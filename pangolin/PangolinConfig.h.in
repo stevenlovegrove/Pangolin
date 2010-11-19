@@ -1,0 +1,3 @@
+// the configured options and settings for Tutorial
+#define PENGOLIN_VERSION_MAJOR @Pengolin_VERSION_MAJOR@
+#define PENGOLIN_VERSION_MINOR @Pengolin_VERSION_MINOR@
