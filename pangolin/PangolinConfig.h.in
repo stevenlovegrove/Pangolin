@@ -1,3 +1,4 @@
-// the configured options and settings for Tutorial
-#define PENGOLIN_VERSION_MAJOR @Pengolin_VERSION_MAJOR@
-#define PENGOLIN_VERSION_MINOR @Pengolin_VERSION_MINOR@
+// Configuration Header for @PROJECT_NAME@
+
+#define PANGOLIN_VERSION_MAJOR @PANGOLIN_VERSION_MAJOR@
+#define PANGOLIN_VERSION_MINOR @PANGOLIN_VERSION_MINOR@
