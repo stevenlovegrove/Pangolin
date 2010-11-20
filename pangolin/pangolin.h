@@ -1,7 +1,7 @@
 #ifndef PANGOLIN_H
 #define PANGOLIN_H
 
-#include <pangolin/PangolinConfig.h>
+#include <pangolin/config.h>
 
 namespace pangolin
 {
