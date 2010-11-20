@@ -2,6 +2,7 @@
 #define PANGOLIN_H
 
 #include <pangolin/config.h>
+#include "platform.h"
 
 namespace pangolin
 {

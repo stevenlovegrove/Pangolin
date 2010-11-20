@@ -1,8 +1,11 @@
+## Library sources
 SET(
   SOURCES
+  platform.h
   pangolin.h test.cpp
 )
 
+## Find dependencies
 FIND_PACKAGE(OpenGL REQUIRED QUIET)
 FIND_PACKAGE(GLU REQUIRED QUIET)
 FIND_PACKAGE(FREEGLUT REQUIRED QUIET)
@@ -31,6 +34,7 @@ ELSE()
   ADD_LIBRARY(${LIBRARY_NAME} ${SOURCES})
 ENDIF()
 
+## Specify Link libraries
 TARGET_LINK_LIBRARIES(
   ${LIBRARY_NAME}
   ${OpenGL_LIBRARY}
@@ -39,6 +43,7 @@ TARGET_LINK_LIBRARIES(
   ${ROBOTVISION_LIBRARY}
 )
 
+## Create configure file for inclusion in library
 CONFIGURE_FILE(
   "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/config.h"

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <GL/gl.h>
 #include <GL/glut.h>
 #include <GL/freeglut_ext.h>
 #include <pangolin/pangolin.h>

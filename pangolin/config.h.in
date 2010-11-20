@@ -1,7 +1,19 @@
-// Configuration Header for @PROJECT_NAME@
+/*
+ * Configuration Header for @PROJECT_NAME@
+ */
 
+/// Version
 #define PANGOLIN_VERSION_MAJOR @PANGOLIN_VERSION_MAJOR@
 #define PANGOLIN_VERSION_MINOR @PANGOLIN_VERSION_MINOR@
 
+/// Configured libraries
 #cmakedefine HAVE_ROBOTVISION
 #cmakedefine HAVE_CUDA
+
+/// Platform
+#cmakedefine _UNIX_
+#cmakedefine _WIN_
+
+/// Compiler
+#cmakedefine _GCC_
+#cmakedefine _MSVC_
