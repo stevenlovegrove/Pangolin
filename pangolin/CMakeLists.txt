@@ -12,23 +12,11 @@ SET(
 ## Find required dependencies
 
 FIND_PACKAGE(OpenGL REQUIRED QUIET)
-FIND_PACKAGE(GLU REQUIRED QUIET)
+
+TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${OpenGL_LIBRARY} )
 
 #######################################################
 ## Find optional dependencies
-
-FIND_PACKAGE(FREEGLUT QUIET)
-IF(FREEGLUT_FOUND)
-  SET(HAVE_GLUT 1)
-  MESSAGE(STATUS "Freeglut Found and Enabled")
-ENDIF()
-
-FIND_PACKAGE(ROBOTVISION QUIET)
-IF(ROBOTVISION_FOUND)
-  INCLUDE_DIRECTORIES(${ROBOTVISION_INCLUDE_DIR})
-  SET(HAVE_ROBOTVISION 1)
-  MESSAGE(STATUS "RobotVision Found and Enabled")
-ENDIF()
 
 FIND_PACKAGE(CUDA QUIET)
 IF(CUDA_FOUND)
@@ -47,16 +35,20 @@ ELSE()
   ADD_LIBRARY(${LIBRARY_NAME} ${SOURCES})
 ENDIF()
 
-#######################################################
-## Specify Link libraries
+FIND_PACKAGE(FREEGLUT QUIET)
+IF(FREEGLUT_FOUND)
+  SET(HAVE_GLUT 1)
+  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${FREEGLUT_LIBRARY} )
+  MESSAGE(STATUS "Freeglut Found and Enabled")
+ENDIF()
 
-TARGET_LINK_LIBRARIES(
-  ${LIBRARY_NAME}
-  ${OpenGL_LIBRARY}
-  ${GLU_LIBRARY}
-  ${FREEGLUT_LIBRARY}
-  ${ROBOTVISION_LIBRARY}
-)
+FIND_PACKAGE(ROBOTVISION QUIET)
+IF(ROBOTVISION_FOUND)
+  INCLUDE_DIRECTORIES(${ROBOTVISION_INCLUDE_DIR})
+  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${ROBOTVISION_LIBRARY} )
+  SET(HAVE_ROBOTVISION 1)
+  MESSAGE(STATUS "RobotVision Found and Enabled")
+ENDIF()
 
 #######################################################
 ## Create configure file for inclusion in library
