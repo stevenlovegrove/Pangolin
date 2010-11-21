@@ -1,14 +1,27 @@
+#######################################################
 ## Library sources
+
 SET(
   SOURCES
+  pangolin.h
   platform.h
-  pangolin.h test.cpp
+  gl.h gl_internal.h gl.cpp
 )
 
-## Find dependencies
+#######################################################
+## Find required dependencies
+
 FIND_PACKAGE(OpenGL REQUIRED QUIET)
 FIND_PACKAGE(GLU REQUIRED QUIET)
-FIND_PACKAGE(FREEGLUT REQUIRED QUIET)
+
+#######################################################
+## Find optional dependencies
+
+FIND_PACKAGE(FREEGLUT QUIET)
+IF(FREEGLUT_FOUND)
+  SET(HAVE_GLUT 1)
+  MESSAGE(STATUS "Freeglut Found and Enabled")
+ENDIF()
 
 FIND_PACKAGE(ROBOTVISION QUIET)
 IF(ROBOTVISION_FOUND)
@@ -34,7 +47,9 @@ ELSE()
   ADD_LIBRARY(${LIBRARY_NAME} ${SOURCES})
 ENDIF()
 
+#######################################################
 ## Specify Link libraries
+
 TARGET_LINK_LIBRARIES(
   ${LIBRARY_NAME}
   ${OpenGL_LIBRARY}
@@ -43,7 +58,9 @@ TARGET_LINK_LIBRARIES(
   ${ROBOTVISION_LIBRARY}
 )
 
+#######################################################
 ## Create configure file for inclusion in library
+
 CONFIGURE_FILE(
   "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/config.h"

@@ -1,3 +1,6 @@
+#ifndef PANGOLIN_CONFIG_H
+#define PANGOLIN_CONFIG_H
+
 /*
  * Configuration Header for @PROJECT_NAME@
  */
@@ -9,6 +12,7 @@
 /// Configured libraries
 #cmakedefine HAVE_ROBOTVISION
 #cmakedefine HAVE_CUDA
+#cmakedefine HAVE_GLUT
 
 /// Platform
 #cmakedefine _UNIX_
@@ -17,3 +21,5 @@
 /// Compiler
 #cmakedefine _GCC_
 #cmakedefine _MSVC_
+
+#endif //PANGOLIN_CONFIG_H

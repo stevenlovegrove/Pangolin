@@ -3,11 +3,10 @@
 
 #include <pangolin/config.h>
 #include "platform.h"
+#include "gl.h"
 
 namespace pangolin
 {
-
-void Test();
 
 }
 
