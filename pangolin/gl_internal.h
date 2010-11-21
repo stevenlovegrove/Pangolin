@@ -2,6 +2,7 @@
 #define PANGOLIN_GL_INTERNAL_H
 
 #include "platform.h"
+#include "gl.h"
 
 namespace pangolin
 {
@@ -9,7 +10,9 @@ namespace pangolin
   struct PangolinGl
   {
     PangolinGl();
+
     bool quit;
+    DisplayContainer base;
   };
 
 }
