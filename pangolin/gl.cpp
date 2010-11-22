@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <map>
-#include <string.h>
 
 #include "platform.h"
 #include "gl.h"
@@ -168,10 +167,14 @@ namespace pangolin
 
   void OpenGlRenderState::Apply() const
   {
-    for(map<OpenGlMatrixType,OpenGlMatrixSpec>::const_iterator i = stacks.begin(); i != stacks.end(); ++i )
+    // Apply any stack matrices we have
+    for(map<OpenGlStack,OpenGlMatrixSpec>::const_iterator i = stacks.begin(); i != stacks.end(); ++i )
     {
       i->second.Load();
     }
+
+    // Leave in MODEVIEW mode
+    glMatrixMode(GL_MODELVIEW);
   }
 
 
@@ -269,76 +272,101 @@ namespace pangolin
 
   void Handler3D::Mouse(Display&, int button, int state, int x, int y)
   {
+    // mouse down
+    last_pos[0] = x;
+    last_pos[1] = y;
+
+    double T_nc[3*4];
+    LieSetIdentity(T_nc);
+
     if( state == 0 )
     {
       // mouse down
-      last_pos[0] = x;
-      last_pos[1] = y;
+      move_mode |= 1 << button;
 
-      move_mode = button;
+      // Wheel
+      if( button == 3 || button == 4)
+      {
+        LieSetIdentity(T_nc);
+        const double t[] = { 0,0,(button==3?1:-1)*100*tf};
+        LieSetTranslation<>(T_nc,t);
+        OpenGlMatrixSpec& spec = cam_state->stacks[GlModelView];
+        LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
+      }
+
     }else if( state == 1 )
     {
       // mouse up
+      move_mode &= ~(1 << button);
     }
 
-    cout << state << " " << button << endl;
+    cout << state << " " << button << ": " << move_mode << endl;
   }
 
   void Handler3D::MouseMotion(Display&, int x, int y)
   {
-    double T_nc[3*4];
-    LieSetIdentity(T_nc);
+    const int delta[2] = {(x-last_pos[0]),(y-last_pos[1])};
+    const float mag = delta[0]*delta[0] + delta[1]*delta[1];
 
-    if( move_mode == 0 )
+    // TODO: convert delta to degrees based of fov
+    // TODO: make transformation with respect to cam spec
+
+    if( mag < 50*50 )
     {
-      // Rotate
-      const double r[] = { (x-last_pos[0])*0.01, (y-last_pos[1])*0.01, 0 };
-      double R[3*3];
-      MatSkew<>(R,r);
-      MatOrtho<3>(R);
-      LieSetRotation<>(T_nc,R);
-    }else if( move_mode == 1 )
-    {
-      // in plane translate
-      const double t[] = { (x-last_pos[0])*tf, -(y-last_pos[1])*tf, 0};
-      LieSetTranslation<>(T_nc,t);
+      double T_nc[3*4];
+      LieSetIdentity(T_nc);
+
+      if( move_mode == 1 )
+      {
+        Rotation<>(T_nc,delta[1]*0.01, -delta[0]*0.01, 0.0);
+      }else if( move_mode == 2 )
+      {
+        // Middle Drag: in plane translate
+        const double t[] = { -delta[0]*tf, -delta[1]*tf, 0};
+        LieSetTranslation<>(T_nc,t);
+      }else if( move_mode == 5)
+      {
+        // Left and Right Drag: in plane rotate
+        Rotation<>(T_nc,0.0,0.0, delta[0]*0.01);
+      }
+
+      OpenGlMatrixSpec& spec = cam_state->stacks[GlModelView];
+      LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
     }
 
-    LieMul4x4bySE3<>(cam_state->stacks[GlProjectionMatrix].m,T_nc,cam_state->stacks[GlProjectionMatrix].m);
-  }
-
-  GLdouble& OpenGlMatrixSpec::operator()(int r,int c)
-  {
-    return m[4*c+r];
+    last_pos[0] = x;
+    last_pos[1] = y;
   }
 
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
   {
       // http://www.songho.ca/opengl/gl_projectionmatrix.html
       const double L = +(u0) * zNear / fu;
-      const double T = -(h-v0) * zNear / fv;
+      const double T = +(v0) * zNear / fv;
       const double R = -(w-u0) * zNear / fu;
-      const double B = +(v0) * zNear / fv;
+      const double B = -(h-v0) * zNear / fv;
 
       OpenGlMatrixSpec P;
-      P.type = GlProjectionMatrix;
-      memset(P.m,0,16);
-      P(0,0) = 2 * zNear / (R-L);
-      P(1,1) = 2 * zNear / (T-B);
-      P(2,2) = -(zFar +zNear) / (zFar - zNear);
-      P(0,2) = (R+L)/(R-L);
-      P(1,2) = (T+B)/(T-B);
-      P(3,2) = -1.0;
-      P(2,3) =  -(2*zFar*zNear)/(zFar-zNear);
+      P.type = GlProjection;
+      std::fill_n(P.m,4*4,0);
+
+      P.m[0*4+0] = 2 * zNear / (R-L);
+      P.m[1*4+1] = 2 * zNear / (T-B);
+      P.m[2*4+2] = -(zFar +zNear) / (zFar - zNear);
+      P.m[2*4+0] = (R+L)/(R-L);
+      P.m[2*4+1] = (T+B)/(T-B);
+      P.m[2*4+3] = -1.0;
+      P.m[3*4+2] =  -(2*zFar*zNear)/(zFar-zNear);
       return P;
   }
 
-  OpenGlMatrixSpec IdentityMatrix(OpenGlMatrixType type)
+  OpenGlMatrixSpec IdentityMatrix(OpenGlStack type)
   {
     OpenGlMatrixSpec P;
     P.type = type;
-    memset(P.m,0,16);
-    for( int i=0; i<4; ++i ) P(i,i) = 1;
+    std::fill_n(P.m,4*4,0);
+    for( int i=0; i<4; ++i ) P.m[i*4+i] = 1;
+    return P;
   }
 
 

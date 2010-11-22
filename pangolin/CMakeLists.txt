@@ -59,3 +59,8 @@ CONFIGURE_FILE(
   "${CMAKE_CURRENT_BINARY_DIR}/config.h"
 )
 INCLUDE_DIRECTORIES("${PROJECT_BINARY_DIR}")
+
+#######################################################
+## Compiler options
+
+SET(CMAKE_CXX_FLAGS "-Wall")

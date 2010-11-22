@@ -2,7 +2,6 @@
 #define PANGOLIN_GL_H
 
 #include <map>
-#include <string>
 #include "pangolin.h"
 
 #include <GL/gl.h>
@@ -91,10 +90,10 @@ namespace pangolin
   };
 
   //! @brief Capture OpenGL matrix types in enum to typing
-  enum OpenGlMatrixType {
-    GlProjectionMatrix = GL_PROJECTION_MATRIX,
-    GlModelViewMatrix = GL_MODELVIEW_MATRIX,
-    GlTextureMatrix = GL_TEXTURE_MATRIX
+  enum OpenGlStack {
+    GlProjection = GL_PROJECTION,
+    GlModelView = GL_MODELVIEW,
+    GlTexture = GL_TEXTURE
   };
 
   struct CameraSpec {
@@ -114,9 +113,7 @@ namespace pangolin
     void Load() const;
 
     // Specify which stack this refers to
-    OpenGlMatrixType type;
-
-    GLdouble& operator()(int r,int c);
+    OpenGlStack type;
 
     // Column major Internal buffer
     GLdouble m[16];
@@ -128,7 +125,7 @@ namespace pangolin
   struct OpenGlRenderState
   {
     void Apply() const;
-    std::map<OpenGlMatrixType,OpenGlMatrixSpec> stacks;
+    std::map<OpenGlStack,OpenGlMatrixSpec> stacks;
   };
 
   // Forward declaration
@@ -186,9 +183,9 @@ namespace pangolin
     void MouseMotion(Display&, int x, int y);
 
     OpenGlRenderState* cam_state;
-    int move_mode;
     float tf;
     CameraSpec cameraspec;
+    int move_mode;
     float last_pos[2];
   };
 
@@ -197,7 +194,7 @@ namespace pangolin
   Display*& GetDisplay(std::string name);
 
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
-  OpenGlMatrixSpec IdentityMatrix(OpenGlMatrixType type);
+  OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);
 
 }
 
