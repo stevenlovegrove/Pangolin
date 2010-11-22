@@ -5,6 +5,7 @@ SET(
   SOURCES
   pangolin.h
   platform.h
+  simple_math.h
   gl.h gl_internal.h gl.cpp
 )
 

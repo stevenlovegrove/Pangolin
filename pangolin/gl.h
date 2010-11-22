@@ -39,6 +39,10 @@ namespace pangolin
     //! You will need to call this manually if you haven't let
     //! Pangolin register callbacks from your windowing system
     void Resize(int width, int height);
+
+    void Mouse( int button, int state, int x, int y);
+
+    void MouseMotion( int x, int y);
   }
 
 #ifdef HAVE_GLUT
@@ -50,6 +54,7 @@ namespace pangolin
     void CreateWindowAndBind(std::string window_title, int w = 640, int h = 480 );
 
     //! @brief Allow Pangolin to take GLUT callbacks for its own uses
+    //! Not needed if you instantiated a window through CreateWindowAndBind().
     void TakeCallbacks();
   }
 #endif
@@ -61,7 +66,8 @@ namespace pangolin
   };
 
   //! @brief Defines typed quantity
-  //! Constructors distinguised by whole pixels, or floating fraction
+  //! Constructors distinguised by whole pixels, or floating
+  //! fraction in interval [0,1]
   struct Attach {
     Attach() : unit(Fraction), p(0) {}
     Attach(int p) : unit(Pixel), p(p) {}
@@ -76,28 +82,70 @@ namespace pangolin
   {
     Viewport() {}
     Viewport(GLint l,GLint b,GLint w,GLint h);
-    void Activate();
+    void Activate() const;
+    bool Contains(int x, int y) const;
     GLint r() const;
     GLint t() const;
     GLfloat aspect() const;
     GLint l,b,w,h;
   };
 
-  struct Projection
-  {
-    GLfloat m[16];
+  //! @brief Capture OpenGL matrix types in enum to typing
+  enum OpenGlMatrixType {
+    GlProjectionMatrix = GL_PROJECTION_MATRIX,
+    GlModelViewMatrix = GL_MODELVIEW_MATRIX,
+    GlTextureMatrix = GL_TEXTURE_MATRIX
   };
 
-  //! @brief A Displays manages the location and resizing of a viewport.
+  struct CameraSpec {
+    GLdouble forward[3];
+    GLdouble up[3];
+    GLdouble right[3];
+    GLdouble img_up[2];
+    GLdouble img_right[2];
+  };
+
+  const static CameraSpec CameraSpecOpenGl = {{0,0,-1},{0,1,0},{1,0,0},{0,1},{1,0}};
+  const static CameraSpec CameraSpecYDownZForward = {{0,0,1},{0,-1,0},{1,0,0},{0,-1},{1,0}};
+
+  //! @brief Object representing OpenGl Matrix
+  struct OpenGlMatrixSpec {
+    // Load matrix on to OpenGl stack
+    void Load() const;
+
+    // Specify which stack this refers to
+    OpenGlMatrixType type;
+
+    GLdouble& operator()(int r,int c);
+
+    // Column major Internal buffer
+    GLdouble m[16];
+  };
+
+  //! @brief Object representing attached OpenGl Matrices / transforms
+  //! Only stores what is attached, not entire OpenGl state (which would
+  //! be horribly slow). Applying state is efficient.
+  struct OpenGlRenderState
+  {
+    void Apply() const;
+    std::map<OpenGlMatrixType,OpenGlMatrixSpec> stacks;
+  };
+
+  // Forward declaration
+  struct Handler;
+
+  //! @brief A Display manages the location and resizing of an OpenGl viewport.
   struct Display
   {
+    Display() : handler(0) {}
+
     //! Activate Displays viewport for drawing within this area
-    virtual void Activate();
+    void Activate() const;
+
+    void Activate(const OpenGlRenderState& state ) const;
 
     //! Given the specification of Display, compute viewport
-    virtual void RecomputeViewport(const Viewport& parent);
-
-    Projection p;
+    void RecomputeViewport(const Viewport& parent);
 
     // Desired width / height aspect (0 if dynamic)
     float aspect;
@@ -107,20 +155,49 @@ namespace pangolin
 
     // Cached absolute viewport (recomputed on resize)
     Viewport v;
+
+    // Access sub-displays by name
+    Display*& operator[](std::string name);
+
+    // Input event handler (if any)
+    Handler* handler;
+
+    // Map for sub-displays (if any)
+    std::map<std::string,Display*> displays;
   };
 
-  //! @brief Container for Displays
-  struct DisplayContainer : public Display
+  //! @brief Input Handler base class with virtual methods which recurse
+  //! into sub-displays
+  struct Handler
   {
-    void RecomputeViewport(const Viewport& parent);
+    virtual void Keyboard(Display&, unsigned char key, int x, int y);
+    virtual void Mouse(Display&, int button, int state, int x, int y);
+    virtual void MouseMotion(Display&, int x, int y);
+  };
+  static Handler StaticHandler;
 
-    Display*& operator[](std::string name);
-    std::map<std::string,Display*> displays;
+  struct Handler3D : Handler
+  {
+    Handler3D(OpenGlRenderState& cam_state)
+      : cam_state(&cam_state), tf(0.01), cameraspec(CameraSpecOpenGl), move_mode(0) {};
+
+    void SetOpenGlCamera();
+    void Mouse(Display&, int button, int state, int x, int y);
+    void MouseMotion(Display&, int x, int y);
+
+    OpenGlRenderState* cam_state;
+    int move_mode;
+    float tf;
+    CameraSpec cameraspec;
+    float last_pos[2];
   };
 
   Display* AddDisplay(std::string name, Attach top, Attach left, Attach bottom, Attach right, bool keep_aspect = false );
   Display* AddDisplay(std::string name, Attach top, Attach left, Attach bottom, Attach right, float aspect );
   Display*& GetDisplay(std::string name);
+
+  OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
+  OpenGlMatrixSpec IdentityMatrix(OpenGlMatrixType type);
 
 }
 

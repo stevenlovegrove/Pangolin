@@ -12,7 +12,7 @@ namespace pangolin
     PangolinGl();
 
     bool quit;
-    DisplayContainer base;
+    Display base;
   };
 
 }
