@@ -34,7 +34,7 @@ namespace pangolin
       // Create and add if not found
       ic = contexts.insert( pair<string,PangolinGl*>(name,new PangolinGl) ).first;
       context = ic->second;
-      Display& dc = context->base;
+      View& dc = context->base;
       dc.left = 0;
       dc.bottom = 0;
       dc.top = 1.0;
@@ -59,30 +59,43 @@ namespace pangolin
     return context->quit;
   }
 
-  Display* AddDisplay(string name, Attach top, Attach left, Attach bottom, Attach right, bool keep_aspect )
+  View& Display(std::string name)
   {
-    Display* d = AddDisplay(name,top,left,bottom,right, 0.0f );
-    // Aspect as defined by params gets put in d->v.aspect() by above constructor.
-    d->aspect = keep_aspect ? d->v.aspect() : 0;
-    return d;
+    // Get / Create View
+    std::map<std::string,View*>::iterator vi = context->all_views.find(name);
+    if( vi != context->all_views.end() )
+    {
+      return *(vi->second);
+    }else{
+      View* v = new View();
+      context->all_views[name] = v;
+      context->base[name] = v;
+      return *v;
+    }
   }
 
-  Display* AddDisplay(std::string name, Attach top, Attach left, Attach bottom, Attach right, float aspect )
+  View& View::SetPos(Attach top, Attach left, Attach bottom, Attach right, bool keep_aspect)
   {
-    Display* d = new Display();
-    d->left = left;
-    d->top = top;
-    d->right = right;
-    d->bottom = bottom;
-    d->aspect = aspect;
-    d->RecomputeViewport(context->base.v);
-    context->base[name] = d;
-    return d;
+    SetPos(top,left,bottom,right,0.0);
+    aspect = keep_aspect ? v.aspect() : 0;
+    return *this;
   }
 
-  Display*& GetDisplay(string name)
+  View& View::SetPos(Attach top, Attach left, Attach bottom, Attach right, double aspect)
   {
-    return context->base[name];
+    this->left = left;
+    this->top = top;
+    this->right = right;
+    this->bottom = bottom;
+    this->aspect = aspect;
+    this->RecomputeViewport(context->base.v);
+    return *this;
+  }
+
+  View& View::SetHandler(Handler* h)
+  {
+    handler = h;
+    return *this;
   }
 
 
@@ -156,31 +169,26 @@ namespace pangolin
   }
 
 #ifdef HAVE_GLUT
-  namespace glut
+  void TakeGlutCallbacks()
   {
+    glutKeyboardFunc(&process::Keyboard);
+    glutReshapeFunc(&process::Resize);
+    glutMouseFunc(&process::Mouse);
+    glutMotionFunc(&process::MouseMotion);
+  }
 
-    void CreateWindowAndBind(string window_title, int w, int h)
+  void CreateGlutWindowAndBind(string window_title, int w, int h)
+  {
+    if( glutGet(GLUT_INIT_STATE) == 0)
     {
-      if( glutGet(GLUT_INIT_STATE) == 0)
-      {
-        int argc = 0;
-        glutInit(&argc, 0);
-        glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-      }
-      glutInitWindowSize(w,h);
-      glutCreateWindow(window_title.c_str());
-      BindToContext(window_title);
-      TakeCallbacks();
+      int argc = 0;
+      glutInit(&argc, 0);
+      glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     }
-
-    void TakeCallbacks()
-    {
-      glutKeyboardFunc(&process::Keyboard);
-      glutReshapeFunc(&process::Resize);
-      glutMouseFunc(&process::Mouse);
-      glutMotionFunc(&process::MouseMotion);
-    }
-
+    glutInitWindowSize(w,h);
+    glutCreateWindow(window_title.c_str());
+    BindToContext(window_title);
+    TakeGlutCallbacks();
   }
 #endif
 
@@ -213,8 +221,21 @@ namespace pangolin
     glMatrixMode(GL_MODELVIEW);
   }
 
+  void OpenGlRenderState::ApplyIdentity()
+  {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+  }
 
-  void Display::RecomputeViewport(const Viewport& p)
+  OpenGlRenderState& OpenGlRenderState::Add(OpenGlMatrixSpec spec)
+  {
+    stacks[spec.type] = spec;
+    return *this;
+  }
+
+  void View::RecomputeViewport(const Viewport& p)
   {
     // Compute Bounds based on specification
     v.l = p.l + (left.unit == Pixel ) ? (left.p) : ( left.p * (p.r()-p.l) );
@@ -244,40 +265,40 @@ namespace pangolin
     }
 
     // Resize children, if any
-    for( map<string,Display*>::const_iterator i = displays.begin(); i != displays.end(); ++i )
+    for( map<string,View*>::const_iterator i = views.begin(); i != views.end(); ++i )
     {
       i->second->RecomputeViewport(v);
     }
   }
 
-  void Display::Activate() const
+  void View::Activate() const
   {
     v.Activate();
   }
 
-  void Display::Activate(const OpenGlRenderState& state ) const
+  void View::Activate(const OpenGlRenderState& state ) const
   {
     v.Activate();
     state.Apply();
   }
 
 
-  Display*& Display::operator[](std::string name)
+  View*& View::operator[](std::string name)
   {
-    return displays[name];
+    return views[name];
   }
 
-  Display* FindChild(Display& parent, int x, int y)
+  View* FindChild(View& parent, int x, int y)
   {
-    for( map<string,Display*>::const_iterator i = parent.displays.begin(); i != parent.displays.end(); ++i )
+    for( map<string,View*>::const_iterator i = parent.views.begin(); i != parent.views.end(); ++i )
       if( i->second->v.Contains(x,y) )
         return i->second;
     return 0;
   }
 
-  void Handler::Keyboard(Display& d, unsigned char key, int x, int y)
+  void Handler::Keyboard(View& d, unsigned char key, int x, int y)
   {
-    Display* child = FindChild(d,x,y);
+    View* child = FindChild(d,x,y);
     if( child)
     {
       context->activeDisplay = child;
@@ -286,9 +307,9 @@ namespace pangolin
     }
   }
 
-  void Handler::Mouse(Display& d, int button, int state, int x, int y)
+  void Handler::Mouse(View& d, int button, int state, int x, int y)
   {
-    Display* child = FindChild(d,x,y);
+    View* child = FindChild(d,x,y);
     if( child )
     {
       context->activeDisplay = child;
@@ -297,9 +318,9 @@ namespace pangolin
     }
   }
 
-  void Handler::MouseMotion(Display& d, int x, int y)
+  void Handler::MouseMotion(View& d, int x, int y)
   {
-    Display* child = FindChild(d,x,y);
+    View* child = FindChild(d,x,y);
     if( child )
     {
       context->activeDisplay = child;
@@ -308,7 +329,7 @@ namespace pangolin
     }
   }
 
-  void Handler3D::Mouse(Display& display, int button, int state, int x, int y)
+  void Handler3D::Mouse(View& display, int button, int state, int x, int y)
   {
     // mouse down
     last_pos[0] = x;
@@ -357,7 +378,7 @@ namespace pangolin
 //    cout << state << " " << button << ": " << context->mouse_state << endl;
   }
 
-  void Handler3D::MouseMotion(Display&, int x, int y)
+  void Handler3D::MouseMotion(View&, int x, int y)
   {
     const int delta[2] = {(x-last_pos[0]),(y-last_pos[1])};
     const float mag = delta[0]*delta[0] + delta[1]*delta[1];

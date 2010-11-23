@@ -45,17 +45,14 @@ namespace pangolin
   }
 
 #ifdef HAVE_GLUT
-  namespace glut
-  {
-    //! @brief Create GLUT window and bind Pangolin to it.
-    //! All GLUT initialisation is taken care of. This prevents you
-    //! from needing to call BindToContext() and TakeGlutCallbacks().
-    void CreateWindowAndBind(std::string window_title, int w = 640, int h = 480 );
+  //! @brief Create GLUT window and bind Pangolin to it.
+  //! All GLUT initialisation is taken care of. This prevents you
+  //! from needing to call BindToContext() and TakeGlutCallbacks().
+  void CreateGlutWindowAndBind(std::string window_title, int w = 640, int h = 480 );
 
-    //! @brief Allow Pangolin to take GLUT callbacks for its own uses
-    //! Not needed if you instantiated a window through CreateWindowAndBind().
-    void TakeCallbacks();
-  }
+  //! @brief Allow Pangolin to take GLUT callbacks for its own uses
+  //! Not needed if you instantiated a window through CreateWindowAndBind().
+  void TakeGlutCallbacks();
 #endif
 
   //! @brief Unit for measuring quantities
@@ -124,7 +121,10 @@ namespace pangolin
   //! be horribly slow). Applying state is efficient.
   struct OpenGlRenderState
   {
+    static void ApplyIdentity();
+
     void Apply() const;
+    OpenGlRenderState& Add(OpenGlMatrixSpec spec);
     std::map<OpenGlStack,OpenGlMatrixSpec> stacks;
   };
 
@@ -132,9 +132,9 @@ namespace pangolin
   struct Handler;
 
   //! @brief A Display manages the location and resizing of an OpenGl viewport.
-  struct Display
+  struct View
   {
-    Display() : handler(0) {}
+    View() : aspect(0.0), top(1.0),left(0),right(1.0),bottom(0), handler(0) {}
 
     //! Activate Displays viewport for drawing within this area
     void Activate() const;
@@ -144,8 +144,12 @@ namespace pangolin
     //! Given the specification of Display, compute viewport
     void RecomputeViewport(const Viewport& parent);
 
+    View& SetPos(Attach top, Attach left, Attach right, Attach bottom, bool keep_aspect = false);
+    View& SetPos(Attach top, Attach left, Attach right, Attach bottom, double aspect);
+    View& SetHandler(Handler* handler);
+
     // Desired width / height aspect (0 if dynamic)
-    float aspect;
+    double aspect;
 
     // Bounds to fit display within
     Attach top, left, right, bottom;
@@ -154,22 +158,26 @@ namespace pangolin
     Viewport v;
 
     // Access sub-displays by name
-    Display*& operator[](std::string name);
+    View*& operator[](std::string name);
 
     // Input event handler (if any)
     Handler* handler;
 
     // Map for sub-displays (if any)
-    std::map<std::string,Display*> displays;
+    std::map<std::string,View*> views;
+
+  private:
+    // Private copy constructor
+    View(View& v) { /* Do Not copy - take reference instead*/ }
   };
 
   //! @brief Input Handler base class with virtual methods which recurse
   //! into sub-displays
   struct Handler
   {
-    virtual void Keyboard(Display&, unsigned char key, int x, int y);
-    virtual void Mouse(Display&, int button, int state, int x, int y);
-    virtual void MouseMotion(Display&, int x, int y);
+    virtual void Keyboard(View&, unsigned char key, int x, int y);
+    virtual void Mouse(View&, int button, int state, int x, int y);
+    virtual void MouseMotion(View&, int x, int y);
   };
   static Handler StaticHandler;
 
@@ -179,8 +187,8 @@ namespace pangolin
       : cam_state(&cam_state), hwin(3), tf(0.01), cameraspec(CameraSpecOpenGl) {};
 
     void SetOpenGlCamera();
-    void Mouse(Display&, int button, int state, int x, int y);
-    void MouseMotion(Display&, int x, int y);
+    void Mouse(View&, int button, int state, int x, int y);
+    void MouseMotion(View&, int x, int y);
 
     OpenGlRenderState* cam_state;
     int hwin;
@@ -190,9 +198,7 @@ namespace pangolin
     GLdouble rot_center[3];
   };
 
-  Display* AddDisplay(std::string name, Attach top, Attach left, Attach bottom, Attach right, bool keep_aspect = false );
-  Display* AddDisplay(std::string name, Attach top, Attach left, Attach bottom, Attach right, float aspect );
-  Display*& GetDisplay(std::string name);
+  View& Display(std::string name);
 
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);

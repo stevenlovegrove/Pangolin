@@ -12,12 +12,14 @@ namespace pangolin
     PangolinGl();
 
     // Base container for displays
-    Display base;
+    View base;
+    std::map<std::string,View*> all_views;
 
     // State relating to interactivity
     bool quit;
     int mouse_state;
-    Display* activeDisplay;
+    View* activeDisplay;
+
   };
 
 }
