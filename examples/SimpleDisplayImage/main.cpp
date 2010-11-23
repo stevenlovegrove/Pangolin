@@ -21,7 +21,6 @@ void displayImage(float * imageArray, int width, int height){
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
   glBegin(GL_QUADS);
-  //glNormal3d(0, 0, 1);
   glTexCoord2f(0, 0);
   glVertex2d(-1,-1);
   glTexCoord2f(1, 0);
@@ -92,8 +91,8 @@ int main( int /*argc*/, char* argv[] )
     d_image.Activate(s_cam);
     displayImage( imageArray,width,height);
 
-    Viewport(0,0,width/2,height/2).Activate();
-    displayImage( imageArray,width,height);
+    //Viewport(0,0,width/2,height/2).Activate();
+    //displayImage( imageArray,width,height);
 
 
     glutSwapBuffers();
