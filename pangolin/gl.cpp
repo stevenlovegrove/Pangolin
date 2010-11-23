@@ -74,14 +74,14 @@ namespace pangolin
     }
   }
 
-  View& View::SetPos(Attach top, Attach left, Attach bottom, Attach right, bool keep_aspect)
+  View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect)
   {
-    SetPos(top,left,bottom,right,0.0);
+    SetBounds(top,bottom,left,right,0.0);
     aspect = keep_aspect ? v.aspect() : 0;
     return *this;
   }
 
-  View& View::SetPos(Attach top, Attach left, Attach bottom, Attach right, double aspect)
+  View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, double aspect)
   {
     this->left = left;
     this->top = top;
@@ -89,6 +89,20 @@ namespace pangolin
     this->bottom = bottom;
     this->aspect = aspect;
     this->RecomputeViewport(context->base.v);
+    return *this;
+  }
+
+  View& View::SetAspect(double aspect)
+  {
+    this->aspect = aspect;
+    this->RecomputeViewport(context->base.v);
+    return *this;
+  }
+
+  View& View::SetLock(Lock horizontal, Lock vertical )
+  {
+    vlock = vertical;
+    hlock = horizontal;
     return *this;
   }
 
@@ -253,13 +267,13 @@ namespace pangolin
       {
         //Adjust height
         const int nh = (int)(v.w / aspect);
-        v.b += (v.h-nh)/2;
+        v.b += vlock == LockBottom ? 0 : (vlock == LockCenter ? (v.h-nh)/2 : (v.h-nh) );
         v.h = nh;
       }else if( current_aspect > aspect )
       {
         //Adjust width
         const int nw = (int)(v.h * aspect);
-        v.l += (v.w-nw)/2;
+        v.l += hlock == LockLeft? 0 : (hlock == LockCenter ? (v.w-nw)/2 : (v.w-nw) );
         v.w = nw;
       }
     }

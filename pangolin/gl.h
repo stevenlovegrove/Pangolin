@@ -73,6 +73,15 @@ namespace pangolin
     GLfloat p;
   };
 
+
+  enum Lock {
+    LockLeft = 0,
+    LockBottom = 0,
+    LockCenter = 1,
+    LockRight = 2,
+    LockTop = 2
+  };
+
   //! @brief Encapsulates OpenGl Viewport
   struct Viewport
   {
@@ -134,7 +143,7 @@ namespace pangolin
   //! @brief A Display manages the location and resizing of an OpenGl viewport.
   struct View
   {
-    View() : aspect(0.0), top(1.0),left(0),right(1.0),bottom(0), handler(0) {}
+    View() : aspect(0.0), top(1.0),left(0),right(1.0),bottom(0),hlock(LockCenter),vlock(LockCenter),handler(0) {}
 
     //! Activate Displays viewport for drawing within this area
     void Activate() const;
@@ -144,15 +153,23 @@ namespace pangolin
     //! Given the specification of Display, compute viewport
     void RecomputeViewport(const Viewport& parent);
 
-    View& SetPos(Attach top, Attach left, Attach right, Attach bottom, bool keep_aspect = false);
-    View& SetPos(Attach top, Attach left, Attach right, Attach bottom, double aspect);
+    //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
+    View& SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect = false);
+
+    //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
+    View& SetBounds(Attach top, Attach bottom,  Attach left, Attach right, double aspect);
+
     View& SetHandler(Handler* handler);
+    View& SetAspect(double aspect);
+    View& SetLock(Lock horizontal, Lock vertical );
 
     // Desired width / height aspect (0 if dynamic)
     double aspect;
 
     // Bounds to fit display within
     Attach top, left, right, bottom;
+    Lock hlock;
+    Lock vlock;
 
     // Cached absolute viewport (recomputed on resize)
     Viewport v;

@@ -25,9 +25,9 @@ int main( int /*argc*/, char* argv[] )
 
   // Define viewports with mixed fractional and pixel units
   Display("panal")
-    .SetPos(1.0, 0, 0.0, 200);
+    .SetBounds(1.0, 0.0, 0, 200);
   View& d_cam = Display("cam")
-    .SetPos(1.0, 200, 0.0, 1.0, 640.0f/480.0f)
+    .SetBounds(1.0, 0.0, 200, 1.0, 640.0f/480.0f)
     .SetHandler(new Handler3D(s_cam));
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
