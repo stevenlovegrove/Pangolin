@@ -90,20 +90,24 @@ namespace pangolin
   {
     void Keyboard( unsigned char key, int x, int y)
     {
-      //  int mod = glutGetModifiers();
+      // Force coords to match OpenGl Window Coords
+      y = context->base.v.h - y;
 
-        if( key == GLUT_KEY_TAB)
-          glutFullScreenToggle();
-        else if( key == GLUT_KEY_ESCAPE)
-          context->quit = true;
-        else
-        {
-          context->base.handler->Keyboard(context->base,key,x,y);
-        }
+      if( key == GLUT_KEY_TAB)
+        glutFullScreenToggle();
+      else if( key == GLUT_KEY_ESCAPE)
+        context->quit = true;
+      else
+      {
+        context->base.handler->Keyboard(context->base,key,x,y);
+      }
     }
 
     void Mouse( int button, int state, int x, int y)
     {
+      // Force coords to match OpenGl Window Coords
+      y = context->base.v.h - y;
+
       const bool fresh_input = (context->mouse_state == 0);
 
       if( state == 0 )
@@ -132,6 +136,9 @@ namespace pangolin
 
     void MouseMotion( int x, int y)
     {
+      // Force coords to match OpenGl Window Coords
+      y = context->base.v.h - y;
+
       if( context->activeDisplay)
       {
         if( context->activeDisplay->handler )
@@ -301,7 +308,7 @@ namespace pangolin
     }
   }
 
-  void Handler3D::Mouse(Display&, int button, int state, int x, int y)
+  void Handler3D::Mouse(Display& display, int button, int state, int x, int y)
   {
     // mouse down
     last_pos[0] = x;
@@ -312,18 +319,42 @@ namespace pangolin
 
     if( state == 0 )
     {
+      OpenGlMatrixSpec& proj = cam_state->stacks[GlProjection];
+      // TODO: check it actually exists!
+      // Find 3D point using depth buffer
+      glEnable(GL_DEPTH_TEST);
+      glReadBuffer(GL_FRONT);
+      GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
+      const int zl = (hwin*2+1);
+      const int zsize = zl*zl;
+      GLfloat zs[zsize];
+      glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
+      GLfloat z = *(std::min_element(zs,zs+zsize));
+
+      if( z != 1 )
+      {
+        gluUnProject(x,y,z,Identity4d,proj.m,viewport,rot_center,rot_center+1,rot_center+2);
+      }else{
+        SetZero<3,1>(rot_center);
+      }
+
       // Wheel
       if( button == 3 || button == 4)
       {
         LieSetIdentity(T_nc);
         const double t[] = { 0,0,(button==3?1:-1)*100*tf};
         LieSetTranslation<>(T_nc,t);
+        if( !(context->mouse_state & (1<<2)) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
+        {
+          LieSetTranslation<>(T_nc,rot_center);
+          MatMul<3,1>(T_nc+(3*3),(button==3?-1.0:1.0)/5.0);
+        }
         OpenGlMatrixSpec& spec = cam_state->stacks[GlModelView];
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
       }
     }
 
-    cout << state << " " << button << ": " << context->mouse_state << endl;
+//    cout << state << " " << button << ": " << context->mouse_state << endl;
   }
 
   void Handler3D::MouseMotion(Display&, int x, int y)
@@ -341,16 +372,29 @@ namespace pangolin
 
       if( context->mouse_state == 1 )
       {
-        Rotation<>(T_nc,delta[1]*0.01, -delta[0]*0.01, 0.0);
+        Rotation<>(T_nc,-delta[1]*0.01, -delta[0]*0.01, 0.0);
       }else if( context->mouse_state == 2 )
       {
         // Middle Drag: in plane translate
-        const double t[] = { -delta[0]*tf, -delta[1]*tf, 0};
+        const double t[] = { -10*delta[0]*tf, 10*delta[1]*tf, 0};
         LieSetTranslation<>(T_nc,t);
       }else if( context->mouse_state == 5)
       {
         // Left and Right Drag: in plane rotate
         Rotation<>(T_nc,0.0,0.0, delta[0]*0.01);
+//        T_nc[11] = delta[1]*0.01;
+      }else if( context->mouse_state == 4)
+      {
+        // Right Drag: object centric rotation
+        double T_2c[3*4];
+        Rotation<>(T_2c,-delta[1]*0.01, -delta[0]*0.01, 0.0);
+        double mrotc[3];
+        MatMul<3,1>(mrotc, rot_center, -1.0);
+        LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
+        double T_n2[3*4];
+        LieSetIdentity<>(T_n2);
+        LieSetTranslation<>(T_n2,rot_center);
+        LieMulSE3(T_nc, T_n2, T_2c );
       }
 
       OpenGlMatrixSpec& spec = cam_state->stacks[GlModelView];

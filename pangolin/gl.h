@@ -176,16 +176,18 @@ namespace pangolin
   struct Handler3D : Handler
   {
     Handler3D(OpenGlRenderState& cam_state)
-      : cam_state(&cam_state), tf(0.01), cameraspec(CameraSpecOpenGl) {};
+      : cam_state(&cam_state), hwin(3), tf(0.01), cameraspec(CameraSpecOpenGl) {};
 
     void SetOpenGlCamera();
     void Mouse(Display&, int button, int state, int x, int y);
     void MouseMotion(Display&, int x, int y);
 
     OpenGlRenderState* cam_state;
+    int hwin;
     float tf;
     CameraSpec cameraspec;
-    float last_pos[2];
+    GLint last_pos[2];
+    GLdouble rot_center[3];
   };
 
   Display* AddDisplay(std::string name, Attach top, Attach left, Attach bottom, Attach right, bool keep_aspect = false );

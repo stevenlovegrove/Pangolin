@@ -272,7 +272,7 @@ void LieMulSE3( P T_ca[3*4], const P T_cb[3*4], const P T_ba[3*4] )
   LieMulSO3<>(T_ca,T_cb,T_ba);
   P R_cb_times_a_b[3];
   LieApplySO3<>(R_cb_times_a_b,T_cb,T_ba+(3*3));
-  MatAdd<3,3>(T_ca+(3*3),R_cb_times_a_b,T_cb+(3*3));
+  MatAdd<3,1>(T_ca+(3*3),R_cb_times_a_b,T_cb+(3*3));
 }
 
 template<typename P>
