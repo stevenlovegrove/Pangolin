@@ -20,8 +20,8 @@ int main( int /*argc*/, char* argv[] )
   CreateGlutWindowAndBind("Main",640,480);
 
   OpenGlRenderState s_cam;
-  s_cam.Add(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
-  s_cam.Add(IdentityMatrix(GlModelView));
+  s_cam.Set(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
+  s_cam.Set(IdentityMatrix(GlModelView));
 
   // Define viewports with mixed fractional and pixel units
   Display("panal")

@@ -243,7 +243,7 @@ namespace pangolin
     glLoadIdentity();
   }
 
-  OpenGlRenderState& OpenGlRenderState::Add(OpenGlMatrixSpec spec)
+  OpenGlRenderState& OpenGlRenderState::Set(OpenGlMatrixSpec spec)
   {
     stacks[spec.type] = spec;
     return *this;

@@ -55,15 +55,15 @@ int main( int /*argc*/, char* argv[] )
   CreateGlutWindowAndBind("Main",640,480);
 
   OpenGlRenderState s_cam;
-  s_cam.Add(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
-  s_cam.Add(IdentityMatrix(GlModelView));
+  s_cam.Set(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
+  s_cam.Set(IdentityMatrix(GlModelView));
 
   // Define viewports with mixed fractional and pixel units
   //Display("panal").SetPos(10, 0, 0.0, 200);
 
   View& d_cam = Display("cam")
-      .SetAspect(640/480.0)
-      .SetLock(LockCenter,LockCenter)
+//      .SetAspect(640/480.0)
+//      .SetLock(LockCenter,LockCenter)
       .SetHandler(new Handler3D(s_cam));
 
   View& d_image = Display("image")
@@ -78,8 +78,19 @@ int main( int /*argc*/, char* argv[] )
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
+
+    int windowWidth = glutGet(GLUT_WINDOW_WIDTH);
+    int windowHeight =glutGet(GLUT_WINDOW_HEIGHT);
+    s_cam.Set(ProjectionMatrix(
+      windowWidth,windowHeight,640,640,windowWidth/2,windowHeight/2,0.1,1000
+    ));
+
     // Activate efficiently by object
     d_cam.Activate(s_cam);
+
+
+//    float windowAspect = glutGet(GLUT_WINDOW_WIDTH)/ (float)glutGet(GLUT_WINDOW_HEIGHT);
+//    gluPerspective(80,windowAspect,0.1,1000);
     glColor3f(1.0,1.0,1.0);
     glutWireTeapot(10.0);
 
@@ -88,7 +99,7 @@ int main( int /*argc*/, char* argv[] )
 
     //display the image
 
-    d_image.Activate(s_cam);
+    d_image.Activate();
     displayImage( imageArray,width,height);
 
     //Viewport(0,0,width/2,height/2).Activate();

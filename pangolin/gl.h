@@ -133,7 +133,7 @@ namespace pangolin
     static void ApplyIdentity();
 
     void Apply() const;
-    OpenGlRenderState& Add(OpenGlMatrixSpec spec);
+    OpenGlRenderState& Set(OpenGlMatrixSpec spec);
     std::map<OpenGlStack,OpenGlMatrixSpec> stacks;
   };
 
