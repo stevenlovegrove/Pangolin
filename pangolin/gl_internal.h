@@ -11,8 +11,13 @@ namespace pangolin
   {
     PangolinGl();
 
-    bool quit;
+    // Base container for displays
     Display base;
+
+    // State relating to interactivity
+    bool quit;
+    int mouse_state;
+    Display* activeDisplay;
   };
 
 }

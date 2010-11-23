@@ -21,7 +21,7 @@ namespace pangolin
   __thread PangolinGl* context = 0;
 
   PangolinGl::PangolinGl()
-   : quit(false)
+   : quit(false), mouse_state(0), activeDisplay(0)
   {
   }
 
@@ -104,12 +104,41 @@ namespace pangolin
 
     void Mouse( int button, int state, int x, int y)
     {
-      context->base.handler->Mouse(context->base,button,state,x,y);
+      const bool fresh_input = (context->mouse_state == 0);
+
+      if( state == 0 )
+      {
+        // mouse down
+        context->mouse_state |= 1 << button;
+      }else if( state == 1 )
+      {
+        // mouse up
+        context->mouse_state &= ~(1 << button);
+
+        if(context->mouse_state == 0 )
+        {
+          context->activeDisplay = 0;
+        }
+      }
+
+      if(fresh_input)
+      {
+        context->base.handler->Mouse(context->base,button,state,x,y);
+      }else if(context->activeDisplay && context->activeDisplay->handler)
+      {
+        context->activeDisplay->handler->Mouse(*(context->activeDisplay),button,state,x,y);
+      }
     }
 
     void MouseMotion( int x, int y)
     {
-      context->base.handler->MouseMotion(context->base,x,y);
+      if( context->activeDisplay)
+      {
+        if( context->activeDisplay->handler )
+          context->activeDisplay->handler->MouseMotion(*(context->activeDisplay),x,y);
+      }else{
+        context->base.handler->MouseMotion(context->base,x,y);
+      }
     }
 
     void Resize( int width, int height )
@@ -231,42 +260,44 @@ namespace pangolin
     return displays[name];
   }
 
+  Display* FindChild(Display& parent, int x, int y)
+  {
+    for( map<string,Display*>::const_iterator i = parent.displays.begin(); i != parent.displays.end(); ++i )
+      if( i->second->v.Contains(x,y) )
+        return i->second;
+    return 0;
+  }
+
   void Handler::Keyboard(Display& d, unsigned char key, int x, int y)
   {
-    // Call childs handler
-    for( map<string,Display*>::const_iterator i = d.displays.begin(); i != d.displays.end(); ++i )
+    Display* child = FindChild(d,x,y);
+    if( child)
     {
-      Handler* ch = i->second->handler;
-      if( ch && i->second->v.Contains(x,y) ) {
-        ch->Keyboard(*(i->second),key,x,y);
-        break;
-      }
+      context->activeDisplay = child;
+      if( child->handler)
+        child->handler->Keyboard(*child,key,x,y);
     }
   }
 
   void Handler::Mouse(Display& d, int button, int state, int x, int y)
   {
-    // Call childs handler
-    for( map<string,Display*>::const_iterator i = d.displays.begin(); i != d.displays.end(); ++i )
+    Display* child = FindChild(d,x,y);
+    if( child )
     {
-      Handler* ch = i->second->handler;
-      if( ch && i->second->v.Contains(x,y) ) {
-        ch->Mouse(*(i->second),button,state,x,y);
-        break;
-      }
+      context->activeDisplay = child;
+      if( child->handler)
+        child->handler->Mouse(*child,button,state,x,y);
     }
   }
 
   void Handler::MouseMotion(Display& d, int x, int y)
   {
-    // Call childs handler
-    for( map<string,Display*>::const_iterator i = d.displays.begin(); i != d.displays.end(); ++i )
+    Display* child = FindChild(d,x,y);
+    if( child )
     {
-      Handler* ch = i->second->handler;
-      if( ch && i->second->v.Contains(x,y) ) {
-        ch->MouseMotion(*(i->second),x,y);
-        break;
-      }
+      context->activeDisplay = child;
+      if( child->handler)
+        child->handler->MouseMotion(*child,x,y);
     }
   }
 
@@ -281,9 +312,6 @@ namespace pangolin
 
     if( state == 0 )
     {
-      // mouse down
-      move_mode |= 1 << button;
-
       // Wheel
       if( button == 3 || button == 4)
       {
@@ -293,14 +321,9 @@ namespace pangolin
         OpenGlMatrixSpec& spec = cam_state->stacks[GlModelView];
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
       }
-
-    }else if( state == 1 )
-    {
-      // mouse up
-      move_mode &= ~(1 << button);
     }
 
-    cout << state << " " << button << ": " << move_mode << endl;
+    cout << state << " " << button << ": " << context->mouse_state << endl;
   }
 
   void Handler3D::MouseMotion(Display&, int x, int y)
@@ -316,15 +339,15 @@ namespace pangolin
       double T_nc[3*4];
       LieSetIdentity(T_nc);
 
-      if( move_mode == 1 )
+      if( context->mouse_state == 1 )
       {
         Rotation<>(T_nc,delta[1]*0.01, -delta[0]*0.01, 0.0);
-      }else if( move_mode == 2 )
+      }else if( context->mouse_state == 2 )
       {
         // Middle Drag: in plane translate
         const double t[] = { -delta[0]*tf, -delta[1]*tf, 0};
         LieSetTranslation<>(T_nc,t);
-      }else if( move_mode == 5)
+      }else if( context->mouse_state == 5)
       {
         // Left and Right Drag: in plane rotate
         Rotation<>(T_nc,0.0,0.0, delta[0]*0.01);

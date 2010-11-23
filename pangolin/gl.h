@@ -176,7 +176,7 @@ namespace pangolin
   struct Handler3D : Handler
   {
     Handler3D(OpenGlRenderState& cam_state)
-      : cam_state(&cam_state), tf(0.01), cameraspec(CameraSpecOpenGl), move_mode(0) {};
+      : cam_state(&cam_state), tf(0.01), cameraspec(CameraSpecOpenGl) {};
 
     void SetOpenGlCamera();
     void Mouse(Display&, int button, int state, int x, int y);
@@ -185,7 +185,6 @@ namespace pangolin
     OpenGlRenderState* cam_state;
     float tf;
     CameraSpec cameraspec;
-    int move_mode;
     float last_pos[2];
   };
 
