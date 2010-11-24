@@ -58,7 +58,8 @@ namespace pangolin
   //! @brief Unit for measuring quantities
   enum Unit {
     Fraction,
-    Pixel
+    Pixel,
+    ReversePixel
   };
 
   //! @brief Defines typed quantity
@@ -66,9 +67,10 @@ namespace pangolin
   //! fraction in interval [0,1]
   struct Attach {
     Attach() : unit(Fraction), p(0) {}
-    Attach(int p) : unit(Pixel), p(p) {}
+    Attach(int p) : unit(p >=0 ? Pixel : ReversePixel), p(abs(p)) {}
     Attach(GLfloat p) : unit(Fraction), p(p) {}
     Attach(GLdouble p) : unit(Fraction), p(p) {}
+    Attach(int p, bool reverse) : unit(ReversePixel), p(p) {}
     Unit unit;
     GLfloat p;
   };
@@ -89,6 +91,8 @@ namespace pangolin
     Viewport(GLint l,GLint b,GLint w,GLint h);
     void Activate() const;
     bool Contains(int x, int y) const;
+    Viewport Inset(int i) const;
+    Viewport Inset(int horiz, int vert) const;
     GLint r() const;
     GLint t() const;
     GLfloat aspect() const;
@@ -131,10 +135,18 @@ namespace pangolin
   struct OpenGlRenderState
   {
     static void ApplyIdentity();
+    static void ApplyWindowCoords();
 
     void Apply() const;
     OpenGlRenderState& Set(OpenGlMatrixSpec spec);
     std::map<OpenGlStack,OpenGlMatrixSpec> stacks;
+  };
+
+  enum Layout
+  {
+    LayoutOverlay,
+    LayoutVertical,
+    LayoutHorizontal
   };
 
   // Forward declaration
@@ -143,7 +155,9 @@ namespace pangolin
   //! @brief A Display manages the location and resizing of an OpenGl viewport.
   struct View
   {
-    View() : aspect(0.0), top(1.0),left(0),right(1.0),bottom(0),hlock(LockCenter),vlock(LockCenter),handler(0) {}
+    View()
+      : aspect(0.0), top(1.0),left(0),right(1.0),bottom(0), hlock(LockCenter),vlock(LockCenter),
+        layout(LayoutOverlay), handler(0) {}
 
     //! Activate Displays viewport for drawing within this area
     void Activate() const;
@@ -151,7 +165,18 @@ namespace pangolin
     void Activate(const OpenGlRenderState& state ) const;
 
     //! Given the specification of Display, compute viewport
-    void RecomputeViewport(const Viewport& parent);
+    virtual void Resize(const Viewport& parent);
+
+    //! Instruct all children to resize
+    virtual void ResizeChildren();
+
+    //! Perform any automatic rendering for this View.
+    //! Default implementation simply instructs children to render themselves.
+    virtual void Render();
+
+    //! Instruct all children to render themselves if appropriate
+    virtual void RenderChildren();
+
 
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
     View& SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect = false);
@@ -170,6 +195,7 @@ namespace pangolin
     Attach top, left, right, bottom;
     Lock hlock;
     Lock vlock;
+    Layout layout;
 
     // Cached absolute viewport (recomputed on resize)
     Viewport v;
@@ -215,6 +241,19 @@ namespace pangolin
     GLdouble rot_center[3];
   };
 
+  struct Panal : public View
+  {
+    void Render();
+  };
+
+  struct Button : public View, Handler
+  {
+    Button();
+    void Mouse(View&, int button, int state, int x, int y);
+    void Render();
+  };
+
+  View& DisplayBase();
   View& Display(std::string name);
 
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );

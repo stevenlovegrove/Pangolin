@@ -7,6 +7,8 @@ SET(
   platform.h
   simple_math.h
   gl.h gl_internal.h gl.cpp
+  vars.h
+  widgets.h widgets.cpp
 )
 
 #######################################################

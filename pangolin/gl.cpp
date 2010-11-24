@@ -59,6 +59,11 @@ namespace pangolin
     return context->quit;
   }
 
+  View& DisplayBase()
+  {
+    return context->base;
+  }
+
   View& Display(std::string name)
   {
     // Get / Create View
@@ -73,45 +78,6 @@ namespace pangolin
       return *v;
     }
   }
-
-  View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect)
-  {
-    SetBounds(top,bottom,left,right,0.0);
-    aspect = keep_aspect ? v.aspect() : 0;
-    return *this;
-  }
-
-  View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, double aspect)
-  {
-    this->left = left;
-    this->top = top;
-    this->right = right;
-    this->bottom = bottom;
-    this->aspect = aspect;
-    this->RecomputeViewport(context->base.v);
-    return *this;
-  }
-
-  View& View::SetAspect(double aspect)
-  {
-    this->aspect = aspect;
-    this->RecomputeViewport(context->base.v);
-    return *this;
-  }
-
-  View& View::SetLock(Lock horizontal, Lock vertical )
-  {
-    vlock = vertical;
-    hlock = horizontal;
-    return *this;
-  }
-
-  View& View::SetHandler(Handler* h)
-  {
-    handler = h;
-    return *this;
-  }
-
 
   namespace process
   {
@@ -178,7 +144,7 @@ namespace pangolin
     void Resize( int width, int height )
     {
       Viewport win(0,0,width,height);
-      context->base.RecomputeViewport(win);
+      context->base.Resize(win);
     }
   }
 
@@ -216,6 +182,15 @@ namespace pangolin
     return l <= x && x < (l+w) && b <= y && y < (b+h);
   }
 
+  Viewport Viewport::Inset(int i) const
+  {
+    return Viewport(l+i, b+i, w-2*i, h-2*i);
+  }
+
+  Viewport Viewport::Inset(int horiz, int vert) const
+  {
+    return Viewport(l+horiz, b+vert, w-horiz, h-vert);
+  }
 
   void OpenGlMatrixSpec::Load() const
   {
@@ -243,19 +218,37 @@ namespace pangolin
     glLoadIdentity();
   }
 
+  void OpenGlRenderState::ApplyWindowCoords()
+  {
+    context->base.v.Activate();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0, context->base.v.w, 0, context->base.v.h);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+  }
+
+
   OpenGlRenderState& OpenGlRenderState::Set(OpenGlMatrixSpec spec)
   {
     stacks[spec.type] = spec;
     return *this;
   }
 
-  void View::RecomputeViewport(const Viewport& p)
+  int AttachAbs( int low, int high, Attach a)
+  {
+    if( a.unit == Pixel ) return low + a.p;
+    if( a.unit == ReversePixel ) return high - a.p;
+    return low + a.p * (high - low);
+  }
+
+  void View::Resize(const Viewport& p)
   {
     // Compute Bounds based on specification
-    v.l = p.l + (left.unit == Pixel ) ? (left.p) : ( left.p * (p.r()-p.l) );
-    v.b = p.b + (bottom.unit == Pixel ) ? (bottom.p) : ( bottom.p * (p.t()-p.b) );
-    const int r = p.l + (right.unit == Pixel ) ? (right.p) : ( right.p * (p.r()-p.l) );
-    const int t = p.b + (top.unit == Pixel ) ? (top.p) : ( top.p * (p.t()-p.b) );
+    v.l = AttachAbs(p.l,p.r(),left);
+    v.b = AttachAbs(p.b,p.t(),bottom);
+    const int r = AttachAbs(p.l,p.r(),right);
+    const int t = AttachAbs(p.b,p.t(),top);
     v.w = r - v.l;
     v.h = t - v.b;
 
@@ -278,11 +271,37 @@ namespace pangolin
       }
     }
 
-    // Resize children, if any
-    for( map<string,View*>::const_iterator i = views.begin(); i != views.end(); ++i )
+    ResizeChildren();
+  }
+
+  void View::ResizeChildren()
+  {
+    if( layout == LayoutOverlay )
     {
-      i->second->RecomputeViewport(v);
+      for( map<string,View*>::const_iterator i = views.begin(); i != views.end(); ++i )
+        i->second->Resize(v);
+    }else if( layout == LayoutVertical )
+    {
+      // Allocate space incrementally
+      const int margin = 8;
+      Viewport space = v.Inset(margin);
+      for( map<string,View*>::const_iterator i = views.begin(); i != views.end(); ++i )
+      {
+        i->second->Resize(space);
+        space.h = i->second->v.b - margin - space.b;
+      }
     }
+  }
+
+  void View::Render()
+  {
+    RenderChildren();
+  }
+
+  void View::RenderChildren()
+  {
+    for( map<string,View*>::const_iterator i = views.begin(); i != views.end(); ++i )
+      i->second->Render();
   }
 
   void View::Activate() const
@@ -300,6 +319,44 @@ namespace pangolin
   View*& View::operator[](std::string name)
   {
     return views[name];
+  }
+
+  View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect)
+  {
+    SetBounds(top,bottom,left,right,0.0);
+    aspect = keep_aspect ? v.aspect() : 0;
+    return *this;
+  }
+
+  View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, double aspect)
+  {
+    this->left = left;
+    this->top = top;
+    this->right = right;
+    this->bottom = bottom;
+    this->aspect = aspect;
+    this->Resize(context->base.v);
+    return *this;
+  }
+
+  View& View::SetAspect(double aspect)
+  {
+    this->aspect = aspect;
+    this->Resize(context->base.v);
+    return *this;
+  }
+
+  View& View::SetLock(Lock horizontal, Lock vertical )
+  {
+    vlock = vertical;
+    hlock = horizontal;
+    return *this;
+  }
+
+  View& View::SetHandler(Handler* h)
+  {
+    handler = h;
+    return *this;
   }
 
   View* FindChild(View& parent, int x, int y)
@@ -357,7 +414,6 @@ namespace pangolin
       OpenGlMatrixSpec& proj = cam_state->stacks[GlProjection];
       // TODO: check it actually exists!
       // Find 3D point using depth buffer
-      glEnable(GL_DEPTH_TEST);
       glReadBuffer(GL_FRONT);
       GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
       const int zl = (hwin*2+1);
@@ -471,6 +527,88 @@ namespace pangolin
     return P;
   }
 
+  const static int border = 1;
+  const static int tab_w = 15;
+  const static int tab_h = 20;
+  const static int tab_p = 5;
+  const static float colour_s1[4] = {0.0, 0.0, 0.0, 1.0};
+  const static float colour_s2[4] = {0.3, 0.3, 0.3, 1.0};
+  const static float colour_bb[4] = {0.0, 0.0, 0.0, 0.1};
+  const static float colour_bg[4] = {1.0, 1.0, 1.0, 0.6};
+  const static float colour_fg[4] = {1.0, 1.0 ,1.0, 0.8};
+  const static float colour_tx[4] = {0.0, 0.0, 0.0, 1.0};
+  const static float colour_hl[4] = {0.9, 0.9, 0.9, 1.0};
+  const static float colour_dn[4] = {1.0, 0.5 ,0.5, 1.0};
+  static void* font = GLUT_BITMAP_HELVETICA_12;
+  static int text_height = 8; //glutBitmapHeight(font) * 0.7;
+
+  void glRect(Viewport v)
+  {
+    glRectf(v.l,v.t(),v.r(),v.b);
+  }
+
+  void glRect(Viewport v, int inset)
+  {
+    glRectf(v.l+inset,v.t()-inset,v.r()-inset,v.b+inset);
+  }
+
+  void DrawShadowRect(float x1, float y1, float x2, float y2, bool pushed)
+  {
+    glColor4fv(pushed ? colour_s1 : colour_s2);
+    glBegin(GL_LINE_STRIP);
+      glVertex2f(x2,y1);
+      glVertex2f(x1,y1);
+      glVertex2f(x1,y2);
+    glEnd();
+
+    glColor3fv(pushed ? colour_s2 : colour_s1);
+    glBegin(GL_LINE_STRIP);
+      glVertex2f(x2,y1);
+      glVertex2f(x2,y2);
+      glVertex2f(x1,y2);
+    glEnd();
+  }
+
+  void Panal::Render()
+  {
+    glColor4fv(colour_bb);
+    glRect(v);
+    glColor4fv(colour_bg);
+    glRect(v);
+    glRect(v,border);
+
+    RenderChildren();
+  }
+
+  Button::Button()
+  {
+    top = 1.0; bottom = -30;
+    left = 0; right = 1.0;
+    hlock = LockLeft;
+    vlock = LockBottom;
+    handler = this;
+  }
+
+  void Button::Mouse(View&, int button, int state, int x, int y)
+  {
+    cout << "Mouse" << endl;
+  }
+
+  void Button::Render()
+  {
+    const bool pushed = false;
+    const string text = "test";
+    const int text_width = glutBitmapLength(font,(unsigned char*)text.c_str());
+
+    DrawShadowRect(v.l,v.t(),v.r(),v.b, pushed);
+    glColor4fv(pushed ? colour_dn : colour_fg );
+    glRect(v.Inset(border));
+    glColor4fv(colour_tx);
+    glRasterPos2f( v.l + (v.w-text_width)/2.0, v.b + (v.h-text_height)/2.0 );
+  //  glRasterPos2f((w-text_width) / 2.0, (h-text_height) / 2.0 );
+    glutBitmapString(font,(unsigned char*)text.c_str());
+
+  }
 
 
 }
