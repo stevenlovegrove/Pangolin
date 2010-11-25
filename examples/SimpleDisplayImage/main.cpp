@@ -87,6 +87,7 @@ int main( int /*argc*/, char* argv[] )
 
     // Activate efficiently by object
     d_cam.Activate(s_cam);
+    glEnable(GL_DEPTH_TEST);
 
 
 //    float windowAspect = glutGet(GLUT_WINDOW_WIDTH)/ (float)glutGet(GLUT_WINDOW_HEIGHT);

@@ -15,6 +15,9 @@ namespace pangolin
     View base;
     std::map<std::string,View*> all_views;
 
+//    // State relating to
+//    View* currentDisplay;
+
     // State relating to interactivity
     bool quit;
     int mouse_state;

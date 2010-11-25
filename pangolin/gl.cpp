@@ -74,7 +74,8 @@ namespace pangolin
     }else{
       View* v = new View();
       context->all_views[name] = v;
-      context->base[name] = v;
+//      context->base[name] = v;
+      context->base.views.push_back(v);
       return *v;
     }
   }
@@ -278,17 +279,17 @@ namespace pangolin
   {
     if( layout == LayoutOverlay )
     {
-      for( map<string,View*>::const_iterator i = views.begin(); i != views.end(); ++i )
-        i->second->Resize(v);
+      for( vector<View*>::const_iterator i = views.begin(); i != views.end(); ++i )
+        (*i)->Resize(v);
     }else if( layout == LayoutVertical )
     {
       // Allocate space incrementally
       const int margin = 8;
       Viewport space = v.Inset(margin);
-      for( map<string,View*>::const_iterator i = views.begin(); i != views.end(); ++i )
+      for( vector<View*>::const_iterator i = views.begin(); i != views.end(); ++i )
       {
-        i->second->Resize(space);
-        space.h = i->second->v.b - margin - space.b;
+        (*i)->Resize(space);
+        space.h = (*i)->v.b - margin - space.b;
       }
     }
   }
@@ -300,8 +301,8 @@ namespace pangolin
 
   void View::RenderChildren()
   {
-    for( map<string,View*>::const_iterator i = views.begin(); i != views.end(); ++i )
-      i->second->Render();
+    for( vector<View*>::const_iterator i = views.begin(); i != views.end(); ++i )
+      (*i)->Render();
   }
 
   void View::Activate() const
@@ -315,11 +316,6 @@ namespace pangolin
     state.Apply();
   }
 
-
-  View*& View::operator[](std::string name)
-  {
-    return views[name];
-  }
 
   View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect)
   {
@@ -361,9 +357,9 @@ namespace pangolin
 
   View* FindChild(View& parent, int x, int y)
   {
-    for( map<string,View*>::const_iterator i = parent.views.begin(); i != parent.views.end(); ++i )
-      if( i->second->v.Contains(x,y) )
-        return i->second;
+    for( vector<View*>::const_iterator i = parent.views.begin(); i != parent.views.end(); ++i )
+      if( (*i)->v.Contains(x,y) )
+        return (*i);
     return 0;
   }
 
@@ -413,6 +409,7 @@ namespace pangolin
     {
       OpenGlMatrixSpec& proj = cam_state->stacks[GlProjection];
       // TODO: check it actually exists!
+
       // Find 3D point using depth buffer
       glReadBuffer(GL_FRONT);
       GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
@@ -420,12 +417,13 @@ namespace pangolin
       const int zsize = zl*zl;
       GLfloat zs[zsize];
       glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
-      GLfloat z = *(std::min_element(zs,zs+zsize));
+      last_z = *(std::min_element(zs,zs+zsize));
 
-      if( z != 1 )
+      if( last_z != 1 )
       {
-        gluUnProject(x,y,z,Identity4d,proj.m,viewport,rot_center,rot_center+1,rot_center+2);
+        gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,rot_center,rot_center+1,rot_center+2);
       }else{
+        // Points on far clipping plane are invalid
         SetZero<3,1>(rot_center);
       }
 
@@ -448,7 +446,7 @@ namespace pangolin
 //    cout << state << " " << button << ": " << context->mouse_state << endl;
   }
 
-  void Handler3D::MouseMotion(View&, int x, int y)
+  void Handler3D::MouseMotion(View& display, int x, int y)
   {
     const int delta[2] = {(x-last_pos[0]),(y-last_pos[1])};
     const float mag = delta[0]*delta[0] + delta[1]*delta[1];
@@ -461,19 +459,42 @@ namespace pangolin
       double T_nc[3*4];
       LieSetIdentity(T_nc);
 
-      if( context->mouse_state == 1 )
-      {
-        Rotation<>(T_nc,-delta[1]*0.01, -delta[0]*0.01, 0.0);
-      }else if( context->mouse_state == 2 )
+      if( context->mouse_state == 2 )
       {
         // Middle Drag: in plane translate
-        const double t[] = { -10*delta[0]*tf, 10*delta[1]*tf, 0};
-        LieSetTranslation<>(T_nc,t);
+        Rotation<>(T_nc,-delta[1]*0.01, -delta[0]*0.01, 0.0);
+      }else if( context->mouse_state == 1 )
+      {
+        // Left Drag: in plane translate
+        if( last_z != 1 )
+        {
+          //TODO Check proj exists
+          OpenGlMatrixSpec& proj = cam_state->stacks[GlProjection];
+          GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
+          GLdouble np[2];
+          gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,np,np+1,np+2);
+          const double t[] = { np[0] - rot_center[0], np[1] - rot_center[1], 0};
+          LieSetTranslation<>(T_nc,t);
+          std::copy(np,np+3,rot_center);
+        }else{
+          const double t[] = { -10*delta[0]*tf, 10*delta[1]*tf, 0};
+          LieSetTranslation<>(T_nc,t);
+        }
       }else if( context->mouse_state == 5)
       {
-        // Left and Right Drag: in plane rotate
-        Rotation<>(T_nc,0.0,0.0, delta[0]*0.01);
-//        T_nc[11] = delta[1]*0.01;
+        // Left and Right Drag: in plane rotate about object
+//        Rotation<>(T_nc,0.0,0.0, delta[0]*0.01);
+
+        double T_2c[3*4];
+        Rotation<>(T_2c,0.0,0.0, delta[0]*0.01);
+        double mrotc[3];
+        MatMul<3,1>(mrotc, rot_center, -1.0);
+        LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
+        double T_n2[3*4];
+        LieSetIdentity<>(T_n2);
+        LieSetTranslation<>(T_n2,rot_center);
+        LieMulSE3(T_nc, T_n2, T_2c );
+
       }else if( context->mouse_state == 4)
       {
         // Right Drag: object centric rotation
@@ -526,89 +547,5 @@ namespace pangolin
     for( int i=0; i<4; ++i ) P.m[i*4+i] = 1;
     return P;
   }
-
-  const static int border = 1;
-  const static int tab_w = 15;
-  const static int tab_h = 20;
-  const static int tab_p = 5;
-  const static float colour_s1[4] = {0.0, 0.0, 0.0, 1.0};
-  const static float colour_s2[4] = {0.3, 0.3, 0.3, 1.0};
-  const static float colour_bb[4] = {0.0, 0.0, 0.0, 0.1};
-  const static float colour_bg[4] = {1.0, 1.0, 1.0, 0.6};
-  const static float colour_fg[4] = {1.0, 1.0 ,1.0, 0.8};
-  const static float colour_tx[4] = {0.0, 0.0, 0.0, 1.0};
-  const static float colour_hl[4] = {0.9, 0.9, 0.9, 1.0};
-  const static float colour_dn[4] = {1.0, 0.5 ,0.5, 1.0};
-  static void* font = GLUT_BITMAP_HELVETICA_12;
-  static int text_height = 8; //glutBitmapHeight(font) * 0.7;
-
-  void glRect(Viewport v)
-  {
-    glRectf(v.l,v.t(),v.r(),v.b);
-  }
-
-  void glRect(Viewport v, int inset)
-  {
-    glRectf(v.l+inset,v.t()-inset,v.r()-inset,v.b+inset);
-  }
-
-  void DrawShadowRect(float x1, float y1, float x2, float y2, bool pushed)
-  {
-    glColor4fv(pushed ? colour_s1 : colour_s2);
-    glBegin(GL_LINE_STRIP);
-      glVertex2f(x2,y1);
-      glVertex2f(x1,y1);
-      glVertex2f(x1,y2);
-    glEnd();
-
-    glColor3fv(pushed ? colour_s2 : colour_s1);
-    glBegin(GL_LINE_STRIP);
-      glVertex2f(x2,y1);
-      glVertex2f(x2,y2);
-      glVertex2f(x1,y2);
-    glEnd();
-  }
-
-  void Panal::Render()
-  {
-    glColor4fv(colour_bb);
-    glRect(v);
-    glColor4fv(colour_bg);
-    glRect(v);
-    glRect(v,border);
-
-    RenderChildren();
-  }
-
-  Button::Button()
-  {
-    top = 1.0; bottom = -30;
-    left = 0; right = 1.0;
-    hlock = LockLeft;
-    vlock = LockBottom;
-    handler = this;
-  }
-
-  void Button::Mouse(View&, int button, int state, int x, int y)
-  {
-    cout << "Mouse" << endl;
-  }
-
-  void Button::Render()
-  {
-    const bool pushed = false;
-    const string text = "test";
-    const int text_width = glutBitmapLength(font,(unsigned char*)text.c_str());
-
-    DrawShadowRect(v.l,v.t(),v.r(),v.b, pushed);
-    glColor4fv(pushed ? colour_dn : colour_fg );
-    glRect(v.Inset(border));
-    glColor4fv(colour_tx);
-    glRasterPos2f( v.l + (v.w-text_width)/2.0, v.b + (v.h-text_height)/2.0 );
-  //  glRasterPos2f((w-text_width) / 2.0, (h-text_height) / 2.0 );
-    glutBitmapString(font,(unsigned char*)text.c_str());
-
-  }
-
 
 }

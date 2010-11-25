@@ -1,9 +1,10 @@
 #ifndef PANGOLIN_GL_H
 #define PANGOLIN_GL_H
 
+#include "platform.h"
+#include <string>
 #include <map>
-#include "pangolin.h"
-
+#include <vector>
 #include <GL/gl.h>
 
 #ifdef HAVE_GLUT
@@ -201,13 +202,14 @@ namespace pangolin
     Viewport v;
 
     // Access sub-displays by name
-    View*& operator[](std::string name);
+//    View*& operator[](std::string name);
 
     // Input event handler (if any)
     Handler* handler;
 
     // Map for sub-displays (if any)
-    std::map<std::string,View*> views;
+    std::vector<View*> views;
+//    std::map<std::string,View*> views;
 
   private:
     // Private copy constructor
@@ -237,20 +239,9 @@ namespace pangolin
     int hwin;
     float tf;
     CameraSpec cameraspec;
+    GLfloat last_z;
     GLint last_pos[2];
     GLdouble rot_center[3];
-  };
-
-  struct Panal : public View
-  {
-    void Render();
-  };
-
-  struct Button : public View, Handler
-  {
-    Button();
-    void Mouse(View&, int button, int state, int x, int y);
-    void Render();
   };
 
   View& DisplayBase();

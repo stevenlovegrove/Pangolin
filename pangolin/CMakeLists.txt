@@ -7,7 +7,7 @@ SET(
   platform.h
   simple_math.h
   gl.h gl_internal.h gl.cpp
-  vars.h
+  vars.h vars.cpp
   widgets.h widgets.cpp
 )
 

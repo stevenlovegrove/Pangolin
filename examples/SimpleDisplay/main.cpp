@@ -6,6 +6,13 @@ using namespace pangolin;
 
 int main( int /*argc*/, char* argv[] )
 {
+//  Var<string> ts = Get<string>("main","123.9 Hello");
+//  Var<float> tf = Get<float>("main");
+//  Var<int> ti = Get<int>("main");
+//  cout << *ti << endl;
+//  cout << *tf << endl;
+//  cout << *ts << endl;
+
   // Create OpenGL window in single line thanks to GLUT
   CreateGlutWindowAndBind("Main",640,480);
 
@@ -17,24 +24,17 @@ int main( int /*argc*/, char* argv[] )
   s_cam.Set(IdentityMatrix(GlModelView));
 
   // Define viewports with mixed fractional and pixel units
-  DisplayBase().views["panal"] = new Panal();
-  View& d_panal = *DisplayBase().views["panal"];
-  d_panal.SetBounds(1.0, 0.0, 0, 200);
-  d_panal.layout = LayoutVertical;
+  View* d_panal = new Panal();
+  DisplayBase().views.push_back(d_panal);
+  d_panal->SetBounds(1.0, 0.0, 0, 200);
+  d_panal->layout = LayoutVertical;
 
 //  View& d_panal = Display("panal")
 //    .SetBounds(1.0, 0.0, 0, 200);
   View& d_cam = Display("cam")
-//    .SetBounds(1.0, 0.0, 200, 1.0, 640.0f/480.0f)
+    .SetBounds(1.0, 0.0, 200, 1.0, 640.0f/480.0f)
     .SetAspect(640/480.0)
     .SetHandler(new Handler3D(s_cam));
-
-  Button button1;
-  Button button2;
-  Button button3;
-  d_panal.views["1"] = &button1;
-  d_panal.views["2"] = &button2;
-  d_panal.views["3"] = &button3;
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while(!pangolin::ShouldQuit())
@@ -50,7 +50,7 @@ int main( int /*argc*/, char* argv[] )
 //    d_panal.Activate();
     OpenGlRenderState::ApplyWindowCoords();
     glDisable(GL_DEPTH_TEST);
-    d_panal.Render();
+    d_panal->Render();
 
     glutSwapBuffers();
     glutMainLoopEvent();
