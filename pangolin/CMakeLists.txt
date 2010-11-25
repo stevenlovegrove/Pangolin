@@ -15,8 +15,7 @@ SET(
 ## Find required dependencies
 
 FIND_PACKAGE(OpenGL REQUIRED QUIET)
-
-TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${OpenGL_LIBRARY} )
+FIND_PACKAGE(Boost REQUIRED QUIET)
 
 #######################################################
 ## Find optional dependencies
@@ -41,17 +40,13 @@ ENDIF()
 FIND_PACKAGE(FREEGLUT QUIET)
 IF(FREEGLUT_FOUND)
   SET(HAVE_GLUT 1)
-  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${FREEGLUT_LIBRARY} GLU )
+  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${FREEGLUT_LIBRARY} )
   MESSAGE(STATUS "Freeglut Found and Enabled")
 ENDIF()
 
-#FIND_PACKAGE(ROBOTVISION QUIET)
-IF(ROBOTVISION_FOUND)
-  INCLUDE_DIRECTORIES(${ROBOTVISION_INCLUDE_DIR})
-  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${ROBOTVISION_LIBRARY} )
-  SET(HAVE_ROBOTVISION 1)
-  MESSAGE(STATUS "RobotVision Found and Enabled")
-ENDIF()
+## Apply required dependencies settings
+INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${OPENGL_INCLUDE_DIR} )
+TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${OPENGL_LIBRARIES} )
 
 #######################################################
 ## Create configure file for inclusion in library

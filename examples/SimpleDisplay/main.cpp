@@ -4,14 +4,23 @@
 using namespace std;
 using namespace pangolin;
 
+void test(std::string name, _var& var)
+{
+  cout << name << endl;
+}
+
+//Var<string> testvar()
+//{
+//  return Get<string>("main","123.9 Hello");
+//}
+
 int main( int /*argc*/, char* argv[] )
 {
-//  Var<string> ts = Get<string>("main","123.9 Hello");
-//  Var<float> tf = Get<float>("main");
-//  Var<int> ti = Get<int>("main");
-//  cout << *ti << endl;
-//  cout << *tf << endl;
-//  cout << *ts << endl;
+  Var<int> test("test",5);
+//  Var<float> tf = Get<float>("test");
+  Var<float> tf("test");
+  cout << *tf << endl;
+  return 0;
 
   // Create OpenGL window in single line thanks to GLUT
   CreateGlutWindowAndBind("Main",640,480);

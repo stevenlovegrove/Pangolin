@@ -2,6 +2,10 @@
 
 * OpenGL
 
+* Boost
+  (win) http://www.boost.org/users/download/
+  (deb) sudo apt-get install boost-dev
+
 == Optional Dependencies ==
 
 * FreeGlut / GLU
