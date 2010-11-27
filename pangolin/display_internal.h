@@ -15,8 +15,9 @@ namespace pangolin
     View base;
     std::map<std::string,View*> all_views;
 
-    // Reserve one texture
-    GLuint tex;
+    // Manage fullscreen (ToggleFullscreen is quite new)
+    bool is_fullscreen;
+    GLint windowed_size[2];
 
     // State relating to interactivity
     bool quit;

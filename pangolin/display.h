@@ -5,12 +5,14 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <GL/gl.h>
+#include <cmath>
 
 #ifdef HAVE_GLUT
-#include <GL/glut.h>
+#include <GL/freeglut_std.h>
 #include <GL/freeglut_ext.h>
 #endif
+
+#include <GL/gl.h>
 
 #define GLUT_KEY_ESCAPE 27
 #define GLUT_KEY_TAB 9
@@ -77,7 +79,7 @@ namespace pangolin
   //! fraction in interval [0,1]
   struct Attach {
     Attach() : unit(Fraction), p(0) {}
-    Attach(int p) : unit(p >=0 ? Pixel : ReversePixel), p(abs(p)) {}
+    Attach(int p) : unit(p >=0 ? Pixel : ReversePixel), p(std::abs((float)p)) {}
     Attach(GLfloat p) : unit(Fraction), p(p) {}
     Attach(GLdouble p) : unit(Fraction), p(p) {}
     Attach(int p, bool reverse) : unit(ReversePixel), p(p) {}

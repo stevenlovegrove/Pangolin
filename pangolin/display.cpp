@@ -39,6 +39,7 @@ namespace pangolin
       dc.right = 1.0;
       dc.aspect = 0;
       dc.handler = &StaticHandler;
+      context->is_fullscreen = false;
     #ifdef HAVE_GLUT
       process::Resize(
         glutGet(GLUT_WINDOW_WIDTH),
@@ -107,11 +108,21 @@ namespace pangolin
       y = context->base.v.h - y;
 
       if( key == GLUT_KEY_TAB)
-        glutFullScreenToggle();
-      else if( key == GLUT_KEY_ESCAPE)
-        context->quit = true;
-      else
       {
+      #ifdef HAVE_GLUT
+        if( context->is_fullscreen )
+        {
+          glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
+          context->is_fullscreen = false;
+        }else{
+          glutFullScreen();
+          context->is_fullscreen = true;
+        }
+      #endif
+      }
+      else if( key == GLUT_KEY_ESCAPE) {
+        context->quit = true;
+      } else {
         context->base.handler->Keyboard(context->base,key,x,y);
       }
     }
@@ -167,6 +178,11 @@ namespace pangolin
 
     void Resize( int width, int height )
     {
+      if( !context->is_fullscreen )
+      {
+        context->windowed_size[0] = width;
+        context->windowed_size[1] = width;
+      }
       context->had_input = true;
       context->has_resized = true;
       Viewport win(0,0,width,height);
