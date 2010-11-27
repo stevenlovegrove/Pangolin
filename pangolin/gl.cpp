@@ -54,6 +54,11 @@ namespace pangolin
     }
   }
 
+  void Quit()
+  {
+    context->quit = true;
+  }
+
   bool ShouldQuit()
   {
     return context->quit;
@@ -64,7 +69,7 @@ namespace pangolin
     return context->base;
   }
 
-  View& Display(std::string name)
+  View& Display(const std::string& name)
   {
     // Get / Create View
     std::map<std::string,View*>::iterator vi = context->all_views.find(name);
@@ -112,11 +117,6 @@ namespace pangolin
       {
         // mouse up
         context->mouse_state &= ~(1 << button);
-
-        if(context->mouse_state == 0 )
-        {
-          context->activeDisplay = 0;
-        }
       }
 
       if(fresh_input)
@@ -125,6 +125,11 @@ namespace pangolin
       }else if(context->activeDisplay && context->activeDisplay->handler)
       {
         context->activeDisplay->handler->Mouse(*(context->activeDisplay),button,state,x,y);
+      }
+
+      if(context->mouse_state == 0 )
+      {
+        context->activeDisplay = 0;
       }
     }
 

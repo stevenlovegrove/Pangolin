@@ -56,10 +56,39 @@ void DrawShadowRect(Viewport& v, bool pushed)
 Panal::Panal()
 {
   handler = &StaticHandler;
+  layout = LayoutVertical;
+}
+
+Panal::Panal(const std::string& auto_register_var_prefix)
+{
+  handler = &StaticHandler;
+  layout = LayoutVertical;
+  RegisterNewVarCallback(&Panal::AddVariable,(void*)this,auto_register_var_prefix);
+}
+
+void Panal::AddVariable(void* data, const std::string& name, _Var& var)
+{
+  Panal* thisptr = (Panal*)data;
+
+  const string& title = var.meta_friendly;
+
+  if( var.type_name == typeid(bool).name() )
+  {
+    thisptr->views.push_back(
+        var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var)
+    );
+  }else if( var.type_name == typeid(double).name() || var.type_name == typeid(int).name() )
+  {
+    thisptr->views.push_back( new Slider(title,var) );
+  }
+
 }
 
 void Panal::Render()
 {
+  OpenGlRenderState::ApplyWindowCoords();
+  glDisable(GL_DEPTH_TEST);
+
   glColor4fv(colour_bb);
   glRect(v);
   glColor4fv(colour_bg);
@@ -69,8 +98,16 @@ void Panal::Render()
   RenderChildren();
 }
 
-Button::Button(string title, _tvar<bool>& tv)
-  : /*TVar<bool>(tv),*/ title(title)
+View& CreatePanal(const std::string& name, const std::string& auto_register_var_prefix)
+{
+  Panal* v = new Panal(auto_register_var_prefix);
+  context->all_views[name] = v;
+  context->base.views.push_back(v);
+  return *v;
+}
+
+Button::Button(string title, _Var& tv)
+  : Var<bool>(tv), title(title), down(false)
 {
   top = 1.0; bottom = -20;
   left = 0; right = 1.0;
@@ -82,13 +119,14 @@ Button::Button(string title, _tvar<bool>& tv)
 
 void Button::Mouse(View&, int button, int state, int x, int y)
 {
-  *val = !*val;
+  down = !state;
+  if( state > 0 ) a->Set(!a->Get());
 }
 
 void Button::Render()
 {
-  DrawShadowRect(v, *val);
-  glColor4fv(*val ? colour_dn : colour_fg );
+  DrawShadowRect(v, down);
+  glColor4fv(down ? colour_dn : colour_fg );
   glRect(vinside);
   glColor4fv(colour_tx);
   glRasterPos2fv(raster);
@@ -102,8 +140,8 @@ void Button::ResizeChildren()
   vinside = v.Inset(border);
 }
 
-Checkbox::Checkbox(std::string title, _tvar<bool>& tv)
-  :/*TVar<bool>(tv),*/ title(title)
+Checkbox::Checkbox(std::string title, _Var& tv)
+  :Var<bool>(tv), title(title)
 {
   top = 1.0; bottom = -20;
   left = 0; right = 1.0;
@@ -114,7 +152,8 @@ Checkbox::Checkbox(std::string title, _tvar<bool>& tv)
 
 void Checkbox::Mouse(View&, int button, int state, int x, int y)
 {
-  *val = !*val;
+  if( state == 0 )
+    a->Set(!a->Get());
 }
 
 void Checkbox::ResizeChildren()
@@ -128,8 +167,10 @@ void Checkbox::ResizeChildren()
 
 void Checkbox::Render()
 {
-  DrawShadowRect(vcb, *val);
-  if( *val )
+  const bool val = a->Get();
+
+  DrawShadowRect(vcb, val);
+  if( val )
   {
     glColor4fv(colour_dn);
     glRect(vcb);
@@ -137,6 +178,59 @@ void Checkbox::Render()
   glColor4fv(colour_tx);
   glRasterPos2fv( raster );
   glutBitmapString(font,(unsigned char*)title.c_str());
+}
+
+
+Slider::Slider(std::string title, _Var& tv)
+  :Var<double>(tv), title(title+":")
+{
+  top = 1.0; bottom = -20;
+  left = 0; right = 1.0;
+  hlock = LockLeft;
+  vlock = LockBottom;
+  handler = this;
+}
+
+void Slider::Mouse(View& view, int button, int state, int x, int y)
+{
+  MouseMotion(view,x,y);
+}
+
+void Slider::MouseMotion(View&, int x, int y)
+{
+  const double frac = max(0.0,min(1.0,(double)(x - v.l)/(double)v.w));
+  const double val = frac * (var->meta_range[1] - var->meta_range[0]) + var->meta_range[0];
+  a->Set(val);
+}
+
+
+void Slider::ResizeChildren()
+{
+  raster[0] = v.l;
+  raster[1] = v.b + (v.h-text_height)/2.0;
+}
+
+void Slider::Render()
+{
+  const double val = a->Get();
+
+  glColor4fv(colour_fg);
+  glRect(v);
+
+  glColor4fv(colour_dn);
+  const double norm_val = max(0.0,min(1.0,(val - var->meta_range[0]) / (var->meta_range[1] - var->meta_range[0])));
+  glRect(Viewport(v.l,v.b,v.w*norm_val,v.h));
+
+  glColor4fv(colour_tx);
+  glRasterPos2fv( raster );
+  glutBitmapString(font,(unsigned char*)title.c_str());
+
+  string str = boost::lexical_cast<string>(val);
+  const unsigned int max_chars = 8;
+  if( str.length() > max_chars ) str[max_chars] = '\0';
+  const int l = glutBitmapLength(font,(unsigned char*)str.c_str());
+  glRasterPos2f( v.l + v.w - l, raster[1] );
+  glutBitmapString(font,(unsigned char*)str.c_str());
 }
 
 

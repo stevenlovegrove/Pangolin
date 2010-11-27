@@ -8,17 +8,19 @@
 namespace pangolin
 {
 
-
+View& CreatePanal(const std::string& name, const std::string& auto_register_var_prefix = "");
 
 struct Panal : public View
 {
   Panal();
+  Panal(const std::string& auto_register_var_prefix);
   void Render();
+  static void AddVariable(void* data, const std::string& name, _Var& var);
 };
 
-struct Button : public View, Handler//, TVar<bool>
+struct Button : public View, Handler, Var<bool>
 {
-  Button(std::string title, _tvar<bool>& tv);
+  Button(std::string title, _Var& tv);
   void Mouse(View&, int button, int state, int x, int y);
   void Render();
   std::string title;
@@ -28,12 +30,12 @@ struct Button : public View, Handler//, TVar<bool>
   int text_width;
   GLfloat raster[2];
   Viewport vinside;
-  bool* val;
+  bool down;
 };
 
-struct Checkbox : public View, Handler//, TVar<bool>
+struct Checkbox : public View, Handler, Var<bool>
 {
-  Checkbox(std::string title, _tvar<bool>& tv);
+  Checkbox(std::string title, _Var& tv);
   void Mouse(View&, int button, int state, int x, int y);
   void Render();
   std::string title;
@@ -43,8 +45,20 @@ struct Checkbox : public View, Handler//, TVar<bool>
   int text_width;
   GLfloat raster[2];
   Viewport vcb;
-  bool* val;
+};
 
+struct Slider : public View, Handler, Var<double>
+{
+  Slider(std::string title, _Var& tv);
+  void Mouse(View&, int button, int state, int x, int y);
+  void MouseMotion(View&, int x, int y);
+  void Render();
+  std::string title;
+
+  //Cache params on resize
+  void ResizeChildren();
+  int text_width;
+  GLfloat raster[2];
 };
 
 

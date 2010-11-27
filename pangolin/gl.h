@@ -25,6 +25,9 @@ namespace pangolin
   //! window
   void BindToContext(std::string name);
 
+  //! @brief Request that the program exit
+  void Quit();
+
   //! @brief Returns true if user has requested to close OpenGL window.
   bool ShouldQuit();
 
@@ -245,7 +248,7 @@ namespace pangolin
   };
 
   View& DisplayBase();
-  View& Display(std::string name);
+  View& Display(const std::string& name);
 
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);

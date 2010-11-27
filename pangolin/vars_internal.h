@@ -19,6 +19,7 @@ struct _Var
 
   std::string meta_friendly;
   double meta_range[2];
+  int meta_flags;
 };
 
 // Forward declaration
