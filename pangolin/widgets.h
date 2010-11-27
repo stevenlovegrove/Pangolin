@@ -2,7 +2,7 @@
 #define PANGOLIN_WIDGETS_H
 
 #include "platform.h"
-#include "gl.h"
+#include "display.h"
 #include "vars.h"
 
 namespace pangolin

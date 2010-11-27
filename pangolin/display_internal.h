@@ -1,8 +1,8 @@
-#ifndef PANGOLIN_GL_INTERNAL_H
-#define PANGOLIN_GL_INTERNAL_H
+#ifndef PANGOLIN_DISPLAY_INTERNAL_H
+#define PANGOLIN_DISPLAY_INTERNAL_H
 
 #include "platform.h"
-#include "gl.h"
+#include "display.h"
 
 namespace pangolin
 {
@@ -15,8 +15,8 @@ namespace pangolin
     View base;
     std::map<std::string,View*> all_views;
 
-//    // State relating to
-//    View* currentDisplay;
+    // Reserve one texture
+    GLuint tex;
 
     // State relating to interactivity
     bool quit;
@@ -29,5 +29,5 @@ namespace pangolin
 
 }
 
-#endif // PANGOLIN_GL_INTERNAL_H
+#endif // PANGOLIN_DISPLAY_INTERNAL_H
 

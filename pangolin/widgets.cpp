@@ -1,7 +1,7 @@
 #include "widgets.h"
 
 #include <iostream>
-#include "gl_internal.h"
+#include "display_internal.h"
 
 using namespace std;
 
@@ -211,7 +211,7 @@ void Slider::Mouse(View& view, int button, int state, int x, int y)
 
 void Slider::MouseMotion(View&, int x, int y)
 {
-  if( var->meta_range[0] || var->meta_range[1] )
+  if( var->meta_range[0] != var->meta_range[1] )
   {
     const double frac = max(0.0,min(1.0,(double)(x - v.l)/(double)v.w));
     const double val = frac * (var->meta_range[1] - var->meta_range[0]) + var->meta_range[0];
@@ -230,7 +230,7 @@ void Slider::Render()
 {
   const double val = a->Get();
 
-  if( var->meta_range[0] || var->meta_range[1] )
+  if( var->meta_range[0] != var->meta_range[1] )
   {
     DrawShadowRect(v);
     glColor4fv(colour_fg);

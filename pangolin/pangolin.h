@@ -3,7 +3,7 @@
 
 #include <pangolin/config.h>
 #include "platform.h"
-#include "gl.h"
+#include "display.h"
 #include "widgets.h"
 
 namespace pangolin

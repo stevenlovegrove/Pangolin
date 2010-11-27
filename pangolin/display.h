@@ -1,5 +1,5 @@
-#ifndef PANGOLIN_GL_H
-#define PANGOLIN_GL_H
+#ifndef PANGOLIN_DISPLAY_H
+#define PANGOLIN_DISPLAY_H
 
 #include "platform.h"
 #include <string>
@@ -36,6 +36,11 @@ namespace pangolin
 
   //! @brief Returns true if user has resized the window
   bool HasResized();
+
+  template<typename T>
+  void DrawImageToViewport(T* image, int width, int height, GLint channels = GL_RGBA);
+
+  void DrawTextureToViewport(GLuint texid);
 
   namespace process
   {
@@ -283,6 +288,5 @@ inline GLint pangolin::Viewport::r() const { return l+w;}
 inline GLint pangolin::Viewport::t() const { return b+h;}
 inline GLfloat pangolin::Viewport::aspect() const { return (GLfloat)w / (GLfloat)h; }
 
-
-#endif // PANGOLIN_GL_H
+#endif // PANGOLIN_DISPLAY_H
 

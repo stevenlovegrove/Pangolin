@@ -1,11 +1,9 @@
-#define PANGOLIN_GL_CPP
-
 #include <iostream>
 #include <map>
 
 #include "platform.h"
-#include "gl.h"
-#include "gl_internal.h"
+#include "display.h"
+#include "display_internal.h"
 #include "simple_math.h"
 
 using namespace std;
@@ -454,7 +452,7 @@ namespace pangolin
   View* FindChild(View& parent, int x, int y)
   {
     for( vector<View*>::const_iterator i = parent.views.begin(); i != parent.views.end(); ++i )
-      if( (*i)->v.Contains(x,y) )
+      if( (*i)->vp.Contains(x,y) )
         return (*i);
     return 0;
   }
@@ -640,6 +638,24 @@ namespace pangolin
     std::fill_n(P.m,4*4,0);
     for( int i=0; i<4; ++i ) P.m[i*4+i] = 1;
     return P;
+  }
+
+  void DrawTextureToViewport(GLuint texid)
+  {
+    OpenGlRenderState::ApplyIdentity();
+    glBindTexture(GL_TEXTURE_2D, texid);
+    glEnable(GL_TEXTURE_2D);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0);
+    glVertex2d(-1,-1);
+    glTexCoord2f(1, 0);
+    glVertex2d(1,-1);
+    glTexCoord2f(1, 1);
+    glVertex2d(1,1);
+    glTexCoord2f(0, 1);
+    glVertex2d(-1,1);
+    glEnd();
+    glDisable(GL_TEXTURE_2D);
   }
 
 }

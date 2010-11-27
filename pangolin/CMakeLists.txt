@@ -6,7 +6,7 @@ SET(
   pangolin.h
   platform.h
   simple_math.h
-  gl.h gl_internal.h gl.cpp
+  display.h display_internal.h display.cpp
   vars.h vars_internal.h vars.cpp
   widgets.h widgets.cpp
 )
