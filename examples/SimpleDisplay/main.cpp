@@ -1,25 +1,32 @@
 #include <iostream>
-#include <pangolin/pangolin.h>
 
 using namespace std;
-using namespace pangolin;
 
-void test(std::string name, _var& var)
-{
-  cout << name << endl;
+struct Example { Example() {} Example(int x, int y) :x(x),y(y) {} int x, y; };
+ostream& operator<<(ostream& s, const Example& t) { s << t.x << "," << t.y; return s; }
+istream& operator>>(istream& s, Example& t) {
+  char delim; s >> t.x; s >> delim;
+  if( delim != ',') s.setstate(ios::failbit);
+  s >> t.y; return s;
 }
 
-//Var<string> testvar()
-//{
-//  return Get<string>("main","123.9 Hello");
-//}
+#include <pangolin/pangolin.h>
+using namespace pangolin;
+
 
 int main( int /*argc*/, char* argv[] )
 {
-  Var<int> test("test",5);
-//  Var<float> tf = Get<float>("test");
-  Var<float> tf("test");
-  cout << *tf << endl;
+  Var<Example> te("test", Example(1,2));
+  Var<string> ts("test");
+
+//  cout << te << endl;
+  cout << (string)ts << endl;
+
+  ts = "7,8";
+
+  cout << (string)ts << endl;
+  cout << te << endl;
+
   return 0;
 
   // Create OpenGL window in single line thanks to GLUT
