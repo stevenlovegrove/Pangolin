@@ -5,11 +5,7 @@
 #include "platform.h"
 #include "display.h"
 #include "widgets.h"
-
-namespace pangolin
-{
-
-}
+#include "gl.h"
 
 #endif // PANGOLIN_H
 

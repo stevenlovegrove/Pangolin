@@ -1,25 +1,9 @@
 #include <limits>
 #include <iostream>
 #include <pangolin/pangolin.h>
-#include <pangolin/simple_math.h>
 
 using namespace std;
 using namespace pangolin;
-
-void displayImage(float * imageArray, int width, int height){
-  GLuint  m_texname;
-  glGenTextures(1, &m_texname);
-  glBindTexture(GL_TEXTURE_2D, m_texname);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_FLOAT, imageArray);
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-  DrawTextureToViewport(m_texname);
-
-  glDeleteTextures(1,&m_texname);
-}
 
 void setImageData(float * imageArray, int width, int height){
   for(int i = 0 ; i < width*height;i++) {
@@ -34,7 +18,7 @@ int main( int /*argc*/, char* argv[] )
 
   OpenGlRenderState s_cam;
   s_cam.Set(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
-  s_cam.Set(IdentityMatrix(GlModelView));
+  s_cam.Set(IdentityMatrix(GlModelViewStack));
 
   View& d_cam = Display("cam")
       .SetAspect(-640/480.0)
@@ -44,9 +28,11 @@ int main( int /*argc*/, char* argv[] )
       .SetBounds(1.0,0.3,20,0.3,640.0/480)
       .SetLock(LockLeft,LockTop);
 
-  int width =  640;
-  int height = 480;
+  const int width =  640;
+  const int height = 480;
+
   float * imageArray = new float[width*height];
+  GlTexture imageTexture(width,height,1);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while(!pangolin::ShouldQuit())
@@ -58,12 +44,13 @@ int main( int /*argc*/, char* argv[] )
     glColor3f(1.0,1.0,1.0);
     glutWireTeapot(10.0);
 
-    //Set some random image data
+    //Set some random image data and upload to GPU
     setImageData(imageArray,width,height);
+    imageTexture.Upload(imageArray,GlDataLayoutLuminance);
 
     //display the image
     d_image.Activate();
-    displayImage( imageArray,width,height);
+    imageTexture.RenderToViewport();
 
     glutSwapBuffers();
     glutMainLoopEvent();

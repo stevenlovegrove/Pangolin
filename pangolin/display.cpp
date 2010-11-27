@@ -501,7 +501,7 @@ namespace pangolin
 
     if( state == 0 )
     {
-      OpenGlMatrixSpec& proj = cam_state->stacks[GlProjection];
+      OpenGlMatrixSpec& proj = cam_state->stacks[GlProjectionStack];
       // TODO: check it actually exists!
 
       // Find 3D point using depth buffer
@@ -532,7 +532,7 @@ namespace pangolin
           LieSetTranslation<>(T_nc,rot_center);
           MatMul<3,1>(T_nc+(3*3),(button==3?-1.0:1.0)/5.0);
         }
-        OpenGlMatrixSpec& spec = cam_state->stacks[GlModelView];
+        OpenGlMatrixSpec& spec = cam_state->stacks[GlModelViewStack];
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
       }
     }
@@ -561,7 +561,7 @@ namespace pangolin
         if( last_z != 1 )
         {
           //TODO Check proj exists
-          OpenGlMatrixSpec& proj = cam_state->stacks[GlProjection];
+          OpenGlMatrixSpec& proj = cam_state->stacks[GlProjectionStack];
           GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
           GLdouble np[2];
           gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,np,np+1,np+2);
@@ -601,7 +601,7 @@ namespace pangolin
         LieMulSE3(T_nc, T_n2, T_2c );
       }
 
-      OpenGlMatrixSpec& spec = cam_state->stacks[GlModelView];
+      OpenGlMatrixSpec& spec = cam_state->stacks[GlModelViewStack];
       LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
     }
 
@@ -618,7 +618,7 @@ namespace pangolin
       const double B = -(h-v0) * zNear / fv;
 
       OpenGlMatrixSpec P;
-      P.type = GlProjection;
+      P.type = GlProjectionStack;
       std::fill_n(P.m,4*4,0);
 
       P.m[0*4+0] = 2 * zNear / (R-L);

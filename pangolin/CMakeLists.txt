@@ -9,6 +9,7 @@ SET(
   display.h display_internal.h display.cpp
   vars.h vars_internal.h vars.cpp
   widgets.h widgets.cpp
+  gl.h
 )
 
 #######################################################

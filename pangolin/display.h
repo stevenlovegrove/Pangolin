@@ -37,11 +37,6 @@ namespace pangolin
   //! @brief Returns true if user has resized the window
   bool HasResized();
 
-  template<typename T>
-  void DrawImageToViewport(T* image, int width, int height, GLint channels = GL_RGBA);
-
-  void DrawTextureToViewport(GLuint texid);
-
   namespace process
   {
     //! @brief Tell pangolin to process input to drive display
@@ -121,9 +116,9 @@ namespace pangolin
 
   //! @brief Capture OpenGL matrix types in enum to typing
   enum OpenGlStack {
-    GlProjection = GL_PROJECTION,
-    GlModelView = GL_MODELVIEW,
-    GlTexture = GL_TEXTURE
+    GlProjectionStack = GL_PROJECTION,
+    GlModelViewStack = GL_MODELVIEW,
+    GlTextureStack = GL_TEXTURE
   };
 
   struct CameraSpec {
