@@ -8,13 +8,13 @@
 namespace pangolin
 {
 
-View& CreatePanal(const std::string& name, const std::string& auto_register_var_prefix = "");
+View& CreatePanal(const std::string& name);
 
 struct Panal : public View
 {
   Panal();
   Panal(const std::string& auto_register_var_prefix);
-  void Render();
+  void Render();  
   static void AddVariable(void* data, const std::string& name, _Var& var);
 };
 

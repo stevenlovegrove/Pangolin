@@ -20,6 +20,8 @@ namespace pangolin
 
     // State relating to interactivity
     bool quit;
+    bool had_input;
+    bool has_resized;
     int mouse_state;
     View* activeDisplay;
 

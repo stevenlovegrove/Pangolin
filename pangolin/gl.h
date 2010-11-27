@@ -31,6 +31,12 @@ namespace pangolin
   //! @brief Returns true if user has requested to close OpenGL window.
   bool ShouldQuit();
 
+  //! @brief Returns true if user has interacted with the window since this was last called
+  bool HadInput();
+
+  //! @brief Returns true if user has resized the window
+  bool HasResized();
+
   namespace process
   {
     //! @brief Tell pangolin to process input to drive display
@@ -94,9 +100,14 @@ namespace pangolin
     Viewport() {}
     Viewport(GLint l,GLint b,GLint w,GLint h);
     void Activate() const;
+    void Scissor() const;
+    void ActivateAndScissor() const;
     bool Contains(int x, int y) const;
     Viewport Inset(int i) const;
     Viewport Inset(int horiz, int vert) const;
+
+    static void DisableScissor();
+
     GLint r() const;
     GLint t() const;
     GLfloat aspect() const;
@@ -166,7 +177,20 @@ namespace pangolin
     //! Activate Displays viewport for drawing within this area
     void Activate() const;
 
+    //! Activate Displays and set State Matrices
     void Activate(const OpenGlRenderState& state ) const;
+
+    //! Activate Displays viewport and Scissor for drawing within this area
+    void ActivateAndScissor() const;
+
+    //! Activate Displays viewport and Scissor for drawing within this area
+    void ActivateScissorAndClear() const;
+
+    //! Activate Display and set State Matrices
+    void ActivateAndScissor(const OpenGlRenderState& state ) const;
+
+    //! Activate Display and set State Matrices
+    void ActivateScissorAndClear(const OpenGlRenderState& state ) const;
 
     //! Given the specification of Display, compute viewport
     virtual void Resize(const Viewport& parent);
@@ -201,18 +225,17 @@ namespace pangolin
     Lock vlock;
     Layout layout;
 
-    // Cached absolute viewport (recomputed on resize)
-    Viewport v;
+    // Cached client area (space allocated from parent)
+    Viewport vp;
 
-    // Access sub-displays by name
-//    View*& operator[](std::string name);
+    // Cached absolute viewport (recomputed on resize - respects aspect)
+    Viewport v;
 
     // Input event handler (if any)
     Handler* handler;
 
     // Map for sub-displays (if any)
     std::vector<View*> views;
-//    std::map<std::string,View*> views;
 
   private:
     // Private copy constructor

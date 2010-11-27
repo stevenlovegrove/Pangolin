@@ -64,6 +64,20 @@ namespace pangolin
     return context->quit;
   }
 
+  bool HadInput()
+  {
+    const bool hi = context->had_input;
+    context->had_input = false;
+    return hi;
+  }
+
+  bool HasResized()
+  {
+    const bool hr = context->has_resized;
+    context->has_resized = false;
+    return hr;
+  }
+
   View& DisplayBase()
   {
     return context->base;
@@ -89,6 +103,8 @@ namespace pangolin
   {
     void Keyboard( unsigned char key, int x, int y)
     {
+      context->had_input = true;
+
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
 
@@ -104,6 +120,8 @@ namespace pangolin
 
     void Mouse( int button, int state, int x, int y)
     {
+      context->had_input = true;
+
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
 
@@ -135,6 +153,8 @@ namespace pangolin
 
     void MouseMotion( int x, int y)
     {
+      context->had_input = true;
+
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
 
@@ -149,6 +169,8 @@ namespace pangolin
 
     void Resize( int width, int height )
     {
+      context->had_input = true;
+      context->has_resized = true;
       Viewport win(0,0,width,height);
       context->base.Resize(win);
     }
@@ -181,6 +203,25 @@ namespace pangolin
   void Viewport::Activate() const
   {
     glViewport(l,b,w,h);
+  }
+
+  void Viewport::Scissor() const
+  {
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(l,b,w,h);
+  }
+
+  void Viewport::ActivateAndScissor() const
+  {
+    glViewport(l,b,w,h);
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(l,b,w,h);
+  }
+
+
+  void Viewport::DisableScissor()
+  {
+    glDisable(GL_SCISSOR_TEST);
   }
 
   bool Viewport::Contains(int x, int y) const
@@ -258,22 +299,44 @@ namespace pangolin
     v.w = r - v.l;
     v.h = t - v.b;
 
+    vp = v;
+
     // Adjust based on aspect requirements
     if( aspect != 0 )
     {
       const float current_aspect = (float)v.w / (float)v.h;
-      if( current_aspect < aspect )
+      if( aspect > 0 )
       {
-        //Adjust height
-        const int nh = (int)(v.w / aspect);
-        v.b += vlock == LockBottom ? 0 : (vlock == LockCenter ? (v.h-nh)/2 : (v.h-nh) );
-        v.h = nh;
-      }else if( current_aspect > aspect )
-      {
-        //Adjust width
-        const int nw = (int)(v.h * aspect);
-        v.l += hlock == LockLeft? 0 : (hlock == LockCenter ? (v.w-nw)/2 : (v.w-nw) );
-        v.w = nw;
+        // Fit to space
+        if( current_aspect < aspect )
+        {
+          //Adjust height
+          const int nh = (int)(v.w / aspect);
+          v.b += vlock == LockBottom ? 0 : (vlock == LockCenter ? (v.h-nh)/2 : (v.h-nh) );
+          v.h = nh;
+        }else if( current_aspect > aspect )
+        {
+          //Adjust width
+          const int nw = (int)(v.h * aspect);
+          v.l += hlock == LockLeft? 0 : (hlock == LockCenter ? (v.w-nw)/2 : (v.w-nw) );
+          v.w = nw;
+        }
+      }else{
+        // Overfit
+        double true_aspect = -aspect;
+        if( current_aspect < true_aspect )
+        {
+          //Adjust width
+          const int nw = (int)(v.h * true_aspect);
+          v.l += hlock == LockLeft? 0 : (hlock == LockCenter ? (v.w-nw)/2 : (v.w-nw) );
+          v.w = nw;
+        }else if( current_aspect > true_aspect )
+        {
+          //Adjust height
+          const int nh = (int)(v.w / true_aspect);
+          v.b += vlock == LockBottom ? 0 : (vlock == LockCenter ? (v.h-nh)/2 : (v.h-nh) );
+          v.h = nh;
+        }
       }
     }
 
@@ -315,10 +378,38 @@ namespace pangolin
     v.Activate();
   }
 
+  void View::ActivateAndScissor() const
+  {
+    vp.Scissor();
+    v.Activate();
+  }
+
+  void View::ActivateScissorAndClear() const
+  {
+    vp.Scissor();
+    v.Activate();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  }
+
   void View::Activate(const OpenGlRenderState& state ) const
   {
     v.Activate();
     state.Apply();
+  }
+
+  void View::ActivateAndScissor(const OpenGlRenderState& state) const
+  {
+    vp.Scissor();
+    v.Activate();
+    state.Apply();
+  }
+
+  void View::ActivateScissorAndClear(const OpenGlRenderState& state ) const
+  {
+    vp.Scissor();
+    v.Activate();
+    state.Apply();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
 
 
@@ -447,8 +538,6 @@ namespace pangolin
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
       }
     }
-
-//    cout << state << " " << button << ": " << context->mouse_state << endl;
   }
 
   void Handler3D::MouseMotion(View& display, int x, int y)

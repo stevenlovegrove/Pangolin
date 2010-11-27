@@ -28,8 +28,9 @@ struct Var
   operator const T& ();
   const T* operator->();
   void operator=(const T& val);
+  void operator=(const Var<T>& val);
 
-  void init(const std::string& name, T default_value, double min = 0, double max = 1, int flags = 1);
+  void init(const std::string& name, T default_value, double min = 0, double max = 0, int flags = 1);
 
   _Var* var;
   Accessor<T>* a;
@@ -86,6 +87,13 @@ inline void Var<T>::operator=(const T& val)
 {
   a->Set(val);
 }
+
+template<typename T>
+inline void Var<T>::operator=(const Var<T>& v)
+{
+  a->Set(v.a->Get());
+}
+
 
 struct NewVarCallback
 {
