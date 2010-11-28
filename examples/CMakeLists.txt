@@ -1,2 +1,3 @@
 ADD_SUBDIRECTORY(SimpleDisplay)
 ADD_SUBDIRECTORY(SimpleDisplayImage)
+ADD_SUBDIRECTORY(VBODisplay)
