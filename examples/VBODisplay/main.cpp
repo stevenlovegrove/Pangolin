@@ -14,53 +14,27 @@
 using namespace pangolin;
 using namespace std;
 
-extern "C"
-void launch_kernel(float4* pos, unsigned int mesh_width, unsigned int mesh_height, float time);
+// Mesh size
+const int mesh_width=256;
+const int mesh_height=256;
 
-GLuint vbo = 0;
-unsigned int timer = 0;
-struct cudaGraphicsResource* vbo_cuda_res;
-const int width=640;
-const int height=480;
-
-void UpdateVBO()
-{
-  cudaGraphicsMapResources(1, &vbo_cuda_res, 0);
-  size_t num_bytes;
-  float4* positions;
-  cudaGraphicsResourceGetMappedPointer((void**)&positions, &num_bytes, vbo_cuda_res);
-  static float time = 0.0;
-  launch_kernel(positions,width,height,time);
-  time += 0.002;
-  cudaGraphicsUnmapResources(1, &vbo_cuda_res, 0);
-}
-
-void CleanUp()
-{
-  if (vbo) {
-    cudaGraphicsUnregisterResource(vbo_cuda_res);
-    glBindBuffer(1, vbo);
-    glDeleteBuffers(1, &vbo);
-  }
-  cutilCheckError( cutDeleteTimer( timer));
-}
+extern "C" void launch_kernel(float4* pos, unsigned int mesh_width, unsigned int mesh_height, float time);
+extern "C" void launch_kernel_colour(float4* pos, uchar4* color, unsigned int mesh_width, unsigned int mesh_height, float time);
 
 int main( int /*argc*/, char* argv[] )
 {
   cudaGLSetGLDevice(cutGetMaxGflopsDeviceId());
   pangolin::CreateGlutWindowAndBind("Main",640,480);
-  atexit(&CleanUp);
   glewInit();
 
-  // Create buffer object and register it with CUDA
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  const unsigned int size = width * height * 4 * sizeof(float);
-  glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  cudaGraphicsGLRegisterBuffer(
-    &vbo_cuda_res, vbo,
-    cudaGraphicsMapFlagsWriteDiscard
+  // Create buffer objects and register then with CUDA
+  GlCudaRegisteredBuffer vertex_array(
+      GlArrayBuffer, mesh_width * mesh_height * sizeof(float4),
+      GlCudaMappedBufferWriteDiscard, GL_STREAM_DRAW
+  );
+  GlCudaRegisteredBuffer colour_array(
+      GlArrayBuffer, mesh_width * mesh_height * sizeof(uchar4),
+      GlCudaMappedBufferWriteDiscard, GL_STREAM_DRAW
   );
 
   // Define Camera Render Object (for view / scene browsing)
@@ -70,20 +44,25 @@ int main( int /*argc*/, char* argv[] )
 
   // Add named OpenGL viewport to window and provide 3D Handler
   View& d_cam = pangolin::Display("cam")
-    .SetBounds(1.0, 0.0, 100, 1.0, -640.0f/480.0f)
+    .SetBounds(1.0, 0.0, 150, 1.0, -640.0f/480.0f)
     .SetHandler(new Handler3D(s_cam));
 
   // Add named Panal and bind to variables beginning 'ui'
   // A Panal is just a View with a default layout and input handling
   View& d_panal = pangolin::CreatePanal("ui")
-      .SetBounds(1.0, 0.0, 0, 100);
+      .SetBounds(1.0, 0.0, 0, 150);
 
+  // Apply timer as used by CUDA samples
+  // The fps measure they use is actually completely incorrect!
+  unsigned int timer = 0;
   cutCreateTimer(&timer);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
-  while(!pangolin::ShouldQuit())
+  for(int frame=0; !pangolin::ShouldQuit(); ++frame)
   {
+    static double time = 0;
     static Var<double> fps("ui.fps");
+    static Var<double> delta("ui.time delta", 0.001, 0, 0.005);
 
     cutStartTimer(timer);
 
@@ -94,27 +73,42 @@ int main( int /*argc*/, char* argv[] )
     glEnable(GL_DEPTH_TEST);
     glColor3f(1.0,1.0,1.0);
 
-    UpdateVBO();
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    {
+      CudaScopedMappedResource var(vertex_array);
+      CudaScopedMappedResource car(colour_array);
+      launch_kernel_colour((float4*)*var,(uchar4*)*car,mesh_width,mesh_height,time);
+      time += delta;
+    }
+
+    vertex_array.Bind();
     glVertexPointer(4, GL_FLOAT, 0, 0);
     glEnableClientState(GL_VERTEX_ARRAY);
-    glDrawArrays(GL_POINTS, 0, width * height);
+
+    colour_array.Bind();
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, 0);
+    glEnableClientState(GL_COLOR_ARRAY);
+
+    glDrawArrays(GL_POINTS, 0, mesh_width * mesh_height);
+
     glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
 
     // Render our UI panal when we receive input
-//    if(HadInput())
+    if(HadInput() | !(frame%1000))
+    {
+      fps = 1000.0 / cutGetAverageTimerValue(timer);
       d_panal.Render();
+      cutResetTimer(timer);
+    }
 
     // Swap frames and Process Events
     glutSwapBuffers();
     glutMainLoopEvent();
 
     cutStopTimer(timer);
-    fps = 1000.0 / cutGetAverageTimerValue(timer);
-    cutResetTimer(timer);
   }
 
-  CleanUp();
+  cutilCheckError( cutDeleteTimer( timer));
 
   return 0;
 }

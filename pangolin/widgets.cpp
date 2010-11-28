@@ -101,15 +101,20 @@ void Panal::Render()
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_SCISSOR_TEST);
 
-//  cout << v.l << "," << v.b << "," << v.w << "," << v.h << endl;
-
   glColor4fv(colour_s2);
   glRect(v);
   glColor4fv(colour_bg);
-  glRect(v,border);
+  glRect(vinside);
 
   RenderChildren();
 }
+
+void Panal::ResizeChildren()
+{
+  vinside = v.Inset(border,border);
+  View::ResizeChildren();
+}
+
 
 View& CreatePanal(const std::string& name)
 {

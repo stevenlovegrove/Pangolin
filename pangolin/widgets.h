@@ -15,7 +15,9 @@ struct Panal : public View
   Panal();
   Panal(const std::string& auto_register_var_prefix);
   void Render();  
+  void ResizeChildren();
   static void AddVariable(void* data, const std::string& name, _Var& var);
+  Viewport vinside;
 };
 
 struct Button : public View, Handler, Var<bool>

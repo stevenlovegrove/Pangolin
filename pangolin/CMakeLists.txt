@@ -9,7 +9,7 @@ SET(
   display.h display_internal.h display.cpp
   vars.h vars_internal.h vars.cpp
   widgets.h widgets.cpp
-  gl.h
+  gl.h glcuda.h
 )
 
 #######################################################
@@ -23,12 +23,14 @@ FIND_PACKAGE(Boost REQUIRED QUIET)
 
 FIND_PACKAGE(CUDA QUIET)
 IF(CUDA_FOUND)
-  CUDA_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   SET(HAVE_CUDA 1)
-  SET(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE OFF)
+  CUDA_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   INCLUDE_DIRECTORIES( ${CUDA_SDK_ROOT_DIR}/common/inc )
+  LINK_DIRECTORIES( ${CUDA_SDK_ROOT_DIR}/lib )
   LINK_DIRECTORIES( ${CUDA_SDK_ROOT_DIR}/common/lib )
+  SET(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE OFF)
   SET(CUDA_NVCC_FLAGS "-O3;-arch=sm_20;--verbose" )
+  ADD_DEFINITIONS(-DCUDA_BUILD)
   MESSAGE(STATUS "CUDA Found and Enabled")
 ENDIF()
 

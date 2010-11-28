@@ -1,6 +1,9 @@
 #include <iostream>
 #include <map>
 
+#include <boost/foreach.hpp>
+#define foreach BOOST_FOREACH
+
 #include "platform.h"
 #include "display.h"
 #include "display_internal.h"
@@ -199,13 +202,13 @@ namespace pangolin
     glutMotionFunc(&process::MouseMotion);
   }
 
-  void CreateGlutWindowAndBind(string window_title, int w, int h)
+  void CreateGlutWindowAndBind(string window_title, int w, int h, unsigned int mode)
   {
     if( glutGet(GLUT_INIT_STATE) == 0)
     {
       int argc = 0;
       glutInit(&argc, 0);
-      glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+      glutInitDisplayMode(mode);
     }
     glutInitWindowSize(w,h);
     glutCreateWindow(window_title.c_str());
@@ -361,17 +364,17 @@ namespace pangolin
   {
     if( layout == LayoutOverlay )
     {
-      for( vector<View*>::const_iterator i = views.begin(); i != views.end(); ++i )
-        (*i)->Resize(v);
+      foreach(View* i, views)
+        i->Resize(v);
     }else if( layout == LayoutVertical )
     {
       // Allocate space incrementally
       const int margin = 8;
       Viewport space = v.Inset(margin);
-      for( vector<View*>::const_iterator i = views.begin(); i != views.end(); ++i )
+      foreach(View* i, views )
       {
-        (*i)->Resize(space);
-        space.h = (*i)->v.b - margin - space.b;
+        i->Resize(space);
+        space.h = i->v.b - margin - space.b;
       }
     }
   }
@@ -383,8 +386,8 @@ namespace pangolin
 
   void View::RenderChildren()
   {
-    for( vector<View*>::const_iterator i = views.begin(); i != views.end(); ++i )
-      (*i)->Render();
+    foreach(View* v, views)
+      v->Render();
   }
 
   void View::Activate() const
