@@ -36,6 +36,8 @@ struct GlCudaRegisteredBuffer
   GlCudaRegisteredBuffer(GlBufferType buffer_type, GLsizeiptr size_bytes, GlCudaMappedBufferUse cudause = GlCudaMappedBufferAny, GLenum gluse = GL_DYNAMIC_DRAW );
   ~GlCudaRegisteredBuffer();
   void Bind() const;
+  void UnBind() const;
+  void Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset = 0);
   GLuint bo;
   cudaGraphicsResource* bo_cuda;
   GlBufferType buffer_type;
@@ -60,7 +62,7 @@ inline GlCudaRegisteredBuffer::GlCudaRegisteredBuffer(GlBufferType buffer_type, 
   glGenBuffers(1, &bo);
   Bind();
   glBufferData(buffer_type, size_bytes, 0, gluse);
-  glBindBuffer(buffer_type, 0);
+  UnBind();
   cudaGraphicsGLRegisterBuffer( &bo_cuda, bo, cudause );
 }
 
@@ -73,6 +75,18 @@ inline GlCudaRegisteredBuffer::~GlCudaRegisteredBuffer()
 inline void GlCudaRegisteredBuffer::Bind() const
 {
   glBindBuffer(buffer_type, bo);
+}
+
+inline void GlCudaRegisteredBuffer::UnBind() const
+{
+  glBindBuffer(buffer_type, 0);
+}
+
+
+inline void GlCudaRegisteredBuffer::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
+{
+  Bind();
+  glBufferSubData(buffer_type,offset,size_bytes, data);
 }
 
 inline CudaScopedMappedResource::CudaScopedMappedResource(GlCudaRegisteredBuffer& buffer)

@@ -27,7 +27,7 @@ int main( int /*argc*/, char* argv[] )
   pangolin::CreateGlutWindowAndBind("Main",640,480);
   glewInit();
 
-  // Create buffer objects and register then with CUDA
+  // Create vertex and colour buffer objects and register them with CUDA
   GlCudaRegisteredBuffer vertex_array(
       GlArrayBuffer, mesh_width * mesh_height * sizeof(float4),
       GlCudaMappedBufferWriteDiscard, GL_STREAM_DRAW

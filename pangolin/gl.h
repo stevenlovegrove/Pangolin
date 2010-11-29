@@ -54,6 +54,7 @@ inline GlTexture::GlTexture(GLint width, GLint height, GLenum channels)
 {
   glGenTextures(1,&tid);
   Bind();
+  glTexImage2D(GL_TEXTURE_2D, 0, channels, width, height, 0, 0,0,0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
@@ -73,6 +74,7 @@ inline void GlTexture::Upload(T* image, GlDataLayout data_layout )
 {
   Bind();
   glTexImage2D(GL_TEXTURE_2D, 0, channels, width, height, 0, data_layout, GlDataType<T>::type, image);
+//  glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_layout,GlDataType<T>::type,image);
 }
 
 inline void GlTexture::RenderToViewport() const
@@ -95,8 +97,6 @@ inline void GlTexture::RenderToViewport() const
   glEnd();
   glDisable(GL_TEXTURE_2D);
 }
-
-
 
 
 }
