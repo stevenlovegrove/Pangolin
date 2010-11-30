@@ -68,16 +68,22 @@ namespace pangolin
 
   bool HadInput()
   {
-    const bool hi = context->had_input;
-    context->had_input = false;
-    return hi;
+    if( context->had_input > 0 )
+    {
+      --context->had_input;
+      return true;
+    }
+    return false;
   }
 
   bool HasResized()
   {
-    const bool hr = context->has_resized;
-    context->has_resized = false;
-    return hr;
+    if( context->has_resized > 0 )
+    {
+      --context->has_resized;
+      return true;
+    }
+    return false;
   }
 
   View& DisplayBase()
@@ -105,7 +111,7 @@ namespace pangolin
   {
     void Keyboard( unsigned char key, int x, int y)
     {
-      context->had_input = true;
+      context->had_input = context->is_double_buffered ? 2 : 1;
 
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
@@ -132,7 +138,7 @@ namespace pangolin
 
     void Mouse( int button, int state, int x, int y)
     {
-      context->had_input = true;
+      context->had_input = context->is_double_buffered ? 2 : 1;
 
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
@@ -165,7 +171,7 @@ namespace pangolin
 
     void MouseMotion( int x, int y)
     {
-      context->had_input = true;
+      context->had_input = context->is_double_buffered ? 2 : 1;
 
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
@@ -186,8 +192,8 @@ namespace pangolin
         context->windowed_size[0] = width;
         context->windowed_size[1] = width;
       }
-      context->had_input = true;
-      context->has_resized = true;
+      context->had_input = context->is_double_buffered ? 2 : 1;
+      context->has_resized = context->is_double_buffered ? 2 : 1;
       Viewport win(0,0,width,height);
       context->base.Resize(win);
     }
@@ -213,6 +219,7 @@ namespace pangolin
     glutInitWindowSize(w,h);
     glutCreateWindow(window_title.c_str());
     BindToContext(window_title);
+    context->is_double_buffered = mode & GLUT_DOUBLE;
     TakeGlutCallbacks();
   }
 #endif
