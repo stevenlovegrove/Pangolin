@@ -163,7 +163,8 @@ namespace pangolin
   {
     LayoutOverlay,
     LayoutVertical,
-    LayoutHorizontal
+    LayoutHorizontal,
+    LayoutEqual
   };
 
   // Forward declaration
@@ -217,6 +218,8 @@ namespace pangolin
     View& SetHandler(Handler* handler);
     View& SetAspect(double aspect);
     View& SetLock(Lock horizontal, Lock vertical );
+    View& SetLayout(Layout layout);
+    View& AddDisplay(View& view);
 
     // Desired width / height aspect (0 if dynamic)
     double aspect;

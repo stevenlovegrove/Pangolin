@@ -306,6 +306,14 @@ namespace pangolin
     return low + a.p * (high - low);
   }
 
+  float AspectAreaWithinTarget(double target, double test)
+  {
+    if( test > target )
+      return test / target;
+    else
+      return target / test;
+  }
+
   void View::Resize(const Viewport& p)
   {
     // Compute Bounds based on specification
@@ -376,7 +384,57 @@ namespace pangolin
         i->Resize(space);
         space.h = i->v.b - margin - space.b;
       }
+    }else if(layout == LayoutHorizontal )
+    {
+      // Allocate space incrementally
+      const int margin = 8;
+      Viewport space = v.Inset(margin);
+      foreach(View* i, views )
+      {
+        i->Resize(space);
+        space.w = i->v.l + margin + space.l;
+      }
+    }else if(layout == LayoutEqual )
+    {
+      // TODO: Make this neater, and make fewer assumptions!
+      if( views.size() > 0 )
+      {
+        int cols = views.size() - 1;
+        const double this_a = v.aspect();
+        const double child_a = views[0]->aspect;
+        double a = views.size() * views[0]->aspect;
+
+        for(; cols > 0; --cols)
+        {
+          const int rows = views.size() / cols + (views.size() % cols == 0 ? 0 : 1);
+          const double na = cols * child_a / rows;
+          if( AspectAreaWithinTarget(this_a,na) > AspectAreaWithinTarget(this_a,a) )
+            break;
+          a = na;
+        }
+
+        cols++;
+        const int rows = views.size() / cols + (views.size() % cols == 0 ? 0 : 1);
+        int cw,ch;
+        if( a > this_a )
+        {
+          cw = v.w / cols;
+          ch = cw / child_a; //v.h / rows;
+        }else{
+          ch = v.h / rows;
+          cw = ch * child_a;
+        }
+
+        for( unsigned int i=0; i< views.size(); ++i )
+        {
+          int c = i % cols;
+          int r = i / cols;
+          Viewport space(v.l + c*cw, v.t() - (r+1)*ch, cw,ch);
+          views[i]->Resize(space);
+        }
+      }
     }
+
   }
 
   void View::Render()
@@ -461,6 +519,28 @@ namespace pangolin
     hlock = horizontal;
     return *this;
   }
+
+  View& View::SetLayout(Layout l)
+  {
+    layout = l;
+    return *this;
+  }
+
+
+  View& View::AddDisplay(View& child)
+  {
+    // detach child from any other view, and add to this
+    vector<View*>::iterator f = std::find(
+      context->base.views.begin(), context->base.views.end(), &child
+    );
+
+    if( f != context->base.views.end() )
+      context->base.views.erase(f);
+
+    views.push_back(&child);
+    return *this;
+  }
+
 
   View& View::SetHandler(Handler* h)
   {
