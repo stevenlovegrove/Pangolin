@@ -32,7 +32,7 @@ int main( int /*argc*/, char* argv[] )
   const int height = 480;
 
   float * imageArray = new float[width*height];
-  GlTexture imageTexture(width,height,1);
+  GlTexture imageTexture(width,height,GL_LUMINANCE32F_ARB);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while(!pangolin::ShouldQuit())
@@ -46,7 +46,7 @@ int main( int /*argc*/, char* argv[] )
 
     //Set some random image data and upload to GPU
     setImageData(imageArray,width,height);
-    imageTexture.Upload(imageArray,GlDataLayoutLuminance);
+    imageTexture.Upload(imageArray,GL_LUMINANCE,GL_FLOAT);
 
     //display the image
     d_image.Activate();

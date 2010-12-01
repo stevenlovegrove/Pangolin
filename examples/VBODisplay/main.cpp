@@ -28,13 +28,13 @@ int main( int /*argc*/, char* argv[] )
   glewInit();
 
   // Create vertex and colour buffer objects and register them with CUDA
-  GlCudaRegisteredBuffer vertex_array(
+  GlBufferCudaPtr vertex_array(
       GlArrayBuffer, mesh_width * mesh_height * sizeof(float4),
-      GlCudaMappedBufferWriteDiscard, GL_STREAM_DRAW
+      cudaGraphicsMapFlagsWriteDiscard, GL_STREAM_DRAW
   );
-  GlCudaRegisteredBuffer colour_array(
+  GlBufferCudaPtr colour_array(
       GlArrayBuffer, mesh_width * mesh_height * sizeof(uchar4),
-      GlCudaMappedBufferWriteDiscard, GL_STREAM_DRAW
+      cudaGraphicsMapFlagsWriteDiscard, GL_STREAM_DRAW
   );
 
   // Define Camera Render Object (for view / scene browsing)
@@ -74,8 +74,8 @@ int main( int /*argc*/, char* argv[] )
     glColor3f(1.0,1.0,1.0);
 
     {
-      CudaScopedMappedResource var(vertex_array);
-      CudaScopedMappedResource car(colour_array);
+      CudaScopedMappedPtr var(vertex_array);
+      CudaScopedMappedPtr car(colour_array);
       launch_kernel_colour((float4*)*var,(uchar4*)*car,mesh_width,mesh_height,time);
       time += delta;
     }

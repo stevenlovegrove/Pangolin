@@ -11,31 +11,23 @@ namespace pangolin
 // Interface
 ////////////////////////////////////////////////
 
-enum GlDataLayout
-{
-  GlDataLayoutLuminance = GL_LUMINANCE,
-  GlDataLayoutRGB = GL_RGB,
-  GlDataLayoutRGBA = GL_RGBA,
-  GlDataLayoutLuminanceAlpha = GL_LUMINANCE_ALPHA
-};
-
 struct GlTexture
 {
-  GlTexture(GLint width, GLint height, GLenum channels);
+  GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA32F );
   ~GlTexture();
 
   void Bind() const;
+  void Unbind() const;
 
-  template<typename T>
-  void Upload(T* image, GlDataLayout data_layout = GlDataLayoutLuminance );
+  void Upload(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT);
 
   void RenderToViewport() const;
   void RenderToViewportFlipY() const;
 
+  GLint internal_format;
   GLuint tid;
   GLint width;
   GLint height;
-  GLenum channels;
 };
 
 
@@ -43,19 +35,20 @@ struct GlTexture
 // Implementation
 ////////////////////////////////////////////////
 
-template<typename T>
-struct GlDataType {};
+//template<typename T>
+//struct GlDataTypeTrait {};
+//template<> struct GlDataTypeTrait<float>{ static const GLenum type = GL_FLOAT; };
+//template<> struct GlDataTypeTrait<int>{ static const GLenum type = GL_INT; };
+//template<> struct GlDataTypeTrait<unsigned char>{ static const GLenum type = GL_UNSIGNED_BYTE; };
 
-template<> struct GlDataType<float>{ static const GLenum type = GL_FLOAT; };
-template<> struct GlDataType<int>{ static const GLenum type = GL_INT; };
-template<> struct GlDataType<unsigned char>{ static const GLenum type = GL_UNSIGNED_BYTE; };
-
-inline GlTexture::GlTexture(GLint width, GLint height, GLenum channels)
-  :width(width),height(height),channels(channels)
+inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format)
+  : internal_format(internal_format),width(width),height(height)
 {
   glGenTextures(1,&tid);
   Bind();
-  glTexImage2D(GL_TEXTURE_2D, 0, channels, width, height, 0, 0,0,0);
+  // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
+  // for call to succeed.
+  glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, GL_LUMINANCE,GL_FLOAT,0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
@@ -70,13 +63,17 @@ inline void GlTexture::Bind() const
   glBindTexture(GL_TEXTURE_2D, tid);
 }
 
-template<typename T>
-inline void GlTexture::Upload(T* image, GlDataLayout data_layout )
+inline void GlTexture::Unbind() const
+{
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+inline void GlTexture::Upload(void* image, GLenum data_layout, GLenum data_type )
 {
   Bind();
-  glTexImage2D(GL_TEXTURE_2D, 0, channels, width, height, 0, data_layout, GlDataType<T>::type, image);
-//  glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_layout,GlDataType<T>::type,image);
+  glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_layout,data_type,image);
 }
+
 
 inline void GlTexture::RenderToViewport() const
 {
