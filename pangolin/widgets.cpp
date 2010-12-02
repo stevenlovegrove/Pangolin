@@ -64,22 +64,22 @@ void DrawShadowRect(Viewport& v, bool pushed)
   glEnd();
 }
 
-Panal::Panal()
+Panel::Panel()
 {
   handler = &StaticHandler;
   layout = LayoutVertical;
 }
 
-Panal::Panal(const std::string& auto_register_var_prefix)
+Panel::Panel(const std::string& auto_register_var_prefix)
 {
   handler = &StaticHandler;
   layout = LayoutVertical;
-  RegisterNewVarCallback(&Panal::AddVariable,(void*)this,auto_register_var_prefix);
+  RegisterNewVarCallback(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
 }
 
-void Panal::AddVariable(void* data, const std::string& name, _Var& var)
+void Panel::AddVariable(void* data, const std::string& name, _Var& var)
 {
-  Panal* thisptr = (Panal*)data;
+  Panel* thisptr = (Panel*)data;
 
   const string& title = var.meta_friendly;
 
@@ -95,7 +95,7 @@ void Panal::AddVariable(void* data, const std::string& name, _Var& var)
 
 }
 
-void Panal::Render()
+void Panel::Render()
 {
   OpenGlRenderState::ApplyWindowCoords();
   glDisable(GL_DEPTH_TEST);
@@ -109,16 +109,16 @@ void Panal::Render()
   RenderChildren();
 }
 
-void Panal::ResizeChildren()
+void Panel::ResizeChildren()
 {
   vinside = v.Inset(border,border);
   View::ResizeChildren();
 }
 
 
-View& CreatePanal(const std::string& name)
+View& CreatePanel(const std::string& name)
 {
-  Panal* v = new Panal(name);
+  Panel* v = new Panel(name);
   context->all_views[name] = v;
   context->base.views.push_back(v);
   return *v;

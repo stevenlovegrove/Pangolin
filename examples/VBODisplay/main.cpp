@@ -47,9 +47,9 @@ int main( int /*argc*/, char* argv[] )
     .SetBounds(1.0, 0.0, 150, 1.0, -640.0f/480.0f)
     .SetHandler(new Handler3D(s_cam));
 
-  // Add named Panal and bind to variables beginning 'ui'
-  // A Panal is just a View with a default layout and input handling
-  View& d_panal = pangolin::CreatePanal("ui")
+  // Add named Panel and bind to variables beginning 'ui'
+  // A Panel is just a View with a default layout and input handling
+  View& d_panel = pangolin::CreatePanel("ui")
       .SetBounds(1.0, 0.0, 0, 150);
 
   // Apply timer as used by CUDA samples
@@ -93,11 +93,11 @@ int main( int /*argc*/, char* argv[] )
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
 
-    // Render our UI panal when we receive input
+    // Render our UI panel when we receive input
     if(HadInput() | !(frame%1000))
     {
       fps = 1000.0 / cutGetAverageTimerValue(timer);
-      d_panal.Render();
+      d_panel.Render();
       cutResetTimer(timer);
     }
 

@@ -24,9 +24,9 @@ int main( int /*argc*/, char* argv[] )
     .SetBounds(1.0, 0.0, 200, 1.0, -640.0f/480.0f)
     .SetHandler(new Handler3D(s_cam));
 
-  // Add named Panal and bind to variables beginning 'ui'
-  // A Panal is just a View with a default layout and input handling
-  View& d_panal = pangolin::CreatePanal("ui")
+  // Add named Panel and bind to variables beginning 'ui'
+  // A Panel is just a View with a default layout and input handling
+  View& d_panel = pangolin::CreatePanel("ui")
       .SetBounds(1.0, 0.0, 0, 200);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
@@ -63,9 +63,9 @@ int main( int /*argc*/, char* argv[] )
     // Render some stuff
     glutWireTeapot(10.0);
 
-    // Render our UI panal when we receive input
+    // Render our UI panel when we receive input
     if(HadInput())
-      d_panal.Render();
+      d_panel.Render();
 
     // Swap frames and Process Events
     glutSwapBuffers();

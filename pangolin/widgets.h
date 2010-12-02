@@ -8,12 +8,12 @@
 namespace pangolin
 {
 
-View& CreatePanal(const std::string& name);
+View& CreatePanel(const std::string& name);
 
-struct Panal : public View
+struct Panel : public View
 {
-  Panal();
-  Panal(const std::string& auto_register_var_prefix);
+  Panel();
+  Panel(const std::string& auto_register_var_prefix);
   void Render();  
   void ResizeChildren();
   static void AddVariable(void* data, const std::string& name, _Var& var);
