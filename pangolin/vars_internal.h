@@ -4,9 +4,36 @@
 #include <boost/utility.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/lexical_cast.hpp>
+#include <iostream>
+
 
 namespace pangolin
 {
+
+template<typename T, typename S> struct Convert {
+  static T Do(const S& src) {
+    return boost::lexical_cast<T>(src);
+  }
+};
+
+template<typename T> struct Convert<T,std::string> {
+  static T Do(const std::string& src)
+  {
+    T target;
+    std::istringstream iss(src);
+    iss >> target;
+    return target;
+  }
+};
+
+template<typename S> struct Convert<std::string, S> {
+  static std::string Do(const S& src)
+  {
+    std::ostringstream oss;
+    oss << src;
+    return oss.str();
+  }
+};
 
 struct _Var
 {
@@ -110,13 +137,15 @@ struct _Accessor<T,S ,typename boost::enable_if_c<
 
   const T& Get() const
   {
-    cache = boost::lexical_cast<T>(var);
+//    cache = boost::lexical_cast<T>(var);
+    cache = Convert<T,S>::Do(var);
     return cache;
   }
 
   void Set(const T& val)
   {
-    var = boost::lexical_cast<S>(val);
+//    var = boost::lexical_cast<S>(val);
+    var = Convert<S,T>::Do(val);
   }
   S& var;
   mutable T cache;
