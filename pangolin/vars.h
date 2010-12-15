@@ -7,6 +7,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <fstream>
 
 #include "vars_internal.h"
 
@@ -42,6 +43,12 @@ void ParseVarsFile(const std::string& filename);
 
 typedef void (*NewVarCallbackFn)(void* data, const std::string& name, _Var& var);
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter = "");
+
+template<typename T>
+T FromFile( const std::string& filename, const T& init = T());
+
+template<typename T>
+void FillFromFile( const std::string& filename, std::vector<T>& v, const T& init = T());
 
 ////////////////////////////////////////////////
 // Implementation
@@ -174,6 +181,37 @@ inline bool Pushed(Var<bool>& button)
   return val;
 }
 
+template<typename T>
+inline T FromFile( const std::string& filename, const T& init = T())
+{
+  T out = init;
+  std::ifstream f(filename.c_str());
+  if( f.is_open() )
+  {
+    f >> out;
+    f.close();
+  }
+  return out;
+}
+
+template<typename T>
+inline void FillFromFile( const std::string& filename, std::vector<T>& v, const T& init = T())
+{
+  std::ifstream f(filename.c_str());
+  if( f.is_open() )
+  {
+    while(!f.eof() && !f.fail())
+    {
+      T data = init;
+      f >> data;
+      if( !f.fail() )
+      {
+        v.push_back(data);
+      }
+    }
+    f.close();
+  }
+}
 
 }
 
