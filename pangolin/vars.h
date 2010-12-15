@@ -38,6 +38,8 @@ struct Var
 
 bool Pushed(Var<bool>& button);
 
+void ParseVarsFile(const std::string& filename);
+
 typedef void (*NewVarCallbackFn)(void* data, const std::string& name, _Var& var);
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter = "");
 
@@ -111,13 +113,25 @@ template<typename T>
 inline void Var<T>::init(const std::string& name, T default_value, double min, double max, int flags)
 {
   std::map<std::string,_Var>::iterator vi = vars.find(name);
+
   if( vi != vars.end() )
   {
     // found
     var = &vi->second;
     a = Accessor<T>::Create(vi->second);
-  }else{
-    // not found
+    if( var->generic && var->type_name != typeid(T).name() )
+    {
+      // re-specialise this variable
+      default_value = a->Get();
+      delete a;
+      free(var->val);
+    }else{
+      return;
+    }
+  }
+
+  // Create var of base type T
+  {
     var = &vars[name];
     if( boost::is_same<T,bool>::value ) {
       *var = _Var(new bool, typeid(bool).name() );

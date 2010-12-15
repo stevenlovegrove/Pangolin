@@ -12,11 +12,12 @@ struct _Var
 {
   _Var() {}
   _Var(void* val, const char* type_name)
-    : val(val),type_name(type_name) {}
+    : val(val),type_name(type_name), generic(false){}
 
   void* val;
   const char* type_name;
 
+  bool generic;
   std::string meta_friendly;
   double meta_range[2];
   int meta_flags;
