@@ -1,6 +1,7 @@
 #include "widgets.h"
 
 #include <iostream>
+#include <iomanip>
 #include "display_internal.h"
 
 using namespace std;
@@ -249,9 +250,9 @@ void Slider::Render()
   glRasterPos2fv( raster );
   glutBitmapString(font,(unsigned char*)title.c_str());
 
-  string str = boost::lexical_cast<string>(val);
-  const unsigned int max_chars = 8;
-  if( str.length() > max_chars ) str[max_chars] = '\0';
+  std::ostringstream oss;
+  oss << setprecision(4) << val;
+  string str = oss.str();
   const int l = glutBitmapLength(font,(unsigned char*)str.c_str()) + 2;
   glRasterPos2f( v.l + v.w - l, raster[1] );
   glutBitmapString(font,(unsigned char*)str.c_str());
