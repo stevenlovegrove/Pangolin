@@ -315,7 +315,7 @@ namespace pangolin
 
   float AspectAreaWithinTarget(double target, double test)
   {
-    if( test > target )
+    if( test < target )
       return test / target;
     else
       return target / test;
@@ -406,17 +406,20 @@ namespace pangolin
       // TODO: Make this neater, and make fewer assumptions!
       if( views.size() > 0 )
       {
-        int cols = views.size() - 1;
         const double this_a = v.aspect();
         const double child_a = views[0]->aspect;
-        double a = views.size() * views[0]->aspect;
+        double a = views.size()*child_a;
+        double area = AspectAreaWithinTarget(this_a, a);
 
+        int cols = views.size()-1;
         for(; cols > 0; --cols)
         {
           const int rows = views.size() / cols + (views.size() % cols == 0 ? 0 : 1);
           const double na = cols * child_a / rows;
-          if( AspectAreaWithinTarget(this_a,na) > AspectAreaWithinTarget(this_a,a) )
+          const double new_area = views.size()*AspectAreaWithinTarget(this_a,na)/(rows*cols);
+          if( new_area <= area )
             break;
+          area = new_area;
           a = na;
         }
 
