@@ -75,7 +75,12 @@ string ProcessVal(const string& val )
         iterator_range<const char*> in(brace+1,endbrace);
         string inexpand = ProcessVal(copy_range<string>(in));
         Var<string> var(inexpand,"#");
-        expanded = replace_range_copy(expanded,out,(string)var);
+        ostringstream oss;
+        oss << copy_range<string>(iterator_range<const char*>(expanded.c_str(), brace-1));
+        oss << (const string)var;
+        oss << copy_range<string>(iterator_range<const char*>(endbrace+1, expanded.c_str() + expanded.length() ));
+        expanded = oss.str();
+//        expanded = replace_range_copy(expanded,out,(const string)var);
 //        cout << copy_range<std::string>(in) << endl;
         continue;
       }

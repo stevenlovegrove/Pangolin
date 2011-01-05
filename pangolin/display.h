@@ -12,6 +12,10 @@
 #include <GL/freeglut_ext.h>
 #endif
 
+#ifdef _WIN_
+#include <Windows.h>
+#endif
+
 #include <GL/gl.h>
 
 #define GLUT_KEY_ESCAPE 27
@@ -260,14 +264,14 @@ namespace pangolin
   struct Handler3D : Handler
   {
     Handler3D(OpenGlRenderState& cam_state)
-      : cam_state(&cam_state), hwin(3), tf(0.01), cameraspec(CameraSpecOpenGl) {};
+      : cam_state(&cam_state), /*hwin(3),*/ tf(0.01), cameraspec(CameraSpecOpenGl) {};
 
     void SetOpenGlCamera();
     void Mouse(View&, int button, int state, int x, int y);
     void MouseMotion(View&, int x, int y);
 
     OpenGlRenderState* cam_state;
-    int hwin;
+    const static int hwin = 3;
     float tf;
     CameraSpec cameraspec;
     GLfloat last_z;

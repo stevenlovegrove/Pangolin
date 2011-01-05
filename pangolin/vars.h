@@ -151,7 +151,7 @@ inline void Var<T>::init(const std::string& name, T default_value, double min, d
       a = new _Accessor<T,double>( *(double*)var->val );
     }else{
       *var = _Var(
-        new std::string(boost::lexical_cast<std::string>(default_value)),
+        new std::string(Convert<std::string,T>::Do(default_value)),
         typeid(std::string).name()
       );
       a = new _Accessor<T,std::string>( *(std::string*)var->val );
@@ -182,7 +182,7 @@ inline bool Pushed(Var<bool>& button)
 }
 
 template<typename T>
-inline T FromFile( const std::string& filename, const T& init = T())
+inline T FromFile( const std::string& filename, const T& init)
 {
   T out = init;
   std::ifstream f(filename.c_str());
@@ -195,7 +195,7 @@ inline T FromFile( const std::string& filename, const T& init = T())
 }
 
 template<typename T>
-inline void FillFromFile( const std::string& filename, std::vector<T>& v, const T& init = T())
+inline void FillFromFile( const std::string& filename, std::vector<T>& v, const T& init)
 {
   std::ifstream f(filename.c_str());
   if( f.is_open() )

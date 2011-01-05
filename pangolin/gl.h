@@ -2,6 +2,11 @@
 #define PANGOLIN_GL_H
 
 #include "platform.h"
+
+#ifdef _WIN_
+#include <Windows.h>
+#endif
+
 #include <GL/gl.h>
 
 namespace pangolin
@@ -13,7 +18,7 @@ namespace pangolin
 
 struct GlTexture
 {
-  GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA32F );
+  GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8 );
   ~GlTexture();
 
   void Bind() const;

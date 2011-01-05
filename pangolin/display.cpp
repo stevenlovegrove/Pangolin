@@ -672,7 +672,7 @@ namespace pangolin
           //TODO Check proj exists
           OpenGlMatrixSpec& proj = cam_state->stacks[GlProjectionStack];
           GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
-          GLdouble np[2];
+          GLdouble np[3];
           gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,np,np+1,np+2);
           const double t[] = { np[0] - rot_center[0], np[1] - rot_center[1], 0};
           LieSetTranslation<>(T_nc,t);

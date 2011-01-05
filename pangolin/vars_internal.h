@@ -3,7 +3,7 @@
 
 #include <boost/utility.hpp>
 #include <boost/type_traits.hpp>
-#include <boost/lexical_cast.hpp>
+//#include <boost/lexical_cast.hpp>
 #include <iostream>
 
 
@@ -11,8 +11,15 @@ namespace pangolin
 {
 
 template<typename T, typename S> struct Convert {
-  static T Do(const S& src) {
-    return boost::lexical_cast<T>(src);
+  static T Do(const S& src)
+  {
+	std::ostringstream oss;
+    oss << src;
+	std::istringstream iss(oss.str());
+    T target;
+    iss >> target;
+    return target;
+//    return boost::lexical_cast<T>(src);
   }
 };
 
@@ -32,6 +39,13 @@ template<typename S> struct Convert<std::string, S> {
     std::ostringstream oss;
     oss << src;
     return oss.str();
+  }
+};
+
+template<> struct Convert<std::string, std::string> {
+  static std::string Do(const std::string& src)
+  {
+    return src;
   }
 };
 

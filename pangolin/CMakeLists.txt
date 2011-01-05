@@ -43,13 +43,22 @@ ENDIF()
 FIND_PACKAGE(FREEGLUT QUIET)
 IF(FREEGLUT_FOUND)
   SET(HAVE_GLUT 1)
+  INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${FREEGLUT_INCLUDE_DIR} )
   TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${FREEGLUT_LIBRARY} )
   MESSAGE(STATUS "Freeglut Found and Enabled")
 ENDIF()
 
 ## Apply required dependencies settings
+INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${Boost_INCLUDE_DIRS} )
 INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${OPENGL_INCLUDE_DIR} )
 TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${OPENGL_LIBRARIES} )
+
+## Set Special Compiler flags
+IF(MSVC)
+  SET(CMAKE_CXX_FLAGS "/EHs")
+ELSE()
+  SET(CMAKE_CXX_FLAGS "-Wall")
+ENDIF()
 
 #######################################################
 ## Create configure file for inclusion in library
@@ -59,8 +68,3 @@ CONFIGURE_FILE(
   "${CMAKE_CURRENT_BINARY_DIR}/config.h"
 )
 INCLUDE_DIRECTORIES("${PROJECT_BINARY_DIR}")
-
-#######################################################
-## Compiler options
-
-SET(CMAKE_CXX_FLAGS "-Wall")
