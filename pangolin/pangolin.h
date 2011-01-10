@@ -3,10 +3,10 @@
 
 #include <pangolin/config.h>
 #include "platform.h"
+#include "glcuda.h"
+#include "gl.h"
 #include "display.h"
 #include "widgets.h"
-#include "gl.h"
-#include "glcuda.h"
 
 #endif // PANGOLIN_H
 
