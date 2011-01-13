@@ -201,7 +201,7 @@ void Checkbox::Render()
 
 
 Slider::Slider(std::string title, _Var& tv)
-  :Var<double>(tv), title(title+":")
+  :Var<double>(tv), title(title+":"), lock_bounds(true)
 {
   top = 1.0; bottom = -20;
   left = 0; right = 1.0;
@@ -212,16 +212,44 @@ Slider::Slider(std::string title, _Var& tv)
 
 void Slider::Mouse(View& view, int button, int state, int x, int y)
 {
-  MouseMotion(view,x,y);
+  if(state==0)
+  {
+    // Wheel
+    if( button == 3 || button == 4 )
+    {
+      // Change scale around current value
+      const double frac = max(0.0,min(1.0,(double)(x - v.l)/(double)v.w));
+      const double val = frac * (var->meta_range[1] - var->meta_range[0]) + var->meta_range[0];
+      const double scale = (button == 4 ? 1.2 : 1.0 / 1.2 );
+      var->meta_range[1] = val + (var->meta_range[1] - val)*scale;
+      var->meta_range[0] = val - (val - var->meta_range[0])*scale;
+    }else{
+      lock_bounds = (button == 0);
+      MouseMotion(view,x,y);
+    }
+  }else{
+    if(!lock_bounds)
+    {
+      const double val = a->Get();
+      var->meta_range[0] = min(var->meta_range[0], val);
+      var->meta_range[1] = max(var->meta_range[1], val);
+    }
+  }
 }
 
 void Slider::MouseMotion(View&, int x, int y)
 {
   if( var->meta_range[0] != var->meta_range[1] )
   {
-    const double frac = max(0.0,min(1.0,(double)(x - v.l)/(double)v.w));
-    const double val = frac * (var->meta_range[1] - var->meta_range[0]) + var->meta_range[0];
-    a->Set(val);
+    const double range = (var->meta_range[1] - var->meta_range[0]);
+    const double frac = (double)(x - v.l)/(double)v.w;
+    if( lock_bounds )
+    {
+      const double bfrac = max(0.0,min(1.0,frac));
+      a->Set(bfrac * range + var->meta_range[0] );
+    }else{
+      a->Set(frac * range + var->meta_range[0]);
+    }
   }
 }
 

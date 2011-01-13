@@ -61,6 +61,7 @@ struct Slider : public View, Handler, Var<double>
   void ResizeChildren();
   int text_width;
   GLfloat raster[2];
+  bool lock_bounds;
 };
 
 
