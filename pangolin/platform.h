@@ -3,8 +3,8 @@
 
 #include <pangolin/config.h>
 
-#ifdef MSVC
+#ifdef _MSVC_
 #define __thread __declspec(thread)
-#endif //MSVC
+#endif //_MSVC_
 
 #endif // PANGOLIN_PLATFORM_H

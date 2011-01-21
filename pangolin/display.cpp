@@ -316,7 +316,7 @@ namespace pangolin
 
   float AspectAreaWithinTarget(double target, double test)
   {
-    if( test > target )
+    if( test < target )
       return test / target;
     else
       return target / test;
@@ -407,17 +407,20 @@ namespace pangolin
       // TODO: Make this neater, and make fewer assumptions!
       if( views.size() > 0 )
       {
-        int cols = views.size() - 1;
         const double this_a = v.aspect();
         const double child_a = views[0]->aspect;
-        double a = views.size() * views[0]->aspect;
+        double a = views.size()*child_a;
+        double area = AspectAreaWithinTarget(this_a, a);
 
+        int cols = views.size()-1;
         for(; cols > 0; --cols)
         {
           const int rows = views.size() / cols + (views.size() % cols == 0 ? 0 : 1);
           const double na = cols * child_a / rows;
-          if( AspectAreaWithinTarget(this_a,na) > AspectAreaWithinTarget(this_a,a) )
+          const double new_area = views.size()*AspectAreaWithinTarget(this_a,na)/(rows*cols);
+          if( new_area <= area )
             break;
+          area = new_area;
           a = na;
         }
 
@@ -670,7 +673,7 @@ namespace pangolin
           //TODO Check proj exists
           OpenGlMatrixSpec& proj = cam_state->stacks[GlProjectionStack];
           GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
-          GLdouble np[2];
+          GLdouble np[3];
           gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,np,np+1,np+2);
           const double t[] = { np[0] - rot_center[0], np[1] - rot_center[1], 0};
           LieSetTranslation<>(T_nc,t);

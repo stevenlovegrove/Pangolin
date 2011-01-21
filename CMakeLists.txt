@@ -7,10 +7,12 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules/"
 
 OPTION(BUILD_EXAMPLES "Build Examples" ON)
 
-SET(BUILD_SHARED_LIBS ON)
+# SET(BUILD_SHARED_LIBS ON)
 
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}
 IF( NOT CMAKE_BUILD_TYPE )
+   MESSAGE("Build type not set (defaults to release)")
+   MESSAGE("-DCMAKE_BUILD_TYPE=Debug for debug")
    SET( CMAKE_BUILD_TYPE Release )
 ENDIF()
 

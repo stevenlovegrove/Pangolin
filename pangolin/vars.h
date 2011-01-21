@@ -7,6 +7,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <fstream>
 
 #include "vars_internal.h"
 
@@ -38,8 +39,16 @@ struct Var
 
 bool Pushed(Var<bool>& button);
 
+void ParseVarsFile(const std::string& filename);
+
 typedef void (*NewVarCallbackFn)(void* data, const std::string& name, _Var& var);
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter = "");
+
+template<typename T>
+T FromFile( const std::string& filename, const T& init = T());
+
+template<typename T>
+void FillFromFile( const std::string& filename, std::vector<T>& v, const T& init = T());
 
 ////////////////////////////////////////////////
 // Implementation
@@ -111,13 +120,25 @@ template<typename T>
 inline void Var<T>::init(const std::string& name, T default_value, double min, double max, int flags)
 {
   std::map<std::string,_Var>::iterator vi = vars.find(name);
+
   if( vi != vars.end() )
   {
     // found
     var = &vi->second;
     a = Accessor<T>::Create(vi->second);
-  }else{
-    // not found
+    if( var->generic && var->type_name != typeid(T).name() )
+    {
+      // re-specialise this variable
+      default_value = a->Get();
+      delete a;
+      free(var->val);
+    }else{
+      return;
+    }
+  }
+
+  // Create var of base type T
+  {
     var = &vars[name];
     if( boost::is_same<T,bool>::value ) {
       *var = _Var(new bool, typeid(bool).name() );
@@ -130,7 +151,7 @@ inline void Var<T>::init(const std::string& name, T default_value, double min, d
       a = new _Accessor<T,double>( *(double*)var->val );
     }else{
       *var = _Var(
-        new std::string(boost::lexical_cast<std::string>(default_value)),
+        new std::string(Convert<std::string,T>::Do(default_value)),
         typeid(std::string).name()
       );
       a = new _Accessor<T,std::string>( *(std::string*)var->val );
@@ -160,6 +181,37 @@ inline bool Pushed(Var<bool>& button)
   return val;
 }
 
+template<typename T>
+inline T FromFile( const std::string& filename, const T& init)
+{
+  T out = init;
+  std::ifstream f(filename.c_str());
+  if( f.is_open() )
+  {
+    f >> out;
+    f.close();
+  }
+  return out;
+}
+
+template<typename T>
+inline void FillFromFile( const std::string& filename, std::vector<T>& v, const T& init)
+{
+  std::ifstream f(filename.c_str());
+  if( f.is_open() )
+  {
+    while(!f.eof() && !f.fail())
+    {
+      T data = init;
+      f >> data;
+      if( !f.fail() )
+      {
+        v.push_back(data);
+      }
+    }
+    f.close();
+  }
+}
 
 }
 

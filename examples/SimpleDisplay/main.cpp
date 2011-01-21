@@ -6,6 +6,9 @@ using namespace std;
 
 int main( int /*argc*/, char* argv[] )
 {
+  // Load configuration data
+  pangolin::ParseVarsFile("app.cfg");
+
   // Create OpenGL window in single line thanks to GLUT
   pangolin::CreateGlutWindowAndBind("Main",640,480);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

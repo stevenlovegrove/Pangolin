@@ -3,20 +3,62 @@
 
 #include <boost/utility.hpp>
 #include <boost/type_traits.hpp>
-#include <boost/lexical_cast.hpp>
+//#include <boost/lexical_cast.hpp>
+#include <iostream>
+
 
 namespace pangolin
 {
+
+template<typename T, typename S> struct Convert {
+  static T Do(const S& src)
+  {
+	std::ostringstream oss;
+    oss << src;
+	std::istringstream iss(oss.str());
+    T target;
+    iss >> target;
+    return target;
+//    return boost::lexical_cast<T>(src);
+  }
+};
+
+template<typename T> struct Convert<T,std::string> {
+  static T Do(const std::string& src)
+  {
+    T target;
+    std::istringstream iss(src);
+    iss >> target;
+    return target;
+  }
+};
+
+template<typename S> struct Convert<std::string, S> {
+  static std::string Do(const S& src)
+  {
+    std::ostringstream oss;
+    oss << src;
+    return oss.str();
+  }
+};
+
+template<> struct Convert<std::string, std::string> {
+  static std::string Do(const std::string& src)
+  {
+    return src;
+  }
+};
 
 struct _Var
 {
   _Var() {}
   _Var(void* val, const char* type_name)
-    : val(val),type_name(type_name) {}
+    : val(val),type_name(type_name), generic(false){}
 
   void* val;
   const char* type_name;
 
+  bool generic;
   std::string meta_friendly;
   double meta_range[2];
   int meta_flags;
@@ -109,13 +151,15 @@ struct _Accessor<T,S ,typename boost::enable_if_c<
 
   const T& Get() const
   {
-    cache = boost::lexical_cast<T>(var);
+//    cache = boost::lexical_cast<T>(var);
+    cache = Convert<T,S>::Do(var);
     return cache;
   }
 
   void Set(const T& val)
   {
-    var = boost::lexical_cast<S>(val);
+//    var = boost::lexical_cast<S>(val);
+    var = Convert<S,T>::Do(val);
   }
   S& var;
   mutable T cache;

@@ -63,6 +63,7 @@ struct CudaScopedMappedArray
 
 void CopyPboToTex(GlBufferCudaPtr& buffer, GlTexture& tex);
 
+void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b);
 
 ////////////////////////////////////////////////
 // Implementation
@@ -155,6 +156,13 @@ inline void CopyPboToTex(const GlBufferCudaPtr& buffer, GlTexture& tex, GLenum b
   tex.Bind();
   glTexImage2D(GL_TEXTURE_2D, 0, tex.internal_format, tex.width, tex.height, 0, buffer_layout, buffer_data_type, 0);
   buffer.Unbind();
+}
+
+inline void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b)
+{
+  std::swap(a.bo, b.bo);
+  std::swap(a.cuda_res, b.cuda_res);
+  std::swap(a.buffer_type, b.buffer_type);
 }
 
 
