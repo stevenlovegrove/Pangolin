@@ -100,6 +100,7 @@ namespace pangolin
       return *(vi->second);
     }else{
       View* v = new View();
+      v->handler = &StaticHandler;
       context->all_views[name] = v;
 //      context->base[name] = v;
       context->base.views.push_back(v);
