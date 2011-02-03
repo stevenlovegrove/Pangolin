@@ -14,7 +14,7 @@ struct Panel : public View
 {
   Panel();
   Panel(const std::string& auto_register_var_prefix);
-  void Render();  
+  void Render();
   void ResizeChildren();
   static void AddVariable(void* data, const std::string& name, _Var& var);
   Viewport vinside;
@@ -54,7 +54,9 @@ struct Slider : public View, Handler, Var<double>
   Slider(std::string title, _Var& tv);
   void Mouse(View&, int button, int state, int x, int y);
   void MouseMotion(View&, int x, int y);
+  void Keyboard(View&, unsigned char key, int x, int y);
   void Render();
+
   std::string title;
 
   //Cache params on resize

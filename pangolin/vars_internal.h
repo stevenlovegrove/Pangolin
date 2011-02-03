@@ -13,9 +13,9 @@ namespace pangolin
 template<typename T, typename S> struct Convert {
   static T Do(const S& src)
   {
-	std::ostringstream oss;
+  std::ostringstream oss;
     oss << src;
-	std::istringstream iss(oss.str());
+  std::istringstream iss(oss.str());
     T target;
     iss >> target;
     return target;
@@ -61,6 +61,8 @@ struct _Var
   bool generic;
   std::string meta_friendly;
   double meta_range[2];
+  double meta_increment;
+  double meta_default;
   int meta_flags;
 };
 

@@ -132,9 +132,14 @@ namespace pangolin
       }
       else if( key == GLUT_KEY_ESCAPE) {
         context->quit = true;
-      } else {
-        context->base.handler->Keyboard(context->base,key,x,y);
       }
+      else if(context->activeDisplay && context->activeDisplay->handler)
+      {
+        context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y);
+      }
+//      else {
+//        context->base.handler->Keyboard(context->base,key,x,y);
+//      }
     }
 
     void Mouse( int button, int state, int x, int y)
@@ -164,10 +169,10 @@ namespace pangolin
         context->activeDisplay->handler->Mouse(*(context->activeDisplay),button,state,x,y);
       }
 
-      if(context->mouse_state == 0 )
-      {
-        context->activeDisplay = 0;
-      }
+//      if(context->mouse_state == 0 )
+//      {
+//        context->activeDisplay = 0;
+//      }
     }
 
     void MouseMotion( int x, int y)
