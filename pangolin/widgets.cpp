@@ -212,25 +212,17 @@ Slider::Slider(std::string title, _Var& tv)
 
 void Slider::Keyboard(View&, unsigned char key, int x, int y){
 
-    if( var->meta_range[0] != var->meta_range[1] )
+    if( var->meta_range[0] < var->meta_range[1] )
     {
-        double newVal = a->Get();
-
+        const double val = a->Get();
         if(key=='-'){
-            newVal -= var->meta_increment;
+            a->Set( max(var->meta_range[0],min(var->meta_range[1],val - var->meta_increment) ) );
         }else if(key == '='){
-            newVal  += var->meta_increment;
+            a->Set( max(var->meta_range[0],min(var->meta_range[1],val + var->meta_increment) ) );
         }else if(key == 'r'){
-            newVal = var->meta_default;
+            Reset();
         }
-
-        if( (newVal >= var->meta_range[0]) &&  (newVal<= var->meta_range[1])){
-            a->Set( newVal);
-        }
-
-
     }
-
 }
 
 void Slider::Mouse(View& view, int button, int state, int x, int y)

@@ -52,17 +52,18 @@ template<> struct Convert<std::string, std::string> {
 struct _Var
 {
   _Var() {}
-  _Var(void* val, const char* type_name)
-    : val(val),type_name(type_name), generic(false){}
+  _Var(void* val, void* val_default, const char* type_name)
+    : val(val), val_default(val_default), type_name(type_name), generic(false){}
 
   void* val;
+  void* val_default;
+
   const char* type_name;
 
   bool generic;
   std::string meta_friendly;
   double meta_range[2];
   double meta_increment;
-  double meta_default;
   int meta_flags;
 };
 
@@ -79,16 +80,16 @@ struct Accessor
 {
   virtual const T& Get() const = 0;
   virtual void Set(const T& val) = 0;
-  static Accessor<T>* Create(_Var& var)
+  static Accessor<T>* Create(const char* typeidname, void* var)
   {
-    if( var.type_name == typeid(double).name() ) {
-      return new _Accessor<T,double>( *(double*)var.val);
-    } else if( var.type_name == typeid(int).name() ) {
-      return new _Accessor<T,int>( *(int*)var.val );
-    } else if( var.type_name == typeid(std::string).name() ) {
-      return new _Accessor<T,std::string>( *(std::string*)var.val );
-    } else if( var.type_name == typeid(bool).name() ) {
-      return new _Accessor<T,bool>( *(bool*)var.val );
+    if( typeidname == typeid(double).name() ) {
+      return new _Accessor<T,double>( *(double*)var);
+    } else if( typeidname == typeid(int).name() ) {
+      return new _Accessor<T,int>( *(int*)var );
+    } else if( typeidname == typeid(std::string).name() ) {
+      return new _Accessor<T,std::string>( *(std::string*)var );
+    } else if( typeidname == typeid(bool).name() ) {
+      return new _Accessor<T,bool>( *(bool*)var );
     } else {
       throw UnknownTypeException();
     }

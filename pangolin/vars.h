@@ -32,6 +32,7 @@ struct Var
   void operator=(const Var<T>& val);
 
   void Init(const std::string& name, T default_value, double min = 0, double max = 0, int flags = 1);
+  void SetDefault(const T& val);
   void Reset();
 
   _Var* var;
@@ -77,7 +78,7 @@ template<typename T>
 inline Var<T>::Var(_Var& var)
   : var(&var)
 {
-  a = Accessor<T>::Create(var);
+  a = Accessor<T>::Create(var.type_name,var.val);
 }
 
 template<typename T>
@@ -126,7 +127,7 @@ inline void Var<T>::Init(const std::string& name, T default_value, double min, d
   {
     // found
     var = &vi->second;
-    a = Accessor<T>::Create(vi->second);
+    a = Accessor<T>::Create(var->type_name,var->val);
     if( var->generic && var->type_name != typeid(T).name() )
     {
       // re-specialise this variable
@@ -145,39 +146,35 @@ inline void Var<T>::Init(const std::string& name, T default_value, double min, d
     const double range = max - min;
     const int default_ticks = 1000;
     const double default_increment = range / default_ticks;
+    Accessor<T>* da = 0;
 
     if( boost::is_same<T,bool>::value ) {
-      *var = _Var(new bool, typeid(bool).name() );
+      *var = _Var(new bool, new bool, typeid(bool).name() );
       a = new _Accessor<T,bool>( *(bool*)var->val );
+      da = new _Accessor<T,bool>( *(bool*)var->val_default );
     }else if( boost::is_integral<T>::value ) {
-      *var = _Var(new int, typeid(int).name() );
+      *var = _Var(new int, new int, typeid(int).name() );
       var->meta_increment = std::max(1.0,default_increment);
-
-      // TODO: UNHACK
-      double *hack =(double *)(&default_value);
-      int * unhack = (int *)hack;
-      var->meta_default = (double)(*unhack);
-
       a = new _Accessor<T,int>( *(int*)var->val );
+      da = new _Accessor<T,int>( *(int*)var->val_default );
     }else if( boost::is_scalar<T>::value ) {
-      *var = _Var(new double, typeid(double).name() );
+      *var = _Var(new double, new double, typeid(double).name() );
       var->meta_increment = default_increment;
-
-      // TODO: UNHACK
-      double *hack =(double *)(&default_value);
-      float * unhack = (float  *)hack;
-      var->meta_default = (float)(*unhack);
-
       a = new _Accessor<T,double>( *(double*)var->val );
+      da = new _Accessor<T,double>( *(double*)var->val_default );
     }else{
       *var = _Var(
         new std::string(Convert<std::string,T>::Do(default_value)),
+        new std::string,
         typeid(std::string).name()
       );
       a = new _Accessor<T,std::string>( *(std::string*)var->val );
+      da = new _Accessor<T,std::string>( *(std::string*)var->val_default );
     }
 
     a->Set(default_value);
+    da->Set(default_value);
+    delete da;
 
     std::vector<std::string> parts;
     boost::split(parts,name,boost::is_any_of("."));
@@ -193,6 +190,22 @@ inline void Var<T>::Init(const std::string& name, T default_value, double min, d
       if( boost::starts_with(name,nvc.filter) )
         nvc.fn(nvc.data,name,*var);
   }
+}
+
+template<typename T>
+inline void Var<T>::SetDefault(const T& val)
+{
+  Accessor<T>* da= Accessor<T>::Create(var->type_name, var->val_default );
+  da->Set(val);
+  delete da;
+}
+
+template<typename T>
+inline void Var<T>::Reset()
+{
+  Accessor<T>* da= Accessor<T>::Create(var->type_name, var->val_default );
+  a->Set(da->Get());
+  delete da;
 }
 
 inline bool Pushed(Var<bool>& button)
