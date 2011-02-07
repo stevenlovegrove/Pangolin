@@ -25,16 +25,60 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PLOTTER_H
+#define PLOTTER_H
 
-#include <pangolin/config.h>
-#include "platform.h"
-#include "glcuda.h"
-#include "gl.h"
-#include "display.h"
-#include "widgets.h"
-#include "plotter.h"
+#include "pangolin.h"
+#include <vector>
+#include <boost/circular_buffer.hpp>
 
-#endif // PANGOLIN_H
+namespace pangolin
+{
 
+struct DataSequence
+{
+  DataSequence(unsigned int buffer_size = 1024);
+
+  void Add(float val);
+  void Clear();
+
+  int x_offset;
+  boost::circular_buffer<float> y;
+  unsigned n;
+  float sum_y;
+  float sum_y_sq;
+  float min_y;
+  float max_y;
+};
+
+struct DataLog
+{
+  DataLog(unsigned int buffer_size = 1024);
+  void Log(float v);
+  void Log(float v1, float v2);
+  void Log(float v1, float v2, float v3);
+  void Log(float v1, float v2, float v3, float v4);
+  void Log(float v1, float v2, float v3, float v4, float v5);
+  void Log(float v1, float v2, float v3, float v4, float v5, float v6);
+  void Log(unsigned int N, const float vals[]);
+  void Clear();
+
+  unsigned int buffer_size;
+  int x;
+  std::vector<DataSequence> sequences;
+};
+
+struct Plotter : public View, Handler
+{
+  Plotter(DataLog& log);
+  void Render();
+
+  DataLog* log;
+//  std::vector<std::pair<int,DataLog*> > data;
+};
+
+View& CreatePlotter(const std::string& name, DataLog& log);
+
+} // namespace pangolin
+
+#endif // PLOTTER_H
