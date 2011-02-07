@@ -137,10 +137,19 @@ namespace pangolin
       {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y);
       }
-//      else {
-//        context->base.handler->Keyboard(context->base,key,x,y);
-//      }
     }
+
+    void KeyboardUp(unsigned char key, int x, int y)
+    {
+        // Force coords to match OpenGl Window Coords
+        y = context->base.v.h - y;
+
+        if(context->activeDisplay && context->activeDisplay->handler)
+        {
+          context->activeDisplay->handler->KeyboardUp(*(context->activeDisplay),key,x,y);
+        }
+    }
+
 
     void Mouse( int button, int state, int x, int y)
     {
@@ -209,6 +218,7 @@ namespace pangolin
   void TakeGlutCallbacks()
   {
     glutKeyboardFunc(&process::Keyboard);
+    glutKeyboardUpFunc(&process::KeyboardUp);
     glutReshapeFunc(&process::Resize);
     glutMouseFunc(&process::Mouse);
     glutMotionFunc(&process::MouseMotion);
@@ -582,6 +592,18 @@ namespace pangolin
         child->handler->Keyboard(*child,key,x,y);
     }
   }
+
+  void Handler::KeyboardUp(View& d, unsigned char key, int x, int y)
+  {
+    View* child = FindChild(d,x,y);
+    if( child)
+    {
+      context->activeDisplay = child;
+      if( child->handler)
+        child->handler->KeyboardUp(*child,key,x,y);
+    }
+  }
+
 
   void Handler::Mouse(View& d, int button, int state, int x, int y)
   {

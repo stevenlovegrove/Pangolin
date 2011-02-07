@@ -50,6 +50,8 @@ namespace pangolin
     //! Pangolin register callbacks from your windowing system
     void Keyboard( unsigned char key, int x, int y);
 
+    void KeyboardUp(unsigned char key, int x, int y);
+
     //! @brief Tell pangolin base window size has changed
     //! You will need to call this manually if you haven't let
     //! Pangolin register callbacks from your windowing system
@@ -256,6 +258,7 @@ namespace pangolin
   struct Handler
   {
     virtual void Keyboard(View&, unsigned char key, int x, int y);
+    virtual void KeyboardUp(View&, unsigned char key, int x, int y);
     virtual void Mouse(View&, int button, int state, int x, int y);
     virtual void MouseMotion(View&, int x, int y);
   };
