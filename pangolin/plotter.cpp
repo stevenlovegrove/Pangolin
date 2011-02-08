@@ -351,8 +351,8 @@ void Plotter::Mouse(View&, MouseButton button, int x, int y, bool pressed, int b
 void Plotter::MouseMotion(View&, int x, int y, int button_state)
 {
   const int d[2] = {x-last_mouse_pos[0],y-last_mouse_pos[1]};
-  const int is[2] = {int_x[1]-int_x[0],int_y[1]-int_y[0]};
-  const float df[2] = {(float)is[0]*d[0]/v.w, (float)is[1]*d[1]/v.h};
+  const float is[2] = {int_x[1]-int_x[0],int_y[1]-int_y[0]};
+  const float df[2] = {is[0]*d[0]/(float)v.w, is[1]*d[1]/(float)v.h};
 
   if( button_state == MouseButtonLeft )
   {
