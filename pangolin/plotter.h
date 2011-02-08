@@ -42,13 +42,15 @@ Plotter& CreatePlotter(const std::string& name, DataLog* log = 0);
 
 struct DataSequence
 {
-  DataSequence(unsigned int buffer_size = 1024);
+  DataSequence(unsigned int buffer_size = 1024, unsigned size = 0, float val = 0.0f );
 
   void Add(float val);
   void Clear();
+  float operator[](unsigned int i) const;
+  size_t size() const;
 
-  int x_offset;
   boost::circular_buffer<float> y;
+  unsigned firstn;
   unsigned n;
   float sum_y;
   float sum_y_sq;
@@ -67,6 +69,7 @@ struct DataLog
   void Log(float v1, float v2, float v3, float v4, float v5, float v6);
   void Log(unsigned int N, const float vals[]);
   void Clear();
+  void Save(std::string filename);
 
   unsigned int buffer_size;
   int x;
@@ -87,11 +90,14 @@ const static float colour_bg[3] = {0.0,0.0,0.0};
 const static float colour_tk[3] = {0.1,0.1,0.1};
 const static float colour_ax[3] = {0.5,0.5,0.5};
 
+const static int draw_modes_n = 2;
+const static int draw_modes[] = {GL_LINE_STRIP, GL_POINTS};
+
 struct Plotter : public View, Handler
 {
   Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5 );
   void Render();
-  void DrawSequence(const DataLog& log, unsigned int s);
+  void DrawSequence(const DataSequence& seq);
   void DrawTicks();
 
   void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
@@ -107,6 +113,8 @@ struct Plotter : public View, Handler
   float ticks[2];
   int last_mouse_pos[2];
 
+  int draw_mode;
+  bool xy;
   const static unsigned int show_n = 9;
   bool show[show_n];
 };

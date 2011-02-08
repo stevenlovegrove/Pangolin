@@ -128,6 +128,7 @@ void Panel::Render()
     OpenGlRenderState::ApplyWindowCoords();
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_LINE_SMOOTH);
 
     glColor4fv(colour_s2);
     glRect(v);
