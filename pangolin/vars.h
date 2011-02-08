@@ -171,7 +171,7 @@ inline void Var<T>::Init(const std::string& name, T default_value, double min, d
     var = &vars[name];
 
     const double range = max - min;
-    const int default_ticks = 1000;
+    const int default_ticks = 5000;
     const double default_increment = range / default_ticks;
     Accessor<T>* da = 0;
 
