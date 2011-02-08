@@ -35,6 +35,11 @@
 namespace pangolin
 {
 
+struct Plotter;
+struct DataLog;
+
+Plotter& CreatePlotter(const std::string& name, DataLog* log = 0);
+
 struct DataSequence
 {
   DataSequence(unsigned int buffer_size = 1024);
@@ -53,7 +58,7 @@ struct DataSequence
 
 struct DataLog
 {
-  DataLog(unsigned int buffer_size = 1024);
+  DataLog(unsigned int buffer_size = 10000 );
   void Log(float v);
   void Log(float v1, float v2);
   void Log(float v1, float v2, float v3);
@@ -68,16 +73,43 @@ struct DataLog
   std::vector<DataSequence> sequences;
 };
 
+const static int num_plot_colours = 6;
+const static float plot_colours[][3] =
+{
+  {1.0, 0.0, 0.0},
+  {0.0, 1.0, 0.0},
+  {0.0, 0.0, 1.0},
+  {1.0, 0.0, 1.0},
+  {0.0, 1.0, 1.0},
+  {1.0, 1.0, 0.0}
+};
+const static float colour_bg[3] = {0.0,0.0,0.0};
+const static float colour_tk[3] = {0.1,0.1,0.1};
+const static float colour_ax[3] = {0.5,0.5,0.5};
+
 struct Plotter : public View, Handler
 {
-  Plotter(DataLog& log);
+  Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5 );
   void Render();
+  void DrawSequence(const DataLog& log, unsigned int s);
+  void DrawTicks();
+
+  void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
+  void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
+  void MouseMotion(View&, int x, int y, int mouse_state);
 
   DataLog* log;
-//  std::vector<std::pair<int,DataLog*> > data;
-};
+  bool track_front;
+  float int_x_dflt[2];
+  float int_y_dflt[2];
+  float int_x[2];
+  float int_y[2];
+  float ticks[2];
+  int last_mouse_pos[2];
 
-View& CreatePlotter(const std::string& name, DataLog& log);
+  const static unsigned int show_n = 9;
+  bool show[show_n];
+};
 
 } // namespace pangolin
 

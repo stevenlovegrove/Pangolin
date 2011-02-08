@@ -50,7 +50,7 @@ struct Panel : public View
 struct Button : public View, Handler, Var<bool>
 {
   Button(std::string title, _Var& tv);
-  void Mouse(View&, int button, int state, int x, int y);
+  void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
   void Render();
   std::string title;
 
@@ -65,7 +65,7 @@ struct Button : public View, Handler, Var<bool>
 struct Checkbox : public View, Handler, Var<bool>
 {
   Checkbox(std::string title, _Var& tv);
-  void Mouse(View&, int button, int state, int x, int y);
+  void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
   void Render();
   std::string title;
 
@@ -79,9 +79,9 @@ struct Checkbox : public View, Handler, Var<bool>
 struct Slider : public View, Handler, Var<double>
 {
   Slider(std::string title, _Var& tv);
-  void Mouse(View&, int button, int state, int x, int y);
-  void MouseMotion(View&, int x, int y);
-  void Keyboard(View&, unsigned char key, int x, int y);
+  void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
+  void MouseMotion(View&, int x, int y, int mouse_state);
+  void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
   void Render();
 
   std::string title;

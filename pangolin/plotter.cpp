@@ -46,6 +46,10 @@ DataSequence::DataSequence(unsigned int buffer_size)
 void DataSequence::Add(float val)
 {
   y.push_back(val);
+  min_y = std::min(min_y,val);
+  max_y = std::max(max_y,val);
+  sum_y += val;
+  sum_y_sq += val*val;
   ++n;
 }
 
@@ -80,6 +84,8 @@ void DataLog::Log(unsigned int N, const float vals[])
 
   for( unsigned int i=0; i<sequences.size(); ++i )
     sequences[i].Add(vals[i]);
+
+  ++x;
 }
 
 void DataLog::Log(float v)
@@ -115,22 +121,195 @@ void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6)
   Log(6,vs);
 }
 
-Plotter::Plotter(DataLog& log)
-  : log(&log)
+Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky)
+  : log(log), track_front(true)
 {
   this->handler = this;
+  int_x[0] = int_x_dflt[0] = left;
+  int_x[1] = int_x_dflt[1] = right;
+  int_y[0] = int_y_dflt[0] = bottom;
+  int_y[1] = int_y_dflt[1] = top;
+  ticks[0] = tickx;
+  ticks[1] = ticky;
+
+  for( unsigned int i=0; i<show_n; ++i )
+    show[i] = true;
+}
+
+void Plotter::DrawTicks()
+{
+  glColor3fv(colour_tk);
+  const int tx[2] = {
+    (int)ceil(int_x[0] / ticks[0]),
+    (int)ceil(int_x[1] / ticks[0])
+  };
+  const int ty[2] = {
+    (int)ceil(int_y[0] / ticks[1]),
+    (int)ceil(int_y[1] / ticks[1])
+  };
+
+  for( int i=tx[0]; i<tx[1]; ++i )
+  {
+    glBegin(GL_LINE_STRIP);
+    glVertex2f(i*ticks[0], int_y[0]);
+    glVertex2f(i*ticks[0], int_y[1]);
+    glEnd();
+  }
+
+  for( int i=ty[0]; i<ty[1]; ++i )
+  {
+    glBegin(GL_LINE_STRIP);
+    glVertex2f(int_x[0], i*ticks[1]);
+    glVertex2f(int_x[1], i*ticks[1]);
+    glEnd();
+  }
+
+  glColor3fv(colour_ax);
+  glBegin(GL_LINE_STRIP);
+  glVertex2f(0, int_y[0]);
+  glVertex2f(0, int_y[1]);
+  glEnd();
+  glBegin(GL_LINE_STRIP);
+  glVertex2f(int_x[0],0);
+  glVertex2f(int_x[1],0);
+  glEnd();
+}
+
+void Plotter::DrawSequence(const DataLog& log, unsigned int s)
+{
+  const DataSequence& seq = log.sequences[s];
+  const int seqint_x[2] = {
+    seq.x_offset + seq.n - seq.y.size(),
+    seq.x_offset + seq.n
+  };
+  const int valid_int_x[2] = {
+    std::max(seqint_x[0],(int)int_x[0]),
+    std::min(seqint_x[1],(int)int_x[1])
+  };
+  glBegin(GL_LINE_STRIP);
+  for( int x=valid_int_x[0]; x<valid_int_x[1]; ++x )
+    glVertex2f(x,seq.y[x-seqint_x[0]]);
+  glEnd();
 }
 
 void Plotter::Render()
 {
-  OpenGlRenderState::ApplyIdentity();
-  glBegin(GL_LINE_STRIP);
-  glVertex2f(-1,-1);
-  glVertex2f(1,1);
-  glEnd();
+  if( track_front )
+  {
+    const float d = int_x[1] - log->x;
+    int_x[0] -= d;
+    int_x[1] -= d;
+  }
+
+  ActivateScissorAndClear();
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(int_x[0], int_x[1], int_y[0], int_y[1]);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  DrawTicks();
+
+  for( unsigned int s=0; s < log->sequences.size(); ++s )
+  {
+    if( (s > 9) ||  show[s] )
+    {
+      glColor3fv(plot_colours[s%num_plot_colours]);
+      DrawSequence(*log,s);
+    }
+  }
 }
 
-View& CreatePlotter(const std::string& name, DataLog& log)
+void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+{
+  if( pressed )
+  {
+    if( key == 't' ) {
+      track_front = !track_front;
+    }else if( key == 'r' )
+    {
+      int_x[0] = int_x_dflt[0];
+      int_x[1] = int_x_dflt[1];
+      int_y[0] = int_y_dflt[0];
+      int_y[1] = int_y_dflt[1];
+      track_front = true;
+      for( unsigned int i=0; i<show_n; ++i )
+        show[i] = true;
+    }else if( key == 'a' || key == ' ' ) {
+      float min_y = std::numeric_limits<float>::max();
+      float max_y = std::numeric_limits<float>::min();
+      for( unsigned int i=0; i<log->sequences.size(); ++i )
+      {
+        if( i>=show_n || show[i] )
+        {
+          min_y = std::min(min_y,log->sequences[i].min_y);
+          max_y = std::max(max_y,log->sequences[i].max_y);
+        }
+      }
+      if( min_y < max_y )
+      {
+        int_y[0] = min_y;
+        int_y[1] = max_y;
+      }
+    }else if( '1' <= key && key <= '9' ) {
+      show[key-'1'] = !show[key-'1'];
+    }
+  }
+}
+
+void Plotter::Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state)
+{
+  last_mouse_pos[0] = x;
+  last_mouse_pos[1] = y;
+
+  if(button == MouseWheelUp || button == MouseWheelDown)
+  {
+    const float mean = (int_y[0] + int_y[1])/2.0;
+    const float scale = 1.0f + ((button == MouseWheelDown) ? 0.1 : -0.1);
+    int_y[0] = scale*(int_y[0] - mean) + mean;
+    int_y[1] = scale*(int_y[1] - mean) + mean;
+
+  }
+}
+
+void Plotter::MouseMotion(View&, int x, int y, int button_state)
+{
+  const int d[2] = {x-last_mouse_pos[0],y-last_mouse_pos[1]};
+  const int is[2] = {int_x[1]-int_x[0],int_y[1]-int_y[0]};
+  const float df[2] = {(float)is[0]*d[0]/v.w, (float)is[1]*d[1]/v.h};
+
+  if( button_state == MouseButtonLeft )
+  {
+    track_front = false;
+    int_x[0] -= df[0];
+    int_x[1] -= df[0];
+//    interval_y[0] -= df[1];
+//    interval_y[1] -= df[1];
+  }else if(button_state == MouseButtonMiddle )
+  {
+    int_y[0] -= df[1];
+    int_y[1] -= df[1];
+  }else if(button_state == MouseButtonRight )
+  {
+    const float c[2] = {
+      track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
+      (int_y[0] + int_y[1])/2.0
+    };
+    const float scale[2] = {
+      1.0f + (float)d[0] / (float)v.w,
+      1.0f - (float)d[1] / (float)v.h,
+    };
+    int_x[0] = scale[0]*(int_x[0] - c[0]) + c[0];
+    int_x[1] = scale[0]*(int_x[1] - c[0]) + c[0];
+    int_y[0] = scale[1]*(int_y[0] - c[1]) + c[1];
+    int_y[1] = scale[1]*(int_y[1] - c[1]) + c[1];
+  }
+
+  last_mouse_pos[0] = x;
+  last_mouse_pos[1] = y;
+}
+
+Plotter& CreatePlotter(const std::string& name, DataLog* log)
 {
     Plotter* v = new Plotter(log);
     context->all_views[name] = v;

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <boost/thread.hpp>
 #include <pangolin/pangolin.h>
 
 using namespace pangolin;
@@ -18,8 +19,8 @@ int main( int /*argc*/, char* argv[] )
 
   DataLog log;
 
-  View& d_graph = pangolin::CreatePlotter("x",log)
-      .SetBounds(1.0, 0.0, 200, 1.0);
+  View& d_graph = pangolin::CreatePlotter("x",&log);
+  d_graph.SetBounds(1.0, 0.0, 200, 1.0);
 
   View& d_panel = pangolin::CreatePanel("ui")
       .SetBounds(1.0, 0.0, 0, 200);
@@ -32,21 +33,19 @@ int main( int /*argc*/, char* argv[] )
     if(HasResized())
       DisplayBase().ActivateScissorAndClear();
 
-    static Var<double> tinc("ui.t inc",0.01,0,M_PI);
-
-    d_graph.ActivateAndScissor();
-    d_graph.Render();
+    static Var<double> tinc("ui.t inc",0.01,0,0.1);
 
     log.Log(sin(t),cos(t),tan(t));
     t += tinc;
 
-    // Render our UI panel when we receive input
-    if(HadInput())
-      d_panel.Render();
+    // Render special panals
+    d_panel.Render();
+    d_graph.Render();
 
     // Swap frames and Process Events
     glutSwapBuffers();
     glutMainLoopEvent();
+    boost::this_thread::sleep(boost::posix_time::milliseconds(10));
   }
 
   return 0;

@@ -162,7 +162,7 @@ namespace pangolin
       }
       else if(context->activeDisplay && context->activeDisplay->handler)
       {
-        context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y);
+        context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
       }
     }
 
@@ -173,13 +173,16 @@ namespace pangolin
 
         if(context->activeDisplay && context->activeDisplay->handler)
         {
-          context->activeDisplay->handler->KeyboardUp(*(context->activeDisplay),key,x,y);
+          context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,false);
         }
     }
 
 
-    void Mouse( int button, int state, int x, int y)
+    void Mouse( int button_raw, int state, int x, int y)
     {
+      const MouseButton button = (MouseButton)(1 << button_raw);
+      const bool pressed = (state == 0);
+
       context->had_input = context->is_double_buffered ? 2 : 1;
 
       // Force coords to match OpenGl Window Coords
@@ -187,28 +190,17 @@ namespace pangolin
 
       const bool fresh_input = (context->mouse_state == 0);
 
-      if( state == 0 )
-      {
-        // mouse down
-        context->mouse_state |= 1 << button;
-      }else if( state == 1 )
-      {
-        // mouse up
-        context->mouse_state &= ~(1 << button);
+      if( pressed ) {
+        context->mouse_state |= button;
+      }else{
+        context->mouse_state &= ~button;
       }
 
-      if(fresh_input)
-      {
-        context->base.handler->Mouse(context->base,button,state,x,y);
-      }else if(context->activeDisplay && context->activeDisplay->handler)
-      {
-        context->activeDisplay->handler->Mouse(*(context->activeDisplay),button,state,x,y);
+      if(fresh_input) {
+        context->base.handler->Mouse(context->base,button,x,y,pressed,context->mouse_state);
+      }else if(context->activeDisplay && context->activeDisplay->handler) {
+        context->activeDisplay->handler->Mouse(*(context->activeDisplay),button,x,y,pressed,context->mouse_state);
       }
-
-//      if(context->mouse_state == 0 )
-//      {
-//        context->activeDisplay = 0;
-//      }
     }
 
     void MouseMotion( int x, int y)
@@ -221,9 +213,9 @@ namespace pangolin
       if( context->activeDisplay)
       {
         if( context->activeDisplay->handler )
-          context->activeDisplay->handler->MouseMotion(*(context->activeDisplay),x,y);
+          context->activeDisplay->handler->MouseMotion(*(context->activeDisplay),x,y,context->mouse_state);
       }else{
-        context->base.handler->MouseMotion(context->base,x,y);
+        context->base.handler->MouseMotion(context->base,x,y,context->mouse_state);
       }
     }
 
@@ -609,52 +601,40 @@ namespace pangolin
     return 0;
   }
 
-  void Handler::Keyboard(View& d, unsigned char key, int x, int y)
+  void Handler::Keyboard(View& d, unsigned char key, int x, int y, bool pressed)
   {
     View* child = FindChild(d,x,y);
     if( child)
     {
       context->activeDisplay = child;
       if( child->handler)
-        child->handler->Keyboard(*child,key,x,y);
+        child->handler->Keyboard(*child,key,x,y,pressed);
     }
   }
 
-  void Handler::KeyboardUp(View& d, unsigned char key, int x, int y)
-  {
-    View* child = FindChild(d,x,y);
-    if( child)
-    {
-      context->activeDisplay = child;
-      if( child->handler)
-        child->handler->KeyboardUp(*child,key,x,y);
-    }
-  }
-
-
-  void Handler::Mouse(View& d, int button, int state, int x, int y)
+  void Handler::Mouse(View& d, MouseButton button, int x, int y, bool pressed, int button_state)
   {
     View* child = FindChild(d,x,y);
     if( child )
     {
       context->activeDisplay = child;
       if( child->handler)
-        child->handler->Mouse(*child,button,state,x,y);
+        child->handler->Mouse(*child,button,x,y,pressed,button_state);
     }
   }
 
-  void Handler::MouseMotion(View& d, int x, int y)
+  void Handler::MouseMotion(View& d, int x, int y, int button_state)
   {
     View* child = FindChild(d,x,y);
     if( child )
     {
       context->activeDisplay = child;
       if( child->handler)
-        child->handler->MouseMotion(*child,x,y);
+        child->handler->MouseMotion(*child,x,y,button_state);
     }
   }
 
-  void Handler3D::Mouse(View& display, int button, int state, int x, int y)
+  void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)
   {
     // mouse down
     last_pos[0] = x;
@@ -663,10 +643,9 @@ namespace pangolin
     double T_nc[3*4];
     LieSetIdentity(T_nc);
 
-    if( state == 0 )
+    if( pressed && cam_state->stacks.find(GlProjectionStack) != cam_state->stacks.end() )
     {
       OpenGlMatrixSpec& proj = cam_state->stacks[GlProjectionStack];
-      // TODO: check it actually exists!
 
       // Find 3D point using depth buffer
       glReadBuffer(GL_FRONT);
@@ -685,16 +664,16 @@ namespace pangolin
         SetZero<3,1>(rot_center);
       }
 
-      // Wheel
-      if( button == 3 || button == 4)
+      if( button == MouseWheelUp || button == MouseWheelDown)
       {
+
         LieSetIdentity(T_nc);
-        const double t[] = { 0,0,(button==3?1:-1)*100*tf};
+        const double t[] = { 0,0,(button==MouseWheelUp?1:-1)*100*tf};
         LieSetTranslation<>(T_nc,t);
-        if( !(context->mouse_state & (1<<2)) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
+        if( !(button_state & MouseButtonRight) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
         {
           LieSetTranslation<>(T_nc,rot_center);
-          MatMul<3,1>(T_nc+(3*3),(button==3?-1.0:1.0)/5.0);
+          MatMul<3,1>(T_nc+(3*3),(button==MouseWheelUp?-1.0:1.0)/5.0);
         }
         OpenGlMatrixSpec& spec = cam_state->stacks[GlModelViewStack];
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
@@ -702,7 +681,7 @@ namespace pangolin
     }
   }
 
-  void Handler3D::MouseMotion(View& display, int x, int y)
+  void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
   {
     const int delta[2] = {(x-last_pos[0]),(y-last_pos[1])};
     const float mag = delta[0]*delta[0] + delta[1]*delta[1];
@@ -715,11 +694,11 @@ namespace pangolin
       double T_nc[3*4];
       LieSetIdentity(T_nc);
 
-      if( context->mouse_state == 2 )
+      if( button_state == MouseButtonMiddle )
       {
         // Middle Drag: in plane translate
         Rotation<>(T_nc,-delta[1]*0.01, -delta[0]*0.01, 0.0);
-      }else if( context->mouse_state == 1 )
+      }else if( button_state == MouseButtonLeft )
       {
         // Left Drag: in plane translate
         if( last_z != 1 )
@@ -736,7 +715,7 @@ namespace pangolin
           const double t[] = { -10*delta[0]*tf, 10*delta[1]*tf, 0};
           LieSetTranslation<>(T_nc,t);
         }
-      }else if( context->mouse_state == 5)
+      }else if( button_state == (MouseButtonLeft | MouseButtonRight) )
       {
         // Left and Right Drag: in plane rotate about object
 //        Rotation<>(T_nc,0.0,0.0, delta[0]*0.01);
@@ -751,7 +730,7 @@ namespace pangolin
         LieSetTranslation<>(T_n2,rot_center);
         LieMulSE3(T_nc, T_n2, T_2c );
 
-      }else if( context->mouse_state == 4)
+      }else if( button_state == MouseButtonRight)
       {
         // Right Drag: object centric rotation
         double T_2c[3*4];

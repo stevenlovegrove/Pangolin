@@ -138,6 +138,7 @@ namespace pangolin
     void Scissor() const;
     void ActivateAndScissor() const;
     bool Contains(int x, int y) const;
+
     Viewport Inset(int i) const;
     Viewport Inset(int horiz, int vert) const;
 
@@ -280,14 +281,22 @@ namespace pangolin
     View(View& v) { /* Do Not copy - take reference instead*/ }
   };
 
+  enum MouseButton
+  {
+    MouseButtonLeft = 1,
+    MouseButtonMiddle = 2,
+    MouseButtonRight = 4,
+    MouseWheelUp = 8,
+    MouseWheelDown = 16
+  };
+
   //! @brief Input Handler base class with virtual methods which recurse
   //! into sub-displays
   struct Handler
   {
-    virtual void Keyboard(View&, unsigned char key, int x, int y);
-    virtual void KeyboardUp(View&, unsigned char key, int x, int y);
-    virtual void Mouse(View&, int button, int state, int x, int y);
-    virtual void MouseMotion(View&, int x, int y);
+    virtual void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
+    virtual void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
+    virtual void MouseMotion(View&, int x, int y, int button_state);
   };
   static Handler StaticHandler;
 
@@ -298,8 +307,8 @@ namespace pangolin
       : cam_state(&cam_state), /*hwin(3),*/ tf(trans_scale), cameraspec(CameraSpecOpenGl) {};
 
     void SetOpenGlCamera();
-    void Mouse(View&, int button, int state, int x, int y);
-    void MouseMotion(View&, int x, int y);
+    void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
+    void MouseMotion(View&, int x, int y, int button_state);
 
     OpenGlRenderState* cam_state;
     const static int hwin = 3;

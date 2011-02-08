@@ -163,10 +163,10 @@ Button::Button(string title, _Var& tv)
     text_width = glutBitmapLength(font,(unsigned char*)title.c_str());
 }
 
-void Button::Mouse(View&, int button, int state, int x, int y)
+void Button::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
 {
-    down = !state;
-    if( state > 0 ) a->Set(!a->Get());
+    down = pressed;
+    if( !pressed ) a->Set(!a->Get());
 }
 
 void Button::Render()
@@ -196,9 +196,9 @@ Checkbox::Checkbox(std::string title, _Var& tv)
     handler = this;
 }
 
-void Checkbox::Mouse(View&, int button, int state, int x, int y)
+void Checkbox::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
 {
-    if( state == 0 )
+    if( pressed )
         a->Set(!a->Get());
 }
 
@@ -237,9 +237,9 @@ Slider::Slider(std::string title, _Var& tv)
     handler = this;
 }
 
-void Slider::Keyboard(View&, unsigned char key, int x, int y){
+void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed){
 
-    if( var->meta_range[0] < var->meta_range[1] )
+    if( pressed && var->meta_range[0] < var->meta_range[1] )
     {
         const double val = a->Get();
         if(key=='-'){
@@ -252,22 +252,22 @@ void Slider::Keyboard(View&, unsigned char key, int x, int y){
     }
 }
 
-void Slider::Mouse(View& view, int button, int state, int x, int y)
+void Slider::Mouse(View& view, MouseButton button, int x, int y, bool pressed, int mouse_state)
 {
-    if(state==0)
+    if(pressed)
     {
         // Wheel
-        if( button == 3 || button == 4 )
+        if( button == MouseWheelUp || button == MouseWheelDown )
         {
             // Change scale around current value
             const double frac = max(0.0,min(1.0,(double)(x - v.l)/(double)v.w));
             const double val = frac * (var->meta_range[1] - var->meta_range[0]) + var->meta_range[0];
-            const double scale = (button == 4 ? 1.2 : 1.0 / 1.2 );
+            const double scale = (button == MouseWheelUp ? 1.2 : 1.0 / 1.2 );
             var->meta_range[1] = val + (var->meta_range[1] - val)*scale;
             var->meta_range[0] = val - (val - var->meta_range[0])*scale;
         }else{
-            lock_bounds = (button == 0);
-            MouseMotion(view,x,y);
+            lock_bounds = (button == MouseButtonLeft);
+            MouseMotion(view,x,y,mouse_state);
         }
     }else{
         if(!lock_bounds)
@@ -279,7 +279,7 @@ void Slider::Mouse(View& view, int button, int state, int x, int y)
     }
 }
 
-void Slider::MouseMotion(View&, int x, int y)
+void Slider::MouseMotion(View&, int x, int y, int mouse_state)
 {
     if( var->meta_range[0] != var->meta_range[1] )
     {
