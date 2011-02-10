@@ -183,20 +183,26 @@ void Plotter::DrawTicks()
     (int)ceil(int_y[1] / ticks[1])
   };
 
-  for( int i=tx[0]; i<tx[1]; ++i )
+  if( tx[1] - tx[0] < v.w/4 )
   {
-    glBegin(GL_LINE_STRIP);
-    glVertex2f(i*ticks[0], int_y[0]);
-    glVertex2f(i*ticks[0], int_y[1]);
-    glEnd();
+    for( int i=tx[0]; i<tx[1]; ++i )
+    {
+      glBegin(GL_LINE_STRIP);
+      glVertex2f(i*ticks[0], int_y[0]);
+      glVertex2f(i*ticks[0], int_y[1]);
+      glEnd();
+    }
   }
 
-  for( int i=ty[0]; i<ty[1]; ++i )
+  if( ty[1] - ty[0] < v.h/4 )
   {
-    glBegin(GL_LINE_STRIP);
-    glVertex2f(int_x[0], i*ticks[1]);
-    glVertex2f(int_x[1], i*ticks[1]);
-    glEnd();
+    for( int i=ty[0]; i<ty[1]; ++i )
+    {
+      glBegin(GL_LINE_STRIP);
+      glVertex2f(int_x[0], i*ticks[1]);
+      glVertex2f(int_x[1], i*ticks[1]);
+      glEnd();
+    }
   }
 
   glColor3fv(colour_ax);
@@ -223,6 +229,15 @@ void Plotter::DrawSequence(const DataSequence& seq)
   glEnd();
 }
 
+void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
+{
+  glBegin(draw_modes[draw_mode]);
+  for( unsigned n=0; n < x.size(); ++n )
+    glVertex2f(x[n],y[n]);
+  glEnd();
+}
+
+
 void Plotter::Render()
 {
   if( track_front )
@@ -244,13 +259,16 @@ void Plotter::Render()
 
   if( log && log->sequences.size() > 0 )
   {
-    if( xy && log->sequences.size() >= 2 )
+    if( xy )
     {
-      glColor3fv(plot_colours[0]);
-      glBegin(draw_modes[draw_mode]);
-      for( unsigned n=0; n < log->sequences[0].size(); ++n )
-        glVertex2f(log->sequences[0][n],log->sequences[1][n]);
-      glEnd();
+      for( unsigned int s=0; s < log->sequences.size() / 2; ++s )
+      {
+        if( (s > 9) ||  show[s] )
+        {
+          glColor3fv(plot_colours[s]);
+          DrawSequence(log->sequences[2*s],log->sequences[2*s+1]);
+        }
+      }
     }else{
       for( unsigned int s=0; s < log->sequences.size(); ++s )
       {
@@ -262,6 +280,66 @@ void Plotter::Render()
       }
     }
   }
+
+  if( mouse_state & MouseButtonLeft )
+  {
+    if( xy )
+    {
+      glColor3fv(colour_ms);
+      glBegin(GL_LINE_STRIP);
+      glVertex2f(mouse_xy[0],int_y[0]);
+      glVertex2f(mouse_xy[0],int_y[1]);
+      glEnd();
+      glBegin(GL_LINE_STRIP);
+      glVertex2f(int_x[0],mouse_xy[1]);
+      glVertex2f(int_x[1],mouse_xy[1]);
+      glEnd();
+      stringstream ss;
+      ss << "(" << mouse_xy[0] << "," << mouse_xy[1] << ")";
+      glColor3f(1.0,1.0,1.0);
+      OpenGlRenderState::ApplyWindowCoords();
+      glRasterPos2f( v.l+5,v.b+5 );
+      glutBitmapString(font,(unsigned char*)ss.str().c_str());
+    }else{
+      int xu = (int)mouse_xy[0];
+      glColor3fv(colour_ms);
+      glBegin(GL_LINE_STRIP);
+      glVertex2f(xu,int_y[0]);
+      glVertex2f(xu,int_y[1]);
+      glEnd();
+      stringstream ss;
+      glColor3f(1.0,1.0,1.0);
+      ss << "x=" << xu << " ";
+      OpenGlRenderState::ApplyWindowCoords();
+      int tx = v.l+5;
+      glRasterPos2f( tx,v.b+5 );
+      glutBitmapString(font,(unsigned char*)ss.str().c_str());
+      tx += glutBitmapLength(font,(unsigned char*)ss.str().c_str());
+      for( unsigned int s=0; s<log->sequences.size(); ++s )
+      {
+        if( (s > show_n || show[s]) && 0 <= xu && xu < (int)log->sequences[s].size() )
+        {
+          stringstream ss;
+          ss << " " << log->sequences[s][xu];
+          glColor3fv(plot_colours[s%num_plot_colours]);
+          glRasterPos2f( tx,v.b+5 );
+          glutBitmapString(font,(unsigned char*)ss.str().c_str());
+          tx += glutBitmapLength(font,(unsigned char*)ss.str().c_str());
+        }
+      }
+    }
+  }
+}
+
+void Plotter::ResetView()
+{
+  track_front = true;
+  int_x[0] = int_x_dflt[0];
+  int_x[1] = int_x_dflt[1];
+  int_y[0] = int_y_dflt[0];
+  int_y[1] = int_y_dflt[1];
+  for( unsigned int i=0; i<show_n; ++i )
+    show[i] = true;
 }
 
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
@@ -280,28 +358,15 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
       draw_mode = (draw_mode+1)%draw_modes_n;
     }else if( key == 'p' ) {
       xy = !xy;
+      ResetView();
       if( xy ) {
         int_x[0] = int_y[0];
         int_x[1] = int_y[1];
         track_front = false;
-      }else{
-        int_x[0] = int_x_dflt[0];
-        int_x[1] = int_x_dflt[1];
-        int_y[0] = int_y_dflt[0];
-        int_y[1] = int_y_dflt[1];
-        track_front = true;
       }
-      for( unsigned int i=0; i<show_n; ++i )
-        show[i] = true;
     }else if( key == 'r' ) {
       cout << "Plotter: Reset viewing range" << endl;
-      int_x[0] = int_x_dflt[0];
-      int_x[1] = int_x_dflt[1];
-      int_y[0] = int_y_dflt[0];
-      int_y[1] = int_y_dflt[1];
-      track_front = true;
-      for( unsigned int i=0; i<show_n; ++i )
-        show[i] = true;
+      ResetView();
     }else if( key == 'a' || key == ' ' ) {
       cout << "Plotter: Auto scale" << endl;
       if( xy && log->sequences.size() >= 2)
@@ -333,10 +398,17 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
   }
 }
 
+void Plotter::ScreenToPlot(int x, int y)
+{
+  mouse_xy[0] = int_x[0] + (int_x[1]-int_x[0]) * (x - v.l) / (float)v.w;
+  mouse_xy[1] = int_y[0] + (int_y[1]-int_y[0]) * (y - v.b) / (float)v.h;
+}
+
 void Plotter::Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state)
 {
   last_mouse_pos[0] = x;
   last_mouse_pos[1] = y;
+  mouse_state = button_state;
 
   if(button == MouseWheelUp || button == MouseWheelDown)
   {
@@ -344,12 +416,14 @@ void Plotter::Mouse(View&, MouseButton button, int x, int y, bool pressed, int b
     const float scale = 1.0f + ((button == MouseWheelDown) ? 0.1 : -0.1);
     int_y[0] = scale*(int_y[0] - mean) + mean;
     int_y[1] = scale*(int_y[1] - mean) + mean;
-
   }
+
+  ScreenToPlot(x,y);
 }
 
 void Plotter::MouseMotion(View&, int x, int y, int button_state)
 {
+  mouse_state = button_state;
   const int d[2] = {x-last_mouse_pos[0],y-last_mouse_pos[1]};
   const float is[2] = {int_x[1]-int_x[0],int_y[1]-int_y[0]};
   const float df[2] = {is[0]*d[0]/(float)v.w, is[1]*d[1]/(float)v.h};

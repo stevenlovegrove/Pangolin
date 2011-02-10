@@ -88,7 +88,9 @@ const static float plot_colours[][3] =
 };
 const static float colour_bg[3] = {0.0,0.0,0.0};
 const static float colour_tk[3] = {0.1,0.1,0.1};
+const static float colour_ms[3] = {0.3,0.3,0.3};
 const static float colour_ax[3] = {0.5,0.5,0.5};
+static void* font = GLUT_BITMAP_HELVETICA_12;
 
 const static int draw_modes_n = 2;
 const static int draw_modes[] = {GL_LINE_STRIP, GL_POINTS};
@@ -98,11 +100,16 @@ struct Plotter : public View, Handler
   Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5 );
   void Render();
   void DrawSequence(const DataSequence& seq);
+  void DrawSequence(const DataSequence& x,const DataSequence& y);
   void DrawTicks();
+
+  void ResetView();
 
   void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
   void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
   void MouseMotion(View&, int x, int y, int mouse_state);
+
+  void ScreenToPlot(int x, int y);
 
   DataLog* log;
   bool track_front;
@@ -112,6 +119,8 @@ struct Plotter : public View, Handler
   float int_y[2];
   float ticks[2];
   int last_mouse_pos[2];
+  int mouse_state;
+  float mouse_xy[2];
 
   int draw_mode;
   bool xy;
