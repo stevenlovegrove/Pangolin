@@ -229,6 +229,9 @@ namespace pangolin
     //! Activate Display and set State Matrices
     void ActivateScissorAndClear(const OpenGlRenderState& state ) const;
 
+    //! Set this view as the active View to receive input
+    void SetFocus();
+
     //! Given the specification of Display, compute viewport
     virtual void Resize(const Viewport& parent);
 

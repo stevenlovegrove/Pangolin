@@ -532,6 +532,10 @@ namespace pangolin
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
 
+  void View::SetFocus()
+  {
+    context->activeDisplay = this;
+  }
 
   View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect)
   {
