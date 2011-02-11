@@ -324,6 +324,7 @@ namespace pangolin
 
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);
+  OpenGlMatrixSpec negIdentityMatrix(OpenGlStack type);
 
 }
 

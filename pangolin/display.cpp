@@ -783,6 +783,17 @@ namespace pangolin
     return P;
   }
 
+  OpenGlMatrixSpec  negIdentityMatrix(OpenGlStack type)
+  {
+    OpenGlMatrixSpec P;
+    P.type = type;
+    std::fill_n(P.m,4*4,0);
+    for( int i=0; i<4; ++i ) P.m[i*4+i] = -1;
+
+    P.m[3*4+3] =1;
+    return P;
+  }
+
   void DrawTextureToViewport(GLuint texid)
   {
     OpenGlRenderState::ApplyIdentity();
