@@ -11,6 +11,7 @@ SET(
   widgets.h widgets.cpp
   plotter.h plotter.cpp
   gl.h glcuda.h
+  videosource.h videosource.cpp
 )
 
 #######################################################
@@ -47,6 +48,14 @@ IF(FREEGLUT_FOUND)
   INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${FREEGLUT_INCLUDE_DIR} )
   TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${FREEGLUT_LIBRARY} )
   MESSAGE(STATUS "Freeglut Found and Enabled")
+ENDIF()
+
+FIND_PACKAGE(DC1394 QUIET)
+IF(DC1394_FOUND)
+  SET(HAVE_DC1394 1)
+  INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${DC1394_INCLUDE_DIR} )
+  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${DC1394_LIBRARY} )
+  MESSAGE(STATUS "libdc1394 Found and Enabled")
 ENDIF()
 
 ## Apply required dependencies settings

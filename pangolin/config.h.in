@@ -13,6 +13,7 @@
 #cmakedefine HAVE_ROBOTVISION
 #cmakedefine HAVE_CUDA
 #cmakedefine HAVE_GLUT
+#cmakedefine HAVE_DC1394
 
 /// Platform
 #cmakedefine _UNIX_

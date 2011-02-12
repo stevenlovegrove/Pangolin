@@ -1,0 +1,85 @@
+/* This file is part of the Pangolin Project.
+ * http://github.com/stevenlovegrove/Pangolin
+ *
+ * Copyright (c) 2011 Steven Lovegrove
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#ifndef PANGOLIN_VIDEOSOURCE_H
+#define PANGOLIN_VIDEOSOURCE_H
+
+#include "pangolin.h"
+#ifdef HAVE_DC1394
+
+#include <dc1394/dc1394.h>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
+struct VideoException : std::exception
+{
+  VideoException(std::string str) : desc(str) {}
+  ~VideoException() throw() {}
+  const char* what() const throw() { return desc.c_str(); }
+  std::string desc;
+};
+
+class FirewireVideo
+{
+public:
+  FirewireVideo(unsigned deviceid = 0);
+  FirewireVideo(uint64_t guid);
+  ~FirewireVideo();
+
+  int Width() const { return width; }
+  int Height() const { return height; }
+
+  void Start();
+  void Stop();
+
+  void GrabNextWait( unsigned char* image );
+  bool GrabNextPoll( unsigned char* image );
+  void GrabNewestWait( unsigned char* image );
+  bool GrabNewestPoll( unsigned char* image );
+
+protected:
+  void init_camera(
+    uint64_t guid, int dma_frames,
+    dc1394speed_t iso_speed,
+    dc1394video_mode_t video_mode,
+    dc1394framerate_t framerate
+  );
+
+  bool running;
+  dc1394camera_t *camera;
+  unsigned int width, height;
+  //dc1394featureset_t features;
+  dc1394_t * d;
+  dc1394camera_list_t * list;
+  dc1394error_t err;
+};
+
+
+#endif // HAVE_DC1394
+#endif // PANGOLIN_VIDEOSOURCE_H

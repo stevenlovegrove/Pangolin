@@ -28,6 +28,7 @@
 #ifndef PANGOLIN_CUDAGL_H
 #define PANGOLIN_CUDAGL_H
 
+
 // Add the definition -DCUDA_BUILD to your project to include CUDA utilities
 #ifdef CUDA_BUILD
 
