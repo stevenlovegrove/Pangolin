@@ -90,7 +90,6 @@ const static float colour_bg[3] = {0.0,0.0,0.0};
 const static float colour_tk[3] = {0.1,0.1,0.1};
 const static float colour_ms[3] = {0.3,0.3,0.3};
 const static float colour_ax[3] = {0.5,0.5,0.5};
-static void* font = GLUT_BITMAP_HELVETICA_12;
 
 const static int draw_modes_n = 2;
 const static int draw_modes[] = {GL_LINE_STRIP, GL_POINTS};

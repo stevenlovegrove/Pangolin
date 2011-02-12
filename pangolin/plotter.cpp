@@ -39,6 +39,8 @@ namespace pangolin
 
 extern __thread PangolinGl* context;
 
+static void* font = GLUT_BITMAP_HELVETICA_12;
+
 DataSequence::DataSequence(unsigned int buffer_size, unsigned size, float val )
   : y(buffer_size,size,val), n(0), sum_y(0), sum_y_sq(0),
     min_y(numeric_limits<float>::max()),
