@@ -8,6 +8,9 @@
 
 using namespace std;
 
+namespace pangolin
+{
+
 void FirewireVideo::init_camera(
   uint64_t guid, int dma_frames,
   dc1394speed_t iso_speed,
@@ -104,46 +107,28 @@ FirewireVideo::FirewireVideo(unsigned deviceid)
   init_camera(guid,50,DC1394_ISO_SPEED_400,DC1394_VIDEO_MODE_640x480_RGB8,DC1394_FRAMERATE_30);
 }
 
-void FirewireVideo::GrabNextWait( unsigned char* image )
+bool FirewireVideo::GrabNext( unsigned char* image, bool wait )
 {
+  const dc1394capture_policy_t policy =
+      wait ? DC1394_CAPTURE_POLICY_WAIT : DC1394_CAPTURE_POLICY_POLL;
+
   dc1394video_frame_t *frame;
-  err=dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &frame);
-  if( err != DC1394_SUCCESS )
-    throw VideoException("Could not dequeue a frame");
-
-  memcpy(image,frame->image,frame->image_bytes);
-
-  err=dc1394_capture_enqueue(camera,frame);
-  if( err != DC1394_SUCCESS )
-    throw VideoException("Could not enqueue a frame");
-}
-
-bool FirewireVideo::GrabNextPoll( unsigned char* image )
-{
-  dc1394video_frame_t *frame;
-  err=dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &frame);
+  dc1394_capture_dequeue(camera, policy, &frame);
   if( frame )
   {
-    if( err != DC1394_SUCCESS )
-      throw VideoException("Could not dequeue a frame");
-
     memcpy(image,frame->image,frame->image_bytes);
-
-    err=dc1394_capture_enqueue(camera,frame);
-    if( err != DC1394_SUCCESS )
-      throw VideoException("Could not enqueue a frame");
+    dc1394_capture_enqueue(camera,frame);
     return true;
   }
   return false;
 }
 
-bool FirewireVideo::GrabNewestPoll( unsigned char* image )
+bool FirewireVideo::GrabNewest( unsigned char* image, bool wait )
 {
   dc1394video_frame_t *f;
   dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &f);
 
-  if( f )
-  {
+  if( f ) {
     while( true )
     {
       dc1394video_frame_t *nf;
@@ -159,16 +144,56 @@ bool FirewireVideo::GrabNewestPoll( unsigned char* image )
     memcpy(image,f->image,f->image_bytes);
     err=dc1394_capture_enqueue(camera,f);
     return true;
+  }else if(wait){
+    return GrabNext(image,true);
   }
-
   return false;
 }
 
-void FirewireVideo::GrabNewestWait( unsigned char* image )
+FirewireFrame FirewireVideo::GetNext(bool wait)
 {
-  if( !GrabNewestPoll(image) )
-    GrabNextWait(image);
+  const dc1394capture_policy_t policy =
+      wait ? DC1394_CAPTURE_POLICY_WAIT : DC1394_CAPTURE_POLICY_POLL;
+
+  dc1394video_frame_t *frame;
+  dc1394_capture_dequeue(camera, policy, &frame);
+  return FirewireFrame(frame);
 }
+
+FirewireFrame FirewireVideo::GetNewest(bool wait)
+{
+  dc1394video_frame_t *f;
+  dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &f);
+
+  if( f ) {
+    while( true )
+    {
+      dc1394video_frame_t *nf;
+      dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &nf);
+      if( nf )
+      {
+        err=dc1394_capture_enqueue(camera,f);
+        f = nf;
+      }else{
+        break;
+      }
+    }
+    return FirewireFrame(f);
+  }else if(wait){
+    return GetNext(true);
+  }
+  return FirewireFrame(0);
+}
+
+void FirewireVideo::PutFrame(FirewireFrame& f)
+{
+  if( f.frame )
+  {
+    dc1394_capture_enqueue(camera,f.frame);
+    f.frame = 0;
+  }
+}
+
 
 FirewireVideo::~FirewireVideo()
 {
@@ -179,6 +204,8 @@ FirewireVideo::~FirewireVideo()
   dc1394_capture_stop(camera);
   dc1394_camera_free(camera);
   dc1394_free (d);
+}
+
 }
 
 #endif

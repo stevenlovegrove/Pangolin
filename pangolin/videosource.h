@@ -37,12 +37,29 @@
 #include <unistd.h>
 #endif
 
+namespace pangolin
+{
+
 struct VideoException : std::exception
 {
   VideoException(std::string str) : desc(str) {}
   ~VideoException() throw() {}
   const char* what() const throw() { return desc.c_str(); }
   std::string desc;
+};
+
+class FirewireFrame
+{
+  friend class FirewireVideo;
+public:
+  bool isValid() { return frame; }
+  unsigned char* Image() { return frame ? frame->image : 0; }
+  unsigned Width() const { return frame ? frame->size[0] : 0; }
+  unsigned Height() const { return frame ? frame->size[1] : 0; }
+
+protected:
+  FirewireFrame(dc1394video_frame_t* frame) : frame(frame) {}
+  dc1394video_frame_t *frame;
 };
 
 class FirewireVideo
@@ -58,10 +75,30 @@ public:
   void Start();
   void Stop();
 
-  void GrabNextWait( unsigned char* image );
-  bool GrabNextPoll( unsigned char* image );
-  void GrabNewestWait( unsigned char* image );
-  bool GrabNewestPoll( unsigned char* image );
+  //! Copy the next frame from the camera to image.
+  //! Optionally wait for a frame if one isn't ready
+  //! Returns true iff image was copied
+  bool GrabNext( unsigned char* image, bool wait = true );
+
+  //! Copy the newest frame from the camera to image
+  //! discarding all older frames.
+  //! Optionally wait for a frame if one isn't ready
+  //! Returns true iff image was copied
+  bool GrabNewest( unsigned char* image, bool wait = true );
+
+  //! Return object containing reference to image data within
+  //! DMA buffer. The FirewireFrame must be returned to
+  //! signal that it can be reused with a corresponding PutFrame()
+  FirewireFrame GetNext(bool wait = true);
+
+  //! Return object containing reference to newest image data within
+  //! DMA buffer discarding old images. The FirewireFrame must be
+  //! returned to signal that it can be reused with a corresponding PutFrame()
+  FirewireFrame GetNewest(bool wait = true);
+
+  //! Return FirewireFrame object. Data held by FirewireFrame is
+  //! invalidated on return.
+  void PutFrame(FirewireFrame& frame);
 
 protected:
   void init_camera(
@@ -79,6 +116,8 @@ protected:
   dc1394camera_list_t * list;
   dc1394error_t err;
 };
+
+}
 
 
 #endif // HAVE_DC1394
