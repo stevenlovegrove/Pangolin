@@ -114,11 +114,13 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var)
     if( var.type_name == typeid(bool).name() )
     {
         thisptr->views.push_back(
-                    var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var)
-                                     );
+          var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var)
+        );
+        thisptr->ResizeChildren();
     }else if( var.type_name == typeid(double).name() || var.type_name == typeid(int).name() )
     {
         thisptr->views.push_back( new Slider(title,var) );
+        thisptr->ResizeChildren();
     }
 
 }

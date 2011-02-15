@@ -242,6 +242,13 @@ inline bool Pushed(Var<bool>& button)
   return val;
 }
 
+inline bool Pushed(bool& button)
+{
+  bool val = button;
+  button = false;
+  return val;
+}
+
 template<typename T>
 inline T FromFile( const std::string& filename, const T& init)
 {
