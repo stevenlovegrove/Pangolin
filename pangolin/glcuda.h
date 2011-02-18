@@ -28,10 +28,6 @@
 #ifndef PANGOLIN_CUDAGL_H
 #define PANGOLIN_CUDAGL_H
 
-
-// Add the definition -DCUDA_BUILD to your project to include CUDA utilities
-#ifdef CUDA_BUILD
-
 #include <GL/glew.h>
 
 #include <algorithm>
@@ -197,5 +193,4 @@ inline void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b)
 
 }
 
-#endif // CUDA_BUILD
 #endif // PANGOLIN_CUDAGL_H
