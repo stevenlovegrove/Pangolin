@@ -34,6 +34,7 @@
 #include <Windows.h>
 #endif
 
+#include <GL/glew.h>
 #include <GL/gl.h>
 
 namespace pangolin
@@ -60,6 +61,26 @@ struct GlTexture
   GLuint tid;
   GLint width;
   GLint height;
+};
+
+struct GlRenderBuffer
+{
+  GlRenderBuffer(GLint width, GLint height, GLint internal_format = GL_DEPTH_COMPONENT24);
+  ~GlRenderBuffer();
+
+  GLuint rbid;
+};
+
+struct GlFramebuffer
+{
+  GlFramebuffer();
+  GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth);
+  ~GlFramebuffer();
+
+  void Bind() const;
+  void Unbind() const;
+
+  GLuint fbid;
 };
 
 
@@ -151,6 +172,49 @@ inline void GlTexture::RenderToViewportFlipY() const
   glVertex2d(-1,-1);
   glEnd();
   glDisable(GL_TEXTURE_2D);
+}
+
+inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_format )
+{
+  glGenRenderbuffersEXT(1, &rbid);
+  glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, rbid);
+  glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, internal_format, width, height);
+  glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
+}
+
+inline GlRenderBuffer::~GlRenderBuffer()
+{
+  glDeleteRenderbuffersEXT(1, &rbid);
+}
+
+inline GlFramebuffer::GlFramebuffer()
+{
+  glGenFramebuffersEXT(1, &fbid);
+}
+
+inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
+{
+  glGenFramebuffersEXT(1, &fbid);
+  Bind();
+  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colour.tid, 0);
+  glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depth.rbid);
+  Unbind();
+}
+
+
+inline GlFramebuffer::~GlFramebuffer()
+{
+  glDeleteFramebuffersEXT(1, &fbid);
+}
+
+inline void GlFramebuffer::Bind() const
+{
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
+}
+
+inline void GlFramebuffer::Unbind() const
+{
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
 
 

@@ -2,6 +2,7 @@
 
 #include <GL/glew.h>
 
+#include <pangolin/glcuda.h>
 #include <pangolin/pangolin.h>
 
 #include <cuda_runtime.h>
