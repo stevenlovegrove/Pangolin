@@ -241,6 +241,7 @@ namespace pangolin
     glutReshapeFunc(&process::Resize);
     glutMouseFunc(&process::Mouse);
     glutMotionFunc(&process::MouseMotion);
+
   }
 
   void CreateGlutWindowAndBind(string window_title, int w, int h, unsigned int mode)
@@ -254,6 +255,7 @@ namespace pangolin
     glutInitWindowSize(w,h);
     glutCreateWindow(window_title.c_str());
     BindToContext(window_title);
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
     context->is_double_buffered = mode & GLUT_DOUBLE;
     TakeGlutCallbacks();
   }

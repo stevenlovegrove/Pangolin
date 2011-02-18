@@ -33,7 +33,7 @@ int main( int /*argc*/, char* argv[] )
       .SetBounds(1.0, 0.0, 0, 200);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
-  while(!pangolin::ShouldQuit())
+  while(!pangolin::ShouldQuit() && glutGetWindow() )
   {
     if(HasResized())
       DisplayBase().ActivateScissorAndClear();
