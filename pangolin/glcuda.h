@@ -28,8 +28,6 @@
 #ifndef PANGOLIN_CUDAGL_H
 #define PANGOLIN_CUDAGL_H
 
-#include <GL/glew.h>
-
 #include <algorithm>
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>

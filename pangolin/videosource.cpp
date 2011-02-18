@@ -21,7 +21,13 @@ void FirewireVideo::init_camera(
   if (!camera)
     throw VideoException("Failed to initialize camera");
 
-  dc1394_camera_free_list (list);
+  // Attempt to stop camera if it is already running
+  dc1394switch_t is_iso_on = DC1394_OFF;
+  dc1394_video_get_transmission(camera, &is_iso_on);
+  if (is_iso_on==DC1394_ON) {
+    dc1394_video_set_transmission(camera, DC1394_OFF);
+  }
+
 
   cout << "Using camera with GUID " << camera->guid << endl;
 
@@ -104,6 +110,9 @@ FirewireVideo::FirewireVideo(unsigned deviceid)
     throw VideoException("Invalid camera index");
 
   const uint64_t guid = list->ids[deviceid].guid;
+
+  dc1394_camera_free_list (list);
+
   init_camera(guid,50,DC1394_ISO_SPEED_400,DC1394_VIDEO_MODE_640x480_RGB8,DC1394_FRAMERATE_30);
 }
 
