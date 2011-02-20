@@ -44,7 +44,7 @@ namespace pangolin
 enum GlBufferType
 {
   GlArrayBuffer = GL_ARRAY_BUFFER,
-  GlElementArrayBuffer = GL_ARRAY_BUFFER,
+  GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,
   GlPixelPackBuffer = GL_PIXEL_PACK_BUFFER,
   GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER
 };
