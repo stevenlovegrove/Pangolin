@@ -123,6 +123,11 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var)
         context->all_views[name] = nv;
         thisptr->views.push_back( nv );
         thisptr->ResizeChildren();
+    }else{
+        View* nv = new TextInput(title,var);
+        context->all_views[name] = nv;
+        thisptr->views.push_back( nv );
+        thisptr->ResizeChildren();
     }
 
 }
@@ -333,5 +338,172 @@ void Slider::Render()
     glutBitmapString(font,(unsigned char*)str.c_str());
 }
 
+
+TextInput::TextInput(std::string title, _Var& tv)
+    :Var<string>(tv), title(title+":"), do_edit(false)
+{
+    top = 1.0; bottom = -20;
+    left = 0; right = 1.0;
+    hlock = LockLeft;
+    vlock = LockBottom;
+    handler = this;
+    sel[0] = -1;
+    sel[1] = -1;
+}
+
+void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+{
+    if(pressed)
+    {
+        const bool selection = sel[1] > sel[0] && sel[0] >= 0;
+
+        if(key == 13)
+        {
+            // return
+            a->Set(edit);
+            do_edit = false;
+            sel[0] = sel[1] = -1;
+        }else if(key == 8) {
+            // backspace
+            if(selection)
+            {
+                edit = edit.substr(0,sel[0]) + edit.substr(sel[1],edit.length()-sel[1]);
+                sel[1] = sel[0];
+            }else{
+                if(sel[0] >0)
+                {
+                    edit = edit.substr(0,sel[0]-1) + edit.substr(sel[0],edit.length()-sel[0]);
+                    sel[0]--;
+                    sel[1]--;
+                }
+            }
+        }else if(key == 127){
+            // delete
+            if(selection)
+            {
+                edit = edit.substr(0,sel[0]) + edit.substr(sel[1],edit.length()-sel[1]);
+                sel[1] = sel[0];
+            }else{
+                if(sel[0] < (int)edit.length())
+                {
+                    edit = edit.substr(0,sel[0]) + edit.substr(sel[0]+1,edit.length()-sel[0]+1);
+                }
+            }
+        }else if(key == 230){
+            // right
+            sel[0] = min((int)edit.length(),sel[0]+1);
+            sel[1] = sel[0];
+        }else if(key == 228){
+            // left
+            sel[0] = max(0,sel[0]-1);
+            sel[1] = sel[0];
+        }else{
+            edit = edit.substr(0,sel[0]).append(1,key) + edit.substr(sel[1],edit.length()-sel[1]);
+            sel[1] = sel[0];
+            sel[0]++;
+            sel[1]++;
+        }
+    }
+}
+
+void TextInput::Mouse(View& view, MouseButton button, int x, int y, bool pressed, int mouse_state)
+{
+
+    if(do_edit)
+    {
+        const int sl = glutBitmapLength(font,(unsigned char*)edit.c_str()) + 2;
+        const int rl = v.l + v.w - sl;
+        int ep = edit.length();
+
+        if( x < rl )
+        {
+            ep = 0;
+        }else{
+            for( unsigned i=0; i<edit.length(); ++i )
+            {
+                const int tl = rl + glutBitmapLength(font,(unsigned char*)edit.substr(0,i).c_str());
+                if(x < tl+2)
+                {
+                    ep = i;
+                    break;
+                }
+            }
+        }
+        if(pressed)
+        {
+            sel[0] = sel[1] = ep;
+        }else{
+            sel[1] = ep;
+        }
+
+        if(sel[0] > sel[1])
+            std::swap(sel[0],sel[1]);
+    }else{
+        do_edit = !pressed;
+        sel[0] = 0;
+        sel[1] = edit.length();
+    }
+}
+
+void TextInput::MouseMotion(View&, int x, int y, int mouse_state)
+{
+    if(do_edit)
+    {
+        const int sl = glutBitmapLength(font,(unsigned char*)edit.c_str()) + 2;
+        const int rl = v.l + v.w - sl;
+        int ep = edit.length();
+
+        if( x < rl )
+        {
+            ep = 0;
+        }else{
+            for( unsigned i=0; i<edit.length(); ++i )
+            {
+                const int tl = rl + glutBitmapLength(font,(unsigned char*)edit.substr(0,i).c_str());
+                if(x < tl+2)
+                {
+                    ep = i;
+                    break;
+                }
+            }
+        }
+
+        sel[1] = ep;
+    }
+}
+
+
+void TextInput::ResizeChildren()
+{
+    raster[0] = v.l+2;
+    raster[1] = v.b + (v.h-text_height)/2.0;
+}
+
+void TextInput::Render()
+{
+    if(!do_edit) edit = a->Get();
+
+    DrawShadowRect(v);
+    glColor4fv(colour_fg);
+    glRect(v);
+
+    const int sl = glutBitmapLength(font,(unsigned char*)edit.c_str()) + 2;
+    const int rl = v.l + v.w - sl;
+
+    if( do_edit && sel[0] >= 0)
+    {
+        const int tl = rl + glutBitmapLength(font,(unsigned char*)edit.substr(0,sel[0]).c_str());
+        const int tr = rl + glutBitmapLength(font,(unsigned char*)edit.substr(0,sel[1]).c_str());
+        glColor4fv(colour_dn);
+        glRect(Viewport(tl,v.b,tr-tl,v.h));
+    }
+
+    glColor4fv(colour_tx);
+    glRasterPos2fv( raster );
+    glutBitmapString(font,(unsigned char*)title.c_str());
+
+    glRasterPos2f( rl, raster[1] );
+    glutBitmapString(font,(unsigned char*)edit.c_str());
+}
 
 }

@@ -4,6 +4,25 @@
 using namespace pangolin;
 using namespace std;
 
+struct CustomType
+{
+  int x;
+  float y;
+  string z;
+};
+
+std::ostream& operator<< (std::ostream& os, const CustomType& o){
+  os << o.x << " " << o.y << " " << o.z;
+  return os;
+}
+
+std::istream& operator>> (std::istream& is, CustomType& o){
+  is >> o.x;
+  is >> o.y;
+  is >> o.z;
+  return is;
+}
+
 int main( int /*argc*/, char* argv[] )
 {
   // Load configuration data
@@ -46,6 +65,7 @@ int main( int /*argc*/, char* argv[] )
     static Var<int> an_int("ui.An Int",2,0,5);
     static Var<bool> a_checkbox("ui.A Checkbox",false,true);
     static Var<int> an_int_no_input("ui.An Int No Input",2);
+    static Var<CustomType> any_type("ui.Some Type",(CustomType){0,1.2,"Hello"});
 
     if( Pushed(a_button) )
       cout << "You Pushed a button!" << endl;
@@ -54,6 +74,9 @@ int main( int /*argc*/, char* argv[] )
     // their wrapped types, eg:
     if( a_checkbox )
       an_int = a_double;
+
+    if( !any_type->z.compare("robot"))
+        any_type = (CustomType){1,2.3,"Boogie"};
 
     an_int_no_input = an_int;
 

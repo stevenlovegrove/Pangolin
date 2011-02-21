@@ -177,6 +177,16 @@ namespace pangolin
         }
     }
 
+    void SpecialFunc(int key, int x, int y)
+    {
+        Keyboard(key+128,x,y);
+    }
+
+    void SpecialFuncUp(int key, int x, int y)
+    {
+        KeyboardUp(key+128,x,y);
+    }
+
 
     void Mouse( int button_raw, int state, int x, int y)
     {
@@ -241,7 +251,8 @@ namespace pangolin
     glutReshapeFunc(&process::Resize);
     glutMouseFunc(&process::Mouse);
     glutMotionFunc(&process::MouseMotion);
-
+    glutSpecialFunc(&process::SpecialFunc);
+    glutSpecialUpFunc(&process::SpecialFuncUp);
   }
 
   void CreateGlutWindowAndBind(string window_title, int w, int h, unsigned int mode)

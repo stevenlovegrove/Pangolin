@@ -93,6 +93,25 @@ struct Slider : public View, Handler, Var<double>
   bool lock_bounds;
 };
 
+struct TextInput : public View, Handler, Var<std::string>
+{
+    TextInput(std::string title, _Var& tv);
+    void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
+    void MouseMotion(View&, int x, int y, int mouse_state);
+    void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
+    void Render();
+
+    std::string title;
+    std::string edit;
+
+    //Cache params on resize
+    void ResizeChildren();
+    int text_width;
+    GLfloat raster[2];
+    bool do_edit;
+    int sel[2];
+};
+
 
 }
 #endif // PANGOLIN_WIDGETS_H
