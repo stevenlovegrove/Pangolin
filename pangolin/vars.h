@@ -111,13 +111,25 @@ inline Var<T>::Var(_Var& var)
 template<typename T>
 inline Var<T>::operator const T& ()
 {
-  return a->Get();
+  try{
+    return a->Get();
+  }catch(BadInputException)
+  {
+    Reset();
+    return a->Get();
+  }
 }
 
 template<typename T>
 inline const T* Var<T>::operator->()
 {
-  return &(a->Get());
+  try{
+    return &(a->Get());
+  }catch(BadInputException)
+  {
+    Reset();
+    return &(a->Get());
+  }
 }
 
 template<typename T>

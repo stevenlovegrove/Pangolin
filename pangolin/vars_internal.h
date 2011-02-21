@@ -37,6 +37,10 @@
 namespace pangolin
 {
 
+struct BadInputException : std::exception {
+  char const* what() const throw() { return "Failed to serialise type"; }
+};
+
 template<typename T, typename S> struct Convert {
   static T Do(const S& src)
   {
@@ -45,6 +49,10 @@ template<typename T, typename S> struct Convert {
   std::istringstream iss(oss.str());
     T target;
     iss >> target;
+
+    if(iss.fail())
+        throw BadInputException();
+
     return target;
 //    return boost::lexical_cast<T>(src);
   }
@@ -56,6 +64,10 @@ template<typename T> struct Convert<T,std::string> {
     T target;
     std::istringstream iss(src);
     iss >> target;
+
+    if(iss.fail())
+        throw BadInputException();
+
     return target;
   }
 };
@@ -176,20 +188,26 @@ struct _Accessor<T,S ,typename boost::enable_if_c<
 >::type> : Accessor<T>
 {
   _Accessor(S& var) : var(var) {
-//    std::cout << "lexical" << std::endl;
   }
 
   const T& Get() const
   {
-//    cache = boost::lexical_cast<T>(var);
-    cache = Convert<T,S>::Do(var);
+//    try{
+        cache = Convert<T,S>::Do(var);
+//    }catch(BadInputException e) {
+//        std::cerr << e.what() << std::endl;
+//    }
+
     return cache;
   }
 
   void Set(const T& val)
   {
-//    var = boost::lexical_cast<S>(val);
-    var = Convert<S,T>::Do(val);
+//    try{
+      var = Convert<S,T>::Do(val);
+//    }catch(BadInputException e) {
+//      std::cerr << "Unable to convert: " << e.what() << std::endl;
+//    }
   }
   S& var;
   mutable T cache;

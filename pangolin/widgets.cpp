@@ -359,7 +359,6 @@ void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 
         if(key == 13)
         {
-            // return
             a->Set(edit);
             do_edit = false;
             sel[0] = sel[1] = -1;
@@ -397,7 +396,14 @@ void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
             // left
             sel[0] = max(0,sel[0]-1);
             sel[1] = sel[0];
+        }else if(key == 234){
+            // home
+            sel[0] = sel[1] = 0;
+        }else if(key == 235){
+            // end
+            sel[0] = sel[1] = edit.length();
         }else{
+//            cout << (int)key << endl;
             edit = edit.substr(0,sel[0]).append(1,key) + edit.substr(sel[1],edit.length()-sel[1]);
             sel[1] = sel[0];
             sel[0]++;
