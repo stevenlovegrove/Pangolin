@@ -10,7 +10,7 @@ SET(
   vars.h vars_internal.h vars.cpp
   widgets.h widgets.cpp
   plotter.h plotter.cpp
-  gl.h glcuda.h
+  gl.h glcuda.h cg.h
   videosource.h videosource.cpp
 )
 
@@ -57,6 +57,11 @@ IF(DC1394_FOUND)
   TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${DC1394_LIBRARY} )
   MESSAGE(STATUS "libdc1394 Found and Enabled")
 ENDIF()
+
+#FIND_PACKAGE(TOON QUIET)
+#IF(TOON_FOUND)
+  SET(HAVE_TOON 1)
+#ENDIF()
 
 ## Apply required dependencies settings
 INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${Boost_INCLUDE_DIRS} )

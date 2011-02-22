@@ -39,6 +39,10 @@
 #include <GL/freeglut_ext.h>
 #endif
 
+#ifdef HAVE_TOON
+#include <TooN/TooN.h>
+#endif
+
 #ifdef _WIN_
 #include <Windows.h>
 #endif
@@ -325,9 +329,19 @@ namespace pangolin
   View& DisplayBase();
   View& Display(const std::string& name);
 
+  OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
+  OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
+
+  // Use OpenGl's default frame RUB_BottomLeft
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
+
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);
   OpenGlMatrixSpec negIdentityMatrix(OpenGlStack type);
+
+#ifdef HAVE_TOON
+  OpenGlMatrixSpec FromTooN(OpenGlStack type, TooN::Matrix<4,4>& M);
+#endif
+
 
 }
 

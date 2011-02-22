@@ -75,18 +75,33 @@ struct GlFramebuffer
 {
   GlFramebuffer();
   GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth);
+  GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth);
   ~GlFramebuffer();
 
   void Bind() const;
   void Unbind() const;
 
   GLuint fbid;
+  unsigned attachments;
 };
 
 
 ////////////////////////////////////////////////
 // Implementation
 ////////////////////////////////////////////////
+
+const int MAX_ATTACHMENTS = 8;
+
+const static GLuint attachment_buffers[] = {
+    GL_COLOR_ATTACHMENT0_EXT,
+    GL_COLOR_ATTACHMENT1_EXT,
+    GL_COLOR_ATTACHMENT2_EXT,
+    GL_COLOR_ATTACHMENT3_EXT,
+    GL_COLOR_ATTACHMENT4_EXT,
+    GL_COLOR_ATTACHMENT5_EXT,
+    GL_COLOR_ATTACHMENT6_EXT,
+    GL_COLOR_ATTACHMENT7_EXT
+};
 
 //template<typename T>
 //struct GlDataTypeTrait {};
@@ -199,6 +214,18 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colour.tid, 0);
   glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depth.rbid);
   Unbind();
+  attachments = 1;
+}
+
+inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth)
+{
+  glGenFramebuffersEXT(1, &fbid);
+  Bind();
+  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colour0.tid, 0);
+  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_2D, colour1.tid, 0);
+  glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depth.rbid);
+  Unbind();
+  attachments = 2;
 }
 
 
@@ -210,10 +237,12 @@ inline GlFramebuffer::~GlFramebuffer()
 inline void GlFramebuffer::Bind() const
 {
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
+  glDrawBuffers( attachments, attachment_buffers );
 }
 
 inline void GlFramebuffer::Unbind() const
 {
+  glDrawBuffers( 1, attachment_buffers );
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
 

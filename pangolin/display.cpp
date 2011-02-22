@@ -769,7 +769,21 @@ namespace pangolin
     last_pos[1] = y;
   }
 
+  // Use OpenGl's default frame of reference
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
+  {
+      return ProjectionMatrixRUB_BottomLeft(w,h,fu,fv,u0,v0,zNear,zFar);
+  }
+
+
+  // Camera Axis:
+  //   X - Right, Y - Up, Z - Back
+  // Image Origin:
+  //   Bottom Left
+  // Caution: Principal point defined with respect to image origin (0,0) at
+  //          top left of top-left pixel (not center, and in different frame
+  //          of reference to projection function image)
+  OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
   {
       // http://www.songho.ca/opengl/gl_projectionmatrix.html
       const double L = +(u0) * zNear / fu;
@@ -788,6 +802,35 @@ namespace pangolin
       P.m[2*4+1] = (T+B)/(T-B);
       P.m[2*4+3] = -1.0;
       P.m[3*4+2] =  -(2*zFar*zNear)/(zFar-zNear);
+      return P;
+  }
+
+  // Camera Axis:
+  //   X - Right, Y - Down, Z - Forward
+  // Image Origin:
+  //   Top Left
+  // Pricipal point specified with image origin (0,0) at top left of top-left pixel (not center)
+  OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
+  {
+      // http://www.songho.ca/opengl/gl_projectionmatrix.html
+      const double L = -(u0) * zNear / fu;
+      const double R = +(w-u0) * zNear / fu;
+      const double T = -(v0) * zNear / fv;
+      const double B = +(h-v0) * zNear / fv;
+
+      OpenGlMatrixSpec P;
+      P.type = GlProjectionStack;
+      std::fill_n(P.m,4*4,0);
+
+      P.m[0*4+0] = 2 * zNear / (R-L);
+      P.m[1*4+1] = 2 * zNear / (T-B);
+
+      P.m[2*4+0] = (R+L)/(L-R);
+      P.m[2*4+1] = (T+B)/(B-T);
+      P.m[2*4+2] = (zFar +zNear) / (zFar - zNear);
+      P.m[2*4+3] = 1.0;
+
+      P.m[3*4+2] =  (2*zFar*zNear)/(zNear - zFar);
       return P;
   }
 
@@ -810,6 +853,21 @@ namespace pangolin
     P.m[3*4+3] =1;
     return P;
   }
+
+#ifdef HAVE_TOON
+  OpenGlMatrixSpec FromTooN(OpenGlStack type, TooN::Matrix<4,4>& M)
+  {
+      // Read in remembering col-major convension for our matrices
+      OpenGlMatrixSpec P;
+      P.type = type;
+      int el = 0;
+      for(int c=0; c<4; ++c)
+          for(int r=0; r<4; ++r)
+              P.m[el++] = M[r][c];
+      return P;
+  }
+#endif
+
 
   void DrawTextureToViewport(GLuint texid)
   {
