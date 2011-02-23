@@ -233,9 +233,6 @@ namespace pangolin
     //! Activate Display and set State Matrices
     void ActivateScissorAndClear(const OpenGlRenderState& state ) const;
 
-    //! Set this view as the active View to receive input
-    void SetFocus();
-
     //! Given the specification of Display, compute viewport
     virtual void Resize(const Viewport& parent);
 
@@ -249,6 +246,8 @@ namespace pangolin
     //! Instruct all children to render themselves if appropriate
     virtual void RenderChildren();
 
+    //! Set this view as the active View to receive input
+    View& SetFocus();
 
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
     View& SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect = false);
