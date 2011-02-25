@@ -51,7 +51,7 @@ const static float colour_hl[4] = {0.9, 0.9, 0.9, 1.0};
 const static float colour_dn[4] = {1.0, 0.7 ,0.7, 1.0};
 static void* font = GLUT_BITMAP_HELVETICA_12;
 static int text_height = 8; //glutBitmapHeight(font) * 0.7;
-static float cb_height = text_height * 1.5;
+static float cb_height = text_height * 1.6;
 
 void glRect(Viewport v)
 {

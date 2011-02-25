@@ -40,6 +40,9 @@ using namespace std;
 
 namespace pangolin
 {
+
+  const int panal_v_margin = 6;
+
   typedef map<string,PangolinGl*> ContextMap;
 
   // Map of active contexts
@@ -432,12 +435,11 @@ namespace pangolin
     }else if( layout == LayoutVertical )
     {
       // Allocate space incrementally
-      const int margin = 8;
-      Viewport space = v.Inset(margin);
+      Viewport space = v.Inset(panal_v_margin);
       foreach(View* i, views )
       {
         i->Resize(space);
-        space.h = i->v.b - margin - space.b;
+        space.h = i->v.b - panal_v_margin - space.b;
       }
     }else if(layout == LayoutHorizontal )
     {
