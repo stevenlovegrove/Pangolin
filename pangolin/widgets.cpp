@@ -138,6 +138,7 @@ void Panel::Render()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_LINE_SMOOTH);
+    glLineWidth(1.0);
 
     glColor4fv(colour_s2);
     glRect(v);
