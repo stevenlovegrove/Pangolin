@@ -120,12 +120,35 @@ string ProcessVal(const string& val )
 
 void AddVar(const string& name, const string& val )
 {
+  std::map<std::string,_Var>::iterator vi = vars.find(name);
+  const bool exists_already = vi != vars.end();
+
   string full = ProcessVal(val);
   Var<string> var(name);
   var = full;
 
-  // Mark as upgradable
-  var.var->generic = true;
+  // Mark as upgradable if unique
+  if(!exists_already)
+  {
+    var.var->generic = true;
+  }
+}
+
+void AddAlias(const string& alias, const string& name)
+{
+    std::map<std::string,_Var>::iterator vi = vars.find(name);
+
+    if( vi != vars.end() )
+    {
+        //cout << "Adding Alias " << alias << " to " << name << endl;
+        _Var& v = vi->second;
+        vars[alias] = _Var(v.val,v.val_default,v.type_name);
+        vars[alias].meta_friendly = alias;
+        v.generic = false;
+        vars[alias].generic = false;
+    }else{
+        cout << "Variable " << name << " does not exist to alias." << endl;
+    }
 }
 
 void ParseVarsFile(const string& filename)
@@ -154,11 +177,17 @@ void ParseVarsFile(const string& filename)
           string val;
           getline(f,name,'=');
           getline(f,val,';');
-          boost::trim(name);
-          boost::trim(val);
-          if( name.size() >0 )
+          boost::trim_if(name, boost::is_any_of(" \t\n\r"));
+          boost::trim_if(val, boost::is_any_of(" \t\n\r"));
+
+          if( name.size() >0 && val.size() > 0 )
           {
-            AddVar(name,val);
+            if( !val.substr(0,1).compare("@") )
+            {
+                AddAlias(name,val.substr(1));
+            }else{
+                AddVar(name,val);
+            }
           }
         }
       }

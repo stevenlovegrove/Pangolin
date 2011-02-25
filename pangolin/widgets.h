@@ -43,7 +43,7 @@ struct Panel : public View
   Panel(const std::string& auto_register_var_prefix);
   void Render();
   void ResizeChildren();
-  static void AddVariable(void* data, const std::string& name, _Var& var);
+  static void AddVariable(void* data, const std::string& name, _Var& var, const char* reg_type_name, bool brand_new);
   Viewport vinside;
 };
 

@@ -70,7 +70,7 @@ bool Pushed(Var<bool>& button);
 
 void ParseVarsFile(const std::string& filename);
 
-typedef void (*NewVarCallbackFn)(void* data, const std::string& name, _Var& var);
+typedef void (*NewVarCallbackFn)(void* data, const std::string& name, _Var& var, const char* reg_type_name, bool brand_new);
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter = "");
 
 template<typename T>
@@ -162,6 +162,10 @@ inline void Var<T>::Init(const std::string& name, T default_value, double min, d
 {
   std::map<std::string,_Var>::iterator vi = vars.find(name);
 
+  std::vector<std::string> parts;
+  boost::split(parts,name,boost::is_any_of("."));
+
+
   if( vi != vars.end() )
   {
     // found
@@ -170,10 +174,21 @@ inline void Var<T>::Init(const std::string& name, T default_value, double min, d
     if( var->generic && var->type_name != typeid(T).name() )
     {
       // re-specialise this variable
+        std::cout << "Specialising " << name << std::endl;
       default_value = a->Get();
       delete a;
       free(var->val);
     }else{
+      // Meta info for variable
+      var->meta_friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
+      var->meta_range[0] = min;
+      var->meta_range[1] = max;
+      var->meta_flags = flags;
+
+      // notify those watching new variables
+      BOOST_FOREACH(NewVarCallback& nvc, callbacks)
+        if( boost::starts_with(name,nvc.filter) )
+          nvc.fn(nvc.data,name,*var, typeid(T).name(), false);
       return;
     }
   }
@@ -215,20 +230,32 @@ inline void Var<T>::Init(const std::string& name, T default_value, double min, d
     da->Set(default_value);
     delete da;
 
-    std::vector<std::string> parts;
-    boost::split(parts,name,boost::is_any_of("."));
-
     // Meta info for variable
     var->meta_friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
     var->meta_range[0] = min;
     var->meta_range[1] = max;
     var->meta_flags = flags;
+    var->generic = false;
 
     // notify those watching new variables
     BOOST_FOREACH(NewVarCallback& nvc, callbacks)
       if( boost::starts_with(name,nvc.filter) )
-        nvc.fn(nvc.data,name,*var);
+        nvc.fn(nvc.data,name,*var, typeid(T).name(), true);
   }
+}
+
+inline void ProcessHistoricCallbacks(NewVarCallbackFn callback, void* data, const std::string& filter)
+{
+    for( std::map<std::string,_Var>::iterator i = vars.begin(); i != vars.end(); ++i )
+    {
+        const std::string& name = i->first;
+
+        if( boost::starts_with(name,filter) )
+        {
+            callback(data,name,i->second, typeid(std::string).name(), false);
+        }
+    }
+
 }
 
 template<typename T>

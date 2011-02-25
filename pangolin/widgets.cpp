@@ -103,31 +103,42 @@ Panel::Panel(const std::string& auto_register_var_prefix)
     handler = &StaticHandler;
     layout = LayoutVertical;
     RegisterNewVarCallback(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
+
+    // TODO: Work out how this might work
+//    ProcessHistoricCallbacks(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
 }
 
-void Panel::AddVariable(void* data, const std::string& name, _Var& var)
+void Panel::AddVariable(void* data, const std::string& name, _Var& var, const char* reg_type_name, bool brand_new )
 {
     Panel* thisptr = (Panel*)data;
 
     const string& title = var.meta_friendly;
 
-    if( var.type_name == typeid(bool).name() )
+    std::map<std::string,View*>::iterator pnl =
+        context->all_views.find(name);
+
+    // Only add if a widget by the same name doesn't
+    // already exist
+    if( pnl == context->all_views.end() )
     {
-        View* nv = var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-        context->all_views[name] = nv;
-        thisptr->views.push_back(nv);
-        thisptr->ResizeChildren();
-    }else if( var.type_name == typeid(double).name() || var.type_name == typeid(int).name() )
-    {
-        View* nv = new Slider(title,var);
-        context->all_views[name] = nv;
-        thisptr->views.push_back( nv );
-        thisptr->ResizeChildren();
-    }else{
-        View* nv = new TextInput(title,var);
-        context->all_views[name] = nv;
-        thisptr->views.push_back( nv );
-        thisptr->ResizeChildren();
+        if( reg_type_name == typeid(bool).name() )
+        {
+            View* nv = var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
+            context->all_views[name] = nv;
+            thisptr->views.push_back(nv);
+            thisptr->ResizeChildren();
+        }else if( reg_type_name == typeid(double).name() || reg_type_name == typeid(float).name() || reg_type_name == typeid(int).name() || reg_type_name == typeid(unsigned int).name() )
+        {
+            View* nv = new Slider(title,var);
+            context->all_views[name] = nv;
+            thisptr->views.push_back( nv );
+            thisptr->ResizeChildren();
+        }else{
+            View* nv = new TextInput(title,var);
+            context->all_views[name] = nv;
+            thisptr->views.push_back( nv );
+            thisptr->ResizeChildren();
+        }
     }
 
 }
