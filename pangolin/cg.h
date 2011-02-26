@@ -49,6 +49,8 @@ struct CgProgram
     CGprogram mProg;
     CGcontext mContext;
     CGprofile mProfile;
+
+    void SetUniform(const std::string& name, float f);
 };
 
 struct CgLoader
@@ -160,6 +162,12 @@ inline void CgLoader::DisablePrograms()
 {
     cgGLDisableProfile(mFragmentProfile);
     cgGLDisableProfile(mVertexProfile);
+}
+
+void CgProgram::SetUniform(const std::string& name, float f)
+{
+    CGparameter p = cgGetNamedParameter( mProg, name.c_str());
+    cgSetParameter1f( p, f );
 }
 
 
