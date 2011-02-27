@@ -320,6 +320,12 @@ namespace pangolin
     glLoadMatrixd(m);
   }
 
+  void OpenGlMatrixSpec::Multiply() const
+  {
+    glMatrixMode(type);
+    glMultMatrixd(m);
+  }
+
   void OpenGlRenderState::Apply() const
   {
     // Apply any stack matrices we have

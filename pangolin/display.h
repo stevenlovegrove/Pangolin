@@ -177,6 +177,8 @@ namespace pangolin
     // Load matrix on to OpenGl stack
     void Load() const;
 
+    void Multiply() const;
+
     // Specify which stack this refers to
     OpenGlStack type;
 
