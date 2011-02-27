@@ -35,9 +35,12 @@ void FirewireVideo::init_camera(
    *  setup capture
    *-----------------------------------------------------------------------*/
 
-    err=dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
-    if( err != DC1394_SUCCESS )
-        throw VideoException("Could not set DC1394_OPERATION_MODE_1394B");
+    if( iso_speed >= DC1394_ISO_SPEED_800)
+    {
+        err=dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
+        if( err != DC1394_SUCCESS )
+            throw VideoException("Could not set DC1394_OPERATION_MODE_1394B");
+    }
 
     err=dc1394_video_set_iso_speed(camera, iso_speed);
     if( err != DC1394_SUCCESS )
@@ -86,19 +89,28 @@ void FirewireVideo::Stop()
     }
 }
 
-FirewireVideo::FirewireVideo(uint64_t guid)
-    :running(false)
+FirewireVideo::FirewireVideo(
+    uint64_t guid,
+    dc1394video_mode_t video_mode,
+    dc1394framerate_t framerate,
+    dc1394speed_t iso_speed,
+    int dma_buffers
+) :running(false)
 {
     d = dc1394_new ();
     if (!d)
         throw VideoException("");
 
-    init_camera(guid,10,DC1394_ISO_SPEED_400,DC1394_VIDEO_MODE_640x480_RGB8,DC1394_FRAMERATE_30);
-
+    init_camera(guid,dma_buffers,iso_speed,video_mode,framerate);
 }
 
-FirewireVideo::FirewireVideo(unsigned deviceid)
-    :running(false)
+FirewireVideo::FirewireVideo(
+    unsigned deviceid,
+    dc1394video_mode_t video_mode,
+    dc1394framerate_t framerate,
+    dc1394speed_t iso_speed,
+    int dma_buffers
+) :running(false)
 {
     d = dc1394_new ();
     if (!d)
@@ -118,7 +130,7 @@ FirewireVideo::FirewireVideo(unsigned deviceid)
 
     dc1394_camera_free_list (list);
 
-    init_camera(guid,10,DC1394_ISO_SPEED_400,DC1394_VIDEO_MODE_640x480_RGB8,DC1394_FRAMERATE_30);
+    init_camera(guid,dma_buffers,iso_speed,video_mode,framerate);
 
 }
 
@@ -209,6 +221,16 @@ void FirewireVideo::PutFrame(FirewireFrame& f)
     }
 }
 
+float FirewireVideo::GetShutterTime() const
+{
+    float shutter;
+    err = dc1394_feature_get_absolute_value(camera,DC1394_FEATURE_SHUTTER,&shutter);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Failed to read shutter");
+
+    return shutter;
+
+}
 
 FirewireVideo::~FirewireVideo()
 {

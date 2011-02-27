@@ -65,8 +65,22 @@ protected:
 class FirewireVideo
 {
 public:
-  FirewireVideo(unsigned deviceid = 0);
-  FirewireVideo(uint64_t guid);
+  FirewireVideo(
+    unsigned deviceid = 0,
+    dc1394video_mode_t video_mode = DC1394_VIDEO_MODE_640x480_RGB8,
+    dc1394framerate_t framerate = DC1394_FRAMERATE_30,
+    dc1394speed_t iso_speed = DC1394_ISO_SPEED_400,
+    int dma_buffers = 10
+  );
+
+  FirewireVideo(
+    uint64_t guid,
+    dc1394video_mode_t video_mode = DC1394_VIDEO_MODE_640x480_RGB8,
+    dc1394framerate_t framerate = DC1394_FRAMERATE_30,
+    dc1394speed_t iso_speed = DC1394_ISO_SPEED_400,
+    int dma_buffers = 10
+  );
+
   ~FirewireVideo();
 
   int Width() const { return width; }
@@ -100,6 +114,8 @@ public:
   //! invalidated on return.
   void PutFrame(FirewireFrame& frame);
 
+  float GetShutterTime() const;
+
 protected:
   void init_camera(
     uint64_t guid, int dma_frames,
@@ -114,7 +130,7 @@ protected:
   //dc1394featureset_t features;
   dc1394_t * d;
   dc1394camera_list_t * list;
-  dc1394error_t err;
+  mutable dc1394error_t err;
 };
 
 }
