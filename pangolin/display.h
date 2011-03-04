@@ -340,7 +340,7 @@ namespace pangolin
   OpenGlMatrixSpec negIdentityMatrix(OpenGlStack type);
 
 #ifdef HAVE_TOON
-  OpenGlMatrixSpec FromTooN(OpenGlStack type, TooN::Matrix<4,4>& M);
+  OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M);
 #endif
 
 

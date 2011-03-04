@@ -116,6 +116,8 @@ public:
 
   float GetShutterTime() const;
 
+  float GetGamma() const;
+
 protected:
   void init_camera(
     uint64_t guid, int dma_frames,

@@ -232,6 +232,16 @@ float FirewireVideo::GetShutterTime() const
 
 }
 
+float FirewireVideo::GetGamma() const
+{
+    float gamma;
+    err = dc1394_feature_get_absolute_value(camera,DC1394_FEATURE_GAMMA,&gamma);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Failed to read gamma");
+    return gamma;
+}
+
+
 FirewireVideo::~FirewireVideo()
 {
     Stop();
