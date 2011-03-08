@@ -50,6 +50,7 @@ struct CgProgram
     CGcontext mContext;
     CGprofile mProfile;
 
+    void SetUniform(const std::string& name, GlTexture& tex);
     void SetUniform(const std::string& name, float f);
 };
 
@@ -168,6 +169,13 @@ void CgProgram::SetUniform(const std::string& name, float f)
 {
     CGparameter p = cgGetNamedParameter( mProg, name.c_str());
     cgSetParameter1f( p, f );
+}
+
+void CgProgram::SetUniform(const std::string& name, GlTexture& tex)
+{
+    CGparameter p = cgGetNamedParameter( mProg, name.c_str());
+    cgGLSetTextureParameter(p, tex.tid );
+    cgGLEnableTextureParameter(p);
 }
 
 
