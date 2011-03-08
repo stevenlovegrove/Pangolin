@@ -169,6 +169,7 @@ void CgProgram::SetUniform(const std::string& name, float f)
 {
     CGparameter p = cgGetNamedParameter( mProg, name.c_str());
     cgSetParameter1f( p, f );
+    cgUpdateProgramParameters(mProg);
 }
 
 void CgProgram::SetUniform(const std::string& name, GlTexture& tex)
