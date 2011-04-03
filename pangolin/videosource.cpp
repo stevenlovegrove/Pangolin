@@ -90,7 +90,7 @@ void FirewireVideo::Stop()
 }
 
 FirewireVideo::FirewireVideo(
-    uint64_t guid,
+    Guid guid,
     dc1394video_mode_t video_mode,
     dc1394framerate_t framerate,
     dc1394speed_t iso_speed,
@@ -101,7 +101,7 @@ FirewireVideo::FirewireVideo(
     if (!d)
         throw VideoException("");
 
-    init_camera(guid,dma_buffers,iso_speed,video_mode,framerate);
+    init_camera(guid.guid,dma_buffers,iso_speed,video_mode,framerate);
 }
 
 FirewireVideo::FirewireVideo(
