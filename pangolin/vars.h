@@ -174,7 +174,7 @@ inline void Var<T>::Init(const std::string& name, T default_value, double min, d
     if( var->generic && var->type_name != typeid(T).name() )
     {
       // re-specialise this variable
-        std::cout << "Specialising " << name << std::endl;
+//      std::cout << "Specialising " << name << std::endl;
       default_value = a->Get();
       delete a;
       free(var->val);
