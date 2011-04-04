@@ -4,26 +4,10 @@
  *                     Imperial College London
  **/
 
-#include <GL/glew.h>
-
-#include <boost/thread.hpp>
 #include <pangolin/pangolin.h>
 #include <pangolin/videosource.h>
-#include <cvd/videosource.h>
-#include <TooN/sl.h>
-#include <TooN/so3.h>
-#include <TooN/se3.h>
-#include <TooN/LU.h>
-
-#include <boost/foreach.hpp>
-#define foreach BOOST_FOREACH
 
 using namespace pangolin;
-using namespace std;
-using namespace CVD;
-using namespace TooN;
-
-//#define USE_CVD_VID
 
 int main( int /*argc*/, char* argv[] )
 {
@@ -38,7 +22,7 @@ int main( int /*argc*/, char* argv[] )
   // Create viewport for video with fixed aspect
   View& vVideo = Display("Video").SetAspect((float)w/h);
 
-  // Video Image buffer
+  // OpenGl Texture for video frame
   GlTexture texVideo(w,h,GL_RGBA8);
 
   for(int frame=0; !pangolin::ShouldQuit(); ++frame)
