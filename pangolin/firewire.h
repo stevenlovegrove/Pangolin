@@ -25,10 +25,12 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEOSOURCE_H
-#define PANGOLIN_VIDEOSOURCE_H
+#ifndef PANGOLIN_FIREWIRE_H
+#define PANGOLIN_FIREWIRE_H
 
 #include "pangolin.h"
+#include "video.h"
+
 #ifdef HAVE_DC1394
 
 #include <dc1394/dc1394.h>
@@ -39,14 +41,6 @@
 
 namespace pangolin
 {
-
-struct VideoException : std::exception
-{
-  VideoException(std::string str) : desc(str) {}
-  ~VideoException() throw() {}
-  const char* what() const throw() { return desc.c_str(); }
-  std::string desc;
-};
 
 class FirewireFrame
 {
@@ -68,7 +62,7 @@ struct Guid
     uint64_t guid;
 };
 
-class FirewireVideo
+class FirewireVideo : public VideoSource
 {
 public:
   FirewireVideo(
@@ -89,21 +83,22 @@ public:
 
   ~FirewireVideo();
 
-  int Width() const { return width; }
-  int Height() const { return height; }
+  //! Implement VideoSource::Width()
+  unsigned Width() const { return width; }
 
+  //! Implement VideoSource::Height()
+  unsigned Height() const { return height; }
+
+  //! Implement VideoSource::Start()
   void Start();
+
+  //! Implement VideoSource::Stop()
   void Stop();
 
-  //! Copy the next frame from the camera to image.
-  //! Optionally wait for a frame if one isn't ready
-  //! Returns true iff image was copied
+  //! Implement VideoSource::GrabNext()
   bool GrabNext( unsigned char* image, bool wait = true );
 
-  //! Copy the newest frame from the camera to image
-  //! discarding all older frames.
-  //! Optionally wait for a frame if one isn't ready
-  //! Returns true iff image was copied
+  //! Implement VideoSource::GrabNewest()
   bool GrabNewest( unsigned char* image, bool wait = true );
 
   //! Return object containing reference to image data within
@@ -134,7 +129,7 @@ protected:
 
   bool running;
   dc1394camera_t *camera;
-  unsigned int width, height;
+  unsigned width, height;
   //dc1394featureset_t features;
   dc1394_t * d;
   dc1394camera_list_t * list;
@@ -145,4 +140,4 @@ protected:
 
 
 #endif // HAVE_DC1394
-#endif // PANGOLIN_VIDEOSOURCE_H
+#endif // PANGOLIN_FIREWIRE_H

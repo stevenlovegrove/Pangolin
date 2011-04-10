@@ -1,4 +1,4 @@
-#include "videosource.h"
+#include "firewire.h"
 #ifdef HAVE_DC1394
 
 #include <stdio.h>
