@@ -15,6 +15,7 @@
 #cmakedefine HAVE_GLUT
 #cmakedefine HAVE_DC1394
 #cmakedefine HAVE_TOON
+#cmakedefine HAVE_FFMPEG
 
 /// Platform
 #cmakedefine _UNIX_

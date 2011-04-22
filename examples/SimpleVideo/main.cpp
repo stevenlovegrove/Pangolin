@@ -7,6 +7,7 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/firewire.h>
 #include <pangolin/v4l.h>
+#include <pangolin/ffmpeg.h>
 
 using namespace pangolin;
 
@@ -137,8 +138,49 @@ int v4l_sample()
     return 0;
 }
 
-int main( int /*argc*/, char* argv[] )
+int ffmpeg_sample(const char* filename)
+{
+    // Setup Firewire Camera
+    FfmpegVideo video(filename);
+    const unsigned w = video.Width();
+    const unsigned h = video.Height();
+
+    // Create Glut window
+    pangolin::CreateGlutWindowAndBind("Main",w,h);
+
+    // Create viewport for video with fixed aspect
+    View& vVideo = Display("Video").SetAspect((float)w/h);
+
+    // OpenGl Texture for video frame
+    GlTexture texVideo(w,h,GL_RGBA8);
+
+    unsigned char* rgb = (unsigned char*)malloc(video.Width()*video.Height()*3);
+
+    for(int frame=0; !pangolin::ShouldQuit(); ++frame)
+    {
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+        video.GrabNext(rgb,true);
+        texVideo.Upload(rgb,GL_RGB,GL_UNSIGNED_BYTE);
+
+        // Activate video viewport and render texture
+        vVideo.Activate();
+        texVideo.RenderToViewportFlipY();
+
+        // Swap back buffer with front
+        glutSwapBuffers();
+
+        // Process window events via GLUT
+        glutMainLoopEvent();
+    }
+
+    return 0;
+}
+
+
+int main( int argc, char* argv[] )
 {
 //    firewire_sample();
-    v4l_sample();
+//    v4l_sample();
+    ffmpeg_sample("/media/Data/pictures/photos/Minnesota 2010/00021.MTS");
 }

@@ -11,7 +11,10 @@ SET(
   widgets.h widgets.cpp
   plotter.h plotter.cpp
   gl.h glcuda.h cg.h
-  video.h firewire.h firewire.cpp v4l.h v4l.cpp
+  video.h
+  firewire.h firewire.cpp
+  v4l.h v4l.cpp
+  ffmpeg.h ffmpeg.cpp
 )
 
 #######################################################
@@ -56,6 +59,14 @@ IF(DC1394_FOUND)
   INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${DC1394_INCLUDE_DIR} )
   TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${DC1394_LIBRARY} )
   MESSAGE(STATUS "libdc1394 Found and Enabled")
+ENDIF()
+
+FIND_PACKAGE(FFMPEG QUIET)
+IF(FFMPEG_FOUND)
+  SET(HAVE_FFMPEG 1)
+  INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${FFMPEG_INCLUDE_DIRS} )
+  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${FFMPEG_LIBRARIES} )
+  MESSAGE(STATUS "ffmpeg Found and Enabled")
 ENDIF()
 
 #FIND_PACKAGE(TOON QUIET)
