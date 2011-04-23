@@ -62,7 +62,7 @@ struct Guid
     uint64_t guid;
 };
 
-class FirewireVideo : public VideoSource
+class FirewireVideo : public VideoInterface
 {
 public:
   FirewireVideo(

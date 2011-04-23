@@ -45,7 +45,7 @@ namespace pangolin
     };
 
     //! Interface to video capture sources
-    struct VideoSource
+    struct VideoInterface
     {
         virtual unsigned Width() const = 0;
         virtual unsigned Height() const = 0;
@@ -63,6 +63,26 @@ namespace pangolin
         //! Optionally wait for a frame if one isn't ready
         //! Returns true iff image was copied
         virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
+    };
+
+    struct VideoInput : public VideoInterface
+    {
+        VideoInput();
+        VideoInput(std::string uri);
+        ~VideoInput();
+
+        void Open(std::string uri);
+
+        unsigned Width() const;
+        unsigned Height() const;
+
+        void Start();
+        void Stop();
+        bool GrabNext( unsigned char* image, bool wait = true );
+        bool GrabNewest( unsigned char* image, bool wait = true );
+
+    protected:
+        VideoInterface* video;
     };
 
 }

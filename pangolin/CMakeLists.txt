@@ -11,7 +11,7 @@ SET(
   widgets.h widgets.cpp
   plotter.h plotter.cpp
   gl.h glcuda.h cg.h
-  video.h
+  video.h video.cpp
   firewire.h firewire.cpp
   v4l.h v4l.cpp
   ffmpeg.h ffmpeg.cpp

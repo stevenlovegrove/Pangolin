@@ -43,7 +43,7 @@ extern "C"
 namespace pangolin
 {
 
-class FfmpegVideo : public VideoSource
+class FfmpegVideo : public VideoInterface
 {
 public:
     FfmpegVideo(const char* filename);

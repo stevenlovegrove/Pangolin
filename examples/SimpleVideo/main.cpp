@@ -177,10 +177,51 @@ int ffmpeg_sample(const char* filename)
     return 0;
 }
 
+void sample(const std::string uri)
+{
+    // Setup Firewire Camera
+    VideoInput video(uri);
+    const unsigned w = video.Width();
+    const unsigned h = video.Height();
+
+    // Create Glut window
+    pangolin::CreateGlutWindowAndBind("Main",w,h);
+
+    // Create viewport for video with fixed aspect
+    View& vVideo = Display("Video").SetAspect((float)w/h);
+
+    // OpenGl Texture for video frame
+    GlTexture texVideo(w,h,GL_RGBA8);
+
+    unsigned char* rgb = (unsigned char*)malloc(video.Width()*video.Height()*3);
+
+    for(int frame=0; !pangolin::ShouldQuit(); ++frame)
+    {
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+        video.GrabNext(rgb,true);
+        texVideo.Upload(rgb,GL_RGB,GL_UNSIGNED_BYTE);
+
+        // Activate video viewport and render texture
+        vVideo.Activate();
+        texVideo.RenderToViewportFlipY();
+
+        // Swap back buffer with front
+        glutSwapBuffers();
+
+        // Process window events via GLUT
+        glutMainLoopEvent();
+    }
+}
+
 
 int main( int argc, char* argv[] )
 {
 //    firewire_sample();
 //    v4l_sample();
-    ffmpeg_sample("/media/Data/pictures/photos/Minnesota 2010/00021.MTS");
+//    ffmpeg_sample("/media/Data/pictures/photos/Minnesota 2010/P1000142.jpg");
+//    ffmpeg_sample("/media/Data/pictures/photos/Minnesota 2010/00021.MTS");
+//    sample("file:///home/sl203/videos/YellowPattern1/test-0000000017.ppm");
+    sample("v4l:///dev/video0");
+//    sample("file:///media/Data/pictures/photos/Minnesota 2010/00021.MTS?something=67&test=something");
 }
