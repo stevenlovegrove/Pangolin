@@ -22,3 +22,9 @@ ui integration, and offers a simple firewire class.
 
 * CUDA Toolkit (>= 3.2)
   http://developer.nvidia.com/object/cuda_3_2_downloads.html
+
+* FFMPEG
+  (deb) sudo apt-get install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev
+
+* DC1394
+  (deb) sudo apt-get install libdc1394-22-dev libraw1394-dev

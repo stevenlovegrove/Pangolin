@@ -36,7 +36,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include <fcntl.h>              /* low-level i/o */
+#include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 #include <malloc.h>
@@ -60,12 +60,6 @@ namespace pangolin
         while (-1 == r && EINTR == errno);
         return r;
     }
-
-//    static void process_image(const void* p)
-//    {
-//        std::cout << "." << std::endl;
-////        fflush (stdout);
-//    }
 
     V4lVideo::V4lVideo(const char* dev_name, io_method io)
         : io(io), fd(-1), buffers(0), n_buffers(0), running(false)

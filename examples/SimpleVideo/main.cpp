@@ -5,9 +5,7 @@
  **/
 
 #include <pangolin/pangolin.h>
-#include <pangolin/firewire.h>
-#include <pangolin/v4l.h>
-#include <pangolin/ffmpeg.h>
+#include <pangolin/video.h>
 
 using namespace pangolin;
 
