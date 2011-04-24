@@ -30,7 +30,93 @@
 namespace pangolin
 {
 
-FfmpegVideo::FfmpegVideo(const char *filename)
+PixelFormat FfmpegFmtFromString(const std::string fmt)
+{
+	std::string lfmt = boost::algorithm::to_lower_copy(fmt);
+	return av_get_pix_fmt(lfmt.c_str());
+}
+
+#define TEST_PIX_FMT_RETURN(fmt) case PIX_FMT_##fmt: return #fmt;
+
+std::string FfmpegFmtToString(const PixelFormat fmt)
+{
+	switch( fmt )
+	{
+	TEST_PIX_FMT_RETURN(YUV420P);
+	TEST_PIX_FMT_RETURN(YUYV422);
+	TEST_PIX_FMT_RETURN(RGB24);
+	TEST_PIX_FMT_RETURN(BGR24);
+	TEST_PIX_FMT_RETURN(YUV422P);
+	TEST_PIX_FMT_RETURN(YUV444P);
+	TEST_PIX_FMT_RETURN(YUV410P);
+	TEST_PIX_FMT_RETURN(YUV411P);
+	TEST_PIX_FMT_RETURN(GRAY8);
+	TEST_PIX_FMT_RETURN(MONOWHITE);
+	TEST_PIX_FMT_RETURN(MONOBLACK);
+	TEST_PIX_FMT_RETURN(PAL8);
+	TEST_PIX_FMT_RETURN(YUVJ420P);
+	TEST_PIX_FMT_RETURN(YUVJ422P);
+	TEST_PIX_FMT_RETURN(YUVJ444P);
+	TEST_PIX_FMT_RETURN(XVMC_MPEG2_MC);
+	TEST_PIX_FMT_RETURN(XVMC_MPEG2_IDCT);
+	TEST_PIX_FMT_RETURN(UYVY422);
+	TEST_PIX_FMT_RETURN(UYYVYY411);
+	TEST_PIX_FMT_RETURN(BGR8);
+	TEST_PIX_FMT_RETURN(BGR4);
+	TEST_PIX_FMT_RETURN(BGR4_BYTE);
+	TEST_PIX_FMT_RETURN(RGB8);
+	TEST_PIX_FMT_RETURN(RGB4);
+	TEST_PIX_FMT_RETURN(RGB4_BYTE);
+	TEST_PIX_FMT_RETURN(NV12);
+	TEST_PIX_FMT_RETURN(NV21);
+	TEST_PIX_FMT_RETURN(ARGB);
+	TEST_PIX_FMT_RETURN(RGBA);
+	TEST_PIX_FMT_RETURN(ABGR);
+	TEST_PIX_FMT_RETURN(BGRA);
+	TEST_PIX_FMT_RETURN(GRAY16BE);
+	TEST_PIX_FMT_RETURN(GRAY16LE);
+	TEST_PIX_FMT_RETURN(YUV440P);
+	TEST_PIX_FMT_RETURN(YUVJ440P);
+	TEST_PIX_FMT_RETURN(YUVA420P);
+	TEST_PIX_FMT_RETURN(VDPAU_H264);
+	TEST_PIX_FMT_RETURN(VDPAU_MPEG1);
+	TEST_PIX_FMT_RETURN(VDPAU_MPEG2);
+	TEST_PIX_FMT_RETURN(VDPAU_WMV3);
+	TEST_PIX_FMT_RETURN(VDPAU_VC1);
+	TEST_PIX_FMT_RETURN(RGB48BE );
+	TEST_PIX_FMT_RETURN(RGB48LE );
+	TEST_PIX_FMT_RETURN(RGB565BE);
+	TEST_PIX_FMT_RETURN(RGB565LE);
+	TEST_PIX_FMT_RETURN(RGB555BE);
+	TEST_PIX_FMT_RETURN(RGB555LE);
+	TEST_PIX_FMT_RETURN(BGR565BE);
+	TEST_PIX_FMT_RETURN(BGR565LE);
+	TEST_PIX_FMT_RETURN(BGR555BE);
+	TEST_PIX_FMT_RETURN(BGR555LE);
+	TEST_PIX_FMT_RETURN(VAAPI_MOCO);
+	TEST_PIX_FMT_RETURN(VAAPI_IDCT);
+	TEST_PIX_FMT_RETURN(VAAPI_VLD);
+	TEST_PIX_FMT_RETURN(YUV420P16LE);
+	TEST_PIX_FMT_RETURN(YUV420P16BE);
+	TEST_PIX_FMT_RETURN(YUV422P16LE);
+	TEST_PIX_FMT_RETURN(YUV422P16BE);
+	TEST_PIX_FMT_RETURN(YUV444P16LE);
+	TEST_PIX_FMT_RETURN(YUV444P16BE);
+	TEST_PIX_FMT_RETURN(VDPAU_MPEG4);
+	TEST_PIX_FMT_RETURN(DXVA2_VLD);
+	TEST_PIX_FMT_RETURN(RGB444BE);
+	TEST_PIX_FMT_RETURN(RGB444LE);
+	TEST_PIX_FMT_RETURN(BGR444BE);
+	TEST_PIX_FMT_RETURN(BGR444LE);
+	TEST_PIX_FMT_RETURN(Y400A   );
+	TEST_PIX_FMT_RETURN(NB      );
+	default: return "";
+	}
+}
+
+#undef TEST_PIX_FMT_RETURN
+
+FfmpegVideo::FfmpegVideo(const char *filename, const std::string strfmtout)
     :pFormatCtx(0)
 {
     // Register all formats and codecs
@@ -77,27 +163,27 @@ FfmpegVideo::FfmpegVideo(const char *filename)
     // Allocate video frame
     pFrame=avcodec_alloc_frame();
 
-    // Allocate an AVFrame structure
-    pFrameRGB=avcodec_alloc_frame();
-    if(pFrameRGB==NULL)
+	// Allocate an AVFrame structure
+	pFrameOut=avcodec_alloc_frame();
+	if(pFrameOut==0)
         throw VideoException("Couldn't allocate frame");
 
-    // Determine required buffer size and allocate buffer
-    numBytes=avpicture_get_size(PIX_FMT_RGB24, pCodecCtx->width,
-        pCodecCtx->height);
+	PixelFormat fmtout = FfmpegFmtFromString(strfmtout);
 
-    buffer=(uint8_t*)malloc(numBytes);
+    // Determine required buffer size and allocate buffer
+    numBytesOut=avpicture_get_size(fmtout, pCodecCtx->width, pCodecCtx->height);
+
+    buffer= new uint8_t[numBytesOut];
 
     // Assign appropriate parts of buffer to image planes in pFrameRGB
-    avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB24,
-        pCodecCtx->width, pCodecCtx->height);
+    avpicture_fill((AVPicture *)pFrameOut, buffer, fmtout, pCodecCtx->width, pCodecCtx->height);
 }
 
 FfmpegVideo::~FfmpegVideo()
 {
     // Free the RGB image
-    free(buffer);
-    av_free(pFrameRGB);
+	delete[] buffer;
+    av_free(pFrameOut);
 
     // Free the YUV frame
     av_free(pFrame);
@@ -118,6 +204,11 @@ unsigned FfmpegVideo::Width() const
 unsigned FfmpegVideo::Height() const
 {
     return pCodecCtx->height;
+}
+
+std::string FfmpegVideo::PixFormat() const
+{
+    return FfmpegFmtToString(pCodecCtx->pix_fmt);
 }
 
 void FfmpegVideo::Start()
@@ -160,9 +251,9 @@ bool FfmpegVideo::GrabNext(unsigned char* image, bool /*wait*/)
 					exit(1);
 				}
 			}
-			sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize);
+			sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameOut->data, pFrameOut->linesize);
 
-            memcpy(image,pFrameRGB->data[0],numBytes);
+            memcpy(image,pFrameOut->data[0],numBytesOut);
         }
 
         // Free the packet that was allocated by av_read_frame
@@ -176,5 +267,101 @@ bool FfmpegVideo::GrabNewest(unsigned char *image, bool wait)
 {
     return GrabNext(image,wait);
 }
+
+FfmpegConverter::FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout, FfmpegMethod method )
+	:videoin(videoin)
+{
+	if( !videoin )
+		throw VideoException("Source video interface not specified");
+
+	w = videoin->Width();
+	h = videoin->Height();
+	fmtsrc = FfmpegFmtFromString(videoin->PixFormat());
+	fmtdst = FfmpegFmtFromString(pixelfmtout);
+
+	img_convert_ctx = sws_getContext(
+		w, h, fmtsrc,
+		w, h, fmtdst,
+		method, NULL, NULL, NULL
+	);
+	if(!img_convert_ctx)
+		throw VideoException("Could not create SwScale context for pixel conversion");
+
+    numbytessrc=avpicture_get_size(fmtsrc, w, h);
+    numbytesdst=avpicture_get_size(fmtdst, w, h);
+    bufsrc  = new uint8_t[numbytessrc];
+    bufdst  = new uint8_t[numbytesdst];
+    avsrc = avcodec_alloc_frame();
+    avdst = avcodec_alloc_frame();
+    avpicture_fill((AVPicture*)avsrc,bufsrc,fmtsrc,w,h);
+    avpicture_fill((AVPicture*)avdst,bufdst,fmtdst,w,h);
+}
+
+FfmpegConverter::~FfmpegConverter()
+{
+    sws_freeContext(img_convert_ctx);
+    delete[] bufsrc;
+    av_free(avsrc);
+    delete[] bufdst;
+    av_free(avdst);
+}
+
+void FfmpegConverter::Start()
+{
+    // No-Op
+}
+
+void FfmpegConverter::Stop()
+{
+    // No-Op
+}
+
+unsigned FfmpegConverter::Width() const
+{
+    return w;
+}
+
+unsigned FfmpegConverter::Height() const
+{
+    return h;
+}
+
+std::string FfmpegConverter::PixFormat() const
+{
+    return FfmpegFmtToString(fmtdst);
+}
+
+bool FfmpegConverter::GrabNext( unsigned char* image, bool wait )
+{
+    if( videoin->GrabNext(avsrc->data[0],wait) )
+    {
+        sws_scale(
+            img_convert_ctx,
+            avsrc->data, avsrc->linesize, 0, h,
+            avdst->data, avdst->linesize
+        );
+        memcpy(image,avdst->data[0],numbytesdst);
+        return true;
+    }
+    return false;
+}
+
+bool FfmpegConverter::GrabNewest( unsigned char* image, bool wait )
+{
+    if( videoin->GrabNewest(avsrc->data[0],wait) )
+    {
+        sws_scale(
+            img_convert_ctx,
+            avsrc->data, avsrc->linesize, 0, h,
+            avdst->data, avdst->linesize
+        );
+        memcpy(image,avdst->data[0],numbytesdst);
+        return true;
+    }
+    return false;
+}
+
+
+
 
 }

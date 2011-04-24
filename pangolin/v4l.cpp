@@ -96,6 +96,12 @@ namespace pangolin
         return height;
     }
 
+    std::string V4lVideo::PixFormat() const
+    {
+        // TODO: compute properly
+        return "YUYV422";
+    }
+
     bool V4lVideo::GrabNext( unsigned char* image, bool wait )
     {
         for (;;) {

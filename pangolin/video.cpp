@@ -91,6 +91,10 @@ VideoUri ParseUri(string str_uri)
     return uri;
 }
 
+#ifdef HAVE_FFMPEG
+#include "ffmpeg.h"
+#endif
+
 void VideoInput::Open(std::string str_uri)
 {
     VideoUri uri = ParseUri(str_uri);
@@ -109,6 +113,14 @@ void VideoInput::Open(std::string str_uri)
     }else{
         throw VideoException("Unable to open video URI");
     }
+
+#ifdef HAVE_FFMPEG
+    if( dynamic_cast<FfmpegVideo*>(video) == 0 &&
+        video->PixFormat().compare("RGB24") != 0 )
+    {
+        video = new FfmpegConverter(video,"RGB24",FFMPEG_FAST_BILINEAR);
+    }
+#endif
 }
 
 unsigned VideoInput::Width() const
@@ -121,6 +133,12 @@ unsigned VideoInput::Height() const
 {
     if( !video ) throw VideoException("No video source open");
     return video->Height();
+}
+
+std::string VideoInput::PixFormat() const
+{
+    if( !video ) throw VideoException("No video source open");
+    return video->PixFormat();
 }
 
 void VideoInput::Start()

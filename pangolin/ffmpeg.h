@@ -38,6 +38,7 @@ extern "C"
 #include <avcodec.h>
 #include <avformat.h>
 #include <swscale.h>
+#include "pixdesc.h"
 }
 
 namespace pangolin
@@ -46,7 +47,7 @@ namespace pangolin
 class FfmpegVideo : public VideoInterface
 {
 public:
-    FfmpegVideo(const char* filename);
+    FfmpegVideo(const char* filename, const std::string strfmtout = "rgb24");
     ~FfmpegVideo();
 
     //! Implement VideoSource::Start()
@@ -59,6 +60,8 @@ public:
 
     unsigned Height() const;
 
+    std::string PixFormat() const;
+
     bool GrabNext( unsigned char* image, bool wait = true );
 
     bool GrabNewest( unsigned char* image, bool wait = true );
@@ -69,10 +72,55 @@ protected:
     AVCodecContext  *pCodecCtx;
     AVCodec         *pCodec;
     AVFrame         *pFrame;
-    AVFrame         *pFrameRGB;
+	AVFrame         *pFrameOut;
     AVPacket        packet;
-    int             numBytes;
+    int             numBytesOut;
     uint8_t         *buffer;
+};
+
+enum FfmpegMethod
+{
+    FFMPEG_FAST_BILINEAR =    1,
+    FFMPEG_BILINEAR      =    2,
+    FFMPEG_BICUBIC       =    4,
+    FFMPEG_X             =    8,
+    FFMPEG_POINT         = 0x10,
+    FFMPEG_AREA          = 0x20,
+    FFMPEG_BICUBLIN      = 0x40,
+    FFMPEG_GAUSS         = 0x80,
+    FFMPEG_SINC          =0x100,
+    FFMPEG_LANCZOS       =0x200,
+    FFMPEG_SPLINE        =0x400
+};
+
+class FfmpegConverter : public VideoInterface
+{
+public:
+    FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_FAST_BILINEAR);
+    ~FfmpegConverter();
+
+    void Start();
+    void Stop();
+    unsigned Width() const;
+    unsigned Height() const;
+    std::string PixFormat() const;
+
+    bool GrabNext( unsigned char* image, bool wait = true );
+    bool GrabNewest( unsigned char* image, bool wait = true );
+
+protected:
+    VideoInterface* videoin;
+    SwsContext *img_convert_ctx;
+
+    PixelFormat     fmtsrc;
+    PixelFormat     fmtdst;
+    AVFrame*        avsrc;
+    AVFrame*        avdst;
+    uint8_t*        bufsrc;
+    uint8_t*        bufdst;
+    int             numbytessrc;
+    int             numbytesdst;
+    unsigned        w,h;
 };
 
 }

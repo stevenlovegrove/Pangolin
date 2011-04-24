@@ -89,6 +89,9 @@ public:
   //! Implement VideoSource::Height()
   unsigned Height() const { return height; }
 
+  //! Implement VideoSource::PixFormat()
+  std::string PixFormat() const;
+
   //! Implement VideoSource::Start()
   void Start();
 

@@ -49,6 +49,7 @@ namespace pangolin
     {
         virtual unsigned Width() const = 0;
         virtual unsigned Height() const = 0;
+        virtual std::string PixFormat() const = 0;
 
         virtual void Start() = 0;
         virtual void Stop() = 0;
@@ -75,6 +76,7 @@ namespace pangolin
 
         unsigned Width() const;
         unsigned Height() const;
+        std::string PixFormat() const;
 
         void Start();
         void Stop();
