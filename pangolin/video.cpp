@@ -104,13 +104,20 @@ void VideoInput::Open(std::string str_uri)
         video = 0;
     }
 
+#ifdef HAVE_FFMPEG
     if(!uri.scheme.compare("file")) {
         video = new FfmpegVideo(uri.url.c_str());
-    }else if(!uri.scheme.compare("v4l")) {
+    }else
+#endif
+    if(!uri.scheme.compare("v4l")) {
         video = new V4lVideo(uri.url.c_str());
-    }else if(!uri.scheme.compare("firewire")) {
+    }else
+#ifdef HAVE_DC1394
+    if(!uri.scheme.compare("firewire")) {
         video = new FirewireVideo();
-    }else{
+    }else
+#endif
+    {
         throw VideoException("Unable to open video URI");
     }
 

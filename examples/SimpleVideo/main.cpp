@@ -54,7 +54,7 @@ int main( int argc, char* argv[] )
 {
     VideoSample(
 //    "file:///home/sl203/videos/YellowPattern1/test-0000000017.ppm"
-//    "v4l:///dev/video0"
-        "file:///media/Data/pictures/photos/Minnesota 2010/00021.MTS?something=67&test=something"
+    "v4l:///dev/video0"
+//    "file:///media/Data/pictures/photos/Minnesota 2010/00021.MTS?something=67&test=something"
     );
 }
