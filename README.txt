@@ -30,5 +30,10 @@ ui integration, and offers a simple mechanism for lightweight video input.
 * DC1394 (For firewire input)
   (deb) sudo apt-get install libdc1394-22-dev libraw1394-dev
 
+== Very Optional Dependencies ==
+
 * CUDA Toolkit (>= 3.2)
   http://developer.nvidia.com/object/cuda_3_2_downloads.html
+
+* Cg Library (some small Cg utils)
+  (deb) sudo apt-get install nvidia-cg-toolkit

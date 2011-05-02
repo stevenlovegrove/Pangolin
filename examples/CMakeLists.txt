@@ -1,4 +1,5 @@
 ADD_SUBDIRECTORY(SimpleDisplay)
+ADD_SUBDIRECTORY(SimpleMultiDisplay)
 ADD_SUBDIRECTORY(SimpleDisplayImage)
 ADD_SUBDIRECTORY(SimplePlot)
 ADD_SUBDIRECTORY(SimpleVideo)

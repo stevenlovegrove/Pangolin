@@ -239,8 +239,9 @@ namespace pangolin
         context->windowed_size[0] = width;
         context->windowed_size[1] = width;
       }
-      context->had_input = context->is_double_buffered ? 2 : 1;
-      context->has_resized = context->is_double_buffered ? 2 : 1;
+      // TODO: Fancy display managers seem to cause this to mess up?
+      context->had_input = 20; //context->is_double_buffered ? 2 : 1;
+      context->has_resized = 20; //context->is_double_buffered ? 2 : 1;
       Viewport win(0,0,width,height);
       context->base.Resize(win);
     }
@@ -462,8 +463,8 @@ namespace pangolin
       // TODO: Make this neater, and make fewer assumptions!
       if( views.size() > 0 )
       {
-        const double this_a = v.aspect();
-        const double child_a = views[0]->aspect;
+        const double this_a = abs(v.aspect());
+        const double child_a = abs(views[0]->aspect);
         double a = views.size()*child_a;
         double area = AspectAreaWithinTarget(this_a, a);
 

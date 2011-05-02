@@ -69,8 +69,11 @@ public:
 protected:
     AVFormatContext *pFormatCtx;
     int             videoStream;
-    AVCodecContext  *pCodecCtx;
-    AVCodec         *pCodec;
+    int             audioStream;
+    AVCodecContext  *pVidCodecCtx;
+    AVCodecContext  *pAudCodecCtx;
+    AVCodec         *pVidCodec;
+    AVCodec         *pAudCodec;
     AVFrame         *pFrame;
 	AVFrame         *pFrameOut;
     AVPacket        packet;
