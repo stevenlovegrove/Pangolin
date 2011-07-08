@@ -93,7 +93,11 @@ namespace pangolin
 
   bool ShouldQuit()
   {
+#ifdef HAVE_GLUT
+    return context->quit || !glutGetWindow();
+#else
     return context->quit;
+#endif
   }
 
   bool HadInput()
