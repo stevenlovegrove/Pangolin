@@ -185,19 +185,18 @@ FfmpegVideo::FfmpegVideo(const char *filename, const std::string strfmtout)
     // Assign appropriate parts of buffer to image planes in pFrameRGB
     avpicture_fill((AVPicture *)pFrameOut, buffer, fmtout, pVidCodecCtx->width, pVidCodecCtx->height);
 
-    if( audioStream!=-1)
-    {
-        pAudCodecCtx = pFormatCtx->streams[audioStream]->codec;
-        pAudCodec = avcodec_find_decoder(pAudCodecCtx->codec_id);
-        if( pAudCodec!=0)
-        {
-            if(avcodec_open(pAudCodecCtx,pAudCodec) >= 0)
-            {
-                std::cout << "Found sound codec" << std::endl;
-            }
-        }
-
-    }
+//    if( audioStream!=-1)
+//    {
+//        pAudCodecCtx = pFormatCtx->streams[audioStream]->codec;
+//        pAudCodec = avcodec_find_decoder(pAudCodecCtx->codec_id);
+//        if( pAudCodec!=0)
+//        {
+//            if(avcodec_open(pAudCodecCtx,pAudCodec) >= 0)
+//            {
+//                std::cout << "Found sound codec" << std::endl;
+//            }
+//        }
+//    }
 }
 
 FfmpegVideo::~FfmpegVideo()
