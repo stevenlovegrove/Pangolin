@@ -210,24 +210,23 @@ inline GlFramebuffer::GlFramebuffer()
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
 {
   glGenFramebuffersEXT(1, &fbid);
-  Bind();
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colour.tid, 0);
   glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depth.rbid);
-  Unbind();
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
   attachments = 1;
 }
 
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth)
 {
   glGenFramebuffersEXT(1, &fbid);
-  Bind();
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colour0.tid, 0);
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_2D, colour1.tid, 0);
   glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depth.rbid);
-  Unbind();
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
   attachments = 2;
 }
-
 
 inline GlFramebuffer::~GlFramebuffer()
 {
