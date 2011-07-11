@@ -35,6 +35,13 @@
 
 extern "C"
 {
+
+// HACK for some versions of FFMPEG
+#ifndef INT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
+#endif
+
 #include <avcodec.h>
 #include <avformat.h>
 #include <swscale.h>
