@@ -41,6 +41,7 @@ struct BadInputException : std::exception {
   char const* what() const throw() { return "Failed to serialise type"; }
 };
 
+// Generic conversion through serialisation from / to string
 template<typename T, typename S> struct Convert {
   static T Do(const S& src)
   {
@@ -58,6 +59,27 @@ template<typename T, typename S> struct Convert {
   }
 };
 
+// Apply bool alpha IO manipulator for bool types
+template<> struct Convert<bool,std::string> {
+  static bool Do(const std::string& src)
+  {
+    bool target;
+    std::istringstream iss(src);
+    iss >> target;
+
+    if(iss.fail())
+    {
+        std::istringstream iss2(src);
+        iss2 >> std::boolalpha >> target;
+        if( iss2.fail())
+            throw BadInputException();
+    }
+
+    return target;
+  }
+};
+
+// From strings
 template<typename T> struct Convert<T,std::string> {
   static T Do(const std::string& src)
   {
@@ -72,6 +94,7 @@ template<typename T> struct Convert<T,std::string> {
   }
 };
 
+// To strings
 template<typename S> struct Convert<std::string, S> {
   static std::string Do(const S& src)
   {
@@ -81,6 +104,7 @@ template<typename S> struct Convert<std::string, S> {
   }
 };
 
+// Between strings is just a copy
 template<> struct Convert<std::string, std::string> {
   static std::string Do(const std::string& src)
   {
