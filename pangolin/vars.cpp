@@ -102,6 +102,10 @@ string ProcessVal(const string& val )
         iterator_range<const char*> in(brace+1,endbrace);
         string inexpand = ProcessVal(copy_range<string>(in));
         Var<string> var(inexpand,"#");
+        if( !((const string)var).compare("#"))
+        {
+            std::cerr << "Unabled to expand: [" << inexpand << "].\nMake sure it is defined and terminated with a semi-colon." << endl << endl;
+        }
         ostringstream oss;
         oss << copy_range<string>(iterator_range<const char*>(expanded.c_str(), brace-1));
         oss << (const string)var;
