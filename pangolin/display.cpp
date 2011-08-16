@@ -685,7 +685,9 @@ namespace pangolin
       const int zsize = zl*zl;
       GLfloat zs[zsize];
       glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
-      last_z = *(std::min_element(zs,zs+zsize));
+
+      const GLfloat mindepth = *(std::min_element(zs,zs+zsize));
+      last_z = mindepth != 1 ? mindepth : last_z;
 
       if( last_z != 1 )
       {
