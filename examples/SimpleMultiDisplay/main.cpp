@@ -58,7 +58,7 @@ int main( int /*argc*/, char* argv[] )
       .AddDisplay(d_cam);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
-  while(!pangolin::ShouldQuit() && glutGetWindow() )
+  while( !pangolin::ShouldQuit() )
   {
     if(HasResized())
       DisplayBase().ActivateScissorAndClear();

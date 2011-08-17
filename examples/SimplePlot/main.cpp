@@ -28,7 +28,7 @@ int main( int /*argc*/, char* argv[] )
   double t = 0;
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
-  while(!pangolin::ShouldQuit())
+  while( !pangolin::ShouldQuit() )
   {
     if(HasResized())
       DisplayBase().ActivateScissorAndClear();
