@@ -84,24 +84,35 @@ struct DataLog
   void Log(float v1, float v2, float v3, float v4, float v5);
   void Log(float v1, float v2, float v3, float v4, float v5, float v6);
   void Log(unsigned int N, const float vals[]);
+  void Log(const std::vector<float> & vals);
+  void SetLabes(const std::vector<std::string> & labels);
   void Clear();
   void Save(std::string filename);
 
   unsigned int buffer_size;
   int x;
   std::vector<DataSequence> sequences;
+  std::vector<std::string> labels;
 };
 
-const static int num_plot_colours = 6;
+const static int num_plot_colours = 12;
 const static float plot_colours[][3] =
 {
   {1.0, 0.0, 0.0},
   {0.0, 1.0, 0.0},
   {0.0, 0.0, 1.0},
   {1.0, 0.0, 1.0},
-  {0.0, 1.0, 1.0},
-  {1.0, 1.0, 0.0}
+  {0.5, 0.5, 0.0},
+  {0.5, 0.0, 0.0},
+  {0.0, 0.5, 0.0},
+  {0.0, 0.0, 0.5},
+  {0.5, 0.0, 1.0},
+  {0.0, 1.0, 0.5},
+  {1.0, 0.0, 0.5},
+  {0.0, 0.5, 1.0}
 };
+
+
 const static float colour_bg[3] = {0.0,0.0,0.0};
 const static float colour_tk[3] = {0.1,0.1,0.1};
 const static float colour_ms[3] = {0.3,0.3,0.3};

@@ -106,6 +106,23 @@ void DataLog::Save(std::string filename)
   }
 }
 
+void DataLog::Log(const vector<float> & vals)
+{
+  // Create new plots if needed
+  for( unsigned int i= sequences.size(); i < vals.size(); ++i )
+    sequences.push_back(DataSequence(buffer_size,x,0));
+
+  // Add data to existing plots
+  for( unsigned int i=0; i<sequences.size(); ++i )
+    sequences[i].Add(vals[i]);
+
+  // Fill missing data
+  for( unsigned int i=vals.size(); i<sequences.size(); ++i )
+    sequences[i].Add(0.0f);
+
+  ++x;
+}
+
 void DataLog::Log(unsigned int N, const float vals[])
 {
   // Create new plots if needed
@@ -121,6 +138,17 @@ void DataLog::Log(unsigned int N, const float vals[])
     sequences[i].Add(0.0f);
 
   ++x;
+}
+
+void DataLog::SetLabes(const std::vector<std::string> & new_labels)
+{
+  // Create new labels if needed
+  for( unsigned int i= labels.size(); i < new_labels.size(); ++i )
+    labels.push_back(std::string("N/A"));
+
+  // Add data to existing plots
+  for( unsigned int i=0; i<labels.size(); ++i )
+    labels[i] = new_labels[i];
 }
 
 void DataLog::Log(float v)
@@ -283,6 +311,19 @@ void Plotter::Render()
       }
     }
   }
+
+
+  float ty = v.h-15;
+  for (size_t i=0; i<log->labels.size(); ++i)
+  {
+    glColor3fv(plot_colours[i%num_plot_colours]);
+
+    OpenGlRenderState::ApplyWindowCoords();
+    glRasterPos2f( v.l+5,ty);
+    glutBitmapString(font,(unsigned char*)log->labels[i].c_str());
+    ty -= 15;
+  }
+
 
   if( mouse_state & MouseButtonLeft )
   {

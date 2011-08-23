@@ -54,7 +54,7 @@ int main( int /*argc*/, char* argv[] )
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
   {
-    if(HasResized())
+    if(pangolin::HasResized())
       DisplayBase().ActivateScissorAndClear();
 
     // Safe and efficient binding of named variables.

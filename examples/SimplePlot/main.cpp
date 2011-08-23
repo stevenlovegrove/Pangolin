@@ -27,6 +27,15 @@ int main( int /*argc*/, char* argv[] )
 
   double t = 0;
 
+  vector<std::string> labels;
+
+  labels.push_back(std::string("sin(t)"));
+  labels.push_back(std::string("cos(t)"));
+  labels.push_back(std::string("tan(t)"));
+  labels.push_back(std::string("sin(t)+cos(t)"));
+
+  log.SetLabes(labels);
+
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
   {
@@ -34,6 +43,8 @@ int main( int /*argc*/, char* argv[] )
       DisplayBase().ActivateScissorAndClear();
 
     static Var<double> tinc("ui.t inc",0.01,0,0.1);
+
+
 
     log.Log(sin(t),cos(t),tan(t),sin(t)+cos(t));
     t += tinc;
