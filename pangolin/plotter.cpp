@@ -73,12 +73,10 @@ void DataSequence::Clear()
 
 float DataSequence::operator[](unsigned int i) const
 {
-  return y[i-firstn];
-}
-
-size_t DataSequence::size() const
-{
-  return y.size();
+  if( !HasData(i) ) {
+      throw DataUnavailableException("Out of range");
+  }
+  return y[(i-firstn) % y.size()];
 }
 
 DataLog::DataLog(unsigned int buffer_size)
@@ -97,7 +95,7 @@ void DataLog::Save(std::string filename)
   if( sequences.size() > 0 )
   {
     ofstream f(filename.c_str());
-    for( unsigned n=0; n < sequences[0].size(); ++n )
+    for( unsigned n=sequences[0].firstn; n < sequences[0].n; ++n )
     {
       f << setprecision(12) << sequences[0][n];
       for( unsigned s=1; s < sequences.size(); ++s )
@@ -233,8 +231,11 @@ void Plotter::DrawSequence(const DataSequence& seq)
 
 void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
 {
+  const unsigned minn = max(x.firstn,y.firstn);
+  const unsigned maxn = min(x.n,y.n);
+
   glBegin(draw_modes[draw_mode]);
-  for( unsigned n=0; n < x.size(); ++n )
+  for( unsigned n=minn; n < maxn; ++n )
     glVertex2f(x[n],y[n]);
   glEnd();
 }
@@ -319,7 +320,7 @@ void Plotter::Render()
       tx += glutBitmapLength(font,(unsigned char*)ss.str().c_str());
       for( unsigned int s=0; s<log->sequences.size(); ++s )
       {
-        if( (s > show_n || show[s]) && 0 <= xu && xu < (int)log->sequences[s].size() )
+        if( (s > show_n || show[s]) && log->sequences[s].HasData(xu) )
         {
           stringstream ss;
           ss << " " << log->sequences[s][xu];

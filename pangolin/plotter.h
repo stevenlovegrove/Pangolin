@@ -40,6 +40,17 @@ struct DataLog;
 
 Plotter& CreatePlotter(const std::string& name, DataLog* log = 0);
 
+struct DataUnavailableException : std::exception
+{
+    DataUnavailableException(std::string str) : desc(str) {}
+    DataUnavailableException(std::string str, std::string detail) {
+        desc = str + "\n\t" + detail;
+    }
+    ~DataUnavailableException() throw() {}
+    const char* what() const throw() { return desc.c_str(); }
+    std::string desc;
+};
+
 struct DataSequence
 {
   DataSequence(unsigned int buffer_size = 1024, unsigned size = 0, float val = 0.0f );
@@ -47,7 +58,8 @@ struct DataSequence
   void Add(float val);
   void Clear();
   float operator[](unsigned int i) const;
-  size_t size() const;
+
+  inline bool HasData(int i) const;
 
   boost::circular_buffer<float> y;
   unsigned firstn;
@@ -57,6 +69,10 @@ struct DataSequence
   float min_y;
   float max_y;
 };
+
+inline bool DataSequence::HasData(int i) const {
+    return i >= (int)firstn && i < (int)n;
+}
 
 struct DataLog
 {
