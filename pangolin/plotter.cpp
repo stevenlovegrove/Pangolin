@@ -249,16 +249,15 @@ void Plotter::DrawSequence(const DataSequence& seq)
 void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
 {
   size_t vec_size
-      = std::min(log->buffer_size, log->buffer_size);
+      = std::min((unsigned)log->x, log->buffer_size);
   int idx_subtract
-      = std::max(0,(int)(log->buffer_size)-(int)(log->buffer_size));
+      = std::max(0,(int)(log->x)-(int)(log->buffer_size));
   vector<float> accum_vec(vec_size,0);
 
   for( unsigned int s=0; s < log->sequences.size(); ++s )
   {
     if( (s > 9) ||  show[s] )
-    {
-      glColor3fv(plot_colours[s%num_plot_colours]);
+    {      glColor3fv(plot_colours[s%num_plot_colours]);
 
       const int seqint_x[2] = {seq.at(s).firstn, seq.at(s).n };
       const int valid_int_x[2] = {

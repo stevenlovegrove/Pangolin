@@ -76,7 +76,7 @@ inline bool DataSequence::HasData(int i) const {
 
 struct DataLog
 {
-  DataLog(unsigned int buffer_size = 100 );
+  DataLog(unsigned int buffer_size = 10000 );
   void Log(float v);
   void Log(float v1, float v2);
   void Log(float v1, float v2, float v3);
