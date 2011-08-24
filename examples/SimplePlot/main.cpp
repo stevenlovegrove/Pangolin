@@ -34,7 +34,7 @@ int main( int /*argc*/, char* argv[] )
   labels.push_back(std::string("tan(t)"));
   labels.push_back(std::string("sin(t)+cos(t)"));
 
-  log.SetLabes(labels);
+  log.SetLabels(labels);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )

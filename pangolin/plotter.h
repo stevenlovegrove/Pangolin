@@ -76,16 +76,16 @@ inline bool DataSequence::HasData(int i) const {
 
 struct DataLog
 {
-  DataLog(unsigned int buffer_size = 10000 );
+  DataLog(unsigned int buffer_size = 100 );
   void Log(float v);
   void Log(float v1, float v2);
   void Log(float v1, float v2, float v3);
   void Log(float v1, float v2, float v3, float v4);
   void Log(float v1, float v2, float v3, float v4, float v5);
   void Log(float v1, float v2, float v3, float v4, float v5, float v6);
-  void Log(unsigned int N, const float vals[]);
+  void Log(unsigned int N, const float * vals);
   void Log(const std::vector<float> & vals);
-  void SetLabes(const std::vector<std::string> & labels);
+  void SetLabels(const std::vector<std::string> & labels);
   void Clear();
   void Save(std::string filename);
 
@@ -127,6 +127,7 @@ struct Plotter : public View, Handler
   void Render();
   void DrawSequence(const DataSequence& seq);
   void DrawSequence(const DataSequence& x,const DataSequence& y);
+  void DrawSequenceHistogram(const std::vector<DataSequence>& seq);
   void DrawTicks();
 
   void ResetView();
@@ -149,7 +150,10 @@ struct Plotter : public View, Handler
   float mouse_xy[2];
 
   int draw_mode;
-  bool xy;
+
+  enum PLOT_MODES { TIME_SERIES, XY, STACKED_HISTOGRAM};
+  static const unsigned modes_n = 3;
+  unsigned plot_mode;
   const static unsigned int show_n = 9;
   bool show[show_n];
 };
