@@ -75,7 +75,7 @@ void DataSequence::Clear()
 float DataSequence::operator[](unsigned int i) const
 {
   if( !HasData(i) ) {
-      throw DataUnavailableException("Out of range");
+    throw DataUnavailableException("Out of range");
   }
   return y[(i-firstn) % y.size()];
 }
@@ -257,7 +257,7 @@ void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
   for( unsigned int s=0; s < log->sequences.size(); ++s )
   {
     if( (s > 9) ||  show[s] )
-    {      glColor3fv(plot_colours[s%num_plot_colours]);
+    {
 
       const int seqint_x[2] = {seq.at(s).firstn, seq.at(s).n };
       const int valid_int_x[2] = {
@@ -267,6 +267,8 @@ void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
 
 
       glBegin(GL_TRIANGLE_STRIP);
+      glColor3fv(plot_colours[s%num_plot_colours]);
+
 
       for( int x=valid_int_x[0]; x<valid_int_x[1]; ++x )
       {
@@ -275,8 +277,10 @@ void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
         float & accum = accum_vec.at(x-idx_subtract);
         float before_val = accum;
         accum += val;
-        glVertex2f(x,val);
-        glVertex2f(x,val+before_val);
+        glVertex2f(x-0.5,before_val);
+        glVertex2f(x-0.5,accum);
+        glVertex2f(x+0.5,before_val);
+        glVertex2f(x+0.5,accum);
       }
       glEnd();
     }
@@ -321,7 +325,7 @@ void Plotter::Render()
       {
         if( (s > 9) ||  show[s] )
         {
-          glColor3fv(plot_colours[s]);
+          glColor3fv(plot_colours[s%num_plot_colours]);
           DrawSequence(log->sequences[2*s],log->sequences[2*s+1]);
         }
       }
@@ -494,10 +498,12 @@ void Plotter::Mouse(View&, MouseButton button, int x, int y, bool pressed, int b
 
   if(button == MouseWheelUp || button == MouseWheelDown)
   {
-    const float mean = (int_y[0] + int_y[1])/2.0;
+    //const float mean = (int_y[0] + int_y[1])/2.0;
     const float scale = 1.0f + ((button == MouseWheelDown) ? 0.1 : -0.1);
-    int_y[0] = scale*(int_y[0] - mean) + mean;
-    int_y[1] = scale*(int_y[1] - mean) + mean;
+//    int_y[0] = scale*(int_y[0] - mean) + mean;
+//    int_y[1] = scale*(int_y[1] - mean) + mean;
+    int_y[0] = scale*(int_y[0]) ;
+    int_y[1] = scale*(int_y[1]) ;
   }
 
   ScreenToPlot(x,y);
