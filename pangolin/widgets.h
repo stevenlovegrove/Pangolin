@@ -91,6 +91,7 @@ struct Slider : public View, Handler, Var<double>
   int text_width;
   GLfloat raster[2];
   bool lock_bounds;
+  bool logscale;
 };
 
 struct TextInput : public View, Handler, Var<std::string>
