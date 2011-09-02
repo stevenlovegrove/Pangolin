@@ -42,8 +42,13 @@ int main( int /*argc*/, char* argv[] )
   s_cam.Set(IdentityMatrix(GlModelViewStack));
 
   // Add named OpenGL viewport to window and provide 3D Handler
-  View& d_cam = pangolin::Display("cam")
-//    .SetBounds(1.0, 0.0, 200, 1.0, -640.0f/480.0f)
+  View& d_cam1 = pangolin::Display("cam1")
+//    .SetBounds(1.0, 0.0, 0, 0.5, 640.0f/480.0f)
+    .SetAspect(-640.0f/480.0f)
+    .SetHandler(new Handler3D(s_cam));
+
+  View& d_cam2 = pangolin::Display("cam2")
+//    .SetBounds(1.0, 0.0, 0.5, 1.0, 640.0f/480.0f)
     .SetAspect(-640.0f/480.0f)
     .SetHandler(new Handler3D(s_cam));
 
@@ -52,10 +57,14 @@ int main( int /*argc*/, char* argv[] )
   View& d_panel = pangolin::CreatePanel("ui")
       .SetBounds(1.0, 0.0, 0, 200);
 
-//  View& d_multi = pangolin::Display("multi")
-//      .SetBounds(1.0, 0.0, 200, 1.0)
-//      .SetLayout(LayoutEqual)
-//      .AddDisplay(d_cam);
+  // LayoutEqual is an EXPERIMENTAL feature - it requires that all sub-displays
+  // share the same aspect ratio, placing them in a raster fasion in the
+  // viewport so as to maximise display size.
+  pangolin::Display("multi")
+      .SetBounds(1.0, 0.0, 200, 1.0)
+      .SetLayout(LayoutEqual)
+      .AddDisplay(d_cam1)
+      .AddDisplay(d_cam2);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
@@ -89,12 +98,19 @@ int main( int /*argc*/, char* argv[] )
 
     // Activate efficiently by object
     // (3D Handler requires depth testing to be enabled)
-    d_cam.ActivateScissorAndClear(s_cam);
+    d_cam1.ActivateScissorAndClear(s_cam);
     glEnable(GL_DEPTH_TEST);
     glColor3f(1.0,1.0,1.0);
 
     // Render some stuff
     glutWireTeapot(10.0);
+
+    // Render 2nd viewport
+    d_cam2.ActivateScissorAndClear(s_cam);
+    glEnable(GL_DEPTH_TEST);
+    glColor3f(1.0,1.0,1.0);
+    glutWireTeapot(10.0);
+
 
     // Render our UI panel when we receive input
     if(HadInput())

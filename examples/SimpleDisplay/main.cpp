@@ -66,7 +66,7 @@ int main( int /*argc*/, char* argv[] )
     static Var<bool> a_checkbox("ui.A Checkbox",false,true);
     static Var<int> an_int_no_input("ui.An Int No Input",2);
     static Var<CustomType> any_type("ui.Some Type",(CustomType){0,1.2,"Hello"});
-    static Var<double> aliased_double("ui.Aliased Double",3,0,5.5);
+    static Var<double> aliased_double("ui.Aliased Double",3,0,10000);
 
     if( Pushed(a_button) )
       cout << "You Pushed a button!" << endl;

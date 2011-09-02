@@ -354,19 +354,6 @@ void Plotter::Render()
     }
   }
 
-
-  float ty = v.h-15;
-  for (size_t i=0; i<log->labels.size(); ++i)
-  {
-    glColor3fv(plot_colours[i%num_plot_colours]);
-
-    OpenGlRenderState::ApplyWindowCoords();
-    glRasterPos2f( v.l+5,ty);
-    glutBitmapString(font,(unsigned char*)log->labels[i].c_str());
-    ty -= 15;
-  }
-
-
   if( mouse_state & MouseButtonLeft )
   {
     if( plot_mode==XY )
@@ -414,6 +401,17 @@ void Plotter::Render()
         }
       }
     }
+  }
+
+  float ty = v.h-15;
+  for (size_t i=0; i<log->labels.size(); ++i)
+  {
+    glColor3fv(plot_colours[i%num_plot_colours]);
+
+    OpenGlRenderState::ApplyWindowCoords();
+    glRasterPos2f( v.l+5,ty);
+    glutBitmapString(font,(unsigned char*)log->labels[i].c_str());
+    ty -= 15;
   }
 }
 
