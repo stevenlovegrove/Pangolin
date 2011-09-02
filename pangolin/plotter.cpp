@@ -254,7 +254,7 @@ void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
       = std::max(0,(int)(log->x)-(int)(log->buffer_size));
   vector<float> accum_vec(vec_size,0);
 
-  for( unsigned int s=0; s < log->sequences.size(); ++s )
+  for(int s=log->sequences.size()-1; s >=0; --s )
   {
     if( (s > 9) ||  show[s] )
     {

@@ -61,7 +61,7 @@ int main( int /*argc*/, char* argv[] )
     // Specialisations mean no conversions take place for exact types
     // and conversions between scalar types are cheap.
     static Var<bool> a_button("ui.A Button",false,false);
-    static Var<double> a_double("ui.A Double",3,0,5.5);
+    static Var<double> a_double("ui.A Double",3,1,10000,true);
     static Var<int> an_int("ui.An Int",2,0,5);
     static Var<bool> a_checkbox("ui.A Checkbox",false,true);
     static Var<int> an_int_no_input("ui.An Int No Input",2);

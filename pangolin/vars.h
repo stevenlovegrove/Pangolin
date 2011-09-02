@@ -50,7 +50,11 @@ struct Var
 {
   Var(const std::string& name, T default_value = T());
   Var(const std::string& name, T default_value, bool toggle);
-  Var(const std::string& name, T default_value, double min, double max);
+  Var(const std::string& name,
+      T default_value,
+      double min,
+      double max,
+      bool logscale=false);
   Var(_Var& var);
 
   operator const T& ();
@@ -58,7 +62,12 @@ struct Var
   void operator=(const T& val);
   void operator=(const Var<T>& val);
 
-  void Init(const std::string& name, T default_value, double min = 0, double max = 0, int flags = 1);
+  void Init(const std::string& name,
+            T default_value,
+            double min = 0,
+            double max = 0,
+            int flags = 1,
+            bool logscale = false);
   void SetDefault(const T& val);
   void Reset();
 
@@ -96,9 +105,23 @@ inline Var<T>::Var(const std::string& name, T default_value, bool toggle)
 }
 
 template<typename T>
-inline Var<T>::Var(const std::string& name, T default_value, double min, double max)
+inline Var<T>::Var(const std::string& name,
+                   T default_value,
+                   double min,
+                   double max,
+                   bool logscale)
 {
-  Init(name,default_value, min, max);
+  if (logscale)
+  {
+    if (min<=0 || max<=0)
+    {
+      throw std::runtime_error("LogScale: range of numbers must be positive!");
+    }
+    Init(name,default_value, log(min), log(max), 1, logscale);
+  }
+  else
+    Init(name,default_value, min, max);
+
 }
 
 template<typename T>
@@ -158,7 +181,12 @@ extern std::map<std::string,_Var> vars;
 extern std::vector<NewVarCallback> callbacks;
 
 template<typename T>
-inline void Var<T>::Init(const std::string& name, T default_value, double min, double max, int flags)
+inline void Var<T>::Init(const std::string& name,
+                         T default_value,
+                         double min,
+                         double max,
+                         int  flags,
+                         bool logscale)
 {
   std::map<std::string,_Var>::iterator vi = vars.find(name);
 
@@ -178,12 +206,14 @@ inline void Var<T>::Init(const std::string& name, T default_value, double min, d
       default_value = a->Get();
       delete a;
       free(var->val);
+
     }else{
       // Meta info for variable
       var->meta_friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
       var->meta_range[0] = min;
       var->meta_range[1] = max;
       var->meta_flags = flags;
+      var->logscale = logscale;
 
       // notify those watching new variables
       BOOST_FOREACH(NewVarCallback& nvc, callbacks)
@@ -236,6 +266,7 @@ inline void Var<T>::Init(const std::string& name, T default_value, double min, d
     var->meta_range[1] = max;
     var->meta_flags = flags;
     var->generic = false;
+    var->logscale = logscale;
 
     // notify those watching new variables
     BOOST_FOREACH(NewVarCallback& nvc, callbacks)
