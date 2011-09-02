@@ -52,10 +52,10 @@ int main( int /*argc*/, char* argv[] )
   View& d_panel = pangolin::CreatePanel("ui")
       .SetBounds(1.0, 0.0, 0, 200);
 
-  View& d_multi = pangolin::Display("multi")
-      .SetBounds(1.0, 0.0, 200, 1.0)
-      .SetLayout(LayoutEqual)
-      .AddDisplay(d_cam);
+//  View& d_multi = pangolin::Display("multi")
+//      .SetBounds(1.0, 0.0, 200, 1.0)
+//      .SetLayout(LayoutEqual)
+//      .AddDisplay(d_cam);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
