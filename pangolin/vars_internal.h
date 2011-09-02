@@ -128,6 +128,7 @@ struct _Var
   double meta_range[2];
   double meta_increment;
   int meta_flags;
+  bool logscale;
 };
 
 // Forward declaration
