@@ -27,6 +27,8 @@
 
 #include "widgets.h"
 
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 #include <iostream>
 #include <iomanip>
 #include "display_internal.h"
@@ -52,6 +54,8 @@ const static float colour_dn[4] = {1.0, 0.7 ,0.7, 1.0};
 static void* font = GLUT_BITMAP_HELVETICA_12;
 static int text_height = 8; //glutBitmapHeight(font) * 0.7;
 static float cb_height = text_height * 1.6;
+
+boost::mutex display_mutex;
 
 void glRect(Viewport v)
 {
@@ -93,12 +97,14 @@ void DrawShadowRect(Viewport& v, bool pushed)
 }
 
 Panel::Panel()
+  : context_views(context->all_views)
 {
   handler = &StaticHandler;
   layout = LayoutVertical;
 }
 
 Panel::Panel(const std::string& auto_register_var_prefix)
+  : context_views(context->all_views)
 {
   handler = &StaticHandler;
   layout = LayoutVertical;
@@ -114,33 +120,36 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
 
   const string& title = var.meta_friendly;
 
+  display_mutex.lock();
+
   std::map<std::string,View*>::iterator pnl =
-      context->all_views.find(name);
+    thisptr->context_views.find(name);
 
   // Only add if a widget by the same name doesn't
   // already exist
-  if( pnl == context->all_views.end() )
+  if( pnl == thisptr->context_views.end() )
   {
     if( reg_type_name == typeid(bool).name() )
     {
       View* nv = var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-      context->all_views[name] = nv;
+      thisptr->context_views[name] = nv;
       thisptr->views.push_back(nv);
       thisptr->ResizeChildren();
     }else if( reg_type_name == typeid(double).name() || reg_type_name == typeid(float).name() || reg_type_name == typeid(int).name() || reg_type_name == typeid(unsigned int).name() )
     {
       View* nv = new Slider(title,var);
-      context->all_views[name] = nv;
+      thisptr->context_views[name] = nv;
       thisptr->views.push_back( nv );
       thisptr->ResizeChildren();
     }else{
       View* nv = new TextInput(title,var);
-      context->all_views[name] = nv;
+      thisptr->context_views[name] = nv;
       thisptr->views.push_back( nv );
       thisptr->ResizeChildren();
     }
   }
 
+  display_mutex.unlock();
 }
 
 void Panel::Render()

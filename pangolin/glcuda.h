@@ -179,6 +179,7 @@ inline void CopyPboToTex(const GlBufferCudaPtr& buffer, GlTexture& tex, GLenum b
   tex.Bind();
   glTexImage2D(GL_TEXTURE_2D, 0, tex.internal_format, tex.width, tex.height, 0, buffer_layout, buffer_data_type, 0);
   buffer.Unbind();
+  tex.Unbind();
 }
 
 inline void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b)
