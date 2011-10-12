@@ -43,7 +43,7 @@ namespace pangolin
 
   const int panal_v_margin = 6;
 
-  typedef map<string,PangolinGl*> ContextMap;
+  typedef boost::ptr_unordered_map<string,PangolinGl> ContextMap;
 
   // Map of active contexts
   ContextMap contexts;
@@ -63,7 +63,7 @@ namespace pangolin
     if( ic == contexts.end() )
     {
       // Create and add if not found
-      ic = contexts.insert( pair<string,PangolinGl*>(name,new PangolinGl) ).first;
+      ic = contexts.insert( name,new PangolinGl ).first;
       context = ic->second;
       View& dc = context->base;
       dc.left = 0;
@@ -128,15 +128,16 @@ namespace pangolin
   View& Display(const std::string& name)
   {
     // Get / Create View
-    std::map<std::string,View*>::iterator vi = context->all_views.find(name);
+    boost::ptr_unordered_map<std::string,View>::iterator vi = context->all_views.find(name);
     if( vi != context->all_views.end() )
     {
       return *(vi->second);
     }else{
-      View* v = new View();
+      View * v = new View();
+      bool inserted =
+        context->all_views.insert(name, v).second;
+      assert(inserted);
       v->handler = &StaticHandler;
-      context->all_views[name] = v;
-//      context->base[name] = v;
       context->base.views.push_back(v);
       return *v;
     }

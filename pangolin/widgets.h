@@ -45,7 +45,7 @@ struct Panel : public View
   void ResizeChildren();
   static void AddVariable(void* data, const std::string& name, _Var& var, const char* reg_type_name, bool brand_new);
   Viewport vinside;
-  std::map<std::string,View*>& context_views;
+  boost::ptr_unordered_map<const std::string,View>& context_views;
 };
 
 struct Button : public View, Handler, Var<bool>

@@ -548,7 +548,10 @@ void Plotter::MouseMotion(View&, int x, int y, int button_state)
 Plotter& CreatePlotter(const string& name, DataLog* log)
 {
   Plotter* v = new Plotter(log);
-  context->all_views[name] = v;
+  //context->all_views[name] = v;
+  bool inserted
+      = context->all_views.insert(name,v).second;
+  assert(inserted);
   context->base.views.push_back(v);
   return *v;
 }

@@ -122,7 +122,7 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
 
   display_mutex.lock();
 
-  std::map<std::string,View*>::iterator pnl =
+  boost::ptr_unordered_map<const std::string,View>::iterator pnl =
     thisptr->context_views.find(name);
 
   // Only add if a widget by the same name doesn't
@@ -132,18 +132,21 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
     if( reg_type_name == typeid(bool).name() )
     {
       View* nv = var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-      thisptr->context_views[name] = nv;
+      //thisptr->context_views[name] = nv;
+      thisptr->context_views.insert(name,nv);
       thisptr->views.push_back(nv);
       thisptr->ResizeChildren();
     }else if( reg_type_name == typeid(double).name() || reg_type_name == typeid(float).name() || reg_type_name == typeid(int).name() || reg_type_name == typeid(unsigned int).name() )
     {
       View* nv = new Slider(title,var);
-      thisptr->context_views[name] = nv;
+      //thisptr->context_views[name] = nv;
+      thisptr->context_views.insert(name,nv);
       thisptr->views.push_back( nv );
       thisptr->ResizeChildren();
     }else{
       View* nv = new TextInput(title,var);
-      thisptr->context_views[name] = nv;
+      //thisptr->context_views[name] = nv;
+      thisptr->context_views.insert(name,nv);
       thisptr->views.push_back( nv );
       thisptr->ResizeChildren();
     }
@@ -177,10 +180,12 @@ void Panel::ResizeChildren()
 
 View& CreatePanel(const std::string& name)
 {
-  Panel* v = new Panel(name);
-  context->all_views[name] = v;
-  context->base.views.push_back(v);
-  return *v;
+  Panel * p = new Panel(name);
+  bool inserted =
+    context->all_views.insert(name, p).second;
+  assert(inserted);
+   context->base.views.push_back(p);
+  return *p;
 }
 
 Button::Button(string title, _Var& tv)
