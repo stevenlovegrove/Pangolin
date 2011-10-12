@@ -134,9 +134,8 @@ namespace pangolin
       return *(vi->second);
     }else{
       View * v = new View();
-      bool inserted =
-        context->all_views.insert(name, v).second;
-      assert(inserted);
+      bool inserted = context->all_views.insert(name, v).second;
+      if(!inserted) throw exception();
       v->handler = &StaticHandler;
       context->base.views.push_back(v);
       return *v;

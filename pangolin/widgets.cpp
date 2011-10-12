@@ -185,10 +185,9 @@ void Panel::ResizeChildren()
 View& CreatePanel(const std::string& name)
 {
   Panel * p = new Panel(name);
-  bool inserted =
-    context->all_views.insert(name, p).second;
-  assert(inserted);
-   context->base.views.push_back(p);
+  bool inserted = context->all_views.insert(name, p).second;
+  if(!inserted) throw exception();
+  context->base.views.push_back(p);
   return *p;
 }
 

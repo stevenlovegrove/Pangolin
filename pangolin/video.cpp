@@ -226,7 +226,7 @@ void VideoInput::Open(std::string str_uri)
     if( dynamic_cast<FfmpegVideo*>(video) == 0 &&
         video->PixFormat().compare("RGB8") != 0 )
     {
-        video = new FfmpegConverter(video,"RGB8",FFMPEG_FAST_BILINEAR);
+        video = new FfmpegConverter(video,"RGB24",FFMPEG_FAST_BILINEAR);
     }
 #endif
 }
