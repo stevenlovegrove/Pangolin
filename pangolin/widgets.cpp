@@ -157,6 +157,8 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
 
 void Panel::Render()
 {
+  glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_SCISSOR_BIT | GL_VIEWPORT_BIT);
+
   OpenGlRenderState::ApplyWindowCoords();
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_SCISSOR_TEST);
@@ -169,6 +171,8 @@ void Panel::Render()
   glRect(vinside);
 
   RenderChildren();
+
+  glPopAttrib();
 }
 
 void Panel::ResizeChildren()
