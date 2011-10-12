@@ -45,17 +45,17 @@ struct BadInputException : std::exception {
 template<typename T, typename S> struct Convert {
   static T Do(const S& src)
   {
-  std::ostringstream oss;
+    std::ostringstream oss;
     oss << src;
-  std::istringstream iss(oss.str());
+    std::istringstream iss(oss.str());
     T target;
     iss >> target;
 
     if(iss.fail())
-        throw BadInputException();
+      throw BadInputException();
 
     return target;
-//    return boost::lexical_cast<T>(src);
+    //    return boost::lexical_cast<T>(src);
   }
 };
 
@@ -69,10 +69,10 @@ template<> struct Convert<bool,std::string> {
 
     if(iss.fail())
     {
-        std::istringstream iss2(src);
-        iss2 >> std::boolalpha >> target;
-        if( iss2.fail())
-            throw BadInputException();
+      std::istringstream iss2(src);
+      iss2 >> std::boolalpha >> target;
+      if( iss2.fail())
+        throw BadInputException();
     }
 
     return target;
@@ -88,7 +88,7 @@ template<typename T> struct Convert<T,std::string> {
     iss >> target;
 
     if(iss.fail())
-        throw BadInputException();
+      throw BadInputException();
 
     return target;
   }
@@ -112,11 +112,59 @@ template<> struct Convert<std::string, std::string> {
   }
 };
 
+struct UnknownTypeException : std::exception {
+  char const* what() const throw() { return "Unknown type in generic container"; }
+};
+
 struct _Var
 {
-  _Var() {}
-  _Var(void* val, void* val_default, const char* type_name)
-    : val(val), val_default(val_default), type_name(type_name), generic(false){}
+  _Var()
+    : val(NULL), val_default(NULL), generic(false)
+  {}
+  ~_Var(){
+    clean();
+  }
+
+  void create(void* new_val, void* new_val_default, const char* new_type_name){
+    clean();
+    val = new_val;
+    val_default = new_val_default;
+    type_name = new_type_name;
+    generic = false;
+  }
+
+  void clean(){
+    if (val!=NULL){
+      if( type_name == typeid(double).name() ) {
+        delete (double *) val;
+      } else if( type_name == typeid(int).name() ) {
+        delete (int *) val;
+      } else if( type_name == typeid(std::string).name() ) {
+        delete (std::string *) val;
+      } else if( type_name == typeid(bool).name() ) {
+        delete (bool *) val;
+      } else {
+        throw UnknownTypeException();
+      }
+    }
+
+    if (val_default!=NULL){
+      if( type_name == typeid(double).name() ) {
+        delete (double *) val_default;
+      } else if( type_name == typeid(int).name() ) {
+        delete (int *) val_default;
+      } else if( type_name == typeid(std::string).name() ) {
+        delete (std::string *) val_default;
+      } else if( type_name == typeid(bool).name() ) {
+        delete (bool *) val_default;
+      } else {
+        throw UnknownTypeException();
+      }
+    }
+  }
+
+
+
 
   void* val;
   void* val_default;
@@ -134,10 +182,6 @@ struct _Var
 // Forward declaration
 template<typename T, typename S, class Enable1 = void, class Enable2 = void, class Enable3 = void>
 struct _Accessor;
-
-struct UnknownTypeException : std::exception {
-  char const* what() const throw() { return "Unknown type in generic container"; }
-};
 
 template<typename T>
 struct Accessor
@@ -164,79 +208,79 @@ template<typename T, typename S>
 struct _Accessor<T,S, typename boost::enable_if_c<
     (boost::is_scalar<T>::value || boost::is_same<T,bool>::value) &&
     (boost::is_scalar<S>::value || boost::is_same<S,bool>::value) &&
-      !boost::is_same<T,S>::value
-  >::type> : Accessor<T>
-{
-  _Accessor(S& var) : var(var) {
-//    std::cout << "scalar" << std::endl;
-  }
-
-  const T& Get() const
-  {
-    cache = (T)var;
-    return cache;
-  }
-
-  void Set(const T& val)
-  {
-    var = (S)val;
-  }
-
-  S& var;
-  mutable T cache;
-};
-
-template<typename T>
-struct _Accessor<T,T> : Accessor<T>
-{
-  _Accessor(T& var) : var(var) {
-//    std::cout << "same" << std::endl;
-  }
-
-  const T& Get() const
-  {
-    return var;
-  }
-
-  void Set(const T& val)
-  {
-    var = val;
-  }
-  T& var;
-};
-
-template<typename T, typename S>
-struct _Accessor<T,S ,typename boost::enable_if_c<
-    !((boost::is_scalar<T>::value || boost::is_same<T,bool>::value) &&
-    (boost::is_scalar<S>::value || boost::is_same<S,bool>::value)) &&
     !boost::is_same<T,S>::value
->::type> : Accessor<T>
-{
-  _Accessor(S& var) : var(var) {
-  }
+    >::type> : Accessor<T>
+    {
+      _Accessor(S& var) : var(var) {
+        //    std::cout << "scalar" << std::endl;
+      }
 
-  const T& Get() const
-  {
-//    try{
+      const T& Get() const
+      {
+        cache = (T)var;
+        return cache;
+      }
+
+      void Set(const T& val)
+      {
+        var = (S)val;
+      }
+
+      S& var;
+      mutable T cache;
+    };
+
+    template<typename T>
+    struct _Accessor<T,T> : Accessor<T>
+    {
+      _Accessor(T& var) : var(var) {
+        //    std::cout << "same" << std::endl;
+      }
+
+      const T& Get() const
+      {
+        return var;
+      }
+
+      void Set(const T& val)
+      {
+        var = val;
+      }
+      T& var;
+    };
+
+    template<typename T, typename S>
+    struct _Accessor<T,S ,typename boost::enable_if_c<
+        !((boost::is_scalar<T>::value || boost::is_same<T,bool>::value) &&
+          (boost::is_scalar<S>::value || boost::is_same<S,bool>::value)) &&
+    !boost::is_same<T,S>::value
+    >::type> : Accessor<T>
+    {
+      _Accessor(S& var) : var(var) {
+      }
+
+      const T& Get() const
+      {
+        //    try{
         cache = Convert<T,S>::Do(var);
-//    }catch(BadInputException e) {
-//        std::cerr << e.what() << std::endl;
-//    }
+        //    }catch(BadInputException e) {
+        //        std::cerr << e.what() << std::endl;
+        //    }
 
-    return cache;
-  }
+        return cache;
+      }
 
-  void Set(const T& val)
-  {
-//    try{
-      var = Convert<S,T>::Do(val);
-//    }catch(BadInputException e) {
-//      std::cerr << "Unable to convert: " << e.what() << std::endl;
-//    }
-  }
-  S& var;
-  mutable T cache;
-};
+      void Set(const T& val)
+      {
+        //    try{
+        var = Convert<S,T>::Do(val);
+        //    }catch(BadInputException e) {
+        //      std::cerr << "Unable to convert: " << e.what() << std::endl;
+        //    }
+      }
+      S& var;
+      mutable T cache;
+    };
 
 }
 
