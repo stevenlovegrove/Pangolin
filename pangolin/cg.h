@@ -52,6 +52,16 @@ struct CgProgram
 
     void SetUniform(const std::string& name, GlTexture& tex);
     void SetUniform(const std::string& name, float f);
+
+#ifdef HAVE_TOON
+    void SetUniform(const std::string& name, const TooN::Vector<2>& v );
+    void SetUniform(const std::string& name, const TooN::Vector<3>& v );
+
+    template <int R, int C>
+    void SetUniform(const std::string& name, const TooN::Matrix<R,C>& M );
+#endif
+
+    void UpdateParams();
 };
 
 struct CgLoader
@@ -66,6 +76,9 @@ struct CgLoader
 
     void EnableProgram(CgProgram program);
     void DisablePrograms();
+
+    void RenderDummyQuad();
+    void RenderDummyQuadWithTexCoords(int w, int h);
 
     CGcontext mContext;
     CGprofile mFragmentProfile;
@@ -165,6 +178,30 @@ inline void CgLoader::DisablePrograms()
     cgGLDisableProfile(mVertexProfile);
 }
 
+inline void CgLoader::RenderDummyQuad()
+{
+    glBegin(GL_QUADS);
+    glVertex2d(-1,1);
+    glVertex2d(1,1);
+    glVertex2d(1,-1);
+    glVertex2d(-1,-1);
+    glEnd();
+}
+
+inline void CgLoader::RenderDummyQuadWithTexCoords(int w, int h)
+{
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0);
+    glVertex2d(-1,-1);
+    glTexCoord2f(w, 0);
+    glVertex2d(1,-1);
+    glTexCoord2f(w, h);
+    glVertex2d(1,1);
+    glTexCoord2f(0, h);
+    glVertex2d(-1,1);
+    glEnd();
+}
+
 void CgProgram::SetUniform(const std::string& name, float f)
 {
     CGparameter p = cgGetNamedParameter( mProg, name.c_str());
@@ -177,6 +214,43 @@ void CgProgram::SetUniform(const std::string& name, GlTexture& tex)
     CGparameter p = cgGetNamedParameter( mProg, name.c_str());
     cgGLSetTextureParameter(p, tex.tid );
     cgGLEnableTextureParameter(p);
+    cgUpdateProgramParameters(mProg);
+}
+
+#ifdef HAVE_TOON
+void CgProgram::SetUniform(const std::string& name, const TooN::Vector<2>& v )
+{
+    CGparameter p = cgGetNamedParameter( mProg, name.c_str());
+    cgGLSetParameter2f(p, v[0],v[1] );
+    cgUpdateProgramParameters(mProg);
+}
+
+void CgProgram::SetUniform(const std::string& name, const TooN::Vector<3>& v )
+{
+    CGparameter p = cgGetNamedParameter( mProg, name.c_str());
+    cgGLSetParameter3f(p, v[0],v[1],v[2] );
+    cgUpdateProgramParameters(mProg);
+}
+
+template <int R, int C>
+void CgProgram::SetUniform(const std::string& name, const TooN::Matrix<R,C>& M )
+{
+    CGparameter p = cgGetNamedParameter( mProg, name.c_str());
+    float Mdata[R*C];
+
+    int i=0;
+    for( int r=0; r<R; ++r )
+      for( int c=0; c<C; ++c )
+        Mdata[i++] = (float)(M[r][c]);
+
+    cgGLSetMatrixParameterfr(p, Mdata );
+    cgUpdateProgramParameters(mProg);
+}
+#endif
+
+void CgProgram::UpdateParams()
+{
+    cgUpdateProgramParameters(mProg);
 }
 
 

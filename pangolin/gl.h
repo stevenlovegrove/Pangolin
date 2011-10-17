@@ -54,6 +54,9 @@ struct GlTexture
 
   void Upload(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT);
 
+  void SetLinear();
+  void SetNearestNeighbour();
+
   void RenderToViewport() const;
   void RenderToViewportFlipY() const;
 
@@ -145,6 +148,23 @@ inline void GlTexture::Upload(void* image, GLenum data_layout, GLenum data_type 
   Bind();
   glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_layout,data_type,image);
 }
+
+inline void GlTexture::SetLinear()
+{
+  Bind();
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  Unbind();
+}
+
+inline void GlTexture::SetNearestNeighbour()
+{
+  Bind();
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  Unbind();
+}
+
 
 
 inline void GlTexture::RenderToViewport() const

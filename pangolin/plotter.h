@@ -40,6 +40,17 @@ struct DataLog;
 
 Plotter& CreatePlotter(const std::string& name, DataLog* log = 0);
 
+struct DataUnavailableException : std::exception
+{
+    DataUnavailableException(std::string str) : desc(str) {}
+    DataUnavailableException(std::string str, std::string detail) {
+        desc = str + "\n\t" + detail;
+    }
+    ~DataUnavailableException() throw() {}
+    const char* what() const throw() { return desc.c_str(); }
+    std::string desc;
+};
+
 struct DataSequence
 {
   DataSequence(unsigned int buffer_size = 1024, unsigned size = 0, float val = 0.0f );
@@ -47,7 +58,8 @@ struct DataSequence
   void Add(float val);
   void Clear();
   float operator[](unsigned int i) const;
-  size_t size() const;
+
+  inline bool HasData(int i) const;
 
   boost::circular_buffer<float> y;
   unsigned firstn;
@@ -58,6 +70,10 @@ struct DataSequence
   float max_y;
 };
 
+inline bool DataSequence::HasData(int i) const {
+    return i >= (int)firstn && i < (int)n;
+}
+
 struct DataLog
 {
   DataLog(unsigned int buffer_size = 10000 );
@@ -67,25 +83,36 @@ struct DataLog
   void Log(float v1, float v2, float v3, float v4);
   void Log(float v1, float v2, float v3, float v4, float v5);
   void Log(float v1, float v2, float v3, float v4, float v5, float v6);
-  void Log(unsigned int N, const float vals[]);
+  void Log(unsigned int N, const float * vals);
+  void Log(const std::vector<float> & vals);
+  void SetLabels(const std::vector<std::string> & labels);
   void Clear();
   void Save(std::string filename);
 
   unsigned int buffer_size;
   int x;
   std::vector<DataSequence> sequences;
+  std::vector<std::string> labels;
 };
 
-const static int num_plot_colours = 6;
+const static int num_plot_colours = 12;
 const static float plot_colours[][3] =
 {
   {1.0, 0.0, 0.0},
   {0.0, 1.0, 0.0},
   {0.0, 0.0, 1.0},
   {1.0, 0.0, 1.0},
-  {0.0, 1.0, 1.0},
-  {1.0, 1.0, 0.0}
+  {0.5, 0.5, 0.0},
+  {0.5, 0.0, 0.0},
+  {0.0, 0.5, 0.0},
+  {0.0, 0.0, 0.5},
+  {0.5, 0.0, 1.0},
+  {0.0, 1.0, 0.5},
+  {1.0, 0.0, 0.5},
+  {0.0, 0.5, 1.0}
 };
+
+
 const static float colour_bg[3] = {0.0,0.0,0.0};
 const static float colour_tk[3] = {0.1,0.1,0.1};
 const static float colour_ms[3] = {0.3,0.3,0.3};
@@ -100,6 +127,7 @@ struct Plotter : public View, Handler
   void Render();
   void DrawSequence(const DataSequence& seq);
   void DrawSequence(const DataSequence& x,const DataSequence& y);
+  void DrawSequenceHistogram(const std::vector<DataSequence>& seq);
   void DrawTicks();
 
   void ResetView();
@@ -122,7 +150,10 @@ struct Plotter : public View, Handler
   float mouse_xy[2];
 
   int draw_mode;
-  bool xy;
+
+  enum PLOT_MODES { TIME_SERIES, XY, STACKED_HISTOGRAM};
+  static const unsigned modes_n = 3;
+  unsigned plot_mode;
   const static unsigned int show_n = 9;
   bool show[show_n];
 };

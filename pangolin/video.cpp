@@ -5,6 +5,8 @@
 #include "ffmpeg.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/foreach.hpp>
 #define foreach BOOST_FOREACH
 
@@ -56,34 +58,60 @@ VideoUri ParseUri(string str_uri)
 {
     VideoUri uri;
 
-    // extract scheme
-    size_t ns = str_uri.find("://");
+    // Find Scheme delimiter
+    size_t ns = str_uri.find_first_of(':');
     if( ns == string::npos )
     {
-        uri.scheme = "file";
-        ns = 0;
-    }else{
-        uri.scheme = str_uri.substr(0,ns);
-        ns += 3;
+        throw VideoException("Bad video URI","no device scheme specified");
     }
+    uri.scheme = str_uri.substr(0,ns);
 
-    // extract url
-    size_t nq = str_uri.find_first_of('?',ns);
-    if(nq == string::npos)
+    // Find url delimiter
+    size_t nurl = str_uri.find_first_of("//",ns+1);
+    if(nurl != string::npos)
     {
-        uri.url = str_uri.substr(ns);
-    }else{
-        string queries = str_uri.substr(nq+1);
-        uri.url = str_uri.substr(ns,nq-ns);
-        vector<string> params;
-        split(params, queries, boost::is_any_of("&"));
-        foreach(string p, params)
+        // If there is space between the delimiters, extract protocol arguments
+        if( nurl-ns > 1)
         {
-            vector<string> args;
-            split(args, p, boost::is_any_of("=") );
-            if( args.size() == 2 )
+            if( str_uri[ns+1] == '[' && str_uri[nurl-1] == ']' )
             {
-                uri.params[args[0]] = args[1];
+                string queries = str_uri.substr(ns+2, nurl-1 - (ns+2) );
+                vector<string> params;
+                split(params, queries, boost::is_any_of(","));
+                foreach(string p, params)
+                {
+                    vector<string> args;
+                    split(args, p, boost::is_any_of("=") );
+                    if( args.size() == 2 )
+                    {
+                        boost::trim(args[0]);
+                        boost::trim(args[1]);
+                        uri.params[args[0]] = args[1];
+                    }
+                }
+            }else{
+                throw VideoException("Bad video URI");
+            }
+        }
+
+        // Find parameter delimiter
+        size_t nq = str_uri.find_first_of('?',nurl+2);
+        if(nq == string::npos)
+        {
+            uri.url = str_uri.substr(nurl+2);
+        }else{
+            string queries = str_uri.substr(nq+1);
+            uri.url = str_uri.substr(nurl+2,nq-(nurl+2));
+            vector<string> params;
+            split(params, queries, boost::is_any_of("&"));
+            foreach(string p, params)
+            {
+                vector<string> args;
+                split(args, p, boost::is_any_of("=") );
+                if( args.size() == 2 )
+                {
+                    uri.params[args[0]] = args[1];
+                }
             }
         }
     }
@@ -93,6 +121,35 @@ VideoUri ParseUri(string str_uri)
 
 #ifdef HAVE_FFMPEG
 #include "ffmpeg.h"
+
+dc1394video_mode_t get_firewire_mode(unsigned width, unsigned height, const string fmt)
+{
+    for( dc1394video_mode_t video_mode=DC1394_VIDEO_MODE_MIN; video_mode<DC1394_VIDEO_MODE_MAX; video_mode = (dc1394video_mode_t)(video_mode +1) )
+    {
+        unsigned w,h;
+        string format;
+        Dc1394ModeDetails(video_mode,w,h,format);
+
+        if( w == width && h==height && !fmt.compare(format) )
+            return video_mode;
+    }
+
+    throw VideoException("Unknown video mode");
+}
+
+dc1394framerate_t get_firewire_framerate(float framerate)
+{
+    if(framerate==1.875)     return DC1394_FRAMERATE_1_875;
+    else if(framerate==3.75) return DC1394_FRAMERATE_3_75;
+    else if(framerate==7.5)  return DC1394_FRAMERATE_7_5;
+    else if(framerate==15)   return DC1394_FRAMERATE_15;
+    else if(framerate==30)   return DC1394_FRAMERATE_30;
+    else if(framerate==60)   return DC1394_FRAMERATE_60;
+    else if(framerate==120)  return DC1394_FRAMERATE_120;
+    else if(framerate==240)  return DC1394_FRAMERATE_240;
+    else throw VideoException("Invalid framerate");
+}
+
 #endif
 
 void VideoInput::Open(std::string str_uri)
@@ -113,8 +170,52 @@ void VideoInput::Open(std::string str_uri)
         video = new V4lVideo(uri.url.c_str());
     }else
 #ifdef HAVE_DC1394
-    if(!uri.scheme.compare("firewire")) {
-        video = new FirewireVideo();
+    if(!uri.scheme.compare("firewire") || !uri.scheme.compare("dc1394") ) {
+        // Default parameters
+        int desired_width = 640;
+        int desired_height = 480;
+        int desired_dma = 10;
+        int desired_iso = 400;
+        float desired_fps = 30;
+        string desired_format = "RGB8";
+
+        // Parse parameters
+        if(uri.params.find("fmt")!=uri.params.end()){
+            desired_format = uri.params["fmt"];
+            boost::to_upper(desired_format);
+        }
+        if(uri.params.find("size")!=uri.params.end()){
+            std::istringstream iss(uri.params["size"]);
+            iss >> desired_width;
+            iss.get();
+            iss >> desired_height;
+        }
+        if(uri.params.find("dma")!=uri.params.end()){
+            std::istringstream iss(uri.params["dma"]);
+            iss >> desired_dma;
+        }
+        if(uri.params.find("iso")!=uri.params.end()){
+            std::istringstream iss(uri.params["iso"]);
+            iss >> desired_iso;
+        }
+        if(uri.params.find("fps")!=uri.params.end()){
+            std::istringstream iss(uri.params["fps"]);
+            iss >> desired_fps;
+        }
+
+        Guid guid = 0;
+        unsigned deviceid = 0;
+        dc1394video_mode_t video_mode = get_firewire_mode(desired_width,desired_height,desired_format);
+        dc1394framerate_t framerate = get_firewire_framerate(desired_fps);
+        dc1394speed_t iso_speed = (dc1394speed_t)(log(desired_iso/100) / log(2));
+        int dma_buffers = desired_dma;
+
+        if( guid.guid == 0 )
+        {
+            video = new FirewireVideo(deviceid,video_mode,framerate,iso_speed,dma_buffers);
+        }else{
+            video = new FirewireVideo(guid,video_mode,framerate,iso_speed,dma_buffers);
+        }
     }else
 #endif
     {
@@ -123,7 +224,7 @@ void VideoInput::Open(std::string str_uri)
 
 #ifdef HAVE_FFMPEG
     if( dynamic_cast<FfmpegVideo*>(video) == 0 &&
-        video->PixFormat().compare("RGB24") != 0 )
+        video->PixFormat().compare("RGB8") != 0 )
     {
         video = new FfmpegConverter(video,"RGB24",FFMPEG_FAST_BILINEAR);
     }

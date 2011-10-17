@@ -39,7 +39,7 @@ using namespace boost;
 namespace pangolin
 {
 
-map<string,_Var> vars;
+boost::ptr_unordered_map<string,_Var> vars;
 vector<NewVarCallback> callbacks;
 
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter)
@@ -124,7 +124,7 @@ string ProcessVal(const string& val )
 
 void AddVar(const string& name, const string& val )
 {
-  std::map<std::string,_Var>::iterator vi = vars.find(name);
+  boost::ptr_unordered_map<std::string,_Var>::iterator vi = vars.find(name);
   const bool exists_already = vi != vars.end();
 
   string full = ProcessVal(val);
@@ -138,22 +138,24 @@ void AddVar(const string& name, const string& val )
   }
 }
 
+#ifdef ALIAS
 void AddAlias(const string& alias, const string& name)
 {
-    std::map<std::string,_Var>::iterator vi = vars.find(name);
+    boost::ptr_unordered_map<std::string,_Var>::iterator vi = vars.find(name);
 
     if( vi != vars.end() )
     {
         //cout << "Adding Alias " << alias << " to " << name << endl;
-        _Var& v = vi->second;
-        vars[alias] = _Var(v.val,v.val_default,v.type_name);
+        _Var * v = vi->second;
+        vars[alias].create(v->val,v->val_default,v->type_name);
         vars[alias].meta_friendly = alias;
-        v.generic = false;
+        v->generic = false;
         vars[alias].generic = false;
     }else{
         cout << "Variable " << name << " does not exist to alias." << endl;
     }
 }
+#endif
 
 void ParseVarsFile(const string& filename)
 {
@@ -188,7 +190,9 @@ void ParseVarsFile(const string& filename)
           {
             if( !val.substr(0,1).compare("@") )
             {
+#ifdef ALIAS
                 AddAlias(name,val.substr(1));
+#endif
             }else{
                 AddVar(name,val);
             }

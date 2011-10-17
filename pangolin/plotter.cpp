@@ -31,6 +31,7 @@
 #include <limits>
 #include <iostream>
 #include <iomanip>
+#include <boost/unordered_map.hpp>
 
 using namespace std;
 
@@ -73,12 +74,10 @@ void DataSequence::Clear()
 
 float DataSequence::operator[](unsigned int i) const
 {
-  return y[i-firstn];
-}
-
-size_t DataSequence::size() const
-{
-  return y.size();
+  if( !HasData(i) ) {
+    throw DataUnavailableException("Out of range");
+  }
+  return y[(i-firstn) % y.size()];
 }
 
 DataLog::DataLog(unsigned int buffer_size)
@@ -97,7 +96,7 @@ void DataLog::Save(std::string filename)
   if( sequences.size() > 0 )
   {
     ofstream f(filename.c_str());
-    for( unsigned n=0; n < sequences[0].size(); ++n )
+    for( unsigned n=sequences[0].firstn; n < sequences[0].n; ++n )
     {
       f << setprecision(12) << sequences[0][n];
       for( unsigned s=1; s < sequences.size(); ++s )
@@ -108,7 +107,12 @@ void DataLog::Save(std::string filename)
   }
 }
 
-void DataLog::Log(unsigned int N, const float vals[])
+void DataLog::Log(const vector<float> & vals)
+{
+  Log(vals.size(), &vals[0]);
+}
+
+void DataLog::Log(unsigned int N, const float * vals)
 {
   // Create new plots if needed
   for( unsigned int i= sequences.size(); i < N; ++i )
@@ -123,6 +127,17 @@ void DataLog::Log(unsigned int N, const float vals[])
     sequences[i].Add(0.0f);
 
   ++x;
+}
+
+void DataLog::SetLabels(const std::vector<std::string> & new_labels)
+{
+  // Create new labels if needed
+  for( unsigned int i= labels.size(); i < new_labels.size(); ++i )
+    labels.push_back(std::string("N/A"));
+
+  // Add data to existing plots
+  for( unsigned int i=0; i<labels.size(); ++i )
+    labels[i] = new_labels[i];
 }
 
 void DataLog::Log(float v)
@@ -159,7 +174,7 @@ void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6)
 }
 
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky)
-  : log(log), track_front(true), draw_mode(0), xy(false)
+  : log(log), track_front(true), draw_mode(0), plot_mode(TIME_SERIES)
 {
   this->handler = this;
   int_x[0] = int_x_dflt[0] = left;
@@ -231,14 +246,57 @@ void Plotter::DrawSequence(const DataSequence& seq)
   glEnd();
 }
 
+void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
+{
+  size_t vec_size
+      = std::min((unsigned)log->x, log->buffer_size);
+  int idx_subtract
+      = std::max(0,(int)(log->x)-(int)(log->buffer_size));
+  vector<float> accum_vec(vec_size,0);
+
+  for(int s=log->sequences.size()-1; s >=0; --s )
+  {
+    if( (s > 9) ||  show[s] )
+    {
+
+      const int seqint_x[2] = {seq.at(s).firstn, seq.at(s).n };
+      const int valid_int_x[2] = {
+        std::max(seqint_x[0],(int)int_x[0]),
+        std::min(seqint_x[1],(int)int_x[1])
+      };
+
+
+      glBegin(GL_TRIANGLE_STRIP);
+      glColor3fv(plot_colours[s%num_plot_colours]);
+
+
+      for( int x=valid_int_x[0]; x<valid_int_x[1]; ++x )
+      {
+        float val = seq.at(s)[x];
+
+        float & accum = accum_vec.at(x-idx_subtract);
+        float before_val = accum;
+        accum += val;
+        glVertex2f(x-0.5,before_val);
+        glVertex2f(x-0.5,accum);
+        glVertex2f(x+0.5,before_val);
+        glVertex2f(x+0.5,accum);
+      }
+      glEnd();
+    }
+  }
+}
+
 void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
 {
+  const unsigned minn = max(x.firstn,y.firstn);
+  const unsigned maxn = min(x.n,y.n);
+
   glBegin(draw_modes[draw_mode]);
-  for( unsigned n=0; n < x.size(); ++n )
+  for( unsigned n=minn; n < maxn; ++n )
     glVertex2f(x[n],y[n]);
   glEnd();
 }
-
 
 void Plotter::Render()
 {
@@ -261,17 +319,19 @@ void Plotter::Render()
 
   if( log && log->sequences.size() > 0 )
   {
-    if( xy )
+    if( plot_mode==XY )
     {
       for( unsigned int s=0; s < log->sequences.size() / 2; ++s )
       {
         if( (s > 9) ||  show[s] )
         {
-          glColor3fv(plot_colours[s]);
+          glColor3fv(plot_colours[s%num_plot_colours]);
           DrawSequence(log->sequences[2*s],log->sequences[2*s+1]);
         }
       }
-    }else{
+    }
+    else if( plot_mode==TIME_SERIES)
+    {
       for( unsigned int s=0; s < log->sequences.size(); ++s )
       {
         if( (s > 9) ||  show[s] )
@@ -281,11 +341,22 @@ void Plotter::Render()
         }
       }
     }
+    else if( plot_mode==STACKED_HISTOGRAM )
+    {
+
+
+      DrawSequenceHistogram(log->sequences);
+
+    }
+    else
+    {
+      assert(false);
+    }
   }
 
   if( mouse_state & MouseButtonLeft )
   {
-    if( xy )
+    if( plot_mode==XY )
     {
       glColor3fv(colour_ms);
       glBegin(GL_LINE_STRIP);
@@ -319,7 +390,7 @@ void Plotter::Render()
       tx += glutBitmapLength(font,(unsigned char*)ss.str().c_str());
       for( unsigned int s=0; s<log->sequences.size(); ++s )
       {
-        if( (s > show_n || show[s]) && 0 <= xu && xu < (int)log->sequences[s].size() )
+        if( (s > show_n || show[s]) && log->sequences[s].HasData(xu) )
         {
           stringstream ss;
           ss << " " << log->sequences[s][xu];
@@ -330,6 +401,17 @@ void Plotter::Render()
         }
       }
     }
+  }
+
+  float ty = v.h-15;
+  for (size_t i=0; i<log->labels.size(); ++i)
+  {
+    glColor3fv(plot_colours[i%num_plot_colours]);
+
+    OpenGlRenderState::ApplyWindowCoords();
+    glRasterPos2f( v.l+5,ty);
+    glutBitmapString(font,(unsigned char*)log->labels[i].c_str());
+    ty -= 15;
   }
 }
 
@@ -359,9 +441,9 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
     }else if( key == 'm' ) {
       draw_mode = (draw_mode+1)%draw_modes_n;
     }else if( key == 'p' ) {
-      xy = !xy;
+      plot_mode = (plot_mode+1)%modes_n;
       ResetView();
-      if( xy ) {
+      if( plot_mode==XY ) {
         int_x[0] = int_y[0];
         int_x[1] = int_y[1];
         track_front = false;
@@ -371,7 +453,7 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
       ResetView();
     }else if( key == 'a' || key == ' ' ) {
       cout << "Plotter: Auto scale" << endl;
-      if( xy && log->sequences.size() >= 2)
+      if( plot_mode==XY && log->sequences.size() >= 2)
       {
         int_x[0] = log->sequences[0].min_y;
         int_x[1] = log->sequences[0].max_y;
@@ -414,10 +496,12 @@ void Plotter::Mouse(View&, MouseButton button, int x, int y, bool pressed, int b
 
   if(button == MouseWheelUp || button == MouseWheelDown)
   {
-    const float mean = (int_y[0] + int_y[1])/2.0;
+    //const float mean = (int_y[0] + int_y[1])/2.0;
     const float scale = 1.0f + ((button == MouseWheelDown) ? 0.1 : -0.1);
-    int_y[0] = scale*(int_y[0] - mean) + mean;
-    int_y[1] = scale*(int_y[1] - mean) + mean;
+//    int_y[0] = scale*(int_y[0] - mean) + mean;
+//    int_y[1] = scale*(int_y[1] - mean) + mean;
+    int_y[0] = scale*(int_y[0]) ;
+    int_y[1] = scale*(int_y[1]) ;
   }
 
   ScreenToPlot(x,y);
@@ -435,8 +519,8 @@ void Plotter::MouseMotion(View&, int x, int y, int button_state)
     track_front = false;
     int_x[0] -= df[0];
     int_x[1] -= df[0];
-//    interval_y[0] -= df[1];
-//    interval_y[1] -= df[1];
+    //    interval_y[0] -= df[1];
+    //    interval_y[1] -= df[1];
   }else if(button_state == MouseButtonMiddle )
   {
     int_y[0] -= df[1];
@@ -463,10 +547,12 @@ void Plotter::MouseMotion(View&, int x, int y, int button_state)
 
 Plotter& CreatePlotter(const string& name, DataLog* log)
 {
-    Plotter* v = new Plotter(log);
-    context->all_views[name] = v;
-    context->base.views.push_back(v);
-    return *v;
+  Plotter* v = new Plotter(log);
+  //context->all_views[name] = v;
+  bool inserted = context->all_views.insert(name,v).second;
+  if(!inserted) throw exception();
+  context->base.views.push_back(v);
+  return *v;
 }
 
 } // namespace pangolin

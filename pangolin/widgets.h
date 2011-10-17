@@ -45,6 +45,7 @@ struct Panel : public View
   void ResizeChildren();
   static void AddVariable(void* data, const std::string& name, _Var& var, const char* reg_type_name, bool brand_new);
   Viewport vinside;
+  boost::ptr_unordered_map<const std::string,View>& context_views;
 };
 
 struct Button : public View, Handler, Var<bool>
@@ -91,6 +92,7 @@ struct Slider : public View, Handler, Var<double>
   int text_width;
   GLfloat raster[2];
   bool lock_bounds;
+  bool logscale;
 };
 
 struct TextInput : public View, Handler, Var<std::string>

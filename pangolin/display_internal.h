@@ -30,6 +30,7 @@
 
 #include "platform.h"
 #include "display.h"
+#include <boost/ptr_container/ptr_unordered_map.hpp>
 
 namespace pangolin
 {
@@ -40,7 +41,7 @@ namespace pangolin
 
     // Base container for displays
     View base;
-    std::map<std::string,View*> all_views;
+    boost::ptr_unordered_map<const std::string,View> all_views;
 
     // Manage fullscreen (ToggleFullscreen is quite new)
     bool is_double_buffered;
