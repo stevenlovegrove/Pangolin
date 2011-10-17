@@ -292,6 +292,30 @@ void FirewireVideo::PutFrame(FirewireFrame& f)
     }
 }
 
+
+void FirewireVideo::SetShutterTime(float shutter)
+{
+
+    err = dc1394_feature_set_absolute_value(camera,DC1394_FEATURE_SHUTTER,shutter);
+
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Failed to set shutter");
+
+
+}
+
+
+void FirewireVideo::SetShutterTimeQuant(int shutter)
+{
+
+    err = dc1394_feature_set_value(camera,DC1394_FEATURE_SHUTTER,shutter);
+
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Failed to set shutter");
+
+
+}
+
 float FirewireVideo::GetShutterTime() const
 {
     float shutter;
@@ -301,6 +325,15 @@ float FirewireVideo::GetShutterTime() const
 
     return shutter;
 
+}
+
+float FirewireVideo::GetGain() const
+{
+    float gain;
+    err = dc1394_feature_get_absolute_value(camera,DC1394_FEATURE_GAIN,&gain);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Failed to read gain");
+    return gain;
 }
 
 float FirewireVideo::GetGamma() const

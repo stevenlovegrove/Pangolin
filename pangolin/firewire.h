@@ -118,9 +118,17 @@ public:
   //! invalidated on return.
   void PutFrame(FirewireFrame& frame);
 
-  float GetShutterTime() const;
+  float GetShutterTime() const;  
 
   float GetGamma() const;
+
+  float GetGain() const;
+
+
+  void SetShutterTime(float shutter);
+  void SetShutterTimeQuant(int shutter);
+
+
 
 protected:
   void init_camera(
