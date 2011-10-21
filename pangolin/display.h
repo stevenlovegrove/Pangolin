@@ -41,6 +41,7 @@
 
 #ifdef HAVE_TOON
 #include <TooN/TooN.h>
+#include <TooN/se3.h>
 #endif
 
 #ifdef _WIN_
@@ -340,6 +341,7 @@ namespace pangolin
   OpenGlMatrixSpec negIdentityMatrix(OpenGlStack type);
 
 #ifdef HAVE_TOON
+  OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw);
   OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M);
 #endif
 
