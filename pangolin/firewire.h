@@ -39,15 +39,10 @@
 #include <unistd.h>
 #endif
 
+
+
 namespace pangolin
 {
-
-std::string Dc1394ColorCodingToString(dc1394color_coding_t coding);
-
-dc1394color_coding_t Dc1394ColorCodingFromString(std::string coding);
-
-void Dc1394ModeDetails(dc1394video_mode_t mode, unsigned& w, unsigned& h, std::string& format );
-
 
 class FirewireFrame
 {
@@ -72,6 +67,8 @@ struct Guid
 class FirewireVideo : public VideoInterface
 {
 public:
+  const static uint32_t MAX_FR = 9999999;
+
   FirewireVideo(
     unsigned deviceid = 0,
     dc1394video_mode_t video_mode = DC1394_VIDEO_MODE_640x480_RGB8,
@@ -86,6 +83,16 @@ public:
     dc1394framerate_t framerate = DC1394_FRAMERATE_30,
     dc1394speed_t iso_speed = DC1394_ISO_SPEED_400,
     int dma_buffers = 10
+  );
+
+  FirewireVideo(
+      Guid guid,
+      dc1394video_mode_t video_mode,
+      uint32_t framerate,
+      uint32_t width, uint32_t height,
+      uint32_t left, uint32_t top,
+      dc1394speed_t iso_speed,
+      int dma_buffers
   );
 
   ~FirewireVideo();
@@ -129,6 +136,14 @@ public:
 
   float GetGamma() const;
 
+  void SetInternalTrigger();
+
+  void SetExternalTrigger();
+
+  void SetAutoShutterTime();
+
+  void SetShutterTime(int val);
+
 protected:
   void init_camera(
     uint64_t guid, int dma_frames,
@@ -137,13 +152,25 @@ protected:
     dc1394framerate_t framerate
   );
 
+  void init_format7_camera(
+      uint64_t guid, int dma_frames,
+      dc1394speed_t iso_speed,
+      dc1394video_mode_t video_mode,
+      uint32_t framerate,
+      uint32_t width, uint32_t height,
+      uint32_t left, uint32_t top
+  );
+
+  static int nearest_value(int value, int step, int min, int max);
+
   bool running;
   dc1394camera_t *camera;
-  unsigned width, height;
+  unsigned width, height, top, left;
   //dc1394featureset_t features;
   dc1394_t * d;
   dc1394camera_list_t * list;
   mutable dc1394error_t err;
+
 };
 
 }
