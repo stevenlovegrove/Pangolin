@@ -44,6 +44,12 @@
 namespace pangolin
 {
 
+std::string Dc1394ColorCodingToString(dc1394color_coding_t coding);
+
+dc1394color_coding_t Dc1394ColorCodingFromString(std::string coding);
+
+void Dc1394ModeDetails(dc1394video_mode_t mode, unsigned& w, unsigned& h, std::string& format );
+
 class FirewireFrame
 {
   friend class FirewireVideo;

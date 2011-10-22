@@ -308,6 +308,132 @@ dc1394color_coding_t Dc1394ColorCodingFromString(std::string coding)
     throw VideoException("Unknown Colour coding");
 }
 
+void Dc1394ModeDetails(dc1394video_mode_t mode, unsigned& w, unsigned& h, string& format )
+{
+  switch( mode )
+  {
+  case DC1394_VIDEO_MODE_160x120_YUV444:
+    w=160;
+    h=120;
+    format = "YUV444";
+    break;
+  case DC1394_VIDEO_MODE_320x240_YUV422:
+    w=320;
+    h=240;
+    format = "YUV422";
+    break;
+  case DC1394_VIDEO_MODE_640x480_YUV411:
+    w=640;
+    h=480;
+    format = "YUV411";
+    break;
+  case DC1394_VIDEO_MODE_640x480_YUV422:
+    w=640;
+    h=480;
+    format = "YUV422";
+    break;
+  case DC1394_VIDEO_MODE_640x480_RGB8:
+    w=640;
+    h=480;
+    format = "RGB8";
+    break;
+  case DC1394_VIDEO_MODE_640x480_MONO8:
+    w=640;
+    h=480;
+    format = "MONO8";
+    break;
+  case DC1394_VIDEO_MODE_640x480_MONO16:
+    w=640;
+    h=480;
+    format = "MONO16";
+    break;
+  case DC1394_VIDEO_MODE_800x600_YUV422:
+    w=800;
+    h=600;
+    format = "YUV422";
+    break;
+  case DC1394_VIDEO_MODE_800x600_RGB8:
+    w=800;
+    h=600;
+    format = "RGB8";
+    break;
+  case DC1394_VIDEO_MODE_800x600_MONO8:
+    w=800;
+    h=600;
+    format = "MONO8";
+    break;
+  case DC1394_VIDEO_MODE_1024x768_YUV422:
+    w=1024;
+    h=768;
+    format = "YUV422";
+    break;
+  case DC1394_VIDEO_MODE_1024x768_RGB8:
+    w=1024;
+    h=768;
+    format = "RGB8";
+    break;
+  case DC1394_VIDEO_MODE_1024x768_MONO8:
+    w=1024;
+    h=768;
+    format = "MONO8";
+    break;
+  case DC1394_VIDEO_MODE_800x600_MONO16:
+    w=800;
+    h=600;
+    format = "MONO16";
+    break;
+  case DC1394_VIDEO_MODE_1024x768_MONO16:
+    w=1024;
+    h=768;
+    format = "MONO16";
+    break;
+  case DC1394_VIDEO_MODE_1280x960_YUV422:
+    w=1280;
+    h=960;
+    format = "YUV422";
+    break;
+  case DC1394_VIDEO_MODE_1280x960_RGB8:
+    w=1280;
+    h=960;
+    format = "RGB8";
+    break;
+  case DC1394_VIDEO_MODE_1280x960_MONO8:
+    w=1280;
+    h=960;
+    format = "MONO8";
+    break;
+  case DC1394_VIDEO_MODE_1600x1200_YUV422:
+    w=1600;
+    h=1200;
+    format = "YUV422";
+    break;
+  case DC1394_VIDEO_MODE_1600x1200_RGB8:
+    w=1600;
+    h=1200;
+    format = "RGB8";
+    break;
+  case DC1394_VIDEO_MODE_1600x1200_MONO8:
+    w=1600;
+    h=1200;
+    format = "MONO8";
+    break;
+  case DC1394_VIDEO_MODE_1280x960_MONO16:
+    w=1280;
+    h=960;
+    format = "MONO16";
+    break;
+  case DC1394_VIDEO_MODE_1600x1200_MONO16:
+    w=1600;
+    h=1200;
+    format = "MONO16";
+    break;
+  default:
+    w=0;
+    h=0;
+    format = "unknown";
+  }
+}
+
 std::string FirewireVideo::PixFormat() const
 {
     dc1394video_mode_t video_mode;
