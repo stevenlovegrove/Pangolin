@@ -15,13 +15,17 @@ SET(
   firewire.h firewire.cpp
   v4l.h v4l.cpp
   ffmpeg.h ffmpeg.cpp
+  pvn_video.h pvn_video.cpp
+  video_recorder.h video_recorder.cpp
+  threaded_file_writer.h threaded_file_writer.cpp
+  timer.h
 )
 
 #######################################################
 ## Find required dependencies
 
 FIND_PACKAGE(OpenGL REQUIRED QUIET)
-FIND_PACKAGE(Boost REQUIRED QUIET)
+FIND_PACKAGE(Boost COMPONENTS thread REQUIRED QUIET)
 
 #######################################################
 ## Find optional dependencies
@@ -77,7 +81,7 @@ ENDIF()
 ## Apply required dependencies settings
 INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${Boost_INCLUDE_DIRS} )
 INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${OPENGL_INCLUDE_DIR} )
-TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${OPENGL_LIBRARIES} )
+TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${OPENGL_LIBRARIES} ${Boost_LIBRARIES} )
 
 ## Set Special Compiler flags
 IF(MSVC)

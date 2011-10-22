@@ -6,16 +6,20 @@
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video.h>
+#include <pangolin/video_recorder.h>
 
 using namespace pangolin;
 using namespace std;
 
-void VideoSample(const std::string uri)
+void RecordSample(const std::string uri, const std::string filename)
 {
     // Setup Video Source
     VideoInput video(uri);
     const unsigned w = video.Width();
     const unsigned h = video.Height();
+
+    // Setup async video recorder with 50 frame memory buffer
+    VideoRecorder recorder(filename, w, h, "RGB24", w*h*3*50);
 
     // Create Glut window
     pangolin::CreateGlutWindowAndBind("Main",w,h);
@@ -35,6 +39,9 @@ void VideoSample(const std::string uri)
         video.GrabNext(rgb,true);
         texVideo.Upload(rgb,GL_RGB,GL_UNSIGNED_BYTE);
 
+        // Record video frame
+        recorder.RecordFrame(rgb);
+
         // Activate video viewport and render texture
         vVideo.Activate();
         texVideo.RenderToViewportFlipY();
@@ -49,23 +56,25 @@ void VideoSample(const std::string uri)
     delete[] rgb;
 }
 
-
 int main( int argc, char* argv[] )
 {
     std::string uri = "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0";
+    std::string filename = "video.pvn";
 
-    if( argc > 1 ) {
+    if( argc >= 2 ) {
         uri = std::string(argv[1]);
+        if( argc == 3 ) {
+            filename = std::string(argv[2]);
+        }
     }else{
-        cout << "Usage:" << endl << "\tSimpleRecord [video-uri]" << endl;
-        cout << "\tvideo-uri: URI of file / device to extract video sequence from" << endl << endl;
+        cout << "Usage:" << endl << "\tSimpleRecord video-uri filename" << endl;
+        cout << "\tvideo-uri:\tURI of file / device to extract video sequence from" << endl;
+        cout << "\tfilename:\tfilename to record pvn video in to" << endl << endl;
         cout << "e.g." << endl;
-        cout << "\tSimpleRecord dc1394:[fps=30,dma=10,size=640x480,iso=400]//0" << endl;
-        cout << "\tSimpleRecord v4l:///dev/video0" << endl;
-        cout << "\tSimpleRecord file:///media/Data/pictures/photos/Minnesota 2010/00021.MTS" << endl;
-        cout << "\tSimpleRecord file:///home/sl203/videos/YellowPattern1/test-0000000017.ppm" << endl;
+        cout << "\tSimpleRecord dc1394:[fps=30,dma=10,size=640x480,iso=400]//0 video.pvn" << endl;
+        cout << "\tSimpleRecord v4l:///dev/video0 video.pvn" << endl;
         cout << endl << "Defaulting to video-uri=" << uri << endl;
     }
 
-    VideoSample(uri);
+    RecordSample(uri, filename);
 }
