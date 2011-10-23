@@ -152,9 +152,6 @@ void FirewireVideo::init_format7_camera(
     if( err != DC1394_SUCCESS )
       throw VideoException("Could not get format7 mode info");
 
-    if( format7_info.present != DC1394_TRUE )
-      throw VideoException("The format 7 mode requested is not supported");
-
     // safely set the video mode
     err=dc1394_video_set_mode(camera, video_mode);
     if( err != DC1394_SUCCESS )
