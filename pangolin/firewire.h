@@ -73,7 +73,8 @@ struct Guid
 class FirewireVideo : public VideoInterface
 {
 public:
-  const static uint32_t MAX_FR = 9999999;
+  const static int MAX_FR = -1;
+  const static int EXT_TRIG = -1;
 
   FirewireVideo(
     unsigned deviceid = 0,
@@ -94,7 +95,17 @@ public:
   FirewireVideo(
       Guid guid,
       dc1394video_mode_t video_mode,
-      uint32_t framerate,
+      int framerate,
+      uint32_t width, uint32_t height,
+      uint32_t left, uint32_t top,
+      dc1394speed_t iso_speed,
+      int dma_buffers
+  );
+
+  FirewireVideo(
+      unsigned deviceid,
+      dc1394video_mode_t video_mode,
+      int framerate,
       uint32_t width, uint32_t height,
       uint32_t left, uint32_t top,
       dc1394speed_t iso_speed,
@@ -140,6 +151,8 @@ public:
 
   float GetShutterTime() const;
 
+  void SetShutterTime(int val);
+
   float GetGamma() const;
 
   void SetInternalTrigger();
@@ -147,8 +160,6 @@ public:
   void SetExternalTrigger();
 
   void SetAutoShutterTime();
-
-  void SetShutterTime(int val);
 
 protected:
   void init_camera(
@@ -162,12 +173,13 @@ protected:
       uint64_t guid, int dma_frames,
       dc1394speed_t iso_speed,
       dc1394video_mode_t video_mode,
-      uint32_t framerate,
+      int framerate,
       uint32_t width, uint32_t height,
       uint32_t left, uint32_t top
   );
 
   static int nearest_value(int value, int step, int min, int max);
+  static double bus_period_from_iso_speed(dc1394speed_t iso_speed);
 
   bool running;
   dc1394camera_t *camera;
