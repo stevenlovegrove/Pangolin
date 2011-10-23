@@ -19,6 +19,7 @@ SET(
   video_recorder.h video_recorder.cpp
   threaded_file_writer.h threaded_file_writer.cpp
   timer.h
+  video_record_repeat.h video_record_repeat.cpp
 )
 
 #######################################################

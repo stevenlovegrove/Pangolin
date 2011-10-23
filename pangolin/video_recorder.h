@@ -55,7 +55,7 @@ namespace pangolin
     public:
         VideoRecorder(
             const std::string& filename,
-            int stream0_width, int stream0_height, std::string stream0_fmt = "rgb24",
+            int stream0_width, int stream0_height, std::string stream0_fmt = "RGB24",
             unsigned int buffer_size_bytes = 1024*1024*100
         );
         ~VideoRecorder();

@@ -190,14 +190,11 @@ bool hasEnding (std::string const &fullString, std::string const &ending)
     }
 }
 
-void VideoInput::Open(std::string str_uri)
+VideoInterface* OpenVideo(std::string str_uri)
 {
-    VideoUri uri = ParseUri(str_uri);
+  VideoInterface* video = 0;
 
-    if(video) {
-        delete video;
-        video = 0;
-    }
+  VideoUri uri = ParseUri(str_uri);
 
 #ifdef HAVE_FFMPEG
     if(!uri.scheme.compare("file") ) {
@@ -276,6 +273,18 @@ void VideoInput::Open(std::string str_uri)
         video = new FfmpegConverter(video,"RGB24",FFMPEG_FAST_BILINEAR);
     }
 #endif
+
+    return video;
+}
+
+
+void VideoInput::Open(std::string uri)
+{
+    if(video) {
+        delete video;
+        video = 0;
+    }
+    video = OpenVideo(uri);
 }
 
 unsigned VideoInput::Width() const

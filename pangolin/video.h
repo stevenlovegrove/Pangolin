@@ -87,6 +87,8 @@ namespace pangolin
         VideoInterface* video;
     };
 
+    VideoInterface* OpenVideo(std::string uri);
+
 }
 
 #endif // PANGOLIN_VIDEO_H

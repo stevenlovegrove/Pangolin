@@ -57,6 +57,16 @@ static float cb_height = text_height * 1.6;
 
 boost::mutex display_mutex;
 
+template<typename T>
+void GuiVarChanged( Var<T>& var)
+{
+  var.var->meta_gui_changed = true;
+
+  BOOST_FOREACH(GuiVarChangedCallback& gvc, gui_var_changed_callbacks)
+      if( boost::starts_with(var.var->meta_full_name,gvc.filter) )
+      gvc.fn(gvc.data,var.var->meta_full_name,*var.var);
+}
+
 void glRect(Viewport v)
 {
   glRectf(v.l,v.t()-1,v.r()-1,v.b);
@@ -205,7 +215,10 @@ Button::Button(string title, _Var& tv)
 void Button::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
 {
   down = pressed;
-  if( !pressed ) a->Set(!a->Get());
+  if( !pressed ) {
+    a->Set(!a->Get());
+    GuiVarChanged(*this);
+  }
 }
 
 void Button::Render()
@@ -237,8 +250,10 @@ Checkbox::Checkbox(std::string title, _Var& tv)
 
 void Checkbox::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
 {
-  if( pressed )
+  if( pressed ) {
     a->Set(!a->Get());
+    GuiVarChanged(*this);
+  }
 }
 
 void Checkbox::ResizeChildren()
@@ -281,10 +296,7 @@ void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed){
 
   if( pressed && var->meta_range[0] < var->meta_range[1] )
   {
-    double val = a->Get();
-
-    if (logscale)
-      val = log(val);
+    double val = !logscale ? a->Get() : log(a->Get());
 
     if(key=='-'){
       if (logscale)
@@ -294,11 +306,14 @@ void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed){
     }else if(key == '='){
       if (logscale)
         a->Set( exp(max(var->meta_range[0],min(var->meta_range[1],val + var->meta_increment) ) ) );
-      if (logscale)
+      else
         a->Set( max(var->meta_range[0],min(var->meta_range[1],val + var->meta_increment) ) );
     }else if(key == 'r'){
       Reset();
+    }else{
+      return;
     }
+    GuiVarChanged(*this);
   }
 }
 
@@ -331,10 +346,7 @@ void Slider::Mouse(View& view, MouseButton button, int x, int y, bool pressed, i
   }else{
     if(!lock_bounds)
     {
-      double val = a->Get();
-
-      if (logscale)
-        val = log(val);
+      double val = !logscale ? a->Get() : log(a->Get());
 
       var->meta_range[0] = min(var->meta_range[0], val);
       var->meta_range[1] = max(var->meta_range[1], val);
@@ -358,12 +370,11 @@ void Slider::MouseMotion(View&, int x, int y, int mouse_state)
       val = frac * range + var->meta_range[0];
     }
 
-    if (logscale)
-      val = exp(val);
+    if (logscale) val = exp(val);
 
      a->Set(val);
-
-   }
+     GuiVarChanged(*this);
+  }
 }
 
 
@@ -376,8 +387,6 @@ void Slider::ResizeChildren()
 void Slider::Render()
 {
   const double val = a->Get();
-
-
 
   if( var->meta_range[0] != var->meta_range[1] )
   {
@@ -428,6 +437,8 @@ void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
     if(key == 13)
     {
       a->Set(edit);
+      GuiVarChanged(*this);
+
       do_edit = false;
       sel[0] = sel[1] = -1;
     }else if(key == 8) {

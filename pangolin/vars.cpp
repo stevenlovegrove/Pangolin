@@ -40,11 +40,17 @@ namespace pangolin
 {
 
 boost::ptr_unordered_map<string,_Var> vars;
-vector<NewVarCallback> callbacks;
+vector<NewVarCallback> new_var_callbacks;
+vector<GuiVarChangedCallback> gui_var_changed_callbacks;
 
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter)
 {
-  callbacks.push_back(NewVarCallback(filter,callback,data));
+  new_var_callbacks.push_back(NewVarCallback(filter,callback,data));
+}
+
+void RegisterGuiVarChangedCallback(GuiVarChangedCallbackFn callback, void* data, const std::string& filter)
+{
+  gui_var_changed_callbacks.push_back(GuiVarChangedCallback(filter,callback,data));
 }
 
 // Find the open brace preceeded by '$'
