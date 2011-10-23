@@ -107,7 +107,7 @@ void FirewireVideo::init_format7_camera(
     dc1394video_mode_t video_mode,
     int framerate,
     uint32_t width, uint32_t height,
-    uint32_t left, uint32_t top
+    uint32_t left, uint32_t top, bool reset_at_boot
     ) {
 
     if(video_mode< DC1394_VIDEO_MODE_FORMAT7_0)
@@ -125,6 +125,10 @@ void FirewireVideo::init_format7_camera(
     }
 
     cout << "Using camera with GUID " << camera->guid << endl;
+
+    if(reset_at_boot){
+      dc1394_camera_reset(camera);
+    }
 
     //-----------------------------------------------------------------------
     //  setup mode and roi
@@ -247,7 +251,7 @@ void FirewireVideo::init_format7_camera(
     if( err != DC1394_SUCCESS )
         throw VideoException("Could not get framerate");
 
-    cout<<" framerate:"<<value<<endl;
+    cout<<" framerate(shutter permitting):"<<value<<endl;
 
     //-----------------------------------------------------------------------
     //  setup capture
@@ -477,14 +481,14 @@ FirewireVideo::FirewireVideo(
     uint32_t width, uint32_t height,
     uint32_t left, uint32_t top,
     dc1394speed_t iso_speed,
-    int dma_buffers
+    int dma_buffers, bool reset_at_boot
 ) :running(false)
 {
     d = dc1394_new ();
     if (!d)
         throw VideoException("Failed to get 1394 bus");
 
-    init_format7_camera(guid.guid,dma_buffers,iso_speed,video_mode,framerate,width,height,left,top);
+    init_format7_camera(guid.guid,dma_buffers,iso_speed,video_mode,framerate,width,height,left,top, reset_at_boot);
 }
 
 FirewireVideo::FirewireVideo(
@@ -524,7 +528,7 @@ FirewireVideo::FirewireVideo(
     uint32_t width, uint32_t height,
     uint32_t left, uint32_t top,
     dc1394speed_t iso_speed,
-    int dma_buffers
+    int dma_buffers, bool reset_at_boot
 ) :running(false)
 {
     d = dc1394_new ();
@@ -545,7 +549,7 @@ FirewireVideo::FirewireVideo(
 
     dc1394_camera_free_list (list);
 
-    init_format7_camera(guid,dma_buffers,iso_speed,video_mode,framerate,width,height,left,top);
+    init_format7_camera(guid,dma_buffers,iso_speed,video_mode,framerate,width,height,left,top, reset_at_boot);
 
 }
 

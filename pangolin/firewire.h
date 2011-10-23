@@ -99,7 +99,7 @@ public:
       uint32_t width, uint32_t height,
       uint32_t left, uint32_t top,
       dc1394speed_t iso_speed,
-      int dma_buffers
+      int dma_buffers, bool reset_at_boot=false
   );
 
   FirewireVideo(
@@ -109,7 +109,7 @@ public:
       uint32_t width, uint32_t height,
       uint32_t left, uint32_t top,
       dc1394speed_t iso_speed,
-      int dma_buffers
+      int dma_buffers, bool reset_at_boot=false
   );
 
   ~FirewireVideo();
@@ -186,7 +186,7 @@ protected:
       dc1394video_mode_t video_mode,
       int framerate,
       uint32_t width, uint32_t height,
-      uint32_t left, uint32_t top
+      uint32_t left, uint32_t top, bool reset_at_boot
   );
 
   static int nearest_value(int value, int step, int min, int max);
