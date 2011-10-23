@@ -1,8 +1,36 @@
+/* This file is part of the Pangolin Project.
+ * http://github.com/stevenlovegrove/Pangolin
+ *
+ * Copyright (c) 2011 Steven Lovegrove
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 #include "video.h"
 
 #include "firewire.h"
 #include "v4l.h"
 #include "ffmpeg.h"
+#include "pvn_video.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -152,18 +180,34 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 #endif
 
-void VideoInput::Open(std::string str_uri)
+// http://stackoverflow.com/questions/874134/find-if-string-endswith-another-string-c
+bool hasEnding (std::string const &fullString, std::string const &ending)
 {
-    VideoUri uri = ParseUri(str_uri);
-
-    if(video) {
-        delete video;
-        video = 0;
+    if (fullString.length() >= ending.length()) {
+        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+    } else {
+        return false;
     }
+}
+
+VideoInterface* OpenVideo(std::string str_uri)
+{
+  VideoInterface* video = 0;
+
+  VideoUri uri = ParseUri(str_uri);
 
 #ifdef HAVE_FFMPEG
-    if(!uri.scheme.compare("file")) {
-        video = new FfmpegVideo(uri.url.c_str());
+    if(!uri.scheme.compare("file") ) {
+        if( hasEnding(uri.url,"pvn") ) {
+            bool realtime = false;
+            if(uri.params.find("realtime")!=uri.params.end()){
+                std::istringstream iss(uri.params["realtime"]);
+                iss >> realtime;
+            }
+            video = new PvnVideo(uri.url.c_str(), realtime);
+        }else{
+            video = new FfmpegVideo(uri.url.c_str());
+        }
     }else
 #endif
     if(!uri.scheme.compare("v4l")) {
@@ -229,6 +273,18 @@ void VideoInput::Open(std::string str_uri)
         video = new FfmpegConverter(video,"RGB24",FFMPEG_FAST_BILINEAR);
     }
 #endif
+
+    return video;
+}
+
+
+void VideoInput::Open(std::string uri)
+{
+    if(video) {
+        delete video;
+        video = 0;
+    }
+    video = OpenVideo(uri);
 }
 
 unsigned VideoInput::Width() const
