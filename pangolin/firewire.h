@@ -158,6 +158,15 @@ public:
   //! set auto shutter value
   void SetAutoShutterTime();
 
+  //! return absolute gain value
+  float GetGain() const;
+
+  //! set absolute shutter value
+  void SetGain(float val);
+
+  //! set auto shutter value
+  void SetAutoGain();
+
   //! return absolute gamma value
   float GetGamma() const;
 

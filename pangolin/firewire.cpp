@@ -637,6 +637,26 @@ void FirewireVideo::PutFrame(FirewireFrame& f)
     }
 }
 
+float FirewireVideo::GetGain() const
+{
+    float gain;
+    err = dc1394_feature_get_absolute_value(camera,DC1394_FEATURE_GAIN,&gain);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Failed to read gain");
+
+    return gain;
+
+}
+
+void FirewireVideo::SetAutoGain(){
+
+        dc1394error_t err = dc1394_feature_set_mode(camera, DC1394_FEATURE_GAIN, DC1394_FEATURE_MODE_AUTO);
+        if (err < 0) {
+                throw VideoException("Could not set auto gain mode");
+        }
+}
+
+
 float FirewireVideo::GetShutterTime() const
 {
     float shutter;
@@ -645,7 +665,25 @@ float FirewireVideo::GetShutterTime() const
         throw VideoException("Failed to read shutter");
 
     return shutter;
+}
 
+
+void FirewireVideo::SetGain(float val){
+
+        dc1394error_t err = dc1394_feature_set_mode(camera, DC1394_FEATURE_GAIN, DC1394_FEATURE_MODE_MANUAL);
+        if (err < 0) {
+                throw VideoException("Could not set manual gain mode");
+        }
+
+        err = dc1394_feature_set_absolute_control(camera, DC1394_FEATURE_GAIN, DC1394_ON);
+        if (err < 0) {
+          throw VideoException("Could not set absolute control for gain");
+        }
+
+        err = dc1394_feature_set_absolute_value(camera, DC1394_FEATURE_GAIN, val);
+        if (err < 0) {
+                throw VideoException("Could not set gain value");
+        }
 }
 
 void FirewireVideo::SetAutoShutterTime(){
