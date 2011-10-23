@@ -1,5 +1,8 @@
 #include "video_record_repeat.h"
 #include "pvn_video.h"
+#include "widgets.h"
+
+using namespace std;
 
 namespace pangolin
 {
@@ -11,6 +14,16 @@ VideoRecordRepeat::VideoRecordRepeat(
     filename(save_filename), buffer_size_bytes(buffer_size_bytes)
 {
     video_src = OpenVideo(uri);
+
+    if( var_record_prefix.compare("#") ) {
+        RegisterGuiVarChangedCallback(&VideoRecordRepeat::GuiVarChanged,(void*)this,var_record_prefix);
+    }
+}
+
+void VideoRecordRepeat::GuiVarChanged(void* data, const std::string& name, _Var& var)
+{
+//    VideoRecordRepeat* thisptr = (VideoRecordRepeat*)data;
+    cout << name << endl;
 }
 
 VideoRecordRepeat::~VideoRecordRepeat()

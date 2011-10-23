@@ -32,7 +32,6 @@
 
 #include "video.h"
 #include "video_recorder.h"
-#include "widgets.h"
 
 namespace pangolin
 {
@@ -65,6 +64,8 @@ protected:
 
     std::string filename;
     int buffer_size_bytes;
+
+    static void GuiVarChanged(void* data, const std::string& name, _Var& var);
 };
 
 }
