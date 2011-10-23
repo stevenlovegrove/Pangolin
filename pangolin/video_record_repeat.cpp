@@ -2,28 +2,15 @@
 #include "pvn_video.h"
 #include "widgets.h"
 
-using namespace std;
-
 namespace pangolin
 {
 
 VideoRecordRepeat::VideoRecordRepeat(
-    std::string uri, std::string save_filename,
-    int buffer_size_bytes, std::string var_record_prefix
+    std::string uri, std::string save_filename, int buffer_size_bytes
     ) : video_src(0), video_file(0), video_recorder(0),
-    filename(save_filename), buffer_size_bytes(buffer_size_bytes)
+    filename(save_filename), buffer_size_bytes(buffer_size_bytes), frame_num(0)
 {
     video_src = OpenVideo(uri);
-
-    if( var_record_prefix.compare("#") ) {
-        RegisterGuiVarChangedCallback(&VideoRecordRepeat::GuiVarChanged,(void*)this,var_record_prefix);
-    }
-}
-
-void VideoRecordRepeat::GuiVarChanged(void* data, const std::string& name, _Var& var)
-{
-//    VideoRecordRepeat* thisptr = (VideoRecordRepeat*)data;
-    cout << name << endl;
 }
 
 VideoRecordRepeat::~VideoRecordRepeat()
@@ -32,24 +19,30 @@ VideoRecordRepeat::~VideoRecordRepeat()
         delete video_recorder;
     if( video_src )
         delete video_src;
+    if( video_file )
+        delete video_file;
 }
 
 void VideoRecordRepeat::Record()
 {
-    if( video_recorder == 0 )
-    {
-        if(video_file) {
-            delete video_file;
-            video_file = 0;
-        }
-
-        video_recorder = new VideoRecorder(
-            filename, video_src->Width(), video_src->Height(),
-            "RGB24", buffer_size_bytes
-        );
-
-        video_src->Start();
+    if( video_recorder ) {
+        video_src->Stop();
+        delete video_recorder;
+        video_recorder = 0;
     }
+
+    if(video_file) {
+        delete video_file;
+        video_file = 0;
+    }
+
+    video_recorder = new VideoRecorder(
+        filename, video_src->Width(), video_src->Height(),
+        "RGB24", buffer_size_bytes
+    );
+
+    video_src->Start();
+    frame_num = 0;
 }
 
 void VideoRecordRepeat::Play(bool realtime)
@@ -67,6 +60,7 @@ void VideoRecordRepeat::Play(bool realtime)
     }
 
     video_file = new PvnVideo(filename.c_str(),realtime);
+    frame_num = 0;
 }
 
 void VideoRecordRepeat::Source()
@@ -82,6 +76,7 @@ void VideoRecordRepeat::Source()
     }
 
     video_src->Start();
+    frame_num = 0;
 }
 
 unsigned VideoRecordRepeat::Width() const
@@ -105,16 +100,23 @@ std::string VideoRecordRepeat::PixFormat() const
 
 void VideoRecordRepeat::Start()
 {
+    // Semantics of this?
 //    video_src->Start();
 }
 
 void VideoRecordRepeat::Stop()
 {
-//    video_src->Stop();
+    // Semantics of this?
+    if(video_recorder) {
+        delete video_recorder;
+        video_recorder = 0;
+    }
 }
 
 bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
 {
+    frame_num++;
+
     if( video_recorder != 0 )
     {
         bool success = video_src->GrabNext(image,wait);
@@ -131,6 +133,8 @@ bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
 
 bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
 {
+    frame_num++;
+
     if( video_recorder != 0 )
     {
         bool success = video_src->GrabNewest(image,wait);
@@ -143,6 +147,11 @@ bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
     }else{
         return video_src->GrabNewest(image,wait);
     }
+}
+
+int VideoRecordRepeat::FrameId()
+{
+    return frame_num;
 }
 
 

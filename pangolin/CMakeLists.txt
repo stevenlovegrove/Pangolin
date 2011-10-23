@@ -20,6 +20,7 @@ SET(
   threaded_file_writer.h threaded_file_writer.cpp
   timer.h
   video_record_repeat.h video_record_repeat.cpp
+  input_record_repeat.h input_record_repeat.cpp
 )
 
 #######################################################

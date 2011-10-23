@@ -25,50 +25,59 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_RECORD_REPEAT_H
-#define PANGOLIN_VIDEO_RECORD_REPEAT_H
+#ifndef PANGOLIN_INPUT_RECORD_REPEAT_H
+#define PANGOLIN_INPUT_RECORD_REPEAT_H
 
 #include "pangolin.h"
 
 #include "video.h"
 #include "video_recorder.h"
 
+#include <list>
+
 namespace pangolin
 {
 
-struct VideoRecordRepeat : public VideoInterface
+struct FrameInput
 {
-    VideoRecordRepeat(
-        std::string uri, std::string save_filename, int buffer_size_bytes
-    );
-    ~VideoRecordRepeat();
+    int index;
+    std::string var;
+    std::string val;
+};
 
-    unsigned Width() const;
-    unsigned Height() const;
-    std::string PixFormat() const;
+struct InputRecordRepeat
+{
+    InputRecordRepeat(const std::string& var_record_prefix);
+    ~InputRecordRepeat();
 
-    void Start();
-    void Stop();
-    bool GrabNext( unsigned char* image, bool wait = true );
-    bool GrabNewest( unsigned char* image, bool wait = true );
+    void SetIndex(int id);
 
     void Record();
-    void Play(bool realtime = true);
-    void Source();
+    void Stop();
 
-    int FrameId();
+    void LoadBuffer(const std::string& filename);
+    void SaveBuffer(const std::string& filename);
+    void ClearBuffer();
+
+    void PlayBuffer();
+    void PlayBuffer(int start, int end);
+
+    int Size();
 
 protected:
-    VideoInterface* video_src;
-    VideoInterface* video_file;
-    VideoRecorder* video_recorder;
+    bool record;
+    bool play;
 
+    int index;
+    std::ofstream file;
     std::string filename;
-    int buffer_size_bytes;
 
-    int frame_num;
+    std::list<FrameInput> play_queue;
+    std::list<FrameInput> record_queue;
+
+    static void GuiVarChanged(void* data, const std::string& name, _Var& var);
 };
 
 }
 
-#endif // PANGOLIN_VIDEO_RECORD_REPEAT_H
+#endif // PANGOLIN_INPUT_RECORD_REPEAT_H

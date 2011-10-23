@@ -7,6 +7,7 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/video.h>
 #include <pangolin/video_record_repeat.h>
+#include <pangolin/input_record_repeat.h>
 
 using namespace pangolin;
 using namespace std;
@@ -14,16 +15,18 @@ using namespace std;
 void RecordSample(const std::string uri, const std::string filename)
 {
     // Setup Video Source
-    VideoRecordRepeat video(uri, filename, 1024*1024*200, "ui");
+    VideoRecordRepeat video(uri, filename, 1024*1024*200);
     const unsigned w = video.Width();
     const unsigned h = video.Height();
+
+    InputRecordRepeat input("ui.");
 
     // Create Glut window
     const int panel_width = 200;
     pangolin::CreateGlutWindowAndBind("Main",w + panel_width,h);
 
     // Create viewport for video with fixed aspect
-    View& d_panel = pangolin::CreatePanel("ui")
+    View& d_panel = pangolin::CreatePanel("ui.")
         .SetBounds(1.0, 0.0, 0, panel_width);
 
     View& vVideo = Display("Video")
@@ -40,26 +43,44 @@ void RecordSample(const std::string uri, const std::string filename)
     static Var<bool> source("ui.Source",false,false);
     static Var<bool> realtime("ui.realtime",true,true);
 
-    for(int frame=0; !pangolin::ShouldQuit(); ++frame)
+    static Var<float> hue("ui.Hue",0,0,360);
+    static Var<bool> colour("ui.Colour Video",false,true);
+
+    for(; !pangolin::ShouldQuit();)
     {
+        // Load next video frame
         video.GrabNext(rgb,true);
         texVideo.Upload(rgb,GL_RGB,GL_UNSIGNED_BYTE);
 
+        // Associate input with this video frame
+        input.SetIndex(video.FrameId());
+
         // Activate video viewport and render texture
         vVideo.ActivateScissorAndClear();
+
+        if( colour ) {
+            glColorHSV(hue,0.5,1.0);
+        }else{
+            glColor3f(1,1,1);
+        }
         texVideo.RenderToViewportFlipY();
 
-        if(pangolin::Pushed(record))
+        if(pangolin::Pushed(record)) {
             video.Record();
+            input.Record();
+        }
 
-        if(pangolin::Pushed(play))
+        if(pangolin::Pushed(play)) {
             video.Play(realtime);
+            input.PlayBuffer(0,input.Size()-1);
+        }
 
-        if(pangolin::Pushed(source))
+        if(pangolin::Pushed(source)) {
             video.Source();
+            input.Stop();
+        }
 
-        if(HadInput())
-          d_panel.Render();
+        d_panel.Render();
 
         glutSwapBuffers();
         glutMainLoopEvent();

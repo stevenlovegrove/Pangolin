@@ -224,14 +224,14 @@ inline void Var<T>::Init(const std::string& name,
       default_value = a->Get();
 
     }else{
-      // Meta info for variable
-      var->meta_full_name = name;
-      var->meta_friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
-      var->meta_range[0] = min;
-      var->meta_range[1] = max;
-      var->meta_flags = flags;
-      var->logscale = logscale;
-      var->meta_gui_changed = false;
+//      // Meta info for variable
+//      var->meta_full_name = name;
+//      var->meta_friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
+//      var->meta_range[0] = min;
+//      var->meta_range[1] = max;
+//      var->meta_flags = flags;
+//      var->logscale = logscale;
+//      var->meta_gui_changed = false;
 
       // notify those watching new variables
       BOOST_FOREACH(NewVarCallback& nvc, new_var_callbacks)
