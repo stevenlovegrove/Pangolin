@@ -655,18 +655,21 @@ void FirewireVideo::SetAutoShutterTime(){
 	}
 }
 
-void FirewireVideo::SetShutterTime(int val){
-
-	val = std::max(std::min(1077, val), 0);
+void FirewireVideo::SetShutterTime(float val){
 
 	dc1394error_t err = dc1394_feature_set_mode(camera, DC1394_FEATURE_SHUTTER, DC1394_FEATURE_MODE_MANUAL);
 	if (err < 0) {
 		throw VideoException("Could not set manual shutter mode");
 	}
 
-	err = dc1394_feature_set_value(camera, DC1394_FEATURE_SHUTTER, val);
+	err = dc1394_feature_set_absolute_control(camera, DC1394_FEATURE_SHUTTER, DC1394_ON);
 	if (err < 0) {
-		throw VideoException("Could not set manual shutter value");
+          throw VideoException("Could not set absolute control for shutter");
+        }
+
+	err = dc1394_feature_set_absolute_value(camera, DC1394_FEATURE_SHUTTER, val);
+	if (err < 0) {
+		throw VideoException("Could not set shutter value");
 	}
 }
 
@@ -687,16 +690,21 @@ void FirewireVideo::SetInternalTrigger()
     }
 }
 
-void FirewireVideo::SetExternalTrigger() 
+void FirewireVideo::SetExternalTrigger(dc1394trigger_mode_t mode, dc1394trigger_polarity_t polarity, dc1394trigger_source_t source)
 {
-    dc1394error_t err = dc1394_external_trigger_set_polarity(camera, DC1394_TRIGGER_ACTIVE_HIGH);
+    dc1394error_t err = dc1394_external_trigger_set_polarity(camera, polarity);
     if (err < 0) {
         throw VideoException("Could not set external trigger polarity");
     }
 
-    err = dc1394_external_trigger_set_mode(camera, DC1394_TRIGGER_MODE_0);
+    err = dc1394_external_trigger_set_mode(camera, mode);
     if (err < 0) {
         throw VideoException("Could not set external trigger mode");
+    }
+
+    err = dc1394_external_trigger_set_source(camera, source);
+    if (err < 0) {
+        throw VideoException("Could not set external trigger source");
     }
 
     err = dc1394_external_trigger_set_power(camera, DC1394_ON);

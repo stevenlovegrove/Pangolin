@@ -149,19 +149,30 @@ public:
   //! invalidated on return.
   void PutFrame(FirewireFrame& frame);
 
+  //! return absolute shutter value
   float GetShutterTime() const;
 
-  void SetShutterTime(int val);
+  //! set absolute shutter value
+  void SetShutterTime(float val);
 
-  float GetGamma() const;
-
-  void SetInternalTrigger();
-
-  void SetExternalTrigger();
-
+  //! set auto shutter value
   void SetAutoShutterTime();
 
+  //! return absolute gamma value
+  float GetGamma() const;
+
+  //! set the trigger to internal, i.e. determined by video mode
+  void SetInternalTrigger();
+
+  //! set the trigger to external
+  void SetExternalTrigger(
+      dc1394trigger_mode_t mode=DC1394_TRIGGER_MODE_0,
+      dc1394trigger_polarity_t polarity=DC1394_TRIGGER_ACTIVE_HIGH,
+      dc1394trigger_source_t source=DC1394_TRIGGER_SOURCE_0
+  );
+
 protected:
+
   void init_camera(
     uint64_t guid, int dma_frames,
     dc1394speed_t iso_speed,
