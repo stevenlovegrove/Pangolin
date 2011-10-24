@@ -12,14 +12,15 @@
 using namespace pangolin;
 using namespace std;
 
-void RecordSample(const std::string uri, const std::string filename)
+void RecordSample(const std::string uri, const std::string vid_file, const std::string ui_file)
 {
     // Setup Video Source
-    VideoRecordRepeat video(uri, filename, 1024*1024*200);
+    VideoRecordRepeat video(uri, vid_file, 1024*1024*200);
     const unsigned w = video.Width();
     const unsigned h = video.Height();
 
     InputRecordRepeat input("ui.");
+    input.LoadBuffer(ui_file);
 
     // Create Glut window
     const int panel_width = 200;
@@ -46,7 +47,7 @@ void RecordSample(const std::string uri, const std::string filename)
     static Var<float> hue("ui.Hue",0,0,360);
     static Var<bool> colour("ui.Colour Video",false,true);
 
-    for(; !pangolin::ShouldQuit();)
+    while( !pangolin::ShouldQuit() )
     {
         // Load next video frame
         video.GrabNext(rgb,true);
@@ -73,11 +74,13 @@ void RecordSample(const std::string uri, const std::string filename)
         if(pangolin::Pushed(play)) {
             video.Play(realtime);
             input.PlayBuffer(0,input.Size()-1);
+            input.SaveBuffer(ui_file);
         }
 
         if(pangolin::Pushed(source)) {
             video.Source();
             input.Stop();
+            input.SaveBuffer(ui_file);
         }
 
         d_panel.Render();
@@ -109,5 +112,5 @@ int main( int argc, char* argv[] )
         cout << endl << "Defaulting to video-uri=" << uri << endl;
     }
 
-    RecordSample(uri, filename);
+    RecordSample(uri, filename, filename + ".ui");
 }

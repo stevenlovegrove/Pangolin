@@ -53,15 +53,42 @@ void InputRecordRepeat::ClearBuffer()
     play_queue.clear();
 }
 
-void InputRecordRepeat::SaveBuffer(const std::string& filename)
+ostream& operator<<(ostream& os, const FrameInput& fi )
 {
-
+    os << fi.index << endl << fi.var << endl << fi.val << endl;
+    return os;
 }
 
+istream& operator>>(istream& is, FrameInput& fi)
+{
+    is >> fi.index;
+    is >> fi.var;
+    is >> fi.val;
+    return is;
+}
+
+void InputRecordRepeat::SaveBuffer(const std::string& filename)
+{
+    ofstream f(filename.c_str());
+
+    for( std::list<FrameInput>::const_iterator i = record_queue.begin(); i!=record_queue.end(); ++i )
+    {
+        f << *i;
+    }
+}
 
 void InputRecordRepeat::LoadBuffer(const std::string& filename)
 {
+    record_queue.clear();
 
+    ifstream f(filename.c_str());
+    while(f.good())
+    {
+        FrameInput fi;
+        f >> fi;
+        if( f.good() )
+            record_queue.push_back(fi);
+    }
 }
 
 void InputRecordRepeat::PlayBuffer()

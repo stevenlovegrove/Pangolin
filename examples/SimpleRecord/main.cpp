@@ -32,7 +32,7 @@ void RecordSample(const std::string uri, const std::string filename)
 
     unsigned char* rgb = new unsigned char[video.Width()*video.Height()*3];
 
-    for(int frame=0; !pangolin::ShouldQuit(); ++frame)
+    while( !pangolin::ShouldQuit() )
     {
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
