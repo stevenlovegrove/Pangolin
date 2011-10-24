@@ -32,7 +32,6 @@
 
 namespace pangolin
 {
-
     struct VideoException : std::exception
     {
         VideoException(std::string str) : desc(str) {}
@@ -43,6 +42,16 @@ namespace pangolin
         const char* what() const throw() { return desc.c_str(); }
         std::string desc;
     };
+
+    struct VideoPixelFormat
+    {
+        std::string format;
+        unsigned int channels;
+        unsigned int channel_size_bits;
+        size_t size_bytes;
+    };
+
+    VideoPixelFormat VideoFormatFromString(const std::string& format);
 
     //! Interface to video capture sources
     struct VideoInterface

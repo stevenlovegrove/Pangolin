@@ -42,8 +42,8 @@ VideoRecorder::VideoRecorder(
     strm0.name = "main";
     strm0.w = stream0_width;
     strm0.h = stream0_height;
-    strm0.fmt = stream0_fmt;
-    strm0.frame_size_bytes = stream0_width * stream0_height * 3 * sizeof(unsigned char);
+    strm0.fmt = VideoFormatFromString(stream0_fmt);
+    strm0.frame_size_bytes = strm0.w * strm0.h * strm0.fmt.size_bytes;
 
     stream_info.push_back(strm0);
 }
@@ -54,20 +54,9 @@ VideoRecorder::~VideoRecorder()
 
 void VideoRecorder::WriteFileHeader()
 {
-    // For single stream data (without any meta info), based loosely on
-    // http://www.cse.yorku.ca/~jgryn/research/pvnspecs.html
-
-    // colour (6) unsigned (a)
-    writer.file << "PV6a\n";
+    writer.file << stream_info[0].fmt.format << "\n";
     writer.file << stream_info[0].w  << "\n";
     writer.file << stream_info[0].h  << "\n";
-
-    // depth: 0 = streaming
-    writer.file << "0\n";
-
-    // bits per channel
-    writer.file << 8 << "\n";
-
     writer.file << "30.0\n";
 }
 

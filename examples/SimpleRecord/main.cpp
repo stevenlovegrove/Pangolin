@@ -71,8 +71,8 @@ int main( int argc, char* argv[] )
         cout << "\tvideo-uri:\tURI of file / device to extract video sequence from" << endl;
         cout << "\tfilename:\tfilename to record pvn video in to" << endl << endl;
         cout << "e.g." << endl;
-        cout << "\tSimpleRecord dc1394:[fps=30,dma=10,size=640x480,iso=400]//0 video.pvn" << endl;
-        cout << "\tSimpleRecord v4l:///dev/video0 video.pvn" << endl;
+        cout << "\tSimpleRecord dc1394:[fmt=RGB8,size=640x480,fps=30,iso=400,dma=10]//0 video.pvn" << endl;
+        cout << "\tSimpleRecord convert:[fmt=RGB8]//v4l:///dev/video0 video.pvn" << endl;
         cout << endl << "Defaulting to video-uri=" << uri << endl;
     }
 

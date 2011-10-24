@@ -14,6 +14,7 @@ void VideoSample(const std::string uri)
 {
     // Setup Video Source
     VideoInput video(uri);
+    VideoPixelFormat vid_fmt = VideoFormatFromString(video.PixFormat());
     const unsigned w = video.Width();
     const unsigned h = video.Height();
 
@@ -26,14 +27,14 @@ void VideoSample(const std::string uri)
     // OpenGl Texture for video frame
     GlTexture texVideo(w,h,GL_RGBA8);
 
-    unsigned char* rgb = new unsigned char[video.Width()*video.Height()*3];
+    unsigned char* img = new unsigned char[w*h*vid_fmt.size_bytes];
 
     for(int frame=0; !pangolin::ShouldQuit(); ++frame)
     {
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-        video.GrabNext(rgb,true);
-        texVideo.Upload(rgb,GL_RGB,GL_UNSIGNED_BYTE);
+        video.GrabNext(img,true);
+        texVideo.Upload(img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB, GL_UNSIGNED_BYTE);
 
         // Activate video viewport and render texture
         vVideo.Activate();
@@ -46,7 +47,7 @@ void VideoSample(const std::string uri)
         glutMainLoopEvent();
     }
 
-    delete[] rgb;
+    delete[] img;
 }
 
 
@@ -60,8 +61,9 @@ int main( int argc, char* argv[] )
         cout << "Usage:" << endl << "\tSimpleRecord [video-uri]" << endl;
         cout << "\tvideo-uri: URI of file / device to extract video sequence from" << endl << endl;
         cout << "e.g." << endl;
-        cout << "\tSimpleRecord dc1394:[fps=30,dma=10,size=640x480,iso=400]//0" << endl;
-        cout << "\tSimpleRecord v4l:///dev/video0" << endl;
+        cout << "\tSimpleRecord dc1394:[fmt=RGB8,size=640x480,fps=30,iso=400,dma=10]//0" << endl;
+        cout << "\tSimpleRecord dc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << endl;
+        cout << "\tSimpleRecord convert:[fmt=RGB8]//v4l:///dev/video0" << endl;
         cout << "\tSimpleRecord file:///media/Data/pictures/photos/Minnesota 2010/00021.MTS" << endl;
         cout << "\tSimpleRecord file:///home/sl203/videos/YellowPattern1/test-0000000017.ppm" << endl;
         cout << endl << "Defaulting to video-uri=" << uri << endl;

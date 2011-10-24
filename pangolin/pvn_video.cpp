@@ -48,23 +48,18 @@ PvnVideo::~PvnVideo()
 
 void PvnVideo::ReadFileHeader()
 {
-    string magic;
-    int num_frames;
-    int bits_per_channel;
+    string sfmt;
     float framerate;
 
     VideoStream strm0;
-
-    file >> magic;
+    file >> sfmt;
     file >> strm0.w;
     file >> strm0.h;
-    file >> num_frames;
-    file >> bits_per_channel;
     file >> framerate;
     file.get();
 
-    strm0.fmt = "RGB8";
-    strm0.frame_size_bytes = strm0.w * strm0.h * 3 * sizeof(unsigned char);
+    strm0.fmt = VideoFormatFromString(sfmt);
+    strm0.frame_size_bytes = strm0.w * strm0.h * strm0.fmt.size_bytes;
     frame_interval = TimeFromSeconds( 1.0 / framerate);
 
     stream_info.push_back(strm0);
@@ -91,7 +86,7 @@ unsigned PvnVideo::Height() const
 
 std::string PvnVideo::PixFormat() const
 {
-    return stream_info[0].fmt;
+    return stream_info[0].fmt.format;
 }
 
 bool PvnVideo::GrabNext( unsigned char* image, bool /*wait*/ )

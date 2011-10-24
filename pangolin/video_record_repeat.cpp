@@ -38,7 +38,7 @@ void VideoRecordRepeat::Record()
 
     video_recorder = new VideoRecorder(
         filename, video_src->Width(), video_src->Height(),
-        "RGB24", buffer_size_bytes
+        video_src->PixFormat(), buffer_size_bytes
     );
 
     video_src->Start();

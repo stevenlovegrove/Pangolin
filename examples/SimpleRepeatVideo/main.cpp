@@ -16,6 +16,7 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
 {
     // Setup Video Source
     VideoRecordRepeat video(uri, vid_file, 1024*1024*200);
+    VideoPixelFormat vid_fmt = VideoFormatFromString(video.PixFormat());
     const unsigned w = video.Width();
     const unsigned h = video.Height();
 
@@ -37,7 +38,7 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
     // OpenGl Texture for video frame
     GlTexture texVideo(w,h,GL_RGBA8);
 
-    unsigned char* rgb = new unsigned char[video.Width()*video.Height()*3];
+    unsigned char* img = new unsigned char[w*h*vid_fmt.size_bytes];
 
     static Var<bool> record("ui.Record",false,false);
     static Var<bool> play("ui.Play",false,false);
@@ -50,8 +51,8 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
     while( !pangolin::ShouldQuit() )
     {
         // Load next video frame
-        video.GrabNext(rgb,true);
-        texVideo.Upload(rgb,GL_RGB,GL_UNSIGNED_BYTE);
+        video.GrabNext(img,true);
+        texVideo.Upload(img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB, GL_UNSIGNED_BYTE);
 
         // Associate input with this video frame
         input.SetIndex(video.FrameId());
@@ -89,7 +90,7 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
         glutMainLoopEvent();
     }
 
-    delete[] rgb;
+    delete[] img;
 }
 
 int main( int argc, char* argv[] )
@@ -103,12 +104,13 @@ int main( int argc, char* argv[] )
             filename = std::string(argv[2]);
         }
     }else{
-        cout << "Usage:" << endl << "\tSimpleRecord video-uri filename" << endl;
+        cout << "Usage:" << endl << "\tSimpleRepeatVideo video-uri filename" << endl;
         cout << "\tvideo-uri:\tURI of file / device to extract video sequence from" << endl;
         cout << "\tfilename:\tfilename to record pvn video in to" << endl << endl;
         cout << "e.g." << endl;
-        cout << "\tSimpleRecord dc1394:[fps=30,dma=10,size=640x480,iso=400]//0 video.pvn" << endl;
-        cout << "\tSimpleRecord v4l:///dev/video0 video.pvn" << endl;
+        cout << "\tSimpleRepeatVideo dc1394:[fmt=RGB8,size=640x480,fps=30,iso=400,dma=10]//0 video.pvn" << endl;
+        cout << "\tSimpleRepeatVideo dc1394:[fmt=FORMAT7_2,size=640x480,pos=2+2,iso=400,dma=10]//0" << endl;
+        cout << "\tSimpleRepeatVideo convert:[fmt=RGB8]//v4l:///dev/video0 video.pvn" << endl;
         cout << endl << "Defaulting to video-uri=" << uri << endl;
     }
 

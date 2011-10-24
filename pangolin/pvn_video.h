@@ -39,7 +39,7 @@ namespace pangolin
 struct VideoStream
 {
     std::string name;
-    std::string fmt;
+    VideoPixelFormat fmt;
     int w,h;
     int frame_size_bytes;
 };
