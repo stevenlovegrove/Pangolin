@@ -100,3 +100,36 @@ CONFIGURE_FILE(
   "${CMAKE_CURRENT_BINARY_DIR}/config.h"
 )
 INCLUDE_DIRECTORIES("${PROJECT_BINARY_DIR}")
+
+#######################################################
+## Define headers files associated with the install target 
+SET(INSTALL_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h 
+	cg.h 
+	display.h 
+	display_internal.h 
+	ffmpeg.h 
+	firewire.h 
+	gl.h 
+	glcuda.h 
+	pangolin.h 
+	platform.h 
+	plotter.h 
+	simple_math.h 
+	v4l.h 
+	vars.h 
+	vars_internal.h 
+	video.h 
+	widgets.h
+)
+
+# install headers
+INSTALL(FILES ${INSTALL_HEADERS} 
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
+)
+
+# install library
+INSTALL(TARGETS ${LIBRARY_NAME}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+)
