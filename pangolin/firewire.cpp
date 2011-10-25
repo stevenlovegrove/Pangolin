@@ -722,15 +722,6 @@ void FirewireVideo::SetShutterTime(float val){
 	}
 }
 
-float FirewireVideo::GetGain() const
-{
-    float gain;
-    err = dc1394_feature_get_absolute_value(camera,DC1394_FEATURE_GAIN,&gain);
-    if( err != DC1394_SUCCESS )
-        throw VideoException("Failed to read gain");
-    return gain;
-}
-
 float FirewireVideo::GetGamma() const
 {
     float gamma;
