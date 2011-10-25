@@ -44,8 +44,6 @@ int main( int /*argc*/, char* argv[] )
 
     static Var<double> tinc("ui.t inc",0.01,0,0.1);
 
-
-
     log.Log(sin(t),cos(t),tan(t),sin(t)+cos(t));
     t += tinc;
 

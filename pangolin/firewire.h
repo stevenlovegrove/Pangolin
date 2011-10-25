@@ -39,6 +39,8 @@
 #include <unistd.h>
 #endif
 
+
+
 namespace pangolin
 {
 
@@ -47,7 +49,6 @@ std::string Dc1394ColorCodingToString(dc1394color_coding_t coding);
 dc1394color_coding_t Dc1394ColorCodingFromString(std::string coding);
 
 void Dc1394ModeDetails(dc1394video_mode_t mode, unsigned& w, unsigned& h, std::string& format );
-
 
 class FirewireFrame
 {
@@ -72,6 +73,9 @@ struct Guid
 class FirewireVideo : public VideoInterface
 {
 public:
+  const static int MAX_FR = -1;
+  const static int EXT_TRIG = -1;
+
   FirewireVideo(
     unsigned deviceid = 0,
     dc1394video_mode_t video_mode = DC1394_VIDEO_MODE_640x480_RGB8,
@@ -86,6 +90,26 @@ public:
     dc1394framerate_t framerate = DC1394_FRAMERATE_30,
     dc1394speed_t iso_speed = DC1394_ISO_SPEED_400,
     int dma_buffers = 10
+  );
+
+  FirewireVideo(
+      Guid guid,
+      dc1394video_mode_t video_mode,
+      int framerate,
+      uint32_t width, uint32_t height,
+      uint32_t left, uint32_t top,
+      dc1394speed_t iso_speed,
+      int dma_buffers, bool reset_at_boot=false
+  );
+
+  FirewireVideo(
+      unsigned deviceid,
+      dc1394video_mode_t video_mode,
+      int framerate,
+      uint32_t width, uint32_t height,
+      uint32_t left, uint32_t top,
+      dc1394speed_t iso_speed,
+      int dma_buffers, bool reset_at_boot=false
   );
 
   ~FirewireVideo();
@@ -125,19 +149,42 @@ public:
   //! invalidated on return.
   void PutFrame(FirewireFrame& frame);
 
-  float GetShutterTime() const;  
+  //! return absolute shutter value
+  float GetShutterTime() const;
 
-  float GetGamma() const;
+  //! set absolute shutter value
+  void SetShutterTime(float val);
 
+  //! set auto shutter value
+  void SetAutoShutterTime();
+
+  //! return absolute gain value
   float GetGain() const;
 
+  //! set absolute shutter value
+  void SetGain(float val);
 
-  void SetShutterTime(float shutter);
+  //! set auto shutter value
+  void SetAutoGain();
+
+  //! return absolute gamma value
+  float GetGamma() const;
+
+  //! return quantised shutter value
   void SetShutterTimeQuant(int shutter);
 
+  //! set the trigger to internal, i.e. determined by video mode
+  void SetInternalTrigger();
 
+  //! set the trigger to external
+  void SetExternalTrigger(
+      dc1394trigger_mode_t mode=DC1394_TRIGGER_MODE_0,
+      dc1394trigger_polarity_t polarity=DC1394_TRIGGER_ACTIVE_HIGH,
+      dc1394trigger_source_t source=DC1394_TRIGGER_SOURCE_0
+  );
 
 protected:
+
   void init_camera(
     uint64_t guid, int dma_frames,
     dc1394speed_t iso_speed,
@@ -145,13 +192,26 @@ protected:
     dc1394framerate_t framerate
   );
 
+  void init_format7_camera(
+      uint64_t guid, int dma_frames,
+      dc1394speed_t iso_speed,
+      dc1394video_mode_t video_mode,
+      int framerate,
+      uint32_t width, uint32_t height,
+      uint32_t left, uint32_t top, bool reset_at_boot
+  );
+
+  static int nearest_value(int value, int step, int min, int max);
+  static double bus_period_from_iso_speed(dc1394speed_t iso_speed);
+
   bool running;
   dc1394camera_t *camera;
-  unsigned width, height;
+  unsigned width, height, top, left;
   //dc1394featureset_t features;
   dc1394_t * d;
   dc1394camera_list_t * list;
   mutable dc1394error_t err;
+
 };
 
 }

@@ -172,10 +172,12 @@ struct _Var
   const char* type_name;
 
   bool generic;
+  std::string meta_full_name;
   std::string meta_friendly;
   double meta_range[2];
   double meta_increment;
   int meta_flags;
+  bool meta_gui_changed;
   bool logscale;
 };
 

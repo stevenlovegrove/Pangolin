@@ -44,6 +44,10 @@ void FirewireVideo::init_camera(
     dc1394video_mode_t video_mode,
     dc1394framerate_t framerate
     ) {
+
+    if(video_mode>=DC1394_VIDEO_MODE_FORMAT7_0)
+      throw VideoException("format7 modes need to be initialized through the constructor that allows for specifying the roi");
+
     camera = dc1394_camera_new (d, guid);
     if (!camera)
         throw VideoException("Failed to initialize camera");
@@ -55,11 +59,12 @@ void FirewireVideo::init_camera(
         dc1394_video_set_transmission(camera, DC1394_OFF);
     }
 
-//    cout << "Using camera with GUID " << camera->guid << endl;
 
-    /*-----------------------------------------------------------------------
-   *  setup capture
-   *-----------------------------------------------------------------------*/
+    cout << "Using camera with GUID " << camera->guid << endl;
+
+    //-----------------------------------------------------------------------
+    //  setup capture
+    //-----------------------------------------------------------------------
 
     if( iso_speed >= DC1394_ISO_SPEED_800)
     {
@@ -84,13 +89,179 @@ void FirewireVideo::init_camera(
     if( err != DC1394_SUCCESS )
         throw VideoException("Could not setup camera - check settings");
 
-    /*-----------------------------------------------------------------------
-   *  initialise width and height from mode
-   *-----------------------------------------------------------------------*/
+    //-----------------------------------------------------------------------
+    //  initialise width and height from mode
+    //-----------------------------------------------------------------------
     dc1394_get_image_size_from_video_mode(camera, video_mode, &width, &height);
 
     Start();
 }
+
+
+// Note:
+// the following was tested on a IIDC camera over USB therefore might not work as
+// well on a camera over proper firewire transport
+void FirewireVideo::init_format7_camera(
+    uint64_t guid, int dma_frames,
+    dc1394speed_t iso_speed,
+    dc1394video_mode_t video_mode,
+    int framerate,
+    uint32_t width, uint32_t height,
+    uint32_t left, uint32_t top, bool reset_at_boot
+    ) {
+
+    if(video_mode< DC1394_VIDEO_MODE_FORMAT7_0)
+        throw VideoException("roi can be specified only for format7 modes");
+
+    camera = dc1394_camera_new (d, guid);
+    if (!camera)
+        throw VideoException("Failed to initialize camera");
+
+    // Attempt to stop camera if it is already running
+    dc1394switch_t is_iso_on = DC1394_OFF;
+    dc1394_video_get_transmission(camera, &is_iso_on);
+    if (is_iso_on==DC1394_ON) {
+        dc1394_video_set_transmission(camera, DC1394_OFF);
+    }
+
+    cout << "Using camera with GUID " << camera->guid << endl;
+
+    if(reset_at_boot){
+      dc1394_camera_reset(camera);
+    }
+
+    //-----------------------------------------------------------------------
+    //  setup mode and roi
+    //-----------------------------------------------------------------------
+
+    if(iso_speed >= DC1394_ISO_SPEED_800)
+    {
+        err=dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
+        if( err != DC1394_SUCCESS )
+           throw VideoException("Could not set DC1394_OPERATION_MODE_1394B");
+    }
+
+    err=dc1394_video_set_iso_speed(camera, iso_speed);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Could not set iso speed");
+
+    // check that the required mode is actually supported
+    dc1394format7mode_t format7_info;
+
+    err = dc1394_format7_get_mode_info(camera, video_mode, &format7_info);
+    if( err != DC1394_SUCCESS )
+      throw VideoException("Could not get format7 mode info");
+
+    // safely set the video mode
+    err=dc1394_video_set_mode(camera, video_mode);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Could not set format7 video mode");
+
+    // set position to 0,0 so that setting any size within min and max is a valid command
+    err = dc1394_format7_set_image_position(camera, video_mode,0,0);
+    if( err != DC1394_SUCCESS )
+      throw VideoException("Could not set format7 image position");
+
+    // work out the desired image size
+    width = nearest_value(width, format7_info.unit_pos_x, 0, format7_info.max_size_x - left);
+    height = nearest_value(height, format7_info.unit_pos_y, 0, format7_info.max_size_y - top);
+
+    // set size
+    err = dc1394_format7_set_image_size(camera,video_mode,width,height);
+    if( err != DC1394_SUCCESS )
+      throw VideoException("Could not set format7 size");
+
+    // get the info again since many parameters depend on image size
+    err = dc1394_format7_get_mode_info(camera, video_mode, &format7_info);
+    if( err != DC1394_SUCCESS )
+      throw VideoException("Could not get format7 mode info");
+
+    // work out position of roi
+    left = nearest_value(left, format7_info.unit_size_x, format7_info.unit_size_x, format7_info.max_size_x - width);
+    top = nearest_value(top, format7_info.unit_size_y, format7_info.unit_size_y, format7_info.max_size_y - height);
+
+    // set roi position
+    err = dc1394_format7_set_image_position(camera,video_mode,left,top);
+    if( err != DC1394_SUCCESS )
+      throw VideoException("Could not set format7 size");
+
+    this->width = width;
+    this->height = height;
+    this->top = top;
+    this->left = left;
+
+    cout<<"roi: "<<left<<" "<<top<<" "<<width<<" "<<height<<"  ";
+
+
+    //-----------------------------------------------------------------------
+    //  setup frame rate
+    //-----------------------------------------------------------------------
+
+    if((framerate == MAX_FR)||(framerate == EXT_TRIG)){
+
+      err=dc1394_format7_set_packet_size(camera,video_mode, format7_info.max_packet_size);
+      if( err != DC1394_SUCCESS )
+        throw VideoException("Could not set format7 packet size");
+
+    } else {
+
+      // setting packet size to get the desired frame rate according to the libdc docs
+      // does not do the trick, so for now we support only max frame rate
+
+        throw VideoException("In format 7 only max frame rate is currently supported");
+      //      uint32_t depth;
+      //      err = dc1394_format7_get_data_depth(camera, video_mode, &depth);
+      //      if( err != DC1394_SUCCESS )
+      //        throw VideoException("Could not get format7 depth");
+      //
+      //      // the following is straight from the libdc docs
+      //      double bus_period = bus_period_from_iso_speed(iso_speed);
+      //
+      //      // work out the max number of packets that the bus can deliver
+      //      int num_packets = (int) (1.0/(bus_period*framerate) + 0.5);
+      //
+      //      if((num_packets > 4095)||(num_packets < 0))
+      //        throw VideoException("number of format7 packets out of range");
+      //
+      //      // work out what the packet size should be for the requested size and framerate
+      //      uint32_t packet_size = (width*964*depth + (num_packets*8) - 1)/(num_packets*8);
+      //      packet_size = nearest_value(packet_size,format7_info.unit_packet_size,format7_info.unit_packet_size,format7_info.max_packet_size);
+      //
+      //      if(packet_size > format7_info.max_packet_size){
+      //        throw VideoException("format7 requested frame rate and size exceed bus bandwidth");
+      //      }
+      //
+      //      err=dc1394_format7_set_packet_size(camera,video_mode, packet_size);
+      //      if( err != DC1394_SUCCESS ){
+      //        throw VideoException("Could not set format7 packet size");
+      //      }
+    }
+
+    // ask the camera what is the resulting framerate (this assume that such a rate is actually
+    // allowed by the shutter time)
+    err = dc1394_feature_set_power(camera,DC1394_FEATURE_FRAME_RATE,DC1394_OFF);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Could not turn off frame rate");
+
+    float value;
+    err=dc1394_feature_get_absolute_value(camera,DC1394_FEATURE_FRAME_RATE,&value);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Could not get framerate");
+
+    cout<<" framerate(shutter permitting):"<<value<<endl;
+
+    //-----------------------------------------------------------------------
+    //  setup capture
+    //-----------------------------------------------------------------------
+
+    err=dc1394_capture_setup(camera,dma_frames, DC1394_CAPTURE_FLAGS_DEFAULT);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Could not setup camera - check settings");
+
+    Start();
+
+}
+
 
 std::string Dc1394ColorCodingToString(dc1394color_coding_t coding)
 {
@@ -291,13 +462,30 @@ FirewireVideo::FirewireVideo(
     dc1394framerate_t framerate,
     dc1394speed_t iso_speed,
     int dma_buffers
+) :running(false),top(0),left(0)
+{
+    d = dc1394_new ();
+    if (!d)
+        throw VideoException("Failed to get 1394 bus");
+
+    init_camera(guid.guid,dma_buffers,iso_speed,video_mode,framerate);
+}
+
+FirewireVideo::FirewireVideo(
+    Guid guid,
+    dc1394video_mode_t video_mode,
+    int framerate,
+    uint32_t width, uint32_t height,
+    uint32_t left, uint32_t top,
+    dc1394speed_t iso_speed,
+    int dma_buffers, bool reset_at_boot
 ) :running(false)
 {
     d = dc1394_new ();
     if (!d)
-        throw VideoException("");
+        throw VideoException("Failed to get 1394 bus");
 
-    init_camera(guid.guid,dma_buffers,iso_speed,video_mode,framerate);
+    init_format7_camera(guid.guid,dma_buffers,iso_speed,video_mode,framerate,width,height,left,top, reset_at_boot);
 }
 
 FirewireVideo::FirewireVideo(
@@ -306,11 +494,11 @@ FirewireVideo::FirewireVideo(
     dc1394framerate_t framerate,
     dc1394speed_t iso_speed,
     int dma_buffers
-) :running(false)
+) :running(false),top(0),left(0)
 {
     d = dc1394_new ();
     if (!d)
-        throw VideoException("");
+        throw VideoException("Failed to get 1394 bus");
 
     err=dc1394_camera_enumerate (d, &list);
     if( err != DC1394_SUCCESS )
@@ -327,6 +515,38 @@ FirewireVideo::FirewireVideo(
     dc1394_camera_free_list (list);
 
     init_camera(guid,dma_buffers,iso_speed,video_mode,framerate);
+
+}
+
+FirewireVideo::FirewireVideo(
+    unsigned deviceid,
+    dc1394video_mode_t video_mode,
+    int framerate,
+    uint32_t width, uint32_t height,
+    uint32_t left, uint32_t top,
+    dc1394speed_t iso_speed,
+    int dma_buffers, bool reset_at_boot
+) :running(false)
+{
+    d = dc1394_new ();
+    if (!d)
+        throw VideoException("Failed to get 1394 bus");
+
+    err=dc1394_camera_enumerate (d, &list);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Failed to enumerate cameras");
+
+    if (list->num == 0)
+        throw VideoException("No cameras found");
+
+    if( deviceid >= list->num )
+        throw VideoException("Invalid camera index");
+
+    const uint64_t guid = list->ids[deviceid].guid;
+
+    dc1394_camera_free_list (list);
+
+    init_format7_camera(guid,dma_buffers,iso_speed,video_mode,framerate,width,height,left,top, reset_at_boot);
 
 }
 
@@ -417,29 +637,35 @@ void FirewireVideo::PutFrame(FirewireFrame& f)
     }
 }
 
-
-void FirewireVideo::SetShutterTime(float shutter)
-{
-
-    err = dc1394_feature_set_absolute_value(camera,DC1394_FEATURE_SHUTTER,shutter);
-
-    if( err != DC1394_SUCCESS )
-        throw VideoException("Failed to set shutter");
-
-
-}
-
-
 void FirewireVideo::SetShutterTimeQuant(int shutter)
 {
+    // TODO: Set mode as well
 
     err = dc1394_feature_set_value(camera,DC1394_FEATURE_SHUTTER,shutter);
 
     if( err != DC1394_SUCCESS )
         throw VideoException("Failed to set shutter");
+}
 
+float FirewireVideo::GetGain() const
+{
+    float gain;
+    err = dc1394_feature_get_absolute_value(camera,DC1394_FEATURE_GAIN,&gain);
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Failed to read gain");
+
+    return gain;
 
 }
+
+void FirewireVideo::SetAutoGain(){
+
+        dc1394error_t err = dc1394_feature_set_mode(camera, DC1394_FEATURE_GAIN, DC1394_FEATURE_MODE_AUTO);
+        if (err < 0) {
+                throw VideoException("Could not set auto gain mode");
+        }
+}
+
 
 float FirewireVideo::GetShutterTime() const
 {
@@ -449,7 +675,51 @@ float FirewireVideo::GetShutterTime() const
         throw VideoException("Failed to read shutter");
 
     return shutter;
+}
 
+
+void FirewireVideo::SetGain(float val){
+
+        dc1394error_t err = dc1394_feature_set_mode(camera, DC1394_FEATURE_GAIN, DC1394_FEATURE_MODE_MANUAL);
+        if (err < 0) {
+                throw VideoException("Could not set manual gain mode");
+        }
+
+        err = dc1394_feature_set_absolute_control(camera, DC1394_FEATURE_GAIN, DC1394_ON);
+        if (err < 0) {
+          throw VideoException("Could not set absolute control for gain");
+        }
+
+        err = dc1394_feature_set_absolute_value(camera, DC1394_FEATURE_GAIN, val);
+        if (err < 0) {
+                throw VideoException("Could not set gain value");
+        }
+}
+
+void FirewireVideo::SetAutoShutterTime(){
+
+	dc1394error_t err = dc1394_feature_set_mode(camera, DC1394_FEATURE_SHUTTER, DC1394_FEATURE_MODE_AUTO);
+	if (err < 0) {
+		throw VideoException("Could not set auto shutter mode");
+	}
+}
+
+void FirewireVideo::SetShutterTime(float val){
+
+	dc1394error_t err = dc1394_feature_set_mode(camera, DC1394_FEATURE_SHUTTER, DC1394_FEATURE_MODE_MANUAL);
+	if (err < 0) {
+		throw VideoException("Could not set manual shutter mode");
+	}
+
+	err = dc1394_feature_set_absolute_control(camera, DC1394_FEATURE_SHUTTER, DC1394_ON);
+	if (err < 0) {
+          throw VideoException("Could not set absolute control for shutter");
+        }
+
+	err = dc1394_feature_set_absolute_value(camera, DC1394_FEATURE_SHUTTER, val);
+	if (err < 0) {
+		throw VideoException("Could not set shutter value");
+	}
 }
 
 float FirewireVideo::GetGain() const
@@ -470,6 +740,37 @@ float FirewireVideo::GetGamma() const
     return gamma;
 }
 
+void FirewireVideo::SetInternalTrigger() 
+{
+    dc1394error_t err = dc1394_external_trigger_set_power(camera, DC1394_OFF);
+    if (err < 0) {
+        throw VideoException("Could not set internal trigger mode");
+    }
+}
+
+void FirewireVideo::SetExternalTrigger(dc1394trigger_mode_t mode, dc1394trigger_polarity_t polarity, dc1394trigger_source_t source)
+{
+    dc1394error_t err = dc1394_external_trigger_set_polarity(camera, polarity);
+    if (err < 0) {
+        throw VideoException("Could not set external trigger polarity");
+    }
+
+    err = dc1394_external_trigger_set_mode(camera, mode);
+    if (err < 0) {
+        throw VideoException("Could not set external trigger mode");
+    }
+
+    err = dc1394_external_trigger_set_source(camera, source);
+    if (err < 0) {
+        throw VideoException("Could not set external trigger source");
+    }
+
+    err = dc1394_external_trigger_set_power(camera, DC1394_ON);
+    if (err < 0) {
+        throw VideoException("Could not set external trigger power");
+    }
+}
+
 
 FirewireVideo::~FirewireVideo()
 {
@@ -480,6 +781,54 @@ FirewireVideo::~FirewireVideo()
     dc1394_capture_stop(camera);
     dc1394_camera_free(camera);
     dc1394_free (d);
+}
+
+
+int FirewireVideo::nearest_value(int value, int step, int min, int max) {
+
+  int low, high;
+
+  low=value-(value%step);
+  high=value-(value%step)+step;
+  if (low<min)
+    low=min;
+  if (high>max)
+    high=max;
+
+  if (abs(low-value)<abs(high-value))
+    return low;
+  else
+    return high;
+}
+
+double FirewireVideo::bus_period_from_iso_speed(dc1394speed_t iso_speed)
+{
+  double bus_period;
+
+  switch(iso_speed){
+    case DC1394_ISO_SPEED_3200:
+      bus_period = 15.625e-6;
+      break;
+    case DC1394_ISO_SPEED_1600:
+      bus_period = 31.25e-6;
+      break;
+    case DC1394_ISO_SPEED_800:
+      bus_period = 62.5e-6;
+      break;
+    case DC1394_ISO_SPEED_400:
+       bus_period = 125e-6;
+       break;
+    case DC1394_ISO_SPEED_200:
+       bus_period = 250e-6;
+       break;
+    case DC1394_ISO_SPEED_100:
+       bus_period = 500e-6;
+       break;
+    default:
+      throw VideoException("iso speed not valid");
+    }
+
+  return bus_period;
 }
 
 }

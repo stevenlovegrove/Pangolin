@@ -1,12 +1,41 @@
+/* This file is part of the Pangolin Project.
+ * http://github.com/stevenlovegrove/Pangolin
+ *
+ * Copyright (c) 2011 Steven Lovegrove
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 #include "video.h"
 
 #include "firewire.h"
 #include "v4l.h"
 #include "ffmpeg.h"
+#include "pvn_video.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/foreach.hpp>
 #define foreach BOOST_FOREACH
 
@@ -122,6 +151,23 @@ VideoUri ParseUri(string str_uri)
 #ifdef HAVE_FFMPEG
 #include "ffmpeg.h"
 
+dc1394video_mode_t get_firewire_format7_mode(const string fmt)
+{
+    const string FMT7_prefix = "FORMAT7_";
+
+    if( algorithm::starts_with(fmt, FMT7_prefix) )
+    {
+        int fmt7_mode = 0;
+        std::istringstream iss( fmt.substr(FMT7_prefix.size()) );
+        iss >> fmt7_mode;
+        if( !iss.fail() ) {
+            return (dc1394video_mode_t)(DC1394_VIDEO_MODE_FORMAT7_0 + fmt7_mode);
+        }
+    }
+
+    throw VideoException("Unknown video mode");
+}
+
 dc1394video_mode_t get_firewire_mode(unsigned width, unsigned height, const string fmt)
 {
     for( dc1394video_mode_t video_mode=DC1394_VIDEO_MODE_MIN; video_mode<DC1394_VIDEO_MODE_MAX; video_mode = (dc1394video_mode_t)(video_mode +1) )
@@ -152,26 +198,37 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 #endif
 
-void VideoInput::Open(std::string str_uri)
+VideoInterface* OpenVideo(std::string str_uri)
 {
-    VideoUri uri = ParseUri(str_uri);
+  VideoInterface* video = 0;
 
-    if(video) {
-        delete video;
-        video = 0;
-    }
+  VideoUri uri = ParseUri(str_uri);
 
 #ifdef HAVE_FFMPEG
-    if(!uri.scheme.compare("file")) {
-        video = new FfmpegVideo(uri.url.c_str());
+    if(!uri.scheme.compare("file") ) {
+        if( algorithm::ends_with(uri.url,"pvn") ) {
+            bool realtime = false;
+            if(uri.params.find("realtime")!=uri.params.end()){
+                std::istringstream iss(uri.params["realtime"]);
+                iss >> realtime;
+            }
+            video = new PvnVideo(uri.url.c_str(), realtime);
+        }else{
+            video = new FfmpegVideo(uri.url.c_str());
+        }
+    }else if( !uri.scheme.compare("convert") ) {
+        VideoInterface* subvid = OpenVideo(uri.url);
+        video = new FfmpegConverter(subvid,"RGB24",FFMPEG_FAST_BILINEAR);
     }else
-#endif
+#endif //HAVE_FFMPEG
     if(!uri.scheme.compare("v4l")) {
         video = new V4lVideo(uri.url.c_str());
     }else
 #ifdef HAVE_DC1394
     if(!uri.scheme.compare("firewire") || !uri.scheme.compare("dc1394") ) {
         // Default parameters
+        int desired_x = 0;
+        int desired_y = 0;
         int desired_width = 640;
         int desired_height = 480;
         int desired_dma = 10;
@@ -190,6 +247,12 @@ void VideoInput::Open(std::string str_uri)
             iss.get();
             iss >> desired_height;
         }
+        if(uri.params.find("pos")!=uri.params.end()){
+            std::istringstream iss(uri.params["pos"]);
+            iss >> desired_x;
+            iss.get();
+            iss >> desired_y;
+        }
         if(uri.params.find("dma")!=uri.params.end()){
             std::istringstream iss(uri.params["dma"]);
             iss >> desired_dma;
@@ -205,30 +268,79 @@ void VideoInput::Open(std::string str_uri)
 
         Guid guid = 0;
         unsigned deviceid = 0;
-        dc1394video_mode_t video_mode = get_firewire_mode(desired_width,desired_height,desired_format);
         dc1394framerate_t framerate = get_firewire_framerate(desired_fps);
         dc1394speed_t iso_speed = (dc1394speed_t)(log(desired_iso/100) / log(2));
         int dma_buffers = desired_dma;
 
-        if( guid.guid == 0 )
+        if( algorithm::starts_with(desired_format, "FORMAT7") )
         {
-            video = new FirewireVideo(deviceid,video_mode,framerate,iso_speed,dma_buffers);
+            dc1394video_mode_t video_mode = get_firewire_format7_mode(desired_format);
+            if( guid.guid == 0 ) {
+                video = new FirewireVideo(deviceid,video_mode,FirewireVideo::MAX_FR,desired_width, desired_height, desired_x, desired_y, iso_speed, dma_buffers,true);
+            }else{
+                video = new FirewireVideo(guid,video_mode,FirewireVideo::MAX_FR,desired_width, desired_height, desired_x, desired_y, iso_speed, dma_buffers,true);
+            }
         }else{
-            video = new FirewireVideo(guid,video_mode,framerate,iso_speed,dma_buffers);
+            dc1394video_mode_t video_mode = get_firewire_mode(desired_width,desired_height,desired_format);
+            if( guid.guid == 0 ) {
+                video = new FirewireVideo(deviceid,video_mode,framerate,iso_speed,dma_buffers);
+            }else{
+                video = new FirewireVideo(guid,video_mode,framerate,iso_speed,dma_buffers);
+            }
         }
     }else
-#endif
+#endif //HAVE_DC1394
     {
         throw VideoException("Unable to open video URI");
     }
 
-#ifdef HAVE_FFMPEG
-    if( dynamic_cast<FfmpegVideo*>(video) == 0 &&
-        video->PixFormat().compare("RGB8") != 0 )
+    return video;
+}
+
+// TODO: Find better way!
+VideoPixelFormat VideoFormatFromString(const std::string& format)
+{
+    VideoPixelFormat pixformat;
+
+    pixformat.format = format;
+    pixformat.channel_size_bits = 8;
+    pixformat.channels = 1;
+
+    unsigned n = format.find_first_of("0123456789");
+    if( n != format.npos )
     {
-        video = new FfmpegConverter(video,"RGB24",FFMPEG_FAST_BILINEAR);
+        int bits;
+        std::istringstream iss(format.substr(n));
+        iss >> bits;
+        if( !iss.bad() ) {
+            if( bits % 8 == 0 )
+                pixformat.channel_size_bits = bits;
+        }
     }
-#endif
+
+    if( algorithm::starts_with(format,"RGB") ) {
+        pixformat.channels = 3;
+    }else if( algorithm::starts_with(format,"BGR") ) {
+        pixformat.channels = 3;
+    }else if( algorithm::starts_with(format,"YUV") ) {
+        pixformat.channels = 3;
+    }else if( algorithm::starts_with(format,"RGBA") ) {
+        pixformat.channels = 4;
+    }
+
+    pixformat.size_bytes = pixformat.channels * pixformat.channel_size_bits / 8;
+
+    return pixformat;
+}
+
+
+void VideoInput::Open(std::string uri)
+{
+    if(video) {
+        delete video;
+        video = 0;
+    }
+    video = OpenVideo(uri);
 }
 
 unsigned VideoInput::Width() const

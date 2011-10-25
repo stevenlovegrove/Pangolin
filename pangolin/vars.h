@@ -87,6 +87,9 @@ void ParseVarsFile(const std::string& filename);
 typedef void (*NewVarCallbackFn)(void* data, const std::string& name, _Var& var, const char* reg_type_name, bool brand_new);
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter = "");
 
+typedef void (*GuiVarChangedCallbackFn)(void* data, const std::string& name, _Var& var);
+void RegisterGuiVarChangedCallback(GuiVarChangedCallbackFn callback, void* data, const std::string& filter = "");
+
 template<typename T>
 T FromFile( const std::string& filename, const T& init = T());
 
@@ -182,8 +185,18 @@ struct NewVarCallback
   void* data;
 };
 
+struct GuiVarChangedCallback
+{
+  GuiVarChangedCallback(const std::string& filter, GuiVarChangedCallbackFn fn, void* data)
+    :filter(filter),fn(fn),data(data) {}
+  std::string filter;
+  GuiVarChangedCallbackFn fn;
+  void* data;
+};
+
 extern boost::ptr_unordered_map<std::string,_Var> vars;
-extern std::vector<NewVarCallback> callbacks;
+extern std::vector<NewVarCallback> new_var_callbacks;
+extern std::vector<GuiVarChangedCallback> gui_var_changed_callbacks;
 
 template<typename T>
 inline void Var<T>::Init(const std::string& name,
@@ -211,15 +224,17 @@ inline void Var<T>::Init(const std::string& name,
       default_value = a->Get();
 
     }else{
-      // Meta info for variable
-      var->meta_friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
-      var->meta_range[0] = min;
-      var->meta_range[1] = max;
-      var->meta_flags = flags;
-      var->logscale = logscale;
+//      // Meta info for variable
+//      var->meta_full_name = name;
+//      var->meta_friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
+//      var->meta_range[0] = min;
+//      var->meta_range[1] = max;
+//      var->meta_flags = flags;
+//      var->logscale = logscale;
+//      var->meta_gui_changed = false;
 
       // notify those watching new variables
-      BOOST_FOREACH(NewVarCallback& nvc, callbacks)
+      BOOST_FOREACH(NewVarCallback& nvc, new_var_callbacks)
           if( boost::starts_with(name,nvc.filter) )
           nvc.fn(nvc.data,name,*var, typeid(T).name(), false);
       return;
@@ -265,15 +280,17 @@ inline void Var<T>::Init(const std::string& name,
     delete da;
 
     // Meta info for variable
+    var->meta_full_name = name;
     var->meta_friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
     var->meta_range[0] = min;
     var->meta_range[1] = max;
     var->meta_flags = flags;
     var->generic = false;
     var->logscale = logscale;
+    var->meta_gui_changed = false;
 
     // notify those watching new variables
-    BOOST_FOREACH(NewVarCallback& nvc, callbacks)
+    BOOST_FOREACH(NewVarCallback& nvc, new_var_callbacks)
         if( boost::starts_with(name,nvc.filter) )
         nvc.fn(nvc.data,name,*var, typeid(T).name(), true);
   }

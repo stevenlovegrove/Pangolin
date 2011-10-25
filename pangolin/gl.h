@@ -37,6 +37,8 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 
+#include <math.h>
+
 namespace pangolin
 {
 
@@ -87,6 +89,10 @@ struct GlFramebuffer
   GLuint fbid;
   unsigned attachments;
 };
+
+void glColorHSV( double hue, double s, double v );
+
+void glColorBin( int bin, int max_bins, double sat = 1.0, double val = 1.0 );
 
 
 ////////////////////////////////////////////////
@@ -263,6 +269,41 @@ inline void GlFramebuffer::Unbind() const
 {
   glDrawBuffers( 1, attachment_buffers );
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+}
+
+// h [0,360)
+// s [0,1]
+// v [0,1]
+inline void glColorHSV( double hue, double s, double v )
+{
+  const double h = hue / 60.0;
+  const int i = floor(h);
+  const double f = (i%2 == 0) ? 1-(h-i) : h-i;
+  const double m = v * (1-s);
+  const double n = v * (1-s*f);
+  switch(i)
+  {
+  case 0: glColor3d(v,n,m); break;
+  case 1: glColor3d(n,v,m); break;
+  case 2: glColor3d(m,v,n); break;
+  case 3: glColor3d(m,n,v); break;
+  case 4: glColor3d(n,m,v); break;
+  case 5: glColor3d(v,m,n); break;
+  default:
+    break;
+  }
+
+}
+
+inline void glColorBin( int bin, int max_bins, double sat, double val )
+{
+  if( bin >= 0 )
+  {
+    const double hue = (double)(bin%max_bins) * 360.0 / (double)max_bins;
+    glColorHSV(hue,sat,val);
+  }else{
+    glColor3f(1,1,1);
+  }
 }
 
 
