@@ -637,6 +637,16 @@ void FirewireVideo::PutFrame(FirewireFrame& f)
     }
 }
 
+void FirewireVideo::SetShutterTimeQuant(int shutter)
+{
+    // TODO: Set mode as well
+
+    err = dc1394_feature_set_value(camera,DC1394_FEATURE_SHUTTER,shutter);
+
+    if( err != DC1394_SUCCESS )
+        throw VideoException("Failed to set shutter");
+}
+
 float FirewireVideo::GetGain() const
 {
     float gain;
