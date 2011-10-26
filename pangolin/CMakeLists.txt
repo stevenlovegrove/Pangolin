@@ -17,7 +17,7 @@ SET(
   ffmpeg.h ffmpeg.cpp
   pvn_video.h pvn_video.cpp
   video_recorder.h video_recorder.cpp
-  threaded_file_writer.h threaded_file_writer.cpp
+  threadedfilebuf.h threadedfilebuf.cpp
   timer.h
   video_record_repeat.h video_record_repeat.cpp
   input_record_repeat.h input_record_repeat.cpp
