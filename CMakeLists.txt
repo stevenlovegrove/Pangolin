@@ -6,7 +6,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules/")
 
 IF (CMAKE_COMPILER_IS_GNUCXX )
-  ADD_DEFINITIONS("-Wall -Wno-error=deprecated-declarations -Werror")
+#  ADD_DEFINITIONS("-Wall -Wno-error=deprecated-declarations -Werror")
+  ADD_DEFINITIONS("-Wall -Wno-error=deprecated-declarations")
 ENDIF()
 
 OPTION(BUILD_EXAMPLES "Build Examples" ON)
