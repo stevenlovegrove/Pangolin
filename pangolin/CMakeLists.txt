@@ -75,9 +75,11 @@ IF(FFMPEG_FOUND)
   MESSAGE(STATUS "ffmpeg Found and Enabled")
 ENDIF()
 
-FIND_PACKAGE(TOON QUIET)
-IF(TOON_FOUND)
+FIND_PACKAGE(TooN QUIET)
+IF(TooN_FOUND)
   SET(HAVE_TOON 1)
+  INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${TooN_INCLUDE_DIR} )
+  MESSAGE(STATUS "TooN Found and Enabled")
 ENDIF()
 
 ## Apply required dependencies settings

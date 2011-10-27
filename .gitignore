@@ -1,0 +1,4 @@
+build
+debug
+cmake_uninstall.cmake
+CMakeLists.txt.user

@@ -40,6 +40,7 @@
 #endif
 
 #ifdef HAVE_TOON
+#include <cstring>
 #include <TooN/TooN.h>
 #include <TooN/se3.h>
 #endif
@@ -359,7 +360,7 @@ inline GLfloat Viewport::aspect() const { return (GLfloat)w / (GLfloat)h; }
 
 #ifdef HAVE_TOON
 
-OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw)
+inline OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw)
 {
     TooN::Matrix<4,4,double,TooN::ColMajor> M;
     M.slice<0,0,3,3>() = T_cw.get_rotation().get_matrix();
@@ -368,11 +369,11 @@ OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw)
 
     OpenGlMatrixSpec P;
     P.type = GlModelViewStack;
-    memcpy(P.m, &(M[0][0]),16*sizeof(double));
+    std::memcpy(P.m, &(M[0][0]),16*sizeof(double));
     return P;
 }
 
-OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M)
+inline OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M)
 {
     // Read in remembering col-major convension for our matrices
     OpenGlMatrixSpec P;
