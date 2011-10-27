@@ -60,35 +60,35 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
     if( num_bytes > mem_max_size )
         throw exception();
 
-    update_mutex.lock();
-
-    // wait until there is space to write into buffer
-    while( mem_size + num_bytes > mem_max_size ) {
-        cond_dequeued.wait(update_mutex);
-    }
-
-    // add image to end of mem_buffer
-    const int array_a_size =
-        (mem_start <= mem_end) ? (mem_max_size - mem_end) : (mem_start - mem_end);
-
-    if( num_bytes <= array_a_size )
     {
-        // copy in one
-        memcpy(mem_buffer + mem_end, data, num_bytes);
-        mem_end += num_bytes;
-        mem_size += num_bytes;
-    }else{
-        const int array_b_size = num_bytes - array_a_size;
-        memcpy(mem_buffer + mem_end, data, array_a_size);
-        memcpy(mem_buffer, data+array_a_size, array_b_size);
-        mem_end = array_b_size;
-        mem_size += num_bytes;
+        boost::unique_lock<boost::mutex> lock(update_mutex);
+
+        // wait until there is space to write into buffer
+        while( mem_size + num_bytes > mem_max_size ) {
+            cond_dequeued.wait(lock);
+        }
+
+        // add image to end of mem_buffer
+        const int array_a_size =
+            (mem_start <= mem_end) ? (mem_max_size - mem_end) : (mem_start - mem_end);
+
+        if( num_bytes <= array_a_size )
+        {
+            // copy in one
+            memcpy(mem_buffer + mem_end, data, num_bytes);
+            mem_end += num_bytes;
+            mem_size += num_bytes;
+        }else{
+            const int array_b_size = num_bytes - array_a_size;
+            memcpy(mem_buffer + mem_end, data, array_a_size);
+            memcpy(mem_buffer, data+array_a_size, array_b_size);
+            mem_end = array_b_size;
+            mem_size += num_bytes;
+        }
+
+        if(mem_end == mem_max_size)
+            mem_end = 0;
     }
-
-    if(mem_end == mem_max_size)
-        mem_end = 0;
-
-    update_mutex.unlock();
 
     cond_queued.notify_one();
 
@@ -101,17 +101,17 @@ void threadedfilebuf::operator()()
 
     while(true)
     {
-        update_mutex.lock();
+        {
+            boost::unique_lock<boost::mutex> lock(update_mutex);
 
-        while( mem_size == 0 )
-            cond_queued.wait(update_mutex);
+            while( mem_size == 0 )
+                cond_queued.wait(lock);
 
-        data_to_write =
-                (mem_start < mem_end) ?
-                    mem_end - mem_start :
-                    mem_max_size - mem_start;
-
-        update_mutex.unlock();
+            data_to_write =
+                    (mem_start < mem_end) ?
+                        mem_end - mem_start :
+                        mem_max_size - mem_start;
+        }
 
         std::streamsize bytes_written =
             file.sputn(mem_buffer + mem_start, data_to_write );
@@ -119,15 +119,15 @@ void threadedfilebuf::operator()()
         if( bytes_written != data_to_write)
             throw std::exception();
 
-        update_mutex.lock();
+        {
+            boost::unique_lock<boost::mutex> lock(update_mutex);
 
-        mem_size -= data_to_write;
-        mem_start += data_to_write;
+            mem_size -= data_to_write;
+            mem_start += data_to_write;
 
-        if(mem_start == mem_max_size)
-            mem_start = 0;
-
-        update_mutex.unlock();
+            if(mem_start == mem_max_size)
+                mem_start = 0;
+        }
 
         cond_dequeued.notify_all();
     }
