@@ -54,7 +54,7 @@ namespace pangolin
 class FfmpegVideo : public VideoInterface
 {
 public:
-    FfmpegVideo(const char* filename, const std::string strfmtout = "rgb24");
+    FfmpegVideo(const std::string filename, const std::string strfmtout = "rgb24");
     ~FfmpegVideo();
 
     //! Implement VideoSource::Start()

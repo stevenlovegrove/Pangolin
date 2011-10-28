@@ -68,7 +68,7 @@ ostream& operator<< (ostream &out, VideoUri &uri)
 
 
 VideoInput::VideoInput()
-    : video(0)
+    : uri(""), video(0)
 {
 }
 
@@ -209,7 +209,7 @@ VideoInterface* OpenVideo(std::string str_uri)
   VideoUri uri = ParseUri(str_uri);
 
 #ifdef HAVE_FFMPEG
-    if(!uri.scheme.compare("file") ) {
+    if(!uri.scheme.compare("file") || !uri.scheme.compare("files") ) {
         if( algorithm::ends_with(uri.url,"pvn") ) {
             bool realtime = true;
             if(uri.params.find("realtime")!=uri.params.end()){
@@ -340,11 +340,18 @@ VideoPixelFormat VideoFormatFromString(const std::string& format)
 
 void VideoInput::Open(std::string uri)
 {
+    this->uri = uri;
+
     if(video) {
         delete video;
         video = 0;
     }
     video = OpenVideo(uri);
+}
+
+void VideoInput::Reset()
+{
+    Open(uri);
 }
 
 unsigned VideoInput::Width() const

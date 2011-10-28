@@ -118,14 +118,17 @@ std::string FfmpegFmtToString(const PixelFormat fmt)
 
 #undef TEST_PIX_FMT_RETURN
 
-FfmpegVideo::FfmpegVideo(const char *filename, const std::string strfmtout)
+FfmpegVideo::FfmpegVideo(const std::string filename, const std::string strfmtout)
     :pFormatCtx(0)
 {
+    if( filename.find('*') != filename.npos )
+        throw VideoException("Wildcards not supported. Please use ffmpegs printf style formatting for image sequences. e.g. img-000000%04d.ppm");
+
     // Register all formats and codecs
     av_register_all();
 
     // Open video file
-    if(av_open_input_file(&pFormatCtx, filename, NULL, 0, NULL)!=0)
+    if(av_open_input_file(&pFormatCtx, filename.c_str(), NULL, 0, NULL)!=0)
         throw VideoException("Couldn't open file");
 
     // Retrieve stream information
@@ -133,7 +136,7 @@ FfmpegVideo::FfmpegVideo(const char *filename, const std::string strfmtout)
         throw VideoException("Couldn't find stream information");
 
     // Dump information about file onto standard error
-    dump_format(pFormatCtx, 0, filename, false);
+    dump_format(pFormatCtx, 0, filename.c_str(), false);
 
     // Find the first video stream
     videoStream=-1;
