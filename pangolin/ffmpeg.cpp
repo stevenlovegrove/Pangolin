@@ -29,13 +29,6 @@
 
 #ifdef HAVE_FFMPEG
 
-// Not defined in Ubuntu 11.10
-#ifndef CODEC_TYPE_VIDEO
-#define PANGO_USE_NEW_FFMPEG
-#define CODEC_TYPE_VIDEO AVMEDIA_TYPE_VIDEO
-#define CODEC_TYPE_AUDIO AVMEDIA_TYPE_AUDIO
-#endif // CODEC_TYPE_VIDEO
-
 namespace pangolin
 {
 
@@ -147,10 +140,10 @@ FfmpegVideo::FfmpegVideo(const char *filename, const std::string strfmtout)
     audioStream=-1;
     for(unsigned i=0; i<pFormatCtx->nb_streams; i++)
     {
-        if(pFormatCtx->streams[i]->codec->codec_type==CODEC_TYPE_VIDEO)
+        if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO)
         {
             videoStream=i;
-        }else if(pFormatCtx->streams[i]->codec->codec_type==CODEC_TYPE_AUDIO)
+        }else if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_AUDIO)
         {
             audioStream=i;
         }
@@ -256,11 +249,7 @@ bool FfmpegVideo::GrabNext(unsigned char* image, bool /*wait*/)
         if(packet.stream_index==videoStream)
         {
             // Decode video frame
-#ifdef PANGO_USE_NEW_FFMPEG
             avcodec_decode_video2(pVidCodecCtx, pFrame, &gotFrame, &packet);
-#else
-            avcodec_decode_video(pVidCodecCtx, pFrame, &gotFrame, packet.data, packet.size);
-#endif
         }
 
         // Did we get a video frame?
