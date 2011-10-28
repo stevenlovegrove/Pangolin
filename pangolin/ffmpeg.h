@@ -74,6 +74,12 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
 
 protected:
+    void InitFile(const std::string filename, const std::string strfmtout = "rgb24");
+    void InitMjpeg(const std::string filename, const std::string strfmtout = "rgb24");
+
+    URLContext* pUrlCtx;
+    ByteIOContext* pIoCtx;
+
     AVFormatContext *pFormatCtx;
     int             videoStream;
     int             audioStream;
