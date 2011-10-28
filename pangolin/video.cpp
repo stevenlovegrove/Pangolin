@@ -89,11 +89,15 @@ VideoUri ParseUri(string str_uri)
 
     // Find Scheme delimiter
     size_t ns = str_uri.find_first_of(':');
-    if( ns == string::npos )
+    if( ns != string::npos )
     {
-        throw VideoException("Bad video URI","no device scheme specified");
+        uri.scheme = str_uri.substr(0,ns);
+    }else{
+//        throw VideoException("Bad video URI","no device scheme specified");
+        uri.scheme = "file";
+        uri.url = str_uri;
+        return uri;
     }
-    uri.scheme = str_uri.substr(0,ns);
 
     // Find url delimiter
     size_t nurl = str_uri.find_first_of("//",ns+1);
@@ -207,7 +211,7 @@ VideoInterface* OpenVideo(std::string str_uri)
 #ifdef HAVE_FFMPEG
     if(!uri.scheme.compare("file") ) {
         if( algorithm::ends_with(uri.url,"pvn") ) {
-            bool realtime = false;
+            bool realtime = true;
             if(uri.params.find("realtime")!=uri.params.end()){
                 std::istringstream iss(uri.params["realtime"]);
                 iss >> realtime;
