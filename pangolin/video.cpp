@@ -127,26 +127,28 @@ VideoUri ParseUri(string str_uri)
             }
         }
 
-        // Find parameter delimiter
-        size_t nq = str_uri.find_first_of('?',nurl+2);
-        if(nq == string::npos)
-        {
-            uri.url = str_uri.substr(nurl+2);
-        }else{
-            string queries = str_uri.substr(nq+1);
-            uri.url = str_uri.substr(nurl+2,nq-(nurl+2));
-            vector<string> params;
-            split(params, queries, boost::is_any_of("&"));
-            foreach(string p, params)
-            {
-                vector<string> args;
-                split(args, p, boost::is_any_of("=") );
-                if( args.size() == 2 )
-                {
-                    uri.params[args[0]] = args[1];
-                }
-            }
-        }
+        uri.url = str_uri.substr(nurl+2);
+
+//        // Find parameter delimiter
+//        size_t nq = str_uri.find_first_of('?',nurl+2);
+//        if(nq == string::npos)
+//        {
+//            uri.url = str_uri.substr(nurl+2);
+//        }else{
+//            string queries = str_uri.substr(nq+1);
+//            uri.url = str_uri.substr(nurl+2,nq-(nurl+2));
+//            vector<string> params;
+//            split(params, queries, boost::is_any_of("&"));
+//            foreach(string p, params)
+//            {
+//                vector<string> args;
+//                split(args, p, boost::is_any_of("=") );
+//                if( args.size() == 2 )
+//                {
+//                    uri.params[args[0]] = args[1];
+//                }
+//            }
+//        }
     }
 
     return uri;
@@ -218,8 +220,10 @@ VideoInterface* OpenVideo(std::string str_uri)
             }
             video = new PvnVideo(uri.url.c_str(), realtime);
         }else{
-            video = new FfmpegVideo(uri.url.c_str());
+            video = new FfmpegVideo(uri.url.c_str(), "RGB24");
         }
+    }else if( !uri.scheme.compare("mjpeg")) {
+        video = new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" );
     }else if( !uri.scheme.compare("convert") ) {
         VideoInterface* subvid = OpenVideo(uri.url);
         video = new FfmpegConverter(subvid,"RGB24",FFMPEG_FAST_BILINEAR);
