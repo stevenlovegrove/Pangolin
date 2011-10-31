@@ -126,9 +126,9 @@ FfmpegVideo::FfmpegVideo(const std::string filename, const std::string strfmtout
     InitUrl(filename, strfmtout, codec_hint);
 }
 
-void FfmpegVideo::InitUrl(const std::string filename, const std::string strfmtout, const std::string codec_hint)
+void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, const std::string codec_hint)
 {
-    if( filename.find('*') != filename.npos )
+    if( url.find('*') != url.npos )
         throw VideoException("Wildcards not supported. Please use ffmpegs printf style formatting for image sequences. e.g. img-000000%04d.ppm");
 
     // Register all formats and codecs
@@ -140,7 +140,12 @@ void FfmpegVideo::InitUrl(const std::string filename, const std::string strfmtou
         fmt = av_find_input_format(codec_hint.c_str());
     }
 
-    if( avformat_open_input(&pFormatCtx, filename.c_str(), fmt, NULL) )
+#ifdef CODEC_TYPE_VIDEO
+    // Old (deprecated) interface - can't use with mjpeg
+    if( av_open_input_file(&pFormatCtx, url.c_str(), fmt, 0, NULL) )
+#else
+    if( avformat_open_input(&pFormatCtx, url.c_str(), fmt, NULL) )
+#endif
         throw VideoException("Couldn't open stream");
 
     if( !boost::algorithm::to_lower_copy(codec_hint).compare("mjpeg") )
@@ -151,7 +156,12 @@ void FfmpegVideo::InitUrl(const std::string filename, const std::string strfmtou
         throw VideoException("Couldn't find stream information");
 
     // Dump information about file onto standard error
-    av_dump_format(pFormatCtx, 0, filename.c_str(), false);
+#ifdef CODEC_TYPE_VIDEO
+    // Old (deprecated) interface
+    dump_format(pFormatCtx, 0, url.c_str(), false);
+#else
+    av_dump_format(pFormatCtx, 0, url.c_str(), false);
+#endif
 
     // Find the first video stream
     videoStream=-1;
