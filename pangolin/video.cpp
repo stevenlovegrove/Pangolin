@@ -68,7 +68,7 @@ ostream& operator<< (ostream &out, VideoUri &uri)
 
 
 VideoInput::VideoInput()
-    : video(0)
+    : uri(""), video(0)
 {
 }
 
@@ -89,11 +89,15 @@ VideoUri ParseUri(string str_uri)
 
     // Find Scheme delimiter
     size_t ns = str_uri.find_first_of(':');
-    if( ns == string::npos )
+    if( ns != string::npos )
     {
-        throw VideoException("Bad video URI","no device scheme specified");
+        uri.scheme = str_uri.substr(0,ns);
+    }else{
+//        throw VideoException("Bad video URI","no device scheme specified");
+        uri.scheme = "file";
+        uri.url = str_uri;
+        return uri;
     }
-    uri.scheme = str_uri.substr(0,ns);
 
     // Find url delimiter
     size_t nurl = str_uri.find_first_of("//",ns+1);
@@ -123,26 +127,28 @@ VideoUri ParseUri(string str_uri)
             }
         }
 
-        // Find parameter delimiter
-        size_t nq = str_uri.find_first_of('?',nurl+2);
-        if(nq == string::npos)
-        {
-            uri.url = str_uri.substr(nurl+2);
-        }else{
-            string queries = str_uri.substr(nq+1);
-            uri.url = str_uri.substr(nurl+2,nq-(nurl+2));
-            vector<string> params;
-            split(params, queries, boost::is_any_of("&"));
-            foreach(string p, params)
-            {
-                vector<string> args;
-                split(args, p, boost::is_any_of("=") );
-                if( args.size() == 2 )
-                {
-                    uri.params[args[0]] = args[1];
-                }
-            }
-        }
+        uri.url = str_uri.substr(nurl+2);
+
+//        // Find parameter delimiter
+//        size_t nq = str_uri.find_first_of('?',nurl+2);
+//        if(nq == string::npos)
+//        {
+//            uri.url = str_uri.substr(nurl+2);
+//        }else{
+//            string queries = str_uri.substr(nq+1);
+//            uri.url = str_uri.substr(nurl+2,nq-(nurl+2));
+//            vector<string> params;
+//            split(params, queries, boost::is_any_of("&"));
+//            foreach(string p, params)
+//            {
+//                vector<string> args;
+//                split(args, p, boost::is_any_of("=") );
+//                if( args.size() == 2 )
+//                {
+//                    uri.params[args[0]] = args[1];
+//                }
+//            }
+//        }
     }
 
     return uri;
@@ -205,17 +211,19 @@ VideoInterface* OpenVideo(std::string str_uri)
   VideoUri uri = ParseUri(str_uri);
 
 #ifdef HAVE_FFMPEG
-    if(!uri.scheme.compare("file") ) {
+    if(!uri.scheme.compare("file") || !uri.scheme.compare("files") ) {
         if( algorithm::ends_with(uri.url,"pvn") ) {
-            bool realtime = false;
+            bool realtime = true;
             if(uri.params.find("realtime")!=uri.params.end()){
                 std::istringstream iss(uri.params["realtime"]);
                 iss >> realtime;
             }
             video = new PvnVideo(uri.url.c_str(), realtime);
         }else{
-            video = new FfmpegVideo(uri.url.c_str());
+            video = new FfmpegVideo(uri.url.c_str(), "RGB24");
         }
+    }else if( !uri.scheme.compare("mjpeg")) {
+        video = new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" );
     }else if( !uri.scheme.compare("convert") ) {
         VideoInterface* subvid = OpenVideo(uri.url);
         video = new FfmpegConverter(subvid,"RGB24",FFMPEG_FAST_BILINEAR);
@@ -336,11 +344,18 @@ VideoPixelFormat VideoFormatFromString(const std::string& format)
 
 void VideoInput::Open(std::string uri)
 {
+    this->uri = uri;
+
     if(video) {
         delete video;
         video = 0;
     }
     video = OpenVideo(uri);
+}
+
+void VideoInput::Reset()
+{
+    Open(uri);
 }
 
 unsigned VideoInput::Width() const

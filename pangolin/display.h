@@ -40,6 +40,7 @@
 #endif
 
 #ifdef HAVE_TOON
+#include <cstring>
 #include <TooN/TooN.h>
 #include <TooN/se3.h>
 #endif
@@ -348,10 +349,45 @@ namespace pangolin
 
 }
 
-inline pangolin::Viewport::Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h) {};
-inline GLint pangolin::Viewport::r() const { return l+w;}
-inline GLint pangolin::Viewport::t() const { return b+h;}
-inline GLfloat pangolin::Viewport::aspect() const { return (GLfloat)w / (GLfloat)h; }
+// Inline definitions
+namespace pangolin
+{
+
+inline Viewport::Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h) {}
+inline GLint Viewport::r() const { return l+w;}
+inline GLint Viewport::t() const { return b+h;}
+inline GLfloat Viewport::aspect() const { return (GLfloat)w / (GLfloat)h; }
+
+#ifdef HAVE_TOON
+
+inline OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw)
+{
+    TooN::Matrix<4,4,double,TooN::ColMajor> M;
+    M.slice<0,0,3,3>() = T_cw.get_rotation().get_matrix();
+    M.T()[3].slice<0,3>() = T_cw.get_translation();
+    M[3] = TooN::makeVector(0,0,0,1);
+
+    OpenGlMatrixSpec P;
+    P.type = GlModelViewStack;
+    std::memcpy(P.m, &(M[0][0]),16*sizeof(double));
+    return P;
+}
+
+inline OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M)
+{
+    // Read in remembering col-major convension for our matrices
+    OpenGlMatrixSpec P;
+    P.type = type;
+    int el = 0;
+    for(int c=0; c<4; ++c)
+        for(int r=0; r<4; ++r)
+            P.m[el++] = M[r][c];
+    return P;
+}
+
+#endif
+
+}
 
 #endif // PANGOLIN_DISPLAY_H
 

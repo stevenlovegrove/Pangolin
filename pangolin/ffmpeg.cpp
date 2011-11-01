@@ -46,8 +46,10 @@ std::string FfmpegFmtToString(const PixelFormat fmt)
 	{
 	TEST_PIX_FMT_RETURN(YUV420P);
 	TEST_PIX_FMT_RETURN(YUYV422);
-	TEST_PIX_FMT_RETURN(RGB24);
-	TEST_PIX_FMT_RETURN(BGR24);
+//	TEST_PIX_FMT_RETURN(RGB24);
+	case PIX_FMT_RGB24: return "RGB8";
+//      TEST_PIX_FMT_RETURN(BGR24);
+	case PIX_FMT_BGR24: return "BGR8";
 	TEST_PIX_FMT_RETURN(YUV422P);
 	TEST_PIX_FMT_RETURN(YUV444P);
 	TEST_PIX_FMT_RETURN(YUV410P);
@@ -118,32 +120,58 @@ std::string FfmpegFmtToString(const PixelFormat fmt)
 
 #undef TEST_PIX_FMT_RETURN
 
-FfmpegVideo::FfmpegVideo(const char *filename, const std::string strfmtout)
+FfmpegVideo::FfmpegVideo(const std::string filename, const std::string strfmtout, const std::string codec_hint)
     :pFormatCtx(0)
 {
+    InitUrl(filename, strfmtout, codec_hint);
+}
+
+void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, const std::string codec_hint)
+{
+    if( url.find('*') != url.npos )
+        throw VideoException("Wildcards not supported. Please use ffmpegs printf style formatting for image sequences. e.g. img-000000%04d.ppm");
+
     // Register all formats and codecs
     av_register_all();
 
-    // Open video file
-    if(av_open_input_file(&pFormatCtx, filename, NULL, 0, NULL)!=0)
-        throw VideoException("Couldn't open file");
+    AVInputFormat* fmt = NULL;
+
+    if( !codec_hint.empty() ) {
+        fmt = av_find_input_format(codec_hint.c_str());
+    }
+
+#ifdef CODEC_TYPE_VIDEO
+    // Old (deprecated) interface - can't use with mjpeg
+    if( av_open_input_file(&pFormatCtx, url.c_str(), fmt, 0, NULL) )
+#else
+    if( avformat_open_input(&pFormatCtx, url.c_str(), fmt, NULL) )
+#endif
+        throw VideoException("Couldn't open stream");
+
+    if( !boost::algorithm::to_lower_copy(codec_hint).compare("mjpeg") )
+        pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
 
     // Retrieve stream information
     if(av_find_stream_info(pFormatCtx)<0)
         throw VideoException("Couldn't find stream information");
 
     // Dump information about file onto standard error
-    dump_format(pFormatCtx, 0, filename, false);
+#ifdef CODEC_TYPE_VIDEO
+    // Old (deprecated) interface
+    dump_format(pFormatCtx, 0, url.c_str(), false);
+#else
+    av_dump_format(pFormatCtx, 0, url.c_str(), false);
+#endif
 
     // Find the first video stream
     videoStream=-1;
     audioStream=-1;
     for(unsigned i=0; i<pFormatCtx->nb_streams; i++)
     {
-        if(pFormatCtx->streams[i]->codec->codec_type==CODEC_TYPE_VIDEO)
+        if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO)
         {
             videoStream=i;
-        }else if(pFormatCtx->streams[i]->codec->codec_type==CODEC_TYPE_AUDIO)
+        }else if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_AUDIO)
         {
             audioStream=i;
         }
@@ -184,19 +212,6 @@ FfmpegVideo::FfmpegVideo(const char *filename, const std::string strfmtout)
 
     // Assign appropriate parts of buffer to image planes in pFrameRGB
     avpicture_fill((AVPicture *)pFrameOut, buffer, fmtout, pVidCodecCtx->width, pVidCodecCtx->height);
-
-//    if( audioStream!=-1)
-//    {
-//        pAudCodecCtx = pFormatCtx->streams[audioStream]->codec;
-//        pAudCodec = avcodec_find_decoder(pAudCodecCtx->codec_id);
-//        if( pAudCodec!=0)
-//        {
-//            if(avcodec_open(pAudCodecCtx,pAudCodec) >= 0)
-//            {
-//                std::cout << "Found sound codec" << std::endl;
-//            }
-//        }
-//    }
 }
 
 FfmpegVideo::~FfmpegVideo()
@@ -249,8 +264,7 @@ bool FfmpegVideo::GrabNext(unsigned char* image, bool /*wait*/)
         if(packet.stream_index==videoStream)
         {
             // Decode video frame
-            avcodec_decode_video(pVidCodecCtx, pFrame, &gotFrame,
-                packet.data, packet.size);
+            avcodec_decode_video2(pVidCodecCtx, pFrame, &gotFrame, &packet);
         }
 
         // Did we get a video frame?

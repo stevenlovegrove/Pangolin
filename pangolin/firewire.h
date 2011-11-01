@@ -170,6 +170,9 @@ public:
   //! return absolute gamma value
   float GetGamma() const;
 
+  //! return quantised shutter value
+  void SetShutterTimeQuant(int shutter);
+
   //! set the trigger to internal, i.e. determined by video mode
   void SetInternalTrigger();
 

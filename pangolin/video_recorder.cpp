@@ -36,7 +36,7 @@ VideoRecorder::VideoRecorder(
     const std::string& filename,
     int stream0_width, int stream0_height, std::string stream0_fmt,
     unsigned int buffer_size_bytes
-    ) : frames(0), writer(filename, buffer_size_bytes)
+    ) : frames(0), buffer(filename, buffer_size_bytes), writer(&buffer)
 {
     VideoStream strm0;
     strm0.name = "main";
@@ -54,10 +54,10 @@ VideoRecorder::~VideoRecorder()
 
 void VideoRecorder::WriteFileHeader()
 {
-    writer.file << stream_info[0].fmt.format << "\n";
-    writer.file << stream_info[0].w  << "\n";
-    writer.file << stream_info[0].h  << "\n";
-    writer.file << "30.0\n";
+    writer << stream_info[0].fmt.format << "\n";
+    writer << stream_info[0].w  << "\n";
+    writer << stream_info[0].h  << "\n";
+    writer << "30.0\n";
 }
 
 int VideoRecorder::RecordFrame(void* img)
@@ -71,8 +71,6 @@ int VideoRecorder::RecordFrame(void* img)
     const VideoStream& strm = stream_info[0];
 
     writer.write((char*)img,strm.frame_size_bytes);
-
-//    file.write((char*)img,strm.frame_size_bytes);
 
     return frames++;
 }

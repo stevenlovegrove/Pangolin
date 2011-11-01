@@ -19,7 +19,7 @@ void RecordSample(const std::string uri, const std::string filename)
     const unsigned h = video.Height();
 
     // Setup async video recorder with 50 frame memory buffer
-    VideoRecorder recorder(filename, w, h, "RGB24", w*h*3*50);
+    VideoRecorder recorder(filename, w, h, "RGB8", w*h*3*50);
 
     // Create Glut window
     pangolin::CreateGlutWindowAndBind("Main",w,h);
@@ -36,11 +36,14 @@ void RecordSample(const std::string uri, const std::string filename)
     {
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-        video.GrabNext(rgb,true);
-        texVideo.Upload(rgb,GL_RGB,GL_UNSIGNED_BYTE);
+        if( video.GrabNext(rgb,true) )
+        {
+            // Upload to GPU as texture for display
+            texVideo.Upload(rgb,GL_RGB,GL_UNSIGNED_BYTE);
 
-        // Record video frame
-        recorder.RecordFrame(rgb);
+            // Record video frame
+            recorder.RecordFrame(rgb);
+        }
 
         // Activate video viewport and render texture
         vVideo.Activate();

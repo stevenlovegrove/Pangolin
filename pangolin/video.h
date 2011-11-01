@@ -82,6 +82,7 @@ namespace pangolin
         ~VideoInput();
 
         void Open(std::string uri);
+        void Reset();
 
         unsigned Width() const;
         unsigned Height() const;
@@ -93,6 +94,7 @@ namespace pangolin
         bool GrabNewest( unsigned char* image, bool wait = true );
 
     protected:
+        std::string uri;
         VideoInterface* video;
     };
 

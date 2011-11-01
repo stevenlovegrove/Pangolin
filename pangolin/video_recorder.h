@@ -35,7 +35,7 @@
 #include <boost/thread/mutex.hpp>
 
 #include "pvn_video.h"
-#include "threaded_file_writer.h"
+#include "threadedfilebuf.h"
 
 namespace pangolin
 {
@@ -69,7 +69,8 @@ namespace pangolin
         int frames;
         std::vector<VideoStream> stream_info;
 
-        ThreadedFileWriter writer;
+        threadedfilebuf buffer;
+        std::ostream writer;
 
         void WriteFileHeader();
     };

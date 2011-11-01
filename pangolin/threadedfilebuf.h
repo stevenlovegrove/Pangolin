@@ -29,38 +29,39 @@
 #define PANGOLIN_THREADED_WRITE_H
 
 #include <iostream>
+#include <streambuf>
 #include <fstream>
 
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <boost/thread/condition_variable.hpp>
 
 namespace pangolin
 {
 
-class ThreadedFileWriter
+class threadedfilebuf : public std::streambuf
 {
 public:
-    ThreadedFileWriter(const std::string& filename, unsigned int buffer_size_bytes);
-    ~ThreadedFileWriter();
-
-    // Asynchronous write
-    int write(char* data, int num_bytes);
+    threadedfilebuf(const std::string& filename, unsigned int buffer_size_bytes);
+    ~threadedfilebuf();
 
     void operator()();
 
-    std::ofstream file;
 protected:
+    //! Override streambuf::xsputn for asynchronous write
+    std::streamsize xsputn(const char * s, std::streamsize n);
+
+    std::filebuf file;
     char* mem_buffer;
     int mem_size;
     int mem_max_size;
     int mem_start;
     int mem_end;
 
-    boost::thread write_thread;
     boost::mutex update_mutex;
-    boost::condition cond_queued;
-    boost::condition cond_dequeued;
+    boost::condition_variable cond_queued;
+    boost::condition_variable cond_dequeued;
+    boost::thread write_thread;
 };
 
 }

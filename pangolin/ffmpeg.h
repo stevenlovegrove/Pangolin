@@ -42,7 +42,6 @@ extern "C"
 #define UINT64_C(c) (c ## ULL)
 #endif
 
-#include <avcodec.h>
 #include <avformat.h>
 #include <swscale.h>
 #include "pixdesc.h"
@@ -54,7 +53,7 @@ namespace pangolin
 class FfmpegVideo : public VideoInterface
 {
 public:
-    FfmpegVideo(const char* filename, const std::string strfmtout = "rgb24");
+    FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "");
     ~FfmpegVideo();
 
     //! Implement VideoSource::Start()
@@ -74,6 +73,8 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
 
 protected:
+    void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "" );
+
     AVFormatContext *pFormatCtx;
     int             videoStream;
     int             audioStream;

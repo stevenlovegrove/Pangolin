@@ -870,34 +870,6 @@ namespace pangolin
     return P;
   }
 
-#ifdef HAVE_TOON
-  OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw)
-  {
-    TooN::Matrix<4,4,double,TooN::ColMajor> M;
-    M.slice<0,0,3,3>() = T_cw.get_rotation().get_matrix();
-    M.T()[3].slice<0,3>() = T_cw.get_translation();
-    M[3] = TooN::makeVector(0,0,0,1);
-
-    OpenGlMatrixSpec P;
-    P.type = GlModelViewStack;
-    memcpy(P.m, &(M[0][0]),16*sizeof(double));
-    return P;
-  }
-
-  OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M)
-  {
-      // Read in remembering col-major convension for our matrices
-      OpenGlMatrixSpec P;
-      P.type = type;
-      int el = 0;
-      for(int c=0; c<4; ++c)
-          for(int r=0; r<4; ++r)
-              P.m[el++] = M[r][c];
-      return P;
-  }
-#endif
-
-
   void DrawTextureToViewport(GLuint texid)
   {
     OpenGlRenderState::ApplyIdentity();

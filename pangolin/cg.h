@@ -37,6 +37,10 @@
 
 #include "gl.h"
 
+#ifdef HAVE_TOON
+#include <TooN/TooN.h>
+#endif // HAVE_TOON
+
 namespace pangolin
 {
 
