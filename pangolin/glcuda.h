@@ -182,6 +182,13 @@ inline void CopyPboToTex(const GlBufferCudaPtr& buffer, GlTexture& tex, GLenum b
   tex.Unbind();
 }
 
+template<typename T>
+inline void CopyDevMemtoTex(T* d_img, size_t pitch, GlTextureCudaArray& tex )
+{
+  CudaScopedMappedArray arr_tex(tex);
+  cudaMemcpy2DToArray(*arr_tex, 0, 0, d_img, pitch, tex.width*sizeof(T), tex.height, cudaMemcpyDeviceToDevice );
+}
+
 inline void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b)
 {
   std::swap(a.bo, b.bo);
