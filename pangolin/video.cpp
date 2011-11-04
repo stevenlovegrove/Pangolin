@@ -154,8 +154,7 @@ VideoUri ParseUri(string str_uri)
     return uri;
 }
 
-#ifdef HAVE_FFMPEG
-#include "ffmpeg.h"
+#ifdef HAVE_DC1394
 
 dc1394video_mode_t get_firewire_format7_mode(const string fmt)
 {
