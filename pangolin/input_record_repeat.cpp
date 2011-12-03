@@ -62,8 +62,9 @@ ostream& operator<<(ostream& os, const FrameInput& fi )
 istream& operator>>(istream& is, FrameInput& fi)
 {
     is >> fi.index;
-    is >> fi.var;
-    is >> fi.val;
+    is.ignore(std::numeric_limits<streamsize>::max(),'\n');
+    getline(is,fi.var);
+    getline(is,fi.val);
     return is;
 }
 
