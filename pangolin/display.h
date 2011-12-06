@@ -344,6 +344,8 @@ namespace pangolin
 #ifdef HAVE_TOON
   OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw);
   OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M);
+  TooN::Matrix<4,4> ToTooN(const OpenGlMatrixSpec& ms);
+  TooN::SE3<> ToTooN_SE3(const OpenGlMatrixSpec& ms);
 #endif
 
 
@@ -384,6 +386,25 @@ inline OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M)
             P.m[el++] = M[r][c];
     return P;
 }
+
+inline TooN::Matrix<4,4> ToTooN(const OpenGlMatrixSpec& ms)
+{
+    TooN::Matrix<4,4> m;
+    int el = 0;
+    for( int c=0; c<4; ++c )
+        for( int r=0; r<4; ++r )
+            m(r,c) = ms.m[el++];
+    return m;
+}
+
+inline TooN::SE3<> ToTooN_SE3(const OpenGlMatrixSpec& ms)
+{
+    TooN::Matrix<4,4> m = ToTooN(ms);
+    const TooN::SO3<> R(m.slice<0,0,3,3>());
+    const TooN::Vector<3> t = m.T()[3].slice<0,3>();
+    return TooN::SE3<>(R,t);
+}
+
 
 #endif
 
