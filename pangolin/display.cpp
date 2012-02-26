@@ -331,6 +331,14 @@ namespace pangolin
     glMultMatrixd(m);
   }
 
+  void OpenGlMatrixSpec::SetIdentity()
+  {
+      m[0] = 1.0f;  m[1] = 0.0f;  m[2] = 0.0f;  m[3] = 0.0f;
+      m[4] = 0.0f;  m[5] = 1.0f;  m[6] = 0.0f;  m[7] = 0.0f;
+      m[8] = 0.0f;  m[9] = 0.0f; m[10] = 1.0f; m[11] = 0.0f;
+     m[12] = 0.0f; m[13] = 0.0f; m[14] = 0.0f; m[15] = 1.0f;
+  }
+
   void OpenGlRenderState::Apply() const
   {
     // Apply any stack matrices we have
@@ -833,6 +841,35 @@ namespace pangolin
       const double R = +(w-u0) * zNear / fu;
       const double T = -(v0) * zNear / fv;
       const double B = +(h-v0) * zNear / fv;
+
+      OpenGlMatrixSpec P;
+      P.type = GlProjectionStack;
+      std::fill_n(P.m,4*4,0);
+
+      P.m[0*4+0] = 2 * zNear / (R-L);
+      P.m[1*4+1] = 2 * zNear / (T-B);
+
+      P.m[2*4+0] = (R+L)/(L-R);
+      P.m[2*4+1] = (T+B)/(B-T);
+      P.m[2*4+2] = (zFar +zNear) / (zFar - zNear);
+      P.m[2*4+3] = 1.0;
+
+      P.m[3*4+2] =  (2*zFar*zNear)/(zNear - zFar);
+      return P;
+  }
+
+  // Camera Axis:
+  //   X - Right, Y - Down, Z - Forward
+  // Image Origin:
+  //   Bottom Left
+  // Pricipal point specified with image origin (0,0) at top left of top-left pixel (not center)
+  OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
+  {
+      // http://www.songho.ca/opengl/gl_projectionmatrix.html
+      const double L = -(u0) * zNear / fu;
+      const double R = +(w-u0) * zNear / fu;
+      const double B = -(v0) * zNear / fv;
+      const double T = +(h-v0) * zNear / fv;
 
       OpenGlMatrixSpec P;
       P.type = GlProjectionStack;
