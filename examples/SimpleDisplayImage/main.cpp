@@ -25,7 +25,7 @@ int main( int /*argc*/, char* argv[] )
       .SetHandler(new Handler3D(s_cam));
 
   View& d_image = Display("image")
-      .SetBounds(0.3,1.0,20,0.3,640.0/480)
+      .SetBounds(0.3,1.0,Attach::Pix(20),0.3,640.0/480)
       .SetLock(LockLeft,LockTop);
 
   const int width =  640;

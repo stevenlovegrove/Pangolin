@@ -55,13 +55,13 @@ int main( int /*argc*/, char* argv[] )
   // Add named Panel and bind to variables beginning 'ui'
   // A Panel is just a View with a default layout and input handling
   View& d_panel = pangolin::CreatePanel("ui")
-      .SetBounds(0.0, 1.0, 0, 200);
+      .SetBounds(0.0, 1.0, 0.0, Attach::Pix(200));
 
   // LayoutEqual is an EXPERIMENTAL feature - it requires that all sub-displays
   // share the same aspect ratio, placing them in a raster fasion in the
   // viewport so as to maximise display size.
   pangolin::Display("multi")
-      .SetBounds(1.0, 0.0, 200, 1.0)
+      .SetBounds(1.0, 0.0, Attach::Pix(200), 1.0)
       .SetLayout(LayoutEqual)
       .AddDisplay(d_cam1)
       .AddDisplay(d_cam2);

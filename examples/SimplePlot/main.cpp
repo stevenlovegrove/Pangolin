@@ -19,11 +19,11 @@ int main( int /*argc*/, char* argv[] )
 
   DataLog log;
 
-  View& d_graph = pangolin::CreatePlotter("x",&log);
-  d_graph.SetBounds(0.0, 1.0, 200, 1.0);
+  View& d_graph = pangolin::CreatePlotter("x",&log)
+      .SetBounds(0.0, 1.0, Attach::Pix(200), 1.0);
 
   View& d_panel = pangolin::CreatePanel("ui")
-      .SetBounds(0.0, 1.0, 0, 200);
+      .SetBounds(0.0, 1.0, 0.0, Attach::Pix(200) );
 
   double t = 0;
 

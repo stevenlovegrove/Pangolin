@@ -118,12 +118,32 @@ namespace pangolin
   //! fraction in interval [0,1]
   struct Attach {
     Attach() : unit(Fraction), p(0) {}
-    Attach(int p) : unit(p >=0 ? Pixel : ReversePixel), p(std::abs((float)p)) {}
-    Attach(GLfloat p) : unit(Fraction), p(p) {}
-    Attach(GLdouble p) : unit(Fraction), p(p) {}
-    Attach(int p, bool reverse) : unit(ReversePixel), p(p) {}
+    Attach(Unit unit, GLfloat p) : unit(unit), p(p) {}
+
+    Attach(GLfloat p) : unit(Fraction), p(p) {
+        if( p < 0 || 1.0 < p ) {
+            std::cerr << "Pangolin API Change: Display::SetBounds must be used with Attach::Pix or Attach::ReversePix to specify pixel bounds relative to an edge. See the code samples for details." << std::endl;
+            throw std::exception();
+        }
+    }
+
+//    Attach(GLdouble p) : unit(Fraction), p(p) {}
+
+    static Attach Pix(int p) {
+        return Attach(p >=0 ? Pixel : ReversePixel, std::abs((float)p));
+    }
+    static Attach ReversePix(int p) {
+        return Attach(ReversePixel, p);
+    }
+    static Attach Frac(float frac) {
+        return Attach(frac);
+    }
+
     Unit unit;
     GLfloat p;
+
+//  protected:
+//    Attach(int p) {}
   };
 
 
@@ -218,7 +238,7 @@ namespace pangolin
   struct View
   {
     View()
-      : aspect(0.0), top(1.0),left(0),right(1.0),bottom(0), hlock(LockCenter),vlock(LockCenter),
+      : aspect(0.0), top(1.0),left(0.0),right(1.0),bottom(0.0), hlock(LockCenter),vlock(LockCenter),
         layout(LayoutOverlay), handler(0) {}
 
     //! Activate Displays viewport for drawing within this area

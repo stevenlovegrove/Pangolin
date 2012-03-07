@@ -66,8 +66,8 @@ namespace pangolin
       ic = contexts.insert( name,new PangolinGl ).first;
       context = ic->second;
       View& dc = context->base;
-      dc.left = 0;
-      dc.bottom = 0;
+      dc.left = 0.0;
+      dc.bottom = 0.0;
       dc.top = 1.0;
       dc.right = 1.0;
       dc.aspect = 0;

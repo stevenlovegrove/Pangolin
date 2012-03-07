@@ -204,8 +204,8 @@ View& CreatePanel(const std::string& name)
 Button::Button(string title, _Var& tv)
   : Var<bool>(tv), title(title), down(false)
 {
-  top = 1.0; bottom = -20;
-  left = 0; right = 1.0;
+  top = 1.0; bottom = Attach::Pix(-20);
+  left = 0.0; right = 1.0;
   hlock = LockLeft;
   vlock = LockBottom;
   handler = this;
@@ -241,8 +241,8 @@ void Button::ResizeChildren()
 Checkbox::Checkbox(std::string title, _Var& tv)
   :Var<bool>(tv), title(title)
 {
-  top = 1.0; bottom = -20;
-  left = 0; right = 1.0;
+  top = 1.0; bottom = Attach::Pix(-20);
+  left = 0.0; right = 1.0;
   hlock = LockLeft;
   vlock = LockBottom;
   handler = this;
@@ -284,8 +284,8 @@ void Checkbox::Render()
 Slider::Slider(std::string title, _Var& tv)
   :Var<double>(tv), title(title+":"), lock_bounds(true)
 {
-  top = 1.0; bottom = -20;
-  left = 0; right = 1.0;
+  top = 1.0; bottom = Attach::Pix(-20);
+  left = 0.0; right = 1.0;
   hlock = LockLeft;
   vlock = LockBottom;
   handler = this;
@@ -419,8 +419,8 @@ void Slider::Render()
 TextInput::TextInput(std::string title, _Var& tv)
   :Var<string>(tv), title(title+":"), do_edit(false)
 {
-  top = 1.0; bottom = -20;
-  left = 0; right = 1.0;
+  top = 1.0; bottom = Attach::Pix(-20);
+  left = 0.0; right = 1.0;
   hlock = LockLeft;
   vlock = LockBottom;
   handler = this;
