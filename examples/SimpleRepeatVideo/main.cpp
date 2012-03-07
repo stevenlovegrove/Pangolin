@@ -29,10 +29,10 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
 
     // Create viewport for video with fixed aspect
     View& d_panel = pangolin::CreatePanel("ui.")
-        .SetBounds(1.0, 0.0, 0, panel_width);
+        .SetBounds(0.0, 1.0, 0, panel_width);
 
     View& vVideo = Display("Video")
-        .SetBounds(1.0, 0.0, panel_width, 1.0)
+        .SetBounds(0.0, 1.0, panel_width, 1.0)
         .SetAspect((float)w/h);
 
     // OpenGl Texture for video frame

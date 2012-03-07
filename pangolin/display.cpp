@@ -396,8 +396,13 @@ namespace pangolin
     // Compute Bounds based on specification
     v.l = AttachAbs(p.l,p.r(),left);
     v.b = AttachAbs(p.b,p.t(),bottom);
-    const int r = AttachAbs(p.l,p.r(),right);
-    const int t = AttachAbs(p.b,p.t(),top);
+    int r = AttachAbs(p.l,p.r(),right);
+    int t = AttachAbs(p.b,p.t(),top);
+
+    // Make sure left and right, top and bottom are correct order
+    if( t < v.b ) swap(t,v.b);
+    if( r < v.l ) swap(r,v.l);
+
     v.w = r - v.l;
     v.h = t - v.b;
 
@@ -572,14 +577,14 @@ namespace pangolin
     return *this;
   }
 
-  View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect)
+  View& View::SetBounds(Attach bottom, Attach top,  Attach left, Attach right, bool keep_aspect)
   {
     SetBounds(top,bottom,left,right,0.0);
     aspect = keep_aspect ? v.aspect() : 0;
     return *this;
   }
 
-  View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, double aspect)
+  View& View::SetBounds(Attach bottom, Attach top,  Attach left, Attach right, double aspect)
   {
     this->left = left;
     this->top = top;

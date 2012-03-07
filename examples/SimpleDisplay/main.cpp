@@ -43,13 +43,13 @@ int main( int /*argc*/, char* argv[] )
 
   // Add named OpenGL viewport to window and provide 3D Handler
   View& d_cam = pangolin::Display("cam")
-    .SetBounds(1.0, 0.0, 200, 1.0, -640.0f/480.0f)
+    .SetBounds(0.0, 1.0, 200, 1.0, -640.0f/480.0f)
     .SetHandler(new Handler3D(s_cam));
 
   // Add named Panel and bind to variables beginning 'ui'
   // A Panel is just a View with a default layout and input handling
   View& d_panel = pangolin::CreatePanel("ui")
-      .SetBounds(1.0, 0.0, 0, 200);
+      .SetBounds(0.0, 1.0, 0, 200);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
