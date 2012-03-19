@@ -56,6 +56,7 @@ namespace pangolin
     //! Interface to video capture sources
     struct VideoInterface
     {
+        virtual ~VideoInterface() {}
         virtual unsigned Width() const = 0;
         virtual unsigned Height() const = 0;
         virtual std::string PixFormat() const = 0;

@@ -241,6 +241,8 @@ namespace pangolin
       : aspect(0.0), top(1.0),left(0.0),right(1.0),bottom(0.0), hlock(LockCenter),vlock(LockCenter),
         layout(LayoutOverlay), handler(0) {}
 
+    virtual ~View() {}
+
     //! Activate Displays viewport for drawing within this area
     void Activate() const;
 
@@ -276,10 +278,10 @@ namespace pangolin
     View& SetFocus();
 
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
-    View& SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect = false);
+    View& SetBounds(Attach bottom, Attach top, Attach left, Attach right, bool keep_aspect = false);
 
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
-    View& SetBounds(Attach top, Attach bottom,  Attach left, Attach right, double aspect);
+    View& SetBounds(Attach bottom, Attach top, Attach left, Attach right, double aspect);
 
     View& SetHandler(Handler* handler);
     View& SetAspect(double aspect);
@@ -310,7 +312,7 @@ namespace pangolin
 
   private:
     // Private copy constructor
-    View(View& v) { /* Do Not copy - take reference instead*/ }
+    View(View&) { /* Do Not copy - take reference instead*/ }
   };
 
   enum MouseButton
@@ -326,6 +328,7 @@ namespace pangolin
   //! into sub-displays
   struct Handler
   {
+    virtual ~Handler() {}
     virtual void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     virtual void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     virtual void MouseMotion(View&, int x, int y, int button_state);
