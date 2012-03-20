@@ -27,7 +27,7 @@ void VideoSample(const std::string uri)
     // OpenGl Texture for video frame
     GlTexture texVideo(w,h,GL_RGBA8);
 
-    unsigned char* img = new unsigned char[w*h*vid_fmt.size_bytes];
+    unsigned char* img = new unsigned char[video.SizeBytes()];
 
     for(int frame=0; !pangolin::ShouldQuit(); ++frame)
     {
@@ -53,22 +53,39 @@ void VideoSample(const std::string uri)
 
 int main( int argc, char* argv[] )
 {
-    std::string uri = "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0";
+    std::string uris[] = {
+        "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
+        "convert:[fmt=RGB24]//v4l:///dev/video0",
+        "convert:[fmt=RGB24]//v4l:///dev/video1",
+        ""
+    };
 
     if( argc > 1 ) {
-        uri = std::string(argv[1]);
+        const string uri = std::string(argv[1]);
+        VideoSample(uri);
     }else{
-        cout << "Usage:" << endl << "\tSimpleRecord [video-uri]" << endl;
-        cout << "\tvideo-uri: URI of file / device to extract video sequence from" << endl << endl;
-        cout << "e.g." << endl;
-        cout << "\tSimpleRecord dc1394:[fmt=RGB8,size=640x480,fps=30,iso=400,dma=10]//0" << endl;
-        cout << "\tSimpleRecord dc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << endl;
-        cout << "\tSimpleRecord convert:[fmt=RGB8]//v4l:///dev/video0" << endl;
-        cout << "\tSimpleRecord file:///media/Data/pictures/photos/Minnesota 2010/00021.MTS" << endl;
-        cout << "\tSimpleRecord file:///home/sl203/videos/YellowPattern1/test-0000000017.ppm" << endl;
-        cout << "\tSimpleRecord file://http://192.168.0.150/?action=stream" << endl;
-        cout << endl << "Defaulting to video-uri=" << uri << endl;
+        cout << "Usage  : SimpleRecord [video-uri]" << endl << endl;
+        cout << "Where video-uri describes a stream or file resource, e.g." << endl;
+        cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << endl;
+        cout << "\tfile:///home/user/video/movie.avi" << endl;
+        cout << "\tfiles:///home/user/seqiemce/foo%03d.jpeg" << endl;
+        cout << "\tdc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0" << endl;
+        cout << "\tdc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << endl;
+        cout << "\tv4l:///dev/video0" << endl;
+        cout << "\tconvert:[fmt=RGB24]//v4l:///dev/video0" << endl;
+        cout << "\tmjpeg://http://127.0.0.1/?action=stream" << endl;
+        cout << endl;
+
+        // Try to open some video device
+        for(int i=0; !uris[i].empty(); ++i )
+        {
+            try{
+                cout << "Trying: " << uris[i] << endl;
+                VideoSample(uris[i]);
+                return 0;
+            }catch(VideoException) {}
+        }
     }
 
-    VideoSample(uri);
+    return 0;
 }

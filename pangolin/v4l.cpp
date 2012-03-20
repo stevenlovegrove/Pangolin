@@ -90,6 +90,11 @@ namespace pangolin
         return height;
     }
 
+    size_t V4lVideo::SizeBytes() const
+    {
+        return image_size;
+    }
+
     std::string V4lVideo::PixFormat() const
     {
         // TODO: compute properly

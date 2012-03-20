@@ -66,7 +66,7 @@ void PvnVideo::ReadFileHeader()
         throw VideoException("Unable to read video header");
 
     strm0.fmt = VideoFormatFromString(sfmt);
-    strm0.frame_size_bytes = strm0.w * strm0.h * strm0.fmt.size_bytes;
+    strm0.frame_size_bytes = (strm0.w * strm0.h * strm0.fmt.bpp) / 8;
     frame_interval = TimeFromSeconds( 1.0 / framerate);
 
     stream_info.push_back(strm0);
@@ -89,6 +89,11 @@ unsigned PvnVideo::Width() const
 unsigned PvnVideo::Height() const
 {
     return stream_info[0].h;
+}
+
+size_t PvnVideo::SizeBytes() const
+{
+    return stream_info[0].frame_size_bytes;
 }
 
 std::string PvnVideo::PixFormat() const

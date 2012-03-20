@@ -46,10 +46,8 @@ std::string FfmpegFmtToString(const PixelFormat fmt)
 	{
 	TEST_PIX_FMT_RETURN(YUV420P);
 	TEST_PIX_FMT_RETURN(YUYV422);
-//	TEST_PIX_FMT_RETURN(RGB24);
-	case PIX_FMT_RGB24: return "RGB8";
-//      TEST_PIX_FMT_RETURN(BGR24);
-	case PIX_FMT_BGR24: return "BGR8";
+    TEST_PIX_FMT_RETURN(RGB24);
+    TEST_PIX_FMT_RETURN(BGR24);
 	TEST_PIX_FMT_RETURN(YUV422P);
 	TEST_PIX_FMT_RETURN(YUV444P);
 	TEST_PIX_FMT_RETURN(YUV410P);
@@ -245,6 +243,11 @@ unsigned FfmpegVideo::Height() const
     return pVidCodecCtx->height;
 }
 
+size_t FfmpegVideo::SizeBytes() const
+{
+    return numBytesOut;
+}
+
 std::string FfmpegVideo::PixFormat() const
 {
     return FfmpegFmtToString(pVidCodecCtx->pix_fmt);
@@ -362,6 +365,11 @@ unsigned FfmpegConverter::Width() const
 unsigned FfmpegConverter::Height() const
 {
     return h;
+}
+
+size_t FfmpegConverter::SizeBytes() const
+{
+    return numbytesdst;
 }
 
 std::string FfmpegConverter::PixFormat() const

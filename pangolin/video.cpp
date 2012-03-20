@@ -45,6 +45,22 @@ using namespace boost;
 namespace pangolin
 {
 
+const VideoPixelFormat SupportedVideoPixelFormats[] =
+{
+    {"RGB24", 3, {8,8,8}, 24, false},
+    {"BGR24", 3, {8,8,8}, 24, false},
+    {"YUYV422", 3, {4,2,2}, 16, false},
+    {"",0,{0,0,0,0},0,0}
+};
+
+VideoPixelFormat VideoFormatFromString(const std::string& format)
+{
+    for(int i=0; !SupportedVideoPixelFormats[i].format.empty(); ++i)
+        if(!format.compare(SupportedVideoPixelFormats[i].format))
+            return SupportedVideoPixelFormats[i];
+    throw VideoException("Unknown Format");
+}
+
 struct VideoUri
 {
     string scheme;
@@ -205,27 +221,35 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 VideoInterface* OpenVideo(std::string str_uri)
 {
-  VideoInterface* video = 0;
+    VideoInterface* video = 0;
 
-  VideoUri uri = ParseUri(str_uri);
+    VideoUri uri = ParseUri(str_uri);
 
-#ifdef HAVE_FFMPEG
-    if(!uri.scheme.compare("file") || !uri.scheme.compare("files") ) {
-        if( algorithm::ends_with(uri.url,"pvn") ) {
-            bool realtime = true;
-            if(uri.params.find("realtime")!=uri.params.end()){
-                std::istringstream iss(uri.params["realtime"]);
-                iss >> realtime;
-            }
-            video = new PvnVideo(uri.url.c_str(), realtime);
-        }else{
-            video = new FfmpegVideo(uri.url.c_str(), "RGB24");
+    if(!uri.scheme.compare("file") && algorithm::ends_with(uri.url,"pvn") )
+    {
+        bool realtime = true;
+        if(uri.params.find("realtime")!=uri.params.end()){
+            std::istringstream iss(uri.params["realtime"]);
+            iss >> realtime;
         }
+        video = new PvnVideo(uri.url.c_str(), realtime);
+    }else
+#ifdef HAVE_FFMPEG
+    if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){
+        string outfmt = "RGB24";
+        if(uri.params.find("fmt")!=uri.params.end()){
+            outfmt = uri.params["fmt"];
+        }
+        video = new FfmpegVideo(uri.url.c_str(), outfmt);
     }else if( !uri.scheme.compare("mjpeg")) {
         video = new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" );
     }else if( !uri.scheme.compare("convert") ) {
+        string outfmt = "RGB24";
+        if(uri.params.find("fmt")!=uri.params.end()){
+            outfmt = uri.params["fmt"];
+        }
         VideoInterface* subvid = OpenVideo(uri.url);
-        video = new FfmpegConverter(subvid,"RGB24",FFMPEG_POINT);
+        video = new FfmpegConverter(subvid,outfmt,FFMPEG_POINT);
     }else
 #endif //HAVE_FFMPEG
     if(!uri.scheme.compare("v4l")) {
@@ -241,7 +265,7 @@ VideoInterface* OpenVideo(std::string str_uri)
         int desired_dma = 10;
         int desired_iso = 400;
         float desired_fps = 30;
-        string desired_format = "RGB8";
+        string desired_format = "RGB24";
 
         // Parse parameters
         if(uri.params.find("fmt")!=uri.params.end()){
@@ -304,43 +328,6 @@ VideoInterface* OpenVideo(std::string str_uri)
     return video;
 }
 
-// TODO: Find better way!
-VideoPixelFormat VideoFormatFromString(const std::string& format)
-{
-    VideoPixelFormat pixformat;
-
-    pixformat.format = format;
-    pixformat.channel_size_bits = 8;
-    pixformat.channels = 1;
-
-    unsigned n = format.find_first_of("0123456789");
-    if( n != format.npos )
-    {
-        int bits;
-        std::istringstream iss(format.substr(n));
-        iss >> bits;
-        if( !iss.bad() ) {
-            if( bits % 8 == 0 )
-                pixformat.channel_size_bits = bits;
-        }
-    }
-
-    if( algorithm::starts_with(format,"RGB") ) {
-        pixformat.channels = 3;
-    }else if( algorithm::starts_with(format,"BGR") ) {
-        pixformat.channels = 3;
-    }else if( algorithm::starts_with(format,"YUV") ) {
-        pixformat.channels = 3;
-    }else if( algorithm::starts_with(format,"RGBA") ) {
-        pixformat.channels = 4;
-    }
-
-    pixformat.size_bytes = pixformat.channels * pixformat.channel_size_bits / 8;
-
-    return pixformat;
-}
-
-
 void VideoInput::Open(std::string uri)
 {
     this->uri = uri;
@@ -367,6 +354,12 @@ unsigned VideoInput::Height() const
 {
     if( !video ) throw VideoException("No video source open");
     return video->Height();
+}
+
+size_t VideoInput::SizeBytes() const
+{
+    if( !video ) throw VideoException("No video source open");
+    return video->SizeBytes();
 }
 
 std::string VideoInput::PixFormat() const

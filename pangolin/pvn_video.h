@@ -41,7 +41,7 @@ struct VideoStream
     std::string name;
     VideoPixelFormat fmt;
     int w,h;
-    int frame_size_bytes;
+    size_t frame_size_bytes;
 };
 
 class PvnVideo : public VideoInterface
@@ -55,6 +55,7 @@ public:
     void Stop();
     unsigned Width() const;
     unsigned Height() const;
+    size_t SizeBytes() const;
     std::string PixFormat() const;
     bool GrabNext( unsigned char* image, bool wait = true );
     bool GrabNewest( unsigned char* image, bool wait = true );

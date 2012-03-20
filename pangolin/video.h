@@ -30,6 +30,32 @@
 
 #include "pangolin.h"
 
+// Pangolin video supports various cameras and file formats through
+// different 3rd party libraries.
+//
+// Video URI's take the following form:
+//  scheme:[param1=value1,param2=value2,...]//device
+//
+// scheme = file | dc1394 | v4l | convert | mjpeg
+//
+// file/files - read PVN file format (pangolin video) or other formats using ffmpeg
+//  e.g. "file:[realtime=1]///home/user/video/movie.pvn"
+//  e.g. "file:///home/user/video/movie.avi"
+//  e.g. "files:///home/user/seqiemce/foo%03d.jpeg"
+//
+// dc1394 - capture video through a firewire camera
+//  e.g. "dc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0"
+//  e.g. "dc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0"
+//
+// v4l - capture video from a Video4Linux (USB) camera (normally YUVY422 format)
+//  e.g. "v4l:///dev/video0"
+//
+// convert - use FFMPEG to convert between video pixel formats
+//  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
+//
+// mjpeg - capture from (possibly networked) motion jpeg stream using FFMPEG
+//  e.g. "mjpeg://http://127.0.0.1/?action=stream"
+
 namespace pangolin
 {
     struct VideoException : std::exception
@@ -47,10 +73,13 @@ namespace pangolin
     {
         std::string format;
         unsigned int channels;
-        unsigned int channel_size_bits;
-        size_t size_bytes;
+        unsigned int channel_bits[4];
+        unsigned int bpp;
+        bool planar;
     };
 
+    //! Return Pixel Format properties given string specification in
+    //! FFMPEG notation.
     VideoPixelFormat VideoFormatFromString(const std::string& format);
 
     //! Interface to video capture sources
@@ -59,6 +88,8 @@ namespace pangolin
         virtual ~VideoInterface() {}
         virtual unsigned Width() const = 0;
         virtual unsigned Height() const = 0;
+        virtual size_t SizeBytes() const = 0;
+
         virtual std::string PixFormat() const = 0;
 
         virtual void Start() = 0;
@@ -87,6 +118,7 @@ namespace pangolin
 
         unsigned Width() const;
         unsigned Height() const;
+        size_t SizeBytes() const;
         std::string PixFormat() const;
 
         void Start();

@@ -120,6 +120,9 @@ public:
   //! Implement VideoSource::Height()
   unsigned Height() const { return height; }
 
+  //! Implement VideoSource::SizeBytes()
+  size_t SizeBytes() const;
+
   //! Implement VideoSource::PixFormat()
   std::string PixFormat() const;
 

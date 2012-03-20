@@ -267,160 +267,122 @@ std::string Dc1394ColorCodingToString(dc1394color_coding_t coding)
 {
     switch(coding)
     {
-    case DC1394_COLOR_CODING_MONO8 : return "MONO8";
-    case DC1394_COLOR_CODING_YUV411 : return "YUV411";
-    case DC1394_COLOR_CODING_YUV422 : return "YUV422";
-    case DC1394_COLOR_CODING_YUV444 : return "YUV444";
-    case DC1394_COLOR_CODING_RGB8 : return "RGB8";
-    case DC1394_COLOR_CODING_MONO16 : return "MONO16";
-    case DC1394_COLOR_CODING_RGB16 : return "RGB16";
-    case DC1394_COLOR_CODING_MONO16S : return "MONO16S";
-    case DC1394_COLOR_CODING_RGB16S : return "RGB16S";
-    case DC1394_COLOR_CODING_RAW8 : return "RAW8";
-    case DC1394_COLOR_CODING_RAW16 : return "RAW16";
-    default: return "";
+        case DC1394_COLOR_CODING_RGB8 :    return "RGB24";
+        case DC1394_COLOR_CODING_MONO8 :   return "GRAY8";
+
+//        case DC1394_COLOR_CODING_MONO16 :  return "GRAY16LE";
+//        case DC1394_COLOR_CODING_RGB16 :   return "RGB48LE";
+//        case DC1394_COLOR_CODING_MONO16S : return "GRAY16BE";
+//        case DC1394_COLOR_CODING_RGB16S :  return "RGB48BE";
+
+//        case DC1394_COLOR_CODING_YUV411 :  return "YUV411P";
+//        case DC1394_COLOR_CODING_YUV422 :  return "YUV422P";
+//        case DC1394_COLOR_CODING_YUV444 :  return "YUV444P";
+//        case DC1394_COLOR_CODING_RAW8 :    return "RAW8";
+//        case DC1394_COLOR_CODING_RAW16 :   return "RAW16";
+        default:
+            throw VideoException("Unknown colour coding");
     }
 }
 
 dc1394color_coding_t Dc1394ColorCodingFromString(std::string coding)
 {
-    if( !coding.compare("MONO8")) return DC1394_COLOR_CODING_MONO8;
-    else if(!coding.compare("YUV411")) return DC1394_COLOR_CODING_YUV411;
-    else if(!coding.compare("YUV422")) return DC1394_COLOR_CODING_YUV422;
-    else if(!coding.compare("YUV444")) return DC1394_COLOR_CODING_YUV444;
-    else if(!coding.compare("RGB8")) return DC1394_COLOR_CODING_RGB8;
-    else if(!coding.compare("MONO16")) return DC1394_COLOR_CODING_MONO16;
-    else if(!coding.compare("RGB16")) return DC1394_COLOR_CODING_RGB16;
-    else if(!coding.compare("MONO16S")) return DC1394_COLOR_CODING_MONO16S;
-    else if(!coding.compare("RGB16S")) return DC1394_COLOR_CODING_RGB16S;
-    else if(!coding.compare("RAW8")) return DC1394_COLOR_CODING_RAW8;
-    else if(!coding.compare("RAW16")) return DC1394_COLOR_CODING_RAW16;
-    throw VideoException("Unknown Colour coding");
+    if(     !coding.compare("RGB24"))    return DC1394_COLOR_CODING_RGB8;
+    else if(!coding.compare("GRAY8"))    return DC1394_COLOR_CODING_MONO8;
+
+//    else if(!coding.compare("GRAY16LE")) return DC1394_COLOR_CODING_MONO16;
+//    else if(!coding.compare("RGB48LE"))  return DC1394_COLOR_CODING_RGB16;
+//    else if(!coding.compare("GRAY16BE")) return DC1394_COLOR_CODING_MONO16S;
+//    else if(!coding.compare("RGB48BE"))  return DC1394_COLOR_CODING_RGB16S;
+
+//    else if(!coding.compare("YUV411P"))  return DC1394_COLOR_CODING_YUV411;
+//    else if(!coding.compare("YUV422P"))  return DC1394_COLOR_CODING_YUV422;
+//    else if(!coding.compare("YUV444P"))  return DC1394_COLOR_CODING_YUV444;
+//    else if(!coding.compare("RAW8"))     return DC1394_COLOR_CODING_RAW8;
+//    else if(!coding.compare("RAW16"))    return DC1394_COLOR_CODING_RAW16;
+    throw VideoException("Unknown colour coding");
 }
 
 void Dc1394ModeDetails(dc1394video_mode_t mode, unsigned& w, unsigned& h, string& format )
 {
   switch( mode )
   {
-  case DC1394_VIDEO_MODE_160x120_YUV444:
-    w=160;
-    h=120;
-    format = "YUV444";
-    break;
-  case DC1394_VIDEO_MODE_320x240_YUV422:
-    w=320;
-    h=240;
-    format = "YUV422";
-    break;
-  case DC1394_VIDEO_MODE_640x480_YUV411:
-    w=640;
-    h=480;
-    format = "YUV411";
-    break;
-  case DC1394_VIDEO_MODE_640x480_YUV422:
-    w=640;
-    h=480;
-    format = "YUV422";
+  // RGB Modes
+  case DC1394_VIDEO_MODE_1024x768_RGB8:
+    w=1024;    h=768;    format = "RGB24";
     break;
   case DC1394_VIDEO_MODE_640x480_RGB8:
-    w=640;
-    h=480;
-    format = "RGB8";
-    break;
-  case DC1394_VIDEO_MODE_640x480_MONO8:
-    w=640;
-    h=480;
-    format = "MONO8";
-    break;
-  case DC1394_VIDEO_MODE_640x480_MONO16:
-    w=640;
-    h=480;
-    format = "MONO16";
-    break;
-  case DC1394_VIDEO_MODE_800x600_YUV422:
-    w=800;
-    h=600;
-    format = "YUV422";
+    w=640;    h=480;    format = "RGB24";
     break;
   case DC1394_VIDEO_MODE_800x600_RGB8:
-    w=800;
-    h=600;
-    format = "RGB8";
-    break;
-  case DC1394_VIDEO_MODE_800x600_MONO8:
-    w=800;
-    h=600;
-    format = "MONO8";
-    break;
-  case DC1394_VIDEO_MODE_1024x768_YUV422:
-    w=1024;
-    h=768;
-    format = "YUV422";
-    break;
-  case DC1394_VIDEO_MODE_1024x768_RGB8:
-    w=1024;
-    h=768;
-    format = "RGB8";
-    break;
-  case DC1394_VIDEO_MODE_1024x768_MONO8:
-    w=1024;
-    h=768;
-    format = "MONO8";
-    break;
-  case DC1394_VIDEO_MODE_800x600_MONO16:
-    w=800;
-    h=600;
-    format = "MONO16";
-    break;
-  case DC1394_VIDEO_MODE_1024x768_MONO16:
-    w=1024;
-    h=768;
-    format = "MONO16";
-    break;
-  case DC1394_VIDEO_MODE_1280x960_YUV422:
-    w=1280;
-    h=960;
-    format = "YUV422";
+    w=800;    h=600;    format = "RGB24";
     break;
   case DC1394_VIDEO_MODE_1280x960_RGB8:
-    w=1280;
-    h=960;
-    format = "RGB8";
-    break;
-  case DC1394_VIDEO_MODE_1280x960_MONO8:
-    w=1280;
-    h=960;
-    format = "MONO8";
-    break;
-  case DC1394_VIDEO_MODE_1600x1200_YUV422:
-    w=1600;
-    h=1200;
-    format = "YUV422";
+    w=1280;    h=960;    format = "RGB24";
     break;
   case DC1394_VIDEO_MODE_1600x1200_RGB8:
-    w=1600;
-    h=1200;
-    format = "RGB8";
+    w=1600;    h=1200;    format = "RGB24";
+    break;
+
+  // Greyscale modes
+  case DC1394_VIDEO_MODE_640x480_MONO8:
+    w=640;    h=480;    format = "GRAY8";
+    break;
+  case DC1394_VIDEO_MODE_800x600_MONO8:
+    w=800;    h=600;    format = "GRAY8";
+    break;
+  case DC1394_VIDEO_MODE_1024x768_MONO8:
+    w=1024;    h=768;    format = "GRAY8";
+    break;
+  case DC1394_VIDEO_MODE_1280x960_MONO8:
+    w=1280;    h=960;    format = "GRAY8";
     break;
   case DC1394_VIDEO_MODE_1600x1200_MONO8:
-    w=1600;
-    h=1200;
-    format = "MONO8";
+    w=1600;    h=1200;    format = "GRAY8";
+    break;
+  case DC1394_VIDEO_MODE_640x480_MONO16:
+    w=640;    h=480;    format = "GRAY16";
+    break;
+  case DC1394_VIDEO_MODE_800x600_MONO16:
+    w=800;    h=600;    format = "GRAY16";
+    break;
+  case DC1394_VIDEO_MODE_1024x768_MONO16:
+    w=1024;    h=768;    format = "GRAY16";
     break;
   case DC1394_VIDEO_MODE_1280x960_MONO16:
-    w=1280;
-    h=960;
-    format = "MONO16";
+    w=1280;    h=960;    format = "GRAY16";
     break;
   case DC1394_VIDEO_MODE_1600x1200_MONO16:
-    w=1600;
-    h=1200;
-    format = "MONO16";
+    w=1600;    h=1200;    format = "GRAY16";
+    break;
+
+  // Chrome modes
+  case DC1394_VIDEO_MODE_640x480_YUV411:
+    w=640;    h=480;    format = "YUV411P";
+    break;
+  case DC1394_VIDEO_MODE_160x120_YUV444:
+    w=160;    h=120;    format = "YUV444P";
+    break;
+  case DC1394_VIDEO_MODE_320x240_YUV422:
+    w=320;    h=240;    format = "YUV422P";
+    break;
+  case DC1394_VIDEO_MODE_640x480_YUV422:
+    w=640;    h=480;    format = "YUV422P";
+    break;
+  case DC1394_VIDEO_MODE_800x600_YUV422:
+    w=800;    h=600;    format = "YUV422P";
+    break;
+  case DC1394_VIDEO_MODE_1024x768_YUV422:
+    w=1024;    h=768;    format = "YUV422P";
+    break;
+  case DC1394_VIDEO_MODE_1600x1200_YUV422:
+    w=1600;    h=1200;    format = "YUV422P";
+    break;
+  case DC1394_VIDEO_MODE_1280x960_YUV422:
+    w=1280;    h=960;    format = "YUV422P";
     break;
   default:
-    w=0;
-    h=0;
-    format = "unknown";
+      throw VideoException("Unknown colour coding");
   }
 }
 
@@ -431,6 +393,11 @@ std::string FirewireVideo::PixFormat() const
     dc1394_video_get_mode(camera,&video_mode);
     dc1394_get_color_coding_from_video_mode(camera,video_mode,&color_coding);
     return Dc1394ColorCodingToString(color_coding);
+}
+
+size_t FirewireVideo::SizeBytes() const
+{
+    return (Width() * Height() * VideoFormatFromString(PixFormat()).bpp) / 8;
 }
 
 void FirewireVideo::Start()

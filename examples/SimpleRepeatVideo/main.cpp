@@ -38,7 +38,7 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
     // OpenGl Texture for video frame
     GlTexture texVideo(w,h,GL_RGBA8);
 
-    unsigned char* img = new unsigned char[w*h*vid_fmt.size_bytes];
+    unsigned char* img = new unsigned char[video.SizeBytes()];
 
     static Var<bool> record("ui.Record",false,false);
     static Var<bool> play("ui.Play",false,false);
@@ -95,24 +95,44 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
 
 int main( int argc, char* argv[] )
 {
-    std::string uri = "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0";
+    std::string uris[] = {
+        "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
+        "convert:[fmt=RGB24]//v4l:///dev/video0",
+        "convert:[fmt=RGB24]//v4l:///dev/video1",
+        ""
+    };
+
     std::string filename = "video.pvn";
 
     if( argc >= 2 ) {
-        uri = std::string(argv[1]);
+        const string uri = std::string(argv[1]);
         if( argc == 3 ) {
             filename = std::string(argv[2]);
         }
+        RecordSample(uri, filename, filename + ".ui");
     }else{
-        cout << "Usage:" << endl << "\tSimpleRepeatVideo video-uri filename" << endl;
-        cout << "\tvideo-uri:\tURI of file / device to extract video sequence from" << endl;
-        cout << "\tfilename:\tfilename to record pvn video in to" << endl << endl;
-        cout << "e.g." << endl;
-        cout << "\tSimpleRepeatVideo dc1394:[fmt=RGB8,size=640x480,fps=30,iso=400,dma=10]//0 video.pvn" << endl;
-        cout << "\tSimpleRepeatVideo dc1394:[fmt=FORMAT7_2,size=640x480,pos=2+2,iso=400,dma=10]//0" << endl;
-        cout << "\tSimpleRepeatVideo convert:[fmt=RGB8]//v4l:///dev/video0 video.pvn" << endl;
-        cout << endl << "Defaulting to video-uri=" << uri << endl;
+        cout << "Usage  : SimpleRepeatVideo [video-uri] [buffer-filename]" << endl << endl;
+        cout << "Where video-uri describes a stream or file resource, e.g." << endl;
+        cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << endl;
+        cout << "\tfile:///home/user/video/movie.avi" << endl;
+        cout << "\tfiles:///home/user/seqiemce/foo%03d.jpeg" << endl;
+        cout << "\tdc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0" << endl;
+        cout << "\tdc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << endl;
+        cout << "\tv4l:///dev/video0" << endl;
+        cout << "\tconvert:[fmt=RGB24]//v4l:///dev/video0" << endl;
+        cout << "\tmjpeg://http://127.0.0.1/?action=stream" << endl;
+        cout << endl;
+
+        // Try to open some video device
+        for(int i=0; !uris[i].empty(); ++i )
+        {
+            try{
+                cout << "Trying: " << uris[i] << endl;
+                RecordSample(uris[i], filename, filename + ".ui");
+                return 0;
+            }catch(VideoException) {}
+        }
     }
 
-    RecordSample(uri, filename, filename + ".ui");
+    return 0;
 }

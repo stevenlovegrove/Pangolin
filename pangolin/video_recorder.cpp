@@ -43,7 +43,7 @@ VideoRecorder::VideoRecorder(
     strm0.w = stream0_width;
     strm0.h = stream0_height;
     strm0.fmt = VideoFormatFromString(stream0_fmt);
-    strm0.frame_size_bytes = strm0.w * strm0.h * strm0.fmt.size_bytes;
+    strm0.frame_size_bytes = (strm0.w * strm0.h * strm0.fmt.bpp) / 8;
 
     stream_info.push_back(strm0);
 }

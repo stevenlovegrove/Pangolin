@@ -45,6 +45,7 @@ struct VideoRecordRepeat : public VideoInterface
 
     unsigned Width() const;
     unsigned Height() const;
+    size_t SizeBytes() const;
     std::string PixFormat() const;
 
     void Start();
