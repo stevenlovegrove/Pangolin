@@ -44,7 +44,7 @@ extern "C"
 
 #include <avformat.h>
 #include <swscale.h>
-#include "pixdesc.h"
+#include <pixdesc.h>
 }
 
 namespace pangolin

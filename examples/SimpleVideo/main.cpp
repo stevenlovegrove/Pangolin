@@ -66,6 +66,7 @@ int main( int argc, char* argv[] )
         cout << "\tSimpleRecord convert:[fmt=RGB8]//v4l:///dev/video0" << endl;
         cout << "\tSimpleRecord file:///media/Data/pictures/photos/Minnesota 2010/00021.MTS" << endl;
         cout << "\tSimpleRecord file:///home/sl203/videos/YellowPattern1/test-0000000017.ppm" << endl;
+        cout << "\tSimpleRecord file://http://192.168.0.150/?action=stream" << endl;
         cout << endl << "Defaulting to video-uri=" << uri << endl;
     }
 
