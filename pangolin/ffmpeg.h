@@ -107,7 +107,7 @@ enum FfmpegMethod
 class FfmpegConverter : public VideoInterface
 {
 public:
-    FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_FAST_BILINEAR);
+    FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_POINT);
     ~FfmpegConverter();
 
     void Start();

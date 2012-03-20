@@ -225,7 +225,7 @@ VideoInterface* OpenVideo(std::string str_uri)
         video = new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" );
     }else if( !uri.scheme.compare("convert") ) {
         VideoInterface* subvid = OpenVideo(uri.url);
-        video = new FfmpegConverter(subvid,"RGB24",FFMPEG_FAST_BILINEAR);
+        video = new FfmpegConverter(subvid,"RGB24",FFMPEG_POINT);
     }else
 #endif //HAVE_FFMPEG
     if(!uri.scheme.compare("v4l")) {
