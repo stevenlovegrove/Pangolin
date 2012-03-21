@@ -685,19 +685,14 @@ namespace pangolin
     }
   }
 
-  const uint MIN_CHILDREN_FOR_SCROLL = 5;
-
   void HandlerScroll::Mouse(View& d, MouseButton button, int x, int y, bool pressed, int button_state)
   {
-    if( button == MouseWheelUp || button == MouseWheelDown )
+    if( button == button_state && (button == MouseWheelUp || button == MouseWheelDown) )
     {
-        if( pressed && d.views.size() > MIN_CHILDREN_FOR_SCROLL)
-        {
-            if( button == MouseWheelUp) d.scroll_offset += 1;
-            if( button == MouseWheelDown) d.scroll_offset -= 1;
-            d.scroll_offset = max(0,d.scroll_offset);
-            d.ResizeChildren();
-        }
+        if( button == MouseWheelUp) d.scroll_offset += 1;
+        if( button == MouseWheelDown) d.scroll_offset -= 1;
+        d.scroll_offset = max(0, min(d.scroll_offset, (int)d.views.size()) );
+        d.ResizeChildren();
     }else{
         Handler::Mouse(d,button,x,y,pressed,button_state);
     }
