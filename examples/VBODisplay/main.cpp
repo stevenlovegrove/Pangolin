@@ -104,7 +104,7 @@ int main( int /*argc*/, char* argv[] )
     glDisableClientState(GL_COLOR_ARRAY);
 
     // Render our UI panel when we receive input
-    if(HadInput() | !(frame%1000))
+    if(HadInput() | !(frame%100))
     {
 #ifdef USE_CUTIL
       fps = 1000.0 / cutGetAverageTimerValue(timer);
