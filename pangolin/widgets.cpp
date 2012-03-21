@@ -213,11 +213,14 @@ Button::Button(string title, _Var& tv)
 
 void Button::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
 {
-  down = pressed;
-  if( !pressed ) {
-    a->Set(!a->Get());
-    GuiVarChanged(*this);
-  }
+    if(button == MouseButtonLeft )
+    {
+      down = pressed;
+      if( !pressed ) {
+        a->Set(!a->Get());
+        GuiVarChanged(*this);
+      }
+    }
 }
 
 void Button::Render()
@@ -249,7 +252,7 @@ Checkbox::Checkbox(std::string title, _Var& tv)
 
 void Checkbox::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
 {
-  if( pressed ) {
+  if( button == MouseButtonLeft && pressed ) {
     a->Set(!a->Get());
     GuiVarChanged(*this);
   }
@@ -492,41 +495,44 @@ void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 
 void TextInput::Mouse(View& view, MouseButton button, int x, int y, bool pressed, int mouse_state)
 {
-
-  if(do_edit)
-  {
-    const int sl = glutBitmapLength(font,(unsigned char*)edit.c_str()) + 2;
-    const int rl = v.l + v.w - sl;
-    int ep = edit.length();
-
-    if( x < rl )
+    if(button != MouseWheelUp && button != MouseWheelDown )
     {
-      ep = 0;
-    }else{
-      for( unsigned i=0; i<edit.length(); ++i )
+
+      if(do_edit)
       {
-        const int tl = rl + glutBitmapLength(font,(unsigned char*)edit.substr(0,i).c_str());
-        if(x < tl+2)
+        const int sl = glutBitmapLength(font,(unsigned char*)edit.c_str()) + 2;
+        const int rl = v.l + v.w - sl;
+        int ep = edit.length();
+
+        if( x < rl )
         {
-          ep = i;
-          break;
+          ep = 0;
+        }else{
+          for( unsigned i=0; i<edit.length(); ++i )
+          {
+            const int tl = rl + glutBitmapLength(font,(unsigned char*)edit.substr(0,i).c_str());
+            if(x < tl+2)
+            {
+              ep = i;
+              break;
+            }
+          }
         }
+        if(pressed)
+        {
+          sel[0] = sel[1] = ep;
+        }else{
+          sel[1] = ep;
+        }
+
+        if(sel[0] > sel[1])
+          std::swap(sel[0],sel[1]);
+      }else{
+        do_edit = !pressed;
+        sel[0] = 0;
+        sel[1] = edit.length();
       }
     }
-    if(pressed)
-    {
-      sel[0] = sel[1] = ep;
-    }else{
-      sel[1] = ep;
-    }
-
-    if(sel[0] > sel[1])
-      std::swap(sel[0],sel[1]);
-  }else{
-    do_edit = !pressed;
-    sel[0] = 0;
-    sel[1] = edit.length();
-  }
 }
 
 void TextInput::MouseMotion(View&, int x, int y, int mouse_state)
