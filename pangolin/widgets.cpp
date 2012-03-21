@@ -53,7 +53,7 @@ const static float colour_hl[4] = {0.9, 0.9, 0.9, 1.0};
 const static float colour_dn[4] = {1.0, 0.7 ,0.7, 1.0};
 static void* font = GLUT_BITMAP_HELVETICA_12;
 static int text_height = 8; //glutBitmapHeight(font) * 0.7;
-static float cb_height = text_height * 1.6;
+static int cb_height = text_height * 1.6;
 
 boost::mutex display_mutex;
 
@@ -69,23 +69,23 @@ void GuiVarChanged( Var<T>& var)
 
 void glRect(Viewport v)
 {
-  glRectf(v.l,v.t()-1,v.r()-1,v.b);
+  glRecti(v.l,v.b,v.r(),v.t());
 }
 
 void glRect(Viewport v, int inset)
 {
-  glRectf(v.l+inset,v.t()-inset-1,v.r()-inset-1,v.b+inset);
+  glRecti(v.l+inset,v.b+inset,v.r()-inset,v.t()-inset);
 }
 
 void DrawShadowRect(Viewport& v)
 {
   glColor4fv(colour_s2);
   glBegin(GL_LINE_STRIP);
-  glVertex2f(v.l,v.b);
-  glVertex2f(v.l,v.t());
-  glVertex2f(v.r(),v.t());
-  glVertex2f(v.r(),v.b);
-  glVertex2f(v.l,v.b);
+  glVertex2i(v.l,v.b);
+  glVertex2i(v.l,v.t());
+  glVertex2i(v.r(),v.t());
+  glVertex2i(v.r(),v.b);
+  glVertex2i(v.l,v.b);
   glEnd();
 }
 
@@ -93,16 +93,16 @@ void DrawShadowRect(Viewport& v, bool pushed)
 {
   glColor4fv(pushed ? colour_s1 : colour_s2);
   glBegin(GL_LINE_STRIP);
-  glVertex2f(v.l,v.b);
-  glVertex2f(v.l,v.t());
-  glVertex2f(v.r(),v.t());
+  glVertex2i(v.l,v.b);
+  glVertex2i(v.l,v.t());
+  glVertex2i(v.r(),v.t());
   glEnd();
 
   glColor3fv(pushed ? colour_s2 : colour_s1);
   glBegin(GL_LINE_STRIP);
-  glVertex2f(v.r(),v.t());
-  glVertex2f(v.r(),v.b);
-  glVertex2f(v.l,v.b);
+  glVertex2i(v.r(),v.t());
+  glVertex2i(v.r(),v.b);
+  glVertex2i(v.l,v.b);
   glEnd();
 }
 
@@ -178,7 +178,7 @@ void Panel::Render()
   glColor4fv(colour_s2);
   glRect(v);
   glColor4fv(colour_bg);
-  glRect(vinside);
+  glRect(v,1);
 
   RenderChildren();
 
@@ -187,7 +187,6 @@ void Panel::Render()
 
 void Panel::ResizeChildren()
 {
-  vinside = v.Inset(border,border);
   View::ResizeChildren();
 }
 
@@ -223,12 +222,12 @@ void Button::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mo
 
 void Button::Render()
 {
-  DrawShadowRect(v, down);
   glColor4fv(colour_fg );
-  glRect(vinside);
+  glRect(v);
   glColor4fv(colour_tx);
   glRasterPos2f(raster[0],raster[1]-down);
   glutBitmapString(font,(unsigned char*)title.c_str());
+  DrawShadowRect(v, down);
 }
 
 void Button::ResizeChildren()
@@ -260,8 +259,8 @@ void Checkbox::ResizeChildren()
 {
   raster[0] = v.l + cb_height + 4;
   raster[1] = v.b + (v.h-text_height)/2.0;
-  const float h = v.h;
-  const float t = (h-cb_height) / 2.0;
+  const int h = v.h;
+  const int t = (h-cb_height) / 2.0;
   vcb = Viewport(v.l,v.b+t,cb_height,cb_height);
 }
 
@@ -269,7 +268,6 @@ void Checkbox::Render()
 {
   const bool val = a->Get();
 
-  DrawShadowRect(vcb, val);
   if( val )
   {
     glColor4fv(colour_dn);
@@ -278,6 +276,7 @@ void Checkbox::Render()
   glColor4fv(colour_tx);
   glRasterPos2fv( raster );
   glutBitmapString(font,(unsigned char*)title.c_str());
+  DrawShadowRect(vcb, val);
 }
 
 
@@ -395,12 +394,12 @@ void Slider::Render()
     {
       rval = log(val);
     }
-    DrawShadowRect(v);
     glColor4fv(colour_fg);
     glRect(v);
     glColor4fv(colour_dn);
     const double norm_val = max(0.0,min(1.0,(rval - var->meta_range[0]) / (var->meta_range[1] - var->meta_range[0])));
     glRect(Viewport(v.l,v.b,v.w*norm_val,v.h));
+    DrawShadowRect(v);
   }
 
   glColor4fv(colour_tx);
@@ -568,7 +567,6 @@ void TextInput::Render()
 {
   if(!do_edit) edit = a->Get();
 
-  DrawShadowRect(v);
   glColor4fv(colour_fg);
   glRect(v);
 
@@ -589,6 +587,7 @@ void TextInput::Render()
 
   glRasterPos2f( rl, raster[1] );
   glutBitmapString(font,(unsigned char*)edit.c_str());
+  DrawShadowRect(v);
 }
 
 }
