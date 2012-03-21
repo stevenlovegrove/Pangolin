@@ -460,10 +460,17 @@ namespace pangolin
     {
       // Allocate space incrementally
       Viewport space = v.Inset(panal_v_margin);
+      int num_children = 0;
       foreach(View* i, views )
       {
-        i->Resize(space);
-        space.h = i->v.b - panal_v_margin - space.b;
+        num_children++;
+        if(scroll_offset > num_children ) {
+            i->show = false;
+        }else{
+            i->show = true;
+            i->Resize(space);
+            space.h = i->v.b - panal_v_margin - space.b;
+        }
       }
     }else if(layout == LayoutHorizontal )
     {
@@ -529,7 +536,7 @@ namespace pangolin
   void View::RenderChildren()
   {
     foreach(View* v, views)
-      v->Render();
+      if(v->show) v->Render();
   }
 
   void View::Activate() const
@@ -640,7 +647,7 @@ namespace pangolin
   View* FindChild(View& parent, int x, int y)
   {
     for( vector<View*>::const_iterator i = parent.views.begin(); i != parent.views.end(); ++i )
-      if( (*i)->vp.Contains(x,y) )
+      if( (*i)->show && (*i)->vp.Contains(x,y) )
         return (*i);
     return 0;
   }
@@ -676,6 +683,25 @@ namespace pangolin
       if( child->handler)
         child->handler->MouseMotion(*child,x,y,button_state);
     }
+  }
+
+  const uint MIN_CHILDREN_FOR_SCROLL = 5;
+
+  void HandlerScroll::Mouse(View& d, MouseButton button, int x, int y, bool pressed, int button_state)
+  {
+    if( button == MouseWheelUp || button == MouseWheelDown )
+    {
+        if( pressed && d.views.size() > MIN_CHILDREN_FOR_SCROLL)
+        {
+            if( button == MouseWheelUp) d.scroll_offset += 1;
+            if( button == MouseWheelDown) d.scroll_offset -= 1;
+            d.scroll_offset = max(0,d.scroll_offset);
+            d.ResizeChildren();
+        }
+    }else{
+        Handler::Mouse(d,button,x,y,pressed,button_state);
+    }
+
   }
 
   void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)

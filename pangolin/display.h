@@ -239,7 +239,7 @@ namespace pangolin
   {
     View()
       : aspect(0.0), top(1.0),left(0.0),right(1.0),bottom(0.0), hlock(LockCenter),vlock(LockCenter),
-        layout(LayoutOverlay), handler(0) {}
+        layout(LayoutOverlay), scroll_offset(0), show(1), handler(0) {}
 
     virtual ~View() {}
 
@@ -298,11 +298,16 @@ namespace pangolin
     Lock vlock;
     Layout layout;
 
+    int scroll_offset;
+
     // Cached client area (space allocated from parent)
     Viewport vp;
 
     // Cached absolute viewport (recomputed on resize - respects aspect)
     Viewport v;
+
+    // Should this view be displayed?
+    bool show;
 
     // Input event handler (if any)
     Handler* handler;
@@ -334,6 +339,12 @@ namespace pangolin
     virtual void MouseMotion(View&, int x, int y, int button_state);
   };
   static Handler StaticHandler;
+
+  struct HandlerScroll : Handler
+  {
+    void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
+  };
+  static HandlerScroll StaticHandlerScroll;
 
   struct Handler3D : Handler
   {

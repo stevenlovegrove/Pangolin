@@ -109,14 +109,14 @@ void DrawShadowRect(Viewport& v, bool pushed)
 Panel::Panel()
   : context_views(context->all_views)
 {
-  handler = &StaticHandler;
+  handler = &StaticHandlerScroll;
   layout = LayoutVertical;
 }
 
 Panel::Panel(const std::string& auto_register_var_prefix)
   : context_views(context->all_views)
 {
-  handler = &StaticHandler;
+  handler = &StaticHandlerScroll;
   layout = LayoutVertical;
   RegisterNewVarCallback(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
 
