@@ -689,8 +689,8 @@ namespace pangolin
   {
     if( button == button_state && (button == MouseWheelUp || button == MouseWheelDown) )
     {
-        if( button == MouseWheelUp) d.scroll_offset += 1;
-        if( button == MouseWheelDown) d.scroll_offset -= 1;
+        if( button == MouseWheelUp) d.scroll_offset   -= 1;
+        if( button == MouseWheelDown) d.scroll_offset += 1;
         d.scroll_offset = max(0, min(d.scroll_offset, (int)d.views.size()) );
         d.ResizeChildren();
     }else{
