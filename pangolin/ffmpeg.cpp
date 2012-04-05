@@ -205,7 +205,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     if(pFrameOut==0)
     throw VideoException("Couldn't allocate frame");
 
-    PixelFormat fmtout = FfmpegFmtFromString(strfmtout);
+    fmtout = FfmpegFmtFromString(strfmtout);
 
     // Determine required buffer size and allocate buffer
     numBytesOut=avpicture_get_size(fmtout, pVidCodecCtx->width, pVidCodecCtx->height);
@@ -250,7 +250,7 @@ size_t FfmpegVideo::SizeBytes() const
 
 std::string FfmpegVideo::PixFormat() const
 {
-    return FfmpegFmtToString(pVidCodecCtx->pix_fmt);
+    return FfmpegFmtToString(fmtout);
 }
 
 void FfmpegVideo::Start()
@@ -284,8 +284,8 @@ bool FfmpegVideo::GrabNext(unsigned char* image, bool /*wait*/)
                                 const int h = pVidCodecCtx->height;
 
 				img_convert_ctx = sws_getContext(w, h,
-                                                                pVidCodecCtx->pix_fmt,
-								w, h, PIX_FMT_RGB24, SWS_BICUBIC,
+                                pVidCodecCtx->pix_fmt,
+                                w, h, fmtout, FFMPEG_POINT,
 								NULL, NULL, NULL);
 				if(img_convert_ctx == NULL) {
 					fprintf(stderr, "Cannot initialize the conversion context!\n");

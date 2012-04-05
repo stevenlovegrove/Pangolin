@@ -89,6 +89,7 @@ protected:
     AVPacket        packet;
     int             numBytesOut;
     uint8_t         *buffer;
+    PixelFormat     fmtout;
 };
 
 enum FfmpegMethod

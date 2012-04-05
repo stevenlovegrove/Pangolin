@@ -58,7 +58,7 @@ VideoPixelFormat VideoFormatFromString(const std::string& format)
     for(int i=0; !SupportedVideoPixelFormats[i].format.empty(); ++i)
         if(!format.compare(SupportedVideoPixelFormats[i].format))
             return SupportedVideoPixelFormats[i];
-    throw VideoException("Unknown Format");
+    throw VideoException("Unknown Format",format);
 }
 
 struct VideoUri
