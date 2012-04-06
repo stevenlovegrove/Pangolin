@@ -47,6 +47,7 @@ namespace pangolin
 
 const VideoPixelFormat SupportedVideoPixelFormats[] =
 {
+    {"GRAY8", 1, {8}, 8, false},
     {"RGB24", 3, {8,8,8}, 24, false},
     {"BGR24", 3, {8,8,8}, 24, false},
     {"YUYV422", 3, {4,2,2}, 16, false},

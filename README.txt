@@ -1,10 +1,15 @@
 == What is Pangolin ==
 
-Pangolin is a Lightweight collection of utilities for rapid vision prototyping.
-At its heart is a simple OpenGl display library which can help manage viewports
-and offers an advanced but intuitive 3D navigation handler. Pangolin also
-provides a mechanism for manipulating program variables through config files and
-ui integration, and offers a simple mechanism for lightweight video input.
+Pangolin is a lightweight rapid development library for managing OpenGL
+display / interaction and video input. At its heart is a simple OpenGl
+viewport manager which can help to modularise 3D visualisation without
+adding to its complexity, and offers an advanced but intuitive 3D
+navigation handler. Pangolin also provides a mechanism for manipulating
+program variables through config files and ui integration.
+
+The ethos of Pangolin is to reduce the boilerplate code that normally
+gets written to visualise and interact with (typically image and 3D
+based) systems, without compromising performance.
 
 == Required Dependencies ==
 

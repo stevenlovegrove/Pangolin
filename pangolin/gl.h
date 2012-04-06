@@ -54,6 +54,8 @@ struct GlTexture
   void Bind() const;
   void Unbind() const;
 
+  //! data_layout normally one of GL_LUMINANCE, GL_RGB, ...
+  //! data_type normally one of GL_UNSIGNED_BYTE, GL_FLOAT
   void Upload(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT);
 
   void SetLinear();

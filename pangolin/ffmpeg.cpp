@@ -35,7 +35,10 @@ namespace pangolin
 PixelFormat FfmpegFmtFromString(const std::string fmt)
 {
 	std::string lfmt = boost::algorithm::to_lower_copy(fmt);
-	return av_get_pix_fmt(lfmt.c_str());
+    if(!lfmt.compare("gray8") || !lfmt.compare("grey8") || !lfmt.compare("grey")) {
+        return PIX_FMT_GRAY8;
+    }
+    return av_get_pix_fmt(lfmt.c_str());
 }
 
 #define TEST_PIX_FMT_RETURN(fmt) case PIX_FMT_##fmt: return #fmt;
@@ -118,13 +121,13 @@ std::string FfmpegFmtToString(const PixelFormat fmt)
 
 #undef TEST_PIX_FMT_RETURN
 
-FfmpegVideo::FfmpegVideo(const std::string filename, const std::string strfmtout, const std::string codec_hint)
+FfmpegVideo::FfmpegVideo(const std::string filename, const std::string strfmtout, const std::string codec_hint, bool dump_info)
     :pFormatCtx(0)
 {
-    InitUrl(filename, strfmtout, codec_hint);
+    InitUrl(filename, strfmtout, codec_hint, dump_info);
 }
 
-void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, const std::string codec_hint)
+void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, const std::string codec_hint, bool dump_info)
 {
     if( url.find('*') != url.npos )
         throw VideoException("Wildcards not supported. Please use ffmpegs printf style formatting for image sequences. e.g. img-000000%04d.ppm");
@@ -153,13 +156,15 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     if(av_find_stream_info(pFormatCtx)<0)
         throw VideoException("Couldn't find stream information");
 
-    // Dump information about file onto standard error
+    if(dump_info) {
+        // Dump information about file onto standard error
 #ifdef CODEC_TYPE_VIDEO
-    // Old (deprecated) interface
-    dump_format(pFormatCtx, 0, url.c_str(), false);
+        // Old (deprecated) interface
+        dump_format(pFormatCtx, 0, url.c_str(), false);
 #else
-    av_dump_format(pFormatCtx, 0, url.c_str(), false);
+        av_dump_format(pFormatCtx, 0, url.c_str(), false);
 #endif
+    }
 
     // Find the first video stream
     videoStream=-1;
@@ -203,17 +208,32 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     // Allocate an AVFrame structure
     pFrameOut=avcodec_alloc_frame();
     if(pFrameOut==0)
-    throw VideoException("Couldn't allocate frame");
+        throw VideoException("Couldn't allocate frame");
 
     fmtout = FfmpegFmtFromString(strfmtout);
+    if(fmtout == PIX_FMT_NONE )
+        throw VideoException("Output format not recognised",strfmtout);
+
+    // Image dimensions
+    const int w = pVidCodecCtx->width;
+    const int h = pVidCodecCtx->height;
 
     // Determine required buffer size and allocate buffer
-    numBytesOut=avpicture_get_size(fmtout, pVidCodecCtx->width, pVidCodecCtx->height);
+    numBytesOut=avpicture_get_size(fmtout, w, h);
 
     buffer= new uint8_t[numBytesOut];
 
     // Assign appropriate parts of buffer to image planes in pFrameRGB
-    avpicture_fill((AVPicture *)pFrameOut, buffer, fmtout, pVidCodecCtx->width, pVidCodecCtx->height);
+    avpicture_fill((AVPicture *)pFrameOut, buffer, fmtout, w, h);
+
+    // Allocate SWS for converting pixel formats
+    img_convert_ctx = sws_getContext(w, h,
+                    pVidCodecCtx->pix_fmt,
+                    w, h, fmtout, FFMPEG_POINT,
+                    NULL, NULL, NULL);
+    if(img_convert_ctx == NULL) {
+        throw VideoException("Cannot initialize the conversion context");
+    }
 }
 
 FfmpegVideo::~FfmpegVideo()
@@ -230,6 +250,9 @@ FfmpegVideo::~FfmpegVideo()
 
     // Close the video file
     av_close_input_file(pFormatCtx);
+
+    // Free pixel conversion context
+    sws_freeContext(img_convert_ctx);
 }
 
 
@@ -275,25 +298,8 @@ bool FfmpegVideo::GrabNext(unsigned char* image, bool /*wait*/)
         }
 
         // Did we get a video frame?
-        if(gotFrame)
-        {
-            static struct SwsContext *img_convert_ctx;
-
-			if(img_convert_ctx == NULL) {
-                                const int w = pVidCodecCtx->width;
-                                const int h = pVidCodecCtx->height;
-
-				img_convert_ctx = sws_getContext(w, h,
-                                pVidCodecCtx->pix_fmt,
-                                w, h, fmtout, FFMPEG_POINT,
-								NULL, NULL, NULL);
-				if(img_convert_ctx == NULL) {
-					fprintf(stderr, "Cannot initialize the conversion context!\n");
-					exit(1);
-				}
-			}
-                        sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pVidCodecCtx->height, pFrameOut->data, pFrameOut->linesize);
-
+        if(gotFrame) {
+            sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pVidCodecCtx->height, pFrameOut->data, pFrameOut->linesize);
             memcpy(image,pFrameOut->data[0],numBytesOut);
         }
 

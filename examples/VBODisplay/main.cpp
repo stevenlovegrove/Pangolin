@@ -48,15 +48,17 @@ int main( int /*argc*/, char* argv[] )
   s_cam.Set(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
   s_cam.Set(IdentityMatrix(GlModelViewStack));
 
+  const int UI_WIDTH = 180;
+
   // Add named OpenGL viewport to window and provide 3D Handler
   View& d_cam = pangolin::Display("cam")
-    .SetBounds(0.0, 1.0, Attach::Pix(150), 1.0, -640.0f/480.0f)
+    .SetBounds(0.0, 1.0, Attach::Pix(UI_WIDTH), 1.0, -640.0f/480.0f)
     .SetHandler(new Handler3D(s_cam));
 
   // Add named Panel and bind to variables beginning 'ui'
   // A Panel is just a View with a default layout and input handling
   View& d_panel = pangolin::CreatePanel("ui")
-      .SetBounds(0.0, 1.0, 0.0, Attach::Pix(150));
+      .SetBounds(0.0, 1.0, 0.0, Attach::Pix(UI_WIDTH));
 
 #ifdef USE_CUTIL
   // Apply timer as used by CUDA samples

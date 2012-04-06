@@ -53,7 +53,7 @@ namespace pangolin
 class FfmpegVideo : public VideoInterface
 {
 public:
-    FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "");
+    FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false);
     ~FfmpegVideo();
 
     //! Implement VideoSource::Start()
@@ -75,8 +75,9 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
 
 protected:
-    void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "" );
+    void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false );
 
+    SwsContext      *img_convert_ctx;
     AVFormatContext *pFormatCtx;
     int             videoStream;
     int             audioStream;

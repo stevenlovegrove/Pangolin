@@ -125,6 +125,14 @@ namespace pangolin
     return context->base;
   }
 
+  View& CreateDisplay()
+  {
+      int iguid = rand();
+      std::stringstream ssguid;
+      ssguid << iguid;
+      return Display(ssguid.str());
+  }
+
   View& Display(const std::string& name)
   {
     // Get / Create View
@@ -637,6 +645,10 @@ namespace pangolin
     return *this;
   }
 
+  View& View::operator[](int i)
+  {
+      return *views[i];
+  }
 
   View& View::SetHandler(Handler* h)
   {

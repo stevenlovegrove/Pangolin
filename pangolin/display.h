@@ -289,6 +289,9 @@ namespace pangolin
     View& SetLayout(Layout layout);
     View& AddDisplay(View& view);
 
+    //! Return (i)th child of this view
+    View& operator[](int i);
+
     // Desired width / height aspect (0 if dynamic)
     double aspect;
 
@@ -365,8 +368,14 @@ namespace pangolin
     GLdouble rot_center[3];
   };
 
+  //! Retrieve 'base' display, corresponding to entire window
   View& DisplayBase();
+
+  //! Create or retrieve named display
   View& Display(const std::string& name);
+
+  //! Create unnamed display
+  View& CreateDisplay();
 
   OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
   OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );

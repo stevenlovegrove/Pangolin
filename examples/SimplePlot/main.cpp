@@ -19,11 +19,13 @@ int main( int /*argc*/, char* argv[] )
 
   DataLog log;
 
+  const int UI_WIDTH = 180;
+
   View& d_graph = pangolin::CreatePlotter("x",&log)
-      .SetBounds(0.0, 1.0, Attach::Pix(200), 1.0);
+      .SetBounds(0.0, 1.0, Attach::Pix(UI_WIDTH), 1.0);
 
   View& d_panel = pangolin::CreatePanel("ui")
-      .SetBounds(0.0, 1.0, 0.0, Attach::Pix(200) );
+      .SetBounds(0.0, 1.0, 0.0, Attach::Pix(UI_WIDTH) );
 
   double t = 0;
 
