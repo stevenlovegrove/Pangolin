@@ -48,6 +48,7 @@ namespace pangolin
 
 struct GlTexture
 {
+  //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8
   GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8 );
   ~GlTexture();
 

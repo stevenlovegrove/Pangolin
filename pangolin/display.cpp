@@ -26,6 +26,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include <map>
 
 #include <boost/foreach.hpp>
