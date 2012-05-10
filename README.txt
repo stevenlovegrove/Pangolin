@@ -23,11 +23,11 @@ based) systems, without compromising performance.
   (win) http://www.cmake.org/cmake/resources/software.html
   (deb) sudo apt-get install cmake
 
-== Optional Dependencies ==
-
-* FreeGlut / GLU / Glew (Recommended for examples)
+* FreeGlut / GLU / Glew (Required for drawing text and windowing)
   (win) http://www.transmissionzero.co.uk/software/freeglut-devel/
   (deb) sudo apt-get install freeglut3-dev libglu-dev libglew-dev
+
+== Optional Dependencies ==
 
 * FFMPEG (For video decoding and image rescaling)
   (deb) sudo apt-get install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev
