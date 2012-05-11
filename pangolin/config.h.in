@@ -16,6 +16,7 @@
 #cmakedefine HAVE_DC1394
 #cmakedefine HAVE_TOON
 #cmakedefine HAVE_FFMPEG
+#cmakedefine HAVE_OPENNI
 
 /// Platform
 #cmakedefine _UNIX_

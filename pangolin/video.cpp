@@ -30,6 +30,7 @@
 #include "firewire.h"
 #include "v4l.h"
 #include "ffmpeg.h"
+#include "openni.h"
 #include "pvn_video.h"
 
 #include <boost/algorithm/string.hpp>
@@ -48,6 +49,7 @@ namespace pangolin
 const VideoPixelFormat SupportedVideoPixelFormats[] =
 {
     {"GRAY8", 1, {8}, 8, false},
+    {"GRAY16LE", 1, {16}, 16, false},
     {"RGB24", 3, {8,8,8}, 24, false},
     {"BGR24", 3, {8,8,8}, 24, false},
     {"YUYV422", 3, {4,2,2}, 16, false},
@@ -322,6 +324,12 @@ VideoInterface* OpenVideo(std::string str_uri)
         }
     }else
 #endif //HAVE_DC1394
+#ifdef HAVE_OPENNI
+    if(!uri.scheme.compare("openni") || !uri.scheme.compare("kinect"))
+    {
+        video = new OpenNiVideo();
+    }else
+#endif
     {
         throw VideoException("Unable to open video URI");
     }

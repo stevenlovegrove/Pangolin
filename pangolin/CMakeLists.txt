@@ -14,6 +14,7 @@ SET(
   video.h video.cpp
   firewire.h firewire.cpp
   v4l.h v4l.cpp
+  openni.h openni.cpp
   ffmpeg.h ffmpeg.cpp
   pvn_video.h pvn_video.cpp
   video_recorder.h video_recorder.cpp
@@ -72,6 +73,14 @@ IF(FFMPEG_FOUND)
   MESSAGE(STATUS "ffmpeg Found and Enabled")
 ENDIF()
 
+FIND_PACKAGE(OpenNI QUIET)
+IF(OPENNI_FOUND)
+  SET(HAVE_OPENNI 1)
+  INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${OPENNI_INCLUDE_DIRS} )
+  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${OPENNI_LIBRARIES} )
+  MESSAGE(STATUS "OpenNI Found and Enabled")
+ENDIF()
+
 FIND_PACKAGE(TooN QUIET)
 IF(TooN_FOUND)
   SET(HAVE_TOON 1)
@@ -88,7 +97,8 @@ TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${OPENGL_LIBRARIES} ${Boost_LIBRARIES} )
 IF(MSVC)
   SET(CMAKE_CXX_FLAGS "/EHs")
 ELSEIF(CMAKE_COMPILER_IS_GNUCXX)
-  SET(CMAKE_CXX_FLAGS "-Wall -Wno-error=deprecated-declarations -Werror")
+#  SET(CMAKE_CXX_FLAGS "-Wall -Wno-error=deprecated-declarations -Werror")
+  SET(CMAKE_CXX_FLAGS "-Wall -Wno-error=deprecated-declarations")
 ENDIF()
 
 #######################################################
