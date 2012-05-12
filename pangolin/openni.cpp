@@ -38,6 +38,16 @@ OpenNiVideo::OpenNiVideo()
         }
     }
 
+    nRetVal = irNode.Create(context);
+    if (nRetVal != XN_STATUS_OK) {
+        std::cerr << "irNode.Create: " << xnGetStatusString(nRetVal) << std::endl;
+    }else{
+        nRetVal = irNode.SetMapOutputMode(mapMode);
+        if (nRetVal != XN_STATUS_OK) {
+            std::cerr << "irNode.SetMapOutputMode: " << xnGetStatusString(nRetVal) << std::endl;
+        }
+    }
+
     Start();
 }
 
@@ -58,14 +68,14 @@ unsigned OpenNiVideo::Height() const
 
 size_t OpenNiVideo::SizeBytes() const
 {
-//    return XN_VGA_X_RES * XN_VGA_Y_RES * sizeof(XnDepthPixel);
-    return XN_VGA_X_RES * XN_VGA_Y_RES * sizeof(XnUInt8) * 3;
+    return XN_VGA_X_RES * XN_VGA_Y_RES * sizeof(XnDepthPixel);
+//    return XN_VGA_X_RES * XN_VGA_Y_RES * sizeof(XnUInt8) * 3;
 }
 
 std::string OpenNiVideo::PixFormat() const
 {
-    return "RGB24";
-//    return "GRAY16LE";
+    return "GRAY16LE";
+//    return "RGB24";
 }
 
 void OpenNiVideo::Start()
@@ -80,21 +90,31 @@ void OpenNiVideo::Stop()
 
 bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
 {
+    XnStatus nRetVal;
+
 //    m_Context.WaitAnyUpdateAll();
 
-    XnStatus nRetVal = context.WaitOneUpdateAll(depthNode);
-    if (nRetVal != XN_STATUS_OK) {
-        std::cerr << "Failed updating data: " << xnGetStatusString(nRetVal) << std::endl;
-    }else{
-        const XnDepthPixel* pDepthMap = depthNode.GetDepthMap();
+//    nRetVal = context.WaitOneUpdateAll(depthNode);
+//    if (nRetVal != XN_STATUS_OK) {
+//        std::cerr << "Failed updating data: " << xnGetStatusString(nRetVal) << std::endl;
+//    }else{
+//        const XnDepthPixel* pDepthMap = depthNode.GetDepthMap();
 //        memcpy(image,pDepthMap,SizeBytes());
-    }
+//    }
 
-    nRetVal = context.WaitOneUpdateAll(imageNode);
+//    nRetVal = context.WaitOneUpdateAll(imageNode);
+//    if (nRetVal != XN_STATUS_OK) {
+//        std::cerr << "Failed updating data: " << xnGetStatusString(nRetVal) << std::endl;
+//    }else{
+//        const XnUInt8* pImageMap = imageNode.GetImageMap();
+//        memcpy(image,pImageMap,SizeBytes());
+//    }
+
+    nRetVal = context.WaitOneUpdateAll(irNode);
     if (nRetVal != XN_STATUS_OK) {
         std::cerr << "Failed updating data: " << xnGetStatusString(nRetVal) << std::endl;
     }else{
-        const XnUInt8* pImageMap = imageNode.GetImageMap();
+        const XnIRPixel* pImageMap = irNode.GetIRMap();
         memcpy(image,pImageMap,SizeBytes());
     }
 

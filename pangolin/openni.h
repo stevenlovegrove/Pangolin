@@ -32,6 +32,7 @@ protected:
     xn::Context context;
     xn::DepthGenerator depthNode;
     xn::ImageGenerator imageNode;
+    xn::IRGenerator irNode;
 };
 
 }
