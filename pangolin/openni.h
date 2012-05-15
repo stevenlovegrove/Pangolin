@@ -11,11 +11,19 @@
 namespace pangolin
 {
 
+enum OpenNiSensorType
+{
+    OpenNiUnassigned = -1,
+    OpenNiRgb = 0,
+    OpenNiIr = 1,
+    OpenNiDepth = 2
+};
+
 //! Interface to video capture sources
 struct OpenNiVideo : public VideoInterface
 {
 public:
-    OpenNiVideo();
+    OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2);
     ~OpenNiVideo();
     unsigned Width() const;
     unsigned Height() const;
@@ -33,6 +41,12 @@ protected:
     xn::DepthGenerator depthNode;
     xn::ImageGenerator imageNode;
     xn::IRGenerator irNode;
+
+    OpenNiSensorType s1;
+    OpenNiSensorType s2;
+    size_t s1SizeBytes;
+    size_t s2SizeBytes;
+    size_t sizeBytes;
 };
 
 }

@@ -327,7 +327,34 @@ VideoInterface* OpenVideo(std::string str_uri)
 #ifdef HAVE_OPENNI
     if(!uri.scheme.compare("openni") || !uri.scheme.compare("kinect"))
     {
-        video = new OpenNiVideo();
+        OpenNiSensorType img1 = OpenNiRgb;
+        OpenNiSensorType img2 = OpenNiUnassigned;
+
+        if(uri.params.find("img1")!=uri.params.end()){
+            std::istringstream iss(uri.params["img1"]);
+
+            if( boost::iequals(iss.str(),"rgb") ) {
+                img1 = OpenNiRgb;
+            }else if( boost::iequals(iss.str(),"ir") ) {
+                img1 = OpenNiIr;
+            }else if( boost::iequals(iss.str(),"depth") ) {
+                img1 = OpenNiDepth;
+            }
+        }
+
+        if(uri.params.find("img2")!=uri.params.end()){
+            std::istringstream iss(uri.params["img2"]);
+
+            if( boost::iequals(iss.str(),"rgb") ) {
+                img2 = OpenNiRgb;
+            }else if( boost::iequals(iss.str(),"ir") ) {
+                img2 = OpenNiIr;
+            }else if( boost::iequals(iss.str(),"depth") ) {
+                img2 = OpenNiDepth;
+            }
+        }
+
+        video = new OpenNiVideo(img1,img2);
     }else
 #endif
     {
