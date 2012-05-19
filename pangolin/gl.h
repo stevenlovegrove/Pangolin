@@ -97,6 +97,8 @@ void glColorHSV( double hue, double s, double v );
 
 void glColorBin( int bin, int max_bins, double sat = 1.0, double val = 1.0 );
 
+void glPixelTransferScale( float r, float g, float b );
+void glPixelTransferScale( float scale );
 
 ////////////////////////////////////////////////
 // Implementation
@@ -308,6 +310,19 @@ inline void glColorBin( int bin, int max_bins, double sat, double val )
     glColor3f(1,1,1);
   }
 }
+
+inline void glPixelTransferScale( float r, float g, float b )
+{
+    glPixelTransferf(GL_RED_SCALE,r);
+    glPixelTransferf(GL_GREEN_SCALE,g);
+    glPixelTransferf(GL_BLUE_SCALE,b);
+}
+
+inline void glPixelTransferScale( float scale )
+{
+    glPixelTransferScale(scale,scale,scale);
+}
+
 
 
 }

@@ -27,6 +27,8 @@
 
 #include "threadedfilebuf.h"
 
+#include <cstring>
+
 using namespace std;
 
 namespace pangolin

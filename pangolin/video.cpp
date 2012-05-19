@@ -30,6 +30,7 @@
 #include "firewire.h"
 #include "v4l.h"
 #include "ffmpeg.h"
+#include "openni.h"
 #include "pvn_video.h"
 
 #include <boost/algorithm/string.hpp>
@@ -48,6 +49,7 @@ namespace pangolin
 const VideoPixelFormat SupportedVideoPixelFormats[] =
 {
     {"GRAY8", 1, {8}, 8, false},
+    {"GRAY16LE", 1, {16}, 16, false},
     {"RGB24", 3, {8,8,8}, 24, false},
     {"BGR24", 3, {8,8,8}, 24, false},
     {"YUYV422", 3, {4,2,2}, 16, false},
@@ -322,6 +324,39 @@ VideoInterface* OpenVideo(std::string str_uri)
         }
     }else
 #endif //HAVE_DC1394
+#ifdef HAVE_OPENNI
+    if(!uri.scheme.compare("openni") || !uri.scheme.compare("kinect"))
+    {
+        OpenNiSensorType img1 = OpenNiRgb;
+        OpenNiSensorType img2 = OpenNiUnassigned;
+
+        if(uri.params.find("img1")!=uri.params.end()){
+            std::istringstream iss(uri.params["img1"]);
+
+            if( boost::iequals(iss.str(),"rgb") ) {
+                img1 = OpenNiRgb;
+            }else if( boost::iequals(iss.str(),"ir") ) {
+                img1 = OpenNiIr;
+            }else if( boost::iequals(iss.str(),"depth") ) {
+                img1 = OpenNiDepth;
+            }
+        }
+
+        if(uri.params.find("img2")!=uri.params.end()){
+            std::istringstream iss(uri.params["img2"]);
+
+            if( boost::iequals(iss.str(),"rgb") ) {
+                img2 = OpenNiRgb;
+            }else if( boost::iequals(iss.str(),"ir") ) {
+                img2 = OpenNiIr;
+            }else if( boost::iequals(iss.str(),"depth") ) {
+                img2 = OpenNiDepth;
+            }
+        }
+
+        video = new OpenNiVideo(img1,img2);
+    }else
+#endif
     {
         throw VideoException("Unable to open video URI");
     }
