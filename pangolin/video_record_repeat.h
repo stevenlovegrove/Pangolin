@@ -59,6 +59,9 @@ struct VideoRecordRepeat : public VideoInterface
 
     int FrameId();
 
+    bool IsRecording() const;
+    bool IsPlaying() const;
+
 protected:
     VideoInterface* video_src;
     VideoInterface* video_file;
