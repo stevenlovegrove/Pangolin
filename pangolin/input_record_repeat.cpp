@@ -120,6 +120,20 @@ int InputRecordRepeat::Size()
     return record_queue.size();
 }
 
+void InputRecordRepeat::UpdateVariable(const std::string& name )
+{
+    Var<std::string> var(name);
+
+    if( record )
+    {
+        FrameInput input;
+        input.index = index;
+        input.var = name;
+        input.val = var.a->Get();
+        record_queue.push_back(input);
+    }
+}
+
 void InputRecordRepeat::GuiVarChanged(void* data, const std::string& name, _Var& _var)
 {
     InputRecordRepeat* thisptr = (InputRecordRepeat*)data;
