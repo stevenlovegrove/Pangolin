@@ -33,6 +33,7 @@
 #include <map>
 #include <vector>
 #include <cmath>
+#include <iostream>
 
 #ifdef HAVE_GLUT
 #include <GL/freeglut_std.h>
