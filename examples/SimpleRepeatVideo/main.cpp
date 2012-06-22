@@ -85,9 +85,7 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
         }
 
         d_panel.Render();
-
-        glutSwapBuffers();
-        glutMainLoopEvent();
+        SwapBuffersProcessEvents();
     }
 
     delete[] img;

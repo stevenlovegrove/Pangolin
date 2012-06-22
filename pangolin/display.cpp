@@ -121,6 +121,18 @@ namespace pangolin
     return false;
   }
 
+  void SwapBuffersProcessEvents()
+  {
+#ifdef HAVE_CVARS
+      DisplayBase().ActivateAndScissor();
+      context->console.RenderConsole();
+#endif
+#ifdef HAVE_GLUT
+      glutSwapBuffers();
+      glutMainLoopEvent();
+#endif
+  }
+
   View& DisplayBase()
   {
     return context->base;
@@ -160,9 +172,25 @@ namespace pangolin
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
 
-      if( key == GLUT_KEY_TAB)
-      {
+      if( key == GLUT_KEY_ESCAPE) {
+              context->quit = true;
+      }
+      #ifdef HAVE_CVARS
+      else if(key == '`') {
+          context->console.ToggleConsole();
+          // Force refresh for several frames whilst panel opens/closes
+          context->had_input = 60*2;
+      }else if(context->console.IsOpen()) {
+          // Direct input to console
+          if( key > 128 ) {
+              context->console.SpecialFunc(key - 128 );
+          }else{
+              context->console.KeyboardFunc(key);
+          }
+      }
+      #endif // HAVE_CVARS
       #ifdef HAVE_GLUT
+      else if( key == GLUT_KEY_TAB) {
         if( context->is_fullscreen )
         {
           glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
@@ -171,13 +199,9 @@ namespace pangolin
           glutFullScreen();
           context->is_fullscreen = true;
         }
-      #endif
       }
-      else if( key == GLUT_KEY_ESCAPE) {
-        context->quit = true;
-      }
-      else if(context->activeDisplay && context->activeDisplay->handler)
-      {
+      #endif // HAVE_GLUT
+      else if(context->activeDisplay && context->activeDisplay->handler) {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
       }
     }

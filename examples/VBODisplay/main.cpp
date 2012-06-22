@@ -117,7 +117,6 @@ int main( int /*argc*/, char* argv[] )
 
     // Swap frames and Process Events
     glutSwapBuffers();
-    glutMainLoopEvent();
 
 #ifdef USE_CUTIL
     cutStopTimer(timer);

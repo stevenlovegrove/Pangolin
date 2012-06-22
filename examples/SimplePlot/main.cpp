@@ -54,8 +54,7 @@ int main( int /*argc*/, char* argv[] )
     d_graph.Render();
 
     // Swap frames and Process Events
-    glutSwapBuffers();
-    glutMainLoopEvent();
+    SwapBuffersProcessEvents();
     boost::this_thread::sleep(boost::posix_time::milliseconds(10));
   }
 

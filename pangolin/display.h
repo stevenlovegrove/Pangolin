@@ -68,6 +68,9 @@ namespace pangolin
   //! @brief Request that the program exit
   void Quit();
 
+  //! @brief Swaps OpenGL Buffers and processes input events
+  void SwapBuffersProcessEvents();
+
   //! @brief Returns true if user has requested to close OpenGL window.
   bool ShouldQuit();
 

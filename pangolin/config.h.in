@@ -14,9 +14,9 @@
 #cmakedefine BUILD_PANGOLIN_VIDEO
 
 /// Configured libraries
-#cmakedefine HAVE_ROBOTVISION
 #cmakedefine HAVE_CUDA
 #cmakedefine HAVE_GLUT
+#cmakedefine HAVE_CVARS
 #cmakedefine HAVE_TOON
 #cmakedefine HAVE_DC1394
 #cmakedefine HAVE_V4L

@@ -32,6 +32,10 @@
 #include "display.h"
 #include <boost/ptr_container/ptr_unordered_map.hpp>
 
+#ifdef HAVE_CVARS
+#include <GLConsole/GLConsole.h>
+#endif // HAVE_CVARS
+
 namespace pangolin
 {
 
@@ -54,6 +58,10 @@ namespace pangolin
     int has_resized;
     int mouse_state;
     View* activeDisplay;
+
+#ifdef HAVE_CVARS
+    GLConsole console;
+#endif // HAVE_CVARS
 
   };
 
