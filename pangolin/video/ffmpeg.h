@@ -28,10 +28,8 @@
 #ifndef PANGOLIN_FFMPEG_H
 #define PANGOLIN_FFMPEG_H
 
-#include "pangolin.h"
-#include "video.h"
-
-#ifdef HAVE_FFMPEG
+#include <pangolin/pangolin.h>
+#include <pangolin/video.h>
 
 extern "C"
 {
@@ -140,7 +138,5 @@ protected:
 };
 
 }
-
-#endif //HAVE_FFMPEG
 
 #endif //PANGOLIN_FFMPEG_H

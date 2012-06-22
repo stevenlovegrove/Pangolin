@@ -12,9 +12,6 @@ void setImageData(float * imageArray, int width, int height){
 
 int main( int /*argc*/, char* argv[] )
 {
-  // Load configuration data
-  pangolin::ParseVarsFile("app.cfg");
-
   // Create OpenGL window in single line thanks to GLUT
   pangolin::CreateGlutWindowAndBind("Main",640,480);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -55,17 +52,11 @@ int main( int /*argc*/, char* argv[] )
   View& d_img2 = pangolin::Display("img2")
     .SetAspect(640.0f/480.0f);
 
-
-  // Add named Panel and bind to variables beginning 'ui'
-  // A Panel is just a View with a default layout and input handling
-  View& d_panel = pangolin::CreatePanel("ui")
-      .SetBounds(0.0, 1.0, 0.0, Attach::Pix(200));
-
   // LayoutEqual is an EXPERIMENTAL feature - it requires that all sub-displays
   // share the same aspect ratio, placing them in a raster fasion in the
   // viewport so as to maximise display size.
   pangolin::Display("multi")
-      .SetBounds(1.0, 0.0, Attach::Pix(200), 1.0)
+      .SetBounds(1.0, 0.0, 0.0, 1.0)
       .SetLayout(LayoutEqual)
       .AddDisplay(d_cam1)
       .AddDisplay(d_img1)
@@ -85,14 +76,6 @@ int main( int /*argc*/, char* argv[] )
   {
     if(HasResized())
       DisplayBase().ActivateScissorAndClear();
-
-    // Safe and efficient binding of named variables.
-    // Specialisations mean no conversions take place for exact types
-    // and conversions between scalar types are cheap.
-    static Var<bool> a_button("ui.A Button",false,false);
-
-    if( Pushed(a_button) )
-      cout << "You Pushed a button!" << endl;
 
     // Generate random image and place in texture memory for display
     setImageData(imageArray,width,height);
@@ -119,10 +102,6 @@ int main( int /*argc*/, char* argv[] )
 
     d_img2.ActivateScissorAndClear();
     imageTexture.RenderToViewport();
-
-    // Render our UI panel when we receive input
-    if(HadInput())
-      d_panel.Render();
 
     // Swap frames and Process Events
     glutSwapBuffers();

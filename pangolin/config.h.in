@@ -9,12 +9,17 @@
 #define PANGOLIN_VERSION_MAJOR @PANGOLIN_VERSION_MAJOR@
 #define PANGOLIN_VERSION_MINOR @PANGOLIN_VERSION_MINOR@
 
+/// Pangolin options
+#cmakedefine BUILD_PANGOLIN_VARS
+#cmakedefine BUILD_PANGOLIN_VIDEO
+
 /// Configured libraries
 #cmakedefine HAVE_ROBOTVISION
 #cmakedefine HAVE_CUDA
 #cmakedefine HAVE_GLUT
-#cmakedefine HAVE_DC1394
 #cmakedefine HAVE_TOON
+#cmakedefine HAVE_DC1394
+#cmakedefine HAVE_V4L
 #cmakedefine HAVE_FFMPEG
 #cmakedefine HAVE_OPENNI
 

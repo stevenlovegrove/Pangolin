@@ -29,11 +29,15 @@
 #define PANGOLIN_H
 
 #include <pangolin/config.h>
-#include "platform.h"
-#include "gl.h"
-#include "display.h"
-#include "widgets.h"
-#include "plotter.h"
+#include <pangolin/platform.h>
+#include <pangolin/gl.h>
+#include <pangolin/display.h>
+#include <pangolin/plotter.h>
+
+#ifdef BUILD_PANGOLIN_VARS
+#include <pangolin/vars.h>
+#include <pangolin/widgets.h>
+#endif
 
 #endif // PANGOLIN_H
 

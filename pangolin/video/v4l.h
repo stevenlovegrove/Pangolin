@@ -25,55 +25,79 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PVN_H
-#define PANGOLIN_PVN_H
+#ifndef PANGOLIN_V4L_H
+#define PANGOLIN_V4L_H
 
-#include "pangolin.h"
-#include "video.h"
-#include "fstream"
-#include "timer.h"
+#include <pangolin/pangolin.h>
+#include <pangolin/video.h>
+
+#include <asm/types.h>
+#include <linux/videodev2.h>
 
 namespace pangolin
 {
 
-struct VideoStream
-{
-    std::string name;
-    VideoPixelFormat fmt;
-    int w,h;
-    size_t frame_size_bytes;
+typedef enum {
+    IO_METHOD_READ,
+    IO_METHOD_MMAP,
+    IO_METHOD_USERPTR,
+} io_method;
+
+struct buffer {
+    void*  start;
+    size_t length;
 };
 
-class PvnVideo : public VideoInterface
+class V4lVideo : public VideoInterface
 {
 public:
-    PvnVideo(const char* filename, bool realtime = false);
-    ~PvnVideo();
+    V4lVideo(const char* dev_name, io_method io = IO_METHOD_MMAP);
+    ~V4lVideo();
 
-    // Implement VideoInterface
+    //! Implement VideoSource::Start()
     void Start();
+
+    //! Implement VideoSource::Stop()
     void Stop();
+
     unsigned Width() const;
+
     unsigned Height() const;
+
     size_t SizeBytes() const;
+
     std::string PixFormat() const;
+
     bool GrabNext( unsigned char* image, bool wait = true );
+
     bool GrabNewest( unsigned char* image, bool wait = true );
 
 protected:
-    int frames;
-    std::ifstream file;
-    std::vector<VideoStream> stream_info;
+    int ReadFrame(unsigned char* image);
+    void Mainloop();
+
+    void init_read(unsigned int buffer_size);
+    void init_mmap(const char* dev_name);
+    void init_userp(const char* dev_name, unsigned int buffer_size);
+
+    void init_device(const char* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps, unsigned v4l_format = V4L2_PIX_FMT_YUYV, v4l2_field field = V4L2_FIELD_INTERLACED);
+    void uninit_device();
+
+    void open_device(const char* dev_name);
+    void close_device();
 
 
-    bool realtime;
-    pangolin::basetime frame_interval;
-    pangolin::basetime last_frame;
-
-    void ReadFileHeader();
+    io_method io;
+    int       fd;
+    buffer*   buffers;
+    unsigned  int n_buffers;
+    bool running;
+    unsigned width;
+    unsigned height;
+    float fps;
+    size_t image_size;
 };
 
 }
 
-
-#endif //PANGOLIN_PVN_H
+#endif // PANGOLIN_V4L_H

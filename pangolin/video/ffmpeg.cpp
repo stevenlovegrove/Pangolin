@@ -27,8 +27,6 @@
 
 #include "ffmpeg.h"
 
-#ifdef HAVE_FFMPEG
-
 namespace pangolin
 {
 
@@ -413,9 +411,5 @@ bool FfmpegConverter::GrabNewest( unsigned char* image, bool wait )
     return false;
 }
 
-
-
-
 }
 
-#endif // HAVE_FFMPEG

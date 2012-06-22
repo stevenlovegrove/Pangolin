@@ -1,10 +1,8 @@
 #ifndef PANGOLIN_OPENNI_H
 #define PANGOLIN_OPENNI_H
 
-#include "pangolin.h"
-#include "video.h"
-
-#ifdef HAVE_OPENNI
+#include <pangolin/pangolin.h>
+#include <pangolin/video.h>
 
 #include <XnCppWrapper.h>
 
@@ -51,5 +49,4 @@ protected:
 
 }
 
-#endif // HAVE_OPENNI
 #endif // PANGOLIN_OPENNI_H

@@ -28,8 +28,6 @@
 
 #include "v4l.h"
 
-#ifndef _WIN32
-
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -619,4 +617,3 @@ namespace pangolin
 
 }
 
-#endif // _WIN32

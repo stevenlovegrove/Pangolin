@@ -1,7 +1,5 @@
 #include "openni.h"
 
-#ifdef HAVE_OPENNI
-
 namespace pangolin
 {
 
@@ -167,6 +165,4 @@ bool OpenNiVideo::GrabNewest( unsigned char* image, bool wait )
 }
 
 }
-
-#endif // HAVE_OPENNI
 

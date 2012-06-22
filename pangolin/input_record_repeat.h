@@ -30,9 +30,6 @@
 
 #include "pangolin.h"
 
-#include "video.h"
-#include "video_recorder.h"
-
 #include <list>
 
 namespace pangolin

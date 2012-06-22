@@ -28,10 +28,8 @@
 #ifndef PANGOLIN_FIREWIRE_H
 #define PANGOLIN_FIREWIRE_H
 
-#include "pangolin.h"
-#include "video.h"
-
-#ifdef HAVE_DC1394
+#include <pangolin/pangolin.h>
+#include <pangolin/video.h>
 
 #include <dc1394/dc1394.h>
 
@@ -219,6 +217,4 @@ protected:
 
 }
 
-
-#endif // HAVE_DC1394
 #endif // PANGOLIN_FIREWIRE_H

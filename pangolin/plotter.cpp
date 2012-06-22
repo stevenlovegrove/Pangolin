@@ -30,6 +30,7 @@
 
 #include <limits>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <boost/unordered_map.hpp>
 

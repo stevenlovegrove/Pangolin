@@ -7,28 +7,44 @@ SET(
   platform.h
   simple_math.h
   display.h display_internal.h display.cpp
-  vars.h vars_internal.h vars.cpp
-  widgets.h widgets.cpp
   plotter.h plotter.cpp
   gl.h glcuda.h cg.h
-  video.h video.cpp
-  firewire.h firewire.cpp
-  v4l.h v4l.cpp
-  openni.h openni.cpp
-  ffmpeg.h ffmpeg.cpp
-  pvn_video.h pvn_video.cpp
-  video_recorder.h video_recorder.cpp
   threadedfilebuf.h threadedfilebuf.cpp
   timer.h
-  video_record_repeat.h video_record_repeat.cpp
-  input_record_repeat.h input_record_repeat.cpp
 )
+
+OPTION(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
+IF(BUILD_PANGOLIN_VARS)
+  LIST(APPEND SOURCES
+    vars.h vars_internal.h vars.cpp
+    input_record_repeat.h input_record_repeat.cpp
+    widgets.h widgets.cpp
+  )
+ENDIF()
+
+OPTION(BUILD_PANGOLIN_VIDEO "Build support for Pangolin Video Utilities" ON)
+IF(BUILD_PANGOLIN_VIDEO)
+  LIST(APPEND SOURCES
+    video.h video.cpp
+    video_recorder.h video_recorder.cpp
+    video_record_repeat.h video_record_repeat.cpp
+    video/pvn_video.h video/pvn_video.cpp
+  )
+ENDIF()
 
 #######################################################
 ## Find required dependencies
 
 FIND_PACKAGE(OpenGL REQUIRED QUIET)
 FIND_PACKAGE(Boost COMPONENTS thread REQUIRED QUIET)
+
+## Apply required dependencies settings
+INCLUDE_DIRECTORIES( ${CMAKE_CURRENT_SOURCE_DIR}/..)
+INCLUDE_DIRECTORIES( ${PROJECT_BINARY_DIR})
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
+INCLUDE_DIRECTORIES( ${OPENGL_INCLUDE_DIR} )
+LINK_LIBRARIES( ${OPENGL_LIBRARIES} ${Boost_LIBRARIES} )
+
 
 #######################################################
 ## Find optional dependencies
@@ -43,58 +59,65 @@ IF(CUDA_FOUND)
   MESSAGE(STATUS "CUDA Found and Enabled")
 ENDIF()
 
-IF(CUDA_FOUND)
-  CUDA_ADD_LIBRARY(${LIBRARY_NAME} SHARED ${SOURCES})
-ELSE()
-  ADD_LIBRARY(${LIBRARY_NAME} SHARED ${SOURCES})
-ENDIF()
-
 FIND_PACKAGE(FREEGLUT REQUIRED)
 IF(FREEGLUT_FOUND)
   SET(HAVE_GLUT 1)
-  INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${FREEGLUT_INCLUDE_DIR} )
-  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${FREEGLUT_LIBRARY} )
+  INCLUDE_DIRECTORIES( ${FREEGLUT_INCLUDE_DIR} )
+  LINK_LIBRARIES( ${FREEGLUT_LIBRARY} )
   MESSAGE(STATUS "Freeglut Found and Enabled")
-ENDIF()
-
-FIND_PACKAGE(DC1394 QUIET)
-IF(DC1394_FOUND)
-  SET(HAVE_DC1394 1)
-  INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${DC1394_INCLUDE_DIR} )
-  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${DC1394_LIBRARY} )
-  MESSAGE(STATUS "libdc1394 Found and Enabled")
-ENDIF()
-
-FIND_PACKAGE(FFMPEG QUIET)
-IF(FFMPEG_FOUND)
-  SET(HAVE_FFMPEG 1)
-  INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${FFMPEG_INCLUDE_DIRS} )
-  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${FFMPEG_LIBRARIES} )
-  MESSAGE(STATUS "ffmpeg Found and Enabled")
-ENDIF()
-
-FIND_PACKAGE(OpenNI QUIET)
-IF(OPENNI_FOUND)
-  SET(HAVE_OPENNI 1)
-  if(CMAKE_COMPILER_IS_GNUCXX)
-     set_source_files_properties( openni.cpp video.cpp PROPERTIES COMPILE_FLAGS " -w " )
-  endif(CMAKE_COMPILER_IS_GNUCXX)
-  INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${OPENNI_INCLUDE_DIRS} )
-  TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${OPENNI_LIBRARIES} )
-  MESSAGE(STATUS "OpenNI Found and Enabled")
 ENDIF()
 
 FIND_PACKAGE(TooN QUIET)
 IF(TooN_FOUND)
   SET(HAVE_TOON 1)
-  INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${TooN_INCLUDE_DIR} )
+  INCLUDE_DIRECTORIES( ${TooN_INCLUDE_DIR} )
   MESSAGE(STATUS "TooN Found and Enabled")
 ENDIF()
 
-## Apply required dependencies settings
-INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${Boost_INCLUDE_DIRS} )
-INCLUDE_DIRECTORIES( ${LIBRARY_NAME} ${OPENGL_INCLUDE_DIR} )
-TARGET_LINK_LIBRARIES( ${LIBRARY_NAME} ${OPENGL_LIBRARIES} ${Boost_LIBRARIES} )
+FIND_PACKAGE(DC1394 QUIET)
+IF(ENABLE_PANGOLIN_VIDEO AND DC1394_FOUND)
+  SET(HAVE_DC1394 1)
+  INCLUDE_DIRECTORIES( ${DC1394_INCLUDE_DIR} )
+  LINK_LIBRARIES( ${DC1394_LIBRARY} )
+  LIST(APPEND SOURCES video/firewire.h video/firewire.cpp)
+  MESSAGE(STATUS "libdc1394 Found and Enabled")
+ENDIF()
+
+IF(ENABLE_PANGOLIN_VIDEO AND UNIX)
+  SET(HAVE_V4L 1)
+  LIST(APPEND SOURCES video/v4l.h video/v4l.cpp)
+ENDIF()
+
+FIND_PACKAGE(FFMPEG QUIET)
+IF(ENABLE_PANGOLIN_VIDEO AND FFMPEG_FOUND)
+  SET(HAVE_FFMPEG 1)
+  INCLUDE_DIRECTORIES( ${FFMPEG_INCLUDE_DIRS} )
+  LINK_LIBRARIES( ${FFMPEG_LIBRARIES} )
+  LIST(APPEND SOURCES video/ffmpeg.h video/ffmpeg.cpp)
+  MESSAGE(STATUS "ffmpeg Found and Enabled")
+ENDIF()
+
+FIND_PACKAGE(OpenNI QUIET)
+IF(ENABLE_PANGOLIN_VIDEO AND OPENNI_FOUND)
+  SET(HAVE_OPENNI 1)
+  if(CMAKE_COMPILER_IS_GNUCXX)
+     # Ignore warnings generated from third party includes
+     set_source_files_properties( video/openni.cpp video.cpp PROPERTIES COMPILE_FLAGS " -w " )
+  endif(CMAKE_COMPILER_IS_GNUCXX)
+  INCLUDE_DIRECTORIES( ${OPENNI_INCLUDE_DIRS} )
+  LINK_LIBRARIES( ${OPENNI_LIBRARIES} )
+  LIST(APPEND SOURCES video/openni.h video/openni.cpp)
+  MESSAGE(STATUS "OpenNI Found and Enabled")
+ENDIF()
+
+#######################################################
+## Add Library
+
+IF(CUDA_FOUND)
+  CUDA_ADD_LIBRARY(${LIBRARY_NAME} SHARED ${SOURCES})
+ELSE()
+  ADD_LIBRARY(${LIBRARY_NAME} SHARED ${SOURCES})
+ENDIF()
 
 ## Set Special Compiler flags
 IF(MSVC)
@@ -111,7 +134,6 @@ CONFIGURE_FILE(
   "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/config.h"
 )
-INCLUDE_DIRECTORIES("${PROJECT_BINARY_DIR}")
 
 #######################################################
 ## Define headers files associated with the install target 
@@ -119,19 +141,17 @@ SET(INSTALL_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h
 	cg.h 
 	display.h 
 	display_internal.h 
-	ffmpeg.h 
-	firewire.h 
 	gl.h 
 	glcuda.h 
 	pangolin.h 
 	platform.h 
 	plotter.h 
 	simple_math.h 
-	v4l.h 
 	vars.h 
 	vars_internal.h 
 	video.h 
-	widgets.h
+        video/firewire.h
+        widgets.h
 )
 
 # install headers

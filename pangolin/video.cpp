@@ -27,11 +27,23 @@
 
 #include "video.h"
 
-#include "firewire.h"
-#include "v4l.h"
-#include "ffmpeg.h"
-#include "openni.h"
-#include "pvn_video.h"
+#ifdef HAVE_DC1394
+#include "video/firewire.h"
+#endif
+
+#ifdef HAVE_V4L
+#include "video/v4l.h"
+#endif
+
+#ifdef HAVE_FFMPEG
+#include "video/ffmpeg.h"
+#endif
+
+#ifdef HAVE_OPENNI
+#include "video/openni.h"
+#endif
+
+#include "video/pvn_video.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -255,9 +267,11 @@ VideoInterface* OpenVideo(std::string str_uri)
         video = new FfmpegConverter(subvid,outfmt,FFMPEG_POINT);
     }else
 #endif //HAVE_FFMPEG
+#ifdef HAVE_V4L
     if(!uri.scheme.compare("v4l")) {
         video = new V4lVideo(uri.url.c_str());
     }else
+#endif // HAVE_V4L
 #ifdef HAVE_DC1394
     if(!uri.scheme.compare("firewire") || !uri.scheme.compare("dc1394") ) {
         // Default parameters

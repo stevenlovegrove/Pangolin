@@ -26,7 +26,6 @@
  */
 
 #include "firewire.h"
-#ifdef HAVE_DC1394
 
 #include <stdio.h>
 #include <stdint.h>
@@ -791,4 +790,3 @@ double FirewireVideo::bus_period_from_iso_speed(dc1394speed_t iso_speed)
 
 }
 
-#endif
