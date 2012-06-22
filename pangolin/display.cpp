@@ -121,18 +121,6 @@ namespace pangolin
     return false;
   }
 
-  void SwapBuffersProcessEvents()
-  {
-#ifdef HAVE_CVARS
-      DisplayBase().ActivateAndScissor();
-      context->console.RenderConsole();
-#endif
-#ifdef HAVE_GLUT
-      glutSwapBuffers();
-      glutMainLoopEvent();
-#endif
-  }
-
   View& DisplayBase()
   {
     return context->base;
@@ -311,7 +299,23 @@ namespace pangolin
     context->is_double_buffered = mode & GLUT_DOUBLE;
     TakeGlutCallbacks();
   }
-#endif
+
+  void FinishGlutFrame()
+  {
+    DisplayBase().Activate();
+    Viewport::DisableScissor();
+#ifdef HAVE_CVARS
+    context->console.RenderConsole();
+#endif // HAVE_CVARS
+    SwapGlutBuffersProcessGlutEvents();
+  }
+
+  void SwapGlutBuffersProcessGlutEvents()
+  {
+    glutSwapBuffers();
+    glutMainLoopEvent();
+  }
+#endif // HAVE_GLUT
 
   void Viewport::Activate() const
   {

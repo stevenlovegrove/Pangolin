@@ -98,7 +98,7 @@ int main( int /*argc*/, char* argv[] )
       d_panel.Render();
 
     // Swap frames and Process Events
-    SwapBuffersProcessEvents();
+    pangolin::FinishGlutFrame();
   }
 
   return 0;

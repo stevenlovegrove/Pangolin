@@ -50,9 +50,8 @@ void RecordSample(const std::string uri, const std::string filename)
         vVideo.Activate();
         texVideo.RenderToViewportFlipY();
 
-        // Swap back buffer with front
-        // Process window events via GLUT
-        SwapBuffersProcessEvents();
+        // Swap back buffer with front and process window events via GLUT
+        pangolin::FinishGlutFrame();
     }
 
     delete[] img;

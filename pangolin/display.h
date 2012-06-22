@@ -68,9 +68,6 @@ namespace pangolin
   //! @brief Request that the program exit
   void Quit();
 
-  //! @brief Swaps OpenGL Buffers and processes input events
-  void SwapBuffersProcessEvents();
-
   //! @brief Returns true if user has requested to close OpenGL window.
   bool ShouldQuit();
 
@@ -99,11 +96,19 @@ namespace pangolin
     void MouseMotion( int x, int y);
   }
 
-#ifdef HAVE_GLUT
+#ifdef HAVE_GLUT  
   //! @brief Create GLUT window and bind Pangolin to it.
   //! All GLUT initialisation is taken care of. This prevents you
   //! from needing to call BindToContext() and TakeGlutCallbacks().
   void CreateGlutWindowAndBind(std::string window_title, int w = 640, int h = 480, unsigned int mode = GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
+
+  //! @brief Applies any post-render events if they are defined,
+  //! swaps buffers and processes events. Also resets viewport to
+  //! entire window and disables scissoring.
+  void FinishGlutFrame();
+
+  //! @brief Swaps OpenGL Buffers and processes input events
+  void SwapGlutBuffersProcessGlutEvents();
 
   //! @brief Allow Pangolin to take GLUT callbacks for its own uses
   //! Not needed if you instantiated a window through CreateWindowAndBind().

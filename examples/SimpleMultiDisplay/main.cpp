@@ -104,7 +104,7 @@ int main( int /*argc*/, char* argv[] )
     imageTexture.RenderToViewport();
 
     // Swap frames and Process Events
-    SwapBuffersProcessEvents();
+    pangolin::FinishGlutFrame();
   }
 
   delete imageArray;

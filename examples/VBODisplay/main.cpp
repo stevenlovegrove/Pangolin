@@ -116,7 +116,7 @@ int main( int /*argc*/, char* argv[] )
     }
 
     // Swap frames and Process Events
-    glutSwapBuffers();
+    pangolin::FinishGlutFrame();
 
 #ifdef USE_CUTIL
     cutStopTimer(timer);
