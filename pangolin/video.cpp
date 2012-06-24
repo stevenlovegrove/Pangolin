@@ -76,14 +76,7 @@ VideoPixelFormat VideoFormatFromString(const std::string& format)
     throw VideoException("Unknown Format",format);
 }
 
-struct VideoUri
-{
-    string scheme;
-    string url;
-    map<string,string> params;
-};
-
-ostream& operator<< (ostream &out, VideoUri &uri)
+ostream& operator<< (ostream &out, Uri &uri)
 {
     out << "scheme: " << uri.scheme << endl;
     out << "url:    " << uri.url << endl;
@@ -114,9 +107,9 @@ VideoInput::~VideoInput()
     if(video) delete video;
 }
 
-VideoUri ParseUri(string str_uri)
+Uri ParseUri(string str_uri)
 {
-    VideoUri uri;
+    Uri uri;
 
     // Find Scheme delimiter
     size_t ns = str_uri.find_first_of(':');
@@ -238,7 +231,7 @@ VideoInterface* OpenVideo(std::string str_uri)
 {
     VideoInterface* video = 0;
 
-    VideoUri uri = ParseUri(str_uri);
+    Uri uri = ParseUri(str_uri);
 
     if(!uri.scheme.compare("file") && algorithm::ends_with(uri.url,"pvn") )
     {

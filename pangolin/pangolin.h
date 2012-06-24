@@ -39,5 +39,9 @@
 #include <pangolin/widgets.h>
 #endif
 
+#ifdef BUILD_PANGOLIN_VIDEO
+#include <pangolin/video.h>
+#endif // BUILD_PANGOLIN_VIDEO
+
 #endif // PANGOLIN_H
 

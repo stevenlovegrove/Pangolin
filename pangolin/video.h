@@ -78,6 +78,13 @@ namespace pangolin
         bool planar;
     };
 
+    struct Uri
+    {
+        std::string scheme;
+        std::string url;
+        std::map<std::string,std::string> params;
+    };
+
     //! Return Pixel Format properties given string specification in
     //! FFMPEG notation.
     VideoPixelFormat VideoFormatFromString(const std::string& format);
@@ -131,8 +138,11 @@ namespace pangolin
         VideoInterface* video;
     };
 
+    //! Open Video Interface from string specification (as described in this files header)
     VideoInterface* OpenVideo(std::string uri);
 
+    //! Parse string as Video URI
+    Uri ParseUri(std::string str_uri);
 }
 
 #endif // PANGOLIN_VIDEO_H
