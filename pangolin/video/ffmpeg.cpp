@@ -119,13 +119,13 @@ std::string FfmpegFmtToString(const PixelFormat fmt)
 
 #undef TEST_PIX_FMT_RETURN
 
-FfmpegVideo::FfmpegVideo(const std::string filename, const std::string strfmtout, const std::string codec_hint, bool dump_info)
+FfmpegVideo::FfmpegVideo(const std::string filename, const std::string strfmtout, const std::string codec_hint, bool dump_info, int user_video_stream)
     :pFormatCtx(0)
 {
-    InitUrl(filename, strfmtout, codec_hint, dump_info);
+    InitUrl(filename, strfmtout, codec_hint, dump_info, user_video_stream);
 }
 
-void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, const std::string codec_hint, bool dump_info)
+void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, const std::string codec_hint, bool dump_info, int user_video_stream)
 {
     if( url.find('*') != url.npos )
         throw VideoException("Wildcards not supported. Please use ffmpegs printf style formatting for image sequences. e.g. img-000000%04d.ppm");
@@ -167,18 +167,29 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     // Find the first video stream
     videoStream=-1;
     audioStream=-1;
+
+    std::vector<int> videoStreams;
+    std::vector<int> audioStreams;
+
     for(unsigned i=0; i<pFormatCtx->nb_streams; i++)
     {
         if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO)
         {
-            videoStream=i;
+            videoStreams.push_back(i);
         }else if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_AUDIO)
         {
-            audioStream=i;
+            audioStreams.push_back(i);
         }
     }
-    if(videoStream==-1)
+
+    if(videoStreams.size()==0)
         throw VideoException("Couldn't find a video stream");
+
+    if(0 <= user_video_stream && user_video_stream < (int)videoStreams.size() ) {
+        videoStream = videoStreams[user_video_stream];
+    }else{
+        videoStream = videoStreams[0];
+    }
 
     // Get a pointer to the codec context for the video stream
     pVidCodecCtx = pFormatCtx->streams[videoStream]->codec;

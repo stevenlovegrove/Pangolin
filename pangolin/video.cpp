@@ -248,7 +248,12 @@ VideoInterface* OpenVideo(std::string str_uri)
         if(uri.params.find("fmt")!=uri.params.end()){
             outfmt = uri.params["fmt"];
         }
-        video = new FfmpegVideo(uri.url.c_str(), outfmt);
+        int video_stream = -1;
+        if(uri.params.find("stream")!=uri.params.end()){
+            std::istringstream iss(uri.params["stream"]);
+            iss >> video_stream;
+        }
+        video = new FfmpegVideo(uri.url.c_str(), outfmt, "", false, video_stream);
     }else if( !uri.scheme.compare("mjpeg")) {
         video = new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" );
     }else if( !uri.scheme.compare("convert") ) {
