@@ -789,6 +789,14 @@ namespace pangolin
     }
   }
 
+  // Direction vector for each AxisDirection enum
+  const static GLdouble AxisDirectionVector[][3] = {
+      {0,0,0},
+      {-1,0,0}, {1,0,0},
+      {0,-1,0}, {0,1,0},
+      {0,0,-1}, {0,0,1}
+  };
+
   void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
   {
     const int delta[2] = {(x-last_pos[0]),(y-last_pos[1])};
@@ -854,6 +862,11 @@ namespace pangolin
 
       OpenGlMatrixSpec& spec = cam_state->stacks[GlModelViewStack];
       LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
+
+      if(enforce_up != AxisNone) {
+          const GLdouble* up = AxisDirectionVector[enforce_up];
+          EnforceUpT_cw(spec.m, up);
+      }
     }
 
     last_pos[0] = x;

@@ -358,18 +358,28 @@ namespace pangolin
   };
   static HandlerScroll StaticHandlerScroll;
 
+  enum AxisDirection
+  {
+      AxisNone,
+      AxisNegX, AxisX,
+      AxisNegY, AxisY,
+      AxisNegZ, AxisZ
+  };
+
   struct Handler3D : Handler
   {
 
-    Handler3D(OpenGlRenderState& cam_state, float trans_scale=0.01f)
-      : cam_state(&cam_state), /*hwin(3),*/ tf(trans_scale), cameraspec(CameraSpecOpenGl), last_z(1.0) {}
+    Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f)
+        : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), cameraspec(CameraSpecOpenGl), last_z(1.0) {}
 
     void SetOpenGlCamera();
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void MouseMotion(View&, int x, int y, int button_state);
 
+  protected:
     OpenGlRenderState* cam_state;
     const static int hwin = 3;
+    AxisDirection enforce_up;
     float tf;
     CameraSpec cameraspec;
     GLfloat last_z;
