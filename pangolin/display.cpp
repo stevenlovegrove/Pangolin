@@ -121,6 +121,11 @@ namespace pangolin
     return false;
   }
 
+  void RenderViews()
+  {
+      DisplayBase().Render();
+  }
+
   View& DisplayBase()
   {
     return context->base;

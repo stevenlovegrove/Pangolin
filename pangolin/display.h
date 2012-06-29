@@ -77,6 +77,9 @@ namespace pangolin
   //! @brief Returns true if user has resized the window
   bool HasResized();
 
+  //! @brief Renders any views with default draw methods
+  void RenderViews();
+
   namespace process
   {
     //! @brief Tell pangolin to process input to drive display
