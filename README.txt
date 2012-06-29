@@ -18,14 +18,17 @@ based) systems, without compromising performance.
 * Boost
   (win) http://www.boost.org/users/download/
   (deb) sudo apt-get install libboost-dev libboost-thread-dev
+  (mac) sudo port install boost
 
 * CMake (for build environment)
   (win) http://www.cmake.org/cmake/resources/software.html
   (deb) sudo apt-get install cmake
+  (mac) sudo port install cmake
 
 * FreeGlut / GLU / Glew (Required for drawing text and windowing)
   (win) http://www.transmissionzero.co.uk/software/freeglut-devel/
   (deb) sudo apt-get install freeglut3-dev libglu-dev libglew-dev
+  (mac) sudo port install freeglut glew
 
 == Optional Dependencies ==
 

@@ -54,8 +54,8 @@ inline basetime TimeNow()
 inline basetime TimeFromSeconds(double seconds)
 {
     basetime t;
-    t.tv_sec = (__time_t)seconds;
-    t.tv_usec = (__useconds_t)((seconds - t.tv_sec) * 1E6);
+    t.tv_sec = (time_t)seconds;
+    t.tv_usec = (useconds_t)((seconds - t.tv_sec) * 1E6);
     return t;
 }
 

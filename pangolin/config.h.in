@@ -26,6 +26,8 @@
 /// Platform
 #cmakedefine _UNIX_
 #cmakedefine _WIN_
+#cmakedefine _OSX_
+#cmakedefine _LINUX_
 
 /// Compiler
 #cmakedefine _GCC_
