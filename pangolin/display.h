@@ -50,7 +50,7 @@
         }
     }
 #else
-    #include <GL/glut.h>
+    #include <GL/freeglut.h>
 #endif
 
 #ifdef __FREEGLUT_EXT_H__

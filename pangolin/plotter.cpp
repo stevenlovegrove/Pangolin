@@ -97,7 +97,7 @@ void DataLog::Save(std::string filename)
   if( sequences.size() > 0 )
   {
     ofstream f(filename.c_str());
-    for( unsigned n=sequences[0].firstn; n < sequences[0].n; ++n )
+    for( int n=sequences[0].firstn; n < sequences[0].n; ++n )
     {
       f << setprecision(12) << sequences[0][n];
       for( unsigned s=1; s < sequences.size(); ++s )
@@ -528,7 +528,7 @@ void Plotter::MouseMotion(View&, int x, int y, int button_state)
     int_y[1] -= df[1];
   }else if(button_state == MouseButtonRight )
   {
-    const float c[2] = {
+    const double c[2] = {
       track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
       (int_y[0] + int_y[1])/2.0
     };

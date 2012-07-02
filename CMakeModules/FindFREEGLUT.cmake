@@ -12,15 +12,22 @@ FIND_PATH(
   /usr/include
   /usr/local/include
 )
+
+SET(STORE_CMAKE_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
+SET(CMAKE_FIND_FRAMEWORK NEVER)
+
 FIND_LIBRARY(
   FREEGLUT_LIBRARY
   NAMES freeglut_static freeglut glut
   PATH
+    /opt/local/lib
     ${CMAKE_LIBRARY_PATH}
     $ENV{lib}
     /usr/lib
     /usr/local/lib
 )
+
+SET(CMAKE_FIND_FRAMEWORK ${STORE_CMAKE_FIND_FRAMEWORK})
 
 IF (FREEGLUT_INCLUDE_DIR AND FREEGLUT_LIBRARY)
    SET(FREEGLUT_FOUND TRUE)
