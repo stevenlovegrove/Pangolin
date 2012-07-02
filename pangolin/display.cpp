@@ -278,6 +278,14 @@ namespace pangolin
   }
 
 #ifdef HAVE_GLUT
+  void PangoGlutRedisplay()
+  {
+      glutPostRedisplay();
+
+//      RenderViews();
+//      FinishGlutFrame();
+  }
+
   void TakeGlutCallbacks()
   {
     glutKeyboardFunc(&process::Keyboard);
@@ -287,11 +295,17 @@ namespace pangolin
     glutMotionFunc(&process::MouseMotion);
     glutSpecialFunc(&process::SpecialFunc);
     glutSpecialUpFunc(&process::SpecialFuncUp);
+
+#ifndef HAVE_GLUT_FREEGLUT
+    glutDisplayFunc(&PangoGlutRedisplay);
+#endif
   }
 
   void CreateGlutWindowAndBind(string window_title, int w, int h, unsigned int mode)
   {
+  #ifdef HAVE_GLUT_FREEGLUT
     if( glutGet(GLUT_INIT_STATE) == 0)
+  #endif
     {
       int argc = 0;
       glutInit(&argc, 0);
@@ -300,7 +314,11 @@ namespace pangolin
     glutInitWindowSize(w,h);
     glutCreateWindow(window_title.c_str());
     BindToContext(window_title);
+
+#ifdef HAVE_GLUT_FREEGLUT
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+#endif
+
     context->is_double_buffered = mode & GLUT_DOUBLE;
     TakeGlutCallbacks();
   }
@@ -318,7 +336,14 @@ namespace pangolin
   void SwapGlutBuffersProcessGlutEvents()
   {
     glutSwapBuffers();
+
+#ifdef HAVE_GLUT_FREEGLUT
     glutMainLoopEvent();
+#endif
+
+#ifdef HAVE_GLUT_APPLE_FRAMEWORK
+    glutCheckLoop();
+#endif
   }
 #endif // HAVE_GLUT
 

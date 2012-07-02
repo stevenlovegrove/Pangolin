@@ -36,9 +36,28 @@
 #include <iostream>
 
 #ifdef HAVE_GLUT
-#include <GL/freeglut_std.h>
-#include <GL/freeglut_ext.h>
+
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+    #include <GLUT/glut.h>
+    #define HAVE_GLUT_APPLE_FRAMEWORK
+
+    inline void glutBitmapString(void* font, const unsigned char* str)
+    {
+        const unsigned char* s = str;
+        while(*s != 0) {
+            glutBitmapCharacter(font, *s);
+            ++s;
+        }
+    }
+#else
+    #include <GL/glut.h>
 #endif
+
+#ifdef __FREEGLUT_EXT_H__
+    #define HAVE_GLUT_FREEGLUT
+#endif
+
+#endif // HAVE_GLUT
 
 #ifdef HAVE_TOON
 #include <cstring>

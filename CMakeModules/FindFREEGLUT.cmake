@@ -14,7 +14,7 @@ FIND_PATH(
 )
 FIND_LIBRARY(
   FREEGLUT_LIBRARY
-  NAMES freeglut_static freeglut
+  NAMES freeglut_static freeglut glut
   PATH
     ${CMAKE_LIBRARY_PATH}
     $ENV{lib}
