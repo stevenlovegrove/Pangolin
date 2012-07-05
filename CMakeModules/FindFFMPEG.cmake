@@ -8,22 +8,22 @@
 FIND_PATH(
   AVCODEC_INCLUDE_DIR avcodec.h
   /usr/include/libavcodec /usr/local/include/libavcodec
-  /usr/include /usr/local/include
+  /usr/include /usr/local/include /opt/local/include/libavcodec
 )
 FIND_PATH(
   AVFORMAT_INCLUDE_DIR avformat.h
   /usr/include/libavformat /usr/local/include/libavformat
-  /usr/include /usr/local/include
+  /usr/include /usr/local/include /opt/local/include/libavformat
 )
 FIND_PATH(
   AVUTIL_INCLUDE_DIR avutil.h
   /usr/include/libavutil /usr/local/include/libavutil
-  /usr/include /usr/local/include
+  /usr/include /usr/local/include /opt/local/include/libavutil
 )
 FIND_PATH(
   SWSCALE_INCLUDE_DIR swscale.h
   /usr/include/libswscale /usr/local/include/libswscale
-  /usr/include /usr/local/include
+  /usr/include /usr/local/include /opt/local/include/libswscale
 )
 
 # Find Library files

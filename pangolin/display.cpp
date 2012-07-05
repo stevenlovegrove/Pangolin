@@ -296,14 +296,14 @@ namespace pangolin
     glutSpecialFunc(&process::SpecialFunc);
     glutSpecialUpFunc(&process::SpecialFuncUp);
 
-#ifndef HAVE_GLUT_FREEGLUT
+#ifndef HAVE_FREEGLUT
     glutDisplayFunc(&PangoGlutRedisplay);
 #endif
   }
 
   void CreateGlutWindowAndBind(string window_title, int w, int h, unsigned int mode)
   {
-  #ifdef HAVE_GLUT_FREEGLUT
+  #ifdef HAVE_FREEGLUT
     if( glutGet(GLUT_INIT_STATE) == 0)
   #endif
     {
@@ -315,7 +315,7 @@ namespace pangolin
     glutCreateWindow(window_title.c_str());
     BindToContext(window_title);
 
-#ifdef HAVE_GLUT_FREEGLUT
+#ifdef HAVE_FREEGLUT
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 #endif
 
@@ -337,7 +337,7 @@ namespace pangolin
   {
     glutSwapBuffers();
 
-#ifdef HAVE_GLUT_FREEGLUT
+#ifdef HAVE_FREEGLUT
     glutMainLoopEvent();
 #endif
 

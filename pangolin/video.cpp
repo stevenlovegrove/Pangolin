@@ -124,7 +124,7 @@ Uri ParseUri(string str_uri)
     }
 
     // Find url delimiter
-    size_t nurl = str_uri.find_first_of("//",ns+1);
+    size_t nurl = str_uri.find("//",ns+1);
     if(nurl != string::npos)
     {
         // If there is space between the delimiters, extract protocol arguments

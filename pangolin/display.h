@@ -53,10 +53,6 @@
     #include <GL/freeglut.h>
 #endif
 
-#ifdef __FREEGLUT_EXT_H__
-    #define HAVE_GLUT_FREEGLUT
-#endif
-
 #endif // HAVE_GLUT
 
 #ifdef HAVE_TOON
