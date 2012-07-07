@@ -57,9 +57,17 @@ static int cb_height = text_height * 1.6;
 
 boost::mutex display_mutex;
 
+static bool guiVarHasChanged = true;
+
+bool GuiVarHasChanged()
+{
+    return pangolin::Pushed(guiVarHasChanged);
+}
+
 template<typename T>
 void GuiVarChanged( Var<T>& var)
 {
+  guiVarHasChanged = true;
   var.var->meta_gui_changed = true;
 
   BOOST_FOREACH(GuiVarChangedCallback& gvc, gui_var_changed_callbacks)
@@ -201,13 +209,12 @@ View& CreatePanel(const std::string& name)
 }
 
 Button::Button(string title, _Var& tv)
-  : Var<bool>(tv), title(title), down(false)
+  : Widget(title,tv), down(false)
 {
   top = 1.0; bottom = Attach::Pix(-20);
   left = 0.0; right = 1.0;
   hlock = LockLeft;
   vlock = LockBottom;
-  handler = this;
   text_width = glutBitmapLength(font,(unsigned char*)title.c_str());
 }
 
@@ -241,7 +248,7 @@ void Button::ResizeChildren()
 }
 
 Checkbox::Checkbox(std::string title, _Var& tv)
-  :Var<bool>(tv), title(title)
+    : Widget(title,tv)
 {
   top = 1.0; bottom = Attach::Pix(-20);
   left = 0.0; right = 1.0;
@@ -284,7 +291,7 @@ void Checkbox::Render()
 
 
 Slider::Slider(std::string title, _Var& tv)
-  :Var<double>(tv), title(title+":"), lock_bounds(true)
+  : Widget(title+":", tv), lock_bounds(true)
 {
   top = 1.0; bottom = Attach::Pix(-20);
   left = 0.0; right = 1.0;
@@ -419,7 +426,7 @@ void Slider::Render()
 
 
 TextInput::TextInput(std::string title, _Var& tv)
-  :Var<string>(tv), title(title+":"), do_edit(false)
+  : Widget(title+":", tv), do_edit(false)
 {
   top = 1.0; bottom = Attach::Pix(-20);
   left = 0.0; right = 1.0;

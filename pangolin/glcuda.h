@@ -59,6 +59,9 @@ struct GlBufferCudaPtr
   GLuint bo;
   cudaGraphicsResource* cuda_res;
   GlBufferType buffer_type;
+
+private:
+  GlBufferCudaPtr(const GlBufferCudaPtr&) {}
 };
 
 struct GlTextureCudaArray : GlTexture
@@ -74,6 +77,9 @@ struct CudaScopedMappedPtr
   ~CudaScopedMappedPtr();
   void* operator*();
   cudaGraphicsResource* res;
+
+private:
+  CudaScopedMappedPtr(const CudaScopedMappedPtr&) {}
 };
 
 struct CudaScopedMappedArray
@@ -82,6 +88,9 @@ struct CudaScopedMappedArray
   ~CudaScopedMappedArray();
   cudaArray* operator*();
   cudaGraphicsResource* res;
+
+private:
+  CudaScopedMappedArray(const CudaScopedMappedArray&) {}
 };
 
 void CopyPboToTex(GlBufferCudaPtr& buffer, GlTexture& tex);
@@ -128,7 +137,10 @@ inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint inter
   :GlTexture(width,height,internal_format)
 {
   // TODO: specify flags too
-  cudaGraphicsGLRegisterImage(&cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
+  const cudaError_t err = cudaGraphicsGLRegisterImage(&cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
+  if( err != cudaSuccess ) {
+      std::cout << "cudaGraphicsGLRegisterImage failed: " << err << std::endl;
+  }
 }
 
 inline GlTextureCudaArray::~GlTextureCudaArray()

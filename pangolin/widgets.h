@@ -35,6 +35,8 @@
 namespace pangolin
 {
 
+bool GuiVarHasChanged();
+
 View& CreatePanel(const std::string& name);
 
 struct Panel : public View
@@ -47,12 +49,23 @@ struct Panel : public View
   boost::ptr_unordered_map<const std::string,View>& context_views;
 };
 
-struct Button : public View, Handler, Var<bool>
+template<typename T>
+struct Widget : public View, Handler, Var<T>
+{
+    Widget(std::string title, _Var& tv)
+        : Var<T>(tv), title(title)
+    {
+        handler = this;
+    }
+
+    std::string title;
+};
+
+struct Button : public Widget<bool>
 {
   Button(std::string title, _Var& tv);
   void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
   void Render();
-  std::string title;
 
   //Cache params on resize
   void ResizeChildren();
@@ -62,12 +75,11 @@ struct Button : public View, Handler, Var<bool>
   bool down;
 };
 
-struct Checkbox : public View, Handler, Var<bool>
+struct Checkbox : public Widget<bool>
 {
   Checkbox(std::string title, _Var& tv);
   void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
   void Render();
-  std::string title;
 
   //Cache params on resize
   void ResizeChildren();
@@ -76,15 +88,13 @@ struct Checkbox : public View, Handler, Var<bool>
   Viewport vcb;
 };
 
-struct Slider : public View, Handler, Var<double>
+struct Slider : public Widget<double>
 {
   Slider(std::string title, _Var& tv);
   void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
   void MouseMotion(View&, int x, int y, int mouse_state);
   void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
   void Render();
-
-  std::string title;
 
   //Cache params on resize
   void ResizeChildren();
@@ -94,7 +104,7 @@ struct Slider : public View, Handler, Var<double>
   bool logscale;
 };
 
-struct TextInput : public View, Handler, Var<std::string>
+struct TextInput : public Widget<std::string>
 {
     TextInput(std::string title, _Var& tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
@@ -102,7 +112,6 @@ struct TextInput : public View, Handler, Var<std::string>
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Render();
 
-    std::string title;
     std::string edit;
 
     //Cache params on resize
