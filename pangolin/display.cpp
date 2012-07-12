@@ -29,6 +29,7 @@
 #include <sstream>
 #include <map>
 
+#include <boost/function.hpp>
 #include <boost/foreach.hpp>
 #define foreach BOOST_FOREACH
 
@@ -156,6 +157,11 @@ namespace pangolin
     }
   }
 
+  void RegisterKeyPressCallback(int key, boost::function<void(void)> func)
+  {
+      context->keypress_hooks[key] = func;
+  }
+
   namespace process
   {
     void Keyboard( unsigned char key, int x, int y)
@@ -194,7 +200,9 @@ namespace pangolin
         }
       }
       #endif // HAVE_GLUT
-      else if(context->activeDisplay && context->activeDisplay->handler) {
+      else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
+          context->keypress_hooks[key]();
+      } else if(context->activeDisplay && context->activeDisplay->handler) {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
       }
     }

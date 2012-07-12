@@ -34,6 +34,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <boost/function.hpp>
 
 #ifdef HAVE_GLUT
 
@@ -94,6 +95,15 @@ namespace pangolin
 
   //! @brief Renders any views with default draw methods
   void RenderViews();
+
+  //! @brief Request to be notified via functor when key is pressed.
+  //! Functor may take one parameter which will equal the key pressed
+  void RegisterKeyPressCallback(int key, boost::function<void(void)> func);
+
+  // Supported Key modifiers for GlobalKeyPressCallback.
+  // e.g. 'r' + PANGO_CTRL
+  const int PANGO_CTRL = -96;
+  const int PANGO_OPTN = 132;
 
   namespace process
   {

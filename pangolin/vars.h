@@ -96,6 +96,22 @@ T FromFile( const std::string& filename, const T& init = T());
 template<typename T>
 void FillFromFile( const std::string& filename, std::vector<T>& v, const T& init = T());
 
+template<typename T>
+struct SetVarFunctor
+{
+    SetVarFunctor(const std::string& name, T val) : varName(name), setVal(val) {}
+    void operator()() { Var<T>(varName).a->Set(setVal); }
+    std::string varName;
+    T setVal;
+};
+
+struct ToggleVarFunctor
+{
+    ToggleVarFunctor(const std::string& name) : varName(name) {}
+    void operator()() { Var<bool> val(varName); val = !val; }
+    std::string varName;
+};
+
 ////////////////////////////////////////////////
 // Implementation
 ////////////////////////////////////////////////

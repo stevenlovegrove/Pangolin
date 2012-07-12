@@ -47,6 +47,9 @@ namespace pangolin
     View base;
     boost::ptr_unordered_map<const std::string,View> all_views;
 
+    // Global keypress hooks
+    std::map<int,boost::function<void(void)> > keypress_hooks;
+
     // Manage fullscreen (ToggleFullscreen is quite new)
     bool is_double_buffered;
     bool is_fullscreen;

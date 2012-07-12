@@ -1,4 +1,5 @@
 #include <iostream>
+#include <boost/bind.hpp>
 #include <pangolin/pangolin.h>
 
 using namespace pangolin;
@@ -21,6 +22,11 @@ std::istream& operator>> (std::istream& is, CustomType& o){
   is >> o.y;
   is >> o.z;
   return is;
+}
+
+void GlobalKeyHook(const std::string& example)
+{
+    cout << example << endl;
 }
 
 int main( int /*argc*/, char* argv[] )
@@ -52,6 +58,12 @@ int main( int /*argc*/, char* argv[] )
   // A Panel is just a View with a default layout and input handling
   View& d_panel = pangolin::CreatePanel("ui")
       .SetBounds(0.0, 1.0, 0.0, Attach::Pix(UI_WIDTH));
+
+  // Demonstration of how we can register a keyboard hook to alter a Var
+  pangolin::RegisterKeyPressCallback( 'b', SetVarFunctor<double>("ui.A Double", 3.5) );
+
+  // Demonstration of how we can register a keyboard hook to trigger a method
+  pangolin::RegisterKeyPressCallback( PANGO_CTRL + 'r', boost::bind(GlobalKeyHook, "You Pushed ctrl-r!" ) );
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
