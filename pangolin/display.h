@@ -101,7 +101,8 @@ namespace pangolin
   void RegisterKeyPressCallback(int key, boost::function<void(void)> func);
 
   // Supported Key modifiers for GlobalKeyPressCallback.
-  // e.g. 'r' + PANGO_CTRL
+  // e.g. PANGO_CTRL + 'r', PANGO_SPECIAL + GLUT_KEY_RIGHT, etc.
+  const int PANGO_SPECIAL = 128;
   const int PANGO_CTRL = -96;
   const int PANGO_OPTN = 132;
 
