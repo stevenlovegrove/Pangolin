@@ -151,7 +151,12 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
 
     // Retrieve stream information
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+    if(avformat_find_stream_info(pFormatCtx, 0)<0)
+#else
+    // Deprecated
     if(av_find_stream_info(pFormatCtx)<0)
+#endif
         throw VideoException("Couldn't find stream information");
 
     if(dump_info) {
@@ -258,7 +263,12 @@ FfmpegVideo::~FfmpegVideo()
     avcodec_close(pVidCodecCtx);
 
     // Close the video file
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+    avformat_close_input(&pFormatCtx);
+#else
+    // Deprecated
     av_close_input_file(pFormatCtx);
+#endif
 
     // Free pixel conversion context
     sws_freeContext(img_convert_ctx);
