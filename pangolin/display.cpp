@@ -881,8 +881,6 @@ namespace pangolin
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
       }
     }
-
-    cout << last_z << endl;
   }
 
   // Direction vector for each AxisDirection enum
@@ -905,6 +903,7 @@ namespace pangolin
     {
       double T_nc[3*4];
       LieSetIdentity(T_nc);
+      bool rotation_changed = false;
 
       if( button_state == MouseButtonMiddle )
       {
@@ -941,7 +940,7 @@ namespace pangolin
         LieSetIdentity<>(T_n2);
         LieSetTranslation<>(T_n2,rot_center);
         LieMulSE3(T_nc, T_n2, T_2c );
-
+        rotation_changed = true;
       }else if( button_state == MouseButtonRight)
       {
         // Right Drag: object centric rotation
@@ -954,12 +953,13 @@ namespace pangolin
         LieSetIdentity<>(T_n2);
         LieSetTranslation<>(T_n2,rot_center);
         LieMulSE3(T_nc, T_n2, T_2c );
+        rotation_changed = true;
       }
 
       OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
       LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
 
-      if(enforce_up != AxisNone) {
+      if(enforce_up != AxisNone && rotation_changed) {
           const GLdouble* up = AxisDirectionVector[enforce_up];
           EnforceUpT_cw(spec.m, up);
       }
