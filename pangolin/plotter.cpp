@@ -550,7 +550,7 @@ Plotter& CreatePlotter(const string& name, DataLog* log)
 {
   Plotter* v = new Plotter(log);
   //context->all_views[name] = v;
-  bool inserted = context->all_views.insert(name,v).second;
+  bool inserted = context->named_managed_views.insert(name,v).second;
   if(!inserted) throw exception();
   context->base.views.push_back(v);
   return *v;

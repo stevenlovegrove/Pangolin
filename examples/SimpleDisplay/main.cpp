@@ -48,7 +48,7 @@ int main( int /*argc*/, char* argv[] )
   const int UI_WIDTH = 180;
 
   // Add named OpenGL viewport to window and provide 3D Handler
-  View& d_cam = pangolin::Display("cam")
+  View& d_cam = pangolin::CreateDisplay()
     .SetBounds(0.0, 1.0, Attach::Pix(UI_WIDTH), 1.0, -640.0f/480.0f)
     .SetHandler(new Handler3D(s_cam));
 

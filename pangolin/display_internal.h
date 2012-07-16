@@ -45,7 +45,9 @@ namespace pangolin
 
     // Base container for displays
     View base;
-    boost::ptr_unordered_map<const std::string,View> all_views;
+
+    // Named views which are managed by pangolin (i.e. created / deleted by pangolin)
+    boost::ptr_unordered_map<const std::string,View> named_managed_views;
 
     // Global keypress hooks
     std::map<int,boost::function<void(void)> > keypress_hooks;

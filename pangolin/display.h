@@ -278,6 +278,12 @@ namespace pangolin
     OpenGlRenderState& SetProjectionMatrix(OpenGlMatrix spec);
     OpenGlRenderState& SetModelViewMatrix(OpenGlMatrix spec);
 
+    OpenGlMatrix& GetProjectionMatrix();
+    OpenGlMatrix GetProjectionMatrix() const;
+
+    OpenGlMatrix& GetModelViewMatrix();
+    OpenGlMatrix GetModelViewMatrix() const;
+
     //! deprecated
     OpenGlRenderState& Set(OpenGlMatrixSpec spec);
 
@@ -442,10 +448,10 @@ namespace pangolin
   //! Retrieve 'base' display, corresponding to entire window
   View& DisplayBase();
 
-  //! Create or retrieve named display
+  //! Create or retrieve named display managed by pangolin (automatically deleted)
   View& Display(const std::string& name);
 
-  //! Create unnamed display
+  //! Create unnamed display managed by pangolin (automatically deleted)
   View& CreateDisplay();
 
   OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );

@@ -143,13 +143,13 @@ namespace pangolin
   View& Display(const std::string& name)
   {
     // Get / Create View
-    boost::ptr_unordered_map<std::string,View>::iterator vi = context->all_views.find(name);
-    if( vi != context->all_views.end() )
+    boost::ptr_unordered_map<std::string,View>::iterator vi = context->named_managed_views.find(name);
+    if( vi != context->named_managed_views.end() )
     {
       return *(vi->second);
     }else{
       View * v = new View();
-      bool inserted = context->all_views.insert(name, v).second;
+      bool inserted = context->named_managed_views.insert(name, v).second;
       if(!inserted) throw exception();
       v->handler = &StaticHandler;
       context->base.views.push_back(v);
@@ -475,6 +475,36 @@ namespace pangolin
   {
     stacks[spec.type] = spec;
     return *this;
+  }
+
+  OpenGlMatrix& OpenGlRenderState::GetProjectionMatrix()
+  {
+      return stacks[GlProjectionStack];
+  }
+
+  OpenGlMatrix OpenGlRenderState::GetProjectionMatrix() const
+  {
+      std::map<OpenGlStack,OpenGlMatrix>::const_iterator i = stacks.find(GlProjectionStack);
+      if( i == stacks.end() ) {
+        return IdentityMatrix();
+      }else{
+        return i->second;
+      }
+  }
+
+  OpenGlMatrix& OpenGlRenderState::GetModelViewMatrix()
+  {
+      return stacks[GlModelViewStack];
+  }
+
+  OpenGlMatrix OpenGlRenderState::GetModelViewMatrix() const
+  {
+      std::map<OpenGlStack,OpenGlMatrix>::const_iterator i = stacks.find(GlModelViewStack);
+      if( i == stacks.end() ) {
+        return IdentityMatrix();
+      }else{
+        return i->second;
+      }
   }
 
   int AttachAbs( int low, int high, Attach a)
@@ -851,6 +881,8 @@ namespace pangolin
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
       }
     }
+
+    cout << last_z << endl;
   }
 
   // Direction vector for each AxisDirection enum
@@ -884,7 +916,7 @@ namespace pangolin
         if( last_z != 1 )
         {
           //TODO Check proj exists
-          OpenGlMatrix& proj = cam_state->stacks[GlProjectionStack];
+          OpenGlMatrix& proj = cam_state->GetProjectionMatrix();
           GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
           GLdouble np[3];
           gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,np,np+1,np+2);
@@ -924,7 +956,7 @@ namespace pangolin
         LieMulSE3(T_nc, T_n2, T_2c );
       }
 
-      OpenGlMatrix& spec = cam_state->stacks[GlModelViewStack];
+      OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
       LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
 
       if(enforce_up != AxisNone) {

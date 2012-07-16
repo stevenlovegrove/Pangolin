@@ -115,14 +115,14 @@ void DrawShadowRect(Viewport& v, bool pushed)
 }
 
 Panel::Panel()
-  : context_views(context->all_views)
+  : context_views(context->named_managed_views)
 {
   handler = &StaticHandlerScroll;
   layout = LayoutVertical;
 }
 
 Panel::Panel(const std::string& auto_register_var_prefix)
-  : context_views(context->all_views)
+  : context_views(context->named_managed_views)
 {
   handler = &StaticHandlerScroll;
   layout = LayoutVertical;
@@ -202,7 +202,7 @@ void Panel::ResizeChildren()
 View& CreatePanel(const std::string& name)
 {
   Panel * p = new Panel(name);
-  bool inserted = context->all_views.insert(name, p).second;
+  bool inserted = context->named_managed_views.insert(name, p).second;
   if(!inserted) throw exception();
   context->base.views.push_back(p);
   return *p;
