@@ -62,6 +62,10 @@
 #include <TooN/se3.h>
 #endif
 
+#ifdef HAVE_EIGEN
+#include <Eigen/Eigen>
+#endif
+
 #ifdef _WIN_
 #include <Windows.h>
 #endif
@@ -233,7 +237,14 @@ namespace pangolin
   const static CameraSpec CameraSpecYDownZForward = {{0,0,1},{0,-1,0},{1,0,0},{0,-1},{1,0}};
 
   //! @brief Object representing OpenGl Matrix
-  struct OpenGlMatrixSpec {
+  struct OpenGlMatrix {
+    OpenGlMatrix();
+
+#ifdef HAVE_EIGEN
+    template<typename T>
+    OpenGlMatrix(const Eigen::Matrix<T,4,4>& mat);
+#endif // HAVE_EIGEN
+
     // Load matrix on to OpenGl stack
     void Load() const;
 
@@ -241,11 +252,14 @@ namespace pangolin
 
     void SetIdentity();
 
-    // Specify which stack this refers to
-    OpenGlStack type;
-
     // Column major Internal buffer
     GLdouble m[16];
+  };
+
+  //! @brief deprecated
+  struct OpenGlMatrixSpec : public OpenGlMatrix {
+    // Specify which stack this refers to
+    OpenGlStack type;
   };
 
   //! @brief Object representing attached OpenGl Matrices / transforms
@@ -253,12 +267,21 @@ namespace pangolin
   //! be horribly slow). Applying state is efficient.
   struct OpenGlRenderState
   {
+    OpenGlRenderState();
+    OpenGlRenderState(const OpenGlMatrix& projection_matrix);
+    OpenGlRenderState(const OpenGlMatrix& projection_matrix, const OpenGlMatrix& modelview_matrix);
+
     static void ApplyIdentity();
     static void ApplyWindowCoords();
 
     void Apply() const;
+    OpenGlRenderState& SetProjectionMatrix(OpenGlMatrix spec);
+    OpenGlRenderState& SetModelViewMatrix(OpenGlMatrix spec);
+
+    //! deprecated
     OpenGlRenderState& Set(OpenGlMatrixSpec spec);
-    std::map<OpenGlStack,OpenGlMatrixSpec> stacks;
+
+    std::map<OpenGlStack,OpenGlMatrix> stacks;
   };
 
   enum Layout
@@ -432,6 +455,7 @@ namespace pangolin
   // Use OpenGl's default frame RUB_BottomLeft
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
 
+  OpenGlMatrix IdentityMatrix();
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);
   OpenGlMatrixSpec negIdentityMatrix(OpenGlStack type);
 
@@ -453,6 +477,23 @@ inline Viewport::Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h)
 inline GLint Viewport::r() const { return l+w;}
 inline GLint Viewport::t() const { return b+h;}
 inline GLfloat Viewport::aspect() const { return (GLfloat)w / (GLfloat)h; }
+
+
+inline OpenGlMatrix::OpenGlMatrix() {
+}
+
+#ifdef HAVE_EIGEN
+  template<typename T> inline
+  OpenGlMatrix::OpenGlMatrix(const Eigen::Matrix<T,4,4>& mat)
+  {
+      for(int r=0; r<4; ++r ) {
+          for(int c=0; c<4; ++c ) {
+              m[c*4+r] = mat(r,c);
+          }
+      }
+  }
+
+#endif
 
 #ifdef HAVE_TOON
 

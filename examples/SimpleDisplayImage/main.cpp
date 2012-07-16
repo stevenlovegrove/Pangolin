@@ -16,9 +16,7 @@ int main( int /*argc*/, char* argv[] )
   // Create OpenGL window in single line thanks to GLUT
   CreateGlutWindowAndBind("Main",640,480);
 
-  OpenGlRenderState s_cam;
-  s_cam.Set(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
-  s_cam.Set(IdentityMatrix(GlModelViewStack));
+  pangolin::OpenGlRenderState s_cam(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
 
   // Aspect ratio allows us to constrain width and height whilst fitting within specified
   // bounds. A positive aspect ratio makes a view 'shrink to fit' (introducing empty bars),

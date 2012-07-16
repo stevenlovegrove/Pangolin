@@ -21,13 +21,9 @@ int main( int /*argc*/, char* argv[] )
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   // Define Camera Render Object (for view / scene browsing)
-  pangolin::OpenGlRenderState s_cam;
-  s_cam.Set(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
-  s_cam.Set(IdentityMatrix(GlModelViewStack));
-
-  pangolin::OpenGlRenderState s_cam2;
-  s_cam2.Set(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
-  s_cam2.Set(IdentityMatrix(GlModelViewStack));
+  pangolin::OpenGlMatrix proj = ProjectionMatrix(640,480,420,420,320,240,0.1,1000);
+  pangolin::OpenGlRenderState s_cam(proj);
+  pangolin::OpenGlRenderState s_cam2(proj);
 
   // Add named OpenGL viewport to window and provide 3D Handler
   View& d_cam1 = pangolin::Display("cam1")

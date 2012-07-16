@@ -43,9 +43,7 @@ int main( int /*argc*/, char* argv[] )
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   // Define Camera Render Object (for view / scene browsing)
-  pangolin::OpenGlRenderState s_cam;
-  s_cam.Set(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
-  s_cam.Set(IdentityMatrix(GlModelViewStack));
+  pangolin::OpenGlRenderState s_cam(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
 
   const int UI_WIDTH = 180;
 

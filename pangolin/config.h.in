@@ -16,6 +16,7 @@
 /// Configured libraries
 #cmakedefine HAVE_CUDA
 #cmakedefine HAVE_CVARS
+#cmakedefine HAVE_EIGEN
 #cmakedefine HAVE_TOON
 #cmakedefine HAVE_DC1394
 #cmakedefine HAVE_V4L

@@ -394,19 +394,17 @@ namespace pangolin
     return Viewport(l+horiz, b+vert, w-horiz, h-vert);
   }
 
-  void OpenGlMatrixSpec::Load() const
+  void OpenGlMatrix::Load() const
   {
-    glMatrixMode(type);
     glLoadMatrixd(m);
   }
 
-  void OpenGlMatrixSpec::Multiply() const
+  void OpenGlMatrix::Multiply() const
   {
-    glMatrixMode(type);
     glMultMatrixd(m);
   }
 
-  void OpenGlMatrixSpec::SetIdentity()
+  void OpenGlMatrix::SetIdentity()
   {
       m[0] = 1.0f;  m[1] = 0.0f;  m[2] = 0.0f;  m[3] = 0.0f;
       m[4] = 0.0f;  m[5] = 1.0f;  m[6] = 0.0f;  m[7] = 0.0f;
@@ -417,13 +415,30 @@ namespace pangolin
   void OpenGlRenderState::Apply() const
   {
     // Apply any stack matrices we have
-    for(map<OpenGlStack,OpenGlMatrixSpec>::const_iterator i = stacks.begin(); i != stacks.end(); ++i )
+    for(map<OpenGlStack,OpenGlMatrix>::const_iterator i = stacks.begin(); i != stacks.end(); ++i )
     {
+      glMatrixMode(i->first);
       i->second.Load();
     }
 
     // Leave in MODEVIEW mode
     glMatrixMode(GL_MODELVIEW);
+  }
+
+  OpenGlRenderState::OpenGlRenderState()
+  {
+  }
+
+  OpenGlRenderState::OpenGlRenderState(const OpenGlMatrix& projection_matrix)
+  {
+    stacks[GlProjectionStack] = projection_matrix;
+    stacks[GlModelViewStack] = IdentityMatrix();
+  }
+
+  OpenGlRenderState::OpenGlRenderState(const OpenGlMatrix& projection_matrix, const OpenGlMatrix& modelview_matrx)
+  {
+    stacks[GlProjectionStack] = projection_matrix;
+    stacks[GlModelViewStack] = modelview_matrx;
   }
 
   void OpenGlRenderState::ApplyIdentity()
@@ -444,6 +459,17 @@ namespace pangolin
     glLoadIdentity();
   }
 
+  OpenGlRenderState& OpenGlRenderState::SetProjectionMatrix(OpenGlMatrix spec)
+  {
+      stacks[GlProjectionStack] = spec;
+      return *this;
+  }
+
+  OpenGlRenderState& OpenGlRenderState::SetModelViewMatrix(OpenGlMatrix spec)
+  {
+      stacks[GlModelViewStack] = spec;
+      return *this;
+  }
 
   OpenGlRenderState& OpenGlRenderState::Set(OpenGlMatrixSpec spec)
   {
@@ -789,7 +815,7 @@ namespace pangolin
 
     if( pressed && cam_state->stacks.find(GlProjectionStack) != cam_state->stacks.end() )
     {
-      OpenGlMatrixSpec& proj = cam_state->stacks[GlProjectionStack];
+      OpenGlMatrix& proj = cam_state->stacks[GlProjectionStack];
 
       // Find 3D point using depth buffer
       glReadBuffer(GL_FRONT);
@@ -821,7 +847,7 @@ namespace pangolin
           LieSetTranslation<>(T_nc,rot_center);
           MatMul<3,1>(T_nc+(3*3),(button==MouseWheelUp?-1.0:1.0)/5.0);
         }
-        OpenGlMatrixSpec& spec = cam_state->stacks[GlModelViewStack];
+        OpenGlMatrix& spec = cam_state->stacks[GlModelViewStack];
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
       }
     }
@@ -858,7 +884,7 @@ namespace pangolin
         if( last_z != 1 )
         {
           //TODO Check proj exists
-          OpenGlMatrixSpec& proj = cam_state->stacks[GlProjectionStack];
+          OpenGlMatrix& proj = cam_state->stacks[GlProjectionStack];
           GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
           GLdouble np[3];
           gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,np,np+1,np+2);
@@ -898,7 +924,7 @@ namespace pangolin
         LieMulSE3(T_nc, T_n2, T_2c );
       }
 
-      OpenGlMatrixSpec& spec = cam_state->stacks[GlModelViewStack];
+      OpenGlMatrix& spec = cam_state->stacks[GlModelViewStack];
       LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
 
       if(enforce_up != AxisNone) {
@@ -1003,6 +1029,14 @@ namespace pangolin
 
       P.m[3*4+2] =  (2*zFar*zNear)/(zNear - zFar);
       return P;
+  }
+
+  OpenGlMatrix IdentityMatrix()
+  {
+    OpenGlMatrix P;
+    std::fill_n(P.m,4*4,0);
+    for( int i=0; i<4; ++i ) P.m[i*4+i] = 1;
+    return P;
   }
 
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type)
