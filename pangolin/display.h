@@ -458,7 +458,6 @@ namespace pangolin
     Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f)
         : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), cameraspec(CameraSpecOpenGl), last_z(1.0) {}
 
-    void SetOpenGlCamera();
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void MouseMotion(View&, int x, int y, int button_state);
 
@@ -489,7 +488,7 @@ namespace pangolin
   // Use OpenGl's default frame RUB_BottomLeft
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
 
-  OpenGlMatrix Pose(double x, double y, double z, AxisDirection fwd, AxisDirection up);
+  OpenGlMatrix Pose(double x, double y, double z);
   OpenGlMatrix IdentityMatrix();
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);
   OpenGlMatrixSpec negIdentityMatrix(OpenGlStack type);

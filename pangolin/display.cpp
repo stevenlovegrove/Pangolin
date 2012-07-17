@@ -1084,12 +1084,25 @@ namespace pangolin
       return P;
   }
 
-  OpenGlMatrix Pose(double x, double y, double z, AxisDirection fwd, AxisDirection up)
+  OpenGlMatrix Pose(double x, double y, double z)
   {
     OpenGlMatrix mat = IdentityMatrix();
     mat.m[0 + 4*3] = x;
     mat.m[1 + 4*3] = y;
     mat.m[2 + 4*3] = z;
+    return mat;
+  }
+
+  OpenGlMatrix Pose(double x, double y, double z, double lx, double ly, double lz, AxisDirection up)
+  {
+    OpenGlMatrix mat = IdentityMatrix();
+    mat.m[0 + 4*3] = x;
+    mat.m[1 + 4*3] = y;
+    mat.m[2 + 4*3] = z;
+
+    double dx = lx - x;
+    double dy = lx - x;
+    double dz = lx - x;
 
     // TODO: Work out rotation
     return mat;
