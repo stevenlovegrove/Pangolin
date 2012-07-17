@@ -333,6 +333,7 @@ namespace pangolin
 
   void FinishGlutFrame()
   {
+    RenderViews();
     DisplayBase().Activate();
     Viewport::DisableScissor();
 #ifdef HAVE_CVARS
@@ -661,6 +662,9 @@ namespace pangolin
 
   void View::Render()
   {
+    if(!extern_draw_function.empty()) {
+      extern_draw_function(*this);
+    }
     RenderChildren();
   }
 
@@ -707,6 +711,32 @@ namespace pangolin
     v.Activate();
     state.Apply();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  }
+
+  GLfloat View::GetClosestDepth(int x, int y, int radius) const
+  {
+      glReadBuffer(GL_FRONT);
+      const int zl = (radius*2+1);
+      const int zsize = zl*zl;
+      GLfloat zs[zsize];
+      glReadPixels(x-radius,y-radius,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
+      const GLfloat mindepth = *(std::min_element(zs,zs+zsize));
+      return mindepth;
+  }
+
+  void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const
+  {
+      const GLint viewport[4] = {v.l,v.b,v.w,v.h};
+      const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
+      const OpenGlMatrix mv = cam_state.GetModelViewMatrix();
+      gluUnProject(winx, winy, winzdepth, mv.m, proj.m, viewport, &x, &y, &z);
+  }
+
+  void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const
+  {
+      const GLint viewport[4] = {v.l,v.b,v.w,v.h};
+      const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
+      gluUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
   }
 
   View& View::SetFocus()
@@ -779,6 +809,12 @@ namespace pangolin
     return *this;
   }
 
+  View& View::SetDrawFunction(const boost::function<void(View&)>& drawFunc)
+  {
+    extern_draw_function = drawFunc;
+    return *this;
+  }
+
   View* FindChild(View& parent, int x, int y)
   {
     for( vector<View*>::const_iterator i = parent.views.begin(); i != parent.views.end(); ++i )
@@ -845,24 +881,12 @@ namespace pangolin
 
     if( pressed && cam_state->stacks.find(GlProjectionStack) != cam_state->stacks.end() )
     {
-      OpenGlMatrix& proj = cam_state->stacks[GlProjectionStack];
-
-      // Find 3D point using depth buffer
-      glReadBuffer(GL_FRONT);
-      GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
-      const int zl = (hwin*2+1);
-      const int zsize = zl*zl;
-      GLfloat zs[zsize];
-      glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
-
-      const GLfloat mindepth = *(std::min_element(zs,zs+zsize));
+      const GLfloat mindepth = display.GetClosestDepth(x,y,hwin);
       last_z = mindepth != 1 ? mindepth : last_z;
 
-      if( last_z != 1 )
-      {
-        gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,rot_center,rot_center+1,rot_center+2);
+      if( last_z != 1 ) {
+        display.GetCamCoordinates(*cam_state, x, y, last_z, rot_center[0], rot_center[1], rot_center[2]);
       }else{
-        // Points on far clipping plane are invalid
         SetZero<3,1>(rot_center);
       }
 
@@ -914,11 +938,8 @@ namespace pangolin
         // Left Drag: in plane translate
         if( last_z != 1 )
         {
-          //TODO Check proj exists
-          OpenGlMatrix& proj = cam_state->GetProjectionMatrix();
-          GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
           GLdouble np[3];
-          gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,np,np+1,np+2);
+          display.GetCamCoordinates(*cam_state,x,y,last_z, np[0], np[1], np[2]);
           const double t[] = { np[0] - rot_center[0], np[1] - rot_center[1], 0};
           LieSetTranslation<>(T_nc,t);
           std::copy(np,np+3,rot_center);
@@ -1061,6 +1082,17 @@ namespace pangolin
 
       P.m[3*4+2] =  (2*zFar*zNear)/(zNear - zFar);
       return P;
+  }
+
+  OpenGlMatrix Pose(double x, double y, double z, AxisDirection fwd, AxisDirection up)
+  {
+    OpenGlMatrix mat = IdentityMatrix();
+    mat.m[0 + 4*3] = x;
+    mat.m[1 + 4*3] = y;
+    mat.m[2 + 4*3] = z;
+
+    // TODO: Work out rotation
+    return mat;
   }
 
   OpenGlMatrix IdentityMatrix()

@@ -306,7 +306,7 @@ namespace pangolin
   {
     View()
       : aspect(0.0), top(1.0),left(0.0),right(1.0),bottom(0.0), hlock(LockCenter),vlock(LockCenter),
-        layout(LayoutOverlay), scroll_offset(0), show(1), handler(0) {}
+        layout(LayoutOverlay), scroll_offset(0), show(1), handler(0), extern_draw_function(0) {}
 
     virtual ~View() {}
 
@@ -327,6 +327,17 @@ namespace pangolin
 
     //! Activate Display and set State Matrices
     void ActivateScissorAndClear(const OpenGlRenderState& state ) const;
+
+    //! Return closest depth buffer value within radius of window (winx,winy)
+    GLfloat GetClosestDepth(int winx, int winy, int radius) const;
+
+    //! Obtain camera space coordinates of scene at pixel (winx, winy, winzdepth)
+    //! winzdepth can be obtained from GetClosestDepth
+    void GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const;
+
+    //! Obtain object space coordinates of scene at pixel (winx, winy, winzdepth)
+    //! winzdepth can be obtained from GetClosestDepth
+    void GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const;
 
     //! Given the specification of Display, compute viewport
     virtual void Resize(const Viewport& parent);
@@ -350,10 +361,24 @@ namespace pangolin
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
     View& SetBounds(Attach bottom, Attach top, Attach left, Attach right, double aspect);
 
+    //! Designate handler for accepting mouse / keyboard input.
     View& SetHandler(Handler* handler);
+
+    //! Set drawFunc as the drawing function for this view
+    View& SetDrawFunction(const boost::function<void(View&)>& drawFunc);
+
+    //! Force this view to have the given aspect, whilst fitting snuggly
+    //! within the parent. A negative value with 'over-draw', fitting the
+    //! smaller side of the parent.
     View& SetAspect(double aspect);
+
+    //! Set how this view should be positioned relative to its parent
     View& SetLock(Lock horizontal, Lock vertical );
+
+    //! Set layout policy for this view
     View& SetLayout(Layout layout);
+
+    //! Add view as child
     View& AddDisplay(View& view);
 
     //! Return (i)th child of this view
@@ -384,6 +409,9 @@ namespace pangolin
 
     // Map for sub-displays (if any)
     std::vector<View*> views;
+
+    // External draw function
+    boost::function<void(View&)> extern_draw_function;
 
   private:
     // Private copy constructor
@@ -436,7 +464,7 @@ namespace pangolin
 
   protected:
     OpenGlRenderState* cam_state;
-    const static int hwin = 3;
+    const static int hwin = 8;
     AxisDirection enforce_up;
     float tf;
     CameraSpec cameraspec;
@@ -461,6 +489,7 @@ namespace pangolin
   // Use OpenGl's default frame RUB_BottomLeft
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
 
+  OpenGlMatrix Pose(double x, double y, double z, AxisDirection fwd, AxisDirection up);
   OpenGlMatrix IdentityMatrix();
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);
   OpenGlMatrixSpec negIdentityMatrix(OpenGlStack type);

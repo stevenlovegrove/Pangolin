@@ -20,8 +20,9 @@ int main( int /*argc*/, char* argv[] )
   DataLog log;
 
   // OpenGL 'view' of data. We might have many views of the same data.
-  View& d_graph = pangolin::CreatePlotter("x",&log)
-      .SetBounds(0.0, 1.0, 0.0, 1.0);
+  Plotter plotter(&log);
+  plotter.SetBounds(0.0, 1.0, 0.0, 1.0);
+  DisplayBase().AddDisplay(plotter);
 
   double t = 0;
 
@@ -43,9 +44,7 @@ int main( int /*argc*/, char* argv[] )
     log.Log(sin(t),cos(t),tan(t),sin(t)+cos(t));
     t += tinc;
 
-    d_graph.Render();
-
-    // Swap frames and Process Events
+    // Render graph, Swap frames and Process Events
     pangolin::FinishGlutFrame();
 
     boost::this_thread::sleep(boost::posix_time::milliseconds(10));

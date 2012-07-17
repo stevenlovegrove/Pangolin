@@ -43,5 +43,8 @@
 #include <pangolin/video.h>
 #endif // BUILD_PANGOLIN_VIDEO
 
+// Let other libraries headers know about Pangolin
+#define HAVE_PANGOLIN
+
 #endif // PANGOLIN_H
 
