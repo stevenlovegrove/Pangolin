@@ -996,6 +996,35 @@ namespace pangolin
       return ProjectionMatrixRUB_BottomLeft(w,h,fu,fv,u0,v0,zNear,zFar);
   }
 
+OpenGlMatrixSpec ProjectionMatrixOrthographic(double t, double b, double l, double r, double n, double f )
+{
+    OpenGlMatrixSpec P;
+    P.type = GlProjectionStack;
+    std::fill_n(P.m,4*4,0);
+
+    P.m[0] = 2/(r-l);
+    P.m[1] = 0;
+    P.m[2] = 0;
+    P.m[3] = 0;
+
+    P.m[4] = 0;
+    P.m[5] = 2/(t-b);
+    P.m[6] = 0;
+    P.m[7] = 0;
+
+    P.m[8] = 0;
+    P.m[9] = 0;
+    P.m[10] = -2/(f-n);
+    P.m[11] = 0;
+
+    P.m[12] = -(r+l)/(r-l);
+    P.m[13] = -(t+b)/(t-b);
+    P.m[14] = -(f+n)/(f-n);
+    P.m[15] = 1;
+
+    return P;
+}
+
 
   // Camera Axis:
   //   X - Right, Y - Up, Z - Back

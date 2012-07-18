@@ -487,6 +487,7 @@ namespace pangolin
 
   // Use OpenGl's default frame RUB_BottomLeft
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
+  OpenGlMatrixSpec ProjectionMatrixOrthographic(double t, double b, double l, double r, double n, double f );
 
   OpenGlMatrix Pose(double x, double y, double z);
   OpenGlMatrix IdentityMatrix();
