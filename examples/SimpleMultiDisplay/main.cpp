@@ -22,8 +22,8 @@ int main( int /*argc*/, char* argv[] )
 
   // Define Camera Render Object (for view / scene browsing)
   pangolin::OpenGlMatrix proj = ProjectionMatrix(640,480,420,420,320,240,0.1,1000);
-  pangolin::OpenGlRenderState s_cam(proj);
-  pangolin::OpenGlRenderState s_cam2(proj);
+  pangolin::OpenGlRenderState s_cam(proj,ModelViewLookAt(1,0.5,-2,0,0,0,AxisY) );
+  pangolin::OpenGlRenderState s_cam2(proj,ModelViewLookAt(0,0,-2,0,0,0,AxisY) );
 
   // Add named OpenGL viewport to window and provide 3D Handler
   View& d_cam1 = pangolin::Display("cam1")

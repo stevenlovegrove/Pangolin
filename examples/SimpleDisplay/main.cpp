@@ -2,6 +2,8 @@
 #include <boost/bind.hpp>
 #include <pangolin/pangolin.h>
 
+#include <pangolin/simple_math.h>
+
 using namespace pangolin;
 using namespace std;
 
@@ -43,7 +45,10 @@ int main( int /*argc*/, char* argv[] )
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   // Define Camera Render Object (for view / scene browsing)
-  pangolin::OpenGlRenderState s_cam(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
+  pangolin::OpenGlRenderState s_cam(
+    ProjectionMatrix(640,480,420,420,320,240,0.1,1000),
+    ModelViewLookAt(-0,0.5,-3, 0,0,0, AxisY)
+  );
 
   const int UI_WIDTH = 180;
 
@@ -96,11 +101,11 @@ int main( int /*argc*/, char* argv[] )
     // Activate efficiently by object
     // (3D Handler requires depth testing to be enabled)
     d_cam.ActivateScissorAndClear(s_cam);
+
     glEnable(GL_DEPTH_TEST);
     glColor3f(1.0,1.0,1.0);
 
     // Render some stuff
-    glTranslatef(0,0,-3);
     glutWireTeapot(1.0);
 
     // Render our UI panel when we receive input

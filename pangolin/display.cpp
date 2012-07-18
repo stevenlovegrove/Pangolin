@@ -964,9 +964,11 @@ namespace pangolin
         rotation_changed = true;
       }else if( button_state == MouseButtonRight)
       {
+        double flip[] = {-1,1};
+
         // Right Drag: object centric rotation
         double T_2c[3*4];
-        Rotation<>(T_2c,-delta[1]*0.01, -delta[0]*0.01, 0.0);
+        Rotation<>(T_2c,flip[0]*delta[1]*0.01, flip[1]*delta[0]*0.01, 0.0);
         double mrotc[3];
         MatMul<3,1>(mrotc, rot_center, -1.0);
         LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
@@ -1036,9 +1038,9 @@ OpenGlMatrixSpec ProjectionMatrixOrthographic(double t, double b, double l, doub
   OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
   {
       // http://www.songho.ca/opengl/gl_projectionmatrix.html
-      const double L = +(u0) * zNear / fu;
+      const double L = +(u0) * zNear / -fu;
       const double T = +(v0) * zNear / fv;
-      const double R = -(w-u0) * zNear / fu;
+      const double R = -(w-u0) * zNear / -fu;
       const double B = -(h-v0) * zNear / fv;
 
       OpenGlMatrixSpec P;
@@ -1052,6 +1054,7 @@ OpenGlMatrixSpec ProjectionMatrixOrthographic(double t, double b, double l, doub
       P.m[2*4+1] = (T+B)/(T-B);
       P.m[2*4+3] = -1.0;
       P.m[3*4+2] =  -(2*zFar*zNear)/(zFar-zNear);
+
       return P;
   }
 
@@ -1113,28 +1116,49 @@ OpenGlMatrixSpec ProjectionMatrixOrthographic(double t, double b, double l, doub
       return P;
   }
 
-  OpenGlMatrix Pose(double x, double y, double z)
+  OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
   {
-    OpenGlMatrix mat = IdentityMatrix();
-    mat.m[0 + 4*3] = x;
-    mat.m[1 + 4*3] = y;
-    mat.m[2 + 4*3] = z;
+    OpenGlMatrix mat;
+    GLdouble* m = mat.m;
+
+    const double u_o[3] = {ux,uy,uz};
+
+    GLdouble x[3], y[3];
+    GLdouble z[] = {ex - lx, ey - ly, ez - lz};
+    Normalise<3>(z);
+
+    CrossProduct(x,u_o,z);
+    CrossProduct(y,z,x);
+
+    Normalise<3>(x);
+    Normalise<3>(y);
+
+  #define M(row,col)  m[col*4+row]
+    M(0,0) = x[0];
+    M(0,1) = x[1];
+    M(0,2) = x[2];
+    M(1,0) = y[0];
+    M(1,1) = y[1];
+    M(1,2) = y[2];
+    M(2,0) = z[0];
+    M(2,1) = z[1];
+    M(2,2) = z[2];
+    M(3,0) = 0.0;
+    M(3,1) = 0.0;
+    M(3,2) = 0.0;
+    M(0,3) = -(M(0,0)*ex + M(0,1)*ey + M(0,2)*ez);
+    M(1,3) = -(M(1,0)*ex + M(1,1)*ey + M(1,2)*ez);
+    M(2,3) = -(M(2,0)*ex + M(2,1)*ey + M(2,2)*ez);
+    M(3,3) = 1.0;
+#undef M
+
     return mat;
   }
 
-  OpenGlMatrix Pose(double x, double y, double z, double lx, double ly, double lz, AxisDirection up)
+  OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, AxisDirection up)
   {
-    OpenGlMatrix mat = IdentityMatrix();
-    mat.m[0 + 4*3] = x;
-    mat.m[1 + 4*3] = y;
-    mat.m[2 + 4*3] = z;
-
-    double dx = lx - x;
-    double dy = lx - x;
-    double dz = lx - x;
-
-    // TODO: Work out rotation
-    return mat;
+    const double* u = AxisDirectionVector[up];
+    return ModelViewLookAt(ex,ey,ez,lx,ly,lz,u[0],u[1],u[2]);
   }
 
   OpenGlMatrix IdentityMatrix()

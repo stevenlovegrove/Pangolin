@@ -485,11 +485,15 @@ namespace pangolin
   OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
   OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
 
-  // Use OpenGl's default frame RUB_BottomLeft
+  //! Use OpenGl's default frame RUB_BottomLeft
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
   OpenGlMatrixSpec ProjectionMatrixOrthographic(double t, double b, double l, double r, double n, double f );
 
-  OpenGlMatrix Pose(double x, double y, double z);
+  //! Generate glulookat style model view matrix, looking at (lx,ly,lz)
+  //! Assumes forward is -z and up is +y
+  OpenGlMatrix ModelViewLookAt(double x, double y, double z, double lx, double ly, double lz, AxisDirection up);
+  OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz);
+
   OpenGlMatrix IdentityMatrix();
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);
   OpenGlMatrixSpec negIdentityMatrix(OpenGlStack type);
