@@ -164,6 +164,9 @@ namespace pangolin
 
   namespace process
   {
+    unsigned int last_x;
+    unsigned int last_y;
+
     void Keyboard( unsigned char key, int x, int y)
     {
       context->had_input = context->is_double_buffered ? 2 : 1;
@@ -231,6 +234,9 @@ namespace pangolin
 
     void Mouse( int button_raw, int state, int x, int y)
     {
+      last_x = x;
+      last_y = y;
+
       const MouseButton button = (MouseButton)(1 << button_raw);
       const bool pressed = (state == 0);
 
@@ -256,6 +262,9 @@ namespace pangolin
 
     void MouseMotion( int x, int y)
     {
+      last_x = x;
+      last_y = y;
+
       context->had_input = context->is_double_buffered ? 2 : 1;
 
       // Force coords to match OpenGl Window Coords
@@ -270,6 +279,12 @@ namespace pangolin
       }
     }
 
+    void PassiveMouseMotion(int x, int y)
+    {
+        last_x = x;
+        last_y = y;
+    }
+
     void Resize( int width, int height )
     {
       if( !context->is_fullscreen )
@@ -282,6 +297,15 @@ namespace pangolin
       context->has_resized = 20; //context->is_double_buffered ? 2 : 1;
       Viewport win(0,0,width,height);
       context->base.Resize(win);
+    }
+
+    void Scroll(float x, float y)
+    {
+        if(x==0) {
+          Mouse(y>0?3:4,0, last_x, last_y);
+          context->mouse_state &= !MouseWheelUp;
+          context->mouse_state &= !MouseWheelDown;
+        }
     }
   }
 
@@ -301,11 +325,20 @@ namespace pangolin
     glutReshapeFunc(&process::Resize);
     glutMouseFunc(&process::Mouse);
     glutMotionFunc(&process::MouseMotion);
+    glutPassiveMotionFunc(&process::PassiveMouseMotion);
     glutSpecialFunc(&process::SpecialFunc);
     glutSpecialUpFunc(&process::SpecialFuncUp);
 
-#ifndef HAVE_FREEGLUT
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
     glutDisplayFunc(&PangoGlutRedisplay);
+
+    // Attempt to register special smooth scroll callback
+    // https://github.com/nanoant/osxglut
+    typedef void (*glutScrollFunc_t)(void (*)(float, float));
+    glutScrollFunc_t glutScrollFunc = (glutScrollFunc_t)glutGetProcAddress("glutScrollFunc");
+    if(glutScrollFunc) {
+        glutScrollFunc(&process::Scroll);
+    }
 #endif
   }
 
@@ -868,6 +901,11 @@ namespace pangolin
         Handler::Mouse(d,button,x,y,pressed,button_state);
     }
 
+  }
+
+  void Handler3D::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+  {
+    // TODO: hooks for reset / changing mode (perspective / ortho etc)
   }
 
   void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)

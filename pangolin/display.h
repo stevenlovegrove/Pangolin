@@ -127,6 +127,8 @@ namespace pangolin
     void Mouse( int button, int state, int x, int y);
 
     void MouseMotion( int x, int y);
+
+    void Scroll(float x, float y);
   }
 
 #ifdef HAVE_GLUT  
@@ -458,6 +460,7 @@ namespace pangolin
     Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f)
         : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), cameraspec(CameraSpecOpenGl), last_z(1.0) {}
 
+    void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void MouseMotion(View&, int x, int y, int button_state);
 
