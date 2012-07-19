@@ -850,7 +850,8 @@ namespace pangolin
 
   View* FindChild(View& parent, int x, int y)
   {
-    for( vector<View*>::const_iterator i = parent.views.begin(); i != parent.views.end(); ++i )
+    // Find in reverse order to mirror draw order
+    for( vector<View*>::const_reverse_iterator i = parent.views.rbegin(); i != parent.views.rend(); ++i )
       if( (*i)->show && (*i)->vp.Contains(x,y) )
         return (*i);
     return 0;
