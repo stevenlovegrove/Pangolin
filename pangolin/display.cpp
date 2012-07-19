@@ -925,6 +925,8 @@ namespace pangolin
 
     if( mag < 50*50 )
     {
+      OpenGlMatrix& mv = cam_state->GetModelViewMatrix();
+      const GLdouble* up = AxisDirectionVector[enforce_up];
       double T_nc[3*4];
       LieSetIdentity(T_nc);
       bool rotation_changed = false;
@@ -964,11 +966,21 @@ namespace pangolin
         rotation_changed = true;
       }else if( button_state == MouseButtonRight)
       {
-        double flip[] = {-1,1};
+        double aboutx = -0.01 * delta[1];
+        double abouty =  0.01 * delta[0];
+
+        if(enforce_up) {
+            // Special case if view direction is parallel to up vector
+            const double updotz = mv.m[2]*up[0] + mv.m[6]*up[1] + mv.m[10]*up[2];
+            if(updotz > 0.98) aboutx = std::min(aboutx,0.0);
+            if(updotz <-0.98) aboutx = std::max(aboutx,0.0);
+            // Module rotation around y so we don't spin too fast!
+            abouty *= (1-0.6*abs(updotz));
+        }
 
         // Right Drag: object centric rotation
         double T_2c[3*4];
-        Rotation<>(T_2c,flip[0]*delta[1]*0.01, flip[1]*delta[0]*0.01, 0.0);
+        Rotation<>(T_2c, aboutx, abouty, 0.0);
         double mrotc[3];
         MatMul<3,1>(mrotc, rot_center, -1.0);
         LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
@@ -979,12 +991,10 @@ namespace pangolin
         rotation_changed = true;
       }
 
-      OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
-      LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
+      LieMul4x4bySE3<>(mv.m,T_nc,mv.m);
 
       if(enforce_up != AxisNone && rotation_changed) {
-          const GLdouble* up = AxisDirectionVector[enforce_up];
-          EnforceUpT_cw(spec.m, up);
+          EnforceUpT_cw(mv.m, up);
       }
     }
 
