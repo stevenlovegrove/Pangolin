@@ -243,8 +243,11 @@ namespace pangolin
     OpenGlMatrix();
 
 #ifdef HAVE_EIGEN
-    template<typename T>
-    OpenGlMatrix(const Eigen::Matrix<T,4,4>& mat);
+    template<typename P>
+    OpenGlMatrix(const Eigen::Matrix<P,4,4>& mat);
+
+    template<typename P>
+    operator Eigen::Matrix<P,4,4>() const;
 #endif // HAVE_EIGEN
 
     // Load matrix on to OpenGl stack
@@ -525,14 +528,26 @@ inline OpenGlMatrix::OpenGlMatrix() {
 }
 
 #ifdef HAVE_EIGEN
-  template<typename T> inline
-  OpenGlMatrix::OpenGlMatrix(const Eigen::Matrix<T,4,4>& mat)
+  template<typename P> inline
+  OpenGlMatrix::OpenGlMatrix(const Eigen::Matrix<P,4,4>& mat)
   {
       for(int r=0; r<4; ++r ) {
           for(int c=0; c<4; ++c ) {
               m[c*4+r] = mat(r,c);
           }
       }
+  }
+
+  template<typename P>
+  OpenGlMatrix::operator Eigen::Matrix<P,4,4>() const
+  {
+      Eigen::Matrix<P,4,4> mat;
+      for(int r=0; r<4; ++r ) {
+          for(int c=0; c<4; ++c ) {
+              mat(r,c) = m[c*4+r];
+          }
+      }
+      return mat;
   }
 
 #endif
