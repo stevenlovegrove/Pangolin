@@ -33,7 +33,6 @@
 #include <cuda_gl_interop.h>
 
 #include "gl.h"
-#include "gltextureview.h"
 
 namespace pangolin
 {
@@ -71,8 +70,6 @@ struct GlTextureCudaArray : GlTexture
   ~GlTextureCudaArray();
   cudaGraphicsResource* cuda_res;
 };
-
-typedef GlTextureViewTemplatedType<GlTextureCudaArray> GlTextureCudaArrayView;
 
 struct CudaScopedMappedPtr
 {
