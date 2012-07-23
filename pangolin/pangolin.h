@@ -32,6 +32,7 @@
 #include <pangolin/platform.h>
 #include <pangolin/gl.h>
 #include <pangolin/display.h>
+#include <pangolin/gltextureview.h>
 #include <pangolin/plotter.h>
 
 #ifdef BUILD_PANGOLIN_VARS

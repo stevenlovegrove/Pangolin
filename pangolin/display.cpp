@@ -124,6 +124,7 @@ namespace pangolin
 
   void RenderViews()
   {
+      Viewport::DisableScissor();
       DisplayBase().Render();
   }
 
@@ -301,7 +302,7 @@ namespace pangolin
 
     void Scroll(float x, float y)
     {
-        cout << "Scroll: " << x << ", " << y << endl;
+//        cout << "Scroll: " << x << ", " << y << endl;
 
         if(x==0) {
           Mouse(y>0?3:4,0, last_x, last_y);
@@ -312,7 +313,12 @@ namespace pangolin
 
     void Zoom(float m)
     {
-        cout << "Zoom: " << m << endl;
+//        cout << "Zoom: " << m << endl;
+    }
+
+    void Rotate(float r)
+    {
+//        cout << "Rotate: " << r << endl;
     }
   }
 
@@ -342,15 +348,21 @@ namespace pangolin
     // Attempt to register special smooth scroll callback
     // https://github.com/nanoant/osxglut
     typedef void (*glutScrollFunc_t)(void (*)(float, float));
+    typedef void (*glutZoomFunc_t)(void (*)(float));
+    typedef void (*glutRotateFunc_t)(void (*)(float));
+
     glutScrollFunc_t glutScrollFunc = (glutScrollFunc_t)glutGetProcAddress("glutScrollFunc");
+    glutZoomFunc_t glutZoomFunc = (glutZoomFunc_t)glutGetProcAddress("glutZoomFunc");
+    glutRotateFunc_t glutRotateFunc = (glutRotateFunc_t)glutGetProcAddress("glutRotateFunc");
+
     if(glutScrollFunc) {
         glutScrollFunc(&process::Scroll);
     }
-    typedef void (*glutZoomFunc_t)(void (*)(float));
-    glutZoomFunc_t glutZoomFunc = (glutZoomFunc_t)glutGetProcAddress("glutZoomFunc");
     if(glutZoomFunc) {
-        cout << "Registering zoom func" << endl;
         glutZoomFunc(&process::Zoom);
+    }
+    if(glutRotateFunc) {
+        glutRotateFunc(&process::Rotate);
     }
 
 #endif

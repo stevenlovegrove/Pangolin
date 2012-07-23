@@ -9,6 +9,7 @@ SET(
   display.h display_internal.h display.cpp
   plotter.h plotter.cpp
   gl.h glcuda.h cg.h
+  gltextureview.h
   threadedfilebuf.h threadedfilebuf.cpp
   timer.h
 )
