@@ -50,7 +50,7 @@ class GlTexture
 {
 public:
   //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8
-  GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8 );
+  GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true );
   ~GlTexture();
 
   void Bind() const;
@@ -63,6 +63,7 @@ public:
   void SetLinear();
   void SetNearestNeighbour();
 
+  void RenderToViewport(const bool flip) const;
   void RenderToViewport() const;
   void RenderToViewportFlipY() const;
 
@@ -128,7 +129,7 @@ const static GLuint attachment_buffers[] = {
 //template<> struct GlDataTypeTrait<int>{ static const GLenum type = GL_INT; };
 //template<> struct GlDataTypeTrait<unsigned char>{ static const GLenum type = GL_UNSIGNED_BYTE; };
 
-inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format)
+inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bool sampling_linear )
   : internal_format(internal_format),width(width),height(height)
 {
   glGenTextures(1,&tid);
@@ -136,10 +137,15 @@ inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format)
   // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
   // for call to succeed.
   glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, GL_LUMINANCE,GL_FLOAT,0);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+  if(sampling_linear) {
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  }else{
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  }
+
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 }
@@ -181,7 +187,14 @@ inline void GlTexture::SetNearestNeighbour()
   Unbind();
 }
 
-
+inline void GlTexture::RenderToViewport(const bool flip) const
+{
+    if(flip) {
+        RenderToViewportFlipY();
+    }else{
+        RenderToViewport();
+    }
+}
 
 inline void GlTexture::RenderToViewport() const
 {
@@ -192,14 +205,10 @@ inline void GlTexture::RenderToViewport() const
   Bind();
   glEnable(GL_TEXTURE_2D);
   glBegin(GL_QUADS);
-  glTexCoord2f(0, 0);
-  glVertex2d(-1,-1);
-  glTexCoord2f(1, 0);
-  glVertex2d(1,-1);
-  glTexCoord2f(1, 1);
-  glVertex2d(1,1);
-  glTexCoord2f(0, 1);
-  glVertex2d(-1,1);
+  glTexCoord2f(0, 0); glVertex2d(-1,-1);
+  glTexCoord2f(1, 0); glVertex2d(1,-1);
+  glTexCoord2f(1, 1); glVertex2d(1,1);
+  glTexCoord2f(0, 1); glVertex2d(-1,1);
   glEnd();
   glDisable(GL_TEXTURE_2D);
 }
@@ -213,14 +222,10 @@ inline void GlTexture::RenderToViewportFlipY() const
   Bind();
   glEnable(GL_TEXTURE_2D);
   glBegin(GL_QUADS);
-  glTexCoord2f(0, 0);
-  glVertex2d(-1,1);
-  glTexCoord2f(1, 0);
-  glVertex2d(1,1);
-  glTexCoord2f(1, 1);
-  glVertex2d(1,-1);
-  glTexCoord2f(0, 1);
-  glVertex2d(-1,-1);
+  glTexCoord2f(0, 0); glVertex2d(-1,1);
+  glTexCoord2f(1, 0); glVertex2d(1,1);
+  glTexCoord2f(1, 1); glVertex2d(1,-1);
+  glTexCoord2f(0, 1); glVertex2d(-1,-1);
   glEnd();
   glDisable(GL_TEXTURE_2D);
 }

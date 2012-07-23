@@ -66,7 +66,7 @@ private:
 
 struct GlTextureCudaArray : GlTexture
 {
-  GlTextureCudaArray(int width, int height, GLint internal_format);
+  GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear = true);
   ~GlTextureCudaArray();
   cudaGraphicsResource* cuda_res;
 };
@@ -133,8 +133,8 @@ inline void GlBufferCudaPtr::Upload(const GLvoid* data, GLsizeiptr size_bytes, G
   glBufferSubData(buffer_type,offset,size_bytes, data);
 }
 
-inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint internal_format)
-  :GlTexture(width,height,internal_format)
+inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear)
+  :GlTexture(width,height,internal_format, sampling_linear)
 {
   // TODO: specify flags too
   const cudaError_t err = cudaGraphicsGLRegisterImage(&cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
