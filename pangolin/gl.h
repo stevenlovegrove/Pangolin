@@ -46,8 +46,9 @@ namespace pangolin
 // Interface
 ////////////////////////////////////////////////
 
-struct GlTexture
+class GlTexture
 {
+public:
   //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8
   GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8 );
   ~GlTexture();
@@ -69,6 +70,10 @@ struct GlTexture
   GLuint tid;
   GLint width;
   GLint height;
+
+private:
+  // Private copy constructor
+  GlTexture(const GlTexture&) {}
 };
 
 struct GlRenderBuffer
