@@ -185,7 +185,7 @@ namespace pangolin
           context->had_input = 60*2;
       }else if(context->console.IsOpen()) {
           // Direct input to console
-          if( key > 128 ) {
+          if( key >= 128 ) {
               context->console.SpecialFunc(key - 128 );
           }else{
               context->console.KeyboardFunc(key);
@@ -291,7 +291,7 @@ namespace pangolin
       if( !context->is_fullscreen )
       {
         context->windowed_size[0] = width;
-        context->windowed_size[1] = width;
+        context->windowed_size[1] = height;
       }
       // TODO: Fancy display managers seem to cause this to mess up?
       context->had_input = 20; //context->is_double_buffered ? 2 : 1;
