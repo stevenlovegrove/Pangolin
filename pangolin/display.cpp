@@ -1073,11 +1073,10 @@ namespace pangolin
       return ProjectionMatrixRUB_BottomLeft(w,h,fu,fv,u0,v0,zNear,zFar);
   }
 
-OpenGlMatrixSpec ProjectionMatrixOrthographic(double t, double b, double l, double r, double n, double f )
+OpenGlMatrixSpec ProjectionMatrixOrthographic(double l, double r, double b, double t, double n, double f )
 {
     OpenGlMatrixSpec P;
     P.type = GlProjectionStack;
-    std::fill_n(P.m,4*4,0);
 
     P.m[0] = 2/(r-l);
     P.m[1] = 0;

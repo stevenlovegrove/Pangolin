@@ -493,7 +493,7 @@ namespace pangolin
 
   //! Use OpenGl's default frame RUB_BottomLeft
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
-  OpenGlMatrixSpec ProjectionMatrixOrthographic(double t, double b, double l, double r, double n, double f );
+  OpenGlMatrixSpec ProjectionMatrixOrthographic(double l, double r, double b, double t, double n, double f );
 
   //! Generate glulookat style model view matrix, looking at (lx,ly,lz)
   //! Assumes forward is -z and up is +y
