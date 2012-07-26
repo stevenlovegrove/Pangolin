@@ -51,7 +51,13 @@ class GlTexture
 public:
   //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
   GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true );
+
+  //! Default constructor represents 'no texture'
+  GlTexture();
   ~GlTexture();
+
+  //! Reinitialise teture width / height / format
+  void Reinitialise(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true );
 
   void Bind() const;
   void Unbind() const;
@@ -129,30 +135,23 @@ const static GLuint attachment_buffers[] = {
 //template<> struct GlDataTypeTrait<int>{ static const GLenum type = GL_INT; };
 //template<> struct GlDataTypeTrait<unsigned char>{ static const GLenum type = GL_UNSIGNED_BYTE; };
 
-inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bool sampling_linear )
-  : internal_format(internal_format),width(width),height(height)
+inline GlTexture::GlTexture()
+    : internal_format(0), tid(0), width(0), height(0)
 {
-  glGenTextures(1,&tid);
-  Bind();
-  // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
-  // for call to succeed.
-  glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, GL_LUMINANCE,GL_FLOAT,0);
+  // Not a texture constructor
+}
 
-  if(sampling_linear) {
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  }else{
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  }
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bool sampling_linear )
+    : internal_format(0), tid(0)
+{
+  Reinitialise(width,height,internal_format,sampling_linear);
 }
 
 inline GlTexture::~GlTexture()
 {
-  glDeleteTextures(1,&tid);
+  if(internal_format!=0) {
+    glDeleteTextures(1,&tid);
+  }
 }
 
 inline void GlTexture::Bind() const
@@ -163,6 +162,34 @@ inline void GlTexture::Bind() const
 inline void GlTexture::Unbind() const
 {
   glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sampling_linear )
+{
+    if(tid!=0) {
+      glDeleteTextures(1,&tid);
+    }
+
+    internal_format = int_format;
+    width = w;
+    height = h;
+
+    glGenTextures(1,&tid);
+    Bind();
+    // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
+    // for call to succeed.
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, GL_LUMINANCE,GL_FLOAT,0);
+
+    if(sampling_linear) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }else{
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 }
 
 inline void GlTexture::Upload(void* image, GLenum data_layout, GLenum data_type )
