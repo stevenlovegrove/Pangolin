@@ -66,6 +66,7 @@ private:
 
 struct GlTextureCudaArray : GlTexture
 {
+  // Some internal_formats aren't accepted. I have trouble with GL_RGB8
   GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear = true);
   ~GlTextureCudaArray();
   cudaGraphicsResource* cuda_res;

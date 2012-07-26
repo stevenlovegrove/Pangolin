@@ -49,7 +49,7 @@ namespace pangolin
 class GlTexture
 {
 public:
-  //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8
+  //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
   GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true );
   ~GlTexture();
 
@@ -57,7 +57,7 @@ public:
   void Unbind() const;
 
   //! data_layout normally one of GL_LUMINANCE, GL_RGB, ...
-  //! data_type normally one of GL_UNSIGNED_BYTE, GL_FLOAT
+  //! data_type normally one of GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_FLOAT
   void Upload(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT);
 
   void SetLinear();
@@ -285,55 +285,6 @@ inline void GlFramebuffer::Unbind() const
   glDrawBuffers( 1, attachment_buffers );
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
-
-// h [0,360)
-// s [0,1]
-// v [0,1]
-inline void glColorHSV( double hue, double s, double v )
-{
-  const double h = hue / 60.0;
-  const int i = floor(h);
-  const double f = (i%2 == 0) ? 1-(h-i) : h-i;
-  const double m = v * (1-s);
-  const double n = v * (1-s*f);
-  switch(i)
-  {
-  case 0: glColor3d(v,n,m); break;
-  case 1: glColor3d(n,v,m); break;
-  case 2: glColor3d(m,v,n); break;
-  case 3: glColor3d(m,n,v); break;
-  case 4: glColor3d(n,m,v); break;
-  case 5: glColor3d(v,m,n); break;
-  default:
-    break;
-  }
-
-}
-
-inline void glColorBin( int bin, int max_bins, double sat, double val )
-{
-  if( bin >= 0 )
-  {
-    const double hue = (double)(bin%max_bins) * 360.0 / (double)max_bins;
-    glColorHSV(hue,sat,val);
-  }else{
-    glColor3f(1,1,1);
-  }
-}
-
-inline void glPixelTransferScale( float r, float g, float b )
-{
-    glPixelTransferf(GL_RED_SCALE,r);
-    glPixelTransferf(GL_GREEN_SCALE,g);
-    glPixelTransferf(GL_BLUE_SCALE,b);
-}
-
-inline void glPixelTransferScale( float scale )
-{
-    glPixelTransferScale(scale,scale,scale);
-}
-
-
 
 }
 

@@ -31,6 +31,7 @@
 #include <pangolin/config.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl.h>
+#include <pangolin/gldraw.h>
 #include <pangolin/display.h>
 #include <pangolin/plotter.h>
 
