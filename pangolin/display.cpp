@@ -1031,8 +1031,13 @@ namespace pangolin
         rotation_changed = true;
       }else if( button_state == MouseButtonRight)
       {
+        // Correct for OpenGL Camera.
         double aboutx = -0.01 * delta[1];
         double abouty =  0.01 * delta[0];
+
+        // Try to correct for different coordinate conventions.
+        OpenGlMatrix& pm = cam_state->GetProjectionMatrix();
+        abouty *= -pm.m[2*4+3];
 
         if(enforce_up) {
             // Special case if view direction is parallel to up vector

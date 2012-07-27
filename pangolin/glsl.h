@@ -61,6 +61,7 @@ public:
 
     void SetUniform(const std::string& name, GlTexture& tex);
     void SetUniform(const std::string& name, float f);
+    void SetUniform(const std::string& name, float f1, float f2, float f3, float f4);
 
     void Bind();
     void Unbind();
@@ -74,10 +75,11 @@ protected:
 class GlSlUtilities
 {
 public:
-    inline static GlSlProgram& Scale(double scale) {
+    inline static GlSlProgram& Scale(float scale, float bias = 0.0f) {
         GlSlProgram& prog = Instance().prog_scale;
         prog.Bind();
         prog.SetUniform("scale", scale);
+        prog.SetUniform("bias",  bias);
     }
 
     inline static void UseNone()
@@ -96,7 +98,7 @@ protected:
 
     // protected constructor
     GlSlUtilities() {
-        const char* source = "uniform float scale; uniform sampler2D tex; void main() { gl_FragColor = scale * texture2D(tex,gl_TexCoord[0].st); }";
+        const char* source = "uniform float scale; uniform float bias; uniform sampler2D tex; void main() { gl_FragColor = bias + scale * texture2D(tex,gl_TexCoord[0].st); }";
         prog_scale.AddShader(GlSlFragmentShader, source);
         prog_scale.Link();
     }
@@ -178,6 +180,12 @@ inline void GlSlProgram::SetUniform(const std::string& name, float f)
 {
     GLint location = glGetUniformLocationARB(prog, name.c_str());
     glUniform1f(location,f);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2, float f3, float f4)
+{
+    GLint location = glGetUniformLocationARB(prog, name.c_str());
+    glUniform4f(location,f1,f2,f3,f4);
 }
 
 }
