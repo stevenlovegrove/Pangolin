@@ -496,7 +496,14 @@ namespace pangolin
   OpenGlMatrixSpec ProjectionMatrixOrthographic(double l, double r, double b, double t, double n, double f );
 
   //! Generate glulookat style model view matrix, looking at (lx,ly,lz)
-  //! Assumes forward is -z and up is +y
+  //! X-Right, Y-Up, Z-Back
+  OpenGlMatrix ModelViewLookAtRUB(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz);
+
+  //! Generate glulookat style model view matrix, looking at (lx,ly,lz)
+  //! X-Right, Y-Down, Z-Forward
+  OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz);
+
+  //! Generate glulookat style model view matrix, OpenGL Default camera convention (XYZ=RUB), looking at (lx,ly,lz)
   OpenGlMatrix ModelViewLookAt(double x, double y, double z, double lx, double ly, double lz, AxisDirection up);
   OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz);
 

@@ -1195,7 +1195,7 @@ OpenGlMatrixSpec ProjectionMatrixOrthographic(double l, double r, double b, doub
       return P;
   }
 
-  OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
+  OpenGlMatrix ModelViewLookAtRUB(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
   {
     OpenGlMatrix mat;
     GLdouble* m = mat.m;
@@ -1234,10 +1234,54 @@ OpenGlMatrixSpec ProjectionMatrixOrthographic(double l, double r, double b, doub
     return mat;
   }
 
+  OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
+  {
+    OpenGlMatrix mat;
+    GLdouble* m = mat.m;
+
+    const double u_o[3] = {ux,uy,uz};
+
+    GLdouble x[3], y[3];
+    GLdouble z[] = {lx - ex, ly - ey, lz - ez};
+    Normalise<3>(z);
+
+    CrossProduct(x,z,u_o);
+    CrossProduct(y,z,x);
+
+    Normalise<3>(x);
+    Normalise<3>(y);
+
+  #define M(row,col)  m[col*4+row]
+    M(0,0) = x[0];
+    M(0,1) = x[1];
+    M(0,2) = x[2];
+    M(1,0) = y[0];
+    M(1,1) = y[1];
+    M(1,2) = y[2];
+    M(2,0) = z[0];
+    M(2,1) = z[1];
+    M(2,2) = z[2];
+    M(3,0) = 0.0;
+    M(3,1) = 0.0;
+    M(3,2) = 0.0;
+    M(0,3) = -(M(0,0)*ex + M(0,1)*ey + M(0,2)*ez);
+    M(1,3) = -(M(1,0)*ex + M(1,1)*ey + M(1,2)*ez);
+    M(2,3) = -(M(2,0)*ex + M(2,1)*ey + M(2,2)*ez);
+    M(3,3) = 1.0;
+#undef M
+
+    return mat;
+  }
+
+  OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
+  {
+    return ModelViewLookAtRUB(ex,ey,ez,lz,ly,lz,ux,uy,uz);
+  }
+
   OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, AxisDirection up)
   {
     const double* u = AxisDirectionVector[up];
-    return ModelViewLookAt(ex,ey,ez,lx,ly,lz,u[0],u[1],u[2]);
+    return ModelViewLookAtRUB(ex,ey,ez,lx,ly,lz,u[0],u[1],u[2]);
   }
 
   OpenGlMatrix IdentityMatrix()

@@ -52,6 +52,7 @@
 //
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
+//  e.g. "convert:[fmt=GRAY8]//v4l:///dev/video0"
 //
 // mjpeg - capture from (possibly networked) motion jpeg stream using FFMPEG
 //  e.g. "mjpeg://http://127.0.0.1/?action=stream"
