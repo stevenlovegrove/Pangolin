@@ -314,7 +314,10 @@ void Plotter::Render()
   gluOrtho2D(int_x[0], int_x[1], int_y[0], int_y[1]);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+
+  glPushAttrib(GL_ENABLE_BIT);
   glEnable(GL_LINE_SMOOTH);
+  glDisable(GL_LIGHTING);
 
   DrawTicks();
 
@@ -344,10 +347,7 @@ void Plotter::Render()
     }
     else if( plot_mode==STACKED_HISTOGRAM )
     {
-
-
       DrawSequenceHistogram(log->sequences);
-
     }
     else
     {
@@ -414,6 +414,8 @@ void Plotter::Render()
     glutBitmapString(font,(unsigned char*)log->labels[i].c_str());
     ty -= 15;
   }
+
+  glPopAttrib();
 }
 
 void Plotter::ResetView()
