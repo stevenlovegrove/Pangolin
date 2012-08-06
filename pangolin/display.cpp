@@ -537,6 +537,13 @@ namespace pangolin
     return *this;
   }
 
+  OpenGlMatrix operator*(const OpenGlMatrix& lhs, const OpenGlMatrix& rhs)
+  {
+      OpenGlMatrix ret;
+      pangolin::MatMul<4,4,4,double>(ret.m, lhs.m, rhs.m);
+      return ret;
+  }
+
   OpenGlMatrix& OpenGlRenderState::GetProjectionMatrix()
   {
       return stacks[GlProjectionStack];
