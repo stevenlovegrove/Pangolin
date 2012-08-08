@@ -825,14 +825,14 @@ namespace pangolin
     this->right = right;
     this->bottom = bottom;
     this->aspect = aspect;
-    this->Resize(context->base.v);
+    context->base.ResizeChildren();
     return *this;
   }
 
   View& View::SetAspect(double aspect)
   {
     this->aspect = aspect;
-    this->Resize(context->base.v);
+    context->base.ResizeChildren();
     return *this;
   }
 
@@ -861,6 +861,7 @@ namespace pangolin
       context->base.views.erase(f);
 
     views.push_back(&child);
+    context->base.ResizeChildren();
     return *this;
   }
 
