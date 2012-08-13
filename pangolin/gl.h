@@ -35,7 +35,12 @@
 #endif
 
 #include <GL/glew.h>
+
+#ifdef _OSX_
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #include <math.h>
 

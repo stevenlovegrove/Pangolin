@@ -70,7 +70,11 @@
 #include <Windows.h>
 #endif
 
+#ifdef _OSX_
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #define GLUT_KEY_ESCAPE 27
 #define GLUT_KEY_TAB 9
