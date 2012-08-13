@@ -40,9 +40,9 @@ extern "C"
 #define UINT64_C(c) (c ## ULL)
 #endif
 
-#include <avformat.h>
-#include <swscale.h>
-#include <pixdesc.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+#include <libavutil/pixdesc.h>
 }
 
 namespace pangolin
