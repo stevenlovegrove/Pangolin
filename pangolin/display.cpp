@@ -472,6 +472,16 @@ namespace pangolin
      m[12] = 0.0f; m[13] = 0.0f; m[14] = 0.0f; m[15] = 1.0f;
   }
 
+  OpenGlMatrix OpenGlMatrix::Inverse() const
+  {
+      OpenGlMatrix inv;
+      inv.m[0] = m[0]; inv.m[4] = m[1]; inv.m[8]  = m[2];  inv.m[12] = -(m[0]*m[12] + m[1]*m[13] + m[2]*m[14]);
+      inv.m[1] = m[4]; inv.m[5] = m[5]; inv.m[9]  = m[6];  inv.m[13] = -(m[4]*m[12] + m[5]*m[13] + m[6]*m[14]);
+      inv.m[2] = m[8]; inv.m[6] = m[9]; inv.m[10] = m[10]; inv.m[14] = -(m[8]*m[12] + m[9]*m[13] + m[10]*m[14]);
+      inv.m[3] =    0; inv.m[7] =    0; inv.m[11] =    0;  inv.m[15] = 1;
+      return inv;
+  }
+
   void OpenGlRenderState::Apply() const
   {
     // Apply any stack matrices we have
@@ -483,6 +493,10 @@ namespace pangolin
 
     // Leave in MODEVIEW mode
     glMatrixMode(GL_MODELVIEW);
+
+    if(follow) {
+        T_cw.Multiply();
+    }
   }
 
   OpenGlRenderState::OpenGlRenderState()
@@ -572,6 +586,28 @@ namespace pangolin
       }else{
         return i->second;
       }
+  }
+
+  void OpenGlRenderState::Follow(const OpenGlMatrix& T_wc, bool follow)
+  {
+      this->T_cw = T_wc.Inverse();
+
+      if(follow != this->follow) {
+          if(follow) {
+              const OpenGlMatrix T_vc = GetModelViewMatrix() * T_wc;
+              SetModelViewMatrix(T_vc);
+              this->follow = true;
+          }else{
+              Unfollow();
+          }
+      }
+  }
+
+  void OpenGlRenderState::Unfollow()
+  {
+      const OpenGlMatrix T_vw = GetModelViewMatrix() * T_cw;
+      SetModelViewMatrix(T_vw);
+      this->follow = false;
   }
 
   int AttachAbs( int low, int high, Attach a)
@@ -952,8 +988,7 @@ namespace pangolin
     double T_nc[3*4];
     LieSetIdentity(T_nc);
 
-    if( pressed && cam_state->stacks.find(GlProjectionStack) != cam_state->stacks.end() )
-    {
+    if( pressed ) {
       const GLfloat mindepth = display.GetClosestDepth(x,y,hwin);
       last_z = mindepth != 1 ? mindepth : last_z;
 
@@ -974,7 +1009,7 @@ namespace pangolin
           LieSetTranslation<>(T_nc,rot_center);
           MatMul<3,1>(T_nc+(3*3),(button==MouseWheelUp?-1.0:1.0)/5.0);
         }
-        OpenGlMatrix& spec = cam_state->stacks[GlModelViewStack];
+        OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
       }
     }

@@ -261,6 +261,8 @@ namespace pangolin
 
     void SetIdentity();
 
+    OpenGlMatrix Inverse() const;
+
     // Column major Internal buffer
     GLdouble m[16];
   };
@@ -276,8 +278,9 @@ namespace pangolin
   //! @brief Object representing attached OpenGl Matrices / transforms
   //! Only stores what is attached, not entire OpenGl state (which would
   //! be horribly slow). Applying state is efficient.
-  struct OpenGlRenderState
+  class OpenGlRenderState
   {
+  public:
     OpenGlRenderState();
     OpenGlRenderState(const OpenGlMatrix& projection_matrix);
     OpenGlRenderState(const OpenGlMatrix& projection_matrix, const OpenGlMatrix& modelview_matrix);
@@ -295,10 +298,18 @@ namespace pangolin
     OpenGlMatrix& GetModelViewMatrix();
     OpenGlMatrix GetModelViewMatrix() const;
 
+    //! Seemlessly move OpenGl camera relative to changes in T_wc,
+    //! whilst still enabling interaction
+    void Follow(const OpenGlMatrix& T_wc, bool follow = true);
+    void Unfollow();
+
     //! deprecated
     OpenGlRenderState& Set(OpenGlMatrixSpec spec);
 
+  protected:
     std::map<OpenGlStack,OpenGlMatrix> stacks;
+    OpenGlMatrix T_cw;
+    bool follow;
   };
 
   enum Layout

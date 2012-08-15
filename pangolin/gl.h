@@ -57,6 +57,11 @@ public:
   //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
   GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true );
 
+#if __cplusplus > 199711L
+  //! Move Constructor
+  GlTexture(GlTexture&& tex);
+#endif
+
   //! Default constructor represents 'no texture'
   GlTexture();
   ~GlTexture();
@@ -151,6 +156,15 @@ inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bo
 {
   Reinitialise(width,height,internal_format,sampling_linear);
 }
+
+#if __cplusplus > 199711L
+  inline GlTexture::GlTexture(GlTexture&& tex)
+      : internal_format(tex.internal_format), tid(tex.tid)
+  {
+      tex.internal_format = 0;
+      tex.tid = 0;
+  }
+#endif
 
 inline GlTexture::~GlTexture()
 {
