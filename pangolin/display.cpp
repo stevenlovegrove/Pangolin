@@ -500,16 +500,19 @@ namespace pangolin
   }
 
   OpenGlRenderState::OpenGlRenderState()
+      : follow(false)
   {
   }
 
   OpenGlRenderState::OpenGlRenderState(const OpenGlMatrix& projection_matrix)
+      : follow(false)
   {
     stacks[GlProjectionStack] = projection_matrix;
     stacks[GlModelViewStack] = IdentityMatrix();
   }
 
   OpenGlRenderState::OpenGlRenderState(const OpenGlMatrix& projection_matrix, const OpenGlMatrix& modelview_matrx)
+      : follow(false)
   {
     stacks[GlProjectionStack] = projection_matrix;
     stacks[GlModelViewStack] = modelview_matrx;
