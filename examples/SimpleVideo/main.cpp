@@ -24,7 +24,8 @@ void VideoSample(const std::string uri)
     // Create viewport for video with fixed aspect
     View& vVideo = Display("Video").SetAspect((float)w/h);
 
-    // OpenGl Texture for video frame
+    // OpenGl Texture for video frame.
+    // GL_RGBA8 is the internal_format, if we upload another it'll be converted
     GlTexture texVideo(w,h,GL_RGBA8);
 
     unsigned char* img = new unsigned char[video.SizeBytes()];
@@ -34,7 +35,11 @@ void VideoSample(const std::string uri)
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
         video.GrabNext(img,true);
-        texVideo.Upload(img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB, GL_UNSIGNED_BYTE);
+        // TODO: Work out the correct display format properly
+        texVideo.Upload(
+            img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB,
+            vid_fmt.channel_bits[0]==8?GL_UNSIGNED_BYTE:GL_UNSIGNED_SHORT
+        );
 
         // Activate video viewport and render texture
         vVideo.Activate();

@@ -269,16 +269,19 @@ std::string Dc1394ColorCodingToString(dc1394color_coding_t coding)
         case DC1394_COLOR_CODING_RGB8 :    return "RGB24";
         case DC1394_COLOR_CODING_MONO8 :   return "GRAY8";
 
-//        case DC1394_COLOR_CODING_MONO16 :  return "GRAY16LE";
-//        case DC1394_COLOR_CODING_RGB16 :   return "RGB48LE";
-//        case DC1394_COLOR_CODING_MONO16S : return "GRAY16BE";
-//        case DC1394_COLOR_CODING_RGB16S :  return "RGB48BE";
+        case DC1394_COLOR_CODING_MONO16 :  return "GRAY16LE";
+        case DC1394_COLOR_CODING_RGB16 :   return "RGB48LE";
 
-//        case DC1394_COLOR_CODING_YUV411 :  return "YUV411P";
-//        case DC1394_COLOR_CODING_YUV422 :  return "YUV422P";
-//        case DC1394_COLOR_CODING_YUV444 :  return "YUV444P";
-//        case DC1394_COLOR_CODING_RAW8 :    return "RAW8";
-//        case DC1394_COLOR_CODING_RAW16 :   return "RAW16";
+        case DC1394_COLOR_CODING_MONO16S : return "GRAY16BE";
+        case DC1394_COLOR_CODING_RGB16S :  return "RGB48BE";
+
+        case DC1394_COLOR_CODING_YUV411 :  return "YUV411P";
+        case DC1394_COLOR_CODING_YUV422 :  return "YUV422P";
+        case DC1394_COLOR_CODING_YUV444 :  return "YUV444P";
+
+        case DC1394_COLOR_CODING_RAW8 :    return "GRAY8";
+        case DC1394_COLOR_CODING_RAW16 :   return "GRAY16LE";
+
         default:
             throw VideoException("Unknown colour coding");
     }
@@ -289,14 +292,14 @@ dc1394color_coding_t Dc1394ColorCodingFromString(std::string coding)
     if(     !coding.compare("RGB24"))    return DC1394_COLOR_CODING_RGB8;
     else if(!coding.compare("GRAY8"))    return DC1394_COLOR_CODING_MONO8;
 
-//    else if(!coding.compare("GRAY16LE")) return DC1394_COLOR_CODING_MONO16;
-//    else if(!coding.compare("RGB48LE"))  return DC1394_COLOR_CODING_RGB16;
-//    else if(!coding.compare("GRAY16BE")) return DC1394_COLOR_CODING_MONO16S;
-//    else if(!coding.compare("RGB48BE"))  return DC1394_COLOR_CODING_RGB16S;
+    else if(!coding.compare("GRAY16LE")) return DC1394_COLOR_CODING_MONO16;
+    else if(!coding.compare("RGB48LE"))  return DC1394_COLOR_CODING_RGB16;
+    else if(!coding.compare("GRAY16BE")) return DC1394_COLOR_CODING_MONO16S;
+    else if(!coding.compare("RGB48BE"))  return DC1394_COLOR_CODING_RGB16S;
 
-//    else if(!coding.compare("YUV411P"))  return DC1394_COLOR_CODING_YUV411;
-//    else if(!coding.compare("YUV422P"))  return DC1394_COLOR_CODING_YUV422;
-//    else if(!coding.compare("YUV444P"))  return DC1394_COLOR_CODING_YUV444;
+    else if(!coding.compare("YUV411P"))  return DC1394_COLOR_CODING_YUV411;
+    else if(!coding.compare("YUV422P"))  return DC1394_COLOR_CODING_YUV422;
+    else if(!coding.compare("YUV444P"))  return DC1394_COLOR_CODING_YUV444;
 //    else if(!coding.compare("RAW8"))     return DC1394_COLOR_CODING_RAW8;
 //    else if(!coding.compare("RAW16"))    return DC1394_COLOR_CODING_RAW16;
     throw VideoException("Unknown colour coding");
@@ -522,7 +525,10 @@ bool FirewireVideo::GrabNext( unsigned char* image, bool wait )
             wait ? DC1394_CAPTURE_POLICY_WAIT : DC1394_CAPTURE_POLICY_POLL;
 
     dc1394video_frame_t *frame;
-    dc1394_capture_dequeue(camera, policy, &frame);
+    err = dc1394_capture_dequeue(camera, policy, &frame);
+    if( err != DC1394_SUCCESS)
+        throw VideoException("Could not capture frame", dc1394_error_get_string(err) );
+
     if( frame )
     {
         memcpy(image,frame->image,frame->image_bytes);
@@ -535,13 +541,18 @@ bool FirewireVideo::GrabNext( unsigned char* image, bool wait )
 bool FirewireVideo::GrabNewest( unsigned char* image, bool wait )
 {
     dc1394video_frame_t *f;
-    dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &f);
+    err = dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &f);
+    if( err != DC1394_SUCCESS)
+        throw VideoException("Could not capture frame", dc1394_error_get_string(err) );
 
     if( f ) {
         while( true )
         {
             dc1394video_frame_t *nf;
-            dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &nf);
+            err = dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &nf);
+            if( err != DC1394_SUCCESS)
+                throw VideoException("Could not capture frame", dc1394_error_get_string(err) );
+
             if( nf )
             {
                 err=dc1394_capture_enqueue(camera,f);
@@ -572,13 +583,18 @@ FirewireFrame FirewireVideo::GetNext(bool wait)
 FirewireFrame FirewireVideo::GetNewest(bool wait)
 {
     dc1394video_frame_t *f;
-    dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &f);
+    err = dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &f);
+    if( err != DC1394_SUCCESS)
+        throw VideoException("Could not capture frame", dc1394_error_get_string(err) );
 
     if( f ) {
         while( true )
         {
             dc1394video_frame_t *nf;
-            dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &nf);
+            err = dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &nf);
+            if( err != DC1394_SUCCESS)
+                throw VideoException("Could not capture frame", dc1394_error_get_string(err) );
+
             if( nf )
             {
                 err=dc1394_capture_enqueue(camera,f);
