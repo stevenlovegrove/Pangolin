@@ -115,6 +115,38 @@ struct GlFramebuffer
   unsigned attachments;
 };
 
+enum GlBufferType
+{
+  GlArrayBuffer = GL_ARRAY_BUFFER,
+  GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,
+  GlPixelPackBuffer = GL_PIXEL_PACK_BUFFER,
+  GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER
+};
+
+struct GlBuffer
+{
+  GlBuffer(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
+//  GlBuffer(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse = GL_DYNAMIC_DRAW );
+  ~GlBuffer();
+
+  void Bind() const;
+  void Unbind() const;
+  void Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset = 0);
+
+  GLuint bo;
+  GlBufferType buffer_type;
+
+  GLuint width;
+  GLuint height;
+
+  GLenum datatype;
+  GLuint count_per_element;
+private:
+  GlBuffer(const GlBuffer&) {}
+};
+
+size_t GlDataTypeBytes(GLenum type);
+
 void glColorHSV( double hue, double s, double v );
 
 void glColorBin( int bin, int max_bins, double sat = 1.0, double val = 1.0 );
@@ -127,7 +159,6 @@ void glPixelTransferScale( float scale );
 ////////////////////////////////////////////////
 
 const int MAX_ATTACHMENTS = 8;
-
 const static GLuint attachment_buffers[] = {
     GL_COLOR_ATTACHMENT0_EXT,
     GL_COLOR_ATTACHMENT1_EXT,
@@ -138,6 +169,26 @@ const static GLuint attachment_buffers[] = {
     GL_COLOR_ATTACHMENT6_EXT,
     GL_COLOR_ATTACHMENT7_EXT
 };
+
+const static size_t datatype_bytes[] = {
+    1, //  #define GL_BYTE 0x1400
+    1, //  #define GL_UNSIGNED_BYTE 0x1401
+    2, //  #define GL_SHORT 0x1402
+    2, //  #define GL_UNSIGNED_SHORT 0x1403
+    4, //  #define GL_INT 0x1404
+    4, //  #define GL_UNSIGNED_INT 0x1405
+    4, //  #define GL_FLOAT 0x1406
+    2, //  #define GL_2_BYTES 0x1407
+    3, //  #define GL_3_BYTES 0x1408
+    4, //  #define GL_4_BYTES 0x1409
+    8  //  #define GL_DOUBLE 0x140A
+};
+
+inline size_t GlDataTypeBytes(GLenum type)
+{
+    return datatype_bytes[type - GL_BYTE];
+}
+
 
 //template<typename T>
 //struct GlDataTypeTrait {};
@@ -331,6 +382,46 @@ inline void GlFramebuffer::Unbind() const
   glDrawBuffers( 1, attachment_buffers );
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
+
+inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, GLenum gluse )
+    : buffer_type(buffer_type), width(width), height(height), datatype(datatype), count_per_element(count_per_element)
+{
+  glGenBuffers(1, &bo);
+  Bind();
+  glBufferData(buffer_type, width*height*GlDataTypeBytes(datatype)*count_per_element, 0, gluse);
+  Unbind();
+}
+
+//inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse)
+//    : buffer_type(buffer_type), width(size_bytes), height(1), datatype(GL_UNSIGNED_BYTE), count_per_element(1)
+//{
+//    glGenBuffers(1, &bo);
+//    Bind();
+//    glBufferData(buffer_type, size_bytes, 0, gluse);
+//    Unbind();
+//}
+
+inline GlBuffer::~GlBuffer()
+{
+  glDeleteBuffers(1, &bo);
+}
+
+inline void GlBuffer::Bind() const
+{
+  glBindBuffer(buffer_type, bo);
+}
+
+inline void GlBuffer::Unbind() const
+{
+  glBindBuffer(buffer_type, 0);
+}
+
+inline void GlBuffer::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
+{
+  Bind();
+  glBufferSubData(buffer_type,offset,size_bytes, data);
+}
+
 
 }
 

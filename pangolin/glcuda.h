@@ -41,27 +41,13 @@ namespace pangolin
 // Interface
 ////////////////////////////////////////////////
 
-enum GlBufferType
+struct GlBufferCudaPtr : public GlBuffer
 {
-  GlArrayBuffer = GL_ARRAY_BUFFER,
-  GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,
-  GlPixelPackBuffer = GL_PIXEL_PACK_BUFFER,
-  GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER
-};
-
-struct GlBufferCudaPtr
-{
-  GlBufferCudaPtr(GlBufferType buffer_type, GLsizeiptr size_bytes, unsigned int cudause = cudaGraphicsMapFlagsNone, GLenum gluse = GL_DYNAMIC_DRAW );
+  GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause = cudaGraphicsMapFlagsNone, GLenum gluse = GL_DYNAMIC_DRAW );
+//  GlBufferCudaPtr(GlBufferType buffer_type, GLsizeiptr size_bytes, unsigned int cudause = cudaGraphicsMapFlagsNone, GLenum gluse = GL_DYNAMIC_DRAW );
   ~GlBufferCudaPtr();
-  void Bind() const;
-  void Unbind() const;
-  void Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset = 0);
-  GLuint bo;
-  cudaGraphicsResource* cuda_res;
-  GlBufferType buffer_type;
 
-private:
-  GlBufferCudaPtr(const GlBufferCudaPtr&) {}
+  cudaGraphicsResource* cuda_res;
 };
 
 struct GlTextureCudaArray : GlTexture
@@ -102,36 +88,21 @@ void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b);
 // Implementation
 ////////////////////////////////////////////////
 
-inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLsizeiptr size_bytes, unsigned int cudause, GLenum gluse)
-  : buffer_type(buffer_type)
+inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause, GLenum gluse )
+    : GlBuffer(buffer_type, width, height, datatype, count_per_element, gluse)
 {
-  glGenBuffers(1, &bo);
-  Bind();
-  glBufferData(buffer_type, size_bytes, 0, gluse);
-  Unbind();
-  cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );
+    cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );
 }
+
+//inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLsizeiptr size_bytes, unsigned int cudause, GLenum gluse)
+//  : GlBuffer(buffer_type,size_bytes,gluse)
+//{
+//  cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );
+//}
 
 inline GlBufferCudaPtr::~GlBufferCudaPtr()
 {
   cudaGraphicsUnregisterResource(cuda_res);
-  glDeleteBuffers(1, &bo);
-}
-
-inline void GlBufferCudaPtr::Bind() const
-{
-  glBindBuffer(buffer_type, bo);
-}
-
-inline void GlBufferCudaPtr::Unbind() const
-{
-  glBindBuffer(buffer_type, 0);
-}
-
-inline void GlBufferCudaPtr::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
-{
-  Bind();
-  glBufferSubData(buffer_type,offset,size_bytes, data);
 }
 
 inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear)

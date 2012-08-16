@@ -175,6 +175,8 @@ SET(INSTALL_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h
 	display_internal.h 
 	gl.h 
 	glcuda.h 
+    glsl.h
+    glvbo.h
 	pangolin.h 
 	platform.h 
 	plotter.h 
@@ -182,8 +184,8 @@ SET(INSTALL_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h
 	vars.h 
 	vars_internal.h 
 	video.h 
-        video/firewire.h
-        widgets.h
+    video/firewire.h
+    widgets.h
 )
 
 # install headers
