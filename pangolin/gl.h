@@ -126,7 +126,6 @@ enum GlBufferType
 struct GlBuffer
 {
   GlBuffer(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
-//  GlBuffer(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse = GL_DYNAMIC_DRAW );
   ~GlBuffer();
 
   void Bind() const;
@@ -391,15 +390,6 @@ inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint width, GLuint height,
   glBufferData(buffer_type, width*height*GlDataTypeBytes(datatype)*count_per_element, 0, gluse);
   Unbind();
 }
-
-//inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse)
-//    : buffer_type(buffer_type), width(size_bytes), height(1), datatype(GL_UNSIGNED_BYTE), count_per_element(1)
-//{
-//    glGenBuffers(1, &bo);
-//    Bind();
-//    glBufferData(buffer_type, size_bytes, 0, gluse);
-//    Unbind();
-//}
 
 inline GlBuffer::~GlBuffer()
 {
