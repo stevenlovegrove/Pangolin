@@ -38,6 +38,12 @@
 #include "display_internal.h"
 #include "simple_math.h"
 
+//#define HAVE_BOOST_GIL
+
+#ifdef HAVE_BOOST_GIL
+#include <boost/gil/gil_all.hpp>
+#endif // HAVE_BOOST_GIL
+
 using namespace std;
 
 namespace pangolin
@@ -54,7 +60,7 @@ namespace pangolin
   __thread PangolinGl* context = 0;
 
   PangolinGl::PangolinGl()
-   : quit(false), mouse_state(0), activeDisplay(0)
+      : quit(false), mouse_state(0), activeDisplay(0), screenshot(0)
   {
   }
 
@@ -161,6 +167,12 @@ namespace pangolin
   void RegisterKeyPressCallback(int key, boost::function<void(void)> func)
   {
       context->keypress_hooks[key] = func;
+  }
+
+  void Screenshot(std::string filename)
+  {
+      context->save_filename = filename;
+      context->screenshot = true;
   }
 
   namespace process
@@ -368,6 +380,17 @@ namespace pangolin
 #endif
   }
 
+
+#ifdef HAVE_BOOST_GIL
+  void TakeScreenshot(std::string filename)
+  {
+      const int w = context->base.v.w;
+      const int h = context->base.v.h;
+
+      cout << "Saving screenshot to " << filename << endl;
+  }
+#endif // HAVE_BOOST_GIL
+
   void CreateGlutWindowAndBind(string window_title, int w, int h, unsigned int mode)
   {
   #ifdef HAVE_FREEGLUT
@@ -395,6 +418,13 @@ namespace pangolin
     RenderViews();
     DisplayBase().Activate();
     Viewport::DisableScissor();
+
+#ifdef HAVE_BOOST_GIL
+    if(context->screenshot) {
+        TakeScreenshot(context->save_filename);
+    }
+#endif // HAVE_BOOST_GIL
+
 #ifdef HAVE_CVARS
     context->console.RenderConsole();
 #endif // HAVE_CVARS
@@ -721,20 +751,21 @@ namespace pangolin
       }
     }else if(layout == LayoutEqual )
     {
+      const size_t visiblechildren = NumVisibleChildren();
       // TODO: Make this neater, and make fewer assumptions!
-      if( views.size() > 0 )
+      if( visiblechildren > 0 )
       {
         const double this_a = abs(v.aspect());
         const double child_a = abs(views[0]->aspect);
-        double a = views.size()*child_a;
+        double a = visiblechildren*child_a;
         double area = AspectAreaWithinTarget(this_a, a);
 
-        int cols = views.size()-1;
+        int cols = visiblechildren-1;
         for(; cols > 0; --cols)
         {
-          const int rows = views.size() / cols + (views.size() % cols == 0 ? 0 : 1);
+          const int rows = visiblechildren / cols + (visiblechildren % cols == 0 ? 0 : 1);
           const double na = cols * child_a / rows;
-          const double new_area = views.size()*AspectAreaWithinTarget(this_a,na)/(rows*cols);
+          const double new_area = visiblechildren*AspectAreaWithinTarget(this_a,na)/(rows*cols);
           if( new_area <= area )
             break;
           area = new_area;
@@ -742,7 +773,7 @@ namespace pangolin
         }
 
         cols++;
-        const int rows = views.size() / cols + (views.size() % cols == 0 ? 0 : 1);
+        const int rows = visiblechildren / cols + (visiblechildren % cols == 0 ? 0 : 1);
         int cw,ch;
         if( a > this_a )
         {
@@ -753,12 +784,12 @@ namespace pangolin
           cw = ch * child_a;
         }
 
-        for( unsigned int i=0; i< views.size(); ++i )
+        for( unsigned int i=0; i< visiblechildren; ++i )
         {
           int c = i % cols;
           int r = i / cols;
           Viewport space(v.l + c*cw, v.t() - (r+1)*ch, cw,ch);
-          views[i]->Resize(space);
+          VisibleChild(i).Resize(space);
         }
       }
     }
@@ -767,7 +798,7 @@ namespace pangolin
 
   void View::Render()
   {
-    if(!extern_draw_function.empty()) {
+    if(!extern_draw_function.empty() && show) {
       extern_draw_function(*this);
     }
     RenderChildren();
@@ -904,9 +935,59 @@ namespace pangolin
     return *this;
   }
 
-  View& View::operator[](int i)
+  View& View::Show(bool show)
+  {
+      this->show = show;
+      context->base.ResizeChildren();
+      return *this;
+  }
+
+  void View::ToggleShow()
+  {
+      Show(!show);
+  }
+
+  bool View::IsShown()
+  {
+      return show;
+  }
+
+  View& View::operator[](size_t i)
   {
       return *views[i];
+  }
+
+  size_t View::NumChildren() const
+  {
+      return views.size();
+  }
+
+  size_t View::NumVisibleChildren() const
+  {
+      int numvis = 0;
+      for(std::vector<View*>::const_iterator i=views.begin(); i!=views.end(); ++i)
+      {
+          if((*i)->show) {
+              numvis++;
+          }
+      }
+      return numvis;
+  }
+
+  View& View::VisibleChild(size_t i)
+  {
+      size_t numvis = 0;
+      for(size_t v=0; v < views.size(); ++v ) {
+          if(views[v]->show) {
+              if( i == numvis ) {
+                  return *views[v];
+              }
+              numvis++;
+          }
+      }
+      // Shouldn't get here
+      assert(0);
+      return *this;
   }
 
   View& View::SetHandler(Handler* h)

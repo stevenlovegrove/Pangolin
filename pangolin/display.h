@@ -108,6 +108,8 @@ namespace pangolin
   //! Functor may take one parameter which will equal the key pressed
   void RegisterKeyPressCallback(int key, boost::function<void(void)> func);
 
+  void Screenshot(std::string filename);
+
   // Supported Key modifiers for GlobalKeyPressCallback.
   // e.g. PANGO_CTRL + 'r', PANGO_SPECIAL + GLUT_KEY_RIGHT, etc.
   const int PANGO_SPECIAL = 128;
@@ -403,8 +405,20 @@ namespace pangolin
     //! Add view as child
     View& AddDisplay(View& view);
 
+    View& Show(bool show=true);
+
+    void ToggleShow();
+
+    bool IsShown();
+
     //! Return (i)th child of this view
-    View& operator[](int i);
+    View& operator[](size_t i);
+
+    size_t NumChildren() const;
+
+    size_t NumVisibleChildren() const;
+
+    View& VisibleChild(size_t i);
 
     // Desired width / height aspect (0 if dynamic)
     double aspect;

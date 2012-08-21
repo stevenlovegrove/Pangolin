@@ -64,6 +64,8 @@ namespace pangolin
     int mouse_state;
     View* activeDisplay;
 
+    bool screenshot;
+    std::string save_filename;
 #ifdef HAVE_CVARS
     GLConsole console;
 #endif // HAVE_CVARS
