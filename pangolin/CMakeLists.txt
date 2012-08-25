@@ -137,6 +137,32 @@ IF(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
   MESSAGE(STATUS "OpenNI Found and Enabled")
 ENDIF()
 
+# Generic Image Library (GIL) should come with boost.
+# If you have a version of boost without it, maybe figure out how to test here.
+SET(HAVE_BOOST_GIL 1)
+
+find_package(PNG QUIET)
+if(PNG_FOUND)
+  set(HAVE_PNG 1)
+  list(APPEND INTERNAL_INC ${PNG_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS ${PNG_LIBRARY} )
+endif()
+
+find_package(JPEG QUIET)
+if(JPEG_FOUND)
+  set(HAVE_JPEG 1)
+  list(APPEND INTERNAL_INC ${JPEG_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS ${JPEG_LIBRARY} )
+endif()
+
+find_package(TIFF QUIET)
+if(TIFF_FOUND)
+  set(HAVE_TIFF 1)
+  list(APPEND INTERNAL_INC ${TIFF_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS ${TIFF_LIBRARY} )
+endif()
+
+
 #######################################################
 ## Add Librarys / Include Directories / Link directories
 

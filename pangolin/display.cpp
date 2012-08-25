@@ -34,14 +34,24 @@
 #define foreach BOOST_FOREACH
 
 #include "platform.h"
+#include "gl.h"
 #include "display.h"
 #include "display_internal.h"
 #include "simple_math.h"
 
-//#define HAVE_BOOST_GIL
-
 #ifdef HAVE_BOOST_GIL
-#include <boost/gil/gil_all.hpp>
+    #include <boost/gil/gil_all.hpp>
+    #ifdef HAVE_PNG
+    #define png_infopp_NULL (png_infopp)NULL
+    #define int_p_NULL (int*)NULL
+    #include <boost/gil/extension/io/png_io.hpp>
+    #endif // HAVE_PNG
+    #ifdef HAVE_JPEG
+    #include <boost/gil/extension/io/jpeg_io.hpp>
+    #endif // HAVE_JPEG
+    #ifdef HAVE_TIFF
+    #include <boost/gil/extension/io/tiff_io.hpp>
+    #endif // HAVE_TIFF
 #endif // HAVE_BOOST_GIL
 
 using namespace std;
@@ -60,7 +70,7 @@ namespace pangolin
   __thread PangolinGl* context = 0;
 
   PangolinGl::PangolinGl()
-      : quit(false), mouse_state(0), activeDisplay(0), screenshot(0)
+      : quit(false), mouse_state(0), activeDisplay(0)
   {
   }
 
@@ -169,10 +179,9 @@ namespace pangolin
       context->keypress_hooks[key] = func;
   }
 
-  void Screenshot(std::string filename)
+  void SaveWindowOnRender(std::string prefix)
   {
-      context->save_filename = filename;
-      context->screenshot = true;
+      context->screen_capture.push(std::pair<std::string,Viewport>(prefix, context->base.v) );
   }
 
   namespace process
@@ -381,15 +390,65 @@ namespace pangolin
   }
 
 
-#ifdef HAVE_BOOST_GIL
-  void TakeScreenshot(std::string filename)
+  void SaveViewFromFbo(std::string prefix, View& view, float scale)
   {
-      const int w = context->base.v.w;
-      const int h = context->base.v.h;
+      const Viewport orig = view.v;
+      view.v.l = 0;
+      view.v.b = 0;
+      view.v.w *= scale;
+      view.v.h *= scale;
 
-      cout << "Saving screenshot to " << filename << endl;
-  }
+      const int w = view.v.w;
+      const int h = view.v.h;
+
+      float origLineWidth;
+      glGetFloatv(GL_LINE_WIDTH, &origLineWidth);
+      glLineWidth(origLineWidth * scale);
+
+      // Create FBO
+      GlTexture color(w,h);
+      GlRenderBuffer depth(w,h);
+      GlFramebuffer fbo(color, depth);
+
+      // Render into FBO
+      fbo.Bind();
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      view.Render();
+      glFlush();
+
+#ifdef HAVE_BOOST_GIL
+      // Read buffer and write file
+      boost::gil::rgba8_image_t img(w, h);
+      glReadPixels(0,0,w,h, GL_RGBA, GL_UNSIGNED_BYTE, boost::gil::interleaved_view_get_raw_data( boost::gil::view( img ) ) );
+#ifdef HAVE_PNG
+      boost::gil::png_write_view(prefix + ".png", flipped_up_down_view( boost::gil::const_view(img)) );
+#endif // HAVE_PNG
 #endif // HAVE_BOOST_GIL
+
+      // unbind FBO
+      fbo.Unbind();
+
+      // restore viewport / line width
+      view.v = orig;
+      glLineWidth(origLineWidth);
+  }
+
+  void SaveFramebuffer(std::string prefix, const Viewport& v)
+  {
+#ifdef HAVE_BOOST_GIL
+      // Save colour channels
+      boost::gil::rgba8_image_t img(v.w, v.h);
+      glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, boost::gil::interleaved_view_get_raw_data( boost::gil::view( img ) ) );
+#ifdef HAVE_PNG
+      boost::gil::png_write_view(prefix + ".png", flipped_up_down_view( boost::gil::const_view(img)) );
+#endif // HAVE_PNG
+
+//      // Save depth channel
+//      boost::gil::gray32f_image_t depth(v.w, v.h);
+//      glReadPixels(v.l, v.b, v.w, v.h, GL_DEPTH_COMPONENT, GL_FLOAT, boost::gil::interleaved_view_get_raw_data( view( depth ) ));
+//      boost::gil::tiff_write_view(prefix + "_depth.tiff", flipped_up_down_view(const_view(depth)) );
+#endif // HAVE_BOOST_GIL
+  }
 
   void CreateGlutWindowAndBind(string window_title, int w, int h, unsigned int mode)
   {
@@ -420,8 +479,10 @@ namespace pangolin
     Viewport::DisableScissor();
 
 #ifdef HAVE_BOOST_GIL
-    if(context->screenshot) {
-        TakeScreenshot(context->save_filename);
+    while(context->screen_capture.size()) {
+        std::pair<std::string,Viewport> fv = context->screen_capture.front();
+        context->screen_capture.pop();
+        SaveFramebuffer(fv.first, fv.second);
     }
 #endif // HAVE_BOOST_GIL
 
@@ -482,6 +543,15 @@ namespace pangolin
   Viewport Viewport::Inset(int horiz, int vert) const
   {
     return Viewport(l+horiz, b+vert, w-horiz, h-vert);
+  }
+
+  Viewport Viewport::Intersect(const Viewport& vp) const
+  {
+      GLint nl = std::max(l,vp.l);
+      GLint nr = std::min(r(),vp.r());
+      GLint nb = std::max(b,vp.b);
+      GLint nt = std::min(t(),vp.t());
+      return Viewport(nl,nb, nr-nl, nt-nb);
   }
 
   void OpenGlMatrix::Load() const
@@ -947,9 +1017,20 @@ namespace pangolin
       Show(!show);
   }
 
-  bool View::IsShown()
+  bool View::IsShown() const
   {
       return show;
+  }
+
+  void View::SaveOnRender(const std::string& filename_prefix)
+  {
+      const Viewport tosave = this->v.Intersect(this->vp);
+      context->screen_capture.push(std::pair<std::string,Viewport>(filename_prefix,tosave ) );
+  }
+
+  void View::SaveRenderNow(const std::string& filename_prefix, float scale)
+  {
+      SaveViewFromFbo(filename_prefix, *this, scale);
   }
 
   View& View::operator[](size_t i)

@@ -31,6 +31,7 @@
 #include "platform.h"
 #include "display.h"
 #include <boost/ptr_container/ptr_unordered_map.hpp>
+#include <queue>
 
 #ifdef HAVE_CVARS
 #include <GLConsole/GLConsole.h>
@@ -64,8 +65,7 @@ namespace pangolin
     int mouse_state;
     View* activeDisplay;
 
-    bool screenshot;
-    std::string save_filename;
+    std::queue<std::pair<std::string,Viewport> > screen_capture;
 #ifdef HAVE_CVARS
     GLConsole console;
 #endif // HAVE_CVARS

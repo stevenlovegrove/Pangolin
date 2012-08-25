@@ -26,6 +26,11 @@
 #cmakedefine HAVE_FREEGLUT
 #cmakedefine HAVE_APPLE_OPENGL_FRAMEWORK
 
+#cmakedefine HAVE_BOOST_GIL
+#cmakedefine HAVE_PNG
+#cmakedefine HAVE_JPEG
+#cmakedefine HAVE_TIFF
+
 /// Platform
 #cmakedefine _UNIX_
 #cmakedefine _WIN_

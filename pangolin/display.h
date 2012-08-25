@@ -108,7 +108,8 @@ namespace pangolin
   //! Functor may take one parameter which will equal the key pressed
   void RegisterKeyPressCallback(int key, boost::function<void(void)> func);
 
-  void Screenshot(std::string filename);
+  //! @brief Save window contents to image
+  void SaveWindowOnRender(std::string filename_prefix);
 
   // Supported Key modifiers for GlobalKeyPressCallback.
   // e.g. PANGO_CTRL + 'r', PANGO_SPECIAL + GLUT_KEY_RIGHT, etc.
@@ -217,6 +218,7 @@ namespace pangolin
 
     Viewport Inset(int i) const;
     Viewport Inset(int horiz, int vert) const;
+    Viewport Intersect(const Viewport& vp) const;
 
     static void DisableScissor();
 
@@ -405,19 +407,34 @@ namespace pangolin
     //! Add view as child
     View& AddDisplay(View& view);
 
+    //! Show / hide this view
     View& Show(bool show=true);
 
+    //! Toggle this views visibility
     void ToggleShow();
 
-    bool IsShown();
+    //! Return whether this view should be shown.
+    //! This method should be checked if drawing manually
+    bool IsShown() const;
+
+    //! Specify that this views region in the framebuffer should be saved to
+    //! a file just before the buffer is flipped.
+    void SaveOnRender(const std::string& filename_prefix);
+
+    //! Uses the views default render method to draw into an FBO 'scale' times
+    //! the size of the view and save to a file.
+    void SaveRenderNow(const std::string& filename_prefix, float scale = 1);
+
+    //! Return number of child views attached to this view
+    size_t NumChildren() const;
 
     //! Return (i)th child of this view
     View& operator[](size_t i);
 
-    size_t NumChildren() const;
-
+    //! Return number of visible child views attached to this view.
     size_t NumVisibleChildren() const;
 
+    //! Return visible child by index.
     View& VisibleChild(size_t i);
 
     // Desired width / height aspect (0 if dynamic)

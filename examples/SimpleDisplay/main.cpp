@@ -85,6 +85,11 @@ int main( int /*argc*/, char* argv[] )
     static Var<int> an_int_no_input("ui.An Int No Input",2);
     static Var<CustomType> any_type("ui.Some Type",(CustomType){0,1.2,"Hello"});
 
+#ifdef HAVE_PNG
+    static Var<bool> save_window("ui.Save Window",false,false);
+    static Var<bool> save_teapot("ui.Save Teapot",false,false);
+#endif // HAVE_PNG
+
     if( Pushed(a_button) )
       cout << "You Pushed a button!" << endl;
 
@@ -97,6 +102,14 @@ int main( int /*argc*/, char* argv[] )
         any_type = (CustomType){1,2.3,"Boogie"};
 
     an_int_no_input = an_int;
+
+#ifdef HAVE_PNG
+    if( Pushed(save_window) )
+        pangolin::SaveWindowOnRender("window");
+
+    if( Pushed(save_teapot) )
+        d_cam.SaveOnRender("teapot");
+#endif // HAVE_PNG
 
     // Activate efficiently by object
     // (3D Handler requires depth testing to be enabled)
