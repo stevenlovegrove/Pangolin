@@ -8,7 +8,7 @@ SET(
   simple_math.h
   display.h display_internal.h display.cpp
   plotter.h plotter.cpp
-  gl.h glcuda.h cg.h glsl.h
+  gl.h glcuda.h cg.h glsl.h gldraw.h
   threadedfilebuf.h threadedfilebuf.cpp
   timer.h
 )
@@ -200,7 +200,8 @@ SET(INSTALL_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h
 	display.h 
 	display_internal.h 
 	gl.h 
-	glcuda.h 
+	glcuda.h
+        gldraw.h 
     glsl.h
     glvbo.h
 	pangolin.h 
