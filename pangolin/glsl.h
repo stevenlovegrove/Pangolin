@@ -98,7 +98,7 @@ protected:
 
     // protected constructor
     GlSlUtilities() {
-        const char* source = "uniform float scale; uniform float bias; uniform sampler2D tex; void main() { gl_FragColor = bias + scale * texture2D(tex,gl_TexCoord[0].st); }";
+        const char* source = "uniform float scale; uniform float bias; uniform sampler2D tex; void main() { gl_FragColor = texture2D(tex,gl_TexCoord[0].st); gl_FragColor.xyz *= scale; }";
         prog_scale.AddShader(GlSlFragmentShader, source);
         prog_scale.Link();
     }
