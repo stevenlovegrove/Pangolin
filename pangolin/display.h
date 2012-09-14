@@ -634,7 +634,7 @@ inline OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M)
     return P;
 }
 
-inline TooN::Matrix<4,4> ToTooN(const OpenGlMatrixSpec& ms)
+inline TooN::Matrix<4,4> ToTooN(const OpenGlMatrix& ms)
 {
     TooN::Matrix<4,4> m;
     int el = 0;
@@ -644,7 +644,7 @@ inline TooN::Matrix<4,4> ToTooN(const OpenGlMatrixSpec& ms)
     return m;
 }
 
-inline TooN::SE3<> ToTooN_SE3(const OpenGlMatrixSpec& ms)
+inline TooN::SE3<> ToTooN_SE3(const OpenGlMatrix& ms)
 {
     TooN::Matrix<4,4> m = ToTooN(ms);
     const TooN::SO3<> R(m.slice<0,0,3,3>());

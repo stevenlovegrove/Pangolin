@@ -825,8 +825,20 @@ namespace pangolin
       // TODO: Make this neater, and make fewer assumptions!
       if( visiblechildren > 0 )
       {
+        // This containers aspect
         const double this_a = abs(v.aspect());
-        const double child_a = abs(views[0]->aspect);
+
+        // Use first child with fixed aspect for all children
+        double child_a = abs(VisibleChild(0).aspect);
+        for(size_t i=1; (child_a==0) && i < visiblechildren; ++i ) {
+            child_a = abs(VisibleChild(i).aspect);
+        }
+
+        if(child_a == 0) {
+            std::cerr << "LayoutEqual requires that each child has same aspect, but no child with fixed aspect found. Using 1:1." << std::endl;
+            child_a = 1;
+        }
+
         double a = visiblechildren*child_a;
         double area = AspectAreaWithinTarget(this_a, a);
 
