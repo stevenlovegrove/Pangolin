@@ -441,7 +441,7 @@ TextInput::TextInput(std::string title, _Var& tv)
 
 void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 {
-  if(pressed)
+  if(pressed && do_edit)
   {
     const bool selection = sel[1] > sel[0] && sel[0] >= 0;
 

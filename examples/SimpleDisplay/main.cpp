@@ -63,7 +63,7 @@ int main( int /*argc*/, char* argv[] )
       .SetBounds(0.0, 1.0, 0.0, Attach::Pix(UI_WIDTH));
 
   // Demonstration of how we can register a keyboard hook to alter a Var
-  pangolin::RegisterKeyPressCallback( 'b', SetVarFunctor<double>("ui.A Double", 3.5) );
+  pangolin::RegisterKeyPressCallback( PANGO_CTRL + 'b', SetVarFunctor<double>("ui.A Double", 3.5) );
 
   // Demonstration of how we can register a keyboard hook to trigger a method
   pangolin::RegisterKeyPressCallback( PANGO_CTRL + 'r', boost::bind(GlobalKeyHook, "You Pushed ctrl-r!" ) );
