@@ -17,7 +17,7 @@ based) systems, without compromising performance.
 
 * Boost
   (win) http://www.boost.org/users/download/
-  (deb) sudo apt-get install libboost-dev libboost-thread-dev
+  (deb) sudo apt-get install libboost-dev libboost-thread-dev libboost-filesystem-dev
   (mac) sudo port install boost
 
 * CMake (for build environment)
@@ -45,3 +45,5 @@ based) systems, without compromising performance.
 
 * Cg Library (some small Cg utils)
   (deb) sudo apt-get install nvidia-cg-toolkit
+
+* Eigen / TooN
