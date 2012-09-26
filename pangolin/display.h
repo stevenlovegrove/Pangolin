@@ -511,6 +511,7 @@ namespace pangolin
   struct HandlerScroll : Handler
   {
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
+    void Special(View&, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state);
   };
   static HandlerScroll StaticHandlerScroll;
 

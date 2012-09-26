@@ -39,6 +39,10 @@
 #include "display_internal.h"
 #include "simple_math.h"
 
+#ifdef BUILD_PANGOLIN_VARS
+  #include "vars.h"
+#endif
+
 #ifdef HAVE_BOOST_GIL
     #include <boost/gil/gil_all.hpp>
     #ifdef HAVE_PNG
@@ -194,6 +198,15 @@ namespace pangolin
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
 
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+      // Switch backspace and delete for OSX!
+      if(key== '\b') {
+          key = 127;
+      }else if(key == 127) {
+          key = '\b';
+      }
+#endif
+
       context->had_input = context->is_double_buffered ? 2 : 1;
 
       if( key == GLUT_KEY_ESCAPE) {
@@ -328,12 +341,12 @@ namespace pangolin
     {
         context->had_input = context->is_double_buffered ? 2 : 1;
 
-        if( context->activeDisplay)
-        {
-          if( context->activeDisplay->handler )
+        const bool fresh_input = (context->mouse_state == 0);
+
+        if(fresh_input) {
+            context->base.handler->Special(context->base,inType,x,y,p1,p2,p3,p4,context->mouse_state);
+        }else if(context->activeDisplay && context->activeDisplay->handler) {
             context->activeDisplay->handler->Special(*(context->activeDisplay),inType,x,y,p1,p2,p3,p4,context->mouse_state);
-        }else{
-          context->base.handler->Special(context->base,inType,x,y,p1,p2,p3,p4,context->mouse_state);
         }
     }
 
@@ -460,6 +473,27 @@ namespace pangolin
 #endif // HAVE_BOOST_GIL
   }
 
+#ifdef BUILD_PANGOLIN_VARS
+#ifdef HAVE_CVARS
+  void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool /*brand_new*/)
+  {
+      const char* typeidname = var.type_name;
+      if( typeidname == typeid(double).name() ) {
+        CVarUtils::AttachCVar(name, (double*)(var.val) );
+      } else if( typeidname == typeid(int).name() ) {
+        CVarUtils::AttachCVar(name, (int*)(var.val) );
+      } else if( typeidname == typeid(std::string).name() ) {
+        CVarUtils::AttachCVar(name, (std::string*)(var.val) );
+      } else if( typeidname == typeid(bool).name() ) {
+        CVarUtils::AttachCVar(name, (bool*)(var.val) );
+      } else {
+        // we can't attach
+        std::cerr << typeidname << std::endl;
+      }
+  }
+#endif // HAVE_CVARS
+#endif // BUILD_PANGOLIN_VARS
+
   void CreateGlutWindowAndBind(string window_title, int w, int h, unsigned int mode)
   {
   #ifdef HAVE_FREEGLUT
@@ -480,6 +514,12 @@ namespace pangolin
 
     context->is_double_buffered = mode & GLUT_DOUBLE;
     TakeGlutCallbacks();
+
+#ifdef BUILD_PANGOLIN_VARS
+#ifdef HAVE_CVARS
+    RegisterNewVarCallback(NewVarForCVars,0);
+#endif // HAVE_CVARS
+#endif // BUILD_PANGOLIN_VARS
   }
 
   void FinishGlutFrame()
@@ -1169,8 +1209,20 @@ namespace pangolin
     }else{
         Handler::Mouse(d,button,x,y,pressed,button_state);
     }
-
   }
+
+  void HandlerScroll::Special(View& d, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state)
+  {
+    if( inType == InputSpecialScroll )
+    {
+        d.scroll_offset -= p2 / abs(p2);
+        d.scroll_offset = max(0, min(d.scroll_offset, (int)d.views.size()) );
+        d.ResizeChildren();
+    }else{
+        Handler::Special(d,inType,x,y,p1,p2,p3,p4,button_state);
+    }
+  }
+
 
   void Handler3D::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
   {
