@@ -191,10 +191,10 @@ namespace pangolin
 
     void Keyboard( unsigned char key, int x, int y)
     {
-      context->had_input = context->is_double_buffered ? 2 : 1;
-
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
+
+      context->had_input = context->is_double_buffered ? 2 : 1;
 
       if( key == GLUT_KEY_ESCAPE) {
               context->quit = true;
@@ -256,6 +256,9 @@ namespace pangolin
 
     void Mouse( int button_raw, int state, int x, int y)
     {
+      // Force coords to match OpenGl Window Coords
+      y = context->base.v.h - y;
+
       last_x = x;
       last_y = y;
 
@@ -263,9 +266,6 @@ namespace pangolin
       const bool pressed = (state == 0);
 
       context->had_input = context->is_double_buffered ? 2 : 1;
-
-      // Force coords to match OpenGl Window Coords
-      y = context->base.v.h - y;
 
       const bool fresh_input = (context->mouse_state == 0);
 
@@ -284,13 +284,13 @@ namespace pangolin
 
     void MouseMotion( int x, int y)
     {
+      // Force coords to match OpenGl Window Coords
+      y = context->base.v.h - y;
+
       last_x = x;
       last_y = y;
 
       context->had_input = context->is_double_buffered ? 2 : 1;
-
-      // Force coords to match OpenGl Window Coords
-      y = context->base.v.h - y;
 
       if( context->activeDisplay)
       {
@@ -303,6 +303,9 @@ namespace pangolin
 
     void PassiveMouseMotion(int x, int y)
     {
+        // Force coords to match OpenGl Window Coords
+        y = context->base.v.h - y;
+
         last_x = x;
         last_y = y;
     }
@@ -321,25 +324,32 @@ namespace pangolin
       context->base.Resize(win);
     }
 
+    void SpecialInput(InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4)
+    {
+        context->had_input = context->is_double_buffered ? 2 : 1;
+
+        if( context->activeDisplay)
+        {
+          if( context->activeDisplay->handler )
+            context->activeDisplay->handler->Special(*(context->activeDisplay),inType,x,y,p1,p2,p3,p4,context->mouse_state);
+        }else{
+          context->base.handler->Special(context->base,inType,x,y,p1,p2,p3,p4,context->mouse_state);
+        }
+    }
+
     void Scroll(float x, float y)
     {
-//        cout << "Scroll: " << x << ", " << y << endl;
-
-        if(x==0) {
-          Mouse(y>0?3:4,0, last_x, last_y);
-          context->mouse_state &= !MouseWheelUp;
-          context->mouse_state &= !MouseWheelDown;
-        }
+        SpecialInput(InputSpecialScroll, last_x, last_y, x, y, 0, 0);
     }
 
     void Zoom(float m)
     {
-//        cout << "Zoom: " << m << endl;
+        SpecialInput(InputSpecialZoom, last_x, last_y, m, 0, 0, 0);
     }
 
     void Rotate(float r)
     {
-//        cout << "Rotate: " << r << endl;
+        SpecialInput(InputSpecialRotate, last_x, last_y, r, 0, 0, 0);
     }
   }
 
@@ -1137,6 +1147,17 @@ namespace pangolin
     }
   }
 
+  void Handler::Special(View& d, InputSpecial inType,  int x, int y, float p1, float p2, float p3, float p4, int button_state)
+  {
+      View* child = FindChild(d,x,y);
+      if( child )
+      {
+        context->activeDisplay = child;
+        if( child->handler)
+          child->handler->Special(*child,inType, x,y, p1, p2, p3, p4, button_state);
+      }
+  }
+
   void HandlerScroll::Mouse(View& d, MouseButton button, int x, int y, bool pressed, int button_state)
   {
     if( button == button_state && (button == MouseWheelUp || button == MouseWheelDown) )
@@ -1177,14 +1198,13 @@ namespace pangolin
 
       if( button == MouseWheelUp || button == MouseWheelDown)
       {
-
         LieSetIdentity(T_nc);
         const double t[] = { 0,0,(button==MouseWheelUp?1:-1)*100*tf};
         LieSetTranslation<>(T_nc,t);
         if( !(button_state & MouseButtonRight) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
         {
           LieSetTranslation<>(T_nc,rot_center);
-          MatMul<3,1>(T_nc+(3*3),(button==MouseWheelUp?-1.0:1.0)/5.0);
+          MatMul<3,1>(T_nc+(3*3),(button==MouseWheelUp?-1.0:1.0) * zf);
         }
         OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
@@ -1291,6 +1311,57 @@ namespace pangolin
     last_pos[0] = x;
     last_pos[1] = y;
   }
+
+  void Handler3D::Special(View& display, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state)
+  {
+    // mouse down
+    last_pos[0] = x;
+    last_pos[1] = y;
+
+    double T_nc[3*4];
+    LieSetIdentity(T_nc);
+
+    const GLfloat mindepth = display.GetClosestDepth(x,y,hwin);
+    last_z = mindepth != 1 ? mindepth : last_z;
+
+    if( last_z != 1 ) {
+        display.GetCamCoordinates(*cam_state, last_pos[0], last_pos[1], last_z, rot_center[0], rot_center[1], rot_center[2]);
+    }else{
+      SetZero<3,1>(rot_center);
+    }
+
+    if( inType == InputSpecialScroll ) {
+      const double scrolly = p2/10;
+
+      LieSetIdentity(T_nc);
+      const double t[] = { 0,0, -scrolly*100*tf};
+      LieSetTranslation<>(T_nc,t);
+      if( !(button_state & MouseButtonRight) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
+      {
+        LieSetTranslation<>(T_nc,rot_center);
+        MatMul<3,1>(T_nc+(3*3), -scrolly * zf);
+      }
+      OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
+      LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
+    }else if(inType == InputSpecialRotate) {
+        const double r = p1 / 20;
+
+        double T_2c[3*4];
+        Rotation<>(T_2c,0.0,0.0, r);
+        double mrotc[3];
+        MatMul<3,1>(mrotc, rot_center, -1.0);
+        LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
+        double T_n2[3*4];
+        LieSetIdentity<>(T_n2);
+        LieSetTranslation<>(T_n2,rot_center);
+        LieMulSE3(T_nc, T_n2, T_2c );
+        OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
+        LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
+    }
+
+  }
+
+
 
   // Use OpenGl's default frame of reference
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )

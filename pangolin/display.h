@@ -117,6 +117,22 @@ namespace pangolin
   const int PANGO_CTRL = -96;
   const int PANGO_OPTN = 132;
 
+  enum MouseButton
+  {
+    MouseButtonLeft = 1,
+    MouseButtonMiddle = 2,
+    MouseButtonRight = 4,
+    MouseWheelUp = 8,
+    MouseWheelDown = 16
+  };
+
+  enum InputSpecial
+  {
+      InputSpecialScroll,
+      InputSpecialZoom,
+      InputSpecialRotate
+  };
+
   namespace process
   {
     //! @brief Tell pangolin to process input to drive display
@@ -135,7 +151,16 @@ namespace pangolin
 
     void MouseMotion( int x, int y);
 
+    void PassiveMouseMotion(int x, int y);
+
     void Scroll(float x, float y);
+
+    void Zoom(float m);
+
+    void Rotate(float r);
+
+    void SpecialInput(InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4);
+
   }
 
 #ifdef HAVE_GLUT  
@@ -471,15 +496,6 @@ namespace pangolin
     View(View&) { /* Do Not copy - take reference instead*/ }
   };
 
-  enum MouseButton
-  {
-    MouseButtonLeft = 1,
-    MouseButtonMiddle = 2,
-    MouseButtonRight = 4,
-    MouseWheelUp = 8,
-    MouseWheelDown = 16
-  };
-
   //! @brief Input Handler base class with virtual methods which recurse
   //! into sub-displays
   struct Handler
@@ -488,6 +504,7 @@ namespace pangolin
     virtual void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     virtual void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     virtual void MouseMotion(View&, int x, int y, int button_state);
+    virtual void Special(View&, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state);
   };
   static Handler StaticHandler;
 
@@ -508,18 +525,20 @@ namespace pangolin
   struct Handler3D : Handler
   {
 
-    Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f)
-        : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), cameraspec(CameraSpecOpenGl), last_z(1.0) {}
+    Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction=1.0f/50.0f)
+        : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), zf(zoom_fraction), cameraspec(CameraSpecOpenGl), last_z(1.0) {}
 
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void MouseMotion(View&, int x, int y, int button_state);
+    void Special(View&, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state);
 
   protected:
     OpenGlRenderState* cam_state;
     const static int hwin = 8;
     AxisDirection enforce_up;
-    float tf;
+    float tf; // translation factor
+    float zf; // zoom fraction
     CameraSpec cameraspec;
     GLfloat last_z;
     GLint last_pos[2];
