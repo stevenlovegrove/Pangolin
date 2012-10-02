@@ -475,20 +475,23 @@ namespace pangolin
 
 #ifdef BUILD_PANGOLIN_VARS
 #ifdef HAVE_CVARS
-  void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool /*brand_new*/)
+  void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool brand_new)
   {
-      const char* typeidname = var.type_name;
-      if( typeidname == typeid(double).name() ) {
-        CVarUtils::AttachCVar(name, (double*)(var.val) );
-      } else if( typeidname == typeid(int).name() ) {
-        CVarUtils::AttachCVar(name, (int*)(var.val) );
-      } else if( typeidname == typeid(std::string).name() ) {
-        CVarUtils::AttachCVar(name, (std::string*)(var.val) );
-      } else if( typeidname == typeid(bool).name() ) {
-        CVarUtils::AttachCVar(name, (bool*)(var.val) );
-      } else {
-        // we can't attach
-        std::cerr << typeidname << std::endl;
+      if(brand_new) {
+          // Attach to CVars too.
+          const char* typeidname = var.type_name;
+          if( typeidname == typeid(double).name() ) {
+            CVarUtils::AttachCVar(name, (double*)(var.val) );
+          } else if( typeidname == typeid(int).name() ) {
+            CVarUtils::AttachCVar(name, (int*)(var.val) );
+          } else if( typeidname == typeid(std::string).name() ) {
+            CVarUtils::AttachCVar(name, (std::string*)(var.val) );
+          } else if( typeidname == typeid(bool).name() ) {
+            CVarUtils::AttachCVar(name, (bool*)(var.val) );
+          } else {
+            // we can't attach
+            std::cerr << typeidname << std::endl;
+          }
       }
   }
 #endif // HAVE_CVARS

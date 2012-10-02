@@ -80,6 +80,7 @@ public:
         prog.Bind();
         prog.SetUniform("scale", scale);
         prog.SetUniform("bias",  bias);
+        return prog;
     }
 
     inline static void UseNone()
