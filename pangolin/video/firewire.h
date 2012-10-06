@@ -93,7 +93,7 @@ public:
   FirewireVideo(
       Guid guid,
       dc1394video_mode_t video_mode,
-      int framerate,
+      float framerate,
       uint32_t width, uint32_t height,
       uint32_t left, uint32_t top,
       dc1394speed_t iso_speed,
@@ -103,7 +103,7 @@ public:
   FirewireVideo(
       unsigned deviceid,
       dc1394video_mode_t video_mode,
-      int framerate,
+      float framerate,
       uint32_t width, uint32_t height,
       uint32_t left, uint32_t top,
       dc1394speed_t iso_speed,
@@ -197,7 +197,7 @@ protected:
       uint64_t guid, int dma_frames,
       dc1394speed_t iso_speed,
       dc1394video_mode_t video_mode,
-      int framerate,
+      float framerate,
       uint32_t width, uint32_t height,
       uint32_t left, uint32_t top, bool reset_at_boot
   );

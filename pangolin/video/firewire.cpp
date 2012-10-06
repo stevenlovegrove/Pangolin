@@ -104,7 +104,7 @@ void FirewireVideo::init_format7_camera(
     uint64_t guid, int dma_frames,
     dc1394speed_t iso_speed,
     dc1394video_mode_t video_mode,
-    int framerate,
+    float framerate,
     uint32_t width, uint32_t height,
     uint32_t left, uint32_t top, bool reset_at_boot
     ) {
@@ -196,52 +196,28 @@ void FirewireVideo::init_format7_camera(
     //  setup frame rate
     //-----------------------------------------------------------------------
 
-    if((framerate == MAX_FR)||(framerate == EXT_TRIG)){
+    err=dc1394_format7_set_packet_size(camera,video_mode, format7_info.max_packet_size);
+    if( err != DC1394_SUCCESS )
+      throw VideoException("Could not set format7 packet size");
 
-      err=dc1394_format7_set_packet_size(camera,video_mode, format7_info.max_packet_size);
+    if((framerate != MAX_FR) && (framerate != EXT_TRIG)){
+      //set the framerate by using the absolute feature as suggested by the
+      //folks at PointGrey
+      err = dc1394_feature_set_absolute_control(camera,DC1394_FEATURE_FRAME_RATE,DC1394_ON);
       if( err != DC1394_SUCCESS )
-        throw VideoException("Could not set format7 packet size");
+          throw VideoException("Could not turn on absolute frame rate control");
 
-    } else {
+      err = dc1394_feature_set_mode(camera,DC1394_FEATURE_FRAME_RATE,DC1394_FEATURE_MODE_MANUAL);
+      if( err != DC1394_SUCCESS )
+          throw VideoException("Could not make frame rate manual ");
 
-      // setting packet size to get the desired frame rate according to the libdc docs
-      // does not do the trick, so for now we support only max frame rate
-
-        throw VideoException("In format 7 only max frame rate is currently supported");
-      //      uint32_t depth;
-      //      err = dc1394_format7_get_data_depth(camera, video_mode, &depth);
-      //      if( err != DC1394_SUCCESS )
-      //        throw VideoException("Could not get format7 depth");
-      //
-      //      // the following is straight from the libdc docs
-      //      double bus_period = bus_period_from_iso_speed(iso_speed);
-      //
-      //      // work out the max number of packets that the bus can deliver
-      //      int num_packets = (int) (1.0/(bus_period*framerate) + 0.5);
-      //
-      //      if((num_packets > 4095)||(num_packets < 0))
-      //        throw VideoException("number of format7 packets out of range");
-      //
-      //      // work out what the packet size should be for the requested size and framerate
-      //      uint32_t packet_size = (width*964*depth + (num_packets*8) - 1)/(num_packets*8);
-      //      packet_size = nearest_value(packet_size,format7_info.unit_packet_size,format7_info.unit_packet_size,format7_info.max_packet_size);
-      //
-      //      if(packet_size > format7_info.max_packet_size){
-      //        throw VideoException("format7 requested frame rate and size exceed bus bandwidth");
-      //      }
-      //
-      //      err=dc1394_format7_set_packet_size(camera,video_mode, packet_size);
-      //      if( err != DC1394_SUCCESS ){
-      //        throw VideoException("Could not set format7 packet size");
-      //      }
+      err=dc1394_feature_set_absolute_value(camera,DC1394_FEATURE_FRAME_RATE,framerate);
+      if( err != DC1394_SUCCESS )
+          throw VideoException("Could not set format7 framerate ");
     }
 
     // ask the camera what is the resulting framerate (this assume that such a rate is actually
     // allowed by the shutter time)
-    err = dc1394_feature_set_power(camera,DC1394_FEATURE_FRAME_RATE,DC1394_OFF);
-    if( err != DC1394_SUCCESS )
-        throw VideoException("Could not turn off frame rate");
-
     float value;
     err=dc1394_feature_get_absolute_value(camera,DC1394_FEATURE_FRAME_RATE,&value);
     if( err != DC1394_SUCCESS )
@@ -443,7 +419,7 @@ FirewireVideo::FirewireVideo(
 FirewireVideo::FirewireVideo(
     Guid guid,
     dc1394video_mode_t video_mode,
-    int framerate,
+    float framerate,
     uint32_t width, uint32_t height,
     uint32_t left, uint32_t top,
     dc1394speed_t iso_speed,
@@ -490,7 +466,7 @@ FirewireVideo::FirewireVideo(
 FirewireVideo::FirewireVideo(
     unsigned deviceid,
     dc1394video_mode_t video_mode,
-    int framerate,
+    float framerate,
     uint32_t width, uint32_t height,
     uint32_t left, uint32_t top,
     dc1394speed_t iso_speed,
