@@ -188,6 +188,7 @@ struct _Accessor;
 template<typename T>
 struct Accessor
 {
+  virtual ~Accessor() {}
   virtual const T& Get() const = 0;
   virtual void Set(const T& val) = 0;
   static Accessor<T>* Create(const char* typeidname, void* var)

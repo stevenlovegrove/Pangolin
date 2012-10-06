@@ -35,7 +35,12 @@
 #endif
 
 #include <GL/glew.h>
+
+#ifdef _OSX_
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #include <math.h>
 
@@ -46,19 +51,37 @@ namespace pangolin
 // Interface
 ////////////////////////////////////////////////
 
-struct GlTexture
+class GlTexture
 {
-  GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8 );
+public:
+  //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
+  GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true );
+
+#if __cplusplus > 199711L
+  //! Move Constructor
+  GlTexture(GlTexture&& tex);
+#endif
+
+  //! Default constructor represents 'no texture'
+  GlTexture();
   ~GlTexture();
+
+  //! Reinitialise teture width / height / format
+  void Reinitialise(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true );
 
   void Bind() const;
   void Unbind() const;
 
+  //! data_layout normally one of GL_LUMINANCE, GL_RGB, ...
+  //! data_type normally one of GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_FLOAT
   void Upload(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT);
+
+  void Download(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT) const;
 
   void SetLinear();
   void SetNearestNeighbour();
 
+  void RenderToViewport(const bool flip) const;
   void RenderToViewport() const;
   void RenderToViewportFlipY() const;
 
@@ -66,6 +89,10 @@ struct GlTexture
   GLuint tid;
   GLint width;
   GLint height;
+
+private:
+  // Private copy constructor
+  GlTexture(const GlTexture&) {}
 };
 
 struct GlRenderBuffer
@@ -90,17 +117,49 @@ struct GlFramebuffer
   unsigned attachments;
 };
 
+enum GlBufferType
+{
+  GlArrayBuffer = GL_ARRAY_BUFFER,
+  GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,
+  GlPixelPackBuffer = GL_PIXEL_PACK_BUFFER,
+  GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER
+};
+
+struct GlBuffer
+{
+  GlBuffer(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
+  ~GlBuffer();
+
+  void Bind() const;
+  void Unbind() const;
+  void Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset = 0);
+
+  GLuint bo;
+  GlBufferType buffer_type;
+
+  GLuint width;
+  GLuint height;
+
+  GLenum datatype;
+  GLuint count_per_element;
+private:
+  GlBuffer(const GlBuffer&) {}
+};
+
+size_t GlDataTypeBytes(GLenum type);
+
 void glColorHSV( double hue, double s, double v );
 
 void glColorBin( int bin, int max_bins, double sat = 1.0, double val = 1.0 );
 
+void glPixelTransferScale( float r, float g, float b );
+void glPixelTransferScale( float scale );
 
 ////////////////////////////////////////////////
 // Implementation
 ////////////////////////////////////////////////
 
 const int MAX_ATTACHMENTS = 8;
-
 const static GLuint attachment_buffers[] = {
     GL_COLOR_ATTACHMENT0_EXT,
     GL_COLOR_ATTACHMENT1_EXT,
@@ -112,31 +171,58 @@ const static GLuint attachment_buffers[] = {
     GL_COLOR_ATTACHMENT7_EXT
 };
 
+const static size_t datatype_bytes[] = {
+    1, //  #define GL_BYTE 0x1400
+    1, //  #define GL_UNSIGNED_BYTE 0x1401
+    2, //  #define GL_SHORT 0x1402
+    2, //  #define GL_UNSIGNED_SHORT 0x1403
+    4, //  #define GL_INT 0x1404
+    4, //  #define GL_UNSIGNED_INT 0x1405
+    4, //  #define GL_FLOAT 0x1406
+    2, //  #define GL_2_BYTES 0x1407
+    3, //  #define GL_3_BYTES 0x1408
+    4, //  #define GL_4_BYTES 0x1409
+    8  //  #define GL_DOUBLE 0x140A
+};
+
+inline size_t GlDataTypeBytes(GLenum type)
+{
+    return datatype_bytes[type - GL_BYTE];
+}
+
+
 //template<typename T>
 //struct GlDataTypeTrait {};
 //template<> struct GlDataTypeTrait<float>{ static const GLenum type = GL_FLOAT; };
 //template<> struct GlDataTypeTrait<int>{ static const GLenum type = GL_INT; };
 //template<> struct GlDataTypeTrait<unsigned char>{ static const GLenum type = GL_UNSIGNED_BYTE; };
 
-inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format)
-  : internal_format(internal_format),width(width),height(height)
+inline GlTexture::GlTexture()
+    : internal_format(0), tid(0), width(0), height(0)
 {
-  glGenTextures(1,&tid);
-  Bind();
-  // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
-  // for call to succeed.
-  glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, GL_LUMINANCE,GL_FLOAT,0);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  // Not a texture constructor
 }
+
+inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bool sampling_linear )
+    : internal_format(0), tid(0)
+{
+  Reinitialise(width,height,internal_format,sampling_linear);
+}
+
+#if __cplusplus > 199711L
+  inline GlTexture::GlTexture(GlTexture&& tex)
+      : internal_format(tex.internal_format), tid(tex.tid)
+  {
+      tex.internal_format = 0;
+      tex.tid = 0;
+  }
+#endif
 
 inline GlTexture::~GlTexture()
 {
-  glDeleteTextures(1,&tid);
+  if(internal_format!=0) {
+    glDeleteTextures(1,&tid);
+  }
 }
 
 inline void GlTexture::Bind() const
@@ -149,11 +235,47 @@ inline void GlTexture::Unbind() const
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sampling_linear )
+{
+    if(tid!=0) {
+      glDeleteTextures(1,&tid);
+    }
+
+    internal_format = int_format;
+    width = w;
+    height = h;
+
+    glGenTextures(1,&tid);
+    Bind();
+    // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
+    // for call to succeed.
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, GL_LUMINANCE,GL_FLOAT,0);
+
+    if(sampling_linear) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }else{
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
+
 inline void GlTexture::Upload(void* image, GLenum data_layout, GLenum data_type )
 {
   Bind();
   glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_layout,data_type,image);
 }
+
+inline void GlTexture::Download(void* image, GLenum data_layout, GLenum data_type) const
+{
+  Bind();
+  glGetTexImage(GL_TEXTURE_2D, 0, data_layout, data_type, image);
+  Unbind();
+}
+
 
 inline void GlTexture::SetLinear()
 {
@@ -171,7 +293,14 @@ inline void GlTexture::SetNearestNeighbour()
   Unbind();
 }
 
-
+inline void GlTexture::RenderToViewport(const bool flip) const
+{
+    if(flip) {
+        RenderToViewportFlipY();
+    }else{
+        RenderToViewport();
+    }
+}
 
 inline void GlTexture::RenderToViewport() const
 {
@@ -182,14 +311,10 @@ inline void GlTexture::RenderToViewport() const
   Bind();
   glEnable(GL_TEXTURE_2D);
   glBegin(GL_QUADS);
-  glTexCoord2f(0, 0);
-  glVertex2d(-1,-1);
-  glTexCoord2f(1, 0);
-  glVertex2d(1,-1);
-  glTexCoord2f(1, 1);
-  glVertex2d(1,1);
-  glTexCoord2f(0, 1);
-  glVertex2d(-1,1);
+  glTexCoord2f(0, 0); glVertex2d(-1,-1);
+  glTexCoord2f(1, 0); glVertex2d(1,-1);
+  glTexCoord2f(1, 1); glVertex2d(1,1);
+  glTexCoord2f(0, 1); glVertex2d(-1,1);
   glEnd();
   glDisable(GL_TEXTURE_2D);
 }
@@ -203,14 +328,10 @@ inline void GlTexture::RenderToViewportFlipY() const
   Bind();
   glEnable(GL_TEXTURE_2D);
   glBegin(GL_QUADS);
-  glTexCoord2f(0, 0);
-  glVertex2d(-1,1);
-  glTexCoord2f(1, 0);
-  glVertex2d(1,1);
-  glTexCoord2f(1, 1);
-  glVertex2d(1,-1);
-  glTexCoord2f(0, 1);
-  glVertex2d(-1,-1);
+  glTexCoord2f(0, 0); glVertex2d(-1,1);
+  glTexCoord2f(1, 0); glVertex2d(1,1);
+  glTexCoord2f(1, 1); glVertex2d(1,-1);
+  glTexCoord2f(0, 1); glVertex2d(-1,-1);
   glEnd();
   glDisable(GL_TEXTURE_2D);
 }
@@ -271,39 +392,34 @@ inline void GlFramebuffer::Unbind() const
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
 
-// h [0,360)
-// s [0,1]
-// v [0,1]
-inline void glColorHSV( double hue, double s, double v )
+inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, GLenum gluse )
+    : buffer_type(buffer_type), width(width), height(height), datatype(datatype), count_per_element(count_per_element)
 {
-  const double h = hue / 60.0;
-  const int i = floor(h);
-  const double f = (i%2 == 0) ? 1-(h-i) : h-i;
-  const double m = v * (1-s);
-  const double n = v * (1-s*f);
-  switch(i)
-  {
-  case 0: glColor3d(v,n,m); break;
-  case 1: glColor3d(n,v,m); break;
-  case 2: glColor3d(m,v,n); break;
-  case 3: glColor3d(m,n,v); break;
-  case 4: glColor3d(n,m,v); break;
-  case 5: glColor3d(v,m,n); break;
-  default:
-    break;
-  }
-
+  glGenBuffers(1, &bo);
+  Bind();
+  glBufferData(buffer_type, width*height*GlDataTypeBytes(datatype)*count_per_element, 0, gluse);
+  Unbind();
 }
 
-inline void glColorBin( int bin, int max_bins, double sat, double val )
+inline GlBuffer::~GlBuffer()
 {
-  if( bin >= 0 )
-  {
-    const double hue = (double)(bin%max_bins) * 360.0 / (double)max_bins;
-    glColorHSV(hue,sat,val);
-  }else{
-    glColor3f(1,1,1);
-  }
+  glDeleteBuffers(1, &bo);
+}
+
+inline void GlBuffer::Bind() const
+{
+  glBindBuffer(buffer_type, bo);
+}
+
+inline void GlBuffer::Unbind() const
+{
+  glBindBuffer(buffer_type, 0);
+}
+
+inline void GlBuffer::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
+{
+  Bind();
+  glBufferSubData(buffer_type,offset,size_bytes, data);
 }
 
 

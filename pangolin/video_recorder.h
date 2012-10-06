@@ -34,7 +34,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include "pvn_video.h"
+#include "video/pvn_video.h"
 #include "threadedfilebuf.h"
 
 namespace pangolin

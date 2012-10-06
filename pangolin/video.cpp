@@ -27,10 +27,23 @@
 
 #include "video.h"
 
-#include "firewire.h"
-#include "v4l.h"
-#include "ffmpeg.h"
-#include "pvn_video.h"
+#ifdef HAVE_DC1394
+#include "video/firewire.h"
+#endif
+
+#ifdef HAVE_V4L
+#include "video/v4l.h"
+#endif
+
+#ifdef HAVE_FFMPEG
+#include "video/ffmpeg.h"
+#endif
+
+#ifdef HAVE_OPENNI
+#include "video/openni.h"
+#endif
+
+#include "video/pvn_video.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -45,14 +58,25 @@ using namespace boost;
 namespace pangolin
 {
 
-struct VideoUri
+const VideoPixelFormat SupportedVideoPixelFormats[] =
 {
-    string scheme;
-    string url;
-    map<string,string> params;
+    {"GRAY8", 1, {8}, 8, false},
+    {"GRAY16LE", 1, {16}, 16, false},
+    {"RGB24", 3, {8,8,8}, 24, false},
+    {"BGR24", 3, {8,8,8}, 24, false},
+    {"YUYV422", 3, {4,2,2}, 16, false},
+    {"",0,{0,0,0,0},0,0}
 };
 
-ostream& operator<< (ostream &out, VideoUri &uri)
+VideoPixelFormat VideoFormatFromString(const std::string& format)
+{
+    for(int i=0; !SupportedVideoPixelFormats[i].format.empty(); ++i)
+        if(!format.compare(SupportedVideoPixelFormats[i].format))
+            return SupportedVideoPixelFormats[i];
+    throw VideoException("Unknown Format",format);
+}
+
+ostream& operator<< (ostream &out, Uri &uri)
 {
     out << "scheme: " << uri.scheme << endl;
     out << "url:    " << uri.url << endl;
@@ -83,9 +107,9 @@ VideoInput::~VideoInput()
     if(video) delete video;
 }
 
-VideoUri ParseUri(string str_uri)
+Uri ParseUri(string str_uri)
 {
-    VideoUri uri;
+    Uri uri;
 
     // Find Scheme delimiter
     size_t ns = str_uri.find_first_of(':');
@@ -100,7 +124,7 @@ VideoUri ParseUri(string str_uri)
     }
 
     // Find url delimiter
-    size_t nurl = str_uri.find_first_of("//",ns+1);
+    size_t nurl = str_uri.find("//",ns+1);
     if(nurl != string::npos)
     {
         // If there is space between the delimiters, extract protocol arguments
@@ -154,8 +178,7 @@ VideoUri ParseUri(string str_uri)
     return uri;
 }
 
-#ifdef HAVE_FFMPEG
-#include "ffmpeg.h"
+#ifdef HAVE_DC1394
 
 dc1394video_mode_t get_firewire_format7_mode(const string fmt)
 {
@@ -206,32 +229,47 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 VideoInterface* OpenVideo(std::string str_uri)
 {
-  VideoInterface* video = 0;
+    VideoInterface* video = 0;
 
-  VideoUri uri = ParseUri(str_uri);
+    Uri uri = ParseUri(str_uri);
 
-#ifdef HAVE_FFMPEG
-    if(!uri.scheme.compare("file") || !uri.scheme.compare("files") ) {
-        if( algorithm::ends_with(uri.url,"pvn") ) {
-            bool realtime = true;
-            if(uri.params.find("realtime")!=uri.params.end()){
-                std::istringstream iss(uri.params["realtime"]);
-                iss >> realtime;
-            }
-            video = new PvnVideo(uri.url.c_str(), realtime);
-        }else{
-            video = new FfmpegVideo(uri.url.c_str(), "RGB24");
+    if(!uri.scheme.compare("file") && algorithm::ends_with(uri.url,"pvn") )
+    {
+        bool realtime = true;
+        if(uri.params.find("realtime")!=uri.params.end()){
+            std::istringstream iss(uri.params["realtime"]);
+            iss >> realtime;
         }
+        video = new PvnVideo(uri.url.c_str(), realtime);
+    }else
+#ifdef HAVE_FFMPEG
+    if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){
+        string outfmt = "RGB24";
+        if(uri.params.find("fmt")!=uri.params.end()){
+            outfmt = uri.params["fmt"];
+        }
+        int video_stream = -1;
+        if(uri.params.find("stream")!=uri.params.end()){
+            std::istringstream iss(uri.params["stream"]);
+            iss >> video_stream;
+        }
+        video = new FfmpegVideo(uri.url.c_str(), outfmt, "", false, video_stream);
     }else if( !uri.scheme.compare("mjpeg")) {
         video = new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" );
     }else if( !uri.scheme.compare("convert") ) {
+        string outfmt = "RGB24";
+        if(uri.params.find("fmt")!=uri.params.end()){
+            outfmt = uri.params["fmt"];
+        }
         VideoInterface* subvid = OpenVideo(uri.url);
-        video = new FfmpegConverter(subvid,"RGB24",FFMPEG_FAST_BILINEAR);
+        video = new FfmpegConverter(subvid,outfmt,FFMPEG_POINT);
     }else
 #endif //HAVE_FFMPEG
+#ifdef HAVE_V4L
     if(!uri.scheme.compare("v4l")) {
         video = new V4lVideo(uri.url.c_str());
     }else
+#endif // HAVE_V4L
 #ifdef HAVE_DC1394
     if(!uri.scheme.compare("firewire") || !uri.scheme.compare("dc1394") ) {
         // Default parameters
@@ -242,7 +280,7 @@ VideoInterface* OpenVideo(std::string str_uri)
         int desired_dma = 10;
         int desired_iso = 400;
         float desired_fps = 30;
-        string desired_format = "RGB8";
+        string desired_format = "RGB24";
 
         // Parse parameters
         if(uri.params.find("fmt")!=uri.params.end()){
@@ -298,49 +336,45 @@ VideoInterface* OpenVideo(std::string str_uri)
         }
     }else
 #endif //HAVE_DC1394
+#ifdef HAVE_OPENNI
+    if(!uri.scheme.compare("openni") || !uri.scheme.compare("kinect"))
+    {
+        OpenNiSensorType img1 = OpenNiRgb;
+        OpenNiSensorType img2 = OpenNiUnassigned;
+
+        if(uri.params.find("img1")!=uri.params.end()){
+            std::istringstream iss(uri.params["img1"]);
+
+            if( boost::iequals(iss.str(),"rgb") ) {
+                img1 = OpenNiRgb;
+            }else if( boost::iequals(iss.str(),"ir") ) {
+                img1 = OpenNiIr;
+            }else if( boost::iequals(iss.str(),"depth") ) {
+                img1 = OpenNiDepth;
+            }
+        }
+
+        if(uri.params.find("img2")!=uri.params.end()){
+            std::istringstream iss(uri.params["img2"]);
+
+            if( boost::iequals(iss.str(),"rgb") ) {
+                img2 = OpenNiRgb;
+            }else if( boost::iequals(iss.str(),"ir") ) {
+                img2 = OpenNiIr;
+            }else if( boost::iequals(iss.str(),"depth") ) {
+                img2 = OpenNiDepth;
+            }
+        }
+
+        video = new OpenNiVideo(img1,img2);
+    }else
+#endif
     {
         throw VideoException("Unable to open video URI");
     }
 
     return video;
 }
-
-// TODO: Find better way!
-VideoPixelFormat VideoFormatFromString(const std::string& format)
-{
-    VideoPixelFormat pixformat;
-
-    pixformat.format = format;
-    pixformat.channel_size_bits = 8;
-    pixformat.channels = 1;
-
-    unsigned n = format.find_first_of("0123456789");
-    if( n != format.npos )
-    {
-        int bits;
-        std::istringstream iss(format.substr(n));
-        iss >> bits;
-        if( !iss.bad() ) {
-            if( bits % 8 == 0 )
-                pixformat.channel_size_bits = bits;
-        }
-    }
-
-    if( algorithm::starts_with(format,"RGB") ) {
-        pixformat.channels = 3;
-    }else if( algorithm::starts_with(format,"BGR") ) {
-        pixformat.channels = 3;
-    }else if( algorithm::starts_with(format,"YUV") ) {
-        pixformat.channels = 3;
-    }else if( algorithm::starts_with(format,"RGBA") ) {
-        pixformat.channels = 4;
-    }
-
-    pixformat.size_bytes = pixformat.channels * pixformat.channel_size_bits / 8;
-
-    return pixformat;
-}
-
 
 void VideoInput::Open(std::string uri)
 {
@@ -368,6 +402,12 @@ unsigned VideoInput::Height() const
 {
     if( !video ) throw VideoException("No video source open");
     return video->Height();
+}
+
+size_t VideoInput::SizeBytes() const
+{
+    if( !video ) throw VideoException("No video source open");
+    return video->SizeBytes();
 }
 
 std::string VideoInput::PixFormat() const

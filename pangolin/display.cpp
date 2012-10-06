@@ -26,15 +26,37 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include <map>
 
+#include <boost/function.hpp>
 #include <boost/foreach.hpp>
 #define foreach BOOST_FOREACH
 
 #include "platform.h"
+#include "gl.h"
 #include "display.h"
 #include "display_internal.h"
 #include "simple_math.h"
+
+#ifdef BUILD_PANGOLIN_VARS
+  #include "vars.h"
+#endif
+
+#ifdef HAVE_BOOST_GIL
+    #include <boost/gil/gil_all.hpp>
+    #ifdef HAVE_PNG
+    #define png_infopp_NULL (png_infopp)NULL
+    #define int_p_NULL (int*)NULL
+    #include <boost/gil/extension/io/png_io.hpp>
+    #endif // HAVE_PNG
+    #ifdef HAVE_JPEG
+    #include <boost/gil/extension/io/jpeg_io.hpp>
+    #endif // HAVE_JPEG
+    #ifdef HAVE_TIFF
+    #include <boost/gil/extension/io/tiff_io.hpp>
+    #endif // HAVE_TIFF
+#endif // HAVE_BOOST_GIL
 
 using namespace std;
 
@@ -52,7 +74,7 @@ namespace pangolin
   __thread PangolinGl* context = 0;
 
   PangolinGl::PangolinGl()
-   : quit(false), mouse_state(0), activeDisplay(0)
+      : quit(false), mouse_state(0), activeDisplay(0)
   {
   }
 
@@ -66,8 +88,8 @@ namespace pangolin
       ic = contexts.insert( name,new PangolinGl ).first;
       context = ic->second;
       View& dc = context->base;
-      dc.left = 0;
-      dc.bottom = 0;
+      dc.left = 0.0;
+      dc.bottom = 0.0;
       dc.top = 1.0;
       dc.right = 1.0;
       dc.aspect = 0;
@@ -120,21 +142,35 @@ namespace pangolin
     return false;
   }
 
+  void RenderViews()
+  {
+      Viewport::DisableScissor();
+      DisplayBase().Render();
+  }
+
   View& DisplayBase()
   {
     return context->base;
   }
 
+  View& CreateDisplay()
+  {
+      int iguid = rand();
+      std::stringstream ssguid;
+      ssguid << iguid;
+      return Display(ssguid.str());
+  }
+
   View& Display(const std::string& name)
   {
     // Get / Create View
-    boost::ptr_unordered_map<std::string,View>::iterator vi = context->all_views.find(name);
-    if( vi != context->all_views.end() )
+    boost::ptr_unordered_map<std::string,View>::iterator vi = context->named_managed_views.find(name);
+    if( vi != context->named_managed_views.end() )
     {
       return *(vi->second);
     }else{
       View * v = new View();
-      bool inserted = context->all_views.insert(name, v).second;
+      bool inserted = context->named_managed_views.insert(name, v).second;
       if(!inserted) throw exception();
       v->handler = &StaticHandler;
       context->base.views.push_back(v);
@@ -142,18 +178,56 @@ namespace pangolin
     }
   }
 
+  void RegisterKeyPressCallback(int key, boost::function<void(void)> func)
+  {
+      context->keypress_hooks[key] = func;
+  }
+
+  void SaveWindowOnRender(std::string prefix)
+  {
+      context->screen_capture.push(std::pair<std::string,Viewport>(prefix, context->base.v) );
+  }
+
   namespace process
   {
+    unsigned int last_x;
+    unsigned int last_y;
+
     void Keyboard( unsigned char key, int x, int y)
     {
-      context->had_input = context->is_double_buffered ? 2 : 1;
-
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
 
-      if( key == GLUT_KEY_TAB)
-      {
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+      // Switch backspace and delete for OSX!
+      if(key== '\b') {
+          key = 127;
+      }else if(key == 127) {
+          key = '\b';
+      }
+#endif
+
+      context->had_input = context->is_double_buffered ? 2 : 1;
+
+      if( key == GLUT_KEY_ESCAPE) {
+              context->quit = true;
+      }
+      #ifdef HAVE_CVARS
+      else if(key == '`') {
+          context->console.ToggleConsole();
+          // Force refresh for several frames whilst panel opens/closes
+          context->had_input = 60*2;
+      }else if(context->console.IsOpen()) {
+          // Direct input to console
+          if( key >= 128 ) {
+              context->console.SpecialFunc(key - 128 );
+          }else{
+              context->console.KeyboardFunc(key);
+          }
+      }
+      #endif // HAVE_CVARS
       #ifdef HAVE_GLUT
+      else if( key == GLUT_KEY_TAB) {
         if( context->is_fullscreen )
         {
           glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
@@ -162,13 +236,11 @@ namespace pangolin
           glutFullScreen();
           context->is_fullscreen = true;
         }
-      #endif
       }
-      else if( key == GLUT_KEY_ESCAPE) {
-        context->quit = true;
-      }
-      else if(context->activeDisplay && context->activeDisplay->handler)
-      {
+      #endif // HAVE_GLUT
+      else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
+          context->keypress_hooks[key]();
+      } else if(context->activeDisplay && context->activeDisplay->handler) {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
       }
     }
@@ -197,13 +269,16 @@ namespace pangolin
 
     void Mouse( int button_raw, int state, int x, int y)
     {
+      // Force coords to match OpenGl Window Coords
+      y = context->base.v.h - y;
+
+      last_x = x;
+      last_y = y;
+
       const MouseButton button = (MouseButton)(1 << button_raw);
       const bool pressed = (state == 0);
 
       context->had_input = context->is_double_buffered ? 2 : 1;
-
-      // Force coords to match OpenGl Window Coords
-      y = context->base.v.h - y;
 
       const bool fresh_input = (context->mouse_state == 0);
 
@@ -222,10 +297,13 @@ namespace pangolin
 
     void MouseMotion( int x, int y)
     {
-      context->had_input = context->is_double_buffered ? 2 : 1;
-
       // Force coords to match OpenGl Window Coords
       y = context->base.v.h - y;
+
+      last_x = x;
+      last_y = y;
+
+      context->had_input = context->is_double_buffered ? 2 : 1;
 
       if( context->activeDisplay)
       {
@@ -236,12 +314,21 @@ namespace pangolin
       }
     }
 
+    void PassiveMouseMotion(int x, int y)
+    {
+        // Force coords to match OpenGl Window Coords
+        y = context->base.v.h - y;
+
+        last_x = x;
+        last_y = y;
+    }
+
     void Resize( int width, int height )
     {
       if( !context->is_fullscreen )
       {
         context->windowed_size[0] = width;
-        context->windowed_size[1] = width;
+        context->windowed_size[1] = height;
       }
       // TODO: Fancy display managers seem to cause this to mess up?
       context->had_input = 20; //context->is_double_buffered ? 2 : 1;
@@ -249,9 +336,45 @@ namespace pangolin
       Viewport win(0,0,width,height);
       context->base.Resize(win);
     }
+
+    void SpecialInput(InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4)
+    {
+        context->had_input = context->is_double_buffered ? 2 : 1;
+
+        const bool fresh_input = (context->mouse_state == 0);
+
+        if(fresh_input) {
+            context->base.handler->Special(context->base,inType,x,y,p1,p2,p3,p4,context->mouse_state);
+        }else if(context->activeDisplay && context->activeDisplay->handler) {
+            context->activeDisplay->handler->Special(*(context->activeDisplay),inType,x,y,p1,p2,p3,p4,context->mouse_state);
+        }
+    }
+
+    void Scroll(float x, float y)
+    {
+        SpecialInput(InputSpecialScroll, last_x, last_y, x, y, 0, 0);
+    }
+
+    void Zoom(float m)
+    {
+        SpecialInput(InputSpecialZoom, last_x, last_y, m, 0, 0, 0);
+    }
+
+    void Rotate(float r)
+    {
+        SpecialInput(InputSpecialRotate, last_x, last_y, r, 0, 0, 0);
+    }
   }
 
 #ifdef HAVE_GLUT
+  void PangoGlutRedisplay()
+  {
+      glutPostRedisplay();
+
+//      RenderViews();
+//      FinishGlutFrame();
+  }
+
   void TakeGlutCallbacks()
   {
     glutKeyboardFunc(&process::Keyboard);
@@ -259,13 +382,126 @@ namespace pangolin
     glutReshapeFunc(&process::Resize);
     glutMouseFunc(&process::Mouse);
     glutMotionFunc(&process::MouseMotion);
+    glutPassiveMotionFunc(&process::PassiveMouseMotion);
     glutSpecialFunc(&process::SpecialFunc);
     glutSpecialUpFunc(&process::SpecialFuncUp);
+
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+    glutDisplayFunc(&PangoGlutRedisplay);
+
+    // Attempt to register special smooth scroll callback
+    // https://github.com/nanoant/osxglut
+    typedef void (*glutScrollFunc_t)(void (*)(float, float));
+    typedef void (*glutZoomFunc_t)(void (*)(float));
+    typedef void (*glutRotateFunc_t)(void (*)(float));
+
+    glutScrollFunc_t glutScrollFunc = (glutScrollFunc_t)glutGetProcAddress("glutScrollFunc");
+    glutZoomFunc_t glutZoomFunc = (glutZoomFunc_t)glutGetProcAddress("glutZoomFunc");
+    glutRotateFunc_t glutRotateFunc = (glutRotateFunc_t)glutGetProcAddress("glutRotateFunc");
+
+    if(glutScrollFunc) {
+        glutScrollFunc(&process::Scroll);
+    }
+    if(glutZoomFunc) {
+        glutZoomFunc(&process::Zoom);
+    }
+    if(glutRotateFunc) {
+        glutRotateFunc(&process::Rotate);
+    }
+
+#endif
   }
+
+
+  void SaveViewFromFbo(std::string prefix, View& view, float scale)
+  {
+      const Viewport orig = view.v;
+      view.v.l = 0;
+      view.v.b = 0;
+      view.v.w *= scale;
+      view.v.h *= scale;
+
+      const int w = view.v.w;
+      const int h = view.v.h;
+
+      float origLineWidth;
+      glGetFloatv(GL_LINE_WIDTH, &origLineWidth);
+      glLineWidth(origLineWidth * scale);
+
+      // Create FBO
+      GlTexture color(w,h);
+      GlRenderBuffer depth(w,h);
+      GlFramebuffer fbo(color, depth);
+
+      // Render into FBO
+      fbo.Bind();
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      view.Render();
+      glFlush();
+
+#ifdef HAVE_BOOST_GIL
+      // Read buffer and write file
+      boost::gil::rgba8_image_t img(w, h);
+      glReadPixels(0,0,w,h, GL_RGBA, GL_UNSIGNED_BYTE, boost::gil::interleaved_view_get_raw_data( boost::gil::view( img ) ) );
+#ifdef HAVE_PNG
+      boost::gil::png_write_view(prefix + ".png", flipped_up_down_view( boost::gil::const_view(img)) );
+#endif // HAVE_PNG
+#endif // HAVE_BOOST_GIL
+
+      // unbind FBO
+      fbo.Unbind();
+
+      // restore viewport / line width
+      view.v = orig;
+      glLineWidth(origLineWidth);
+  }
+
+  void SaveFramebuffer(std::string prefix, const Viewport& v)
+  {
+#ifdef HAVE_BOOST_GIL
+      // Save colour channels
+      boost::gil::rgba8_image_t img(v.w, v.h);
+      glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, boost::gil::interleaved_view_get_raw_data( boost::gil::view( img ) ) );
+#ifdef HAVE_PNG
+      boost::gil::png_write_view(prefix + ".png", flipped_up_down_view( boost::gil::const_view(img)) );
+#endif // HAVE_PNG
+
+//      // Save depth channel
+//      boost::gil::gray32f_image_t depth(v.w, v.h);
+//      glReadPixels(v.l, v.b, v.w, v.h, GL_DEPTH_COMPONENT, GL_FLOAT, boost::gil::interleaved_view_get_raw_data( view( depth ) ));
+//      boost::gil::tiff_write_view(prefix + "_depth.tiff", flipped_up_down_view(const_view(depth)) );
+#endif // HAVE_BOOST_GIL
+  }
+
+#ifdef BUILD_PANGOLIN_VARS
+#ifdef HAVE_CVARS
+  void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool brand_new)
+  {
+      if(brand_new) {
+          // Attach to CVars too.
+          const char* typeidname = var.type_name;
+          if( typeidname == typeid(double).name() ) {
+            CVarUtils::AttachCVar(name, (double*)(var.val) );
+          } else if( typeidname == typeid(int).name() ) {
+            CVarUtils::AttachCVar(name, (int*)(var.val) );
+          } else if( typeidname == typeid(std::string).name() ) {
+            CVarUtils::AttachCVar(name, (std::string*)(var.val) );
+          } else if( typeidname == typeid(bool).name() ) {
+            CVarUtils::AttachCVar(name, (bool*)(var.val) );
+          } else {
+            // we can't attach
+            std::cerr << typeidname << std::endl;
+          }
+      }
+  }
+#endif // HAVE_CVARS
+#endif // BUILD_PANGOLIN_VARS
 
   void CreateGlutWindowAndBind(string window_title, int w, int h, unsigned int mode)
   {
+  #ifdef HAVE_FREEGLUT
     if( glutGet(GLUT_INIT_STATE) == 0)
+  #endif
     {
       int argc = 0;
       glutInit(&argc, 0);
@@ -274,11 +510,54 @@ namespace pangolin
     glutInitWindowSize(w,h);
     glutCreateWindow(window_title.c_str());
     BindToContext(window_title);
+
+#ifdef HAVE_FREEGLUT
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+#endif
+
     context->is_double_buffered = mode & GLUT_DOUBLE;
     TakeGlutCallbacks();
+
+#ifdef BUILD_PANGOLIN_VARS
+#ifdef HAVE_CVARS
+    RegisterNewVarCallback(NewVarForCVars,0);
+#endif // HAVE_CVARS
+#endif // BUILD_PANGOLIN_VARS
   }
+
+  void FinishGlutFrame()
+  {
+    RenderViews();
+    DisplayBase().Activate();
+    Viewport::DisableScissor();
+
+#ifdef HAVE_BOOST_GIL
+    while(context->screen_capture.size()) {
+        std::pair<std::string,Viewport> fv = context->screen_capture.front();
+        context->screen_capture.pop();
+        SaveFramebuffer(fv.first, fv.second);
+    }
+#endif // HAVE_BOOST_GIL
+
+#ifdef HAVE_CVARS
+    context->console.RenderConsole();
+#endif // HAVE_CVARS
+    SwapGlutBuffersProcessGlutEvents();
+  }
+
+  void SwapGlutBuffersProcessGlutEvents()
+  {
+    glutSwapBuffers();
+
+#ifdef HAVE_FREEGLUT
+    glutMainLoopEvent();
 #endif
+
+#ifdef HAVE_GLUT_APPLE_FRAMEWORK
+    glutCheckLoop();
+#endif
+  }
+#endif // HAVE_GLUT
 
   void Viewport::Activate() const
   {
@@ -319,28 +598,77 @@ namespace pangolin
     return Viewport(l+horiz, b+vert, w-horiz, h-vert);
   }
 
-  void OpenGlMatrixSpec::Load() const
+  Viewport Viewport::Intersect(const Viewport& vp) const
   {
-    glMatrixMode(type);
+      GLint nl = std::max(l,vp.l);
+      GLint nr = std::min(r(),vp.r());
+      GLint nb = std::max(b,vp.b);
+      GLint nt = std::min(t(),vp.t());
+      return Viewport(nl,nb, nr-nl, nt-nb);
+  }
+
+  void OpenGlMatrix::Load() const
+  {
     glLoadMatrixd(m);
   }
 
-  void OpenGlMatrixSpec::Multiply() const
+  void OpenGlMatrix::Multiply() const
   {
-    glMatrixMode(type);
     glMultMatrixd(m);
+  }
+
+  void OpenGlMatrix::SetIdentity()
+  {
+      m[0] = 1.0f;  m[1] = 0.0f;  m[2] = 0.0f;  m[3] = 0.0f;
+      m[4] = 0.0f;  m[5] = 1.0f;  m[6] = 0.0f;  m[7] = 0.0f;
+      m[8] = 0.0f;  m[9] = 0.0f; m[10] = 1.0f; m[11] = 0.0f;
+     m[12] = 0.0f; m[13] = 0.0f; m[14] = 0.0f; m[15] = 1.0f;
+  }
+
+  OpenGlMatrix OpenGlMatrix::Inverse() const
+  {
+      OpenGlMatrix inv;
+      inv.m[0] = m[0]; inv.m[4] = m[1]; inv.m[8]  = m[2];  inv.m[12] = -(m[0]*m[12] + m[1]*m[13] + m[2]*m[14]);
+      inv.m[1] = m[4]; inv.m[5] = m[5]; inv.m[9]  = m[6];  inv.m[13] = -(m[4]*m[12] + m[5]*m[13] + m[6]*m[14]);
+      inv.m[2] = m[8]; inv.m[6] = m[9]; inv.m[10] = m[10]; inv.m[14] = -(m[8]*m[12] + m[9]*m[13] + m[10]*m[14]);
+      inv.m[3] =    0; inv.m[7] =    0; inv.m[11] =    0;  inv.m[15] = 1;
+      return inv;
   }
 
   void OpenGlRenderState::Apply() const
   {
     // Apply any stack matrices we have
-    for(map<OpenGlStack,OpenGlMatrixSpec>::const_iterator i = stacks.begin(); i != stacks.end(); ++i )
+    for(map<OpenGlStack,OpenGlMatrix>::const_iterator i = stacks.begin(); i != stacks.end(); ++i )
     {
+      glMatrixMode(i->first);
       i->second.Load();
     }
 
     // Leave in MODEVIEW mode
     glMatrixMode(GL_MODELVIEW);
+
+    if(follow) {
+        T_cw.Multiply();
+    }
+  }
+
+  OpenGlRenderState::OpenGlRenderState()
+      : follow(false)
+  {
+  }
+
+  OpenGlRenderState::OpenGlRenderState(const OpenGlMatrix& projection_matrix)
+      : follow(false)
+  {
+    stacks[GlProjectionStack] = projection_matrix;
+    stacks[GlModelViewStack] = IdentityMatrix();
+  }
+
+  OpenGlRenderState::OpenGlRenderState(const OpenGlMatrix& projection_matrix, const OpenGlMatrix& modelview_matrx)
+      : follow(false)
+  {
+    stacks[GlProjectionStack] = projection_matrix;
+    stacks[GlModelViewStack] = modelview_matrx;
   }
 
   void OpenGlRenderState::ApplyIdentity()
@@ -361,11 +689,81 @@ namespace pangolin
     glLoadIdentity();
   }
 
+  OpenGlRenderState& OpenGlRenderState::SetProjectionMatrix(OpenGlMatrix spec)
+  {
+      stacks[GlProjectionStack] = spec;
+      return *this;
+  }
+
+  OpenGlRenderState& OpenGlRenderState::SetModelViewMatrix(OpenGlMatrix spec)
+  {
+      stacks[GlModelViewStack] = spec;
+      return *this;
+  }
 
   OpenGlRenderState& OpenGlRenderState::Set(OpenGlMatrixSpec spec)
   {
     stacks[spec.type] = spec;
     return *this;
+  }
+
+  OpenGlMatrix operator*(const OpenGlMatrix& lhs, const OpenGlMatrix& rhs)
+  {
+      OpenGlMatrix ret;
+      pangolin::MatMul<4,4,4,double>(ret.m, lhs.m, rhs.m);
+      return ret;
+  }
+
+  OpenGlMatrix& OpenGlRenderState::GetProjectionMatrix()
+  {
+      return stacks[GlProjectionStack];
+  }
+
+  OpenGlMatrix OpenGlRenderState::GetProjectionMatrix() const
+  {
+      std::map<OpenGlStack,OpenGlMatrix>::const_iterator i = stacks.find(GlProjectionStack);
+      if( i == stacks.end() ) {
+        return IdentityMatrix();
+      }else{
+        return i->second;
+      }
+  }
+
+  OpenGlMatrix& OpenGlRenderState::GetModelViewMatrix()
+  {
+      return stacks[GlModelViewStack];
+  }
+
+  OpenGlMatrix OpenGlRenderState::GetModelViewMatrix() const
+  {
+      std::map<OpenGlStack,OpenGlMatrix>::const_iterator i = stacks.find(GlModelViewStack);
+      if( i == stacks.end() ) {
+        return IdentityMatrix();
+      }else{
+        return i->second;
+      }
+  }
+
+  void OpenGlRenderState::Follow(const OpenGlMatrix& T_wc, bool follow)
+  {
+      this->T_cw = T_wc.Inverse();
+
+      if(follow != this->follow) {
+          if(follow) {
+              const OpenGlMatrix T_vc = GetModelViewMatrix() * T_wc;
+              SetModelViewMatrix(T_vc);
+              this->follow = true;
+          }else{
+              Unfollow();
+          }
+      }
+  }
+
+  void OpenGlRenderState::Unfollow()
+  {
+      const OpenGlMatrix T_vw = GetModelViewMatrix() * T_cw;
+      SetModelViewMatrix(T_vw);
+      this->follow = false;
   }
 
   int AttachAbs( int low, int high, Attach a)
@@ -388,8 +786,13 @@ namespace pangolin
     // Compute Bounds based on specification
     v.l = AttachAbs(p.l,p.r(),left);
     v.b = AttachAbs(p.b,p.t(),bottom);
-    const int r = AttachAbs(p.l,p.r(),right);
-    const int t = AttachAbs(p.b,p.t(),top);
+    int r = AttachAbs(p.l,p.r(),right);
+    int t = AttachAbs(p.b,p.t(),top);
+
+    // Make sure left and right, top and bottom are correct order
+    if( t < v.b ) swap(t,v.b);
+    if( r < v.l ) swap(r,v.l);
+
     v.w = r - v.l;
     v.h = t - v.b;
 
@@ -447,10 +850,17 @@ namespace pangolin
     {
       // Allocate space incrementally
       Viewport space = v.Inset(panal_v_margin);
+      int num_children = 0;
       foreach(View* i, views )
       {
-        i->Resize(space);
-        space.h = i->v.b - panal_v_margin - space.b;
+        num_children++;
+        if(scroll_offset > num_children ) {
+            i->show = false;
+        }else{
+            i->show = true;
+            i->Resize(space);
+            space.h = i->v.b - panal_v_margin - space.b;
+        }
       }
     }else if(layout == LayoutHorizontal )
     {
@@ -464,20 +874,33 @@ namespace pangolin
       }
     }else if(layout == LayoutEqual )
     {
+      const size_t visiblechildren = NumVisibleChildren();
       // TODO: Make this neater, and make fewer assumptions!
-      if( views.size() > 0 )
+      if( visiblechildren > 0 )
       {
+        // This containers aspect
         const double this_a = abs(v.aspect());
-        const double child_a = abs(views[0]->aspect);
-        double a = views.size()*child_a;
+
+        // Use first child with fixed aspect for all children
+        double child_a = abs(VisibleChild(0).aspect);
+        for(size_t i=1; (child_a==0) && i < visiblechildren; ++i ) {
+            child_a = abs(VisibleChild(i).aspect);
+        }
+
+        if(child_a == 0) {
+            std::cerr << "LayoutEqual requires that each child has same aspect, but no child with fixed aspect found. Using 1:1." << std::endl;
+            child_a = 1;
+        }
+
+        double a = visiblechildren*child_a;
         double area = AspectAreaWithinTarget(this_a, a);
 
-        int cols = views.size()-1;
+        int cols = visiblechildren-1;
         for(; cols > 0; --cols)
         {
-          const int rows = views.size() / cols + (views.size() % cols == 0 ? 0 : 1);
+          const int rows = visiblechildren / cols + (visiblechildren % cols == 0 ? 0 : 1);
           const double na = cols * child_a / rows;
-          const double new_area = views.size()*AspectAreaWithinTarget(this_a,na)/(rows*cols);
+          const double new_area = visiblechildren*AspectAreaWithinTarget(this_a,na)/(rows*cols);
           if( new_area <= area )
             break;
           area = new_area;
@@ -485,7 +908,7 @@ namespace pangolin
         }
 
         cols++;
-        const int rows = views.size() / cols + (views.size() % cols == 0 ? 0 : 1);
+        const int rows = visiblechildren / cols + (visiblechildren % cols == 0 ? 0 : 1);
         int cw,ch;
         if( a > this_a )
         {
@@ -496,12 +919,12 @@ namespace pangolin
           cw = ch * child_a;
         }
 
-        for( unsigned int i=0; i< views.size(); ++i )
+        for( unsigned int i=0; i< visiblechildren; ++i )
         {
           int c = i % cols;
           int r = i / cols;
           Viewport space(v.l + c*cw, v.t() - (r+1)*ch, cw,ch);
-          views[i]->Resize(space);
+          VisibleChild(i).Resize(space);
         }
       }
     }
@@ -510,13 +933,16 @@ namespace pangolin
 
   void View::Render()
   {
+    if(!extern_draw_function.empty() && show) {
+      extern_draw_function(*this);
+    }
     RenderChildren();
   }
 
   void View::RenderChildren()
   {
     foreach(View* v, views)
-      v->Render();
+      if(v->show) v->Render();
   }
 
   void View::Activate() const
@@ -558,34 +984,60 @@ namespace pangolin
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
 
+  GLfloat View::GetClosestDepth(int x, int y, int radius) const
+  {
+      glReadBuffer(GL_FRONT);
+      const int zl = (radius*2+1);
+      const int zsize = zl*zl;
+      GLfloat zs[zsize];
+      glReadPixels(x-radius,y-radius,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
+      const GLfloat mindepth = *(std::min_element(zs,zs+zsize));
+      return mindepth;
+  }
+
+  void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const
+  {
+      const GLint viewport[4] = {v.l,v.b,v.w,v.h};
+      const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
+      const OpenGlMatrix mv = cam_state.GetModelViewMatrix();
+      gluUnProject(winx, winy, winzdepth, mv.m, proj.m, viewport, &x, &y, &z);
+  }
+
+  void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const
+  {
+      const GLint viewport[4] = {v.l,v.b,v.w,v.h};
+      const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
+      gluUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
+  }
+
   View& View::SetFocus()
   {
     context->activeDisplay = this;
     return *this;
   }
 
-  View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect)
+  View& View::SetBounds(Attach bottom, Attach top,  Attach left, Attach right, bool keep_aspect)
   {
     SetBounds(top,bottom,left,right,0.0);
     aspect = keep_aspect ? v.aspect() : 0;
     return *this;
   }
 
-  View& View::SetBounds(Attach top, Attach bottom,  Attach left, Attach right, double aspect)
+  View& View::SetBounds(Attach bottom, Attach top,  Attach left, Attach right, double aspect)
   {
     this->left = left;
     this->top = top;
     this->right = right;
     this->bottom = bottom;
     this->aspect = aspect;
-    this->Resize(context->base.v);
+    context->base.ResizeChildren();
     return *this;
   }
 
   View& View::SetAspect(double aspect)
   {
     this->aspect = aspect;
-    this->Resize(context->base.v);
+    context->base.ResizeChildren();
     return *this;
   }
 
@@ -614,9 +1066,75 @@ namespace pangolin
       context->base.views.erase(f);
 
     views.push_back(&child);
+    context->base.ResizeChildren();
     return *this;
   }
 
+  View& View::Show(bool show)
+  {
+      this->show = show;
+      context->base.ResizeChildren();
+      return *this;
+  }
+
+  void View::ToggleShow()
+  {
+      Show(!show);
+  }
+
+  bool View::IsShown() const
+  {
+      return show;
+  }
+
+  void View::SaveOnRender(const std::string& filename_prefix)
+  {
+      const Viewport tosave = this->v.Intersect(this->vp);
+      context->screen_capture.push(std::pair<std::string,Viewport>(filename_prefix,tosave ) );
+  }
+
+  void View::SaveRenderNow(const std::string& filename_prefix, float scale)
+  {
+      SaveViewFromFbo(filename_prefix, *this, scale);
+  }
+
+  View& View::operator[](size_t i)
+  {
+      return *views[i];
+  }
+
+  size_t View::NumChildren() const
+  {
+      return views.size();
+  }
+
+  size_t View::NumVisibleChildren() const
+  {
+      int numvis = 0;
+      for(std::vector<View*>::const_iterator i=views.begin(); i!=views.end(); ++i)
+      {
+          if((*i)->show) {
+              numvis++;
+          }
+      }
+      return numvis;
+  }
+
+  View& View::VisibleChild(size_t i)
+  {
+      size_t numvis = 0;
+      for(size_t v=0; v < views.size(); ++v ) {
+          if(views[v]->show) {
+              if( i == numvis ) {
+                  return *views[v];
+              }
+              numvis++;
+          }
+      }
+      // Shouldn't get here
+      assert(0);
+      return *this;
+  }
 
   View& View::SetHandler(Handler* h)
   {
@@ -624,10 +1142,17 @@ namespace pangolin
     return *this;
   }
 
+  View& View::SetDrawFunction(const boost::function<void(View&)>& drawFunc)
+  {
+    extern_draw_function = drawFunc;
+    return *this;
+  }
+
   View* FindChild(View& parent, int x, int y)
   {
-    for( vector<View*>::const_iterator i = parent.views.begin(); i != parent.views.end(); ++i )
-      if( (*i)->vp.Contains(x,y) )
+    // Find in reverse order to mirror draw order
+    for( vector<View*>::const_reverse_iterator i = parent.views.rbegin(); i != parent.views.rend(); ++i )
+      if( (*i)->show && (*i)->vp.Contains(x,y) )
         return (*i);
     return 0;
   }
@@ -665,6 +1190,48 @@ namespace pangolin
     }
   }
 
+  void Handler::Special(View& d, InputSpecial inType,  int x, int y, float p1, float p2, float p3, float p4, int button_state)
+  {
+      View* child = FindChild(d,x,y);
+      if( child )
+      {
+        context->activeDisplay = child;
+        if( child->handler)
+          child->handler->Special(*child,inType, x,y, p1, p2, p3, p4, button_state);
+      }
+  }
+
+  void HandlerScroll::Mouse(View& d, MouseButton button, int x, int y, bool pressed, int button_state)
+  {
+    if( button == button_state && (button == MouseWheelUp || button == MouseWheelDown) )
+    {
+        if( button == MouseWheelUp) d.scroll_offset   -= 1;
+        if( button == MouseWheelDown) d.scroll_offset += 1;
+        d.scroll_offset = max(0, min(d.scroll_offset, (int)d.views.size()) );
+        d.ResizeChildren();
+    }else{
+        Handler::Mouse(d,button,x,y,pressed,button_state);
+    }
+  }
+
+  void HandlerScroll::Special(View& d, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state)
+  {
+    if( inType == InputSpecialScroll )
+    {
+        d.scroll_offset -= p2 / abs(p2);
+        d.scroll_offset = max(0, min(d.scroll_offset, (int)d.views.size()) );
+        d.ResizeChildren();
+    }else{
+        Handler::Special(d,inType,x,y,p1,p2,p3,p4,button_state);
+    }
+  }
+
+
+  void Handler3D::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+  {
+    // TODO: hooks for reset / changing mode (perspective / ortho etc)
+  }
+
   void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)
   {
     // mouse down
@@ -674,45 +1241,39 @@ namespace pangolin
     double T_nc[3*4];
     LieSetIdentity(T_nc);
 
-    if( pressed && cam_state->stacks.find(GlProjectionStack) != cam_state->stacks.end() )
-    {
-      OpenGlMatrixSpec& proj = cam_state->stacks[GlProjectionStack];
-
-      // Find 3D point using depth buffer
-      glReadBuffer(GL_FRONT);
-      GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
-      const int zl = (hwin*2+1);
-      const int zsize = zl*zl;
-      GLfloat zs[zsize];
-      glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
-
-      const GLfloat mindepth = *(std::min_element(zs,zs+zsize));
+    if( pressed ) {
+      const GLfloat mindepth = display.GetClosestDepth(x,y,hwin);
       last_z = mindepth != 1 ? mindepth : last_z;
 
-      if( last_z != 1 )
-      {
-        gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,rot_center,rot_center+1,rot_center+2);
+      if( last_z != 1 ) {
+        display.GetCamCoordinates(*cam_state, x, y, last_z, rot_center[0], rot_center[1], rot_center[2]);
       }else{
-        // Points on far clipping plane are invalid
         SetZero<3,1>(rot_center);
       }
 
       if( button == MouseWheelUp || button == MouseWheelDown)
       {
-
         LieSetIdentity(T_nc);
         const double t[] = { 0,0,(button==MouseWheelUp?1:-1)*100*tf};
         LieSetTranslation<>(T_nc,t);
         if( !(button_state & MouseButtonRight) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
         {
           LieSetTranslation<>(T_nc,rot_center);
-          MatMul<3,1>(T_nc+(3*3),(button==MouseWheelUp?-1.0:1.0)/5.0);
+          MatMul<3,1>(T_nc+(3*3),(button==MouseWheelUp?-1.0:1.0) * zf);
         }
-        OpenGlMatrixSpec& spec = cam_state->stacks[GlModelViewStack];
+        OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
       }
     }
   }
+
+  // Direction vector for each AxisDirection enum
+  const static GLdouble AxisDirectionVector[][3] = {
+      {0,0,0},
+      {-1,0,0}, {1,0,0},
+      {0,-1,0}, {0,1,0},
+      {0,0,-1}, {0,0,1}
+  };
 
   void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
   {
@@ -724,8 +1285,11 @@ namespace pangolin
 
     if( mag < 50*50 )
     {
+      OpenGlMatrix& mv = cam_state->GetModelViewMatrix();
+      const GLdouble* up = AxisDirectionVector[enforce_up];
       double T_nc[3*4];
       LieSetIdentity(T_nc);
+      bool rotation_changed = false;
 
       if( button_state == MouseButtonMiddle )
       {
@@ -736,11 +1300,8 @@ namespace pangolin
         // Left Drag: in plane translate
         if( last_z != 1 )
         {
-          //TODO Check proj exists
-          OpenGlMatrixSpec& proj = cam_state->stacks[GlProjectionStack];
-          GLint viewport[4] = {display.v.l,display.v.b,display.v.w,display.v.h};
           GLdouble np[3];
-          gluUnProject(x,y,last_z,Identity4d,proj.m,viewport,np,np+1,np+2);
+          display.GetCamCoordinates(*cam_state,x,y,last_z, np[0], np[1], np[2]);
           const double t[] = { np[0] - rot_center[0], np[1] - rot_center[1], 0};
           LieSetTranslation<>(T_nc,t);
           std::copy(np,np+3,rot_center);
@@ -762,12 +1323,29 @@ namespace pangolin
         LieSetIdentity<>(T_n2);
         LieSetTranslation<>(T_n2,rot_center);
         LieMulSE3(T_nc, T_n2, T_2c );
-
+        rotation_changed = true;
       }else if( button_state == MouseButtonRight)
       {
+        // Correct for OpenGL Camera.
+        double aboutx = -0.01 * delta[1];
+        double abouty =  0.01 * delta[0];
+
+        // Try to correct for different coordinate conventions.
+        OpenGlMatrix& pm = cam_state->GetProjectionMatrix();
+        abouty *= -pm.m[2*4+3];
+
+        if(enforce_up) {
+            // Special case if view direction is parallel to up vector
+            const double updotz = mv.m[2]*up[0] + mv.m[6]*up[1] + mv.m[10]*up[2];
+            if(updotz > 0.98) aboutx = std::min(aboutx,0.0);
+            if(updotz <-0.98) aboutx = std::max(aboutx,0.0);
+            // Module rotation around y so we don't spin too fast!
+            abouty *= (1-0.6*abs(updotz));
+        }
+
         // Right Drag: object centric rotation
         double T_2c[3*4];
-        Rotation<>(T_2c,-delta[1]*0.01, -delta[0]*0.01, 0.0);
+        Rotation<>(T_2c, aboutx, abouty, 0.0);
         double mrotc[3];
         MatMul<3,1>(mrotc, rot_center, -1.0);
         LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
@@ -775,21 +1353,104 @@ namespace pangolin
         LieSetIdentity<>(T_n2);
         LieSetTranslation<>(T_n2,rot_center);
         LieMulSE3(T_nc, T_n2, T_2c );
+        rotation_changed = true;
       }
 
-      OpenGlMatrixSpec& spec = cam_state->stacks[GlModelViewStack];
-      LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
+      LieMul4x4bySE3<>(mv.m,T_nc,mv.m);
+
+      if(enforce_up != AxisNone && rotation_changed) {
+          EnforceUpT_cw(mv.m, up);
+      }
     }
 
     last_pos[0] = x;
     last_pos[1] = y;
   }
 
+  void Handler3D::Special(View& display, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state)
+  {
+    // mouse down
+    last_pos[0] = x;
+    last_pos[1] = y;
+
+    double T_nc[3*4];
+    LieSetIdentity(T_nc);
+
+    const GLfloat mindepth = display.GetClosestDepth(x,y,hwin);
+    last_z = mindepth != 1 ? mindepth : last_z;
+
+    if( last_z != 1 ) {
+        display.GetCamCoordinates(*cam_state, last_pos[0], last_pos[1], last_z, rot_center[0], rot_center[1], rot_center[2]);
+    }else{
+      SetZero<3,1>(rot_center);
+    }
+
+    if( inType == InputSpecialScroll ) {
+      const double scrolly = p2/10;
+
+      LieSetIdentity(T_nc);
+      const double t[] = { 0,0, -scrolly*100*tf};
+      LieSetTranslation<>(T_nc,t);
+      if( !(button_state & MouseButtonRight) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
+      {
+        LieSetTranslation<>(T_nc,rot_center);
+        MatMul<3,1>(T_nc+(3*3), -scrolly * zf);
+      }
+      OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
+      LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
+    }else if(inType == InputSpecialRotate) {
+        const double r = p1 / 20;
+
+        double T_2c[3*4];
+        Rotation<>(T_2c,0.0,0.0, r);
+        double mrotc[3];
+        MatMul<3,1>(mrotc, rot_center, -1.0);
+        LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
+        double T_n2[3*4];
+        LieSetIdentity<>(T_n2);
+        LieSetTranslation<>(T_n2,rot_center);
+        LieMulSE3(T_nc, T_n2, T_2c );
+        OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
+        LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
+    }
+
+  }
+
+
+
   // Use OpenGl's default frame of reference
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
   {
       return ProjectionMatrixRUB_BottomLeft(w,h,fu,fv,u0,v0,zNear,zFar);
   }
+
+OpenGlMatrixSpec ProjectionMatrixOrthographic(double l, double r, double b, double t, double n, double f )
+{
+    OpenGlMatrixSpec P;
+    P.type = GlProjectionStack;
+
+    P.m[0] = 2/(r-l);
+    P.m[1] = 0;
+    P.m[2] = 0;
+    P.m[3] = 0;
+
+    P.m[4] = 0;
+    P.m[5] = 2/(t-b);
+    P.m[6] = 0;
+    P.m[7] = 0;
+
+    P.m[8] = 0;
+    P.m[9] = 0;
+    P.m[10] = -2/(f-n);
+    P.m[11] = 0;
+
+    P.m[12] = -(r+l)/(r-l);
+    P.m[13] = -(t+b)/(t-b);
+    P.m[14] = -(f+n)/(f-n);
+    P.m[15] = 1;
+
+    return P;
+}
 
 
   // Camera Axis:
@@ -802,9 +1463,9 @@ namespace pangolin
   OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
   {
       // http://www.songho.ca/opengl/gl_projectionmatrix.html
-      const double L = +(u0) * zNear / fu;
+      const double L = +(u0) * zNear / -fu;
       const double T = +(v0) * zNear / fv;
-      const double R = -(w-u0) * zNear / fu;
+      const double R = -(w-u0) * zNear / -fu;
       const double B = -(h-v0) * zNear / fv;
 
       OpenGlMatrixSpec P;
@@ -818,6 +1479,7 @@ namespace pangolin
       P.m[2*4+1] = (T+B)/(T-B);
       P.m[2*4+3] = -1.0;
       P.m[3*4+2] =  -(2*zFar*zNear)/(zFar-zNear);
+
       return P;
   }
 
@@ -848,6 +1510,132 @@ namespace pangolin
 
       P.m[3*4+2] =  (2*zFar*zNear)/(zNear - zFar);
       return P;
+  }
+
+  // Camera Axis:
+  //   X - Right, Y - Down, Z - Forward
+  // Image Origin:
+  //   Bottom Left
+  // Pricipal point specified with image origin (0,0) at top left of top-left pixel (not center)
+  OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
+  {
+      // http://www.songho.ca/opengl/gl_projectionmatrix.html
+      const double L = -(u0) * zNear / fu;
+      const double R = +(w-u0) * zNear / fu;
+      const double B = -(v0) * zNear / fv;
+      const double T = +(h-v0) * zNear / fv;
+
+      OpenGlMatrixSpec P;
+      P.type = GlProjectionStack;
+      std::fill_n(P.m,4*4,0);
+
+      P.m[0*4+0] = 2 * zNear / (R-L);
+      P.m[1*4+1] = 2 * zNear / (T-B);
+
+      P.m[2*4+0] = (R+L)/(L-R);
+      P.m[2*4+1] = (T+B)/(B-T);
+      P.m[2*4+2] = (zFar +zNear) / (zFar - zNear);
+      P.m[2*4+3] = 1.0;
+
+      P.m[3*4+2] =  (2*zFar*zNear)/(zNear - zFar);
+      return P;
+  }
+
+  OpenGlMatrix ModelViewLookAtRUB(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
+  {
+    OpenGlMatrix mat;
+    GLdouble* m = mat.m;
+
+    const double u_o[3] = {ux,uy,uz};
+
+    GLdouble x[3], y[3];
+    GLdouble z[] = {ex - lx, ey - ly, ez - lz};
+    Normalise<3>(z);
+
+    CrossProduct(x,u_o,z);
+    CrossProduct(y,z,x);
+
+    Normalise<3>(x);
+    Normalise<3>(y);
+
+  #define M(row,col)  m[col*4+row]
+    M(0,0) = x[0];
+    M(0,1) = x[1];
+    M(0,2) = x[2];
+    M(1,0) = y[0];
+    M(1,1) = y[1];
+    M(1,2) = y[2];
+    M(2,0) = z[0];
+    M(2,1) = z[1];
+    M(2,2) = z[2];
+    M(3,0) = 0.0;
+    M(3,1) = 0.0;
+    M(3,2) = 0.0;
+    M(0,3) = -(M(0,0)*ex + M(0,1)*ey + M(0,2)*ez);
+    M(1,3) = -(M(1,0)*ex + M(1,1)*ey + M(1,2)*ez);
+    M(2,3) = -(M(2,0)*ex + M(2,1)*ey + M(2,2)*ez);
+    M(3,3) = 1.0;
+#undef M
+
+    return mat;
+  }
+
+  OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
+  {
+    OpenGlMatrix mat;
+    GLdouble* m = mat.m;
+
+    const double u_o[3] = {ux,uy,uz};
+
+    GLdouble x[3], y[3];
+    GLdouble z[] = {lx - ex, ly - ey, lz - ez};
+    Normalise<3>(z);
+
+    CrossProduct(x,z,u_o);
+    CrossProduct(y,z,x);
+
+    Normalise<3>(x);
+    Normalise<3>(y);
+
+  #define M(row,col)  m[col*4+row]
+    M(0,0) = x[0];
+    M(0,1) = x[1];
+    M(0,2) = x[2];
+    M(1,0) = y[0];
+    M(1,1) = y[1];
+    M(1,2) = y[2];
+    M(2,0) = z[0];
+    M(2,1) = z[1];
+    M(2,2) = z[2];
+    M(3,0) = 0.0;
+    M(3,1) = 0.0;
+    M(3,2) = 0.0;
+    M(0,3) = -(M(0,0)*ex + M(0,1)*ey + M(0,2)*ez);
+    M(1,3) = -(M(1,0)*ex + M(1,1)*ey + M(1,2)*ez);
+    M(2,3) = -(M(2,0)*ex + M(2,1)*ey + M(2,2)*ez);
+    M(3,3) = 1.0;
+#undef M
+
+    return mat;
+  }
+
+  OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
+  {
+    return ModelViewLookAtRUB(ex,ey,ez,lz,ly,lz,ux,uy,uz);
+  }
+
+  OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, AxisDirection up)
+  {
+    const double* u = AxisDirectionVector[up];
+    return ModelViewLookAtRUB(ex,ey,ez,lx,ly,lz,u[0],u[1],u[2]);
+  }
+
+  OpenGlMatrix IdentityMatrix()
+  {
+    OpenGlMatrix P;
+    std::fill_n(P.m,4*4,0);
+    for( int i=0; i<4; ++i ) P.m[i*4+i] = 1;
+    return P;
   }
 
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type)

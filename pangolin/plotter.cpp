@@ -30,6 +30,7 @@
 
 #include <limits>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <boost/unordered_map.hpp>
 
@@ -96,7 +97,7 @@ void DataLog::Save(std::string filename)
   if( sequences.size() > 0 )
   {
     ofstream f(filename.c_str());
-    for( unsigned n=sequences[0].firstn; n < sequences[0].n; ++n )
+    for( int n=sequences[0].firstn; n < sequences[0].n; ++n )
     {
       f << setprecision(12) << sequences[0][n];
       for( unsigned s=1; s < sequences.size(); ++s )
@@ -313,7 +314,10 @@ void Plotter::Render()
   gluOrtho2D(int_x[0], int_x[1], int_y[0], int_y[1]);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+
+  glPushAttrib(GL_ENABLE_BIT);
   glEnable(GL_LINE_SMOOTH);
+  glDisable(GL_LIGHTING);
 
   DrawTicks();
 
@@ -343,10 +347,7 @@ void Plotter::Render()
     }
     else if( plot_mode==STACKED_HISTOGRAM )
     {
-
-
       DrawSequenceHistogram(log->sequences);
-
     }
     else
     {
@@ -413,6 +414,8 @@ void Plotter::Render()
     glutBitmapString(font,(unsigned char*)log->labels[i].c_str());
     ty -= 15;
   }
+
+  glPopAttrib();
 }
 
 void Plotter::ResetView()
@@ -527,7 +530,7 @@ void Plotter::MouseMotion(View&, int x, int y, int button_state)
     int_y[1] -= df[1];
   }else if(button_state == MouseButtonRight )
   {
-    const float c[2] = {
+    const double c[2] = {
       track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
       (int_y[0] + int_y[1])/2.0
     };
@@ -549,7 +552,7 @@ Plotter& CreatePlotter(const string& name, DataLog* log)
 {
   Plotter* v = new Plotter(log);
   //context->all_views[name] = v;
-  bool inserted = context->all_views.insert(name,v).second;
+  bool inserted = context->named_managed_views.insert(name,v).second;
   if(!inserted) throw exception();
   context->base.views.push_back(v);
   return *v;

@@ -16,17 +16,27 @@ int main( int /*argc*/, char* argv[] )
   // Create OpenGL window in single line thanks to GLUT
   CreateGlutWindowAndBind("Main",640,480);
 
-  OpenGlRenderState s_cam;
-  s_cam.Set(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
-  s_cam.Set(IdentityMatrix(GlModelViewStack));
+  pangolin::OpenGlRenderState s_cam(
+    ProjectionMatrix(640,480,420,420,320,240,0.1,1000),
+    ModelViewLookAt(-0,0.5,-3, 0,0,0, AxisY)
+  );
 
+  // Aspect ratio allows us to constrain width and height whilst fitting within specified
+  // bounds. A positive aspect ratio makes a view 'shrink to fit' (introducing empty bars),
+  // whilst a negative ratio makes the view 'grow to fit' (cropping the view).
   View& d_cam = Display("cam")
-      .SetAspect(-640/480.0)
+      .SetBounds(0,1,0,1,-640/480.0)
       .SetHandler(new Handler3D(s_cam));
 
+  // This view will take up no more than a third of the windows width or height, and it
+  // will have a fixed aspect ratio to match the image that it will display. When fitting
+  // within the specified bounds, push to the top-left (as specified by SetLock).
   View& d_image = Display("image")
-      .SetBounds(1.0,0.3,20,0.3,640.0/480)
+      .SetBounds(2/3.0,1.0,0,1/3.0,640.0/480)
       .SetLock(LockLeft,LockTop);
+
+  cout << "Resize the window to experiment with SetBounds, SetLock and SetAspect." << endl;
+  cout << "Notice that the teapots aspect is maintained even though it covers the whole screen." << endl;
 
   const int width =  640;
   const int height = 480;
@@ -42,7 +52,7 @@ int main( int /*argc*/, char* argv[] )
     d_cam.Activate(s_cam);
     glEnable(GL_DEPTH_TEST);
     glColor3f(1.0,1.0,1.0);
-    glutWireTeapot(10.0);
+    glutWireTeapot(2.0);
 
     //Set some random image data and upload to GPU
     setImageData(imageArray,width,height);
@@ -52,8 +62,7 @@ int main( int /*argc*/, char* argv[] )
     d_image.Activate();
     imageTexture.RenderToViewport();
 
-    glutSwapBuffers();
-    glutMainLoopEvent();
+    pangolin::FinishGlutFrame();
   }
 
   delete imageArray;

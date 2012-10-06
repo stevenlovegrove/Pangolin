@@ -48,12 +48,9 @@ namespace pangolin
 // Interface
 ////////////////////////////////////////////////
 
-struct CgProgram
+class CgProgram
 {
-    CGprogram mProg;
-    CGcontext mContext;
-    CGprofile mProfile;
-
+public:
     void SetUniform(const std::string& name, GlTexture& tex);
     void SetUniform(const std::string& name, float f);
 
@@ -66,9 +63,14 @@ struct CgProgram
 #endif
 
     void UpdateParams();
+
+protected:
+    CGprogram mProg;
+    CGcontext mContext;
+    CGprofile mProfile;
 };
 
-struct CgLoader
+class CgLoader
 {
     CgLoader();
     ~CgLoader();
@@ -76,7 +78,7 @@ struct CgLoader
     // Call AFTER glutInit (or similar)
     void Initialise();
 
-    CgProgram LoadProgram(const std::string& file, const std::string& function, bool isVertexShader );
+    CgProgram LoadProgramFromFile(const std::string& file, const std::string& function, bool isVertexShader );
 
     void EnableProgram(CgProgram program);
     void DisablePrograms();
@@ -84,6 +86,7 @@ struct CgLoader
     void RenderDummyQuad();
     void RenderDummyQuadWithTexCoords(int w, int h);
 
+protected:
     CGcontext mContext;
     CGprofile mFragmentProfile;
     CGprofile mVertexProfile;
@@ -139,10 +142,11 @@ inline void CgLoader::Initialise()
   cgOkay();
 }
 
-inline CgProgram CgLoader::LoadProgram(const std::string& file, const std::string& function, bool isVertexShader )
+inline CgProgram CgLoader::LoadProgramFromFile(const std::string& file, const std::string& function, bool isVertexShader )
 {
-    if( !mContext )
+    if( !mContext ) {
         Initialise();
+    }
 
     CgProgram prog;
 

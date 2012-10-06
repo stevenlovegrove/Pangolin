@@ -1,0 +1,8 @@
+SET( Pangolin_LIBRARIES    "@LIBRARY_NAME@;@LINK_LIBS@" )
+SET( Pangolin_LIBRARY      "@LIBRARY_NAME@;@LINK_LIBS@" )
+
+SET( Pangolin_INCLUDE_DIRS "@USER_INC@" )
+SET( Pangolin_INCLUDE_DIR  "@USER_INC@" )
+
+SET( Pangolin_LIBRARY_DIRS "@LIB_DIRS@" )
+SET( Pangolin_LIBRARY_DIR  "@LIB_DIRS@" )

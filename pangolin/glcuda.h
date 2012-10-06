@@ -41,29 +41,22 @@ namespace pangolin
 // Interface
 ////////////////////////////////////////////////
 
-enum GlBufferType
+struct GlBufferCudaPtr : public GlBuffer
 {
-  GlArrayBuffer = GL_ARRAY_BUFFER,
-  GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,
-  GlPixelPackBuffer = GL_PIXEL_PACK_BUFFER,
-  GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER
-};
+  GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause = cudaGraphicsMapFlagsNone, GLenum gluse = GL_DYNAMIC_DRAW );
 
-struct GlBufferCudaPtr
-{
+  //! Deprecated
   GlBufferCudaPtr(GlBufferType buffer_type, GLsizeiptr size_bytes, unsigned int cudause = cudaGraphicsMapFlagsNone, GLenum gluse = GL_DYNAMIC_DRAW );
+
   ~GlBufferCudaPtr();
-  void Bind() const;
-  void Unbind() const;
-  void Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset = 0);
-  GLuint bo;
+
   cudaGraphicsResource* cuda_res;
-  GlBufferType buffer_type;
 };
 
 struct GlTextureCudaArray : GlTexture
 {
-  GlTextureCudaArray(int width, int height, GLint internal_format);
+  // Some internal_formats aren't accepted. I have trouble with GL_RGB8
+  GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear = true);
   ~GlTextureCudaArray();
   cudaGraphicsResource* cuda_res;
 };
@@ -74,6 +67,9 @@ struct CudaScopedMappedPtr
   ~CudaScopedMappedPtr();
   void* operator*();
   cudaGraphicsResource* res;
+
+private:
+  CudaScopedMappedPtr(const CudaScopedMappedPtr&) {}
 };
 
 struct CudaScopedMappedArray
@@ -82,6 +78,9 @@ struct CudaScopedMappedArray
   ~CudaScopedMappedArray();
   cudaArray* operator*();
   cudaGraphicsResource* res;
+
+private:
+  CudaScopedMappedArray(const CudaScopedMappedArray&) {}
 };
 
 void CopyPboToTex(GlBufferCudaPtr& buffer, GlTexture& tex);
@@ -92,43 +91,31 @@ void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b);
 // Implementation
 ////////////////////////////////////////////////
 
-inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLsizeiptr size_bytes, unsigned int cudause, GLenum gluse)
-  : buffer_type(buffer_type)
+inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause, GLenum gluse )
+    : GlBuffer(buffer_type, width, height, datatype, count_per_element, gluse)
 {
-  glGenBuffers(1, &bo);
-  Bind();
-  glBufferData(buffer_type, size_bytes, 0, gluse);
-  Unbind();
+    cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );
+}
+
+inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLsizeiptr size_bytes, unsigned int cudause, GLenum gluse)
+  : GlBuffer(buffer_type,size_bytes,1,GL_UNSIGNED_BYTE,1,gluse)
+{
   cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );
 }
 
 inline GlBufferCudaPtr::~GlBufferCudaPtr()
 {
   cudaGraphicsUnregisterResource(cuda_res);
-  glDeleteBuffers(1, &bo);
 }
 
-inline void GlBufferCudaPtr::Bind() const
-{
-  glBindBuffer(buffer_type, bo);
-}
-
-inline void GlBufferCudaPtr::Unbind() const
-{
-  glBindBuffer(buffer_type, 0);
-}
-
-inline void GlBufferCudaPtr::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
-{
-  Bind();
-  glBufferSubData(buffer_type,offset,size_bytes, data);
-}
-
-inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint internal_format)
-  :GlTexture(width,height,internal_format)
+inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear)
+  :GlTexture(width,height,internal_format, sampling_linear)
 {
   // TODO: specify flags too
-  cudaGraphicsGLRegisterImage(&cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
+  const cudaError_t err = cudaGraphicsGLRegisterImage(&cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
+  if( err != cudaSuccess ) {
+      std::cout << "cudaGraphicsGLRegisterImage failed: " << err << std::endl;
+  }
 }
 
 inline GlTextureCudaArray::~GlTextureCudaArray()
@@ -180,6 +167,13 @@ inline void CopyPboToTex(const GlBufferCudaPtr& buffer, GlTexture& tex, GLenum b
   glTexImage2D(GL_TEXTURE_2D, 0, tex.internal_format, tex.width, tex.height, 0, buffer_layout, buffer_data_type, 0);
   buffer.Unbind();
   tex.Unbind();
+}
+
+template<typename T>
+inline void CopyDevMemtoTex(T* d_img, size_t pitch, GlTextureCudaArray& tex )
+{
+  CudaScopedMappedArray arr_tex(tex);
+  cudaMemcpy2DToArray(*arr_tex, 0, 0, d_img, pitch, tex.width*sizeof(T), tex.height, cudaMemcpyDeviceToDevice );
 }
 
 inline void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b)

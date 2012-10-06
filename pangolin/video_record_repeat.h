@@ -45,6 +45,7 @@ struct VideoRecordRepeat : public VideoInterface
 
     unsigned Width() const;
     unsigned Height() const;
+    size_t SizeBytes() const;
     std::string PixFormat() const;
 
     void Start();
@@ -57,6 +58,9 @@ struct VideoRecordRepeat : public VideoInterface
     void Source();
 
     int FrameId();
+
+    bool IsRecording() const;
+    bool IsPlaying() const;
 
 protected:
     VideoInterface* video_src;

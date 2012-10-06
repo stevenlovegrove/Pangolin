@@ -28,8 +28,6 @@
 
 #include "v4l.h"
 
-#ifndef _WIN32
-
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,6 +86,11 @@ namespace pangolin
     unsigned V4lVideo::Height() const
     {
         return height;
+    }
+
+    size_t V4lVideo::SizeBytes() const
+    {
+        return image_size;
     }
 
     std::string V4lVideo::PixFormat() const
@@ -614,4 +617,3 @@ namespace pangolin
 
 }
 
-#endif // _WIN32

@@ -31,6 +31,11 @@
 #include "platform.h"
 #include "display.h"
 #include <boost/ptr_container/ptr_unordered_map.hpp>
+#include <queue>
+
+#ifdef HAVE_CVARS
+#include <GLConsole/GLConsole.h>
+#endif // HAVE_CVARS
 
 namespace pangolin
 {
@@ -41,7 +46,12 @@ namespace pangolin
 
     // Base container for displays
     View base;
-    boost::ptr_unordered_map<const std::string,View> all_views;
+
+    // Named views which are managed by pangolin (i.e. created / deleted by pangolin)
+    boost::ptr_unordered_map<const std::string,View> named_managed_views;
+
+    // Global keypress hooks
+    std::map<int,boost::function<void(void)> > keypress_hooks;
 
     // Manage fullscreen (ToggleFullscreen is quite new)
     bool is_double_buffered;
@@ -54,6 +64,11 @@ namespace pangolin
     int has_resized;
     int mouse_state;
     View* activeDisplay;
+
+    std::queue<std::pair<std::string,Viewport> > screen_capture;
+#ifdef HAVE_CVARS
+    GLConsole console;
+#endif // HAVE_CVARS
 
   };
 

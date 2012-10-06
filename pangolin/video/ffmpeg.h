@@ -28,10 +28,8 @@
 #ifndef PANGOLIN_FFMPEG_H
 #define PANGOLIN_FFMPEG_H
 
-#include "pangolin.h"
-#include "video.h"
-
-#ifdef HAVE_FFMPEG
+#include <pangolin/pangolin.h>
+#include <pangolin/video.h>
 
 extern "C"
 {
@@ -42,9 +40,9 @@ extern "C"
 #define UINT64_C(c) (c ## ULL)
 #endif
 
-#include <avformat.h>
-#include <swscale.h>
-#include "pixdesc.h"
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+#include <libavutil/pixdesc.h>
 }
 
 namespace pangolin
@@ -53,7 +51,7 @@ namespace pangolin
 class FfmpegVideo : public VideoInterface
 {
 public:
-    FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "");
+    FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false, int user_video_stream = -1);
     ~FfmpegVideo();
 
     //! Implement VideoSource::Start()
@@ -66,6 +64,8 @@ public:
 
     unsigned Height() const;
 
+    size_t SizeBytes() const;
+
     std::string PixFormat() const;
 
     bool GrabNext( unsigned char* image, bool wait = true );
@@ -73,8 +73,9 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
 
 protected:
-    void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "" );
+    void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false , int user_video_stream = -1);
 
+    SwsContext      *img_convert_ctx;
     AVFormatContext *pFormatCtx;
     int             videoStream;
     int             audioStream;
@@ -87,6 +88,7 @@ protected:
     AVPacket        packet;
     int             numBytesOut;
     uint8_t         *buffer;
+    PixelFormat     fmtout;
 };
 
 enum FfmpegMethod
@@ -107,13 +109,14 @@ enum FfmpegMethod
 class FfmpegConverter : public VideoInterface
 {
 public:
-    FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_FAST_BILINEAR);
+    FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_POINT);
     ~FfmpegConverter();
 
     void Start();
     void Stop();
     unsigned Width() const;
     unsigned Height() const;
+    size_t SizeBytes() const;
     std::string PixFormat() const;
 
     bool GrabNext( unsigned char* image, bool wait = true );
@@ -135,7 +138,5 @@ protected:
 };
 
 }
-
-#endif //HAVE_FFMPEG
 
 #endif //PANGOLIN_FFMPEG_H

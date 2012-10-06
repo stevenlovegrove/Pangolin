@@ -38,6 +38,10 @@ PvnVideo::PvnVideo(const char* filename, bool realtime )
     : realtime(realtime), last_frame(TimeNow())
 {
     file.open(filename, ios::binary );
+
+    if(!file.is_open() )
+        throw VideoException("Cannot open file - does not exist or bad permissions.");
+
     ReadFileHeader();
 }
 
@@ -58,8 +62,11 @@ void PvnVideo::ReadFileHeader()
     file >> framerate;
     file.get();
 
+    if(file.bad() || !(strm0.w >0 && strm0.h >0) )
+        throw VideoException("Unable to read video header");
+
     strm0.fmt = VideoFormatFromString(sfmt);
-    strm0.frame_size_bytes = strm0.w * strm0.h * strm0.fmt.size_bytes;
+    strm0.frame_size_bytes = (strm0.w * strm0.h * strm0.fmt.bpp) / 8;
     frame_interval = TimeFromSeconds( 1.0 / framerate);
 
     stream_info.push_back(strm0);
@@ -82,6 +89,11 @@ unsigned PvnVideo::Width() const
 unsigned PvnVideo::Height() const
 {
     return stream_info[0].h;
+}
+
+size_t PvnVideo::SizeBytes() const
+{
+    return stream_info[0].frame_size_bytes;
 }
 
 std::string PvnVideo::PixFormat() const

@@ -62,8 +62,9 @@ ostream& operator<<(ostream& os, const FrameInput& fi )
 istream& operator>>(istream& is, FrameInput& fi)
 {
     is >> fi.index;
-    is >> fi.var;
-    is >> fi.val;
+    is.ignore(std::numeric_limits<streamsize>::max(),'\n');
+    getline(is,fi.var);
+    getline(is,fi.val);
     return is;
 }
 
@@ -117,6 +118,20 @@ void InputRecordRepeat::PlayBuffer(int start, int end)
 int InputRecordRepeat::Size()
 {
     return record_queue.size();
+}
+
+void InputRecordRepeat::UpdateVariable(const std::string& name )
+{
+    Var<std::string> var(name);
+
+    if( record )
+    {
+        FrameInput input;
+        input.index = index;
+        input.var = name;
+        input.val = var.a->Get();
+        record_queue.push_back(input);
+    }
 }
 
 void InputRecordRepeat::GuiVarChanged(void* data, const std::string& name, _Var& _var)

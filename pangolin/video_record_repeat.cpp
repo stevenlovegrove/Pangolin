@@ -1,6 +1,6 @@
-#include "video_record_repeat.h"
-#include "pvn_video.h"
-#include "widgets.h"
+#include <pangolin/video_record_repeat.h>
+#include <pangolin/video/pvn_video.h>
+#include <pangolin/widgets.h>
 
 namespace pangolin
 {
@@ -92,6 +92,12 @@ unsigned VideoRecordRepeat::Height() const
     return video_src->Height();
 }
 
+size_t VideoRecordRepeat::SizeBytes() const
+{
+    if( !video_src ) throw VideoException("No video source open");
+    return video_src->SizeBytes();
+}
+
 std::string VideoRecordRepeat::PixFormat() const
 {
     if( !video_src ) throw VideoException("No video source open");
@@ -153,6 +159,17 @@ int VideoRecordRepeat::FrameId()
 {
     return frame_num;
 }
+
+bool VideoRecordRepeat::IsRecording() const
+{
+    return video_recorder != 0;
+}
+
+bool VideoRecordRepeat::IsPlaying() const
+{
+    return video_file != 0;
+}
+
 
 
 }

@@ -62,8 +62,8 @@ struct DataSequence
   inline bool HasData(int i) const;
 
   boost::circular_buffer<float> y;
-  unsigned firstn;
-  unsigned n;
+  int firstn;
+  int n;
   float sum_y;
   float sum_y_sq;
   float min_y;

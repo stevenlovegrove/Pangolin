@@ -4,30 +4,14 @@
 using namespace pangolin;
 using namespace std;
 
-struct CustomType
-{
-  int x;
-  float y;
-  string z;
-};
-
-std::ostream& operator<< (std::ostream& os, const CustomType& o){
-  os << o.x << " " << o.y << " " << o.z;
-  return os;
-}
-
-std::istream& operator>> (std::istream& is, CustomType& o){
-  is >> o.x;
-  is >> o.y;
-  is >> o.z;
-  return is;
+void setImageData(float * imageArray, int width, int height){
+  for(int i = 0 ; i < width*height;i++) {
+    imageArray[i] = (float)rand()/RAND_MAX;
+  }
 }
 
 int main( int /*argc*/, char* argv[] )
 {
-  // Load configuration data
-  pangolin::ParseVarsFile("app.cfg");
-
   // Create OpenGL window in single line thanks to GLUT
   pangolin::CreateGlutWindowAndBind("Main",640,480);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -37,34 +21,51 @@ int main( int /*argc*/, char* argv[] )
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   // Define Camera Render Object (for view / scene browsing)
-  pangolin::OpenGlRenderState s_cam;
-  s_cam.Set(ProjectionMatrix(640,480,420,420,320,240,0.1,1000));
-  s_cam.Set(IdentityMatrix(GlModelViewStack));
+  pangolin::OpenGlMatrix proj = ProjectionMatrix(640,480,420,420,320,240,0.1,1000);
+  pangolin::OpenGlRenderState s_cam(proj,ModelViewLookAt(1,0.5,-2,0,0,0,AxisY) );
+  pangolin::OpenGlRenderState s_cam2(proj,ModelViewLookAt(0,0,-2,0,0,0,AxisY) );
 
   // Add named OpenGL viewport to window and provide 3D Handler
   View& d_cam1 = pangolin::Display("cam1")
-//    .SetBounds(1.0, 0.0, 0, 0.5, 640.0f/480.0f)
-    .SetAspect(-640.0f/480.0f)
+    .SetAspect(640.0f/480.0f)
     .SetHandler(new Handler3D(s_cam));
 
   View& d_cam2 = pangolin::Display("cam2")
-//    .SetBounds(1.0, 0.0, 0.5, 1.0, 640.0f/480.0f)
-    .SetAspect(-640.0f/480.0f)
+    .SetAspect(640.0f/480.0f)
+    .SetHandler(new Handler3D(s_cam2));
+
+  View& d_cam3 = pangolin::Display("cam3")
+    .SetAspect(640.0f/480.0f)
     .SetHandler(new Handler3D(s_cam));
 
-  // Add named Panel and bind to variables beginning 'ui'
-  // A Panel is just a View with a default layout and input handling
-  View& d_panel = pangolin::CreatePanel("ui")
-      .SetBounds(1.0, 0.0, 0, 200);
+  View& d_cam4 = pangolin::Display("cam4")
+    .SetAspect(640.0f/480.0f)
+    .SetHandler(new Handler3D(s_cam2));
+
+  View& d_img1 = pangolin::Display("img1")
+    .SetAspect(640.0f/480.0f);
+
+  View& d_img2 = pangolin::Display("img2")
+    .SetAspect(640.0f/480.0f);
 
   // LayoutEqual is an EXPERIMENTAL feature - it requires that all sub-displays
   // share the same aspect ratio, placing them in a raster fasion in the
   // viewport so as to maximise display size.
   pangolin::Display("multi")
-      .SetBounds(1.0, 0.0, 200, 1.0)
+      .SetBounds(1.0, 0.0, 0.0, 1.0)
       .SetLayout(LayoutEqual)
       .AddDisplay(d_cam1)
-      .AddDisplay(d_cam2);
+      .AddDisplay(d_img1)
+      .AddDisplay(d_cam2)
+      .AddDisplay(d_img2)
+      .AddDisplay(d_cam3)
+      .AddDisplay(d_cam4);
+
+  const int width =  64;
+  const int height = 48;
+  float * imageArray = new float[width*height];
+  GlTexture imageTexture(width,height,GL_LUMINANCE32F_ARB);
+  imageTexture.SetNearestNeighbour();
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
@@ -72,54 +73,37 @@ int main( int /*argc*/, char* argv[] )
     if(HasResized())
       DisplayBase().ActivateScissorAndClear();
 
-    // Safe and efficient binding of named variables.
-    // Specialisations mean no conversions take place for exact types
-    // and conversions between scalar types are cheap.
-    static Var<bool> a_button("ui.A Button",false,false);
-    static Var<double> a_double("ui.A Double",3,0,5.5);
-    static Var<int> an_int("ui.An Int",2,0,5);
-    static Var<bool> a_checkbox("ui.A Checkbox",false,true);
-    static Var<int> an_int_no_input("ui.An Int No Input",2);
-    static Var<CustomType> any_type("ui.Some Type",(CustomType){0,1.2,"Hello"});
-    static Var<double> aliased_double("ui.Aliased Double",3,0,5.5);
+    // Generate random image and place in texture memory for display
+    setImageData(imageArray,width,height);
+    imageTexture.Upload(imageArray,GL_LUMINANCE,GL_FLOAT);
 
-    if( Pushed(a_button) )
-      cout << "You Pushed a button!" << endl;
-
-    // Overloading of Var<T> operators allows us to treat them like
-    // their wrapped types, eg:
-    if( a_checkbox )
-      an_int = a_double;
-
-    if( !any_type->z.compare("robot"))
-        any_type = (CustomType){1,2.3,"Boogie"};
-
-    an_int_no_input = an_int;
-
-    // Activate efficiently by object
     // (3D Handler requires depth testing to be enabled)
+    glEnable(GL_DEPTH_TEST);
+    glColor3f(1.0,1.0,1.0);
+
     d_cam1.ActivateScissorAndClear(s_cam);
-    glEnable(GL_DEPTH_TEST);
-    glColor3f(1.0,1.0,1.0);
+    glutWireTeapot(1.0);
 
-    // Render some stuff
-    glutWireTeapot(10.0);
+    d_cam2.ActivateScissorAndClear(s_cam2);
+    glutWireTeapot(1.0);
 
-    // Render 2nd viewport
-    d_cam2.ActivateScissorAndClear(s_cam);
-    glEnable(GL_DEPTH_TEST);
-    glColor3f(1.0,1.0,1.0);
-    glutWireTeapot(10.0);
+    d_cam3.ActivateScissorAndClear(s_cam);
+    glutWireTeapot(1.0);
 
+    d_cam4.ActivateScissorAndClear(s_cam2);
+    glutWireTeapot(1.0);
 
-    // Render our UI panel when we receive input
-    if(HadInput())
-      d_panel.Render();
+    d_img1.ActivateScissorAndClear();
+    imageTexture.RenderToViewport();
+
+    d_img2.ActivateScissorAndClear();
+    imageTexture.RenderToViewport();
 
     // Swap frames and Process Events
-    glutSwapBuffers();
-    glutMainLoopEvent();
+    pangolin::FinishGlutFrame();
   }
+
+  delete imageArray;
 
   return 0;
 }

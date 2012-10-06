@@ -145,7 +145,7 @@ void MatAdd(P m[R*C], const P m1[R*C], const P m2[R*C])
     m[i] = m1[i] + m2[i];
 }
 
-// m = m1 + m2
+// m = m1 - m2
 template<int R, int C, typename P>
 void MatSub(P m[R*C], const P m1[R*C], const P m2[R*C])
 {
@@ -153,7 +153,7 @@ void MatSub(P m[R*C], const P m1[R*C], const P m2[R*C])
     m[i] = m1[i] - m2[i];
 }
 
-// m = m1 + m2
+// m = m1 * scalar
 template<int R, int C, typename P>
 void MatMul(P m[R*C], const P m1[R*C], P scalar)
 {
@@ -345,6 +345,86 @@ void LieInverseSE3( P T_ab[3*4], const P T_ba[3*4] )
   P minus_b_a[3];
   LieApplySO3(minus_b_a, T_ab, T_ba+(3*3));
   MatMul<3,1,P>(T_ab+(3*3),minus_b_a, -1);
+}
+
+// c = a x b
+template<typename P>
+void CrossProduct( P c[3], const P a[3], const P b[3] )
+{
+    c[0] = a[1] * b[2] - a[2] * b[1];
+    c[1] = a[2] * b[0] - a[0] * b[2];
+    c[2] = a[0] * b[1] - a[1] * b[0];
+}
+
+template<int R, typename P>
+P Length( P v[R] )
+{
+    P sum_sq = 0;
+
+    for(size_t r = 0; r < R; ++r ) {
+        sum_sq += v[r] * v[r];
+    }
+
+    return sqrt(sum_sq);
+}
+
+
+template<int R, typename P>
+void Normalise( P v[R] )
+{
+    const P length = Length<R,P>(v);
+
+    for(size_t r = 0; r < R; ++r ) {
+        v[r] /= length;
+    }
+}
+
+template<typename P>
+void EnforceUpT_wc(P T_wc[3*4], const P up_w[3])
+{
+    // Copy R_wc
+    P R_wc[3*3];
+    std::copy(T_wc,T_wc+3*3,R_wc);
+
+    // New R_wc should go into T_wc
+    P* NR_wc = T_wc;
+
+//    // cx_w,cy_w,cz_w are camera axis in world coordinates
+//    // Calculate new camera coordinates (ncx_w,ncy_w,ncz_w)
+
+    // ncx_w = up_w x cz_w
+    CrossProduct(NR_wc + 0*3, up_w, R_wc + 2*3);
+
+    // ncy_w = cz_w x ncx_w
+    CrossProduct(NR_wc + 1*3, R_wc + 2*3, NR_wc + 0*3);
+
+    // ncz_w = cz_w
+    std::copy(R_wc + 2*3, R_wc + 3*3, NR_wc + 2*3);
+
+    Normalise<3,P>(NR_wc + 0*3);
+    Normalise<3,P>(NR_wc + 1*3);
+    Normalise<3,P>(NR_wc + 2*3);
+}
+
+template<typename P>
+void EnforceUpT_cw(P T_cw_4x4[4*4], const P up_w[3])
+{
+    // 3x4 from 4x4
+    P T_cw[3*4];
+    LieSE3from4x4<P>(T_cw,T_cw_4x4);
+
+    // Invert T_cw
+    P T_wc[3*4];
+    LieInverseSE3<P>(T_wc, T_cw);
+
+    // Enforce up for T_wc
+    EnforceUpT_wc<P>(T_wc, up_w);
+
+    // Invert
+    LieInverseSE3<P>(T_cw, T_wc);
+
+    // 4x4 from 3x4
+    LiePutSE3in4x4<P>(T_cw_4x4,T_cw);
 }
 
 }

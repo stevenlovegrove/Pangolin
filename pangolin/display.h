@@ -33,11 +33,28 @@
 #include <map>
 #include <vector>
 #include <cmath>
+#include <iostream>
+#include <boost/function.hpp>
 
 #ifdef HAVE_GLUT
-#include <GL/freeglut_std.h>
-#include <GL/freeglut_ext.h>
+
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+    #include <GLUT/glut.h>
+    #define HAVE_GLUT_APPLE_FRAMEWORK
+
+    inline void glutBitmapString(void* font, const unsigned char* str)
+    {
+        const unsigned char* s = str;
+        while(*s != 0) {
+            glutBitmapCharacter(font, *s);
+            ++s;
+        }
+    }
+#else
+    #include <GL/freeglut.h>
 #endif
+
+#endif // HAVE_GLUT
 
 #ifdef HAVE_TOON
 #include <cstring>
@@ -45,11 +62,19 @@
 #include <TooN/se3.h>
 #endif
 
+#ifdef HAVE_EIGEN
+#include <Eigen/Eigen>
+#endif
+
 #ifdef _WIN_
 #include <Windows.h>
 #endif
 
+#ifdef _OSX_
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #define GLUT_KEY_ESCAPE 27
 #define GLUT_KEY_TAB 9
@@ -76,6 +101,38 @@ namespace pangolin
   //! @brief Returns true if user has resized the window
   bool HasResized();
 
+  //! @brief Renders any views with default draw methods
+  void RenderViews();
+
+  //! @brief Request to be notified via functor when key is pressed.
+  //! Functor may take one parameter which will equal the key pressed
+  void RegisterKeyPressCallback(int key, boost::function<void(void)> func);
+
+  //! @brief Save window contents to image
+  void SaveWindowOnRender(std::string filename_prefix);
+
+  // Supported Key modifiers for GlobalKeyPressCallback.
+  // e.g. PANGO_CTRL + 'r', PANGO_SPECIAL + GLUT_KEY_RIGHT, etc.
+  const int PANGO_SPECIAL = 128;
+  const int PANGO_CTRL = -96;
+  const int PANGO_OPTN = 132;
+
+  enum MouseButton
+  {
+    MouseButtonLeft = 1,
+    MouseButtonMiddle = 2,
+    MouseButtonRight = 4,
+    MouseWheelUp = 8,
+    MouseWheelDown = 16
+  };
+
+  enum InputSpecial
+  {
+      InputSpecialScroll,
+      InputSpecialZoom,
+      InputSpecialRotate
+  };
+
   namespace process
   {
     //! @brief Tell pangolin to process input to drive display
@@ -93,13 +150,32 @@ namespace pangolin
     void Mouse( int button, int state, int x, int y);
 
     void MouseMotion( int x, int y);
+
+    void PassiveMouseMotion(int x, int y);
+
+    void Scroll(float x, float y);
+
+    void Zoom(float m);
+
+    void Rotate(float r);
+
+    void SpecialInput(InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4);
+
   }
 
-#ifdef HAVE_GLUT
+#ifdef HAVE_GLUT  
   //! @brief Create GLUT window and bind Pangolin to it.
   //! All GLUT initialisation is taken care of. This prevents you
   //! from needing to call BindToContext() and TakeGlutCallbacks().
   void CreateGlutWindowAndBind(std::string window_title, int w = 640, int h = 480, unsigned int mode = GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
+
+  //! @brief Applies any post-render events if they are defined,
+  //! swaps buffers and processes events. Also resets viewport to
+  //! entire window and disables scissoring.
+  void FinishGlutFrame();
+
+  //! @brief Swaps OpenGL Buffers and processes input events
+  void SwapGlutBuffersProcessGlutEvents();
 
   //! @brief Allow Pangolin to take GLUT callbacks for its own uses
   //! Not needed if you instantiated a window through CreateWindowAndBind().
@@ -118,12 +194,32 @@ namespace pangolin
   //! fraction in interval [0,1]
   struct Attach {
     Attach() : unit(Fraction), p(0) {}
-    Attach(int p) : unit(p >=0 ? Pixel : ReversePixel), p(std::abs((float)p)) {}
-    Attach(GLfloat p) : unit(Fraction), p(p) {}
-    Attach(GLdouble p) : unit(Fraction), p(p) {}
-    Attach(int p, bool reverse) : unit(ReversePixel), p(p) {}
+    Attach(Unit unit, GLfloat p) : unit(unit), p(p) {}
+
+    Attach(GLfloat p) : unit(Fraction), p(p) {
+        if( p < 0 || 1.0 < p ) {
+            std::cerr << "Pangolin API Change: Display::SetBounds must be used with Attach::Pix or Attach::ReversePix to specify pixel bounds relative to an edge. See the code samples for details." << std::endl;
+            throw std::exception();
+        }
+    }
+
+//    Attach(GLdouble p) : unit(Fraction), p(p) {}
+
+    static Attach Pix(int p) {
+        return Attach(p >=0 ? Pixel : ReversePixel, std::abs((float)p));
+    }
+    static Attach ReversePix(int p) {
+        return Attach(ReversePixel, p);
+    }
+    static Attach Frac(float frac) {
+        return Attach(frac);
+    }
+
     Unit unit;
     GLfloat p;
+
+//  protected:
+//    Attach(int p) {}
   };
 
 
@@ -147,6 +243,7 @@ namespace pangolin
 
     Viewport Inset(int i) const;
     Viewport Inset(int horiz, int vert) const;
+    Viewport Intersect(const Viewport& vp) const;
 
     static void DisableScissor();
 
@@ -175,30 +272,73 @@ namespace pangolin
   const static CameraSpec CameraSpecYDownZForward = {{0,0,1},{0,-1,0},{1,0,0},{0,-1},{1,0}};
 
   //! @brief Object representing OpenGl Matrix
-  struct OpenGlMatrixSpec {
+  struct OpenGlMatrix {
+    OpenGlMatrix();
+
+#ifdef HAVE_EIGEN
+    template<typename P>
+    OpenGlMatrix(const Eigen::Matrix<P,4,4>& mat);
+
+    template<typename P>
+    operator Eigen::Matrix<P,4,4>() const;
+#endif // HAVE_EIGEN
+
     // Load matrix on to OpenGl stack
     void Load() const;
 
     void Multiply() const;
 
-    // Specify which stack this refers to
-    OpenGlStack type;
+    void SetIdentity();
+
+    OpenGlMatrix Inverse() const;
 
     // Column major Internal buffer
     GLdouble m[16];
   };
 
+  OpenGlMatrix operator*(const OpenGlMatrix& lhs, const OpenGlMatrix& rhs);
+
+  //! @brief deprecated
+  struct OpenGlMatrixSpec : public OpenGlMatrix {
+    // Specify which stack this refers to
+    OpenGlStack type;
+  };
+
   //! @brief Object representing attached OpenGl Matrices / transforms
   //! Only stores what is attached, not entire OpenGl state (which would
   //! be horribly slow). Applying state is efficient.
-  struct OpenGlRenderState
+  class OpenGlRenderState
   {
+  public:
+    OpenGlRenderState();
+    OpenGlRenderState(const OpenGlMatrix& projection_matrix);
+    OpenGlRenderState(const OpenGlMatrix& projection_matrix, const OpenGlMatrix& modelview_matrix);
+
     static void ApplyIdentity();
     static void ApplyWindowCoords();
 
     void Apply() const;
+    OpenGlRenderState& SetProjectionMatrix(OpenGlMatrix spec);
+    OpenGlRenderState& SetModelViewMatrix(OpenGlMatrix spec);
+
+    OpenGlMatrix& GetProjectionMatrix();
+    OpenGlMatrix GetProjectionMatrix() const;
+
+    OpenGlMatrix& GetModelViewMatrix();
+    OpenGlMatrix GetModelViewMatrix() const;
+
+    //! Seemlessly move OpenGl camera relative to changes in T_wc,
+    //! whilst still enabling interaction
+    void Follow(const OpenGlMatrix& T_wc, bool follow = true);
+    void Unfollow();
+
+    //! deprecated
     OpenGlRenderState& Set(OpenGlMatrixSpec spec);
-    std::map<OpenGlStack,OpenGlMatrixSpec> stacks;
+
+  protected:
+    std::map<OpenGlStack,OpenGlMatrix> stacks;
+    OpenGlMatrix T_cw;
+    bool follow;
   };
 
   enum Layout
@@ -215,9 +355,11 @@ namespace pangolin
   //! @brief A Display manages the location and resizing of an OpenGl viewport.
   struct View
   {
-    View()
-      : aspect(0.0), top(1.0),left(0),right(1.0),bottom(0), hlock(LockCenter),vlock(LockCenter),
-        layout(LayoutOverlay), handler(0) {}
+    View(double aspect=0.0)
+      : aspect(aspect), top(1.0),left(0.0),right(1.0),bottom(0.0), hlock(LockCenter),vlock(LockCenter),
+        layout(LayoutOverlay), scroll_offset(0), show(1), handler(0), extern_draw_function(0) {}
+
+    virtual ~View() {}
 
     //! Activate Displays viewport for drawing within this area
     void Activate() const;
@@ -237,6 +379,17 @@ namespace pangolin
     //! Activate Display and set State Matrices
     void ActivateScissorAndClear(const OpenGlRenderState& state ) const;
 
+    //! Return closest depth buffer value within radius of window (winx,winy)
+    GLfloat GetClosestDepth(int winx, int winy, int radius) const;
+
+    //! Obtain camera space coordinates of scene at pixel (winx, winy, winzdepth)
+    //! winzdepth can be obtained from GetClosestDepth
+    void GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const;
+
+    //! Obtain object space coordinates of scene at pixel (winx, winy, winzdepth)
+    //! winzdepth can be obtained from GetClosestDepth
+    void GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const;
+
     //! Given the specification of Display, compute viewport
     virtual void Resize(const Viewport& parent);
 
@@ -254,16 +407,60 @@ namespace pangolin
     View& SetFocus();
 
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
-    View& SetBounds(Attach top, Attach bottom,  Attach left, Attach right, bool keep_aspect = false);
+    View& SetBounds(Attach bottom, Attach top, Attach left, Attach right, bool keep_aspect = false);
 
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
-    View& SetBounds(Attach top, Attach bottom,  Attach left, Attach right, double aspect);
+    View& SetBounds(Attach bottom, Attach top, Attach left, Attach right, double aspect);
 
+    //! Designate handler for accepting mouse / keyboard input.
     View& SetHandler(Handler* handler);
+
+    //! Set drawFunc as the drawing function for this view
+    View& SetDrawFunction(const boost::function<void(View&)>& drawFunc);
+
+    //! Force this view to have the given aspect, whilst fitting snuggly
+    //! within the parent. A negative value with 'over-draw', fitting the
+    //! smaller side of the parent.
     View& SetAspect(double aspect);
+
+    //! Set how this view should be positioned relative to its parent
     View& SetLock(Lock horizontal, Lock vertical );
+
+    //! Set layout policy for this view
     View& SetLayout(Layout layout);
+
+    //! Add view as child
     View& AddDisplay(View& view);
+
+    //! Show / hide this view
+    View& Show(bool show=true);
+
+    //! Toggle this views visibility
+    void ToggleShow();
+
+    //! Return whether this view should be shown.
+    //! This method should be checked if drawing manually
+    bool IsShown() const;
+
+    //! Specify that this views region in the framebuffer should be saved to
+    //! a file just before the buffer is flipped.
+    void SaveOnRender(const std::string& filename_prefix);
+
+    //! Uses the views default render method to draw into an FBO 'scale' times
+    //! the size of the view and save to a file.
+    void SaveRenderNow(const std::string& filename_prefix, float scale = 1);
+
+    //! Return number of child views attached to this view
+    size_t NumChildren() const;
+
+    //! Return (i)th child of this view
+    View& operator[](size_t i);
+
+    //! Return number of visible child views attached to this view.
+    size_t NumVisibleChildren() const;
+
+    //! Return visible child by index.
+    View& VisibleChild(size_t i);
 
     // Desired width / height aspect (0 if dynamic)
     double aspect;
@@ -274,11 +471,16 @@ namespace pangolin
     Lock vlock;
     Layout layout;
 
+    int scroll_offset;
+
     // Cached client area (space allocated from parent)
     Viewport vp;
 
     // Cached absolute viewport (recomputed on resize - respects aspect)
     Viewport v;
+
+    // Should this view be displayed?
+    bool show;
 
     // Input event handler (if any)
     Handler* handler;
@@ -286,64 +488,102 @@ namespace pangolin
     // Map for sub-displays (if any)
     std::vector<View*> views;
 
+    // External draw function
+    boost::function<void(View&)> extern_draw_function;
+
   private:
     // Private copy constructor
-    View(View& v) { /* Do Not copy - take reference instead*/ }
-  };
-
-  enum MouseButton
-  {
-    MouseButtonLeft = 1,
-    MouseButtonMiddle = 2,
-    MouseButtonRight = 4,
-    MouseWheelUp = 8,
-    MouseWheelDown = 16
+    View(View&) { /* Do Not copy - take reference instead*/ }
   };
 
   //! @brief Input Handler base class with virtual methods which recurse
   //! into sub-displays
   struct Handler
   {
+    virtual ~Handler() {}
     virtual void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     virtual void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     virtual void MouseMotion(View&, int x, int y, int button_state);
+    virtual void Special(View&, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state);
   };
   static Handler StaticHandler;
+
+  struct HandlerScroll : Handler
+  {
+    void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
+    void Special(View&, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state);
+  };
+  static HandlerScroll StaticHandlerScroll;
+
+  enum AxisDirection
+  {
+      AxisNone,
+      AxisNegX, AxisX,
+      AxisNegY, AxisY,
+      AxisNegZ, AxisZ
+  };
 
   struct Handler3D : Handler
   {
 
-    Handler3D(OpenGlRenderState& cam_state, float trans_scale=0.01f)
-      : cam_state(&cam_state), /*hwin(3),*/ tf(trans_scale), cameraspec(CameraSpecOpenGl), last_z(1.0) {}
+    Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction=1.0f/50.0f)
+        : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), zf(zoom_fraction), cameraspec(CameraSpecOpenGl), last_z(1.0) {}
 
-    void SetOpenGlCamera();
+    void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void MouseMotion(View&, int x, int y, int button_state);
+    void Special(View&, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state);
 
+  protected:
     OpenGlRenderState* cam_state;
-    const static int hwin = 3;
-    float tf;
+    const static int hwin = 8;
+    AxisDirection enforce_up;
+    float tf; // translation factor
+    float zf; // zoom fraction
     CameraSpec cameraspec;
     GLfloat last_z;
     GLint last_pos[2];
     GLdouble rot_center[3];
   };
 
+  //! Retrieve 'base' display, corresponding to entire window
   View& DisplayBase();
+
+  //! Create or retrieve named display managed by pangolin (automatically deleted)
   View& Display(const std::string& name);
+
+  //! Create unnamed display managed by pangolin (automatically deleted)
+  View& CreateDisplay();
 
   OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
   OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
+  OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
 
-  // Use OpenGl's default frame RUB_BottomLeft
+  //! Use OpenGl's default frame RUB_BottomLeft
   OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
+  OpenGlMatrixSpec ProjectionMatrixOrthographic(double l, double r, double b, double t, double n, double f );
 
+  //! Generate glulookat style model view matrix, looking at (lx,ly,lz)
+  //! X-Right, Y-Up, Z-Back
+  OpenGlMatrix ModelViewLookAtRUB(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz);
+
+  //! Generate glulookat style model view matrix, looking at (lx,ly,lz)
+  //! X-Right, Y-Down, Z-Forward
+  OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz);
+
+  //! Generate glulookat style model view matrix, OpenGL Default camera convention (XYZ=RUB), looking at (lx,ly,lz)
+  OpenGlMatrix ModelViewLookAt(double x, double y, double z, double lx, double ly, double lz, AxisDirection up);
+  OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz);
+
+  OpenGlMatrix IdentityMatrix();
   OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);
   OpenGlMatrixSpec negIdentityMatrix(OpenGlStack type);
 
 #ifdef HAVE_TOON
   OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw);
   OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M);
+  TooN::Matrix<4,4> ToTooN(const OpenGlMatrixSpec& ms);
+  TooN::SE3<> ToTooN_SE3(const OpenGlMatrixSpec& ms);
 #endif
 
 
@@ -357,6 +597,35 @@ inline Viewport::Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h)
 inline GLint Viewport::r() const { return l+w;}
 inline GLint Viewport::t() const { return b+h;}
 inline GLfloat Viewport::aspect() const { return (GLfloat)w / (GLfloat)h; }
+
+
+inline OpenGlMatrix::OpenGlMatrix() {
+}
+
+#ifdef HAVE_EIGEN
+  template<typename P> inline
+  OpenGlMatrix::OpenGlMatrix(const Eigen::Matrix<P,4,4>& mat)
+  {
+      for(int r=0; r<4; ++r ) {
+          for(int c=0; c<4; ++c ) {
+              m[c*4+r] = mat(r,c);
+          }
+      }
+  }
+
+  template<typename P>
+  OpenGlMatrix::operator Eigen::Matrix<P,4,4>() const
+  {
+      Eigen::Matrix<P,4,4> mat;
+      for(int r=0; r<4; ++r ) {
+          for(int c=0; c<4; ++c ) {
+              mat(r,c) = m[c*4+r];
+          }
+      }
+      return mat;
+  }
+
+#endif
 
 #ifdef HAVE_TOON
 
@@ -384,6 +653,25 @@ inline OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M)
             P.m[el++] = M[r][c];
     return P;
 }
+
+inline TooN::Matrix<4,4> ToTooN(const OpenGlMatrix& ms)
+{
+    TooN::Matrix<4,4> m;
+    int el = 0;
+    for( int c=0; c<4; ++c )
+        for( int r=0; r<4; ++r )
+            m(r,c) = ms.m[el++];
+    return m;
+}
+
+inline TooN::SE3<> ToTooN_SE3(const OpenGlMatrix& ms)
+{
+    TooN::Matrix<4,4> m = ToTooN(ms);
+    const TooN::SO3<> R(m.slice<0,0,3,3>());
+    const TooN::Vector<3> t = m.T()[3].slice<0,3>();
+    return TooN::SE3<>(R,t);
+}
+
 
 #endif
 

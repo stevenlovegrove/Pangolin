@@ -30,9 +30,6 @@
 
 #include "pangolin.h"
 
-#include "video.h"
-#include "video_recorder.h"
-
 #include <list>
 
 namespace pangolin
@@ -61,6 +58,13 @@ struct InputRecordRepeat
 
     void PlayBuffer();
     void PlayBuffer(int start, int end);
+
+    void UpdateVariable(const std::string& name );
+
+    template<typename T>
+    inline void UpdateVariable(const Var<T>& var ) {
+        GuiVarChanged((void*)this, var.var->meta_full_name, *var.var);
+    }
 
     int Size();
 
