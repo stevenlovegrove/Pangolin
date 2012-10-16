@@ -529,6 +529,7 @@ namespace pangolin
     Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction=1.0f/50.0f)
         : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), zf(zoom_fraction), cameraspec(CameraSpecOpenGl), last_z(1.0) {}
 
+    virtual void GetPosNormal(View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3]);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void MouseMotion(View&, int x, int y, int button_state);
@@ -544,6 +545,11 @@ namespace pangolin
     GLfloat last_z;
     GLint last_pos[2];
     GLdouble rot_center[3];
+
+    double p[3];
+    double Pw[3];
+    double Pc[3];
+    double n[3];
   };
 
   //! Retrieve 'base' display, corresponding to entire window

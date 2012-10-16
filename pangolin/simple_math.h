@@ -288,6 +288,14 @@ void LieApplySE3vec( P x_b[3], const P T_ba[3*4], const P x_a[3] )
 }
 
 template<typename P>
+void LieApplySE34x4vec3( P x_b[3], const P T_ba[4*4], const P x_a[3] )
+{
+    x_b[0] = T_ba[0]*x_a[0] + T_ba[4]*x_a[1] + T_ba[8]*x_a[2] + T_ba[12];
+    x_b[1] = T_ba[1]*x_a[0] + T_ba[5]*x_a[1] + T_ba[9]*x_a[2] + T_ba[13];
+    x_b[2] = T_ba[2]*x_a[0] + T_ba[6]*x_a[1] + T_ba[10]*x_a[2] + T_ba[14];
+}
+
+template<typename P>
 void LieMulSO3( P R_ca[3*3], const P R_cb[3*3], const P R_ba[3*3] )
 {
   MatMul<3,3,3>(R_ca,R_cb,R_ba);

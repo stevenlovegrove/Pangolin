@@ -1232,6 +1232,38 @@ namespace pangolin
     // TODO: hooks for reset / changing mode (perspective / ortho etc)
   }
 
+  void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3])
+  {
+      const GLint viewport[4] = {view.v.l,view.v.b,view.v.w,view.v.h};
+      const pangolin::OpenGlMatrix proj = cam_state->GetProjectionMatrix();
+      const pangolin::OpenGlMatrix mv = cam_state->GetModelViewMatrix();
+
+      glReadBuffer(GL_FRONT);
+      const int zl = (hwin*2+1);
+      const int zsize = zl*zl;
+      GLfloat zs[zsize];
+      glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
+      const GLfloat mindepth = *(std::min_element(zs,zs+zsize));
+
+      p[0] = x; p[1] = y; p[2] = mindepth;
+      gluUnProject(x, y, mindepth, mv.m, proj.m, viewport, &Pw[0], &Pw[1], &Pw[2]);
+
+      LieApplySE34x4vec3(Pc, mv.m, Pw);
+
+      double Pl[3]; double Pr[3]; double Pb[3]; double Pt[3];
+      gluUnProject(x-hwin, y, zs[hwin*zl + 0],    mv.m, proj.m, viewport, &Pl[0], &Pl[1], &Pl[2]);
+      gluUnProject(x+hwin, y, zs[hwin*zl + zl-1], mv.m, proj.m, viewport, &Pr[0], &Pr[1], &Pr[2]);
+      gluUnProject(x, y-hwin, zs[hwin+1],         mv.m, proj.m, viewport, &Pb[0], &Pb[1], &Pb[2]);
+      gluUnProject(x, y+hwin, zs[zsize-(hwin+1)], mv.m, proj.m, viewport, &Pt[0], &Pt[1], &Pt[2]);
+
+//      n = ((Pr-Pl).cross(Pt-Pb)).normalized();
+      double PrmPl[3]; double PtmPb[3];
+      MatSub<3,1>(PrmPl,Pr,Pl);
+      MatSub<3,1>(PtmPb,Pt,Pb);
+      CrossProduct(n, PrmPl, PtmPb);
+      Normalise<3>(n);
+  }
+
   void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)
   {
     // mouse down
@@ -1242,11 +1274,11 @@ namespace pangolin
     LieSetIdentity(T_nc);
 
     if( pressed ) {
-      const GLfloat mindepth = display.GetClosestDepth(x,y,hwin);
-      last_z = mindepth != 1 ? mindepth : last_z;
+      GetPosNormal(display,x,y,p,Pw,Pc,n);
+      last_z = p[2];
 
       if( last_z != 1 ) {
-        display.GetCamCoordinates(*cam_state, x, y, last_z, rot_center[0], rot_center[1], rot_center[2]);
+        std::copy(Pc,Pc+3,rot_center);
       }else{
         SetZero<3,1>(rot_center);
       }
@@ -1376,11 +1408,11 @@ namespace pangolin
     double T_nc[3*4];
     LieSetIdentity(T_nc);
 
-    const GLfloat mindepth = display.GetClosestDepth(x,y,hwin);
-    last_z = mindepth != 1 ? mindepth : last_z;
+    GetPosNormal(display,x,y,p,Pw,Pc,n);
+    last_z = p[2];
 
     if( last_z != 1 ) {
-        display.GetCamCoordinates(*cam_state, last_pos[0], last_pos[1], last_z, rot_center[0], rot_center[1], rot_center[2]);
+      std::copy(Pc,Pc+3,rot_center);
     }else{
       SetZero<3,1>(rot_center);
     }
