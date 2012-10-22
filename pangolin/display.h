@@ -130,7 +130,8 @@ namespace pangolin
   {
       InputSpecialScroll,
       InputSpecialZoom,
-      InputSpecialRotate
+      InputSpecialRotate,
+      InputSpecialTablet
   };
 
   namespace process
@@ -159,7 +160,7 @@ namespace pangolin
 
     void Rotate(float r);
 
-    void SpecialInput(InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4);
+    void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4);
 
   }
 
@@ -504,14 +505,14 @@ namespace pangolin
     virtual void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     virtual void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     virtual void MouseMotion(View&, int x, int y, int button_state);
-    virtual void Special(View&, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state);
+    virtual void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
   };
   static Handler StaticHandler;
 
   struct HandlerScroll : Handler
   {
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
-    void Special(View&, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state);
+    void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
   };
   static HandlerScroll StaticHandlerScroll;
 
@@ -533,7 +534,7 @@ namespace pangolin
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void MouseMotion(View&, int x, int y, int button_state);
-    void Special(View&, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state);
+    void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
 
   protected:
     OpenGlRenderState* cam_state;

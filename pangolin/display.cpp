@@ -337,7 +337,7 @@ namespace pangolin
       context->base.Resize(win);
     }
 
-    void SpecialInput(InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4)
+    void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4)
     {
         context->had_input = context->is_double_buffered ? 2 : 1;
 
@@ -363,6 +363,11 @@ namespace pangolin
     void Rotate(float r)
     {
         SpecialInput(InputSpecialRotate, last_x, last_y, r, 0, 0, 0);
+    }
+
+    void SubpixTabletMotion(float x, float y, float pressure, float rotation, float tiltx, float tilty)
+    {
+        SpecialInput(InputSpecialTablet, x, y, pressure, rotation, tiltx, tilty);
     }
   }
 
@@ -394,10 +399,12 @@ namespace pangolin
     typedef void (*glutScrollFunc_t)(void (*)(float, float));
     typedef void (*glutZoomFunc_t)(void (*)(float));
     typedef void (*glutRotateFunc_t)(void (*)(float));
+    typedef void (*glutSubpixTabletMotionFunc_t)(void (*)(float,float,float,float,float,float));
 
     glutScrollFunc_t glutScrollFunc = (glutScrollFunc_t)glutGetProcAddress("glutScrollFunc");
     glutZoomFunc_t glutZoomFunc = (glutZoomFunc_t)glutGetProcAddress("glutZoomFunc");
     glutRotateFunc_t glutRotateFunc = (glutRotateFunc_t)glutGetProcAddress("glutRotateFunc");
+    glutSubpixTabletMotionFunc_t glutSubpixTabletMotionFunc = (glutSubpixTabletMotionFunc_t)glutGetProcAddress("glutSubpixTabletMotionFunc");
 
     if(glutScrollFunc) {
         glutScrollFunc(&process::Scroll);
@@ -407,6 +414,10 @@ namespace pangolin
     }
     if(glutRotateFunc) {
         glutRotateFunc(&process::Rotate);
+    }
+
+    if(glutSubpixTabletMotionFunc) {
+        glutSubpixTabletMotionFunc(&process::SubpixTabletMotion);
     }
 
 #endif
@@ -1190,7 +1201,7 @@ namespace pangolin
     }
   }
 
-  void Handler::Special(View& d, InputSpecial inType,  int x, int y, float p1, float p2, float p3, float p4, int button_state)
+  void Handler::Special(View& d, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
   {
       View* child = FindChild(d,x,y);
       if( child )
@@ -1214,7 +1225,7 @@ namespace pangolin
     }
   }
 
-  void HandlerScroll::Special(View& d, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state)
+  void HandlerScroll::Special(View& d, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
   {
     if( inType == InputSpecialScroll )
     {
@@ -1399,8 +1410,11 @@ namespace pangolin
     last_pos[1] = y;
   }
 
-  void Handler3D::Special(View& display, InputSpecial inType, int x, int y, float p1, float p2, float p3, float p4, int button_state)
+  void Handler3D::Special(View& display, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
   {
+    if( !(inType == InputSpecialScroll || inType == InputSpecialRotate) )
+      return;
+
     // mouse down
     last_pos[0] = x;
     last_pos[1] = y;
