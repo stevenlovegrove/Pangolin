@@ -618,6 +618,26 @@ namespace pangolin
       return Viewport(nl,nb, nr-nl, nt-nb);
   }
 
+  OpenGlMatrix OpenGlMatrix::Translate(double x, double y, double z)
+  {
+      OpenGlMatrix mat;
+      mat.SetIdentity();
+      mat.m[12] = x;
+      mat.m[13] = y;
+      mat.m[14] = z;
+      return mat;
+  }
+
+  OpenGlMatrix OpenGlMatrix::Scale(double x, double y, double z)
+  {
+      OpenGlMatrix mat;
+      mat.SetIdentity();
+      mat.m[0] = x;
+      mat.m[5] = y;
+      mat.m[10] = z;
+      return mat;
+  }
+
   void OpenGlMatrix::Load() const
   {
     glLoadMatrixd(m);
@@ -636,6 +656,16 @@ namespace pangolin
      m[12] = 0.0f; m[13] = 0.0f; m[14] = 0.0f; m[15] = 1.0f;
   }
 
+  OpenGlMatrix OpenGlMatrix::Transpose() const
+  {
+      OpenGlMatrix trans;
+      trans.m[0] = m[0];  trans.m[4] = m[1];  trans.m[8]  = m[2];  trans.m[12] = m[3];
+      trans.m[1] = m[4];  trans.m[5] = m[5];  trans.m[9]  = m[6];  trans.m[13] = m[7];
+      trans.m[2] = m[8];  trans.m[6] = m[9];  trans.m[10] = m[10]; trans.m[14] = m[11];
+      trans.m[3] = m[12]; trans.m[7] = m[13]; trans.m[11] = m[14]; trans.m[15] = m[15];
+      return trans;
+  }
+
   OpenGlMatrix OpenGlMatrix::Inverse() const
   {
       OpenGlMatrix inv;
@@ -644,6 +674,17 @@ namespace pangolin
       inv.m[2] = m[8]; inv.m[6] = m[9]; inv.m[10] = m[10]; inv.m[14] = -(m[8]*m[12] + m[9]*m[13] + m[10]*m[14]);
       inv.m[3] =    0; inv.m[7] =    0; inv.m[11] =    0;  inv.m[15] = 1;
       return inv;
+  }
+
+  std::ostream& operator<<(std::ostream& os, const OpenGlMatrix& mat)
+  {
+      for(int r=0; r< 4; ++r) {
+          for(int c=0; c<4; ++c) {
+              std::cout << mat.m[4*c+r] << '\t';
+          }
+          std::cout << std::endl;
+      }
+      return os;
   }
 
   void OpenGlRenderState::Apply() const
@@ -753,6 +794,41 @@ namespace pangolin
       }else{
         return i->second;
       }
+  }
+
+  OpenGlMatrix OpenGlRenderState::GetProjectionModelViewMatrix() const
+  {
+      return GetProjectionMatrix() * GetModelViewMatrix();
+  }
+
+  OpenGlMatrix OpenGlRenderState::GetProjectiveTextureMatrix() const
+  {
+      return OpenGlMatrix::Translate(0.5,0.5,0.5) * OpenGlMatrix::Scale(0.5,0.5,0.5) * GetProjectionModelViewMatrix();
+  }
+
+  void OpenGlRenderState::EnableProjectiveTexturing() const
+  {
+      const pangolin::OpenGlMatrix projmattrans = GetProjectiveTextureMatrix().Transpose();
+      glEnable(GL_TEXTURE_GEN_S);
+      glEnable(GL_TEXTURE_GEN_T);
+      glEnable(GL_TEXTURE_GEN_R);
+      glEnable(GL_TEXTURE_GEN_Q);
+      glTexGendv(GL_S, GL_EYE_PLANE, projmattrans.m);
+      glTexGendv(GL_T, GL_EYE_PLANE, projmattrans.m+4);
+      glTexGendv(GL_R, GL_EYE_PLANE, projmattrans.m+8);
+      glTexGendv(GL_Q, GL_EYE_PLANE, projmattrans.m+12);
+      glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+      glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+      glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+      glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+  }
+
+  void OpenGlRenderState::DisableProjectiveTexturing() const
+  {
+      glDisable(GL_TEXTURE_GEN_S);
+      glDisable(GL_TEXTURE_GEN_T);
+      glDisable(GL_TEXTURE_GEN_R);
+      glDisable(GL_TEXTURE_GEN_Q);
   }
 
   void OpenGlRenderState::Follow(const OpenGlMatrix& T_wc, bool follow)

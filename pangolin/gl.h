@@ -43,9 +43,13 @@
 #endif
 
 #include <math.h>
+#include <iostream>
+#include <cstdlib>
 
 namespace pangolin
 {
+
+#define CheckGlDieOnError() pangolin::_CheckGlDieOnError( __FILE__, __LINE__ );
 
 ////////////////////////////////////////////////
 // Interface
@@ -55,7 +59,7 @@ class GlTexture
 {
 public:
   //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
-  GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true );
+  GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE );
 
 #if __cplusplus > 199711L
   //! Move Constructor
@@ -67,7 +71,7 @@ public:
   ~GlTexture();
 
   //! Reinitialise teture width / height / format
-  void Reinitialise(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true );
+  void Reinitialise(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE );
 
   void Bind() const;
   void Unbind() const;
@@ -112,6 +116,13 @@ struct GlFramebuffer
 
   void Bind() const;
   void Unbind() const;
+
+  // Attach Colour texture to frame buffer
+  // Return attachment texture is bound to (e.g. GL_COLOR_ATTACHMENT0_EXT)
+  GLenum AttachColour(GlTexture& tex);
+
+  // Attach Depth render buffer to frame buffer
+  void AttachDepth(GlRenderBuffer& rb);
 
   GLuint fbid;
   unsigned attachments;
@@ -159,6 +170,16 @@ void glPixelTransferScale( float scale );
 // Implementation
 ////////////////////////////////////////////////
 
+inline void _CheckGlDieOnError( const char *sFile, const int nLine )
+{
+    GLenum glError = glGetError();
+    if( glError != GL_NO_ERROR ) {
+        std::cerr << "OpenGL Error: " << sFile << ":" << nLine << std::endl;
+        std::cerr << gluErrorString(glError) << std::endl;
+        exit( -1 );
+    }
+}
+
 const int MAX_ATTACHMENTS = 8;
 const static GLuint attachment_buffers[] = {
     GL_COLOR_ATTACHMENT0_EXT,
@@ -203,10 +224,10 @@ inline GlTexture::GlTexture()
   // Not a texture constructor
 }
 
-inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bool sampling_linear )
+inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype )
     : internal_format(0), tid(0)
 {
-  Reinitialise(width,height,internal_format,sampling_linear);
+  Reinitialise(width,height,internal_format,sampling_linear,border,glformat,gltype);
 }
 
 #if __cplusplus > 199711L
@@ -235,7 +256,7 @@ inline void GlTexture::Unbind() const
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sampling_linear )
+inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype )
 {
     if(tid!=0) {
       glDeleteTextures(1,&tid);
@@ -249,7 +270,7 @@ inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sam
     Bind();
     // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
     // for call to succeed.
-    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, GL_LUMINANCE,GL_FLOAT,0);
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, border, glformat, gltype, 0);
 
     if(sampling_linear) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -350,29 +371,28 @@ inline GlRenderBuffer::~GlRenderBuffer()
 }
 
 inline GlFramebuffer::GlFramebuffer()
+  : attachments(0)
 {
   glGenFramebuffersEXT(1, &fbid);
 }
 
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
+    : attachments(0)
 {
   glGenFramebuffersEXT(1, &fbid);
-  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
-  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colour.tid, 0);
-  glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depth.rbid);
-  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-  attachments = 1;
+  AttachColour(colour);
+  AttachDepth(depth);
+  CheckGlDieOnError();
 }
 
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth)
+    : attachments(0)
 {
   glGenFramebuffersEXT(1, &fbid);
-  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
-  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colour0.tid, 0);
-  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_2D, colour1.tid, 0);
-  glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depth.rbid);
-  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-  attachments = 2;
+  AttachColour(colour0);
+  AttachColour(colour1);
+  AttachDepth(depth);
+  CheckGlDieOnError();
 }
 
 inline GlFramebuffer::~GlFramebuffer()
@@ -390,6 +410,25 @@ inline void GlFramebuffer::Unbind() const
 {
   glDrawBuffers( 1, attachment_buffers );
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+}
+
+inline GLenum GlFramebuffer::AttachColour(GlTexture& tex )
+{
+    const GLenum color_attachment = GL_COLOR_ATTACHMENT0_EXT + attachments;
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, color_attachment, GL_TEXTURE_2D, tex.tid, 0);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    attachments++;
+    CheckGlDieOnError();
+    return color_attachment;
+}
+
+inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
+{
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
+    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rb.rbid);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    CheckGlDieOnError();
 }
 
 inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, GLenum gluse )
@@ -421,7 +460,6 @@ inline void GlBuffer::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr
   Bind();
   glBufferSubData(buffer_type,offset,size_bytes, data);
 }
-
 
 }
 

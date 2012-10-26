@@ -274,6 +274,9 @@ namespace pangolin
 
   //! @brief Object representing OpenGl Matrix
   struct OpenGlMatrix {
+    static OpenGlMatrix Translate(double x, double y, double z);
+    static OpenGlMatrix Scale(double x, double y, double z);
+
     OpenGlMatrix();
 
 #ifdef HAVE_EIGEN
@@ -291,6 +294,8 @@ namespace pangolin
 
     void SetIdentity();
 
+    OpenGlMatrix Transpose() const;
+
     OpenGlMatrix Inverse() const;
 
     // Column major Internal buffer
@@ -298,6 +303,7 @@ namespace pangolin
   };
 
   OpenGlMatrix operator*(const OpenGlMatrix& lhs, const OpenGlMatrix& rhs);
+  std::ostream& operator<<(std::ostream& os, const OpenGlMatrix& mat);
 
   //! @brief deprecated
   struct OpenGlMatrixSpec : public OpenGlMatrix {
@@ -327,6 +333,12 @@ namespace pangolin
 
     OpenGlMatrix& GetModelViewMatrix();
     OpenGlMatrix GetModelViewMatrix() const;
+
+    OpenGlMatrix GetProjectionModelViewMatrix() const;
+    OpenGlMatrix GetProjectiveTextureMatrix() const;
+
+    void EnableProjectiveTexturing() const;
+    void DisableProjectiveTexturing() const;
 
     //! Seemlessly move OpenGl camera relative to changes in T_wc,
     //! whilst still enabling interaction
