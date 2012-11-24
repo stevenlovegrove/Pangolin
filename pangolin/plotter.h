@@ -136,6 +136,9 @@ struct Plotter : public View, Handler
   void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
   void MouseMotion(View&, int x, int y, int mouse_state);
 
+  void SetLimits(int xmin, int xmax, int ymin, int ymax);
+  void SetXLimits(int xmin, int xmax);
+  void SetYLimits(int ymin, int ymax);
   void ScreenToPlot(int x, int y);
 
   DataLog* log;

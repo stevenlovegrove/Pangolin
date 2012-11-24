@@ -429,6 +429,26 @@ void Plotter::ResetView()
     show[i] = true;
 }
 
+void Plotter::SetLimits(int xmin, int xmax, int ymin, int ymax)
+{
+  int_x[0] = xmin;
+  int_x[1] = xmax;
+  int_y[0] = ymax;
+  int_y[1] = ymin;
+}
+
+void Plotter::SetXLimits(int xmin, int xmax)
+{
+  int_x[0] = xmin;
+  int_x[1] = xmax;
+}
+
+void Plotter::SetYLimits(int ymin, int ymax)
+{
+  int_y[0] = ymax;
+  int_y[1] = ymin;
+}
+
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 {
   if( pressed )
