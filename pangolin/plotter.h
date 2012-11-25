@@ -140,6 +140,7 @@ struct Plotter : public View, Handler
   void SetXLimits(int xmin, int xmax);
   void SetYLimits(int ymin, int ymax);
   void ScreenToPlot(int x, int y);
+  void SetMode(unsigned mode);
 
   DataLog* log;
   bool track_front;

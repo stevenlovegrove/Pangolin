@@ -449,6 +449,11 @@ void Plotter::SetYLimits(int ymin, int ymax)
   int_y[1] = ymin;
 }
 
+void Plotter::SetMode(unsigned mode)
+{
+	plot_mode = mode;
+}
+
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 {
   if( pressed )
