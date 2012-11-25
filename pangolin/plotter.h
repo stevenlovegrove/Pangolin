@@ -141,6 +141,7 @@ struct Plotter : public View, Handler
   void SetYLimits(int ymin, int ymax);
   void ScreenToPlot(int x, int y);
   void SetMode(unsigned mode);
+  void SetX0(float x0);
 
   DataLog* log;
   bool track_front;
@@ -153,6 +154,7 @@ struct Plotter : public View, Handler
   int mouse_state;
   float mouse_xy[2];
 
+  float x0;
   int draw_mode;
 
   enum PLOT_MODES { TIME_SERIES, XY, STACKED_HISTOGRAM};

@@ -175,7 +175,7 @@ void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6)
 }
 
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky)
-  : log(log), track_front(true), draw_mode(0), plot_mode(TIME_SERIES)
+  : log(log), track_front(true),x0(0), draw_mode(0), plot_mode(TIME_SERIES)
 {
   this->handler = this;
   int_x[0] = int_x_dflt[0] = left;
@@ -288,6 +288,11 @@ void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
   }
 }
 
+void Plotter::SetX0(float val)
+{
+    x0 = val;
+}
+
 void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
 {
   const unsigned minn = max(x.firstn,y.firstn);
@@ -295,7 +300,7 @@ void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
 
   glBegin(draw_modes[draw_mode]);
   for( unsigned n=minn; n < maxn; ++n )
-    glVertex2f(x[n],y[n]);
+    glVertex2f(x[n]-x0,y[n]);
   glEnd();
 }
 
@@ -452,6 +457,7 @@ void Plotter::SetYLimits(int ymin, int ymax)
 void Plotter::SetMode(unsigned mode)
 {
 	plot_mode = mode;
+	track_front = false;
 }
 
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
