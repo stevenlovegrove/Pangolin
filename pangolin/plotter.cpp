@@ -175,13 +175,14 @@ void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6)
 }
 
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky)
-  : log(log), track_front(true),x0(0), draw_mode(0), plot_mode(TIME_SERIES)
+  : log(log), track_front(true), draw_mode(0), plot_mode(TIME_SERIES)
 {
   this->handler = this;
   int_x[0] = int_x_dflt[0] = left;
   int_x[1] = int_x_dflt[1] = right;
   int_y[0] = int_y_dflt[0] = bottom;
   int_y[1] = int_y_dflt[1] = top;
+  vo[0] = vo[1] = 0;
   ticks[0] = tickx;
   ticks[1] = ticky;
 
@@ -191,23 +192,25 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
 void Plotter::DrawTicks()
 {
-  glColor3fv(colour_tk);
   const int tx[2] = {
     (int)ceil(int_x[0] / ticks[0]),
     (int)ceil(int_x[1] / ticks[0])
   };
+
   const int ty[2] = {
     (int)ceil(int_y[0] / ticks[1]),
     (int)ceil(int_y[1] / ticks[1])
   };
 
+  const int votx = ceil(vo[0]/ ticks[0]);
+  const int voty = ceil(vo[1]/ ticks[1]);
   if( tx[1] - tx[0] < v.w/4 )
   {
     for( int i=tx[0]; i<tx[1]; ++i )
     {
       glBegin(GL_LINE_STRIP);
-      glVertex2f(i*ticks[0], int_y[0]);
-      glVertex2f(i*ticks[0], int_y[1]);
+      glVertex2f((i+votx)*ticks[0], int_y[0]+vo[1]);
+      glVertex2f((i+votx)*ticks[0], int_y[1]+vo[1]);
       glEnd();
     }
   }
@@ -217,20 +220,20 @@ void Plotter::DrawTicks()
     for( int i=ty[0]; i<ty[1]; ++i )
     {
       glBegin(GL_LINE_STRIP);
-      glVertex2f(int_x[0], i*ticks[1]);
-      glVertex2f(int_x[1], i*ticks[1]);
+      glVertex2f(int_x[0]+vo[0], (i+voty)*ticks[1]);
+      glVertex2f(int_x[1]+vo[0], (i+voty)*ticks[1]);
       glEnd();
     }
   }
 
   glColor3fv(colour_ax);
   glBegin(GL_LINE_STRIP);
-  glVertex2f(0, int_y[0]);
-  glVertex2f(0, int_y[1]);
+  glVertex2f(0, int_y[0]+vo[1]);
+  glVertex2f(0, int_y[1]+vo[1]);
   glEnd();
   glBegin(GL_LINE_STRIP);
-  glVertex2f(int_x[0],0);
-  glVertex2f(int_x[1],0);
+  glVertex2f(int_x[0]+vo[0],0);
+  glVertex2f(int_x[1]+vo[0],0);
   glEnd();
 }
 
@@ -238,8 +241,8 @@ void Plotter::DrawSequence(const DataSequence& seq)
 {
   const int seqint_x[2] = {seq.firstn, seq.n };
   const int valid_int_x[2] = {
-    std::max(seqint_x[0],(int)int_x[0]),
-    std::min(seqint_x[1],(int)int_x[1])
+    std::max(seqint_x[0],(int)(int_x[0]+vo[0])),
+    std::min(seqint_x[1],(int)(int_x[1]+vo[0]))
   };
   glBegin(draw_modes[draw_mode]);
   for( int x=valid_int_x[0]; x<valid_int_x[1]; ++x )
@@ -249,23 +252,19 @@ void Plotter::DrawSequence(const DataSequence& seq)
 
 void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
 {
-  size_t vec_size
-      = std::min((unsigned)log->x, log->buffer_size);
-  int idx_subtract
-      = std::max(0,(int)(log->x)-(int)(log->buffer_size));
+  size_t vec_size = std::min((unsigned)log->x, log->buffer_size);
+  int idx_subtract = std::max(0,(int)(log->x)-(int)(log->buffer_size));
   vector<float> accum_vec(vec_size,0);
 
   for(int s=log->sequences.size()-1; s >=0; --s )
   {
     if( (s > 9) ||  show[s] )
     {
-
       const int seqint_x[2] = {seq.at(s).firstn, seq.at(s).n };
       const int valid_int_x[2] = {
-        std::max(seqint_x[0],(int)int_x[0]),
-        std::min(seqint_x[1],(int)int_x[1])
+        std::max(seqint_x[0],(int)(int_x[0]+vo[0])),
+        std::min(seqint_x[1],(int)(int_x[1]+vo[0]))
       };
-
 
       glBegin(GL_TRIANGLE_STRIP);
       glColor3fv(plot_colours[s%num_plot_colours]);
@@ -288,11 +287,6 @@ void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
   }
 }
 
-void Plotter::SetX0(float val)
-{
-    x0 = val;
-}
-
 void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
 {
   const unsigned minn = max(x.firstn,y.firstn);
@@ -300,7 +294,7 @@ void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
 
   glBegin(draw_modes[draw_mode]);
   for( unsigned n=minn; n < maxn; ++n )
-    glVertex2f(x[n]-x0,y[n]);
+    glVertex2f(x[n],y[n]);
   glEnd();
 }
 
@@ -308,15 +302,16 @@ void Plotter::Render()
 {
   if( track_front )
   {
-    const float d = int_x[1] - log->x;
-    int_x[0] -= d;
-    int_x[1] -= d;
+	vo[0] = log->x-int_x[1];
+    //const float d = int_x[1] - log->x
+    //int_x[0] -= d;
+    //int_x[1] -= d;
   }
 
   ActivateScissorAndClear();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluOrtho2D(int_x[0], int_x[1], int_y[0], int_y[1]);
+  gluOrtho2D(int_x[0]+vo[0], int_x[1]+vo[0], int_y[0]+vo[1], int_y[1]+vo[1]);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
@@ -430,34 +425,21 @@ void Plotter::ResetView()
   int_x[1] = int_x_dflt[1];
   int_y[0] = int_y_dflt[0];
   int_y[1] = int_y_dflt[1];
+  vo[0] = vo[1] = 0;
   for( unsigned int i=0; i<show_n; ++i )
     show[i] = true;
 }
 
-void Plotter::SetLimits(int xmin, int xmax, int ymin, int ymax)
+void Plotter::SetViewOrigin(float x0, float y0)
 {
-  int_x[0] = xmin;
-  int_x[1] = xmax;
-  int_y[0] = ymax;
-  int_y[1] = ymin;
+  vo[0] = x0;
+  vo[1] = y0;
 }
 
-void Plotter::SetXLimits(int xmin, int xmax)
-{
-  int_x[0] = xmin;
-  int_x[1] = xmax;
-}
-
-void Plotter::SetYLimits(int ymin, int ymax)
-{
-  int_y[0] = ymax;
-  int_y[1] = ymin;
-}
-
-void Plotter::SetMode(unsigned mode)
+void Plotter::SetMode(unsigned mode, bool track)
 {
 	plot_mode = mode;
-	track_front = false;
+	track_front = track;
 }
 
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
@@ -551,19 +533,22 @@ void Plotter::MouseMotion(View&, int x, int y, int button_state)
   if( button_state == MouseButtonLeft )
   {
     track_front = false;
-    int_x[0] -= df[0];
-    int_x[1] -= df[0];
+    //int_x[0] -= df[0];
+    //int_x[1] -= df[0];
+    vo[0] -= df[0];
+
     //    interval_y[0] -= df[1];
     //    interval_y[1] -= df[1];
   }else if(button_state == MouseButtonMiddle )
   {
-    int_y[0] -= df[1];
-    int_y[1] -= df[1];
+    //int_y[0] -= df[1];
+    //int_y[1] -= df[1];
+    vo[1] -= df[1];
   }else if(button_state == MouseButtonRight )
   {
     const double c[2] = {
       track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
-      (int_y[0] + int_y[1])/2.0
+    		  (int_y[0] + int_y[1])/2.0
     };
     const float scale[2] = {
       1.0f + (float)d[0] / (float)v.w,
