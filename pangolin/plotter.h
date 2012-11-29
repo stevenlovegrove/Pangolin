@@ -137,6 +137,8 @@ struct Plotter : public View, Handler
   void MouseMotion(View&, int x, int y, int mouse_state);
 
   void ScreenToPlot(int x, int y);
+  void SetMode(unsigned mode, bool track=true);
+  void SetViewOrigin(float x0, float y0);
 
   DataLog* log;
   bool track_front;
@@ -144,6 +146,7 @@ struct Plotter : public View, Handler
   float int_y_dflt[2];
   float int_x[2];
   float int_y[2];
+  float vo[2]; //view offset
   float ticks[2];
   int last_mouse_pos[2];
   int mouse_state;

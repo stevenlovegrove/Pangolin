@@ -88,6 +88,7 @@ public:
   void RenderToViewport(const bool flip) const;
   void RenderToViewport() const;
   void RenderToViewportFlipY() const;
+  void RenderToViewportFlipXFlipY() const;
 
   GLint internal_format;
   GLuint tid;
@@ -353,6 +354,23 @@ inline void GlTexture::RenderToViewportFlipY() const
   glTexCoord2f(1, 0); glVertex2d(1,1);
   glTexCoord2f(1, 1); glVertex2d(1,-1);
   glTexCoord2f(0, 1); glVertex2d(-1,-1);
+  glEnd();
+  glDisable(GL_TEXTURE_2D);
+}
+
+inline void GlTexture::RenderToViewportFlipXFlipY() const
+{
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  Bind();
+  glEnable(GL_TEXTURE_2D);
+  glBegin(GL_QUADS);
+  glTexCoord2f(0, 0); glVertex2d(1,1);
+  glTexCoord2f(1, 0); glVertex2d(-1,1);
+  glTexCoord2f(1, 1); glVertex2d(-1,-1);
+  glTexCoord2f(0, 1); glVertex2d(1,-1);
   glEnd();
   glDisable(GL_TEXTURE_2D);
 }
