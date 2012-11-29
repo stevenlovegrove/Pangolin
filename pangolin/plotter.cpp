@@ -192,6 +192,7 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
 void Plotter::DrawTicks()
 {
+  glColor3fv(colour_tk);
   const int tx[2] = {
     (int)ceil(int_x[0] / ticks[0]),
     (int)ceil(int_x[1] / ticks[0])
@@ -500,8 +501,8 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 
 void Plotter::ScreenToPlot(int x, int y)
 {
-  mouse_xy[0] = int_x[0] + (int_x[1]-int_x[0]) * (x - v.l) / (float)v.w;
-  mouse_xy[1] = int_y[0] + (int_y[1]-int_y[0]) * (y - v.b) / (float)v.h;
+  mouse_xy[0] = vo[0] + int_x[0] + (int_x[1]-int_x[0]) * (x - v.l) / (float)v.w;
+  mouse_xy[1] = vo[1] + int_y[0] + (int_y[1]-int_y[0]) * (y - v.b) / (float)v.h;
 }
 
 void Plotter::Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state)
