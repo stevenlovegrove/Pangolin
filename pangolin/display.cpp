@@ -1313,6 +1313,11 @@ namespace pangolin
     }
   }
 
+  Handler3D::Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up, float trans_scale, float zoom_fraction)
+      : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), zf(zoom_fraction), cameraspec(CameraSpecOpenGl), last_z(1.0)
+  {
+      SetZero<3,1>(rot_center);
+  }
 
   void Handler3D::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
   {
@@ -1366,8 +1371,6 @@ namespace pangolin
 
       if( last_z != 1 ) {
         std::copy(Pc,Pc+3,rot_center);
-      }else{
-        SetZero<3,1>(rot_center);
       }
 
       if( button == MouseWheelUp || button == MouseWheelDown)
@@ -1503,8 +1506,6 @@ namespace pangolin
 
     if( last_z != 1 ) {
       std::copy(Pc,Pc+3,rot_center);
-    }else{
-      SetZero<3,1>(rot_center);
     }
 
     if( inType == InputSpecialScroll ) {

@@ -201,12 +201,14 @@ dc1394video_mode_t get_firewire_mode(unsigned width, unsigned height, const stri
 {
     for( dc1394video_mode_t video_mode=DC1394_VIDEO_MODE_MIN; video_mode<DC1394_VIDEO_MODE_MAX; video_mode = (dc1394video_mode_t)(video_mode +1) )
     {
-        unsigned w,h;
-        string format;
-        Dc1394ModeDetails(video_mode,w,h,format);
+        try {
+            unsigned w,h;
+            string format;
+            Dc1394ModeDetails(video_mode,w,h,format);
 
-        if( w == width && h==height && !fmt.compare(format) )
-            return video_mode;
+            if( w == width && h==height && !fmt.compare(format) )
+                return video_mode;
+        } catch (VideoException e) {}
     }
 
     throw VideoException("Unknown video mode");

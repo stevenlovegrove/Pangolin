@@ -539,8 +539,7 @@ namespace pangolin
   struct Handler3D : Handler
   {
 
-    Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction=1.0f/50.0f)
-        : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), zf(zoom_fraction), cameraspec(CameraSpecOpenGl), last_z(1.0) {}
+    Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction=1.0f/50.0f);
 
     virtual void GetPosNormal(View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3]);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
