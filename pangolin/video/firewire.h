@@ -56,7 +56,10 @@ public:
   unsigned char* Image() { return frame ? frame->image : 0; }
   unsigned Width() const { return frame ? frame->size[0] : 0; }
   unsigned Height() const { return frame ? frame->size[1] : 0; }
-
+  unsigned ImageBytes() const { return frame ? frame->image_bytes : 0; }
+  int FramesBehind() const { return frame ? frame->frames_behind : -1; }
+  unsigned Timestamp() const { return frame ? frame->timestamp : 0; }
+  int Id() const { return frame ? frame->id : -1; }
 protected:
   FirewireFrame(dc1394video_frame_t* frame) : frame(frame) {}
   dc1394video_frame_t *frame;
