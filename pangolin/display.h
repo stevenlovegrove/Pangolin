@@ -541,7 +541,7 @@ namespace pangolin
 
     Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction=1.0f/50.0f);
 
-    virtual void GetPosNormal(View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3]);
+    virtual void GetPosNormal(View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3], double default_z = 1.0);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void MouseMotion(View&, int x, int y, int button_state);

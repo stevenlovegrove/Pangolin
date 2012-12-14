@@ -1324,22 +1324,24 @@ namespace pangolin
     // TODO: hooks for reset / changing mode (perspective / ortho etc)
   }
 
-  void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3])
+  void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3], double default_z)
   {
       const GLint viewport[4] = {view.v.l,view.v.b,view.v.w,view.v.h};
       const pangolin::OpenGlMatrix proj = cam_state->GetProjectionMatrix();
       const pangolin::OpenGlMatrix mv = cam_state->GetModelViewMatrix();
+//      const pangolin::OpenGlMatrix id = IdentityMatrix();
 
       glReadBuffer(GL_FRONT);
       const int zl = (hwin*2+1);
       const int zsize = zl*zl;
       GLfloat zs[zsize];
       glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
-      const GLfloat mindepth = *(std::min_element(zs,zs+zsize));
+      GLfloat mindepth = *(std::min_element(zs,zs+zsize));
+      if(mindepth == 1) mindepth = default_z;
 
       p[0] = x; p[1] = y; p[2] = mindepth;
       gluUnProject(x, y, mindepth, mv.m, proj.m, viewport, &Pw[0], &Pw[1], &Pw[2]);
-
+//      gluUnProject(x, y, mindepth, id.m, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
       LieApplySE34x4vec3(Pc, mv.m, Pw);
 
       double Pl[3]; double Pr[3]; double Pb[3]; double Pt[3];
@@ -1366,11 +1368,10 @@ namespace pangolin
     LieSetIdentity(T_nc);
 
     if( pressed ) {
-      GetPosNormal(display,x,y,p,Pw,Pc,n);
-      last_z = p[2];
-
-      if( last_z != 1 ) {
-        std::copy(Pc,Pc+3,rot_center);
+      GetPosNormal(display,x,y,p,Pw,Pc,n,last_z);
+      if(p[2] < 1.0) {
+          last_z = p[2];
+          std::copy(Pc,Pc+3,rot_center);
       }
 
       if( button == MouseWheelUp || button == MouseWheelDown)
@@ -1501,11 +1502,10 @@ namespace pangolin
     double T_nc[3*4];
     LieSetIdentity(T_nc);
 
-    GetPosNormal(display,x,y,p,Pw,Pc,n);
-    last_z = p[2];
-
-    if( last_z != 1 ) {
-      std::copy(Pc,Pc+3,rot_center);
+    GetPosNormal(display,x,y,p,Pw,Pc,n,last_z);
+    if(p[2] < 1.0) {
+        last_z = p[2];
+        std::copy(Pc,Pc+3,rot_center);
     }
 
     if( inType == InputSpecialScroll ) {
