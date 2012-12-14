@@ -175,7 +175,7 @@ void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6)
 }
 
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky)
-  : log(log), track_front(true), draw_mode(0), plot_mode(TIME_SERIES)
+  : log(log), track_front(true),lineThickness(1.0f), draw_mode(0), plot_mode(TIME_SERIES)
 {
   this->handler = this;
   int_x[0] = int_x_dflt[0] = left;
@@ -193,6 +193,7 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 void Plotter::DrawTicks()
 {
   glColor3fv(colour_tk);
+  glLineWidth(lineThickness);
   const int tx[2] = {
     (int)ceil(int_x[0] / ticks[0]),
     (int)ceil(int_x[1] / ticks[0])
@@ -236,6 +237,7 @@ void Plotter::DrawTicks()
   glVertex2f(int_x[0]+vo[0],0);
   glVertex2f(int_x[1]+vo[0],0);
   glEnd();
+  glLineWidth(1.0f);
 }
 
 void Plotter::DrawSequence(const DataSequence& seq)
@@ -245,10 +247,12 @@ void Plotter::DrawSequence(const DataSequence& seq)
     std::max(seqint_x[0],(int)(int_x[0]+vo[0])),
     std::min(seqint_x[1],(int)(int_x[1]+vo[0]))
   };
+  glLineWidth(lineThickness);
   glBegin(draw_modes[draw_mode]);
   for( int x=valid_int_x[0]; x<valid_int_x[1]; ++x )
     glVertex2f(x,seq[x]);
   glEnd();
+  glLineWidth(1.0f);
 }
 
 void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
@@ -293,10 +297,12 @@ void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
   const unsigned minn = max(x.firstn,y.firstn);
   const unsigned maxn = min(x.n,y.n);
 
+  glLineWidth(lineThickness);
   glBegin(draw_modes[draw_mode]);
   for( unsigned n=minn; n < maxn; ++n )
     glVertex2f(x[n],y[n]);
   glEnd();
+  glLineWidth(1.0f);
 }
 
 void Plotter::Render()
@@ -405,13 +411,13 @@ void Plotter::Render()
     }
   }
 
-  float ty = v.h-15;
+  float ty = v.h+v.b-15;
   for (size_t i=0; i<log->labels.size(); ++i)
   {
     glColor3fv(plot_colours[i%num_plot_colours]);
 
     OpenGlRenderState::ApplyWindowCoords();
-    glRasterPos2f( v.l+5,ty);
+    glRasterPos2f(v.l+5,ty);
     glutBitmapString(font,(unsigned char*)log->labels[i].c_str());
     ty -= 15;
   }
@@ -441,6 +447,11 @@ void Plotter::SetMode(unsigned mode, bool track)
 {
 	plot_mode = mode;
 	track_front = track;
+}
+
+void Plotter::SetLineThickness(float t)
+{
+	lineThickness = t;
 }
 
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
