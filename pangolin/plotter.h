@@ -139,6 +139,7 @@ struct Plotter : public View, Handler
   void ScreenToPlot(int x, int y);
   void SetMode(unsigned mode, bool track=true);
   void SetViewOrigin(float x0, float y0);
+  void SetLineThickness(float t);
 
   DataLog* log;
   bool track_front;
@@ -151,6 +152,7 @@ struct Plotter : public View, Handler
   int last_mouse_pos[2];
   int mouse_state;
   float mouse_xy[2];
+  float lineThickness;
 
   int draw_mode;
 
