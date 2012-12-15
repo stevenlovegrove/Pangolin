@@ -202,22 +202,36 @@ SET(INSTALL_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h
 	gl.h 
 	glcuda.h
         gldraw.h 
-    glsl.h
-    glvbo.h
+        glsl.h
+        glvbo.h
+	input_record_repeat.h
 	pangolin.h 
 	platform.h 
 	plotter.h 
 	simple_math.h 
+	threadedfilebuf.h
 	vars.h 
 	vars_internal.h 
 	video.h 
-    video/firewire.h
-    widgets.h
+	video_recorder.h
+	video_record_repeat.h
+        widgets.h
+)
+
+SET(INSTALL_VIDEO_HEADERS 
+	video/ffmpeg.h
+	video/firewire.h
+	video/openni.h	
+	video/pvn_video.h
+	video/v4l.h
 )
 
 # install headers
 INSTALL(FILES ${INSTALL_HEADERS} 
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
+)
+INSTALL(FILES ${INSTALL_VIDEO_HEADERS} 
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}/video
 )
 
 # install library
