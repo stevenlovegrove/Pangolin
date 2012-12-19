@@ -175,7 +175,7 @@ void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6)
 }
 
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky)
-  : log(log), track_front(true),lineThickness(1.0f), draw_mode(0), plot_mode(TIME_SERIES)
+    : log(log), track_front(true), mouse_state(0),lineThickness(1.0f), draw_mode(0), plot_mode(TIME_SERIES)
 {
   this->handler = this;
   int_x[0] = int_x_dflt[0] = left;
