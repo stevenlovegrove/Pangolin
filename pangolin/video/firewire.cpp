@@ -732,6 +732,37 @@ FirewireVideo::~FirewireVideo()
     dc1394_free (d);
 }
 
+void FirewireVideo::SetRegister(uint64_t offset, uint32_t value){
+    dc1394error_t err = dc1394_set_register (camera, offset, value);
+    if (err < 0) {
+        throw VideoException("Could not set camera register");
+    }
+}
+
+uint32_t FirewireVideo::GetRegister(uint64_t offset){
+    uint32_t value = 0;
+    dc1394error_t err = dc1394_get_register (camera, offset, &value);
+    if (err < 0) {
+        throw VideoException("Could not get camera register");
+    }
+    return value;
+}
+
+void FirewireVideo::SetControlRegister(uint64_t offset, uint32_t value){
+    dc1394error_t err = dc1394_set_control_register (camera, offset, value);
+    if (err < 0) {
+        throw VideoException("Could not set camera control register");
+    }
+}
+
+uint32_t FirewireVideo::GetControlRegister(uint64_t offset){
+    uint32_t value = 0;
+    dc1394error_t err = dc1394_get_control_register(camera, offset, &value);
+    if (err < 0) {
+        throw VideoException("Could not get camera control register");
+    }
+    return value;
+}
 
 int FirewireVideo::nearest_value(int value, int step, int min, int max) {
 
