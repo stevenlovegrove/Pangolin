@@ -169,11 +169,20 @@ public:
   //! return absolute gain value
   float GetGain() const;
 
-  //! set absolute shutter value
+  //! set absolute gain value
   void SetGain(float val);
 
-  //! set auto shutter value
+  //! set auto gain value
   void SetAutoGain();
+
+  //! return absolute brightness value
+  float GetBrightness() const;
+
+  //! set absolute brightness value
+  void SetBrightness(float val);
+
+  //! set auto brightness
+  void SetAutoBrightness();
 
   //! return absolute gamma value
   float GetGamma() const;
