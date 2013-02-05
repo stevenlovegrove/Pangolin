@@ -76,6 +76,10 @@ class FirewireVideo : public VideoInterface
 public:
   const static int MAX_FR = -1;
   const static int EXT_TRIG = -1;
+  const static uint32_t GPIO_CTRL_PIN0 = 0x1110;
+  const static uint32_t GPIO_CTRL_PIN1 = 0x1120;
+  const static uint32_t GPIO_CTRL_PIN2 = 0x1130;
+  const static uint32_t GPIO_CTRL_PIN3 = 0x1140;
 
   FirewireVideo(
     unsigned deviceid = 0,
@@ -165,11 +169,20 @@ public:
   //! return absolute gain value
   float GetGain() const;
 
-  //! set absolute shutter value
+  //! set absolute gain value
   void SetGain(float val);
 
-  //! set auto shutter value
+  //! set auto gain value
   void SetAutoGain();
+
+  //! return absolute brightness value
+  float GetBrightness() const;
+
+  //! set absolute brightness value
+  void SetBrightness(float val);
+
+  //! set auto brightness
+  void SetAutoBrightness();
 
   //! return absolute gamma value
   float GetGamma() const;
@@ -186,6 +199,18 @@ public:
       dc1394trigger_polarity_t polarity=DC1394_TRIGGER_ACTIVE_HIGH,
       dc1394trigger_source_t source=DC1394_TRIGGER_SOURCE_0
   );
+
+  //! set a camera register
+  void SetRegister(uint64_t offset, uint32_t value);
+
+  //! read camera register
+  uint32_t GetRegister(uint64_t offset);
+
+  //! set a camera control register
+  void SetControlRegister(uint64_t offset, uint32_t value);
+
+  //! read camera control register
+  uint32_t GetControlRegister(uint64_t offset);
 
 protected:
 
