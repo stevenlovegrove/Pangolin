@@ -151,6 +151,7 @@ struct GlBuffer
   ~GlBuffer();
   
   void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse );
+  void Resize(GLuint num_elements);
 
   void Bind() const;
   void Unbind() const;
@@ -459,12 +460,12 @@ inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
 }
 
 inline GlBuffer::GlBuffer()
-    : bo(0)
+    : bo(0), num_elements(0)
 {
 }
 
 inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
-    : bo(0)
+    : bo(0), num_elements(0)
 {
     Reinitialise(buffer_type, num_elements, datatype, count_per_element, gluse );
 }
@@ -486,16 +487,33 @@ inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements
   this->num_elements = num_elements;
   this->count_per_element = count_per_element;
     
-  if(bo!=0) {
-    glDeleteBuffers(1, &bo);
+  if(!bo) {
+    glGenBuffers(1, &bo);
   }
 
-  glGenBuffers(1, &bo);
   Bind();
   glBufferData(buffer_type, num_elements*GlDataTypeBytes(datatype)*count_per_element, 0, gluse);
   Unbind();
 }
-    
+
+inline void GlBuffer::Resize(GLuint new_num_elements)
+{
+    if(bo!=0) {
+        // Backup current data, reinit memory, restore old data
+        const size_t backup_elements = std::min(new_num_elements,num_elements);
+        const size_t backup_size_bytes = backup_elements*GlDataTypeBytes(datatype)*count_per_element;
+        unsigned char* backup = new unsigned char[backup_size_bytes];
+        Bind();
+        glGetBufferSubData(buffer_type, 0, backup_size_bytes, backup);
+        glBufferData(buffer_type, new_num_elements*GlDataTypeBytes(datatype)*count_per_element, 0, gluse);
+        glBufferSubData(buffer_type, 0, backup_size_bytes, backup);
+        Unbind();
+        delete[] backup;
+    }else{
+        Reinitialise(buffer_type, new_num_elements, datatype, count_per_element, gluse);
+    }
+    num_elements = new_num_elements;
+}
 
 inline GlBuffer::~GlBuffer()
 {
