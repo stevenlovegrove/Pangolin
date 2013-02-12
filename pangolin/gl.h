@@ -168,6 +168,29 @@ private:
   GlBuffer(const GlBuffer&) {}
 };
 
+class GlSizeableBuffer
+    : public pangolin::GlBuffer
+{
+public:
+    GlSizeableBuffer(pangolin::GlBufferType buffer_type, GLuint initial_num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
+    
+#ifdef HAVE_EIGEN
+    template<typename T, int R, int C>
+    void Add(Eigen::Matrix<T,R,C> vec);
+#endif
+    
+    size_t start() const;
+    
+    size_t size() const;
+
+protected:  
+    void CheckResize(int num_new_verts);
+    
+    size_t NextSize(size_t min_size) const;
+    
+    size_t  m_num_verts;    
+};
+
 size_t GlDataTypeBytes(GLenum type);
 
 void glColorHSV( double hue, double s, double v );
@@ -385,6 +408,8 @@ inline void GlTexture::RenderToViewportFlipXFlipY() const
   glDisable(GL_TEXTURE_2D);
 }
 
+////////////////////////////////////////////////////////////////////////////
+
 inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_format )
 {
   glGenRenderbuffersEXT(1, &rbid);
@@ -397,6 +422,8 @@ inline GlRenderBuffer::~GlRenderBuffer()
 {
   glDeleteRenderbuffersEXT(1, &rbid);
 }
+
+////////////////////////////////////////////////////////////////////////////
 
 inline GlFramebuffer::GlFramebuffer()
   : attachments(0)
@@ -458,6 +485,8 @@ inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     CheckGlDieOnError();
 }
+
+////////////////////////////////////////////////////////////////////////////
 
 inline GlBuffer::GlBuffer()
     : bo(0), num_elements(0)
@@ -537,6 +566,52 @@ inline void GlBuffer::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr
   Bind();
   glBufferSubData(buffer_type,offset,size_bytes, data);
 }
+
+////////////////////////////////////////////////////////////////////////////
+
+inline GlSizeableBuffer::GlSizeableBuffer(GlBufferType buffer_type, GLuint initial_num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
+    : GlBuffer(buffer_type, initial_num_elements, datatype, count_per_element, gluse)
+{
+    
+}
+
+#ifdef HAVE_EIGEN
+template<typename T, int R, int C> inline
+void GlSizeableBuffer::Add(Eigen::Matrix<T,R,C> vec)
+{
+    assert(R==GlBuffer::count_per_element);
+    CheckResize(1);
+    Eigen::Matrix<float,R,C> vecf = vec.template cast<float>();
+    Upload(vecf.data(), sizeof(float)*R*C, sizeof(float)*R*m_num_verts);
+    m_num_verts += C;
+}
+#endif
+
+inline size_t GlSizeableBuffer::start() const {
+    return 0;
+}
+
+inline size_t GlSizeableBuffer::size() const {
+    return m_num_verts;
+}
+
+inline void GlSizeableBuffer::CheckResize(int num_new_verts)
+{
+    if(m_num_verts + num_new_verts > GlBuffer::num_elements) {
+        const size_t new_size = NextSize(m_num_verts + num_new_verts);
+        GlBuffer::Resize(new_size);
+    }
+}
+
+inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
+{
+    size_t new_size = GlBuffer::num_elements;
+    while(new_size < min_size) {
+        new_size *= 2;
+    }
+    return new_size;
+}
+
 
 }
 
