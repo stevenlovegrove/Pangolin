@@ -42,6 +42,10 @@
 #include <GL/gl.h>
 #endif
 
+#ifdef HAVE_EIGEN
+#include <Eigen/Eigen>
+#endif
+
 #include <math.h>
 #include <iostream>
 #include <cstdlib>
