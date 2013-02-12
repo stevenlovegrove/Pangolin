@@ -8,7 +8,7 @@ SET(
   simple_math.h
   display.h display_internal.h display.cpp
   plotter.h plotter.cpp
-  gl.h glcuda.h cg.h glsl.h gldraw.h
+  gl.h glcuda.h cg.h glsl.h gldraw.h glvbo.h
   threadedfilebuf.h threadedfilebuf.cpp
   timer.h
 )

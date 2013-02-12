@@ -37,35 +37,78 @@ namespace pangolin
 // Interface
 ////////////////////////////////////////////////
 
-void RenderVbo(pangolin::GlBuffer& vbo, int w, int h);
+void MakeTriangleStripIboForVbo(GlBuffer& ibo, int w, int h);
 
-void RenderVboCbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& cbo, int w, int h, bool draw_color = true);
+#if __cplusplus > 199711L
+GlBuffer MakeTriangleStripIboForVbo(int w, int h);
+#endif
 
-void RenderVboIbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo, int w, int h, bool draw_mesh = true);
+void RenderVbo(GlBuffer& vbo);
 
-void RenderVboIboCbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo, pangolin::GlBuffer& cbo, int w, int h, bool draw_mesh = true, bool draw_color = true);
+void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color = true);
 
-void RenderVboIboCboNbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo, pangolin::GlBuffer& cbo, pangolin::GlBuffer& nbo, int w, int h, bool draw_mesh = true, bool draw_color = true, bool draw_normals = true);
+void RenderVboIbo(GlBuffer& vbo, GlBuffer& ibo, bool draw_mesh = true);
+
+void RenderVboIboCbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, bool draw_mesh = true, bool draw_color = true);
+
+void RenderVboIboCboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, GlBuffer& nbo, bool draw_mesh = true, bool draw_color = true, bool draw_normals = true);
 
 ////////////////////////////////////////////////
 // Implementation
 ////////////////////////////////////////////////
 
-inline void RenderVbo(pangolin::GlBuffer& vbo, int w, int h)
+inline void MakeTriangleStripIboForVbo(GlBuffer& ibo, int w, int h)
+{
+    const int num_elements = w*(h-1)*2;
+    unsigned int* buffer = new unsigned int[num_elements];
+    unsigned int* ptr = buffer;
+    
+    for(int y=0; y < (h-1);)
+    {
+        for(int x=0; x<w; ++x) {
+            (*ptr++) = y*w+x;
+            (*ptr++) = (y+1)*w+x;
+        }
+        ++y;
+        
+        if(y>=(h-1)) break;        
+        for(int x=w-1; x>=0; --x) {
+            (*ptr++) = y*w+x;
+            (*ptr++) = (y+1)*w+x;
+        }
+        ++y;
+    }
+        
+    ibo.Reinitialise(GlElementArrayBuffer, num_elements, GL_UNSIGNED_INT, 1, GL_STATIC_DRAW );
+    ibo.Upload(buffer, sizeof(unsigned int)*num_elements );
+    
+    delete[] buffer;
+}
+
+#if __cplusplus > 199711L
+inline GlBuffer MakeTriangleStripIboForVbo(int w, int h)
+{
+    GlBuffer ibo;
+    MakeTriangleStripIboForVbo(ibo,w,h);
+    return ibo;
+}
+#endif
+
+inline void RenderVbo(GlBuffer& vbo)
 {
     vbo.Bind();
     glVertexPointer(vbo.count_per_element, vbo.datatype, 0, 0);
     glEnableClientState(GL_VERTEX_ARRAY);
 
     glPointSize(2.0);
-    glDrawArrays(GL_POINTS, 0, w * h);
+    glDrawArrays(GL_POINTS, 0, vbo.num_elements);
 
     glDisableClientState(GL_VERTEX_ARRAY);
     vbo.Unbind();
 
 }
 
-inline void RenderVboCbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& cbo, int w, int h, bool draw_color)
+inline void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color)
 {
     if(draw_color) {
         cbo.Bind();
@@ -73,7 +116,7 @@ inline void RenderVboCbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& cbo, int w
         glEnableClientState(GL_COLOR_ARRAY);
     }
 
-    RenderVbo(vbo,w,h);
+    RenderVbo(vbo);
 
     if(draw_color) {
         glDisableClientState(GL_COLOR_ARRAY);
@@ -81,7 +124,7 @@ inline void RenderVboCbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& cbo, int w
     }
 }
 
-inline void RenderVboIbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo, int w, int h, bool draw_mesh)
+inline void RenderVboIbo(GlBuffer& vbo, GlBuffer& ibo, bool draw_mesh)
 {
     vbo.Bind();
     glVertexPointer(vbo.count_per_element, vbo.datatype, 0, 0);
@@ -89,20 +132,18 @@ inline void RenderVboIbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo, int w
 
     if(draw_mesh) {
         ibo.Bind();
-        for( int r=0; r<h-1; ++r) {
-            glDrawElements(GL_TRIANGLE_STRIP,w*ibo.count_per_element, ibo.datatype, (unsigned int*)0 + ibo.width*ibo.count_per_element*r);
-        }
+        glDrawElements(GL_TRIANGLE_STRIP,ibo.num_elements, ibo.datatype, 0);
         ibo.Unbind();
     }else{
         glPointSize(2.0);
-        glDrawArrays(GL_POINTS, 0, w * h);
+        glDrawArrays(GL_POINTS, 0, vbo.num_elements);
     }
 
     glDisableClientState(GL_VERTEX_ARRAY);
     vbo.Unbind();
 }
 
-inline void RenderVboIboCbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo, pangolin::GlBuffer& cbo, int w, int h, bool draw_mesh, bool draw_color )
+inline void RenderVboIboCbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, bool draw_mesh, bool draw_color )
 {
     if(draw_color) {
         cbo.Bind();
@@ -110,7 +151,7 @@ inline void RenderVboIboCbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo, pa
         glEnableClientState(GL_COLOR_ARRAY);
     }
 
-    RenderVboIbo(vbo,ibo,w,h,draw_mesh);
+    RenderVboIbo(vbo,ibo,draw_mesh);
 
     if(draw_color) {
         glDisableClientState(GL_COLOR_ARRAY);
@@ -118,7 +159,7 @@ inline void RenderVboIboCbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo, pa
     }
 }
 
-inline void RenderVboIboCboNbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo, pangolin::GlBuffer& cbo, pangolin::GlBuffer& nbo, int w, int h, bool draw_mesh, bool draw_color, bool draw_normals)
+inline void RenderVboIboCboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, GlBuffer& nbo, bool draw_mesh, bool draw_color, bool draw_normals)
 {
     if(draw_color) {
         cbo.Bind();
@@ -133,14 +174,12 @@ inline void RenderVboIboCboNbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo,
     if(draw_mesh) {
         if(draw_normals) {
             nbo.Bind();
-            glNormalPointer(nbo.datatype, nbo.count_per_element * pangolin::GlDataTypeBytes(nbo.datatype),0);
+            glNormalPointer(nbo.datatype, nbo.count_per_element * GlDataTypeBytes(nbo.datatype),0);
             glEnableClientState(GL_NORMAL_ARRAY);
         }
 
         ibo.Bind();
-        for( int r=0; r<h-1; ++r) {
-            glDrawElements(GL_TRIANGLE_STRIP,w*ibo.count_per_element, ibo.datatype, (unsigned int*)0 + ibo.width*ibo.count_per_element*r);
-        }
+        glDrawElements(GL_TRIANGLE_STRIP,ibo.num_elements, ibo.datatype, 0);
         ibo.Unbind();
 
         if(draw_normals) {
@@ -149,7 +188,7 @@ inline void RenderVboIboCboNbo(pangolin::GlBuffer& vbo, pangolin::GlBuffer& ibo,
         }
     }else{
         glPointSize(2.0);
-        glDrawArrays(GL_POINTS, 0, w * h);
+        glDrawArrays(GL_POINTS, 0, vbo.num_elements);
     }
 
     if(draw_color) {

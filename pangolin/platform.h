@@ -30,6 +30,14 @@
 
 #include <pangolin/config.h>
 
+#ifdef _GCC_
+#  define PANGOLIN_DEPRECATED __attribute__((deprecated))
+#elif defined _MSVC_
+#  define PANGOLIN_DEPRECATED __declspec(deprecated)
+#else
+#  define PANGOLIN_DEPRECATED
+#endif
+
 #ifdef _MSVC_
 #define __thread __declspec(thread)
 #endif //_MSVC_

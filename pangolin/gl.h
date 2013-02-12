@@ -131,16 +131,26 @@ struct GlFramebuffer
 
 enum GlBufferType
 {
-  GlArrayBuffer = GL_ARRAY_BUFFER,
-  GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,
-  GlPixelPackBuffer = GL_PIXEL_PACK_BUFFER,
+  GlArrayBuffer = GL_ARRAY_BUFFER,                    // VBO's, CBO's, NBO's
+  GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,     // IBO's
+  GlPixelPackBuffer = GL_PIXEL_PACK_BUFFER,           // PBO's
   GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER
 };
 
 struct GlBuffer
 {
-  GlBuffer(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
+  //! Default constructor represents 'no buffer'
+  GlBuffer();
+  GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
+  
+#if __cplusplus > 199711L
+  //! Move Constructor
+  GlBuffer(GlBuffer&& tex);
+#endif  
+  
   ~GlBuffer();
+  
+  void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse );
 
   void Bind() const;
   void Unbind() const;
@@ -148,11 +158,10 @@ struct GlBuffer
 
   GLuint bo;
   GlBufferType buffer_type;
-
-  GLuint width;
-  GLuint height;
+  GLenum gluse;
 
   GLenum datatype;
+  GLuint num_elements;
   GLuint count_per_element;
 private:
   GlBuffer(const GlBuffer&) {}
@@ -449,18 +458,50 @@ inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
     CheckGlDieOnError();
 }
 
-inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, GLenum gluse )
-    : buffer_type(buffer_type), width(width), height(height), datatype(datatype), count_per_element(count_per_element)
+inline GlBuffer::GlBuffer()
+    : bo(0)
 {
+}
+
+inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
+    : bo(0)
+{
+    Reinitialise(buffer_type, num_elements, datatype, count_per_element, gluse );
+}
+
+#if __cplusplus > 199711L
+  inline GlBuffer::GlBuffer(GlBuffer&& buffer)
+      : bo(buffer.bo), buffer_type(buffer.buffer_type), gluse(buffer.gluse), datatype(buffer.datatype),
+        num_elements(buffer.num_elements), count_per_element(buffer.count_per_element)
+  {
+      buffer.bo = 0;
+  }
+#endif
+
+inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
+{
+  this->buffer_type = buffer_type;
+  this->gluse = gluse;
+  this->datatype = datatype;
+  this->num_elements = num_elements;
+  this->count_per_element = count_per_element;
+    
+  if(bo!=0) {
+    glDeleteBuffers(1, &bo);
+  }
+
   glGenBuffers(1, &bo);
   Bind();
-  glBufferData(buffer_type, width*height*GlDataTypeBytes(datatype)*count_per_element, 0, gluse);
+  glBufferData(buffer_type, num_elements*GlDataTypeBytes(datatype)*count_per_element, 0, gluse);
   Unbind();
 }
+    
 
 inline GlBuffer::~GlBuffer()
 {
-  glDeleteBuffers(1, &bo);
+  if(bo!=0) {
+    glDeleteBuffers(1, &bo);
+  }
 }
 
 inline void GlBuffer::Bind() const

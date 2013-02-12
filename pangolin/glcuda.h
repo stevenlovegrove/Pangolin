@@ -43,11 +43,11 @@ namespace pangolin
 
 struct GlBufferCudaPtr : public GlBuffer
 {
-  GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause = cudaGraphicsMapFlagsNone, GLenum gluse = GL_DYNAMIC_DRAW );
+  GlBufferCudaPtr(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
 
-  //! Deprecated
-  GlBufferCudaPtr(GlBufferType buffer_type, GLsizeiptr size_bytes, unsigned int cudause = cudaGraphicsMapFlagsNone, GLenum gluse = GL_DYNAMIC_DRAW );
-
+  PANGOLIN_DEPRECATED
+  GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
+    
   ~GlBufferCudaPtr();
 
   cudaGraphicsResource* cuda_res;
@@ -91,16 +91,16 @@ void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b);
 // Implementation
 ////////////////////////////////////////////////
 
-inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause, GLenum gluse )
-    : GlBuffer(buffer_type, width, height, datatype, count_per_element, gluse)
+inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause, GLenum gluse )
+    : GlBuffer(buffer_type, num_elements, datatype, count_per_element, gluse)
 {
     cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );
 }
 
-inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLsizeiptr size_bytes, unsigned int cudause, GLenum gluse)
-  : GlBuffer(buffer_type,size_bytes,1,GL_UNSIGNED_BYTE,1,gluse)
+inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ )
+    : GlBuffer(buffer_type, width*height, datatype, count_per_element, gluse)
 {
-  cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );
+    cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );    
 }
 
 inline GlBufferCudaPtr::~GlBufferCudaPtr()
