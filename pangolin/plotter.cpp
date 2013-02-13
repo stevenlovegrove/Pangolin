@@ -44,18 +44,22 @@ extern __thread PangolinGl* context;
 static void* font = GLUT_BITMAP_HELVETICA_12;
 
 DataSequence::DataSequence(unsigned int buffer_size, unsigned size, float val )
-  : y(buffer_size,size,val), n(0), sum_y(0), sum_y_sq(0),
+  : buffer_size(buffer_size), ys(0), firstn(size), n(0), sum_y(0), sum_y_sq(0),
     min_y(numeric_limits<float>::max()),
     max_y(numeric_limits<float>::min())
 {
+    ys = new float[buffer_size];
+}
 
+DataSequence::~DataSequence()
+{
+    delete[] ys;
 }
 
 void DataSequence::Add(float val)
 {
-  y.push_back(val);
-  ++n;
-  firstn = n-y.size();
+  operator[](n++) = val;
+
   min_y = std::min(min_y,val);
   max_y = std::max(max_y,val);
   sum_y += val;
@@ -64,7 +68,6 @@ void DataSequence::Add(float val)
 
 void DataSequence::Clear()
 {
-  y.clear();
   n = 0;
   firstn = 0;
   sum_y = 0;
@@ -73,12 +76,29 @@ void DataSequence::Clear()
   max_y = numeric_limits<float>::min();
 }
 
-float DataSequence::operator[](unsigned int i) const
+float DataSequence::operator[](int i) const
 {
-  if( !HasData(i) ) {
-    throw DataUnavailableException("Out of range");
-  }
-  return y[(i-firstn) % y.size()];
+  return ys[(i-firstn) % buffer_size];
+}
+
+float& DataSequence::operator[](int i)
+{
+  return ys[(i-firstn) % buffer_size];
+}
+
+float DataSequence::Sum() const
+{
+    return sum_y;
+}
+
+float DataSequence::Min() const
+{
+    return min_y;    
+}
+
+float DataSequence::Max() const
+{
+    return max_y;    
 }
 
 DataLog::DataLog(unsigned int buffer_size)
@@ -97,7 +117,7 @@ void DataLog::Save(std::string filename)
   if( sequences.size() > 0 )
   {
     ofstream f(filename.c_str());
-    for( int n=sequences[0].firstn; n < sequences[0].n; ++n )
+    for( int n=sequences[0].IndexBegin(); n < sequences[0].IndexEnd(); ++n )
     {
       f << setprecision(12) << sequences[0][n];
       for( unsigned s=1; s < sequences.size(); ++s )
@@ -117,10 +137,10 @@ void DataLog::Log(unsigned int N, const float * vals)
 {
   // Create new plots if needed
   for( unsigned int i= sequences.size(); i < N; ++i )
-    sequences.push_back(DataSequence(buffer_size,x,0));
+    sequences.push_back(new DataSequence(buffer_size,x,0));
 
   // Add data to existing plots
-  for( unsigned int i=0; i<sequences.size(); ++i )
+  for( unsigned int i=0; i<N; ++i )
     sequences[i].Add(vals[i]);
 
   // Fill missing data
@@ -242,7 +262,7 @@ void Plotter::DrawTicks()
 
 void Plotter::DrawSequence(const DataSequence& seq)
 {
-  const int seqint_x[2] = {seq.firstn, seq.n };
+  const int seqint_x[2] = {seq.IndexBegin(), seq.IndexEnd() };
   const int valid_int_x[2] = {
     std::max(seqint_x[0],(int)(int_x[0]+vo[0])),
     std::min(seqint_x[1],(int)(int_x[1]+vo[0]))
@@ -255,7 +275,7 @@ void Plotter::DrawSequence(const DataSequence& seq)
   glLineWidth(1.0f);
 }
 
-void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
+void Plotter::DrawSequenceHistogram(const DataLog::SequenceContainer& seq)
 {
   size_t vec_size = std::min((unsigned)log->x, log->buffer_size);
   int idx_subtract = std::max(0,(int)(log->x)-(int)(log->buffer_size));
@@ -265,7 +285,7 @@ void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
   {
     if( (s > 9) ||  show[s] )
     {
-      const int seqint_x[2] = {seq.at(s).firstn, seq.at(s).n };
+      const int seqint_x[2] = {seq.at(s).IndexBegin(), seq.at(s).IndexEnd() };
       const int valid_int_x[2] = {
         std::max(seqint_x[0],(int)(int_x[0]+vo[0])),
         std::min(seqint_x[1],(int)(int_x[1]+vo[0]))
@@ -294,8 +314,8 @@ void Plotter::DrawSequenceHistogram(const std::vector<DataSequence>& seq)
 
 void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
 {
-  const unsigned minn = max(x.firstn,y.firstn);
-  const unsigned maxn = min(x.n,y.n);
+  const unsigned minn = max(x.IndexBegin(),y.IndexBegin());
+  const unsigned maxn = min(x.IndexEnd(),y.IndexEnd());
 
   glLineWidth(lineThickness);
   glBegin(draw_modes[draw_mode]);
@@ -483,10 +503,10 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
       cout << "Plotter: Auto scale" << endl;
       if( plot_mode==XY && log->sequences.size() >= 2)
       {
-        int_x[0] = log->sequences[0].min_y;
-        int_x[1] = log->sequences[0].max_y;
-        int_y[0] = log->sequences[1].min_y;
-        int_y[1] = log->sequences[1].max_y;
+        int_x[0] = log->sequences[0].Min();
+        int_x[1] = log->sequences[0].Max();
+        int_y[0] = log->sequences[1].Min();
+        int_y[1] = log->sequences[1].Max();
       }else{
         float min_y = numeric_limits<float>::max();
         float max_y = numeric_limits<float>::min();
@@ -494,8 +514,8 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
         {
           if( i>=show_n || show[i] )
           {
-            min_y = std::min(min_y,log->sequences[i].min_y);
-            max_y = std::max(max_y,log->sequences[i].max_y);
+            min_y = std::min(min_y,log->sequences[i].Min());
+            max_y = std::max(max_y,log->sequences[i].Max());
           }
         }
         if( min_y < max_y )

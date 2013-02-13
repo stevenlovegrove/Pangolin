@@ -30,7 +30,7 @@
 
 #include "pangolin.h"
 #include <vector>
-#include <boost/circular_buffer.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
 
 namespace pangolin
 {
@@ -51,31 +51,62 @@ struct DataUnavailableException : std::exception
     std::string desc;
 };
 
-struct DataSequence
+class DataSequence
 {
+public:
   DataSequence(unsigned int buffer_size = 1024, unsigned size = 0, float val = 0.0f );
+  ~DataSequence();
 
   void Add(float val);
   void Clear();
-  float operator[](unsigned int i) const;
+  
+  float operator[](int i) const;
+  float& operator[](int i);
 
-  inline bool HasData(int i) const;
+  int IndexBegin() const;
+  int IndexEnd() const;
+  
+  bool HasData(int i) const;
+  
+  float Sum() const;
+  float Min() const;
+  float Max() const;
+  
+protected:
+  DataSequence(const DataSequence& o) {}
 
-  boost::circular_buffer<float> y;
+  int buffer_size;
+  float* ys;
+  
   int firstn;
   int n;
   float sum_y;
   float sum_y_sq;
   float min_y;
   float max_y;
+  
 };
 
+inline int DataSequence::IndexEnd() const
+{
+    return firstn + n;   
+}
+
+inline int DataSequence::IndexBegin() const
+{
+    return std::max(firstn, IndexEnd()-buffer_size);
+}
+
 inline bool DataSequence::HasData(int i) const {
-    return i >= (int)firstn && i < (int)n;
+    const int last  = IndexEnd();
+    const int first = std::max(firstn, last-buffer_size);
+    return first <= i && i < last;
 }
 
 struct DataLog
 {
+  typedef boost::ptr_vector<DataSequence> SequenceContainer;
+    
   DataLog(unsigned int buffer_size = 10000 );
   void Log(float v);
   void Log(float v1, float v2);
@@ -91,7 +122,7 @@ struct DataLog
 
   unsigned int buffer_size;
   int x;
-  std::vector<DataSequence> sequences;
+  SequenceContainer sequences;
   std::vector<std::string> labels;
 };
 
@@ -127,7 +158,7 @@ struct Plotter : public View, Handler
   void Render();
   void DrawSequence(const DataSequence& seq);
   void DrawSequence(const DataSequence& x,const DataSequence& y);
-  void DrawSequenceHistogram(const std::vector<DataSequence>& seq);
+  void DrawSequenceHistogram(const DataLog::SequenceContainer& seq);
   void DrawTicks();
 
   void ResetView();
