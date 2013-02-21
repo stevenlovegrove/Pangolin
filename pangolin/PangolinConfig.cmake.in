@@ -1,5 +1,5 @@
-SET( Pangolin_LIBRARIES    "@LIBRARY_NAME@;@LINK_LIBS@" )
-SET( Pangolin_LIBRARY      "@LIBRARY_NAME@;@LINK_LIBS@" )
+SET( Pangolin_LIBRARIES    "@LIB_LOC@;@LINK_LIBS@" )
+SET( Pangolin_LIBRARY      "@LIB_LOC@;@LINK_LIBS@" )
 
 SET( Pangolin_INCLUDE_DIRS "@USER_INC@" )
 SET( Pangolin_INCLUDE_DIR  "@USER_INC@" )
