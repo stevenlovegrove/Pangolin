@@ -125,6 +125,14 @@ namespace pangolin
     MouseWheelUp = 8,
     MouseWheelDown = 16
   };
+  
+  enum KeyModifier
+  {
+    KeyModifierShift = 1<<16,
+    KeyModifierCtrl  = 1<<17,
+    KeyModifierAlt   = 1<<18,
+    KeyModifierCmd   = 1<<19
+  };
 
   enum InputSpecial
   {
@@ -168,7 +176,7 @@ namespace pangolin
   //! @brief Create GLUT window and bind Pangolin to it.
   //! All GLUT initialisation is taken care of. This prevents you
   //! from needing to call BindToContext() and TakeGlutCallbacks().
-  void CreateGlutWindowAndBind(std::string window_title, int w = 640, int h = 480, unsigned int mode = GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
+  void CreateGlutWindowAndBind(std::string window_title, int w = 640, int h = 480, unsigned int mode = GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
   //! @brief Applies any post-render events if they are defined,
   //! swaps buffers and processes events. Also resets viewport to

@@ -193,7 +193,7 @@ public:
     size_t size() const;
 
 protected:  
-    void CheckResize(int num_new_verts);
+    void CheckResize(size_t num_verts);
     
     size_t NextSize(size_t min_size) const;
     
@@ -584,7 +584,7 @@ inline GlSizeableBuffer::GlSizeableBuffer(GlBufferType buffer_type, GLuint initi
     
 }
 
-void GlSizeableBuffer::Clear()
+inline void GlSizeableBuffer::Clear()
 {
     m_num_verts = 0;
 }
@@ -623,7 +623,7 @@ inline size_t GlSizeableBuffer::size() const {
     return m_num_verts;
 }
 
-inline void GlSizeableBuffer::CheckResize(int num_verts)
+inline void GlSizeableBuffer::CheckResize(size_t num_verts)
 {
     if( num_verts > GlBuffer::num_elements) {
         const size_t new_size = NextSize(num_verts);

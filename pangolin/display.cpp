@@ -287,6 +287,11 @@ namespace pangolin
       }else{
         context->mouse_state &= ~button;
       }
+      
+#ifdef HAVE_GLUT
+      context->mouse_state &= 0x0000ffff;
+      context->mouse_state |= glutGetModifiers() << 16;
+#endif
 
       if(fresh_input) {
         context->base.handler->Mouse(context->base,button,x,y,pressed,context->mouse_state);
