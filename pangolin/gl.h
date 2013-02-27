@@ -178,9 +178,14 @@ class GlSizeableBuffer
 public:
     GlSizeableBuffer(pangolin::GlBufferType buffer_type, GLuint initial_num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
     
+    void Clear();
+    
 #ifdef HAVE_EIGEN
-    template<typename T, int R, int C>
-    void Add(Eigen::Matrix<T,R,C> vec);
+    template<typename Derived>
+    void Add(const Eigen::DenseBase<Derived>& vec);
+    
+    template<typename Derived>
+    void Update(const Eigen::DenseBase<Derived>& vec, size_t position = 0);
 #endif
     
     size_t start() const;
@@ -579,15 +584,34 @@ inline GlSizeableBuffer::GlSizeableBuffer(GlBufferType buffer_type, GLuint initi
     
 }
 
-#ifdef HAVE_EIGEN
-template<typename T, int R, int C> inline
-void GlSizeableBuffer::Add(Eigen::Matrix<T,R,C> vec)
+void GlSizeableBuffer::Clear()
 {
-    assert(R==GlBuffer::count_per_element);
-    CheckResize(1);
-    Eigen::Matrix<float,R,C> vecf = vec.template cast<float>();
-    Upload(vecf.data(), sizeof(float)*R*C, sizeof(float)*R*m_num_verts);
-    m_num_verts += C;
+    m_num_verts = 0;
+}
+
+#ifdef HAVE_EIGEN
+template<typename Derived> inline
+void GlSizeableBuffer::Add(const Eigen::DenseBase<Derived>& vec)
+{
+    typedef typename Eigen::DenseBase<Derived>::Scalar Scalar;
+    assert(vec.rows()==GlBuffer::count_per_element);
+    CheckResize(m_num_verts + 1);
+    // TODO: taking address of first element is really dodgey. Need to work out
+    // when this is okay!
+    Upload(&vec(0,0), sizeof(Scalar)*vec.rows()*vec.cols(), sizeof(Scalar)*vec.rows()*m_num_verts);
+    m_num_verts += vec.cols();
+}
+
+template<typename Derived> inline
+void GlSizeableBuffer::Update(const Eigen::DenseBase<Derived>& vec, size_t position )
+{
+    typedef typename Eigen::DenseBase<Derived>::Scalar Scalar;    
+    assert(vec.rows()==GlBuffer::count_per_element);
+    CheckResize(position + vec.cols() );
+    // TODO: taking address of first element is really dodgey. Need to work out
+    // when this is okay!
+    Upload(&vec(0,0), sizeof(Scalar)*vec.rows()*vec.cols(), sizeof(Scalar)*vec.rows()*position );
+    m_num_verts = std::max(position+vec.cols(), m_num_verts);
 }
 #endif
 
@@ -599,10 +623,10 @@ inline size_t GlSizeableBuffer::size() const {
     return m_num_verts;
 }
 
-inline void GlSizeableBuffer::CheckResize(int num_new_verts)
+inline void GlSizeableBuffer::CheckResize(int num_verts)
 {
-    if(m_num_verts + num_new_verts > GlBuffer::num_elements) {
-        const size_t new_size = NextSize(m_num_verts + num_new_verts);
+    if( num_verts > GlBuffer::num_elements) {
+        const size_t new_size = NextSize(num_verts);
         GlBuffer::Resize(new_size);
     }
 }
