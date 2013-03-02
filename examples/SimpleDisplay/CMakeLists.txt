@@ -5,3 +5,8 @@ LINK_DIRECTORIES(${Pangolin_LIBRARY_DIRS})
 LINK_LIBRARIES(${Pangolin_LIBRARIES})
 
 ADD_EXECUTABLE(SimpleDisplay main.cpp)
+
+# In your own code, you can ommit these lines
+IF( ${PANGOLIN_EXAMPLE} )
+  add_dependencies(SimpleDisplay ${LIBRARY_NAME})
+ENDIF()

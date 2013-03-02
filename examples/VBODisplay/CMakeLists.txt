@@ -24,4 +24,9 @@ IF(CUDA_FOUND)
     main.cpp kernal.cu
   )
 
+  # In your own code, you can ommit these lines
+  IF( ${PANGOLIN_EXAMPLE} )
+    add_dependencies(VBODisplay ${LIBRARY_NAME})
+  ENDIF()
+
 ENDIF()

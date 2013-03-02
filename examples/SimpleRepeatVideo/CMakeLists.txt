@@ -5,3 +5,8 @@ LINK_DIRECTORIES(${Pangolin_LIBRARY_DIRS})
 LINK_LIBRARIES(${Pangolin_LIBRARIES})
 
 ADD_EXECUTABLE(SimpleRepeatVideo main.cpp)
+
+# In your own code, you can ommit these lines
+IF( ${PANGOLIN_EXAMPLE} )
+  add_dependencies(SimpleRepeatVideo ${LIBRARY_NAME})
+ENDIF()
