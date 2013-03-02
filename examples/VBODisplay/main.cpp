@@ -35,11 +35,11 @@ int main( int /*argc*/, char* argv[] )
 
   // Create vertex and colour buffer objects and register them with CUDA
   GlBufferCudaPtr vertex_array(
-      GlArrayBuffer, mesh_width, mesh_height, GL_FLOAT, 4,
+      GlArrayBuffer, mesh_width* mesh_height, GL_FLOAT, 4,
       cudaGraphicsMapFlagsWriteDiscard, GL_STREAM_DRAW
   );
   GlBufferCudaPtr colour_array(
-      GlArrayBuffer, mesh_width, mesh_height, GL_UNSIGNED_BYTE, 4,
+      GlArrayBuffer, mesh_width* mesh_height, GL_UNSIGNED_BYTE, 4,
       cudaGraphicsMapFlagsWriteDiscard, GL_STREAM_DRAW
   );
 
