@@ -4,6 +4,9 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/video.h>
 
+// OpenNI generates SO MANY warnings, we'll just disable all for this header(!)
+// GCC and clang will listen to this pramga.
+#pragma GCC system_header
 #include <XnCppWrapper.h>
 
 namespace pangolin

@@ -115,7 +115,8 @@ std::string OpenNiVideo::PixFormat() const
 
 void OpenNiVideo::Start()
 {
-    XnStatus nRetVal = context.StartGeneratingAll();
+//    XnStatus nRetVal = 
+        context.StartGeneratingAll();
 }
 
 void OpenNiVideo::Stop()
@@ -132,6 +133,7 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
 
     if (nRetVal != XN_STATUS_OK) {
         std::cerr << "Failed updating data: " << xnGetStatusString(nRetVal) << std::endl;
+        return false;
     }else{
         if(s1==OpenNiDepth) {
             const XnDepthPixel* pDepthMap = depthNode.GetDepthMap();
@@ -154,8 +156,7 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
             const XnUInt8* pImageMap = imageNode.GetImageMap();
             memcpy(image+s1SizeBytes,pImageMap, s2SizeBytes);
         }
-
-
+        return true;
     }
 }
 

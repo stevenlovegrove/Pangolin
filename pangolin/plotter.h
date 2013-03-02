@@ -30,7 +30,18 @@
 
 #include "pangolin.h"
 #include <vector>
+
+// Dont trouble the user with these warnings in boost.
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#endif
+
 #include <boost/ptr_container/ptr_vector.hpp>
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 namespace pangolin
 {
@@ -73,7 +84,7 @@ public:
   float Max() const;
   
 protected:
-  DataSequence(const DataSequence& o) {}
+  DataSequence(const DataSequence& /*o*/) {}
 
   int buffer_size;
   float* ys;
