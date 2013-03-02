@@ -525,6 +525,7 @@ namespace pangolin
     virtual void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     virtual void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     virtual void MouseMotion(View&, int x, int y, int button_state);
+    virtual void PassiveMouseMotion(View&, int x, int y, int button_state);
     virtual void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
   };
   static Handler StaticHandler;

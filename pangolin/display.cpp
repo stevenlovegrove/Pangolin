@@ -324,6 +324,8 @@ namespace pangolin
         // Force coords to match OpenGl Window Coords
         y = context->base.v.h - y;
 
+        context->base.handler->PassiveMouseMotion(context->base,x,y,context->mouse_state);
+
         last_x = x;
         last_y = y;
     }
@@ -1244,7 +1246,7 @@ namespace pangolin
   {
     // Find in reverse order to mirror draw order
     for( vector<View*>::const_reverse_iterator i = parent.views.rbegin(); i != parent.views.rend(); ++i )
-      if( (*i)->show && (*i)->vp.Contains(x,y) )
+      if( (*i)->show && (*i)->v.Contains(x,y) )
         return (*i);
     return 0;
   }
@@ -1279,6 +1281,16 @@ namespace pangolin
       context->activeDisplay = child;
       if( child->handler)
         child->handler->MouseMotion(*child,x,y,button_state);
+    }
+  }
+  
+  void Handler::PassiveMouseMotion(View& d, int x, int y, int button_state)
+  {
+    View* child = FindChild(d,x,y);
+    if( child )
+    {
+      if( child->handler)
+        child->handler->PassiveMouseMotion(*child,x,y,button_state);
     }
   }
 
