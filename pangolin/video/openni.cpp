@@ -86,7 +86,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
 
 OpenNiVideo::~OpenNiVideo()
 {
-    context.Shutdown();
+    context.Release();
 }
 
 unsigned OpenNiVideo::Width() const
