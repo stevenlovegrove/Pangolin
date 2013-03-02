@@ -22,9 +22,11 @@
 #cmakedefine HAVE_V4L
 #cmakedefine HAVE_FFMPEG
 #cmakedefine HAVE_OPENNI
+
 #cmakedefine HAVE_GLUT
 #cmakedefine HAVE_FREEGLUT
 #cmakedefine HAVE_APPLE_OPENGL_FRAMEWORK
+#cmakedefine HAVE_MODIFIED_OSXGLUT
 
 #cmakedefine HAVE_BOOST_GIL
 #cmakedefine HAVE_PNG
