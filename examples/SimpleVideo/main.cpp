@@ -59,6 +59,7 @@ int main( int argc, char* argv[] )
         "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
         "convert:[fmt=RGB24]//v4l:///dev/video0",
         "convert:[fmt=RGB24]//v4l:///dev/video1",
+        "openni:[img1=rgb]//"
         ""
     };
 
@@ -76,6 +77,7 @@ int main( int argc, char* argv[] )
         cout << "\tv4l:///dev/video0" << endl;
         cout << "\tconvert:[fmt=RGB24]//v4l:///dev/video0" << endl;
         cout << "\tmjpeg://http://127.0.0.1/?action=stream" << endl;
+        cout << "\topenni:[img1=rgb]//" << endl;
         cout << endl;
 
         // Try to open some video device

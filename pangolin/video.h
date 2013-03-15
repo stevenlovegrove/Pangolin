@@ -50,6 +50,11 @@
 // v4l - capture video from a Video4Linux (USB) camera (normally YUVY422 format)
 //  e.g. "v4l:///dev/video0"
 //
+// openni - capture video / depth from an OpenNI streaming device (Kinect / Xtrion etc)
+//  e.g. "openni://'
+//  e.g. "openni:[img1=rgb,img2=depth]//"
+//  e.g. "openni:[img1=ir]//"
+//
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
 //  e.g. "convert:[fmt=GRAY8]//v4l:///dev/video0"
