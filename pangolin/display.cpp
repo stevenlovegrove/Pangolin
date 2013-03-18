@@ -446,6 +446,10 @@ namespace pangolin
       glGetFloatv(GL_LINE_WIDTH, &origLineWidth);
       glLineWidth(origLineWidth * scale);
 
+      float origPointSize;
+      glGetFloatv(GL_POINT_SIZE, &origPointSize);
+      glPointSize(origPointSize * scale);
+      
       // Create FBO
       GlTexture color(w,h);
       GlRenderBuffer depth(w,h);
@@ -472,6 +476,7 @@ namespace pangolin
       // restore viewport / line width
       view.v = orig;
       glLineWidth(origLineWidth);
+      glPointSize(origPointSize);      
   }
 
   void SaveFramebuffer(std::string prefix, const Viewport& v)
