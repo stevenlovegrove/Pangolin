@@ -195,7 +195,7 @@ void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6)
 }
 
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky)
-    : log(log), track_front(true), mouse_state(0),lineThickness(1.0f), draw_mode(0), plot_mode(TIME_SERIES)
+    : log(log), track_front(true), mouse_state(0),lineThickness(1.5f), draw_mode(0), plot_mode(TIME_SERIES)
 {
   this->handler = this;
   int_x[0] = int_x_dflt[0] = left;
@@ -327,6 +327,8 @@ void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
 
 void Plotter::Render()
 {
+  glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_LINE_BIT);
+
   if( track_front )
   {
 	vo[0] = log->x-int_x[1];
@@ -334,7 +336,8 @@ void Plotter::Render()
     //int_x[0] -= d;
     //int_x[1] -= d;
   }
-
+  
+  glClearColor(0.0, 0.0, 0.0, 0.0);
   ActivateScissorAndClear();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -342,9 +345,15 @@ void Plotter::Render()
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  glPushAttrib(GL_ENABLE_BIT);
+  glDisable(GL_MULTISAMPLE);
+  
+  glLineWidth(1.5);
   glEnable(GL_LINE_SMOOTH);
+  glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_LIGHTING);
+  glDisable( GL_DEPTH_TEST );
 
   DrawTicks();
 
