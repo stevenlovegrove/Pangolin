@@ -16,6 +16,9 @@ int main( int /*argc*/, char* argv[] )
   // Create OpenGL window in single line thanks to GLUT
   CreateGlutWindowAndBind("Main",640,480);
 
+  // 3D Mouse handler requires depth testing to be enabled
+  glEnable(GL_DEPTH_TEST);
+  
   pangolin::OpenGlRenderState s_cam(
     ProjectionMatrix(640,480,420,420,320,240,0.1,1000),
     ModelViewLookAt(-0,0.5,-3, 0,0,0, AxisY)
@@ -41,7 +44,7 @@ int main( int /*argc*/, char* argv[] )
   const int width =  640;
   const int height = 480;
 
-  float * imageArray = new float[width*height];
+  float* imageArray = new float[width*height];
   GlTexture imageTexture(width,height,GL_LUMINANCE32F_ARB);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
@@ -50,7 +53,7 @@ int main( int /*argc*/, char* argv[] )
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     d_cam.Activate(s_cam);
-    glEnable(GL_DEPTH_TEST);
+
     glColor3f(1.0,1.0,1.0);
     glutWireTeapot(2.0);
 
@@ -65,7 +68,7 @@ int main( int /*argc*/, char* argv[] )
     pangolin::FinishGlutFrame();
   }
 
-  delete imageArray;
+  delete[] imageArray;
 
   return 0;
 }

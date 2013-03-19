@@ -14,7 +14,9 @@ int main( int /*argc*/, char* argv[] )
 {
   // Create OpenGL window in single line thanks to GLUT
   pangolin::CreateGlutWindowAndBind("Main",640,480);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  
+  // 3D Mouse handler requires depth testing to be enabled
+  glEnable(GL_DEPTH_TEST);  
 
   // Issue specific OpenGl we might need
   glEnable (GL_BLEND);
@@ -70,40 +72,37 @@ int main( int /*argc*/, char* argv[] )
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
   {
-    if(HasResized())
-      DisplayBase().ActivateScissorAndClear();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Generate random image and place in texture memory for display
     setImageData(imageArray,width,height);
     imageTexture.Upload(imageArray,GL_LUMINANCE,GL_FLOAT);
 
-    // (3D Handler requires depth testing to be enabled)
-    glEnable(GL_DEPTH_TEST);
     glColor3f(1.0,1.0,1.0);
 
-    d_cam1.ActivateScissorAndClear(s_cam);
+    d_cam1.Activate(s_cam);
     glutWireTeapot(1.0);
 
-    d_cam2.ActivateScissorAndClear(s_cam2);
+    d_cam2.Activate(s_cam2);
     glutWireTeapot(1.0);
 
-    d_cam3.ActivateScissorAndClear(s_cam);
+    d_cam3.Activate(s_cam);
     glutWireTeapot(1.0);
 
-    d_cam4.ActivateScissorAndClear(s_cam2);
+    d_cam4.Activate(s_cam2);
     glutWireTeapot(1.0);
 
-    d_img1.ActivateScissorAndClear();
+    d_img1.Activate();
     imageTexture.RenderToViewport();
 
-    d_img2.ActivateScissorAndClear();
+    d_img2.Activate();
     imageTexture.RenderToViewport();
 
     // Swap frames and Process Events
     pangolin::FinishGlutFrame();
   }
 
-  delete imageArray;
+  delete[] imageArray;
 
   return 0;
 }

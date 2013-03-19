@@ -50,15 +50,18 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
 
     while( !pangolin::ShouldQuit() )
     {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
         // Load next video frame
-        video.GrabNext(img,true);
-        texVideo.Upload(img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB, GL_UNSIGNED_BYTE);
+        if( video.GrabNext(img,true) ) {
+            texVideo.Upload(img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB, GL_UNSIGNED_BYTE);
 
-        // Associate input with this video frame
-        input.SetIndex(video.FrameId());
+            // Associate input with this video frame
+            input.SetIndex(video.FrameId());            
+        }
 
         // Activate video viewport and render texture
-        vVideo.ActivateScissorAndClear();
+        vVideo.Activate();
 
         if( colour ) {
             glColorHSV(hue,0.5,1.0);
@@ -84,7 +87,6 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
             input.SaveBuffer(ui_file);
         }
 
-        d_panel.Render();
         pangolin::FinishGlutFrame();
     }
 

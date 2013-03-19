@@ -38,11 +38,13 @@ int main( int /*argc*/, char* argv[] )
 
   // Create OpenGL window in single line thanks to GLUT
   pangolin::CreateGlutWindowAndBind("Main",640,480);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+  
+  // 3D Mouse handler requires depth testing to be enabled
+  glEnable(GL_DEPTH_TEST);
+  
   // Issue specific OpenGl we might need
   glEnable (GL_BLEND);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
   // Define Camera Render Object (for view / scene browsing)
   pangolin::OpenGlRenderState s_cam(
@@ -71,8 +73,8 @@ int main( int /*argc*/, char* argv[] )
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
   {
-    if(pangolin::HasResized())
-      DisplayBase().ActivateScissorAndClear();
+    // Clear entire screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Safe and efficient binding of named variables.
     // Specialisations mean no conversions take place for exact types
@@ -112,18 +114,11 @@ int main( int /*argc*/, char* argv[] )
 #endif // HAVE_PNG
 
     // Activate efficiently by object
-    // (3D Handler requires depth testing to be enabled)
-    d_cam.ActivateScissorAndClear(s_cam);
-
-    glEnable(GL_DEPTH_TEST);
-    glColor3f(1.0,1.0,1.0);
+    d_cam.Activate(s_cam);
 
     // Render some stuff
+    glColor3f(1.0,1.0,1.0);
     glutWireTeapot(1.0);
-
-    // Render our UI panel when we receive input
-    if(HadInput())
-      d_panel.Render();
 
     // Swap frames and Process Events
     pangolin::FinishGlutFrame();

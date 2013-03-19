@@ -32,6 +32,9 @@ int main( int /*argc*/, char* argv[] )
 
   pangolin::CreateGlutWindowAndBind("Main",640,480);
   glewInit();
+  
+  // 3D Mouse handler requires depth testing to be enabled  
+  glEnable(GL_DEPTH_TEST);  
 
   // Create vertex and colour buffer objects and register them with CUDA
   GlBufferCudaPtr vertex_array(
@@ -78,11 +81,9 @@ int main( int /*argc*/, char* argv[] )
     cutStartTimer(timer);
 #endif
 
-    if(HasResized())
-      DisplayBase().ActivateScissorAndClear();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    d_cam.ActivateScissorAndClear(s_cam);
-    glEnable(GL_DEPTH_TEST);
+    d_cam.Activate(s_cam);
     glColor3f(1.0,1.0,1.0);
 
     {
@@ -113,8 +114,6 @@ int main( int /*argc*/, char* argv[] )
       cutResetTimer(timer);
 #endif
     }
-
-    d_panel.Render();
 
     // Swap frames and Process Events
     pangolin::FinishGlutFrame();

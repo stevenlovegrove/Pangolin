@@ -12,10 +12,6 @@ int main( int /*argc*/, char* argv[] )
   // Create OpenGL window in single line thanks to GLUT
   pangolin::CreateGlutWindowAndBind("Main",640,480);
 
-  // Issue specific OpenGl we might need, in this case for smooth lines
-  glEnable (GL_BLEND);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
   // Data logger object
   DataLog log;
   const double tinc = 0.01;
@@ -34,8 +30,6 @@ int main( int /*argc*/, char* argv[] )
   labels.push_back(std::string("tan(t)"));
   labels.push_back(std::string("sin(t)+cos(t)"));
   log.SetLabels(labels);
-
-
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )

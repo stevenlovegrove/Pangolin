@@ -34,12 +34,13 @@ void VideoSample(const std::string uri)
     {
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-        video.GrabNext(img,true);
-        // TODO: Work out the correct display format properly
-        texVideo.Upload(
-            img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB,
-            vid_fmt.channel_bits[0]==8?GL_UNSIGNED_BYTE:GL_UNSIGNED_SHORT
-        );
+        if( video.GrabNext(img,true) ) {
+            // TODO: Work out the correct display format properly
+            texVideo.Upload(
+                img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB,
+                vid_fmt.channel_bits[0]==8?GL_UNSIGNED_BYTE:GL_UNSIGNED_SHORT
+            );
+        }
 
         // Activate video viewport and render texture
         vVideo.Activate();
