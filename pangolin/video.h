@@ -41,7 +41,7 @@
 // file/files - read PVN file format (pangolin video) or other formats using ffmpeg
 //  e.g. "file:[realtime=1]///home/user/video/movie.pvn"
 //  e.g. "file:[stream=1]///home/user/video/movie.avi"
-//  e.g. "files:///home/user/seqiemce/foo%03d.jpeg"
+//  e.g. "files:///home/user/sequence/foo%03d.jpeg"
 //
 // dc1394 - capture video through a firewire camera
 //  e.g. "dc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0"

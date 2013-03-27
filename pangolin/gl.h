@@ -325,6 +325,8 @@ inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sam
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    
+    CheckGlDieOnError();
 }
 
 inline void GlTexture::Upload(void* image, GLenum data_layout, GLenum data_type )

@@ -95,6 +95,14 @@ inline void glDraw_z0(float scale, int grid)
     glEnd();
 }
 
+inline void glDrawLine( float x1, float y1, float x2, float y2 )
+{
+    glBegin(GL_LINES);
+      glVertex2f(x1, y1);
+      glVertex2f(x2, y2);
+    glEnd();
+}
+
 inline void glDrawCross( float x, float y, int r = 5 )
 {
     glBegin(GL_LINES);
@@ -146,6 +154,11 @@ inline void glDrawAxis(float s)
 }
 
 #ifdef HAVE_EIGEN
+inline void glDrawLine( const Eigen::Vector2d& p1, const Eigen::Vector2d& p2 )
+{
+    glDrawLine(p1(0), p1(1), p2(0), p2(1));
+}
+
 inline void glDrawCross( const Eigen::Vector2d& p, int r = 5 )
 {
     glDrawCross(p(0), p(1), r);
