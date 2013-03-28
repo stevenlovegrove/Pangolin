@@ -1,9 +1,9 @@
 #######################################################
 ## Library sources
 
-SET( INCDIR "../include/pangolin")
+set( INCDIR "../include/pangolin")
 
-SET(
+set(
   HEADERS
   ${INCDIR}/pangolin.h
   ${INCDIR}/platform.h
@@ -17,7 +17,7 @@ SET(
   ${INCDIR}/threadedfilebuf.h ${INCDIR}/timer.h
 )
 
-SET(
+set(
   SOURCES
   display.cpp view.cpp viewport.cpp
   handler.cpp opengl_render_state.cpp
@@ -28,140 +28,140 @@ SET(
 #######################################################
 ## User build options
 
-OPTION(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
-IF(BUILD_PANGOLIN_VARS)
-  LIST(APPEND HEADERS ${INCDIR}/vars.h ${INCDIR}/vars_internal.h ${INCDIR}/input_record_repeat.h ${INCDIR}/widgets.h )
-  LIST(APPEND SOURCES vars.cpp input_record_repeat.cpp widgets.cpp )
-ENDIF()
+option(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
+if(BUILD_PANGOLIN_VARS)
+  list(APPEND HEADERS ${INCDIR}/vars.h ${INCDIR}/vars_internal.h ${INCDIR}/input_record_repeat.h ${INCDIR}/widgets.h )
+  list(APPEND SOURCES vars.cpp input_record_repeat.cpp widgets.cpp )
+endif()
 
-OPTION(BUILD_PANGOLIN_VIDEO "Build support for Pangolin Video Utilities" ON)
-IF(BUILD_PANGOLIN_VIDEO)
-  LIST(APPEND HEADERS ${INCDIR}/video.h ${INCDIR}/video_recorder.h ${INCDIR}/video_record_repeat.h ${INCDIR}/video/pvn_video.h )
-  LIST(APPEND SOURCES video.cpp video_recorder.cpp video_record_repeat.cpp video/pvn_video.cpp )
-ENDIF()
+option(BUILD_PANGOLIN_VIDEO "Build support for Pangolin Video Utilities" ON)
+if(BUILD_PANGOLIN_VIDEO)
+  list(APPEND HEADERS ${INCDIR}/video.h ${INCDIR}/video_recorder.h ${INCDIR}/video_record_repeat.h ${INCDIR}/video/pvn_video.h )
+  list(APPEND SOURCES video.cpp video_recorder.cpp video_record_repeat.cpp video/pvn_video.cpp )
+endif()
 
 #######################################################
 ## Find required dependencies
 
-FIND_PACKAGE(OpenGL REQUIRED QUIET)
-FIND_PACKAGE(GLEW REQUIRED)
-FIND_PACKAGE(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
+find_package(OpenGL REQUIRED QUIET)
+find_package(GLEW REQUIRED)
+find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
 
 ## Apply required dependencies settings
-LIST(APPEND USER_INC  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/include" )
-LIST(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR};${Boost_INCLUDE_DIRS}" )
-LIST(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY};${Boost_LIBRARIES}" )
-LIST(APPEND LIB_DIRS  "${OPENGL_LIBRARY_DIR};${GLEW_LIBRARY_DIR};${Boost_LIBRARY_DIRS}" )
+list(APPEND USER_INC  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
+list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR};${Boost_INCLUDE_DIRS}" )
+list(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY};${Boost_LIBRARIES}" )
+list(APPEND LIB_DIRS  "${OPENGL_LIBRARY_DIR};${GLEW_LIBRARY_DIR};${Boost_LIBRARY_DIRS}" )
 
 #######################################################
 ## Find optional dependencies
 
-FIND_PACKAGE(CVARS QUIET)
-IF(CVARS_FOUND)
-  SET(HAVE_CVARS 1)
-  LIST(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
-  LIST(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
-  LIST(APPEND LIB_DIRS ${CVARS_DIR} )
-ENDIF()
+find_package(CVARS QUIET)
+if(CVARS_FOUND)
+  set(HAVE_CVARS 1)
+  list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
+  list(APPEND LIB_DIRS ${CVARS_DIR} )
+endif()
 
-FIND_PACKAGE(CUDA QUIET)
-IF(CUDA_FOUND)
-  SET(HAVE_CUDA 1)
-  CUDA_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-  SET(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE OFF)
-  SET(CUDA_NVCC_FLAGS "-O3" )
-  ADD_DEFINITIONS(-DCUDA_BUILD)
-  MESSAGE(STATUS "CUDA Found and Enabled")
-ENDIF()
+find_package(CUDA QUIET)
+if(CUDA_FOUND)
+  set(HAVE_CUDA 1)
+  cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+  set(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE OFF)
+  set(CUDA_NVCC_FLAGS "-O3" )
+  add_definitions(-DCUDA_BUILD)
+  message(STATUS "CUDA Found and Enabled")
+endif()
 
-FIND_PACKAGE(FREEGLUT)
-FIND_PACKAGE(GLUT)
+find_package(FREEGLUT)
+find_package(GLUT)
 
-IF(_OSX_)
+if(_OSX_)
   INCLUDE(CheckCXXSourceRuns)
-  SET(CMAKE_REQUIRED_LIBRARIES ${GLUT_LIBRARY})
+  set(CMAKE_REQUIRED_LIBRARIES ${GLUT_LIBRARY})
   CHECK_CXX_SOURCE_RUNS("#include <GLUT/glut.h>\n int main () {return glutGetProcAddress(\"glutScrollFunc\") ? 0 : -1;};" HAVE_MODIFIED_OSXGLUT)
-  IF(NOT HAVE_MODIFIED_OSXGLUT)
-        MESSAGE(STATUS "Install modified osxglut for smooth scroll support / pinch / zoom.")
-        MESSAGE(STATUS "(https://github.com/stevenlovegrove/osxglut)")
-  ENDIF()
-ENDIF()
+  if(NOT HAVE_MODIFIED_OSXGLUT)
+        message(STATUS "Install modified osxglut for smooth scroll support / pinch / zoom.")
+        message(STATUS "(https://github.com/stevenlovegrove/osxglut)")
+  endif()
+endif()
 
 # Prefer OSX_MODIFIED_GLUT > FREEGLUT > GLUT
-IF(FREEGLUT_FOUND AND NOT HAVE_MODIFIED_OSXGLUT)
-  SET(HAVE_FREEGLUT 1)
-  LIST(APPEND USER_INC  ${FREEGLUT_INCLUDE_DIR} )
-  LIST(APPEND LINK_LIBS ${FREEGLUT_LIBRARY} )
-ELSEIF(GLUT_FOUND)
-  LIST(APPEND USER_INC  ${GLUT_INCLUDE_DIR} )
-  LIST(APPEND LINK_LIBS ${GLUT_LIBRARY} )
-  IF(_OSX_)
-    SET(HAVE_APPLE_OPENGL_FRAMEWORK 1)
-    IF(NOT HAVE_MODIFIED_OSXGLUT)
-        MESSAGE(STATUS "Using Apple Framework GLUT.")
-        MESSAGE(STATUS "Install Freeglut or modified osxglut for scroll support.")
-    ENDIF()
-  ENDIF()
-ENDIF()
+if(FREEGLUT_FOUND AND NOT HAVE_MODIFIED_OSXGLUT)
+  set(HAVE_FREEGLUT 1)
+  list(APPEND USER_INC  ${FREEGLUT_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS ${FREEGLUT_LIBRARY} )
+elseif(GLUT_FOUND)
+  list(APPEND USER_INC  ${GLUT_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS ${GLUT_LIBRARY} )
+  if(_OSX_)
+    set(HAVE_APPLE_OPENGL_FRAMEWORK 1)
+    if(NOT HAVE_MODIFIED_OSXGLUT)
+        message(STATUS "Using Apple Framework GLUT.")
+        message(STATUS "Install Freeglut or modified osxglut for scroll support.")
+    endif()
+  endif()
+endif()
 
-IF(FREEGLUT_FOUND OR GLUT_FOUND)
-    SET(HAVE_GLUT 1)
-    MESSAGE(STATUS "Glut Found and Enabled")
-ENDIF()
+if(FREEGLUT_FOUND OR GLUT_FOUND)
+    set(HAVE_GLUT 1)
+    message(STATUS "Glut Found and Enabled")
+endif()
 
-FIND_PACKAGE(Eigen3 QUIET)
-IF(EIGEN3_FOUND)
-  SET(HAVE_EIGEN 1)
-  LIST(APPEND USER_INC  ${EIGEN3_INCLUDE_DIR} )
-  MESSAGE(STATUS "Eigen Found and Enabled")
-ENDIF()
+find_package(Eigen3 QUIET)
+if(EIGEN3_FOUND)
+  set(HAVE_EIGEN 1)
+  list(APPEND USER_INC  ${EIGEN3_INCLUDE_DIR} )
+  message(STATUS "Eigen Found and Enabled")
+endif()
 
-FIND_PACKAGE(TooN QUIET)
-IF(TooN_FOUND)
-  SET(HAVE_TOON 1)
-  LIST(APPEND USER_INC  ${TooN_INCLUDE_DIR} )
-  MESSAGE(STATUS "TooN Found and Enabled")
-ENDIF()
+find_package(TooN QUIET)
+if(TooN_FOUND)
+  set(HAVE_TOON 1)
+  list(APPEND USER_INC  ${TooN_INCLUDE_DIR} )
+  message(STATUS "TooN Found and Enabled")
+endif()
 
-FIND_PACKAGE(DC1394 QUIET)
-IF(BUILD_PANGOLIN_VIDEO AND DC1394_FOUND)
-  SET(HAVE_DC1394 1)
-  LIST(APPEND INTERNAL_INC  ${DC1394_INCLUDE_DIR} )
-  LIST(APPEND LINK_LIBS  ${DC1394_LIBRARY} )
-  LIST(APPEND HEADERS ${INCDIR}/video/firewire.h )
-  LIST(APPEND SOURCES video/firewire.cpp)
-  MESSAGE(STATUS "libdc1394 Found and Enabled")
-ENDIF()
+find_package(DC1394 QUIET)
+if(BUILD_PANGOLIN_VIDEO AND DC1394_FOUND)
+  set(HAVE_DC1394 1)
+  list(APPEND INTERNAL_INC  ${DC1394_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS  ${DC1394_LIBRARY} )
+  list(APPEND HEADERS ${INCDIR}/video/firewire.h )
+  list(APPEND SOURCES video/firewire.cpp)
+  message(STATUS "libdc1394 Found and Enabled")
+endif()
 
-IF(BUILD_PANGOLIN_VIDEO AND _LINUX_)
-  SET(HAVE_V4L 1)
-  LIST(APPEND HEADERS ${INCDIR}/video/v4l.h)
-  LIST(APPEND SOURCES video/v4l.cpp)
-ENDIF()
+if(BUILD_PANGOLIN_VIDEO AND _LINUX_)
+  set(HAVE_V4L 1)
+  list(APPEND HEADERS ${INCDIR}/video/v4l.h)
+  list(APPEND SOURCES video/v4l.cpp)
+endif()
 
-FIND_PACKAGE(FFMPEG QUIET)
-IF(BUILD_PANGOLIN_VIDEO AND FFMPEG_FOUND)
-  SET(HAVE_FFMPEG 1)
-  LIST(APPEND INTERNAL_INC  ${FFMPEG_INCLUDE_DIRS} )
-  LIST(APPEND LINK_LIBS ${FFMPEG_LIBRARIES} )
-  LIST(APPEND HEADERS ${INCDIR}/video/ffmpeg.h)
-  LIST(APPEND SOURCES video/ffmpeg.cpp)
-  MESSAGE(STATUS "ffmpeg Found and Enabled")
-ENDIF()
+find_package(FFMPEG QUIET)
+if(BUILD_PANGOLIN_VIDEO AND FFMPEG_FOUND)
+  set(HAVE_FFMPEG 1)
+  list(APPEND INTERNAL_INC  ${FFMPEG_INCLUDE_DIRS} )
+  list(APPEND LINK_LIBS ${FFMPEG_LIBRARIES} )
+  list(APPEND HEADERS ${INCDIR}/video/ffmpeg.h)
+  list(APPEND SOURCES video/ffmpeg.cpp)
+  message(STATUS "ffmpeg Found and Enabled")
+endif()
 
-FIND_PACKAGE(OpenNI QUIET)
-IF(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
-  SET(HAVE_OPENNI 1)
-  LIST(APPEND INTERNAL_INC  ${OPENNI_INCLUDE_DIRS} )
-  LIST(APPEND LINK_LIBS ${OPENNI_LIBRARIES} )
-  LIST(APPEND HEADERS ${INCDIR}/video/openni.h )
-  LIST(APPEND SOURCES video/openni.cpp)
-  MESSAGE(STATUS "OpenNI Found and Enabled")
-ENDIF()
+find_package(OpenNI QUIET)
+if(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
+  set(HAVE_OPENNI 1)
+  list(APPEND INTERNAL_INC  ${OPENNI_INCLUDE_DIRS} )
+  list(APPEND LINK_LIBS ${OPENNI_LIBRARIES} )
+  list(APPEND HEADERS ${INCDIR}/video/openni.h )
+  list(APPEND SOURCES video/openni.cpp)
+  message(STATUS "OpenNI Found and Enabled")
+endif()
 
 # Generic Image Library (GIL) should come with boost.
 # If you have a version of boost without it, maybe figure out how to test here.
-SET(HAVE_BOOST_GIL 1)
+set(HAVE_BOOST_GIL 1)
 
 find_package(PNG QUIET)
 if(PNG_FOUND)
@@ -188,47 +188,47 @@ endif()
 #######################################################
 ## Add Libraries / Include Directories / Link directories
 
-INCLUDE_DIRECTORIES( ${INTERNAL_INC} )
-INCLUDE_DIRECTORIES( ${USER_INC} )
-LINK_LIBRARIES(${LINK_LIBS})
-LINK_DIRECTORIES(${LIB_DIRS})
+include_directories( ${INTERNAL_INC} )
+include_directories( ${USER_INC} )
+link_libraries(${LINK_LIBS})
+link_directories(${LIB_DIRS})
 
-ADD_LIBRARY(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
+add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
 
 ## Set Special Compiler flags
-IF(MSVC)
-  SET(CMAKE_CXX_FLAGS "/EHs")
-ELSEIF(CMAKE_COMPILER_IS_GNUCXX)
-  SET(CMAKE_CXX_FLAGS "-Wall -Wno-error=deprecated-declarations")
-ENDIF()
+if(MSVC)
+  set(CMAKE_CXX_FLAGS "/EHs")
+elseif(CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_CXX_FLAGS "-Wall -Wno-error=deprecated-declarations")
+endif()
 
 #######################################################
 ## Create configure file for inclusion in library
 
-CONFIGURE_FILE(
+configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
-  "${CMAKE_CURRENT_SOURCE_DIR}/include/${LIBRARY_NAME}/config.h"
+  "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/config.h"
 )
 
 #######################################################
 ## Install headers / targets
 
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
 )
-INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/${LIBRARY_NAME}
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/${LIBRARY_NAME}
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
 )
 
-INSTALL(TARGETS ${LIBRARY_NAME}
+install(TARGETS ${LIBRARY_NAME}
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
 )
 
 #######################################################
-## Export config file for easy inclusion into other projects: FIND_PACKAGE( Pangolin )
+## Export config file for easy inclusion into other projects: find_package( Pangolin )
 get_target_property( LIB_LOC ${LIBRARY_NAME} LOCATION )
-CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/PangolinConfig.cmake @ONLY IMMEDIATE )
-EXPORT( PACKAGE Pangolin )
+export( PACKAGE Pangolin )

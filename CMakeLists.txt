@@ -1,38 +1,38 @@
-PROJECT("Pangolin")
-SET(PANGOLIN_VERSION_MAJOR 0)
-SET(PANGOLIN_VERSION_MINOR 1)
+project("Pangolin")
+set(PANGOLIN_VERSION_MAJOR 0)
+set(PANGOLIN_VERSION_MINOR 1)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules/")
+cmake_minimum_required(VERSION 2.6)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules/")
 
-OPTION(BUILD_EXAMPLES "Build Examples" ON)
-OPTION(BUILD_SHARED_LIBS "Build Shared Library" ON)
+option(BUILD_EXAMPLES "Build Examples" ON)
+option(BUILD_SHARED_LIBS "Build Shared Library" ON)
 
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}
-IF( NOT CMAKE_BUILD_TYPE )
-   MESSAGE("Build type not set (defaults to release)")
-   MESSAGE("-DCMAKE_BUILD_TYPE=Debug for debug")
-   SET( CMAKE_BUILD_TYPE Release )
-ENDIF()
+if( NOT CMAKE_BUILD_TYPE )
+   message("Build type not set (defaults to release)")
+   message("-DCMAKE_BUILD_TYPE=Debug for debug")
+   set( CMAKE_BUILD_TYPE Release )
+endif()
 
 # Platform configuration vars
-INCLUDE(SetPlatformVars)
+include(SetPlatformVars)
 
-STRING(TOLOWER ${PROJECT_NAME} LIBRARY_NAME)
+string(TOLOWER ${PROJECT_NAME} LIBRARY_NAME)
 
 # make an uninstall target 
-CONFIGURE_FILE(
+configure_file(
  	"${CMAKE_SOURCE_DIR}/cmake_uninstall.cmake.in"
   	"${CMAKE_SOURCE_DIR}/cmake_uninstall.cmake"
   	IMMEDIATE @ONLY
 )
 
-ADD_CUSTOM_TARGET(uninstall
+add_custom_target(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_SOURCE_DIR}/cmake_uninstall.cmake")
 
-ADD_SUBDIRECTORY("src")
+add_subdirectory("src")
 
-IF(BUILD_EXAMPLES)
-  SET(PANGOLIN_EXAMPLE 1)
-  ADD_SUBDIRECTORY(examples)
-ENDIF()
+if(BUILD_EXAMPLES)
+  set(PANGOLIN_EXAMPLE 1)
+  add_subdirectory(examples)
+endif()

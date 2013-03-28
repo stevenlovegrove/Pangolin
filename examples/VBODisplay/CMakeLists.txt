@@ -1,32 +1,31 @@
 # Find Pangolin (https://github.com/stevenlovegrove/Pangolin)
-FIND_PACKAGE(Pangolin REQUIRED)
-INCLUDE_DIRECTORIES(${Pangolin_INCLUDE_DIRS})
-LINK_DIRECTORIES(${Pangolin_LIBRARY_DIRS})
-LINK_LIBRARIES(${Pangolin_LIBRARIES})
+find_package(Pangolin REQUIRED)
+include_directories(${Pangolin_INCLUDE_DIRS})
+link_directories(${Pangolin_LIBRARY_DIRS})
+link_libraries(${Pangolin_LIBRARIES})
 
-FIND_PACKAGE(CUDA QUIET)
+find_package(CUDA QUIET)
 
-IF(CUDA_FOUND)
-  CUDA_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+if(CUDA_FOUND)
+  cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-  SET(CUDA_NVCC_FLAGS "-O3")
-  ADD_DEFINITIONS(-DCUDA_BUILD)
+  set(CUDA_NVCC_FLAGS "-O3")
+  add_definitions(-DCUDA_BUILD)
 
-  IF(CUDA_SDK_ROOT_DIR AND EXISTS("${CUDA_SDK_ROOT_DIR}/lib/libcutil_x86_64.a") )
-    ADD_DEFINITIONS(-DUSE_CUTIL)
-    INCLUDE_DIRECTORIES( ${CUDA_SDK_ROOT_DIR}/common/inc )
-    LINK_DIRECTORIES( ${CUDA_SDK_ROOT_DIR}/lib )
-    LINK_LIBRARIES(libcutil_x86_64.a)
-  ENDIF()
+  if(CUDA_SDK_ROOT_DIR AND EXISTS("${CUDA_SDK_ROOT_DIR}/lib/libcutil_x86_64.a") )
+    add_definitions(-DUSE_CUTIL)
+    include_directories( ${CUDA_SDK_ROOT_DIR}/common/inc )
+    link_directories( ${CUDA_SDK_ROOT_DIR}/lib )
+    link_libraries(libcutil_x86_64.a)
+  endif()
 
-  CUDA_ADD_EXECUTABLE(
+  cuda_add_executable(
     VBODisplay
     main.cpp kernal.cu
   )
 
   # In your own code, you can ommit these lines
-  IF( ${PANGOLIN_EXAMPLE} )
+  if( ${PANGOLIN_EXAMPLE} )
     add_dependencies(VBODisplay ${LIBRARY_NAME})
-  ENDIF()
-
-ENDIF()
+  endif()
+endif()
