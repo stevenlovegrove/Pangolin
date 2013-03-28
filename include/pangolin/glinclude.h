@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2011 Steven Lovegrove, Richard Newcombe
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,54 +25,43 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_DISPLAY_INTERNAL_H
-#define PANGOLIN_DISPLAY_INTERNAL_H
+#ifndef PANGOLIN_GLINCLUDE_H
+#define PANGOLIN_GLINCLUDE_H
+
+//////////////////////////////////////////////////////////
+// Attempt to portably include Necessary OpenGL headers
+//////////////////////////////////////////////////////////
 
 #include "platform.h"
-#include "display.h"
-#include <boost/ptr_container/ptr_unordered_map.hpp>
-#include <queue>
 
-#ifdef HAVE_CVARS
-#include <GLConsole/GLConsole.h>
-#endif // HAVE_CVARS
+#ifdef HAVE_GLUT
 
-namespace pangolin
-{
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+    #include <GLUT/glut.h>
+    #define HAVE_GLUT_APPLE_FRAMEWORK
 
-  struct PangolinGl
-  {
-    PangolinGl();
+    inline void glutBitmapString(void* font, const unsigned char* str)
+    {
+        const unsigned char* s = str;
+        while(*s != 0) {
+            glutBitmapCharacter(font, *s);
+            ++s;
+        }
+    }
+#else
+    #include <GL/freeglut.h>
+#endif
 
-    // Base container for displays
-    View base;
+#endif // HAVE_GLUT
 
-    // Named views which are managed by pangolin (i.e. created / deleted by pangolin)
-    boost::ptr_unordered_map<const std::string,View> named_managed_views;
+#ifdef _WIN_
+#include <Windows.h>
+#endif
 
-    // Global keypress hooks
-    std::map<int,boost::function<void(void)> > keypress_hooks;
+#ifdef _OSX_
+#include <OpenGL/gl.h>
+#else
+#include <GL/gl.h>
+#endif
 
-    // Manage fullscreen (ToggleFullscreen is quite new)
-    bool is_double_buffered;
-    bool is_fullscreen;
-    GLint windowed_size[2];
-
-    // State relating to interactivity
-    bool quit;
-    int had_input;
-    int has_resized;
-    int mouse_state;
-    View* activeDisplay;
-
-    std::queue<std::pair<std::string,Viewport> > screen_capture;
-#ifdef HAVE_CVARS
-    GLConsole console;
-#endif // HAVE_CVARS
-
-  };
-
-}
-
-#endif // PANGOLIN_DISPLAY_INTERNAL_H
-
+#endif // PANGOLIN_GLINCLUDE_H

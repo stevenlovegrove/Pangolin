@@ -1,4 +1,4 @@
-#include "input_record_repeat.h"
+#include <pangolin/input_record_repeat.h>
 
 using namespace std;
 

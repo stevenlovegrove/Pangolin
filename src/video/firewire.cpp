@@ -25,7 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "firewire.h"
+#include <pangolin/video/firewire.h>
 
 #include <stdio.h>
 #include <stdint.h>

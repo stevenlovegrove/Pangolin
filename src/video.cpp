@@ -25,25 +25,25 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "video.h"
+#include <pangolin/video.h>
 
 #ifdef HAVE_DC1394
-#include "video/firewire.h"
+#include <pangolin/video/firewire.h>
 #endif
 
 #ifdef HAVE_V4L
-#include "video/v4l.h"
+#include <pangolin/video/v4l.h>
 #endif
 
 #ifdef HAVE_FFMPEG
-#include "video/ffmpeg.h"
+#include <pangolin/video/ffmpeg.h>
 #endif
 
 #ifdef HAVE_OPENNI
-#include "video/openni.h"
+#include <pangolin/video/openni.h>
 #endif
 
-#include "video/pvn_video.h"
+#include <pangolin/video/pvn_video.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>

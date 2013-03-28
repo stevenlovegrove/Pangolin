@@ -25,7 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "threadedfilebuf.h"
+#include <pangolin/threadedfilebuf.h>
 
 #include <cstring>
 

@@ -25,7 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "vars.h"
+#include <pangolin/vars.h>
 
 #include <iostream>
 #include <fstream>

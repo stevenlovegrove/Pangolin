@@ -25,19 +25,21 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "widgets.h"
+#include <pangolin/widgets.h>
+#include <pangolin/display.h>
+#include <pangolin/display_internal.h>
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <iostream>
 #include <iomanip>
-#include "display_internal.h"
 
 using namespace std;
 
 namespace pangolin
 {
 
+// Pointer to context defined in display.cpp
 extern __thread PangolinGl* context;
 
 const static int border = 1;
@@ -177,7 +179,7 @@ void Panel::Render()
 {
   glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_SCISSOR_BIT | GL_VIEWPORT_BIT);
 
-  OpenGlRenderState::ApplyWindowCoords();
+  DisplayBase().ActivatePixelOrthographic();
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glDisable(GL_SCISSOR_TEST);

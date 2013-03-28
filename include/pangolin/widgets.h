@@ -28,9 +28,9 @@
 #ifndef PANGOLIN_WIDGETS_H
 #define PANGOLIN_WIDGETS_H
 
-#include "platform.h"
-#include "display.h"
-#include "vars.h"
+#include <pangolin/view.h>
+#include <pangolin/vars.h>
+#include <pangolin/handler.h>
 
 namespace pangolin
 {

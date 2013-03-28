@@ -25,7 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "ffmpeg.h"
+#include <pangolin/video/ffmpeg.h>
 
 namespace pangolin
 {

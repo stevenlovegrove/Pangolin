@@ -25,54 +25,27 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "video_recorder.h"
+#ifndef PANGOLIN_H
+#define PANGOLIN_H
 
-using namespace std;
+#include <pangolin/platform.h>
+#include <pangolin/gl.h>
+#include <pangolin/gldraw.h>
+#include <pangolin/display.h>
+#include <pangolin/view.h>
+#include <pangolin/plotter.h>
 
-namespace pangolin
-{
+#ifdef BUILD_PANGOLIN_VARS
+#include <pangolin/vars.h>
+#include <pangolin/widgets.h>
+#endif
 
-VideoRecorder::VideoRecorder(
-    const std::string& filename,
-    int stream0_width, int stream0_height, std::string stream0_fmt,
-    unsigned int buffer_size_bytes
-    ) : frames(0), buffer(filename, buffer_size_bytes), writer(&buffer)
-{
-    VideoStream strm0;
-    strm0.name = "main";
-    strm0.w = stream0_width;
-    strm0.h = stream0_height;
-    strm0.fmt = VideoFormatFromString(stream0_fmt);
-    strm0.frame_size_bytes = (strm0.w * strm0.h * strm0.fmt.bpp) / 8;
+#ifdef BUILD_PANGOLIN_VIDEO
+#include <pangolin/video.h>
+#endif // BUILD_PANGOLIN_VIDEO
 
-    stream_info.push_back(strm0);
-}
+// Let other libraries headers know about Pangolin
+#define HAVE_PANGOLIN
 
-VideoRecorder::~VideoRecorder()
-{
-}
+#endif // PANGOLIN_H
 
-void VideoRecorder::WriteFileHeader()
-{
-    writer << stream_info[0].fmt.format << "\n";
-    writer << stream_info[0].w  << "\n";
-    writer << stream_info[0].h  << "\n";
-    writer << "30.0\n";
-}
-
-int VideoRecorder::RecordFrame(void* img)
-{
-    if( stream_info.size() != 1 )
-        throw VideoRecorderException("Incorrect number of frames specified");
-
-    if(frames==0)
-        WriteFileHeader();
-
-    const VideoStream& strm = stream_info[0];
-
-    writer.write((char*)img,strm.frame_size_bytes);
-
-    return frames++;
-}
-
-}

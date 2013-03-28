@@ -25,7 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "pvn_video.h"
+#include <pangolin/video/pvn_video.h>
 
 #include <iostream>
 

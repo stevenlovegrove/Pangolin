@@ -1,35 +1,43 @@
 #######################################################
 ## Library sources
 
+SET( INCDIR "../include/pangolin")
+
+SET(
+  HEADERS
+  ${INCDIR}/pangolin.h
+  ${INCDIR}/platform.h
+  ${INCDIR}/simple_math.h
+  ${INCDIR}/plotter.h 
+  ${INCDIR}/display.h ${INCDIR}/display_internal.h 
+  ${INCDIR}/view.h ${INCDIR}/viewport.h
+  ${INCDIR}/handler.h ${INCDIR}/opengl_render_state.h
+  ${INCDIR}/gl.h ${INCDIR}/gldraw.h ${INCDIR}/glvbo.h
+  ${INCDIR}/glcuda.h ${INCDIR}/cg.h ${INCDIR}/glsl.h
+  ${INCDIR}/threadedfilebuf.h ${INCDIR}/timer.h
+)
+
 SET(
   SOURCES
-  pangolin.h
-  platform.h
-  simple_math.h
-  display.h display_internal.h display.cpp
-  plotter.h plotter.cpp
-  gl.h glcuda.h cg.h glsl.h gldraw.h glvbo.h
-  threadedfilebuf.h threadedfilebuf.cpp
-  timer.h
+  display.cpp view.cpp viewport.cpp
+  handler.cpp opengl_render_state.cpp
+  plotter.cpp
+  threadedfilebuf.cpp
 )
+
+#######################################################
+## User build options
 
 OPTION(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
 IF(BUILD_PANGOLIN_VARS)
-  LIST(APPEND SOURCES
-    vars.h vars_internal.h vars.cpp
-    input_record_repeat.h input_record_repeat.cpp
-    widgets.h widgets.cpp
-  )
+  LIST(APPEND HEADERS ${INCDIR}/vars.h ${INCDIR}/vars_internal.h ${INCDIR}/input_record_repeat.h ${INCDIR}/widgets.h )
+  LIST(APPEND SOURCES vars.cpp input_record_repeat.cpp widgets.cpp )
 ENDIF()
 
 OPTION(BUILD_PANGOLIN_VIDEO "Build support for Pangolin Video Utilities" ON)
 IF(BUILD_PANGOLIN_VIDEO)
-  LIST(APPEND SOURCES
-    video.h video.cpp
-    video_recorder.h video_recorder.cpp
-    video_record_repeat.h video_record_repeat.cpp
-    video/pvn_video.h video/pvn_video.cpp
-  )
+  LIST(APPEND HEADERS ${INCDIR}/video.h ${INCDIR}/video_recorder.h ${INCDIR}/video_record_repeat.h ${INCDIR}/video/pvn_video.h )
+  LIST(APPEND SOURCES video.cpp video_recorder.cpp video_record_repeat.cpp video/pvn_video.cpp )
 ENDIF()
 
 #######################################################
@@ -40,7 +48,8 @@ FIND_PACKAGE(GLEW REQUIRED)
 FIND_PACKAGE(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
 
 ## Apply required dependencies settings
-LIST(APPEND USER_INC  "${CMAKE_CURRENT_SOURCE_DIR}/..;${PROJECT_BINARY_DIR};${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR};${Boost_INCLUDE_DIRS}" )
+LIST(APPEND USER_INC  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/include" )
+LIST(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR};${Boost_INCLUDE_DIRS}" )
 LIST(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY};${Boost_LIBRARIES}" )
 LIST(APPEND LIB_DIRS  "${OPENGL_LIBRARY_DIR};${GLEW_LIBRARY_DIR};${Boost_LIBRARY_DIRS}" )
 
@@ -119,13 +128,15 @@ IF(BUILD_PANGOLIN_VIDEO AND DC1394_FOUND)
   SET(HAVE_DC1394 1)
   LIST(APPEND INTERNAL_INC  ${DC1394_INCLUDE_DIR} )
   LIST(APPEND LINK_LIBS  ${DC1394_LIBRARY} )
-  LIST(APPEND SOURCES video/firewire.h video/firewire.cpp)
+  LIST(APPEND HEADERS ${INCDIR}/video/firewire.h )
+  LIST(APPEND SOURCES video/firewire.cpp)
   MESSAGE(STATUS "libdc1394 Found and Enabled")
 ENDIF()
 
 IF(BUILD_PANGOLIN_VIDEO AND _LINUX_)
   SET(HAVE_V4L 1)
-  LIST(APPEND SOURCES video/v4l.h video/v4l.cpp)
+  LIST(APPEND HEADERS ${INCDIR}/video/v4l.h)
+  LIST(APPEND SOURCES video/v4l.cpp)
 ENDIF()
 
 FIND_PACKAGE(FFMPEG QUIET)
@@ -133,7 +144,8 @@ IF(BUILD_PANGOLIN_VIDEO AND FFMPEG_FOUND)
   SET(HAVE_FFMPEG 1)
   LIST(APPEND INTERNAL_INC  ${FFMPEG_INCLUDE_DIRS} )
   LIST(APPEND LINK_LIBS ${FFMPEG_LIBRARIES} )
-  LIST(APPEND SOURCES video/ffmpeg.h video/ffmpeg.cpp)
+  LIST(APPEND HEADERS ${INCDIR}/video/ffmpeg.h)
+  LIST(APPEND SOURCES video/ffmpeg.cpp)
   MESSAGE(STATUS "ffmpeg Found and Enabled")
 ENDIF()
 
@@ -142,7 +154,8 @@ IF(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
   SET(HAVE_OPENNI 1)
   LIST(APPEND INTERNAL_INC  ${OPENNI_INCLUDE_DIRS} )
   LIST(APPEND LINK_LIBS ${OPENNI_LIBRARIES} )
-  LIST(APPEND SOURCES video/openni.h video/openni.cpp)
+  LIST(APPEND HEADERS ${INCDIR}/video/openni.h )
+  LIST(APPEND SOURCES video/openni.cpp)
   MESSAGE(STATUS "OpenNI Found and Enabled")
 ENDIF()
 
@@ -173,24 +186,19 @@ endif()
 
 
 #######################################################
-## Add Librarys / Include Directories / Link directories
+## Add Libraries / Include Directories / Link directories
 
 INCLUDE_DIRECTORIES( ${INTERNAL_INC} )
 INCLUDE_DIRECTORIES( ${USER_INC} )
 LINK_LIBRARIES(${LINK_LIBS})
 LINK_DIRECTORIES(${LIB_DIRS})
 
-IF(CUDA_FOUND)
-  CUDA_ADD_LIBRARY(${LIBRARY_NAME} ${SOURCES})
-ELSE()
-  ADD_LIBRARY(${LIBRARY_NAME} ${SOURCES})
-ENDIF()
+ADD_LIBRARY(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
 
 ## Set Special Compiler flags
 IF(MSVC)
   SET(CMAKE_CXX_FLAGS "/EHs")
 ELSEIF(CMAKE_COMPILER_IS_GNUCXX)
-#  SET(CMAKE_CXX_FLAGS "-Wall -Wno-error=deprecated-declarations -Werror")
   SET(CMAKE_CXX_FLAGS "-Wall -Wno-error=deprecated-declarations")
 ENDIF()
 
@@ -199,58 +207,27 @@ ENDIF()
 
 CONFIGURE_FILE(
   "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/${LIBRARY_NAME}/config.h"
 )
 
 #######################################################
-## Define headers files associated with the install target 
-SET(INSTALL_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h 
-	cg.h 
-	display.h 
-	display_internal.h 
-	gl.h 
-	glcuda.h
-        gldraw.h 
-        glsl.h
-        glvbo.h
-	input_record_repeat.h
-	pangolin.h 
-	platform.h 
-	plotter.h 
-	simple_math.h 
-	threadedfilebuf.h
-	vars.h 
-	vars_internal.h 
-	video.h 
-	video_recorder.h
-	video_record_repeat.h
-        widgets.h
-)
+## Install headers / targets
 
-SET(INSTALL_VIDEO_HEADERS 
-	video/ffmpeg.h
-	video/firewire.h
-	video/openni.h	
-	video/pvn_video.h
-	video/v4l.h
-)
-
-# install headers
-INSTALL(FILES ${INSTALL_HEADERS} 
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
 )
-INSTALL(FILES ${INSTALL_VIDEO_HEADERS} 
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}/video
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/${LIBRARY_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
 )
 
-# install library
 INSTALL(TARGETS ${LIBRARY_NAME}
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
 )
 
-# Export config file for easy inclusion into other projects: FIND_PACKAGE( Pangolin )
+#######################################################
+## Export config file for easy inclusion into other projects: FIND_PACKAGE( Pangolin )
 get_target_property( LIB_LOC ${LIBRARY_NAME} LOCATION )
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/PangolinConfig.cmake @ONLY IMMEDIATE )

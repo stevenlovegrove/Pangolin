@@ -1,4 +1,4 @@
-#include "openni.h"
+#include <pangolin/video/openni.h>
 
 namespace pangolin
 {

@@ -25,8 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "plotter.h"
-#include "display_internal.h"
+#include <pangolin/plotter.h>
+#include <pangolin/display.h>
+#include <pangolin/display_internal.h>
 
 #include <limits>
 #include <iostream>
@@ -407,7 +408,7 @@ void Plotter::Render()
       stringstream ss;
       ss << "(" << mouse_xy[0] << "," << mouse_xy[1] << ")";
       glColor3f(1.0,1.0,1.0);
-      OpenGlRenderState::ApplyWindowCoords();
+      DisplayBase().ActivatePixelOrthographic();
       glRasterPos2f( v.l+5,v.b+5 );
       glutBitmapString(font,(unsigned char*)ss.str().c_str());
     }else{
@@ -420,7 +421,7 @@ void Plotter::Render()
       stringstream ss;
       glColor3f(1.0,1.0,1.0);
       ss << "x=" << xu << " ";
-      OpenGlRenderState::ApplyWindowCoords();
+      DisplayBase().ActivatePixelOrthographic();
       int tx = v.l+5;
       glRasterPos2f( tx,v.b+5 );
       glutBitmapString(font,(unsigned char*)ss.str().c_str());
@@ -445,7 +446,7 @@ void Plotter::Render()
   {
     glColor3fv(plot_colours[i%num_plot_colours]);
 
-    OpenGlRenderState::ApplyWindowCoords();
+    DisplayBase().ActivatePixelOrthographic();
     glRasterPos2f(v.l+5,ty);
     glutBitmapString(font,(unsigned char*)log->labels[i].c_str());
     ty -= 15;

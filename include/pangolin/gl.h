@@ -28,19 +28,8 @@
 #ifndef PANGOLIN_GL_H
 #define PANGOLIN_GL_H
 
-#include "platform.h"
-
-#ifdef _WIN_
-#include <Windows.h>
-#endif
-
-#include <GL/glew.h>
-
-#ifdef _OSX_
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
+#include <pangolin/platform.h>
+#include <pangolin/glinclude.h>
 
 #ifdef HAVE_EIGEN
 #include <Eigen/Eigen>
