@@ -66,7 +66,7 @@ public:
 
     size_t SizeBytes() const;
 
-    std::string PixFormat() const;
+    VideoPixelFormat PixFormat() const;
 
     bool GrabNext( unsigned char* image, bool wait = true );
 
@@ -114,10 +114,12 @@ public:
 
     void Start();
     void Stop();
+
     unsigned Width() const;
     unsigned Height() const;
     size_t SizeBytes() const;
-    std::string PixFormat() const;
+
+    VideoPixelFormat PixFormat() const;
 
     bool GrabNext( unsigned char* image, bool wait = true );
     bool GrabNewest( unsigned char* image, bool wait = true );

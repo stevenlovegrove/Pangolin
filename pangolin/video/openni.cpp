@@ -104,12 +104,12 @@ size_t OpenNiVideo::SizeBytes() const
     return sizeBytes;
 }
 
-std::string OpenNiVideo::PixFormat() const
+VideoPixelFormat OpenNiVideo::PixFormat() const
 {
     if(s1 == OpenNiRgb) {
-        return "RGB24";
+        return VideoFormatFromString("RGB24");
     }else{
-        return "GRAY16LE";
+        return VideoFormatFromString("GRAY16LE");
     }
 }
 

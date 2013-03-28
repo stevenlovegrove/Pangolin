@@ -129,7 +129,7 @@ public:
   size_t SizeBytes() const;
 
   //! Implement VideoSource::PixFormat()
-  std::string PixFormat() const;
+  VideoPixelFormat PixFormat() const;
 
   //! Implement VideoSource::Start()
   void Start();

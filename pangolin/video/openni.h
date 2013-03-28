@@ -30,7 +30,7 @@ public:
     unsigned Height() const;
     size_t SizeBytes() const;
 
-    std::string PixFormat() const;
+    VideoPixelFormat PixFormat() const;
 
     void Start();
     void Stop();

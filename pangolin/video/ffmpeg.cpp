@@ -290,9 +290,9 @@ size_t FfmpegVideo::SizeBytes() const
     return numBytesOut;
 }
 
-std::string FfmpegVideo::PixFormat() const
+VideoPixelFormat FfmpegVideo::PixFormat() const
 {
-    return FfmpegFmtToString(fmtout);
+    return VideoFormatFromString(FfmpegFmtToString(fmtout));
 }
 
 void FfmpegVideo::Start()
@@ -397,9 +397,9 @@ size_t FfmpegConverter::SizeBytes() const
     return numbytesdst;
 }
 
-std::string FfmpegConverter::PixFormat() const
+VideoPixelFormat FfmpegConverter::PixFormat() const
 {
-    return FfmpegFmtToString(fmtdst);
+    return VideoFormatFromString(FfmpegFmtToString(fmtdst));
 }
 
 bool FfmpegConverter::GrabNext( unsigned char* image, bool wait )

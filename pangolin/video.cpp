@@ -386,7 +386,12 @@ void VideoInput::Open(std::string uri)
         delete video;
         video = 0;
     }
+    
+    // Create video device
     video = OpenVideo(uri);
+    
+    // Cache video format object
+    fmt = video->PixFormat();
 }
 
 void VideoInput::Reset()
@@ -412,10 +417,10 @@ size_t VideoInput::SizeBytes() const
     return video->SizeBytes();
 }
 
-std::string VideoInput::PixFormat() const
+VideoPixelFormat VideoInput::PixFormat() const
 {
     if( !video ) throw VideoException("No video source open");
-    return video->PixFormat();
+    return fmt;
 }
 
 void VideoInput::Start()

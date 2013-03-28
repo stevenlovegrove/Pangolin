@@ -15,7 +15,7 @@ void RecordSample(const std::string uri, const std::string filename)
 {
     // Setup Video Source
     VideoInput video(uri);
-    VideoPixelFormat vid_fmt = VideoFormatFromString(video.PixFormat());
+    const VideoPixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();
 

@@ -364,13 +364,14 @@ void Dc1394ModeDetails(dc1394video_mode_t mode, unsigned& w, unsigned& h, string
     }
 }
 
-std::string FirewireVideo::PixFormat() const
+VideoPixelFormat FirewireVideo::PixFormat() const
 {
     dc1394video_mode_t video_mode;
     dc1394color_coding_t color_coding;
     dc1394_video_get_mode(camera,&video_mode);
     dc1394_get_color_coding_from_video_mode(camera,video_mode,&color_coding);
-    return Dc1394ColorCodingToString(color_coding);
+    const std::string strformat = Dc1394ColorCodingToString(color_coding);
+    return VideoFormatFromString(strformat);
 }
 
 size_t FirewireVideo::SizeBytes() const

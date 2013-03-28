@@ -93,10 +93,10 @@ namespace pangolin
         return image_size;
     }
 
-    std::string V4lVideo::PixFormat() const
+    VideoPixelFormat V4lVideo::PixFormat() const
     {
         // TODO: compute properly
-        return "YUYV422";
+        return VideoFormatFromString("YUYV422");
     }
 
     bool V4lVideo::GrabNext( unsigned char* image, bool wait )

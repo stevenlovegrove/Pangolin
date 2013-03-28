@@ -96,9 +96,9 @@ size_t PvnVideo::SizeBytes() const
     return stream_info[0].frame_size_bytes;
 }
 
-std::string PvnVideo::PixFormat() const
+VideoPixelFormat PvnVideo::PixFormat() const
 {
-    return stream_info[0].fmt.format;
+    return VideoFormatFromString(stream_info[0].fmt.format);
 }
 
 bool PvnVideo::GrabNext( unsigned char* image, bool /*wait*/ )

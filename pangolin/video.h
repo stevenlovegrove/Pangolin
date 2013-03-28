@@ -36,7 +36,7 @@
 // Video URI's take the following form:
 //  scheme:[param1=value1,param2=value2,...]//device
 //
-// scheme = file | dc1394 | v4l | convert | mjpeg
+// scheme = file | dc1394 | v4l | openni | convert | mjpeg
 //
 // file/files - read PVN file format (pangolin video) or other formats using ffmpeg
 //  e.g. "file:[realtime=1]///home/user/video/movie.pvn"
@@ -77,7 +77,11 @@ namespace pangolin
 
     struct VideoPixelFormat
     {
-        std::string format;
+        // Previously, VideoInterface::PixFormat returned a string.
+        // For compatibility, make this string convertable
+        inline operator std::string() { return format; }
+
+        std::string  format;
         unsigned int channels;
         unsigned int channel_bits[4];
         unsigned int bpp;
@@ -103,7 +107,7 @@ namespace pangolin
         virtual unsigned Height() const = 0;
         virtual size_t SizeBytes() const = 0;
 
-        virtual std::string PixFormat() const = 0;
+        virtual VideoPixelFormat PixFormat() const = 0;
 
         virtual void Start() = 0;
         virtual void Stop() = 0;
@@ -132,7 +136,7 @@ namespace pangolin
         unsigned Width() const;
         unsigned Height() const;
         size_t SizeBytes() const;
-        std::string PixFormat() const;
+        VideoPixelFormat PixFormat() const;
 
         void Start();
         void Stop();
@@ -142,6 +146,7 @@ namespace pangolin
     protected:
         std::string uri;
         VideoInterface* video;
+        VideoPixelFormat fmt;
     };
 
     //! Open Video Interface from string specification (as described in this files header)

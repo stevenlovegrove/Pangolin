@@ -98,7 +98,7 @@ size_t VideoRecordRepeat::SizeBytes() const
     return video_src->SizeBytes();
 }
 
-std::string VideoRecordRepeat::PixFormat() const
+VideoPixelFormat VideoRecordRepeat::PixFormat() const
 {
     if( !video_src ) throw VideoException("No video source open");
     return video_src->PixFormat();
