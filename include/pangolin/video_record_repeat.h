@@ -38,38 +38,36 @@ namespace pangolin
 
 struct VideoRecordRepeat : public VideoInterface
 {
-    VideoRecordRepeat(
-        std::string uri, std::string save_filename, int buffer_size_bytes
-    );
+    VideoRecordRepeat( std::string uri, std::string save_filename, int buffer_size_bytes );
     ~VideoRecordRepeat();
-
+    
     unsigned Width() const;
     unsigned Height() const;
     size_t SizeBytes() const;
     VideoPixelFormat PixFormat() const;
-
+    
     void Start();
     void Stop();
     bool GrabNext( unsigned char* image, bool wait = true );
     bool GrabNewest( unsigned char* image, bool wait = true );
-
+    
     void Record();
     void Play(bool realtime = true);
     void Source();
-
+    
     int FrameId();
-
+    
     bool IsRecording() const;
     bool IsPlaying() const;
-
+    
 protected:
     VideoInterface* video_src;
     VideoInterface* video_file;
     VideoRecorder* video_recorder;
-
+    
     std::string filename;
     int buffer_size_bytes;
-
+    
     int frame_num;
 };
 

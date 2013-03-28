@@ -39,41 +39,43 @@
 
 namespace pangolin
 {
-    struct VideoRecorderException : std::exception
-    {
-        VideoRecorderException(std::string str) : desc(str) {}
-        VideoRecorderException(std::string str, std::string detail) {
-            desc = str + "\n\t" + detail;
-        }
-        ~VideoRecorderException() throw() {}
-        const char* what() const throw() { return desc.c_str(); }
-        std::string desc;
-    };
 
-    class VideoRecorder
-    {
-    public:
-        VideoRecorder(
+struct VideoRecorderException : std::exception
+{
+    VideoRecorderException(std::string str) : desc(str) {}
+    VideoRecorderException(std::string str, std::string detail) {
+        desc = str + "\n\t" + detail;
+    }
+    ~VideoRecorderException() throw() {}
+    const char* what() const throw() { return desc.c_str(); }
+    std::string desc;
+};
+
+class VideoRecorder
+{
+public:
+    VideoRecorder(
             const std::string& filename,
             int stream0_width, int stream0_height, std::string stream0_fmt,
             unsigned int buffer_size_bytes = 1024*1024*100
-        );
-        ~VideoRecorder();
+            );
+    ~VideoRecorder();
+    
+    // Save img (with correct format and resolution) to video, returning video frame id.
+    int RecordFrame(void* img);
+    
+    void operator()();
+    
+protected:       
+    int frames;
+    std::vector<VideoStream> stream_info;
+    
+    threadedfilebuf buffer;
+    std::ostream writer;
+    
+    void WriteFileHeader();
+};
 
-        // Save img (with correct format and resolution) to video, returning video frame id.
-        int RecordFrame(void* img);
-
-        void operator()();
-
-    protected:       
-        int frames;
-        std::vector<VideoStream> stream_info;
-
-        threadedfilebuf buffer;
-        std::ostream writer;
-
-        void WriteFileHeader();
-    };
 }
 
 #endif // PANGOLIN_VIDEO_RECORDER_H

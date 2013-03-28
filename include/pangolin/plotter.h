@@ -65,37 +65,37 @@ struct DataUnavailableException : std::exception
 class DataSequence
 {
 public:
-  DataSequence(unsigned int buffer_size = 1024, unsigned size = 0, float val = 0.0f );
-  ~DataSequence();
-
-  void Add(float val);
-  void Clear();
-  
-  float operator[](int i) const;
-  float& operator[](int i);
-
-  int IndexBegin() const;
-  int IndexEnd() const;
-  
-  bool HasData(int i) const;
-  
-  float Sum() const;
-  float Min() const;
-  float Max() const;
-  
+    DataSequence(unsigned int buffer_size = 1024, unsigned size = 0, float val = 0.0f );
+    ~DataSequence();
+    
+    void Add(float val);
+    void Clear();
+    
+    float operator[](int i) const;
+    float& operator[](int i);
+    
+    int IndexBegin() const;
+    int IndexEnd() const;
+    
+    bool HasData(int i) const;
+    
+    float Sum() const;
+    float Min() const;
+    float Max() const;
+    
 protected:
-  DataSequence(const DataSequence& /*o*/) {}
-
-  int buffer_size;
-  float* ys;
-  
-  int firstn;
-  int n;
-  float sum_y;
-  float sum_y_sq;
-  float min_y;
-  float max_y;
-  
+    DataSequence(const DataSequence& /*o*/) {}
+    
+    int buffer_size;
+    float* ys;
+    
+    int firstn;
+    int n;
+    float sum_y;
+    float sum_y_sq;
+    float min_y;
+    float max_y;
+    
 };
 
 inline int DataSequence::IndexEnd() const
@@ -116,42 +116,42 @@ inline bool DataSequence::HasData(int i) const {
 
 struct DataLog
 {
-  typedef boost::ptr_vector<DataSequence> SequenceContainer;
+    typedef boost::ptr_vector<DataSequence> SequenceContainer;
     
-  DataLog(unsigned int buffer_size = 10000 );
-  void Log(float v);
-  void Log(float v1, float v2);
-  void Log(float v1, float v2, float v3);
-  void Log(float v1, float v2, float v3, float v4);
-  void Log(float v1, float v2, float v3, float v4, float v5);
-  void Log(float v1, float v2, float v3, float v4, float v5, float v6);
-  void Log(unsigned int N, const float * vals);
-  void Log(const std::vector<float> & vals);
-  void SetLabels(const std::vector<std::string> & labels);
-  void Clear();
-  void Save(std::string filename);
-
-  unsigned int buffer_size;
-  int x;
-  SequenceContainer sequences;
-  std::vector<std::string> labels;
+    DataLog(unsigned int buffer_size = 10000 );
+    void Log(float v);
+    void Log(float v1, float v2);
+    void Log(float v1, float v2, float v3);
+    void Log(float v1, float v2, float v3, float v4);
+    void Log(float v1, float v2, float v3, float v4, float v5);
+    void Log(float v1, float v2, float v3, float v4, float v5, float v6);
+    void Log(unsigned int N, const float * vals);
+    void Log(const std::vector<float> & vals);
+    void SetLabels(const std::vector<std::string> & labels);
+    void Clear();
+    void Save(std::string filename);
+    
+    unsigned int buffer_size;
+    int x;
+    SequenceContainer sequences;
+    std::vector<std::string> labels;
 };
 
 const static int num_plot_colours = 12;
 const static float plot_colours[][3] =
 {
-  {1.0, 0.0, 0.0},
-  {0.0, 1.0, 0.0},
-  {0.0, 0.0, 1.0},
-  {1.0, 0.0, 1.0},
-  {0.5, 0.5, 0.0},
-  {0.5, 0.0, 0.0},
-  {0.0, 0.5, 0.0},
-  {0.0, 0.0, 0.5},
-  {0.5, 0.0, 1.0},
-  {0.0, 1.0, 0.5},
-  {1.0, 0.0, 0.5},
-  {0.0, 0.5, 1.0}
+    {1.0, 0.0, 0.0},
+    {0.0, 1.0, 0.0},
+    {0.0, 0.0, 1.0},
+    {1.0, 0.0, 1.0},
+    {0.5, 0.5, 0.0},
+    {0.5, 0.0, 0.0},
+    {0.0, 0.5, 0.0},
+    {0.0, 0.0, 0.5},
+    {0.5, 0.0, 1.0},
+    {0.0, 1.0, 0.5},
+    {1.0, 0.0, 0.5},
+    {0.0, 0.5, 1.0}
 };
 
 
@@ -165,44 +165,44 @@ const static int draw_modes[] = {GL_LINE_STRIP, GL_POINTS};
 
 struct Plotter : public View, Handler
 {
-  Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5 );
-  void Render();
-  void DrawSequence(const DataSequence& seq);
-  void DrawSequence(const DataSequence& x,const DataSequence& y);
-  void DrawSequenceHistogram(const DataLog::SequenceContainer& seq);
-  void DrawTicks();
-
-  void ResetView();
-
-  void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
-  void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
-  void MouseMotion(View&, int x, int y, int mouse_state);
-
-  void ScreenToPlot(int x, int y);
-  void SetMode(unsigned mode, bool track=true);
-  void SetViewOrigin(float x0, float y0);
-  void SetLineThickness(float t);
-
-  DataLog* log;
-  bool track_front;
-  float int_x_dflt[2];
-  float int_y_dflt[2];
-  float int_x[2];
-  float int_y[2];
-  float vo[2]; //view offset
-  float ticks[2];
-  int last_mouse_pos[2];
-  int mouse_state;
-  float mouse_xy[2];
-  float lineThickness;
-
-  int draw_mode;
-
-  enum PLOT_MODES { TIME_SERIES, XY, STACKED_HISTOGRAM};
-  static const unsigned modes_n = 3;
-  unsigned plot_mode;
-  const static unsigned int show_n = 9;
-  bool show[show_n];
+    Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5 );
+    void Render();
+    void DrawSequence(const DataSequence& seq);
+    void DrawSequence(const DataSequence& x,const DataSequence& y);
+    void DrawSequenceHistogram(const DataLog::SequenceContainer& seq);
+    void DrawTicks();
+    
+    void ResetView();
+    
+    void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
+    void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
+    void MouseMotion(View&, int x, int y, int mouse_state);
+    
+    void ScreenToPlot(int x, int y);
+    void SetMode(unsigned mode, bool track=true);
+    void SetViewOrigin(float x0, float y0);
+    void SetLineThickness(float t);
+    
+    DataLog* log;
+    bool track_front;
+    float int_x_dflt[2];
+    float int_y_dflt[2];
+    float int_x[2];
+    float int_y[2];
+    float vo[2]; //view offset
+    float ticks[2];
+    int last_mouse_pos[2];
+    int mouse_state;
+    float mouse_xy[2];
+    float lineThickness;
+    
+    int draw_mode;
+    
+    enum PLOT_MODES { TIME_SERIES, XY, STACKED_HISTOGRAM};
+    static const unsigned modes_n = 3;
+    unsigned plot_mode;
+    const static unsigned int show_n = 9;
+    bool show[show_n];
 };
 
 } // namespace pangolin

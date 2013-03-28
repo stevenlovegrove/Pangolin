@@ -49,30 +49,30 @@ class PvnVideo : public VideoInterface
 public:
     PvnVideo(const char* filename, bool realtime = false);
     ~PvnVideo();
-
+    
     // Implement VideoInterface
     void Start();
     void Stop();
     
     unsigned Width() const;
     unsigned Height() const;
-
+    
     size_t SizeBytes() const;
     VideoPixelFormat PixFormat() const;
     
     bool GrabNext( unsigned char* image, bool wait = true );
     bool GrabNewest( unsigned char* image, bool wait = true );
-
+    
 protected:
     int frames;
     std::ifstream file;
     std::vector<VideoStream> stream_info;
-
-
+    
+    
     bool realtime;
     pangolin::basetime frame_interval;
     pangolin::basetime last_frame;
-
+    
     void ReadFileHeader();
 };
 

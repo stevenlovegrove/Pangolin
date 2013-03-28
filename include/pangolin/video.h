@@ -64,96 +64,98 @@
 
 namespace pangolin
 {
-    struct VideoException : std::exception
-    {
-        VideoException(std::string str) : desc(str) {}
-        VideoException(std::string str, std::string detail) {
-            desc = str + "\n\t" + detail;
-        }
-        ~VideoException() throw() {}
-        const char* what() const throw() { return desc.c_str(); }
-        std::string desc;
-    };
 
-    struct VideoPixelFormat
-    {
-        // Previously, VideoInterface::PixFormat returned a string.
-        // For compatibility, make this string convertable
-        inline operator std::string() { return format; }
+struct VideoException : std::exception
+{
+    VideoException(std::string str) : desc(str) {}
+    VideoException(std::string str, std::string detail) {
+        desc = str + "\n\t" + detail;
+    }
+    ~VideoException() throw() {}
+    const char* what() const throw() { return desc.c_str(); }
+    std::string desc;
+};
 
-        std::string  format;
-        unsigned int channels;
-        unsigned int channel_bits[4];
-        unsigned int bpp;
-        bool planar;
-    };
+struct VideoPixelFormat
+{
+    // Previously, VideoInterface::PixFormat returned a string.
+    // For compatibility, make this string convertable
+    inline operator std::string() { return format; }
+    
+    std::string  format;
+    unsigned int channels;
+    unsigned int channel_bits[4];
+    unsigned int bpp;
+    bool planar;
+};
 
-    struct Uri
-    {
-        std::string scheme;
-        std::string url;
-        std::map<std::string,std::string> params;
-    };
+struct Uri
+{
+    std::string scheme;
+    std::string url;
+    std::map<std::string,std::string> params;
+};
 
-    //! Return Pixel Format properties given string specification in
-    //! FFMPEG notation.
-    VideoPixelFormat VideoFormatFromString(const std::string& format);
+//! Return Pixel Format properties given string specification in
+//! FFMPEG notation.
+VideoPixelFormat VideoFormatFromString(const std::string& format);
 
-    //! Interface to video capture sources
-    struct VideoInterface
-    {
-        virtual ~VideoInterface() {}
-        virtual unsigned Width() const = 0;
-        virtual unsigned Height() const = 0;
-        virtual size_t SizeBytes() const = 0;
+//! Interface to video capture sources
+struct VideoInterface
+{
+    virtual ~VideoInterface() {}
+    virtual unsigned Width() const = 0;
+    virtual unsigned Height() const = 0;
+    virtual size_t SizeBytes() const = 0;
+    
+    virtual VideoPixelFormat PixFormat() const = 0;
+    
+    virtual void Start() = 0;
+    virtual void Stop() = 0;
+    
+    //! Copy the next frame from the camera to image.
+    //! Optionally wait for a frame if one isn't ready
+    //! Returns true iff image was copied
+    virtual bool GrabNext( unsigned char* image, bool wait = true ) = 0;
+    
+    //! Copy the newest frame from the camera to image
+    //! discarding all older frames.
+    //! Optionally wait for a frame if one isn't ready
+    //! Returns true iff image was copied
+    virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
+};
 
-        virtual VideoPixelFormat PixFormat() const = 0;
+struct VideoInput : public VideoInterface
+{
+    VideoInput();
+    VideoInput(std::string uri);
+    ~VideoInput();
+    
+    void Open(std::string uri);
+    void Reset();
+    
+    unsigned Width() const;
+    unsigned Height() const;
+    size_t SizeBytes() const;
+    VideoPixelFormat PixFormat() const;
+    
+    void Start();
+    void Stop();
+    bool GrabNext( unsigned char* image, bool wait = true );
+    bool GrabNewest( unsigned char* image, bool wait = true );
+    
+protected:
+    std::string uri;
+    VideoInterface* video;
+    VideoPixelFormat fmt;
+};
 
-        virtual void Start() = 0;
-        virtual void Stop() = 0;
+//! Open Video Interface from string specification (as described in this files header)
+VideoInterface* OpenVideo(std::string uri);
 
-        //! Copy the next frame from the camera to image.
-        //! Optionally wait for a frame if one isn't ready
-        //! Returns true iff image was copied
-        virtual bool GrabNext( unsigned char* image, bool wait = true ) = 0;
+//! Parse string as Video URI
+Uri ParseUri(std::string str_uri);
 
-        //! Copy the newest frame from the camera to image
-        //! discarding all older frames.
-        //! Optionally wait for a frame if one isn't ready
-        //! Returns true iff image was copied
-        virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
-    };
-
-    struct VideoInput : public VideoInterface
-    {
-        VideoInput();
-        VideoInput(std::string uri);
-        ~VideoInput();
-
-        void Open(std::string uri);
-        void Reset();
-
-        unsigned Width() const;
-        unsigned Height() const;
-        size_t SizeBytes() const;
-        VideoPixelFormat PixFormat() const;
-
-        void Start();
-        void Stop();
-        bool GrabNext( unsigned char* image, bool wait = true );
-        bool GrabNewest( unsigned char* image, bool wait = true );
-
-    protected:
-        std::string uri;
-        VideoInterface* video;
-        VideoPixelFormat fmt;
-    };
-
-    //! Open Video Interface from string specification (as described in this files header)
-    VideoInterface* OpenVideo(std::string uri);
-
-    //! Parse string as Video URI
-    Uri ParseUri(std::string str_uri);
 }
 
 #endif // PANGOLIN_VIDEO_H

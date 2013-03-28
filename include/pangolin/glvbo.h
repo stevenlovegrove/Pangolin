@@ -78,7 +78,7 @@ inline void MakeTriangleStripIboForVbo(GlBuffer& ibo, int w, int h)
         }
         ++y;
     }
-        
+    
     ibo.Reinitialise(GlElementArrayBuffer, num_elements, GL_UNSIGNED_INT, 1, GL_STATIC_DRAW );
     ibo.Upload(buffer, sizeof(unsigned int)*num_elements );
     
@@ -99,13 +99,13 @@ inline void RenderVbo(GlBuffer& vbo)
     vbo.Bind();
     glVertexPointer(vbo.count_per_element, vbo.datatype, 0, 0);
     glEnableClientState(GL_VERTEX_ARRAY);
-
+    
     glPointSize(2.0);
     glDrawArrays(GL_POINTS, 0, vbo.num_elements);
-
+    
     glDisableClientState(GL_VERTEX_ARRAY);
     vbo.Unbind();
-
+    
 }
 
 inline void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color)
@@ -115,9 +115,9 @@ inline void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color)
         glColorPointer(cbo.count_per_element, cbo.datatype, 0, 0);
         glEnableClientState(GL_COLOR_ARRAY);
     }
-
+    
     RenderVbo(vbo);
-
+    
     if(draw_color) {
         glDisableClientState(GL_COLOR_ARRAY);
         cbo.Unbind();
@@ -129,7 +129,7 @@ inline void RenderVboIbo(GlBuffer& vbo, GlBuffer& ibo, bool draw_mesh)
     vbo.Bind();
     glVertexPointer(vbo.count_per_element, vbo.datatype, 0, 0);
     glEnableClientState(GL_VERTEX_ARRAY);
-
+    
     if(draw_mesh) {
         ibo.Bind();
         glDrawElements(GL_TRIANGLE_STRIP,ibo.num_elements, ibo.datatype, 0);
@@ -138,7 +138,7 @@ inline void RenderVboIbo(GlBuffer& vbo, GlBuffer& ibo, bool draw_mesh)
         glPointSize(2.0);
         glDrawArrays(GL_POINTS, 0, vbo.num_elements);
     }
-
+    
     glDisableClientState(GL_VERTEX_ARRAY);
     vbo.Unbind();
 }
@@ -150,9 +150,9 @@ inline void RenderVboIboCbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, bool dr
         glColorPointer(cbo.count_per_element, cbo.datatype, 0, 0);
         glEnableClientState(GL_COLOR_ARRAY);
     }
-
+    
     RenderVboIbo(vbo,ibo,draw_mesh);
-
+    
     if(draw_color) {
         glDisableClientState(GL_COLOR_ARRAY);
         cbo.Unbind();
@@ -166,22 +166,22 @@ inline void RenderVboIboCboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, GlBu
         glColorPointer(cbo.count_per_element, cbo.datatype, 0, 0);
         glEnableClientState(GL_COLOR_ARRAY);
     }
-
+    
     vbo.Bind();
     glVertexPointer(vbo.count_per_element, vbo.datatype, 0, 0);
     glEnableClientState(GL_VERTEX_ARRAY);
-
+    
     if(draw_mesh) {
         if(draw_normals) {
             nbo.Bind();
             glNormalPointer(nbo.datatype, nbo.count_per_element * GlDataTypeBytes(nbo.datatype),0);
             glEnableClientState(GL_NORMAL_ARRAY);
         }
-
+        
         ibo.Bind();
         glDrawElements(GL_TRIANGLE_STRIP,ibo.num_elements, ibo.datatype, 0);
         ibo.Unbind();
-
+        
         if(draw_normals) {
             glDisableClientState(GL_NORMAL_ARRAY);
             nbo.Unbind();
@@ -190,12 +190,12 @@ inline void RenderVboIboCboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, GlBu
         glPointSize(2.0);
         glDrawArrays(GL_POINTS, 0, vbo.num_elements);
     }
-
+    
     if(draw_color) {
         glDisableClientState(GL_COLOR_ARRAY);
         cbo.Unbind();
     }
-
+    
     glDisableClientState(GL_VERTEX_ARRAY);
     vbo.Unbind();
 }

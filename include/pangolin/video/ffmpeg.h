@@ -53,28 +53,28 @@ class FfmpegVideo : public VideoInterface
 public:
     FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false, int user_video_stream = -1);
     ~FfmpegVideo();
-
+    
     //! Implement VideoSource::Start()
     void Start();
-
+    
     //! Implement VideoSource::Stop()
     void Stop();
-
+    
     unsigned Width() const;
-
+    
     unsigned Height() const;
-
+    
     size_t SizeBytes() const;
-
+    
     VideoPixelFormat PixFormat() const;
-
+    
     bool GrabNext( unsigned char* image, bool wait = true );
-
+    
     bool GrabNewest( unsigned char* image, bool wait = true );
-
+    
 protected:
     void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false , int user_video_stream = -1);
-
+    
     SwsContext      *img_convert_ctx;
     AVFormatContext *pFormatCtx;
     int             videoStream;
@@ -84,7 +84,7 @@ protected:
     AVCodec         *pVidCodec;
     AVCodec         *pAudCodec;
     AVFrame         *pFrame;
-	AVFrame         *pFrameOut;
+    AVFrame         *pFrameOut;
     AVPacket        packet;
     int             numBytesOut;
     uint8_t         *buffer;
@@ -111,23 +111,23 @@ class FfmpegConverter : public VideoInterface
 public:
     FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_POINT);
     ~FfmpegConverter();
-
+    
     void Start();
     void Stop();
-
+    
     unsigned Width() const;
     unsigned Height() const;
     size_t SizeBytes() const;
-
+    
     VideoPixelFormat PixFormat() const;
-
+    
     bool GrabNext( unsigned char* image, bool wait = true );
     bool GrabNewest( unsigned char* image, bool wait = true );
-
+    
 protected:
     VideoInterface* videoin;
     SwsContext *img_convert_ctx;
-
+    
     PixelFormat     fmtsrc;
     PixelFormat     fmtdst;
     AVFrame*        avsrc;

@@ -44,20 +44,20 @@ class threadedfilebuf : public std::streambuf
 public:
     threadedfilebuf(const std::string& filename, unsigned int buffer_size_bytes);
     ~threadedfilebuf();
-
+    
     void operator()();
-
+    
 protected:
     //! Override streambuf::xsputn for asynchronous write
     std::streamsize xsputn(const char * s, std::streamsize n);
-
+    
     std::filebuf file;
     char* mem_buffer;
     int mem_size;
     int mem_max_size;
     int mem_start;
     int mem_end;
-
+    
     boost::mutex update_mutex;
     boost::condition_variable cond_queued;
     boost::condition_variable cond_dequeued;

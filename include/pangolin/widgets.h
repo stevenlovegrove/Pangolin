@@ -41,12 +41,12 @@ View& CreatePanel(const std::string& name);
 
 struct Panel : public View
 {
-  Panel();
-  Panel(const std::string& auto_register_var_prefix);
-  void Render();
-  void ResizeChildren();
-  static void AddVariable(void* data, const std::string& name, _Var& var, const char* reg_type_name, bool brand_new);
-  boost::ptr_unordered_map<const std::string,View>& context_views;
+    Panel();
+    Panel(const std::string& auto_register_var_prefix);
+    void Render();
+    void ResizeChildren();
+    static void AddVariable(void* data, const std::string& name, _Var& var, const char* reg_type_name, bool brand_new);
+    boost::ptr_unordered_map<const std::string,View>& context_views;
 };
 
 template<typename T>
@@ -57,51 +57,51 @@ struct Widget : public View, Handler, Var<T>
     {
         handler = this;
     }
-
+    
     std::string title;
 };
 
 struct Button : public Widget<bool>
 {
-  Button(std::string title, _Var& tv);
-  void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
-  void Render();
-
-  //Cache params on resize
-  void ResizeChildren();
-  int text_width;
-  GLfloat raster[2];
-  Viewport vinside;
-  bool down;
+    Button(std::string title, _Var& tv);
+    void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
+    void Render();
+    
+    //Cache params on resize
+    void ResizeChildren();
+    int text_width;
+    GLfloat raster[2];
+    Viewport vinside;
+    bool down;
 };
 
 struct Checkbox : public Widget<bool>
 {
-  Checkbox(std::string title, _Var& tv);
-  void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
-  void Render();
-
-  //Cache params on resize
-  void ResizeChildren();
-  int text_width;
-  GLfloat raster[2];
-  Viewport vcb;
+    Checkbox(std::string title, _Var& tv);
+    void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
+    void Render();
+    
+    //Cache params on resize
+    void ResizeChildren();
+    int text_width;
+    GLfloat raster[2];
+    Viewport vcb;
 };
 
 struct Slider : public Widget<double>
 {
-  Slider(std::string title, _Var& tv);
-  void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
-  void MouseMotion(View&, int x, int y, int mouse_state);
-  void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
-  void Render();
-
-  //Cache params on resize
-  void ResizeChildren();
-  int text_width;
-  GLfloat raster[2];
-  bool lock_bounds;
-  bool logscale;
+    Slider(std::string title, _Var& tv);
+    void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
+    void MouseMotion(View&, int x, int y, int mouse_state);
+    void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
+    void Render();
+    
+    //Cache params on resize
+    void ResizeChildren();
+    int text_width;
+    GLfloat raster[2];
+    bool lock_bounds;
+    bool logscale;
 };
 
 struct TextInput : public Widget<std::string>
@@ -111,9 +111,9 @@ struct TextInput : public Widget<std::string>
     void MouseMotion(View&, int x, int y, int mouse_state);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Render();
-
+    
     std::string edit;
-
+    
     //Cache params on resize
     void ResizeChildren();
     int text_width;

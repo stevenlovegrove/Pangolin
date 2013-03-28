@@ -53,40 +53,40 @@ class V4lVideo : public VideoInterface
 public:
     V4lVideo(const char* dev_name, io_method io = IO_METHOD_MMAP);
     ~V4lVideo();
-
+    
     //! Implement VideoSource::Start()
     void Start();
-
+    
     //! Implement VideoSource::Stop()
     void Stop();
-
+    
     unsigned Width() const;
-
+    
     unsigned Height() const;
-
+    
     size_t SizeBytes() const;
-
+    
     VideoPixelFormat PixFormat() const;
-
+    
     bool GrabNext( unsigned char* image, bool wait = true );
-
+    
     bool GrabNewest( unsigned char* image, bool wait = true );
-
+    
 protected:
     int ReadFrame(unsigned char* image);
     void Mainloop();
-
+    
     void init_read(unsigned int buffer_size);
     void init_mmap(const char* dev_name);
     void init_userp(const char* dev_name, unsigned int buffer_size);
-
+    
     void init_device(const char* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps, unsigned v4l_format = V4L2_PIX_FMT_YUYV, v4l2_field field = V4L2_FIELD_INTERLACED);
     void uninit_device();
-
+    
     void open_device(const char* dev_name);
     void close_device();
-
-
+    
+    
     io_method io;
     int       fd;
     buffer*   buffers;

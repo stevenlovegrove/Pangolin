@@ -29,20 +29,20 @@ public:
     unsigned Width() const;
     unsigned Height() const;
     size_t SizeBytes() const;
-
+    
     VideoPixelFormat PixFormat() const;
-
+    
     void Start();
     void Stop();
     bool GrabNext( unsigned char* image, bool wait = true );
     bool GrabNewest( unsigned char* image, bool wait = true );
-
+    
 protected:
     xn::Context context;
     xn::DepthGenerator depthNode;
     xn::ImageGenerator imageNode;
     xn::IRGenerator irNode;
-
+    
     OpenNiSensorType s1;
     OpenNiSensorType s2;
     size_t s1SizeBytes;

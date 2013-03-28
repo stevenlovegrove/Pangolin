@@ -32,41 +32,41 @@ namespace pangolin {
 
 void Viewport::Activate() const
 {
-  glViewport(l,b,w,h);
+    glViewport(l,b,w,h);
 }
 
 void Viewport::Scissor() const
 {
-  glEnable(GL_SCISSOR_TEST);
-  glScissor(l,b,w,h);
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(l,b,w,h);
 }
 
 void Viewport::ActivateAndScissor() const
 {
-  glViewport(l,b,w,h);
-  glEnable(GL_SCISSOR_TEST);
-  glScissor(l,b,w,h);
+    glViewport(l,b,w,h);
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(l,b,w,h);
 }
 
 
 void Viewport::DisableScissor()
 {
-  glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_SCISSOR_TEST);
 }
 
 bool Viewport::Contains(int x, int y) const
 {
-  return l <= x && x < (l+w) && b <= y && y < (b+h);
+    return l <= x && x < (l+w) && b <= y && y < (b+h);
 }
 
 Viewport Viewport::Inset(int i) const
 {
-  return Viewport(l+i, b+i, w-2*i, h-2*i);
+    return Viewport(l+i, b+i, w-2*i, h-2*i);
 }
 
 Viewport Viewport::Inset(int horiz, int vert) const
 {
-  return Viewport(l+horiz, b+vert, w-horiz, h-vert);
+    return Viewport(l+horiz, b+vert, w-horiz, h-vert);
 }
 
 Viewport Viewport::Intersect(const Viewport& vp) const

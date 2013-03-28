@@ -40,33 +40,33 @@ namespace pangolin
 // v [0,1]
 inline void glColorHSV( double hue, double s, double v )
 {
-  const double h = hue / 60.0;
-  const int i = floor(h);
-  const double f = (i%2 == 0) ? 1-(h-i) : h-i;
-  const double m = v * (1-s);
-  const double n = v * (1-s*f);
-  switch(i)
-  {
-  case 0: glColor3d(v,n,m); break;
-  case 1: glColor3d(n,v,m); break;
-  case 2: glColor3d(m,v,n); break;
-  case 3: glColor3d(m,n,v); break;
-  case 4: glColor3d(n,m,v); break;
-  case 5: glColor3d(v,m,n); break;
-  default:
-    break;
-  }
+    const double h = hue / 60.0;
+    const int i = floor(h);
+    const double f = (i%2 == 0) ? 1-(h-i) : h-i;
+    const double m = v * (1-s);
+    const double n = v * (1-s*f);
+    switch(i)
+    {
+    case 0: glColor3d(v,n,m); break;
+    case 1: glColor3d(n,v,m); break;
+    case 2: glColor3d(m,v,n); break;
+    case 3: glColor3d(m,n,v); break;
+    case 4: glColor3d(n,m,v); break;
+    case 5: glColor3d(v,m,n); break;
+    default:
+        break;
+    }
 }
 
 inline void glColorBin( int bin, int max_bins, double sat, double val )
 {
-  if( bin >= 0 )
-  {
-    const double hue = (double)(bin%max_bins) * 360.0 / (double)max_bins;
-    glColorHSV(hue,sat,val);
-  }else{
-    glColor3f(1,1,1);
-  }
+    if( bin >= 0 )
+    {
+        const double hue = (double)(bin%max_bins) * 360.0 / (double)max_bins;
+        glColorHSV(hue,sat,val);
+    }else{
+        glColor3f(1,1,1);
+    }
 }
 
 inline void glPixelTransferScale( float r, float g, float b )
@@ -98,59 +98,56 @@ inline void glDraw_z0(float scale, int grid)
 inline void glDrawLine( float x1, float y1, float x2, float y2 )
 {
     glBegin(GL_LINES);
-      glVertex2f(x1, y1);
-      glVertex2f(x2, y2);
+    glVertex2f(x1, y1);
+    glVertex2f(x2, y2);
     glEnd();
 }
 
 inline void glDrawCross( float x, float y, int r = 5 )
 {
     glBegin(GL_LINES);
-      glVertex2f(x,y-r);
-      glVertex2f(x,y+r);
-      glVertex2f(x-r,y);
-      glVertex2f(x+r,y);
+    glVertex2f(x,y-r);
+    glVertex2f(x,y+r);
+    glVertex2f(x-r,y);
+    glVertex2f(x+r,y);
     glEnd();
 }
 
 inline void glDrawCross( float x, float y, float z, int r )
 {
-  glBegin(GL_LINES);
+    glBegin(GL_LINES);
     glVertex3f(x,y-r,z);
     glVertex3f(x,y+r,z);
     glVertex3f(x-r,y,z);
     glVertex3f(x+r,y,z);
     glVertex3f(x,y,z-r);
     glVertex3f(x,y,z+r);
-  glEnd();
+    glEnd();
 }
 
 inline void glDrawCircle( float x, float y, double radius )
 {
-  glBegin(GL_POLYGON);
-  for( double a=0; a< 2*M_PI; a += M_PI/50.0 )
-  {
-    glVertex2d(
-      x + radius * cos(a),
-      y + radius * sin(a)
-    );
-  }
-  glEnd();
+    glBegin(GL_POLYGON);
+    for( double a=0; a< 2*M_PI; a += M_PI/50.0 )
+    {
+        glVertex2d( x + radius * cos(a), y + radius * sin(a) );
+    }
+    glEnd();
 }
 
 inline void glDrawAxis(float s)
 {
-  glBegin(GL_LINES);
-  glColor3f(1,0,0);
-  glVertex3f(0,0,0);
-  glVertex3f(s,0,0);
-  glColor3f(0,1,0);
-  glVertex3f(0,0,0);
-  glVertex3f(0,s,0);
-  glColor3f(0,0,1);
-  glVertex3f(0,0,0);
-  glVertex3f(0,0,s);
-  glEnd();
+    glBegin(GL_LINES);
+    glColor3f(1,0,0);
+    glVertex3f(0,0,0);
+    glVertex3f(s,0,0);
+    glColor3f(0,1,0);
+    glVertex3f(0,0,0);
+    glVertex3f(0,s,0);
+    glColor3f(0,0,1);
+    glVertex3f(0,0,0);
+    glVertex3f(0,0,s);
+    glEnd();
 }
 
 #ifdef HAVE_EIGEN

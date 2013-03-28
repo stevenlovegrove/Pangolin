@@ -53,17 +53,17 @@ class CgProgram
 public:
     void SetUniform(const std::string& name, GlTexture& tex);
     void SetUniform(const std::string& name, float f);
-
+    
 #ifdef HAVE_TOON
     void SetUniform(const std::string& name, const TooN::Vector<2>& v );
     void SetUniform(const std::string& name, const TooN::Vector<3>& v );
-
+    
     template <int R, int C>
     void SetUniform(const std::string& name, const TooN::Matrix<R,C>& M );
 #endif
-
+    
     void UpdateParams();
-
+    
 protected:
     CGprogram mProg;
     CGcontext mContext;
@@ -74,18 +74,18 @@ class CgLoader
 {
     CgLoader();
     ~CgLoader();
-
+    
     // Call AFTER glutInit (or similar)
     void Initialise();
-
+    
     CgProgram LoadProgramFromFile(const std::string& file, const std::string& function, bool isVertexShader );
-
+    
     void EnableProgram(CgProgram program);
     void DisablePrograms();
-
+    
     void RenderDummyQuad();
     void RenderDummyQuadWithTexCoords(int w, int h);
-
+    
 protected:
     CGcontext mContext;
     CGprofile mFragmentProfile;
@@ -101,15 +101,15 @@ protected:
 
 inline bool cgOkay()
 {
-  CGerror error;
-  const char *string = cgGetLastErrorString(&error);
-
-  if (error != CG_NO_ERROR) {
-    std::cout << "CG Error: " << string << std::endl;
-//    assert(0);
-    return false;
-  }
-  return true;
+    CGerror error;
+    const char *string = cgGetLastErrorString(&error);
+    
+    if (error != CG_NO_ERROR) {
+        std::cout << "CG Error: " << string << std::endl;
+        //    assert(0);
+        return false;
+    }
+    return true;
 }
 
 inline CgLoader::CgLoader()
@@ -129,17 +129,17 @@ inline CgLoader::~CgLoader()
 
 inline void CgLoader::Initialise()
 {
-  mContext = cgCreateContext();
-  cgSetParameterSettingMode(mContext, CG_DEFERRED_PARAMETER_SETTING);
-  cgOkay();
-
-  mFragmentProfile = cgGLGetLatestProfile(CG_GL_FRAGMENT);
-  cgGLSetOptimalOptions(mFragmentProfile);
-  cgOkay();
-
-  mVertexProfile = cgGLGetLatestProfile(CG_GL_VERTEX);
-  cgGLSetOptimalOptions(mVertexProfile);
-  cgOkay();
+    mContext = cgCreateContext();
+    cgSetParameterSettingMode(mContext, CG_DEFERRED_PARAMETER_SETTING);
+    cgOkay();
+    
+    mFragmentProfile = cgGLGetLatestProfile(CG_GL_FRAGMENT);
+    cgGLSetOptimalOptions(mFragmentProfile);
+    cgOkay();
+    
+    mVertexProfile = cgGLGetLatestProfile(CG_GL_VERTEX);
+    cgGLSetOptimalOptions(mVertexProfile);
+    cgOkay();
 }
 
 inline CgProgram CgLoader::LoadProgramFromFile(const std::string& file, const std::string& function, bool isVertexShader )
@@ -147,28 +147,28 @@ inline CgProgram CgLoader::LoadProgramFromFile(const std::string& file, const st
     if( !mContext ) {
         Initialise();
     }
-
+    
     CgProgram prog;
-
+    
     prog.mContext = mContext;
     prog.mProfile = isVertexShader ? mVertexProfile : mFragmentProfile;
     prog.mProg = cgCreateProgramFromFile( prog.mContext, CG_SOURCE, file.c_str(), prog.mProfile, function.c_str(), NULL);
-
+    
     if( !cgOkay() )
     {
-      std::cout << cgGetLastListing(mContext) << std::endl;
-      assert(0);
+        std::cout << cgGetLastListing(mContext) << std::endl;
+        assert(0);
     }
-
+    
     cgGLLoadProgram(prog.mProg);
     if( !cgOkay() )
     {
-      const char* err = cgGetProgramString( prog.mProg, CG_COMPILED_PROGRAM );
-      int pos;
-      glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &pos);
-      std::cout << err << std::endl;
-      std::cout << "@ " << pos << std::endl;
-      assert(0);
+        const char* err = cgGetProgramString( prog.mProg, CG_COMPILED_PROGRAM );
+        int pos;
+        glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &pos);
+        std::cout << err << std::endl;
+        std::cout << "@ " << pos << std::endl;
+        assert(0);
     }
     return prog;
 }
@@ -245,12 +245,12 @@ void CgProgram::SetUniform(const std::string& name, const TooN::Matrix<R,C>& M )
 {
     CGparameter p = cgGetNamedParameter( mProg, name.c_str());
     float Mdata[R*C];
-
+    
     int i=0;
     for( int r=0; r<R; ++r )
-      for( int c=0; c<C; ++c )
-        Mdata[i++] = (float)(M[r][c]);
-
+        for( int c=0; c<C; ++c )
+            Mdata[i++] = (float)(M[r][c]);
+    
     cgGLSetMatrixParameterfr(p, Mdata );
     cgUpdateProgramParameters(mProg);
 }

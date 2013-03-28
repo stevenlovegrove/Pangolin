@@ -41,37 +41,37 @@
 namespace pangolin
 {
 
-  struct PangolinGl
-  {
+struct PangolinGl
+{
     PangolinGl();
-
+    
     // Base container for displays
     View base;
-
+    
     // Named views which are managed by pangolin (i.e. created / deleted by pangolin)
     boost::ptr_unordered_map<const std::string,View> named_managed_views;
-
+    
     // Global keypress hooks
     std::map<int,boost::function<void(void)> > keypress_hooks;
-
+    
     // Manage fullscreen (ToggleFullscreen is quite new)
     bool is_double_buffered;
     bool is_fullscreen;
     GLint windowed_size[2];
-
+    
     // State relating to interactivity
     bool quit;
     int had_input;
     int has_resized;
     int mouse_state;
     View* activeDisplay;
-
+    
     std::queue<std::pair<std::string,Viewport> > screen_capture;
 #ifdef HAVE_CVARS
     GLConsole console;
 #endif // HAVE_CVARS
-
-  };
+    
+};
 
 }
 

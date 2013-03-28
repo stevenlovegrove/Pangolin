@@ -46,39 +46,39 @@ struct InputRecordRepeat
 {
     InputRecordRepeat(const std::string& var_record_prefix);
     ~InputRecordRepeat();
-
+    
     void SetIndex(int id);
-
+    
     void Record();
     void Stop();
-
+    
     void LoadBuffer(const std::string& filename);
     void SaveBuffer(const std::string& filename);
     void ClearBuffer();
-
+    
     void PlayBuffer();
     void PlayBuffer(int start, int end);
-
+    
     void UpdateVariable(const std::string& name );
-
+    
     template<typename T>
     inline void UpdateVariable(const Var<T>& var ) {
         GuiVarChanged((void*)this, var.var->meta_full_name, *var.var);
     }
-
+    
     int Size();
-
+    
 protected:
     bool record;
     bool play;
-
+    
     int index;
     std::ofstream file;
     std::string filename;
-
+    
     std::list<FrameInput> play_queue;
     std::list<FrameInput> record_queue;
-
+    
     static void GuiVarChanged(void* data, const std::string& name, _Var& var);
 };
 

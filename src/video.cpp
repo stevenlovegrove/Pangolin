@@ -86,7 +86,7 @@ ostream& operator<< (ostream &out, Uri &uri)
     {
         cout << "\t" << p.first << " = " << p.second << endl;
     }
-
+    
     return out;
 }
 
@@ -110,7 +110,7 @@ VideoInput::~VideoInput()
 Uri ParseUri(string str_uri)
 {
     Uri uri;
-
+    
     // Find Scheme delimiter
     size_t ns = str_uri.find_first_of(':');
     if( ns != string::npos )
@@ -122,7 +122,7 @@ Uri ParseUri(string str_uri)
         uri.url = str_uri;
         return uri;
     }
-
+    
     // Find url delimiter
     size_t nurl = str_uri.find("//",ns+1);
     if(nurl != string::npos)
@@ -150,31 +150,10 @@ Uri ParseUri(string str_uri)
                 throw VideoException("Bad video URI");
             }
         }
-
+        
         uri.url = str_uri.substr(nurl+2);
-
-//        // Find parameter delimiter
-//        size_t nq = str_uri.find_first_of('?',nurl+2);
-//        if(nq == string::npos)
-//        {
-//            uri.url = str_uri.substr(nurl+2);
-//        }else{
-//            string queries = str_uri.substr(nq+1);
-//            uri.url = str_uri.substr(nurl+2,nq-(nurl+2));
-//            vector<string> params;
-//            split(params, queries, boost::is_any_of("&"));
-//            foreach(string p, params)
-//            {
-//                vector<string> args;
-//                split(args, p, boost::is_any_of("=") );
-//                if( args.size() == 2 )
-//                {
-//                    uri.params[args[0]] = args[1];
-//                }
-//            }
-//        }
     }
-
+    
     return uri;
 }
 
@@ -183,7 +162,7 @@ Uri ParseUri(string str_uri)
 dc1394video_mode_t get_firewire_format7_mode(const string fmt)
 {
     const string FMT7_prefix = "FORMAT7_";
-
+    
     if( algorithm::starts_with(fmt, FMT7_prefix) )
     {
         int fmt7_mode = 0;
@@ -193,7 +172,7 @@ dc1394video_mode_t get_firewire_format7_mode(const string fmt)
             return (dc1394video_mode_t)(DC1394_VIDEO_MODE_FORMAT7_0 + fmt7_mode);
         }
     }
-
+    
     throw VideoException("Unknown video mode");
 }
 
@@ -205,12 +184,12 @@ dc1394video_mode_t get_firewire_mode(unsigned width, unsigned height, const stri
             unsigned w,h;
             string format;
             Dc1394ModeDetails(video_mode,w,h,format);
-
+            
             if( w == width && h==height && !fmt.compare(format) )
                 return video_mode;
         } catch (VideoException e) {}
     }
-
+    
     throw VideoException("Unknown video mode");
 }
 
@@ -232,9 +211,9 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 VideoInterface* OpenVideo(std::string str_uri)
 {
     VideoInterface* video = 0;
-
+    
     Uri uri = ParseUri(str_uri);
-
+    
     if(!uri.scheme.compare("file") && algorithm::ends_with(uri.url,"pvn") )
     {
         bool realtime = true;
@@ -283,7 +262,7 @@ VideoInterface* OpenVideo(std::string str_uri)
         int desired_iso = 400;
         float desired_fps = 30;
         string desired_format = "RGB24";
-
+        
         // Parse parameters
         if(uri.params.find("fmt")!=uri.params.end()){
             desired_format = uri.params["fmt"];
@@ -313,13 +292,13 @@ VideoInterface* OpenVideo(std::string str_uri)
             std::istringstream iss(uri.params["fps"]);
             iss >> desired_fps;
         }
-
+        
         Guid guid = 0;
         unsigned deviceid = 0;
         dc1394framerate_t framerate = get_firewire_framerate(desired_fps);
         dc1394speed_t iso_speed = (dc1394speed_t)(log(desired_iso/100) / log(2));
         int dma_buffers = desired_dma;
-
+        
         if( algorithm::starts_with(desired_format, "FORMAT7") )
         {
             dc1394video_mode_t video_mode = get_firewire_format7_mode(desired_format);
@@ -343,10 +322,10 @@ VideoInterface* OpenVideo(std::string str_uri)
     {
         OpenNiSensorType img1 = OpenNiRgb;
         OpenNiSensorType img2 = OpenNiUnassigned;
-
+        
         if(uri.params.find("img1")!=uri.params.end()){
             std::istringstream iss(uri.params["img1"]);
-
+            
             if( boost::iequals(iss.str(),"rgb") ) {
                 img1 = OpenNiRgb;
             }else if( boost::iequals(iss.str(),"ir") ) {
@@ -355,10 +334,10 @@ VideoInterface* OpenVideo(std::string str_uri)
                 img1 = OpenNiDepth;
             }
         }
-
+        
         if(uri.params.find("img2")!=uri.params.end()){
             std::istringstream iss(uri.params["img2"]);
-
+            
             if( boost::iequals(iss.str(),"rgb") ) {
                 img2 = OpenNiRgb;
             }else if( boost::iequals(iss.str(),"ir") ) {
@@ -367,21 +346,21 @@ VideoInterface* OpenVideo(std::string str_uri)
                 img2 = OpenNiDepth;
             }
         }
-
+        
         video = new OpenNiVideo(img1,img2);
     }else
 #endif
     {
         throw VideoException("Unable to open video URI");
     }
-
+    
     return video;
 }
 
 void VideoInput::Open(std::string uri)
 {
     this->uri = uri;
-
+    
     if(video) {
         delete video;
         video = 0;

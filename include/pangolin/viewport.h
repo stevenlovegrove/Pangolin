@@ -36,24 +36,24 @@ namespace pangolin
 //! @brief Encapsulates OpenGl Viewport
 struct Viewport
 {
-  Viewport() {}
-  Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h) {}
-  
-  void Activate() const;
-  void Scissor() const;
-  void ActivateAndScissor() const;
-  bool Contains(int x, int y) const;
-
-  Viewport Inset(int i) const;
-  Viewport Inset(int horiz, int vert) const;
-  Viewport Intersect(const Viewport& vp) const;
-
-  static void DisableScissor();
-
-  GLint r() const { return l+w;}
-  GLint t() const { return b+h;}
-  GLfloat aspect() const { return (GLfloat)w / (GLfloat)h; }
-  GLint l,b,w,h;
+    Viewport() {}
+    Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h) {}
+    
+    void Activate() const;
+    void Scissor() const;
+    void ActivateAndScissor() const;
+    bool Contains(int x, int y) const;
+    
+    Viewport Inset(int i) const;
+    Viewport Inset(int horiz, int vert) const;
+    Viewport Intersect(const Viewport& vp) const;
+    
+    static void DisableScissor();
+    
+    GLint r() const { return l+w;}
+    GLint t() const { return b+h;}
+    GLfloat aspect() const { return (GLfloat)w / (GLfloat)h; }
+    GLint l,b,w,h;
 };
 
 }

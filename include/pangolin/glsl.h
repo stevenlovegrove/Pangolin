@@ -55,17 +55,17 @@ class GlSlProgram
 public:
     GlSlProgram();
     ~GlSlProgram();
-
+    
     void AddShader(GlSlShaderType shader_type, const std::string& source_code);
     void Link();
-
+    
     void SetUniform(const std::string& name, GlTexture& tex);
     void SetUniform(const std::string& name, float f);
     void SetUniform(const std::string& name, float f1, float f2, float f3, float f4);
-
+    
     void Bind();
     void Unbind();
-
+    
 protected:
     bool linked;
     std::vector<GLhandleARB> shaders;
@@ -82,12 +82,12 @@ public:
         prog.SetUniform("bias",  bias);
         return prog;
     }
-
+    
     inline static void UseNone()
     {
         glUseProgram(0);
     }
-
+    
 protected:
     static GlSlUtilities* instance;
     static GlSlUtilities& Instance() {
@@ -96,14 +96,14 @@ protected:
         }
         return *instance;
     }
-
+    
     // protected constructor
     GlSlUtilities() {
         const char* source = "uniform float scale; uniform float bias; uniform sampler2D tex; void main() { gl_FragColor = texture2D(tex,gl_TexCoord[0].st); gl_FragColor.xyz *= scale; }";
         prog_scale.AddShader(GlSlFragmentShader, source);
         prog_scale.Link();
     }
-
+    
     GlSlProgram prog_scale;
 };
 
@@ -119,16 +119,16 @@ void printInfoLog(GLhandleARB obj)
     int infologLength = 0;
     int charsWritten  = 0;
     char *infoLog;
-
+    
     glGetObjectParameterivARB(obj, GL_OBJECT_INFO_LOG_LENGTH_ARB,
-                     &infologLength);
-
+                              &infologLength);
+    
     if (infologLength > 0)
     {
-    infoLog = (char *)malloc(infologLength);
-    glGetInfoLogARB(obj, infologLength, &charsWritten, infoLog);
-    printf("%s\n",infoLog);
-    free(infoLog);
+        infoLog = (char *)malloc(infologLength);
+        glGetInfoLogARB(obj, infologLength, &charsWritten, infoLog);
+        printf("%s\n",infoLog);
+        free(infoLog);
     }
 }
 
@@ -156,7 +156,7 @@ inline void GlSlProgram::AddShader(GlSlShaderType shader_type, const std::string
     glCompileShader(shader);
     glAttachObjectARB(prog, shader);
     printInfoLog(shader);
-
+    
     shaders.push_back(shader);
     linked = false;
 }

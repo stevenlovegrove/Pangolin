@@ -201,28 +201,27 @@ inline OpenGlMatrix::OpenGlMatrix() {
 }
 
 #ifdef HAVE_EIGEN
-  template<typename P> inline
-  OpenGlMatrix::OpenGlMatrix(const Eigen::Matrix<P,4,4>& mat)
-  {
-      for(int r=0; r<4; ++r ) {
-          for(int c=0; c<4; ++c ) {
-              m[c*4+r] = mat(r,c);
-          }
-      }
-  }
+template<typename P> inline
+OpenGlMatrix::OpenGlMatrix(const Eigen::Matrix<P,4,4>& mat)
+{
+    for(int r=0; r<4; ++r ) {
+        for(int c=0; c<4; ++c ) {
+            m[c*4+r] = mat(r,c);
+        }
+    }
+}
 
-  template<typename P>
-  OpenGlMatrix::operator Eigen::Matrix<P,4,4>() const
-  {
-      Eigen::Matrix<P,4,4> mat;
-      for(int r=0; r<4; ++r ) {
-          for(int c=0; c<4; ++c ) {
-              mat(r,c) = m[c*4+r];
-          }
-      }
-      return mat;
-  }
-
+template<typename P>
+OpenGlMatrix::operator Eigen::Matrix<P,4,4>() const
+{
+    Eigen::Matrix<P,4,4> mat;
+    for(int r=0; r<4; ++r ) {
+        for(int c=0; c<4; ++c ) {
+            mat(r,c) = m[c*4+r];
+        }
+    }
+    return mat;
+}
 #endif
 
 #ifdef HAVE_TOON
@@ -233,7 +232,7 @@ inline OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw)
     M.slice<0,0,3,3>() = T_cw.get_rotation().get_matrix();
     M.T()[3].slice<0,3>() = T_cw.get_translation();
     M[3] = TooN::makeVector(0,0,0,1);
-
+    
     OpenGlMatrixSpec P;
     P.type = GlModelViewStack;
     std::memcpy(P.m, &(M[0][0]),16*sizeof(double));
