@@ -302,18 +302,27 @@ void Handler3D::Special(View& display, InputSpecial inType, float x, float y, fl
     }
     
     if( inType == InputSpecialScroll ) {
-        const double scrolly = p2/10;
-        
-        LieSetIdentity(T_nc);
-        const double t[] = { 0,0, -scrolly*100*tf};
-        LieSetTranslation<>(T_nc,t);
-        if( !(button_state & MouseButtonRight) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
-        {
-            LieSetTranslation<>(T_nc,rot_center);
-            MatMul<3,1>(T_nc+(3*3), -scrolly * zf);
+        if(button_state & KeyModifierCmd) {
+            const double rx = -p2 / 1000;
+            const double ry = -p1 / 1000;
+            
+            Rotation<>(T_nc,rx, ry, 0.0);
+            OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
+            LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
+        }else{
+            const double scrolly = p2/10;
+            
+            LieSetIdentity(T_nc);
+            const double t[] = { 0,0, -scrolly*100*tf};
+            LieSetTranslation<>(T_nc,t);
+            if( !(button_state & MouseButtonRight) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
+            {
+                LieSetTranslation<>(T_nc,rot_center);
+                MatMul<3,1>(T_nc+(3*3), -scrolly * zf);
+            }
+            OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
+            LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
         }
-        OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
-        LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
     }else if(inType == InputSpecialRotate) {
         const double r = p1 / 20;
         

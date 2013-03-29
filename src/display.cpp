@@ -186,8 +186,8 @@ void SaveWindowOnRender(std::string prefix)
 
 namespace process
 {
-unsigned int last_x;
-unsigned int last_y;
+float last_x;
+float last_y;
 
 void Keyboard( unsigned char key, int x, int y)
 {
@@ -355,20 +355,35 @@ void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, flo
 
 void Scroll(float x, float y)
 {
+#ifdef HAVE_GLUT
+    context->mouse_state &= 0x0000ffff;
+    context->mouse_state |= glutGetModifiers() << 16;
+#endif    
+    
     SpecialInput(InputSpecialScroll, last_x, last_y, x, y, 0, 0);
 }
 
 void Zoom(float m)
 {
+#ifdef HAVE_GLUT
+    context->mouse_state &= 0x0000ffff;
+    context->mouse_state |= glutGetModifiers() << 16;
+#endif    
+    
     SpecialInput(InputSpecialZoom, last_x, last_y, m, 0, 0, 0);
 }
 
 void Rotate(float r)
 {
+#ifdef HAVE_GLUT
+    context->mouse_state &= 0x0000ffff;
+    context->mouse_state |= glutGetModifiers() << 16;
+#endif    
+    
     SpecialInput(InputSpecialRotate, last_x, last_y, r, 0, 0, 0);
 }
 
-void SubpixTabletMotion(float x, float y, float pressure, float rotation, float tiltx, float tilty)
+void SubpixMotion(float x, float y, float pressure, float rotation, float tiltx, float tilty)
 {
     SpecialInput(InputSpecialTablet, x, y, pressure, rotation, tiltx, tilty);
 }
@@ -402,12 +417,12 @@ void TakeGlutCallbacks()
     typedef void (*glutScrollFunc_t)(void (*)(float, float));
     typedef void (*glutZoomFunc_t)(void (*)(float));
     typedef void (*glutRotateFunc_t)(void (*)(float));
-    typedef void (*glutSubpixTabletMotionFunc_t)(void (*)(float,float,float,float,float,float));
+    typedef void (*glutSubpixMotionFunc_t)(void (*)(float,float,float,float,float,float));
     
     glutScrollFunc_t glutScrollFunc = (glutScrollFunc_t)glutGetProcAddress("glutScrollFunc");
     glutZoomFunc_t glutZoomFunc = (glutZoomFunc_t)glutGetProcAddress("glutZoomFunc");
     glutRotateFunc_t glutRotateFunc = (glutRotateFunc_t)glutGetProcAddress("glutRotateFunc");
-    glutSubpixTabletMotionFunc_t glutSubpixTabletMotionFunc = (glutSubpixTabletMotionFunc_t)glutGetProcAddress("glutSubpixTabletMotionFunc");
+    glutSubpixMotionFunc_t glutSubpixMotionFunc = (glutSubpixMotionFunc_t)glutGetProcAddress("glutSubpixMotionFunc");
     
     if(glutScrollFunc) {
         glutScrollFunc(&process::Scroll);
@@ -419,8 +434,8 @@ void TakeGlutCallbacks()
         glutRotateFunc(&process::Rotate);
     }
     
-    if(glutSubpixTabletMotionFunc) {
-        glutSubpixTabletMotionFunc(&process::SubpixTabletMotion);
+    if(glutSubpixMotionFunc) {
+        glutSubpixMotionFunc(&process::SubpixMotion);
     }
     
 #endif

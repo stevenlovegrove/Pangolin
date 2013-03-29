@@ -95,6 +95,8 @@ namespace pangolin
     void Zoom(float m);
 
     void Rotate(float r);
+    
+    void SubpixMotion(float x, float y, float pressure, float rotation, float tiltx, float tilty);    
 
     void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4);
 
