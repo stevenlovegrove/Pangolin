@@ -28,6 +28,7 @@
 #ifndef PANGOLIN_VIEW_H
 #define PANGOLIN_VIEW_H
 
+#include <vector>
 #include <boost/function.hpp>
 
 #include <pangolin/viewport.h>
