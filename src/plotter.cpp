@@ -606,6 +606,38 @@ void Plotter::MouseMotion(View&, int x, int y, int button_state)
     last_mouse_pos[1] = y;
 }
 
+void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
+{
+    mouse_state = button_state;
+
+    if(inType == InputSpecialScroll) {
+        const float d[2] = {p1,-p2};
+        const float is[2] = {int_x[1]-int_x[0],int_y[1]-int_y[0]};
+        const float df[2] = {is[0]*d[0]/(float)v.w, is[1]*d[1]/(float)v.h};
+
+        vo[0] -= df[0];
+        vo[1] -= df[1];
+        if(df[0] > 0) {
+            track_front = false;
+        }
+    } else if(inType == InputSpecialZoom) {
+        const float scale = (1-p1);
+        const double c[2] = {
+            track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
+            (int_y[0] + int_y[1])/2.0
+        };
+        
+        if(button_state & KeyModifierCmd) {        
+            int_y[0] = scale*(int_y[0] - c[1]) + c[1];
+            int_y[1] = scale*(int_y[1] - c[1]) + c[1];        
+        }else{
+            int_x[0] = scale*(int_x[0] - c[0]) + c[0];
+            int_x[1] = scale*(int_x[1] - c[0]) + c[0];
+        }
+    }
+}
+
+
 Plotter& CreatePlotter(const string& name, DataLog* log)
 {
     Plotter* v = new Plotter(log);

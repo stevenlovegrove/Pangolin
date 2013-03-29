@@ -177,6 +177,7 @@ struct Plotter : public View, Handler
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
     void MouseMotion(View&, int x, int y, int mouse_state);
+    void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
     
     void ScreenToPlot(int x, int y);
     void SetMode(unsigned mode, bool track=true);
