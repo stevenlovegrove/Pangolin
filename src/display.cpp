@@ -494,16 +494,22 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool brand_new)
 {
     if(brand_new) {
+        // CVars can't save names containing spaces, so map to '_' instead
+        std::string cvar_name = name;
+        for(size_t i=0; i < cvar_name.size(); ++i) {
+            if(cvar_name[i] == ' ') cvar_name[i] = '_';
+        }
+        
         // Attach to CVars too.
         const char* typeidname = var.type_name;
         if( typeidname == typeid(double).name() ) {
-            CVarUtils::AttachCVar(name, (double*)(var.val) );
+            CVarUtils::AttachCVar(cvar_name, (double*)(var.val) );
         } else if( typeidname == typeid(int).name() ) {
-            CVarUtils::AttachCVar(name, (int*)(var.val) );
+            CVarUtils::AttachCVar(cvar_name, (int*)(var.val) );
         } else if( typeidname == typeid(std::string).name() ) {
-            CVarUtils::AttachCVar(name, (std::string*)(var.val) );
+            CVarUtils::AttachCVar(cvar_name, (std::string*)(var.val) );
         } else if( typeidname == typeid(bool).name() ) {
-            CVarUtils::AttachCVar(name, (bool*)(var.val) );
+            CVarUtils::AttachCVar(cvar_name, (bool*)(var.val) );
         } else {
             // we can't attach
             std::cerr << typeidname << std::endl;
