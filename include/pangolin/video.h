@@ -154,7 +154,7 @@ protected:
 struct RecorderStreamInterface
 {
     virtual ~RecorderStreamInterface() {}
-    virtual void WriteImage(uint8_t* img, int w, int h, const VideoPixelFormat& input_fmt, int64_t pts) = 0;
+    virtual void WriteImage(uint8_t* img, int w, int h, const std::string& format, int64_t pts) = 0;
 };
 
 //! Interface to video recording destinations
@@ -168,8 +168,13 @@ struct RecorderInterface
 struct VideoOutput : public RecorderInterface
 {
 public:
-    VideoOutput(std::string uri);
+    VideoOutput();
+    VideoOutput(const std::string& uri);
     ~VideoOutput();
+    
+    bool IsOpen() const;
+    void Open(const std::string& uri);
+    void Reset();
     
     void AddStream(int w, int h, const std::string& encoder_fmt);
     RecorderStreamInterface& operator[](size_t i);

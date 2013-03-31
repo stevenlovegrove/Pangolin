@@ -30,6 +30,7 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/view.h>
+#include <pangolin/video.h>
 
 #include <boost/ptr_container/ptr_unordered_map.hpp>
 #include <queue>
@@ -67,6 +68,10 @@ struct PangolinGl
     View* activeDisplay;
     
     std::queue<std::pair<std::string,Viewport> > screen_capture;
+    
+    View* record_view;
+    VideoOutput recorder;
+    
 #ifdef HAVE_CVARS
     GLConsole console;
 #endif // HAVE_CVARS

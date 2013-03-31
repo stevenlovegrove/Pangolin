@@ -416,6 +416,13 @@ void View::SaveOnRender(const std::string& filename_prefix)
     context->screen_capture.push(std::pair<std::string,Viewport>(filename_prefix,tosave ) );
 }
 
+void View::RecordOnRender(const std::string& record_uri)
+{
+    context->record_view = this;
+    context->recorder.Open(record_uri);
+    context->recorder.AddStream(v.w, v.h, "YUV420P");
+}
+
 void View::SaveRenderNow(const std::string& filename_prefix, float scale)
 {
     SaveViewFromFbo(filename_prefix, *this, scale);

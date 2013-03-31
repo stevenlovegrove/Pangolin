@@ -559,7 +559,7 @@ void FfmpegRecorderStream::WriteImage(AVPicture& src_picture, int w, int h, Pixe
     av_free(frame);
 }
 
-void FfmpegRecorderStream::WriteImage(uint8_t* img, int w, int h, const VideoPixelFormat& input_fmt, int64_t pts)
+void FfmpegRecorderStream::WriteImage(uint8_t* img, int w, int h, const std::string& input_fmt, int64_t pts)
 {
     // TODO: Why is this hack needed?
     h = h-1;

@@ -154,6 +154,10 @@ struct View
     //! a file just before the buffer is flipped.
     void SaveOnRender(const std::string& filename_prefix);
     
+    //! Specify that this views region in the framebuffer should be saved to
+    //! a video just before the buffer is flipped
+    void RecordOnRender(const std::string& record_uri);
+    
     //! Uses the views default render method to draw into an FBO 'scale' times
     //! the size of the view and save to a file.
     void SaveRenderNow(const std::string& filename_prefix, float scale = 1);

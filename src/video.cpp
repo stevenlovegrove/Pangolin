@@ -445,15 +445,41 @@ RecorderInterface* OpenRecorder(std::string str_uri)
     return recorder;
 }
 
-VideoOutput::VideoOutput(std::string uri)
+VideoOutput::VideoOutput()
+    : recorder(NULL)
 {
-    recorder = OpenRecorder(uri);
+}
+
+VideoOutput::VideoOutput(const std::string& uri)
+    : recorder(NULL)
+{
+    Open(uri);
 }
 
 VideoOutput::~VideoOutput()
 {
     delete recorder;
 }
+
+bool VideoOutput::IsOpen() const
+{
+    return recorder;
+}
+
+void VideoOutput::Open(const std::string& uri)
+{
+    Reset();
+    recorder = OpenRecorder(uri);
+}
+
+void VideoOutput::Reset()
+{
+    if(recorder) {
+        delete recorder;
+        recorder = 0;
+    }    
+}
+
 
 void VideoOutput::AddStream(int w, int h, const std::string& encoder_fmt)
 {

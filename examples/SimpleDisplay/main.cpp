@@ -91,6 +91,9 @@ int main( int /*argc*/, char* argv[] )
     static Var<bool> save_window("ui.Save Window",false,false);
     static Var<bool> save_teapot("ui.Save Teapot",false,false);
 #endif // HAVE_PNG
+    
+    static Var<bool> record_teapot("ui.Record Teapot",false,false);
+    
 
     if( Pushed(a_button) )
       cout << "You Pushed a button!" << endl;
@@ -112,6 +115,9 @@ int main( int /*argc*/, char* argv[] )
     if( Pushed(save_teapot) )
         d_cam.SaveOnRender("teapot");
 #endif // HAVE_PNG
+    
+    if(Pushed(record_teapot))
+        DisplayBase().RecordOnRender("ffmpeg://test.avi");
 
     // Activate efficiently by object
     d_cam.Activate(s_cam);

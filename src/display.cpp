@@ -459,6 +459,14 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
 #endif // HAVE_BOOST_GIL
 }
 
+void SaveFramebuffer(VideoOutput& video, const Viewport& v)
+{
+    static int frame = 0;
+    unsigned char img[v.w*v.h*4];
+    glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, img );
+    video[0].WriteImage(img,v.w, v.h, "RGBA", frame++ );
+}
+
 #ifdef BUILD_PANGOLIN_VARS
 #ifdef HAVE_CVARS
 void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool brand_new)
@@ -524,6 +532,10 @@ void FinishGlutFrame()
         SaveFramebuffer(fv.first, fv.second);
     }
 #endif // HAVE_BOOST_GIL
+    
+    if(context->recorder.IsOpen()) {
+        SaveFramebuffer(context->recorder, context->record_view->v );
+    }
     
 #ifdef HAVE_CVARS
     context->console.RenderConsole();
