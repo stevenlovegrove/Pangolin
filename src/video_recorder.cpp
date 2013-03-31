@@ -60,7 +60,7 @@ void VideoRecorder::WriteFileHeader()
     writer << "30.0\n";
 }
 
-int VideoRecorder::RecordFrame(void* img)
+int VideoRecorder::RecordFrame(uint8_t* img)
 {
     if( stream_info.size() != 1 )
         throw VideoRecorderException("Incorrect number of frames specified");

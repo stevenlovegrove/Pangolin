@@ -80,7 +80,7 @@ struct VideoPixelFormat
 {
     // Previously, VideoInterface::PixFormat returned a string.
     // For compatibility, make this string convertable
-    inline operator std::string() { return format; }
+    inline operator std::string() const { return format; }
     
     std::string  format;
     unsigned int channels;
@@ -125,6 +125,7 @@ struct VideoInterface
     virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
 };
 
+//! Generic wrapper class for different video sources
 struct VideoInput : public VideoInterface
 {
     VideoInput();
@@ -149,6 +150,34 @@ protected:
     VideoInterface* video;
     VideoPixelFormat fmt;
 };
+
+struct RecorderStreamInterface
+{
+    virtual ~RecorderStreamInterface() {}
+    virtual void WriteImage(uint8_t* img, int w, int h, const VideoPixelFormat& input_fmt, int64_t pts) = 0;
+};
+
+//! Interface to video recording destinations
+struct RecorderInterface
+{
+    virtual ~RecorderInterface() {}
+    virtual void AddStream(int w, int h, const std::string& encoder_fmt) = 0;
+    virtual RecorderStreamInterface& operator[](size_t i) = 0;
+};
+
+struct VideoOutput : public RecorderInterface
+{
+public:
+    VideoOutput(std::string uri);
+    ~VideoOutput();
+    
+    void AddStream(int w, int h, const std::string& encoder_fmt);
+    RecorderStreamInterface& operator[](size_t i);
+    
+protected:
+    RecorderInterface* recorder;
+};
+
 
 //! Open Video Interface from string specification (as described in this files header)
 VideoInterface* OpenVideo(std::string uri);

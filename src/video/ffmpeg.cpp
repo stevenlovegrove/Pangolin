@@ -26,6 +26,12 @@
  */
 
 #include <pangolin/video/ffmpeg.h>
+#include <libavformat/avio.h>
+#include <libavutil/pixfmt.h>
+
+#include <libavutil/mathematics.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
 
 namespace pangolin
 {
@@ -430,6 +436,231 @@ bool FfmpegConverter::GrabNewest( unsigned char* image, bool wait )
         return true;
     }
     return false;
+}
+
+// Based on this example
+// http://cekirdek.pardus.org.tr/~ismail/ffmpeg-docs/output-example_8c-source.html
+static AVStream* CreateStream(AVFormatContext *oc, enum CodecID codec_id, uint64_t STREAM_FRAME_RATE, PixelFormat EncoderFormat, int width, int height)
+{
+    AVCodec* codec = avcodec_find_encoder(codec_id);
+    if (!(codec)) throw VideoException("Could not find encoder", avcodec_get_name(codec_id));
+
+    AVStream* stream = avformat_new_stream(oc, codec);
+    if (!stream) throw VideoException("Could not allocate stream");
+    
+    stream->id = oc->nb_streams-1;
+    
+    switch (codec->type) {
+    case AVMEDIA_TYPE_AUDIO:
+        stream->id = 1;
+        stream->codec->sample_fmt  = AV_SAMPLE_FMT_S16;
+        stream->codec->bit_rate    = 64000;
+        stream->codec->sample_rate = 44100;
+        stream->codec->channels    = 2;
+        break;
+    case AVMEDIA_TYPE_VIDEO:
+        stream->codec->codec_id = codec_id;
+//        stream->codec->bit_rate = 400000;
+        stream->codec->bit_rate = 10*1024*1024;
+        /* Resolution must be a multiple of two. */
+        stream->codec->width    = width;
+        stream->codec->height   = height;
+        /* timebase: This is the fundamental unit of time (in seconds) in terms
+         * of which frame timestamps are represented. For fixed-fps content,
+         * timebase should be 1/framerate and timestamp increments should be
+         * identical to 1. */
+        stream->codec->time_base.den = STREAM_FRAME_RATE;
+        stream->codec->time_base.num = 1;
+        stream->codec->gop_size      = 12;
+        stream->codec->pix_fmt       = EncoderFormat;
+        break;
+    default:
+        break;
+    }
+    
+    /* Some formats want stream headers to be separate. */
+    if (oc->oformat->flags & AVFMT_GLOBALHEADER)
+        stream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
+    
+    /* open the codec */
+    int ret = avcodec_open2(stream->codec, codec, NULL);
+    if (ret < 0)  throw VideoException("Could not open video codec");
+    
+    return stream;
+}
+
+void FfmpegRecorderStream::WriteAvPacket(AVPacket* pkt)
+{
+    if (pkt->size) {
+        pkt->stream_index = stream->index;
+        int ret = av_interleaved_write_frame(recorder.oc, pkt);
+        if (ret < 0) throw VideoException("Error writing video frame");
+    }
+}
+
+void FfmpegRecorderStream::WriteFrame(AVFrame* frame)
+{
+    AVPacket pkt;
+    pkt.data = NULL;
+    pkt.size = 0;
+    av_init_packet(&pkt);
+
+    int ret;
+    int got_packet = 1;
+
+    // Setup AVPacket
+    if (recorder.oc->oformat->flags & AVFMT_RAWPICTURE) {
+        /* Raw video case - directly store the picture in the packet */
+        pkt.flags        |= AV_PKT_FLAG_KEY;
+        pkt.data          = frame->data[0];
+        pkt.size          = sizeof(AVPicture);
+        ret = 0;
+    } else {
+        /* encode the image */
+        ret = avcodec_encode_video2(stream->codec, &pkt, frame, &got_packet);
+        if (ret < 0) throw VideoException("Error encoding video frame");
+    }
+    
+    if (!ret && got_packet) {
+        WriteAvPacket(&pkt);
+    }
+    
+    av_free_packet(&pkt);
+}
+
+void FfmpegRecorderStream::WriteImage(AVPicture& src_picture, int w, int h, PixelFormat fmt, int64_t pts)
+{
+    AVCodecContext *c = stream->codec;
+    
+    AVFrame* frame = avcodec_alloc_frame();
+    frame->pts = pts;
+    frame->width = w;
+    frame->height = h;
+        
+    if (c->pix_fmt != fmt || c->width != w || c->height != h) {
+        if(!sws_ctx) {
+            sws_ctx = sws_getCachedContext( sws_ctx,
+                w, h, fmt,
+                c->width, c->height, c->pix_fmt,
+                SWS_BICUBIC, NULL, NULL, NULL
+            );
+            if (!sws_ctx) throw VideoException("Could not initialize the conversion context");        
+        }
+        sws_scale(sws_ctx,
+            src_picture.data, src_picture.linesize, 0, h,
+            dst_picture.data, dst_picture.linesize
+        );
+        *((AVPicture *)frame) = dst_picture;
+    } else {
+        *((AVPicture *)frame) = src_picture;
+    }    
+    
+    WriteFrame(frame);
+    av_free(frame);
+}
+
+void FfmpegRecorderStream::WriteImage(uint8_t* img, int w, int h, const VideoPixelFormat& input_fmt, int64_t pts)
+{
+    // TODO: Why is this hack needed?
+    h = h-1;
+    
+    recorder.StartStream();
+    
+    PixelFormat fmt = FfmpegFmtFromString(input_fmt);
+    AVPicture picture;
+    avpicture_fill(&picture,img,fmt,w,h);
+    WriteImage(picture, w, h, fmt, pts);
+}
+
+FfmpegRecorderStream::FfmpegRecorderStream(FfmpegRecorder& recorder, enum CodecID codec_id, uint64_t STREAM_FRAME_RATE, PixelFormat EncoderFormat, int width, int height )
+    : recorder(recorder), sws_ctx(NULL)
+{
+    int ret;
+
+    stream = CreateStream(recorder.oc, codec_id, STREAM_FRAME_RATE, EncoderFormat, width, height);
+        
+    /* Allocate the encoded raw picture. */
+    ret = avpicture_alloc(&dst_picture, stream->codec->pix_fmt, stream->codec->width, stream->codec->height);
+    if (ret < 0) throw VideoException("Could not allocate picture");    
+}
+
+FfmpegRecorderStream::~FfmpegRecorderStream()
+{
+    if(sws_ctx) {
+        sws_freeContext(sws_ctx);
+    }
+    
+    av_free(dst_picture.data[0]);
+    avcodec_close(stream->codec);
+}
+
+FfmpegRecorder::FfmpegRecorder(const std::string& filename)
+    : filename(filename), started(false), oc(NULL), frame_count(0)
+{
+    Initialise(filename);
+}
+
+FfmpegRecorder::~FfmpegRecorder()
+{
+    Close();
+}
+
+void FfmpegRecorder::Initialise(std::string filename)
+{
+    av_register_all();
+
+    int ret = avformat_alloc_output_context2(&oc, NULL, NULL, filename.c_str());
+    if (ret < 0 || !oc) {
+        std::cout << "Could not deduce output format from file extension: using MPEG." << std::endl;
+        ret = avformat_alloc_output_context2(&oc, NULL, "mpeg", filename.c_str());
+        if (ret < 0 || !oc) throw VideoException("Couldn't create AVFormatContext");
+    }
+    
+    /* open the output file, if needed */
+    if (!(oc->oformat->flags & AVFMT_NOFILE)) {
+        ret = avio_open(&oc->pb, filename.c_str(), AVIO_FLAG_WRITE);
+        if (ret < 0) throw VideoException("Could not open '%s'\n", filename);
+    }    
+}
+
+void FfmpegRecorder::StartStream()
+{
+    if(!started) {
+        av_dump_format(oc, 0, filename.c_str(), 1);
+        
+        /* Write the stream header, if any. */
+        int ret = avformat_write_header(oc, NULL);
+        if (ret < 0) throw VideoException("Error occurred when opening output file");
+        
+        started = true;
+    }
+}
+
+void FfmpegRecorder::Close()
+{
+    av_write_trailer(oc);
+    
+    for(std::vector<FfmpegRecorderStream*>::iterator i = streams.begin(); i!=streams.end(); ++i)
+    {
+        delete *i;
+    }
+    
+    if (!(oc->oformat->flags & AVFMT_NOFILE)) avio_close(oc->pb);
+
+    avformat_free_context(oc);
+}
+
+void FfmpegRecorder::AddStream(int w, int h, const std::string& encoder_fmt)
+{
+    streams.push_back( new FfmpegRecorderStream(*this, oc->oformat->video_codec, 25, FfmpegFmtFromString(encoder_fmt), w, h) );    
+}
+
+RecorderStreamInterface& FfmpegRecorder::operator[](size_t i)
+{
+    if(i < streams.size()) {
+        return *streams[i];
+    }
+    throw VideoException("Attempt to access non-existent stream.");
 }
 
 }

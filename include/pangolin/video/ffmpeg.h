@@ -139,6 +139,57 @@ protected:
     unsigned        w,h;
 };
 
+class FfmpegRecorder;
+class FfmpegRecorderStream
+    : public RecorderStreamInterface
+{
+public:
+    FfmpegRecorderStream(FfmpegRecorder& recorder, enum CodecID codec_id, uint64_t STREAM_FRAME_RATE, PixelFormat EncoderFormat, int width, int height );
+    ~FfmpegRecorderStream();
+    
+    void WriteAvPacket(AVPacket* pkt);
+    void WriteFrame(AVFrame* frame);
+    void WriteImage(AVPicture& src_picture, int w, int h, PixelFormat fmt, int64_t pts);
+    void WriteImage(uint8_t* img, int w, int h, const VideoPixelFormat& input_fmt, int64_t pts);
+    
+//protected:
+    FfmpegRecorder& recorder;
+
+    AVPicture dst_picture;
+    
+    // These pointers are owned by class
+    AVStream* stream;
+    SwsContext *sws_ctx;
+    
+};
+
+class FfmpegRecorder
+    : public RecorderInterface
+{
+    friend class FfmpegRecorderStream;
+public:
+    FfmpegRecorder( const std::string& filename );
+    ~FfmpegRecorder();
+    
+    void AddStream(int w, int h, const std::string& encoder_fmt);
+    RecorderStreamInterface& operator[](size_t i);    
+    
+//    // Save img (with correct format and resolution) to video, returning video frame id.
+//    int RecordFrame(uint8_t* img);
+    
+protected:
+    void Initialise(std::string filename);
+    void StartStream();
+    void Close();
+    
+    std::string filename;
+    bool started;
+    AVFormatContext *oc;
+    std::vector<FfmpegRecorderStream*> streams;
+    
+    int frame_count;
+};
+
 }
 
 #endif //PANGOLIN_FFMPEG_H

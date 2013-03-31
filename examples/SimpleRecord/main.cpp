@@ -11,16 +11,16 @@
 using namespace pangolin;
 using namespace std;
 
-void RecordSample(const std::string uri, const std::string filename)
+void RecordSample(const std::string input_uri, const std::string record_uri)
 {
     // Setup Video Source
-    VideoInput video(uri);
+    VideoInput video(input_uri);
     const VideoPixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();
 
-    // Setup async video recorder with 50 frame memory buffer
-    VideoRecorder recorder(filename, w, h, vid_fmt.format, video.SizeBytes()*50 );
+    VideoOutput recorder( record_uri );
+    recorder.AddStream(w,h, "YUV420P");
 
     // Create Glut window
     pangolin::CreateGlutWindowAndBind("Main",w,h);
@@ -31,6 +31,7 @@ void RecordSample(const std::string uri, const std::string filename)
     // OpenGl Texture for video frame
     GlTexture texVideo(w,h,GL_RGBA8);
 
+    int frame = 0;
     unsigned char* img = new unsigned char[video.SizeBytes()];
 
     while( !pangolin::ShouldQuit() )
@@ -43,7 +44,7 @@ void RecordSample(const std::string uri, const std::string filename)
             texVideo.Upload(img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB, GL_UNSIGNED_BYTE);
 
             // Record video frame
-            recorder.RecordFrame(img);
+            recorder[0].WriteImage(img, w, h, vid_fmt,frame++);
         }
 
         // Activate video viewport and render texture
@@ -59,23 +60,23 @@ void RecordSample(const std::string uri, const std::string filename)
 
 int main( int argc, char* argv[] )
 {
-    std::string uris[] = {
+    std::string record_uri = "ffmpeg://video.avi";
+
+    std::string input_uris[] = {
         "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
         "convert:[fmt=RGB24]//v4l:///dev/video0",
         "convert:[fmt=RGB24]//v4l:///dev/video1",
         ""
     };
 
-    std::string filename = "video.pvn";
-
     if( argc >= 2 ) {
         const string uri = std::string(argv[1]);
         if( argc == 3 ) {
-            filename = std::string(argv[2]);
+            record_uri = std::string(argv[2]);
         }
-        RecordSample(uri, filename);
+        RecordSample(uri, record_uri);
     }else{
-        cout << "Usage  : SimpleRecord [video-uri] [output-filename]" << endl << endl;
+        cout << "Usage  : SimpleRecord [video-uri] [output-uri]" << endl << endl;
         cout << "Where video-uri describes a stream or file resource, e.g." << endl;
         cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << endl;
         cout << "\tfile:///home/user/video/movie.avi" << endl;
@@ -88,11 +89,11 @@ int main( int argc, char* argv[] )
         cout << endl;
 
         // Try to open some video device
-        for(int i=0; !uris[i].empty(); ++i )
+        for(int i=0; !input_uris[i].empty(); ++i )
         {
             try{
-                cout << "Trying: " << uris[i] << endl;
-                RecordSample(uris[i], filename);
+                cout << "Trying: " << input_uris[i] << endl;
+                RecordSample(input_uris[i], record_uri);
                 return 0;
             }catch(VideoException) {}
         }

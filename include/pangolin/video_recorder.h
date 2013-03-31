@@ -62,7 +62,7 @@ public:
     ~VideoRecorder();
     
     // Save img (with correct format and resolution) to video, returning video frame id.
-    int RecordFrame(void* img);
+    int RecordFrame(uint8_t* img);
     
     void operator()();
     

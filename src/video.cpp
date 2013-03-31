@@ -426,4 +426,46 @@ bool VideoInput::GrabNewest( unsigned char* image, bool wait )
     return video->GrabNext(image,wait);
 }
 
+RecorderInterface* OpenRecorder(std::string str_uri)
+{
+    RecorderInterface* recorder = 0;
+    
+    Uri uri = ParseUri(str_uri);
+    
+#ifdef HAVE_FFMPEG    
+    if(!uri.scheme.compare("ffmpeg") )
+    {
+        recorder = new FfmpegRecorder(uri.url);
+    }else
+#endif
+    {
+        throw VideoException("Unable to open recorder URI");
+    }
+    
+    return recorder;
+}
+
+VideoOutput::VideoOutput(std::string uri)
+{
+    recorder = OpenRecorder(uri);
+}
+
+VideoOutput::~VideoOutput()
+{
+    delete recorder;
+}
+
+void VideoOutput::AddStream(int w, int h, const std::string& encoder_fmt)
+{
+    if( !recorder ) throw VideoException("No recorder open");    
+    recorder->AddStream(w,h,encoder_fmt);
+}
+
+RecorderStreamInterface& VideoOutput::operator[](size_t i)
+{
+    if( !recorder ) throw VideoException("No recorder open");    
+    return recorder->operator [](i);    
+}
+
+
 }

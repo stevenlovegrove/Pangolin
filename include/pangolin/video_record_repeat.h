@@ -36,7 +36,7 @@
 namespace pangolin
 {
 
-struct VideoRecordRepeat : public VideoInterface
+struct VideoRecordRepeat
 {
     VideoRecordRepeat( std::string uri, std::string save_filename, int buffer_size_bytes );
     ~VideoRecordRepeat();
