@@ -462,16 +462,15 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
 
 void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 {
-    static int frame = 0;
     static basetime last_time = TimeNow();
     const basetime time_now = TimeNow();
     
-    if(TimeDiff_s(last_time,time_now) > 1.0/25.0) {
+    if(TimeDiff_s(last_time,time_now) > video[0].BaseFrameTime() ) {
         last_time = time_now;
         unsigned char* img = new unsigned char[v.w*v.h*4];
         glReadBuffer(GL_BACK);
         glReadPixels(v.l, v.b, v.w, v.h, GL_RGB, GL_UNSIGNED_BYTE, img );
-        video[0].WriteImage(img,v.w, -v.h, "RGB24", frame++ );
+        video[0].WriteImage(img, v.w, -v.h, "RGB24" );
         delete[] img;
     }
     

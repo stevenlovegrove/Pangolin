@@ -489,6 +489,7 @@ void FfmpegRecorderStream::WriteAvPacket(AVPacket* pkt)
         pkt->stream_index = stream->index;
         int ret = av_interleaved_write_frame(recorder.oc, pkt);
         if (ret < 0) throw VideoException("Error writing video frame");
+        last_pts = pkt->pts;
     }
 }
 
@@ -571,14 +572,22 @@ void FfmpegRecorderStream::WriteImage(uint8_t* img, int w, int h, const std::str
         avpicture_fill(&picture,img,fmt,w,h);        
     }
 
-//    // TODO: Why is this hack needed?
-//    h = h-1;
-    
     WriteImage(picture, w, h, fmt, pts);
 }
 
+void FfmpegRecorderStream::WriteImage(uint8_t* img, int w, int h, const std::string& input_format, double time)
+{
+    const int64_t pts = (time >= 0) ? time / BaseFrameTime() : last_pts + 1;
+    WriteImage(img,w,h,input_format,pts);
+}
+
+double FfmpegRecorderStream::BaseFrameTime()
+{
+    return (double)stream->codec->time_base.num / (double)stream->codec->time_base.den;
+}
+
 FfmpegRecorderStream::FfmpegRecorderStream(FfmpegRecorder& recorder, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height )
-    : recorder(recorder), sws_ctx(NULL)
+    : recorder(recorder), last_pts(-1), sws_ctx(NULL)
 {
     int ret;
 

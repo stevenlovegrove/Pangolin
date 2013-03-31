@@ -117,7 +117,7 @@ int main( int /*argc*/, char* argv[] )
 #endif // HAVE_PNG
     
     if(Pushed(record_teapot))
-        DisplayBase().RecordOnRender("ffmpeg:[fps=60,bps=8388608]//test.avi");
+        DisplayBase().RecordOnRender("ffmpeg:[fps=50,bps=8388608,unique_filename]//screencap.avi");
 
     // Activate efficiently by object
     d_cam.Activate(s_cam);

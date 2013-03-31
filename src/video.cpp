@@ -45,6 +45,7 @@
 
 #include <pangolin/video/pvn_video.h>
 
+#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -74,6 +75,37 @@ VideoPixelFormat VideoFormatFromString(const std::string& format)
         if(!format.compare(SupportedVideoPixelFormats[i].format))
             return SupportedVideoPixelFormats[i];
     throw VideoException("Unknown Format",format);
+}
+
+std::string MakeFilenameUnique(const std::string& filename)
+{
+    if( boost::filesystem::exists(filename) ) {
+        const size_t dot = filename.find_last_of('.');
+        
+        std::string fn;
+        std::string ext;
+        
+        if(dot == filename.npos) {
+            fn = filename;
+            ext = "";
+        }else{
+            fn = filename.substr(0, dot);
+            ext = filename.substr(dot);
+        }
+        
+        int id = 1;
+        std::string new_file;
+        do {
+            id++;
+            std::stringstream ss;
+            ss << fn << "_" << id << ext;
+            new_file = ss.str();
+        }while( boost::filesystem::exists(new_file) );
+
+        return new_file;        
+    }else{
+        return filename;
+    }
 }
 
 ostream& operator<< (ostream &out, Uri &uri)
@@ -139,12 +171,11 @@ Uri ParseUri(string str_uri)
                 {
                     vector<string> args;
                     split(args, p, boost::is_any_of("=") );
-                    if( args.size() == 2 )
-                    {
-                        boost::trim(args[0]);
-                        boost::trim(args[1]);
-                        uri.params[args[0]] = args[1];
-                    }
+                    std::string key = args[0];
+                    std::string val = args.size() > 1 ? args[1] : "";
+                    boost::trim(key);
+                    boost::trim(val);
+                    uri.params[key] = val;
                 }
             }else{
                 throw VideoException("Bad video URI");
@@ -435,18 +466,15 @@ RecorderInterface* OpenRecorder(std::string str_uri)
 #ifdef HAVE_FFMPEG    
     if(!uri.scheme.compare("ffmpeg") )
     {
-        int desired_frame_rate = 25;
-        int desired_bit_rate = 1000*1024;
+        int desired_frame_rate = uri.Get("fps", 25);
+        int desired_bit_rate = uri.Get("bps", 1000*1024);
+        std::string filename = uri.url;
+
+        if(uri.Contains("unique_filename")) {        
+            filename = MakeFilenameUnique(filename);
+        }
         
-        if(uri.params.find("fps") != uri.params.end()) {
-            std::istringstream iss(uri.params["fps"]);
-            iss >> desired_frame_rate;
-        }
-        if(uri.params.find("bps") != uri.params.end()) {
-            std::istringstream iss(uri.params["bps"]);
-            iss >> desired_bit_rate;
-        }
-        recorder = new FfmpegRecorder(uri.url, desired_frame_rate, desired_bit_rate);
+        recorder = new FfmpegRecorder(filename, desired_frame_rate, desired_bit_rate);
     }else
 #endif
     {

@@ -30,6 +30,8 @@
 
 #include "pangolin.h"
 
+#include <pangolin/type_convert.h>
+
 // Pangolin video supports various cameras and file formats through
 // different 3rd party libraries.
 //
@@ -94,6 +96,20 @@ struct Uri
     std::string scheme;
     std::string url;
     std::map<std::string,std::string> params;
+    
+    bool Contains(std::string key) {
+        return params.find(key) != params.end();
+    }
+    
+    template<typename T>
+    T Get(std::string key, T default_val) {
+        std::map<std::string,std::string>::iterator v = params.find(key);
+        if(v != params.end()) {
+            return Convert<T, std::string>::Do(v->second);
+        }else{
+            return default_val;
+        }
+    }
 };
 
 //! Return Pixel Format properties given string specification in
@@ -154,7 +170,8 @@ protected:
 struct RecorderStreamInterface
 {
     virtual ~RecorderStreamInterface() {}
-    virtual void WriteImage(uint8_t* img, int w, int h, const std::string& format, int64_t pts) = 0;
+    virtual void WriteImage(uint8_t* img, int w, int h, const std::string& format, double time_s = -1) = 0;
+    virtual double BaseFrameTime() = 0;
 };
 
 //! Interface to video recording destinations

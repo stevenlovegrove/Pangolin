@@ -151,11 +151,14 @@ public:
     void WriteFrame(AVFrame* frame);
     void WriteImage(AVPicture& src_picture, int w, int h, PixelFormat fmt, int64_t pts);
     void WriteImage(uint8_t* img, int w, int h, const std::string& input_format, int64_t pts);
+    void WriteImage(uint8_t* img, int w, int h, const std::string& input_format, double time);
+    
+    double BaseFrameTime();
     
 protected:
     FfmpegRecorder& recorder;
-
     AVPicture dst_picture;
+    int64_t last_pts;
     
     // These pointers are owned by class
     AVStream* stream;

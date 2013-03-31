@@ -33,84 +33,10 @@
 //#include <boost/lexical_cast.hpp>
 #include <iostream>
 
+#include <pangolin/type_convert.h>
 
 namespace pangolin
 {
-
-struct BadInputException : std::exception {
-    char const* what() const throw() { return "Failed to serialise type"; }
-};
-
-// Generic conversion through serialisation from / to string
-template<typename T, typename S> struct Convert {
-    static T Do(const S& src)
-    {
-        std::ostringstream oss;
-        oss << src;
-        std::istringstream iss(oss.str());
-        T target;
-        iss >> target;
-        
-        if(iss.fail())
-            throw BadInputException();
-        
-        return target;
-        //    return boost::lexical_cast<T>(src);
-    }
-};
-
-// Apply bool alpha IO manipulator for bool types
-template<> struct Convert<bool,std::string> {
-    static bool Do(const std::string& src)
-    {
-        bool target;
-        std::istringstream iss(src);
-        iss >> target;
-        
-        if(iss.fail())
-        {
-            std::istringstream iss2(src);
-            iss2 >> std::boolalpha >> target;
-            if( iss2.fail())
-                throw BadInputException();
-        }
-        
-        return target;
-    }
-};
-
-// From strings
-template<typename T> struct Convert<T,std::string> {
-    static T Do(const std::string& src)
-    {
-        T target;
-        std::istringstream iss(src);
-        iss >> target;
-        
-        if(iss.fail())
-            throw BadInputException();
-        
-        return target;
-    }
-};
-
-// To strings
-template<typename S> struct Convert<std::string, S> {
-    static std::string Do(const S& src)
-    {
-        std::ostringstream oss;
-        oss << src;
-        return oss.str();
-    }
-};
-
-// Between strings is just a copy
-template<> struct Convert<std::string, std::string> {
-    static std::string Do(const std::string& src)
-    {
-        return src;
-    }
-};
 
 struct UnknownTypeException : std::exception {
     char const* what() const throw() { return "Unknown type in generic container"; }

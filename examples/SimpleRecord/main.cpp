@@ -31,9 +31,10 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
     // OpenGl Texture for video frame
     GlTexture texVideo(w,h,GL_RGBA8);
 
-    int frame = 0;
-    unsigned char* img = new unsigned char[video.SizeBytes()];
-
+    // Allocate image buffer. The +1 is to give ffmpeg some alignment slack
+    // swscale seems to have a bug which goes over the array by 1...
+    unsigned char* img = new unsigned char[video.SizeBytes() + 1];
+    
     while( !pangolin::ShouldQuit() )
     {
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -44,7 +45,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
             texVideo.Upload(img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB, GL_UNSIGNED_BYTE);
 
             // Record video frame
-            recorder[0].WriteImage(img, w, h, vid_fmt,frame++);
+            recorder[0].WriteImage(img, w, h, vid_fmt);
         }
 
         // Activate video viewport and render texture
@@ -60,7 +61,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
 
 int main( int argc, char* argv[] )
 {
-    std::string record_uri = "ffmpeg://video.avi";
+    std::string record_uri = "ffmpeg:[fps=30,bps=8388608]//video.avi";
 
     std::string input_uris[] = {
         "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
