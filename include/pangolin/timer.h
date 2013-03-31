@@ -51,6 +51,12 @@ inline basetime TimeNow()
     return t;
 }
 
+inline double TimeNow_s()
+{
+    basetime tnow = TimeNow();
+    return (double)tnow.tv_sec + 1E-6 * (double)tnow.tv_usec;
+}
+
 inline basetime TimeFromSeconds(double seconds)
 {
     basetime t;
@@ -89,6 +95,14 @@ inline basetime TimeNow()
     return t;
 }
 
+inline double TimeNow_s()
+{
+    LARGE_INTEGER f;
+    QueryPerformanceFrequency(&f);
+    basetime tnow = TimeNow();
+    return tnow.QuadPart / f.QuadPart;
+}
+
 inline double TimeDiff_s(basetime start, basetime end)
 {
     LARGE_INTEGER f;
@@ -108,7 +122,7 @@ inline basetime TimeFromSeconds(double seconds)
 inline basetime TimeAdd(basetime t1, basetime t2)
 {
     basetime t;
-    t.QuadPart t1.QuadPart + t2.QuadPart;
+    t.QuadPart = t1.QuadPart + t2.QuadPart;
     return t;
 }
 #endif

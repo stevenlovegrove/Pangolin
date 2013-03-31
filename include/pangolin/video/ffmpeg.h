@@ -144,7 +144,7 @@ class FfmpegRecorderStream
     : public RecorderStreamInterface
 {
 public:
-    FfmpegRecorderStream(FfmpegRecorder& recorder, enum CodecID codec_id, uint64_t STREAM_FRAME_RATE, PixelFormat EncoderFormat, int width, int height );
+    FfmpegRecorderStream(FfmpegRecorder& recorder, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height );
     ~FfmpegRecorderStream();
     
     void WriteAvPacket(AVPacket* pkt);
@@ -152,7 +152,7 @@ public:
     void WriteImage(AVPicture& src_picture, int w, int h, PixelFormat fmt, int64_t pts);
     void WriteImage(uint8_t* img, int w, int h, const std::string& input_format, int64_t pts);
     
-//protected:
+protected:
     FfmpegRecorder& recorder;
 
     AVPicture dst_picture;
@@ -160,7 +160,6 @@ public:
     // These pointers are owned by class
     AVStream* stream;
     SwsContext *sws_ctx;
-    
 };
 
 class FfmpegRecorder
@@ -168,7 +167,7 @@ class FfmpegRecorder
 {
     friend class FfmpegRecorderStream;
 public:
-    FfmpegRecorder( const std::string& filename );
+    FfmpegRecorder( const std::string& filename, int base_frame_rate, int bit_rate );
     ~FfmpegRecorder();
     
     void AddStream(int w, int h, const std::string& encoder_fmt);
@@ -188,6 +187,9 @@ protected:
     std::vector<FfmpegRecorderStream*> streams;
     
     int frame_count;
+    
+    int base_frame_rate;
+    int bit_rate;    
 };
 
 }

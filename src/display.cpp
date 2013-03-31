@@ -35,6 +35,7 @@
 #include <pangolin/display.h>
 #include <pangolin/display_internal.h>
 #include <pangolin/simple_math.h>
+#include <pangolin/timer.h>
 
 #define GLUT_KEY_ESCAPE 27
 #define GLUT_KEY_TAB 9
@@ -462,9 +463,31 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
 void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 {
     static int frame = 0;
-    unsigned char img[v.w*v.h*4];
-    glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, img );
-    video[0].WriteImage(img,v.w, v.h, "RGBA", frame++ );
+    static basetime last_time = TimeNow();
+    const basetime time_now = TimeNow();
+    
+    if(TimeDiff_s(last_time,time_now) > 1.0/25.0) {
+        last_time = time_now;
+        unsigned char* img = new unsigned char[v.w*v.h*4];
+        glReadBuffer(GL_BACK);
+        glReadPixels(v.l, v.b, v.w, v.h, GL_RGB, GL_UNSIGNED_BYTE, img );
+        video[0].WriteImage(img,v.w, -v.h, "RGB24", frame++ );
+        delete[] img;
+    }
+    
+    const int ticks = (int)TimeNow_s();
+    if( ticks % 2 )
+    {
+        v.ActivatePixelOrthographic();
+        // now, render a little red "recording" dot
+        glPushAttrib(GL_ENABLE_BIT);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_DEPTH_TEST);
+        const float r = 7;
+        glColor3ub( 255, 0, 0 );
+        glDrawCircle( v.w-2*r, v.h-2*r, r );
+        glPopAttrib();
+    }
 }
 
 #ifdef BUILD_PANGOLIN_VARS
@@ -522,8 +545,6 @@ void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned in
 void FinishGlutFrame()
 {
     RenderViews();
-    DisplayBase().Activate();
-    Viewport::DisableScissor();
     
 #ifdef HAVE_BOOST_GIL
     while(context->screen_capture.size()) {
@@ -534,8 +555,11 @@ void FinishGlutFrame()
 #endif // HAVE_BOOST_GIL
     
     if(context->recorder.IsOpen()) {
-        SaveFramebuffer(context->recorder, context->record_view->v );
+        SaveFramebuffer(context->recorder, context->record_view->GetBounds() );
     }
+
+    DisplayBase().Activate();
+    Viewport::DisableScissor();
     
 #ifdef HAVE_CVARS
     context->console.RenderConsole();

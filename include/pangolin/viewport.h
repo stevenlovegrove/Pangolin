@@ -40,8 +40,11 @@ struct Viewport
     Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h) {}
     
     void Activate() const;
+    void ActivatePixelOrthographic() const;
+
     void Scissor() const;
     void ActivateAndScissor() const;
+
     bool Contains(int x, int y) const;
     
     Viewport Inset(int i) const;

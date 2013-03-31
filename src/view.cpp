@@ -299,12 +299,7 @@ void View::ActivateScissorAndClear(const OpenGlRenderState& state ) const
 
 void View::ActivatePixelOrthographic() const
 {
-    v.Activate();
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(v.l, v.r(), v.b, v.t());
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    v.ActivatePixelOrthographic();
 }  
 
 GLfloat View::GetClosestDepth(int x, int y, int radius) const
@@ -410,6 +405,11 @@ bool View::IsShown() const
     return show;
 }
 
+Viewport View::GetBounds() const
+{
+    return Viewport( std::max(v.l, vp.l), std::max(v.b, vp.b), std::min(v.w, vp.w), std::min(v.h, vp.h) );
+}
+
 void View::SaveOnRender(const std::string& filename_prefix)
 {
     const Viewport tosave = this->v.Intersect(this->vp);
@@ -418,9 +418,14 @@ void View::SaveOnRender(const std::string& filename_prefix)
 
 void View::RecordOnRender(const std::string& record_uri)
 {
-    context->record_view = this;
-    context->recorder.Open(record_uri);
-    context->recorder.AddStream(v.w, v.h, "YUV420P");
+    if(!context->recorder.IsOpen()) {
+        Viewport area = GetBounds();
+        context->record_view = this;
+        context->recorder.Open(record_uri);
+        context->recorder.AddStream(area.w, area.h, "YUV420P");
+    }else{
+        context->recorder.Reset();
+    }
 }
 
 void View::SaveRenderNow(const std::string& filename_prefix, float scale)

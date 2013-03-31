@@ -59,6 +59,16 @@ bool Viewport::Contains(int x, int y) const
     return l <= x && x < (l+w) && b <= y && y < (b+h);
 }
 
+void Viewport::ActivatePixelOrthographic() const
+{
+    Activate();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0, w, 0, h);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
 Viewport Viewport::Inset(int i) const
 {
     return Viewport(l+i, b+i, w-2*i, h-2*i);

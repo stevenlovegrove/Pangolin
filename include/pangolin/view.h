@@ -150,6 +150,10 @@ struct View
     //! This method should be checked if drawing manually
     bool IsShown() const;
     
+    //! Returns viewport reflecting space that will actually get drawn
+    //! The minimum of vp and v
+    Viewport GetBounds() const;
+    
     //! Specify that this views region in the framebuffer should be saved to
     //! a file just before the buffer is flipped.
     void SaveOnRender(const std::string& filename_prefix);

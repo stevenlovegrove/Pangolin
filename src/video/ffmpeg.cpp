@@ -440,7 +440,7 @@ bool FfmpegConverter::GrabNewest( unsigned char* image, bool wait )
 
 // Based on this example
 // http://cekirdek.pardus.org.tr/~ismail/ffmpeg-docs/output-example_8c-source.html
-static AVStream* CreateStream(AVFormatContext *oc, enum CodecID codec_id, uint64_t STREAM_FRAME_RATE, PixelFormat EncoderFormat, int width, int height)
+static AVStream* CreateStream(AVFormatContext *oc, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height)
 {
     AVCodec* codec = avcodec_find_encoder(codec_id);
     if (!(codec)) throw VideoException("Could not find encoder", avcodec_get_name(codec_id));
@@ -451,25 +451,19 @@ static AVStream* CreateStream(AVFormatContext *oc, enum CodecID codec_id, uint64
     stream->id = oc->nb_streams-1;
     
     switch (codec->type) {
-    case AVMEDIA_TYPE_AUDIO:
-        stream->id = 1;
-        stream->codec->sample_fmt  = AV_SAMPLE_FMT_S16;
-        stream->codec->bit_rate    = 64000;
-        stream->codec->sample_rate = 44100;
-        stream->codec->channels    = 2;
-        break;
+//    case AVMEDIA_TYPE_AUDIO:
+//        stream->id = 1;
+//        stream->codec->sample_fmt  = AV_SAMPLE_FMT_S16;
+//        stream->codec->bit_rate    = 64000;
+//        stream->codec->sample_rate = 44100;
+//        stream->codec->channels    = 2;
+//        break;
     case AVMEDIA_TYPE_VIDEO:
         stream->codec->codec_id = codec_id;
-//        stream->codec->bit_rate = 400000;
-        stream->codec->bit_rate = 10*1024*1024;
-        /* Resolution must be a multiple of two. */
+        stream->codec->bit_rate = bit_rate;
         stream->codec->width    = width;
         stream->codec->height   = height;
-        /* timebase: This is the fundamental unit of time (in seconds) in terms
-         * of which frame timestamps are represented. For fixed-fps content,
-         * timebase should be 1/framerate and timestamp increments should be
-         * identical to 1. */
-        stream->codec->time_base.den = STREAM_FRAME_RATE;
+        stream->codec->time_base.den = frame_rate;
         stream->codec->time_base.num = 1;
         stream->codec->gop_size      = 12;
         stream->codec->pix_fmt       = EncoderFormat;
@@ -561,23 +555,34 @@ void FfmpegRecorderStream::WriteImage(AVPicture& src_picture, int w, int h, Pixe
 
 void FfmpegRecorderStream::WriteImage(uint8_t* img, int w, int h, const std::string& input_fmt, int64_t pts)
 {
-    // TODO: Why is this hack needed?
-    h = h-1;
-    
     recorder.StartStream();
     
     PixelFormat fmt = FfmpegFmtFromString(input_fmt);
     AVPicture picture;
-    avpicture_fill(&picture,img,fmt,w,h);
+    
+    if(h < 0) {
+        h = -h;
+        avpicture_fill(&picture,img,fmt,w,h);        
+        for(int i=0; i<4; ++i) {
+            picture.data[i] += (h-1) * picture.linesize[i];
+            picture.linesize[i] *= -1;
+        }
+    }else{
+        avpicture_fill(&picture,img,fmt,w,h);        
+    }
+
+//    // TODO: Why is this hack needed?
+//    h = h-1;
+    
     WriteImage(picture, w, h, fmt, pts);
 }
 
-FfmpegRecorderStream::FfmpegRecorderStream(FfmpegRecorder& recorder, enum CodecID codec_id, uint64_t STREAM_FRAME_RATE, PixelFormat EncoderFormat, int width, int height )
+FfmpegRecorderStream::FfmpegRecorderStream(FfmpegRecorder& recorder, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height )
     : recorder(recorder), sws_ctx(NULL)
 {
     int ret;
 
-    stream = CreateStream(recorder.oc, codec_id, STREAM_FRAME_RATE, EncoderFormat, width, height);
+    stream = CreateStream(recorder.oc, codec_id, frame_rate, bit_rate, EncoderFormat, width, height);
         
     /* Allocate the encoded raw picture. */
     ret = avpicture_alloc(&dst_picture, stream->codec->pix_fmt, stream->codec->width, stream->codec->height);
@@ -594,8 +599,9 @@ FfmpegRecorderStream::~FfmpegRecorderStream()
     avcodec_close(stream->codec);
 }
 
-FfmpegRecorder::FfmpegRecorder(const std::string& filename)
-    : filename(filename), started(false), oc(NULL), frame_count(0)
+FfmpegRecorder::FfmpegRecorder(const std::string& filename, int base_frame_rate, int bit_rate)
+    : filename(filename), started(false), oc(NULL),
+      frame_count(0), base_frame_rate(base_frame_rate), bit_rate(bit_rate)
 {
     Initialise(filename);
 }
@@ -652,7 +658,7 @@ void FfmpegRecorder::Close()
 
 void FfmpegRecorder::AddStream(int w, int h, const std::string& encoder_fmt)
 {
-    streams.push_back( new FfmpegRecorderStream(*this, oc->oformat->video_codec, 25, FfmpegFmtFromString(encoder_fmt), w, h) );    
+    streams.push_back( new FfmpegRecorderStream(*this, oc->oformat->video_codec, base_frame_rate, bit_rate, FfmpegFmtFromString(encoder_fmt), w, h) );    
 }
 
 RecorderStreamInterface& FfmpegRecorder::operator[](size_t i)

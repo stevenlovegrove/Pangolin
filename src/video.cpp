@@ -435,7 +435,18 @@ RecorderInterface* OpenRecorder(std::string str_uri)
 #ifdef HAVE_FFMPEG    
     if(!uri.scheme.compare("ffmpeg") )
     {
-        recorder = new FfmpegRecorder(uri.url);
+        int desired_frame_rate = 25;
+        int desired_bit_rate = 1000*1024;
+        
+        if(uri.params.find("fps") != uri.params.end()) {
+            std::istringstream iss(uri.params["fps"]);
+            iss >> desired_frame_rate;
+        }
+        if(uri.params.find("bps") != uri.params.end()) {
+            std::istringstream iss(uri.params["bps"]);
+            iss >> desired_bit_rate;
+        }
+        recorder = new FfmpegRecorder(uri.url, desired_frame_rate, desired_bit_rate);
     }else
 #endif
     {
