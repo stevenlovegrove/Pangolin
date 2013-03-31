@@ -137,29 +137,6 @@ struct DataLog
     std::vector<std::string> labels;
 };
 
-const static int num_plot_colours = 12;
-const static float plot_colours[][3] =
-{
-    {1.0, 0.0, 0.0},
-    {0.0, 1.0, 0.0},
-    {0.0, 0.0, 1.0},
-    {1.0, 0.0, 1.0},
-    {0.5, 0.5, 0.0},
-    {0.5, 0.0, 0.0},
-    {0.0, 0.5, 0.0},
-    {0.0, 0.0, 0.5},
-    {0.5, 0.0, 1.0},
-    {0.0, 1.0, 0.5},
-    {1.0, 0.0, 0.5},
-    {0.0, 0.5, 1.0}
-};
-
-
-const static float colour_bg[3] = {0.0,0.0,0.0};
-const static float colour_tk[3] = {0.1,0.1,0.1};
-const static float colour_ms[3] = {0.3,0.3,0.3};
-const static float colour_ax[3] = {0.5,0.5,0.5};
-
 const static int draw_modes_n = 2;
 const static int draw_modes[] = {GL_LINE_STRIP, GL_POINTS};
 

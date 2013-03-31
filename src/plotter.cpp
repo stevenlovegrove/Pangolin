@@ -44,6 +44,29 @@ extern __thread PangolinGl* context;
 
 static void* font = GLUT_BITMAP_HELVETICA_12;
 
+const static int num_plot_colours = 12;
+const static float plot_colours[][3] =
+{
+    {1.0, 0.0, 0.0},
+    {0.0, 1.0, 0.0},
+    {0.0, 0.0, 1.0},
+    {1.0, 0.0, 1.0},
+    {0.5, 0.5, 0.0},
+    {0.5, 0.0, 0.0},
+    {0.0, 0.5, 0.0},
+    {0.0, 0.0, 0.5},
+    {0.5, 0.0, 1.0},
+    {0.0, 1.0, 0.5},
+    {1.0, 0.0, 0.5},
+    {0.0, 0.5, 1.0}
+};
+
+
+const static float colour_bg[3] = {0.0,0.0,0.0};
+const static float colour_tk[3] = {0.1,0.1,0.1};
+const static float colour_ms[3] = {0.3,0.3,0.3};
+const static float colour_ax[3] = {0.5,0.5,0.5};
+
 DataSequence::DataSequence(unsigned int buffer_size, unsigned size, float val )
     : buffer_size(buffer_size), ys(0), firstn(size), n(0), sum_y(0), sum_y_sq(0),
       min_y(numeric_limits<float>::max()),
