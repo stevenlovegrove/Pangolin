@@ -192,12 +192,12 @@ void View::ResizeChildren()
         if( visiblechildren > 0 )
         {
             // This containers aspect
-            const double this_a = abs(v.aspect());
+            const double this_a = std::fabs(v.aspect());
             
             // Use first child with fixed aspect for all children
-            double child_a = abs(VisibleChild(0).aspect);
+            double child_a = std::fabs(VisibleChild(0).aspect);
             for(size_t i=1; (child_a==0) && i < visiblechildren; ++i ) {
-                child_a = abs(VisibleChild(i).aspect);
+                child_a = std::fabs(VisibleChild(i).aspect);
             }
             
             if(child_a == 0) {

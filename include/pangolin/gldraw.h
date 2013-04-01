@@ -135,6 +135,16 @@ inline void glDrawCircle( float x, float y, double radius )
     glEnd();
 }
 
+inline void glDrawCirclePerimeter( float x, float y, double radius )
+{
+    glBegin(GL_LINE_STRIP);
+    for( double a=0; a< 2*M_PI; a += M_PI/50.0 )
+    {
+        glVertex2d( x + radius * cos(a), y + radius * sin(a) );
+    }
+    glEnd();
+}
+
 inline void glDrawAxis(float s)
 {
     glBegin(GL_LINES);
@@ -169,6 +179,11 @@ inline void glDrawCross( const Eigen::Vector3d& p, int r = 5 )
 inline void glDrawCircle( const Eigen::Vector2d& p, double radius = 5 )
 {
     glDrawCircle(p(0), p(1), radius );
+}
+
+inline void glDrawCirclePerimeter( const Eigen::Vector2d& p, double radius = 5 )
+{
+    glDrawCirclePerimeter(p(0), p(1), radius);
 }
 #endif // HAVE_EIGEN
 
