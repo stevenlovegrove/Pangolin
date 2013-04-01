@@ -2,8 +2,6 @@
 #include <boost/bind.hpp>
 #include <pangolin/pangolin.h>
 
-#include <pangolin/simple_math.h>
-
 using namespace pangolin;
 using namespace std;
 

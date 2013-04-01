@@ -448,6 +448,7 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
 #ifdef HAVE_BOOST_GIL
     // Save colour channels
     boost::gil::rgba8_image_t img(v.w, v.h);
+    glReadBuffer(GL_BACK);    
     glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, boost::gil::interleaved_view_get_raw_data( boost::gil::view( img ) ) );
 #ifdef HAVE_PNG
     boost::gil::png_write_view(prefix + ".png", flipped_up_down_view( boost::gil::const_view(img)) );
@@ -489,8 +490,86 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
     }
 }
 
-#ifdef BUILD_PANGOLIN_VARS
 #ifdef HAVE_CVARS
+// Pangolin CVar function hooks
+bool CVarScreencap( std::vector<std::string>* args )
+{
+    if(args && args->size() > 0) {
+        const std::string file_prefix = args->at(0);
+        float scale = 1.0f;
+        View* view = &DisplayBase();
+        
+        if(args->size() > 1)  scale = Convert<float,std::string>::Do(args->at(1));
+        if(args->size() > 2)  view = &Display(args->at(2));
+
+        if(scale == 1.0f) {
+            view->SaveOnRender(file_prefix);
+        }else{
+            view->SaveRenderNow(file_prefix, scale);
+        }
+        context->console.EnterLogLine("done.");
+    }else{
+        context->console.EnterLogLine("USAGE: pango.screencap file_prefix [scale=1] [view_name]", LINEPROP_ERROR);
+        context->console.EnterLogLine("   eg: pango.screencap my_shot", LINEPROP_ERROR);
+    }
+    return false;
+}
+
+bool CVarRecordStart( std::vector<std::string>* args )
+{
+    if(args && args->size() > 0) {
+        const std::string uri = args->at(0);
+        View* view = &DisplayBase();
+        
+        if(args->size() > 1) {
+            view = &Display(args->at(1));
+        }
+        
+        try {
+            view->RecordOnRender(uri);
+            context->console.ToggleConsole();
+            return true;
+        }catch(VideoException e) {
+            context->console.EnterLogLine(e.what(), LINEPROP_ERROR );
+        }
+    }else{
+        context->console.EnterLogLine("USAGE: pango.record.start uri [view_name]", LINEPROP_ERROR);
+        context->console.EnterLogLine("   eg: pango.record.start ffmpeg://screencap.avi", LINEPROP_ERROR);
+    }
+    return false;
+}
+
+// Pangolin CVar function hooks
+bool CVarRecordStop( std::vector<std::string>* args )
+{
+    context->recorder.Reset();
+    return true;
+}
+
+bool CVarViewList( std::vector<std::string>* args )
+{
+    std::stringstream ss;
+    for(boost::ptr_unordered_map<std::string,View>::iterator vi
+        = context->named_managed_views.begin();
+        vi != context->named_managed_views.end(); ++vi)
+    {
+        ss << "'" << vi->first << "' " << std::endl;
+    }
+    context->console.EnterLogLine(ss.str().c_str());
+    return true;
+}
+
+bool CVarViewShowHide( std::vector<std::string>* args )
+{
+    if(args && args->size() == 1) {
+        Display(args->at(0)).ToggleShow();
+    }else{
+        context->console.EnterLogLine("USAGE: pango.view.showhide view_name", LINEPROP_ERROR);        
+    }
+    return true;
+}
+
+#ifdef BUILD_PANGOLIN_VARS
 void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool brand_new)
 {
     if(brand_new) {
@@ -516,8 +595,8 @@ void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const ch
         }
     }
 }
-#endif // HAVE_CVARS
 #endif // BUILD_PANGOLIN_VARS
+#endif // HAVE_CVARS
 
 void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned int mode)
 {
@@ -532,6 +611,7 @@ void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned in
     glutInitWindowSize(w,h);
     glutCreateWindow(window_title.c_str());
     BindToContext(window_title);
+    glewInit();
     
 #ifdef HAVE_FREEGLUT
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
@@ -540,11 +620,19 @@ void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned in
     context->is_double_buffered = mode & GLUT_DOUBLE;
     TakeGlutCallbacks();
     
-#ifdef BUILD_PANGOLIN_VARS
 #ifdef HAVE_CVARS
+#ifdef BUILD_PANGOLIN_VARS
     RegisterNewVarCallback(NewVarForCVars,0);
-#endif // HAVE_CVARS
 #endif // BUILD_PANGOLIN_VARS
+    
+    // Register utilities
+    CVarUtils::CreateCVar("pango.screencap", &CVarScreencap, "Capture image of window to a file." );
+    CVarUtils::CreateCVar("pango.record.start", &CVarRecordStart, "Record video of window to a file." );
+    CVarUtils::CreateCVar("pango.record.stop",  &CVarRecordStop, "Stop video recording." );
+
+    CVarUtils::CreateCVar("pango.view.list",  &CVarViewList, "List named views." );
+    CVarUtils::CreateCVar("pango.view.showhide",  &CVarViewShowHide, "Show/Hide named view." );
+#endif // HAVE_CVARS
 }
 
 void FinishGlutFrame()
