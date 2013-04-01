@@ -69,8 +69,10 @@ struct PangolinGl
     
     std::queue<std::pair<std::string,Viewport> > screen_capture;
     
+#ifdef BUILD_PANGOLIN_VIDEO
     View* record_view;
     VideoOutput recorder;
+#endif
     
 #ifdef HAVE_CVARS
     GLConsole console;

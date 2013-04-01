@@ -492,6 +492,31 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 
 #ifdef HAVE_CVARS
 // Pangolin CVar function hooks
+
+bool CVarViewList( std::vector<std::string>* args )
+{
+    std::stringstream ss;
+    for(boost::ptr_unordered_map<std::string,View>::iterator vi
+        = context->named_managed_views.begin();
+        vi != context->named_managed_views.end(); ++vi)
+    {
+        ss << "'" << vi->first << "' " << std::endl;
+    }
+    context->console.EnterLogLine(ss.str().c_str());
+    return true;
+}
+
+bool CVarViewShowHide( std::vector<std::string>* args )
+{
+    if(args && args->size() == 1) {
+        Display(args->at(0)).ToggleShow();
+    }else{
+        context->console.EnterLogLine("USAGE: pango.view.showhide view_name", LINEPROP_ERROR);        
+    }
+    return true;
+}
+
+// Pangolin CVar function hooks
 bool CVarScreencap( std::vector<std::string>* args )
 {
     if(args && args->size() > 0) {
@@ -515,6 +540,7 @@ bool CVarScreencap( std::vector<std::string>* args )
     return false;
 }
 
+#ifdef BUILD_PANGOLIN_VIDEO
 bool CVarRecordStart( std::vector<std::string>* args )
 {
     if(args && args->size() > 0) {
@@ -539,35 +565,12 @@ bool CVarRecordStart( std::vector<std::string>* args )
     return false;
 }
 
-// Pangolin CVar function hooks
 bool CVarRecordStop( std::vector<std::string>* args )
 {
     context->recorder.Reset();
     return true;
 }
-
-bool CVarViewList( std::vector<std::string>* args )
-{
-    std::stringstream ss;
-    for(boost::ptr_unordered_map<std::string,View>::iterator vi
-        = context->named_managed_views.begin();
-        vi != context->named_managed_views.end(); ++vi)
-    {
-        ss << "'" << vi->first << "' " << std::endl;
-    }
-    context->console.EnterLogLine(ss.str().c_str());
-    return true;
-}
-
-bool CVarViewShowHide( std::vector<std::string>* args )
-{
-    if(args && args->size() == 1) {
-        Display(args->at(0)).ToggleShow();
-    }else{
-        context->console.EnterLogLine("USAGE: pango.view.showhide view_name", LINEPROP_ERROR);        
-    }
-    return true;
-}
+#endif // BUILD_PANGOLIN_VIDEO
 
 #ifdef BUILD_PANGOLIN_VARS
 void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool brand_new)
@@ -621,17 +624,20 @@ void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned in
     TakeGlutCallbacks();
     
 #ifdef HAVE_CVARS
+    
 #ifdef BUILD_PANGOLIN_VARS
     RegisterNewVarCallback(NewVarForCVars,0);
 #endif // BUILD_PANGOLIN_VARS
     
     // Register utilities
-    CVarUtils::CreateCVar("pango.screencap", &CVarScreencap, "Capture image of window to a file." );
-    CVarUtils::CreateCVar("pango.record.start", &CVarRecordStart, "Record video of window to a file." );
-    CVarUtils::CreateCVar("pango.record.stop",  &CVarRecordStop, "Stop video recording." );
-
     CVarUtils::CreateCVar("pango.view.list",  &CVarViewList, "List named views." );
     CVarUtils::CreateCVar("pango.view.showhide",  &CVarViewShowHide, "Show/Hide named view." );
+    CVarUtils::CreateCVar("pango.screencap", &CVarScreencap, "Capture image of window to a file." );
+#ifdef BUILD_PANGOLIN_VIDEO
+    CVarUtils::CreateCVar("pango.record.start", &CVarRecordStart, "Record video of window to a file." );
+    CVarUtils::CreateCVar("pango.record.stop",  &CVarRecordStop, "Stop video recording." );
+#endif // BUILD_PANGOLIN_VIDEO
+
 #endif // HAVE_CVARS
 }
 
@@ -647,9 +653,11 @@ void FinishGlutFrame()
     }
 #endif // HAVE_BOOST_GIL
     
+#ifdef BUILD_PANGOLIN_VIDEO
     if(context->recorder.IsOpen()) {
         SaveFramebuffer(context->recorder, context->record_view->GetBounds() );
     }
+#endif // BUILD_PANGOLIN_VIDEO
 
     DisplayBase().Activate();
     Viewport::DisableScissor();
@@ -657,6 +665,7 @@ void FinishGlutFrame()
 #ifdef HAVE_CVARS
     context->console.RenderConsole();
 #endif // HAVE_CVARS
+    
     SwapGlutBuffersProcessGlutEvents();
 }
 

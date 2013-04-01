@@ -418,6 +418,7 @@ void View::SaveOnRender(const std::string& filename_prefix)
 
 void View::RecordOnRender(const std::string& record_uri)
 {
+#ifdef BUILD_PANGOLIN_VIDEO
     if(!context->recorder.IsOpen()) {
         Viewport area = GetBounds();
         context->record_view = this;
@@ -426,6 +427,9 @@ void View::RecordOnRender(const std::string& record_uri)
     }else{
         context->recorder.Reset();
     }
+#else
+    std::cerr << "Error: Video Support hasn't been built into this library." << std::endl;
+#endif // BUILD_PANGOLIN_VIDEO
 }
 
 void View::SaveRenderNow(const std::string& filename_prefix, float scale)
