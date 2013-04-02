@@ -26,12 +26,12 @@
  */
 
 #include <pangolin/video/ffmpeg.h>
-#include <libavformat/avio.h>
-#include <libavutil/pixfmt.h>
 
+extern "C"
+{
+#include <libavformat/avio.h>
 #include <libavutil/mathematics.h>
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
+}
 
 namespace pangolin
 {

@@ -43,6 +43,7 @@ extern "C"
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libavutil/pixdesc.h>
+#include <libavcodec/avcodec.h>
 }
 
 namespace pangolin
