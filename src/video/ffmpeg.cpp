@@ -157,7 +157,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
     
     // Retrieve stream information
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
     if(avformat_find_stream_info(pFormatCtx, 0)<0)
 #else
     // Deprecated
@@ -269,7 +269,7 @@ FfmpegVideo::~FfmpegVideo()
     avcodec_close(pVidCodecCtx);
     
     // Close the video file
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
     avformat_close_input(&pFormatCtx);
 #else
     // Deprecated
@@ -443,7 +443,12 @@ bool FfmpegConverter::GrabNewest( unsigned char* image, bool wait )
 static AVStream* CreateStream(AVFormatContext *oc, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height)
 {
     AVCodec* codec = avcodec_find_encoder(codec_id);
-    if (!(codec)) throw VideoException("Could not find encoder", avcodec_get_name(codec_id));
+    if (!(codec)) throw
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+        VideoException("Could not find encoder", avcodec_get_name(codec_id));
+#else
+        VideoException("Could not find encoder");
+#endif
 
     AVStream* stream = avformat_new_stream(oc, codec);
     if (!stream) throw VideoException("Could not allocate stream");
@@ -512,7 +517,12 @@ void FfmpegRecorderStream::WriteFrame(AVFrame* frame)
         ret = 0;
     } else {
         /* encode the image */
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
         ret = avcodec_encode_video2(stream->codec, &pkt, frame, &got_packet);
+#else
+        ret = avcodec_encode_video(stream->codec,pkt.data, pkt.size, frame);
+        got_packet = ret > 0;
+#endif
         if (ret < 0) throw VideoException("Error encoding video frame");
     }
     
@@ -624,10 +634,21 @@ void FfmpegRecorder::Initialise(std::string filename)
 {
     av_register_all();
 
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
     int ret = avformat_alloc_output_context2(&oc, NULL, NULL, filename.c_str());
+#else
+    oc = avformat_alloc_context();
+    oc->oformat = av_guess_format(NULL, filename.c_str(), NULL);
+    int ret = oc->oformat ? 0 : -1;
+#endif
+
     if (ret < 0 || !oc) {
         std::cout << "Could not deduce output format from file extension: using MPEG." << std::endl;
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
         ret = avformat_alloc_output_context2(&oc, NULL, "mpeg", filename.c_str());
+#else
+        oc->oformat = av_guess_format("mpeg", filename.c_str(), NULL);
+#endif
         if (ret < 0 || !oc) throw VideoException("Couldn't create AVFormatContext");
     }
     
