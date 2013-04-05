@@ -140,13 +140,13 @@ protected:
     unsigned        w,h;
 };
 
-class FfmpegRecorder;
-class FfmpegRecorderStream
-    : public RecorderStreamInterface
+class FfmpegVideoOutput;
+class FfmpegVideoOutputStream
+    : public VideoOutputStreamInterface
 {
 public:
-    FfmpegRecorderStream(FfmpegRecorder& recorder, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height );
-    ~FfmpegRecorderStream();
+    FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height );
+    ~FfmpegVideoOutputStream();
     
     void WriteAvPacket(AVPacket* pkt);
     void WriteFrame(AVFrame* frame);
@@ -157,7 +157,7 @@ public:
     double BaseFrameTime();
     
 protected:
-    FfmpegRecorder& recorder;
+    FfmpegVideoOutput& recorder;
     AVPicture dst_picture;
     int64_t last_pts;
     
@@ -166,16 +166,16 @@ protected:
     SwsContext *sws_ctx;
 };
 
-class FfmpegRecorder
-    : public RecorderInterface
+class FfmpegVideoOutput
+    : public VideoOutputInterface
 {
-    friend class FfmpegRecorderStream;
+    friend class FfmpegVideoOutputStream;
 public:
-    FfmpegRecorder( const std::string& filename, int base_frame_rate, int bit_rate );
-    ~FfmpegRecorder();
+    FfmpegVideoOutput( const std::string& filename, int base_frame_rate, int bit_rate );
+    ~FfmpegVideoOutput();
     
     void AddStream(int w, int h, const std::string& encoder_fmt);
-    RecorderStreamInterface& operator[](size_t i);    
+    VideoOutputStreamInterface& operator[](size_t i);    
     
 //    // Save img (with correct format and resolution) to video, returning video frame id.
 //    int RecordFrame(uint8_t* img);
@@ -188,7 +188,7 @@ protected:
     std::string filename;
     bool started;
     AVFormatContext *oc;
-    std::vector<FfmpegRecorderStream*> streams;
+    std::vector<FfmpegVideoOutputStream*> streams;
     
     int frame_count;
     

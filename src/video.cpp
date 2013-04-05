@@ -45,7 +45,6 @@
 
 #include <pangolin/video/pvn_video.h>
 
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -54,7 +53,6 @@
 #define foreach BOOST_FOREACH
 
 using namespace std;
-using namespace boost;
 
 namespace pangolin
 {
@@ -75,37 +73,6 @@ VideoPixelFormat VideoFormatFromString(const std::string& format)
         if(!format.compare(SupportedVideoPixelFormats[i].format))
             return SupportedVideoPixelFormats[i];
     throw VideoException("Unknown Format",format);
-}
-
-std::string MakeFilenameUnique(const std::string& filename)
-{
-    if( boost::filesystem::exists(filename) ) {
-        const size_t dot = filename.find_last_of('.');
-        
-        std::string fn;
-        std::string ext;
-        
-        if(dot == filename.npos) {
-            fn = filename;
-            ext = "";
-        }else{
-            fn = filename.substr(0, dot);
-            ext = filename.substr(dot);
-        }
-        
-        int id = 1;
-        std::string new_file;
-        do {
-            id++;
-            std::stringstream ss;
-            ss << fn << "_" << id << ext;
-            new_file = ss.str();
-        }while( boost::filesystem::exists(new_file) );
-
-        return new_file;        
-    }else{
-        return filename;
-    }
 }
 
 ostream& operator<< (ostream &out, Uri &uri)
@@ -194,7 +161,7 @@ dc1394video_mode_t get_firewire_format7_mode(const string fmt)
 {
     const string FMT7_prefix = "FORMAT7_";
     
-    if( algorithm::starts_with(fmt, FMT7_prefix) )
+    if( boost::algorithm::starts_with(fmt, FMT7_prefix) )
     {
         int fmt7_mode = 0;
         std::istringstream iss( fmt.substr(FMT7_prefix.size()) );
@@ -245,7 +212,7 @@ VideoInterface* OpenVideo(std::string str_uri)
     
     Uri uri = ParseUri(str_uri);
     
-    if(!uri.scheme.compare("file") && algorithm::ends_with(uri.url,"pvn") )
+    if(!uri.scheme.compare("file") && boost::algorithm::ends_with(uri.url,"pvn") )
     {
         bool realtime = true;
         if(uri.params.find("realtime")!=uri.params.end()){
@@ -330,7 +297,7 @@ VideoInterface* OpenVideo(std::string str_uri)
         dc1394speed_t iso_speed = (dc1394speed_t)(log(desired_iso/100) / log(2));
         int dma_buffers = desired_dma;
         
-        if( algorithm::starts_with(desired_format, "FORMAT7") )
+        if( boost::algorithm::starts_with(desired_format, "FORMAT7") )
         {
             dc1394video_mode_t video_mode = get_firewire_format7_mode(desired_format);
             if( guid.guid == 0 ) {
@@ -456,81 +423,5 @@ bool VideoInput::GrabNewest( unsigned char* image, bool wait )
     if( !video ) throw VideoException("No video source open");
     return video->GrabNext(image,wait);
 }
-
-RecorderInterface* OpenRecorder(std::string str_uri)
-{
-    RecorderInterface* recorder = 0;
-    
-    Uri uri = ParseUri(str_uri);
-    
-#ifdef HAVE_FFMPEG    
-    if(!uri.scheme.compare("ffmpeg") )
-    {
-        int desired_frame_rate = uri.Get("fps", 30);
-        int desired_bit_rate = uri.Get("bps", 20000*1024);
-        std::string filename = uri.url;
-
-        if(uri.Contains("unique_filename")) {        
-            filename = MakeFilenameUnique(filename);
-        }
-        
-        recorder = new FfmpegRecorder(filename, desired_frame_rate, desired_bit_rate);
-    }else
-#endif
-    {
-        throw VideoException("Unable to open recorder URI");
-    }
-    
-    return recorder;
-}
-
-VideoOutput::VideoOutput()
-    : recorder(NULL)
-{
-}
-
-VideoOutput::VideoOutput(const std::string& uri)
-    : recorder(NULL)
-{
-    Open(uri);
-}
-
-VideoOutput::~VideoOutput()
-{
-    delete recorder;
-}
-
-bool VideoOutput::IsOpen() const
-{
-    return recorder;
-}
-
-void VideoOutput::Open(const std::string& uri)
-{
-    Reset();
-    recorder = OpenRecorder(uri);
-}
-
-void VideoOutput::Reset()
-{
-    if(recorder) {
-        delete recorder;
-        recorder = 0;
-    }    
-}
-
-
-void VideoOutput::AddStream(int w, int h, const std::string& encoder_fmt)
-{
-    if( !recorder ) throw VideoException("No recorder open");    
-    recorder->AddStream(w,h,encoder_fmt);
-}
-
-RecorderStreamInterface& VideoOutput::operator[](size_t i)
-{
-    if( !recorder ) throw VideoException("No recorder open");    
-    return recorder->operator [](i);    
-}
-
 
 }

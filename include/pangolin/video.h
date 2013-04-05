@@ -28,10 +28,6 @@
 #ifndef PANGOLIN_VIDEO_H
 #define PANGOLIN_VIDEO_H
 
-#include "pangolin.h"
-
-#include <pangolin/type_convert.h>
-
 // Pangolin video supports various cameras and file formats through
 // different 3rd party libraries.
 //
@@ -64,53 +60,10 @@
 // mjpeg - capture from (possibly networked) motion jpeg stream using FFMPEG
 //  e.g. "mjpeg://http://127.0.0.1/?action=stream"
 
+#include <pangolin/video_common.h>
+
 namespace pangolin
 {
-
-struct VideoException : std::exception
-{
-    VideoException(std::string str) : desc(str) {}
-    VideoException(std::string str, std::string detail) {
-        desc = str + "\n\t" + detail;
-    }
-    ~VideoException() throw() {}
-    const char* what() const throw() { return desc.c_str(); }
-    std::string desc;
-};
-
-struct VideoPixelFormat
-{
-    // Previously, VideoInterface::PixFormat returned a string.
-    // For compatibility, make this string convertable
-    inline operator std::string() const { return format; }
-    
-    std::string  format;
-    unsigned int channels;
-    unsigned int channel_bits[4];
-    unsigned int bpp;
-    bool planar;
-};
-
-struct Uri
-{
-    std::string scheme;
-    std::string url;
-    std::map<std::string,std::string> params;
-    
-    bool Contains(std::string key) {
-        return params.find(key) != params.end();
-    }
-    
-    template<typename T>
-    T Get(std::string key, T default_val) {
-        std::map<std::string,std::string>::iterator v = params.find(key);
-        if(v != params.end()) {
-            return Convert<T, std::string>::Do(v->second);
-        }else{
-            return default_val;
-        }
-    }
-};
 
 //! Return Pixel Format properties given string specification in
 //! FFMPEG notation.
@@ -167,45 +120,8 @@ protected:
     VideoPixelFormat fmt;
 };
 
-struct RecorderStreamInterface
-{
-    virtual ~RecorderStreamInterface() {}
-    virtual void WriteImage(uint8_t* img, int w, int h, const std::string& format, double time_s = -1) = 0;
-    virtual double BaseFrameTime() = 0;
-};
-
-//! Interface to video recording destinations
-struct RecorderInterface
-{
-    virtual ~RecorderInterface() {}
-    virtual void AddStream(int w, int h, const std::string& encoder_fmt) = 0;
-    virtual RecorderStreamInterface& operator[](size_t i) = 0;
-};
-
-struct VideoOutput : public RecorderInterface
-{
-public:
-    VideoOutput();
-    VideoOutput(const std::string& uri);
-    ~VideoOutput();
-    
-    bool IsOpen() const;
-    void Open(const std::string& uri);
-    void Reset();
-    
-    void AddStream(int w, int h, const std::string& encoder_fmt);
-    RecorderStreamInterface& operator[](size_t i);
-    
-protected:
-    RecorderInterface* recorder;
-};
-
-
 //! Open Video Interface from string specification (as described in this files header)
 VideoInterface* OpenVideo(std::string uri);
-
-//! Parse string as Video URI
-Uri ParseUri(std::string str_uri);
 
 }
 

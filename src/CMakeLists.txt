@@ -36,8 +36,8 @@ endif()
 
 option(BUILD_PANGOLIN_VIDEO "Build support for Pangolin Video Utilities" ON)
 if(BUILD_PANGOLIN_VIDEO)
-  list(APPEND HEADERS ${INCDIR}/video.h ${INCDIR}/video_recorder.h ${INCDIR}/video_record_repeat.h ${INCDIR}/video/pvn_video.h )
-  list(APPEND SOURCES video.cpp video_recorder.cpp video_record_repeat.cpp video/pvn_video.cpp )
+  list(APPEND HEADERS ${INCDIR}/video.h ${INCDIR}/video_common.h ${INCDIR}/video_output.h ${INCDIR}/video_recorder.h ${INCDIR}/video_record_repeat.h ${INCDIR}/video/pvn_video.h )
+  list(APPEND SOURCES video.cpp video_output.cpp video_recorder.cpp video_record_repeat.cpp video/pvn_video.cpp )
 endif()
 
 #######################################################

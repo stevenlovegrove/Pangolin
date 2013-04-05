@@ -42,6 +42,7 @@
 
 #ifdef BUILD_PANGOLIN_VIDEO
 #include <pangolin/video.h>
+#include <pangolin/video_output.h>
 #endif // BUILD_PANGOLIN_VIDEO
 
 // Let other libraries headers know about Pangolin

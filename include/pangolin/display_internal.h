@@ -30,10 +30,13 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/view.h>
-#include <pangolin/video.h>
 
 #include <boost/ptr_container/ptr_unordered_map.hpp>
 #include <queue>
+
+#ifdef BUILD_PANGOLIN_VIDEO
+#include <pangolin/video_output.h>
+#endif // BUILD_PANGOLIN_VIDEO
 
 #ifdef HAVE_CVARS
 #include <GLConsole/GLConsole.h>

@@ -488,7 +488,7 @@ static AVStream* CreateStream(AVFormatContext *oc, enum CodecID codec_id, uint64
     return stream;
 }
 
-void FfmpegRecorderStream::WriteAvPacket(AVPacket* pkt)
+void FfmpegVideoOutputStream::WriteAvPacket(AVPacket* pkt)
 {
     if (pkt->size) {
         pkt->stream_index = stream->index;
@@ -498,7 +498,7 @@ void FfmpegRecorderStream::WriteAvPacket(AVPacket* pkt)
     }
 }
 
-void FfmpegRecorderStream::WriteFrame(AVFrame* frame)
+void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
 {
     AVPacket pkt;
     pkt.data = NULL;
@@ -533,7 +533,7 @@ void FfmpegRecorderStream::WriteFrame(AVFrame* frame)
     av_free_packet(&pkt);
 }
 
-void FfmpegRecorderStream::WriteImage(AVPicture& src_picture, int w, int h, PixelFormat fmt, int64_t pts)
+void FfmpegVideoOutputStream::WriteImage(AVPicture& src_picture, int w, int h, PixelFormat fmt, int64_t pts)
 {
     AVCodecContext *c = stream->codec;
     
@@ -564,7 +564,7 @@ void FfmpegRecorderStream::WriteImage(AVPicture& src_picture, int w, int h, Pixe
     av_free(frame);
 }
 
-void FfmpegRecorderStream::WriteImage(uint8_t* img, int w, int h, const std::string& input_fmt, int64_t pts)
+void FfmpegVideoOutputStream::WriteImage(uint8_t* img, int w, int h, const std::string& input_fmt, int64_t pts)
 {
     recorder.StartStream();
     
@@ -585,18 +585,18 @@ void FfmpegRecorderStream::WriteImage(uint8_t* img, int w, int h, const std::str
     WriteImage(picture, w, h, fmt, pts);
 }
 
-void FfmpegRecorderStream::WriteImage(uint8_t* img, int w, int h, const std::string& input_format, double time)
+void FfmpegVideoOutputStream::WriteImage(uint8_t* img, int w, int h, const std::string& input_format, double time)
 {
     const int64_t pts = (time >= 0) ? time / BaseFrameTime() : last_pts + 1;
     WriteImage(img,w,h,input_format,pts);
 }
 
-double FfmpegRecorderStream::BaseFrameTime()
+double FfmpegVideoOutputStream::BaseFrameTime()
 {
     return (double)stream->codec->time_base.num / (double)stream->codec->time_base.den;
 }
 
-FfmpegRecorderStream::FfmpegRecorderStream(FfmpegRecorder& recorder, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height )
+FfmpegVideoOutputStream::FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height )
     : recorder(recorder), last_pts(-1), sws_ctx(NULL)
 {
     int ret;
@@ -608,7 +608,7 @@ FfmpegRecorderStream::FfmpegRecorderStream(FfmpegRecorder& recorder, enum CodecI
     if (ret < 0) throw VideoException("Could not allocate picture");    
 }
 
-FfmpegRecorderStream::~FfmpegRecorderStream()
+FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
 {
     if(sws_ctx) {
         sws_freeContext(sws_ctx);
@@ -618,19 +618,19 @@ FfmpegRecorderStream::~FfmpegRecorderStream()
     avcodec_close(stream->codec);
 }
 
-FfmpegRecorder::FfmpegRecorder(const std::string& filename, int base_frame_rate, int bit_rate)
+FfmpegVideoOutput::FfmpegVideoOutput(const std::string& filename, int base_frame_rate, int bit_rate)
     : filename(filename), started(false), oc(NULL),
       frame_count(0), base_frame_rate(base_frame_rate), bit_rate(bit_rate)
 {
     Initialise(filename);
 }
 
-FfmpegRecorder::~FfmpegRecorder()
+FfmpegVideoOutput::~FfmpegVideoOutput()
 {
     Close();
 }
 
-void FfmpegRecorder::Initialise(std::string filename)
+void FfmpegVideoOutput::Initialise(std::string filename)
 {
     av_register_all();
 
@@ -659,7 +659,7 @@ void FfmpegRecorder::Initialise(std::string filename)
     }    
 }
 
-void FfmpegRecorder::StartStream()
+void FfmpegVideoOutput::StartStream()
 {
     if(!started) {
         av_dump_format(oc, 0, filename.c_str(), 1);
@@ -672,11 +672,11 @@ void FfmpegRecorder::StartStream()
     }
 }
 
-void FfmpegRecorder::Close()
+void FfmpegVideoOutput::Close()
 {
     av_write_trailer(oc);
     
-    for(std::vector<FfmpegRecorderStream*>::iterator i = streams.begin(); i!=streams.end(); ++i)
+    for(std::vector<FfmpegVideoOutputStream*>::iterator i = streams.begin(); i!=streams.end(); ++i)
     {
         delete *i;
     }
@@ -686,12 +686,12 @@ void FfmpegRecorder::Close()
     avformat_free_context(oc);
 }
 
-void FfmpegRecorder::AddStream(int w, int h, const std::string& encoder_fmt)
+void FfmpegVideoOutput::AddStream(int w, int h, const std::string& encoder_fmt)
 {
-    streams.push_back( new FfmpegRecorderStream(*this, oc->oformat->video_codec, base_frame_rate, bit_rate, FfmpegFmtFromString(encoder_fmt), w, h) );    
+    streams.push_back( new FfmpegVideoOutputStream(*this, oc->oformat->video_codec, base_frame_rate, bit_rate, FfmpegFmtFromString(encoder_fmt), w, h) );    
 }
 
-RecorderStreamInterface& FfmpegRecorder::operator[](size_t i)
+VideoOutputStreamInterface& FfmpegVideoOutput::operator[](size_t i)
 {
     if(i < streams.size()) {
         return *streams[i];
