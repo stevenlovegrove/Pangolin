@@ -78,25 +78,14 @@ V4lVideo::~V4lVideo()
     close_device();
 }
 
-unsigned V4lVideo::Width() const
+const std::vector<StreamInfo>& V4lVideo::Streams() const
 {
-    return width;
-}
-
-unsigned V4lVideo::Height() const
-{
-    return height;
+    return streams;
 }
 
 size_t V4lVideo::SizeBytes() const
 {
     return image_size;
-}
-
-VideoPixelFormat V4lVideo::PixFormat() const
-{
-    // TODO: compute properly
-    return VideoFormatFromString("YUYV422");
 }
 
 bool V4lVideo::GrabNext( unsigned char* image, bool wait )
@@ -586,6 +575,12 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
         init_userp (dev_name, fmt.fmt.pix.sizeimage);
         break;
     }
+    
+    // populate streams for users to query
+    // TODO: Compute these properly!
+    const VideoPixelFormat pfmt = VideoFormatFromString("YUYV422");
+    const StreamInfo stream_info(pfmt, width, height, (width*pfmt.bpp)/8, 0);
+    streams.push_back(stream_info);
 }
 
 void V4lVideo::close_device()

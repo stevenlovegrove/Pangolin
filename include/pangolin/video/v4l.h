@@ -54,22 +54,22 @@ public:
     V4lVideo(const char* dev_name, io_method io = IO_METHOD_MMAP);
     ~V4lVideo();
     
-    //! Implement VideoSource::Start()
+    //! Implement VideoInput::Start()
     void Start();
     
-    //! Implement VideoSource::Stop()
+    //! Implement VideoInput::Stop()
     void Stop();
-    
-    unsigned Width() const;
-    
-    unsigned Height() const;
-    
+
+    //! Implement VideoInput::SizeBytes()
     size_t SizeBytes() const;
+
+    //! Implement VideoInput::Streams()
+    const std::vector<StreamInfo>& Streams() const;
     
-    VideoPixelFormat PixFormat() const;
-    
+    //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
     
+    //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
     
 protected:
@@ -86,6 +86,7 @@ protected:
     void open_device(const char* dev_name);
     void close_device();
     
+    std::vector<StreamInfo> streams;
     
     io_method io;
     int       fd;
