@@ -82,6 +82,22 @@ struct Uri
     }
 };
 
+struct ImageDim
+{
+    inline ImageDim() : x(0), y(0) {}
+    inline ImageDim(size_t x, size_t y) : x(x), y(y) {}
+    size_t x;
+    size_t y;
+};
+
+struct ImageRoi
+{
+    inline ImageRoi() : x(0), y(0), w(0), h(0) {}
+    inline ImageRoi(size_t x, size_t y, size_t w, size_t h) : x(x), y(y), w(w), h(h) {}
+    size_t x; size_t y;
+    size_t w; size_t h;
+};
+
 //! Parse string as Video URI
 Uri ParseUri(std::string str_uri);
 

@@ -59,6 +59,9 @@
 //
 // mjpeg - capture from (possibly networked) motion jpeg stream using FFMPEG
 //  e.g. "mjpeg://http://127.0.0.1/?action=stream"
+//
+// split - split a single stream video into a multi stream video based on Region of Interest
+//  e.g. "split:[roi1=0+0+640x480,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 
 #include <pangolin/video_common.h>
 #include <vector>

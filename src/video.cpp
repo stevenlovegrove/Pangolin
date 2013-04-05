@@ -44,6 +44,7 @@
 #endif
 
 #include <pangolin/video/pvn_video.h>
+#include <pangolin/video_splitter.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -89,17 +90,16 @@ ostream& operator<< (ostream &out, Uri &uri)
     return out;
 }
 
-struct ImageDim
-{
-    inline ImageDim() : x(0), y(0) {}
-    inline ImageDim(int x, int y) : x(x), y(y) {}
-    int x;
-    int y;
-};
-
 istream& operator>> (istream &is, ImageDim &dim)
 {
     is >> dim.x; is.get(); is >> dim.y;
+    return is;
+}
+
+istream& operator>> (istream &is, ImageRoi &roi)
+{
+    is >> roi.x; is.get(); is >> roi.y; is.get();
+    is >> roi.w; is.get(); is >> roi.h;
     return is;
 }
 
@@ -229,6 +229,28 @@ VideoInterface* OpenVideo(std::string str_uri)
     {
         const bool realtime = uri.Contains("realtime");
         video = new PvnVideo(uri.url.c_str(), realtime);
+    }else
+    if(!uri.scheme.compare("split"))
+    {
+        std::vector<ImageRoi> rois;
+
+        VideoInterface* subvid = OpenVideo(uri.url);
+        const ImageRoi default_roi(0,0, subvid->Streams()[0].Width(), subvid->Streams()[0].Height() );
+        
+        while(true)
+        {
+            std::stringstream ss;
+            ss << "roi" << (rois.size() + 1);
+            const std::string key = ss.str();
+            
+            if(!uri.Contains(key)) {
+                break;
+            }
+            
+            rois.push_back( uri.Get<ImageRoi>(key, default_roi));
+        }
+        
+        video = new VideoSplitter(subvid,rois);       
     }else
 #ifdef HAVE_FFMPEG
     if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){
