@@ -103,6 +103,13 @@ public:
     //! Offset in bytes relative to start of frame buffer
     inline unsigned char* Offset() const { return img_offset.ptr; }
     
+    //! Return Image wrapper around raw base pointer
+    Image<unsigned char> StreamImage(unsigned char* base_ptr) const {
+        Image<unsigned char> img = img_offset;
+        img.ptr += (size_t)base_ptr;
+        return img;
+    }
+    
 protected:
     VideoPixelFormat fmt;        
     Image<unsigned char> img_offset;
@@ -159,6 +166,9 @@ struct VideoInput : public VideoInterface
     void Stop();
     bool GrabNext( unsigned char* image, bool wait = true );
     bool GrabNewest( unsigned char* image, bool wait = true );
+
+    // experimental - not stable
+    bool Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait = true, bool newest = false);
     
 protected:
     std::string uri;

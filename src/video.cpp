@@ -89,6 +89,19 @@ ostream& operator<< (ostream &out, Uri &uri)
     return out;
 }
 
+struct ImageDim
+{
+    inline ImageDim() : x(0), y(0) {}
+    inline ImageDim(int x, int y) : x(x), y(y) {}
+    int x;
+    int y;
+};
+
+istream& operator>> (istream &is, ImageDim &dim)
+{
+    is >> dim.x; is.get(); is >> dim.y;
+    return is;
+}
 
 VideoInput::VideoInput()
     : uri(""), video(0)
@@ -241,24 +254,12 @@ VideoInterface* OpenVideo(std::string str_uri)
     if(!uri.scheme.compare("firewire") || !uri.scheme.compare("dc1394") ) {
         string desired_format = uri.Get<std::string>("fmt","RGB24");
         boost::to_upper(desired_format);
+        const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+        const ImageDim desired_xy  = uri.Get<ImageDim>("pos", ImageDim(0,0));
         const int desired_dma = uri.Get<int>("dma", 10);
         const int desired_iso = uri.Get<int>("iso", 400);
         const float desired_fps = uri.Get<float>("fps", 30);
-        
-        int desired_width = 640;
-        int desired_height = 480;
-        if(uri.params.find("size")!=uri.params.end()){
-            std::istringstream iss(uri.params["size"]);
-            iss >> desired_width; iss.get(); iss >> desired_height;
-        }
-
-        int desired_x = 0;
-        int desired_y = 0;
-        if(uri.params.find("pos")!=uri.params.end()){
-            std::istringstream iss(uri.params["pos"]);
-            iss >> desired_x; iss.get(); iss >> desired_y;
-        }
-        
+                
         Guid guid = 0;
         unsigned deviceid = 0;
         dc1394framerate_t framerate = get_firewire_framerate(desired_fps);
@@ -269,12 +270,12 @@ VideoInterface* OpenVideo(std::string str_uri)
         {
             dc1394video_mode_t video_mode = get_firewire_format7_mode(desired_format);
             if( guid.guid == 0 ) {
-                video = new FirewireVideo(deviceid,video_mode,FirewireVideo::MAX_FR,desired_width, desired_height, desired_x, desired_y, iso_speed, dma_buffers,true);
+                video = new FirewireVideo(deviceid,video_mode,FirewireVideo::MAX_FR, desired_dim.x, desired_dim.y, desired_xy.x, desired_xy.y, iso_speed, dma_buffers,true);
             }else{
-                video = new FirewireVideo(guid,video_mode,FirewireVideo::MAX_FR,desired_width, desired_height, desired_x, desired_y, iso_speed, dma_buffers,true);
+                video = new FirewireVideo(guid,video_mode,FirewireVideo::MAX_FR, desired_dim.x, desired_dim.y, desired_xy.x, desired_xy.y, iso_speed, dma_buffers,true);
             }
         }else{
-            dc1394video_mode_t video_mode = get_firewire_mode(desired_width,desired_height,desired_format);
+            dc1394video_mode_t video_mode = get_firewire_mode(desired_dim.x, desired_dim.y,desired_format);
             if( guid.guid == 0 ) {
                 video = new FirewireVideo(deviceid,video_mode,framerate,iso_speed,dma_buffers);
             }else{
@@ -393,6 +394,28 @@ bool VideoInput::GrabNewest( unsigned char* image, bool wait )
 {
     if( !video ) throw VideoException("No video source open");
     return video->GrabNext(image,wait);
+}
+
+bool VideoInput::Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait, bool newest)
+{
+    if( !video ) throw VideoException("No video source open");
+    
+    bool success;
+    
+    if(newest) {
+        success = GrabNewest(buffer, wait);
+    }else{
+        success = GrabNext(buffer, wait);
+    }
+    
+    if(success) {
+        images.clear();
+        for(size_t s=0; s < Streams().size(); ++s) {
+            images.push_back(Streams()[s].StreamImage(buffer));
+        }
+    }
+    
+    return success;
 }
 
 }
