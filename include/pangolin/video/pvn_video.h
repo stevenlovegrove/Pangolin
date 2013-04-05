@@ -36,38 +36,36 @@
 namespace pangolin
 {
 
-struct VideoStream
-{
-    std::string name;
-    VideoPixelFormat fmt;
-    int w,h;
-    size_t frame_size_bytes;
-};
-
 class PvnVideo : public VideoInterface
 {
 public:
     PvnVideo(const char* filename, bool realtime = false);
     ~PvnVideo();
     
-    // Implement VideoInterface
+    //! Implement VideoInput::Start()
     void Start();
+    
+    //! Implement VideoInput::Stop()
     void Stop();
-    
-    unsigned Width() const;
-    unsigned Height() const;
-    
+
+    //! Implement VideoInput::SizeBytes()
     size_t SizeBytes() const;
-    VideoPixelFormat PixFormat() const;
+
+    //! Implement VideoInput::Streams()
+    const std::vector<StreamInfo>& Streams() const;
     
+    //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
+    
+    //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
     
 protected:
     int frames;
     std::ifstream file;
-    std::vector<VideoStream> stream_info;
-    
+
+    std::vector<StreamInfo> streams;
+    size_t frame_size_bytes;
     
     bool realtime;
     pangolin::basetime frame_interval;

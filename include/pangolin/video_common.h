@@ -67,12 +67,12 @@ struct Uri
     std::string url;
     std::map<std::string,std::string> params;
     
-    bool Contains(std::string key) {
+    bool Contains(const std::string& key) {
         return params.find(key) != params.end();
     }
     
     template<typename T>
-    T Get(std::string key, T default_val) {
+    T Get(const std::string& key, T default_val) {
         std::map<std::string,std::string>::iterator v = params.find(key);
         if(v != params.end()) {
             return Convert<T, std::string>::Do(v->second);
@@ -84,6 +84,10 @@ struct Uri
 
 //! Parse string as Video URI
 Uri ParseUri(std::string str_uri);
+
+//! Return Pixel Format properties given string specification in
+//! FFMPEG notation.
+VideoPixelFormat VideoFormatFromString(const std::string& format);
 
 }
 

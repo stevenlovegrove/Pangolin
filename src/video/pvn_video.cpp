@@ -35,7 +35,7 @@ namespace pangolin
 {
 
 PvnVideo::PvnVideo(const char* filename, bool realtime )
-    : realtime(realtime), last_frame(TimeNow())
+    : frame_size_bytes(0), realtime(realtime), last_frame(TimeNow())
 {
     file.open(filename, ios::binary );
     
@@ -47,29 +47,30 @@ PvnVideo::PvnVideo(const char* filename, bool realtime )
 
 PvnVideo::~PvnVideo()
 {
-    
 }
 
 void PvnVideo::ReadFileHeader()
 {
     string sfmt;
     float framerate;
-    
-    VideoStream strm0;
+    unsigned w, h;
+        
     file >> sfmt;
-    file >> strm0.w;
-    file >> strm0.h;
+    file >> w;
+    file >> h;
     file >> framerate;
     file.get();
-    
-    if(file.bad() || !(strm0.w >0 && strm0.h >0) )
+
+    if(file.bad() || !(w >0 && h >0) )
         throw VideoException("Unable to read video header");
     
-    strm0.fmt = VideoFormatFromString(sfmt);
-    strm0.frame_size_bytes = (strm0.w * strm0.h * strm0.fmt.bpp) / 8;
+    const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
+    StreamInfo strm0( fmt, w, h, (w*fmt.bpp) / 8, 0);
+    
+    frame_size_bytes += strm0.Pitch() * strm0.Height();
     frame_interval = TimeFromSeconds( 1.0 / framerate);
     
-    stream_info.push_back(strm0);
+    streams.push_back(strm0);
 }
 
 
@@ -81,29 +82,19 @@ void PvnVideo::Stop()
 {
 }
 
-unsigned PvnVideo::Width() const
-{
-    return stream_info[0].w;
-}
-
-unsigned PvnVideo::Height() const
-{
-    return stream_info[0].h;
-}
-
 size_t PvnVideo::SizeBytes() const
 {
-    return stream_info[0].frame_size_bytes;
+    return frame_size_bytes;
 }
 
-VideoPixelFormat PvnVideo::PixFormat() const
+const std::vector<StreamInfo>& PvnVideo::Streams() const
 {
-    return VideoFormatFromString(stream_info[0].fmt.format);
+    return streams;
 }
 
 bool PvnVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
-    file.read((char*)image,stream_info[0].frame_size_bytes);
+    file.read((char*)image, frame_size_bytes);
     
     const basetime next_frame = TimeAdd(last_frame, frame_interval);
     

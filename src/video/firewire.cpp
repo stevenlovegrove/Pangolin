@@ -93,7 +93,8 @@ void FirewireVideo::init_camera(
     //-----------------------------------------------------------------------
     dc1394_get_image_size_from_video_mode(camera, video_mode, &width, &height);
     
-    Start();
+    init_stream_info();
+    Start();    
 }
 
 
@@ -233,6 +234,7 @@ void FirewireVideo::init_format7_camera(
     if( err != DC1394_SUCCESS )
         throw VideoException("Could not setup camera - check settings");
     
+    init_stream_info();
     Start();
 }
 
@@ -362,19 +364,31 @@ void Dc1394ModeDetails(dc1394video_mode_t mode, unsigned& w, unsigned& h, string
     }
 }
 
-VideoPixelFormat FirewireVideo::PixFormat() const
+void FirewireVideo::init_stream_info()
 {
+    streams.clear();
+    
     dc1394video_mode_t video_mode;
     dc1394color_coding_t color_coding;
     dc1394_video_get_mode(camera,&video_mode);
     dc1394_get_color_coding_from_video_mode(camera,video_mode,&color_coding);
     const std::string strformat = Dc1394ColorCodingToString(color_coding);
-    return VideoFormatFromString(strformat);
+    const VideoPixelFormat fmt = VideoFormatFromString(strformat);
+    
+    StreamInfo stream(fmt, width, height, (width*fmt.bpp)/8, 0 );
+    streams.push_back( stream );
+    
+    frame_size_bytes = stream.Pitch() * stream.Height();
+}
+
+const std::vector<StreamInfo>& FirewireVideo::Streams() const
+{
+    return streams;
 }
 
 size_t FirewireVideo::SizeBytes() const
 {
-    return (Width() * Height() * VideoFormatFromString(PixFormat()).bpp) / 8;
+    return frame_size_bytes;
 }
 
 void FirewireVideo::Start()

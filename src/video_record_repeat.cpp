@@ -62,10 +62,12 @@ void VideoRecordRepeat::Record()
         delete video_file;
         video_file = 0;
     }
+    
+    const StreamInfo& s0 = video_src->Streams()[0];
 
     video_recorder = new VideoRecorder(
-        filename, video_src->Width(), video_src->Height(),
-        video_src->PixFormat(), buffer_size_bytes
+        filename, s0.Width(), s0.Height(),
+        s0.PixFormat(), buffer_size_bytes
     );
 
     video_src->Start();
@@ -106,29 +108,28 @@ void VideoRecordRepeat::Source()
     frame_num = 0;
 }
 
-unsigned VideoRecordRepeat::Width() const
-{
-    if( !video_src ) throw VideoException("No video source open");
-    return video_src->Width();
-
-}
-
-unsigned VideoRecordRepeat::Height() const
-{
-    if( !video_src ) throw VideoException("No video source open");
-    return video_src->Height();
-}
-
 size_t VideoRecordRepeat::SizeBytes() const
 {
     if( !video_src ) throw VideoException("No video source open");
     return video_src->SizeBytes();
 }
 
+unsigned VideoRecordRepeat::Width() const
+{
+    if( !video_src ) throw VideoException("No video source open");
+    return video_src->Streams()[0].Width();
+}
+
+unsigned VideoRecordRepeat::Height() const
+{
+    if( !video_src ) throw VideoException("No video source open");
+    return video_src->Streams()[0].Height();
+}
+
 VideoPixelFormat VideoRecordRepeat::PixFormat() const
 {
     if( !video_src ) throw VideoException("No video source open");
-    return video_src->PixFormat();
+    return video_src->Streams()[0].PixFormat();
 }
 
 void VideoRecordRepeat::Start()

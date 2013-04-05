@@ -55,26 +55,28 @@ public:
     FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false, int user_video_stream = -1);
     ~FfmpegVideo();
     
-    //! Implement VideoSource::Start()
+    //! Implement VideoInput::Start()
     void Start();
     
-    //! Implement VideoSource::Stop()
+    //! Implement VideoInput::Stop()
     void Stop();
-    
-    unsigned Width() const;
-    
-    unsigned Height() const;
-    
+
+    //! Implement VideoInput::SizeBytes()
     size_t SizeBytes() const;
+
+    //! Implement VideoInput::Streams()
+    const std::vector<StreamInfo>& Streams() const;
     
-    VideoPixelFormat PixFormat() const;
-    
+    //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
     
+    //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
     
 protected:
     void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false , int user_video_stream = -1);
+    
+    std::vector<StreamInfo> streams;
     
     SwsContext      *img_convert_ctx;
     AVFormatContext *pFormatCtx;
@@ -113,19 +115,27 @@ public:
     FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_POINT);
     ~FfmpegConverter();
     
+    //! Implement VideoInput::Start()
     void Start();
+    
+    //! Implement VideoInput::Stop()
     void Stop();
-    
-    unsigned Width() const;
-    unsigned Height() const;
+
+    //! Implement VideoInput::SizeBytes()
     size_t SizeBytes() const;
+
+    //! Implement VideoInput::Streams()
+    const std::vector<StreamInfo>& Streams() const;
     
-    VideoPixelFormat PixFormat() const;
-    
+    //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
+    
+    //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
     
 protected:
+    std::vector<StreamInfo> streams;
+    
     VideoInterface* videoin;
     SwsContext *img_convert_ctx;
     

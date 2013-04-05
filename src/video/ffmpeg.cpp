@@ -254,6 +254,11 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     if(img_convert_ctx == NULL) {
         throw VideoException("Cannot initialize the conversion context");
     }
+    
+    // Populate stream info for users to query
+    const VideoPixelFormat strm_fmt = VideoFormatFromString(FfmpegFmtToString(fmtout));
+    const StreamInfo stream(strm_fmt, w, h, (w*strm_fmt.bpp)/8, 0);
+    streams.push_back(stream);
 }
 
 FfmpegVideo::~FfmpegVideo()
@@ -280,25 +285,14 @@ FfmpegVideo::~FfmpegVideo()
     sws_freeContext(img_convert_ctx);
 }
 
-
-unsigned FfmpegVideo::Width() const
+const std::vector<StreamInfo>& FfmpegVideo::Streams() const
 {
-    return pVidCodecCtx->width;
-}
-
-unsigned FfmpegVideo::Height() const
-{
-    return pVidCodecCtx->height;
+    return streams;
 }
 
 size_t FfmpegVideo::SizeBytes() const
 {
     return numBytesOut;
-}
-
-VideoPixelFormat FfmpegVideo::PixFormat() const
-{
-    return VideoFormatFromString(FfmpegFmtToString(fmtout));
 }
 
 void FfmpegVideo::Start()
@@ -340,16 +334,22 @@ bool FfmpegVideo::GrabNewest(unsigned char *image, bool wait)
     return GrabNext(image,wait);
 }
 
-FfmpegConverter::FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout, FfmpegMethod method )
+FfmpegConverter::FfmpegConverter(VideoInterface* videoin, const std::string sfmtdst, FfmpegMethod method )
     :videoin(videoin)
 {
     if( !videoin )
         throw VideoException("Source video interface not specified");
     
-    w = videoin->Width();
-    h = videoin->Height();
-    fmtsrc = FfmpegFmtFromString(videoin->PixFormat());
-    fmtdst = FfmpegFmtFromString(pixelfmtout);
+    if( videoin->Streams().size() != 1)
+        throw VideoException("FfmpegConverter currently only supports one input stream.");
+    
+    const StreamInfo instrm = videoin->Streams()[0];
+    
+    w = instrm.Width();
+    h = instrm.Height();
+    
+    fmtsrc = FfmpegFmtFromString(instrm.PixFormat());
+    fmtdst = FfmpegFmtFromString(sfmtdst);
     
     img_convert_ctx = sws_getContext(
                 w, h, fmtsrc,
@@ -367,6 +367,11 @@ FfmpegConverter::FfmpegConverter(VideoInterface* videoin, const std::string pixe
     avdst = avcodec_alloc_frame();
     avpicture_fill((AVPicture*)avsrc,bufsrc,fmtsrc,w,h);
     avpicture_fill((AVPicture*)avdst,bufdst,fmtdst,w,h);
+    
+    // Create output stream info
+    VideoPixelFormat pxfmtdst = VideoFormatFromString(sfmtdst);
+    const StreamInfo sdst( pxfmtdst, w, h, (w*pxfmtdst.bpp)/8, 0 );
+    streams.push_back(sdst);
 }
 
 FfmpegConverter::~FfmpegConverter()
@@ -388,24 +393,14 @@ void FfmpegConverter::Stop()
     // No-Op
 }
 
-unsigned FfmpegConverter::Width() const
-{
-    return w;
-}
-
-unsigned FfmpegConverter::Height() const
-{
-    return h;
-}
-
 size_t FfmpegConverter::SizeBytes() const
 {
     return numbytesdst;
 }
 
-VideoPixelFormat FfmpegConverter::PixFormat() const
+const std::vector<StreamInfo>& FfmpegConverter::Streams() const
 {
-    return VideoFormatFromString(FfmpegFmtToString(fmtdst));
+    return streams;
 }
 
 bool FfmpegConverter::GrabNext( unsigned char* image, bool wait )

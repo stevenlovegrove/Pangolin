@@ -26,27 +26,36 @@ struct OpenNiVideo : public VideoInterface
 public:
     OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2);
     ~OpenNiVideo();
-    unsigned Width() const;
-    unsigned Height() const;
-    size_t SizeBytes() const;
-    
-    VideoPixelFormat PixFormat() const;
-    
+
+    //! Implement VideoInput::Start()
     void Start();
+    
+    //! Implement VideoInput::Stop()
     void Stop();
+
+    //! Implement VideoInput::SizeBytes()
+    size_t SizeBytes() const;
+
+    //! Implement VideoInput::Streams()
+    const std::vector<StreamInfo>& Streams() const;
+    
+    //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
+    
+    //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
     
 protected:
+    std::vector<StreamInfo> streams;
+    
     xn::Context context;
     xn::DepthGenerator depthNode;
     xn::ImageGenerator imageNode;
     xn::IRGenerator irNode;
     
-    OpenNiSensorType s1;
-    OpenNiSensorType s2;
-    size_t s1SizeBytes;
-    size_t s2SizeBytes;
+    OpenNiSensorType sensor_type[2];
+    size_t sensor_SizeBytes[2];
+
     size_t sizeBytes;
 };
 

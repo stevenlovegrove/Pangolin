@@ -68,7 +68,7 @@ public:
     
 protected:       
     int frames;
-    std::vector<VideoStream> stream_info;
+    std::vector<StreamInfo> streams;
     
     threadedfilebuf buffer;
     std::ostream writer;

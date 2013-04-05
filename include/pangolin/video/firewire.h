@@ -119,29 +119,31 @@ public:
     
     ~FirewireVideo();
     
-    //! Implement VideoSource::Width()
-    unsigned Width() const { return width; }
-    
-    //! Implement VideoSource::Height()
-    unsigned Height() const { return height; }
-    
-    //! Implement VideoSource::SizeBytes()
-    size_t SizeBytes() const;
-    
-    //! Implement VideoSource::PixFormat()
-    VideoPixelFormat PixFormat() const;
-    
-    //! Implement VideoSource::Start()
+    //! Implement VideoInput::Start()
     void Start();
     
-    //! Implement VideoSource::Stop()
+    //! Implement VideoInput::Stop()
     void Stop();
+
+    //! Implement VideoInput::SizeBytes()
+    size_t SizeBytes() const;
+
+    //! Implement VideoInput::Streams()
+    const std::vector<StreamInfo>& Streams() const;
     
-    //! Implement VideoSource::GrabNext()
+    //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
     
-    //! Implement VideoSource::GrabNewest()
+    //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
+
+    //! (deprecated: use Streams[i].Width())
+    //! Return image width
+    unsigned Width() const { return width; }
+    
+    //! (deprecated: use Streams[i].Height())
+    //! Return image height
+    unsigned Height() const { return height; }
     
     //! Return object containing reference to image data within
     //! DMA buffer. The FirewireFrame must be returned to
@@ -213,6 +215,7 @@ public:
     uint32_t GetControlRegister(uint64_t offset);
     
 protected:
+    void init_stream_info();
     
     void init_camera(
             uint64_t guid, int dma_frames,
@@ -232,6 +235,9 @@ protected:
     
     static int nearest_value(int value, int step, int min, int max);
     static double bus_period_from_iso_speed(dc1394speed_t iso_speed);
+    
+    size_t frame_size_bytes;
+    std::vector<StreamInfo> streams;
     
     bool running;
     dc1394camera_t *camera;

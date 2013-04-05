@@ -61,25 +61,68 @@
 //  e.g. "mjpeg://http://127.0.0.1/?action=stream"
 
 #include <pangolin/video_common.h>
+#include <vector>
 
 namespace pangolin
 {
 
-//! Return Pixel Format properties given string specification in
-//! FFMPEG notation.
-VideoPixelFormat VideoFormatFromString(const std::string& format);
+template<typename T>
+struct Image {
+    inline Image(size_t w, size_t h, size_t pitch, unsigned char* ptr)
+        : pitch(pitch), ptr(ptr), w(w), h(h)
+    {
+    }
+    
+    size_t pitch;
+    T* ptr;
+    size_t w;
+    size_t h;
+};
+
+class StreamInfo
+{
+public:
+    inline StreamInfo(VideoPixelFormat fmt, size_t w, size_t h, size_t pitch, unsigned char* offset)
+        : fmt(fmt), img_offset(w,h,pitch,offset) {}
+    
+    //! Format representing how image is layed out in memory
+    inline VideoPixelFormat PixFormat() const { return fmt; }
+    
+    //! Image width in pixels
+    inline size_t Width() const { return img_offset.w; }
+    
+    //! Image height in pixels
+    inline size_t Height() const { return img_offset.h; }
+    
+    //! Pitch: Number of bytes between one image row and the next
+    inline size_t Pitch() const { return img_offset.pitch; }
+    
+    //! Number of contiguous bytes in memory that the image occupies
+    inline size_t SizeBytes() const { return img_offset.h * img_offset.pitch; }
+    
+    //! Offset in bytes relative to start of frame buffer
+    inline unsigned char* Offset() const { return img_offset.ptr; }
+    
+protected:
+    VideoPixelFormat fmt;        
+    Image<unsigned char> img_offset;
+};
 
 //! Interface to video capture sources
 struct VideoInterface
 {
     virtual ~VideoInterface() {}
-    virtual unsigned Width() const = 0;
-    virtual unsigned Height() const = 0;
+
+    //! Required buffer size to store all frames
     virtual size_t SizeBytes() const = 0;
     
-    virtual VideoPixelFormat PixFormat() const = 0;
+    //! Get format and dimensions of all video streams
+    virtual const std::vector<StreamInfo>& Streams() const = 0;
     
+    //! Start Video device
     virtual void Start() = 0;
+    
+    //! Stop Video device
     virtual void Stop() = 0;
     
     //! Copy the next frame from the camera to image.
@@ -104,9 +147,12 @@ struct VideoInput : public VideoInterface
     void Open(std::string uri);
     void Reset();
     
+    size_t SizeBytes() const;
+    const std::vector<StreamInfo>& Streams() const;
+    
+    // Return details of first stream
     unsigned Width() const;
     unsigned Height() const;
-    size_t SizeBytes() const;
     VideoPixelFormat PixFormat() const;
     
     void Start();
@@ -117,7 +163,6 @@ struct VideoInput : public VideoInterface
 protected:
     std::string uri;
     VideoInterface* video;
-    VideoPixelFormat fmt;
 };
 
 //! Open Video Interface from string specification (as described in this files header)

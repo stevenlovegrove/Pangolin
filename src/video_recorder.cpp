@@ -38,14 +38,9 @@ VideoRecorder::VideoRecorder(
     unsigned int buffer_size_bytes
     ) : frames(0), buffer(filename, buffer_size_bytes), writer(&buffer)
 {
-    VideoStream strm0;
-    strm0.name = "main";
-    strm0.w = stream0_width;
-    strm0.h = stream0_height;
-    strm0.fmt = VideoFormatFromString(stream0_fmt);
-    strm0.frame_size_bytes = (strm0.w * strm0.h * strm0.fmt.bpp) / 8;
-
-    stream_info.push_back(strm0);
+    const VideoPixelFormat fmt = VideoFormatFromString(stream0_fmt);
+    const StreamInfo strm0(fmt, stream0_width, stream0_height, (stream0_width*fmt.bpp)/8, 0);
+    streams.push_back(strm0);
 }
 
 VideoRecorder::~VideoRecorder()
@@ -54,23 +49,21 @@ VideoRecorder::~VideoRecorder()
 
 void VideoRecorder::WriteFileHeader()
 {
-    writer << stream_info[0].fmt.format << "\n";
-    writer << stream_info[0].w  << "\n";
-    writer << stream_info[0].h  << "\n";
+    writer << streams[0].PixFormat().format << "\n";
+    writer << streams[0].Width()  << "\n";
+    writer << streams[0].Height()  << "\n";
     writer << "30.0\n";
 }
 
 int VideoRecorder::RecordFrame(uint8_t* img)
 {
-    if( stream_info.size() != 1 )
+    if( streams.size() != 1 )
         throw VideoRecorderException("Incorrect number of frames specified");
 
     if(frames==0)
         WriteFileHeader();
 
-    const VideoStream& strm = stream_info[0];
-
-    writer.write((char*)img,strm.frame_size_bytes);
+    writer.write((char*)img, streams[0].SizeBytes() );
 
     return frames++;
 }

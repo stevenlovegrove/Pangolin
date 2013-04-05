@@ -214,32 +214,20 @@ VideoInterface* OpenVideo(std::string str_uri)
     
     if(!uri.scheme.compare("file") && boost::algorithm::ends_with(uri.url,"pvn") )
     {
-        bool realtime = true;
-        if(uri.params.find("realtime")!=uri.params.end()){
-            std::istringstream iss(uri.params["realtime"]);
-            iss >> realtime;
-        }
+        const bool realtime = uri.Contains("realtime");
         video = new PvnVideo(uri.url.c_str(), realtime);
     }else
 #ifdef HAVE_FFMPEG
     if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){
-        string outfmt = "RGB24";
-        if(uri.params.find("fmt")!=uri.params.end()){
-            outfmt = uri.params["fmt"];
-        }
-        int video_stream = -1;
-        if(uri.params.find("stream")!=uri.params.end()){
-            std::istringstream iss(uri.params["stream"]);
-            iss >> video_stream;
-        }
+        string outfmt = uri.Get<std::string>("fmt","RGB24");
+        boost::to_upper(outfmt);
+        const int video_stream = uri.Get<int>("stream",-1);
         video = new FfmpegVideo(uri.url.c_str(), outfmt, "", false, video_stream);
     }else if( !uri.scheme.compare("mjpeg")) {
         video = new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" );
     }else if( !uri.scheme.compare("convert") ) {
-        string outfmt = "RGB24";
-        if(uri.params.find("fmt")!=uri.params.end()){
-            outfmt = uri.params["fmt"];
-        }
+        string outfmt = uri.Get<std::string>("fmt","RGB24");
+        boost::to_upper(outfmt);
         VideoInterface* subvid = OpenVideo(uri.url);
         video = new FfmpegConverter(subvid,outfmt,FFMPEG_POINT);
     }else
@@ -251,44 +239,24 @@ VideoInterface* OpenVideo(std::string str_uri)
 #endif // HAVE_V4L
 #ifdef HAVE_DC1394
     if(!uri.scheme.compare("firewire") || !uri.scheme.compare("dc1394") ) {
-        // Default parameters
-        int desired_x = 0;
-        int desired_y = 0;
+        string desired_format = uri.Get<std::string>("fmt","RGB24");
+        boost::to_upper(desired_format);
+        const int desired_dma = uri.Get<int>("dma", 10);
+        const int desired_iso = uri.Get<int>("iso", 400);
+        const float desired_fps = uri.Get<float>("fps", 30);
+        
         int desired_width = 640;
         int desired_height = 480;
-        int desired_dma = 10;
-        int desired_iso = 400;
-        float desired_fps = 30;
-        string desired_format = "RGB24";
-        
-        // Parse parameters
-        if(uri.params.find("fmt")!=uri.params.end()){
-            desired_format = uri.params["fmt"];
-            boost::to_upper(desired_format);
-        }
         if(uri.params.find("size")!=uri.params.end()){
             std::istringstream iss(uri.params["size"]);
-            iss >> desired_width;
-            iss.get();
-            iss >> desired_height;
+            iss >> desired_width; iss.get(); iss >> desired_height;
         }
+
+        int desired_x = 0;
+        int desired_y = 0;
         if(uri.params.find("pos")!=uri.params.end()){
             std::istringstream iss(uri.params["pos"]);
-            iss >> desired_x;
-            iss.get();
-            iss >> desired_y;
-        }
-        if(uri.params.find("dma")!=uri.params.end()){
-            std::istringstream iss(uri.params["dma"]);
-            iss >> desired_dma;
-        }
-        if(uri.params.find("iso")!=uri.params.end()){
-            std::istringstream iss(uri.params["iso"]);
-            iss >> desired_iso;
-        }
-        if(uri.params.find("fps")!=uri.params.end()){
-            std::istringstream iss(uri.params["fps"]);
-            iss >> desired_fps;
+            iss >> desired_x; iss.get(); iss >> desired_y;
         }
         
         Guid guid = 0;
@@ -366,26 +334,11 @@ void VideoInput::Open(std::string uri)
     
     // Create video device
     video = OpenVideo(uri);
-    
-    // Cache video format object
-    fmt = video->PixFormat();
 }
 
 void VideoInput::Reset()
 {
     Open(uri);
-}
-
-unsigned VideoInput::Width() const
-{
-    if( !video ) throw VideoException("No video source open");
-    return video->Width();
-}
-
-unsigned VideoInput::Height() const
-{
-    if( !video ) throw VideoException("No video source open");
-    return video->Height();
 }
 
 size_t VideoInput::SizeBytes() const
@@ -394,10 +347,28 @@ size_t VideoInput::SizeBytes() const
     return video->SizeBytes();
 }
 
+const std::vector<StreamInfo>& VideoInput::Streams() const
+{
+    if( !video ) throw VideoException("No video source open");
+    return video->Streams();
+}
+
+unsigned VideoInput::Width() const
+{
+    if( !video ) throw VideoException("No video source open");
+    return video->Streams()[0].Width();
+}
+
+unsigned VideoInput::Height() const
+{
+    if( !video ) throw VideoException("No video source open");
+    return video->Streams()[0].Height();
+}
+
 VideoPixelFormat VideoInput::PixFormat() const
 {
     if( !video ) throw VideoException("No video source open");
-    return fmt;
+    return Streams()[0].PixFormat();
 }
 
 void VideoInput::Start()
