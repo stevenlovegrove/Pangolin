@@ -71,7 +71,7 @@ public:
     
     //! data_layout normally one of GL_LUMINANCE, GL_RGB, ...
     //! data_type normally one of GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_FLOAT
-    void Upload(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT);
+    void Upload(const void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT);
     
     void Download(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT) const;
     
@@ -318,7 +318,7 @@ inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sam
     CheckGlDieOnError();
 }
 
-inline void GlTexture::Upload(void* image, GLenum data_layout, GLenum data_type )
+inline void GlTexture::Upload(const void* image, GLenum data_layout, GLenum data_type )
 {
     Bind();
     glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_layout,data_type,image);
