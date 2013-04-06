@@ -28,6 +28,8 @@
 #ifndef PANGOLIN_GLDRAW_H
 #define PANGOLIN_GLDRAW_H
 
+#include <pangolin/glinclude.h>
+
 #ifdef HAVE_EIGEN
 #include <Eigen/Eigen>
 #endif // HAVE_EIGEN
@@ -161,6 +163,11 @@ inline void glDrawAxis(float s)
 }
 
 #ifdef HAVE_EIGEN
+inline void glVertex( const Eigen::Vector3d& p )
+{
+    glVertex3dv(p.data());
+}
+
 inline void glDrawLine( const Eigen::Vector2d& p1, const Eigen::Vector2d& p2 )
 {
     glDrawLine(p1(0), p1(1), p2(0), p2(1));
@@ -185,6 +192,47 @@ inline void glDrawCirclePerimeter( const Eigen::Vector2d& p, double radius = 5 )
 {
     glDrawCirclePerimeter(p(0), p(1), radius);
 }
+
+inline void glSetFrameOfReference( const Eigen::Matrix4d& T_wf )
+{
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glMultMatrixd( T_wf.data() );
+}
+
+inline void glUnsetFrameOfReference()
+{
+    glPopMatrix();
+}
+
+inline void glDrawAxis( const Eigen::Matrix4d& T_wf, float scale )
+{
+    glSetFrameOfReference(T_wf);
+    glDrawAxis(scale);
+    glUnsetFrameOfReference();
+}
+
+inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, float scale )
+{
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex3d(0,0,0);
+    glVertex( scale * Kinv * Eigen::Vector3d(0,0,1) );
+    glVertex( scale * Kinv * Eigen::Vector3d(w,0,1) );
+    glVertex( scale * Kinv * Eigen::Vector3d(w,h,1) );
+    glVertex( scale * Kinv * Eigen::Vector3d(0,h,1) );
+    glVertex( scale * Kinv * Eigen::Vector3d(0,0,1) );
+    glEnd();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, const Eigen::Matrix4d& T_wf, float scale )
+{
+    glSetFrameOfReference(T_wf);
+    glDrawFrustrum(Kinv,w,h,scale);
+    glUnsetFrameOfReference();
+}
+
 #endif // HAVE_EIGEN
 
 }

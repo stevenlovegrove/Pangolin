@@ -449,6 +449,7 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
     // Save colour channels
     boost::gil::rgba8_image_t img(v.w, v.h);
     glReadBuffer(GL_BACK);    
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // TODO: Avoid this?    
     glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, boost::gil::interleaved_view_get_raw_data( boost::gil::view( img ) ) );
 #ifdef HAVE_PNG
     boost::gil::png_write_view(prefix + ".png", flipped_up_down_view( boost::gil::const_view(img)) );
@@ -470,6 +471,7 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
         last_time = time_now;
         unsigned char* img = new unsigned char[v.w*v.h*4];
         glReadBuffer(GL_BACK);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // TODO: Avoid this?        
         glReadPixels(v.l, v.b, v.w, v.h, GL_RGB, GL_UNSIGNED_BYTE, img );
         video[0].WriteImage(img, v.w, -v.h, "RGB24" );
         delete[] img;
