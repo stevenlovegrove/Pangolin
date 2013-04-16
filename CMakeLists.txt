@@ -3,7 +3,7 @@ set(PANGOLIN_VERSION_MAJOR 0)
 set(PANGOLIN_VERSION_MINOR 1)
 
 cmake_minimum_required(VERSION 2.6)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 
 option(BUILD_EXAMPLES "Build Examples" ON)
 option(BUILD_SHARED_LIBS "Build Shared Library" ON)
@@ -29,6 +29,9 @@ configure_file(
 
 add_custom_target(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+
+# Force all found paths to trump system paths (and potentially installed pangolin)
+set( CMAKE_INCLUDE_DIRECTORIES_BEFORE ON )
 
 add_subdirectory("src")
 
