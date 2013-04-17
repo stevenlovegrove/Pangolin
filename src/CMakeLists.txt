@@ -213,13 +213,12 @@ configure_file(
 #######################################################
 ## Install headers / targets
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/config.h"
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
 )
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/${LIBRARY_NAME}
+install(DIRECTORY ${INCDIR}
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
 )
-
 install(TARGETS ${LIBRARY_NAME}
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
