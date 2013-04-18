@@ -157,7 +157,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
     
     // Retrieve stream information
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
     if(avformat_find_stream_info(pFormatCtx, 0)<0)
 #else
     // Deprecated
@@ -274,7 +274,7 @@ FfmpegVideo::~FfmpegVideo()
     avcodec_close(pVidCodecCtx);
     
     // Close the video file
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54 || (LIBAVFORMAT_VERSION_MAJOR >= 53 && LIBAVFORMAT_VERSION_MINOR >= 21) )
     avformat_close_input(&pFormatCtx);
 #else
     // Deprecated
@@ -445,10 +445,10 @@ static AVStream* CreateStream(AVFormatContext *oc, enum CodecID codec_id, uint64
         VideoException("Could not find encoder");
 #endif
 
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54 || (LIBAVFORMAT_VERSION_MAJOR >= 53 && LIBAVFORMAT_VERSION_MINOR >= 21) )
     AVStream* stream = avformat_new_stream(oc, codec);
 #else
-    AVStream* stream = av_new_stream(oc, codec);
+    AVStream* stream = av_new_stream(oc, codec_id);
 #endif
     
     if (!stream) throw VideoException("Could not allocate stream");
