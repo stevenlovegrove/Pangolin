@@ -145,11 +145,11 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         fmt = av_find_input_format(codec_hint.c_str());
     }
     
-#ifdef CODEC_TYPE_VIDEO
-    // Old (deprecated) interface - can't use with mjpeg
-    if( av_open_input_file(&pFormatCtx, url.c_str(), fmt, 0, NULL) )
-#else
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
     if( avformat_open_input(&pFormatCtx, url.c_str(), fmt, NULL) )
+#else
+    // Deprecated - can't use with mjpeg
+    if( av_open_input_file(&pFormatCtx, url.c_str(), fmt, 0, NULL) )
 #endif
         throw VideoException("Couldn't open stream");
     
@@ -157,7 +157,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
     
     // Retrieve stream information
-#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
     if(avformat_find_stream_info(pFormatCtx, 0)<0)
 #else
     // Deprecated
@@ -167,11 +167,11 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     
     if(dump_info) {
         // Dump information about file onto standard error
-#ifdef CODEC_TYPE_VIDEO
-        // Old (deprecated) interface
-        dump_format(pFormatCtx, 0, url.c_str(), false);
-#else
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
         av_dump_format(pFormatCtx, 0, url.c_str(), false);
+#else
+        // Deprecated
+        dump_format(pFormatCtx, 0, url.c_str(), false);
 #endif
     }
     
@@ -274,7 +274,7 @@ FfmpegVideo::~FfmpegVideo()
     avcodec_close(pVidCodecCtx);
     
     // Close the video file
-#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
     avformat_close_input(&pFormatCtx);
 #else
     // Deprecated
