@@ -445,7 +445,7 @@ static AVStream* CreateStream(AVFormatContext *oc, enum CodecID codec_id, uint64
         VideoException("Could not find encoder");
 #endif
 
-#if (LIBAVFORMAT_VERSION >= 54)
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
     AVStream* stream = avformat_new_stream(oc, codec);
 #else
     AVStream* stream = av_new_stream(oc, codec);
