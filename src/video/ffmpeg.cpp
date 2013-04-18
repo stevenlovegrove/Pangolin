@@ -145,7 +145,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         fmt = av_find_input_format(codec_hint.c_str());
     }
     
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
     if( avformat_open_input(&pFormatCtx, url.c_str(), fmt, NULL) )
 #else
     // Deprecated - can't use with mjpeg
@@ -167,7 +167,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     
     if(dump_info) {
         // Dump information about file onto standard error
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
         av_dump_format(pFormatCtx, 0, url.c_str(), false);
 #else
         // Deprecated
@@ -445,7 +445,12 @@ static AVStream* CreateStream(AVFormatContext *oc, enum CodecID codec_id, uint64
         VideoException("Could not find encoder");
 #endif
 
+#if (LIBAVFORMAT_VERSION >= 54)
     AVStream* stream = avformat_new_stream(oc, codec);
+#else
+    AVStream* stream = av_new_stream(oc, codec);
+#endif
+    
     if (!stream) throw VideoException("Could not allocate stream");
     
     stream->id = oc->nb_streams-1;
@@ -657,7 +662,12 @@ void FfmpegVideoOutput::Initialise(std::string filename)
 void FfmpegVideoOutput::StartStream()
 {
     if(!started) {
+#if (LIBAVFORMAT_VERSION_MAJOR >= 53)        
         av_dump_format(oc, 0, filename.c_str(), 1);
+#else
+        // Deprecated
+        dump_format(oc, 0, filename.c_str(), 1);
+#endif
         
         /* Write the stream header, if any. */
         int ret = avformat_write_header(oc, NULL);
