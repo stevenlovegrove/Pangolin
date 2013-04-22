@@ -27,6 +27,8 @@
 
 #include <pangolin/opengl_render_state.h>
 
+#include <stdexcept>
+
 namespace pangolin
 {
 
@@ -421,8 +423,7 @@ OpenGlMatrix ModelViewLookAtRUB(double ex, double ey, double ez, double lx, doub
     #undef M        
         return mat;
     }else{
-        throw "Look and up vectors are parallel when calling ModelViewLookAt.";
-//        return IdentityMatrix();
+        throw std::invalid_argument("'Look' and 'up' vectors cannot be parallel when calling ModelViewLookAt.");
     }
     
 }
@@ -470,8 +471,7 @@ OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, doub
     #undef M
         return mat;
     }else{
-        throw "Look and up vectors are parallel when calling ModelViewLookAt.";
-//        return IdentityMatrix();
+        throw std::invalid_argument("'Look' and 'up' vectors cannot be parallel when calling ModelViewLookAt.");
     }
 }
 
