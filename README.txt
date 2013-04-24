@@ -37,8 +37,11 @@ based) systems, without compromising performance.
 
 * DC1394 (For firewire input)
   (deb) sudo apt-get install libdc1394-22-dev libraw1394-dev
-
+  
 == Very Optional Dependencies ==
+
+* GLConsole (For graphical drop-down console. Must be build before Pangolin.)
+  git clone git://git.code.sf.net/p/glconsole/code glconsole
 
 * CUDA Toolkit (>= 3.2)
   http://developer.nvidia.com/object/cuda_3_2_downloads.html
