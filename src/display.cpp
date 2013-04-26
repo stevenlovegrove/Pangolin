@@ -36,6 +36,7 @@
 #include <pangolin/display_internal.h>
 #include <pangolin/simple_math.h>
 #include <pangolin/timer.h>
+#include <pangolin/type_convert.h>
 
 #define GLUT_KEY_ESCAPE 27
 #define GLUT_KEY_TAB 9
