@@ -462,6 +462,7 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
 #endif // HAVE_BOOST_GIL
 }
 
+#ifdef BUILD_PANGOLIN_VIDEO
 void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 {
     static basetime last_time = TimeNow();
@@ -491,6 +492,7 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
         glPopAttrib();
     }
 }
+#endif // BUILD_PANGOLIN_VIDEO
 
 #ifdef HAVE_CVARS
 // Pangolin CVar function hooks

@@ -2,7 +2,8 @@ find_package(FREEGLUT QUIET)
 find_package(GLUT QUIET)
 find_package(CUDA QUIET)
 
-if(FREEGLUT_FOUND OR GLUT_FOUND)
+# All examples depend on Pangolin GUI and GLUT
+if(BUILD_PANGOLIN_GUI AND (FREEGLUT_FOUND OR GLUT_FOUND) )
     add_subdirectory(SimpleMultiDisplay)
     add_subdirectory(SimpleDisplayImage)
     add_subdirectory(SimplePlot)
@@ -20,7 +21,7 @@ if(FREEGLUT_FOUND OR GLUT_FOUND)
 
       ## VBODisplay Sample requires CUDA
       if(CUDA_FOUND)
-      	add_subdirectory(VBODisplay)
+        add_subdirectory(VBODisplay)
       endif(CUDA_FOUND) 
     endif(BUILD_PANGOLIN_VARS)
-endif(FREEGLUT_FOUND OR GLUT_FOUND)
+endif()

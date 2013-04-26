@@ -27,7 +27,6 @@
 
 #include <pangolin/video_record_repeat.h>
 #include <pangolin/video/pvn_video.h>
-#include <pangolin/widgets.h>
 
 namespace pangolin
 {

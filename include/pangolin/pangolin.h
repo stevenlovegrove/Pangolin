@@ -29,16 +29,21 @@
 #define PANGOLIN_H
 
 #include <pangolin/platform.h>
+
+#ifdef BUILD_PANGOLIN_GUI
 #include <pangolin/gl.h>
 #include <pangolin/gldraw.h>
 #include <pangolin/display.h>
 #include <pangolin/view.h>
 #include <pangolin/plotter.h>
+#endif // BUILD_PANGOLIN_GUI
 
 #ifdef BUILD_PANGOLIN_VARS
 #include <pangolin/vars.h>
+#ifdef BUILD_PANGOLIN_GUI
 #include <pangolin/widgets.h>
-#endif
+#endif // BUILD_PANGOLIN_GUI
+#endif // BUILD_PANGOLIN_VARS
 
 #ifdef BUILD_PANGOLIN_VIDEO
 #include <pangolin/video.h>

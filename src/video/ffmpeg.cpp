@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/video/ffmpeg.h>
+#include <boost/algorithm/string.hpp>
 
 extern "C"
 {

@@ -10,6 +10,7 @@
 #define PANGOLIN_VERSION_MINOR @PANGOLIN_VERSION_MINOR@
 
 /// Pangolin options
+#cmakedefine BUILD_PANGOLIN_GUI
 #cmakedefine BUILD_PANGOLIN_VARS
 #cmakedefine BUILD_PANGOLIN_VIDEO
 

@@ -3,55 +3,78 @@
 
 set( INCDIR "../include/pangolin")
 
+## Header only includes / core headers
 set(
   HEADERS
-  ${INCDIR}/pangolin.h
-  ${INCDIR}/platform.h
-  ${INCDIR}/simple_math.h
-  ${INCDIR}/plotter.h 
-  ${INCDIR}/display.h ${INCDIR}/display_internal.h 
-  ${INCDIR}/view.h ${INCDIR}/viewport.h
-  ${INCDIR}/handler.h ${INCDIR}/opengl_render_state.h
+  ${INCDIR}/pangolin.h ${INCDIR}/platform.h
+  ${INCDIR}/simple_math.h ${INCDIR}/timer.h
   ${INCDIR}/gl.h ${INCDIR}/gldraw.h ${INCDIR}/glvbo.h
   ${INCDIR}/glcuda.h ${INCDIR}/cg.h ${INCDIR}/glsl.h
-  ${INCDIR}/threadedfilebuf.h ${INCDIR}/timer.h
 )
 
-set(
-  SOURCES
-  display.cpp view.cpp viewport.cpp
-  handler.cpp opengl_render_state.cpp
-  plotter.cpp
-  threadedfilebuf.cpp
-)
+## Store list of source files
+set( SOURCES "" )
 
 #######################################################
 ## User build options
 
+option(BUILD_PANGOLIN_GUI "Build support for Pangolin GUI" ON)
+if(BUILD_PANGOLIN_GUI)
+  list(APPEND HEADERS
+    ${INCDIR}/display.h ${INCDIR}/display_internal.h 
+    ${INCDIR}/view.h ${INCDIR}/viewport.h
+    ${INCDIR}/handler.h ${INCDIR}/opengl_render_state.h
+    ${INCDIR}/plotter.h
+  )
+  list(APPEND SOURCES
+    display.cpp view.cpp viewport.cpp
+    handler.cpp opengl_render_state.cpp
+    plotter.cpp
+  )
+endif()
+
 option(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
 if(BUILD_PANGOLIN_VARS)
-  list(APPEND HEADERS ${INCDIR}/vars.h ${INCDIR}/vars_internal.h ${INCDIR}/input_record_repeat.h ${INCDIR}/widgets.h )
-  list(APPEND SOURCES vars.cpp input_record_repeat.cpp widgets.cpp )
+  list(APPEND HEADERS ${INCDIR}/vars.h ${INCDIR}/vars_internal.h ${INCDIR}/input_record_repeat.h )
+  list(APPEND SOURCES vars.cpp input_record_repeat.cpp )
+
+  if(BUILD_PANGOLIN_GUI)
+      list(APPEND HEADERS ${INCDIR}/widgets.h )
+      list(APPEND SOURCES widgets.cpp )
+  endif()
 endif()
 
 option(BUILD_PANGOLIN_VIDEO "Build support for Pangolin Video Utilities" ON)
 if(BUILD_PANGOLIN_VIDEO)
-  list(APPEND HEADERS ${INCDIR}/video.h ${INCDIR}/video_common.h ${INCDIR}/video_splitter.h ${INCDIR}/video_output.h ${INCDIR}/video_recorder.h ${INCDIR}/video_record_repeat.h ${INCDIR}/video/pvn_video.h )
-  list(APPEND SOURCES video.cpp video_splitter.cpp video_output.cpp video_recorder.cpp video_record_repeat.cpp video/pvn_video.cpp )
+  list(APPEND HEADERS
+    ${INCDIR}/threadedfilebuf.h ${INCDIR}/video.h ${INCDIR}/video_common.h
+    ${INCDIR}/video_splitter.h ${INCDIR}/video_output.h
+    ${INCDIR}/video_recorder.h ${INCDIR}/video_record_repeat.h
+    ${INCDIR}/video/pvn_video.h
+  )
+  list(APPEND SOURCES
+    threadedfilebuf.cpp video.cpp video_splitter.cpp video_output.cpp
+    video_recorder.cpp video_record_repeat.cpp video/pvn_video.cpp
+  )
 endif()
 
 #######################################################
-## Find required dependencies
+## Setup required includes / link info
 
-find_package(OpenGL REQUIRED QUIET)
-find_package(GLEW REQUIRED)
-find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
-
-## Apply required dependencies settings
 list(APPEND USER_INC  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
-list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR};${Boost_INCLUDE_DIRS}" )
-list(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY};${Boost_LIBRARIES}" )
-list(APPEND LIB_DIRS  "${OPENGL_LIBRARY_DIR};${GLEW_LIBRARY_DIR};${Boost_LIBRARY_DIRS}" )
+
+find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
+list(APPEND USER_INC  "${Boost_INCLUDE_DIRS}" )
+list(APPEND LINK_LIBS "${Boost_LIBRARIES}" )
+list(APPEND LIB_DIRS  "${Boost_LIBRARY_DIRS}" )
+
+if(BUILD_PANGOLIN_GUI)
+  find_package(OpenGL REQUIRED QUIET)
+  find_package(GLEW REQUIRED)
+  list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR}" )
+  list(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY}" )
+  list(APPEND LIB_DIRS  "${OPENGL_LIBRARY_DIR};${GLEW_LIBRARY_DIR}" )
+endif()
 
 #######################################################
 ## Find optional dependencies
