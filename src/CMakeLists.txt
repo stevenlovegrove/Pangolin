@@ -51,7 +51,6 @@ find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
 list(APPEND USER_INC  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR};${Boost_INCLUDE_DIRS}" )
 list(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY};${Boost_LIBRARIES}" )
-list(APPEND LIB_DIRS  "${OPENGL_LIBRARY_DIR};${GLEW_LIBRARY_DIR};${Boost_LIBRARY_DIRS}" )
 
 #######################################################
 ## Find optional dependencies
@@ -61,7 +60,6 @@ if(CVARS_FOUND)
   set(HAVE_CVARS 1)
   list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
   list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
-  list(APPEND LIB_DIRS ${CVARS_DIR} )
 endif()
 
 find_package(CUDA QUIET)
@@ -190,10 +188,9 @@ endif()
 
 include_directories( ${INTERNAL_INC} )
 include_directories( ${USER_INC} )
-link_libraries(${LINK_LIBS})
-link_directories(${LIB_DIRS})
 
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
+target_link_libraries(${LIBRARY_NAME} ${LINK_LIBS})
 
 ## Set Special Compiler flags
 if(MSVC)
@@ -217,17 +214,38 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/config.h"
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
 )
 install(DIRECTORY ${INCDIR}
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include
 )
 install(TARGETS ${LIBRARY_NAME}
+  EXPORT PangolinTargets
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
 )
 
 #######################################################
+# Figure out the relative path from the installed Config.cmake file to the
+# install prefix. This relative path will be configured into PangolinConfig.cmake.
+set( CMAKECONFIG_INSTALL_DIR lib/cmake/Pangolin )
+file( RELATIVE_PATH REL_INCLUDE_DIR
+    "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
+    "${CMAKE_INSTALL_PREFIX}/include" )
+
+# Add package to CMake package registery for use from the build tree
+export( TARGETS ${LIBRARY_NAME}
+        FILE "${CMAKE_CURRENT_BINARY_DIR}/PangolinTargets.cmake" )
+export( PACKAGE Pangolin )
+# Install the export set for use with the install tree
+install( EXPORT PangolinTargets DESTINATION ${CMAKECONFIG_INSTALL_DIR} )
+
 ## Export config file for easy inclusion into other projects: find_package( Pangolin )
-get_target_property( LIB_LOC ${LIBRARY_NAME} LOCATION )
+# ... for the build tree
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/PangolinConfig.cmake @ONLY IMMEDIATE )
-export( PACKAGE Pangolin )
+# ... for the install tree
+set( USER_INC "\${PANGOLIN_CMAKE_DIR}/${REL_INCLUDE_DIR}" )
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PangolinConfig.cmake @ONLY )
+
+INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PangolinConfig.cmake"
+        DESTINATION ${CMAKECONFIG_INSTALL_DIR} )
