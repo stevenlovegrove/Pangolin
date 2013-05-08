@@ -50,6 +50,7 @@ namespace pangolin
 
 class CgProgram
 {
+    friend class CgLoader;
 public:
     void SetUniform(const std::string& name, GlTexture& tex);
     void SetUniform(const std::string& name, float f);
@@ -72,6 +73,7 @@ protected:
 
 class CgLoader
 {
+public:
     CgLoader();
     ~CgLoader();
     
