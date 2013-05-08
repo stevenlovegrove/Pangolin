@@ -43,13 +43,19 @@ namespace pangolin
 
 struct GlBufferCudaPtr : public GlBuffer
 {
-    GlBufferCudaPtr(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
+    //! Default constructor represents 'no buffer'
+    GlBufferCudaPtr();
+    
     GlBufferCudaPtr(GlBufferType buffer_type, GLuint size_bytes, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
+    GlBufferCudaPtr(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
     
     PANGOLIN_DEPRECATED
     GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
     
     ~GlBufferCudaPtr();
+    
+    void Reinitialise(GlBufferType buffer_type, GLuint size_bytes, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
+    void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
     
     cudaGraphicsResource* cuda_res;
 };
@@ -92,27 +98,48 @@ void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b);
 // Implementation
 ////////////////////////////////////////////////
 
-inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause, GLenum gluse )
-    : GlBuffer(buffer_type, num_elements, datatype, count_per_element, gluse)
+inline GlBufferCudaPtr::GlBufferCudaPtr()
+    : cuda_res(0)
 {
-    cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );
 }
 
 inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint size_bytes, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ )
-    : GlBuffer(buffer_type, size_bytes, GL_BYTE, 1, gluse)
+    : cuda_res(0)
 {
-    cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );
+    Reinitialise(buffer_type, size_bytes, cudause, gluse);
+}
+
+inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause, GLenum gluse )
+    : cuda_res(0)
+{
+    Reinitialise(buffer_type, num_elements, datatype, count_per_element, cudause, gluse);
 }
 
 inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ )
-    : GlBuffer(buffer_type, width*height, datatype, count_per_element, gluse)
+    : cuda_res(0)
 {
-    cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );    
+    Reinitialise(buffer_type, width*height, datatype, count_per_element, cudause, gluse);
 }
 
 inline GlBufferCudaPtr::~GlBufferCudaPtr()
 {
-    cudaGraphicsUnregisterResource(cuda_res);
+    if(cuda_res) {    
+        cudaGraphicsUnregisterResource(cuda_res);
+    }
+}
+
+inline void GlBufferCudaPtr::Reinitialise(GlBufferType buffer_type, GLuint size_bytes, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ )
+{
+    GlBufferCudaPtr::Reinitialise(buffer_type, size_bytes, GL_BYTE, 1, cudause, gluse);
+}
+
+inline void GlBufferCudaPtr::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ )
+{
+    if(cuda_res) {
+        cudaGraphicsUnregisterResource(cuda_res);
+    }
+    GlBuffer::Reinitialise(buffer_type, num_elements, datatype, count_per_element, gluse);
+    cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );    
 }
 
 inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear)
