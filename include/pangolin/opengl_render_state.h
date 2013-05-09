@@ -94,6 +94,13 @@ struct OpenGlMatrix {
     template<typename P>
     operator Eigen::Matrix<P,4,4>() const;
 #endif // HAVE_EIGEN
+
+#ifdef HAVE_TOON
+    OpenGlMatrix(const TooN::SE3<>& T);
+    OpenGlMatrix(const TooN::Matrix<4,4>& M);
+    operator const TooN::SE3<>() const;
+    operator const TooN::Matrix<4,4>() const;
+#endif // HAVE_TOON    
     
     // Load matrix on to OpenGl stack
     void Load() const;
@@ -152,7 +159,7 @@ public:
     void Follow(const OpenGlMatrix& T_wc, bool follow = true);
     void Unfollow();
     
-    //! deprecated
+    PANGOLIN_DEPRECATED
     OpenGlRenderState& Set(OpenGlMatrixSpec spec);
     
 protected:
@@ -225,7 +232,43 @@ OpenGlMatrix::operator Eigen::Matrix<P,4,4>() const
 #endif
 
 #ifdef HAVE_TOON
+inline OpenGlMatrix::OpenGlMatrix(const TooN::SE3<>& T)
+{
+    TooN::Matrix<4,4,double,TooN::ColMajor> M;
+    M.slice<0,0,3,3>() = T.get_rotation().get_matrix();
+    M.T()[3].slice<0,3>() = T.get_translation();
+    M[3] = TooN::makeVector(0,0,0,1);
+    std::memcpy(m, &(M[0][0]),16*sizeof(double));
+}
 
+inline OpenGlMatrix::OpenGlMatrix(const TooN::Matrix<4,4>& M)
+{
+    // Read in remembering col-major convension for our matrices
+    int el = 0;
+    for(int c=0; c<4; ++c)
+        for(int r=0; r<4; ++r)
+            m[el++] = M[r][c];    
+}
+
+inline OpenGlMatrix::operator const TooN::SE3<>() const
+{
+    const TooN::Matrix<4,4> m = *this;
+    const TooN::SO3<> R(m.slice<0,0,3,3>());
+    const TooN::Vector<3> t = m.T()[3].slice<0,3>();
+    return TooN::SE3<>(R,t);    
+}
+
+inline OpenGlMatrix::operator const TooN::Matrix<4,4>() const
+{
+    TooN::Matrix<4,4> M;
+    int el = 0;
+    for( int c=0; c<4; ++c )
+        for( int r=0; r<4; ++r )
+            M(r,c) = m[el++];
+    return M;
+}
+
+PANGOLIN_DEPRECATED
 inline OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw)
 {
     TooN::Matrix<4,4,double,TooN::ColMajor> M;
@@ -239,6 +282,7 @@ inline OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw)
     return P;
 }
 
+PANGOLIN_DEPRECATED
 inline OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M)
 {
     // Read in remembering col-major convension for our matrices
@@ -251,6 +295,7 @@ inline OpenGlMatrixSpec FromTooN(OpenGlStack type, const TooN::Matrix<4,4>& M)
     return P;
 }
 
+PANGOLIN_DEPRECATED
 inline TooN::Matrix<4,4> ToTooN(const OpenGlMatrix& ms)
 {
     TooN::Matrix<4,4> m;
@@ -261,9 +306,10 @@ inline TooN::Matrix<4,4> ToTooN(const OpenGlMatrix& ms)
     return m;
 }
 
+PANGOLIN_DEPRECATED
 inline TooN::SE3<> ToTooN_SE3(const OpenGlMatrix& ms)
 {
-    TooN::Matrix<4,4> m = ToTooN(ms);
+    TooN::Matrix<4,4> m = ms;
     const TooN::SO3<> R(m.slice<0,0,3,3>());
     const TooN::Vector<3> t = m.T()[3].slice<0,3>();
     return TooN::SE3<>(R,t);
