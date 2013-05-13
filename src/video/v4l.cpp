@@ -63,7 +63,7 @@ V4lVideo::V4lVideo(const char* dev_name, io_method io)
     : io(io), fd(-1), buffers(0), n_buffers(0), running(false)
 {
     open_device(dev_name);
-    init_device(dev_name,640,480,30);
+    init_device(dev_name,0,0,0);
     Start();
 }
 
@@ -503,39 +503,26 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
         }
     } else {
         /* Errors ignored. */
-    }
-    
-    //        {
-    //            v4l2_frmivalenum fie;
-    //            CLEAR(fie);
-    //            fie.width = iwidth;
-    //            fie.height = iheight;
-    //            fie.pixel_format = v4l_format;
-    
-    //            while(1)
-    //            {
-    
-    //                if (-1 == xioctl (fd, VIDIOC_ENUM_FRAMEINTERVALS, &fie))
-    //                    throw VideoException("VIDIOC_ENUM_FRAMEINTERVALS", strerror(errno));
-    
-    //                cout << fie.type << endl;
-    //                cout << fie.discrete.numerator << endl;
-    //                cout << fie.discrete.denominator << endl << endl;
-    //                fie.index++;
-    //            }
-    //        }
-    
+    }    
     
     CLEAR (fmt);
-    
-    fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    fmt.fmt.pix.width       = iwidth;
-    fmt.fmt.pix.height      = iheight;
-    fmt.fmt.pix.pixelformat = v4l_format;
-    fmt.fmt.pix.field       = field;
-    
-    if (-1 == xioctl (fd, VIDIOC_S_FMT, &fmt))
-        throw VideoException("VIDIOC_S_FMT", strerror(errno));
+
+    if(iwidth!=0 && iheight!=0) {
+        fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        fmt.fmt.pix.width       = iwidth;
+        fmt.fmt.pix.height      = iheight;
+        fmt.fmt.pix.pixelformat = v4l_format;
+        fmt.fmt.pix.field       = field;
+        
+        if (-1 == xioctl (fd, VIDIOC_S_FMT, &fmt))
+            throw VideoException("VIDIOC_S_FMT", strerror(errno));
+    }else{
+        fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        
+        /* Preserve original settings as set by v4l2-ctl for example */
+        if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt))
+            throw VideoException("VIDIOC_G_FMT", strerror(errno));
+    }
     
     /* Buggy driver paranoia. */
     min = fmt.fmt.pix.width * 2;
@@ -550,17 +537,21 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
     height = fmt.fmt.pix.height;
     image_size = fmt.fmt.pix.sizeimage;
     
-    
-    CLEAR(strm);
-    strm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    strm.parm.capture.capability = V4L2_CAP_TIMEPERFRAME;
-    strm.parm.capture.timeperframe.numerator = 1;
-    strm.parm.capture.timeperframe.denominator = ifps;
-    
-    if (-1 == xioctl (fd, VIDIOC_S_PARM, &fmt))
-        throw VideoException("VIDIOC_S_PARM", strerror(errno));
-    
-    fps = (float)strm.parm.capture.timeperframe.denominator / strm.parm.capture.timeperframe.numerator;
+    if(ifps!=0)
+    {
+        CLEAR(strm);
+        strm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        strm.parm.capture.capability = V4L2_CAP_TIMEPERFRAME;
+        strm.parm.capture.timeperframe.numerator = 1;
+        strm.parm.capture.timeperframe.denominator = ifps;
+        
+        if (-1 == xioctl (fd, VIDIOC_S_PARM, &fmt))
+            throw VideoException("VIDIOC_S_PARM", strerror(errno));
+        
+        fps = (float)strm.parm.capture.timeperframe.denominator / strm.parm.capture.timeperframe.numerator;
+    }else{
+        fps = 0;    
+    }
     
     switch (io) {
     case IO_METHOD_READ:
