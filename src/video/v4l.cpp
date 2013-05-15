@@ -59,6 +59,18 @@ static int xioctl(int fd, int request, void* arg)
     return r;
 }
 
+inline std::string V4lToString(int32_t v)
+{
+    //	v = ((__u32)(a) | ((__u32)(b) << 8) | ((__u32)(c) << 16) | ((__u32)(d) << 24))
+    char cc[5];
+    cc[0] = v       & 0xff;
+    cc[1] = (v>>8)  & 0xff;
+    cc[2] = (v>>16) & 0xff;
+    cc[3] = (v>>24) & 0xff;
+    cc[4] = 0;
+    return std::string(cc);
+}
+
 V4lVideo::V4lVideo(const char* dev_name, io_method io)
     : io(io), fd(-1), buffers(0), n_buffers(0), running(false)
 {
@@ -567,9 +579,18 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
         break;
     }
     
-    // populate streams for users to query
-    // TODO: Compute these properly!
-    const VideoPixelFormat pfmt = VideoFormatFromString("YUYV422");
+    std::string spix="GRAY8";
+    if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_GREY) {
+        spix="GRAY8";
+    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+        spix="YUYV422";
+    }else{
+        // TODO: Add method to translate from V4L to FFMPEG type.
+        std::cerr << "V4L Format " << V4lToString(fmt.fmt.pix.pixelformat)
+                  << " not recognised. Defaulting to '" << spix << std::endl;
+    }
+
+    const VideoPixelFormat pfmt = VideoFormatFromString(spix);
     const StreamInfo stream_info(pfmt, width, height, (width*pfmt.bpp)/8, 0);
     streams.push_back(stream_info);
 }
