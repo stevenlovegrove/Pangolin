@@ -193,6 +193,7 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
 
 void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
 {
+    const double rf = 0.01;
     const int delta[2] = {(x-last_pos[0]),(y-last_pos[1])};
     const float mag = delta[0]*delta[0] + delta[1]*delta[1];
     
@@ -210,7 +211,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         if( button_state == MouseButtonMiddle )
         {
             // Middle Drag: in plane translate
-            Rotation<>(T_nc,-delta[1]*0.01, -delta[0]*0.01, 0.0);
+            Rotation<>(T_nc,-delta[1]*rf, -delta[0]*rf, 0.0);
         }else if( button_state == MouseButtonLeft )
         {
             // Left Drag: in plane translate
@@ -231,7 +232,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             //        Rotation<>(T_nc,0.0,0.0, delta[0]*0.01);
             
             double T_2c[3*4];
-            Rotation<>(T_2c,0.0,0.0, delta[0]*0.01);
+            Rotation<>(T_2c,0.0,0.0, delta[0]*rf);
             double mrotc[3];
             MatMul<3,1>(mrotc, rot_center, -1.0);
             LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
@@ -243,8 +244,8 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         }else if( button_state == MouseButtonRight)
         {
             // Correct for OpenGL Camera.
-            double aboutx = -0.01 * delta[1];
-            double abouty =  0.01 * delta[0];
+            double aboutx = -rf * delta[1];
+            double abouty =  rf * delta[0];
             
             // Try to correct for different coordinate conventions.
             OpenGlMatrix& pm = cam_state->GetProjectionMatrix();
