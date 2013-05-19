@@ -239,7 +239,9 @@ VideoInterface* OpenVideo(std::string str_uri)
         std::vector<ImageRoi> rois;
 
         VideoInterface* subvid = OpenVideo(uri.url);
-        const ImageRoi default_roi(0,0, subvid->Streams()[0].Width(), subvid->Streams()[0].Height() );
+        const int subw = subvid->Streams()[0].Width();
+        const int subh = subvid->Streams()[0].Height();
+        const ImageRoi default_roi(0,0, subw, subh );
         
         while(true)
         {
@@ -252,6 +254,18 @@ VideoInterface* OpenVideo(std::string str_uri)
             }
             
             rois.push_back( uri.Get<ImageRoi>(key, default_roi));
+        }
+        
+        if(rois.size() == 0) {
+            if(subw > subh) {
+                // split horizontally
+                rois.push_back( ImageRoi(0,0, subw/2, subh ) );
+                rois.push_back( ImageRoi(subw/2,0, subw/2, subh ) );                
+            }else{
+                // split horizontally
+                rois.push_back( ImageRoi(0,0, subw, subh/2 ) );
+                rois.push_back( ImageRoi(0,subh/2, subw, subh/2 ) );                
+            }
         }
         
         video = new VideoSplitter(subvid,rois);       
