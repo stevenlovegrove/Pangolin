@@ -43,6 +43,10 @@
 #include <pangolin/video/openni.h>
 #endif
 
+#ifdef HAVE_UVC
+#include <pangolin/video/uvc.h>
+#endif
+
 #include <pangolin/video/pvn_video.h>
 #include <pangolin/video_splitter.h>
 
@@ -337,6 +341,11 @@ VideoInterface* OpenVideo(std::string str_uri)
         }
         
         video = new OpenNiVideo(img1,img2);
+    }else
+#endif
+#ifdef HAVE_UVC
+    if(!uri.scheme.compare("uvc")) {
+        video = new UvcVideo();
     }else
 #endif
     {

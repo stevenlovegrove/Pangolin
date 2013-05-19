@@ -179,6 +179,16 @@ if(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
   message(STATUS "OpenNI Found and Enabled")
 endif()
 
+find_package(uvc QUIET)
+if(BUILD_PANGOLIN_VIDEO AND uvc_FOUND)
+  set(HAVE_UVC 1)
+  list(APPEND INTERNAL_INC  ${uvc_INCLUDE_DIRS} )
+  list(APPEND LINK_LIBS ${uvc_LIBRARIES} )
+  list(APPEND HEADERS ${INCDIR}/video/uvc.h )
+  list(APPEND SOURCES video/uvc.cpp)
+  message(STATUS "libuvc Found and Enabled")
+endif()
+
 # Generic Image Library (GIL) should come with boost.
 # If you have a version of boost without it, maybe figure out how to test here.
 set(HAVE_BOOST_GIL 1)

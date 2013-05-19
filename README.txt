@@ -37,7 +37,10 @@ based) systems, without compromising performance.
 
 * DC1394 (For firewire input)
   (deb) sudo apt-get install libdc1394-22-dev libraw1394-dev
-  
+
+* libuvc (For cross-platform webcam video input via libusb)
+  git://github.com/ktossell/libuvc.git
+    
 == Very Optional Dependencies ==
 
 * GLConsole (For graphical drop-down console. Must be build before Pangolin.)

@@ -17,12 +17,15 @@
 /// Configured libraries
 #cmakedefine HAVE_CUDA
 #cmakedefine HAVE_CVARS
+
 #cmakedefine HAVE_EIGEN
 #cmakedefine HAVE_TOON
+
 #cmakedefine HAVE_DC1394
 #cmakedefine HAVE_V4L
 #cmakedefine HAVE_FFMPEG
 #cmakedefine HAVE_OPENNI
+#cmakedefine HAVE_UVC
 
 #cmakedefine HAVE_GLUT
 #cmakedefine HAVE_FREEGLUT
