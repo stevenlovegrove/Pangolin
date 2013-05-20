@@ -32,6 +32,7 @@
 #include <boost/type_traits.hpp>
 //#include <boost/lexical_cast.hpp>
 #include <iostream>
+#include <cstring>
 
 #include <pangolin/type_convert.h>
 
@@ -61,13 +62,13 @@ struct _Var
     
     void clean(){
         if (val!=NULL){
-            if( type_name == typeid(double).name() ) {
+            if( !strcmp(type_name, typeid(double).name()) ) {
                 delete (double *) val;
-            } else if( type_name == typeid(int).name() ) {
+            } else if( !strcmp(type_name, typeid(int).name()) ) {
                 delete (int *) val;
-            } else if( type_name == typeid(std::string).name() ) {
+            } else if( !strcmp(type_name, typeid(std::string).name()) ) {
                 delete (std::string *) val;
-            } else if( type_name == typeid(bool).name() ) {
+            } else if( !strcmp(type_name, typeid(bool).name()) ) {
                 delete (bool *) val;
             } else {
                 throw UnknownTypeException();
@@ -75,13 +76,13 @@ struct _Var
         }
         
         if (val_default!=NULL){
-            if( type_name == typeid(double).name() ) {
+            if( !strcmp(type_name, typeid(double).name()) ) {
                 delete (double *) val_default;
-            } else if( type_name == typeid(int).name() ) {
+            } else if( !strcmp(type_name, typeid(int).name()) ) {
                 delete (int *) val_default;
-            } else if( type_name == typeid(std::string).name() ) {
+            } else if( !strcmp(type_name, typeid(std::string).name()) ) {
                 delete (std::string *) val_default;
-            } else if( type_name == typeid(bool).name() ) {
+            } else if( !strcmp(type_name, typeid(bool).name()) ) {
                 delete (bool *) val_default;
             } else {
                 throw UnknownTypeException();
@@ -116,13 +117,13 @@ struct Accessor
     virtual void Set(const T& val) = 0;
     static Accessor<T>* Create(const char* typeidname, void* var)
     {
-        if( typeidname == typeid(double).name() ) {
+        if( !strcmp(typeidname, typeid(double).name()) ) {
             return new _Accessor<T,double>( *(double*)var);
-        } else if( typeidname == typeid(int).name() ) {
+        } else if( !strcmp(typeidname, typeid(int).name()) ) {
             return new _Accessor<T,int>( *(int*)var );
-        } else if( typeidname == typeid(std::string).name() ) {
+        } else if( !strcmp(typeidname, typeid(std::string).name()) ) {
             return new _Accessor<T,std::string>( *(std::string*)var );
-        } else if( typeidname == typeid(bool).name() ) {
+        } else if( !strcmp(typeidname, typeid(bool).name()) ) {
             return new _Accessor<T,bool>( *(bool*)var );
         } else {
             throw UnknownTypeException();
