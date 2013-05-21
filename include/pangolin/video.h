@@ -64,23 +64,12 @@
 //  e.g. "split:[roi1=0+0+640x480,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 
 #include <pangolin/video_common.h>
+#include <pangolin/image.h>
+
 #include <vector>
 
 namespace pangolin
 {
-
-template<typename T>
-struct Image {
-    inline Image(size_t w, size_t h, size_t pitch, unsigned char* ptr)
-        : pitch(pitch), ptr(ptr), w(w), h(h)
-    {
-    }
-    
-    size_t pitch;
-    T* ptr;
-    size_t w;
-    size_t h;
-};
 
 class StreamInfo
 {

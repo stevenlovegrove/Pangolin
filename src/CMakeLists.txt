@@ -10,6 +10,7 @@ set(
   ${INCDIR}/simple_math.h ${INCDIR}/timer.h
   ${INCDIR}/gl.h ${INCDIR}/gldraw.h ${INCDIR}/glvbo.h
   ${INCDIR}/glcuda.h ${INCDIR}/cg.h ${INCDIR}/glsl.h
+  ${INCDIR}/image.h
 )
 
 ## Store list of source files
