@@ -1,11 +1,11 @@
 # - Try to find uvc
 #
 #  uvc_FOUND - system has libuvc
-#  uvc_INCLUDE_DIR - the libuvc include directories
+#  uvc_INCLUDE_DIRS - the libuvc include directories
 #  uvc_LIBRARIES - link these to use libuvc
 
 FIND_PATH(
-  uvc_INCLUDE_DIR
+  uvc_INCLUDE_DIRS
   NAMES libuvc/libuvc.h
   PATHS 
     ${CMAKE_SOURCE_DIR}/..
@@ -24,9 +24,9 @@ FIND_LIBRARY(
     /opt/local/lib
 ) 
 
-IF (uvc_INCLUDE_DIR AND uvc_LIBRARIES)
+IF (uvc_INCLUDE_DIRS AND uvc_LIBRARIES)
    SET(uvc_FOUND TRUE)
-ENDIF (uvc_INCLUDE_DIR AND uvc_LIBRARIES)
+ENDIF (uvc_INCLUDE_DIRS AND uvc_LIBRARIES)
 
 IF (uvc_FOUND)
    IF (NOT uvc_FIND_QUIETLY)

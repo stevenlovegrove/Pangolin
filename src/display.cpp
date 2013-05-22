@@ -440,7 +440,7 @@ void TakeGlutCallbacks()
         glutSubpixMotionFunc(&process::SubpixMotion);
     }
     
-#endif
+#endif // HAVE_APPLE_OPENGL_FRAMEWORK
 }
 
 
