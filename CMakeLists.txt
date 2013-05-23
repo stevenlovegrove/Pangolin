@@ -30,9 +30,6 @@ configure_file(
 add_custom_target(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
-# Force all found paths to trump system paths (and potentially installed pangolin)
-set( CMAKE_INCLUDE_DIRECTORIES_BEFORE ON )
-
 add_subdirectory("src")
 
 if(BUILD_EXAMPLES)

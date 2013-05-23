@@ -62,6 +62,7 @@ endif()
 #######################################################
 ## Setup required includes / link info
 
+# Project headers trump everything (including any potentially installed Pangolin)
 list(APPEND USER_INC  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 
 find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
@@ -219,8 +220,8 @@ endif()
 #######################################################
 ## Add Libraries / Include Directories / Link directories
 
-include_directories( ${INTERNAL_INC} )
 include_directories( ${USER_INC} )
+include_directories( ${INTERNAL_INC} )
 
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
 target_link_libraries(${LIBRARY_NAME} ${LINK_LIBS})
