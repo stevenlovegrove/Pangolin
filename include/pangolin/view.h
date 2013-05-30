@@ -92,11 +92,11 @@ struct View
     
     //! Obtain camera space coordinates of scene at pixel (winx, winy, winzdepth)
     //! winzdepth can be obtained from GetClosestDepth
-    void GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const;
+    void GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const;
     
     //! Obtain object space coordinates of scene at pixel (winx, winy, winzdepth)
     //! winzdepth can be obtained from GetClosestDepth
-    void GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const;
+    void GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const;
     
     //! Given the specification of Display, compute viewport
     virtual void Resize(const Viewport& parent);

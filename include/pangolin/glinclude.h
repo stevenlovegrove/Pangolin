@@ -38,7 +38,9 @@
 #include <Windows.h>
 #endif
 
+#ifndef _ANDROID_
 #include <GL/glew.h>
+#endif
 
 #ifdef HAVE_GLUT
     #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
@@ -59,9 +61,14 @@
 #endif // HAVE_GLUT
 
 #ifdef _OSX_
-#include <OpenGL/gl.h>
+    #include <OpenGL/gl.h>
+#elif defined(_ANDROID_)
+    #include <EGL/egl.h>
+    #include <GLES/gl.h>
+//    #define GLdouble GLfloat
+    #define GLdouble GLfloat
 #else
-#include <GL/gl.h>
+    #include <GL/gl.h>
 #endif
 
 #endif // PANGOLIN_GLINCLUDE_H

@@ -31,7 +31,8 @@
 #include <map>
 
 #include <pangolin/platform.h>
-#include <pangolin/gl.h>
+//#include <pangolin/gl.h>
+#include <pangolin/glinclude.h>
 #include <pangolin/display.h>
 #include <pangolin/display_internal.h>
 #include <pangolin/simple_math.h>
@@ -690,6 +691,7 @@ void SwapGlutBuffersProcessGlutEvents()
 
 void DrawTextureToViewport(GLuint texid)
 {
+#ifndef _ANDROID_
     OpenGlRenderState::ApplyIdentity();
     glBindTexture(GL_TEXTURE_2D, texid);
     glEnable(GL_TEXTURE_2D);
@@ -704,6 +706,7 @@ void DrawTextureToViewport(GLuint texid)
     glVertex2d(-1,1);
     glEnd();
     glDisable(GL_TEXTURE_2D);
+#endif
 }
 
 }

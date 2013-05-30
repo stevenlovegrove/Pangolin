@@ -25,13 +25,16 @@ if(BUILD_PANGOLIN_GUI)
     ${INCDIR}/display.h ${INCDIR}/display_internal.h 
     ${INCDIR}/view.h ${INCDIR}/viewport.h
     ${INCDIR}/handler.h ${INCDIR}/opengl_render_state.h
-    ${INCDIR}/plotter.h
   )
   list(APPEND SOURCES
     display.cpp view.cpp viewport.cpp
     handler.cpp opengl_render_state.cpp
-    plotter.cpp
   )
+endif()
+
+if(BUILD_PANGOLIN_GUI AND NOT ANDROID)
+  list(APPEND HEADERS ${INCDIR}/plotter.h )
+  list(APPEND SOURCES plotter.cpp )
 endif()
 
 option(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
@@ -39,7 +42,7 @@ if(BUILD_PANGOLIN_VARS)
   list(APPEND HEADERS ${INCDIR}/vars.h ${INCDIR}/vars_internal.h ${INCDIR}/input_record_repeat.h )
   list(APPEND SOURCES vars.cpp input_record_repeat.cpp )
 
-  if(BUILD_PANGOLIN_GUI)
+  if(BUILD_PANGOLIN_GUI AND NOT ANDROID)
       list(APPEND HEADERS ${INCDIR}/widgets.h )
       list(APPEND SOURCES widgets.cpp )
   endif()
@@ -70,17 +73,22 @@ list(APPEND USER_INC  "${Boost_INCLUDE_DIRS}" )
 list(APPEND LINK_LIBS "${Boost_LIBRARIES}" )
 
 if(BUILD_PANGOLIN_GUI)
-  find_package(OpenGL REQUIRED QUIET)
-  find_package(GLEW REQUIRED)
-  list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR}" )
-  list(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY}" )
+  if(NOT ANDROID)
+      find_package(OpenGL REQUIRED QUIET)
+      find_package(GLEW REQUIRED)
+      list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR}" )
+      list(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY}" )
+  else()
+      link_directories( "/Users/slovegrove/tools/toolchain/sysroot/usr/lib" )
+      list(APPEND USER_INC  "/Users/slovegrove/tools/android/android-ndk-r8e/platforms/android-14/arch-arm/usr/include/")
+  endif()
 endif()
 
 #######################################################
 ## Find optional dependencies
 
 find_package(CVARS QUIET)
-if(CVARS_FOUND)
+if(CVARS_FOUND AND NOT ANDROID)
   set(HAVE_CVARS 1)
   list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
   list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )

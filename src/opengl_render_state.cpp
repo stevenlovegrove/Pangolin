@@ -54,12 +54,20 @@ OpenGlMatrix OpenGlMatrix::Scale(double x, double y, double z)
 
 void OpenGlMatrix::Load() const
 {
+#ifndef _ANDROID_
     glLoadMatrixd(m);
+#else
+    glLoadMatrixf(m);
+#endif
 }
 
 void OpenGlMatrix::Multiply() const
 {
+#ifndef _ANDROID_
     glMultMatrixd(m);
+#else
+    glMultMatrixf(m);
+#endif
 }
 
 void OpenGlMatrix::SetIdentity()
@@ -166,7 +174,7 @@ OpenGlRenderState& OpenGlRenderState::Set(OpenGlMatrixSpec spec)
 OpenGlMatrix operator*(const OpenGlMatrix& lhs, const OpenGlMatrix& rhs)
 {
     OpenGlMatrix ret;
-    pangolin::MatMul<4,4,4,double>(ret.m, lhs.m, rhs.m);
+    pangolin::MatMul<4,4,4>(ret.m, lhs.m, rhs.m);
     return ret;
 }
 
@@ -212,6 +220,7 @@ OpenGlMatrix OpenGlRenderState::GetProjectiveTextureMatrix() const
 
 void OpenGlRenderState::EnableProjectiveTexturing() const
 {
+#ifndef _ANDROID_
     const pangolin::OpenGlMatrix projmattrans = GetProjectiveTextureMatrix().Transpose();
     glEnable(GL_TEXTURE_GEN_S);
     glEnable(GL_TEXTURE_GEN_T);
@@ -225,14 +234,17 @@ void OpenGlRenderState::EnableProjectiveTexturing() const
     glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
     glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
     glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+#endif
 }
 
 void OpenGlRenderState::DisableProjectiveTexturing() const
 {
+#ifndef _ANDROID_
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
     glDisable(GL_TEXTURE_GEN_R);
     glDisable(GL_TEXTURE_GEN_Q);
+#endif
 }
 
 void OpenGlRenderState::Follow(const OpenGlMatrix& T_wc, bool follow)
@@ -385,7 +397,7 @@ OpenGlMatrix ModelViewLookAtRUB(double ex, double ey, double ez, double lx, doub
     OpenGlMatrix mat;
     GLdouble* m = mat.m;
     
-    const double u_o[3] = {ux,uy,uz};
+    const GLdouble u_o[3] = {ux,uy,uz};
     
     GLdouble x[3], y[3];
     GLdouble z[] = {ex - lx, ey - ly, ez - lz};
@@ -395,8 +407,8 @@ OpenGlMatrix ModelViewLookAtRUB(double ex, double ey, double ez, double lx, doub
     CrossProduct(y,z,x);
     
     // Normalize x, y
-    const double lenx = Length<3,double>(x);
-    const double leny = Length<3,double>(y);
+    const GLdouble lenx = Length<3>(x);
+    const GLdouble leny = Length<3>(y);
     
     if( lenx > 0 && leny > 0) {
         for(size_t r = 0; r < 3; ++r ) {
@@ -433,7 +445,7 @@ OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, doub
     OpenGlMatrix mat;
     GLdouble* m = mat.m;
     
-    const double u_o[3] = {ux,uy,uz};
+    const GLdouble u_o[3] = {ux,uy,uz};
     
     GLdouble x[3], y[3];
     GLdouble z[] = {lx - ex, ly - ey, lz - ez};
@@ -443,8 +455,8 @@ OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, doub
     CrossProduct(y,z,x);
     
     // Normalize x, y
-    const double lenx = Length<3,double>(x);
-    const double leny = Length<3,double>(y);
+    const double lenx = Length<3>(x);
+    const double leny = Length<3>(y);
     
     if( lenx > 0 && leny > 0) {
         for(size_t r = 0; r < 3; ++r ) {
@@ -482,7 +494,7 @@ OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double 
 
 OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, AxisDirection up)
 {
-    const double* u = AxisDirectionVector[up];
+    const GLdouble* u = AxisDirectionVector[up];
     return ModelViewLookAtRUB(ex,ey,ez,lx,ly,lz,u[0],u[1],u[2]);
 }
 

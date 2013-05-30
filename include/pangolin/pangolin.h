@@ -31,8 +31,10 @@
 #include <pangolin/platform.h>
 
 #ifdef BUILD_PANGOLIN_GUI
+#ifndef _ANDROID_
 #include <pangolin/gl.h>
 #include <pangolin/gldraw.h>
+#endif
 #include <pangolin/display.h>
 #include <pangolin/view.h>
 #include <pangolin/plotter.h>

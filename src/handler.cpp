@@ -127,6 +127,8 @@ void Handler3D::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 
 void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3], double default_z)
 {
+    // TODO: Get to work on android    
+#ifndef _ANDROID_    
     const GLint viewport[4] = {view.v.l,view.v.b,view.v.w,view.v.h};
     const pangolin::OpenGlMatrix proj = cam_state->GetProjectionMatrix();
     const pangolin::OpenGlMatrix mv = cam_state->GetModelViewMatrix();
@@ -157,6 +159,7 @@ void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, double p[3], do
     MatSub<3,1>(PtmPb,Pt,Pb);
     CrossProduct(n, PrmPl, PtmPb);
     Normalise<3>(n);
+#endif
 }
 
 void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)
@@ -165,7 +168,7 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
     last_pos[0] = x;
     last_pos[1] = y;
     
-    double T_nc[3*4];
+    GLdouble T_nc[3*4];
     LieSetIdentity(T_nc);
     
     if( pressed ) {
@@ -178,12 +181,13 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
         if( button == MouseWheelUp || button == MouseWheelDown)
         {
             LieSetIdentity(T_nc);
-            const double t[] = { 0,0,(button==MouseWheelUp?1:-1)*100*tf};
+            const GLdouble t[] = { 0,0,(button==MouseWheelUp?1:-1)*100*tf};
             LieSetTranslation<>(T_nc,t);
             if( !(button_state & MouseButtonRight) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
             {
                 LieSetTranslation<>(T_nc,rot_center);
-                MatMul<3,1>(T_nc+(3*3),(button==MouseWheelUp?-1.0:1.0) * zf);
+                const GLdouble s = (button==MouseWheelUp?-1.0:1.0) * zf;
+                MatMul<3,1>(T_nc+(3*3), s);
             }
             OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
             LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
@@ -193,7 +197,7 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
 
 void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
 {
-    const double rf = 0.01;
+    const GLdouble rf = 0.01;
     const int delta[2] = {(x-last_pos[0]),(y-last_pos[1])};
     const float mag = delta[0]*delta[0] + delta[1]*delta[1];
     
@@ -204,14 +208,14 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
     {
         OpenGlMatrix& mv = cam_state->GetModelViewMatrix();
         const GLdouble* up = AxisDirectionVector[enforce_up];
-        double T_nc[3*4];
+        GLdouble T_nc[3*4];
         LieSetIdentity(T_nc);
         bool rotation_changed = false;
         
         if( button_state == MouseButtonMiddle )
         {
             // Middle Drag: in plane translate
-            Rotation<>(T_nc,-delta[1]*rf, -delta[0]*rf, 0.0);
+            Rotation<>(T_nc,-delta[1]*rf, -delta[0]*rf, (GLdouble)0.0);
         }else if( button_state == MouseButtonLeft )
         {
             // Left Drag: in plane translate
@@ -219,11 +223,11 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             {
                 GLdouble np[3];
                 display.GetCamCoordinates(*cam_state,x,y,last_z, np[0], np[1], np[2]);
-                const double t[] = { np[0] - rot_center[0], np[1] - rot_center[1], 0};
+                const GLdouble t[] = { np[0] - rot_center[0], np[1] - rot_center[1], 0};
                 LieSetTranslation<>(T_nc,t);
                 std::copy(np,np+3,rot_center);
             }else{
-                const double t[] = { -10*delta[0]*tf, 10*delta[1]*tf, 0};
+                const GLdouble t[] = { -10*delta[0]*tf, 10*delta[1]*tf, 0};
                 LieSetTranslation<>(T_nc,t);
             }
         }else if( button_state == (MouseButtonLeft | MouseButtonRight) )
@@ -231,12 +235,12 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             // Left and Right Drag: in plane rotate about object
             //        Rotation<>(T_nc,0.0,0.0, delta[0]*0.01);
             
-            double T_2c[3*4];
-            Rotation<>(T_2c,0.0,0.0, delta[0]*rf);
-            double mrotc[3];
-            MatMul<3,1>(mrotc, rot_center, -1.0);
+            GLdouble T_2c[3*4];
+            Rotation<>(T_2c, (GLdouble)0.0, (GLdouble)0.0, delta[0]*rf);
+            GLdouble mrotc[3];
+            MatMul<3,1>(mrotc, rot_center, (GLdouble)-1.0);
             LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
-            double T_n2[3*4];
+            GLdouble T_n2[3*4];
             LieSetIdentity<>(T_n2);
             LieSetTranslation<>(T_n2,rot_center);
             LieMulSE3(T_nc, T_n2, T_2c );
@@ -244,8 +248,8 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         }else if( button_state == MouseButtonRight)
         {
             // Correct for OpenGL Camera.
-            double aboutx = -rf * delta[1];
-            double abouty =  rf * delta[0];
+            GLdouble aboutx = -rf * delta[1];
+            GLdouble abouty =  rf * delta[0];
             
             // Try to correct for different coordinate conventions.
             OpenGlMatrix& pm = cam_state->GetProjectionMatrix();
@@ -253,20 +257,20 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             
             if(enforce_up) {
                 // Special case if view direction is parallel to up vector
-                const double updotz = mv.m[2]*up[0] + mv.m[6]*up[1] + mv.m[10]*up[2];
-                if(updotz > 0.98) aboutx = std::min(aboutx,0.0);
-                if(updotz <-0.98) aboutx = std::max(aboutx,0.0);
+                const GLdouble updotz = mv.m[2]*up[0] + mv.m[6]*up[1] + mv.m[10]*up[2];
+                if(updotz > 0.98) aboutx = std::min(aboutx, (GLdouble)0.0);
+                if(updotz <-0.98) aboutx = std::max(aboutx, (GLdouble)0.0);
                 // Module rotation around y so we don't spin too fast!
                 abouty *= (1-0.6*abs(updotz));
             }
             
             // Right Drag: object centric rotation
-            double T_2c[3*4];
-            Rotation<>(T_2c, aboutx, abouty, 0.0);
-            double mrotc[3];
-            MatMul<3,1>(mrotc, rot_center, -1.0);
+            GLdouble T_2c[3*4];
+            Rotation<>(T_2c, aboutx, abouty, (GLdouble)0.0);
+            GLdouble mrotc[3];
+            MatMul<3,1>(mrotc, rot_center, (GLdouble)-1.0);
             LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
-            double T_n2[3*4];
+            GLdouble T_n2[3*4];
             LieSetIdentity<>(T_n2);
             LieSetTranslation<>(T_n2,rot_center);
             LieMulSE3(T_nc, T_n2, T_2c );
@@ -293,7 +297,7 @@ void Handler3D::Special(View& display, InputSpecial inType, float x, float y, fl
     last_pos[0] = x;
     last_pos[1] = y;
     
-    double T_nc[3*4];
+    GLdouble T_nc[3*4];
     LieSetIdentity(T_nc);
     
     GetPosNormal(display,x,y,p,Pw,Pc,n,last_z);
@@ -304,17 +308,17 @@ void Handler3D::Special(View& display, InputSpecial inType, float x, float y, fl
     
     if( inType == InputSpecialScroll ) {
         if(button_state & KeyModifierCmd) {
-            const double rx = -p2 / 1000;
-            const double ry = -p1 / 1000;
+            const GLdouble rx = -p2 / 1000;
+            const GLdouble ry = -p1 / 1000;
             
-            Rotation<>(T_nc,rx, ry, 0.0);
+            Rotation<>(T_nc,rx, ry, (GLdouble)0.0);
             OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
             LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
         }else{
-            const double scrolly = p2/10;
+            const GLdouble scrolly = p2/10;
             
             LieSetIdentity(T_nc);
-            const double t[] = { 0,0, -scrolly*100*tf};
+            const GLdouble t[] = { 0,0, -scrolly*100*tf};
             LieSetTranslation<>(T_nc,t);
             if( !(button_state & MouseButtonRight) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
             {
@@ -325,14 +329,14 @@ void Handler3D::Special(View& display, InputSpecial inType, float x, float y, fl
             LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
         }
     }else if(inType == InputSpecialRotate) {
-        const double r = p1 / 20;
+        const GLdouble r = p1 / 20;
         
-        double T_2c[3*4];
-        Rotation<>(T_2c,0.0,0.0, r);
-        double mrotc[3];
-        MatMul<3,1>(mrotc, rot_center, -1.0);
+        GLdouble T_2c[3*4];
+        Rotation<>(T_2c, (GLdouble)0.0, (GLdouble)0.0, r);
+        GLdouble mrotc[3];
+        MatMul<3,1>(mrotc, rot_center, (GLdouble)-1.0);
         LieApplySO3<>(T_2c+(3*3),T_2c,mrotc);
-        double T_n2[3*4];
+        GLdouble T_n2[3*4];
         LieSetIdentity<>(T_n2);
         LieSetTranslation<>(T_n2,rot_center);
         LieMulSE3(T_nc, T_n2, T_2c );

@@ -42,6 +42,7 @@
 #cmakedefine _WIN_
 #cmakedefine _OSX_
 #cmakedefine _LINUX_
+#cmakedefine _ANDROID_
 
 /// Compiler
 #cmakedefine _GCC_

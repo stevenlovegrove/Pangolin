@@ -6,7 +6,8 @@
 #include <pangolin/display_internal.h>
 #include <pangolin/view.h>
 #include <pangolin/viewport.h>
-#include <pangolin/gl.h>
+//#include <pangolin/gl.h>
+#include <pangolin/glinclude.h>
 
 #ifdef HAVE_BOOST_GIL
     #include <boost/gil/gil_all.hpp>
@@ -48,6 +49,7 @@ float AspectAreaWithinTarget(double target, double test)
 
 void SaveViewFromFbo(std::string prefix, View& view, float scale)
 {
+#ifndef _ANDROID_
     const Viewport orig = view.v;
     view.v.l = 0;
     view.v.b = 0;
@@ -91,7 +93,8 @@ void SaveViewFromFbo(std::string prefix, View& view, float scale)
     // restore viewport / line width
     view.v = orig;
     glLineWidth(origLineWidth);
-    glPointSize(origPointSize);      
+    glPointSize(origPointSize); 
+#endif // _ANDROID_
 }
 
 void View::Resize(const Viewport& p)
@@ -304,6 +307,8 @@ void View::ActivatePixelOrthographic() const
 
 GLfloat View::GetClosestDepth(int x, int y, int radius) const
 {
+    // TODO: Get to work on android    
+#ifndef _ANDROID_
     glReadBuffer(GL_FRONT);
     const int zl = (radius*2+1);
     const int zsize = zl*zl;
@@ -311,21 +316,28 @@ GLfloat View::GetClosestDepth(int x, int y, int radius) const
     glReadPixels(x-radius,y-radius,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
     const GLfloat mindepth = *(std::min_element(zs,zs+zsize));
     return mindepth;
+#endif
 }
 
-void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const
+void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
 {
+    // TODO: Get to work on android
+#ifndef _ANDROID_
     const GLint viewport[4] = {v.l,v.b,v.w,v.h};
     const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
     const OpenGlMatrix mv = cam_state.GetModelViewMatrix();
     gluUnProject(winx, winy, winzdepth, mv.m, proj.m, viewport, &x, &y, &z);
+#endif
 }
 
-void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, double& x, double& y, double& z) const
+void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
 {
+    // TODO: Get to work on android    
+#ifndef _ANDROID_
     const GLint viewport[4] = {v.l,v.b,v.w,v.h};
     const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
     gluUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
+#endif
 }
 
 View& View::SetFocus()
