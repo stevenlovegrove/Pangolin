@@ -363,14 +363,23 @@ inline void GlTexture::RenderToViewport() const
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    Bind();
+
+    GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
+    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+    glEnableClientState(GL_VERTEX_ARRAY);   
+
+    GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
+    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
     glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2d(-1,-1);
-    glTexCoord2f(1, 0); glVertex2d(1,-1);
-    glTexCoord2f(1, 1); glVertex2d(1,1);
-    glTexCoord2f(0, 1); glVertex2d(-1,1);
-    glEnd();
+    Bind();
+   
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
     glDisable(GL_TEXTURE_2D);
 }
 
@@ -380,14 +389,23 @@ inline void GlTexture::RenderToViewportFlipY() const
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    Bind();
+
+    GLfloat sq_vert[] = { -1,1,  1,1,  1,-1,  -1,-1 };
+    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+    glEnableClientState(GL_VERTEX_ARRAY);   
+
+    GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
+    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
     glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2d(-1,1);
-    glTexCoord2f(1, 0); glVertex2d(1,1);
-    glTexCoord2f(1, 1); glVertex2d(1,-1);
-    glTexCoord2f(0, 1); glVertex2d(-1,-1);
-    glEnd();
+    Bind();
+   
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
     glDisable(GL_TEXTURE_2D);
 }
 
@@ -397,14 +415,23 @@ inline void GlTexture::RenderToViewportFlipXFlipY() const
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    Bind();
+
+    GLfloat sq_vert[] = { 1,1,  -1,1,  -1,-1,  -1,-1 };
+    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+    glEnableClientState(GL_VERTEX_ARRAY);   
+
+    GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
+    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      
     glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2d(1,1);
-    glTexCoord2f(1, 0); glVertex2d(-1,1);
-    glTexCoord2f(1, 1); glVertex2d(-1,-1);
-    glTexCoord2f(0, 1); glVertex2d(1,-1);
-    glEnd();
+    Bind();
+   
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
     glDisable(GL_TEXTURE_2D);
 }
 

@@ -6,8 +6,11 @@
 #include <pangolin/display_internal.h>
 #include <pangolin/view.h>
 #include <pangolin/viewport.h>
-//#include <pangolin/gl.h>
 #include <pangolin/glinclude.h>
+
+#ifndef _ANDROID_
+#include <pangolin/gl.h>
+#endif
 
 #ifdef HAVE_BOOST_GIL
     #include <boost/gil/gil_all.hpp>

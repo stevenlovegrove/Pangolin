@@ -28,7 +28,10 @@
 #ifndef PLOTTER_H
 #define PLOTTER_H
 
-#include <pangolin/pangolin.h>
+#include <pangolin/gl.h>
+#include <pangolin/view.h>
+#include <pangolin/handler.h>
+
 #include <vector>
 
 // Dont trouble the user with these warnings in boost.

@@ -82,8 +82,8 @@ const static GLdouble AxisDirectionVector[7][3] = {
 
 //! @brief Object representing OpenGl Matrix
 struct OpenGlMatrix {
-    static OpenGlMatrix Translate(double x, double y, double z);
-    static OpenGlMatrix Scale(double x, double y, double z);
+    static OpenGlMatrix Translate(GLdouble x, GLdouble y, GLdouble z);
+    static OpenGlMatrix Scale(GLdouble x, GLdouble y, GLdouble z);
     
     OpenGlMatrix();
     
@@ -168,25 +168,25 @@ protected:
     bool follow;
 };
 
-OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
-OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
-OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
+OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, GLdouble fu, GLdouble fv, GLdouble u0, GLdouble v0, GLdouble zNear, GLdouble zFar );
+OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, GLdouble fu, GLdouble fv, GLdouble u0, GLdouble v0, GLdouble zNear, GLdouble zFar );
+OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, GLdouble fu, GLdouble fv, GLdouble u0, GLdouble v0, GLdouble zNear, GLdouble zFar );
 
 //! Use OpenGl's default frame RUB_BottomLeft
-OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar );
-OpenGlMatrixSpec ProjectionMatrixOrthographic(double l, double r, double b, double t, double n, double f );
+OpenGlMatrixSpec ProjectionMatrix(int w, int h, GLdouble fu, GLdouble fv, GLdouble u0, GLdouble v0, GLdouble zNear, GLdouble zFar );
+OpenGlMatrixSpec ProjectionMatrixOrthographic(GLdouble l, GLdouble r, GLdouble b, GLdouble t, GLdouble n, GLdouble f );
 
 //! Generate glulookat style model view matrix, looking at (lx,ly,lz)
 //! X-Right, Y-Up, Z-Back
-OpenGlMatrix ModelViewLookAtRUB(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz);
+OpenGlMatrix ModelViewLookAtRUB(GLdouble ex, GLdouble ey, GLdouble ez, GLdouble lx, GLdouble ly, GLdouble lz, GLdouble ux, GLdouble uy, GLdouble uz);
 
 //! Generate glulookat style model view matrix, looking at (lx,ly,lz)
 //! X-Right, Y-Down, Z-Forward
-OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz);
+OpenGlMatrix ModelViewLookAtRDF(GLdouble ex, GLdouble ey, GLdouble ez, GLdouble lx, GLdouble ly, GLdouble lz, GLdouble ux, GLdouble uy, GLdouble uz);
 
 //! Generate glulookat style model view matrix, OpenGL Default camera convention (XYZ=RUB), looking at (lx,ly,lz)
-OpenGlMatrix ModelViewLookAt(double x, double y, double z, double lx, double ly, double lz, AxisDirection up);
-OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz);
+OpenGlMatrix ModelViewLookAt(GLdouble x, GLdouble y, GLdouble z, GLdouble lx, GLdouble ly, GLdouble lz, AxisDirection up);
+OpenGlMatrix ModelViewLookAt(GLdouble ex, GLdouble ey, GLdouble ez, GLdouble lx, GLdouble ly, GLdouble lz, GLdouble ux, GLdouble uy, GLdouble uz);
 
 OpenGlMatrix IdentityMatrix();
 OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);
@@ -234,11 +234,11 @@ OpenGlMatrix::operator Eigen::Matrix<P,4,4>() const
 #ifdef HAVE_TOON
 inline OpenGlMatrix::OpenGlMatrix(const TooN::SE3<>& T)
 {
-    TooN::Matrix<4,4,double,TooN::ColMajor> M;
+    TooN::Matrix<4,4,GLdouble,TooN::ColMajor> M;
     M.slice<0,0,3,3>() = T.get_rotation().get_matrix();
     M.T()[3].slice<0,3>() = T.get_translation();
     M[3] = TooN::makeVector(0,0,0,1);
-    std::memcpy(m, &(M[0][0]),16*sizeof(double));
+    std::memcpy(m, &(M[0][0]),16*sizeof(GLdouble));
 }
 
 inline OpenGlMatrix::OpenGlMatrix(const TooN::Matrix<4,4>& M)
@@ -271,14 +271,14 @@ inline OpenGlMatrix::operator const TooN::Matrix<4,4>() const
 PANGOLIN_DEPRECATED
 inline OpenGlMatrixSpec FromTooN(const TooN::SE3<>& T_cw)
 {
-    TooN::Matrix<4,4,double,TooN::ColMajor> M;
+    TooN::Matrix<4,4,GLdouble,TooN::ColMajor> M;
     M.slice<0,0,3,3>() = T_cw.get_rotation().get_matrix();
     M.T()[3].slice<0,3>() = T_cw.get_translation();
     M[3] = TooN::makeVector(0,0,0,1);
     
     OpenGlMatrixSpec P;
     P.type = GlModelViewStack;
-    std::memcpy(P.m, &(M[0][0]),16*sizeof(double));
+    std::memcpy(P.m, &(M[0][0]),16*sizeof(GLdouble));
     return P;
 }
 

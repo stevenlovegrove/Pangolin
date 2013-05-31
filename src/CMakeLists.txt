@@ -86,8 +86,10 @@ endif()
 #######################################################
 ## Find optional dependencies
 
+## Don't even try to find these things on android
+if(NOT ANDROID)
     find_package(CVARS QUIET)
-if(CVARS_FOUND AND NOT ANDROID)
+    if(CVARS_FOUND)
       set(HAVE_CVARS 1)
       list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
       list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
@@ -137,6 +139,7 @@ if(CVARS_FOUND AND NOT ANDROID)
         set(HAVE_GLUT 1)
         message(STATUS "Glut Found and Enabled")
     endif()
+endif() # NOT ANDROID
 
 find_package(Eigen3 QUIET)
 if(EIGEN3_FOUND)
@@ -272,10 +275,14 @@ file( RELATIVE_PATH REL_INCLUDE_DIR
     "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
     "${CMAKE_INSTALL_PREFIX}/include" )
 
-# Add package to CMake package registery for use from the build tree
 export( TARGETS ${LIBRARY_NAME}
         FILE "${CMAKE_CURRENT_BINARY_DIR}/PangolinTargets.cmake" )
-export( PACKAGE Pangolin )
+
+if(NOT ANDROID)
+    # Add package to CMake package registery for use from the build tree
+    export( PACKAGE Pangolin )
+endif()
+
 # Install the export set for use with the install tree
 install( EXPORT PangolinTargets DESTINATION ${CMAKECONFIG_INSTALL_DIR} )
 

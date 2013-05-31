@@ -32,7 +32,7 @@
 namespace pangolin
 {
 
-OpenGlMatrix OpenGlMatrix::Translate(double x, double y, double z)
+OpenGlMatrix OpenGlMatrix::Translate(GLdouble x, GLdouble y, GLdouble z)
 {
     OpenGlMatrix mat;
     mat.SetIdentity();
@@ -42,7 +42,7 @@ OpenGlMatrix OpenGlMatrix::Translate(double x, double y, double z)
     return mat;
 }
 
-OpenGlMatrix OpenGlMatrix::Scale(double x, double y, double z)
+OpenGlMatrix OpenGlMatrix::Scale(GLdouble x, GLdouble y, GLdouble z)
 {
     OpenGlMatrix mat;
     mat.SetIdentity();
@@ -270,12 +270,12 @@ void OpenGlRenderState::Unfollow()
 }
 
 // Use OpenGl's default frame of reference
-OpenGlMatrixSpec ProjectionMatrix(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
+OpenGlMatrixSpec ProjectionMatrix(int w, int h, GLdouble fu, GLdouble fv, GLdouble u0, GLdouble v0, GLdouble zNear, GLdouble zFar )
 {
     return ProjectionMatrixRUB_BottomLeft(w,h,fu,fv,u0,v0,zNear,zFar);
 }
 
-OpenGlMatrixSpec ProjectionMatrixOrthographic(double l, double r, double b, double t, double n, double f )
+OpenGlMatrixSpec ProjectionMatrixOrthographic(GLdouble l, GLdouble r, GLdouble b, GLdouble t, GLdouble n, GLdouble f )
 {
     OpenGlMatrixSpec P;
     P.type = GlProjectionStack;
@@ -311,13 +311,13 @@ OpenGlMatrixSpec ProjectionMatrixOrthographic(double l, double r, double b, doub
 // Caution: Principal point defined with respect to image origin (0,0) at
 //          top left of top-left pixel (not center, and in different frame
 //          of reference to projection function image)
-OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
+OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, GLdouble fu, GLdouble fv, GLdouble u0, GLdouble v0, GLdouble zNear, GLdouble zFar )
 {
     // http://www.songho.ca/opengl/gl_projectionmatrix.html
-    const double L = +(u0) * zNear / -fu;
-    const double T = +(v0) * zNear / fv;
-    const double R = -(w-u0) * zNear / -fu;
-    const double B = -(h-v0) * zNear / fv;
+    const GLdouble L = +(u0) * zNear / -fu;
+    const GLdouble T = +(v0) * zNear / fv;
+    const GLdouble R = -(w-u0) * zNear / -fu;
+    const GLdouble B = -(h-v0) * zNear / fv;
     
     OpenGlMatrixSpec P;
     P.type = GlProjectionStack;
@@ -339,13 +339,13 @@ OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, double fu, double 
 // Image Origin:
 //   Top Left
 // Pricipal point specified with image origin (0,0) at top left of top-left pixel (not center)
-OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
+OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, GLdouble fu, GLdouble fv, GLdouble u0, GLdouble v0, GLdouble zNear, GLdouble zFar )
 {
     // http://www.songho.ca/opengl/gl_projectionmatrix.html
-    const double L = -(u0) * zNear / fu;
-    const double R = +(w-u0) * zNear / fu;
-    const double T = -(v0) * zNear / fv;
-    const double B = +(h-v0) * zNear / fv;
+    const GLdouble L = -(u0) * zNear / fu;
+    const GLdouble R = +(w-u0) * zNear / fu;
+    const GLdouble T = -(v0) * zNear / fv;
+    const GLdouble B = +(h-v0) * zNear / fv;
     
     OpenGlMatrixSpec P;
     P.type = GlProjectionStack;
@@ -368,13 +368,13 @@ OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, double fu, double fv,
 // Image Origin:
 //   Bottom Left
 // Pricipal point specified with image origin (0,0) at top left of top-left pixel (not center)
-OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, double fu, double fv, double u0, double v0, double zNear, double zFar )
+OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, GLdouble fu, GLdouble fv, GLdouble u0, GLdouble v0, GLdouble zNear, GLdouble zFar )
 {
     // http://www.songho.ca/opengl/gl_projectionmatrix.html
-    const double L = -(u0) * zNear / fu;
-    const double R = +(w-u0) * zNear / fu;
-    const double B = -(v0) * zNear / fv;
-    const double T = +(h-v0) * zNear / fv;
+    const GLdouble L = -(u0) * zNear / fu;
+    const GLdouble R = +(w-u0) * zNear / fu;
+    const GLdouble B = -(v0) * zNear / fv;
+    const GLdouble T = +(h-v0) * zNear / fv;
     
     OpenGlMatrixSpec P;
     P.type = GlProjectionStack;
@@ -392,7 +392,7 @@ OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, double fu, double 
     return P;
 }
 
-OpenGlMatrix ModelViewLookAtRUB(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
+OpenGlMatrix ModelViewLookAtRUB(GLdouble ex, GLdouble ey, GLdouble ez, GLdouble lx, GLdouble ly, GLdouble lz, GLdouble ux, GLdouble uy, GLdouble uz)
 {
     OpenGlMatrix mat;
     GLdouble* m = mat.m;
@@ -440,7 +440,7 @@ OpenGlMatrix ModelViewLookAtRUB(double ex, double ey, double ez, double lx, doub
     
 }
 
-OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
+OpenGlMatrix ModelViewLookAtRDF(GLdouble ex, GLdouble ey, GLdouble ez, GLdouble lx, GLdouble ly, GLdouble lz, GLdouble ux, GLdouble uy, GLdouble uz)
 {
     OpenGlMatrix mat;
     GLdouble* m = mat.m;
@@ -455,8 +455,8 @@ OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, doub
     CrossProduct(y,z,x);
     
     // Normalize x, y
-    const double lenx = Length<3>(x);
-    const double leny = Length<3>(y);
+    const GLdouble lenx = Length<3>(x);
+    const GLdouble leny = Length<3>(y);
     
     if( lenx > 0 && leny > 0) {
         for(size_t r = 0; r < 3; ++r ) {
@@ -487,12 +487,12 @@ OpenGlMatrix ModelViewLookAtRDF(double ex, double ey, double ez, double lx, doub
     }
 }
 
-OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, double ux, double uy, double uz)
+OpenGlMatrix ModelViewLookAt(GLdouble ex, GLdouble ey, GLdouble ez, GLdouble lx, GLdouble ly, GLdouble lz, GLdouble ux, GLdouble uy, GLdouble uz)
 {
     return ModelViewLookAtRUB(ex,ey,ez,lz,ly,lz,ux,uy,uz);
 }
 
-OpenGlMatrix ModelViewLookAt(double ex, double ey, double ez, double lx, double ly, double lz, AxisDirection up)
+OpenGlMatrix ModelViewLookAt(GLdouble ex, GLdouble ey, GLdouble ez, GLdouble lx, GLdouble ly, GLdouble lz, AxisDirection up)
 {
     const GLdouble* u = AxisDirectionVector[up];
     return ModelViewLookAtRUB(ex,ey,ez,lx,ly,lz,u[0],u[1],u[2]);
