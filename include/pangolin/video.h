@@ -46,7 +46,9 @@
 //  e.g. "dc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0"
 //
 // v4l - capture video from a Video4Linux (USB) camera (normally YUVY422 format)
+//           method=mmap|read|userptr
 //  e.g. "v4l:///dev/video0"
+//  e.g. "v4l[method=mmap]:///dev/video0"
 //
 // openni - capture video / depth from an OpenNI streaming device (Kinect / Xtrion etc)
 //  e.g. "openni://'

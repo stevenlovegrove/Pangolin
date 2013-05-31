@@ -287,7 +287,19 @@ VideoInterface* OpenVideo(std::string str_uri)
 #endif //HAVE_FFMPEG
 #ifdef HAVE_V4L
     if(!uri.scheme.compare("v4l")) {
-        video = new V4lVideo(uri.url.c_str());
+        const string smethod = uri.Get<std::string>("method","mmap");
+        
+        io_method method = IO_METHOD_MMAP;
+        
+        if(smethod == "read" ) {
+            method = IO_METHOD_READ;
+        }else if(smethod == "mmap" ) {
+            method = IO_METHOD_MMAP;
+        }else if(smethod == "userptr" ) {
+            method = IO_METHOD_USERPTR;
+        }            
+        
+        video = new V4lVideo(uri.url.c_str(), method);
     }else
 #endif // HAVE_V4L
 #ifdef HAVE_DC1394
