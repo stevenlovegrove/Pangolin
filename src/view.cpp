@@ -308,35 +308,37 @@ void View::ActivatePixelOrthographic() const
 GLfloat View::GetClosestDepth(int x, int y, int radius) const
 {
     // TODO: Get to work on android    
-#ifndef _ANDROID_
-    glReadBuffer(GL_FRONT);
     const int zl = (radius*2+1);
     const int zsize = zl*zl;
     GLfloat zs[zsize];
+    
+#ifndef _ANDROID_
+    glReadBuffer(GL_FRONT);
     glReadPixels(x-radius,y-radius,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
+#else
+    std::fill(zs,zs+zsize, 0.8);    
+#endif
+    
     const GLfloat mindepth = *(std::min_element(zs,zs+zsize));
     return mindepth;
-#endif
 }
 
 void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
 {
-    // TODO: Get to work on android
-#ifndef _ANDROID_
     const GLint viewport[4] = {v.l,v.b,v.w,v.h};
     const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
     const OpenGlMatrix mv = cam_state.GetModelViewMatrix();
     gluUnProject(winx, winy, winzdepth, mv.m, proj.m, viewport, &x, &y, &z);
-#endif
 }
 
 void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
 {
-    // TODO: Get to work on android    
-#ifndef _ANDROID_
     const GLint viewport[4] = {v.l,v.b,v.w,v.h};
     const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
+#ifndef _ANDROID_    
     gluUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
+#else
+    gluUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
 #endif
 }
 

@@ -125,21 +125,26 @@ void Handler3D::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
     // TODO: hooks for reset / changing mode (perspective / ortho etc)
 }
 
-void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3], double default_z)
+void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, GLdouble p[3], GLdouble Pw[3], GLdouble Pc[3], GLdouble n[3], GLdouble default_z)
 {
     // TODO: Get to work on android    
-#ifndef _ANDROID_    
     const GLint viewport[4] = {view.v.l,view.v.b,view.v.w,view.v.h};
     const pangolin::OpenGlMatrix proj = cam_state->GetProjectionMatrix();
     const pangolin::OpenGlMatrix mv = cam_state->GetModelViewMatrix();
     //      const pangolin::OpenGlMatrix id = IdentityMatrix();
     
-    glReadBuffer(GL_FRONT);
     const int zl = (hwin*2+1);
     const int zsize = zl*zl;
     GLfloat zs[zsize];
+    
+#ifndef _ANDROID_    
+    glReadBuffer(GL_FRONT);
     glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
+#else
+    std::fill(zs,zs+zsize, 0.8);
+#endif
     GLfloat mindepth = *(std::min_element(zs,zs+zsize));
+    
     if(mindepth == 1) mindepth = default_z;
     
     p[0] = x; p[1] = y; p[2] = mindepth;
@@ -147,19 +152,18 @@ void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, double p[3], do
     //      gluUnProject(x, y, mindepth, id.m, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
     LieApplySE34x4vec3(Pc, mv.m, Pw);
     
-    double Pl[3]; double Pr[3]; double Pb[3]; double Pt[3];
+    GLdouble Pl[3]; GLdouble Pr[3]; GLdouble Pb[3]; GLdouble Pt[3];
     gluUnProject(x-hwin, y, zs[hwin*zl + 0],    mv.m, proj.m, viewport, &Pl[0], &Pl[1], &Pl[2]);
     gluUnProject(x+hwin, y, zs[hwin*zl + zl-1], mv.m, proj.m, viewport, &Pr[0], &Pr[1], &Pr[2]);
     gluUnProject(x, y-hwin, zs[hwin+1],         mv.m, proj.m, viewport, &Pb[0], &Pb[1], &Pb[2]);
     gluUnProject(x, y+hwin, zs[zsize-(hwin+1)], mv.m, proj.m, viewport, &Pt[0], &Pt[1], &Pt[2]);
     
     //      n = ((Pr-Pl).cross(Pt-Pb)).normalized();
-    double PrmPl[3]; double PtmPb[3];
+    GLdouble PrmPl[3]; GLdouble PtmPb[3];
     MatSub<3,1>(PrmPl,Pr,Pl);
     MatSub<3,1>(PtmPb,Pt,Pb);
     CrossProduct(n, PrmPl, PtmPb);
     Normalise<3>(n);
-#endif
 }
 
 void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)

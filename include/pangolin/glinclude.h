@@ -65,7 +65,7 @@
 #elif defined(_ANDROID_)
     #include <EGL/egl.h>
     #include <GLES/gl.h>
-//    #define GLdouble GLfloat
+    #include <glues/glu.h>
     #define GLdouble GLfloat
 #else
     #include <GL/gl.h>
