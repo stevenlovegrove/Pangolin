@@ -31,21 +31,19 @@
 #include <pangolin/platform.h>
 
 #ifdef BUILD_PANGOLIN_GUI
-#ifndef _ANDROID_
+#ifndef HAVE_GLES
 #include <pangolin/gl.h>
 #include <pangolin/gldraw.h>
 #include <pangolin/plotter.h>
-#endif // _ANDROID_
+#endif // HAVE_GLES
 #include <pangolin/display.h>
 #include <pangolin/view.h>
 #endif // BUILD_PANGOLIN_GUI
 
 #ifdef BUILD_PANGOLIN_VARS
 #include <pangolin/vars.h>
-#ifdef BUILD_PANGOLIN_GUI
-#ifndef _ANDROID_
+#if defined(BUILD_PANGOLIN_GUI) && !defined(HAVE_GLES)
 #include <pangolin/widgets.h>
-#endif // _ANDROID_
 #endif // BUILD_PANGOLIN_GUI
 #endif // BUILD_PANGOLIN_VARS
 

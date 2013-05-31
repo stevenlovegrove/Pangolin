@@ -31,6 +31,7 @@
 #cmakedefine HAVE_FREEGLUT
 #cmakedefine HAVE_APPLE_OPENGL_FRAMEWORK
 #cmakedefine HAVE_MODIFIED_OSXGLUT
+#cmakedefine HAVE_GLES
 
 #cmakedefine HAVE_BOOST_GIL
 #cmakedefine HAVE_PNG

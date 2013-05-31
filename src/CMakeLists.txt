@@ -66,7 +66,7 @@ endif()
 ## Setup required includes / link info
 
 # Project headers trump everything (including any potentially installed Pangolin)
-list(APPEND USER_INC  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
+list(APPEND PANGO_INC  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 
 find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
 list(APPEND USER_INC  "${Boost_INCLUDE_DIRS}" )
@@ -139,6 +139,8 @@ if(NOT ANDROID)
         set(HAVE_GLUT 1)
         message(STATUS "Glut Found and Enabled")
     endif()
+else()  # NOT ANDROID
+    set(HAVE_GLES 1)
 endif() # NOT ANDROID
 
 find_package(Eigen3 QUIET)
@@ -230,6 +232,7 @@ endif()
 #######################################################
 ## Add Libraries / Include Directories / Link directories
 
+include_directories( ${PANGO_INC} )
 include_directories( ${USER_INC} )
 include_directories( ${INTERNAL_INC} )
 
@@ -291,7 +294,7 @@ install( EXPORT PangolinTargets DESTINATION ${CMAKECONFIG_INSTALL_DIR} )
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/PangolinConfig.cmake @ONLY IMMEDIATE )
 # ... for the install tree
-set( USER_INC "\${PANGOLIN_CMAKE_DIR}/${REL_INCLUDE_DIR}" )
+set( PANGO_INC "\${PANGOLIN_CMAKE_DIR}/${REL_INCLUDE_DIR}" )
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PangolinConfig.cmake @ONLY )
 

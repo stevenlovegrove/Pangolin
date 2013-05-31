@@ -62,7 +62,7 @@ bool Viewport::Contains(int x, int y) const
 void Viewport::ActivatePixelOrthographic() const
 {
     // TODO: Get to work on android    
-#ifndef _ANDROID_    
+#ifndef HAVE_GLES    
     Activate();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();

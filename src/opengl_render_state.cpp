@@ -54,7 +54,7 @@ OpenGlMatrix OpenGlMatrix::Scale(GLdouble x, GLdouble y, GLdouble z)
 
 void OpenGlMatrix::Load() const
 {
-#ifndef _ANDROID_
+#ifndef HAVE_GLES
     glLoadMatrixd(m);
 #else
     glLoadMatrixf(m);
@@ -63,7 +63,7 @@ void OpenGlMatrix::Load() const
 
 void OpenGlMatrix::Multiply() const
 {
-#ifndef _ANDROID_
+#ifndef HAVE_GLES
     glMultMatrixd(m);
 #else
     glMultMatrixf(m);
@@ -220,7 +220,7 @@ OpenGlMatrix OpenGlRenderState::GetProjectiveTextureMatrix() const
 
 void OpenGlRenderState::EnableProjectiveTexturing() const
 {
-#ifndef _ANDROID_
+#ifndef HAVE_GLES
     const pangolin::OpenGlMatrix projmattrans = GetProjectiveTextureMatrix().Transpose();
     glEnable(GL_TEXTURE_GEN_S);
     glEnable(GL_TEXTURE_GEN_T);
@@ -239,7 +239,7 @@ void OpenGlRenderState::EnableProjectiveTexturing() const
 
 void OpenGlRenderState::DisableProjectiveTexturing() const
 {
-#ifndef _ANDROID_
+#ifndef HAVE_GLES
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
     glDisable(GL_TEXTURE_GEN_R);

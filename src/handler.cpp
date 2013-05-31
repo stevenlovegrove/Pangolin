@@ -137,7 +137,7 @@ void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, GLdouble p[3], 
     const int zsize = zl*zl;
     GLfloat zs[zsize];
     
-#ifndef _ANDROID_    
+#ifndef HAVE_GLES    
     glReadBuffer(GL_FRONT);
     glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
 #else

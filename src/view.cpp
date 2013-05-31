@@ -8,7 +8,7 @@
 #include <pangolin/viewport.h>
 #include <pangolin/glinclude.h>
 
-#ifndef _ANDROID_
+#ifndef HAVE_GLES
 #include <pangolin/gl.h>
 #endif
 
@@ -52,7 +52,7 @@ float AspectAreaWithinTarget(double target, double test)
 
 void SaveViewFromFbo(std::string prefix, View& view, float scale)
 {
-#ifndef _ANDROID_
+#ifndef HAVE_GLES
     const Viewport orig = view.v;
     view.v.l = 0;
     view.v.b = 0;
@@ -97,7 +97,7 @@ void SaveViewFromFbo(std::string prefix, View& view, float scale)
     view.v = orig;
     glLineWidth(origLineWidth);
     glPointSize(origPointSize); 
-#endif // _ANDROID_
+#endif // HAVE_GLES
 }
 
 void View::Resize(const Viewport& p)
@@ -315,7 +315,7 @@ GLfloat View::GetClosestDepth(int x, int y, int radius) const
     const int zsize = zl*zl;
     GLfloat zs[zsize];
     
-#ifndef _ANDROID_
+#ifndef HAVE_GLES
     glReadBuffer(GL_FRONT);
     glReadPixels(x-radius,y-radius,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
 #else
@@ -338,7 +338,7 @@ void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, do
 {
     const GLint viewport[4] = {v.l,v.b,v.w,v.h};
     const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
-#ifndef _ANDROID_    
+#ifndef HAVE_GLES    
     gluUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
 #else
     gluUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
