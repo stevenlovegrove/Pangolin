@@ -8,8 +8,10 @@ if( NOT TARGET @LIBRARY_NAME@ AND NOT Pangolin_BINARY_DIR )
   include( "${PANGOLIN_CMAKE_DIR}/PangolinTargets.cmake" )
 endif()
 
-# Import targets from CVars
-find_package( CVARS QUIET )
+if(NOT ANDROID)
+    # Import targets from CVars
+    find_package( CVARS QUIET )
+endif()
 
 SET( Pangolin_LIBRARIES    @LIBRARY_NAME@ ${CVARS_LIBRARIES} )
 SET( Pangolin_LIBRARY      @LIBRARY_NAME@ )
