@@ -4,6 +4,7 @@ find_package(CUDA QUIET)
 
 # All examples depend on Pangolin GUI and GLUT
 if(BUILD_PANGOLIN_GUI AND (FREEGLUT_FOUND OR GLUT_FOUND) )
+    add_subdirectory(HelloPangolin)
     add_subdirectory(SimpleMultiDisplay)
     add_subdirectory(SimpleDisplayImage)
     add_subdirectory(SimplePlot)
