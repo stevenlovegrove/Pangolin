@@ -27,6 +27,7 @@
 
 #include <pangolin/plotter.h>
 #include <pangolin/display.h>
+#include <pangolin/gldraw.h>
 #include <pangolin/display_internal.h>
 
 #include <limits>
@@ -43,7 +44,9 @@ namespace pangolin
 
 extern __thread PangolinGl* context;
 
+#ifndef HAVE_GLES
 static void* font = GLUT_BITMAP_HELVETICA_12;
+#endif
 
 const static int num_plot_colours = 12;
 const static float plot_colours[][3] =
@@ -251,37 +254,21 @@ void Plotter::DrawTicks()
     
     const int votx = ceil(vo[0]/ ticks[0]);
     const int voty = ceil(vo[1]/ ticks[1]);
-    if( tx[1] - tx[0] < v.w/4 )
-    {
-        for( int i=tx[0]; i<tx[1]; ++i )
-        {
-            glBegin(GL_LINE_STRIP);
-            glVertex2f((i+votx)*ticks[0], int_y[0]+vo[1]);
-            glVertex2f((i+votx)*ticks[0], int_y[1]+vo[1]);
-            glEnd();
+    if( tx[1] - tx[0] < v.w/4 ) {
+        for( int i=tx[0]; i<tx[1]; ++i ) {
+            glDrawLine((i+votx)*ticks[0], int_y[0]+vo[1],   (i+votx)*ticks[0], int_y[1]+vo[1]);
         }
     }
     
-    if( ty[1] - ty[0] < v.h/4 )
-    {
-        for( int i=ty[0]; i<ty[1]; ++i )
-        {
-            glBegin(GL_LINE_STRIP);
-            glVertex2f(int_x[0]+vo[0], (i+voty)*ticks[1]);
-            glVertex2f(int_x[1]+vo[0], (i+voty)*ticks[1]);
-            glEnd();
+    if( ty[1] - ty[0] < v.h/4 ) {
+        for( int i=ty[0]; i<ty[1]; ++i ) {
+            glDrawLine(int_x[0]+vo[0], (i+voty)*ticks[1],  int_x[1]+vo[0], (i+voty)*ticks[1]);
         }
     }
     
     glColor3fv(colour_ax);
-    glBegin(GL_LINE_STRIP);
-    glVertex2f(0, int_y[0]+vo[1]);
-    glVertex2f(0, int_y[1]+vo[1]);
-    glEnd();
-    glBegin(GL_LINE_STRIP);
-    glVertex2f(int_x[0]+vo[0],0);
-    glVertex2f(int_x[1]+vo[0],0);
-    glEnd();
+    glDrawLine(0, int_y[0]+vo[1],  0, int_y[1]+vo[1] );
+    glDrawLine(int_x[0]+vo[0],0,   int_x[1]+vo[0],0  );
     glLineWidth(1.0f);
 }
 
@@ -352,7 +339,9 @@ void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
 
 void Plotter::Render()
 {
+#ifndef HAVE_GLES
     glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_LINE_BIT);
+#endif
     
     if( track_front )
     {
@@ -382,36 +371,24 @@ void Plotter::Render()
     
     DrawTicks();
     
-    if( log && log->sequences.size() > 0 )
-    {
-        if( plot_mode==XY )
-        {
-            for( unsigned int s=0; s < log->sequences.size() / 2; ++s )
-            {
-                if( (s > 9) ||  show[s] )
-                {
-                    glColor3fv(plot_colours[s%num_plot_colours]);
-                    DrawSequence(log->sequences[2*s],log->sequences[2*s+1]);
-                }
-            }
-        }
-        else if( plot_mode==TIME_SERIES)
-        {
-            for( unsigned int s=0; s < log->sequences.size(); ++s )
-            {
-                if( (s > 9) ||  show[s] )
-                {
+    if( log && log->sequences.size() > 0 ) {
+        if( plot_mode==TIME_SERIES) {
+            for( unsigned int s=0; s < log->sequences.size(); ++s ) {
+                if( (s > 9) ||  show[s] ) {
                     glColor3fv(plot_colours[s%num_plot_colours]);
                     DrawSequence(log->sequences[s]);
                 }
             }
-        }
-        else if( plot_mode==STACKED_HISTOGRAM )
-        {
+        }else if( plot_mode==XY ) {
+            for( unsigned int s=0; s < log->sequences.size() / 2; ++s ) {
+                if( (s > 9) ||  show[s] ) {
+                    glColor3fv(plot_colours[s%num_plot_colours]);
+                    DrawSequence(log->sequences[2*s],log->sequences[2*s+1]);
+                }
+            }
+        }else if( plot_mode==STACKED_HISTOGRAM ) {
             DrawSequenceHistogram(log->sequences);
-        }
-        else
-        {
+        }else {
             assert(false);
         }
     }
@@ -421,27 +398,21 @@ void Plotter::Render()
         if( plot_mode==XY )
         {
             glColor3fv(colour_ms);
-            glBegin(GL_LINE_STRIP);
-            glVertex2f(mouse_xy[0],int_y[0]);
-            glVertex2f(mouse_xy[0],int_y[1]);
-            glEnd();
-            glBegin(GL_LINE_STRIP);
-            glVertex2f(int_x[0],mouse_xy[1]);
-            glVertex2f(int_x[1],mouse_xy[1]);
-            glEnd();
+            glDrawLine(mouse_xy[0],int_y[0],  mouse_xy[0],int_y[1]);
+            glDrawLine(int_x[0],mouse_xy[1],  int_x[1],mouse_xy[1]);
+#ifdef HAVE_GLUT
             stringstream ss;
             ss << "(" << mouse_xy[0] << "," << mouse_xy[1] << ")";
             glColor3f(1.0,1.0,1.0);
             DisplayBase().ActivatePixelOrthographic();
             glRasterPos2f( v.l+5,v.b+5 );
             glutBitmapString(font,(unsigned char*)ss.str().c_str());
+#endif
         }else{
             int xu = (int)mouse_xy[0];
             glColor3fv(colour_ms);
-            glBegin(GL_LINE_STRIP);
-            glVertex2f(xu,int_y[0]);
-            glVertex2f(xu,int_y[1]);
-            glEnd();
+            glDrawLine(xu,int_y[0],  xu,int_y[1]);
+#ifdef HAVE_GLUT
             stringstream ss;
             glColor3f(1.0,1.0,1.0);
             ss << "x=" << xu << " ";
@@ -462,9 +433,11 @@ void Plotter::Render()
                     tx += glutBitmapLength(font,(unsigned char*)ss.str().c_str());
                 }
             }
+#endif            
         }
     }
     
+#ifdef HAVE_GLUT
     float ty = v.h+v.b-15;
     for (size_t i=0; i<log->labels.size(); ++i)
     {
@@ -475,8 +448,11 @@ void Plotter::Render()
         glutBitmapString(font,(unsigned char*)log->labels[i].c_str());
         ty -= 15;
     }
-    
+#endif
+ 
+#ifndef HAVE_GLES
     glPopAttrib();
+#endif
 }
 
 void Plotter::ResetView()

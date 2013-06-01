@@ -8,7 +8,8 @@ set(
   HEADERS
   ${INCDIR}/pangolin.h ${INCDIR}/platform.h
   ${INCDIR}/simple_math.h ${INCDIR}/timer.h
-  ${INCDIR}/gl.h ${INCDIR}/gldraw.h ${INCDIR}/glvbo.h
+  ${INCDIR}/gl.h ${INCDIR}/glinclude.h ${INCDIR}/gl_es_compat.h
+  ${INCDIR}/gldraw.h ${INCDIR}/glvbo.h
   ${INCDIR}/glcuda.h ${INCDIR}/cg.h ${INCDIR}/glsl.h
   ${INCDIR}/image.h
 )
@@ -25,16 +26,13 @@ if(BUILD_PANGOLIN_GUI)
     ${INCDIR}/display.h ${INCDIR}/display_internal.h 
     ${INCDIR}/view.h ${INCDIR}/viewport.h
     ${INCDIR}/handler.h ${INCDIR}/opengl_render_state.h
+    ${INCDIR}/plotter.h
   )
   list(APPEND SOURCES
     display.cpp view.cpp viewport.cpp
     handler.cpp opengl_render_state.cpp
+    plotter.cpp
   )
-endif()
-
-if(BUILD_PANGOLIN_GUI AND NOT ANDROID)
-  list(APPEND HEADERS ${INCDIR}/plotter.h )
-  list(APPEND SOURCES plotter.cpp )
 endif()
 
 option(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)

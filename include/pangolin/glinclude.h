@@ -67,16 +67,7 @@
 
     #define GL_GLEXT_PROTOTYPES
     #include <GLES/glext.h>
-
-    #define GLdouble GLfloat
-    #define GL_DEPTH_COMPONENT24 GL_DEPTH_COMPONENT24_OES
-    #define glGenFramebuffersEXT glGenFramebuffersOES
-    #define glDeleteFramebuffersEXT glDeleteFramebuffersOES
-    #define glBindFramebufferEXT glBindFramebufferOES
-    #define GL_FRAMEBUFFER_EXT GL_FRAMEBUFFER_OES
-    #define glDrawBuffers glDrawBuffersOES
-    #define glFramebufferTexture2DEXT glFramebufferTexture2DOES
-    #define GL_COLOR_ATTACHMENT0_EXT GL_COLOR_ATTACHMENT0_OES
+    #include <pangolin/gl_es_compat.h>
 #else
     #include <GL/glew.h>
     #ifdef _OSX_
