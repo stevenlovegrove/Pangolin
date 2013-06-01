@@ -52,7 +52,7 @@ class GlTexture
 {
 public:
     //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
-    GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE );
+    GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE );
     
 #if __cplusplus > 199711L
     //! Move Constructor
@@ -64,7 +64,7 @@ public:
     ~GlTexture();
     
     //! Reinitialise teture width / height / format
-    void Reinitialise(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE );
+    void Reinitialise(GLint width, GLint height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE );
     
     void Bind() const;
     void Unbind() const;
@@ -93,6 +93,7 @@ private:
     GlTexture(const GlTexture&) {}
 };
 
+#ifndef HAVE_GLES
 struct GlRenderBuffer
 {
     GlRenderBuffer(GLint width, GLint height, GLint internal_format = GL_DEPTH_COMPONENT24);
@@ -100,13 +101,17 @@ struct GlRenderBuffer
     
     GLuint rbid;
 };
+#endif // HAVE_GLES
 
 struct GlFramebuffer
 {
     GlFramebuffer();
+    ~GlFramebuffer();
+    
+#ifndef HAVE_GLES
     GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth);
     GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth);
-    ~GlFramebuffer();
+#endif    
     
     void Bind() const;
     void Unbind() const;
@@ -115,8 +120,10 @@ struct GlFramebuffer
     // Return attachment texture is bound to (e.g. GL_COLOR_ATTACHMENT0_EXT)
     GLenum AttachColour(GlTexture& tex);
     
+#ifndef HAVE_GLES
     // Attach Depth render buffer to frame buffer
     void AttachDepth(GlRenderBuffer& rb);
+#endif
     
     GLuint fbid;
     unsigned attachments;
@@ -126,8 +133,10 @@ enum GlBufferType
 {
     GlArrayBuffer = GL_ARRAY_BUFFER,                    // VBO's, CBO's, NBO's
     GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,     // IBO's
+#ifndef HAVE_GLES
     GlPixelPackBuffer = GL_PIXEL_PACK_BUFFER,           // PBO's
     GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER
+#endif
 };
 
 struct GlBuffer
@@ -212,6 +221,7 @@ inline void _CheckGlDieOnError( const char *sFile, const int nLine )
     }
 }
 
+#ifndef HAVE_GLES
 const int MAX_ATTACHMENTS = 8;
 const static GLuint attachment_buffers[] = {
     GL_COLOR_ATTACHMENT0_EXT,
@@ -223,6 +233,12 @@ const static GLuint attachment_buffers[] = {
     GL_COLOR_ATTACHMENT6_EXT,
     GL_COLOR_ATTACHMENT7_EXT
 };
+#else // HAVE_GLES
+const int MAX_ATTACHMENTS = 1;
+const static GLuint attachment_buffers[] = {
+    GL_COLOR_ATTACHMENT0_OES
+};
+#endif // HAVE_GLES
 
 const static size_t datatype_bytes[] = {
     1, //  #define GL_BYTE 0x1400
@@ -324,13 +340,14 @@ inline void GlTexture::Upload(const void* image, GLenum data_layout, GLenum data
     glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_layout,data_type,image);
 }
 
+#ifndef HAVE_GLES
 inline void GlTexture::Download(void* image, GLenum data_layout, GLenum data_type) const
 {
     Bind();
     glGetTexImage(GL_TEXTURE_2D, 0, data_layout, data_type, image);
     Unbind();
 }
-
+#endif // HAVE_GLES
 
 inline void GlTexture::SetLinear()
 {
@@ -437,6 +454,7 @@ inline void GlTexture::RenderToViewportFlipXFlipY() const
 
 ////////////////////////////////////////////////////////////////////////////
 
+#ifndef HAVE_GLES
 inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_format )
 {
     glGenRenderbuffersEXT(1, &rbid);
@@ -449,6 +467,7 @@ inline GlRenderBuffer::~GlRenderBuffer()
 {
     glDeleteRenderbuffersEXT(1, &rbid);
 }
+#endif // HAVE_GLES
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -458,6 +477,12 @@ inline GlFramebuffer::GlFramebuffer()
     glGenFramebuffersEXT(1, &fbid);
 }
 
+inline GlFramebuffer::~GlFramebuffer()
+{
+    glDeleteFramebuffersEXT(1, &fbid);
+}
+
+#ifndef HAVE_GLES
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
     : attachments(0)
 {
@@ -476,21 +501,21 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRe
     AttachDepth(depth);
     CheckGlDieOnError();
 }
-
-inline GlFramebuffer::~GlFramebuffer()
-{
-    glDeleteFramebuffersEXT(1, &fbid);
-}
+#endif
 
 inline void GlFramebuffer::Bind() const
 {
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
+#ifndef HAVE_GLES
     glDrawBuffers( attachments, attachment_buffers );
+#endif
 }
 
 inline void GlFramebuffer::Unbind() const
 {
+#ifndef HAVE_GLES
     glDrawBuffers( 1, attachment_buffers );
+#endif
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
 
@@ -505,6 +530,7 @@ inline GLenum GlFramebuffer::AttachColour(GlTexture& tex )
     return color_attachment;
 }
 
+#ifndef HAVE_GLES
 inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
 {
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
@@ -512,6 +538,7 @@ inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     CheckGlDieOnError();
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -555,6 +582,7 @@ inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements
 inline void GlBuffer::Resize(GLuint new_num_elements)
 {
     if(bo!=0) {
+#ifndef HAVE_GLES
         // Backup current data, reinit memory, restore old data
         const size_t backup_elements = std::min(new_num_elements,num_elements);
         const size_t backup_size_bytes = backup_elements*GlDataTypeBytes(datatype)*count_per_element;
@@ -565,6 +593,9 @@ inline void GlBuffer::Resize(GLuint new_num_elements)
         glBufferSubData(buffer_type, 0, backup_size_bytes, backup);
         Unbind();
         delete[] backup;
+#else
+        throw std::exception();
+#endif
     }else{
         Reinitialise(buffer_type, new_num_elements, datatype, count_per_element, gluse);
     }
