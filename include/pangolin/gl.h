@@ -200,13 +200,6 @@ protected:
 
 size_t GlDataTypeBytes(GLenum type);
 
-void glColorHSV( double hue, double s, double v );
-
-void glColorBin( int bin, int max_bins, double sat = 1.0, double val = 1.0 );
-
-void glPixelTransferScale( float r, float g, float b );
-void glPixelTransferScale( float scale );
-
 ////////////////////////////////////////////////
 // Implementation
 ////////////////////////////////////////////////

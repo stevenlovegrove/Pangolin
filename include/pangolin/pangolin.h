@@ -32,8 +32,8 @@
 
 #ifdef BUILD_PANGOLIN_GUI
 #include <pangolin/gl.h>
-#ifndef HAVE_GLES
 #include <pangolin/gldraw.h>
+#ifndef HAVE_GLES
 #include <pangolin/plotter.h>
 #endif // HAVE_GLES
 #include <pangolin/display.h>

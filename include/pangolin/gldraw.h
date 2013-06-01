@@ -40,133 +40,126 @@ namespace pangolin
 // h [0,360)
 // s [0,1]
 // v [0,1]
-inline void glColorHSV( double hue, double s, double v )
+inline void glColorHSV( GLfloat hue, GLfloat s, GLfloat v )
 {
-    const double h = hue / 60.0;
+    const GLfloat h = hue / 60.0;
     const int i = floor(h);
-    const double f = (i%2 == 0) ? 1-(h-i) : h-i;
-    const double m = v * (1-s);
-    const double n = v * (1-s*f);
+    const GLfloat f = (i%2 == 0) ? 1-(h-i) : h-i;
+    const GLfloat m = v * (1-s);
+    const GLfloat n = v * (1-s*f);
     switch(i)
     {
-    case 0: glColor3d(v,n,m); break;
-    case 1: glColor3d(n,v,m); break;
-    case 2: glColor3d(m,v,n); break;
-    case 3: glColor3d(m,n,v); break;
-    case 4: glColor3d(n,m,v); break;
-    case 5: glColor3d(v,m,n); break;
+    case 0: glColor4f(v,n,m,1); break;
+    case 1: glColor4f(n,v,m,1); break;
+    case 2: glColor4f(m,v,n,1); break;
+    case 3: glColor4f(m,n,v,1); break;
+    case 4: glColor4f(n,m,v,1); break;
+    case 5: glColor4f(v,m,n,1); break;
     default:
         break;
     }
 }
 
-inline void glColorBin( int bin, int max_bins, double sat, double val )
+inline void glColorBin( int bin, int max_bins, GLfloat sat, GLfloat val )
 {
-    if( bin >= 0 )
-    {
-        const double hue = (double)(bin%max_bins) * 360.0 / (double)max_bins;
+    if( bin >= 0 ) {
+        const GLfloat hue = (GLfloat)(bin%max_bins) * 360.0 / (GLfloat)max_bins;
         glColorHSV(hue,sat,val);
     }else{
-        glColor3f(1,1,1);
+        glColor4f(1,1,1,1);
     }
 }
 
-inline void glPixelTransferScale( float r, float g, float b )
+inline void glDrawLine( GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2 )
 {
-    glPixelTransferf(GL_RED_SCALE,r);
-    glPixelTransferf(GL_GREEN_SCALE,g);
-    glPixelTransferf(GL_BLUE_SCALE,b);
+    GLfloat verts[] = { x1,y1,  x2,y2 };
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDrawArrays(GL_LINES, 0, 2);
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-inline void glPixelTransferScale( float scale )
+inline void glDrawLine( GLfloat x1, GLfloat y1, GLfloat z1, GLfloat x2, GLfloat y2, GLfloat z2)
 {
-    glPixelTransferScale(scale,scale,scale);
+    GLfloat verts[] = { x1,y1,z1,  x2,y2,z2 };
+    glVertexPointer(3, GL_FLOAT, 0, verts);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDrawArrays(GL_LINES, 0, 2);
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-inline void glDraw_z0(float scale, int grid)
+inline void glDraw_z0(GLfloat scale, int grid)
 {
-    const float maxord = grid*scale;
-    glBegin(GL_LINES);
-    for(int i=-grid; i<=grid; ++i )
-    {
-        glVertex2f(i*scale,-maxord);
-        glVertex2f(i*scale,+maxord);
-        glVertex2f(-maxord, i*scale);
-        glVertex2f(+maxord, i*scale);
+    const GLfloat maxord = grid*scale;
+    for(int i=-grid; i<=grid; ++i ) {
+        glDrawLine(i*scale,-maxord,   i*scale,+maxord);
+        glDrawLine(-maxord, i*scale,  +maxord, i*scale);
     }
-    glEnd();
 }
 
-inline void glDrawLine( float x1, float y1, float x2, float y2 )
+inline void glDrawCross( GLfloat x, GLfloat y, GLfloat r = 5 )
 {
-    glBegin(GL_LINES);
-    glVertex2f(x1, y1);
-    glVertex2f(x2, y2);
-    glEnd();
+    glDrawLine(x-r,y, x+r, y);
+    glDrawLine(x,y-r, x, y+r);
 }
 
-inline void glDrawCross( float x, float y, int r = 5 )
+inline void glDrawCross( GLfloat x, GLfloat y, GLfloat z, GLfloat r )
 {
-    glBegin(GL_LINES);
-    glVertex2f(x,y-r);
-    glVertex2f(x,y+r);
-    glVertex2f(x-r,y);
-    glVertex2f(x+r,y);
-    glEnd();
+    glDrawLine(x-r,y,z, x+r, y,z);
+    glDrawLine(x,y-r,z, x, y+r,z);
+    glDrawLine(x,y,z-r, x, y,z+r);
 }
 
-inline void glDrawCross( float x, float y, float z, int r )
+inline void glDrawCircle( GLfloat x, GLfloat y, GLfloat radius )
 {
-    glBegin(GL_LINES);
-    glVertex3f(x,y-r,z);
-    glVertex3f(x,y+r,z);
-    glVertex3f(x-r,y,z);
-    glVertex3f(x+r,y,z);
-    glVertex3f(x,y,z-r);
-    glVertex3f(x,y,z+r);
-    glEnd();
-}
-
-inline void glDrawCircle( float x, float y, double radius )
-{
-    glBegin(GL_POLYGON);
-    for( double a=0; a< 2*M_PI; a += M_PI/50.0 )
-    {
-        glVertex2d( x + radius * cos(a), y + radius * sin(a) );
+    GLfloat verts[720];
+    
+    for(int i = 0; i < 720; i+=2) {
+        verts[i] = x + cos(M_PI*i/360.0);
+        verts[i] = y + sin(M_PI*i/360.0);
     }
-    glEnd();
+    
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 360);
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 inline void glDrawCirclePerimeter( float x, float y, double radius )
 {
-    glBegin(GL_LINE_STRIP);
-    for( double a=0; a< 2*M_PI; a += M_PI/50.0 )
-    {
-        glVertex2d( x + radius * cos(a), y + radius * sin(a) );
+    GLfloat verts[720];
+    
+    for(int i = 0; i < 720; i+=2) {
+        verts[i] = x + cos(M_PI*i/360.0);
+        verts[i] = y + sin(M_PI*i/360.0);
     }
-    glEnd();
+    
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDrawArrays(GL_LINES, 0, 360);
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 inline void glDrawAxis(float s)
 {
-    glBegin(GL_LINES);
-    glColor3f(1,0,0);
-    glVertex3f(0,0,0);
-    glVertex3f(s,0,0);
-    glColor3f(0,1,0);
-    glVertex3f(0,0,0);
-    glVertex3f(0,s,0);
-    glColor3f(0,0,1);
-    glVertex3f(0,0,0);
-    glVertex3f(0,0,s);
-    glEnd();
+    glColor4f(1,0,0,1);
+    glDrawLine(0,0,0, s,0,0);
+
+    glColor4f(0,1,0,1);
+    glDrawLine(0,0,0, 0,s,0);
+    
+    glColor4f(0,0,1,1);
+    glDrawLine(0,0,0, 0,0,s);
 }
 
 #ifdef HAVE_EIGEN
+
+#ifndef HAVE_GLES
 inline void glVertex( const Eigen::Vector3d& p )
 {
     glVertex3dv(p.data());
 }
+#endif
 
 inline void glDrawLine( const Eigen::Vector2d& p1, const Eigen::Vector2d& p2 )
 {
@@ -197,7 +190,12 @@ inline void glSetFrameOfReference( const Eigen::Matrix4d& T_wf )
 {
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
+#ifndef HAVE_GLES
     glMultMatrixd( T_wf.data() );
+#else
+    const Eigen::Matrix4f fT_wf = T_wf.cast<GLfloat>();
+    glMultMatrixf( fT_wf.data() );
+#endif
 }
 
 inline void glUnsetFrameOfReference()
@@ -212,18 +210,28 @@ inline void glDrawAxis( const Eigen::Matrix4d& T_wf, float scale )
     glUnsetFrameOfReference();
 }
 
-inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, float scale )
+inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, GLfloat scale )
 {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex3d(0,0,0);
-    glVertex( scale * Kinv * Eigen::Vector3d(0,0,1) );
-    glVertex( scale * Kinv * Eigen::Vector3d(w,0,1) );
-    glVertex( scale * Kinv * Eigen::Vector3d(w,h,1) );
-    glVertex( scale * Kinv * Eigen::Vector3d(0,h,1) );
-    glVertex( scale * Kinv * Eigen::Vector3d(0,0,1) );
-    glEnd();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    const GLfloat fu = scale*Kinv(0,0);
+    const GLfloat fv = scale*Kinv(1,1);
+    const GLfloat u0 = scale*Kinv(0,2);
+    const GLfloat v0 = scale*Kinv(0,2);
+    
+    GLfloat verts[] = {
+        u0, v0, scale,
+        fu+u0, v0, scale,
+        w*fu+u0, h*fv+v0, scale,
+        u0, h*fv+v0, scale,
+        u0, v0, scale,
+        0, 0, 0,
+        w*fu+u0, h*fv+v0, scale,
+        fu+u0, v0, scale,
+        u0, h*fv+v0, scale
+    };
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDrawArrays(GL_LINES, 0, 9);
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, const Eigen::Matrix4d& T_wf, float scale )
@@ -234,6 +242,20 @@ inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, const Eig
 }
 
 #endif // HAVE_EIGEN
+
+#ifndef HAVE_GLES
+inline void glPixelTransferScale( float r, float g, float b )
+{
+    glPixelTransferf(GL_RED_SCALE,r);
+    glPixelTransferf(GL_GREEN_SCALE,g);
+    glPixelTransferf(GL_BLUE_SCALE,b);
+}
+
+inline void glPixelTransferScale( float scale )
+{
+    glPixelTransferScale(scale,scale,scale);
+}
+#endif
 
 }
 
