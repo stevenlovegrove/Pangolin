@@ -111,32 +111,38 @@ inline void glDrawCross( GLfloat x, GLfloat y, GLfloat z, GLfloat r )
 }
 
 inline void glDrawCircle( GLfloat x, GLfloat y, GLfloat rad )
-{
-    GLfloat verts[720];
+{    
+    const int N = 50;
+    GLfloat verts[N*2];
     
-    for(int i = 0; i < 720; i+=2) {
-        verts[i] = x + rad * cos(M_PI*i/360.0);
-        verts[i] = y + rad * sin(M_PI*i/360.0);
+    const double TAU_DIV_N = 2*M_PI/N;
+    for(int i = 0; i < N*2; i+=2) {
+        verts[i] =   x + rad * cos(i*TAU_DIV_N);
+        verts[i+1] = y + rad * sin(i*TAU_DIV_N);
     }
     
+    // Render filled shape and outline (to make it look smooth)
     glVertexPointer(2, GL_FLOAT, 0, verts);
     glEnableClientState(GL_VERTEX_ARRAY);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 360);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, N);
+    glDrawArrays(GL_LINE_STRIP, 0, N);
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 inline void glDrawCirclePerimeter( float x, float y, double rad )
 {
-    GLfloat verts[720];
+    const int N = 50;
+    GLfloat verts[N*2];
     
-    for(int i = 0; i < 720; i+=2) {
-        verts[i] = x + rad * cos(M_PI*i/360.0);
-        verts[i] = y + rad * sin(M_PI*i/360.0);
+    const double TAU_DIV_N = 2*M_PI/N;
+    for(int i = 0; i < N*2; i+=2) {
+        verts[i] =   x + rad * cos(i*TAU_DIV_N);
+        verts[i+1] = y + rad * sin(i*TAU_DIV_N);
     }
     
     glVertexPointer(2, GL_FLOAT, 0, verts);
     glEnableClientState(GL_VERTEX_ARRAY);
-    glDrawArrays(GL_LINES, 0, 360);
+    glDrawArrays(GL_LINES, 0, N);
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
