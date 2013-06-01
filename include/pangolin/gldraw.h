@@ -40,7 +40,7 @@ namespace pangolin
 // h [0,360)
 // s [0,1]
 // v [0,1]
-inline void glColorHSV( GLfloat hue, GLfloat s, GLfloat v )
+inline void glColorHSV( GLfloat hue, GLfloat s=1.0f, GLfloat v=1.0f )
 {
     const GLfloat h = hue / 60.0;
     const int i = floor(h);
@@ -60,7 +60,7 @@ inline void glColorHSV( GLfloat hue, GLfloat s, GLfloat v )
     }
 }
 
-inline void glColorBin( int bin, int max_bins, GLfloat sat, GLfloat val )
+inline void glColorBin( int bin, int max_bins, GLfloat sat=1.0f, GLfloat val=1.0f )
 {
     if( bin >= 0 ) {
         const GLfloat hue = (GLfloat)(bin%max_bins) * 360.0 / (GLfloat)max_bins;
@@ -110,13 +110,13 @@ inline void glDrawCross( GLfloat x, GLfloat y, GLfloat z, GLfloat r )
     glDrawLine(x,y,z-r, x, y,z+r);
 }
 
-inline void glDrawCircle( GLfloat x, GLfloat y, GLfloat radius )
+inline void glDrawCircle( GLfloat x, GLfloat y, GLfloat rad )
 {
     GLfloat verts[720];
     
     for(int i = 0; i < 720; i+=2) {
-        verts[i] = x + cos(M_PI*i/360.0);
-        verts[i] = y + sin(M_PI*i/360.0);
+        verts[i] = x + rad * cos(M_PI*i/360.0);
+        verts[i] = y + rad * sin(M_PI*i/360.0);
     }
     
     glVertexPointer(2, GL_FLOAT, 0, verts);
@@ -125,13 +125,13 @@ inline void glDrawCircle( GLfloat x, GLfloat y, GLfloat radius )
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-inline void glDrawCirclePerimeter( float x, float y, double radius )
+inline void glDrawCirclePerimeter( float x, float y, double rad )
 {
     GLfloat verts[720];
     
     for(int i = 0; i < 720; i+=2) {
-        verts[i] = x + cos(M_PI*i/360.0);
-        verts[i] = y + sin(M_PI*i/360.0);
+        verts[i] = x + rad * cos(M_PI*i/360.0);
+        verts[i] = y + rad * sin(M_PI*i/360.0);
     }
     
     glVertexPointer(2, GL_FLOAT, 0, verts);
