@@ -16,6 +16,9 @@ FIND_LIBRARY( GLUES_LIBRARY glues
   /usr/lib64
   /usr/lib
   /usr/local/lib
+  /opt/local/lib
+  /opt/local/lib64
+  ${CMAKE_INSTALL_PREFIX}/lib
 )
 
 IF(GLUES_INCLUDE_DIR AND GLUES_LIBRARY)
