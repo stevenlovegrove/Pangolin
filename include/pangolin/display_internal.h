@@ -83,6 +83,24 @@ struct PangolinGl
     
 };
 
+void PangolinCommonInit();
+
+#ifdef BUILD_PANGOLIN_VIDEO
+  void SaveFramebuffer(VideoOutput& video, const Viewport& v);
+#endif // BUILD_PANGOLIN_VIDEO
+
+#ifdef HAVE_CVARS
+  bool CVarViewList( std::vector<std::string>* args );
+  bool CVarViewShowHide( std::vector<std::string>* args );
+  bool CVarScreencap( std::vector<std::string>* args );
+
+#ifdef BUILD_PANGOLIN_VIDEO
+  bool CVarRecordStart( std::vector<std::string>* args );
+  bool CVarRecordStop( std::vector<std::string>* args );
+#endif // BUILD_PANGOLIN_VIDEO
+    
+#endif // HAVE_CVARS  
+
 }
 
 #endif // PANGOLIN_DISPLAY_INTERNAL_H

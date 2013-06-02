@@ -40,6 +40,7 @@ namespace pangolin
 
   // Forward Declarations
   struct View;
+  struct Viewport;
 
   //! @brief Give this OpenGL context a name or switch contexts
   //! This is required to initialise Pangolin for use with an
@@ -62,6 +63,9 @@ namespace pangolin
 
   //! @brief Renders any views with default draw methods
   void RenderViews();
+  
+  //! @brief Perform any post render events, such as screen recording.
+  void PostRender();
 
   //! @brief Request to be notified via functor when key is pressed.
   //! Functor may take one parameter which will equal the key pressed
@@ -69,7 +73,9 @@ namespace pangolin
 
   //! @brief Save window contents to image
   void SaveWindowOnRender(std::string filename_prefix);
-
+  
+  void SaveFramebuffer(std::string prefix, const Viewport& v);
+  
   namespace process
   {
     //! @brief Tell pangolin to process input to drive display
@@ -78,6 +84,10 @@ namespace pangolin
     void Keyboard( unsigned char key, int x, int y);
 
     void KeyboardUp(unsigned char key, int x, int y);
+    
+    void SpecialFunc(int key, int x, int y);
+    
+    void SpecialFuncUp(int key, int x, int y);
 
     //! @brief Tell pangolin base window size has changed
     //! You will need to call this manually if you haven't let
@@ -101,25 +111,6 @@ namespace pangolin
     void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4);
 
   }
-
-#ifdef HAVE_GLUT  
-  //! @brief Create GLUT window and bind Pangolin to it.
-  //! All GLUT initialisation is taken care of. This prevents you
-  //! from needing to call BindToContext() and TakeGlutCallbacks().
-  void CreateGlutWindowAndBind(std::string window_title, int w = 640, int h = 480, unsigned int mode = GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
-
-  //! @brief Applies any post-render events if they are defined,
-  //! swaps buffers and processes events. Also resets viewport to
-  //! entire window and disables scissoring.
-  void FinishGlutFrame();
-
-  //! @brief Swaps OpenGL Buffers and processes input events
-  void SwapGlutBuffersProcessGlutEvents();
-
-  //! @brief Allow Pangolin to take GLUT callbacks for its own uses
-  //! Not needed if you instantiated a window through CreateWindowAndBind().
-  void TakeGlutCallbacks();
-#endif
 
   //! Retrieve 'base' display, corresponding to entire window
   View& DisplayBase();

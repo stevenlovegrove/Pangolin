@@ -31,7 +31,6 @@
 #include <map>
 
 #include <pangolin/platform.h>
-//#include <pangolin/gl.h>
 #include <pangolin/glinclude.h>
 #include <pangolin/display.h>
 #include <pangolin/display_internal.h>
@@ -147,6 +146,30 @@ void RenderViews()
     DisplayBase().Render();
 }
 
+void PostRender()
+{
+#ifdef HAVE_BOOST_GIL
+    while(context->screen_capture.size()) {
+        std::pair<std::string,Viewport> fv = context->screen_capture.front();
+        context->screen_capture.pop();
+        SaveFramebuffer(fv.first, fv.second);
+    }
+#endif // HAVE_BOOST_GIL
+    
+#ifdef BUILD_PANGOLIN_VIDEO
+    if(context->recorder.IsOpen()) {
+        SaveFramebuffer(context->recorder, context->record_view->GetBounds() );
+    }
+#endif // BUILD_PANGOLIN_VIDEO
+
+    DisplayBase().Activate();
+    Viewport::DisableScissor();
+    
+#ifdef HAVE_CVARS
+    context->console.RenderConsole();
+#endif // HAVE_CVARS    
+}
+
 View& DisplayBase()
 {
     return context->base;
@@ -186,6 +209,168 @@ void SaveWindowOnRender(std::string prefix)
 {
     context->screen_capture.push(std::pair<std::string,Viewport>(prefix, context->base.v) );
 }
+
+void SaveFramebuffer(std::string prefix, const Viewport& v)
+{
+#ifdef HAVE_BOOST_GIL
+    // Save colour channels
+    boost::gil::rgba8_image_t img(v.w, v.h);
+    glReadBuffer(GL_BACK);    
+    glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?    
+    glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, boost::gil::interleaved_view_get_raw_data( boost::gil::view( img ) ) );
+#ifdef HAVE_PNG
+    boost::gil::png_write_view(prefix + ".png", flipped_up_down_view( boost::gil::const_view(img)) );
+#endif // HAVE_PNG
+    
+    //      // Save depth channel
+    //      boost::gil::gray32f_image_t depth(v.w, v.h);
+    //      glReadPixels(v.l, v.b, v.w, v.h, GL_DEPTH_COMPONENT, GL_FLOAT, boost::gil::interleaved_view_get_raw_data( view( depth ) ));
+    //      boost::gil::tiff_write_view(prefix + "_depth.tiff", flipped_up_down_view(const_view(depth)) );
+#endif // HAVE_BOOST_GIL
+}
+
+#ifdef BUILD_PANGOLIN_VIDEO
+void SaveFramebuffer(VideoOutput& video, const Viewport& v)
+{
+    static basetime last_time = TimeNow();
+    const basetime time_now = TimeNow();
+    
+    if(TimeDiff_s(last_time,time_now) > video[0].BaseFrameTime() ) {
+        last_time = time_now;
+        unsigned char* img = new unsigned char[v.w*v.h*4];
+        glReadBuffer(GL_BACK);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?        
+        glReadPixels(v.l, v.b, v.w, v.h, GL_RGB, GL_UNSIGNED_BYTE, img );
+        video[0].WriteImage(img, v.w, -v.h, "RGB24" );
+        delete[] img;
+    }
+    
+    const int ticks = (int)TimeNow_s();
+    if( ticks % 2 )
+    {
+        v.ActivatePixelOrthographic();
+        // now, render a little red "recording" dot
+        glPushAttrib(GL_ENABLE_BIT);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_DEPTH_TEST);
+        const float r = 7;
+        glColor3ub( 255, 0, 0 );
+        glDrawCircle( v.w-2*r, v.h-2*r, r );
+        glPopAttrib();
+    }
+}
+#endif // BUILD_PANGOLIN_VIDEO
+
+#ifdef HAVE_CVARS
+// Pangolin CVar function hooks
+
+bool CVarViewList( std::vector<std::string>* args )
+{
+    std::stringstream ss;
+    for(boost::ptr_unordered_map<std::string,View>::iterator vi
+        = context->named_managed_views.begin();
+        vi != context->named_managed_views.end(); ++vi)
+    {
+        ss << "'" << vi->first << "' " << std::endl;
+    }
+    context->console.EnterLogLine(ss.str().c_str());
+    return true;
+}
+
+bool CVarViewShowHide( std::vector<std::string>* args )
+{
+    if(args && args->size() == 1) {
+        Display(args->at(0)).ToggleShow();
+    }else{
+        context->console.EnterLogLine("USAGE: pango.view.showhide view_name", LINEPROP_ERROR);        
+    }
+    return true;
+}
+
+// Pangolin CVar function hooks
+bool CVarScreencap( std::vector<std::string>* args )
+{
+    if(args && args->size() > 0) {
+        const std::string file_prefix = args->at(0);
+        float scale = 1.0f;
+        View* view = &DisplayBase();
+        
+        if(args->size() > 1)  scale = Convert<float,std::string>::Do(args->at(1));
+        if(args->size() > 2)  view = &Display(args->at(2));
+
+        if(scale == 1.0f) {
+            view->SaveOnRender(file_prefix);
+        }else{
+            view->SaveRenderNow(file_prefix, scale);
+        }
+        context->console.EnterLogLine("done.");
+    }else{
+        context->console.EnterLogLine("USAGE: pango.screencap file_prefix [scale=1] [view_name]", LINEPROP_ERROR);
+        context->console.EnterLogLine("   eg: pango.screencap my_shot", LINEPROP_ERROR);
+    }
+    return false;
+}
+
+#ifdef BUILD_PANGOLIN_VIDEO
+bool CVarRecordStart( std::vector<std::string>* args )
+{
+    if(args && args->size() > 0) {
+        const std::string uri = args->at(0);
+        View* view = &DisplayBase();
+        
+        if(args->size() > 1) {
+            view = &Display(args->at(1));
+        }
+        
+        try {
+            view->RecordOnRender(uri);
+            context->console.ToggleConsole();
+            return true;
+        }catch(VideoException e) {
+            context->console.EnterLogLine(e.what(), LINEPROP_ERROR );
+        }
+    }else{
+        context->console.EnterLogLine("USAGE: pango.record.start uri [view_name]", LINEPROP_ERROR);
+        context->console.EnterLogLine("   eg: pango.record.start ffmpeg://screencap.avi", LINEPROP_ERROR);
+    }
+    return false;
+}
+
+bool CVarRecordStop( std::vector<std::string>* args )
+{
+    context->recorder.Reset();
+    return true;
+}
+#endif // BUILD_PANGOLIN_VIDEO
+
+#ifdef BUILD_PANGOLIN_VARS
+void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool brand_new)
+{
+    if(brand_new) {
+        // CVars can't save names containing spaces, so map to '_' instead
+        std::string cvar_name = name;
+        for(size_t i=0; i < cvar_name.size(); ++i) {
+            if(cvar_name[i] == ' ') cvar_name[i] = '_';
+        }
+        
+        // Attach to CVars too.
+        const char* typeidname = var.type_name;
+        if( typeidname == typeid(double).name() ) {
+            CVarUtils::AttachCVar(cvar_name, (double*)(var.val) );
+        } else if( typeidname == typeid(int).name() ) {
+            CVarUtils::AttachCVar(cvar_name, (int*)(var.val) );
+        } else if( typeidname == typeid(std::string).name() ) {
+            CVarUtils::AttachCVar(cvar_name, (std::string*)(var.val) );
+        } else if( typeidname == typeid(bool).name() ) {
+            CVarUtils::AttachCVar(cvar_name, (bool*)(var.val) );
+        } else {
+            // we can't attach
+            std::cerr << typeidname << std::endl;
+        }
+    }
+}
+#endif // BUILD_PANGOLIN_VARS
+#endif // HAVE_CVARS
 
 namespace process
 {
@@ -392,303 +577,6 @@ void SubpixMotion(float x, float y, float pressure, float rotation, float tiltx,
 }
 }
 
-#ifdef HAVE_GLUT
-void PangoGlutRedisplay()
-{
-    glutPostRedisplay();
-    
-    //      RenderViews();
-    //      FinishGlutFrame();
-}
-
-void TakeGlutCallbacks()
-{
-    glutKeyboardFunc(&process::Keyboard);
-    glutKeyboardUpFunc(&process::KeyboardUp);
-    glutReshapeFunc(&process::Resize);
-    glutMouseFunc(&process::Mouse);
-    glutMotionFunc(&process::MouseMotion);
-    glutPassiveMotionFunc(&process::PassiveMouseMotion);
-    glutSpecialFunc(&process::SpecialFunc);
-    glutSpecialUpFunc(&process::SpecialFuncUp);
-    
-#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-    glutDisplayFunc(&PangoGlutRedisplay);
-    
-    // Attempt to register special smooth scroll callback
-    // https://github.com/nanoant/osxglut
-    typedef void (*glutScrollFunc_t)(void (*)(float, float));
-    typedef void (*glutZoomFunc_t)(void (*)(float));
-    typedef void (*glutRotateFunc_t)(void (*)(float));
-    typedef void (*glutSubpixMotionFunc_t)(void (*)(float,float,float,float,float,float));
-    
-    glutScrollFunc_t glutScrollFunc = (glutScrollFunc_t)glutGetProcAddress("glutScrollFunc");
-    glutZoomFunc_t glutZoomFunc = (glutZoomFunc_t)glutGetProcAddress("glutZoomFunc");
-    glutRotateFunc_t glutRotateFunc = (glutRotateFunc_t)glutGetProcAddress("glutRotateFunc");
-    glutSubpixMotionFunc_t glutSubpixMotionFunc = (glutSubpixMotionFunc_t)glutGetProcAddress("glutSubpixMotionFunc");
-    
-    if(glutScrollFunc) {
-        glutScrollFunc(&process::Scroll);
-    }
-    if(glutZoomFunc) {
-        glutZoomFunc(&process::Zoom);
-    }
-    if(glutRotateFunc) {
-        glutRotateFunc(&process::Rotate);
-    }
-    
-    if(glutSubpixMotionFunc) {
-        glutSubpixMotionFunc(&process::SubpixMotion);
-    }
-    
-#endif // HAVE_APPLE_OPENGL_FRAMEWORK
-}
-
-
-void SaveFramebuffer(std::string prefix, const Viewport& v)
-{
-#ifdef HAVE_BOOST_GIL
-    // Save colour channels
-    boost::gil::rgba8_image_t img(v.w, v.h);
-    glReadBuffer(GL_BACK);    
-    glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?    
-    glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, boost::gil::interleaved_view_get_raw_data( boost::gil::view( img ) ) );
-#ifdef HAVE_PNG
-    boost::gil::png_write_view(prefix + ".png", flipped_up_down_view( boost::gil::const_view(img)) );
-#endif // HAVE_PNG
-    
-    //      // Save depth channel
-    //      boost::gil::gray32f_image_t depth(v.w, v.h);
-    //      glReadPixels(v.l, v.b, v.w, v.h, GL_DEPTH_COMPONENT, GL_FLOAT, boost::gil::interleaved_view_get_raw_data( view( depth ) ));
-    //      boost::gil::tiff_write_view(prefix + "_depth.tiff", flipped_up_down_view(const_view(depth)) );
-#endif // HAVE_BOOST_GIL
-}
-
-#ifdef BUILD_PANGOLIN_VIDEO
-void SaveFramebuffer(VideoOutput& video, const Viewport& v)
-{
-    static basetime last_time = TimeNow();
-    const basetime time_now = TimeNow();
-    
-    if(TimeDiff_s(last_time,time_now) > video[0].BaseFrameTime() ) {
-        last_time = time_now;
-        unsigned char* img = new unsigned char[v.w*v.h*4];
-        glReadBuffer(GL_BACK);
-        glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?        
-        glReadPixels(v.l, v.b, v.w, v.h, GL_RGB, GL_UNSIGNED_BYTE, img );
-        video[0].WriteImage(img, v.w, -v.h, "RGB24" );
-        delete[] img;
-    }
-    
-    const int ticks = (int)TimeNow_s();
-    if( ticks % 2 )
-    {
-        v.ActivatePixelOrthographic();
-        // now, render a little red "recording" dot
-        glPushAttrib(GL_ENABLE_BIT);
-        glDisable(GL_LIGHTING);
-        glDisable(GL_DEPTH_TEST);
-        const float r = 7;
-        glColor3ub( 255, 0, 0 );
-        glDrawCircle( v.w-2*r, v.h-2*r, r );
-        glPopAttrib();
-    }
-}
-#endif // BUILD_PANGOLIN_VIDEO
-
-#ifdef HAVE_CVARS
-// Pangolin CVar function hooks
-
-bool CVarViewList( std::vector<std::string>* args )
-{
-    std::stringstream ss;
-    for(boost::ptr_unordered_map<std::string,View>::iterator vi
-        = context->named_managed_views.begin();
-        vi != context->named_managed_views.end(); ++vi)
-    {
-        ss << "'" << vi->first << "' " << std::endl;
-    }
-    context->console.EnterLogLine(ss.str().c_str());
-    return true;
-}
-
-bool CVarViewShowHide( std::vector<std::string>* args )
-{
-    if(args && args->size() == 1) {
-        Display(args->at(0)).ToggleShow();
-    }else{
-        context->console.EnterLogLine("USAGE: pango.view.showhide view_name", LINEPROP_ERROR);        
-    }
-    return true;
-}
-
-// Pangolin CVar function hooks
-bool CVarScreencap( std::vector<std::string>* args )
-{
-    if(args && args->size() > 0) {
-        const std::string file_prefix = args->at(0);
-        float scale = 1.0f;
-        View* view = &DisplayBase();
-        
-        if(args->size() > 1)  scale = Convert<float,std::string>::Do(args->at(1));
-        if(args->size() > 2)  view = &Display(args->at(2));
-
-        if(scale == 1.0f) {
-            view->SaveOnRender(file_prefix);
-        }else{
-            view->SaveRenderNow(file_prefix, scale);
-        }
-        context->console.EnterLogLine("done.");
-    }else{
-        context->console.EnterLogLine("USAGE: pango.screencap file_prefix [scale=1] [view_name]", LINEPROP_ERROR);
-        context->console.EnterLogLine("   eg: pango.screencap my_shot", LINEPROP_ERROR);
-    }
-    return false;
-}
-
-#ifdef BUILD_PANGOLIN_VIDEO
-bool CVarRecordStart( std::vector<std::string>* args )
-{
-    if(args && args->size() > 0) {
-        const std::string uri = args->at(0);
-        View* view = &DisplayBase();
-        
-        if(args->size() > 1) {
-            view = &Display(args->at(1));
-        }
-        
-        try {
-            view->RecordOnRender(uri);
-            context->console.ToggleConsole();
-            return true;
-        }catch(VideoException e) {
-            context->console.EnterLogLine(e.what(), LINEPROP_ERROR );
-        }
-    }else{
-        context->console.EnterLogLine("USAGE: pango.record.start uri [view_name]", LINEPROP_ERROR);
-        context->console.EnterLogLine("   eg: pango.record.start ffmpeg://screencap.avi", LINEPROP_ERROR);
-    }
-    return false;
-}
-
-bool CVarRecordStop( std::vector<std::string>* args )
-{
-    context->recorder.Reset();
-    return true;
-}
-#endif // BUILD_PANGOLIN_VIDEO
-
-#ifdef BUILD_PANGOLIN_VARS
-void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool brand_new)
-{
-    if(brand_new) {
-        // CVars can't save names containing spaces, so map to '_' instead
-        std::string cvar_name = name;
-        for(size_t i=0; i < cvar_name.size(); ++i) {
-            if(cvar_name[i] == ' ') cvar_name[i] = '_';
-        }
-        
-        // Attach to CVars too.
-        const char* typeidname = var.type_name;
-        if( typeidname == typeid(double).name() ) {
-            CVarUtils::AttachCVar(cvar_name, (double*)(var.val) );
-        } else if( typeidname == typeid(int).name() ) {
-            CVarUtils::AttachCVar(cvar_name, (int*)(var.val) );
-        } else if( typeidname == typeid(std::string).name() ) {
-            CVarUtils::AttachCVar(cvar_name, (std::string*)(var.val) );
-        } else if( typeidname == typeid(bool).name() ) {
-            CVarUtils::AttachCVar(cvar_name, (bool*)(var.val) );
-        } else {
-            // we can't attach
-            std::cerr << typeidname << std::endl;
-        }
-    }
-}
-#endif // BUILD_PANGOLIN_VARS
-#endif // HAVE_CVARS
-
-void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned int mode)
-{
-#ifdef HAVE_FREEGLUT
-    if( glutGet(GLUT_INIT_STATE) == 0)
-#endif
-    {
-        int argc = 0;
-        glutInit(&argc, 0);
-        glutInitDisplayMode(mode);
-    }
-    glutInitWindowSize(w,h);
-    glutCreateWindow(window_title.c_str());
-    BindToContext(window_title);
-    glewInit();
-    
-#ifdef HAVE_FREEGLUT
-    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-#endif
-    
-    context->is_double_buffered = mode & GLUT_DOUBLE;
-    TakeGlutCallbacks();
-    
-#ifdef HAVE_CVARS
-    
-#ifdef BUILD_PANGOLIN_VARS
-    RegisterNewVarCallback(NewVarForCVars,0);
-#endif // BUILD_PANGOLIN_VARS
-    
-    // Register utilities
-    CVarUtils::CreateCVar("pango.view.list",  &CVarViewList, "List named views." );
-    CVarUtils::CreateCVar("pango.view.showhide",  &CVarViewShowHide, "Show/Hide named view." );
-    CVarUtils::CreateCVar("pango.screencap", &CVarScreencap, "Capture image of window to a file." );
-#ifdef BUILD_PANGOLIN_VIDEO
-    CVarUtils::CreateCVar("pango.record.start", &CVarRecordStart, "Record video of window to a file." );
-    CVarUtils::CreateCVar("pango.record.stop",  &CVarRecordStop, "Stop video recording." );
-#endif // BUILD_PANGOLIN_VIDEO
-
-#endif // HAVE_CVARS
-}
-
-void FinishGlutFrame()
-{
-    RenderViews();
-    
-#ifdef HAVE_BOOST_GIL
-    while(context->screen_capture.size()) {
-        std::pair<std::string,Viewport> fv = context->screen_capture.front();
-        context->screen_capture.pop();
-        SaveFramebuffer(fv.first, fv.second);
-    }
-#endif // HAVE_BOOST_GIL
-    
-#ifdef BUILD_PANGOLIN_VIDEO
-    if(context->recorder.IsOpen()) {
-        SaveFramebuffer(context->recorder, context->record_view->GetBounds() );
-    }
-#endif // BUILD_PANGOLIN_VIDEO
-
-    DisplayBase().Activate();
-    Viewport::DisableScissor();
-    
-#ifdef HAVE_CVARS
-    context->console.RenderConsole();
-#endif // HAVE_CVARS
-    
-    SwapGlutBuffersProcessGlutEvents();
-}
-
-void SwapGlutBuffersProcessGlutEvents()
-{
-    glutSwapBuffers();
-    
-#ifdef HAVE_FREEGLUT
-    glutMainLoopEvent();
-#endif
-    
-#ifdef HAVE_GLUT_APPLE_FRAMEWORK
-    glutCheckLoop();
-#endif
-}
-#endif // HAVE_GLUT
-
 void DrawTextureToViewport(GLuint texid)
 {
     OpenGlRenderState::ApplyIdentity();
@@ -710,5 +598,26 @@ void DrawTextureToViewport(GLuint texid)
 
     glDisable(GL_TEXTURE_2D);
 }
+
+void PangolinCommonInit()
+{
+#ifdef HAVE_CVARS
+    
+#ifdef BUILD_PANGOLIN_VARS
+    RegisterNewVarCallback(NewVarForCVars,0);
+#endif // BUILD_PANGOLIN_VARS
+    
+    // Register utilities
+    CVarUtils::CreateCVar("pango.view.list",  &CVarViewList, "List named views." );
+    CVarUtils::CreateCVar("pango.view.showhide",  &CVarViewShowHide, "Show/Hide named view." );
+    CVarUtils::CreateCVar("pango.screencap", &CVarScreencap, "Capture image of window to a file." );
+#ifdef BUILD_PANGOLIN_VIDEO
+    CVarUtils::CreateCVar("pango.record.start", &CVarRecordStart, "Record video of window to a file." );
+    CVarUtils::CreateCVar("pango.record.stop",  &CVarRecordStop, "Stop video recording." );
+#endif // BUILD_PANGOLIN_VIDEO
+
+#endif // HAVE_CVARS
+}
+
 
 }

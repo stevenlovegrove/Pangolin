@@ -25,36 +25,34 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_DISPLAY_GLUT_H
+#define PANGOLIN_DISPLAY_GLUT_H
 
 #include <pangolin/platform.h>
+#include <pangolin/glinclude.h>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl.h>
-  #include <pangolin/gldraw.h>
-  #include <pangolin/plotter.h>
-  #include <pangolin/display.h>
-  #include <pangolin/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display_glut.h>
-  #endif // HAVE_GLUT
-#endif // BUILD_PANGOLIN_GUI
+#include <string>
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/vars.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video.h>
-  #include <pangolin/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+//! @brief Create GLUT window and bind Pangolin to it.
+//! All GLUT initialisation is taken care of. This prevents you
+//! from needing to call BindToContext() and TakeGlutCallbacks().
+void CreateGlutWindowAndBind(std::string window_title, int w = 640, int h = 480, unsigned int mode = GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+//! @brief Applies any post-render events if they are defined,
+//! swaps buffers and processes events. Also resets viewport to
+//! entire window and disables scissoring.
+void FinishGlutFrame();
 
-#endif // PANGOLIN_H
+//! @brief Swaps OpenGL Buffers and processes input events
+void SwapGlutBuffersProcessGlutEvents();
 
+//! @brief Allow Pangolin to take GLUT callbacks for its own uses
+//! Not needed if you instantiated a window through CreateWindowAndBind().
+void TakeGlutCallbacks();
+
+}
+
+#endif // PANGOLIN_DISPLAY_GLUT_H

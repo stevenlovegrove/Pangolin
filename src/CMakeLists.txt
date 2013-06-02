@@ -137,6 +137,8 @@ if(NOT ANDROID)
     
     if(FREEGLUT_FOUND OR GLUT_FOUND)
         set(HAVE_GLUT 1)
+        list(APPEND HEADERS ${INCDIR}/display_glut.h )
+        list(APPEND SOURCES display_glut.cpp )
         message(STATUS "Glut Found and Enabled")
     endif()
 else()  # NOT ANDROID
