@@ -179,32 +179,79 @@ static void engine_term_display(struct engine* engine) {
     engine->surface = EGL_NO_SURFACE;
 }
 
+namespace process {
+extern float last_x;
+extern float last_y;
+}
+
+void UnpressAll()
+{
+    if(context->mouse_state & pangolin::MouseButtonLeft) {
+        pangolin::process::Mouse(0, 1, process::last_x, process::last_y);
+    }
+    if(context->mouse_state & pangolin::MouseButtonMiddle) {
+        pangolin::process::Mouse(1, 1, process::last_x, process::last_y);
+    }
+    if(context->mouse_state & pangolin::MouseButtonRight) {
+        pangolin::process::Mouse(2, 1, process::last_x, process::last_y);
+    }
+    if(context->mouse_state & pangolin::MouseWheelUp) {
+        pangolin::process::Mouse(3, 1, process::last_x, process::last_y);
+    }
+    if(context->mouse_state & pangolin::MouseWheelDown) {
+        pangolin::process::Mouse(4, 1, process::last_x, process::last_y);
+    }
+    context->mouse_state = 0;
+}
+
 /**
  * Process the next input event.
  */
 static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) {
     struct engine* engine = (struct engine*)app->userData;
+
+//    LOGI("---------------------------------------------------------------------");
+    
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
+        engine->has_focus = 1;        
+        
         const float x = AMotionEvent_getX(event, 0);
         const float y = AMotionEvent_getY(event, 0);
-        const int32_t action = AMotionEvent_getAction(event);
-
-        engine->has_focus = 1;
-        
-//        LOGI("---------------------------------------------------------------------");
-//        LOGI(pangolin::Convert<std::string,float>::Do(x).c_str());
-//        LOGI(pangolin::Convert<std::string,float>::Do(y).c_str());    
-//        LOGI(pangolin::Convert<std::string,int32_t>::Do(action).c_str());    
+        const int32_t actionAndPtr = AMotionEvent_getAction(event);
+        const int32_t action = AMOTION_EVENT_ACTION_MASK & actionAndPtr;
+//        const int32_t ptrindex = (AMOTION_EVENT_ACTION_POINTER_INDEX_MASK & actionAndPtr) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
                 
-        if(action == AMOTION_EVENT_ACTION_DOWN) {
-            pangolin::process::Mouse(0, 0, x, y);
+        const size_t num_ptrs = AMotionEvent_getPointerCount(event);
+        
+        switch(action)
+        {
+        case AMOTION_EVENT_ACTION_UP:
+        case AMOTION_EVENT_ACTION_POINTER_UP:
+            UnpressAll();
+            break;
+        case AMOTION_EVENT_ACTION_DOWN:
+        case AMOTION_EVENT_ACTION_POINTER_DOWN:
+            UnpressAll();
+            if(num_ptrs <=2) {
+                const int button = (num_ptrs==1) ? 0 : 2;
+                pangolin::process::Mouse(button, 0, x, y);
+            }
+            break;
+        case AMOTION_EVENT_ACTION_MOVE:
+            if(num_ptrs == 3) {
+                const double dx = x - process::last_x;
+                const double dy = y - process::last_y;
+                process::last_x = x;
+                process::last_y = y;
+                pangolin::process::Scroll(dx,dy);
+            }else{
+                pangolin::process::MouseMotion(x,y);
+            }
+            break;
+        default:
+            break;
         }
-        if(action == AMOTION_EVENT_ACTION_UP) {
-            pangolin::process::Mouse(0, 1, x, y);
-        }
-        if(action == AMOTION_EVENT_ACTION_MOVE) {
-            pangolin::process::MouseMotion(x,y);
-        }
+        
         return 1;
     }
     return 0;

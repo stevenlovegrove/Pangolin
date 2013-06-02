@@ -115,7 +115,7 @@ void HandlerScroll::Special(View& d, InputSpecial inType, float x, float y, floa
 }
 
 Handler3D::Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up, float trans_scale, float zoom_fraction)
-    : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), zf(zoom_fraction), cameraspec(CameraSpecOpenGl), last_z(1.0)
+    : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), zf(zoom_fraction), cameraspec(CameraSpecOpenGl), last_z(0.8)
 {
     SetZero<3,1>(rot_center);
 }
@@ -141,7 +141,7 @@ void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, GLdouble p[3], 
     glReadBuffer(GL_FRONT);
     glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
 #else
-    std::fill(zs,zs+zsize, 0.8);
+    std::fill(zs,zs+zsize, 1);
 #endif
     GLfloat mindepth = *(std::min_element(zs,zs+zsize));
     
