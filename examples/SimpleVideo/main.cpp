@@ -19,7 +19,7 @@ void VideoSample(const std::string uri)
     const unsigned h = video.Height();
 
     // Create Glut window
-    pangolin::CreateGlutWindowAndBind("Main",w,h);
+    pangolin::CreateWindowAndBind("Main",w,h);
 
     // Create viewport for video with fixed aspect
     View& vVideo = Display("Video").SetAspect((float)w/h);
@@ -47,7 +47,7 @@ void VideoSample(const std::string uri)
         texVideo.RenderToViewportFlipY();
 
         // Swap back buffer with front and process window events via GLUT
-        pangolin::FinishGlutFrame();
+        pangolin::FinishFrame();
     }
 
     delete[] img;

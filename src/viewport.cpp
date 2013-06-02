@@ -69,6 +69,16 @@ void Viewport::ActivatePixelOrthographic() const
     glLoadIdentity();
 }
 
+void Viewport::ActivateIdentity() const
+{
+    Activate();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+
 Viewport Viewport::Inset(int i) const
 {
     return Viewport(l+i, b+i, w-2*i, h-2*i);

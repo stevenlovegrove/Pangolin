@@ -23,7 +23,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
     recorder.AddStream(w,h, "YUV420P");
 
     // Create Glut window
-    pangolin::CreateGlutWindowAndBind("Main",w,h);
+    pangolin::CreateWindowAndBind("Main",w,h);
 
     // Create viewport for video with fixed aspect
     View& vVideo = Display("Video").SetAspect((float)w/h);
@@ -53,7 +53,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
         texVideo.RenderToViewportFlipY();
 
         // Swap back buffer with front and process window events via GLUT
-        pangolin::FinishGlutFrame();
+        pangolin::FinishFrame();
     }
 
     delete[] img;

@@ -142,6 +142,8 @@ if(NOT ANDROID)
         message(STATUS "Glut Found and Enabled")
     endif()
 else()  # NOT ANDROID
+    list(APPEND HEADERS ${INCDIR}/display_android.h )
+    list(APPEND SOURCES display_android.cpp )
     set(HAVE_GLES 1)
 endif() # NOT ANDROID
 

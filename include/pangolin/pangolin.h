@@ -39,6 +39,9 @@
   #ifdef HAVE_GLUT
     #include <pangolin/display_glut.h>
   #endif // HAVE_GLUT
+  #ifdef _ANDROID_
+    #include <pangolin/display_android.h>
+  #endif
 #endif // BUILD_PANGOLIN_GUI
 
 #ifdef BUILD_PANGOLIN_VARS

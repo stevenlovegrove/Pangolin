@@ -40,6 +40,7 @@ struct Viewport
     Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h) {}
     
     void Activate() const;
+    void ActivateIdentity() const;
     void ActivatePixelOrthographic() const;
 
     void Scissor() const;

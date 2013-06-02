@@ -41,13 +41,21 @@ namespace pangolin
   // Forward Declarations
   struct View;
   struct Viewport;
-
+  
   //! @brief Give this OpenGL context a name or switch contexts
   //! This is required to initialise Pangolin for use with an
   //! externally defined OpenGL context. You needn't call it
   //! if you have used CreateGlutWindowAndBind() to create a GLUT
   //! window
   void BindToContext(std::string name);
+
+  //! @brief Initialise OpenGL window (determined by platform) and bind context
+  //! This method will choose an available windowing system if one is present
+  //! Currently, uses GLUT on a desktop, and EGL on android.
+  void CreateWindowAndBind(std::string window_title, int w = 640, int h = 480);
+  
+  //! @brief Perform any post rendering, event processing and frame swapping
+  void FinishFrame();
 
   //! @brief Request that the program exit
   void Quit();

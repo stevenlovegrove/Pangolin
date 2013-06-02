@@ -14,7 +14,7 @@ void setImageData(float * imageArray, int width, int height){
 int main( int /*argc*/, char* argv[] )
 {
   // Create OpenGL window in single line thanks to GLUT
-  CreateGlutWindowAndBind("Main",640,480);
+  CreateWindowAndBind("Main",640,480);
 
   // 3D Mouse handler requires depth testing to be enabled
   glEnable(GL_DEPTH_TEST);
@@ -65,7 +65,7 @@ int main( int /*argc*/, char* argv[] )
     d_image.Activate();
     imageTexture.RenderToViewport();
 
-    pangolin::FinishGlutFrame();
+    pangolin::FinishFrame();
   }
 
   delete[] imageArray;

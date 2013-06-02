@@ -2,19 +2,20 @@
 
 int main( int /*argc*/, char** /*argv*/ )
 {  
-    pangolin::CreateGlutWindowAndBind("Main",640,480);
+    pangolin::CreateWindowAndBind("Main",640,480);
     glEnable(GL_DEPTH_TEST);
     
     // Define Projection and initial ModelView matrix
     pangolin::OpenGlRenderState s_cam(
-        pangolin::ProjectionMatrix(640,480,420,420,320,240,0.1,1000),
-        pangolin::ModelViewLookAt(-0,0.5,-3, 0,0,0, pangolin::AxisY)
+        pangolin::ProjectionMatrix(640,480,420,420,320,240,0.2,100),
+        pangolin::ModelViewLookAt(-2,2,-2, 0,0,0, pangolin::AxisY)
     );
     
     // Create Interactive View in window
+    pangolin::Handler3D handler(s_cam);
     pangolin::View& d_cam = pangolin::CreateDisplay()
             .SetBounds(0.0, 1.0, 0.0, 1.0, -640.0f/480.0f)
-            .SetHandler(new pangolin::Handler3D(s_cam));
+            .SetHandler(&handler);
     
     while( !pangolin::ShouldQuit() )
     {
@@ -24,10 +25,10 @@ int main( int /*argc*/, char** /*argv*/ )
         
         // Render OpenGL Teapot
         glColor3f(1.0,1.0,1.0);
-        glutWireTeapot(1.0);
+        pangolin::glDrawColouredCube();
         
         // Swap frames and Process Events
-        pangolin::FinishGlutFrame();
+        pangolin::FinishFrame();
     }
     
     return 0;

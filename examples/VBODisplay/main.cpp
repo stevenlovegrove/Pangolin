@@ -30,7 +30,7 @@ int main( int /*argc*/, char* argv[] )
     cudaGLSetGLDevice(0);
 #endif
 
-  pangolin::CreateGlutWindowAndBind("Main",640,480);
+  pangolin::CreateWindowAndBind("Main",640,480);
   glewInit();
   
   // 3D Mouse handler requires depth testing to be enabled  
@@ -116,7 +116,7 @@ int main( int /*argc*/, char* argv[] )
     }
 
     // Swap frames and Process Events
-    pangolin::FinishGlutFrame();
+    pangolin::FinishFrame();
 
 #ifdef USE_CUTIL
     cutStopTimer(timer);

@@ -25,7 +25,7 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
 
     // Create Glut window
     const int panel_width = 200;
-    pangolin::CreateGlutWindowAndBind("Main",w + panel_width,h);
+    pangolin::CreateWindowAndBind("Main",w + panel_width,h);
 
     // Create viewport for video with fixed aspect
     View& d_panel = pangolin::CreatePanel("ui.")
@@ -87,7 +87,7 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
             input.SaveBuffer(ui_file);
         }
 
-        pangolin::FinishGlutFrame();
+        pangolin::FinishFrame();
     }
 
     delete[] img;

@@ -10,7 +10,7 @@ using namespace std;
 int main( int /*argc*/, char* argv[] )
 {
   // Create OpenGL window in single line thanks to GLUT
-  pangolin::CreateGlutWindowAndBind("Main",640,480);
+  pangolin::CreateWindowAndBind("Main",640,480);
 
   // Data logger object
   DataLog log;
@@ -40,7 +40,7 @@ int main( int /*argc*/, char* argv[] )
     t += tinc;
 
     // Render graph, Swap frames and Process Events
-    pangolin::FinishGlutFrame();
+    pangolin::FinishFrame();
 
     boost::this_thread::sleep(boost::posix_time::milliseconds(10));
   }

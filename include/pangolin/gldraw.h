@@ -158,6 +158,28 @@ inline void glDrawAxis(float s)
     glDrawLine(0,0,0, 0,0,s);
 }
 
+inline void glDrawTexture(GLenum target, GLuint texid)
+{
+    glBindTexture(target, texid);
+    glEnable(target);
+    
+    GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
+    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+    glEnableClientState(GL_VERTEX_ARRAY);   
+
+    GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
+    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+         
+    glColor4f(1,1,1,1);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glDisable(target);
+}
+
 #ifdef HAVE_EIGEN
 
 #ifndef HAVE_GLES
@@ -245,6 +267,38 @@ inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, const Eig
     glSetFrameOfReference(T_wf);
     glDrawFrustrum(Kinv,w,h,scale);
     glUnsetFrameOfReference();
+}
+
+inline void glDrawColouredCube(GLfloat axis_min=-0.5f, GLfloat axis_max = +0.5f)
+{
+    const GLfloat l = axis_min;
+    const GLfloat h = axis_max;
+    
+    const GLfloat verts[] = {
+        l,l,h,  h,l,h,  l,h,h,  h,h,h,  // FRONT
+        l,l,l,  l,h,l,  h,l,l,  h,h,l,  // BACK
+        l,l,h,  l,h,h,  l,l,l,  l,h,l,  // LEFT
+        h,l,l,  h,h,l,  h,l,h,  h,h,h,  // RIGHT
+        l,h,h,  h,h,h,  l,h,l,  h,h,l,  // TOP
+        l,l,h,  l,l,l,  h,l,h,  h,l,l   // BOTTOM
+    };
+    
+    glVertexPointer(3, GL_FLOAT, 0, verts);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    
+    glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
+    
+    glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+    glDrawArrays(GL_TRIANGLE_STRIP, 8, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 12, 4);
+    
+    glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+    glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 #endif // HAVE_EIGEN

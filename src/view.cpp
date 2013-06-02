@@ -308,6 +308,11 @@ void View::ActivatePixelOrthographic() const
     v.ActivatePixelOrthographic();
 }  
 
+void View::ActivateIdentity() const
+{
+    v.ActivateIdentity();
+}  
+
 GLfloat View::GetClosestDepth(int x, int y, int radius) const
 {
     // TODO: Get to work on android    

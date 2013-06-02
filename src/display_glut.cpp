@@ -128,4 +128,16 @@ void FinishGlutFrame()
     SwapGlutBuffersProcessGlutEvents();
 }
 
+// Implement platform agnostic version
+void CreateWindowAndBind(std::string window_title, int w, int h )
+{
+    CreateGlutWindowAndBind(window_title, w, h);
+}
+
+// Implement platform agnostic version
+void FinishFrame()
+{
+    FinishGlutFrame();
+}
+
 }

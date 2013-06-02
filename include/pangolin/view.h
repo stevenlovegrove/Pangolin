@@ -87,6 +87,9 @@ struct View
     //! Activate Display and setup coordinate system for 2d pixel View coordinates
     void ActivatePixelOrthographic() const;
     
+    //! Activate Display and reset coordinate system to OpenGL default
+    void ActivateIdentity() const;
+    
     //! Return closest depth buffer value within radius of window (winx,winy)
     GLfloat GetClosestDepth(int winx, int winy, int radius) const;
     

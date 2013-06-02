@@ -35,7 +35,7 @@ int main( int /*argc*/, char* argv[] )
   pangolin::ParseVarsFile("app.cfg");
 
   // Create OpenGL window in single line thanks to GLUT
-  pangolin::CreateGlutWindowAndBind("Main",640,480);
+  pangolin::CreateWindowAndBind("Main",640,480);
   
   // 3D Mouse handler requires depth testing to be enabled
   glEnable(GL_DEPTH_TEST);
@@ -121,7 +121,7 @@ int main( int /*argc*/, char* argv[] )
     glutWireTeapot(1.0);
 
     // Swap frames and Process Events
-    pangolin::FinishGlutFrame();
+    pangolin::FinishFrame();
   }
 
   return 0;

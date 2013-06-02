@@ -6,7 +6,12 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 
 option(BUILD_EXAMPLES "Build Examples" ON)
-option(BUILD_SHARED_LIBS "Build Shared Library" ON)
+
+if(NOT ANDROID)
+   option(BUILD_SHARED_LIBS "Build Shared Library" ON)
+else()
+   set(BUILD_SHARED_LIBS OFF)
+endif()
 
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}
 if( NOT CMAKE_BUILD_TYPE )
