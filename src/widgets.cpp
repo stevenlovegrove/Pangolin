@@ -39,6 +39,16 @@ using namespace std;
 namespace pangolin
 {
 
+#ifdef HAVE_GLES
+// TODO: Implement text for GL ES
+// dummy implementations
+void glRasterPos2f(int,int){}
+void glRasterPos2fv(const GLfloat *v){}
+void glutBitmapString(void *font, const unsigned char *str){}
+int glutBitmapLength(void *font, const unsigned char *string){return 0;}
+#define GLUT_BITMAP_HELVETICA_12 0;
+#endif
+
 // Pointer to context defined in display.cpp
 extern __thread PangolinGl* context;
 
@@ -46,13 +56,14 @@ const static int border = 1;
 const static int tab_w = 15;
 const static int tab_h = 20;
 const static int tab_p = 5;
-const static float colour_s1[4] = {0.2, 0.2, 0.2, 1.0};
-const static float colour_s2[4] = {0.6, 0.6, 0.6, 1.0};
-const static float colour_bg[4] = {0.9, 0.9, 0.9, 1.0};
-const static float colour_fg[4] = {1.0, 1.0 ,1.0, 1.0};
-const static float colour_tx[4] = {0.0, 0.0, 0.0, 1.0};
-const static float colour_hl[4] = {0.9, 0.9, 0.9, 1.0};
-const static float colour_dn[4] = {1.0, 0.7 ,0.7, 1.0};
+const static GLfloat colour_s1[4] = {0.2, 0.2, 0.2, 1.0};
+const static GLfloat colour_s2[4] = {0.6, 0.6, 0.6, 1.0};
+const static GLfloat colour_bg[4] = {0.9, 0.9, 0.9, 1.0};
+const static GLfloat colour_fg[4] = {1.0, 1.0 ,1.0, 1.0};
+const static GLfloat colour_tx[4] = {0.0, 0.0, 0.0, 1.0};
+const static GLfloat colour_hl[4] = {0.9, 0.9, 0.9, 1.0};
+const static GLfloat colour_dn[4] = {1.0, 0.7 ,0.7, 1.0};
+
 static void* font = GLUT_BITMAP_HELVETICA_12;
 static int text_height = 8; //glutBitmapHeight(font) * 0.7;
 static int cb_height = text_height * 1.6;
@@ -79,41 +90,98 @@ void GuiVarChanged( Var<T>& var)
 
 void glRect(Viewport v)
 {
+#ifndef HAVE_GLES
     glRecti(v.l,v.b,v.r(),v.t());
+#else
+    GLfloat verts[] = { (float)v.l,(float)v.b,
+                        (float)v.r(),(float)v.b,
+                        (float)v.r(),(float)v.t(),
+                        (float)v.l,(float)v.t() };    
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
 }
 
-void glRect(Viewport v, int inset)
+void glRect(Viewport v, GLfloat inset)
 {
+#ifndef HAVE_GLES
     glRecti(v.l+inset,v.b+inset,v.r()-inset,v.t()-inset);
+#else
+    GLfloat verts[] = { 
+        v.l+inset,v.b+inset, v.r()-inset,v.b+inset,
+        v.r()-inset,v.t()-inset, v.l+inset,v.t()-inset
+    };
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
+    
 }
 
 void DrawShadowRect(Viewport& v)
 {
     glColor4fv(colour_s2);
-    glBegin(GL_LINE_STRIP);
+#ifndef HAVE_GLES
+    glBegin(GL_LINE_LOOP);
     glVertex2i(v.l,v.b);
     glVertex2i(v.l,v.t());
     glVertex2i(v.r(),v.t());
     glVertex2i(v.r(),v.b);
-    glVertex2i(v.l,v.b);
-    glEnd();
+    glEnd();    
+#else
+    GLfloat verts[] = { (float)v.l,(float)v.b,
+                        (float)v.r(),(float)v.b,
+                        (float)v.r(),(float)v.t(),
+                        (float)v.l,(float)v.t() };    
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glDrawArrays(GL_LINE_LOOP, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
+    
 }
 
 void DrawShadowRect(Viewport& v, bool pushed)
 {
-    glColor4fv(pushed ? colour_s1 : colour_s2);
+    const GLfloat* c1 = pushed ? colour_s1 : colour_s2;
+    const GLfloat* c2 = pushed ? colour_s2 : colour_s1;
+    
+    glColor4fv(c1);
+#ifndef HAVE_GLES    
     glBegin(GL_LINE_STRIP);
     glVertex2i(v.l,v.b);
     glVertex2i(v.l,v.t());
     glVertex2i(v.r(),v.t());
     glEnd();
+#else
+    GLfloat verts1[] = { (float)v.l,(float)v.b,
+                         (float)v.l,(float)v.t(),
+                         (float)v.r(),(float)v.t() };
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, verts1);
+    glDrawArrays(GL_LINE_STRIP, 0, 3);
+    glDisableClientState(GL_VERTEX_ARRAY);    
+#endif
     
-    glColor3fv(pushed ? colour_s2 : colour_s1);
+    glColor4fv(c2);
+#ifndef HAVE_GLES    
     glBegin(GL_LINE_STRIP);
     glVertex2i(v.r(),v.t());
     glVertex2i(v.r(),v.b);
     glVertex2i(v.l,v.b);
     glEnd();
+#else
+    GLfloat verts2[] = { (float)v.r(),(float)v.t(),
+                         (float)v.r(),(float)v.b,
+                         (float)v.l,(float)v.b };
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, verts2);
+    glDrawArrays(GL_LINE_STRIP, 0, 3);
+    glDisableClientState(GL_VERTEX_ARRAY);    
+#endif
 }
 
 Panel::Panel()
@@ -177,7 +245,9 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
 
 void Panel::Render()
 {
+#ifndef HAVE_GLES
     glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_SCISSOR_BIT | GL_VIEWPORT_BIT);
+#endif
     
     DisplayBase().ActivatePixelOrthographic();
     glDisable(GL_DEPTH_TEST);
@@ -194,7 +264,12 @@ void Panel::Render()
     
     RenderChildren();
     
+#ifndef HAVE_GLES
     glPopAttrib();
+#else
+    glEnable(GL_LINE_SMOOTH);
+    glEnable(GL_DEPTH_TEST);    
+#endif
 }
 
 void Panel::ResizeChildren()

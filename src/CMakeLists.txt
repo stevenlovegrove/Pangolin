@@ -40,7 +40,7 @@ if(BUILD_PANGOLIN_VARS)
   list(APPEND HEADERS ${INCDIR}/vars.h ${INCDIR}/vars_internal.h ${INCDIR}/input_record_repeat.h )
   list(APPEND SOURCES vars.cpp input_record_repeat.cpp )
 
-  if(BUILD_PANGOLIN_GUI AND NOT ANDROID)
+  if(BUILD_PANGOLIN_GUI)
       list(APPEND HEADERS ${INCDIR}/widgets.h )
       list(APPEND SOURCES widgets.cpp )
   endif()

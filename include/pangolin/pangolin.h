@@ -40,7 +40,7 @@
 
 #ifdef BUILD_PANGOLIN_VARS
 #include <pangolin/vars.h>
-#if defined(BUILD_PANGOLIN_GUI) && !defined(HAVE_GLES)
+#ifdef BUILD_PANGOLIN_GUI
 #include <pangolin/widgets.h>
 #endif // BUILD_PANGOLIN_GUI
 #endif // BUILD_PANGOLIN_VARS
