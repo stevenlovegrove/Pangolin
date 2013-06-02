@@ -212,6 +212,7 @@ void SaveWindowOnRender(std::string prefix)
 
 void SaveFramebuffer(std::string prefix, const Viewport& v)
 {
+#ifndef HAVE_GLES
 #ifdef HAVE_BOOST_GIL
     // Save colour channels
     boost::gil::rgba8_image_t img(v.w, v.h);
@@ -227,11 +228,13 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
     //      glReadPixels(v.l, v.b, v.w, v.h, GL_DEPTH_COMPONENT, GL_FLOAT, boost::gil::interleaved_view_get_raw_data( view( depth ) ));
     //      boost::gil::tiff_write_view(prefix + "_depth.tiff", flipped_up_down_view(const_view(depth)) );
 #endif // HAVE_BOOST_GIL
+#endif // HAVE_GLES
 }
 
 #ifdef BUILD_PANGOLIN_VIDEO
 void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 {
+#ifndef HAVE_GLES    
     static basetime last_time = TimeNow();
     const basetime time_now = TimeNow();
     
@@ -258,6 +261,7 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
         glDrawCircle( v.w-2*r, v.h-2*r, r );
         glPopAttrib();
     }
+#endif // HAVE_GLES
 }
 #endif // BUILD_PANGOLIN_VIDEO
 
