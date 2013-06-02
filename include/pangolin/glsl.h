@@ -89,12 +89,9 @@ public:
     }
     
 protected:
-    static GlSlUtilities* instance;
     static GlSlUtilities& Instance() {
-        if(!instance) {
-            instance = new GlSlUtilities();
-        }
-        return *instance;
+        static GlSlUtilities instance;
+        return instance;
     }
     
     // protected constructor
@@ -111,8 +108,6 @@ protected:
 ////////////////////////////////////////////////
 // Implementation
 ////////////////////////////////////////////////
-
-GlSlUtilities* GlSlUtilities::instance = 0;
 
 void printInfoLog(GLhandleARB obj)
 {
