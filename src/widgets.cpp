@@ -90,35 +90,12 @@ void GuiVarChanged( Var<T>& var)
 
 void glRect(Viewport v)
 {
-#ifndef HAVE_GLES
-    glRecti(v.l,v.b,v.r(),v.t());
-#else
-    GLfloat verts[] = { (float)v.l,(float)v.b,
-                        (float)v.r(),(float)v.b,
-                        (float)v.r(),(float)v.t(),
-                        (float)v.l,(float)v.t() };    
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_FLOAT, 0, verts);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glDisableClientState(GL_VERTEX_ARRAY);
-#endif
+    glRecti(v.l, v.b, v.r(), v.t());
 }
 
 void glRect(Viewport v, GLfloat inset)
 {
-#ifndef HAVE_GLES
     glRecti(v.l+inset,v.b+inset,v.r()-inset,v.t()-inset);
-#else
-    GLfloat verts[] = { 
-        v.l+inset,v.b+inset, v.r()-inset,v.b+inset,
-        v.r()-inset,v.t()-inset, v.l+inset,v.t()-inset
-    };
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_FLOAT, 0, verts);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glDisableClientState(GL_VERTEX_ARRAY);
-#endif
-    
 }
 
 void DrawShadowRect(Viewport& v)

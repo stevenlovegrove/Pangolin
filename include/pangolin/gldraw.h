@@ -110,6 +110,24 @@ inline void glDrawCross( GLfloat x, GLfloat y, GLfloat z, GLfloat r )
     glDrawLine(x,y,z-r, x, y,z+r);
 }
 
+inline void glDrawRect( GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2 )
+{
+    GLfloat verts[] = { x1,y1,  x2,y1,  x2,y2,  x1,y2 };    
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+}
+
+inline void glDrawRectPerimeter( GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2 )
+{
+    GLfloat verts[] = { x1,y1,  x2,y1,  x2,y2,  x1,y2 };    
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glDrawArrays(GL_LINE_LOOP, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+}
+
 inline void glDrawCircle( GLfloat x, GLfloat y, GLfloat rad )
 {    
     const int N = 50;
