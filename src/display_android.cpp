@@ -310,6 +310,8 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 // Define library entry point.
 extern "C" {
 
+pangolin::engine g_engine;
+
 static void free_saved_state(struct android_app* android_app) {
     pthread_mutex_lock(&android_app->mutex);
     if (android_app->savedState != NULL) {
@@ -442,7 +444,7 @@ void android_app_post_exec_cmd(struct android_app* android_app, int8_t cmd) {
 }
 
 static void android_app_destroy(struct android_app* android_app) {
-    LOGV("android_app_destroy!");
+    LOGV("+android_app_destroy!");
     free_saved_state(android_app);
     pthread_mutex_lock(&android_app->mutex);
     if (android_app->inputQueue != NULL) {
@@ -453,6 +455,7 @@ static void android_app_destroy(struct android_app* android_app) {
     pthread_cond_broadcast(&android_app->cond);
     pthread_mutex_unlock(&android_app->mutex);
     // Can't touch android_app object after this.
+    LOGV("-android_app_destroy!");
 }
 
 static void process_input(struct android_app* app, struct android_poll_source* source) {
@@ -478,6 +481,7 @@ static void process_cmd(struct android_app* app, struct android_poll_source* sou
 }
 
 static void* android_app_entry(void* param) {
+    LOGV("+android_app_entry");
     struct android_app* android_app = (struct android_app*)param;
 
     android_app->config = AConfiguration_new();
@@ -511,6 +515,12 @@ static void* android_app_entry(void* param) {
     main(1,argv);
 
     android_app_destroy(android_app);
+    
+    // Process terminate commands?
+    pangolin::ProcessAndroidEvents();
+    
+    LOGV("-android_app_entry");
+    
     return NULL;
 }
 
@@ -698,8 +708,6 @@ static void onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue)
     android_app_set_input((struct android_app*)activity->instance, NULL);
 }
 
-pangolin::engine g_engine;
-
 void ANativeActivity_onCreate(
         ANativeActivity* activity,
         void* savedState,
@@ -732,11 +740,11 @@ void ANativeActivity_onCreate(
     g_engine.activity = activity;
     
     // Prepare to monitor accelerometer
-    g_engine.sensorManager = ASensorManager_getInstance();
-    g_engine.accelerometerSensor = ASensorManager_getDefaultSensor(g_engine.sensorManager,
-            ASENSOR_TYPE_ACCELEROMETER);
-    g_engine.sensorEventQueue = ASensorManager_createEventQueue(g_engine.sensorManager,
-            app->looper, LOOPER_ID_USER, NULL, NULL);
+//    g_engine.sensorManager = ASensorManager_getInstance();
+//    g_engine.accelerometerSensor = ASensorManager_getDefaultSensor(g_engine.sensorManager,
+//            ASENSOR_TYPE_ACCELEROMETER);
+//    g_engine.sensorEventQueue = ASensorManager_createEventQueue(g_engine.sensorManager,
+//            app->looper, LOOPER_ID_USER, NULL, NULL);
 
 //    // Load existing state if it exists
 //    if (app->savedState != NULL) {
@@ -751,7 +759,12 @@ namespace pangolin
 
 void CreateAndroidWindowAndBind(std::string name)
 {
+    LOGI("*****************************************************************");
+    LOGV("+CreateAndroidWindowAndBind");
+    // Bind and Wait for GL Context
     pangolin::BindToContext(name);
+    ProcessAndroidEvents();    
+    LOGV("-CreateAndroidWindowAndBind");    
 }
 
 void ProcessAndroidEvents()
@@ -773,18 +786,18 @@ void ProcessAndroidEvents()
                 source->process(g_engine.app, source);
             }
     
-            // If a sensor has data, process it now.
-            if (ident == LOOPER_ID_USER) {
-                if (g_engine.accelerometerSensor != NULL) {
-                    ASensorEvent event;
-                    while (ASensorEventQueue_getEvents(g_engine.sensorEventQueue,
-                            &event, 1) > 0) {
-    //                        LOGI("accelerometer: x=%f y=%f z=%f",
-    //                                event.acceleration.x, event.acceleration.y,
-    //                                event.acceleration.z);
-                    }
-                }
-            }
+//            // If a sensor has data, process it now.
+//            if (ident == LOOPER_ID_USER) {
+//                if (g_engine.accelerometerSensor != NULL) {
+//                    ASensorEvent event;
+//                    while (ASensorEventQueue_getEvents(g_engine.sensorEventQueue,
+//                            &event, 1) > 0) {
+//    //                        LOGI("accelerometer: x=%f y=%f z=%f",
+//    //                                event.acceleration.x, event.acceleration.y,
+//    //                                event.acceleration.z);
+//                    }
+//                }
+//            }
     
             // Check if we are exiting.
             if (g_engine.app->destroyRequested != 0) {
@@ -798,9 +811,11 @@ void ProcessAndroidEvents()
 
 void FinishAndroidFrame()
 {
+    LOGV("+FinishAndroidFrame");
     ProcessAndroidEvents();
     RenderViews();
     eglSwapBuffers(g_engine.display, g_engine.surface);    
+    LOGV("-FinishAndroidFrame");
 }
 
 // Implement platform agnostic version

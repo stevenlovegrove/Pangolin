@@ -45,6 +45,7 @@
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__))
 
 /* For debug builds, always enable the debug traces in this library */
+#undef NDEBUG
 #ifndef NDEBUG
 #  define LOGV(...)  ((void)__android_log_print(ANDROID_LOG_VERBOSE, "pango", __VA_ARGS__))
 #else
