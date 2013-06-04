@@ -121,7 +121,7 @@ static int engine_init_display(struct engine* engine) {
     eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
 
     ANativeWindow_setBuffersGeometry(engine->app->window, 0, 0, format);
-    ANativeActivity_setWindowFlags(engine->app->activity, AWINDOW_FLAG_FULLSCREEN, 0 );
+//    ANativeActivity_setWindowFlags(engine->app->activity, AWINDOW_FLAG_FULLSCREEN, 0 );
 
     surface = eglCreateWindowSurface(display, config, engine->app->window, NULL);
     context = eglCreateContext(display, config, NULL, NULL);

@@ -133,10 +133,11 @@ inline void glDrawCircle( GLfloat x, GLfloat y, GLfloat rad )
     const int N = 50;
     GLfloat verts[N*2];
     
+    // Draw vertices anticlockwise for front face
     const double TAU_DIV_N = 2*M_PI/N;
     for(int i = 0; i < N*2; i+=2) {
-        verts[i] =   x + rad * cos(i*TAU_DIV_N);
-        verts[i+1] = y + rad * sin(i*TAU_DIV_N);
+        verts[i] =   x + rad * cos(-i*TAU_DIV_N);
+        verts[i+1] = y + rad * sin(-i*TAU_DIV_N);
     }
     
     // Render filled shape and outline (to make it look smooth)
@@ -181,11 +182,33 @@ inline void glDrawTexture(GLenum target, GLuint texid)
     glBindTexture(target, texid);
     glEnable(target);
     
-    GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
+    const GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
     glVertexPointer(2, GL_FLOAT, 0, sq_vert);
     glEnableClientState(GL_VERTEX_ARRAY);   
 
-    GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
+    const GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
+    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+         
+    glColor4f(1,1,1,1);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glDisable(target);
+}
+
+inline void glDrawTextureFlipY(GLenum target, GLuint texid)
+{
+    glBindTexture(target, texid);
+    glEnable(target);
+    
+    const GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
+    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+    glEnableClientState(GL_VERTEX_ARRAY);   
+
+    const GLfloat sq_tex[]  = { 0,1,  1,1,  1,0,  0,0  };
     glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
          
