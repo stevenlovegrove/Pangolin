@@ -280,10 +280,14 @@ void Plotter::DrawSequence(const DataSequence& seq)
         std::min(seqint_x[1],(int)(int_x[1]+vo[0]))
     };
     glLineWidth(lineThickness);
+    
+#ifndef HAVE_GLES
     glBegin(draw_modes[draw_mode]);
     for( int x=valid_int_x[0]; x<valid_int_x[1]; ++x )
         glVertex2f(x,seq[x]);
     glEnd();
+#endif // HAVE_GLES
+    
     glLineWidth(1.0f);
 }
 
@@ -303,6 +307,7 @@ void Plotter::DrawSequenceHistogram(const DataLog::SequenceContainer& seq)
                 std::min(seqint_x[1],(int)(int_x[1]+vo[0]))
             };
             
+#ifndef HAVE_GLES            
             glBegin(GL_TRIANGLE_STRIP);
             glColor3fv(plot_colours[s%num_plot_colours]);
             
@@ -320,6 +325,7 @@ void Plotter::DrawSequenceHistogram(const DataLog::SequenceContainer& seq)
                 glVertex2f(x+0.5,accum);
             }
             glEnd();
+#endif // HAVE_GLES
         }
     }
 }
@@ -330,10 +336,14 @@ void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
     const unsigned maxn = min(x.IndexEnd(),y.IndexEnd());
     
     glLineWidth(lineThickness);
+
+#ifndef HAVE_GLES
     glBegin(draw_modes[draw_mode]);
     for( unsigned n=minn; n < maxn; ++n )
         glVertex2f(x[n],y[n]);
     glEnd();
+#endif
+    
     glLineWidth(1.0f);
 }
 
