@@ -281,25 +281,23 @@ inline void glDrawAxis( const Eigen::Matrix4d& T_wf, float scale )
 
 inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, GLfloat scale )
 {
-    const GLfloat fu = scale*Kinv(0,0);
-    const GLfloat fv = scale*Kinv(1,1);
-    const GLfloat u0 = scale*Kinv(0,2);
-    const GLfloat v0 = scale*Kinv(0,2);
-    
-    GLfloat verts[] = {
-        u0, v0, scale,
-        fu+u0, v0, scale,
-        w*fu+u0, h*fv+v0, scale,
-        u0, h*fv+v0, scale,
-        u0, v0, scale,
-        0, 0, 0,
-        w*fu+u0, h*fv+v0, scale,
-        fu+u0, v0, scale,
-        u0, h*fv+v0, scale
+    const GLfloat xl = scale * Kinv(0,2);
+    const GLfloat xh = scale * (w*Kinv(0,0) + Kinv(0,2));
+    const GLfloat yl = scale * Kinv(1,2);
+    const GLfloat yh = scale * (h*Kinv(1,1) + Kinv(1,2));
+        
+    const GLfloat verts[] = {
+        xl,yl,scale,  xh,yl,scale,
+        xh,yh,scale,  xl,yh,scale,
+        xl,yl,scale,  0,0,0,
+        xh,yl,scale,  0,0,0,
+        xl,yh,scale,  0,0,0,
+        xh,yh,scale
     };
-    glVertexPointer(2, GL_FLOAT, 0, verts);
+    
+    glVertexPointer(3, GL_FLOAT, 0, verts);
     glEnableClientState(GL_VERTEX_ARRAY);
-    glDrawArrays(GL_LINES, 0, 9);
+    glDrawArrays(GL_LINE_STRIP, 0, 11);
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
