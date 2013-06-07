@@ -39,6 +39,5 @@ add_custom_target(uninstall
 add_subdirectory("src")
 
 if(BUILD_EXAMPLES)
-  set(PANGOLIN_EXAMPLE 1)
   add_subdirectory(examples)
 endif()
