@@ -251,12 +251,42 @@ elseif(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 #######################################################
-## Create configure file for inclusion in library
+## Create config.h file for inclusion in library
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/config.h"
 )
+
+#######################################################
+
+# This relative path allows installed files to be relocatable.
+set( CMAKECONFIG_INSTALL_DIR lib/cmake/Pangolin )
+file( RELATIVE_PATH REL_INCLUDE_DIR
+    "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
+    "${CMAKE_INSTALL_PREFIX}/include"
+)
+
+# Export library for easy inclusion from other cmake projects.
+export( TARGETS ${LIBRARY_NAME}
+        FILE "${CMAKE_CURRENT_BINARY_DIR}/PangolinTargets.cmake" )
+
+# Version information
+configure_file(PangolinConfigVersion.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/PangolinConfigVersion.cmake" @ONLY)
+
+# Build tree config
+set( EXPORT_PANGO_INC ${PANGO_INC} )
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/PangolinConfig.cmake @ONLY IMMEDIATE )
+
+# Install tree config
+set( EXPORT_PANGO_INC "\${PANGOLIN_CMAKE_DIR}/${REL_INCLUDE_DIR}" )
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PangolinConfig.cmake @ONLY )
+
+# Add package to CMake package registery for use from the build tree
+export( PACKAGE Pangolin )
 
 #######################################################
 ## Install headers / targets
@@ -275,32 +305,13 @@ install(TARGETS ${LIBRARY_NAME}
 )
 
 #######################################################
-# Figure out the relative path from the installed Config.cmake file to the
-# install prefix. This relative path will be configured into PangolinConfig.cmake.
-set( CMAKECONFIG_INSTALL_DIR lib/cmake/Pangolin )
-file( RELATIVE_PATH REL_INCLUDE_DIR
-    "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
-    "${CMAKE_INSTALL_PREFIX}/include" )
+## Install CMake config
 
-export( TARGETS ${LIBRARY_NAME}
-        FILE "${CMAKE_CURRENT_BINARY_DIR}/PangolinTargets.cmake" )
-
-if(NOT ANDROID)
-    # Add package to CMake package registery for use from the build tree
-    export( PACKAGE Pangolin )
-endif()
-
-# Install the export set for use with the install tree
-install( EXPORT PangolinTargets DESTINATION ${CMAKECONFIG_INSTALL_DIR} )
-
-## Export config file for easy inclusion into other projects: find_package( Pangolin )
-# ... for the build tree
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/PangolinConfig.cmake @ONLY IMMEDIATE )
-# ... for the install tree
-set( PANGO_INC "\${PANGOLIN_CMAKE_DIR}/${REL_INCLUDE_DIR}" )
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PangolinConfig.cmake @ONLY )
-
-INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PangolinConfig.cmake"
-        DESTINATION ${CMAKECONFIG_INSTALL_DIR} )
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PangolinConfig.cmake"
+          "${CMAKE_CURRENT_BINARY_DIR}/PangolinConfigVersion.cmake"
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+)
+install(
+    EXPORT PangolinTargets DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+)

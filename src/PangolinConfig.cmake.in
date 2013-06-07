@@ -1,7 +1,7 @@
 # Compute paths
 get_filename_component( PANGOLIN_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
-SET( Pangolin_INCLUDE_DIRS "@PANGO_INC@;@USER_INC@" )
-SET( Pangolin_INCLUDE_DIR  "@PANGO_INC@;@USER_INC@" )
+SET( Pangolin_INCLUDE_DIRS "@EXPORT_PANGO_INC@;@USER_INC@" )
+SET( Pangolin_INCLUDE_DIR  "@EXPORT_PANGO_INC@;@USER_INC@" )
 
 # Library dependencies (contains definitions for IMPORTED targets)
 if( NOT TARGET @LIBRARY_NAME@ AND NOT Pangolin_BINARY_DIR )

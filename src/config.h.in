@@ -2,12 +2,13 @@
 #define PANGOLIN_CONFIG_H
 
 /*
- * Configuration Header for @PROJECT_NAME@
+ * Configuration Header for Pangolin
  */
 
 /// Version
 #define PANGOLIN_VERSION_MAJOR @PANGOLIN_VERSION_MAJOR@
 #define PANGOLIN_VERSION_MINOR @PANGOLIN_VERSION_MINOR@
+#define PANGOLIN_VERSION_STRING "@PANGOLIN_VERSION@"
 
 /// Pangolin options
 #cmakedefine BUILD_PANGOLIN_GUI
