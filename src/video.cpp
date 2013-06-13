@@ -223,6 +223,29 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 #endif
 
+#ifdef HAVE_OPENNI
+
+OpenNiSensorType openni_sensor(std::string str)
+{
+    if( !str.compare("rgb") ) {
+        return OpenNiRgb;
+    }else if( !str.compare("ir") ) {
+        return OpenNiIr;
+    }else if( !str.compare("depth") ) {
+        return OpenNiDepth;
+    }else if( !str.compare("ir8") ) {
+        return OpenNiIr8bit;
+    }else if( !str.compare("ir+") ) {
+        return OpenNiIrProj;
+    }else if( !str.compare("ir8+") ) {
+        return OpenNiIr8bitProj;
+    }else{
+        throw pangolin::VideoException("Unknown OpenNi sensor", str );
+    }
+}
+
+#endif // HAVE_OPENNI
+
 VideoInterface* OpenVideo(std::string str_uri)
 {
     VideoInterface* video = 0;
@@ -343,27 +366,11 @@ VideoInterface* OpenVideo(std::string str_uri)
         OpenNiSensorType img2 = OpenNiUnassigned;
         
         if(uri.params.find("img1")!=uri.params.end()){
-            std::istringstream iss(uri.params["img1"]);
-            
-            if( boost::iequals(iss.str(),"rgb") ) {
-                img1 = OpenNiRgb;
-            }else if( boost::iequals(iss.str(),"ir") ) {
-                img1 = OpenNiIr;
-            }else if( boost::iequals(iss.str(),"depth") ) {
-                img1 = OpenNiDepth;
-            }
+            img1 = openni_sensor(uri.params["img1"]);
         }
         
         if(uri.params.find("img2")!=uri.params.end()){
-            std::istringstream iss(uri.params["img2"]);
-            
-            if( boost::iequals(iss.str(),"rgb") ) {
-                img2 = OpenNiRgb;
-            }else if( boost::iequals(iss.str(),"ir") ) {
-                img2 = OpenNiIr;
-            }else if( boost::iequals(iss.str(),"depth") ) {
-                img2 = OpenNiDepth;
-            }
+            img2 = openni_sensor(uri.params["img2"]);
         }
         
         video = new OpenNiVideo(img1,img2);

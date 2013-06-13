@@ -17,7 +17,10 @@ enum OpenNiSensorType
     OpenNiUnassigned = -1,
     OpenNiRgb = 0,
     OpenNiIr = 1,
-    OpenNiDepth = 2
+    OpenNiDepth = 2,
+    OpenNiIr8bit = 3,
+    OpenNiIrProj = 4,
+    OpenNiIr8bitProj = 5
 };
 
 //! Interface to video capture sources
@@ -47,15 +50,13 @@ public:
     
 protected:
     std::vector<StreamInfo> streams;
+    OpenNiSensorType sensor_type[2];
     
     xn::Context context;
     xn::DepthGenerator depthNode;
     xn::ImageGenerator imageNode;
     xn::IRGenerator irNode;
     
-    OpenNiSensorType sensor_type[2];
-    size_t sensor_SizeBytes[2];
-
     size_t sizeBytes;
 };
 

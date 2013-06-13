@@ -48,31 +48,58 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
     
     sizeBytes = 0;
     
+    bool use_depth = false;
+    bool use_ir = false;
+    bool use_rgb = false;
+    
     for(int i=0; i<2; ++i) {
         VideoPixelFormat fmt;
-        
+
+        // Establish output pixel format for sensor streams
         switch( sensor_type[i] ) {
         case OpenNiDepth:
         case OpenNiIr:
-            sensor_SizeBytes[i] = XN_VGA_X_RES * XN_VGA_Y_RES * sizeof(XnDepthPixel);
+        case OpenNiIrProj:
             fmt = VideoFormatFromString("GRAY16LE");
+            break;
+        case OpenNiIr8bit:
+        case OpenNiIr8bitProj:
+            fmt = VideoFormatFromString("GRAY8");
             break;
         case OpenNiRgb:
             fmt = VideoFormatFromString("RGB24");
-            sensor_SizeBytes[i] = XN_VGA_X_RES * XN_VGA_Y_RES * sizeof(XnUInt8) * 3;
             break;
         case OpenNiUnassigned:
         default:
-            sensor_SizeBytes[i] = 0;
             continue;
         }
         
-        const StreamInfo stream(fmt, XN_VGA_X_RES, XN_VGA_Y_RES, (XN_VGA_X_RES * fmt.bpp) / 8, 0);
+        switch( sensor_type[i] ) {
+        case OpenNiDepth:
+            use_depth = true;
+            break;
+        case OpenNiIr:
+        case OpenNiIr8bit:
+            use_ir = true;
+            break;
+        case OpenNiIrProj:
+        case OpenNiIr8bitProj:
+            use_ir = true;
+            use_depth = true;
+            break;
+        case OpenNiRgb:
+            use_rgb = true;
+            break;
+        case OpenNiUnassigned:
+            break;
+        }
+
+        const StreamInfo stream(fmt, mapMode.nXRes, mapMode.nYRes, (mapMode.nXRes * fmt.bpp) / 8, 0);
+        sizeBytes += stream.SizeBytes();
         streams.push_back(stream);
-        sizeBytes += sensor_SizeBytes[i];
     }
     
-    if( sensor_type[0] == OpenNiDepth || sensor_type[1] == OpenNiDepth ) {
+    if( use_depth ) {
         nRetVal = depthNode.Create(context);
         if (nRetVal != XN_STATUS_OK) {
             std::cerr << "depthNode.Create: " << xnGetStatusString(nRetVal) << std::endl;
@@ -84,7 +111,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
         }
     }
     
-    if( sensor_type[0] == OpenNiIr || sensor_type[1] == OpenNiIr ) {
+    if( use_ir ) {
         nRetVal = irNode.Create(context);
         if (nRetVal != XN_STATUS_OK) {
             std::cerr << "irNode.Create: " << xnGetStatusString(nRetVal) << std::endl;
@@ -96,7 +123,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
         }
     }
     
-    if( sensor_type[0] == OpenNiRgb || sensor_type[1] == OpenNiRgb ) {
+    if( use_rgb ) {
         nRetVal = imageNode.Create(context);
         if (nRetVal != XN_STATUS_OK) {
             std::cerr << "imageNode.Create: " << xnGetStatusString(nRetVal) << std::endl;
@@ -150,17 +177,53 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
         unsigned char* out_img = image;
         
         for(int i=0; i<2; ++i) {
-            if(sensor_type[i]==OpenNiDepth) {
+            switch (sensor_type[i]) {
+            case OpenNiDepth:
+            {
                 const XnDepthPixel* pDepthMap = depthNode.GetDepthMap();
-                memcpy(out_img,pDepthMap, sensor_SizeBytes[i] );
-            }else if(sensor_type[i]==OpenNiIr) {
-                const XnIRPixel* pIrMap = irNode.GetIRMap();
-                memcpy(out_img,pIrMap, sensor_SizeBytes[i]);
-            }else if(sensor_type[i]==OpenNiRgb) {
-                const XnUInt8* pImageMap = imageNode.GetImageMap();
-                memcpy(out_img,pImageMap, sensor_SizeBytes[i]);
+                memcpy(out_img,pDepthMap, streams[i].SizeBytes() );
+                break;
             }
-            out_img += sensor_SizeBytes[i];
+            case OpenNiIr:
+            case OpenNiIrProj:
+            {
+                const XnIRPixel* pIrMap = irNode.GetIRMap();
+                memcpy(out_img, pIrMap, streams[i].SizeBytes() );
+                break;
+            }
+            case OpenNiIr8bit:
+            case OpenNiIr8bitProj:
+            {
+                const XnIRPixel* pIr16Map = irNode.GetIRMap();
+
+                // rescale from 16-bit (10 effective) to 8-bit
+                xn::IRMetaData meta_data;
+                irNode.GetMetaData(meta_data);
+                int w = meta_data.XRes();
+                int h = meta_data.YRes();
+
+                XnUInt8 pIrMapScaled[w * h];
+                for (int v = 0; v < h; ++v)
+                for (int u = 0; u < w; ++u) {
+                    int val = *pIr16Map >> 2; // 10bit to 8 bit
+                    pIrMapScaled[w * v + u] = val;
+                    pIr16Map++;
+                }
+
+                memcpy(out_img, pIrMapScaled, streams[i].SizeBytes() );
+                break;
+            }
+            case OpenNiRgb:
+            {
+                const XnUInt8* pImageMap = imageNode.GetImageMap();
+                memcpy(out_img,pImageMap, streams[i].SizeBytes());
+                break;
+            }
+            case OpenNiUnassigned:
+                break;
+            }
+            
+            out_img += streams[i].SizeBytes();
         }
         
         return true;
