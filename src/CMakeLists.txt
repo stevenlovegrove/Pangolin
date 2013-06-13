@@ -64,7 +64,7 @@ endif()
 ## Setup required includes / link info
 
 # Project headers trump everything (including any potentially installed Pangolin)
-list(APPEND PANGO_INC  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
+list(APPEND LIB_INC_DIR  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 
 find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
 list(APPEND USER_INC  "${Boost_INCLUDE_DIRS}" )
@@ -236,7 +236,7 @@ endif()
 #######################################################
 ## Add Libraries / Include Directories / Link directories
 
-include_directories( ${PANGO_INC} )
+include_directories( ${LIB_INC_DIR} )
 include_directories( ${USER_INC} )
 include_directories( ${INTERNAL_INC} )
 
@@ -261,32 +261,34 @@ configure_file(
 #######################################################
 
 # This relative path allows installed files to be relocatable.
-set( CMAKECONFIG_INSTALL_DIR lib/cmake/Pangolin )
+set( CMAKECONFIG_INSTALL_DIR lib/cmake/${PROJECT_NAME} )
 file( RELATIVE_PATH REL_INCLUDE_DIR
     "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
     "${CMAKE_INSTALL_PREFIX}/include"
 )
 
-# Export library for easy inclusion from other cmake projects.
+# Export library for easy inclusion from other cmake projects. APPEND allows
+# call to function even as subdirectory of larger project.
+FILE(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
 export( TARGETS ${LIBRARY_NAME}
-        FILE "${CMAKE_CURRENT_BINARY_DIR}/PangolinTargets.cmake" )
+        APPEND FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake" )
 
 # Version information
-configure_file(PangolinConfigVersion.cmake.in
-  "${CMAKE_CURRENT_BINARY_DIR}/PangolinConfigVersion.cmake" @ONLY)
+configure_file(${PROJECT_NAME}ConfigVersion.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" @ONLY)
 
 # Build tree config
-set( EXPORT_PANGO_INC ${PANGO_INC} )
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/PangolinConfig.cmake @ONLY IMMEDIATE )
+set( EXPORT_LIB_INC_DIR ${LIB_INC_DIR} )
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY IMMEDIATE )
 
 # Install tree config
-set( EXPORT_PANGO_INC "\${PANGOLIN_CMAKE_DIR}/${REL_INCLUDE_DIR}" )
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/PangolinConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PangolinConfig.cmake @ONLY )
+set( EXPORT_LIB_INC_DIR "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}" )
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake @ONLY )
 
 # Add package to CMake package registery for use from the build tree
-export( PACKAGE Pangolin )
+export( PACKAGE ${PROJECT_NAME} )
 
 #######################################################
 ## Install headers / targets
@@ -298,7 +300,7 @@ install(DIRECTORY ${INCDIR}
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include
 )
 install(TARGETS ${LIBRARY_NAME}
-  EXPORT PangolinTargets
+  EXPORT ${PROJECT_NAME}Targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
@@ -308,10 +310,10 @@ install(TARGETS ${LIBRARY_NAME}
 ## Install CMake config
 
 install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/PangolinConfig.cmake"
-          "${CMAKE_CURRENT_BINARY_DIR}/PangolinConfigVersion.cmake"
+    FILES "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
+          "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
     DESTINATION ${CMAKECONFIG_INSTALL_DIR}
 )
 install(
-    EXPORT PangolinTargets DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+    EXPORT ${PROJECT_NAME}Targets DESTINATION ${CMAKECONFIG_INSTALL_DIR}
 )
