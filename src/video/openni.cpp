@@ -94,7 +94,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
             break;
         }
 
-        const StreamInfo stream(fmt, mapMode.nXRes, mapMode.nYRes, (mapMode.nXRes * fmt.bpp) / 8, 0);
+        const StreamInfo stream(fmt, mapMode.nXRes, mapMode.nYRes, (mapMode.nXRes * fmt.bpp) / 8, (unsigned char*)0 + sizeBytes);
         sizeBytes += stream.SizeBytes();
         streams.push_back(stream);
     }
