@@ -39,6 +39,10 @@
 #include <iostream>
 #include <cstdlib>
 
+#ifdef _ANDROID_
+#include <android/log.h>
+#endif
+
 namespace pangolin
 {
 
@@ -208,8 +212,13 @@ inline void _CheckGlDieOnError( const char *sFile, const int nLine )
 {
     GLenum glError = glGetError();
     if( glError != GL_NO_ERROR ) {
+#ifdef _ANDROID_
+        __android_log_print(ANDROID_LOG_ERROR, "pango", "OpenGL Error: %s (%d)", gluErrorString(glError), glError );
+        __android_log_print(ANDROID_LOG_ERROR, "pango", "In: %s, line %d", sFile, nLine);
+#else
         std::cerr << "OpenGL Error: " << sFile << ":" << nLine << std::endl;
-        std::cerr << gluErrorString(glError) << std::endl;
+        std::cerr << gluErrorString(glError) << " (" << glError << ")" << std::endl;
+#endif                
         exit( -1 );
     }
 }
@@ -309,6 +318,7 @@ inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sam
     
     glGenTextures(1,&tid);
     Bind();
+        
     // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
     // for call to succeed.
     glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, border, glformat, gltype, 0);

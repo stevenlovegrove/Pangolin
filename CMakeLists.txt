@@ -12,6 +12,7 @@ if(NOT ANDROID)
    option(BUILD_SHARED_LIBS "Build Shared Library" ON)
 else()
    set(BUILD_SHARED_LIBS OFF)
+   include(AndroidUtils)
 endif()
 
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}

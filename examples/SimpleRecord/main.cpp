@@ -29,7 +29,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
     View& vVideo = Display("Video").SetAspect((float)w/h);
 
     // OpenGl Texture for video frame
-    GlTexture texVideo(w,h,GL_RGBA8);
+    GlTexture texVideo(w,h,GL_RGBA);
 
     // Allocate image buffer. The +1 is to give ffmpeg some alignment slack
     // swscale seems to have a bug which goes over the array by 1...

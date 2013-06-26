@@ -26,7 +26,7 @@ void VideoSample(const std::string uri)
 
     // OpenGl Texture for video frame.
     // GL_RGBA8 is the internal_format, if we upload another it'll be converted
-    GlTexture texVideo(w,h,GL_RGBA8);
+    GlTexture texVideo(w,h,GL_RGBA);
 
     unsigned char* img = new unsigned char[video.SizeBytes()];
 

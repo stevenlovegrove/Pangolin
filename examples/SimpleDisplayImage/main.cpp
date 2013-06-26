@@ -5,9 +5,9 @@
 using namespace std;
 using namespace pangolin;
 
-void setImageData(float * imageArray, int width, int height){
-  for(int i = 0 ; i < width*height;i++) {
-    imageArray[i] = (float)rand()/RAND_MAX;
+void setImageData(unsigned char * imageArray, int size){
+  for(int i = 0 ; i < size;i++) {
+    imageArray[i] = (unsigned char)(rand()/(RAND_MAX/255.0));
   }
 }
 
@@ -21,7 +21,7 @@ int main( int /*argc*/, char* argv[] )
   
   pangolin::OpenGlRenderState s_cam(
     ProjectionMatrix(640,480,420,420,320,240,0.1,1000),
-    ModelViewLookAt(-0,0.5,-3, 0,0,0, AxisY)
+    ModelViewLookAt(-1,1,-1, 0,0,0, AxisY)
   );
 
   // Aspect ratio allows us to constrain width and height whilst fitting within specified
@@ -41,11 +41,11 @@ int main( int /*argc*/, char* argv[] )
   cout << "Resize the window to experiment with SetBounds, SetLock and SetAspect." << endl;
   cout << "Notice that the teapots aspect is maintained even though it covers the whole screen." << endl;
 
-  const int width =  640;
-  const int height = 480;
+  const int width =  64;
+  const int height = 48;
 
-  float* imageArray = new float[width*height];
-  GlTexture imageTexture(width,height,GL_LUMINANCE32F_ARB);
+  unsigned char* imageArray = new unsigned char[3*width*height];
+  GlTexture imageTexture(width,height,GL_RGB,false,0,GL_RGB,GL_UNSIGNED_BYTE);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while(!pangolin::ShouldQuit())
@@ -55,14 +55,15 @@ int main( int /*argc*/, char* argv[] )
     d_cam.Activate(s_cam);
 
     glColor3f(1.0,1.0,1.0);
-    glutWireTeapot(2.0);
+    glDrawColouredCube();
 
     //Set some random image data and upload to GPU
-    setImageData(imageArray,width,height);
-    imageTexture.Upload(imageArray,GL_LUMINANCE,GL_FLOAT);
+    setImageData(imageArray,3*width*height);
+    imageTexture.Upload(imageArray,GL_RGB,GL_UNSIGNED_BYTE);
 
     //display the image
     d_image.Activate();
+    glColor3f(1.0,1.0,1.0);
     imageTexture.RenderToViewport();
 
     pangolin::FinishFrame();

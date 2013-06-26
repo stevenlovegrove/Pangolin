@@ -48,4 +48,7 @@ inline void glRecti(int x1, int y1, int x2, int y2)
 #endif
 }
 
+// We dont want a program to fail just because of a test teapot. Draw placeholder.
+#define glutWireTeapot(X) (pangolin::glDrawColouredCube(-(X),X))
+
 #endif // PANGOLIN_GL_ES_COMPAT_H

@@ -36,7 +36,7 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
         .SetAspect((float)w/h);
 
     // OpenGl Texture for video frame
-    GlTexture texVideo(w,h,GL_RGBA8);
+    GlTexture texVideo(w,h,GL_RGBA);
 
     unsigned char* img = new unsigned char[video.SizeBytes()];
 

@@ -4,9 +4,9 @@
 using namespace pangolin;
 using namespace std;
 
-void setImageData(float * imageArray, int width, int height){
-  for(int i = 0 ; i < width*height;i++) {
-    imageArray[i] = (float)rand()/RAND_MAX;
+void setImageData(unsigned char * imageArray, int size){
+  for(int i = 0 ; i < size;i++) {
+    imageArray[i] = (unsigned char)(rand()/(RAND_MAX/255.0));
   }
 }
 
@@ -65,9 +65,8 @@ int main( int /*argc*/, char* argv[] )
 
   const int width =  64;
   const int height = 48;
-  float * imageArray = new float[width*height];
-  GlTexture imageTexture(width,height,GL_LUMINANCE32F_ARB);
-  imageTexture.SetNearestNeighbour();
+  unsigned char* imageArray = new unsigned char[3*width*height];
+  GlTexture imageTexture(width,height,GL_RGB,false,0,GL_RGB,GL_UNSIGNED_BYTE);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
@@ -75,27 +74,29 @@ int main( int /*argc*/, char* argv[] )
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Generate random image and place in texture memory for display
-    setImageData(imageArray,width,height);
-    imageTexture.Upload(imageArray,GL_LUMINANCE,GL_FLOAT);
+    setImageData(imageArray,3*width*height);
+    imageTexture.Upload(imageArray,GL_RGB,GL_UNSIGNED_BYTE);
 
     glColor3f(1.0,1.0,1.0);
 
     d_cam1.Activate(s_cam);
-    glutWireTeapot(1.0);
+    glDrawColouredCube();
 
     d_cam2.Activate(s_cam2);
-    glutWireTeapot(1.0);
+    glDrawColouredCube();
 
     d_cam3.Activate(s_cam);
-    glutWireTeapot(1.0);
+    glDrawColouredCube();
 
     d_cam4.Activate(s_cam2);
-    glutWireTeapot(1.0);
+    glDrawColouredCube();
 
     d_img1.Activate();
+    glColor4f(1.0f,1.0f,1.0f,1.0f);
     imageTexture.RenderToViewport();
 
     d_img2.Activate();
+    glColor4f(1.0f,1.0f,1.0f,1.0f);
     imageTexture.RenderToViewport();
 
     // Swap frames and Process Events
