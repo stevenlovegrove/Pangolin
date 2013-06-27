@@ -47,6 +47,7 @@
 #include <pangolin/video/uvc.h>
 #endif
 
+#include <pangolin/video/test.h>
 #include <pangolin/video/pvn_video.h>
 #include <pangolin/video_splitter.h>
 
@@ -252,6 +253,13 @@ VideoInterface* OpenVideo(std::string str_uri)
     
     Uri uri = ParseUri(str_uri);
     
+    if(!uri.scheme.compare("test") )
+    {
+        const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+        const int n = uri.Get<int>("n", 1);
+        string fmt  = uri.Get<std::string>("fmt","RGB24");        
+        video = new TestVideo(dim.x,dim.y,n,fmt);
+    }else
     if(!uri.scheme.compare("file") && boost::algorithm::ends_with(uri.url,"pvn") )
     {
         const bool realtime = uri.Contains("realtime");

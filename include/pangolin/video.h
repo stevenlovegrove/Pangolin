@@ -66,6 +66,10 @@
 //
 // split - split a single stream video into a multi stream video based on Region of Interest
 //  e.g. "split:[roi1=0+0+640x480,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
+//
+// test - output test video sequence
+//  e.g. "test://"
+//  e.g. "test:[size=640x480,fmt=RGB24]//"
 
 #include <pangolin/video_common.h>
 #include <pangolin/image.h>

@@ -17,7 +17,11 @@ void VideoSample(const std::string uri)
     const VideoPixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();
-
+    
+    // Work out appropriate GL channel and format options
+    const GLint glchannels = vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB;
+    const GLenum glformat = vid_fmt.channel_bits[0]==8?GL_UNSIGNED_BYTE:GL_UNSIGNED_SHORT;
+    
     // Create Glut window
     pangolin::CreateWindowAndBind("Main",w,h);
 
@@ -25,8 +29,7 @@ void VideoSample(const std::string uri)
     View& vVideo = Display("Video").SetAspect((float)w/h);
 
     // OpenGl Texture for video frame.
-    // GL_RGBA8 is the internal_format, if we upload another it'll be converted
-    GlTexture texVideo(w,h,GL_RGBA);
+    GlTexture texVideo(w,h,glchannels,false,0,glchannels,glformat);
 
     unsigned char* img = new unsigned char[video.SizeBytes()];
 
@@ -35,16 +38,12 @@ void VideoSample(const std::string uri)
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
         if( video.GrabNext(img,true) ) {
-            // TODO: Work out the correct display format properly
-            texVideo.Upload(
-                img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB,
-                vid_fmt.channel_bits[0]==8?GL_UNSIGNED_BYTE:GL_UNSIGNED_SHORT
-            );
+            texVideo.Upload( img, glchannels, glformat );
         }
 
         // Activate video viewport and render texture
         vVideo.Activate();
-        texVideo.RenderToViewportFlipY();
+        texVideo.RenderToViewportFlipY();        
 
         // Swap back buffer with front and process window events via GLUT
         pangolin::FinishFrame();
@@ -60,7 +59,8 @@ int main( int argc, char* argv[] )
         "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
         "convert:[fmt=RGB24]//v4l:///dev/video0",
         "convert:[fmt=RGB24]//v4l:///dev/video1",
-        "openni:[img1=rgb]//"
+        "openni:[img1=rgb]//",
+        "test:[size=160x120,n=1,fmt=RGB24]//"
         ""
     };
 
@@ -88,7 +88,7 @@ int main( int argc, char* argv[] )
                 cout << "Trying: " << uris[i] << endl;
                 VideoSample(uris[i]);
                 return 0;
-            }catch(VideoException) {}
+            }catch(VideoException) { }
         }
     }
 
