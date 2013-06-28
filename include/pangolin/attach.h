@@ -50,7 +50,8 @@ struct Attach {
   Attach(Unit unit, GLfloat p) : unit(unit), p(p) {}
 
   Attach(GLfloat p) : unit(Fraction), p(p) {
-      if( p < 0 || 1.0 < p ) {
+      // Allow for numerical imprecision when checking usage.
+      if( p < -1E-3 || 1.001 < p ) {
           std::cerr << "Pangolin API Change: Display::SetBounds must be used with Attach::Pix or Attach::ReversePix to specify pixel bounds relative to an edge. See the code samples for details." << std::endl;
           throw std::exception();
       }
