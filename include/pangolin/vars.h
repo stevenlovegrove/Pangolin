@@ -34,7 +34,6 @@
 #include <sstream>
 #include <map>
 #include <vector>
-#include <iostream>
 #include <fstream>
 
 #include "vars_internal.h"
@@ -234,10 +233,9 @@ inline void Var<T>::Init(const std::string& name,
         // found
         var = vi->second;
         a = Accessor<T>::Create(var->type_name,var->val);
-        if( var->generic && var->type_name != typeid(T).name() )
+        if( var->generic && strcmp(var->type_name, typeid(T).name()) )
         {
             // re-specialise this variable
-            //      std::cout << "Specialising " << name << std::endl;
             default_value = a->Get();
             
         }else{

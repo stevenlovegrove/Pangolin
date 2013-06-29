@@ -115,7 +115,7 @@ inline basetime TimeFromSeconds(double seconds)
     LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
     basetime t;
-    t.QuadPart = (seconds * f);
+    t.QuadPart = (seconds * f.QuadPart);
     return t;
 }
 
