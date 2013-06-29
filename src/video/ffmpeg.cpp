@@ -521,13 +521,20 @@ void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
 #if (LIBAVFORMAT_VERSION_MAJOR >= 54)
         ret = avcodec_encode_video2(stream->codec, &pkt, frame, &got_packet);
 #else
-        ret = avcodec_encode_video(stream->codec,pkt.data, pkt.size, frame);
+        // TODO: Why is ffmpeg so fussy about this buffer size?
+        //       Making this too big results in garbled output.
+        //       Too small and it will fail entirely.
+        pkt.size = 50* FF_MIN_BUFFER_SIZE; //std::max(FF_MIN_BUFFER_SIZE, frame->width * frame->height * 4 );
+        // TODO: Make sure this is being freed by av_free_packet
+        pkt.data = (uint8_t*) malloc(pkt.size);
+        pkt.pts = frame->pts;
+        ret = avcodec_encode_video(stream->codec, pkt.data, pkt.size, frame);
         got_packet = ret > 0;
 #endif
         if (ret < 0) throw VideoException("Error encoding video frame");
     }
     
-    if (!ret && got_packet) {
+    if (ret > 0 && got_packet) {
         WriteAvPacket(&pkt);
     }
     
@@ -638,6 +645,7 @@ void FfmpegVideoOutput::Initialise(std::string filename)
 #if (LIBAVFORMAT_VERSION_MAJOR >= 54)
     int ret = avformat_alloc_output_context2(&oc, NULL, NULL, filename.c_str());
 #else
+    std::cerr << "If you experience encoding problems, consider upgrading to libavformat >= 54" << std::endl;
     oc = avformat_alloc_context();
     oc->oformat = av_guess_format(NULL, filename.c_str(), NULL);
     int ret = oc->oformat ? 0 : -1;
