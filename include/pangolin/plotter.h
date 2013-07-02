@@ -34,18 +34,6 @@
 
 #include <vector>
 
-// Dont trouble the user with these warnings in boost.
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#endif
-
-#include <boost/ptr_container/ptr_vector.hpp>
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
-
 namespace pangolin
 {
 
@@ -117,11 +105,14 @@ inline bool DataSequence::HasData(int i) const {
     return first <= i && i < last;
 }
 
-struct DataLog
+class DataLog
 {
-    typedef boost::ptr_vector<DataSequence> SequenceContainer;
+public:    
+    typedef std::vector<DataSequence*> SequenceContainer;
     
     DataLog(unsigned int buffer_size = 10000 );
+    ~DataLog();
+    
     void Log(float v);
     void Log(float v1, float v2);
     void Log(float v1, float v2, float v3);
@@ -134,6 +125,19 @@ struct DataLog
     void Clear();
     void Save(std::string filename);
     
+    inline size_t NumSequences() {
+        return sequences.size();
+    }
+    
+    inline DataSequence& Sequence(size_t id) {
+        return *sequences[id];
+    }
+
+    inline const DataSequence& Sequence(size_t id) const {
+        return *sequences[id];
+    }
+        
+//protected:    
     unsigned int buffer_size;
     int x;
     SequenceContainer sequences;
@@ -149,7 +153,7 @@ struct Plotter : public View, Handler
     void Render();
     void DrawSequence(const DataSequence& seq);
     void DrawSequence(const DataSequence& x,const DataSequence& y);
-    void DrawSequenceHistogram(const DataLog::SequenceContainer& seq);
+    void DrawSequenceHistogram(const DataLog& seq);
     void DrawTicks();
     
     void ResetView();
