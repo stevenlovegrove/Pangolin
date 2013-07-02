@@ -1,6 +1,3 @@
-#include <boost/foreach.hpp>
-#define foreach BOOST_FOREACH
-
 #include <pangolin/platform.h>
 #include <pangolin/display.h>
 #include <pangolin/display_internal.h>
@@ -163,22 +160,23 @@ void View::ResizeChildren()
 {
     if( layout == LayoutOverlay )
     {
-        foreach(View* i, views)
-            i->Resize(v);
+        for(std::vector<View*>::iterator iv = views.begin(); iv != views.end(); ++iv ) {
+            (*iv)->Resize(v);
+        }
     }else if( layout == LayoutVertical )
     {
         // Allocate space incrementally
         Viewport space = v.Inset(panal_v_margin);
         int num_children = 0;
-        foreach(View* i, views )
+        for(std::vector<View*>::iterator iv = views.begin(); iv != views.end(); ++iv )
         {
             num_children++;
             if(scroll_offset > num_children ) {
-                i->show = false;
+                (*iv)->show = false;
             }else{
-                i->show = true;
-                i->Resize(space);
-                space.h = i->v.b - panal_v_margin - space.b;
+                (*iv)->show = true;
+                (*iv)->Resize(space);
+                space.h = (*iv)->v.b - panal_v_margin - space.b;
             }
         }
     }else if(layout == LayoutHorizontal )
@@ -186,10 +184,10 @@ void View::ResizeChildren()
         // Allocate space incrementally
         const int margin = 8;
         Viewport space = v.Inset(margin);
-        foreach(View* i, views )
+        for(std::vector<View*>::iterator iv = views.begin(); iv != views.end(); ++iv )
         {
-            i->Resize(space);
-            space.w = i->v.l + margin + space.l;
+            (*iv)->Resize(space);
+            space.w = (*iv)->v.l + margin + space.l;
         }
     }else if(layout == LayoutEqual )
     {
@@ -260,8 +258,10 @@ void View::Render()
 
 void View::RenderChildren()
 {
-    foreach(View* v, views)
-        if(v->show) v->Render();
+    for(std::vector<View*>::iterator iv = views.begin(); iv != views.end(); ++iv )
+    {
+        if((*iv)->show) (*iv)->Render();        
+    }    
 }
 
 void View::Activate() const
