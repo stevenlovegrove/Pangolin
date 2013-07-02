@@ -28,12 +28,8 @@
 #ifndef PANGOLIN_TYPE_CONVERT_H
 #define PANGOLIN_TYPE_CONVERT_H
 
-#include <boost/utility.hpp>
-#include <boost/type_traits.hpp>
-// boost lexical cast isn't perfect
-//#include <boost/lexical_cast.hpp>
 #include <iostream>
-
+#include <sstream>
 
 namespace pangolin
 {
@@ -56,7 +52,6 @@ template<typename T, typename S> struct Convert {
             throw BadInputException();
         
         return target;
-        //    return boost::lexical_cast<T>(src);
     }
 };
 

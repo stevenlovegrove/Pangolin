@@ -28,7 +28,6 @@
 #ifndef PANGOLIN_VARS_H
 #define PANGOLIN_VARS_H
 
-#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/ptr_container/ptr_unordered_map.hpp>
 #include <sstream>
@@ -249,9 +248,11 @@ inline void Var<T>::Init(const std::string& name,
             //      var->meta_gui_changed = false;
             
             // notify those watching new variables
-            BOOST_FOREACH(NewVarCallback& nvc, new_var_callbacks)
-                    if( boost::starts_with(name,nvc.filter) )
-                    nvc.fn(nvc.data,name,*var, typeid(T).name(), false);
+            for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
+                if( boost::starts_with(name,invc->filter) ) {
+                   invc->fn( invc->data, name, *var, typeid(T).name(), false);
+                }
+            }
             return;
         }
         delete a;
@@ -304,10 +305,11 @@ inline void Var<T>::Init(const std::string& name,
         var->logscale = logscale;
         var->meta_gui_changed = false;
         
-        // notify those watching new variables
-        BOOST_FOREACH(NewVarCallback& nvc, new_var_callbacks)
-                if( boost::starts_with(name,nvc.filter) )
-                nvc.fn(nvc.data,name,*var, typeid(T).name(), true);
+        for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
+            if( boost::starts_with(name,invc->filter) ) {
+               invc->fn( invc->data, name, *var, typeid(T).name(), true);
+            }
+        }        
     }
 }
 

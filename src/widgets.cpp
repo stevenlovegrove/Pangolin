@@ -83,9 +83,11 @@ void GuiVarChanged( Var<T>& var)
     guiVarHasChanged = true;
     var.var->meta_gui_changed = true;
     
-    BOOST_FOREACH(GuiVarChangedCallback& gvc, gui_var_changed_callbacks)
-            if( boost::starts_with(var.var->meta_full_name,gvc.filter) )
-            gvc.fn(gvc.data,var.var->meta_full_name,*var.var);
+    for(std::vector<GuiVarChangedCallback>::iterator igvc = gui_var_changed_callbacks.begin(); igvc != gui_var_changed_callbacks.end(); ++igvc) {
+        if( boost::starts_with(var.var->meta_full_name, igvc->filter) ) {
+           igvc->fn( igvc->data, var.var->meta_full_name, *var.var );
+        }
+    }
 }
 
 void glRect(Viewport v)
@@ -162,14 +164,12 @@ void DrawShadowRect(Viewport& v, bool pushed)
 }
 
 Panel::Panel()
-    : context_views(context->named_managed_views)
 {
     handler = &StaticHandlerScroll;
     layout = LayoutVertical;
 }
 
 Panel::Panel(const std::string& auto_register_var_prefix)
-    : context_views(context->named_managed_views)
 {
     handler = &StaticHandlerScroll;
     layout = LayoutVertical;
@@ -188,30 +188,27 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
     display_mutex.lock();
     
     boost::ptr_unordered_map<const std::string,View>::iterator pnl =
-            thisptr->context_views.find(name);
+            context->named_managed_views.find(name);
     
     // Only add if a widget by the same name doesn't
     // already exist
-    if( pnl == thisptr->context_views.end() )
+    if( pnl == context->named_managed_views.end() )
     {
         if( reg_type_name == typeid(bool).name() )
         {
             View* nv = var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-            //thisptr->context_views[name] = nv;
-            thisptr->context_views.insert(name,nv);
+            context->named_managed_views.insert(name,nv);
             thisptr->views.push_back(nv);
             thisptr->ResizeChildren();
         }else if( reg_type_name == typeid(double).name() || reg_type_name == typeid(float).name() || reg_type_name == typeid(int).name() || reg_type_name == typeid(unsigned int).name() )
         {
             View* nv = new Slider(title,var);
-            //thisptr->context_views[name] = nv;
-            thisptr->context_views.insert(name,nv);
+            context->named_managed_views.insert(name,nv);
             thisptr->views.push_back( nv );
             thisptr->ResizeChildren();
         }else{
             View* nv = new TextInput(title,var);
-            //thisptr->context_views[name] = nv;
-            thisptr->context_views.insert(name,nv);
+            context->named_managed_views.insert(name,nv);
             thisptr->views.push_back( nv );
             thisptr->ResizeChildren();
         }
