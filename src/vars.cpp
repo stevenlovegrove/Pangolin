@@ -34,7 +34,6 @@
 #include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
-using namespace boost;
 
 namespace pangolin
 {
@@ -104,18 +103,18 @@ string ProcessVal(const string& val )
             const char* endbrace = MatchingEndBrace(brace);
             if( endbrace )
             {
-                iterator_range<const char*> out(brace-1,endbrace+1);
-                iterator_range<const char*> in(brace+1,endbrace);
-                string inexpand = ProcessVal(copy_range<string>(in));
+                boost::iterator_range<const char*> out(brace-1,endbrace+1);
+                boost::iterator_range<const char*> in(brace+1,endbrace);
+                string inexpand = ProcessVal( boost::copy_range<string>(in) );
                 Var<string> var(inexpand,"#");
                 if( !((const string)var).compare("#"))
                 {
                     std::cerr << "Unabled to expand: [" << inexpand << "].\nMake sure it is defined and terminated with a semi-colon." << endl << endl;
                 }
                 ostringstream oss;
-                oss << copy_range<string>(iterator_range<const char*>(expanded.c_str(), brace-1));
+                oss << boost::copy_range<string>(boost::iterator_range<const char*>(expanded.c_str(), brace-1));
                 oss << (const string)var;
-                oss << copy_range<string>(iterator_range<const char*>(endbrace+1, expanded.c_str() + expanded.length() ));
+                oss << boost::copy_range<string>(boost::iterator_range<const char*>(endbrace+1, expanded.c_str() + expanded.length() ));
                 expanded = oss.str();
                 //        expanded = replace_range_copy(expanded,out,(const string)var);
                 //        cout << copy_range<std::string>(in) << endl;

@@ -53,9 +53,6 @@
 #include <unistd.h>
 #include <sys/resource.h>
 
-//using namespace android;
-
-
 namespace pangolin
 {
 
