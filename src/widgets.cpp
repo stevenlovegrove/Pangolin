@@ -187,8 +187,7 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
     
     display_mutex.lock();
     
-    boost::ptr_unordered_map<const std::string,View>::iterator pnl =
-            context->named_managed_views.find(name);
+    ViewMap::iterator pnl = context->named_managed_views.find(name);
     
     // Only add if a widget by the same name doesn't
     // already exist
@@ -197,18 +196,18 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
         if( reg_type_name == typeid(bool).name() )
         {
             View* nv = var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-            context->named_managed_views.insert(name,nv);
+            context->named_managed_views[name] = nv;
             thisptr->views.push_back(nv);
             thisptr->ResizeChildren();
         }else if( reg_type_name == typeid(double).name() || reg_type_name == typeid(float).name() || reg_type_name == typeid(int).name() || reg_type_name == typeid(unsigned int).name() )
         {
             View* nv = new Slider(title,var);
-            context->named_managed_views.insert(name,nv);
+            context->named_managed_views[name] = nv;
             thisptr->views.push_back( nv );
             thisptr->ResizeChildren();
         }else{
             View* nv = new TextInput(title,var);
-            context->named_managed_views.insert(name,nv);
+            context->named_managed_views[name] = nv;
             thisptr->views.push_back( nv );
             thisptr->ResizeChildren();
         }
@@ -254,9 +253,11 @@ void Panel::ResizeChildren()
 
 View& CreatePanel(const std::string& name)
 {
+    if(context->named_managed_views.find(name) != context->named_managed_views.end()) {
+        throw std::runtime_error("Panel already registered with this name.");
+    }
     Panel * p = new Panel(name);
-    bool inserted = context->named_managed_views.insert(name, p).second;
-    if(!inserted) throw exception();
+    context->named_managed_views[name] = p;
     context->base.views.push_back(p);
     return *p;
 }

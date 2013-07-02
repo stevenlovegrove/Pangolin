@@ -31,7 +31,6 @@
 #include <pangolin/platform.h>
 #include <pangolin/view.h>
 
-#include <boost/ptr_container/ptr_unordered_map.hpp>
 #include <queue>
 
 #ifdef BUILD_PANGOLIN_VIDEO
@@ -45,15 +44,18 @@
 namespace pangolin
 {
 
+typedef std::map<const std::string,View*> ViewMap;
+
 struct PangolinGl
 {
     PangolinGl();
+    ~PangolinGl();
     
     // Base container for displays
     View base;
     
     // Named views which are managed by pangolin (i.e. created / deleted by pangolin)
-    boost::ptr_unordered_map<const std::string,View> named_managed_views;
+    ViewMap named_managed_views;
     
     // Global keypress hooks
     std::map<int,boost::function<void(void)> > keypress_hooks;

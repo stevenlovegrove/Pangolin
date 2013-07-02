@@ -76,6 +76,15 @@ PangolinGl::PangolinGl()
 {
 }
 
+PangolinGl::~PangolinGl()
+{
+    // Free displays owned by named_managed_views
+    for(ViewMap::iterator iv = named_managed_views.begin(); iv != named_managed_views.end(); ++iv) {
+        delete iv->second;
+    }
+    named_managed_views.clear();
+}
+
 void BindToContext(std::string name)
 {
     ContextMap::iterator ic = contexts.find(name);
@@ -186,14 +195,13 @@ View& CreateDisplay()
 View& Display(const std::string& name)
 {
     // Get / Create View
-    boost::ptr_unordered_map<std::string,View>::iterator vi = context->named_managed_views.find(name);
+    ViewMap::iterator vi = context->named_managed_views.find(name);
     if( vi != context->named_managed_views.end() )
     {
         return *(vi->second);
     }else{
         View * v = new View();
-        bool inserted = context->named_managed_views.insert(name, v).second;
-        if(!inserted) throw std::exception();
+        context->named_managed_views[name] = v;
         v->handler = &StaticHandler;
         context->base.views.push_back(v);
         return *v;
@@ -271,8 +279,7 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 bool CVarViewList( std::vector<std::string>* args )
 {
     std::stringstream ss;
-    for(boost::ptr_unordered_map<std::string,View>::iterator vi
-        = context->named_managed_views.begin();
+    for(ViewMap::iterator vi = context->named_managed_views.begin();
         vi != context->named_managed_views.end(); ++vi)
     {
         ss << "'" << vi->first << "' " << std::endl;
