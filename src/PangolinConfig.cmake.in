@@ -10,7 +10,7 @@ endif()
 
 if(NOT ANDROID)
     # Import targets from CVars
-    find_package( CVARS QUIET )
+    find_package( CVARS 2.3 QUIET )
 endif()
 
 SET( Pangolin_LIBRARIES    @LIBRARY_NAME@ ${CVARS_LIBRARIES} )

@@ -90,7 +90,7 @@ endif()
 
 ## Don't even try to find these things on android
 if(NOT ANDROID)
-    find_package(CVARS QUIET)
+    find_package(CVARS 2.3 QUIET)
     if(CVARS_FOUND)
       set(HAVE_CVARS 1)
       list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
