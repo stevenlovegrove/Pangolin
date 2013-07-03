@@ -68,9 +68,22 @@ endif()
 # Project headers trump everything (including any potentially installed Pangolin)
 list(APPEND LIB_INC_DIR  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 
-find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
-list(APPEND USER_INC  "${Boost_INCLUDE_DIRS}" )
-list(APPEND LINK_LIBS "${Boost_LIBRARIES}" )
+option( CPP11_NO_BOOST "Use c++11 over boost for threading etc." OFF)
+if(CPP11_NO_BOOST)
+    set( CMAKE_CXX_FLAGS "-std=c++0x -Wall ${CMAKE_CXX_FLAGS}" )
+    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    endif()
+else()
+    # Boost is required when c++11 is disabled
+    find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
+    list(APPEND USER_INC  "${Boost_INCLUDE_DIRS}" )
+    list(APPEND LINK_LIBS "${Boost_LIBRARIES}" )
+
+    # Generic Image Library (GIL) should come with boost.
+    # If you have a version of boost without it, maybe figure out how to test here.
+    set(HAVE_BOOST_GIL 1)
+endif()
 
 if(BUILD_PANGOLIN_GUI)
   if(NOT ANDROID)
@@ -208,10 +221,6 @@ if(BUILD_PANGOLIN_VIDEO AND uvc_FOUND)
   list(APPEND SOURCES video/uvc.cpp)
   message(STATUS "libuvc Found and Enabled")
 endif()
-
-# Generic Image Library (GIL) should come with boost.
-# If you have a version of boost without it, maybe figure out how to test here.
-set(HAVE_BOOST_GIL 1)
 
 find_package(PNG QUIET)
 if(PNG_FOUND)
