@@ -60,10 +60,18 @@
     #endif // HAVE_TIFF
 #endif // HAVE_BOOST_GIL
 
+#ifdef CPP11_NO_BOOST
+#include <memory>
+namespace boostd = std;
+#else
+#include <boost/shared_ptr.hpp>
+namespace boostd = boost;
+#endif
+
 namespace pangolin
 {
 
-typedef boost::ptr_unordered_map<std::string,PangolinGl> ContextMap;
+typedef std::map<std::string,boostd::shared_ptr<PangolinGl> > ContextMap;
 
 // Map of active contexts
 ContextMap contexts;
@@ -92,8 +100,8 @@ void BindToContext(std::string name)
     if( ic == contexts.end() )
     {
         // Create and add if not found
-        ic = contexts.insert( name,new PangolinGl ).first;
-        context = ic->second;
+        context = new PangolinGl;
+        contexts[name] = boostd::shared_ptr<PangolinGl>(context);
         View& dc = context->base;
         dc.left = 0.0;
         dc.bottom = 0.0;
@@ -111,7 +119,7 @@ void BindToContext(std::string name)
         process::Resize(640,480);
 #endif //HAVE_GLUT
     }else{
-        context = ic->second;
+        context = ic->second.get();
     }
 }
 
