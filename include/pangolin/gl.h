@@ -631,7 +631,7 @@ inline void GlBuffer::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr
 ////////////////////////////////////////////////////////////////////////////
 
 inline GlSizeableBuffer::GlSizeableBuffer(GlBufferType buffer_type, GLuint initial_num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
-    : GlBuffer(buffer_type, initial_num_elements, datatype, count_per_element, gluse)
+    : GlBuffer(buffer_type, initial_num_elements, datatype, count_per_element, gluse), m_num_verts(0)
 {
     
 }
