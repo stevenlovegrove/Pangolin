@@ -37,8 +37,8 @@
 namespace pangolin
 {
 
-struct Plotter;
-struct DataLog;
+class Plotter;
+class DataLog;
 
 Plotter& CreatePlotter(const std::string& name, DataLog* log = 0);
 
@@ -147,8 +147,9 @@ public:
 const static int draw_modes_n = 2;
 const static int draw_modes[] = {GL_LINE_STRIP, GL_POINTS};
 
-struct Plotter : public View, Handler
+class Plotter : public View, Handler
 {
+public:
     Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5 );
     void Render();
     void DrawSequence(const DataSequence& seq);
