@@ -685,7 +685,7 @@ inline void GlSizeableBuffer::CheckResize(size_t num_verts)
 
 inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
 {
-    size_t new_size = GlBuffer::num_elements;
+    size_t new_size = std::max(GlBuffer::num_elements, 1u);
     while(new_size < min_size) {
         new_size *= 2;
     }
