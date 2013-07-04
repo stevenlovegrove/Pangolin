@@ -29,6 +29,8 @@
 #define __GL_FONT_H__
 
 #include <pangolin/glinclude.h>
+#include <pangolin/gl.h>
+#include <pangolin/compat/memory.h>
 
 #include <cstdio>
 #include <cstdarg>
@@ -44,7 +46,7 @@ struct BitmapFontPadding
     int nBottom;
     int nLeft;
     int nRight;
-
+    
     BitmapFontPadding() : nTop(0), nBottom(0), nLeft(0), nRight(0) {}
 };
 
@@ -52,7 +54,7 @@ struct BitmapFontSpacing
 {
     int nTop;
     int nLeft;
-
+    
     BitmapFontSpacing() : nTop(0), nLeft(0) {}
 };
 
@@ -70,10 +72,10 @@ struct BitmapFontInfo
     BitmapFontPadding padding;
     BitmapFontSpacing spacing;
     int nOutline;
-
+    
     BitmapFontInfo() : sName(""), nSize(0), bBold(false), bItalic(false),
-    sCharset(""), bUnicode(false), nStretchHeight(0),
-    bSmooth(false), bAntiAliasing(false), nOutline(0) {}
+        sCharset(""), bUnicode(false), nStretchHeight(0),
+        bSmooth(false), bAntiAliasing(false), nOutline(0) {}
 };
 
 struct BitmapFontCommon
@@ -91,24 +93,8 @@ struct BitmapFontCommon
     ChannelType ctBlue;
 };
 
-struct BitmapFontPage
-{
-    int nID;
-    std::string sFileName;
-    unsigned char * image;
-    unsigned int w;
-    unsigned int h;
-    unsigned int depth;
-    unsigned int colour;
-    GLenum glFormat;
-
-    BitmapFontPage() : nID(-1), image(NULL), w(0), h(0), depth(0), colour(0) {}
-    ~BitmapFontPage() { delete[] image; }
-};
-
 struct BitmapChar
 {
-    GLuint nID;
     int x;
     int y;
     int width;
@@ -118,10 +104,11 @@ struct BitmapChar
     int xAdvance;
     int page;
     int channel;
-    std::map< char, int > mKernings;  //list of proceeding characters where kerning of this char is needed.
-    BitmapChar() : nID(0), x(0), y(0), width(0), height(0) {}
+    
+    //list of proceeding characters where kerning of this char is needed.
+    std::map< char, int > mKernings;
+    BitmapChar() : x(0), y(0), width(0), height(0) {}
 };
-
 
 struct StrInfo {
     unsigned int width;                           // width of the string
@@ -134,37 +121,30 @@ struct StrInfo {
 
 class GlFont
 {
-    public:
-        GlFont();
-        ~GlFont();
-
-        /// Initialize the font. Load the font file (.fnt) and images
-        bool Init( std::string sCustomFont = "" );
-
-        /// printf style function take position to print to as well
-        void glPrintf(int x, int y, const char *fmt, ...);
-        void glPrintf(int x, int y, const std::string fmt, ...){ glPrintf(x,y, fmt.c_str()); }
-
-        /// Return information about how the string will be rendered
-        const StrInfo StringInfo( std::string s ) const;
-        unsigned int StringWidth( std::string s ) { return StringInfo( s ).width; }
-        unsigned int StringHeight( std::string s ) { return StringInfo( s ).height; }
-        unsigned int LineHeight() { return mCommon.nLineHeight; }
-
-    private:
-        bool _Load( std::string sFileName = "" );
-        bool _LoadEmbeddedImage( BitmapFontPage & page );
-        bool _LoadImage( BitmapFontPage & page, std::string sPath );
-        void _GenTexture( BitmapFontPage & page);        
-        void _DrawChar(const BitmapChar & bc);
-        void _DrawString( int x, int y, std::string s );
-
-
-    private:
-        BitmapFontInfo mInfo;                            // info about the font
-        BitmapFontCommon mCommon;                        // further font info
-        std::vector<BitmapFontPage> mvPages;             // the texture files that make up the font
-        std::map< char, BitmapChar > mmCharacters;       // the list of characters in the font
+public:
+    // Load font now (requires OpenGL context)
+    bool LoadFontFromText( char* str_xml );
+    bool LoadEmbeddedFont();
+    bool LoadFontFromFile( const std::string& filename );
+    
+    // printf style function take position to print to as well
+    void glPrintf(int x, int y, const char *fmt, ...);
+    void glPrintf(int x, int y, const std::string fmt, ...){ glPrintf(x,y, fmt.c_str()); }
+    
+    /// Return information about how the string will be rendered
+    const StrInfo StringInfo( std::string s ) const;
+    unsigned int StringWidth( std::string s ) { return StringInfo( s ).width; }
+    unsigned int StringHeight( std::string s ) { return StringInfo( s ).height; }
+    unsigned int LineHeight() { return mCommon.nLineHeight; }
+    
+protected:
+    void DrawChar(const BitmapChar & bc);
+    void DrawString( int x, int y, std::string s );
+    
+    BitmapFontInfo mInfo;                            // info about the font
+    BitmapFontCommon mCommon;                        // further font info
+    std::vector<boostd::shared_ptr<GlTexture> > mvPages;             // the texture files that make up the font
+    std::map< char, BitmapChar > mmCharacters;       // the list of characters in the font
 };
 
 }

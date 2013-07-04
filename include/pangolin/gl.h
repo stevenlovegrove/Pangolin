@@ -56,7 +56,7 @@ class GlTexture
 {
 public:
     //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
-    GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE );
+    GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL  );
     
 #if __cplusplus > 199711L
     //! Move Constructor
@@ -68,7 +68,7 @@ public:
     ~GlTexture();
     
     //! Reinitialise teture width / height / format
-    void Reinitialise(GLint width, GLint height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE );
+    void Reinitialise(GLint width, GLint height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL );
     
     void Bind() const;
     void Unbind() const;
@@ -274,10 +274,10 @@ inline GlTexture::GlTexture()
     // Not a texture constructor
 }
 
-inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype )
+inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, GLvoid* data )
     : internal_format(0), tid(0)
 {
-    Reinitialise(width,height,internal_format,sampling_linear,border,glformat,gltype);
+    Reinitialise(width,height,internal_format,sampling_linear,border,glformat,gltype,data);
 }
 
 #if __cplusplus > 199711L
@@ -306,7 +306,7 @@ inline void GlTexture::Unbind() const
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype )
+inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, GLvoid* data )
 {
     if(tid!=0) {
         glDeleteTextures(1,&tid);
@@ -321,7 +321,7 @@ inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sam
         
     // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
     // for call to succeed.
-    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, border, glformat, gltype, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, border, glformat, gltype, data);
     
     if(sampling_linear) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

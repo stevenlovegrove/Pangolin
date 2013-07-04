@@ -44,77 +44,57 @@
 namespace pangolin
 {
 
-std::istream& operator>>(std::istream& is, BitmapFontPadding& pad)
-{
+std::istream& operator>>(std::istream& is, BitmapFontPadding& pad) {
     is >> pad.nTop; is.get(); is >> pad.nRight; is.get();
     is >> pad.nBottom; is.get(); is >> pad.nLeft;
     return is;
 }
 
-std::istream& operator>>(std::istream& is, BitmapFontSpacing& space)
-{
+std::istream& operator>>(std::istream& is, BitmapFontSpacing& space) {
     is >> space.nTop; is.get(); is >> space.nLeft;
     return is;
 }
 
-std::istream& operator>>(std::istream& is, BitmapFontCommon::ChannelType& chtype)
-{
+std::istream& operator>>(std::istream& is, BitmapFontCommon::ChannelType& chtype) {
     int ict;
     is >> ict;
     chtype = (BitmapFontCommon::ChannelType) ict;
     return is;
 }
 
-GlFont::GlFont()
-{
-}
-
-GlFont::~GlFont()
-{
-    // TODO: Release textures.
-}
-
-bool GlFont::Init( std::string sCustomFont )
-{
-    return _Load( sCustomFont );
-}
-
 void GlFont::glPrintf(int x, int y, const char *fmt, ...)
 {
-    char        text[MAX_TEXT_LENGTH];                  // Holds Our String
-    va_list     ap;                                     // Pointer To List Of Arguments
-
-    if( fmt == NULL ) {                                 // If There's No Text
-        return;                                         // Do Nothing
+    char text[MAX_TEXT_LENGTH];          
+    va_list ap;
+    
+    if( fmt != NULL ) {
+        va_start( ap, fmt );
+        vsnprintf( text, MAX_TEXT_LENGTH, fmt, ap );
+        va_end( ap );
+        
+        glDisable(GL_DEPTH_TEST); //causes text not to clip with geometry
+        DrawString(x, y, text);
+        glEnable(GL_DEPTH_TEST);
     }
-
-    va_start( ap, fmt );                                // Parses The String For Variables
-    vsnprintf( text, MAX_TEXT_LENGTH, fmt, ap );        // And Converts Symbols To Actual Numbers
-    va_end( ap );                                       // Results Are Stored In Text
-
-    glDisable(GL_DEPTH_TEST); //causes text not to clip with geometry
-    //glScalef( 0.5, 0.5, 0.5 );
-    _DrawString(x, y, text);
-    glEnable(GL_DEPTH_TEST);
 }
 
-bool GlFont::_Load( std::string filename )
+void LoadGlImage(GlTexture& tex, const std::string& filename, bool sampling_linear)
+{
+    const GLenum chtypes[] = {
+        GL_ALPHA, GL_LUMINANCE_ALPHA,
+        GL_RGB, GL_RGBA
+    };
+    TypedImage img = LoadImage(filename);
+    const GLint format  = chtypes[img.fmt.channels];
+    const GLint imgtype = GL_UNSIGNED_BYTE;
+    tex.Reinitialise(img.w, img.h, format, sampling_linear, 0, format, imgtype, img.ptr );
+    img.Dealloc();
+}
+
+bool GlFont::LoadFontFromText(char* xml_text)
 {
     rapidxml::xml_document<> doc;
-    char* str = NULL;
-    
-    if(!filename.empty()) {
-        try{
-            rapidxml::file<> xmlFile(filename.c_str());
-            str = doc.allocate_string( xmlFile.data(), xmlFile.size() );
-        }catch(std::exception) {}
-    }
-    
-    if(!str) {
-        str = doc.allocate_string( font_xml_data.data(), font_xml_data.size() );
-    }
-    
-    doc.parse<0>(str);
+    doc.parse<0>(xml_text);
     
     rapidxml::xml_node<>* node_font = doc.first_node("font");
     if(node_font) {
@@ -153,15 +133,16 @@ bool GlFont::_Load( std::string filename )
                 for( rapidxml::xml_node<>* xml_page = node_pages->first_node();
                      xml_page; xml_page = xml_page->next_sibling() )
                 {
-                    BitmapFontPage page;
-                    page.nID       = xml_page->first_attribute_value<int>( "id" );
-                    page.sFileName = xml_page->first_attribute_value<std::string>( "file" );
-                    mvPages.push_back( page );                    
+                    const std::string filename = xml_page->first_attribute_value<std::string>( "file" );
+                    GlTexture* tex = new GlTexture();
+                    LoadGlImage(*tex, filename, false );
+                    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+                    mvPages.push_back( boostd::shared_ptr<GlTexture>(tex) );
                 }
             }else{
-                BitmapFontPage page;
-                page.nID = 0;
-                mvPages.push_back( page );
+                GlTexture* tex = new GlTexture(mCommon.nScaleWidth, mCommon.nScaleHeight, GL_ALPHA,false,0,GL_ALPHA,GL_UNSIGNED_BYTE,font_image_data );
+                glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+                mvPages.push_back( boostd::shared_ptr<GlTexture>(tex) );
             }
             
             for( rapidxml::xml_node<>* xml_char = node_chars->first_node();
@@ -191,138 +172,87 @@ bool GlFont::_Load( std::string filename )
                     mmCharacters[second].mKernings[first] = amount;
                 }
             }
-            
-            if(node_pages) {
-                for( size_t i = 0; i < mvPages.size(); i++) {
-                    if( _LoadImage( mvPages[i], mvPages[i].sFileName ) )  {
-                        _GenTexture( mvPages[i] );
-                        return true;
-                    }else{
-                        return false;
-                    }
-                }
-            }else{
-                _LoadEmbeddedImage( mvPages[0] );
-                _GenTexture( mvPages[0] );
-                return true;
-            }
         }
     }
-    
     return false;
 }
 
-bool GlFont::_LoadEmbeddedImage( BitmapFontPage & page ) {
-    page.w = mCommon.nScaleWidth;
-    page.h = mCommon.nScaleHeight;
-    page.depth = 8;
-    page.glFormat = GL_LUMINANCE;
-
-    page.image = (unsigned char*)malloc( sizeof(font_image_data)  );
-    for( size_t ii = 0; ii < sizeof(font_image_data); ii++ ) {
-        page.image[ii] = 255 * font_image_data[ii];
-    }
-
-    return true;
-}
-
-bool GlFont::_LoadImage( BitmapFontPage & page, std::string sPath)
+bool GlFont::LoadFontFromFile( const std::string& filename )
 {
-    const GLenum chtypes[] = {
-        GL_LUMINANCE, GL_LUMINANCE_ALPHA,
-        GL_RGB, GL_RGBA
-    };
-    
-    try{        
-        TypedImage img = LoadImage(sPath);
-        page.image = img.ptr;
-        page.depth = img.fmt.bpp;
-        page.w = img.w;
-        page.h = img.h;
-        page.colour = img.fmt.channels;
-        page.glFormat = chtypes[img.fmt.channels];
-        return true;
-    }catch(std::exception /*e*/) {
+    try{
+        rapidxml::file<> xmlFile(filename.c_str());
+        return LoadFontFromText( xmlFile.data() );
+    }catch(std::exception) {
         return false;
     }
 }
 
-void GlFont::_GenTexture( BitmapFontPage & page)
+bool GlFont::LoadEmbeddedFont()
 {
-    GLuint texture;
-    glGenTextures( 1, &texture );
-    glBindTexture( GL_TEXTURE_2D, texture );
-    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-    if( page.glFormat == GL_LUMINANCE ) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, page.w, page.h, 0,
-                GL_ALPHA, GL_UNSIGNED_BYTE, page.image);
-    } else {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, page.w, page.h, 0,
-                page.glFormat, GL_UNSIGNED_BYTE, page.image);
-    }
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    page.nID = texture;
+    char* str = new char[font_xml_data.size()];
+    strcpy( str, font_xml_data.c_str() );
+    const bool success = LoadFontFromText(str);
+    delete[] str;
+    return success;
 }
 
-void GlFont::_DrawChar(const BitmapChar & bc)
+void GlFont::DrawChar(const BitmapChar & bc)
 {
-    const BitmapFontPage& page = mvPages[bc.page];
+    GlTexture& page = *(mvPages[bc.page]);
     const GLfloat w = bc.width;
     const GLfloat h = bc.height;
     const GLfloat ox = bc.xOffset;
     const GLfloat oy = bc.yOffset;
-    const GLfloat pW = page.w;
-    const GLfloat pH = page.h;
-
+    const GLfloat pW = page.width;
+    const GLfloat pH = page.height;
+    
     GLfloat u =  ((GLfloat)bc.x - 0.5f ) / pW;
     GLfloat v =  ((GLfloat)bc.y - 0.5f ) / pH;
     GLfloat u2 = u + (w + 0.5f)/ pW;
     GLfloat v2 = v + (h + 0.5f)/ pH;
-
+    
     GLfloat y = (double)mCommon.nBase;
     
     GLfloat sq_vert[] = { ox, y-oy,  ox, y-h-oy,  w+ox, y-h-oy,  w+ox, y-oy };
     glVertexPointer(2, GL_FLOAT, 0, sq_vert);
     glEnableClientState(GL_VERTEX_ARRAY);   
-
+    
     GLfloat sq_tex[]  = { u,v,  u,v2,  u2,v2,  u2,v };
     glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glBindTexture(GL_TEXTURE_2D, page.nID);
+    page.Bind();
     glEnable(GL_TEXTURE_2D);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     glDisable(GL_TEXTURE_2D);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
+    
     glTranslatef(bc.xAdvance + 2*mInfo.nOutline, 0, 0);
 }
 
-/// draw a string onto the gl display at the x y location
-void GlFont::_DrawString( int x, int y, std::string s )
+void GlFont::DrawString( int x, int y, std::string s )
 {
-    // Make sure we're initialised.
-    if(!mmCharacters.size()) Init();
+    // Make sure we have at least one font
+    if(!mmCharacters.size()) LoadEmbeddedFont();
     
     glDisable( GL_DEPTH_TEST );
     glPushMatrix();
     glTranslatef(x,y,0);
     glEnable( GL_TEXTURE_2D );
-
+    
     for( size_t i = 0; i < s.length(); i++ ) {
         const char c = s[i];
         std::map< char, BitmapChar >::const_iterator it;
         it = mmCharacters.find( c );
-
+        
         if( it == mmCharacters.end() )  {
             continue;
         }
-
+        
         const BitmapChar & bc = (*it).second;
-
-        glBindTexture( GL_TEXTURE_2D, mvPages[ bc.page ].nID);
-
+        
+        mvPages[bc.page]->Bind();
+        
         //kerning
         if( i > 0 ) {
             std::map< char, int >::const_iterator k;
@@ -331,12 +261,12 @@ void GlFont::_DrawString( int x, int y, std::string s )
                 glTranslatef( (*k).second, 0, 0);
             }
         }
-
-        _DrawChar( bc );
+        
+        DrawChar( bc );
     }
-
+    
     glDisable(GL_TEXTURE_2D);
-
+    
     glPopMatrix();
     glEnable( GL_DEPTH_TEST );
 }
@@ -344,36 +274,36 @@ void GlFont::_DrawString( int x, int y, std::string s )
 const StrInfo GlFont::StringInfo( std::string s ) const
 {
     StrInfo si;
-
+    
     if( s.empty() ) {
         return si;
     }
-
+    
     int yMin = 1000, yMax = 0;
     std::map< char, BitmapChar >::const_iterator it;
-
+    
     for( size_t i = 0; i < s.size(); i++ ) {
         it = mmCharacters.find( s[i] );
         if( it != mmCharacters.end() )  {
             const BitmapChar & c = (*it).second;
-
+            
             si.width += c.xAdvance + 2*mInfo.nOutline;
-
+            
             std::map< char, int >::const_iterator k;
             k = c.mKernings.find( s[i-1] );
             if( k != c.mKernings.end() )  {
                 si.width += (*k).second;
             }
-
+            
             yMin = std::min( yMin, c.yOffset );
             yMax = std::max( yMax, c.yOffset + c.height);
         }
     }
-
+    
     si.height = yMax - yMin;
     si.baseline = si.height - (mCommon.nBase - yMin);
     si.lineHeight = mCommon.nLineHeight;
-
+    
     return si;
 }
 

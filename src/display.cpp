@@ -60,13 +60,7 @@
     #endif // HAVE_TIFF
 #endif // HAVE_BOOST_GIL
 
-#ifdef CPP11_NO_BOOST
-#include <memory>
-namespace boostd = std;
-#else
-#include <boost/shared_ptr.hpp>
-namespace boostd = boost;
-#endif
+#include <pangolin/compat/memory.h>
 
 namespace pangolin
 {
