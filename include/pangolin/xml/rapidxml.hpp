@@ -11,6 +11,7 @@
     #include <cstdlib>      // For std::size_t
     #include <cassert>      // For assert
     #include <new>          // For placement new
+    #include <sstream>      // for conversion between types
 #endif
 
 // On MSVC, disable "conditional expression is constant" warning (level 4). 
@@ -279,6 +280,13 @@ namespace rapidxml
     //! See xml_document::parse() function.
     const int parse_full = parse_declaration_node | parse_comment_nodes | parse_doctype_node | parse_pi_nodes | parse_validate_closing_tags;
 
+    ///////////////////////////////////////////////////////////////////////
+    // Command option default defaults
+
+    //! Default case sensitivity when searching for node / attribute names.
+    const bool default_case_sensitivity = false;
+    
+    
     ///////////////////////////////////////////////////////////////////////
     // Internals
 
@@ -701,6 +709,24 @@ namespace rapidxml
         {
             return m_value ? m_value_size : 0;
         }
+        
+        //! Gets value of node converted to type T.
+        //! \return Value of node converted to type T or default_val if no value exists.
+        //! \throws parse_error iff conversion to type T fails.
+        template<typename T>
+        T valueT(T default_val = T() )
+        {
+            if(m_value) {
+                std::istringstream ss( std::string(m_value, m_value_size) );
+                T ret_val;
+                ss >> ret_val;
+                if(ss.fail()) {
+                    RAPIDXML_PARSE_ERROR("error converting value in valueT()", m_value);
+                }
+                return ret_val;
+            }
+            return default_val;
+        }
 
         ///////////////////////////////////////////////////////////////////////////
         // Node modification
@@ -833,7 +859,7 @@ namespace rapidxml
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
         //! \param case_sensitive Should name comparison be case-sensitive; non case-sensitive comparison works properly only for ASCII characters
         //! \return Pointer to found attribute, or 0 if not found.
-        xml_attribute<Ch> *previous_attribute(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = true) const
+        xml_attribute<Ch> *previous_attribute(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = default_case_sensitivity) const
         {
             if (name)
             {
@@ -853,7 +879,7 @@ namespace rapidxml
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
         //! \param case_sensitive Should name comparison be case-sensitive; non case-sensitive comparison works properly only for ASCII characters
         //! \return Pointer to found attribute, or 0 if not found.
-        xml_attribute<Ch> *next_attribute(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = true) const
+        xml_attribute<Ch> *next_attribute(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = default_case_sensitivity) const
         {
             if (name)
             {
@@ -933,7 +959,7 @@ namespace rapidxml
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
         //! \param case_sensitive Should name comparison be case-sensitive; non case-sensitive comparison works properly only for ASCII characters
         //! \return Pointer to found child, or 0 if not found.
-        xml_node<Ch> *first_node(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = true) const
+        xml_node<Ch> *first_node(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = default_case_sensitivity) const
         {
             if (name)
             {
@@ -955,7 +981,7 @@ namespace rapidxml
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
         //! \param case_sensitive Should name comparison be case-sensitive; non case-sensitive comparison works properly only for ASCII characters
         //! \return Pointer to found child, or 0 if not found.
-        xml_node<Ch> *last_node(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = true) const
+        xml_node<Ch> *last_node(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = default_case_sensitivity) const
         {
             assert(m_first_node);  // Cannot query for last child if node has no children
             if (name)
@@ -978,7 +1004,7 @@ namespace rapidxml
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
         //! \param case_sensitive Should name comparison be case-sensitive; non case-sensitive comparison works properly only for ASCII characters
         //! \return Pointer to found sibling, or 0 if not found.
-        xml_node<Ch> *previous_sibling(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = true) const
+        xml_node<Ch> *previous_sibling(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = default_case_sensitivity) const
         {
             assert(this->m_parent);     // Cannot query for siblings if node has no parent
             if (name)
@@ -1001,7 +1027,7 @@ namespace rapidxml
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
         //! \param case_sensitive Should name comparison be case-sensitive; non case-sensitive comparison works properly only for ASCII characters
         //! \return Pointer to found sibling, or 0 if not found.
-        xml_node<Ch> *next_sibling(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = true) const
+        xml_node<Ch> *next_sibling(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = default_case_sensitivity) const
         {
             assert(this->m_parent);     // Cannot query for siblings if node has no parent
             if (name)
@@ -1022,7 +1048,7 @@ namespace rapidxml
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
         //! \param case_sensitive Should name comparison be case-sensitive; non case-sensitive comparison works properly only for ASCII characters
         //! \return Pointer to found attribute, or 0 if not found.
-        xml_attribute<Ch> *first_attribute(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = true) const
+        xml_attribute<Ch> *first_attribute(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = default_case_sensitivity) const
         {
             if (name)
             {
@@ -1042,7 +1068,7 @@ namespace rapidxml
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
         //! \param case_sensitive Should name comparison be case-sensitive; non case-sensitive comparison works properly only for ASCII characters
         //! \return Pointer to found attribute, or 0 if not found.
-        xml_attribute<Ch> *last_attribute(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = true) const
+        xml_attribute<Ch> *last_attribute(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = default_case_sensitivity) const
         {
             if (name)
             {
@@ -1055,6 +1081,19 @@ namespace rapidxml
             }
             else
                 return m_first_attribute ? m_last_attribute : 0;
+        }
+        
+        //! Gets first attribute of node, optionally matching attribute name, converting to type T
+        //! \param name Name of attribute to find, or 0 to return first attribute regardless of its name; this string doesn't have to be zero-terminated if name_size is non-zero
+        //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
+        //! \param default_val value to return if attribute is not found or if it has no value
+        //! \param case_sensitive Should name comparison be case-sensitive; non case-sensitive comparison works properly only for ASCII characters
+        //! \return Converted value of attribute, or default_val if attribute not found or it has no value
+        template<typename T>
+        T first_attribute_value(const Ch *name = 0, std::size_t name_size = 0,  T default_val = T(), bool case_sensitive = default_case_sensitivity )
+        {
+            rapidxml::xml_attribute<>* a = first_attribute( name, name_size, case_sensitive );
+            return a ? a->valueT<T>(default_val) : default_val;
         }
 
         ///////////////////////////////////////////////////////////////////////////

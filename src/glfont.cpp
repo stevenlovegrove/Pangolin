@@ -110,16 +110,6 @@ void GlFont::glPrintf(int x, int y, const char *fmt, ...)
     glEnable(GL_DEPTH_TEST);
 }
 
-template<typename T>
-T GetAttrib(rapidxml::xml_node<>* node, std::string attrib, T default_val = T() )
-{
-    if(node) {
-        rapidxml::xml_attribute<>* a = node->first_attribute( attrib.c_str() );
-        if(a) return Convert<T,std::string>::Do( a->value() );
-    }
-    return default_val;
-}
-
 bool GlFont::_Load( std::string filename )
 {
     rapidxml::xml_document<> doc;
@@ -147,37 +137,37 @@ bool GlFont::_Load( std::string filename )
         rapidxml::xml_node<>* node_kerns  = node_font->first_node("kernings");
         
         if(node_info && node_common && node_chars) {
-            mInfo.sName          = GetAttrib<std::string>(node_info, "face" );
-            mInfo.sCharset       = GetAttrib<std::string>(node_info, "charset" );
-            mInfo.nSize          = GetAttrib(node_info, "size", 0 );
-            mInfo.nStretchHeight = GetAttrib(node_info, "stretchH", 0 );
-            mInfo.nOutline       = GetAttrib(node_info, "outline", 0 );
-            mInfo.bBold          = GetAttrib(node_info, "bold", false );
-            mInfo.bItalic        = GetAttrib(node_info, "italic", false );
-            mInfo.bUnicode       = GetAttrib(node_info, "unicode", false );
-            mInfo.bSmooth        = GetAttrib(node_info, "smooth", false );
-            mInfo.bAntiAliasing  = GetAttrib(node_info, "aa", false );
-            mInfo.padding        = GetAttrib(node_info, "padding", BitmapFontPadding() );
-            mInfo.spacing        = GetAttrib(node_info, "spacing", BitmapFontSpacing() );
+            mInfo.sName          = node_info->first_attribute_value<std::string>("face");
+            mInfo.sCharset       = node_info->first_attribute_value<std::string>("charset");
+            mInfo.nSize          = node_info->first_attribute_value<int>("size");
+            mInfo.nStretchHeight = node_info->first_attribute_value<int>("stretchH");
+            mInfo.nOutline       = node_info->first_attribute_value<int>("outline");
+            mInfo.bBold          = node_info->first_attribute_value<bool>("bold");
+            mInfo.bItalic        = node_info->first_attribute_value<bool>("italic");
+            mInfo.bUnicode       = node_info->first_attribute_value<bool>("unicode");
+            mInfo.bSmooth        = node_info->first_attribute_value<bool>("smooth");
+            mInfo.bAntiAliasing  = node_info->first_attribute_value<bool>("aa");
+            mInfo.padding        = node_info->first_attribute_value("padding", 0, BitmapFontPadding() );
+            mInfo.spacing        = node_info->first_attribute_value("spacing", 0, BitmapFontSpacing() );
             
-            mCommon.nBase        = GetAttrib(node_common, "base", 0 );
-            mCommon.nScaleWidth  = GetAttrib(node_common, "scaleW", 0 );
-            mCommon.nScaleHeight = GetAttrib(node_common, "scaleH", 0 );
-            mCommon.nLineHeight  = GetAttrib(node_common, "lineHeight", 0 );
-            mCommon.nPages       = GetAttrib(node_common, "pages", 0 );
-            mCommon.bPacked      = GetAttrib(node_common, "packed", false );
-            mCommon.bPacked      = GetAttrib(node_common, "alphaChnl", BitmapFontCommon::GLYPH );
-            mCommon.bPacked      = GetAttrib(node_common, "redChnl", BitmapFontCommon::GLYPH );
-            mCommon.bPacked      = GetAttrib(node_common, "greenChnl", BitmapFontCommon::GLYPH );
-            mCommon.bPacked      = GetAttrib(node_common, "blueChnl", BitmapFontCommon::GLYPH );
+            mCommon.nBase        = node_common->first_attribute_value<int>("base");
+            mCommon.nScaleWidth  = node_common->first_attribute_value<int>("scaleW");
+            mCommon.nScaleHeight = node_common->first_attribute_value<int>("scaleH");
+            mCommon.nLineHeight  = node_common->first_attribute_value<int>("lineHeight");
+            mCommon.nPages       = node_common->first_attribute_value<int>("pages");
+            mCommon.bPacked      = node_common->first_attribute_value<bool>("packed");
+            mCommon.bPacked      = node_common->first_attribute_value("alphaChnl", 0, BitmapFontCommon::GLYPH );
+            mCommon.bPacked      = node_common->first_attribute_value("redChnl", 0, BitmapFontCommon::GLYPH );
+            mCommon.bPacked      = node_common->first_attribute_value("greenChnl", 0, BitmapFontCommon::GLYPH );
+            mCommon.bPacked      = node_common->first_attribute_value("blueChnl", 0, BitmapFontCommon::GLYPH );
             
             if(node_pages) {
                 for( rapidxml::xml_node<>* xml_page = node_pages->first_node();
                      xml_page; xml_page = xml_page->next_sibling() )
                 {
                     BitmapFontPage page;
-                    page.nID       = GetAttrib(xml_page, "id", 0);
-                    page.sFileName = GetAttrib<std::string>(xml_page, "file" );
+                    page.nID       = xml_page->first_attribute_value<int>( "id" );
+                    page.sFileName = xml_page->first_attribute_value<std::string>( "file" );
                     mvPages.push_back( page );                    
                 }
             }else{
@@ -190,16 +180,16 @@ bool GlFont::_Load( std::string filename )
                  xml_char; xml_char = xml_char->next_sibling() )
             {
                 BitmapChar bc;
-                char id     = GetAttrib(xml_char, "id", 0 );
-                bc.x        = GetAttrib(xml_char, "x", 0);
-                bc.y        = GetAttrib(xml_char, "y", 0);
-                bc.width    = GetAttrib(xml_char, "width", 0);
-                bc.height   = GetAttrib(xml_char, "height", 0);
-                bc.xOffset  = GetAttrib(xml_char, "xoffset", 0);
-                bc.yOffset  = GetAttrib(xml_char, "yoffset", 0);
-                bc.xAdvance = GetAttrib(xml_char, "xadvance", 0);
-                bc.page     = GetAttrib(xml_char, "page", 0);
-                bc.channel  = GetAttrib(xml_char, "chnl", 0);                
+                char id     = xml_char->first_attribute_value<int>("id");
+                bc.x        = xml_char->first_attribute_value<int>("x");
+                bc.y        = xml_char->first_attribute_value<int>("y");
+                bc.width    = xml_char->first_attribute_value<int>("width");
+                bc.height   = xml_char->first_attribute_value<int>("height");
+                bc.xOffset  = xml_char->first_attribute_value<int>("xoffset");
+                bc.yOffset  = xml_char->first_attribute_value<int>("yoffset");
+                bc.xAdvance = xml_char->first_attribute_value<int>("xadvance");
+                bc.page     = xml_char->first_attribute_value<int>("page");
+                bc.channel  = xml_char->first_attribute_value<int>("chnl");                
                 mmCharacters[id] = bc;
             }
             
@@ -207,9 +197,9 @@ bool GlFont::_Load( std::string filename )
                 for( rapidxml::xml_node<>* xml_kern = node_kerns->first_node();
                      xml_kern; xml_kern = xml_kern->next_sibling() )
                 {
-                    char first  = GetAttrib<char>(xml_kern, "first");
-                    char second = GetAttrib<char>(xml_kern, "second");
-                    int amount  = GetAttrib<int>(xml_kern, "amount");
+                    char first  = xml_kern->first_attribute_value<char>("first");
+                    char second = xml_kern->first_attribute_value<char>("second");
+                    int amount  = xml_kern->first_attribute_value<int>("amount");
                     mmCharacters[second].mKernings[first] = amount;
                 }
             }
