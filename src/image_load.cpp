@@ -275,6 +275,7 @@ TypedImage LoadPng(const std::string& filename)
 #endif
 }
 
+#ifdef HAVE_JPEG
 struct my_error_mgr
 {
   struct jpeg_error_mgr pub;
@@ -290,7 +291,6 @@ METHODDEF(void) my_error_exit(j_common_ptr cinfo)
   longjmp(myerr->setjmp_buffer, 1);
 }
 
-#ifdef HAVE_JPEG
 VideoPixelFormat JpgFormat(jpeg_decompress_struct& /*info*/ )
 {
     // TODO: Actually work this out properly.
