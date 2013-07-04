@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,48 +25,47 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_IMAGE_H
-#define PANGOLIN_IMAGE_H
+#ifndef PANGOLIN_IMAGE_LOAD_H
+#define PANGOLIN_IMAGE_LOAD_H
 
-namespace pangolin
+#include <pangolin/video_common.h>
+#include <pangolin/image.h>
+
+namespace pangolin {
+
+enum ImageFileType
 {
-
-// Simple image wrapper
-template<typename T>
-struct Image {
-    inline Image()
-        : pitch(0), ptr(0), w(0), h(0)
-    {
-    }
-
-    inline Image(size_t w, size_t h, size_t pitch, unsigned char* ptr)
-        : pitch(pitch), ptr(ptr), w(w), h(h)
-    {
-    }
-    
-    void Dealloc()
-    {
-        if(ptr) {
-            delete[] ptr;
-            ptr = NULL;
-        }
-    }
-    
-    void Alloc(size_t w, size_t h, size_t pitch)
-    {
-        Dealloc();
-        this->w = w;
-        this->h = h;
-        this->pitch = pitch;
-        this->ptr = new unsigned char[h*pitch];
-    }
-    
-    size_t pitch;
-    T* ptr;
-    size_t w;
-    size_t h;
+    ImageFileTypeTga,
+    ImageFileTypePng,
+    ImageFileTypeJpg,
+    ImageFileTypeGif,
+    ImageFileTypeUnknown
 };
+
+struct TypedImage : public Image<unsigned char>
+{
+    inline TypedImage()
+        : Image()
+    {
+    }
+
+    inline TypedImage(size_t w, size_t h, size_t pitch, unsigned char* ptr, pangolin::VideoPixelFormat fmt)
+        : Image(w,h,pitch,ptr), fmt(fmt)
+    {
+    }    
+    
+    pangolin::VideoPixelFormat fmt;
+};
+
+std::string FileLowercaseExtention(const std::string& filename);
+ImageFileType FileType(const unsigned char data[], size_t bytes);
+ImageFileType FileType(const std::string& filename);
+
+TypedImage LoadImage(const std::string& filename, ImageFileType file_type);
+TypedImage LoadImage(const std::string& filename);
+
+void FreeImage(TypedImage img);
 
 }
 
-#endif // PANGOLIN_IMAGE_H
+#endif // PANGOLIN_IMAGE_LOAD_H
