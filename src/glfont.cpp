@@ -66,33 +66,21 @@ std::istream& operator>>(std::istream& is, BitmapFontCommon::ChannelType& chtype
 }
 
 GlFont::GlFont()
-: m_nDisplayListBase(-1),
-    m_bCompiled(false)
 {
 }
 
 GlFont::~GlFont()
 {
-    if( GlFont::m_bCompiled ){
-        glDeleteLists( GlFont::m_nDisplayListBase,
-                GlFont::m_nDisplayListBase + mmCharacters.size() );
-    }
+    // TODO: Release textures.
 }
 
 bool GlFont::Init( std::string sCustomFont )
 {
-    if( !m_bCompiled ) {
-        return _Load( sCustomFont );
-    }
-    return true;
+    return _Load( sCustomFont );
 }
 
 void GlFont::glPrintf(int x, int y, const char *fmt, ...)
 {
-    if( !GlFont::m_bCompiled ) {
-        Init();
-    }
-
     char        text[MAX_TEXT_LENGTH];                  // Holds Our String
     va_list     ap;                                     // Pointer To List Of Arguments
 
@@ -208,7 +196,7 @@ bool GlFont::_Load( std::string filename )
                 for( size_t i = 0; i < mvPages.size(); i++) {
                     if( _LoadImage( mvPages[i], mvPages[i].sFileName ) )  {
                         _GenTexture( mvPages[i] );
-                        return _GenerateDisplayLists();
+                        return true;
                     }else{
                         return false;
                     }
@@ -216,7 +204,7 @@ bool GlFont::_Load( std::string filename )
             }else{
                 _LoadEmbeddedImage( mvPages[0] );
                 _GenTexture( mvPages[0] );
-                return _GenerateDisplayLists();
+                return true;
             }
         }
     }
@@ -259,7 +247,6 @@ bool GlFont::_LoadImage( BitmapFontPage & page, std::string sPath)
     }
 }
 
-/// Generate a texture for the character page
 void GlFont::_GenTexture( BitmapFontPage & page)
 {
     GLuint texture;
@@ -267,10 +254,9 @@ void GlFont::_GenTexture( BitmapFontPage & page)
     glBindTexture( GL_TEXTURE_2D, texture );
     glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
     if( page.glFormat == GL_LUMINANCE ) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY, page.w, page.h, 0,
-                page.glFormat, GL_UNSIGNED_BYTE, page.image);
-    }
-    else {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, page.w, page.h, 0,
+                GL_ALPHA, GL_UNSIGNED_BYTE, page.image);
+    } else {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, page.w, page.h, 0,
                 page.glFormat, GL_UNSIGNED_BYTE, page.image);
     }
@@ -279,76 +265,49 @@ void GlFont::_GenTexture( BitmapFontPage & page)
     page.nID = texture;
 }
 
-
-/// Generate the display lists for each character
-bool GlFont::_GenerateDisplayLists()
+void GlFont::_DrawChar(const BitmapChar & bc)
 {
-    GLuint index = glGenLists( mmCharacters.size() );
+    const BitmapFontPage& page = mvPages[bc.page];
+    const GLfloat w = bc.width;
+    const GLfloat h = bc.height;
+    const GLfloat ox = bc.xOffset;
+    const GLfloat oy = bc.yOffset;
+    const GLfloat pW = page.w;
+    const GLfloat pH = page.h;
 
-    if(index == 0 ) {
-        std::cerr << "ERROR: Failed to generate display lists" << std::endl;
-        return false;
-    }
+    GLfloat u =  ((GLfloat)bc.x - 0.5f ) / pW;
+    GLfloat v =  ((GLfloat)bc.y - 0.5f ) / pH;
+    GLfloat u2 = u + (w + 0.5f)/ pW;
+    GLfloat v2 = v + (h + 0.5f)/ pH;
 
-    std::map< char, BitmapChar >::iterator i;
-    for( i = mmCharacters.begin(); i != mmCharacters.end(); i++ )
-    {
-        BitmapChar & c = (*i).second;
-        BitmapFontPage & page = mvPages.at( c.page );
-        double a =  (double)c.xAdvance;
-        double w =  (double)c.width;
-        double h =  (double)c.height;
-        double ox = (double)c.xOffset;
-        double oy = (double)c.yOffset;
-        double pW = (double)page.w;
-        double pH = (double)page.h;
-
-        double u =  ((double)c.x - 0.5f ) / pW;
-        double v =  ((double)c.y - 0.5f ) / pH;
-        double u2 = u +  (w + 0.5f)/ pW;
-        double v2 = v + (h  + 0.5f)/ pH;
-
-        double y = (double)mCommon.nBase;
-
-        glNewList(index, GL_COMPILE);
-        {
-            glBegin(GL_QUADS);
-            {
-                glTexCoord2d(u, v);
-                glVertex2f( ox, y-oy);
-
-                glTexCoord2d(u, v2);
-                glVertex2f( ox, y-h-oy);
-
-                glTexCoord2d(u2, v2);
-                glVertex2f( w+ox, y-h-oy);
-
-                glTexCoord2d(u2, v);
-                glVertex2f( w+ox,y-oy);
-            }
-            glEnd();
-
-            glTranslated(a + 2*mInfo.nOutline, 0, 0);
-        }
-        glEndList();
-
-        c.nID = index;
-
-        index++;
-    }
+    GLfloat y = (double)mCommon.nBase;
     
-    m_bCompiled = true;
-    return true;
+    GLfloat sq_vert[] = { ox, y-oy,  ox, y-h-oy,  w+ox, y-h-oy,  w+ox, y-oy };
+    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+    glEnableClientState(GL_VERTEX_ARRAY);   
+
+    GLfloat sq_tex[]  = { u,v,  u,v2,  u2,v2,  u2,v };
+    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glBindTexture(GL_TEXTURE_2D, page.nID);
+    glEnable(GL_TEXTURE_2D);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDisable(GL_TEXTURE_2D);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glTranslatef(bc.xAdvance + 2*mInfo.nOutline, 0, 0);
 }
 
-
 /// draw a string onto the gl display at the x y location
-const void GlFont::_DrawString( int x, int y, std::string s ) const
+void GlFont::_DrawString( int x, int y, std::string s )
 {
-    glDisable( GL_DEPTH_TEST );      // Causes text not to clip with geometry
+    // Make sure we're initialised.
+    if(!mmCharacters.size()) Init();
+    
+    glDisable( GL_DEPTH_TEST );
     glPushMatrix();
     glTranslatef(x,y,0);
-    glPushAttrib( GL_LIST_BIT );     // Pushes The Display List Bits
     glEnable( GL_TEXTURE_2D );
 
     for( size_t i = 0; i < s.length(); i++ ) {
@@ -373,19 +332,15 @@ const void GlFont::_DrawString( int x, int y, std::string s ) const
             }
         }
 
-        glCallList( bc.nID );
-
+        _DrawChar( bc );
     }
 
     glDisable(GL_TEXTURE_2D);
 
-    glPopAttrib();
     glPopMatrix();
     glEnable( GL_DEPTH_TEST );
-
 }
 
-/// Return information about how the string will be rendered
 const StrInfo GlFont::StringInfo( std::string s ) const
 {
     StrInfo si;

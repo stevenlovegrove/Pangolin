@@ -145,22 +145,19 @@ class GlFont
         void glPrintf(int x, int y, const char *fmt, ...);
         void glPrintf(int x, int y, const std::string fmt, ...){ glPrintf(x,y, fmt.c_str()); }
 
+        /// Return information about how the string will be rendered
         const StrInfo StringInfo( std::string s ) const;
         unsigned int StringWidth( std::string s ) { return StringInfo( s ).width; }
         unsigned int StringHeight( std::string s ) { return StringInfo( s ).height; }
         unsigned int LineHeight() { return mCommon.nLineHeight; }
 
     private:
-        int m_nDisplayListBase; //base number for each display list
-        bool m_bCompiled;
-
-    private:
         bool _Load( std::string sFileName = "" );
         bool _LoadEmbeddedImage( BitmapFontPage & page );
         bool _LoadImage( BitmapFontPage & page, std::string sPath );
-        void _GenTexture( BitmapFontPage & page);
-        bool _GenerateDisplayLists();
-        const void _DrawString( int x, int y, std::string s ) const;
+        void _GenTexture( BitmapFontPage & page);        
+        void _DrawChar(const BitmapChar & bc);
+        void _DrawString( int x, int y, std::string s );
 
 
     private:
