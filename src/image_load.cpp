@@ -52,7 +52,7 @@ std::string FileLowercaseExtention(const std::string& filename)
     }
 }
 
-ImageFileType FileType(const unsigned char data[], size_t bytes)
+ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
 {
     // Check we wont go over bounds when comparing.
     if(bytes >= 8) {
@@ -61,6 +61,8 @@ ImageFileType FileType(const unsigned char data[], size_t bytes)
         const unsigned char magic_jpg2[] = "\xFF\xD9";
         const unsigned char magic_gif1[] = "GIF87a";
         const unsigned char magic_gif2[] = "GIF89a";
+        const unsigned char magic_tiff1[] = "\x49\x49\x2A\x00";
+        const unsigned char magic_tiff2[] = "\x4D\x4D\x00\x2A";
         
         if( !strncmp((char*)data, (char*)magic_png, 8) ) {
             return ImageFileTypePng;
@@ -70,10 +72,33 @@ ImageFileType FileType(const unsigned char data[], size_t bytes)
         }else if( !strncmp((char*)data, (char*)magic_gif1,6)
                   || !strncmp((char*)data, (char*)magic_gif2,6) ) {
             return ImageFileTypeGif;
+        }else if( !strncmp((char*)data, (char*)magic_tiff1,4)
+                  || !strncmp((char*)data, (char*)magic_tiff2,4) ) {
+            return ImageFileTypeTiff;
+        }else if( data[0] == 'P' && '0' < data[1] && data[1] < '9') {
+            return ImageFileTypePpm;            
         }
     }
-    
     return ImageFileTypeUnknown;
+}
+
+ImageFileType FileTypeExtension(const std::string& ext)
+{
+    if( ext == ".png" ) {
+        return ImageFileTypePng;
+    } else if( ext == ".tga" || ext == ".targa") {
+        return ImageFileTypeTga;
+    } else if( ext == ".jpg" || ext == ".jpeg" ) {
+        return ImageFileTypeJpg;
+    } else if( ext == ".gif" ) {
+        return ImageFileTypeGif;
+    } else if( ext == ".tif" || ext == ".tiff" ) {
+        return ImageFileTypeTiff;
+    } else if( ext == ".ppm" || ext == ".pgm" || ext == ".pbm" || ext == ".pxm" || ext == ".pdm" ) {
+        return ImageFileTypePpm;
+    } else {
+        return ImageFileTypeUnknown;
+    }    
 }
 
 ImageFileType FileType(const std::string& filename)
@@ -83,7 +108,7 @@ ImageFileType FileType(const std::string& filename)
     const size_t magic_bytes = 8;    
     unsigned char magic[magic_bytes];    
     size_t num_read = fread( (void *)magic, 1, magic_bytes, fp);
-    ImageFileType magic_type = FileType(magic, num_read);
+    ImageFileType magic_type = FileTypeMagic(magic, num_read);
     fclose(fp);
     if(magic_type != ImageFileTypeUnknown) {
         return magic_type;
@@ -91,17 +116,7 @@ ImageFileType FileType(const std::string& filename)
     
     // Fallback on using extension...
     const std::string ext = FileLowercaseExtention(filename);
-    if( ext == ".png" ) {
-        return ImageFileTypePng;
-    } else if( ext == ".tga" || ext == ".targa") {
-        return ImageFileTypeTga;
-    } else if( ext == ".jpg" || ext == ".jpeg" ) {
-        return ImageFileTypeJpg;
-    } else if( ext == ".gif" ) {
-        return ImageFileTypeGif;
-    } else {
-        return ImageFileTypeUnknown;
-    }    
+    return FileTypeExtension(ext);
 }
 
 VideoPixelFormat TgaFormat(int depth, int color_type, int color_map)
@@ -333,11 +348,6 @@ TypedImage LoadJpg(const std::string& filename)
 #endif
 }
 
-TypedImage LoadGif(const std::string& filename)
-{
-    throw std::runtime_error("GIF Support not enabled. Please rebuild Pangolin.");
-}
-
 TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
 {
     switch (file_type) {
@@ -347,8 +357,6 @@ TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
         return LoadPng(filename);
     case ImageFileTypeJpg:
         return LoadJpg(filename);
-    case ImageFileTypeGif:
-        return LoadGif(filename);
     default:
         throw std::runtime_error("Unsupported image file type, '" + filename + "'");
     }

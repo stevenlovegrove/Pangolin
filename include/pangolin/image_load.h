@@ -35,9 +35,11 @@ namespace pangolin {
 
 enum ImageFileType
 {
+    ImageFileTypePpm,
     ImageFileTypeTga,
     ImageFileTypePng,
     ImageFileTypeJpg,
+    ImageFileTypeTiff,
     ImageFileTypeGif,
     ImageFileTypeUnknown
 };
@@ -58,7 +60,8 @@ struct TypedImage : public Image<unsigned char>
 };
 
 std::string FileLowercaseExtention(const std::string& filename);
-ImageFileType FileType(const unsigned char data[], size_t bytes);
+ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes);
+ImageFileType FileTypeExtension(const std::string& ext);
 ImageFileType FileType(const std::string& filename);
 
 TypedImage LoadImage(const std::string& filename, ImageFileType file_type);
