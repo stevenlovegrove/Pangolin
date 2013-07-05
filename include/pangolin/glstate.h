@@ -71,6 +71,8 @@ public:
         : m_DepthMaskCalled(false),
           m_ShadeModelCalled(false),
           m_CullFaceCalled(false),
+          m_PointSizeCalled(false),
+          m_LineWidthCalled(false),
           m_ColorMaskCalled(false),
           m_ViewportCalled(false)
     {
@@ -94,6 +96,14 @@ public:
         if (m_CullFaceCalled) {
             ::glCullFace(m_OriginalCullFace);
         }
+        
+        if(m_PointSizeCalled) {
+            ::glPointSize(m_OriginalPointSize);
+        }
+        
+        if(m_LineWidthCalled) {
+            ::glPointSize(m_OriginalLineWidth);
+        }        
         
         if (m_ColorMaskCalled) {
             ::glColorMask(m_OriginalColorMask[0], m_OriginalColorMask[1], m_OriginalColorMask[2], m_OriginalColorMask[3]);
@@ -119,7 +129,6 @@ public:
         }
     }
 
-
     inline void glDisable(GLenum cap)
     {
         if(IsEnabled(cap)) {
@@ -132,8 +141,10 @@ public:
     GLboolean m_OriginalDepthMask;
     inline void glDepthMask(GLboolean flag)
     {
-        m_DepthMaskCalled = true;
-        glGetBooleanv(GL_DEPTH_WRITEMASK, &m_OriginalDepthMask);
+        if(!m_DepthMaskCalled) {
+            m_DepthMaskCalled = true;
+            glGetBooleanv(GL_DEPTH_WRITEMASK, &m_OriginalDepthMask);
+        }
         ::glDepthMask(flag);
     }
 
@@ -141,8 +152,10 @@ public:
     GLint m_OriginalShadeModel;
     inline void glShadeModel(GLint mode)
     {
-        m_ShadeModelCalled = true;
-        glGetIntegerv(GL_SHADE_MODEL, &m_OriginalShadeModel);
+        if(!m_ShadeModelCalled) {
+            m_ShadeModelCalled = true;
+            glGetIntegerv(GL_SHADE_MODEL, &m_OriginalShadeModel);
+        }
         ::glShadeModel(mode);
     }
     
@@ -150,17 +163,44 @@ public:
     GLint m_OriginalCullFace;
     void glCullFace(GLenum mode)
     {
-        m_ShadeModelCalled = true;
-        glGetIntegerv(GL_CULL_FACE_MODE, &m_OriginalCullFace);
+        if(!m_ShadeModelCalled) {
+            m_ShadeModelCalled = true;
+            glGetIntegerv(GL_CULL_FACE_MODE, &m_OriginalCullFace);
+        }
         ::glCullFace(mode);        
+    }
+    
+    bool m_PointSizeCalled;
+    GLfloat m_OriginalPointSize;
+    void glPointSize(GLfloat size)
+    {
+        if(!m_PointSizeCalled) {
+            m_PointSizeCalled = true;
+            glGetFloatv(GL_POINT_SIZE, &m_OriginalPointSize);
+        }
+        ::glPointSize(size);
+    }
+    
+    bool m_LineWidthCalled;
+    GLfloat m_OriginalLineWidth;
+    void glLineWidth(GLfloat width)
+    {
+        if(!m_LineWidthCalled) {
+            m_LineWidthCalled = true;
+            glGetFloatv(GL_LINE_WIDTH, &m_OriginalLineWidth);
+        }
+        ::glLineWidth(width);
+        
     }
 
     bool m_ColorMaskCalled;
     GLboolean m_OriginalColorMask[4];
     inline void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
     {
-        m_ColorMaskCalled = true;
-        glGetBooleanv(GL_COLOR_WRITEMASK,  m_OriginalColorMask);
+        if(!m_ColorMaskCalled) {
+            m_ColorMaskCalled = true;
+            glGetBooleanv(GL_COLOR_WRITEMASK,  m_OriginalColorMask);
+        }
         ::glColorMask(red, green, blue, alpha);
     }
 
@@ -168,8 +208,10 @@ public:
     GLint m_OriginalViewport[4];
     inline void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
     {
-        m_ViewportCalled = true;
-        glGetIntegerv(GL_VIEWPORT, m_OriginalViewport);
+        if(!m_ViewportCalled) {
+            m_ViewportCalled = true;
+            glGetIntegerv(GL_VIEWPORT, m_OriginalViewport);
+        }
         ::glViewport(x, y, width, height);
     }
 
