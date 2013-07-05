@@ -230,7 +230,7 @@ VideoInterface* OpenVideo(std::string str_uri)
 #endif //HAVE_FFMPEG
 #ifdef HAVE_V4L
     if(!uri.scheme.compare("v4l")) {
-        const string smethod = uri.Get<std::string>("method","mmap");
+        const std::string smethod = uri.Get<std::string>("method","mmap");
         
         io_method method = IO_METHOD_MMAP;
         
