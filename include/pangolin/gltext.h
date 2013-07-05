@@ -40,6 +40,8 @@ namespace pangolin {
 class GlText
 {
 public:
+    GlText();
+
     GlText(const GlTexture& font_tex);
     
     // Added specified charector to this string.

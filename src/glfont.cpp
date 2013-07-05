@@ -91,6 +91,14 @@ int GlChar::Kern(char c) const
     return 0;
 }
 
+GlText::GlText()
+    : tex(NULL), width(0),
+      ymin(std::numeric_limits<int>::max()),
+      ymax(std::numeric_limits<int>::min())
+{
+    
+}
+
 GlText::GlText(const GlTexture& font_tex)
     : tex(&font_tex), width(0),
       ymin(std::numeric_limits<int>::max()),
