@@ -44,22 +44,91 @@
 namespace pangolin
 {
 
-std::istream& operator>>(std::istream& is, BitmapFontPadding& pad) {
-    is >> pad.nTop; is.get(); is >> pad.nRight; is.get();
-    is >> pad.nBottom; is.get(); is >> pad.nLeft;
-    return is;
+GlChar::GlChar()
+{
 }
 
-std::istream& operator>>(std::istream& is, BitmapFontSpacing& space) {
-    is >> space.nTop; is.get(); is >> space.nLeft;
-    return is;
+GlChar::GlChar(int tw, int th, int x, int y, int w, int h, int advance, GLfloat ox, GLfloat oy)
+    : x_step(advance)
+{
+    const GLfloat u = (x-0.5f) / tw;
+    const GLfloat v = (y-0.5f) / th;
+    const GLfloat u2 = u + (w + 0.5f) / tw;
+    const GLfloat v2 = v + (h + 0.5f) / th;
+    
+    // Setup u,v tex coords
+    vs[0] = XYUV(ox, oy,     u,v );
+    vs[1] = XYUV(ox, oy-h,   u,v2 );
+    vs[2] = XYUV(w+ox, oy-h, u2,v2 );
+    vs[3] = XYUV(w+ox, oy,   u2,v );
 }
 
-std::istream& operator>>(std::istream& is, BitmapFontCommon::ChannelType& chtype) {
-    int ict;
-    is >> ict;
-    chtype = (BitmapFontCommon::ChannelType) ict;
-    return is;
+void GlChar::Draw() const
+{
+    glVertexPointer(2, GL_FLOAT, sizeof(XYUV), &vs[0].x);
+    glEnableClientState(GL_VERTEX_ARRAY);   
+    glTexCoordPointer(2, GL_FLOAT, sizeof(XYUV), &vs[0].tu);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnable(GL_TEXTURE_2D);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDisable(GL_TEXTURE_2D);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+}
+
+void GlChar::SetKern(char c, int kern)
+{
+    mKernings[c] = kern;
+}
+
+int GlChar::Kern(char c) const
+{
+    std::map< char, int >::const_iterator k = mKernings.find(c);
+    if(k != mKernings.end())  return k->second;
+    return 0;
+}
+
+GlText::GlText(const GlTexture& font_tex)
+    : tex(&font_tex), width(0),
+      ymin(std::numeric_limits<int>::max()),
+      ymax(std::numeric_limits<int>::min())
+{
+}
+
+void GlText::Add(const GlChar& c)
+{
+    int k = 0;
+    int x = width;
+    
+    if(str.size()) {
+        k = c.Kern(str[str.size()-1]);
+        x += k;
+    }
+    
+    vs.push_back(c.GetVert(0) + x);
+    vs.push_back(c.GetVert(1) + x);
+    vs.push_back(c.GetVert(2) + x);
+    vs.push_back(c.GetVert(0) + x);
+    vs.push_back(c.GetVert(2) + x);
+    vs.push_back(c.GetVert(3) + x);
+    
+    width = x + c.StepX();        
+}
+
+void GlText::Draw()
+{
+    if(vs.size() && tex) {
+        glVertexPointer(2, GL_FLOAT, sizeof(XYUV), &vs[0].x);
+        glEnableClientState(GL_VERTEX_ARRAY);   
+        glTexCoordPointer(2, GL_FLOAT, sizeof(XYUV), &vs[0].tu);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        tex->Bind();
+        glEnable(GL_TEXTURE_2D);
+        glDrawArrays(GL_TRIANGLES, 0, vs.size() );
+        glDisable(GL_TEXTURE_2D);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    }
 }
 
 void GlFont::glPrintf(int x, int y, const char *fmt, ...)
@@ -105,61 +174,61 @@ bool GlFont::LoadFontFromText(char* xml_text)
         rapidxml::xml_node<>* node_kerns  = node_font->first_node("kernings");
         
         if(node_info && node_common && node_chars) {
-            mInfo.sName          = node_info->first_attribute_value<std::string>("face");
-            mInfo.sCharset       = node_info->first_attribute_value<std::string>("charset");
-            mInfo.nSize          = node_info->first_attribute_value<int>("size");
-            mInfo.nStretchHeight = node_info->first_attribute_value<int>("stretchH");
-            mInfo.nOutline       = node_info->first_attribute_value<int>("outline");
-            mInfo.bBold          = node_info->first_attribute_value<bool>("bold");
-            mInfo.bItalic        = node_info->first_attribute_value<bool>("italic");
-            mInfo.bUnicode       = node_info->first_attribute_value<bool>("unicode");
-            mInfo.bSmooth        = node_info->first_attribute_value<bool>("smooth");
-            mInfo.bAntiAliasing  = node_info->first_attribute_value<bool>("aa");
-            mInfo.padding        = node_info->first_attribute_value("padding", 0, BitmapFontPadding() );
-            mInfo.spacing        = node_info->first_attribute_value("spacing", 0, BitmapFontSpacing() );
+            sName          = node_info->first_attribute_value<std::string>("face");
+            sCharset       = node_info->first_attribute_value<std::string>("charset");
+            nSize          = node_info->first_attribute_value<int>("size");
+            nStretchHeight = node_info->first_attribute_value<int>("stretchH");
+            nOutline       = node_info->first_attribute_value<int>("outline");
+            bBold          = node_info->first_attribute_value<bool>("bold");
+            bItalic        = node_info->first_attribute_value<bool>("italic");
+            bUnicode       = node_info->first_attribute_value<bool>("unicode");
+            bSmooth        = node_info->first_attribute_value<bool>("smooth");
+            bAntiAliasing  = node_info->first_attribute_value<bool>("aa");
             
-            mCommon.nBase        = node_common->first_attribute_value<int>("base");
-            mCommon.nScaleWidth  = node_common->first_attribute_value<int>("scaleW");
-            mCommon.nScaleHeight = node_common->first_attribute_value<int>("scaleH");
-            mCommon.nLineHeight  = node_common->first_attribute_value<int>("lineHeight");
-            mCommon.nPages       = node_common->first_attribute_value<int>("pages");
-            mCommon.bPacked      = node_common->first_attribute_value<bool>("packed");
-            mCommon.bPacked      = node_common->first_attribute_value("alphaChnl", 0, BitmapFontCommon::GLYPH );
-            mCommon.bPacked      = node_common->first_attribute_value("redChnl", 0, BitmapFontCommon::GLYPH );
-            mCommon.bPacked      = node_common->first_attribute_value("greenChnl", 0, BitmapFontCommon::GLYPH );
-            mCommon.bPacked      = node_common->first_attribute_value("blueChnl", 0, BitmapFontCommon::GLYPH );
+            nBase        = node_common->first_attribute_value<int>("base");
+            nScaleWidth  = node_common->first_attribute_value<int>("scaleW");
+            nScaleHeight = node_common->first_attribute_value<int>("scaleH");
+            nLineHeight  = node_common->first_attribute_value<int>("lineHeight");
+            nPages       = node_common->first_attribute_value<int>("pages");
             
             if(node_pages) {
                 for( rapidxml::xml_node<>* xml_page = node_pages->first_node();
                      xml_page; xml_page = xml_page->next_sibling() )
                 {
                     const std::string filename = xml_page->first_attribute_value<std::string>( "file" );
-                    GlTexture* tex = new GlTexture();
-                    LoadGlImage(*tex, filename, false );
+                    LoadGlImage(mTex, filename, false );
                     glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-                    mvPages.push_back( boostd::shared_ptr<GlTexture>(tex) );
                 }
             }else{
-                GlTexture* tex = new GlTexture(mCommon.nScaleWidth, mCommon.nScaleHeight, GL_ALPHA,false,0,GL_ALPHA,GL_UNSIGNED_BYTE,font_image_data );
+                mTex.Reinitialise(nScaleWidth, nScaleHeight, GL_ALPHA,false,0,GL_ALPHA,GL_UNSIGNED_BYTE,font_image_data );
                 glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-                mvPages.push_back( boostd::shared_ptr<GlTexture>(tex) );
+            }
+            
+            if( nPages < 1) {
+                std::cerr << "Incorrect number of font pages loaded." << std::endl;
             }
             
             for( rapidxml::xml_node<>* xml_char = node_chars->first_node();
                  xml_char; xml_char = xml_char->next_sibling() )
             {
-                BitmapChar bc;
-                char id     = xml_char->first_attribute_value<int>("id");
-                bc.x        = xml_char->first_attribute_value<int>("x");
-                bc.y        = xml_char->first_attribute_value<int>("y");
-                bc.width    = xml_char->first_attribute_value<int>("width");
-                bc.height   = xml_char->first_attribute_value<int>("height");
-                bc.xOffset  = xml_char->first_attribute_value<int>("xoffset");
-                bc.yOffset  = xml_char->first_attribute_value<int>("yoffset");
-                bc.xAdvance = xml_char->first_attribute_value<int>("xadvance");
-                bc.page     = xml_char->first_attribute_value<int>("page");
-                bc.channel  = xml_char->first_attribute_value<int>("chnl");                
-                mmCharacters[id] = bc;
+                char id      = xml_char->first_attribute_value<int>("id");
+                int x        = xml_char->first_attribute_value<int>("x");
+                int y        = xml_char->first_attribute_value<int>("y");
+                int width    = xml_char->first_attribute_value<int>("width");
+                int height   = xml_char->first_attribute_value<int>("height");
+                int xOffset  = xml_char->first_attribute_value<int>("xoffset");
+                int yOffset  = xml_char->first_attribute_value<int>("yoffset");
+                int xAdvance = xml_char->first_attribute_value<int>("xadvance");
+                int page     = xml_char->first_attribute_value<int>("page");
+                
+                if(page != 0) {
+                    std::cerr << "Multi-page font not supported" << std::endl;
+                    page = 0;
+                }
+                
+                mmCharacters[id] = GlChar(nScaleWidth, nScaleHeight,
+                                          x,y,width, height,xAdvance,
+                                          xOffset,nBase - yOffset);
             }
             
             if(node_kerns) {
@@ -169,7 +238,7 @@ bool GlFont::LoadFontFromText(char* xml_text)
                     char first  = xml_kern->first_attribute_value<char>("first");
                     char second = xml_kern->first_attribute_value<char>("second");
                     int amount  = xml_kern->first_attribute_value<int>("amount");
-                    mmCharacters[second].mKernings[first] = amount;
+                    mmCharacters[second].SetKern(first,amount);
                 }
             }
         }
@@ -196,38 +265,30 @@ bool GlFont::LoadEmbeddedFont()
     return success;
 }
 
-void GlFont::DrawChar(const BitmapChar & bc)
+GlText GlFont::Text( const char* fmt, ... )
 {
-    GlTexture& page = *(mvPages[bc.page]);
-    const GLfloat w = bc.width;
-    const GLfloat h = bc.height;
-    const GLfloat ox = bc.xOffset;
-    const GLfloat oy = bc.yOffset;
-    const GLfloat pW = page.width;
-    const GLfloat pH = page.height;
+    if(!mmCharacters.size()) LoadEmbeddedFont();
     
-    GLfloat u =  ((GLfloat)bc.x - 0.5f ) / pW;
-    GLfloat v =  ((GLfloat)bc.y - 0.5f ) / pH;
-    GLfloat u2 = u + (w + 0.5f)/ pW;
-    GLfloat v2 = v + (h + 0.5f)/ pH;
+    GlText ret(mTex);
     
-    GLfloat y = (double)mCommon.nBase;
+    char text[MAX_TEXT_LENGTH];          
+    va_list ap;
     
-    GLfloat sq_vert[] = { ox, y-oy,  ox, y-h-oy,  w+ox, y-h-oy,  w+ox, y-oy };
-    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-    glEnableClientState(GL_VERTEX_ARRAY);   
-    
-    GLfloat sq_tex[]  = { u,v,  u,v2,  u2,v2,  u2,v };
-    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    page.Bind();
-    glEnable(GL_TEXTURE_2D);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glDisable(GL_TEXTURE_2D);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    
-    glTranslatef(bc.xAdvance + 2*mInfo.nOutline, 0, 0);
+    if( fmt != NULL ) {
+        va_start( ap, fmt );
+        vsnprintf( text, MAX_TEXT_LENGTH, fmt, ap );
+        va_end( ap );
+        
+        int len = strlen(text);
+        for(int i=0; i < len; ++i) {
+            const char c = text[i];
+            std::map< char, GlChar >::const_iterator it = mmCharacters.find( c );
+            if(it != mmCharacters.end()) {
+                ret.Add(it->second);
+            }
+        }
+    }
+    return ret;
 }
 
 void GlFont::DrawString( int x, int y, std::string s )
@@ -242,69 +303,22 @@ void GlFont::DrawString( int x, int y, std::string s )
     
     for( size_t i = 0; i < s.length(); i++ ) {
         const char c = s[i];
-        std::map< char, BitmapChar >::const_iterator it;
-        it = mmCharacters.find( c );
+        std::map< char, GlChar >::const_iterator it = mmCharacters.find( c );
         
-        if( it == mmCharacters.end() )  {
-            continue;
-        }
-        
-        const BitmapChar & bc = (*it).second;
-        
-        mvPages[bc.page]->Bind();
-        
-        //kerning
-        if( i > 0 ) {
-            std::map< char, int >::const_iterator k;
-            k = bc.mKernings.find( s[i - 1] );
-            if( k != bc.mKernings.end() )  {
-                glTranslatef( (*k).second, 0, 0);
+        if( it != mmCharacters.end() )  {
+            const GlChar& bc = it->second;
+            if( i > 0 ) {
+                int adv = bc.StepXKerned( s[i-1] );
+                glTranslatef( adv, 0, 0);
             }
+            bc.Draw();
         }
-        
-        DrawChar( bc );
     }
     
     glDisable(GL_TEXTURE_2D);
     
     glPopMatrix();
     glEnable( GL_DEPTH_TEST );
-}
-
-const StrInfo GlFont::StringInfo( std::string s ) const
-{
-    StrInfo si;
-    
-    if( s.empty() ) {
-        return si;
-    }
-    
-    int yMin = 1000, yMax = 0;
-    std::map< char, BitmapChar >::const_iterator it;
-    
-    for( size_t i = 0; i < s.size(); i++ ) {
-        it = mmCharacters.find( s[i] );
-        if( it != mmCharacters.end() )  {
-            const BitmapChar & c = (*it).second;
-            
-            si.width += c.xAdvance + 2*mInfo.nOutline;
-            
-            std::map< char, int >::const_iterator k;
-            k = c.mKernings.find( s[i-1] );
-            if( k != c.mKernings.end() )  {
-                si.width += (*k).second;
-            }
-            
-            yMin = std::min( yMin, c.yOffset );
-            yMax = std::max( yMax, c.yOffset + c.height);
-        }
-    }
-    
-    si.height = yMax - yMin;
-    si.baseline = si.height - (mCommon.nBase - yMin);
-    si.lineHeight = mCommon.nLineHeight;
-    
-    return si;
 }
 
 }

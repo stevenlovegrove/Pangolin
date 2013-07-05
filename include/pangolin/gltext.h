@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Robert Castle, Steven Lovegrove, Gabe Sibley
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,54 +25,50 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLFONT_H
-#define PANGOLIN_GLFONT_H
+#ifndef PANGOLIN_GLTEXT_H
+#define PANGOLIN_GLTEXT_H
 
-#include <pangolin/gltext.h>
+#include <pangolin/glinclude.h>
+#include <pangolin/gl.h>
+#include <pangolin/glchar.h>
 
-#include <cstdio>
-#include <cstdarg>
+#include <vector>
+#include <string>
 
 namespace pangolin {
 
-class GlFont
+class GlText
 {
 public:
-    // Load font now (requires OpenGL context)
-    bool LoadFontFromText( char* str_xml );
-    bool LoadEmbeddedFont();
-    bool LoadFontFromFile( const std::string& filename );
+    GlText(const GlTexture& font_tex);
+    
+    void Add(const GlChar& c);
 
-    // Generate renderable GlText object from this font.
-    GlText Text( const char* fmt, ... );
+    void Draw();
     
-    // printf style function take position to print to as well
-    void glPrintf(int x, int y, const char *fmt, ...);
-    void glPrintf(int x, int y, const std::string fmt, ...){ glPrintf(x,y, fmt.c_str()); }
-        
+    const std::string& Text() const
+    {
+        return str;
+    }
+    
+    int Width() const {
+        return width;
+    }
+    
+    int Height() const {
+        return ymax - ymin;
+    }
+
 protected:
-    void DrawString( int x, int y, std::string s );
+    const GlTexture* tex;
+    std::string str;
+    unsigned int width;
+    unsigned int ymin;
+    unsigned int ymax;
     
-    std::string sName;
-    int nSize;
-    bool bBold;
-    bool bItalic;
-    std::string sCharset;
-    bool bUnicode;
-    int nStretchHeight;
-    bool bSmooth;
-    bool bAntiAliasing;
-    int nOutline;
-    int nLineHeight;
-    int nBase;
-    int nScaleWidth;
-    int nScaleHeight;
-    int nPages;
-    
-    GlTexture mTex;
-    std::map< char, GlChar > mmCharacters;
+    std::vector<XYUV> vs;
 };
 
 }
 
-#endif // PANGOLIN_GLFONT_H
+#endif // PANGOLIN_GLTEXT_H

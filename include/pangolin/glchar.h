@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Robert Castle, Steven Lovegrove, Gabe Sibley
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,54 +25,55 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLFONT_H
-#define PANGOLIN_GLFONT_H
+#ifndef PANGOLIN_GLCHAR_H
+#define PANGOLIN_GLCHAR_H
 
-#include <pangolin/gltext.h>
-
-#include <cstdio>
-#include <cstdarg>
+#include <map>
 
 namespace pangolin {
 
-class GlFont
+struct XYUV
+{
+    XYUV() {}
+    XYUV(GLfloat x, GLfloat y, GLfloat tu, GLfloat tv)
+        : x(x), y(y), tu(tu), tv(tv) {}
+
+    XYUV operator+(int dx) const {
+        return XYUV(x+dx,y,tu,tv);
+    }    
+    
+    GLfloat x, y, tu, tv;
+};
+
+class GlChar
 {
 public:
-    // Load font now (requires OpenGL context)
-    bool LoadFontFromText( char* str_xml );
-    bool LoadEmbeddedFont();
-    bool LoadFontFromFile( const std::string& filename );
+    GlChar();
+    GlChar(int tw, int th, int x, int y, int w, int h, int x_step, GLfloat ox, GLfloat oy);
 
-    // Generate renderable GlText object from this font.
-    GlText Text( const char* fmt, ... );
+    void SetKern(char c, int kern);
+    int Kern(char c) const;
     
-    // printf style function take position to print to as well
-    void glPrintf(int x, int y, const char *fmt, ...);
-    void glPrintf(int x, int y, const std::string fmt, ...){ glPrintf(x,y, fmt.c_str()); }
+    const XYUV& GetVert(size_t i) const {
+        return vs[i];
+    }    
+    
+    int StepX() const {
+        return x_step;
+    }
+        
+    int StepXKerned(char c) const {
+        return StepX() + Kern(c);
+    }    
+        
+    void Draw() const;
         
 protected:
-    void DrawString( int x, int y, std::string s );
-    
-    std::string sName;
-    int nSize;
-    bool bBold;
-    bool bItalic;
-    std::string sCharset;
-    bool bUnicode;
-    int nStretchHeight;
-    bool bSmooth;
-    bool bAntiAliasing;
-    int nOutline;
-    int nLineHeight;
-    int nBase;
-    int nScaleWidth;
-    int nScaleHeight;
-    int nPages;
-    
-    GlTexture mTex;
-    std::map< char, GlChar > mmCharacters;
+    std::map< char, int > mKernings;
+    XYUV vs[4];
+    int x_step;    
 };
 
 }
 
-#endif // PANGOLIN_GLFONT_H
+#endif // PANGOLIN_GLCHAR_H
