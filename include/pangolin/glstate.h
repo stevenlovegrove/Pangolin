@@ -36,10 +36,10 @@ namespace pangolin
 
 class GlState {
 
-    class CapabilityEnabled {
+    class CapabilityState {
     public:
 
-        CapabilityEnabled(GLenum cap, GLboolean enable)
+        CapabilityState(GLenum cap, GLboolean enable)
             : m_cap(cap), m_enable(enable)
         {
 
@@ -68,11 +68,12 @@ class GlState {
 
 public:
     GlState()
+        : m_DepthMaskCalled(false),
+          m_ShadeModelCalled(false),
+          m_CullFaceCalled(false),
+          m_ColorMaskCalled(false),
+          m_ViewportCalled(false)
     {
-        m_DepthMaskCalled = false;
-        m_ShadeModelCalled = false;
-        m_ColorMaskCalled = false;
-        m_ViewportCalled = false;
     }
 
     ~GlState() {
@@ -90,6 +91,10 @@ public:
             ::glShadeModel(m_OriginalShadeModel);
         }
 
+        if (m_CullFaceCalled) {
+            ::glCullFace(m_OriginalCullFace);
+        }
+        
         if (m_ColorMaskCalled) {
             ::glColorMask(m_OriginalColorMask[0], m_OriginalColorMask[1], m_OriginalColorMask[2], m_OriginalColorMask[3]);
         }
@@ -99,7 +104,7 @@ public:
         }
     }
 
-    static inline GLboolean EnableValue(GLenum cap)
+    static inline GLboolean IsEnabled(GLenum cap)
     {
         GLboolean curVal;
         glGetBooleanv(cap, &curVal);
@@ -108,8 +113,8 @@ public:
 
     inline void glEnable(GLenum cap)
     {
-        if(!EnableValue(cap)) {
-            m_history.push(CapabilityEnabled(cap,false));
+        if(!IsEnabled(cap)) {
+            m_history.push(CapabilityState(cap,true));
             ::glEnable(cap);
         }
     }
@@ -117,8 +122,8 @@ public:
 
     inline void glDisable(GLenum cap)
     {
-        if(EnableValue(cap)) {
-            m_history.push(CapabilityEnabled(cap,true));
+        if(IsEnabled(cap)) {
+            m_history.push(CapabilityState(cap,false));
            ::glDisable(cap);
         }
     }
@@ -140,6 +145,15 @@ public:
         glGetIntegerv(GL_SHADE_MODEL, &m_OriginalShadeModel);
         ::glShadeModel(mode);
     }
+    
+    bool m_CullFaceCalled;
+    GLint m_OriginalCullFace;
+    void glCullFace(GLenum mode)
+    {
+        m_ShadeModelCalled = true;
+        glGetIntegerv(GL_CULL_FACE_MODE, &m_OriginalCullFace);
+        ::glCullFace(mode);        
+    }
 
     bool m_ColorMaskCalled;
     GLboolean m_OriginalColorMask[4];
@@ -159,7 +173,7 @@ public:
         ::glViewport(x, y, width, height);
     }
 
-    std::stack<CapabilityEnabled> m_history;
+    std::stack<CapabilityState> m_history;
 };
 
 }
