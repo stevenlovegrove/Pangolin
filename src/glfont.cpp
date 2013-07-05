@@ -144,15 +144,30 @@ void GlText::Draw()
 
 void GlText::Draw(int x, int y)
 {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();    
+    
     glDisable( GL_DEPTH_TEST );
     DisplayBase().ActivatePixelOrthographic();    
     glTranslatef(x,y,0);
     Draw();
     glEnable( GL_DEPTH_TEST );
+    
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();        
 }
 
 void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
 {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    
     // find object point (x,y,z)' in pixel coords
     GLdouble projection[16];
     GLdouble modelview[16];
@@ -169,6 +184,11 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
     DisplayBase().ActivatePixelOrthographic();
     glTranslatef((int)scrn[0],(int)scrn[1],0);
     Draw();
+    
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();    
 }
 
 void LoadGlImage(GlTexture& tex, const std::string& filename, bool sampling_linear)

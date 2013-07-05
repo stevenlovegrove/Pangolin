@@ -48,16 +48,13 @@ public:
     void Add(const GlChar& c);
 
     // Render without transform in text-centric pixel coordinates
-    // No changes are made to OpenGL state
     void Draw();
 
-    // Render int window-centric pixel coordinates at (x,y)'
-    // Window coordinates will be set up.
+    // Render in window-centric pixel coordinates at (x,y)'
     void Draw(int x, int y);
     
     // Render at (x,y,z)' in object coordinates,
     // keeping text size and orientation constant
-    // Window coordinates will be set up.
     void Draw(GLfloat x, GLfloat y, GLfloat z);
     
     // Return text that this object signifies.
