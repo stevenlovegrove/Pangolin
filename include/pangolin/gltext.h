@@ -50,12 +50,9 @@ public:
     // Render without transform in text-centric pixel coordinates
     void Draw();
 
-    // Render in window-centric pixel coordinates at (x,y)'
-    void Draw(int x, int y);
-    
     // Render at (x,y,z)' in object coordinates,
     // keeping text size and orientation constant
-    void Draw(GLfloat x, GLfloat y, GLfloat z);
+    void Draw(GLfloat x, GLfloat y, GLfloat z = 0.0f);
     
     // Return text that this object signifies.
     const std::string& Text() const {

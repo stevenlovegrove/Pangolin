@@ -29,6 +29,7 @@
 #include <pangolin/display.h>
 
 #include <pangolin/glfont.h>
+#include <pangolin/glstate.h>
 #include <pangolin/image_load.h>
 #include <pangolin/type_convert.h>
 
@@ -142,37 +143,13 @@ void GlText::Draw()
     }
 }
 
-void GlText::Draw(int x, int y)
-{
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();    
-    
-    glDisable( GL_DEPTH_TEST );
-    DisplayBase().ActivatePixelOrthographic();    
-    glTranslatef(x,y,0);
-    Draw();
-    glEnable( GL_DEPTH_TEST );
-    
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();        
-}
-
 void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
 {
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    
     // find object point (x,y,z)' in pixel coords
     GLdouble projection[16];
     GLdouble modelview[16];
-    GLint        view[4];
-    GLdouble     scrn[3];
+    GLint    view[4];
+    GLdouble scrn[3];
     
     glGetDoublev(GL_PROJECTION_MATRIX, projection );
     glGetDoublev(GL_MODELVIEW_MATRIX, modelview );
@@ -181,10 +158,22 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
     gluProject(x, y, z, modelview, projection, view,
         scrn, scrn + 1, scrn + 2);
     
-    DisplayBase().ActivatePixelOrthographic();
+    DisplayBase().Activate();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();    
+    gluOrtho2D(0, DisplayBase().v.w, 0, DisplayBase().v.h);    
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    
     glTranslatef((int)scrn[0],(int)scrn[1],0);
     Draw();
+
+    // Restore viewport
+    glViewport(view[0],view[1],view[2],view[3]);
     
+    // Restore modelview / project matrices
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
