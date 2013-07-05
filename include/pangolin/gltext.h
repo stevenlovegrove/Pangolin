@@ -42,19 +42,33 @@ class GlText
 public:
     GlText(const GlTexture& font_tex);
     
+    // Added specified charector to this string.
     void Add(const GlChar& c);
 
+    // Render without transform in text-centric pixel coordinates
+    // No changes are made to OpenGL state
     void Draw();
+
+    // Render int window-centric pixel coordinates at (x,y)'
+    // Window coordinates will be set up.
+    void Draw(int x, int y);
     
-    const std::string& Text() const
-    {
+    // Render at (x,y,z)' in object coordinates,
+    // keeping text size and orientation constant
+    // Window coordinates will be set up.
+    void Draw(GLfloat x, GLfloat y, GLfloat z);
+    
+    // Return text that this object signifies.
+    const std::string& Text() const {
         return str;
     }
     
+    // Return width in pixels of this text.
     int Width() const {
         return width;
     }
     
+    // Return height in pixels of this text.
     int Height() const {
         return ymax - ymin;
     }

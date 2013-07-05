@@ -20,6 +20,7 @@
 #define glBindFramebufferEXT        glBindFramebufferOES
 #define glDrawBuffers               glDrawBuffersOES
 #define glFramebufferTexture2DEXT   glFramebufferTexture2DOES
+#define glGetDoublev                glGetFloatv
 
 inline void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
 {

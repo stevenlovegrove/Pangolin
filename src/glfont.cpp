@@ -25,6 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/view.h>
+#include <pangolin/display.h>
+
 #include <pangolin/glfont.h>
 #include <pangolin/image_load.h>
 #include <pangolin/type_convert.h>
@@ -131,20 +134,33 @@ void GlText::Draw()
     }
 }
 
-void GlFont::glPrintf(int x, int y, const char *fmt, ...)
+void GlText::Draw(int x, int y)
 {
-    char text[MAX_TEXT_LENGTH];          
-    va_list ap;
+    glDisable( GL_DEPTH_TEST );
+    DisplayBase().ActivatePixelOrthographic();    
+    glTranslatef(x,y,0);
+    Draw();
+    glEnable( GL_DEPTH_TEST );
+}
+
+void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
+{
+    // find object point (x,y,z)' in pixel coords
+    GLdouble projection[16];
+    GLdouble modelview[16];
+    GLint        view[4];
+    GLdouble     scrn[3];
     
-    if( fmt != NULL ) {
-        va_start( ap, fmt );
-        vsnprintf( text, MAX_TEXT_LENGTH, fmt, ap );
-        va_end( ap );
-        
-        glDisable(GL_DEPTH_TEST); //causes text not to clip with geometry
-        DrawString(x, y, text);
-        glEnable(GL_DEPTH_TEST);
-    }
+    glGetDoublev(GL_PROJECTION_MATRIX, projection );
+    glGetDoublev(GL_MODELVIEW_MATRIX, modelview );
+    glGetIntegerv(GL_VIEWPORT, view );
+    
+    gluProject(x, y, z, modelview, projection, view,
+        scrn, scrn + 1, scrn + 2);
+    
+    DisplayBase().ActivatePixelOrthographic();
+    glTranslatef((int)scrn[0],(int)scrn[1],0);
+    Draw();
 }
 
 void LoadGlImage(GlTexture& tex, const std::string& filename, bool sampling_linear)
@@ -289,36 +305,6 @@ GlText GlFont::Text( const char* fmt, ... )
         }
     }
     return ret;
-}
-
-void GlFont::DrawString( int x, int y, std::string s )
-{
-    // Make sure we have at least one font
-    if(!mmCharacters.size()) LoadEmbeddedFont();
-    
-    glDisable( GL_DEPTH_TEST );
-    glPushMatrix();
-    glTranslatef(x,y,0);
-    glEnable( GL_TEXTURE_2D );
-    
-    for( size_t i = 0; i < s.length(); i++ ) {
-        const char c = s[i];
-        std::map< char, GlChar >::const_iterator it = mmCharacters.find( c );
-        
-        if( it != mmCharacters.end() )  {
-            const GlChar& bc = it->second;
-            if( i > 0 ) {
-                int adv = bc.StepXKerned( s[i-1] );
-                glTranslatef( adv, 0, 0);
-            }
-            bc.Draw();
-        }
-    }
-    
-    glDisable(GL_TEXTURE_2D);
-    
-    glPopMatrix();
-    glEnable( GL_DEPTH_TEST );
 }
 
 }

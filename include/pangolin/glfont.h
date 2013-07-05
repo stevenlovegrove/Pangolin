@@ -46,13 +46,7 @@ public:
     // Generate renderable GlText object from this font.
     GlText Text( const char* fmt, ... );
     
-    // printf style function take position to print to as well
-    void glPrintf(int x, int y, const char *fmt, ...);
-    void glPrintf(int x, int y, const std::string fmt, ...){ glPrintf(x,y, fmt.c_str()); }
-        
 protected:
-    void DrawString( int x, int y, std::string s );
-    
     std::string sName;
     int nSize;
     bool bBold;
