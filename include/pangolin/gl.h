@@ -97,7 +97,6 @@ private:
     GlTexture(const GlTexture&) {}
 };
 
-#ifndef HAVE_GLES
 struct GlRenderBuffer
 {
     GlRenderBuffer(GLint width, GLint height, GLint internal_format = GL_DEPTH_COMPONENT24);
@@ -105,17 +104,14 @@ struct GlRenderBuffer
     
     GLuint rbid;
 };
-#endif // HAVE_GLES
 
 struct GlFramebuffer
 {
     GlFramebuffer();
     ~GlFramebuffer();
     
-#ifndef HAVE_GLES
     GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth);
     GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth);
-#endif    
     
     void Bind() const;
     void Unbind() const;
@@ -124,10 +120,8 @@ struct GlFramebuffer
     // Return attachment texture is bound to (e.g. GL_COLOR_ATTACHMENT0_EXT)
     GLenum AttachColour(GlTexture& tex);
     
-#ifndef HAVE_GLES
     // Attach Depth render buffer to frame buffer
     void AttachDepth(GlRenderBuffer& rb);
-#endif
     
     GLuint fbid;
     unsigned attachments;
@@ -470,6 +464,27 @@ inline GlRenderBuffer::~GlRenderBuffer()
 {
     glDeleteRenderbuffersEXT(1, &rbid);
 }
+#else
+inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_format )
+{
+    // Use a texture instead...
+    glGenTextures(1, &rbid);
+    glBindTexture(GL_TEXTURE_2D, rbid);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format,
+            width, height,
+            0, internal_format, GL_UNSIGNED_SHORT, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+}
+
+inline GlRenderBuffer::~GlRenderBuffer()
+{
+    glDeleteTextures(1, &rbid);
+}
 #endif // HAVE_GLES
 
 ////////////////////////////////////////////////////////////////////////////
@@ -485,7 +500,6 @@ inline GlFramebuffer::~GlFramebuffer()
     glDeleteFramebuffersEXT(1, &fbid);
 }
 
-#ifndef HAVE_GLES
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
     : attachments(0)
 {
@@ -504,7 +518,6 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRe
     AttachDepth(depth);
     CheckGlDieOnError();
 }
-#endif
 
 inline void GlFramebuffer::Bind() const
 {
@@ -533,15 +546,17 @@ inline GLenum GlFramebuffer::AttachColour(GlTexture& tex )
     return color_attachment;
 }
 
-#ifndef HAVE_GLES
 inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
 {
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
+#ifndef HAVE_GLES
     glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rb.rbid);
+#else
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_OES, GL_TEXTURE_2D, rb.rbid, 0);    
+#endif
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     CheckGlDieOnError();
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 
