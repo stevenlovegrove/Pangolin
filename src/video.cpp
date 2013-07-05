@@ -52,58 +52,17 @@
 #include <pangolin/video_splitter.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/foreach.hpp>
-#define foreach BOOST_FOREACH
-
-using namespace std;
 
 namespace pangolin
 {
 
-const VideoPixelFormat SupportedVideoPixelFormats[] =
-{
-    {"GRAY8", 1, {8}, 8, false},
-    {"GRAY16LE", 1, {16}, 16, false},
-    {"Y400A", 2, {8,8}, 16, false},
-    {"RGB24", 3, {8,8,8}, 24, false},
-    {"BGR24", 3, {8,8,8}, 24, false},
-    {"YUYV422", 3, {4,2,2}, 16, false},
-    {"RGBA",  4, {8,8,8,8}, 32, false},
-    {"",0,{0,0,0,0},0,0}
-};
-
-VideoPixelFormat VideoFormatFromString(const std::string& format)
-{
-    for(int i=0; !SupportedVideoPixelFormats[i].format.empty(); ++i)
-        if(!format.compare(SupportedVideoPixelFormats[i].format))
-            return SupportedVideoPixelFormats[i];
-    throw VideoException("Unknown Format",format);
-}
-
-ostream& operator<< (ostream &out, Uri &uri)
-{
-    out << "scheme: " << uri.scheme << endl;
-    out << "url:    " << uri.url << endl;
-    out << "params:" << endl;
-    typedef pair<string,string> Param;
-    foreach( Param p, uri.params)
-    {
-        cout << "\t" << p.first << " = " << p.second << endl;
-    }
-    
-    return out;
-}
-
-istream& operator>> (istream &is, ImageDim &dim)
+std::istream& operator>> (std::istream &is, ImageDim &dim)
 {
     is >> dim.x; is.get(); is >> dim.y;
     return is;
 }
 
-istream& operator>> (istream &is, ImageRoi &roi)
+std::istream& operator>> (std::istream &is, ImageRoi &roi)
 {
     is >> roi.x; is.get(); is >> roi.y; is.get();
     is >> roi.w; is.get(); is >> roi.h;
@@ -126,60 +85,11 @@ VideoInput::~VideoInput()
     if(video) delete video;
 }
 
-Uri ParseUri(string str_uri)
-{
-    Uri uri;
-    
-    // Find Scheme delimiter
-    size_t ns = str_uri.find_first_of(':');
-    if( ns != string::npos )
-    {
-        uri.scheme = str_uri.substr(0,ns);
-    }else{
-//        throw VideoException("Bad video URI","no device scheme specified");
-        uri.scheme = "file";
-        uri.url = str_uri;
-        return uri;
-    }
-    
-    // Find url delimiter
-    size_t nurl = str_uri.find("//",ns+1);
-    if(nurl != string::npos)
-    {
-        // If there is space between the delimiters, extract protocol arguments
-        if( nurl-ns > 1)
-        {
-            if( str_uri[ns+1] == '[' && str_uri[nurl-1] == ']' )
-            {
-                string queries = str_uri.substr(ns+2, nurl-1 - (ns+2) );
-                vector<string> params;
-                split(params, queries, boost::is_any_of(","));
-                foreach(string p, params)
-                {
-                    vector<string> args;
-                    split(args, p, boost::is_any_of("=") );
-                    std::string key = args[0];
-                    std::string val = args.size() > 1 ? args[1] : "";
-                    boost::trim(key);
-                    boost::trim(val);
-                    uri.params[key] = val;
-                }
-            }else{
-                throw VideoException("Bad video URI");
-            }
-        }
-        
-        uri.url = str_uri.substr(nurl+2);
-    }
-    
-    return uri;
-}
-
 #ifdef HAVE_DC1394
 
-dc1394video_mode_t get_firewire_format7_mode(const string fmt)
+dc1394video_mode_t get_firewire_format7_mode(const std::string fmt)
 {
-    const string FMT7_prefix = "FORMAT7_";
+    const std::string FMT7_prefix = "FORMAT7_";
     
     if( boost::algorithm::starts_with(fmt, FMT7_prefix) )
     {
@@ -194,13 +104,13 @@ dc1394video_mode_t get_firewire_format7_mode(const string fmt)
     throw VideoException("Unknown video mode");
 }
 
-dc1394video_mode_t get_firewire_mode(unsigned width, unsigned height, const string fmt)
+dc1394video_mode_t get_firewire_mode(unsigned width, unsigned height, const std::string fmt)
 {
     for( dc1394video_mode_t video_mode=DC1394_VIDEO_MODE_MIN; video_mode<DC1394_VIDEO_MODE_MAX; video_mode = (dc1394video_mode_t)(video_mode +1) )
     {
         try {
             unsigned w,h;
-            string format;
+            std::string format;
             Dc1394ModeDetails(video_mode,w,h,format);
             
             if( w == width && h==height && !fmt.compare(format) )
@@ -259,7 +169,7 @@ VideoInterface* OpenVideo(std::string str_uri)
     {
         const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
         const int n = uri.Get<int>("n", 1);
-        string fmt  = uri.Get<std::string>("fmt","RGB24");        
+        std::string fmt  = uri.Get<std::string>("fmt","RGB24");        
         video = new TestVideo(dim.x,dim.y,n,fmt);
     }else
     if(!uri.scheme.compare("file") && boost::algorithm::ends_with(uri.url,"pvn") )
@@ -305,14 +215,14 @@ VideoInterface* OpenVideo(std::string str_uri)
     }else
 #ifdef HAVE_FFMPEG
     if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){
-        string outfmt = uri.Get<std::string>("fmt","RGB24");
+        std::string outfmt = uri.Get<std::string>("fmt","RGB24");
         boost::to_upper(outfmt);
         const int video_stream = uri.Get<int>("stream",-1);
         video = new FfmpegVideo(uri.url.c_str(), outfmt, "", false, video_stream);
     }else if( !uri.scheme.compare("mjpeg")) {
         video = new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" );
     }else if( !uri.scheme.compare("convert") ) {
-        string outfmt = uri.Get<std::string>("fmt","RGB24");
+        std::string outfmt = uri.Get<std::string>("fmt","RGB24");
         boost::to_upper(outfmt);
         VideoInterface* subvid = OpenVideo(uri.url);
         video = new FfmpegConverter(subvid,outfmt,FFMPEG_POINT);
@@ -337,7 +247,7 @@ VideoInterface* OpenVideo(std::string str_uri)
 #endif // HAVE_V4L
 #ifdef HAVE_DC1394
     if(!uri.scheme.compare("firewire") || !uri.scheme.compare("dc1394") ) {
-        string desired_format = uri.Get<std::string>("fmt","RGB24");
+        std::string desired_format = uri.Get<std::string>("fmt","RGB24");
         boost::to_upper(desired_format);
         const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
         const ImageDim desired_xy  = uri.Get<ImageDim>("pos", ImageDim(0,0));

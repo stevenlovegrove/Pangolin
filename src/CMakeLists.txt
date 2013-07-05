@@ -15,7 +15,7 @@ set(
 )
 
 ## Store list of source files
-set( SOURCES "image_load.cpp" )
+set( SOURCES image_load.cpp video_common.cpp )
 
 #######################################################
 ## User build options

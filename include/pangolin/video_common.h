@@ -61,11 +61,10 @@ struct VideoPixelFormat
     bool planar;
 };
 
-struct Uri
+class Uri
 {
-    std::string scheme;
-    std::string url;
-    std::map<std::string,std::string> params;
+public:
+    typedef std::map<std::string,std::string> ParamMap;
     
     bool Contains(const std::string& key) {
         return params.find(key) != params.end();
@@ -73,13 +72,17 @@ struct Uri
     
     template<typename T>
     T Get(const std::string& key, T default_val) {
-        std::map<std::string,std::string>::iterator v = params.find(key);
+        ParamMap::iterator v = params.find(key);
         if(v != params.end()) {
             return Convert<T, std::string>::Do(v->second);
         }else{
             return default_val;
         }
     }
+        
+    std::string scheme;
+    std::string url;
+    ParamMap params;    
 };
 
 struct ImageDim

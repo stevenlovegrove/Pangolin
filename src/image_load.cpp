@@ -150,22 +150,29 @@ TypedImage LoadTga(const std::string& filename)
     file = fopen(filename.c_str(), "rb");
     
     if(file) {
-        fread( &type, sizeof (char), 3, file );
+        bool success = true;
+        success &= fread( &type, sizeof (char), 3, file ) == 3;
         fseek( file, 12, SEEK_SET );
-        fread( &info, sizeof (char), 6, file );
+        success &= fread( &info, sizeof (char), 6, file ) == 6;
         
         const int width  = info[0] + (info[1] * 256);
         const int height = info[2] + (info[3] * 256);
         
         TypedImage img;
-        img.fmt = TgaFormat(info[4], type[2], type[1]);
-        img.Alloc(width, height, width*img.fmt.bpp / 8);
+        if(success) {
+            img.fmt = TgaFormat(info[4], type[2], type[1]);
+            img.Alloc(width, height, width*img.fmt.bpp / 8);
+            
+            //read in image data
+            const size_t data_size = img.w * img.pitch;
+            success &= fread(img.ptr, sizeof(unsigned char), data_size, file) == data_size;
+        }
         
-        //read in image data
-        fread(img.ptr, sizeof(unsigned char), img.w * img.pitch, file);
         fclose(file);
         
-        return img;
+        if (success) {
+            return img;
+        }
     }
     
     throw std::runtime_error("Unable to load TGA file, '" + filename + "'");    
@@ -200,10 +207,10 @@ TypedImage LoadPng(const std::string& filename)
     
     if( in )  {
         //check the header
-        int nBytes = 8;
+        const size_t nBytes = 8;
         png_byte header[nBytes];
-        fread(header, 1, nBytes, in);
-        int nIsPNG = png_sig_cmp(header, 0, nBytes);
+        size_t nread = fread(header, 1, nBytes, in);
+        int nIsPNG = png_sig_cmp(header, 0, nread);
         
         if ( nIsPNG != 0 )  {
             throw std::runtime_error( filename + " is not a PNG file" );
