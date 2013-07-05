@@ -33,6 +33,7 @@
 #ifdef BUILD_PANGOLIN_GUI
   #include <pangolin/gl.h>
   #include <pangolin/gldraw.h>
+  #include <pangolin/glstate.h>
   #include <pangolin/plotter.h>
   #include <pangolin/display.h>
   #include <pangolin/view.h>
