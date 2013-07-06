@@ -45,6 +45,11 @@
 #include <android/log.h>
 #include <android/window.h>
 
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 
 #include <jni.h>
 
@@ -502,14 +507,55 @@ static void* android_app_entry(void* param) {
     android_app->running = 1;
     pthread_cond_broadcast(&android_app->cond);
     pthread_mutex_unlock(&android_app->mutex);
+    
+    JNIEnv *env;
+    android_app->activity->vm->AttachCurrentThread(&env, 0);
+    jobject me = android_app->activity->clazz;
+    
+    jclass acl = env->GetObjectClass(me); //class pointer of NativeActivity
+    jmethodID giid = env->GetMethodID(acl, "getIntent", "()Landroid/content/Intent;");
+    jobject intent = env->CallObjectMethod(me, giid); //Got our intent
+    
+    jclass icl = env->GetObjectClass(intent); //class pointer of Intent
+    jmethodID gseid = env->GetMethodID(icl, "getStringExtra", "(Ljava/lang/String;)Ljava/lang/String;");
+    
+    jstring jsARGV = (jstring)env->CallObjectMethod(intent, gseid, env->NewStringUTF("ARGV"));
+    
+    std::string sargv;
+    
+    if(jsARGV) {
+        const char *chARGV = env->GetStringUTFChars(jsARGV, 0);
+        if(chARGV) {
+            sargv = std::string(chARGV);
+            LOGI("ARGV: pango %s", chARGV);
+        }
+        env->ReleaseStringUTFChars(jsARGV, chARGV);    
+    }
 
-    // Setup fake command line
-    char arg1[20];
-    strcpy(arg1, "pangolin");
-    char* argv[] = {arg1};
+    // Set up argv/argc to pass to users main
+    std::vector<std::string> vargv;
+    vargv.push_back("pango");
+    
+    // Parse parameters from ARGV android intent parameter
+    std::istringstream iss(sargv);
+    std::copy(std::istream_iterator<std::string>(iss),
+             std::istream_iterator<std::string>(),
+             std::back_inserter<std::vector<std::string> >(vargv));    
+
+    char* argv[vargv.size()+1];
+    for(size_t ac = 0; ac < vargv.size(); ++ac) {
+        argv[ac] = new char[vargv[ac].size()];
+        strcpy( argv[ac], vargv[ac].c_str() );
+    }
+    argv[vargv.size()] = NULL;
     
     // Call users standard main entry point.
-    main(1,argv);
+    main(vargv.size(), argv);
+    
+    // Clean up parameters
+    for(size_t ac = 0; ac < vargv.size(); ++ac) {
+        delete[] argv[ac];
+    }    
 
     android_app_destroy(android_app);
     
