@@ -100,15 +100,15 @@ endif()
 
 #######################################################
 ## Find optional dependencies
+find_package(CVARS 2.3 QUIET)
+if(CVARS_FOUND)
+  set(HAVE_CVARS 1)
+  list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
+endif()
 
 ## Don't even try to find these things on android
 if(NOT ANDROID)
-    find_package(CVARS 2.3 QUIET)
-    if(CVARS_FOUND)
-      set(HAVE_CVARS 1)
-      list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
-      list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
-    endif()
     
     find_package(CUDA QUIET)
     if(CUDA_FOUND)

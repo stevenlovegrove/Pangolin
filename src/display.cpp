@@ -76,6 +76,9 @@ __thread PangolinGl* context = 0;
 PangolinGl::PangolinGl()
     : quit(false), mouse_state(0), activeDisplay(0)
 {
+#if defined(HAVE_CVARS) && defined(HAVE_GLES)
+    console.m_fOverlayPercent = 0.5;
+#endif    
 }
 
 PangolinGl::~PangolinGl()

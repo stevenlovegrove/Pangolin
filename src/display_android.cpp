@@ -202,32 +202,44 @@ void UnpressAll()
     context->mouse_state = 0;
 }
 
-int PangolinKeyFromAndroidKeycode(int32_t keycode)
+int PangolinKeyFromAndroidKeycode(int32_t keycode, bool shift)
 {
     if( AKEYCODE_0 <= keycode && keycode <= AKEYCODE_9) {
         return '0' + (keycode - AKEYCODE_0);
     }
     
     if( AKEYCODE_A <= keycode && keycode <= AKEYCODE_Z) {
-        return 'a' + (keycode - AKEYCODE_A);
+        return (shift ? 'A' : 'a') + (keycode - AKEYCODE_A);
     }
     
-    switch (keycode) {
-    case AKEYCODE_COMMA:     return ',';
-    case AKEYCODE_PERIOD:    return '.';
-    case AKEYCODE_SPACE:     return ' ';
-    case AKEYCODE_ENTER:     return '\r';
-    case AKEYCODE_TAB:       return '\t';
-    case AKEYCODE_DEL:       return '\b';
-    case AKEYCODE_SLASH:     return '/';
-    case AKEYCODE_BACKSLASH: return '\\';
-    case AKEYCODE_SEMICOLON: return ';';
-    case AKEYCODE_APOSTROPHE:return '\'';
-    case AKEYCODE_MINUS:     return '-';
-    case AKEYCODE_EQUALS:    return '=';
-    case AKEYCODE_PLUS:      return '+';
-    case AKEYCODE_AT:        return '@';
-    default:                 return '?';
+    if(shift) {
+        switch (keycode) {
+        case AKEYCODE_GRAVE:     return '~';
+        default:
+            LOGI("Unknown keycode (with shift): %d", keycode);
+            return '?';
+        }
+    }else{
+        switch (keycode) {
+        case AKEYCODE_COMMA:     return ',';
+        case AKEYCODE_PERIOD:    return '.';
+        case AKEYCODE_SPACE:     return ' ';
+        case AKEYCODE_ENTER:     return '\r';
+        case AKEYCODE_TAB:       return '\t';
+        case AKEYCODE_DEL:       return '\b';
+        case AKEYCODE_SLASH:     return '/';
+        case AKEYCODE_BACKSLASH: return '\\';
+        case AKEYCODE_SEMICOLON: return ';';
+        case AKEYCODE_APOSTROPHE:return '\'';
+        case AKEYCODE_MINUS:     return '-';
+        case AKEYCODE_EQUALS:    return '=';
+        case AKEYCODE_PLUS:      return '+';
+        case AKEYCODE_AT:        return '@';
+        case AKEYCODE_GRAVE:     return '`';
+        default:
+            LOGI("Unknown keycode: %d", keycode);
+            return '?';
+        }
     }
 }
 
@@ -281,11 +293,17 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
         
         return 1;
     }else if(AINPUT_EVENT_TYPE_KEY) {
-        const int32_t action = AKeyEvent_getAction(event);
+        static bool shift = false;
         
+        const int32_t action = AKeyEvent_getAction(event);
         const int32_t keycode  = AKeyEvent_getKeyCode(event);
-        const int32_t scancode = AKeyEvent_getScanCode(event);
-        const unsigned char key = PangolinKeyFromAndroidKeycode(keycode);
+        
+        if(keycode == AKEYCODE_SHIFT_LEFT) {
+            shift = (action == AKEY_EVENT_ACTION_DOWN);
+            return 1;
+        }
+        
+        unsigned char key = PangolinKeyFromAndroidKeycode(keycode, shift);
         
         if(action == AKEY_EVENT_ACTION_DOWN) {
             pangolin::process::Keyboard(key, pangolin::process::last_x,pangolin::process::last_y);
@@ -293,7 +311,7 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
             pangolin::process::KeyboardUp(key, pangolin::process::last_x,pangolin::process::last_y);
         }
     }
-    return 0;
+    return 1;
 }
 
 /**
@@ -935,6 +953,7 @@ void FinishAndroidFrame()
 {
     ProcessAndroidEvents();
     RenderViews();
+    PostRender();
     eglSwapBuffers(g_engine.display, g_engine.surface);    
 }
 

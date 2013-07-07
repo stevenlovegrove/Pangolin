@@ -38,7 +38,7 @@
 #endif // BUILD_PANGOLIN_VIDEO
 
 #ifdef HAVE_CVARS
-#include <GLConsole/GLConsole.h>
+#include <pangolin/compat/glconsole.h>
 #endif // HAVE_CVARS
 
 namespace pangolin
