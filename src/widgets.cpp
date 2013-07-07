@@ -28,6 +28,8 @@
 #include <pangolin/widgets.h>
 #include <pangolin/display.h>
 #include <pangolin/display_internal.h>
+#include <pangolin/gldraw.h>
+
 #include <pangolin/compat/glutbitmap.h>
 
 #include <boost/thread/thread.hpp>
@@ -45,8 +47,14 @@ extern __thread PangolinGl* context;
 
 const static int border = 1;
 const static int tab_w = 15;
-const static int tab_h = 20;
 const static int tab_p = 5;
+#ifdef HAVE_GLES
+// a little more finger friendly
+const static int tab_h = 30;
+#else
+const static int tab_h = 20;
+#endif
+
 const static GLfloat colour_s1[4] = {0.2, 0.2, 0.2, 1.0};
 const static GLfloat colour_s2[4] = {0.6, 0.6, 0.6, 1.0};
 const static GLfloat colour_bg[4] = {0.9, 0.9, 0.9, 1.0};
@@ -94,24 +102,7 @@ void glRect(Viewport v, GLfloat inset)
 void DrawShadowRect(Viewport& v)
 {
     glColor4fv(colour_s2);
-#ifndef HAVE_GLES
-    glBegin(GL_LINE_LOOP);
-    glVertex2i(v.l,v.b);
-    glVertex2i(v.l,v.t());
-    glVertex2i(v.r(),v.t());
-    glVertex2i(v.r(),v.b);
-    glEnd();    
-#else
-    GLfloat verts[] = { (float)v.l,(float)v.b,
-                        (float)v.r(),(float)v.b,
-                        (float)v.r(),(float)v.t(),
-                        (float)v.l,(float)v.t() };    
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_FLOAT, 0, verts);
-    glDrawArrays(GL_LINE_LOOP, 0, 4);
-    glDisableClientState(GL_VERTEX_ARRAY);
-#endif
-    
+    glDrawRectPerimeter(v.l, v.b, v.r(), v.t());
 }
 
 void DrawShadowRect(Viewport& v, bool pushed)
@@ -119,39 +110,21 @@ void DrawShadowRect(Viewport& v, bool pushed)
     const GLfloat* c1 = pushed ? colour_s1 : colour_s2;
     const GLfloat* c2 = pushed ? colour_s2 : colour_s1;
     
-    glColor4fv(c1);
-#ifndef HAVE_GLES    
-    glBegin(GL_LINE_STRIP);
-    glVertex2i(v.l,v.b);
-    glVertex2i(v.l,v.t());
-    glVertex2i(v.r(),v.t());
-    glEnd();
-#else
-    GLfloat verts1[] = { (float)v.l,(float)v.b,
-                         (float)v.l,(float)v.t(),
-                         (float)v.r(),(float)v.t() };
+    GLfloat vs[] = { (float)v.l,(float)v.b,
+                     (float)v.l,(float)v.t(),
+                     (float)v.r(),(float)v.t(),
+                     (float)v.r(),(float)v.b,
+                     (float)v.l,(float)v.b };
+    
     glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_FLOAT, 0, verts1);
+    glVertexPointer(2, GL_FLOAT, 0, vs);
+    glColor4fv(c1);
     glDrawArrays(GL_LINE_STRIP, 0, 3);
-    glDisableClientState(GL_VERTEX_ARRAY);    
-#endif
     
     glColor4fv(c2);
-#ifndef HAVE_GLES    
-    glBegin(GL_LINE_STRIP);
-    glVertex2i(v.r(),v.t());
-    glVertex2i(v.r(),v.b);
-    glVertex2i(v.l,v.b);
-    glEnd();
-#else
-    GLfloat verts2[] = { (float)v.r(),(float)v.t(),
-                         (float)v.r(),(float)v.b,
-                         (float)v.l,(float)v.b };
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_FLOAT, 0, verts2);
-    glDrawArrays(GL_LINE_STRIP, 0, 3);
+    glDrawArrays(GL_LINE_STRIP, 2, 3);
     glDisableClientState(GL_VERTEX_ARRAY);    
-#endif
+
 }
 
 Panel::Panel()
@@ -184,20 +157,15 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
     // already exist
     if( pnl == context->named_managed_views.end() )
     {
-        if( reg_type_name == typeid(bool).name() )
-        {
-            View* nv = var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-            context->named_managed_views[name] = nv;
-            thisptr->views.push_back(nv);
-            thisptr->ResizeChildren();
-        }else if( reg_type_name == typeid(double).name() || reg_type_name == typeid(float).name() || reg_type_name == typeid(int).name() || reg_type_name == typeid(unsigned int).name() )
-        {
-            View* nv = new Slider(title,var);
-            context->named_managed_views[name] = nv;
-            thisptr->views.push_back( nv );
-            thisptr->ResizeChildren();
+        View* nv = NULL;
+        if( reg_type_name == typeid(bool).name() ) {
+            nv = var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
+        }else if( reg_type_name == typeid(double).name() || reg_type_name == typeid(float).name() || reg_type_name == typeid(int).name() || reg_type_name == typeid(unsigned int).name() ) {
+            nv = new Slider(title,var);
         }else{
-            View* nv = new TextInput(title,var);
+            nv = new TextInput(title,var);
+        }
+        if(nv) {
             context->named_managed_views[name] = nv;
             thisptr->views.push_back( nv );
             thisptr->ResizeChildren();
@@ -256,7 +224,7 @@ View& CreatePanel(const std::string& name)
 Button::Button(string title, _Var& tv)
     : Widget<bool>(title,tv), down(false)
 {
-    top = 1.0; bottom = Attach::Pix(-20);
+    top = 1.0; bottom = Attach::Pix(-tab_h);
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
@@ -295,7 +263,7 @@ void Button::ResizeChildren()
 Checkbox::Checkbox(std::string title, _Var& tv)
     : Widget<bool>(title,tv)
 {
-    top = 1.0; bottom = Attach::Pix(-20);
+    top = 1.0; bottom = Attach::Pix(-tab_h);
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
@@ -338,7 +306,7 @@ void Checkbox::Render()
 Slider::Slider(std::string title, _Var& tv)
     : Widget<double>(title+":", tv), lock_bounds(true)
 {
-    top = 1.0; bottom = Attach::Pix(-20);
+    top = 1.0; bottom = Attach::Pix(-tab_h);
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
@@ -473,7 +441,7 @@ void Slider::Render()
 TextInput::TextInput(std::string title, _Var& tv)
     : Widget<std::string>(title+":", tv), do_edit(false)
 {
-    top = 1.0; bottom = Attach::Pix(-20);
+    top = 1.0; bottom = Attach::Pix(-tab_h);
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
