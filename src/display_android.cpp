@@ -70,10 +70,6 @@ struct engine {
     android_app* app;
     ANativeActivity* activity;
     
-    ASensorManager* sensorManager;
-    const ASensor* accelerometerSensor;
-    ASensorEventQueue* sensorEventQueue;
-
     int has_focus;
     EGLDisplay display;
     EGLSurface surface;
@@ -206,15 +202,44 @@ void UnpressAll()
     context->mouse_state = 0;
 }
 
+int PangolinKeyFromAndroidKeycode(int32_t keycode)
+{
+    if( AKEYCODE_0 <= keycode && keycode <= AKEYCODE_9) {
+        return '0' + (keycode - AKEYCODE_0);
+    }
+    
+    if( AKEYCODE_A <= keycode && keycode <= AKEYCODE_Z) {
+        return 'a' + (keycode - AKEYCODE_A);
+    }
+    
+    switch (keycode) {
+    case AKEYCODE_COMMA:     return ',';
+    case AKEYCODE_PERIOD:    return '.';
+    case AKEYCODE_SPACE:     return ' ';
+    case AKEYCODE_ENTER:     return '\r';
+    case AKEYCODE_TAB:       return '\t';
+    case AKEYCODE_DEL:       return '\b';
+    case AKEYCODE_SLASH:     return '/';
+    case AKEYCODE_BACKSLASH: return '\\';
+    case AKEYCODE_SEMICOLON: return ';';
+    case AKEYCODE_APOSTROPHE:return '\'';
+    case AKEYCODE_MINUS:     return '-';
+    case AKEYCODE_EQUALS:    return '=';
+    case AKEYCODE_PLUS:      return '+';
+    case AKEYCODE_AT:        return '@';
+    default:                 return '?';
+    }
+}
+
 /**
  * Process the next input event.
  */
 static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) {
     struct engine* engine = (struct engine*)app->userData;
 
-//    LOGI("---------------------------------------------------------------------");
+    const int32_t input_type = AInputEvent_getType(event);
     
-    if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
+    if (input_type == AINPUT_EVENT_TYPE_MOTION) {
         engine->has_focus = 1;        
         
         const float x = AMotionEvent_getX(event, 0);
@@ -255,6 +280,18 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
         }
         
         return 1;
+    }else if(AINPUT_EVENT_TYPE_KEY) {
+        const int32_t action = AKeyEvent_getAction(event);
+        
+        const int32_t keycode  = AKeyEvent_getKeyCode(event);
+        const int32_t scancode = AKeyEvent_getScanCode(event);
+        const unsigned char key = PangolinKeyFromAndroidKeycode(keycode);
+        
+        if(action == AKEY_EVENT_ACTION_DOWN) {
+            pangolin::process::Keyboard(key, pangolin::process::last_x,pangolin::process::last_y);
+        }else{
+            pangolin::process::KeyboardUp(key, pangolin::process::last_x,pangolin::process::last_y);
+        }
     }
     return 0;
 }
@@ -283,26 +320,10 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             engine_term_display(engine);
             break;
         case APP_CMD_GAINED_FOCUS:
-            // When our app gains focus, we start monitoring the accelerometer.
-            if (engine->accelerometerSensor != NULL) {
-                ASensorEventQueue_enableSensor(engine->sensorEventQueue,
-                        engine->accelerometerSensor);
-                // We'd like to get 60 events per second (in us).
-                ASensorEventQueue_setEventRate(engine->sensorEventQueue,
-                        engine->accelerometerSensor, (1000L/60)*1000);
-            }
             engine->has_focus = 1;            
             break;
         case APP_CMD_LOST_FOCUS:
-            // When our app loses focus, we stop monitoring the accelerometer.
-            // This is to avoid consuming battery while not being used.
-            if (engine->accelerometerSensor != NULL) {
-                ASensorEventQueue_disableSensor(engine->sensorEventQueue,
-                        engine->accelerometerSensor);
-            }
-            // Also stop animating.
             engine->has_focus = 0;
-            engine_draw_frame(engine);
             break;
     }
 }
@@ -311,6 +332,69 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
 // Define library entry point.
 extern "C" {
+
+JNIEnv* GetEnvAttachThread(JavaVM* vm)
+{
+    JNIEnv* env;
+    switch (vm->GetEnv((void**)&env, JNI_VERSION_1_6)) {
+    case JNI_OK:
+        break;
+    case JNI_EDETACHED:
+        if (vm->AttachCurrentThread(&env, NULL)!=0) {
+            throw std::runtime_error("Could not attach current thread");
+        }
+        break;
+    case JNI_EVERSION:
+        throw std::runtime_error("Invalid java version");
+    }
+    return env;
+}
+
+// https://groups.google.com/d/msg/android-ndk/Tk3g00wLKhk/TJQucoaE_asJ
+void displayKeyboard(android_app* app, bool pShow) {
+    jint lFlags = 0;
+    JNIEnv* lJNIEnv = GetEnvAttachThread(app->activity->vm);
+
+    // Retrieves NativeActivity. 
+    jobject lNativeActivity = app->activity->clazz; 
+    jclass ClassNativeActivity = lJNIEnv->GetObjectClass(lNativeActivity); 
+
+    // Retrieves Context.INPUT_METHOD_SERVICE. 
+    jclass ClassContext = lJNIEnv->FindClass("android/content/Context"); 
+    jfieldID FieldINPUT_METHOD_SERVICE = lJNIEnv->GetStaticFieldID(ClassContext, "INPUT_METHOD_SERVICE", "Ljava/lang/String;"); 
+    jobject INPUT_METHOD_SERVICE = lJNIEnv->GetStaticObjectField(ClassContext, FieldINPUT_METHOD_SERVICE); 
+//    jniCheck(INPUT_METHOD_SERVICE); 
+
+    // lInputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE). 
+    jclass ClassInputMethodManager = lJNIEnv->FindClass( "android/view/inputmethod/InputMethodManager"); 
+    jmethodID MethodGetSystemService = lJNIEnv->GetMethodID( ClassNativeActivity, "getSystemService",  "(Ljava/lang/String;)Ljava/lang/Object;"); 
+    jobject lInputMethodManager = lJNIEnv->CallObjectMethod( lNativeActivity, MethodGetSystemService, INPUT_METHOD_SERVICE); 
+
+    // lDecorView = getWindow().getDecorView(). 
+    jmethodID MethodGetWindow = lJNIEnv->GetMethodID( ClassNativeActivity, "getWindow",  "()Landroid/view/Window;"); 
+    jobject lWindow = lJNIEnv->CallObjectMethod(lNativeActivity,  MethodGetWindow); 
+    jclass ClassWindow = lJNIEnv->FindClass(  "android/view/Window"); 
+    jmethodID MethodGetDecorView = lJNIEnv->GetMethodID( ClassWindow, "getDecorView", "()Landroid/view/View;"); 
+    jobject lDecorView = lJNIEnv->CallObjectMethod(lWindow,  MethodGetDecorView); 
+
+    if (pShow) { 
+        // Runs lInputMethodManager.showSoftInput(...). 
+        jmethodID MethodShowSoftInput = lJNIEnv->GetMethodID( ClassInputMethodManager, "showSoftInput", "(Landroid/view/View;I)Z"); 
+        /*jboolean lResult = */lJNIEnv->CallBooleanMethod( lInputMethodManager, MethodShowSoftInput, lDecorView, lFlags); 
+    } else { 
+        // Runs lWindow.getViewToken() 
+        jclass ClassView = lJNIEnv->FindClass( "android/view/View"); 
+        jmethodID MethodGetWindowToken = lJNIEnv->GetMethodID( ClassView, "getWindowToken", "()Landroid/os/IBinder;"); 
+        jobject lBinder = lJNIEnv->CallObjectMethod(lDecorView, MethodGetWindowToken); 
+
+        // lInputMethodManager.hideSoftInput(...). 
+        jmethodID MethodHideSoftInput = lJNIEnv->GetMethodID( ClassInputMethodManager, "hideSoftInputFromWindow", "(Landroid/os/IBinder;I)Z"); 
+        /*jboolean lRes = */lJNIEnv->CallBooleanMethod( lInputMethodManager, MethodHideSoftInput, lBinder, lFlags); 
+    } 
+
+//    // Finished with the JVM. 
+//    lJavaVM->DetachCurrentThread();
+}
 
 pangolin::engine g_engine;
 
@@ -463,7 +547,21 @@ static void android_app_destroy(struct android_app* android_app) {
 static void process_input(struct android_app* app, struct android_poll_source* source) {
     AInputEvent* event = NULL;
     if (AInputQueue_getEvent(app->inputQueue, &event) >= 0) {
-        LOGV("New input event: type=%d\n", AInputEvent_getType(event));
+        
+        // HACK: Override back buttom to show / hide keyboard.
+        int type = AInputEvent_getType(event);
+        if(type == AINPUT_EVENT_TYPE_KEY) {
+            if(AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_DOWN) {
+                static bool keyboard_shown = false;
+                if( AKeyEvent_getKeyCode(event) == AKEYCODE_BACK ) {
+                    displayKeyboard(app,!keyboard_shown);
+                    keyboard_shown = !keyboard_shown;
+                    AInputQueue_finishEvent(app->inputQueue, event, 1);
+                    return;
+                }
+            }
+        }    
+        
         if (AInputQueue_preDispatchEvent(app->inputQueue, event)) {
             return;
         }
@@ -508,8 +606,7 @@ static void* android_app_entry(void* param) {
     pthread_cond_broadcast(&android_app->cond);
     pthread_mutex_unlock(&android_app->mutex);
     
-    JNIEnv *env;
-    android_app->activity->vm->AttachCurrentThread(&env, 0);
+    JNIEnv *env = GetEnvAttachThread(android_app->activity->vm);
     jobject me = android_app->activity->clazz;
     
     jclass acl = env->GetObjectClass(me); //class pointer of NativeActivity
@@ -558,9 +655,6 @@ static void* android_app_entry(void* param) {
     }    
 
     android_app_destroy(android_app);
-    
-    // Process terminate commands?
-    pangolin::ProcessAndroidEvents();
     
     LOGV("-android_app_entry");
     
@@ -751,6 +845,10 @@ static void onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue)
     android_app_set_input((struct android_app*)activity->instance, NULL);
 }
 
+static void onContentRectChanged(ANativeActivity* activity, const ARect* rect) {
+    LOGV("onContentRectChanged: %p -- (%d, %d), (%d, %d)\n", activity, rect->left, rect->top, rect->right, rect->bottom);
+}
+
 void ANativeActivity_onCreate(
         ANativeActivity* activity,
         void* savedState,
@@ -769,6 +867,7 @@ void ANativeActivity_onCreate(
     activity->callbacks->onNativeWindowDestroyed = onNativeWindowDestroyed;
     activity->callbacks->onInputQueueCreated = onInputQueueCreated;
     activity->callbacks->onInputQueueDestroyed = onInputQueueDestroyed;
+    activity->callbacks->onContentRectChanged = onContentRectChanged;
 
     // Create threaded android_app
     android_app* app = android_app_create(activity, savedState, savedStateSize);
@@ -781,13 +880,6 @@ void ANativeActivity_onCreate(
     app->onInputEvent = pangolin::engine_handle_input;
     g_engine.app = app;
     g_engine.activity = activity;
-    
-    // Prepare to monitor accelerometer
-//    g_engine.sensorManager = ASensorManager_getInstance();
-//    g_engine.accelerometerSensor = ASensorManager_getDefaultSensor(g_engine.sensorManager,
-//            ASENSOR_TYPE_ACCELEROMETER);
-//    g_engine.sensorEventQueue = ASensorManager_createEventQueue(g_engine.sensorManager,
-//            app->looper, LOOPER_ID_USER, NULL, NULL);
 
 //    // Load existing state if it exists
 //    if (app->savedState != NULL) {
@@ -828,20 +920,7 @@ void ProcessAndroidEvents()
             if (source != NULL) {
                 source->process(g_engine.app, source);
             }
-    
-//            // If a sensor has data, process it now.
-//            if (ident == LOOPER_ID_USER) {
-//                if (g_engine.accelerometerSensor != NULL) {
-//                    ASensorEvent event;
-//                    while (ASensorEventQueue_getEvents(g_engine.sensorEventQueue,
-//                            &event, 1) > 0) {
-//    //                        LOGI("accelerometer: x=%f y=%f z=%f",
-//    //                                event.acceleration.x, event.acceleration.y,
-//    //                                event.acceleration.z);
-//                    }
-//                }
-//            }
-    
+        
             // Check if we are exiting.
             if (g_engine.app->destroyRequested != 0) {
                 engine_term_display(&g_engine);
@@ -854,11 +933,9 @@ void ProcessAndroidEvents()
 
 void FinishAndroidFrame()
 {
-    LOGV("+FinishAndroidFrame");
     ProcessAndroidEvents();
     RenderViews();
     eglSwapBuffers(g_engine.display, g_engine.surface);    
-    LOGV("-FinishAndroidFrame");
 }
 
 // Implement platform agnostic version

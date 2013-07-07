@@ -35,7 +35,7 @@ if(ANDROID)
         <activity android:name=\"android.app.NativeActivity\"
                 android:label=\"${activity_name}\"
                 android:screenOrientation=\"landscape\"
-                android:configChanges=\"orientation|keyboardHidden\"
+                android:configChanges=\"orientation|keyboard|keyboardHidden\"
                 android:theme=\"@android:style/Theme.NoTitleBar.Fullscreen\"
                 >
             <!-- Tell NativeActivity the name of our .so -->
