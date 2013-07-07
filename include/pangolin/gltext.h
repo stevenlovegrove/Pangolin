@@ -53,6 +53,9 @@ public:
     // Render at (x,y,z)' in object coordinates,
     // keeping text size and orientation constant
     void Draw(GLfloat x, GLfloat y, GLfloat z = 0.0f);
+
+    // Render at (x,y,z)' in window coordinates.
+    void DrawWindow(GLfloat x, GLfloat y, GLfloat z = 0.0f);
     
     // Return text that this object signifies.
     const std::string& Text() const {

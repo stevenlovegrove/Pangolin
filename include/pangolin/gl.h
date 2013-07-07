@@ -335,6 +335,7 @@ inline void GlTexture::Upload(const void* image, GLenum data_layout, GLenum data
 {
     Bind();
     glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_layout,data_type,image);
+    CheckGlDieOnError();
 }
 
 #ifndef HAVE_GLES

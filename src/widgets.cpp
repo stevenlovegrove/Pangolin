@@ -28,6 +28,7 @@
 #include <pangolin/widgets.h>
 #include <pangolin/display.h>
 #include <pangolin/display_internal.h>
+#include <pangolin/compat/glutbitmap.h>
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -38,16 +39,6 @@ using namespace std;
 
 namespace pangolin
 {
-
-#ifdef HAVE_GLES
-// TODO: Implement text for GL ES
-// dummy implementations
-void glRasterPos2f(int,int){}
-void glRasterPos2fv(const GLfloat *v){}
-void glutBitmapString(void *font, const unsigned char *str){}
-int glutBitmapLength(void *font, const unsigned char *string){return 0;}
-#define GLUT_BITMAP_HELVETICA_12 0;
-#endif
 
 // Pointer to context defined in display.cpp
 extern __thread PangolinGl* context;

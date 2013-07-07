@@ -38,6 +38,9 @@ namespace pangolin {
 class GlFont
 {
 public:
+    // Singleton instance if requested.
+    static GlFont& I();
+    
     // Load font now (requires OpenGL context)
     bool LoadFontFromText( char* str_xml );
     bool LoadEmbeddedFont();
