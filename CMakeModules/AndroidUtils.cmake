@@ -159,7 +159,7 @@ void ANativeActivity_onCreate(ANativeActivity * app, void * ud, size_t udsize) {
 
     macro( package_with_target prog_name lib_path )
         # Mark lib_path as dependent of prog_name
-        set_property(TARGET ${prog_name} APPEND PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG ${lib_path} )
+        set_property(TARGET ${prog_name} APPEND PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE ${lib_path} )
 
         # If prog_name is to be packaged, add file copy command to package .so's.
         get_target_property( package_dependent_libs ${prog_name} MAKE_APK )
@@ -175,7 +175,14 @@ void ANativeActivity_onCreate(ANativeActivity * app, void * ud, size_t udsize) {
 
     macro( add_to_depend_libs prog_name depend_file lib_name )
         # Recursively Process dependents of lib_name
-        get_target_property(TARGET_LIBS ${lib_name} IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)
+        get_target_property(TARGET_LIBS ${lib_name} IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE)
+        if(NOT TARGET_LIBS)
+            get_target_property(TARGET_LIBS ${lib_name} IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)
+        endif()
+        if(NOT TARGET_LIBS)
+            get_target_property(TARGET_LIBS ${lib_name} IMPORTED_LINK_INTERFACE_LIBRARIES_DEBUG)
+        endif()
+
         foreach(SUBLIB ${TARGET_LIBS})
             if(SUBLIB)
                 add_to_depend_libs( ${prog_name} ${depend_file} ${SUBLIB} )
