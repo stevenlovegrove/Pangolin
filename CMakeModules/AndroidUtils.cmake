@@ -1,5 +1,5 @@
 if(NOT ANDROID_PACKAGE_NAME)
-  set(ANDROID_PACKAGE_NAME "edu.gwu.robotics")
+  set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
 endif()
 
 # Configure build environment to automatically generate APK's instead of executables.
@@ -150,37 +150,55 @@ void ANativeActivity_onCreate(ANativeActivity * app, void * ud, size_t udsize) {
         )
         add_dependencies(run ${prog_name}-run)
 
+        # Flag to package dependent libs
+        set_property(TARGET ${prog_name} APPEND PROPERTY MAKE_APK 1 )        
+
         # Clear shared library loading header
         file( WRITE "${CMAKE_CURRENT_BINARY_DIR}/${prog_name}_shared_load.h" "")
     endmacro()
 
-    macro( add_to_depend_libs prog_name depend_file lib_name )
-            # dependents of lib
-            get_target_property(TARGET_LIBS ${lib_name} IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)
-            foreach(SUBLIB ${TARGET_LIBS})
-                if(SUBLIB)
-                    add_to_depend_libs( ${prog_name} ${depend_file} ${SUBLIB} )
-                endif()
-            endforeach()
+    macro( package_with_target prog_name lib_path )
+        # Mark lib_path as dependent of prog_name
+        set_property(TARGET ${prog_name} APPEND PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG ${lib_path} )
 
-            # lib itself
-            get_target_property(TARGET_LIB ${lib_name} IMPORTED_LOCATION_NOCONFIG)
-            if(TARGET_LIB)
-                get_filename_component(target_filename ${TARGET_LIB} NAME)
-                file( APPEND ${depend_file} "load_lib(LIB_PATH \"${target_filename}\" );\n")
-                add_custom_command(TARGET ${prog_name} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    ${TARGET_LIB} "${CMAKE_CURRENT_BINARY_DIR}/libs/${ANDROID_NDK_ABI_NAME}"
-                )
-            endif()
+        # If prog_name is to be packaged, add file copy command to package .so's.
+        get_target_property( package_dependent_libs ${prog_name} MAKE_APK )
+        if( package_dependent_libs )
+            get_filename_component(target_filename ${lib_path} NAME)
+            file( APPEND ${depend_file} "load_lib(LIB_PATH \"${target_filename}\" );\n")
+            add_custom_command(TARGET ${prog_name} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${lib_path} "${CMAKE_CURRENT_BINARY_DIR}/libs/${ANDROID_NDK_ABI_NAME}/"
+            )
+        endif()
     endmacro()
 
+    macro( add_to_depend_libs prog_name depend_file lib_name )
+        # Recursively Process dependents of lib_name
+        get_target_property(TARGET_LIBS ${lib_name} IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)
+        foreach(SUBLIB ${TARGET_LIBS})
+            if(SUBLIB)
+                add_to_depend_libs( ${prog_name} ${depend_file} ${SUBLIB} )
+            endif()
+        endforeach()
+
+        # Check if lib itself is an external shared library
+        if("${lib_name}" MATCHES "\\.so$")
+            package_with_target( ${prog_name} ${lib_name} )
+        endif()
+
+        # Check if lib itself is an internal shared library
+        get_target_property(TARGET_LIB ${lib_name} LOCATION)
+        if("${TARGET_LIB}" MATCHES "\\.so$")
+            package_with_target( ${prog_name} ${TARGET_LIB} )
+        endif()
+    endmacro()
 
     macro( target_link_libraries prog_name)
         # _target_link_libraries corresponds to original
         _target_link_libraries( ${prog_name} ${ARGN} )
 
-        # Add to shared library loading header.
+        # Recursively process dependencies
         set(depend_file "${CMAKE_CURRENT_BINARY_DIR}/${prog_name}_shared_load.h" )
         foreach( LIB ${ARGN} )
             add_to_depend_libs( ${prog_name} ${depend_file} ${LIB} )
