@@ -16,11 +16,14 @@ if(CUDA_FOUND)
     add_definitions(-DUSE_CUTIL)
     include_directories( ${CUDA_SDK_ROOT_DIR}/common/inc )
     link_directories( ${CUDA_SDK_ROOT_DIR}/lib )
-    link_libraries(libcutil_x86_64.a)
   endif()
 
   cuda_add_executable(
     VBODisplay
     main.cpp kernal.cu
   )
+
+  if(CUDA_SDK_ROOT_DIR AND EXISTS("${CUDA_SDK_ROOT_DIR}/lib/libcutil_x86_64.a") )
+    target_link_libraries(VBODisplay libcutil_x86_64.a)
+  endif()
 endif()
