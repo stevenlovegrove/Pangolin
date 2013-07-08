@@ -12,6 +12,7 @@ if(NOT ANDROID)
    option(BUILD_SHARED_LIBS "Build Shared Library" ON)
 else()
    set(BUILD_SHARED_LIBS OFF)
+   set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
    include(AndroidUtils)
 endif()
 
