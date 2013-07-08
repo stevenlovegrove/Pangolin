@@ -52,7 +52,7 @@
 //
 // openni - capture video / depth from an OpenNI streaming device (Kinect / Xtrion etc)
 //           sensor modes containing '8' will truncate to 8-bits.
-//           imgN=rgb|ir|ir8|ir+|ir8+|depth
+//           imgN=rgb|ir|ir8|ir+|ir8+|depth|reg_depth
 //  e.g. "openni://'
 //  e.g. "openni:[img1=rgb,img2=depth]//"
 //  e.g. "openni:[img1=ir]//"

@@ -51,6 +51,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
     bool use_depth = false;
     bool use_ir = false;
     bool use_rgb = false;
+    bool depth_to_color = false;
     
     for(int i=0; i<2; ++i) {
         VideoPixelFormat fmt;
@@ -58,6 +59,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
         // Establish output pixel format for sensor streams
         switch( sensor_type[i] ) {
         case OpenNiDepth:
+        case OpenNiDepthRegistered:
         case OpenNiIr:
         case OpenNiIrProj:
             fmt = VideoFormatFromString("GRAY16LE");
@@ -75,6 +77,8 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
         }
         
         switch( sensor_type[i] ) {
+        case OpenNiDepthRegistered:
+            depth_to_color = true;
         case OpenNiDepth:
             use_depth = true;
             break;
@@ -99,6 +103,18 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
         streams.push_back(stream);
     }
     
+    if( use_rgb ) {
+        nRetVal = imageNode.Create(context);
+        if (nRetVal != XN_STATUS_OK) {
+            std::cerr << "imageNode.Create: " << xnGetStatusString(nRetVal) << std::endl;
+        }else{
+            nRetVal = imageNode.SetMapOutputMode(mapMode);
+            if (nRetVal != XN_STATUS_OK) {
+                std::cerr << "imageNode.SetMapOutputMode: " << xnGetStatusString(nRetVal) << std::endl;
+            }
+        }
+    }
+    
     if( use_depth ) {
         nRetVal = depthNode.Create(context);
         if (nRetVal != XN_STATUS_OK) {
@@ -107,6 +123,14 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
             nRetVal = depthNode.SetMapOutputMode(mapMode);
             if (nRetVal != XN_STATUS_OK) {
                 std::cerr << "depthNode.SetMapOutputMode: " << xnGetStatusString(nRetVal) << std::endl;
+            }
+            if (depth_to_color && use_rgb) {
+                if( depthNode.IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT) ) {
+                    nRetVal = depthNode.GetAlternativeViewPointCap().SetViewPoint( imageNode  );
+                    if (nRetVal != XN_STATUS_OK) {
+                        std::cerr << "depthNode.GetAlternativeViewPointCap().SetViewPoint(imageNode): " << xnGetStatusString(nRetVal) << std::endl;
+                    }
+                }
             }
         }
     }
@@ -119,18 +143,6 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
             nRetVal = irNode.SetMapOutputMode(mapMode);
             if (nRetVal != XN_STATUS_OK) {
                 std::cerr << "irNode.SetMapOutputMode: " << xnGetStatusString(nRetVal) << std::endl;
-            }
-        }
-    }
-    
-    if( use_rgb ) {
-        nRetVal = imageNode.Create(context);
-        if (nRetVal != XN_STATUS_OK) {
-            std::cerr << "imageNode.Create: " << xnGetStatusString(nRetVal) << std::endl;
-        }else{
-            nRetVal = imageNode.SetMapOutputMode(mapMode);
-            if (nRetVal != XN_STATUS_OK) {
-                std::cerr << "imageNode.SetMapOutputMode: " << xnGetStatusString(nRetVal) << std::endl;
             }
         }
     }
@@ -179,6 +191,7 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
         for(int i=0; i<2; ++i) {
             switch (sensor_type[i]) {
             case OpenNiDepth:
+            case OpenNiDepthRegistered:
             {
                 const XnDepthPixel* pDepthMap = depthNode.GetDepthMap();
                 memcpy(out_img,pDepthMap, streams[i].SizeBytes() );

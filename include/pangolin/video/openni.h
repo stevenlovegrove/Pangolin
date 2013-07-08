@@ -18,9 +18,10 @@ enum OpenNiSensorType
     OpenNiRgb = 0,
     OpenNiIr = 1,
     OpenNiDepth = 2,
-    OpenNiIr8bit = 3,
-    OpenNiIrProj = 4,
-    OpenNiIr8bitProj = 5
+    OpenNiDepthRegistered = 3,
+    OpenNiIr8bit = 4,
+    OpenNiIrProj = 5,
+    OpenNiIr8bitProj = 6
 };
 
 //! Interface to video capture sources
