@@ -41,7 +41,10 @@ class GLFont
 public:
     void glPrintf(int x, int y, const char *fmt, ...)
     {
-        pangolin::GlFont::I().Text(fmt).DrawWindow(x,y);
+        glPushMatrix();
+        glTranslatef(x,y,1.0f);
+        pangolin::GlFont::I().Text(fmt).Draw();
+        glPopMatrix();
     }
     void glPrintf(int x, int y, const std::string fmt, ...){ glPrintf(x,y, fmt.c_str()); }
     void glPrintfFast(int x, int y, const char *fmt, ...) { glPrintf(x,y,fmt); }

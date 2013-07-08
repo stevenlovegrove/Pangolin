@@ -212,8 +212,8 @@ inline void _CheckGlDieOnError( const char *sFile, const int nLine )
 #else
         std::cerr << "OpenGL Error: " << sFile << ":" << nLine << std::endl;
         std::cerr << gluErrorString(glError) << " (" << glError << ")" << std::endl;
-#endif                
         exit( -1 );
+#endif                
     }
 }
 
