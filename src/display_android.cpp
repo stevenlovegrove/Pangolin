@@ -359,11 +359,13 @@ JNIEnv* GetEnvAttachThread(JavaVM* vm)
         break;
     case JNI_EDETACHED:
         if (vm->AttachCurrentThread(&env, NULL)!=0) {
+            LOGE("Could not attach current thread");
             throw std::runtime_error("Could not attach current thread");
         }
         break;
     case JNI_EVERSION:
-        throw std::runtime_error("Invalid java version");
+        LOGE("Invalid Java version");
+        throw std::runtime_error("Invalid Java version");
     }
     return env;
 }
@@ -371,47 +373,48 @@ JNIEnv* GetEnvAttachThread(JavaVM* vm)
 // https://groups.google.com/d/msg/android-ndk/Tk3g00wLKhk/TJQucoaE_asJ
 void displayKeyboard(android_app* app, bool pShow) {
     jint lFlags = 0;
-    JNIEnv* lJNIEnv = GetEnvAttachThread(app->activity->vm);
-
-    // Retrieves NativeActivity. 
-    jobject lNativeActivity = app->activity->clazz; 
-    jclass ClassNativeActivity = lJNIEnv->GetObjectClass(lNativeActivity); 
-
-    // Retrieves Context.INPUT_METHOD_SERVICE. 
-    jclass ClassContext = lJNIEnv->FindClass("android/content/Context"); 
-    jfieldID FieldINPUT_METHOD_SERVICE = lJNIEnv->GetStaticFieldID(ClassContext, "INPUT_METHOD_SERVICE", "Ljava/lang/String;"); 
-    jobject INPUT_METHOD_SERVICE = lJNIEnv->GetStaticObjectField(ClassContext, FieldINPUT_METHOD_SERVICE); 
-//    jniCheck(INPUT_METHOD_SERVICE); 
-
-    // lInputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE). 
-    jclass ClassInputMethodManager = lJNIEnv->FindClass( "android/view/inputmethod/InputMethodManager"); 
-    jmethodID MethodGetSystemService = lJNIEnv->GetMethodID( ClassNativeActivity, "getSystemService",  "(Ljava/lang/String;)Ljava/lang/Object;"); 
-    jobject lInputMethodManager = lJNIEnv->CallObjectMethod( lNativeActivity, MethodGetSystemService, INPUT_METHOD_SERVICE); 
-
-    // lDecorView = getWindow().getDecorView(). 
-    jmethodID MethodGetWindow = lJNIEnv->GetMethodID( ClassNativeActivity, "getWindow",  "()Landroid/view/Window;"); 
-    jobject lWindow = lJNIEnv->CallObjectMethod(lNativeActivity,  MethodGetWindow); 
-    jclass ClassWindow = lJNIEnv->FindClass(  "android/view/Window"); 
-    jmethodID MethodGetDecorView = lJNIEnv->GetMethodID( ClassWindow, "getDecorView", "()Landroid/view/View;"); 
-    jobject lDecorView = lJNIEnv->CallObjectMethod(lWindow,  MethodGetDecorView); 
-
-    if (pShow) { 
-        // Runs lInputMethodManager.showSoftInput(...). 
-        jmethodID MethodShowSoftInput = lJNIEnv->GetMethodID( ClassInputMethodManager, "showSoftInput", "(Landroid/view/View;I)Z"); 
-        /*jboolean lResult = */lJNIEnv->CallBooleanMethod( lInputMethodManager, MethodShowSoftInput, lDecorView, lFlags); 
-    } else { 
-        // Runs lWindow.getViewToken() 
-        jclass ClassView = lJNIEnv->FindClass( "android/view/View"); 
-        jmethodID MethodGetWindowToken = lJNIEnv->GetMethodID( ClassView, "getWindowToken", "()Landroid/os/IBinder;"); 
-        jobject lBinder = lJNIEnv->CallObjectMethod(lDecorView, MethodGetWindowToken); 
-
-        // lInputMethodManager.hideSoftInput(...). 
-        jmethodID MethodHideSoftInput = lJNIEnv->GetMethodID( ClassInputMethodManager, "hideSoftInputFromWindow", "(Landroid/os/IBinder;I)Z"); 
-        /*jboolean lRes = */lJNIEnv->CallBooleanMethod( lInputMethodManager, MethodHideSoftInput, lBinder, lFlags); 
-    } 
-
-//    // Finished with the JVM. 
-//    lJavaVM->DetachCurrentThread();
+    JNIEnv* env = GetEnvAttachThread(app->activity->vm);
+    if(env) {
+        // Retrieves NativeActivity. 
+        jobject lNativeActivity = app->activity->clazz; 
+        jclass ClassNativeActivity = env->GetObjectClass(lNativeActivity); 
+    
+        // Retrieves Context.INPUT_METHOD_SERVICE. 
+        jclass ClassContext = env->FindClass("android/content/Context"); 
+        jfieldID FieldINPUT_METHOD_SERVICE = env->GetStaticFieldID(ClassContext, "INPUT_METHOD_SERVICE", "Ljava/lang/String;"); 
+        jobject INPUT_METHOD_SERVICE = env->GetStaticObjectField(ClassContext, FieldINPUT_METHOD_SERVICE); 
+    //    jniCheck(INPUT_METHOD_SERVICE); 
+    
+        // lInputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE). 
+        jclass ClassInputMethodManager = env->FindClass( "android/view/inputmethod/InputMethodManager"); 
+        jmethodID MethodGetSystemService = env->GetMethodID( ClassNativeActivity, "getSystemService",  "(Ljava/lang/String;)Ljava/lang/Object;"); 
+        jobject lInputMethodManager = env->CallObjectMethod( lNativeActivity, MethodGetSystemService, INPUT_METHOD_SERVICE); 
+    
+        // lDecorView = getWindow().getDecorView(). 
+        jmethodID MethodGetWindow = env->GetMethodID( ClassNativeActivity, "getWindow",  "()Landroid/view/Window;"); 
+        jobject lWindow = env->CallObjectMethod(lNativeActivity,  MethodGetWindow); 
+        jclass ClassWindow = env->FindClass(  "android/view/Window"); 
+        jmethodID MethodGetDecorView = env->GetMethodID( ClassWindow, "getDecorView", "()Landroid/view/View;"); 
+        jobject lDecorView = env->CallObjectMethod(lWindow,  MethodGetDecorView); 
+    
+        if (pShow) { 
+            // Runs lInputMethodManager.showSoftInput(...). 
+            jmethodID MethodShowSoftInput = env->GetMethodID( ClassInputMethodManager, "showSoftInput", "(Landroid/view/View;I)Z"); 
+            /*jboolean lResult = */env->CallBooleanMethod( lInputMethodManager, MethodShowSoftInput, lDecorView, lFlags); 
+        } else { 
+            // Runs lWindow.getViewToken() 
+            jclass ClassView = env->FindClass( "android/view/View"); 
+            jmethodID MethodGetWindowToken = env->GetMethodID( ClassView, "getWindowToken", "()Landroid/os/IBinder;"); 
+            jobject lBinder = env->CallObjectMethod(lDecorView, MethodGetWindowToken); 
+    
+            // lInputMethodManager.hideSoftInput(...). 
+            jmethodID MethodHideSoftInput = env->GetMethodID( ClassInputMethodManager, "hideSoftInputFromWindow", "(Landroid/os/IBinder;I)Z"); 
+            /*jboolean lRes = */env->CallBooleanMethod( lInputMethodManager, MethodHideSoftInput, lBinder, lFlags); 
+        } 
+    
+        // Finished with the JVM. 
+        app->activity->vm->DetachCurrentThread();
+    }
 }
 
 pangolin::engine g_engine;
@@ -624,27 +627,33 @@ static void* android_app_entry(void* param) {
     pthread_cond_broadcast(&android_app->cond);
     pthread_mutex_unlock(&android_app->mutex);
     
-    JNIEnv *env = GetEnvAttachThread(android_app->activity->vm);
-    jobject me = android_app->activity->clazz;
-    
-    jclass acl = env->GetObjectClass(me); //class pointer of NativeActivity
-    jmethodID giid = env->GetMethodID(acl, "getIntent", "()Landroid/content/Intent;");
-    jobject intent = env->CallObjectMethod(me, giid); //Got our intent
-    
-    jclass icl = env->GetObjectClass(intent); //class pointer of Intent
-    jmethodID gseid = env->GetMethodID(icl, "getStringExtra", "(Ljava/lang/String;)Ljava/lang/String;");
-    
-    jstring jsARGV = (jstring)env->CallObjectMethod(intent, gseid, env->NewStringUTF("ARGV"));
-    
     std::string sargv;
     
-    if(jsARGV) {
-        const char *chARGV = env->GetStringUTFChars(jsARGV, 0);
-        if(chARGV) {
-            sargv = std::string(chARGV);
-            LOGI("ARGV: pango %s", chARGV);
+    // Load command line from ARGV parameter
+    JNIEnv *env = GetEnvAttachThread(android_app->activity->vm);
+    if(env) {
+        jobject me = android_app->activity->clazz;
+        
+        jclass acl = env->GetObjectClass(me); //class pointer of NativeActivity
+        jmethodID giid = env->GetMethodID(acl, "getIntent", "()Landroid/content/Intent;");
+        jobject intent = env->CallObjectMethod(me, giid); //Got our intent
+        
+        jclass icl = env->GetObjectClass(intent); //class pointer of Intent
+        jmethodID gseid = env->GetMethodID(icl, "getStringExtra", "(Ljava/lang/String;)Ljava/lang/String;");
+        
+        jstring jsARGV = (jstring)env->CallObjectMethod(intent, gseid, env->NewStringUTF("ARGV"));
+        
+        
+        if(jsARGV) {
+            const char *chARGV = env->GetStringUTFChars(jsARGV, 0);
+            if(chARGV) {
+                sargv = std::string(chARGV);
+                LOGI("ARGV: pango %s", chARGV);
+            }
+            env->ReleaseStringUTFChars(jsARGV, chARGV);    
         }
-        env->ReleaseStringUTFChars(jsARGV, chARGV);    
+        
+        android_app->activity->vm->DetachCurrentThread();
     }
 
     // Set up argv/argc to pass to users main
@@ -671,7 +680,7 @@ static void* android_app_entry(void* param) {
     for(size_t ac = 0; ac < vargv.size(); ++ac) {
         delete[] argv[ac];
     }    
-
+    
     android_app_destroy(android_app);
     
     LOGV("-android_app_entry");
