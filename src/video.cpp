@@ -69,22 +69,6 @@ std::istream& operator>> (std::istream &is, ImageRoi &roi)
     return is;
 }
 
-VideoInput::VideoInput()
-    : uri(""), video(0)
-{
-}
-
-VideoInput::VideoInput(std::string uri)
-    : video(0)
-{
-    Open(uri);
-}
-
-VideoInput::~VideoInput()
-{
-    if(video) delete video;
-}
-
 #ifdef HAVE_DC1394
 
 dc1394video_mode_t get_firewire_format7_mode(const std::string fmt)
@@ -310,7 +294,23 @@ VideoInterface* OpenVideo(std::string str_uri)
     return video;
 }
 
-void VideoInput::Open(std::string uri)
+VideoInput::VideoInput()
+    : uri(""), video(0)
+{
+}
+
+VideoInput::VideoInput(const std::string& uri)
+    : video(0)
+{
+    Open(uri);
+}
+
+VideoInput::~VideoInput()
+{
+    if(video) delete video;
+}
+
+void VideoInput::Open(const std::string& uri)
 {
     this->uri = uri;
     

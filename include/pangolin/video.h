@@ -148,10 +148,10 @@ struct VideoInterface
 struct VideoInput : public VideoInterface
 {
     VideoInput();
-    VideoInput(std::string uri);
+    VideoInput(const std::string& uri);
     ~VideoInput();
     
-    void Open(std::string uri);
+    void Open(const std::string& uri);
     void Reset();
     
     size_t SizeBytes() const;
