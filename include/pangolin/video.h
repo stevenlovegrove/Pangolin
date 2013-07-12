@@ -36,6 +36,10 @@
 //
 // scheme = file | dc1394 | v4l | openni | convert | mjpeg
 //
+// files - read one or more streams from image files
+// e.g.  "files://~/data/dataset/img_*.jpg"
+// e.g.  "files://~/data/dataset/img_[left,right]_*.pgm"
+//
 // file/files - read PVN file format (pangolin video) or other formats using ffmpeg
 //  e.g. "file:[realtime=1]///home/user/video/movie.pvn"
 //  e.g. "file:[stream=1]///home/user/video/movie.avi"

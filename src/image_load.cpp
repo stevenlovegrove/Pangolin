@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <fstream>
 
 #ifdef HAVE_PNG
 #include <png.h>
@@ -355,6 +356,59 @@ TypedImage LoadJpg(const std::string& filename)
 #endif
 }
 
+VideoPixelFormat PpmFormat(const std::string& strType, int /*num_colours*/)
+{
+    if(strType == "P5") {
+        return VideoFormatFromString("GRAY8"); 
+    }else if(strType == "P6") {
+        return VideoFormatFromString("RGB24"); 
+    }else{
+        throw std::runtime_error("Unsupported PPM/PGM format");        
+    }
+}
+
+TypedImage LoadPpm(std::ifstream& bFile)
+{
+    // Parse header
+
+    std::string ppm_type = "";
+    int num_colors = 0;
+    int w = 0;
+    int h = 0;
+
+    bFile >> ppm_type;
+    bFile >> w;
+    bFile >> h;
+    bFile >> num_colors;
+    bFile.ignore(1,'\n');
+    
+    TypedImage img;
+    bool success = !bFile.fail() && w > 0 && h > 0;
+
+    if(success) {
+        img.fmt = PpmFormat(ppm_type, num_colors);
+        img.Alloc(w, h, w*img.fmt.bpp/8);
+
+        // Read in data
+        for(size_t r=0; r<img.h; ++r) {
+            bFile.read( (char*)img.ptr + r*img.pitch, img.pitch );
+        }
+        success = !bFile.fail();
+    }
+
+    if(!success) {
+        img.Dealloc();
+    }
+    
+    return img;
+}
+
+TypedImage LoadPpm(const std::string& filename)
+{
+    std::ifstream bFile( filename.c_str(), std::ios::in | std::ios::binary );
+    return LoadPpm(bFile);
+}
+
 TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
 {
     switch (file_type) {
@@ -364,6 +418,8 @@ TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
         return LoadPng(filename);
     case ImageFileTypeJpg:
         return LoadJpg(filename);
+    case ImageFileTypePpm:
+        return LoadPpm(filename);
     default:
         throw std::runtime_error("Unsupported image file type, '" + filename + "'");
     }

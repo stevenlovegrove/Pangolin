@@ -48,6 +48,7 @@
 #endif
 
 #include <pangolin/video/test.h>
+#include <pangolin/video/images.h>
 #include <pangolin/video/pvn_video.h>
 #include <pangolin/video_splitter.h>
 
@@ -157,6 +158,11 @@ VideoInterface* OpenVideo(std::string str_uri)
         const int n = uri.Get<int>("n", 1);
         std::string fmt  = uri.Get<std::string>("fmt","RGB24");        
         video = new TestVideo(dim.x,dim.y,n,fmt);
+    }else
+    // '%' printf specifier used with ffmpeg
+    if(!uri.scheme.compare("files") && uri.scheme.find('\%') == std::string::npos)
+    {
+        video = new ImagesVideo(uri.url);
     }else
     if(!uri.scheme.compare("file") && boost::algorithm::ends_with(uri.url,"pvn") )
     {

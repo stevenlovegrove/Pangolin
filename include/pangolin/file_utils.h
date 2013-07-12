@@ -25,45 +25,31 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_TEST_H
-#define PANGOLIN_VIDEO_TEST_H
+#ifndef PANGOLIN_FILE_UTILS_H
+#define PANGOLIN_FILE_UTILS_H
 
-#include <pangolin/pangolin.h>
-#include <pangolin/video.h>
+#include <string>
+#include <vector>
 
 namespace pangolin
 {
 
-// Video class that outputs test video signal.
-class TestVideo : public VideoInterface
-{
-public:
-    TestVideo(size_t w, size_t h, size_t n, std::string pix_fmt);
-    ~TestVideo();
-    
-    //! Implement VideoInput::Start()
-    void Start();
-    
-    //! Implement VideoInput::Stop()
-    void Stop();
+std::vector<std::string>& Split(const std::string& s, char delim, std::vector<std::string>& elements);
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+std::vector<std::string> Split(const std::string &s, char delim);
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
-    
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
-    
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
-    
-protected:
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
-};
+std::vector<std::string> Expand(const std::string &s, char open='[', char close=']', char delim=',');
+
+std::string PathParent(const std::string& path);
+
+bool FileExists(const std::string& filename);
+
+std::string PathExpand(const std::string& sPath);
+
+bool MatchesWildcard(const std::string& str, const std::string& wildcard);
+
+bool FilesMatchingWildcard(const std::string& wildcard_file_path, std::vector<std::string>& file_vec);
 
 }
 
-#endif // PANGOLIN_VIDEO_TEST_H
+#endif // PANGOLIN_FILE_UTILS_H

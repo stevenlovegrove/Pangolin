@@ -15,7 +15,7 @@ set(
 )
 
 ## Store list of source files
-set( SOURCES image_load.cpp video_common.cpp )
+set( SOURCES file_utils.cpp image_load.cpp video_common.cpp )
 
 #######################################################
 ## User build options
@@ -53,12 +53,12 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video_splitter.h ${INCDIR}/video_output.h
     ${INCDIR}/video_recorder.h ${INCDIR}/video_record_repeat.h
     ${INCDIR}/video/pvn_video.h
-    ${INCDIR}/video/test.h
+    ${INCDIR}/video/test.h ${INCDIR}/video/images.h
   )
   list(APPEND SOURCES
     threadedfilebuf.cpp video.cpp video_splitter.cpp video_output.cpp
     video_recorder.cpp video_record_repeat.cpp video/pvn_video.cpp
-    video/test.cpp
+    video/test.cpp video/images.cpp
   )
 endif()
 

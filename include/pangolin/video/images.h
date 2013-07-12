@@ -25,21 +25,25 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_TEST_H
-#define PANGOLIN_VIDEO_TEST_H
+#ifndef PANGOLIN_VIDEO_IMAGES_H
+#define PANGOLIN_VIDEO_IMAGES_H
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video.h>
+#include <pangolin/image_load.h>
+
+#include <deque>
+#include <vector>
 
 namespace pangolin
 {
 
 // Video class that outputs test video signal.
-class TestVideo : public VideoInterface
+class ImagesVideo : public VideoInterface
 {
 public:
-    TestVideo(size_t w, size_t h, size_t n, std::string pix_fmt);
-    ~TestVideo();
+    ImagesVideo(const std::string& wildcard_path);
+    ~ImagesVideo();
     
     //! Implement VideoInput::Start()
     void Start();
@@ -60,10 +64,26 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
     
 protected:
+    typedef std::vector<TypedImage> Frame;
+    
+    const std::string& Filename(int frameNum, int channelNum) {
+        return filenames[channelNum][frameNum];
+    }
+    
+    bool QueueFrame();
+    
     std::vector<StreamInfo> streams;
     size_t size_bytes;
+    
+    
+    int num_files;
+    size_t num_channels;
+    std::vector<std::vector<std::string> > filenames;
+    
+    int num_loaded;
+    std::deque<Frame> loaded;
 };
 
 }
 
-#endif // PANGOLIN_VIDEO_TEST_H
+#endif // PANGOLIN_VIDEO_IMAGES_H
