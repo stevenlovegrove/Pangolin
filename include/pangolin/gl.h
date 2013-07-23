@@ -642,6 +642,7 @@ inline void GlBuffer::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr
 {
     Bind();
     glBufferSubData(buffer_type,offset,size_bytes, data);
+    Unbind();
 }
 
 ////////////////////////////////////////////////////////////////////////////
