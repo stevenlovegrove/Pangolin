@@ -30,6 +30,8 @@
 #include <algorithm>
 #include <stdexcept>
 #include <fstream>
+#include <cstring>
+#include <setjmp.h>
 
 #ifdef HAVE_PNG
 #include <png.h>
