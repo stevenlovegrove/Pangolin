@@ -372,18 +372,28 @@ VideoPixelFormat PpmFormat(const std::string& strType, int /*num_colours*/)
     }
 }
 
+void PpmConsumeWhitespaceAndComments(std::ifstream& bFile)
+{
+    // TODO: Make a little more general / more efficient
+    while( bFile.peek() == ' ' )  bFile.get();
+    while( bFile.peek() == '\n' ) bFile.get();
+    while( bFile.peek() == '#' )  bFile.ignore(4096, '\n');
+}
+
 TypedImage LoadPpm(std::ifstream& bFile)
 {
     // Parse header
-
     std::string ppm_type = "";
     int num_colors = 0;
     int w = 0;
     int h = 0;
 
     bFile >> ppm_type;
+    PpmConsumeWhitespaceAndComments(bFile);
     bFile >> w;
+    PpmConsumeWhitespaceAndComments(bFile);
     bFile >> h;
+    PpmConsumeWhitespaceAndComments(bFile);
     bFile >> num_colors;
     bFile.ignore(1,'\n');
     
@@ -404,7 +414,7 @@ TypedImage LoadPpm(std::ifstream& bFile)
     if(!success) {
         img.Dealloc();
     }
-    
+
     return img;
 }
 
