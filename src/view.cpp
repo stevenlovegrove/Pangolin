@@ -189,6 +189,26 @@ void View::ResizeChildren()
             (*iv)->Resize(space);
             space.w = (*iv)->v.l + margin + space.l;
         }
+    }else if(layout == LayoutEqualVertical )
+    {
+        // Allocate vertical space equally
+        const size_t visiblechildren = NumVisibleChildren();
+        const float height = v.h / visiblechildren;
+        
+        for( size_t i=0; i < visiblechildren; ++i) {
+            Viewport space(v.l,v.b+(visiblechildren-1-i)*height, v.w, height);
+            VisibleChild(i).Resize(space);
+        }        
+    }else if(layout == LayoutEqualHorizontal )
+    {
+        // Allocate vertical space equally
+        const size_t visiblechildren = NumVisibleChildren();
+        const float width = v.w / visiblechildren;
+        
+        for( size_t i=0; i < visiblechildren; ++i) {
+            Viewport space(v.l+i*width, v.b, width, v.h);
+            VisibleChild(i).Resize(space);
+        }        
     }else if(layout == LayoutEqual )
     {
         const size_t visiblechildren = NumVisibleChildren();

@@ -43,7 +43,9 @@ enum Layout
     LayoutOverlay,
     LayoutVertical,
     LayoutHorizontal,
-    LayoutEqual
+    LayoutEqual,
+    LayoutEqualVertical,
+    LayoutEqualHorizontal
 };
 
 enum Lock {
