@@ -436,7 +436,7 @@ bool FfmpegConverter::GrabNewest( unsigned char* image, bool wait )
 
 // Based on this example
 // http://cekirdek.pardus.org.tr/~ismail/ffmpeg-docs/output-example_8c-source.html
-static AVStream* CreateStream(AVFormatContext *oc, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height)
+static AVStream* CreateStream(AVFormatContext *oc, CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height)
 {
     AVCodec* codec = avcodec_find_encoder(codec_id);
     if (!(codec)) throw
@@ -604,7 +604,7 @@ double FfmpegVideoOutputStream::BaseFrameTime()
     return (double)stream->codec->time_base.num / (double)stream->codec->time_base.den;
 }
 
-FfmpegVideoOutputStream::FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height )
+FfmpegVideoOutputStream::FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height )
     : recorder(recorder), last_pts(-1), sws_ctx(NULL)
 {
     int ret;

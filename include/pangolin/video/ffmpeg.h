@@ -150,12 +150,16 @@ protected:
     unsigned        w,h;
 };
 
+#if (LIBAVFORMAT_VERSION_MAJOR > 55) || ((LIBAVFORMAT_VERSION_MAJOR == 55) && (LIBAVFORMAT_VERSION_MINOR >= 7))
+typedef AVCodecID CodecID;
+#endif
+
 class FfmpegVideoOutput;
 class FfmpegVideoOutputStream
     : public VideoOutputStreamInterface
 {
 public:
-    FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, enum CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height );
+    FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height );
     ~FfmpegVideoOutputStream();
     
     void WriteAvPacket(AVPacket* pkt);
