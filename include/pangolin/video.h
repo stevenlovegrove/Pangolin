@@ -48,6 +48,7 @@
 // dc1394 - capture video through a firewire camera
 //  e.g. "dc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0"
 //  e.g. "dc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0"
+//  e.g. "dc1394:[fmt=FORMAT7_3,deinterlace=1]//0"
 //
 // v4l - capture video from a Video4Linux (USB) camera (normally YUVY422 format)
 //           method=mmap|read|userptr

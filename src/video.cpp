@@ -29,6 +29,7 @@
 
 #ifdef HAVE_DC1394
 #include <pangolin/video/firewire.h>
+#include <pangolin/video/firewire_deinterlace.h>
 #endif
 
 #ifdef HAVE_V4L
@@ -246,7 +247,8 @@ VideoInterface* OpenVideo(std::string str_uri)
         const int desired_dma = uri.Get<int>("dma", 10);
         const int desired_iso = uri.Get<int>("iso", 400);
         const float desired_fps = uri.Get<float>("fps", 30);
-                
+        const bool deinterlace = uri.Get<bool>("deinterlace", 0);
+
         Guid guid = 0;
         unsigned deviceid = 0;
         dc1394framerate_t framerate = get_firewire_framerate(desired_fps);
@@ -268,6 +270,10 @@ VideoInterface* OpenVideo(std::string str_uri)
             }else{
                 video = new FirewireVideo(guid,video_mode,framerate,iso_speed,dma_buffers);
             }
+        }
+
+        if(deinterlace) {
+            video = new FirewireDeinterlace(video);
         }
     }else
 #endif //HAVE_DC1394
