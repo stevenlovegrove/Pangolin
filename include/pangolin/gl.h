@@ -431,7 +431,7 @@ inline void GlTexture::RenderToViewportFlipXFlipY() const
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    GLfloat sq_vert[] = { 1,1,  -1,1,  -1,-1,  -1,-1 };
+    GLfloat sq_vert[] = { 1,1,  -1,1,  -1,-1,  1,-1 };
     glVertexPointer(2, GL_FLOAT, 0, sq_vert);
     glEnableClientState(GL_VERTEX_ARRAY);   
 
