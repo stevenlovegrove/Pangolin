@@ -331,7 +331,8 @@ bool GlFont::LoadFontFromFile( const std::string& filename )
 
 bool GlFont::LoadEmbeddedFont()
 {
-    char* str = new char[font_xml_data.size()];
+    // Include an extra byte for the terminating NULL
+    char* str = new char[font_xml_data.size() + 1];
     strcpy( str, font_xml_data.c_str() );
     const bool success = LoadFontFromText(str);
     delete[] str;
