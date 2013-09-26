@@ -489,7 +489,7 @@ OpenGlMatrix ModelViewLookAtRDF(GLdouble ex, GLdouble ey, GLdouble ez, GLdouble 
 
 OpenGlMatrix ModelViewLookAt(GLdouble ex, GLdouble ey, GLdouble ez, GLdouble lx, GLdouble ly, GLdouble lz, GLdouble ux, GLdouble uy, GLdouble uz)
 {
-    return ModelViewLookAtRUB(ex,ey,ez,lz,ly,lz,ux,uy,uz);
+    return ModelViewLookAtRUB(ex,ey,ez,lx,ly,lz,ux,uy,uz);
 }
 
 OpenGlMatrix ModelViewLookAt(GLdouble ex, GLdouble ey, GLdouble ez, GLdouble lx, GLdouble ly, GLdouble lz, AxisDirection up)
