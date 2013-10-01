@@ -69,8 +69,11 @@
 // mjpeg - capture from (possibly networked) motion jpeg stream using FFMPEG
 //  e.g. "mjpeg://http://127.0.0.1/?action=stream"
 //
-// split - split a single stream video into a multi stream video based on Region of Interest
+// split - split a single stream video into a multi stream video based on Region of Interest / memory specification
+//           roiN=X+Y+WxH
+//           memN=Offset:WxH:PitchBytes:Format
 //  e.g. "split:[roi1=0+0+640x480,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
+//  e.g. "split:[mem1=307200:640x480:1280:GRAY8,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 //
 // test - output test video sequence
 //  e.g. "test://"
@@ -87,6 +90,12 @@ namespace pangolin
 class StreamInfo
 {
 public:
+    inline StreamInfo()
+        : fmt(VideoFormatFromString("GRAY8")) {}
+
+    inline StreamInfo(VideoPixelFormat fmt, const Image<unsigned char> img_offset )
+        : fmt(fmt), img_offset(img_offset) {}
+
     inline StreamInfo(VideoPixelFormat fmt, size_t w, size_t h, size_t pitch, unsigned char* offset)
         : fmt(fmt), img_offset(w,h,pitch,offset) {}
     

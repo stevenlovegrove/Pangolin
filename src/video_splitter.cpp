@@ -30,20 +30,11 @@
 namespace pangolin
 {
 
-VideoSplitter::VideoSplitter(VideoInterface* videoin, const std::vector<ImageRoi>& rois)
-    : videoin(videoin)
+VideoSplitter::VideoSplitter(VideoInterface *videoin, const std::vector<StreamInfo>& streams)
+    : videoin(videoin), streams(streams)
 {
     if(videoin->Streams().size() != 1)
         throw VideoException("VideoSplitter input must have exactly one stream");
-    
-    const StreamInfo& stmin = videoin->Streams()[0];
-    
-    for(size_t ir = 0; ir < rois.size(); ++ir)
-    {
-        const ImageRoi& roi = rois[ir];
-        StreamInfo stm(stmin.PixFormat(), roi.w, roi.h, stmin.Pitch(), (unsigned char*)0 + roi.y * stmin.Pitch() + roi.x);
-        streams.push_back(stm);
-    }
 }
 
 VideoSplitter::~VideoSplitter()

@@ -71,6 +71,35 @@ std::istream& operator>> (std::istream &is, ImageRoi &roi)
     return is;
 }
 
+std::istream& operator>> (std::istream &is, VideoPixelFormat& fmt)
+{
+    std::string sfmt;
+    is >> sfmt;
+    fmt = VideoFormatFromString(sfmt);
+    return is;
+}
+
+std::istream& operator>> (std::istream &is, Image<unsigned char>& img)
+{
+    size_t offset;
+    is >> offset; is.get();
+    img.ptr = (unsigned char*)0 + offset;
+    is >> img.w; is.get();
+    is >> img.h; is.get();
+    is >> img.pitch;
+    return is;
+}
+
+std::istream& operator>> (std::istream &is, StreamInfo &stream)
+{
+    VideoPixelFormat fmt;
+    Image<unsigned char> img_offset;
+    is >> img_offset; is.get();
+    is >> fmt;
+    stream = StreamInfo(fmt, img_offset);
+    return is;
+}
+
 #ifdef HAVE_DC1394
 
 dc1394video_mode_t get_firewire_format7_mode(const std::string fmt)
@@ -172,39 +201,58 @@ VideoInterface* OpenVideo(std::string str_uri)
     }else
     if(!uri.scheme.compare("split"))
     {
-        std::vector<ImageRoi> rois;
+        std::vector<StreamInfo> streams;
 
         VideoInterface* subvid = OpenVideo(uri.url);
+        if(subvid->Streams().size() != 1)
+            throw VideoException("VideoSplitter input must have exactly one stream");
+
         const int subw = subvid->Streams()[0].Width();
         const int subh = subvid->Streams()[0].Height();
         const ImageRoi default_roi(0,0, subw, subh );
-        
-        while(true)
-        {
+        const StreamInfo& stmin = subvid->Streams()[0];
+
+        while(true) {
             std::stringstream ss;
-            ss << "roi" << (rois.size() + 1);
+            ss << "roi" << (streams.size() + 1);
             const std::string key = ss.str();
-            
-            if(!uri.Contains(key)) {
-                break;
+
+            if(uri.Contains(key)) {
+                const ImageRoi& roi = uri.Get<ImageRoi>(key, default_roi);
+                StreamInfo stm(stmin.PixFormat(), roi.w, roi.h, stmin.Pitch(), (unsigned char*)0 + roi.y * stmin.Pitch() + roi.x);
+                streams.push_back(stm);
+            }else{
+                std::stringstream ss;
+                ss << "mem" << (streams.size() + 1);
+                const std::string key = ss.str();
+                if(uri.Contains(key)) {
+                    const StreamInfo& info = uri.Get<StreamInfo>(key, stmin);
+                    streams.push_back(info);
+                }else{
+                    break;
+                }
             }
-            
-            rois.push_back( uri.Get<ImageRoi>(key, default_roi));
         }
-        
-        if(rois.size() == 0) {
+
+        // Default split if no arguments
+        if(streams.size() == 0) {
+            ImageRoi roi1, roi2;
+
             if(subw > subh) {
                 // split horizontally
-                rois.push_back( ImageRoi(0,0, subw/2, subh ) );
-                rois.push_back( ImageRoi(subw/2,0, subw/2, subh ) );                
+                roi1 = ImageRoi(0,0, subw/2, subh );
+                roi2 = ImageRoi(subw/2,0, subw/2, subh );
             }else{
-                // split horizontally
-                rois.push_back( ImageRoi(0,0, subw, subh/2 ) );
-                rois.push_back( ImageRoi(0,subh/2, subw, subh/2 ) );                
+                // split vertically
+                roi1 = ImageRoi(0,0, subw, subh/2 );
+                roi2 = ImageRoi(0,subh/2, subw, subh/2 );
             }
+
+            streams.push_back( StreamInfo( stmin.PixFormat(), roi1.w, roi1.h, stmin.Pitch(), (unsigned char*)0 + roi1.y * stmin.Pitch() + roi1.x ) );
+            streams.push_back( StreamInfo( stmin.PixFormat(), roi2.w, roi2.h, stmin.Pitch(), (unsigned char*)0 + roi2.y * stmin.Pitch() + roi2.x ) );
         }
         
-        video = new VideoSplitter(subvid,rois);       
+        video = new VideoSplitter(subvid,streams);
     }else
 #ifdef HAVE_FFMPEG
     if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){

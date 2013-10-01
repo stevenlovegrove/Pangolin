@@ -38,7 +38,8 @@ class VideoSplitter
     : public VideoInterface
 {
 public:
-    VideoSplitter(VideoInterface* videoin, const std::vector<ImageRoi>& rois);
+    VideoSplitter(VideoInterface* videoin, const std::vector<StreamInfo>& streams);
+
     ~VideoSplitter();
     
     size_t SizeBytes() const;
