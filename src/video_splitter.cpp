@@ -35,6 +35,12 @@ VideoSplitter::VideoSplitter(VideoInterface *videoin, const std::vector<StreamIn
 {
     if(videoin->Streams().size() != 1)
         throw VideoException("VideoSplitter input must have exactly one stream");
+
+    // Make sure no stream over-runs input stream
+    for(unsigned int i=0; i < streams.size(); ++i) {
+        if(videoin->Streams()[0].SizeBytes() < (size_t)streams[i].Offset() + streams[i].SizeBytes() )
+            throw VideoException("VideoSplitter: stream extends past end of input");
+    }
 }
 
 VideoSplitter::~VideoSplitter()
