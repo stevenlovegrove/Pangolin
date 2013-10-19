@@ -30,9 +30,13 @@
 
 #include <pangolin/glinclude.h>
 
-#ifdef HAVE_EIGEN
+#if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
+#define USE_EIGEN
+#endif
+
+#ifdef USE_EIGEN
 #include <Eigen/Eigen>
-#endif // HAVE_EIGEN
+#endif // USE_EIGEN
 
 namespace pangolin
 {
@@ -253,7 +257,7 @@ inline void glDrawTextureFlipY(GLenum target, GLuint texid)
     glDisable(target);
 }
 
-#ifdef HAVE_EIGEN
+#ifdef USE_EIGEN
 
 #ifndef HAVE_GLES
 inline void glVertex( const Eigen::Vector3d& p )
@@ -340,7 +344,7 @@ inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, const Eig
     glUnsetFrameOfReference();
 }
 
-#endif // HAVE_EIGEN
+#endif // USE_EIGEN
 
 #ifndef HAVE_GLES
 inline void glPixelTransferScale( float r, float g, float b )
