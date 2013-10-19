@@ -34,7 +34,11 @@
 
 #include <map>
 
-#ifdef HAVE_EIGEN
+#if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
+#define USE_EIGEN
+#endif
+
+#ifdef USE_EIGEN
 #include <Eigen/Eigen>
 #endif
 
@@ -87,13 +91,13 @@ struct OpenGlMatrix {
     
     OpenGlMatrix();
     
-#ifdef HAVE_EIGEN
+#ifdef USE_EIGEN
     template<typename P>
     OpenGlMatrix(const Eigen::Matrix<P,4,4>& mat);
     
     template<typename P>
     operator Eigen::Matrix<P,4,4>() const;
-#endif // HAVE_EIGEN
+#endif // USE_EIGEN
 
 #ifdef HAVE_TOON
     OpenGlMatrix(const TooN::SE3<>& T);
@@ -207,7 +211,7 @@ namespace pangolin
 inline OpenGlMatrix::OpenGlMatrix() {
 }
 
-#ifdef HAVE_EIGEN
+#ifdef USE_EIGEN
 template<typename P> inline
 OpenGlMatrix::OpenGlMatrix(const Eigen::Matrix<P,4,4>& mat)
 {

@@ -31,7 +31,11 @@
 #include <pangolin/platform.h>
 #include <pangolin/glinclude.h>
 
-#ifdef HAVE_EIGEN
+#if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
+#define USE_EIGEN
+#endif
+
+#ifdef USE_EIGEN
 #include <Eigen/Eigen>
 #endif
 
@@ -176,7 +180,7 @@ public:
     
     void Clear();
     
-#ifdef HAVE_EIGEN
+#ifdef USE_EIGEN
     template<typename Derived>
     void Add(const Eigen::DenseBase<Derived>& vec);
     
@@ -658,7 +662,7 @@ inline void GlSizeableBuffer::Clear()
     m_num_verts = 0;
 }
 
-#ifdef HAVE_EIGEN
+#ifdef USE_EIGEN
 template<typename Derived> inline
 void GlSizeableBuffer::Add(const Eigen::DenseBase<Derived>& vec)
 {

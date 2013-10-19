@@ -33,9 +33,13 @@
 
 #include "gl.h"
 
-#ifdef HAVE_EIGEN
+#if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
+#define USE_EIGEN
+#endif
+
+#ifdef USE_EIGEN
 #include <Eigen/Eigen>
-#endif // HAVE_EIGEN
+#endif // USE_EIGEN
 
 namespace pangolin
 {
