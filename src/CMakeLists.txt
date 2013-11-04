@@ -299,7 +299,12 @@ configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake @ONLY )
 
 # Add package to CMake package registery for use from the build tree
-export( PACKAGE ${PROJECT_NAME} )
+option( EXPORT_${PROJECT_NAME}
+  "Should the ${PROJECT_NAME} package be exported for use by other software" ON )
+
+if( EXPORT_${PROJECT_NAME} )
+  export( PACKAGE ${PROJECT_NAME} )
+endif()
 
 #######################################################
 ## Install headers / targets
