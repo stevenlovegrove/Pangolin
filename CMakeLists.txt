@@ -41,5 +41,6 @@ add_custom_target(uninstall
 add_subdirectory("src")
 
 if(BUILD_EXAMPLES)
+  set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
   add_subdirectory(examples)
 endif()
