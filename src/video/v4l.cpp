@@ -71,11 +71,11 @@ inline std::string V4lToString(int32_t v)
     return std::string(cc);
 }
 
-V4lVideo::V4lVideo(const char* dev_name, io_method io)
+V4lVideo::V4lVideo(const char* dev_name, io_method io, unsigned iwidth, unsigned iheight)
     : io(io), fd(-1), buffers(0), n_buffers(0), running(false)
 {
     open_device(dev_name);
-    init_device(dev_name,0,0,0);
+    init_device(dev_name,iwidth,iheight,0);
     Start();
 }
 

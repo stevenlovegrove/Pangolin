@@ -51,7 +51,7 @@ struct buffer {
 class V4lVideo : public VideoInterface
 {
 public:
-    V4lVideo(const char* dev_name, io_method io = IO_METHOD_MMAP);
+    V4lVideo(const char* dev_name, io_method io = IO_METHOD_MMAP, unsigned iwidth=0, unsigned iheight=0);
     ~V4lVideo();
     
     //! Implement VideoInput::Start()

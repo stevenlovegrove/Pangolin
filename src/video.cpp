@@ -224,6 +224,7 @@ VideoInterface* OpenVideo(std::string str_uri)
 #ifdef HAVE_V4L
     if(!uri.scheme.compare("v4l")) {
         const std::string smethod = uri.Get<std::string>("method","mmap");
+        const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(0,0));
         
         io_method method = IO_METHOD_MMAP;
         
@@ -235,7 +236,7 @@ VideoInterface* OpenVideo(std::string str_uri)
             method = IO_METHOD_USERPTR;
         }            
         
-        video = new V4lVideo(uri.url.c_str(), method);
+        video = new V4lVideo(uri.url.c_str(), method, desired_dim.x, desired_dim.y );
     }else
 #endif // HAVE_V4L
 #ifdef HAVE_DC1394
