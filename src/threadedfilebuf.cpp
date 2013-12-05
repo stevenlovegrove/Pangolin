@@ -42,16 +42,16 @@ threadedfilebuf::threadedfilebuf( const std::string& filename, unsigned int buff
     mem_max_size = buffer_size_bytes;
     mem_buffer = new char[mem_max_size];
     
+    should_run = true;
     write_thread = boostd::thread(boostd::ref(*this));
 }
 
 threadedfilebuf::~threadedfilebuf()
 {
-    if( write_thread.joinable() )
-    {
-        write_thread.interrupt();
-        write_thread.join();
-    }
+    should_run = false;
+    cond_queued.notify_all();
+
+    write_thread.join();
     
     if( mem_buffer) delete mem_buffer;
     file.close();
@@ -106,9 +106,11 @@ void threadedfilebuf::operator()()
         {
             boostd::unique_lock<boostd::mutex> lock(update_mutex);
             
-            while( mem_size == 0 )
+            while( mem_size == 0 ) {
+                if(!should_run) return;
                 cond_queued.wait(lock);
-            
+            }
+
             data_to_write =
                     (mem_start < mem_end) ?
                         mem_end - mem_start :

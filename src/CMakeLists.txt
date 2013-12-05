@@ -69,13 +69,7 @@ endif()
 # Project headers trump everything (including any potentially installed Pangolin)
 list(APPEND LIB_INC_DIR  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 
-option( CPP11_NO_BOOST "Use c++11 over boost for threading etc." OFF)
-if(CPP11_NO_BOOST)
-    set( CMAKE_CXX_FLAGS "-std=c++0x -Wall ${CMAKE_CXX_FLAGS}" )
-    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-    endif()
-else()
+if(NOT CPP11_NO_BOOST)
     # Boost is required when c++11 is disabled
     find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
     list(APPEND USER_INC  "${Boost_INCLUDE_DIRS}" )
@@ -257,9 +251,9 @@ target_link_libraries(${LIBRARY_NAME} ${LINK_LIBS})
 
 ## Set Special Compiler flags
 if(MSVC)
-  set(CMAKE_CXX_FLAGS "/EHs")
+  set(CMAKE_CXX_FLAGS "/EHs ${CMAKE_CXX_FLAGS}")
 elseif(CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS "-Wall -Wno-error=deprecated-declarations")
+  set(CMAKE_CXX_FLAGS "-Wall -Wno-error=deprecated-declarations ${CMAKE_CXX_FLAGS}")
 endif()
 
 #######################################################

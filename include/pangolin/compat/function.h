@@ -29,7 +29,7 @@
 #define PANGOLIN_COMPAT_FUNCTION_H
 
 #ifdef CPP11_NO_BOOST
-#include <function>
+#include <functional>
 #else
 #include <boost/function.hpp>
 #endif

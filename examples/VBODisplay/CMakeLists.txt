@@ -6,7 +6,9 @@ link_libraries(${Pangolin_LIBRARIES})
 
 find_package(CUDA QUIET)
 
-if(CUDA_FOUND)
+# This example could be made to work with C++11, but the kernel code must be
+# compiled without it.
+if(CUDA_FOUND AND NOT CPP11_NO_BOOST)
   cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
   set(CUDA_NVCC_FLAGS "-O3")

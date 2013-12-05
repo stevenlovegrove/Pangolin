@@ -62,6 +62,8 @@ protected:
     boostd::condition_variable cond_queued;
     boostd::condition_variable cond_dequeued;
     boostd::thread write_thread;
+
+    bool should_run;
 };
 
 }

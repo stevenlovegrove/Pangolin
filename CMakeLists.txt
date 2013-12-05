@@ -6,7 +6,15 @@ set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 
-option(BUILD_EXAMPLES "Build Examples" ON)
+option( BUILD_EXAMPLES "Build Examples" ON )
+
+option( CPP11_NO_BOOST "Use c++11 over boost for threading etc." OFF )
+if(CPP11_NO_BOOST)
+    set( CMAKE_CXX_FLAGS "-std=c++0x -Wall ${CMAKE_CXX_FLAGS}" )
+    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    endif()
+endif()
 
 if(NOT ANDROID)
    option(BUILD_SHARED_LIBS "Build Shared Library" ON)

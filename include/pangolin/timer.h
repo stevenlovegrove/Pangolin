@@ -31,6 +31,7 @@
 #include "pangolin.h"
 
 #ifdef _UNIX_
+#include <unistd.h>
 #include <sys/time.h>
 #endif
 

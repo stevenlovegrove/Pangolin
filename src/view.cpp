@@ -270,7 +270,7 @@ void View::ResizeChildren()
 
 void View::Render()
 {
-    if(!extern_draw_function.empty() && show) {
+    if(extern_draw_function && show) {
         extern_draw_function(*this);
     }
     RenderChildren();
