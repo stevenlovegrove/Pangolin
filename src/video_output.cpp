@@ -32,15 +32,14 @@
 #endif
 
 #include <pangolin/video/pvn_video.h>
-
-#include <boost/filesystem.hpp>
+#include <pangolin/file_utils.h>
 
 namespace pangolin
 {
 
 std::string MakeFilenameUnique(const std::string& filename)
 {
-    if( boost::filesystem::exists(filename) ) {
+    if( FileExists(filename) ) {
         const size_t dot = filename.find_last_of('.');
         
         std::string fn;
@@ -61,7 +60,7 @@ std::string MakeFilenameUnique(const std::string& filename)
             std::stringstream ss;
             ss << fn << "_" << id << ext;
             new_file = ss.str();
-        }while( boost::filesystem::exists(new_file) );
+        }while( FileExists(new_file) );
 
         return new_file;        
     }else{

@@ -29,11 +29,11 @@
 #define PANGOLIN_VIEW_H
 
 #include <vector>
-#include <boost/function.hpp>
 
 #include <pangolin/viewport.h>
 #include <pangolin/attach.h>
 #include <pangolin/opengl_render_state.h>
+#include <pangolin/compat/function.h>
 
 namespace pangolin
 {
@@ -129,7 +129,7 @@ struct View
     View& SetHandler(Handler* handler);
     
     //! Set drawFunc as the drawing function for this view
-    View& SetDrawFunction(const boost::function<void(View&)>& drawFunc);
+    View& SetDrawFunction(const boostd::function<void(View&)>& drawFunc);
     
     //! Force this view to have the given aspect, whilst fitting snuggly
     //! within the parent. A negative value with 'over-draw', fitting the
@@ -213,7 +213,7 @@ struct View
     std::vector<View*> views;
     
     // External draw function
-    boost::function<void(View&)> extern_draw_function;
+    boostd::function<void(View&)> extern_draw_function;
     
 private:
     // Private copy constructor

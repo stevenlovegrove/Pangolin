@@ -26,9 +26,9 @@
  */
 
 #include <pangolin/video_common.h>
+#include <pangolin/file_utils.h>
 
 #include <vector>
-#include <boost/algorithm/string.hpp>
 
 namespace pangolin
 {
@@ -95,15 +95,13 @@ Uri ParseUri(std::string str_uri)
             {
                 std::string queries = str_uri.substr(ns+2, nurl-1 - (ns+2) );
                 std::vector<std::string> params;
-                boost::split(params, queries, boost::is_any_of(","));
+                Split(queries, ',', params);
                 for(size_t i=0; i< params.size(); ++i)
                 {
                     std::vector<std::string> args;
-                    boost::split(args, params[i], boost::is_any_of("=") );
-                    std::string key = args[0];
-                    std::string val = args.size() > 1 ? args[1] : "";
-                    boost::trim(key);
-                    boost::trim(val);
+                    Split(params[i], '=', args );
+                    std::string key = Trim(args[0]);
+                    std::string val = args.size() > 1 ? Trim(args[1]) : "";
                     uri.params[key] = val;
                 }
             }else{

@@ -28,12 +28,11 @@
 #ifndef PANGOLIN_VARS_INTERNAL_H
 #define PANGOLIN_VARS_INTERNAL_H
 
-#include <boost/utility.hpp>
-#include <boost/type_traits.hpp>
 #include <iostream>
 #include <cstring>
 
 #include <pangolin/type_convert.h>
+#include <pangolin/compat/type_traits.h>
 
 namespace pangolin
 {
@@ -131,10 +130,10 @@ struct Accessor
 };
 
 template<typename T, typename S>
-struct _Accessor<T,S, typename boost::enable_if_c<
-        (boost::is_scalar<T>::value || boost::is_same<T,bool>::value) &&
-        (boost::is_scalar<S>::value || boost::is_same<S,bool>::value) &&
-        !boost::is_same<T,S>::value
+struct _Accessor<T,S, typename pangolin::enable_if_c<
+        (boostd::is_scalar<T>::value || boostd::is_same<T,bool>::value) &&
+        (boostd::is_scalar<S>::value || boostd::is_same<S,bool>::value) &&
+        !boostd::is_same<T,S>::value
         >::type> : Accessor<T>
 {
     _Accessor(S& var) : var(var) {
@@ -175,10 +174,10 @@ struct _Accessor<T,T> : Accessor<T>
 };
 
 template<typename T, typename S>
-struct _Accessor<T,S ,typename boost::enable_if_c<
-        !((boost::is_scalar<T>::value || boost::is_same<T,bool>::value) &&
-          (boost::is_scalar<S>::value || boost::is_same<S,bool>::value)) &&
-!boost::is_same<T,S>::value
+struct _Accessor<T,S ,typename enable_if_c<
+        !((boostd::is_scalar<T>::value || boostd::is_same<T,bool>::value) &&
+          (boostd::is_scalar<S>::value || boostd::is_same<S,bool>::value)) &&
+!boostd::is_same<T,S>::value
 >::type> : Accessor<T>
 {
     _Accessor(S& var) : var(var) {

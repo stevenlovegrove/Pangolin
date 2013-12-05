@@ -1,5 +1,5 @@
 #include <iostream>
-#include <boost/bind.hpp>
+
 #include <pangolin/pangolin.h>
 
 using namespace pangolin;
@@ -24,9 +24,9 @@ std::istream& operator>> (std::istream& is, CustomType& o){
   return is;
 }
 
-void GlobalKeyHook(const std::string& example)
+void GlobalKeyHook()
 {
-    cout << example << endl;
+    cout << "You pushed ctrl-r" << endl;
 }
 
 int main( int /*argc*/, char* argv[] )
@@ -66,7 +66,7 @@ int main( int /*argc*/, char* argv[] )
   pangolin::RegisterKeyPressCallback( PANGO_CTRL + 'b', SetVarFunctor<double>("ui.A Double", 3.5) );
 
   // Demonstration of how we can register a keyboard hook to trigger a method
-  pangolin::RegisterKeyPressCallback( PANGO_CTRL + 'r', boost::bind(GlobalKeyHook, "You Pushed ctrl-r!" ) );
+  pangolin::RegisterKeyPressCallback( PANGO_CTRL + 'r', GlobalKeyHook );
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )

@@ -30,6 +30,7 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/view.h>
+#include <pangolin/compat/function.h>
 
 #include <queue>
 
@@ -58,7 +59,7 @@ struct PangolinGl
     ViewMap named_managed_views;
     
     // Global keypress hooks
-    std::map<int,boost::function<void(void)> > keypress_hooks;
+    std::map<int,boostd::function<void(void)> > keypress_hooks;
     
     // Manage fullscreen (ToggleFullscreen is quite new)
     bool is_double_buffered;

@@ -31,9 +31,9 @@
 #include <pangolin/platform.h>
 #include <pangolin/glinclude.h>
 #include <pangolin/handler.h>
+#include <pangolin/compat/function.h>
 
 #include <string>
-#include <boost/function.hpp>
 
 namespace pangolin
 {
@@ -77,7 +77,7 @@ namespace pangolin
 
   //! @brief Request to be notified via functor when key is pressed.
   //! Functor may take one parameter which will equal the key pressed
-  void RegisterKeyPressCallback(int key, boost::function<void(void)> func);
+  void RegisterKeyPressCallback(int key, boostd::function<void(void)> func);
 
   //! @brief Save window contents to image
   void SaveWindowOnRender(std::string filename_prefix);

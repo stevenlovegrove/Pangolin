@@ -213,7 +213,7 @@ View& Display(const std::string& name)
     }
 }
 
-void RegisterKeyPressCallback(int key, boost::function<void(void)> func)
+void RegisterKeyPressCallback(int key, boostd::function<void(void)> func)
 {
     context->keypress_hooks[key] = func;
 }

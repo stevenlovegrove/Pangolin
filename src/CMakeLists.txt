@@ -12,6 +12,7 @@ set(
   ${INCDIR}/gldraw.h ${INCDIR}/glvbo.h
   ${INCDIR}/glcuda.h ${INCDIR}/cg.h ${INCDIR}/glsl.h
   ${INCDIR}/image.h
+  ${INCDIR}/file_utils.h
 )
 
 ## Store list of source files

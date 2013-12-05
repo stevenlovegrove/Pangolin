@@ -28,12 +28,13 @@
 #ifndef PANGOLIN_VARS_H
 #define PANGOLIN_VARS_H
 
-#include <boost/algorithm/string.hpp>
-#include <boost/ptr_container/ptr_unordered_map.hpp>
 #include <sstream>
 #include <map>
 #include <vector>
 #include <fstream>
+#include <stdexcept>
+
+#include <pangolin/file_utils.h>
 
 #include "vars_internal.h"
 
@@ -209,7 +210,7 @@ struct GuiVarChangedCallback
     void* data;
 };
 
-extern boost::ptr_unordered_map<std::string,_Var> vars;
+extern std::map<std::string,_Var*> vars;
 extern std::vector<NewVarCallback> new_var_callbacks;
 extern std::vector<GuiVarChangedCallback> gui_var_changed_callbacks;
 
@@ -221,11 +222,9 @@ inline void Var<T>::Init(const std::string& name,
                          int  flags,
                          bool logscale)
 {
-    boost::ptr_unordered_map<std::string,_Var>::iterator vi = vars.find(name);
+    std::map<std::string,_Var*>::iterator vi = vars.find(name);
     
-    std::vector<std::string> parts;
-    boost::split(parts,name,boost::is_any_of("."));
-    
+    const std::vector<std::string> parts = pangolin::Split(name,'.');
     
     if( vi != vars.end() )
     {
@@ -249,7 +248,7 @@ inline void Var<T>::Init(const std::string& name,
             
             // notify those watching new variables
             for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
-                if( boost::starts_with(name,invc->filter) ) {
+                if( StartsWith(name,invc->filter) ) {
                    invc->fn( invc->data, name, *var, typeid(T).name(), false);
                 }
             }
@@ -260,23 +259,28 @@ inline void Var<T>::Init(const std::string& name,
     
     // Create var of base type T
     {
-        var = &vars[name];
+        var = vars[name];
+        if(!var) {
+            var = new _Var();
+            vars[name] = var;
+            // TODO: This needs to be deallocated!
+        }
         
         const double range = max - min;
         const int default_ticks = 5000;
         const double default_increment = range / default_ticks;
         Accessor<T>* da = 0;
         
-        if( boost::is_same<T,bool>::value ) {
+        if( boostd::is_same<T,bool>::value ) {
             var->create(new bool, new bool, typeid(bool).name() );
             a = new _Accessor<T,bool>( *(bool*)var->val );
             da = new _Accessor<T,bool>( *(bool*)var->val_default );
-        }else if( boost::is_integral<T>::value ) {
+        }else if( boostd::is_integral<T>::value ) {
             var->create(new int, new int, typeid(int).name() );
             var->meta_increment = std::max(1.0,default_increment);
             a = new _Accessor<T,int>( *(int*)var->val );
             da = new _Accessor<T,int>( *(int*)var->val_default );
-        }else if( boost::is_scalar<T>::value ) {
+        }else if( boostd::is_scalar<T>::value ) {
             var->create(new double, new double, typeid(double).name() );
             var->meta_increment = default_increment;
             a = new _Accessor<T,double>( *(double*)var->val );
@@ -306,7 +310,7 @@ inline void Var<T>::Init(const std::string& name,
         var->meta_gui_changed = false;
         
         for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
-            if( boost::starts_with(name,invc->filter) ) {
+            if( StartsWith(name,invc->filter) ) {
                invc->fn( invc->data, name, *var, typeid(T).name(), true);
             }
         }        
@@ -315,12 +319,12 @@ inline void Var<T>::Init(const std::string& name,
 
 inline void ProcessHistoricCallbacks(NewVarCallbackFn callback, void* data, const std::string& filter)
 {
-    for( boost::ptr_unordered_map<std::string,_Var>::iterator i = vars.begin();
+    for( std::map<std::string,_Var*>::iterator i = vars.begin();
          i != vars.end(); ++i )
     {
         const std::string& name = i->first;
         
-        if( boost::starts_with(name,filter) )
+        if( StartsWith(name,filter) )
         {
             callback(data,name,*(i->second), typeid(std::string).name(), false);
         }

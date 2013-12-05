@@ -26,7 +26,6 @@
  */
 
 #include <pangolin/video/ffmpeg.h>
-#include <boost/algorithm/string.hpp>
 
 extern "C"
 {
@@ -39,7 +38,7 @@ namespace pangolin
 
 PixelFormat FfmpegFmtFromString(const std::string fmt)
 {
-    std::string lfmt = boost::algorithm::to_lower_copy(fmt);
+    const std::string lfmt = ToUpperCopy(fmt);
     if(!lfmt.compare("gray8") || !lfmt.compare("grey8") || !lfmt.compare("grey")) {
         return PIX_FMT_GRAY8;
     }
@@ -154,7 +153,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
 #endif
         throw VideoException("Couldn't open stream");
     
-    if( !boost::algorithm::to_lower_copy(codec_hint).compare("mjpeg") )
+    if( !ToUpperCopy(codec_hint).compare("MJPEG") )
         pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
     
     // Retrieve stream information

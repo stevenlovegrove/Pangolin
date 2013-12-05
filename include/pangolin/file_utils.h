@@ -30,6 +30,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 namespace pangolin
 {
@@ -49,6 +50,39 @@ std::string PathExpand(const std::string& sPath);
 bool MatchesWildcard(const std::string& str, const std::string& wildcard);
 
 bool FilesMatchingWildcard(const std::string& wildcard_file_path, std::vector<std::string>& file_vec);
+
+
+// TODO: Tidy these inlines up / move them
+
+inline bool StartsWith(const std::string& str, const std::string& prefix)
+{
+    return !str.compare(0, prefix.size(), prefix);
+}
+
+inline bool EndsWith(const std::string& str, const std::string& prefix)
+{
+    return !str.compare(str.size() - prefix.size(), prefix.size(), prefix);
+}
+
+inline std::string Trim(const std::string& str, const std::string& delimiters = " \f\n\r\t\v" )
+{
+    const size_t f = str.find_first_not_of( delimiters );
+    return f == std::string::npos ?
+                "" :
+                str.substr( f, str.find_last_not_of( delimiters ) + 1 );
+}
+
+inline void ToUpper( std::string& str )
+{
+    std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+}
+
+inline std::string ToUpperCopy( const std::string& str )
+{
+    std::string out;
+    std::transform(str.begin(), str.end(), out.begin(), ::toupper);
+    return out;
+}
 
 }
 

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <boost/thread.hpp>
+
 #include <pangolin/pangolin.h>
 
 using namespace pangolin;
@@ -41,8 +41,6 @@ int main( int /*argc*/, char* argv[] )
 
     // Render graph, Swap frames and Process Events
     pangolin::FinishFrame();
-
-    boost::this_thread::sleep(boost::posix_time::milliseconds(10));
   }
 
   return 0;

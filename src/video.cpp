@@ -53,8 +53,6 @@
 #include <pangolin/video/pvn_video.h>
 #include <pangolin/video_splitter.h>
 
-#include <boost/algorithm/string.hpp>
-
 namespace pangolin
 {
 
@@ -106,7 +104,7 @@ dc1394video_mode_t get_firewire_format7_mode(const std::string fmt)
 {
     const std::string FMT7_prefix = "FORMAT7_";
     
-    if( boost::algorithm::starts_with(fmt, FMT7_prefix) )
+    if( StartsWith(fmt, FMT7_prefix) )
     {
         int fmt7_mode = 0;
         std::istringstream iss( fmt.substr(FMT7_prefix.size()) );
@@ -194,7 +192,7 @@ VideoInterface* OpenVideo(std::string str_uri)
     {
         video = new ImagesVideo(uri.url);
     }else
-    if(!uri.scheme.compare("file") && boost::algorithm::ends_with(uri.url,"pvn") )
+    if(!uri.scheme.compare("file") && EndsWith(uri.url,"pvn") )
     {
         const bool realtime = uri.Contains("realtime");
         video = new PvnVideo(uri.url.c_str(), realtime);
@@ -257,14 +255,14 @@ VideoInterface* OpenVideo(std::string str_uri)
 #ifdef HAVE_FFMPEG
     if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){
         std::string outfmt = uri.Get<std::string>("fmt","RGB24");
-        boost::to_upper(outfmt);
+        ToUpper(outfmt);
         const int video_stream = uri.Get<int>("stream",-1);
         video = new FfmpegVideo(uri.url.c_str(), outfmt, "", false, video_stream);
     }else if( !uri.scheme.compare("mjpeg")) {
         video = new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" );
     }else if( !uri.scheme.compare("convert") ) {
         std::string outfmt = uri.Get<std::string>("fmt","RGB24");
-        boost::to_upper(outfmt);
+        ToUpper(outfmt);
         VideoInterface* subvid = OpenVideo(uri.url);
         video = new FfmpegConverter(subvid,outfmt,FFMPEG_POINT);
     }else
@@ -289,7 +287,7 @@ VideoInterface* OpenVideo(std::string str_uri)
 #ifdef HAVE_DC1394
     if(!uri.scheme.compare("firewire") || !uri.scheme.compare("dc1394") ) {
         std::string desired_format = uri.Get<std::string>("fmt","RGB24");
-        boost::to_upper(desired_format);
+        ToUpper(desired_format);
         const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
         const ImageDim desired_xy  = uri.Get<ImageDim>("pos", ImageDim(0,0));
         const int desired_dma = uri.Get<int>("dma", 10);
@@ -303,7 +301,7 @@ VideoInterface* OpenVideo(std::string str_uri)
         dc1394speed_t iso_speed = (dc1394speed_t)(log(desired_iso/100) / log(2));
         int dma_buffers = desired_dma;
         
-        if( boost::algorithm::starts_with(desired_format, "FORMAT7") )
+        if( StartsWith(desired_format, "FORMAT7") )
         {
             dc1394video_mode_t video_mode = get_firewire_format7_mode(desired_format);
             if( guid.guid == 0 ) {

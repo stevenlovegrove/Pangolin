@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,46 +25,15 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_THREADED_WRITE_H
-#define PANGOLIN_THREADED_WRITE_H
+#ifndef PANGOLIN_COMPAT_FUNCTION_H
+#define PANGOLIN_COMPAT_FUNCTION_H
 
-#include <iostream>
-#include <streambuf>
-#include <fstream>
+#ifdef CPP11_NO_BOOST
+#include <function>
+#else
+#include <boost/function.hpp>
+#endif
 
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
-#include <pangolin/compat/condition_variable.h>
+#include <pangolin/compat/boostd.h>
 
-namespace pangolin
-{
-
-class threadedfilebuf : public std::streambuf
-{
-public:
-    threadedfilebuf(const std::string& filename, unsigned int buffer_size_bytes);
-    ~threadedfilebuf();
-    
-    void operator()();
-    
-protected:
-    //! Override streambuf::xsputn for asynchronous write
-    std::streamsize xsputn(const char * s, std::streamsize n);
-    
-    std::filebuf file;
-    char* mem_buffer;
-    int mem_size;
-    int mem_max_size;
-    int mem_start;
-    int mem_end;
-    
-    boostd::mutex update_mutex;
-    boostd::condition_variable cond_queued;
-    boostd::condition_variable cond_dequeued;
-    boostd::thread write_thread;
-};
-
-}
-
-
-#endif // PANGOLIN_THREADED_WRITE_H
+#endif // PANGOLIN_COMPAT_FUNCTION_H

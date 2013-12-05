@@ -32,8 +32,9 @@
 
 #include <pangolin/compat/glutbitmap.h>
 
-#include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
+#include <pangolin/compat/thread.h>
+#include <pangolin/compat/mutex.h>
+
 #include <iostream>
 #include <iomanip>
 
@@ -67,7 +68,7 @@ static void* font = GLUT_BITMAP_HELVETICA_12;
 static int text_height = 8; //glutBitmapHeight(font) * 0.7;
 static int cb_height = text_height * 1.6;
 
-boost::mutex display_mutex;
+boostd::mutex display_mutex;
 
 static bool guiVarHasChanged = true;
 
@@ -83,7 +84,7 @@ void GuiVarChanged( Var<T>& var)
     var.var->meta_gui_changed = true;
     
     for(std::vector<GuiVarChangedCallback>::iterator igvc = gui_var_changed_callbacks.begin(); igvc != gui_var_changed_callbacks.end(); ++igvc) {
-        if( boost::starts_with(var.var->meta_full_name, igvc->filter) ) {
+        if( StartsWith(var.var->meta_full_name, igvc->filter) ) {
            igvc->fn( igvc->data, var.var->meta_full_name, *var.var );
         }
     }

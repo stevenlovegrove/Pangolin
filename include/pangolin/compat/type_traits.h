@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,46 +25,32 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_THREADED_WRITE_H
-#define PANGOLIN_THREADED_WRITE_H
+#ifndef PANGOLIN_COMPAT_TYPE_TRAITS_H
+#define PANGOLIN_COMPAT_TYPE_TRAITS_H
 
-#include <iostream>
-#include <streambuf>
-#include <fstream>
+#include <typeinfo>
 
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
-#include <pangolin/compat/condition_variable.h>
+#ifdef CPP11_NO_BOOST
+    #include <type_traits>
+#else
+    #include <boost/type_traits.hpp>
+#endif
 
+#include <pangolin/compat/boostd.h>
+
+// enable_if From Boost
 namespace pangolin
 {
+    template <bool B, class T = void>
+    struct enable_if_c {
+      typedef T type;
+    };
 
-class threadedfilebuf : public std::streambuf
-{
-public:
-    threadedfilebuf(const std::string& filename, unsigned int buffer_size_bytes);
-    ~threadedfilebuf();
-    
-    void operator()();
-    
-protected:
-    //! Override streambuf::xsputn for asynchronous write
-    std::streamsize xsputn(const char * s, std::streamsize n);
-    
-    std::filebuf file;
-    char* mem_buffer;
-    int mem_size;
-    int mem_max_size;
-    int mem_start;
-    int mem_end;
-    
-    boostd::mutex update_mutex;
-    boostd::condition_variable cond_queued;
-    boostd::condition_variable cond_dequeued;
-    boostd::thread write_thread;
-};
+    template <class T>
+    struct enable_if_c<false, T> {};
 
+    template <class Cond, class T = void>
+    struct enable_if : public enable_if_c<Cond::value, T> {};
 }
 
-
-#endif // PANGOLIN_THREADED_WRITE_H
+#endif // PANGOLIN_COMPAT_TYPE_TRAITS_H
