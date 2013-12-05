@@ -4,6 +4,7 @@
 
 #include <pangolin/glcuda.h>
 #include <pangolin/pangolin.h>
+#include <pangolin/glvbo.h>
 
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
@@ -38,11 +39,11 @@ int main( int /*argc*/, char* argv[] )
 
   // Create vertex and colour buffer objects and register them with CUDA
   GlBufferCudaPtr vertex_array(
-      GlArrayBuffer, mesh_width*mesh_height*sizeof(float4),
+      GlArrayBuffer, mesh_width*mesh_height, GL_FLOAT, 4,
       cudaGraphicsMapFlagsWriteDiscard, GL_STREAM_DRAW
   );
   GlBufferCudaPtr colour_array(
-      GlArrayBuffer, mesh_width*mesh_height*sizeof(uchar4),
+      GlArrayBuffer, mesh_width*mesh_height, GL_UNSIGNED_BYTE, 4,
       cudaGraphicsMapFlagsWriteDiscard, GL_STREAM_DRAW
   );
 
@@ -93,18 +94,7 @@ int main( int /*argc*/, char* argv[] )
       time += delta;
     }
 
-    vertex_array.Bind();
-    glVertexPointer(4, GL_FLOAT, 0, 0);
-    glEnableClientState(GL_VERTEX_ARRAY);
-
-    colour_array.Bind();
-    glColorPointer(4, GL_UNSIGNED_BYTE, 0, 0);
-    glEnableClientState(GL_COLOR_ARRAY);
-
-    glDrawArrays(GL_POINTS, 0, mesh_width * mesh_height);
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
+    pangolin::RenderVboCbo(vertex_array, colour_array);
 
     // Render our UI panel when we receive input
     if(!(frame%100))
