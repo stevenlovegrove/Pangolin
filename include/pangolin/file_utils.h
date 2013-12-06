@@ -77,10 +77,24 @@ inline void ToUpper( std::string& str )
     std::transform(str.begin(), str.end(), str.begin(), ::toupper);
 }
 
+inline void ToLower( std::string& str )
+{
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+}
+
 inline std::string ToUpperCopy( const std::string& str )
 {
     std::string out;
+    out.resize(str.size());
     std::transform(str.begin(), str.end(), out.begin(), ::toupper);
+    return out;
+}
+
+inline std::string ToLowerCopy( const std::string& str )
+{
+    std::string out;
+    out.resize(str.size());
+    std::transform(str.begin(), str.end(), out.begin(), ::tolower);
     return out;
 }
 

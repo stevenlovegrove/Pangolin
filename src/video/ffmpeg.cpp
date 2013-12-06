@@ -38,7 +38,7 @@ namespace pangolin
 
 PixelFormat FfmpegFmtFromString(const std::string fmt)
 {
-    const std::string lfmt = ToUpperCopy(fmt);
+    const std::string lfmt = ToLowerCopy(fmt);
     if(!lfmt.compare("gray8") || !lfmt.compare("grey8") || !lfmt.compare("grey")) {
         return PIX_FMT_GRAY8;
     }
@@ -153,7 +153,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
 #endif
         throw VideoException("Couldn't open stream");
     
-    if( !ToUpperCopy(codec_hint).compare("MJPEG") )
+    if( !ToLowerCopy(codec_hint).compare("mjpeg") )
         pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
     
     // Retrieve stream information
@@ -533,7 +533,7 @@ void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
         if (ret < 0) throw VideoException("Error encoding video frame");
     }
     
-    if (ret > 0 && got_packet) {
+    if (ret >= 0 && got_packet) {
         WriteAvPacket(&pkt);
     }
     
