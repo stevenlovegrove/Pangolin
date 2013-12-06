@@ -59,7 +59,7 @@ int main( int /*argc*/, char* argv[] )
 
   // Add named Panel and bind to variables beginning 'ui'
   // A Panel is just a View with a default layout and input handling
-  View& d_panel = pangolin::CreatePanel("ui")
+  pangolin::CreatePanel("ui")
       .SetBounds(0.0, 1.0, 0.0, Attach::Pix(UI_WIDTH));
 
   // Demonstration of how we can register a keyboard hook to alter a Var

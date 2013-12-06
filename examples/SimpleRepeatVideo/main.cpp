@@ -28,7 +28,7 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
     pangolin::CreateWindowAndBind("Main",w + panel_width,h);
 
     // Create viewport for video with fixed aspect
-    View& d_panel = pangolin::CreatePanel("ui.")
+    pangolin::CreatePanel("ui.")
         .SetBounds(0.0, 1.0, 0.0, Attach::Pix(panel_width));
 
     View& vVideo = Display("Video")
