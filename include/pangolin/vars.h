@@ -210,9 +210,19 @@ struct GuiVarChangedCallback
     void* data;
 };
 
-extern std::map<std::string,_Var*> vars;
-extern std::vector<NewVarCallback> new_var_callbacks;
-extern std::vector<GuiVarChangedCallback> gui_var_changed_callbacks;
+struct VarState
+{
+    static VarState& I();
+    static std::map<std::string,_Var*>& Vars();
+
+    VarState();
+    ~VarState();
+
+    std::map<std::string,_Var*> vars;
+    std::vector<NewVarCallback> new_var_callbacks;
+    std::vector<GuiVarChangedCallback> gui_var_changed_callbacks;
+};
+
 
 template<typename T>
 inline void Var<T>::Init(const std::string& name,
@@ -222,11 +232,11 @@ inline void Var<T>::Init(const std::string& name,
                          int  flags,
                          bool logscale)
 {
-    std::map<std::string,_Var*>::iterator vi = vars.find(name);
+    std::map<std::string,_Var*>::iterator vi = VarState::I().vars.find(name);
     
     const std::vector<std::string> parts = pangolin::Split(name,'.');
     
-    if( vi != vars.end() )
+    if( vi != VarState::I().vars.end() )
     {
         // found
         var = vi->second;
@@ -247,7 +257,7 @@ inline void Var<T>::Init(const std::string& name,
             //      var->meta_gui_changed = false;
             
             // notify those watching new variables
-            for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
+            for(std::vector<NewVarCallback>::iterator invc = VarState::I().new_var_callbacks.begin(); invc != VarState::I().new_var_callbacks.end(); ++invc) {
                 if( StartsWith(name,invc->filter) ) {
                    invc->fn( invc->data, name, *var, typeid(T).name(), false);
                 }
@@ -259,10 +269,10 @@ inline void Var<T>::Init(const std::string& name,
     
     // Create var of base type T
     {
-        var = vars[name];
+        var = VarState::I().vars[name];
         if(!var) {
             var = new _Var();
-            vars[name] = var;
+            VarState::I().vars[name] = var;
             // TODO: This needs to be deallocated!
         }
         
@@ -309,7 +319,7 @@ inline void Var<T>::Init(const std::string& name,
         var->logscale = logscale;
         var->meta_gui_changed = false;
         
-        for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
+        for(std::vector<NewVarCallback>::iterator invc = VarState::I().new_var_callbacks.begin(); invc != VarState::I().new_var_callbacks.end(); ++invc) {
             if( StartsWith(name,invc->filter) ) {
                invc->fn( invc->data, name, *var, typeid(T).name(), true);
             }
@@ -319,8 +329,8 @@ inline void Var<T>::Init(const std::string& name,
 
 inline void ProcessHistoricCallbacks(NewVarCallbackFn callback, void* data, const std::string& filter)
 {
-    for( std::map<std::string,_Var*>::iterator i = vars.begin();
-         i != vars.end(); ++i )
+    for( std::map<std::string,_Var*>::iterator i = VarState::I().vars.begin();
+         i != VarState::I().vars.end(); ++i )
     {
         const std::string& name = i->first;
         

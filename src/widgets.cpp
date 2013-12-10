@@ -83,7 +83,7 @@ void GuiVarChanged( Var<T>& var)
     guiVarHasChanged = true;
     var.var->meta_gui_changed = true;
     
-    for(std::vector<GuiVarChangedCallback>::iterator igvc = gui_var_changed_callbacks.begin(); igvc != gui_var_changed_callbacks.end(); ++igvc) {
+    for(std::vector<GuiVarChangedCallback>::iterator igvc = VarState::I().gui_var_changed_callbacks.begin(); igvc != VarState::I().gui_var_changed_callbacks.end(); ++igvc) {
         if( StartsWith(var.var->meta_full_name, igvc->filter) ) {
            igvc->fn( igvc->data, var.var->meta_full_name, *var.var );
         }

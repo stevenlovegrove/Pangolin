@@ -36,18 +36,34 @@ using namespace std;
 namespace pangolin
 {
 
-std::map<string,_Var*> vars;
-vector<NewVarCallback> new_var_callbacks;
-vector<GuiVarChangedCallback> gui_var_changed_callbacks;
+VarState::VarState()
+{
+    // Nothing to do
+}
+
+VarState::~VarState()
+{
+    // Deallocate vars
+    for( std::map<std::string,_Var*>::iterator i = vars.begin(); i != vars.end(); ++i)
+    {
+        delete i->second;
+    }
+    vars.clear();
+}
+
+VarState& VarState::I() {
+    static VarState singleton;
+    return singleton;
+}
 
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter)
 {
-    new_var_callbacks.push_back(NewVarCallback(filter,callback,data));
+    VarState::I().new_var_callbacks.push_back(NewVarCallback(filter,callback,data));
 }
 
 void RegisterGuiVarChangedCallback(GuiVarChangedCallbackFn callback, void* data, const std::string& filter)
 {
-    gui_var_changed_callbacks.push_back(GuiVarChangedCallback(filter,callback,data));
+    VarState::I().gui_var_changed_callbacks.push_back(GuiVarChangedCallback(filter,callback,data));
 }
 
 // Find the open brace preceeded by '$'
@@ -125,8 +141,8 @@ string ProcessVal(const string& val )
 
 void AddVar(const string& name, const string& val )
 {
-    std::map<std::string,_Var*>::iterator vi = vars.find(name);
-    const bool exists_already = vi != vars.end();
+    std::map<std::string,_Var*>::iterator vi = VarState::I().vars.find(name);
+    const bool exists_already = vi != VarState::I().vars.end();
     
     string full = ProcessVal(val);
     Var<string> var(name);
