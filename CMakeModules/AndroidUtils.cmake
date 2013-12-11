@@ -93,9 +93,18 @@ void ANativeActivity_onCreate(ANativeActivity * app, void * ud, size_t udsize) {
     endmacro()
 
     macro( android_update android_project_name)
+        # Find which android platforms are available.
+        execute_process(
+            COMMAND android list targets -c
+            OUTPUT_VARIABLE android_target_list
+        )
+
+        # Pick first platform from this list.
+        string(REGEX MATCH "^.*[^\n]" android_target ${android_target_list} )
+
         # Generate ant build scripts for making APK
         execute_process(
-            COMMAND android update project --name ${android_project_name} --path . --target android-17 --subprojects
+            COMMAND android update project --name ${android_project_name} --path . --target ${android_target} --subprojects
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
     endmacro()
