@@ -28,6 +28,8 @@
 #ifndef PANGOLIN_COMPAT_TYPE_TRAITS_H
 #define PANGOLIN_COMPAT_TYPE_TRAITS_H
 
+#include <pangolin/platform.h>
+
 #include <typeinfo>
 
 #ifdef CPP11_NO_BOOST

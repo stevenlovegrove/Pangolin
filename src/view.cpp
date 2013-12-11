@@ -24,6 +24,8 @@
     #endif // HAVE_TIFF
 #endif // HAVE_BOOST_GIL
 
+#include <stdexcept>
+
 namespace pangolin
 {
 
@@ -513,8 +515,7 @@ View& View::VisibleChild(size_t i)
         }
     }
     // Shouldn't get here
-    assert(0);
-    return *this;
+    throw std::out_of_range("No such child.");
 }
 
 View* View::FindChild(int x, int y)

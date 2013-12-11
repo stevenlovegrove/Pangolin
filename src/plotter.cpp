@@ -35,6 +35,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <stdexcept>
 #include <map>
 
 using namespace std;
@@ -408,7 +409,7 @@ void Plotter::Render()
         }else if( plot_mode==STACKED_HISTOGRAM ) {
             DrawSequenceHistogram(*log);
         }else {
-            assert(false);
+            throw std::logic_error("Unknown plot mode.");
         }
     }
     

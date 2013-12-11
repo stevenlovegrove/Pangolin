@@ -50,6 +50,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include <stdexcept>
 
 #include <jni.h>
 
