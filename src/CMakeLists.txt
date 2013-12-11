@@ -153,6 +153,10 @@ if(NOT ANDROID)
         message(STATUS "Glut Found and Enabled")
     endif()
 else()  # NOT ANDROID
+    # Fix issue with thread local storage on android.
+    add_definitions(-fno-data-sections)
+
+    # Android specific display code
     list(APPEND HEADERS ${INCDIR}/display_android.h )
     list(APPEND SOURCES display_android.cpp )
     set(HAVE_GLES 1)
