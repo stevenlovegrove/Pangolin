@@ -88,6 +88,7 @@ if(BUILD_PANGOLIN_GUI)
       list(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY}" )
   else()
       find_package(GLUES REQUIRED)
+      list(APPEND USER_INC  "${GLUES_INCLUDE_DIR};" )
       list(APPEND LINK_LIBS "${GLUES_LIBRARY}" )
       list(APPEND LINK_LIBS "-lEGL;-lGLESv2;-lGLESv1_CM" )
   endif()
@@ -152,6 +153,10 @@ if(NOT ANDROID)
         message(STATUS "Glut Found and Enabled")
     endif()
 else()  # NOT ANDROID
+    # Fix issue with thread local storage on android.
+    add_definitions(-fno-data-sections)
+
+    # Android specific display code
     list(APPEND HEADERS ${INCDIR}/display_android.h )
     list(APPEND SOURCES display_android.cpp )
     set(HAVE_GLES 1)

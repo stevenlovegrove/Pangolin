@@ -28,6 +28,8 @@
 #ifndef PANGOLIN_COMPAT_FUNCTION_H
 #define PANGOLIN_COMPAT_FUNCTION_H
 
+#include <pangolin/platform.h>
+
 #ifdef CPP11_NO_BOOST
 #include <functional>
 #else

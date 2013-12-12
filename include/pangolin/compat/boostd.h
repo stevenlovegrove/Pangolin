@@ -28,6 +28,8 @@
 #ifndef PANGOLIN_COMPAT_BOOSTD_H
 #define PANGOLIN_COMPAT_BOOSTD_H
 
+#include <pangolin/platform.h>
+
 #ifdef CPP11_NO_BOOST
 namespace boostd = std;
 #else
