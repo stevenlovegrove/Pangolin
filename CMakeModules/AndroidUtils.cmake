@@ -100,7 +100,7 @@ void ANativeActivity_onCreate(ANativeActivity * app, void * ud, size_t udsize) {
         )
 
         # Pick first platform from this list.
-        string(REGEX MATCH "^.*[^\n]" android_target ${android_target_list} )
+        string(REGEX MATCH "^.*[^\n]" android_target "${android_target_list}" )
 
         # Generate ant build scripts for making APK
         execute_process(
