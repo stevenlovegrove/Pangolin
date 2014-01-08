@@ -28,6 +28,8 @@
 #ifndef PANGOLIN_GL2ENGINE_H
 #define PANGOLIN_GL2ENGINE_H
 
+#include <stack>
+
 #include <pangolin/opengl_render_state.h>
 #include <pangolin/glsl.h>
 
@@ -69,8 +71,8 @@ public:
     GlEngine()
     {
         // Initialise default state
-        projection = IdentityMatrix();
-        modelview = IdentityMatrix();
+        projection.push(IdentityMatrix());
+        modelview.push(IdentityMatrix());
         currentmatrix = &modelview;
 
         // Compile and link shaders
@@ -98,11 +100,11 @@ public:
 
     void UpdateMatrices()
     {
-        OpenGlMatrix pmv = projection * modelview;
+        OpenGlMatrix pmv = projection.top() * modelview.top();
         GLint curprog;
         glGetIntegerv(GL_CURRENT_PROGRAM, &curprog);
         prog_fixed.Bind();
-        glUniformMatrix4fv( prog_fixed.GetUniformHandle("u_modelViewMatrix"), 1, false, modelview.m );
+        glUniformMatrix4fv( prog_fixed.GetUniformHandle("u_modelViewMatrix"), 1, false, modelview.top().m );
         glUniformMatrix4fv( prog_fixed.GetUniformHandle("u_modelViewProjectionMatrix"), 1, false, pmv.m );
         glUseProgram(curprog);
     }
@@ -117,9 +119,9 @@ public:
     }
 
 //protected:
-    OpenGlMatrix projection;
-    OpenGlMatrix modelview;
-    OpenGlMatrix* currentmatrix;
+    std::stack<OpenGlMatrix> projection;
+    std::stack<OpenGlMatrix> modelview;
+    std::stack<OpenGlMatrix>* currentmatrix;
 
     GLenum matrixmode;
 
@@ -181,9 +183,9 @@ inline void glEnableClientState(GLenum cap)
     if(cap == GL_VERTEX_ARRAY) {
         glEnableVertexAttribArray(0);
     }else if(cap == GL_COLOR_ARRAY) {
-        glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(1);
     }else if(cap == GL_NORMAL_ARRAY) {
-        glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(2);
     }else if(cap == GL_TEXTURE_COORD_ARRAY) {
         glEnableVertexAttribArray(3);
     }else{
@@ -196,9 +198,9 @@ inline void glDisableClientState(GLenum cap)
     if(cap == GL_VERTEX_ARRAY) {
         glDisableVertexAttribArray(0);
     }else if(cap == GL_COLOR_ARRAY) {
-        glDisableVertexAttribArray(3);
+        glDisableVertexAttribArray(1);
     }else if(cap == GL_NORMAL_ARRAY) {
-        glDisableVertexAttribArray(3);
+        glDisableVertexAttribArray(2);
     }else if(cap == GL_TEXTURE_COORD_ARRAY) {
         glDisableVertexAttribArray(3);
     }else{
@@ -225,14 +227,14 @@ inline void glMatrixMode(GLenum mode)
 inline void glLoadIdentity()
 {
     pangolin::GlEngine& gl = pangolin::glEngine();
-    *gl.currentmatrix = pangolin::IdentityMatrix();
+    gl.currentmatrix->top() = pangolin::IdentityMatrix();
     gl.UpdateMatrices();
 }
 
 inline void glLoadMatrixf(const GLfloat* m)
 {
     pangolin::GlEngine& gl = pangolin::glEngine();
-    pangolin::GLprecision* cm = gl.currentmatrix->m;
+    pangolin::GLprecision* cm = gl.currentmatrix->top().m;
     for(int i=0; i<16; ++i) cm[i] = (pangolin::GLprecision)m[i];
     gl.UpdateMatrices();
 }
@@ -240,7 +242,7 @@ inline void glLoadMatrixf(const GLfloat* m)
 inline void glLoadMatrixd(const GLdouble* m)
 {
     pangolin::GlEngine& gl = pangolin::glEngine();
-    pangolin::GLprecision* cm = gl.currentmatrix->m;
+    pangolin::GLprecision* cm = gl.currentmatrix->top().m;
     for(int i=0; i<16; ++i) cm[i] = (pangolin::GLprecision)m[i];
     gl.UpdateMatrices();
 }
@@ -259,16 +261,36 @@ inline void glMultMatrixd(const GLdouble* m)
     print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
-inline void glOrtho(
-    GLdouble l,
-    GLdouble r,
-    GLdouble b,
-    GLdouble t,
-    GLdouble n,
-    GLdouble f)
+inline void glPushMatrix(void)
 {
     pangolin::GlEngine& gl = pangolin::glEngine();
-    *gl.currentmatrix = pangolin::ProjectionMatrixOrthographic(l,r,b,t,b,f);
+    gl.currentmatrix->push(gl.currentmatrix->top());
+}
+
+inline void glPopMatrix(void)
+{
+    pangolin::GlEngine& gl = pangolin::glEngine();
+    gl.currentmatrix->pop();
+    gl.UpdateMatrices();
+}
+
+inline void glTranslatef(GLfloat x, GLfloat y, GLfloat z )
+{
+    pangolin::GlEngine& gl = pangolin::glEngine();
+    pangolin::GLprecision* cm = gl.currentmatrix->top().m;
+    cm[3] += x;
+    cm[7] += y;
+    cm[11] += z;
+    gl.UpdateMatrices();
+}
+
+inline void glOrtho(
+    GLdouble l, GLdouble r,
+    GLdouble b, GLdouble t,
+    GLdouble n, GLdouble f)
+{
+    pangolin::GlEngine& gl = pangolin::glEngine();
+    gl.currentmatrix->top() = pangolin::ProjectionMatrixOrthographic(l,r,b,t,n,f);
     gl.UpdateMatrices();
 }
 
@@ -292,21 +314,6 @@ inline void glPointSize(GLfloat size)
     print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
-inline void glPushMatrix(void)
-{
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
-}
-
-inline void glPopMatrix(void)
-{
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
-}
-
-inline void glTranslatef(GLfloat x, GLfloat y, GLfloat z )
-{
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
-}
-
 inline void glTexEnvf(	GLenum target,
     GLenum pname,
     GLfloat param)
@@ -314,14 +321,11 @@ inline void glTexEnvf(	GLenum target,
     print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
+const GLubyte gNotErrorLookup[] = "XX";
 inline const GLubyte* gluErrorString(GLenum error)
 {
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
-    return 0;
+    return gNotErrorLookup;
 }
-
-
-
 
 static void __gluMultMatrixVecf(const GLfloat matrix[16], const GLfloat in[4],
                                 GLfloat out[4])
