@@ -978,6 +978,11 @@ void FinishAndroidFrame()
 void CreateWindowAndBind(std::string window_title, int /*w*/, int /*h*/ )
 {
     CreateAndroidWindowAndBind(window_title);
+
+#ifdef HAVE_GLES_2
+    // Bind default compatibility shader
+    pangolin::glEngine().prog_fixed.Bind();
+#endif
 }
 
 // Implement platform agnostic version

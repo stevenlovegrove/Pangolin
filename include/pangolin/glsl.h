@@ -31,6 +31,8 @@
 #include <sstream>
 #include <algorithm>
 
+#include <pangolin/glplatform.h>
+
 #ifdef HAVE_GLES
     #define GLhandleARB GLuint
 #endif

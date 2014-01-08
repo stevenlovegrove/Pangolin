@@ -91,6 +91,8 @@ if(BUILD_PANGOLIN_GUI)
       list(APPEND USER_INC  "${GLUES_INCLUDE_DIR};" )
       list(APPEND LINK_LIBS "${GLUES_LIBRARY}" )
       list(APPEND LINK_LIBS "-lEGL;-lGLESv2;-lGLESv1_CM" )
+      list(APPEND HEADERS ${INCDIR}/gl2engine.h )
+      list(APPEND SOURCES gl2engine.cpp)
   endif()
 endif()
 
