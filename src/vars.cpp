@@ -162,14 +162,13 @@ void AddAlias(const string& alias, const string& name)
     
     if( vi != vars.end() )
     {
-        //cout << "Adding Alias " << alias << " to " << name << endl;
         _Var * v = vi->second;
         vars[alias].create(v->val,v->val_default,v->type_name);
         vars[alias].meta_friendly = alias;
         v->generic = false;
         vars[alias].generic = false;
     }else{
-        cout << "Variable " << name << " does not exist to alias." << endl;
+        print_error("Variable %s does not exist to alias.\n", name);
     }
 }
 #endif

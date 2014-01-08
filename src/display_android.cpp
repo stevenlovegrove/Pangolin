@@ -122,8 +122,15 @@ static int engine_init_display(struct engine* engine) {
     ANativeWindow_setBuffersGeometry(engine->app->window, 0, 0, format);
 //    ANativeActivity_setWindowFlags(engine->app->activity, AWINDOW_FLAG_FULLSCREEN, 0 );
 
+    EGLint const attrib_list[] = {
+#ifdef HAVE_GLES_2
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
+        EGL_NONE
+    };
+
     surface = eglCreateWindowSurface(display, config, engine->app->window, NULL);
-    context = eglCreateContext(display, config, NULL, NULL);
+    context = eglCreateContext(display, config, NULL, attrib_list);
 
     if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE) {
         LOGW("Unable to eglMakeCurrent");

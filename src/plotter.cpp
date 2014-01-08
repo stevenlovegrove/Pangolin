@@ -105,6 +105,19 @@ void DataSequence::Clear()
     max_y = numeric_limits<float>::min();
 }
 
+const float* DataSequence::FirstBlock(int i, size_t& n) const
+{
+    int index = (i-firstn) % buffer_size;
+    n = buffer_size - index;
+    return &ys[index];
+}
+
+const float* DataSequence::SecondBlock(int i, size_t& n) const
+{
+    n = buffer_size;
+    return ys;
+}
+
 float DataSequence::operator[](int i) const
 {
     return ys[(i-firstn) % buffer_size];
@@ -246,10 +259,21 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
     
     for( unsigned int i=0; i<show_n; ++i )
         show[i] = true;
+
+    glslprogram.AddShader(GlSlFragmentShader,
+      "void main() { gl_FragColor.x = 1.0; gl_FragColor.y = 0.0; gl_FragColor.z = 0.0; }"
+    );
+    //glslprogram.AddShader(GlSlVertexShader,
+    //  "attribute vec4 a_position; uniform mat4 u_modelViewProjectionMatrix; void main() { gl_Position = u_modelViewProjectionMatrix * a_position; }"
+    //);
+
+    glslprogram.Link();
 }
 
 void Plotter::DrawTicks()
 {
+    glslprogram.Bind();
+
     glColor3fv(colour_tk);
     glLineWidth(lineThickness);
     const int tx[2] = {
@@ -280,10 +304,13 @@ void Plotter::DrawTicks()
     glDrawLine(0, int_y[0]+vo[1],  0, int_y[1]+vo[1] );
     glDrawLine(int_x[0]+vo[0],0,   int_x[1]+vo[0],0  );
     glLineWidth(1.0f);
+
+    glslprogram.Unbind();
 }
 
 void Plotter::DrawSequence(const DataSequence& seq)
 {
+#ifndef HAVE_GLES
     const int seqint_x[2] = {seq.IndexBegin(), seq.IndexEnd() };
     const int valid_int_x[2] = {
         std::max(seqint_x[0],(int)(int_x[0]+vo[0])),
@@ -291,18 +318,18 @@ void Plotter::DrawSequence(const DataSequence& seq)
     };
     glLineWidth(lineThickness);
     
-#ifndef HAVE_GLES
     glBegin(draw_modes[draw_mode]);
     for( int x=valid_int_x[0]; x<valid_int_x[1]; ++x )
         glVertex2f(x,seq[x]);
     glEnd();
-#endif // HAVE_GLES
     
     glLineWidth(1.0f);
+#endif // HAVE_GLES
 }
 
 void Plotter::DrawSequenceHistogram(const DataLog& seq)
 {
+#ifndef HAVE_GLES
     size_t vec_size = std::min((unsigned)log->x, log->buffer_size);
     int idx_subtract = std::max(0,(int)(log->x)-(int)(log->buffer_size));
     vector<float> accum_vec(vec_size,0);
@@ -317,7 +344,6 @@ void Plotter::DrawSequenceHistogram(const DataLog& seq)
                 std::min(seqint_x[1],(int)(int_x[1]+vo[0]))
             };
             
-#ifndef HAVE_GLES            
             glBegin(GL_TRIANGLE_STRIP);
             glColor3fv(plot_colours[s%num_plot_colours]);
             
@@ -335,26 +361,26 @@ void Plotter::DrawSequenceHistogram(const DataLog& seq)
                 glVertex2f(x+0.5,accum);
             }
             glEnd();
-#endif // HAVE_GLES
         }
     }
+#endif // HAVE_GLES
 }
 
 void Plotter::DrawSequence(const DataSequence& x,const DataSequence& y)
 {
+#ifndef HAVE_GLES
     const unsigned minn = max(x.IndexBegin(),y.IndexBegin());
     const unsigned maxn = min(x.IndexEnd(),y.IndexEnd());
     
     glLineWidth(lineThickness);
 
-#ifndef HAVE_GLES
     glBegin(draw_modes[draw_mode]);
     for( unsigned n=minn; n < maxn; ++n )
         glVertex2f(x[n],y[n]);
     glEnd();
-#endif
     
     glLineWidth(1.0f);
+#endif
 }
 
 void Plotter::Render()
@@ -512,10 +538,10 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
             track_front = !track_front;
         }else if( key == 'c' ) {
             log->Clear();
-            cout << "Plotter: Clearing data" << endl;
+            print_report("Plotter: Clearing data\n");
         }else if( key == 's' ) {
             log->Save("./log.csv");
-            cout << "Plotter: Saving to log.csv" << endl;
+            print_report("Plotter: Saving to log.csv\n");
         }else if( key == 'm' ) {
             draw_mode = (draw_mode+1)%draw_modes_n;
         }else if( key == 'p' ) {
@@ -527,10 +553,10 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
                 track_front = false;
             }
         }else if( key == 'r' ) {
-            cout << "Plotter: Reset viewing range" << endl;
+            print_report("Plotter: Reset viewing range\n");
             ResetView();
         }else if( key == 'a' || key == ' ' ) {
-            cout << "Plotter: Auto scale" << endl;
+            print_report("Plotter: Auto scale\n");
             if( plot_mode==XY && log->sequences.size() >= 2)
             {
                 int_x[0] = log->Sequence(0).Min();

@@ -31,6 +31,7 @@
 #include <pangolin/gl.h>
 #include <pangolin/view.h>
 #include <pangolin/handler.h>
+#include <pangolin/glsl.h>
 
 #include <vector>
 
@@ -64,7 +65,11 @@ public:
     
     float operator[](int i) const;
     float& operator[](int i);
-    
+
+    // Return first and second contiguous blocks of memory.
+    const float* FirstBlock(int i, size_t &n) const;
+    const float* SecondBlock(int i, size_t &n) const;
+
     int IndexBegin() const;
     int IndexEnd() const;
     
@@ -189,6 +194,8 @@ public:
     unsigned plot_mode;
     const static unsigned int show_n = 9;
     bool show[show_n];
+
+    GlSlProgram glslprogram;
 };
 
 } // namespace pangolin

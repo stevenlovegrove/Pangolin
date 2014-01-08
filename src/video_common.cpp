@@ -62,7 +62,7 @@ std::ostream& operator<< (std::ostream &out, Uri &uri)
     for( Uri::ParamMap::const_iterator ip = uri.params.begin();
          ip != uri.params.end(); ++ip)
     {
-        std::cout << "\t" << ip->first << " = " << ip->second << std::endl;
+        out << "\t" << ip->first << " = " << ip->second << std::endl;
     }
     
     return out;

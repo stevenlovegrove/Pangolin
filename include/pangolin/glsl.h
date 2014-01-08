@@ -31,7 +31,9 @@
 #include <sstream>
 #include <algorithm>
 
-#include "gl.h"
+#ifdef HAVE_GLES
+    #define GLhandleARB GLuint
+#endif
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN
@@ -50,8 +52,8 @@ namespace pangolin
 
 enum GlSlShaderType
 {
-    GlSlFragmentShader = GL_FRAGMENT_SHADER_ARB,
-    GlSlVertexShader = GL_VERTEX_SHADER_ARB
+    GlSlFragmentShader = GL_FRAGMENT_SHADER,
+    GlSlVertexShader = GL_VERTEX_SHADER
 };
 
 class GlSlProgram
@@ -63,9 +65,15 @@ public:
     void AddShader(GlSlShaderType shader_type, const std::string& source_code);
     void Link();
     
-    void SetUniform(const std::string& name, GlTexture& tex);
+    GLint GetAttributeHandle(const std::string& name);
+    GLint GetUniformHandle(const std::string& name);
+
+//    void SetUniform(const std::string& name, GlTexture& tex);
     void SetUniform(const std::string& name, float f);
+    void SetUniform(const std::string& name, float f1, float f2);
+    void SetUniform(const std::string& name, float f1, float f2, float f3);
     void SetUniform(const std::string& name, float f1, float f2, float f3, float f4);
+
     
     void Bind();
     void Unbind();
@@ -113,49 +121,59 @@ protected:
 // Implementation
 ////////////////////////////////////////////////
 
-void printInfoLog(GLhandleARB obj)
+inline void printProgInfoLog(GLhandleARB prog)
 {
-    int infologLength = 0;
-    int charsWritten  = 0;
-    char *infoLog;
-    
-    glGetObjectParameterivARB(obj, GL_OBJECT_INFO_LOG_LENGTH_ARB,
-                              &infologLength);
-    
-    if (infologLength > 0)
-    {
-        infoLog = (char *)malloc(infologLength);
-        glGetInfoLogARB(obj, infologLength, &charsWritten, infoLog);
-        printf("%s\n",infoLog);
-        free(infoLog);
+    GLint status;
+    glGetProgramiv(prog, GL_LINK_STATUS, &status);
+    if(status != GL_TRUE) {
+        print_error("GL_LINK_STATUS != GL_TRUE");
+        const int PROGRAM_LOG_MAX_LEN = 1024;
+        char infolog[PROGRAM_LOG_MAX_LEN];
+        GLsizei len;
+        glGetProgramInfoLog(prog, PROGRAM_LOG_MAX_LEN, &len, infolog);
+        if(len) print_error("%s\n",infolog);
+    }
+}
+
+inline void printShaderInfoLog(GLhandleARB shader)
+{
+    GLint status;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    if(status != GL_TRUE) {
+        print_error("GL_COMPILE_STATUS != GL_TRUE");
+        const int SHADER_LOG_MAX_LEN = 1024;
+        char infolog[SHADER_LOG_MAX_LEN];
+        GLsizei len;
+        glGetShaderInfoLog(shader, SHADER_LOG_MAX_LEN, &len, infolog);
+        if(len) print_error("%s\n",infolog);
     }
 }
 
 inline GlSlProgram::GlSlProgram()
     : linked(false)
 {
-    prog = glCreateProgramObjectARB();
+    prog = glCreateProgram();
 }
 
 inline GlSlProgram::~GlSlProgram()
 {
     // Remove and delete each shader
     for(size_t i=0; i<shaders.size(); ++i ) {
-        glDetachObjectARB(prog, shaders[i]);
-        glDeleteObjectARB(shaders[i]);
+        glDetachShader(prog, shaders[i]);
+        glDeleteShader(shaders[i]);
     }
-    glDeleteProgramsARB(1, &prog);
+    glDeleteProgram(prog);
 }
 
 inline void GlSlProgram::AddShader(GlSlShaderType shader_type, const std::string& source_code)
 {
-    GLhandleARB shader = glCreateShaderObjectARB(shader_type);
+    GLhandleARB shader = glCreateShader(shader_type);
     const char* source = source_code.c_str();
-    glShaderSourceARB(shader, 1, &source, NULL);
+    glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
-    glAttachObjectARB(prog, shader);
-    printInfoLog(shader);
-    
+    printShaderInfoLog(shader);
+    glAttachShader(prog, shader);
+
     shaders.push_back(shader);
     linked = false;
 }
@@ -163,7 +181,7 @@ inline void GlSlProgram::AddShader(GlSlShaderType shader_type, const std::string
 inline void GlSlProgram::Link()
 {
     glLinkProgram(prog);
-    printInfoLog(prog);
+    printProgInfoLog(prog);
 }
 
 inline void GlSlProgram::Bind()
@@ -176,16 +194,34 @@ inline void GlSlProgram::Unbind()
     glUseProgram(0);
 }
 
+inline GLint GlSlProgram::GetAttributeHandle(const std::string& name)
+{
+    return glGetAttribLocation(prog, name.c_str());
+}
+
+inline GLint GlSlProgram::GetUniformHandle(const std::string& name)
+{
+    return glGetUniformLocation(prog, name.c_str());
+}
+
 inline void GlSlProgram::SetUniform(const std::string& name, float f)
 {
-    GLint location = glGetUniformLocationARB(prog, name.c_str());
-    glUniform1f(location,f);
+    glUniform1f( GetUniformHandle(name), f);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2)
+{
+    glUniform2f( GetUniformHandle(name), f1,f2);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2, float f3)
+{
+    glUniform3f( GetUniformHandle(name), f1,f2,f3);
 }
 
 inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2, float f3, float f4)
 {
-    GLint location = glGetUniformLocationARB(prog, name.c_str());
-    glUniform4f(location,f1,f2,f3,f4);
+    glUniform4f( GetUniformHandle(name), f1,f2,f3,f4);
 }
 
 }

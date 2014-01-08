@@ -42,4 +42,16 @@
 #define __thread __declspec(thread)
 #endif //_MSVC_
 
+#ifndef _ANDROID_
+#   include <cstdio>
+#   define print_report(...) printf(__VA_ARGS__)
+#   define print_debug(...)  printf(__VA_ARGS__)
+#   define print_error(...)  fprintf(stderr, __VA_ARGS__)
+#else
+#   include <android/log.h>
+#   define print_report(...) __android_log_print(ANDROID_LOG_INFO, "pango", __VA_ARGS__ );
+#   define print_debug(...)  __android_log_print(ANDROID_LOG_DEBUG, "pango", __VA_ARGS__ );
+#   define print_error(...)  __android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__ );
+#endif
+
 #endif // PANGOLIN_PLATFORM_H

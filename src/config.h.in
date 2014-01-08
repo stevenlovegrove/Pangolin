@@ -35,6 +35,11 @@
 #cmakedefine HAVE_MODIFIED_OSXGLUT
 #cmakedefine HAVE_GLES
 
+#ifdef HAVE_GLES
+// TODO: Actually configure this
+#define HAVE_GLES_2
+#endif
+
 #cmakedefine HAVE_BOOST_GIL
 #cmakedefine HAVE_PNG
 #cmakedefine HAVE_JPEG
