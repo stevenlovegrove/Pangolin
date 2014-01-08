@@ -39,8 +39,8 @@ public:
     const char* vert =
             "attribute vec4 a_position;\n"
             "attribute vec4 a_color;\n"
-//            "attribute vec3 a_normal;\n"
-//            "attribute vec2 a_texcoord;\n"
+            "attribute vec3 a_normal;\n"
+            "attribute vec2 a_texcoord;\n"
 //            "uniform bool u_normalEnabled;\n"
 //            "uniform bool u_colorEnabled;\n"
             "uniform vec4 u_color;\n"
@@ -180,8 +180,14 @@ inline void glEnableClientState(GLenum cap)
 {
     if(cap == GL_VERTEX_ARRAY) {
         glEnableVertexAttribArray(0);
+    }else if(cap == GL_COLOR_ARRAY) {
+        glEnableVertexAttribArray(3);
+    }else if(cap == GL_NORMAL_ARRAY) {
+        glEnableVertexAttribArray(3);
+    }else if(cap == GL_TEXTURE_COORD_ARRAY) {
+        glEnableVertexAttribArray(3);
     }else{
-        print_error("Not Implemented: %s, %d", __FILE__, __LINE__);
+        print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
     }
 }
 
@@ -189,8 +195,14 @@ inline void glDisableClientState(GLenum cap)
 {
     if(cap == GL_VERTEX_ARRAY) {
         glDisableVertexAttribArray(0);
+    }else if(cap == GL_COLOR_ARRAY) {
+        glDisableVertexAttribArray(3);
+    }else if(cap == GL_NORMAL_ARRAY) {
+        glDisableVertexAttribArray(3);
+    }else if(cap == GL_TEXTURE_COORD_ARRAY) {
+        glDisableVertexAttribArray(3);
     }else{
-        print_error("Not Implemented: %s, %d", __FILE__, __LINE__);
+        print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
     }
 }
 
@@ -239,12 +251,25 @@ inline void glMultMatrixf(const GLfloat* m)
 //    float res[16];
 //    pangolin::MatMul<4,4,4,float>(res, m, gl.currentmatrix->m );
 //    std::memcpy(gl.currentmatrix->m, res, sizeof(float) * 16 );
-    print_error("Not Implemented: %s, %d", __FILE__, __LINE__);
+    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
 inline void glMultMatrixd(const GLdouble* m)
 {
-    print_error("Not Implemented: %s, %d", __FILE__, __LINE__);
+    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
+}
+
+inline void glOrtho(
+    GLdouble l,
+    GLdouble r,
+    GLdouble b,
+    GLdouble t,
+    GLdouble n,
+    GLdouble f)
+{
+    pangolin::GlEngine& gl = pangolin::glEngine();
+    *gl.currentmatrix = pangolin::ProjectionMatrixOrthographic(l,r,b,t,b,f);
+    gl.UpdateMatrices();
 }
 
 inline void glColor4f(	GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
@@ -295,39 +320,179 @@ inline const GLubyte* gluErrorString(GLenum error)
     return 0;
 }
 
-inline void gluOrtho2D(int x1, int x2, int y1, int y2)
+
+
+
+static void __gluMultMatrixVecf(const GLfloat matrix[16], const GLfloat in[4],
+                                GLfloat out[4])
 {
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
+    int i;
+
+    for (i=0; i<4; i++)
+    {
+        out[i] = in[0] * matrix[0*4+i] +
+                 in[1] * matrix[1*4+i] +
+                 in[2] * matrix[2*4+i] +
+                 in[3] * matrix[3*4+i];
+    }
 }
 
-inline GLint gluUnProject(
-    GLdouble winX,
-    GLdouble winY,
-    GLdouble winZ,
-    const GLdouble* model,
-    const GLdouble* proj,
-    const GLint* view,
-    GLdouble* objX,
-    GLdouble* objY,
-    GLdouble* objZ)
+/*
+** Invert 4x4 matrix.
+** Contributed by David Moore (See Mesa bug #6748)
+*/
+static int __gluInvertMatrixf(const GLfloat m[16], GLfloat invOut[16])
 {
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
-    return 0;
+    GLfloat inv[16], det;
+    int i;
+
+    inv[0] =   m[5]*m[10]*m[15] - m[5]*m[11]*m[14] - m[9]*m[6]*m[15]
+             + m[9]*m[7]*m[14] + m[13]*m[6]*m[11] - m[13]*m[7]*m[10];
+    inv[4] =  -m[4]*m[10]*m[15] + m[4]*m[11]*m[14] + m[8]*m[6]*m[15]
+             - m[8]*m[7]*m[14] - m[12]*m[6]*m[11] + m[12]*m[7]*m[10];
+    inv[8] =   m[4]*m[9]*m[15] - m[4]*m[11]*m[13] - m[8]*m[5]*m[15]
+             + m[8]*m[7]*m[13] + m[12]*m[5]*m[11] - m[12]*m[7]*m[9];
+    inv[12] = -m[4]*m[9]*m[14] + m[4]*m[10]*m[13] + m[8]*m[5]*m[14]
+             - m[8]*m[6]*m[13] - m[12]*m[5]*m[10] + m[12]*m[6]*m[9];
+    inv[1] =  -m[1]*m[10]*m[15] + m[1]*m[11]*m[14] + m[9]*m[2]*m[15]
+             - m[9]*m[3]*m[14] - m[13]*m[2]*m[11] + m[13]*m[3]*m[10];
+    inv[5] =   m[0]*m[10]*m[15] - m[0]*m[11]*m[14] - m[8]*m[2]*m[15]
+             + m[8]*m[3]*m[14] + m[12]*m[2]*m[11] - m[12]*m[3]*m[10];
+    inv[9] =  -m[0]*m[9]*m[15] + m[0]*m[11]*m[13] + m[8]*m[1]*m[15]
+             - m[8]*m[3]*m[13] - m[12]*m[1]*m[11] + m[12]*m[3]*m[9];
+    inv[13] =  m[0]*m[9]*m[14] - m[0]*m[10]*m[13] - m[8]*m[1]*m[14]
+             + m[8]*m[2]*m[13] + m[12]*m[1]*m[10] - m[12]*m[2]*m[9];
+    inv[2] =   m[1]*m[6]*m[15] - m[1]*m[7]*m[14] - m[5]*m[2]*m[15]
+             + m[5]*m[3]*m[14] + m[13]*m[2]*m[7] - m[13]*m[3]*m[6];
+    inv[6] =  -m[0]*m[6]*m[15] + m[0]*m[7]*m[14] + m[4]*m[2]*m[15]
+             - m[4]*m[3]*m[14] - m[12]*m[2]*m[7] + m[12]*m[3]*m[6];
+    inv[10] =  m[0]*m[5]*m[15] - m[0]*m[7]*m[13] - m[4]*m[1]*m[15]
+             + m[4]*m[3]*m[13] + m[12]*m[1]*m[7] - m[12]*m[3]*m[5];
+    inv[14] = -m[0]*m[5]*m[14] + m[0]*m[6]*m[13] + m[4]*m[1]*m[14]
+             - m[4]*m[2]*m[13] - m[12]*m[1]*m[6] + m[12]*m[2]*m[5];
+    inv[3] =  -m[1]*m[6]*m[11] + m[1]*m[7]*m[10] + m[5]*m[2]*m[11]
+             - m[5]*m[3]*m[10] - m[9]*m[2]*m[7] + m[9]*m[3]*m[6];
+    inv[7] =   m[0]*m[6]*m[11] - m[0]*m[7]*m[10] - m[4]*m[2]*m[11]
+             + m[4]*m[3]*m[10] + m[8]*m[2]*m[7] - m[8]*m[3]*m[6];
+    inv[11] = -m[0]*m[5]*m[11] + m[0]*m[7]*m[9] + m[4]*m[1]*m[11]
+             - m[4]*m[3]*m[9] - m[8]*m[1]*m[7] + m[8]*m[3]*m[5];
+    inv[15] =  m[0]*m[5]*m[10] - m[0]*m[6]*m[9] - m[4]*m[1]*m[10]
+             + m[4]*m[2]*m[9] + m[8]*m[1]*m[6] - m[8]*m[2]*m[5];
+
+    det = m[0]*inv[0] + m[1]*inv[4] + m[2]*inv[8] + m[3]*inv[12];
+    if (det == 0)
+        return GL_FALSE;
+
+    det=1.0f/det;
+
+    for (i = 0; i < 16; i++)
+        invOut[i] = inv[i] * det;
+
+    return GL_TRUE;
 }
 
-inline GLint gluProject(	GLdouble  	objX,
-    GLdouble  	objY,
-    GLdouble  	objZ,
-    const GLdouble *  	model,
-    const GLdouble *  	proj,
-    const GLint *  	view,
-    GLdouble*  	winX,
-    GLdouble*  	winY,
-    GLdouble*  	winZ)
+static void __gluMultMatricesf(const GLfloat a[16], const GLfloat b[16],
+                               GLfloat r[16])
 {
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
-    return 0;
+    int i, j;
+
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            r[i*4+j] = a[i*4+0]*b[0*4+j] +
+                       a[i*4+1]*b[1*4+j] +
+                       a[i*4+2]*b[2*4+j] +
+                       a[i*4+3]*b[3*4+j];
+        }
+    }
 }
+
+inline GLint gluProject(GLfloat objx, GLfloat objy, GLfloat objz,
+                        const GLfloat modelMatrix[16],
+                        const GLfloat projMatrix[16],
+                        const GLint viewport[4],
+                        GLfloat* winx, GLfloat* winy, GLfloat* winz)
+{
+    GLfloat in[4];
+    GLfloat out[4];
+
+    in[0]=objx;
+    in[1]=objy;
+    in[2]=objz;
+    in[3]=1.0;
+    __gluMultMatrixVecf(modelMatrix, in, out);
+    __gluMultMatrixVecf(projMatrix, out, in);
+    if (in[3] == 0.0)
+    {
+        return(GL_FALSE);
+    }
+
+    in[0]/=in[3];
+    in[1]/=in[3];
+    in[2]/=in[3];
+    /* Map x, y and z to range 0-1 */
+    in[0]=in[0]*0.5f+0.5f;
+    in[1]=in[1]*0.5f+0.5f;
+    in[2]=in[2]*0.5f+0.5f;
+
+    /* Map x,y to viewport */
+    in[0]=in[0] * viewport[2] + viewport[0];
+    in[1]=in[1] * viewport[3] + viewport[1];
+
+    *winx=in[0];
+    *winy=in[1];
+    *winz=in[2];
+
+    return(GL_TRUE);
+}
+
+inline GLint gluUnProject(GLfloat winx, GLfloat winy, GLfloat winz,
+                          const GLfloat modelMatrix[16],
+                          const GLfloat projMatrix[16],
+                          const GLint viewport[4],
+                          GLfloat* objx, GLfloat* objy, GLfloat* objz)
+{
+    GLfloat finalMatrix[16];
+    GLfloat in[4];
+    GLfloat out[4];
+
+    __gluMultMatricesf(modelMatrix, projMatrix, finalMatrix);
+    if (!__gluInvertMatrixf(finalMatrix, finalMatrix))
+    {
+        return(GL_FALSE);
+    }
+
+    in[0]=winx;
+    in[1]=winy;
+    in[2]=winz;
+    in[3]=1.0;
+
+    /* Map x and y from window coordinates */
+    in[0] = (in[0] - viewport[0]) / viewport[2];
+    in[1] = (in[1] - viewport[1]) / viewport[3];
+
+    /* Map to range -1 to 1 */
+    in[0] = in[0] * 2 - 1;
+    in[1] = in[1] * 2 - 1;
+    in[2] = in[2] * 2 - 1;
+
+    __gluMultMatrixVecf(finalMatrix, in, out);
+    if (out[3] == 0.0)
+    {
+        return(GL_FALSE);
+    }
+
+    out[0] /= out[3];
+    out[1] /= out[3];
+    out[2] /= out[3];
+    *objx = out[0];
+    *objy = out[1];
+    *objz = out[2];
+
+    return(GL_TRUE);
+}
+
 
 
 #endif // PANGOLIN_GL2ENGINE_H

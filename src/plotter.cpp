@@ -401,7 +401,7 @@ void Plotter::Render()
     ActivateScissorAndClear();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(int_x[0]+vo[0], int_x[1]+vo[0], int_y[0]+vo[1], int_y[1]+vo[1]);
+    glOrtho(int_x[0]+vo[0], int_x[1]+vo[0], int_y[0]+vo[1], int_y[1]+vo[1], -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
