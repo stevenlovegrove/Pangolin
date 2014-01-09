@@ -43,29 +43,28 @@ public:
             "attribute vec4 a_color;\n"
             "attribute vec3 a_normal;\n"
             "attribute vec2 a_texcoord;\n"
-//            "uniform bool u_normalEnabled;\n"
-//            "uniform bool u_colorEnabled;\n"
             "uniform vec4 u_color;\n"
             "uniform mat4 u_modelViewMatrix;\n"
             "uniform mat4 u_modelViewProjectionMatrix;\n"
-//            "uniform mat3 u_transposeAdjointModelViewMatrix;\n"
             "varying vec4 v_frontColor;\n"
-//            "varying vec3 v_normal;\n"
+            "varying vec2 v_texcoord;\n"
             "void main() {\n"
             "    gl_Position = u_modelViewProjectionMatrix * a_position;\n"
-//            "    gl_Position = a_position;\n"
-//            "    v_frontColor = u_colorEnabled ? a_color : u_color;\n"
             "    v_frontColor = u_color;\n"
-//            "    v_normal = u_transposeAdjointModelViewMatrix * a_normal;\n"
+            "    v_texcoord = a_texcoord;\n"
             "}\n";
 
     const char* frag =
             "precision mediump float;\n"
             "varying vec4 v_frontColor;\n"
-//            "varying vec3 v_normal;\n"
+            "varying vec2 v_texcoord;\n"
+            "uniform sampler2D u_texture;\n"
+            "uniform bool u_textureEnable;\n"
             "void main() {\n"
             "  gl_FragColor = v_frontColor;\n"
-//            "  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+            "  if(u_textureEnable) {\n"
+            "    gl_FragColor *= texture2D(u_texture, v_texcoord);\n"
+            "  }\n"
             "}\n";
 
     GlEngine()
@@ -75,6 +74,9 @@ public:
         modelview.push(IdentityMatrix());
         currentmatrix = &modelview;
 
+        // Set GL_TEXTURE0 as default active texture
+        glActiveTexture(GL_TEXTURE0);
+
         // Compile and link shaders
         prog_fixed.AddShader(GlSlVertexShader, vert);
         prog_fixed.AddShader(GlSlFragmentShader, frag);
@@ -82,20 +84,20 @@ public:
 
         // Save locations of attributes
         a_position = prog_fixed.GetAttributeHandle("a_position");
-//        a_color = prog_fixed.GetAttributeHandle("a_color");
-//        a_normal = prog_fixed.GetAttributeHandle("a_normal");
-//        a_texcoord = prog_fixed.GetAttributeHandle("a_texcoord");
+        a_color = prog_fixed.GetAttributeHandle("a_color");
+        a_normal = prog_fixed.GetAttributeHandle("a_normal");
+        a_texcoord = prog_fixed.GetAttributeHandle("a_texcoord");
 
         // Save locations of uniforms
-        // TODO
+        u_color = prog_fixed.GetUniformHandle("u_color");
+        u_modelViewMatrix = prog_fixed.GetUniformHandle("u_modelViewMatrix");
+        u_modelViewProjectionMatrix = prog_fixed.GetUniformHandle("u_modelViewProjectionMatrix");
+        u_texture = prog_fixed.GetUniformHandle("u_texture");
+        u_textureEnable = prog_fixed.GetUniformHandle("u_textureEnable");
 
         // Initialise default uniform values
-        prog_fixed.Bind();
-//        glUniform1f( prog_fixed.GetUniformHandle("u_colorEnabled"), 0.0);
-        glUniform4f( prog_fixed.GetUniformHandle("u_color"), 1.0, 0.0, 0.0, 1.0);
-        prog_fixed.Unbind();
-
         UpdateMatrices();
+        SetColor(1.0,1.0,1.0,1.0);
     }
 
     void UpdateMatrices()
@@ -104,17 +106,26 @@ public:
         GLint curprog;
         glGetIntegerv(GL_CURRENT_PROGRAM, &curprog);
         prog_fixed.Bind();
-        glUniformMatrix4fv( prog_fixed.GetUniformHandle("u_modelViewMatrix"), 1, false, modelview.top().m );
-        glUniformMatrix4fv( prog_fixed.GetUniformHandle("u_modelViewProjectionMatrix"), 1, false, pmv.m );
+        glUniformMatrix4fv( u_modelViewMatrix, 1, false, modelview.top().m );
+        glUniformMatrix4fv( u_modelViewProjectionMatrix, 1, false, pmv.m );
         glUseProgram(curprog);
     }
 
-    void UpdateColors()
+    void SetColor(float r, float g, float b, float a)
     {
         GLint curprog;
         glGetIntegerv(GL_CURRENT_PROGRAM, &curprog);
         prog_fixed.Bind();
-        glUniform4f( prog_fixed.GetUniformHandle("u_color"), color[0], color[1], color[2], color[3]);
+        glUniform4f( u_color, r, g, b, a);
+        glUseProgram(curprog);
+    }
+
+    void EnableTexturing(GLboolean v)
+    {
+        GLint curprog;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &curprog);
+        prog_fixed.Bind();
+        glUniform1i( u_textureEnable, v);
         glUseProgram(curprog);
     }
 
@@ -128,10 +139,17 @@ public:
     float color[4];
 
     GlSlProgram  prog_fixed;
+
     GLint a_position;
     GLint a_color;
     GLint a_normal;
     GLint a_texcoord;
+
+    GLint u_color;
+    GLint u_modelViewMatrix;
+    GLint u_modelViewProjectionMatrix;
+    GLint u_texture;
+    GLint u_textureEnable;
 };
 
 GlEngine& glEngine();
@@ -180,14 +198,16 @@ GlEngine& glEngine();
 
 inline void glEnableClientState(GLenum cap)
 {
+    pangolin::GlEngine& gl = pangolin::glEngine();
     if(cap == GL_VERTEX_ARRAY) {
-        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(gl.a_position);
     }else if(cap == GL_COLOR_ARRAY) {
-        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(gl.a_color);
     }else if(cap == GL_NORMAL_ARRAY) {
-        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(gl.a_normal);
     }else if(cap == GL_TEXTURE_COORD_ARRAY) {
-        glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(gl.a_texcoord);
+        gl.EnableTexturing(true);
     }else{
         print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
     }
@@ -195,14 +215,16 @@ inline void glEnableClientState(GLenum cap)
 
 inline void glDisableClientState(GLenum cap)
 {
+    pangolin::GlEngine& gl = pangolin::glEngine();
     if(cap == GL_VERTEX_ARRAY) {
-        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(gl.a_position);
     }else if(cap == GL_COLOR_ARRAY) {
-        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(gl.a_color);
     }else if(cap == GL_NORMAL_ARRAY) {
-        glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(gl.a_normal);
     }else if(cap == GL_TEXTURE_COORD_ARRAY) {
-        glDisableVertexAttribArray(3);
+        glDisableVertexAttribArray(gl.a_texcoord);
+        gl.EnableTexturing(false);
     }else{
         print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
     }
@@ -296,12 +318,7 @@ inline void glOrtho(
 
 inline void glColor4f(	GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
-    pangolin::GlEngine& gl = pangolin::glEngine();
-    gl.color[0] = red;
-    gl.color[1] = green;
-    gl.color[2] = blue;
-    gl.color[3] = alpha;
-    gl.UpdateColors();
+    pangolin::glEngine().SetColor(red,green,blue,alpha);
 }
 
 inline void glShadeModel( GLenum mode)
