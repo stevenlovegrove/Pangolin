@@ -41,8 +41,13 @@ inline void glRasterPos3f(GLfloat x, GLfloat y, GLfloat z)
     GLdouble modelview[16];
     GLint    view[4];
     
+#ifdef HAVE_GLES_2
+    std::copy(pangolin::glEngine().projection.top().m, pangolin::glEngine().projection.top().m+16, projection);
+    std::copy(pangolin::glEngine().modelview.top().m, pangolin::glEngine().modelview.top().m+16, modelview);
+#else
     glGetDoublev(GL_PROJECTION_MATRIX, projection );
     glGetDoublev(GL_MODELVIEW_MATRIX, modelview );
+#endif
     glGetIntegerv(GL_VIEWPORT, view );
     
     gluProject(x, y, z, modelview, projection, view,

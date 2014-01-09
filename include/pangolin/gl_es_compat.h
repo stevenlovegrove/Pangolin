@@ -7,7 +7,6 @@
 
 #define GLdouble     GLfloat
 #define glClearDepth glClearDepthf
-#define glOrtho      glOrtho
 #define glFrustum    glFrustumf
 
 #define glColor4fv(a)       glColor4f(a[0], a[1], a[2], a[3])

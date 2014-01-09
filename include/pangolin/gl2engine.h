@@ -167,9 +167,6 @@ GlEngine& glEngine();
 #define GL_POINT_SIZE                     0x0B11
 
 #define GL_MULTISAMPLE                    0x809D
-#define GL_MODELVIEW_MATRIX               0x0BA6
-#define GL_PROJECTION_MATRIX              0x0BA7
-#define GL_TEXTURE_MATRIX                 0x0BA8
 
 #define GL_LIGHTING                       0x0B50
 #define GL_POINT_SMOOTH                   0x0B10
@@ -300,9 +297,9 @@ inline void glTranslatef(GLfloat x, GLfloat y, GLfloat z )
 {
     pangolin::GlEngine& gl = pangolin::glEngine();
     pangolin::GLprecision* cm = gl.currentmatrix->top().m;
-    cm[3] += x;
-    cm[7] += y;
-    cm[11] += z;
+    cm[12] += x;
+    cm[13] += y;
+    cm[14] += z;
     gl.UpdateMatrices();
 }
 

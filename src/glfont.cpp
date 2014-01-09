@@ -150,9 +150,14 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
     GLdouble modelview[16];
     GLint    view[4];
     GLdouble scrn[3];
-    
+
+#ifdef HAVE_GLES_2
+    std::copy(glEngine().projection.top().m, glEngine().projection.top().m+16, projection);
+    std::copy(glEngine().modelview.top().m, glEngine().modelview.top().m+16, modelview);
+#else
     glGetDoublev(GL_PROJECTION_MATRIX, projection );
     glGetDoublev(GL_MODELVIEW_MATRIX, modelview );
+#endif
     glGetIntegerv(GL_VIEWPORT, view );
     
     gluProject(x, y, z, modelview, projection, view,
@@ -183,13 +188,8 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
 // Render at (x,y) in window coordinates.
 void GlText::DrawWindow(GLfloat x, GLfloat y, GLfloat z)
 {
-    // find object point (x,y,z)' in pixel coords
-    GLdouble projection[16];
-    GLdouble modelview[16];
+    // Backup viewport
     GLint    view[4];
-    
-    glGetDoublev(GL_PROJECTION_MATRIX, projection );
-    glGetDoublev(GL_MODELVIEW_MATRIX, modelview );
     glGetIntegerv(GL_VIEWPORT, view );
         
     DisplayBase().Activate();
