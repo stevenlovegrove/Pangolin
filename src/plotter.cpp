@@ -272,8 +272,6 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
 void Plotter::DrawTicks()
 {
-    glslprogram.Bind();
-
     glColor3fv(colour_tk);
     glLineWidth(lineThickness);
     const int tx[2] = {
@@ -304,8 +302,6 @@ void Plotter::DrawTicks()
     glDrawLine(0, int_y[0]+vo[1],  0, int_y[1]+vo[1] );
     glDrawLine(int_x[0]+vo[0],0,   int_x[1]+vo[0],0  );
     glLineWidth(1.0f);
-
-    glslprogram.Unbind();
 }
 
 void Plotter::DrawSequence(const DataSequence& seq)

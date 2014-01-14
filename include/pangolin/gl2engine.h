@@ -103,30 +103,24 @@ public:
     void UpdateMatrices()
     {
         OpenGlMatrix pmv = projection.top() * modelview.top();
-        GLint curprog;
-        glGetIntegerv(GL_CURRENT_PROGRAM, &curprog);
-        prog_fixed.Bind();
+        prog_fixed.SaveBind();
         glUniformMatrix4fv( u_modelViewMatrix, 1, false, modelview.top().m );
         glUniformMatrix4fv( u_modelViewProjectionMatrix, 1, false, pmv.m );
-        glUseProgram(curprog);
+        prog_fixed.Unbind();
     }
 
     void SetColor(float r, float g, float b, float a)
     {
-        GLint curprog;
-        glGetIntegerv(GL_CURRENT_PROGRAM, &curprog);
-        prog_fixed.Bind();
+        prog_fixed.SaveBind();
         glUniform4f( u_color, r, g, b, a);
-        glUseProgram(curprog);
+        prog_fixed.Unbind();
     }
 
     void EnableTexturing(GLboolean v)
     {
-        GLint curprog;
-        glGetIntegerv(GL_CURRENT_PROGRAM, &curprog);
-        prog_fixed.Bind();
+        prog_fixed.SaveBind();
         glUniform1i( u_textureEnable, v);
-        glUseProgram(curprog);
+        prog_fixed.Unbind();
     }
 
 //protected:

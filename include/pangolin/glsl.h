@@ -78,12 +78,15 @@ public:
 
     
     void Bind();
+    void SaveBind();
     void Unbind();
     
 protected:
     bool linked;
     std::vector<GLhandleARB> shaders;
     GLenum prog;
+
+    GLint prev_prog;
 };
 
 class GlSlUtilities
@@ -152,7 +155,7 @@ inline void printShaderInfoLog(GLhandleARB shader)
 }
 
 inline GlSlProgram::GlSlProgram()
-    : linked(false)
+    : linked(false), prev_prog(0)
 {
     prog = glCreateProgram();
 }
@@ -188,12 +191,19 @@ inline void GlSlProgram::Link()
 
 inline void GlSlProgram::Bind()
 {
+    prev_prog = 0;
+    glUseProgram(prog);
+}
+
+inline void GlSlProgram::SaveBind()
+{
+    glGetIntegerv(GL_CURRENT_PROGRAM, &prev_prog);
     glUseProgram(prog);
 }
 
 inline void GlSlProgram::Unbind()
 {
-    glUseProgram(0);
+    glUseProgram(prev_prog);
 }
 
 inline GLint GlSlProgram::GetAttributeHandle(const std::string& name)
