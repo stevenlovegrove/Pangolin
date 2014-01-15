@@ -31,10 +31,7 @@
 #include <pangolin/gl.h>
 #include <pangolin/view.h>
 #include <pangolin/handler.h>
-#include <pangolin/glsl.h>
 #include <pangolin/datalog.h>
-
-#include <vector>
 
 namespace pangolin
 {
