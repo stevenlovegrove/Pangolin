@@ -28,105 +28,120 @@
 #ifndef PANGOLIN_DATALOG_H
 #define PANGOLIN_DATALOG_H
 
+#include <stdexcept>
 #include <vector>
 #include <string>
+#include <limits>
 
 namespace pangolin
 {
 
-class DataSequence
+class DataLogBlock
 {
 public:
-    DataSequence(unsigned int buffer_size = 1024, unsigned size = 0, float val = 0.0f );
-    ~DataSequence();
+    // dim: dimension of sample
+    // max_samples: maximum number of samples this block can hold
+    // start_id: index of first sample (from entire dataset) in this buffer
+    DataLogBlock(size_t dim, size_t max_samples, size_t start_id)
+        : dim(dim), max_samples(max_samples), samples(0),
+          start_id(start_id), sample_buffer(0), nextBlock(0)
+    {
+        sample_buffer = new float[dim*max_samples];
+    }
 
-    void Add(float val);
-    void Clear();
+    ~DataLogBlock()
+    {
+        delete[] sample_buffer;
+    }
 
-    float operator[](int i) const;
-    float& operator[](int i);
+    size_t Samples() const
+    {
+        return samples;
+    }
 
-    // Return first and second contiguous blocks of memory.
-    const float* FirstBlock(int i, size_t &n) const;
-    const float* SecondBlock(int i, size_t &n) const;
+    size_t MaxSamples() const
+    {
+        return max_samples;
+    }
 
-    int IndexBegin() const;
-    int IndexEnd() const;
+    // Return how many more samples can fit in this block
+    size_t SampleSpaceLeft() const
+    {
+        return MaxSamples()- Samples();
+    }
 
-    bool HasData(int i) const;
+    bool IsFull() const
+    {
+        return Samples() >= MaxSamples();
+    }
 
-    float Sum() const;
-    float Min() const;
-    float Max() const;
+    // Add data to block
+    void AddSamples(size_t num_samples, size_t dimensions, const float* data_dim_major );
+
+    // Delete all samples
+    void ClearLinked()
+    {
+        samples = 0;
+        if(nextBlock) {
+            delete nextBlock;
+        }
+    }
+
+    DataLogBlock* NextBlock() const
+    {
+        return nextBlock;
+    }
+
+    size_t StartId() const
+    {
+        return start_id;
+    }
+
+    float* DimData(size_t d) const
+    {
+        return sample_buffer + d;
+    }
+
+    size_t Dimensions() const
+    {
+        return dim;
+    }
 
 protected:
-    DataSequence(const DataSequence& /*o*/) {}
-
-    int buffer_size;
-    float* ys;
-
-    int firstn;
-    int n;
-    float sum_y;
-    float sum_y_sq;
-    float min_y;
-    float max_y;
-
+    size_t dim;
+    size_t max_samples;
+    size_t samples;
+    size_t start_id;
+    float* sample_buffer;
+    DataLogBlock* nextBlock;
 };
-
-inline int DataSequence::IndexEnd() const
-{
-    return firstn + n;
-}
-
-inline int DataSequence::IndexBegin() const
-{
-    return std::max(firstn, IndexEnd()-buffer_size);
-}
-
-inline bool DataSequence::HasData(int i) const {
-    const int last  = IndexEnd();
-    const int first = std::max(firstn, last-buffer_size);
-    return first <= i && i < last;
-}
 
 class DataLog
 {
 public:
-    typedef std::vector<DataSequence*> SequenceContainer;
-
-    DataLog(unsigned int buffer_size = 10000 );
+    DataLog(unsigned int block_samples_alloc = 10000 );
     ~DataLog();
 
+    void SetLabels(const std::vector<std::string> & labels);
+
+    void Log(unsigned int dimension, const float * vals, unsigned int samples = 1);
     void Log(float v);
     void Log(float v1, float v2);
     void Log(float v1, float v2, float v3);
     void Log(float v1, float v2, float v3, float v4);
     void Log(float v1, float v2, float v3, float v4, float v5);
     void Log(float v1, float v2, float v3, float v4, float v5, float v6);
-    void Log(unsigned int N, const float * vals);
     void Log(const std::vector<float> & vals);
-    void SetLabels(const std::vector<std::string> & labels);
+
     void Clear();
     void Save(std::string filename);
 
-    inline size_t NumSequences() {
-        return sequences.size();
-    }
+    const DataLogBlock* Blocks() const;
 
-    inline DataSequence& Sequence(size_t id) {
-        return *sequences[id];
-    }
-
-    inline const DataSequence& Sequence(size_t id) const {
-        return *sequences[id];
-    }
-
-//protected:
-    unsigned int buffer_size;
-    int x;
-    SequenceContainer sequences;
+protected:
+    unsigned int block_samples_alloc;
     std::vector<std::string> labels;
+    DataLogBlock* blocks;
 };
 
 }

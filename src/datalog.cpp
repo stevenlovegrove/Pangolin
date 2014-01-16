@@ -3,148 +3,85 @@
 #include <limits>
 #include <fstream>
 #include <iomanip>
+#include <stdexcept>
+
+#include <iostream>
 
 namespace pangolin
 {
 
-DataSequence::DataSequence(unsigned int buffer_size, unsigned size, float val )
-    : buffer_size(buffer_size), ys(0), firstn(size), n(0), sum_y(0), sum_y_sq(0),
-      min_y(std::numeric_limits<float>::max()),
-      max_y(std::numeric_limits<float>::min())
+void DataLogBlock::AddSamples(size_t num_samples, size_t dimensions, const float* data_dim_major )
 {
-    ys = new float[buffer_size];
-}
+    if(nextBlock) {
+        // If next block exists, add to it instead
+        nextBlock->AddSamples(num_samples, dimensions, data_dim_major);
+    }else{
+        if(dimensions > dim) {
+            // If dimensions is too high for this block, start a new bigger one
+            nextBlock = new DataLogBlock(dimensions, max_samples, start_id + samples);
+        }else{
+            // Try to copy samples to this block
+            const size_t samples_to_copy = std::min(num_samples, SampleSpaceLeft());
 
-DataSequence::~DataSequence()
-{
-    delete[] ys;
-}
+            if(dimensions == dim) {
+                // Copy entire block all together
+                std::copy(data_dim_major, data_dim_major + samples_to_copy*dim, sample_buffer+samples*dim);
+                samples += samples_to_copy;
+                data_dim_major += samples_to_copy*dim;
+            }else{
+                // Copy sample at a time, filling with NaN's where needed.
+                float* dst = sample_buffer;
+                for(size_t i=0; i< samples_to_copy; ++i) {
+                    std::copy(data_dim_major, data_dim_major + dimensions, dst);
+                    for(size_t ii = dimensions; ii < dim; ++ii) {
+                        dst[ii] = std::numeric_limits<float>::quiet_NaN();
+                    }
+                    dst += dimensions;
+                    data_dim_major += dimensions;
+                }
+                samples += samples_to_copy;
+            }
 
-void DataSequence::Add(float val)
-{
-    operator[](n++) = val;
-
-    min_y = std::min(min_y,val);
-    max_y = std::max(max_y,val);
-    sum_y += val;
-    sum_y_sq += val*val;
-}
-
-void DataSequence::Clear()
-{
-    n = 0;
-    firstn = 0;
-    sum_y = 0;
-    sum_y_sq = 0;
-    min_y = std::numeric_limits<float>::max();
-    max_y = std::numeric_limits<float>::min();
-}
-
-const float* DataSequence::FirstBlock(int i, size_t& n) const
-{
-    int index = (i-firstn) % buffer_size;
-    n = buffer_size - index;
-    return &ys[index];
-}
-
-const float* DataSequence::SecondBlock(int i, size_t& n) const
-{
-    n = buffer_size;
-    return ys;
-}
-
-float DataSequence::operator[](int i) const
-{
-    return ys[(i-firstn) % buffer_size];
-}
-
-float& DataSequence::operator[](int i)
-{
-    return ys[(i-firstn) % buffer_size];
-}
-
-float DataSequence::Sum() const
-{
-    return sum_y;
-}
-
-float DataSequence::Min() const
-{
-    return min_y;
-}
-
-float DataSequence::Max() const
-{
-    return max_y;
+            // Copy remaining data to next block (this one is full)
+            if(samples_to_copy < num_samples) {
+                nextBlock = new DataLogBlock(dim, max_samples, start_id + Samples());
+                nextBlock->AddSamples(num_samples-samples_to_copy, dimensions, data_dim_major);
+            }
+        }
+    }
 }
 
 DataLog::DataLog(unsigned int buffer_size)
-    : buffer_size(buffer_size), x(0)
+    : block_samples_alloc(buffer_size), blocks(0)
 {
 }
 
 DataLog::~DataLog()
 {
-    for(SequenceContainer::iterator ids = sequences.begin(); ids != sequences.end(); ++ids) {
-        delete *ids;
-    }
-    sequences.clear();
-}
-
-void DataLog::Clear()
-{
-    x = 0;
-    sequences.clear();
-}
-
-void DataLog::Save(std::string filename)
-{
-    if( sequences.size() > 0 )
-    {
-        std::ofstream f(filename.c_str());
-        for( int n=sequences[0]->IndexBegin(); n < sequences[0]->IndexEnd(); ++n )
-        {
-            f << std::setprecision(12) << Sequence(0)[n];
-            for( unsigned s=1; s < NumSequences(); ++s ) {
-                f << ", " << Sequence(s)[n];
-            }
-            f << std::endl;
-        }
-        f.close();
-    }
-}
-
-void DataLog::Log(const std::vector<float> & vals)
-{
-    Log(vals.size(), &vals[0]);
-}
-
-void DataLog::Log(unsigned int N, const float * vals)
-{
-    // Create new plots if needed
-    for( unsigned int i= sequences.size(); i < N; ++i )
-        sequences.push_back(new DataSequence(buffer_size,x,0));
-
-    // Add data to existing plots
-    for( unsigned int i=0; i<N; ++i )
-        Sequence(i).Add(vals[i]);
-
-    // Fill missing data
-    for( unsigned int i=N; i<sequences.size(); ++i )
-        Sequence(i).Add(0.0f);
-
-    ++x;
+    Clear();
 }
 
 void DataLog::SetLabels(const std::vector<std::string> & new_labels)
 {
     // Create new labels if needed
     for( unsigned int i= labels.size(); i < new_labels.size(); ++i )
-        labels.push_back(std::string("N/A"));
+        labels.push_back( std::string() );
 
     // Add data to existing plots
     for( unsigned int i=0; i<labels.size(); ++i )
         labels[i] = new_labels[i];
+}
+
+void DataLog::Log(unsigned int dimension, const float* vals, unsigned int samples )
+{
+    if(!blocks) {
+        // Create first block
+        blocks = new DataLogBlock(dimension, block_samples_alloc, 0);
+    }
+
+    blocks->AddSamples(samples,dimension,vals);
+
+    // TODO: Compute stats for new samples
 }
 
 void DataLog::Log(float v)
@@ -178,6 +115,31 @@ void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6)
 {
     const float vs[] = {v1,v2,v3,v4,v5,v6};
     Log(6,vs);
+}
+
+void DataLog::Log(const std::vector<float> & vals)
+{
+    Log(vals.size(), &vals[0]);
+}
+
+void DataLog::Clear()
+{
+    if(blocks) {
+        blocks->ClearLinked();
+        delete blocks;
+        blocks = 0;
+    }
+}
+
+void DataLog::Save(std::string filename)
+{
+    // TODO: Implement
+    throw std::runtime_error("Method not implemented");
+}
+
+const DataLogBlock* DataLog::Blocks() const
+{
+    return blocks;
 }
 
 }

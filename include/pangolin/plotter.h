@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2014 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -31,53 +31,92 @@
 #include <pangolin/gl.h>
 #include <pangolin/view.h>
 #include <pangolin/handler.h>
+#include <pangolin/glsl.h>
 #include <pangolin/datalog.h>
 
 namespace pangolin
 {
 
-class Plotter;
-class DataLog;
-
-Plotter& CreatePlotter(const std::string& name, DataLog* log = 0);
-
-struct DataUnavailableException : std::exception
+struct PlotSeries
 {
-    DataUnavailableException(std::string str) : desc(str) {}
-    DataUnavailableException(std::string str, std::string detail) {
-        desc = str + "\n\t" + detail;
-    }
-    ~DataUnavailableException() throw() {}
-    const char* what() const throw() { return desc.c_str(); }
-    std::string desc;
-};
+    struct Attrib
+    {
+        Attrib(int location, int plot_id)
+            : location(location), plot_id(plot_id)
+        {
+        }
 
-const static int draw_modes_n = 2;
-const static int draw_modes[] = {GL_LINE_STRIP, GL_POINTS};
+        int location;
+        int plot_id;
+    };
+
+    void CreatePlot(const std::string& x, const std::string& y)
+    {
+        // TODO: Customise shader based on x and y
+
+        prog.AddShader( GlSlVertexShader,
+                             "#extension GL_EXT_gpu_shader4 : require\n"
+                             "attribute float s0;\n"
+                             "attribute float s1;\n"
+                             "uniform int u_id_offset;\n"
+                             "uniform vec4 u_color;\n"
+                             "uniform vec2 u_scale;\n"
+                             "uniform vec2 u_offset;\n"
+                             "varying vec4 v_color;\n"
+                             "void main() {\n"
+                             "    vec2 pos = vec2(u_id_offset+gl_VertexID,s0);\n"
+    //                         "    vec2 pos = vec2(s0, s1);\n"
+                             "    gl_Position = vec4(u_scale * (pos + u_offset),0,1);\n"
+                             "    v_color = u_color;\n"
+                             "}\n"
+                             );
+        prog.AddShader( GlSlFragmentShader,
+                             "varying vec4 v_color;\n"
+                             "void main() {\n"
+                             "  gl_FragColor = v_color;\n"
+                             "}\n"
+                             );
+        prog.Link();
+
+        prog.SaveBind();
+        attribs.push_back( Attrib(prog.GetAttributeHandle("s0"), 0) );
+        attribs.push_back( Attrib(prog.GetAttributeHandle("s1"), 1) );
+        prog.Unbind();
+
+    }
+
+    GlSlProgram prog;
+    std::vector<Attrib> attribs;
+};
 
 class Plotter : public View, Handler
 {
 public:
-    Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5 );
+    Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5, Plotter* linked = 0 );
     void Render();
-    void DrawSequence(const DataSequence& seq);
-    void DrawSequence(const DataSequence& x,const DataSequence& y);
-    void DrawSequenceHistogram(const DataLog& seq);
     void DrawTicks();
-    
-    void ResetView();
-    
+
+    void ScreenToPlot(int x, int y);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
     void MouseMotion(View&, int x, int y, int mouse_state);
     void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
-    
-    void ScreenToPlot(int x, int y);
-    void SetMode(unsigned mode, bool track=true);
-    void SetViewOrigin(float x0, float y0);
-    void SetLineThickness(float t);
-    
+
+protected:
     DataLog* log;
+    Plotter* linked;
+
+    float colour_bg[4];
+    float colour_tk[4];
+    float colour_ms[4];
+    float colour_ax[4];
+    float lineThickness;
+
+    GlSlProgram prog_default;
+
+    std::vector<PlotSeries> plotseries;
+
+    // Rethink these ...
     bool track_front;
     float int_x_dflt[2];
     float int_y_dflt[2];
@@ -88,15 +127,7 @@ public:
     int last_mouse_pos[2];
     int mouse_state;
     float mouse_xy[2];
-    float lineThickness;
-    
-    int draw_mode;
-    
-    enum PLOT_MODES { TIME_SERIES, XY, STACKED_HISTOGRAM};
-    static const unsigned modes_n = 3;
-    unsigned plot_mode;
-    const static unsigned int show_n = 9;
-    bool show[show_n];
+
 };
 
 } // namespace pangolin

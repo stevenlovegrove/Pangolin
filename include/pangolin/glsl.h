@@ -62,6 +62,12 @@ class GlSlProgram
 {
 public:
     GlSlProgram();
+
+#if __cplusplus > 199711L
+    //! Move Constructor
+    GlSlProgram(GlSlProgram&& tex);
+#endif
+
     ~GlSlProgram();
     
     void AddShader(GlSlShaderType shader_type, const std::string& source_code);
@@ -70,7 +76,11 @@ public:
     GLint GetAttributeHandle(const std::string& name);
     GLint GetUniformHandle(const std::string& name);
 
-//    void SetUniform(const std::string& name, GlTexture& tex);
+    void SetUniform(const std::string& name, int x);
+    void SetUniform(const std::string& name, int x1, int x2);
+    void SetUniform(const std::string& name, int x1, int x2, int x3);
+    void SetUniform(const std::string& name, int x1, int x2, int x3, int x4);
+
     void SetUniform(const std::string& name, float f);
     void SetUniform(const std::string& name, float f1, float f2);
     void SetUniform(const std::string& name, float f1, float f2, float f3);
@@ -155,23 +165,38 @@ inline void printShaderInfoLog(GLhandleARB shader)
 }
 
 inline GlSlProgram::GlSlProgram()
-    : linked(false), prev_prog(0)
+    : linked(false), prog(0), prev_prog(0)
 {
-    prog = glCreateProgram();
 }
+
+#if __cplusplus > 199711L
+//! Move Constructor
+inline GlSlProgram::GlSlProgram(GlSlProgram&& o)
+    : linked(o.linked), shaders(o.shaders), prog(o.prog), prev_prog(o.prev_prog)
+{
+    o.prog = 0;
+}
+#endif
+
 
 inline GlSlProgram::~GlSlProgram()
 {
-    // Remove and delete each shader
-    for(size_t i=0; i<shaders.size(); ++i ) {
-        glDetachShader(prog, shaders[i]);
-        glDeleteShader(shaders[i]);
+    if(prog) {
+        // Remove and delete each shader
+        for(size_t i=0; i<shaders.size(); ++i ) {
+            glDetachShader(prog, shaders[i]);
+            glDeleteShader(shaders[i]);
+        }
+        glDeleteProgram(prog);
     }
-    glDeleteProgram(prog);
 }
 
 inline void GlSlProgram::AddShader(GlSlShaderType shader_type, const std::string& source_code)
 {
+    if(!prog) {
+        prog = glCreateProgram();
+    }
+
     GLhandleARB shader = glCreateShader(shader_type);
     const char* source = source_code.c_str();
     glShaderSource(shader, 1, &source, NULL);
@@ -214,6 +239,26 @@ inline GLint GlSlProgram::GetAttributeHandle(const std::string& name)
 inline GLint GlSlProgram::GetUniformHandle(const std::string& name)
 {
     return glGetUniformLocation(prog, name.c_str());
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, int x)
+{
+    glUniform1i( GetUniformHandle(name), x);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, int x1, int x2)
+{
+    glUniform2i( GetUniformHandle(name), x1, x2);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, int x1, int x2, int x3)
+{
+    glUniform3i( GetUniformHandle(name), x1, x2, x3);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, int x1, int x2, int x3, int x4)
+{
+    glUniform4i( GetUniformHandle(name), x1, x2, x3, x4);
 }
 
 inline void GlSlProgram::SetUniform(const std::string& name, float f)
