@@ -164,12 +164,10 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
     int_x[1] = int_x_dflt[1] = right;
     int_y[0] = int_y_dflt[0] = bottom;
     int_y[1] = int_y_dflt[1] = top;
-    vo[0] = vo[1] = 0;
     ticks[0] = tickx;
     ticks[1] = ticky;
     track_front = false;
     lineThickness = 1.5;
-    mouse_state = 0;
 
     // Create shader for drawing simple primitives
     prog_default.AddShader( GlSlVertexShader,
@@ -231,13 +229,14 @@ void Plotter::Render()
     glDisable(GL_LIGHTING);
     glDisable( GL_DEPTH_TEST );
 
-    const float x = int_x[0]+vo[0];
-    const float y = int_y[0]+vo[1];
-    const float w = int_x[1]+vo[0] - x;
-    const float h = int_y[1]+vo[1] - y;
+    const float x = int_x[0];
+    const float y = int_y[0];
+    const float w = int_x[1] - x;
+    const float h = int_y[1] - y;
     const float ox = -(x+w/2.0f);
     const float oy = -(y+h/2.0f);
 
+    //////////////////////////////////////////////////////////////////////////
     // Draw ticks
     prog_default.SaveBind();
     prog_default.SetUniform("u_scale",  2.0f / w, 2.0f / h);
@@ -255,25 +254,28 @@ void Plotter::Render()
         (int)ceil(int_y[1] / ticks[1])
     };
 
-    const int votx = ceil(vo[0]/ ticks[0]);
-    const int voty = ceil(vo[1]/ ticks[1]);
     if( tx[1] - tx[0] < v.w/4 ) {
         for( int i=tx[0]; i<tx[1]; ++i ) {
-            glDrawLine((i+votx)*ticks[0], int_y[0]+vo[1],   (i+votx)*ticks[0], int_y[1]+vo[1]);
+            glDrawLine((i)*ticks[0], int_y[0],   (i)*ticks[0], int_y[1]);
         }
     }
 
     if( ty[1] - ty[0] < v.h/4 ) {
         for( int i=ty[0]; i<ty[1]; ++i ) {
-            glDrawLine(int_x[0]+vo[0], (i+voty)*ticks[1],  int_x[1]+vo[0], (i+voty)*ticks[1]);
+            glDrawLine(int_x[0], (i)*ticks[1],  int_x[1], (i)*ticks[1]);
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    // Draw axis
+
     prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], colour_ax[3] );
-    glDrawLine(0, int_y[0]+vo[1],  0, int_y[1]+vo[1] );
-    glDrawLine(int_x[0]+vo[0],0,   int_x[1]+vo[0],0  );
-    glLineWidth(1.0f);
+    glDrawLine(0, int_y[0],  0, int_y[1] );
+    glDrawLine(int_x[0],0,   int_x[1],0  );
     prog_default.Unbind();
+
+    //////////////////////////////////////////////////////////////////////////
+    // Draw series
 
     static size_t id_start = 0;
     static size_t id_size = 0;
@@ -336,6 +338,28 @@ void Plotter::Render()
         prog.Unbind();
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    // Draw hover / selection
+
+    prog_default.SaveBind();
+    // hover over
+    prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], 0.3 );
+    glDrawLine(hover[0], int_y[0],  hover[0], int_y[1] );
+    glDrawLine(int_x[0], hover[1],  int_x[1], hover[1] );
+
+    // range
+    prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], 0.5 );
+    glDrawLine(sel_x[0], int_y[0],  sel_x[0], int_y[1] );
+    glDrawLine(sel_x[1], int_y[0],  sel_x[1], int_y[1] );
+    glDrawLine(int_x[0], sel_y[0],  int_x[1], sel_y[0] );
+    glDrawLine(int_x[0], sel_y[1],  int_x[1], sel_y[1] );
+    glDrawRect(sel_x[0], sel_y[0],  sel_x[1], sel_y[1]);
+
+    prog_default.Unbind();
+
+
+    glLineWidth(1.0f);
+
 #ifndef HAVE_GLES
     glPopAttrib();
 #endif
@@ -347,52 +371,41 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 
 }
 
-void Plotter::ScreenToPlot(int x, int y)
+void Plotter::ScreenToPlot(int xpix, int ypix, float& xplot, float& yplot)
 {
-    mouse_xy[0] = vo[0] + int_x[0] + (int_x[1]-int_x[0]) * (x - v.l) / (float)v.w;
-    mouse_xy[1] = vo[1] + int_y[0] + (int_y[1]-int_y[0]) * (y - v.b) / (float)v.h;
+    xplot = int_x[0] + (int_x[1]-int_x[0]) * (xpix - v.l) / (float)v.w;
+    yplot = int_y[0] + (int_y[1]-int_y[0]) * (ypix - v.b) / (float)v.h;
 }
 
-void Plotter::Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state)
+void Plotter::Mouse(View& view, MouseButton button, int x, int y, bool pressed, int button_state)
 {
     last_mouse_pos[0] = x;
     last_mouse_pos[1] = y;
-    mouse_state = button_state;
 
-    if(button == MouseWheelUp || button == MouseWheelDown)
-    {
-        //const float mean = (int_y[0] + int_y[1])/2.0;
-        const float scale = 1.0f + ((button == MouseWheelDown) ? 0.1 : -0.1);
-        //    int_y[0] = scale*(int_y[0] - mean) + mean;
-        //    int_y[1] = scale*(int_y[1] - mean) + mean;
-        int_y[0] = scale*(int_y[0]) ;
-        int_y[1] = scale*(int_y[1]) ;
+    if(button == MouseButtonLeft) {
+        // Update selected range
+        if(pressed) {
+            ScreenToPlot(x,y, sel_x[0], sel_y[0]);
+        }
+        ScreenToPlot(x,y, sel_x[1], sel_y[1]);
+    }else if(button == MouseWheelUp || button == MouseWheelDown) {
+        Special(view, InputSpecialZoom, x, y, ((button == MouseWheelDown) ? 0.1 : -0.1), 0.0f, 0.0f, 0.0f, button_state );
     }
-
-    ScreenToPlot(x,y);
 }
 
-void Plotter::MouseMotion(View&, int x, int y, int button_state)
+void Plotter::MouseMotion(View& view, int x, int y, int button_state)
 {
-    mouse_state = button_state;
     const int d[2] = {x-last_mouse_pos[0],y-last_mouse_pos[1]};
     const float is[2] = {int_x[1]-int_x[0],int_y[1]-int_y[0]};
     const float df[2] = {is[0]*d[0]/(float)v.w, is[1]*d[1]/(float)v.h};
 
     if( button_state == MouseButtonLeft )
     {
-        track_front = false;
-        //int_x[0] -= df[0];
-        //int_x[1] -= df[0];
-        vo[0] -= df[0];
-
-        //    interval_y[0] -= df[1];
-        //    interval_y[1] -= df[1];
+        // Update selected range
+        ScreenToPlot(x,y, sel_x[1], sel_y[1]);
     }else if(button_state == MouseButtonMiddle )
     {
-        //int_y[0] -= df[1];
-        //int_y[1] -= df[1];
-        vo[1] -= df[1];
+        Special(view, InputSpecialScroll, df[0], df[1], 0.0f, 0.0f, 0.0f, 0.0f, button_state);
     }else if(button_state == MouseButtonRight )
     {
         const double c[2] = {
@@ -409,21 +422,30 @@ void Plotter::MouseMotion(View&, int x, int y, int button_state)
         int_y[1] = scale[1]*(int_y[1] - c[1]) + c[1];
     }
 
+    // Update hover status (after potential resizing)
+    ScreenToPlot(x, y, hover[0], hover[1]);
+
     last_mouse_pos[0] = x;
     last_mouse_pos[1] = y;
 }
 
+void Plotter::PassiveMouseMotion(View&, int x, int y, int button_state)
+{
+    ScreenToPlot(x, y, hover[0], hover[1]);
+}
+
 void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
 {
-    mouse_state = button_state;
-
     if(inType == InputSpecialScroll) {
         const float d[2] = {p1,-p2};
         const float is[2] = {int_x[1]-int_x[0],int_y[1]-int_y[0]};
         const float df[2] = {is[0]*d[0]/(float)v.w, is[1]*d[1]/(float)v.h};
 
-        vo[0] -= df[0];
-        vo[1] -= df[1];
+        int_x[0] -= df[0];
+        int_x[1] -= df[0];
+        int_y[0] -= df[1];
+        int_y[1] -= df[1];
+
         if(df[0] > 0) {
             track_front = false;
         }
@@ -442,6 +464,9 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
             int_x[1] = scale*(int_x[1] - c[0]) + c[0];
         }
     }
+
+    // Update hover status (after potential resizing)
+    ScreenToPlot(x, y, hover[0], hover[1]);
 }
 
 }

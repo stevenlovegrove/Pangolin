@@ -185,27 +185,22 @@ static void engine_term_display(struct engine* engine) {
     engine->surface = EGL_NO_SURFACE;
 }
 
-namespace process {
-extern float last_x;
-extern float last_y;
-}
-
-void UnpressAll()
+void UnpressAll(float last_x, float last_y)
 {
     if(context->mouse_state & pangolin::MouseButtonLeft) {
-        pangolin::process::Mouse(0, 1, process::last_x, process::last_y);
+        pangolin::process::Mouse(0, 1, last_x, last_y);
     }
     if(context->mouse_state & pangolin::MouseButtonMiddle) {
-        pangolin::process::Mouse(1, 1, process::last_x, process::last_y);
+        pangolin::process::Mouse(1, 1, last_x, last_y);
     }
     if(context->mouse_state & pangolin::MouseButtonRight) {
-        pangolin::process::Mouse(2, 1, process::last_x, process::last_y);
+        pangolin::process::Mouse(2, 1, last_x, last_y);
     }
     if(context->mouse_state & pangolin::MouseWheelUp) {
-        pangolin::process::Mouse(3, 1, process::last_x, process::last_y);
+        pangolin::process::Mouse(3, 1, last_x, last_y);
     }
     if(context->mouse_state & pangolin::MouseWheelDown) {
-        pangolin::process::Mouse(4, 1, process::last_x, process::last_y);
+        pangolin::process::Mouse(4, 1, last_x, last_y);
     }
     context->mouse_state = 0;
 }
@@ -257,11 +252,15 @@ int PangolinKeyFromAndroidKeycode(int32_t keycode, bool shift)
 static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) {
     struct engine* engine = (struct engine*)app->userData;
 
+    static float last_x = 0;
+    static float last_y = 0;
+
     const int32_t input_type = AInputEvent_getType(event);
     
     if (input_type == AINPUT_EVENT_TYPE_MOTION) {
         engine->has_focus = 1;        
         
+
         const float x = AMotionEvent_getX(event, 0);
         const float y = AMotionEvent_getY(event, 0);
         const int32_t actionAndPtr = AMotionEvent_getAction(event);
@@ -269,16 +268,16 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
 //        const int32_t ptrindex = (AMOTION_EVENT_ACTION_POINTER_INDEX_MASK & actionAndPtr) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
                 
         const size_t num_ptrs = AMotionEvent_getPointerCount(event);
-        
+
         switch(action)
         {
         case AMOTION_EVENT_ACTION_UP:
         case AMOTION_EVENT_ACTION_POINTER_UP:
-            UnpressAll();
+            UnpressAll(last_x, last_y);
             break;
         case AMOTION_EVENT_ACTION_DOWN:
         case AMOTION_EVENT_ACTION_POINTER_DOWN:
-            UnpressAll();
+            UnpressAll(last_x, last_y);
             if(num_ptrs <=2) {
                 const int button = (num_ptrs==1) ? 0 : 2;
                 pangolin::process::Mouse(button, 0, x, y);
@@ -286,10 +285,8 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
             break;
         case AMOTION_EVENT_ACTION_MOVE:
             if(num_ptrs == 3) {
-                const double dx = x - process::last_x;
-                const double dy = y - process::last_y;
-                process::last_x = x;
-                process::last_y = y;
+                const double dx = x - last_x;
+                const double dy = y - last_y;
                 pangolin::process::Scroll(dx,dy);
             }else{
                 pangolin::process::MouseMotion(x,y);
@@ -298,7 +295,10 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
         default:
             break;
         }
-        
+
+        last_x = x;
+        last_y = y;
+
         return 1;
     }else if(AINPUT_EVENT_TYPE_KEY) {
         static bool shift = false;
@@ -314,9 +314,9 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
         unsigned char key = PangolinKeyFromAndroidKeycode(keycode, shift);
         
         if(action == AKEY_EVENT_ACTION_DOWN) {
-            pangolin::process::Keyboard(key, pangolin::process::last_x,pangolin::process::last_y);
+            pangolin::process::Keyboard(key, last_x, last_y);
         }else{
-            pangolin::process::KeyboardUp(key, pangolin::process::last_x,pangolin::process::last_y);
+            pangolin::process::KeyboardUp(key, last_x, last_y);
         }
     }
     return 1;

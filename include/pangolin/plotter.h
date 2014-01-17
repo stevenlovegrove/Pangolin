@@ -46,10 +46,11 @@ public:
     void Render();
     void DrawTicks();
 
-    void ScreenToPlot(int x, int y);
+    void ScreenToPlot(int xpix, int ypix, float &xplot, float &yplot);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
     void MouseMotion(View&, int x, int y, int mouse_state);
+    void PassiveMouseMotion(View&, int x, int y, int button_state);
     void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
 
 protected:
@@ -91,12 +92,12 @@ protected:
     float int_y_dflt[2];
     float int_x[2];
     float int_y[2];
-    float vo[2]; //view offset
     float ticks[2];
     int last_mouse_pos[2];
-    int mouse_state;
-    float mouse_xy[2];
 
+    float sel_x[2];
+    float sel_y[2];
+    float hover[2];
 };
 
 } // namespace pangolin

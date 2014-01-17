@@ -561,6 +561,8 @@ void Resize( int width, int height )
 
 void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4)
 {
+    // Assume coords already match OpenGl Window Coords
+
     context->had_input = context->is_double_buffered ? 2 : 1;
     
     const bool fresh_input = (context->mouse_state == 0);
@@ -604,6 +606,8 @@ void Rotate(float r)
 
 void SubpixMotion(float x, float y, float pressure, float rotation, float tiltx, float tilty)
 {
+    // Force coords to match OpenGl Window Coords
+    y = context->base.v.h - y;
     SpecialInput(InputSpecialTablet, x, y, pressure, rotation, tiltx, tilty);
 }
 }
