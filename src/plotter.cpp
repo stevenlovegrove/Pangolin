@@ -203,6 +203,17 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
     plotseries.back().CreatePlot("$i", "$4");
     plotseries.push_back( PlotSeries() );
     plotseries.back().CreatePlot("$i", "$5");
+
+//    // Setup test PlotMarkers
+//    plotmarkers.push_back( PlotMarker(true, -1, 0.1, 1.0, 0.0, 0.0, 0.2 ) );
+//    plotmarkers.push_back( PlotMarker(false, 1, 2*M_PI/0.01, 0.0, 1.0, 0.0, 0.2 ) );
+
+//    // Setup test implicit plots.
+//    // ...
+
+//    // Setup texture spectogram style plots
+//    // ...
+
 }
 
 void Plotter::Render()
@@ -338,10 +349,11 @@ void Plotter::Render()
         prog.Unbind();
     }
 
+    prog_default.SaveBind();
+
     //////////////////////////////////////////////////////////////////////////
     // Draw hover / selection
 
-    prog_default.SaveBind();
     // hover over
     prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], 0.3 );
     glDrawLine(hover[0], int_y[0],  hover[0], int_y[1] );
@@ -355,8 +367,34 @@ void Plotter::Render()
     glDrawLine(int_x[0], sel_y[1],  int_x[1], sel_y[1] );
     glDrawRect(sel_x[0], sel_y[0],  sel_x[1], sel_y[1]);
 
-    prog_default.Unbind();
 
+    //////////////////////////////////////////////////////////////////////////
+    // Draw markers
+    glLineWidth(2.5f);
+
+    for( size_t i=0; i < plotmarkers.size(); ++i) {
+        PlotMarker& m = plotmarkers[i];
+        prog_default.SetUniform("u_color",  m.colour[0], m.colour[1], m.colour[2], m.colour[3] );
+        if(m.horizontal) {
+            if(m.leg == 0) {
+                glDrawLine(int_x[0], m.coord,  int_x[1], m.coord );
+            }else if(m.leg == -1) {
+                glDrawRect(int_x[0], int_y[0],  int_x[1], m.coord);
+            }else if(m.leg == 1) {
+                glDrawRect(int_x[0], m.coord,  int_x[1], int_y[1]);
+            }
+        }else{
+            if(m.leg == 0) {
+                glDrawLine(m.coord, int_y[0],  m.coord, int_y[1] );
+            }else if(m.leg == -1) {
+                glDrawRect(int_x[0], int_y[0],  m.coord, int_y[1] );
+            }else if(m.leg == 1) {
+                glDrawRect(m.coord, int_y[0],  int_x[1], int_y[1] );
+            }
+        }
+    }
+
+    prog_default.Unbind();
 
     glLineWidth(1.0f);
 

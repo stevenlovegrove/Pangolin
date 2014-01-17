@@ -73,6 +73,24 @@ protected:
         std::vector<PlotAttrib> attribs;
     };
 
+    struct PlotMarker
+    {
+        PlotMarker(bool horizontal, int leg, float coord, float red, float green, float blue, float alpha)
+            : horizontal(horizontal), leg(leg), coord(coord)
+        {
+            colour[0] = red;
+            colour[1] = green;
+            colour[2] = blue;
+            colour[3] = alpha;
+        }
+
+        bool horizontal;
+        // less than -1, equal 0, greater than 1
+        int leg;
+        float coord;
+        float colour[4];
+    };
+
     DataLog* log;
     Plotter* linked;
 
@@ -85,6 +103,7 @@ protected:
     GlSlProgram prog_default;
 
     std::vector<PlotSeries> plotseries;
+    std::vector<PlotMarker> plotmarkers;
 
     // Rethink these ...
     bool track_front;
