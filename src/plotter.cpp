@@ -31,6 +31,23 @@
 namespace pangolin
 {
 
+const static int num_plot_colours = 12;
+const static float plot_colours[][3] =
+{
+    {1.0, 0.0, 0.0},
+    {0.0, 1.0, 0.0},
+    {0.0, 0.0, 1.0},
+    {1.0, 0.0, 1.0},
+    {0.5, 0.5, 0.0},
+    {0.5, 0.0, 0.0},
+    {0.0, 0.5, 0.0},
+    {0.0, 0.0, 0.5},
+    {0.5, 0.0, 1.0},
+    {0.0, 1.0, 0.5},
+    {1.0, 0.0, 0.5},
+    {0.0, 0.5, 1.0}
+};
+
 inline void SetColor(float colour[4], float r, float g, float b, float alpha = 1.0f)
 {
     colour[0] = r;
@@ -39,6 +56,93 @@ inline void SetColor(float colour[4], float r, float g, float b, float alpha = 1
     colour[3] = alpha;
 }
 
+std::string ReplaceChar(const std::string& str, char from, char to)
+{
+    std::string ret = str;
+    for(size_t i=0; i<ret.length(); ++i) {
+        if(ret[i] == from) ret[i] = to;
+    }
+    return ret;
+}
+
+std::set<int> ConvertSequences(const std::string& str, char seq_char='$', char id_char='i')
+{
+    std::set<int> sequences;
+
+    for(size_t i=0; i<str.length(); ++i) {
+        if(str[i] == seq_char) {
+            if(i+1 < str.length() && str[i+1] == id_char) {
+                sequences.insert(-1);
+            }else{
+                int v = 0;
+                for(size_t j=i+1; std::isdigit(str[j]) && j< str.length(); ++j) {
+                    v = v*10 + (str[j] - '0');
+                }
+                sequences.insert(v);
+            }
+        }
+    }
+
+    return sequences;
+}
+
+void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y)
+{
+    static const std::string vs_header =
+            "uniform int u_id_offset;\n"
+            "uniform vec4 u_color;\n"
+            "uniform vec2 u_scale;\n"
+            "uniform vec2 u_offset;\n"
+            "varying vec4 v_color;\n"
+            "void main() {\n";
+
+    static const std::string vs_footer =
+            "    vec2 pos = vec2(x, y);\n"
+            "    gl_Position = vec4(u_scale * (pos + u_offset),0,1);\n"
+            "    v_color = u_color;\n"
+            "}\n";
+
+    static const std::string fs =
+            "varying vec4 v_color;\n"
+            "void main() {\n"
+            "  gl_FragColor = v_color;\n"
+            "}\n";
+
+    attribs.clear();
+
+    const std::set<int> ax = ConvertSequences(x);
+    const std::set<int> ay = ConvertSequences(y);
+    std::set<int> as;
+    as.insert(ax.begin(), ax.end());
+    as.insert(ay.begin(), ay.end());
+    contains_id = ( as.find(-1) != as.end() );
+
+    std::string vs_attrib;
+    for(std::set<int>::const_iterator i=as.begin(); i != as.end(); ++i) {
+        std::ostringstream oss;
+        oss << "s" << *i;
+        const std::string name = *i >= 0 ? oss.str() : "si";
+        attribs.push_back( PlotAttrib(name, *i) );
+        vs_attrib += "attribute float " + name + ";\n";
+    }
+
+    prog.AddShader( GlSlVertexShader,
+                    vs_attrib +
+                    vs_header +
+                    "float x = " + ReplaceChar(x,'$','s') + ";\n" +
+                    "float y = " + ReplaceChar(y,'$','s') + ";\n" +
+                    vs_footer);
+    prog.AddShader( GlSlFragmentShader, fs );
+    prog.Link();
+
+    // Lookup attribute locations in compiled shader
+    prog.SaveBind();
+    for(size_t i=0; i<attribs.size(); ++i) {
+        attribs[i].location = prog.GetAttributeHandle( attribs[i].name );
+    }
+    prog.Unbind();
+
+}
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky, Plotter* linked)
 {
     if(!log) {
@@ -89,9 +193,18 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
     // Setup default PlotSeries
     plotseries.reserve(10);
-
     plotseries.push_back( PlotSeries() );
-    plotseries.back().CreatePlot("id", "s0");
+    plotseries.back().CreatePlot("$i", "$0");
+    plotseries.push_back( PlotSeries() );
+    plotseries.back().CreatePlot("$i", "$1");
+    plotseries.push_back( PlotSeries() );
+    plotseries.back().CreatePlot("$i", "$2");
+    plotseries.push_back( PlotSeries() );
+    plotseries.back().CreatePlot("$i", "$3");
+    plotseries.push_back( PlotSeries() );
+    plotseries.back().CreatePlot("$i", "$4");
+    plotseries.push_back( PlotSeries() );
+    plotseries.back().CreatePlot("$i", "$5");
 }
 
 void Plotter::Render()
@@ -162,6 +275,10 @@ void Plotter::Render()
     glLineWidth(1.0f);
     prog_default.Unbind();
 
+    static size_t id_start = 0;
+    static size_t id_size = 0;
+    static float* id_array = 0;
+
     for(size_t i=0; i < plotseries.size(); ++i)
     {
         PlotSeries& ps = plotseries[i];
@@ -170,26 +287,49 @@ void Plotter::Render()
         prog.SaveBind();
         prog.SetUniform("u_scale",  2.0f / w, 2.0f / h);
         prog.SetUniform("u_offset", ox, oy);
-        prog.SetUniform("u_color",  1.0f, 0.0f, 0.0f, 1.0f );
+        prog.SetUniform("u_color",  plot_colours[i][0], plot_colours[i][1], plot_colours[i][2], 1.0f );
 
         const DataLogBlock* block = log->Blocks();
         while(block) {
+            if(ps.contains_id ) {
+                if(id_size < block->Samples() ) {
+                    // Create index array that we can bind
+                    delete[] id_array;
+                    id_start = -1;
+                    id_size = block->MaxSamples();
+                    id_array = new float[id_size];
+                }
+                if(id_start != block->StartId()) {
+                    for(size_t k=0; k < id_size; ++k) {
+                        id_array[k] = block->StartId() + k;
+                    }
+                }
+            }
+
             prog.SetUniform("u_id_offset",  (int)block->StartId() );
 
             // Enable appropriate attributes
             for(size_t i=0; i< ps.attribs.size(); ++i) {
-                glVertexAttribPointer(ps.attribs[i].location, 1, GL_FLOAT, GL_FALSE, block->Dimensions()*sizeof(float), block->DimData(ps.attribs[i].plot_id) );
-                glEnableVertexAttribArray(ps.attribs[i].location);
+                if(0 <= ps.attribs[i].plot_id && ps.attribs[i].plot_id < (int)block->Dimensions() ) {
+                    glVertexAttribPointer(ps.attribs[i].location, 1, GL_FLOAT, GL_FALSE, block->Dimensions()*sizeof(float), block->DimData(ps.attribs[i].plot_id) );
+                    glEnableVertexAttribArray(ps.attribs[i].location);
+                }else if( ps.attribs[i].plot_id == -1 ){
+                    glVertexAttribPointer(ps.attribs[i].location, 1, GL_FLOAT, GL_FALSE, 0, id_array );
+                    glEnableVertexAttribArray(ps.attribs[i].location);
+                }else{
+                    // bad id: don't render
+                    goto draw_skip;
+                }
             }
 
             // Draw geometry
             glDrawArrays(GL_LINE_STRIP, 0, block->Samples());
 
+        draw_skip:
             // Disable enabled attributes
             for(size_t i=0; i< ps.attribs.size(); ++i) {
                 glDisableVertexAttribArray(ps.attribs[i].location);
             }
-
 
             block = block->NextBlock();
         }

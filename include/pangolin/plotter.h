@@ -34,60 +34,10 @@
 #include <pangolin/glsl.h>
 #include <pangolin/datalog.h>
 
+#include <set>
+
 namespace pangolin
 {
-
-struct PlotSeries
-{
-    struct Attrib
-    {
-        Attrib(int location, int plot_id)
-            : location(location), plot_id(plot_id)
-        {
-        }
-
-        int location;
-        int plot_id;
-    };
-
-    void CreatePlot(const std::string& x, const std::string& y)
-    {
-        // TODO: Customise shader based on x and y
-
-        prog.AddShader( GlSlVertexShader,
-                             "#extension GL_EXT_gpu_shader4 : require\n"
-                             "attribute float s0;\n"
-                             "attribute float s1;\n"
-                             "uniform int u_id_offset;\n"
-                             "uniform vec4 u_color;\n"
-                             "uniform vec2 u_scale;\n"
-                             "uniform vec2 u_offset;\n"
-                             "varying vec4 v_color;\n"
-                             "void main() {\n"
-                             "    vec2 pos = vec2(u_id_offset+gl_VertexID,s0);\n"
-    //                         "    vec2 pos = vec2(s0, s1);\n"
-                             "    gl_Position = vec4(u_scale * (pos + u_offset),0,1);\n"
-                             "    v_color = u_color;\n"
-                             "}\n"
-                             );
-        prog.AddShader( GlSlFragmentShader,
-                             "varying vec4 v_color;\n"
-                             "void main() {\n"
-                             "  gl_FragColor = v_color;\n"
-                             "}\n"
-                             );
-        prog.Link();
-
-        prog.SaveBind();
-        attribs.push_back( Attrib(prog.GetAttributeHandle("s0"), 0) );
-        attribs.push_back( Attrib(prog.GetAttributeHandle("s1"), 1) );
-        prog.Unbind();
-
-    }
-
-    GlSlProgram prog;
-    std::vector<Attrib> attribs;
-};
 
 class Plotter : public View, Handler
 {
@@ -103,6 +53,25 @@ public:
     void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
 
 protected:
+    struct PlotAttrib
+    {
+        PlotAttrib(std::string name, int plot_id, int location = -1)
+            : name(name), plot_id(plot_id), location(location) { }
+
+        std::string name;
+        int plot_id;
+        int location;
+    };
+
+    struct PlotSeries
+    {
+        void CreatePlot(const std::string& x, const std::string& y);
+
+        GlSlProgram prog;
+        bool contains_id;
+        std::vector<PlotAttrib> attribs;
+    };
+
     DataLog* log;
     Plotter* linked;
 
