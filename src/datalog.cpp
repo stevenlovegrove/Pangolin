@@ -132,6 +132,30 @@ void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6)
     Log(6,vs);
 }
 
+void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7)
+{
+    const float vs[] = {v1,v2,v3,v4,v5,v6,v7};
+    Log(7,vs);
+}
+
+void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7, float v8)
+{
+    const float vs[] = {v1,v2,v3,v4,v5,v6,v7,v8};
+    Log(8,vs);
+}
+
+void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7, float v8, float v9)
+{
+    const float vs[] = {v1,v2,v3,v4,v5,v6,v7,v8,v9};
+    Log(9,vs);
+}
+
+void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7, float v8, float v9, float v10)
+{
+    const float vs[] = {v1,v2,v3,v4,v5,v6,v7,v8,v9,v10};
+    Log(10,vs);
+}
+
 void DataLog::Log(const std::vector<float> & vals)
 {
     Log(vals.size(), &vals[0]);

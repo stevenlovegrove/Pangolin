@@ -88,6 +88,12 @@ std::set<int> ConvertSequences(const std::string& str, char seq_char='$', char i
     return sequences;
 }
 
+Plotter::PlotSeries::PlotSeries()
+    : drawing_mode(GL_LINE_STRIP)
+{
+
+}
+
 void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y)
 {
     static const std::string vs_header =
@@ -185,13 +191,12 @@ void Plotter::PlotImplicit::CreateColouredPlot(const std::string& code)
         );
 }
 
-void Plotter::PlotImplicit::CreateInequality(const std::string& ie, float red, float green, float blue, float alphatrue)
+void Plotter::PlotImplicit::CreateInequality(const std::string& ie, float red, float green, float blue, float alpha)
 {
-    const float alphafalse = 0.0;
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(1);
-    oss << "bool eq = " << ie << ";\n";
-    oss << "gl_FragColor = vec4(" << red << "," << green << "," << blue << "," << "eq ? " << alphatrue << " : " << alphafalse << ");\n";
+    oss << "if( !(" << ie << ") ) discard;\n";
+    oss << "gl_FragColor = vec4(" << red << "," << green << "," << blue << "," << alpha << ");\n";
 
     CreatePlot( oss.str() );
 }
@@ -372,11 +377,12 @@ void Plotter::Render()
     {
         PlotSeries& ps = plotseries[i];
         GlSlProgram& prog = ps.prog;
+        const Colour c = colour_wheel.GetColourBin(i);
 
         prog.SaveBind();
         prog.SetUniform("u_scale",  2.0f / w, 2.0f / h);
         prog.SetUniform("u_offset", ox, oy);
-        prog.SetUniform("u_color",  plot_colours[i][0], plot_colours[i][1], plot_colours[i][2], 1.0f );
+        prog.SetUniform("u_color", c.red, c.green, c.blue, c.alpha );
 
         const DataLogBlock* block = log->Blocks();
         while(block) {
@@ -412,7 +418,7 @@ void Plotter::Render()
             }
 
             // Draw geometry
-            glDrawArrays(GL_LINE_STRIP, 0, block->Samples());
+            glDrawArrays(ps.drawing_mode, 0, block->Samples());
 
         draw_skip:
             // Disable enabled attributes

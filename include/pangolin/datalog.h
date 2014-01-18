@@ -147,6 +147,10 @@ public:
     void Log(float v1, float v2, float v3, float v4);
     void Log(float v1, float v2, float v3, float v4, float v5);
     void Log(float v1, float v2, float v3, float v4, float v5, float v6);
+    void Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7);
+    void Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7, float v8);
+    void Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7, float v8, float v9);
+    void Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7, float v8, float v9, float v10);
     void Log(const std::vector<float> & vals);
 
     void Clear();

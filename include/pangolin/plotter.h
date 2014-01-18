@@ -33,6 +33,7 @@
 #include <pangolin/handler.h>
 #include <pangolin/glsl.h>
 #include <pangolin/datalog.h>
+#include <pangolin/colour.h>
 
 #include <set>
 
@@ -66,11 +67,13 @@ protected:
 
     struct PlotSeries
     {
+        PlotSeries();
         void CreatePlot(const std::string& x, const std::string& y);
 
         GlSlProgram prog;
         bool contains_id;
         std::vector<PlotAttrib> attribs;
+        GLenum drawing_mode;
     };
 
     struct PlotImplicit
@@ -82,7 +85,7 @@ protected:
         void CreateColouredPlot(const std::string& code);
 
         // Expression uses x,y and evaluates to true/false;
-        void CreateInequality(const std::string& ie, float red, float green, float blue, float alphatrue = 0.5);
+        void CreateInequality(const std::string& ie, float red, float green, float blue, float alpha = 0.5);
 
         // Expression uses x,y and evaluates to a number
         void CreateDistancePlot(const std::string& dist);
@@ -111,6 +114,8 @@ protected:
 
     DataLog* log;
     Plotter* linked;
+
+    ColourWheel colour_wheel;
 
     float colour_bg[4];
     float colour_tk[4];
