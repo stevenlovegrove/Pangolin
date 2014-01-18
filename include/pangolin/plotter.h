@@ -73,6 +73,24 @@ protected:
         std::vector<PlotAttrib> attribs;
     };
 
+    struct PlotImplicit
+    {
+        // Assign to gl_FragColor
+        void CreatePlot(const std::string& code);
+
+        // Expression uses x,y and assignes colours [0,1] to r,g,b,a
+        void CreateColouredPlot(const std::string& code);
+
+        // Expression uses x,y and evaluates to true/false;
+        void CreateInequality(const std::string& ie, float red, float green, float blue, float alphatrue = 0.5);
+
+        // Expression uses x,y and evaluates to a number
+        void CreateDistancePlot(const std::string& dist);
+
+
+        GlSlProgram prog;
+    };
+
     struct PlotMarker
     {
         PlotMarker(bool horizontal, int leg, float coord, float red, float green, float blue, float alpha)
@@ -104,6 +122,7 @@ protected:
 
     std::vector<PlotSeries> plotseries;
     std::vector<PlotMarker> plotmarkers;
+    std::vector<PlotImplicit> plotimplicits;
 
     // Rethink these ...
     bool track_front;

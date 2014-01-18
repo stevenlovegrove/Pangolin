@@ -52,7 +52,7 @@ void DataLogBlock::AddSamples(size_t num_samples, size_t dimensions, const float
 }
 
 DataLog::DataLog(unsigned int buffer_size)
-    : block_samples_alloc(buffer_size), blocks(0)
+    : block_samples_alloc(buffer_size), blocks(0), record_stats(true)
 {
 }
 
@@ -79,9 +79,24 @@ void DataLog::Log(unsigned int dimension, const float* vals, unsigned int sample
         blocks = new DataLogBlock(dimension, block_samples_alloc, 0);
     }
 
-    blocks->AddSamples(samples,dimension,vals);
+    if(record_stats) {
+        while(stats.size() < dimension) {
+            stats.push_back( DimensionStats() );
+        }
+        for(int d=0; d<dimension; ++d) {
+            DimensionStats& ds = stats[d];
+            for(int s=0; s<samples; ++s) {
+                const float v = vals[s*dimension+d];
+                ds.isMonotonic = ds.isMonotonic && (v >= ds.max);
+                ds.sum += v;
+                ds.sum_sq += v*v;
+                ds.min = std::min(ds.min, v);
+                ds.max = std::max(ds.max, v);
+            }
+        }
+    }
 
-    // TODO: Compute stats for new samples
+    blocks->AddSamples(samples,dimension,vals);
 }
 
 void DataLog::Log(float v)
@@ -129,6 +144,7 @@ void DataLog::Clear()
         delete blocks;
         blocks = 0;
     }
+    stats.clear();
 }
 
 void DataLog::Save(std::string filename)
@@ -141,5 +157,11 @@ const DataLogBlock* DataLog::Blocks() const
 {
     return blocks;
 }
+
+const DimensionStats& DataLog::Stats(size_t dim) const
+{
+    return stats[dim];
+}
+
 
 }

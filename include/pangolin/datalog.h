@@ -116,6 +116,22 @@ protected:
     DataLogBlock* nextBlock;
 };
 
+struct DimensionStats
+{
+    DimensionStats()
+        : isMonotonic(true), sum(0.0f), sum_sq(0.0f),
+          min(std::numeric_limits<float>::max()),
+          max(-std::numeric_limits<float>::max())
+    {
+    }
+
+    bool isMonotonic;
+    float sum;
+    float sum_sq;
+    float min;
+    float max;
+};
+
 class DataLog
 {
 public:
@@ -138,10 +154,14 @@ public:
 
     const DataLogBlock* Blocks() const;
 
+    const DimensionStats& Stats(size_t dim) const;
+
 protected:
     unsigned int block_samples_alloc;
     std::vector<std::string> labels;
     DataLogBlock* blocks;
+    std::vector<DimensionStats> stats;
+    bool record_stats;
 };
 
 }

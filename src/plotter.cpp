@@ -28,6 +28,8 @@
 #include <pangolin/plotter.h>
 #include <pangolin/gldraw.h>
 
+#include <iomanip>
+
 namespace pangolin
 {
 
@@ -141,8 +143,64 @@ void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y)
         attribs[i].location = prog.GetAttributeHandle( attribs[i].name );
     }
     prog.Unbind();
+}
+
+void Plotter::PlotImplicit::CreatePlot(const std::string& code)
+{
+    static const std::string vs =
+            "attribute vec2 a_position;\n"
+            "uniform vec2 u_scale;\n"
+            "uniform vec2 u_offset;\n"
+            "varying float x;\n"
+            "varying float y;\n"
+            "void main() {\n"
+            "    gl_Position = vec4(u_scale * (a_position + u_offset),0,1);\n"
+            "    x = a_position.x;"
+            "    y = a_position.y;"
+            "}\n";
+
+    static const std::string fs1 =
+            "varying float x;\n"
+            "varying float y;\n"
+            "void main() {\n";
+    static const std::string fs2 =
+            "}\n";
+
+    prog.AddShader( GlSlVertexShader, vs );
+    prog.AddShader( GlSlFragmentShader, fs1 + code + fs2 );
+    prog.Link();
 
 }
+
+
+void Plotter::PlotImplicit::CreateColouredPlot(const std::string& code)
+{
+    CreatePlot(
+        "  float r=1.0;\n"
+        "  float g=1.0;\n"
+        "  float b=1.0;\n"
+        "  float a=0.5;\n" +
+           code +
+        "  gl_FragColor = vec4(r,g,b,a);\n"
+        );
+}
+
+void Plotter::PlotImplicit::CreateInequality(const std::string& ie, float red, float green, float blue, float alphatrue)
+{
+    const float alphafalse = 0.0;
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(1);
+    oss << "bool eq = " << ie << ";\n";
+    oss << "gl_FragColor = vec4(" << red << "," << green << "," << blue << "," << "eq ? " << alphatrue << " : " << alphafalse << ");\n";
+
+    CreatePlot( oss.str() );
+}
+
+void Plotter::PlotImplicit::CreateDistancePlot(const std::string& dist)
+{
+
+}
+
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky, Plotter* linked)
 {
     if(!log) {
@@ -208,11 +266,13 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 //    plotmarkers.push_back( PlotMarker(true, -1, 0.1, 1.0, 0.0, 0.0, 0.2 ) );
 //    plotmarkers.push_back( PlotMarker(false, 1, 2*M_PI/0.01, 0.0, 1.0, 0.0, 0.2 ) );
 
-//    // Setup test implicit plots.
-//    // ...
+    // Setup test implicit plots.
+    plotimplicits.reserve(10);
+    plotimplicits.push_back( PlotImplicit() );
+    plotimplicits.back().CreateInequality("y > 2.5", 1.0, 0.0, 0.0);
 
-//    // Setup texture spectogram style plots
-//    // ...
+    // Setup texture spectogram style plots
+    // ...
 
 }
 
@@ -252,7 +312,6 @@ void Plotter::Render()
     prog_default.SaveBind();
     prog_default.SetUniform("u_scale",  2.0f / w, 2.0f / h);
     prog_default.SetUniform("u_offset", ox, oy);
-
     prog_default.SetUniform("u_color",  colour_tk[0], colour_tk[1], colour_tk[2], colour_tk[3] );
     glLineWidth(lineThickness);
     const int tx[2] = {
@@ -276,14 +335,31 @@ void Plotter::Render()
             glDrawLine(int_x[0], (i)*ticks[1],  int_x[1], (i)*ticks[1]);
         }
     }
+    prog_default.Unbind();
 
     //////////////////////////////////////////////////////////////////////////
     // Draw axis
 
+    prog_default.SaveBind();
     prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], colour_ax[3] );
     glDrawLine(0, int_y[0],  0, int_y[1] );
     glDrawLine(int_x[0],0,   int_x[1],0  );
     prog_default.Unbind();
+
+    //////////////////////////////////////////////////////////////////////////
+    // Draw Implicits
+
+    for(size_t i=0; i < plotimplicits.size(); ++i) {
+        PlotImplicit& im = plotimplicits[i];
+        im.prog.SaveBind();
+
+        im.prog.SetUniform("u_scale",  2.0f / w, 2.0f / h);
+        im.prog.SetUniform("u_offset", ox, oy);
+
+        glDrawRect(int_x[0], int_y[0], int_x[1], int_y[1]);
+
+        im.prog.Unbind();
+    }
 
     //////////////////////////////////////////////////////////////////////////
     // Draw series
@@ -352,23 +428,6 @@ void Plotter::Render()
     prog_default.SaveBind();
 
     //////////////////////////////////////////////////////////////////////////
-    // Draw hover / selection
-
-    // hover over
-    prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], 0.3 );
-    glDrawLine(hover[0], int_y[0],  hover[0], int_y[1] );
-    glDrawLine(int_x[0], hover[1],  int_x[1], hover[1] );
-
-    // range
-    prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], 0.5 );
-    glDrawLine(sel_x[0], int_y[0],  sel_x[0], int_y[1] );
-    glDrawLine(sel_x[1], int_y[0],  sel_x[1], int_y[1] );
-    glDrawLine(int_x[0], sel_y[0],  int_x[1], sel_y[0] );
-    glDrawLine(int_x[0], sel_y[1],  int_x[1], sel_y[1] );
-    glDrawRect(sel_x[0], sel_y[0],  sel_x[1], sel_y[1]);
-
-
-    //////////////////////////////////////////////////////////////////////////
     // Draw markers
     glLineWidth(2.5f);
 
@@ -393,6 +452,23 @@ void Plotter::Render()
             }
         }
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Draw hover / selection
+    glLineWidth(1.5f);
+
+    // hover over
+    prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], 0.3 );
+    glDrawLine(hover[0], int_y[0],  hover[0], int_y[1] );
+    glDrawLine(int_x[0], hover[1],  int_x[1], hover[1] );
+
+    // range
+    prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], 0.5 );
+    glDrawLine(sel_x[0], int_y[0],  sel_x[0], int_y[1] );
+    glDrawLine(sel_x[1], int_y[0],  sel_x[1], int_y[1] );
+    glDrawLine(int_x[0], sel_y[0],  int_x[1], sel_y[0] );
+    glDrawLine(int_x[0], sel_y[1],  int_x[1], sel_y[1] );
+    glDrawRect(sel_x[0], sel_y[0],  sel_x[1], sel_y[1]);
 
     prog_default.Unbind();
 
