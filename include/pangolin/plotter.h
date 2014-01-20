@@ -47,6 +47,9 @@ public:
     void Render();
     void DrawTicks();
 
+    void SetViewPan(float left=0, float right=600, float bottom=-1, float top=1);
+    void SetView(float left=0, float right=600, float bottom=-1, float top=1);
+
     void ScreenToPlot(int xpix, int ypix, float &xplot, float &yplot);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
@@ -68,12 +71,13 @@ protected:
     struct PlotSeries
     {
         PlotSeries();
-        void CreatePlot(const std::string& x, const std::string& y);
+        void CreatePlot(const std::string& x, const std::string& y, Colour c);
 
         GlSlProgram prog;
         bool contains_id;
         std::vector<PlotAttrib> attribs;
         GLenum drawing_mode;
+        Colour colour;
     };
 
     struct PlotImplicit
@@ -85,42 +89,41 @@ protected:
         void CreateColouredPlot(const std::string& code);
 
         // Expression uses x,y and evaluates to true/false;
-        void CreateInequality(const std::string& ie, float red, float green, float blue, float alpha = 0.5);
+        void CreateInequality(const std::string& ie, Colour c);
 
         // Expression uses x,y and evaluates to a number
         void CreateDistancePlot(const std::string& dist);
-
 
         GlSlProgram prog;
     };
 
     struct PlotMarker
     {
-        PlotMarker(bool horizontal, int leg, float coord, float red, float green, float blue, float alpha)
-            : horizontal(horizontal), leg(leg), coord(coord)
+        PlotMarker(bool horizontal, int leg, float coord, Colour c)
+            : horizontal(horizontal), leg(leg), coord(coord), colour(c)
         {
-            colour[0] = red;
-            colour[1] = green;
-            colour[2] = blue;
-            colour[3] = alpha;
         }
 
         bool horizontal;
         // less than -1, equal 0, greater than 1
         int leg;
         float coord;
-        float colour[4];
+        Colour colour;
     };
+
+    void UpdateView();
+    void ScrollView(float x, float y);
+    void ScaleView(float x, float y);
 
     DataLog* log;
     Plotter* linked;
 
     ColourWheel colour_wheel;
 
-    float colour_bg[4];
-    float colour_tk[4];
-    float colour_ms[4];
-    float colour_ax[4];
+    Colour colour_bg;
+    Colour colour_tk;
+    Colour colour_ms;
+    Colour colour_ax;
     float lineThickness;
 
     GlSlProgram prog_default;
@@ -137,6 +140,9 @@ protected:
     float int_y[2];
     float ticks[2];
     int last_mouse_pos[2];
+
+    float target_x[2];
+    float target_y[2];
 
     float sel_x[2];
     float sel_y[2];

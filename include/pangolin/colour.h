@@ -28,11 +28,18 @@
 #ifndef PANGOLIN_COLOUR
 #define PANGOLIN_COLOUR
 
+#include <stdexcept>
+
 namespace pangolin
 {
 
 struct Colour
 {
+    Colour()
+        : red(1.0), green(1.0), blue(1.0), alpha(1.0)
+    {
+    }
+
     Colour(float red, float green, float blue, float alpha = 1.0)
         : red(red), green(green), blue(blue), alpha(alpha)
     {
@@ -48,10 +55,15 @@ struct Colour
         return c;
     }
 
+    Colour WithAlpha(float alpha)
+    {
+        return Colour(r,g,b,alpha);
+    }
+
+    // hue : [0,1], sat : [0,1], val : [0,1]
     static Colour Hsv(float hue, float sat = 1.0, float val = 1.0, float alpha = 1.0)
     {
-          hue *= 360.0;
-          const float h = hue / 60.0;
+          const float h = 6.0f * hue;
           const int i = floor(h);
           const float f = (i%2 == 0) ? 1-(h-i) : h-i;
           const float m = val * (1-sat);

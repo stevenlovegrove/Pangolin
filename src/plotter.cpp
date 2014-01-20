@@ -33,23 +33,6 @@
 namespace pangolin
 {
 
-const static int num_plot_colours = 12;
-const static float plot_colours[][3] =
-{
-    {1.0, 0.0, 0.0},
-    {0.0, 1.0, 0.0},
-    {0.0, 0.0, 1.0},
-    {1.0, 0.0, 1.0},
-    {0.5, 0.5, 0.0},
-    {0.5, 0.0, 0.0},
-    {0.0, 0.5, 0.0},
-    {0.0, 0.0, 0.5},
-    {0.5, 0.0, 1.0},
-    {0.0, 1.0, 0.5},
-    {1.0, 0.0, 0.5},
-    {0.0, 0.5, 1.0}
-};
-
 inline void SetColor(float colour[4], float r, float g, float b, float alpha = 1.0f)
 {
     colour[0] = r;
@@ -94,7 +77,7 @@ Plotter::PlotSeries::PlotSeries()
 
 }
 
-void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y)
+void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y, Colour c)
 {
     static const std::string vs_header =
             "uniform int u_id_offset;\n"
@@ -118,6 +101,7 @@ void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y)
 
     attribs.clear();
 
+    colour = c;
     const std::set<int> ax = ConvertSequences(x);
     const std::set<int> ay = ConvertSequences(y);
     std::set<int> as;
@@ -191,12 +175,12 @@ void Plotter::PlotImplicit::CreateColouredPlot(const std::string& code)
         );
 }
 
-void Plotter::PlotImplicit::CreateInequality(const std::string& ie, float red, float green, float blue, float alpha)
+void Plotter::PlotImplicit::CreateInequality(const std::string& ie, Colour c)
 {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(1);
     oss << "if( !(" << ie << ") ) discard;\n";
-    oss << "gl_FragColor = vec4(" << red << "," << green << "," << blue << "," << alpha << ");\n";
+    oss << "gl_FragColor = vec4(" << c.r << "," << c.g << "," << c.b << "," << c.a << ");\n";
 
     CreatePlot( oss.str() );
 }
@@ -207,6 +191,7 @@ void Plotter::PlotImplicit::CreateDistancePlot(const std::string& dist)
 }
 
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky, Plotter* linked)
+    : colour_wheel(0.6)
 {
     if(!log) {
         throw std::runtime_error("DataLog not specified");
@@ -217,16 +202,13 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
     this->log = log;
 
     // Default colour scheme
-    SetColor(colour_bg, 0.0,0.0,0.0);
-    SetColor(colour_tk, 0.2,0.2,0.2);
-    SetColor(colour_ms, 0.3,0.3,0.3);
-    SetColor(colour_ax, 0.5,0.5,0.5);
+    colour_bg = Colour(0.0,0.0,0.0);
+    colour_tk = Colour(0.2,0.2,0.2);
+    colour_ms = Colour(0.3,0.3,0.3);
+    colour_ax = Colour(0.5,0.5,0.5);
 
     // Setup view range.
-    int_x[0] = int_x_dflt[0] = left;
-    int_x[1] = int_x_dflt[1] = right;
-    int_y[0] = int_y_dflt[0] = bottom;
-    int_y[1] = int_y_dflt[1] = top;
+    SetView(left,right,bottom,top);
     ticks[0] = tickx;
     ticks[1] = ticky;
     track_front = false;
@@ -254,18 +236,12 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
     // Setup default PlotSeries
     plotseries.reserve(10);
-    plotseries.push_back( PlotSeries() );
-    plotseries.back().CreatePlot("$i", "$0");
-    plotseries.push_back( PlotSeries() );
-    plotseries.back().CreatePlot("$i", "$1");
-    plotseries.push_back( PlotSeries() );
-    plotseries.back().CreatePlot("$i", "$2");
-    plotseries.push_back( PlotSeries() );
-    plotseries.back().CreatePlot("$i", "$3");
-    plotseries.push_back( PlotSeries() );
-    plotseries.back().CreatePlot("$i", "$4");
-    plotseries.push_back( PlotSeries() );
-    plotseries.back().CreatePlot("$i", "$5");
+    for(int i=0; i<10; ++i) {
+        std::ostringstream oss;
+        oss << "$" << i;
+        plotseries.push_back( PlotSeries() );
+        plotseries.back().CreatePlot("$i", oss.str(), colour_wheel.GetUniqueColour() );
+    }
 
 //    // Setup test PlotMarkers
 //    plotmarkers.push_back( PlotMarker(true, -1, 0.1, 1.0, 0.0, 0.0, 0.2 ) );
@@ -273,8 +249,12 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
     // Setup test implicit plots.
     plotimplicits.reserve(10);
-    plotimplicits.push_back( PlotImplicit() );
-    plotimplicits.back().CreateInequality("y > 2.5", 1.0, 0.0, 0.0);
+//    plotimplicits.push_back( PlotImplicit() );
+//    plotimplicits.back().CreateInequality("x+y <= 150.0", colour_wheel.GetUniqueColour().WithAlpha(0.2) );
+//    plotimplicits.push_back( PlotImplicit() );
+//    plotimplicits.back().CreateInequality("x+2.0*y <= 170.0", colour_wheel.GetUniqueColour().WithAlpha(0.2) );
+//    plotimplicits.push_back( PlotImplicit() );
+//    plotimplicits.back().CreateInequality("3.0*y <= 180.0", colour_wheel.GetUniqueColour().WithAlpha(0.2) );
 
     // Setup texture spectogram style plots
     // ...
@@ -283,6 +263,8 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
 void Plotter::Render()
 {
+    UpdateView();
+
 #ifndef HAVE_GLES
     glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_LINE_BIT);
 #endif
@@ -292,7 +274,7 @@ void Plotter::Render()
         // TODO: Implement
     }
 
-    glClearColor(colour_bg[0], colour_bg[1], colour_bg[2], colour_bg[3]);
+    glClearColor(colour_bg.r, colour_bg.g, colour_bg.b, colour_bg.a);
     ActivateScissorAndClear();
 
     // Try to create smooth lines
@@ -317,7 +299,7 @@ void Plotter::Render()
     prog_default.SaveBind();
     prog_default.SetUniform("u_scale",  2.0f / w, 2.0f / h);
     prog_default.SetUniform("u_offset", ox, oy);
-    prog_default.SetUniform("u_color",  colour_tk[0], colour_tk[1], colour_tk[2], colour_tk[3] );
+    prog_default.SetUniform("u_color",  colour_tk );
     glLineWidth(lineThickness);
     const int tx[2] = {
         (int)ceil(int_x[0] / ticks[0]),
@@ -346,7 +328,7 @@ void Plotter::Render()
     // Draw axis
 
     prog_default.SaveBind();
-    prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], colour_ax[3] );
+    prog_default.SetUniform("u_color",  colour_ax );
     glDrawLine(0, int_y[0],  0, int_y[1] );
     glDrawLine(int_x[0],0,   int_x[1],0  );
     prog_default.Unbind();
@@ -377,12 +359,11 @@ void Plotter::Render()
     {
         PlotSeries& ps = plotseries[i];
         GlSlProgram& prog = ps.prog;
-        const Colour c = colour_wheel.GetColourBin(i);
 
         prog.SaveBind();
         prog.SetUniform("u_scale",  2.0f / w, 2.0f / h);
         prog.SetUniform("u_offset", ox, oy);
-        prog.SetUniform("u_color", c.red, c.green, c.blue, c.alpha );
+        prog.SetUniform("u_color", ps.colour );
 
         const DataLogBlock* block = log->Blocks();
         while(block) {
@@ -439,7 +420,7 @@ void Plotter::Render()
 
     for( size_t i=0; i < plotmarkers.size(); ++i) {
         PlotMarker& m = plotmarkers[i];
-        prog_default.SetUniform("u_color",  m.colour[0], m.colour[1], m.colour[2], m.colour[3] );
+        prog_default.SetUniform("u_color",  m.colour );
         if(m.horizontal) {
             if(m.leg == 0) {
                 glDrawLine(int_x[0], m.coord,  int_x[1], m.coord );
@@ -464,12 +445,12 @@ void Plotter::Render()
     glLineWidth(1.5f);
 
     // hover over
-    prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], 0.3 );
+    prog_default.SetUniform("u_color",  colour_ax.WithAlpha(0.3) );
     glDrawLine(hover[0], int_y[0],  hover[0], int_y[1] );
     glDrawLine(int_x[0], hover[1],  int_x[1], hover[1] );
 
     // range
-    prog_default.SetUniform("u_color",  colour_ax[0], colour_ax[1], colour_ax[2], 0.5 );
+    prog_default.SetUniform("u_color",  colour_ax.WithAlpha(0.5) );
     glDrawLine(sel_x[0], int_y[0],  sel_x[0], int_y[1] );
     glDrawLine(sel_x[1], int_y[0],  sel_x[1], int_y[1] );
     glDrawLine(int_x[0], sel_y[0],  int_x[1], sel_y[0] );
@@ -486,9 +467,95 @@ void Plotter::Render()
 
 }
 
+void Plotter::SetViewPan(float left, float right, float bottom, float top)
+{
+    target_x[0] = left;
+    target_x[1] = right;
+    target_y[0] = bottom;
+    target_y[1] = top;
+
+}
+
+void Plotter::SetView(float left, float right, float bottom, float top)
+{
+    SetViewPan(left,right,bottom,top);
+    int_x[0] = left;
+    int_x[1] = right;
+    int_y[0] = bottom;
+    int_y[1] = top;
+}
+
+void Plotter::UpdateView()
+{
+    const float sf = 1.0 / 20.0;
+    float dx[2] = { target_x[0]-int_x[0], target_x[1]-int_x[1] };
+    float dy[2] = { target_y[0]-int_y[0], target_y[1]-int_y[1] };
+    int_x[0] += sf * dx[0];
+    int_x[1] += sf * dx[1];
+    int_y[0] += sf * dy[0];
+    int_y[1] += sf * dy[1];
+}
+
+void Plotter::ScrollView(float x, float y)
+{
+    int_x[0] += x; int_x[1] += x;
+    int_y[0] += y; int_y[1] += y;
+    target_x[0] += x; target_x[1] += x;
+    target_y[0] += y; target_y[1] += y;
+}
+
+void Plotter::ScaleView(float x, float y)
+{
+    const double c[2] = {
+        track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
+        (int_y[0] + int_y[1])/2.0
+    };
+
+    int_y[0] = y*(int_y[0] - c[1]) + c[1];
+    int_y[1] = y*(int_y[1] - c[1]) + c[1];
+    int_x[0] = x*(int_x[0] - c[0]) + c[0];
+    int_x[1] = x*(int_x[1] - c[0]) + c[0];
+
+    target_y[0] = y*(target_y[0] - c[1]) + c[1];
+    target_y[1] = y*(target_y[1] - c[1]) + c[1];
+    target_x[0] = x*(target_x[0] - c[0]) + c[0];
+    target_x[1] = x*(target_x[1] - c[0]) + c[0];
+}
+
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 {
+    const float mvfactor = 1.0 / 10.0;
 
+    if(pressed) {
+        if(key == ' ' && sel_x[0] != sel_x[1] && sel_y[0] != sel_y[1]) {
+            // Set view to equal selection
+            SetViewPan(sel_x[0], sel_x[1], sel_y[0], sel_y[1]);
+
+            // Reset selection
+            sel_x[1] = sel_x[0];
+            sel_y[1] = sel_y[0];
+        }else if(key == PANGO_SPECIAL + PANGO_KEY_LEFT) {
+            const float w = int_x[1] - int_x[0];
+            const float dx = mvfactor*w;
+            target_x[0] -= dx;
+            target_x[1] -= dx;
+        }else if(key == PANGO_SPECIAL + PANGO_KEY_RIGHT) {
+            const float w = target_x[1] - target_x[0];
+            const float dx = mvfactor*w;
+            target_x[0] += dx;
+            target_x[1] += dx;
+        }else if(key == PANGO_SPECIAL + PANGO_KEY_UP) {
+            const float h = target_y[1] - target_y[0];
+            const float dy = mvfactor*h;
+            target_y[0] += dy;
+            target_y[1] += dy;
+        }else if(key == PANGO_SPECIAL + PANGO_KEY_DOWN) {
+            const float h = target_y[1] - target_y[0];
+            const float dy = mvfactor*h;
+            target_y[0] -= dy;
+            target_y[1] -= dy;
+        }
+    }
 }
 
 void Plotter::ScreenToPlot(int xpix, int ypix, float& xplot, float& yplot)
@@ -561,28 +628,35 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
         const float is[2] = {int_x[1]-int_x[0],int_y[1]-int_y[0]};
         const float df[2] = {is[0]*d[0]/(float)v.w, is[1]*d[1]/(float)v.h};
 
-        int_x[0] -= df[0];
-        int_x[1] -= df[0];
-        int_y[0] -= df[1];
-        int_y[1] -= df[1];
+        ScrollView(-df[0], -df[1]);
 
         if(df[0] > 0) {
             track_front = false;
         }
     } else if(inType == InputSpecialZoom) {
-        const float scale = (1-p1);
-        const double c[2] = {
-            track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
-            (int_y[0] + int_y[1])/2.0
-        };
+        float scalex = 1.0;
+        float scaley = 1.0;
 
         if(button_state & KeyModifierCmd) {
-            int_y[0] = scale*(int_y[0] - c[1]) + c[1];
-            int_y[1] = scale*(int_y[1] - c[1]) + c[1];
+            scaley = 1-p1;
         }else{
-            int_x[0] = scale*(int_x[0] - c[0]) + c[0];
-            int_x[1] = scale*(int_x[1] - c[0]) + c[0];
+            scalex = 1-p1;
         }
+
+        ScaleView(scalex, scaley);
+
+//        const double c[2] = {
+//            track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
+//            (int_y[0] + int_y[1])/2.0
+//        };
+
+//        if(button_state & KeyModifierCmd) {
+//            int_y[0] = scale*(int_y[0] - c[1]) + c[1];
+//            int_y[1] = scale*(int_y[1] - c[1]) + c[1];
+//        }else{
+//            int_x[0] = scale*(int_x[0] - c[0]) + c[0];
+//            int_x[1] = scale*(int_x[1] - c[0]) + c[0];
+//        }
     }
 
     // Update hover status (after potential resizing)

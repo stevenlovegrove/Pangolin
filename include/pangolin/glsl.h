@@ -32,6 +32,7 @@
 #include <algorithm>
 
 #include <pangolin/glplatform.h>
+#include <pangolin/colour.h>
 
 #ifdef HAVE_GLES
     #define GLhandleARB GLuint
@@ -86,6 +87,7 @@ public:
     void SetUniform(const std::string& name, float f1, float f2, float f3);
     void SetUniform(const std::string& name, float f1, float f2, float f3, float f4);
 
+    void SetUniform(const std::string& name, Colour c);
     
     void Bind();
     void SaveBind();
@@ -280,6 +282,12 @@ inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2,
 {
     glUniform4f( GetUniformHandle(name), f1,f2,f3,f4);
 }
+
+inline void GlSlProgram::SetUniform(const std::string& name, Colour c)
+{
+    glUniform4f( GetUniformHandle(name), c.r, c.g, c.b, c.a);
+}
+
 
 }
 
