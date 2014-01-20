@@ -494,10 +494,11 @@ void Plotter::Render()
 
     prog_default.Unbind();
 
+    prog_default_tex.SaveBind();
+
     //////////////////////////////////////////////////////////////////////////
     // Draw Key
 
-    prog_default_tex.SaveBind();
     prog_default_tex.SetUniform("u_scale",  2.0f / v.w, 2.0f / v.h);
 
     int keyid = 0;
@@ -510,6 +511,51 @@ void Plotter::Render()
             ps.title.DrawGlSl();
         }
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Draw axis text
+
+    prog_default_tex.SetUniform("u_scale",  2.0f / v.w, 2.0f / v.h);
+    prog_default_tex.SetUniform("u_color", colour_ax );
+
+    if( tx[1] - tx[0] < v.w/4 ) {
+        for( int i=tx[0]; i<tx[1]; ++i ) {
+            std::ostringstream oss;
+            const float divpi = ticks[0] / M_PI;
+            const float divrt2 = ticks[0] / M_SQRT2;
+            if( std::abs(divpi - floor(divpi)) < 1E-6 ) {
+                oss << i*divpi << "pi";
+            }else if( std::abs(divrt2 - floor(divrt2)) < 1E-6 ) {
+                oss << i*divpi << "sqrt(2)";
+            }else{
+                oss << i*ticks[0];
+            }
+            GlText txt = GlFont::I().Text(oss.str().c_str());
+            float sx = v.w*((i)*ticks[0]-(int_x[0]+int_x[1])/2.0f)/w - txt.Width()/2.0f;
+            prog_default_tex.SetUniform("u_offset", sx, 15 -v.h/2.0f );
+            txt.DrawGlSl();
+        }
+    }
+
+    if( ty[1] - ty[0] < v.h/4 ) {
+        for( int i=ty[0]; i<ty[1]; ++i ) {
+            std::ostringstream oss;
+            const float divpi = ticks[1] / M_PI;
+            const float divrt2 = ticks[1] / M_SQRT2;
+            if( std::abs(divpi - floor(divpi)) < 1E-6 ) {
+                oss << i*divpi << "pi";
+            }else if( std::abs(divrt2 - floor(divrt2)) < 1E-6 ) {
+                oss << i*divpi << "sqrt(2)";
+            }else{
+                oss << i*ticks[1];
+            }
+            GlText txt = GlFont::I().Text(oss.str().c_str());
+            float sy = v.h*((i)*ticks[1]-(int_y[0]+int_y[1])/2.0f)/h - txt.Height()/2.0f;
+            prog_default_tex.SetUniform("u_offset", 15 -v.w/2.0f, sy );
+            txt.DrawGlSl();
+        }
+    }
+
 
     prog_default_tex.Unbind();
 
@@ -528,7 +574,6 @@ void Plotter::SetViewPan(float left, float right, float bottom, float top)
     target_x[1] = right;
     target_y[0] = bottom;
     target_y[1] = top;
-
 }
 
 void Plotter::SetView(float left, float right, float bottom, float top)
@@ -577,15 +622,15 @@ void Plotter::ScaleView(float x, float y)
         (int_y[0] + int_y[1])/2.0
     };
 
-    int_y[0] = y*(int_y[0] - c[1]) + c[1];
-    int_y[1] = y*(int_y[1] - c[1]) + c[1];
     int_x[0] = x*(int_x[0] - c[0]) + c[0];
     int_x[1] = x*(int_x[1] - c[0]) + c[0];
+    int_y[0] = y*(int_y[0] - c[1]) + c[1];
+    int_y[1] = y*(int_y[1] - c[1]) + c[1];
 
-    target_y[0] = y*(target_y[0] - c[1]) + c[1];
-    target_y[1] = y*(target_y[1] - c[1]) + c[1];
     target_x[0] = x*(target_x[0] - c[0]) + c[0];
     target_x[1] = x*(target_x[1] - c[0]) + c[0];
+    target_y[0] = y*(target_y[0] - c[1]) + c[1];
+    target_y[1] = y*(target_y[1] - c[1]) + c[1];
 }
 
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
@@ -663,18 +708,11 @@ void Plotter::MouseMotion(View& view, int x, int y, int button_state)
         Special(view, InputSpecialScroll, df[0], df[1], 0.0f, 0.0f, 0.0f, 0.0f, button_state);
     }else if(button_state == MouseButtonRight )
     {
-        const double c[2] = {
-            track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
-            (int_y[0] + int_y[1])/2.0
-        };
         const float scale[2] = {
             1.0f + (float)d[0] / (float)v.w,
             1.0f - (float)d[1] / (float)v.h,
         };
-        int_x[0] = scale[0]*(int_x[0] - c[0]) + c[0];
-        int_x[1] = scale[0]*(int_x[1] - c[0]) + c[0];
-        int_y[0] = scale[1]*(int_y[0] - c[1]) + c[1];
-        int_y[1] = scale[1]*(int_y[1] - c[1]) + c[1];
+        ScaleView(scale[0], scale[1]);
     }
 
     // Update hover status (after potential resizing)
