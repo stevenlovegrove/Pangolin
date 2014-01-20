@@ -52,7 +52,7 @@ void DataLogBlock::AddSamples(size_t num_samples, size_t dimensions, const float
 }
 
 DataLog::DataLog(unsigned int buffer_size)
-    : block_samples_alloc(buffer_size), blocks(0), record_stats(true)
+    : block_samples_alloc(buffer_size), block0(0), blockn(0), record_stats(false)
 {
 }
 
@@ -74,9 +74,10 @@ void DataLog::SetLabels(const std::vector<std::string> & new_labels)
 
 void DataLog::Log(unsigned int dimension, const float* vals, unsigned int samples )
 {
-    if(!blocks) {
+    if(!block0) {
         // Create first block
-        blocks = new DataLogBlock(dimension, block_samples_alloc, 0);
+        block0 = new DataLogBlock(dimension, block_samples_alloc, 0);
+        blockn = block0;
     }
 
     if(record_stats) {
@@ -96,7 +97,7 @@ void DataLog::Log(unsigned int dimension, const float* vals, unsigned int sample
         }
     }
 
-    blocks->AddSamples(samples,dimension,vals);
+    blockn->AddSamples(samples,dimension,vals);
 }
 
 void DataLog::Log(float v)
@@ -163,10 +164,11 @@ void DataLog::Log(const std::vector<float> & vals)
 
 void DataLog::Clear()
 {
-    if(blocks) {
-        blocks->ClearLinked();
-        delete blocks;
-        blocks = 0;
+    if(block0) {
+        block0->ClearLinked();
+        delete block0;
+        block0 = 0;
+        blockn = 0;
     }
     stats.clear();
 }
@@ -179,7 +181,7 @@ void DataLog::Save(std::string filename)
 
 const DataLogBlock* DataLog::Blocks() const
 {
-    return blocks;
+    return block0;
 }
 
 const DimensionStats& DataLog::Stats(size_t dim) const

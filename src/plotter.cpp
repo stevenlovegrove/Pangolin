@@ -288,6 +288,11 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
 }
 
+Plotter::~Plotter()
+{
+
+}
+
 void Plotter::Render()
 {
     UpdateView();
@@ -408,6 +413,7 @@ void Plotter::Render()
                     for(size_t k=0; k < id_size; ++k) {
                         id_array[k] = block->StartId() + k;
                     }
+                    id_start = block->StartId();
                 }
             }
 
