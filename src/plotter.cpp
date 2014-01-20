@@ -271,7 +271,6 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
         std::ostringstream oss;
         oss << "$" << i;
         const Colour col = colour_wheel.GetUniqueColour();
-        print_debug("Unique Colour %f, %f, %f, %f\n", col.r, col.g, col.b, col.a);
         plotseries.push_back( PlotSeries() );
         plotseries.back().CreatePlot("$i", oss.str(), col, oss.str() );
     }
@@ -334,26 +333,33 @@ void Plotter::Render()
     prog_default.SetUniform("u_offset", ox, oy);
     prog_default.SetUniform("u_color",  colour_tk );
     glLineWidth(lineThickness);
+
+    const float min_space = 80.0;
+    int ta[2] = {1,1};
+    while(v.w * ta[0] *ticks[0] / w < min_space) ta[0] *=2;
+    while(v.h * ta[1] *ticks[1] / h < min_space) ta[1] *=2;
+
+    const float tdelta[2] = {
+        this->ticks[0] * ta[0],
+        this->ticks[1] * ta[1]
+    };
+
     const int tx[2] = {
-        (int)ceil(int_x[0] / ticks[0]),
-        (int)ceil(int_x[1] / ticks[0])
+        (int)ceil(int_x[0] / tdelta[0]),
+        (int)ceil(int_x[1] / tdelta[0])
     };
 
     const int ty[2] = {
-        (int)ceil(int_y[0] / ticks[1]),
-        (int)ceil(int_y[1] / ticks[1])
+        (int)ceil(int_y[0] / tdelta[1]),
+        (int)ceil(int_y[1] / tdelta[1])
     };
 
-    if( tx[1] - tx[0] < v.w/4 ) {
-        for( int i=tx[0]; i<tx[1]; ++i ) {
-            glDrawLine((i)*ticks[0], int_y[0],   (i)*ticks[0], int_y[1]);
-        }
+    for( int i=tx[0]; i<tx[1]; ++i ) {
+        glDrawLine((i)*tdelta[0], int_y[0],   (i)*tdelta[0], int_y[1]);
     }
 
-    if( ty[1] - ty[0] < v.h/4 ) {
-        for( int i=ty[0]; i<ty[1]; ++i ) {
-            glDrawLine(int_x[0], (i)*ticks[1],  int_x[1], (i)*ticks[1]);
-        }
+    for( int i=ty[0]; i<ty[1]; ++i ) {
+        glDrawLine(int_x[0], (i)*tdelta[1],  int_x[1], (i)*tdelta[1]);
     }
     prog_default.Unbind();
 
@@ -521,28 +527,23 @@ void Plotter::Render()
     prog_default_tex.SetUniform("u_scale",  2.0f / v.w, 2.0f / v.h);
     prog_default_tex.SetUniform("u_color", colour_ax );
 
-    if( tx[1] - tx[0] < v.w/4 ) {
-        for( int i=tx[0]; i<tx[1]; ++i ) {
-            std::ostringstream oss;
-            oss << i*ticks[0]*tickfactor[0].factor << tickfactor[0].symbol;
-            GlText txt = GlFont::I().Text(oss.str().c_str());
-            float sx = v.w*((i)*ticks[0]-(int_x[0]+int_x[1])/2.0f)/w - txt.Width()/2.0f;
-            prog_default_tex.SetUniform("u_offset", sx, 15 -v.h/2.0f );
-            txt.DrawGlSl();
-        }
+    for( int i=tx[0]; i<tx[1]; ++i ) {
+        std::ostringstream oss;
+        oss << i*tdelta[0]*tickfactor[0].factor << tickfactor[0].symbol;
+        GlText txt = GlFont::I().Text(oss.str().c_str());
+        float sx = v.w*((i)*tdelta[0]-(int_x[0]+int_x[1])/2.0f)/w - txt.Width()/2.0f;
+        prog_default_tex.SetUniform("u_offset", sx, 15 -v.h/2.0f );
+        txt.DrawGlSl();
     }
 
-    if( ty[1] - ty[0] < v.h/4 ) {
-        for( int i=ty[0]; i<ty[1]; ++i ) {
-            std::ostringstream oss;
-            oss << i*ticks[1]*tickfactor[1].factor << tickfactor[1].symbol;
-            GlText txt = GlFont::I().Text(oss.str().c_str());
-            float sy = v.h*((i)*ticks[1]-(int_y[0]+int_y[1])/2.0f)/h - txt.Height()/2.0f;
-            prog_default_tex.SetUniform("u_offset", 15 -v.w/2.0f, sy );
-            txt.DrawGlSl();
-        }
+    for( int i=ty[0]; i<ty[1]; ++i ) {
+        std::ostringstream oss;
+        oss << i*tdelta[1]*tickfactor[1].factor << tickfactor[1].symbol;
+        GlText txt = GlFont::I().Text(oss.str().c_str());
+        float sy = v.h*((i)*tdelta[1]-(int_y[0]+int_y[1])/2.0f)/h - txt.Height()/2.0f;
+        prog_default_tex.SetUniform("u_offset", 15 -v.w/2.0f, sy );
+        txt.DrawGlSl();
     }
-
 
     prog_default_tex.Unbind();
 
