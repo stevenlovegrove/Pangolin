@@ -82,12 +82,6 @@ public:
         prog_fixed.AddShader(GlSlFragmentShader, frag);
         prog_fixed.Link();
 
-        // Save locations of attributes
-        a_position = prog_fixed.GetAttributeHandle("a_position");
-        a_color = prog_fixed.GetAttributeHandle("a_color");
-        a_normal = prog_fixed.GetAttributeHandle("a_normal");
-        a_texcoord = prog_fixed.GetAttributeHandle("a_texcoord");
-
         // Save locations of uniforms
         u_color = prog_fixed.GetUniformHandle("u_color");
         u_modelViewMatrix = prog_fixed.GetUniformHandle("u_modelViewMatrix");
@@ -133,11 +127,6 @@ public:
     float color[4];
 
     GlSlProgram  prog_fixed;
-
-    GLint a_position;
-    GLint a_color;
-    GLint a_normal;
-    GLint a_texcoord;
 
     GLint u_color;
     GLint u_modelViewMatrix;
@@ -191,13 +180,13 @@ inline void glEnableClientState(GLenum cap)
 {
     pangolin::GlEngine& gl = pangolin::glEngine();
     if(cap == GL_VERTEX_ARRAY) {
-        glEnableVertexAttribArray(gl.a_position);
+        glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_POSITION);
     }else if(cap == GL_COLOR_ARRAY) {
-        glEnableVertexAttribArray(gl.a_color);
+        glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_COLOUR);
     }else if(cap == GL_NORMAL_ARRAY) {
-        glEnableVertexAttribArray(gl.a_normal);
+        glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_NORMAL);
     }else if(cap == GL_TEXTURE_COORD_ARRAY) {
-        glEnableVertexAttribArray(gl.a_texcoord);
+        glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_TEXCOORD);
         gl.EnableTexturing(true);
     }else{
         print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
@@ -208,13 +197,13 @@ inline void glDisableClientState(GLenum cap)
 {
     pangolin::GlEngine& gl = pangolin::glEngine();
     if(cap == GL_VERTEX_ARRAY) {
-        glDisableVertexAttribArray(gl.a_position);
+        glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_POSITION);
     }else if(cap == GL_COLOR_ARRAY) {
-        glDisableVertexAttribArray(gl.a_color);
+        glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_COLOUR);
     }else if(cap == GL_NORMAL_ARRAY) {
-        glDisableVertexAttribArray(gl.a_normal);
+        glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_NORMAL);
     }else if(cap == GL_TEXTURE_COORD_ARRAY) {
-        glDisableVertexAttribArray(gl.a_texcoord);
+        glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_TEXCOORD);
         gl.EnableTexturing(false);
     }else{
         print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
@@ -223,12 +212,12 @@ inline void glDisableClientState(GLenum cap)
 
 inline void glVertexPointer( GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
 {
-    glVertexAttribPointer(pangolin::glEngine().a_position, size, type, GL_FALSE, stride, pointer);
+    glVertexAttribPointer(pangolin::DEFAULT_LOCATION_POSITION, size, type, GL_FALSE, stride, pointer);
 }
 
 inline void glTexCoordPointer( GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
 {
-    glVertexAttribPointer(pangolin::glEngine().a_texcoord, size, type, GL_FALSE, stride, pointer);
+    glVertexAttribPointer(pangolin::DEFAULT_LOCATION_TEXCOORD, size, type, GL_FALSE, stride, pointer);
 }
 
 inline void glMatrixMode(GLenum mode)

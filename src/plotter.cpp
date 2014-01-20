@@ -77,7 +77,7 @@ Plotter::PlotSeries::PlotSeries()
 
 }
 
-void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y, Colour c)
+void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y, Colour colour, std::string title)
 {
     static const std::string vs_header =
             "uniform int u_id_offset;\n"
@@ -101,7 +101,8 @@ void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y,
 
     attribs.clear();
 
-    colour = c;
+    this->colour = colour;
+    this->title  = GlFont::I().Text(title.c_str());
     const std::set<int> ax = ConvertSequences(x);
     const std::set<int> ay = ConvertSequences(y);
     std::set<int> as;
@@ -158,6 +159,7 @@ void Plotter::PlotImplicit::CreatePlot(const std::string& code)
 
     prog.AddShader( GlSlVertexShader, vs );
     prog.AddShader( GlSlFragmentShader, fs1 + code + fs2 );
+    prog.BindPangolinDefaultAttribLocations();
     prog.Link();
 
 }
@@ -232,7 +234,35 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
                          "  gl_FragColor = v_color;\n"
                          "}\n"
                          );
+    prog_default.BindPangolinDefaultAttribLocations();
     prog_default.Link();
+
+    prog_default_tex.AddShader( GlSlVertexShader,
+                         "attribute vec2 a_position;\n"
+                         "attribute vec2 a_texcoord;\n"
+                         "uniform vec4 u_color;\n"
+                         "uniform vec2 u_scale;\n"
+                         "uniform vec2 u_offset;\n"
+                         "varying vec4 v_color;\n"
+                         "varying vec2 v_texcoord;\n"
+                         "void main() {\n"
+                         "    gl_Position = vec4(u_scale * (a_position + u_offset),0,1);\n"
+                         "    v_color = u_color;\n"
+                         "    v_texcoord = a_texcoord;\n"
+                         "}\n"
+                         );
+    prog_default_tex.AddShader( GlSlFragmentShader,
+                         "varying vec4 v_color;\n"
+                         "varying vec2 v_texcoord;\n"
+                         "uniform sampler2D u_texture;\n"
+                         "void main() {\n"
+                         "  gl_FragColor = v_color;\n"
+                         "  gl_FragColor.a *= texture2D(u_texture, v_texcoord).a;\n"
+                         "}\n"
+                         );
+    prog_default_tex.BindPangolinDefaultAttribLocations();
+    prog_default_tex.Link();
+
 
     // Setup default PlotSeries
     plotseries.reserve(10);
@@ -240,7 +270,7 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
         std::ostringstream oss;
         oss << "$" << i;
         plotseries.push_back( PlotSeries() );
-        plotseries.back().CreatePlot("$i", oss.str(), colour_wheel.GetUniqueColour() );
+        plotseries.back().CreatePlot("$i", oss.str(), colour_wheel.GetUniqueColour(), oss.str() );
     }
 
 //    // Setup test PlotMarkers
@@ -359,6 +389,7 @@ void Plotter::Render()
     {
         PlotSeries& ps = plotseries[i];
         GlSlProgram& prog = ps.prog;
+        ps.used = false;
 
         prog.SaveBind();
         prog.SetUniform("u_scale",  2.0f / w, 2.0f / h);
@@ -385,6 +416,7 @@ void Plotter::Render()
             prog.SetUniform("u_id_offset",  (int)block->StartId() );
 
             // Enable appropriate attributes
+            bool shouldRender = true;
             for(size_t i=0; i< ps.attribs.size(); ++i) {
                 if(0 <= ps.attribs[i].plot_id && ps.attribs[i].plot_id < (int)block->Dimensions() ) {
                     glVertexAttribPointer(ps.attribs[i].location, 1, GL_FLOAT, GL_FALSE, block->Dimensions()*sizeof(float), block->DimData(ps.attribs[i].plot_id) );
@@ -394,14 +426,17 @@ void Plotter::Render()
                     glEnableVertexAttribArray(ps.attribs[i].location);
                 }else{
                     // bad id: don't render
-                    goto draw_skip;
+                    shouldRender = false;
+                    break;
                 }
             }
 
-            // Draw geometry
-            glDrawArrays(ps.drawing_mode, 0, block->Samples());
+            if(shouldRender) {
+                // Draw geometry
+                glDrawArrays(ps.drawing_mode, 0, block->Samples());
+                ps.used = true;
+            }
 
-        draw_skip:
             // Disable enabled attributes
             for(size_t i=0; i< ps.attribs.size(); ++i) {
                 glDisableVertexAttribArray(ps.attribs[i].location);
@@ -459,6 +494,26 @@ void Plotter::Render()
 
     prog_default.Unbind();
 
+    //////////////////////////////////////////////////////////////////////////
+    // Draw Key
+
+    prog_default_tex.SaveBind();
+    prog_default_tex.SetUniform("u_scale",  2.0f / v.w, 2.0f / v.h);
+
+    int keyid = 0;
+    for(size_t i=0; i < plotseries.size(); ++i)
+    {
+        PlotSeries& ps = plotseries[i];
+        if(ps.used) {
+            prog_default_tex.SetUniform("u_color", ps.colour );
+            prog_default_tex.SetUniform("u_offset",v.w-25 -(v.w/2.0f), v.h-15*(++keyid) -(v.h/2.0f));
+            ps.title.DrawGlSl();
+        }
+    }
+
+    prog_default_tex.Unbind();
+
+
     glLineWidth(1.0f);
 
 #ifndef HAVE_GLES
@@ -483,6 +538,17 @@ void Plotter::SetView(float left, float right, float bottom, float top)
     int_x[1] = right;
     int_y[0] = bottom;
     int_y[1] = top;
+}
+
+void Plotter::FixSelection()
+{
+    // Make sure selection matches sign of current viewport
+    if( (sel_x[0]<sel_x[1]) != (int_x[0]<int_x[1]) ) {
+        std::swap(sel_x[0], sel_x[1]);
+    }
+    if( (sel_y[0]<sel_y[1]) != (int_y[0]<int_y[1]) ) {
+        std::swap(sel_y[0], sel_y[1]);
+    }
 }
 
 void Plotter::UpdateView()
@@ -578,6 +644,8 @@ void Plotter::Mouse(View& view, MouseButton button, int x, int y, bool pressed, 
     }else if(button == MouseWheelUp || button == MouseWheelDown) {
         Special(view, InputSpecialZoom, x, y, ((button == MouseWheelDown) ? 0.1 : -0.1), 0.0f, 0.0f, 0.0f, button_state );
     }
+
+    FixSelection();
 }
 
 void Plotter::MouseMotion(View& view, int x, int y, int button_state)

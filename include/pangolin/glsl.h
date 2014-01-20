@@ -50,6 +50,20 @@ namespace pangolin
 {
 
 ////////////////////////////////////////////////
+// Standard attribute locations
+////////////////////////////////////////////////
+
+const GLuint DEFAULT_LOCATION_POSITION = 0;
+const GLuint DEFAULT_LOCATION_COLOUR   = 1;
+const GLuint DEFAULT_LOCATION_NORMAL   = 2;
+const GLuint DEFAULT_LOCATION_TEXCOORD = 3;
+
+const char DEFAULT_NAME_POSITION[] = "a_position";
+const char DEFAULT_NAME_COLOUR[]   = "a_color";
+const char DEFAULT_NAME_NORMAL[]   = "a_normal";
+const char DEFAULT_NAME_TEXCOORD[] = "a_texcoord";
+
+////////////////////////////////////////////////
 // Interface
 ////////////////////////////////////////////////
 
@@ -92,7 +106,9 @@ public:
     void Bind();
     void SaveBind();
     void Unbind();
-    
+
+    void BindPangolinDefaultAttribLocations();
+
 protected:
     bool linked;
     std::vector<GLhandleARB> shaders;
@@ -288,6 +304,13 @@ inline void GlSlProgram::SetUniform(const std::string& name, Colour c)
     glUniform4f( GetUniformHandle(name), c.r, c.g, c.b, c.a);
 }
 
+inline void GlSlProgram::BindPangolinDefaultAttribLocations()
+{
+    glBindAttribLocation(prog, DEFAULT_LOCATION_POSITION, DEFAULT_NAME_POSITION);
+    glBindAttribLocation(prog, DEFAULT_LOCATION_COLOUR,   DEFAULT_NAME_COLOUR);
+    glBindAttribLocation(prog, DEFAULT_LOCATION_NORMAL,   DEFAULT_NAME_NORMAL);
+    glBindAttribLocation(prog, DEFAULT_LOCATION_TEXCOORD, DEFAULT_NAME_TEXCOORD);
+}
 
 }
 

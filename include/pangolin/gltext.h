@@ -49,6 +49,7 @@ public:
 
     // Render without transform in text-centric pixel coordinates
     void Draw();
+    void DrawGlSl();
 
     // Render at (x,y,z)' in object coordinates,
     // keeping text size and orientation constant

@@ -34,6 +34,7 @@
 #include <pangolin/glsl.h>
 #include <pangolin/datalog.h>
 #include <pangolin/colour.h>
+#include <pangolin/glfont.h>
 
 #include <set>
 
@@ -71,13 +72,15 @@ protected:
     struct PlotSeries
     {
         PlotSeries();
-        void CreatePlot(const std::string& x, const std::string& y, Colour c);
+        void CreatePlot(const std::string& x, const std::string& y, Colour c, std::string title);
 
         GlSlProgram prog;
+        GlText title;
         bool contains_id;
         std::vector<PlotAttrib> attribs;
         GLenum drawing_mode;
         Colour colour;
+        bool used;
     };
 
     struct PlotImplicit
@@ -111,6 +114,7 @@ protected:
         Colour colour;
     };
 
+    void FixSelection();
     void UpdateView();
     void ScrollView(float x, float y);
     void ScaleView(float x, float y);
@@ -127,6 +131,7 @@ protected:
     float lineThickness;
 
     GlSlProgram prog_default;
+    GlSlProgram prog_default_tex;
 
     std::vector<PlotSeries> plotseries;
     std::vector<PlotMarker> plotmarkers;

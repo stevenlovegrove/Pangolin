@@ -32,6 +32,7 @@
 #include <pangolin/glstate.h>
 #include <pangolin/image_load.h>
 #include <pangolin/type_convert.h>
+#include <pangolin/glsl.h>
 
 #include <pangolin/xml/rapidxml.hpp>
 #include <pangolin/xml/rapidxml_utils.hpp>
@@ -125,6 +126,25 @@ void GlText::Add(const GlChar& c)
     vs.push_back(c.GetVert(3) + x);
     
     width = x + c.StepX();        
+}
+
+void GlText::DrawGlSl()
+{
+    if(vs.size() && tex) {
+        glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_POSITION);
+        glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_TEXCOORD);
+
+        glVertexAttribPointer(pangolin::DEFAULT_LOCATION_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(XYUV), &vs[0].x);
+        glVertexAttribPointer(pangolin::DEFAULT_LOCATION_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(XYUV), &vs[0].tu);
+
+        tex->Bind();
+        glEnable(GL_TEXTURE_2D);
+        glDrawArrays(GL_TRIANGLES, 0, vs.size() );
+        glDisable(GL_TEXTURE_2D);
+
+        glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_POSITION);
+        glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_TEXCOORD);
+    }
 }
 
 void GlText::Draw()
