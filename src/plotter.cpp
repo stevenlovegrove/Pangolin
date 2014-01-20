@@ -211,8 +211,9 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
     // Setup view range.
     SetView(left,right,bottom,top);
-    ticks[0] = tickx;
-    ticks[1] = ticky;
+    SetDefaultView(left,right,bottom,top);
+    SetTicks(tickx, ticky);
+
     track_front = false;
     lineThickness = 1.5;
 
@@ -269,8 +270,10 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
     for(int i=0; i<10; ++i) {
         std::ostringstream oss;
         oss << "$" << i;
+        const Colour col = colour_wheel.GetUniqueColour();
+        print_debug("Unique Colour %f, %f, %f, %f\n", col.r, col.g, col.b, col.a);
         plotseries.push_back( PlotSeries() );
-        plotseries.back().CreatePlot("$i", oss.str(), colour_wheel.GetUniqueColour(), oss.str() );
+        plotseries.back().CreatePlot("$i", oss.str(), col, oss.str() );
     }
 
 //    // Setup test PlotMarkers
@@ -521,15 +524,7 @@ void Plotter::Render()
     if( tx[1] - tx[0] < v.w/4 ) {
         for( int i=tx[0]; i<tx[1]; ++i ) {
             std::ostringstream oss;
-            const float divpi = ticks[0] / M_PI;
-            const float divrt2 = ticks[0] / M_SQRT2;
-            if( std::abs(divpi - floor(divpi)) < 1E-6 ) {
-                oss << i*divpi << "pi";
-            }else if( std::abs(divrt2 - floor(divrt2)) < 1E-6 ) {
-                oss << i*divpi << "sqrt(2)";
-            }else{
-                oss << i*ticks[0];
-            }
+            oss << i*ticks[0]*tickfactor[0].factor << tickfactor[0].symbol;
             GlText txt = GlFont::I().Text(oss.str().c_str());
             float sx = v.w*((i)*ticks[0]-(int_x[0]+int_x[1])/2.0f)/w - txt.Width()/2.0f;
             prog_default_tex.SetUniform("u_offset", sx, 15 -v.h/2.0f );
@@ -540,15 +535,7 @@ void Plotter::Render()
     if( ty[1] - ty[0] < v.h/4 ) {
         for( int i=ty[0]; i<ty[1]; ++i ) {
             std::ostringstream oss;
-            const float divpi = ticks[1] / M_PI;
-            const float divrt2 = ticks[1] / M_SQRT2;
-            if( std::abs(divpi - floor(divpi)) < 1E-6 ) {
-                oss << i*divpi << "pi";
-            }else if( std::abs(divrt2 - floor(divrt2)) < 1E-6 ) {
-                oss << i*divpi << "sqrt(2)";
-            }else{
-                oss << i*ticks[1];
-            }
+            oss << i*ticks[1]*tickfactor[1].factor << tickfactor[1].symbol;
             GlText txt = GlFont::I().Text(oss.str().c_str());
             float sy = v.h*((i)*ticks[1]-(int_y[0]+int_y[1])/2.0f)/h - txt.Height()/2.0f;
             prog_default_tex.SetUniform("u_offset", 15 -v.w/2.0f, sy );
@@ -568,6 +555,15 @@ void Plotter::Render()
 
 }
 
+void Plotter::SetView(float left, float right, float bottom, float top)
+{
+    SetViewPan(left,right,bottom,top);
+    int_x[0] = left;
+    int_x[1] = right;
+    int_y[0] = bottom;
+    int_y[1] = top;
+}
+
 void Plotter::SetViewPan(float left, float right, float bottom, float top)
 {
     target_x[0] = left;
@@ -576,13 +572,49 @@ void Plotter::SetViewPan(float left, float right, float bottom, float top)
     target_y[1] = top;
 }
 
-void Plotter::SetView(float left, float right, float bottom, float top)
+void Plotter::SetDefaultView(float left, float right, float bottom, float top)
 {
-    SetViewPan(left,right,bottom,top);
-    int_x[0] = left;
-    int_x[1] = right;
-    int_y[0] = bottom;
-    int_y[1] = top;
+    int_x_dflt[0] = left;
+    int_x_dflt[1] = right;
+    int_y_dflt[0] = bottom;
+    int_y_dflt[1] = top;
+}
+
+Plotter::TickFactor Plotter::FindTickFactor(float tick)
+{
+    Plotter::TickFactor ret;
+    const float eps = 1E-6;
+
+    if( std::abs(tick/M_PI - floor(tick/M_PI)) < eps ) {
+        ret.factor = 1.0f / M_PI;
+        ret.symbol = "pi";
+    }else if( std::abs(tick/M_PI_2 - floor(tick/M_PI_2)) < eps ) {
+        ret.factor = 1.0f / M_PI;
+        ret.symbol = "pi";
+    }else if( std::abs(tick/M_PI_4 - floor(tick/M_PI_4)) < eps ) {
+        ret.factor = 1.0f / M_PI;
+        ret.symbol = "pi";
+    }else if( std::abs(tick/M_SQRT2 - floor(tick/M_SQRT2)) < eps ) {
+        ret.factor = 1.0f / M_SQRT2;
+        ret.symbol = "\251 2";
+    }else if( std::abs(tick/M_E - floor(tick/M_E)) < eps ) {
+        ret.factor = 1.0f / M_E;
+        ret.symbol = "e";
+    }else{
+        ret.factor = 1.0f;
+        ret.symbol = "";
+    }
+    return ret;
+}
+
+void Plotter::SetTicks(float tickx, float ticky)
+{
+    ticks[0] = tickx;
+    ticks[1] = ticky;
+
+    // Compute tick_factor, tick_label
+    tickfactor[0] = FindTickFactor(tickx);
+    tickfactor[1] = FindTickFactor(ticky);
 }
 
 void Plotter::FixSelection()
@@ -665,6 +697,11 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
             const float dy = mvfactor*h;
             target_y[0] -= dy;
             target_y[1] -= dy;
+        }else if(key == 'r') {
+            target_x[0] = int_x_dflt[0];
+            target_x[1] = int_x_dflt[1];
+            target_y[0] = int_y_dflt[0];
+            target_y[1] = int_y_dflt[1];
         }
     }
 }

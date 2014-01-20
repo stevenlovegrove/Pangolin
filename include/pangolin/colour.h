@@ -104,7 +104,7 @@ class ColourWheel
 {
 public:
     ColourWheel(float saturation=0.5, float value=1.0, float alpha = 1.0)
-        : sat(saturation), val(value), alpha(alpha)
+        : unique_colours(0), sat(saturation), val(value), alpha(alpha)
     {
 
     }
@@ -117,16 +117,16 @@ public:
         return Colour::Hsv(hue,sat,val,alpha);
     }
 
-    Colour GetUniqueColour() const
+    Colour GetUniqueColour()
     {
         return GetColourBin(unique_colours++);
     }
 
 protected:
+    int unique_colours;
     float sat;
     float val;
     float alpha;
-    mutable int unique_colours;
 };
 
 }

@@ -45,11 +45,13 @@ class Plotter : public View, Handler
 {
 public:
     Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5, Plotter* linked = 0 );
-    void Render();
-    void DrawTicks();
 
-    void SetViewPan(float left=0, float right=600, float bottom=-1, float top=1);
-    void SetView(float left=0, float right=600, float bottom=-1, float top=1);
+    void Render();
+
+    void SetView(float left, float right, float bottom, float top);
+    void SetViewPan(float left, float right, float bottom, float top);
+    void SetDefaultView(float left, float right, float bottom, float top);
+    void SetTicks(float tickx, float ticky);
 
     void ScreenToPlot(int xpix, int ypix, float &xplot, float &yplot);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
@@ -59,6 +61,12 @@ public:
     void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
 
 protected:
+    struct TickFactor
+    {
+        float factor;
+        std::string symbol;
+    };
+
     struct PlotAttrib
     {
         PlotAttrib(std::string name, int plot_id, int location = -1)
@@ -118,6 +126,7 @@ protected:
     void UpdateView();
     void ScrollView(float x, float y);
     void ScaleView(float x, float y);
+    TickFactor FindTickFactor(float tick);
 
     DataLog* log;
     Plotter* linked;
@@ -143,7 +152,10 @@ protected:
     float int_y_dflt[2];
     float int_x[2];
     float int_y[2];
+
     float ticks[2];
+    TickFactor tickfactor[2];
+
     int last_mouse_pos[2];
 
     float target_x[2];
