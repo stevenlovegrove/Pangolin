@@ -35,6 +35,7 @@
 #include <pangolin/datalog.h>
 #include <pangolin/colour.h>
 #include <pangolin/glfont.h>
+#include <pangolin/range.h>
 
 #include <set>
 
@@ -48,9 +49,9 @@ public:
 
     void Render();
 
-    void SetView(float left, float right, float bottom, float top);
-    void SetViewPan(float left, float right, float bottom, float top);
-    void SetDefaultView(float left, float right, float bottom, float top);
+    void SetView(const XYRange& range);
+    void SetViewPan(const XYRange& range);
+    void SetDefaultView(const XYRange& range);
     void SetTicks(float tickx, float ticky);
 
     void ScreenToPlot(int xpix, int ypix, float &xplot, float &yplot);
@@ -148,21 +149,16 @@ protected:
 
     // Rethink these ...
     bool track_front;
-    float int_x_dflt[2];
-    float int_y_dflt[2];
-    float int_x[2];
-    float int_y[2];
+
+    XYRange int_dflt;
+    XYRange int_;
+    XYRange target_;
+    XYRange sel_;
 
     float ticks[2];
     TickFactor tickfactor[2];
 
     int last_mouse_pos[2];
-
-    float target_x[2];
-    float target_y[2];
-
-    float sel_x[2];
-    float sel_y[2];
     float hover[2];
 };
 

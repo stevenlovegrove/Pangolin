@@ -193,7 +193,9 @@ void Plotter::PlotImplicit::CreateDistancePlot(const std::string& dist)
 }
 
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky, Plotter* linked)
-    : colour_wheel(0.6)
+    : colour_wheel(0.6),
+      int_dflt(left,right,bottom,top), int_(int_dflt), target_(int_),
+      sel_(0,0,0,0)
 {
     if(!log) {
         throw std::runtime_error("DataLog not specified");
@@ -209,9 +211,6 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
     colour_ms = Colour(0.3,0.3,0.3);
     colour_ax = Colour(0.5,0.5,0.5);
 
-    // Setup view range.
-    SetView(left,right,bottom,top);
-    SetDefaultView(left,right,bottom,top);
     SetTicks(tickx, ticky);
 
     track_front = false;
@@ -319,17 +318,17 @@ void Plotter::Render()
     glDisable(GL_LIGHTING);
     glDisable( GL_DEPTH_TEST );
 
-    const float x = int_x[0];
-    const float y = int_y[0];
-    const float w = int_x[1] - x;
-    const float h = int_y[1] - y;
-    const float ox = -(x+w/2.0f);
-    const float oy = -(y+h/2.0f);
+    const float w = int_.xrange.Size();
+    const float h = int_.yrange.Size();
+    const float ox = -int_.xrange.Mid();
+    const float oy = -int_.yrange.Mid();
+    const float sx = 2.0f / w;
+    const float sy = 2.0f / h;
 
     //////////////////////////////////////////////////////////////////////////
     // Draw ticks
     prog_default.SaveBind();
-    prog_default.SetUniform("u_scale",  2.0f / w, 2.0f / h);
+    prog_default.SetUniform("u_scale",  sx, sy);
     prog_default.SetUniform("u_offset", ox, oy);
     prog_default.SetUniform("u_color",  colour_tk );
     glLineWidth(lineThickness);
@@ -340,26 +339,26 @@ void Plotter::Render()
     while(v.h * ta[1] *ticks[1] / h < min_space) ta[1] *=2;
 
     const float tdelta[2] = {
-        this->ticks[0] * ta[0],
-        this->ticks[1] * ta[1]
+        ticks[0] * ta[0],
+        ticks[1] * ta[1]
     };
 
     const int tx[2] = {
-        (int)ceil(int_x[0] / tdelta[0]),
-        (int)ceil(int_x[1] / tdelta[0])
+        (int)ceil(int_.xrange.rmin / tdelta[0]),
+        (int)ceil(int_.xrange.rmax / tdelta[0])
     };
 
     const int ty[2] = {
-        (int)ceil(int_y[0] / tdelta[1]),
-        (int)ceil(int_y[1] / tdelta[1])
+        (int)ceil(int_.yrange.rmin / tdelta[1]),
+        (int)ceil(int_.yrange.rmax / tdelta[1])
     };
 
     for( int i=tx[0]; i<tx[1]; ++i ) {
-        glDrawLine((i)*tdelta[0], int_y[0],   (i)*tdelta[0], int_y[1]);
+        glDrawLine((i)*tdelta[0], int_.yrange.rmin,   (i)*tdelta[0], int_.yrange.rmax);
     }
 
     for( int i=ty[0]; i<ty[1]; ++i ) {
-        glDrawLine(int_x[0], (i)*tdelta[1],  int_x[1], (i)*tdelta[1]);
+        glDrawLine(int_.xrange.rmin, (i)*tdelta[1],  int_.xrange.rmax, (i)*tdelta[1]);
     }
     prog_default.Unbind();
 
@@ -368,8 +367,8 @@ void Plotter::Render()
 
     prog_default.SaveBind();
     prog_default.SetUniform("u_color",  colour_ax );
-    glDrawLine(0, int_y[0],  0, int_y[1] );
-    glDrawLine(int_x[0],0,   int_x[1],0  );
+    glDrawLine(0, int_.yrange.rmin,  0, int_.yrange.rmax );
+    glDrawLine(int_.xrange.rmin,0,   int_.xrange.rmax,0  );
     prog_default.Unbind();
 
     //////////////////////////////////////////////////////////////////////////
@@ -379,10 +378,10 @@ void Plotter::Render()
         PlotImplicit& im = plotimplicits[i];
         im.prog.SaveBind();
 
-        im.prog.SetUniform("u_scale",  2.0f / w, 2.0f / h);
+        im.prog.SetUniform("u_scale",  sx, sy);
         im.prog.SetUniform("u_offset", ox, oy);
 
-        glDrawRect(int_x[0], int_y[0], int_x[1], int_y[1]);
+        glDrawRect(int_.xrange.rmin,int_.yrange.rmin,int_.xrange.rmax,int_.yrange.rmax);
 
         im.prog.Unbind();
     }
@@ -401,7 +400,7 @@ void Plotter::Render()
         ps.used = false;
 
         prog.SaveBind();
-        prog.SetUniform("u_scale",  2.0f / w, 2.0f / h);
+        prog.SetUniform("u_scale",  sx, sy);
         prog.SetUniform("u_offset", ox, oy);
         prog.SetUniform("u_color", ps.colour );
 
@@ -467,19 +466,19 @@ void Plotter::Render()
         prog_default.SetUniform("u_color",  m.colour );
         if(m.horizontal) {
             if(m.leg == 0) {
-                glDrawLine(int_x[0], m.coord,  int_x[1], m.coord );
+                glDrawLine(int_.xrange.rmin, m.coord,  int_.xrange.rmax, m.coord );
             }else if(m.leg == -1) {
-                glDrawRect(int_x[0], int_y[0],  int_x[1], m.coord);
+                glDrawRect(int_.xrange.rmin, int_.yrange.rmin,  int_.xrange.rmax, m.coord);
             }else if(m.leg == 1) {
-                glDrawRect(int_x[0], m.coord,  int_x[1], int_y[1]);
+                glDrawRect(int_.xrange.rmin, m.coord,  int_.xrange.rmax, int_.yrange.rmax);
             }
         }else{
             if(m.leg == 0) {
-                glDrawLine(m.coord, int_y[0],  m.coord, int_y[1] );
+                glDrawLine(m.coord, int_.yrange.rmin,  m.coord, int_.yrange.rmax );
             }else if(m.leg == -1) {
-                glDrawRect(int_x[0], int_y[0],  m.coord, int_y[1] );
+                glDrawRect(int_.xrange.rmin, int_.yrange.rmin,  m.coord, int_.yrange.rmax );
             }else if(m.leg == 1) {
-                glDrawRect(m.coord, int_y[0],  int_x[1], int_y[1] );
+                glDrawRect(m.coord, int_.yrange.rmin,  int_.xrange.rmax, int_.yrange.rmax );
             }
         }
     }
@@ -490,16 +489,16 @@ void Plotter::Render()
 
     // hover over
     prog_default.SetUniform("u_color",  colour_ax.WithAlpha(0.3) );
-    glDrawLine(hover[0], int_y[0],  hover[0], int_y[1] );
-    glDrawLine(int_x[0], hover[1],  int_x[1], hover[1] );
+    glDrawLine(hover[0], int_.yrange.rmin,  hover[0], int_.yrange.rmax );
+    glDrawLine(int_.xrange.rmin, hover[1],  int_.xrange.rmax, hover[1] );
 
     // range
     prog_default.SetUniform("u_color",  colour_ax.WithAlpha(0.5) );
-    glDrawLine(sel_x[0], int_y[0],  sel_x[0], int_y[1] );
-    glDrawLine(sel_x[1], int_y[0],  sel_x[1], int_y[1] );
-    glDrawLine(int_x[0], sel_y[0],  int_x[1], sel_y[0] );
-    glDrawLine(int_x[0], sel_y[1],  int_x[1], sel_y[1] );
-    glDrawRect(sel_x[0], sel_y[0],  sel_x[1], sel_y[1]);
+    glDrawLine(sel_.xrange.rmin, int_.yrange.rmin,  sel_.xrange.rmin, int_.yrange.rmax );
+    glDrawLine(sel_.xrange.rmax, int_.yrange.rmin,  sel_.xrange.rmax, int_.yrange.rmax );
+    glDrawLine(int_.xrange.rmin, sel_.yrange.rmin,  int_.xrange.rmax, sel_.yrange.rmin );
+    glDrawLine(int_.xrange.rmin, sel_.yrange.rmax,  int_.xrange.rmax, sel_.yrange.rmax );
+    glDrawRect(sel_.xrange.rmin, sel_.yrange.rmin,  sel_.xrange.rmax, sel_.yrange.rmax);
 
     prog_default.Unbind();
 
@@ -531,7 +530,7 @@ void Plotter::Render()
         std::ostringstream oss;
         oss << i*tdelta[0]*tickfactor[0].factor << tickfactor[0].symbol;
         GlText txt = GlFont::I().Text(oss.str().c_str());
-        float sx = v.w*((i)*tdelta[0]-(int_x[0]+int_x[1])/2.0f)/w - txt.Width()/2.0f;
+        float sx = v.w*((i)*tdelta[0]-int_.xrange.Mid())/w - txt.Width()/2.0f;
         prog_default_tex.SetUniform("u_offset", sx, 15 -v.h/2.0f );
         txt.DrawGlSl();
     }
@@ -540,7 +539,7 @@ void Plotter::Render()
         std::ostringstream oss;
         oss << i*tdelta[1]*tickfactor[1].factor << tickfactor[1].symbol;
         GlText txt = GlFont::I().Text(oss.str().c_str());
-        float sy = v.h*((i)*tdelta[1]-(int_y[0]+int_y[1])/2.0f)/h - txt.Height()/2.0f;
+        float sy = v.h*((i)*tdelta[1]-int_.yrange.Mid())/h - txt.Height()/2.0f;
         prog_default_tex.SetUniform("u_offset", 15 -v.w/2.0f, sy );
         txt.DrawGlSl();
     }
@@ -556,29 +555,19 @@ void Plotter::Render()
 
 }
 
-void Plotter::SetView(float left, float right, float bottom, float top)
+void Plotter::SetView(const XYRange& range)
 {
-    SetViewPan(left,right,bottom,top);
-    int_x[0] = left;
-    int_x[1] = right;
-    int_y[0] = bottom;
-    int_y[1] = top;
+    int_ = range;
 }
 
-void Plotter::SetViewPan(float left, float right, float bottom, float top)
+void Plotter::SetViewPan(const XYRange &range)
 {
-    target_x[0] = left;
-    target_x[1] = right;
-    target_y[0] = bottom;
-    target_y[1] = top;
+    target_ = range;
 }
 
-void Plotter::SetDefaultView(float left, float right, float bottom, float top)
+void Plotter::SetDefaultView(const XYRange &range)
 {
-    int_x_dflt[0] = left;
-    int_x_dflt[1] = right;
-    int_y_dflt[0] = bottom;
-    int_y_dflt[1] = top;
+    int_dflt = range;
 }
 
 Plotter::TickFactor Plotter::FindTickFactor(float tick)
@@ -621,49 +610,38 @@ void Plotter::SetTicks(float tickx, float ticky)
 void Plotter::FixSelection()
 {
     // Make sure selection matches sign of current viewport
-    if( (sel_x[0]<sel_x[1]) != (int_x[0]<int_x[1]) ) {
-        std::swap(sel_x[0], sel_x[1]);
+    if( (sel_.xrange.rmin<sel_.xrange.rmax) != (int_.xrange.rmin<int_.xrange.rmax) ) {
+        std::swap(sel_.xrange.rmin, sel_.xrange.rmax);
     }
-    if( (sel_y[0]<sel_y[1]) != (int_y[0]<int_y[1]) ) {
-        std::swap(sel_y[0], sel_y[1]);
+    if( (sel_.yrange.rmin<sel_.yrange.rmax) != (int_.yrange.rmin<int_.yrange.rmax) ) {
+        std::swap(sel_.yrange.rmin, sel_.yrange.rmax);
     }
 }
 
 void Plotter::UpdateView()
 {
     const float sf = 1.0 / 20.0;
-    float dx[2] = { target_x[0]-int_x[0], target_x[1]-int_x[1] };
-    float dy[2] = { target_y[0]-int_y[0], target_y[1]-int_y[1] };
-    int_x[0] += sf * dx[0];
-    int_x[1] += sf * dx[1];
-    int_y[0] += sf * dy[0];
-    int_y[1] += sf * dy[1];
+    XYRange d = target_ - int_;
+    int_ += d * sf;
 }
 
 void Plotter::ScrollView(float x, float y)
 {
-    int_x[0] += x; int_x[1] += x;
-    int_y[0] += y; int_y[1] += y;
-    target_x[0] += x; target_x[1] += x;
-    target_y[0] += y; target_y[1] += y;
+    int_.xrange += x;
+    int_.yrange += y;
+    target_.xrange += x;
+    target_.yrange += y;
 }
 
 void Plotter::ScaleView(float x, float y)
 {
     const double c[2] = {
-        track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
-        (int_y[0] + int_y[1])/2.0
+        track_front ? int_.xrange.rmax : int_.xrange.Mid(),
+        int_.yrange.Mid()
     };
 
-    int_x[0] = x*(int_x[0] - c[0]) + c[0];
-    int_x[1] = x*(int_x[1] - c[0]) + c[0];
-    int_y[0] = y*(int_y[0] - c[1]) + c[1];
-    int_y[1] = y*(int_y[1] - c[1]) + c[1];
-
-    target_x[0] = x*(target_x[0] - c[0]) + c[0];
-    target_x[1] = x*(target_x[1] - c[0]) + c[0];
-    target_y[0] = y*(target_y[0] - c[1]) + c[1];
-    target_y[1] = y*(target_y[1] - c[1]) + c[1];
+    int_.Scale(x,y, c[0], c[1]);
+    target_.Scale(x,y, c[0], c[1]);
 }
 
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
@@ -671,46 +649,39 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
     const float mvfactor = 1.0 / 10.0;
 
     if(pressed) {
-        if(key == ' ' && sel_x[0] != sel_x[1] && sel_y[0] != sel_y[1]) {
+        if(key == ' ' && sel_.Area() > 0.0f) {
             // Set view to equal selection
-            SetViewPan(sel_x[0], sel_x[1], sel_y[0], sel_y[1]);
+            SetViewPan(sel_);
 
             // Reset selection
-            sel_x[1] = sel_x[0];
-            sel_y[1] = sel_y[0];
+            sel_.xrange.rmax = sel_.xrange.rmin;
+            sel_.yrange.rmax = sel_.yrange.rmin;
         }else if(key == PANGO_SPECIAL + PANGO_KEY_LEFT) {
-            const float w = int_x[1] - int_x[0];
+            const float w = int_.xrange.Size();
             const float dx = mvfactor*w;
-            target_x[0] -= dx;
-            target_x[1] -= dx;
+            target_.xrange -= dx;
         }else if(key == PANGO_SPECIAL + PANGO_KEY_RIGHT) {
-            const float w = target_x[1] - target_x[0];
+            const float w = int_.xrange.Size();
             const float dx = mvfactor*w;
-            target_x[0] += dx;
-            target_x[1] += dx;
+            target_.xrange += dx;
         }else if(key == PANGO_SPECIAL + PANGO_KEY_UP) {
-            const float h = target_y[1] - target_y[0];
+            const float h = target_.yrange.Size();
             const float dy = mvfactor*h;
-            target_y[0] += dy;
-            target_y[1] += dy;
+            target_.yrange += dy;
         }else if(key == PANGO_SPECIAL + PANGO_KEY_DOWN) {
-            const float h = target_y[1] - target_y[0];
+            const float h = target_.yrange.Size();
             const float dy = mvfactor*h;
-            target_y[0] -= dy;
-            target_y[1] -= dy;
+            target_.yrange -= dy;
         }else if(key == 'r') {
-            target_x[0] = int_x_dflt[0];
-            target_x[1] = int_x_dflt[1];
-            target_y[0] = int_y_dflt[0];
-            target_y[1] = int_y_dflt[1];
+            target_ = int_dflt;
         }
     }
 }
 
 void Plotter::ScreenToPlot(int xpix, int ypix, float& xplot, float& yplot)
 {
-    xplot = int_x[0] + (int_x[1]-int_x[0]) * (xpix - v.l) / (float)v.w;
-    yplot = int_y[0] + (int_y[1]-int_y[0]) * (ypix - v.b) / (float)v.h;
+    xplot = int_.xrange.rmin + int_.xrange.Size() * (xpix - v.l) / (float)v.w;
+    yplot = int_.yrange.rmin + int_.yrange.Size() * (ypix - v.b) / (float)v.h;
 }
 
 void Plotter::Mouse(View& view, MouseButton button, int x, int y, bool pressed, int button_state)
@@ -721,9 +692,9 @@ void Plotter::Mouse(View& view, MouseButton button, int x, int y, bool pressed, 
     if(button == MouseButtonLeft) {
         // Update selected range
         if(pressed) {
-            ScreenToPlot(x,y, sel_x[0], sel_y[0]);
+            ScreenToPlot(x,y, sel_.xrange.rmin, sel_.yrange.rmin);
         }
-        ScreenToPlot(x,y, sel_x[1], sel_y[1]);
+        ScreenToPlot(x,y, sel_.xrange.rmax, sel_.yrange.rmax);
     }else if(button == MouseWheelUp || button == MouseWheelDown) {
         Special(view, InputSpecialZoom, x, y, ((button == MouseWheelDown) ? 0.1 : -0.1), 0.0f, 0.0f, 0.0f, button_state );
     }
@@ -734,13 +705,13 @@ void Plotter::Mouse(View& view, MouseButton button, int x, int y, bool pressed, 
 void Plotter::MouseMotion(View& view, int x, int y, int button_state)
 {
     const int d[2] = {x-last_mouse_pos[0],y-last_mouse_pos[1]};
-    const float is[2] = {int_x[1]-int_x[0],int_y[1]-int_y[0]};
+    const float is[2] = {int_.xrange.Size(),int_.yrange.Size() };
     const float df[2] = {is[0]*d[0]/(float)v.w, is[1]*d[1]/(float)v.h};
 
     if( button_state == MouseButtonLeft )
     {
         // Update selected range
-        ScreenToPlot(x,y, sel_x[1], sel_y[1]);
+        ScreenToPlot(x,y, sel_.xrange.rmax, sel_.yrange.rmax);
     }else if(button_state == MouseButtonMiddle )
     {
         Special(view, InputSpecialScroll, df[0], df[1], 0.0f, 0.0f, 0.0f, 0.0f, button_state);
@@ -769,7 +740,7 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
 {
     if(inType == InputSpecialScroll) {
         const float d[2] = {p1,-p2};
-        const float is[2] = {int_x[1]-int_x[0],int_y[1]-int_y[0]};
+        const float is[2] = {int_.xrange.Size(),int_.yrange.Size() };
         const float df[2] = {is[0]*d[0]/(float)v.w, is[1]*d[1]/(float)v.h};
 
         ScrollView(-df[0], -df[1]);
