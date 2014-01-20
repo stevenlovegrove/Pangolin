@@ -34,110 +34,129 @@ namespace pangolin
 struct Range
 {
     Range(float rmin, float rmax)
-        : rmin(rmin), rmax(rmax)
+        : min(rmin), max(rmax)
     {
     }
 
     Range& operator+=(float v)
     {
-        rmin += v;
-        rmax += v;
+        min += v;
+        max += v;
         return *this;
     }
 
     Range& operator-=(float v)
     {
-        rmin -= v;
-        rmax -= v;
+        min -= v;
+        max -= v;
+        return *this;
+    }
+
+    Range& operator*=(float v)
+    {
+        min *= v;
+        max *= v;
+        return *this;
+    }
+
+    Range& operator/=(float v)
+    {
+        min /= v;
+        max /= v;
         return *this;
     }
 
     Range& operator+=(const Range& o)
     {
-        rmin += o.rmin;
-        rmax += o.rmax;
+        min += o.min;
+        max += o.max;
         return *this;
     }
 
     Range& operator-=(const Range& o)
     {
-        rmin -= o.rmin;
-        rmax -= o.rmax;
+        min -= o.min;
+        max -= o.max;
         return *this;
+    }
+
+    Range operator+(const Range& o) const
+    {
+        return Range(min + o.min, max + o.max);
     }
 
     Range operator-(const Range& o) const
     {
-        return Range(rmin - o.rmin, rmax - o.rmax);
+        return Range(min - o.min, max - o.max);
     }
 
     Range operator*(float s) const
     {
-        return Range(s*rmin, s*rmax);
+        return Range(s*min, s*max);
     }
 
     float Size() const
     {
-        return rmax - rmin;
+        return max - min;
     }
 
     float Mid() const
     {
-        return (rmin + rmax) / 2.0f;
+        return (min + max) / 2.0f;
     }
 
     void Scale(float s, float center = 0.0f)
     {
-        rmin = s*(rmin-center) + center;
-        rmax = s*(rmax-center) + center;
+        min = s*(min-center) + center;
+        max = s*(max-center) + center;
     }
 
-    float rmin;
-    float rmax;
+    float min;
+    float max;
 };
 
 struct XYRange
 {
     XYRange(const Range& xrange, const Range& yrange)
-        : xrange(xrange), yrange(yrange)
+        : x(xrange), y(yrange)
     {
     }
 
     XYRange(float xmin, float xmax, float ymin, float ymax)
-        : xrange(xmin,xmax), yrange(ymin,ymax)
+        : x(xmin,xmax), y(ymin,ymax)
     {
     }
 
     XYRange operator-(const XYRange& o) const
     {
-        return XYRange(xrange - o.xrange, yrange - o.yrange);
+        return XYRange(x - o.x, y - o.y);
     }
 
     XYRange operator*(float s) const
     {
-        return XYRange(xrange*s, yrange*s);
+        return XYRange(x*s, y*s);
     }
 
     XYRange& operator+=(const XYRange& o)
     {
-        xrange += o.xrange;
-        yrange += o.yrange;
+        x += o.x;
+        y += o.y;
         return *this;
     }
 
     void Scale(float sx, float sy, float centerx, float centery)
     {
-        xrange.Scale(sx, centerx);
-        yrange.Scale(sy, centery);
+        x.Scale(sx, centerx);
+        y.Scale(sy, centery);
     }
 
     float Area() const
     {
-        return xrange.Size() * yrange.Size();
+        return x.Size() * y.Size();
     }
 
-    Range xrange;
-    Range yrange;
+    Range x;
+    Range y;
 };
 
 }

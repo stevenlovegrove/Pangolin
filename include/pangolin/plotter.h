@@ -45,7 +45,7 @@ namespace pangolin
 class Plotter : public View, Handler
 {
 public:
-    Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5, Plotter* linked = 0 );
+    Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5 );
 
     void Render();
 
@@ -53,6 +53,10 @@ public:
     void SetViewPan(const XYRange& range);
     void SetDefaultView(const XYRange& range);
     void SetTicks(float tickx, float ticky);
+
+    void SetBackgroundColour(const Colour& col);
+    void SetAxisColour(const Colour& col);
+    void SetTickColour(const Colour& col);
 
     void ScreenToPlot(int xpix, int ypix, float &xplot, float &yplot);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
@@ -62,8 +66,9 @@ public:
     void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
 
 protected:
-    struct TickFactor
+    struct Tick
     {
+        float val;
         float factor;
         std::string symbol;
     };
@@ -127,39 +132,30 @@ protected:
     void UpdateView();
     void ScrollView(float x, float y);
     void ScaleView(float x, float y);
-    TickFactor FindTickFactor(float tick);
+    Tick FindTickFactor(float tick);
 
     DataLog* log;
-    Plotter* linked;
 
     ColourWheel colour_wheel;
-
     Colour colour_bg;
     Colour colour_tk;
-    Colour colour_ms;
     Colour colour_ax;
-    float lineThickness;
 
-    GlSlProgram prog_default;
-    GlSlProgram prog_default_tex;
+    GlSlProgram prog_lines;
+    GlSlProgram prog_text;
 
     std::vector<PlotSeries> plotseries;
     std::vector<PlotMarker> plotmarkers;
     std::vector<PlotImplicit> plotimplicits;
 
-    // Rethink these ...
-    bool track_front;
+    Tick tick[2];
+    XYRange rview_default;
+    XYRange rview;
+    XYRange target;
+    XYRange selection;
 
-    XYRange int_dflt;
-    XYRange int_;
-    XYRange target_;
-    XYRange sel_;
-
-    float ticks[2];
-    TickFactor tickfactor[2];
-
-    int last_mouse_pos[2];
     float hover[2];
+    int last_mouse_pos[2];
 };
 
 } // namespace pangolin
