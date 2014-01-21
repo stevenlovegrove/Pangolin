@@ -189,7 +189,7 @@ inline void glEnableClientState(GLenum cap)
         glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_TEXCOORD);
         gl.EnableTexturing(true);
     }else{
-        print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
+        pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
     }
 }
 
@@ -206,7 +206,7 @@ inline void glDisableClientState(GLenum cap)
         glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_TEXCOORD);
         gl.EnableTexturing(false);
     }else{
-        print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
+        pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
     }
 }
 
@@ -255,12 +255,12 @@ inline void glMultMatrixf(const GLfloat* m)
 //    float res[16];
 //    pangolin::MatMul<4,4,4,float>(res, m, gl.currentmatrix->m );
 //    std::memcpy(gl.currentmatrix->m, res, sizeof(float) * 16 );
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
+    pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
 inline void glMultMatrixd(const GLdouble* m)
 {
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
+    pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
 inline void glPushMatrix(void)
@@ -303,19 +303,19 @@ inline void glColor4f(	GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 
 inline void glShadeModel( GLenum mode)
 {
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
+    pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
 inline void glPointSize(GLfloat size)
 {
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
+    pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
 inline void glTexEnvf(	GLenum target,
     GLenum pname,
     GLfloat param)
 {
-    print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
+    pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
 const GLubyte gNotErrorLookup[] = "XX";

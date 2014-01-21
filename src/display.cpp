@@ -396,7 +396,7 @@ void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const ch
             CVarUtils::AttachCVar(cvar_name, (bool*)(var.val) );
         } else {
             // we can't attach
-            print_error("NewVarForCVars: Typeid '%s' does not match known types.\n", typeidname);
+            pango_print_error("NewVarForCVars: Typeid '%s' does not match known types.\n", typeidname);
         }
     }
 }

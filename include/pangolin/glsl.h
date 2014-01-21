@@ -159,12 +159,12 @@ inline void printProgInfoLog(GLhandleARB prog)
     GLint status;
     glGetProgramiv(prog, GL_LINK_STATUS, &status);
     if(status != GL_TRUE) {
-        print_error("GL_LINK_STATUS != GL_TRUE");
+        pango_print_error("GL_LINK_STATUS != GL_TRUE");
         const int PROGRAM_LOG_MAX_LEN = 1024;
         char infolog[PROGRAM_LOG_MAX_LEN];
         GLsizei len;
         glGetProgramInfoLog(prog, PROGRAM_LOG_MAX_LEN, &len, infolog);
-        if(len) print_error("%s\n",infolog);
+        if(len) pango_print_error("%s\n",infolog);
     }
 }
 
@@ -173,12 +173,12 @@ inline void printShaderInfoLog(GLhandleARB shader)
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if(status != GL_TRUE) {
-        print_error("GL_COMPILE_STATUS != GL_TRUE");
+        pango_print_error("GL_COMPILE_STATUS != GL_TRUE");
         const int SHADER_LOG_MAX_LEN = 1024;
         char infolog[SHADER_LOG_MAX_LEN];
         GLsizei len;
         glGetShaderInfoLog(shader, SHADER_LOG_MAX_LEN, &len, infolog);
-        if(len) print_error("%s\n",infolog);
+        if(len) pango_print_error("%s\n",infolog);
     }
 }
 

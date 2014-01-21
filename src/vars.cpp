@@ -168,7 +168,7 @@ void AddAlias(const string& alias, const string& name)
         v->generic = false;
         vars[alias].generic = false;
     }else{
-        print_error("Variable %s does not exist to alias.\n", name);
+        pango_print_error("Variable %s does not exist to alias.\n", name);
     }
 }
 #endif
