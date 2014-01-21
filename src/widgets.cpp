@@ -159,9 +159,9 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
     if( pnl == context->named_managed_views.end() )
     {
         View* nv = NULL;
-        if( reg_type_name == typeid(bool).name() ) {
+        if( !strcmp(reg_type_name, typeid(bool).name()) ) {
             nv = var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-        }else if( reg_type_name == typeid(double).name() || reg_type_name == typeid(float).name() || reg_type_name == typeid(int).name() || reg_type_name == typeid(unsigned int).name() ) {
+        }else if( !strcmp(reg_type_name, typeid(double).name()) || !strcmp(reg_type_name, typeid(float).name()) || !strcmp(reg_type_name, typeid(int).name()) || !strcmp(reg_type_name, typeid(unsigned int).name()) ) {
             nv = new Slider(title,var);
         }else{
             nv = new TextInput(title,var);

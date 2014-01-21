@@ -761,9 +761,9 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
         float scaley = 1.0;
 
         if(button_state & KeyModifierCmd) {
-            scaley = 1-p1;
-        }else{
             scalex = 1-p1;
+        }else{
+            scaley = 1-p1;
         }
 
         ScaleView(scalex, scaley);

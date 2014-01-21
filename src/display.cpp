@@ -386,17 +386,17 @@ void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const ch
         
         // Attach to CVars too.
         const char* typeidname = var.type_name;
-        if( typeidname == typeid(double).name() ) {
+        if( !strcmp(typeidname, typeid(double).name()) ) {
             CVarUtils::AttachCVar(cvar_name, (double*)(var.val) );
-        } else if( typeidname == typeid(int).name() ) {
+        } else if( !strcmp(typeidname, typeid(int).name()) ) {
             CVarUtils::AttachCVar(cvar_name, (int*)(var.val) );
-        } else if( typeidname == typeid(std::string).name() ) {
+        } else if( !strcmp(typeidname, typeid(std::string).name()) ) {
             CVarUtils::AttachCVar(cvar_name, (std::string*)(var.val) );
-        } else if( typeidname == typeid(bool).name() ) {
+        } else if( !strcmp(typeidname, typeid(bool).name()) ) {
             CVarUtils::AttachCVar(cvar_name, (bool*)(var.val) );
         } else {
             // we can't attach
-            std::cerr << typeidname << std::endl;
+            print_error("NewVarForCVars: Typeid '%s' does not match known types.\n", typeidname);
         }
     }
 }

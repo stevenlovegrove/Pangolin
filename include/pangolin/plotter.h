@@ -51,8 +51,12 @@ public:
     void Render();
 
     void SetView(const XYRange& range);
-    void SetViewPan(const XYRange& range);
     void SetDefaultView(const XYRange& range);
+    void SetViewPan(const XYRange& range);
+
+    void ScrollView(float x, float y);
+    void ScaleView(float x, float y);
+
     void SetTicks(float tickx, float ticky);
 
     void SetBackgroundColour(const Colour& col);
@@ -131,8 +135,6 @@ protected:
 
     void FixSelection();
     void UpdateView();
-    void ScrollView(float x, float y);
-    void ScaleView(float x, float y);
     Tick FindTickFactor(float tick);
 
     DataLog* log;
