@@ -189,5 +189,14 @@ const DimensionStats& DataLog::Stats(size_t dim) const
     return stats[dim];
 }
 
+unsigned int DataLog::Samples() const
+{
+    if(blockn) {
+        return blockn->StartId() + blockn->Samples();
+    }
+    return 0;
+}
+
+
 
 }

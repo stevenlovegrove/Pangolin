@@ -160,6 +160,8 @@ public:
 
     const DimensionStats& Stats(size_t dim) const;
 
+    unsigned int Samples() const;
+
 protected:
     unsigned int block_samples_alloc;
     std::vector<std::string> labels;
