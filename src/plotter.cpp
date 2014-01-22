@@ -195,7 +195,9 @@ void Plotter::PlotImplicit::CreateDistancePlot(const std::string& dist)
 Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky)
     : colour_wheel(0.6),
       rview_default(left,right,bottom,top), rview(rview_default), target(rview),
-      selection(0,0,0,0)
+      selection(0,0,0,0),
+      track(false), track_x("$i"), track_y(""),
+      trigger_edge(0), trigger("$0")
 {
     if(!log) {
         throw std::runtime_error("DataLog not specified");
@@ -293,8 +295,51 @@ Plotter::~Plotter()
 
 }
 
+template <typename T> int data_sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+void Plotter::ComputeTrackValue( float track_val[2] )
+{
+    if(trigger_edge) {
+        const DataLogBlock* block = log->LastBlock();
+        if(block) {
+            int s = block->StartId() + block->Samples() - 1;
+            const size_t dim = block->Dimensions();
+            const float* data = block->Sample(s);
+            int last_sgn = 0;
+            for(; s >= 0; --s, data -= dim )
+            {
+                const float val = data[0] - trigger_value;
+                const int sgn = data_sgn(val);
+                if(last_sgn * sgn == -1 && last_sgn == trigger_edge) {
+                    track_val[0] = s;
+                    track_val[1] = 0.0f;
+                    return;
+                }
+                last_sgn = sgn;
+            }
+        }
+        track_val[0] = log->Samples();
+        track_val[1] = 0.0f;
+    }else{
+        track_val[0] = log->Samples();
+        track_val[1] = 0.0f;
+    }
+}
+
 void Plotter::Render()
 {
+    // Track value based on last log sample
+    if(track || trigger_edge) {
+        float newTrackVal[2];
+        ComputeTrackValue(newTrackVal);
+        ScrollView(newTrackVal[0]-last_track_val[0], newTrackVal[1]-last_track_val[1] );
+        last_track_val[0] = newTrackVal[0];
+        last_track_val[1] = newTrackVal[1];
+    }
+
+    // Animate scroll / zooming
     UpdateView();
 
 #ifndef HAVE_GLES
@@ -399,7 +444,7 @@ void Plotter::Render()
         prog.SetUniform("u_offset", ox, oy);
         prog.SetUniform("u_color", ps.colour );
 
-        const DataLogBlock* block = log->Blocks();
+        const DataLogBlock* block = log->FirstBlock();
         while(block) {
             if(ps.contains_id ) {
                 if(id_size < block->Samples() ) {
@@ -556,7 +601,7 @@ void Plotter::SetView(const XYRange& range)
     rview = range;
 }
 
-void Plotter::SetViewPan(const XYRange &range)
+void Plotter::SetViewSmooth(const XYRange &range)
 {
     target = range;
 }
@@ -600,6 +645,42 @@ void Plotter::SetTicks(float tickx, float ticky)
     // Compute tick_factor, tick_label
     tick[0] = FindTickFactor(tickx);
     tick[1] = FindTickFactor(ticky);
+}
+
+void Plotter::Track(const std::string& x, const std::string& y)
+{
+    if( x != "$i" || y != "") {
+        throw std::runtime_error("Track option not fully implemented");
+    }
+
+    track_x = x;
+    track_y = y;
+    track = !track_x.empty() || !track_y.empty();
+    ComputeTrackValue(last_track_val);
+}
+
+void Plotter::ToggleTracking()
+{
+    track = !track;
+    ComputeTrackValue(last_track_val);
+}
+
+void Plotter::Trigger(const std::string& x, int edge, float value)
+{
+    if( x != "$0") {
+        throw std::runtime_error("Trigger option not fully implemented");
+    }
+
+    trigger = x;
+    trigger_edge = edge;
+    trigger_value = value;
+    ComputeTrackValue(last_track_val);
+}
+
+void Plotter::ToggleTrigger()
+{
+    trigger_edge = trigger_edge ? 0 : -1;
+    ComputeTrackValue(last_track_val);
 }
 
 void Plotter::SetBackgroundColour(const Colour& col)
@@ -652,28 +733,42 @@ void Plotter::UpdateView()
 
 void Plotter::ScrollView(float x, float y)
 {
+    target.x += x;
+    target.y += y;
     rview.x += x;
     rview.y += y;
+}
+
+void Plotter::ScrollViewSmooth(float x, float y)
+{
     target.x += x;
     target.y += y;
 }
 
-void Plotter::ScaleView(float x, float y)
+void Plotter::ScaleView(float x, float y, float cx, float cy)
 {
-//    const float c[2] = { rview.x.Mid(), rview.y.Mid() };
-    const float c[2] = { hover[0], hover[1] };
-    rview.Scale(x,y, c[0], c[1]);
-    target.Scale(x,y, c[0], c[1]);
+    target.Scale(x,y, cx, cy);
+    rview.Scale(x,y, cx, cy);
+}
+
+void Plotter::ScaleViewSmooth(float x, float y, float cx, float cy)
+{
+    target.Scale(x,y, cx, cy);
 }
 
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 {
     const float mvfactor = 1.0 / 10.0;
 
+    const float c[2] = {
+        track || trigger_edge ? target.x.max : rview.x.Mid(),
+        rview.y.Mid()
+    };
+
     if(pressed) {
         if(key == ' ' && selection.Area() > 0.0f) {
             // Set view to equal selection
-            SetViewPan(selection);
+            SetViewSmooth(selection);
 
             // Reset selection
             selection.x.max = selection.x.min;
@@ -681,21 +776,29 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
         }else if(key == PANGO_SPECIAL + PANGO_KEY_LEFT) {
             const float w = rview.x.Size();
             const float dx = mvfactor*w;
-            target.x -= dx;
+            ScrollViewSmooth(-dx, 0);
         }else if(key == PANGO_SPECIAL + PANGO_KEY_RIGHT) {
             const float w = rview.x.Size();
             const float dx = mvfactor*w;
-            target.x += dx;
-        }else if(key == PANGO_SPECIAL + PANGO_KEY_UP) {
-            const float h = target.y.Size();
-            const float dy = mvfactor*h;
-            target.y += dy;
+            ScrollViewSmooth(+dx, 0);
         }else if(key == PANGO_SPECIAL + PANGO_KEY_DOWN) {
             const float h = target.y.Size();
             const float dy = mvfactor*h;
-            target.y -= dy;
+            ScrollViewSmooth(0, -dy);
+        }else if(key == PANGO_SPECIAL + PANGO_KEY_UP) {
+            const float h = target.y.Size();
+            const float dy = mvfactor*h;
+            ScrollViewSmooth(0, +dy);
+        }else if(key == '=') {
+            ScaleViewSmooth(0.5, 0.5, c[0], c[1]);
+        }else if(key == '-') {
+            ScaleViewSmooth(2.0, 2.0, c[0], c[1]);
         }else if(key == 'r') {
             target = rview_default;
+        }else if(key == 't') {
+            ToggleTracking();
+        }else if(key == 'e') {
+            ToggleTrigger();
         }
     }
 }
@@ -716,9 +819,11 @@ void Plotter::Mouse(View& view, MouseButton button, int x, int y, bool pressed, 
         if(pressed) {
             selection.x.min = hover[0];
             selection.y.min = hover[1];
+            trigger_value = selection.y.min;
         }
         selection.x.max = hover[0];
         selection.y.max = hover[1];
+
     }else if(button == MouseWheelUp || button == MouseWheelDown) {
         Special(view, InputSpecialZoom, x, y, ((button == MouseWheelDown) ? 0.1 : -0.1), 0.0f, 0.0f, 0.0f, button_state );
     }
@@ -748,11 +853,16 @@ void Plotter::MouseMotion(View& view, int x, int y, int button_state)
         Special(view, InputSpecialScroll, df[0], df[1], 0.0f, 0.0f, 0.0f, 0.0f, button_state);
     }else if(button_state == MouseButtonRight )
     {
+        const float c[2] = {
+            track || trigger_edge ? target.x.max : hover[0],
+            hover[1]
+        };
+
         const float scale[2] = {
             1.0f + (float)d[0] / (float)v.w,
             1.0f - (float)d[1] / (float)v.h,
         };
-        ScaleView(scale[0], scale[1]);
+        ScaleView(scale[0], scale[1], c[0], c[1]);
     }
 
     last_mouse_pos[0] = x;
@@ -782,7 +892,12 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
             scaley = 1-p1;
         }
 
-        ScaleView(scalex, scaley);
+        const float c[2] = {
+            track || trigger_edge ? target.x.max : hover[0],
+            hover[1]
+        };
+
+        ScaleView(scalex, scaley, c[0], c[1]);
 
 //        const double c[2] = {
 //            track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,

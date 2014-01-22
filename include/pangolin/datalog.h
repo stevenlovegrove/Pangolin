@@ -107,6 +107,21 @@ public:
         return dim;
     }
 
+    const float* Sample(size_t n) const
+    {
+        const int id = n - start_id;
+
+        if( 0 <= id && id < (int)samples ) {
+            return sample_buffer + dim*id;
+        }else{
+            if(nextBlock) {
+                return nextBlock->Sample(n);
+            }else{
+                throw std::out_of_range("Index out of range.");
+            }
+        }
+    }
+
 protected:
     size_t dim;
     size_t max_samples;
@@ -156,11 +171,20 @@ public:
     void Clear();
     void Save(std::string filename);
 
-    const DataLogBlock* Blocks() const;
+    // Return first block of stored data
+    const DataLogBlock* FirstBlock() const;
 
-    const DimensionStats& Stats(size_t dim) const;
+    // Return last block of stored data
+    const DataLogBlock* LastBlock() const;
 
+    // Return number of samples stored in this DataLog
     unsigned int Samples() const;
+
+    // Return pointer to stored sample n
+    const float* Sample(int n) const;
+
+    // Return stats computed for each dimension if enabled.
+    const DimensionStats& Stats(size_t dim) const;
 
 protected:
     unsigned int block_samples_alloc;

@@ -179,9 +179,14 @@ void DataLog::Save(std::string filename)
     throw std::runtime_error("Method not implemented");
 }
 
-const DataLogBlock* DataLog::Blocks() const
+const DataLogBlock* DataLog::FirstBlock() const
 {
     return block0;
+}
+
+const DataLogBlock* DataLog::LastBlock() const
+{
+    return blockn;
 }
 
 const DimensionStats& DataLog::Stats(size_t dim) const
@@ -197,6 +202,13 @@ unsigned int DataLog::Samples() const
     return 0;
 }
 
-
+const float* DataLog::Sample(int n) const
+{
+    if(block0) {
+        return block0->Sample(n);
+    }else{
+        return 0;
+    }
+}
 
 }

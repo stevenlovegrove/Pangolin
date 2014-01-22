@@ -50,18 +50,28 @@ public:
 
     void Render();
 
-    void SetView(const XYRange& range);
-    void SetDefaultView(const XYRange& range);
-    void SetViewPan(const XYRange& range);
-
-    XYRange& GetView();
-    XYRange& GetDefaultView();
     XYRange& GetSelection();
 
+    XYRange& GetDefaultView();
+    void SetDefaultView(const XYRange& range);
+
+    XYRange& GetView();
+    void SetView(const XYRange& range);
+    void SetViewSmooth(const XYRange& range);
+
     void ScrollView(float x, float y);
-    void ScaleView(float x, float y);
+    void ScrollViewSmooth(float x, float y);
+
+    void ScaleView(float x, float y, float cx, float cy);
+    void ScaleViewSmooth(float x, float y, float cx, float cy);
 
     void SetTicks(float tickx, float ticky);
+
+    void Track(const std::string& x="$i", const std::string& y = "");
+    void ToggleTracking();
+
+    void Trigger(const std::string& x="$0", int edge = -1, float value = 0.0f);
+    void ToggleTrigger();
 
     void SetBackgroundColour(const Colour& col);
     void SetAxisColour(const Colour& col);
@@ -160,6 +170,18 @@ protected:
     XYRange rview;
     XYRange target;
     XYRange selection;
+
+    void ComputeTrackValue( float track_val[2] );
+
+    bool track;
+    std::string track_x;
+    std::string track_y;
+    float last_track_val[2];
+
+    // -1: falling, -0:disable, 1: rising
+    int trigger_edge;
+    float trigger_value;
+    std::string trigger;
 
     float hover[2];
     int last_mouse_pos[2];
