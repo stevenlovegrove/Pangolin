@@ -84,9 +84,9 @@ void DataLog::Log(unsigned int dimension, const float* vals, unsigned int sample
         while(stats.size() < dimension) {
             stats.push_back( DimensionStats() );
         }
-        for(int d=0; d<dimension; ++d) {
+        for(unsigned int d=0; d<dimension; ++d) {
             DimensionStats& ds = stats[d];
-            for(int s=0; s<samples; ++s) {
+            for(unsigned int s=0; s<samples; ++s) {
                 const float v = vals[s*dimension+d];
                 ds.isMonotonic = ds.isMonotonic && (v >= ds.max);
                 ds.sum += v;
