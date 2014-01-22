@@ -166,9 +166,7 @@ void DataLog::Clear()
 {
     if(block0) {
         block0->ClearLinked();
-        delete block0;
-        block0 = 0;
-        blockn = 0;
+        blockn = block0;
     }
     stats.clear();
 }
