@@ -617,6 +617,21 @@ void Plotter::SetTickColour(const Colour& col)
     colour_tk = col;
 }
 
+XYRange& Plotter::GetView()
+{
+    return target;
+}
+
+XYRange& Plotter::GetDefaultView()
+{
+    return rview_default;
+}
+
+XYRange& Plotter::GetSelection()
+{
+    return selection;
+}
+
 void Plotter::FixSelection()
 {
     // Make sure selection matches sign of current viewport
@@ -645,7 +660,8 @@ void Plotter::ScrollView(float x, float y)
 
 void Plotter::ScaleView(float x, float y)
 {
-    const float c[2] = { rview.x.Mid(), rview.y.Mid() };
+//    const float c[2] = { rview.x.Mid(), rview.y.Mid() };
+    const float c[2] = { hover[0], hover[1] };
     rview.Scale(x,y, c[0], c[1]);
     target.Scale(x,y, c[0], c[1]);
 }

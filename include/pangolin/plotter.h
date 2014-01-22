@@ -54,6 +54,10 @@ public:
     void SetDefaultView(const XYRange& range);
     void SetViewPan(const XYRange& range);
 
+    XYRange& GetView();
+    XYRange& GetDefaultView();
+    XYRange& GetSelection();
+
     void ScrollView(float x, float y);
     void ScaleView(float x, float y);
 
