@@ -273,6 +273,7 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
     }
 
 //    // Setup test PlotMarkers
+    plotmarkers.reserve(100);
 //    plotmarkers.push_back( PlotMarker(true, -1, 0.1, 1.0, 0.0, 0.0, 0.2 ) );
 //    plotmarkers.push_back( PlotMarker(false, 1, 2*M_PI/0.01, 0.0, 1.0, 0.0, 0.2 ) );
 
@@ -503,23 +504,23 @@ void Plotter::Render()
     glLineWidth(2.5f);
 
     for( size_t i=0; i < plotmarkers.size(); ++i) {
-        PlotMarker& m = plotmarkers[i];
+        const Marker& m = plotmarkers[i];
         prog_lines.SetUniform("u_color",  m.colour );
-        if(m.horizontal) {
+        if(m.direction == Marker::Horizontal) {
             if(m.leg == 0) {
-                glDrawLine(rview.x.min, m.coord,  rview.x.max, m.coord );
+                glDrawLine(rview.x.min, m.value,  rview.x.max, m.value );
             }else if(m.leg == -1) {
-                glDrawRect(rview.x.min, rview.y.min,  rview.x.max, m.coord);
+                glDrawRect(rview.x.min, rview.y.min,  rview.x.max, m.value);
             }else if(m.leg == 1) {
-                glDrawRect(rview.x.min, m.coord,  rview.x.max, rview.y.max);
+                glDrawRect(rview.x.min, m.value,  rview.x.max, rview.y.max);
             }
         }else{
             if(m.leg == 0) {
-                glDrawLine(m.coord, rview.y.min,  m.coord, rview.y.max );
+                glDrawLine(m.value, rview.y.min,  m.value, rview.y.max );
             }else if(m.leg == -1) {
-                glDrawRect(rview.x.min, rview.y.min,  m.coord, rview.y.max );
+                glDrawRect(rview.x.min, rview.y.min,  m.value, rview.y.max );
             }else if(m.leg == 1) {
-                glDrawRect(m.coord, rview.y.min,  rview.x.max, rview.y.max );
+                glDrawRect(m.value, rview.y.min,  rview.x.max, rview.y.max );
             }
         }
     }
@@ -916,5 +917,17 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
     // Update hover status (after potential resizing)
     ScreenToPlot(x, y, hover[0], hover[1]);
 }
+
+Marker& Plotter::AddMarker(Marker::Direction d, float value, Marker::Equality leg, Colour c )
+{
+    plotmarkers.push_back( Marker(d,value,leg,c) );
+    return plotmarkers.back();
+}
+
+void Plotter::ClearMarkers()
+{
+    plotmarkers.clear();
+}
+
 
 }

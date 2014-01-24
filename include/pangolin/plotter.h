@@ -42,6 +42,32 @@
 namespace pangolin
 {
 
+struct Marker
+{
+    enum Direction
+    {
+        Horizontal,
+        Vertical
+    };
+
+    enum Equality
+    {
+        LessThan = -1,
+        Equal = 0,
+        GreaterThan = 1
+    };
+
+    Marker(Direction d, float value, Equality leg = Equal, Colour c = Colour() )
+        : direction(d), value(value), leg(leg), colour(c)
+    {
+    }
+
+    Direction direction;
+    float value;
+    Equality leg;
+    Colour colour;
+};
+
 class Plotter : public View, Handler
 {
 public:
@@ -83,6 +109,9 @@ public:
     void MouseMotion(View&, int x, int y, int mouse_state);
     void PassiveMouseMotion(View&, int x, int y, int button_state);
     void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
+
+    Marker& AddMarker(Marker::Direction d, float value, Marker::Equality leg = Marker::Equal, Colour c = Colour() );
+    void ClearMarkers();
 
 protected:
     struct Tick
@@ -133,20 +162,6 @@ protected:
         GlSlProgram prog;
     };
 
-    struct PlotMarker
-    {
-        PlotMarker(bool horizontal, int leg, float coord, Colour c)
-            : horizontal(horizontal), leg(leg), coord(coord), colour(c)
-        {
-        }
-
-        bool horizontal;
-        // less than -1, equal 0, greater than 1
-        int leg;
-        float coord;
-        Colour colour;
-    };
-
     void FixSelection();
     void UpdateView();
     Tick FindTickFactor(float tick);
@@ -162,7 +177,7 @@ protected:
     GlSlProgram prog_text;
 
     std::vector<PlotSeries> plotseries;
-    std::vector<PlotMarker> plotmarkers;
+    std::vector<Marker> plotmarkers;
     std::vector<PlotImplicit> plotimplicits;
 
     Tick tick[2];
