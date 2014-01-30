@@ -34,11 +34,7 @@
 #cmakedefine HAVE_APPLE_OPENGL_FRAMEWORK
 #cmakedefine HAVE_MODIFIED_OSXGLUT
 #cmakedefine HAVE_GLES
-
-#ifdef HAVE_GLES
-// TODO: Actually configure this
-#define HAVE_GLES_2
-#endif
+#cmakedefine HAVE_GLES_2
 
 #cmakedefine HAVE_BOOST_GIL
 #cmakedefine HAVE_PNG
@@ -51,6 +47,7 @@
 #cmakedefine _OSX_
 #cmakedefine _LINUX_
 #cmakedefine _ANDROID_
+#cmakedefine _IOS_
 
 /// Compiler
 #cmakedefine _GCC_

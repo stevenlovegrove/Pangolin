@@ -30,6 +30,7 @@
 
 #include <sstream>
 #include <algorithm>
+#include <vector>
 
 #include <pangolin/glplatform.h>
 #include <pangolin/colour.h>

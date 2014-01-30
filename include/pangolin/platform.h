@@ -42,6 +42,11 @@
 #define __thread __declspec(thread)
 #endif //_MSVC_
 
+#ifdef _IOS_
+// Not supported on this platform.
+#define __thread
+#endif // _IOS_
+
 #ifndef _ANDROID_
 #   include <cstdio>
 #   define pango_print_debug(...) printf(__VA_ARGS__)

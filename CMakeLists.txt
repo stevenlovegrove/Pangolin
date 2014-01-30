@@ -16,12 +16,14 @@ if(CPP11_NO_BOOST)
     endif()
 endif()
 
-if(NOT ANDROID)
-   option(BUILD_SHARED_LIBS "Build Shared Library" ON)
-else()
+if(ANDROID)
    set(BUILD_SHARED_LIBS OFF)
    set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
    include(AndroidUtils)
+elseif(IOS)
+   set(BUILD_SHARED_LIBS OFF)
+else()
+   option(BUILD_SHARED_LIBS "Build Shared Library" ON)
 endif()
 
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}

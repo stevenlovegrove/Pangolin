@@ -61,16 +61,20 @@
 #endif // HAVE_GLUT
 
 #ifdef HAVE_GLES
-    #include <EGL/egl.h>
-
-    #ifdef HAVE_GLES_2
-        #include <GLES2/gl2.h>
-        #include <GLES2/gl2ext.h>
-    #else
-        #include <GLES/gl.h>
-        #define GL_GLEXT_PROTOTYPES
-        #include <GLES/glext.h>
-        #include <glues/glu.h>
+    #if defined(_ANDROID_)
+        #include <EGL/egl.h>
+        #ifdef HAVE_GLES_2
+            #include <GLES2/gl2.h>
+            #include <GLES2/gl2ext.h>
+        #else
+            #include <GLES/gl.h>
+            #define GL_GLEXT_PROTOTYPES
+            #include <GLES/glext.h>
+            #include <glues/glu.h>
+        #endif
+    #elif defined(_IOS_)
+        #include <OpenGLES/ES2/gl.h>
+        #include <OpenGLES/ES2/glext.h>
     #endif
 #else
     #include <GL/glew.h>

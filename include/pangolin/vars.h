@@ -33,6 +33,7 @@
 #include <vector>
 #include <fstream>
 #include <stdexcept>
+#include <cmath>
 
 #include <pangolin/file_utils.h>
 
@@ -141,7 +142,7 @@ inline Var<T>::Var(const std::string& name,
         {
             throw std::runtime_error("LogScale: range of numbers must be positive!");
         }
-        Init(name,default_value, log(min), log(max), 1, logscale);
+        Init(name,default_value, std::log(min), std::log(max), 1, logscale);
     }
     else
         Init(name,default_value, min, max);

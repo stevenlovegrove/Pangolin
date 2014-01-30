@@ -27,3 +27,7 @@ ENDIF()
 IF(ANDROID)
    SET(_ANDROID_ 1)
 ENDIF()
+
+IF(IOS)
+    SET(_IOS_ 1)
+ENDIF()

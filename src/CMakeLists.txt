@@ -83,34 +83,49 @@ if(NOT CPP11_NO_BOOST)
 endif()
 
 if(BUILD_PANGOLIN_GUI)
-  if(NOT ANDROID)
-      find_package(OpenGL REQUIRED QUIET)
-      find_package(GLEW REQUIRED QUIET)
-      list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR}" )
-      list(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY}" )
-  else()
-      find_package(GLUES REQUIRED QUIET)
-      list(APPEND USER_INC  "${GLUES_INCLUDE_DIR};" )
-      list(APPEND LINK_LIBS "${GLUES_LIBRARY}" )
-      list(APPEND LINK_LIBS "-lEGL;-lGLESv2;-lGLESv1_CM" )
-      list(APPEND HEADERS ${INCDIR}/gl2engine.h )
-      list(APPEND SOURCES gl2engine.cpp)
-  endif()
+    if( ANDROID  )
+        # TODO: Choose between these based on config.
+        set(HAVE_GLES   1)
+        set(HAVE_GLES_2 1)
+
+        # Android specific display code
+        list(APPEND HEADERS ${INCDIR}/display_android.h )
+        list(APPEND SOURCES display_android.cpp )
+
+        if(HAVE_GLES_2)
+            list(APPEND LINK_LIBS "-lEGL;-lGLESv2;-lGLESv1_CM" )
+        else()
+            find_package(GLUES REQUIRED QUIET)
+            list(APPEND USER_INC  "${GLUES_INCLUDE_DIR};" )
+            list(APPEND LINK_LIBS "${GLUES_LIBRARY}" )
+        endif()
+    elseif( IOS )
+        set(HAVE_GLES   1)
+        set(HAVE_GLES_2 1)
+        list(APPEND LINK_LIBS "-framework OpenGLES" )
+    else()
+        find_package(OpenGL REQUIRED QUIET)
+        find_package(GLEW REQUIRED QUIET)
+        list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR}" )
+        list(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY}" )
+    endif()
+
+    if( HAVE_GLES_2 )
+        # Add Pangolins backwards compat layer.
+        list(APPEND HEADERS ${INCDIR}/gl2engine.h )
+        list(APPEND SOURCES gl2engine.cpp)
+    endif()
 endif()
 
 #######################################################
 ## Find optional dependencies
 
-find_package(CVARS 2.3 QUIET)
-if(CVARS_FOUND)
-  set(HAVE_CVARS 1)
-  list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
-  list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
-  message(STATUS "CVARS Found and Enabled")
-endif()
-
-## Don't even try to find these things on android
-if(NOT ANDROID)
+if(ANDROID)
+    # Fix issue with thread local storage on android.
+    add_definitions(-fno-data-sections)
+elseif(IOS)
+    # Nothing specific in here yet.
+else()
     find_package(CUDA QUIET)
     if(CUDA_FOUND)
       set(HAVE_CUDA 1)
@@ -157,15 +172,15 @@ if(NOT ANDROID)
         list(APPEND SOURCES display_glut.cpp )
         message(STATUS "Glut Found and Enabled")
     endif()
-else()  # NOT ANDROID
-    # Fix issue with thread local storage on android.
-    add_definitions(-fno-data-sections)
+endif()
 
-    # Android specific display code
-    list(APPEND HEADERS ${INCDIR}/display_android.h )
-    list(APPEND SOURCES display_android.cpp )
-    set(HAVE_GLES 1)
-endif() # NOT ANDROID
+find_package(CVARS 2.3 QUIET)
+if(CVARS_FOUND)
+  set(HAVE_CVARS 1)
+  list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
+  message(STATUS "CVARS Found and Enabled")
+endif()
 
 find_package(Eigen3 QUIET)
 if(EIGEN3_FOUND)
