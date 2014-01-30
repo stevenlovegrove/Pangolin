@@ -28,7 +28,9 @@
 #ifndef PANGOLIN_COMPAT_GLCONSOLE_H
 #define PANGOLIN_COMPAT_GLCONSOLE_H
 
-// If we don't have GLUT, coerce GLConsole to work with out own font rendering.
+#include <pangolin/platform.h>
+
+// If we don't have GLUT, coerce GLConsole to work with our own font rendering.
 #ifdef HAVE_GLES
 #include <pangolin/glinclude.h>
 #include <pangolin/glfont.h>
@@ -52,9 +54,12 @@ public:
     unsigned int CharHeight() { return 10; }
     unsigned int CharWidth() { return 10; }
 };
+
+// TODO: We should implement these or something...
 #define glPushAttrib(x)
 #define glPopAttrib(x)
 #define glutGetModifiers(x) (0)
+
 #define GLUT_ACTIVE_SHIFT 0
 #define GLUT_ACTIVE_CTRL 1
 #define GLUT_ACTIVE_ALT 2
@@ -66,6 +71,7 @@ public:
 #define GLUT_KEY_PAGE_DOWN 8
 #define GLUT_KEY_HOME 9
 #define GLUT_KEY_END 10
+
 #endif // HAVE_GLES
 
 #include <GLConsole/GLConsole.h>
