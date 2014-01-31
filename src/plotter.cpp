@@ -94,6 +94,7 @@ void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y,
             "}\n";
 
     static const std::string fs =
+            "precision mediump float;\n"
             "varying vec4 v_color;\n"
             "void main() {\n"
             "  gl_FragColor = v_color;\n"
@@ -151,6 +152,7 @@ void Plotter::PlotImplicit::CreatePlot(const std::string& code)
             "}\n";
 
     static const std::string fs1 =
+            "precision mediump float;\n"
             "varying float x;\n"
             "varying float y;\n"
             "void main() {\n";
@@ -159,9 +161,7 @@ void Plotter::PlotImplicit::CreatePlot(const std::string& code)
 
     prog.AddShader( GlSlVertexShader, vs );
     prog.AddShader( GlSlFragmentShader, fs1 + code + fs2 );
-    prog.BindPangolinDefaultAttribLocations();
-    prog.Link();
-
+    prog.BindPangolinDefaultAttribLocationsAndLink();
 }
 
 
@@ -227,13 +227,13 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
                          "}\n"
                          );
     prog_lines.AddShader( GlSlFragmentShader,
+                         "precision mediump float;\n"
                          "varying vec4 v_color;\n"
                          "void main() {\n"
                          "  gl_FragColor = v_color;\n"
                          "}\n"
                          );
-    prog_lines.BindPangolinDefaultAttribLocations();
-    prog_lines.Link();
+    prog_lines.BindPangolinDefaultAttribLocationsAndLink();
 
     prog_text.AddShader( GlSlVertexShader,
                          "attribute vec2 a_position;\n"
@@ -250,6 +250,7 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
                          "}\n"
                          );
     prog_text.AddShader( GlSlFragmentShader,
+                         "precision mediump float;\n"
                          "varying vec4 v_color;\n"
                          "varying vec2 v_texcoord;\n"
                          "uniform sampler2D u_texture;\n"
@@ -258,8 +259,7 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
                          "  gl_FragColor.a *= texture2D(u_texture, v_texcoord).a;\n"
                          "}\n"
                          );
-    prog_text.BindPangolinDefaultAttribLocations();
-    prog_text.Link();
+    prog_text.BindPangolinDefaultAttribLocationsAndLink();
 
 
     // Setup default PlotSeries

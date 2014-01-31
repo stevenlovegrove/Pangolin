@@ -80,7 +80,7 @@ public:
         // Compile and link shaders
         prog_fixed.AddShader(GlSlVertexShader, vert);
         prog_fixed.AddShader(GlSlFragmentShader, frag);
-        prog_fixed.Link();
+        prog_fixed.BindPangolinDefaultAttribLocationsAndLink();
 
         // Save locations of uniforms
         u_color = prog_fixed.GetUniformHandle("u_color");

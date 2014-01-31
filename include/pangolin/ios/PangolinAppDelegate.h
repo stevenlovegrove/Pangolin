@@ -27,6 +27,8 @@
 
 #import <UIKit/UIKit.h>
 
+#import "PangolinUIView.h"
+
 @interface PangolinAppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;

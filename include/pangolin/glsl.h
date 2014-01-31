@@ -108,7 +108,7 @@ public:
     void SaveBind();
     void Unbind();
 
-    void BindPangolinDefaultAttribLocations();
+    void BindPangolinDefaultAttribLocationsAndLink();
 
 protected:
     bool linked;
@@ -305,12 +305,13 @@ inline void GlSlProgram::SetUniform(const std::string& name, Colour c)
     glUniform4f( GetUniformHandle(name), c.r, c.g, c.b, c.a);
 }
 
-inline void GlSlProgram::BindPangolinDefaultAttribLocations()
+inline void GlSlProgram::BindPangolinDefaultAttribLocationsAndLink()
 {
     glBindAttribLocation(prog, DEFAULT_LOCATION_POSITION, DEFAULT_NAME_POSITION);
     glBindAttribLocation(prog, DEFAULT_LOCATION_COLOUR,   DEFAULT_NAME_COLOUR);
     glBindAttribLocation(prog, DEFAULT_LOCATION_NORMAL,   DEFAULT_NAME_NORMAL);
     glBindAttribLocation(prog, DEFAULT_LOCATION_TEXCOORD, DEFAULT_NAME_TEXCOORD);
+    Link();
 }
 
 }
