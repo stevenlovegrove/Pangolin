@@ -31,6 +31,7 @@
 #include <pangolin/platform.h>
 #include <pangolin/view.h>
 #include <pangolin/compat/function.h>
+#include <pangolin/user_app.h>
 
 #include <queue>
 
@@ -58,6 +59,9 @@ struct PangolinGl
     
     // Named views which are managed by pangolin (i.e. created / deleted by pangolin)
     ViewMap named_managed_views;
+
+    // Optional user app
+    UserApp* user_app;
     
     // Global keypress hooks
     std::map<int,boostd::function<void(void)> > keypress_hooks;

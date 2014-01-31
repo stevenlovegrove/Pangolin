@@ -74,7 +74,7 @@ ContextMap contexts;
 __thread PangolinGl* context = 0;
 
 PangolinGl::PangolinGl()
-    : quit(false), mouse_state(0), activeDisplay(0)
+    : user_app(0), quit(false), mouse_state(0), activeDisplay(0)
 {
 #if defined(HAVE_GLCONSOLE) && defined(HAVE_GLES)
     console.m_fOverlayPercent = 0.5;

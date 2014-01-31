@@ -41,18 +41,25 @@ namespace pangolin
   // Forward Declarations
   struct View;
   struct Viewport;
+  class  UserApp;
   
   //! @brief Give this OpenGL context a name or switch contexts
   //! This is required to initialise Pangolin for use with an
   //! externally defined OpenGL context. You needn't call it
-  //! if you have used CreateGlutWindowAndBind() to create a GLUT
-  //! window
+  //! if you have used CreateWindowAndBind() to create a window
+  //! or launched a pangolin::UserApp
   void BindToContext(std::string name);
 
   //! @brief Initialise OpenGL window (determined by platform) and bind context
   //! This method will choose an available windowing system if one is present
   //! Currently, uses GLUT on a desktop, and EGL on android.
   void CreateWindowAndBind(std::string window_title, int w = 640, int h = 480);
+
+  //! @brief Launch users derived UserApp, controlling OpenGL event loop
+  //! This method will block until the application exits, calling app's
+  //! Init() method to start and Render() method subsequently to draw each frame.
+  //! @return exit code for use when returning from main. Currently always 0.
+  int LaunchUserApp(UserApp& app);
   
   //! @brief Perform any post rendering, event processing and frame swapping
   void FinishFrame();
