@@ -94,7 +94,9 @@ void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y,
             "}\n";
 
     static const std::string fs =
+        #ifdef HAVE_GLES_2
             "precision mediump float;\n"
+        #endif // HAVE_GLES_2
             "varying vec4 v_color;\n"
             "void main() {\n"
             "  gl_FragColor = v_color;\n"
@@ -152,7 +154,9 @@ void Plotter::PlotImplicit::CreatePlot(const std::string& code)
             "}\n";
 
     static const std::string fs1 =
+        #ifdef HAVE_GLES_2
             "precision mediump float;\n"
+        #endif // HAVE_GLES_2
             "varying float x;\n"
             "varying float y;\n"
             "void main() {\n";
@@ -227,7 +231,9 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
                          "}\n"
                          );
     prog_lines.AddShader( GlSlFragmentShader,
-                         "precision mediump float;\n"
+                      #ifdef HAVE_GLES_2
+                          "precision mediump float;\n"
+                      #endif // HAVE_GLES_2
                          "varying vec4 v_color;\n"
                          "void main() {\n"
                          "  gl_FragColor = v_color;\n"
@@ -250,7 +256,9 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
                          "}\n"
                          );
     prog_text.AddShader( GlSlFragmentShader,
+                     #ifdef HAVE_GLES_2
                          "precision mediump float;\n"
+                     #endif // HAVE_GLES_2
                          "varying vec4 v_color;\n"
                          "varying vec2 v_texcoord;\n"
                          "uniform sampler2D u_texture;\n"

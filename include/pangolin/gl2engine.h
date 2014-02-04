@@ -55,7 +55,9 @@ public:
             "}\n";
 
     const char* frag =
+        #ifdef HAVE_GLES_2
             "precision mediump float;\n"
+        #endif // HAVE_GLES_2
             "varying vec4 v_frontColor;\n"
             "varying vec2 v_texcoord;\n"
             "uniform sampler2D u_texture;\n"
