@@ -110,15 +110,15 @@ struct HandlerScroll : Handler
 
 struct Handler3D : Handler
 {
-    
+
     Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction=1.0f/50.0f);
-    
+
     virtual void GetPosNormal(View& view, int x, int y, GLdouble p[3], GLdouble Pw[3], GLdouble Pc[3], GLdouble n[3], GLdouble default_z = 1.0);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void MouseMotion(View&, int x, int y, int button_state);
     void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
-    
+
 protected:
     OpenGlRenderState* cam_state;
     const static int hwin = 8;
@@ -129,11 +129,28 @@ protected:
     GLfloat last_z;
     GLint last_pos[2];
     GLdouble rot_center[3];
-    
+
     GLdouble p[3];
     GLdouble Pw[3];
     GLdouble Pc[3];
     GLdouble n[3];
+};
+
+struct PassThroughHandler : Handler
+{
+  PassThroughHandler() {}
+
+  void SetPassThroughView(View& v) {
+    pass_through_view = &v;
+  }
+
+  virtual void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
+  virtual void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
+  virtual void MouseMotion(View&, int x, int y, int button_state);
+  virtual void PassiveMouseMotion(View&, int x, int y, int button_state);
+  virtual void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
+
+  View* pass_through_view;
 };
 
 static Handler StaticHandler;
