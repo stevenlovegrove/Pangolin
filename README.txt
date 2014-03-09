@@ -31,7 +31,7 @@ and IOS.
   (mac) sudo port install freeglut glew
   (mac) OsxGlut for smooth scroll/zoom: https://github.com/stevenlovegrove/osxglut
 
-* Boost (optional with C++11. Configure with 'cmake -DCPP11_NO_BOOST ..' )
+* Boost (optional with C++11. Configure with 'cmake -DCPP11_NO_BOOST=1 ..' )
   (win) http://www.boost.org/users/download/
   (deb) sudo apt-get install libboost-dev libboost-thread-dev libboost-filesystem-dev
   (mac) sudo port install boost
