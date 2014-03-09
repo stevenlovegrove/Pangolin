@@ -48,6 +48,7 @@
 #include <pangolin/video/uvc.h>
 #endif
 
+#include <pangolin/file_utils.h>
 #include <pangolin/video/test.h>
 #include <pangolin/video/images.h>
 #include <pangolin/video/pvn_video.h>
