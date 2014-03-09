@@ -405,8 +405,8 @@ void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const ch
 
 namespace process
 {
-float last_x;
-float last_y;
+float last_x = 0;
+float last_y = 0;
 
 void Keyboard( unsigned char key, int x, int y)
 {

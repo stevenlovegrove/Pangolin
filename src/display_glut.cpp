@@ -101,7 +101,9 @@ void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned in
 #ifdef HAVE_FREEGLUT
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 #endif
-    
+
+    glutIgnoreKeyRepeat(true);
+
     context->is_double_buffered = mode & GLUT_DOUBLE;
     TakeGlutCallbacks();
     

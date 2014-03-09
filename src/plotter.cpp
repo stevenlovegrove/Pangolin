@@ -210,6 +210,8 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
     // Handle our own mouse / keyboard events
     this->handler = this;
     this->log = log;
+    hover[0] = 0;
+    hover[1] = 0;
 
     // Default colour scheme
     colour_bg = Colour(0.0,0.0,0.0);
@@ -280,10 +282,10 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
         plotseries.back().CreatePlot("$i", oss.str(), col, oss.str() );
     }
 
-//    // Setup test PlotMarkers
+    // Setup test PlotMarkers
     plotmarkers.reserve(100);
-//    plotmarkers.push_back( PlotMarker(true, -1, 0.1, 1.0, 0.0, 0.0, 0.2 ) );
-//    plotmarkers.push_back( PlotMarker(false, 1, 2*M_PI/0.01, 0.0, 1.0, 0.0, 0.2 ) );
+//    plotmarkers.push_back( Marker( Marker::Vertical, 10, Marker::GreaterThan, Colour(1,0,0,0.2)) );
+//    plotmarkers.push_back( Marker( Marker::Horizontal, 1, Marker::LessThan, Colour(0,1,0,0.2)) );
 
     // Setup test implicit plots.
     plotimplicits.reserve(10);
