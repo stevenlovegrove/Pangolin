@@ -27,6 +27,8 @@
 
 #include <pangolin/input_record_repeat.h>
 
+#include <limits>
+
 using namespace std;
 
 namespace pangolin
