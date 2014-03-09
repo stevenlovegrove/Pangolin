@@ -338,7 +338,15 @@ void View::ActivateIdentity() const
 GLfloat View::GetClosestDepth(int x, int y, int radius) const
 {
     // TODO: Get to work on android    
+
+#ifdef _MSVC_
+    // MSVC Requires fixed sized arrays on stack
+    radius = 5;
+    const int zl = (5*2+1);
+#else
     const int zl = (radius*2+1);
+#endif
+
     const int zsize = zl*zl;
     GLfloat zs[zsize];
     

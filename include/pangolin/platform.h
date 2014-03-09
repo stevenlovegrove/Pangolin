@@ -42,10 +42,10 @@
 #define __thread __declspec(thread)
 #endif //_MSVC_
 
-#ifdef _IOS_
+#ifdef _APPLE_IOS_
 // Not supported on this platform.
 #define __thread
-#endif // _IOS_
+#endif // _APPLE_IOS_
 
 #ifndef _ANDROID_
 #   include <cstdio>

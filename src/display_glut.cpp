@@ -96,7 +96,10 @@ void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned in
     glutInitWindowSize(w,h);
     glutCreateWindow(window_title.c_str());
     BindToContext(window_title);
+
+#ifdef HAVE_GLEW
     glewInit();
+#endif
     
 #ifdef HAVE_FREEGLUT
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);

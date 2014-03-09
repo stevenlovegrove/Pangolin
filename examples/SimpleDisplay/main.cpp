@@ -7,6 +7,12 @@ using namespace std;
 
 struct CustomType
 {
+  CustomType()
+    : x(0), y(0.0f) {}
+
+  CustomType(int x, float y, string z)
+    : x(x), y(y), z(z) {}
+
   int x;
   float y;
   string z;
@@ -83,7 +89,7 @@ int main( int /*argc*/, char* argv[] )
     static Var<double> a_double_log("ui.Log scale var",3,1,1E4, true);
     static Var<bool> a_checkbox("ui.A Checkbox",false,true);
     static Var<int> an_int_no_input("ui.An Int No Input",2);
-    static Var<CustomType> any_type("ui.Some Type",(CustomType){0,1.2,"Hello"});
+    static Var<CustomType> any_type("ui.Some Type", CustomType(0,1.2,"Hello") );
 
     static Var<bool> save_window("ui.Save Window",false,false);
     static Var<bool> save_teapot("ui.Save Teapot",false,false);
@@ -100,7 +106,7 @@ int main( int /*argc*/, char* argv[] )
       an_int = a_double;
 
     if( !any_type->z.compare("robot"))
-        any_type = (CustomType){1,2.3,"Boogie"};
+        any_type = CustomType(1,2.3,"Boogie");
 
     an_int_no_input = an_int;
 

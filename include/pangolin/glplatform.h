@@ -35,12 +35,21 @@
 #include "platform.h"
 
 #ifdef _WIN_
-#include <Windows.h>
+    // Define maths quantities when using <cmath> to match posix systems
+    #define _USE_MATH_DEFINES
+
+    // Don't define min / max macros in windows.h or other unnecessary macros
+    #define NOMINMAX
+    #define WIN32_LEAN_AND_MEAN
+    #include <Windows.h>
+
+    // Undef nuisance macros which interfere with our methods
+    #undef LoadImage
 #endif
 
-#ifndef HAVE_GLES
+#ifdef HAVE_GLEW
     #include <GL/glew.h>
-#endif // HAVE_GLES
+#endif
 
 #ifdef HAVE_GLUT
     #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
@@ -72,12 +81,11 @@
             #include <GLES/glext.h>
             #include <glues/glu.h>
         #endif
-    #elif defined(_IOS_)
+    #elif defined(_APPLE_IOS_)
         #include <OpenGLES/ES2/gl.h>
         #include <OpenGLES/ES2/glext.h>
     #endif
 #else
-    #include <GL/glew.h>
     #ifdef _OSX_
         #include <OpenGL/gl.h>
     #else

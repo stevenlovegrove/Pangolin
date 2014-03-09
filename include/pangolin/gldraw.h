@@ -30,6 +30,8 @@
 
 #include <pangolin/glinclude.h>
 
+#include <math.h>
+
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN
 #endif

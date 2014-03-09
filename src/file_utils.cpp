@@ -25,10 +25,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/platform.h>
 #include <pangolin/file_utils.h>
 
+#ifndef _WIN_
 #include <dirent.h>
 #include <sys/stat.h>
+#endif // _WIN_
 
 #include <algorithm>
 #include <sstream>
@@ -91,8 +94,12 @@ std::string PathParent(const std::string& path)
 
 bool FileExists(const std::string& filename)
 {
+#ifndef _WIN_
     struct stat buf;
     return stat(filename.c_str(), &buf) != -1;
+#else
+	throw std::runtime_error("Not implemented");
+#endif //_WIN_
 }
 
 std::string PathExpand(const std::string& sPath)
@@ -143,7 +150,8 @@ bool MatchesWildcard(const std::string& str, const std::string& wildcard)
 
 bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>& file_vec)
 {
-    size_t nLastSlash = wildcard.find_last_of('/');
+#ifndef _WIN_
+	size_t nLastSlash = wildcard.find_last_of('/');
     
     std::string sPath;
     std::string sFileWc;
@@ -178,6 +186,9 @@ bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>
         return file_vec.size() > 0;
     }
     return false;
+#else
+	throw std::runtime_error("Not implemented");
+#endif //_WIN_
 }
 
 }

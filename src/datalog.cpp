@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iomanip>
 #include <stdexcept>
-
+#include <algorithm>
 #include <iostream>
 
 namespace pangolin

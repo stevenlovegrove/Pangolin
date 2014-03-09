@@ -64,7 +64,7 @@ struct View
 {
     View(double aspect=0.0)
         : aspect(aspect), top(1.0),left(0.0),right(1.0),bottom(0.0), hlock(LockCenter),vlock(LockCenter),
-          layout(LayoutOverlay), scroll_offset(0), show(1), handler(0), extern_draw_function(0) {}
+          layout(LayoutOverlay), scroll_offset(0), show(1), handler(0) {}
     
     virtual ~View() {}
     

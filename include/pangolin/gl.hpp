@@ -29,6 +29,7 @@
 #define PANGOLIN_GL_HPP
 
 #include <pangolin/gl.h>
+#include <algorithm>
 
 namespace pangolin
 {

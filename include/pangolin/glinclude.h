@@ -40,8 +40,15 @@ inline void _CheckGlDieOnError( const char *sFile, const int nLine )
 {
     GLenum glError = glGetError();
     if( glError != GL_NO_ERROR ) {
+
+#ifdef HAVE_GLUT
         pango_print_error( "OpenGL Error: %s (%d)\n", gluErrorString(glError), glError );
-        pango_print_error( "In: %s, line %d\n", sFile, nLine);
+		pango_print_error("In: %s, line %d\n", sFile, nLine);
+#else
+		pango_print_error("OpenGL Error: %d\n", glError);
+		pango_print_error("In: %s, line %d\n", sFile, nLine);
+#endif // HAVE_GLUT
+
     }
 }
 }

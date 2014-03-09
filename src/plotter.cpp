@@ -29,6 +29,7 @@
 #include <pangolin/gldraw.h>
 
 #include <iomanip>
+#include <cctype>
 
 namespace pangolin
 {
