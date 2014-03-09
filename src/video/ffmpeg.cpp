@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/video/ffmpeg.h>
+#include <pangolin/file_utils.h>
 
 extern "C"
 {
