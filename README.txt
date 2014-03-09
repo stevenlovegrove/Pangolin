@@ -1,36 +1,42 @@
 == What is Pangolin ==
 
-Pangolin is a lightweight rapid development library for managing OpenGL
-display / interaction and video input. At its heart is a simple OpenGl
-viewport manager which can help to modularise 3D visualisation without
-adding to its complexity, and offers an advanced but intuitive 3D
-navigation handler. Pangolin also provides a mechanism for manipulating
-program variables through config files and ui integration.
+Pangolin is a lightweight portable rapid development library for managing OpenGL
+display / interaction and abstracting video input. At its heart is a simple
+OpenGl viewport manager which can help to modularise 3D visualisation without
+adding to its complexity, and offers an advanced but intuitive 3D navigation
+handler. Pangolin also provides a mechanism for manipulating program variables
+through config files and ui integration, and has a flexible real-time plotter
+for visualising graphical data.
 
 The ethos of Pangolin is to reduce the boilerplate code that normally
 gets written to visualise and interact with (typically image and 3D
-based) systems, without compromising performance.
+based) systems, without compromising performance. It also enables write-once
+code for a number of platforms, currently including Windows, Linux, OSX, Android
+and IOS.
 
 == Required Dependencies ==
 
 * OpenGL
-
-* Boost
-  (win) http://www.boost.org/users/download/
-  (deb) sudo apt-get install libboost-dev libboost-thread-dev libboost-filesystem-dev
-  (mac) sudo port install boost
 
 * CMake (for build environment)
   (win) http://www.cmake.org/cmake/resources/software.html
   (deb) sudo apt-get install cmake
   (mac) sudo port install cmake
 
-* FreeGlut / GLU / Glew (Required for drawing text and windowing)
+== Recommended Dependencies ==
+
+* Glut / GLU / Glew (Required for window management on OSX/Win/Linux)
   (win) http://www.transmissionzero.co.uk/software/freeglut-devel/
   (deb) sudo apt-get install freeglut3-dev libglu-dev libglew-dev
   (mac) sudo port install freeglut glew
+  (mac) OsxGlut for smooth scroll/zoom: https://github.com/stevenlovegrove/osxglut
 
-== Optional Dependencies ==
+* Boost (optional with C++11. Configure with 'cmake -DCPP11_NO_BOOST ..' )
+  (win) http://www.boost.org/users/download/
+  (deb) sudo apt-get install libboost-dev libboost-thread-dev libboost-filesystem-dev
+  (mac) sudo port install boost
+
+== Optional Dependencies for video input ==
 
 * FFMPEG (For video decoding and image rescaling)
   (deb) sudo apt-get install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev
@@ -43,13 +49,10 @@ based) systems, without compromising performance.
     
 == Very Optional Dependencies ==
 
-* GLConsole (For graphical drop-down console. Must be build before Pangolin.)
+* GLConsole (For graphical drop-down console. Must be built before Pangolin.)
   git clone git://git.code.sf.net/p/glconsole/code glconsole
 
 * CUDA Toolkit (>= 3.2)
   http://developer.nvidia.com/object/cuda_3_2_downloads.html
-
-* Cg Library (some small Cg utils)
-  (deb) sudo apt-get install nvidia-cg-toolkit
 
 * Eigen / TooN
