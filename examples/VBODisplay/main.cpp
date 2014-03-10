@@ -10,10 +10,6 @@
 #include <cuda_gl_interop.h>
 #include <vector_types.h>
 
-#ifdef USE_CUTIL
-  #include <cutil_inline.h>
-#endif // USE_CUTIL
-
 using namespace pangolin;
 using namespace std;
 
@@ -25,11 +21,7 @@ extern "C" void launch_kernel(float4* dVertexArray, uchar4* dColourArray, unsign
 
 int main( int /*argc*/, char* argv[] )
 {
-#ifdef USE_CUTIL
-    cudaGLSetGLDevice(cutGetMaxGflopsDeviceId());
-#else
-    cudaGLSetGLDevice(0);
-#endif
+//  cudaGLSetGLDevice(0);
 
   pangolin::CreateWindowAndBind("Main",640,480);
   glewInit();
@@ -64,23 +56,11 @@ int main( int /*argc*/, char* argv[] )
   View& d_panel = pangolin::CreatePanel("ui")
       .SetBounds(0.0, 1.0, 0.0, Attach::Pix(UI_WIDTH));
 
-#ifdef USE_CUTIL
-  // Apply timer as used by CUDA samples
-  // The fps measure they use is actually completely incorrect!
-  unsigned int timer = 0;
-  cutCreateTimer(&timer);
-#endif
-
   // Default hooks for exiting (Esc) and fullscreen (tab).
   for(int frame=0; !pangolin::ShouldQuit(); ++frame)
   {
     static double time = 0;
     static Var<double> delta("ui.time delta", 0.001, 0, 0.005);
-
-#ifdef USE_CUTIL
-    static Var<double> fps("ui.fps");
-    cutStartTimer(timer);
-#endif
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -96,26 +76,9 @@ int main( int /*argc*/, char* argv[] )
 
     pangolin::RenderVboCbo(vertex_array, colour_array);
 
-    // Render our UI panel when we receive input
-    if(!(frame%100))
-    {
-#ifdef USE_CUTIL
-      fps = 1000.0 / cutGetAverageTimerValue(timer);
-      cutResetTimer(timer);
-#endif
-    }
-
     // Swap frames and Process Events
     pangolin::FinishFrame();
-
-#ifdef USE_CUTIL
-    cutStopTimer(timer);
-#endif
   }
-
-#ifdef USE_CUTIL
-  cutilCheckError( cutDeleteTimer( timer));
-#endif
 
   return 0;
 }
