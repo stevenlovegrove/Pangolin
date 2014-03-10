@@ -378,19 +378,23 @@ void Plotter::Render()
     gluOrtho2D(int_x[0]+vo[0], int_x[1]+vo[0], int_y[0]+vo[1], int_y[1]+vo[1]);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    
+
     glDisable(GL_MULTISAMPLE);
-    
+
     glLineWidth(1.5);
+#ifndef HAVE_GLES
     glEnable(GL_LINE_SMOOTH);
     glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
+#else
+    glDisable(GL_LINE_SMOOTH);
+#endif
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_LIGHTING);
     glDisable( GL_DEPTH_TEST );
-    
+
     DrawTicks();
-    
+
     if( log && log->sequences.size() > 0 ) {
         if( plot_mode==TIME_SERIES) {
             for( unsigned int s=0; s < log->sequences.size(); ++s ) {
