@@ -34,7 +34,7 @@
 namespace pangolin
 {
 
-class VideoSplitter
+class PANGOLIN_EXPORT VideoSplitter
     : public VideoInterface
 {
 public:

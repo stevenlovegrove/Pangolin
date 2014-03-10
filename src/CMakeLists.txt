@@ -286,6 +286,18 @@ include_directories( ${INTERNAL_INC} )
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
 target_link_libraries(${LIBRARY_NAME} ${LINK_LIBS})
 
+## Generate symbol export helper header on MSVC
+IF(MSVC)
+    string(TOUPPER ${LIBRARY_NAME} LIBRARY_NAME_CAPS)
+    include(GenerateExportHeader)
+    GENERATE_EXPORT_HEADER( ${LIBRARY_NAME}
+        BASE_NAME ${LIBRARY_NAME_CAPS}
+        EXPORT_MACRO_NAME ${LIBRARY_NAME_CAPS}_EXPORT
+        EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/${LIBRARY_NAME}_export.h"
+        STATIC_DEFINE ${LIBRARY_NAME_CAPS}_BUILT_AS_STATIC
+    )
+ENDIF()
+
 ## Set Special Compiler flags
 if(MSVC)
   set(CMAKE_CXX_FLAGS "/EHs ${CMAKE_CXX_FLAGS}")

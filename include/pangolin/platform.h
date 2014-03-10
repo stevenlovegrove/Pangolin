@@ -39,7 +39,10 @@
 #endif
 
 #ifdef _MSVC_
-#define __thread __declspec(thread)
+#   define __thread __declspec(thread)
+#   include <pangolin/pangolin_export.h>
+#else
+#   define PANGOLIN_EXPORT
 #endif //_MSVC_
 
 #ifdef _APPLE_IOS_

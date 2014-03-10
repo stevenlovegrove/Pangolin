@@ -37,7 +37,7 @@
 
 namespace pangolin {
 
-class GlText
+class PANGOLIN_EXPORT GlText
 {
 public:
     GlText();

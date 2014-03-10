@@ -79,6 +79,7 @@ struct CameraSpec {
 };
 
 const static CameraSpec CameraSpecOpenGl = {{0,0,-1},{0,1,0},{1,0,0},{0,1},{1,0}};
+
 const static CameraSpec CameraSpecYDownZForward = {{0,0,1},{0,-1,0},{1,0,0},{0,-1},{1,0}};
 
 // Direction vector for each AxisDirection enum
@@ -90,7 +91,7 @@ const static GLprecision AxisDirectionVector[7][3] = {
 };
 
 //! @brief Object representing OpenGl Matrix
-struct OpenGlMatrix {
+struct PANGOLIN_EXPORT OpenGlMatrix {
     static OpenGlMatrix Translate(GLprecision x, GLprecision y, GLprecision z);
     static OpenGlMatrix Scale(GLprecision x, GLprecision y, GLprecision z);
     
@@ -126,11 +127,14 @@ struct OpenGlMatrix {
     GLprecision m[16];
 };
 
+PANGOLIN_EXPORT
 OpenGlMatrix operator*(const OpenGlMatrix& lhs, const OpenGlMatrix& rhs);
+
+PANGOLIN_EXPORT
 std::ostream& operator<<(std::ostream& os, const OpenGlMatrix& mat);
 
 //! @brief deprecated
-struct OpenGlMatrixSpec : public OpenGlMatrix {
+struct PANGOLIN_EXPORT OpenGlMatrixSpec : public OpenGlMatrix {
     // Specify which stack this refers to
     OpenGlStack type;
 };
@@ -138,7 +142,7 @@ struct OpenGlMatrixSpec : public OpenGlMatrix {
 //! @brief Object representing attached OpenGl Matrices / transforms
 //! Only stores what is attached, not entire OpenGl state (which would
 //! be horribly slow). Applying state is efficient.
-class OpenGlRenderState
+class PANGOLIN_EXPORT OpenGlRenderState
 {
 public:
     OpenGlRenderState();
@@ -177,28 +181,49 @@ protected:
     bool follow;
 };
 
+PANGOLIN_EXPORT
 OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar );
+
+PANGOLIN_EXPORT
 OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar );
+
+PANGOLIN_EXPORT
 OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar );
 
+
 //! Use OpenGl's default frame RUB_BottomLeft
+PANGOLIN_EXPORT
 OpenGlMatrixSpec ProjectionMatrix(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar );
+
+PANGOLIN_EXPORT
 OpenGlMatrixSpec ProjectionMatrixOrthographic(GLprecision l, GLprecision r, GLprecision b, GLprecision t, GLprecision n, GLprecision f );
+
 
 //! Generate glulookat style model view matrix, looking at (lx,ly,lz)
 //! X-Right, Y-Up, Z-Back
+PANGOLIN_EXPORT
 OpenGlMatrix ModelViewLookAtRUB(GLprecision ex, GLprecision ey, GLprecision ez, GLprecision lx, GLprecision ly, GLprecision lz, GLprecision ux, GLprecision uy, GLprecision uz);
 
 //! Generate glulookat style model view matrix, looking at (lx,ly,lz)
 //! X-Right, Y-Down, Z-Forward
+PANGOLIN_EXPORT
 OpenGlMatrix ModelViewLookAtRDF(GLprecision ex, GLprecision ey, GLprecision ez, GLprecision lx, GLprecision ly, GLprecision lz, GLprecision ux, GLprecision uy, GLprecision uz);
 
 //! Generate glulookat style model view matrix, OpenGL Default camera convention (XYZ=RUB), looking at (lx,ly,lz)
+PANGOLIN_EXPORT
 OpenGlMatrix ModelViewLookAt(GLprecision x, GLprecision y, GLprecision z, GLprecision lx, GLprecision ly, GLprecision lz, AxisDirection up);
+
+PANGOLIN_EXPORT
 OpenGlMatrix ModelViewLookAt(GLprecision ex, GLprecision ey, GLprecision ez, GLprecision lx, GLprecision ly, GLprecision lz, GLprecision ux, GLprecision uy, GLprecision uz);
 
+
+PANGOLIN_EXPORT
 OpenGlMatrix IdentityMatrix();
+
+PANGOLIN_EXPORT
 OpenGlMatrixSpec IdentityMatrix(OpenGlStack type);
+
+PANGOLIN_EXPORT
 OpenGlMatrixSpec negIdentityMatrix(OpenGlStack type);
 
 #ifdef HAVE_TOON

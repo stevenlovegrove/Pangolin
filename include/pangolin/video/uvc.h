@@ -36,7 +36,7 @@
 namespace pangolin
 {
 
-class UvcVideo : public VideoInterface
+class PANGOLIN_EXPORT UvcVideo : public VideoInterface
 {
 public:
     UvcVideo();

@@ -28,6 +28,8 @@
 #ifndef PANGOLIN_DATALOG_H
 #define PANGOLIN_DATALOG_H
 
+#include <pangolin/platform.h>
+
 #include <stdexcept>
 #include <vector>
 #include <string>
@@ -147,7 +149,7 @@ struct DimensionStats
     float max;
 };
 
-class DataLog
+class PANGOLIN_EXPORT DataLog
 {
 public:
     DataLog(unsigned int block_samples_alloc = 10000 );

@@ -159,7 +159,7 @@ struct VideoInterface
 };
 
 //! Generic wrapper class for different video sources
-struct VideoInput : public VideoInterface
+struct PANGOLIN_EXPORT VideoInput : public VideoInterface
 {
     VideoInput();
     VideoInput(const std::string& uri);
@@ -190,6 +190,7 @@ protected:
 };
 
 //! Open Video Interface from string specification (as described in this files header)
+PANGOLIN_EXPORT
 VideoInterface* OpenVideo(std::string uri);
 
 }

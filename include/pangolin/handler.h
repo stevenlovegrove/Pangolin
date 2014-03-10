@@ -92,7 +92,7 @@ enum InputSpecial
 
 //! @brief Input Handler base class with virtual methods which recurse
 //! into sub-displays
-struct Handler
+struct PANGOLIN_EXPORT Handler
 {
     virtual ~Handler() {}
     virtual void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
@@ -102,13 +102,13 @@ struct Handler
     virtual void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
 };
 
-struct HandlerScroll : Handler
+struct PANGOLIN_EXPORT HandlerScroll : Handler
 {
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
 };
 
-struct Handler3D : Handler
+struct PANGOLIN_EXPORT Handler3D : Handler
 {
     
     Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction=1.0f/50.0f);

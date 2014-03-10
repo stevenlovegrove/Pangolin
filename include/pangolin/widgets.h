@@ -35,11 +35,13 @@
 namespace pangolin
 {
 
+PANGOLIN_EXPORT
 bool GuiVarHasChanged();
 
+PANGOLIN_EXPORT
 View& CreatePanel(const std::string& name);
 
-struct Panel : public View
+struct PANGOLIN_EXPORT Panel : public View
 {
     Panel();
     Panel(const std::string& auto_register_var_prefix);
@@ -60,7 +62,7 @@ struct Widget : public View, Handler, Var<T>
     std::string title;
 };
 
-struct Button : public Widget<bool>
+struct PANGOLIN_EXPORT Button : public Widget<bool>
 {
     Button(std::string title, _Var& tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
@@ -74,7 +76,7 @@ struct Button : public Widget<bool>
     bool down;
 };
 
-struct Checkbox : public Widget<bool>
+struct PANGOLIN_EXPORT Checkbox : public Widget<bool>
 {
     Checkbox(std::string title, _Var& tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
@@ -87,7 +89,7 @@ struct Checkbox : public Widget<bool>
     Viewport vcb;
 };
 
-struct Slider : public Widget<double>
+struct PANGOLIN_EXPORT Slider : public Widget<double>
 {
     Slider(std::string title, _Var& tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
@@ -103,7 +105,7 @@ struct Slider : public Widget<double>
     bool logscale;
 };
 
-struct TextInput : public Widget<std::string>
+struct PANGOLIN_EXPORT TextInput : public Widget<std::string>
 {
     TextInput(std::string title, _Var& tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);

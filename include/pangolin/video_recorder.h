@@ -48,7 +48,7 @@ struct VideoRecorderException : std::exception
     std::string desc;
 };
 
-class VideoRecorder
+class PANGOLIN_EXPORT VideoRecorder
 {
 public:
     VideoRecorder(

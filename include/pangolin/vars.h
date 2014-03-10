@@ -83,6 +83,7 @@ struct Var
 
 bool Pushed(Var<bool>& button);
 
+PANGOLIN_EXPORT
 void ParseVarsFile(const std::string& filename);
 
 typedef void (*NewVarCallbackFn)(void* data, const std::string& name, _Var& var, const char* reg_type_name, bool brand_new);
@@ -211,7 +212,7 @@ struct GuiVarChangedCallback
     void* data;
 };
 
-struct VarState
+struct PANGOLIN_EXPORT VarState
 {
     static VarState& I();
     static std::map<std::string,_Var*>& Vars();

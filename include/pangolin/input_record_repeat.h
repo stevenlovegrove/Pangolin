@@ -42,7 +42,7 @@ struct FrameInput
     std::string val;
 };
 
-struct InputRecordRepeat
+struct PANGOLIN_EXPORT InputRecordRepeat
 {
     InputRecordRepeat(const std::string& var_record_prefix);
     ~InputRecordRepeat();

@@ -35,7 +35,7 @@ namespace pangolin
 {
 
 // Video class that outputs test video signal.
-class TestVideo : public VideoInterface
+class PANGOLIN_EXPORT TestVideo : public VideoInterface
 {
 public:
     TestVideo(size_t w, size_t h, size_t n, std::string pix_fmt);

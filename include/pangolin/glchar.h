@@ -32,7 +32,7 @@
 
 namespace pangolin {
 
-struct XYUV
+struct PANGOLIN_EXPORT XYUV
 {
     XYUV() {}
     XYUV(GLfloat x, GLfloat y, GLfloat tu, GLfloat tv)
@@ -45,7 +45,7 @@ struct XYUV
     GLfloat x, y, tu, tv;
 };
 
-class GlChar
+class PANGOLIN_EXPORT GlChar
 {
 public:
     GlChar();

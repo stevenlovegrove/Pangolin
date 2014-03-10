@@ -39,7 +39,7 @@
 namespace pangolin
 {
 
-class threadedfilebuf : public std::streambuf
+class PANGOLIN_EXPORT threadedfilebuf : public std::streambuf
 {
 public:
     threadedfilebuf(const std::string& filename, unsigned int buffer_size_bytes);

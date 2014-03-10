@@ -35,7 +35,7 @@
 
 namespace pangolin {
 
-class GlFont
+class PANGOLIN_EXPORT GlFont
 {
 public:
     // Singleton instance if requested.

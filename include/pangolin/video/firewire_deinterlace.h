@@ -34,7 +34,7 @@
 namespace pangolin
 {
 
-class FirewireDeinterlace
+class PANGOLIN_EXPORT FirewireDeinterlace
     : public VideoInterface
 {
 public:

@@ -66,7 +66,7 @@ struct VideoOutputInterface
 };
 
 //! VideoOutput wrap to generically construct instances of VideoOutputInterface.
-class VideoOutput : public VideoOutputInterface
+class PANGOLIN_EXPORT VideoOutput : public VideoOutputInterface
 {
 public:
     VideoOutput();
@@ -85,6 +85,7 @@ protected:
 };
 
 //! Open VideoOutput Interface from string specification (as described in this files header)
+PANGOLIN_EXPORT
 VideoOutputInterface* OpenVideoOutput(std::string str_uri);
 
 }

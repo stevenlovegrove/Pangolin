@@ -36,7 +36,7 @@
 namespace pangolin
 {
 
-class PvnVideo : public VideoInterface
+class PANGOLIN_EXPORT PvnVideo : public VideoInterface
 {
 public:
     PvnVideo(const char* filename, bool realtime = false);

@@ -49,7 +49,7 @@ namespace pangolin
 
 typedef std::map<const std::string,View*> ViewMap;
 
-struct PangolinGl
+struct PANGOLIN_EXPORT PangolinGl
 {
     PangolinGl();
     ~PangolinGl();
@@ -91,6 +91,7 @@ struct PangolinGl
     
 };
 
+PANGOLIN_EXPORT
 void PangolinCommonInit();
 
 #ifdef BUILD_PANGOLIN_VIDEO

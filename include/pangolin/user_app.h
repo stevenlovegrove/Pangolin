@@ -31,7 +31,7 @@
 namespace pangolin
 {
 
-class UserApp
+class PANGOLIN_EXPORT UserApp
 {
 public:
     virtual ~UserApp() {}

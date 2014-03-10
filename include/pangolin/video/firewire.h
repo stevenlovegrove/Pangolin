@@ -42,13 +42,16 @@
 namespace pangolin
 {
 
+PANGOLIN_EXPORT
 std::string Dc1394ColorCodingToString(dc1394color_coding_t coding);
 
+PANGOLIN_EXPORT
 dc1394color_coding_t Dc1394ColorCodingFromString(std::string coding);
 
+PANGOLIN_EXPORT
 void Dc1394ModeDetails(dc1394video_mode_t mode, unsigned& w, unsigned& h, std::string& format );
 
-class FirewireFrame
+class PANGOLIN_EXPORT FirewireFrame
 {
     friend class FirewireVideo;
 public:
@@ -65,13 +68,13 @@ protected:
     dc1394video_frame_t *frame;
 };
 
-struct Guid
+struct PANGOLIN_EXPORT Guid
 {
     Guid(uint64_t guid):guid(guid){}
     uint64_t guid;
 };
 
-class FirewireVideo : public VideoInterface
+class PANGOLIN_EXPORT FirewireVideo : public VideoInterface
 {
 public:
     const static int MAX_FR = -1;

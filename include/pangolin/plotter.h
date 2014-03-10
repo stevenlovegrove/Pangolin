@@ -68,7 +68,7 @@ struct Marker
     Colour colour;
 };
 
-class Plotter : public View, Handler
+class PANGOLIN_EXPORT Plotter : public View, Handler
 {
 public:
     Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5 );

@@ -25,7 +25,7 @@ enum OpenNiSensorType
 };
 
 //! Interface to video capture sources
-struct OpenNiVideo : public VideoInterface
+struct PANGOLIN_EXPORT OpenNiVideo : public VideoInterface
 {
 public:
     OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2);

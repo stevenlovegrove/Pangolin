@@ -28,7 +28,7 @@
 #ifndef PANGOLIN_VIDEO_COMMON_H
 #define PANGOLIN_VIDEO_COMMON_H
 
-#include <pangolin/config.h>
+#include <pangolin/platform.h>
 #include <pangolin/type_convert.h>
 #include <exception>
 #include <string>
@@ -102,10 +102,12 @@ struct ImageRoi
 };
 
 //! Parse string as Video URI
+PANGOLIN_EXPORT
 Uri ParseUri(std::string str_uri);
 
 //! Return Pixel Format properties given string specification in
 //! FFMPEG notation.
+PANGOLIN_EXPORT
 VideoPixelFormat VideoFormatFromString(const std::string& format);
 
 }

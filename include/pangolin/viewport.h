@@ -34,7 +34,7 @@ namespace pangolin
 {
 
 //! @brief Encapsulates OpenGl Viewport
-struct Viewport
+struct PANGOLIN_EXPORT Viewport
 {
     Viewport() {}
     Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h) {}

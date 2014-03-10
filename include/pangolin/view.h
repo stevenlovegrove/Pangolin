@@ -60,7 +60,7 @@ enum Lock {
 struct Handler;
 
 //! @brief A Display manages the location and resizing of an OpenGl viewport.
-struct View
+struct PANGOLIN_EXPORT View
 {
     View(double aspect=0.0)
         : aspect(aspect), top(1.0),left(0.0),right(1.0),bottom(0.0), hlock(LockCenter),vlock(LockCenter),
