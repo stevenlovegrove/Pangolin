@@ -26,7 +26,8 @@ if(BUILD_PANGOLIN_GUI)
   list(APPEND HEADERS
     ${INCDIR}/display.h ${INCDIR}/display_internal.h 
     ${INCDIR}/view.h ${INCDIR}/viewport.h
-    ${INCDIR}/handler.h ${INCDIR}/opengl_render_state.h
+    ${INCDIR}/handler.h ${INCDIR}/handler_enums.h
+    ${INCDIR}/opengl_render_state.h
     ${INCDIR}/datalog.h ${INCDIR}/plotter.h
     ${INCDIR}/glfont.h
   )
