@@ -131,6 +131,7 @@ void FinishGlutFrame()
     RenderViews();
     PostRender();
     SwapGlutBuffersProcessGlutEvents();
+    context->quit |= !glutGetWindow();
 }
 
 // Implement platform agnostic version

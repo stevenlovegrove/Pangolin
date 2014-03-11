@@ -30,7 +30,6 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/glinclude.h>
-#include <pangolin/handler.h>
 #include <pangolin/compat/function.h>
 
 #include <string>
@@ -42,6 +41,7 @@ namespace pangolin
   struct View;
   struct Viewport;
   class  UserApp;
+  enum   InputSpecial;
   
   //! @brief Give this OpenGL context a name or switch contexts
   //! This is required to initialise Pangolin for use with an

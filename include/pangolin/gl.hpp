@@ -29,6 +29,7 @@
 #define PANGOLIN_GL_HPP
 
 #include <pangolin/gl.h>
+#include <pangolin/display.h>
 #include <algorithm>
 
 namespace pangolin
@@ -106,7 +107,8 @@ inline GlTexture::GlTexture(GlTexture&& tex)
 
 inline void GlTexture::Delete()
 {
-    if(internal_format!=0) {
+    // We have no GL context whilst exiting.
+    if(internal_format!=0 && !pangolin::ShouldQuit() ) {
         glDeleteTextures(1,&tid);
         internal_format = 0;
         tid = 0;
@@ -117,7 +119,8 @@ inline void GlTexture::Delete()
 
 inline GlTexture::~GlTexture()
 {
-    if(internal_format!=0) {
+    // We have no GL context whilst exiting.
+    if(internal_format!=0 && !pangolin::ShouldQuit() ) {
         glDeleteTextures(1,&tid);
     }
 }
