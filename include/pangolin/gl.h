@@ -63,6 +63,9 @@ public:
     //! Default constructor represents 'no texture'
     GlTexture();
     ~GlTexture();
+
+    //! Delete OpenGL resources and fall back to representing 'no texture'
+    void Delete();
     
     //! Reinitialise teture width / height / format
     void Reinitialise(GLint width, GLint height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL );

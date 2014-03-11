@@ -104,6 +104,17 @@ inline GlTexture::GlTexture(GlTexture&& tex)
 }
 #endif
 
+inline void GlTexture::Delete()
+{
+    if(internal_format!=0) {
+        glDeleteTextures(1,&tid);
+        internal_format = 0;
+        tid = 0;
+        width = 0;
+        height = 0;
+    }
+}
+
 inline GlTexture::~GlTexture()
 {
     if(internal_format!=0) {

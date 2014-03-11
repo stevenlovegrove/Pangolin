@@ -359,6 +359,12 @@ bool GlFont::LoadEmbeddedFont()
     return success;
 }
 
+void GlFont::UnloadFont()
+{
+    mTex.Delete();
+    mmCharacters.clear();
+}
+
 GlText GlFont::Text( const char* fmt, ... )
 {
     if(!mmCharacters.size()) LoadEmbeddedFont();
