@@ -46,6 +46,7 @@ void TakeGlutCallbacks()
     glutKeyboardFunc(&process::Keyboard);
     glutKeyboardUpFunc(&process::KeyboardUp);
     glutReshapeFunc(&process::Resize);
+    glutDisplayFunc(&process::Display);
     glutMouseFunc(&process::Mouse);
     glutMotionFunc(&process::MouseMotion);
     glutPassiveMotionFunc(&process::PassiveMouseMotion);

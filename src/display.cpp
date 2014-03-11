@@ -541,6 +541,11 @@ void PassiveMouseMotion(int x, int y)
     last_y = y;
 }
 
+void Display()
+{
+    // No implementation
+}
+
 void Resize( int width, int height )
 {
     if( !context->is_fullscreen )

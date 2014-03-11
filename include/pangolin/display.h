@@ -127,6 +127,11 @@ namespace pangolin
     PANGOLIN_EXPORT
     void Resize(int width, int height);
 
+    //! @brief Event based rendering entry point (from e.g.
+    //! glutMainLoop). Not currently supported.
+    PANGOLIN_EXPORT
+    void Display();
+
     PANGOLIN_EXPORT
     void Mouse( int button, int state, int x, int y);
 
