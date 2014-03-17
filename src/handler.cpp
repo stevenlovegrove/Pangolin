@@ -148,15 +148,15 @@ void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3
     if(mindepth == 1) mindepth = default_z;
     
     p[0] = x; p[1] = y; p[2] = mindepth;
-    gluUnProject(x, y, mindepth, mv.m, proj.m, viewport, &Pw[0], &Pw[1], &Pw[2]);
-    //      gluUnProject(x, y, mindepth, id.m, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
+    glUnProject(x, y, mindepth, mv.m, proj.m, viewport, &Pw[0], &Pw[1], &Pw[2]);
+//      glUnProject(x, y, mindepth, id.m, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
     LieApplySE34x4vec3(Pc, mv.m, Pw);
     
     GLprecision Pl[3]; GLprecision Pr[3]; GLprecision Pb[3]; GLprecision Pt[3];
-    gluUnProject(x-hwin, y, zs[hwin*zl + 0],    mv.m, proj.m, viewport, &Pl[0], &Pl[1], &Pl[2]);
-    gluUnProject(x+hwin, y, zs[hwin*zl + zl-1], mv.m, proj.m, viewport, &Pr[0], &Pr[1], &Pr[2]);
-    gluUnProject(x, y-hwin, zs[hwin+1],         mv.m, proj.m, viewport, &Pb[0], &Pb[1], &Pb[2]);
-    gluUnProject(x, y+hwin, zs[zsize-(hwin+1)], mv.m, proj.m, viewport, &Pt[0], &Pt[1], &Pt[2]);
+    glUnProject(x-hwin, y, zs[hwin*zl + 0],    mv.m, proj.m, viewport, &Pl[0], &Pl[1], &Pl[2]);
+    glUnProject(x+hwin, y, zs[hwin*zl + zl-1], mv.m, proj.m, viewport, &Pr[0], &Pr[1], &Pr[2]);
+    glUnProject(x, y-hwin, zs[hwin+1],         mv.m, proj.m, viewport, &Pb[0], &Pb[1], &Pb[2]);
+    glUnProject(x, y+hwin, zs[zsize-(hwin+1)], mv.m, proj.m, viewport, &Pt[0], &Pt[1], &Pt[2]);
     
     //      n = ((Pr-Pl).cross(Pt-Pb)).normalized();
     GLprecision PrmPl[3]; GLprecision PtmPb[3];

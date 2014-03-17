@@ -29,13 +29,13 @@ if(BUILD_PANGOLIN_GUI)
     ${INCDIR}/handler.h ${INCDIR}/handler_enums.h
     ${INCDIR}/opengl_render_state.h
     ${INCDIR}/datalog.h ${INCDIR}/plotter.h
-    ${INCDIR}/glfont.h
+    ${INCDIR}/glfont.h ${INCDIR}/glpangoglu.h
   )
   list(APPEND SOURCES
     display.cpp view.cpp viewport.cpp
     handler.cpp opengl_render_state.cpp
     datalog.cpp plotter.cpp
-    glfont.cpp
+    glfont.cpp glpangoglu.cpp
   )
 endif()
 

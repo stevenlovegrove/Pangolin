@@ -180,7 +180,7 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
 #endif
     glGetIntegerv(GL_VIEWPORT, view );
     
-    gluProject(x, y, z, modelview, projection, view,
+    pangolin::glProject(x, y, z, modelview, projection, view,
         scrn, scrn + 1, scrn + 2);
     
     DisplayBase().Activate();

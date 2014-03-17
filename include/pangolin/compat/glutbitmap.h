@@ -50,7 +50,7 @@ inline void glRasterPos3f(GLfloat x, GLfloat y, GLfloat z)
 #endif
     glGetIntegerv(GL_VIEWPORT, view );
     
-    gluProject(x, y, z, modelview, projection, view,
+    pangolin::glProject(x, y, z, modelview, projection, view,
         g_raster_pos, g_raster_pos + 1, g_raster_pos + 2);
 }
 

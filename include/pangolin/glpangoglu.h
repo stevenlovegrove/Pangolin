@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove, Richard Newcombe
+ * Copyright (c) 2014 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,25 +25,54 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLINCLUDE_H
-#define PANGOLIN_GLINCLUDE_H
+#ifndef PANGOLIN_GLPANGOGLU_H
+#define PANGOLIN_GLPANGOGLU_H
 
 #include <pangolin/glplatform.h>
 
-#ifdef HAVE_GLES
-#include <pangolin/gl_es_compat.h>
-#endif
-
-#define CheckGlDieOnError() pangolin::_CheckGlDieOnError( __FILE__, __LINE__ );
 namespace pangolin {
-inline void _CheckGlDieOnError( const char *sFile, const int nLine )
-{
-    GLenum glError = glGetError();
-    if( glError != GL_NO_ERROR ) {
-        pango_print_error( "OpenGL Error: %s (%d)\n", glErrorString(glError), glError );
-		pango_print_error("In: %s, line %d\n", sFile, nLine);
-    }
-}
+
+/// Clone of gluProject
+const GLubyte* glErrorString(GLenum error);
+
+/// Clone of gluProject
+GLint glProject(
+    GLfloat objx, GLfloat objy, GLfloat objz,
+    const GLfloat modelMatrix[16],
+    const GLfloat projMatrix[16],
+    const GLint viewport[4],
+    GLfloat* winx, GLfloat* winy, GLfloat* winz
+);
+
+
+/// Clone of gluUnProject
+GLint glUnProject(
+    GLfloat winx, GLfloat winy, GLfloat winz,
+    const GLfloat modelMatrix[16],
+    const GLfloat projMatrix[16],
+    const GLint viewport[4],
+    GLfloat* objx, GLfloat* objy, GLfloat* objz
+);
+
+/// Clone of gluProject
+GLint glProject(
+    GLdouble objx, GLdouble objy, GLdouble objz,
+    const GLdouble modelMatrix[16],
+    const GLdouble projMatrix[16],
+    const GLint viewport[4],
+    GLdouble* winx, GLdouble* winy, GLdouble* winz
+);
+
+
+/// Clone of gluUnProject
+GLint glUnProject(
+    GLdouble winx, GLdouble winy, GLdouble winz,
+    const GLdouble modelMatrix[16],
+    const GLdouble projMatrix[16],
+    const GLint viewport[4],
+    GLdouble* objx, GLdouble* objy, GLdouble* objz
+);
+
 }
 
-#endif // PANGOLIN_GLINCLUDE_H
+#endif // PANGOLIN_GLPANGOGLU_H

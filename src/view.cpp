@@ -366,7 +366,7 @@ void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx,
     const GLint viewport[4] = {v.l,v.b,v.w,v.h};
     const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
     const OpenGlMatrix mv = cam_state.GetModelViewMatrix();
-    gluUnProject(winx, winy, winzdepth, mv.m, proj.m, viewport, &x, &y, &z);
+    glUnProject(winx, winy, winzdepth, mv.m, proj.m, viewport, &x, &y, &z);
 }
 
 void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
@@ -374,9 +374,9 @@ void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, do
     const GLint viewport[4] = {v.l,v.b,v.w,v.h};
     const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
 #ifndef HAVE_GLES    
-    gluUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
+    glUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
 #else
-    gluUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
+    glUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
 #endif
 }
 

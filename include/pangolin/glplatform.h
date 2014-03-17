@@ -79,7 +79,6 @@
             #include <GLES/gl.h>
             #define GL_GLEXT_PROTOTYPES
             #include <GLES/glext.h>
-            #include <glues/glu.h>
         #endif
     #elif defined(_APPLE_IOS_)
         #include <OpenGLES/ES2/gl.h>
@@ -92,5 +91,7 @@
         #include <GL/gl.h>
     #endif
 #endif // HAVE_GLES
+
+#include <pangolin/glpangoglu.h>
 
 #endif // PANGOLIN_GLPLATFORM_H
