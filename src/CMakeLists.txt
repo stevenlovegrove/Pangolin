@@ -136,7 +136,7 @@ elseif(IOS)
     # Nothing specific in here yet.
 else()
     find_package(CUDA QUIET)
-    if(CUDA_FOUND)
+    if(CUDA_FOUND AND NOT _CLANG_)
       set(HAVE_CUDA 1)
       cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
       set(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE OFF)

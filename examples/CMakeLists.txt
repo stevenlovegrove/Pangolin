@@ -21,8 +21,8 @@ if(BUILD_PANGOLIN_GUI AND (FREEGLUT_FOUND OR GLUT_FOUND OR ANDROID) )
       endif(BUILD_PANGOLIN_VIDEO)
 
       ## VBODisplay Sample requires CUDA
-      if(CUDA_FOUND)
+      if(CUDA_FOUND AND NOT _CLANG_)
         add_subdirectory(VBODisplay)
-      endif(CUDA_FOUND) 
+      endif(CUDA_FOUND AND NOT _CLANG_)
     endif(BUILD_PANGOLIN_VARS)
 endif()

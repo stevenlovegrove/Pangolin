@@ -52,6 +52,7 @@
 
 /// Compiler
 #cmakedefine _GCC_
+#cmakedefine _CLANG_
 #cmakedefine _MSVC_
 
 #endif //PANGOLIN_CONFIG_H
