@@ -28,6 +28,7 @@
 #ifndef PANGOLIN_VARS_H
 #define PANGOLIN_VARS_H
 
+#include <cmath>
 #include <sstream>
 #include <map>
 #include <vector>
@@ -56,16 +57,16 @@ struct Var
         double max,
         bool logscale=false);
     Var(_Var& var);
-    
+
     ~Var(){
         delete a;
     }
-    
+
     operator const T& ();
     const T* operator->();
     void operator=(const T& val);
     void operator=(const Var<T>& val);
-    
+
     void Init(const std::string& name,
               T default_value,
               double min = 0,
@@ -75,7 +76,7 @@ struct Var
     void SetDefault(const T& val);
     void Reset();
     bool GuiChanged();
-    
+
     _Var* var;
     Accessor<T>* a;
 };
@@ -141,11 +142,11 @@ inline Var<T>::Var(const std::string& name,
         {
             throw std::runtime_error("LogScale: range of numbers must be positive!");
         }
-        Init(name,default_value, log(min), log(max), 1, logscale);
+        Init(name,default_value, std::log(min), std::log(max), 1, logscale);
     }
     else
         Init(name,default_value, min, max);
-    
+
 }
 
 template<typename T>
@@ -233,9 +234,9 @@ inline void Var<T>::Init(const std::string& name,
                          bool logscale)
 {
     std::map<std::string,_Var*>::iterator vi = VarState::I().vars.find(name);
-    
+
     const std::vector<std::string> parts = pangolin::Split(name,'.');
-    
+
     if( vi != VarState::I().vars.end() )
     {
         // found
@@ -245,7 +246,7 @@ inline void Var<T>::Init(const std::string& name,
         {
             // re-specialise this variable
             default_value = a->Get();
-            
+
         }else{
             //      // Meta info for variable
             //      var->meta_full_name = name;
@@ -255,7 +256,7 @@ inline void Var<T>::Init(const std::string& name,
             //      var->meta_flags = flags;
             //      var->logscale = logscale;
             //      var->meta_gui_changed = false;
-            
+
             // notify those watching new variables
             for(std::vector<NewVarCallback>::iterator invc = VarState::I().new_var_callbacks.begin(); invc != VarState::I().new_var_callbacks.end(); ++invc) {
                 if( StartsWith(name,invc->filter) ) {
@@ -266,7 +267,7 @@ inline void Var<T>::Init(const std::string& name,
         }
         delete a;
     }
-    
+
     // Create var of base type T
     {
         var = VarState::I().vars[name];
@@ -275,12 +276,12 @@ inline void Var<T>::Init(const std::string& name,
             VarState::I().vars[name] = var;
             // TODO: This needs to be deallocated!
         }
-        
+
         const double range = max - min;
         const int default_ticks = 5000;
         const double default_increment = range / default_ticks;
         Accessor<T>* da = 0;
-        
+
         if( boostd::is_same<T,bool>::value ) {
             var->create(new bool, new bool, typeid(bool).name() );
             a = new _Accessor<T,bool>( *(bool*)var->val );
@@ -304,11 +305,11 @@ inline void Var<T>::Init(const std::string& name,
             a = new _Accessor<T,std::string>( *(std::string*)var->val );
             da = new _Accessor<T,std::string>( *(std::string*)var->val_default );
         }
-        
+
         a->Set(default_value);
         da->Set(default_value);
         delete da;
-        
+
         // Meta info for variable
         var->meta_full_name = name;
         var->meta_friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
@@ -318,12 +319,12 @@ inline void Var<T>::Init(const std::string& name,
         var->generic = false;
         var->logscale = logscale;
         var->meta_gui_changed = false;
-        
+
         for(std::vector<NewVarCallback>::iterator invc = VarState::I().new_var_callbacks.begin(); invc != VarState::I().new_var_callbacks.end(); ++invc) {
             if( StartsWith(name,invc->filter) ) {
                invc->fn( invc->data, name, *var, typeid(T).name(), true);
             }
-        }        
+        }
     }
 }
 
@@ -333,13 +334,13 @@ inline void ProcessHistoricCallbacks(NewVarCallbackFn callback, void* data, cons
          i != VarState::I().vars.end(); ++i )
     {
         const std::string& name = i->first;
-        
+
         if( StartsWith(name,filter) )
         {
             callback(data,name,*(i->second), typeid(std::string).name(), false);
         }
     }
-    
+
 }
 
 inline bool Pushed(Var<bool>& button)
