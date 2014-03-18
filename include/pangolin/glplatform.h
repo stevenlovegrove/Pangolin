@@ -43,8 +43,10 @@
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>
 
-    // Undef nuisance macros which interfere with our methods
+    // Undef nuisance Windows.h macros which interfere with our methods
     #undef LoadImage
+    #undef near
+    #undef far
 #endif
 
 #ifdef HAVE_GLEW
