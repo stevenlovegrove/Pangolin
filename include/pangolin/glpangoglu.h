@@ -33,9 +33,11 @@
 namespace pangolin {
 
 /// Clone of gluProject
+PANGOLIN_EXPORT
 const GLubyte* glErrorString(GLenum error);
 
 /// Clone of gluProject
+PANGOLIN_EXPORT
 GLint glProject(
     GLfloat objx, GLfloat objy, GLfloat objz,
     const GLfloat modelMatrix[16],
@@ -46,6 +48,7 @@ GLint glProject(
 
 
 /// Clone of gluUnProject
+PANGOLIN_EXPORT
 GLint glUnProject(
     GLfloat winx, GLfloat winy, GLfloat winz,
     const GLfloat modelMatrix[16],
@@ -55,6 +58,7 @@ GLint glUnProject(
 );
 
 /// Clone of gluProject
+PANGOLIN_EXPORT
 GLint glProject(
     GLdouble objx, GLdouble objy, GLdouble objz,
     const GLdouble modelMatrix[16],
@@ -65,6 +69,7 @@ GLint glProject(
 
 
 /// Clone of gluUnProject
+PANGOLIN_EXPORT
 GLint glUnProject(
     GLdouble winx, GLdouble winy, GLdouble winz,
     const GLdouble modelMatrix[16],

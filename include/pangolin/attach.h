@@ -45,7 +45,7 @@ enum Unit {
 //! @brief Defines typed quantity
 //! Constructors distinguised by whole pixels, or floating
 //! fraction in interval [0,1]
-struct Attach {
+struct PANGOLIN_EXPORT Attach {
   Attach() : unit(Fraction), p(0) {}
   Attach(Unit unit, GLfloat p) : unit(unit), p(p) {}
 
@@ -61,7 +61,7 @@ struct Attach {
       return Attach(p >=0 ? Pixel : ReversePixel, std::abs((float)p));
   }
   static Attach ReversePix(int p) {
-      return Attach(ReversePixel, p);
+      return Attach(ReversePixel, (GLfloat)p);
   }
   static Attach Frac(float frac) {
       return Attach(frac);
