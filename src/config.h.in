@@ -28,6 +28,7 @@
 #cmakedefine HAVE_FFMPEG
 #cmakedefine HAVE_OPENNI
 #cmakedefine HAVE_UVC
+#cmakedefine HAVE_DEPTHSENSE
 
 #cmakedefine HAVE_GLEW
 #cmakedefine HAVE_GLUT
