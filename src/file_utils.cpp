@@ -28,9 +28,12 @@
 #include <pangolin/platform.h>
 #include <pangolin/file_utils.h>
 
-#ifndef _WIN_
-#include <dirent.h>
-#include <sys/stat.h>
+#ifdef _WIN_
+#  define WIN32_LEAN_AND_MEAN
+#  include <Windows.h>
+#else
+#  include <dirent.h>
+#  include <sys/stat.h>
 #endif // _WIN_
 
 #include <algorithm>
@@ -83,7 +86,7 @@ std::vector<std::string> Expand(const std::string &s, char open, char close, cha
 
 std::string PathParent(const std::string& path)
 {
-    const size_t nLastSlash = path.find_last_of('/');
+    const size_t nLastSlash = path.find_last_of("/\\");
     
     if(nLastSlash != std::string::npos) {
         return path.substr(0, nLastSlash);
@@ -92,21 +95,17 @@ std::string PathParent(const std::string& path)
     }
 }
 
-bool FileExists(const std::string& filename)
-{
-#ifndef _WIN_
-    struct stat buf;
-    return stat(filename.c_str(), &buf) != -1;
-#else
-	throw std::runtime_error("Not implemented");
-#endif //_WIN_
-}
-
 std::string PathExpand(const std::string& sPath)
 {
     if(sPath.length() >0 && sPath[0] == '~') {
-        const char* sHomeDir = getenv("HOME");
-        return std::string(sHomeDir) + sPath.substr(1,std::string::npos);
+#ifdef _WIN_
+        std::string sHomeDir =
+            std::string(getenv("HOMEDRIVE")) +
+            std::string(getenv("HOMEPATH"));
+#else
+        std::string sHomeDir = std::string(getenv("HOME"));
+#endif
+        return sHomeDir + sPath.substr(1,std::string::npos);
     }else{
         return sPath;
     }
@@ -148,10 +147,81 @@ bool MatchesWildcard(const std::string& str, const std::string& wildcard)
     return !*psQuery && !*psWildcard;
 }
 
+#ifdef _WIN_
+
+#ifdef UNICODE
+    typedef std::codecvt_utf8<wchar_t> WinStringConvert;
+    typedef std::wstring WinString;
+
+    WinString s2ws(const std::string& str) {
+        std::wstring_convert<WinStringConvert, wchar_t> converter;
+        return converter.from_bytes(str);
+    }
+    std::string ws2s(const WinString& wstr) {
+        std::wstring_convert<WinStringConvert, wchar_t> converter;
+        return converter.to_bytes(wstr);
+    }
+#else
+    typedef std::string WinString;
+    // No conversions necessary
+#   define s2ws(X) (X)
+#   define ws2s(X) (X)
+#endif // UNICODE
+
 bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>& file_vec)
 {
-#ifndef _WIN_
-	size_t nLastSlash = wildcard.find_last_of('/');
+	size_t nLastSlash = wildcard.find_last_of("/\\");
+    
+    std::string sPath;
+    std::string sFileWc;
+    
+    if(nLastSlash != std::string::npos) {
+        sPath =   wildcard.substr(0, nLastSlash);                  
+        sFileWc = wildcard.substr(nLastSlash+1, std::string::npos);
+    }else{
+        sPath = ".";
+        sFileWc = wildcard;
+    }
+
+    sPath = PathExpand(sPath);
+    
+    WIN32_FIND_DATA wfd;
+    HANDLE fh = FindFirstFile( s2ws(sPath + "\\" + sFileWc).c_str(), &wfd);
+
+    std::vector<std::string> files;
+
+    if (fh != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))  {
+                files.push_back( sPath + "\\" + ws2s(wfd.cFileName) );
+            }
+        } while (FindNextFile (fh, &wfd));
+        FindClose(fh);
+    }
+
+    // TOOD: Use different comparison to achieve better ordering.
+    std::sort(files.begin(), files.end() );
+
+    // Put file list at end of file_vec
+    file_vec.insert(file_vec.end(), files.begin(), files.end() );
+
+    return files.size() > 0;
+}
+
+bool FileExists(const std::string& filename)
+{
+    WIN32_FIND_DATA wfd;
+    HANDLE fh = FindFirstFile( s2ws(filename).c_str(), &wfd);
+    const bool exists = fh != INVALID_HANDLE_VALUE;
+    FindClose(fh);
+    return exists;
+}
+
+#else // _WIN_
+
+bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>& file_vec)
+{
+	size_t nLastSlash = wildcard.find_last_of("/\\");
     
     std::string sPath;
     std::string sFileWc;
@@ -186,9 +256,14 @@ bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>
         return file_vec.size() > 0;
     }
     return false;
-#else
-	throw std::runtime_error("Not implemented");
-#endif //_WIN_
 }
+
+bool FileExists(const std::string& filename)
+{
+    struct stat buf;
+    return stat(filename.c_str(), &buf) != -1;
+}
+
+#endif //_WIN_
 
 }
