@@ -31,6 +31,8 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/video.h>
 #include <pangolin/compat/thread.h>
+#include <pangolin/compat/mutex.h>
+#include <pangolin/compat/condition_variable.h>
 
 // DepthSense SDK for SoftKinetic cameras from Creative
 #include <DepthSense.hxx>
@@ -82,25 +84,35 @@ protected:
     DepthSense::DepthNode g_dnode;
     DepthSense::ColorNode g_cnode;
     DepthSense::StereoCameraParameters g_scp;
+
+    unsigned char* fill_image;
+    boostd::mutex update_mutex;
+    boostd::condition_variable cond_image_filled;
+    boostd::condition_variable cond_image_requested;
 };
 
 class DepthSenseContext
 {
+    friend class DepthSenseVideo;
+
 public:
     // Singleton Instance
     static DepthSenseContext& I();
 
-    DepthSense::Context& Context();
-
     DepthSenseVideo* GetDepthSenseVideo(int device_num = 0);
-
-    void StartNodes();
-    void StopNodes();
 
 protected:
     // Protected Constructor 
     DepthSenseContext();
     ~DepthSenseContext();
+
+    DepthSense::Context& Context();
+
+    void NewDeviceRunning();
+    void DeviceClosing();
+
+    void StartNodes();
+    void StopNodes();
 
     void EventLoop();
 
@@ -111,6 +123,8 @@ protected:
 
     boostd::thread event_thread;
     bool is_running;
+
+    int running_devices;
 };
 
 }

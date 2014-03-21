@@ -48,6 +48,10 @@
 #include <pangolin/video/uvc.h>
 #endif
 
+#ifdef HAVE_DEPTHSENSE
+#include <pangolin/video/depthsense.h>
+#endif
+
 #include <pangolin/file_utils.h>
 #include <pangolin/video/test.h>
 #include <pangolin/video/images.h>
@@ -345,6 +349,11 @@ VideoInterface* OpenVideo(std::string str_uri)
 #ifdef HAVE_UVC
     if(!uri.scheme.compare("uvc")) {
         video = new UvcVideo();
+    }else
+#endif
+#ifdef HAVE_DEPTHSENSE
+    if(!uri.scheme.compare("depthsense")) {
+        video = DepthSenseContext::I().GetDepthSenseVideo();
     }else
 #endif
     {

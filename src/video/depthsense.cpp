@@ -30,6 +30,8 @@
 namespace pangolin
 {
 
+const size_t ROGUE_ADDR = 0x01;
+
 DepthSenseContext& DepthSenseContext::I()
 {
     static DepthSenseContext s;
@@ -41,47 +43,52 @@ DepthSense::Context& DepthSenseContext::Context()
     return g_context;
 }
 
+void DepthSenseContext::NewDeviceRunning()
+{
+    running_devices++;
+    if(running_devices == 1) {
+        StartNodes();
+    }
+}
+
+void DepthSenseContext::DeviceClosing()
+{
+    running_devices--;
+    if(running_devices == 0) {
+        StopNodes();
+
+        // Force destruction of current context
+        g_context = DepthSense::Context();
+    }
+}
+
 DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(int device_num)
 {
+    if(running_devices == 0) {
+        // Initialise SDK
+        g_context = DepthSense::Context::create("localhost");
+    }
+
     // Get the list of currently connected devices
     std::vector<DepthSense::Device> da = g_context.getDevices();
 
-    if( da.size() >= device_num )
+    if( da.size() > device_num )
     {
         return new DepthSenseVideo(da[device_num]);
     }
 
-    return 0;
+    throw VideoException("DepthSense device not connected.");
 }
 
 DepthSenseContext::DepthSenseContext()
-    : is_running(false)
+    : is_running(false), running_devices(0)
 {
-    // Initialise SDK
-    g_context = DepthSense::Context::create("localhost");
-
-    // Get notified of connects and disconnect events
-    g_context.deviceAddedEvent().connect(this, &DepthSenseContext::onDeviceConnected);
-    g_context.deviceRemovedEvent().connect(this, &DepthSenseContext::onDeviceDisconnected);
-
-    StartNodes();
 }
 
 DepthSenseContext::~DepthSenseContext()
 {
-    StopNodes();
 }
 
-void DepthSenseContext::onDeviceConnected(DepthSense::Context context, DepthSense::Context::DeviceAddedData data)
-{
-    std::cout << "DepthSense Device Connected" << std::endl;
-}
-
-void DepthSenseContext::onDeviceDisconnected(DepthSense::Context context, DepthSense::Context::DeviceRemovedData data)
-{
-    // TODO: Could communicate with DepthSenseVideo via map or something?
-    std::cout << "DepthSense Device Disconnected" << std::endl;
-}
 
 void DepthSenseContext::StartNodes()
 {
@@ -95,6 +102,7 @@ void DepthSenseContext::StopNodes()
 {
     if(is_running) {
         g_context.quit();
+        event_thread.join();
     }
 }
 
@@ -108,7 +116,7 @@ void DepthSenseContext::EventLoop()
 }
 
 DepthSenseVideo::DepthSenseVideo(DepthSense::Device device)
-    : device(device)
+    : device(device), fill_image(0)
 {
     device.nodeAddedEvent().connect(this, &DepthSenseVideo::onNodeConnected);
     device.nodeRemovedEvent().connect(this, &DepthSenseVideo::onNodeDisconnected);
@@ -122,7 +130,7 @@ DepthSenseVideo::DepthSenseVideo(DepthSense::Device device)
     const int w = 320;
     const int h = 240;
 
-    const VideoPixelFormat pfmt = VideoFormatFromString("");
+    const VideoPixelFormat pfmt = VideoFormatFromString("GRAY16LE");
     
     size_bytes = 0;
     
@@ -131,11 +139,19 @@ DepthSenseVideo::DepthSenseVideo(DepthSense::Device device)
         streams.push_back(stream_info);        
         size_bytes += w*h*(pfmt.bpp)/8;
     }
+
+    DepthSenseContext::I().NewDeviceRunning();
 }
 
 DepthSenseVideo::~DepthSenseVideo()
 {
+    if (g_cnode.isSet()) DepthSenseContext::I().Context().unregisterNode(g_cnode);
+    if (g_dnode.isSet()) DepthSenseContext::I().Context().unregisterNode(g_dnode);
     
+    fill_image = (unsigned char*)ROGUE_ADDR;
+    cond_image_requested.notify_all();
+
+    DepthSenseContext::I().DeviceClosing();
 }
 
 void DepthSenseVideo::onNodeConnected(DepthSense::Device device, DepthSense::Device::NodeAddedData data)
@@ -179,7 +195,8 @@ void DepthSenseVideo::ConfigureDepthNode()
     config.saturation = true;
 
     //g_dnode.setEnableVertices(true);
-    g_dnode.setEnableDepthMapFloatingPoint(true);
+    //g_dnode.setEnableDepthMapFloatingPoint(true);
+    g_dnode.setEnableDepthMap(true);
 
     try 
     {
@@ -275,6 +292,23 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
 {
     // Our data is stored in a float array:
     // data.depthMapFloatingPoint
+
+    {
+        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+
+        // Wait for fill request
+        while(!fill_image) {
+            cond_image_requested.wait(lock);
+        }
+
+        if(fill_image != (unsigned char*)ROGUE_ADDR) {
+            // Fill with data
+            memcpy(fill_image, data.depthMap, SizeBytes());
+            fill_image = 0;
+        }
+    }
+
+    cond_image_filled.notify_one();
 }
 
 void DepthSenseVideo::Start()
@@ -297,7 +331,22 @@ const std::vector<StreamInfo>& DepthSenseVideo::Streams() const
 
 bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
 {
-    // Copy some data
+    if(fill_image) {
+        throw std::runtime_error("GrabNext Cannot be called concurrently");
+    }
+
+    // Request that image is filled with data
+    fill_image = image;
+    cond_image_requested.notify_one();
+
+    // Wait until it has been filled successfully. 
+    {
+        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        while( fill_image ) {
+            cond_image_filled.wait(lock);
+        }
+    }
+
     return true;
 }
 
