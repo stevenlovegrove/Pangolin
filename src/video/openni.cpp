@@ -215,7 +215,8 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
                 int w = meta_data.XRes();
                 int h = meta_data.YRes();
 
-                XnUInt8 pIrMapScaled[w * h];
+                // Copy to out_img with conversion
+                XnUInt8* pIrMapScaled = (XnUInt8*)out_img;
                 for (int v = 0; v < h; ++v)
                 for (int u = 0; u < w; ++u) {
                     int val = *pIr16Map >> 2; // 10bit to 8 bit
@@ -223,7 +224,6 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
                     pIr16Map++;
                 }
 
-                memcpy(out_img, pIrMapScaled, streams[i].SizeBytes() );
                 break;
             }
             case OpenNiRgb:
@@ -233,6 +233,7 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
                 break;
             }
             case OpenNiUnassigned:
+                continue;
                 break;
             }
             
