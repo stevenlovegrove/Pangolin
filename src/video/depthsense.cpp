@@ -176,12 +176,12 @@ void DepthSenseVideo::ConfigureNode(DepthSense::Node node)
         DepthSenseContext::I().Context().registerNode(node);
     }
 
-    if ((node.is<DepthSense::ColorNode>())&&(!g_cnode.isSet()))
-    {
-        g_cnode = node.as<DepthSense::ColorNode>();
-        ConfigureColorNode();
-        DepthSenseContext::I().Context().registerNode(node);
-    }
+//    if ((node.is<DepthSense::ColorNode>())&&(!g_cnode.isSet()))
+//    {
+//        g_cnode = node.as<DepthSense::ColorNode>();
+//        ConfigureColorNode();
+//        DepthSenseContext::I().Context().registerNode(node);
+//    }
 }
 
 void DepthSenseVideo::ConfigureDepthNode()
