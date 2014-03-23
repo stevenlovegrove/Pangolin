@@ -10,6 +10,7 @@ FIND_PATH( DepthSense_INCLUDE_DIR DepthSense.hxx
       /usr/include
       /usr/local/include
       /opt/local/include
+      /opt/softkinetic/DepthSenseSDK/include
 )
 
 FIND_LIBRARY( DepthSense_LIBRARY DepthSense
@@ -19,6 +20,7 @@ FIND_LIBRARY( DepthSense_LIBRARY DepthSense
       /usr/lib
       /usr/local/lib
       /opt/local/lib
+      /opt/softkinetic/DepthSenseSDK/lib
 )
 
 IF(DepthSense_INCLUDE_DIR AND DepthSense_LIBRARY)
