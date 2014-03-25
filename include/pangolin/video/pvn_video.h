@@ -39,7 +39,7 @@ namespace pangolin
 class PANGOLIN_EXPORT PvnVideo : public VideoInterface
 {
 public:
-    PvnVideo(const char* filename, bool realtime = false);
+    PvnVideo(const std::string& filename, bool realtime = false);
     ~PvnVideo();
     
     //! Implement VideoInput::Start()
