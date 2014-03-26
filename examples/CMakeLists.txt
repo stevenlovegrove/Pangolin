@@ -18,11 +18,13 @@ if(BUILD_PANGOLIN_GUI AND (FREEGLUT_FOUND OR GLUT_FOUND OR ANDROID) )
         add_subdirectory(SimpleVideo)
         add_subdirectory(SimpleRecord)
         add_subdirectory(SimpleRepeatVideo)
-      endif(BUILD_PANGOLIN_VIDEO)
+      endif()
 
-      ## VBODisplay Sample requires CUDA
-      if(CUDA_FOUND AND NOT _CLANG_)
-        add_subdirectory(VBODisplay)
-      endif(CUDA_FOUND AND NOT _CLANG_)
-    endif(BUILD_PANGOLIN_VARS)
+#      This sample fails on many platforms, so exclude it for now,
+#      until we can create a better cmake test for support.
+#      ## VBODisplay Sample requires CUDA
+#      if( CUDA_FOUND )
+#        add_subdirectory(VBODisplay)
+#      endif()
+    endif()
 endif()
