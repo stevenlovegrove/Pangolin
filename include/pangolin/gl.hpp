@@ -96,7 +96,7 @@ inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bo
     Reinitialise(width,height,internal_format,sampling_linear,border,glformat,gltype,data);
 }
 
-#if __cplusplus > 199711L
+#ifdef CALLEE_HAS_RVALREF
 inline GlTexture::GlTexture(GlTexture&& tex)
     : internal_format(tex.internal_format), tid(tex.tid)
 {
@@ -407,7 +407,7 @@ inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum 
     Reinitialise(buffer_type, num_elements, datatype, count_per_element, gluse );
 }
 
-#if __cplusplus > 199711L
+#ifdef CALLEE_HAS_RVALREF
 inline GlBuffer::GlBuffer(GlBuffer&& buffer)
     : bo(buffer.bo), buffer_type(buffer.buffer_type), gluse(buffer.gluse), datatype(buffer.datatype),
       num_elements(buffer.num_elements), count_per_element(buffer.count_per_element)

@@ -79,7 +79,7 @@ class GlSlProgram
 public:
     GlSlProgram();
 
-#if __cplusplus > 199711L
+#ifdef CALLEE_HAS_RVALREF
     //! Move Constructor
     GlSlProgram(GlSlProgram&& tex);
 #endif
@@ -188,7 +188,7 @@ inline GlSlProgram::GlSlProgram()
 {
 }
 
-#if __cplusplus > 199711L
+#ifdef CALLEE_HAS_RVALREF
 //! Move Constructor
 inline GlSlProgram::GlSlProgram(GlSlProgram&& o)
     : linked(o.linked), shaders(o.shaders), prog(o.prog), prev_prog(o.prev_prog)

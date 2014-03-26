@@ -39,7 +39,7 @@ namespace pangolin
 
 void MakeTriangleStripIboForVbo(GlBuffer& ibo, int w, int h);
 
-#if __cplusplus > 199711L
+#ifdef CALLEE_HAS_RVALREF
 GlBuffer MakeTriangleStripIboForVbo(int w, int h);
 #endif
 
@@ -85,7 +85,7 @@ inline void MakeTriangleStripIboForVbo(GlBuffer& ibo, int w, int h)
     delete[] buffer;
 }
 
-#if __cplusplus > 199711L
+#ifdef CALLEE_HAS_RVALREF
 inline GlBuffer MakeTriangleStripIboForVbo(int w, int h)
 {
     GlBuffer ibo;

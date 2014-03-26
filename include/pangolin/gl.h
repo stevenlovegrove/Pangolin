@@ -55,7 +55,7 @@ public:
     //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
     GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL  );
     
-#if __cplusplus > 199711L
+#ifdef CALLEE_HAS_RVALREF
     //! Move Constructor
     GlTexture(GlTexture&& tex);
 #endif
@@ -143,7 +143,7 @@ struct GlBuffer
     GlBuffer();
     GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
     
-#if __cplusplus > 199711L
+#ifdef CALLEE_HAS_RVALREF
     //! Move Constructor
     GlBuffer(GlBuffer&& tex);
 #endif  
