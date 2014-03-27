@@ -4,6 +4,12 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/video.h>
 
+// Workaround poor OpenNI Platform test on Linux before including XnCppWrapper.h
+// See https://github.com/dennishamester/OpenNI/commit/ca99f6181234c682bba42a6ba
+#ifdef _LINUX_
+#define linux 1
+#endif // _LINUX_
+
 // OpenNI generates SO MANY warnings, we'll just disable all for this header(!)
 // GCC and clang will listen to this pramga.
 #pragma GCC system_header
