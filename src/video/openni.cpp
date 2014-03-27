@@ -30,7 +30,7 @@
 namespace pangolin
 {
 
-OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
+OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim, int fps)
 {
     sensor_type[0] = s1;
     sensor_type[1] = s2;
@@ -42,9 +42,9 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
     }
     
     XnMapOutputMode mapMode;
-    mapMode.nXRes = XN_VGA_X_RES;
-    mapMode.nYRes = XN_VGA_Y_RES;
-    mapMode.nFPS = 30;
+    mapMode.nXRes = dim.x;
+    mapMode.nYRes = dim.y;
+    mapMode.nFPS = fps;
     
     sizeBytes = 0;
     
@@ -106,11 +106,11 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
     if( use_rgb ) {
         nRetVal = imageNode.Create(context);
         if (nRetVal != XN_STATUS_OK) {
-            std::cerr << "imageNode.Create: " << xnGetStatusString(nRetVal) << std::endl;
+            throw VideoException( (std::string)"Unable to create ImageNode: " + xnGetStatusString(nRetVal) );
         }else{
             nRetVal = imageNode.SetMapOutputMode(mapMode);
             if (nRetVal != XN_STATUS_OK) {
-                std::cerr << "imageNode.SetMapOutputMode: " << xnGetStatusString(nRetVal) << std::endl;
+                throw VideoException( (std::string)"Invalid ImageNode mode: " + xnGetStatusString(nRetVal) );
             }
         }
     }
@@ -118,11 +118,11 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
     if( use_depth ) {
         nRetVal = depthNode.Create(context);
         if (nRetVal != XN_STATUS_OK) {
-            std::cerr << "depthNode.Create: " << xnGetStatusString(nRetVal) << std::endl;
+            throw VideoException( (std::string)"Unable to create DepthNode: " + xnGetStatusString(nRetVal) );
         }else{
             nRetVal = depthNode.SetMapOutputMode(mapMode);
             if (nRetVal != XN_STATUS_OK) {
-                std::cerr << "depthNode.SetMapOutputMode: " << xnGetStatusString(nRetVal) << std::endl;
+                throw VideoException( (std::string)"Invalid DepthNode mode: " + xnGetStatusString(nRetVal) );
             }
             if (depth_to_color && use_rgb) {
                 if( depthNode.IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT) ) {
@@ -138,11 +138,11 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2)
     if( use_ir ) {
         nRetVal = irNode.Create(context);
         if (nRetVal != XN_STATUS_OK) {
-            std::cerr << "irNode.Create: " << xnGetStatusString(nRetVal) << std::endl;
+            throw VideoException( (std::string)"Unable to create IrNode: " + xnGetStatusString(nRetVal) );
         }else{
             nRetVal = irNode.SetMapOutputMode(mapMode);
             if (nRetVal != XN_STATUS_OK) {
-                std::cerr << "irNode.SetMapOutputMode: " << xnGetStatusString(nRetVal) << std::endl;
+                throw VideoException( (std::string)"Invalid IrNode mode: " + xnGetStatusString(nRetVal) );
             }
         }
     }

@@ -63,7 +63,39 @@ namespace pangolin
 
 std::istream& operator>> (std::istream &is, ImageDim &dim)
 {
-    is >> dim.x; is.get(); is >> dim.y;
+    if(std::isdigit(is.peek()) ) {
+        // Expect 640x480, 640*480, ...
+        is >> dim.x; is.get(); is >> dim.y;
+    }else{
+        // Expect 'VGA', 'QVGA', etc
+        std::string sdim;
+        is >> sdim;
+        ToUpper(sdim);
+
+        if( !sdim.compare("QQVGA") ) {
+            dim = ImageDim(160,120);
+        }else if( !sdim.compare("HQVGA") ) {
+            dim = ImageDim(240,160);
+        }else if( !sdim.compare("QVGA") ) {
+            dim = ImageDim(320,240);
+        }else if( !sdim.compare("WQVGA") ) {
+            dim = ImageDim(360,240);
+        }else if( !sdim.compare("HVGA") ) {
+            dim = ImageDim(480,320);
+        }else if( !sdim.compare("VGA") ) {
+            dim = ImageDim(640,480);
+        }else if( !sdim.compare("WVGA") ) {
+            dim = ImageDim(720,480);
+        }else if( !sdim.compare("SVGA") ) {
+            dim = ImageDim(800,600);
+        }else if( !sdim.compare("DVGA") ) {
+            dim = ImageDim(960,640);
+        }else if( !sdim.compare("WSVGA") ) {
+            dim = ImageDim(1024,600);
+        }else{
+            throw VideoException("Unrecognised image-size string.");
+        }
+    }
     return is;
 }
 
@@ -332,6 +364,9 @@ VideoInterface* OpenVideo(std::string str_uri)
 #ifdef HAVE_OPENNI
     if(!uri.scheme.compare("openni") || !uri.scheme.compare("kinect"))
     {
+        const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+        const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+
         OpenNiSensorType img1 = OpenNiRgb;
         OpenNiSensorType img2 = OpenNiUnassigned;
         
@@ -343,7 +378,7 @@ VideoInterface* OpenVideo(std::string str_uri)
             img2 = openni_sensor(uri.params["img2"]);
         }
         
-        video = new OpenNiVideo(img1,img2);
+        video = new OpenNiVideo(img1,img2,dim,fps);
     }else
 #endif
 #ifdef HAVE_UVC

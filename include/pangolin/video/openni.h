@@ -28,7 +28,7 @@ enum OpenNiSensorType
 struct PANGOLIN_EXPORT OpenNiVideo : public VideoInterface
 {
 public:
-    OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2);
+    OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim = ImageDim(640,480), int fps = 30);
     ~OpenNiVideo();
 
     //! Implement VideoInput::Start()

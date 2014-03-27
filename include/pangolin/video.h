@@ -60,7 +60,7 @@
 //           imgN=rgb|ir|ir8|ir+|ir8+|depth|reg_depth
 //  e.g. "openni://'
 //  e.g. "openni:[img1=rgb,img2=depth]//"
-//  e.g. "openni:[img1=ir]//"
+//  e.g. "openni:[size=320x240,fps=60,img1=ir]//"
 //
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
