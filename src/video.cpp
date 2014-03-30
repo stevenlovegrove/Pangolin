@@ -188,7 +188,7 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 #ifdef HAVE_OPENNI
 
-OpenNiSensorType openni_sensor(std::string str)
+OpenNiSensorType openni_sensor(const std::string& str)
 {
     if( !str.compare("rgb") ) {
         return OpenNiRgb;
@@ -211,11 +211,14 @@ OpenNiSensorType openni_sensor(std::string str)
 
 #endif // HAVE_OPENNI
 
-VideoInterface* OpenVideo(std::string str_uri)
+VideoInterface* OpenVideo(const std::string& str_uri)
+{
+    return OpenVideo( ParseUri(str_uri) );
+}
+
+VideoInterface* OpenVideo(const Uri& uri)
 {
     VideoInterface* video = 0;
-    
-    Uri uri = ParseUri(str_uri);
     
     if(!uri.scheme.compare("test") )
     {
@@ -371,11 +374,11 @@ VideoInterface* OpenVideo(std::string str_uri)
         OpenNiSensorType img2 = OpenNiUnassigned;
         
         if(uri.params.find("img1")!=uri.params.end()){
-            img1 = openni_sensor(uri.params["img1"]);
+            img1 = openni_sensor(uri.Get<std::string>("img1", "depth"));
         }
         
         if(uri.params.find("img2")!=uri.params.end()){
-            img2 = openni_sensor(uri.params["img2"]);
+            img2 = openni_sensor(uri.Get<std::string>("img2","rgb"));
         }
         
         video = new OpenNiVideo(img1,img2,dim,fps);
@@ -399,7 +402,7 @@ VideoInterface* OpenVideo(std::string str_uri)
 }
 
 VideoInput::VideoInput()
-    : uri(""), video(0)
+    : video(0)
 {
 }
 
@@ -414,9 +417,9 @@ VideoInput::~VideoInput()
     if(video) delete video;
 }
 
-void VideoInput::Open(const std::string& uri)
+void VideoInput::Open(const std::string& sUri)
 {
-    this->uri = uri;
+    uri = ParseUri(sUri);
     
     if(video) {
         delete video;
@@ -429,7 +432,13 @@ void VideoInput::Open(const std::string& uri)
 
 void VideoInput::Reset()
 {
-    Open(uri);
+    if(video) {
+        delete video;
+        video = 0;
+    }
+
+    // Create video device
+    video = OpenVideo(uri);
 }
 
 size_t VideoInput::SizeBytes() const
@@ -460,6 +469,11 @@ VideoPixelFormat VideoInput::PixFormat() const
 {
     if( !video ) throw VideoException("No video source open");
     return Streams()[0].PixFormat();
+}
+
+const Uri& VideoInput::VideoUri() const
+{
+    return uri;
 }
 
 void VideoInput::Start()

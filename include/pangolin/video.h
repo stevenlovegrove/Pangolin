@@ -175,6 +175,7 @@ struct PANGOLIN_EXPORT VideoInput : public VideoInterface
     unsigned Width() const;
     unsigned Height() const;
     VideoPixelFormat PixFormat() const;
+    const Uri& VideoUri() const;
     
     void Start();
     void Stop();
@@ -185,13 +186,17 @@ struct PANGOLIN_EXPORT VideoInput : public VideoInterface
     bool Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait = true, bool newest = false);
     
 protected:
-    std::string uri;
+    Uri uri;
     VideoInterface* video;
 };
 
 //! Open Video Interface from string specification (as described in this files header)
 PANGOLIN_EXPORT
-VideoInterface* OpenVideo(std::string uri);
+VideoInterface* OpenVideo(const std::string& uri);
+
+//! Open Video Interface from Uri specification
+PANGOLIN_EXPORT
+VideoInterface* OpenVideo(const Uri& uri);
 
 }
 

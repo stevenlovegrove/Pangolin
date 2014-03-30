@@ -66,13 +66,15 @@ class Uri
 public:
     typedef std::map<std::string,std::string> ParamMap;
     
-    bool Contains(const std::string& key) {
+    bool Contains(const std::string& key) const
+    {
         return params.find(key) != params.end();
     }
     
     template<typename T>
-    T Get(const std::string& key, T default_val) {
-        ParamMap::iterator v = params.find(key);
+    T Get(const std::string& key, T default_val) const
+    {
+        ParamMap::const_iterator v = params.find(key);
         if(v != params.end()) {
             return Convert<T, std::string>::Do(v->second);
         }else{
