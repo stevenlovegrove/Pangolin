@@ -92,6 +92,7 @@ public:
     GLint GetAttributeHandle(const std::string& name);
     GLint GetUniformHandle(const std::string& name);
 
+    // Before setting uniforms, be sure to Bind() the GlSl program first.
     void SetUniform(const std::string& name, int x);
     void SetUniform(const std::string& name, int x1, int x2);
     void SetUniform(const std::string& name, int x1, int x2, int x3);
