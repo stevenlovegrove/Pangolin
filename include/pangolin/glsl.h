@@ -317,7 +317,7 @@ inline void GlSlProgram::ParseGLSL(
             const std::string import_file = ParseIncludeFilename(line+8);
             const std::string resolved_file = SearchIncludePath(import_file, search_path, current_path);
 
-            std::ifstream ifs(resolved_file);
+            std::ifstream ifs(resolved_file.c_str());
             if(ifs.good()) {
                 const std::string file_path = pangolin::PathParent(resolved_file);
                 ParseGLSL(ifs, output, program_defines, search_path, file_path);
@@ -364,7 +364,7 @@ inline void GlSlProgram::AddShaderFromFile(
     const std::map<std::string,std::string>& program_defines,
     const std::vector<std::string>& search_path
 ) {
-    std::ifstream ifs(filename);
+    std::ifstream ifs(filename.c_str());
     std::stringstream buffer;
     ParseGLSL(ifs, buffer, program_defines, search_path, ".");
     AddPreprocessedShader(shader_type, buffer.str() );
