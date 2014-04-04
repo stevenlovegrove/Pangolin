@@ -29,11 +29,13 @@
 #define PANGOLIN_GLSL_H
 
 #include <sstream>
+#include <fstream>
 #include <algorithm>
 #include <vector>
 
 #include <pangolin/glplatform.h>
 #include <pangolin/colour.h>
+#include <pangolin/file_utils.h>
 
 #ifdef HAVE_GLES
     #define GLhandleARB GLuint
@@ -87,6 +89,7 @@ public:
     ~GlSlProgram();
     
     void AddShader(GlSlShaderType shader_type, const std::string& source_code);
+    void AddShaderFromFile(GlSlShaderType shader_type, const std::string& filename, const std::vector<std::string>& search_path = std::vector<std::string>() );
     void Link();
     
     GLint GetAttributeHandle(const std::string& name);
@@ -112,6 +115,23 @@ public:
     void BindPangolinDefaultAttribLocationsAndLink();
 
 protected:
+    std::string ParseIncludeFilename(
+        const std::string& location
+    );
+
+    std::string SearchIncludePath(
+        const std::string& filename,
+        const std::vector<std::string>& search_path,
+        const std::string& current_path
+    );
+
+    void ParseGLSL(
+        std::ifstream& input,
+        std::stringstream& output,
+        const std::vector<std::string>& search_path,
+        const std::string& current_path
+    );
+
     bool linked;
     std::vector<GLhandleARB> shaders;
     GLenum prog;
@@ -175,7 +195,7 @@ inline void printShaderInfoLog(GLhandleARB shader)
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if(status != GL_TRUE) {
-        pango_print_error("GL_COMPILE_STATUS != GL_TRUE");
+        pango_print_error("GL_COMPILE_STATUS: ");
         const int SHADER_LOG_MAX_LEN = 1024;
         char infolog[SHADER_LOG_MAX_LEN];
         GLsizei len;
@@ -226,6 +246,77 @@ inline void GlSlProgram::AddShader(GlSlShaderType shader_type, const std::string
 
     shaders.push_back(shader);
     linked = false;
+}
+
+inline std::string GlSlProgram::ParseIncludeFilename(const std::string& location)
+{
+    size_t start = location.find_first_of("\"<");
+    if(start != std::string::npos) {
+        size_t end = location.find_first_of("\">", start+1);
+        if(end != std::string::npos) {
+            return location.substr(start+1, end - start - 1);
+        }
+    }
+    throw std::runtime_error("GLSL Parser: Unable to parse include location " + location );
+}
+
+inline std::string GlSlProgram::SearchIncludePath(
+    const std::string& filename,
+    const std::vector<std::string>& search_path,
+    const std::string& current_path
+) {
+    if(FileExists(current_path + "/" + filename)) {
+        return current_path + "/" + filename;
+    }else{
+        for(size_t i=0; i < search_path.size(); ++i) {
+            const std::string hypoth = search_path[i] + "/" + filename;
+            if( FileExists(hypoth) ) {
+                return hypoth;
+            }
+        }
+    }
+    return "";
+}
+
+inline void GlSlProgram::ParseGLSL(
+        std::ifstream& input, std::stringstream& output,
+        const std::vector<std::string> &search_path,
+        const std::string &current_path)
+{
+    const size_t MAXLINESIZE = 10240;
+    char line[MAXLINESIZE];
+
+    while(!input.eof()) {
+        // Take like from source
+        input.getline(line,MAXLINESIZE);
+
+        // Transform
+        if( !strncmp(line, "#include", 8 ) ) {
+            // Transform
+            const std::string import_file = ParseIncludeFilename(line+8);
+            const std::string resolved_file = SearchIncludePath(import_file, search_path, current_path);
+
+            std::ifstream ifs(resolved_file);
+            if(ifs.good()) {
+                const std::string file_path = pangolin::PathParent(resolved_file);
+                ParseGLSL(ifs, output, search_path, file_path);
+            }else{
+                throw std::runtime_error("GLSL Parser: Unable to open " + import_file );
+            }
+        }else{
+            // Output directly
+            output << line << std::endl;
+        }
+    }
+}
+
+
+inline void GlSlProgram::AddShaderFromFile(GlSlShaderType shader_type, const std::string& filename, const std::vector<std::string>& search_path )
+{
+    std::ifstream ifs(filename);
+    std::stringstream buffer;
+    ParseGLSL(ifs, buffer, search_path, ".");
+    AddShader(shader_type, buffer.str() );
 }
 
 inline void GlSlProgram::Link()
