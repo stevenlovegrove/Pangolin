@@ -71,7 +71,6 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
         case OpenNiRgb:
             fmt = VideoFormatFromString("RGB24");
             break;
-        case OpenNiUnassigned:
         default:
             continue;
         }
@@ -94,7 +93,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
         case OpenNiRgb:
             use_rgb = true;
             break;
-        case OpenNiUnassigned:
+        default:
             break;
         }
 
@@ -232,7 +231,7 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
                 memcpy(out_img,pImageMap, streams[i].SizeBytes());
                 break;
             }
-            case OpenNiUnassigned:
+            default:
                 continue;
                 break;
             }

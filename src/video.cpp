@@ -44,6 +44,10 @@
 #include <pangolin/video/openni.h>
 #endif
 
+#ifdef HAVE_OPENNI2
+#include <pangolin/video/openni2.h>
+#endif
+
 #ifdef HAVE_UVC
 #include <pangolin/video/uvc.h>
 #endif
@@ -382,6 +386,26 @@ VideoInterface* OpenVideo(const Uri& uri)
         }
         
         video = new OpenNiVideo(img1,img2,dim,fps);
+    }else
+#endif
+#ifdef HAVE_OPENNI2
+    if(!uri.scheme.compare("openni2") )
+    {
+        const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+        const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+
+        OpenNiSensorType img1 = OpenNiRgb;
+        OpenNiSensorType img2 = OpenNiUnassigned;
+
+        if(uri.params.find("img1")!=uri.params.end()){
+            img1 = openni_sensor(uri.Get<std::string>("img1", "depth"));
+        }
+
+        if(uri.params.find("img2")!=uri.params.end()){
+            img2 = openni_sensor(uri.Get<std::string>("img2","rgb"));
+        }
+
+        video = new OpenNiVideo2(img1,img2,dim,fps);
     }else
 #endif
 #ifdef HAVE_UVC
