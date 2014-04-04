@@ -88,8 +88,20 @@ public:
 
     ~GlSlProgram();
     
-    void AddShader(GlSlShaderType shader_type, const std::string& source_code);
-    void AddShaderFromFile(GlSlShaderType shader_type, const std::string& filename, const std::vector<std::string>& search_path = std::vector<std::string>() );
+    void AddShader(
+        GlSlShaderType shader_type,
+        const std::string& source_code,
+        const std::map<std::string,std::string>& program_defines = std::map<std::string,std::string>(),
+        const std::vector<std::string>& search_path = std::vector<std::string>()
+    );
+
+    void AddShaderFromFile(
+        GlSlShaderType shader_type,
+        const std::string& filename,
+        const std::map<std::string,std::string>& program_defines = std::map<std::string,std::string>(),
+        const std::vector<std::string>& search_path = std::vector<std::string>()
+    );
+
     void Link();
     
     GLint GetAttributeHandle(const std::string& name);
@@ -125,9 +137,15 @@ protected:
         const std::string& current_path
     );
 
+    void AddPreprocessedShader(
+        GlSlShaderType shader_type,
+        const std::string& source_code
+    );
+
     void ParseGLSL(
-        std::ifstream& input,
-        std::stringstream& output,
+        std::istream& input,
+        std::ostream& output,
+        const std::map<std::string,std::string>& program_defines,
         const std::vector<std::string>& search_path,
         const std::string& current_path
     );
@@ -231,8 +249,10 @@ inline GlSlProgram::~GlSlProgram()
     }
 }
 
-inline void GlSlProgram::AddShader(GlSlShaderType shader_type, const std::string& source_code)
-{
+inline void GlSlProgram::AddPreprocessedShader(
+    GlSlShaderType shader_type,
+    const std::string& source_code
+) {
     if(!prog) {
         prog = glCreateProgram();
     }
@@ -279,10 +299,11 @@ inline std::string GlSlProgram::SearchIncludePath(
 }
 
 inline void GlSlProgram::ParseGLSL(
-        std::ifstream& input, std::stringstream& output,
+        std::istream& input, std::ostream& output,
+        const std::map<std::string,std::string>& program_defines,
         const std::vector<std::string> &search_path,
-        const std::string &current_path)
-{
+        const std::string &current_path
+) {
     const size_t MAXLINESIZE = 10240;
     char line[MAXLINESIZE];
 
@@ -292,16 +313,31 @@ inline void GlSlProgram::ParseGLSL(
 
         // Transform
         if( !strncmp(line, "#include", 8 ) ) {
-            // Transform
+            // C++ / G3D style include directive
             const std::string import_file = ParseIncludeFilename(line+8);
             const std::string resolved_file = SearchIncludePath(import_file, search_path, current_path);
 
             std::ifstream ifs(resolved_file);
             if(ifs.good()) {
                 const std::string file_path = pangolin::PathParent(resolved_file);
-                ParseGLSL(ifs, output, search_path, file_path);
+                ParseGLSL(ifs, output, program_defines, search_path, file_path);
             }else{
                 throw std::runtime_error("GLSL Parser: Unable to open " + import_file );
+            }
+        }else if( !strncmp(line, "#expect", 7) ) {
+            // G3D style 'expect' directive, annotating expected preprocessor
+            // definition with document string
+            size_t token_start = 7;
+            while( std::isblank(line[token_start]) ) ++token_start;
+            size_t token_end = token_start;
+            while( !std::isspace(line[token_end]) ) ++token_end;
+            std::string token(line+token_start, line+token_end);
+            std::map<std::string,std::string>::const_iterator it = program_defines.find(token);
+            if( it == program_defines.end() ) {
+                pango_print_warn("Expected define missing (defaulting to 0): %s\n%s\n", token.c_str(), line + token_end );
+                output << "#define " << token << " 0" << std::endl;
+            }else{
+                output << "#define " << token << " " << it->second << std::endl;
             }
         }else{
             // Output directly
@@ -310,13 +346,28 @@ inline void GlSlProgram::ParseGLSL(
     }
 }
 
+inline void GlSlProgram::AddShader(
+    GlSlShaderType shader_type,
+    const std::string& source_code,
+    const std::map<std::string,std::string>& program_defines,
+    const std::vector<std::string>& search_path
+) {
+    std::istringstream iss(source_code);
+    std::stringstream buffer;
+    ParseGLSL(iss, buffer, program_defines, search_path, ".");
+    AddPreprocessedShader(shader_type, buffer.str() );
+}
 
-inline void GlSlProgram::AddShaderFromFile(GlSlShaderType shader_type, const std::string& filename, const std::vector<std::string>& search_path )
-{
+inline void GlSlProgram::AddShaderFromFile(
+    GlSlShaderType shader_type,
+    const std::string& filename,
+    const std::map<std::string,std::string>& program_defines,
+    const std::vector<std::string>& search_path
+) {
     std::ifstream ifs(filename);
     std::stringstream buffer;
-    ParseGLSL(ifs, buffer, search_path, ".");
-    AddShader(shader_type, buffer.str() );
+    ParseGLSL(ifs, buffer, program_defines, search_path, ".");
+    AddPreprocessedShader(shader_type, buffer.str() );
 }
 
 inline void GlSlProgram::Link()
