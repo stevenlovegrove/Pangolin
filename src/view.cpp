@@ -530,7 +530,7 @@ View* View::FindChild(int x, int y)
 {
     // Find in reverse order to mirror draw order
     for( std::vector<View*>::const_reverse_iterator i = views.rbegin(); i != views.rend(); ++i )
-        if( (*i)->show && (*i)->v.Contains(x,y) )
+        if( (*i)->show && (*i)->GetBounds().Contains(x,y) )
             return (*i);
     return 0;    
 }
