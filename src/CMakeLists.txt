@@ -27,13 +27,15 @@ if(BUILD_PANGOLIN_GUI)
     ${INCDIR}/display.h ${INCDIR}/display_internal.h 
     ${INCDIR}/view.h ${INCDIR}/viewport.h
     ${INCDIR}/handler.h ${INCDIR}/handler_enums.h
+    ${INCDIR}/handler_glbuffer.h
     ${INCDIR}/opengl_render_state.h
     ${INCDIR}/datalog.h ${INCDIR}/plotter.h
     ${INCDIR}/glfont.h ${INCDIR}/glpangoglu.h
   )
   list(APPEND SOURCES
     display.cpp view.cpp viewport.cpp
-    handler.cpp opengl_render_state.cpp
+    handler.cpp handler_glbuffer.cpp
+    opengl_render_state.cpp
     datalog.cpp plotter.cpp
     glfont.cpp glpangoglu.cpp
   )
