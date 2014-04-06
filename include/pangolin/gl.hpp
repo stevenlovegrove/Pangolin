@@ -233,6 +233,37 @@ inline void GlTexture::RenderToViewport() const
     glDisable(GL_TEXTURE_2D);
 }
 
+inline void GlTexture::Render(Viewport v, bool flip) const
+{
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
+    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    const GLfloat l = v.l / (width-1.0f);
+    const GLfloat b = v.b / (height-1.0f);
+    const GLfloat w = v.w / (width-1.0f);
+    const GLfloat h = v.h / (height-1.0f);
+
+    GLfloat sq_tex[]  = { l,b,  w,b,  w,h,  l,h };
+    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glEnable(GL_TEXTURE_2D);
+    Bind();
+
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glDisable(GL_TEXTURE_2D);
+}
+
 inline void GlTexture::RenderToViewportFlipY() const
 {
     glMatrixMode(GL_PROJECTION);
@@ -289,6 +320,7 @@ inline void GlTexture::RenderToViewportFlipXFlipY() const
 
 #ifndef HAVE_GLES
 inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_format )
+    : width(width), height(height)
 {
     glGenRenderbuffersEXT(1, &rbid);
     glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, rbid);
@@ -298,7 +330,10 @@ inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_
 
 inline GlRenderBuffer::~GlRenderBuffer()
 {
-    glDeleteRenderbuffersEXT(1, &rbid);
+    // We have no GL context whilst exiting.
+    if( width!=0 && !pangolin::ShouldQuit() ) {
+        glDeleteRenderbuffersEXT(1, &rbid);
+    }
 }
 #else
 inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_format )
@@ -319,9 +354,20 @@ inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_
 
 inline GlRenderBuffer::~GlRenderBuffer()
 {
-    glDeleteTextures(1, &rbid);
+    // We have no GL context whilst exiting.
+    if( width!=0 && !pangolin::ShouldQuit() ) {
+        glDeleteTextures(1, &rbid);
+    }
 }
 #endif // HAVE_GLES
+
+#ifdef CALLEE_HAS_RVALREF
+inline GlRenderBuffer::GlRenderBuffer(GlRenderBuffer&& tex)
+    : width(tex.width), height(tex.height), rbid(tex.rbid)
+{
+    tex.rbid = tex.width = tex.height = 0;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////
 

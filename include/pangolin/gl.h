@@ -29,6 +29,7 @@
 #define PANGOLIN_GL_H
 
 #include <pangolin/glinclude.h>
+#include <pangolin/viewport.h>
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN
@@ -84,6 +85,7 @@ public:
     
     void RenderToViewport(const bool flip) const;
     void RenderToViewport() const;
+    void Render(Viewport v, bool flip) const;
     void RenderToViewportFlipY() const;
     void RenderToViewportFlipXFlipY() const;
     
@@ -100,9 +102,21 @@ private:
 struct GlRenderBuffer
 {
     GlRenderBuffer(GLint width, GLint height, GLint internal_format = GL_DEPTH_COMPONENT24);
+
+#ifdef CALLEE_HAS_RVALREF
+    //! Move Constructor
+    GlRenderBuffer(GlRenderBuffer&& tex);
+#endif
+
     ~GlRenderBuffer();
     
+    GLint width;
+    GLint height;
     GLuint rbid;
+
+private:
+    // Private copy constructor
+    GlRenderBuffer(const GlRenderBuffer&) {}
 };
 
 struct GlFramebuffer
