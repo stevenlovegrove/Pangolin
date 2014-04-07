@@ -47,6 +47,10 @@
 #include <TooN/se3.h>
 #endif
 
+#ifdef HAVE_OCULUS
+#include <OVR.h>
+#endif
+
 namespace pangolin {
 
 #ifdef HAVE_GLES
@@ -111,6 +115,11 @@ struct PANGOLIN_EXPORT OpenGlMatrix {
     operator const TooN::SE3<>() const;
     operator const TooN::Matrix<4,4>() const;
 #endif // HAVE_TOON    
+
+#ifdef HAVE_OCULUS
+    OpenGlMatrix(const OVR::Matrix4f& M);
+    operator const OVR::Matrix4f() const;
+#endif // HAVE_OCULUS
     
     // Load matrix on to OpenGl stack
     void Load() const;
@@ -263,7 +272,7 @@ OpenGlMatrix::operator Eigen::Matrix<P,4,4>() const
     }
     return mat;
 }
-#endif
+#endif // USE_EIGEN
 
 #ifdef HAVE_TOON
 inline OpenGlMatrix::OpenGlMatrix(const TooN::SE3<>& T)
@@ -349,7 +358,26 @@ inline TooN::SE3<> ToTooN_SE3(const OpenGlMatrix& ms)
     return TooN::SE3<>(R,t);
 }
 
-#endif
+#endif // HAVE_TOON
+
+#ifdef HAVE_OCULUS
+inline OpenGlMatrix::OpenGlMatrix(const OVR::Matrix4f& mat)
+{
+    for(int r=0; r<4; ++r )
+        for(int c=0; c<4; ++c )
+            m[c*4+r] = mat.M[r][c];
+}
+
+inline OpenGlMatrix::operator const OVR::Matrix4f() const
+{
+    OVR::Matrix4f mat;
+    for(int r=0; r<4; ++r )
+        for(int c=0; c<4; ++c )
+            mat.M[r][c] = m[c*4+r];
+    return mat;
+}
+#endif // HAVE_OCULUS
+
 
 }
 
