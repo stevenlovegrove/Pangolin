@@ -13,7 +13,6 @@ static const char* PostProcessFullFragShaderSrc =
     "uniform vec4 HmdWarpParam;\n"
     "uniform vec4 ChromAbParam;\n"
     "uniform sampler2D Texture0;\n"
-    //"varying vec2 oTexCoord;\n"
     "\n"
     // Scales input texture coordinates for distortion.
     // ScaleIn maps texture coordinates to Scales to ([-1, 1]), although top/bottom will be
@@ -22,8 +21,7 @@ static const char* PostProcessFullFragShaderSrc =
     "{\n"
     "   vec2  theta = (gl_TexCoord[0].xy - LensCenter) * ScaleIn;\n" // Scales to [-1, 1]
     "   float rSq= theta.x * theta.x + theta.y * theta.y;\n"
-    "   vec2  theta1 = theta * (HmdWarpParam.x + HmdWarpParam.y * rSq + "
-    "                  HmdWarpParam.z * rSq * rSq + HmdWarpParam.w * rSq * rSq * rSq);\n"
+    "   vec2  theta1 = theta * (HmdWarpParam.x + rSq*(HmdWarpParam.y + rSq*(HmdWarpParam.z + rSq*HmdWarpParam.w) ) );\n"
     "   \n"
     "   // Detect whether blue texture coordinates are out of range since these will scaled out the furthest.\n"
     "   vec2 thetaBlue = theta1 * (ChromAbParam.z + ChromAbParam.w * rSq);\n"
@@ -53,35 +51,6 @@ int main(int argc, char ** argv) {
     pangolin::CreateWindowAndBind("Main",640,480);
     glEnable(GL_DEPTH_TEST);
 
-    const int w = 640;
-    const int h = 480;
-
-    // Frame buffer for entire screen
-    const unsigned int MAXW = 1440;
-    const unsigned int MAXH = 900;
-    pangolin::GlTexture colourbuffer(MAXW,MAXH,GL_RGBA8);
-    pangolin::GlRenderBuffer depthbuffer(MAXW,MAXH,GL_DEPTH_COMPONENT24);
-    pangolin::GlFramebuffer framebuffer(colourbuffer, depthbuffer);
-
-    pangolin::OpenGlRenderState s_cam[] = {
-        { pangolin::ProjectionMatrix(w,h,420,420,w/2,h/2,0.2,100),
-          pangolin::ModelViewLookAt(-2,2,-2, 0,0,0, pangolin::AxisY) },
-        { pangolin::ProjectionMatrix(w,h,420,420,w/2,h/2,0.2,100),
-          pangolin::ModelViewLookAt(-2,2,-2, 0,0,0, pangolin::AxisY) }
-    };
-    pangolin::Handler3DFramebuffer handler[] = {
-        {framebuffer, s_cam[0]},
-        {framebuffer, s_cam[1]},
-    };
-
-    pangolin::View& container = pangolin::DisplayBase();
-    pangolin::View view[2];
-    for(int i=0; i<2; ++i) {
-        container.AddDisplay(view[i]);
-        view[i].SetHandler(&handler[i]);
-        view[i].SetBounds(0.0,1.0,0.5*i,0.5*i+0.5, -640.0f/480.0f);
-    }
-
     OVR::System::Init();
 
     OVR::Ptr<OVR::DeviceManager> pManager = *OVR::DeviceManager::Create();
@@ -91,24 +60,42 @@ int main(int argc, char ** argv) {
     }
 
     OVR::Ptr<OVR::HMDDevice> pHMD = *pManager->EnumerateDevices<OVR::HMDDevice>().CreateDevice();
-    OVR::HMDInfo hmdInfo;
+    OVR::HMDInfo HMD;
     OVR::Ptr<OVR::SensorDevice> pSensor;
     OVR::SensorFusion FusionResult;
 
     if (pHMD) {
-        pHMD->GetDeviceInfo(&hmdInfo);
+        pHMD->GetDeviceInfo(&HMD);
         pSensor = *pHMD->GetSensor();
         if (pSensor) {
             FusionResult.AttachToSensor(pSensor);
         }else{
             pango_print_error("Unable to get sensor\n");
-            return 0;
         }
     }else{
         pango_print_error("Unable to create device\n");
-        return 0;
+        // Set defaults instead
+        HMD.HResolution            = 1280;
+        HMD.VResolution            = 800;
+        HMD.HScreenSize            = 0.14976f;
+        HMD.VScreenSize            = HMD.HScreenSize / (1280.0/800.0);
+        HMD.InterpupillaryDistance = 0.064f;
+        HMD.LensSeparationDistance = 0.0635f;
+        HMD.EyeToScreenDistance    = 0.041f;
+        HMD.DistortionK[0]         = 1.0f;
+        HMD.DistortionK[1]         = 0.22f;
+        HMD.DistortionK[2]         = 0.24f;
+        HMD.DistortionK[3]         = 0;
     }
 
+    pangolin::GlTexture colourbuffer(HMD.HResolution, HMD.VResolution, GL_RGBA8);
+    pangolin::GlRenderBuffer depthbuffer(HMD.HResolution, HMD.VResolution, GL_DEPTH_COMPONENT24);
+    pangolin::GlFramebuffer framebuffer(colourbuffer, depthbuffer);
+
+    pangolin::OpenGlRenderState s_cam;
+    s_cam.SetModelViewMatrix( pangolin::ModelViewLookAt(-1.5,1.5,-1.5, 0,0,0, pangolin::AxisY) );
+
+    pangolin::View& FullView = pangolin::DisplayBase();
 
     pangolin::GlSlProgram occ;
     occ.AddShader(pangolin::GlSlFragmentShader, PostProcessFullFragShaderSrc);
@@ -116,57 +103,68 @@ int main(int argc, char ** argv) {
 
     while( !pangolin::ShouldQuit() )
     {
-        const OVR::Quatf q = FusionResult.GetOrientation();
-        const OVR::Matrix4f oT_co = OVR::Matrix4f(q).Transposed();
-        pangolin::OpenGlMatrix T_co;
-        std::copy(&oT_co.M[0][0], &oT_co.M[0][0]+16, T_co.m);
-        T_co.Inverse();
-
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        const OVR::Quatf q = FusionResult.GetOrientation();
+        const OVR::Matrix4f T_co = OVR::Matrix4f(q);
+
+        OVR::Util::Render::StereoConfig stereo(
+            OVR::Util::Render::Stereo_LeftRight_Multipass,
+            OVR::Util::Render::Viewport(0,0, FullView.v.w, FullView.v.h)
+        );
+        stereo.SetHMDInfo(HMD);
+        if (HMD.HScreenSize > 0.140f) {
+            stereo.SetDistortionFitPointVP(-1.0f, 0.0f);
+        }else{
+            stereo.SetDistortionFitPointVP(0.0f, 1.0f);
+        }
 
         framebuffer.Bind();
         glClearColor(1,1,1,0);
-        for(int i=0; i<1; ++i) {
-            pangolin::OpenGlRenderState cam = s_cam[0];
-            pangolin::OpenGlMatrix T_ow = T_co.Inverse() * cam.GetModelViewMatrix();
-            cam.GetModelViewMatrix() = T_ow;
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        for(int i=0; i<2; ++i) {
+            OVR::Util::Render::StereoEyeParams eye =
+                    stereo.GetEyeRenderParams( OVR::Util::Render::StereoEye(OVR::Util::Render::StereoEye_Left+i) );
 
-            view[i].ActivateScissorAndClear(cam);
+            pangolin::OpenGlRenderState cam( eye.Projection,
+                pangolin::OpenGlMatrix(T_co.Inverted() * eye.ViewAdjust) * s_cam.GetModelViewMatrix()
+            );
+
+            glViewport(eye.VP.x,eye.VP.y,eye.VP.w,eye.VP.h);
+            cam.Apply();
             pangolin::glDrawColouredCube();
         }
         framebuffer.Unbind();
 
-        container.ActivateAndScissor();
+        FullView.Activate();
         glColor3f(1.0,1.0,1.0);
 
+        for(int i=0; i<2; ++i)
         {
-            const int i = 0;
-            const pangolin::Viewport vp = view[i].GetBounds();
-            const float w = float(vp.w) / float(container.v.w);
-            const float h = float(vp.h) / float(container.v.h);
-            const float x = float(vp.l) / float(container.v.w);
-            const float y = float(vp.b) / float(container.v.h);
-            const float as = float(vp.w) / float(vp.h);
+            OVR::Util::Render::StereoEyeParams eye =
+                    stereo.GetEyeRenderParams( OVR::Util::Render::StereoEye(1+i) );
 
-            const float lensOffset = hmdInfo.LensSeparationDistance * 0.5f;
-            const float lensShift  = hmdInfo.HScreenSize * 0.25f - lensOffset;
-            const float lensViewportShift = 4.0f * lensShift / hmdInfo.HScreenSize;
-            const float XCenterOffset= lensViewportShift;
-            const float Scale = 1.0;
-            const float scaleFactor = 1.0f / Scale;
-
+            pangolin::Viewport vp(eye.VP.x,eye.VP.y,eye.VP.w,eye.VP.h);
             occ.Bind();
 
-            occ.SetUniform("LensCenter",   x + (w + XCenterOffset * 0.5f)*0.5f, y + h*0.5f);
+            const float x = vp.l / (float)FullView.v.w;
+            const float y = vp.b / (float)FullView.v.h;
+            const float w = vp.w / (float)FullView.v.w;
+            const float h = vp.h / (float)FullView.v.h;
+
+            const OVR::Util::Render::DistortionConfig& Distortion = stereo.GetDistortionConfig();
+            const float as = stereo.GetAspect();
+            const float scaleFactor = 1.0f / Distortion.Scale;
+            occ.SetUniform("LensCenter", x + (w + (1-i*2)*Distortion.XCenterOffset * 0.5f)*0.5f, y + h*0.5f);
             occ.SetUniform("ScreenCenter", x + w*0.5f, y + h*0.5f);
             occ.SetUniform("Scale",   (w/2.0f) * scaleFactor, (h/2.0f) * scaleFactor * as);
             occ.SetUniform("ScaleIn", (2.0f/w),               (2.0f/h) / as);
-            occ.SetUniform("HmdWarpParam", hmdInfo.DistortionK[0], hmdInfo.DistortionK[1], hmdInfo.DistortionK[2], hmdInfo.DistortionK[3] );
-            occ.SetUniform("ChromAbParam", hmdInfo.ChromaAbCorrection[0], hmdInfo.ChromaAbCorrection[1], hmdInfo.ChromaAbCorrection[2], hmdInfo.ChromaAbCorrection[3]);
+            occ.SetUniform("HmdWarpParam", HMD.DistortionK[0], HMD.DistortionK[1], HMD.DistortionK[2], HMD.DistortionK[3] );
+            occ.SetUniform("ChromAbParam", HMD.ChromaAbCorrection[0], HMD.ChromaAbCorrection[1], HMD.ChromaAbCorrection[2], HMD.ChromaAbCorrection[3]);
 
-            colourbuffer.Render(container.v, false);
+            vp.Activate();
+            colourbuffer.RenderToViewport(vp, false);
 
             occ.Unbind();
         }
