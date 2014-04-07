@@ -85,7 +85,7 @@ public:
     
     void RenderToViewport(const bool flip) const;
     void RenderToViewport() const;
-    void Render(Viewport v, bool flip) const;
+    void RenderToViewport(Viewport tex_vp, bool flip) const;
     void RenderToViewportFlipY() const;
     void RenderToViewportFlipXFlipY() const;
     

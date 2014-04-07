@@ -233,7 +233,7 @@ inline void GlTexture::RenderToViewport() const
     glDisable(GL_TEXTURE_2D);
 }
 
-inline void GlTexture::Render(Viewport v, bool flip) const
+inline void GlTexture::RenderToViewport(Viewport tex_vp, bool flip) const
 {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -244,12 +244,12 @@ inline void GlTexture::Render(Viewport v, bool flip) const
     glVertexPointer(2, GL_FLOAT, 0, sq_vert);
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    const GLfloat l = v.l / (width-1.0f);
-    const GLfloat b = v.b / (height-1.0f);
-    const GLfloat w = v.w / (width-1.0f);
-    const GLfloat h = v.h / (height-1.0f);
+    const GLfloat l = tex_vp.l / (float)(width);
+    const GLfloat b = tex_vp.b / (float)(height);
+    const GLfloat r = (tex_vp.l+tex_vp.w) / (float)(width);
+    const GLfloat t = (tex_vp.b+tex_vp.h) / (float)(height);
 
-    GLfloat sq_tex[]  = { l,b,  w,b,  w,h,  l,h };
+    GLfloat sq_tex[]  = { l,b,  r,b,  r,t,  l,t };
     glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
