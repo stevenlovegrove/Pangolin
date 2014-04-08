@@ -101,7 +101,10 @@ private:
 
 struct GlRenderBuffer
 {
+    GlRenderBuffer();
     GlRenderBuffer(GLint width, GLint height, GLint internal_format = GL_DEPTH_COMPONENT24);
+
+    void Reinitialise(GLint width, GLint height, GLint internal_format = GL_DEPTH_COMPONENT24);
 
 #ifdef CALLEE_HAS_RVALREF
     //! Move Constructor

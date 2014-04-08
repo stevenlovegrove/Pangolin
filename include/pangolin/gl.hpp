@@ -318,10 +318,26 @@ inline void GlTexture::RenderToViewportFlipXFlipY() const
 
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef HAVE_GLES
-inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_format )
-    : width(width), height(height)
+inline GlRenderBuffer::GlRenderBuffer()
+    : width(0), height(0), rbid(0)
 {
+}
+
+inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_format )
+    : width(0), height(0), rbid(0)
+{
+    Reinitialise(width,height,internal_format);
+}
+
+#ifndef HAVE_GLES
+inline void GlRenderBuffer::Reinitialise(GLint width, GLint height, GLint internal_format)
+{
+    if( this->width != 0 ) {
+        glDeleteRenderbuffersEXT(1, &rbid);
+    }
+
+    this->width = width;
+    this->height = height;
     glGenRenderbuffersEXT(1, &rbid);
     glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, rbid);
     glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, internal_format, width, height);
@@ -336,8 +352,12 @@ inline GlRenderBuffer::~GlRenderBuffer()
     }
 }
 #else
-inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_format )
+inline void GlRenderBuffer::Reinitialise(GLint width, GLint height, GLint internal_format = GL_DEPTH_COMPONENT24)
 {
+    if( width!=0 ) {
+        glDeleteTextures(1, &rbid);
+    }
+
     // Use a texture instead...
     glGenTextures(1, &rbid);
     glBindTexture(GL_TEXTURE_2D, rbid);
