@@ -170,6 +170,14 @@ namespace pangolin
   PANGOLIN_EXPORT
   View& CreateDisplay();
 
+  //! Switch between windowed and fullscreen mode
+  PANGOLIN_EXPORT
+  void ToggleFullscreen();
+
+  //! Switch windows/fullscreenmode = fullscreen
+  PANGOLIN_EXPORT
+  void SetFullscreen(bool fullscreen = true);
+
 }
 
 #endif // PANGOLIN_DISPLAY_H

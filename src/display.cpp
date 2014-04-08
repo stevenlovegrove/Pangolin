@@ -193,6 +193,31 @@ View& CreateDisplay()
     return Display(ssguid.str());
 }
 
+void ToggleFullscreen()
+{
+    if( context->is_fullscreen )
+    {
+        glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
+        context->is_fullscreen = false;
+    }else{
+        glutFullScreen();
+        context->is_fullscreen = true;
+    }
+}
+
+void SetFullscreen(bool fullscreen)
+{
+    if( fullscreen != context->is_fullscreen )
+    {
+        if(fullscreen) {
+            glutFullScreen();
+        }else{
+            glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
+        }
+        context->is_fullscreen = fullscreen;
+    }
+}
+
 View& Display(const std::string& name)
 {
     // Get / Create View
@@ -439,14 +464,7 @@ void Keyboard( unsigned char key, int x, int y)
 #endif // HAVE_GLCONSOLE
 #ifdef HAVE_GLUT
     else if( key == GLUT_KEY_TAB) {
-        if( context->is_fullscreen )
-        {
-            glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
-            context->is_fullscreen = false;
-        }else{
-            glutFullScreen();
-            context->is_fullscreen = true;
-        }
+        ToggleFullscreen();
     }
 #endif // HAVE_GLUT
     else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
