@@ -31,7 +31,7 @@
 #include <pangolin/platform.h>
 #include <pangolin/simple_math.h>
 
-#include <map>
+#include <vector>
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN
