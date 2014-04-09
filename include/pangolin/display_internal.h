@@ -33,6 +33,7 @@
 #include <pangolin/compat/function.h>
 #include <pangolin/user_app.h>
 
+#include <map>
 #include <queue>
 
 #ifdef BUILD_PANGOLIN_VIDEO
