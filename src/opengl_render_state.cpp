@@ -112,38 +112,81 @@ std::ostream& operator<<(std::ostream& os, const OpenGlMatrix& mat)
 
 void OpenGlRenderState::Apply() const
 {
-    // Apply any stack matrices we have
-    for(std::map<OpenGlStack,OpenGlMatrix>::const_iterator i = stacks.begin(); i != stacks.end(); ++i )
-    {
-        glMatrixMode(i->first);
-        i->second.Load();
-    }
+    glMatrixMode(GL_PROJECTION);
+    projection[0].Load();
     
     // Leave in MODEVIEW mode
     glMatrixMode(GL_MODELVIEW);
-    
+    modelview.Load();
+
+    if(follow) {
+        T_cw.Multiply();
+    }
+}
+
+OpenGlMatrix& OpenGlRenderState::GetProjectionMatrix(unsigned int view)
+{
+    if( projection.size() <= view ) {
+        projection.resize(view+1);
+    }
+    return projection[view];
+}
+
+OpenGlMatrix OpenGlRenderState::GetProjectionMatrix(unsigned int view) const
+{
+    if( projection.size() <= view ) {
+        return IdentityMatrix();
+    }
+    return projection[view];
+}
+
+OpenGlMatrix& OpenGlRenderState::GetViewOffset(unsigned int view)
+{
+    if( modelview_premult.size() <= view ) {
+        modelview_premult.resize(view+1);
+    }
+    return modelview_premult[view];
+}
+
+OpenGlMatrix OpenGlRenderState::GetViewOffset(unsigned int view) const
+{
+    if( projection.size() <= view ) {
+        return IdentityMatrix();
+    }
+    return modelview_premult[view];
+}
+
+void OpenGlRenderState::ApplyNView(int view) const
+{
+    glMatrixMode(GL_PROJECTION);
+    projection[view].Load();
+
+    // Leave in MODEVIEW mode
+    glMatrixMode(GL_MODELVIEW);
+    modelview_premult[view].Load();
+    modelview.Multiply();
+
     if(follow) {
         T_cw.Multiply();
     }
 }
 
 OpenGlRenderState::OpenGlRenderState()
-    : follow(false)
+    : modelview(IdentityMatrix()), follow(false)
 {
+    projection.push_back( IdentityMatrix() );
 }
 
 OpenGlRenderState::OpenGlRenderState(const OpenGlMatrix& projection_matrix)
-    : follow(false)
+    : modelview(IdentityMatrix()), follow(false)
 {
-    stacks[GlProjectionStack] = projection_matrix;
-    stacks[GlModelViewStack] = IdentityMatrix();
+    projection.push_back( projection_matrix );
 }
 
 OpenGlRenderState::OpenGlRenderState(const OpenGlMatrix& projection_matrix, const OpenGlMatrix& modelview_matrx)
-    : follow(false)
+    : modelview(modelview_matrx), follow(false)
 {
-    stacks[GlProjectionStack] = projection_matrix;
-    stacks[GlModelViewStack] = modelview_matrx;
+    projection.push_back( projection_matrix );
 }
 
 void OpenGlRenderState::ApplyIdentity()
@@ -154,21 +197,31 @@ void OpenGlRenderState::ApplyIdentity()
     glLoadIdentity();
 }
 
-OpenGlRenderState& OpenGlRenderState::SetProjectionMatrix(OpenGlMatrix spec)
+OpenGlRenderState& OpenGlRenderState::SetProjectionMatrix(OpenGlMatrix m)
 {
-    stacks[GlProjectionStack] = spec;
+    projection[0] = m;
     return *this;
 }
 
-OpenGlRenderState& OpenGlRenderState::SetModelViewMatrix(OpenGlMatrix spec)
+OpenGlRenderState& OpenGlRenderState::SetModelViewMatrix(OpenGlMatrix m)
 {
-    stacks[GlModelViewStack] = spec;
+    modelview = m;
     return *this;
 }
 
-OpenGlRenderState& OpenGlRenderState::Set(OpenGlMatrixSpec spec)
+OpenGlRenderState& OpenGlRenderState::Set(OpenGlMatrixSpec m)
 {
-    stacks[spec.type] = spec;
+    switch (m.type) {
+    case GlProjectionStack:
+        projection[0] = m;
+        break;
+    case GlModelViewStack:
+        modelview = m;
+        break;
+    default:
+        throw std::runtime_error("Unexpected matrix type");
+        break;
+    }
     return *this;
 }
 
@@ -181,32 +234,29 @@ OpenGlMatrix operator*(const OpenGlMatrix& lhs, const OpenGlMatrix& rhs)
 
 OpenGlMatrix& OpenGlRenderState::GetProjectionMatrix()
 {
-    return stacks[GlProjectionStack];
+    // guarenteed to have at least one projection matrix element
+    return projection[0];
 }
 
 OpenGlMatrix OpenGlRenderState::GetProjectionMatrix() const
 {
-    std::map<OpenGlStack,OpenGlMatrix>::const_iterator i = stacks.find(GlProjectionStack);
-    if( i == stacks.end() ) {
-        return IdentityMatrix();
-    }else{
-        return i->second;
-    }
+    // guarenteed to have at least one projection matrix element
+    return projection[0];
 }
 
 OpenGlMatrix& OpenGlRenderState::GetModelViewMatrix()
 {
-    return stacks[GlModelViewStack];
+    return modelview;
 }
 
 OpenGlMatrix OpenGlRenderState::GetModelViewMatrix() const
 {
-    std::map<OpenGlStack,OpenGlMatrix>::const_iterator i = stacks.find(GlModelViewStack);
-    if( i == stacks.end() ) {
-        return IdentityMatrix();
-    }else{
-        return i->second;
-    }
+    return modelview;
+}
+
+OpenGlMatrix OpenGlRenderState::GetModelViewMatrix(int i) const
+{
+    return modelview_premult[i] * modelview;
 }
 
 OpenGlMatrix OpenGlRenderState::GetProjectionModelViewMatrix() const

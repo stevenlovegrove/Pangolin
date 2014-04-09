@@ -149,8 +149,6 @@ struct PANGOLIN_EXPORT OpenGlMatrixSpec : public OpenGlMatrix {
 };
 
 //! @brief Object representing attached OpenGl Matrices / transforms
-//! Only stores what is attached, not entire OpenGl state (which would
-//! be horribly slow). Applying state is efficient.
 class PANGOLIN_EXPORT OpenGlRenderState
 {
 public:
@@ -161,9 +159,9 @@ public:
     static void ApplyIdentity();
     
     void Apply() const;
-    OpenGlRenderState& SetProjectionMatrix(OpenGlMatrix spec);
-    OpenGlRenderState& SetModelViewMatrix(OpenGlMatrix spec);
-    
+    OpenGlRenderState& SetProjectionMatrix(OpenGlMatrix m);
+    OpenGlRenderState& SetModelViewMatrix(OpenGlMatrix m);
+
     OpenGlMatrix& GetProjectionMatrix();
     OpenGlMatrix GetProjectionMatrix() const;
     
@@ -180,12 +178,22 @@ public:
     //! whilst still enabling interaction
     void Follow(const OpenGlMatrix& T_wc, bool follow = true);
     void Unfollow();
+
+    // Experimental - subject to change
+    OpenGlMatrix& GetProjectionMatrix(unsigned int view);
+    OpenGlMatrix GetProjectionMatrix(unsigned int view) const;
+    OpenGlMatrix& GetViewOffset(unsigned int view);
+    OpenGlMatrix GetViewOffset(unsigned int view) const;
+    OpenGlMatrix GetModelViewMatrix(int i) const;
+    void ApplyNView(int view) const;
     
     PANGOLIN_DEPRECATED
     OpenGlRenderState& Set(OpenGlMatrixSpec spec);
     
 protected:
-    std::map<OpenGlStack,OpenGlMatrix> stacks;
+    OpenGlMatrix modelview;
+    std::vector<OpenGlMatrix> projection;
+    std::vector<OpenGlMatrix> modelview_premult;
     OpenGlMatrix T_cw;
     bool follow;
 };
