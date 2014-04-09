@@ -1,8 +1,5 @@
 #include <pangolin/pangolin.h>
-#include <pangolin/handler_glbuffer.h>
-#include <pangolin/glsl.h>
-
-#include "OculusHud.h"
+#include <pangolin/hud/oculus_hud.h>
 
 int main(int argc, char ** argv) {
     pangolin::CreateWindowAndBind("Main",640,480);

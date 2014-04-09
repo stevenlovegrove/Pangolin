@@ -1,5 +1,5 @@
-#ifndef OCULUS_HUD_H
-#define OCULUS_HUD_H
+#ifndef PANGOLIN_OCULUS_HUD_H
+#define PANGOLIN_OCULUS_HUD_H
 
 #include <pangolin/compat/memory.h>
 #include <pangolin/view.h>
@@ -67,4 +67,4 @@ protected:
 
 }
 
-#endif // OCULUS_HUD_H
+#endif // PANGOLIN_OCULUS_HUD_H

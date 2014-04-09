@@ -1,6 +1,5 @@
-#include "OculusHud.h"
-
 #include <pangolin/pangolin.h>
+#include <pangolin/hud/oculus_hud.h>
 
 namespace pangolin
 {
