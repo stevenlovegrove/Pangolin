@@ -5,6 +5,12 @@
 namespace pangolin
 {
 
+std::ostream& operator<<(std::ostream& s, const Viewport& v)
+{
+    s << v.l << "," << v.b << ": " << v.w << "x" << v.h;
+    return s;
+}
+
 OculusHud::OculusHud()
 {
     InitialiseOculus();
@@ -13,17 +19,30 @@ OculusHud::OculusHud()
 
     // Make this the default fullscreen view
     DisplayBase().AddDisplay(*this);
-    pangolin::SetFullscreen();
+    SetBounds(Attach::Pix(0),Attach::Pix(HMD.VResolution),Attach::Pix(0),Attach::Pix(HMD.HResolution));
+    View::SetHandler(&pangolin::StaticHandler);
 
-    // Initialise stuff
+    // Initialise per-eye views / parameters
     for(int i=0; i<2; ++i) {
         OVR::Util::Render::StereoEyeParams eye =
                 stereo.GetEyeRenderParams( OVR::Util::Render::StereoEye(1+i) );
 
-        viewport[i] = pangolin::Viewport(eye.VP.x,eye.VP.y,eye.VP.w,eye.VP.h);
-        projection[i] = eye.Projection;
-        viewAdjust[i] = eye.ViewAdjust;
+        eyeview[i].SetBounds(Attach::Pix(eye.VP.y), Attach::Pix(eye.VP.y+eye.VP.h), Attach::Pix(eye.VP.x), Attach::Pix(eye.VP.x+eye.VP.w));
+        this->AddDisplay(eyeview[i]);
+
+        default_cam.GetProjectionMatrix(i) = eye.Projection;
+        default_cam.GetViewOffset(i) = eye.ViewAdjust;
     }
+
+    T_oc = IdentityMatrix();
+
+    pangolin::SetFullscreen();
+}
+
+void OculusHud::SetHandler(Handler *handler)
+{
+    eyeview[0].SetHandler(handler);
+    eyeview[1].SetHandler(handler);
 }
 
 OpenGlMatrix OculusHud::HeadTransform()
@@ -33,48 +52,69 @@ OpenGlMatrix OculusHud::HeadTransform()
     return OpenGlMatrix(T_oc);
 }
 
-void OculusHud::Bind()
+OpenGlMatrix OculusHud::HeadTransformDelta()
 {
-    framebuffer.Bind();
+    OpenGlMatrix T_2c = HeadTransform();
+    OpenGlMatrix T_21 = T_2c * T_oc.Inverse();
 
+    // Update
+    T_oc = T_2c;
+
+    return T_21;
 }
 
-void OculusHud::Unbind()
+
+pangolin::GlFramebuffer& OculusHud::Framebuffer()
 {
-    framebuffer.Unbind();
+    return framebuffer;
 }
 
-unsigned int OculusHud::NumViews()
+pangolin::OpenGlRenderState& OculusHud::DefaultRenderState()
 {
-    return 2;
+    return default_cam;
 }
 
-void OculusHud::RenderToView(int view)
+void OculusHud::UnwarpPoint(unsigned int view, const float in[2], float out[2])
 {
-    pangolin::OpenGlRenderState cam(
-        projection[view],
-        headTransform * viewAdjust[view] * pangolin::ModelViewLookAt(-1.5,1.5,-1.5, 0,0,0, pangolin::AxisY)
-    );
+    const OVR::Util::Render::DistortionConfig& Distortion = stereo.GetDistortionConfig();
+    pangolin::Viewport& vp = eyeview[view].v;
+    const float x = vp.l / (float)v.w;
+    const float y = vp.b / (float)v.h;
+    const float w = vp.w / (float)v.w;
+    const float h = vp.h / (float)v.h;
 
-    viewport[view].Activate();
-    cam.Apply();
+    float lensc[] = { x + (w + (1-view*2)*Distortion.XCenterOffset * 0.5f)*0.5f, y + h*0.5f };
+    float scale[] = { (float)v.w, (float)v.h };
+
+    float inc[] = {
+        in[0] / scale[0] - lensc[0],
+        in[1] / scale[1] - lensc[1],
+    };
+
+    const float r = std::sqrt(inc[0]*inc[0] + inc[1]*inc[1]);
+    const float nr = const_cast<OVR::Util::Render::DistortionConfig&>(Distortion).DistortionFnInverse(r);
+
+    float outc[] {
+        nr * inc[0] / r,
+        nr * inc[1] / r
+    };
+
+    out[0] = scale[0] * (outc[0] + lensc[0]);
+    out[1] = scale[1] * (outc[1] + lensc[1]);
 }
 
 void OculusHud::RenderFramebuffer()
 {    
-    // Render framebuffer to screen via distortion shader
     Activate();
 
     glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glColor3f(1.0,1.0,1.0);
+    // Render framebuffer views to screen via distortion shader
     for(int i=0; i<2; ++i)
     {
-        OVR::Util::Render::StereoEyeParams eye =
-                stereo.GetEyeRenderParams( OVR::Util::Render::StereoEye(1+i) );
-
-        pangolin::Viewport vp(eye.VP.x,eye.VP.y,eye.VP.w,eye.VP.h);
+        pangolin::Viewport& vp = eyeview[i].v;
         occ.Bind();
 
         const float x = vp.l / (float)v.w;
@@ -102,8 +142,6 @@ void OculusHud::RenderFramebuffer()
 void OculusHud::Render()
 {
     if(show) {
-        headTransform = HeadTransform();
-
         // If render function defined, use it to render left / right images
         // to framebuffer
         if(this->extern_draw_function) {
@@ -111,7 +149,8 @@ void OculusHud::Render()
             glClearColor(1,1,1,0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             for(int i=0; i<2; ++i) {
-                RenderToView(i);
+                eyeview[i].Activate();
+                default_cam.ApplyNView(i);
                 this->extern_draw_function(*this);
             }
             framebuffer.Unbind();
@@ -220,6 +259,19 @@ void OculusHud::InitialiseShader()
 {
     occ.AddShader(pangolin::GlSlFragmentShader, PostProcessFullFragShaderSrc);
     occ.Link();
+}
+
+Handler3DOculus::Handler3DOculus(OculusHud& oculus, pangolin::OpenGlRenderState& cam_state, pangolin::AxisDirection enforce_up, float trans_scale)
+    : pangolin::Handler3D(cam_state,enforce_up, trans_scale), oculus(oculus)
+{
+}
+
+void Handler3DOculus::GetPosNormal(pangolin::View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3], double default_z)
+{
+    // TODO: Unwarp coordinates into framebuffer.
+    oculus.Framebuffer().Bind();
+    Handler3D::GetPosNormal(view,x,y,p,Pw,Pc,n,default_z);
+    oculus.Framebuffer().Unbind();
 }
 
 }
