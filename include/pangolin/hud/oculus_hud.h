@@ -12,6 +12,26 @@
 namespace pangolin
 {
 
+class OculusHud;
+
+struct HandlerOculus : public pangolin::Handler
+{
+    HandlerOculus(OculusHud& oculus, pangolin::Handler* h = 0);
+
+    void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
+    void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
+    void MouseMotion(View&, int x, int y, int button_state);
+    void PassiveMouseMotion(View&, int x, int y, int button_state);
+    void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
+
+    void SetHandler(pangolin::Handler* h);
+
+protected:
+    OculusHud& oculus;
+    pangolin::Handler* handler;
+};
+
+
 class OculusHud : public View
 {
 public:
@@ -21,6 +41,8 @@ public:
     void RenderFramebuffer();
 
     void SetHandler(Handler *handler);
+
+    View& CommonView();
 
     OpenGlMatrix HeadTransform();
     OpenGlMatrix HeadTransformDelta();
@@ -41,6 +63,7 @@ protected:
     pangolin::GlRenderBuffer depthbuffer;
     pangolin::GlFramebuffer framebuffer;
     pangolin::GlSlProgram occ;
+    bool post_unwarp;
 
     OVR::Ptr<OVR::DeviceManager> pManager;
     OVR::Ptr<OVR::HMDDevice> pHMD;
@@ -50,19 +73,12 @@ protected:
     OVR::Util::Render::StereoConfig stereo;
 
     View eyeview[2];
+    View common;
     pangolin::OpenGlRenderState default_cam;
+    HandlerOculus handler;
 
     // Center to Oculus transform
     OpenGlMatrix T_oc;
-};
-
-struct Handler3DOculus : public pangolin::Handler3D
-{
-    Handler3DOculus(OculusHud& oculus, pangolin::OpenGlRenderState& cam_state, pangolin::AxisDirection enforce_up=pangolin::AxisNone, float trans_scale=0.01f);
-    void GetPosNormal(pangolin::View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double /*n*/[3], double default_z);
-
-protected:
-    OculusHud& oculus;
 };
 
 }

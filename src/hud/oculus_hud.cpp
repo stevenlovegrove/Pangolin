@@ -1,5 +1,7 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/hud/oculus_hud.h>
+#include <pangolin/display_internal.h>
+
 
 namespace pangolin
 {
@@ -11,6 +13,7 @@ std::ostream& operator<<(std::ostream& s, const Viewport& v)
 }
 
 OculusHud::OculusHud()
+    : post_unwarp(true), handler(*this)
 {
     InitialiseOculus();
     InitialiseFramebuffer();
@@ -19,7 +22,8 @@ OculusHud::OculusHud()
     // Make this the default fullscreen view
     DisplayBase().AddDisplay(*this);
     SetBounds(Attach::Pix(0),Attach::Pix(HMD.VResolution),Attach::Pix(0),Attach::Pix(HMD.HResolution));
-    View::SetHandler(&pangolin::StaticHandler);
+    handler.SetHandler(&pangolin::StaticHandler);
+    View::SetHandler(&handler);
 
     // Initialise per-eye views / parameters
     for(int i=0; i<2; ++i) {
@@ -33,15 +37,24 @@ OculusHud::OculusHud()
         default_cam.GetViewOffset(i) = eye.ViewAdjust;
     }
 
+    common.SetHandler(&pangolin::StaticHandler);
+    this->AddDisplay(common);
+
     T_oc = IdentityMatrix();
 
     pangolin::SetFullscreen();
 }
 
-void OculusHud::SetHandler(Handler *handler)
+void OculusHud::SetHandler(Handler *h)
 {
-    eyeview[0].SetHandler(handler);
-    eyeview[1].SetHandler(handler);
+    for(int i=0; i<2; ++i) {
+        eyeview[i].SetHandler(h);
+    }
+}
+
+View& OculusHud::CommonView()
+{
+    return common;
 }
 
 OpenGlMatrix OculusHud::HeadTransform()
@@ -76,30 +89,30 @@ pangolin::OpenGlRenderState& OculusHud::DefaultRenderState()
 void OculusHud::UnwarpPoint(unsigned int view, const float in[2], float out[2])
 {
     const OVR::Util::Render::DistortionConfig& Distortion = stereo.GetDistortionConfig();
-    pangolin::Viewport& vp = eyeview[view].v;
-    const float x = vp.l / (float)v.w;
-    const float y = vp.b / (float)v.h;
-    const float w = vp.w / (float)v.w;
-    const float h = vp.h / (float)v.h;
 
-    float lensc[] = { x + (w + (1-view*2)*Distortion.XCenterOffset * 0.5f)*0.5f, y + h*0.5f };
-    float scale[] = { (float)v.w, (float)v.h };
+    const int   sx = 1-view*2;
+    const float cx = 0.25 + view*0.5;
+    const float as = stereo.GetAspect();
 
-    float inc[] = {
-        in[0] / scale[0] - lensc[0],
-        in[1] / scale[1] - lensc[1],
+    float LensCenter[] = { cx + sx*Distortion.XCenterOffset / 4.0f, 0.5f };
+    float Scale[] = { 1.0f / (4.0f*Distortion.Scale), as / (2.0f*Distortion.Scale) };
+    float ScaleIn[] = {4.0f, 2.0f / as};
+
+    float theta[] = {
+        ScaleIn[0] * (in[0] / v.w - LensCenter[0]),
+        ScaleIn[1] * (in[1] / v.h - LensCenter[1])
     };
 
-    const float r = std::sqrt(inc[0]*inc[0] + inc[1]*inc[1]);
-    const float nr = const_cast<OVR::Util::Render::DistortionConfig&>(Distortion).DistortionFnInverse(r);
+    const float r = std::sqrt(theta[0]*theta[0] + theta[1]*theta[1]);
+    const float nr = const_cast<OVR::Util::Render::DistortionConfig&>(Distortion).DistortionFn(r);
 
-    float outc[] {
-        nr * inc[0] / r,
-        nr * inc[1] / r
+    float theta1[] {
+        nr * theta[0] / r,
+        nr * theta[1] / r
     };
 
-    out[0] = scale[0] * (outc[0] + lensc[0]);
-    out[1] = scale[1] * (outc[1] + lensc[1]);
+    out[0] = v.w * (LensCenter[0] + Scale[0] * theta1[0]);
+    out[1] = v.h * (LensCenter[1] + Scale[1] * theta1[1]);
 }
 
 void OculusHud::RenderFramebuffer()
@@ -110,31 +123,33 @@ void OculusHud::RenderFramebuffer()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glColor3f(1.0,1.0,1.0);
-    // Render framebuffer views to screen via distortion shader
-    for(int i=0; i<2; ++i)
-    {
-        pangolin::Viewport& vp = eyeview[i].v;
-        occ.Bind();
 
-        const float x = vp.l / (float)v.w;
-        const float y = vp.b / (float)v.h;
-        const float w = vp.w / (float)v.w;
-        const float h = vp.h / (float)v.h;
+    if(post_unwarp) {
+        // Render framebuffer views to screen via distortion shader
+        for(int i=0; i<2; ++i)
+        {
 
-        const OVR::Util::Render::DistortionConfig& Distortion = stereo.GetDistortionConfig();
-        const float as = stereo.GetAspect();
-        const float scaleFactor = 1.0f / Distortion.Scale;
-        occ.SetUniform("LensCenter", x + (w + (1-i*2)*Distortion.XCenterOffset * 0.5f)*0.5f, y + h*0.5f);
-        occ.SetUniform("ScreenCenter", x + w*0.5f, y + h*0.5f);
-        occ.SetUniform("Scale",   (w/2.0f) * scaleFactor, (h/2.0f) * scaleFactor * as);
-        occ.SetUniform("ScaleIn", (2.0f/w),               (2.0f/h) / as);
-        occ.SetUniform("HmdWarpParam", HMD.DistortionK[0], HMD.DistortionK[1], HMD.DistortionK[2], HMD.DistortionK[3] );
-        occ.SetUniform("ChromAbParam", HMD.ChromaAbCorrection[0], HMD.ChromaAbCorrection[1], HMD.ChromaAbCorrection[2], HMD.ChromaAbCorrection[3]);
+            const int   sx = 1-i*2;
+            const float cx = 0.25 + i*0.5;
+            const float as = stereo.GetAspect();
+            const OVR::Util::Render::DistortionConfig& Distortion = stereo.GetDistortionConfig();
+            occ.Bind();
+            occ.SetUniform("LensCenter", cx + sx*Distortion.XCenterOffset / 4.0f, 0.5f);
+            occ.SetUniform("ScreenCenter", cx, 0.5f);
+            occ.SetUniform("ScaleIn", 4.0f, 2.0f / as);
+            occ.SetUniform("Scale",   1.0f / (4.0f*Distortion.Scale), as / (2.0f*Distortion.Scale) );
+            occ.SetUniform("HmdWarpParam", HMD.DistortionK[0], HMD.DistortionK[1], HMD.DistortionK[2], HMD.DistortionK[3] );
+            occ.SetUniform("ChromAbParam", HMD.ChromaAbCorrection[0], HMD.ChromaAbCorrection[1], HMD.ChromaAbCorrection[2], HMD.ChromaAbCorrection[3]);
 
-        vp.Activate();
-        colourbuffer.RenderToViewport(vp, false);
+            pangolin::Viewport& vp = eyeview[i].v;
+            vp.Activate();
+            colourbuffer.RenderToViewport(vp, false);
 
-        occ.Unbind();
+            occ.Unbind();
+        }
+    }else{
+        this->Activate();
+        colourbuffer.RenderToViewport(false);
     }
 }
 
@@ -151,6 +166,20 @@ void OculusHud::Render()
                 eyeview[i].Activate();
                 default_cam.ApplyNView(i);
                 this->extern_draw_function(*this);
+            }
+            framebuffer.Unbind();
+        }
+
+        if(common.IsShown() && common.NumChildren()) {
+            framebuffer.Bind();
+            RenderChildren();
+            for(int i=0; i<2; ++i) {
+                Viewport v = eyeview[i].v;
+                v.l += 160 -i*120;
+                v.w -= 160;
+                v.h -= 220;
+                common.Resize(v);
+                common.Render();
             }
             framebuffer.Unbind();
         }
@@ -260,17 +289,74 @@ void OculusHud::InitialiseShader()
     occ.Link();
 }
 
-Handler3DOculus::Handler3DOculus(OculusHud& oculus, pangolin::OpenGlRenderState& cam_state, pangolin::AxisDirection enforce_up, float trans_scale)
-    : pangolin::Handler3D(cam_state,enforce_up, trans_scale), oculus(oculus)
+HandlerOculus::HandlerOculus(OculusHud& oculus, pangolin::Handler* handler)
+    : oculus(oculus), handler(handler)
 {
+
 }
 
-void Handler3DOculus::GetPosNormal(pangolin::View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3], double default_z)
+// Pointer to context defined in display.cpp
+extern __thread PangolinGl* context;
+
+void HandlerOculus::Keyboard(View& d, unsigned char key, int x, int y, bool pressed)
 {
-    // TODO: Unwarp coordinates into framebuffer.
-    oculus.Framebuffer().Bind();
-    Handler3D::GetPosNormal(view,x,y,p,Pw,Pc,n,default_z);
-    oculus.Framebuffer().Unbind();
+    if(handler) {
+        const float in[] = { (float)x, (float)y};
+        float out[2];
+        oculus.UnwarpPoint(x < d.v.w/2 ?0:1, in, out );
+        handler->Keyboard(d, key, out[0], out[1], pressed);
+        context->activeDisplay = &d;
+    }
 }
+
+void HandlerOculus::Mouse(View& d, MouseButton button, int x, int y, bool pressed, int button_state)
+{
+    if(handler) {
+        const float in[] = { (float)x, (float)y};
+        float out[2];
+        oculus.UnwarpPoint(x < d.v.w/2 ?0:1, in, out );
+        handler->Mouse(d, button, out[0], out[1], pressed, button_state);
+        context->activeDisplay = &d;
+    }
+}
+
+void HandlerOculus::MouseMotion(View& d, int x, int y, int button_state)
+{
+    if(handler) {
+        const float in[] = { (float)x, (float)y};
+        float out[2];
+        oculus.UnwarpPoint(x < d.v.w/2 ?0:1, in, out );
+        handler->MouseMotion(d, out[0], out[1], button_state);
+        context->activeDisplay = &d;
+    }
+}
+
+void HandlerOculus::PassiveMouseMotion(View& d, int x, int y, int button_state)
+{
+    if(handler) {
+        const float in[] = { (float)x, (float)y};
+        float out[2];
+        oculus.UnwarpPoint(x < d.v.w/2 ?0:1, in, out );
+        handler->PassiveMouseMotion(d, out[0], out[1], button_state);
+        context->activeDisplay = &d;
+    }
+}
+
+void HandlerOculus::Special(View& d, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
+{
+    if(handler) {
+        const float in[] = { (float)x, (float)y};
+        float out[2];
+        oculus.UnwarpPoint(x < d.v.w/2 ?0:1, in, out );
+        handler->Special(d, inType, out[0], out[1], p1, p2, p3, p4, button_state);
+        context->activeDisplay = &d;
+    }
+}
+
+void HandlerOculus::SetHandler(pangolin::Handler* h)
+{
+    handler = h;
+}
+
 
 }
