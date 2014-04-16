@@ -27,15 +27,13 @@ OculusHud::OculusHud()
 
     // Initialise per-eye views / parameters
     for(int i=0; i<2; ++i) {
-        OVR::Util::Render::StereoEyeParams eye =
-                stereo.GetEyeRenderParams( OVR::Util::Render::StereoEye(1+i) );
-
-        eyeview[i].SetBounds(Attach::Pix(eye.VP.y), Attach::Pix(eye.VP.y+eye.VP.h), Attach::Pix(eye.VP.x), Attach::Pix(eye.VP.x+eye.VP.w));
+        int hw = HMD.HResolution/2;
+        eyeview[i].SetBounds(Attach::Pix(0),Attach::Pix(HMD.VResolution),Attach::Pix(i*hw),Attach::Pix((1+i)*hw));
         this->AddDisplay(eyeview[i]);
-
-        default_cam.GetProjectionMatrix(i) = eye.Projection;
-        default_cam.GetViewOffset(i) = eye.ViewAdjust;
     }
+
+    // Setup default projection parameters
+    SetParams(204.4, 48.62, 0.177, -0.083);
 
     common.SetHandler(&pangolin::StaticHandler);
     this->AddDisplay(common);
@@ -49,6 +47,29 @@ void OculusHud::SetHandler(Handler *h)
 {
     for(int i=0; i<2; ++i) {
         eyeview[i].SetHandler(h);
+    }
+}
+
+void OculusHud::SetParams(float focalLength, float lensXOffset, float eye_y, float eye_z )
+{
+    const float eye_dist = HMD.InterpupillaryDistance / 2.0;
+
+    for(int i=0; i<2; ++i) {
+//        OVR::Util::Render::StereoEyeParams eye =
+//                stereo.GetEyeRenderParams( OVR::Util::Render::StereoEye(1+i) );
+//        default_cam.GetProjectionMatrix(i) = eye.Projection;
+//        default_cam.GetViewOffset(i) = eye.ViewAdjust;
+
+        default_cam.GetProjectionMatrix(i) =
+                pangolin::ProjectionMatrix(
+                    HMD.HResolution/2.0, HMD.VResolution,
+                    focalLength, focalLength,
+                    HMD.HResolution/4.0 -(i*2-1)*lensXOffset, HMD.VResolution/2.0,
+                    0.2,100
+                    );
+
+        default_cam.GetViewOffset(i) =
+                pangolin::OpenGlMatrix::Translate( -(i*2-1)*eye_dist, -eye_y, -eye_z);;
     }
 }
 

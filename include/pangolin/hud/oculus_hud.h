@@ -42,6 +42,8 @@ public:
 
     void SetHandler(Handler *handler);
 
+    void SetParams(float focalLength, float lensXOffset, float eye_y, float eye_z);
+
     View& CommonView();
 
     OpenGlMatrix HeadTransform();
