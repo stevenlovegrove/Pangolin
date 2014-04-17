@@ -37,6 +37,7 @@
 #include <pangolin/glplatform.h>
 #include <pangolin/colour.h>
 #include <pangolin/file_utils.h>
+#include <pangolin/opengl_render_state.h>
 
 #ifdef HAVE_GLES
     #define GLhandleARB GLuint
@@ -120,7 +121,9 @@ public:
     void SetUniform(const std::string& name, float f1, float f2, float f3, float f4);
 
     void SetUniform(const std::string& name, Colour c);
-    
+
+    void SetUniform(const std::string& name, const OpenGlMatrix& m);
+
     void Bind();
     void SaveBind();
     void Unbind();
@@ -447,6 +450,14 @@ inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2,
 inline void GlSlProgram::SetUniform(const std::string& name, Colour c)
 {
     glUniform4f( GetUniformHandle(name), c.r, c.g, c.b, c.a);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, const OpenGlMatrix& mat)
+{
+    // glUniformMatrix4dv seems to be crashing...
+    float m[16];
+    std::copy(mat.m, mat.m+16, m);
+    glUniformMatrix4fv( GetUniformHandle(name), 1, GL_FALSE, m);
 }
 
 inline void GlSlProgram::BindPangolinDefaultAttribLocationsAndLink()
