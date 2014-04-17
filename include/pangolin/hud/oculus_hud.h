@@ -44,6 +44,10 @@ public:
 
     void SetParams(float focalLength, float lensXOffset, float eye_y, float eye_z);
 
+    OVR::HMDInfo& HmdInfo();
+
+    unsigned int NumEyes() const;
+
     View& CommonView();
 
     OpenGlMatrix HeadTransform();

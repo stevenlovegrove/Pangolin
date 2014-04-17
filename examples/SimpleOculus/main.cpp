@@ -29,7 +29,7 @@ int main(int argc, char ** argv) {
         oculus.Framebuffer().Bind();
         glClearColor(1,1,1,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        for(unsigned int view = 0; view < oculus.NumChildren(); ++view)
+        for(unsigned int view = 0; view < oculus.NumEyes(); ++view)
         {
             oculus[view].Activate();
             s_cam.ApplyNView(view);

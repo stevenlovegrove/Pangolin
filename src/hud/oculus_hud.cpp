@@ -73,6 +73,16 @@ void OculusHud::SetParams(float focalLength, float lensXOffset, float eye_y, flo
     }
 }
 
+OVR::HMDInfo& OculusHud::HmdInfo()
+{
+    return HMD;
+}
+
+unsigned int OculusHud::NumEyes() const
+{
+    return 2;
+}
+
 View& OculusHud::CommonView()
 {
     return common;
