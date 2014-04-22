@@ -33,7 +33,9 @@ OculusHud::OculusHud()
     }
 
     // Setup default projection parameters
-    SetParams(204.4, 48.62, 0.177, -0.083);
+    const OVR::Util::Render::DistortionConfig& Distortion = stereo.GetDistortionConfig();
+    const float ppos = HMD.HResolution * Distortion.XCenterOffset / 4.0f;
+    SetParams(204.4, ppos, 0.177, -0.083);
 
     common.SetHandler(&pangolin::StaticHandler);
     this->AddDisplay(common);
@@ -156,14 +158,14 @@ void OculusHud::RenderFramebuffer()
     glColor3f(1.0,1.0,1.0);
 
     if(post_unwarp) {
+        const float as = stereo.GetAspect();
+        const OVR::Util::Render::DistortionConfig& Distortion = stereo.GetDistortionConfig();
+
         // Render framebuffer views to screen via distortion shader
         for(int i=0; i<2; ++i)
         {
-
             const int   sx = 1-i*2;
             const float cx = 0.25 + i*0.5;
-            const float as = stereo.GetAspect();
-            const OVR::Util::Render::DistortionConfig& Distortion = stereo.GetDistortionConfig();
             occ.Bind();
             occ.SetUniform("LensCenter", cx + sx*Distortion.XCenterOffset / 4.0f, 0.5f);
             occ.SetUniform("ScreenCenter", cx, 0.5f);
