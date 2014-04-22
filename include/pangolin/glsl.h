@@ -75,7 +75,9 @@ const char DEFAULT_NAME_TEXCOORD[] = "a_texcoord";
 enum GlSlShaderType
 {
     GlSlFragmentShader = GL_FRAGMENT_SHADER,
-    GlSlVertexShader = GL_VERTEX_SHADER
+    GlSlVertexShader = GL_VERTEX_SHADER,
+    GlSlGeometryShader = GL_GEOMETRY_SHADER,
+    GlSlComputeShader = GL_COMPUTE_SHADER
 };
 
 class GlSlProgram
@@ -90,21 +92,21 @@ public:
 
     ~GlSlProgram();
     
-    void AddShader(
+    bool AddShader(
         GlSlShaderType shader_type,
         const std::string& source_code,
         const std::map<std::string,std::string>& program_defines = std::map<std::string,std::string>(),
         const std::vector<std::string>& search_path = std::vector<std::string>()
     );
 
-    void AddShaderFromFile(
+    bool AddShaderFromFile(
         GlSlShaderType shader_type,
         const std::string& filename,
         const std::map<std::string,std::string>& program_defines = std::map<std::string,std::string>(),
         const std::vector<std::string>& search_path = std::vector<std::string>()
     );
 
-    void Link();
+    bool Link();
     
     GLint GetAttributeHandle(const std::string& name);
     GLint GetUniformHandle(const std::string& name);
@@ -141,7 +143,7 @@ protected:
         const std::string& current_path
     );
 
-    void AddPreprocessedShader(
+    bool AddPreprocessedShader(
         GlSlShaderType shader_type,
         const std::string& source_code
     );
@@ -198,32 +200,42 @@ protected:
 // Implementation
 ////////////////////////////////////////////////
 
-inline void printProgInfoLog(GLhandleARB prog)
+inline bool IsLinkSuccessPrintLog(GLhandleARB prog)
 {
     GLint status;
     glGetProgramiv(prog, GL_LINK_STATUS, &status);
     if(status != GL_TRUE) {
-        pango_print_error("GL_LINK_STATUS != GL_TRUE");
-        const int PROGRAM_LOG_MAX_LEN = 1024;
+        pango_print_error("GLSL Program link failed: ");
+        const int PROGRAM_LOG_MAX_LEN = 10240;
         char infolog[PROGRAM_LOG_MAX_LEN];
         GLsizei len;
         glGetProgramInfoLog(prog, PROGRAM_LOG_MAX_LEN, &len, infolog);
-        if(len) pango_print_error("%s\n",infolog);
+        if(len) {
+            pango_print_error("%s\n",infolog);
+        }else{
+            pango_print_error("No details provided.\n");
+        }
     }
+    return status;
 }
 
-inline void printShaderInfoLog(GLhandleARB shader)
+inline bool IsCompileSuccessPrintLog(GLhandleARB shader)
 {
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if(status != GL_TRUE) {
-        pango_print_error("GL_COMPILE_STATUS: ");
-        const int SHADER_LOG_MAX_LEN = 1024;
+        pango_print_error("GLSL Shader compilation failed: ");
+        const int SHADER_LOG_MAX_LEN = 10240;
         char infolog[SHADER_LOG_MAX_LEN];
         GLsizei len;
         glGetShaderInfoLog(shader, SHADER_LOG_MAX_LEN, &len, infolog);
-        if(len) pango_print_error("%s\n",infolog);
+        if(len) {
+            pango_print_error("%s\n",infolog);
+        }else{
+            pango_print_error("No details provided.\n");
+        }
     }
+    return status;
 }
 
 inline GlSlProgram::GlSlProgram()
@@ -253,7 +265,7 @@ inline GlSlProgram::~GlSlProgram()
     }
 }
 
-inline void GlSlProgram::AddPreprocessedShader(
+inline bool GlSlProgram::AddPreprocessedShader(
     GlSlShaderType shader_type,
     const std::string& source_code
 ) {
@@ -265,11 +277,13 @@ inline void GlSlProgram::AddPreprocessedShader(
     const char* source = source_code.c_str();
     glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
-    printShaderInfoLog(shader);
-    glAttachShader(prog, shader);
-
-    shaders.push_back(shader);
-    linked = false;
+    bool success = IsCompileSuccessPrintLog(shader);
+    if(success) {
+        glAttachShader(prog, shader);
+        shaders.push_back(shader);
+        linked = false;
+    }
+    return success;
 }
 
 inline std::string GlSlProgram::ParseIncludeFilename(const std::string& location)
@@ -350,7 +364,7 @@ inline void GlSlProgram::ParseGLSL(
     }
 }
 
-inline void GlSlProgram::AddShader(
+inline bool GlSlProgram::AddShader(
     GlSlShaderType shader_type,
     const std::string& source_code,
     const std::map<std::string,std::string>& program_defines,
@@ -359,25 +373,29 @@ inline void GlSlProgram::AddShader(
     std::istringstream iss(source_code);
     std::stringstream buffer;
     ParseGLSL(iss, buffer, program_defines, search_path, ".");
-    AddPreprocessedShader(shader_type, buffer.str() );
+    return AddPreprocessedShader(shader_type, buffer.str() );
 }
 
-inline void GlSlProgram::AddShaderFromFile(
+inline bool GlSlProgram::AddShaderFromFile(
     GlSlShaderType shader_type,
     const std::string& filename,
     const std::map<std::string,std::string>& program_defines,
     const std::vector<std::string>& search_path
 ) {
     std::ifstream ifs(filename.c_str());
-    std::stringstream buffer;
-    ParseGLSL(ifs, buffer, program_defines, search_path, ".");
-    AddPreprocessedShader(shader_type, buffer.str() );
+    if(ifs.is_open()) {
+        std::stringstream buffer;
+        ParseGLSL(ifs, buffer, program_defines, search_path, ".");
+        return AddPreprocessedShader(shader_type, buffer.str() );
+    }else{
+        throw std::runtime_error("Unable to open " + filename );
+    }
 }
 
-inline void GlSlProgram::Link()
+inline bool GlSlProgram::Link()
 {
     glLinkProgram(prog);
-    printProgInfoLog(prog);
+    return IsLinkSuccessPrintLog(prog);
 }
 
 inline void GlSlProgram::Bind()
