@@ -6,9 +6,10 @@ set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 
+option( BUILD_SHARED_LIBS "Build Shared Library" ON)
 option( BUILD_EXAMPLES "Build Examples" ON )
-
 option( CPP11_NO_BOOST "Use c++11 over boost for threading etc." OFF )
+
 if(CPP11_NO_BOOST)
     set( CMAKE_CXX_FLAGS "-std=c++0x -Wall ${CMAKE_CXX_FLAGS}" )
     if(_CLANG_)
@@ -17,13 +18,8 @@ if(CPP11_NO_BOOST)
 endif()
 
 if(ANDROID)
-   set(BUILD_SHARED_LIBS OFF)
    set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
    include(AndroidUtils)
-elseif(IOS)
-   set(BUILD_SHARED_LIBS OFF)
-else()
-   option(BUILD_SHARED_LIBS "Build Shared Library" ON)
 endif()
 
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}

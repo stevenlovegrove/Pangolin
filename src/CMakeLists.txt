@@ -134,6 +134,7 @@ endif()
 if(ANDROID)
     # Fix issue with thread local storage on android.
     add_definitions(-fno-data-sections)
+    list(APPEND LINK_LIBS android log)
 elseif(IOS)
     # Nothing specific in here yet.
 else()

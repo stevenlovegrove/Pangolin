@@ -36,7 +36,7 @@
 #include <pthread.h>
 #include <sched.h>
 #include <errno.h>
-
+#include <dlfcn.h>
 
 #include <android/configuration.h>
 #include <android/looper.h>
@@ -680,9 +680,16 @@ static void* android_app_entry(void* param) {
         strcpy( argv[ac], vargv[ac].c_str() );
     }
     argv[vargv.size()] = NULL;
-    
+
+    // Find main symbol
+    void (*main)(int, char**);
+    *(void **) (&main) = dlsym( dlopen(android_app->application_so, RTLD_NOW), "main");
+    if (!main) {
+        LOGE( "undefined symbol main, crap" );
+        exit(1);
+    }
     // Call users standard main entry point.
-    main(vargv.size(), argv);
+    (*main)(vargv.size(), argv);
     
     // Clean up parameters
     for(size_t ac = 0; ac < vargv.size(); ++ac) {
@@ -694,48 +701,6 @@ static void* android_app_entry(void* param) {
     LOGV("-android_app_entry");
     
     return NULL;
-}
-
-// --------------------------------------------------------------------
-// Native activity interaction (called from main thread)
-// --------------------------------------------------------------------
-
-static struct android_app* android_app_create(ANativeActivity* activity,
-        void* savedState, size_t savedStateSize) {
-    struct android_app* android_app = (struct android_app*)malloc(sizeof(struct android_app));
-    memset(android_app, 0, sizeof(struct android_app));
-    android_app->activity = activity;
-
-    pthread_mutex_init(&android_app->mutex, NULL);
-    pthread_cond_init(&android_app->cond, NULL);
-
-    if (savedState != NULL) {
-        android_app->savedState = malloc(savedStateSize);
-        android_app->savedStateSize = savedStateSize;
-        memcpy(android_app->savedState, savedState, savedStateSize);
-    }
-
-    int msgpipe[2];
-    if (pipe(msgpipe)) {
-        LOGE("could not create pipe: %s", strerror(errno));
-        return NULL;
-    }
-    android_app->msgread = msgpipe[0];
-    android_app->msgwrite = msgpipe[1];
-
-    pthread_attr_t attr; 
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_create(&android_app->thread, &attr, android_app_entry, android_app);
-
-    // Wait for thread to start.
-    pthread_mutex_lock(&android_app->mutex);
-    while (!android_app->running) {
-        pthread_cond_wait(&android_app->cond, &android_app->mutex);
-    }
-    pthread_mutex_unlock(&android_app->mutex);
-
-    return android_app;
 }
 
 static void android_app_write_cmd(struct android_app* android_app, int8_t cmd) {
@@ -884,10 +849,12 @@ static void onContentRectChanged(ANativeActivity* activity, const ARect* rect) {
     LOGV("onContentRectChanged: %p -- (%d, %d), (%d, %d)\n", activity, rect->left, rect->top, rect->right, rect->bottom);
 }
 
-void ANativeActivity_onCreate(
+void DeferredNativeActivity_onCreate(
         ANativeActivity* activity,
         void* savedState,
-        size_t savedStateSize)
+        size_t savedStateSize,
+        const char* load_target
+    )
 {
     activity->callbacks->onDestroy = onDestroy;
     activity->callbacks->onStart = onStart;
@@ -905,7 +872,40 @@ void ANativeActivity_onCreate(
     activity->callbacks->onContentRectChanged = onContentRectChanged;
 
     // Create threaded android_app
-    android_app* app = android_app_create(activity, savedState, savedStateSize);
+    android_app* app = (struct android_app*)malloc(sizeof(struct android_app));
+    memset(app, 0, sizeof(struct android_app));
+    app->activity = activity;
+    app->application_so = load_target;
+
+    pthread_mutex_init(&app->mutex, NULL);
+    pthread_cond_init(&app->cond, NULL);
+
+    if (savedState != NULL) {
+        app->savedState = malloc(savedStateSize);
+        app->savedStateSize = savedStateSize;
+        memcpy(app->savedState, savedState, savedStateSize);
+    }
+
+    int msgpipe[2];
+    if (pipe(msgpipe)) {
+        LOGE("could not create pipe: %s", strerror(errno));
+        exit(1);
+    }
+    app->msgread = msgpipe[0];
+    app->msgwrite = msgpipe[1];
+
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_create(&app->thread, &attr, android_app_entry, app);
+
+    // Wait for thread to start.
+    pthread_mutex_lock(&app->mutex);
+    while (!app->running) {
+        pthread_cond_wait(&app->cond, &app->mutex);
+    }
+    pthread_mutex_unlock(&app->mutex);
+
     activity->instance = app;
     
     // Save global variables for use later
