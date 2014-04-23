@@ -197,10 +197,14 @@ void ToggleFullscreen()
 {
     if( context->is_fullscreen )
     {
+#ifdef HAVE_GLUT
         glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
+#endif // HAVE_GLUT
         context->is_fullscreen = false;
     }else{
+#ifdef HAVE_GLUT
         glutFullScreen();
+#endif // HAVE_GLUT
         context->is_fullscreen = true;
     }
 }
@@ -209,11 +213,13 @@ void SetFullscreen(bool fullscreen)
 {
     if( fullscreen != context->is_fullscreen )
     {
+#ifdef HAVE_GLUT
         if(fullscreen) {
             glutFullScreen();
         }else{
             glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
         }
+#endif // HAVE_GLUT
         context->is_fullscreen = fullscreen;
     }
 }

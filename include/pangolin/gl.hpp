@@ -352,7 +352,7 @@ inline GlRenderBuffer::~GlRenderBuffer()
     }
 }
 #else
-inline void GlRenderBuffer::Reinitialise(GLint width, GLint height, GLint internal_format = GL_DEPTH_COMPONENT24)
+inline void GlRenderBuffer::Reinitialise(GLint width, GLint height, GLint internal_format)
 {
     if( width!=0 ) {
         glDeleteTextures(1, &rbid);

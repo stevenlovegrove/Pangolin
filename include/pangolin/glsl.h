@@ -76,8 +76,10 @@ enum GlSlShaderType
 {
     GlSlFragmentShader = GL_FRAGMENT_SHADER,
     GlSlVertexShader = GL_VERTEX_SHADER,
+#ifndef HAVE_GLES
     GlSlGeometryShader = GL_GEOMETRY_SHADER,
     GlSlComputeShader = GL_COMPUTE_SHADER
+#endif
 };
 
 class GlSlProgram

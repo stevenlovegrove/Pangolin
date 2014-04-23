@@ -35,7 +35,7 @@ Handler3DFramebuffer::Handler3DFramebuffer(GlFramebuffer& fb, pangolin::OpenGlRe
 {
 }
 
-void Handler3DFramebuffer::GetPosNormal(pangolin::View& view, int x, int y, double p[3], double Pw[3], double Pc[3], double n[3], double default_z)
+void Handler3DFramebuffer::GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision n[3], GLprecision default_z)
 {
     fb.Bind();
     Handler3D::GetPosNormal(view,x,y,p,Pw,Pc,n,default_z);

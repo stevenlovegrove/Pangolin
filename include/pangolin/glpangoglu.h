@@ -39,43 +39,43 @@ const GLubyte* glErrorString(GLenum error);
 /// Clone of gluProject
 PANGOLIN_EXPORT
 GLint glProject(
-    GLfloat objx, GLfloat objy, GLfloat objz,
-    const GLfloat modelMatrix[16],
-    const GLfloat projMatrix[16],
+    float objx, float objy, float objz,
+    const float modelMatrix[16],
+    const float projMatrix[16],
     const GLint viewport[4],
-    GLfloat* winx, GLfloat* winy, GLfloat* winz
+    float* winx, float* winy, float* winz
 );
 
 
 /// Clone of gluUnProject
 PANGOLIN_EXPORT
 GLint glUnProject(
-    GLfloat winx, GLfloat winy, GLfloat winz,
-    const GLfloat modelMatrix[16],
-    const GLfloat projMatrix[16],
+    float winx, float winy, float winz,
+    const float modelMatrix[16],
+    const float projMatrix[16],
     const GLint viewport[4],
-    GLfloat* objx, GLfloat* objy, GLfloat* objz
+    float* objx, float* objy, float* objz
 );
 
 /// Clone of gluProject
 PANGOLIN_EXPORT
 GLint glProject(
-    GLdouble objx, GLdouble objy, GLdouble objz,
-    const GLdouble modelMatrix[16],
-    const GLdouble projMatrix[16],
+    double objx, double objy, double objz,
+    const double modelMatrix[16],
+    const double projMatrix[16],
     const GLint viewport[4],
-    GLdouble* winx, GLdouble* winy, GLdouble* winz
+    double* winx, double* winy, double* winz
 );
 
 
 /// Clone of gluUnProject
 PANGOLIN_EXPORT
 GLint glUnProject(
-    GLdouble winx, GLdouble winy, GLdouble winz,
-    const GLdouble modelMatrix[16],
-    const GLdouble projMatrix[16],
+    double winx, double winy, double winz,
+    const double modelMatrix[16],
+    const double projMatrix[16],
     const GLint viewport[4],
-    GLdouble* objx, GLdouble* objy, GLdouble* objz
+    double* objx, double* objy, double* objz
 );
 
 }

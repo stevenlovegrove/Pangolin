@@ -92,17 +92,17 @@ int InvertMatrix(const P m[16], P invOut[16])
 
 // Based on glu implementation
 GLint glProject(
-    GLfloat objx, GLfloat objy, GLfloat objz,
-    const GLfloat modelMatrix[16],
-    const GLfloat projMatrix[16],
+    float objx, float objy, float objz,
+    const float modelMatrix[16],
+    const float projMatrix[16],
     const GLint viewport[4],
-    GLfloat* winx, GLfloat* winy, GLfloat* winz)
+    float* winx, float* winy, float* winz)
 {
-    GLfloat t1[4] = {objx, objy, objz, 1.0f};
-    GLfloat t2[4];
+    float t1[4] = {objx, objy, objz, 1.0f};
+    float t2[4];
 
-    MatMul<4,4,1,GLfloat>(t2, modelMatrix, t1);
-    MatMul<4,4,1,GLfloat>(t1, projMatrix, t2);
+    MatMul<4,4,1,float>(t2, modelMatrix, t1);
+    MatMul<4,4,1,float>(t1, projMatrix, t2);
 
     if (t1[3] == 0.0) {
         return(GL_FALSE);
@@ -131,22 +131,22 @@ GLint glProject(
 
 // Based on glu implementation
 GLint glUnProject(
-    GLfloat winx, GLfloat winy, GLfloat winz,
-    const GLfloat mv[16],
-    const GLfloat proj[16],
+    float winx, float winy, float winz,
+    const float mv[16],
+    const float proj[16],
     const GLint viewport[4],
-    GLfloat* objx, GLfloat* objy, GLfloat* objz)
+    float* objx, float* objy, float* objz)
 {
-    GLfloat t1[16];
+    float t1[16];
 
-    MatMul<4,4,4,GLfloat>(t1, proj, mv);
+    MatMul<4,4,4,float>(t1, proj, mv);
 
-    if (!InvertMatrix<GLfloat>(t1, t1)) {
+    if (!InvertMatrix<float>(t1, t1)) {
         return(GL_FALSE);
     }
 
     // Map x and y from window coordinates
-    GLfloat in[4] = {winx, winy, winz, 1.0f};
+    float in[4] = {winx, winy, winz, 1.0f};
     in[0] = (in[0] - viewport[0]) / viewport[2];
     in[1] = (in[1] - viewport[1]) / viewport[3];
 
@@ -155,8 +155,8 @@ GLint glUnProject(
     in[1] = in[1] * 2 - 1;
     in[2] = in[2] * 2 - 1;
 
-    GLfloat out[4];
-    MatMul<4,4,1,GLfloat>(out, t1, in);
+    float out[4];
+    MatMul<4,4,1,float>(out, t1, in);
 
     if (out[3] == 0.0) {
         return(GL_FALSE);
@@ -177,17 +177,17 @@ GLint glUnProject(
 
 // Based on glu implementation
 GLint glProject(
-    GLdouble objx, GLdouble objy, GLdouble objz,
-    const GLdouble modelMatrix[16],
-    const GLdouble projMatrix[16],
+    double objx, double objy, double objz,
+    const double modelMatrix[16],
+    const double projMatrix[16],
     const GLint viewport[4],
-    GLdouble* winx, GLdouble* winy, GLdouble* winz)
+    double* winx, double* winy, double* winz)
 {
-    GLdouble t1[4] = {objx, objy, objz, 1.0f};
-    GLdouble t2[4];
+    double t1[4] = {objx, objy, objz, 1.0f};
+    double t2[4];
 
-    MatMul<4,4,1,GLdouble>(t2, modelMatrix, t1);
-    MatMul<4,4,1,GLdouble>(t1, projMatrix, t2);
+    MatMul<4,4,1,double>(t2, modelMatrix, t1);
+    MatMul<4,4,1,double>(t1, projMatrix, t2);
 
     if (t1[3] == 0.0) {
         return(GL_FALSE);
@@ -216,22 +216,22 @@ GLint glProject(
 
 // Based on glu implementation
 GLint glUnProject(
-    GLdouble winx, GLdouble winy, GLdouble winz,
-    const GLdouble mv[16],
-    const GLdouble proj[16],
+    double winx, double winy, double winz,
+    const double mv[16],
+    const double proj[16],
     const GLint viewport[4],
-    GLdouble* objx, GLdouble* objy, GLdouble* objz)
+    double* objx, double* objy, double* objz)
 {
-    GLdouble t1[16];
+    double t1[16];
 
-    MatMul<4,4,4,GLdouble>(t1, proj, mv);
+    MatMul<4,4,4,double>(t1, proj, mv);
 
-    if (!InvertMatrix<GLdouble>(t1, t1)) {
+    if (!InvertMatrix<double>(t1, t1)) {
         return(GL_FALSE);
     }
 
     // Map x and y from window coordinates
-    GLdouble in[4] = {winx, winy, winz, 1.0f};
+    double in[4] = {winx, winy, winz, 1.0f};
     in[0] = (in[0] - viewport[0]) / viewport[2];
     in[1] = (in[1] - viewport[1]) / viewport[3];
 
@@ -240,8 +240,8 @@ GLint glUnProject(
     in[1] = in[1] * 2 - 1;
     in[2] = in[2] * 2 - 1;
 
-    GLdouble out[4];
-    MatMul<4,4,1,GLdouble>(out, t1, in);
+    double out[4];
+    MatMul<4,4,1,double>(out, t1, in);
 
     if (out[3] == 0.0) {
         return(GL_FALSE);
