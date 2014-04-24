@@ -902,19 +902,6 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
         };
 
         ScaleView(scalex, scaley, c[0], c[1]);
-
-//        const double c[2] = {
-//            track_front ? int_x[1] : (int_x[0] + int_x[1])/2.0,
-//            (int_y[0] + int_y[1])/2.0
-//        };
-
-//        if(button_state & KeyModifierCmd) {
-//            int_y[0] = scale*(int_y[0] - c[1]) + c[1];
-//            int_y[1] = scale*(int_y[1] - c[1]) + c[1];
-//        }else{
-//            int_x[0] = scale*(int_x[0] - c[0]) + c[0];
-//            int_x[1] = scale*(int_x[1] - c[0]) + c[0];
-//        }
     }
 
     // Update hover status (after potential resizing)
