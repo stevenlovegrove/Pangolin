@@ -26,6 +26,7 @@
     #define GL_COLOR_ATTACHMENT0_EXT    GL_COLOR_ATTACHMENT0
     #define GL_DEPTH_ATTACHMENT_EXT     GL_DEPTH_ATTACHMENT
 #else
+    #define glOrtho                     glOrthof
     #define glGenFramebuffersEXT        glGenFramebuffersOES
     #define glDeleteFramebuffersEXT     glDeleteFramebuffersOES
     #define glBindFramebufferEXT        glBindFramebufferOES

@@ -8,7 +8,10 @@ if(BUILD_PANGOLIN_GUI AND (FREEGLUT_FOUND OR GLUT_FOUND OR ANDROID) )
     add_subdirectory(HelloPangolin)
     add_subdirectory(SimpleMultiDisplay)
     add_subdirectory(SimpleDisplayImage)
-    add_subdirectory(SimplePlot)
+
+    if(NOT HAVE_GLES OR HAVE_GLES_2)
+        add_subdirectory(SimplePlot)
+    endif()
 
     ## These samples require Pangolin Var support
     if(BUILD_PANGOLIN_VARS)

@@ -32,7 +32,10 @@
 #include <pangolin/glstate.h>
 #include <pangolin/image_load.h>
 #include <pangolin/type_convert.h>
+
+#if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
 #include <pangolin/glsl.h>
+#endif
 
 #include <pangolin/xml/rapidxml.hpp>
 #include <pangolin/xml/rapidxml_utils.hpp>
@@ -130,6 +133,7 @@ void GlText::Add(const GlChar& c)
 
 void GlText::DrawGlSl()
 {
+#if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
     if(vs.size() && tex) {
         glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_POSITION);
         glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_TEXCOORD);
@@ -145,6 +149,7 @@ void GlText::DrawGlSl()
         glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_POSITION);
         glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_TEXCOORD);
     }
+#endif
 }
 
 void GlText::Draw()

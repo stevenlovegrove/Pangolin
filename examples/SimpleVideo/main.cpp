@@ -34,8 +34,10 @@ void VideoSample(const std::string uri)
     const VideoPixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();
+#if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
     const float scale = video.VideoUri().Get<float>("scale", 1.0f);
     const float bias  = video.VideoUri().Get<float>("bias", 0.0f);
+#endif
 
     // Work out appropriate GL channel and format options
     GLint glchannels;
@@ -63,9 +65,13 @@ void VideoSample(const std::string uri)
 
         // Activate video viewport and render texture
         vVideo.Activate();
+#if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
         pangolin::GlSlUtilities::Scale(scale, bias);
         texVideo.RenderToViewportFlipY();
         pangolin::GlSlUtilities::UseNone();
+#else
+        texVideo.RenderToViewportFlipY();
+#endif
 
         // Swap back buffer with front and process window events via GLUT
         pangolin::FinishFrame();

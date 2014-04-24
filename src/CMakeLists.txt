@@ -29,16 +29,20 @@ if(BUILD_PANGOLIN_GUI)
     ${INCDIR}/handler.h ${INCDIR}/handler_enums.h
     ${INCDIR}/handler_glbuffer.h
     ${INCDIR}/opengl_render_state.h
-    ${INCDIR}/datalog.h ${INCDIR}/plotter.h
+    ${INCDIR}/datalog.h
     ${INCDIR}/glfont.h ${INCDIR}/glpangoglu.h
   )
   list(APPEND SOURCES
     display.cpp view.cpp viewport.cpp
     handler.cpp handler_glbuffer.cpp
     opengl_render_state.cpp
-    datalog.cpp plotter.cpp
+    datalog.cpp
     glfont.cpp glpangoglu.cpp
   )
+  if(NOT HAVE_GLES OR HAVE_GLES_2)
+    list(APPEND HEADERS ${INCDIR}/plotter.h)
+    list(APPEND SOURCES plotter.cpp)
+  endif()
 endif()
 
 option(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
@@ -87,24 +91,16 @@ endif()
 
 if(BUILD_PANGOLIN_GUI)
     if( ANDROID  )
-        # TODO: Choose between these based on config.
-        set(HAVE_GLES   1)
-        set(HAVE_GLES_2 1)
-
         # Android specific display code
         list(APPEND HEADERS ${INCDIR}/display_android.h )
         list(APPEND SOURCES display_android.cpp )
 
         if(HAVE_GLES_2)
-            list(APPEND LINK_LIBS "-lEGL;-lGLESv2;-lGLESv1_CM" )
+            list(APPEND LINK_LIBS "-lEGL;-lGLESv2" )
         else()
-            find_package(GLUES REQUIRED QUIET)
-            list(APPEND USER_INC  "${GLUES_INCLUDE_DIR};" )
-            list(APPEND LINK_LIBS "${GLUES_LIBRARY}" )
+            list(APPEND LINK_LIBS "-lEGL;-lGLESv1_CM" )
         endif()
     elseif( IOS )
-        set(HAVE_GLES   1)
-        set(HAVE_GLES_2 1)
         list(APPEND LINK_LIBS "-framework OpenGLES" )
         list(APPEND HEADERS "${INCDIR}/ios/PangolinAppDelegate.h" "${INCDIR}/ios/PangolinViewController.h" )
         list(APPEND SOURCES "ios/PangolinAppDelegate.mm" "ios/PangolinViewController.mm" )

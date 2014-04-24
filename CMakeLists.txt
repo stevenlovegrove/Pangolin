@@ -18,8 +18,16 @@ if(CPP11_NO_BOOST)
 endif()
 
 if(ANDROID)
-   set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
-   include(AndroidUtils)
+    set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
+    include(AndroidUtils)
+endif()
+
+if(ANDROID OR IOS)
+    set(HAVE_GLES 1)
+    option(BUILD_FOR_GLES_2 "Build for OpenGL ES 2 instead of ES 1" ON )
+    if(BUILD_FOR_GLES_2)
+        set(HAVE_GLES_2 1)
+    endif()
 endif()
 
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}

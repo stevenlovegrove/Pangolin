@@ -54,7 +54,7 @@ const static GLuint attachment_buffers[] = {
 #else // HAVE_GLES
 const int MAX_ATTACHMENTS = 1;
 const static GLuint attachment_buffers[] = {
-    GL_COLOR_ATTACHMENT0
+    GL_COLOR_ATTACHMENT0_EXT
 };
 #endif // HAVE_GLES
 
@@ -451,10 +451,12 @@ inline GLenum GlFramebuffer::AttachColour(GlTexture& tex )
 inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
 {
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
-#ifndef HAVE_GLES
+#if !defined(HAVE_GLES)
     glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rb.rbid);
-#else
+#elif defined(HAVE_GLES_2)
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, rb.rbid, 0);
+#else
+    throw std::exception();
 #endif
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     CheckGlDieOnError();
