@@ -342,7 +342,9 @@ void Plotter::Render()
     if(track || trigger_edge) {
         float newTrackVal[2];
         ComputeTrackValue(newTrackVal);
-        ScrollView(newTrackVal[0]-last_track_val[0], newTrackVal[1]-last_track_val[1] );
+        if(target.x.max <= newTrackVal[0] ) {
+            ScrollView(newTrackVal[0]-last_track_val[0], newTrackVal[1]-last_track_val[1] );
+        }
         last_track_val[0] = newTrackVal[0];
         last_track_val[1] = newTrackVal[1];
     }
