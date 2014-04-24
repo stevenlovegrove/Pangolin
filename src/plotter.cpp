@@ -271,12 +271,15 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
     // Setup default PlotSeries
     plotseries.reserve(10);
-    for(int i=0; i<10; ++i) {
+    const std::vector<std::string>& labels = log->Labels();
+    for(unsigned int i=0; i< 10; ++i) {
         std::ostringstream oss;
         oss << "$" << i;
-        const Colour col = colour_wheel.GetUniqueColour();
         plotseries.push_back( PlotSeries() );
-        plotseries.back().CreatePlot("$i", oss.str(), col, oss.str() );
+        plotseries.back().CreatePlot( "$i", oss.str(),
+            colour_wheel.GetUniqueColour(),
+            i < labels.size() ? log->Labels()[i] : oss.str()
+        );
     }
 
     // Setup test PlotMarkers
@@ -560,7 +563,10 @@ void Plotter::Render()
         PlotSeries& ps = plotseries[i];
         if(ps.used) {
             prog_text.SetUniform("u_color", ps.colour );
-            prog_text.SetUniform("u_offset",v.w-25 -(v.w/2.0f), v.h-15*(++keyid) -(v.h/2.0f));
+            prog_text.SetUniform("u_offset",
+                v.w-5-ps.title.Width() -(v.w/2.0f),
+                v.h-15*(++keyid) -(v.h/2.0f)
+            );
             ps.title.DrawGlSl();
         }
     }

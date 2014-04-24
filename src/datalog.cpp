@@ -72,6 +72,11 @@ void DataLog::SetLabels(const std::vector<std::string> & new_labels)
         labels[i] = new_labels[i];
 }
 
+const std::vector<std::string>& DataLog::Labels() const
+{
+    return labels;
+}
+
 void DataLog::Log(unsigned int dimension, const float* vals, unsigned int samples )
 {
     if(!block0) {

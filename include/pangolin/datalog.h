@@ -163,6 +163,7 @@ public:
     /// Provide textual labels corresponding to each dimension logged.
     /// This information may be used by graphical interfaces to DataLog.
     void SetLabels(const std::vector<std::string> & labels);
+    const std::vector<std::string>& Labels() const;
 
     void Log(unsigned int dimension, const float * vals, unsigned int samples = 1);
     void Log(float v);
