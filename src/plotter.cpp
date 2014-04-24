@@ -34,14 +34,6 @@
 namespace pangolin
 {
 
-inline void SetColor(float colour[4], float r, float g, float b, float alpha = 1.0f)
-{
-    colour[0] = r;
-    colour[1] = g;
-    colour[2] = b;
-    colour[3] = alpha;
-}
-
 std::string ReplaceChar(const std::string& str, char from, char to)
 {
     std::string ret = str;
