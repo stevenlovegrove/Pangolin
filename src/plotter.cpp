@@ -306,6 +306,7 @@ template <typename T> int data_sgn(T val) {
 void Plotter::ComputeTrackValue( float track_val[2] )
 {
     if(trigger_edge) {
+        // Track last edge transition matching trigger_edge
         const DataLogBlock* block = log->LastBlock();
         if(block) {
             int s = block->StartId() + block->Samples() - 1;
@@ -324,12 +325,11 @@ void Plotter::ComputeTrackValue( float track_val[2] )
                 last_sgn = sgn;
             }
         }
-        track_val[0] = log->Samples();
-        track_val[1] = 0.0f;
-    }else{
-        track_val[0] = log->Samples();
-        track_val[1] = 0.0f;
+        // Fall back to simple last value tracking
     }
+
+    track_val[0] = log->Samples();
+    track_val[1] = 0.0f;
 }
 
 void Plotter::Render()
@@ -858,7 +858,7 @@ void Plotter::MouseMotion(View& view, int x, int y, int button_state)
     }else if(button_state == MouseButtonRight )
     {
         const float c[2] = {
-            track || trigger_edge ? target.x.max : hover[0],
+            track || trigger_edge ? last_track_val[0] : hover[0],
             hover[1]
         };
 
@@ -897,7 +897,7 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
         }
 
         const float c[2] = {
-            track || trigger_edge ? target.x.max : hover[0],
+            track || trigger_edge ? last_track_val[0] : hover[0],
             hover[1]
         };
 
