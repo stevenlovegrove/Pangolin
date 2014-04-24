@@ -28,6 +28,8 @@
 #ifndef PANGOLIN_RANGE_H
 #define PANGOLIN_RANGE_H
 
+#include <limits>
+
 namespace pangolin
 {
 
@@ -111,6 +113,18 @@ struct Range
         max = s*(max-center) + center;
     }
 
+    void Insert(float v)
+    {
+        min = std::min(min,v);
+        max = std::max(max,v);
+    }
+
+    void Clear()
+    {
+        min = +std::numeric_limits<float>::max();
+        max = -std::numeric_limits<float>::max();
+    }
+
     float min;
     float max;
 };
@@ -148,6 +162,12 @@ struct XYRange
     {
         x.Scale(sx, centerx);
         y.Scale(sy, centery);
+    }
+
+    void Clear()
+    {
+        x.Clear();
+        y.Clear();
     }
 
     float Area() const
