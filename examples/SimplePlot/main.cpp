@@ -17,8 +17,10 @@ int main( int /*argc*/, char* argv[] )
   const double tinc = 0.01;
 
   // OpenGL 'view' of data. We might have many views of the same data.
-  Plotter plotter(&log,0,M_PI/tinc,-2,2,M_PI/(4*tinc),0.5);
+  Plotter plotter(&log,0,4*M_PI/tinc,-2,2,M_PI/(4*tinc),0.5);
   plotter.SetBounds(0.0, 1.0, 0.0, 1.0);
+  plotter.Track("$i");
+
   DisplayBase().AddDisplay(plotter);
 
   double t = 0;
