@@ -73,7 +73,7 @@ Plotter::PlotSeries::PlotSeries()
 void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y, Colour colour, std::string title)
 {
     static const std::string vs_header =
-            "uniform int u_id_offset;\n"
+            "uniform float u_id_offset;\n"
             "uniform vec4 u_color;\n"
             "uniform vec2 u_scale;\n"
             "uniform vec2 u_offset;\n"
@@ -106,21 +106,25 @@ void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y,
     as.insert(ay.begin(), ay.end());
     contains_id = ( as.find(-1) != as.end() );
 
-    std::string vs_attrib;
+    std::ostringstream oss_prog;
+
     for(std::set<int>::const_iterator i=as.begin(); i != as.end(); ++i) {
         std::ostringstream oss;
         oss << "s" << *i;
-        const std::string name = *i >= 0 ? oss.str() : "si";
+        const std::string name = *i >= 0 ? oss.str() : "sn";
         attribs.push_back( PlotAttrib(name, *i) );
-        vs_attrib += "attribute float " + name + ";\n";
+        oss_prog << "attribute float " + name + ";\n";
     }
 
-    prog.AddShader( GlSlVertexShader,
-                    vs_attrib +
-                    vs_header +
-                    "float x = " + ReplaceChar(x,'$','s') + ";\n" +
-                    "float y = " + ReplaceChar(y,'$','s') + ";\n" +
-                    vs_footer);
+    oss_prog << vs_header;
+    if(contains_id) {
+        oss_prog << "float si = sn + u_id_offset;\n";
+    }
+    oss_prog << "float x = " + ReplaceChar(x,'$','s') + ";\n";
+    oss_prog << "float y = " + ReplaceChar(y,'$','s') + ";\n";
+    oss_prog << vs_footer;
+
+    prog.AddShader( GlSlVertexShader, oss_prog.str() );
     prog.AddShader( GlSlFragmentShader, fs );
     prog.Link();
 
@@ -433,7 +437,6 @@ void Plotter::Render()
     //////////////////////////////////////////////////////////////////////////
     // Draw series
 
-    static size_t id_start = 0;
     static size_t id_size = 0;
     static float* id_array = 0;
 
@@ -454,19 +457,14 @@ void Plotter::Render()
                 if(id_size < block->Samples() ) {
                     // Create index array that we can bind
                     delete[] id_array;
-                    id_start = -1;
                     id_size = block->MaxSamples();
                     id_array = new float[id_size];
-                }
-                if(id_start != block->StartId()) {
                     for(size_t k=0; k < id_size; ++k) {
-                        id_array[k] = block->StartId() + k;
+                        id_array[k] = k;
                     }
-                    id_start = block->StartId();
                 }
+                prog.SetUniform("u_id_offset",  (float)block->StartId() );
             }
-
-            prog.SetUniform("u_id_offset",  (int)block->StartId() );
 
             // Enable appropriate attributes
             bool shouldRender = true;
