@@ -37,8 +37,8 @@ namespace pangolin
 // Forward declarations
 struct View;
 
-//! @brief Input Handler base class with virtual methods which recurse
-//! into sub-displays
+/// Input Handler base class.
+/// Virtual methods which recurse into sub-displays.
 struct PANGOLIN_EXPORT Handler
 {
     virtual ~Handler() {}

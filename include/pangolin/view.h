@@ -59,7 +59,7 @@ enum Lock {
 // Forward declaration
 struct Handler;
 
-//! @brief A Display manages the location and resizing of an OpenGl viewport.
+/// A Display manages the location and resizing of an OpenGl viewport.
 struct PANGOLIN_EXPORT View
 {
     View(double aspect=0.0)

@@ -59,7 +59,7 @@ namespace pangolin {
     typedef double GLprecision;
 #endif
 
-//! @brief Capture OpenGL matrix types in enum to typing
+/// Capture OpenGL matrix types in enum to typing.
 enum OpenGlStack {
     GlModelViewStack =  0x1700, // GL_MODELVIEW
     GlProjectionStack = 0x1701, // GL_PROJECTION
@@ -86,7 +86,7 @@ const static CameraSpec CameraSpecOpenGl = {{0,0,-1},{0,1,0},{1,0,0},{0,1},{1,0}
 
 const static CameraSpec CameraSpecYDownZForward = {{0,0,1},{0,-1,0},{1,0,0},{0,-1},{1,0}};
 
-// Direction vector for each AxisDirection enum
+/// Direction vector for each AxisDirection enum
 const static GLprecision AxisDirectionVector[7][3] = {
     {0,0,0},
     {-1,0,0}, {1,0,0},
@@ -94,7 +94,7 @@ const static GLprecision AxisDirectionVector[7][3] = {
     {0,0,-1}, {0,0,1}
 };
 
-//! @brief Object representing OpenGl Matrix
+/// Object representing OpenGl Matrix.
 struct PANGOLIN_EXPORT OpenGlMatrix {
     static OpenGlMatrix Translate(GLprecision x, GLprecision y, GLprecision z);
     static OpenGlMatrix Scale(GLprecision x, GLprecision y, GLprecision z);
@@ -142,13 +142,13 @@ OpenGlMatrix operator*(const OpenGlMatrix& lhs, const OpenGlMatrix& rhs);
 PANGOLIN_EXPORT
 std::ostream& operator<<(std::ostream& os, const OpenGlMatrix& mat);
 
-//! @brief deprecated
+/// Deprecated.
 struct PANGOLIN_EXPORT OpenGlMatrixSpec : public OpenGlMatrix {
     // Specify which stack this refers to
     OpenGlStack type;
 };
 
-//! @brief Object representing attached OpenGl Matrices / transforms
+/// Object representing attached OpenGl Matrices / transforms.
 class PANGOLIN_EXPORT OpenGlRenderState
 {
 public:
