@@ -98,6 +98,11 @@ void DataLog::Log(unsigned int dimension, const float* vals, unsigned int sample
     }
 
     blockn->AddSamples(samples,dimension,vals);
+
+    // Update pointer to most recent block.
+    while(blockn->NextBlock()) {
+        blockn = blockn->NextBlock();
+    }
 }
 
 void DataLog::Log(float v)
