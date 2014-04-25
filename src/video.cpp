@@ -190,7 +190,7 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 #endif
 
-#ifdef HAVE_OPENNI
+#if defined(HAVE_OPENNI) || defined(HAVE_OPENNI2)
 
 OpenNiSensorType openni_sensor(const std::string& str)
 {
@@ -219,7 +219,7 @@ OpenNiSensorType openni_sensor(const std::string& str)
     }
 }
 
-#endif // HAVE_OPENNI
+#endif // defined(HAVE_OPENNI) || defined(HAVE_OPENNI2)
 
 VideoInterface* OpenVideo(const std::string& str_uri)
 {
