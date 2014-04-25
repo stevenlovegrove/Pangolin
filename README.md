@@ -15,8 +15,17 @@ based) systems, without compromising performance. It also enables write-once
 code for a number of platforms, currently including Windows, Linux, OSX, Android
 and IOS.
 
-Required Dependencies
-====================================
+## Code ##
+
+Find the latest version on [Github](http://github.com/stevenlovegrove/Pangolin):
+>     git clone https://github.com/stevenlovegrove/Pangolin.git
+
+Current build status on [Drone.io](https://drone.io/github.com/stevenlovegrove/Pangolin)
+![Build Status](https://drone.io/github.com/stevenlovegrove/Pangolin/status.png)
+
+## Dependencies ##
+
+### Required Dependencies ###
 
 * OpenGL
 
@@ -25,8 +34,7 @@ Required Dependencies
  * (deb) sudo apt-get install cmake
  * (mac) sudo port install cmake
 
-Recommended Dependencies
-====================================
+### Recommended Dependencies ###
 
 * Glut / GLU / Glew (Required for window management on OSX/Win/Linux)
  * (win) http://www.transmissionzero.co.uk/software/freeglut-devel/
@@ -39,8 +47,7 @@ Recommended Dependencies
  * (deb) sudo apt-get install libboost-dev libboost-thread-dev libboost-filesystem-dev
  * (mac) sudo port install boost
 
-Optional Dependencies for video input
-====================================
+### Optional Dependencies for video input ###
 
 * FFMPEG (For video decoding and image rescaling)
  * (deb) sudo apt-get install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev
@@ -51,8 +58,7 @@ Optional Dependencies for video input
 * libuvc (For cross-platform webcam video input via libusb)
  * git://github.com/ktossell/libuvc.git
 
-Very Optional Dependencies
-====================================
+### Very Optional Dependencies ###
 
 * GLConsole (For graphical drop-down console. Must be built before Pangolin.)
  * git clone git://git.code.sf.net/p/glconsole/code glconsole
