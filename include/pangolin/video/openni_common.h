@@ -35,13 +35,14 @@ enum OpenNiSensorType
 {
     OpenNiUnassigned = -1,
     OpenNiRgb = 0,
-    OpenNiIr = 1,
-    OpenNiDepth = 2,
-    OpenNiDepthRegistered = 3,
-    OpenNiIr8bit = 4,
-    OpenNiIrProj = 5,
-    OpenNiIr8bitProj = 6,
-    OpenNiGrey = 7
+    OpenNiIr,
+    OpenNiDepth,
+    OpenNiDepthRegistered,
+    OpenNiIr8bit,
+    OpenNiIr24bit,
+    OpenNiIrProj,
+    OpenNiIr8bitProj,
+    OpenNiGrey
 };
 
 }

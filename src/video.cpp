@@ -194,7 +194,9 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 OpenNiSensorType openni_sensor(const std::string& str)
 {
-    if( !str.compare("rgb") ) {
+    if( !str.compare("grey") || !str.compare("gray") ) {
+        return OpenNiGrey;
+    }else if( !str.compare("rgb") ) {
         return OpenNiRgb;
     }else if( !str.compare("ir") ) {
         return OpenNiIr;
@@ -204,10 +206,14 @@ OpenNiSensorType openni_sensor(const std::string& str)
         return OpenNiDepthRegistered;
     }else if( !str.compare("ir8") ) {
         return OpenNiIr8bit;
+    }else if( !str.compare("ir24") ) {
+        return OpenNiIr24bit;
     }else if( !str.compare("ir+") ) {
         return OpenNiIrProj;
     }else if( !str.compare("ir8+") ) {
         return OpenNiIr8bitProj;
+    }else if( str.empty() ) {
+        return OpenNiUnassigned;
     }else{
         throw pangolin::VideoException("Unknown OpenNi sensor", str );
     }
@@ -394,18 +400,18 @@ VideoInterface* OpenVideo(const Uri& uri)
         const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
         const unsigned int fps = uri.Get<unsigned int>("fps", 30);
 
-        OpenNiSensorType img1 = OpenNiRgb;
-        OpenNiSensorType img2 = OpenNiUnassigned;
+        OpenNiSensorType img1;
+        OpenNiSensorType img2;
 
-        if(uri.params.find("img1")!=uri.params.end()){
-            img1 = openni_sensor(uri.Get<std::string>("img1", "depth"));
-        }
+        img1 = openni_sensor(uri.Get<std::string>("img1", "rgb") );
+        img2 = openni_sensor(uri.Get<std::string>("img2", "") );
 
-        if(uri.params.find("img2")!=uri.params.end()){
-            img2 = openni_sensor(uri.Get<std::string>("img2","rgb"));
-        }
+        OpenNiVideo2* nivid = new OpenNiVideo2(img1,img2,dim,fps);
+        video = nivid;
 
-        video = new OpenNiVideo2(img1,img2,dim,fps);
+        nivid->SetDepthCloseRange( uri.Get<bool>("closerange",false) );
+        nivid->SetDepthHoleFilter( uri.Get<bool>("holefilter",false) );
+        nivid->SetDepthColorSyncEnabled( uri.Get<bool>("coloursync",false) );
     }else
 #endif
 #ifdef HAVE_UVC

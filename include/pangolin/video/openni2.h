@@ -43,7 +43,16 @@ namespace pangolin
 struct OpenNiVideo2 : public VideoInterface
 {
 public:
-    OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim, int fps);
+    OpenNiVideo2(
+        OpenNiSensorType s1, OpenNiSensorType s2,
+        ImageDim dim, int fps
+    );
+
+    void SetDepthCloseRange(bool enable);
+    void SetDepthHoleFilter(bool enable);
+    void SetDepthColorSyncEnabled(bool enable);
+    void SetRegisterDepthToImage(bool enable);
+
     ~OpenNiVideo2();
 
     //! Implement VideoInput::Start()
@@ -65,6 +74,13 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
 
 protected:
+    void PrintOpenNI2Modes(openni::SensorType sensorType);
+
+    openni::VideoMode FindOpenNI2Mode(openni::SensorType sensorType,
+        int width, int height,
+        int fps, openni::PixelFormat fmt
+    );
+
     std::vector<StreamInfo> streams;
     OpenNiSensorType sensor_type[2];
 
@@ -76,12 +92,9 @@ protected:
     bool depth_to_color;
     bool use_ir_and_rgb;
     bool fromFile;
-    openni::Status rc;
     openni::Device device;
-    openni::VideoStream depth_ps, color, ir_ps;
-    openni::VideoFrameRef depth_frame;
-    openni::VideoFrameRef m_colorFrame;
-    openni::VideoFrameRef m_IRFrame;
+    openni::VideoStream video_stream[2];
+    openni::VideoFrameRef video_frame[2];
 };
 
 }

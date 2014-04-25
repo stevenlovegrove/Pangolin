@@ -55,8 +55,16 @@
 //  e.g. "v4l:///dev/video0"
 //  e.g. "v4l[method=mmap]:///dev/video0"
 //
-// openni - capture video / depth from an OpenNI streaming device (Kinect / Xtrion etc)
-//           sensor modes containing '8' will truncate to 8-bits.
+// openni2 - capture video / depth from OpenNI2 SDK  (Kinect / Xtrion etc)
+//           imgN=grey|rgb|ir|ir8|ir24|depth|reg_depth
+//  e.g. "openni://'
+//  e.g. "openni:[img1=rgb,img2=depth,coloursync=true]//"
+//  e.g. "openni:[img1=depth,close=closerange,holefilter=true]//"
+//  e.g. "openni:[size=320x240,fps=60,img1=ir]//"
+//
+// openni - capture video / depth from OpenNI 1.0 SDK (Kinect / Xtrion etc)
+//           Sensor modes containing '8' will truncate to 8-bits.
+//           Sensor modes containing '+' explicitly enable IR illuminator
 //           imgN=rgb|ir|ir8|ir+|ir8+|depth|reg_depth
 //  e.g. "openni://'
 //  e.g. "openni:[img1=rgb,img2=depth]//"

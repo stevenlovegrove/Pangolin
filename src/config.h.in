@@ -27,6 +27,7 @@
 #cmakedefine HAVE_V4L
 #cmakedefine HAVE_FFMPEG
 #cmakedefine HAVE_OPENNI
+#cmakedefine HAVE_OPENNI2
 #cmakedefine HAVE_UVC
 #cmakedefine HAVE_DEPTHSENSE
 
