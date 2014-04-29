@@ -116,13 +116,18 @@ void ANativeActivity_onCreate(ANativeActivity * app, void * ud, size_t udsize) {
         )
 
         # Pick first platform from this list.
-        string(REGEX MATCH "^.*[^\n]" android_target "${android_target_list}" )
-
-        # Generate ant build scripts for making APK
-        execute_process(
-            COMMAND android update project --name ${android_project_name} --path . --target ${android_target} --subprojects
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )
+        string(REGEX MATCH "^[^\n]+" android_target "${android_target_list}" )
+        message(STATUS "Android Target: ${android_target}")
+        
+        if( NOT "${android_target}" STREQUAL "" )        
+            # Generate ant build scripts for making APK
+            execute_process(
+                COMMAND android update project --name ${android_project_name} --path . --target ${android_target} --subprojects
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            )
+        else()
+            message( FATAL_ERROR "No Android SDK platforms found. Please install an Android platform SDK. On Linux, run 'android'." )
+        endif()
     endmacro()
 
     # Override add_executable to build android .so instead!
