@@ -196,7 +196,7 @@ if(Oculus_FOUND)
   list(APPEND HEADERS ${INCDIR}/hud/oculus_hud.h )
   list(APPEND SOURCES hud/oculus_hud.cpp )
   list(APPEND USER_INC ${Oculus_INCLUDE_DIRS} )
-  list(APPEND LINK_LIBS ${Oculus_LIBRARIES} )
+  list(APPEND LINK_LIBS ${Oculus_LIBRARIES} "-ludev;-lpthread;-lXinerama" )
   message(STATUS "Oculus Rift Found and Enabled")
 endif()
 

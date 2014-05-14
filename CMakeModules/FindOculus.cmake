@@ -22,6 +22,7 @@ FIND_LIBRARY(
   NAMES ovr
   PATHS
     ${CMAKE_SOURCE_DIR}/../LibOVR/Lib/MacOS/Release
+    ${CMAKE_SOURCE_DIR}/../LibOVR/Lib/Linux/Release/x86_64
     /usr/include/LibOVR/Lib
     /usr/local/include/LibOVR/Lib
     /opt/local/include/LibOVR/Lib
