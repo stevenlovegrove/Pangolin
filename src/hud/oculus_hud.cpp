@@ -276,7 +276,7 @@ void OculusHud::InitialiseOculus()
         pHMD->GetDeviceInfo(&HMD);
         pSensor = *pHMD->GetSensor();
         if (pSensor) {
-            pFusionResult = std::unique_ptr<OVR::SensorFusion>(new OVR::SensorFusion());
+            pFusionResult = boostd::shared_ptr<OVR::SensorFusion>(new OVR::SensorFusion());
             pFusionResult->AttachToSensor(pSensor);
         }else{
             pango_print_error("Unable to get sensor\n");

@@ -74,7 +74,7 @@ protected:
     OVR::Ptr<OVR::DeviceManager> pManager;
     OVR::Ptr<OVR::HMDDevice> pHMD;
     OVR::Ptr<OVR::SensorDevice> pSensor;
-    boostd::unique_ptr<OVR::SensorFusion> pFusionResult;
+    boostd::shared_ptr<OVR::SensorFusion> pFusionResult;
     OVR::HMDInfo HMD;
     OVR::Util::Render::StereoConfig stereo;
 
