@@ -1,5 +1,6 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/hud/oculus_hud.h>
+#include <pangolin/compat/bind.h>
 
 // This Oculus sample is experimental - the OculusHud API is subject to change.
 int main(int argc, char ** argv) {
