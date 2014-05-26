@@ -38,6 +38,7 @@
 
 #ifdef USE_EIGEN
 #include <Eigen/Eigen>
+#include <Eigen/Geometry>
 #endif // USE_EIGEN
 
 namespace pangolin
@@ -344,6 +345,36 @@ inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, const Eig
     glSetFrameOfReference(T_wf);
     glDrawFrustrum(Kinv,w,h,scale);
     glUnsetFrameOfReference();
+}
+
+template<typename T>
+inline void glDrawAlignedBox( const Eigen::AlignedBox<T,3>& box)
+{
+    const Eigen::Matrix<float,3,1> l = box.min().template cast<float>();
+    const Eigen::Matrix<float,3,1> h = box.max().template cast<float>();
+
+    GLfloat verts[] = {
+        l[0], l[1], l[2],
+        l[0], l[1], h[2],
+        h[0], l[1], h[2],
+        h[0], l[1], l[2],
+        l[0], l[1], l[2],
+        l[0], h[1], l[2],
+        h[0], h[1], l[2],
+        h[0], l[1], l[2],
+        h[0], h[1], l[2],
+        h[0], h[1], h[2],
+        l[0], h[1], h[2],
+        l[0], h[1], l[2],
+        l[0], h[1], h[2],
+        l[0], l[1], h[2],
+        h[0], l[1], h[2],
+        h[0], h[1], h[2]
+    };
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, verts);
+    glDrawArrays(GL_LINE_STRIP, 0, 16);
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 #endif // USE_EIGEN
