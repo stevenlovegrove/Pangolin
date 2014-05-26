@@ -57,10 +57,10 @@
 //
 // openni2 - capture video / depth from OpenNI2 SDK  (Kinect / Xtrion etc)
 //           imgN=grey|rgb|ir|ir8|ir24|depth|reg_depth
-//  e.g. "openni://'
-//  e.g. "openni:[img1=rgb,img2=depth,coloursync=true]//"
-//  e.g. "openni:[img1=depth,close=closerange,holefilter=true]//"
-//  e.g. "openni:[size=320x240,fps=60,img1=ir]//"
+//  e.g. "openni2://'
+//  e.g. "openni2:[img1=rgb,img2=depth,coloursync=true]//"
+//  e.g. "openni2:[img1=depth,close=closerange,holefilter=true]//"
+//  e.g. "openni2:[size=320x240,fps=60,img1=ir]//"
 //
 // openni - capture video / depth from OpenNI 1.0 SDK (Kinect / Xtrion etc)
 //           Sensor modes containing '8' will truncate to 8-bits.
