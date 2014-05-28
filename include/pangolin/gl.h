@@ -78,6 +78,15 @@ public:
     //! data_type normally one of GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_FLOAT
     void Upload(const void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT);
     
+    //! Upload data to texture, overwriting a sub-region of it.
+    //! data ptr contains packed data_w x data_h of pixel data.
+    void Upload(
+        const void* data,
+        unsigned int tex_x_offset, unsigned int tex_y_offset,
+        unsigned int data_w, unsigned int data_h,
+        GLenum data_layout, GLenum data_type
+    );
+
     void Download(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT) const;
     
     void SetLinear();
@@ -85,7 +94,7 @@ public:
     
     void RenderToViewport(const bool flip) const;
     void RenderToViewport() const;
-    void RenderToViewport(Viewport tex_vp, bool flip) const;
+    void RenderToViewport(Viewport tex_vp, bool flipx=false, bool flipy=false) const;
     void RenderToViewportFlipY() const;
     void RenderToViewportFlipXFlipY() const;
     

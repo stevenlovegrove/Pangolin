@@ -166,10 +166,23 @@ inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sam
     CheckGlDieOnError();
 }
 
-inline void GlTexture::Upload(const void* image, GLenum data_layout, GLenum data_type )
+inline void GlTexture::Upload(
+    const void* data,
+    GLenum data_layout, GLenum data_type
+) {
+    Bind();
+    glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_layout,data_type,data);
+    CheckGlDieOnError();
+}
+
+inline void GlTexture::Upload(
+    const void* data,
+    unsigned int tex_x_offset, unsigned int tex_y_offset,
+    unsigned int data_w, unsigned int data_h,
+    GLenum data_layout, GLenum data_type )
 {
     Bind();
-    glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_layout,data_type,image);
+    glTexSubImage2D(GL_TEXTURE_2D,0,tex_x_offset,tex_y_offset,data_w,data_h,data_layout,data_type,data);
     CheckGlDieOnError();
 }
 
@@ -233,7 +246,7 @@ inline void GlTexture::RenderToViewport() const
     glDisable(GL_TEXTURE_2D);
 }
 
-inline void GlTexture::RenderToViewport(Viewport tex_vp, bool flip) const
+inline void GlTexture::RenderToViewport(Viewport tex_vp, bool flipx, bool flipy) const
 {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -244,10 +257,13 @@ inline void GlTexture::RenderToViewport(Viewport tex_vp, bool flip) const
     glVertexPointer(2, GL_FLOAT, 0, sq_vert);
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    const GLfloat l = tex_vp.l / (float)(width);
-    const GLfloat b = tex_vp.b / (float)(height);
-    const GLfloat r = (tex_vp.l+tex_vp.w) / (float)(width);
-    const GLfloat t = (tex_vp.b+tex_vp.h) / (float)(height);
+    GLfloat l = tex_vp.l / (float)(width);
+    GLfloat b = tex_vp.b / (float)(height);
+    GLfloat r = (tex_vp.l+tex_vp.w) / (float)(width);
+    GLfloat t = (tex_vp.b+tex_vp.h) / (float)(height);
+
+    if(flipx) std::swap(l,r);
+    if(flipy) std::swap(b,t);
 
     GLfloat sq_tex[]  = { l,b,  r,b,  r,t,  l,t };
     glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
@@ -271,7 +287,7 @@ inline void GlTexture::RenderToViewportFlipY() const
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-     GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
+    GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
     glVertexPointer(2, GL_FLOAT, 0, sq_vert);
     glEnableClientState(GL_VERTEX_ARRAY);
 
