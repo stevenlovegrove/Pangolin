@@ -193,12 +193,20 @@ void Plotter::PlotImplicit::CreateDistancePlot(const std::string& dist)
 
 }
 
-Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top, float tickx, float ticky)
-    : colour_wheel(0.6),
+Plotter::Plotter(
+    DataLog* log,
+    float left, float right, float bottom, float top,
+    float tickx, float ticky,
+    Plotter* linked_plotter_x,
+    Plotter* linked_plotter_y
+)   : log(log),
+      colour_wheel(0.6),
       rview_default(left,right,bottom,top), rview(rview_default), target(rview),
       selection(0,0,0,0),
       track(false), track_x("$i"), track_y(""),
-      trigger_edge(0), trigger("$0")
+      trigger_edge(0), trigger("$0"),
+      linked_plotter_x(linked_plotter_x),
+      linked_plotter_y(linked_plotter_y)
 {
     if(!log) {
         throw std::runtime_error("DataLog not specified");
@@ -206,7 +214,6 @@ Plotter::Plotter(DataLog* log, float left, float right, float bottom, float top,
 
     // Handle our own mouse / keyboard events
     this->handler = this;
-    this->log = log;
     hover[0] = 0;
     hover[1] = 0;
 
@@ -606,21 +613,6 @@ void Plotter::Render()
 
 }
 
-void Plotter::SetView(const XYRange& range)
-{
-    rview = range;
-}
-
-void Plotter::SetViewSmooth(const XYRange &range)
-{
-    target = range;
-}
-
-void Plotter::SetDefaultView(const XYRange &range)
-{
-    rview_default = range;
-}
-
 Plotter::Tick Plotter::FindTickFactor(float tick)
 {
     Plotter::Tick ret;
@@ -737,33 +729,104 @@ void Plotter::FixSelection()
 void Plotter::UpdateView()
 {
     const float sf = 1.0 / 20.0;
-    XYRange d = target - rview;
-    rview += d * sf;
+//    XYRange d = target - rview;
+//    rview += d * sf;
+
+    if( linked_plotter_x ) {
+        // Synchronise rview and target with linked plotter
+        rview.x = linked_plotter_x->rview.x;
+        target.x = linked_plotter_x->target.x;
+    }else{
+        // Animate view window toward target
+        Range d = target.x - rview.x;
+        rview.x += d * sf;
+    }
+
+    if( linked_plotter_y ) {
+        // Synchronise rview and target with linked plotter
+        rview.y = linked_plotter_y->rview.y;
+        target.y = linked_plotter_y->target.y;
+    }else{
+        // Animate view window toward target
+        Range d = target.y - rview.y;
+        rview.y += d * sf;
+    }
+}
+
+void Plotter::SetView(const XYRange& range)
+{
+    Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
+    Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
+
+    px.rview.x = range.x;
+    py.rview.y = range.y;
+}
+
+void Plotter::SetViewSmooth(const XYRange &range)
+{
+    Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
+    Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
+
+    px.target.x = range.x;
+    py.target.y = range.y;
+}
+
+void Plotter::SetDefaultView(const XYRange &range)
+{
+    Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
+    Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
+
+    px.rview_default.x = range.x;
+    py.rview_default.y = range.y;
 }
 
 void Plotter::ScrollView(float x, float y)
 {
-    target.x += x;
-    target.y += y;
-    rview.x += x;
-    rview.y += y;
+    Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
+    Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
+
+    px.target.x += x;
+    py.target.y += y;
+    px.rview.x += x;
+    py.rview.y += y;
 }
 
 void Plotter::ScrollViewSmooth(float x, float y)
 {
-    target.x += x;
-    target.y += y;
+    Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
+    Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
+
+    px.target.x += x;
+    py.target.y += y;
 }
 
 void Plotter::ScaleView(float x, float y, float cx, float cy)
 {
-    target.Scale(x,y, cx, cy);
-    rview.Scale(x,y, cx, cy);
+    Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
+    Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
+
+    px.target.x.Scale(x, cx);
+    py.target.y.Scale(y, cy);
+    px.rview.x.Scale(x, cx);
+    py.rview.y.Scale(y, cy);
 }
 
 void Plotter::ScaleViewSmooth(float x, float y, float cx, float cy)
 {
-    target.Scale(x,y, cx, cy);
+    Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
+    Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
+
+    px.target.x.Scale(x,cx);
+    py.target.y.Scale(y,cy);
+}
+
+void Plotter::ResetView()
+{
+    Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
+    Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
+
+    px.target.x = px.rview_default.x;
+    py.target.y = py.rview_default.y;
 }
 
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
@@ -804,7 +867,7 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
         }else if(key == '-') {
             ScaleViewSmooth(2.0, 2.0, c[0], c[1]);
         }else if(key == 'r') {
-            target = rview_default;
+            ResetView();
         }else if(key == 't') {
             ToggleTracking();
         }else if(key == 'e') {

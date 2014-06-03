@@ -71,7 +71,14 @@ struct Marker
 class PANGOLIN_EXPORT Plotter : public View, Handler
 {
 public:
-    Plotter(DataLog* log, float left=0, float right=600, float bottom=-1, float top=1, float tickx=30, float ticky=0.5 );
+    Plotter(
+        DataLog* log,
+        float left=0, float right=600, float bottom=-1, float top=1,
+        float tickx=30, float ticky=0.5,
+        Plotter* linked_plotter_x = 0,
+        Plotter* linked_plotter_y = 0
+    );
+
     virtual ~Plotter();
 
     void Render();
@@ -90,6 +97,8 @@ public:
 
     void ScaleView(float x, float y, float cx, float cy);
     void ScaleViewSmooth(float x, float y, float cx, float cy);
+
+    void ResetView();
 
     void SetTicks(float tickx, float ticky);
 
@@ -200,6 +209,9 @@ protected:
 
     float hover[2];
     int last_mouse_pos[2];
+
+    Plotter* linked_plotter_x;
+    Plotter* linked_plotter_y;
 };
 
 } // namespace pangolin
