@@ -211,6 +211,9 @@ Plotter::Plotter(
     if(!log) {
         throw std::runtime_error("DataLog not specified");
     }
+    // Prevent links to ourselves - this could cause infinite recursion.
+    if(linked_plotter_x == this) this->linked_plotter_x = 0;
+    if(linked_plotter_y == this) this->linked_plotter_y = 0;
 
     // Handle our own mouse / keyboard events
     this->handler = this;
@@ -348,17 +351,6 @@ void Plotter::ComputeTrackValue( float track_val[2] )
 
 void Plotter::Render()
 {
-    // Track value based on last log sample
-    if(track || trigger_edge) {
-        float newTrackVal[2];
-        ComputeTrackValue(newTrackVal);
-        if(target.x.max <= newTrackVal[0] ) {
-            ScrollView(newTrackVal[0]-last_track_val[0], newTrackVal[1]-last_track_val[1] );
-        }
-        last_track_val[0] = newTrackVal[0];
-        last_track_val[1] = newTrackVal[1];
-    }
-
     // Animate scroll / zooming
     UpdateView();
 
@@ -651,20 +643,26 @@ void Plotter::SetTicks(float tickx, float ticky)
 
 void Plotter::Track(const std::string& x, const std::string& y)
 {
+    Plotter& p = linked_plotter_x ? *linked_plotter_x :
+                    (linked_plotter_y ? *linked_plotter_y : *this);
+
     if( x != "$i" || y != "") {
         throw std::runtime_error("Track option not fully implemented");
     }
 
-    track_x = x;
-    track_y = y;
-    track = !track_x.empty() || !track_y.empty();
-    ComputeTrackValue(last_track_val);
+    p.track_x = x;
+    p.track_y = y;
+    p.track = !p.track_x.empty() || !p.track_y.empty();
+    p.ComputeTrackValue(p.last_track_val);
 }
 
 void Plotter::ToggleTracking()
 {
-    track = !track;
-    ComputeTrackValue(last_track_val);
+    Plotter& p = linked_plotter_x ? *linked_plotter_x :
+                    (linked_plotter_y ? *linked_plotter_y : *this);
+
+    p.track = !p.track;
+    p.ComputeTrackValue(p.last_track_val);
 }
 
 void Plotter::Trigger(const std::string& x, int edge, float value)
@@ -728,6 +726,17 @@ void Plotter::FixSelection()
 
 void Plotter::UpdateView()
 {
+    // Track value based on last log sample
+    if( (track || trigger_edge) && !(linked_plotter_x || linked_plotter_y) ) {
+        float newTrackVal[2];
+        ComputeTrackValue(newTrackVal);
+        if(target.x.max <= newTrackVal[0] ) {
+            ScrollView(newTrackVal[0]-last_track_val[0], newTrackVal[1]-last_track_val[1] );
+        }
+        last_track_val[0] = newTrackVal[0];
+        last_track_val[1] = newTrackVal[1];
+    }
+
     const float sf = 1.0 / 20.0;
 //    XYRange d = target - rview;
 //    rview += d * sf;
