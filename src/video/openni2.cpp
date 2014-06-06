@@ -29,6 +29,7 @@
 #include <pangolin/video/openni2.h>
 
 #include <PS1080.h>
+#include <OniVersion.h>
 
 namespace pangolin
 {
@@ -46,7 +47,9 @@ VideoPixelFormat VideoFormatFromOpenNI2(openni::PixelFormat fmt)
     case openni::PIXEL_FORMAT_GRAY8:        pvfmt = "GRAY8"; break;
     case openni::PIXEL_FORMAT_GRAY16:       pvfmt = "GRAY16LE"; break;
     case openni::PIXEL_FORMAT_YUV422:       pvfmt = "YUYV422"; break;
+#if ONI_VERSION_MAJOR >= 2 && ONI_VERSION_MINOR >= 2
     case openni::PIXEL_FORMAT_YUYV:         pvfmt = "Y400A"; break;
+#endif
     default:
         throw VideoException("Unknown OpenNI pixel format");
         break;
