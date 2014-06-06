@@ -30,6 +30,7 @@
 
 #include <pangolin/gl.h>
 #include <pangolin/display.h>
+#include <pangolin/image_load.h>
 #include <algorithm>
 
 namespace pangolin
@@ -184,6 +185,17 @@ inline void GlTexture::Upload(
     Bind();
     glTexSubImage2D(GL_TEXTURE_2D,0,tex_x_offset,tex_y_offset,data_w,data_h,data_layout,data_type,data);
     CheckGlDieOnError();
+}
+
+inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_linear)
+{
+    TypedImage image = LoadImage(filename);
+    GLenum format = image.fmt.channels == 1 ? GL_LUMINANCE :
+                        (image.fmt.channels == 3 ? GL_RGB : GL_RGBA);
+
+    // TODO: Make the format logic more reliable
+    Reinitialise(image.w, image.h, GL_RGBA, sampling_linear, 0, format, GL_UNSIGNED_BYTE, image.ptr );
+    FreeImage(image);
 }
 
 #ifndef HAVE_GLES

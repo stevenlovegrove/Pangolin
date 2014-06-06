@@ -87,6 +87,8 @@ public:
         GLenum data_layout, GLenum data_type
     );
 
+    void LoadFromFile(const std::string& filename, bool sampling_linear = true);
+
     void Download(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT) const;
     
     void SetLinear();
