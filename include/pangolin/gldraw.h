@@ -294,6 +294,13 @@ inline void glDrawCirclePerimeter( const Eigen::Vector2d& p, double radius = 5 )
     glDrawCirclePerimeter(p(0), p(1), radius);
 }
 
+inline void glSetFrameOfReference( const Eigen::Matrix4f& T_wf )
+{
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glMultMatrixf( T_wf.data() );
+}
+
 inline void glSetFrameOfReference( const Eigen::Matrix4d& T_wf )
 {
     glMatrixMode(GL_MODELVIEW);
@@ -311,14 +318,16 @@ inline void glUnsetFrameOfReference()
     glPopMatrix();
 }
 
-inline void glDrawAxis( const Eigen::Matrix4d& T_wf, float scale )
+template<typename T>
+inline void glDrawAxis( const Eigen::Matrix<T,4,4>& T_wf, T scale )
 {
     glSetFrameOfReference(T_wf);
     glDrawAxis(scale);
     glUnsetFrameOfReference();
 }
 
-inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, GLfloat scale )
+template<typename T>
+inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, T scale )
 {
     const GLfloat xl = scale * Kinv(0,2);
     const GLfloat xh = scale * (w*Kinv(0,0) + Kinv(0,2));
@@ -340,7 +349,8 @@ inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, GLfloat s
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, const Eigen::Matrix4d& T_wf, float scale )
+template<typename T>
+inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, const Eigen::Matrix<T,4,4>& T_wf, T scale )
 {
     glSetFrameOfReference(T_wf);
     glDrawFrustrum(Kinv,w,h,scale);
