@@ -190,6 +190,12 @@ struct PANGOLIN_EXPORT VideoInput : public VideoInterface
     bool GrabNext( unsigned char* image, bool wait = true );
     bool GrabNewest( unsigned char* image, bool wait = true );
 
+    // Return pointer to inner video class as VideoType
+    template<typename VideoType>
+    VideoType* Cast() {
+        return dynamic_cast<VideoType*>(video);
+    }
+
     // experimental - not stable
     bool Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait = true, bool newest = false);
     
