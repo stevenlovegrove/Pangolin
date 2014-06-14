@@ -44,6 +44,11 @@
 #endif // HAVE_PNG
 #endif // HAVE_JPEG
 
+#ifdef _WIN_
+// Undef windows Macro polution from jpeglib.h
+#undef LoadImage
+#endif
+
 namespace pangolin {
 
 std::string FileLowercaseExtention(const std::string& filename)
