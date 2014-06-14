@@ -70,6 +70,10 @@
 //  e.g. "openni:[img1=rgb,img2=depth]//"
 //  e.g. "openni:[size=320x240,fps=60,img1=ir]//"
 //
+// depthsense - capture video / depth from DepthSense SDK.
+//              DepthSenseViewer can be used to alter capture settings.
+//  e.g. "depthsense://"
+//
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
 //  e.g. "convert:[fmt=GRAY8]//v4l:///dev/video0"
