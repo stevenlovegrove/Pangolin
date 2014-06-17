@@ -25,7 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/var/VarExtra.h>
+#include <pangolin/var/varextra.h>
+#include <pangolin/var/varstate.h>
 #include <pangolin/file_utils.h>
 
 #include <iostream>
@@ -37,25 +38,31 @@ using namespace std;
 namespace pangolin
 {
 
-//VarState::VarState()
-//{
-//    // Nothing to do
-//}
+VarState& VarState::I() {
+    static VarState singleton;
+    return singleton;
+}
 
-//VarState::~VarState()
-//{
-//    // Deallocate vars
-//    for( std::map<std::string,_Var*>::iterator i = vars.begin(); i != vars.end(); ++i)
-//    {
-//        delete i->second;
-//    }
-//    vars.clear();
-//}
+VarState::~VarState() {
+    Clear();
+}
 
-//VarState& VarState::I() {
-//    static VarState singleton;
-//    return singleton;
-//}
+void VarState::Clear() {
+    for(VarStoreContainer::iterator i = vars.begin(); i != vars.end(); ++i) {
+        delete i->second;
+    }
+    vars.clear();
+}
+
+void VarState::NotifyNewVar(const std::string& name, VarValueGeneric& var )
+{
+    // notify those watching new variables
+    for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
+        if( StartsWith(name,invc->filter) ) {
+           invc->fn( invc->data, name, var, var.TypeId(), false);
+        }
+    }
+}
 
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter)
 {

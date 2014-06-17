@@ -60,36 +60,17 @@ struct GuiVarChangedCallback
 class VarState
 {
 public:
-    static VarState& I()
-    {
-        static VarState store;
-        return store;
-    }
+    static VarState& I();
 
-    ~VarState() {
-        Clear();
-    }
+    ~VarState();
 
-    void Clear() {
-        for(VarStoreContainer::iterator i = vars.begin(); i != vars.end(); ++i) {
-            delete i->second;
-        }
-        vars.clear();
-    }
+    void Clear();
+
+    void NotifyNewVar(const std::string& name, VarValueGeneric& var );
 
     VarValueGeneric*& operator[](const std::string& str)
     {
         return vars[str];
-    }
-
-    void NotifyNewVar(const std::string& name, VarValueGeneric& var )
-    {
-        // notify those watching new variables
-        for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
-            if( StartsWith(name,invc->filter) ) {
-               invc->fn( invc->data, name, var, var.TypeId(), false);
-            }
-        }
     }
 
 //protected:
