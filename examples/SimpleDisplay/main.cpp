@@ -74,28 +74,27 @@ int main( int /*argc*/, char* argv[] )
   // Demonstration of how we can register a keyboard hook to trigger a method
   pangolin::RegisterKeyPressCallback( PANGO_CTRL + 'r', GlobalKeyHook );
 
+  // Safe and efficient binding of named variables.
+  // Specialisations mean no conversions take place for exact types
+  // and conversions between scalar types are cheap.
+  Var<bool> a_button("ui.A Button",false,false);
+  Var<double> a_double("ui.A Double",3,0,5);
+  Var<int> an_int("ui.An Int",2,0,5);
+  Var<double> a_double_log("ui.Log scale var",3,1,1E4, true);
+  Var<bool> a_checkbox("ui.A Checkbox",false,true);
+  Var<int> an_int_no_input("ui.An Int No Input",2);
+  Var<CustomType> any_type("ui.Some Type", CustomType(0,1.2,"Hello") );
+
+  Var<bool> save_window("ui.Save Window",false,false);
+  Var<bool> save_teapot("ui.Save Teapot",false,false);
+
+  Var<bool> record_teapot("ui.Record Teapot",false,false);
+
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
   {
     // Clear entire screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Safe and efficient binding of named variables.
-    // Specialisations mean no conversions take place for exact types
-    // and conversions between scalar types are cheap.
-    static Var<bool> a_button("ui.A Button",false,false);
-    static Var<double> a_double("ui.A Double",3,0,5);
-    static Var<int> an_int("ui.An Int",2,0,5);
-    static Var<double> a_double_log("ui.Log scale var",3,1,1E4, true);
-    static Var<bool> a_checkbox("ui.A Checkbox",false,true);
-    static Var<int> an_int_no_input("ui.An Int No Input",2);
-    static Var<CustomType> any_type("ui.Some Type", CustomType(0,1.2,"Hello") );
-
-    static Var<bool> save_window("ui.Save Window",false,false);
-    static Var<bool> save_teapot("ui.Save Teapot",false,false);
-    
-    static Var<bool> record_teapot("ui.Record Teapot",false,false);
-    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
 
     if( Pushed(a_button) )
       cout << "You Pushed a button!" << endl;

@@ -40,13 +40,13 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
 
     unsigned char* img = new unsigned char[video.SizeBytes()];
 
-    static Var<bool> record("ui.Record",false,false);
-    static Var<bool> play("ui.Play",false,false);
-    static Var<bool> source("ui.Source",false,false);
-    static Var<bool> realtime("ui.realtime",true,true);
+    Var<bool> record("ui.Record",false,false);
+    Var<bool> play("ui.Play",false,false);
+    Var<bool> source("ui.Source",false,false);
+    Var<bool> realtime("ui.realtime",true,true);
 
-    static Var<float> hue("ui.Hue",0,0,360);
-    static Var<bool> colour("ui.Colour Video",false,true);
+    Var<float> hue("ui.Hue",0,0,360);
+    Var<bool> colour("ui.Colour Video",false,true);
 
     while( !pangolin::ShouldQuit() )
     {
