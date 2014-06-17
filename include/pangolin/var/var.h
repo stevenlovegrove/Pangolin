@@ -97,7 +97,7 @@ public:
             // new VarValue<T> (owned by VarStore)
             var = new VarValue<T>(T());
             v = var;
-            InitialiseNewVarMeta(*var,name,0,0,0,false);
+            InitialiseNewVarMeta(*var, name);
         }
     }
 
@@ -112,7 +112,7 @@ public:
             // new VarValue<T> (owned by VarStore)
             var = new VarValue<T>(value);
             v = var;
-            InitialiseNewVarMeta(*var,name,0,1,toggle,false);
+            InitialiseNewVarMeta(*var,name,0,1,toggle);
         }
     }
 
@@ -133,9 +133,9 @@ public:
                 if (min <= 0 || max <= 0) {
                     throw std::runtime_error("LogScale: range of numbers must be positive!");
                 }
-                InitialiseNewVarMeta(*var,name,std::log(min),std::log(max),1,logscale);
+                InitialiseNewVarMeta(*var, name, std::log(min), std::log(max), 1, true);
             }else{
-                InitialiseNewVarMeta(*var,name,min,max);
+                InitialiseNewVarMeta(*var, name, min, max);
             }
         }
     }

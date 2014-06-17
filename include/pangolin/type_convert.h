@@ -40,8 +40,11 @@ struct BadInputException : std::exception {
     char const* what() const throw() { return "Failed to serialise type"; }
 };
 
-// Generic conversion through serialisation from / to string
 template<typename T, typename S, typename Enable=void>
+struct Convert;
+
+// Generic conversion through serialisation from / to string
+template<typename T, typename S, typename Enable>
 struct Convert {
     static T Do(const S& src)
     {
@@ -50,10 +53,10 @@ struct Convert {
         std::istringstream iss(oss.str());
         T target;
         iss >> target;
-        
+
         if(iss.fail())
             throw BadInputException();
-        
+
         return target;
     }
 };
@@ -90,7 +93,9 @@ struct Convert<bool,std::string> {
 
 // From strings
 template<typename T>
-struct Convert<T,std::string, pangolin::enable_if_c<!boostd::is_same<T,std::string>::value> > {
+struct Convert<T,std::string, typename pangolin::enable_if_c<
+        !boostd::is_same<T,std::string>::value
+        >::type > {
     static T Do(const std::string& src)
     {
         T target;
@@ -106,9 +111,9 @@ struct Convert<T,std::string, pangolin::enable_if_c<!boostd::is_same<T,std::stri
 
 // To strings
 template<typename S>
-struct Convert<std::string, S, pangolin::enable_if_c<
+struct Convert<std::string, S, typename pangolin::enable_if_c<
         !boostd::is_same<S,std::string>::value
-        > > {
+        >::type > {
     static std::string Do(const S& src)
     {
         std::ostringstream oss;
@@ -119,11 +124,11 @@ struct Convert<std::string, S, pangolin::enable_if_c<
 
 // Between scalars
 template<typename T, typename S>
-struct Convert<T, S, pangolin::enable_if_c<
+struct Convert<T, S, typename pangolin::enable_if_c<
         (boostd::is_scalar<T>::value || boostd::is_same<T,bool>::value) &&
         (boostd::is_scalar<S>::value || boostd::is_same<S,bool>::value) &&
         !boostd::is_same<S,T>::value
-        > > {
+        >::type > {
     static T Do(const S& src)
     {
         return static_cast<T>(src);
