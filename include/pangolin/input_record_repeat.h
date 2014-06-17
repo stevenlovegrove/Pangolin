@@ -63,7 +63,7 @@ struct PANGOLIN_EXPORT InputRecordRepeat
     
     template<typename T>
     inline void UpdateVariable(const Var<T>& var ) {
-        GuiVarChanged((void*)this, var.var->meta_full_name, *var.var);
+        GuiVarChanged((void*)this, var.var->Meta().full_name, *var.var);
     }
     
     int Size();
@@ -79,7 +79,7 @@ protected:
     std::list<FrameInput> play_queue;
     std::list<FrameInput> record_queue;
     
-    static void GuiVarChanged(void* data, const std::string& name, _Var& var);
+    static void GuiVarChanged(void* data, const std::string& name, VarValueGeneric& var);
 };
 
 }

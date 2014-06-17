@@ -42,7 +42,7 @@
 #define GLUT_KEY_TAB 9
 
 #ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/vars.h>
+  #include <pangolin/var/Var.h>
 #endif
 
 #ifdef HAVE_BOOST_GIL
@@ -402,29 +402,29 @@ bool CVarRecordStop( std::vector<std::string>* args )
 #endif // BUILD_PANGOLIN_VIDEO
 
 #ifdef BUILD_PANGOLIN_VARS
-void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool brand_new)
+void NewVarForCVars(void* /*data*/, const std::string& name, VarValueGeneric& var, const char* /*orig_typeidname*/, bool brand_new)
 {
     if(brand_new) {
-        // CVars can't save names containing spaces, so map to '_' instead
-        std::string cvar_name = name;
-        for(size_t i=0; i < cvar_name.size(); ++i) {
-            if(cvar_name[i] == ' ') cvar_name[i] = '_';
-        }
+//        // CVars can't save names containing spaces, so map to '_' instead
+//        std::string cvar_name = name;
+//        for(size_t i=0; i < cvar_name.size(); ++i) {
+//            if(cvar_name[i] == ' ') cvar_name[i] = '_';
+//        }
         
-        // Attach to CVars too.
-        const char* typeidname = var.type_name;
-        if( !strcmp(typeidname, typeid(double).name()) ) {
-            CVarUtils::AttachCVar(cvar_name, (double*)(var.val) );
-        } else if( !strcmp(typeidname, typeid(int).name()) ) {
-            CVarUtils::AttachCVar(cvar_name, (int*)(var.val) );
-        } else if( !strcmp(typeidname, typeid(std::string).name()) ) {
-            CVarUtils::AttachCVar(cvar_name, (std::string*)(var.val) );
-        } else if( !strcmp(typeidname, typeid(bool).name()) ) {
-            CVarUtils::AttachCVar(cvar_name, (bool*)(var.val) );
-        } else {
-            // we can't attach
-            pango_print_error("NewVarForCVars: Typeid '%s' does not match known types.\n", typeidname);
-        }
+//        // Attach to CVars too.
+//        const char* typeidname = var.TypeId();
+//        if( !strcmp(typeidname, typeid(double).name()) ) {
+//            CVarUtils::AttachCVar(cvar_name, (double*)(var.val) );
+//        } else if( !strcmp(typeidname, typeid(int).name()) ) {
+//            CVarUtils::AttachCVar(cvar_name, (int*)(var.val) );
+//        } else if( !strcmp(typeidname, typeid(std::string).name()) ) {
+//            CVarUtils::AttachCVar(cvar_name, (std::string*)(var.val) );
+//        } else if( !strcmp(typeidname, typeid(bool).name()) ) {
+//            CVarUtils::AttachCVar(cvar_name, (bool*)(var.val) );
+//        } else {
+//            // we can't attach
+//            pango_print_error("NewVarForCVars: Typeid '%s' does not match known types.\n", typeidname);
+//        }
     }
 }
 #endif // BUILD_PANGOLIN_VARS

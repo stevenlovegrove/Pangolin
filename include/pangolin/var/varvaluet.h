@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2014 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,42 +25,25 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_VARVALUET_H
+#define PANGOLIN_VARVALUET_H
 
-#include <pangolin/platform.h>
+#include <pangolin/var/varvaluegeneric.h>
+#include <pangolin/compat/type_traits.h>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl.h>
-  #include <pangolin/gldraw.h>
-  #include <pangolin/glstate.h>
-  #include <pangolin/display.h>
-  #include <pangolin/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/VarExtra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+template<typename T>
+class VarValueT : public VarValueGeneric
+{
+public:
+    typedef typename boostd::remove_reference<T>::type VarT;
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video.h>
-  #include <pangolin/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+    virtual const VarT& Get() const = 0;
+    virtual void Set(const VarT& val) = 0;
+};
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+}
 
-#endif // PANGOLIN_H
-
+#endif // PANGOLIN_VARVALUET_H

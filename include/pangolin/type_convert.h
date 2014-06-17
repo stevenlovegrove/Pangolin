@@ -31,6 +31,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <pangolin/compat/type_traits.h>
+
 namespace pangolin
 {
 
@@ -39,7 +41,8 @@ struct BadInputException : std::exception {
 };
 
 // Generic conversion through serialisation from / to string
-template<typename T, typename S> struct Convert {
+template<typename T, typename S, typename Enable=void>
+struct Convert {
     static T Do(const S& src)
     {
         std::ostringstream oss;
@@ -55,8 +58,18 @@ template<typename T, typename S> struct Convert {
     }
 };
 
+// Between the same types is just a copy
+template<typename T>
+struct Convert<T, T > {
+    static T Do(const T& src)
+    {
+        return src;
+    }
+};
+
 // Apply bool alpha IO manipulator for bool types
-template<> struct Convert<bool,std::string> {
+template<>
+struct Convert<bool,std::string> {
     static bool Do(const std::string& src)
     {
         bool target;
@@ -76,7 +89,8 @@ template<> struct Convert<bool,std::string> {
 };
 
 // From strings
-template<typename T> struct Convert<T,std::string> {
+template<typename T>
+struct Convert<T,std::string, pangolin::enable_if_c<!boostd::is_same<T,std::string>::value> > {
     static T Do(const std::string& src)
     {
         T target;
@@ -91,7 +105,10 @@ template<typename T> struct Convert<T,std::string> {
 };
 
 // To strings
-template<typename S> struct Convert<std::string, S> {
+template<typename S>
+struct Convert<std::string, S, pangolin::enable_if_c<
+        !boostd::is_same<S,std::string>::value
+        > > {
     static std::string Do(const S& src)
     {
         std::ostringstream oss;
@@ -100,11 +117,16 @@ template<typename S> struct Convert<std::string, S> {
     }
 };
 
-// Between strings is just a copy
-template<> struct Convert<std::string, std::string> {
-    static std::string Do(const std::string& src)
+// Between scalars
+template<typename T, typename S>
+struct Convert<T, S, pangolin::enable_if_c<
+        (boostd::is_scalar<T>::value || boostd::is_same<T,bool>::value) &&
+        (boostd::is_scalar<S>::value || boostd::is_same<S,bool>::value) &&
+        !boostd::is_same<S,T>::value
+        > > {
+    static T Do(const S& src)
     {
-        return src;
+        return static_cast<T>(src);
     }
 };
 

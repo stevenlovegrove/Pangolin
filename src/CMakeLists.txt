@@ -47,8 +47,12 @@ endif()
 
 option(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
 if(BUILD_PANGOLIN_VARS)
-  list(APPEND HEADERS ${INCDIR}/vars.h ${INCDIR}/vars_internal.h ${INCDIR}/input_record_repeat.h )
-  list(APPEND SOURCES vars.cpp input_record_repeat.cpp )
+  list(APPEND HEADERS ${INCDIR}/var/var.h ${INCDIR}/var/varextra.h
+    ${INCDIR}/var/varstate.h ${INCDIR}/var/varvalue.h
+    ${INCDIR}/var/varvaluegeneric.h ${INCDIR}/var/varvaluet.h
+    ${INCDIR}/var/varwrapper.h ${INCDIR}/input_record_repeat.h
+  )
+  list(APPEND SOURCES var/vars.cpp input_record_repeat.cpp )
 
   if(BUILD_PANGOLIN_GUI)
       list(APPEND HEADERS ${INCDIR}/widgets.h )

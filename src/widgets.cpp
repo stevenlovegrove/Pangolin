@@ -31,9 +31,11 @@
 #include <pangolin/gldraw.h>
 
 #include <pangolin/compat/glutbitmap.h>
+#include <pangolin/var/VarExtra.h>
 
 #include <pangolin/compat/thread.h>
 #include <pangolin/compat/mutex.h>
+#include <pangolin/file_utils.h>
 
 #include <iostream>
 #include <iomanip>
@@ -79,11 +81,11 @@ template<typename T>
 void GuiVarChanged( Var<T>& var)
 {
     guiVarHasChanged = true;
-    var.var->meta_gui_changed = true;
+    var.var->Meta().gui_changed = true;
     
     for(std::vector<GuiVarChangedCallback>::iterator igvc = VarState::I().gui_var_changed_callbacks.begin(); igvc != VarState::I().gui_var_changed_callbacks.end(); ++igvc) {
-        if( StartsWith(var.var->meta_full_name, igvc->filter) ) {
-           igvc->fn( igvc->data, var.var->meta_full_name, *var.var );
+        if( StartsWith(var.var->Meta().full_name, igvc->filter) ) {
+           igvc->fn( igvc->data, var.var->Meta().full_name, *var.var );
         }
     }
 }
@@ -142,11 +144,11 @@ Panel::Panel(const std::string& auto_register_var_prefix)
     //    ProcessHistoricCallbacks(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
 }
 
-void Panel::AddVariable(void* data, const std::string& name, _Var& var, const char* reg_type_name, bool brand_new )
+void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& var, const char* reg_type_name, bool brand_new )
 {
     Panel* thisptr = (Panel*)data;
     
-    const string& title = var.meta_friendly;
+    const string& title = var.Meta().friendly;
     
     display_mutex.lock();
     
@@ -158,7 +160,7 @@ void Panel::AddVariable(void* data, const std::string& name, _Var& var, const ch
     {
         View* nv = NULL;
         if( !strcmp(reg_type_name, typeid(bool).name()) ) {
-            nv = var.meta_flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
+            nv = var.Meta().flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
         }else if( !strcmp(reg_type_name, typeid(double).name()) || !strcmp(reg_type_name, typeid(float).name()) || !strcmp(reg_type_name, typeid(int).name()) || !strcmp(reg_type_name, typeid(unsigned int).name()) ) {
             nv = new Slider(title,var);
         }else{
@@ -220,7 +222,7 @@ View& CreatePanel(const std::string& name)
     return *p;
 }
 
-Button::Button(string title, _Var& tv)
+Button::Button(string title, VarValueGeneric& tv)
     : Widget<bool>(title,tv), down(false)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h);
@@ -236,7 +238,7 @@ void Button::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mo
     {
         down = pressed;
         if( !pressed ) {
-            a->Set(!a->Get());
+            var->Set(!var->Get());
             GuiVarChanged(*this);
         }
     }
@@ -259,7 +261,7 @@ void Button::ResizeChildren()
     vinside = v.Inset(border);
 }
 
-Checkbox::Checkbox(std::string title, _Var& tv)
+Checkbox::Checkbox(std::string title, VarValueGeneric& tv)
     : Widget<bool>(title,tv)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h);
@@ -272,7 +274,7 @@ Checkbox::Checkbox(std::string title, _Var& tv)
 void Checkbox::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
 {
     if( button == MouseButtonLeft && pressed ) {
-        a->Set(!a->Get());
+        var->Set(!var->Get());
         GuiVarChanged(*this);
     }
 }
@@ -288,7 +290,7 @@ void Checkbox::ResizeChildren()
 
 void Checkbox::Render()
 {
-    const bool val = a->Get();
+    const bool val = var->Get();
     
     if( val )
     {
@@ -302,7 +304,7 @@ void Checkbox::Render()
 }
 
 
-Slider::Slider(std::string title, _Var& tv)
+Slider::Slider(std::string title, VarValueGeneric& tv)
     : Widget<double>(title+":", tv), lock_bounds(true)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h);
@@ -310,25 +312,25 @@ Slider::Slider(std::string title, _Var& tv)
     hlock = LockLeft;
     vlock = LockBottom;
     handler = this;
-    logscale = (int)tv.logscale;
+    logscale = (int)tv.Meta().logscale;
 }
 
 void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed){
     
-    if( pressed && var->meta_range[0] < var->meta_range[1] )
+    if( pressed && var->Meta().range[0] < var->Meta().range[1] )
     {
-        double val = !logscale ? a->Get() : log(a->Get());
+        double val = !logscale ? var->Get() : log(var->Get());
         
         if(key=='-'){
             if (logscale)
-                a->Set( exp(max(var->meta_range[0],min(var->meta_range[1],val - var->meta_increment) ) ) );
+                var->Set( exp(max(var->Meta().range[0],min(var->Meta().range[1],val - var->Meta().increment) ) ) );
             else
-                a->Set( max(var->meta_range[0],min(var->meta_range[1],val - var->meta_increment) ) );
+                var->Set( max(var->Meta().range[0],min(var->Meta().range[1],val - var->Meta().increment) ) );
         }else if(key == '='){
             if (logscale)
-                a->Set( exp(max(var->meta_range[0],min(var->meta_range[1],val + var->meta_increment) ) ) );
+                var->Set( exp(max(var->Meta().range[0],min(var->Meta().range[1],val + var->Meta().increment) ) ) );
             else
-                a->Set( max(var->meta_range[0],min(var->meta_range[1],val + var->meta_increment) ) );
+                var->Set( max(var->Meta().range[0],min(var->Meta().range[1],val + var->Meta().increment) ) );
         }else if(key == 'r'){
             Reset();
         }else{
@@ -347,7 +349,7 @@ void Slider::Mouse(View& view, MouseButton button, int x, int y, bool pressed, i
         {
             // Change scale around current value
             const double frac = max(0.0,min(1.0,(double)(x - v.l)/(double)v.w));
-            double val = frac * (var->meta_range[1] - var->meta_range[0]) + var->meta_range[0];
+            double val = frac * (var->Meta().range[1] - var->Meta().range[0]) + var->Meta().range[0];
             
             if (logscale)
             {
@@ -358,8 +360,8 @@ void Slider::Mouse(View& view, MouseButton button, int x, int y, bool pressed, i
             }
             
             const double scale = (button == MouseWheelUp ? 1.2 : 1.0 / 1.2 );
-            var->meta_range[1] = val + (var->meta_range[1] - val)*scale;
-            var->meta_range[0] = val - (val - var->meta_range[0])*scale;
+            var->Meta().range[1] = val + (var->Meta().range[1] - val)*scale;
+            var->Meta().range[0] = val - (val - var->Meta().range[0])*scale;
         }else{
             lock_bounds = (button == MouseButtonLeft);
             MouseMotion(view,x,y,mouse_state);
@@ -367,33 +369,33 @@ void Slider::Mouse(View& view, MouseButton button, int x, int y, bool pressed, i
     }else{
         if(!lock_bounds)
         {
-            double val = !logscale ? a->Get() : log(a->Get());
+            double val = !logscale ? var->Get() : log(var->Get());
             
-            var->meta_range[0] = min(var->meta_range[0], val);
-            var->meta_range[1] = max(var->meta_range[1], val);
+            var->Meta().range[0] = min(var->Meta().range[0], val);
+            var->Meta().range[1] = max(var->Meta().range[1], val);
         }
     }
 }
 
 void Slider::MouseMotion(View&, int x, int y, int mouse_state)
 {
-    if( var->meta_range[0] != var->meta_range[1] )
+    if( var->Meta().range[0] != var->Meta().range[1] )
     {
-        const double range = (var->meta_range[1] - var->meta_range[0]);
+        const double range = (var->Meta().range[1] - var->Meta().range[0]);
         const double frac = (double)(x - v.l)/(double)v.w;
         double val;
         
         if( lock_bounds )
         {
             const double bfrac = max(0.0,min(1.0,frac));
-            val = bfrac * range + var->meta_range[0] ;
+            val = bfrac * range + var->Meta().range[0] ;
         }else{
-            val = frac * range + var->meta_range[0];
+            val = frac * range + var->Meta().range[0];
         }
         
         if (logscale) val = exp(val);
         
-        a->Set(val);
+        var->Set(val);
         GuiVarChanged(*this);
     }
 }
@@ -407,9 +409,9 @@ void Slider::ResizeChildren()
 
 void Slider::Render()
 {
-    const double val = a->Get();
+    const double val = var->Get();
     
-    if( var->meta_range[0] != var->meta_range[1] )
+    if( var->Meta().range[0] != var->Meta().range[1] )
     {
         double rval = val;
         if (logscale)
@@ -419,7 +421,7 @@ void Slider::Render()
         glColor4fv(colour_fg);
         glRect(v);
         glColor4fv(colour_dn);
-        const double norm_val = max(0.0,min(1.0,(rval - var->meta_range[0]) / (var->meta_range[1] - var->meta_range[0])));
+        const double norm_val = max(0.0,min(1.0,(rval - var->Meta().range[0]) / (var->Meta().range[1] - var->Meta().range[0])));
         glRect(Viewport(v.l,v.b,v.w*norm_val,v.h));
         DrawShadowRect(v);
     }
@@ -437,7 +439,7 @@ void Slider::Render()
 }
 
 
-TextInput::TextInput(std::string title, _Var& tv)
+TextInput::TextInput(std::string title, VarValueGeneric& tv)
     : Widget<std::string>(title+":", tv), do_edit(false)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h);
@@ -457,7 +459,7 @@ void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
         
         if(key == 13)
         {
-            a->Set(edit);
+            var->Set(edit);
             GuiVarChanged(*this);
             
             do_edit = false;
@@ -590,7 +592,7 @@ void TextInput::ResizeChildren()
 
 void TextInput::Render()
 {
-    if(!do_edit) edit = a->Get();
+    if(!do_edit) edit = var->Get();
     
     glColor4fv(colour_fg);
     glRect(v);

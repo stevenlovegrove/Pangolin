@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2014 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,42 +25,51 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_VARVALUEGENERIC_H
+#define PANGOLIN_VARVALUEGENERIC_H
 
-#include <pangolin/platform.h>
+#include <string>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl.h>
-  #include <pangolin/gldraw.h>
-  #include <pangolin/glstate.h>
-  #include <pangolin/display.h>
-  #include <pangolin/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/VarExtra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+struct VarMeta
+{
+    std::string full_name;
+    std::string friendly;
+    double range[2];
+    double increment;
+    int flags;
+    bool gui_changed;
+    bool logscale;
+};
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video.h>
-  #include <pangolin/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+// Forward declaration
+template<typename T>
+class VarValueT;
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+//! Abstract base class for named Pangolin variables
+class VarValueGeneric
+{
+public:
+    VarValueGeneric()
+        : str(0)
+    {
+    }
 
-#endif // PANGOLIN_H
+    virtual ~VarValueGeneric()
+    {
+    }
 
+    virtual const char* TypeId() const = 0;
+    virtual void Reset() = 0;
+    virtual VarMeta& Meta() = 0;
+
+//protected:
+    // String serialisation object.
+    VarValueT<std::string>* str;
+};
+
+}
+
+#endif // PANGOLIN_VARVALUEGENERIC_H

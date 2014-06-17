@@ -25,7 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/vars.h>
+#include <pangolin/var/VarExtra.h>
+#include <pangolin/file_utils.h>
 
 #include <iostream>
 #include <fstream>
@@ -36,25 +37,25 @@ using namespace std;
 namespace pangolin
 {
 
-VarState::VarState()
-{
-    // Nothing to do
-}
+//VarState::VarState()
+//{
+//    // Nothing to do
+//}
 
-VarState::~VarState()
-{
-    // Deallocate vars
-    for( std::map<std::string,_Var*>::iterator i = vars.begin(); i != vars.end(); ++i)
-    {
-        delete i->second;
-    }
-    vars.clear();
-}
+//VarState::~VarState()
+//{
+//    // Deallocate vars
+//    for( std::map<std::string,_Var*>::iterator i = vars.begin(); i != vars.end(); ++i)
+//    {
+//        delete i->second;
+//    }
+//    vars.clear();
+//}
 
-VarState& VarState::I() {
-    static VarState singleton;
-    return singleton;
-}
+//VarState& VarState::I() {
+//    static VarState singleton;
+//    return singleton;
+//}
 
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter)
 {
@@ -139,20 +140,11 @@ string ProcessVal(const string& val )
     return expanded;
 }
 
-void AddVar(const string& name, const string& val )
+void AddVar(const std::string& name, const string& val )
 {
-    std::map<std::string,_Var*>::iterator vi = VarState::I().vars.find(name);
-    const bool exists_already = vi != VarState::I().vars.end();
-    
-    string full = ProcessVal(val);
-    Var<string> var(name);
+    const std::string full = ProcessVal(val);
+    Var<string> var(name, full);
     var = full;
-    
-    // Mark as upgradable if unique
-    if(!exists_already)
-    {
-        var.var->generic = true;
-    }
 }
 
 #ifdef ALIAS
@@ -164,7 +156,7 @@ void AddAlias(const string& alias, const string& name)
     {
         _Var * v = vi->second;
         vars[alias].create(v->val,v->val_default,v->type_name);
-        vars[alias].meta_friendly = alias;
+        vars[alias].Meta().friendly = alias;
         v->generic = false;
         vars[alias].generic = false;
     }else{
