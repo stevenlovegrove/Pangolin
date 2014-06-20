@@ -28,6 +28,8 @@
 #include <pangolin/video/images.h>
 #include <pangolin/file_utils.h>
 
+#include <cstring>
+
 namespace pangolin
 {
 
