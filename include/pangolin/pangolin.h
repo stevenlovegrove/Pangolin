@@ -48,7 +48,7 @@
 #endif // BUILD_PANGOLIN_GUI
 
 #ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/VarExtra.h>
+  #include <pangolin/var/varextra.h>
   #ifdef BUILD_PANGOLIN_GUI
     #include <pangolin/widgets.h>
   #endif // BUILD_PANGOLIN_GUI

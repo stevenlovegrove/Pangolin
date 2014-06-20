@@ -31,7 +31,7 @@
 #include <pangolin/gldraw.h>
 
 #include <pangolin/compat/glutbitmap.h>
-#include <pangolin/var/VarExtra.h>
+#include <pangolin/var/varextra.h>
 
 #include <pangolin/compat/thread.h>
 #include <pangolin/compat/mutex.h>
@@ -81,11 +81,11 @@ template<typename T>
 void GuiVarChanged( Var<T>& var)
 {
     guiVarHasChanged = true;
-    var.var->Meta().gui_changed = true;
+    var.Meta().gui_changed = true;
     
     for(std::vector<GuiVarChangedCallback>::iterator igvc = VarState::I().gui_var_changed_callbacks.begin(); igvc != VarState::I().gui_var_changed_callbacks.end(); ++igvc) {
-        if( StartsWith(var.var->Meta().full_name, igvc->filter) ) {
-           igvc->fn( igvc->data, var.var->Meta().full_name, *var.var );
+        if( StartsWith(var.Meta().full_name, igvc->filter) ) {
+           igvc->fn( igvc->data, var.Meta().full_name, var.Ref() );
         }
     }
 }

@@ -42,23 +42,6 @@ template<typename T>
 class Var
 {
 public:
-    static void InitialiseNewVarMeta(
-        VarValueGeneric& v, const std::string& name,
-        double min = 0, double max = 0, int flags = 1, bool logscale = false
-    ) {
-        // Initialise meta parameters
-        const std::vector<std::string> parts = pangolin::Split(name,'.');
-        v.Meta().full_name = name;
-        v.Meta().friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
-        v.Meta().range[0] = min;
-        v.Meta().range[1] = max;
-        v.Meta().flags = flags;
-        v.Meta().logscale = logscale;
-        v.Meta().generic = false;
-
-        VarState::I().NotifyNewVar(name, v);
-    }
-
     static void Attach(
         const std::string& name, T& variable,
         double min = 0, double max = 0, int flags = 1,
@@ -162,47 +145,6 @@ public:
         }
     }
 
-    // Initialise from existing variable, obtain data / accessor
-    void InitialiseFromGeneric(VarValueGeneric* v)
-    {
-        if( !strcmp(v->TypeId(), typeid(T).name()) ) {
-            // Same type
-            var = (VarValueT<T>*)(v);
-        }else if( boostd::is_same<T,std::string>::value ) {
-            // Use types string accessor
-            var = (VarValueT<T>*)(v->str);
-        }else if( !strcmp(v->TypeId(), typeid(bool).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,bool>( *(VarValueT<bool>*)v );
-            var = ptr;
-        }else if( !strcmp(v->TypeId(), typeid(short).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,short>( *(VarValueT<short>*)v );
-            var = ptr;
-        }else if( !strcmp(v->TypeId(), typeid(int).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,int>( *(VarValueT<int>*)v );
-            var = ptr;
-        }else if( !strcmp(v->TypeId(), typeid(long).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,long>( *(VarValueT<long>*)v );
-            var = ptr;
-        }else if( !strcmp(v->TypeId(), typeid(float).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,float>( *(VarValueT<float>*)v );
-            var = ptr;
-        }else if( !strcmp(v->TypeId(), typeid(double).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,double>( *(VarValueT<double>*)v );
-            var = ptr;
-        }else{
-            // other types: have to go via string
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,std::string>( *(v->str) );
-            var = ptr;
-        }
-    }
-
     void Reset()
     {
         var->Reset();
@@ -245,7 +187,80 @@ public:
         var->Set(v.var->Get());
     }
 
-//protected:
+    VarMeta& Meta()
+    {
+        return var->Meta();
+    }
+
+    bool GuiChanged()
+    {
+        return Pushed(var->Meta().gui_changed);
+    }
+
+    VarValueT<T>& Ref()
+    {
+        return *var;
+    }
+
+protected:
+    static void InitialiseNewVarMeta(
+        VarValueGeneric& v, const std::string& name,
+        double min = 0, double max = 0, int flags = 1, bool logscale = false
+    ) {
+        // Initialise meta parameters
+        const std::vector<std::string> parts = pangolin::Split(name,'.');
+        v.Meta().full_name = name;
+        v.Meta().friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
+        v.Meta().range[0] = min;
+        v.Meta().range[1] = max;
+        v.Meta().flags = flags;
+        v.Meta().logscale = logscale;
+        v.Meta().generic = false;
+
+        VarState::I().NotifyNewVar(name, v);
+    }
+
+    // Initialise from existing variable, obtain data / accessor
+    void InitialiseFromGeneric(VarValueGeneric* v)
+    {
+        if( !strcmp(v->TypeId(), typeid(T).name()) ) {
+            // Same type
+            var = (VarValueT<T>*)(v);
+        }else if( boostd::is_same<T,std::string>::value ) {
+            // Use types string accessor
+            var = (VarValueT<T>*)(v->str);
+        }else if( !strcmp(v->TypeId(), typeid(bool).name() ) ) {
+            // Wrapper, owned by this object
+            ptr = new VarWrapper<T,bool>( *(VarValueT<bool>*)v );
+            var = ptr;
+        }else if( !strcmp(v->TypeId(), typeid(short).name() ) ) {
+            // Wrapper, owned by this object
+            ptr = new VarWrapper<T,short>( *(VarValueT<short>*)v );
+            var = ptr;
+        }else if( !strcmp(v->TypeId(), typeid(int).name() ) ) {
+            // Wrapper, owned by this object
+            ptr = new VarWrapper<T,int>( *(VarValueT<int>*)v );
+            var = ptr;
+        }else if( !strcmp(v->TypeId(), typeid(long).name() ) ) {
+            // Wrapper, owned by this object
+            ptr = new VarWrapper<T,long>( *(VarValueT<long>*)v );
+            var = ptr;
+        }else if( !strcmp(v->TypeId(), typeid(float).name() ) ) {
+            // Wrapper, owned by this object
+            ptr = new VarWrapper<T,float>( *(VarValueT<float>*)v );
+            var = ptr;
+        }else if( !strcmp(v->TypeId(), typeid(double).name() ) ) {
+            // Wrapper, owned by this object
+            ptr = new VarWrapper<T,double>( *(VarValueT<double>*)v );
+            var = ptr;
+        }else{
+            // other types: have to go via string
+            // Wrapper, owned by this object
+            ptr = new VarWrapper<T,std::string>( *(v->str) );
+            var = ptr;
+        }
+    }
+
     // Holds reference to stored variable object
     VarValueT<T>* var;
 

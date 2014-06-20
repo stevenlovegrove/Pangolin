@@ -42,7 +42,7 @@
 #define GLUT_KEY_TAB 9
 
 #ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/Var.h>
+  #include <pangolin/var/var.h>
 #endif
 
 #ifdef HAVE_BOOST_GIL

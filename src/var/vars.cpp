@@ -154,7 +154,7 @@ void AddVar(const std::string& name, const string& val )
     var = full;
 
     // Type can be overriden.
-    var.var->Meta().generic = true;
+    var.Meta().generic = true;
 }
 
 #ifdef ALIAS

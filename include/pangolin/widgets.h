@@ -29,7 +29,7 @@
 #define PANGOLIN_WIDGETS_H
 
 #include <pangolin/view.h>
-#include <pangolin/var/Var.h>
+#include <pangolin/var/var.h>
 #include <pangolin/handler.h>
 
 namespace pangolin
