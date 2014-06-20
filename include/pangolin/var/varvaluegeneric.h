@@ -42,6 +42,7 @@ struct VarMeta
     int flags;
     bool gui_changed;
     bool logscale;
+    bool generic;
 };
 
 // Forward declaration

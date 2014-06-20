@@ -150,8 +150,11 @@ string ProcessVal(const string& val )
 void AddVar(const std::string& name, const string& val )
 {
     const std::string full = ProcessVal(val);
-    Var<string> var(name, full);
+    Var<string> var(name);
     var = full;
+
+    // Type can be overriden.
+    var.var->Meta().generic = true;
 }
 
 #ifdef ALIAS

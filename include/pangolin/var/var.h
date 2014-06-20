@@ -54,6 +54,7 @@ public:
         v.Meta().range[1] = max;
         v.Meta().flags = flags;
         v.Meta().logscale = logscale;
+        v.Meta().generic = false;
 
         VarState::I().NotifyNewVar(name, v);
     }
@@ -91,12 +92,19 @@ public:
     {
         // Find name in VarStore
         VarValueGeneric*& v = VarState::I()[name];
-        if(v) {
+        if(v && !v->Meta().generic) {
             InitialiseFromGeneric(v);
         }else{
             // new VarValue<T> (owned by VarStore)
-            var = new VarValue<T>(T());
-            v = var;
+            if(v) {
+                // Specialise generic variable
+                var = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
+                delete v;
+                v = var;
+            }else{
+                var = new VarValue<T>( T() );
+                v = var;
+            }
             InitialiseNewVarMeta(*var, name);
         }
     }
@@ -106,13 +114,20 @@ public:
     {
         // Find name in VarStore
         VarValueGeneric*& v = VarState::I()[name];
-        if(v) {
+        if(v && !v->Meta().generic) {
             InitialiseFromGeneric(v);
         }else{
             // new VarValue<T> (owned by VarStore)
-            var = new VarValue<T>(value);
-            v = var;
-            InitialiseNewVarMeta(*var,name,0,1,toggle);
+            if(v) {
+                // Specialise generic variable
+                var = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
+                delete v;
+                v = var;
+            }else{
+                var = new VarValue<T>(value);
+                v = var;
+            }
+            InitialiseNewVarMeta(*var, name, 0, 1, toggle);
         }
     }
 
@@ -123,12 +138,19 @@ public:
     {
         // Find name in VarStore
         VarValueGeneric*& v = VarState::I()[name];
-        if(v) {
+        if(v && !v->Meta().generic) {
             InitialiseFromGeneric(v);
         }else{
             // new VarValue<T> (owned by VarStore)
-            var = new VarValue<T>(value);
-            v = var;
+            if(v) {
+                // Specialise generic variable
+                var = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
+                delete v;
+                v = var;
+            }else{
+                var = new VarValue<T>(value);
+                v = var;
+            }
             if(logscale) {
                 if (min <= 0 || max <= 0) {
                     throw std::runtime_error("LogScale: range of numbers must be positive!");
