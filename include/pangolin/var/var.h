@@ -194,7 +194,11 @@ public:
 
     bool GuiChanged()
     {
-        return Pushed(var->Meta().gui_changed);
+        if(var->Meta().gui_changed) {
+            var->Meta().gui_changed = false;
+            return true;
+        }
+        return false;
     }
 
     VarValueT<T>& Ref()

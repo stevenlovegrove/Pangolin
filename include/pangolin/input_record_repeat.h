@@ -31,6 +31,8 @@
 #include "pangolin.h"
 
 #include <list>
+#include <string>
+#include <fstream>
 
 namespace pangolin
 {
