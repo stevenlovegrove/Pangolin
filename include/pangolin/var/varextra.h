@@ -38,15 +38,11 @@ namespace pangolin
 PANGOLIN_EXPORT
 void ParseVarsFile(const std::string& filename);
 
+PANGOLIN_EXPORT
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter = "");
 
+PANGOLIN_EXPORT
 void RegisterGuiVarChangedCallback(GuiVarChangedCallbackFn callback, void* data, const std::string& filter = "");
-
-template<typename T>
-T FromFile( const std::string& filename, const T& init = T());
-
-template<typename T>
-void FillFromFile( const std::string& filename, std::vector<T>& v, const T& init = T());
 
 template<typename T>
 struct SetVarFunctor

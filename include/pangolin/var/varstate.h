@@ -30,6 +30,7 @@
 
 #include <map>
 #include <vector>
+#include <pangolin/platform.h>
 #include <pangolin/var/varvaluegeneric.h>
 #include <pangolin/file_utils.h>
 
@@ -57,7 +58,7 @@ struct GuiVarChangedCallback
     void* data;
 };
 
-class VarState
+class PANGOLIN_EXPORT VarState
 {
 public:
     static VarState& I();
