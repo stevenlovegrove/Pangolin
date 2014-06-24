@@ -98,6 +98,9 @@ const static GLprecision AxisDirectionVector[7][3] = {
 struct PANGOLIN_EXPORT OpenGlMatrix {
     static OpenGlMatrix Translate(GLprecision x, GLprecision y, GLprecision z);
     static OpenGlMatrix Scale(GLprecision x, GLprecision y, GLprecision z);
+
+    template<typename P>
+    static OpenGlMatrix ColMajor4x4(const P* col_major_4x4);
     
     OpenGlMatrix();
     
@@ -255,6 +258,15 @@ TooN::SE3<> ToTooN_SE3(const OpenGlMatrixSpec& ms);
 // Inline definitions
 namespace pangolin
 {
+
+template<typename P>
+inline OpenGlMatrix OpenGlMatrix::ColMajor4x4(const P* col_major_4x4)
+{
+    OpenGlMatrix mat;
+    std::copy(col_major_4x4, col_major_4x4 + 16, mat.m);
+    return mat;
+}
+
 inline OpenGlMatrix::OpenGlMatrix() {
 }
 
