@@ -25,9 +25,12 @@ Current build status on [Drone.io](https://drone.io/github.com/stevenlovegrove/P
 
 ## Dependencies ##
 
+Optional dependencies are enabled when found, otherwise they are silently disabled.
+Check the CMake configure output for details.
+
 ### Required Dependencies ###
 
-* OpenGL
+* OpenGL (Desktop / ES / ES2)
 
 * CMake (for build environment)
  * (win) http://www.cmake.org/cmake/resources/software.html
@@ -58,12 +61,19 @@ Current build status on [Drone.io](https://drone.io/github.com/stevenlovegrove/P
 * libuvc (For cross-platform webcam video input via libusb)
  * git://github.com/ktossell/libuvc.git
 
+* libjpeg, libpng (For reading still-image sequences)
+
+* OpenNI / OpenNI2 (For Kinect / Xtrion / Primesense capture)
+
+* DepthSense SDK
+
 ### Very Optional Dependencies ###
 
 * GLConsole (For graphical drop-down console. Must be built before Pangolin.)
  * git clone git://git.code.sf.net/p/glconsole/code glconsole
 
+* Eigen / TooN (These matrix types supported in the Pangolin API.)
+
 * CUDA Toolkit (>= 3.2)
  * http://developer.nvidia.com/object/cuda_3_2_downloads.html
 
-* Eigen / TooN
