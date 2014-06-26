@@ -35,6 +35,10 @@
 #include <string>
 #include <limits>
 
+#ifdef HAVE_EIGEN
+#include <Eigen/Eigen>
+#endif
+
 namespace pangolin
 {
 
@@ -177,6 +181,14 @@ public:
     void Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7, float v8, float v9);
     void Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7, float v8, float v9, float v10);
     void Log(const std::vector<float> & vals);
+
+#ifdef HAVE_EIGEN
+    template<typename Derived>
+    void Log(const Eigen::MatrixBase<Derived>& M)
+    {
+        Log( M.rows() * M.cols(), M.template cast<float>().eval().data() );
+    }
+#endif
 
     void Clear();
     void Save(std::string filename);
