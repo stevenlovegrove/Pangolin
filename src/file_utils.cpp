@@ -99,9 +99,16 @@ std::string PathExpand(const std::string& sPath)
 {
     if(sPath.length() >0 && sPath[0] == '~') {
 #ifdef _WIN_
-        std::string sHomeDir =
-            std::string(getenv("HOMEDRIVE")) +
-            std::string(getenv("HOMEPATH"));
+        const size_t buffer_size = 1024;
+        char buffer[buffer_size];
+        size_t size;
+        std::string sHomeDir;
+        if (!getenv_s(&size, buffer, buffer_size, "HOMEDRIVE")) {
+            sHomeDir = std::string(buffer, buffer + size);
+            if (!getenv_s(&size, buffer, buffer_size, "HOMEPATH")) {
+                sHomeDir += std::string(buffer, buffer + size);
+            }
+        }
 #else
         std::string sHomeDir = std::string(getenv("HOME"));
 #endif

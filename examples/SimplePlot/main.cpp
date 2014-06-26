@@ -32,7 +32,7 @@ int main( int /*argc*/, char* argv[] )
 
   DisplayBase().AddDisplay(plotter);
 
-  double t = 0;
+  float t = 0;
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )

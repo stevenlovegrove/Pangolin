@@ -57,16 +57,16 @@ const static int tab_h = 30;
 const static int tab_h = 20;
 #endif
 
-const static GLfloat colour_s1[4] = {0.2, 0.2, 0.2, 1.0};
-const static GLfloat colour_s2[4] = {0.6, 0.6, 0.6, 1.0};
-const static GLfloat colour_bg[4] = {0.9, 0.9, 0.9, 1.0};
-const static GLfloat colour_fg[4] = {1.0, 1.0 ,1.0, 1.0};
-const static GLfloat colour_tx[4] = {0.0, 0.0, 0.0, 1.0};
-const static GLfloat colour_dn[4] = {1.0, 0.7 ,0.7, 1.0};
+const static GLfloat colour_s1[4] = {0.2f, 0.2f, 0.2f, 1.0f};
+const static GLfloat colour_s2[4] = {0.6f, 0.6f, 0.6f, 1.0f};
+const static GLfloat colour_bg[4] = {0.9f, 0.9f, 0.9f, 1.0f};
+const static GLfloat colour_fg[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+const static GLfloat colour_tx[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+const static GLfloat colour_dn[4] = {1.0f, 0.7f, 0.7f, 1.0f};
 
 static void* font = GLUT_BITMAP_HELVETICA_12;
 static int text_height = 8; //glutBitmapHeight(font) * 0.7;
-static int cb_height = text_height * 1.6;
+static int cb_height = (int)(text_height * 1.6);
 
 boostd::mutex display_mutex;
 
@@ -95,7 +95,7 @@ void glRect(Viewport v)
     glRecti(v.l, v.b, v.r(), v.t());
 }
 
-void glRect(Viewport v, GLfloat inset)
+void glRect(Viewport v, int inset)
 {
     glRecti(v.l+inset,v.b+inset,v.r()-inset,v.t()-inset);
 }
@@ -103,7 +103,7 @@ void glRect(Viewport v, GLfloat inset)
 void DrawShadowRect(Viewport& v)
 {
     glColor4fv(colour_s2);
-    glDrawRectPerimeter(v.l, v.b, v.r(), v.t());
+    glDrawRectPerimeter((GLfloat)v.l, (GLfloat)v.b, (GLfloat)v.r(), (GLfloat)v.t());
 }
 
 void DrawShadowRect(Viewport& v, bool pushed)
@@ -256,8 +256,8 @@ void Button::Render()
 
 void Button::ResizeChildren()
 {
-    raster[0] = v.l + (v.w-text_width)/2.0;
-    raster[1] = v.b + (v.h-text_height)/2.0;
+    raster[0] = v.l + (v.w-text_width)/2.0f;
+    raster[1] = v.b + (v.h-text_height)/2.0f;
     vinside = v.Inset(border);
 }
 
@@ -281,10 +281,10 @@ void Checkbox::Mouse(View&, MouseButton button, int x, int y, bool pressed, int 
 
 void Checkbox::ResizeChildren()
 {
-    raster[0] = v.l + cb_height + 4;
-    raster[1] = v.b + (v.h-text_height)/2.0;
+    raster[0] = v.l + cb_height + 4.0f;
+    raster[1] = v.b + (v.h-text_height)/2.0f;
     const int h = v.h;
-    const int t = (h-cb_height) / 2.0;
+    const int t = (int)((h-cb_height) / 2.0f);
     vcb = Viewport(v.l,v.b+t,cb_height,cb_height);
 }
 
@@ -403,8 +403,8 @@ void Slider::MouseMotion(View&, int x, int y, int mouse_state)
 
 void Slider::ResizeChildren()
 {
-    raster[0] = v.l+2;
-    raster[1] = v.b + (v.h-text_height)/2.0;
+    raster[0] = v.l + 2.0f;
+    raster[1] = v.b + (v.h-text_height)/2.0f;
 }
 
 void Slider::Render()
@@ -422,7 +422,7 @@ void Slider::Render()
         glRect(v);
         glColor4fv(colour_dn);
         const double norm_val = max(0.0,min(1.0,(rval - var->Meta().range[0]) / (var->Meta().range[1] - var->Meta().range[0])));
-        glRect(Viewport(v.l,v.b,v.w*norm_val,v.h));
+        glRect(Viewport(v.l,v.b, (int)(v.w*norm_val),v.h));
         DrawShadowRect(v);
     }
     
@@ -434,7 +434,7 @@ void Slider::Render()
     oss << setprecision(4) << val;
     string str = oss.str();
     const int l = glutBitmapLength(font,(unsigned char*)str.c_str()) + 2;
-    glRasterPos2f( v.l + v.w - l, raster[1] );
+    glRasterPos2f( (GLfloat)(v.l + v.w - l), raster[1] );
     glutBitmapString(font,(unsigned char*)str.c_str());
 }
 
@@ -586,8 +586,8 @@ void TextInput::MouseMotion(View&, int x, int y, int mouse_state)
 
 void TextInput::ResizeChildren()
 {
-    raster[0] = v.l+2;
-    raster[1] = v.b + (v.h-text_height)/2.0;
+    raster[0] = v.l + 2.0f;
+    raster[1] = v.b + (v.h-text_height) / 2.0f;
 }
 
 void TextInput::Render()
@@ -612,7 +612,7 @@ void TextInput::Render()
     glRasterPos2fv( raster );
     glutBitmapString(font,(unsigned char*)title.c_str());
     
-    glRasterPos2f( rl, raster[1] );
+    glRasterPos2f( (GLfloat)(rl), raster[1] );
     glutBitmapString(font,(unsigned char*)edit.c_str());
     DrawShadowRect(v);
 }

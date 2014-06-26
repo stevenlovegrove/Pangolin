@@ -238,7 +238,7 @@ VideoInterface* OpenVideo(const Uri& uri)
         video = new TestVideo(dim.x,dim.y,n,fmt);
     }else
     // '%' printf specifier used with ffmpeg
-    if(!uri.scheme.compare("files") && uri.url.find('\%') == std::string::npos)
+    if(!uri.scheme.compare("files") && uri.url.find('%') == std::string::npos)
     {
         video = new ImagesVideo(uri.url);
     }else

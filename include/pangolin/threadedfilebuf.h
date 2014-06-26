@@ -53,10 +53,10 @@ protected:
     
     std::filebuf file;
     char* mem_buffer;
-    int mem_size;
-    int mem_max_size;
-    int mem_start;
-    int mem_end;
+    std::streamsize mem_size;
+    std::streamsize mem_max_size;
+    std::streamsize mem_start;
+    std::streamsize mem_end;
     
     boostd::mutex update_mutex;
     boostd::condition_variable cond_queued;

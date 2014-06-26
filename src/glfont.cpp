@@ -197,7 +197,7 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
     glPushMatrix();
     glLoadIdentity();
     
-    glTranslatef((int)scrn[0],(int)scrn[1],scrn[2]);
+    glTranslatef(std::floor((GLfloat)scrn[0]), std::floor((GLfloat)scrn[1]), (GLfloat)scrn[2]);
     Draw();
 
     // Restore viewport
@@ -226,7 +226,7 @@ void GlText::DrawWindow(GLfloat x, GLfloat y, GLfloat z)
     glPushMatrix();
     glLoadIdentity();
     
-    glTranslatef((int)x,(int)y,z);
+    glTranslatef( std::floor(x), std::floor(y), z);
     Draw();
 
     // Restore viewport
@@ -326,7 +326,7 @@ bool GlFont::LoadFontFromText(char* xml_text)
                 
                 mmCharacters[id] = GlChar(nScaleWidth, nScaleHeight,
                                           x,y,width, height,xAdvance,
-                                          xOffset,nBase - yOffset);
+                                          (GLfloat)xOffset, (GLfloat)(nBase - yOffset) );
             }
             
             if(node_kerns) {

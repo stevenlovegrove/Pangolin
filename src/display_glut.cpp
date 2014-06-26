@@ -108,7 +108,7 @@ void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned in
 
     glutIgnoreKeyRepeat(true);
 
-    context->is_double_buffered = mode & GLUT_DOUBLE;
+    context->is_double_buffered = (mode & GLUT_DOUBLE) != 0;
     TakeGlutCallbacks();
     
     PangolinCommonInit();

@@ -80,7 +80,7 @@ void Handler::PassiveMouseMotion(View& d, int x, int y, int button_state)
 
 void Handler::Special(View& d, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
 {
-    View* child = d.FindChild(x,y);
+    View* child = d.FindChild( (int)x, (int)y);
     if( child )
     {
         context->activeDisplay = child;
@@ -106,7 +106,7 @@ void HandlerScroll::Special(View& d, InputSpecial inType, float x, float y, floa
 {
     if( inType == InputSpecialScroll )
     {
-        d.scroll_offset -= p2 / abs(p2);
+        d.scroll_offset -= (int)(p2 / abs(p2));
         d.scroll_offset = std::max(0, std::min(d.scroll_offset, (int)d.views.size()) );
         d.ResizeChildren();
     }else{
@@ -145,7 +145,7 @@ void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3
 #endif
     GLfloat mindepth = *(std::min_element(zs,zs+zsize));
     
-    if(mindepth == 1) mindepth = default_z;
+    if(mindepth == 1) mindepth = (GLfloat)default_z;
     
     p[0] = x; p[1] = y; p[2] = mindepth;
     glUnProject(x, y, mindepth, mv.m, proj.m, viewport, &Pw[0], &Pw[1], &Pw[2]);
@@ -169,8 +169,8 @@ void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3
 void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)
 {
     // mouse down
-    last_pos[0] = x;
-    last_pos[1] = y;
+    last_pos[0] = (float)x;
+    last_pos[1] = (float)y;
     
     GLprecision T_nc[3*4];
     LieSetIdentity(T_nc);
@@ -202,13 +202,13 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
 void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
 {
     const GLprecision rf = 0.01;
-    const int delta[2] = {(x-last_pos[0]),(y-last_pos[1])};
+    const float delta[2] = { (float)x - last_pos[0], (float)y - last_pos[1] };
     const float mag = delta[0]*delta[0] + delta[1]*delta[1];
     
     // TODO: convert delta to degrees based of fov
     // TODO: make transformation with respect to cam spec
     
-    if( mag < 50*50 )
+    if( mag < 50.0f*50.0f )
     {
         OpenGlMatrix& mv = cam_state->GetModelViewMatrix();
         const GLprecision* up = AxisDirectionVector[enforce_up];
@@ -288,8 +288,8 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         }
     }
     
-    last_pos[0] = x;
-    last_pos[1] = y;
+    last_pos[0] = (float)x;
+    last_pos[1] = (float)y;
 }
 
 void Handler3D::Special(View& display, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
@@ -304,7 +304,7 @@ void Handler3D::Special(View& display, InputSpecial inType, float x, float y, fl
     GLprecision T_nc[3*4];
     LieSetIdentity(T_nc);
     
-    GetPosNormal(display,x,y,p,Pw,Pc,n,last_z);
+    GetPosNormal(display, (int)x, (int)y, p, Pw, Pc, n, last_z);
     if(p[2] < 1.0) {
         last_z = p[2];
         std::copy(Pc,Pc+3,rot_center);

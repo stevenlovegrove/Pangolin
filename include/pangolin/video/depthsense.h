@@ -99,7 +99,7 @@ public:
     // Singleton Instance
     static DepthSenseContext& I();
 
-    DepthSenseVideo* GetDepthSenseVideo(int device_num = 0);
+    DepthSenseVideo* GetDepthSenseVideo(size_t device_num = 0);
 
 protected:
     // Protected Constructor 

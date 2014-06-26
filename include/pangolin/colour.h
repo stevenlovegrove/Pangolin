@@ -73,7 +73,7 @@ struct Colour
     static Colour Hsv(float hue, float sat = 1.0, float val = 1.0, float alpha = 1.0)
     {
           const float h = 6.0f * hue;
-          const int i = floor(h);
+          const int i = (int)floor(h);
           const float f = (i%2 == 0) ? 1-(h-i) : h-i;
           const float m = val * (1-sat);
           const float n = val * (1-sat*f);
@@ -126,7 +126,7 @@ public:
     /// Use Golden ratio (/angle) to pick well spaced colours.
     Colour GetColourBin(int i) const
     {
-        float hue = i * 0.5 * (3 - sqrt(5));
+        float hue = i * 0.5f * (3.0f - sqrt(5.0f));
         hue -= (int)hue;
         return Colour::Hsv(hue,sat,val,alpha);
     }

@@ -10,7 +10,7 @@ option( BUILD_SHARED_LIBS "Build Shared Library" ON)
 option( BUILD_EXAMPLES "Build Examples" ON )
 option( CPP11_NO_BOOST "Use c++11 over boost for threading etc." OFF )
 
-if(CPP11_NO_BOOST)
+if(CPP11_NO_BOOST AND NOT MSVC)
     set( CMAKE_CXX_FLAGS "-std=c++0x -Wall ${CMAKE_CXX_FLAGS}" )
     if(_CLANG_)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")

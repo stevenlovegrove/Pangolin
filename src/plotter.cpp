@@ -200,7 +200,7 @@ Plotter::Plotter(
     Plotter* linked_plotter_x,
     Plotter* linked_plotter_y
 )   : log(log),
-      colour_wheel(0.6),
+      colour_wheel(0.6f),
       rview_default(left,right,bottom,top), rview(rview_default), target(rview),
       selection(0,0,0,0),
       track(false), track_x("$i"), track_y(""),
@@ -221,9 +221,9 @@ Plotter::Plotter(
     hover[1] = 0;
 
     // Default colour scheme
-    colour_bg = Colour(0.0,0.0,0.0);
-    colour_tk = Colour(0.2,0.2,0.2);
-    colour_ax = Colour(0.5,0.5,0.5);
+    colour_bg = Colour(0.0f, 0.0f, 0.0f);
+    colour_tk = Colour(0.2f, 0.2f, 0.2f);
+    colour_ax = Colour(0.5f, 0.5f, 0.5f);
 
     SetTicks(tickx, ticky);
 
@@ -335,7 +335,7 @@ void Plotter::ComputeTrackValue( float track_val[2] )
                 const float val = data[0] - trigger_value;
                 const int sgn = data_sgn(val);
                 if(last_sgn * sgn == -1 && last_sgn == trigger_edge) {
-                    track_val[0] = s;
+                    track_val[0] = (float)s;
                     track_val[1] = 0.0f;
                     return;
                 }
@@ -345,7 +345,7 @@ void Plotter::ComputeTrackValue( float track_val[2] )
         // Fall back to simple last value tracking
     }
 
-    track_val[0] = log->Samples();
+    track_val[0] = (float)log->Samples();
     track_val[1] = 0.0f;
 }
 
@@ -464,7 +464,7 @@ void Plotter::Render()
                     id_size = block->MaxSamples();
                     id_array = new float[id_size];
                     for(size_t k=0; k < id_size; ++k) {
-                        id_array[k] = k;
+                        id_array[k] = (float)k;
                     }
                 }
                 prog.SetUniform("u_id_offset",  (float)block->StartId() );
@@ -535,7 +535,7 @@ void Plotter::Render()
     glLineWidth(1.5f);
 
     // hover over
-    prog_lines.SetUniform("u_color",  colour_ax.WithAlpha(0.3) );
+    prog_lines.SetUniform("u_color",  colour_ax.WithAlpha(0.3f) );
     glDrawLine(hover[0], rview.y.min,  hover[0], rview.y.max );
     glDrawLine(rview.x.min, hover[1],  rview.x.max, hover[1] );
 
@@ -610,22 +610,22 @@ Plotter::Tick Plotter::FindTickFactor(float tick)
     Plotter::Tick ret;
     ret.val = tick;
 
-    const float eps = 1E-6;
+    const float eps = 1E-6f;
 
     if( std::abs(tick/M_PI - floor(tick/M_PI)) < eps ) {
-        ret.factor = 1.0f / M_PI;
+        ret.factor = 1.0f / (float)M_PI;
         ret.symbol = "pi";
     }else if( std::abs(tick/M_PI_2 - floor(tick/M_PI_2)) < eps ) {
-        ret.factor = 1.0f / M_PI;
+        ret.factor = 1.0f / (float)M_PI;
         ret.symbol = "pi";
     }else if( std::abs(tick/M_PI_4 - floor(tick/M_PI_4)) < eps ) {
-        ret.factor = 1.0f / M_PI;
+        ret.factor = 1.0f / (float)M_PI;
         ret.symbol = "pi";
     }else if( std::abs(tick/M_SQRT2 - floor(tick/M_SQRT2)) < eps ) {
-        ret.factor = 1.0f / M_SQRT2;
+        ret.factor = 1.0f / (float)M_SQRT2;
         ret.symbol = "\251 2";
     }else if( std::abs(tick/M_E - floor(tick/M_E)) < eps ) {
-        ret.factor = 1.0f / M_E;
+        ret.factor = 1.0f / (float)M_E;
         ret.symbol = "e";
     }else{
         ret.factor = 1.0f;
@@ -737,7 +737,7 @@ void Plotter::UpdateView()
         last_track_val[1] = newTrackVal[1];
     }
 
-    const float sf = 1.0 / 20.0;
+    const float sf = 1.0f / 20.0f;
 //    XYRange d = target - rview;
 //    rview += d * sf;
 
@@ -840,7 +840,7 @@ void Plotter::ResetView()
 
 void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 {
-    const float mvfactor = 1.0 / 10.0;
+    const float mvfactor = 1.0f / 10.0f;
 
     const float c[2] = {
         track || trigger_edge ? target.x.max : rview.x.Mid(),
@@ -907,7 +907,7 @@ void Plotter::Mouse(View& view, MouseButton button, int x, int y, bool pressed, 
         selection.y.max = hover[1];
 
     }else if(button == MouseWheelUp || button == MouseWheelDown) {
-        Special(view, InputSpecialZoom, x, y, ((button == MouseWheelDown) ? 0.1 : -0.1), 0.0f, 0.0f, 0.0f, button_state );
+        Special(view, InputSpecialZoom, (float)x, (float)y, ((button == MouseWheelDown) ? 0.1f : -0.1f), 0.0f, 0.0f, 0.0f, button_state );
     }
 
     FixSelection();
@@ -983,7 +983,7 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
     }
 
     // Update hover status (after potential resizing)
-    ScreenToPlot(x, y, hover[0], hover[1]);
+    ScreenToPlot( (int)x, (int)y, hover[0], hover[1]);
 }
 
 Marker& Plotter::AddMarker(Marker::Direction d, float value, Marker::Equality leg, Colour c )

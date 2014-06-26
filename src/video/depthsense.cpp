@@ -62,7 +62,7 @@ void DepthSenseContext::DeviceClosing()
     }
 }
 
-DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(int device_num)
+DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(size_t device_num)
 {
     if(running_devices == 0) {
         // Initialise SDK

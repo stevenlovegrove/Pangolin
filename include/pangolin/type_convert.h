@@ -125,13 +125,39 @@ struct Convert<std::string, S, typename pangolin::enable_if_c<
 // Between scalars
 template<typename T, typename S>
 struct Convert<T, S, typename pangolin::enable_if_c<
-        (boostd::is_scalar<T>::value || boostd::is_same<T,bool>::value) &&
-        (boostd::is_scalar<S>::value || boostd::is_same<S,bool>::value) &&
+        boostd::is_scalar<T>::value && !boostd::is_same<T, bool>::value &&
+        boostd::is_scalar<S>::value && !boostd::is_same<S, bool>::value &&
         !boostd::is_same<S,T>::value
         >::type > {
     static T Do(const S& src)
     {
         return static_cast<T>(src);
+    }
+};
+
+// From Scalars to bool (different than scalar definition to avoid MSVC Warnings)
+template<typename T, typename S>
+struct Convert<T, S, typename pangolin::enable_if_c<
+    boostd::is_same<T, bool>::value &&
+    boostd::is_scalar<S>::value &&
+    !boostd::is_same<S, T>::value
+>::type > {
+    static T Do(const S& src)
+    {
+        return src != static_cast<S>(0);
+    }
+};
+
+// From bool to Scalars (different than scalar definition to avoid MSVC Warnings)
+template<typename T, typename S>
+struct Convert<T, S, typename pangolin::enable_if_c<
+    boostd::is_scalar<T>::value &&
+    boostd::is_same<S, bool>::value &&
+    !boostd::is_same<S, T>::value
+>::type > {
+    static T Do(const S& src)
+    {
+        return src ? static_cast<T>(0) : static_cast<T>(1);
     }
 };
 

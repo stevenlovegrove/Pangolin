@@ -74,7 +74,7 @@ protected:
     float zf; // zoom fraction
     CameraSpec cameraspec;
     GLprecision last_z;
-    int last_pos[2];
+    float last_pos[2];
     GLprecision rot_center[3];
     
     GLprecision p[3];

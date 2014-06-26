@@ -507,8 +507,8 @@ void Mouse( int button_raw, int state, int x, int y)
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;
     
-    last_x = x;
-    last_y = y;
+    last_x = (float)x;
+    last_y = (float)y;
     
     const MouseButton button = (MouseButton)(1 << button_raw);
     const bool pressed = (state == 0);
@@ -540,8 +540,8 @@ void MouseMotion( int x, int y)
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;
     
-    last_x = x;
-    last_y = y;
+    last_x = (float)x;
+    last_y = (float)y;
     
     context->had_input = context->is_double_buffered ? 2 : 1;
     
@@ -561,8 +561,8 @@ void PassiveMouseMotion(int x, int y)
     
     context->base.handler->PassiveMouseMotion(context->base,x,y,context->mouse_state);
     
-    last_x = x;
-    last_y = y;
+    last_x = (float)x;
+    last_y = (float)y;
 }
 
 void Display()

@@ -216,8 +216,9 @@ inline bool IsLinkSuccessPrintLog(GLhandleARB prog)
         }else{
             pango_print_error("No details provided.\n");
         }
+        return false;
     }
-    return status;
+    return true;
 }
 
 inline bool IsCompileSuccessPrintLog(GLhandleARB shader)
@@ -235,8 +236,9 @@ inline bool IsCompileSuccessPrintLog(GLhandleARB shader)
         }else{
             pango_print_error("No details provided.\n");
         }
+        return false;
     }
-    return status;
+    return true;
 }
 
 inline GlSlProgram::GlSlProgram()
