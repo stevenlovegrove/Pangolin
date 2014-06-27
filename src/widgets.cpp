@@ -163,8 +163,10 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
             nv = var.Meta().flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
         } else if (!strcmp(reg_type_name, typeid(double).name()) || !strcmp(reg_type_name, typeid(float).name()) || !strcmp(reg_type_name, typeid(int).name()) || !strcmp(reg_type_name, typeid(unsigned int).name())) {
             nv = new Slider(title, var);
+#ifdef CPP11_NO_BOOST
         } else if (!strcmp(reg_type_name, typeid(boostd::function<void(void)>).name() ) ) {
             nv = (View*)new FunctionButton(title, var);
+#endif // CPP11_NO_BOOST
         }else{
             nv = new TextInput(title,var);
         }
@@ -263,6 +265,7 @@ void Button::ResizeChildren()
     vinside = v.Inset(border);
 }
 
+#ifdef CPP11_NO_BOOST
 FunctionButton::FunctionButton(string title, VarValueGeneric& tv)
     : Widget<boostd::function<void(void)> >(title, tv), down(false)
 {
@@ -301,6 +304,7 @@ void FunctionButton::ResizeChildren()
     raster[1] = v.b + (v.h - text_height) / 2.0f;
     vinside = v.Inset(border);
 }
+#endif // CPP11_NO_BOOST
 
 Checkbox::Checkbox(std::string title, VarValueGeneric& tv)
     : Widget<bool>(title,tv)

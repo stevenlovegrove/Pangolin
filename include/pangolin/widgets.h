@@ -77,6 +77,7 @@ struct PANGOLIN_EXPORT Button : public Widget<bool>
     bool down;
 };
 
+#ifdef CPP11_NO_BOOST
 struct PANGOLIN_EXPORT FunctionButton : public Widget<boostd::function<void(void)> >
 {
     FunctionButton(std::string title, VarValueGeneric& tv);
@@ -90,6 +91,7 @@ struct PANGOLIN_EXPORT FunctionButton : public Widget<boostd::function<void(void
     Viewport vinside;
     bool down;
 };
+#endif // CPP11_NO_BOOST
 
 struct PANGOLIN_EXPORT Checkbox : public Widget<bool>
 {
