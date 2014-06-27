@@ -1,9 +1,6 @@
 #include <iostream>
 #include <pangolin/pangolin.h>
 
-using namespace pangolin;
-using namespace std;
-
 void setImageData(unsigned char * imageArray, int size){
   for(int i = 0 ; i < size;i++) {
     imageArray[i] = (unsigned char)(rand()/(RAND_MAX/255.0));
@@ -23,31 +20,31 @@ int main( int /*argc*/, char* argv[] )
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   // Define Camera Render Object (for view / scene browsing)
-  pangolin::OpenGlMatrix proj = ProjectionMatrix(640,480,420,420,320,240,0.1,1000);
-  pangolin::OpenGlRenderState s_cam(proj,ModelViewLookAt(1,0.5,-2,0,0,0,AxisY) );
-  pangolin::OpenGlRenderState s_cam2(proj,ModelViewLookAt(0,0,-2,0,0,0,AxisY) );
+  pangolin::OpenGlMatrix proj = pangolin::ProjectionMatrix(640,480,420,420,320,240,0.1,1000);
+  pangolin::OpenGlRenderState s_cam(proj, pangolin::ModelViewLookAt(1,0.5,-2,0,0,0, pangolin::AxisY) );
+  pangolin::OpenGlRenderState s_cam2(proj, pangolin::ModelViewLookAt(0,0,-2,0,0,0, pangolin::AxisY) );
 
   // Add named OpenGL viewport to window and provide 3D Handler
-  View& d_cam1 = pangolin::Display("cam1")
+  pangolin::View& d_cam1 = pangolin::Display("cam1")
     .SetAspect(640.0f/480.0f)
-    .SetHandler(new Handler3D(s_cam));
+    .SetHandler(new pangolin::Handler3D(s_cam));
 
-  View& d_cam2 = pangolin::Display("cam2")
+  pangolin::View& d_cam2 = pangolin::Display("cam2")
     .SetAspect(640.0f/480.0f)
-    .SetHandler(new Handler3D(s_cam2));
+    .SetHandler(new pangolin::Handler3D(s_cam2));
 
-  View& d_cam3 = pangolin::Display("cam3")
+  pangolin::View& d_cam3 = pangolin::Display("cam3")
     .SetAspect(640.0f/480.0f)
-    .SetHandler(new Handler3D(s_cam));
+    .SetHandler(new pangolin::Handler3D(s_cam));
 
-  View& d_cam4 = pangolin::Display("cam4")
+  pangolin::View& d_cam4 = pangolin::Display("cam4")
     .SetAspect(640.0f/480.0f)
-    .SetHandler(new Handler3D(s_cam2));
+    .SetHandler(new pangolin::Handler3D(s_cam2));
 
-  View& d_img1 = pangolin::Display("img1")
+  pangolin::View& d_img1 = pangolin::Display("img1")
     .SetAspect(640.0f/480.0f);
 
-  View& d_img2 = pangolin::Display("img2")
+  pangolin::View& d_img2 = pangolin::Display("img2")
     .SetAspect(640.0f/480.0f);
 
   // LayoutEqual is an EXPERIMENTAL feature - it requires that all sub-displays
@@ -55,7 +52,7 @@ int main( int /*argc*/, char* argv[] )
   // viewport so as to maximise display size.
   pangolin::Display("multi")
       .SetBounds(1.0, 0.0, 0.0, 1.0)
-      .SetLayout(LayoutEqual)
+      .SetLayout(pangolin::LayoutEqual)
       .AddDisplay(d_cam1)
       .AddDisplay(d_img1)
       .AddDisplay(d_cam2)
@@ -66,7 +63,7 @@ int main( int /*argc*/, char* argv[] )
   const int width =  64;
   const int height = 48;
   unsigned char* imageArray = new unsigned char[3*width*height];
-  GlTexture imageTexture(width,height,GL_RGB,false,0,GL_RGB,GL_UNSIGNED_BYTE);
+  pangolin::GlTexture imageTexture(width,height,GL_RGB,false,0,GL_RGB,GL_UNSIGNED_BYTE);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
@@ -80,16 +77,16 @@ int main( int /*argc*/, char* argv[] )
     glColor3f(1.0,1.0,1.0);
 
     d_cam1.Activate(s_cam);
-    glDrawColouredCube();
+    pangolin::glDrawColouredCube();
 
     d_cam2.Activate(s_cam2);
-    glDrawColouredCube();
+    pangolin::glDrawColouredCube();
 
     d_cam3.Activate(s_cam);
-    glDrawColouredCube();
+    pangolin::glDrawColouredCube();
 
     d_cam4.Activate(s_cam2);
-    glDrawColouredCube();
+    pangolin::glDrawColouredCube();
 
     d_img1.Activate();
     glColor4f(1.0f,1.0f,1.0f,1.0f);

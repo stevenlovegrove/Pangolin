@@ -9,18 +9,15 @@
 #include <pangolin/video_record_repeat.h>
 #include <pangolin/input_record_repeat.h>
 
-using namespace pangolin;
-using namespace std;
-
 void RecordSample(const std::string uri, const std::string vid_file, const std::string ui_file)
 {
     // Setup Video Source
-    VideoRecordRepeat video(uri, vid_file, 1024*1024*200);
-    const VideoPixelFormat vid_fmt = video.PixFormat();
+    pangolin::VideoRecordRepeat video(uri, vid_file, 1024*1024*200);
+    const pangolin::VideoPixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();
 
-    InputRecordRepeat input("ui.");
+    pangolin::InputRecordRepeat input("ui.");
     input.LoadBuffer(ui_file);
 
     // Create Glut window
@@ -29,24 +26,24 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
 
     // Create viewport for video with fixed aspect
     pangolin::CreatePanel("ui.")
-        .SetBounds(0.0, 1.0, 0.0, Attach::Pix(panel_width));
+        .SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(panel_width));
 
-    View& vVideo = Display("Video")
-        .SetBounds(0.0, 1.0, Attach::Pix(panel_width), 1.0)
+    pangolin::View& vVideo = pangolin::Display("Video")
+        .SetBounds(0.0, 1.0, pangolin::Attach::Pix(panel_width), 1.0)
         .SetAspect((float)w/h);
 
     // OpenGl Texture for video frame
-    GlTexture texVideo(w,h,GL_RGBA);
+    pangolin::GlTexture texVideo(w,h,GL_RGBA);
 
     unsigned char* img = new unsigned char[video.SizeBytes()];
 
-    Var<bool> record("ui.Record",false,false);
-    Var<bool> play("ui.Play",false,false);
-    Var<bool> source("ui.Source",false,false);
-    Var<bool> realtime("ui.realtime",true,true);
+    pangolin::Var<bool> record("ui.Record",false,false);
+    pangolin::Var<bool> play("ui.Play",false,false);
+    pangolin::Var<bool> source("ui.Source",false,false);
+    pangolin::Var<bool> realtime("ui.realtime",true,true);
 
-    Var<float> hue("ui.Hue",0,0,360);
-    Var<bool> colour("ui.Colour Video",false,true);
+    pangolin::Var<float> hue("ui.Hue",0,0,360);
+    pangolin::Var<bool> colour("ui.Colour Video",false,true);
 
     while( !pangolin::ShouldQuit() )
     {
@@ -105,32 +102,32 @@ int main( int argc, char* argv[] )
     std::string filename = "video.pvn";
 
     if( argc >= 2 ) {
-        const string uri = std::string(argv[1]);
+        const std::string uri = std::string(argv[1]);
         if( argc == 3 ) {
             filename = std::string(argv[2]);
         }
         RecordSample(uri, filename, filename + ".ui");
     }else{
-        cout << "Usage  : SimpleRepeatVideo [video-uri] [buffer-filename]" << endl << endl;
-        cout << "Where video-uri describes a stream or file resource, e.g." << endl;
-        cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << endl;
-        cout << "\tfile:///home/user/video/movie.avi" << endl;
-        cout << "\tfiles:///home/user/seqiemce/foo%03d.jpeg" << endl;
-        cout << "\tdc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0" << endl;
-        cout << "\tdc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << endl;
-        cout << "\tv4l:///dev/video0" << endl;
-        cout << "\tconvert:[fmt=RGB24]//v4l:///dev/video0" << endl;
-        cout << "\tmjpeg://http://127.0.0.1/?action=stream" << endl;
-        cout << endl;
+        std::cout << "Usage  : SimpleRepeatVideo [video-uri] [buffer-filename]" << std::endl << std::endl;
+        std::cout << "Where video-uri describes a stream or file resource, e.g." << std::endl;
+        std::cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << std::endl;
+        std::cout << "\tfile:///home/user/video/movie.avi" << std::endl;
+        std::cout << "\tfiles:///home/user/seqiemce/foo%03d.jpeg" << std::endl;
+        std::cout << "\tdc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0" << std::endl;
+        std::cout << "\tdc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << std::endl;
+        std::cout << "\tv4l:///dev/video0" << std::endl;
+        std::cout << "\tconvert:[fmt=RGB24]//v4l:///dev/video0" << std::endl;
+        std::cout << "\tmjpeg://http://127.0.0.1/?action=stream" << std::endl;
+        std::cout << std::endl;
 
         // Try to open some video device
         for(int i=0; !uris[i].empty(); ++i )
         {
             try{
-                cout << "Trying: " << uris[i] << endl;
+                std::cout << "Trying: " << uris[i] << std::endl;
                 RecordSample(uris[i], filename, filename + ".ui");
                 return 0;
-            }catch(VideoException) {}
+            }catch(pangolin::VideoException) {}
         }
     }
 

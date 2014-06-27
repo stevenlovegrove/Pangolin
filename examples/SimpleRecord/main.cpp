@@ -8,28 +8,25 @@
 #include <pangolin/video.h>
 #include <pangolin/video_recorder.h>
 
-using namespace pangolin;
-using namespace std;
-
 void RecordSample(const std::string input_uri, const std::string record_uri)
 {
     // Setup Video Source
-    VideoInput video(input_uri);
-    const VideoPixelFormat vid_fmt = video.PixFormat();
+    pangolin::VideoInput video(input_uri);
+    const pangolin::VideoPixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();
 
-    VideoOutput recorder( record_uri );
+    pangolin::VideoOutput recorder( record_uri );
     recorder.AddStream(w,h, "YUV420P");
 
     // Create Glut window
     pangolin::CreateWindowAndBind("Main",w,h);
 
     // Create viewport for video with fixed aspect
-    View& vVideo = Display("Video").SetAspect((float)w/h);
+    pangolin::View vVideo((float)w/h);
 
     // OpenGl Texture for video frame
-    GlTexture texVideo(w,h,GL_RGBA);
+    pangolin::GlTexture texVideo(w,h,GL_RGBA);
 
     // Allocate image buffer. The +1 is to give ffmpeg some alignment slack
     // swscale seems to have a bug which goes over the array by 1...
@@ -71,32 +68,32 @@ int main( int argc, char* argv[] )
     };
 
     if( argc >= 2 ) {
-        const string uri = std::string(argv[1]);
+        const std::string uri = std::string(argv[1]);
         if( argc == 3 ) {
             record_uri = std::string(argv[2]);
         }
         RecordSample(uri, record_uri);
     }else{
-        cout << "Usage  : SimpleRecord [video-uri] [output-uri]" << endl << endl;
-        cout << "Where video-uri describes a stream or file resource, e.g." << endl;
-        cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << endl;
-        cout << "\tfile:///home/user/video/movie.avi" << endl;
-        cout << "\tfiles:///home/user/seqiemce/foo%03d.jpeg" << endl;
-        cout << "\tdc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0" << endl;
-        cout << "\tdc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << endl;
-        cout << "\tv4l:///dev/video0" << endl;
-        cout << "\tconvert:[fmt=RGB24]//v4l:///dev/video0" << endl;
-        cout << "\tmjpeg://http://127.0.0.1/?action=stream" << endl;
-        cout << endl;
+        std::cout << "Usage  : SimpleRecord [video-uri] [output-uri]" << std::endl << std::endl;
+        std::cout << "Where video-uri describes a stream or file resource, e.g." << std::endl;
+        std::cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << std::endl;
+        std::cout << "\tfile:///home/user/video/movie.avi" << std::endl;
+        std::cout << "\tfiles:///home/user/seqiemce/foo%03d.jpeg" << std::endl;
+        std::cout << "\tdc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0" << std::endl;
+        std::cout << "\tdc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << std::endl;
+        std::cout << "\tv4l:///dev/video0" << std::endl;
+        std::cout << "\tconvert:[fmt=RGB24]//v4l:///dev/video0" << std::endl;
+        std::cout << "\tmjpeg://http://127.0.0.1/?action=stream" << std::endl;
+        std::cout << std::endl;
 
         // Try to open some video device
         for(int i=0; !input_uris[i].empty(); ++i )
         {
             try{
-                cout << "Trying: " << input_uris[i] << endl;
+                std::cout << "Trying: " << input_uris[i] << std::endl;
                 RecordSample(input_uris[i], record_uri);
                 return 0;
-            }catch(VideoException) {}
+            }catch(pangolin::VideoException) {}
         }
     }
 
