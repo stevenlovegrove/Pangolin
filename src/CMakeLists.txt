@@ -91,6 +91,9 @@ if(NOT CPP11_NO_BOOST)
     # Generic Image Library (GIL) should come with boost.
     # If you have a version of boost without it, maybe figure out how to test here.
     set(HAVE_BOOST_GIL 1)
+else()
+    find_package(Boost QUIET)
+    set(HAVE_BOOST_GIL 1)
 endif()
 
 if(BUILD_PANGOLIN_GUI)
