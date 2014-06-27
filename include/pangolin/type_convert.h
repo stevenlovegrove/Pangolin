@@ -31,6 +31,7 @@
 #include <iostream>
 #include <sstream>
 
+#include <pangolin/compat/function.h>
 #include <pangolin/compat/type_traits.h>
 
 namespace pangolin
@@ -39,6 +40,27 @@ namespace pangolin
 struct BadInputException : std::exception {
     char const* what() const throw() { return "Failed to serialise type"; }
 };
+
+// Dummy methods to serialise functions / functors / lambdas etc
+#ifdef CALLEE_HAS_CPP11
+template<typename Ret, typename... Args>
+std::istream& operator>>(std::istream& is, std::function<Ret(Args...)>& f) {
+    throw BadInputException();
+}
+template<typename Ret, typename... Args>
+std::ostream& operator<<(std::ostream& os, const std::function<Ret(Args...)>& f) {
+    throw BadInputException();
+}
+#else
+template<typename Ret, typename Arg>
+std::istream& operator>>(std::istream& is, boostd::function<Ret(Args...)>& f) {
+    throw BadInputException();
+}
+template<typename Ret, typename Args>
+std::ostream& operator<<(std::ostream& os, const boostd::function<Ret(Args...)>& f) {
+    throw BadInputException();
+}
+#endif
 
 template<typename T, typename S, typename Enable=void>
 struct Convert;

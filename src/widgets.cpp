@@ -161,8 +161,10 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
         View* nv = NULL;
         if( !strcmp(reg_type_name, typeid(bool).name()) ) {
             nv = var.Meta().flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-        }else if( !strcmp(reg_type_name, typeid(double).name()) || !strcmp(reg_type_name, typeid(float).name()) || !strcmp(reg_type_name, typeid(int).name()) || !strcmp(reg_type_name, typeid(unsigned int).name()) ) {
-            nv = new Slider(title,var);
+        } else if (!strcmp(reg_type_name, typeid(double).name()) || !strcmp(reg_type_name, typeid(float).name()) || !strcmp(reg_type_name, typeid(int).name()) || !strcmp(reg_type_name, typeid(unsigned int).name())) {
+            nv = new Slider(title, var);
+        } else if (!strcmp(reg_type_name, typeid(boostd::function<void(void)>).name() ) ) {
+            nv = (View*)new FunctionButton(title, var);
         }else{
             nv = new TextInput(title,var);
         }
@@ -258,6 +260,45 @@ void Button::ResizeChildren()
 {
     raster[0] = v.l + (v.w-text_width)/2.0f;
     raster[1] = v.b + (v.h-text_height)/2.0f;
+    vinside = v.Inset(border);
+}
+
+FunctionButton::FunctionButton(string title, VarValueGeneric& tv)
+    : Widget<boostd::function<void(void)> >(title, tv), down(false)
+{
+    top = 1.0; bottom = Attach::Pix(-tab_h);
+    left = 0.0; right = 1.0;
+    hlock = LockLeft;
+    vlock = LockBottom;
+    text_width = glutBitmapLength(font, (unsigned char*)title.c_str());
+}
+
+void FunctionButton::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
+{
+    if (button == MouseButtonLeft)
+    {
+        down = pressed;
+        if (!pressed) {
+            var->Get()();
+            GuiVarChanged(*this);
+        }
+    }
+}
+
+void FunctionButton::Render()
+{
+    glColor4fv(colour_fg);
+    glRect(v);
+    glColor4fv(colour_tx);
+    glRasterPos2f(raster[0], raster[1] - down);
+    glutBitmapString(font, (unsigned char*)title.c_str());
+    DrawShadowRect(v, down);
+}
+
+void FunctionButton::ResizeChildren()
+{
+    raster[0] = v.l + (v.w - text_width) / 2.0f;
+    raster[1] = v.b + (v.h - text_height) / 2.0f;
     vinside = v.Inset(border);
 }
 

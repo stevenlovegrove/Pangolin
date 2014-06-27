@@ -30,9 +30,9 @@ std::istream& operator>> (std::istream& is, CustomType& o){
   return is;
 }
 
-void GlobalKeyHook()
+void SampleMethod()
 {
-    cout << "You pushed ctrl-r" << endl;
+    cout << "You typed ctrl-r or pushed reset" << endl;
 }
 
 int main( int /*argc*/, char* argv[] )
@@ -68,12 +68,6 @@ int main( int /*argc*/, char* argv[] )
   pangolin::CreatePanel("ui")
       .SetBounds(0.0, 1.0, 0.0, Attach::Pix(UI_WIDTH));
 
-  // Demonstration of how we can register a keyboard hook to alter a Var
-  pangolin::RegisterKeyPressCallback( PANGO_CTRL + 'b', SetVarFunctor<double>("ui.A Double", 3.5) );
-
-  // Demonstration of how we can register a keyboard hook to trigger a method
-  pangolin::RegisterKeyPressCallback( PANGO_CTRL + 'r', GlobalKeyHook );
-
   // Safe and efficient binding of named variables.
   // Specialisations mean no conversions take place for exact types
   // and conversions between scalar types are cheap.
@@ -89,6 +83,16 @@ int main( int /*argc*/, char* argv[] )
   Var<bool> save_teapot("ui.Save Teapot",false,false);
 
   Var<bool> record_teapot("ui.Record Teapot",false,false);
+
+  // boost::function / std::function objects can be used for Var's too.
+  // In C++11, these work great with closures.
+  Var<boostd::function<void(void)> > reset("ui.Reset", SampleMethod);
+
+  // Demonstration of how we can register a keyboard hook to alter a Var
+  pangolin::RegisterKeyPressCallback(PANGO_CTRL + 'b', SetVarFunctor<double>("ui.A Double", 3.5));
+
+  // Demonstration of how we can register a keyboard hook to trigger a method
+  pangolin::RegisterKeyPressCallback(PANGO_CTRL + 'r', SampleMethod);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
