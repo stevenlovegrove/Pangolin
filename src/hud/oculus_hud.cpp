@@ -139,7 +139,7 @@ void OculusHud::UnwarpPoint(unsigned int view, const float in[2], float out[2])
     const float r = std::sqrt(theta[0]*theta[0] + theta[1]*theta[1]);
     const float nr = const_cast<OVR::Util::Render::DistortionConfig&>(Distortion).DistortionFn(r);
 
-    float theta1[] {
+    float theta1[] = {
         nr * theta[0] / r,
         nr * theta[1] / r
     };
