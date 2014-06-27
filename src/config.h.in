@@ -65,4 +65,8 @@
 #define CALLEE_HAS_RVALREF
 #endif
 
+#if (__cplusplus > 199711L) || (_MSC_VER >= 1800)
+#define CALLEE_HAS_VARIADIC_TEMPLATES
+#endif
+
 #endif //PANGOLIN_CONFIG_H

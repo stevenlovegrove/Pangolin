@@ -42,22 +42,28 @@ struct BadInputException : std::exception {
 };
 
 // Dummy methods to serialise functions / functors / lambdas etc
-#ifdef CALLEE_HAS_CPP11
+#ifdef CALLEE_HAS_VARIADIC_TEMPLATES
 template<typename Ret, typename... Args>
-std::istream& operator>>(std::istream& is, boostd::function<Ret(Args...)>& f) {
+inline std::istream& operator>>(std::istream& is, boostd::function<Ret(Args...)>& f) {
     throw BadInputException();
 }
 template<typename Ret, typename... Args>
-std::ostream& operator<<(std::ostream& os, const boostd::function<Ret(Args...)>& f) {
+inline std::ostream& operator<<(std::ostream& os, const boostd::function<Ret(Args...)>& f) {
     throw BadInputException();
 }
 #else
 template<typename Ret, typename Arg>
-std::istream& operator>>(std::istream& is, boostd::function<Ret(Arg)>& f) {
+inline std::istream& operator>>(std::istream& is, boostd::function<Ret(Arg)>& f) {
     throw BadInputException();
 }
 template<typename Ret, typename Arg>
-std::ostream& operator<<(std::ostream& os, const boostd::function<Ret(Arg)>& f) {
+inline std::ostream& operator<<(std::ostream& os, const boostd::function<Ret(Arg)>& f) {
+    throw BadInputException();
+}
+inline std::istream& operator>>(std::istream& is, boostd::function<void(void)>& f) {
+    throw BadInputException();
+}
+inline std::ostream& operator<<(std::ostream& os, const boostd::function<void(void)>& f) {
     throw BadInputException();
 }
 #endif

@@ -40,7 +40,7 @@ namespace pangolin
 typedef void (*NewVarCallbackFn)(void* data, const std::string& name, VarValueGeneric& var, const char* reg_type_name, bool brand_new);
 typedef void (*GuiVarChangedCallbackFn)(void* data, const std::string& name, VarValueGeneric& var);
 
-struct NewVarCallback
+struct PANGOLIN_EXPORT NewVarCallback
 {
     NewVarCallback(const std::string& filter, NewVarCallbackFn fn, void* data)
         :filter(filter),fn(fn),data(data) {}
@@ -49,7 +49,7 @@ struct NewVarCallback
     void* data;
 };
 
-struct GuiVarChangedCallback
+struct PANGOLIN_EXPORT GuiVarChangedCallback
 {
     GuiVarChangedCallback(const std::string& filter, GuiVarChangedCallbackFn fn, void* data)
         :filter(filter),fn(fn),data(data) {}
