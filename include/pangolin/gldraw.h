@@ -322,7 +322,7 @@ template<typename T>
 inline void glDrawAxis( const Eigen::Matrix<T,4,4>& T_wf, T scale )
 {
     glSetFrameOfReference(T_wf);
-    glDrawAxis(scale);
+    glDrawAxis( (float)scale );
     glUnsetFrameOfReference();
 }
 
