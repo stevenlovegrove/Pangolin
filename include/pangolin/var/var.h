@@ -44,8 +44,7 @@ class Var
 public:
     static void Attach(
         const std::string& name, T& variable,
-        double min = 0, double max = 0, int flags = 1,
-        bool logscale = false
+        double min, double max, bool logscale = false
     ) {
         // Find name in VarStore
         VarValueGeneric*& v = VarState::I()[name];
@@ -54,7 +53,22 @@ public:
         }else{
             // new VarRef<T> (owned by VarStore)
             v = new VarValue<T&>(variable);
-            InitialiseNewVarMeta(*v,name,min,max,flags,logscale);
+            InitialiseNewVarMeta(*v,name,min,max,1,logscale);
+        }
+    }
+
+    static void Attach(
+        const std::string& name, T& variable, bool toggle = false
+        ) {
+        // Find name in VarStore
+        VarValueGeneric*& v = VarState::I()[name];
+        if (v) {
+            throw std::runtime_error("Var with that name already exists.");
+        }
+        else{
+            // new VarRef<T> (owned by VarStore)
+            v = new VarValue<T&>(variable);
+            InitialiseNewVarMeta(*v, name, 0.0, 0.0, toggle);
         }
     }
 
