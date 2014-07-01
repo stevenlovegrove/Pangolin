@@ -4,31 +4,29 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/video.h>
 
+#include <pangolin/video/openni_common.h>
+
+// Workaround poor OpenNI Platform test on Linux before including XnCppWrapper.h
+// See https://github.com/dennishamester/OpenNI/commit/ca99f6181234c682bba42a6ba
+#ifdef _LINUX_
+#define linux 1
+#endif // _LINUX_
+
 // OpenNI generates SO MANY warnings, we'll just disable all for this header(!)
 // GCC and clang will listen to this pramga.
+#ifndef _MSVC_
 #pragma GCC system_header
+#endif
 #include <XnCppWrapper.h>
 
 namespace pangolin
 {
 
-enum OpenNiSensorType
-{
-    OpenNiUnassigned = -1,
-    OpenNiRgb = 0,
-    OpenNiIr = 1,
-    OpenNiDepth = 2,
-    OpenNiDepthRegistered = 3,
-    OpenNiIr8bit = 4,
-    OpenNiIrProj = 5,
-    OpenNiIr8bitProj = 6
-};
-
 //! Interface to video capture sources
-struct OpenNiVideo : public VideoInterface
+struct PANGOLIN_EXPORT OpenNiVideo : public VideoInterface
 {
 public:
-    OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2);
+    OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim = ImageDim(640,480), int fps = 30);
     ~OpenNiVideo();
 
     //! Implement VideoInput::Start()

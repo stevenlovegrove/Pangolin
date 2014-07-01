@@ -28,7 +28,7 @@
 #ifndef PANGOLIN_VIDEO_COMMON_H
 #define PANGOLIN_VIDEO_COMMON_H
 
-#include <pangolin/config.h>
+#include <pangolin/platform.h>
 #include <pangolin/type_convert.h>
 #include <exception>
 #include <string>
@@ -66,13 +66,15 @@ class Uri
 public:
     typedef std::map<std::string,std::string> ParamMap;
     
-    bool Contains(const std::string& key) {
+    bool Contains(const std::string& key) const
+    {
         return params.find(key) != params.end();
     }
     
     template<typename T>
-    T Get(const std::string& key, T default_val) {
-        ParamMap::iterator v = params.find(key);
+    T Get(const std::string& key, T default_val) const
+    {
+        ParamMap::const_iterator v = params.find(key);
         if(v != params.end()) {
             return Convert<T, std::string>::Do(v->second);
         }else{
@@ -102,10 +104,12 @@ struct ImageRoi
 };
 
 //! Parse string as Video URI
+PANGOLIN_EXPORT
 Uri ParseUri(std::string str_uri);
 
 //! Return Pixel Format properties given string specification in
 //! FFMPEG notation.
+PANGOLIN_EXPORT
 VideoPixelFormat VideoFormatFromString(const std::string& format);
 
 }

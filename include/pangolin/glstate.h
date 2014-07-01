@@ -102,7 +102,7 @@ public:
         }
         
         if(m_LineWidthCalled) {
-            ::glPointSize(m_OriginalLineWidth);
+            ::glLineWidth(m_OriginalLineWidth);
         }        
         
         if (m_ColorMaskCalled) {

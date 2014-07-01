@@ -44,10 +44,19 @@
 #include <pangolin/video/openni.h>
 #endif
 
+#ifdef HAVE_OPENNI2
+#include <pangolin/video/openni2.h>
+#endif
+
 #ifdef HAVE_UVC
 #include <pangolin/video/uvc.h>
 #endif
 
+#ifdef HAVE_DEPTHSENSE
+#include <pangolin/video/depthsense.h>
+#endif
+
+#include <pangolin/file_utils.h>
 #include <pangolin/video/test.h>
 #include <pangolin/video/images.h>
 #include <pangolin/video/pvn_video.h>
@@ -58,7 +67,39 @@ namespace pangolin
 
 std::istream& operator>> (std::istream &is, ImageDim &dim)
 {
-    is >> dim.x; is.get(); is >> dim.y;
+    if(std::isdigit(is.peek()) ) {
+        // Expect 640x480, 640*480, ...
+        is >> dim.x; is.get(); is >> dim.y;
+    }else{
+        // Expect 'VGA', 'QVGA', etc
+        std::string sdim;
+        is >> sdim;
+        ToUpper(sdim);
+
+        if( !sdim.compare("QQVGA") ) {
+            dim = ImageDim(160,120);
+        }else if( !sdim.compare("HQVGA") ) {
+            dim = ImageDim(240,160);
+        }else if( !sdim.compare("QVGA") ) {
+            dim = ImageDim(320,240);
+        }else if( !sdim.compare("WQVGA") ) {
+            dim = ImageDim(360,240);
+        }else if( !sdim.compare("HVGA") ) {
+            dim = ImageDim(480,320);
+        }else if( !sdim.compare("VGA") ) {
+            dim = ImageDim(640,480);
+        }else if( !sdim.compare("WVGA") ) {
+            dim = ImageDim(720,480);
+        }else if( !sdim.compare("SVGA") ) {
+            dim = ImageDim(800,600);
+        }else if( !sdim.compare("DVGA") ) {
+            dim = ImageDim(960,640);
+        }else if( !sdim.compare("WSVGA") ) {
+            dim = ImageDim(1024,600);
+        }else{
+            throw VideoException("Unrecognised image-size string.");
+        }
+    }
     return is;
 }
 
@@ -149,11 +190,13 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 #endif
 
-#ifdef HAVE_OPENNI
+#if defined(HAVE_OPENNI) || defined(HAVE_OPENNI2)
 
-OpenNiSensorType openni_sensor(std::string str)
+OpenNiSensorType openni_sensor(const std::string& str)
 {
-    if( !str.compare("rgb") ) {
+    if( !str.compare("grey") || !str.compare("gray") ) {
+        return OpenNiGrey;
+    }else if( !str.compare("rgb") ) {
         return OpenNiRgb;
     }else if( !str.compare("ir") ) {
         return OpenNiIr;
@@ -163,22 +206,29 @@ OpenNiSensorType openni_sensor(std::string str)
         return OpenNiDepthRegistered;
     }else if( !str.compare("ir8") ) {
         return OpenNiIr8bit;
+    }else if( !str.compare("ir24") ) {
+        return OpenNiIr24bit;
     }else if( !str.compare("ir+") ) {
         return OpenNiIrProj;
     }else if( !str.compare("ir8+") ) {
         return OpenNiIr8bitProj;
+    }else if( str.empty() ) {
+        return OpenNiUnassigned;
     }else{
         throw pangolin::VideoException("Unknown OpenNi sensor", str );
     }
 }
 
-#endif // HAVE_OPENNI
+#endif // defined(HAVE_OPENNI) || defined(HAVE_OPENNI2)
 
-VideoInterface* OpenVideo(std::string str_uri)
+VideoInterface* OpenVideo(const std::string& str_uri)
+{
+    return OpenVideo( ParseUri(str_uri) );
+}
+
+VideoInterface* OpenVideo(const Uri& uri)
 {
     VideoInterface* video = 0;
-    
-    Uri uri = ParseUri(str_uri);
     
     if(!uri.scheme.compare("test") )
     {
@@ -188,7 +238,7 @@ VideoInterface* OpenVideo(std::string str_uri)
         video = new TestVideo(dim.x,dim.y,n,fmt);
     }else
     // '%' printf specifier used with ffmpeg
-    if(!uri.scheme.compare("files") && uri.url.find('\%') == std::string::npos)
+    if(!uri.scheme.compare("files") && uri.url.find('%') == std::string::npos)
     {
         video = new ImagesVideo(uri.url);
     }else
@@ -327,23 +377,51 @@ VideoInterface* OpenVideo(std::string str_uri)
 #ifdef HAVE_OPENNI
     if(!uri.scheme.compare("openni") || !uri.scheme.compare("kinect"))
     {
+        const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+        const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+
         OpenNiSensorType img1 = OpenNiRgb;
         OpenNiSensorType img2 = OpenNiUnassigned;
         
         if(uri.params.find("img1")!=uri.params.end()){
-            img1 = openni_sensor(uri.params["img1"]);
+            img1 = openni_sensor(uri.Get<std::string>("img1", "depth"));
         }
         
         if(uri.params.find("img2")!=uri.params.end()){
-            img2 = openni_sensor(uri.params["img2"]);
+            img2 = openni_sensor(uri.Get<std::string>("img2","rgb"));
         }
         
-        video = new OpenNiVideo(img1,img2);
+        video = new OpenNiVideo(img1,img2,dim,fps);
+    }else
+#endif
+#ifdef HAVE_OPENNI2
+    if(!uri.scheme.compare("openni2") )
+    {
+        const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+        const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+
+        OpenNiSensorType img1;
+        OpenNiSensorType img2;
+
+        img1 = openni_sensor(uri.Get<std::string>("img1", "rgb") );
+        img2 = openni_sensor(uri.Get<std::string>("img2", "") );
+
+        OpenNiVideo2* nivid = new OpenNiVideo2(img1,img2,dim,fps);
+        video = nivid;
+
+        nivid->SetDepthCloseRange( uri.Get<bool>("closerange",false) );
+        nivid->SetDepthHoleFilter( uri.Get<bool>("holefilter",false) );
+        nivid->SetDepthColorSyncEnabled( uri.Get<bool>("coloursync",false) );
     }else
 #endif
 #ifdef HAVE_UVC
     if(!uri.scheme.compare("uvc")) {
         video = new UvcVideo();
+    }else
+#endif
+#ifdef HAVE_DEPTHSENSE
+    if(!uri.scheme.compare("depthsense")) {
+        video = DepthSenseContext::I().GetDepthSenseVideo();
     }else
 #endif
     {
@@ -354,7 +432,7 @@ VideoInterface* OpenVideo(std::string str_uri)
 }
 
 VideoInput::VideoInput()
-    : uri(""), video(0)
+    : video(0)
 {
 }
 
@@ -369,9 +447,9 @@ VideoInput::~VideoInput()
     if(video) delete video;
 }
 
-void VideoInput::Open(const std::string& uri)
+void VideoInput::Open(const std::string& sUri)
 {
-    this->uri = uri;
+    uri = ParseUri(sUri);
     
     if(video) {
         delete video;
@@ -384,7 +462,13 @@ void VideoInput::Open(const std::string& uri)
 
 void VideoInput::Reset()
 {
-    Open(uri);
+    if(video) {
+        delete video;
+        video = 0;
+    }
+
+    // Create video device
+    video = OpenVideo(uri);
 }
 
 size_t VideoInput::SizeBytes() const
@@ -415,6 +499,11 @@ VideoPixelFormat VideoInput::PixFormat() const
 {
     if( !video ) throw VideoException("No video source open");
     return Streams()[0].PixFormat();
+}
+
+const Uri& VideoInput::VideoUri() const
+{
+    return uri;
 }
 
 void VideoInput::Start()

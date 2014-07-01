@@ -48,6 +48,7 @@ namespace pangolin
 // Interface
 ////////////////////////////////////////////////
 
+/// Lightweight object wrapper for NVidia Cg Shader program objects.
 class CgProgram
 {
     friend class CgLoader;

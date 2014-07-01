@@ -28,53 +28,22 @@
 #ifndef PANGOLIN_GLINCLUDE_H
 #define PANGOLIN_GLINCLUDE_H
 
-//////////////////////////////////////////////////////////
-// Attempt to portably include Necessary OpenGL headers
-//////////////////////////////////////////////////////////
-
-#include "platform.h"
-
-#ifdef _WIN_
-#include <Windows.h>
-#endif
-
-#ifndef HAVE_GLES
-    #include <GL/glew.h>
-#endif // HAVE_GLES
-
-#ifdef HAVE_GLUT
-    #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-        #include <GLUT/glut.h>
-        #define HAVE_GLUT_APPLE_FRAMEWORK
-    
-        inline void glutBitmapString(void* font, const unsigned char* str)
-        {
-            const unsigned char* s = str;
-            while(*s != 0) {
-                glutBitmapCharacter(font, *s);
-                ++s;
-            }
-        }
-    #else
-        #include <GL/freeglut.h>
-    #endif // HAVE_APPLE_OPENGL_FRAMEWORK
-#endif // HAVE_GLUT
+#include <pangolin/glplatform.h>
 
 #ifdef HAVE_GLES
-    #include <EGL/egl.h>
-    #include <GLES/gl.h>
-    #include <glues/glu.h>
+#include <pangolin/gl_es_compat.h>
+#endif
 
-    #define GL_GLEXT_PROTOTYPES
-    #include <GLES/glext.h>
-    #include <pangolin/gl_es_compat.h>
-#else
-    #include <GL/glew.h>
-    #ifdef _OSX_
-        #include <OpenGL/gl.h>
-    #else
-        #include <GL/gl.h>
-    #endif
-#endif // HAVE_GLES
+#define CheckGlDieOnError() pangolin::_CheckGlDieOnError( __FILE__, __LINE__ );
+namespace pangolin {
+inline void _CheckGlDieOnError( const char *sFile, const int nLine )
+{
+    GLenum glError = glGetError();
+    if( glError != GL_NO_ERROR ) {
+        pango_print_error( "OpenGL Error: %s (%d)\n", glErrorString(glError), glError );
+		pango_print_error("In: %s, line %d\n", sFile, nLine);
+    }
+}
+}
 
 #endif // PANGOLIN_GLINCLUDE_H

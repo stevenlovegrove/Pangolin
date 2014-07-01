@@ -31,7 +31,9 @@
 #include <pangolin/platform.h>
 #include <pangolin/view.h>
 #include <pangolin/compat/function.h>
+#include <pangolin/user_app.h>
 
+#include <map>
 #include <queue>
 
 #ifdef BUILD_PANGOLIN_VIDEO
@@ -39,7 +41,8 @@
 #endif // BUILD_PANGOLIN_VIDEO
 
 #ifdef HAVE_CVARS
-#include <pangolin/compat/glconsole.h>
+    #define HAVE_GLCONSOLE
+    #include <pangolin/compat/glconsole.h>
 #endif // HAVE_CVARS
 
 namespace pangolin
@@ -47,7 +50,7 @@ namespace pangolin
 
 typedef std::map<const std::string,View*> ViewMap;
 
-struct PangolinGl
+struct PANGOLIN_EXPORT PangolinGl
 {
     PangolinGl();
     ~PangolinGl();
@@ -57,6 +60,9 @@ struct PangolinGl
     
     // Named views which are managed by pangolin (i.e. created / deleted by pangolin)
     ViewMap named_managed_views;
+
+    // Optional user app
+    UserApp* user_app;
     
     // Global keypress hooks
     std::map<int,boostd::function<void(void)> > keypress_hooks;
@@ -80,12 +86,13 @@ struct PangolinGl
     VideoOutput recorder;
 #endif
     
-#ifdef HAVE_CVARS
+#ifdef HAVE_GLCONSOLE
     GLConsole console;
-#endif // HAVE_CVARS
+#endif // HAVE_GLCONSOLE
     
 };
 
+PANGOLIN_EXPORT
 void PangolinCommonInit();
 
 #ifdef BUILD_PANGOLIN_VIDEO

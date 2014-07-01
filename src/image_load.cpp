@@ -44,6 +44,11 @@
 #endif // HAVE_PNG
 #endif // HAVE_JPEG
 
+#ifdef _WIN_
+// Undef windows Macro polution from jpeglib.h
+#undef LoadImage
+#endif
+
 namespace pangolin {
 
 std::string FileLowercaseExtention(const std::string& filename)
@@ -187,21 +192,25 @@ TypedImage LoadTga(const std::string& filename)
 #ifdef HAVE_PNG
 VideoPixelFormat PngFormat(png_structp png_ptr, png_infop info_ptr )
 {
-    png_byte colour = png_get_color_type(png_ptr, info_ptr);
-    
-    if( colour & PNG_COLOR_MASK_COLOR) {
-        if( colour & PNG_COLOR_MASK_ALPHA) {
-            return VideoFormatFromString("RGBA");
-        } else {
+    const png_byte colour = png_get_color_type(png_ptr, info_ptr);
+    const png_byte depth  = png_get_bit_depth(png_ptr, info_ptr);
+
+    if( depth == 8 ) {
+        if( colour == PNG_COLOR_MASK_COLOR ) {
             return VideoFormatFromString("RGB24");
-        }
-    } else {
-        if( colour & PNG_COLOR_MASK_ALPHA) {
+        } else if( colour == (PNG_COLOR_MASK_COLOR | PNG_COLOR_MASK_ALPHA) ) {
+            return VideoFormatFromString("RGBA");
+        } else if( colour == PNG_COLOR_MASK_ALPHA ) {
             return VideoFormatFromString("Y400A");
         } else {
             return VideoFormatFromString("GRAY8");
         }
+    }else if( depth == 16 ) {
+        if( colour == 0 ) {
+            return VideoFormatFromString("GRAY16LE");
+        }
     }
+
     throw std::runtime_error("Unsupported PNG format");
 }
 #endif

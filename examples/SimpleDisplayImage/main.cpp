@@ -28,14 +28,14 @@ int main( int /*argc*/, char* argv[] )
   // bounds. A positive aspect ratio makes a view 'shrink to fit' (introducing empty bars),
   // whilst a negative ratio makes the view 'grow to fit' (cropping the view).
   View& d_cam = Display("cam")
-      .SetBounds(0,1,0,1,-640/480.0)
+      .SetBounds(0,1.0f,0,1.0f,-640/480.0)
       .SetHandler(new Handler3D(s_cam));
 
   // This view will take up no more than a third of the windows width or height, and it
   // will have a fixed aspect ratio to match the image that it will display. When fitting
   // within the specified bounds, push to the top-left (as specified by SetLock).
   View& d_image = Display("image")
-      .SetBounds(2/3.0,1.0,0,1/3.0,640.0/480)
+      .SetBounds(2/3.0f,1.0f,0,1/3.0f,640.0/480)
       .SetLock(LockLeft,LockTop);
 
   cout << "Resize the window to experiment with SetBounds, SetLock and SetAspect." << endl;

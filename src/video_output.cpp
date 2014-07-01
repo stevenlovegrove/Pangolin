@@ -113,7 +113,7 @@ VideoOutput::~VideoOutput()
 
 bool VideoOutput::IsOpen() const
 {
-    return recorder;
+    return recorder != 0;
 }
 
 void VideoOutput::Open(const std::string& uri)

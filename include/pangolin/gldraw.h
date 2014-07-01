@@ -30,12 +30,15 @@
 
 #include <pangolin/glinclude.h>
 
+#include <math.h>
+
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN
 #endif
 
 #ifdef USE_EIGEN
 #include <Eigen/Eigen>
+#include <Eigen/Geometry>
 #endif // USE_EIGEN
 
 namespace pangolin
@@ -46,8 +49,8 @@ namespace pangolin
 // v [0,1]
 inline void glColorHSV( GLfloat hue, GLfloat s=1.0f, GLfloat v=1.0f )
 {
-    const GLfloat h = hue / 60.0;
-    const int i = floor(h);
+    const GLfloat h = hue / 60.0f;
+    const int i = (int)floor(h);
     const GLfloat f = (i%2 == 0) ? 1-(h-i) : h-i;
     const GLfloat m = v * (1-s);
     const GLfloat n = v * (1-s*f);
@@ -67,7 +70,7 @@ inline void glColorHSV( GLfloat hue, GLfloat s=1.0f, GLfloat v=1.0f )
 inline void glColorBin( int bin, int max_bins, GLfloat sat=1.0f, GLfloat val=1.0f )
 {
     if( bin >= 0 ) {
-        const GLfloat hue = (GLfloat)(bin%max_bins) * 360.0 / (GLfloat)max_bins;
+        const GLfloat hue = (GLfloat)(bin%max_bins) * 360.0f / (GLfloat)max_bins;
         glColorHSV(hue,sat,val);
     }else{
         glColor4f(1,1,1,1);
@@ -138,7 +141,7 @@ inline void glDrawCircle( GLfloat x, GLfloat y, GLfloat rad )
     GLfloat verts[N*2];
     
     // Draw vertices anticlockwise for front face
-    const double TAU_DIV_N = 2*M_PI/N;
+    const float TAU_DIV_N = 2*(float)M_PI/N;
     for(int i = 0; i < N*2; i+=2) {
         verts[i] =   x + rad * cos(-i*TAU_DIV_N);
         verts[i+1] = y + rad * sin(-i*TAU_DIV_N);
@@ -152,12 +155,12 @@ inline void glDrawCircle( GLfloat x, GLfloat y, GLfloat rad )
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-inline void glDrawCirclePerimeter( float x, float y, double rad )
+inline void glDrawCirclePerimeter( float x, float y, float rad )
 {
     const int N = 50;
     GLfloat verts[N*2];
     
-    const double TAU_DIV_N = 2*M_PI/N;
+    const float TAU_DIV_N = 2*(float)M_PI/N;
     for(int i = 0; i < N*2; i+=2) {
         verts[i] =   x + rad * cos(i*TAU_DIV_N);
         verts[i+1] = y + rad * sin(i*TAU_DIV_N);
@@ -268,27 +271,34 @@ inline void glVertex( const Eigen::Vector3d& p )
 
 inline void glDrawLine( const Eigen::Vector2d& p1, const Eigen::Vector2d& p2 )
 {
-    glDrawLine(p1(0), p1(1), p2(0), p2(1));
+    glDrawLine((GLfloat)p1(0), (GLfloat)p1(1), (GLfloat)p2(0), (GLfloat)p2(1));
 }
 
-inline void glDrawCross( const Eigen::Vector2d& p, int r = 5 )
+inline void glDrawCross( const Eigen::Vector2d& p, double r = 5.0 )
 {
-    glDrawCross(p(0), p(1), r);
+    glDrawCross((GLfloat)p(0), (GLfloat)p(1), (GLfloat)r);
 }
 
-inline void glDrawCross( const Eigen::Vector3d& p, int r = 5 )
+inline void glDrawCross( const Eigen::Vector3d& p, double r = 5.0 )
 {
-    glDrawCross(p(0), p(1), p(2), r);
+    glDrawCross((GLfloat)p(0), (GLfloat)p(1), (GLfloat)p(2), (GLfloat)r);
 }
 
-inline void glDrawCircle( const Eigen::Vector2d& p, double radius = 5 )
+inline void glDrawCircle( const Eigen::Vector2d& p, double radius = 5.0 )
 {
-    glDrawCircle(p(0), p(1), radius );
+    glDrawCircle((GLfloat)p(0), (GLfloat)p(1), (GLfloat)radius);
 }
 
-inline void glDrawCirclePerimeter( const Eigen::Vector2d& p, double radius = 5 )
+inline void glDrawCirclePerimeter( const Eigen::Vector2d& p, double radius = 5.0 )
 {
-    glDrawCirclePerimeter(p(0), p(1), radius);
+    glDrawCirclePerimeter((GLfloat)p(0), (GLfloat)p(1), (GLfloat)radius);
+}
+
+inline void glSetFrameOfReference( const Eigen::Matrix4f& T_wf )
+{
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glMultMatrixf( T_wf.data() );
 }
 
 inline void glSetFrameOfReference( const Eigen::Matrix4d& T_wf )
@@ -308,14 +318,16 @@ inline void glUnsetFrameOfReference()
     glPopMatrix();
 }
 
-inline void glDrawAxis( const Eigen::Matrix4d& T_wf, float scale )
+template<typename T>
+inline void glDrawAxis( const Eigen::Matrix<T,4,4>& T_wf, T scale )
 {
     glSetFrameOfReference(T_wf);
     glDrawAxis(scale);
     glUnsetFrameOfReference();
 }
 
-inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, GLfloat scale )
+template<typename T>
+inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, T scale )
 {
     const GLfloat xl = scale * Kinv(0,2);
     const GLfloat xh = scale * (w*Kinv(0,0) + Kinv(0,2));
@@ -337,11 +349,42 @@ inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, GLfloat s
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-inline void glDrawFrustrum( const Eigen::Matrix3d& Kinv, int w, int h, const Eigen::Matrix4d& T_wf, float scale )
+template<typename T>
+inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, const Eigen::Matrix<T,4,4>& T_wf, T scale )
 {
     glSetFrameOfReference(T_wf);
     glDrawFrustrum(Kinv,w,h,scale);
     glUnsetFrameOfReference();
+}
+
+template<typename T>
+inline void glDrawAlignedBox( const Eigen::AlignedBox<T,3>& box)
+{
+    const Eigen::Matrix<float,3,1> l = box.min().template cast<float>();
+    const Eigen::Matrix<float,3,1> h = box.max().template cast<float>();
+
+    GLfloat verts[] = {
+        l[0], l[1], l[2],
+        l[0], l[1], h[2],
+        h[0], l[1], h[2],
+        h[0], l[1], l[2],
+        l[0], l[1], l[2],
+        l[0], h[1], l[2],
+        h[0], h[1], l[2],
+        h[0], l[1], l[2],
+        h[0], h[1], l[2],
+        h[0], h[1], h[2],
+        l[0], h[1], h[2],
+        l[0], h[1], l[2],
+        l[0], h[1], h[2],
+        l[0], l[1], h[2],
+        h[0], l[1], h[2],
+        h[0], h[1], h[2]
+    };
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, verts);
+    glDrawArrays(GL_LINE_STRIP, 0, 16);
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 #endif // USE_EIGEN

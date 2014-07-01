@@ -35,7 +35,7 @@
 
 namespace pangolin {
 
-class GlFont
+class PANGOLIN_EXPORT GlFont
 {
 public:
     // Singleton instance if requested.
@@ -45,6 +45,7 @@ public:
     bool LoadFontFromText( char* str_xml );
     bool LoadEmbeddedFont();
     bool LoadFontFromFile( const std::string& filename );
+    void UnloadFont();
 
     // Generate renderable GlText object from this font.
     GlText Text( const char* fmt, ... );

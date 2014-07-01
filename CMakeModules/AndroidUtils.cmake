@@ -2,6 +2,10 @@ if(NOT ANDROID_PACKAGE_NAME)
   set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
 endif()
 
+if(NOT ANDROID_DEFERRED_ENTRY_SO)
+  set(ANDROID_DEFERRED_ENTRY_SO "libpangolin.so")
+endif()
+
 # Configure build environment to automatically generate APK's instead of executables.
 if(ANDROID AND NOT TARGET apk)
     # virtual targets which we'll add apks and push actions to.
@@ -26,6 +30,7 @@ if(ANDROID AND NOT TARGET apk)
 
     <!-- This is the platform API where NativeActivity was introduced. -->
     <uses-sdk android:minSdkVersion=\"14\" />
+    <uses-feature android:glEsVersion=\"0x00020000\" />
     <uses-feature android:name=\"android.hardware.camera\" />
     <uses-permission android:name=\"android.permission.CAMERA\"/>
     <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>
@@ -71,21 +76,32 @@ if(ANDROID AND NOT TARGET apk)
 
 void * load_lib(const char * l) {
     void * handle = dlopen(l, RTLD_NOW | RTLD_GLOBAL);
-    if (!handle) {
-        LOGE( \"dlopen('%s'): %s\", l, strerror(errno) );
-    }
+    if (!handle) LOGE( \"dlopen('%s'): %s\", l, strerror(errno) );
     return handle;
 }
 
 void ANativeActivity_onCreate(ANativeActivity * app, void * ud, size_t udsize) {
     #include \"${prog_name}_shared_load.h\"
-    void (*main)(ANativeActivity*, void*, size_t);
-    *(void **) (&main) = dlsym(load_lib( LIB_PATH \"lib${prog_name}.so\"), \"ANativeActivity_onCreate\");
-    if (!main) {
-        LOGE( \"undefined symbol ANativeActivity_onCreate\" );
-        exit(1);
+
+    // Look for standard entrypoint in user lib
+    void (*stdentrypoint)(ANativeActivity*, void*, size_t);
+    *(void **) (&stdentrypoint) = dlsym(load_lib( LIB_PATH \"lib${prog_name}.so\"), \"ANativeActivity_onCreate\");
+    if (stdentrypoint) {
+        (*stdentrypoint)(app, ud, udsize);
+    }else{
+        // Look for deferred load entry point
+        void (*exdentrypoint)(ANativeActivity*, void*, size_t, const char*);
+        *(void **) (&exdentrypoint) = dlsym(load_lib( LIB_PATH \"lib${prog_name}.so\"), \"DeferredNativeActivity_onCreate\");
+        if (!exdentrypoint) {
+            // Look in specific shared lib
+            *(void **) (&exdentrypoint) = dlsym(load_lib( LIB_PATH \"${ANDROID_DEFERRED_ENTRY_SO}\"), \"DeferredNativeActivity_onCreate\");
+        }
+        if(exdentrypoint) {
+            (*exdentrypoint)(app, ud, udsize, LIB_PATH \"lib${prog_name}.so\" );
+        }else{
+            LOGE( \"Unable to find compatible entry point\" );
+        }
     }
-    (*main)(app, ud, udsize);
 }" )
         add_library( "${prog_name}_start" SHARED ${bootstrap_cpp} )
         target_link_libraries( "${prog_name}_start" android log )
@@ -100,13 +116,18 @@ void ANativeActivity_onCreate(ANativeActivity * app, void * ud, size_t udsize) {
         )
 
         # Pick first platform from this list.
-        string(REGEX MATCH "^.*[^\n]" android_target "${android_target_list}" )
-
-        # Generate ant build scripts for making APK
-        execute_process(
-            COMMAND android update project --name ${android_project_name} --path . --target ${android_target} --subprojects
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )
+        string(REGEX MATCH "^[^\n]+" android_target "${android_target_list}" )
+        message(STATUS "Android Target: ${android_target}")
+        
+        if( NOT "${android_target}" STREQUAL "" )        
+            # Generate ant build scripts for making APK
+            execute_process(
+                COMMAND android update project --name ${android_project_name} --path . --target ${android_target} --subprojects
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            )
+        else()
+            message( FATAL_ERROR "No Android SDK platforms found. Please install an Android platform SDK. On Linux, run 'android'." )
+        endif()
     endmacro()
 
     # Override add_executable to build android .so instead!

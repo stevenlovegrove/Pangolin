@@ -101,14 +101,14 @@ inline double TimeNow_s()
     LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
     basetime tnow = TimeNow();
-    return tnow.QuadPart / f.QuadPart;
+    return (double)tnow.QuadPart / (double)f.QuadPart;
 }
 
 inline double TimeDiff_s(basetime start, basetime end)
 {
     LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
-    return (end.QuadPart - start.QuadPart) / f.QuadPart;
+    return (double)(end.QuadPart - start.QuadPart) / (double)f.QuadPart;
 }
 
 inline basetime TimeFromSeconds(double seconds)
@@ -116,7 +116,7 @@ inline basetime TimeFromSeconds(double seconds)
     LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
     basetime t;
-    t.QuadPart = (seconds * f.QuadPart);
+    t.QuadPart = (LONGLONG)(seconds * f.QuadPart);
     return t;
 }
 

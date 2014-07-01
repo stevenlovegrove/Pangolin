@@ -42,7 +42,7 @@
 #define GLUT_KEY_TAB 9
 
 #ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/vars.h>
+  #include <pangolin/var/var.h>
 #endif
 
 #ifdef HAVE_BOOST_GIL
@@ -74,9 +74,9 @@ ContextMap contexts;
 __thread PangolinGl* context = 0;
 
 PangolinGl::PangolinGl()
-    : quit(false), mouse_state(0), activeDisplay(0)
+    : user_app(0), quit(false), mouse_state(0), activeDisplay(0)
 {
-#if defined(HAVE_CVARS) && defined(HAVE_GLES)
+#if defined(HAVE_GLCONSOLE) && defined(HAVE_GLES)
     console.m_fOverlayPercent = 0.5;
 #endif    
 }
@@ -127,11 +127,7 @@ void Quit()
 
 bool ShouldQuit()
 {
-#ifdef HAVE_GLUT
-    return context->quit || !glutGetWindow();
-#else
     return context->quit;
-#endif
 }
 
 bool HadInput()
@@ -179,9 +175,9 @@ void PostRender()
     DisplayBase().Activate();
     Viewport::DisableScissor();
     
-#ifdef HAVE_CVARS
+#ifdef HAVE_GLCONSOLE
     context->console.RenderConsole();
-#endif // HAVE_CVARS    
+#endif // HAVE_GLCONSOLE
 }
 
 View& DisplayBase()
@@ -195,6 +191,37 @@ View& CreateDisplay()
     std::stringstream ssguid;
     ssguid << iguid;
     return Display(ssguid.str());
+}
+
+void ToggleFullscreen()
+{
+    if( context->is_fullscreen )
+    {
+#ifdef HAVE_GLUT
+        glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
+#endif // HAVE_GLUT
+        context->is_fullscreen = false;
+    }else{
+#ifdef HAVE_GLUT
+        glutFullScreen();
+#endif // HAVE_GLUT
+        context->is_fullscreen = true;
+    }
+}
+
+void SetFullscreen(bool fullscreen)
+{
+    if( fullscreen != context->is_fullscreen )
+    {
+#ifdef HAVE_GLUT
+        if(fullscreen) {
+            glutFullScreen();
+        }else{
+            glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
+        }
+#endif // HAVE_GLUT
+        context->is_fullscreen = fullscreen;
+    }
 }
 
 View& Display(const std::string& name)
@@ -283,6 +310,7 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 
 bool CVarViewList( std::vector<std::string>* args )
 {
+#ifdef HAVE_GLCONSOLE
     std::stringstream ss;
     for(ViewMap::iterator vi = context->named_managed_views.begin();
         vi != context->named_managed_views.end(); ++vi)
@@ -290,6 +318,7 @@ bool CVarViewList( std::vector<std::string>* args )
         ss << "'" << vi->first << "' " << std::endl;
     }
     context->console.EnterLogLine(ss.str().c_str());
+#endif //HAVE_GLCONSOLE
     return true;
 }
 
@@ -298,7 +327,9 @@ bool CVarViewShowHide( std::vector<std::string>* args )
     if(args && args->size() == 1) {
         Display(args->at(0)).ToggleShow();
     }else{
+#ifdef HAVE_GLCONSOLE
         context->console.EnterLogLine("USAGE: pango.view.showhide view_name", LINEPROP_ERROR);        
+#endif //HAVE_GLCONSOLE
     }
     return true;
 }
@@ -319,10 +350,15 @@ bool CVarScreencap( std::vector<std::string>* args )
         }else{
             view->SaveRenderNow(file_prefix, scale);
         }
+
+#ifdef HAVE_GLCONSOLE
         context->console.EnterLogLine("done.");
+#endif // HAVE_GLCONSOLE
     }else{
+#ifdef HAVE_GLCONSOLE
         context->console.EnterLogLine("USAGE: pango.screencap file_prefix [scale=1] [view_name]", LINEPROP_ERROR);
         context->console.EnterLogLine("   eg: pango.screencap my_shot", LINEPROP_ERROR);
+#endif // HAVE_GLCONSOLE
     }
     return false;
 }
@@ -340,14 +376,20 @@ bool CVarRecordStart( std::vector<std::string>* args )
         
         try {
             view->RecordOnRender(uri);
+#ifdef HAVE_GLCONSOLE
             context->console.ToggleConsole();
+#endif // HAVE_GLCONSOLE
             return true;
         }catch(VideoException e) {
+#ifdef HAVE_GLCONSOLE
             context->console.EnterLogLine(e.what(), LINEPROP_ERROR );
+#endif // HAVE_GLCONSOLE
         }
     }else{
+#ifdef HAVE_GLCONSOLE
         context->console.EnterLogLine("USAGE: pango.record.start uri [view_name]", LINEPROP_ERROR);
         context->console.EnterLogLine("   eg: pango.record.start ffmpeg://screencap.avi", LINEPROP_ERROR);
+#endif // HAVE_GLCONSOLE
     }
     return false;
 }
@@ -360,29 +402,29 @@ bool CVarRecordStop( std::vector<std::string>* args )
 #endif // BUILD_PANGOLIN_VIDEO
 
 #ifdef BUILD_PANGOLIN_VARS
-void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const char* /*orig_typeidname*/, bool brand_new)
+void NewVarForCVars(void* /*data*/, const std::string& name, VarValueGeneric& var, const char* /*orig_typeidname*/, bool brand_new)
 {
     if(brand_new) {
-        // CVars can't save names containing spaces, so map to '_' instead
-        std::string cvar_name = name;
-        for(size_t i=0; i < cvar_name.size(); ++i) {
-            if(cvar_name[i] == ' ') cvar_name[i] = '_';
-        }
+//        // CVars can't save names containing spaces, so map to '_' instead
+//        std::string cvar_name = name;
+//        for(size_t i=0; i < cvar_name.size(); ++i) {
+//            if(cvar_name[i] == ' ') cvar_name[i] = '_';
+//        }
         
-        // Attach to CVars too.
-        const char* typeidname = var.type_name;
-        if( typeidname == typeid(double).name() ) {
-            CVarUtils::AttachCVar(cvar_name, (double*)(var.val) );
-        } else if( typeidname == typeid(int).name() ) {
-            CVarUtils::AttachCVar(cvar_name, (int*)(var.val) );
-        } else if( typeidname == typeid(std::string).name() ) {
-            CVarUtils::AttachCVar(cvar_name, (std::string*)(var.val) );
-        } else if( typeidname == typeid(bool).name() ) {
-            CVarUtils::AttachCVar(cvar_name, (bool*)(var.val) );
-        } else {
-            // we can't attach
-            std::cerr << typeidname << std::endl;
-        }
+//        // Attach to CVars too.
+//        const char* typeidname = var.TypeId();
+//        if( !strcmp(typeidname, typeid(double).name()) ) {
+//            CVarUtils::AttachCVar(cvar_name, (double*)(var.val) );
+//        } else if( !strcmp(typeidname, typeid(int).name()) ) {
+//            CVarUtils::AttachCVar(cvar_name, (int*)(var.val) );
+//        } else if( !strcmp(typeidname, typeid(std::string).name()) ) {
+//            CVarUtils::AttachCVar(cvar_name, (std::string*)(var.val) );
+//        } else if( !strcmp(typeidname, typeid(bool).name()) ) {
+//            CVarUtils::AttachCVar(cvar_name, (bool*)(var.val) );
+//        } else {
+//            // we can't attach
+//            pango_print_error("NewVarForCVars: Typeid '%s' does not match known types.\n", typeidname);
+//        }
     }
 }
 #endif // BUILD_PANGOLIN_VARS
@@ -390,8 +432,8 @@ void NewVarForCVars(void* /*data*/, const std::string& name, _Var& var, const ch
 
 namespace process
 {
-float last_x;
-float last_y;
+float last_x = 0;
+float last_y = 0;
 
 void Keyboard( unsigned char key, int x, int y)
 {
@@ -412,7 +454,7 @@ void Keyboard( unsigned char key, int x, int y)
     if( key == GLUT_KEY_ESCAPE) {
         context->quit = true;
     }
-#ifdef HAVE_CVARS
+#ifdef HAVE_GLCONSOLE
     else if(key == '`') {
         context->console.ToggleConsole();
         // Force refresh for several frames whilst panel opens/closes
@@ -425,17 +467,10 @@ void Keyboard( unsigned char key, int x, int y)
             context->console.KeyboardFunc(key);
         }
     }
-#endif // HAVE_CVARS
+#endif // HAVE_GLCONSOLE
 #ifdef HAVE_GLUT
     else if( key == GLUT_KEY_TAB) {
-        if( context->is_fullscreen )
-        {
-            glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
-            context->is_fullscreen = false;
-        }else{
-            glutFullScreen();
-            context->is_fullscreen = true;
-        }
+        ToggleFullscreen();
     }
 #endif // HAVE_GLUT
     else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
@@ -472,8 +507,8 @@ void Mouse( int button_raw, int state, int x, int y)
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;
     
-    last_x = x;
-    last_y = y;
+    last_x = (float)x;
+    last_y = (float)y;
     
     const MouseButton button = (MouseButton)(1 << button_raw);
     const bool pressed = (state == 0);
@@ -505,8 +540,8 @@ void MouseMotion( int x, int y)
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;
     
-    last_x = x;
-    last_y = y;
+    last_x = (float)x;
+    last_y = (float)y;
     
     context->had_input = context->is_double_buffered ? 2 : 1;
     
@@ -526,8 +561,13 @@ void PassiveMouseMotion(int x, int y)
     
     context->base.handler->PassiveMouseMotion(context->base,x,y,context->mouse_state);
     
-    last_x = x;
-    last_y = y;
+    last_x = (float)x;
+    last_y = (float)y;
+}
+
+void Display()
+{
+    // No implementation
 }
 
 void Resize( int width, int height )
@@ -546,6 +586,8 @@ void Resize( int width, int height )
 
 void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4)
 {
+    // Assume coords already match OpenGl Window Coords
+
     context->had_input = context->is_double_buffered ? 2 : 1;
     
     const bool fresh_input = (context->mouse_state == 0);
@@ -589,6 +631,8 @@ void Rotate(float r)
 
 void SubpixMotion(float x, float y, float pressure, float rotation, float tiltx, float tilty)
 {
+    // Force coords to match OpenGl Window Coords
+    y = context->base.v.h - y;
     SpecialInput(InputSpecialTablet, x, y, pressure, rotation, tiltx, tilty);
 }
 }

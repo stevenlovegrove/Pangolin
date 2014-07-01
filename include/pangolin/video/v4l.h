@@ -48,7 +48,7 @@ struct buffer {
     size_t length;
 };
 
-class V4lVideo : public VideoInterface
+class PANGOLIN_EXPORT V4lVideo : public VideoInterface
 {
 public:
     V4lVideo(const char* dev_name, io_method io = IO_METHOD_MMAP, unsigned iwidth=0, unsigned iheight=0);

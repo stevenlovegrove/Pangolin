@@ -36,21 +36,25 @@
 namespace pangolin
 {
 
-//! @brief Create GLUT window and bind Pangolin to it.
-//! All GLUT initialisation is taken care of. This prevents you
-//! from needing to call BindToContext() and TakeGlutCallbacks().
+/// Create GLUT window and bind Pangolin to it.
+/// All GLUT initialisation is taken care of. This prevents you
+/// from needing to call BindToContext() and TakeGlutCallbacks().
+PANGOLIN_EXPORT
 void CreateGlutWindowAndBind(std::string window_title, int w = 640, int h = 480, unsigned int mode = GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
-//! @brief Applies any post-render events if they are defined,
-//! swaps buffers and processes events. Also resets viewport to
-//! entire window and disables scissoring.
+/// Applies any post-render events if they are defined,
+/// swaps buffers and processes events. Also resets viewport to
+/// entire window and disables scissoring.
+PANGOLIN_EXPORT
 void FinishGlutFrame();
 
-//! @brief Swaps OpenGL Buffers and processes input events
+/// Swaps OpenGL Buffers and processes input events.
+PANGOLIN_EXPORT
 void SwapGlutBuffersProcessGlutEvents();
 
-//! @brief Allow Pangolin to take GLUT callbacks for its own uses
-//! Not needed if you instantiated a window through CreateWindowAndBind().
+/// Allow Pangolin to take GLUT callbacks for its own uses.
+/// Not needed if you instantiated a window through CreateWindowAndBind().
+PANGOLIN_EXPORT
 void TakeGlutCallbacks();
 
 }

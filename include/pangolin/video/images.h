@@ -39,7 +39,7 @@ namespace pangolin
 {
 
 // Video class that outputs test video signal.
-class ImagesVideo : public VideoInterface
+class PANGOLIN_EXPORT ImagesVideo : public VideoInterface
 {
 public:
     ImagesVideo(const std::string& wildcard_path);

@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/video/pvn_video.h>
+#include <pangolin/file_utils.h>
 
 #include <iostream>
 
@@ -34,10 +35,10 @@ using namespace std;
 namespace pangolin
 {
 
-PvnVideo::PvnVideo(const char* filename, bool realtime )
+PvnVideo::PvnVideo(const std::string& filename, bool realtime )
     : frame_size_bytes(0), realtime(realtime), last_frame(TimeNow())
 {
-    file.open(filename, ios::binary );
+    file.open( PathExpand(filename).c_str(), ios::binary );
     
     if(!file.is_open() )
         throw VideoException("Cannot open file - does not exist or bad permissions.");

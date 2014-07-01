@@ -28,6 +28,8 @@
 #ifndef PANGOLIN_FILE_UTILS_H
 #define PANGOLIN_FILE_UTILS_H
 
+#include <pangolin/platform.h>
+
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -35,20 +37,28 @@
 namespace pangolin
 {
 
+PANGOLIN_EXPORT
 std::vector<std::string>& Split(const std::string& s, char delim, std::vector<std::string>& elements);
 
+PANGOLIN_EXPORT
 std::vector<std::string> Split(const std::string &s, char delim);
 
+PANGOLIN_EXPORT
 std::vector<std::string> Expand(const std::string &s, char open='[', char close=']', char delim=',');
 
+PANGOLIN_EXPORT
 std::string PathParent(const std::string& path);
 
+PANGOLIN_EXPORT
 bool FileExists(const std::string& filename);
 
+PANGOLIN_EXPORT
 std::string PathExpand(const std::string& sPath);
 
+PANGOLIN_EXPORT
 bool MatchesWildcard(const std::string& str, const std::string& wildcard);
 
+PANGOLIN_EXPORT
 bool FilesMatchingWildcard(const std::string& wildcard_file_path, std::vector<std::string>& file_vec);
 
 

@@ -35,43 +35,53 @@
 namespace pangolin
 {
 
-//! @brief Unit for measuring quantities
+/// Units for measuring screen distances.
 enum Unit {
-  Fraction,
-  Pixel,
-  ReversePixel
+    Fraction,
+    Pixel,
+    ReversePixel
 };
 
-//! @brief Defines typed quantity
-//! Constructors distinguised by whole pixels, or floating
-//! fraction in interval [0,1]
-struct Attach {
-  Attach() : unit(Fraction), p(0) {}
-  Attach(Unit unit, GLfloat p) : unit(unit), p(p) {}
+/// Defines absolute or relative position from parent viewport edge.
+/// Constructors distinguised by whole pixels, or floating
+/// fraction in interval [0,1]
+struct PANGOLIN_EXPORT Attach {
+    /// Attach to Left/Bottom edge
+    Attach() : unit(Fraction), p(0) {}
 
-  Attach(GLfloat p) : unit(Fraction), p(p) {
-      // Allow for numerical imprecision when checking usage.
-      if( p < -1E-3 || 1.001 < p ) {
-          std::cerr << "Pangolin API Change: Display::SetBounds must be used with Attach::Pix or Attach::ReversePix to specify pixel bounds relative to an edge. See the code samples for details." << std::endl;
-          throw std::exception();
-      }
-  }
+    /// General constructor
+    Attach(Unit unit, GLfloat p) : unit(unit), p(p) {}
 
-  static Attach Pix(int p) {
-      return Attach(p >=0 ? Pixel : ReversePixel, std::abs((float)p));
-  }
-  static Attach ReversePix(int p) {
-      return Attach(ReversePixel, p);
-  }
-  static Attach Frac(float frac) {
-      return Attach(frac);
-  }
+    /// Specify relative position in range [0,1].
+    /// 0 represents leftmost / bottom-most edge,
+    /// 1 represents rightmost / topmost edge
+    Attach(GLfloat p) : unit(Fraction), p(p) {
+        // Allow for numerical imprecision when checking usage.
+        if( p < -1E-3 || 1.001 < p ) {
+            std::cerr << "Pangolin API Change: Display::SetBounds must be used with Attach::Pix or Attach::ReversePix to specify pixel bounds relative to an edge. See the code samples for details." << std::endl;
+            throw std::exception();
+        }
+    }
 
-  Unit unit;
-  GLfloat p;
+    /// Specify absolute position from leftmost / bottom-most edge.
+    static Attach Pix(int p) {
+        return Attach(p >=0 ? Pixel : ReversePixel, std::abs((float)p));
+    }
 
-//  protected:
-//    Attach(int p) {}
+    /// Specify absolute position from rightmost / topmost edge.
+    static Attach ReversePix(int p) {
+        return Attach(ReversePixel, (GLfloat)p);
+    }
+
+    /// Specify relative position in range [0,1].
+    /// 0 represents leftmost / bottom-most edge,
+    /// 1 represents rightmost / topmost edge
+    static Attach Frac(float frac) {
+        return Attach(frac);
+    }
+
+    Unit unit;
+    GLfloat p;
 };
 
 } // namespace pangolin

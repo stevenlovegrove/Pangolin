@@ -42,6 +42,7 @@ const VideoPixelFormat SupportedVideoPixelFormats[] =
     {"BGR24", 3, {8,8,8}, 24, false},
     {"YUYV422", 3, {4,2,2}, 16, false},
     {"RGBA",  4, {8,8,8,8}, 32, false},
+    {"GRAY32F", 1, {32}, 32, false},
     {"",0,{0,0,0,0},0,0}
 };
 
@@ -62,7 +63,7 @@ std::ostream& operator<< (std::ostream &out, Uri &uri)
     for( Uri::ParamMap::const_iterator ip = uri.params.begin();
          ip != uri.params.end(); ++ip)
     {
-        std::cout << "\t" << ip->first << " = " << ip->second << std::endl;
+        out << "\t" << ip->first << " = " << ip->second << std::endl;
     }
     
     return out;

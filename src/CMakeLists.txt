@@ -26,20 +26,33 @@ if(BUILD_PANGOLIN_GUI)
   list(APPEND HEADERS
     ${INCDIR}/display.h ${INCDIR}/display_internal.h 
     ${INCDIR}/view.h ${INCDIR}/viewport.h
-    ${INCDIR}/handler.h ${INCDIR}/opengl_render_state.h
-    ${INCDIR}/plotter.h ${INCDIR}/glfont.h
+    ${INCDIR}/handler.h ${INCDIR}/handler_enums.h
+    ${INCDIR}/handler_glbuffer.h
+    ${INCDIR}/opengl_render_state.h
+    ${INCDIR}/datalog.h
+    ${INCDIR}/glfont.h ${INCDIR}/glpangoglu.h
   )
   list(APPEND SOURCES
     display.cpp view.cpp viewport.cpp
-    handler.cpp opengl_render_state.cpp
-    plotter.cpp glfont.cpp
+    handler.cpp handler_glbuffer.cpp
+    opengl_render_state.cpp
+    datalog.cpp
+    glfont.cpp glpangoglu.cpp
   )
+  if(NOT HAVE_GLES OR HAVE_GLES_2)
+    list(APPEND HEADERS ${INCDIR}/plotter.h)
+    list(APPEND SOURCES plotter.cpp)
+  endif()
 endif()
 
 option(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
 if(BUILD_PANGOLIN_VARS)
-  list(APPEND HEADERS ${INCDIR}/vars.h ${INCDIR}/vars_internal.h ${INCDIR}/input_record_repeat.h )
-  list(APPEND SOURCES vars.cpp input_record_repeat.cpp )
+  list(APPEND HEADERS ${INCDIR}/var/var.h ${INCDIR}/var/varextra.h
+    ${INCDIR}/var/varstate.h ${INCDIR}/var/varvalue.h
+    ${INCDIR}/var/varvaluegeneric.h ${INCDIR}/var/varvaluet.h
+    ${INCDIR}/var/varwrapper.h ${INCDIR}/input_record_repeat.h
+  )
+  list(APPEND SOURCES var/vars.cpp input_record_repeat.cpp )
 
   if(BUILD_PANGOLIN_GUI)
       list(APPEND HEADERS ${INCDIR}/widgets.h )
@@ -81,34 +94,52 @@ if(NOT CPP11_NO_BOOST)
 endif()
 
 if(BUILD_PANGOLIN_GUI)
-  if(NOT ANDROID)
-      find_package(OpenGL REQUIRED QUIET)
-      find_package(GLEW REQUIRED QUIET)
-      list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR};${GLEW_INCLUDE_DIR}" )
-      list(APPEND LINK_LIBS "${OPENGL_LIBRARIES};${GLEW_LIBRARY}" )
-  else()
-      find_package(GLUES REQUIRED QUIET)
-      list(APPEND USER_INC  "${GLUES_INCLUDE_DIR};" )
-      list(APPEND LINK_LIBS "${GLUES_LIBRARY}" )
-      list(APPEND LINK_LIBS "-lEGL;-lGLESv2;-lGLESv1_CM" )
-  endif()
+    if( ANDROID  )
+        # Android specific display code
+        list(APPEND HEADERS ${INCDIR}/display_android.h )
+        list(APPEND SOURCES display_android.cpp )
+
+        if(HAVE_GLES_2)
+            list(APPEND LINK_LIBS "-lEGL;-lGLESv2" )
+        else()
+            list(APPEND LINK_LIBS "-lEGL;-lGLESv1_CM" )
+        endif()
+    elseif( IOS )
+        list(APPEND LINK_LIBS "-framework OpenGLES" )
+        list(APPEND HEADERS "${INCDIR}/ios/PangolinAppDelegate.h" "${INCDIR}/ios/PangolinViewController.h" )
+        list(APPEND SOURCES "ios/PangolinAppDelegate.mm" "ios/PangolinViewController.mm" )
+    else()
+        find_package(OpenGL REQUIRED QUIET)
+        list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR}" )
+        list(APPEND LINK_LIBS "${OPENGL_LIBRARIES}" )
+
+        find_package(GLEW REQUIRED QUIET)
+        if(GLEW_FOUND)
+            list(APPEND USER_INC  "${GLEW_INCLUDE_DIR}" )
+            list(APPEND LINK_LIBS "${GLEW_LIBRARY}" )
+            set(HAVE_GLEW 1)
+        endif()
+    endif()
+
+    if( HAVE_GLES_2 )
+        # Add Pangolins backwards compat layer.
+        list(APPEND HEADERS ${INCDIR}/gl2engine.h )
+        list(APPEND SOURCES gl2engine.cpp)
+    endif()
 endif()
 
 #######################################################
 ## Find optional dependencies
 
-find_package(CVARS 2.3 QUIET)
-if(CVARS_FOUND)
-  set(HAVE_CVARS 1)
-  list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
-  list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
-  message(STATUS "CVARS Found and Enabled")
-endif()
-
-## Don't even try to find these things on android
-if(NOT ANDROID)
+if(ANDROID)
+    # Fix issue with thread local storage on android.
+    add_definitions(-fno-data-sections)
+    list(APPEND LINK_LIBS android log)
+elseif(IOS)
+    # Nothing specific in here yet.
+else()
     find_package(CUDA QUIET)
-    if(CUDA_FOUND)
+    if(CUDA_FOUND AND NOT _CLANG_)
       set(HAVE_CUDA 1)
       cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
       set(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE OFF)
@@ -153,15 +184,25 @@ if(NOT ANDROID)
         list(APPEND SOURCES display_glut.cpp )
         message(STATUS "Glut Found and Enabled")
     endif()
-else()  # NOT ANDROID
-    # Fix issue with thread local storage on android.
-    add_definitions(-fno-data-sections)
+endif()
 
-    # Android specific display code
-    list(APPEND HEADERS ${INCDIR}/display_android.h )
-    list(APPEND SOURCES display_android.cpp )
-    set(HAVE_GLES 1)
-endif() # NOT ANDROID
+find_package(CVARS 2.3 QUIET)
+if(CVARS_FOUND)
+  set(HAVE_CVARS 1)
+  list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
+  message(STATUS "CVARS Found and Enabled")
+endif()
+
+find_package(Oculus QUIET)
+if(Oculus_FOUND)
+  set(HAVE_OCULUS 1)
+  list(APPEND HEADERS ${INCDIR}/hud/oculus_hud.h )
+  list(APPEND SOURCES hud/oculus_hud.cpp )
+  list(APPEND USER_INC ${Oculus_INCLUDE_DIRS} )
+  list(APPEND LINK_LIBS ${Oculus_LIBRARIES} )
+  message(STATUS "Oculus Rift Found and Enabled")
+endif()
 
 find_package(Eigen3 QUIET)
 if(EIGEN3_FOUND)
@@ -214,6 +255,16 @@ if(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
   message(STATUS "OpenNI Found and Enabled")
 endif()
 
+find_package(OpenNI2 QUIET)
+if(BUILD_PANGOLIN_VIDEO AND OPENNI2_FOUND)
+  set(HAVE_OPENNI2 1)
+  list(APPEND INTERNAL_INC  ${OPENNI2_INCLUDE_DIRS} )
+  list(APPEND LINK_LIBS ${OPENNI2_LIBRARIES} )
+  list(APPEND HEADERS ${INCDIR}/video/openni2.h )
+  list(APPEND SOURCES video/openni2.cpp)
+  message(STATUS "OpenNI2 Found and Enabled")
+endif()
+
 find_package(uvc QUIET)
 if(BUILD_PANGOLIN_VIDEO AND uvc_FOUND)
   set(HAVE_UVC 1)
@@ -222,6 +273,16 @@ if(BUILD_PANGOLIN_VIDEO AND uvc_FOUND)
   list(APPEND HEADERS ${INCDIR}/video/uvc.h )
   list(APPEND SOURCES video/uvc.cpp)
   message(STATUS "libuvc Found and Enabled")
+endif()
+
+find_package(DepthSense QUIET)
+if(BUILD_PANGOLIN_VIDEO AND DepthSense_FOUND)
+  set(HAVE_DEPTHSENSE 1)
+  list(APPEND INTERNAL_INC  ${DepthSense_INCLUDE_DIRS} )
+  list(APPEND LINK_LIBS ${DepthSense_LIBRARIES} )
+  list(APPEND HEADERS ${INCDIR}/video/depthsense.h )
+  list(APPEND SOURCES video/depthsense.cpp)
+  message(STATUS "DepthSense Found and Enabled")
 endif()
 
 find_package(PNG QUIET)
@@ -259,6 +320,18 @@ include_directories( ${INTERNAL_INC} )
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
 target_link_libraries(${LIBRARY_NAME} ${LINK_LIBS})
 
+## Generate symbol export helper header on MSVC
+IF(MSVC)
+    string(TOUPPER ${LIBRARY_NAME} LIBRARY_NAME_CAPS)
+    include(GenerateExportHeader)
+    GENERATE_EXPORT_HEADER( ${LIBRARY_NAME}
+        BASE_NAME ${LIBRARY_NAME_CAPS}
+        EXPORT_MACRO_NAME ${LIBRARY_NAME_CAPS}_EXPORT
+        EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/${LIBRARY_NAME}_export.h"
+        STATIC_DEFINE ${LIBRARY_NAME_CAPS}_BUILT_AS_STATIC
+    )
+ENDIF()
+
 ## Set Special Compiler flags
 if(MSVC)
   set(CMAKE_CXX_FLAGS "/EHs ${CMAKE_CXX_FLAGS}")
@@ -273,6 +346,19 @@ configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/config.h"
 )
+
+#######################################################
+## Generate Doxygen documentation target (make doc)
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../doc )
+    add_custom_target(doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../doc
+        COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
+endif()
 
 #######################################################
 

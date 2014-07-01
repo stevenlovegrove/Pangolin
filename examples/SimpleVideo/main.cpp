@@ -10,6 +10,23 @@
 using namespace pangolin;
 using namespace std;
 
+void SetGlFormat(GLint& glchannels, GLenum& glformat, const VideoPixelFormat& fmt)
+{
+    switch( fmt.channels) {
+    case 1: glchannels = GL_LUMINANCE; break;
+    case 3: glchannels = GL_RGB; break;
+    case 4: glchannels = GL_RGBA; break;
+    default: throw std::runtime_error("Unable to display video format");
+    }
+
+    switch (fmt.channel_bits[0]) {
+    case 8: glformat = GL_UNSIGNED_BYTE; break;
+    case 16: glformat = GL_UNSIGNED_SHORT; break;
+    case 32: glformat = GL_FLOAT; break;
+    default: throw std::runtime_error("Unknown channel format");
+    }
+}
+
 void VideoSample(const std::string uri)
 {
     // Setup Video Source
@@ -17,10 +34,15 @@ void VideoSample(const std::string uri)
     const VideoPixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();
-    
+#if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
+    const float scale = video.VideoUri().Get<float>("scale", 1.0f);
+    const float bias  = video.VideoUri().Get<float>("bias", 0.0f);
+#endif
+
     // Work out appropriate GL channel and format options
-    const GLint glchannels = vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB;
-    const GLenum glformat = vid_fmt.channel_bits[0]==8?GL_UNSIGNED_BYTE:GL_UNSIGNED_SHORT;
+    GLint glchannels;
+    GLenum glformat;
+    SetGlFormat(glchannels, glformat, vid_fmt);
     
     // Create Glut window
     pangolin::CreateWindowAndBind("Main",w,h);
@@ -43,7 +65,13 @@ void VideoSample(const std::string uri)
 
         // Activate video viewport and render texture
         vVideo.Activate();
-        texVideo.RenderToViewportFlipY();        
+#if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
+        pangolin::GlSlUtilities::Scale(scale, bias);
+        texVideo.RenderToViewportFlipY();
+        pangolin::GlSlUtilities::UseNone();
+#else
+        texVideo.RenderToViewportFlipY();
+#endif
 
         // Swap back buffer with front and process window events via GLUT
         pangolin::FinishFrame();

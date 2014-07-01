@@ -178,6 +178,8 @@ struct android_app {
     AInputQueue* pendingInputQueue;
     ANativeWindow* pendingWindow;
     ARect pendingContentRect;
+
+    const char* application_so;
 };
 
 enum {
@@ -326,12 +328,6 @@ void android_app_pre_exec_cmd(struct android_app* android_app, int8_t cmd);
  * actions for the command before calling this function.
  */
 void android_app_post_exec_cmd(struct android_app* android_app, int8_t cmd);
-
-/**
- * This is the function that application code must implement, representing
- * the main entry to the app.
- */
-extern int main(int argc, char** argv);
 
 #ifdef __cplusplus
 }

@@ -49,7 +49,7 @@ extern "C"
 namespace pangolin
 {
 
-class FfmpegVideo : public VideoInterface
+class PANGOLIN_EXPORT FfmpegVideo : public VideoInterface
 {
 public:
     FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false, int user_video_stream = -1);
@@ -109,7 +109,7 @@ enum FfmpegMethod
     FFMPEG_SPLINE        =0x400
 };
 
-class FfmpegConverter : public VideoInterface
+class PANGOLIN_EXPORT FfmpegConverter : public VideoInterface
 {
 public:
     FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_POINT);
@@ -155,7 +155,7 @@ typedef AVCodecID CodecID;
 #endif
 
 class FfmpegVideoOutput;
-class FfmpegVideoOutputStream
+class PANGOLIN_EXPORT FfmpegVideoOutputStream
     : public VideoOutputStreamInterface
 {
 public:
@@ -180,7 +180,7 @@ protected:
     SwsContext *sws_ctx;
 };
 
-class FfmpegVideoOutput
+class PANGOLIN_EXPORT FfmpegVideoOutput
     : public VideoOutputInterface
 {
     friend class FfmpegVideoOutputStream;

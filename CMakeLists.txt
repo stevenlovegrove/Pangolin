@@ -1,27 +1,33 @@
 cmake_minimum_required(VERSION 2.6)
 project("Pangolin")
 set(PANGOLIN_VERSION_MAJOR 0)
-set(PANGOLIN_VERSION_MINOR 1)
+set(PANGOLIN_VERSION_MINOR 2)
 set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 
+option( BUILD_SHARED_LIBS "Build Shared Library" ON)
 option( BUILD_EXAMPLES "Build Examples" ON )
-
 option( CPP11_NO_BOOST "Use c++11 over boost for threading etc." OFF )
-if(CPP11_NO_BOOST)
+
+if(CPP11_NO_BOOST AND NOT MSVC)
     set( CMAKE_CXX_FLAGS "-std=c++0x -Wall ${CMAKE_CXX_FLAGS}" )
-    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+    if(_CLANG_)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     endif()
 endif()
 
-if(NOT ANDROID)
-   option(BUILD_SHARED_LIBS "Build Shared Library" ON)
-else()
-   set(BUILD_SHARED_LIBS OFF)
-   set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
-   include(AndroidUtils)
+if(ANDROID)
+    set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
+    include(AndroidUtils)
+endif()
+
+if(ANDROID OR IOS)
+    set(HAVE_GLES 1)
+    option(BUILD_FOR_GLES_2 "Build for OpenGL ES 2 instead of ES 1" ON )
+    if(BUILD_FOR_GLES_2)
+        set(HAVE_GLES_2 1)
+    endif()
 endif()
 
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}

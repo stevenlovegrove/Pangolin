@@ -27,13 +27,18 @@
 #cmakedefine HAVE_V4L
 #cmakedefine HAVE_FFMPEG
 #cmakedefine HAVE_OPENNI
+#cmakedefine HAVE_OPENNI2
 #cmakedefine HAVE_UVC
+#cmakedefine HAVE_DEPTHSENSE
 
+#cmakedefine HAVE_GLEW
 #cmakedefine HAVE_GLUT
 #cmakedefine HAVE_FREEGLUT
 #cmakedefine HAVE_APPLE_OPENGL_FRAMEWORK
 #cmakedefine HAVE_MODIFIED_OSXGLUT
 #cmakedefine HAVE_GLES
+#cmakedefine HAVE_GLES_2
+#cmakedefine HAVE_OCULUS
 
 #cmakedefine HAVE_BOOST_GIL
 #cmakedefine HAVE_PNG
@@ -46,9 +51,18 @@
 #cmakedefine _OSX_
 #cmakedefine _LINUX_
 #cmakedefine _ANDROID_
+#cmakedefine _IOS_
 
 /// Compiler
 #cmakedefine _GCC_
+#cmakedefine _CLANG_
 #cmakedefine _MSVC_
+
+/// Defines generated when calling into Pangolin API. Not to be
+/// used in compiled library code, only inlined header code.
+#if (__cplusplus > 199711L) || (_MSC_VER >= 1700)
+#define CALLEE_HAS_CPP11
+#define CALLEE_HAS_RVALREF
+#endif
 
 #endif //PANGOLIN_CONFIG_H

@@ -34,7 +34,6 @@
   #include <pangolin/gl.h>
   #include <pangolin/gldraw.h>
   #include <pangolin/glstate.h>
-  #include <pangolin/plotter.h>
   #include <pangolin/display.h>
   #include <pangolin/view.h>
   #ifdef HAVE_GLUT
@@ -43,10 +42,13 @@
   #ifdef _ANDROID_
     #include <pangolin/display_android.h>
   #endif
+  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
+    #include <pangolin/plotter.h>
+  #endif
 #endif // BUILD_PANGOLIN_GUI
 
 #ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/vars.h>
+  #include <pangolin/var/varextra.h>
   #ifdef BUILD_PANGOLIN_GUI
     #include <pangolin/widgets.h>
   #endif // BUILD_PANGOLIN_GUI

@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/video/ffmpeg.h>
+#include <pangolin/file_utils.h>
 
 extern "C"
 {
@@ -651,7 +652,7 @@ void FfmpegVideoOutput::Initialise(std::string filename)
 #endif
 
     if (ret < 0 || !oc) {
-        std::cout << "Could not deduce output format from file extension: using MPEG." << std::endl;
+        pango_print_error("Could not deduce output format from file extension: using MPEG.\n");
 #if (LIBAVFORMAT_VERSION_MAJOR >= 54)
         ret = avformat_alloc_output_context2(&oc, NULL, "mpeg", filename.c_str());
 #else

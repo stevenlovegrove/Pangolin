@@ -36,12 +36,12 @@ const int panal_v_margin = 6;
 
 int AttachAbs( int low, int high, Attach a)
 {
-    if( a.unit == Pixel ) return low + a.p;
-    if( a.unit == ReversePixel ) return high - a.p;
-    return low + a.p * (high - low);
+    if( a.unit == Pixel ) return low + (int)a.p;
+    if( a.unit == ReversePixel ) return high - (int)a.p;
+    return (int)(low + a.p * (high - low));
 }
 
-float AspectAreaWithinTarget(double target, double test)
+double AspectAreaWithinTarget(double target, double test)
 {
     if( test < target )
         return test / target;
@@ -55,8 +55,8 @@ void SaveViewFromFbo(std::string prefix, View& view, float scale)
     const Viewport orig = view.v;
     view.v.l = 0;
     view.v.b = 0;
-    view.v.w *= scale;
-    view.v.h *= scale;
+    view.v.w = (int)(view.v.w * scale);
+    view.v.h = (int)(view.v.h * scale);
     
     const int w = view.v.w;
     const int h = view.v.h;
@@ -195,20 +195,20 @@ void View::ResizeChildren()
     {
         // Allocate vertical space equally
         const size_t visiblechildren = NumVisibleChildren();
-        const float height = v.h / visiblechildren;
+        const float height = (float)v.h / (float)visiblechildren;
         
         for( size_t i=0; i < visiblechildren; ++i) {
-            Viewport space(v.l,v.b+(visiblechildren-1-i)*height, v.w, height);
+            Viewport space(v.l, (GLint)(v.b+(visiblechildren-1-i)*height), v.w, (GLint)(height) );
             VisibleChild(i).Resize(space);
         }        
     }else if(layout == LayoutEqualHorizontal )
     {
         // Allocate vertical space equally
         const size_t visiblechildren = NumVisibleChildren();
-        const float width = v.w / visiblechildren;
+        const float width = (float)v.w / (float)visiblechildren;
         
         for( size_t i=0; i < visiblechildren; ++i) {
-            Viewport space(v.l+i*width, v.b, width, v.h);
+            Viewport space( (GLint)(v.l+i*width), v.b, (GLint)width, v.h);
             VisibleChild(i).Resize(space);
         }        
     }else if(layout == LayoutEqual )
@@ -252,10 +252,10 @@ void View::ResizeChildren()
             if( a > this_a )
             {
                 cw = v.w / cols;
-                ch = cw / child_a; //v.h / rows;
+                ch = (int)(cw / child_a); //v.h / rows;
             }else{
                 ch = v.h / rows;
-                cw = ch * child_a;
+                cw = (int)(ch * child_a);
             }
             
             for( unsigned int i=0; i< visiblechildren; ++i )
@@ -338,7 +338,15 @@ void View::ActivateIdentity() const
 GLfloat View::GetClosestDepth(int x, int y, int radius) const
 {
     // TODO: Get to work on android    
+
+#ifdef _MSVC_
+    // MSVC Requires fixed sized arrays on stack
+    radius = 5;
+    const int zl = (5*2+1);
+#else
     const int zl = (radius*2+1);
+#endif
+
     const int zsize = zl*zl;
     GLfloat zs[zsize];
     
@@ -358,7 +366,7 @@ void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx,
     const GLint viewport[4] = {v.l,v.b,v.w,v.h};
     const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
     const OpenGlMatrix mv = cam_state.GetModelViewMatrix();
-    gluUnProject(winx, winy, winzdepth, mv.m, proj.m, viewport, &x, &y, &z);
+    glUnProject(winx, winy, winzdepth, mv.m, proj.m, viewport, &x, &y, &z);
 }
 
 void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
@@ -366,9 +374,9 @@ void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, do
     const GLint viewport[4] = {v.l,v.b,v.w,v.h};
     const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
 #ifndef HAVE_GLES    
-    gluUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
+    glUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
 #else
-    gluUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
+    glUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
 #endif
 }
 
@@ -522,7 +530,7 @@ View* View::FindChild(int x, int y)
 {
     // Find in reverse order to mirror draw order
     for( std::vector<View*>::const_reverse_iterator i = views.rbegin(); i != views.rend(); ++i )
-        if( (*i)->show && (*i)->v.Contains(x,y) )
+        if( (*i)->show && (*i)->GetBounds().Contains(x,y) )
             return (*i);
     return 0;    
 }

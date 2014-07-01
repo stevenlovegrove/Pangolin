@@ -33,6 +33,10 @@
 #include <pangolin/image_load.h>
 #include <pangolin/type_convert.h>
 
+#if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
+#include <pangolin/glsl.h>
+#endif
+
 #include <pangolin/xml/rapidxml.hpp>
 #include <pangolin/xml/rapidxml_utils.hpp>
 
@@ -127,6 +131,27 @@ void GlText::Add(const GlChar& c)
     width = x + c.StepX();        
 }
 
+void GlText::DrawGlSl()
+{
+#if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
+    if(vs.size() && tex) {
+        glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_POSITION);
+        glEnableVertexAttribArray(pangolin::DEFAULT_LOCATION_TEXCOORD);
+
+        glVertexAttribPointer(pangolin::DEFAULT_LOCATION_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(XYUV), &vs[0].x);
+        glVertexAttribPointer(pangolin::DEFAULT_LOCATION_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(XYUV), &vs[0].tu);
+
+        tex->Bind();
+        glEnable(GL_TEXTURE_2D);
+        glDrawArrays(GL_TRIANGLES, 0, vs.size() );
+        glDisable(GL_TEXTURE_2D);
+
+        glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_POSITION);
+        glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_TEXCOORD);
+    }
+#endif
+}
+
 void GlText::Draw()
 {
     if(vs.size() && tex) {
@@ -150,24 +175,29 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
     GLdouble modelview[16];
     GLint    view[4];
     GLdouble scrn[3];
-    
+
+#ifdef HAVE_GLES_2
+    std::copy(glEngine().projection.top().m, glEngine().projection.top().m+16, projection);
+    std::copy(glEngine().modelview.top().m, glEngine().modelview.top().m+16, modelview);
+#else
     glGetDoublev(GL_PROJECTION_MATRIX, projection );
     glGetDoublev(GL_MODELVIEW_MATRIX, modelview );
+#endif
     glGetIntegerv(GL_VIEWPORT, view );
     
-    gluProject(x, y, z, modelview, projection, view,
+    pangolin::glProject(x, y, z, modelview, projection, view,
         scrn, scrn + 1, scrn + 2);
     
     DisplayBase().Activate();
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();    
-    gluOrtho2D(0, DisplayBase().v.w, 0, DisplayBase().v.h);    
+    glOrtho(0, DisplayBase().v.w, 0, DisplayBase().v.h, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
     
-    glTranslatef((int)scrn[0],(int)scrn[1],scrn[2]);
+    glTranslatef(std::floor((GLfloat)scrn[0]), std::floor((GLfloat)scrn[1]), (GLfloat)scrn[2]);
     Draw();
 
     // Restore viewport
@@ -183,25 +213,20 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
 // Render at (x,y) in window coordinates.
 void GlText::DrawWindow(GLfloat x, GLfloat y, GLfloat z)
 {
-    // find object point (x,y,z)' in pixel coords
-    GLdouble projection[16];
-    GLdouble modelview[16];
+    // Backup viewport
     GLint    view[4];
-    
-    glGetDoublev(GL_PROJECTION_MATRIX, projection );
-    glGetDoublev(GL_MODELVIEW_MATRIX, modelview );
     glGetIntegerv(GL_VIEWPORT, view );
         
     DisplayBase().Activate();
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();    
-    gluOrtho2D(0, DisplayBase().v.w, 0, DisplayBase().v.h);    
+    glOrtho(0, DisplayBase().v.w, 0, DisplayBase().v.h, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
     
-    glTranslatef((int)x,(int)y,z);
+    glTranslatef( std::floor(x), std::floor(y), z);
     Draw();
 
     // Restore viewport
@@ -301,7 +326,7 @@ bool GlFont::LoadFontFromText(char* xml_text)
                 
                 mmCharacters[id] = GlChar(nScaleWidth, nScaleHeight,
                                           x,y,width, height,xAdvance,
-                                          xOffset,nBase - yOffset);
+                                          (GLfloat)xOffset, (GLfloat)(nBase - yOffset) );
             }
             
             if(node_kerns) {
@@ -337,6 +362,12 @@ bool GlFont::LoadEmbeddedFont()
     const bool success = LoadFontFromText(str);
     delete[] str;
     return success;
+}
+
+void GlFont::UnloadFont()
+{
+    mTex.Delete();
+    mmCharacters.clear();
 }
 
 GlText GlFont::Text( const char* fmt, ... )

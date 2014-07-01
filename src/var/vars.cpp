@@ -25,7 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/vars.h>
+#include <pangolin/var/varextra.h>
+#include <pangolin/var/varstate.h>
+#include <pangolin/file_utils.h>
 
 #include <iostream>
 #include <fstream>
@@ -36,24 +38,30 @@ using namespace std;
 namespace pangolin
 {
 
-VarState::VarState()
-{
-    // Nothing to do
+VarState& VarState::I() {
+    static VarState singleton;
+    return singleton;
 }
 
-VarState::~VarState()
-{
-    // Deallocate vars
-    for( std::map<std::string,_Var*>::iterator i = vars.begin(); i != vars.end(); ++i)
-    {
+VarState::~VarState() {
+    Clear();
+}
+
+void VarState::Clear() {
+    for(VarStoreContainer::iterator i = vars.begin(); i != vars.end(); ++i) {
         delete i->second;
     }
     vars.clear();
 }
 
-VarState& VarState::I() {
-    static VarState singleton;
-    return singleton;
+void VarState::NotifyNewVar(const std::string& name, VarValueGeneric& var )
+{
+    // notify those watching new variables
+    for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
+        if( StartsWith(name,invc->filter) ) {
+           invc->fn( invc->data, name, var, var.TypeId(), false);
+        }
+    }
 }
 
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter)
@@ -139,20 +147,14 @@ string ProcessVal(const string& val )
     return expanded;
 }
 
-void AddVar(const string& name, const string& val )
+void AddVar(const std::string& name, const string& val )
 {
-    std::map<std::string,_Var*>::iterator vi = VarState::I().vars.find(name);
-    const bool exists_already = vi != VarState::I().vars.end();
-    
-    string full = ProcessVal(val);
+    const std::string full = ProcessVal(val);
     Var<string> var(name);
     var = full;
-    
-    // Mark as upgradable if unique
-    if(!exists_already)
-    {
-        var.var->generic = true;
-    }
+
+    // Type can be overriden.
+    var.Meta().generic = true;
 }
 
 #ifdef ALIAS
@@ -162,14 +164,13 @@ void AddAlias(const string& alias, const string& name)
     
     if( vi != vars.end() )
     {
-        //cout << "Adding Alias " << alias << " to " << name << endl;
         _Var * v = vi->second;
         vars[alias].create(v->val,v->val_default,v->type_name);
-        vars[alias].meta_friendly = alias;
+        vars[alias].Meta().friendly = alias;
         v->generic = false;
         vars[alias].generic = false;
     }else{
-        cout << "Variable " << name << " does not exist to alias." << endl;
+        pango_print_error("Variable %s does not exist to alias.\n", name);
     }
 }
 #endif

@@ -36,7 +36,7 @@
 #include <pthread.h>
 #include <sched.h>
 #include <errno.h>
-
+#include <dlfcn.h>
 
 #include <android/configuration.h>
 #include <android/looper.h>
@@ -122,8 +122,15 @@ static int engine_init_display(struct engine* engine) {
     ANativeWindow_setBuffersGeometry(engine->app->window, 0, 0, format);
 //    ANativeActivity_setWindowFlags(engine->app->activity, AWINDOW_FLAG_FULLSCREEN, 0 );
 
+    EGLint const attrib_list[] = {
+#ifdef HAVE_GLES_2
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
+        EGL_NONE
+    };
+
     surface = eglCreateWindowSurface(display, config, engine->app->window, NULL);
-    context = eglCreateContext(display, config, NULL, NULL);
+    context = eglCreateContext(display, config, NULL, attrib_list);
 
     if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE) {
         LOGW("Unable to eglMakeCurrent");
@@ -178,27 +185,22 @@ static void engine_term_display(struct engine* engine) {
     engine->surface = EGL_NO_SURFACE;
 }
 
-namespace process {
-extern float last_x;
-extern float last_y;
-}
-
-void UnpressAll()
+void UnpressAll(float last_x, float last_y)
 {
     if(context->mouse_state & pangolin::MouseButtonLeft) {
-        pangolin::process::Mouse(0, 1, process::last_x, process::last_y);
+        pangolin::process::Mouse(0, 1, last_x, last_y);
     }
     if(context->mouse_state & pangolin::MouseButtonMiddle) {
-        pangolin::process::Mouse(1, 1, process::last_x, process::last_y);
+        pangolin::process::Mouse(1, 1, last_x, last_y);
     }
     if(context->mouse_state & pangolin::MouseButtonRight) {
-        pangolin::process::Mouse(2, 1, process::last_x, process::last_y);
+        pangolin::process::Mouse(2, 1, last_x, last_y);
     }
     if(context->mouse_state & pangolin::MouseWheelUp) {
-        pangolin::process::Mouse(3, 1, process::last_x, process::last_y);
+        pangolin::process::Mouse(3, 1, last_x, last_y);
     }
     if(context->mouse_state & pangolin::MouseWheelDown) {
-        pangolin::process::Mouse(4, 1, process::last_x, process::last_y);
+        pangolin::process::Mouse(4, 1, last_x, last_y);
     }
     context->mouse_state = 0;
 }
@@ -250,11 +252,15 @@ int PangolinKeyFromAndroidKeycode(int32_t keycode, bool shift)
 static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) {
     struct engine* engine = (struct engine*)app->userData;
 
+    static float last_x = 0;
+    static float last_y = 0;
+
     const int32_t input_type = AInputEvent_getType(event);
     
     if (input_type == AINPUT_EVENT_TYPE_MOTION) {
         engine->has_focus = 1;        
         
+
         const float x = AMotionEvent_getX(event, 0);
         const float y = AMotionEvent_getY(event, 0);
         const int32_t actionAndPtr = AMotionEvent_getAction(event);
@@ -262,16 +268,16 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
 //        const int32_t ptrindex = (AMOTION_EVENT_ACTION_POINTER_INDEX_MASK & actionAndPtr) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
                 
         const size_t num_ptrs = AMotionEvent_getPointerCount(event);
-        
+
         switch(action)
         {
         case AMOTION_EVENT_ACTION_UP:
         case AMOTION_EVENT_ACTION_POINTER_UP:
-            UnpressAll();
+            UnpressAll(last_x, last_y);
             break;
         case AMOTION_EVENT_ACTION_DOWN:
         case AMOTION_EVENT_ACTION_POINTER_DOWN:
-            UnpressAll();
+            UnpressAll(last_x, last_y);
             if(num_ptrs <=2) {
                 const int button = (num_ptrs==1) ? 0 : 2;
                 pangolin::process::Mouse(button, 0, x, y);
@@ -279,10 +285,8 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
             break;
         case AMOTION_EVENT_ACTION_MOVE:
             if(num_ptrs == 3) {
-                const double dx = x - process::last_x;
-                const double dy = y - process::last_y;
-                process::last_x = x;
-                process::last_y = y;
+                const double dx = x - last_x;
+                const double dy = y - last_y;
                 pangolin::process::Scroll(dx,dy);
             }else{
                 pangolin::process::MouseMotion(x,y);
@@ -291,7 +295,10 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
         default:
             break;
         }
-        
+
+        last_x = x;
+        last_y = y;
+
         return 1;
     }else if(AINPUT_EVENT_TYPE_KEY) {
         static bool shift = false;
@@ -307,9 +314,9 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
         unsigned char key = PangolinKeyFromAndroidKeycode(keycode, shift);
         
         if(action == AKEY_EVENT_ACTION_DOWN) {
-            pangolin::process::Keyboard(key, pangolin::process::last_x,pangolin::process::last_y);
+            pangolin::process::Keyboard(key, last_x, last_y);
         }else{
-            pangolin::process::KeyboardUp(key, pangolin::process::last_x,pangolin::process::last_y);
+            pangolin::process::KeyboardUp(key, last_x, last_y);
         }
     }
     return 1;
@@ -673,9 +680,16 @@ static void* android_app_entry(void* param) {
         strcpy( argv[ac], vargv[ac].c_str() );
     }
     argv[vargv.size()] = NULL;
-    
+
+    // Find main symbol
+    void (*main)(int, char**);
+    *(void **) (&main) = dlsym( dlopen(android_app->application_so, RTLD_NOW), "main");
+    if (!main) {
+        LOGE( "undefined symbol main, crap" );
+        exit(1);
+    }
     // Call users standard main entry point.
-    main(vargv.size(), argv);
+    (*main)(vargv.size(), argv);
     
     // Clean up parameters
     for(size_t ac = 0; ac < vargv.size(); ++ac) {
@@ -687,48 +701,6 @@ static void* android_app_entry(void* param) {
     LOGV("-android_app_entry");
     
     return NULL;
-}
-
-// --------------------------------------------------------------------
-// Native activity interaction (called from main thread)
-// --------------------------------------------------------------------
-
-static struct android_app* android_app_create(ANativeActivity* activity,
-        void* savedState, size_t savedStateSize) {
-    struct android_app* android_app = (struct android_app*)malloc(sizeof(struct android_app));
-    memset(android_app, 0, sizeof(struct android_app));
-    android_app->activity = activity;
-
-    pthread_mutex_init(&android_app->mutex, NULL);
-    pthread_cond_init(&android_app->cond, NULL);
-
-    if (savedState != NULL) {
-        android_app->savedState = malloc(savedStateSize);
-        android_app->savedStateSize = savedStateSize;
-        memcpy(android_app->savedState, savedState, savedStateSize);
-    }
-
-    int msgpipe[2];
-    if (pipe(msgpipe)) {
-        LOGE("could not create pipe: %s", strerror(errno));
-        return NULL;
-    }
-    android_app->msgread = msgpipe[0];
-    android_app->msgwrite = msgpipe[1];
-
-    pthread_attr_t attr; 
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_create(&android_app->thread, &attr, android_app_entry, android_app);
-
-    // Wait for thread to start.
-    pthread_mutex_lock(&android_app->mutex);
-    while (!android_app->running) {
-        pthread_cond_wait(&android_app->cond, &android_app->mutex);
-    }
-    pthread_mutex_unlock(&android_app->mutex);
-
-    return android_app;
 }
 
 static void android_app_write_cmd(struct android_app* android_app, int8_t cmd) {
@@ -877,10 +849,12 @@ static void onContentRectChanged(ANativeActivity* activity, const ARect* rect) {
     LOGV("onContentRectChanged: %p -- (%d, %d), (%d, %d)\n", activity, rect->left, rect->top, rect->right, rect->bottom);
 }
 
-void ANativeActivity_onCreate(
+void DeferredNativeActivity_onCreate(
         ANativeActivity* activity,
         void* savedState,
-        size_t savedStateSize)
+        size_t savedStateSize,
+        const char* load_target
+    )
 {
     activity->callbacks->onDestroy = onDestroy;
     activity->callbacks->onStart = onStart;
@@ -898,7 +872,40 @@ void ANativeActivity_onCreate(
     activity->callbacks->onContentRectChanged = onContentRectChanged;
 
     // Create threaded android_app
-    android_app* app = android_app_create(activity, savedState, savedStateSize);
+    android_app* app = (struct android_app*)malloc(sizeof(struct android_app));
+    memset(app, 0, sizeof(struct android_app));
+    app->activity = activity;
+    app->application_so = load_target;
+
+    pthread_mutex_init(&app->mutex, NULL);
+    pthread_cond_init(&app->cond, NULL);
+
+    if (savedState != NULL) {
+        app->savedState = malloc(savedStateSize);
+        app->savedStateSize = savedStateSize;
+        memcpy(app->savedState, savedState, savedStateSize);
+    }
+
+    int msgpipe[2];
+    if (pipe(msgpipe)) {
+        LOGE("could not create pipe: %s", strerror(errno));
+        exit(1);
+    }
+    app->msgread = msgpipe[0];
+    app->msgwrite = msgpipe[1];
+
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_create(&app->thread, &attr, android_app_entry, app);
+
+    // Wait for thread to start.
+    pthread_mutex_lock(&app->mutex);
+    while (!app->running) {
+        pthread_cond_wait(&app->cond, &app->mutex);
+    }
+    pthread_mutex_unlock(&app->mutex);
+
     activity->instance = app;
     
     // Save global variables for use later
@@ -971,6 +978,11 @@ void FinishAndroidFrame()
 void CreateWindowAndBind(std::string window_title, int /*w*/, int /*h*/ )
 {
     CreateAndroidWindowAndBind(window_title);
+
+#ifdef HAVE_GLES_2
+    // Bind default compatibility shader
+    pangolin::glEngine().prog_fixed.Bind();
+#endif
 }
 
 // Implement platform agnostic version

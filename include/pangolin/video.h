@@ -55,12 +55,24 @@
 //  e.g. "v4l:///dev/video0"
 //  e.g. "v4l[method=mmap]:///dev/video0"
 //
-// openni - capture video / depth from an OpenNI streaming device (Kinect / Xtrion etc)
-//           sensor modes containing '8' will truncate to 8-bits.
+// openni2 - capture video / depth from OpenNI2 SDK  (Kinect / Xtrion etc)
+//           imgN=grey|rgb|ir|ir8|ir24|depth|reg_depth
+//  e.g. "openni2://'
+//  e.g. "openni2:[img1=rgb,img2=depth,coloursync=true]//"
+//  e.g. "openni2:[img1=depth,close=closerange,holefilter=true]//"
+//  e.g. "openni2:[size=320x240,fps=60,img1=ir]//"
+//
+// openni - capture video / depth from OpenNI 1.0 SDK (Kinect / Xtrion etc)
+//           Sensor modes containing '8' will truncate to 8-bits.
+//           Sensor modes containing '+' explicitly enable IR illuminator
 //           imgN=rgb|ir|ir8|ir+|ir8+|depth|reg_depth
 //  e.g. "openni://'
 //  e.g. "openni:[img1=rgb,img2=depth]//"
-//  e.g. "openni:[img1=ir]//"
+//  e.g. "openni:[size=320x240,fps=60,img1=ir]//"
+//
+// depthsense - capture video / depth from DepthSense SDK.
+//              DepthSenseViewer can be used to alter capture settings.
+//  e.g. "depthsense://"
 //
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
@@ -159,7 +171,7 @@ struct VideoInterface
 };
 
 //! Generic wrapper class for different video sources
-struct VideoInput : public VideoInterface
+struct PANGOLIN_EXPORT VideoInput : public VideoInterface
 {
     VideoInput();
     VideoInput(const std::string& uri);
@@ -175,22 +187,34 @@ struct VideoInput : public VideoInterface
     unsigned Width() const;
     unsigned Height() const;
     VideoPixelFormat PixFormat() const;
+    const Uri& VideoUri() const;
     
     void Start();
     void Stop();
     bool GrabNext( unsigned char* image, bool wait = true );
     bool GrabNewest( unsigned char* image, bool wait = true );
 
+    // Return pointer to inner video class as VideoType
+    template<typename VideoType>
+    VideoType* Cast() {
+        return dynamic_cast<VideoType*>(video);
+    }
+
     // experimental - not stable
     bool Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait = true, bool newest = false);
     
 protected:
-    std::string uri;
+    Uri uri;
     VideoInterface* video;
 };
 
 //! Open Video Interface from string specification (as described in this files header)
-VideoInterface* OpenVideo(std::string uri);
+PANGOLIN_EXPORT
+VideoInterface* OpenVideo(const std::string& uri);
+
+//! Open Video Interface from Uri specification
+PANGOLIN_EXPORT
+VideoInterface* OpenVideo(const Uri& uri);
 
 }
 

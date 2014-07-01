@@ -27,6 +27,8 @@
 
 #include <pangolin/input_record_repeat.h>
 
+#include <limits>
+
 using namespace std;
 
 namespace pangolin
@@ -156,12 +158,12 @@ void InputRecordRepeat::UpdateVariable(const std::string& name )
         FrameInput input;
         input.index = index;
         input.var = name;
-        input.val = var.a->Get();
+        input.val = var.Get();
         record_queue.push_back(input);
     }
 }
 
-void InputRecordRepeat::GuiVarChanged(void* data, const std::string& name, _Var& _var)
+void InputRecordRepeat::GuiVarChanged(void* data, const std::string& name, VarValueGeneric &_var)
 {
     InputRecordRepeat* thisptr = (InputRecordRepeat*)data;
 
@@ -172,7 +174,7 @@ void InputRecordRepeat::GuiVarChanged(void* data, const std::string& name, _Var&
         FrameInput input;
         input.index = thisptr->index;
         input.var = name;
-        input.val = var.a->Get();
+        input.val = var.Get();
 
         thisptr->record_queue.push_back(input);
     }

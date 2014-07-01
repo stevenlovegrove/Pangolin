@@ -39,7 +39,29 @@
 #endif
 
 #ifdef _MSVC_
-#define __thread __declspec(thread)
+#   define __thread __declspec(thread)
+#   include <pangolin/pangolin_export.h>
+#else
+#   define PANGOLIN_EXPORT
 #endif //_MSVC_
+
+#ifdef _APPLE_IOS_
+// Not supported on this platform.
+#define __thread
+#endif // _APPLE_IOS_
+
+#ifndef _ANDROID_
+#   include <cstdio>
+#   define pango_print_debug(...) printf(__VA_ARGS__)
+#   define pango_print_info(...)  printf(__VA_ARGS__)
+#   define pango_print_error(...) fprintf(stderr, __VA_ARGS__)
+#   define pango_print_warn(...)  fprintf(stderr, __VA_ARGS__)
+#else
+#   include <android/log.h>
+#   define pango_print_debug(...) __android_log_print(ANDROID_LOG_DEBUG, "pango", __VA_ARGS__ );
+#   define pango_print_info(...)  __android_log_print(ANDROID_LOG_INFO,  "pango", __VA_ARGS__ );
+#   define pango_print_error(...) __android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__ );
+#   define pango_print_warn(...)  __android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__ );
+#endif
 
 #endif // PANGOLIN_PLATFORM_H

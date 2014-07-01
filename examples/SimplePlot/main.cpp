@@ -14,14 +14,6 @@ int main( int /*argc*/, char* argv[] )
 
   // Data logger object
   DataLog log;
-  const double tinc = 0.01;
-
-  // OpenGL 'view' of data. We might have many views of the same data.
-  Plotter plotter(&log,0,M_PI/tinc,-2,2,M_PI/(4*tinc),0.5);
-  plotter.SetBounds(0.0, 1.0, 0.0, 1.0);
-  DisplayBase().AddDisplay(plotter);
-
-  double t = 0;
 
   // Optionally add named labels
   vector<std::string> labels;
@@ -30,6 +22,17 @@ int main( int /*argc*/, char* argv[] )
   labels.push_back(std::string("tan(t)"));
   labels.push_back(std::string("sin(t)+cos(t)"));
   log.SetLabels(labels);
+
+  const double tinc = 0.01;
+
+  // OpenGL 'view' of data. We might have many views of the same data.
+  Plotter plotter(&log,0,4*M_PI/tinc,-2,2,M_PI/(4*tinc),0.5);
+  plotter.SetBounds(0.0, 1.0, 0.0, 1.0);
+  plotter.Track("$i");
+
+  DisplayBase().AddDisplay(plotter);
+
+  float t = 0;
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )

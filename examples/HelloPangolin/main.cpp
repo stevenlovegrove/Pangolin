@@ -24,7 +24,6 @@ int main( int /*argc*/, char** /*argv*/ )
         d_cam.Activate(s_cam);
         
         // Render OpenGL Teapot
-        glColor3f(1.0,1.0,1.0);
         pangolin::glDrawColouredCube();
         
         // Swap frames and Process Events

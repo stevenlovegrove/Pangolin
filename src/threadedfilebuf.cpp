@@ -40,7 +40,7 @@ threadedfilebuf::threadedfilebuf( const std::string& filename, unsigned int buff
     file.open(filename.c_str(), ios::out | ios::binary );
     
     mem_max_size = buffer_size_bytes;
-    mem_buffer = new char[mem_max_size];
+    mem_buffer = new char[(size_t)mem_max_size];
     
     should_run = true;
     write_thread = boostd::thread(boostd::ref(*this));
@@ -71,19 +71,19 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
         }
         
         // add image to end of mem_buffer
-        const int array_a_size =
+        const std::streamsize array_a_size =
                 (mem_start <= mem_end) ? (mem_max_size - mem_end) : (mem_start - mem_end);
         
         if( num_bytes <= array_a_size )
         {
             // copy in one
-            memcpy(mem_buffer + mem_end, data, num_bytes);
+            memcpy(mem_buffer + mem_end, data, (size_t)num_bytes);
             mem_end += num_bytes;
             mem_size += num_bytes;
         }else{
-            const int array_b_size = num_bytes - array_a_size;
-            memcpy(mem_buffer + mem_end, data, array_a_size);
-            memcpy(mem_buffer, data+array_a_size, array_b_size);
+            const std::streamsize array_b_size = num_bytes - array_a_size;
+            memcpy(mem_buffer + mem_end, data, (size_t)array_a_size);
+            memcpy(mem_buffer, data+array_a_size, (size_t)array_b_size);
             mem_end = array_b_size;
             mem_size += num_bytes;
         }
@@ -99,7 +99,7 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
 
 void threadedfilebuf::operator()()
 {
-    int data_to_write = 0;
+    std::streamsize data_to_write = 0;
     
     while(true)
     {
