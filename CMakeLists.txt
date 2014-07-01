@@ -17,11 +17,6 @@ if(CPP11_NO_BOOST AND NOT MSVC)
     endif()
 endif()
 
-if(ANDROID)
-    set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
-    include(AndroidUtils)
-endif()
-
 if(ANDROID OR IOS)
     set(HAVE_GLES 1)
     option(BUILD_FOR_GLES_2 "Build for OpenGL ES 2 instead of ES 1" ON )
