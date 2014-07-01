@@ -30,6 +30,7 @@
 
 #include <stdexcept>
 #include <string.h>
+#include <cmath>
 
 #include <pangolin/var/varvalue.h>
 #include <pangolin/var/varwrapper.h>
