@@ -214,7 +214,7 @@ VideoPixelFormat PngFormat(png_structp png_ptr, png_infop info_ptr )
     throw std::runtime_error("Unsupported PNG format");
 }
 
-void PNGAPI PngWarningsCallback(png_structrp /*png_ptr*/, png_const_charp /*warning_message*/)
+void PNGAPI PngWarningsCallback(png_structp /*png_ptr*/, png_const_charp /*warning_message*/)
 {
     // Override default behaviour - don't do anything.
 }
