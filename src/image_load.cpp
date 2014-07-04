@@ -213,6 +213,11 @@ VideoPixelFormat PngFormat(png_structp png_ptr, png_infop info_ptr )
 
     throw std::runtime_error("Unsupported PNG format");
 }
+
+void PNGAPI PngWarningsCallback(png_structrp /*png_ptr*/, png_const_charp /*warning_message*/)
+{
+    // Override default behaviour - don't do anything.
+}
 #endif
 
 TypedImage LoadPng(const std::string& filename)
@@ -232,7 +237,7 @@ TypedImage LoadPng(const std::string& filename)
         }
         
         //set up initial png structs
-        png_structp png_ptr = png_create_read_struct( PNG_LIBPNG_VER_STRING, (png_voidp)NULL, NULL, NULL);
+        png_structp png_ptr = png_create_read_struct( PNG_LIBPNG_VER_STRING, (png_voidp)NULL, NULL, &PngWarningsCallback);
         if (!png_ptr) {
             throw std::runtime_error( "PNG Init error 1" );
         }
