@@ -31,13 +31,17 @@
 #include <map>
 #include <vector>
 #include <pangolin/platform.h>
-#include <pangolin/var/varvaluegeneric.h>
+#include <pangolin/var/varvalue.h>
 #include <pangolin/file_utils.h>
+
+#ifdef HAVE_CVARS
+#include <CVars/CVar.h>
+#endif
 
 namespace pangolin
 {
 
-typedef void (*NewVarCallbackFn)(void* data, const std::string& name, VarValueGeneric& var, const char* reg_type_name, bool brand_new);
+typedef void (*NewVarCallbackFn)(void* data, const std::string& name, VarValueGeneric& var, bool brand_new);
 typedef void (*GuiVarChangedCallbackFn)(void* data, const std::string& name, VarValueGeneric& var);
 
 struct PANGOLIN_EXPORT NewVarCallback
@@ -67,11 +71,39 @@ public:
 
     void Clear();
 
-    void NotifyNewVar(const std::string& name, VarValueGeneric& var );
+    template<typename T>
+    void NotifyNewVar(const std::string& name, VarValue<T>& var )
+    {
+        // notify those watching new variables
+        for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
+            if( StartsWith(name,invc->filter) ) {
+               invc->fn( invc->data, name, var, true);
+            }
+        }
+
+#ifdef HAVE_CVARS
+        // CVars can't save names containing spaces, so map to '_' instead
+        std::string cvar_name = name;
+        std::replace(cvar_name.begin(), cvar_name.end(), ' ', '_');
+
+        // Don't add generic vars that might change type later.
+        if(!var.Meta().generic) {
+            try {
+                CVarUtils::AttachCVar(cvar_name, &var.Get() );
+            }catch(CVarUtils::CVarException) {
+            }
+        }
+#endif
+    }
 
     VarValueGeneric*& operator[](const std::string& str)
     {
         return vars[str];
+    }
+
+    bool Exists(const std::string& str) const
+    {
+        return vars.find(str) != vars.end();
     }
 
 //protected:

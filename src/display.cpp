@@ -401,33 +401,6 @@ bool CVarRecordStop( std::vector<std::string>* args )
 }
 #endif // BUILD_PANGOLIN_VIDEO
 
-#ifdef BUILD_PANGOLIN_VARS
-void NewVarForCVars(void* /*data*/, const std::string& name, VarValueGeneric& var, const char* /*orig_typeidname*/, bool brand_new)
-{
-    if(brand_new) {
-//        // CVars can't save names containing spaces, so map to '_' instead
-//        std::string cvar_name = name;
-//        for(size_t i=0; i < cvar_name.size(); ++i) {
-//            if(cvar_name[i] == ' ') cvar_name[i] = '_';
-//        }
-        
-//        // Attach to CVars too.
-//        const char* typeidname = var.TypeId();
-//        if( !strcmp(typeidname, typeid(double).name()) ) {
-//            CVarUtils::AttachCVar(cvar_name, (double*)(var.val) );
-//        } else if( !strcmp(typeidname, typeid(int).name()) ) {
-//            CVarUtils::AttachCVar(cvar_name, (int*)(var.val) );
-//        } else if( !strcmp(typeidname, typeid(std::string).name()) ) {
-//            CVarUtils::AttachCVar(cvar_name, (std::string*)(var.val) );
-//        } else if( !strcmp(typeidname, typeid(bool).name()) ) {
-//            CVarUtils::AttachCVar(cvar_name, (bool*)(var.val) );
-//        } else {
-//            // we can't attach
-//            pango_print_error("NewVarForCVars: Typeid '%s' does not match known types.\n", typeidname);
-//        }
-    }
-}
-#endif // BUILD_PANGOLIN_VARS
 #endif // HAVE_CVARS
 
 namespace process
@@ -661,12 +634,7 @@ void DrawTextureToViewport(GLuint texid)
 
 void PangolinCommonInit()
 {
-#ifdef HAVE_CVARS
-    
-#ifdef BUILD_PANGOLIN_VARS
-    RegisterNewVarCallback(NewVarForCVars,0);
-#endif // BUILD_PANGOLIN_VARS
-    
+#ifdef HAVE_CVARS    
     // Register utilities
     CVarUtils::CreateCVar("pango.view.list",  &CVarViewList, "List named views." );
     CVarUtils::CreateCVar("pango.view.showhide",  &CVarViewShowHide, "Show/Hide named view." );

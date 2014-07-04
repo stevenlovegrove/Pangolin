@@ -144,7 +144,7 @@ Panel::Panel(const std::string& auto_register_var_prefix)
     //    ProcessHistoricCallbacks(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
 }
 
-void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& var, const char* reg_type_name, bool brand_new )
+void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool brand_new )
 {
     Panel* thisptr = (Panel*)data;
     
@@ -159,12 +159,16 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
     if( pnl == context->named_managed_views.end() )
     {
         View* nv = NULL;
-        if( !strcmp(reg_type_name, typeid(bool).name()) ) {
+        if( !strcmp(var.TypeId(), typeid(bool).name()) ) {
             nv = var.Meta().flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-        } else if (!strcmp(reg_type_name, typeid(double).name()) || !strcmp(reg_type_name, typeid(float).name()) || !strcmp(reg_type_name, typeid(int).name()) || !strcmp(reg_type_name, typeid(unsigned int).name())) {
+        } else if (!strcmp(var.TypeId(), typeid(double).name()) ||
+                   !strcmp(var.TypeId(), typeid(float).name()) ||
+                   !strcmp(var.TypeId(), typeid(int).name()) ||
+                   !strcmp(var.TypeId(), typeid(unsigned int).name()))
+        {
             nv = new Slider(title, var);
 #ifdef CPP11_NO_BOOST
-        } else if (!strcmp(reg_type_name, typeid(boostd::function<void(void)>).name() ) ) {
+        } else if (!strcmp(var.TypeId(), typeid(boostd::function<void(void)>).name() ) ) {
             nv = (View*)new FunctionButton(title, var);
 #endif // CPP11_NO_BOOST
         }else{

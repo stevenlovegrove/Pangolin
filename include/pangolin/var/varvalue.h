@@ -82,6 +82,11 @@ public:
         return value;
     }
 
+    VarT& Get()
+    {
+        return value;
+    }
+
     void Set(const VarT& val)
     {
         value = val;

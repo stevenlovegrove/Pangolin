@@ -48,7 +48,7 @@ struct PANGOLIN_EXPORT Panel : public View
     Panel(const std::string& auto_register_var_prefix);
     void Render();
     void ResizeChildren();
-    static void AddVariable(void* data, const std::string& name, VarValueGeneric& var, const char* reg_type_name, bool brand_new);
+    static void AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool brand_new);
 };
 
 template<typename T>
