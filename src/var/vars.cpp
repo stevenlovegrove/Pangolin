@@ -144,7 +144,7 @@ void AddVar(const std::string& name, const string& val )
     VarValueGeneric*& v = VarState::I()[name];
     if(!v) {
         VarValue<std::string>* nv = new VarValue<std::string>(val);
-        Var<std::string>::InitialiseNewVarMetaGeneric(*nv, name);
+        InitialiseNewVarMetaGeneric<std::string>(*nv, name);
         v = nv;
     }
     v->str->Set(full);
