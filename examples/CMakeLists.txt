@@ -24,9 +24,9 @@ if(BUILD_PANGOLIN_GUI AND (FREEGLUT_FOUND OR GLUT_FOUND OR ANDROID) )
         add_subdirectory(SimpleRepeatVideo)
       endif()
 
-      if(Oculus_FOUND)
-        add_subdirectory(SimpleOculus)
-      endif()
+#      if(Oculus_FOUND)
+#        add_subdirectory(SimpleOculus)
+#      endif()
 
 #      This sample fails on many platforms, so exclude it for now,
 #      until we can create a better cmake test for support.
