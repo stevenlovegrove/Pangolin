@@ -200,6 +200,9 @@ if(CVARS_FOUND)
   message(STATUS "CVARS Found and Enabled")
 endif()
 
+
+
+
 find_package(Oculus QUIET)
 if(Oculus_FOUND)
   set(HAVE_OCULUS 1)
@@ -210,6 +213,7 @@ if(Oculus_FOUND)
   list(APPEND LINK_LIBS ${Oculus_LIBRARIES} )
   message(STATUS "Oculus Rift Found and Enabled")
 endif()
+
 
 find_package(Eigen3 QUIET)
 if(EIGEN3_FOUND)

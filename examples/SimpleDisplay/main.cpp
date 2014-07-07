@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <pangolin/pangolin.h>
 
 struct CustomType
