@@ -4,8 +4,6 @@
 #  Oculus_INCLUDE_DIRS - the libuvc include directories
 #  Oculus_LIBRARIES - link these to use libuvc
 
-message(STATUS "Looking for Oculus")
-
 FIND_PATH(
   Oculus_INCLUDE_DIRS
   NAMES OVR.h
@@ -34,37 +32,32 @@ FIND_LIBRARY(
     /opt/local/lib
 )
 
-IF (Oculus_INCLUDE_DIRS AND Oculus_LIBRARIES)
+IF(Oculus_INCLUDE_DIRS AND Oculus_LIBRARIES)
     IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         find_library(CARBON_LIBRARIES NAMES Carbon)
         find_library(IOKIT_LIBRARIES NAMES IOKit)
         list(APPEND Oculus_LIBRARIES ${CARBON_LIBRARIES})
         list(APPEND Oculus_LIBRARIES ${IOKIT_LIBRARIES})
-        message(STATUS "found Oculus!")
         SET(Oculus_FOUND TRUE)
     ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         FIND_PACKAGE(Xrandr)
-    IF( Xrandr_FOUND )
-        message(STATUS "OccyRift Found")
-        list(APPEND Oculus_LIBRARIES ${Xrandr_LIBRARIES} -ludev -lXrandr  )
-    message(STATUS "found Oculus!")
-        SET(Oculus_FOUND TRUE)
-    ELSE()
-        SET(Oculus_FOUND FALSE)
+        IF( Xrandr_FOUND )
+            list(APPEND Oculus_LIBRARIES ${Xrandr_LIBRARIES} -ludev -lXrandr  )
+            SET(Oculus_FOUND TRUE)
+        ENDIF()
     ENDIF()
-    ENDIF()
-ENDIF (Oculus_INCLUDE_DIRS AND Oculus_LIBRARIES)
+ENDIF(Oculus_INCLUDE_DIRS AND Oculus_LIBRARIES)
 
 
 
-IF (Oculus_FOUND)
-   IF (NOT Oculus_FIND_QUIETLY)
+IF(Oculus_FOUND)
+   IF(NOT Oculus_FIND_QUIETLY)
       MESSAGE(STATUS "Found Oculus: ${Oculus_LIBRARIES}")
       MESSAGE(STATUS "Found Oculus: ${Oculus_INCLUDE_DIRS}")
-   ENDIF (NOT Oculus_FIND_QUIETLY)
-ELSE (Oculus_FOUND)
+   ENDIF(NOT Oculus_FIND_QUIETLY)
+ELSE(Oculus_FOUND)
 message(STATUS "Oculus NOT found")
-   IF (Oculus_FIND_REQUIRED)
+   IF(Oculus_FIND_REQUIRED)
       MESSAGE(FATAL_ERROR "Could not find Oculus")
-   ENDIF (Oculus_FIND_REQUIRED)
-ENDIF (Oculus_FOUND)
+   ENDIF(Oculus_FIND_REQUIRED)
+ENDIF(Oculus_FOUND)
