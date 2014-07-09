@@ -364,22 +364,19 @@ Slider::Slider(std::string title, VarValueGeneric& tv)
     logscale = (int)tv.Meta().logscale;
 }
 
-void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed){
-    
+void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+{
     if( pressed && var->Meta().range[0] < var->Meta().range[1] )
     {
         double val = !logscale ? var->Get() : log(var->Get());
         
-        if(key=='-'){
-            if (logscale)
-                var->Set( exp(max(var->Meta().range[0],min(var->Meta().range[1],val - var->Meta().increment) ) ) );
-            else
-                var->Set( max(var->Meta().range[0],min(var->Meta().range[1],val - var->Meta().increment) ) );
-        }else if(key == '='){
-            if (logscale)
-                var->Set( exp(max(var->Meta().range[0],min(var->Meta().range[1],val + var->Meta().increment) ) ) );
-            else
-                var->Set( max(var->Meta().range[0],min(var->Meta().range[1],val + var->Meta().increment) ) );
+        if(key=='-' || key=='_' || key=='=' || key=='+') {
+            double inc = var->Meta().increment;
+            if (key == '-') inc *= -1.0;
+            if (key == '_') inc *= -0.1;
+            if (key == '+') inc *=  0.1;
+            const double newval = max(var->Meta().range[0], min(var->Meta().range[1], val + inc));
+            var->Set( logscale ? exp(newval) : newval );
         }else if(key == 'r'){
             Reset();
         }else{

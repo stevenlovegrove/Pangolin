@@ -49,6 +49,7 @@ inline void InitialiseNewVarMetaGeneric(
     v.Meta().friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
     v.Meta().range[0] = 0.0;
     v.Meta().range[1] = 0.0;
+    v.Meta().increment = 0.0;
     v.Meta().flags = 0;
     v.Meta().logscale = false;
     v.Meta().generic = true;
@@ -67,6 +68,11 @@ inline void InitialiseNewVarMeta(
     v.Meta().friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
     v.Meta().range[0] = min;
     v.Meta().range[1] = max;
+    if (boostd::is_integral<T>::value) {
+        v.Meta().increment = 1.0;
+    } else {
+        v.Meta().increment = (max - min) / 100.0;
+    }
     v.Meta().flags = flags;
     v.Meta().logscale = logscale;
     v.Meta().generic = false;
