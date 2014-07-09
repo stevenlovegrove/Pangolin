@@ -482,8 +482,8 @@ void Mouse( int button_raw, int state, int x, int y)
     
     last_x = (float)x;
     last_y = (float)y;
-    
-    const MouseButton button = (MouseButton)(1 << button_raw);
+
+    const MouseButton button = (MouseButton)(1 << (button_raw&0x7) );
     const bool pressed = (state == 0);
     
     context->had_input = context->is_double_buffered ? 2 : 1;

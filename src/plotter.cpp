@@ -968,7 +968,11 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
         float scalex = 1.0;
         float scaley = 1.0;
 
+#ifdef _OSX_
         if(button_state & KeyModifierCmd) {
+#else
+        if (button_state & KeyModifierCtrl) {
+#endif
             scalex = 1-p1;
         }else{
             scaley = 1-p1;
