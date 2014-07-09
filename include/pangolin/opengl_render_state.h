@@ -48,7 +48,7 @@
 #endif
 
 #ifdef HAVE_OCULUS
-#include <OVR.h>
+#include <pangolin/compat/ovr.h>
 #endif
 
 namespace pangolin {
