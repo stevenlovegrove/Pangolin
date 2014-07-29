@@ -20,7 +20,7 @@ void RecordSample(const std::string uri, const std::string vid_file, const std::
     pangolin::InputRecordRepeat input("ui.");
     input.LoadBuffer(ui_file);
 
-    // Create Glut window
+    // Create OpenGL window
     const int panel_width = 200;
     pangolin::CreateWindowAndBind("Main",w + panel_width,h);
 

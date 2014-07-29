@@ -4,7 +4,7 @@
 
 int main( int /*argc*/, char* argv[] )
 {
-  // Create OpenGL window in single line thanks to GLUT
+  // Create OpenGL window in single line
   pangolin::CreateWindowAndBind("Main",640,480);
 
   // Data logger object

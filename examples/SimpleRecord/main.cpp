@@ -19,7 +19,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
     pangolin::VideoOutput recorder( record_uri );
     recorder.AddStream(w,h, "YUV420P");
 
-    // Create Glut window
+    // Create OpenGL window
     pangolin::CreateWindowAndBind("Main",w,h);
 
     // Create viewport for video with fixed aspect

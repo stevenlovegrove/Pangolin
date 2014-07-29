@@ -36,7 +36,7 @@ int main( int /*argc*/, char* argv[] )
   // Load configuration data
   pangolin::ParseVarsFile("app.cfg");
 
-  // Create OpenGL window in single line thanks to GLUT
+  // Create OpenGL window in single line
   pangolin::CreateWindowAndBind("Main",640,480);
   
   // 3D Mouse handler requires depth testing to be enabled

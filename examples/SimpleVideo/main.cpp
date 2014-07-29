@@ -41,7 +41,7 @@ void VideoSample(const std::string uri)
     GLenum glformat;
     SetGlFormat(glchannels, glformat, vid_fmt);
     
-    // Create Glut window
+    // Create OpenGL window
     pangolin::CreateWindowAndBind("Main",w,h);
 
     // Create viewport for video with fixed aspect
