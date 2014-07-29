@@ -125,7 +125,7 @@ int main( int /*argc*/, char* argv[] )
 
     // Render some stuff
     glColor3f(1.0,1.0,1.0);
-    glutWireTeapot(1.0);
+    pangolin::glDrawColouredCube();
 
     // Swap frames and Process Events
     pangolin::FinishFrame();

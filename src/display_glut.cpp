@@ -27,6 +27,7 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/glinclude.h>
+#include <pangolin/glglut.h>
 #include <pangolin/display.h>
 #include <pangolin/display_glut.h>
 #include <pangolin/display_internal.h>

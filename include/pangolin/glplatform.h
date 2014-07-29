@@ -53,24 +53,6 @@
     #include <GL/glew.h>
 #endif
 
-#ifdef HAVE_GLUT
-    #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-        #include <GLUT/glut.h>
-        #define HAVE_GLUT_APPLE_FRAMEWORK
-
-        inline void glutBitmapString(void* font, const unsigned char* str)
-        {
-            const unsigned char* s = str;
-            while(*s != 0) {
-                glutBitmapCharacter(font, *s);
-                ++s;
-            }
-        }
-    #else
-        #include <GL/freeglut.h>
-    #endif // HAVE_APPLE_OPENGL_FRAMEWORK
-#endif // HAVE_GLUT
-
 #ifdef HAVE_GLES
     #if defined(_ANDROID_)
         #include <EGL/egl.h>
