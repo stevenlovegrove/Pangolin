@@ -294,9 +294,10 @@ endif()
 
 find_package(PNG QUIET)
 if(PNG_FOUND)
+  # (ZLIB is also found by FindPNG.cmake as its dependency)
   set(HAVE_PNG 1)
   list(APPEND INTERNAL_INC ${PNG_INCLUDE_DIR} )
-  list(APPEND LINK_LIBS ${PNG_LIBRARY} )
+  list(APPEND LINK_LIBS ${PNG_LIBRARY} ${ZLIB_LIBRARY} )
   message(STATUS "libpng Found and Enabled")
 endif()
 
