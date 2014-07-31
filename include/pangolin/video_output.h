@@ -50,7 +50,7 @@ namespace pangolin
 {
 
 //! Interface for a single video stream within a VideoOutput target
-struct VideoOutputStreamInterface
+struct PANGOLIN_EXPORT VideoOutputStreamInterface
 {
     virtual ~VideoOutputStreamInterface() {}
     virtual void WriteImage(unsigned char* img, int w, int h, const std::string& format, double time_s = -1) = 0;
@@ -58,7 +58,7 @@ struct VideoOutputStreamInterface
 };
 
 //! Interface to video recording destinations
-struct VideoOutputInterface
+struct PANGOLIN_EXPORT VideoOutputInterface
 {
     virtual ~VideoOutputInterface() {}
     virtual void AddStream(int w, int h, const std::string& encoder_fmt) = 0;
