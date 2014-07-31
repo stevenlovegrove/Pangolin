@@ -5,7 +5,6 @@
  **/
 
 #include <pangolin/pangolin.h>
-#include <pangolin/video.h>
 #include <pangolin/video_record_repeat.h>
 #include <pangolin/input_record_repeat.h>
 

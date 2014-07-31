@@ -5,7 +5,6 @@
  **/
 
 #include <pangolin/pangolin.h>
-#include <pangolin/video.h>
 
 void SetGlFormat(GLint& glchannels, GLenum& glformat, const pangolin::VideoPixelFormat& fmt)
 {

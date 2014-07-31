@@ -5,8 +5,6 @@
  **/
 
 #include <pangolin/pangolin.h>
-#include <pangolin/video.h>
-#include <pangolin/video_recorder.h>
 
 void RecordSample(const std::string input_uri, const std::string record_uri)
 {
