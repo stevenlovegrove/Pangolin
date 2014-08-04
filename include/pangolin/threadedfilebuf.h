@@ -50,6 +50,9 @@ public:
 protected:
     //! Override streambuf::xsputn for asynchronous write
     std::streamsize xsputn(const char * s, std::streamsize n);
+
+    //! Override streambuf::overflow for asynchronous write
+    int overflow(int c);
     
     std::filebuf file;
     char* mem_buffer;

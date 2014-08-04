@@ -97,6 +97,35 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
     return num_bytes;
 }
 
+int threadedfilebuf::overflow(int c)
+{
+    const std::streamsize num_bytes = 1;
+
+    if( num_bytes > mem_max_size )
+        throw exception();
+
+    {
+        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+
+        // wait until there is space to write into buffer
+        while( mem_size + num_bytes > mem_max_size ) {
+            cond_dequeued.wait(lock);
+        }
+
+        // add image to end of mem_buffer
+        mem_buffer[mem_end] = c;
+        mem_end += num_bytes;
+        mem_size += num_bytes;
+
+        if(mem_end == mem_max_size)
+            mem_end = 0;
+    }
+
+    cond_queued.notify_one();
+
+    return num_bytes;
+}
+
 void threadedfilebuf::operator()()
 {
     std::streamsize data_to_write = 0;
