@@ -33,7 +33,9 @@
 #ifdef BUILD_PANGOLIN_GUI
   #include <pangolin/gl/gl.h>
   #include <pangolin/gl/gldraw.h>
+  #include <pangolin/gl/glvbo.h>
   #include <pangolin/gl/glstate.h>
+  #include <pangolin/gl/colour.h>
   #include <pangolin/display/display.h>
   #include <pangolin/display/view.h>
   #ifdef HAVE_GLUT
@@ -58,6 +60,8 @@
   #include <pangolin/video/video.h>
   #include <pangolin/video/video_output.h>
 #endif // BUILD_PANGOLIN_VIDEO
+
+#include <pangolin/image/image_load.h>
 
 // Let other libraries headers know about Pangolin
 #define HAVE_PANGOLIN

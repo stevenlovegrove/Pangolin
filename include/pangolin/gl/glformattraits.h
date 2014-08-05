@@ -28,7 +28,7 @@
 #ifndef PANGOLIN_GLFORMATTRAITS_H
 #define PANGOLIN_GLFORMATTRAITS_H
 
-#include <pangolin/glplatform.h>
+#include <pangolin/gl/glplatform.h>
 
 namespace pangolin
 {

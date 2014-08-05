@@ -28,10 +28,10 @@
 #ifndef PANGOLIN_GLTEXTURECACHE_H
 #define PANGOLIN_GLTEXTURECACHE_H
 
-#include <pangolin/gl.h>
+#include <pangolin/gl/gl.h>
 #include <pangolin/gl/glformattraits.h>
 #include <pangolin/compat/memory.h>
-#include <pangolin/image.h>
+#include <pangolin/image/image.h>
 
 namespace pangolin
 {

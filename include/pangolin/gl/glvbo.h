@@ -28,7 +28,7 @@
 #ifndef PANGOLIN_GLVBO_H
 #define PANGOLIN_GLVBO_H
 
-#include <pangolin/gl.h>
+#include <pangolin/gl/gl.h>
 
 namespace pangolin
 {
