@@ -76,7 +76,7 @@ public:
     
     //! data_layout normally one of GL_LUMINANCE, GL_RGB, ...
     //! data_type normally one of GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_FLOAT
-    void Upload(const void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT);
+    void Upload(const void* image, GLenum data_format = GL_LUMINANCE, GLenum data_type = GL_FLOAT);
     
     //! Upload data to texture, overwriting a sub-region of it.
     //! data ptr contains packed data_w x data_h of pixel data.
@@ -84,7 +84,7 @@ public:
         const void* data,
         unsigned int tex_x_offset, unsigned int tex_y_offset,
         unsigned int data_w, unsigned int data_h,
-        GLenum data_layout, GLenum data_type
+        GLenum data_format, GLenum data_type
     );
 
     void LoadFromFile(const std::string& filename, bool sampling_linear = true);

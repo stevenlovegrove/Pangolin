@@ -44,11 +44,14 @@ public:
         return instance;
     }
 
-    template<typename T>
-    GlTexture& GlTex(int w, int h)
+    GlTexture& GlTex(int w, int h, GLint internal_format, GLint glformat, GLenum gltype)
     {
+        const long key =
+            (((long)internal_format)<<20) ^
+            (((long)glformat)<<10) ^ gltype;
+
         // Lookup texture
-        boostd::shared_ptr<GlTexture>& ptex = texture_map[typeid(T).name()];
+        boostd::shared_ptr<GlTexture>& ptex = texture_map[key];
         if(!ptex) {
             ptex = boostd::shared_ptr<GlTexture>(new GlTexture());
         }
@@ -58,18 +61,27 @@ public:
         if(!tex.tid || tex.width < w || tex.height < h) {
             tex.Reinitialise(
                 std::max(tex.width,w), std::max(tex.height,h),
-                GlFormatTraits<T>::glinternalformat, default_sampling_linear, 0,
-                GlFormatTraits<T>::glformat,
-                GlFormatTraits<T>::gltype
+                internal_format, default_sampling_linear, 0,
+                glformat, gltype
             );
         }
 
         return tex;
     }
 
+    template<typename T>
+    GlTexture& GlTex(int w, int h)
+    {
+        return GlTex( w,h,
+            GlFormatTraits<T>::glinternalformat,
+            GlFormatTraits<T>::glformat,
+            GlFormatTraits<T>::gltype
+        );
+    }
+
 protected:
     bool default_sampling_linear;
-    std::map<const char*, boostd::shared_ptr<GlTexture> > texture_map;
+    std::map<long, boostd::shared_ptr<GlTexture> > texture_map;
 
     // Protected constructor
     TextureCache()

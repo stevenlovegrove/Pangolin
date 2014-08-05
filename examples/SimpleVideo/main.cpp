@@ -6,19 +6,19 @@
 
 #include <pangolin/pangolin.h>
 
-void SetGlFormat(GLint& glchannels, GLenum& glformat, const pangolin::VideoPixelFormat& fmt)
+void SetGlFormat(GLint& glformat, GLenum& gltype, const pangolin::VideoPixelFormat& fmt)
 {
     switch( fmt.channels) {
-    case 1: glchannels = GL_LUMINANCE; break;
-    case 3: glchannels = GL_RGB; break;
-    case 4: glchannels = GL_RGBA; break;
+    case 1: glformat = GL_LUMINANCE; break;
+    case 3: glformat = GL_RGB; break;
+    case 4: glformat = GL_RGBA; break;
     default: throw std::runtime_error("Unable to display video format");
     }
 
     switch (fmt.channel_bits[0]) {
-    case 8: glformat = GL_UNSIGNED_BYTE; break;
-    case 16: glformat = GL_UNSIGNED_SHORT; break;
-    case 32: glformat = GL_FLOAT; break;
+    case 8: gltype = GL_UNSIGNED_BYTE; break;
+    case 16: gltype = GL_UNSIGNED_SHORT; break;
+    case 32: gltype = GL_FLOAT; break;
     default: throw std::runtime_error("Unknown channel format");
     }
 }
@@ -30,15 +30,11 @@ void VideoSample(const std::string uri)
     const pangolin::VideoPixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();
-#if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    const float scale = video.VideoUri().Get<float>("scale", 1.0f);
-    const float bias  = video.VideoUri().Get<float>("bias", 0.0f);
-#endif
 
     // Work out appropriate GL channel and format options
-    GLint glchannels;
-    GLenum glformat;
-    SetGlFormat(glchannels, glformat, vid_fmt);
+    GLint glformat;
+    GLenum gltype;
+    SetGlFormat(glformat, gltype, vid_fmt);
     
     // Create OpenGL window
     pangolin::CreateWindowAndBind("Main",w,h);
@@ -47,7 +43,7 @@ void VideoSample(const std::string uri)
     pangolin::View& vVideo = pangolin::Display("Video").SetAspect((float)w/h);
 
     // OpenGl Texture for video frame.
-    pangolin::GlTexture texVideo(w,h,glchannels,false,0,glchannels,glformat);
+    pangolin::GlTexture texVideo(w,h,glformat,false,0,glformat,gltype);
 
     unsigned char* img = new unsigned char[video.SizeBytes()];
 
@@ -56,18 +52,12 @@ void VideoSample(const std::string uri)
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
         if( video.GrabNext(img,true) ) {
-            texVideo.Upload( img, glchannels, glformat );
+            texVideo.Upload( img, glformat, gltype );
         }
 
         // Activate video viewport and render texture
         vVideo.Activate();
-#if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-        pangolin::GlSlUtilities::Scale(scale, bias);
         texVideo.RenderToViewportFlipY();
-        pangolin::GlSlUtilities::UseNone();
-#else
-        texVideo.RenderToViewportFlipY();
-#endif
 
         // Swap back buffer with front and process window events via GLUT
         pangolin::FinishFrame();
