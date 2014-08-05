@@ -37,7 +37,7 @@
 #include <queue>
 
 #ifdef BUILD_PANGOLIN_VIDEO
-#include <pangolin/video_output.h>
+#include <pangolin/video/video_output.h>
 #endif // BUILD_PANGOLIN_VIDEO
 
 #ifdef HAVE_CVARS

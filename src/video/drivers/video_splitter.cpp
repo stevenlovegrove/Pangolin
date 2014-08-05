@@ -25,61 +25,59 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_IMAGE_LOAD_H
-#define PANGOLIN_IMAGE_LOAD_H
+#include <pangolin/video/drivers/video_splitter.h>
 
-#include <pangolin/video/video_common.h>
-#include <pangolin/image.h>
-
-namespace pangolin {
-
-enum ImageFileType
+namespace pangolin
 {
-    ImageFileTypePpm,
-    ImageFileTypeTga,
-    ImageFileTypePng,
-    ImageFileTypeJpg,
-    ImageFileTypeTiff,
-    ImageFileTypeGif,
-    ImageFileTypeUnknown
-};
 
-struct TypedImage : public Image<unsigned char>
+VideoSplitter::VideoSplitter(VideoInterface *videoin, const std::vector<StreamInfo>& streams)
+    : videoin(videoin), streams(streams)
 {
-    inline TypedImage()
-        : Image()
-    {
+    if(videoin->Streams().size() != 1)
+        throw VideoException("VideoSplitter input must have exactly one stream");
+
+    // Make sure no stream over-runs input stream
+    for(unsigned int i=0; i < streams.size(); ++i) {
+        if(videoin->Streams()[0].SizeBytes() < (size_t)streams[i].Offset() + streams[i].SizeBytes() )
+            throw VideoException("VideoSplitter: stream extends past end of input");
     }
-
-    inline TypedImage(size_t w, size_t h, size_t pitch, unsigned char* ptr, pangolin::VideoPixelFormat fmt)
-        : Image(w,h,pitch,ptr), fmt(fmt)
-    {
-    }    
-    
-    pangolin::VideoPixelFormat fmt;
-};
-
-PANGOLIN_EXPORT
-std::string FileLowercaseExtention(const std::string& filename);
-
-PANGOLIN_EXPORT
-ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes);
-
-PANGOLIN_EXPORT
-ImageFileType FileTypeExtension(const std::string& ext);
-
-PANGOLIN_EXPORT
-ImageFileType FileType(const std::string& filename);
-
-PANGOLIN_EXPORT
-TypedImage LoadImage(const std::string& filename, ImageFileType file_type);
-
-PANGOLIN_EXPORT
-TypedImage LoadImage(const std::string& filename);
-
-PANGOLIN_EXPORT
-void FreeImage(TypedImage img);
-
 }
 
-#endif // PANGOLIN_IMAGE_LOAD_H
+VideoSplitter::~VideoSplitter()
+{
+    delete videoin;
+}
+
+size_t VideoSplitter::SizeBytes() const
+{
+    return videoin->SizeBytes();
+}
+
+const std::vector<StreamInfo>& VideoSplitter::Streams() const
+{
+    return streams;
+}
+
+void VideoSplitter::Start()
+{
+    videoin->Start();
+}
+
+void VideoSplitter::Stop()
+{
+    videoin->Stop();
+}
+
+bool VideoSplitter::GrabNext( unsigned char* image, bool wait )
+{
+    return videoin->GrabNext(image, wait);
+}
+
+bool VideoSplitter::GrabNewest( unsigned char* image, bool wait )
+{
+    return videoin->GrabNewest(image, wait);
+}
+
+
+
+}

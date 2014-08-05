@@ -30,7 +30,7 @@
 
 #include <pangolin/var/varvaluegeneric.h>
 #include <pangolin/compat/type_traits.h>
-#include <pangolin/type_convert.h>
+#include <pangolin/utils/type_convert.h>
 
 namespace pangolin
 {

@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,42 +25,41 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_FIREWIRE_DEINTERLACE_H
+#define PANGOLIN_FIREWIRE_DEINTERLACE_H
 
-#include <pangolin/platform.h>
+#include <pangolin/video/video.h>
+#include <vector>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl.h>
-  #include <pangolin/gldraw.h>
-  #include <pangolin/glstate.h>
-  #include <pangolin/display.h>
-  #include <pangolin/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+class PANGOLIN_EXPORT FirewireDeinterlace
+    : public VideoInterface
+{
+public:
+    FirewireDeinterlace(VideoInterface* videoin);
+    ~FirewireDeinterlace();
+    
+    size_t SizeBytes() const;
+    
+    const std::vector<StreamInfo>& Streams() const;
+    
+    void Start();
+    
+    void Stop();
+    
+    bool GrabNext( unsigned char* image, bool wait = true );
+    
+    bool GrabNewest( unsigned char* image, bool wait = true );    
+    
+protected:
+    VideoInterface* videoin;
+    std::vector<StreamInfo> streams;
+    unsigned char* buffer;
+};
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+}
 
-#endif // PANGOLIN_H
-
+#endif // PANGOLIN_FIREWIRE_DEINTERLACE_H

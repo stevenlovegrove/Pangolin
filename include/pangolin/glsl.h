@@ -37,7 +37,7 @@
 
 #include <pangolin/glplatform.h>
 #include <pangolin/colour.h>
-#include <pangolin/file_utils.h>
+#include <pangolin/utils/file_utils.h>
 #include <pangolin/opengl_render_state.h>
 
 #ifdef HAVE_GLES

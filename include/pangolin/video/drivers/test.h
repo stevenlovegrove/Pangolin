@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,42 +25,45 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_VIDEO_TEST_H
+#define PANGOLIN_VIDEO_TEST_H
 
-#include <pangolin/platform.h>
+#include <pangolin/pangolin.h>
+#include <pangolin/video/video.h>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl.h>
-  #include <pangolin/gldraw.h>
-  #include <pangolin/glstate.h>
-  #include <pangolin/display.h>
-  #include <pangolin/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+// Video class that outputs test video signal.
+class PANGOLIN_EXPORT TestVideo : public VideoInterface
+{
+public:
+    TestVideo(size_t w, size_t h, size_t n, std::string pix_fmt);
+    ~TestVideo();
+    
+    //! Implement VideoInput::Start()
+    void Start();
+    
+    //! Implement VideoInput::Stop()
+    void Stop();
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+    //! Implement VideoInput::SizeBytes()
+    size_t SizeBytes() const;
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+    //! Implement VideoInput::Streams()
+    const std::vector<StreamInfo>& Streams() const;
+    
+    //! Implement VideoInput::GrabNext()
+    bool GrabNext( unsigned char* image, bool wait = true );
+    
+    //! Implement VideoInput::GrabNewest()
+    bool GrabNewest( unsigned char* image, bool wait = true );
+    
+protected:
+    std::vector<StreamInfo> streams;
+    size_t size_bytes;
+};
 
-#endif // PANGOLIN_H
+}
 
+#endif // PANGOLIN_VIDEO_TEST_H

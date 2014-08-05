@@ -27,7 +27,7 @@
 
 #include <pangolin/var/varextra.h>
 #include <pangolin/var/varstate.h>
-#include <pangolin/file_utils.h>
+#include <pangolin/utils/file_utils.h>
 
 #include <iostream>
 #include <fstream>

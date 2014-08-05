@@ -25,42 +25,55 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_UVC_H
+#define PANGOLIN_UVC_H
 
-#include <pangolin/platform.h>
+#include <pangolin/pangolin.h>
+#include <pangolin/video/video.h>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl.h>
-  #include <pangolin/gldraw.h>
-  #include <pangolin/glstate.h>
-  #include <pangolin/display.h>
-  #include <pangolin/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+#include <libuvc/libuvc.h>
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+class PANGOLIN_EXPORT UvcVideo : public VideoInterface
+{
+public:
+    UvcVideo();
+    ~UvcVideo();
+    
+    void InitDevice(int vid, int pid, const char* sn, int width, int height, int fps);
+    void DeinitDevice();
+    
+    //! Implement VideoInput::Start()
+    void Start();
+    
+    //! Implement VideoInput::Stop()
+    void Stop();
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+    //! Implement VideoInput::SizeBytes()
+    size_t SizeBytes() const;
 
-#endif // PANGOLIN_H
+    //! Implement VideoInput::Streams()
+    const std::vector<StreamInfo>& Streams() const;
+    
+    //! Implement VideoInput::GrabNext()
+    bool GrabNext( unsigned char* image, bool wait = true );
+    
+    //! Implement VideoInput::GrabNewest()
+    bool GrabNewest( unsigned char* image, bool wait = true );
+    
+protected:
+    std::vector<StreamInfo> streams;
+    size_t size_bytes;
+    
+    uvc_context* ctx_;
+    uvc_device*  dev_;
+    uvc_device_handle*  devh_;
+    uvc_stream_ctrl_t ctrl_;
+    uvc_frame_t* frame_;
+};
 
+}
+
+#endif // PANGOLIN_UVC_H

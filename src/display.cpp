@@ -33,11 +33,13 @@
 #include <pangolin/platform.h>
 #include <pangolin/glinclude.h>
 #include <pangolin/glglut.h>
+#include <pangolin/gldraw.h>
 #include <pangolin/display.h>
 #include <pangolin/display_internal.h>
+#include <pangolin/handler.h>
 #include <pangolin/simple_math.h>
-#include <pangolin/timer.h>
-#include <pangolin/type_convert.h>
+#include <pangolin/utils/timer.h>
+#include <pangolin/utils/type_convert.h>
 
 #define GLUT_KEY_ESCAPE 27
 #define GLUT_KEY_TAB 9

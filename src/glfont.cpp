@@ -31,14 +31,14 @@
 #include <pangolin/glfont.h>
 #include <pangolin/glstate.h>
 #include <pangolin/image_load.h>
-#include <pangolin/type_convert.h>
+#include <pangolin/utils/type_convert.h>
 
 #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
 #include <pangolin/glsl.h>
 #endif
 
-#include <pangolin/xml/rapidxml.hpp>
-#include <pangolin/xml/rapidxml_utils.hpp>
+#include <pangolin/utils/xml/rapidxml.hpp>
+#include <pangolin/utils/xml/rapidxml_utils.hpp>
 
 #include <stdlib.h>
 #include <cstring>

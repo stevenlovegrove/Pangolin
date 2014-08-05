@@ -32,7 +32,7 @@
 #include <vector>
 #include <pangolin/platform.h>
 #include <pangolin/var/varvalue.h>
-#include <pangolin/file_utils.h>
+#include <pangolin/utils/file_utils.h>
 
 #ifdef HAVE_CVARS
 #include <CVars/CVar.h>

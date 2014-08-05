@@ -7,16 +7,17 @@ set( INCDIR "../include/pangolin")
 set(
   HEADERS
   ${INCDIR}/pangolin.h ${INCDIR}/platform.h
-  ${INCDIR}/simple_math.h ${INCDIR}/timer.h
+  ${INCDIR}/simple_math.h
   ${INCDIR}/gl.h ${INCDIR}/glinclude.h ${INCDIR}/gl_es_compat.h
   ${INCDIR}/gldraw.h ${INCDIR}/glvbo.h
   ${INCDIR}/glcuda.h ${INCDIR}/cg.h ${INCDIR}/glsl.h
   ${INCDIR}/image.h
-  ${INCDIR}/file_utils.h
+  ${INCDIR}/utils/timer.h
+  ${INCDIR}/utils/file_utils.h
 )
 
 ## Store list of source files
-set( SOURCES file_utils.cpp image_load.cpp video_common.cpp )
+set( SOURCES utils/file_utils.cpp image_load.cpp video/video_common.cpp )
 
 #######################################################
 ## User build options
@@ -63,16 +64,19 @@ endif()
 option(BUILD_PANGOLIN_VIDEO "Build support for Pangolin Video Utilities" ON)
 if(BUILD_PANGOLIN_VIDEO)
   list(APPEND HEADERS
-    ${INCDIR}/threadedfilebuf.h ${INCDIR}/video.h ${INCDIR}/video_common.h
-    ${INCDIR}/video_splitter.h ${INCDIR}/video_output.h
-    ${INCDIR}/video_recorder.h ${INCDIR}/video_record_repeat.h
-    ${INCDIR}/video/pvn_video.h
-    ${INCDIR}/video/test.h ${INCDIR}/video/images.h
+    ${INCDIR}/utils/threadedfilebuf.h
+    ${INCDIR}/video/video.h ${INCDIR}/video/video_common.h
+    ${INCDIR}/video/video_output.h
+    ${INCDIR}/video/video_recorder.h ${INCDIR}/video/video_record_repeat.h
+    ${INCDIR}/video/drivers/test.h ${INCDIR}/video/drivers/images.h
+    ${INCDIR}/video/drivers/video_splitter.h ${INCDIR}/video/drivers/pvn_video.h
   )
   list(APPEND SOURCES
-    threadedfilebuf.cpp video.cpp video_splitter.cpp video_output.cpp
-    video_recorder.cpp video_record_repeat.cpp video/pvn_video.cpp
-    video/test.cpp video/images.cpp
+    utils/threadedfilebuf.cpp
+    video/video.cpp video/video_output.cpp
+    video/video_recorder.cpp video/video_record_repeat.cpp
+    video/drivers/test.cpp video/drivers/images.cpp
+    video/drivers/video_splitter.cpp video/drivers/pvn_video.cpp
   )
 endif()
 
@@ -230,15 +234,15 @@ if(BUILD_PANGOLIN_VIDEO AND DC1394_FOUND)
   set(HAVE_DC1394 1)
   list(APPEND INTERNAL_INC  ${DC1394_INCLUDE_DIR} )
   list(APPEND LINK_LIBS  ${DC1394_LIBRARY} )
-  list(APPEND HEADERS ${INCDIR}/video/firewire.h ${INCDIR}/video/firewire_deinterlace.h )
-  list(APPEND SOURCES video/firewire.cpp video/firewire_deinterlace.cpp)
+  list(APPEND HEADERS ${INCDIR}/video/drivers/firewire.h ${INCDIR}/video/drivers/firewire_deinterlace.h )
+  list(APPEND SOURCES video/drivers/firewire.cpp video/drivers/firewire_deinterlace.cpp)
   message(STATUS "libdc1394 Found and Enabled")
 endif()
 
 if(BUILD_PANGOLIN_VIDEO AND _LINUX_)
   set(HAVE_V4L 1)
-  list(APPEND HEADERS ${INCDIR}/video/v4l.h)
-  list(APPEND SOURCES video/v4l.cpp)
+  list(APPEND HEADERS ${INCDIR}/video/drivers/v4l.h)
+  list(APPEND SOURCES video/drivers/v4l.cpp)
   message(STATUS "V4L Found and Enabled")
 endif()
 
@@ -247,8 +251,8 @@ if(BUILD_PANGOLIN_VIDEO AND FFMPEG_FOUND)
   set(HAVE_FFMPEG 1)
   list(APPEND INTERNAL_INC  ${FFMPEG_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${FFMPEG_LIBRARIES} )
-  list(APPEND HEADERS ${INCDIR}/video/ffmpeg.h)
-  list(APPEND SOURCES video/ffmpeg.cpp)
+  list(APPEND HEADERS ${INCDIR}/video/drivers/ffmpeg.h)
+  list(APPEND SOURCES video/drivers/ffmpeg.cpp)
   message(STATUS "ffmpeg Found and Enabled")
 endif()
 
@@ -257,8 +261,8 @@ if(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
   set(HAVE_OPENNI 1)
   list(APPEND INTERNAL_INC  ${OPENNI_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${OPENNI_LIBRARIES} )
-  list(APPEND HEADERS ${INCDIR}/video/openni.h )
-  list(APPEND SOURCES video/openni.cpp)
+  list(APPEND HEADERS ${INCDIR}/video/drivers/openni.h )
+  list(APPEND SOURCES video/drivers/openni.cpp)
   message(STATUS "OpenNI Found and Enabled")
 endif()
 
@@ -267,8 +271,8 @@ if(BUILD_PANGOLIN_VIDEO AND OPENNI2_FOUND)
   set(HAVE_OPENNI2 1)
   list(APPEND INTERNAL_INC  ${OPENNI2_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${OPENNI2_LIBRARIES} )
-  list(APPEND HEADERS ${INCDIR}/video/openni2.h )
-  list(APPEND SOURCES video/openni2.cpp)
+  list(APPEND HEADERS ${INCDIR}/video/drivers/openni2.h )
+  list(APPEND SOURCES video/drivers/openni2.cpp)
   message(STATUS "OpenNI2 Found and Enabled")
 endif()
 
@@ -277,8 +281,8 @@ if(BUILD_PANGOLIN_VIDEO AND uvc_FOUND)
   set(HAVE_UVC 1)
   list(APPEND INTERNAL_INC  ${uvc_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${uvc_LIBRARIES} )
-  list(APPEND HEADERS ${INCDIR}/video/uvc.h )
-  list(APPEND SOURCES video/uvc.cpp)
+  list(APPEND HEADERS ${INCDIR}/video/drivers/uvc.h )
+  list(APPEND SOURCES video/drivers/uvc.cpp)
   message(STATUS "libuvc Found and Enabled")
 endif()
 
@@ -287,8 +291,8 @@ if(BUILD_PANGOLIN_VIDEO AND DepthSense_FOUND)
   set(HAVE_DEPTHSENSE 1)
   list(APPEND INTERNAL_INC  ${DepthSense_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${DepthSense_LIBRARIES} )
-  list(APPEND HEADERS ${INCDIR}/video/depthsense.h )
-  list(APPEND SOURCES video/depthsense.cpp)
+  list(APPEND HEADERS ${INCDIR}/video/drivers/depthsense.h )
+  list(APPEND SOURCES video/drivers/depthsense.cpp)
   message(STATUS "DepthSense Found and Enabled")
 endif()
 

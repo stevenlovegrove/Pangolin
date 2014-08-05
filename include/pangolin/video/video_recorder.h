@@ -25,42 +25,54 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_VIDEO_RECORDER_H
+#define PANGOLIN_VIDEO_RECORDER_H
 
-#include <pangolin/platform.h>
+#include <vector>
+#include <string>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl.h>
-  #include <pangolin/gldraw.h>
-  #include <pangolin/glstate.h>
-  #include <pangolin/display.h>
-  #include <pangolin/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+#include <pangolin/video/drivers/pvn_video.h>
+#include <pangolin/utils/threadedfilebuf.h>
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+struct VideoRecorderException : std::exception
+{
+    VideoRecorderException(std::string str) : desc(str) {}
+    VideoRecorderException(std::string str, std::string detail) {
+        desc = str + "\n\t" + detail;
+    }
+    ~VideoRecorderException() throw() {}
+    const char* what() const throw() { return desc.c_str(); }
+    std::string desc;
+};
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+class PANGOLIN_EXPORT VideoRecorder
+{
+public:
+    VideoRecorder(
+            const std::string& filename,
+            int stream0_width, int stream0_height, std::string stream0_fmt,
+            unsigned int buffer_size_bytes = 1024*1024*100
+            );
+    ~VideoRecorder();
+    
+    // Save img (with correct format and resolution) to video, returning video frame id.
+    int RecordFrame(uint8_t* img);
+    
+    void operator()();
+    
+protected:       
+    int frames;
+    std::vector<StreamInfo> streams;
+    
+    threadedfilebuf buffer;
+    std::ostream writer;
+    
+    void WriteFileHeader();
+};
 
-#endif // PANGOLIN_H
+}
 
+#endif // PANGOLIN_VIDEO_RECORDER_H

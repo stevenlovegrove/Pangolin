@@ -25,42 +25,50 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_VIDEO_RECORD_REPEAT_H
+#define PANGOLIN_VIDEO_RECORD_REPEAT_H
 
-#include <pangolin/platform.h>
+#include <pangolin/video/video.h>
+#include <pangolin/video/video_recorder.h>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl.h>
-  #include <pangolin/gldraw.h>
-  #include <pangolin/glstate.h>
-  #include <pangolin/display.h>
-  #include <pangolin/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+struct PANGOLIN_EXPORT VideoRecordRepeat
+{
+    VideoRecordRepeat( std::string uri, std::string save_filename, int buffer_size_bytes );
+    ~VideoRecordRepeat();
+    
+    unsigned Width() const;
+    unsigned Height() const;
+    size_t SizeBytes() const;
+    VideoPixelFormat PixFormat() const;
+    
+    void Start();
+    void Stop();
+    bool GrabNext( unsigned char* image, bool wait = true );
+    bool GrabNewest( unsigned char* image, bool wait = true );
+    
+    void Record();
+    void Play(bool realtime = true);
+    void Source();
+    
+    int FrameId();
+    
+    bool IsRecording() const;
+    bool IsPlaying() const;
+    
+protected:
+    VideoInterface* video_src;
+    VideoInterface* video_file;
+    VideoRecorder* video_recorder;
+    
+    std::string filename;
+    int buffer_size_bytes;
+    
+    int frame_num;
+};
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+}
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
-
-#endif // PANGOLIN_H
-
+#endif // PANGOLIN_VIDEO_RECORD_REPEAT_H

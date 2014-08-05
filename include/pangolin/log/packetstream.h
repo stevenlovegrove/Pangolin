@@ -29,7 +29,7 @@
 #define PANGOLIN_PACKETSTREAM_H
 
 #include <pangolin/platform.h>
-#include <pangolin/threadedfilebuf.h>
+#include <pangolin/utils/threadedfilebuf.h>
 #include <pangolin/log/packetstreamtypemap.h>
 
 namespace pangolin

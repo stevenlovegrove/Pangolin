@@ -25,42 +25,47 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#include <pangolin/video/video_recorder.h>
 
-#include <pangolin/platform.h>
+using namespace std;
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl.h>
-  #include <pangolin/gldraw.h>
-  #include <pangolin/glstate.h>
-  #include <pangolin/display.h>
-  #include <pangolin/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+VideoRecorder::VideoRecorder(
+    const std::string& filename,
+    int stream0_width, int stream0_height, std::string stream0_fmt,
+    unsigned int buffer_size_bytes
+    ) : frames(0), buffer(filename, buffer_size_bytes), writer(&buffer)
+{
+    const VideoPixelFormat fmt = VideoFormatFromString(stream0_fmt);
+    const StreamInfo strm0(fmt, stream0_width, stream0_height, (stream0_width*fmt.bpp)/8, 0);
+    streams.push_back(strm0);
+}
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+VideoRecorder::~VideoRecorder()
+{
+}
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+void VideoRecorder::WriteFileHeader()
+{
+    writer << streams[0].PixFormat().format << "\n";
+    writer << streams[0].Width()  << "\n";
+    writer << streams[0].Height()  << "\n";
+    writer << "30.0\n";
+}
 
-#endif // PANGOLIN_H
+int VideoRecorder::RecordFrame(uint8_t* img)
+{
+    if( streams.size() != 1 )
+        throw VideoRecorderException("Incorrect number of frames specified");
 
+    if(frames==0)
+        WriteFileHeader();
+
+    writer.write((char*)img, streams[0].SizeBytes() );
+
+    return frames++;
+}
+
+}
