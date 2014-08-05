@@ -45,24 +45,22 @@
 //  e.g. ffmpeg:[fps=30,bps=1000000,unique_filename]//output_file.avi
 
 #include <pangolin/video_common.h>
+#include <pangolin/video.h>
 
 namespace pangolin
 {
-
-//! Interface for a single video stream within a VideoOutput target
-struct PANGOLIN_EXPORT VideoOutputStreamInterface
-{
-    virtual ~VideoOutputStreamInterface() {}
-    virtual void WriteImage(unsigned char* img, int w, int h, const std::string& format, double time_s = -1) = 0;
-    virtual double BaseFrameTime() = 0;
-};
 
 //! Interface to video recording destinations
 struct PANGOLIN_EXPORT VideoOutputInterface
 {
     virtual ~VideoOutputInterface() {}
-    virtual void AddStream(int w, int h, const std::string& encoder_fmt) = 0;
-    virtual VideoOutputStreamInterface& operator[](size_t i) = 0;
+
+    //! Get format and dimensions of all video streams
+    virtual const std::vector<StreamInfo>& Streams() const = 0;
+
+    virtual void AddStreams(const std::vector<StreamInfo>& streams) = 0;
+
+    virtual int WriteStreams(unsigned char* data) = 0;
 };
 
 //! VideoOutput wrap to generically construct instances of VideoOutputInterface.
@@ -75,18 +73,26 @@ public:
     
     bool IsOpen() const;
     void Open(const std::string& uri);
-    void Reset();
-    
-    void AddStream(int w, int h, const std::string& encoder_fmt);
-    VideoOutputStreamInterface& operator[](size_t i);
+    void Close();
+
+    const std::vector<StreamInfo>& Streams() const;
+
+    void AddStreams(const std::vector<StreamInfo>& streams);
+
+    int WriteStreams(unsigned char* data);
     
 protected:
+    Uri uri;
     VideoOutputInterface* recorder;
 };
 
 //! Open VideoOutput Interface from string specification (as described in this files header)
 PANGOLIN_EXPORT
 VideoOutputInterface* OpenVideoOutput(std::string str_uri);
+
+//! Open VideoOutput Interface from Uri specification
+PANGOLIN_EXPORT
+VideoOutputInterface* OpenVideoOutput(const Uri& uri);
 
 }
 

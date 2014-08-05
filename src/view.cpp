@@ -475,9 +475,12 @@ void View::RecordOnRender(const std::string& record_uri)
         Viewport area = GetBounds();
         context->record_view = this;
         context->recorder.Open(record_uri);
-        context->recorder.AddStream(area.w, area.h, "YUV420P");
+        std::vector<StreamInfo> streams;
+        const VideoPixelFormat fmt = VideoFormatFromString("RGB24");
+        streams.push_back( StreamInfo(fmt, area.w, area.h, area.w * fmt.bpp) );
+        context->recorder.AddStreams(streams);
     }else{
-        context->recorder.Reset();
+        context->recorder.Close();
     }
 #else
     std::cerr << "Error: Video Support hasn't been built into this library." << std::endl;

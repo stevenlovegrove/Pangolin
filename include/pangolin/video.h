@@ -108,7 +108,7 @@ public:
     inline StreamInfo(VideoPixelFormat fmt, const Image<unsigned char> img_offset )
         : fmt(fmt), img_offset(img_offset) {}
 
-    inline StreamInfo(VideoPixelFormat fmt, size_t w, size_t h, size_t pitch, unsigned char* offset)
+    inline StreamInfo(VideoPixelFormat fmt, size_t w, size_t h, size_t pitch, unsigned char* offset = 0)
         : fmt(fmt), img_offset(w,h,pitch,offset) {}
     
     //! Format representing how image is layed out in memory

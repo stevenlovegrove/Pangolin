@@ -276,18 +276,23 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
 void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 {
 #ifndef HAVE_GLES    
+    const StreamInfo& si = video.Streams()[0];
+    if(video.Streams().size()==0 || (int)si.Width() != v.w || (int)si.Height() != v.h) {
+        video.Close();
+        return;
+    }
+
     static basetime last_time = TimeNow();
     const basetime time_now = TimeNow();
+    last_time = time_now;
     
-    if(TimeDiff_s(last_time,time_now) > video[0].BaseFrameTime() ) {
-        last_time = time_now;
-        unsigned char* img = new unsigned char[v.w*v.h*4];
-        glReadBuffer(GL_BACK);
-        glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?        
-        glReadPixels(v.l, v.b, v.w, v.h, GL_RGB, GL_UNSIGNED_BYTE, img );
-        video[0].WriteImage(img, v.w, -v.h, "RGB24" );
-        delete[] img;
-    }
+    static std::vector<unsigned char> img;
+    img.resize(v.w*v.h*4);
+
+    glReadBuffer(GL_BACK);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?
+    glReadPixels(v.l, v.b, v.w, v.h, GL_RGB, GL_UNSIGNED_BYTE, &img[0] );
+    video.WriteStreams(&img[0]);
     
     const int ticks = (int)TimeNow_s();
     if( ticks % 2 )
@@ -389,15 +394,15 @@ bool CVarRecordStart( std::vector<std::string>* args )
     }else{
 #ifdef HAVE_GLCONSOLE
         context->console.EnterLogLine("USAGE: pango.record.start uri [view_name]", LINEPROP_ERROR);
-        context->console.EnterLogLine("   eg: pango.record.start ffmpeg://screencap.avi", LINEPROP_ERROR);
+        context->console.EnterLogLine("   eg: pango.record.start ffmpeg[fps=60]://screencap.avi", LINEPROP_ERROR);
 #endif // HAVE_GLCONSOLE
     }
     return false;
 }
 
-bool CVarRecordStop( std::vector<std::string>* args )
+bool CVarRecordStop( std::vector<std::string>* /*args*/ )
 {
-    context->recorder.Reset();
+    context->recorder.Close();
     return true;
 }
 #endif // BUILD_PANGOLIN_VIDEO

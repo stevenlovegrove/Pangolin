@@ -154,31 +154,8 @@ protected:
 typedef AVCodecID CodecID;
 #endif
 
-class FfmpegVideoOutput;
-class PANGOLIN_EXPORT FfmpegVideoOutputStream
-    : public VideoOutputStreamInterface
-{
-public:
-    FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height );
-    ~FfmpegVideoOutputStream();
-    
-    void WriteAvPacket(AVPacket* pkt);
-    void WriteFrame(AVFrame* frame);
-    void WriteImage(AVPicture& src_picture, int w, int h, PixelFormat fmt, int64_t pts);
-    void WriteImage(uint8_t* img, int w, int h, const std::string& input_format, int64_t pts);
-    void WriteImage(uint8_t* img, int w, int h, const std::string& input_format, double time);
-    
-    double BaseFrameTime();
-    
-protected:
-    FfmpegVideoOutput& recorder;
-    AVPicture dst_picture;
-    int64_t last_pts;
-    
-    // These pointers are owned by class
-    AVStream* stream;
-    SwsContext *sws_ctx;
-};
+// Forward declaration
+class FfmpegVideoOutputStream;
 
 class PANGOLIN_EXPORT FfmpegVideoOutput
     : public VideoOutputInterface
@@ -187,12 +164,10 @@ class PANGOLIN_EXPORT FfmpegVideoOutput
 public:
     FfmpegVideoOutput( const std::string& filename, int base_frame_rate, int bit_rate );
     ~FfmpegVideoOutput();
-    
-    void AddStream(int w, int h, const std::string& encoder_fmt);
-    VideoOutputStreamInterface& operator[](size_t i);    
-    
-//    // Save img (with correct format and resolution) to video, returning video frame id.
-//    int RecordFrame(uint8_t* img);
+
+    const std::vector<StreamInfo>& Streams() const;
+    void AddStreams(const std::vector<StreamInfo>& streams);
+    int WriteStreams(unsigned char* data);
     
 protected:
     void Initialise(std::string filename);
@@ -203,7 +178,8 @@ protected:
     bool started;
     AVFormatContext *oc;
     std::vector<FfmpegVideoOutputStream*> streams;
-    
+    std::vector<StreamInfo> strs;
+
     int frame_count;
     
     int base_frame_rate;

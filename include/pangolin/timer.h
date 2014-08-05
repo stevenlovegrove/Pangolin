@@ -52,10 +52,14 @@ inline basetime TimeNow()
     return t;
 }
 
-inline double TimeNow_s()
+inline double Time_s(basetime t)
 {
-    basetime tnow = TimeNow();
-    return (double)tnow.tv_sec + 1E-6 * (double)tnow.tv_usec;
+    return (double)t.tv_sec + 1E-6 * (double)t.tv_usec;
+}
+
+inline double TimeDiff_s(basetime start, basetime end)
+{
+    return (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_usec - start.tv_usec) * 1E-6;
 }
 
 inline basetime TimeFromSeconds(double seconds)
@@ -76,13 +80,8 @@ inline basetime TimeAdd(basetime t1, basetime t2)
         t.tv_usec -= 1E6;
         t.tv_sec += 1;
     }
-    
-    return t;
-}
 
-inline double TimeDiff_s(basetime start, basetime end)
-{
-    return (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_usec - start.tv_usec) * 1E-6;
+    return t;
 }
 #endif
 
@@ -96,12 +95,11 @@ inline basetime TimeNow()
     return t;
 }
 
-inline double TimeNow_s()
+inline double Time_s(basetime t)
 {
     LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
-    basetime tnow = TimeNow();
-    return (double)tnow.QuadPart / (double)f.QuadPart;
+    return (double)t.QuadPart / (double)f.QuadPart;
 }
 
 inline double TimeDiff_s(basetime start, basetime end)
@@ -127,6 +125,12 @@ inline basetime TimeAdd(basetime t1, basetime t2)
     return t;
 }
 #endif
+
+inline double TimeNow_s()
+{
+    return Time_s(TimeNow());
+}
+
 
 inline basetime WaitUntil(basetime t)
 {

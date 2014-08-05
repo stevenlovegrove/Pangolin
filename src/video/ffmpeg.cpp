@@ -489,6 +489,39 @@ static AVStream* CreateStream(AVFormatContext *oc, CodecID codec_id, uint64_t fr
     return stream;
 }
 
+class FfmpegVideoOutputStream
+{
+public:
+    FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate, int bit_rate, const StreamInfo& input_info );
+    ~FfmpegVideoOutputStream();
+
+    const StreamInfo& GetStreamInfo() const;
+
+    void WriteImage(const uint8_t* img, int w, int h, double time);
+
+protected:
+    void WriteAvPacket(AVPacket* pkt);
+    void WriteFrame(AVFrame* frame);
+    double BaseFrameTime();
+
+    FfmpegVideoOutput& recorder;
+
+    StreamInfo input_info;
+    PixelFormat input_format;
+    PixelFormat output_format;
+
+    AVPicture src_picture;
+    AVPicture dst_picture;
+    int64_t last_pts;
+
+    // These pointers are owned by class
+    AVStream* stream;
+    SwsContext *sws_ctx;
+    AVFrame* frame;
+
+    bool flip;
+};
+
 void FfmpegVideoOutputStream::WriteAvPacket(AVPacket* pkt)
 {
     if (pkt->size) {
@@ -541,23 +574,32 @@ void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
     av_free_packet(&pkt);
 }
 
-void FfmpegVideoOutputStream::WriteImage(AVPicture& src_picture, int w, int h, PixelFormat fmt, int64_t pts)
+void FfmpegVideoOutputStream::WriteImage(const uint8_t* img, int w, int h, double time=-1.0)
 {
+    const int64_t pts = (time >= 0) ? time / BaseFrameTime() : last_pts + 1;
+
+    recorder.StartStream();
+
     AVCodecContext *c = stream->codec;
-    
-    AVFrame* frame = avcodec_alloc_frame();
-    frame->pts = pts;
-    frame->width = w;
-    frame->height = h;
-        
-    if (c->pix_fmt != fmt || c->width != w || c->height != h) {
+
+    if(flip) {
+        avpicture_fill(&src_picture,img,input_format,w,h);
+        for(int i=0; i<4; ++i) {
+            src_picture.data[i] += (h-1) * src_picture.linesize[i];
+            src_picture.linesize[i] *= -1;
+        }
+    }else{
+        avpicture_fill(&src_picture,img,input_format,w,h);
+    }
+
+    if (c->pix_fmt != input_format || c->width != w || c->height != h) {
         if(!sws_ctx) {
             sws_ctx = sws_getCachedContext( sws_ctx,
-                w, h, fmt,
+                w, h, input_format,
                 c->width, c->height, c->pix_fmt,
                 SWS_BICUBIC, NULL, NULL, NULL
             );
-            if (!sws_ctx) throw VideoException("Could not initialize the conversion context");        
+            if (!sws_ctx) throw VideoException("Could not initialize the conversion context");
         }
         sws_scale(sws_ctx,
             src_picture.data, src_picture.linesize, 0, h,
@@ -566,37 +608,17 @@ void FfmpegVideoOutputStream::WriteImage(AVPicture& src_picture, int w, int h, P
         *((AVPicture *)frame) = dst_picture;
     } else {
         *((AVPicture *)frame) = src_picture;
-    }    
-    
-    WriteFrame(frame);
-    av_free(frame);
-}
-
-void FfmpegVideoOutputStream::WriteImage(uint8_t* img, int w, int h, const std::string& input_fmt, int64_t pts)
-{
-    recorder.StartStream();
-    
-    PixelFormat fmt = FfmpegFmtFromString(input_fmt);
-    AVPicture picture;
-    
-    if(h < 0) {
-        h = -h;
-        avpicture_fill(&picture,img,fmt,w,h);        
-        for(int i=0; i<4; ++i) {
-            picture.data[i] += (h-1) * picture.linesize[i];
-            picture.linesize[i] *= -1;
-        }
-    }else{
-        avpicture_fill(&picture,img,fmt,w,h);        
     }
 
-    WriteImage(picture, w, h, fmt, pts);
+    frame->pts = pts;
+    frame->width =  w;
+    frame->height = h;
+    WriteFrame(frame);
 }
 
-void FfmpegVideoOutputStream::WriteImage(uint8_t* img, int w, int h, const std::string& input_format, double time)
+const StreamInfo& FfmpegVideoOutputStream::GetStreamInfo() const
 {
-    const int64_t pts = (time >= 0) ? time / BaseFrameTime() : last_pts + 1;
-    WriteImage(img,w,h,input_format,pts);
+    return input_info;
 }
 
 double FfmpegVideoOutputStream::BaseFrameTime()
@@ -604,16 +626,23 @@ double FfmpegVideoOutputStream::BaseFrameTime()
     return (double)stream->codec->time_base.num / (double)stream->codec->time_base.den;
 }
 
-FfmpegVideoOutputStream::FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height )
-    : recorder(recorder), last_pts(-1), sws_ctx(NULL)
+FfmpegVideoOutputStream::FfmpegVideoOutputStream(
+    FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate,
+    int bit_rate, const StreamInfo& input_info
+)
+    : recorder(recorder), input_info(input_info),
+      input_format(FfmpegFmtFromString(input_info.PixFormat())),
+      output_format(AV_PIX_FMT_YUV420P),
+      last_pts(-1), sws_ctx(NULL), frame(NULL), flip(true)
 {
-    int ret;
-
-    stream = CreateStream(recorder.oc, codec_id, frame_rate, bit_rate, EncoderFormat, width, height);
+    stream = CreateStream(recorder.oc, codec_id, frame_rate, bit_rate, output_format, input_info.Width(), input_info.Height() );
         
-    /* Allocate the encoded raw picture. */
-    ret = avpicture_alloc(&dst_picture, stream->codec->pix_fmt, stream->codec->width, stream->codec->height);
-    if (ret < 0) throw VideoException("Could not allocate picture");    
+    // Allocate the encoded raw picture.
+    int ret = avpicture_alloc(&dst_picture, stream->codec->pix_fmt, stream->codec->width, stream->codec->height);
+    if (ret < 0) throw VideoException("Could not allocate picture");
+
+    // Allocate frame
+    frame = avcodec_alloc_frame();
 }
 
 FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
@@ -622,6 +651,7 @@ FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
         sws_freeContext(sws_ctx);
     }
     
+    av_free(frame);
     av_free(dst_picture.data[0]);
     avcodec_close(stream->codec);
 }
@@ -700,17 +730,32 @@ void FfmpegVideoOutput::Close()
     avformat_free_context(oc);
 }
 
-void FfmpegVideoOutput::AddStream(int w, int h, const std::string& encoder_fmt)
+const std::vector<StreamInfo>& FfmpegVideoOutput::Streams() const
 {
-    streams.push_back( new FfmpegVideoOutputStream(*this, oc->oformat->video_codec, base_frame_rate, bit_rate, FfmpegFmtFromString(encoder_fmt), w, h) );    
+    return strs;
 }
 
-VideoOutputStreamInterface& FfmpegVideoOutput::operator[](size_t i)
+void FfmpegVideoOutput::AddStreams(const std::vector<StreamInfo>& str)
 {
-    if(i < streams.size()) {
-        return *streams[i];
+    strs.insert(strs.end(), str.begin(), str.end());
+
+    for(std::vector<StreamInfo>::const_iterator i = str.begin(); i!= str.end(); ++i)
+    {
+        streams.push_back( new FfmpegVideoOutputStream(
+            *this, oc->oformat->video_codec, base_frame_rate, bit_rate, *i
+        ) );
     }
-    throw VideoException("Attempt to access non-existent stream.");
+}
+
+int FfmpegVideoOutput::WriteStreams(unsigned char* data)
+{
+    for(std::vector<FfmpegVideoOutputStream*>::iterator i = streams.begin(); i!= streams.end(); ++i)
+    {
+        FfmpegVideoOutputStream& s = **i;
+        Image<unsigned char> img = s.GetStreamInfo().StreamImage(data);
+        s.WriteImage(img.ptr, img.w, img.h);
+    }
+    return frame_count++;
 }
 
 }

@@ -68,16 +68,14 @@ std::string MakeFilenameUnique(const std::string& filename)
     }
 }
 
-VideoOutputInterface* OpenVideoOutput(std::string str_uri)
+VideoOutputInterface* OpenVideoOutput(const Uri& uri)
 {
     VideoOutputInterface* recorder = 0;
-    
-    Uri uri = ParseUri(str_uri);
     
 #ifdef HAVE_FFMPEG    
     if(!uri.scheme.compare("ffmpeg") )
     {
-        int desired_frame_rate = uri.Get("fps", 30);
+        int desired_frame_rate = uri.Get("fps", 60);
         int desired_bit_rate = uri.Get("bps", 20000*1024);
         std::string filename = uri.url;
 
@@ -93,6 +91,12 @@ VideoOutputInterface* OpenVideoOutput(std::string str_uri)
     }
     
     return recorder;
+}
+
+VideoOutputInterface* OpenVideoOutput(std::string str_uri)
+{
+    Uri uri = ParseUri(str_uri);
+    return OpenVideoOutput(uri);
 }
 
 VideoOutput::VideoOutput()
@@ -116,13 +120,14 @@ bool VideoOutput::IsOpen() const
     return recorder != 0;
 }
 
-void VideoOutput::Open(const std::string& uri)
+void VideoOutput::Open(const std::string& str_uri)
 {
-    Reset();
+    Close();
+    uri = ParseUri(str_uri);
     recorder = OpenVideoOutput(uri);
 }
 
-void VideoOutput::Reset()
+void VideoOutput::Close()
 {
     if(recorder) {
         delete recorder;
@@ -130,16 +135,20 @@ void VideoOutput::Reset()
     }    
 }
 
-void VideoOutput::AddStream(int w, int h, const std::string& encoder_fmt)
+const std::vector<StreamInfo>& VideoOutput::Streams() const
 {
-    if( !recorder ) throw VideoException("No recorder open");    
-    recorder->AddStream(w,h,encoder_fmt);
+    return recorder->Streams();
 }
 
-VideoOutputStreamInterface& VideoOutput::operator[](size_t i)
+void VideoOutput::AddStreams(const std::vector<StreamInfo>& streams)
 {
-    if( !recorder ) throw VideoException("No recorder open");    
-    return recorder->operator [](i);    
+    recorder->AddStreams(streams);
 }
+
+int VideoOutput::WriteStreams(unsigned char* data)
+{
+    return recorder->WriteStreams(data);
+}
+
 
 }
