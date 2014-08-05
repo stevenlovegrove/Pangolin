@@ -81,7 +81,7 @@ public:
         AddDefaultTypes();
     }
 
-    PacketStreamTypeId CreateOrGetType(const std::string& ns, picojson::value& val)
+    PacketStreamTypeId CreateOrGetType(const std::string& ns, const picojson::value& val)
     {
         using namespace picojson;
 
@@ -94,8 +94,8 @@ public:
 
             // Fill in children
             bool fixed_size = true;
-            object& children = val.get<object>();
-            for(object::value_type& child : children) {
+            const object& children = val.get<object>();
+            for(const object::value_type& child : children) {
                 const PacketStreamTypeId id = CreateOrGetType(ns, child.second);
                 newtype.fieldnames.push_back(child.first);
                 newtype.fieldtypes.push_back(id);
@@ -113,7 +113,7 @@ public:
             // New un-named type
             PacketStreamType newtype;
 
-            array& children = val.get<array>();
+            const array& children = val.get<array>();
             if(children.size() == 1) {
                 // unknown repeats / total size
                 newtype.repeats = 0;
@@ -135,23 +135,11 @@ public:
     }
 
     // http://typed-json.org/ style definitions
-    void AddTypes(const std::string& ns, const std::string& definitions)
+    void AddTypes(const std::string& ns, const picojson::object& json)
     {
-        using namespace picojson;
-
-        value json;
-        std::string err;
-        parse(json,definitions.begin(), definitions.end(), &err);
-
-        if(err.empty()) {
-            if(json.is<picojson::object>()) {
-                for(object::value_type& v : json.get<object>()) {
-                    PacketStreamTypeId types_id = CreateOrGetType(ns, v.second);
-                    AddAlias(ns + v.first, types_id);
-                }
-            }
-        }else{
-            throw std::runtime_error("Parse error: " + err);
+        for(const picojson::object::value_type& v : json) {
+            PacketStreamTypeId types_id = CreateOrGetType(ns, v.second);
+            AddAlias(ns + v.first, types_id);
         }
     }
 

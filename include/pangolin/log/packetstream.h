@@ -37,11 +37,12 @@ namespace pangolin
 
 const static std::string PANGO_FRAME = "pango_frame";
 
-const static std::string TAG_PANGO_START = "PNGO\n";
-const static std::string TAG_PANGO_SYNC  = "SYNC\n";
-const static std::string TAG_PANGO_STATS = "STAT\n";
-const static std::string TAG_ADD_SOURCE  = "ADDS\n";
-const static std::string TAG_SRC_FRAME   = "SFRM\n";
+const static std::string TAG_PANGO_MAGIC = "PA";
+const static std::string TAG_PANGO_HDR   = "NGO";
+const static std::string TAG_PANGO_SYNC  = "SYC";
+const static std::string TAG_PANGO_STATS = "STA";
+const static std::string TAG_ADD_SOURCE  = "SRC";
+const static std::string TAG_SRC_FRAME   = "FRM";
 
 struct PacketStreamSource
 {
@@ -54,10 +55,12 @@ class PANGOLIN_EXPORT PacketStreamWriter
 {
 public:
 
-    PacketStreamWriter(const std::string& filename, unsigned int buffer_size_bytes)
+    PacketStreamWriter(const std::string& filename, unsigned int buffer_size_bytes = 10000000)
         : buffer(filename, buffer_size_bytes), writer(&buffer), id_level(0)
     {
-        StartFile();
+        // Start of file magic
+        WriteTag(TAG_PANGO_MAGIC);
+        WritePangoHeader();
     }
 
     ~PacketStreamWriter()
@@ -67,28 +70,49 @@ public:
 
     unsigned int AddSource(
         const std::string& type,
-        const std::string& name,
-        const std::string& header,
-        const std::string& frame_definition
+        const std::string& uri,
+        const std::string& json_frame = "{}",
+        const std::string& json_header = "{}",
+        const std::string& json_aux_types = "{}"
     ) {
         const std::string ns = type+"::";
-        typemap.AddTypes(ns, frame_definition);
 
+        std::string err;
+        picojson::value header;
+        picojson::value typed_aux;
+        picojson::value typed_frame;
 
-        WriteTag(TAG_ADD_SOURCE);
-        {
-            Block();
-            Line() << "\"type\":\"" << type << "\",\n";
-            Line() << "\"name\":\"" << name << "\",\n";
-            Line() << "\"header\":" << header << ",\n";
-            Line() << "\"definition\":" << frame_definition << "\n";
-            UnBlock();
+        picojson::parse(header,json_header.begin(), json_header.end(), &err);
+        if(!err.empty()) throw std::runtime_error("Frame header parse error: " + err);
+
+        picojson::parse(typed_aux,json_aux_types.begin(), json_aux_types.end(), &err);
+        if(!err.empty()) throw std::runtime_error("Frame types parse error: " + err);
+
+        picojson::parse(typed_frame,json_frame.begin(), json_frame.end(), &err);
+        if(!err.empty()) throw std::runtime_error("Frame definition parse error: " + err);
+
+        if( typed_aux.is<picojson::object>() ) {
+            typemap.AddTypes(ns, typed_aux.get<picojson::object>() );
+            PacketStreamTypeId frame_id = typemap.CreateOrGetType(ns, typed_frame);
+            typemap.AddAlias(ns + "pango_frame", frame_id);
+
+            picojson::value json_src(picojson::object_type,false);
+            json_src.get<picojson::object>()["_type_"] = picojson::value(type);
+            json_src.get<picojson::object>()["_uri_"] = picojson::value(uri);
+            json_src.get<picojson::object>()["header"] = header;
+            json_src.get<picojson::object>()["typed_aux"] = typed_aux;
+            json_src.get<picojson::object>()["typed_frame"] = typed_frame;
+
+            WriteTag(TAG_ADD_SOURCE);
+            json_src.serialize(std::ostream_iterator<char>(writer), true);
+
+            const PacketStreamType& frame_type = typemap.GetType(ns + PANGO_FRAME);
+            const size_t src_id = sources.size();
+            sources.push_back( {type,uri,frame_type} );
+            return src_id;
+        }else{
+            throw std::runtime_error("Frame definition must be JSON object.");
         }
-
-        const PacketStreamType& frame_type = typemap.GetType(ns + PANGO_FRAME);
-        const size_t src_id = sources.size();
-        sources.push_back( {type,name,frame_type} );
-        return src_id;
     }
 
     void WriteSourceFrame(unsigned int src, char* data, size_t n)
@@ -106,35 +130,28 @@ public:
         }
 
         // Write data
-        std::cout << "Writing " << n << " bytes" << std::endl;
         writer.write(data, n);
         bytes_written += n;
-        std::cout << "done" << std::endl;
     }
 
-    std::ostream& Writer()
+    void WritePangoHeader()
     {
-        return writer;
-    }
+        // Write Header
+        picojson::value pango(picojson::object_type,false);
+        pango.get<picojson::object>()["version"] = picojson::value(PANGOLIN_VERSION_STRING);
+        pango.get<picojson::object>()["date_created"] = picojson::value("2014/08/04 14:28:38 GMT");
 
-    void WriteCompressedInt(size_t n)
-    {
-        while(n >= 0x80) {
-            writer.put( 0x80 | (n & 0x7F) );
-            n >>= 7;
-        }
-        writer.put( n );
+        WriteTag(TAG_PANGO_HDR);
+        pango.serialize(std::ostream_iterator<char>(writer), true);
     }
 
     void WriteStats()
     {
         WriteTag(TAG_PANGO_STATS);
-        {
-            Block();
-            Line() << "\"num_sources\":\"" << sources.size() << "\",\n";
-            Line() << "\"bytes_written\":\"" << bytes_written << "\",\n";
-            UnBlock();
-        }
+        picojson::value stat(picojson::object_type,false);
+        stat.get<picojson::object>()["num_sources"] = picojson::value((int64_t)sources.size());
+        stat.get<picojson::object>()["bytes_written"] = picojson::value((int64_t)bytes_written);
+        stat.serialize(std::ostream_iterator<char>(writer), true);
     }
 
     void WriteSync()
@@ -144,47 +161,29 @@ public:
         }
     }
 
+    const PacketStreamType& GetFrameType()
+    {
+        return GetType(PANGO_FRAME);
+    }
+
     const PacketStreamType& GetType(const std::string& name)
     {
         return typemap.GetType(name);
     }
 
 protected:
-    void StartFile()
+    void WriteCompressedInt(size_t n)
     {
-        // Start of file magic
-        WriteTag(TAG_PANGO_START);
-        {
-            Block();
-            Line() << "\"version\":\"" << PANGOLIN_VERSION_STRING << "\",\n";
-            Line() << "\"date_created\":\"" << "2014/08/04 14:28:38 GMT" << "\"\n";
-            UnBlock();
+        while(n >= 0x80) {
+            writer.put( 0x80 | (n & 0x7F) );
+            n >>= 7;
         }
+        writer.put( n );
     }
 
     void WriteTag(const std::string& tag)
     {
         writer << tag;
-    }
-
-    void Block()
-    {
-        writer << "{\n";
-        id_level += 2;
-    }
-
-    void UnBlock()
-    {
-        id_level -= 2;
-        writer << "}\n";
-    }
-
-    std::ostream& Line()
-    {
-        for(int i=0; i<id_level; ++i) {
-            writer.put(' ');
-        }
-        return writer;
     }
 
     PacketStreamTypeMap typemap;
