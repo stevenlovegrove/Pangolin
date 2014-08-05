@@ -25,42 +25,50 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_IMAGE_H
+#define PANGOLIN_IMAGE_H
 
-#include <pangolin/platform.h>
+#include <cstddef>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl/gl.h>
-  #include <pangolin/gl/gldraw.h>
-  #include <pangolin/gl/glstate.h>
-  #include <pangolin/display/display.h>
-  #include <pangolin/display/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display/device/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display/device/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plot/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/display/widgets/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+// Simple image wrapper
+template<typename T>
+struct Image {
+    inline Image()
+        : pitch(0), ptr(0), w(0), h(0)
+    {
+    }
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+    inline Image(size_t w, size_t h, size_t pitch, unsigned char* ptr)
+        : pitch(pitch), ptr(ptr), w(w), h(h)
+    {
+    }
+    
+    void Dealloc()
+    {
+        if(ptr) {
+            delete[] ptr;
+            ptr = NULL;
+        }
+    }
+    
+    void Alloc(size_t w, size_t h, size_t pitch)
+    {
+        Dealloc();
+        this->w = w;
+        this->h = h;
+        this->pitch = pitch;
+        this->ptr = new unsigned char[h*pitch];
+    }
+    
+    size_t pitch;
+    T* ptr;
+    size_t w;
+    size_t h;
+};
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+}
 
-#endif // PANGOLIN_H
-
+#endif // PANGOLIN_IMAGE_H

@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,42 +25,21 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#include <pangolin/handler/handler_glbuffer.h>
+#include <pangolin/display/view.h>
 
-#include <pangolin/platform.h>
+namespace pangolin {
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl/gl.h>
-  #include <pangolin/gl/gldraw.h>
-  #include <pangolin/gl/glstate.h>
-  #include <pangolin/display/display.h>
-  #include <pangolin/display/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display/device/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display/device/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plot/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+Handler3DFramebuffer::Handler3DFramebuffer(GlFramebuffer& fb, pangolin::OpenGlRenderState& cam_state, pangolin::AxisDirection enforce_up, float trans_scale)
+    : pangolin::Handler3D(cam_state,enforce_up, trans_scale), fb(fb)
+{
+}
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/display/widgets/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+void Handler3DFramebuffer::GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision n[3], GLprecision default_z)
+{
+    fb.Bind();
+    Handler3D::GetPosNormal(view,x,y,p,Pw,Pc,n,default_z);
+    fb.Unbind();
+}
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
-
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
-
-#endif // PANGOLIN_H
-
+}

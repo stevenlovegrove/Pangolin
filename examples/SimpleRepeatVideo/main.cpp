@@ -5,8 +5,8 @@
  **/
 
 #include <pangolin/pangolin.h>
-#include <pangolin/video_record_repeat.h>
-#include <pangolin/input_record_repeat.h>
+#include <pangolin/video/video_record_repeat.h>
+#include <pangolin/var/input_record_repeat.h>
 
 void RecordSample(const std::string uri, const std::string vid_file, const std::string ui_file)
 {

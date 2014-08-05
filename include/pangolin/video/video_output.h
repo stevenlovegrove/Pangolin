@@ -44,7 +44,6 @@
 //  e.g. ffmpeg://output_file.avi
 //  e.g. ffmpeg:[fps=30,bps=1000000,unique_filename]//output_file.avi
 
-#include <pangolin/video/video_common.h>
 #include <pangolin/video/video.h>
 
 namespace pangolin

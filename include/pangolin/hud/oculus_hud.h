@@ -2,10 +2,10 @@
 #define PANGOLIN_OCULUS_HUD_H
 
 #include <pangolin/compat/memory.h>
-#include <pangolin/view.h>
-#include <pangolin/gl.h>
-#include <pangolin/glsl.h>
-#include <pangolin/handler_glbuffer.h>
+#include <pangolin/display/view.h>
+#include <pangolin/gl/gl.h>
+#include <pangolin/gl/glsl.h>
+#include <pangolin/handler/handler_glbuffer.h>
 
 #include <OVR.h>
 

@@ -1,82 +1,73 @@
 #######################################################
 ## Library sources
 
-set( INCDIR "../include/pangolin")
+macro( append_glob list glob )
+    file(GLOB files ${glob})
+    set(${list} "${${list}};${files}")
+endmacro()
+
 
 ## Header only includes / core headers
-set(
-  HEADERS
-  ${INCDIR}/pangolin.h ${INCDIR}/platform.h
-  ${INCDIR}/simple_math.h
-  ${INCDIR}/gl.h ${INCDIR}/glinclude.h ${INCDIR}/gl_es_compat.h
-  ${INCDIR}/gldraw.h ${INCDIR}/glvbo.h
-  ${INCDIR}/glcuda.h ${INCDIR}/cg.h ${INCDIR}/glsl.h
-  ${INCDIR}/image.h
-  ${INCDIR}/utils/timer.h
-  ${INCDIR}/utils/file_utils.h
+set( INCDIR "../include/pangolin" )
+set( HEADERS
+  ${INCDIR}/pangolin.h
+  ${INCDIR}/platform.h
 )
+append_glob(HEADERS ${INCDIR}/gl/*.h*)
+append_glob(HEADERS ${INCDIR}/utils/*.h*)
+append_glob(HEADERS ${INCDIR}/image/*.h*)
 
-## Store list of source files
-set( SOURCES utils/file_utils.cpp image_load.cpp video/video_common.cpp )
+### Store list of source files
+append_glob(SOURCES gl/*.cpp)
+append_glob(SOURCES utils/*.cpp)
+append_glob(SOURCES image/*.cpp)
 
 #######################################################
 ## User build options
 
 option(BUILD_PANGOLIN_GUI "Build support for Pangolin GUI" ON)
 if(BUILD_PANGOLIN_GUI)
-  list(APPEND HEADERS
-    ${INCDIR}/display.h ${INCDIR}/display_internal.h 
-    ${INCDIR}/view.h ${INCDIR}/viewport.h
-    ${INCDIR}/handler.h ${INCDIR}/handler_enums.h
-    ${INCDIR}/handler_glbuffer.h
-    ${INCDIR}/opengl_render_state.h
-    ${INCDIR}/datalog.h
-    ${INCDIR}/glfont.h ${INCDIR}/glpangoglu.h
-  )
-  list(APPEND SOURCES
-    display.cpp view.cpp viewport.cpp
-    handler.cpp handler_glbuffer.cpp
-    opengl_render_state.cpp
-    datalog.cpp
-    glfont.cpp glpangoglu.cpp
-  )
+  append_glob(HEADERS ${INCDIR}/display/*.h*)
+  append_glob(HEADERS ${INCDIR}/handler/*.h*)
+
+  append_glob(SOURCES display/*.cpp)
+  append_glob(SOURCES handler/*.cpp)
+
   if(NOT HAVE_GLES OR HAVE_GLES_2)
-    list(APPEND HEADERS ${INCDIR}/plotter.h)
-    list(APPEND SOURCES plotter.cpp)
+    append_glob(HEADERS ${INCDIR}/plot/*.h*)
+    append_glob(SOURCES plot/*.cpp)
   endif()
 endif()
 
 option(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
 if(BUILD_PANGOLIN_VARS)
-  list(APPEND HEADERS ${INCDIR}/var/var.h ${INCDIR}/var/varextra.h
-    ${INCDIR}/var/varstate.h ${INCDIR}/var/varvalue.h
-    ${INCDIR}/var/varvaluegeneric.h ${INCDIR}/var/varvaluet.h
-    ${INCDIR}/var/varwrapper.h ${INCDIR}/input_record_repeat.h
-  )
-  list(APPEND SOURCES var/vars.cpp input_record_repeat.cpp )
+  append_glob(HEADERS ${INCDIR}/var/*.h*)
+  append_glob(SOURCES var/*.cpp)
 
   if(BUILD_PANGOLIN_GUI)
-      list(APPEND HEADERS ${INCDIR}/widgets.h )
-      list(APPEND SOURCES widgets.cpp )
+      list(APPEND HEADERS ${INCDIR}/display/widgets/widgets.h )
+      list(APPEND SOURCES display/widgets/widgets.cpp )
   endif()
 endif()
 
 option(BUILD_PANGOLIN_VIDEO "Build support for Pangolin Video Utilities" ON)
 if(BUILD_PANGOLIN_VIDEO)
+  # Generic video includes
+  append_glob(HEADERS ${INCDIR}/video/*.h*)
+  append_glob(SOURCES video/*.cpp)
+
+  # Generic video drivers
   list(APPEND HEADERS
-    ${INCDIR}/utils/threadedfilebuf.h
-    ${INCDIR}/video/video.h ${INCDIR}/video/video_common.h
-    ${INCDIR}/video/video_output.h
-    ${INCDIR}/video/video_recorder.h ${INCDIR}/video/video_record_repeat.h
-    ${INCDIR}/video/drivers/test.h ${INCDIR}/video/drivers/images.h
-    ${INCDIR}/video/drivers/video_splitter.h ${INCDIR}/video/drivers/pvn_video.h
+    ${INCDIR}/video/drivers/test.h
+    ${INCDIR}/video/drivers/images.h
+    ${INCDIR}/video/drivers/video_splitter.h
+    ${INCDIR}/video/drivers/pvn_video.h
   )
   list(APPEND SOURCES
-    utils/threadedfilebuf.cpp
-    video/video.cpp video/video_output.cpp
-    video/video_recorder.cpp video/video_record_repeat.cpp
-    video/drivers/test.cpp video/drivers/images.cpp
-    video/drivers/video_splitter.cpp video/drivers/pvn_video.cpp
+    video/drivers/test.cpp
+    video/drivers/images.cpp
+    video/drivers/video_splitter.cpp
+    video/drivers/pvn_video.cpp
   )
 endif()
 
@@ -106,8 +97,8 @@ endif()
 if(BUILD_PANGOLIN_GUI)
     if( ANDROID  )
         # Android specific display code
-        list(APPEND HEADERS ${INCDIR}/display_android.h )
-        list(APPEND SOURCES display_android.cpp )
+        list(APPEND HEADERS ${INCDIR}/display/device/display_android.h )
+        list(APPEND SOURCES display/device/display_android.cpp )
 
         if(HAVE_GLES_2)
             list(APPEND LINK_LIBS "-lEGL;-lGLESv2" )
@@ -190,8 +181,8 @@ else()
     
     if(FREEGLUT_FOUND OR GLUT_FOUND)
         set(HAVE_GLUT 1)
-        list(APPEND HEADERS ${INCDIR}/display_glut.h )
-        list(APPEND SOURCES display_glut.cpp )
+        list(APPEND HEADERS ${INCDIR}/display/device/display_glut.h )
+        list(APPEND SOURCES display/device/display_glut.cpp )
         message(STATUS "Glut Found and Enabled")
     endif()
 endif()

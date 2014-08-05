@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Steven Lovegrove
+ * Copyright (c) 2011 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,65 +25,65 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_IMAGES_H
-#define PANGOLIN_VIDEO_IMAGES_H
+#ifndef PANGOLIN_INPUT_RECORD_REPEAT_H
+#define PANGOLIN_INPUT_RECORD_REPEAT_H
 
 #include <pangolin/pangolin.h>
-#include <pangolin/video/video.h>
-#include <pangolin/image/image_load.h>
 
-#include <deque>
-#include <vector>
+#include <list>
+#include <string>
+#include <fstream>
 
 namespace pangolin
 {
 
-// Video class that outputs test video signal.
-class PANGOLIN_EXPORT ImagesVideo : public VideoInterface
+struct FrameInput
 {
-public:
-    ImagesVideo(const std::string& wildcard_path);
-    ~ImagesVideo();
+    int index;
+    std::string var;
+    std::string val;
+};
+
+struct PANGOLIN_EXPORT InputRecordRepeat
+{
+    InputRecordRepeat(const std::string& var_record_prefix);
+    ~InputRecordRepeat();
     
-    //! Implement VideoInput::Start()
-    void Start();
+    void SetIndex(int id);
     
-    //! Implement VideoInput::Stop()
+    void Record();
     void Stop();
-
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
-
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
     
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+    void LoadBuffer(const std::string& filename);
+    void SaveBuffer(const std::string& filename);
+    void ClearBuffer();
     
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+    void PlayBuffer();
+    void PlayBuffer(int start, int end);
     
-protected:
-    typedef std::vector<TypedImage> Frame;
+    void UpdateVariable(const std::string& name );
     
-    const std::string& Filename(int frameNum, int channelNum) {
-        return filenames[channelNum][frameNum];
+    template<typename T>
+    inline void UpdateVariable(const Var<T>& var ) {
+        GuiVarChanged((void*)this, var.var->Meta().full_name, *var.var);
     }
     
-    bool QueueFrame();
+    int Size();
     
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
+protected:
+    bool record;
+    bool play;
     
+    int index;
+    std::ofstream file;
+    std::string filename;
     
-    int num_files;
-    size_t num_channels;
-    std::vector<std::vector<std::string> > filenames;
+    std::list<FrameInput> play_queue;
+    std::list<FrameInput> record_queue;
     
-    int num_loaded;
-    std::deque<Frame> loaded;
+    static void GuiVarChanged(void* data, const std::string& name, VarValueGeneric& var);
 };
 
 }
 
-#endif // PANGOLIN_VIDEO_IMAGES_H
+#endif // PANGOLIN_INPUT_RECORD_REPEAT_H

@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2011 Steven Lovegrove, Richard Newcombe
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,42 +25,25 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_GLINCLUDE_H
+#define PANGOLIN_GLINCLUDE_H
 
-#include <pangolin/platform.h>
+#include <pangolin/gl/glplatform.h>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl/gl.h>
-  #include <pangolin/gl/gldraw.h>
-  #include <pangolin/gl/glstate.h>
-  #include <pangolin/display/display.h>
-  #include <pangolin/display/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display/device/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display/device/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plot/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+#ifdef HAVE_GLES
+#include <pangolin/gl/gl_es_compat.h>
+#endif
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/display/widgets/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+#define CheckGlDieOnError() pangolin::_CheckGlDieOnError( __FILE__, __LINE__ );
+namespace pangolin {
+inline void _CheckGlDieOnError( const char *sFile, const int nLine )
+{
+    GLenum glError = glGetError();
+    if( glError != GL_NO_ERROR ) {
+        pango_print_error( "OpenGL Error: %s (%d)\n", glErrorString(glError), glError );
+		pango_print_error("In: %s, line %d\n", sFile, nLine);
+    }
+}
+}
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
-
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
-
-#endif // PANGOLIN_H
-
+#endif // PANGOLIN_GLINCLUDE_H

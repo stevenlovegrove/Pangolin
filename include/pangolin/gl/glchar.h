@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,42 +25,56 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_GLCHAR_H
+#define PANGOLIN_GLCHAR_H
 
-#include <pangolin/platform.h>
+#include <pangolin/gl/glplatform.h>
+#include <map>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl/gl.h>
-  #include <pangolin/gl/gldraw.h>
-  #include <pangolin/gl/glstate.h>
-  #include <pangolin/display/display.h>
-  #include <pangolin/display/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display/device/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display/device/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plot/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+namespace pangolin {
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/display/widgets/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+struct PANGOLIN_EXPORT XYUV
+{
+    XYUV() {}
+    XYUV(GLfloat x, GLfloat y, GLfloat tu, GLfloat tv)
+        : x(x), y(y), tu(tu), tv(tv) {}
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+    XYUV operator+(int dx) const {
+        return XYUV(x+dx,y,tu,tv);
+    }    
+    
+    GLfloat x, y, tu, tv;
+};
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+class PANGOLIN_EXPORT GlChar
+{
+public:
+    GlChar();
+    GlChar(int tw, int th, int x, int y, int w, int h, int x_step, GLfloat ox, GLfloat oy);
 
-#endif // PANGOLIN_H
+    void SetKern(char c, int kern);
+    int Kern(char c) const;
+    
+    const XYUV& GetVert(size_t i) const {
+        return vs[i];
+    }    
+    
+    int StepX() const {
+        return x_step;
+    }
+        
+    int StepXKerned(char c) const {
+        return StepX() + Kern(c);
+    }    
+        
+    void Draw() const;
+        
+protected:
+    std::map< char, int > mKernings;
+    XYUV vs[4];
+    int x_step;    
+};
 
+}
+
+#endif // PANGOLIN_GLCHAR_H

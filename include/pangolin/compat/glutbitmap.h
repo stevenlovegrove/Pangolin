@@ -28,10 +28,10 @@
 #ifndef PANGOLIN_COMPAT_GLUT_BITMAP_H
 #define PANGOLIN_COMPAT_GLUT_BITMAP_H
 
-#include <pangolin/glglut.h>
+#include <pangolin/gl/glglut.h>
 
 #ifndef HAVE_GLUT
-#include <pangolin/glfont.h>
+#include <pangolin/gl/glfont.h>
 
 #ifdef HAVE_GLES
 GLfloat g_raster_pos[4];

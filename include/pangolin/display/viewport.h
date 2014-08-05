@@ -25,42 +25,41 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_VIEWPORT_H
+#define PANGOLIN_VIEWPORT_H
 
-#include <pangolin/platform.h>
+#include <pangolin/gl/glinclude.h>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl/gl.h>
-  #include <pangolin/gl/gldraw.h>
-  #include <pangolin/gl/glstate.h>
-  #include <pangolin/display/display.h>
-  #include <pangolin/display/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display/device/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display/device/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plot/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/display/widgets/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+/// Encapsulates OpenGl Viewport.
+struct PANGOLIN_EXPORT Viewport
+{
+    Viewport() {}
+    Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h) {}
+    
+    void Activate() const;
+    void ActivateIdentity() const;
+    void ActivatePixelOrthographic() const;
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+    void Scissor() const;
+    void ActivateAndScissor() const;
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+    bool Contains(int x, int y) const;
+    
+    Viewport Inset(int i) const;
+    Viewport Inset(int horiz, int vert) const;
+    Viewport Intersect(const Viewport& vp) const;
+    
+    static void DisableScissor();
+    
+    GLint r() const { return l+w;}
+    GLint t() const { return b+h;}
+    GLfloat aspect() const { return (GLfloat)w / (GLfloat)h; }
+    GLint l,b,w,h;
+};
 
-#endif // PANGOLIN_H
+}
 
+#endif // PANGOLIN_VIEWPORT_H

@@ -25,42 +25,33 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#include <pangolin/image/image_common.h>
+#include <pangolin/utils/file_utils.h>
 
-#include <pangolin/platform.h>
+#include <vector>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl/gl.h>
-  #include <pangolin/gl/gldraw.h>
-  #include <pangolin/gl/glstate.h>
-  #include <pangolin/display/display.h>
-  #include <pangolin/display/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display/device/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display/device/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plot/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/display/widgets/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+const VideoPixelFormat SupportedVideoPixelFormats[] =
+{
+    {"GRAY8", 1, {8}, 8, false},
+    {"GRAY16LE", 1, {16}, 16, false},
+    {"Y400A", 2, {8,8}, 16, false},
+    {"RGB24", 3, {8,8,8}, 24, false},
+    {"BGR24", 3, {8,8,8}, 24, false},
+    {"YUYV422", 3, {4,2,2}, 16, false},
+    {"RGBA",  4, {8,8,8,8}, 32, false},
+    {"GRAY32F", 1, {32}, 32, false},
+    {"",0,{0,0,0,0},0,0}
+};
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+VideoPixelFormat VideoFormatFromString(const std::string& format)
+{
+    for(int i=0; !SupportedVideoPixelFormats[i].format.empty(); ++i)
+        if(!format.compare(SupportedVideoPixelFormats[i].format))
+            return SupportedVideoPixelFormats[i];
+    throw VideoException("Unknown Format",format);
+}
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
-
-#endif // PANGOLIN_H
-
+}

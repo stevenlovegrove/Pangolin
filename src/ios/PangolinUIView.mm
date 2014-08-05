@@ -32,9 +32,9 @@
 
 #include <pangolin/pangolin.h>
 #include <pangolin/platform.h>
-#include <pangolin/glinclude.h>
-#include <pangolin/display.h>
-#include <pangolin/display_internal.h>
+#include <pangolin/gl/glinclude.h>
+#include <pangolin/display/display.h>
+#include <pangolin/display/display_internal.h>
 
 namespace pangolin
 {

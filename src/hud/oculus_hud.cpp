@@ -1,6 +1,6 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/hud/oculus_hud.h>
-#include <pangolin/display_internal.h>
+#include <pangolin/display/display_internal.h>
 
 
 namespace pangolin

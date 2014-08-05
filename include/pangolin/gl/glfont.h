@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2013 Robert Castle, Steven Lovegrove, Gabe Sibley
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,42 +25,52 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_GLFONT_H
+#define PANGOLIN_GLFONT_H
 
-#include <pangolin/platform.h>
+#include <pangolin/gl/gltext.h>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl/gl.h>
-  #include <pangolin/gl/gldraw.h>
-  #include <pangolin/gl/glstate.h>
-  #include <pangolin/display/display.h>
-  #include <pangolin/display/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display/device/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display/device/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plot/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+#include <cstdio>
+#include <cstdarg>
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/display/widgets/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+namespace pangolin {
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+class PANGOLIN_EXPORT GlFont
+{
+public:
+    // Singleton instance if requested.
+    static GlFont& I();
+    
+    // Load font now (requires OpenGL context)
+    bool LoadFontFromText( char* str_xml );
+    bool LoadEmbeddedFont();
+    bool LoadFontFromFile( const std::string& filename );
+    void UnloadFont();
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+    // Generate renderable GlText object from this font.
+    GlText Text( const char* fmt, ... );
+    
+protected:
+    std::string sName;
+    int nSize;
+    bool bBold;
+    bool bItalic;
+    std::string sCharset;
+    bool bUnicode;
+    int nStretchHeight;
+    bool bSmooth;
+    bool bAntiAliasing;
+    int nOutline;
+    int nLineHeight;
+    int nBase;
+    int nScaleWidth;
+    int nScaleHeight;
+    int nPages;
+    
+    GlTexture mTex;
+    std::map< char, GlChar > mmCharacters;
+};
 
-#endif // PANGOLIN_H
+}
 
+#endif // PANGOLIN_GLFONT_H

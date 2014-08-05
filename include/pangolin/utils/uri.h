@@ -25,42 +25,48 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#ifndef PANGOLIN_URI_H
+#define PANGOLIN_URI_H
 
 #include <pangolin/platform.h>
+#include <pangolin/utils/type_convert.h>
 
-#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl/gl.h>
-  #include <pangolin/gl/gldraw.h>
-  #include <pangolin/gl/glstate.h>
-  #include <pangolin/display/display.h>
-  #include <pangolin/display/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display/device/display_glut.h>
-  #endif // HAVE_GLUT
-  #ifdef _ANDROID_
-    #include <pangolin/display/device/display_android.h>
-  #endif
-  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plot/plotter.h>
-  #endif
-#endif // BUILD_PANGOLIN_GUI
+#include <string>
+#include <map>
 
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/display/widgets/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-#endif // BUILD_PANGOLIN_VARS
+namespace pangolin
+{
 
-#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+class PANGOLIN_EXPORT Uri
+{
+public:
+    typedef std::map<std::string,std::string> ParamMap;
 
-// Let other libraries headers know about Pangolin
-#define HAVE_PANGOLIN
+    bool Contains(const std::string& key) const
+    {
+        return params.find(key) != params.end();
+    }
 
-#endif // PANGOLIN_H
+    template<typename T>
+    T Get(const std::string& key, T default_val) const
+    {
+        ParamMap::const_iterator v = params.find(key);
+        if(v != params.end()) {
+            return Convert<T, std::string>::Do(v->second);
+        }else{
+            return default_val;
+        }
+    }
 
+    std::string scheme;
+    std::string url;
+    ParamMap params;
+};
+
+//! Parse string as Video URI
+PANGOLIN_EXPORT
+Uri ParseUri(std::string str_uri);
+
+}
+
+#endif // PANGOLIN_URI_H

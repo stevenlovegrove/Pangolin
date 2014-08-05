@@ -91,8 +91,8 @@
 //  e.g. "test://"
 //  e.g. "test:[size=640x480,fmt=RGB24]//"
 
-#include <pangolin/video/video_common.h>
-#include <pangolin/image.h>
+#include <pangolin/image/image.h>
+#include <pangolin/image/image_common.h>
 
 #include <vector>
 
