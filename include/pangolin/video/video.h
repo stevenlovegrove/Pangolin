@@ -119,6 +119,8 @@ public:
     
     //! Image height in pixels
     inline size_t Height() const { return img_offset.h; }
+
+    inline double Aspect() const { return (double)Width() / (double)Height(); }
     
     //! Pitch: Number of bytes between one image row and the next
     inline size_t Pitch() const { return img_offset.pitch; }

@@ -35,12 +35,15 @@ void RenderToViewport(
     tex.RenderToViewport(pangolin::Viewport(0,0,image.w, image.h), flipx, flipy);
 }
 
-void VideoViewer(const std::string uri)
+void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
     // Open Video by URI
-    pangolin::VideoInput video(uri);
+    pangolin::VideoInput video(input_uri);
     std::vector<unsigned char> buffer;
-    buffer.resize(video.SizeBytes());
+    buffer.resize(video.SizeBytes()+1);
+
+    // Video Output device
+    pangolin::VideoOutput video_out;
 
     // Create OpenGL window - guess sensible dimensions
     pangolin::CreateWindowAndBind( "VideoViewer",
@@ -56,6 +59,19 @@ void VideoViewer(const std::string uri)
         glfmt.push_back(GlFormat(video.Streams()[d].PixFormat()));
     }
 
+#ifdef CALLEE_HAS_CPP11
+    pangolin::RegisterKeyPressCallback(' ', [&](){
+        if(video_out.IsOpen()) {
+            video_out.Close();
+            std::cout << "Finished recording." << std::endl;
+        }else{
+            std::cout << "Recording..." << std::endl;
+            video_out.Open(output_uri);
+            video_out.AddStreams(video.Streams());
+        }
+    });
+#endif
+
     // Stream and display video
     for(int frame=0; !pangolin::ShouldQuit(); ++frame)
     {
@@ -63,6 +79,10 @@ void VideoViewer(const std::string uri)
 
         std::vector<pangolin::Image<unsigned char> > images;
         if( video.Grab(&buffer[0], images) ) {
+            if(video_out.IsOpen()) {
+                video_out.WriteStreams(&buffer[0]);
+            }
+
             for(unsigned int i=0; i<images.size(); ++i)
             {
                 pangolin::DisplayBase()[i].Activate();
@@ -83,19 +103,22 @@ void VideoViewer(const std::string uri)
 
 int main( int argc, char* argv[] )
 {
-    std::string uris[] = {
-        "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
-        "convert:[fmt=RGB24]//v4l:///dev/video0",
-        "convert:[fmt=RGB24]//v4l:///dev/video1",
-        "openni:[img1=rgb]//",
-        "test:[size=160x120,n=1,fmt=RGB24]//"
-        ""
-    };
+    const std::string dflt_output_uri = "pango://";
 
     if( argc > 1 ) {
-        const std::string uri = std::string(argv[1]);
-        VideoViewer(uri);
+        const std::string input_uri = std::string(argv[1]);
+        const std::string output_uri = (argc > 2) ? std::string(argv[2]) : dflt_output_uri;
+        VideoViewer(input_uri, output_uri);
     }else{
+        const std::string input_uris[] = {
+            "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
+            "convert:[fmt=RGB24]//v4l:///dev/video0",
+            "convert:[fmt=RGB24]//v4l:///dev/video1",
+            "openni:[img1=rgb]//",
+            "test:[size=160x120,n=1,fmt=RGB24]//"
+            ""
+        };
+
         std::cout << "Usage  : VideoViewer [video-uri]" << std::endl << std::endl;
         std::cout << "Where video-uri describes a stream or file resource, e.g." << std::endl;
         std::cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << std::endl;
@@ -110,11 +133,11 @@ int main( int argc, char* argv[] )
         std::cout << std::endl;
 
         // Try to open some video device
-        for(int i=0; !uris[i].empty(); ++i )
+        for(int i=0; !input_uris[i].empty(); ++i )
         {
             try{
-                std::cout << "Trying: " << uris[i] << std::endl;
-                VideoViewer(uris[i]);
+                std::cout << "Trying: " << input_uris[i] << std::endl;
+                VideoViewer(input_uris[i], dflt_output_uri);
                 return 0;
             }catch(pangolin::VideoException) { }
         }
