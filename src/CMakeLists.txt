@@ -16,11 +16,13 @@ set( HEADERS
 append_glob(HEADERS ${INCDIR}/gl/*.h*)
 append_glob(HEADERS ${INCDIR}/utils/*.h*)
 append_glob(HEADERS ${INCDIR}/image/*.h*)
+append_glob(HEADERS ${INCDIR}/log/*.h*)
 
 ### Store list of source files
 append_glob(SOURCES gl/*.cpp)
 append_glob(SOURCES utils/*.cpp)
 append_glob(SOURCES image/*.cpp)
+append_glob(SOURCES log/*.cpp)
 
 #######################################################
 ## User build options
