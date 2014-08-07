@@ -27,11 +27,12 @@
 
 #include <pangolin/video/video_output.h>
 
+#include <pangolin/video/drivers/pango_video_output.h>
+
 #ifdef HAVE_FFMPEG
 #include <pangolin/video/drivers/ffmpeg.h>
 #endif
 
-#include <pangolin/video/drivers/pvn_video.h>
 #include <pangolin/utils/file_utils.h>
 
 namespace pangolin
@@ -72,6 +73,11 @@ VideoOutputInterface* OpenVideoOutput(const Uri& uri)
 {
     VideoOutputInterface* recorder = 0;
     
+    if(!uri.scheme.compare("pango"))
+    {
+        const std::string filename = uri.url;
+        recorder = new PangoVideoOutput(filename);
+    }else
 #ifdef HAVE_FFMPEG    
     if(!uri.scheme.compare("ffmpeg") )
     {

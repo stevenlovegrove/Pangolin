@@ -1,9 +1,3 @@
-/**
- * @author  Steven Lovegrove
- * Copyright (C) 2010  Steven Lovegrove
- *                     Imperial College London
- **/
-
 #include <pangolin/pangolin.h>
 
 void RecordSample(const std::string input_uri, const std::string record_uri)
@@ -15,7 +9,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
     const unsigned h = video.Height();
 
     pangolin::VideoOutput recorder( record_uri );
-    recorder.AddStream(w,h, "YUV420P");
+    recorder.AddStreams(video.Streams());
 
     // Create OpenGL window
     pangolin::CreateWindowAndBind("Main",w,h);
@@ -40,7 +34,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
             texVideo.Upload(img, vid_fmt.channels==1 ? GL_LUMINANCE:GL_RGB, GL_UNSIGNED_BYTE);
 
             // Record video frame
-            recorder[0].WriteImage(img, w, h, vid_fmt);
+            recorder.WriteStreams(img);
         }
 
         // Activate video viewport and render texture
