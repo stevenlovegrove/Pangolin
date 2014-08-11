@@ -335,12 +335,12 @@ inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, T sc
     const GLfloat yh = scale * (h*Kinv(1,1) + Kinv(1,2));
         
     const GLfloat verts[] = {
-        xl,yl,scale,  xh,yl,scale,
-        xh,yh,scale,  xl,yh,scale,
-        xl,yl,scale,  0,0,0,
-        xh,yl,scale,  0,0,0,
-        xl,yh,scale,  0,0,0,
-        xh,yh,scale
+        xl,yl,static_cast<GLfloat>(scale),  xh,yl, static_cast<GLfloat>(scale),
+        xh,yh,static_cast<GLfloat>(scale),  xl,yh, static_cast<GLfloat>(scale),
+        xl,yl,static_cast<GLfloat>(scale),  0,0,0,
+        xh,yl,static_cast<GLfloat>(scale),  0,0,0,
+        xl,yh,static_cast<GLfloat>(scale),  0,0,0,
+        xh,yh,static_cast<GLfloat>(scale)
     };
     
     glVertexPointer(3, GL_FLOAT, 0, verts);
