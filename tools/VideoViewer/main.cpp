@@ -39,6 +39,12 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
     // Open Video by URI
     pangolin::VideoInput video(input_uri);
+
+    if(video.Streams().size() == 0) {
+        pango_print_error("No video streams from device.\n");
+        return;
+    }
+
     std::vector<unsigned char> buffer;
     buffer.resize(video.SizeBytes()+1);
 
@@ -63,9 +69,9 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::RegisterKeyPressCallback(' ', [&](){
         if(video_out.IsOpen()) {
             video_out.Close();
-            std::cout << "Finished recording." << std::endl;
+            pango_print_info("Finished recording.\n");
         }else{
-            std::cout << "Recording..." << std::endl;
+            pango_print_info("Recording...\n");
             video_out.Open(output_uri);
             video_out.AddStreams(video.Streams());
         }
@@ -136,7 +142,7 @@ int main( int argc, char* argv[] )
         for(int i=0; !input_uris[i].empty(); ++i )
         {
             try{
-                std::cout << "Trying: " << input_uris[i] << std::endl;
+                pango_print_info("Trying: %s\n", input_uris[i].c_str());
                 VideoViewer(input_uris[i], dflt_output_uri);
                 return 0;
             }catch(pangolin::VideoException) { }

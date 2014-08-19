@@ -60,6 +60,7 @@
 #include <pangolin/video/drivers/test.h>
 #include <pangolin/video/drivers/images.h>
 #include <pangolin/video/drivers/pvn_video.h>
+#include <pangolin/video/drivers/pango_video.h>
 #include <pangolin/video/drivers/video_splitter.h>
 
 namespace pangolin
@@ -242,10 +243,17 @@ VideoInterface* OpenVideo(const Uri& uri)
     {
         video = new ImagesVideo(uri.url);
     }else
-    if(!uri.scheme.compare("file") && EndsWith(uri.url,"pvn") )
+    if(!uri.scheme.compare("file") )
     {
-        const bool realtime = uri.Contains("realtime");
-        video = new PvnVideo(uri.url.c_str(), realtime);
+        // TODO: Check file magic
+        if( EndsWith(uri.url,"pvn") ) {
+            const bool realtime = uri.Contains("realtime");
+            video = new PvnVideo(uri.url.c_str(), realtime);
+        }else if(EndsWith(uri.url,"pango")) {
+            video = new PangoVideo(uri.url.c_str());
+        }else{
+            throw VideoException("Unable to open file type");
+        }
     }else
     if(!uri.scheme.compare("split"))
     {

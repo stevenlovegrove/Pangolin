@@ -74,7 +74,8 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
         const unsigned char magic_gif2[] = "GIF89a";
         const unsigned char magic_tiff1[] = "\x49\x49\x2A\x00";
         const unsigned char magic_tiff2[] = "\x4D\x4D\x00\x2A";
-        
+        const unsigned char magic_pango[] = "PANGO";
+
         if( !strncmp((char*)data, (char*)magic_png, 8) ) {
             return ImageFileTypePng;
         }else if( !strncmp( (char*)data, (char*)magic_jpg1, 2)
@@ -86,6 +87,8 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
         }else if( !strncmp((char*)data, (char*)magic_tiff1,4)
                   || !strncmp((char*)data, (char*)magic_tiff2,4) ) {
             return ImageFileTypeTiff;
+        }else if( !strncmp((char*)data, (char*)magic_pango,5) ) {
+            return ImageFileTypePango;
         }else if( data[0] == 'P' && '0' < data[1] && data[1] < '9') {
             return ImageFileTypePpm;            
         }

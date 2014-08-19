@@ -64,6 +64,7 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/drivers/images.h
     ${INCDIR}/video/drivers/video_splitter.h
     ${INCDIR}/video/drivers/pvn_video.h
+    ${INCDIR}/video/drivers/pango_video.h
     ${INCDIR}/video/drivers/pango_video_output.h
   )
   list(APPEND SOURCES
@@ -71,6 +72,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/images.cpp
     video/drivers/video_splitter.cpp
     video/drivers/pvn_video.cpp
+    video/drivers/pango_video.cpp
     video/drivers/pango_video_output.cpp
   )
 endif()
