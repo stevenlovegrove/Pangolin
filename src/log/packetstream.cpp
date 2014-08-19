@@ -136,7 +136,7 @@ void PacketStreamWriter::WritePangoHeader()
 {
     // Write Header
     picojson::value pango(picojson::object_type,false);
-    pango.get<picojson::object>()["version"] = picojson::value(PANGOLIN_VERSION_STRING);
+    pango.get<picojson::object>()["pangolin_version"] = picojson::value(PANGOLIN_VERSION_STRING);
     pango.get<picojson::object>()["date_created"] = picojson::value( CurrentTimeStr() );
     pango.get<picojson::object>()["endian"] = picojson::value("little_endian");
 
@@ -172,7 +172,7 @@ PacketStreamReader::PacketStreamReader(const std::string& filename)
     const unsigned char magic_pango[] = "PANGO";
     char buffer[magic_pango_len];
 
-    reader.open(filename, std::ios::in | std::ios::binary);
+    reader.open(filename.c_str(), std::ios::in | std::ios::binary);
 
     // Check file magic matches expected value
     reader.read(buffer,magic_pango_len);
@@ -293,8 +293,6 @@ void PacketStreamReader::ReadHeaderPacket()
     // Consume newline
     char buffer[1];
     reader.read(buffer,1);
-
-    std::cout << json_header.serialize(true) << std::endl;
 }
 
 void PacketStreamReader::ReadNewSourcePacket()
@@ -306,14 +304,14 @@ void PacketStreamReader::ReadNewSourcePacket()
     reader.get(); // consume newline
 
     if(!json.contains(json_hdr_type) || !json.contains(json_hdr_uri)) {
-        pango_print_error("Missing required fields for source.\n" );
+        throw std::runtime_error("Missing required fields for source.\n" );
     }
 
-    picojson::value jstype = json.get(json_hdr_type);
-    picojson::value jsuri  = json.get(json_hdr_uri);
+    picojson::value jstype = json[json_hdr_type];
+    picojson::value jsuri  = json[json_hdr_uri];
 
     if( !jstype.is<std::string>() || !jsuri.is<std::string>() ) {
-        pango_print_error("Missing required fields for source.\n" );
+        throw std::runtime_error("Missing required fields for source.\n" );
     }
 
     PacketStreamSource ps;
@@ -323,24 +321,20 @@ void PacketStreamReader::ReadNewSourcePacket()
     const std::string ns = ps.type+"::";
 
     if(json.contains(json_hdr_header)) {
-        ps.header = json.get(json_hdr_header);
+        ps.header = json[json_hdr_header];
     }
 
     if(json.contains(json_hdr_typed_aux)) {
-        picojson::value jsaux = json.get(json_hdr_typed_aux);
-        if(jsaux.is<picojson::object>()) {
-            typemap.AddTypes( ns, jsaux.get<picojson::object>() );
-        }
+        picojson::value jsaux = json[json_hdr_typed_aux];
+        typemap.AddTypes( ns, jsaux.get<picojson::object>() );
     }
 
     if(json.contains(json_hdr_typed_frame)) {
-        ps.frametype = typemap.CreateOrGetType(ns, json.get(json_hdr_typed_frame));
+        ps.frametype = typemap.CreateOrGetType(ns, json[json_hdr_typed_frame]);
     }
 
     ps.registered_handler = false;
     sources.push_back(ps);
-
-    std::cout << json.serialize(true) << std::endl;
 
     for(unsigned int r=0; r<source_handlers.size(); ++r) {
         source_handlers[r]->NewSource(src_id, sources[src_id]);
@@ -352,13 +346,13 @@ void PacketStreamReader::ReadStatsPacket()
     picojson::value json;
     picojson::parse(json, reader);
     reader.get(); // consume newline
-    std::cout << json.serialize(true) << std::endl;
 }
 
 void PacketStreamReader::ReadOverSourceFramePacket(PacketStreamSourceId src_id)
 {
     const PacketStreamSource& src = sources[src_id];
     const PacketStreamType& src_type = typemap.GetType(src.frametype);
+
     if(src_type.IsFixedSize()) {
         reader.ignore(src_type.size_bytes);
     }else{

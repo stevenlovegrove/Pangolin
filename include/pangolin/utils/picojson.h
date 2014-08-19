@@ -145,10 +145,13 @@ namespace picojson {
     template <typename T> const T& get() const;
     template <typename T> T& get();
     bool evaluate_as_boolean() const;
-    const value& get(size_t idx) const;
-    const value& get(const std::string& key) const;
-    value& get(size_t idx);
-    value& get(const std::string& key);
+    const size_t size() const;
+
+    const value& operator[](size_t idx) const;
+    const value& operator[](const std::string& key) const;
+
+    value& operator[](size_t idx);
+    value& operator[](const std::string& key);
 
     bool contains(size_t idx) const;
     bool contains(const std::string& key) const;
@@ -323,27 +326,33 @@ namespace picojson {
       return true;
     }
   }
+
+  inline const size_t value::size() const
+  {
+    PICOJSON_ASSERT(is<array>());
+    return u_.array_->size();
+  }
   
-  inline const value& value::get(size_t idx) const {
+  inline const value& value::operator[](size_t idx) const {
     static value s_null;
     PICOJSON_ASSERT(is<array>());
     return idx < u_.array_->size() ? (*u_.array_)[idx] : s_null;
   }
 
-  inline value& value::get(size_t idx) {
+  inline value& value::operator[](size_t idx) {
     static value s_null;
     PICOJSON_ASSERT(is<array>());
     return idx < u_.array_->size() ? (*u_.array_)[idx] : s_null;
   }
 
-  inline const value& value::get(const std::string& key) const {
+  inline const value& value::operator[](const std::string& key) const {
     static value s_null;
     PICOJSON_ASSERT(is<object>());
     object::const_iterator i = u_.object_->find(key);
     return i != u_.object_->end() ? i->second : s_null;
   }
 
-  inline value& value::get(const std::string& key) {
+  inline value& value::operator[](const std::string& key) {
     static value s_null;
     PICOJSON_ASSERT(is<object>());
     object::iterator i = u_.object_->find(key);
