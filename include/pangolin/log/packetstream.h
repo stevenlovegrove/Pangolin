@@ -38,16 +38,19 @@
 namespace pangolin
 {
 
-const static std::string PANGO_FRAME = "pango_frame";
+const static std::string PANGO_MAGIC = "PANGO";
+const static std::string PANGO_FRAME = "PANGO_FRAME";
 
 const unsigned int TAG_LENGTH = 3;
-const static std::string TAG_PANGO_MAGIC = "PA";
-const static std::string TAG_PANGO_HDR   = "NGO";
-const static std::string TAG_PANGO_SYNC  = "SYC";
-const static std::string TAG_PANGO_STATS = "STA";
-const static std::string TAG_ADD_SOURCE  = "SRC";
-const static std::string TAG_SRC_FRAME   = "FRM";
-const static std::string TAG_END         = "END";
+
+#define PANGO_TAG(a,b,c) ( (c<<16) | (b<<8) | a)
+const u_int32_t TAG_PANGO_HDR   = PANGO_TAG('L','I','N');
+const u_int32_t TAG_PANGO_SYNC  = PANGO_TAG('S','Y','N');
+const u_int32_t TAG_PANGO_STATS = PANGO_TAG('S','T','A');
+const u_int32_t TAG_ADD_SOURCE  = PANGO_TAG('S','R','C');
+const u_int32_t TAG_SRC_FRAME   = PANGO_TAG('F','R','M');
+const u_int32_t TAG_END         = PANGO_TAG('E','N','D');
+#undef PANGO_TAG
 
 struct PANGOLIN_EXPORT PacketStreamSource
 {
@@ -104,9 +107,9 @@ protected:
         writer.put( n );
     }
 
-    inline void WriteTag(const std::string& tag)
+    inline void WriteTag(const u_int32_t tag)
     {
-        writer << tag;
+        writer.write((char*)&tag, TAG_LENGTH);
     }
 
     PacketStreamTypeMap typemap;
@@ -140,10 +143,13 @@ public:
     void RegisterSourceHeaderHandler( NewSourceReceiver& receiver );
     void RegisterFrameHandler( PacketStreamSourceId src_id );
     void UnregisterFrameHandler( PacketStreamSourceId src_id );
-    bool ProcessUpToNextSourceFrame(PacketStreamSourceId src_id);
+
+    bool GetSourceFrameLock(PacketStreamSourceId src_id);
+    void ReleaseSourceFrameLock(PacketStreamSourceId src_id);
+
+    void ProcessMessage();
 
     int ProcessMessagesUntilRegisteredSourceFrame();
-    bool ReadTag();
 
     inline std::basic_istream<char>& Read(char* s, size_t n)
     {
@@ -163,17 +169,20 @@ protected:
         return n|v;
     }
 
+    bool ReadTag();
     void ReadHeaderPacket();
     void ReadNewSourcePacket();
     void ReadStatsPacket();
     void ReadOverSourceFramePacket(PacketStreamSourceId src_id);
-    unsigned char next_tag[4];
+    u_int32_t next_tag;
 
     PacketStreamTypeMap typemap;
     std::vector<PacketStreamSource> sources;
     boostd::condition_variable source_tag_available[MAX_SOURCES];
 
     std::ifstream reader;
+    std::mutex read_mutex;
+    std::condition_variable new_frame;
 
     std::vector<NewSourceReceiver*> source_handlers;
 //    std::map<unsigned int, FrameHandler> frame_handlers;

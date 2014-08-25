@@ -353,10 +353,8 @@ namespace picojson {
   }
 
   inline value& value::operator[](const std::string& key) {
-    static value s_null;
     PICOJSON_ASSERT(is<object>());
-    object::iterator i = u_.object_->find(key);
-    return i != u_.object_->end() ? i->second : s_null;
+    return u_.object_->operator [](key);
   }
 
   inline bool value::contains(size_t idx) const {

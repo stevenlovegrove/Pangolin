@@ -35,7 +35,7 @@
 namespace pangolin
 {
 
-const char* json_hdr_type         = "_type_";
+const char* json_hdr_type        = "_type_";
 const char* json_hdr_uri         = "_uri_";
 const char* json_hdr_header      = "header";
 const char* json_hdr_typed_aux   = "typed_aux";
@@ -49,7 +49,8 @@ PacketStreamWriter::PacketStreamWriter(const std::string& filename, unsigned int
     : buffer(filename, buffer_size_bytes), writer(&buffer), bytes_written(0)
 {
     // Start of file magic
-    WriteTag(TAG_PANGO_MAGIC);
+    writer.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
+
     WritePangoHeader();
 }
 
@@ -136,9 +137,9 @@ void PacketStreamWriter::WritePangoHeader()
 {
     // Write Header
     picojson::value pango(picojson::object_type,false);
-    pango.get<picojson::object>()["pangolin_version"] = picojson::value(PANGOLIN_VERSION_STRING);
-    pango.get<picojson::object>()["date_created"] = picojson::value( CurrentTimeStr() );
-    pango.get<picojson::object>()["endian"] = picojson::value("little_endian");
+    pango["pangolin_version"] = picojson::value(PANGOLIN_VERSION_STRING);
+    pango["date_created"] = picojson::value( CurrentTimeStr() );
+    pango["endian"] = picojson::value("little_endian");
 
     WriteTag(TAG_PANGO_HDR);
     pango.serialize(std::ostream_iterator<char>(writer), true);
@@ -166,27 +167,19 @@ void PacketStreamWriter::WriteSync()
 
 PacketStreamReader::PacketStreamReader(const std::string& filename)
 {
-    next_tag[3] = '\n';
-
-    const int magic_pango_len = 5;
-    const unsigned char magic_pango[] = "PANGO";
-    char buffer[magic_pango_len];
+    const size_t PANGO_MAGIC_LEN = PANGO_MAGIC.size();
+    char buffer[PANGO_MAGIC_LEN];
 
     reader.open(filename.c_str(), std::ios::in | std::ios::binary);
 
     // Check file magic matches expected value
-    reader.read(buffer,magic_pango_len);
-    if(!strncmp((char*)buffer, (char*)magic_pango, magic_pango_len) ) {
-        // Read opening file JSON.
-        ReadHeaderPacket();
-
+    reader.read(buffer,PANGO_MAGIC_LEN);
+    if( reader.good() && !strncmp((char*)buffer, PANGO_MAGIC.c_str(), PANGO_MAGIC_LEN) ) {
         ReadTag();
 
         // Read any source headers, stop on first frame
-        while(!strncmp((char*)next_tag, (char*)TAG_ADD_SOURCE.c_str(), TAG_LENGTH))
-        {
-            ReadNewSourcePacket();
-            ReadTag();
+        while(next_tag == TAG_PANGO_HDR || next_tag == TAG_ADD_SOURCE ) {
+            ProcessMessage();
         }
     }else{
         throw std::runtime_error("Unrecognised or corrupted file header.");
@@ -227,18 +220,70 @@ void PacketStreamReader::UnregisterFrameHandler( PacketStreamSourceId src_id )
 //    frame_handlers[src_id] = handler;
 //}
 
-bool PacketStreamReader::ProcessUpToNextSourceFrame(PacketStreamSourceId src_id)
+bool PacketStreamReader::GetSourceFrameLock(PacketStreamSourceId src_id)
 {
+    read_mutex.lock();
+
+    // Walk over data that no-one is interested in
     int nxt = ProcessMessagesUntilRegisteredSourceFrame();
-    if(nxt == -1) return false;
 
     while(nxt != (int)src_id) {
-        ReadOverSourceFramePacket(src_id);
+        if(nxt == -1) {
+            // EOF or something critical
+            read_mutex.unlock();
+            return false;
+        }else{
+//            // Wait for another next frame to get read
+//            new_frame.wait(read_mutex);
+            ReadOverSourceFramePacket(nxt);
+            nxt = ProcessMessagesUntilRegisteredSourceFrame();
+        }
+
+
         nxt = ProcessMessagesUntilRegisteredSourceFrame();
-        if(nxt == -1) return false;
     }
+
     return true;
 }
+
+void PacketStreamReader::ReleaseSourceFrameLock(PacketStreamSourceId src_id)
+{
+    ReadTag();
+    read_mutex.unlock();
+}
+
+void PacketStreamReader::ProcessMessage()
+{
+    // Read one frame / header
+    switch (next_tag) {
+    case TAG_PANGO_HDR:
+        ReadHeaderPacket();
+        break;
+    case TAG_ADD_SOURCE:
+        ReadNewSourcePacket();
+        break;
+    case TAG_PANGO_STATS:
+        ReadStatsPacket();
+        break;
+    case TAG_SRC_FRAME:
+    {
+        const size_t src_id = ReadCompressedUnsignedInt();
+        if(src_id >= sources.size()) {
+            throw std::runtime_error("Invalid Frame Source ID.");
+        }
+        ReadOverSourceFramePacket(src_id);
+        break;
+    }
+    case TAG_END:
+        return;
+    default:
+        // TODO: Resync
+        throw std::runtime_error("Unknown packet type.");
+    }
+    if(!ReadTag()) {
+        // Dummy end tag
+        next_tag = TAG_END;
+    }}
 
 // return src_id
 int PacketStreamReader::ProcessMessagesUntilRegisteredSourceFrame()
@@ -246,13 +291,18 @@ int PacketStreamReader::ProcessMessagesUntilRegisteredSourceFrame()
     while(true)
     {
         // Read one frame / header
-        if(!strncmp((char*)next_tag, (char*)TAG_PANGO_HDR.c_str(), TAG_LENGTH)) {
+        switch (next_tag) {
+        case TAG_PANGO_HDR:
             ReadHeaderPacket();
-        }else if(!strncmp((char*)next_tag, (char*)TAG_ADD_SOURCE.c_str(), TAG_LENGTH)) {
+            break;
+        case TAG_ADD_SOURCE:
             ReadNewSourcePacket();
-        }else if(!strncmp((char*)next_tag, (char*)TAG_PANGO_STATS.c_str(), TAG_LENGTH)) {
+            break;
+        case TAG_PANGO_STATS:
             ReadStatsPacket();
-        }else if(!strncmp((char*)next_tag, (char*)TAG_SRC_FRAME.c_str(), TAG_LENGTH)) {
+            break;
+        case TAG_SRC_FRAME:
+        {
             const size_t src_id = ReadCompressedUnsignedInt();
             if(src_id >= sources.size()) {
                 throw std::runtime_error("Invalid Frame Source ID.");
@@ -263,15 +313,17 @@ int PacketStreamReader::ProcessMessagesUntilRegisteredSourceFrame()
                 // We have to read over this frame.
                 ReadOverSourceFramePacket(src_id);
             }
-        }else if(!strncmp((char*)next_tag, (char*)TAG_END.c_str(), TAG_LENGTH)) {
+            break;
+        }
+        case TAG_END:
             return -1;
-        }else{
+        default:
             // TODO: Resync
             throw std::runtime_error("Unknown packet type.");
         }
         if(!ReadTag()) {
             // Dummy end tag
-            strcpy((char*)next_tag,TAG_END.c_str());
+            next_tag = TAG_END;
         }
     }
 }
@@ -279,7 +331,7 @@ int PacketStreamReader::ProcessMessagesUntilRegisteredSourceFrame()
 bool PacketStreamReader::ReadTag()
 {
     if(reader.good()) {
-        reader.read((char*)next_tag, TAG_LENGTH);
+        reader.read((char*)&next_tag, TAG_LENGTH );
     }
 
     return reader.good();

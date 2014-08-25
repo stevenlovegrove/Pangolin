@@ -64,10 +64,10 @@ void PangoVideo::Stop()
 
 bool PangoVideo::GrabNext( unsigned char* image, bool wait )
 {
-    if(reader.ProcessUpToNextSourceFrame(src_id)) {
+    if(reader.GetSourceFrameLock(src_id)) {
         // read this frames actual data
         reader.Read((char*)image, size_bytes);
-        reader.ReadTag();
+        reader.ReleaseSourceFrameLock(src_id);
         return true;
     }else{
         return false;
