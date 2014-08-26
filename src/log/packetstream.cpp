@@ -168,7 +168,7 @@ void PacketStreamWriter::WriteSync()
 PacketStreamReader::PacketStreamReader(const std::string& filename)
 {
     const size_t PANGO_MAGIC_LEN = PANGO_MAGIC.size();
-    char buffer[PANGO_MAGIC_LEN];
+    char buffer[10];
 
     reader.open(filename.c_str(), std::ios::in | std::ios::binary);
 

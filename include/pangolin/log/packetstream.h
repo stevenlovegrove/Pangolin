@@ -34,6 +34,7 @@
 #include <pangolin/compat/function.h>
 #include <pangolin/compat/mutex.h>
 #include <pangolin/compat/condition_variable.h>
+#include <stdint.h>
 
 
 namespace pangolin
@@ -45,12 +46,12 @@ const static std::string PANGO_FRAME = "PANGO_FRAME";
 const unsigned int TAG_LENGTH = 3;
 
 #define PANGO_TAG(a,b,c) ( (c<<16) | (b<<8) | a)
-const u_int32_t TAG_PANGO_HDR   = PANGO_TAG('L','I','N');
-const u_int32_t TAG_PANGO_SYNC  = PANGO_TAG('S','Y','N');
-const u_int32_t TAG_PANGO_STATS = PANGO_TAG('S','T','A');
-const u_int32_t TAG_ADD_SOURCE  = PANGO_TAG('S','R','C');
-const u_int32_t TAG_SRC_FRAME   = PANGO_TAG('F','R','M');
-const u_int32_t TAG_END         = PANGO_TAG('E','N','D');
+const uint32_t TAG_PANGO_HDR   = PANGO_TAG('L', 'I', 'N');
+const uint32_t TAG_PANGO_SYNC  = PANGO_TAG('S', 'Y', 'N');
+const uint32_t TAG_PANGO_STATS = PANGO_TAG('S', 'T', 'A');
+const uint32_t TAG_ADD_SOURCE  = PANGO_TAG('S', 'R', 'C');
+const uint32_t TAG_SRC_FRAME   = PANGO_TAG('F', 'R', 'M');
+const uint32_t TAG_END         = PANGO_TAG('E', 'N', 'D');
 #undef PANGO_TAG
 
 struct PANGOLIN_EXPORT PacketStreamSource
@@ -108,7 +109,7 @@ protected:
         writer.put( n );
     }
 
-    inline void WriteTag(const u_int32_t tag)
+    inline void WriteTag(const uint32_t tag)
     {
         writer.write((char*)&tag, TAG_LENGTH);
     }
@@ -175,7 +176,7 @@ protected:
     void ReadNewSourcePacket();
     void ReadStatsPacket();
     void ReadOverSourceFramePacket(PacketStreamSourceId src_id);
-    u_int32_t next_tag;
+    uint32_t next_tag;
 
     PacketStreamTypeMap typemap;
     std::vector<PacketStreamSource> sources;
