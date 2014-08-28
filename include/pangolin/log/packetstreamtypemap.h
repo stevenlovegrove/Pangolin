@@ -95,9 +95,10 @@ public:
             // Fill in children
             bool fixed_size = true;
             const object& children = val.get<object>();
-            for(const object::value_type& child : children) {
-                const PacketStreamTypeId id = CreateOrGetType(ns, child.second);
-                newtype.fieldnames.push_back(child.first);
+
+            for(object::const_iterator child = children.begin(); child!= children.end(); ++child) {
+                const PacketStreamTypeId id = CreateOrGetType(ns, child->second);
+                newtype.fieldnames.push_back(child->first);
                 newtype.fieldtypes.push_back(id);
                 unsigned int child_size_bytes = GetType(id).size_bytes;
                 fixed_size &= (child_size_bytes > 0);
@@ -137,9 +138,9 @@ public:
     // http://typed-json.org/ style definitions
     void AddTypes(const std::string& ns, const picojson::object& json)
     {
-        for(const picojson::object::value_type& v : json) {
-            PacketStreamTypeId types_id = CreateOrGetType(ns, v.second);
-            AddAlias(ns + v.first, types_id);
+        for(picojson::object::const_iterator v = json.begin(); v!= json.end(); ++v) {
+            PacketStreamTypeId types_id = CreateOrGetType(ns, v->second);
+            AddAlias(ns + v->first, types_id);
         }
     }
 

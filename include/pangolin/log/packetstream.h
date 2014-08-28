@@ -32,6 +32,7 @@
 #include <pangolin/utils/threadedfilebuf.h>
 #include <pangolin/log/packetstreamtypemap.h>
 #include <pangolin/compat/function.h>
+#include <pangolin/compat/mutex.h>
 #include <pangolin/compat/condition_variable.h>
 
 
@@ -181,8 +182,8 @@ protected:
     boostd::condition_variable source_tag_available[MAX_SOURCES];
 
     std::ifstream reader;
-    std::mutex read_mutex;
-    std::condition_variable new_frame;
+    boostd::mutex read_mutex;
+    boostd::condition_variable new_frame;
 
     std::vector<NewSourceReceiver*> source_handlers;
 //    std::map<unsigned int, FrameHandler> frame_handlers;
