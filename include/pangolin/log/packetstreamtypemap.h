@@ -28,8 +28,9 @@
 #ifndef PANGOLIN_PACKETSTREAMTYPEMAP_H
 #define PANGOLIN_PACKETSTREAMTYPEMAP_H
 
-#include <stdint.h>
+#include <pangolin/platform.h>
 #include <pangolin/utils/picojson.h>
+#include <stdint.h>
 #include <vector>
 #include <map>
 
