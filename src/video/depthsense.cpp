@@ -62,7 +62,7 @@ void DepthSenseContext::DeviceClosing()
     }
 }
 
-DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(size_t device_num)
+DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2)
 {
     if(running_devices == 0) {
         // Initialise SDK
@@ -74,7 +74,7 @@ DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(size_t device_num)
 
     if( da.size() > device_num )
     {
-        return new DepthSenseVideo(da[device_num]);
+        return new DepthSenseVideo(da[device_num], s1, s2, dim1, dim2, fps1, fps2);
     }
 
     throw VideoException("DepthSense device not connected.");
@@ -115,18 +115,23 @@ void DepthSenseContext::EventLoop()
     is_running = false;
 }
 
-DepthSenseVideo::DepthSenseVideo(DepthSense::Device device)
+DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2)
     : device(device), fill_image(0)
 {
+    sensor_type[0] = s1;
+    sensor_type[1] = s2;
+
     device.nodeAddedEvent().connect(this, &DepthSenseVideo::onNodeConnected);
     device.nodeRemovedEvent().connect(this, &DepthSenseVideo::onNodeDisconnected);
+
+    size_bytes = 0;
 
     std::vector<DepthSense::Node> nodes = device.getNodes();
     for (int n = 0; n < (int)nodes.size();n++)
         ConfigureNode(nodes[n]);
 
     // Just return depth image for the time being
-    const int n = 1;
+   /* const int n = 1;
     const int w = 320;
     const int h = 240;
 
@@ -138,7 +143,7 @@ DepthSenseVideo::DepthSenseVideo(DepthSense::Device device)
         const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp)/8, 0);
         streams.push_back(stream_info);        
         size_bytes += w*h*(pfmt.bpp)/8;
-    }
+    }*/
 
     DepthSenseContext::I().NewDeviceRunning();
 }
@@ -176,12 +181,12 @@ void DepthSenseVideo::ConfigureNode(DepthSense::Node node)
         DepthSenseContext::I().Context().registerNode(node);
     }
 
-//    if ((node.is<DepthSense::ColorNode>())&&(!g_cnode.isSet()))
-//    {
-//        g_cnode = node.as<DepthSense::ColorNode>();
-//        ConfigureColorNode();
-//        DepthSenseContext::I().Context().registerNode(node);
-//    }
+    if ((node.is<DepthSense::ColorNode>())&&(!g_cnode.isSet()))
+    {
+        g_cnode = node.as<DepthSense::ColorNode>();
+        ConfigureColorNode();
+        DepthSenseContext::I().Context().registerNode(node);
+    }
 }
 
 void DepthSenseVideo::ConfigureDepthNode()
@@ -190,7 +195,7 @@ void DepthSenseVideo::ConfigureDepthNode()
 
     DepthSense::DepthNode::Configuration config = g_dnode.getConfiguration();
     config.frameFormat = DepthSense::FRAME_FORMAT_QVGA;
-    config.framerate = 25;
+    config.framerate = 30;
     config.mode = DepthSense::DepthNode::CAMERA_MODE_CLOSE_MODE;
     config.saturation = true;
 
@@ -233,6 +238,15 @@ void DepthSenseVideo::ConfigureDepthNode()
         printf("TimeoutException\n");
     }
 
+    //Set pangolin stream for this channel
+    const int w = 320;
+    const int h = 240;
+
+    const VideoPixelFormat pfmt = VideoFormatFromString("GRAY16LE");
+
+    const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0 + size_bytes);
+    streams.push_back(stream_info);
+    size_bytes += stream_info.SizeBytes();
 }
 
 void DepthSenseVideo::ConfigureColorNode()
@@ -281,6 +295,16 @@ void DepthSenseVideo::ConfigureColorNode()
     {
         printf("TimeoutException\n");
     }
+
+    //Set pangolin stream for this channel
+    //const int w = 640;
+    //const int h = 480;
+
+    //const VideoPixelFormat pfmt = VideoFormatFromString("BGR24");
+
+    //const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0 + size_bytes);
+    //streams.push_back(stream_info);
+    //size_bytes += stream_info.SizeBytes();
 }
 
 void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data)

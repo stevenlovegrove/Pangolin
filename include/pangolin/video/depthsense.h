@@ -40,11 +40,18 @@
 namespace pangolin
 {
 
+enum DepthSenseSensorType
+{
+    DepthSenseUnassigned = -1,
+    DepthSenseRgb = 0,
+    DepthSenseDepth
+};
+
 // Video class that outputs test video signal.
 class PANGOLIN_EXPORT DepthSenseVideo : public VideoInterface
 {
 public:
-    DepthSenseVideo(DepthSense::Device device);
+    DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2);
     ~DepthSenseVideo();
     
     //! Implement VideoInput::Start()
@@ -78,6 +85,8 @@ protected:
     void ConfigureColorNode();
 
     std::vector<StreamInfo> streams;
+    DepthSenseSensorType sensor_type[2];
+
     size_t size_bytes;
 
     DepthSense::Device device;
@@ -99,7 +108,7 @@ public:
     // Singleton Instance
     static DepthSenseContext& I();
 
-    DepthSenseVideo* GetDepthSenseVideo(size_t device_num = 0);
+    DepthSenseVideo* GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2);
 
 protected:
     // Protected Constructor 
