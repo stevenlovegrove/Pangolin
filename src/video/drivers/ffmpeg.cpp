@@ -583,13 +583,15 @@ void FfmpegVideoOutputStream::WriteImage(const uint8_t* img, int w, int h, doubl
     AVCodecContext *c = stream->codec;
 
     if(flip) {
-        avpicture_fill(&src_picture,img,input_format,w,h);
+        // Earlier versions of ffmpeg do not annotate img as const, although it is
+        avpicture_fill(&src_picture,const_cast<uint8_t*>(img),input_format,w,h);
         for(int i=0; i<4; ++i) {
             src_picture.data[i] += (h-1) * src_picture.linesize[i];
             src_picture.linesize[i] *= -1;
         }
     }else{
-        avpicture_fill(&src_picture,img,input_format,w,h);
+        // Earlier versions of ffmpeg do not annotate img as const, although it is
+        avpicture_fill(&src_picture,const_cast<uint8_t*>(img),input_format,w,h);
     }
 
     if (c->pix_fmt != input_format || c->width != w || c->height != h) {
