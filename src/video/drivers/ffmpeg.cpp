@@ -634,7 +634,7 @@ FfmpegVideoOutputStream::FfmpegVideoOutputStream(
 )
     : recorder(recorder), input_info(input_info),
       input_format(FfmpegFmtFromString(input_info.PixFormat())),
-      output_format(AV_PIX_FMT_YUV420P),
+      output_format( FfmpegFmtFromString("YUV420P") ),
       last_pts(-1), sws_ctx(NULL), frame(NULL), flip(true)
 {
     stream = CreateStream(recorder.oc, codec_id, frame_rate, bit_rate, output_format, input_info.Width(), input_info.Height() );
