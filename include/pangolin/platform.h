@@ -38,6 +38,12 @@
 #  define PANGOLIN_DEPRECATED
 #endif
 
+#if (__cplusplus > 199711L) || (_MSC_VER >= 1700)
+#  define PANGOLIN_OVERRIDE override
+#else
+#  define PANGOLIN_OVERRIDE
+#endif
+
 #ifdef _MSVC_
 #   define __thread __declspec(thread)
 #   include <pangolin/pangolin_export.h>

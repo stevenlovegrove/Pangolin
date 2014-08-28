@@ -40,9 +40,9 @@ public:
     PangoVideoOutput(const std::string& filename);
     ~PangoVideoOutput();
 
-    const std::vector<StreamInfo>& Streams() const override;
-    void AddStreams(const std::vector<StreamInfo>& streams) override;
-    int WriteStreams(unsigned char* data) override;
+    const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
+    void AddStreams(const std::vector<StreamInfo>& streams) PANGOLIN_OVERRIDE;
+    int WriteStreams(unsigned char* data) PANGOLIN_OVERRIDE;
 
 protected:
     void WriteHeader();
