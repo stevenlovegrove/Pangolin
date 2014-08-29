@@ -73,37 +73,24 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
     
 protected:
-    //void ConfigureNode(DepthSense::Node node);
     void ConfigureNodes();
 
-    //void onNodeConnected(DepthSense::Device device, DepthSense::Device::NodeAddedData data);
-    //void onNodeDisconnected(DepthSense::Device device, DepthSense::Device::NodeRemovedData data);
-    
     void onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data);
     void onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data);
 
-    void ConfigureDepthNode();
-    void ConfigureColorNode();
-
-    enum StreamType
+    struct SensorConfig
     {
-        StreamTypeDepth = 0,
-        StreamTypeColor = 1
+        DepthSenseSensorType type;
+        ImageDim dim;
+        unsigned int fps;
     };
 
-    struct AssignedStream
-    {
-        AssignedStream(StreamType _type, StreamInfo _info) :
-            type(_type), info(_info)
-        {}
-
-        StreamType type;
-        StreamInfo info;
-    };
+    void ConfigureDepthNode(const SensorConfig& sensorConfig);
+    void ConfigureColorNode(const SensorConfig& sensorConfig);
 
     std::vector<StreamInfo> streams;
-    std::vector<AssignedStream> assignedStreams;
-    DepthSenseSensorType sensor_type[2];
+    SensorConfig sensorConfig[2];
+
     bool enableDepth;
     bool enableColor;
 

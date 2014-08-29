@@ -116,25 +116,11 @@ void DepthSenseContext::EventLoop()
 }
 
 DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2)
-    : device(device), fill_image(0), gotDepth(0), gotColor(0), enableDepth(false), enableColor(false)
+    : device(device), fill_image(0), gotDepth(0), gotColor(0), enableDepth(false), enableColor(false), size_bytes(0)
 {
-    sensor_type[0] = s1;
-    sensor_type[1] = s2;
-
-    //device.nodeAddedEvent().connect(this, &DepthSenseVideo::onNodeConnected);
-    //device.nodeRemovedEvent().connect(this, &DepthSenseVideo::onNodeDisconnected);
-
-    size_bytes = 0;
-
-    /*std::vector<DepthSense::Node> nodes = device.getNodes();
-    for (int n = 0; n < (int)nodes.size();n++)
-        ConfigureNode(nodes[n]);*/
+    sensorConfig[0] = {s1, dim1, fps1};
+    sensorConfig[1] = {s2, dim2, fps2};
     ConfigureNodes();
-
-    for (int i = 0; i < assignedStreams.size(); ++i)
-    {
-        streams.push_back(assignedStreams[i].info);
-    }
 
     DepthSenseContext::I().NewDeviceRunning();
 }
@@ -150,54 +136,14 @@ DepthSenseVideo::~DepthSenseVideo()
     DepthSenseContext::I().DeviceClosing();
 }
 
-//void DepthSenseVideo::onNodeConnected(DepthSense::Device device, DepthSense::Device::NodeAddedData data)
-//{
-//    ConfigureNode(data.node);
-//}
-
-//void DepthSenseVideo::onNodeDisconnected(DepthSense::Device device, DepthSense::Device::NodeRemovedData data)
-//{
-//    if (data.node.is<DepthSense::ColorNode>() && (data.node.as<DepthSense::ColorNode>() == g_cnode))
-//        g_cnode.unset();
-//    if (data.node.is<DepthSense::DepthNode>() && (data.node.as<DepthSense::DepthNode>() == g_dnode))
-//        g_dnode.unset();
-//}
-
-//void DepthSenseVideo::ConfigureNode(DepthSense::Node node)
-//{
-//    for (int i = 0; i<2; ++i) {
-//        switch (sensor_type[i]) {
-//        case DepthSenseDepth:
-//        {
-//            if ((node.is<DepthSense::DepthNode>()) && (!g_dnode.isSet()))
-//            {
-//                g_dnode = node.as<DepthSense::DepthNode>();
-//                ConfigureDepthNode();
-//                DepthSenseContext::I().Context().registerNode(node);
-//            }
-//            break;
-//        }
-//        case DepthSenseRgb:
-//        {
-//            if ((node.is<DepthSense::ColorNode>()) && (!g_cnode.isSet()))
-//            {
-//                g_cnode = node.as<DepthSense::ColorNode>();
-//                ConfigureColorNode();
-//                DepthSenseContext::I().Context().registerNode(node);
-//            }
-//            break;
-//        }
-//        default:
-//            continue;
-//        }
-//    }
-//}
 void DepthSenseVideo::ConfigureNodes()
 {
     std::vector<DepthSense::Node> nodes = device.getNodes();
 
-    for (int i = 0; i<2; ++i) {
-        switch (sensor_type[i]) {
+    for (int i = 0; i<2; ++i)
+    {
+        switch (sensorConfig[i].type)
+        {
         case DepthSenseDepth:
         {
             for (int n = 0; n < (int)nodes.size(); n++)
@@ -206,7 +152,7 @@ void DepthSenseVideo::ConfigureNodes()
                 if ((node.is<DepthSense::DepthNode>()) && (!g_dnode.isSet()))
                 {
                     g_dnode = node.as<DepthSense::DepthNode>();
-                    ConfigureDepthNode();
+                    ConfigureDepthNode(sensorConfig[i]);
                     DepthSenseContext::I().Context().registerNode(node);
                 }
             }
@@ -220,7 +166,7 @@ void DepthSenseVideo::ConfigureNodes()
                 if ((node.is<DepthSense::ColorNode>()) && (!g_cnode.isSet()))
                 {
                     g_cnode = node.as<DepthSense::ColorNode>();
-                    ConfigureColorNode();
+                    ConfigureColorNode(sensorConfig[i]);
                     DepthSenseContext::I().Context().registerNode(node);
                 }
             }
@@ -232,13 +178,75 @@ void DepthSenseVideo::ConfigureNodes()
     }
 }
 
-void DepthSenseVideo::ConfigureDepthNode()
+inline DepthSense::FrameFormat ImageDim2FrameFormat(const ImageDim& dim)
+{
+    DepthSense::FrameFormat retVal = DepthSense::FRAME_FORMAT_UNKNOWN;
+    if(dim.x == 160 && dim.y == 120)
+    {
+        retVal = DepthSense::FRAME_FORMAT_QQVGA;
+    }
+    else if(dim.x == 176 && dim.y == 144)
+    {
+        retVal = DepthSense::FRAME_FORMAT_QCIF;
+    }
+    else if(dim.x == 240 && dim.y == 160)
+    {
+        retVal = DepthSense::FRAME_FORMAT_HQVGA;
+    }
+    else if(dim.x == 320 && dim.y == 240)
+    {
+        retVal = DepthSense::FRAME_FORMAT_QVGA;
+    }
+    else if(dim.x == 352 && dim.y == 288)
+    {
+        retVal = DepthSense::FRAME_FORMAT_CIF;
+    }
+    else if(dim.x == 480 && dim.y == 320)
+    {
+        retVal = DepthSense::FRAME_FORMAT_HVGA;
+    }
+    else if(dim.x == 640 && dim.y == 480)
+    {
+        retVal = DepthSense::FRAME_FORMAT_VGA;
+    }
+    else if(dim.x == 1280 && dim.y == 720)
+    {
+        retVal = DepthSense::FRAME_FORMAT_WXGA_H;
+    }
+    else if(dim.x == 320 && dim.y == 120)
+    {
+        retVal = DepthSense::FRAME_FORMAT_DS311;
+    }
+    else if(dim.x == 1024 && dim.y == 768)
+    {
+        retVal = DepthSense::FRAME_FORMAT_XGA;
+    }
+    else if(dim.x == 800 && dim.y == 600)
+    {
+        retVal = DepthSense::FRAME_FORMAT_SVGA;
+    }
+    else if(dim.x == 636 && dim.y == 480)
+    {
+        retVal = DepthSense::FRAME_FORMAT_OVVGA;
+    }
+    else if(dim.x == 640 && dim.y == 240)
+    {
+        retVal = DepthSense::FRAME_FORMAT_WHVGA;
+    }
+    else if(dim.x == 640 && dim.y == 360)
+    {
+        retVal = DepthSense::FRAME_FORMAT_NHD;
+    }
+    return retVal;
+}
+
+void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig)
 {
     g_dnode.newSampleReceivedEvent().connect(this, &DepthSenseVideo::onNewDepthSample);
 
     DepthSense::DepthNode::Configuration config = g_dnode.getConfiguration();
-    config.frameFormat = DepthSense::FRAME_FORMAT_QVGA;
-    config.framerate = 30;
+    config.frameFormat = ImageDim2FrameFormat(sensorConfig.dim);
+    config.framerate = sensorConfig.fps;
     config.mode = DepthSense::DepthNode::CAMERA_MODE_CLOSE_MODE;
     config.saturation = true;
 
@@ -282,28 +290,29 @@ void DepthSenseVideo::ConfigureDepthNode()
     }
 
     //Set pangolin stream for this channel
-    const int w = 320;
-    const int h = 240;
+    const int w = sensorConfig.dim.x;
+    const int h = sensorConfig.dim.y;
 
     const VideoPixelFormat pfmt = VideoFormatFromString("GRAY16LE");
 
     const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0);
-    assignedStreams.push_back(AssignedStream(StreamTypeDepth, stream_info));
+    streams.push_back(stream_info);
+
     size_bytes += stream_info.SizeBytes();
 
     enableDepth = true;
 }
 
-void DepthSenseVideo::ConfigureColorNode()
+void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig)
 {
     // connect new color sample handler
     g_cnode.newSampleReceivedEvent().connect(this, &DepthSenseVideo::onNewColorSample);
 
     DepthSense::ColorNode::Configuration config = g_cnode.getConfiguration();
-    config.frameFormat = DepthSense::FRAME_FORMAT_VGA;
+    config.frameFormat = ImageDim2FrameFormat(sensorConfig.dim);
     config.compression = DepthSense::COMPRESSION_TYPE_MJPEG;
     config.powerLineFrequency = DepthSense::POWER_LINE_FREQUENCY_50HZ;
-    config.framerate = 25;
+    config.framerate = sensorConfig.fps;
 
     g_cnode.setEnableColorMap(true);
 
@@ -342,13 +351,13 @@ void DepthSenseVideo::ConfigureColorNode()
     }
 
     //Set pangolin stream for this channel
-    const int w = 640;
-    const int h = 480;
+    const int w = sensorConfig.dim.x;
+    const int h = sensorConfig.dim.y;
 
     const VideoPixelFormat pfmt = VideoFormatFromString("BGR24");
 
     const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0 + size_bytes);
-    assignedStreams.push_back(AssignedStream(StreamTypeColor, stream_info));
+    streams.push_back(stream_info);
 
     size_bytes += stream_info.SizeBytes();
 
@@ -368,19 +377,43 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
         if (fill_image != (unsigned char*)ROGUE_ADDR) {
             // Fill with data
             unsigned char* imagePtr = fill_image;
-            size_t streamSize = 0;
-            for (int i = 0; i < assignedStreams.size(); ++i)
+            bool copied = false;
+            for (int i = 0; i < 2; ++i)
             {
-                if (assignedStreams[i].type != StreamTypeColor)
+                switch (sensorConfig[i].type)
                 {
-                    imagePtr += assignedStreams[i].info.SizeBytes();
+                case DepthSenseDepth:
+                {
+                    imagePtr += streams[i].SizeBytes();
+                    break;
                 }
-                else
+                case DepthSenseRgb:
                 {
-                    streamSize = assignedStreams[i].info.SizeBytes();
+                    //copy data while converting BGR to RGB
+                    const unsigned char* srcPtr = data.colorMap;
+                    unsigned char* dstPtr = imagePtr;
+                    for(int y = 0; y < sensorConfig[i].dim.y; y++)
+                    {
+                        for(int x = 0; x < sensorConfig[i].dim.x; x++)
+                        {
+                            dstPtr[0] = srcPtr[2];
+                            dstPtr[1] = srcPtr[1];
+                            dstPtr[2] = srcPtr[0];
+                            dstPtr += 3;
+                            srcPtr += 3;
+                        }
+                    }
+                    copied = true;
+                    break;
+                }
+                default:
+                    continue;
+                }
+                if(copied)
+                {
+                    break;
                 }
             }
-            memcpy(imagePtr, data.colorMap, streamSize);
             gotColor++;
         }
     }
@@ -401,19 +434,30 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
         if(fill_image != (unsigned char*)ROGUE_ADDR) {
             // Fill with data
             unsigned char* imagePtr = fill_image;
-            size_t streamSize = 0;
-            for (int i = 0; i < assignedStreams.size(); ++i)
+            bool copied = false;
+            for (int i = 0; i < 2; ++i)
             {
-                if (assignedStreams[i].type != StreamTypeDepth)
+                switch (sensorConfig[i].type)
                 {
-                    imagePtr += assignedStreams[i].info.SizeBytes();
+                case DepthSenseDepth:
+                {
+                    memcpy(imagePtr, data.depthMap, streams[i].SizeBytes());
+                    copied = true;
+                    break;
                 }
-                else
+                case DepthSenseRgb:
                 {
-                    streamSize = assignedStreams[i].info.SizeBytes();
+                    imagePtr += streams[i].SizeBytes();
+                    break;
+                }
+                default:
+                    continue;
+                }
+                if(copied)
+                {
+                    break;
                 }
             }
-            memcpy(imagePtr, data.depthMap, streamSize);
             gotDepth++;
         }
     }
