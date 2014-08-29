@@ -221,6 +221,26 @@ OpenNiSensorType openni_sensor(const std::string& str)
 
 #endif // defined(HAVE_OPENNI) || defined(HAVE_OPENNI2)
 
+#if defined(HAVE_DEPTHSENSE)
+
+DepthSenseSensorType depthsense_sensor(const std::string& str)
+{
+    if (!str.compare("rgb")) {
+        return DepthSenseRgb;
+    }
+    else if (!str.compare("depth")) {
+        return DepthSenseDepth;
+    }
+    else if (str.empty()) {
+        return DepthSenseUnassigned;
+    }
+    else{
+        throw pangolin::VideoException("Unknown DepthSense sensor", str);
+    }
+}
+
+#endif // defined(HAVE_DEPTHSENSE)
+
 VideoInterface* OpenVideo(const std::string& str_uri)
 {
     return OpenVideo( ParseUri(str_uri) );
@@ -421,7 +441,23 @@ VideoInterface* OpenVideo(const Uri& uri)
 #endif
 #ifdef HAVE_DEPTHSENSE
     if(!uri.scheme.compare("depthsense")) {
-        video = DepthSenseContext::I().GetDepthSenseVideo();
+        const ImageDim dim1 = uri.Get<ImageDim>("size1", ImageDim(320, 240)); 
+        const ImageDim dim2 = uri.Get<ImageDim>("size2", ImageDim(640, 480)); 
+        const unsigned int fps1 = uri.Get<unsigned int>("fps1", 30); 
+        const unsigned int fps2 = uri.Get<unsigned int>("fps2", 30);
+
+        DepthSenseSensorType img1 = DepthSenseDepth;
+        DepthSenseSensorType img2 = DepthSenseUnassigned;
+
+        if (uri.params.find("img1") != uri.params.end()){
+            img1 = depthsense_sensor(uri.Get<std::string>("img1", "depth"));
+        }
+
+        if (uri.params.find("img2") != uri.params.end()){
+            img2 = depthsense_sensor(uri.Get<std::string>("img2", "rgb"));
+        }
+
+        video = DepthSenseContext::I().GetDepthSenseVideo(0, img1, img2, dim1, dim2, fps1, fps2);
     }else
 #endif
     {
