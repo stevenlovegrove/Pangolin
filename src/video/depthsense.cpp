@@ -121,14 +121,15 @@ DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType
     sensor_type[0] = s1;
     sensor_type[1] = s2;
 
-    device.nodeAddedEvent().connect(this, &DepthSenseVideo::onNodeConnected);
-    device.nodeRemovedEvent().connect(this, &DepthSenseVideo::onNodeDisconnected);
+    //device.nodeAddedEvent().connect(this, &DepthSenseVideo::onNodeConnected);
+    //device.nodeRemovedEvent().connect(this, &DepthSenseVideo::onNodeDisconnected);
 
     size_bytes = 0;
 
-    std::vector<DepthSense::Node> nodes = device.getNodes();
+    /*std::vector<DepthSense::Node> nodes = device.getNodes();
     for (int n = 0; n < (int)nodes.size();n++)
-        ConfigureNode(nodes[n]);
+        ConfigureNode(nodes[n]);*/
+    ConfigureNodes();
 
     for (int i = 0; i < assignedStreams.size(); ++i)
     {
@@ -149,40 +150,79 @@ DepthSenseVideo::~DepthSenseVideo()
     DepthSenseContext::I().DeviceClosing();
 }
 
-void DepthSenseVideo::onNodeConnected(DepthSense::Device device, DepthSense::Device::NodeAddedData data)
-{
-    ConfigureNode(data.node);
-}
+//void DepthSenseVideo::onNodeConnected(DepthSense::Device device, DepthSense::Device::NodeAddedData data)
+//{
+//    ConfigureNode(data.node);
+//}
 
-void DepthSenseVideo::onNodeDisconnected(DepthSense::Device device, DepthSense::Device::NodeRemovedData data)
-{
-    if (data.node.is<DepthSense::ColorNode>() && (data.node.as<DepthSense::ColorNode>() == g_cnode))
-        g_cnode.unset();
-    if (data.node.is<DepthSense::DepthNode>() && (data.node.as<DepthSense::DepthNode>() == g_dnode))
-        g_dnode.unset();
-}
+//void DepthSenseVideo::onNodeDisconnected(DepthSense::Device device, DepthSense::Device::NodeRemovedData data)
+//{
+//    if (data.node.is<DepthSense::ColorNode>() && (data.node.as<DepthSense::ColorNode>() == g_cnode))
+//        g_cnode.unset();
+//    if (data.node.is<DepthSense::DepthNode>() && (data.node.as<DepthSense::DepthNode>() == g_dnode))
+//        g_dnode.unset();
+//}
 
-void DepthSenseVideo::ConfigureNode(DepthSense::Node node)
+//void DepthSenseVideo::ConfigureNode(DepthSense::Node node)
+//{
+//    for (int i = 0; i<2; ++i) {
+//        switch (sensor_type[i]) {
+//        case DepthSenseDepth:
+//        {
+//            if ((node.is<DepthSense::DepthNode>()) && (!g_dnode.isSet()))
+//            {
+//                g_dnode = node.as<DepthSense::DepthNode>();
+//                ConfigureDepthNode();
+//                DepthSenseContext::I().Context().registerNode(node);
+//            }
+//            break;
+//        }
+//        case DepthSenseRgb:
+//        {
+//            if ((node.is<DepthSense::ColorNode>()) && (!g_cnode.isSet()))
+//            {
+//                g_cnode = node.as<DepthSense::ColorNode>();
+//                ConfigureColorNode();
+//                DepthSenseContext::I().Context().registerNode(node);
+//            }
+//            break;
+//        }
+//        default:
+//            continue;
+//        }
+//    }
+//}
+void DepthSenseVideo::ConfigureNodes()
 {
+    std::vector<DepthSense::Node> nodes = device.getNodes();
+
     for (int i = 0; i<2; ++i) {
         switch (sensor_type[i]) {
         case DepthSenseDepth:
         {
-            if ((node.is<DepthSense::DepthNode>()) && (!g_dnode.isSet()))
+            for (int n = 0; n < (int)nodes.size(); n++)
             {
-                g_dnode = node.as<DepthSense::DepthNode>();
-                ConfigureDepthNode();
-                DepthSenseContext::I().Context().registerNode(node);
+                DepthSense::Node node = nodes[n];
+                if ((node.is<DepthSense::DepthNode>()) && (!g_dnode.isSet()))
+                {
+                    g_dnode = node.as<DepthSense::DepthNode>();
+                    ConfigureDepthNode();
+                    DepthSenseContext::I().Context().registerNode(node);
+                }
             }
             break;
         }
         case DepthSenseRgb:
         {
-            if ((node.is<DepthSense::ColorNode>()) && (!g_cnode.isSet()))
+            for (int n = 0; n < (int)nodes.size(); n++)
             {
-                g_cnode = node.as<DepthSense::ColorNode>();
-                ConfigureColorNode();
-                DepthSenseContext::I().Context().registerNode(node);
+                DepthSense::Node node = nodes[n];
+                if ((node.is<DepthSense::ColorNode>()) && (!g_cnode.isSet()))
+                {
+                    g_cnode = node.as<DepthSense::ColorNode>();
+                    ConfigureColorNode();
+                    DepthSenseContext::I().Context().registerNode(node);
+                }
             }
             break;
         }

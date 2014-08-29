@@ -73,10 +73,11 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
     
 protected:
-    void ConfigureNode(DepthSense::Node node);
+    //void ConfigureNode(DepthSense::Node node);
+    void ConfigureNodes();
 
-    void onNodeConnected(DepthSense::Device device, DepthSense::Device::NodeAddedData data);
-    void onNodeDisconnected(DepthSense::Device device, DepthSense::Device::NodeRemovedData data);
+    //void onNodeConnected(DepthSense::Device device, DepthSense::Device::NodeAddedData data);
+    //void onNodeDisconnected(DepthSense::Device device, DepthSense::Device::NodeRemovedData data);
     
     void onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data);
     void onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data);
