@@ -400,7 +400,7 @@ VideoInterface* OpenVideo(const Uri& uri)
         const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
         const unsigned int fps = uri.Get<unsigned int>("fps", 30);
 
-        OpenNiSensorType img1 = OpenNiRgb; //TODO: shouldn't this default to OpenNiDepth 
+        OpenNiSensorType img1 = OpenNiRgb;
         OpenNiSensorType img2 = OpenNiUnassigned;
         
         if(uri.params.find("img1")!=uri.params.end()){
@@ -441,10 +441,10 @@ VideoInterface* OpenVideo(const Uri& uri)
 #endif
 #ifdef HAVE_DEPTHSENSE
     if(!uri.scheme.compare("depthsense")) {
-        const ImageDim dim1 = uri.Get<ImageDim>("size1", ImageDim(320, 240)); //default for depth
-        const ImageDim dim2 = uri.Get<ImageDim>("size2", ImageDim(640, 480)); //default for rgb
-        const unsigned int fps1 = uri.Get<unsigned int>("fps1", 30); //default for depth
-        const unsigned int fps2 = uri.Get<unsigned int>("fps1", 30); //default for rgb
+        const ImageDim dim1 = uri.Get<ImageDim>("size1", ImageDim(320, 240)); 
+        const ImageDim dim2 = uri.Get<ImageDim>("size2", ImageDim(640, 480)); 
+        const unsigned int fps1 = uri.Get<unsigned int>("fps1", 30); 
+        const unsigned int fps2 = uri.Get<unsigned int>("fps1", 30);
 
         DepthSenseSensorType img1 = DepthSenseDepth;
         DepthSenseSensorType img2 = DepthSenseUnassigned;

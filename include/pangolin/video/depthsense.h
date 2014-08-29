@@ -84,8 +84,27 @@ protected:
     void ConfigureDepthNode();
     void ConfigureColorNode();
 
+    enum StreamType
+    {
+        StreamTypeDepth = 0,
+        StreamTypeColor = 1
+    };
+
+    struct AssignedStream
+    {
+        AssignedStream(StreamType _type, StreamInfo _info) :
+            type(_type), info(_info)
+        {}
+
+        StreamType type;
+        StreamInfo info;
+    };
+
     std::vector<StreamInfo> streams;
+    std::vector<AssignedStream> assignedStreams;
     DepthSenseSensorType sensor_type[2];
+    bool enableDepth;
+    bool enableColor;
 
     size_t size_bytes;
 
@@ -95,6 +114,8 @@ protected:
     DepthSense::StereoCameraParameters g_scp;
 
     unsigned char* fill_image;
+    int gotDepth;
+    int gotColor;
     boostd::mutex update_mutex;
     boostd::condition_variable cond_image_filled;
     boostd::condition_variable cond_image_requested;

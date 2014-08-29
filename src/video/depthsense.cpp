@@ -116,7 +116,7 @@ void DepthSenseContext::EventLoop()
 }
 
 DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2)
-    : device(device), fill_image(0)
+    : device(device), fill_image(0), gotDepth(0), gotColor(0), enableDepth(false), enableColor(false)
 {
     sensor_type[0] = s1;
     sensor_type[1] = s2;
@@ -130,20 +130,10 @@ DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType
     for (int n = 0; n < (int)nodes.size();n++)
         ConfigureNode(nodes[n]);
 
-    // Just return depth image for the time being
-   /* const int n = 1;
-    const int w = 320;
-    const int h = 240;
-
-    const VideoPixelFormat pfmt = VideoFormatFromString("GRAY16LE");
-    
-    size_bytes = 0;
-    
-    for(size_t c=0; c < n; ++c) {
-        const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp)/8, 0);
-        streams.push_back(stream_info);        
-        size_bytes += w*h*(pfmt.bpp)/8;
-    }*/
+    for (int i = 0; i < assignedStreams.size(); ++i)
+    {
+        streams.push_back(assignedStreams[i].info);
+    }
 
     DepthSenseContext::I().NewDeviceRunning();
 }
@@ -174,18 +164,31 @@ void DepthSenseVideo::onNodeDisconnected(DepthSense::Device device, DepthSense::
 
 void DepthSenseVideo::ConfigureNode(DepthSense::Node node)
 {
-    if ((node.is<DepthSense::DepthNode>())&&(!g_dnode.isSet()))
-    {
-        g_dnode = node.as<DepthSense::DepthNode>();
-        ConfigureDepthNode();
-        DepthSenseContext::I().Context().registerNode(node);
-    }
-
-    if ((node.is<DepthSense::ColorNode>())&&(!g_cnode.isSet()))
-    {
-        g_cnode = node.as<DepthSense::ColorNode>();
-        ConfigureColorNode();
-        DepthSenseContext::I().Context().registerNode(node);
+    for (int i = 0; i<2; ++i) {
+        switch (sensor_type[i]) {
+        case DepthSenseDepth:
+        {
+            if ((node.is<DepthSense::DepthNode>()) && (!g_dnode.isSet()))
+            {
+                g_dnode = node.as<DepthSense::DepthNode>();
+                ConfigureDepthNode();
+                DepthSenseContext::I().Context().registerNode(node);
+            }
+            break;
+        }
+        case DepthSenseRgb:
+        {
+            if ((node.is<DepthSense::ColorNode>()) && (!g_cnode.isSet()))
+            {
+                g_cnode = node.as<DepthSense::ColorNode>();
+                ConfigureColorNode();
+                DepthSenseContext::I().Context().registerNode(node);
+            }
+            break;
+        }
+        default:
+            continue;
+        }
     }
 }
 
@@ -244,9 +247,11 @@ void DepthSenseVideo::ConfigureDepthNode()
 
     const VideoPixelFormat pfmt = VideoFormatFromString("GRAY16LE");
 
-    const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0 + size_bytes);
-    streams.push_back(stream_info);
+    const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0);
+    assignedStreams.push_back(AssignedStream(StreamTypeDepth, stream_info));
     size_bytes += stream_info.SizeBytes();
+
+    enableDepth = true;
 }
 
 void DepthSenseVideo::ConfigureColorNode()
@@ -297,26 +302,54 @@ void DepthSenseVideo::ConfigureColorNode()
     }
 
     //Set pangolin stream for this channel
-    //const int w = 640;
-    //const int h = 480;
+    const int w = 640;
+    const int h = 480;
 
-    //const VideoPixelFormat pfmt = VideoFormatFromString("BGR24");
+    const VideoPixelFormat pfmt = VideoFormatFromString("BGR24");
 
-    //const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0 + size_bytes);
-    //streams.push_back(stream_info);
-    //size_bytes += stream_info.SizeBytes();
+    const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0 + size_bytes);
+    assignedStreams.push_back(AssignedStream(StreamTypeColor, stream_info));
+
+    size_bytes += stream_info.SizeBytes();
+
+    enableColor = true;
 }
 
 void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data)
 {
+    {
+        boostd::unique_lock<boostd::mutex> lock(update_mutex);
 
+        // Wait for fill request
+        while (!fill_image) {
+            cond_image_requested.wait(lock);
+        }
+
+        if (fill_image != (unsigned char*)ROGUE_ADDR) {
+            // Fill with data
+            unsigned char* imagePtr = fill_image;
+            size_t streamSize = 0;
+            for (int i = 0; i < assignedStreams.size(); ++i)
+            {
+                if (assignedStreams[i].type != StreamTypeColor)
+                {
+                    imagePtr += assignedStreams[i].info.SizeBytes();
+                }
+                else
+                {
+                    streamSize = assignedStreams[i].info.SizeBytes();
+                }
+            }
+            memcpy(imagePtr, data.colorMap, streamSize);
+            gotColor++;
+        }
+    }
+
+    cond_image_filled.notify_one();
 }
 
 void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data)
 {
-    // Our data is stored in a float array:
-    // data.depthMapFloatingPoint
-
     {
         boostd::unique_lock<boostd::mutex> lock(update_mutex);
 
@@ -327,8 +360,21 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
 
         if(fill_image != (unsigned char*)ROGUE_ADDR) {
             // Fill with data
-            memcpy(fill_image, data.depthMap, SizeBytes());
-            fill_image = 0;
+            unsigned char* imagePtr = fill_image;
+            size_t streamSize = 0;
+            for (int i = 0; i < assignedStreams.size(); ++i)
+            {
+                if (assignedStreams[i].type != StreamTypeDepth)
+                {
+                    imagePtr += assignedStreams[i].info.SizeBytes();
+                }
+                else
+                {
+                    streamSize = assignedStreams[i].info.SizeBytes();
+                }
+            }
+            memcpy(imagePtr, data.depthMap, streamSize);
+            gotDepth++;
         }
     }
 
@@ -366,9 +412,20 @@ bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
     // Wait until it has been filled successfully. 
     {
         boostd::unique_lock<boostd::mutex> lock(update_mutex);
-        while( fill_image ) {
+        while ((enableDepth && !gotDepth) || (enableColor && !gotColor))
+        {
             cond_image_filled.wait(lock);
         }
+
+        if (gotDepth)
+        {
+            gotDepth = 0;
+        }
+        if (gotColor)
+        {
+            gotColor = 0;
+        }
+        fill_image = 0;
     }
 
     return true;
