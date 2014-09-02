@@ -72,7 +72,11 @@
 //
 // depthsense - capture video / depth from DepthSense SDK.
 //              DepthSenseViewer can be used to alter capture settings.
+//              imgN=depth|rgb
+//              sizeN=QVGA|320x240|...
+//              fpsN=25|30|60|...
 //  e.g. "depthsense://"
+//  e.g. "depthsense:[img1=depth,img2=rgb]//"
 //
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
