@@ -40,11 +40,18 @@
 namespace pangolin
 {
 
+enum DepthSenseSensorType
+{
+    DepthSenseUnassigned = -1,
+    DepthSenseRgb = 0,
+    DepthSenseDepth
+};
+
 // Video class that outputs test video signal.
 class PANGOLIN_EXPORT DepthSenseVideo : public VideoInterface
 {
 public:
-    DepthSenseVideo(DepthSense::Device device);
+    DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2);
     ~DepthSenseVideo();
     
     //! Implement VideoInput::Start()
@@ -66,18 +73,27 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
     
 protected:
-    void ConfigureNode(DepthSense::Node node);
+    void ConfigureNodes();
 
-    void onNodeConnected(DepthSense::Device device, DepthSense::Device::NodeAddedData data);
-    void onNodeDisconnected(DepthSense::Device device, DepthSense::Device::NodeRemovedData data);
-    
     void onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data);
     void onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data);
 
-    void ConfigureDepthNode();
-    void ConfigureColorNode();
+    struct SensorConfig
+    {
+        DepthSenseSensorType type;
+        ImageDim dim;
+        unsigned int fps;
+    };
+
+    void ConfigureDepthNode(const SensorConfig& sensorConfig);
+    void ConfigureColorNode(const SensorConfig& sensorConfig);
 
     std::vector<StreamInfo> streams;
+    SensorConfig sensorConfig[2];
+
+    bool enableDepth;
+    bool enableColor;
+
     size_t size_bytes;
 
     DepthSense::Device device;
@@ -86,6 +102,8 @@ protected:
     DepthSense::StereoCameraParameters g_scp;
 
     unsigned char* fill_image;
+    int gotDepth;
+    int gotColor;
     boostd::mutex update_mutex;
     boostd::condition_variable cond_image_filled;
     boostd::condition_variable cond_image_requested;
@@ -99,7 +117,7 @@ public:
     // Singleton Instance
     static DepthSenseContext& I();
 
-    DepthSenseVideo* GetDepthSenseVideo(size_t device_num = 0);
+    DepthSenseVideo* GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2);
 
 protected:
     // Protected Constructor 
