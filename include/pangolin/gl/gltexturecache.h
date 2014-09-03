@@ -39,10 +39,7 @@ namespace pangolin
 class PANGOLIN_EXPORT TextureCache
 {
 public:
-    static TextureCache& I() {
-        static TextureCache instance;
-        return instance;
-    }
+    static TextureCache& I();
 
     GlTexture& GlTex(int w, int h, GLint internal_format, GLint glformat, GLenum gltype)
     {
