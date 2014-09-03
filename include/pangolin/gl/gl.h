@@ -50,7 +50,7 @@ namespace pangolin
 // Interface
 ////////////////////////////////////////////////
 
-class GlTexture
+class PANGOLIN_EXPORT GlTexture
 {
 public:
     //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
@@ -110,7 +110,7 @@ private:
     GlTexture(const GlTexture&) {}
 };
 
-struct GlRenderBuffer
+struct PANGOLIN_EXPORT GlRenderBuffer
 {
     GlRenderBuffer();
     GlRenderBuffer(GLint width, GLint height, GLint internal_format = GL_DEPTH_COMPONENT24);
@@ -133,7 +133,7 @@ private:
     GlRenderBuffer(const GlRenderBuffer&) {}
 };
 
-struct GlFramebuffer
+struct PANGOLIN_EXPORT GlFramebuffer
 {
     GlFramebuffer();
     ~GlFramebuffer();
@@ -165,7 +165,7 @@ enum GlBufferType
 #endif
 };
 
-struct GlBuffer
+struct PANGOLIN_EXPORT GlBuffer
 {
     //! Default constructor represents 'no buffer'
     GlBuffer();
@@ -196,7 +196,7 @@ private:
     GlBuffer(const GlBuffer&) {}
 };
 
-class GlSizeableBuffer
+class PANGOLIN_EXPORT GlSizeableBuffer
         : public pangolin::GlBuffer
 {
 public:
