@@ -18,7 +18,10 @@ and IOS.
 ## Code ##
 
 Find the latest version on [Github](http://github.com/stevenlovegrove/Pangolin):
->     git clone https://github.com/stevenlovegrove/Pangolin.git
+
+```
+git clone https://github.com/stevenlovegrove/Pangolin.git
+```
 
 Current build status on [Drone.io](https://drone.io/github.com/stevenlovegrove/Pangolin)
 ![Build Status](https://drone.io/github.com/stevenlovegrove/Pangolin/status.png)
@@ -70,10 +73,33 @@ Check the CMake configure output for details.
 ### Very Optional Dependencies ###
 
 * GLConsole (For graphical drop-down console. Must be built before Pangolin.)
- * git clone git://git.code.sf.net/p/glconsole/code glconsole
+ * https://github.com/arpg/GLConsole
 
 * Eigen / TooN (These matrix types supported in the Pangolin API.)
 
 * CUDA Toolkit (>= 3.2)
- * http://developer.nvidia.com/object/cuda_3_2_downloads.html
+ * http://developer.nvidia.com/cuda-downloads
 
+* Doxygen for generating html / pdf documentation.
+
+## Building ##
+
+Pangolin uses the CMake portable pre-build tool. To checkout and build pangolin in the
+directory 'build', enabling C++11 support instead of using Boost, execute the
+following at a shell (or the equivelent using a GUI):
+
+```
+git clone https://github.com/stevenlovegrove/Pangolin.git
+cd Pangolin
+mkdir build
+cd build
+cmake -DCPP11_NO_BOOST=1 ..
+make -j
+```
+
+If you would like to build the documentation and you have Doxygen installed, you
+can execute:
+
+```
+make doc
+```
