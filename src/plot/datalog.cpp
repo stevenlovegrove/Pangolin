@@ -79,7 +79,7 @@ void DataLogBlock::AddSamples(size_t num_samples, size_t dimensions, const float
 }
 
 DataLog::DataLog(unsigned int buffer_size)
-    : block_samples_alloc(buffer_size), block0(0), blockn(0), record_stats(false)
+    : block_samples_alloc(buffer_size), block0(0), blockn(0), record_stats(true)
 {
 }
 

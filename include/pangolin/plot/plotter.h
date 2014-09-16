@@ -196,6 +196,7 @@ protected:
     XYRange selection;
 
     void ComputeTrackValue( float track_val[2] );
+    XYRange ComputeAutoSelection();
 
     bool track;
     std::string track_x;

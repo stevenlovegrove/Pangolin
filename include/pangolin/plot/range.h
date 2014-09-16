@@ -35,6 +35,12 @@ namespace pangolin
 
 struct Range
 {
+    Range()
+        : min(+std::numeric_limits<float>::max()),
+          max(-std::numeric_limits<float>::max())
+    {
+    }
+
     Range(float rmin, float rmax)
         : min(rmin), max(rmax)
     {
@@ -131,6 +137,10 @@ struct Range
 
 struct XYRange
 {
+    XYRange()
+    {
+    }
+
     XYRange(const Range& xrange, const Range& yrange)
         : x(xrange), y(yrange)
     {

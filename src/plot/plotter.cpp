@@ -349,6 +349,30 @@ void Plotter::ComputeTrackValue( float track_val[2] )
     track_val[1] = 0.0f;
 }
 
+XYRange Plotter::ComputeAutoSelection()
+{
+    XYRange range;
+    range.x = target.x;
+
+    const DataLogBlock* block = log->FirstBlock();
+
+    if(block) {
+        for(size_t i=0; i < plotseries.size(); ++i)
+        {
+            if( plotseries[i].attribs.size() == 2 && plotseries[i].attribs[0].plot_id == -1) {
+                const int id = plotseries[i].attribs[1].plot_id;
+                if( 0<= id && id < (int)block->Dimensions()) {
+                    range.y.Insert(log->Stats(id).min);
+                    range.y.Insert(log->Stats(id).max);
+                }
+            }
+
+        }
+    }
+
+    return range;
+}
+
 void Plotter::Render()
 {
     // Animate scroll / zooming
@@ -848,13 +872,20 @@ void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
     };
 
     if(pressed) {
-        if(key == ' ' && selection.Area() > 0.0f) {
-            // Set view to equal selection
-            SetViewSmooth(selection);
+        if(key == ' ') {
+            if( selection.Area() <= 0.0f) {
+                // Work out Auto zoom selection bounds
+                selection = ComputeAutoSelection();
+            }
 
-            // Reset selection
-            selection.x.max = selection.x.min;
-            selection.y.max = selection.y.min;
+            if( selection.Area() > 0.0f) {
+                // Set view to equal selection
+                SetViewSmooth(selection);
+
+                // Reset selection
+                selection.x.max = selection.x.min;
+                selection.y.max = selection.y.min;
+            }
         }else if(key == PANGO_SPECIAL + PANGO_KEY_LEFT) {
             const float w = rview.x.Size();
             const float dx = mvfactor*w;
