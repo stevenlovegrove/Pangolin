@@ -85,15 +85,46 @@ std::vector<std::string> Expand(const std::string &s, char open, char close, cha
     return ret;
 }
 
-std::string PathParent(const std::string& path)
+// Make path seperator consistent for OS.
+void PathOsNormaliseInplace(std::string& path)
 {
-    const size_t nLastSlash = path.find_last_of("/\\");
-    
-    if(nLastSlash != std::string::npos) {
-        return path.substr(0, nLastSlash);
-    }else{
-        return std::string();
+#ifdef _WIN_
+    std::replace(path.begin(), path.end(), '/', '\\');
+#else
+    std::replace(path.begin(), path.end(), '\\', '/');
+#endif
+}
+
+// Return path 'levels' directories above 'path'
+std::string PathParent(const std::string& path, int levels)
+{
+    std::string res = path;
+
+    while (levels > 1) {
+        if (res.length() == 0) {
+            res = std::string();
+            for (int l = 0; l < levels; ++l) {
+#ifdef _WIN_
+                res += std::string("..\\");
+#else
+                res += std::string("../");
+#endif
+            }
+            return res;
+        }else{
+            const size_t nLastSlash = res.find_last_of("/\\");
+
+            if (nLastSlash != std::string::npos) {
+                res = path.substr(0, nLastSlash);
+            } else{
+                res = std::string();
+            }
+
+            --levels;
+        }
     }
+
+    return res;
 }
 
 std::string PathExpand(const std::string& sPath)
