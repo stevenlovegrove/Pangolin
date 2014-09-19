@@ -67,14 +67,15 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
 #ifdef CALLEE_HAS_CPP11
     pangolin::RegisterKeyPressCallback(' ', [&](){
-        if(video_out.IsOpen()) {
-            video_out.Close();
-            pango_print_info("Finished recording.\n");
-        }else{
+        if(!video_out.IsOpen()) {
             pango_print_info("Recording...\n");
             video_out.Open(output_uri);
             video_out.AddStreams(video.Streams());
+        }else{
+            video_out.Close();
+            pango_print_info("Finished recording.\n");
         }
+        fflush(stdout);
     });
 #endif
 
