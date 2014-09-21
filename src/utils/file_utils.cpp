@@ -100,7 +100,7 @@ std::string PathParent(const std::string& path, int levels)
 {
     std::string res = path;
 
-    while (levels > 1) {
+    while (levels > 0) {
         if (res.length() == 0) {
             res = std::string();
             for (int l = 0; l < levels; ++l) {
@@ -125,6 +125,15 @@ std::string PathParent(const std::string& path, int levels)
     }
 
     return res;
+}
+
+std::string FindPath(const std::string& child_path, const std::string& signature_path)
+{
+    std::string path = child_path;
+    while(!path.empty() && !FileExists(path + signature_path)) {
+        path = PathParent(path);
+    }
+    return path + signature_path;
 }
 
 std::string PathExpand(const std::string& sPath)

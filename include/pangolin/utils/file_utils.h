@@ -53,6 +53,9 @@ PANGOLIN_EXPORT
 bool FileExists(const std::string& filename);
 
 PANGOLIN_EXPORT
+std::string FindPath(const std::string& child_path, const std::string& signature_path);
+
+PANGOLIN_EXPORT
 std::string PathExpand(const std::string& sPath);
 
 PANGOLIN_EXPORT
