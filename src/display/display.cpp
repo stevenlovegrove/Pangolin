@@ -40,6 +40,7 @@
 #include <pangolin/utils/simple_math.h>
 #include <pangolin/utils/timer.h>
 #include <pangolin/utils/type_convert.h>
+#include <pangolin/image/image_load.h>
 
 #define GLUT_KEY_ESCAPE 27
 #define GLUT_KEY_TAB 9
@@ -47,21 +48,6 @@
 #ifdef BUILD_PANGOLIN_VARS
   #include <pangolin/var/var.h>
 #endif
-
-#ifdef HAVE_BOOST_GIL
-    #include <boost/gil/gil_all.hpp>
-    #ifdef HAVE_PNG
-    #define png_infopp_NULL (png_infopp)NULL
-    #define int_p_NULL (int*)NULL
-    #include <boost/gil/extension/io/png_io.hpp>
-    #endif // HAVE_PNG
-    #ifdef HAVE_JPEG
-    #include <boost/gil/extension/io/jpeg_io.hpp>
-    #endif // HAVE_JPEG
-    #ifdef HAVE_TIFF
-    #include <boost/gil/extension/io/tiff_io.hpp>
-    #endif // HAVE_TIFF
-#endif // HAVE_BOOST_GIL
 
 #include <pangolin/compat/memory.h>
 
@@ -161,13 +147,11 @@ void RenderViews()
 
 void PostRender()
 {
-#ifdef HAVE_BOOST_GIL
     while(context->screen_capture.size()) {
         std::pair<std::string,Viewport> fv = context->screen_capture.front();
         context->screen_capture.pop();
         SaveFramebuffer(fv.first, fv.second);
     }
-#endif // HAVE_BOOST_GIL
     
 #ifdef BUILD_PANGOLIN_VIDEO
     if(context->recorder.IsOpen()) {
@@ -256,21 +240,19 @@ void SaveWindowOnRender(std::string prefix)
 void SaveFramebuffer(std::string prefix, const Viewport& v)
 {
 #ifndef HAVE_GLES
-#ifdef HAVE_BOOST_GIL
-    // Save colour channels
-    boost::gil::rgba8_image_t img(v.w, v.h);
-    glReadBuffer(GL_BACK);    
-    glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?    
-    glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, boost::gil::interleaved_view_get_raw_data( boost::gil::view( img ) ) );
+
 #ifdef HAVE_PNG
-    boost::gil::png_write_view(prefix + ".png", flipped_up_down_view( boost::gil::const_view(img)) );
+    Image<unsigned char> buffer;
+
+    VideoPixelFormat fmt = VideoFormatFromString("RGBA");
+    buffer.Alloc(v.w, v.h, v.w * fmt.bpp/8 );
+    glReadBuffer(GL_BACK);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?
+    glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, buffer.ptr );
+    SaveImage(buffer, fmt, prefix + ".png", false);
+    buffer.Dealloc();
 #endif // HAVE_PNG
     
-    //      // Save depth channel
-    //      boost::gil::gray32f_image_t depth(v.w, v.h);
-    //      glReadPixels(v.l, v.b, v.w, v.h, GL_DEPTH_COMPONENT, GL_FLOAT, boost::gil::interleaved_view_get_raw_data( view( depth ) ));
-    //      boost::gil::tiff_write_view(prefix + "_depth.tiff", flipped_up_down_view(const_view(depth)) );
-#endif // HAVE_BOOST_GIL
 #endif // HAVE_GLES
 }
 

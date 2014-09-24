@@ -88,16 +88,6 @@ if(NOT CPP11_NO_BOOST)
     find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
     list(APPEND USER_INC  "${Boost_INCLUDE_DIRS}" )
     list(APPEND LINK_LIBS "${Boost_LIBRARIES}" )
-
-    # Generic Image Library (GIL) should come with boost.
-    # If you have a version of boost without it, maybe figure out how to test here.
-    set(HAVE_BOOST_GIL 1)
-else()
-    find_package(Boost QUIET)
-    if(Boost_FOUND)
-        list(APPEND USER_INC "${Boost_INCLUDE_DIRS}" )
-        set(HAVE_BOOST_GIL 1)
-    endif()
 endif()
 
 if(BUILD_PANGOLIN_GUI)

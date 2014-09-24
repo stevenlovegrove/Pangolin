@@ -40,7 +40,6 @@
 #cmakedefine HAVE_GLES_2
 #cmakedefine HAVE_OCULUS
 
-#cmakedefine HAVE_BOOST_GIL
 #cmakedefine HAVE_PNG
 #cmakedefine HAVE_JPEG
 #cmakedefine HAVE_TIFF

@@ -305,7 +305,7 @@ TypedImage LoadPng(const std::string& filename)
 #endif
 }
 
-void SavePng(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename)
+void SavePng(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
     // Check image has supported bit depth
     for(unsigned int i=1; i < fmt.channels; ++i) {
@@ -372,8 +372,14 @@ void SavePng(const Image<unsigned char>& image, const pangolin::VideoPixelFormat
 
     // Write image data
 
-    for (unsigned int y = 0; y< image.h; y++) {
-        png_write_row(png_ptr, image.ptr + y*image.pitch);
+    if(top_line_first) {
+        for (unsigned int y = 0; y< image.h; y++) {
+            png_write_row(png_ptr, image.ptr + y*image.pitch);
+        }
+    }else{
+        for (int y = (int)image.h-1; y >=0; y--) {
+            png_write_row(png_ptr, image.ptr + y*image.pitch);
+        }
     }
 
     // End write
@@ -547,26 +553,26 @@ TypedImage LoadImage(const std::string& filename)
     return LoadImage( filename, file_type );
 }
 
-void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, ImageFileType file_type)
+void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, ImageFileType file_type, bool top_line_first)
 {
     switch (file_type) {
     case ImageFileTypePng:
-        return SavePng(image, fmt, filename);
+        return SavePng(image, fmt, filename, top_line_first);
     default:
         throw std::runtime_error("Unsupported image file type, '" + filename + "'");
     }
 }
 
-void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename)
+void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
     const std::string ext = FileLowercaseExtention(filename);
     ImageFileType file_type = FileTypeExtension(ext);
-    SaveImage(image, fmt, filename,file_type);
+    SaveImage(image, fmt, filename,file_type, top_line_first);
 }
 
-void SaveImage(const TypedImage& image, const std::string& filename)
+void SaveImage(const TypedImage& image, const std::string& filename, bool top_line_first)
 {
-    SaveImage(image, image.fmt, filename);
+    SaveImage(image, image.fmt, filename, top_line_first);
 }
 
 void FreeImage(TypedImage& img)

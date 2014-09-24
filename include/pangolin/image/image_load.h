@@ -79,10 +79,10 @@ PANGOLIN_EXPORT
 TypedImage LoadImage(const std::string& filename);
 
 PANGOLIN_EXPORT
-void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename);
+void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first = true);
 
 PANGOLIN_EXPORT
-void SaveImage(const TypedImage& image, const std::string& filename);
+void SaveImage(const TypedImage& image, const std::string& filename, bool top_line_first = true);
 
 PANGOLIN_EXPORT
 void FreeImage(TypedImage& img);

@@ -32,21 +32,6 @@
 #include <pangolin/display/view.h>
 #include <pangolin/display/viewport.h>
 
-#ifdef HAVE_BOOST_GIL
-    #include <boost/gil/gil_all.hpp>
-    #ifdef HAVE_PNG
-    #define png_infopp_NULL (png_infopp)NULL
-    #define int_p_NULL (int*)NULL
-    #include <boost/gil/extension/io/png_io.hpp>
-    #endif // HAVE_PNG
-    #ifdef HAVE_JPEG
-    #include <boost/gil/extension/io/jpeg_io.hpp>
-    #endif // HAVE_JPEG
-    #ifdef HAVE_TIFF
-    #include <boost/gil/extension/io/tiff_io.hpp>
-    #endif // HAVE_TIFF
-#endif // HAVE_BOOST_GIL
-
 #include <stdexcept>
 
 namespace pangolin
@@ -102,15 +87,17 @@ void SaveViewFromFbo(std::string prefix, View& view, float scale)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     view.Render();
     glFlush();
-    
-#ifdef HAVE_BOOST_GIL
-    // Read buffer and write file
-    boost::gil::rgba8_image_t img(w, h);
-    glReadPixels(0,0,w,h, GL_RGBA, GL_UNSIGNED_BYTE, boost::gil::interleaved_view_get_raw_data( boost::gil::view( img ) ) );
+
 #ifdef HAVE_PNG
-    boost::gil::png_write_view(prefix + ".png", flipped_up_down_view( boost::gil::const_view(img)) );
+    Image<unsigned char> buffer;
+    VideoPixelFormat fmt = VideoFormatFromString("RGBA");
+    buffer.Alloc(w, h, w * fmt.bpp/8 );
+    glReadBuffer(GL_BACK);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?
+    glReadPixels(0,0,w,h, GL_RGBA, GL_UNSIGNED_BYTE, buffer.ptr );
+    SaveImage(buffer, fmt, prefix + ".png", false);
+    buffer.Dealloc();
 #endif // HAVE_PNG
-#endif // HAVE_BOOST_GIL
     
     // unbind FBO
     fbo.Unbind();
