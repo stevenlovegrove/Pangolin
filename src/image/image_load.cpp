@@ -305,6 +305,90 @@ TypedImage LoadPng(const std::string& filename)
 #endif
 }
 
+void SavePng(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename)
+{
+    // Check image has supported bit depth
+    for(unsigned int i=1; i < fmt.channels; ++i) {
+        if( fmt.channel_bits[i] != fmt.channel_bits[0] ) {
+            throw std::runtime_error("PNG Saving only supported for images where each channel has the same bit depth.");
+        }
+    }
+
+#ifdef HAVE_PNG
+    FILE *fp;
+    png_structp png_ptr;
+    png_infop info_ptr;
+
+    // Open file for writing (binary mode)
+    fp = fopen(filename.c_str(), "wb");
+    if (fp == NULL) {
+        throw std::runtime_error( "PNG Error: Could not open file '" + filename + "' for writing" );
+    }
+
+    // Initialize write structure
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png_ptr == NULL) {
+        fclose(fp);
+        throw std::runtime_error( "PNG Error: Could not allocate write struct." );
+    }
+
+    // Initialize info structure
+    info_ptr = png_create_info_struct(png_ptr);
+    if (info_ptr == NULL) {
+        png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+        fclose(fp);
+        throw std::runtime_error( "PNG Error: Could not allocate info struct." );
+    }
+
+    // Setup Exception handling
+    if (setjmp(png_jmpbuf(png_ptr))) {
+        png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
+        png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+        fclose(fp);
+        throw std::runtime_error( "PNG Error: Error during png creation." );
+    }
+
+    png_init_io(png_ptr, fp);
+
+    const int bit_depth = fmt.channel_bits[0];
+
+    int colour_type;
+    switch (fmt.channels) {
+    case 1: colour_type = PNG_COLOR_TYPE_GRAY; break;
+    case 2: colour_type = PNG_COLOR_TYPE_GRAY_ALPHA; break;
+    case 3: colour_type = PNG_COLOR_TYPE_RGB; break;
+    case 4: colour_type = PNG_COLOR_TYPE_RGBA; break;
+    default:
+        throw std::runtime_error( "PNG Error: unexpected image channel number");
+    }
+
+    // Write header (8 bit colour depth)
+    png_set_IHDR(
+        png_ptr, info_ptr, image.w, image.h, bit_depth, colour_type,
+        PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT
+    );
+
+    png_write_info(png_ptr, info_ptr);
+
+    // Write image data
+
+    for (unsigned int y = 0; y< image.h; y++) {
+        png_write_row(png_ptr, image.ptr + y*image.pitch);
+    }
+
+    // End write
+    png_write_end(png_ptr, NULL);
+
+    // Free resources
+    fclose(fp);
+    png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
+    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+
+#else
+    throw std::runtime_error("PNG Support not enabled. Please rebuild Pangolin.");
+#endif
+}
+
 #ifdef HAVE_JPEG
 struct my_error_mgr
 {
@@ -463,7 +547,29 @@ TypedImage LoadImage(const std::string& filename)
     return LoadImage( filename, file_type );
 }
 
-void FreeImage(TypedImage img)
+void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, ImageFileType file_type)
+{
+    switch (file_type) {
+    case ImageFileTypePng:
+        return SavePng(image, fmt, filename);
+    default:
+        throw std::runtime_error("Unsupported image file type, '" + filename + "'");
+    }
+}
+
+void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename)
+{
+    const std::string ext = FileLowercaseExtention(filename);
+    ImageFileType file_type = FileTypeExtension(ext);
+    SaveImage(image, fmt, filename,file_type);
+}
+
+void SaveImage(const TypedImage& image, const std::string& filename)
+{
+    SaveImage(image, image.fmt, filename);
+}
+
+void FreeImage(TypedImage& img)
 {
     img.Dealloc();
 }
