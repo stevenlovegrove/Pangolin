@@ -250,7 +250,11 @@ bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
     if(realtime) {
         // Wait correct amount of time
         const double time_diff = time_s - LoggingSystemTimeSeconds();
-        std::this_thread::sleep_for(  std::chrono::duration<double>( time_diff ) );
+        std::this_thread::sleep_for(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::duration<double>(time_diff)
+            )
+        );
     }
 
     return true;
