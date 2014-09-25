@@ -86,7 +86,7 @@ public:
         const std::string& json_aux_types = "{}"
     );
 
-    void WriteSourceFrame(PacketStreamSourceId src, char* data, size_t n);
+    void WriteSourceFrame(PacketStreamSourceId src, const char* data, size_t n);
 
     void WritePangoHeader();
 

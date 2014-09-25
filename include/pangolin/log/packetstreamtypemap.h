@@ -203,8 +203,8 @@ protected:
         AddType("uint8",PacketStreamType(1));
         AddType("uint16",PacketStreamType(2));
         AddType("uint32",PacketStreamType(4));
-        AddType("float32",PacketStreamType(32));
-        AddType("float64",PacketStreamType(64));
+        AddType("float32",PacketStreamType(4));
+        AddType("float64",PacketStreamType(8));
         AddType("string", PacketStreamType(0,GetTypeId("int8"),1));
 
         // Encode bools as int8's

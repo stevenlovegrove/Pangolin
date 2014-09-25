@@ -85,7 +85,7 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
     const std::string& json_header,
     const std::string& json_aux_types
 ) {
-    const std::string ns = type+"::";
+    const std::string ns = "";   // type + "::";
 
     std::string err;
     picojson::value header;
@@ -125,7 +125,7 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
     }
 }
 
-void PacketStreamWriter::WriteSourceFrame(PacketStreamSourceId src, char* data, size_t n)
+void PacketStreamWriter::WriteSourceFrame(PacketStreamSourceId src, const char* data, size_t n)
 {
     // Write SOURCE_FRAME tag and source id
     WriteTag(TAG_SRC_FRAME);
