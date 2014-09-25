@@ -115,7 +115,11 @@ int main( int argc, char* argv[] )
     if( argc > 1 ) {
         const std::string input_uri = std::string(argv[1]);
         const std::string output_uri = (argc > 2) ? std::string(argv[2]) : dflt_output_uri;
-        VideoViewer(input_uri, output_uri);
+        try{
+            VideoViewer(input_uri, output_uri);
+        } catch (std::exception e) {
+            std::cout << e.what() << std::endl;
+        }
     }else{
         const std::string input_uris[] = {
             "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
