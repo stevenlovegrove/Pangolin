@@ -25,8 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_IMAGE_LOAD_H
-#define PANGOLIN_IMAGE_LOAD_H
+#ifndef PANGOLIN_IMAGE_IO_H
+#define PANGOLIN_IMAGE_IO_H
 
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_common.h>
@@ -89,4 +89,4 @@ void FreeImage(TypedImage& img);
 
 }
 
-#endif // PANGOLIN_IMAGE_LOAD_H
+#endif // PANGOLIN_IMAGE_IO_H

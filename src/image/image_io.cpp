@@ -25,7 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/image/image_load.h>
+#include <pangolin/image/image_io.h>
 
 #include <algorithm>
 #include <stdexcept>

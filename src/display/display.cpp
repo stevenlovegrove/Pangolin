@@ -40,7 +40,7 @@
 #include <pangolin/utils/simple_math.h>
 #include <pangolin/utils/timer.h>
 #include <pangolin/utils/type_convert.h>
-#include <pangolin/image/image_load.h>
+#include <pangolin/image/image_io.h>
 
 #define GLUT_KEY_ESCAPE 27
 #define GLUT_KEY_TAB 9

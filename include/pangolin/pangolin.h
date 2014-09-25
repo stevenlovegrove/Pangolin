@@ -61,7 +61,7 @@
   #include <pangolin/video/video_output.h>
 #endif // BUILD_PANGOLIN_VIDEO
 
-#include <pangolin/image/image_load.h>
+#include <pangolin/image/image_io.h>
 
 // Let other libraries headers know about Pangolin
 #define HAVE_PANGOLIN

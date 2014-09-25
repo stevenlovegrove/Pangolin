@@ -30,7 +30,7 @@
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
-#include <pangolin/image/image_load.h>
+#include <pangolin/image/image_io.h>
 
 #include <deque>
 #include <vector>

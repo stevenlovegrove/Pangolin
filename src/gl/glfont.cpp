@@ -27,7 +27,7 @@
 
 #include <pangolin/gl/glfont.h>
 #include <pangolin/gl/glstate.h>
-#include <pangolin/image/image_load.h>
+#include <pangolin/image/image_io.h>
 #include <pangolin/utils/type_convert.h>
 
 #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
