@@ -42,8 +42,12 @@ namespace pangolin
 class PANGOLIN_EXPORT threadedfilebuf : public std::streambuf
 {
 public:
-    threadedfilebuf(const std::string& filename, unsigned int buffer_size_bytes);
     ~threadedfilebuf();
+    threadedfilebuf();
+    threadedfilebuf(const std::string& filename, unsigned int buffer_size_bytes);
+    
+    void open(const std::string& filename, unsigned int buffer_size_bytes);
+    void close();
     
     void operator()();
     

@@ -64,9 +64,25 @@ void ResetLoggingSystemTimeSeconds(double time_s)
 // PacketStreamWriter
 //////////////////////////////////////////////////////////////////////////
 
+PacketStreamWriter::PacketStreamWriter()
+    : writer(&buffer), bytes_written(0)
+{
+}
+
 PacketStreamWriter::PacketStreamWriter(const std::string& filename, unsigned int buffer_size_bytes )
     : buffer(filename, buffer_size_bytes), writer(&buffer), bytes_written(0)
 {
+    // Start of file magic
+    writer.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
+
+    WritePangoHeader();
+}
+
+void PacketStreamWriter::Open(const std::string& filename, unsigned int buffer_size_bytes)
+{
+    // Open file for writing
+    buffer.open(filename, buffer_size_bytes);
+    
     // Start of file magic
     writer.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
 
@@ -185,37 +201,60 @@ void PacketStreamWriter::WriteSync()
 // PacketStreamReader
 //////////////////////////////////////////////////////////////////////////
 
-PacketStreamReader::PacketStreamReader(const std::string& filename, bool realtime)
-    : frames(0), realtime(realtime)
+PacketStreamReader::PacketStreamReader()
+    : next_tag(0), frames(0)
 {
+}
+
+PacketStreamReader::PacketStreamReader(const std::string& filename, bool realtime)
+    : next_tag(0), frames(0)
+{
+    Open(filename, realtime);
+}
+
+void PacketStreamReader::Open(const std::string& filename, bool realtime)
+{
+    if (reader.is_open()) {
+        Close();
+    }
+
+    this->realtime = realtime;
     ++playback_devices;
 
     const size_t PANGO_MAGIC_LEN = PANGO_MAGIC.size();
     char buffer[10];
 
     reader.open(filename.c_str(), std::ios::in | std::ios::binary);
-    if( !reader.good() ) {
+    if (!reader.good()) {
         throw std::runtime_error("Unable to open file '" + filename + "'.");
     }
 
     // Check file magic matches expected value
-    reader.read(buffer,PANGO_MAGIC_LEN);
-    if( !reader.good() || strncmp((char*)buffer, PANGO_MAGIC.c_str(), PANGO_MAGIC_LEN) ) {
+    reader.read(buffer, PANGO_MAGIC_LEN);
+    if (!reader.good() || strncmp((char*)buffer, PANGO_MAGIC.c_str(), PANGO_MAGIC_LEN)) {
         throw std::runtime_error("Unrecognised or corrupted file header.");
     }
 
     ReadTag();
 
     // Read any source headers, stop on first frame
-    while(next_tag == TAG_PANGO_HDR || next_tag == TAG_ADD_SOURCE ) {
+    while (next_tag == TAG_PANGO_HDR || next_tag == TAG_ADD_SOURCE) {
         ProcessMessage();
     }
 }
 
-PacketStreamReader::~PacketStreamReader()
-{    
+void PacketStreamReader::Close()
+{
     reader.close();
     --playback_devices;
+
+    sources.clear();
+    typemap.Clear();
+}
+
+PacketStreamReader::~PacketStreamReader()
+{    
+    Close();
 }
 
 bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
@@ -380,7 +419,7 @@ void PacketStreamReader::ReadNewSourcePacket()
     ps.type = jstype.get<std::string>();
     ps.uri  = jsuri.get<std::string>();
 
-    const std::string ns = ps.type+"::";
+    const std::string ns = ""; // ps.type + "::";
 
     if(json.contains(json_hdr_header)) {
         ps.header = json[json_hdr_header];

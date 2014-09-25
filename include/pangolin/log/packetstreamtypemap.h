@@ -193,6 +193,13 @@ public:
         }
     }
 
+    void Clear()
+    {
+        types.clear();
+        str_map.clear();
+        AddDefaultTypes();
+    }
+
 protected:
     void AddDefaultTypes()
     {

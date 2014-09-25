@@ -73,8 +73,10 @@ void ResetLoggingSystemTimeSeconds(double time_s = 0);
 class PANGOLIN_EXPORT PacketStreamWriter
 {
 public:
-
+    PacketStreamWriter();
     PacketStreamWriter(const std::string& filename, unsigned int buffer_size_bytes = 10000000);
+    void Open(const std::string& filename, unsigned int buffer_size_bytes = 10000000);
+
 
     ~PacketStreamWriter();
 
@@ -136,8 +138,12 @@ protected:
 class PANGOLIN_EXPORT PacketStreamReader
 {
 public:
-    PacketStreamReader(const std::string& filename, bool realtime = true);
     ~PacketStreamReader();
+    PacketStreamReader();
+    PacketStreamReader(const std::string& filename, bool realtime = true);
+
+    void Open(const std::string& filename, bool realtime = true);
+    void Close();
 
     inline const std::vector<PacketStreamSource>& Sources() const
     {

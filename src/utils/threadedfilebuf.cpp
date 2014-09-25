@@ -34,27 +34,50 @@ using namespace std;
 namespace pangolin
 {
 
-threadedfilebuf::threadedfilebuf( const std::string& filename, unsigned int buffer_size_bytes )
-    : mem_buffer(0), mem_size(0), mem_start(0), mem_end(0)
+threadedfilebuf::threadedfilebuf()
+    : mem_buffer(0), mem_size(0), mem_max_size(0), mem_start(0), mem_end(0), should_run(false)
 {
-    file.open(filename.c_str(), ios::out | ios::binary );
-    
+}
+
+threadedfilebuf::threadedfilebuf( const std::string& filename, unsigned int buffer_size_bytes )
+    : mem_buffer(0), mem_size(0), mem_max_size(0), mem_start(0), mem_end(0), should_run(false)
+{
+    open(filename, buffer_size_bytes);
+}
+
+void threadedfilebuf::open(const std::string& filename, unsigned int buffer_size_bytes)
+{
+    if (file.is_open()) {
+        close();
+    }
+
+    file.open(filename.c_str(), ios::out | ios::binary);
+
+    mem_buffer = 0;
+    mem_size = 0;
+    mem_start = 0;
+    mem_end = 0;
     mem_max_size = buffer_size_bytes;
     mem_buffer = new char[(size_t)mem_max_size];
-    
+
     should_run = true;
     write_thread = boostd::thread(boostd::ref(*this));
 }
 
-threadedfilebuf::~threadedfilebuf()
+void threadedfilebuf::close()
 {
     should_run = false;
     cond_queued.notify_all();
 
     write_thread.join();
-    
-    if( mem_buffer) delete mem_buffer;
+
+    if (mem_buffer) delete mem_buffer;
     file.close();
+}
+
+threadedfilebuf::~threadedfilebuf()
+{
+    close();
 }
 
 std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_bytes)

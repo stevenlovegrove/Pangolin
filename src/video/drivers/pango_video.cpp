@@ -90,7 +90,7 @@ int PangoVideo::FindSource()
         const PacketStreamSource& src = reader.Sources()[src_id];
 
         try {
-            if( src.type.compare("raw_video") ) {
+            if( !src.type.compare("pango_raw_video") ) {
                 // Read sources header
                 size_bytes = 0;
 
