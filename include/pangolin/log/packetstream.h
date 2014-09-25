@@ -60,7 +60,6 @@ struct PANGOLIN_EXPORT PacketStreamSource
     std::string uri;
     picojson::value header;
     PacketStreamTypeId frametype;
-    bool registered_handler;
 };
 
 typedef unsigned int PacketStreamSourceId;
@@ -125,34 +124,19 @@ protected:
 class PANGOLIN_EXPORT PacketStreamReader
 {
 public:
-    const static int MAX_SOURCES = 20;
-
-    struct NewSourceReceiver
-    {
-        virtual void NewSource(PacketStreamSourceId src_id, const PacketStreamSource& src) = 0;
-    };
-
-    struct SourceFrame
-    {
-        PacketStreamSourceId src_id;
-        size_t size_bytes;
-        std::ifstream& reader;
-    };
-
     PacketStreamReader(const std::string& filename);
     ~PacketStreamReader();
 
-    void RegisterSourceHeaderHandler( NewSourceReceiver& receiver );
-    void RegisterFrameHandler( PacketStreamSourceId src_id );
-    void UnregisterFrameHandler( PacketStreamSourceId src_id );
+    inline const std::vector<PacketStreamSource>& Sources() const
+    {
+        return sources;
+    }
 
-    bool GetSourceFrameLock(PacketStreamSourceId src_id);
+    bool ReadToSourceFrameAndLock(PacketStreamSourceId src_id);
+
     void ReleaseSourceFrameLock(PacketStreamSourceId src_id);
 
-    void ProcessMessage();
-
-    int ProcessMessagesUntilRegisteredSourceFrame();
-
+    // Should only read once lock is aquired
     inline std::basic_istream<char>& Read(char* s, size_t n)
     {
         return reader.read(s,n);
@@ -171,6 +155,9 @@ protected:
         return n|v;
     }
 
+    void ProcessMessage();
+    int ProcessMessagesUntilSourceFrame();
+
     bool ReadTag();
     void ReadHeaderPacket();
     void ReadNewSourcePacket();
@@ -180,14 +167,10 @@ protected:
 
     PacketStreamTypeMap typemap;
     std::vector<PacketStreamSource> sources;
-    boostd::condition_variable source_tag_available[MAX_SOURCES];
 
     std::ifstream reader;
     boostd::mutex read_mutex;
     boostd::condition_variable new_frame;
-
-    std::vector<NewSourceReceiver*> source_handlers;
-//    std::map<unsigned int, FrameHandler> frame_handlers;
 };
 
 }

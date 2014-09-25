@@ -35,7 +35,11 @@ namespace pangolin
 PangoVideo::PangoVideo(const std::string& filename)
     : reader(filename)
 {
-    reader.RegisterSourceHeaderHandler(*this);
+    src_id = FindSource();
+
+    if(src_id == -1) {
+        throw pangolin::VideoException("No appropriate video streams found in log.");
+    }
 }
 
 PangoVideo::~PangoVideo()
@@ -64,7 +68,7 @@ void PangoVideo::Stop()
 
 bool PangoVideo::GrabNext( unsigned char* image, bool wait )
 {
-    if(reader.GetSourceFrameLock(src_id)) {
+    if(reader.ReadToSourceFrameAndLock(src_id)) {
         // read this frames actual data
         reader.Read((char*)image, size_bytes);
         reader.ReleaseSourceFrameLock(src_id);
@@ -79,38 +83,43 @@ bool PangoVideo::GrabNewest( unsigned char* image, bool wait )
     return GrabNext(image, wait);
 }
 
-void PangoVideo::NewSource(PacketStreamSourceId src_id, const PacketStreamSource& src)
+int PangoVideo::FindSource()
 {
-    try {
-        if( src.type.compare("raw_video") ) {
-            // Read sources header
-            size_bytes = 0;
+    for(PacketStreamSourceId src_id=0; src_id < reader.Sources().size(); ++src_id)
+    {
+        const PacketStreamSource& src = reader.Sources()[src_id];
 
-            const picojson::value& json_streams = src.header["streams"];
-            const size_t num_streams = json_streams.size();
-            for(size_t i=0; i<num_streams; ++i) {
-                const picojson::value& json_stream = json_streams[i];
-                StreamInfo si(
-                    VideoFormatFromString(
-                        json_stream["encoding"].get<std::string>()
-                    ),
-                    json_stream["width"].get<int64_t>(),
-                    json_stream["height"].get<int64_t>(),
-                    json_stream["pitch"].get<int64_t>(),
-                    (unsigned char*)0 + json_stream["offset"].get<int64_t>()
-                );
+        try {
+            if( src.type.compare("raw_video") ) {
+                // Read sources header
+                size_bytes = 0;
 
-                size_bytes += si.SizeBytes();
-                streams.push_back(si);
+                const picojson::value& json_streams = src.header["streams"];
+                const size_t num_streams = json_streams.size();
+                for(size_t i=0; i<num_streams; ++i) {
+                    const picojson::value& json_stream = json_streams[i];
+                    StreamInfo si(
+                        VideoFormatFromString(
+                            json_stream["encoding"].get<std::string>()
+                        ),
+                        json_stream["width"].get<int64_t>(),
+                        json_stream["height"].get<int64_t>(),
+                        json_stream["pitch"].get<int64_t>(),
+                        (unsigned char*)0 + json_stream["offset"].get<int64_t>()
+                    );
+
+                    size_bytes += si.SizeBytes();
+                    streams.push_back(si);
+                }
+
+                return src_id;
             }
-
-            // Register to keep frames of this type for processing
-            reader.RegisterFrameHandler(src_id);
-            this->src_id = src_id;
+        }catch(...) {
+            pango_print_info("Unable to parse PacketStream Source. File version incompatible.\n");
         }
-    }catch(...) {
-        pango_print_info("Unable to parse PacketStream Source. File version incompatible.\n");
     }
+
+    return -1;
 }
 
 }

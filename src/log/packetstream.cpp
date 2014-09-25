@@ -171,18 +171,21 @@ PacketStreamReader::PacketStreamReader(const std::string& filename)
     char buffer[10];
 
     reader.open(filename.c_str(), std::ios::in | std::ios::binary);
+    if( !reader.good() ) {
+        throw std::runtime_error("Unable to open file '" + filename + "'.");
+    }
 
     // Check file magic matches expected value
     reader.read(buffer,PANGO_MAGIC_LEN);
-    if( reader.good() && !strncmp((char*)buffer, PANGO_MAGIC.c_str(), PANGO_MAGIC_LEN) ) {
-        ReadTag();
-
-        // Read any source headers, stop on first frame
-        while(next_tag == TAG_PANGO_HDR || next_tag == TAG_ADD_SOURCE ) {
-            ProcessMessage();
-        }
-    }else{
+    if( !reader.good() || strncmp((char*)buffer, PANGO_MAGIC.c_str(), PANGO_MAGIC_LEN) ) {
         throw std::runtime_error("Unrecognised or corrupted file header.");
+    }
+
+    ReadTag();
+
+    // Read any source headers, stop on first frame
+    while(next_tag == TAG_PANGO_HDR || next_tag == TAG_ADD_SOURCE ) {
+        ProcessMessage();
     }
 }
 
@@ -191,41 +194,12 @@ PacketStreamReader::~PacketStreamReader()
     reader.close();
 }
 
-void PacketStreamReader::RegisterSourceHeaderHandler(NewSourceReceiver &receiver )
-{
-    source_handlers.push_back(&receiver);
-
-    // Inform of already loaded sources
-    for(unsigned int s=0; s < sources.size(); ++s) {
-        receiver.NewSource(s, sources[s]);
-    }
-}
-
-void PacketStreamReader::RegisterFrameHandler( PacketStreamSourceId src_id )
-{
-    sources[src_id].registered_handler = true;
-}
-
-void PacketStreamReader::UnregisterFrameHandler( PacketStreamSourceId src_id )
-{
-    sources[src_id].registered_handler = false;
-}
-
-//void PacketStreamReader::RegisterFrameHandler( PacketStreamSourceId src_id, const FrameHandler& handler )
-//{
-//    if(src_id >= sources.size()) {
-//        throw std::runtime_error("Invalid PacketStream source ID.");
-//    }
-
-//    frame_handlers[src_id] = handler;
-//}
-
-bool PacketStreamReader::GetSourceFrameLock(PacketStreamSourceId src_id)
+bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
 {
     read_mutex.lock();
 
     // Walk over data that no-one is interested in
-    int nxt = ProcessMessagesUntilRegisteredSourceFrame();
+    int nxt = ProcessMessagesUntilSourceFrame();
 
     while(nxt != (int)src_id) {
         if(nxt == -1) {
@@ -236,11 +210,10 @@ bool PacketStreamReader::GetSourceFrameLock(PacketStreamSourceId src_id)
 //            // Wait for another next frame to get read
 //            new_frame.wait(read_mutex);
             ReadOverSourceFramePacket(nxt);
-            nxt = ProcessMessagesUntilRegisteredSourceFrame();
+            ReadTag();
         }
 
-
-        nxt = ProcessMessagesUntilRegisteredSourceFrame();
+        nxt = ProcessMessagesUntilSourceFrame();
     }
 
     return true;
@@ -286,7 +259,7 @@ void PacketStreamReader::ProcessMessage()
     }}
 
 // return src_id
-int PacketStreamReader::ProcessMessagesUntilRegisteredSourceFrame()
+int PacketStreamReader::ProcessMessagesUntilSourceFrame()
 {
     while(true)
     {
@@ -307,13 +280,7 @@ int PacketStreamReader::ProcessMessagesUntilRegisteredSourceFrame()
             if(src_id >= sources.size()) {
                 throw std::runtime_error("Invalid Frame Source ID.");
             }
-            if(sources[src_id].registered_handler) {
-                return src_id;
-            }else{
-                // We have to read over this frame.
-                ReadOverSourceFramePacket(src_id);
-            }
-            break;
+            return src_id;
         }
         case TAG_END:
             return -1;
@@ -349,8 +316,6 @@ void PacketStreamReader::ReadHeaderPacket()
 
 void PacketStreamReader::ReadNewSourcePacket()
 {
-    const int src_id = sources.size();
-
     picojson::value json;
     picojson::parse(json, reader);
     reader.get(); // consume newline
@@ -385,12 +350,7 @@ void PacketStreamReader::ReadNewSourcePacket()
         ps.frametype = typemap.CreateOrGetType(ns, json[json_hdr_typed_frame]);
     }
 
-    ps.registered_handler = false;
     sources.push_back(ps);
-
-    for(unsigned int r=0; r<source_handlers.size(); ++r) {
-        source_handlers[r]->NewSource(src_id, sources[src_id]);
-    }
 }
 
 void PacketStreamReader::ReadStatsPacket()
