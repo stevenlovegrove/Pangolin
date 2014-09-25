@@ -33,8 +33,44 @@
 #ifdef CPP11_NO_BOOST
     #include <thread>
 #else
-    #include <boost/thread.hpp>
-#endif
+#include <boost/thread.hpp>
+#include <boost/chrono/chrono.hpp>
+#include <boost/type_traits.hpp>
+#include <unistd.h>
+
+#if BOOST_VERSION < 105000
+// Simple implementation of missing sleep_for / sleep_until methods
+namespace boost {
+    namespace this_thread {
+        template <class Rep, class Period>
+        void sleep_for(const boost::chrono::duration<Rep, Period>& d)
+        {
+            boost::chrono::microseconds t = boost::chrono::duration_cast<boost::chrono::microseconds>(d);
+
+            if (t > boost::chrono::microseconds(0)) {
+                usleep(t.count());
+            }
+        }
+
+        template <class Clock, class Duration>
+        void sleep_until(const boost::chrono::time_point<Clock, Duration>& t)
+        {
+            using namespace boost::chrono;
+            typedef time_point<Clock, Duration> Time;
+            typedef system_clock::time_point SysTime;
+            if (t > Clock::now())
+            {
+                typedef typename boost::common_type<typename Time::duration,
+                    typename SysTime::duration>::type D;
+                D d = t - Clock::now();
+                usleep( duration_cast<microseconds>(d).count() );
+            }
+        }
+    }  // this_thread
+} // boost
+#endif // BOOST_VERSION < 105000
+
+#endif // CPP11_NO_BOOST
 
 #include <pangolin/compat/boostd.h>
 

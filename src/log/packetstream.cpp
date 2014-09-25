@@ -27,6 +27,7 @@
 
 #include <pangolin/log/packetstream.h>
 #include <pangolin/utils/timer.h>
+#include <pangolin/compat/thread.h>
 
 #include <iostream>
 #include <string>
@@ -250,9 +251,9 @@ bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
     if(realtime) {
         // Wait correct amount of time
         const double time_diff = time_s - LoggingSystemTimeSeconds();
-        std::this_thread::sleep_for(
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::duration<double>(time_diff)
+        boostd::this_thread::sleep_for(
+            boostd::chrono::duration_cast<boostd::chrono::milliseconds>(
+                boostd::chrono::duration<double>(time_diff)
             )
         );
     }
