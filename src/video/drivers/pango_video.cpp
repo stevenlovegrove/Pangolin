@@ -32,8 +32,8 @@
 namespace pangolin
 {
 
-PangoVideo::PangoVideo(const std::string& filename)
-    : reader(filename)
+PangoVideo::PangoVideo(const std::string& filename, bool realtime)
+    : reader(filename, realtime)
 {
     src_id = FindSource();
 

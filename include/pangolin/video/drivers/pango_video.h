@@ -37,7 +37,7 @@ namespace pangolin
 class PANGOLIN_EXPORT PangoVideo : public VideoInterface
 {
 public:
-    PangoVideo(const std::string& filename);
+    PangoVideo(const std::string& filename, bool realtime = true);
     ~PangoVideo();
 
     size_t SizeBytes() const;

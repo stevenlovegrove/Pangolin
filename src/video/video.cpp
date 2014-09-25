@@ -270,7 +270,8 @@ VideoInterface* OpenVideo(const Uri& uri)
             const bool realtime = uri.Contains("realtime");
             video = new PvnVideo(uri.url.c_str(), realtime);
         }else if(EndsWith(uri.url,"pango")) {
-            video = new PangoVideo(uri.url.c_str());
+            const bool realtime = uri.Contains("realtime");
+            video = new PangoVideo(uri.url.c_str(), realtime);
         }else{
             throw VideoException("Unable to open file type");
         }

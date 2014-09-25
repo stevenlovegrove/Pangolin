@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/log/packetstream.h>
+#include <pangolin/utils/timer.h>
 
 #include <iostream>
 #include <string>
@@ -40,6 +41,23 @@ const char* json_hdr_uri         = "_uri_";
 const char* json_hdr_header      = "header";
 const char* json_hdr_typed_aux   = "typed_aux";
 const char* json_hdr_typed_frame = "typed_frame";
+
+//////////////////////////////////////////////////////////////////////////
+// Timer utils
+//////////////////////////////////////////////////////////////////////////
+
+int playback_devices = 0;
+basetime startup_time = TimeNow();
+
+double LoggingSystemTimeSeconds()
+{
+    return TimeDiff_s(startup_time, TimeNow() );
+}
+
+void ResetLoggingSystemTimeSeconds(double time_s)
+{
+    startup_time = TimeFromSeconds(TimeNow_s() - time_s);
+}
 
 //////////////////////////////////////////////////////////////////////////
 // PacketStreamWriter
@@ -110,6 +128,7 @@ void PacketStreamWriter::WriteSourceFrame(PacketStreamSourceId src, char* data, 
 {
     // Write SOURCE_FRAME tag and source id
     WriteTag(TAG_SRC_FRAME);
+    WriteTimestamp();
     WriteCompressedUnsignedInt(src);
 
     // Write frame size if dynamic so it can be skipped over easily
@@ -165,8 +184,11 @@ void PacketStreamWriter::WriteSync()
 // PacketStreamReader
 //////////////////////////////////////////////////////////////////////////
 
-PacketStreamReader::PacketStreamReader(const std::string& filename)
+PacketStreamReader::PacketStreamReader(const std::string& filename, bool realtime)
+    : frames(0), realtime(realtime)
 {
+    ++playback_devices;
+
     const size_t PANGO_MAGIC_LEN = PANGO_MAGIC.size();
     char buffer[10];
 
@@ -190,8 +212,9 @@ PacketStreamReader::PacketStreamReader(const std::string& filename)
 }
 
 PacketStreamReader::~PacketStreamReader()
-{
+{    
     reader.close();
+    --playback_devices;
 }
 
 bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
@@ -199,21 +222,35 @@ bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
     read_mutex.lock();
 
     // Walk over data that no-one is interested in
-    int nxt = ProcessMessagesUntilSourceFrame();
+    int nxt_src_id;
+    double time_s;
 
-    while(nxt != (int)src_id) {
-        if(nxt == -1) {
+    ProcessMessagesUntilSourceFrame(nxt_src_id, time_s);
+
+    while(nxt_src_id != (int)src_id) {
+        if(nxt_src_id == -1) {
             // EOF or something critical
             read_mutex.unlock();
             return false;
         }else{
 //            // Wait for another next frame to get read
 //            new_frame.wait(read_mutex);
-            ReadOverSourceFramePacket(nxt);
+            ReadOverSourceFramePacket(nxt_src_id);
             ReadTag();
         }
 
-        nxt = ProcessMessagesUntilSourceFrame();
+        ProcessMessagesUntilSourceFrame(nxt_src_id, time_s);
+    }
+
+    // Sync time to start of stream if there are no other playback devices
+    if(frames == 0 && playback_devices == 1) {
+        ResetLoggingSystemTimeSeconds(time_s);
+    }
+
+    if(realtime) {
+        // Wait correct amount of time
+        const double time_diff = time_s - LoggingSystemTimeSeconds();
+        std::this_thread::sleep_for(  std::chrono::duration<double>( time_diff ) );
     }
 
     return true;
@@ -222,6 +259,7 @@ bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
 void PacketStreamReader::ReleaseSourceFrameLock(PacketStreamSourceId src_id)
 {
     ReadTag();
+    ++frames;
     read_mutex.unlock();
 }
 
@@ -259,7 +297,7 @@ void PacketStreamReader::ProcessMessage()
     }}
 
 // return src_id
-int PacketStreamReader::ProcessMessagesUntilSourceFrame()
+void PacketStreamReader::ProcessMessagesUntilSourceFrame(int &nxt_src_id, double &time_s)
 {
     while(true)
     {
@@ -276,14 +314,16 @@ int PacketStreamReader::ProcessMessagesUntilSourceFrame()
             break;
         case TAG_SRC_FRAME:
         {
-            const size_t src_id = ReadCompressedUnsignedInt();
-            if(src_id >= sources.size()) {
+            time_s = ReadTimestamp();
+            nxt_src_id = ReadCompressedUnsignedInt();
+            if(nxt_src_id >= (int)sources.size()) {
                 throw std::runtime_error("Invalid Frame Source ID.");
             }
-            return src_id;
+            return;
         }
         case TAG_END:
-            return -1;
+            nxt_src_id = -1;
+            return;
         default:
             // TODO: Resync
             throw std::runtime_error("Unknown packet type.");

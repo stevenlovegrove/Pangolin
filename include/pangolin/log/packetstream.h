@@ -64,6 +64,12 @@ struct PANGOLIN_EXPORT PacketStreamSource
 
 typedef unsigned int PacketStreamSourceId;
 
+PANGOLIN_EXPORT
+double LoggingSystemTimeSeconds();
+
+PANGOLIN_EXPORT
+void ResetLoggingSystemTimeSeconds(double time_s = 0);
+
 class PANGOLIN_EXPORT PacketStreamWriter
 {
 public:
@@ -108,6 +114,12 @@ protected:
         writer.put( n );
     }
 
+    inline void WriteTimestamp()
+    {
+        const double time_s = LoggingSystemTimeSeconds();
+        writer.write((char*)&time_s, sizeof(double));
+    }
+
     inline void WriteTag(const uint32_t tag)
     {
         writer.write((char*)&tag, TAG_LENGTH);
@@ -124,7 +136,7 @@ protected:
 class PANGOLIN_EXPORT PacketStreamReader
 {
 public:
-    PacketStreamReader(const std::string& filename);
+    PacketStreamReader(const std::string& filename, bool realtime = true);
     ~PacketStreamReader();
 
     inline const std::vector<PacketStreamSource>& Sources() const
@@ -143,6 +155,13 @@ public:
     }
 
 protected:
+    inline double ReadTimestamp()
+    {
+        double time_s;
+        reader.read((char*)&time_s, sizeof(double));
+        return time_s;
+    }
+
     inline size_t ReadCompressedUnsignedInt()
     {
         size_t n = 0;
@@ -156,7 +175,7 @@ protected:
     }
 
     void ProcessMessage();
-    int ProcessMessagesUntilSourceFrame();
+    void ProcessMessagesUntilSourceFrame(int& nxt_src_id, double& time_s);
 
     bool ReadTag();
     void ReadHeaderPacket();
@@ -171,6 +190,9 @@ protected:
     std::ifstream reader;
     boostd::mutex read_mutex;
     boostd::condition_variable new_frame;
+
+    int frames;
+    bool realtime;
 };
 
 }
