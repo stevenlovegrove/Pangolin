@@ -40,8 +40,8 @@ namespace pangolin
 const char* json_hdr_type        = "_type_";
 const char* json_hdr_uri         = "_uri_";
 const char* json_hdr_header      = "header";
-const char* json_hdr_typed_aux   = "typed_aux";
-const char* json_hdr_typed_frame = "typed_frame";
+const char* json_hdr_frame_size  = "frame_size";
+const char* json_hdr_definitions = "definitions";
 
 //////////////////////////////////////////////////////////////////////////
 // Timer utils
@@ -95,55 +95,38 @@ PacketStreamWriter::~PacketStreamWriter()
 }
 
 PacketStreamSourceId PacketStreamWriter::AddSource(
-    const std::string& type,
-    const std::string& uri,
-    const std::string& json_frame,
+    const std::string& source_type,
+    const std::string& source_uri,
     const std::string& json_header,
-    const std::string& json_aux_types
+    const size_t       frame_size_bytes,
+    const std::string& c_code_struct_definitions
 ) {
-    const std::string ns = "";   // type + "::";
-
     std::string err;
 
     PacketStreamSource pss;
-    picojson::value typed_aux;
-    picojson::value typed_frame;
+
+    pss.source_type = source_type;
+    pss.source_uri = source_uri;
+    pss.frame_size_bytes = frame_size_bytes;
+    pss.c_code_struct_definitions = c_code_struct_definitions;
 
     picojson::parse(pss.header,json_header.begin(), json_header.end(), &err);
     if(!err.empty()) throw std::runtime_error("Frame header parse error: " + err);
 
-    picojson::parse(typed_aux,json_aux_types.begin(), json_aux_types.end(), &err);
-    if(!err.empty()) throw std::runtime_error("Frame types parse error: " + err);
+    picojson::value json_src(picojson::object_type,false);
+    json_src.get<picojson::object>()[json_hdr_type] = picojson::value(source_type);
+    json_src.get<picojson::object>()[json_hdr_uri] = picojson::value(source_uri);
+    json_src.get<picojson::object>()[json_hdr_header] = pss.header;
+    json_src.get<picojson::object>()[json_hdr_frame_size] = picojson::value( (int64_t)frame_size_bytes);
+    json_src.get<picojson::object>()[json_hdr_definitions] = picojson::value(c_code_struct_definitions);
 
-    picojson::parse(typed_frame,json_frame.begin(), json_frame.end(), &err);
-    if(!err.empty()) throw std::runtime_error("Frame definition parse error: " + err);
+    WriteTag(TAG_ADD_SOURCE);
+    json_src.serialize(std::ostream_iterator<char>(writer), true);
 
-    if( typed_aux.is<picojson::object>() ) {
-        typemap.AddTypes(ns, typed_aux.get<picojson::object>() );
-        PacketStreamTypeId frame_id = typemap.CreateOrGetType(ns, typed_frame);
-        typemap.AddAlias(ns + PANGO_FRAME, frame_id);
+    const size_t src_id = sources.size();
 
-        picojson::value json_src(picojson::object_type,false);
-        json_src.get<picojson::object>()[json_hdr_type] = picojson::value(type);
-        json_src.get<picojson::object>()[json_hdr_uri] = picojson::value(uri);
-        json_src.get<picojson::object>()[json_hdr_header] = pss.header;
-        json_src.get<picojson::object>()[json_hdr_typed_aux] = typed_aux;
-        json_src.get<picojson::object>()[json_hdr_typed_frame] = typed_frame;
-
-        WriteTag(TAG_ADD_SOURCE);
-        json_src.serialize(std::ostream_iterator<char>(writer), true);
-
-        const size_t src_id = sources.size();
-
-        pss.type = type;
-        pss.uri = uri;
-        pss.frametype = typemap.GetTypeId(ns + PANGO_FRAME);
-
-        sources.push_back( pss );
-        return src_id;
-    }else{
-        throw std::runtime_error("Frame definition must be JSON object.");
-    }
+    sources.push_back( pss );
+    return src_id;
 }
 
 void PacketStreamWriter::WriteSourceFrame(PacketStreamSourceId src, const char* data, size_t n)
@@ -154,10 +137,10 @@ void PacketStreamWriter::WriteSourceFrame(PacketStreamSourceId src, const char* 
     WriteCompressedUnsignedInt(src);
 
     // Write frame size if dynamic so it can be skipped over easily
-    const PacketStreamType& frametype = typemap.GetType(sources[src].frametype);
-    if(!frametype.IsFixedSize()) {
+    size_t frame_size = sources[src].frame_size_bytes;
+    if(frame_size == 0) {
         WriteCompressedUnsignedInt(n);
-    }else if(frametype.size_bytes != n) {
+    }else if(frame_size != n) {
         throw std::runtime_error("Attempting to write frame of wrong size");
     }
 
@@ -205,6 +188,16 @@ void PacketStreamWriter::WriteSync()
 //////////////////////////////////////////////////////////////////////////
 // PacketStreamReader
 //////////////////////////////////////////////////////////////////////////
+
+std::string TagName(int v)
+{
+    char b[4];
+    b[0] = v&0xff;
+    b[1] = (v>>8)&0xff;
+    b[2] = (v>>16)&0xff;
+    b[3] = 0x00;
+    return std::string(b);
+}
 
 PacketStreamReader::PacketStreamReader()
     : next_tag(0), frames(0)
@@ -254,7 +247,6 @@ void PacketStreamReader::Close()
     --playback_devices;
 
     sources.clear();
-    typemap.Clear();
 }
 
 PacketStreamReader::~PacketStreamReader()
@@ -415,29 +407,24 @@ void PacketStreamReader::ReadNewSourcePacket()
 
     picojson::value jstype = json[json_hdr_type];
     picojson::value jsuri  = json[json_hdr_uri];
+    picojson::value jssize = json[json_hdr_frame_size];
+    picojson::value jsdefs = json[json_hdr_definitions];
 
-    if( !jstype.is<std::string>() || !jsuri.is<std::string>() ) {
+    if( !jstype.is<std::string>() || !jsuri.is<std::string>() ||
+            !jssize.is<int64_t>() || !jsdefs.is<std::string>() ) {
         throw std::runtime_error("Missing required fields for source.\n" );
     }
 
     PacketStreamSource ps;
-    ps.type = jstype.get<std::string>();
-    ps.uri  = jsuri.get<std::string>();
-
-    const std::string ns = ""; // ps.type + "::";
+    ps.source_type = jstype.get<std::string>();
+    ps.source_uri  = jsuri.get<std::string>();
+    ps.frame_size_bytes = jssize.get<int64_t>();
+    ps.c_code_struct_definitions = jsdefs.get<std::string>();
 
     if(json.contains(json_hdr_header)) {
         ps.header = json[json_hdr_header];
     }
 
-    if(json.contains(json_hdr_typed_aux)) {
-        picojson::value jsaux = json[json_hdr_typed_aux];
-        typemap.AddTypes( ns, jsaux.get<picojson::object>() );
-    }
-
-    if(json.contains(json_hdr_typed_frame)) {
-        ps.frametype = typemap.CreateOrGetType(ns, json[json_hdr_typed_frame]);
-    }
 
     sources.push_back(ps);
 }
@@ -452,10 +439,9 @@ void PacketStreamReader::ReadStatsPacket()
 void PacketStreamReader::ReadOverSourceFramePacket(PacketStreamSourceId src_id)
 {
     const PacketStreamSource& src = sources[src_id];
-    const PacketStreamType& src_type = typemap.GetType(src.frametype);
 
-    if(src_type.IsFixedSize()) {
-        reader.ignore(src_type.size_bytes);
+    if(src.frame_size_bytes > 0) {
+        reader.ignore(src.frame_size_bytes);
     }else{
         size_t size_bytes = ReadCompressedUnsignedInt();
         reader.ignore(size_bytes);

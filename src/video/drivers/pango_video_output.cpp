@@ -87,8 +87,11 @@ void PangoVideoOutput::WriteHeader()
     packetstreamsrcid = packetstream.AddSource(
         pango_video_type,
         "default_uri",
-        json_frame.serialize(),
-        json_header.serialize()
+        json_header.serialize(),
+        total_frame_size,
+        "struct Frame{\n"
+        "   uint8 stream_data[" + pangolin::Convert<std::string,size_t>::Do(total_frame_size) + "];\n"
+        "};"
     );
 }
 

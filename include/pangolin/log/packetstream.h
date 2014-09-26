@@ -30,10 +30,10 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/threadedfilebuf.h>
-#include <pangolin/log/packetstreamtypemap.h>
 #include <pangolin/compat/function.h>
 #include <pangolin/compat/mutex.h>
 #include <pangolin/compat/condition_variable.h>
+#include <pangolin/utils/picojson.h>
 #include <stdint.h>
 
 
@@ -56,10 +56,11 @@ const uint32_t TAG_END         = PANGO_TAG('E', 'N', 'D');
 
 struct PANGOLIN_EXPORT PacketStreamSource
 {
-    std::string type;
-    std::string uri;
+    std::string source_type;
+    std::string source_uri;
     picojson::value header;
-    PacketStreamTypeId frametype;
+    size_t      frame_size_bytes;
+    std::string c_code_struct_definitions;
 };
 
 typedef unsigned int PacketStreamSourceId;
@@ -81,11 +82,11 @@ public:
     ~PacketStreamWriter();
 
     PacketStreamSourceId AddSource(
-        const std::string& type,
-        const std::string& uri,
-        const std::string& json_frame = "{}",
+        const std::string& source_type,
+        const std::string& source_uri = "",
         const std::string& json_header = "{}",
-        const std::string& json_aux_types = "{}"
+        const size_t       frame_size_bytes = 0,
+        const std::string& c_code_struct_definitions = ""
     );
 
     void WriteSourceFrame(PacketStreamSourceId src, const char* data, size_t n);
@@ -95,16 +96,6 @@ public:
     void WriteStats();
 
     void WriteSync();
-
-    inline const PacketStreamType& GetType(const std::string& name)
-    {
-        return typemap.GetType(name);
-    }
-
-    inline const PacketStreamType& GetFrameType()
-    {
-        return GetType(PANGO_FRAME);
-    }
 
 protected:
     inline void WriteCompressedUnsignedInt(size_t n)
@@ -127,7 +118,6 @@ protected:
         writer.write((char*)&tag, TAG_LENGTH);
     }
 
-    PacketStreamTypeMap typemap;
     std::vector<PacketStreamSource> sources;
     threadedfilebuf buffer;
     std::ostream writer;
@@ -190,7 +180,6 @@ protected:
     void ReadOverSourceFramePacket(PacketStreamSourceId src_id);
     uint32_t next_tag;
 
-    PacketStreamTypeMap typemap;
     std::vector<PacketStreamSource> sources;
 
     std::ifstream reader;
