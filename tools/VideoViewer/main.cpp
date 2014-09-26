@@ -65,8 +65,11 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glfmt.push_back(GlFormat(video.Streams()[d].PixFormat()));
     }
 
+    int frame = 0;
+    pangolin::Var<int> max_frame("max_frame", std::numeric_limits<int>::max() );
+
 #ifdef CALLEE_HAS_CPP11
-    pangolin::RegisterKeyPressCallback(' ', [&](){
+    pangolin::RegisterKeyPressCallback('r', [&](){
         if(!video_out.IsOpen()) {
             pango_print_info("Recording...\n");
             video_out.Open(output_uri);
@@ -77,29 +80,41 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         }
         fflush(stdout);
     });
+    pangolin::RegisterKeyPressCallback(' ', [&](){
+        max_frame = (frame < max_frame) ? frame : std::numeric_limits<int>::max();
+    });
+    pangolin::RegisterKeyPressCallback(pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_RIGHT, [&](){
+        max_frame = frame+1;
+    });
 #endif
 
+    std::vector<pangolin::Image<unsigned char> > images;
+
     // Stream and display video
-    for(int frame=0; !pangolin::ShouldQuit(); ++frame)
+    while(!pangolin::ShouldQuit())
     {
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        glColor3f(1.0f, 1.0f, 1.0f);
 
-        std::vector<pangolin::Image<unsigned char> > images;
-        if( video.Grab(&buffer[0], images) ) {
-            if(video_out.IsOpen()) {
-                video_out.WriteStreams(&buffer[0]);
-            }
-
-            for(unsigned int i=0; i<images.size(); ++i)
-            {
-                pangolin::DisplayBase()[i].Activate();
-                if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
-                    pangolin::GlSlUtilities::Scale(20.0f, 0.0f);
-                    RenderToViewport(images[i], glfmt[i],false,true);
-                    pangolin::GlSlUtilities::UseNone();
-                }else{
-                    RenderToViewport(images[i], glfmt[i],false,true);
+        if (frame == 0 || frame < max_frame) {
+            images.clear();
+            if (video.Grab(&buffer[0], images) ){
+                if (video_out.IsOpen()) {
+                    video_out.WriteStreams(&buffer[0]);
                 }
+                ++frame;
+            }
+        }
+
+        for(unsigned int i=0; i<images.size(); ++i)
+        {
+            pangolin::DisplayBase()[i].Activate();
+            if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
+                pangolin::GlSlUtilities::Scale(20.0f, 0.0f);
+                RenderToViewport(images[i], glfmt[i],false,true);
+                pangolin::GlSlUtilities::UseNone();
+            }else{
+                RenderToViewport(images[i], glfmt[i],false,true);
             }
         }
 
