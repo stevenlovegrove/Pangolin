@@ -104,11 +104,12 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
     const std::string ns = "";   // type + "::";
 
     std::string err;
-    picojson::value header;
+
+    PacketStreamSource pss;
     picojson::value typed_aux;
     picojson::value typed_frame;
 
-    picojson::parse(header,json_header.begin(), json_header.end(), &err);
+    picojson::parse(pss.header,json_header.begin(), json_header.end(), &err);
     if(!err.empty()) throw std::runtime_error("Frame header parse error: " + err);
 
     picojson::parse(typed_aux,json_aux_types.begin(), json_aux_types.end(), &err);
@@ -125,16 +126,20 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
         picojson::value json_src(picojson::object_type,false);
         json_src.get<picojson::object>()[json_hdr_type] = picojson::value(type);
         json_src.get<picojson::object>()[json_hdr_uri] = picojson::value(uri);
-        json_src.get<picojson::object>()[json_hdr_header] = header;
+        json_src.get<picojson::object>()[json_hdr_header] = pss.header;
         json_src.get<picojson::object>()[json_hdr_typed_aux] = typed_aux;
         json_src.get<picojson::object>()[json_hdr_typed_frame] = typed_frame;
 
         WriteTag(TAG_ADD_SOURCE);
         json_src.serialize(std::ostream_iterator<char>(writer), true);
 
-        const PacketStreamTypeId frame_type = typemap.GetTypeId(ns + PANGO_FRAME);
         const size_t src_id = sources.size();
-        sources.push_back( {type,uri,header,frame_type} );
+
+        pss.type = type;
+        pss.uri = uri;
+        pss.frametype = typemap.GetTypeId(ns + PANGO_FRAME);
+
+        sources.push_back( pss );
         return src_id;
     }else{
         throw std::runtime_error("Frame definition must be JSON object.");
