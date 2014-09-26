@@ -145,7 +145,7 @@ namespace picojson {
     template <typename T> const T& get() const;
     template <typename T> T& get();
     bool evaluate_as_boolean() const;
-    const size_t size() const;
+    size_t size() const;
 
     const value& operator[](size_t idx) const;
     const value& operator[](const std::string& key) const;
@@ -327,7 +327,7 @@ namespace picojson {
     }
   }
 
-  inline const size_t value::size() const
+  inline size_t value::size() const
   {
     PICOJSON_ASSERT(is<array>());
     return u_.array_->size();
