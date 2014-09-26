@@ -28,9 +28,12 @@ struct GlFormat
 
 void RenderToViewport(
     pangolin::Image<unsigned char>& image,
-    const GlFormat& fmt, bool flipx=false, bool flipy=false
+    const GlFormat& fmt, bool flipx=false, bool flipy=false, bool linear_sampling = true
 ) {
     pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, fmt.glformat, fmt.glformat, fmt.gltype);
+    tex.Bind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
     tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
     tex.RenderToViewport(pangolin::Viewport(0,0,image.w, image.h), flipx, flipy);
 }
@@ -66,7 +69,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     }
 
     int frame = 0;
-    pangolin::Var<int> max_frame("max_frame", std::numeric_limits<int>::max() );
+    pangolin::Var<int>  max_frame("max_frame", std::numeric_limits<int>::max() );
+    pangolin::Var<bool> linear_sampling("linear_sampling", true );
+    pangolin::Var<float> int16_scale("int16.scale", 20.0 );
+    pangolin::Var<float> int16_bias("int16.bias", 0.0 );
 
 #ifdef CALLEE_HAS_CPP11
     pangolin::RegisterKeyPressCallback('r', [&](){
@@ -86,6 +92,8 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::RegisterKeyPressCallback(pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_RIGHT, [&](){
         max_frame = frame+1;
     });
+    pangolin::RegisterKeyPressCallback('l', [&](){ linear_sampling = true; });
+    pangolin::RegisterKeyPressCallback('n', [&](){ linear_sampling = false; });
 #endif
 
     std::vector<pangolin::Image<unsigned char> > images;
@@ -110,11 +118,11 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         {
             pangolin::DisplayBase()[i].Activate();
             if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
-                pangolin::GlSlUtilities::Scale(20.0f, 0.0f);
-                RenderToViewport(images[i], glfmt[i],false,true);
+                pangolin::GlSlUtilities::Scale(int16_scale, int16_bias);
+                RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
                 pangolin::GlSlUtilities::UseNone();
             }else{
-                RenderToViewport(images[i], glfmt[i],false,true);
+                RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
             }
         }
 
@@ -132,7 +140,7 @@ int main( int argc, char* argv[] )
         const std::string output_uri = (argc > 2) ? std::string(argv[2]) : dflt_output_uri;
         try{
             VideoViewer(input_uri, output_uri);
-        } catch (std::exception e) {
+        } catch (pangolin::VideoException e) {
             std::cout << e.what() << std::endl;
         }
     }else{
