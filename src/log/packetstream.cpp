@@ -37,11 +37,13 @@
 namespace pangolin
 {
 
-const char* json_hdr_type        = "_type_";
-const char* json_hdr_uri         = "_uri_";
-const char* json_hdr_header      = "header";
-const char* json_hdr_frame_size  = "frame_size";
-const char* json_hdr_definitions = "definitions";
+const char* json_src_id              = "id";
+const char* json_src_info            = "info";
+const char* json_src_packet          = "packet";
+const char* json_src_version         = "version";
+const char* json_pkt_alignment_bytes = "alignment_bytes";
+const char* json_pkt_definitions     = "definitions";
+const char* json_pkt_size_bytes      = "size_bytes";
 
 //////////////////////////////////////////////////////////////////////////
 // Timer utils
@@ -95,30 +97,34 @@ PacketStreamWriter::~PacketStreamWriter()
 }
 
 PacketStreamSourceId PacketStreamWriter::AddSource(
-    const std::string& source_type,
-    const std::string& source_uri,
-    const std::string& json_header,
-    const size_t       frame_size_bytes,
-    const std::string& c_code_struct_definitions
+    const std::string& source_id,
+    const std::string& source_info,
+    const size_t       packet_size_bytes,
+    const std::string& packet_definitions
 ) {
     std::string err;
 
     PacketStreamSource pss;
 
-    pss.source_type = source_type;
-    pss.source_uri = source_uri;
-    pss.frame_size_bytes = frame_size_bytes;
-    pss.c_code_struct_definitions = c_code_struct_definitions;
+    pss.id = source_id;
+    pss.data_size_bytes = packet_size_bytes;
+    pss.data_definitions = packet_definitions;
+    pss.version = 1;
+    pss.data_alignment_bytes = 1;
 
-    picojson::parse(pss.header,json_header.begin(), json_header.end(), &err);
-    if(!err.empty()) throw std::runtime_error("Frame header parse error: " + err);
+    picojson::parse(pss.info,source_info.begin(), source_info.end(), &err);
+    if(!err.empty()) throw std::runtime_error("Source Info parse error: " + err);
+
+    picojson::value json_packet(picojson::object_type,false);
+    json_packet.get<picojson::object>()[json_pkt_size_bytes] = picojson::value( pss.data_size_bytes );
+    json_packet.get<picojson::object>()[json_pkt_definitions] = picojson::value(pss.data_definitions);
+    json_packet.get<picojson::object>()[json_pkt_alignment_bytes] = picojson::value( pss.data_alignment_bytes );
 
     picojson::value json_src(picojson::object_type,false);
-    json_src.get<picojson::object>()[json_hdr_type] = picojson::value(source_type);
-    json_src.get<picojson::object>()[json_hdr_uri] = picojson::value(source_uri);
-    json_src.get<picojson::object>()[json_hdr_header] = pss.header;
-    json_src.get<picojson::object>()[json_hdr_frame_size] = picojson::value( (int64_t)frame_size_bytes);
-    json_src.get<picojson::object>()[json_hdr_definitions] = picojson::value(c_code_struct_definitions);
+    json_src.get<picojson::object>()[json_src_id] = picojson::value(pss.id);
+    json_src.get<picojson::object>()[json_src_info] = pss.info;
+    json_src.get<picojson::object>()[json_src_version] = picojson::value( pss.version );
+    json_src.get<picojson::object>()[json_src_packet] = json_packet;
 
     WriteTag(TAG_ADD_SOURCE);
     json_src.serialize(std::ostream_iterator<char>(writer), true);
@@ -129,19 +135,19 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
     return src_id;
 }
 
-void PacketStreamWriter::WriteSourceFrame(PacketStreamSourceId src, const char* data, size_t n)
+void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char* data, size_t n)
 {
-    // Write SOURCE_FRAME tag and source id
-    WriteTag(TAG_SRC_FRAME);
+    // Write SOURCE_PACKET tag and source id
+    WriteTag(TAG_SRC_PACKET);
     WriteTimestamp();
     WriteCompressedUnsignedInt(src);
 
-    // Write frame size if dynamic so it can be skipped over easily
-    size_t frame_size = sources[src].frame_size_bytes;
-    if(frame_size == 0) {
+    // Write packet size if dynamic so it can be skipped over easily
+    size_t packet_size = sources[src].data_size_bytes;
+    if(packet_size == 0) {
         WriteCompressedUnsignedInt(n);
-    }else if(frame_size != n) {
-        throw std::runtime_error("Attempting to write frame of wrong size");
+    }else if(packet_size != n) {
+        throw std::runtime_error("Attempting to write packet of wrong size");
     }
 
     // Write data
@@ -200,12 +206,12 @@ std::string TagName(int v)
 }
 
 PacketStreamReader::PacketStreamReader()
-    : next_tag(0), frames(0)
+    : next_tag(0), packets(0)
 {
 }
 
 PacketStreamReader::PacketStreamReader(const std::string& filename, bool realtime)
-    : next_tag(0), frames(0)
+    : next_tag(0), packets(0)
 {
     Open(filename, realtime);
 }
@@ -235,7 +241,7 @@ void PacketStreamReader::Open(const std::string& filename, bool realtime)
 
     ReadTag();
 
-    // Read any source headers, stop on first frame
+    // Read any source headers
     while (next_tag == TAG_PANGO_HDR || next_tag == TAG_ADD_SOURCE) {
         ProcessMessage();
     }
@@ -254,7 +260,7 @@ PacketStreamReader::~PacketStreamReader()
     Close();
 }
 
-bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
+bool PacketStreamReader::ReadToSourcePacketAndLock(PacketStreamSourceId src_id)
 {
     read_mutex.lock();
 
@@ -262,7 +268,7 @@ bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
     int nxt_src_id;
     double time_s;
 
-    ProcessMessagesUntilSourceFrame(nxt_src_id, time_s);
+    ProcessMessagesUntilSourcePacket(nxt_src_id, time_s);
 
     while(nxt_src_id != (int)src_id) {
         if(nxt_src_id == -1) {
@@ -270,17 +276,15 @@ bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
             read_mutex.unlock();
             return false;
         }else{
-//            // Wait for another next frame to get read
-//            new_frame.wait(read_mutex);
-            ReadOverSourceFramePacket(nxt_src_id);
+            ReadOverSourcePacket(nxt_src_id);
             ReadTag();
         }
 
-        ProcessMessagesUntilSourceFrame(nxt_src_id, time_s);
+        ProcessMessagesUntilSourcePacket(nxt_src_id, time_s);
     }
 
     // Sync time to start of stream if there are no other playback devices
-    if(frames == 0 && playback_devices == 1) {
+    if(packets == 0 && playback_devices == 1) {
         ResetLoggingSystemTimeSeconds(time_s);
     }
 
@@ -297,16 +301,16 @@ bool PacketStreamReader::ReadToSourceFrameAndLock(PacketStreamSourceId src_id)
     return true;
 }
 
-void PacketStreamReader::ReleaseSourceFrameLock(PacketStreamSourceId src_id)
+void PacketStreamReader::ReleaseSourcePacketLock(PacketStreamSourceId src_id)
 {
     ReadTag();
-    ++frames;
+    ++packets;
     read_mutex.unlock();
 }
 
 void PacketStreamReader::ProcessMessage()
 {
-    // Read one frame / header
+    // Read one packet / header
     switch (next_tag) {
     case TAG_PANGO_HDR:
         ReadHeaderPacket();
@@ -317,13 +321,13 @@ void PacketStreamReader::ProcessMessage()
     case TAG_PANGO_STATS:
         ReadStatsPacket();
         break;
-    case TAG_SRC_FRAME:
+    case TAG_SRC_PACKET:
     {
         const size_t src_id = ReadCompressedUnsignedInt();
         if(src_id >= sources.size()) {
-            throw std::runtime_error("Invalid Frame Source ID.");
+            throw std::runtime_error("Invalid Packet Source ID.");
         }
-        ReadOverSourceFramePacket(src_id);
+        ReadOverSourcePacket(src_id);
         break;
     }
     case TAG_END:
@@ -338,7 +342,7 @@ void PacketStreamReader::ProcessMessage()
     }}
 
 // return src_id
-void PacketStreamReader::ProcessMessagesUntilSourceFrame(int &nxt_src_id, double &time_s)
+void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, double &time_s)
 {
     while(true)
     {
@@ -353,7 +357,7 @@ void PacketStreamReader::ProcessMessagesUntilSourceFrame(int &nxt_src_id, double
         case TAG_PANGO_STATS:
             ReadStatsPacket();
             break;
-        case TAG_SRC_FRAME:
+        case TAG_SRC_PACKET:
         {
             time_s = ReadTimestamp();
             nxt_src_id = ReadCompressedUnsignedInt();
@@ -401,30 +405,21 @@ void PacketStreamReader::ReadNewSourcePacket()
     picojson::parse(json, reader);
     reader.get(); // consume newline
 
-    if(!json.contains(json_hdr_type) || !json.contains(json_hdr_uri)) {
-        throw std::runtime_error("Missing required fields for source.\n" );
-    }
-
-    picojson::value jstype = json[json_hdr_type];
-    picojson::value jsuri  = json[json_hdr_uri];
-    picojson::value jssize = json[json_hdr_frame_size];
-    picojson::value jsdefs = json[json_hdr_definitions];
-
-    if( !jstype.is<std::string>() || !jsuri.is<std::string>() ||
-            !jssize.is<int64_t>() || !jsdefs.is<std::string>() ) {
-        throw std::runtime_error("Missing required fields for source.\n" );
-    }
+    picojson::value src_id      = json[json_src_id];
+    picojson::value src_info    = json[json_src_info];
+    picojson::value src_version = json[json_src_version];
+    picojson::value src_packet  = json[json_src_packet];
+    picojson::value data_size   = src_packet[json_pkt_size_bytes];
+    picojson::value data_defs   = src_packet[json_pkt_definitions];
+    picojson::value data_align  = src_packet[json_pkt_alignment_bytes];
 
     PacketStreamSource ps;
-    ps.source_type = jstype.get<std::string>();
-    ps.source_uri  = jsuri.get<std::string>();
-    ps.frame_size_bytes = jssize.get<int64_t>();
-    ps.c_code_struct_definitions = jsdefs.get<std::string>();
-
-    if(json.contains(json_hdr_header)) {
-        ps.header = json[json_hdr_header];
-    }
-
+    ps.id = src_id.get<std::string>();
+    ps.info = src_info;
+    ps.version = src_version.get<int64_t>();
+    ps.data_size_bytes = data_size.get<int64_t>();
+    ps.data_definitions = data_defs.get<std::string>();
+    ps.data_alignment_bytes = data_align.get<int64_t>();
 
     sources.push_back(ps);
 }
@@ -436,12 +431,12 @@ void PacketStreamReader::ReadStatsPacket()
     reader.get(); // consume newline
 }
 
-void PacketStreamReader::ReadOverSourceFramePacket(PacketStreamSourceId src_id)
+void PacketStreamReader::ReadOverSourcePacket(PacketStreamSourceId src_id)
 {
     const PacketStreamSource& src = sources[src_id];
 
-    if(src.frame_size_bytes > 0) {
-        reader.ignore(src.frame_size_bytes);
+    if(src.data_size_bytes > 0) {
+        reader.ignore(src.data_size_bytes);
     }else{
         size_t size_bytes = ReadCompressedUnsignedInt();
         reader.ignore(size_bytes);

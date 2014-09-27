@@ -41,7 +41,6 @@ namespace pangolin
 {
 
 const static std::string PANGO_MAGIC = "PANGO";
-const static std::string PANGO_FRAME = "PANGO_FRAME";
 
 const unsigned int TAG_LENGTH = 3;
 
@@ -50,17 +49,18 @@ const uint32_t TAG_PANGO_HDR   = PANGO_TAG('L', 'I', 'N');
 const uint32_t TAG_PANGO_SYNC  = PANGO_TAG('S', 'Y', 'N');
 const uint32_t TAG_PANGO_STATS = PANGO_TAG('S', 'T', 'A');
 const uint32_t TAG_ADD_SOURCE  = PANGO_TAG('S', 'R', 'C');
-const uint32_t TAG_SRC_FRAME   = PANGO_TAG('F', 'R', 'M');
+const uint32_t TAG_SRC_PACKET  = PANGO_TAG('P', 'K', 'T');
 const uint32_t TAG_END         = PANGO_TAG('E', 'N', 'D');
 #undef PANGO_TAG
 
 struct PANGOLIN_EXPORT PacketStreamSource
 {
-    std::string source_type;
-    std::string source_uri;
-    picojson::value header;
-    size_t      frame_size_bytes;
-    std::string c_code_struct_definitions;
+    std::string     id;
+    picojson::value info;
+    int64_t         version;
+    int64_t         data_alignment_bytes;
+    std::string     data_definitions;
+    int64_t         data_size_bytes;
 };
 
 typedef unsigned int PacketStreamSourceId;
@@ -83,13 +83,12 @@ public:
 
     PacketStreamSourceId AddSource(
         const std::string& source_type,
-        const std::string& source_uri = "",
         const std::string& json_header = "{}",
-        const size_t       frame_size_bytes = 0,
-        const std::string& c_code_struct_definitions = ""
+        const size_t       packet_size_bytes = 0,
+        const std::string& packet_definitions = ""
     );
 
-    void WriteSourceFrame(PacketStreamSourceId src, const char* data, size_t n);
+    void WriteSourcePacket(PacketStreamSourceId src, const char* data, size_t n);
 
     void WritePangoHeader();
 
@@ -140,9 +139,9 @@ public:
         return sources;
     }
 
-    bool ReadToSourceFrameAndLock(PacketStreamSourceId src_id);
+    bool ReadToSourcePacketAndLock(PacketStreamSourceId src_id);
 
-    void ReleaseSourceFrameLock(PacketStreamSourceId src_id);
+    void ReleaseSourcePacketLock(PacketStreamSourceId src_id);
 
     // Should only read once lock is aquired
     inline std::basic_istream<char>& Read(char* s, size_t n)
@@ -171,22 +170,21 @@ protected:
     }
 
     void ProcessMessage();
-    void ProcessMessagesUntilSourceFrame(int& nxt_src_id, double& time_s);
+    void ProcessMessagesUntilSourcePacket(int& nxt_src_id, double& time_s);
 
     bool ReadTag();
     void ReadHeaderPacket();
     void ReadNewSourcePacket();
     void ReadStatsPacket();
-    void ReadOverSourceFramePacket(PacketStreamSourceId src_id);
+    void ReadOverSourcePacket(PacketStreamSourceId src_id);
     uint32_t next_tag;
 
     std::vector<PacketStreamSource> sources;
 
     std::ifstream reader;
     boostd::mutex read_mutex;
-    boostd::condition_variable new_frame;
 
-    int frames;
+    int packets;
     bool realtime;
 };
 

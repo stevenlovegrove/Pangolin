@@ -31,7 +31,7 @@
 namespace pangolin
 {
 
-const std::string pango_video_type = "pango_raw_video";
+const std::string pango_video_type = "raw_video";
 
 PangoVideoOutput::PangoVideoOutput(const std::string& filename)
     : packetstream(filename), packetstreamsrcid(-1)
@@ -86,11 +86,10 @@ void PangoVideoOutput::WriteHeader()
 
     packetstreamsrcid = packetstream.AddSource(
         pango_video_type,
-        "default_uri",
         json_header.serialize(),
         total_frame_size,
-        "struct Frame{\n"
-        "   uint8 stream_data[" + pangolin::Convert<std::string,size_t>::Do(total_frame_size) + "];\n"
+        "struct Frame{"
+        " uint8 stream_data[" + pangolin::Convert<std::string,size_t>::Do(total_frame_size) + "];"
         "};"
     );
 }
@@ -101,7 +100,7 @@ int PangoVideoOutput::WriteStreams(unsigned char* data)
         WriteHeader();
     }
 
-    packetstream.WriteSourceFrame(
+    packetstream.WriteSourcePacket(
         packetstreamsrcid,
         (char*)data, total_frame_size
     );
