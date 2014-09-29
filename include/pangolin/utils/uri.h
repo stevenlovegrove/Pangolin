@@ -65,7 +65,7 @@ public:
 
 //! Parse string as Video URI
 PANGOLIN_EXPORT
-Uri ParseUri(std::string str_uri);
+Uri ParseUri(const std::string& str_uri);
 
 }
 

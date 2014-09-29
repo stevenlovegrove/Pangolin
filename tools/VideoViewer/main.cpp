@@ -1,4 +1,5 @@
 #include <pangolin/pangolin.h>
+#include <pangolin/video/video_record_repeat.h>
 #include <pangolin/gl/gltexturecache.h>
 
 struct GlFormat
@@ -41,7 +42,7 @@ void RenderToViewport(
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
     // Open Video by URI
-    pangolin::VideoInput video(input_uri);
+    pangolin::VideoRecordRepeat video(input_uri, output_uri);
 
     if(video.Streams().size() == 0) {
         pango_print_error("No video streams from device.\n");
@@ -50,9 +51,6 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
     std::vector<unsigned char> buffer;
     buffer.resize(video.SizeBytes()+1);
-
-    // Video Output device
-    pangolin::VideoOutput video_out;
 
     // Create OpenGL window - guess sensible dimensions
     pangolin::CreateWindowAndBind( "VideoViewer",
@@ -76,14 +74,25 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
 #ifdef CALLEE_HAS_CPP11
     pangolin::RegisterKeyPressCallback('r', [&](){
-        if(!video_out.IsOpen()) {
-            pango_print_info("Recording...\n");
-            video_out.Open(output_uri);
-            video_out.AddStreams(video.Streams());
+        if(!video.IsRecording()) {
+            video.Record();
+            pango_print_info("Started Recording.\n");
         }else{
-            video_out.Close();
+            video.Stop();
             pango_print_info("Finished recording.\n");
         }
+        fflush(stdout);
+    });
+    pangolin::RegisterKeyPressCallback('p', [&](){
+        video.Play();
+        max_frame = std::numeric_limits<int>::max();
+        pango_print_info("Playing from file log.\n");
+        fflush(stdout);
+    });
+    pangolin::RegisterKeyPressCallback('s', [&](){
+        video.Source();
+        max_frame = std::numeric_limits<int>::max();
+        pango_print_info("Playing from source input.\n");
         fflush(stdout);
     });
     pangolin::RegisterKeyPressCallback(' ', [&](){
@@ -107,9 +116,6 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         if (frame == 0 || frame < max_frame) {
             images.clear();
             if (video.Grab(&buffer[0], images) ){
-                if (video_out.IsOpen()) {
-                    video_out.WriteStreams(&buffer[0]);
-                }
                 ++frame;
             }
         }

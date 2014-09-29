@@ -34,7 +34,7 @@
 namespace pangolin
 {
 
-Uri ParseUri(std::string str_uri)
+Uri ParseUri(const std::string &str_uri)
 {
     Uri uri;
 
@@ -70,7 +70,7 @@ Uri ParseUri(std::string str_uri)
                     uri.params[key] = val;
                 }
             }else{
-                throw std::runtime_error("Unable to parse URI.");
+                throw std::runtime_error("Unable to parse URI: '" + str_uri + "'");
             }
         }
 

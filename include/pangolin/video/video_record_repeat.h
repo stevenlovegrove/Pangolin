@@ -36,11 +36,13 @@ namespace pangolin
 
 struct PANGOLIN_EXPORT VideoRecordRepeat : VideoInterface
 {
-    VideoRecordRepeat(const std::string &input_uri, const std::string &log_filename = "video_log.pango", int buffer_size_bytes = 10240000);
+    VideoRecordRepeat(const std::string &input_uri, const std::string &output_uri = "video_log.pango", int buffer_size_bytes = 10240000);
     ~VideoRecordRepeat();
-
-    const std::string& LogFilename() const;
     
+    /////////////////////////////////////////////////////////////
+    // VideoInterface Methods
+    /////////////////////////////////////////////////////////////
+
     size_t SizeBytes() const;
     const std::vector<StreamInfo>& Streams() const;
 
@@ -59,22 +61,36 @@ struct PANGOLIN_EXPORT VideoRecordRepeat : VideoInterface
     void Stop();
     bool GrabNext( unsigned char* image, bool wait = true );
     bool GrabNewest( unsigned char* image, bool wait = true );
+
+    /////////////////////////////////////////////////////////////
+    // VideoInput Methods
+    /////////////////////////////////////////////////////////////
+
+    // experimental - not stable
+    bool Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait = true, bool newest = false);
     
+    /////////////////////////////////////////////////////////////
+    // VideoRecordRepeat Methods
+    /////////////////////////////////////////////////////////////
+
+    const std::string& LogFilename() const;
+
     void Record();
     void Play(bool realtime = true);
     void Source();
     
-    int FrameId();
     
     bool IsRecording() const;
     bool IsPlaying() const;
     
+    int FrameId();
+
 protected:
+    Uri uri_output;
     VideoInterface* video_src;
     VideoInterface* video_file;
     VideoOutputInterface* video_recorder;
     
-    std::string filename;
     int buffer_size_bytes;
     
     int frame_num;

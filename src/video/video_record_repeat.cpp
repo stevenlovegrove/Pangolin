@@ -34,11 +34,17 @@ namespace pangolin
 
 VideoRecordRepeat::VideoRecordRepeat(
     const std::string& input_uri,
-    const std::string& log_filename,
+    const std::string& output_uri,
     int buffer_size_bytes
     ) : video_src(0), video_file(0), video_recorder(0),
-    filename(log_filename), buffer_size_bytes(buffer_size_bytes), frame_num(0)
+    buffer_size_bytes(buffer_size_bytes), frame_num(0)
 {
+    uri_output = ParseUri(output_uri);
+    if(uri_output.scheme == "file") {
+        // Default to pango output
+        uri_output.scheme = "pango";
+    }
+
     video_src = OpenVideo(input_uri);
 }
 
@@ -54,7 +60,29 @@ VideoRecordRepeat::~VideoRecordRepeat()
 
 const std::string& VideoRecordRepeat::LogFilename() const
 {
-    return filename;
+    return uri_output.url;
+}
+
+bool VideoRecordRepeat::Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait, bool newest)
+{
+    if( !video_src ) throw VideoException("No video source open");
+
+    bool success;
+
+    if(newest) {
+        success = GrabNewest(buffer, wait);
+    }else{
+        success = GrabNext(buffer, wait);
+    }
+
+    if(success) {
+        images.clear();
+        for(size_t s=0; s < Streams().size(); ++s) {
+            images.push_back(Streams()[s].StreamImage(buffer));
+        }
+    }
+
+    return success;
 }
 
 void VideoRecordRepeat::Record()
@@ -70,7 +98,7 @@ void VideoRecordRepeat::Record()
         video_file = 0;
     }
 
-    video_recorder = new PangoVideoOutput(filename);
+    video_recorder = OpenVideoOutput(uri_output);
     video_recorder->AddStreams( video_src->Streams() );
 
     video_src->Start();
@@ -91,7 +119,11 @@ void VideoRecordRepeat::Play(bool realtime)
         video_recorder = 0;
     }
 
-    video_file = new PangoVideo(filename,realtime);
+    video_file = OpenVideo(
+        realtime ? "file:[realtime]//" + uri_output.url :
+                   uri_output.url
+    );
+
     frame_num = 0;
 }
 
