@@ -98,7 +98,7 @@ int main( int argc, char* argv[] )
         ""
     };
 
-    std::string filename = "video.pvn";
+    std::string filename = "video.pango";
 
     if( argc >= 2 ) {
         const std::string uri = std::string(argv[1]);

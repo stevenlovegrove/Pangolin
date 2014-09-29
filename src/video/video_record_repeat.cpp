@@ -26,17 +26,20 @@
  */
 
 #include <pangolin/video/video_record_repeat.h>
-#include <pangolin/video/drivers/pvn_video.h>
+#include <pangolin/video/drivers/pango_video.h>
+#include <pangolin/video/drivers/pango_video_output.h>
 
 namespace pangolin
 {
 
 VideoRecordRepeat::VideoRecordRepeat(
-    std::string uri, std::string save_filename, int buffer_size_bytes
+    const std::string& input_uri,
+    const std::string& log_filename,
+    int buffer_size_bytes
     ) : video_src(0), video_file(0), video_recorder(0),
-    filename(save_filename), buffer_size_bytes(buffer_size_bytes), frame_num(0)
+    filename(log_filename), buffer_size_bytes(buffer_size_bytes), frame_num(0)
 {
-    video_src = OpenVideo(uri);
+    video_src = OpenVideo(input_uri);
 }
 
 VideoRecordRepeat::~VideoRecordRepeat()
@@ -47,6 +50,11 @@ VideoRecordRepeat::~VideoRecordRepeat()
         delete video_src;
     if( video_file )
         delete video_file;
+}
+
+const std::string& VideoRecordRepeat::LogFilename() const
+{
+    return filename;
 }
 
 void VideoRecordRepeat::Record()
@@ -61,13 +69,9 @@ void VideoRecordRepeat::Record()
         delete video_file;
         video_file = 0;
     }
-    
-    const StreamInfo& s0 = video_src->Streams()[0];
 
-    video_recorder = new VideoRecorder(
-        filename, s0.Width(), s0.Height(),
-        s0.PixFormat(), buffer_size_bytes
-    );
+    video_recorder = new PangoVideoOutput(filename);
+    video_recorder->AddStreams( video_src->Streams() );
 
     video_src->Start();
     frame_num = 0;
@@ -87,7 +91,7 @@ void VideoRecordRepeat::Play(bool realtime)
         video_recorder = 0;
     }
 
-    video_file = new PvnVideo(filename.c_str(),realtime);
+    video_file = new PangoVideo(filename,realtime);
     frame_num = 0;
 }
 
@@ -113,22 +117,9 @@ size_t VideoRecordRepeat::SizeBytes() const
     return video_src->SizeBytes();
 }
 
-unsigned VideoRecordRepeat::Width() const
+const std::vector<StreamInfo>& VideoRecordRepeat::Streams() const
 {
-    if( !video_src ) throw VideoException("No video source open");
-    return video_src->Streams()[0].Width();
-}
-
-unsigned VideoRecordRepeat::Height() const
-{
-    if( !video_src ) throw VideoException("No video source open");
-    return video_src->Streams()[0].Height();
-}
-
-VideoPixelFormat VideoRecordRepeat::PixFormat() const
-{
-    if( !video_src ) throw VideoException("No video source open");
-    return video_src->Streams()[0].PixFormat();
+    return video_src->Streams();
 }
 
 void VideoRecordRepeat::Start()
@@ -150,11 +141,10 @@ bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
 {
     frame_num++;
 
-    if( video_recorder != 0 )
-    {
-        bool success = video_src->GrabNext(image,wait);
+    if( video_recorder != 0 ) {
+        bool success = video_src->GrabNext(image, wait);
         if( success ) {
-            video_recorder->RecordFrame(image);
+            video_recorder->WriteStreams(image);
         }
         return success;
     }else if( video_file != 0 ) {
@@ -172,7 +162,7 @@ bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
     {
         bool success = video_src->GrabNewest(image,wait);
         if( success ) {
-            video_recorder->RecordFrame(image);
+            video_recorder->WriteStreams(image);
         }
         return success;
     }else if( video_file != 0 ) {

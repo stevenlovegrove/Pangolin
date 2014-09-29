@@ -29,21 +29,32 @@
 #define PANGOLIN_VIDEO_RECORD_REPEAT_H
 
 #include <pangolin/video/video.h>
-#include <pangolin/video/video_recorder.h>
+#include <pangolin/video/video_output.h>
 
 namespace pangolin
 {
 
-struct PANGOLIN_EXPORT VideoRecordRepeat
+struct PANGOLIN_EXPORT VideoRecordRepeat : VideoInterface
 {
-    VideoRecordRepeat( std::string uri, std::string save_filename, int buffer_size_bytes );
+    VideoRecordRepeat(const std::string &input_uri, const std::string &log_filename = "video_log.pango", int buffer_size_bytes = 10240000);
     ~VideoRecordRepeat();
+
+    const std::string& LogFilename() const;
     
-    unsigned Width() const;
-    unsigned Height() const;
     size_t SizeBytes() const;
-    VideoPixelFormat PixFormat() const;
-    
+    const std::vector<StreamInfo>& Streams() const;
+
+    // Return details of first stream
+    unsigned Width() const {
+        return Streams()[0].Width();
+    }
+    unsigned Height() const {
+        return Streams()[0].Height();
+    }
+    VideoPixelFormat PixFormat() const {
+        return Streams()[0].PixFormat();
+    }
+
     void Start();
     void Stop();
     bool GrabNext( unsigned char* image, bool wait = true );
@@ -61,7 +72,7 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
 protected:
     VideoInterface* video_src;
     VideoInterface* video_file;
-    VideoRecorder* video_recorder;
+    VideoOutputInterface* video_recorder;
     
     std::string filename;
     int buffer_size_bytes;
