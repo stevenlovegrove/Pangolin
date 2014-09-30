@@ -96,10 +96,10 @@ int PangoVideo::FindSource()
                 // Read sources header
                 size_bytes = 0;
 
-                const picojson::value& json_streams = src.info["streams"];
+                const json::value& json_streams = src.info["streams"];
                 const size_t num_streams = json_streams.size();
                 for(size_t i=0; i<num_streams; ++i) {
-                    const picojson::value& json_stream = json_streams[i];
+                    const json::value& json_stream = json_streams[i];
                     StreamInfo si(
                         VideoFormatFromString(
                             json_stream["encoding"].get<std::string>()

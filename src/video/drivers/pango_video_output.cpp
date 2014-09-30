@@ -58,31 +58,21 @@ void PangoVideoOutput::AddStreams(const std::vector<StreamInfo>& st)
 
 void PangoVideoOutput::WriteHeader()
 {
-    picojson::value json_header(picojson::object_type,false);
-    picojson::value json_streams(picojson::array_type,false);
+    json::value json_header(json::object_type,false);
+    json::value& json_streams = json_header["streams"];
 
     total_frame_size = 0;
     for(unsigned int i=0; i< streams.size(); ++i) {
         StreamInfo& si = streams[i];
         total_frame_size += si.SizeBytes();
 
-        picojson::value json_stream(picojson::object_type,false);
-        json_stream["encoding"] = picojson::value(si.PixFormat().format);
-        json_stream["width"] = picojson::value( (int64_t)si.Width() );
-        json_stream["height"] = picojson::value( (int64_t)si.Height() );
-        json_stream["pitch"] = picojson::value( (int64_t)si.Pitch() );
-        json_stream["offset"] = picojson::value( (int64_t)si.Offset() );
-        json_streams.get<picojson::array>().push_back(json_stream);
+        json::value& json_stream = json_streams.push_back();
+        json_stream["encoding"] = si.PixFormat().format;
+        json_stream["width"] =    si.Width();
+        json_stream["height"] =   si.Height();
+        json_stream["pitch"] =    si.Pitch();
+        json_stream["offset"] =   (size_t)si.Offset();
     }
-
-    json_header["streams"] = json_streams;
-
-    picojson::value json_frame_streams(picojson::array_type,false);
-    json_frame_streams.get<picojson::array>().push_back( picojson::value("uint8") );
-    json_frame_streams.get<picojson::array>().push_back( picojson::value( (int64_t)total_frame_size) );
-
-    picojson::value json_frame(picojson::object_type,false);
-    json_frame["stream_data"] = json_frame_streams;
 
     packetstreamsrcid = packetstream.AddSource(
         pango_video_type,

@@ -56,7 +56,7 @@ const uint32_t TAG_END         = PANGO_TAG('E', 'N', 'D');
 struct PANGOLIN_EXPORT PacketStreamSource
 {
     std::string     id;
-    picojson::value info;
+    json::value     info;
     int64_t         version;
     int64_t         data_alignment_bytes;
     std::string     data_definitions;

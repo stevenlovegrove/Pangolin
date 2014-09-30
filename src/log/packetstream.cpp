@@ -112,19 +112,18 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
     pss.version = 1;
     pss.data_alignment_bytes = 1;
 
-    picojson::parse(pss.info,source_info.begin(), source_info.end(), &err);
+    json::parse(pss.info,source_info.begin(), source_info.end(), &err);
     if(!err.empty()) throw std::runtime_error("Source Info parse error: " + err);
 
-    picojson::value json_packet(picojson::object_type,false);
-    json_packet.get<picojson::object>()[json_pkt_size_bytes] = picojson::value( pss.data_size_bytes );
-    json_packet.get<picojson::object>()[json_pkt_definitions] = picojson::value(pss.data_definitions);
-    json_packet.get<picojson::object>()[json_pkt_alignment_bytes] = picojson::value( pss.data_alignment_bytes );
+    json::value json_src;
+    json_src[json_src_id] = pss.id;
+    json_src[json_src_info] = pss.info;
+    json_src[json_src_version] = pss.version;
 
-    picojson::value json_src(picojson::object_type,false);
-    json_src.get<picojson::object>()[json_src_id] = picojson::value(pss.id);
-    json_src.get<picojson::object>()[json_src_info] = pss.info;
-    json_src.get<picojson::object>()[json_src_version] = picojson::value( pss.version );
-    json_src.get<picojson::object>()[json_src_packet] = json_packet;
+    json::value& json_packet = json_src[json_src_packet];
+    json_packet[json_pkt_size_bytes] = pss.data_size_bytes;
+    json_packet[json_pkt_definitions] = pss.data_definitions;
+    json_packet[json_pkt_alignment_bytes] = pss.data_alignment_bytes;
 
     WriteTag(TAG_ADD_SOURCE);
     json_src.serialize(std::ostream_iterator<char>(writer), true);
@@ -166,10 +165,10 @@ const std::string CurrentTimeStr() {
 void PacketStreamWriter::WritePangoHeader()
 {
     // Write Header
-    picojson::value pango(picojson::object_type,false);
-    pango["pangolin_version"] = picojson::value(PANGOLIN_VERSION_STRING);
-    pango["date_created"] = picojson::value( CurrentTimeStr() );
-    pango["endian"] = picojson::value("little_endian");
+    json::value pango;
+    pango["pangolin_version"] = PANGOLIN_VERSION_STRING;
+    pango["date_created"] = CurrentTimeStr();
+    pango["endian"] = "little_endian";
 
     WriteTag(TAG_PANGO_HDR);
     pango.serialize(std::ostream_iterator<char>(writer), true);
@@ -178,9 +177,9 @@ void PacketStreamWriter::WritePangoHeader()
 void PacketStreamWriter::WriteStats()
 {
     WriteTag(TAG_PANGO_STATS);
-    picojson::value stat(picojson::object_type,false);
-    stat.get<picojson::object>()["num_sources"] = picojson::value((int64_t)sources.size());
-    stat.get<picojson::object>()["bytes_written"] = picojson::value((int64_t)bytes_written);
+    json::value stat;
+    stat["num_sources"]   = sources.size();
+    stat["bytes_written"] = bytes_written;
     stat.serialize(std::ostream_iterator<char>(writer), true);
 }
 
@@ -391,8 +390,8 @@ bool PacketStreamReader::ReadTag()
 
 void PacketStreamReader::ReadHeaderPacket()
 {
-    picojson::value json_header;
-    picojson::parse(json_header, reader);
+    json::value json_header;
+    json::parse(json_header, reader);
 
     // Consume newline
     char buffer[1];
@@ -401,17 +400,17 @@ void PacketStreamReader::ReadHeaderPacket()
 
 void PacketStreamReader::ReadNewSourcePacket()
 {
-    picojson::value json;
-    picojson::parse(json, reader);
+    json::value json;
+    json::parse(json, reader);
     reader.get(); // consume newline
 
-    picojson::value src_id      = json[json_src_id];
-    picojson::value src_info    = json[json_src_info];
-    picojson::value src_version = json[json_src_version];
-    picojson::value src_packet  = json[json_src_packet];
-    picojson::value data_size   = src_packet[json_pkt_size_bytes];
-    picojson::value data_defs   = src_packet[json_pkt_definitions];
-    picojson::value data_align  = src_packet[json_pkt_alignment_bytes];
+    json::value src_id      = json[json_src_id];
+    json::value src_info    = json[json_src_info];
+    json::value src_version = json[json_src_version];
+    json::value src_packet  = json[json_src_packet];
+    json::value data_size   = src_packet[json_pkt_size_bytes];
+    json::value data_defs   = src_packet[json_pkt_definitions];
+    json::value data_align  = src_packet[json_pkt_alignment_bytes];
 
     PacketStreamSource ps;
     ps.id = src_id.get<std::string>();
@@ -426,8 +425,8 @@ void PacketStreamReader::ReadNewSourcePacket()
 
 void PacketStreamReader::ReadStatsPacket()
 {
-    picojson::value json;
-    picojson::parse(json, reader);
+    json::value json;
+    json::parse(json, reader);
     reader.get(); // consume newline
 }
 
