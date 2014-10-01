@@ -9,7 +9,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
     const unsigned h = video.Height();
 
     pangolin::VideoOutput recorder( record_uri );
-    recorder.AddStreams(video.Streams());
+    recorder.SetStreams(video.Streams());
 
     // Create OpenGL window
     pangolin::CreateWindowAndBind("Main",w,h);

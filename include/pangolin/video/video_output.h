@@ -57,9 +57,9 @@ struct PANGOLIN_EXPORT VideoOutputInterface
     //! Get format and dimensions of all video streams
     virtual const std::vector<StreamInfo>& Streams() const = 0;
 
-    virtual void AddStreams(const std::vector<StreamInfo>& streams) = 0;
+    virtual void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri ="", const json::value& properties = json::value() ) = 0;
 
-    virtual int WriteStreams(unsigned char* data) = 0;
+    virtual int WriteStreams(unsigned char* data, const json::value& frame_properties ) = 0;
 };
 
 //! VideoOutput wrap to generically construct instances of VideoOutputInterface.
@@ -76,9 +76,9 @@ public:
 
     const std::vector<StreamInfo>& Streams() const;
 
-    void AddStreams(const std::vector<StreamInfo>& streams);
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri = "", const json::value& properties = json::value() );
 
-    int WriteStreams(unsigned char* data);
+    int WriteStreams(unsigned char* data, const json::value& frame_properties = json::value() );
     
 protected:
     Uri uri;

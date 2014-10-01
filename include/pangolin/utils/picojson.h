@@ -1,4 +1,4 @@
-/* This is a (buchered) derivative of picojson, incorporated into the
+/* This is a (butchered) derivative of picojson, incorporated into the
  * Pangolin Project (http://github.com/stevenlovegrove/Pangolin)
  *
  * Modifications Copyright (c) 2014 Steven Lovegrove,

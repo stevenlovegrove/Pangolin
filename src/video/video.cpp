@@ -426,6 +426,7 @@ VideoInterface* OpenVideo(const Uri& uri)
 #ifdef HAVE_OPENNI2
     if(!uri.scheme.compare("openni2") )
     {
+        const bool realtime = uri.Contains("realtime");
         const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
         const unsigned int fps = uri.Get<unsigned int>("fps", 30);
 
@@ -435,12 +436,13 @@ VideoInterface* OpenVideo(const Uri& uri)
         img1 = openni_sensor(uri.Get<std::string>("img1", "rgb") );
         img2 = openni_sensor(uri.Get<std::string>("img2", "") );
 
-        OpenNiVideo2* nivid = new OpenNiVideo2(img1,img2,dim,fps);
+        OpenNiVideo2* nivid = new OpenNiVideo2(img1,img2,dim,fps,realtime);
         video = nivid;
 
         nivid->SetDepthCloseRange( uri.Get<bool>("closerange",false) );
         nivid->SetDepthHoleFilter( uri.Get<bool>("holefilter",false) );
         nivid->SetDepthColorSyncEnabled( uri.Get<bool>("coloursync",false) );
+        nivid->UpdateProperties();
     }else
 #endif
 #ifdef HAVE_UVC

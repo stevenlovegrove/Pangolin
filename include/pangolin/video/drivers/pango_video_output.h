@@ -41,13 +41,16 @@ public:
     ~PangoVideoOutput();
 
     const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
-    void AddStreams(const std::vector<StreamInfo>& streams) PANGOLIN_OVERRIDE;
-    int WriteStreams(unsigned char* data) PANGOLIN_OVERRIDE;
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& properties) PANGOLIN_OVERRIDE;
+    int WriteStreams(unsigned char* data, const json::value& frame_properties) PANGOLIN_OVERRIDE;
 
 protected:
     void WriteHeader();
 
     std::vector<StreamInfo> streams;
+    std::string input_uri;
+    json::value properties;
+
     PacketStreamWriter packetstream;
     int packetstreamsrcid;
     size_t total_frame_size;

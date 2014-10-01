@@ -49,6 +49,7 @@ const uint32_t TAG_PANGO_HDR   = PANGO_TAG('L', 'I', 'N');
 const uint32_t TAG_PANGO_SYNC  = PANGO_TAG('S', 'Y', 'N');
 const uint32_t TAG_PANGO_STATS = PANGO_TAG('S', 'T', 'A');
 const uint32_t TAG_ADD_SOURCE  = PANGO_TAG('S', 'R', 'C');
+const uint32_t TAG_SRC_META    = PANGO_TAG('M', 'T', 'A');
 const uint32_t TAG_SRC_PACKET  = PANGO_TAG('P', 'K', 'T');
 const uint32_t TAG_END         = PANGO_TAG('E', 'N', 'D');
 #undef PANGO_TAG
@@ -56,7 +57,9 @@ const uint32_t TAG_END         = PANGO_TAG('E', 'N', 'D');
 struct PANGOLIN_EXPORT PacketStreamSource
 {
     std::string     id;
+    std::string     uri;
     json::value     info;
+    json::value     meta;
     int64_t         version;
     int64_t         data_alignment_bytes;
     std::string     data_definitions;
@@ -83,10 +86,13 @@ public:
 
     PacketStreamSourceId AddSource(
         const std::string& source_type,
-        const std::string& json_header = "{}",
+        const std::string& uri,
+        const json::value& json_header = json::value(),
         const size_t       packet_size_bytes = 0,
         const std::string& packet_definitions = ""
     );
+
+    void WriteSourcePacketMeta(PacketStreamSourceId src, const json::value& json);
 
     void WriteSourcePacket(PacketStreamSourceId src, const char* data, size_t n);
 
@@ -174,6 +180,7 @@ protected:
 
     bool ReadTag();
     void ReadHeaderPacket();
+    void ReadSourcePacketMeta(json::value &json);
     void ReadNewSourcePacket();
     void ReadStatsPacket();
     void ReadOverSourcePacket(PacketStreamSourceId src_id);

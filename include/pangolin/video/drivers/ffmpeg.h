@@ -166,8 +166,8 @@ public:
     ~FfmpegVideoOutput();
 
     const std::vector<StreamInfo>& Streams() const;
-    void AddStreams(const std::vector<StreamInfo>& streams);
-    int WriteStreams(unsigned char* data);
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& properties);
+    int WriteStreams(unsigned char* data, const json::value& frame_properties);
     
 protected:
     void Initialise(std::string filename);

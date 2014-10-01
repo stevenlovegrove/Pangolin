@@ -146,14 +146,14 @@ const std::vector<StreamInfo>& VideoOutput::Streams() const
     return recorder->Streams();
 }
 
-void VideoOutput::AddStreams(const std::vector<StreamInfo>& streams)
+void VideoOutput::SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value &properties)
 {
-    recorder->AddStreams(streams);
+    recorder->SetStreams(streams, uri, properties);
 }
 
-int VideoOutput::WriteStreams(unsigned char* data)
+int VideoOutput::WriteStreams(unsigned char* data, const json::value& frame_properties)
 {
-    return recorder->WriteStreams(data);
+    return recorder->WriteStreams(data, frame_properties);
 }
 
 

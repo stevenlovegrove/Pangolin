@@ -36,9 +36,10 @@ VideoRecordRepeat::VideoRecordRepeat(
     const std::string& input_uri,
     const std::string& output_uri,
     int buffer_size_bytes
-    ) : video_src(0), video_file(0), video_recorder(0),
+    ) : video_src(0), video_src_props(0), video_file(0), video_recorder(0),
     buffer_size_bytes(buffer_size_bytes), frame_num(0)
 {
+    uri_input = input_uri;
     uri_output = ParseUri(output_uri);
     if(uri_output.scheme == "file") {
         // Default to pango output
@@ -46,6 +47,7 @@ VideoRecordRepeat::VideoRecordRepeat(
     }
 
     video_src = OpenVideo(input_uri);
+    video_src_props = dynamic_cast<VideoPropertiesInterface*>(video_src);
 }
 
 VideoRecordRepeat::~VideoRecordRepeat()
@@ -99,7 +101,10 @@ void VideoRecordRepeat::Record()
     }
 
     video_recorder = OpenVideoOutput(uri_output);
-    video_recorder->AddStreams( video_src->Streams() );
+    video_recorder->SetStreams(
+        video_src->Streams(), uri_input, video_src_props ?
+            video_src_props->DeviceProperties() : json::value()
+    );
 
     video_src->Start();
     frame_num = 0;
@@ -123,6 +128,7 @@ void VideoRecordRepeat::Play(bool realtime)
         realtime ? "file:[realtime]//" + uri_output.url :
                    uri_output.url
     );
+    video_file_props = dynamic_cast<VideoPropertiesInterface*>(video_file);
 
     frame_num = 0;
 }
@@ -176,7 +182,9 @@ bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
     if( video_recorder != 0 ) {
         bool success = video_src->GrabNext(image, wait);
         if( success ) {
-            video_recorder->WriteStreams(image);
+            video_recorder->WriteStreams(image, video_src_props ?
+                video_src_props->FrameProperties() : json::value()
+            );
         }
         return success;
     }else if( video_file != 0 ) {
@@ -194,13 +202,33 @@ bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
     {
         bool success = video_src->GrabNewest(image,wait);
         if( success ) {
-            video_recorder->WriteStreams(image);
+            video_recorder->WriteStreams(image, video_src_props ?
+                video_src_props->FrameProperties() : json::value()
+            );
         }
         return success;
     }else if( video_file != 0 ) {
         return video_file->GrabNewest(image,wait);
     }else{
         return video_src->GrabNewest(image,wait);
+    }
+}
+
+const json::value& VideoRecordRepeat::DeviceProperties() const
+{
+    if(IsPlaying()) {
+        return video_file_props ? video_file_props->DeviceProperties() : null_props;
+    }else{
+        return video_src_props ? video_src_props->DeviceProperties() : null_props;
+    }
+}
+
+const json::value& VideoRecordRepeat::FrameProperties() const
+{
+    if(IsPlaying()) {
+        return video_file_props ? video_file_props->FrameProperties() : null_props;
+    }else{
+        return video_src_props ? video_src_props->FrameProperties() : null_props;
     }
 }
 

@@ -85,6 +85,24 @@ bool PangoVideo::GrabNewest( unsigned char* image, bool wait )
     return GrabNext(image, wait);
 }
 
+const json::value& PangoVideo::DeviceProperties() const
+{
+    if(src_id >=0) {
+        return reader.Sources()[src_id].info["properties"];
+    }else{
+        throw std::runtime_error("Not initialised");
+    }
+}
+
+const json::value& PangoVideo::FrameProperties() const
+{
+    if(src_id >=0) {
+        return reader.Sources()[src_id].meta;
+    }else{
+        throw std::runtime_error("Not initialised");
+    }
+}
+
 int PangoVideo::FindSource()
 {
     for(PacketStreamSourceId src_id=0; src_id < reader.Sources().size(); ++src_id)
@@ -96,6 +114,7 @@ int PangoVideo::FindSource()
                 // Read sources header
                 size_bytes = 0;
 
+                device_properties = src.info["properties"];
                 const json::value& json_streams = src.info["streams"];
                 const size_t num_streams = json_streams.size();
                 for(size_t i=0; i<num_streams; ++i) {

@@ -34,7 +34,8 @@
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT PangoVideo : public VideoInterface
+class PANGOLIN_EXPORT PangoVideo
+    : public VideoInterface, public VideoPropertiesInterface
 {
 public:
     PangoVideo(const std::string& filename, bool realtime = true);
@@ -52,12 +53,18 @@ public:
 
     bool GrabNewest( unsigned char* image, bool wait = true );
 
+    const json::value& DeviceProperties() const;
+
+    const json::value& FrameProperties() const;
+
 protected:
     int FindSource();
 
     PacketStreamReader reader;
     size_t size_bytes;
     std::vector<StreamInfo> streams;
+    json::value device_properties;
+    json::value frame_properties;
     int src_id;
 };
 

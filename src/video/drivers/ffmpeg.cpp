@@ -737,7 +737,7 @@ const std::vector<StreamInfo>& FfmpegVideoOutput::Streams() const
     return strs;
 }
 
-void FfmpegVideoOutput::AddStreams(const std::vector<StreamInfo>& str)
+void FfmpegVideoOutput::SetStreams(const std::vector<StreamInfo>& str, const std::string& /*uri*/, const json::value& properties)
 {
     strs.insert(strs.end(), str.begin(), str.end());
 
@@ -747,9 +747,13 @@ void FfmpegVideoOutput::AddStreams(const std::vector<StreamInfo>& str)
             *this, oc->oformat->video_codec, base_frame_rate, bit_rate, *i
         ) );
     }
+
+    if(!properties.is<json::null>()) {
+        pango_print_warn("Ignoring attached video properties.");
+    }
 }
 
-int FfmpegVideoOutput::WriteStreams(unsigned char* data)
+int FfmpegVideoOutput::WriteStreams(unsigned char* data, const json::value& /*frame_properties*/)
 {
     for(std::vector<FfmpegVideoOutputStream*>::iterator i = streams.begin(); i!= streams.end(); ++i)
     {

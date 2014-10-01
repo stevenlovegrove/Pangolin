@@ -48,7 +48,8 @@ enum DepthSenseSensorType
 };
 
 // Video class that outputs test video signal.
-class PANGOLIN_EXPORT DepthSenseVideo : public VideoInterface
+class PANGOLIN_EXPORT DepthSenseVideo :
+        public VideoInterface, public VideoPropertiesInterface
 {
 public:
     DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2);
@@ -72,6 +73,15 @@ public:
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
     
+    //! Implement VideoInput::DeviceProperties()
+    const json::value& DeviceProperties() const {
+        return device_properties;
+    }
+
+    //! Implement VideoInput::DeviceProperties()
+    const json::value& FrameProperties() const {
+        return frame_properties;
+    }
 protected:
     void ConfigureNodes();
 
@@ -89,6 +99,8 @@ protected:
     void ConfigureColorNode(const SensorConfig& sensorConfig);
 
     std::vector<StreamInfo> streams;
+    json::value device_properties;
+    json::value frame_properties;
     SensorConfig sensorConfig[2];
 
     bool enableDepth;

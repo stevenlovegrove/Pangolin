@@ -38,6 +38,7 @@ namespace pangolin
 {
 
 const char* json_src_id              = "id";
+const char* json_src_uri             = "uri";
 const char* json_src_info            = "info";
 const char* json_src_packet          = "packet";
 const char* json_src_version         = "version";
@@ -98,7 +99,8 @@ PacketStreamWriter::~PacketStreamWriter()
 
 PacketStreamSourceId PacketStreamWriter::AddSource(
     const std::string& source_id,
-    const std::string& source_info,
+    const std::string& uri,
+    const json::value& source_info,
     const size_t       packet_size_bytes,
     const std::string& packet_definitions
 ) {
@@ -107,16 +109,16 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
     PacketStreamSource pss;
 
     pss.id = source_id;
+    pss.uri = uri;
+    pss.info = source_info;
     pss.data_size_bytes = packet_size_bytes;
     pss.data_definitions = packet_definitions;
     pss.version = 1;
     pss.data_alignment_bytes = 1;
 
-    json::parse(pss.info,source_info.begin(), source_info.end(), &err);
-    if(!err.empty()) throw std::runtime_error("Source Info parse error: " + err);
-
     json::value json_src;
     json_src[json_src_id] = pss.id;
+    json_src[json_src_uri] = pss.uri;
     json_src[json_src_info] = pss.info;
     json_src[json_src_version] = pss.version;
 
@@ -132,6 +134,13 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
 
     sources.push_back( pss );
     return src_id;
+}
+
+void PacketStreamWriter::WriteSourcePacketMeta(PacketStreamSourceId src, const json::value& json)
+{
+    WriteTag(TAG_SRC_META);
+    WriteCompressedUnsignedInt(src);
+    json.serialize(std::ostream_iterator<char>(writer), false);
 }
 
 void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char* data, size_t n)
@@ -320,6 +329,16 @@ void PacketStreamReader::ProcessMessage()
     case TAG_PANGO_STATS:
         ReadStatsPacket();
         break;
+    case TAG_SRC_META:
+    {
+        size_t src_id = ReadCompressedUnsignedInt();
+        if(src_id >= sources.size()) {
+            std::cerr << src_id << std::endl;
+            throw std::runtime_error("Invalid Frame Source ID.");
+        }
+        ReadSourcePacketMeta(sources[src_id].meta);
+        break;
+    }
     case TAG_SRC_PACKET:
     {
         const size_t src_id = ReadCompressedUnsignedInt();
@@ -335,6 +354,7 @@ void PacketStreamReader::ProcessMessage()
         // TODO: Resync
         throw std::runtime_error("Unknown packet type.");
     }
+
     if(!ReadTag()) {
         // Dummy end tag
         next_tag = TAG_END;
@@ -356,13 +376,24 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, doubl
         case TAG_PANGO_STATS:
             ReadStatsPacket();
             break;
+        case TAG_SRC_META:
+        {
+            size_t src_id = ReadCompressedUnsignedInt();
+            if(src_id >= sources.size()) {
+                std::cerr << src_id << std::endl;
+                throw std::runtime_error("Invalid Frame Source ID.");
+            }
+            ReadSourcePacketMeta(sources[src_id].meta);
+            break;
+        }
         case TAG_SRC_PACKET:
         {
             time_s = ReadTimestamp();
             nxt_src_id = ReadCompressedUnsignedInt();
             if(nxt_src_id >= (int)sources.size()) {
-                throw std::runtime_error("Invalid Frame Source ID.");
+                throw std::runtime_error("Invalid Packet Source ID.");
             }
+            // return, don't break. We're in the middle of this packet.
             return;
         }
         case TAG_END:
@@ -372,6 +403,7 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, doubl
             // TODO: Resync
             throw std::runtime_error("Unknown packet type.");
         }
+
         if(!ReadTag()) {
             // Dummy end tag
             next_tag = TAG_END;
@@ -392,10 +424,12 @@ void PacketStreamReader::ReadHeaderPacket()
 {
     json::value json_header;
     json::parse(json_header, reader);
+    reader.get(); // consume newline
+}
 
-    // Consume newline
-    char buffer[1];
-    reader.read(buffer,1);
+void PacketStreamReader::ReadSourcePacketMeta(json::value& json)
+{
+    json::parse(json, reader);
 }
 
 void PacketStreamReader::ReadNewSourcePacket()

@@ -47,10 +47,12 @@ const std::vector<StreamInfo>& PangoVideoOutput::Streams() const
     return streams;
 }
 
-void PangoVideoOutput::AddStreams(const std::vector<StreamInfo>& st)
+void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::string& uri, const json::value& prop)
 {
     if(packetstreamsrcid == -1) {
-        streams.insert(streams.begin(), st.begin(), st.end());
+        input_uri = uri;
+        streams = st;
+        properties = prop;
     }else{
         throw std::runtime_error("Unable to add new streams");
     }
@@ -60,6 +62,7 @@ void PangoVideoOutput::WriteHeader()
 {
     json::value json_header(json::object_type,false);
     json::value& json_streams = json_header["streams"];
+    json_header["properties"] = properties;
 
     total_frame_size = 0;
     for(unsigned int i=0; i< streams.size(); ++i) {
@@ -75,8 +78,7 @@ void PangoVideoOutput::WriteHeader()
     }
 
     packetstreamsrcid = packetstream.AddSource(
-        pango_video_type,
-        json_header.serialize(),
+        pango_video_type, input_uri, json_header,
         total_frame_size,
         "struct Frame{"
         " uint8 stream_data[" + pangolin::Convert<std::string,size_t>::Do(total_frame_size) + "];"
@@ -84,10 +86,14 @@ void PangoVideoOutput::WriteHeader()
     );
 }
 
-int PangoVideoOutput::WriteStreams(unsigned char* data)
+int PangoVideoOutput::WriteStreams(unsigned char* data, const json::value& frame_properties)
 {
     if(packetstreamsrcid == -1) {
         WriteHeader();
+    }
+
+    if(!frame_properties.is<json::null>()) {
+        packetstream.WriteSourcePacketMeta(packetstreamsrcid, frame_properties);
     }
 
     packetstream.WriteSourcePacket(

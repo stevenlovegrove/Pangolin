@@ -40,13 +40,15 @@ namespace pangolin
 {
 
 //! Interface to video capture sources
-struct OpenNiVideo2 : public VideoInterface
+struct OpenNiVideo2 : public VideoInterface, public VideoPropertiesInterface
 {
 public:
     OpenNiVideo2(
         OpenNiSensorType s1, OpenNiSensorType s2,
-        ImageDim dim, int fps
+        ImageDim dim, int fps, bool realtime = true
     );
+
+    void UpdateProperties();
 
     void SetDepthCloseRange(bool enable);
     void SetDepthHoleFilter(bool enable);
@@ -73,6 +75,16 @@ public:
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
+    //! Implement VideoInput::Properties()
+    const json::value& DeviceProperties() const {
+        return device_properties;
+    }
+
+    //! Implement VideoInput::Properties()
+    const json::value& FrameProperties() const {
+        return frame_properties;
+    }
+
 protected:
     void PrintOpenNI2Modes(openni::SensorType sensorType);
 
@@ -82,6 +94,10 @@ protected:
     );
 
     std::vector<StreamInfo> streams;
+    json::value device_properties;
+    json::value frame_properties;
+    json::value* sensors_properties;
+
     OpenNiSensorType sensor_type[2];
 
     size_t sizeBytes;

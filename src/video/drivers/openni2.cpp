@@ -110,8 +110,12 @@ openni::VideoMode OpenNiVideo2::FindOpenNI2Mode(
     throw pangolin::VideoException("Video mode not supported");
 }
 
-OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim, int fps)
+OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim, int fps, bool realtime)
 {
+    sensors_properties = &frame_properties["sensors"];
+    *sensors_properties = json::value(json::array_type,false);
+    sensors_properties->get<json::array>().resize(2);
+
     sensor_type[0] = s1;
     sensor_type[1] = s2;
 
@@ -225,7 +229,7 @@ OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim di
 
     if(fromFile) {
         // Go as fast as we can.
-        device.getPlaybackControl()->setSpeed(-1);
+        device.getPlaybackControl()->setSpeed(realtime ? 1.0f : -1.0f);
     }
 
     if(depth_to_color) {
@@ -235,6 +239,60 @@ OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim di
     }
 
     Start();
+}
+
+void OpenNiVideo2::UpdateProperties()
+{
+    json::value& jsopenni = device_properties["openni"];
+
+#define SET_PARAM(param_type, param) \
+    { \
+        param_type val; \
+        if(device.getProperty(param, &val) == openni::STATUS_OK) { \
+            jsdevice[#param] = val; \
+        } \
+    }
+
+    json::value& jsdevice = jsopenni["device"];
+    SET_PARAM( unsigned long long, XN_MODULE_PROPERTY_USB_INTERFACE );
+    SET_PARAM( bool,  XN_MODULE_PROPERTY_MIRROR );
+#undef SET_PARAM
+
+    json::value& sensor = jsopenni["sensors"];
+    sensor = json::value(json::array_type,false);
+    sensor.get<json::array>().resize(2);
+    for(int i=0; i<2; ++i) {
+        if(sensor_type[i] != OpenNiUnassigned)
+        {
+#define SET_PARAM(param_type, param) \
+            {\
+                param_type val; \
+                if(video_stream[i].getProperty(param, &val) == openni::STATUS_OK) { \
+                    jsstream[#param] = val; \
+                } \
+            }
+
+            json::value& jsstream = sensor[i];
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_INPUT_FORMAT );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_CROPPING_MODE );
+
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_CLOSE_RANGE );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_WHITE_BALANCE_ENABLED );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_GAIN );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_HOLE_FILTER );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_REGISTRATION_TYPE );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_CONST_SHIFT );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_PIXEL_SIZE_FACTOR );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_MAX_SHIFT );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_PARAM_COEFF );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_SHIFT_SCALE );
+            SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_ZERO_PLANE_DISTANCE );
+            SET_PARAM( double, XN_STREAM_PROPERTY_ZERO_PLANE_PIXEL_SIZE );
+            SET_PARAM( double, XN_STREAM_PROPERTY_EMITTER_DCMOS_DISTANCE );
+            SET_PARAM( double, XN_STREAM_PROPERTY_DCMOS_RCMOS_DISTANCE );
+#undef SET_PARAM
+        }
+    }
 }
 
 void OpenNiVideo2::SetDepthCloseRange(bool enable)
@@ -339,6 +397,9 @@ bool OpenNiVideo2::GrabNext( unsigned char* image, bool wait )
         }else{
             memcpy(out_img, video_frame[i].getData(), streams[i].SizeBytes());
         }
+
+        // update frame properties
+        (*sensors_properties)[i]["timestamp"] = video_frame[i].getTimestamp();
 
         if(use_ir_and_rgb) video_stream[i].stop();
 

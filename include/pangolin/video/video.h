@@ -97,6 +97,7 @@
 
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_common.h>
+#include <pangolin/utils/picojson.h>
 
 #include <vector>
 
@@ -174,6 +175,15 @@ struct PANGOLIN_EXPORT VideoInterface
     //! Optionally wait for a frame if one isn't ready
     //! Returns true iff image was copied
     virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
+};
+
+struct PANGOLIN_EXPORT VideoPropertiesInterface
+{
+    //! Access JSON properties of device
+    virtual const json::value& DeviceProperties() const = 0;
+
+    //! Access JSON properties of most recently captured frame
+    virtual const json::value& FrameProperties() const = 0;
 };
 
 //! Generic wrapper class for different video sources
