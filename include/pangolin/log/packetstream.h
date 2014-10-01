@@ -69,10 +69,10 @@ struct PANGOLIN_EXPORT PacketStreamSource
 typedef unsigned int PacketStreamSourceId;
 
 PANGOLIN_EXPORT
-double LoggingSystemTimeSeconds();
+int64_t PlaybackTime_us();
 
 PANGOLIN_EXPORT
-void ResetLoggingSystemTimeSeconds(double time_s = 0);
+void SetCurrentPlaybackTime_us(int64_t time_us = 0);
 
 class PANGOLIN_EXPORT PacketStreamWriter
 {
@@ -114,8 +114,8 @@ protected:
 
     inline void WriteTimestamp()
     {
-        const double time_s = LoggingSystemTimeSeconds();
-        writer.write((char*)&time_s, sizeof(double));
+        const int64_t time_us = PlaybackTime_us();
+        writer.write((char*)&time_us, sizeof(int64_t));
     }
 
     inline void WriteTag(const uint32_t tag)
@@ -156,11 +156,11 @@ public:
     }
 
 protected:
-    inline double ReadTimestamp()
+    inline int64_t ReadTimestamp()
     {
-        double time_s;
-        reader.read((char*)&time_s, sizeof(double));
-        return time_s;
+        int64_t time_us;
+        reader.read((char*)&time_us, sizeof(int64_t));
+        return time_us;
     }
 
     inline size_t ReadCompressedUnsignedInt()
@@ -176,7 +176,7 @@ protected:
     }
 
     void ProcessMessage();
-    void ProcessMessagesUntilSourcePacket(int& nxt_src_id, double& time_s);
+    void ProcessMessagesUntilSourcePacket(int& nxt_src_id, int64_t &time_us);
 
     bool ReadTag();
     void ReadHeaderPacket();

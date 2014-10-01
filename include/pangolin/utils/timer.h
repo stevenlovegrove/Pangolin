@@ -57,9 +57,19 @@ inline double Time_s(basetime t)
     return (double)t.tv_sec + 1E-6 * (double)t.tv_usec;
 }
 
+inline int64_t Time_us(basetime t)
+{
+    return 1000000 * t.tv_sec + t.tv_usec;
+}
+
 inline double TimeDiff_s(basetime start, basetime end)
 {
     return (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_usec - start.tv_usec) * 1E-6;
+}
+
+inline int64_t TimeDiff_us(basetime start, basetime end)
+{
+    return 1000000*(end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec);
 }
 
 inline basetime TimeFromSeconds(double seconds)
@@ -75,9 +85,9 @@ inline basetime TimeAdd(basetime t1, basetime t2)
     basetime t;
     t.tv_sec = t1.tv_sec + t2.tv_sec;
     t.tv_usec = t1.tv_usec + t2.tv_usec;
-    if(t.tv_usec >= 1E6 )
+    if(t.tv_usec >= 1000000 )
     {
-        t.tv_usec -= 1E6;
+        t.tv_usec -= 1000000;
         t.tv_sec += 1;
     }
 
@@ -102,11 +112,25 @@ inline double Time_s(basetime t)
     return (double)t.QuadPart / (double)f.QuadPart;
 }
 
+inline int64_t Time_us(basetime t)
+{
+    LARGE_INTEGER f;
+    QueryPerformanceFrequency(&f);
+    return (1000000*t.QuadPart) / f.QuadPart;
+}
+
 inline double TimeDiff_s(basetime start, basetime end)
 {
     LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
     return (double)(end.QuadPart - start.QuadPart) / (double)f.QuadPart;
+}
+
+inline int64_t TimeDiff_us(basetime start, basetime end)
+{
+    LARGE_INTEGER f;
+    QueryPerformanceFrequency(&f);
+    return 1000000*(end.QuadPart - start.QuadPart) / f.QuadPart;
 }
 
 inline basetime TimeFromSeconds(double seconds)

@@ -96,7 +96,7 @@ protected:
     std::vector<StreamInfo> streams;
     json::value device_properties;
     json::value frame_properties;
-    json::value* sensors_properties;
+    json::value* streams_properties;
 
     OpenNiSensorType sensor_type[2];
 

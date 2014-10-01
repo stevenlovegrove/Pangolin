@@ -51,16 +51,28 @@ const char* json_pkt_size_bytes      = "size_bytes";
 //////////////////////////////////////////////////////////////////////////
 
 int playback_devices = 0;
-basetime startup_time = TimeNow();
+int64_t playback_start_time_us = 0;
 
-double LoggingSystemTimeSeconds()
+int64_t PlaybackTime_us()
 {
-    return TimeDiff_s(startup_time, TimeNow() );
+    return Time_us(TimeNow()) - playback_start_time_us;
 }
 
-void ResetLoggingSystemTimeSeconds(double time_s)
+void SetCurrentPlaybackTime_us(int64_t time_us)
 {
-    startup_time = TimeFromSeconds(TimeNow_s() - time_s);
+    playback_start_time_us = Time_us(TimeNow()) - time_us;
+}
+
+void WaitUntilPlaybackTime_us(int64_t time_us)
+{
+    // Wait correct amount of time
+    const int64_t time_diff_us = time_us - PlaybackTime_us();
+
+    boostd::this_thread::sleep_for(
+        boostd::chrono::duration_cast<boostd::chrono::milliseconds>(
+            boostd::chrono::microseconds(time_diff_us)
+        )
+    );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -274,9 +286,9 @@ bool PacketStreamReader::ReadToSourcePacketAndLock(PacketStreamSourceId src_id)
 
     // Walk over data that no-one is interested in
     int nxt_src_id;
-    double time_s;
+    int64_t time_us;
 
-    ProcessMessagesUntilSourcePacket(nxt_src_id, time_s);
+    ProcessMessagesUntilSourcePacket(nxt_src_id, time_us);
 
     while(nxt_src_id != (int)src_id) {
         if(nxt_src_id == -1) {
@@ -288,22 +300,16 @@ bool PacketStreamReader::ReadToSourcePacketAndLock(PacketStreamSourceId src_id)
             ReadTag();
         }
 
-        ProcessMessagesUntilSourcePacket(nxt_src_id, time_s);
+        ProcessMessagesUntilSourcePacket(nxt_src_id, time_us);
     }
 
     // Sync time to start of stream if there are no other playback devices
     if(packets == 0 && playback_devices == 1) {
-        ResetLoggingSystemTimeSeconds(time_s);
+        SetCurrentPlaybackTime_us(time_us);
     }
 
     if(realtime) {
-        // Wait correct amount of time
-        const double time_diff = time_s - LoggingSystemTimeSeconds();
-        boostd::this_thread::sleep_for(
-            boostd::chrono::duration_cast<boostd::chrono::milliseconds>(
-                boostd::chrono::duration<double>(time_diff)
-            )
-        );
+        WaitUntilPlaybackTime_us(time_us);
     }
 
     return true;
@@ -361,7 +367,7 @@ void PacketStreamReader::ProcessMessage()
     }}
 
 // return src_id
-void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, double &time_s)
+void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64_t& time_us)
 {
     while(true)
     {
@@ -388,7 +394,7 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, doubl
         }
         case TAG_SRC_PACKET:
         {
-            time_s = ReadTimestamp();
+            time_us = ReadTimestamp();
             nxt_src_id = ReadCompressedUnsignedInt();
             if(nxt_src_id >= (int)sources.size()) {
                 throw std::runtime_error("Invalid Packet Source ID.");

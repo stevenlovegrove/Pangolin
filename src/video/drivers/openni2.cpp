@@ -112,9 +112,9 @@ openni::VideoMode OpenNiVideo2::FindOpenNI2Mode(
 
 OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim, int fps, bool realtime)
 {
-    sensors_properties = &frame_properties["sensors"];
-    *sensors_properties = json::value(json::array_type,false);
-    sensors_properties->get<json::array>().resize(2);
+    streams_properties = &frame_properties["streams"];
+    *streams_properties = json::value(json::array_type,false);
+    streams_properties->get<json::array>().resize(2);
 
     sensor_type[0] = s1;
     sensor_type[1] = s2;
@@ -258,9 +258,9 @@ void OpenNiVideo2::UpdateProperties()
     SET_PARAM( bool,  XN_MODULE_PROPERTY_MIRROR );
 #undef SET_PARAM
 
-    json::value& sensor = jsopenni["sensors"];
-    sensor = json::value(json::array_type,false);
-    sensor.get<json::array>().resize(2);
+    json::value& stream = jsopenni["streams"];
+    stream = json::value(json::array_type,false);
+    stream.get<json::array>().resize(2);
     for(int i=0; i<2; ++i) {
         if(sensor_type[i] != OpenNiUnassigned)
         {
@@ -272,7 +272,7 @@ void OpenNiVideo2::UpdateProperties()
                 } \
             }
 
-            json::value& jsstream = sensor[i];
+            json::value& jsstream = stream[i];
             SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_INPUT_FORMAT );
             SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_CROPPING_MODE );
 
@@ -399,7 +399,7 @@ bool OpenNiVideo2::GrabNext( unsigned char* image, bool wait )
         }
 
         // update frame properties
-        (*sensors_properties)[i]["timestamp"] = video_frame[i].getTimestamp();
+        (*streams_properties)[i]["devtime_us"] = video_frame[i].getTimestamp();
 
         if(use_ir_and_rgb) video_stream[i].stop();
 
