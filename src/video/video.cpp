@@ -468,7 +468,7 @@ VideoInterface* OpenVideo(const Uri& uri)
             img2 = depthsense_sensor(uri.Get<std::string>("img2", "rgb"));
         }
 
-        video = DepthSenseContext::I().GetDepthSenseVideo(0, img1, img2, dim1, dim2, fps1, fps2);
+        video = DepthSenseContext::I().GetDepthSenseVideo(0, img1, img2, dim1, dim2, fps1, fps2, uri);
     }else
 #endif
     {

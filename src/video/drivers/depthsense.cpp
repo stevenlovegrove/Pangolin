@@ -62,7 +62,7 @@ void DepthSenseContext::DeviceClosing()
     }
 }
 
-DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2)
+DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri)
 {
     if(running_devices == 0) {
         // Initialise SDK
@@ -74,7 +74,7 @@ DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(size_t device_num, DepthS
 
     if( da.size() > device_num )
     {
-        return new DepthSenseVideo(da[device_num], s1, s2, dim1, dim2, fps1, fps2);
+        return new DepthSenseVideo(da[device_num], s1, s2, dim1, dim2, fps1, fps2, uri);
     }
 
     throw VideoException("DepthSense device not connected.");
@@ -115,7 +115,7 @@ void DepthSenseContext::EventLoop()
     is_running = false;
 }
 
-DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2)
+DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri)
     : device(device), fill_image(0), gotDepth(0), gotColor(0), enableDepth(false), enableColor(false), size_bytes(0)
 {
     streams_properties = &frame_properties["streams"];
@@ -124,7 +124,7 @@ DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType
 
     sensorConfig[0] = {s1, dim1, fps1};
     sensorConfig[1] = {s2, dim2, fps2};
-    ConfigureNodes();
+    ConfigureNodes(uri);
 
     DepthSenseContext::I().NewDeviceRunning();
 }
@@ -140,13 +140,8 @@ DepthSenseVideo::~DepthSenseVideo()
     DepthSenseContext::I().DeviceClosing();
 }
 
-void DepthSenseVideo::ConfigureNodes()
+void DepthSenseVideo::ConfigureNodes(const Uri& uri)
 {
-    json::value& jsdepthsense = device_properties["depthsense"];
-    json::value& streams = jsdepthsense["streams"];
-    streams = json::value(json::array_type, false);
-    streams.get<json::array>().resize(2);
-
     std::vector<DepthSense::Node> nodes = device.getNodes();
 
     for (int i = 0; i<2; ++i)
@@ -161,7 +156,7 @@ void DepthSenseVideo::ConfigureNodes()
                 if ((node.is<DepthSense::DepthNode>()) && (!g_dnode.isSet()))
                 {
                     g_dnode = node.as<DepthSense::DepthNode>();
-                    ConfigureDepthNode(sensorConfig[i]);
+                    ConfigureDepthNode(sensorConfig[i], uri);
                     DepthSenseContext::I().Context().registerNode(node);
                 }
             }
@@ -175,7 +170,7 @@ void DepthSenseVideo::ConfigureNodes()
                 if ((node.is<DepthSense::ColorNode>()) && (!g_cnode.isSet()))
                 {
                     g_cnode = node.as<DepthSense::ColorNode>();
-                    ConfigureColorNode(sensorConfig[i]);
+                    ConfigureColorNode(sensorConfig[i], uri);
                     DepthSenseContext::I().Context().registerNode(node);
                 }
             }
@@ -249,15 +244,19 @@ inline DepthSense::FrameFormat ImageDim2FrameFormat(const ImageDim& dim)
     return retVal;
 }
 
-void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node)
+void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node, const Uri& uri)
 {
     DepthSense::Type type = node.getType();
     json::value& jsnode = device_properties[type.name()];
     
     std::vector<DepthSense::PropertyBase> properties = type.getProperties();
     for (DepthSense::PropertyBase& prop : properties) {
+        const std::string name = prop.name();
+
         if (prop.is<DepthSense::Property<int32_t> >()) {
-            jsnode[prop.name()] = prop.as<DepthSense::Property<int32_t> >().getValue(node);
+            DepthSense::Property<int32_t> tprop = prop.as<DepthSense::Property<int32_t> >();
+            if (uri.Contains(prop.name()) && !prop.isReadOnly()) tprop.setValue(node, uri.Get<int32_t>(prop.name(), tprop.getValue(node) ));
+            jsnode[prop.name()] = tprop.getValue(node);
         } else if (prop.is<DepthSense::Property<float> >()) {
             jsnode[prop.name()] = prop.as<DepthSense::Property<float> >().getValue(node);
         } else if (prop.is<DepthSense::Property<bool> >()) {
@@ -268,7 +267,7 @@ void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node)
     }
 }
 
-void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig)
+void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig, const Uri& uri)
 {
     g_dnode.newSampleReceivedEvent().connect(this, &DepthSenseVideo::onNewDepthSample);
 
@@ -279,15 +278,11 @@ void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig)
     config.mode = DepthSense::DepthNode::CAMERA_MODE_CLOSE_MODE;
     config.saturation = true;
 
-    //g_dnode.setEnableVertices(true);
-    //g_dnode.setEnableDepthMapFloatingPoint(true);
-    g_dnode.setEnableDepthMap(true);
-
     try 
     {
-        DepthSenseContext::I().Context().requestControl(g_dnode,0);
-
+        DepthSenseContext::I().Context().requestControl(g_dnode, 0);
         g_dnode.setConfiguration(config);
+        g_dnode.setEnableDepthMap(true);
     }
     catch (DepthSense::ArgumentException& e)
     {
@@ -331,10 +326,10 @@ void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig)
 
     enableDepth = true;
 
-    UpdateParameters(g_dnode);
+    UpdateParameters(g_dnode, uri);
 }
 
-void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig)
+void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig, const Uri& uri)
 {
     // connect new color sample handler
     g_cnode.newSampleReceivedEvent().connect(this, &DepthSenseVideo::onNewColorSample);
@@ -345,12 +340,12 @@ void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig)
     config.powerLineFrequency = DepthSense::POWER_LINE_FREQUENCY_50HZ;
     config.framerate = sensorConfig.fps;
 
-    g_cnode.setEnableColorMap(true);
-
     try 
     {
         DepthSenseContext::I().Context().requestControl(g_cnode,0);
         g_cnode.setConfiguration(config);
+        g_cnode.setEnableColorMap(true);
+        UpdateParameters(g_cnode, uri);
     }
     catch (DepthSense::ArgumentException& e)
     {
@@ -393,8 +388,6 @@ void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig)
     size_bytes += stream_info.SizeBytes();
 
     enableColor = true;
-
-    UpdateParameters(g_cnode);
 }
 
 void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data)

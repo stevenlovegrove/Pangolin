@@ -52,7 +52,7 @@ class PANGOLIN_EXPORT DepthSenseVideo :
         public VideoInterface, public VideoPropertiesInterface
 {
 public:
-    DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2);
+    DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri);
     ~DepthSenseVideo();
     
     //! Implement VideoInput::Start()
@@ -83,9 +83,6 @@ public:
         return frame_properties;
     }
 protected:
-    void UpdateParameters(const DepthSense::Node& node);
-    void ConfigureNodes();
-
     void onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data);
     void onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data);
 
@@ -96,8 +93,10 @@ protected:
         unsigned int fps;
     };
 
-    void ConfigureDepthNode(const SensorConfig& sensorConfig);
-    void ConfigureColorNode(const SensorConfig& sensorConfig);
+    void UpdateParameters(const DepthSense::Node& node, const Uri& uri);
+    void ConfigureNodes(const Uri& uri);
+    void ConfigureDepthNode(const SensorConfig& sensorConfig, const Uri& uri);
+    void ConfigureColorNode(const SensorConfig& sensorConfig, const Uri& uri);
 
     std::vector<StreamInfo> streams;
     json::value device_properties;
@@ -132,7 +131,7 @@ public:
     // Singleton Instance
     static DepthSenseContext& I();
 
-    DepthSenseVideo* GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2);
+    DepthSenseVideo* GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri);
 
 protected:
     // Protected Constructor 
