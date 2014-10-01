@@ -73,6 +73,13 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::Var<float> int16_bias("int16.bias", 0.0 );
 
 #ifdef CALLEE_HAS_CPP11
+    // Show/hide streams
+    for(size_t v=0; v < pangolin::DisplayBase().NumChildren() && v < 9; v++) {
+        pangolin::RegisterKeyPressCallback('1'+v, [v](){
+            pangolin::DisplayBase()[v].ToggleShow();
+        } );
+    }
+
     pangolin::RegisterKeyPressCallback('r', [&](){
         if(!video.IsRecording()) {
             video.Record();
@@ -122,13 +129,15 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
         for(unsigned int i=0; i<images.size(); ++i)
         {
-            pangolin::DisplayBase()[i].Activate();
-            if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
-                pangolin::GlSlUtilities::Scale(int16_scale, int16_bias);
-                RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
-                pangolin::GlSlUtilities::UseNone();
-            }else{
-                RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
+            if(pangolin::DisplayBase()[i].IsShown()) {
+                pangolin::DisplayBase()[i].Activate();
+                if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
+                    pangolin::GlSlUtilities::Scale(int16_scale, int16_bias);
+                    RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
+                    pangolin::GlSlUtilities::UseNone();
+                }else{
+                    RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
+                }
             }
         }
 
