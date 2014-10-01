@@ -49,14 +49,15 @@ const uint32_t TAG_PANGO_HDR   = PANGO_TAG('L', 'I', 'N');
 const uint32_t TAG_PANGO_SYNC  = PANGO_TAG('S', 'Y', 'N');
 const uint32_t TAG_PANGO_STATS = PANGO_TAG('S', 'T', 'A');
 const uint32_t TAG_ADD_SOURCE  = PANGO_TAG('S', 'R', 'C');
-const uint32_t TAG_SRC_META    = PANGO_TAG('M', 'T', 'A');
+const uint32_t TAG_SRC_JSON    = PANGO_TAG('J', 'S', 'N');
 const uint32_t TAG_SRC_PACKET  = PANGO_TAG('P', 'K', 'T');
 const uint32_t TAG_END         = PANGO_TAG('E', 'N', 'D');
 #undef PANGO_TAG
 
 struct PANGOLIN_EXPORT PacketStreamSource
 {
-    std::string     id;
+    std::string     driver;
+    int             id;
     std::string     uri;
     json::value     info;
     json::value     meta;
@@ -85,8 +86,8 @@ public:
     ~PacketStreamWriter();
 
     PacketStreamSourceId AddSource(
-        const std::string& source_type,
-        const std::string& uri,
+        const std::string& source_driver,
+        const std::string& source_uri,
         const json::value& json_header = json::value(),
         const size_t       packet_size_bytes = 0,
         const std::string& packet_definitions = ""

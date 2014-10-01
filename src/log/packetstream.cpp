@@ -37,9 +37,10 @@
 namespace pangolin
 {
 
+const char* json_src_driver          = "driver";
 const char* json_src_id              = "id";
-const char* json_src_uri             = "uri";
 const char* json_src_info            = "info";
+const char* json_src_uri             = "uri";
 const char* json_src_packet          = "packet";
 const char* json_src_version         = "version";
 const char* json_pkt_alignment_bytes = "alignment_bytes";
@@ -110,18 +111,17 @@ PacketStreamWriter::~PacketStreamWriter()
 }
 
 PacketStreamSourceId PacketStreamWriter::AddSource(
-    const std::string& source_id,
-    const std::string& uri,
+    const std::string& source_driver,
+    const std::string& source_uri,
     const json::value& source_info,
     const size_t       packet_size_bytes,
     const std::string& packet_definitions
 ) {
-    std::string err;
-
     PacketStreamSource pss;
 
-    pss.id = source_id;
-    pss.uri = uri;
+    pss.driver = source_driver;
+    pss.id = sources.size();
+    pss.uri = source_uri;
     pss.info = source_info;
     pss.data_size_bytes = packet_size_bytes;
     pss.data_definitions = packet_definitions;
@@ -129,6 +129,7 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
     pss.data_alignment_bytes = 1;
 
     json::value json_src;
+    json_src[json_src_driver] = pss.driver;
     json_src[json_src_id] = pss.id;
     json_src[json_src_uri] = pss.uri;
     json_src[json_src_info] = pss.info;
@@ -142,15 +143,13 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
     WriteTag(TAG_ADD_SOURCE);
     json_src.serialize(std::ostream_iterator<char>(writer), true);
 
-    const size_t src_id = sources.size();
-
     sources.push_back( pss );
-    return src_id;
+    return pss.id;
 }
 
 void PacketStreamWriter::WriteSourcePacketMeta(PacketStreamSourceId src, const json::value& json)
 {
-    WriteTag(TAG_SRC_META);
+    WriteTag(TAG_SRC_JSON);
     WriteCompressedUnsignedInt(src);
     json.serialize(std::ostream_iterator<char>(writer), false);
 }
@@ -188,6 +187,7 @@ void PacketStreamWriter::WritePangoHeader()
     // Write Header
     json::value pango;
     pango["pangolin_version"] = PANGOLIN_VERSION_STRING;
+    pango["time_us"] = PlaybackTime_us();
     pango["date_created"] = CurrentTimeStr();
     pango["endian"] = "little_endian";
 
@@ -335,7 +335,7 @@ void PacketStreamReader::ProcessMessage()
     case TAG_PANGO_STATS:
         ReadStatsPacket();
         break;
-    case TAG_SRC_META:
+    case TAG_SRC_JSON:
     {
         size_t src_id = ReadCompressedUnsignedInt();
         if(src_id >= sources.size()) {
@@ -382,7 +382,7 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
         case TAG_PANGO_STATS:
             ReadStatsPacket();
             break;
-        case TAG_SRC_META:
+        case TAG_SRC_JSON:
         {
             size_t src_id = ReadCompressedUnsignedInt();
             if(src_id >= sources.size()) {
@@ -444,6 +444,7 @@ void PacketStreamReader::ReadNewSourcePacket()
     json::parse(json, reader);
     reader.get(); // consume newline
 
+    json::value src_driver  = json[json_src_driver];
     json::value src_id      = json[json_src_id];
     json::value src_info    = json[json_src_info];
     json::value src_version = json[json_src_version];
@@ -453,7 +454,8 @@ void PacketStreamReader::ReadNewSourcePacket()
     json::value data_align  = src_packet[json_pkt_alignment_bytes];
 
     PacketStreamSource ps;
-    ps.id = src_id.get<std::string>();
+    ps.driver = src_driver.get<std::string>();
+    ps.id = src_id.get<int64_t>();
     ps.info = src_info;
     ps.version = src_version.get<int64_t>();
     ps.data_size_bytes = data_size.get<int64_t>();

@@ -47,12 +47,12 @@ const std::vector<StreamInfo>& PangoVideoOutput::Streams() const
     return streams;
 }
 
-void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::string& uri, const json::value& prop)
+void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::string& uri, const json::value& properties)
 {
     if(packetstreamsrcid == -1) {
         input_uri = uri;
         streams = st;
-        properties = prop;
+        device_properties = properties;
     }else{
         throw std::runtime_error("Unable to add new streams");
     }
@@ -62,7 +62,7 @@ void PangoVideoOutput::WriteHeader()
 {
     json::value json_header(json::object_type,false);
     json::value& json_streams = json_header["streams"];
-    json_header["properties"] = properties;
+    json_header["device"] = device_properties;
 
     total_frame_size = 0;
     for(unsigned int i=0; i< streams.size(); ++i) {
