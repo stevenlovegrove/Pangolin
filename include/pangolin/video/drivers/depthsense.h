@@ -83,6 +83,7 @@ public:
         return frame_properties;
     }
 protected:
+    void UpdateParameters(const DepthSense::Node& node);
     void ConfigureNodes();
 
     void onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data);
@@ -101,6 +102,8 @@ protected:
     std::vector<StreamInfo> streams;
     json::value device_properties;
     json::value frame_properties;
+    json::value* streams_properties;
+
     SensorConfig sensorConfig[2];
 
     bool enableDepth;

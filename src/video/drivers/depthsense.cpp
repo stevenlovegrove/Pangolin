@@ -118,6 +118,10 @@ void DepthSenseContext::EventLoop()
 DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2)
     : device(device), fill_image(0), gotDepth(0), gotColor(0), enableDepth(false), enableColor(false), size_bytes(0)
 {
+    streams_properties = &frame_properties["streams"];
+    *streams_properties = json::value(json::array_type, false);
+    streams_properties->get<json::array>().resize(2);
+
     sensorConfig[0] = {s1, dim1, fps1};
     sensorConfig[1] = {s2, dim2, fps2};
     ConfigureNodes();
@@ -138,6 +142,11 @@ DepthSenseVideo::~DepthSenseVideo()
 
 void DepthSenseVideo::ConfigureNodes()
 {
+    json::value& jsdepthsense = device_properties["depthsense"];
+    json::value& streams = jsdepthsense["streams"];
+    streams = json::value(json::array_type, false);
+    streams.get<json::array>().resize(2);
+
     std::vector<DepthSense::Node> nodes = device.getNodes();
 
     for (int i = 0; i<2; ++i)
@@ -240,11 +249,31 @@ inline DepthSense::FrameFormat ImageDim2FrameFormat(const ImageDim& dim)
     return retVal;
 }
 
+void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node)
+{
+    DepthSense::Type type = node.getType();
+    json::value& jsnode = device_properties[type.name()];
+    
+    std::vector<DepthSense::PropertyBase> properties = type.getProperties();
+    for (DepthSense::PropertyBase& prop : properties) {
+        if (prop.is<DepthSense::Property<int32_t> >()) {
+            jsnode[prop.name()] = prop.as<DepthSense::Property<int32_t> >().getValue(node);
+        } else if (prop.is<DepthSense::Property<float> >()) {
+            jsnode[prop.name()] = prop.as<DepthSense::Property<float> >().getValue(node);
+        } else if (prop.is<DepthSense::Property<bool> >()) {
+            jsnode[prop.name()] = prop.as<DepthSense::Property<bool> >().getValue(node);
+        } else if (prop.is<DepthSense::Property<std::string> >()){
+            jsnode[prop.name()] = prop.as<DepthSense::Property<std::string> >().getValue(node);
+        }
+    }
+}
+
 void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig)
 {
     g_dnode.newSampleReceivedEvent().connect(this, &DepthSenseVideo::onNewDepthSample);
 
     DepthSense::DepthNode::Configuration config = g_dnode.getConfiguration();
+
     config.frameFormat = ImageDim2FrameFormat(sensorConfig.dim);
     config.framerate = sensorConfig.fps;
     config.mode = DepthSense::DepthNode::CAMERA_MODE_CLOSE_MODE;
@@ -301,6 +330,8 @@ void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig)
     size_bytes += stream_info.SizeBytes();
 
     enableDepth = true;
+
+    UpdateParameters(g_dnode);
 }
 
 void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig)
@@ -362,6 +393,8 @@ void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig)
     size_bytes += stream_info.SizeBytes();
 
     enableColor = true;
+
+    UpdateParameters(g_cnode);
 }
 
 void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data)
