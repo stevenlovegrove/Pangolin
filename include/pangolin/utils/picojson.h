@@ -97,6 +97,12 @@ extern "C" {
 #define SNPRINTF snprintf
 #endif
 
+#ifdef _MSC_VER
+#define PICOJSON_FALSE_TEMPLATE_TYPE nullptr
+#else
+#define PICOJSON_FALSE_TEMPLATE_TYPE ((void*)0)
+#endif
+
 namespace pangolin {
 namespace json {
 
@@ -156,13 +162,17 @@ public:
     }
 
 #ifdef PICOJSON_USE_INT64
-    template<typename T, typename boostd::enable_if<boostd::is_integral<T>::value && !boostd::is_same<T,bool>::value>::type* = (void*)0>
+    template<typename T,
+        typename boostd::enable_if<boostd::is_integral<T>::value &&
+        !boostd::is_same<T, bool>::value>::type* = PICOJSON_FALSE_TEMPLATE_TYPE>
     value(T i) : type_(int64_type) {
         u_.int64_ = static_cast<int64_t>(i);
     }
 #endif
 
-    template<typename T, typename boostd::enable_if<boostd::is_floating_point<T>::value>::type* = (void*)0>
+    template<typename T,
+        typename boostd::enable_if<boostd::is_floating_point<T>::value>::type* =
+        PICOJSON_FALSE_TEMPLATE_TYPE>
     value(T n) : type_(number_type) {
         if (
             #ifdef _MSC_VER
