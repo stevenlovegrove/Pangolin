@@ -104,6 +104,8 @@ protected:
     json::value* streams_properties;
 
     SensorConfig sensorConfig[2];
+    int depthmap_stream;
+    int rgb_stream;
 
     bool enableDepth;
     bool enableColor;
