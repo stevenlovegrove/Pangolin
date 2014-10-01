@@ -37,9 +37,13 @@ namespace pangolin
 struct PANGOLIN_EXPORT VideoRecordRepeat
     : public VideoInterface, public VideoPropertiesInterface
 {
+    VideoRecordRepeat();
     VideoRecordRepeat(const std::string &input_uri, const std::string &output_uri = "video_log.pango", int buffer_size_bytes = 10240000);
     ~VideoRecordRepeat();
-    
+
+    void Open(const std::string &input_uri, const std::string &output_uri = "video_log.pango", int buffer_size_bytes = 10240000);
+    void Close();
+
     /////////////////////////////////////////////////////////////
     // VideoInterface Methods
     /////////////////////////////////////////////////////////////
@@ -56,6 +60,9 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
     }
     VideoPixelFormat PixFormat() const {
         return Streams()[0].PixFormat();
+    }
+    const Uri& VideoUri() const {
+        return uri_input;
     }
 
     void Start();
@@ -91,7 +98,8 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
 
 protected:
     json::value null_props;
-    std::string uri_input;
+    std::string str_uri_input;
+    Uri uri_input;
     Uri uri_output;
 
     VideoInterface* video_src;

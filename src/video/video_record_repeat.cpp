@@ -32,16 +32,34 @@
 namespace pangolin
 {
 
+VideoRecordRepeat::VideoRecordRepeat() 
+    : video_src(0), video_src_props(0), video_file(0), video_recorder(0),
+    buffer_size_bytes(0), frame_num(0)
+{
+}
+
 VideoRecordRepeat::VideoRecordRepeat(
     const std::string& input_uri,
     const std::string& output_uri,
     int buffer_size_bytes
     ) : video_src(0), video_src_props(0), video_file(0), video_recorder(0),
-    buffer_size_bytes(buffer_size_bytes), frame_num(0)
+    buffer_size_bytes(0), frame_num(0)
 {
-    uri_input = input_uri;
+    Open(input_uri, output_uri, buffer_size_bytes);
+}
+
+void VideoRecordRepeat::Open(
+    const std::string& input_uri,
+    const std::string& output_uri,
+    int buffer_size_bytes
+    ) 
+{
+    buffer_size_bytes = buffer_size_bytes;
+    str_uri_input = input_uri;
+    uri_input = ParseUri(input_uri);
     uri_output = ParseUri(output_uri);
-    if(uri_output.scheme == "file") {
+
+    if (uri_output.scheme == "file") {
         // Default to pango output
         uri_output.scheme = "pango";
     }
@@ -50,14 +68,26 @@ VideoRecordRepeat::VideoRecordRepeat(
     video_src_props = dynamic_cast<VideoPropertiesInterface*>(video_src);
 }
 
+void VideoRecordRepeat::Close()
+{
+    if (video_recorder) {
+        delete video_recorder;
+        video_recorder = 0;
+    }
+    if (video_src) {
+        delete video_src;
+        video_src = 0;
+    }
+    if (video_file) {
+        delete video_file;
+        video_file = 0;
+    }
+    buffer_size_bytes = 0;
+}
+
 VideoRecordRepeat::~VideoRecordRepeat()
 {
-    if(video_recorder)
-        delete video_recorder;
-    if( video_src )
-        delete video_src;
-    if( video_file )
-        delete video_file;
+    Close();
 }
 
 const std::string& VideoRecordRepeat::LogFilename() const
@@ -102,7 +132,7 @@ void VideoRecordRepeat::Record()
 
     video_recorder = OpenVideoOutput(uri_output);
     video_recorder->SetStreams(
-        video_src->Streams(), uri_input, video_src_props ?
+        video_src->Streams(), str_uri_input, video_src_props ?
             video_src_props->DeviceProperties() : json::value()
     );
 
