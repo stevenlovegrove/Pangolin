@@ -404,7 +404,7 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
             // Fill with data
             unsigned char* imagePtr = fill_image;
             bool copied = false;
-            for (int i = 0; i < 2; ++i)
+            for (int i = 0; !copied && i < 2; ++i)
             {
                 switch (sensorConfig[i].type)
                 {
@@ -415,29 +415,13 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
                 }
                 case DepthSenseRgb:
                 {
-                    //copy data while converting BGR to RGB
-                    const unsigned char* srcPtr = data.colorMap;
-                    unsigned char* dstPtr = imagePtr;
-                    for(int y = 0; y < sensorConfig[i].dim.y; y++)
-                    {
-                        for(int x = 0; x < sensorConfig[i].dim.x; x++)
-                        {
-                            dstPtr[0] = srcPtr[2];
-                            dstPtr[1] = srcPtr[1];
-                            dstPtr[2] = srcPtr[0];
-                            dstPtr += 3;
-                            srcPtr += 3;
-                        }
-                    }
+                    // Leave as BGR
+                    std::memcpy(imagePtr, data.colorMap, streams[i].SizeBytes());
                     copied = true;
                     break;
                 }
                 default:
                     continue;
-                }
-                if(copied)
-                {
-                    break;
                 }
             }
             gotColor++;

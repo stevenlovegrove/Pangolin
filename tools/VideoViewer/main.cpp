@@ -10,8 +10,8 @@ struct GlFormat
     {
         switch( fmt.channels) {
         case 1: glformat = GL_LUMINANCE; break;
-        case 3: glformat = GL_RGB; break;
-        case 4: glformat = GL_RGBA; break;
+        case 3: glformat = (fmt.format == "BGR24") ? GL_BGR : GL_RGB; break;
+        case 4: glformat = (fmt.format == "BGRA24") ? GL_BGRA : GL_RGBA; break;
         default: throw std::runtime_error("Unable to display video format");
         }
 
@@ -31,7 +31,7 @@ void RenderToViewport(
     pangolin::Image<unsigned char>& image,
     const GlFormat& fmt, bool flipx=false, bool flipy=false, bool linear_sampling = true
 ) {
-    pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, fmt.glformat, fmt.glformat, fmt.gltype);
+    pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, GL_RGBA, GL_RGBA, fmt.gltype);
     tex.Bind();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
