@@ -268,10 +268,10 @@ VideoInterface* OpenVideo(const Uri& uri)
         // TODO: Check file magic
         if( EndsWith(uri.url,"pvn") ) {
             const bool realtime = uri.Contains("realtime");
-            video = new PvnVideo(uri.url.c_str(), realtime);
+            video = new PvnVideo(PathExpand(uri.url).c_str(), realtime);
         }else if(EndsWith(uri.url,"pango")) {
             const bool realtime = uri.Contains("realtime");
-            video = new PangoVideo(uri.url.c_str(), realtime);
+            video = new PangoVideo(PathExpand(uri.url).c_str(), realtime);
         }else{
             throw VideoException("Unable to open file type");
         }
