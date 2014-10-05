@@ -117,7 +117,7 @@ void DepthSenseContext::EventLoop()
 }
 
 DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri)
-    : device(device), fill_image(0), depthmap_stream(-1), rgb_stream(-1), gotDepth(0), gotColor(0), enableDepth(false), enableColor(false), size_bytes(0)
+    : device(device), g_scp(device.getStereoCameraParameters()), fill_image(0), depthmap_stream(-1), rgb_stream(-1), gotDepth(0), gotColor(0), enableDepth(false), enableColor(false), size_bytes(0)
 {
     streams_properties = &frame_properties["streams"];
     *streams_properties = json::value(json::array_type, false);
@@ -139,6 +139,43 @@ DepthSenseVideo::~DepthSenseVideo()
     cond_image_requested.notify_all();
 
     DepthSenseContext::I().DeviceClosing();
+}
+
+json::value Json(DepthSense::IntrinsicParameters& p)
+{
+    json::value js;
+    js["model"] = "polynomial";
+    js["width"] = p.width;
+    js["height"] = p.height;
+    js["RDF"] = "[1,0,0; 0,1,0; 0,0,1]";
+
+    js["fx"] = p.fx;
+    js["fy"] = p.fy;
+    js["u0"] = p.cx;
+    js["v0"] = p.cy;
+    js["k1"] = p.k1;
+    js["k2"] = p.k2;
+    js["k3"] = p.k3;
+    js["p1"] = p.p1;
+    js["p2"] = p.p2;
+
+    return js;
+}
+
+json::value Json(DepthSense::ExtrinsicParameters& p)
+{
+    json::value js;
+    js["rows"] = "3";
+    js["cols"] = "4";
+
+    std::ostringstream oss;
+    oss << std::setprecision(17);
+    oss << "[" << p.r11 << "," << p.r12 << "," << p.r13 << "," << p.t1 << ";";
+    oss        << p.r21 << "," << p.r22 << "," << p.r23 << "," << p.t2 << ";";
+    oss        << p.r31 << "," << p.r32 << "," << p.r33 << "," << p.t3 << "]";
+
+    js["data"] = oss.str();
+    return js;
 }
 
 void DepthSenseVideo::ConfigureNodes(const Uri& uri)
@@ -182,6 +219,20 @@ void DepthSenseVideo::ConfigureNodes(const Uri& uri)
         default:
             continue;
         }
+    }
+
+    //Set json device properties for intrinsics and extrinsics
+    json::value& jsintrinsics = device_properties["intrinsics"];
+    if (jsintrinsics.is<json::null>()) {
+        jsintrinsics = json::value(json::array_type, false);
+        jsintrinsics.get<json::array>().resize(streams.size());
+        if (depthmap_stream >= 0) jsintrinsics[depthmap_stream] = Json(g_scp.depthIntrinsics);
+        if (rgb_stream >= 0) jsintrinsics[rgb_stream] = Json(g_scp.colorIntrinsics);
+    }
+
+    json::value& jsextrinsics = device_properties["extrinsics"];
+    if(jsextrinsics.is<json::null>()){
+        jsextrinsics = Json(g_scp.extrinsics);
     }
 }
 
@@ -438,52 +489,6 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
     cond_image_filled.notify_one();
 }
 
-json::value Json(DepthSense::IntrinsicParameters& p)
-{
-    json::value js;
-    js["model"] = "polynomial";
-    js["width"] = p.width;
-    js["height"] = p.height;
-    js["RDF"] = "[1,0,0; 0,1,0; 0,0,1]";
-
-    js["fx"] = p.fx;
-    js["fy"] = p.fy;
-    js["u0"] = p.cx;
-    js["v0"] = p.cy;
-    js["k1"] = p.k1;
-    js["k2"] = p.k2;
-    js["k3"] = p.k3;
-    js["p1"] = p.p1;
-    js["p2"] = p.p2;
-
-    return js;
-}
-
-json::value Json(DepthSense::ExtrinsicParameters& p)
-{
-    json::value js;
-    js["rows"] = "3";
-    js["cols"] = "4";
-
-    std::ostringstream oss;
-    oss << std::setprecision(17);
-    oss << "[" << p.r11 << "," << p.r12 << "," << p.r13 << "," << p.t1 << ";";
-    oss        << p.r21 << "," << p.r22 << "," << p.r23 << "," << p.t2 << ";";
-    oss        << p.r31 << "," << p.r32 << "," << p.r33 << "," << p.t3 << "]";
-
-    js["data"] = oss.str();
-    return js;
-}
-
-json::value Json(DepthSense::StereoCameraParameters& p)
-{
-    json::value js;
-    js["colorIntrinsics"] = Json(p.colorIntrinsics);
-    js["depthIntrinsics"] = Json(p.depthIntrinsics);
-    js["extrinsics"] = Json(p.extrinsics);
-    return js;
-}
-
 void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data)
 {
     {
@@ -497,15 +502,6 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
         // Update per-frame parameters
         json::value& jsstream = frame_properties["streams"][depthmap_stream];
         jsstream["time_us"] = data.timeOfCapture;
-
-        json::value& jsintrinsics = device_properties["intrinsics"];
-        if (jsintrinsics.is<json::null>()) {
-            device_properties["extrinsics"] = Json(data.stereoCameraParameters.extrinsics);
-            jsintrinsics = json::value(json::array_type, false);
-            jsintrinsics.get<json::array>().resize(streams.size());
-            if (depthmap_stream >= 0) jsintrinsics[depthmap_stream] = Json(data.stereoCameraParameters.depthIntrinsics);
-            if (rgb_stream >= 0) jsintrinsics[rgb_stream] = Json(data.stereoCameraParameters.colorIntrinsics);
-        }
 
         if(fill_image != (unsigned char*)ROGUE_ADDR) {
             // Fill with data
