@@ -32,6 +32,7 @@ namespace pangolin
 {
 
 const size_t ROGUE_ADDR = 0x01;
+const double MAX_DELTA_TIME = 10000.0; //u_s
 
 DepthSenseContext& DepthSenseContext::I()
 {
@@ -117,7 +118,8 @@ void DepthSenseContext::EventLoop()
 }
 
 DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri)
-    : device(device), g_scp(device.getStereoCameraParameters()), fill_image(0), depthmap_stream(-1), rgb_stream(-1), gotDepth(0), gotColor(0), enableDepth(false), enableColor(false), size_bytes(0)
+    : device(device), g_scp(device.getStereoCameraParameters()), fill_image(0), depthmap_stream(-1), rgb_stream(-1), gotDepth(0), gotColor(0),
+      enableDepth(false), enableColor(false), depthTs(0.0), colorTs(0.0), size_bytes(0)
 {
     streams_properties = &frame_properties["streams"];
     *streams_properties = json::value(json::array_type, false);
@@ -454,10 +456,12 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
             cond_image_requested.wait(lock);
         }
 
+        printf("onNewColorSample about to update\n");
+
         // Update per-frame parameters
+        colorTs = data.timeOfCapture;
         json::value& jsstream = frame_properties["streams"][rgb_stream];
         jsstream["time_us"] = data.timeOfCapture;
-        printf("Color time: %u\n", data.timeOfCapture);
 
         if (fill_image != (unsigned char*)ROGUE_ADDR) {
             // Fill with data
@@ -485,9 +489,22 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
             }
             gotColor++;
         }
+
+        printf("Got color at: %.1f\n", colorTs);
+
+        if(gotDepth)
+        {
+            double delta = fabs(GetDeltaTime());
+            if(delta > MAX_DELTA_TIME)
+            {
+                printf("**** Waiting for another depth, delta: %.1f ****\n", delta);
+                gotDepth = 0;
+                return;
+            }
+        }
     }
 
-    cond_color_filled.notify_one();
+    cond_image_filled.notify_one();
 }
 
 void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data)
@@ -500,10 +517,13 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
             cond_image_requested.wait(lock);
         }
 
+        printf("onNewDepthSample about to update\n");
+
         // Update per-frame parameters
+        depthTs = data.timeOfCapture;
+
         json::value& jsstream = frame_properties["streams"][depthmap_stream];
-        jsstream["time_us"] = data.timeOfCapture;
-        printf("Depth time: %u\n", data.timeOfCapture);
+        jsstream["time_us"] = depthTs;
 
         if(fill_image != (unsigned char*)ROGUE_ADDR) {
             // Fill with data
@@ -534,9 +554,22 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
             }
             gotDepth++;
         }
+
+        printf("Got depth at: %.1f\n", depthTs);
+
+        if(gotColor)
+        {
+            double delta = fabs(GetDeltaTime());
+            if(delta > MAX_DELTA_TIME)
+            {
+                printf("**** Waiting for another color, delta: %.1f ****\n", delta);
+                gotColor = 0;
+                return;
+            }
+        }
     }
 
-    cond_depth_filled.notify_one();
+    cond_image_filled.notify_one();
 }
 
 void DepthSenseVideo::Start()
@@ -567,26 +600,20 @@ bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
 
     // Request that image is filled with data
     fill_image = image;
-    cond_image_requested.notify_all();
+    cond_image_requested.notify_one();
 
     // Wait until it has been filled successfully. 
     {
         boostd::unique_lock<boostd::mutex> lock(update_mutex);
-        while ((enableDepth && !gotDepth))
+        while ((enableDepth && !gotDepth) || (enableColor && !gotColor))
         {
-            cond_depth_filled.wait(lock);
+            cond_image_filled.wait(lock);
         }
 
         if (gotDepth)
         {
             gotDepth = 0;
         }
-
-        while ((enableColor && !gotColor))
-        {
-            cond_color_filled.wait(lock);
-        }
-
         if (gotColor)
         {
             gotColor = 0;
@@ -594,7 +621,7 @@ bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
         fill_image = 0;
     }
 
-    printf("---- done ----\n");
+    printf("Delta time: %.1f\n", fabs(GetDeltaTime()));
 
     return true;
 }
@@ -602,6 +629,11 @@ bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
 bool DepthSenseVideo::GrabNewest( unsigned char* image, bool wait )
 {
     return GrabNext(image,wait);
+}
+
+double DepthSenseVideo::GetDeltaTime() const
+{
+    return depthTs - colorTs;
 }
 
 }
