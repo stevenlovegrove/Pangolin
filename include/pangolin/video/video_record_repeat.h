@@ -84,6 +84,12 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
     // VideoRecordRepeat Methods
     /////////////////////////////////////////////////////////////
 
+    // Return pointer to inner video class as VideoType
+    template<typename VideoType>
+    VideoType* Cast() {
+        return dynamic_cast<VideoType*>(video_src);
+    }
+
     const std::string& LogFilename() const;
 
     void Record();
