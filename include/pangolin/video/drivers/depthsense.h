@@ -109,6 +109,9 @@ protected:
 
     bool enableDepth;
     bool enableColor;
+    double depthTs;
+    double colorTs;
+    double GetDeltaTime() const;
 
     size_t size_bytes;
 
