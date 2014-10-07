@@ -121,7 +121,8 @@ protected:
     int gotDepth;
     int gotColor;
     boostd::mutex update_mutex;
-    boostd::condition_variable cond_image_filled;
+    boostd::condition_variable cond_depth_filled;
+    boostd::condition_variable cond_color_filled;
     boostd::condition_variable cond_image_requested;
 };
 

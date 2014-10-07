@@ -457,6 +457,7 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
         // Update per-frame parameters
         json::value& jsstream = frame_properties["streams"][rgb_stream];
         jsstream["time_us"] = data.timeOfCapture;
+        printf("Color time: %u\n", data.timeOfCapture);
 
         if (fill_image != (unsigned char*)ROGUE_ADDR) {
             // Fill with data
@@ -486,7 +487,7 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
         }
     }
 
-    cond_image_filled.notify_one();
+    cond_color_filled.notify_one();
 }
 
 void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data)
@@ -502,6 +503,7 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
         // Update per-frame parameters
         json::value& jsstream = frame_properties["streams"][depthmap_stream];
         jsstream["time_us"] = data.timeOfCapture;
+        printf("Depth time: %u\n", data.timeOfCapture);
 
         if(fill_image != (unsigned char*)ROGUE_ADDR) {
             // Fill with data
@@ -534,7 +536,7 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
         }
     }
 
-    cond_image_filled.notify_one();
+    cond_depth_filled.notify_one();
 }
 
 void DepthSenseVideo::Start()
@@ -561,28 +563,38 @@ bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
         throw std::runtime_error("GrabNext Cannot be called concurrently");
     }
 
+    printf("#### Grab Next ####\n");
+
     // Request that image is filled with data
     fill_image = image;
-    cond_image_requested.notify_one();
+    cond_image_requested.notify_all();
 
     // Wait until it has been filled successfully. 
     {
         boostd::unique_lock<boostd::mutex> lock(update_mutex);
-        while ((enableDepth && !gotDepth) || (enableColor && !gotColor))
+        while ((enableDepth && !gotDepth))
         {
-            cond_image_filled.wait(lock);
+            cond_depth_filled.wait(lock);
         }
 
         if (gotDepth)
         {
             gotDepth = 0;
         }
+
+        while ((enableColor && !gotColor))
+        {
+            cond_color_filled.wait(lock);
+        }
+
         if (gotColor)
         {
             gotColor = 0;
         }
         fill_image = 0;
     }
+
+    printf("---- done ----\n");
 
     return true;
 }
