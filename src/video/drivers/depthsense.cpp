@@ -32,7 +32,7 @@ namespace pangolin
 {
 
 const size_t ROGUE_ADDR = 0x01;
-const double MAX_DELTA_TIME = 10000.0; //u_s
+const double MAX_DELTA_TIME = 20000.0; //u_s
 
 DepthSenseContext& DepthSenseContext::I()
 {
@@ -456,9 +456,8 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
             cond_image_requested.wait(lock);
         }
 
-        printf("onNewColorSample about to update\n");
-
         // Update per-frame parameters
+        //printf("Color delta: %.1f\n", fabs(colorTs - data.timeOfCapture));
         colorTs = data.timeOfCapture;
         json::value& jsstream = frame_properties["streams"][rgb_stream];
         jsstream["time_us"] = data.timeOfCapture;
@@ -490,14 +489,14 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
             gotColor++;
         }
 
-        printf("Got color at: %.1f\n", colorTs);
+        //printf("Got color at: %.1f\n", colorTs);
 
         if(gotDepth)
         {
             double delta = fabs(GetDeltaTime());
             if(delta > MAX_DELTA_TIME)
             {
-                printf("**** Waiting for another depth, delta: %.1f ****\n", delta);
+                //printf("**** Waiting for another depth, delta: %.1f ****\n", delta);
                 gotDepth = 0;
                 return;
             }
@@ -517,9 +516,8 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
             cond_image_requested.wait(lock);
         }
 
-        printf("onNewDepthSample about to update\n");
-
         // Update per-frame parameters
+        //printf("Depth delta: %.1f\n", fabs(depthTs - data.timeOfCapture));
         depthTs = data.timeOfCapture;
 
         json::value& jsstream = frame_properties["streams"][depthmap_stream];
@@ -555,14 +553,14 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
             gotDepth++;
         }
 
-        printf("Got depth at: %.1f\n", depthTs);
+        //printf("Got depth at: %.1f\n", depthTs);
 
         if(gotColor)
         {
             double delta = fabs(GetDeltaTime());
             if(delta > MAX_DELTA_TIME)
             {
-                printf("**** Waiting for another color, delta: %.1f ****\n", delta);
+                //printf("**** Waiting for another color, delta: %.1f ****\n", delta);
                 gotColor = 0;
                 return;
             }
@@ -596,7 +594,7 @@ bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
         throw std::runtime_error("GrabNext Cannot be called concurrently");
     }
 
-    printf("#### Grab Next ####\n");
+    //printf("#### Grab Next ####\n");
 
     // Request that image is filled with data
     fill_image = image;
@@ -621,7 +619,7 @@ bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
         fill_image = 0;
     }
 
-    printf("Delta time: %.1f\n", fabs(GetDeltaTime()));
+    //printf("Delta time: %.1f\n", fabs(GetDeltaTime()));
 
     return true;
 }
