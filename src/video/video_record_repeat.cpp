@@ -54,7 +54,7 @@ void VideoRecordRepeat::Open(
     int buffer_size_bytes
     ) 
 {
-    buffer_size_bytes = buffer_size_bytes;
+    this->buffer_size_bytes = buffer_size_bytes;
     str_uri_input = input_uri;
     uri_input = ParseUri(input_uri);
     uri_output = ParseUri(output_uri);
