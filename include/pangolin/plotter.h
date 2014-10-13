@@ -123,14 +123,14 @@ public:
     void ClearMarkers();
 
 protected:
-    struct Tick
+    struct PANGOLIN_EXPORT Tick
     {
         float val;
         float factor;
         std::string symbol;
     };
 
-    struct PlotAttrib
+    struct PANGOLIN_EXPORT PlotAttrib
     {
         PlotAttrib(std::string name, int plot_id, int location = -1)
             : name(name), plot_id(plot_id), location(location) { }
@@ -140,7 +140,7 @@ protected:
         int location;
     };
 
-    struct PlotSeries
+    struct PANGOLIN_EXPORT PlotSeries
     {
         PlotSeries();
         void CreatePlot(const std::string& x, const std::string& y, Colour c, std::string title);
@@ -154,7 +154,7 @@ protected:
         bool used;
     };
 
-    struct PlotImplicit
+    struct PANGOLIN_EXPORT PlotImplicit
     {
         // Assign to gl_FragColor
         void CreatePlot(const std::string& code);

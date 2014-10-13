@@ -31,14 +31,48 @@
 #include <iostream>
 #include <sstream>
 
+#include <pangolin/compat/function.h>
 #include <pangolin/compat/type_traits.h>
 
 namespace pangolin
 {
-
 struct BadInputException : std::exception {
     char const* what() const throw() { return "Failed to serialise type"; }
 };
+}
+
+namespace std
+{
+// Dummy methods to serialise functions / functors / lambdas etc
+#ifdef CALLEE_HAS_VARIADIC_TEMPLATES
+template<typename Ret, typename... Args>
+inline std::istream& operator>>(std::istream& /*is*/, boostd::function<Ret(Args...)>& /*f*/) {
+    throw pangolin::BadInputException();
+}
+template<typename Ret, typename... Args>
+inline std::ostream& operator<<(std::ostream& /*os*/, const boostd::function<Ret(Args...)>& /*f*/) {
+    throw pangolin::BadInputException();
+}
+#else
+template<typename Ret, typename Arg>
+inline std::istream& operator>>(std::istream& /*is*/, boostd::function<Ret(Arg)>& /*f*/) {
+    throw pangolin::BadInputException();
+}
+template<typename Ret, typename Arg>
+inline std::ostream& operator<<(std::ostream& /*os*/, const boostd::function<Ret(Arg)>& /*f*/) {
+    throw pangolin::BadInputException();
+}
+inline std::istream& operator>>(std::istream& /*is*/, boostd::function<void(void)>& /*f*/) {
+    throw pangolin::BadInputException();
+}
+inline std::ostream& operator<<(std::ostream& /*os*/, const boostd::function<void(void)>& /*f*/) {
+    throw pangolin::BadInputException();
+}
+#endif
+}
+
+namespace pangolin
+{
 
 template<typename T, typename S, typename Enable=void>
 struct Convert;

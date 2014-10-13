@@ -144,7 +144,7 @@ Panel::Panel(const std::string& auto_register_var_prefix)
     //    ProcessHistoricCallbacks(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
 }
 
-void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& var, const char* reg_type_name, bool brand_new )
+void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool brand_new )
 {
     Panel* thisptr = (Panel*)data;
     
@@ -159,10 +159,18 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
     if( pnl == context->named_managed_views.end() )
     {
         View* nv = NULL;
-        if( !strcmp(reg_type_name, typeid(bool).name()) ) {
+        if( !strcmp(var.TypeId(), typeid(bool).name()) ) {
             nv = var.Meta().flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-        }else if( !strcmp(reg_type_name, typeid(double).name()) || !strcmp(reg_type_name, typeid(float).name()) || !strcmp(reg_type_name, typeid(int).name()) || !strcmp(reg_type_name, typeid(unsigned int).name()) ) {
-            nv = new Slider(title,var);
+        } else if (!strcmp(var.TypeId(), typeid(double).name()) ||
+                   !strcmp(var.TypeId(), typeid(float).name()) ||
+                   !strcmp(var.TypeId(), typeid(int).name()) ||
+                   !strcmp(var.TypeId(), typeid(unsigned int).name()))
+        {
+            nv = new Slider(title, var);
+#ifdef CPP11_NO_BOOST
+        } else if (!strcmp(var.TypeId(), typeid(boostd::function<void(void)>).name() ) ) {
+            nv = (View*)new FunctionButton(title, var);
+#endif // CPP11_NO_BOOST
         }else{
             nv = new TextInput(title,var);
         }
@@ -261,6 +269,47 @@ void Button::ResizeChildren()
     vinside = v.Inset(border);
 }
 
+#ifdef CPP11_NO_BOOST
+FunctionButton::FunctionButton(string title, VarValueGeneric& tv)
+    : Widget<boostd::function<void(void)> >(title, tv), down(false)
+{
+    top = 1.0; bottom = Attach::Pix(-tab_h);
+    left = 0.0; right = 1.0;
+    hlock = LockLeft;
+    vlock = LockBottom;
+    text_width = glutBitmapLength(font, (unsigned char*)title.c_str());
+}
+
+void FunctionButton::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
+{
+    if (button == MouseButtonLeft)
+    {
+        down = pressed;
+        if (!pressed) {
+            var->Get()();
+            GuiVarChanged(*this);
+        }
+    }
+}
+
+void FunctionButton::Render()
+{
+    glColor4fv(colour_fg);
+    glRect(v);
+    glColor4fv(colour_tx);
+    glRasterPos2f(raster[0], raster[1] - down);
+    glutBitmapString(font, (unsigned char*)title.c_str());
+    DrawShadowRect(v, down);
+}
+
+void FunctionButton::ResizeChildren()
+{
+    raster[0] = v.l + (v.w - text_width) / 2.0f;
+    raster[1] = v.b + (v.h - text_height) / 2.0f;
+    vinside = v.Inset(border);
+}
+#endif // CPP11_NO_BOOST
+
 Checkbox::Checkbox(std::string title, VarValueGeneric& tv)
     : Widget<bool>(title,tv)
 {
@@ -315,22 +364,19 @@ Slider::Slider(std::string title, VarValueGeneric& tv)
     logscale = (int)tv.Meta().logscale;
 }
 
-void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed){
-    
+void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+{
     if( pressed && var->Meta().range[0] < var->Meta().range[1] )
     {
         double val = !logscale ? var->Get() : log(var->Get());
         
-        if(key=='-'){
-            if (logscale)
-                var->Set( exp(max(var->Meta().range[0],min(var->Meta().range[1],val - var->Meta().increment) ) ) );
-            else
-                var->Set( max(var->Meta().range[0],min(var->Meta().range[1],val - var->Meta().increment) ) );
-        }else if(key == '='){
-            if (logscale)
-                var->Set( exp(max(var->Meta().range[0],min(var->Meta().range[1],val + var->Meta().increment) ) ) );
-            else
-                var->Set( max(var->Meta().range[0],min(var->Meta().range[1],val + var->Meta().increment) ) );
+        if(key=='-' || key=='_' || key=='=' || key=='+') {
+            double inc = var->Meta().increment;
+            if (key == '-') inc *= -1.0;
+            if (key == '_') inc *= -0.1;
+            if (key == '+') inc *=  0.1;
+            const double newval = max(var->Meta().range[0], min(var->Meta().range[1], val + inc));
+            var->Set( logscale ? exp(newval) : newval );
         }else if(key == 'r'){
             Reset();
         }else{

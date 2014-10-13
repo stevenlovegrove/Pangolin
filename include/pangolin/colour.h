@@ -51,7 +51,10 @@ struct Colour
     /// Construct from rgba array.
     Colour(float rgba[4])
     {
-        std::copy( rgba,rgba+4, Get() );
+        r = rgba[0];
+        g = rgba[1];
+        b = rgba[2];
+        a = rgba[3];
     }
 
     /// Return pointer to OpenGL compatible RGBA array.

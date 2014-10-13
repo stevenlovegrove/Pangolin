@@ -31,6 +31,7 @@
 #include <pangolin/view.h>
 #include <pangolin/var/var.h>
 #include <pangolin/handler.h>
+#include <pangolin/compat/function.h>
 
 namespace pangolin
 {
@@ -47,7 +48,7 @@ struct PANGOLIN_EXPORT Panel : public View
     Panel(const std::string& auto_register_var_prefix);
     void Render();
     void ResizeChildren();
-    static void AddVariable(void* data, const std::string& name, VarValueGeneric& var, const char* reg_type_name, bool brand_new);
+    static void AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool brand_new);
 };
 
 template<typename T>
@@ -75,6 +76,22 @@ struct PANGOLIN_EXPORT Button : public Widget<bool>
     Viewport vinside;
     bool down;
 };
+
+#ifdef CPP11_NO_BOOST
+struct PANGOLIN_EXPORT FunctionButton : public Widget<boostd::function<void(void)> >
+{
+    FunctionButton(std::string title, VarValueGeneric& tv);
+    void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
+    void Render();
+
+    //Cache params on resize
+    void ResizeChildren();
+    int text_width;
+    GLfloat raster[2];
+    Viewport vinside;
+    bool down;
+};
+#endif // CPP11_NO_BOOST
 
 struct PANGOLIN_EXPORT Checkbox : public Widget<bool>
 {

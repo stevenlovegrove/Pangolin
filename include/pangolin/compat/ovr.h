@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,51 +25,16 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_THREADED_WRITE_H
-#define PANGOLIN_THREADED_WRITE_H
+#ifndef PANGOLIN_COMPAT_OVR_H
+#define PANGOLIN_COMPAT_OVR_H
 
-#include <iostream>
-#include <streambuf>
-#include <fstream>
+#include <pangolin/config.h>
 
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
-#include <pangolin/compat/condition_variable.h>
+#ifndef _MSVC_
+// Suppress warnings in OVR library headers
+#pragma GCC system_header
+#endif
 
-namespace pangolin
-{
+#include <OVR.h>
 
-class PANGOLIN_EXPORT threadedfilebuf : public std::streambuf
-{
-public:
-    threadedfilebuf(const std::string& filename, unsigned int buffer_size_bytes);
-    ~threadedfilebuf();
-    
-    void operator()();
-    
-protected:
-    //! Override streambuf::xsputn for asynchronous write
-    std::streamsize xsputn(const char * s, std::streamsize n);
-
-    //! Override streambuf::overflow for asynchronous write
-    int overflow(int c);
-    
-    std::filebuf file;
-    char* mem_buffer;
-    std::streamsize mem_size;
-    std::streamsize mem_max_size;
-    std::streamsize mem_start;
-    std::streamsize mem_end;
-    
-    boostd::mutex update_mutex;
-    boostd::condition_variable cond_queued;
-    boostd::condition_variable cond_dequeued;
-    boostd::thread write_thread;
-
-    bool should_run;
-};
-
-}
-
-
-#endif // PANGOLIN_THREADED_WRITE_H
+#endif // PANGOLIN_COMPAT_OVR_H

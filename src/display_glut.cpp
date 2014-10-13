@@ -27,6 +27,7 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/glinclude.h>
+#include <pangolin/glglut.h>
 #include <pangolin/display.h>
 #include <pangolin/display_glut.h>
 #include <pangolin/display_internal.h>
@@ -106,7 +107,8 @@ void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned in
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 #endif
 
-    glutIgnoreKeyRepeat(true);
+    // TODO: Need to implement our own key-repeat mechanism
+    //glutIgnoreKeyRepeat(true);
 
     context->is_double_buffered = (mode & GLUT_DOUBLE) != 0;
     TakeGlutCallbacks();

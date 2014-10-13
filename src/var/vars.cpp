@@ -54,16 +54,6 @@ void VarState::Clear() {
     vars.clear();
 }
 
-void VarState::NotifyNewVar(const std::string& name, VarValueGeneric& var )
-{
-    // notify those watching new variables
-    for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
-        if( StartsWith(name,invc->filter) ) {
-           invc->fn( invc->data, name, var, var.TypeId(), false);
-        }
-    }
-}
-
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter)
 {
     VarState::I().new_var_callbacks.push_back(NewVarCallback(filter,callback,data));
@@ -125,18 +115,18 @@ string ProcessVal(const string& val )
             const char* endbrace = MatchingEndBrace(brace);
             if( endbrace )
             {
-                string inexpand = ProcessVal( std::string(brace+1,endbrace) );
-
-                Var<string> var(inexpand,"#");
-                if( !((const string)var).compare("#"))
-                {
-                    std::cerr << "Unabled to expand: [" << inexpand << "].\nMake sure it is defined and terminated with a semi-colon." << endl << endl;
-                }
                 ostringstream oss;
                 oss << std::string(expanded.c_str(), brace-1);
-                oss << (const string)var;
-                oss << std::string(endbrace+1, expanded.c_str() + expanded.length() );
 
+                const string inexpand = ProcessVal( std::string(brace+1,endbrace) );
+                if( VarState::I().Exists(inexpand) ) {
+                    oss << VarState::I()[inexpand]->str->Get();
+                }else{
+                    pango_print_error("Unabled to expand: [%s].\nMake sure it is defined and terminated with a semi-colon.\n", inexpand.c_str() );
+                    oss << "#";
+                }
+
+                oss << std::string(endbrace+1, expanded.c_str() + expanded.length() );
                 expanded = oss.str();
                 continue;
             }
@@ -150,11 +140,14 @@ string ProcessVal(const string& val )
 void AddVar(const std::string& name, const string& val )
 {
     const std::string full = ProcessVal(val);
-    Var<string> var(name);
-    var = full;
 
-    // Type can be overriden.
-    var.Meta().generic = true;
+    VarValueGeneric*& v = VarState::I()[name];
+    if(!v) {
+        VarValue<std::string>* nv = new VarValue<std::string>(val);
+        InitialiseNewVarMetaGeneric<std::string>(*nv, name);
+        v = nv;
+    }
+    v->str->Set(full);
 }
 
 #ifdef ALIAS

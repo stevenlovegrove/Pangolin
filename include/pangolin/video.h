@@ -99,7 +99,7 @@
 namespace pangolin
 {
 
-class StreamInfo
+class PANGOLIN_EXPORT StreamInfo
 {
 public:
     inline StreamInfo()
@@ -142,7 +142,7 @@ protected:
 };
 
 //! Interface to video capture sources
-struct VideoInterface
+struct PANGOLIN_EXPORT VideoInterface
 {
     virtual ~VideoInterface() {}
 

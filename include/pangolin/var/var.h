@@ -31,6 +31,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <string.h>
+#include <cmath>
 
 #include <pangolin/var/varvalue.h>
 #include <pangolin/var/varwrapper.h>
@@ -40,13 +41,53 @@ namespace pangolin
 {
 
 template<typename T>
+inline void InitialiseNewVarMetaGeneric(
+    VarValue<T>& v, const std::string& name
+) {
+    // Initialise meta parameters
+    const std::vector<std::string> parts = pangolin::Split(name,'.');
+    v.Meta().full_name = name;
+    v.Meta().friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
+    v.Meta().range[0] = 0.0;
+    v.Meta().range[1] = 0.0;
+    v.Meta().increment = 0.0;
+    v.Meta().flags = 0;
+    v.Meta().logscale = false;
+    v.Meta().generic = true;
+
+    VarState::I().NotifyNewVar<T>(name, v);
+}
+
+template<typename T>
+inline void InitialiseNewVarMeta(
+    VarValue<T>& v, const std::string& name,
+    double min = 0, double max = 0, int flags = 1, bool logscale = false
+) {
+    // Initialise meta parameters
+    const std::vector<std::string> parts = pangolin::Split(name,'.');
+    v.Meta().full_name = name;
+    v.Meta().friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
+    v.Meta().range[0] = min;
+    v.Meta().range[1] = max;
+    if (boostd::is_integral<T>::value) {
+        v.Meta().increment = 1.0;
+    } else {
+        v.Meta().increment = (max - min) / 100.0;
+    }
+    v.Meta().flags = flags;
+    v.Meta().logscale = logscale;
+    v.Meta().generic = false;
+
+    VarState::I().NotifyNewVar<T>(name, v);
+}
+
+template<typename T>
 class Var
 {
 public:
     static void Attach(
         const std::string& name, T& variable,
-        double min = 0, double max = 0, int flags = 1,
-        bool logscale = false
+        double min, double max, bool logscale = false
     ) {
         // Find name in VarStore
         VarValueGeneric*& v = VarState::I()[name];
@@ -54,8 +95,25 @@ public:
             throw std::runtime_error("Var with that name already exists.");
         }else{
             // new VarRef<T> (owned by VarStore)
-            v = new VarValue<T&>(variable);
-            InitialiseNewVarMeta(*v,name,min,max,flags,logscale);
+            VarValue<T&>* nv = new VarValue<T&>(variable);
+            v = nv;
+            InitialiseNewVarMeta<T&>(*nv,name,min,max,1,logscale);
+        }
+    }
+
+    static void Attach(
+        const std::string& name, T& variable, bool toggle = false
+        ) {
+        // Find name in VarStore
+        VarValueGeneric*& v = VarState::I()[name];
+        if (v) {
+            throw std::runtime_error("Var with that name already exists.");
+        }
+        else{
+            // new VarRef<T> (owned by VarStore)
+            VarValue<T&>* nv = new VarValue<T&>(variable);
+            v = nv;
+            InitialiseNewVarMeta<T&>(*nv, name, 0.0, 0.0, toggle);
         }
     }
 
@@ -80,16 +138,17 @@ public:
             InitialiseFromGeneric(v);
         }else{
             // new VarValue<T> (owned by VarStore)
+            VarValue<T>* nv;
             if(v) {
                 // Specialise generic variable
-                var = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
+                nv = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
                 delete v;
-                v = var;
             }else{
-                var = new VarValue<T>( T() );
-                v = var;
+                nv = new VarValue<T>( T() );
             }
-            InitialiseNewVarMeta(*var, name);
+            v = nv;
+            var = nv;
+            InitialiseNewVarMeta(*nv, name);
         }
     }
 
@@ -102,16 +161,17 @@ public:
             InitialiseFromGeneric(v);
         }else{
             // new VarValue<T> (owned by VarStore)
+            VarValue<T>* nv;
             if(v) {
                 // Specialise generic variable
-                var = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
+                nv = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
                 delete v;
-                v = var;
             }else{
-                var = new VarValue<T>(value);
-                v = var;
+                nv = new VarValue<T>(value);
             }
-            InitialiseNewVarMeta(*var, name, 0, 1, toggle);
+            v = nv;
+            var = nv;
+            InitialiseNewVarMeta(*nv, name, 0, 1, toggle);
         }
     }
 
@@ -126,22 +186,23 @@ public:
             InitialiseFromGeneric(v);
         }else{
             // new VarValue<T> (owned by VarStore)
+            VarValue<T>* nv;
             if(v) {
                 // Specialise generic variable
-                var = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
+                nv = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
                 delete v;
-                v = var;
             }else{
-                var = new VarValue<T>(value);
-                v = var;
+                nv = new VarValue<T>(value);
             }
+            var = nv;
+            v = nv;
             if(logscale) {
                 if (min <= 0 || max <= 0) {
                     throw std::runtime_error("LogScale: range of numbers must be positive!");
                 }
-                InitialiseNewVarMeta(*var, name, std::log(min), std::log(max), 1, true);
+                InitialiseNewVarMeta(*nv, name, std::log(min), std::log(max), 1, true);
             }else{
-                InitialiseNewVarMeta(*var, name, min, max);
+                InitialiseNewVarMeta(*nv, name, min, max);
             }
         }
     }
@@ -208,23 +269,6 @@ public:
     }
 
 protected:
-    static void InitialiseNewVarMeta(
-        VarValueGeneric& v, const std::string& name,
-        double min = 0, double max = 0, int flags = 1, bool logscale = false
-    ) {
-        // Initialise meta parameters
-        const std::vector<std::string> parts = pangolin::Split(name,'.');
-        v.Meta().full_name = name;
-        v.Meta().friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
-        v.Meta().range[0] = min;
-        v.Meta().range[1] = max;
-        v.Meta().flags = flags;
-        v.Meta().logscale = logscale;
-        v.Meta().generic = false;
-
-        VarState::I().NotifyNewVar(name, v);
-    }
-
     // Initialise from existing variable, obtain data / accessor
     void InitialiseFromGeneric(VarValueGeneric* v)
     {
