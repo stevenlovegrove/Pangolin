@@ -408,6 +408,7 @@ VideoInterface* OpenVideo(const Uri& uri)
     {
         const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
         const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+        const bool autoexposure = uri.Get<bool>("autoexposure", true);
 
         OpenNiSensorType img1 = OpenNiRgb;
         OpenNiSensorType img2 = OpenNiUnassigned;
@@ -419,8 +420,10 @@ VideoInterface* OpenVideo(const Uri& uri)
         if(uri.params.find("img2")!=uri.params.end()){
             img2 = openni_sensor(uri.Get<std::string>("img2","rgb"));
         }
-        
-        video = new OpenNiVideo(img1,img2,dim,fps);
+
+        OpenNiVideo* oniv = new OpenNiVideo(img1, img2, dim, fps);
+        oniv->SetAutoExposure(autoexposure);
+        video = oniv;
     }else
 #endif
 #ifdef HAVE_OPENNI2

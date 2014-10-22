@@ -66,6 +66,7 @@
 //           Sensor modes containing '8' will truncate to 8-bits.
 //           Sensor modes containing '+' explicitly enable IR illuminator
 //           imgN=rgb|ir|ir8|ir+|ir8+|depth|reg_depth
+//           autoexposure=true|false
 //  e.g. "openni://'
 //  e.g. "openni:[img1=rgb,img2=depth]//"
 //  e.g. "openni:[size=320x240,fps=60,img1=ir]//"

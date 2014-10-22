@@ -46,6 +46,11 @@ public:
     
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
+
+    void SetAutoExposure(bool enabled)
+    {
+        imageNode.GetAutoExposureCap().Set(enabled ? 1 : 0);
+    }
     
 protected:
     std::vector<StreamInfo> streams;
