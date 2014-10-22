@@ -52,7 +52,7 @@ class PANGOLIN_EXPORT DepthSenseVideo :
         public VideoInterface, public VideoPropertiesInterface
 {
 public:
-    DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri);
+    DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri, const bool enableConfidence);
     ~DepthSenseVideo();
     
     //! Implement VideoInput::Start()
@@ -106,9 +106,11 @@ protected:
     SensorConfig sensorConfig[2];
     int depthmap_stream;
     int rgb_stream;
+    int confidence_stream;
 
     bool enableDepth;
     bool enableColor;
+    bool enableConfidence;
     double depthTs;
     double colorTs;
     double GetDeltaTime() const;
@@ -136,7 +138,7 @@ public:
     // Singleton Instance
     static DepthSenseContext& I();
 
-    DepthSenseVideo* GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri);
+    DepthSenseVideo* GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri, const bool enableConfidence);
 
 protected:
     // Protected Constructor 

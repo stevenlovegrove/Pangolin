@@ -64,7 +64,7 @@ void DepthSenseContext::DeviceClosing()
     }
 }
 
-DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri)
+DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri, const bool enableConfidence)
 {
     if(running_devices == 0) {
         // Initialise SDK
@@ -76,7 +76,7 @@ DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(size_t device_num, DepthS
 
     if( da.size() > device_num )
     {
-        return new DepthSenseVideo(da[device_num], s1, s2, dim1, dim2, fps1, fps2, uri);
+        return new DepthSenseVideo(da[device_num], s1, s2, dim1, dim2, fps1, fps2, uri, enableConfidence);
     }
 
     throw VideoException("DepthSense device not connected.");
@@ -117,13 +117,13 @@ void DepthSenseContext::EventLoop()
     is_running = false;
 }
 
-DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri)
-    : device(device), g_scp(device.getStereoCameraParameters()), fill_image(0), depthmap_stream(-1), rgb_stream(-1), gotDepth(0), gotColor(0),
-      enableDepth(false), enableColor(false), depthTs(0.0), colorTs(0.0), size_bytes(0)
+DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri, const bool _enableConfidence)
+    : device(device), g_scp(device.getStereoCameraParameters()), fill_image(0), depthmap_stream(-1), rgb_stream(-1), confidence_stream(-1), gotDepth(0), gotColor(0),
+      enableDepth(false), enableColor(false), enableConfidence(_enableConfidence), depthTs(0.0), colorTs(0.0), size_bytes(0)
 {
     streams_properties = &frame_properties["streams"];
     *streams_properties = json::value(json::array_type, false);
-    streams_properties->get<json::array>().resize(2);
+    streams_properties->get<json::array>().resize(3);
 
     sensorConfig[0] = {s1, dim1, fps1};
     sensorConfig[1] = {s2, dim2, fps2};
@@ -196,6 +196,10 @@ void DepthSenseVideo::ConfigureNodes(const Uri& uri)
                 if ((node.is<DepthSense::DepthNode>()) && (!g_dnode.isSet()))
                 {
                     depthmap_stream = i;
+                    if(enableConfidence)
+                    {
+                        confidence_stream = i + 1;
+                    }
                     g_dnode = node.as<DepthSense::DepthNode>();
                     ConfigureDepthNode(sensorConfig[i], uri);
                     DepthSenseContext::I().Context().registerNode(node);
@@ -210,7 +214,14 @@ void DepthSenseVideo::ConfigureNodes(const Uri& uri)
                 DepthSense::Node node = nodes[n];
                 if ((node.is<DepthSense::ColorNode>()) && (!g_cnode.isSet()))
                 {
-                    rgb_stream = i;
+                    if(enableConfidence && i > 0)
+                    {
+                        rgb_stream = i + 1;
+                    }
+                    else
+                    {
+                        rgb_stream = i;
+                    }
                     g_cnode = node.as<DepthSense::ColorNode>();
                     ConfigureColorNode(sensorConfig[i], uri);
                     DepthSenseContext::I().Context().registerNode(node);
@@ -229,6 +240,7 @@ void DepthSenseVideo::ConfigureNodes(const Uri& uri)
         jsintrinsics = json::value(json::array_type, false);
         jsintrinsics.get<json::array>().resize(streams.size());
         if (depthmap_stream >= 0) jsintrinsics[depthmap_stream] = Json(g_scp.depthIntrinsics);
+        if (confidence_stream >= 0) jsintrinsics[confidence_stream] = json::value();
         if (rgb_stream >= 0) jsintrinsics[rgb_stream] = Json(g_scp.colorIntrinsics);
     }
 
@@ -339,6 +351,7 @@ void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig, const
         DepthSenseContext::I().Context().requestControl(g_dnode, 0);
         g_dnode.setConfiguration(config);
         g_dnode.setEnableDepthMap(true);
+        g_dnode.setEnableConfidenceMap(enableConfidence);
     }
     catch (DepthSense::ArgumentException& e)
     {
@@ -379,6 +392,12 @@ void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig, const
     streams.push_back(stream_info);
 
     size_bytes += stream_info.SizeBytes();
+
+    if(enableConfidence) //duplicate stream_info for confidenceMap
+    {
+        streams.push_back(stream_info);
+        size_bytes += stream_info.SizeBytes();
+    }
 
     enableDepth = true;
 
@@ -473,12 +492,23 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
                 case DepthSenseDepth:
                 {
                     imagePtr += streams[i].SizeBytes();
+                    if(enableConfidence)
+                    {
+                        imagePtr += streams[i + 1].SizeBytes();
+                    }
                     break;
                 }
                 case DepthSenseRgb:
                 {
                     // Leave as BGR
-                    std::memcpy(imagePtr, data.colorMap, streams[i].SizeBytes());
+                    if(enableConfidence && i > 0)
+                    {
+                        std::memcpy(imagePtr, data.colorMap, streams[i + 1].SizeBytes());
+                    }
+                    else
+                    {
+                        std::memcpy(imagePtr, data.colorMap, streams[i].SizeBytes());
+                    }
                     copied = true;
                     break;
                 }
@@ -520,8 +550,14 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
         //printf("Depth delta: %.1f\n", fabs(depthTs - data.timeOfCapture));
         depthTs = data.timeOfCapture;
 
-        json::value& jsstream = frame_properties["streams"][depthmap_stream];
-        jsstream["time_us"] = depthTs;
+        json::value& js_depth_stream = frame_properties["streams"][depthmap_stream];
+        js_depth_stream["time_us"] = depthTs;
+
+        if(enableConfidence)
+        {
+            json::value& js_conf_stream = frame_properties["streams"][confidence_stream];
+            js_conf_stream["time_us"] = depthTs;
+        }
 
         if(fill_image != (unsigned char*)ROGUE_ADDR) {
             // Fill with data
@@ -534,6 +570,10 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
                 case DepthSenseDepth:
                 {
                     memcpy(imagePtr, data.depthMap, streams[i].SizeBytes());
+                    if(enableConfidence)
+                    {
+                        memcpy(imagePtr + streams[i].SizeBytes(), data.confidenceMap, streams[i + 1].SizeBytes());
+                    }
                     copied = true;
                     break;
                 }
