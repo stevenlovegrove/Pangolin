@@ -44,7 +44,7 @@ public:
     VarWrapper(VarValueT<S>& src)
         : src(src)
     {
-        VarValueGeneric::str = src.str;
+        this->str = src.str;
     }
 
     const char* TypeId() const

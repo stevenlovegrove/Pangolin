@@ -97,10 +97,10 @@ protected:
     {
         if(boostd::is_same<VarT,std::string>::value) {
             str_ptr = 0;
-            VarValueGeneric::str = (VarValueT<std::string>*)this;
+            this->str = (VarValueT<std::string>*)this;
         }else{
             str_ptr = new VarWrapper<std::string,VarT>(*this);
-            VarValueGeneric::str = str_ptr;
+            this->str = str_ptr;
         }
     }
 
