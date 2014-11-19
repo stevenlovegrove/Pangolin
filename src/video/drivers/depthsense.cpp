@@ -306,8 +306,8 @@ void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node, const Uri& 
     json::value& jsnode = device_properties[type.name()];
     
     std::vector<DepthSense::PropertyBase> properties = type.getProperties();
-    for (DepthSense::PropertyBase& prop : properties) {
-        const std::string name = prop.name();
+    for(std::vector<DepthSense::PropertyBase>::const_iterator it = properties.begin(); it != properties.end(); ++it) {
+        DepthSense::PropertyBase& prop = *it;
 
         if (prop.is<DepthSense::Property<int32_t> >()) {
             DepthSense::Property<int32_t> tprop = prop.as<DepthSense::Property<int32_t> >();
