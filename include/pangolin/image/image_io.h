@@ -48,12 +48,12 @@ enum ImageFileType
 struct TypedImage : public Image<unsigned char>
 {
     inline TypedImage()
-        : Image()
+        : Image<unsigned char>()
     {
     }
 
     inline TypedImage(size_t w, size_t h, size_t pitch, unsigned char* ptr, pangolin::VideoPixelFormat fmt)
-        : Image(w,h,pitch,ptr), fmt(fmt)
+        : Image<unsigned char>(w,h,pitch,ptr), fmt(fmt)
     {
     }    
     
