@@ -161,6 +161,8 @@ public:
         u_.boolean_ = b;
     }
 
+#ifdef CALLEE_HAS_CPP11
+
 #ifdef PICOJSON_USE_INT64
     template<typename T,
         typename boostd::enable_if<boostd::is_integral<T>::value &&
@@ -187,6 +189,8 @@ public:
         }
         u_.number_ = static_cast<double>(n);
     }
+
+#endif // #ifdef CALLEE_HAS_CPP11
 
     value(const array& a);
     value(const object& o);
