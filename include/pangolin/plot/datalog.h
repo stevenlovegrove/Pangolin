@@ -35,7 +35,11 @@
 #include <string>
 #include <limits>
 
-#ifdef HAVE_EIGEN
+#if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
+#define USE_EIGEN
+#endif
+
+#ifdef USE_EIGEN
 #include <Eigen/Eigen>
 #endif
 
@@ -182,7 +186,7 @@ public:
     void Log(float v1, float v2, float v3, float v4, float v5, float v6, float v7, float v8, float v9, float v10);
     void Log(const std::vector<float> & vals);
 
-#ifdef HAVE_EIGEN
+#ifdef USE_EIGEN
     template<typename Derived>
     void Log(const Eigen::MatrixBase<Derived>& M)
     {
