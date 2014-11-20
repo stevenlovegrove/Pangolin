@@ -165,19 +165,19 @@ public:
     value(short v) : type_(int64_type) {
         u_.int64_ = static_cast<int64_t>(v);
     }
-    value(ushort v) : type_(int64_type) {
+    value(unsigned short v) : type_(int64_type) {
         u_.int64_ = static_cast<int64_t>(v);
     }
     value(int v) : type_(int64_type) {
         u_.int64_ = static_cast<int64_t>(v);
     }
-    value(uint v) : type_(int64_type) {
+    value(unsigned int v) : type_(int64_type) {
         u_.int64_ = static_cast<int64_t>(v);
     }
     value(long v) : type_(int64_type) {
         u_.int64_ = static_cast<int64_t>(v);
     }
-    value(ulong v) : type_(int64_type) {
+    value(unsigned long v) : type_(int64_type) {
         u_.int64_ = static_cast<int64_t>(v);
     }
     value(long long v) : type_(int64_type) {
