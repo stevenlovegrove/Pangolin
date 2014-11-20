@@ -161,21 +161,34 @@ public:
         u_.boolean_ = b;
     }
 
-#ifdef CALLEE_HAS_CPP11
-
 #ifdef PICOJSON_USE_INT64
-    template<typename T,
-        typename boostd::enable_if<boostd::is_integral<T>::value &&
-        !boostd::is_same<T, bool>::value>::type* = PICOJSON_FALSE_TEMPLATE_TYPE>
-    value(T i) : type_(int64_type) {
-        u_.int64_ = static_cast<int64_t>(i);
+    value(short v) : type_(int64_type) {
+        u_.int64_ = static_cast<int64_t>(v);
+    }
+    value(ushort v) : type_(int64_type) {
+        u_.int64_ = static_cast<int64_t>(v);
+    }
+    value(int v) : type_(int64_type) {
+        u_.int64_ = static_cast<int64_t>(v);
+    }
+    value(uint v) : type_(int64_type) {
+        u_.int64_ = static_cast<int64_t>(v);
+    }
+    value(long v) : type_(int64_type) {
+        u_.int64_ = static_cast<int64_t>(v);
+    }
+    value(ulong v) : type_(int64_type) {
+        u_.int64_ = static_cast<int64_t>(v);
+    }
+    value(long long v) : type_(int64_type) {
+        u_.int64_ = static_cast<int64_t>(v);
+    }
+    value(unsigned long long v) : type_(int64_type) {
+        u_.int64_ = static_cast<int64_t>(v);
     }
 #endif
 
-    template<typename T,
-        typename boostd::enable_if<boostd::is_floating_point<T>::value>::type* =
-        PICOJSON_FALSE_TEMPLATE_TYPE>
-    value(T n) : type_(number_type) {
+    value(float n) : type_(number_type) {
         if (
             #ifdef _MSC_VER
                 ! _finite(n)
@@ -190,7 +203,20 @@ public:
         u_.number_ = static_cast<double>(n);
     }
 
-#endif // #ifdef CALLEE_HAS_CPP11
+    value(double n) : type_(number_type) {
+        if (
+            #ifdef _MSC_VER
+                ! _finite(n)
+            #elif __cplusplus>=201103L || !(defined(isnan) && defined(isinf))
+                std::isnan(n) || std::isinf(n)
+            #else
+                isnan(n) || isinf(n)
+            #endif
+                ) {
+            throw std::overflow_error("");
+        }
+        u_.number_ = n;
+    }
 
     value(const array& a);
     value(const object& o);
