@@ -45,9 +45,9 @@ OpenGlMatrix OpenGlMatrix::Translate(GLprecision x, GLprecision y, GLprecision z
 {
     OpenGlMatrix mat;
     mat.SetIdentity();
-    mat.m[12] = x;
-    mat.m[13] = y;
-    mat.m[14] = z;
+    mat(0, 3) = x;
+    mat(1, 3) = y;
+    mat(2, 3) = z;
     return mat;
 }
 
@@ -55,9 +55,48 @@ OpenGlMatrix OpenGlMatrix::Scale(GLprecision x, GLprecision y, GLprecision z)
 {
     OpenGlMatrix mat;
     mat.SetIdentity();
-    mat.m[0] = x;
-    mat.m[5] = y;
-    mat.m[10] = z;
+    mat(0, 0) = x;
+    mat(1, 1) = y;
+    mat(2, 2) = z;
+    return mat;
+}
+
+OpenGlMatrix OpenGlMatrix::RotateX(GLprecision theta_rad)
+{
+    OpenGlMatrix mat;
+    mat.SetIdentity();
+    const GLprecision costh = cos(theta_rad);
+    const GLprecision sinth = sin(theta_rad);
+    mat(1, 1) = costh;
+    mat(1, 2) = -sinth;
+    mat(2, 1) = sinth;
+    mat(2, 2) = costh;
+    return mat;
+}
+
+OpenGlMatrix OpenGlMatrix::RotateY(GLprecision theta_rad)
+{
+    OpenGlMatrix mat;
+    mat.SetIdentity();
+    const GLprecision costh = cos(theta_rad);
+    const GLprecision sinth = sin(theta_rad);
+    mat(0, 0) = costh;
+    mat(0, 2) = sinth;
+    mat(2, 0) = -sinth;
+    mat(2, 2) = costh;
+    return mat;
+}
+
+OpenGlMatrix OpenGlMatrix::RotateZ(GLprecision theta_rad)
+{
+    OpenGlMatrix mat;
+    mat.SetIdentity();
+    const GLprecision costh = cos(theta_rad);
+    const GLprecision sinth = sin(theta_rad);
+    mat(0, 0) = costh;
+    mat(0, 1) = -sinth;
+    mat(1, 0) = sinth;
+    mat(1, 1) = costh;
     return mat;
 }
 

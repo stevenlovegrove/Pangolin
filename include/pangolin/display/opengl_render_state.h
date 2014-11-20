@@ -98,6 +98,10 @@ const static GLprecision AxisDirectionVector[7][3] = {
 struct PANGOLIN_EXPORT OpenGlMatrix {
     static OpenGlMatrix Translate(GLprecision x, GLprecision y, GLprecision z);
     static OpenGlMatrix Scale(GLprecision x, GLprecision y, GLprecision z);
+    static OpenGlMatrix RotateX(GLprecision theta_rad);
+    static OpenGlMatrix RotateY(GLprecision theta_rad);
+    static OpenGlMatrix RotateZ(GLprecision theta_rad);
+
 
     template<typename P>
     static OpenGlMatrix ColMajor4x4(const P* col_major_4x4);
@@ -134,6 +138,14 @@ struct PANGOLIN_EXPORT OpenGlMatrix {
     OpenGlMatrix Transpose() const;
     
     OpenGlMatrix Inverse() const;
+
+    GLprecision& operator()(int r, int c) {
+        return m[4*c +r];
+    }
+
+    GLprecision operator()(int r, int c) const {
+        return m[4 * c + r];
+    }
     
     // Column major Internal buffer
     GLprecision m[16];
