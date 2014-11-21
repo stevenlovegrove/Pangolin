@@ -66,6 +66,7 @@ void SetCurrentPlaybackTime_us(int64_t time_us)
 
 void WaitUntilPlaybackTime_us(int64_t time_us)
 {
+#if defined(CPP11_NO_BOOST) || BOOST_VERSION >= 104500
     // Wait correct amount of time
     const int64_t time_diff_us = time_us - PlaybackTime_us();
 
@@ -74,6 +75,11 @@ void WaitUntilPlaybackTime_us(int64_t time_us)
             boostd::chrono::microseconds(time_diff_us)
         )
     );
+#else
+    // TODO: Find method instead of busy-wait
+    while (time_us - PlaybackTime_us() > 0);
+#endif
+
 }
 
 //////////////////////////////////////////////////////////////////////////
