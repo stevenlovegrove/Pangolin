@@ -34,9 +34,11 @@
     #include <thread>
 #else
 #include <boost/thread.hpp>
-#include <boost/chrono/chrono.hpp>
 #include <boost/type_traits.hpp>
 #include <unistd.h>
+
+#if BOOST_VERSION >= 104500
+#include <boost/chrono/chrono.hpp>
 
 #if BOOST_VERSION < 105000
 // Simple implementation of missing sleep_for / sleep_until methods
@@ -69,6 +71,7 @@ namespace boost {
     }  // this_thread
 } // boost
 #endif // BOOST_VERSION < 105000
+#endif // BOOST_VERSION >= 104500
 
 #endif // CPP11_NO_BOOST
 
