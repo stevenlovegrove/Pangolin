@@ -39,6 +39,8 @@
 #include <windows.h>
 #endif
 
+#include <stdint.h>
+
 namespace pangolin
 {
 
