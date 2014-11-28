@@ -30,7 +30,7 @@
 namespace pangolin
 {
 
-UvcVideo::UvcVideo()
+UvcVideo::UvcVideo(int vendor_id, int product_id, const char* sn, int width, int height, int fps)
     : ctx_(NULL),
       dev_(NULL),
       devh_(NULL),
@@ -41,7 +41,7 @@ UvcVideo::UvcVideo()
         throw VideoException("Unable to open UVC Context");
     }
     
-    InitDevice(0x03e7,0x1811,NULL, 640*2, 480, 45);
+    InitDevice(vendor_id, product_id, sn, width, height, fps);
     Start();
 }
 
@@ -84,7 +84,15 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int width, int heigh
         uvc_perror(mode_err, "uvc_get_stream_ctrl_format_size");
         uvc_close(devh_);
         uvc_unref_device(dev_);
-        throw VideoException("Unable to device mode.");
+        throw VideoException("Unable to set device mode.");
+    }
+
+    uvc_error_t strm_err = uvc_stream_open_ctrl(devh_, &strm_, &ctrl_);
+    if(strm_err != UVC_SUCCESS) {
+        uvc_perror(strm_err, "uvc_stream_open_ctrl");
+        uvc_close(devh_);
+        uvc_unref_device(dev_);
+        throw VideoException("Unable to open device stream.");
     }
     
     const VideoPixelFormat pfmt = VideoFormatFromString("GRAY8");
@@ -144,7 +152,7 @@ const std::vector<StreamInfo>& UvcVideo::Streams() const
 bool UvcVideo::GrabNext( unsigned char* image, bool wait )
 {
     uvc_frame_t* frame = NULL;
-    uvc_error_t err = uvc_get_frame(devh_, &frame, 0);
+    uvc_error_t err = uvc_stream_get_frame(strm_, &frame, 0);
     
     if(err!= UVC_SUCCESS) {
         uvc_perror(err, "uvc_get_frame");

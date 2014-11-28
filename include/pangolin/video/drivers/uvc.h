@@ -39,7 +39,7 @@ namespace pangolin
 class PANGOLIN_EXPORT UvcVideo : public VideoInterface
 {
 public:
-    UvcVideo();
+    UvcVideo(int vendor_id, int product_id, const char* sn, int width, int height, int fps);
     ~UvcVideo();
     
     void InitDevice(int vid, int pid, const char* sn, int width, int height, int fps);
@@ -69,7 +69,8 @@ protected:
     
     uvc_context* ctx_;
     uvc_device*  dev_;
-    uvc_device_handle*  devh_;
+    uvc_device_handle* devh_;
+    uvc_stream_handle* strm_;
     uvc_stream_ctrl_t ctrl_;
     uvc_frame_t* frame_;
 };
