@@ -73,12 +73,16 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int width, int heigh
         uvc_unref_device(dev_);
         throw VideoException("Unable to open device");
     }
+
+    //uvc_print_diag(devh_, stderr);
     
     uvc_error_t mode_err = uvc_get_stream_ctrl_format_size(
                 devh_, &ctrl_,
-                UVC_COLOR_FORMAT_GRAY8,
+                UVC_FRAME_FORMAT_YUYV,
                 width, height,
                 fps);
+
+    //uvc_print_stream_ctrl(&ctrl_, stderr);
             
     if (mode_err != UVC_SUCCESS) {
         uvc_perror(mode_err, "uvc_get_stream_ctrl_format_size");
@@ -112,13 +116,13 @@ void UvcVideo::DeinitDevice()
 
 void UvcVideo::Start()
 {
-    uvc_error_t stream_err = uvc_start_iso_streaming(devh_, &ctrl_, NULL, this);
+    uvc_error_t stream_err = uvc_stream_start(strm_, NULL, this, 0);
     
     if (stream_err != UVC_SUCCESS) {
-        uvc_perror(stream_err, "uvc_start_iso_streaming");
+        uvc_perror(stream_err, "uvc_stream_start");
         uvc_close(devh_);
         uvc_unref_device(dev_);
-        throw VideoException("Unable to start iso streaming.");
+        throw VideoException("Unable to start streaming.");
     }
     
     if (frame_) {
