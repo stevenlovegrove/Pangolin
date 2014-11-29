@@ -274,6 +274,13 @@ if(BUILD_PANGOLIN_VIDEO AND uvc_FOUND)
   list(APPEND LINK_LIBS ${uvc_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/uvc.h )
   list(APPEND SOURCES video/drivers/uvc.cpp)
+  if(_WIN_)
+    find_package(pthread REQUIRED QUIET)
+    list(APPEND LINK_LIBS ${pthread_LIBRARIES} )
+
+    find_package(libusb1 REQUIRED QUIET)
+    list(APPEND LINK_LIBS ${libusb1_LIBRARIES} )
+  endif()
   message(STATUS "libuvc Found and Enabled")
 endif()
 

@@ -31,6 +31,14 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
 
+#ifdef _MSC_VER
+// Define missing timeval struct
+typedef struct timeval {
+    long tv_sec;
+    long tv_usec;
+} timeval;
+#endif // _MSC_VER
+
 #include <libuvc/libuvc.h>
 
 namespace pangolin
