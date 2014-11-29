@@ -95,6 +95,24 @@ inline void glDrawLine( GLfloat x1, GLfloat y1, GLfloat z1, GLfloat x2, GLfloat 
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
+inline void glDraw_x0(GLfloat scale, int grid)
+{
+    const GLfloat maxord = grid*scale;
+    for (int i = -grid; i <= grid; ++i) {
+        glDrawLine(0.0, i*scale, -maxord, 0.0, i*scale, +maxord);
+        glDrawLine(0.0, -maxord, i*scale, 0.0, +maxord, i*scale);
+    }
+}
+
+inline void glDraw_y0(GLfloat scale, int grid)
+{
+    const GLfloat maxord = grid*scale;
+    for (int i = -grid; i <= grid; ++i) {
+        glDrawLine(i*scale, 0.0, -maxord, i*scale, 0.0, +maxord);
+        glDrawLine(-maxord, 0.0, i*scale, +maxord, 0.0, i*scale);
+    }
+}
+
 inline void glDraw_z0(GLfloat scale, int grid)
 {
     const GLfloat maxord = grid*scale;
