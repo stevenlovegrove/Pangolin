@@ -70,7 +70,10 @@ public:
     
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
-    
+
+    int GetCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, enum uvc_req_code req_code);
+    int SetCtrl(uint8_t unit, uint8_t ctrl, void *data, int len);
+
 protected:
     std::vector<StreamInfo> streams;
     size_t size_bytes;

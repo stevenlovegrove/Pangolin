@@ -177,4 +177,15 @@ bool UvcVideo::GrabNewest( unsigned char* image, bool wait )
     return GrabNext(image, wait);
 }
 
+int UvcVideo::GetCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, enum uvc_req_code req_code)
+{
+    return uvc_get_ctrl(devh_, unit, ctrl, data, len, req_code);
+}
+
+int UvcVideo::SetCtrl(uint8_t unit, uint8_t ctrl, void *data, int len)
+{
+    return uvc_set_ctrl(devh_, unit, ctrl, data, len);
+}
+
+
 }
