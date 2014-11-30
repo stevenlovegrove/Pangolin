@@ -155,7 +155,12 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         throw VideoException("Couldn't open stream");
     
     if( !ToLowerCopy(codec_hint).compare("mjpeg") )
+#if LIBAVFORMAT_VERSION_MAJOR >= 56
+        pFormatCtx->max_analyze_duration2 = AV_TIME_BASE * 0.0;
+#else
+        // Deprecated
         pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
+#endif
     
     // Retrieve stream information
 #if (LIBAVFORMAT_VERSION_MAJOR >= 53)
@@ -223,13 +228,18 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     if(pVidCodecCtx->time_base.num>1000 && pVidCodecCtx->time_base.den==1)
         pVidCodecCtx->time_base.den=1000;
     
-    // Allocate video frame
-    pFrame=avcodec_alloc_frame();
     
-    // Allocate an AVFrame structure
-    pFrameOut=avcodec_alloc_frame();
-    if(pFrameOut==0)
-        throw VideoException("Couldn't allocate frame");
+    // Allocate video frames
+#if LIBAVUTIL_VERSION_MAJOR >= 54
+    pFrame = av_frame_alloc();
+    pFrameOut = av_frame_alloc();
+#else
+	// deprecated
+    pFrame = avcodec_alloc_frame();
+    pFrameOut = avcodec_alloc_frame();
+#endif
+    if(!pFrame || !pFrameOut)
+        throw VideoException("Couldn't allocate frames");
     
     fmtout = FfmpegFmtFromString(strfmtout);
     if(fmtout == PIX_FMT_NONE )
@@ -364,8 +374,14 @@ FfmpegConverter::FfmpegConverter(VideoInterface* videoin, const std::string sfmt
     numbytesdst=avpicture_get_size(fmtdst, w, h);
     bufsrc  = new uint8_t[numbytessrc];
     bufdst  = new uint8_t[numbytesdst];
+#if LIBAVUTIL_VERSION_MAJOR >= 54
+    avsrc = av_frame_alloc();
+    avdst = av_frame_alloc();
+#else
+    // deprecated
     avsrc = avcodec_alloc_frame();
     avdst = avcodec_alloc_frame();
+#endif
     avpicture_fill((AVPicture*)avsrc,bufsrc,fmtsrc,w,h);
     avpicture_fill((AVPicture*)avdst,bufdst,fmtdst,w,h);
     
@@ -644,7 +660,12 @@ FfmpegVideoOutputStream::FfmpegVideoOutputStream(
     if (ret < 0) throw VideoException("Could not allocate picture");
 
     // Allocate frame
+#if LIBAVUTIL_VERSION_MAJOR >= 54
+    frame = av_frame_alloc();
+#else
+    // Deprecated
     frame = avcodec_alloc_frame();
+#endif
 }
 
 FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
