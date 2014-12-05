@@ -30,7 +30,7 @@
 namespace pangolin
 {
 
-UvcVideo::UvcVideo(int vendor_id, int product_id, const char* sn, int width, int height, int fps)
+UvcVideo::UvcVideo(int vendor_id, int product_id, const char* sn, int device_id, int width, int height, int fps)
     : ctx_(NULL),
       dev_(NULL),
       devh_(NULL),
@@ -41,7 +41,7 @@ UvcVideo::UvcVideo(int vendor_id, int product_id, const char* sn, int width, int
         throw VideoException("Unable to open UVC Context");
     }
     
-    InitDevice(vendor_id, product_id, sn, width, height, fps);
+    InitDevice(vendor_id, product_id, sn, device_id, width, height, fps);
     Start();
 }
 
@@ -56,9 +56,66 @@ UvcVideo::~UvcVideo()
 //    }   
 }
 
-void UvcVideo::InitDevice(int vid, int pid, const char* sn, int width, int height, int fps)
-{    
-    uvc_error_t find_err = uvc_find_device(ctx_, &dev_, vid, pid, sn );
+uvc_error_t UvcVideo::FindDevice(
+    uvc_context_t *ctx, uvc_device_t **dev,
+    int vid, int pid, const char *sn, int device_id) {
+  uvc_error_t ret = UVC_SUCCESS;
+
+  uvc_device_t **list;
+  uvc_device_t *test_dev;
+
+  ret = uvc_get_device_list(ctx, &list);
+
+  if (ret != UVC_SUCCESS) {
+    return ret;
+  }
+
+  int dev_idx = 0;
+  int num_found = 0;
+  bool found_dev = false;
+
+  while (!found_dev && (test_dev = list[dev_idx++]) != NULL) {
+    uvc_device_descriptor_t *desc;
+
+    fprintf(stderr,"Here\n");
+
+    if (uvc_get_device_descriptor(test_dev, &desc) != UVC_SUCCESS)
+      continue;
+
+    fprintf(stderr,"found: vid: %i, pid: %i\n", desc->idVendor, desc->idProduct );
+    fflush(stderr);
+
+    const bool matches = (!vid || desc->idVendor == vid)
+            && (!pid || desc->idProduct == pid)
+            && (!sn || (desc->serialNumber && !strcmp(desc->serialNumber, sn)));
+
+    uvc_free_device_descriptor(desc);
+
+    if (matches) {
+        if(device_id == num_found) {
+            found_dev = true;
+            break;
+        }
+        num_found++;
+    }
+  }
+
+  if (found_dev)
+    uvc_ref_device(test_dev);
+
+  uvc_free_device_list(list, 1);
+
+  if (found_dev) {
+    *dev = test_dev;
+    return UVC_SUCCESS;
+  } else {
+    return UVC_ERROR_NO_DEVICE;
+  }
+}
+
+void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int width, int height, int fps)
+{
+    uvc_error_t find_err = FindDevice(ctx_, &dev_, vid, pid, sn, device_id );
     if (find_err != UVC_SUCCESS) {
         uvc_perror(find_err, "uvc_find_device");
         throw VideoException("Unable to open UVC Device");

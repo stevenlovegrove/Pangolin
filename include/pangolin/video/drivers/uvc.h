@@ -47,10 +47,10 @@ namespace pangolin
 class PANGOLIN_EXPORT UvcVideo : public VideoInterface
 {
 public:
-    UvcVideo(int vendor_id, int product_id, const char* sn, int width, int height, int fps);
+    UvcVideo(int vendor_id, int product_id, const char* sn, int deviceid, int width, int height, int fps);
     ~UvcVideo();
     
-    void InitDevice(int vid, int pid, const char* sn, int width, int height, int fps);
+    void InitDevice(int vid, int pid, const char* sn, int deviceid, int width, int height, int fps);
     void DeinitDevice();
     
     //! Implement VideoInput::Start()
@@ -75,6 +75,10 @@ public:
     int SetCtrl(uint8_t unit, uint8_t ctrl, void *data, int len);
 
 protected:
+    static uvc_error_t FindDevice(
+        uvc_context_t *ctx, uvc_device_t **dev,
+        int vid, int pid, const char *sn, int device_id);
+
     std::vector<StreamInfo> streams;
     size_t size_bytes;
     

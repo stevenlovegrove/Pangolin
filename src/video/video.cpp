@@ -454,9 +454,10 @@ VideoInterface* OpenVideo(const Uri& uri)
         int pid = 0;
         std::istringstream(uri.Get<std::string>("vid","0x0000")) >> std::hex >> vid;
         std::istringstream(uri.Get<std::string>("pid","0x0000")) >> std::hex >> pid;
+        const unsigned int dev_id = uri.Get<int>("num",0);
         const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
         const unsigned int fps = uri.Get<unsigned int>("fps", 30);
-        video = new UvcVideo(vid,pid,0,dim.x,dim.y,fps);
+        video = new UvcVideo(vid,pid,0,dev_id,dim.x,dim.y,fps);
     }else
 #endif
 #ifdef HAVE_DEPTHSENSE
