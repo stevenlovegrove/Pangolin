@@ -161,8 +161,6 @@ json::value Json(DepthSense::IntrinsicParameters& p)
     js["p1"] = p.p1;
     js["p2"] = p.p2;
 
-    std::cout << "ff: " << p.fx << ", " << p.fy << ", pp: " << p.cx << ", " << p.cy << ", sz: " << p.width << ", " << p.height << std::endl;
-
     return js;
 }
 
