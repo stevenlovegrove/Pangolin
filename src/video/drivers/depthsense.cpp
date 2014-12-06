@@ -230,9 +230,7 @@ void DepthSenseVideo::ConfigureNodes(const Uri& uri)
     if (jsintrinsics.is<json::null>()) {
         jsintrinsics = json::value(json::array_type, false);
         jsintrinsics.get<json::array>().resize(streams.size());
-        std::cout << "Depth intr: " << std::endl;
         if (depthmap_stream >= 0) jsintrinsics[depthmap_stream] = Json(scp.depthIntrinsics);
-        std::cout << "Colour intr: " << std::endl;
         if (rgb_stream >= 0) jsintrinsics[rgb_stream] = Json(scp.colorIntrinsics);
     }
 
