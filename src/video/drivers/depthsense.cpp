@@ -118,7 +118,7 @@ void DepthSenseContext::EventLoop()
 }
 
 DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri)
-    : device(device), g_scp(device.getStereoCameraParameters()), fill_image(0), depthmap_stream(-1), rgb_stream(-1), gotDepth(0), gotColor(0),
+    : device(device), fill_image(0), depthmap_stream(-1), rgb_stream(-1), gotDepth(0), gotColor(0),
       enableDepth(false), enableColor(false), depthTs(0.0), colorTs(0.0), size_bytes(0)
 {
     streams_properties = &frame_properties["streams"];
@@ -160,6 +160,8 @@ json::value Json(DepthSense::IntrinsicParameters& p)
     js["k3"] = p.k3;
     js["p1"] = p.p1;
     js["p2"] = p.p2;
+
+    std::cout << "ff: " << p.fx << ", " << p.fy << ", pp: " << p.cx << ", " << p.cy << ", sz: " << p.width << ", " << p.height << std::endl;
 
     return js;
 }
@@ -223,18 +225,22 @@ void DepthSenseVideo::ConfigureNodes(const Uri& uri)
         }
     }
 
+    DepthSense::StereoCameraParameters scp = device.getStereoCameraParameters();
+
     //Set json device properties for intrinsics and extrinsics
     json::value& jsintrinsics = device_properties["intrinsics"];
     if (jsintrinsics.is<json::null>()) {
         jsintrinsics = json::value(json::array_type, false);
         jsintrinsics.get<json::array>().resize(streams.size());
-        if (depthmap_stream >= 0) jsintrinsics[depthmap_stream] = Json(g_scp.depthIntrinsics);
-        if (rgb_stream >= 0) jsintrinsics[rgb_stream] = Json(g_scp.colorIntrinsics);
+        std::cout << "Depth intr: " << std::endl;
+        if (depthmap_stream >= 0) jsintrinsics[depthmap_stream] = Json(scp.depthIntrinsics);
+        std::cout << "Colour intr: " << std::endl;
+        if (rgb_stream >= 0) jsintrinsics[rgb_stream] = Json(scp.colorIntrinsics);
     }
 
     json::value& jsextrinsics = device_properties["extrinsics"];
     if(jsextrinsics.is<json::null>()){
-        jsextrinsics = Json(g_scp.extrinsics);
+        jsextrinsics = Json(scp.extrinsics);
     }
 }
 
