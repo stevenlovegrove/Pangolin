@@ -118,7 +118,6 @@ protected:
     DepthSense::Device device;
     DepthSense::DepthNode g_dnode;
     DepthSense::ColorNode g_cnode;
-    DepthSense::StereoCameraParameters g_scp;
 
     unsigned char* fill_image;
     int gotDepth;
