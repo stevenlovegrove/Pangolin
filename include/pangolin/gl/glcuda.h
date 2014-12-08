@@ -62,9 +62,12 @@ struct GlBufferCudaPtr : public GlBuffer
 
 struct GlTextureCudaArray : GlTexture
 {
+    GlTextureCudaArray();
     // Some internal_formats aren't accepted. I have trouble with GL_RGB8
     GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear = true);
     ~GlTextureCudaArray();
+
+    void Reinitialise(int width, int height, GLint internal_format, bool sampling_linear = true);
     cudaGraphicsResource* cuda_res;
 };
 
@@ -142,6 +145,12 @@ inline void GlBufferCudaPtr::Reinitialise(GlBufferType buffer_type, GLuint num_e
     cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );    
 }
 
+inline GlTextureCudaArray::GlTextureCudaArray()
+    : GlTexture(), cuda_res(0)
+{
+    // Not a texture
+}
+
 inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear)
     :GlTexture(width,height,internal_format, sampling_linear)
 {
@@ -154,7 +163,23 @@ inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint inter
 
 inline GlTextureCudaArray::~GlTextureCudaArray()
 {
-    cudaGraphicsUnregisterResource(cuda_res);
+    if(cuda_res) {
+        cudaGraphicsUnregisterResource(cuda_res);
+    }
+}
+
+void GlTextureCudaArray::Reinitialise(int width, int height, GLint internal_format, bool sampling_linear)
+{
+    if(cuda_res) {
+        cudaGraphicsUnregisterResource(cuda_res);
+    }
+
+    GlTexture::Reinitialise(width, height, internal_format, sampling_linear);
+
+    const cudaError_t err = cudaGraphicsGLRegisterImage(&cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
+    if( err != cudaSuccess ) {
+        std::cout << "cudaGraphicsGLRegisterImage failed: " << err << std::endl;
+    }
 }
 
 inline CudaScopedMappedPtr::CudaScopedMappedPtr(GlBufferCudaPtr& buffer)

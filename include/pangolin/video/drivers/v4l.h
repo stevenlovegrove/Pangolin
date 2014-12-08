@@ -71,6 +71,10 @@ public:
     
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
+
+    int GetFileDescriptor() const{
+        return fd;
+    }
     
 protected:
     int ReadFrame(unsigned char* image);
