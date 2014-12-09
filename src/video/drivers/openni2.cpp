@@ -370,6 +370,11 @@ bool OpenNiVideo2::GrabNext( unsigned char* image, bool wait )
     openni::Status rc;
 
     for(int i=0; i<2; ++i) {
+        if(sensor_type[i] == OpenNiUnassigned) {
+            rc = openni::STATUS_OK;
+            continue;
+        }
+
         if(!video_stream[i].isValid()) {
             rc = openni::STATUS_NO_DEVICE;
             continue;
