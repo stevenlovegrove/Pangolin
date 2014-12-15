@@ -31,6 +31,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <assert.h>
 
@@ -43,6 +44,8 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <linux/uvcvideo.h>
+#include <linux/usb/video.h>
 
 #define CLEAR(x) memset (&(x), 0, sizeof (x))
 
@@ -633,7 +636,7 @@ int V4lVideo::IoCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, UvcRequest
 
     int ret = ioctl(fd, UVCIOC_CTRL_QUERY, &xu);
     if (ret == -1) {
-        std::err << "V4lVideo::IoCtrl() ioctl error: " << errno << std::endl;
+        pango_print_warn("V4lVideo::IoCtrl() ioctl error: %d\n", errno);
         return ret;
     }
     return 0;
