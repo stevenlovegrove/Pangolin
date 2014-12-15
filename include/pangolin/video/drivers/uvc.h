@@ -72,7 +72,7 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
 
     //! Implement VideoUvcInterface::GetCtrl()
-    int IoCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, UvcRequestCode req_code);
+    int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code);
 
 protected:
     static uvc_error_t FindDevice(

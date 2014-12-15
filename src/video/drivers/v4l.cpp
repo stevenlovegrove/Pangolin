@@ -625,7 +625,7 @@ void V4lVideo::open_device(const char* dev_name)
     }
 }
 
-int V4lVideo::IoCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, UvcRequestCode req_code)
+int V4lVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code)
 {
     struct uvc_xu_control_query xu;
     xu.unit = unit;

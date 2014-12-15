@@ -234,7 +234,7 @@ bool UvcVideo::GrabNewest( unsigned char* image, bool wait )
     return GrabNext(image, wait);
 }
 
-int UvcVideo::IoCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, UvcRequestCode req_code)
+int UvcVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code)
 {
     if(req_code == UVC_SET_CUR) {
         return uvc_set_ctrl(devh_, unit, ctrl, data, len);

@@ -201,7 +201,7 @@ enum UvcRequestCode {
 
 struct PANGOLIN_EXPORT VideoUvcInterface
 {
-    virtual int IoCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, UvcRequestCode req_code) = 0;
+    virtual int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code) = 0;
 };
 
 //! Generic wrapper class for different video sources
