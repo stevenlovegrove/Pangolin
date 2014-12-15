@@ -622,5 +622,22 @@ void V4lVideo::open_device(const char* dev_name)
     }
 }
 
+int V4lVideo::IoCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, UvcRequestCode req_code)
+{
+    struct uvc_xu_control_query xu;
+    xu.unit = unit;
+    xu.selector = ctrl;
+    xu.size = len;
+    xu.data = data;
+    xu.query = req_code;
+
+    int ret = ioctl(fd, UVCIOC_CTRL_QUERY, &xu);
+    if (ret == -1) {
+        std::err << "V4lVideo::IoCtrl() ioctl error: " << errno << std::endl;
+        return ret;
+    }
+    return 0;
+}
+
 }
 

@@ -234,15 +234,13 @@ bool UvcVideo::GrabNewest( unsigned char* image, bool wait )
     return GrabNext(image, wait);
 }
 
-int UvcVideo::GetCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, enum uvc_req_code req_code)
+int UvcVideo::IoCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, UvcRequestCode req_code)
 {
-    return uvc_get_ctrl(devh_, unit, ctrl, data, len, req_code);
+    if(req_code == UVC_SET_CUR) {
+        return uvc_set_ctrl(devh_, unit, ctrl, data, len);
+    }else{
+        return uvc_get_ctrl(devh_, unit, ctrl, data, len, (uvc_req_code)req_code);
+    }
 }
-
-int UvcVideo::SetCtrl(uint8_t unit, uint8_t ctrl, void *data, int len)
-{
-    return uvc_set_ctrl(devh_, unit, ctrl, data, len);
-}
-
 
 }

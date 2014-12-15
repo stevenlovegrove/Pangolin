@@ -44,7 +44,7 @@ typedef struct timeval {
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT UvcVideo : public VideoInterface
+class PANGOLIN_EXPORT UvcVideo : public VideoInterface, public VideoUvcInterface
 {
 public:
     UvcVideo(int vendor_id, int product_id, const char* sn, int deviceid, int width, int height, int fps);
@@ -71,8 +71,8 @@ public:
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
-    int GetCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, enum uvc_req_code req_code);
-    int SetCtrl(uint8_t unit, uint8_t ctrl, void *data, int len);
+    //! Implement VideoUvcInterface::GetCtrl()
+    int IoCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, UvcRequestCode req_code);
 
 protected:
     static uvc_error_t FindDevice(

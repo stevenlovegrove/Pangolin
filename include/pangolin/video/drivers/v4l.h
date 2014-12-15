@@ -48,7 +48,7 @@ struct buffer {
     size_t length;
 };
 
-class PANGOLIN_EXPORT V4lVideo : public VideoInterface
+class PANGOLIN_EXPORT V4lVideo : public VideoInterface, public VideoUvcInterface
 {
 public:
     V4lVideo(const char* dev_name, io_method io = IO_METHOD_MMAP, unsigned iwidth=0, unsigned iheight=0);
@@ -71,6 +71,9 @@ public:
     
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
+
+    //! Implement VideoUvcInterface::IoCtrl()
+    int IoCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, UvcRequestCode req_code);
 
     int GetFileDescriptor() const{
         return fd;

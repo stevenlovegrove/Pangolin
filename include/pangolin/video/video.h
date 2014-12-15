@@ -187,6 +187,23 @@ struct PANGOLIN_EXPORT VideoPropertiesInterface
     virtual const json::value& FrameProperties() const = 0;
 };
 
+enum UvcRequestCode {
+  UVC_RC_UNDEFINED = 0x00,
+  UVC_SET_CUR = 0x01,
+  UVC_GET_CUR = 0x81,
+  UVC_GET_MIN = 0x82,
+  UVC_GET_MAX = 0x83,
+  UVC_GET_RES = 0x84,
+  UVC_GET_LEN = 0x85,
+  UVC_GET_INFO = 0x86,
+  UVC_GET_DEF = 0x87
+};
+
+struct PANGOLIN_EXPORT VideoUvcInterface
+{
+    virtual int IoCtrl(uint8_t unit, uint8_t ctrl, void *data, int len, UvcRequestCode req_code) = 0;
+};
+
 //! Generic wrapper class for different video sources
 struct PANGOLIN_EXPORT VideoInput : public VideoInterface
 {
