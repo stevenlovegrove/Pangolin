@@ -51,6 +51,8 @@ void RenderVboIbo(GlBuffer& vbo, GlBuffer& ibo, bool draw_mesh = true);
 
 void RenderVboIboCbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, bool draw_mesh = true, bool draw_color = true);
 
+void RenderVboIboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& nbo, bool draw_mesh = true, bool draw_normals = true);
+
 void RenderVboIboCboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, GlBuffer& nbo, bool draw_mesh = true, bool draw_color = true, bool draw_normals = true);
 
 ////////////////////////////////////////////////
@@ -196,6 +198,36 @@ inline void RenderVboIboCboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, GlBu
         cbo.Unbind();
     }
     
+    glDisableClientState(GL_VERTEX_ARRAY);
+    vbo.Unbind();
+}
+
+inline void RenderVboIboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& nbo, bool draw_mesh, bool draw_normals)
+{
+    vbo.Bind();
+    glVertexPointer(vbo.count_per_element, vbo.datatype, 0, 0);
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    if(draw_mesh) {
+        if(draw_normals) {
+            nbo.Bind();
+            glNormalPointer(nbo.datatype, nbo.count_per_element * GlDataTypeBytes(nbo.datatype),0);
+            glEnableClientState(GL_NORMAL_ARRAY);
+        }
+
+        ibo.Bind();
+        glDrawElements(GL_TRIANGLE_STRIP,ibo.num_elements, ibo.datatype, 0);
+        ibo.Unbind();
+
+        if(draw_normals) {
+            glDisableClientState(GL_NORMAL_ARRAY);
+            nbo.Unbind();
+        }
+    }else{
+        glPointSize(2.0);
+        glDrawArrays(GL_POINTS, 0, vbo.num_elements);
+    }
+
     glDisableClientState(GL_VERTEX_ARRAY);
     vbo.Unbind();
 }
