@@ -462,21 +462,14 @@ VideoInterface* OpenVideo(const Uri& uri)
 #endif
 #ifdef HAVE_DEPTHSENSE
     if(!uri.scheme.compare("depthsense")) {
-        const ImageDim dim1 = uri.Get<ImageDim>("size1", ImageDim(320, 240)); 
-        const ImageDim dim2 = uri.Get<ImageDim>("size2", ImageDim(640, 480)); 
-        const unsigned int fps1 = uri.Get<unsigned int>("fps1", 30); 
+        DepthSenseSensorType img1 = depthsense_sensor(uri.Get<std::string>("img1", "depth"));
+        DepthSenseSensorType img2 = depthsense_sensor(uri.Get<std::string>("img2", "rgb"));
+
+        const ImageDim dim1 = uri.Get<ImageDim>("size1", img1 == DepthSenseDepth ? ImageDim(320, 240) : ImageDim(640, 480) );
+        const ImageDim dim2 = uri.Get<ImageDim>("size2", img2 == DepthSenseDepth ? ImageDim(320, 240) : ImageDim(640, 480) );
+
+        const unsigned int fps1 = uri.Get<unsigned int>("fps1", 30);
         const unsigned int fps2 = uri.Get<unsigned int>("fps2", 30);
-
-        DepthSenseSensorType img1 = DepthSenseDepth;
-        DepthSenseSensorType img2 = DepthSenseUnassigned;
-
-        if (uri.params.find("img1") != uri.params.end()){
-            img1 = depthsense_sensor(uri.Get<std::string>("img1", "depth"));
-        }
-
-        if (uri.params.find("img2") != uri.params.end()){
-            img2 = depthsense_sensor(uri.Get<std::string>("img2", "rgb"));
-        }
 
         video = DepthSenseContext::I().GetDepthSenseVideo(0, img1, img2, dim1, dim2, fps1, fps2, uri);
     }else
