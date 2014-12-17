@@ -336,39 +336,12 @@ void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig, const
     config.mode = DepthSense::DepthNode::CAMERA_MODE_CLOSE_MODE;
     config.saturation = true;
 
-    try 
-    {
+    try {
         DepthSenseContext::I().Context().requestControl(g_dnode, 0);
         g_dnode.setConfiguration(config);
         g_dnode.setEnableDepthMap(true);
-    }
-    catch (DepthSense::ArgumentException& e)
-    {
-        printf("Argument Exception: %s\n",e.what());
-    }
-    catch (DepthSense::UnauthorizedAccessException& e)
-    {
-        printf("Unauthorized Access Exception: %s\n",e.what());
-    }
-    catch (DepthSense::IOException& e)
-    {
-        printf("IO Exception: %s\n",e.what());
-    }
-    catch (DepthSense::InvalidOperationException& e)
-    {
-        printf("Invalid Operation Exception: %s\n",e.what());
-    }
-    catch (DepthSense::ConfigurationException& e)
-    {
-        printf("Configuration Exception: %s\n",e.what());
-    }
-    catch (DepthSense::StreamingException& e)
-    {
-        printf("Streaming Exception: %s\n",e.what());
-    }
-    catch (DepthSense::TimeoutException&)
-    {
-        printf("TimeoutException\n");
+    } catch (DepthSense::Exception& e) {
+        throw pangolin::VideoException("DepthSense exception whilst configuring node", e.what());
     }
 
     //Set pangolin stream for this channel
@@ -398,40 +371,13 @@ void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig, const
     config.powerLineFrequency = DepthSense::POWER_LINE_FREQUENCY_50HZ;
     config.framerate = sensorConfig.fps;
 
-    try 
-    {
+    try {
         DepthSenseContext::I().Context().requestControl(g_cnode,0);
         g_cnode.setConfiguration(config);
         g_cnode.setEnableColorMap(true);
         UpdateParameters(g_cnode, uri);
-    }
-    catch (DepthSense::ArgumentException& e)
-    {
-        printf("Argument Exception: %s\n",e.what());
-    }
-    catch (DepthSense::UnauthorizedAccessException& e)
-    {
-        printf("Unauthorized Access Exception: %s\n",e.what());
-    }
-    catch (DepthSense::IOException& e)
-    {
-        printf("IO Exception: %s\n",e.what());
-    }
-    catch (DepthSense::InvalidOperationException& e)
-    {
-        printf("Invalid Operation Exception: %s\n",e.what());
-    }
-    catch (DepthSense::ConfigurationException& e)
-    {
-        printf("Configuration Exception: %s\n",e.what());
-    }
-    catch (DepthSense::StreamingException& e)
-    {
-        printf("Streaming Exception: %s\n",e.what());
-    }
-    catch (DepthSense::TimeoutException&)
-    {
-        printf("TimeoutException\n");
+    } catch (DepthSense::Exception& e) {
+        throw pangolin::VideoException("DepthSense exception whilst configuring node", e.what());
     }
 
     //Set pangolin stream for this channel
