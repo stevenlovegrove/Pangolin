@@ -463,7 +463,7 @@ VideoInterface* OpenVideo(const Uri& uri)
 #ifdef HAVE_DEPTHSENSE
     if(!uri.scheme.compare("depthsense")) {
         DepthSenseSensorType img1 = depthsense_sensor(uri.Get<std::string>("img1", "depth"));
-        DepthSenseSensorType img2 = depthsense_sensor(uri.Get<std::string>("img2", "rgb"));
+        DepthSenseSensorType img2 = depthsense_sensor(uri.Get<std::string>("img2", ""));
 
         const ImageDim dim1 = uri.Get<ImageDim>("size1", img1 == DepthSenseDepth ? ImageDim(320, 240) : ImageDim(640, 480) );
         const ImageDim dim2 = uri.Get<ImageDim>("size2", img2 == DepthSenseDepth ? ImageDim(320, 240) : ImageDim(640, 480) );
