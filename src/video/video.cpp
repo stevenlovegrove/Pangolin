@@ -314,7 +314,6 @@ VideoInterface* OpenVideo(const Uri& uri)
         std::vector<std::string> uris = SplitBrackets(uri.url);
         std::vector<VideoInterface*> src;
 
-        std::cout << uri.url << std::endl;
         if(uris.size() == 0) {
             throw VideoException("No VideoSources found in join URL.", "Specify videos to join with curly braces, e.g. join://{test://}{test://}");
         }
