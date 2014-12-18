@@ -63,6 +63,7 @@
 #include <pangolin/video/drivers/pango_video.h>
 #include <pangolin/video/drivers/video_splitter.h>
 #include <pangolin/video/drivers/debayer.h>
+#include <pangolin/video/drivers/join.h>
 
 namespace pangolin
 {
@@ -139,6 +140,32 @@ std::istream& operator>> (std::istream &is, StreamInfo &stream)
     is >> fmt;
     stream = StreamInfo(fmt, img_offset);
     return is;
+}
+
+std::vector<std::string> SplitBrackets(const std::string src, char open = '{', char close = '}')
+{
+    std::vector<std::string> splits;
+
+    int nesting = 0;
+    int begin = -1;
+
+    for(int i=0; i < src.length(); ++i) {
+        if(src[i] == open) {
+            if(nesting==0) {
+                begin = i;
+            }
+            nesting++;
+        }else if(src[i] == close) {
+            nesting--;
+            if(nesting == 0) {
+                // matching close bracket.
+                int str_start = begin+1;
+                splits.push_back( src.substr(str_start, i-str_start) );
+            }
+        }
+    }
+
+    return splits;
 }
 
 #ifdef HAVE_DC1394
@@ -281,6 +308,22 @@ VideoInterface* OpenVideo(const Uri& uri)
     {
         VideoInterface* subvid = OpenVideo(uri.url);
         video = new DebayerVideo(subvid, DC1394_COLOR_FILTER_BGGR, BAYER_METHOD_HQLINEAR );
+    }else
+    if(!uri.scheme.compare("join"))
+    {
+        std::vector<std::string> uris = SplitBrackets(uri.url);
+        std::vector<VideoInterface*> src;
+
+        std::cout << uri.url << std::endl;
+        if(uris.size() == 0) {
+            throw VideoException("No VideoSources found in join URL.", "Specify videos to join with curly braces, e.g. join://{test://}{test://}");
+        }
+
+        for(int i=0; i<uris.size(); ++i) {
+            src.push_back( OpenVideo(uris[i]) );
+        }
+
+        video = new VideoJoiner(src);
     }else
     if(!uri.scheme.compare("split"))
     {

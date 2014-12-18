@@ -67,6 +67,7 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/drivers/pango_video.h
     ${INCDIR}/video/drivers/pango_video_output.h
     ${INCDIR}/video/drivers/debayer.h
+    ${INCDIR}/video/drivers/join.h
   )
   list(APPEND SOURCES
     video/drivers/test.cpp
@@ -76,6 +77,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/pango_video.cpp
     video/drivers/pango_video_output.cpp
     video/drivers/debayer.cpp
+    video/drivers/join.cpp
   )
 endif()
 
