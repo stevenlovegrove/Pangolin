@@ -36,7 +36,7 @@ VideoSplitter::VideoSplitter(VideoInterface *videoin, const std::vector<StreamIn
     // Warn if stream over-runs input stream
     for(unsigned int i=0; i < streams.size(); ++i) {
         if(videoin->Streams()[0].SizeBytes() < (size_t)streams[i].Offset() + streams[i].SizeBytes() ) {
-            pango_print_warn("VideoSplitter: stream extends past end of input.");
+            pango_print_warn("VideoSplitter: stream extends past end of input.\n");
             break;
         }
     }
