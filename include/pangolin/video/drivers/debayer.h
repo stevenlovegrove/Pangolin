@@ -55,7 +55,7 @@ typedef enum {
 } color_filter_t;
 
 // Video class that debayers its video input using the given method.
-class PANGOLIN_EXPORT DebayerVideo : public VideoInterface
+class PANGOLIN_EXPORT DebayerVideo : public VideoInterface, public VideoFilterInterface
 {
 public:
     DebayerVideo(VideoInterface* videoin, color_filter_t tile, bayer_method_t method);
@@ -79,8 +79,10 @@ public:
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
+    std::vector<VideoInterface*>& InputStreams();
+
 protected:
-    VideoInterface* videoin;
+    std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
     size_t size_bytes;
     unsigned char* buffer;

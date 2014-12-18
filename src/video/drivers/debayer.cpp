@@ -34,12 +34,13 @@
 namespace pangolin
 {
 
-DebayerVideo::DebayerVideo(VideoInterface* videoin, color_filter_t tile, bayer_method_t method)
-    : videoin(videoin), size_bytes(0), buffer(0), tile(tile), method(method)
+DebayerVideo::DebayerVideo(VideoInterface* src, color_filter_t tile, bayer_method_t method)
+    : size_bytes(0), buffer(0), tile(tile), method(method)
 {
-    if(!videoin) {
+    if(!src) {
         throw VideoException("DebayerVideo: VideoInterface in must not be null");
     }
+    videoin.push_back(src);
 
 #ifndef HAVE_DC1394
     pango_print_warn("debayer: dc1394 unavailable for debayering. Using simple downsampling method instead.\n");
@@ -47,9 +48,9 @@ DebayerVideo::DebayerVideo(VideoInterface* videoin, color_filter_t tile, bayer_m
 #endif
 
     const pangolin::VideoPixelFormat rgb_format = pangolin::VideoFormatFromString("RGB24");
-    for(int s=0; s< videoin->Streams().size(); ++s) {
-        int w = videoin->Streams()[s].Width();
-        int h = videoin->Streams()[s].Height();
+    for(int s=0; s< src->Streams().size(); ++s) {
+        int w = src->Streams()[s].Width();
+        int h = src->Streams()[s].Height();
         if(this->method==BAYER_METHOD_DOWNSAMPLE) {
             w = w/2;
             h = h/2;
@@ -58,24 +59,25 @@ DebayerVideo::DebayerVideo(VideoInterface* videoin, color_filter_t tile, bayer_m
         size_bytes += w*h*rgb_format.bpp / 8;
     }
 
-    buffer = new unsigned char[videoin->SizeBytes()];
+    buffer = new unsigned char[src->SizeBytes()];
 }
 
 DebayerVideo::~DebayerVideo()
 {
     delete[] buffer;
+    delete videoin[0];
 }
 
 //! Implement VideoInput::Start()
 void DebayerVideo::Start()
 {
-    videoin->Start();
+    videoin[0]->Start();
 }
 
 //! Implement VideoInput::Stop()
 void DebayerVideo::Stop()
 {
-    videoin->Stop();
+    videoin[0]->Stop();
 }
 
 //! Implement VideoInput::SizeBytes()
@@ -108,9 +110,9 @@ void DownsampleDebayer(
 //! Implement VideoInput::GrabNext()
 bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
 {    
-    if(videoin->GrabNext(buffer,wait)) {
+    if(videoin[0]->GrabNext(buffer,wait)) {
         for(int s=0; s<streams.size(); ++s) {
-            Image<unsigned char> img_in  = videoin->Streams()[s].StreamImage(buffer);
+            Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
             Image<unsigned char> img_out = Streams()[s].StreamImage(image);
 
 #ifdef HAVE_DC1394
@@ -134,5 +136,11 @@ bool DebayerVideo::GrabNewest( unsigned char* image, bool wait )
 {
     return GrabNext(image,wait);
 }
+
+std::vector<VideoInterface*>& DebayerVideo::InputStreams()
+{
+    return videoin;
+}
+
 
 }

@@ -35,7 +35,7 @@ namespace pangolin
 {
 
 class PANGOLIN_EXPORT VideoSplitter
-    : public VideoInterface
+    : public VideoInterface, public VideoFilterInterface
 {
 public:
     VideoSplitter(VideoInterface* videoin, const std::vector<StreamInfo>& streams);
@@ -52,10 +52,12 @@ public:
     
     bool GrabNext( unsigned char* image, bool wait = true );
     
-    bool GrabNewest( unsigned char* image, bool wait = true );    
+    bool GrabNewest( unsigned char* image, bool wait = true );
+
+    std::vector<VideoInterface*>& InputStreams();
     
 protected:
-    VideoInterface* videoin;    
+    std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
 };
 

@@ -30,12 +30,14 @@
 namespace pangolin
 {
 
-VideoSplitter::VideoSplitter(VideoInterface *videoin, const std::vector<StreamInfo>& streams)
-    : videoin(videoin), streams(streams)
+VideoSplitter::VideoSplitter(VideoInterface *src, const std::vector<StreamInfo>& streams)
+    : streams(streams)
 {
+    videoin.push_back(src);
+
     // Warn if stream over-runs input stream
     for(unsigned int i=0; i < streams.size(); ++i) {
-        if(videoin->SizeBytes() < (size_t)streams[i].Offset() + streams[i].SizeBytes() ) {
+        if(src->SizeBytes() < (size_t)streams[i].Offset() + streams[i].SizeBytes() ) {
             pango_print_warn("VideoSplitter: stream extends past end of input.\n");
             break;
         }
@@ -44,12 +46,12 @@ VideoSplitter::VideoSplitter(VideoInterface *videoin, const std::vector<StreamIn
 
 VideoSplitter::~VideoSplitter()
 {
-    delete videoin;
+    delete videoin[0];
 }
 
 size_t VideoSplitter::SizeBytes() const
 {
-    return videoin->SizeBytes();
+    return videoin[0]->SizeBytes();
 }
 
 const std::vector<StreamInfo>& VideoSplitter::Streams() const
@@ -59,22 +61,27 @@ const std::vector<StreamInfo>& VideoSplitter::Streams() const
 
 void VideoSplitter::Start()
 {
-    videoin->Start();
+    videoin[0]->Start();
 }
 
 void VideoSplitter::Stop()
 {
-    videoin->Stop();
+    videoin[0]->Stop();
 }
 
 bool VideoSplitter::GrabNext( unsigned char* image, bool wait )
 {
-    return videoin->GrabNext(image, wait);
+    return videoin[0]->GrabNext(image, wait);
 }
 
 bool VideoSplitter::GrabNewest( unsigned char* image, bool wait )
 {
-    return videoin->GrabNewest(image, wait);
+    return videoin[0]->GrabNewest(image, wait);
+}
+
+std::vector<VideoInterface*>& VideoSplitter::InputStreams()
+{
+    return videoin;
 }
 
 

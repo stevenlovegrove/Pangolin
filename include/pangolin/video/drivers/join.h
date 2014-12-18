@@ -34,7 +34,7 @@ namespace pangolin
 {
 
 class PANGOLIN_EXPORT VideoJoiner
-    : public VideoInterface
+    : public VideoInterface, public VideoFilterInterface
 {
 public:
     VideoJoiner(const std::vector<VideoInterface *> &src);
@@ -53,7 +53,7 @@ public:
 
     bool GrabNewest( unsigned char* image, bool wait = true );
 
-    std::vector<VideoInterface*>& SourceVideos();
+    std::vector<VideoInterface*>& InputStreams();
 
 protected:
     std::vector<VideoInterface*> src;

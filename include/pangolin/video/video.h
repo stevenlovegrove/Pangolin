@@ -202,6 +202,31 @@ enum UvcRequestCode {
   UVC_GET_DEF = 0x87
 };
 
+struct PANGOLIN_EXPORT VideoFilterInterface
+{
+    template<typename T>
+    std::vector<T*> FindMatchingStreams()
+    {
+        std::vector<T*> matches;
+        std::vector<VideoInterface*> children = InputStreams();
+        for(int c=0; c < children.size(); ++c) {
+            T* concrete_video = dynamic_cast<T*>(children[c]);
+            if(concrete_video) {
+                matches.push_back(concrete_video);
+            }else{
+                VideoFilterInterface* filter_video = dynamic_cast<VideoFilterInterface*>(children[c]);
+                if(filter_video) {
+                    std::vector<T*> child_matches = filter_video->FindMatchingStreams<T>();
+                    matches.insert(matches.end(), child_matches.begin(), child_matches.end());
+                }
+            }
+        }
+        return matches;
+    }
+
+    virtual std::vector<VideoInterface*>& InputStreams() = 0;
+};
+
 struct PANGOLIN_EXPORT VideoUvcInterface
 {
     virtual int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code) = 0;

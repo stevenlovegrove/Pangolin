@@ -94,7 +94,7 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
     return GrabNext(image, wait);
 }
 
-std::vector<VideoInterface*>& VideoJoiner::SourceVideos()
+std::vector<VideoInterface*>& VideoJoiner::InputStreams()
 {
     return src;
 }
