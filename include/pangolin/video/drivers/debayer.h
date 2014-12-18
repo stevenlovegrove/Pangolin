@@ -91,4 +91,4 @@ protected:
 
 }
 
-#endif // PANGOLIN_VIDEO_TEST_H
+#endif // PANGOLIN_VIDEO_DEBAYER_H

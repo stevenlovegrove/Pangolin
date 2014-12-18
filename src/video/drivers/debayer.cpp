@@ -37,6 +37,10 @@ namespace pangolin
 DebayerVideo::DebayerVideo(VideoInterface* videoin, color_filter_t tile, bayer_method_t method)
     : videoin(videoin), size_bytes(0), buffer(0), tile(tile), method(method)
 {
+    if(!videoin) {
+        throw VideoException("DebayerVideo: VideoInterface in must not be null");
+    }
+
 #ifndef HAVE_DC1394
     pango_print_warn("debayer: dc1394 unavailable for debayering. Using simple downsampling method instead.\n");
     this->method = BAYER_METHOD_DOWNSAMPLE;
@@ -65,13 +69,13 @@ DebayerVideo::~DebayerVideo()
 //! Implement VideoInput::Start()
 void DebayerVideo::Start()
 {
-
+    videoin->Start();
 }
 
 //! Implement VideoInput::Stop()
 void DebayerVideo::Stop()
 {
-
+    videoin->Stop();
 }
 
 //! Implement VideoInput::SizeBytes()
