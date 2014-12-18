@@ -62,6 +62,7 @@
 #include <pangolin/video/drivers/pvn_video.h>
 #include <pangolin/video/drivers/pango_video.h>
 #include <pangolin/video/drivers/video_splitter.h>
+#include <pangolin/video/drivers/debayer.h>
 
 namespace pangolin
 {
@@ -275,6 +276,11 @@ VideoInterface* OpenVideo(const Uri& uri)
         }else{
             throw VideoException("Unable to open file type");
         }
+    }else
+    if(!uri.scheme.compare("debayer"))
+    {
+        VideoInterface* subvid = OpenVideo(uri.url);
+        video = new DebayerVideo(subvid, DC1394_COLOR_FILTER_BGGR, BAYER_METHOD_HQLINEAR );
     }else
     if(!uri.scheme.compare("split"))
     {
