@@ -31,6 +31,12 @@
 #include <pangolin/display/opengl_render_state.h>
 #include <pangolin/handler/handler_enums.h>
 
+#ifdef _OSX_
+#define PANGO_DFLT_HANDLER3D_ZF (1.0f/50.0f)
+#else
+#define PANGO_DFLT_HANDLER3D_ZF (1.0f/10.0f)
+#endif
+
 namespace pangolin
 {
 
@@ -57,8 +63,7 @@ struct PANGOLIN_EXPORT HandlerScroll : Handler
 
 struct PANGOLIN_EXPORT Handler3D : Handler
 {
-    
-    Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction=1.0f/50.0f);
+    Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction= PANGO_DFLT_HANDLER3D_ZF);
     
     virtual void GetPosNormal(View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision n[3], GLprecision default_z = 1.0);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
