@@ -34,10 +34,10 @@ VideoJoiner::VideoJoiner(const std::vector<VideoInterface*>& src)
     : src(src), size_bytes(0)
 {
     // Add individual streams
-    for(int s=0; s< src.size(); ++s)
+    for(size_t s=0; s< src.size(); ++s)
     {
         VideoInterface& vid = *src[s];
-        for(int i=0; i < vid.Streams().size(); ++i)
+        for(size_t i=0; i < vid.Streams().size(); ++i)
         {
             const StreamInfo si = vid.Streams()[i];
             const VideoPixelFormat fmt = si.PixFormat();
@@ -64,14 +64,14 @@ const std::vector<StreamInfo>& VideoJoiner::Streams() const
 
 void VideoJoiner::Start()
 {
-    for(int s=0; s< src.size(); ++s) {
+    for(size_t s=0; s< src.size(); ++s) {
         src[s]->Start();
     }
 }
 
 void VideoJoiner::Stop()
 {
-    for(int s=0; s< src.size(); ++s) {
+    for(size_t s=0; s< src.size(); ++s) {
         src[s]->Stop();
     }
 }
@@ -80,7 +80,7 @@ bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
 {
     bool grabbed_any = false;
     size_t offset = 0;
-    for(int s=0; s< src.size(); ++s)
+    for(size_t s=0; s< src.size(); ++s)
     {
         VideoInterface& vid = *src[s];
         grabbed_any |= vid.GrabNext(image+offset,wait);

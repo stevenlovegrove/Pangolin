@@ -48,7 +48,7 @@ DebayerVideo::DebayerVideo(VideoInterface* src, color_filter_t tile, bayer_metho
 #endif
 
     const pangolin::VideoPixelFormat rgb_format = pangolin::VideoFormatFromString("RGB24");
-    for(int s=0; s< src->Streams().size(); ++s) {
+    for(size_t s=0; s< src->Streams().size(); ++s) {
         int w = src->Streams()[s].Width();
         int h = src->Streams()[s].Height();
         if(this->method==BAYER_METHOD_DOWNSAMPLE) {
@@ -97,8 +97,8 @@ void DownsampleDebayer(
     const Image<unsigned char>& in
 ) {
     // TODO: Take tile pattern as input
-    for(int y=0; y<out.h; ++y) {
-        for(int x=0; x<out.w; ++x) {
+    for(size_t y=0; y<out.h; ++y) {
+        for(size_t x=0; x<out.w; ++x) {
             // BGGR Pattern
             out.ptr[3*(y*out.w+x)+2] = in.ptr[2*y*in.pitch + 2*x];
             out.ptr[3*(y*out.w+x)+1] = (in.ptr[2*y*in.pitch + 2*x + 1] + in.ptr[(2*y+1)*in.pitch + 2*x]) >> 1;
@@ -111,7 +111,7 @@ void DownsampleDebayer(
 bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
 {    
     if(videoin[0]->GrabNext(buffer,wait)) {
-        for(int s=0; s<streams.size(); ++s) {
+        for(size_t s=0; s<streams.size(); ++s) {
             Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
             Image<unsigned char> img_out = Streams()[s].StreamImage(image);
 

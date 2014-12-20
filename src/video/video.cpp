@@ -149,7 +149,7 @@ std::vector<std::string> SplitBrackets(const std::string src, char open = '{', c
     int nesting = 0;
     int begin = -1;
 
-    for(int i=0; i < src.length(); ++i) {
+    for(size_t i=0; i < src.length(); ++i) {
         if(src[i] == open) {
             if(nesting==0) {
                 begin = i;
@@ -318,7 +318,7 @@ VideoInterface* OpenVideo(const Uri& uri)
             throw VideoException("No VideoSources found in join URL.", "Specify videos to join with curly braces, e.g. join://{test://}{test://}");
         }
 
-        for(int i=0; i<uris.size(); ++i) {
+        for(size_t i=0; i<uris.size(); ++i) {
             src.push_back( OpenVideo(uris[i]) );
         }
 
