@@ -101,6 +101,18 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
         sizeBytes += stream.SizeBytes();
         streams.push_back(stream);
     }
+
+    if( use_depth ) {
+        nRetVal = depthNode.Create(context);
+        if (nRetVal != XN_STATUS_OK) {
+            throw VideoException( (std::string)"Unable to create DepthNode: " + xnGetStatusString(nRetVal) );
+        }else{
+            nRetVal = depthNode.SetMapOutputMode(mapMode);
+            if (nRetVal != XN_STATUS_OK) {
+                throw VideoException( (std::string)"Invalid DepthNode mode: " + xnGetStatusString(nRetVal) );
+            }
+        }
+    }
     
     if( use_rgb ) {
         nRetVal = imageNode.Create(context);
@@ -113,22 +125,24 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
             }
         }
     }
-    
-    if( use_depth ) {
-        nRetVal = depthNode.Create(context);
-        if (nRetVal != XN_STATUS_OK) {
-            throw VideoException( (std::string)"Unable to create DepthNode: " + xnGetStatusString(nRetVal) );
-        }else{
-            nRetVal = depthNode.SetMapOutputMode(mapMode);
+
+    if (depth_to_color && use_rgb) {
+        //Registration
+        if( depthNode.IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT) ) {
+            nRetVal = depthNode.GetAlternativeViewPointCap().SetViewPoint( imageNode  );
             if (nRetVal != XN_STATUS_OK) {
-                throw VideoException( (std::string)"Invalid DepthNode mode: " + xnGetStatusString(nRetVal) );
+                std::cerr << "depthNode.GetAlternativeViewPointCap().SetViewPoint(imageNode): " << xnGetStatusString(nRetVal) << std::endl;
             }
-            if (depth_to_color && use_rgb) {
-                if( depthNode.IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT) ) {
-                    nRetVal = depthNode.GetAlternativeViewPointCap().SetViewPoint( imageNode  );
-                    if (nRetVal != XN_STATUS_OK) {
-                        std::cerr << "depthNode.GetAlternativeViewPointCap().SetViewPoint(imageNode): " << xnGetStatusString(nRetVal) << std::endl;
-                    }
+        }
+
+        // Frame Sync
+        if (depthNode.IsCapabilitySupported(XN_CAPABILITY_FRAME_SYNC))
+        {
+            if (depthNode.GetFrameSyncCap().CanFrameSyncWith(imageNode))
+            {
+                nRetVal = depthNode.GetFrameSyncCap().FrameSyncWith(imageNode);
+                if (nRetVal != XN_STATUS_OK) {
+                    std::cerr << "depthNode.GetFrameSyncCap().FrameSyncWith(imageNode): " << xnGetStatusString(nRetVal) << std::endl;
                 }
             }
         }
