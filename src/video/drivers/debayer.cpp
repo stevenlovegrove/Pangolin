@@ -122,7 +122,7 @@ bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
             );
 #else
             // use our simple debayering instead
-            SimpleDownsampleDebayer(img_out,img_in);
+            DownsampleDebayer(img_out, img_in);
 #endif
         }
         return true;
