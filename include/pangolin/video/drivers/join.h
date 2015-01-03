@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Steven Lovegrove
+ * Copyright (c) 2014 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,65 +25,43 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/video_splitter.h>
+#ifndef PANGOLIN_VIDEO_JOIN_H
+#define PANGOLIN_VIDEO_JOIN_H
+
+#include <pangolin/video/video.h>
 
 namespace pangolin
 {
 
-VideoSplitter::VideoSplitter(VideoInterface *src, const std::vector<StreamInfo>& streams)
-    : streams(streams)
+class PANGOLIN_EXPORT VideoJoiner
+    : public VideoInterface, public VideoFilterInterface
 {
-    videoin.push_back(src);
+public:
+    VideoJoiner(const std::vector<VideoInterface *> &src);
 
-    // Warn if stream over-runs input stream
-    for(unsigned int i=0; i < streams.size(); ++i) {
-        if(src->SizeBytes() < (size_t)streams[i].Offset() + streams[i].SizeBytes() ) {
-            pango_print_warn("VideoSplitter: stream extends past end of input.\n");
-            break;
-        }
-    }
-}
+    ~VideoJoiner();
 
-VideoSplitter::~VideoSplitter()
-{
-    delete videoin[0];
-}
+    size_t SizeBytes() const;
 
-size_t VideoSplitter::SizeBytes() const
-{
-    return videoin[0]->SizeBytes();
-}
+    const std::vector<StreamInfo>& Streams() const;
 
-const std::vector<StreamInfo>& VideoSplitter::Streams() const
-{
-    return streams;
-}
+    void Start();
 
-void VideoSplitter::Start()
-{
-    videoin[0]->Start();
-}
+    void Stop();
 
-void VideoSplitter::Stop()
-{
-    videoin[0]->Stop();
-}
+    bool GrabNext( unsigned char* image, bool wait = true );
 
-bool VideoSplitter::GrabNext( unsigned char* image, bool wait )
-{
-    return videoin[0]->GrabNext(image, wait);
-}
+    bool GrabNewest( unsigned char* image, bool wait = true );
 
-bool VideoSplitter::GrabNewest( unsigned char* image, bool wait )
-{
-    return videoin[0]->GrabNewest(image, wait);
-}
+    std::vector<VideoInterface*>& InputStreams();
 
-std::vector<VideoInterface*>& VideoSplitter::InputStreams()
-{
-    return videoin;
-}
-
+protected:
+    std::vector<VideoInterface*> src;
+    std::vector<StreamInfo> streams;
+    size_t size_bytes;
+};
 
 
 }
+
+#endif // PANGOLIN_VIDEO_JOIN_H

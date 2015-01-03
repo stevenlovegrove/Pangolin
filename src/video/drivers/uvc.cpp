@@ -77,13 +77,8 @@ uvc_error_t UvcVideo::FindDevice(
   while (!found_dev && (test_dev = list[dev_idx++]) != NULL) {
     uvc_device_descriptor_t *desc;
 
-    fprintf(stderr,"Here\n");
-
     if (uvc_get_device_descriptor(test_dev, &desc) != UVC_SUCCESS)
       continue;
-
-    fprintf(stderr,"found: vid: %i, pid: %i\n", desc->idVendor, desc->idProduct );
-    fflush(stderr);
 
     const bool matches = (!vid || desc->idVendor == vid)
             && (!pid || desc->idProduct == pid)

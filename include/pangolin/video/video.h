@@ -86,11 +86,14 @@
 // mjpeg - capture from (possibly networked) motion jpeg stream using FFMPEG
 //  e.g. "mjpeg://http://127.0.0.1/?action=stream"
 //
-// split - split a single stream video into a multi stream video based on Region of Interest / memory specification
+// split - split an input video into a one or more streams based on Region of Interest / memory specification
 //           roiN=X+Y+WxH
 //           memN=Offset:WxH:PitchBytes:Format
 //  e.g. "split:[roi1=0+0+640x480,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 //  e.g. "split:[mem1=307200:640x480:1280:GRAY8,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
+//
+// debayer - debayer an input video stream
+// e.g.  "debayer://v4l:///dev/video0
 //
 // test - output test video sequence
 //  e.g. "test://"
@@ -197,6 +200,31 @@ enum UvcRequestCode {
   UVC_GET_LEN = 0x85,
   UVC_GET_INFO = 0x86,
   UVC_GET_DEF = 0x87
+};
+
+struct PANGOLIN_EXPORT VideoFilterInterface
+{
+    template<typename T>
+    std::vector<T*> FindMatchingStreams()
+    {
+        std::vector<T*> matches;
+        std::vector<VideoInterface*> children = InputStreams();
+        for(int c=0; c < children.size(); ++c) {
+            T* concrete_video = dynamic_cast<T*>(children[c]);
+            if(concrete_video) {
+                matches.push_back(concrete_video);
+            }else{
+                VideoFilterInterface* filter_video = dynamic_cast<VideoFilterInterface*>(children[c]);
+                if(filter_video) {
+                    std::vector<T*> child_matches = filter_video->FindMatchingStreams<T>();
+                    matches.insert(matches.end(), child_matches.begin(), child_matches.end());
+                }
+            }
+        }
+        return matches;
+    }
+
+    virtual std::vector<VideoInterface*>& InputStreams() = 0;
 };
 
 struct PANGOLIN_EXPORT VideoUvcInterface

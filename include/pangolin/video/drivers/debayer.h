@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Steven Lovegrove
+ * Copyright (c) 2014 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,43 +25,72 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_SPLITTER_H
-#define PANGOLIN_VIDEO_SPLITTER_H
+#ifndef PANGOLIN_VIDEO_DEBAYER_H
+#define PANGOLIN_VIDEO_DEBAYER_H
 
+#include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
-#include <vector>
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT VideoSplitter
-    : public VideoInterface, public VideoFilterInterface
+// Enum to match libdc1394's dc1394_bayer_method_t
+typedef enum {
+    BAYER_METHOD_NEAREST = 0,
+    BAYER_METHOD_SIMPLE,
+    BAYER_METHOD_BILINEAR,
+    BAYER_METHOD_HQLINEAR,
+    BAYER_METHOD_DOWNSAMPLE,
+    BAYER_METHOD_EDGESENSE,
+    BAYER_METHOD_VNG,
+    BAYER_METHOD_AHD
+} bayer_method_t;
+
+// Enum to match libdc1394's dc1394_color_filter_t
+typedef enum {
+    DC1394_COLOR_FILTER_RGGB = 512,
+    DC1394_COLOR_FILTER_GBRG,
+    DC1394_COLOR_FILTER_GRBG,
+    DC1394_COLOR_FILTER_BGGR
+} color_filter_t;
+
+// Video class that debayers its video input using the given method.
+class PANGOLIN_EXPORT DebayerVideo : public VideoInterface, public VideoFilterInterface
 {
 public:
-    VideoSplitter(VideoInterface* videoin, const std::vector<StreamInfo>& streams);
+    DebayerVideo(VideoInterface* videoin, color_filter_t tile, bayer_method_t method);
+    ~DebayerVideo();
 
-    ~VideoSplitter();
-    
-    size_t SizeBytes() const;
-    
-    const std::vector<StreamInfo>& Streams() const;
-    
+    //! Implement VideoInput::Start()
     void Start();
-    
+
+    //! Implement VideoInput::Stop()
     void Stop();
-    
+
+    //! Implement VideoInput::SizeBytes()
+    size_t SizeBytes() const;
+
+    //! Implement VideoInput::Streams()
+    const std::vector<StreamInfo>& Streams() const;
+
+    //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
-    
+
+    //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
     std::vector<VideoInterface*>& InputStreams();
-    
+
 protected:
     std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
-};
+    size_t size_bytes;
+    unsigned char* buffer;
 
+    color_filter_t tile;
+    bayer_method_t method;
+};
 
 }
 
-#endif // PANGOLIN_VIDEO_SPLITTER_H
+#endif // PANGOLIN_VIDEO_DEBAYER_H

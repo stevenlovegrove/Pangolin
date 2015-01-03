@@ -317,7 +317,7 @@ void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node, const Uri& 
                 if (!prop.isReadOnly()) {
                     tprop.setValue(node, uri.Get<int32_t>(prop.name(), tprop.getValue(node)));
                 } else {
-                    pango_print_warn("DepthSense property '%s' is read-only\n", prop.name());
+                    pango_print_warn("DepthSense property '%s' is read-only\n", prop.name().c_str() );
                 }
             }
             jsnode[prop.name()] = tprop.getValue(node);
@@ -327,7 +327,7 @@ void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node, const Uri& 
                 if (!prop.isReadOnly()) {
                     tprop.setValue(node, uri.Get<float>(prop.name(), tprop.getValue(node)));
                 } else {
-                    pango_print_warn("DepthSense property '%s' is read-only\n", prop.name());
+                    pango_print_warn("DepthSense property '%s' is read-only\n", prop.name().c_str() );
                 }
             }
             jsnode[prop.name()] = tprop.getValue(node);
@@ -337,7 +337,7 @@ void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node, const Uri& 
                 if (!prop.isReadOnly()) {
                     tprop.setValue(node, uri.Get<bool>(prop.name(), tprop.getValue(node)));
                 } else {
-                    pango_print_warn("DepthSense property '%s' is read-only\n", prop.name() );
+                    pango_print_warn("DepthSense property '%s' is read-only\n", prop.name().c_str() );
                 }
             }
             jsnode[prop.name()] = tprop.getValue(node);
@@ -347,7 +347,7 @@ void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node, const Uri& 
                 if (!prop.isReadOnly()) {
                     tprop.setValue(node, uri.Get<std::string>(prop.name(), tprop.getValue(node)).c_str() );
                 } else {
-                    pango_print_warn("DepthSense property '%s' is read-only\n", prop.name());
+                    pango_print_warn("DepthSense property '%s' is read-only\n", prop.name().c_str() );
                 }
             }
             jsnode[prop.name()] = tprop.getValue(node);
