@@ -38,6 +38,7 @@
 
 namespace pangolin
 {
+const int MAX_OPENNI2_STREAMS = 2 * ONI_MAX_SENSORS;
 
 //! Interface to video capture sources
 struct OpenNiVideo2 : public VideoInterface, public VideoPropertiesInterface
@@ -85,10 +86,16 @@ public:
         return frame_properties;
     }
 
+    int maxNumAvailableDevices;
+    int numDevices;
+    int numStreams;
+
+    openni::Device device[ONI_MAX_SENSORS];
+
 protected:
     void PrintOpenNI2Modes(openni::SensorType sensorType);
 
-    openni::VideoMode FindOpenNI2Mode(openni::SensorType sensorType,
+    openni::VideoMode FindOpenNI2Mode(openni::Device &device, openni::SensorType sensorType,
         int width, int height,
         int fps, openni::PixelFormat fmt
     );
@@ -98,7 +105,7 @@ protected:
     json::value frame_properties;
     json::value* streams_properties;
 
-    OpenNiSensorType sensor_type[2];
+    OpenNiSensorType sensor_type[ONI_MAX_SENSORS];
 
     size_t sizeBytes;
 
@@ -108,9 +115,9 @@ protected:
     bool depth_to_color;
     bool use_ir_and_rgb;
     bool fromFile;
-    openni::Device device;
-    openni::VideoStream video_stream[2];
-    openni::VideoFrameRef video_frame[2];
+//    openni::Device device;
+    openni::VideoStream video_stream[ONI_MAX_SENSORS];
+    openni::VideoFrameRef video_frame[ONI_MAX_SENSORS];
 };
 
 }
