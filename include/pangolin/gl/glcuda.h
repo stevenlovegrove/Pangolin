@@ -168,7 +168,7 @@ inline GlTextureCudaArray::~GlTextureCudaArray()
     }
 }
 
-void GlTextureCudaArray::Reinitialise(int width, int height, GLint internal_format, bool sampling_linear)
+inline void GlTextureCudaArray::Reinitialise(int width, int height, GLint internal_format, bool sampling_linear)
 {
     if(cuda_res) {
         cudaGraphicsUnregisterResource(cuda_res);
