@@ -36,6 +36,9 @@
 #endif
 
 #ifdef _WIN_
+// TODO: Put this into CPP file so that it doesn't have consequences
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 

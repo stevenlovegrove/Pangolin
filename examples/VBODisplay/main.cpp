@@ -2,9 +2,9 @@
 
 #include <GL/glew.h>
 
-#include <pangolin/glcuda.h>
 #include <pangolin/pangolin.h>
-#include <pangolin/glvbo.h>
+#include <pangolin/gl/glcuda.h>
+#include <pangolin/gl/glvbo.h>
 
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>

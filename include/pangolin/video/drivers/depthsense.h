@@ -98,33 +98,37 @@ protected:
     void ConfigureDepthNode(const SensorConfig& sensorConfig, const Uri& uri);
     void ConfigureColorNode(const SensorConfig& sensorConfig, const Uri& uri);
 
+    double GetDeltaTime() const;
+
     std::vector<StreamInfo> streams;
     json::value device_properties;
     json::value frame_properties;
     json::value* streams_properties;
 
-    SensorConfig sensorConfig[2];
-    int depthmap_stream;
-    int rgb_stream;
-
-    bool enableDepth;
-    bool enableColor;
-    double depthTs;
-    double colorTs;
-    double GetDeltaTime() const;
-
-    size_t size_bytes;
 
     DepthSense::Device device;
     DepthSense::DepthNode g_dnode;
     DepthSense::ColorNode g_cnode;
 
     unsigned char* fill_image;
+
+    int depthmap_stream;
+    int rgb_stream;
+
     int gotDepth;
     int gotColor;
     boostd::mutex update_mutex;
     boostd::condition_variable cond_image_filled;
     boostd::condition_variable cond_image_requested;
+
+    SensorConfig sensorConfig[2];
+
+    bool enableDepth;
+    bool enableColor;
+    double depthTs;
+    double colorTs;
+
+    size_t size_bytes;
 };
 
 class DepthSenseContext
