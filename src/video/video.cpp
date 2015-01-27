@@ -544,7 +544,9 @@ VideoInterface* OpenVideo(const Uri& uri)
         }
 
         OpenNiVideo2* nivid;
-        if(stream_modes.size()) {
+        if(!uri.url.empty()) {
+            nivid = new OpenNiVideo2(pangolin::PathExpand(uri.url));
+        }else if(stream_modes.size()) {
             nivid = new OpenNiVideo2(stream_modes);
         }else{
             nivid = new OpenNiVideo2(default_dim, default_fps);

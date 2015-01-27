@@ -51,6 +51,9 @@ public:
     // Open streams specified
     OpenNiVideo2(std::vector<OpenNiStreamMode>& stream_modes);
 
+    // Open openni file
+    OpenNiVideo2(const std::string& filename);
+
     void UpdateProperties();
 
     void SetMirroring(bool enable);
@@ -92,29 +95,31 @@ public:
         return frame_properties;
     }
 
-    int numDevices;
-    int numStreams;
-
-    openni::Device device[ONI_MAX_SENSORS];
 
 protected:
     void InitialiseOpenNI();
+    int AddDevice(const std::string& device_uri);
+    void AddStream(const OpenNiStreamMode& mode);
     void SetupStreamModes();
     void PrintOpenNI2Modes(openni::SensorType sensorType);
+    openni::VideoMode FindOpenNI2Mode(openni::Device &device, openni::SensorType sensorType, int width, int height, int fps, openni::PixelFormat fmt );
 
-    openni::VideoMode FindOpenNI2Mode(openni::Device &device, openni::SensorType sensorType,
-        int width, int height,
-        int fps, openni::PixelFormat fmt
-    );
+    int numDevices;
+    int numStreams;
+
+    openni::Device devices[ONI_MAX_SENSORS];
+    OpenNiStreamMode sensor_type[ONI_MAX_SENSORS];
+
+    openni::VideoStream video_stream[ONI_MAX_SENSORS];
+    openni::VideoFrameRef video_frame[ONI_MAX_SENSORS];
 
     std::vector<StreamInfo> streams;
+    size_t sizeBytes;
+
     json::value device_properties;
     json::value frame_properties;
     json::value* streams_properties;
 
-    OpenNiStreamMode sensor_type[ONI_MAX_SENSORS];
-
-    size_t sizeBytes;
 
     bool use_depth;
     bool use_ir;
@@ -122,9 +127,7 @@ protected:
     bool depth_to_color;
     bool use_ir_and_rgb;
     bool fromFile;
-//    openni::Device device;
-    openni::VideoStream video_stream[ONI_MAX_SENSORS];
-    openni::VideoFrameRef video_frame[ONI_MAX_SENSORS];
+
 };
 
 }
