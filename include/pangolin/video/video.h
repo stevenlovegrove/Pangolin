@@ -232,6 +232,13 @@ struct PANGOLIN_EXPORT VideoUvcInterface
     virtual int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code) = 0;
 };
 
+struct PANGOLIN_EXPORT VideoPlaybackInterface
+{
+    virtual int GetCurrentFrameId() const = 0;
+    virtual int GetTotalFrames() const = 0;
+    virtual int Seek(int frameid) = 0;
+};
+
 //! Generic wrapper class for different video sources
 struct PANGOLIN_EXPORT VideoInput : public VideoInterface
 {

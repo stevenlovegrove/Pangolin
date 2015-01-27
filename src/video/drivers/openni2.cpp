@@ -132,7 +132,6 @@ inline openni::SensorType SensorType(const OpenNiSensorType sensor)
 }
 
 OpenNiVideo2::OpenNiVideo2(ImageDim dim, int fps)
-    : numDevices(0), numStreams(0)
 {
     InitialiseOpenNI();
 
@@ -155,7 +154,6 @@ OpenNiVideo2::OpenNiVideo2(ImageDim dim, int fps)
 }
 
 OpenNiVideo2::OpenNiVideo2(const std::string& device_uri)
-    : numDevices(0), numStreams(0)
 {
     InitialiseOpenNI();
 
@@ -168,7 +166,6 @@ OpenNiVideo2::OpenNiVideo2(const std::string& device_uri)
 }
 
 OpenNiVideo2::OpenNiVideo2(std::vector<OpenNiStreamMode>& stream_modes)
-    : numDevices(0), numStreams(0)
 {
     InitialiseOpenNI();
 
@@ -195,6 +192,12 @@ OpenNiVideo2::OpenNiVideo2(std::vector<OpenNiStreamMode>& stream_modes)
 
 void OpenNiVideo2::InitialiseOpenNI()
 {
+    // Initialise member variables
+    numDevices = 0;
+    numStreams = 0;
+    current_frame_index = 0;
+    total_frames = -1;
+
     openni::Status rc = openni::STATUS_OK;
 
     rc = openni::OpenNI::initialize();
@@ -217,10 +220,18 @@ int OpenNiVideo2::AddDevice(const std::string& device_uri)
 void OpenNiVideo2::AddStream(const OpenNiStreamMode& mode)
 {
     sensor_type[numStreams] = mode;
-    openni::Status rc = video_stream[numStreams].create(devices[mode.device], SensorType(mode.sensor_type));
+    openni::Device& device = devices[mode.device];
+    openni::VideoStream& stream = video_stream[numStreams];
+    openni::Status rc = stream.create(device, SensorType(mode.sensor_type));
     if (rc != openni::STATUS_OK) {
         throw VideoException( "OpenNI2: Couldn't create stream.", openni::OpenNI::getExtendedError() );
     }
+
+    openni::PlaybackControl* control = device.getPlaybackControl();
+    if(control) {
+        total_frames = std::max(total_frames, control->getNumberOfFrames(stream));
+    }
+
     numStreams++;
 }
 
@@ -438,6 +449,14 @@ void OpenNiVideo2::SetPlaybackSpeed(float speed)
     }
 }
 
+void OpenNiVideo2::SetPlaybackRepeat(bool enabled)
+{
+    for(int i = 0 ; i < numDevices; i++) {
+        openni::PlaybackControl* control = devices[i].getPlaybackControl();
+        if(control) control->setRepeatEnabled(enabled);
+    }
+}
+
 OpenNiVideo2::~OpenNiVideo2()
 {
     Stop();
@@ -495,6 +514,7 @@ bool OpenNiVideo2::GrabNext( unsigned char* image, bool wait )
         if(use_ir_and_rgb) video_stream[i].start();
 
         rc = video_stream[i].readFrame(&video_frame[i]);
+        video_frame[0].getFrameIndex();
         if(rc != openni::STATUS_OK) {
             pango_print_error("Error reading frame:\n%s", openni::OpenNI::getExtendedError() );
         }
@@ -523,12 +543,35 @@ bool OpenNiVideo2::GrabNext( unsigned char* image, bool wait )
         out_img += streams[i].SizeBytes();
     }
 
+    current_frame_index = video_frame[0].getFrameIndex();
+
     return rc == openni::STATUS_OK;
 }
 
 bool OpenNiVideo2::GrabNewest( unsigned char* image, bool wait )
 {
     return GrabNext(image,wait);
+}
+
+int OpenNiVideo2::GetCurrentFrameId() const
+{
+    return current_frame_index;
+}
+
+int OpenNiVideo2::GetTotalFrames() const
+{
+    return total_frames;
+}
+
+int OpenNiVideo2::Seek(int frameid)
+{
+    openni::PlaybackControl* control = devices[0].getPlaybackControl();
+    if(control) {
+        return control->seek(video_stream[0], frameid);
+        return frameid;
+    }else{
+        return -1;
+    }
 }
 
 }

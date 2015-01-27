@@ -41,7 +41,7 @@ namespace pangolin
 const int MAX_OPENNI2_STREAMS = 2 * ONI_MAX_SENSORS;
 
 //! Interface to video capture sources
-struct OpenNiVideo2 : public VideoInterface, public VideoPropertiesInterface
+struct OpenNiVideo2 : public VideoInterface, public VideoPropertiesInterface, public VideoPlaybackInterface
 {
 public:
 
@@ -64,6 +64,7 @@ public:
     void SetDepthColorSyncEnabled(bool enable);
     void SetRegisterDepthToImage(bool enable);
     void SetPlaybackSpeed(float speed);
+    void SetPlaybackRepeat(bool enabled);
 
     ~OpenNiVideo2();
 
@@ -85,16 +86,24 @@ public:
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
-    //! Implement VideoInput::Properties()
+    //! Implement VideoPropertiesInterface::Properties()
     const json::value& DeviceProperties() const {
         return device_properties;
     }
 
-    //! Implement VideoInput::Properties()
+    //! Implement VideoPropertiesInterface::Properties()
     const json::value& FrameProperties() const {
         return frame_properties;
     }
 
+    //! Implement VideoPlaybackInterface::GetCurrentFrameId
+    int GetCurrentFrameId() const;
+
+    //! Implement VideoPlaybackInterface::GetTotalFrames
+    int GetTotalFrames() const ;
+
+    //! Implement VideoPlaybackInterface::Seek
+    int Seek(int frameid);
 
 protected:
     void InitialiseOpenNI();
@@ -120,7 +129,6 @@ protected:
     json::value frame_properties;
     json::value* streams_properties;
 
-
     bool use_depth;
     bool use_ir;
     bool use_rgb;
@@ -128,6 +136,8 @@ protected:
     bool use_ir_and_rgb;
     bool fromFile;
 
+    int current_frame_index;
+    int total_frames;
 };
 
 }
