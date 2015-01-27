@@ -44,17 +44,23 @@ const int MAX_OPENNI2_STREAMS = 2 * ONI_MAX_SENSORS;
 struct OpenNiVideo2 : public VideoInterface, public VideoPropertiesInterface
 {
 public:
-    OpenNiVideo2(
-        OpenNiSensorType s1, OpenNiSensorType s2,
-        ImageDim dim, int fps, bool realtime = true
-    );
+
+    // Open all RGB and Depth streams from all devices
+    OpenNiVideo2(ImageDim dim=ImageDim(640,480), int fps=30);
+
+    // Open streams specified
+    OpenNiVideo2(std::vector<OpenNiStreamMode>& stream_modes);
 
     void UpdateProperties();
 
+    void SetMirroring(bool enable);
+    void SetAutoExposure(bool enable);
+    void SetAutoWhiteBalance(bool enable);
     void SetDepthCloseRange(bool enable);
     void SetDepthHoleFilter(bool enable);
     void SetDepthColorSyncEnabled(bool enable);
     void SetRegisterDepthToImage(bool enable);
+    void SetPlaybackSpeed(float speed);
 
     ~OpenNiVideo2();
 
@@ -86,13 +92,14 @@ public:
         return frame_properties;
     }
 
-    int maxNumAvailableDevices;
     int numDevices;
     int numStreams;
 
     openni::Device device[ONI_MAX_SENSORS];
 
 protected:
+    void InitialiseOpenNI();
+    void SetupStreamModes();
     void PrintOpenNI2Modes(openni::SensorType sensorType);
 
     openni::VideoMode FindOpenNI2Mode(openni::Device &device, openni::SensorType sensorType,
@@ -105,7 +112,7 @@ protected:
     json::value frame_properties;
     json::value* streams_properties;
 
-    OpenNiSensorType sensor_type[ONI_MAX_SENSORS];
+    OpenNiStreamMode sensor_type[ONI_MAX_SENSORS];
 
     size_t sizeBytes;
 

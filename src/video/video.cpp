@@ -248,6 +248,57 @@ OpenNiSensorType openni_sensor(const std::string& str)
     }
 }
 
+// Find prefix character key
+// Given arguments "depth!5:320x240@15", "!:@", would return map
+// \0->"depth", !->"5", :->"320x240", @->"15"
+std::map<char,std::string> GetTokenSplits(const std::string& str, const std::string& tokens)
+{
+    std::map<char,std::string> splits;
+
+    char last_token = 0;
+    size_t  last_start = 0;
+    for(unsigned int i=0; i<str.size(); ++i) {
+        size_t token_pos = tokens.find(str[i]);
+        if(token_pos != std::string::npos) {
+            splits[last_token] = str.substr(last_start, i-last_start);
+            last_token = tokens[token_pos];
+            last_start = i+1;
+        }
+    }
+
+    if(last_start < str.size()) {
+        splits[last_token] = str.substr(last_start);
+    }
+
+    return splits;
+}
+
+std::istream& operator>> (std::istream &is, OpenNiStreamMode& fmt)
+{
+    std::string str;
+    is >> str;
+
+    std::map<char,std::string> splits = GetTokenSplits(str, "!:@");
+
+    if(splits.count(0)) {
+        fmt.sensor_type = openni_sensor(splits[0]);
+    }
+
+    if(splits.count('@')) {
+        fmt.fps = pangolin::Convert<int,std::string>::Do(splits['@']);
+    }
+
+    if(splits.count(':')) {
+        fmt.dim = pangolin::Convert<ImageDim,std::string>::Do(splits[':']);
+    }
+
+    if(splits.count('!')) {
+        fmt.device = pangolin::Convert<int,std::string>::Do(splits['!']);
+    }
+
+    return is;
+}
+
 #endif // defined(HAVE_OPENNI) || defined(HAVE_OPENNI2)
 
 #if defined(HAVE_DEPTHSENSE)
@@ -478,22 +529,38 @@ VideoInterface* OpenVideo(const Uri& uri)
     if(!uri.scheme.compare("openni2") )
     {
         const bool realtime = uri.Contains("realtime");
-        const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
-        const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+        const ImageDim default_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+        const unsigned int default_fps = uri.Get<unsigned int>("fps", 30);
 
-        OpenNiSensorType img1;
-        OpenNiSensorType img2;
+        std::vector<OpenNiStreamMode> stream_modes;
 
-        img1 = openni_sensor(uri.Get<std::string>("img1", "rgb") );
-        img2 = openni_sensor(uri.Get<std::string>("img2", "") );
+        int num_streams = 0;
+        std::string simg= "img1";
+        while(uri.Contains(simg)) {
+            OpenNiStreamMode stream = uri.Get<OpenNiStreamMode>(simg, OpenNiStreamMode(OpenNiRgb,default_dim,default_fps,0));
+            stream_modes.push_back(stream);
+            ++num_streams;
+            simg = "img" + ToString(num_streams+1);
+        }
 
-        OpenNiVideo2* nivid = new OpenNiVideo2(img1,img2,dim,fps,realtime);
-        video = nivid;
+        OpenNiVideo2* nivid;
+        if(stream_modes.size()) {
+            nivid = new OpenNiVideo2(stream_modes);
+        }else{
+            nivid = new OpenNiVideo2(default_dim, default_fps);
+        }
 
         nivid->SetDepthCloseRange( uri.Get<bool>("closerange",false) );
         nivid->SetDepthHoleFilter( uri.Get<bool>("holefilter",false) );
         nivid->SetDepthColorSyncEnabled( uri.Get<bool>("coloursync",false) );
+        nivid->SetPlaybackSpeed(realtime ? 1.0f : -1.0f);
+        nivid->SetAutoExposure(true);
+        nivid->SetAutoWhiteBalance(true);
+        nivid->SetMirroring(false);
+
         nivid->UpdateProperties();
+
+        video = nivid;
     }else
 #endif
 #ifdef HAVE_UVC

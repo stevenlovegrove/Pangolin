@@ -111,7 +111,111 @@ openni::VideoMode OpenNiVideo2::FindOpenNI2Mode(
     throw pangolin::VideoException("Video mode not supported");
 }
 
-OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim, int fps, bool realtime)
+OpenNiVideo2::OpenNiVideo2(ImageDim dim, int fps)
+{
+    InitialiseOpenNI();
+
+    openni::Array<openni::DeviceInfo> deviceList;
+    openni::OpenNI::enumerateDevices(&deviceList);
+
+    numDevices = deviceList.getSize();
+    numStreams = 0;
+
+    if (numDevices < 1) {
+        throw VideoException("No OpenNI Devices available. Ensure your camera is plugged in.");
+    }
+
+    for(int i = 0 ; i < numDevices ;i ++) {
+        const char*  device1Uri = deviceList[i].getUri();
+        openni::Status rc = device[i].open(device1Uri);
+        if (rc != openni::STATUS_OK) {
+            throw VideoException( "OpenNI2: Couldn't open device.", openni::OpenNI::getExtendedError() );
+        }
+
+        sensor_type[numStreams].sensor_type = pangolin::OpenNiDepth;
+        sensor_type[numStreams].dim = dim;
+        sensor_type[numStreams].fps = fps;
+        sensor_type[numStreams].device = i;
+        rc = video_stream[numStreams].create(device[i], openni::SENSOR_DEPTH);
+        if (rc != openni::STATUS_OK) {
+            throw VideoException( "OpenNI2: Couldn't create stream.", openni::OpenNI::getExtendedError() );
+        }
+        numStreams++;
+
+        sensor_type[numStreams].sensor_type = pangolin::OpenNiRgb;
+        sensor_type[numStreams].dim = dim;
+        sensor_type[numStreams].fps = fps;
+        sensor_type[numStreams].device = i;
+        rc = video_stream[numStreams].create(device[i], openni::SENSOR_COLOR);
+        if (rc != openni::STATUS_OK) {
+            throw VideoException( "OpenNI2: Couldn't create stream.", openni::OpenNI::getExtendedError() );
+        }
+        numStreams++;
+    }
+
+    SetupStreamModes();
+    Start();
+}
+
+inline openni::SensorType SensorType(OpenNiSensorType& sensor)
+{
+    switch (sensor) {
+    case OpenNiRgb:
+    case OpenNiGrey:
+        return openni::SENSOR_COLOR;
+    case OpenNiDepth:
+    case OpenNiDepthRegistered:
+        return openni::SENSOR_DEPTH;
+    case OpenNiIr:
+    case OpenNiIr8bit:
+    case OpenNiIr24bit:
+    case OpenNiIrProj:
+    case OpenNiIr8bitProj:
+        return openni::SENSOR_IR;
+    default:
+        throw std::invalid_argument("OpenNI: Bad sensor type");
+    }
+}
+
+OpenNiVideo2::OpenNiVideo2(std::vector<OpenNiStreamMode>& stream_modes)
+{
+    InitialiseOpenNI();
+
+    openni::Array<openni::DeviceInfo> deviceList;
+    openni::OpenNI::enumerateDevices(&deviceList);
+
+    numDevices = deviceList.getSize();
+    numStreams = 0;
+
+    if (numDevices < 1) {
+        throw VideoException("OpenNI2: No devices available. Ensure your camera is plugged in.");
+    }
+
+    for(size_t i=0; i < stream_modes.size(); ++i) {
+        OpenNiStreamMode& mode = stream_modes[i];
+        sensor_type[numStreams] = mode;
+
+        // Open device if it isn't already
+        if(!device[mode.device].isValid()) {
+            const char*  device1Uri = deviceList[mode.device].getUri();
+            openni::Status rc = device[mode.device].open(device1Uri);
+            if (rc != openni::STATUS_OK) {
+                throw VideoException( "OpenNI2: Couldn't open device.", openni::OpenNI::getExtendedError() );
+            }
+        }
+
+        openni::Status rc = video_stream[numStreams].create(device[mode.device], SensorType(mode.sensor_type) );
+        if (rc != openni::STATUS_OK) {
+            throw VideoException( "OpenNI2: Couldn't create stream.", openni::OpenNI::getExtendedError() );
+        }
+        ++numStreams;
+    }
+
+    SetupStreamModes();
+    Start();
+}
+
+void OpenNiVideo2::InitialiseOpenNI()
 {
     openni::Status rc = openni::STATUS_OK;
 
@@ -119,52 +223,13 @@ OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim di
     if (rc != openni::STATUS_OK) {
         throw VideoException( "Unable to initialise OpenNI library", openni::OpenNI::getExtendedError() );
     }
+}
 
-    openni::Array<openni::DeviceInfo> deviceList;
-    openni::OpenNI::enumerateDevices(&deviceList);
-
-
-     maxNumAvailableDevices = deviceList.getSize();
-     numDevices = maxNumAvailableDevices;
-     numStreams = 0;
-
-    if (numDevices < 1)
-    {
-        openni::OpenNI::shutdown();
-        throw VideoException("Failed to open device - none available");
-    }
-
-    for(int i = 0 ; i < numDevices ;i ++) {
-        const char*  device1Uri = deviceList[i].getUri();
-        rc = device[i].open(device1Uri);
-
-        if (rc != openni::STATUS_OK)
-        {
-            throw VideoException( "OpenNI2: Couldn't open device.", openni::OpenNI::getExtendedError() );
-        }
-
-        rc = video_stream[numStreams].create(device[i], openni::SENSOR_DEPTH);
-        if (rc != openni::STATUS_OK)
-        {
-            throw VideoException( "OpenNI2: Couldn't create stream.", openni::OpenNI::getExtendedError() );
-        }
-        sensor_type[numStreams] = pangolin::OpenNiDepthRegistered;
-        numStreams++;
-
-        rc = video_stream[numStreams].create(device[i], openni::SENSOR_COLOR);
-        if (rc != openni::STATUS_OK)
-        {
-            throw VideoException( "OpenNI2: Couldn't create stream.", openni::OpenNI::getExtendedError() );
-        }
-
-        sensor_type[numStreams] = pangolin::OpenNiRgb;
-        numStreams++;
-    }
-
+void OpenNiVideo2::SetupStreamModes()
+{
     streams_properties = &frame_properties["streams"];
     *streams_properties = json::value(json::array_type,false);
     streams_properties->get<json::array>().resize(numStreams);
-
 
     use_depth = false;
     use_ir = false;
@@ -175,50 +240,45 @@ OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim di
     //    const char* deviceURI = openni::ANY_DEVICE;
     fromFile = false;//(deviceURI!=NULL);
 
-
-
-    //    PrintOpenNI2Modes(openni::SENSOR_COLOR);
-    //    PrintOpenNI2Modes(openni::SENSOR_DEPTH);
-    //    PrintOpenNI2Modes(openni::SENSOR_IR);
-
     sizeBytes =0;
     for(int i=0; i<numStreams; ++i) {
-        openni::SensorType sensortype;
-        openni::PixelFormat pixelfmt;
+        const OpenNiStreamMode& mode = sensor_type[i];
+        openni::SensorType nisensortype;
+        openni::PixelFormat nipixelfmt;
 
-        switch( sensor_type[i] ) {
+        switch( mode.sensor_type ) {
         case OpenNiDepthRegistered:
             depth_to_color = true;
         case OpenNiDepth:
-            sensortype = openni::SENSOR_DEPTH;
-            pixelfmt = openni::PIXEL_FORMAT_DEPTH_1_MM;
+            nisensortype = openni::SENSOR_DEPTH;
+            nipixelfmt = openni::PIXEL_FORMAT_DEPTH_1_MM;
             use_depth = true;
             break;
         case OpenNiIrProj:
         case OpenNiIr:
-            sensortype = openni::SENSOR_IR;
-            pixelfmt = openni::PIXEL_FORMAT_GRAY16;
+            nisensortype = openni::SENSOR_IR;
+            nipixelfmt = openni::PIXEL_FORMAT_GRAY16;
             use_ir = true;
             break;
         case OpenNiIr24bit:
-            sensortype = openni::SENSOR_IR;
-            pixelfmt = openni::PIXEL_FORMAT_RGB888;
+            nisensortype = openni::SENSOR_IR;
+            nipixelfmt = openni::PIXEL_FORMAT_RGB888;
             use_ir = true;
             break;
         case OpenNiIr8bitProj:
         case OpenNiIr8bit:
-            sensortype = openni::SENSOR_IR;
-            pixelfmt = openni::PIXEL_FORMAT_GRAY8;
+            nisensortype = openni::SENSOR_IR;
+            nipixelfmt = openni::PIXEL_FORMAT_GRAY8;
             use_ir = true;
             break;
         case OpenNiRgb:
-            sensortype = openni::SENSOR_COLOR;
-            pixelfmt = openni::PIXEL_FORMAT_RGB888;
+            nisensortype = openni::SENSOR_COLOR;
+            nipixelfmt = openni::PIXEL_FORMAT_RGB888;
             use_rgb = true;
             break;
         case OpenNiGrey:
-            sensortype = openni::SENSOR_COLOR;
-            pixelfmt = openni::PIXEL_FORMAT_GRAY8;
+            nisensortype = openni::SENSOR_COLOR;
+            nipixelfmt = openni::PIXEL_FORMAT_GRAY8;
             use_rgb = true;
             break;
         case OpenNiUnassigned:
@@ -228,10 +288,10 @@ OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim di
 
         openni::VideoMode onivmode;
         try {
-            onivmode = FindOpenNI2Mode(device[0], sensortype, dim.x, dim.y, fps, pixelfmt);
+            onivmode = FindOpenNI2Mode(device[mode.device], nisensortype, mode.dim.x, mode.dim.y, mode.fps, nipixelfmt);
         }catch(VideoException e) {
             pango_print_error("Unable to find compatible OpenNI Video Mode. Please choose from:\n");
-            PrintOpenNI2Modes(sensortype);
+            PrintOpenNI2Modes(nisensortype);
             fflush(stdout);
             throw e;
         }
@@ -240,18 +300,11 @@ OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim di
             // do something with mode?
         }
 
-        rc = video_stream[i].setVideoMode(onivmode);
+        openni::Status rc = video_stream[i].setVideoMode(onivmode);
         if(rc != openni::STATUS_OK)
             throw VideoException("Couldn't set OpenNI VideoMode", openni::OpenNI::getExtendedError());
 
-        video_stream[i].setMirroringEnabled(false);
-
-        if(sensortype == openni::SENSOR_COLOR) {
-            video_stream[i].getCameraSettings()->setAutoExposureEnabled(true);
-            video_stream[i].getCameraSettings()->setAutoWhiteBalanceEnabled(true);
-        }
-
-        const VideoPixelFormat fmt = VideoFormatFromOpenNI2(pixelfmt);
+        const VideoPixelFormat fmt = VideoFormatFromOpenNI2(nipixelfmt);
         const StreamInfo stream(
             fmt, onivmode.getResolutionX(), onivmode.getResolutionY(),
             (onivmode.getResolutionX() * fmt.bpp) / 8,
@@ -261,25 +314,8 @@ OpenNiVideo2::OpenNiVideo2(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim di
         sizeBytes += stream.SizeBytes();
         streams.push_back(stream);
     }
+
     use_ir_and_rgb = use_rgb && use_ir;
-
-    if(fromFile) {
-        for(int i = 0 ; i < numDevices; i++) {
-            device[i].getPlaybackControl()->setSpeed(realtime ? 1.0f : -1.0f);
-        }
-    }
-
-    if(depth_to_color) {
-        for(int i = 0 ; i < numDevices; i++) {
-            device[i].setImageRegistrationMode(openni::IMAGE_REGISTRATION_DEPTH_TO_COLOR);
-        }
-    }else{
-        for(int i = 0 ; i < numDevices; i++) {
-            device[i].setImageRegistrationMode(openni::IMAGE_REGISTRATION_OFF);
-        }
-    }
-
-    Start();
 }
 
 void OpenNiVideo2::UpdateProperties()
@@ -303,7 +339,7 @@ void OpenNiVideo2::UpdateProperties()
     stream = json::value(json::array_type,false);
     stream.get<json::array>().resize(Streams().size());
     for(unsigned int i=0; i<Streams().size(); ++i) {
-        if(sensor_type[i] != OpenNiUnassigned)
+        if(sensor_type[i].sensor_type != OpenNiUnassigned)
         {
 #define SET_PARAM(param_type, param) \
             {\
@@ -336,9 +372,35 @@ void OpenNiVideo2::UpdateProperties()
     }
 }
 
+void OpenNiVideo2::SetMirroring(bool enable)
+{
+    // Set this property on all streams. It doesn't matter if it fails.
+    for(unsigned int i=0; i<Streams().size(); ++i) {
+        video_stream[i].setMirroringEnabled(enable);
+    }
+}
+
+void OpenNiVideo2::SetAutoExposure(bool enable)
+{
+    // Set this property on all streams exposing CameraSettings
+    for(unsigned int i=0; i<Streams().size(); ++i) {
+        openni::CameraSettings* cam = video_stream[i].getCameraSettings();
+        if(cam) cam->setAutoExposureEnabled(enable);
+    }
+}
+
+void OpenNiVideo2::SetAutoWhiteBalance(bool enable)
+{
+    // Set this property on all streams exposing CameraSettings
+    for(unsigned int i=0; i<Streams().size(); ++i) {
+        openni::CameraSettings* cam = video_stream[i].getCameraSettings();
+        if(cam) cam->setAutoWhiteBalanceEnabled(enable);
+    }
+}
+
 void OpenNiVideo2::SetDepthCloseRange(bool enable)
 {
-    // Set this property on all devices. It doesn't matter if it fails.
+    // Set this property on all streams. It doesn't matter if it fails.
     for(unsigned int i=0; i<Streams().size(); ++i) {
         video_stream[i].setProperty(XN_STREAM_PROPERTY_CLOSE_RANGE, enable);
     }
@@ -346,7 +408,7 @@ void OpenNiVideo2::SetDepthCloseRange(bool enable)
 
 void OpenNiVideo2::SetDepthHoleFilter(bool enable)
 {
-    // Set this property on all devices. It doesn't matter if it fails.
+    // Set this property on all streams. It doesn't matter if it fails.
     for(unsigned int i=0; i<Streams().size(); ++i) {
         video_stream[i].setProperty(XN_STREAM_PROPERTY_HOLE_FILTER, enable);
         video_stream[i].setProperty(XN_STREAM_PROPERTY_GAIN,50);
@@ -370,6 +432,14 @@ void OpenNiVideo2::SetRegisterDepthToImage(bool enable)
         for(int i = 0 ; i < numDevices ; i++) {
             device[i].setImageRegistrationMode(openni::IMAGE_REGISTRATION_OFF);
         }
+    }
+}
+
+void OpenNiVideo2::SetPlaybackSpeed(float speed)
+{
+    for(int i = 0 ; i < numDevices; i++) {
+        openni::PlaybackControl* control = device[i].getPlaybackControl();
+        if(control) control->setSpeed(speed);
     }
 }
 
@@ -417,7 +487,7 @@ bool OpenNiVideo2::GrabNext( unsigned char* image, bool wait )
     openni::Status rc = openni::STATUS_OK;
 
     for(unsigned int i=0; i<Streams().size(); ++i) {
-        if(sensor_type[i] == OpenNiUnassigned) {
+        if(sensor_type[i].sensor_type == OpenNiUnassigned) {
             rc = openni::STATUS_OK;
             continue;
         }

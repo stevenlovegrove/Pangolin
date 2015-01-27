@@ -28,6 +28,8 @@
 #ifndef PANGOLIN_OPENNI_COMMON_H
 #define PANGOLIN_OPENNI_COMMON_H
 
+#include <pangolin/image/image_common.h>
+
 namespace pangolin
 {
 
@@ -43,6 +45,23 @@ enum OpenNiSensorType
     OpenNiIrProj,
     OpenNiIr8bitProj,
     OpenNiGrey
+};
+
+struct PANGOLIN_EXPORT OpenNiStreamMode
+{
+    OpenNiStreamMode(
+        OpenNiSensorType sensor_type=OpenNiUnassigned,
+        ImageDim dim=ImageDim(640,480), int fps=30, int device=0
+    )
+        : sensor_type(sensor_type), dim(dim), fps(fps), device(device)
+    {
+
+    }
+
+    OpenNiSensorType sensor_type;
+    ImageDim dim;
+    int fps;
+    int device;
 };
 
 }
