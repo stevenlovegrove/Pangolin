@@ -196,7 +196,7 @@ void OpenNiVideo2::InitialiseOpenNI()
     numDevices = 0;
     numStreams = 0;
     current_frame_index = 0;
-    total_frames = -1;
+    total_frames = std::numeric_limits<int>::max();
 
     openni::Status rc = openni::STATUS_OK;
 
@@ -228,8 +228,8 @@ void OpenNiVideo2::AddStream(const OpenNiStreamMode& mode)
     }
 
     openni::PlaybackControl* control = device.getPlaybackControl();
-    if(control) {
-        total_frames = std::max(total_frames, control->getNumberOfFrames(stream));
+    if(control && numStreams==0) {
+        total_frames = std::min(total_frames,control->getNumberOfFrames(stream));
     }
 
     numStreams++;
