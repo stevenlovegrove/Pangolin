@@ -106,6 +106,11 @@ inline GlTexture::GlTexture(GlTexture&& tex)
 }
 #endif
 
+inline bool GlTexture::IsValid() const
+{
+    return tid != 0;
+}
+
 inline void GlTexture::Delete()
 {
     // We have no GL context whilst exiting.
@@ -511,6 +516,11 @@ inline GlBuffer::GlBuffer(GlBuffer&& buffer)
     buffer.bo = 0;
 }
 #endif
+
+inline bool GlBuffer::IsValid() const
+{
+    return bo;
+}
 
 inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
 {
