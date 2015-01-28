@@ -65,6 +65,8 @@ public:
     GlTexture();
     ~GlTexture();
 
+    bool IsValid() const;
+
     //! Delete OpenGL resources and fall back to representing 'no texture'
     void Delete();
     
@@ -177,6 +179,8 @@ struct PANGOLIN_EXPORT GlBuffer
 #endif  
     
     ~GlBuffer();
+
+    bool IsValid() const;
     
     void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse );
     void Resize(GLuint num_elements);

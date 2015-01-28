@@ -195,6 +195,19 @@ struct Convert<T, S, typename pangolin::enable_if_c<
     }
 };
 
+template<typename S>
+std::string ToString(const S& src)
+{
+    return Convert<std::string,S>::Do(src);
+}
+
+template<typename T>
+T FromString(const std::string& src)
+{
+    return Convert<T,std::string>::Do(src);
+}
+
+
 }
 
 #endif // PANGOLIN_TYPE_CONVERT_H

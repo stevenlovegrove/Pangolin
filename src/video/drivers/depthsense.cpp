@@ -89,6 +89,7 @@ DepthSenseContext::DepthSenseContext()
 
 DepthSenseContext::~DepthSenseContext()
 {
+    StopNodes();
 }
 
 
@@ -102,7 +103,7 @@ void DepthSenseContext::StartNodes()
 
 void DepthSenseContext::StopNodes()
 {
-    if(is_running) {
+    if(is_running && event_thread.joinable()) {
         g_context.quit();
         event_thread.join();
     }

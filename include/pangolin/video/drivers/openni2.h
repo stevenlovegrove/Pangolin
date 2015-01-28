@@ -38,22 +38,33 @@
 
 namespace pangolin
 {
+const int MAX_OPENNI2_STREAMS = 2 * ONI_MAX_SENSORS;
 
 //! Interface to video capture sources
-struct OpenNiVideo2 : public VideoInterface, public VideoPropertiesInterface
+struct OpenNiVideo2 : public VideoInterface, public VideoPropertiesInterface, public VideoPlaybackInterface
 {
 public:
-    OpenNiVideo2(
-        OpenNiSensorType s1, OpenNiSensorType s2,
-        ImageDim dim, int fps, bool realtime = true
-    );
+
+    // Open all RGB and Depth streams from all devices
+    OpenNiVideo2(ImageDim dim=ImageDim(640,480), int fps=30);
+
+    // Open streams specified
+    OpenNiVideo2(std::vector<OpenNiStreamMode>& stream_modes);
+
+    // Open openni file
+    OpenNiVideo2(const std::string& filename);
 
     void UpdateProperties();
 
+    void SetMirroring(bool enable);
+    void SetAutoExposure(bool enable);
+    void SetAutoWhiteBalance(bool enable);
     void SetDepthCloseRange(bool enable);
     void SetDepthHoleFilter(bool enable);
     void SetDepthColorSyncEnabled(bool enable);
     void SetRegisterDepthToImage(bool enable);
+    void SetPlaybackSpeed(float speed);
+    void SetPlaybackRepeat(bool enabled);
 
     ~OpenNiVideo2();
 
@@ -75,32 +86,48 @@ public:
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
-    //! Implement VideoInput::Properties()
+    //! Implement VideoPropertiesInterface::Properties()
     const json::value& DeviceProperties() const {
         return device_properties;
     }
 
-    //! Implement VideoInput::Properties()
+    //! Implement VideoPropertiesInterface::Properties()
     const json::value& FrameProperties() const {
         return frame_properties;
     }
 
-protected:
-    void PrintOpenNI2Modes(openni::SensorType sensorType);
+    //! Implement VideoPlaybackInterface::GetCurrentFrameId
+    int GetCurrentFrameId() const;
 
-    openni::VideoMode FindOpenNI2Mode(openni::SensorType sensorType,
-        int width, int height,
-        int fps, openni::PixelFormat fmt
-    );
+    //! Implement VideoPlaybackInterface::GetTotalFrames
+    int GetTotalFrames() const ;
+
+    //! Implement VideoPlaybackInterface::Seek
+    int Seek(int frameid);
+
+protected:
+    void InitialiseOpenNI();
+    int AddDevice(const std::string& device_uri);
+    void AddStream(const OpenNiStreamMode& mode);
+    void SetupStreamModes();
+    void PrintOpenNI2Modes(openni::SensorType sensorType);
+    openni::VideoMode FindOpenNI2Mode(openni::Device &device, openni::SensorType sensorType, int width, int height, int fps, openni::PixelFormat fmt );
+
+    int numDevices;
+    int numStreams;
+
+    openni::Device devices[ONI_MAX_SENSORS];
+    OpenNiStreamMode sensor_type[ONI_MAX_SENSORS];
+
+    openni::VideoStream video_stream[ONI_MAX_SENSORS];
+    openni::VideoFrameRef video_frame[ONI_MAX_SENSORS];
 
     std::vector<StreamInfo> streams;
+    size_t sizeBytes;
+
     json::value device_properties;
     json::value frame_properties;
     json::value* streams_properties;
-
-    OpenNiSensorType sensor_type[2];
-
-    size_t sizeBytes;
 
     bool use_depth;
     bool use_ir;
@@ -108,9 +135,9 @@ protected:
     bool depth_to_color;
     bool use_ir_and_rgb;
     bool fromFile;
-    openni::Device device;
-    openni::VideoStream video_stream[2];
-    openni::VideoFrameRef video_frame[2];
+
+    int current_frame_index;
+    int total_frames;
 };
 
 }

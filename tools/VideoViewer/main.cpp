@@ -43,10 +43,18 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
     // Open Video by URI
     pangolin::VideoRecordRepeat video(input_uri, output_uri);
+    int total_frames = std::numeric_limits<int>::max();
 
     if(video.Streams().size() == 0) {
         pango_print_error("No video streams from device.\n");
         return;
+    }
+
+    // Check if video supports VideoPlaybackInterface
+    pangolin::VideoPlaybackInterface* video_playback = video.Cast<pangolin::VideoPlaybackInterface>();
+    if( video_playback ) {
+        total_frames = video_playback->GetTotalFrames();
+        std::cout << "Video length: " << total_frames << " frames" << std::endl;
     }
 
     std::vector<unsigned char> buffer;
@@ -66,8 +74,9 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glfmt.push_back(GlFormat(video.Streams()[d].PixFormat()));
     }
 
+    const int FRAME_SKIP = 30;
     int frame = 0;
-    pangolin::Var<int>  max_frame("max_frame", std::numeric_limits<int>::max() );
+    pangolin::Var<int>  max_frame("max_frame", total_frames );
     pangolin::Var<bool> linear_sampling("linear_sampling", true );
     pangolin::Var<float> int16_scale("int16.scale", 20.0 );
     pangolin::Var<float> int16_bias("int16.bias", 0.0 );
@@ -105,8 +114,22 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::RegisterKeyPressCallback(' ', [&](){
         max_frame = (frame < max_frame) ? frame : std::numeric_limits<int>::max();
     });
+    pangolin::RegisterKeyPressCallback(pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_LEFT, [&](){
+        if(video_playback) {
+            const int frame = std::min(video_playback->GetCurrentFrameId()-FRAME_SKIP, video_playback->GetTotalFrames()-1);
+            video_playback->Seek(frame);
+        }else{
+            // We can't go backwards
+        }
+    });
     pangolin::RegisterKeyPressCallback(pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_RIGHT, [&](){
-        max_frame = frame+1;
+        if(video_playback) {
+            const int frame = std::max(video_playback->GetCurrentFrameId()+FRAME_SKIP, 0);
+            video_playback->Seek(frame);
+        }else{
+            // Pause at this frame
+            max_frame = frame+1;
+        }
     });
     pangolin::RegisterKeyPressCallback('l', [&](){ linear_sampling = true; });
     pangolin::RegisterKeyPressCallback('n', [&](){ linear_sampling = false; });

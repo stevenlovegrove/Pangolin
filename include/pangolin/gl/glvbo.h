@@ -169,25 +169,20 @@ inline void RenderVboIboCboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, GlBu
         glEnableClientState(GL_COLOR_ARRAY);
     }
     
+    if(draw_normals) {
+        nbo.Bind();
+        glNormalPointer(nbo.datatype, nbo.count_per_element * GlDataTypeBytes(nbo.datatype),0);
+        glEnableClientState(GL_NORMAL_ARRAY);
+    }
+
     vbo.Bind();
     glVertexPointer(vbo.count_per_element, vbo.datatype, 0, 0);
     glEnableClientState(GL_VERTEX_ARRAY);
     
     if(draw_mesh) {
-        if(draw_normals) {
-            nbo.Bind();
-            glNormalPointer(nbo.datatype, nbo.count_per_element * GlDataTypeBytes(nbo.datatype),0);
-            glEnableClientState(GL_NORMAL_ARRAY);
-        }
-        
         ibo.Bind();
         glDrawElements(GL_TRIANGLE_STRIP,ibo.num_elements, ibo.datatype, 0);
         ibo.Unbind();
-        
-        if(draw_normals) {
-            glDisableClientState(GL_NORMAL_ARRAY);
-            nbo.Unbind();
-        }
     }else{
         glPointSize(2.0);
         glDrawArrays(GL_POINTS, 0, vbo.num_elements);
@@ -198,6 +193,11 @@ inline void RenderVboIboCboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, GlBu
         cbo.Unbind();
     }
     
+    if(draw_normals) {
+        glDisableClientState(GL_NORMAL_ARRAY);
+        nbo.Unbind();
+    }
+
     glDisableClientState(GL_VERTEX_ARRAY);
     vbo.Unbind();
 }
@@ -208,24 +208,24 @@ inline void RenderVboIboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& nbo, bool dr
     glVertexPointer(vbo.count_per_element, vbo.datatype, 0, 0);
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    if(draw_mesh) {
-        if(draw_normals) {
-            nbo.Bind();
-            glNormalPointer(nbo.datatype, nbo.count_per_element * GlDataTypeBytes(nbo.datatype),0);
-            glEnableClientState(GL_NORMAL_ARRAY);
-        }
+    if(draw_normals) {
+        nbo.Bind();
+        glNormalPointer(nbo.datatype, nbo.count_per_element * GlDataTypeBytes(nbo.datatype),0);
+        glEnableClientState(GL_NORMAL_ARRAY);
+    }
 
+    if(draw_mesh) {
         ibo.Bind();
         glDrawElements(GL_TRIANGLE_STRIP,ibo.num_elements, ibo.datatype, 0);
         ibo.Unbind();
-
-        if(draw_normals) {
-            glDisableClientState(GL_NORMAL_ARRAY);
-            nbo.Unbind();
-        }
     }else{
         glPointSize(2.0);
         glDrawArrays(GL_POINTS, 0, vbo.num_elements);
+    }
+
+    if(draw_normals) {
+        glDisableClientState(GL_NORMAL_ARRAY);
+        nbo.Unbind();
     }
 
     glDisableClientState(GL_VERTEX_ARRAY);
