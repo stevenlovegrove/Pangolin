@@ -95,6 +95,52 @@ void PathOsNormaliseInplace(std::string& path)
 #endif
 }
 
+std::string SanitizePath(const std::string& path)
+{
+    std::string path_copy(path.length(), '\0');
+
+    int p_slash1 = -1;
+    int p_slash0 = -1;
+    int n_dots = 0;
+
+    int dst = 0;
+    for(int src=0; src < (int)path.length(); ++src) {
+        if(path[src] == '/') {
+            if(n_dots==1 && p_slash0 >=0) {
+                dst = p_slash0;
+                for(p_slash1=p_slash0-1; p_slash1>=0 && path_copy[p_slash1] != '/'; --p_slash1);
+            }else if(n_dots==2) {
+                if(p_slash1 >=0) {
+                    dst = p_slash1;
+                    p_slash0 = dst;
+                    for(p_slash1=p_slash0-1; p_slash1>=0 && path_copy[p_slash1] != '/'; --p_slash1) {
+                        if( path_copy[p_slash1] == '.' ) {
+                            p_slash1=-1;
+                            break;
+                        }
+                    }
+                }else{
+                    p_slash1 = -1;
+                    p_slash0 = dst;
+                }
+            }else{
+                p_slash1 = p_slash0;
+                p_slash0 = dst;
+            }
+            n_dots = 0;
+        }else if(path[src] == '.' ){
+            if((dst-p_slash0) == n_dots+1) {
+                ++n_dots;
+            }
+        }else{
+            n_dots = 0;
+        }
+        path_copy[dst++] = path[src];
+    }
+
+    return path_copy.substr(0,dst);
+}
+
 // Return path 'levels' directories above 'path'
 std::string PathParent(const std::string& path, int levels)
 {

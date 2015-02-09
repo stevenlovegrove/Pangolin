@@ -47,6 +47,9 @@ PANGOLIN_EXPORT
 std::vector<std::string> Expand(const std::string &s, char open='[', char close=']', char delim=',');
 
 PANGOLIN_EXPORT
+std::string SanitizePath(const std::string& path);
+
+PANGOLIN_EXPORT
 std::string PathParent(const std::string& path, int levels = 1);
 
 PANGOLIN_EXPORT
