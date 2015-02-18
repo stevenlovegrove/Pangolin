@@ -345,7 +345,7 @@ inline void glDrawAxis( const Eigen::Matrix<T,4,4>& T_wf, T scale )
 }
 
 template<typename T>
-inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, T scale )
+inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, GLfloat scale )
 {
     const GLfloat xl = scale * Kinv(0,2);
     const GLfloat xh = scale * (w*Kinv(0,0) + Kinv(0,2));
