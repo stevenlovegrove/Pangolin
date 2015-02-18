@@ -50,7 +50,9 @@ public:
     void SetAutoExposure(bool enabled)
     {
 #if XN_MINOR_VERSION > 5 || (XN_MINOR_VERSION == 5 && XN_BUILD_VERSION >= 7)
-        imageNode.GetAutoExposureCap().Set(enabled ? 1 : 0);
+        if(imageNode.IsValid()) {
+            imageNode.GetAutoExposureCap().Set(enabled ? 1 : 0);
+        }
 #else
         throw pangolin::VideoException("SetAutoExposure Not supported for this version of OpenNI.");
 #endif
