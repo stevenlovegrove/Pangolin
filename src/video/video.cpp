@@ -229,10 +229,12 @@ OpenNiSensorType openni_sensor(const std::string& str)
         return OpenNiRgb;
     }else if( !str.compare("ir") ) {
         return OpenNiIr;
-    }else if( !str.compare("depth") ) {
-        return OpenNiDepth;
-    }else if( !str.compare("reg_depth") ) {
-        return OpenNiDepthRegistered;
+    }else if( !str.compare("depth1mm") || !str.compare("depth") ) {
+        return OpenNiDepth_1mm;
+    }else if( !str.compare("depth100um") ) {
+        return OpenNiDepth_100um;
+    }else if( !str.compare("depth_reg") || !str.compare("reg_depth")) {
+        return OpenNiDepth_1mm_Registered;
     }else if( !str.compare("ir8") ) {
         return OpenNiIr8bit;
     }else if( !str.compare("ir24") ) {

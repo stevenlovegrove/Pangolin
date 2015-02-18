@@ -117,8 +117,9 @@ inline openni::SensorType SensorType(const OpenNiSensorType sensor)
     case OpenNiRgb:
     case OpenNiGrey:
         return openni::SENSOR_COLOR;
-    case OpenNiDepth:
-    case OpenNiDepthRegistered:
+    case OpenNiDepth_1mm:
+    case OpenNiDepth_100um:
+    case OpenNiDepth_1mm_Registered:
         return openni::SENSOR_DEPTH;
     case OpenNiIr:
     case OpenNiIr8bit:
@@ -145,7 +146,7 @@ OpenNiVideo2::OpenNiVideo2(ImageDim dim, int fps)
     for(int i = 0 ; i < deviceList.getSize(); i ++) {
         const char*  device_uri = deviceList[i].getUri();
         const int dev_id = AddDevice(device_uri);
-        AddStream(OpenNiStreamMode( OpenNiDepth, dim, fps, dev_id) );
+        AddStream(OpenNiStreamMode( OpenNiDepth_1mm, dim, fps, dev_id) );
         AddStream(OpenNiStreamMode( OpenNiRgb, dim, fps, dev_id) );
     }
 
@@ -158,8 +159,23 @@ OpenNiVideo2::OpenNiVideo2(const std::string& device_uri)
     InitialiseOpenNI();
 
     const int dev_id = AddDevice(device_uri);
-    AddStream(OpenNiStreamMode( OpenNiDepth, ImageDim(), 30, dev_id) );
+    AddStream(OpenNiStreamMode( OpenNiDepth_1mm, ImageDim(), 30, dev_id) );
     AddStream(OpenNiStreamMode( OpenNiRgb,   ImageDim(), 30, dev_id) );
+
+    SetupStreamModes();
+    Start();
+}
+
+OpenNiVideo2::OpenNiVideo2(const std::string& device_uri, std::vector<OpenNiStreamMode> &stream_modes)
+{
+    InitialiseOpenNI();
+
+    const int dev_id = AddDevice(device_uri);
+
+    for(size_t i=0; i < stream_modes.size(); ++i) {
+        OpenNiStreamMode& mode = stream_modes[i];
+        AddStream(mode);
+    }
 
     SetupStreamModes();
     Start();
@@ -257,11 +273,16 @@ void OpenNiVideo2::SetupStreamModes()
         openni::PixelFormat nipixelfmt;
 
         switch( mode.sensor_type ) {
-        case OpenNiDepthRegistered:
+        case OpenNiDepth_1mm_Registered:
             depth_to_color = true;
-        case OpenNiDepth:
+        case OpenNiDepth_1mm:
             nisensortype = openni::SENSOR_DEPTH;
             nipixelfmt = openni::PIXEL_FORMAT_DEPTH_1_MM;
+            use_depth = true;
+            break;
+        case OpenNiDepth_100um:
+            nisensortype = openni::SENSOR_DEPTH;
+            nipixelfmt = openni::PIXEL_FORMAT_DEPTH_100_UM;
             use_depth = true;
             break;
         case OpenNiIrProj:
@@ -491,6 +512,15 @@ void OpenNiVideo2::Stop()
 {
     for(unsigned int i=0; i<Streams().size(); ++i) {
         video_stream[i].stop();
+    }
+}
+
+openni::VideoStream * OpenNiVideo2::GetVideoStream(int stream){
+    if(video_stream[stream].isValid()) {
+        return &video_stream[stream];
+    }else{
+        pango_print_error("Error getting stream: %d \n%s",stream,  openni::OpenNI::getExtendedError() );
+        return NULL;
     }
 }
 

@@ -54,6 +54,9 @@ public:
     // Open openni file
     OpenNiVideo2(const std::string& filename);
 
+    // Open openni file with certain params
+    OpenNiVideo2(const std::string& filename, std::vector<OpenNiStreamMode>& stream_modes);
+    
     void UpdateProperties();
 
     void SetMirroring(bool enable);
@@ -104,6 +107,8 @@ public:
 
     //! Implement VideoPlaybackInterface::Seek
     int Seek(int frameid);
+
+    openni::VideoStream* GetVideoStream(int stream);
 
 protected:
     void InitialiseOpenNI();

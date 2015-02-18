@@ -58,8 +58,8 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
 
         // Establish output pixel format for sensor streams
         switch( sensor_type[i] ) {
-        case OpenNiDepth:
-        case OpenNiDepthRegistered:
+        case OpenNiDepth_1mm_Registered:
+        case OpenNiDepth_1mm:
         case OpenNiIr:
         case OpenNiIrProj:
             fmt = VideoFormatFromString("GRAY16LE");
@@ -76,9 +76,9 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
         }
         
         switch( sensor_type[i] ) {
-        case OpenNiDepthRegistered:
+        case OpenNiDepth_1mm_Registered:
             depth_to_color = true;
-        case OpenNiDepth:
+        case OpenNiDepth_1mm:
             use_depth = true;
             break;
         case OpenNiIr:
@@ -189,8 +189,8 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
         
         for(int i=0; i<2; ++i) {
             switch (sensor_type[i]) {
-            case OpenNiDepth:
-            case OpenNiDepthRegistered:
+            case OpenNiDepth_1mm:
+            case OpenNiDepth_1mm_Registered:
             {
                 const XnDepthPixel* pDepthMap = depthNode.GetDepthMap();
                 memcpy(out_img,pDepthMap, streams[i].SizeBytes() );

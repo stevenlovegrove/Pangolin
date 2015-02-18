@@ -2,6 +2,7 @@
  * http://github.com/stevenlovegrove/Pangolin
  *
  * Copyright (c) 2014 Steven Lovegrove
+ *               2015 Richard Newcombe
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -38,8 +39,9 @@ enum OpenNiSensorType
     OpenNiUnassigned = -1,
     OpenNiRgb = 0,
     OpenNiIr,
-    OpenNiDepth,
-    OpenNiDepthRegistered,
+    OpenNiDepth_1mm,
+    OpenNiDepth_1mm_Registered,
+    OpenNiDepth_100um,
     OpenNiIr8bit,
     OpenNiIr24bit,
     OpenNiIrProj,
