@@ -170,7 +170,7 @@ OpenNiVideo2::OpenNiVideo2(const std::string& device_uri, std::vector<OpenNiStre
 {
     InitialiseOpenNI();
 
-    const int dev_id = AddDevice(device_uri);
+    AddDevice(device_uri);
 
     for(size_t i=0; i < stream_modes.size(); ++i) {
         OpenNiStreamMode& mode = stream_modes[i];
