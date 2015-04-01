@@ -130,7 +130,7 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int w
     
     uvc_error_t mode_err = uvc_get_stream_ctrl_format_size(
                 devh_, &ctrl_,
-                UVC_FRAME_FORMAT_YUYV,
+                UVC_FRAME_FORMAT_ANY,
                 width, height,
                 fps);
 
@@ -150,8 +150,22 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int w
         uvc_unref_device(dev_);
         throw VideoException("Unable to open device stream.");
     }
+
+    // Default to greyscale.
+    VideoPixelFormat pfmt = VideoFormatFromString("GRAY8");
+
+    const uvc_format_desc_t* uvc_fmt = uvc_get_format_descs(devh_);
+    while( uvc_fmt->bFormatIndex != ctrl_.bFormatIndex && uvc_fmt ) {
+        uvc_fmt = uvc_fmt->next;
+    }
+
+    if(uvc_fmt) {
+        // TODO: Use uvc_fmt->fourccFormat
+        if( uvc_fmt->bBitsPerPixel == 16 ) {
+            pfmt = VideoFormatFromString("GRAY16LE");
+        }
+    }
     
-    const VideoPixelFormat pfmt = VideoFormatFromString("GRAY8");
     const StreamInfo stream_info(pfmt, width, height, (width*pfmt.bpp)/8, 0);
     streams.push_back(stream_info);
 }
