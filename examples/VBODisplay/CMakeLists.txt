@@ -1,8 +1,8 @@
 # Find Pangolin (https://github.com/stevenlovegrove/Pangolin)
-find_package(Pangolin 0.1 REQUIRED)
-include_directories(${Pangolin_INCLUDE_DIRS})
-link_directories(${Pangolin_LIBRARY_DIRS})
-link_libraries(${Pangolin_LIBRARIES})
+find_package(pangolin 0.1 REQUIRED)
+include_directories(${PANGOLIN_INCLUDE_DIRS})
+link_directories(${PANGOLIN_LIBRARY_DIRS})
+link_libraries(${PANGOLIN_LIBRARIES})
 
 find_package(CUDA QUIET)
 
