@@ -1,7 +1,8 @@
 #######################################################
 ## Library sources
 
-set( INCDIR "../include/pangolin")
+set( INCDIR "include/pangolin")
+set( SRCDIR "src" )
 
 ## Header only includes / core headers
 set(
@@ -16,7 +17,11 @@ set(
 )
 
 ## Store list of source files
-set( SOURCES file_utils.cpp image_load.cpp video_common.cpp )
+set( SOURCES
+    ${SRCDIR}/file_utils.cpp
+    ${SRCDIR}/image_load.cpp
+    ${SRCDIR}/video_common.cpp
+    )
 
 #######################################################
 ## User build options
@@ -32,16 +37,22 @@ if(BUILD_PANGOLIN_GUI)
     ${INCDIR}/datalog.h
     ${INCDIR}/glfont.h ${INCDIR}/glpangoglu.h
   )
+
   list(APPEND SOURCES
-    display.cpp view.cpp viewport.cpp
-    handler.cpp handler_glbuffer.cpp
-    opengl_render_state.cpp
-    datalog.cpp
-    glfont.cpp glpangoglu.cpp
+    ${SRCDIR}/display.cpp
+    ${SRCDIR}/view.cpp
+    ${SRCDIR}/viewport.cpp
+    ${SRCDIR}/handler.cpp
+    ${SRCDIR}/handler_glbuffer.cpp
+    ${SRCDIR}/opengl_render_state.cpp
+    ${SRCDIR}/datalog.cpp
+    ${SRCDIR}/glfont.cpp
+    ${SRCDIR}/glpangoglu.cpp
   )
+
   if(NOT HAVE_GLES OR HAVE_GLES_2)
     list(APPEND HEADERS ${INCDIR}/plotter.h)
-    list(APPEND SOURCES plotter.cpp)
+    list(APPEND SOURCES ${SRCDIR}/plotter.cpp)
   endif()
 endif()
 
@@ -52,11 +63,11 @@ if(BUILD_PANGOLIN_VARS)
     ${INCDIR}/var/varvaluegeneric.h ${INCDIR}/var/varvaluet.h
     ${INCDIR}/var/varwrapper.h ${INCDIR}/input_record_repeat.h
   )
-  list(APPEND SOURCES var/vars.cpp input_record_repeat.cpp )
+  list(APPEND SOURCES ${SRCDIR}/var/vars.cpp ${SRCDIR}/input_record_repeat.cpp )
 
   if(BUILD_PANGOLIN_GUI)
       list(APPEND HEADERS ${INCDIR}/widgets.h )
-      list(APPEND SOURCES widgets.cpp )
+      list(APPEND SOURCES ${SRCDIR}/widgets.cpp )
   endif()
 endif()
 
@@ -70,9 +81,15 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/test.h ${INCDIR}/video/images.h
   )
   list(APPEND SOURCES
-    threadedfilebuf.cpp video.cpp video_splitter.cpp video_output.cpp
-    video_recorder.cpp video_record_repeat.cpp video/pvn_video.cpp
-    video/test.cpp video/images.cpp
+    ${SRCDIR}/threadedfilebuf.cpp
+    ${SRCDIR}/video.cpp
+    ${SRCDIR}/video_splitter.cpp
+    ${SRCDIR}/video_output.cpp
+    ${SRCDIR}/video_recorder.cpp
+    ${SRCDIR}/video_record_repeat.cpp
+    ${SRCDIR}/video/pvn_video.cpp
+    ${SRCDIR}/video/test.cpp
+    ${SRCDIR}/video/images.cpp
   )
 endif()
 
@@ -103,7 +120,7 @@ if(BUILD_PANGOLIN_GUI)
     if( ANDROID  )
         # Android specific display code
         list(APPEND HEADERS ${INCDIR}/display_android.h )
-        list(APPEND SOURCES display_android.cpp )
+        list(APPEND SOURCES ${SRCDIR}/display_android.cpp )
 
         if(HAVE_GLES_2)
             list(APPEND LINK_LIBS "-lEGL;-lGLESv2" )
@@ -113,7 +130,8 @@ if(BUILD_PANGOLIN_GUI)
     elseif( IOS )
         list(APPEND LINK_LIBS "-framework OpenGLES" )
         list(APPEND HEADERS "${INCDIR}/ios/PangolinAppDelegate.h" "${INCDIR}/ios/PangolinViewController.h" )
-        list(APPEND SOURCES "ios/PangolinAppDelegate.mm" "ios/PangolinViewController.mm" )
+        list(APPEND SOURCES ${SRCDIR}/ios/PangolinAppDelegate.mm
+            ${SRCDIR}/ios/PangolinViewController.mm )
     else()
         find_package(OpenGL REQUIRED QUIET)
         list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR}" )
@@ -130,7 +148,7 @@ if(BUILD_PANGOLIN_GUI)
     if( HAVE_GLES_2 )
         # Add Pangolins backwards compat layer.
         list(APPEND HEADERS ${INCDIR}/gl2engine.h )
-        list(APPEND SOURCES gl2engine.cpp)
+        list(APPEND SOURCES ${SRCDIR}/gl2engine.cpp)
     endif()
 endif()
 
@@ -187,7 +205,7 @@ else()
     if(FREEGLUT_FOUND OR GLUT_FOUND)
         set(HAVE_GLUT 1)
         list(APPEND HEADERS ${INCDIR}/display_glut.h )
-        list(APPEND SOURCES display_glut.cpp )
+        list(APPEND SOURCES ${SRCDIR}/display_glut.cpp )
         message(STATUS "Glut Found and Enabled")
     endif()
 endif()
@@ -231,14 +249,14 @@ if(BUILD_PANGOLIN_VIDEO AND DC1394_FOUND)
   list(APPEND INTERNAL_INC  ${DC1394_INCLUDE_DIR} )
   list(APPEND LINK_LIBS  ${DC1394_LIBRARY} )
   list(APPEND HEADERS ${INCDIR}/video/firewire.h ${INCDIR}/video/firewire_deinterlace.h )
-  list(APPEND SOURCES video/firewire.cpp video/firewire_deinterlace.cpp)
+  list(APPEND SOURCES ${SRCDIR}/video/firewire.cpp ${SRCDIR}/video/firewire_deinterlace.cpp)
   message(STATUS "libdc1394 Found and Enabled")
 endif()
 
 if(BUILD_PANGOLIN_VIDEO AND _LINUX_)
   set(HAVE_V4L 1)
   list(APPEND HEADERS ${INCDIR}/video/v4l.h)
-  list(APPEND SOURCES video/v4l.cpp)
+  list(APPEND SOURCES ${SRCDIR}/video/v4l.cpp)
   message(STATUS "V4L Found and Enabled")
 endif()
 
@@ -248,7 +266,7 @@ if(BUILD_PANGOLIN_VIDEO AND FFMPEG_FOUND)
   list(APPEND INTERNAL_INC  ${FFMPEG_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${FFMPEG_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/ffmpeg.h)
-  list(APPEND SOURCES video/ffmpeg.cpp)
+  list(APPEND SOURCES ${SRCDIR}/video/ffmpeg.cpp)
   message(STATUS "ffmpeg Found and Enabled")
 endif()
 
@@ -258,7 +276,7 @@ if(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
   list(APPEND INTERNAL_INC  ${OPENNI_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${OPENNI_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/openni.h )
-  list(APPEND SOURCES video/openni.cpp)
+  list(APPEND SOURCES ${SRCDIR}/video/openni.cpp)
   message(STATUS "OpenNI Found and Enabled")
 endif()
 
@@ -268,7 +286,7 @@ if(BUILD_PANGOLIN_VIDEO AND OPENNI2_FOUND)
   list(APPEND INTERNAL_INC  ${OPENNI2_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${OPENNI2_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/openni2.h )
-  list(APPEND SOURCES video/openni2.cpp)
+  list(APPEND SOURCES ${SRCDIR}/video/openni2.cpp)
   message(STATUS "OpenNI2 Found and Enabled")
 endif()
 
@@ -278,7 +296,7 @@ if(BUILD_PANGOLIN_VIDEO AND uvc_FOUND)
   list(APPEND INTERNAL_INC  ${uvc_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${uvc_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/uvc.h )
-  list(APPEND SOURCES video/uvc.cpp)
+  list(APPEND SOURCES ${SRCDIR}/video/uvc.cpp)
   message(STATUS "libuvc Found and Enabled")
 endif()
 
@@ -288,7 +306,7 @@ if(BUILD_PANGOLIN_VIDEO AND DepthSense_FOUND)
   list(APPEND INTERNAL_INC  ${DepthSense_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${DepthSense_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/depthsense.h )
-  list(APPEND SOURCES video/depthsense.cpp)
+  list(APPEND SOURCES ${SRCDIR}/video/depthsense.cpp)
   message(STATUS "DepthSense Found and Enabled")
 endif()
 
@@ -322,8 +340,8 @@ endif()
 ## Create config.h file for inclusion in library
 
 configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/config.h"
+  "config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/../include/${LIBRARY_NAME}/PangolinConfig.h"
 )
 
 #######################################################

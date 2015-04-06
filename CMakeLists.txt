@@ -43,7 +43,6 @@ include(SetPlatformVars)
 # Sets PANGOLIN_SRCS
 add_subdirectory( "src" )
 
-
 # Include collected includes/libraries
 include_directories( ${REQUIRED_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR}/include )
 include_directories( ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR} )
@@ -100,11 +99,9 @@ endif()
 #######################################################
 ## Install script
 
-set( PANGOLIN_DIR ${CMAKE_CURRENT_BINARY_DIR} )
+set( pangolin_DIR ${CMAKE_CURRENT_BINARY_DIR} )
 set( PANGOLIN_LIBRARIES ${REQUIRED_LIBRARIES} pangolin )
 set( PANGOLIN_INCLUDE_DIRS ${REQUIRED_INCLUDE_DIRS} )
-
-message( STATUS "PANGOLIN_DIR ${PANGOLIN_DIR}" )
 
 if(BUILD_EXAMPLES)
   add_subdirectory(examples)
