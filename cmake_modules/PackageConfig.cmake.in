@@ -1,0 +1,14 @@
+# Compute paths
+get_filename_component( PACKAGE_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
+SET( @package@_INCLUDE_DIRS "@EXPORT_PANGOLIN_INC@;@USER_INC@" )
+SET( @package@_INCLUDE_DIR  "@EXPORT_PANGOLIN_INC@;@USER_INC@" )
+
+# Library dependencies (contains definitions for IMPORTED targets)
+if(NOT TARGET "@package_LIBRARIES@" AND NOT @package@_BINARY_DIR)
+  include( "${PACKAGE_CMAKE_DIR}/@package@Targets.cmake" )
+endif()
+
+SET(@package@_LIBRARIES @PACKAGE_LIBRARIES@)
+SET(@package@_LIBRARY @PACKAGE_LIBRARY@)
+SET(@package@_INCLUDE_DIRS @PACKAGE_INCLUDE_DIRS@)
+SET(@package@_LINK_DIRS @PACKAGE_LINK_DIRS@)

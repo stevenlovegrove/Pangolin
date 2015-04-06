@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
-set( LIBRARY_NAME "pangolin" )
-project( ${LIBRARY_NAME} )
+project( Pangolin )
 set(PANGOLIN_VERSION_MAJOR 0)
 set(PANGOLIN_VERSION_MINOR 2)
-set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
+set(VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 include( install_library )
 
 option( BUILD_SHARED_LIBS "Build Shared Library" ON)
@@ -43,6 +42,8 @@ include(SetPlatformVars)
 # Sets PANGOLIN_SRCS
 add_subdirectory( "src" )
 
+message( STATUS "LIBRARY_NAME ${LIBRARY_NAME}" )
+
 # Include collected includes/libraries
 include_directories( ${REQUIRED_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR}/include )
 include_directories( ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR} )
@@ -50,7 +51,7 @@ add_library( pangolin ${PANGOLIN_SRCS} )
 target_link_libraries( pangolin ${REQUIRED_LIBRARIES} )
 
 install_library(
-    LIBRARY ${LIBRARY_NAME}
+    LIBRARY pangolin
     VERSION ${VERSION}
     DESCRIPTION "GL wrapper library that permits simpler GUI creation"
     HEADERS ${PANGOLIN_HDRS}
@@ -99,9 +100,10 @@ endif()
 #######################################################
 ## Install script
 
-set( pangolin_DIR ${CMAKE_CURRENT_BINARY_DIR} )
+set( PANGOLIN_DIR ${CMAKE_CURRENT_BINARY_DIR} )
 set( PANGOLIN_LIBRARIES ${REQUIRED_LIBRARIES} pangolin )
 set( PANGOLIN_INCLUDE_DIRS ${REQUIRED_INCLUDE_DIRS} )
+link_libraries( ${REQUIRED_LIBRARIES} pangolin )
 
 if(BUILD_EXAMPLES)
   add_subdirectory(examples)
@@ -110,4 +112,4 @@ endif()
 # make an uninstall target
 include(${CMAKE_MODULE_PATH}/cmake_uninstall.cmake.in)
 add_custom_target(uninstall
-    COMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+    COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")

@@ -1,7 +1,7 @@
 #######################################################
 ## Library sources
 
-set( INCDIR "include/pangolin")
+set( INCDIR "include/Pangolin")
 set( SRCDIR "src" )
 
 ## Header only includes / core headers

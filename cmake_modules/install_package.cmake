@@ -10,7 +10,7 @@
 
 #
 # install_package - Takes a package name and the following optional named arguments:
-#  PKG_NAME <name of the package for pkg-config>
+#  PKG_NAME <name of the package for pkg-config>, usually the same as ${PROJECT_NAME}
 #  LIB_NAME <name of a library to build, if any>
 #  VERSION <version>
 #  INSTALL_HEADERS <header files to install, if any>
@@ -49,6 +49,7 @@ function(install_package)
     "${ARGN}"
     )
 
+
   # clean things up 
   if( PACKAGE_LINK_DIRS )
     list( REMOVE_DUPLICATES PACKAGE_LINK_DIRS )
@@ -68,7 +69,6 @@ function(install_package)
     list( APPEND PACKAGE_LINK_LIBS ${CMAKE_INSTALL_PREFIX}/lib/${_lib} )
   endif()
 
-
   # construct Cflags arguments for pkg-config file
   string( CONCAT PACKAGE_CFLAGS ${PACKAGE_CFLAGS} ${CMAKE_C_FLAGS} )
   foreach(var IN LISTS PACKAGE_INCLUDE_DIRS )
@@ -79,7 +79,7 @@ function(install_package)
   foreach(var IN LISTS PACKAGE_LINK_DIRS )
     string( CONCAT PACKAGE_LIBS ${PACKAGE_LIBS} " -L${var}" )
   endforeach()
-  foreach(var IN LISTS PACKAGE_LIBS )
+  foreach(var IN LISTS PACKAGE_LINK_LIBS )
     if( EXISTS ${var} OR  ${var} MATCHES "-framework*" )
       string( CONCAT PACKAGE_LIBS ${PACKAGE_LIBS} " ${var}" )
     else() # assume it's just a -l call??
@@ -116,7 +116,42 @@ function(install_package)
   # _installed_ files.
   configure_file( ${modules_dir}/FindPackage.cmake.in Find${PACKAGE_PKG_NAME}.cmake @ONLY )
   install( FILES ${CMAKE_CURRENT_BINARY_DIR}/Find${PACKAGE_PKG_NAME}.cmake 
-       DESTINATION ${CMAKE_INSTALL_PREFIX}/share/cmake/Modules )
+       DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PACKAGE_PKG_NAME}/ )
+
+  #######################################################
+  # Export library for easy inclusion from other cmake projects. APPEND allows
+  # call to function even as subdirectory of larger project.
+  FILE(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
+  export( TARGETS ${LIBRARY_NAME}
+      APPEND FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake" )
+#  install( EXPORT ${PROJECT_NAME}Targets DESTINATION ${CMAKECONFIG_INSTALL_DIR} )
+#  install(TARGETS ${LIBRARY_NAME}
+#      EXPORT ${PROJECT_NAME}Targets DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+#      )
+
+  # Version information.  So find_package( XXX version ) will work.
+  configure_file( ${CMAKE_SOURCE_DIR}/cmake_modules/PackageConfigVersion.cmake.in
+      "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" @ONLY )
+
+  # Build tree config.  So some folks can use the built package (e.g., any of our
+  # own examples or applcations in this project.
+  configure_file( ${CMAKE_SOURCE_DIR}/cmake_modules/PackageConfig.cmake.in
+      ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY )
+
+  #  # Install tree config.  NB we DO NOT use this.  We install using brew or
+  #  set( EXPORT_LIB_INC_DIR ${LIB_INC_DIR} )
+  #  pkg-config.
+  #  set( EXPORT_LIB_INC_DIR "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}" )
+  #  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in
+  #      ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake @ONLY )
+
+  # Add package to CMake package registery for use from the build tree. RISKY.
+  option( EXPORT_${PROJECT_NAME}
+      "Should the ${PROJECT_NAME} package be exported for use by other software" OFF )
+  if( EXPORT_${PROJECT_NAME} )
+    export( PACKAGE ${PROJECT_NAME} )
+  endif()
+
 
 endfunction()
 

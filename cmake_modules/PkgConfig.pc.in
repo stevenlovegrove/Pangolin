@@ -3,9 +3,9 @@ exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
-Name: @PACKAGE_PKG_NAME@
+Name: lib@PACKAGE_LIBRARY@
 Description: @PACKAGE_DESCRIPTION@
 Version: @PACKAGE_VERSION@
-Cflags: @PACKAGE_CFLAGS@
-Libs: -L${libdir} @PACKAGE_LIBS@ @PACKAGE_LIB_LINK@
+Cflags: -I@PACKAGE_CFLAGS@
+Libs: -L${libdir} @PACKAGE_PRIVATE_LIBS@ -l@PACKAGE_LIBRARY@ 
 
