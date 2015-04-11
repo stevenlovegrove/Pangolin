@@ -63,6 +63,7 @@
 #include <pangolin/video/drivers/pango_video.h>
 #include <pangolin/video/drivers/video_splitter.h>
 #include <pangolin/video/drivers/debayer.h>
+#include <pangolin/video/drivers/shift.h>
 #include <pangolin/video/drivers/join.h>
 
 namespace pangolin
@@ -361,6 +362,14 @@ VideoInterface* OpenVideo(const Uri& uri)
     {
         VideoInterface* subvid = OpenVideo(uri.url);
         video = new DebayerVideo(subvid, DC1394_COLOR_FILTER_BGGR, BAYER_METHOD_HQLINEAR );
+    }else
+    if(!uri.scheme.compare("shift"))
+    {
+        const int shift_right = uri.Get<int>("shift", 0);
+        const int mask = uri.Get<int>("mask",  0xffff);
+
+        VideoInterface* subvid = OpenVideo(uri.url);
+        video = new ShiftVideo(subvid, VideoFormatFromString("GRAY8"), shift_right, mask);
     }else
     if(!uri.scheme.compare("join"))
     {
