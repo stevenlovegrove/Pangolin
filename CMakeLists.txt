@@ -45,14 +45,20 @@ set( SRCDIR "src" )
 ## Header only includes / core headers
 set(
   HEADERS
+  ${INCDIR}/glplatform.h
   ${INCDIR}/pangolin.h ${INCDIR}/platform.h
   ${INCDIR}/simple_math.h ${INCDIR}/timer.h
   ${INCDIR}/gl.h ${INCDIR}/glinclude.h ${INCDIR}/gl_es_compat.h
   ${INCDIR}/gldraw.h ${INCDIR}/glvbo.h
   ${INCDIR}/glcuda.h ${INCDIR}/cg.h ${INCDIR}/glsl.h
-  ${INCDIR}/image.h
+  ${INCDIR}/image.h ${INCDIR}/gl.hpp
   ${INCDIR}/file_utils.h
 )
+
+set(
+    COMPAT_HEADERS
+    ${INCDIR}/compat/function.h
+    )
 
 ## Store list of source files
 set( SOURCES
@@ -96,7 +102,7 @@ endif()
 
 option(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
 if(BUILD_PANGOLIN_VARS)
-  list(APPEND HEADERS ${INCDIR}/var/var.h ${INCDIR}/var/varextra.h
+    list(APPEND VAR_HEADERS ${INCDIR}/var/var.h ${INCDIR}/var/varextra.h
     ${INCDIR}/var/varstate.h ${INCDIR}/var/varvalue.h
     ${INCDIR}/var/varvaluegeneric.h ${INCDIR}/var/varvaluet.h
     ${INCDIR}/var/varwrapper.h ${INCDIR}/input_record_repeat.h
@@ -167,7 +173,7 @@ if(BUILD_PANGOLIN_GUI)
         endif()
     elseif( IOS )
         list(APPEND LINK_LIBS "-framework OpenGLES" )
-        list(APPEND HEADERS "${INCDIR}/ios/PangolinAppDelegate.h" "${INCDIR}/ios/PangolinViewController.h" )
+        list(APPEND IOS_HEADERS "${INCDIR}/ios/PangolinAppDelegate.h" "${INCDIR}/ios/PangolinViewController.h" )
         list(APPEND SOURCES ${SRCDIR}/ios/PangolinAppDelegate.mm
             ${SRCDIR}/ios/PangolinViewController.mm )
     else()
@@ -286,14 +292,14 @@ if(BUILD_PANGOLIN_VIDEO AND DC1394_FOUND)
   set(HAVE_DC1394 1)
   list(APPEND INTERNAL_INC  ${DC1394_INCLUDE_DIR} )
   list(APPEND LINK_LIBS  ${DC1394_LIBRARY} )
-  list(APPEND HEADERS ${INCDIR}/video/firewire.h ${INCDIR}/video/firewire_deinterlace.h )
+  list(APPEND VIDEO_HEADERS ${INCDIR}/video/firewire.h ${INCDIR}/video/firewire_deinterlace.h )
   list(APPEND SOURCES ${SRCDIR}/video/firewire.cpp ${SRCDIR}/video/firewire_deinterlace.cpp)
   message(STATUS "libdc1394 Found and Enabled")
 endif()
 
 if(BUILD_PANGOLIN_VIDEO AND _LINUX_)
   set(HAVE_V4L 1)
-  list(APPEND HEADERS ${INCDIR}/video/v4l.h)
+  list(APPEND VIDEO_HEADERS ${INCDIR}/video/v4l.h)
   list(APPEND SOURCES ${SRCDIR}/video/v4l.cpp)
   message(STATUS "V4L Found and Enabled")
 endif()
@@ -303,7 +309,7 @@ if(BUILD_PANGOLIN_VIDEO AND FFMPEG_FOUND)
   set(HAVE_FFMPEG 1)
   list(APPEND INTERNAL_INC  ${FFMPEG_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${FFMPEG_LIBRARIES} )
-  list(APPEND HEADERS ${INCDIR}/video/ffmpeg.h)
+  list(APPEND VIDEO_HEADERS ${INCDIR}/video/ffmpeg.h)
   list(APPEND SOURCES ${SRCDIR}/video/ffmpeg.cpp)
   message(STATUS "ffmpeg Found and Enabled")
 endif()
@@ -313,7 +319,7 @@ if(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
   set(HAVE_OPENNI 1)
   list(APPEND INTERNAL_INC  ${OPENNI_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${OPENNI_LIBRARIES} )
-  list(APPEND HEADERS ${INCDIR}/video/openni.h )
+  list(APPEND VIDEO_HEADERS ${INCDIR}/video/openni.h )
   list(APPEND SOURCES ${SRCDIR}/video/openni.cpp)
   message(STATUS "OpenNI Found and Enabled")
 endif()
@@ -323,7 +329,7 @@ if(BUILD_PANGOLIN_VIDEO AND OPENNI2_FOUND)
   set(HAVE_OPENNI2 1)
   list(APPEND INTERNAL_INC  ${OPENNI2_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${OPENNI2_LIBRARIES} )
-  list(APPEND HEADERS ${INCDIR}/video/openni2.h )
+  list(APPEND VIDEO_HEADERS ${INCDIR}/video/openni2.h )
   list(APPEND SOURCES ${SRCDIR}/video/openni2.cpp)
   message(STATUS "OpenNI2 Found and Enabled")
 endif()
@@ -333,7 +339,7 @@ if(BUILD_PANGOLIN_VIDEO AND uvc_FOUND)
   set(HAVE_UVC 1)
   list(APPEND INTERNAL_INC  ${uvc_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${uvc_LIBRARIES} )
-  list(APPEND HEADERS ${INCDIR}/video/uvc.h )
+  list(APPEND VIDEO_HEADERS ${INCDIR}/video/uvc.h )
   list(APPEND SOURCES ${SRCDIR}/video/uvc.cpp)
   message(STATUS "libuvc Found and Enabled")
 endif()
@@ -343,7 +349,7 @@ if(BUILD_PANGOLIN_VIDEO AND DepthSense_FOUND)
   set(HAVE_DEPTHSENSE 1)
   list(APPEND INTERNAL_INC  ${DepthSense_INCLUDE_DIRS} )
   list(APPEND LINK_LIBS ${DepthSense_LIBRARIES} )
-  list(APPEND HEADERS ${INCDIR}/video/depthsense.h )
+  list(APPEND VIDEO_HEADERS ${INCDIR}/video/depthsense.h )
   list(APPEND SOURCES ${SRCDIR}/video/depthsense.cpp)
   message(STATUS "DepthSense Found and Enabled")
 endif()
@@ -388,6 +394,8 @@ set( REQUIRED_INCLUDE_DIRS ${INTERNAL_INC} ${USER_INC} )
 set( REQUIRED_LIBRARIES ${LINK_LIBS} )
 set( PANGOLIN_SRCS ${SOURCES} )
 set( PANGOLIN_HDRS ${HEADERS} )
+list( APPEND PANGOLIN_HDRS ${IOS_HEADERS} ${VIDEO_HEADERS} ${COMPAT_HEADERS} )
+list( APPEND PANGOLIN_HDRS "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/PangolinConfig.h")
 
 # Include collected includes/libraries
 include_directories( ${REQUIRED_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR}/include )

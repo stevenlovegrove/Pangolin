@@ -112,7 +112,7 @@ function(install_package)
   endif()
 
   # write and install a cmake "find package" for cmake projects to use.
-  # NB: this .camke file CANNOT refer to any source directory, only to
+  # NB: this .cmake file CANNOT refer to any source directory, only to
   # _installed_ files.
   configure_file( ${modules_dir}/FindPackage.cmake.in Find${PACKAGE_PKG_NAME}.cmake @ONLY )
   install( FILES ${CMAKE_CURRENT_BINARY_DIR}/Find${PACKAGE_PKG_NAME}.cmake 
@@ -137,8 +137,12 @@ function(install_package)
   # own examples or applcations in this project.
   configure_file( ${CMAKE_SOURCE_DIR}/cmake_modules/PackageConfig.cmake.in
       ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY )
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake 
-      DESTINATION lib/cmake/${PROJECT_NAME})
+  install(FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+      ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake
+      ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+      DESTINATION
+      lib/cmake/${PROJECT_NAME})
 
   #  # Install tree config.  NB we DO NOT use this.  We install using brew or
   #  set( EXPORT_LIB_INC_DIR ${LIB_INC_DIR} )
