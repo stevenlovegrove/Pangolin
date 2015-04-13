@@ -108,7 +108,9 @@ function(install_package)
 
   if( PACKAGE_INSTALL_HEADERS )
     # install header files
-    install( FILES ${PACKAGE_INSTALL_HEADERS} DESTINATION ${PACKAGE_DESTINATION} )
+    install( DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION ${PACKAGE_DESTINATION} )
+    install( DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
+        DESTINATION ${PACKAGE_DESTINATION} FILES_MATCHING PATTERN "*.h" )
   endif()
 
   # write and install a cmake "find package" for cmake projects to use.

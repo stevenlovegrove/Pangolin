@@ -409,7 +409,7 @@ install_package(
     VERSION ${VERSION}
     DESCRIPTION "GL wrapper library that permits simpler GUI creation"
     INSTALL_HEADERS ${PANGOLIN_HDRS}
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/Pangolin
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
     INCLUDE_DIRS ${REQUIRED_INCLUDE_DIRS}
     LINK_LIBS ${REQUIRED_LIBRARIES}
     )
