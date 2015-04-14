@@ -35,6 +35,8 @@ function(install_package)
       VERSION
       DESCRIPTION
       INSTALL_HEADERS 
+      INSTALL_HEADER_DIRS
+      INSTALL_INCLUDE_DIR
       DESTINATION
       INCLUDE_DIRS
       LINK_LIBS
@@ -108,9 +110,20 @@ function(install_package)
 
   if( PACKAGE_INSTALL_HEADERS )
     # install header files
-    install( DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION ${PACKAGE_DESTINATION} )
-    install( DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
-        DESTINATION ${PACKAGE_DESTINATION} FILES_MATCHING PATTERN "*.h" )
+    install( FILES ${PACKAGE_INSTALL_HEADERS} DESTINATION ${PACKAGE_DESTINATION} )
+  endif()
+
+  if( PACKAGE_INSTALL_INCLUDE_DIR )
+      install(DIRECTORY ${CMAKE_SOURCE_DIR}/include DESTINATION ${PACKAGE_DESTINATION} )
+  endif()
+
+  if( PACKAGE_INSTALL_HEADER_DIRS )
+      foreach(dir IN LISTS PACKAGE_INSTALL_HEADER_DIRS )
+          install( DIRECTORY ${dir}
+              DESTINATION ${PACKAGE_DESTINATION}/include 
+              FILES_MATCHING PATTERN "*.h"
+              )
+      endforeach()
   endif()
 
   # write and install a cmake "find package" for cmake projects to use.
