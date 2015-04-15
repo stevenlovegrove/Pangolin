@@ -718,7 +718,7 @@ bool VideoInput::GrabNext( unsigned char* image, bool wait )
 bool VideoInput::GrabNewest( unsigned char* image, bool wait )
 {
     if( !video ) throw VideoException("No video source open");
-    return video->GrabNext(image,wait);
+    return video->GrabNewest(image,wait);
 }
 
 bool VideoInput::Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait, bool newest)
