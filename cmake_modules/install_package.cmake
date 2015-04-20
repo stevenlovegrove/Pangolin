@@ -174,12 +174,12 @@ function(install_package)
   elseif( EXPORT_${PROJECT_NAME} )
 
         # add "installed" library to list of required libraries to link against
-        if( PACKAGE_LIB_NAME )
-            cmake_policy( SET CMP0026 OLD )
-            get_target_property( _target_library ${PACKAGE_LIB_NAME} LOCATION )
-            get_filename_component( _lib ${_target_library} NAME )
-            list( APPEND PACKAGE_LINK_LIBS ${CMAKE_CURRENT_BINARY_DIR}/${_lib} )
-        endif()
+        #if( PACKAGE_LIB_NAME )
+        #    cmake_policy( SET CMP0026 OLD )
+        #    get_target_property( _target_library ${PACKAGE_LIB_NAME} LOCATION )
+        #    get_filename_component( _lib ${_target_library} NAME )
+        #    list( APPEND PACKAGE_LINK_LIBS ${CMAKE_CURRENT_BINARY_DIR}/${_lib} )
+        #endif()
 
 
         if( PACKAGE_INSTALL_HEADER_DIRS )
