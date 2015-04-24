@@ -1,6 +1,5 @@
 # Find Pangolin (https://github.com/stevenlovegrove/Pangolin)
-find_package(Pangolin 0.1 REQUIRED)
-include_directories(${Pangolin_INCLUDE_DIRS})
+include_directories(${PANGOLIN_INCLUDE_DIRS})
 
 add_executable(SimpleDisplay main.cpp)
-target_link_libraries(SimpleDisplay ${Pangolin_LIBRARIES})
+target_link_libraries(SimpleDisplay ${PANGOLIN_LIBRARIES})

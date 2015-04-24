@@ -28,7 +28,7 @@
 #ifndef PANGOLIN_PLATFORM_H
 #define PANGOLIN_PLATFORM_H
 
-#include <pangolin/config.h>
+#include <pangolin/PangolinConfig.h>
 
 #ifdef _GCC_
 #  define PANGOLIN_DEPRECATED __attribute__((deprecated))
@@ -57,7 +57,7 @@
 #   define pango_print_error(...) fprintf(stderr, __VA_ARGS__)
 #   define pango_print_warn(...)  fprintf(stderr, __VA_ARGS__)
 #else
-#   include <android/log.h>
+#   include <pangolin/android/log.h>
 #   define pango_print_debug(...) __android_log_print(ANDROID_LOG_DEBUG, "pango", __VA_ARGS__ );
 #   define pango_print_info(...)  __android_log_print(ANDROID_LOG_INFO,  "pango", __VA_ARGS__ );
 #   define pango_print_error(...) __android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__ );
