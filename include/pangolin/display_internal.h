@@ -41,8 +41,8 @@
 #endif // BUILD_PANGOLIN_VIDEO
 
 #ifdef HAVE_CVARS
-    #define HAVE_GLCONSOLE
-    #include <pangolin/compat/glconsole.h>
+    #define HAVE_CVARS
+    #include <pangolin/compat/CVARS.h>
 #endif // HAVE_CVARS
 
 namespace pangolin
@@ -86,9 +86,9 @@ struct PANGOLIN_EXPORT PangolinGl
     VideoOutput recorder;
 #endif
     
-#ifdef HAVE_GLCONSOLE
-    GLConsole console;
-#endif // HAVE_GLCONSOLE
+#ifdef HAVE_CVARS
+    CVARS console;
+#endif // HAVE_CVARS
     
 };
 
