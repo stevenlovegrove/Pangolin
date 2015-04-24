@@ -254,7 +254,7 @@ else()
     endif()
 endif()
 
-find_package(CVars 2.3 QUIET)
+find_package(CVARS 2.3 QUIET)
 if(CVARS_FOUND)
   set(HAVE_CVARS 1)
   list(APPEND USER_INC  ${CVars_INCLUDE_DIRS} )

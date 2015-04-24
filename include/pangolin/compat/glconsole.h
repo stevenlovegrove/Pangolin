@@ -25,17 +25,17 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_COMPAT_CVARS_H
-#define PANGOLIN_COMPAT_CVARS_H
+#ifndef PANGOLIN_COMPAT_GLCONSOLE_H
+#define PANGOLIN_COMPAT_GLCONSOLE_H
 
 #include <pangolin/platform.h>
 
-// If we don't have GLUT, coerce CVARS to work with our own font rendering.
+// If we don't have GLUT, coerce GLConsole to work with our own font rendering.
 #ifdef HAVE_GLES
 #include <pangolin/glinclude.h>
 #include <pangolin/glfont.h>
 
-// Define our own GLFont class, preventing CVARSs from being included.
+// Define our own GLFont class, preventing GLConsoles from being included.
 #define __GL_FONT_H__
 
 class GLFont
@@ -74,6 +74,6 @@ public:
 
 #endif // HAVE_GLES
 
-#include <CVARS/CVARS.h>
+#include <GLConsole/GLConsole.h>
 
-#endif // PANGOLIN_COMPAT_CVARS_H
+#endif // PANGOLIN_COMPAT_GLCONSOLE_H
