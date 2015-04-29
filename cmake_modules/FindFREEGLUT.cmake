@@ -18,7 +18,7 @@ SET(CMAKE_FIND_FRAMEWORK NEVER)
 
 FIND_LIBRARY(
   FREEGLUT_LIBRARY
-  NAMES freeglut_static freeglut glut
+  NAMES freeglut_static freeglut
   PATH
     /opt/local/lib
     ${CMAKE_LIBRARY_PATH}

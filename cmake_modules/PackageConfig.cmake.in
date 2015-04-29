@@ -11,12 +11,12 @@ mark_as_advanced( @PACKAGE_PKG_NAME@_INCLUDE_DIRS )
 # Compute paths
 get_filename_component( PACKAGE_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
 
-
-# Library dependencies (contains definitions for IMPORTED targets)
-if(NOT TARGET "@PACKAGE_PKG_NAME@_LIBRARIES" AND NOT "@PACKAGE_PKG_NAME@_BINARY_DIR")
-    include( "${PACKAGE_CMAKE_DIR}/@PACKAGE_PKG_NAME@Targets.cmake" )
-    include( "${PACKAGE_CMAKE_DIR}/@PACKAGE_PKG_NAME@ConfigVersion.cmake" )
-endif()
+# This file, when used for INSTALLED code, does not use Targets... sigh.
+## Library dependencies (contains definitions for IMPORTED targets)
+#if(NOT TARGET "@PACKAGE_PKG_NAME@_LIBRARIES" AND NOT "@PACKAGE_PKG_NAME@_BINARY_DIR")
+#    include( "${PACKAGE_CMAKE_DIR}/@PACKAGE_PKG_NAME@Targets.cmake" )
+#    include( "${PACKAGE_CMAKE_DIR}/@PACKAGE_PKG_NAME@ConfigVersion.cmake" )
+#endif()
 
 #SET(@PACKAGE_PKG_NAME@_LIBRARIES @PACKAGE_LIBRARIES@)
 #SET(@PACKAGE_PKG_NAME@_LIBRARY @PACKAGE_LIBRARY@)
