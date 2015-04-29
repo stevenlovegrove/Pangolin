@@ -240,6 +240,12 @@ else()
       if(_OSX_)
         set(HAVE_APPLE_OPENGL_FRAMEWORK 1)
         ADD_DEFINITIONS( -DHAVE_APPLE_OPENGL_FRAMEWORK )
+
+        message( STATUS "*************** HAVE_APPLE_OPENGL_FRAMEWORK ***************" )
+        message( STATUS "*************** HAVE_APPLE_OPENGL_FRAMEWORK ***************" )
+        message( STATUS "*************** HAVE_APPLE_OPENGL_FRAMEWORK ***************" )
+        message( STATUS "*************** HAVE_APPLE_OPENGL_FRAMEWORK ***************" )
+
         if(NOT HAVE_MODIFIED_OSXGLUT)
             message(STATUS "Using Apple Framework GLUT.")
             message(STATUS "Install Freeglut or modified osxglut for scroll support.")
