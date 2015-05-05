@@ -28,6 +28,7 @@
 #ifndef PANGOLIN_VAR_H
 #define PANGOLIN_VAR_H
 
+#include <cmath>
 #include <stdexcept>
 #include <string.h>
 #include <cmath>

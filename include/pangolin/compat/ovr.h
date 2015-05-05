@@ -28,13 +28,13 @@
 #ifndef PANGOLIN_COMPAT_OVR_H
 #define PANGOLIN_COMPAT_OVR_H
 
-#include <pangolin/config.h>
+#include <pangolin/PangolinConfig.h>
 
 #ifndef _MSVC_
 // Suppress warnings in OVR library headers
 #pragma GCC system_header
 #endif
 
-#include <OVR.h>
+#include <pangolin/compat/OVR.h>
 
 #endif // PANGOLIN_COMPAT_OVR_H

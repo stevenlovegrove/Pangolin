@@ -127,37 +127,37 @@ void Handler3D::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 
 void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision n[3], GLprecision default_z)
 {
-    // TODO: Get to work on android    
+    // TODO: Get to work on android
     const GLint viewport[4] = {view.v.l,view.v.b,view.v.w,view.v.h};
     const pangolin::OpenGlMatrix proj = cam_state->GetProjectionMatrix();
     const pangolin::OpenGlMatrix mv = cam_state->GetModelViewMatrix();
     //      const pangolin::OpenGlMatrix id = IdentityMatrix();
-    
+
     const int zl = (hwin*2+1);
     const int zsize = zl*zl;
     GLfloat zs[zsize];
-    
-#ifndef HAVE_GLES    
+
+#ifndef HAVE_GLES
     glReadBuffer(GL_FRONT);
     glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
 #else
     std::fill(zs,zs+zsize, 1);
 #endif
     GLfloat mindepth = *(std::min_element(zs,zs+zsize));
-    
+
     if(mindepth == 1) mindepth = (GLfloat)default_z;
-    
+
     p[0] = x; p[1] = y; p[2] = mindepth;
     glUnProject(x, y, mindepth, mv.m, proj.m, viewport, &Pw[0], &Pw[1], &Pw[2]);
 //      glUnProject(x, y, mindepth, id.m, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
     LieApplySE34x4vec3(Pc, mv.m, Pw);
-    
+
     GLprecision Pl[3]; GLprecision Pr[3]; GLprecision Pb[3]; GLprecision Pt[3];
     glUnProject(x-hwin, y, zs[hwin*zl + 0],    mv.m, proj.m, viewport, &Pl[0], &Pl[1], &Pl[2]);
     glUnProject(x+hwin, y, zs[hwin*zl + zl-1], mv.m, proj.m, viewport, &Pr[0], &Pr[1], &Pr[2]);
     glUnProject(x, y-hwin, zs[hwin+1],         mv.m, proj.m, viewport, &Pb[0], &Pb[1], &Pb[2]);
     glUnProject(x, y+hwin, zs[zsize-(hwin+1)], mv.m, proj.m, viewport, &Pt[0], &Pt[1], &Pt[2]);
-    
+
     //      n = ((Pr-Pl).cross(Pt-Pb)).normalized();
     GLprecision PrmPl[3]; GLprecision PtmPb[3];
     MatSub<3,1>(PrmPl,Pr,Pl);
@@ -171,17 +171,17 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
     // mouse down
     last_pos[0] = (float)x;
     last_pos[1] = (float)y;
-    
+
     GLprecision T_nc[3*4];
     LieSetIdentity(T_nc);
-    
+
     if( pressed ) {
         GetPosNormal(display,x,y,p,Pw,Pc,n,last_z);
         if(p[2] < 1.0) {
             last_z = p[2];
             std::copy(Pc,Pc+3,rot_center);
         }
-        
+
         if( button == MouseWheelUp || button == MouseWheelDown)
         {
             LieSetIdentity(T_nc);
@@ -204,10 +204,10 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
     const GLprecision rf = 0.01;
     const float delta[2] = { (float)x - last_pos[0], (float)y - last_pos[1] };
     const float mag = delta[0]*delta[0] + delta[1]*delta[1];
-    
+
     // TODO: convert delta to degrees based of fov
     // TODO: make transformation with respect to cam spec
-    
+
     if( mag < 50.0f*50.0f )
     {
         OpenGlMatrix& mv = cam_state->GetModelViewMatrix();
@@ -215,7 +215,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         GLprecision T_nc[3*4];
         LieSetIdentity(T_nc);
         bool rotation_changed = false;
-        
+
         if( button_state == MouseButtonMiddle )
         {
             // Middle Drag: in plane translate
@@ -238,7 +238,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         {
             // Left and Right Drag: in plane rotate about object
             //        Rotation<>(T_nc,0.0,0.0, delta[0]*0.01);
-            
+
             GLprecision T_2c[3*4];
             Rotation<>(T_2c, (GLprecision)0.0, (GLprecision)0.0, delta[0]*rf);
             GLprecision mrotc[3];
@@ -254,11 +254,11 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             // Correct for OpenGL Camera.
             GLprecision aboutx = -rf * delta[1];
             GLprecision abouty =  rf * delta[0];
-            
+
             // Try to correct for different coordinate conventions.
             OpenGlMatrix& pm = cam_state->GetProjectionMatrix();
             abouty *= -pm.m[2*4+3];
-            
+
             if(enforce_up) {
                 // Special case if view direction is parallel to up vector
                 const GLprecision updotz = mv.m[2]*up[0] + mv.m[6]*up[1] + mv.m[10]*up[2];
@@ -267,7 +267,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
                 // Module rotation around y so we don't spin too fast!
                 abouty *= (1-0.6*abs(updotz));
             }
-            
+
             // Right Drag: object centric rotation
             GLprecision T_2c[3*4];
             Rotation<>(T_2c, aboutx, abouty, (GLprecision)0.0);
@@ -280,14 +280,14 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             LieMulSE3(T_nc, T_n2, T_2c );
             rotation_changed = true;
         }
-        
+
         LieMul4x4bySE3<>(mv.m,T_nc,mv.m);
-        
+
         if(enforce_up != AxisNone && rotation_changed) {
             EnforceUpT_cw(mv.m, up);
         }
     }
-    
+
     last_pos[0] = (float)x;
     last_pos[1] = (float)y;
 }
@@ -296,31 +296,31 @@ void Handler3D::Special(View& display, InputSpecial inType, float x, float y, fl
 {
     if( !(inType == InputSpecialScroll || inType == InputSpecialRotate) )
         return;
-    
+
     // mouse down
     last_pos[0] = x;
     last_pos[1] = y;
-    
+
     GLprecision T_nc[3*4];
     LieSetIdentity(T_nc);
-    
+
     GetPosNormal(display, (int)x, (int)y, p, Pw, Pc, n, last_z);
     if(p[2] < 1.0) {
         last_z = p[2];
         std::copy(Pc,Pc+3,rot_center);
     }
-    
+
     if( inType == InputSpecialScroll ) {
         if(button_state & KeyModifierCmd) {
-            const GLprecision rx = -p2 / 1000;
+          const GLprecision rx = -p2 / 1000;
             const GLprecision ry = -p1 / 1000;
-            
+
             Rotation<>(T_nc,rx, ry, (GLprecision)0.0);
             OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
             LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
         }else{
             const GLprecision scrolly = p2/10;
-            
+
             LieSetIdentity(T_nc);
             const GLprecision t[] = { 0,0, -scrolly*100*tf};
             LieSetTranslation<>(T_nc,t);
@@ -334,7 +334,7 @@ void Handler3D::Special(View& display, InputSpecial inType, float x, float y, fl
         }
     }else if(inType == InputSpecialRotate) {
         const GLprecision r = p1 / 20;
-        
+
         GLprecision T_2c[3*4];
         Rotation<>(T_2c, (GLprecision)0.0, (GLprecision)0.0, r);
         GLprecision mrotc[3];
@@ -347,7 +347,103 @@ void Handler3D::Special(View& display, InputSpecial inType, float x, float y, fl
         OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
         LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
     }
-    
+}
+
+void PassThroughHandler::Keyboard(View& d, unsigned char key, int x,
+                                  int y, bool pressed) {
+  View* child = d.FindChild(x,y);
+  if (child) {
+    context->activeDisplay = child;
+    if (child->handler) {
+      child->handler->Keyboard(*child, key, x, y, pressed);
+      return;
+    }
+  }
+
+  if (pass_through_view && pass_through_view->handler) {
+    context->activeDisplay = pass_through_view;
+    pass_through_view->handler->Keyboard(*pass_through_view,
+                                         key, x, y, pressed);
+  }
+}
+
+void PassThroughHandler::Mouse(View& d, pangolin::MouseButton button,
+                               int x, int y, bool pressed, int button_state) {
+  View* child = d.FindChild(x,y);
+  if (child) {
+    context->activeDisplay = child;
+    if (child->handler) {
+      child->handler->Mouse(*child, button, x, y, pressed, button_state);
+      return;
+    }
+  }
+
+  if (pass_through_view && pass_through_view->handler) {
+    context->activeDisplay = pass_through_view;
+    pass_through_view->handler->Mouse(*pass_through_view, button,
+                                      x, y, pressed, button_state);
+  }
+}
+
+void PassThroughHandler::MouseMotion(View& d, int x, int y, int button_state) {
+  View* child = d.FindChild(x,y);
+  if (child) {
+    context->activeDisplay = child;
+    if (child->handler) {
+      child->handler->MouseMotion(*child, x, y, button_state);
+      return;
+    }
+  }
+
+  if (pass_through_view && pass_through_view->handler) {
+    context->activeDisplay = pass_through_view;
+    pass_through_view->handler->MouseMotion(*pass_through_view,
+                                             x, y, button_state);
+  }
+}
+
+void PassThroughHandler::Special(View& d,
+                                 pangolin::InputSpecial inType,
+                                 float x,
+                                 float y,
+                                 float p1,
+                                 float p2,
+                                 float p3,
+                                 float p4,
+                                 int button_state) {
+  View* child = d.FindChild(x,y);
+  if (child) {
+    context->activeDisplay = child;
+    if (child->handler) {
+      child->handler->Special(*child, inType,
+                              x, y, p1, p2, p3, p4, button_state);
+      return;
+    }
+  }
+
+  if (pass_through_view && pass_through_view->handler) {
+    context->activeDisplay = pass_through_view;
+    pass_through_view->handler->Special(*pass_through_view, inType,
+                                        x, y, p1, p2, p3, p4, button_state);
+  }
+}
+
+void PassThroughHandler::PassiveMouseMotion(View& d, int x, int y,
+                                            int button_state) {
+  View* child = d.FindChild(x,y);
+  if (child) {
+    context->activeDisplay = child;
+    if (child->handler) {
+      child->handler->PassiveMouseMotion(*child, x, y, button_state);
+      return;
+    }
+  }
+
+  if (pass_through_view && pass_through_view->handler) {
+    context->activeDisplay = pass_through_view;
+    pass_through_view->handler->PassiveMouseMotion(
+        *pass_through_view, x, y, button_state);
+  }
 }
 
 }
