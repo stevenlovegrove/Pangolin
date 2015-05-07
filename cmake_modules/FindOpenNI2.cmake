@@ -25,9 +25,12 @@ find_path(OPENNI2_INCLUDE_DIR OpenNI.h
             "$ENV{PROGRAMW6432}/OpenNI2/Include"
             "${CMAKE_SOURCE_DIR}/../OpenNI2/Include"
             /usr/include
+            /usr/local/include
             /user/include
           PATH_SUFFIXES openni2 ni2
 )
+
+message( STATUS "Found OPENNI2_INCLUDE_DIR: at ${OPENNI2_INCLUDE_DIR}")
 
 #add a hint so that it can find it without the pkg-config
 find_library(OPENNI2_LIBRARY
@@ -41,9 +44,12 @@ find_library(OPENNI2_LIBRARY
                "$ENV{PROGRAMW6432}/OpenNI2"
                "${CMAKE_SOURCE_DIR}/../OpenNI2/Bin/x64-Release"
                /usr/lib
+               /usr/local/lib
                /user/lib
-             PATH_SUFFIXES lib lib64
+             PATH_SUFFIXES lib lib64 ni2
 )
+
+message( STATUS "Found OPENNI2_LIBRARY: at ${OPENNI2_LIBRARY}")
 
 set(OPENNI2_INCLUDE_DIRS ${OPENNI2_INCLUDE_DIR})
 set(OPENNI2_LIBRARIES ${OPENNI2_LIBRARY})

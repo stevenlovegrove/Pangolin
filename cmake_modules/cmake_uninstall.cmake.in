@@ -1,0 +1,26 @@
+## A simple uninstall script.
+## Alternatively UNIX users can run/sudo `xargs rm < install_manifest.txt` in the build directory.
+
+set(unfile ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+file(WRITE ${unfile} "IF(NOT EXISTS \"install_manifest.txt\")\n")
+file(APPEND ${unfile} "MESSAGE(\"FATAL_ERROR Cannot find \\\"install manifest\\\": install_manifest.txt\")\n")
+file(APPEND ${unfile} "ENDIF(NOT EXISTS \"install_manifest.txt\")\n")
+file(APPEND ${unfile} "FILE(READ \"install_manifest.txt\" files)\n")
+file(APPEND ${unfile} "STRING(REGEX REPLACE \"\\n\" \";\" files \"\${files}\")\n")
+file(APPEND ${unfile} "FOREACH(file \${files})\n")
+file(APPEND ${unfile} "  MESSAGE(STATUS \"Uninstalling \\\"\${file}\\\"\")\n")
+file(APPEND ${unfile} "  IF(EXISTS \"\${file}\")\n")
+file(APPEND ${unfile} "    EXEC_PROGRAM(\n")
+file(APPEND ${unfile} "      \"\${CMAKE_COMMAND}\" ARGS \"-E remove \\\"\${file}\\\"\"\n")
+file(APPEND ${unfile} "    OUTPUT_VARIABLE rm_out\n")
+file(APPEND ${unfile} "      RETURN_VALUE rm_retval\n")
+file(APPEND ${unfile} "      )\n")
+file(APPEND ${unfile} "    IF(\"\${rm_retval}\" STREQUAL 0\)\n")
+file(APPEND ${unfile} "    ELSE(\"\${rm_retval}\" STREQUAL 0\)\n")
+file(APPEND ${unfile} "    MESSAGE(FATAL_ERROR \"Problem when removing \\\"\${file}\\\"\")\n")
+file(APPEND ${unfile} "    ENDIF(\"\${rm_retval}\" STREQUAL 0)\n")
+file(APPEND ${unfile} "  ELSE(EXISTS \"\${file}\")\n")
+file(APPEND ${unfile} "    MESSAGE(STATUS \"File \\\"\${file}\\\" does not exist.  \")\n")
+file(APPEND ${unfile} "  ENDIF(EXISTS \"\${file}\")\n")
+file(APPEND ${unfile} "ENDFOREACH(file)\n")
+

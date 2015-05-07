@@ -45,7 +45,7 @@
 #include <fstream>
 
 // Include the default font directly
-#include "glfontdata.h"
+#include <pangolin/glfontdata.h>
 
 #define MAX_TEXT_LENGTH 500
 
