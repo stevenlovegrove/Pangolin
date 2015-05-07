@@ -30,8 +30,6 @@ find_path(OPENNI2_INCLUDE_DIR OpenNI.h
           PATH_SUFFIXES openni2 ni2
 )
 
-message( STATUS "Found OPENNI2_INCLUDE_DIR: at ${OPENNI2_INCLUDE_DIR}")
-
 #add a hint so that it can find it without the pkg-config
 find_library(OPENNI2_LIBRARY
              NAMES OpenNI2
@@ -48,8 +46,6 @@ find_library(OPENNI2_LIBRARY
                /user/lib
              PATH_SUFFIXES lib lib64 ni2
 )
-
-message( STATUS "Found OPENNI2_LIBRARY: at ${OPENNI2_LIBRARY}")
 
 set(OPENNI2_INCLUDE_DIRS ${OPENNI2_INCLUDE_DIR})
 set(OPENNI2_LIBRARIES ${OPENNI2_LIBRARY})
