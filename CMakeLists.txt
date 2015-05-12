@@ -7,8 +7,6 @@ set(VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 include( install_package )
 
-message(STATUS "CMAKE_ROOT ${CMAKE_ROOT}" )
-
 option( BUILD_SHARED_LIBS "Build Shared Library" ON)
 option( BUILD_EXAMPLES "Build Examples" ON )
 option( CPP11_NO_BOOST "Use c++11 over boost for threading etc." ON )
@@ -144,18 +142,10 @@ endif()
 list(APPEND LIB_INC_DIR  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 
 if(NOT CPP11_NO_BOOST)
-    # Boost is required when c++11 is disabled
-    find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
-    list(APPEND USER_INC  "${Boost_INCLUDE_DIRS}" )
-    list(APPEND LINK_LIBS "${Boost_LIBRARIES}" )
-
-    # Generic Image Library (GIL) should come with boost.
-    # If you have a version of boost without it, maybe figure out how to test here.
-    set(HAVE_BOOST_GIL 1)
-else()
-    find_package(Boost QUIET)
+    find_package(Boost REQUIRED)
     if(Boost_FOUND)
         list(APPEND USER_INC "${Boost_INCLUDE_DIRS}" )
+        list(APPEND LINK_LIBS "${Boost_LIBRARIES}" )
         set(HAVE_BOOST_GIL 1)
     endif()
 endif()
