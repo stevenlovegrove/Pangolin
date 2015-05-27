@@ -390,12 +390,13 @@ set( REQUIRED_LIBRARIES ${LINK_LIBS} )
 set( PANGOLIN_SRCS ${SOURCES} )
 set( PANGOLIN_HDRS ${HEADERS} )
 list( APPEND PANGOLIN_HDRS ${IOS_HEADERS} ${VIDEO_HEADERS} ${COMPAT_HEADERS} )
-list( APPEND PANGOLIN_HDRS "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/PangolinConfig.h")
 
 # Include collected includes/libraries
 include_directories( ${REQUIRED_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR}/include )
 include_directories( ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR} )
-add_library( pangolin ${PANGOLIN_SRCS} )
+
+# Include PANGOLIN_HDRS so we can see them in QtCreator.
+add_library( pangolin ${PANGOLIN_SRCS} ${PANGOLIN_HDRS} )
 target_link_libraries( pangolin ${REQUIRED_LIBRARIES} )
 
 install_package(
@@ -403,9 +404,8 @@ install_package(
     LIB_NAME pangolin
     VERSION ${VERSION}
     DESCRIPTION "GL wrapper library that permits simpler GUI creation"
-    #INSTALL_HEADERS ${PANGOLIN_HDRS}
     INSTALL_INCLUDE_DIR true
-    INSTALL_HEADER_DIRS ${CMAKE_CURRENT_BINARY_DIR}/include/pangolin
+    INSTALL_GENERATED_HEADERS "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/PangolinConfig.h"
     DESTINATION ${CMAKE_INSTALL_PREFIX}
     INCLUDE_DIRS ${REQUIRED_INCLUDE_DIRS}
     LINK_LIBS ${REQUIRED_LIBRARIES}
