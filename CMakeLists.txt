@@ -47,7 +47,6 @@ set( SRCDIR "src" )
 ## Header only includes / core headers
 set(
   HEADERS
-  ${INCDIR}/glplatform.h
   ${INCDIR}/pangolin.h ${INCDIR}/platform.h
   ${INCDIR}/simple_math.h ${INCDIR}/timer.h
   ${INCDIR}/gl.h ${INCDIR}/glinclude.h ${INCDIR}/gl_es_compat.h
@@ -81,6 +80,7 @@ if(BUILD_PANGOLIN_GUI)
     ${INCDIR}/handler_glbuffer.h
     ${INCDIR}/opengl_render_state.h
     ${INCDIR}/datalog.h
+    ${INCDIR}/glplatform.h
     ${INCDIR}/glfont.h ${INCDIR}/glpangoglu.h
   )
 
