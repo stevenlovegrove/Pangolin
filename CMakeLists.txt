@@ -41,8 +41,8 @@ endif()
 # Platform configuration vars
 include(SetPlatformVars)
 
-set( INCDIR "include/Pangolin")
-set( SRCDIR "src" )
+set( INCDIR "${CMAKE_CURRENT_SOURCE_DIR}/include/pangolin")
+set( SRCDIR "${CMAKE_CURRENT_SOURCE_DIR}/src" )
 
 ## Header only includes / core headers
 set(
