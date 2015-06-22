@@ -119,14 +119,16 @@ ImageFileType FileType(const std::string& filename)
 {
     // Check magic number of file...    
     FILE *fp = fopen(filename.c_str(), "rb");
-    const size_t magic_bytes = 8;    
-    unsigned char magic[magic_bytes];    
-    size_t num_read = fread( (void *)magic, 1, magic_bytes, fp);
-    ImageFileType magic_type = FileTypeMagic(magic, num_read);
-    fclose(fp);
-    if(magic_type != ImageFileTypeUnknown) {
-        return magic_type;
-    }    
+    if(fp) {
+        const size_t magic_bytes = 8;
+        unsigned char magic[magic_bytes];
+        size_t num_read = fread( (void *)magic, 1, magic_bytes, fp);
+        ImageFileType magic_type = FileTypeMagic(magic, num_read);
+        fclose(fp);
+        if(magic_type != ImageFileTypeUnknown) {
+            return magic_type;
+        }
+    }
     
     // Fallback on using extension...
     const std::string ext = FileLowercaseExtention(filename);

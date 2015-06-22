@@ -30,6 +30,7 @@
 
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/display/viewport.h>
+#include <pangolin/image/image_io.h>
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN
@@ -88,6 +89,8 @@ public:
         unsigned int data_w, unsigned int data_h,
         GLenum data_format, GLenum data_type
     );
+
+    void Load(const TypedImage& image, bool sampling_linear = true);
 
     void LoadFromFile(const std::string& filename, bool sampling_linear = true);
 

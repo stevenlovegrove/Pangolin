@@ -192,14 +192,19 @@ inline void GlTexture::Upload(
     CheckGlDieOnError();
 }
 
-inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_linear)
+inline void GlTexture::Load(const TypedImage& image, bool sampling_linear)
 {
-    TypedImage image = LoadImage(filename);
     GLenum format = image.fmt.channels == 1 ? GL_LUMINANCE :
                         (image.fmt.channels == 3 ? GL_RGB : GL_RGBA);
 
     // TODO: Make the format logic more reliable
     Reinitialise(image.w, image.h, GL_RGBA, sampling_linear, 0, format, GL_UNSIGNED_BYTE, image.ptr );
+}
+
+inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_linear)
+{
+    TypedImage image = LoadImage(filename);
+    Load(image, sampling_linear);
     FreeImage(image);
 }
 
