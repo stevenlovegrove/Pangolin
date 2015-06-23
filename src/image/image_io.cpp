@@ -176,8 +176,7 @@ TypedImage LoadTga(const std::string& filename)
         
         TypedImage img;
         if(success) {
-            img.fmt = TgaFormat(info[4], type[2], type[1]);
-            img.Alloc(width, height, width*img.fmt.bpp / 8);
+            img.Alloc(width, height, TgaFormat(info[4], type[2], type[1]) );
             
             //read in image data
             const size_t data_size = img.w * img.pitch;
@@ -287,8 +286,7 @@ TypedImage LoadPng(const std::string& filename)
         const size_t pitch = png_get_rowbytes(png_ptr, info_ptr);
         
         TypedImage img;
-        img.fmt = PngFormat(png_ptr, info_ptr);
-        img.Alloc( w, h, pitch );
+        img.Alloc(w, h, PngFormat(png_ptr, info_ptr), pitch);
         
         png_bytepp rows = png_get_rows(png_ptr, info_ptr);
         for( unsigned int r = 0; r < h; r++) {
@@ -447,8 +445,7 @@ TypedImage LoadJpg(const std::string& filename)
         const int row_stride = cinfo.output_width * cinfo.output_components;
         
         TypedImage img;
-        img.Alloc(cinfo.output_width, cinfo.output_height, row_stride );
-        img.fmt = JpgFormat(cinfo);
+        img.Alloc(cinfo.output_width, cinfo.output_height, JpgFormat(cinfo), row_stride);
         
         JSAMPARRAY row_buffer = (*cinfo.mem->alloc_sarray)
                 ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
@@ -510,8 +507,7 @@ TypedImage LoadPpm(std::ifstream& bFile)
     bool success = !bFile.fail() && w > 0 && h > 0;
 
     if(success) {
-        img.fmt = PpmFormat(ppm_type, num_colors);
-        img.Alloc(w, h, w*img.fmt.bpp/8);
+        img.Alloc(w, h, PpmFormat(ppm_type, num_colors) );
 
         // Read in data
         for(size_t r=0; r<img.h; ++r) {

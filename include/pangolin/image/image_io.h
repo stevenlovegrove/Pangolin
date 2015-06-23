@@ -51,13 +51,25 @@ struct TypedImage : public Image<unsigned char>
         : Image<unsigned char>()
     {
     }
-
-    inline TypedImage(size_t w, size_t h, size_t pitch, unsigned char* ptr, pangolin::VideoPixelFormat fmt)
+    
+    inline TypedImage(size_t w, size_t h, size_t pitch, unsigned char* ptr, const VideoPixelFormat& fmt)
         : Image<unsigned char>(w,h,pitch,ptr), fmt(fmt)
     {
     }    
     
-    pangolin::VideoPixelFormat fmt;
+    inline void Alloc(size_t w, size_t h, const VideoPixelFormat& fmt)
+    {
+        this->fmt = fmt;
+        Image<unsigned char>::Alloc(w, h, w*fmt.bpp / 8);
+    }
+    
+    inline void Alloc(size_t w, size_t h, const VideoPixelFormat& fmt, size_t pitch)
+    {
+        this->fmt = fmt;
+        Image<unsigned char>::Alloc(w, h, pitch);
+    }
+    
+    VideoPixelFormat fmt;
 };
 
 PANGOLIN_EXPORT

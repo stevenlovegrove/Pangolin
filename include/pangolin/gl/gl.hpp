@@ -215,6 +215,26 @@ inline void GlTexture::Download(void* image, GLenum data_layout, GLenum data_typ
     glGetTexImage(GL_TEXTURE_2D, 0, data_layout, data_type, image);
     Unbind();
 }
+
+inline void GlTexture::Save(const std::string& filename, bool top_line_first)
+{
+    TypedImage image;
+    
+    VideoPixelFormat fmt;
+    switch (internal_format)
+    {
+    case GL_LUMINANCE: fmt = VideoFormatFromString("GRAY8"); break;
+    case GL_RGB:       fmt = VideoFormatFromString("RGB24"); break;
+    case GL_RGBA:      fmt = VideoFormatFromString("RGBA"); break;
+    default:
+        throw std::runtime_error("Unknown format");
+    }
+    
+    image.Alloc(width, height, fmt);
+    Download(image.ptr, internal_format, GL_UNSIGNED_BYTE);
+    pangolin::SaveImage(image, filename, top_line_first);
+    image.Dealloc();
+}
 #endif // HAVE_GLES
 
 inline void GlTexture::SetLinear()
