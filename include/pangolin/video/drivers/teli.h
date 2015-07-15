@@ -40,8 +40,9 @@ namespace pangolin
 class PANGOLIN_EXPORT TeliVideo : public VideoInterface
 {
 public:
-	TeliVideo();
-	~TeliVideo();
+    TeliVideo();
+    TeliVideo(const ImageRoi& roi);
+    ~TeliVideo();
     
     //! Implement VideoInput::Start()
     void Start();
@@ -60,14 +61,24 @@ public:
     
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
-    
+
+    inline Teli::CAM_HANDLE GetCameraHandle() {
+        return cam;
+    }
+
+    inline Teli::CAM_STRM_HANDLE GetCameraStreamHandle() {
+        return strm;
+    }
+
 protected:
+    void Initialise(const ImageRoi& roi);
+
     std::vector<StreamInfo> streams;
     size_t size_bytes;
 
-	Teli::CAM_HANDLE cam;
-	Teli::CAM_STRM_HANDLE strm;
-	HANDLE hStrmCmpEvt;
+    Teli::CAM_HANDLE cam;
+    Teli::CAM_STRM_HANDLE strm;
+    HANDLE hStrmCmpEvt;
 };
 
 }

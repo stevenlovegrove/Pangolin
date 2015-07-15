@@ -31,88 +31,120 @@ namespace pangolin
 {
 
 TeliVideo::TeliVideo()
-    : cam(0), strm(0), hStrmCmpEvt(0)
+	: cam(0), strm(0), hStrmCmpEvt(0)
 {
-	Teli::CAM_API_STATUS uiStatus = Teli::Sys_Initialize();
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("Unable to initialise TeliSDK.");
+    Teli::CAM_API_STATUS uiStatus = Teli::Sys_Initialize();
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("Unable to initialise TeliSDK.");
 
-	uint32_t num_cams = 0;
-	uiStatus = Teli::Sys_GetNumOfCameras(&num_cams);
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("Unable to enumerate TeliSDK cameras.");
+    uint32_t num_cams = 0;
+    uiStatus = Teli::Sys_GetNumOfCameras(&num_cams);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("Unable to enumerate TeliSDK cameras.");
 
-	if (num_cams == 0)
-		throw pangolin::VideoException("No TeliSDK Cameras available.");
+    if (num_cams == 0)
+     throw pangolin::VideoException("No TeliSDK Cameras available.");
 
-	uiStatus = Teli::Cam_Open(0, &cam, 0, false, 0);
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("TeliSDK: Error opening camera");
+    uiStatus = Teli::Cam_Open(0, &cam, 0, false, 0);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("TeliSDK: Error opening camera");
 
-	uint32_t width = 0;
-	uint32_t height = 0;
-	uiStatus = Teli::GetCamSensorWidth(cam, &width);
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("Unable to get TeliSDK Camera dimensions");
+    uint32_t width = 0;
+    uint32_t height = 0;
+    uiStatus = Teli::GetCamSensorWidth(cam, &width);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+      throw pangolin::VideoException("Unable to get TeliSDK Camera dimensions");
 
-	uiStatus = Teli::GetCamSensorHeight(cam, &height);
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("Unable to get TeliSDK Camera dimensions");
+    uiStatus = Teli::GetCamSensorHeight(cam, &height);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("Unable to get TeliSDK Camera dimensions");
 
-	// Create completion event object for stream.
-	hStrmCmpEvt = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (hStrmCmpEvt == NULL)
-		throw pangolin::VideoException("TeliSDK: Error creating event.");
+    Initialise(ImageRoi(0, 0, width, height));
+}
 
-	uint32_t uiPyldSize = 0;
-	uiStatus = Teli::Strm_OpenSimple(cam, &strm, &uiPyldSize, hStrmCmpEvt);
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("TeliSDK: Error opening camera stream.");
+TeliVideo::TeliVideo(const ImageRoi& roi)
+: cam(0), strm(0), hStrmCmpEvt(0)
+{
+    Teli::CAM_API_STATUS uiStatus = Teli::Sys_Initialize();
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("Unable to initialise TeliSDK.");
 
-	Start();
+    uint32_t num_cams = 0;
+    uiStatus = Teli::Sys_GetNumOfCameras(&num_cams);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("Unable to enumerate TeliSDK cameras.");
+
+    if (num_cams == 0)
+        throw pangolin::VideoException("No TeliSDK Cameras available.");
+
+    uiStatus = Teli::Cam_Open(0, &cam, 0, false, 0);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("TeliSDK: Error opening camera");
+
+    Initialise(roi);
+}
+
+void TeliVideo::Initialise(const ImageRoi& roi)
+{
+    Teli::CAM_API_STATUS uiStatus = Teli::SetCamRoi(cam, roi.w, roi.h, roi.x, roi.y);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS) {
+        std::cerr << "Error: " << std::hex << uiStatus << std::endl;
+        throw pangolin::VideoException("TeliSDK: Error setting SetCamRoi.");
+    }
+
+    // Create completion event object for stream.
+    hStrmCmpEvt = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (hStrmCmpEvt == NULL)
+        throw pangolin::VideoException("TeliSDK: Error creating event.");
+
+    uint32_t uiPyldSize = 0;
+    uiStatus = Teli::Strm_OpenSimple(cam, &strm, &uiPyldSize, hStrmCmpEvt);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("TeliSDK: Error opening camera stream.");
+
+    Start();
 	
     const VideoPixelFormat pfmt = VideoFormatFromString("GRAY8");
     
     size_bytes = 0;
     
-	const int n = 1;
+    const int n = 1;
     for(size_t c=0; c < n; ++c) {
-		const StreamInfo stream_info(pfmt, width, height, (width*pfmt.bpp) / 8, 0);
+        const StreamInfo stream_info(pfmt, roi.w, roi.h, (roi.w*pfmt.bpp) / 8, 0);
         streams.push_back(stream_info);        
-		size_bytes += uiPyldSize;
+        size_bytes += uiPyldSize;
     }
-
 }
 
 TeliVideo::~TeliVideo()
 {
-	Teli::CAM_API_STATUS uiStatus = Teli::Strm_Close(strm);
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("TeliSDK: Error closing camera stream.");
+    Teli::CAM_API_STATUS uiStatus = Teli::Strm_Close(strm);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("TeliSDK: Error closing camera stream.");
 
-	uiStatus = Teli::Cam_Close(cam);
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("TeliSDK: Error closing camera.");
+    uiStatus = Teli::Cam_Close(cam);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("TeliSDK: Error closing camera.");
 
-	uiStatus = Teli::Sys_Terminate();
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("TeliSDK: Error uninitialising.");
+    uiStatus = Teli::Sys_Terminate();
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("TeliSDK: Error uninitialising.");
 }
 
 //! Implement VideoInput::Start()
 void TeliVideo::Start()
 {
-	Teli::CAM_API_STATUS uiStatus = Teli::Strm_Start(strm);
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("TeliSDK: Error starting stream.");
+    Teli::CAM_API_STATUS uiStatus = Teli::Strm_Start(strm);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("TeliSDK: Error starting stream.");
 }
 
 //! Implement VideoInput::Stop()
 void TeliVideo::Stop()
 {
-	Teli::CAM_API_STATUS uiStatus = Teli::Strm_Stop(strm);
-	if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-		throw pangolin::VideoException("TeliSDK: Error stopping stream.");
+    Teli::CAM_API_STATUS uiStatus = Teli::Strm_Stop(strm);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("TeliSDK: Error stopping stream.");
 }
 
 //! Implement VideoInput::SizeBytes()
@@ -130,13 +162,13 @@ const std::vector<StreamInfo>& TeliVideo::Streams() const
 //! Implement VideoInput::GrabNext()
 bool TeliVideo::GrabNext(unsigned char* image, bool wait)
 {
-	unsigned int uiRet = WaitForSingleObject(hStrmCmpEvt, 2000);
-	if (uiRet == WAIT_OBJECT_0) {
-		Teli::CAM_IMAGE_INFO sImageInfo;
-		uint32_t uiPyldSize = size_bytes;
-		Teli::CAM_API_STATUS uiStatus = Teli::Strm_ReadCurrentImage(strm, image, &uiPyldSize, &sImageInfo);
-		return (uiStatus == Teli::CAM_API_STS_SUCCESS);
-	}
+    unsigned int uiRet = WaitForSingleObject(hStrmCmpEvt, 2000);
+    if (uiRet == WAIT_OBJECT_0) {
+        Teli::CAM_IMAGE_INFO sImageInfo;
+        uint32_t uiPyldSize = size_bytes;
+        Teli::CAM_API_STATUS uiStatus = Teli::Strm_ReadCurrentImage(strm, image, &uiPyldSize, &sImageInfo);
+        return (uiStatus == Teli::CAM_API_STS_SUCCESS);
+    }
 
     return false;
 }

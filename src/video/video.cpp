@@ -608,8 +608,11 @@ VideoInterface* OpenVideo(const Uri& uri)
 #endif
 #ifdef HAVE_TELICAM
     if (!uri.scheme.compare("teli")) {
-        TeliVideo* teli = new TeliVideo();
-        video = teli;
+        if (uri.Contains("roi")) {
+            video = new TeliVideo(uri.Get<ImageRoi>("roi", ImageRoi(0,0,1920,1200) ) );
+        }else{
+            video = new TeliVideo();
+        }
     }else
 #endif
 	{
