@@ -56,6 +56,10 @@
 #include <pangolin/video/drivers/depthsense.h>
 #endif
 
+#ifdef HAVE_TELICAM
+#include <pangolin/video/drivers/teli.h>
+#endif
+
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/video/drivers/test.h>
 #include <pangolin/video/drivers/images.h>
@@ -602,7 +606,13 @@ VideoInterface* OpenVideo(const Uri& uri)
         video = DepthSenseContext::I().GetDepthSenseVideo(0, img1, img2, dim1, dim2, fps1, fps2, uri);
     }else
 #endif
-    {
+#ifdef HAVE_TELICAM
+    if (!uri.scheme.compare("teli")) {
+        TeliVideo* teli = new TeliVideo();
+        video = teli;
+    }else
+#endif
+	{
         throw VideoException("Unable to open video URI");
     }
     

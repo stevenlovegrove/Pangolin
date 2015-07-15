@@ -119,7 +119,7 @@ const std::vector<StreamInfo>& ImagesVideo::Streams() const
 //! Implement VideoInput::GrabNext()
 bool ImagesVideo::GrabNext( unsigned char* image, bool wait )
 {
-    if(!QueueFrame()) return false;
+    QueueFrame();
         
     if(!loaded.size()) return false;
     

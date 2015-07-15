@@ -30,6 +30,7 @@
 #cmakedefine HAVE_OPENNI2
 #cmakedefine HAVE_UVC
 #cmakedefine HAVE_DEPTHSENSE
+#cmakedefine HAVE_TELICAM
 
 #cmakedefine HAVE_GLEW
 #cmakedefine HAVE_GLUT
