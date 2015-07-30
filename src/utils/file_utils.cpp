@@ -180,9 +180,14 @@ std::string FindPath(const std::string& child_path, const std::string& signature
     PathOsNormaliseInplace(path);
     PathOsNormaliseInplace(signature);
 
-    while(!path.empty() && !FileExists(path + signature)) {
-        path = PathParent(path);
+    while(!FileExists(path + signature)) {
+        if (path.empty()) {
+            return std::string();
+        } else {
+            path = PathParent(path);
+        }
     }
+
     return path + signature;
 }
 
