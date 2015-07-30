@@ -176,10 +176,14 @@ std::string PathParent(const std::string& path, int levels)
 std::string FindPath(const std::string& child_path, const std::string& signature_path)
 {
     std::string path = child_path;
-    while(!path.empty() && !FileExists(path + signature_path)) {
+    std::string signature = signature_path;
+    PathOsNormaliseInplace(path);
+    PathOsNormaliseInplace(signature);
+
+    while(!path.empty() && !FileExists(path + signature)) {
         path = PathParent(path);
     }
-    return path + signature_path;
+    return path + signature;
 }
 
 std::string PathExpand(const std::string& sPath)
@@ -304,8 +308,12 @@ bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>
 
 bool FileExists(const std::string& filename)
 {
+    std::string search_filename = filename;
+    if(filename.length() > 0 && filename[filename.length()-1] == '\\') {
+        search_filename.resize(filename.length()-1);
+    }
     WIN32_FIND_DATA wfd;
-    HANDLE fh = FindFirstFile( s2ws(filename).c_str(), &wfd);
+    HANDLE fh = FindFirstFile( s2ws(search_filename).c_str(), &wfd);
     const bool exists = fh != INVALID_HANDLE_VALUE;
     FindClose(fh);
     return exists;
