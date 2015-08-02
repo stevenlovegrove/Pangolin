@@ -6,8 +6,8 @@
 
 FIND_PATH( DepthSense_INCLUDE_DIR DepthSense.hxx
   PATHS
-      "$ENV{PROGRAMFILES}/SoftKinetic/DepthSenseSDK/include"
-      "$ENV{PROGRAMFILES}/Meta/DepthSenseSDK/include"
+      "${PROGRAM_FILES}/SoftKinetic/DepthSenseSDK/include"
+      "${PROGRAM_FILES}/Meta/DepthSenseSDK/include"
       /usr/include
       /usr/local/include
       /opt/local/include
@@ -16,8 +16,8 @@ FIND_PATH( DepthSense_INCLUDE_DIR DepthSense.hxx
 
 FIND_LIBRARY( DepthSense_LIBRARY DepthSense
   PATHS
-      "$ENV{PROGRAMFILES}/SoftKinetic/DepthSenseSDK/lib"
-      "$ENV{PROGRAMFILES}/Meta/DepthSenseSDK/lib"
+      "${PROGRAM_FILES}/SoftKinetic/DepthSenseSDK/lib"
+      "${PROGRAM_FILES}/Meta/DepthSenseSDK/lib"
       /usr/lib64
       /usr/lib
       /usr/local/lib
