@@ -991,4 +991,9 @@ void FinishFrame()
     FinishAndroidFrame();
 }
 
+void SetFullscreen(bool /*fullscreen*/)
+{
+    // Do nothing
+}
+
 }

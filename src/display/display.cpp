@@ -182,33 +182,7 @@ View& CreateDisplay()
 
 void ToggleFullscreen()
 {
-    if( context->is_fullscreen )
-    {
-#ifdef HAVE_GLUT
-        glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
-#endif // HAVE_GLUT
-        context->is_fullscreen = false;
-    }else{
-#ifdef HAVE_GLUT
-        glutFullScreen();
-#endif // HAVE_GLUT
-        context->is_fullscreen = true;
-    }
-}
-
-void SetFullscreen(bool fullscreen)
-{
-    if( fullscreen != context->is_fullscreen )
-    {
-#ifdef HAVE_GLUT
-        if(fullscreen) {
-            glutFullScreen();
-        }else{
-            glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
-        }
-#endif // HAVE_GLUT
-        context->is_fullscreen = fullscreen;
-    }
+    SetFullscreen(!context->is_fullscreen);
 }
 
 View& Display(const std::string& name)
@@ -431,12 +405,9 @@ void Keyboard( unsigned char key, int x, int y)
         }
     }
 #endif // HAVE_GLCONSOLE
-#ifdef HAVE_GLUT
     else if( key == GLUT_KEY_TAB) {
         ToggleFullscreen();
-    }
-#endif // HAVE_GLUT
-    else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
+    } else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
         context->keypress_hooks[key]();
     } else if(context->activeDisplay && context->activeDisplay->handler) {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);

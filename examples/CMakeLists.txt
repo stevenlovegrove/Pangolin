@@ -4,7 +4,7 @@ find_package(CUDA QUIET)
 find_package(Oculus QUIET)
 
 # All examples depend on Pangolin GUI
-if(BUILD_PANGOLIN_GUI AND (FREEGLUT_FOUND OR GLUT_FOUND OR ANDROID) )
+if(BUILD_PANGOLIN_GUI AND (FREEGLUT_FOUND OR GLUT_FOUND OR ANDROID OR _WIN_) )
     add_subdirectory(HelloPangolin)
     add_subdirectory(SimpleMultiDisplay)
     add_subdirectory(SimpleDisplayImage)

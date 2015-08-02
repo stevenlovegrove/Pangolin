@@ -42,8 +42,12 @@ Check the CMake configure output for details.
 
 ### Recommended Dependencies ###
 
-* Glut / GLU / Glew (Required for window management on OSX/Win/Linux)
- * (win) http://www.transmissionzero.co.uk/software/freeglut-devel/
+* Glew
+ * (win) http://glew.sourceforge.net
+ * (deb) sudo apt-get install libglew-dev
+ * (mac) sudo port install glew
+
+* Glut (Required for window management on OSX/Linux)
  * (deb) sudo apt-get install freeglut3-dev libglu-dev libglew-dev
  * (mac) sudo port install freeglut glew
  * (mac) OsxGlut for smooth scroll/zoom: https://github.com/stevenlovegrove/osxglut

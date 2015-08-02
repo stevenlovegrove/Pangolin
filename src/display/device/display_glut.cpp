@@ -149,4 +149,18 @@ void FinishFrame()
     FinishGlutFrame();
 }
 
+void SetFullscreen(bool fullscreen)
+{
+    if( fullscreen != context->is_fullscreen )
+    {
+        if(fullscreen) {
+            glutFullScreen();
+        }else{
+            glutReshapeWindow(context->windowed_size[0],context->windowed_size[1]);
+        }
+        context->is_fullscreen = fullscreen;
+    }
+}
+
+
 }
