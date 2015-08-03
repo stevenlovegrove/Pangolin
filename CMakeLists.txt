@@ -41,8 +41,12 @@ if(ANDROID OR IOS)
     endif()
 endif()
 
+if(_OSX_)
+    set(CMAKE_MACOSX_RPATH ON)
+endif()
+
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}
-if( NOT CMAKE_BUILD_TYPE )
+if( NOT CMAKE_BUILD_TYPE AND NOT _WIN_ )
    message("Build type not set (defaults to release)")
    message("-DCMAKE_BUILD_TYPE=Debug for debug")
    set( CMAKE_BUILD_TYPE Release )
