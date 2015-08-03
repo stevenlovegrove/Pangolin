@@ -9,36 +9,39 @@
 find_path(
     TeliCam_INCLUDE_DIR TeliCamApi.h
     PATHS
-        "$ENV{PROGRAMFILES}/Toshiba Teli/TeliCamSDK/TeliCamApi/Include"
-        "$ENV{PROGRAMW6432}/Toshiba Teli/TeliCamSDK/TeliCamApi/Include"
+        "${PROGRAM_FILES}/Toshiba Teli/TeliCamSDK/TeliCamApi/Include"
         "${CMAKE_SOURCE_DIR}/../TeliCamSDK/TeliCamApi/Include"
         /usr/include
         /user/include
     PATH_SUFFIXES TeliCam
 )
 
+if(${CMAKE_CL_64})
+    set(TELI_PATH_SUFFIXES x64)
+else()
+    set(TELI_PATH_SUFFIXES x86)
+endif()
+
 find_library(
     TeliCamApi_LIBRARY
-    NAMES TeliCamApi
+    NAMES TeliCamApi TeliCamApi64
     PATHS
-        "$ENV{PROGRAMFILES}/Toshiba Teli/TeliCamSDK/TeliCamApi/lib"
-        "$ENV{PROGRAMW6432}/Toshiba Teli/TeliCamSDK/TeliCamApi/lib"
+        "${PROGRAM_FILES}/Toshiba Teli/TeliCamSDK/TeliCamApi/lib"
         "${CMAKE_SOURCE_DIR}/../TeliCamSDK/TeliCamApi/lib"
         /usr/lib
         /user/lib
-    PATH_SUFFIXES x64 x86
+    PATH_SUFFIXES ${TELI_PATH_SUFFIXES}
 )
 
 find_library(
     TeliCamUtl_LIBRARY
-    NAMES TeliCamUtl
+    NAMES TeliCamUtl TeliCamUtl64
     PATHS
-        "$ENV{PROGRAMFILES}/Toshiba Teli/TeliCamSDK/TeliCamApi/lib"
-        "$ENV{PROGRAMW6432}/Toshiba Teli/TeliCamSDK/TeliCamApi/lib"
+        "${PROGRAM_FILES}/Toshiba Teli/TeliCamSDK/TeliCamApi/lib"
         "${CMAKE_SOURCE_DIR}/../TeliCamSDK/TeliCamApi/lib"
         /usr/lib
         /user/lib
-    PATH_SUFFIXES x64 x86
+    PATH_SUFFIXES ${TELI_PATH_SUFFIXES}
 )
 
 set(TeliCam_INCLUDE_DIRS ${TeliCam_INCLUDE_DIR})
