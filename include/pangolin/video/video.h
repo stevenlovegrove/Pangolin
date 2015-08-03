@@ -209,7 +209,7 @@ struct PANGOLIN_EXPORT VideoFilterInterface
     {
         std::vector<T*> matches;
         std::vector<VideoInterface*> children = InputStreams();
-        for(int c=0; c < children.size(); ++c) {
+        for(size_t c=0; c < children.size(); ++c) {
             T* concrete_video = dynamic_cast<T*>(children[c]);
             if(concrete_video) {
                 matches.push_back(concrete_video);
