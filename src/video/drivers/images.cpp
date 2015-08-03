@@ -61,7 +61,7 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path)
         const std::string channel_wildcard = PathExpand(wildcards[i]);
         FilesMatchingWildcard(channel_wildcard, filenames[i]);
         if(num_files < 0) {
-            num_files = filenames[i].size();
+            num_files = (int)filenames[i].size();
         }else{
             if( num_files != (int)filenames[i].size() ) {
                 std::cerr << "Warning: Video Channels have unequal number of files" << std::endl;

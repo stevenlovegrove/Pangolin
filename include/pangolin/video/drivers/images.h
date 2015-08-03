@@ -66,7 +66,7 @@ public:
 protected:
     typedef std::vector<TypedImage> Frame;
     
-    const std::string& Filename(int frameNum, int channelNum) {
+    const std::string& Filename(size_t frameNum, size_t channelNum) {
         return filenames[channelNum][frameNum];
     }
     

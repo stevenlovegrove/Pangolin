@@ -59,7 +59,7 @@ struct PANGOLIN_EXPORT InputRecordRepeat
     void ClearBuffer();
     
     void PlayBuffer();
-    void PlayBuffer(int start, int end);
+    void PlayBuffer(size_t start, size_t end);
     
     void UpdateVariable(const std::string& name );
     
@@ -68,7 +68,7 @@ struct PANGOLIN_EXPORT InputRecordRepeat
         GuiVarChanged((void*)this, var.var->Meta().full_name, *var.var);
     }
     
-    int Size();
+    size_t Size();
     
 protected:
     bool record;

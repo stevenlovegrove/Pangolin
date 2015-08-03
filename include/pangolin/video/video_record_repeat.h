@@ -52,11 +52,11 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
     const std::vector<StreamInfo>& Streams() const;
 
     // Return details of first stream
-    unsigned Width() const {
-        return Streams()[0].Width();
+    unsigned int Width() const {
+        return (unsigned int)Streams()[0].Width();
     }
-    unsigned Height() const {
-        return Streams()[0].Height();
+    unsigned int Height() const {
+        return (unsigned int)Streams()[0].Height();
     }
     VideoPixelFormat PixFormat() const {
         return Streams()[0].PixFormat();

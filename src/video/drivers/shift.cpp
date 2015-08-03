@@ -39,8 +39,8 @@ ShiftVideo::ShiftVideo(VideoInterface* src, VideoPixelFormat out_fmt, int shift_
     videoin.push_back(src);
 
     for(size_t s=0; s< src->Streams().size(); ++s) {
-        const int w = src->Streams()[s].Width();
-        const int h = src->Streams()[s].Height();
+        const size_t w = src->Streams()[s].Width();
+        const size_t h = src->Streams()[s].Height();
 
         // Check compatibility of formats
         const VideoPixelFormat in_fmt = src->Streams()[s].PixFormat();

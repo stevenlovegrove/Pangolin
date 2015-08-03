@@ -49,8 +49,8 @@ DebayerVideo::DebayerVideo(VideoInterface* src, color_filter_t tile, bayer_metho
 
     const pangolin::VideoPixelFormat rgb_format = pangolin::VideoFormatFromString("RGB24");
     for(size_t s=0; s< src->Streams().size(); ++s) {
-        int w = src->Streams()[s].Width();
-        int h = src->Streams()[s].Height();
+        size_t w = src->Streams()[s].Width();
+        size_t h = src->Streams()[s].Height();
         if(this->method==BAYER_METHOD_DOWNSAMPLE) {
             w = w/2;
             h = h/2;

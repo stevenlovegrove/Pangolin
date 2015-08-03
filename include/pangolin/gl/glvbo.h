@@ -171,7 +171,7 @@ inline void RenderVboIboCboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, GlBu
     
     if(draw_normals) {
         nbo.Bind();
-        glNormalPointer(nbo.datatype, nbo.count_per_element * GlDataTypeBytes(nbo.datatype),0);
+        glNormalPointer(nbo.datatype, (GLsizei)(nbo.count_per_element * GlDataTypeBytes(nbo.datatype)),0);
         glEnableClientState(GL_NORMAL_ARRAY);
     }
 
@@ -210,7 +210,7 @@ inline void RenderVboIboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& nbo, bool dr
 
     if(draw_normals) {
         nbo.Bind();
-        glNormalPointer(nbo.datatype, nbo.count_per_element * GlDataTypeBytes(nbo.datatype),0);
+        glNormalPointer(nbo.datatype, (GLsizei)(nbo.count_per_element * GlDataTypeBytes(nbo.datatype)), 0);
         glEnableClientState(GL_NORMAL_ARRAY);
     }
 

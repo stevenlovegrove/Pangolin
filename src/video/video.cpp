@@ -157,7 +157,7 @@ std::vector<std::string> SplitBrackets(const std::string src, char open = '{', c
     for(size_t i=0; i < src.length(); ++i) {
         if(src[i] == open) {
             if(nesting==0) {
-                begin = i;
+                begin = (int)i;
             }
             nesting++;
         }else if(src[i] == close) {
@@ -398,8 +398,8 @@ VideoInterface* OpenVideo(const Uri& uri)
         if(subvid->Streams().size() != 1)
             throw VideoException("VideoSplitter input must have exactly one stream");
 
-        const int subw = subvid->Streams()[0].Width();
-        const int subh = subvid->Streams()[0].Height();
+        const size_t subw = subvid->Streams()[0].Width();
+        const size_t subh = subvid->Streams()[0].Height();
         const ImageRoi default_roi(0,0, subw, subh );
         const StreamInfo& stmin = subvid->Streams()[0];
 
@@ -674,16 +674,16 @@ const std::vector<StreamInfo>& VideoInput::Streams() const
     return video->Streams();
 }
 
-unsigned VideoInput::Width() const
+unsigned int VideoInput::Width() const
 {
     if( !video ) throw VideoException("No video source open");
-    return video->Streams()[0].Width();
+    return (unsigned int)video->Streams()[0].Width();
 }
 
-unsigned VideoInput::Height() const
+unsigned int VideoInput::Height() const
 {
     if( !video ) throw VideoException("No video source open");
-    return video->Streams()[0].Height();
+    return (unsigned int)video->Streams()[0].Height();
 }
 
 VideoPixelFormat VideoInput::PixFormat() const

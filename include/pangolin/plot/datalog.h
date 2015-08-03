@@ -119,7 +119,7 @@ public:
 
     const float* Sample(size_t n) const
     {
-        const int id = n - start_id;
+        const int id = (int)n - (int)start_id;
 
         if( 0 <= id && id < (int)samples ) {
             return sample_buffer + dim*id;

@@ -129,13 +129,13 @@ void InputRecordRepeat::PlayBuffer()
     play = true;
 }
 
-void InputRecordRepeat::PlayBuffer(int start, int end)
+void InputRecordRepeat::PlayBuffer(size_t start, size_t end)
 {
     std::list<FrameInput>::iterator s = record_queue.begin();
     std::list<FrameInput>::iterator e = record_queue.begin();
 
-    for(int i=0; i<start; i++) s++;
-    for(int i=0; i<end; i++) e++;
+    for(size_t i=0; i<start; i++) s++;
+    for(size_t i=0; i<end; i++) e++;
 
     play_queue.clear();
     play_queue.insert(play_queue.begin(),s,e);
@@ -144,7 +144,7 @@ void InputRecordRepeat::PlayBuffer(int start, int end)
     play = true;
 }
 
-int InputRecordRepeat::Size()
+size_t InputRecordRepeat::Size()
 {
     return record_queue.size();
 }

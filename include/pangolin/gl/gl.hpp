@@ -199,7 +199,7 @@ inline void GlTexture::Load(const TypedImage& image, bool sampling_linear)
                         (image.fmt.channels == 3 ? GL_RGB : GL_RGBA);
 
     // TODO: Make the format logic more reliable
-    Reinitialise(image.w, image.h, GL_RGBA, sampling_linear, 0, format, GL_UNSIGNED_BYTE, image.ptr );
+    Reinitialise((GLint)image.w, (GLint)image.h, GL_RGBA, sampling_linear, 0, format, GL_UNSIGNED_BYTE, image.ptr );
 }
 
 inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_linear)
@@ -663,7 +663,7 @@ inline void GlSizeableBuffer::CheckResize(size_t num_verts)
 {
     if( num_verts > GlBuffer::num_elements) {
         const size_t new_size = NextSize(num_verts);
-        GlBuffer::Resize(new_size);
+        GlBuffer::Resize((GLuint)new_size);
     }
 }
 

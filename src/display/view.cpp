@@ -244,10 +244,10 @@ void View::ResizeChildren()
             double a = visiblechildren*child_a;
             double area = AspectAreaWithinTarget(this_a, a);
             
-            int cols = visiblechildren-1;
+            size_t cols = visiblechildren-1;
             for(; cols > 0; --cols)
             {
-                const int rows = visiblechildren / cols + (visiblechildren % cols == 0 ? 0 : 1);
+                const size_t rows = visiblechildren / cols + (visiblechildren % cols == 0 ? 0 : 1);
                 const double na = cols * child_a / rows;
                 const double new_area = visiblechildren*AspectAreaWithinTarget(this_a,na)/(rows*cols);
                 if( new_area <= area )
@@ -257,8 +257,8 @@ void View::ResizeChildren()
             }
             
             cols++;
-            const int rows = visiblechildren / cols + (visiblechildren % cols == 0 ? 0 : 1);
-            int cw,ch;
+            const size_t rows = visiblechildren / cols + (visiblechildren % cols == 0 ? 0 : 1);
+            size_t cw, ch;
             if( a > this_a )
             {
                 cw = v.w / cols;
@@ -268,11 +268,11 @@ void View::ResizeChildren()
                 cw = (int)(ch * child_a);
             }
             
-            for( unsigned int i=0; i< visiblechildren; ++i )
+            for(size_t i=0; i< visiblechildren; ++i )
             {
-                int c = i % cols;
-                int r = i / cols;
-                Viewport space(v.l + c*cw, v.t() - (r+1)*ch, cw,ch);
+                size_t c = i % cols;
+                size_t r = i / cols;
+                Viewport space( GLint(v.l + c*cw), GLint(v.t() - (r+1)*ch), GLint(cw), GLint(ch) );
                 VisibleChild(i).Resize(space);
             }
         }

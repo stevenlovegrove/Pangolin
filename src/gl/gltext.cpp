@@ -83,7 +83,7 @@ void GlText::DrawGlSl()
 
         tex->Bind();
         glEnable(GL_TEXTURE_2D);
-        glDrawArrays(GL_TRIANGLES, 0, vs.size() );
+        glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vs.size() );
         glDisable(GL_TEXTURE_2D);
 
         glDisableVertexAttribArray(pangolin::DEFAULT_LOCATION_POSITION);
@@ -101,7 +101,7 @@ void GlText::Draw()
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         tex->Bind();
         glEnable(GL_TEXTURE_2D);
-        glDrawArrays(GL_TRIANGLES, 0, vs.size() );
+        glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vs.size() );
         glDisable(GL_TEXTURE_2D);
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);

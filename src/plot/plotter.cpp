@@ -326,7 +326,7 @@ void Plotter::ComputeTrackValue( float track_val[2] )
         // Track last edge transition matching trigger_edge
         const DataLogBlock* block = log->LastBlock();
         if(block) {
-            int s = block->StartId() + block->Samples() - 1;
+            int s = (int)block->StartId() + (int)block->Samples() - 1;
             const size_t dim = block->Dimensions();
             const float* data = block->Sample(s);
             int last_sgn = 0;
@@ -498,7 +498,7 @@ void Plotter::Render()
             bool shouldRender = true;
             for(size_t i=0; i< ps.attribs.size(); ++i) {
                 if(0 <= ps.attribs[i].plot_id && ps.attribs[i].plot_id < (int)block->Dimensions() ) {
-                    glVertexAttribPointer(ps.attribs[i].location, 1, GL_FLOAT, GL_FALSE, block->Dimensions()*sizeof(float), block->DimData(ps.attribs[i].plot_id) );
+                    glVertexAttribPointer(ps.attribs[i].location, 1, GL_FLOAT, GL_FALSE, (GLsizei)(block->Dimensions()*sizeof(float)), block->DimData(ps.attribs[i].plot_id) );
                     glEnableVertexAttribArray(ps.attribs[i].location);
                 }else if( ps.attribs[i].plot_id == -1 ){
                     glVertexAttribPointer(ps.attribs[i].location, 1, GL_FLOAT, GL_FALSE, 0, id_array );
@@ -512,7 +512,7 @@ void Plotter::Render()
 
             if(shouldRender) {
                 // Draw geometry
-                glDrawArrays(ps.drawing_mode, 0, block->Samples());
+                glDrawArrays(ps.drawing_mode, 0, (GLsizei)block->Samples());
                 ps.used = true;
             }
 

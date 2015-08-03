@@ -58,7 +58,7 @@ void LoadGlImage(GlTexture& tex, const std::string& filename, bool sampling_line
     TypedImage img = LoadImage(filename);
     const GLint format  = chtypes[img.fmt.channels];
     const GLint imgtype = GL_UNSIGNED_BYTE;
-    tex.Reinitialise(img.w, img.h, format, sampling_linear, 0, format, imgtype, img.ptr );
+    tex.Reinitialise((GLint)img.w, (GLint)img.h, format, sampling_linear, 0, format, imgtype, img.ptr );
     img.Dealloc();
 }
 
@@ -168,7 +168,8 @@ bool GlFont::LoadEmbeddedFont()
 {
     // Include an extra byte for the terminating NULL
     char* str = new char[font_xml_data.size() + 1];
-    strcpy( str, font_xml_data.c_str() );
+    std::memcpy(str, font_xml_data.c_str(), font_xml_data.size());
+    str[font_xml_data.size()] = '\0';
     const bool success = LoadFontFromText(str);
     delete[] str;
     return success;
@@ -194,8 +195,8 @@ GlText GlFont::Text( const char* fmt, ... )
         vsnprintf( text, MAX_TEXT_LENGTH, fmt, ap );
         va_end( ap );
         
-        int len = strlen(text);
-        for(int i=0; i < len; ++i) {
+        const size_t len = strlen(text);
+        for(size_t i=0; i < len; ++i) {
             const char c = text[i];
             std::map< char, GlChar >::const_iterator it = mmCharacters.find( c );
             if(it != mmCharacters.end()) {

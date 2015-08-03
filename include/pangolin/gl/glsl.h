@@ -477,7 +477,9 @@ inline void GlSlProgram::SetUniform(const std::string& name, const OpenGlMatrix&
 {
     // glUniformMatrix4dv seems to be crashing...
     float m[16];
-    std::copy(mat.m, mat.m+16, m);
+    for (int i = 0; i < 16; ++i) {
+        m[i] = (float)mat.m[i];
+    }
     glUniformMatrix4fv( GetUniformHandle(name), 1, GL_FALSE, m);
 }
 
