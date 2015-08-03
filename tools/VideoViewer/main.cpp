@@ -74,7 +74,6 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glfmt.push_back(GlFormat(video.Streams()[d].PixFormat()));
     }
 
-    const int FRAME_SKIP = 30;
     int frame = 0;
     pangolin::Var<int>  max_frame("max_frame", total_frames );
     pangolin::Var<bool> linear_sampling("linear_sampling", true );
@@ -82,6 +81,8 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::Var<float> int16_bias("int16.bias", 0.0 );
 
 #ifdef CALLEE_HAS_CPP11
+    const int FRAME_SKIP = 30;
+
     // Show/hide streams
     for(size_t v=0; v < pangolin::DisplayBase().NumChildren() && v < 9; v++) {
         pangolin::RegisterKeyPressCallback('1'+v, [v](){
