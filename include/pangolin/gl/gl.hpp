@@ -544,7 +544,7 @@ inline GlBuffer::GlBuffer(GlBuffer&& buffer)
 
 inline bool GlBuffer::IsValid() const
 {
-    return bo;
+    return bo != 0;
 }
 
 inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )

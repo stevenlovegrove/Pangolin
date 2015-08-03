@@ -299,7 +299,7 @@ OpenGlMatrix::operator Eigen::Matrix<P,4,4>() const
     Eigen::Matrix<P,4,4> mat;
     for(int r=0; r<4; ++r ) {
         for(int c=0; c<4; ++c ) {
-            mat(r,c) = m[c*4+r];
+            mat(r,c) = (P)m[c*4+r];
         }
     }
     return mat;
