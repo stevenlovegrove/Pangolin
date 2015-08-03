@@ -32,6 +32,7 @@
 #include <pangolin/display/display.h>
 #include <pangolin/image/image_io.h>
 #include <algorithm>
+#include <stdexcept>
 
 namespace pangolin
 {
