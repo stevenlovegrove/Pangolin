@@ -238,20 +238,20 @@ LPARAM lParam)
     case WM_LBUTTONDOWN:
         process::Mouse(0, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
-    case WM_RBUTTONDOWN:
+    case WM_MBUTTONDOWN:
         process::Mouse(1, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
-    case WM_MBUTTONDOWN:
+    case WM_RBUTTONDOWN:
         process::Mouse(2, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
 
     case WM_LBUTTONUP:
         process::Mouse(0, 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
-    case WM_RBUTTONUP:
+    case WM_MBUTTONUP:
         process::Mouse(1, 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
-    case WM_MBUTTONUP:
+    case WM_RBUTTONUP:
         process::Mouse(2, 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
 
