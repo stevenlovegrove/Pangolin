@@ -110,7 +110,7 @@ protected:
             writer.put( 0x80 | (n & 0x7F) );
             n >>= 7;
         }
-        writer.put( (char)n );
+        writer.put( (unsigned char)n );
     }
 
     inline void WriteTimestamp()

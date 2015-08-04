@@ -28,6 +28,7 @@
 #include <pangolin/log/packetstream.h>
 #include <pangolin/utils/timer.h>
 #include <pangolin/compat/thread.h>
+#include <pangolin/utils/file_utils.h>
 
 #include <iostream>
 #include <string>
@@ -92,7 +93,7 @@ PacketStreamWriter::PacketStreamWriter()
 }
 
 PacketStreamWriter::PacketStreamWriter(const std::string& filename, unsigned int buffer_size_bytes )
-    : buffer(filename, buffer_size_bytes), writer(&buffer), bytes_written(0)
+    : buffer(pangolin::PathExpand(filename), buffer_size_bytes), writer(&buffer), bytes_written(0)
 {
     // Start of file magic
     writer.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
@@ -103,7 +104,7 @@ PacketStreamWriter::PacketStreamWriter(const std::string& filename, unsigned int
 void PacketStreamWriter::Open(const std::string& filename, unsigned int buffer_size_bytes)
 {
     // Open file for writing
-    buffer.open(filename, buffer_size_bytes);
+    buffer.open(pangolin::PathExpand(filename), buffer_size_bytes);
     
     // Start of file magic
     writer.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
@@ -177,6 +178,9 @@ void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char*
 
     // Write data
     writer.write(data, n);
+    if(writer.bad()) {
+        throw std::runtime_error("Error writing data.");
+    }
     bytes_written += n;
 }
 

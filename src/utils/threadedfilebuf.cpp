@@ -28,6 +28,7 @@
 #include <pangolin/utils/threadedfilebuf.h>
 
 #include <cstring>
+#include <stdexcept>
 
 using namespace std;
 
@@ -52,6 +53,9 @@ void threadedfilebuf::open(const std::string& filename, unsigned int buffer_size
     }
 
     file.open(filename.c_str(), ios::out | ios::binary);
+    if(!file.is_open()) {
+        throw std::runtime_error("Unable to open '" + filename + "' for writing.");
+    }
 
     mem_buffer = 0;
     mem_size = 0;
@@ -82,9 +86,21 @@ threadedfilebuf::~threadedfilebuf()
 
 std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_bytes)
 {
-    if( num_bytes > mem_max_size )
-        throw exception();
-    
+    if( num_bytes > mem_max_size ) {
+        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        // Wait until queue is empty
+        while( mem_size > 0 ) {
+            cond_dequeued.wait(lock);
+        }
+
+        // Allocate bigger buffer
+        delete mem_buffer;
+        mem_start = 0;
+        mem_end = 0;
+        mem_max_size = num_bytes * 4;
+        mem_buffer = new char[(size_t)mem_max_size];
+    }
+
     {
         boostd::unique_lock<boostd::mutex> lock(update_mutex);
         
@@ -123,9 +139,6 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
 int threadedfilebuf::overflow(int c)
 {
     const std::streamsize num_bytes = 1;
-
-    if( num_bytes > mem_max_size )
-        throw exception();
 
     {
         boostd::unique_lock<boostd::mutex> lock(update_mutex);
@@ -172,14 +185,11 @@ void threadedfilebuf::operator()()
         std::streamsize bytes_written =
                 file.sputn(mem_buffer + mem_start, data_to_write );
         
-        if( bytes_written != data_to_write)
-            throw std::exception();
-        
         {
             boostd::unique_lock<boostd::mutex> lock(update_mutex);
             
-            mem_size -= data_to_write;
-            mem_start += data_to_write;
+            mem_size -= bytes_written;
+            mem_start += bytes_written;
             
             if(mem_start == mem_max_size)
                 mem_start = 0;
