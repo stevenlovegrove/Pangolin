@@ -218,8 +218,15 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         
         if( button_state == MouseButtonMiddle )
         {
-            // Middle Drag: in plane translate
-            Rotation<>(T_nc,-delta[1]*rf, -delta[0]*rf, (GLprecision)0.0);
+            // Middle Drag: Rotate around view
+
+            // Try to correct for different coordinate conventions.
+            GLprecision aboutx = -rf * delta[1];
+            GLprecision abouty = rf * delta[0];
+            OpenGlMatrix& pm = cam_state->GetProjectionMatrix();
+            abouty *= -pm.m[2 * 4 + 3];
+
+            Rotation<>(T_nc, aboutx, abouty, (GLprecision)0.0);
         }else if( button_state == MouseButtonLeft )
         {
             // Left Drag: in plane translate
@@ -251,11 +258,9 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             rotation_changed = true;
         }else if( button_state == MouseButtonRight)
         {
-            // Correct for OpenGL Camera.
+            // Try to correct for different coordinate conventions.
             GLprecision aboutx = -rf * delta[1];
             GLprecision abouty =  rf * delta[0];
-            
-            // Try to correct for different coordinate conventions.
             OpenGlMatrix& pm = cam_state->GetProjectionMatrix();
             abouty *= -pm.m[2*4+3];
             
