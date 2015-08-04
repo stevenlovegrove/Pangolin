@@ -1,5 +1,6 @@
 include(ExternalProject)
 
+set(ExternConfig "")
 
 if( BUILD_EXTERN_GLEW )
 
@@ -26,6 +27,12 @@ set(GLEW_FOUND true PARENT_SCOPE)
 set(GLEW_INCLUDE_DIR "${glew_PREFIX}/include" PARENT_SCOPE)
 set(GLEW_LIBRARY _glew PARENT_SCOPE)
 set(GLEW_STATIC 1 PARENT_SCOPE)
+set(ExternConfig "${ExternConfig}
+  add_library(_glew STATIC IMPORTED)
+  set_target_properties(_glew PROPERTIES
+    IMPORTED_LOCATION_RELEASE ${glew_PREFIX}/lib/glew.lib
+    IMPORTED_LOCATION_DEBUG   ${glew_PREFIX}/lib/glewd.lib
+  )")
 endif()
 
 if( BUILD_EXTERN_LIBPNG )
@@ -76,7 +83,17 @@ set(PNG_FOUND true PARENT_SCOPE)
 set(PNG_INCLUDE_DIR "${libpng_PREFIX}/include" PARENT_SCOPE)
 set(PNG_LIBRARY _libpng PARENT_SCOPE)
 set(ZLIB_LIBRARY _zlib PARENT_SCOPE)
-
+set(ExternConfig "${ExternConfig}
+  add_library(_zlib STATIC IMPORTED)
+  set_target_properties(_zlib PROPERTIES
+    IMPORTED_LOCATION_RELEASE ${zlib_PREFIX}/lib/zlibstatic.lib
+    IMPORTED_LOCATION_DEBUG   ${zlib_PREFIX}/lib/zlibstaticd.lib
+  )
+  add_library(_libpng STATIC IMPORTED)
+  set_target_properties(_libpng PROPERTIES
+    IMPORTED_LOCATION_RELEASE ${libpng_PREFIX}/lib/libpng16_static.lib
+    IMPORTED_LOCATION_DEBUG   ${libpng_PREFIX}/lib/libpng16_staticd.lib
+  )")
 endif()
 
 if( BUILD_EXTERN_LIBJPEG )
@@ -104,5 +121,11 @@ set_target_properties(_libjpeg PROPERTIES
 set(JPEG_FOUND true PARENT_SCOPE)
 set(JPEG_INCLUDE_DIR "${libjpeg_PREFIX}/include" PARENT_SCOPE)
 set(JPEG_LIBRARY _libjpeg PARENT_SCOPE)
-
+set(ExternConfig "${ExternConfig}
+  add_library(_libjpeg STATIC IMPORTED)
+  set_target_properties(_libjpeg PROPERTIES
+    IMPORTED_LOCATION ${libjpeg_PREFIX}/lib/jpeg.lib
+  )")
 endif()
+
+set(ExternConfig "${ExternConfig}" PARENT_SCOPE)

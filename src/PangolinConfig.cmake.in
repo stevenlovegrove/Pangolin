@@ -9,6 +9,7 @@ SET( Pangolin_INCLUDE_DIR  "@EXPORT_LIB_INC_DIR@;@USER_INC@" )
 # Library dependencies (contains definitions for IMPORTED targets)
 if( NOT TARGET @LIBRARY_NAME@ AND NOT @PROJECT_NAME@_BINARY_DIR )
   include( "${PROJECT_CMAKE_DIR}/@PROJECT_NAME@Targets.cmake" )
+  @ExternConfig@
 endif()
 
 SET( Pangolin_LIBRARIES    @LIBRARY_NAME@ )
