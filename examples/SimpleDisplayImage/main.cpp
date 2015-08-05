@@ -36,7 +36,7 @@ int main( int /*argc*/, char* argv[] )
       .SetLock(pangolin::LockLeft, pangolin::LockTop);
 
   std::cout << "Resize the window to experiment with SetBounds, SetLock and SetAspect." << std::endl;
-  std::cout << "Notice that the teapots aspect is maintained even though it covers the whole screen." << std::endl;
+  std::cout << "Notice that the cubes aspect is maintained even though it covers the whole screen." << std::endl;
 
   const int width =  64;
   const int height = 48;

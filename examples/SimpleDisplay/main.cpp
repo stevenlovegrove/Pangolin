@@ -76,9 +76,9 @@ int main( int /*argc*/, char* argv[] )
   pangolin::Var<CustomType> any_type("ui.Some Type", CustomType(0,1.2,"Hello") );
 
   pangolin::Var<bool> save_window("ui.Save Window",false,false);
-  pangolin::Var<bool> save_teapot("ui.Save Teapot",false,false);
+  pangolin::Var<bool> save_cube("ui.Save Cube",false,false);
 
-  pangolin::Var<bool> record_teapot("ui.Record Teapot",false,false);
+  pangolin::Var<bool> record_cube("ui.Record Cube",false,false);
 
 #ifdef CPP11_NO_BOOST
   // boost::function / std::function objects can be used for Var's too.
@@ -114,10 +114,10 @@ int main( int /*argc*/, char* argv[] )
     if( pangolin::Pushed(save_window) )
         pangolin::SaveWindowOnRender("window");
 
-    if( pangolin::Pushed(save_teapot) )
-        d_cam.SaveOnRender("teapot");
+    if( pangolin::Pushed(save_cube) )
+        d_cam.SaveOnRender("cube");
     
-    if( pangolin::Pushed(record_teapot) )
+    if( pangolin::Pushed(record_cube) )
         pangolin::DisplayBase().RecordOnRender("ffmpeg:[fps=50,bps=8388608,unique_filename]//screencap.avi");
 
     // Activate efficiently by object
