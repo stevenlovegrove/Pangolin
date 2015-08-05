@@ -27,6 +27,7 @@
 
 #include <pangolin/video/drivers/pango_video_output.h>
 #include <pangolin/utils/picojson.h>
+#include <set>
 
 namespace pangolin
 {
@@ -49,6 +50,15 @@ const std::vector<StreamInfo>& PangoVideoOutput::Streams() const
 
 void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::string& uri, const json::value& properties)
 {
+    std::set<unsigned char*> unique_ptrs;
+    for(size_t i=0; i<st.size(); ++i) {
+        unique_ptrs.insert(st[i].Offset());
+    }
+
+    if(unique_ptrs.size() < st.size()) {
+        throw std::invalid_argument("Each image must have unique offset into buffer.");
+    }
+
     if(packetstreamsrcid == -1) {
         input_uri = uri;
         streams = st;
