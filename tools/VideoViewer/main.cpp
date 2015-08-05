@@ -3,6 +3,32 @@
 #include <pangolin/gl/gltexturecache.h>
 #include <pangolin/gl/glpixformat.h>
 
+template<typename T>
+std::pair<float,float> GetScaleBias(const pangolin::Image<unsigned char>& img)
+{
+    std::pair<float,float> mm(std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+    for(size_t i=0; i < img.Area(); ++i) {
+        const T val = ((T*)img.ptr)[i];
+        if(val != 0) {
+            if(val < mm.first) mm.first = val;
+            if(val > mm.second) mm.second = val;
+        }
+    }
+
+    const float scale = 1.0 / (mm.second - mm.first);
+    const float bias = - scale*mm.first;
+    return std::pair<float,float>(scale, bias);
+}
+
+template<typename T>
+void ScaleImage(const pangolin::Image<unsigned char>& img, const std::pair<float,float>& scale_bias)
+{
+    for(size_t i=0; i < img.Area(); ++i) {
+        T& val = ((T*)img.ptr)[i];
+        val = val * scale_bias.first + scale_bias.second;
+    }
+}
+
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
     // Open Video by URI
@@ -41,8 +67,12 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     int frame = 0;
     pangolin::Var<int>  max_frame("max_frame", total_frames );
     pangolin::Var<bool> linear_sampling("linear_sampling", true );
-    pangolin::Var<float> int16_scale("int16.scale", 20.0 );
+    pangolin::Var<float> int16_scale("int16.scale", 1<<4 );
     pangolin::Var<float> int16_bias("int16.bias", 0.0 );
+    pangolin::Var<float> float32_scale("float32.scale", 1.0 );
+    pangolin::Var<float> float32_bias("float32.bias", 0.0 );
+
+    std::vector<pangolin::Image<unsigned char> > images;
 
 #ifdef CALLEE_HAS_CPP11
     const int FRAME_SKIP = 30;
@@ -98,9 +128,25 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     });
     pangolin::RegisterKeyPressCallback('l', [&](){ linear_sampling = true; });
     pangolin::RegisterKeyPressCallback('n', [&](){ linear_sampling = false; });
+
+    pangolin::RegisterKeyPressCallback('a', [&](){
+        // Adapt scale
+        for(unsigned int i=0; i<images.size(); ++i) {
+            if(pangolin::DisplayBase()[i].IsShown()) {
+                if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
+                    std::pair<float,float> sb = GetScaleBias<unsigned short>(images[i]);
+                    int16_scale = 255.0 * sb.first;
+                    int16_bias  = 255.0 * sb.second;
+                }else if(glfmt[i].gltype == GL_FLOAT) {
+                    std::pair<float,float> sb = GetScaleBias<float>(images[i]);
+                    float32_scale = sb.first;
+                    float32_bias  = sb.second;
+                }
+            }
+        }
+    });
 #endif
 
-    std::vector<pangolin::Image<unsigned char> > images;
 
     // Stream and display video
     while(!pangolin::ShouldQuit())
@@ -121,6 +167,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
                 pangolin::DisplayBase()[i].Activate();
                 if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
                     pangolin::GlSlUtilities::Scale(int16_scale, int16_bias);
+                    pangolin::RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
+                    pangolin::GlSlUtilities::UseNone();
+                }else if(glfmt[i].gltype == GL_FLOAT) {
+                    pangolin::GlSlUtilities::Scale(float32_scale, float32_bias);
                     pangolin::RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
                     pangolin::GlSlUtilities::UseNone();
                 }else{

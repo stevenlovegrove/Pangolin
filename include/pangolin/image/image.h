@@ -62,7 +62,17 @@ struct Image {
         this->pitch = pitch;
         this->ptr = new unsigned char[h*pitch];
     }
+
+    size_t SizeBytes() const
+    {
+        return pitch * h;
+    }
     
+    size_t Area() const
+    {
+        return w * h;
+    }
+
     size_t pitch;
     T* ptr;
     size_t w;
