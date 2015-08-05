@@ -1,43 +1,7 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video_record_repeat.h>
 #include <pangolin/gl/gltexturecache.h>
-
-struct GlFormat
-{
-    GlFormat() {}
-
-    GlFormat(const pangolin::VideoPixelFormat& fmt)
-    {
-        switch( fmt.channels) {
-        case 1: glformat = GL_LUMINANCE; break;
-        case 3: glformat = (fmt.format == "BGR24") ? GL_BGR : GL_RGB; break;
-        case 4: glformat = (fmt.format == "BGRA24") ? GL_BGRA : GL_RGBA; break;
-        default: throw std::runtime_error("Unable to display video format");
-        }
-
-        switch (fmt.channel_bits[0]) {
-        case 8: gltype = GL_UNSIGNED_BYTE; break;
-        case 16: gltype = GL_UNSIGNED_SHORT; break;
-        case 32: gltype = GL_FLOAT; break;
-        default: throw std::runtime_error("Unknown channel format");
-        }
-    }
-
-    GLint glformat;
-    GLenum gltype;
-};
-
-void RenderToViewport(
-    pangolin::Image<unsigned char>& image,
-    const GlFormat& fmt, bool flipx=false, bool flipy=false, bool linear_sampling = true
-) {
-    pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, GL_RGBA, GL_RGBA, fmt.gltype);
-    tex.Bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
-    tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
-    tex.RenderToViewport(pangolin::Viewport(0,0,image.w, image.h), flipx, flipy);
-}
+#include <pangolin/gl/glpixformat.h>
 
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
@@ -66,12 +30,12 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     );
 
     // Setup resizable views for video streams
-    std::vector<GlFormat> glfmt;
+    std::vector<pangolin::GlPixFormat> glfmt;
     pangolin::DisplayBase().SetLayout(pangolin::LayoutEqual);
     for(unsigned int d=0; d < video.Streams().size(); ++d) {
         pangolin::View& view = pangolin::CreateDisplay().SetAspect(video.Streams()[d].Aspect());
         pangolin::DisplayBase().AddDisplay(view);
-        glfmt.push_back(GlFormat(video.Streams()[d].PixFormat()));
+        glfmt.push_back(pangolin::GlPixFormat(video.Streams()[d].PixFormat()));
     }
 
     int frame = 0;
@@ -157,10 +121,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
                 pangolin::DisplayBase()[i].Activate();
                 if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
                     pangolin::GlSlUtilities::Scale(int16_scale, int16_bias);
-                    RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
+                    pangolin::RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
                     pangolin::GlSlUtilities::UseNone();
                 }else{
-                    RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
+                    pangolin::RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
                 }
             }
         }
