@@ -137,9 +137,7 @@ Panel::Panel(const std::string& auto_register_var_prefix)
     handler = &StaticHandlerScroll;
     layout = LayoutVertical;
     RegisterNewVarCallback(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
-    
-    // TODO: Work out how this might work
-    //    ProcessHistoricCallbacks(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
+    ProcessHistoricCallbacks(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
 }
 
 void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool brand_new )

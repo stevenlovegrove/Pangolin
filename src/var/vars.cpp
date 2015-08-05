@@ -52,6 +52,18 @@ void VarState::Clear() {
         delete i->second;
     }
     vars.clear();
+    var_adds.clear();
+}
+
+void ProcessHistoricCallbacks(NewVarCallbackFn callback, void* data, const std::string& filter)
+{
+    for (VarState::VarStoreAdditions::const_iterator i = VarState::I().var_adds.begin(); i != VarState::I().var_adds.end(); ++i)
+    {
+        const std::string& name = *i;
+        if (StartsWith(name, filter)) {
+            callback(data, name, *VarState::I()[name], false);
+        }
+    }
 }
 
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter)

@@ -74,6 +74,8 @@ public:
     template<typename T>
     void NotifyNewVar(const std::string& name, VarValue<T>& var )
     {
+        var_adds.push_back(name);
+
         // notify those watching new variables
         for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
             if( StartsWith(name,invc->filter) ) {
@@ -107,8 +109,11 @@ public:
     }
 
 //protected:
-    typedef std::map<std::string,VarValueGeneric*> VarStoreContainer;
+    typedef std::map<std::string, VarValueGeneric*> VarStoreContainer;
+    typedef std::vector<std::string> VarStoreAdditions;
+
     VarStoreContainer vars;
+    VarStoreAdditions var_adds;
 
     std::vector<NewVarCallback> new_var_callbacks;
     std::vector<GuiVarChangedCallback> gui_var_changed_callbacks;

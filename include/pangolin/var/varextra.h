@@ -39,6 +39,9 @@ PANGOLIN_EXPORT
 void ParseVarsFile(const std::string& filename);
 
 PANGOLIN_EXPORT
+void ProcessHistoricCallbacks(NewVarCallbackFn callback, void* data, const std::string& filter = "");
+
+PANGOLIN_EXPORT
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter = "");
 
 PANGOLIN_EXPORT
