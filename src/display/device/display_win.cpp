@@ -55,13 +55,13 @@ setupPixelFormat(HDC hDC)
         PFD_DRAW_TO_WINDOW |
         PFD_DOUBLEBUFFER,               /* support double-buffering */
         PFD_TYPE_RGBA,                  /* color type */
-        16,                             /* prefered color depth */
+        24,                             /* prefered color depth */
         0, 0, 0, 0, 0, 0,               /* color bits (ignored) */
-        0,                              /* no alpha buffer */
-        0,                              /* alpha bits (ignored) */
+        8,                              /* alpha bits */
+        0,                              /* alpha shift (ignored) */
         0,                              /* no accumulation buffer */
         0, 0, 0, 0,                     /* accum bits (ignored) */
-        16,                             /* depth buffer */
+        32,                             /* depth buffer */
         0,                              /* no stencil buffer */
         0,                              /* no auxiliary buffers */
         PFD_MAIN_PLANE,                 /* main layer */
