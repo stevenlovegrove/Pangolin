@@ -7,7 +7,7 @@ target_link_libraries(VideoViewer ${Pangolin_LIBRARIES})
 
 
 # Make file association
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND ${CMAKE_MAJOR_VERSION} VERSION_GREATER "2.9.9" )
     file( GENERATE
         OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/pango.desktop"
         CONTENT
