@@ -30,6 +30,7 @@
 
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glformattraits.h>
+#include <pangolin/gl/glpixformat.h>
 #include <pangolin/compat/memory.h>
 #include <pangolin/image/image.h>
 
@@ -94,6 +95,21 @@ void RenderToViewport(Image<T>& image, bool flipx=false, bool flipy=false)
     GlTexture& tex = TextureCache::I().GlTex<T>(image.w, image.h);
     tex.Upload(image.ptr,0,0, image.w, image.h, GlFormatTraits<T>::glformat, GlFormatTraits<T>::gltype);
     tex.RenderToViewport(Viewport(0,0,image.w, image.h), flipx, flipy);
+}
+
+// This method may dissapear in the future
+inline void RenderToViewport(
+    Image<unsigned char>& image,
+    const pangolin::GlPixFormat& fmt,
+    bool flipx=false, bool flipy=false,
+    bool linear_sampling = true
+) {
+    pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, GL_RGBA32F, GL_RGBA, fmt.gltype);
+    tex.Bind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
+    tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
+    tex.RenderToViewport(pangolin::Viewport(0,0,image.w, image.h), flipx, flipy);
 }
 
 }

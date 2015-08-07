@@ -29,7 +29,6 @@
 #define PANGOLIN_GLPANGOPIXFORMAT_H
 
 #include <pangolin/gl/glplatform.h>
-#include <pangolin/gl/gltexturecache.h>
 #include <pangolin/image/image_common.h>
 
 namespace pangolin {
@@ -39,7 +38,7 @@ struct GlPixFormat
 {
     GlPixFormat() {}
 
-    GlPixFormat(const pangolin::VideoPixelFormat& fmt)
+    GlPixFormat(const VideoPixelFormat& fmt)
     {
         switch( fmt.channels) {
         case 1: glformat = GL_LUMINANCE; break;
@@ -59,21 +58,6 @@ struct GlPixFormat
     GLint glformat;
     GLenum gltype;
 };
-
-// This method may dissapear in the future
-inline void RenderToViewport(
-    pangolin::Image<unsigned char>& image,
-    const pangolin::GlPixFormat& fmt,
-    bool flipx=false, bool flipy=false,
-    bool linear_sampling = true
-) {
-    pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, GL_RGBA32F, GL_RGBA, fmt.gltype);
-    tex.Bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
-    tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
-    tex.RenderToViewport(pangolin::Viewport(0,0,image.w, image.h), flipx, flipy);
-}
 
 }
 

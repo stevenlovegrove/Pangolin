@@ -29,6 +29,7 @@
 #define PANGOLIN_GL_HPP
 
 #include <pangolin/gl/gl.h>
+#include <pangolin/gl/glpixformat.h>
 #include <pangolin/display/display.h>
 #include <pangolin/image/image_io.h>
 #include <algorithm>
@@ -195,11 +196,8 @@ inline void GlTexture::Upload(
 
 inline void GlTexture::Load(const TypedImage& image, bool sampling_linear)
 {
-    GLenum format = image.fmt.channels == 1 ? GL_LUMINANCE :
-                        (image.fmt.channels == 3 ? GL_RGB : GL_RGBA);
-
-    // TODO: Make the format logic more reliable
-    Reinitialise((GLint)image.w, (GLint)image.h, GL_RGBA, sampling_linear, 0, format, GL_UNSIGNED_BYTE, image.ptr );
+    GlPixFormat fmt(image.fmt);
+    Reinitialise((GLint)image.w, (GLint)image.h, GL_RGBA32F, sampling_linear, 0, fmt.glformat, fmt.gltype, image.ptr );
 }
 
 inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_linear)
