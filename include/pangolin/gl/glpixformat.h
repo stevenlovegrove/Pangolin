@@ -30,6 +30,7 @@
 
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/image/image_common.h>
+#include <stdexcept>
 
 namespace pangolin {
 
