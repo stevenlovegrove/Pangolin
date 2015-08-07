@@ -118,9 +118,12 @@ struct PANGOLIN_EXPORT View
     
     //! Set this view as the active View to receive input
     View& SetFocus();
-    
+
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
-    View& SetBounds(Attach bottom, Attach top, Attach left, Attach right, bool keep_aspect = false);
+    View& SetBounds(Attach bottom, Attach top, Attach left, Attach right);
+
+    //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
+    View& SetBounds(Attach bottom, Attach top, Attach left, Attach right, bool keep_aspect);
     
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
     View& SetBounds(Attach bottom, Attach top, Attach left, Attach right, double aspect);

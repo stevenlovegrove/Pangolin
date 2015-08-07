@@ -396,21 +396,27 @@ View& View::SetFocus()
     return *this;
 }
 
-View& View::SetBounds(Attach bottom, Attach top,  Attach left, Attach right, bool keep_aspect)
-{
-    SetBounds(top,bottom,left,right,0.0);
-    aspect = keep_aspect ? v.aspect() : 0;
-    return *this;
-}
-
-View& View::SetBounds(Attach bottom, Attach top,  Attach left, Attach right, double aspect)
+View& View::SetBounds(Attach bottom, Attach top, Attach left, Attach right)
 {
     this->left = left;
     this->top = top;
     this->right = right;
     this->bottom = bottom;
-    this->aspect = aspect;
     context->base.ResizeChildren();
+    return *this;
+}
+
+View& View::SetBounds(Attach bottom, Attach top,  Attach left, Attach right, bool keep_aspect)
+{
+    aspect = keep_aspect ? v.aspect() : 0;
+    SetBounds(top,bottom,left,right);
+    return *this;
+}
+
+View& View::SetBounds(Attach bottom, Attach top,  Attach left, Attach right, double aspect)
+{
+    this->aspect = aspect;
+    SetBounds(top,bottom,left,right);
     return *this;
 }
 
