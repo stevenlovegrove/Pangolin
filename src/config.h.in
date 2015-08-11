@@ -46,6 +46,7 @@
 #cmakedefine HAVE_PNG
 #cmakedefine HAVE_JPEG
 #cmakedefine HAVE_TIFF
+#cmakedefine HAVE_OPENEXR
 
 /// Platform
 #cmakedefine _UNIX_

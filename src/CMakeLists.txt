@@ -349,6 +349,14 @@ if(TIFF_FOUND)
   message(STATUS "libtiff Found and Enabled")
 endif()
 
+find_package(OpenEXR QUIET)
+if(OpenEXR_FOUND)
+  set(HAVE_OPENEXR 1)
+  list(APPEND INTERNAL_INC ${OpenEXR_INCLUDE_DIR} )
+  list(APPEND LINK_LIBS ${OpenEXR_LIBRARY} )
+  message(STATUS "libopenexr Found and Enabled")
+endif()
+
 
 #######################################################
 ## Add Libraries / Include Directories / Link directories

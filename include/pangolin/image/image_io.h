@@ -41,6 +41,7 @@ enum ImageFileType
     ImageFileTypeJpg,
     ImageFileTypeTiff,
     ImageFileTypeGif,
+    ImageFileTypeExr,
     ImageFileTypePango,
     ImageFileTypeUnknown
 };

@@ -44,6 +44,12 @@
 #endif // HAVE_PNG
 #endif // HAVE_JPEG
 
+#ifdef HAVE_OPENEXR
+#include <ImfOutputFile.h>
+#include <ImfInputFile.h>
+#include <ImfChannelList.h>
+#endif // HAVE_OPENEXR
+
 #ifdef _WIN_
 // Undef windows Macro polution from jpeglib.h
 #undef LoadImage
@@ -74,6 +80,7 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
         const unsigned char magic_gif2[] = "GIF89a";
         const unsigned char magic_tiff1[] = "\x49\x49\x2A\x00";
         const unsigned char magic_tiff2[] = "\x4D\x4D\x00\x2A";
+        const unsigned char magic_exr[]   = "\x76\x2F\x31\x01";
         const unsigned char magic_pango[] = "PANGO";
 
         if( !strncmp((char*)data, (char*)magic_png, 8) ) {
@@ -87,6 +94,8 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
         }else if( !strncmp((char*)data, (char*)magic_tiff1,4)
                   || !strncmp((char*)data, (char*)magic_tiff2,4) ) {
             return ImageFileTypeTiff;
+        }else if( !strncmp((char*)data, (char*)magic_exr,4) ) {
+            return ImageFileTypeExr;
         }else if( !strncmp((char*)data, (char*)magic_pango,5) ) {
             return ImageFileTypePango;
         }else if( data[0] == 'P' && '0' < data[1] && data[1] < '9') {
@@ -108,6 +117,8 @@ ImageFileType FileTypeExtension(const std::string& ext)
         return ImageFileTypeGif;
     } else if( ext == ".tif" || ext == ".tiff" ) {
         return ImageFileTypeTiff;
+    } else if( ext == ".exr"  ) {
+        return ImageFileTypeExr;
     } else if( ext == ".ppm" || ext == ".pgm" || ext == ".pbm" || ext == ".pxm" || ext == ".pdm" ) {
         return ImageFileTypePpm;
     } else {
@@ -529,6 +540,57 @@ TypedImage LoadPpm(const std::string& filename)
     return LoadPpm(bFile);
 }
 
+#ifdef HAVE_OPENEXR
+Imf::PixelType OpenEXRPixelType(int channel_bits)
+{
+    if( channel_bits == 16 ) {
+        return Imf::PixelType::HALF;
+    }else if( channel_bits == 32 ) {
+        return Imf::PixelType::FLOAT;
+    }else{
+        throw std::runtime_error("Unsupported OpenEXR Pixel Type.");
+    }
+}
+
+void SetOpenEXRChannels(Imf::ChannelList& ch, const pangolin::VideoPixelFormat& fmt)
+{
+    const char* CHANNEL_NAMES[] = {"R","G","B","A"};
+    for(size_t c=0; c < fmt.channels; ++c) {
+        ch.insert( CHANNEL_NAMES[c], Imf::Channel(OpenEXRPixelType(fmt.channel_bits[c])) );
+    }
+}
+#endif //HAVE_OPENEXR
+
+void SaveExr(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
+{
+#ifdef HAVE_OPENEXR
+    Imf::Header header (image.w, image.h);
+    SetOpenEXRChannels(header.channels(), fmt);
+
+    Imf::OutputFile file (filename.c_str(), header);
+    Imf::FrameBuffer frameBuffer;
+
+    int ch=0;
+    for(Imf::ChannelList::Iterator it = header.channels().begin(); it != header.channels().end(); ++it)
+    {
+        frameBuffer.insert(
+            it.name(),
+            Imf::Slice(
+                it.channel().type, (char*)image.ptr+ch,
+                fmt.channel_bits[ch]/8, image.pitch
+            )
+        );
+        ++ch;
+    }
+
+    file.setFrameBuffer(frameBuffer);
+    file.writePixels(image.h);
+#else
+    throw std::runtime_error("EXR Support not enabled. Please rebuild Pangolin.");
+#endif // HAVE_OPENEXR
+}
+
+
 TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
 {
     switch (file_type) {
@@ -556,6 +618,8 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelForm
     switch (file_type) {
     case ImageFileTypePng:
         return SavePng(image, fmt, filename, top_line_first);
+    case ImageFileTypeExr:
+        return SaveExr(image, fmt, filename, top_line_first);
     default:
         throw std::runtime_error("Unsupported image file type, '" + filename + "'");
     }
@@ -564,7 +628,7 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelForm
 void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
     const std::string ext = FileLowercaseExtention(filename);
-    ImageFileType file_type = FileTypeExtension(ext);
+    const ImageFileType file_type = FileTypeExtension(ext);
     SaveImage(image, fmt, filename,file_type, top_line_first);
 }
 

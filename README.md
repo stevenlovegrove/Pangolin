@@ -68,7 +68,8 @@ Check the CMake configure output for details.
 * libuvc (For cross-platform webcam video input via libusb)
  * git://github.com/ktossell/libuvc.git
 
-* libjpeg, libpng (For reading still-image sequences)
+* libjpeg, libpng, libtiff, libopenexr (For reading still-image sequences)
+ * (deb) sudo apt-get install libjpeg-dev libpng12-dev libtiff5-dev libopenexr-dev
 
 * OpenNI / OpenNI2 (For Kinect / Xtrion / Primesense capture)
 
