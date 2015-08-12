@@ -4,6 +4,7 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/gl/glfont.h>
+#include <pangolin/var/var.h>
 
 #include <Python.h>
 
@@ -15,6 +16,37 @@
 
 namespace pangolin
 {
+
+static PyObject *PangoError;
+
+static PyObject * pango_GetVar(PyObject *self, PyObject *args)
+{
+    const char *var_name;
+
+    if (!PyArg_ParseTuple(args, "s", &var_name))
+        return NULL;
+
+    pangolin::Var<std::string> v(var_name);
+    return Py_BuildValue("s", v.Get().c_str());
+}
+
+static PyMethodDef PangoMethods[] = {
+    {"GetVar",  pango_GetVar, METH_VARARGS, "Get Pangolin Variable."},
+    {NULL, NULL, 0, NULL}        /* Sentinel */
+};
+
+PyMODINIT_FUNC InitPangoModule(void)
+{
+    PyObject *m;
+
+    m = Py_InitModule("pango", PangoMethods);
+    if (m == NULL)
+        return;
+
+    PangoError = PyErr_NewException("pango.error", NULL, NULL);
+    Py_INCREF(PangoError);
+    PyModule_AddObject(m, "error", PangoError);
+}
 
 struct PyUniqueObj
 {
@@ -125,8 +157,7 @@ public:
                     if(code) {
                         PyUniqueObj eval_args = Py_BuildValue("(OOO)", *code, globals, globals );
                         if(eval_args) {
-                            PyUniqueObj res = PyObject_Call(eval, eval_args, 0);
-                            res.Dec();
+                            return PyObject_Call(eval, eval_args, 0);
                         }
                     }
                 }
@@ -183,8 +214,11 @@ private:
 
         Py_Initialize();
 
+        InitPangoModule();
+
         PyRun_SimpleString(
             "import sys\n"
+            "import pango\n"
             "try:\n"
             "   import readline\n"
             "except ImportError:\n"
@@ -298,7 +332,11 @@ public:
                 PyUniqueObj obj = python.EvalExec(cmd);
                 line_buffer.push_front(current_line);
                 if(obj) {
-                    AddLine(python.ToString(obj));
+                    // Succeeded
+                    if(obj != Py_None) {
+                        // With result
+                        AddLine(python.ToString(obj));
+                    }
                 }
                 current_line = prompt;
 
@@ -309,9 +347,6 @@ public:
             }else{
                 current_line = font.Text("%s%c", current_line.Text().c_str(), key);
             }
-//            std::cout << (int)key << std::endl;
-//            PythonSend("read=");
-//            PythonSend("\n");
         }
     }
 
