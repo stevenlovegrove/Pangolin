@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <string.h>
+#include <cstring>
 
 #ifdef HAVE_PNG
 #include <png.h>
@@ -561,9 +562,21 @@ void SetOpenEXRChannels(Imf::ChannelList& ch, const pangolin::VideoPixelFormat& 
 }
 #endif //HAVE_OPENEXR
 
-void SaveExr(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
+void SaveExr(const Image<unsigned char>& image_in, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
 #ifdef HAVE_OPENEXR
+    Image<unsigned char> image;
+
+    if(top_line_first) {
+        image = image_in;
+    }else{
+        image.Alloc(image_in.w,image_in.h,image_in.pitch);
+        for(size_t y=0; y<image_in.h; ++y) {
+            std::memcpy(image.ptr + y*image.pitch, image_in.ptr + (image_in.h-y-1)*image_in.pitch, image.pitch);
+        }
+    }
+
+
     Imf::Header header (image.w, image.h);
     SetOpenEXRChannels(header.channels(), fmt);
 
@@ -571,20 +584,29 @@ void SaveExr(const Image<unsigned char>& image, const pangolin::VideoPixelFormat
     Imf::FrameBuffer frameBuffer;
 
     int ch=0;
+    size_t ch_bits = 0;
     for(Imf::ChannelList::Iterator it = header.channels().begin(); it != header.channels().end(); ++it)
     {
         frameBuffer.insert(
             it.name(),
             Imf::Slice(
-                it.channel().type, (char*)image.ptr+ch,
-                fmt.channel_bits[ch]/8, image.pitch
+                it.channel().type,
+                (char*)image.ptr + ch_bits/8,
+                fmt.channel_bits[ch]/8,
+                image.pitch
             )
         );
-        ++ch;
+
+        ch_bits += fmt.channel_bits[ch++];
     }
 
     file.setFrameBuffer(frameBuffer);
     file.writePixels(image.h);
+
+    if(!top_line_first) {
+        image.Dealloc();
+    }
+
 #else
     throw std::runtime_error("EXR Support not enabled. Please rebuild Pangolin.");
 #endif // HAVE_OPENEXR
