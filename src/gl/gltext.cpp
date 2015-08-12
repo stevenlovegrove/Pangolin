@@ -44,6 +44,12 @@ GlText::GlText()
 
 }
 
+GlText::GlText(const GlText& txt)
+    : tex(txt.tex), str(txt.str), width(txt.width),
+      ymin(txt.ymin), ymax(txt.ymax), vs(txt.vs)
+{
+}
+
 GlText::GlText(const GlTexture& font_tex)
     : tex(&font_tex), width(0),
       ymin(std::numeric_limits<int>::max()),
@@ -51,24 +57,25 @@ GlText::GlText(const GlTexture& font_tex)
 {
 }
 
-void GlText::Add(const GlChar& c)
+void GlText::Add(unsigned char c, const GlChar& glc)
 {
     int k = 0;
     int x = width;
 
     if(str.size()) {
-        k = c.Kern(str[str.size()-1]);
+        k = glc.Kern(str[str.size()-1]);
         x += k;
     }
 
-    vs.push_back(c.GetVert(0) + x);
-    vs.push_back(c.GetVert(1) + x);
-    vs.push_back(c.GetVert(2) + x);
-    vs.push_back(c.GetVert(0) + x);
-    vs.push_back(c.GetVert(2) + x);
-    vs.push_back(c.GetVert(3) + x);
+    vs.push_back(glc.GetVert(0) + x);
+    vs.push_back(glc.GetVert(1) + x);
+    vs.push_back(glc.GetVert(2) + x);
+    vs.push_back(glc.GetVert(0) + x);
+    vs.push_back(glc.GetVert(2) + x);
+    vs.push_back(glc.GetVert(3) + x);
 
-    width = x + c.StepX();
+    width = x + glc.StepX();
+    str.append(1,c);
 }
 
 void GlText::DrawGlSl()

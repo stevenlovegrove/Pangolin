@@ -405,9 +405,10 @@ void Keyboard( unsigned char key, int x, int y)
         }
     }
 #endif // HAVE_GLCONSOLE
-    else if( key == GLUT_KEY_TAB) {
-        ToggleFullscreen();
-    } else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
+//    else if( key == GLUT_KEY_TAB) {
+//        ToggleFullscreen();
+//    }
+    else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
         context->keypress_hooks[key]();
     } else if(context->activeDisplay && context->activeDisplay->handler) {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);

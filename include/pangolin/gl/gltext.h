@@ -41,10 +41,12 @@ class PANGOLIN_EXPORT GlText
 public:
     GlText();
 
+    GlText(const GlText& txt);
+
     GlText(const GlTexture& font_tex);
     
-    // Added specified charector to this string.
-    void Add(const GlChar& c);
+    // Add specified charector to this string.
+    void Add(unsigned char c, const GlChar& glc);
 
     // Render without transform in text-centric pixel coordinates
     void Draw();

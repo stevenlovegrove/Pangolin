@@ -200,7 +200,7 @@ GlText GlFont::Text( const char* fmt, ... )
             const char c = text[i];
             std::map< char, GlChar >::const_iterator it = mmCharacters.find( c );
             if(it != mmCharacters.end()) {
-                ret.Add(it->second);
+                ret.Add(c, it->second);
             }
         }
     }
