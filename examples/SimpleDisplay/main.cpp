@@ -70,18 +70,20 @@ int main( int argc, char* argv[] )
   // Safe and efficient binding of named variables.
   // Specialisations mean no conversions take place for exact types
   // and conversions between scalar types are cheap.
-  pangolin::Var<bool> a_button("ui.A Button",false,false);
-  pangolin::Var<double> a_double("ui.A Double",3,0,5);
-  pangolin::Var<int> an_int("ui.An Int",2,0,5);
-  pangolin::Var<double> a_double_log("ui.Log scale var",3,1,1E4, true);
-  pangolin::Var<bool> a_checkbox("ui.A Checkbox",false,true);
-  pangolin::Var<int> an_int_no_input("ui.An Int No Input",2);
-  pangolin::Var<CustomType> any_type("ui.Some Type", CustomType(0,1.2,"Hello") );
+  pangolin::Var<bool> a_button("ui.A_Button",false,false);
+  pangolin::Var<double> a_double("ui.A_Double",3,0,5);
+  pangolin::Var<int> an_int("ui.An_Int",2,0,5);
+  pangolin::Var<double> a_double_log("ui.Log_scale var",3,1,1E4, true);
+  pangolin::Var<bool> a_checkbox("ui.A_Checkbox",false,true);
+  pangolin::Var<int> an_int_no_input("ui.An_Int_No_Input",2);
+  pangolin::Var<CustomType> any_type("ui.Some_Type", CustomType(0,1.2,"Hello") );
 
-  pangolin::Var<bool> save_window("ui.Save Window",false,false);
-  pangolin::Var<bool> save_cube("ui.Save Cube",false,false);
+  pangolin::Var<bool> save_window("ui.Save_Window",false,false);
+  pangolin::Var<bool> save_cube("ui.Save_Cube",false,false);
 
-  pangolin::Var<bool> record_cube("ui.Record Cube",false,false);
+  pangolin::Var<bool> record_cube("ui.Record_Cube",false,false);
+
+  pangolin::Var<int> an_ant_eater("ui.an.ant.eater",2);
 
 #ifdef CPP11_NO_BOOST
   // boost::function / std::function objects can be used for Var's too.
