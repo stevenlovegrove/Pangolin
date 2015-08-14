@@ -40,11 +40,6 @@
 #include <pangolin/video/video_output.h>
 #endif // BUILD_PANGOLIN_VIDEO
 
-#ifdef HAVE_CVARS
-    #define HAVE_GLCONSOLE
-    #include <pangolin/compat/glconsole.h>
-#endif // HAVE_CVARS
-
 namespace pangolin
 {
 
@@ -85,11 +80,6 @@ struct PANGOLIN_EXPORT PangolinGl
     View* record_view;
     VideoOutput recorder;
 #endif
-    
-#ifdef HAVE_GLCONSOLE
-    GLConsole console;
-#endif // HAVE_GLCONSOLE
-    
 };
 
 PANGOLIN_EXPORT
@@ -98,18 +88,6 @@ void PangolinCommonInit();
 #ifdef BUILD_PANGOLIN_VIDEO
   void SaveFramebuffer(VideoOutput& video, const Viewport& v);
 #endif // BUILD_PANGOLIN_VIDEO
-
-#ifdef HAVE_CVARS
-  bool CVarViewList( std::vector<std::string>* args );
-  bool CVarViewShowHide( std::vector<std::string>* args );
-  bool CVarScreencap( std::vector<std::string>* args );
-
-#ifdef BUILD_PANGOLIN_VIDEO
-  bool CVarRecordStart( std::vector<std::string>* args );
-  bool CVarRecordStop( std::vector<std::string>* args );
-#endif // BUILD_PANGOLIN_VIDEO
-    
-#endif // HAVE_CVARS  
 
 }
 

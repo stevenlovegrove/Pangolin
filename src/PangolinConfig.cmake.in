@@ -1,6 +1,3 @@
-# Import targets from CVars
-find_package( CVARS 2.3 QUIET )
-
 # Compute paths
 get_filename_component( PROJECT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
 SET( Pangolin_INCLUDE_DIRS "@EXPORT_LIB_INC_DIR@;@USER_INC@" )

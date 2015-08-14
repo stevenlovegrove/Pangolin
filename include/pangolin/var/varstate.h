@@ -34,10 +34,6 @@
 #include <pangolin/var/varvalue.h>
 #include <pangolin/utils/file_utils.h>
 
-#ifdef HAVE_CVARS
-#include <CVars/CVar.h>
-#endif
-
 namespace pangolin
 {
 
@@ -82,20 +78,6 @@ public:
                invc->fn( invc->data, name, var, true);
             }
         }
-
-#ifdef HAVE_CVARS
-        // CVars can't save names containing spaces, so map to '_' instead
-        std::string cvar_name = name;
-        std::replace(cvar_name.begin(), cvar_name.end(), ' ', '_');
-
-        // Don't add generic vars that might change type later.
-        if(!var.Meta().generic) {
-            try {
-                CVarUtils::AttachCVar(cvar_name, &var.Get() );
-            }catch(CVarUtils::CVarException) {
-            }
-        }
-#endif
     }
 
     VarValueGeneric*& operator[](const std::string& str)
