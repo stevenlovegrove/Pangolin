@@ -8,7 +8,7 @@
 namespace pangolin
 {
 
-class PyInterpreter : ConsoleInterpreter
+class PyInterpreter : public ConsoleInterpreter
 {
 public:
     PyInterpreter();

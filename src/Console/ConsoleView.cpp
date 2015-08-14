@@ -1,11 +1,10 @@
-#include <pangolin/python/PyView.h>
-#include <pangolin/python/PyInterpreter.h>
+#include <pangolin/console/ConsoleView.h>
 
 namespace pangolin
 {
 
-PyView::PyView()
-    : python(new PyInterpreter()),
+ConsoleView::ConsoleView(ConsoleInterpreter* interpreter)
+    : interpreter(interpreter),
       font(GlFont::I()),
       prompt(font.Text("")),
       current_line(prompt)
@@ -15,15 +14,15 @@ PyView::PyView()
     AddLine("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 }
 
-PyView::~PyView() {
-    delete python;
+ConsoleView::~ConsoleView() {
+    delete interpreter;
 }
 
-void PyView::ProcessOutputLines()
+void ConsoleView::ProcessOutputLines()
 {
     // empty output queue
     ConsoleLine line_in;
-    while(python->PullLine(line_in))
+    while(interpreter->PullLine(line_in))
     {
         line_buffer.push_front(
             font.Text("%s", line_in.text.c_str())
@@ -32,7 +31,7 @@ void PyView::ProcessOutputLines()
 }
 
 
-void PyView::Render()
+void ConsoleView::Render()
 {
     ProcessOutputLines();
 
@@ -70,7 +69,7 @@ void PyView::Render()
     glPopAttrib();
 }
 
-void PyView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+void ConsoleView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 {
     if(pressed) {
         if(key=='\r') key = '\n';
@@ -78,11 +77,11 @@ void PyView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
         const std::string cmd = current_line.Text();
 
         if(key=='\n') {
-            python->PushCommand(cmd);
+            interpreter->PushCommand(cmd);
             line_buffer.push_front(current_line);
             current_line.Clear();
         }else if(key=='\t') {
-            std::vector<std::string> options = python->Complete(cmd,100);
+            std::vector<std::string> options = interpreter->Complete(cmd,100);
             if(options.size()) {
                 const std::string option = options[0];
                 current_line = font.Text("%s", option.c_str());
@@ -95,7 +94,7 @@ void PyView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
     }
 }
 
-void PyView::AddLine(const std::string& str)
+void ConsoleView::AddLine(const std::string& str)
 {
     line_buffer.push_front( font.Text("%s",str.c_str()) );
 }

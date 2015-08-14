@@ -192,7 +192,7 @@ void ToggleConsole()
 #ifdef HAVE_PYTHON
     if( !context->python_view) {
         // Create console and let the pangolin context take ownership
-        context->python_view = new PyView();
+        context->python_view = new ConsoleView(new PyInterpreter());
         context->named_managed_views["pangolin_console"] = context->python_view;
         context->python_view->SetFocus();
     }else{

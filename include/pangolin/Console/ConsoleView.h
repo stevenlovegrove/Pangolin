@@ -8,18 +8,18 @@
 #include <pangolin/display/view.h>
 #include <pangolin/handler/handler.h>
 
+#include <pangolin/Console/ConsoleInterpreter.h>
+
 namespace pangolin
 {
 
-// Forward declartation
-class PyInterpreter;
-
-class PyView : public pangolin::View, pangolin::Handler
+class ConsoleView : public pangolin::View, pangolin::Handler
 {
 public:
-    PyView();
+    // Construct with interpreter (and take ownership)
+    ConsoleView(ConsoleInterpreter* interpreter);
 
-    ~PyView();
+    ~ConsoleView();
 
     void Render();
 
@@ -30,7 +30,7 @@ public:
 private:
     void ProcessOutputLines();
 
-    PyInterpreter* python;
+    ConsoleInterpreter* interpreter;
 
     GlFont& font;
     GlText prompt;

@@ -41,7 +41,8 @@
 #endif // BUILD_PANGOLIN_VIDEO
 
 #ifdef HAVE_PYTHON
-#include <pangolin/python/PyView.h>
+#include <pangolin/console/ConsoleView.h>
+#include <pangolin/python/PyInterpreter.h>
 #endif // HAVE_PYTHON
 
 namespace pangolin
@@ -86,7 +87,7 @@ struct PANGOLIN_EXPORT PangolinGl
 #endif
 
 #ifdef HAVE_PYTHON
-    PyView* python_view;
+    ConsoleView* python_view;
 #endif
 };
 

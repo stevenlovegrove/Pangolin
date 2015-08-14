@@ -204,13 +204,14 @@ find_package(PythonLibs REQUIRED)
 if(BUILD_PANGOLIN_GUI AND PYTHONLIBS_FOUND)
   set(HAVE_PYTHON 1)
   list(APPEND HEADERS
-    ${INCDIR}/python/PyView.h
+    ${INCDIR}/console/ConsoleInterpreter.h
+    ${INCDIR}/console/ConsoleView.h
     ${INCDIR}/python/PyInterpreter.h
-    ${INCDIR}/python/PyPango.h
     ${INCDIR}/python/PyUniqueObj.h
+    ${INCDIR}/python/PyPango.h
   )
   list(APPEND SOURCES
-    python/PyView.cpp
+    console/ConsoleView.cpp
     python/PyInterpreter.cpp
   )
   list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIR})
