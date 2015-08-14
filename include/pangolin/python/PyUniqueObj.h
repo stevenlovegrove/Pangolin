@@ -1,5 +1,7 @@
 #pragma once
 
+#include <pangolin/platform.h>
+
 #include <Python.h>
 
 namespace pangolin

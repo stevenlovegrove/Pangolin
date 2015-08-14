@@ -200,6 +200,24 @@ else()
     endif()
 endif()
 
+find_package(PythonLibs REQUIRED)
+if(BUILD_PANGOLIN_GUI AND PYTHONLIBS_FOUND)
+  set(HAVE_PYTHON 1)
+  list(APPEND HEADERS
+    ${INCDIR}/python/PyView.h
+    ${INCDIR}/python/PyInterpreter.h
+    ${INCDIR}/python/PyPango.h
+    ${INCDIR}/python/PyUniqueObj.h
+  )
+  list(APPEND SOURCES
+    python/PyView.cpp
+    python/PyInterpreter.cpp
+  )
+  list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIR})
+  list(APPEND LINK_LIBS    ${PYTHON_LIBRARY})
+  message(STATUS "Python Found and Enabled")
+endif()
+
 find_package(CVARS 2.3 QUIET)
 if(BUILD_PANGOLIN_GUI AND CVARS_FOUND)
   set(HAVE_CVARS 1)

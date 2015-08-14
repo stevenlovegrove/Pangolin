@@ -1,7 +1,7 @@
 #include <iostream>
 #include <pangolin/pangolin.h>
 
-#include "PythonView.h"
+#include <pangolin/python/PyView.h>
 
 struct CustomType
 {
