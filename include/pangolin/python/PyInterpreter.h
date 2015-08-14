@@ -1,27 +1,33 @@
 #pragma once
 
 #include <pangolin/python/PyUniqueObj.h>
-#include <string>
-#include <thread>
+#include <pangolin/Console/ConsoleInterpreter.h>
+#include <pangolin/compat/thread.h>
+#include <queue>
 
 namespace pangolin
 {
 
-class PythonInterpreter
+class PyInterpreter : ConsoleInterpreter
 {
 public:
-    PythonInterpreter();
+    PyInterpreter();
 
-    ~PythonInterpreter();
+    ~PyInterpreter() PANGOLIN_OVERRIDE;
 
-    std::string ToString(PyObject* py);
+    void PushCommand(const std::string &cmd) PANGOLIN_OVERRIDE;
 
-    PyUniqueObj EvalExec(const std::string& cmd);
+    bool PullLine(ConsoleLine& line) PANGOLIN_OVERRIDE;
 
-    std::string Complete(const std::string& str);
+    std::vector<std::string> Complete(
+        const std::string& cmd, int max_options
+    ) PANGOLIN_OVERRIDE;
 
 private:
-    std::thread python_thread;
+    std::string ToString(PyObject* py);
+    PyUniqueObj EvalExec(const std::string& cmd);
+
+    std::queue<ConsoleLine> line_queue;
 };
 
 }

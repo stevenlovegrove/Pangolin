@@ -78,6 +78,15 @@ void GlText::Add(unsigned char c, const GlChar& glc)
     str.append(1,c);
 }
 
+void GlText::Clear()
+{
+    str.clear();
+    vs.clear();
+    width = 0;
+    ymin = std::numeric_limits<int>::max();
+    ymax = std::numeric_limits<int>::min();
+}
+
 void GlText::DrawGlSl()
 {
 #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)

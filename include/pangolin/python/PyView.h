@@ -12,7 +12,7 @@ namespace pangolin
 {
 
 // Forward declartation
-class PythonInterpreter;
+class PyInterpreter;
 
 class PyView : public pangolin::View, pangolin::Handler
 {
@@ -28,7 +28,9 @@ public:
     void AddLine(const std::string& str);
 
 private:
-    PythonInterpreter* python;
+    void ProcessOutputLines();
+
+    PyInterpreter* python;
 
     GlFont& font;
     GlText prompt;

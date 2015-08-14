@@ -5,7 +5,7 @@ namespace pangolin
 {
 
 PyView::PyView()
-    : python(new PythonInterpreter()),
+    : python(new PyInterpreter()),
       font(GlFont::I()),
       prompt(font.Text("")),
       current_line(prompt)
@@ -19,8 +19,23 @@ PyView::~PyView() {
     delete python;
 }
 
+void PyView::ProcessOutputLines()
+{
+    // empty output queue
+    ConsoleLine line_in;
+    while(python->PullLine(line_in))
+    {
+        line_buffer.push_front(
+            font.Text("%s", line_in.text.c_str())
+        );
+    }
+}
+
+
 void PyView::Render()
 {
+    ProcessOutputLines();
+
     this->ActivatePixelOrthographic();
     glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT | GL_TRANSFORM_BIT );
 
@@ -60,24 +75,18 @@ void PyView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
     if(pressed) {
         if(key=='\r') key = '\n';
 
+        const std::string cmd = current_line.Text();
+
         if(key=='\n') {
-            const std::string cmd = current_line.Text();
-
-            PyUniqueObj obj = python->EvalExec(cmd);
-            std::cout.flush();
-
+            python->PushCommand(cmd);
             line_buffer.push_front(current_line);
-            if(obj) {
-                // Succeeded
-                if(obj != Py_None) {
-                    // With result
-                    AddLine(python->ToString(obj));
-                }
-            }
-            current_line = prompt;
-
+            current_line.Clear();
         }else if(key=='\t') {
-            current_line = font.Text("%s", python->Complete(current_line.Text()).c_str());
+            std::vector<std::string> options = python->Complete(cmd,100);
+            if(options.size()) {
+                const std::string option = options[0];
+                current_line = font.Text("%s", option.c_str());
+            }
         }else if(key=='\b') {
             current_line = font.Text("%s", current_line.Text().substr(0,current_line.Text().size()-1).c_str() );
         }else{

@@ -48,6 +48,9 @@ public:
     // Add specified charector to this string.
     void Add(unsigned char c, const GlChar& glc);
 
+    // Clear text
+    void Clear();
+
     // Render without transform in text-centric pixel coordinates
     void Draw();
     void DrawGlSl();

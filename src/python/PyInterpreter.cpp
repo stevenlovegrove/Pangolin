@@ -9,7 +9,7 @@
 namespace pangolin
 {
 
-PythonInterpreter::PythonInterpreter()
+PyInterpreter::PyInterpreter()
 {
     Py_Initialize();
 
@@ -47,18 +47,18 @@ PythonInterpreter::PythonInterpreter()
     );
 }
 
-PythonInterpreter::~PythonInterpreter()
+PyInterpreter::~PyInterpreter()
 {
     Py_Finalize();
 }
 
-std::string PythonInterpreter::ToString(PyObject* py)
+std::string PyInterpreter::ToString(PyObject* py)
 {
     PyUniqueObj pystr = PyObject_Repr(py);
     return std::string( PyString_AsString(pystr) );
 }
 
-PyUniqueObj PythonInterpreter::EvalExec(const std::string& cmd)
+PyUniqueObj PyInterpreter::EvalExec(const std::string& cmd)
 {
     PyObject* globals = PyModule_GetDict(PyImport_AddModule("__main__"));
     PyObject* builtin = PyImport_AddModule("__builtin__");
@@ -100,12 +100,10 @@ PyUniqueObj PythonInterpreter::EvalExec(const std::string& cmd)
     return PyUniqueObj();
 }
 
-std::string PythonInterpreter::Complete(const std::string& str)
+std::vector<std::string> PyInterpreter::Complete(const std::string& cmd, int max_options)
 {
+    std::vector<std::string> ret;
     PyErr_Clear();
-
-    std::string ret = str;
-    PyObject* result = 0;
 
     PyObject* pymain = PyImport_AddModule("__main__");
     if(pymain) {
@@ -113,21 +111,45 @@ std::string PythonInterpreter::Complete(const std::string& str)
         if(pycompleter) {
             PyObject* pycomplete  = PyObject_GetAttrString(pycompleter,"complete");
             if(pycomplete) {
-                PyObject* args = PyTuple_Pack(2,PyString_FromString(str.c_str()), PyInt_FromSize_t(0));
-                result = PyObject_CallObject(pycomplete, args);
-                Py_DECREF(args);
+                for(int i=0; i < max_options; ++i) {
+                    PyUniqueObj args = PyTuple_Pack( 2, PyString_FromString(cmd.c_str()), PyInt_FromSize_t(i) );
+                    PyUniqueObj result = PyObject_CallObject(pycomplete, args);
+                    if(result && PyString_Check(result) ) {
+                        ret.push_back( std::string( PyString_AsString(result) ) );
+                    }else{
+                        break;
+                    }
+                }
             }
         }
     }
 
-    if(result) {
-        if(PyString_Check(result)) {
-            ret = std::string( PyString_AsString(result) );
-        }
-        Py_DECREF(result);
+    return ret;
+}
+
+void PyInterpreter::PushCommand(const std::string& cmd)
+{
+    PyUniqueObj obj = EvalExec(cmd);
+    if(obj && obj != Py_None) {
+        const std::string output = ToString(obj);
+        line_queue.push(
+            ConsoleLine(output, ConsoleLineTypeOutput)
+        );
     }
 
-    return ret;
+    std::cout.flush();
+    std::cerr.flush();
+}
+
+bool PyInterpreter::PullLine(ConsoleLine& line)
+{
+    if(line_queue.size()) {
+        line = line_queue.front();
+        line_queue.pop();
+        return true;
+    }else{
+        return false;
+    }
 }
 
 }
