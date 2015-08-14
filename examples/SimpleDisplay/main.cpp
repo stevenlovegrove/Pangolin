@@ -1,8 +1,6 @@
 #include <iostream>
 #include <pangolin/pangolin.h>
 
-#include <pangolin/python/PyView.h>
-
 struct CustomType
 {
   CustomType()
@@ -96,11 +94,6 @@ int main( int argc, char* argv[] )
 
   // Demonstration of how we can register a keyboard hook to trigger a method
   pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'r', SampleMethod);
-
-  pangolin::PythonView pyview;
-  pangolin::DisplayBase().AddDisplay(pyview);
-  pyview.SetBounds(0.5,1.0,0.0,1.0);
-  pyview.SetFocus();
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )

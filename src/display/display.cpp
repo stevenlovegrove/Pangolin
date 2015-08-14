@@ -63,7 +63,13 @@ ContextMap contexts;
 __thread PangolinGl* context = 0;
 
 PangolinGl::PangolinGl()
-    : user_app(0), quit(false), mouse_state(0), activeDisplay(0)
+    : user_app(0), quit(false), mouse_state(0),activeDisplay(0)
+#ifdef BUILD_PANGOLIN_VIDEO
+    , record_view(0)
+#endif
+#ifdef HAVE_PYTHON
+    , python_view(0)
+#endif
 {
 }
 
@@ -156,8 +162,16 @@ void PostRender()
     }
 #endif // BUILD_PANGOLIN_VIDEO
 
-    DisplayBase().Activate();
+    // Disable scissor each frame
     Viewport::DisableScissor();
+
+#ifdef HAVE_PYTHON
+    if(context->python_view && context->python_view->IsShown()) {
+        // Size to base
+        context->python_view->v = DisplayBase().v;
+        context->python_view->Render();
+    }
+#endif
 }
 
 View& DisplayBase()
@@ -171,6 +185,23 @@ View& CreateDisplay()
     std::stringstream ssguid;
     ssguid << iguid;
     return Display(ssguid.str());
+}
+
+void ToggleConsole()
+{
+#ifdef HAVE_PYTHON
+    if( !context->python_view) {
+        // Create console and let the pangolin context take ownership
+        context->python_view = new PyView();
+        context->named_managed_views["pangolin_console"] = context->python_view;
+        context->python_view->SetFocus();
+    }else{
+        context->python_view->ToggleShow();
+        if(context->python_view->IsShown()) {
+            context->python_view->SetFocus();
+        }
+    }
+#endif
 }
 
 void ToggleFullscreen()
@@ -287,6 +318,12 @@ void Keyboard( unsigned char key, int x, int y)
     if( key == GLUT_KEY_ESCAPE) {
         context->quit = true;
     }
+#ifdef HAVE_PYTHON
+    // TODO: Use keypress_hook system to allow customisation
+    else if( key == '`') {
+        ToggleConsole();
+    }
+#endif
 //    else if( key == GLUT_KEY_TAB) {
 //        ToggleFullscreen();
 //    }

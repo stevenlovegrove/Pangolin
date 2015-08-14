@@ -4,7 +4,7 @@
 namespace pangolin
 {
 
-PythonView::PythonView()
+PyView::PyView()
     : python(new PythonInterpreter()),
       font(GlFont::I()),
       prompt(font.Text("")),
@@ -15,11 +15,11 @@ PythonView::PythonView()
     AddLine("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 }
 
-PythonView::~PythonView() {
+PyView::~PyView() {
     delete python;
 }
 
-void PythonView::Render()
+void PyView::Render()
 {
     this->ActivatePixelOrthographic();
     glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT | GL_TRANSFORM_BIT );
@@ -55,7 +55,7 @@ void PythonView::Render()
     glPopAttrib();
 }
 
-void PythonView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+void PyView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 {
     if(pressed) {
         if(key=='\r') key = '\n';
@@ -86,7 +86,7 @@ void PythonView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
     }
 }
 
-void PythonView::AddLine(const std::string& str)
+void PyView::AddLine(const std::string& str)
 {
     line_buffer.push_front( font.Text("%s",str.c_str()) );
 }

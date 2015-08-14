@@ -40,6 +40,10 @@
 #include <pangolin/video/video_output.h>
 #endif // BUILD_PANGOLIN_VIDEO
 
+#ifdef HAVE_PYTHON
+#include <pangolin/python/PyView.h>
+#endif // HAVE_PYTHON
+
 namespace pangolin
 {
 
@@ -79,6 +83,10 @@ struct PANGOLIN_EXPORT PangolinGl
 #ifdef BUILD_PANGOLIN_VIDEO
     View* record_view;
     VideoOutput recorder;
+#endif
+
+#ifdef HAVE_PYTHON
+    PyView* python_view;
 #endif
 };
 

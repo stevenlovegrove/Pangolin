@@ -14,16 +14,16 @@ namespace pangolin
 // Forward declartation
 class PythonInterpreter;
 
-class PythonView : public pangolin::View, pangolin::Handler
+class PyView : public pangolin::View, pangolin::Handler
 {
 public:
-    PythonView();
+    PyView();
 
-    ~PythonView();
+    ~PyView();
 
     void Render();
 
-    void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
+    void Keyboard(View&, unsigned char key, int x, int y, bool pressed) PANGOLIN_OVERRIDE;
 
     void AddLine(const std::string& str);
 

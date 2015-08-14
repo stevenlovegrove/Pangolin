@@ -183,6 +183,10 @@ namespace pangolin
   PANGOLIN_EXPORT
   void SetFullscreen(bool fullscreen = true);
 
+  /// Toggle display of Pangolin console
+  PANGOLIN_EXPORT
+  void ToggleConsole();
+
 }
 
 #endif // PANGOLIN_DISPLAY_H
