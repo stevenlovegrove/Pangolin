@@ -9,6 +9,7 @@ namespace pangolin
 enum ConsoleLineType
 {
     ConsoleLineTypeCmd,
+    ConsoleLineTypeCmdCompletion,
     ConsoleLineTypeHistory,
     ConsoleLineTypeStdout,
     ConsoleLineTypeStderr,

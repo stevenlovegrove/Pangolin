@@ -3,11 +3,20 @@
 namespace pangolin
 {
 
+void glColour(const Colour& c)
+{
+    glColor4f(c.r,c.g,c.b,c.a);
+}
+
+void DrawLine(ConsoleView::Line& l)
+{
+    glColour(l.colour);
+    l.text.Draw();
+}
+
 ConsoleView::ConsoleView(ConsoleInterpreter* interpreter)
     : interpreter(interpreter),
-      font(GlFont::I()),
-      prompt(font.Text("")),
-      current_line(prompt)
+      font(GlFont::I())
 {
     SetHandler(this);
     AddLine("Pangolin Python Command Prompt:");
@@ -57,12 +66,10 @@ void ConsoleView::Render()
 
     const int line_space = 15;
     glTranslated(10.0, 10.0, 0.0 );
-    glColor4f( 1.0, 1.0, 1.0, 1.0 );
-    current_line.Draw();
+    DrawLine(current_line);
     glTranslated(0.0, line_space, 0.0);
     for(int l=0; l < line_buffer.size(); ++l) {
-        GlText& txt = line_buffer[l];
-        txt.Draw();
+        DrawLine(line_buffer[l]);
         glTranslated(0.0, line_space, 0.0);
     }
 
@@ -74,12 +81,13 @@ void ConsoleView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
     if(pressed) {
         if(key=='\r') key = '\n';
 
-        const std::string cmd = current_line.Text();
+        GlText& txt = current_line.text;
+        const std::string cmd = txt.Text();
 
         if(key=='\n') {
             interpreter->PushCommand(cmd);
             line_buffer.push_front(current_line);
-            current_line.Clear();
+            txt.Clear();
         }else if(key=='\t') {
             std::vector<std::string> options = interpreter->Complete(cmd,100);
             if(options.size()) {
@@ -87,16 +95,16 @@ void ConsoleView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
                 current_line = font.Text("%s", option.c_str());
             }
         }else if(key=='\b') {
-            current_line = font.Text("%s", current_line.Text().substr(0,current_line.Text().size()-1).c_str() );
+            txt = font.Text("%s", txt.Text().substr(0,txt.Text().size()-1).c_str() );
         }else{
-            current_line = font.Text("%s%c", current_line.Text().c_str(), key);
+            txt = font.Text("%s%c", txt.Text().c_str(), key);
         }
     }
 }
 
-void ConsoleView::AddLine(const std::string& str)
+void ConsoleView::AddLine(const std::string& text, ConsoleLineType linetype, Colour colour )
 {
-    line_buffer.push_front( font.Text("%s",str.c_str()) );
+    line_buffer.push_front( Line( font.Text("%s",text.c_str()), linetype, colour) );
 }
 
 }
