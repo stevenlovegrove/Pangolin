@@ -46,7 +46,9 @@ public:
 private:
     void ProcessOutputLines();
 
-    void AddLine(const std::string& text, ConsoleLineType linetype = ConsoleLineTypeCmd, Colour colour = Colour(1.0,1.0,1.0) );
+    void AddLine(const std::string& text, ConsoleLineType linetype = ConsoleLineTypeCmd);
+
+    Line* GetLine(int id, ConsoleLineType line_type, const std::string& prefix = "");
 
     ConsoleInterpreter* interpreter;
 
@@ -56,6 +58,7 @@ private:
 
     Line current_line;
     std::deque<Line> line_buffer;
+    std::map<ConsoleLineType,pangolin::Colour> line_colours;
 };
 
 }

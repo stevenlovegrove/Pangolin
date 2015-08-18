@@ -19,8 +19,15 @@ ConsoleView::ConsoleView(ConsoleInterpreter* interpreter)
       font(GlFont::I())
 {
     SetHandler(this);
-    AddLine("Pangolin Python Command Prompt:");
-    AddLine("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+
+    line_colours[ConsoleLineTypeCmd]        = Colour(1.0,1.0,1.0,1.0);
+    line_colours[ConsoleLineTypeCmdOptions] = Colour(0.9,0.9,0.9,1.0);
+    line_colours[ConsoleLineTypeOutput]     = Colour(0.0,1.0,1.0,1.0);
+    line_colours[ConsoleLineTypeHelp]       = Colour(1.0,0.5,1.0,1.0);
+
+    AddLine("Pangolin Python Command Prompt:", ConsoleLineTypeHelp);
+    AddLine("===============================", ConsoleLineTypeHelp);
+
 }
 
 ConsoleView::~ConsoleView() {
@@ -33,9 +40,7 @@ void ConsoleView::ProcessOutputLines()
     ConsoleLine line_in;
     while(interpreter->PullLine(line_in))
     {
-        line_buffer.push_front(
-            font.Text("%s", line_in.text.c_str())
-        );
+        AddLine(line_in.text, line_in.linetype);
     }
 }
 
@@ -52,7 +57,7 @@ void ConsoleView::Render()
     glBlendFunc( GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA );
     glDisable(GL_DEPTH_TEST );
 
-    glColor4f( 1.0, 0.5, 0.5, 0.8 );
+    glColor4f( 0.8, 0.3, 0.3, 0.8 );
 
     GLfloat verts[] = { 0.0f, (GLfloat)v.h,
                         (GLfloat)v.w, (GLfloat)v.h,
@@ -76,8 +81,30 @@ void ConsoleView::Render()
     glPopAttrib();
 }
 
+inline std::string CommonPrefix(const std::vector<std::string>& vec)
+{
+    if(!vec.size()) return "";
+
+    size_t cmn = vec[0].size();
+    for(int i=1; i<vec.size(); ++i) {
+        cmn = std::min(vec[i].size(), cmn);
+        for(int p=0; p < cmn; ++p) {
+            if(vec[i][p] != vec[0][p]) {
+                cmn = p;
+                break;
+            }
+        }
+    }
+
+    return vec[0].substr(0,cmn);
+}
+
 void ConsoleView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 {
+    static int hist_id = -1;
+    static std::string prefix;
+    static bool edited = true;
+
     if(pressed) {
         if(key=='\r') key = '\n';
 
@@ -87,24 +114,73 @@ void ConsoleView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
         if(key=='\n') {
             interpreter->PushCommand(cmd);
             line_buffer.push_front(current_line);
+            hist_id = -1;
+            prefix = "";
+            edited = true;
             txt.Clear();
         }else if(key=='\t') {
             std::vector<std::string> options = interpreter->Complete(cmd,100);
             if(options.size()) {
-                const std::string option = options[0];
-                current_line = font.Text("%s", option.c_str());
+                const std::string common = CommonPrefix(options);
+                if(common != cmd) {
+                    current_line = font.Text("%s", common.c_str());
+                }else{
+                    std::stringstream s;
+                    std::copy(options.begin(), options.end(), std::ostream_iterator<std::string>(s,", "));
+                    AddLine(s.str(), ConsoleLineTypeCmdOptions);
+                }
+            }
+        }else if(key==PANGO_SPECIAL + PANGO_KEY_UP) {
+            if(edited) {
+                prefix = cmd;
+                edited = false;
+            }
+            Line* hist_line = GetLine(hist_id+1, ConsoleLineTypeCmd, prefix);
+            if(hist_line) {
+                current_line = *hist_line;
+                hist_id++;
+            }
+        }else if(key==PANGO_SPECIAL + PANGO_KEY_DOWN) {
+            if(edited) {
+                prefix = cmd;
+                edited = false;
+            }
+            Line* hist_line = GetLine(hist_id-1, ConsoleLineTypeCmd, prefix);
+            if(hist_line) {
+                current_line = *hist_line;
+                hist_id--;
             }
         }else if(key=='\b') {
             txt = font.Text("%s", txt.Text().substr(0,txt.Text().size()-1).c_str() );
+            edited = true;
         }else{
             txt = font.Text("%s%c", txt.Text().c_str(), key);
+            edited = true;
         }
     }
 }
 
-void ConsoleView::AddLine(const std::string& text, ConsoleLineType linetype, Colour colour )
+void ConsoleView::AddLine(const std::string& text, ConsoleLineType linetype )
 {
+    const Colour& colour = line_colours[linetype];
     line_buffer.push_front( Line( font.Text("%s",text.c_str()), linetype, colour) );
+}
+
+ConsoleView::Line* ConsoleView::GetLine(int id, ConsoleLineType line_type, const std::string& prefix )
+{
+    int match = 0;
+    for(Line& l : line_buffer)
+    {
+        if(l.linetype == line_type && l.text.Text().substr(0,prefix.size()) == prefix  ) {
+            if(id == match) {
+                return &l;
+            }else{
+                ++match;
+            }
+        }
+    }
+
+    return nullptr;
 }
 
 }

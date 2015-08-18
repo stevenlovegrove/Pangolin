@@ -9,12 +9,13 @@ namespace pangolin
 enum ConsoleLineType
 {
     ConsoleLineTypeCmd,
-    ConsoleLineTypeCmdCompletion,
+    ConsoleLineTypeCmdOptions,
     ConsoleLineTypeHistory,
     ConsoleLineTypeStdout,
     ConsoleLineTypeStderr,
     ConsoleLineTypeOutput,
     ConsoleLineTypeError,
+    ConsoleLineTypeHelp,
 };
 
 class ConsoleLine
