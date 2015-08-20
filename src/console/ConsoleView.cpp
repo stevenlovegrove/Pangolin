@@ -1,4 +1,5 @@
 #include <pangolin/console/ConsoleView.h>
+#include <iterator>
 
 namespace pangolin
 {
@@ -73,7 +74,7 @@ void ConsoleView::Render()
     glTranslated(10.0, 10.0, 0.0 );
     DrawLine(current_line);
     glTranslated(0.0, line_space, 0.0);
-    for(int l=0; l < line_buffer.size(); ++l) {
+    for(size_t l=0; l < line_buffer.size(); ++l) {
         DrawLine(line_buffer[l]);
         glTranslated(0.0, line_space, 0.0);
     }
@@ -86,9 +87,9 @@ inline std::string CommonPrefix(const std::vector<std::string>& vec)
     if(!vec.size()) return "";
 
     size_t cmn = vec[0].size();
-    for(int i=1; i<vec.size(); ++i) {
+    for(size_t i=1; i<vec.size(); ++i) {
         cmn = std::min(vec[i].size(), cmn);
-        for(int p=0; p < cmn; ++p) {
+        for(size_t p=0; p < cmn; ++p) {
             if(vec[i][p] != vec[0][p]) {
                 cmn = p;
                 break;

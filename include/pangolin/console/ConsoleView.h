@@ -9,7 +9,7 @@
 #include <pangolin/handler/handler.h>
 #include <pangolin/gl/colour.h>
 
-#include <pangolin/Console/ConsoleInterpreter.h>
+#include <pangolin/console/ConsoleInterpreter.h>
 
 namespace pangolin
 {

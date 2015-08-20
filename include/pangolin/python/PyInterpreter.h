@@ -1,7 +1,7 @@
 #pragma once
 
 #include <pangolin/python/PyUniqueObj.h>
-#include <pangolin/Console/ConsoleInterpreter.h>
+#include <pangolin/console/ConsoleInterpreter.h>
 #include <pangolin/compat/thread.h>
 #include <queue>
 
