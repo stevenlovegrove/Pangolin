@@ -546,8 +546,7 @@ void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
         }else if(key == 235){
             // end
             sel[0] = sel[1] = edit.length();
-        }else{
-            //            cout << (int)key << endl;
+        }else if(key < PANGO_SPECIAL){
             edit = edit.substr(0,sel[0]).append(1,key) + edit.substr(sel[1],edit.length()-sel[1]);
             sel[1] = sel[0];
             sel[0]++;

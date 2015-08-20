@@ -154,7 +154,7 @@ void ConsoleView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
         }else if(key=='\b') {
             txt = font.Text("%s", txt.Text().substr(0,txt.Text().size()-1).c_str() );
             edited = true;
-        }else{
+        }else if(key < PANGO_SPECIAL){
             txt = font.Text("%s%c", txt.Text().c_str(), key);
             edited = true;
         }
