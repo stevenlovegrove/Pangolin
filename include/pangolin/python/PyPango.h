@@ -8,21 +8,29 @@
 namespace pangolin
 {
 
-typedef struct {
+struct PyPangoVar {
     PyObject_HEAD
+    PyPangoVar(PyTypeObject *type)
+        : ob_refcnt(1), ob_type(type)
+    {
+    }
+
     std::string ns;
-} PyPangoVar;
+};
 
 static void
 PyPangoVar_dealloc(PyPangoVar* self)
 {
-    self->ob_type->tp_free((PyObject*)self);
+//    self->ob_type->tp_free((PyObject*)self);
+    delete self;
 }
 
 static PyObject *
 PyPangoVar_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    PyPangoVar* self = (PyPangoVar *)type->tp_alloc(type, 0);
+//    // tp_alloc doesn't not correctly initialise c++ member variables.
+//    PyPangoVar* self = (PyPangoVar *)type->tp_alloc(type, 0);
+    PyPangoVar* self = new PyPangoVar(type);
     return (PyObject *)self;
 }
 
