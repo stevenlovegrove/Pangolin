@@ -323,10 +323,12 @@ void Keyboard( unsigned char key, int x, int y)
     else if( key == '`') {
         ToggleConsole();
     }
+    else if( !(context->python_view && context->python_view->IsShown()) && key == GLUT_KEY_TAB) {
+#else
+    else if( key == GLUT_KEY_TAB) {
 #endif
-//    else if( key == GLUT_KEY_TAB) {
-//        ToggleFullscreen();
-//    }
+        ToggleFullscreen();
+    }
     else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
         context->keypress_hooks[key]();
     } else if(context->activeDisplay && context->activeDisplay->handler) {
