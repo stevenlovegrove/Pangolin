@@ -87,7 +87,7 @@ struct PANGOLIN_EXPORT PangolinGl
 #endif
 
 #ifdef HAVE_PYTHON
-    ConsoleView* python_view;
+    ConsoleView* console_view;
 #endif
 };
 

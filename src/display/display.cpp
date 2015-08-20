@@ -68,7 +68,7 @@ PangolinGl::PangolinGl()
     , record_view(0)
 #endif
 #ifdef HAVE_PYTHON
-    , python_view(0)
+    , console_view(0)
 #endif
 {
 }
@@ -166,10 +166,10 @@ void PostRender()
     Viewport::DisableScissor();
 
 #ifdef HAVE_PYTHON
-    if(context->python_view && context->python_view->IsShown()) {
+    if(context->console_view && context->console_view->IsShown()) {
         // Size to base
-        context->python_view->v = DisplayBase().v;
-        context->python_view->Render();
+        context->console_view->v = DisplayBase().v;
+        context->console_view->Render();
     }
 #endif
 }
@@ -190,15 +190,15 @@ View& CreateDisplay()
 void ToggleConsole()
 {
 #ifdef HAVE_PYTHON
-    if( !context->python_view) {
+    if( !context->console_view) {
         // Create console and let the pangolin context take ownership
-        context->python_view = new ConsoleView(new PyInterpreter());
-        context->named_managed_views["pangolin_console"] = context->python_view;
-        context->python_view->SetFocus();
+        context->console_view = new ConsoleView(new PyInterpreter());
+        context->named_managed_views["pangolin_console"] = context->console_view;
+        context->console_view->SetFocus();
     }else{
-        context->python_view->ToggleShow();
-        if(context->python_view->IsShown()) {
-            context->python_view->SetFocus();
+        context->console_view->ToggleShow();
+        if(context->console_view->IsShown()) {
+            context->console_view->SetFocus();
         }
     }
 #endif
@@ -323,7 +323,7 @@ void Keyboard( unsigned char key, int x, int y)
     else if( key == '`') {
         ToggleConsole();
     }
-    else if( !(context->python_view && context->python_view->IsShown()) && key == GLUT_KEY_TAB) {
+    else if( !(context->console_view && context->console_view->IsShown()) && key == GLUT_KEY_TAB) {
 #else
     else if( key == GLUT_KEY_TAB) {
 #endif
