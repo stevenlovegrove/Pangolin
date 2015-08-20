@@ -4,7 +4,7 @@
 #include <pangolin/gl/glpixformat.h>
 
 template<typename T>
-std::pair<float,float> GetScaleBias(const pangolin::Image<unsigned char>& img)
+std::pair<float,float> GetOffsetScale(const pangolin::Image<unsigned char>& img, float type_max, float format_max)
 {
     std::pair<float,float> mm(std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
     for(size_t i=0; i < img.Area(); ++i) {
@@ -15,18 +15,10 @@ std::pair<float,float> GetScaleBias(const pangolin::Image<unsigned char>& img)
         }
     }
 
-    const float scale = 1.0 / (mm.second - mm.first);
-    const float bias = - scale*mm.first;
-    return std::pair<float,float>(scale, bias);
-}
-
-template<typename T>
-void ScaleImage(const pangolin::Image<unsigned char>& img, const std::pair<float,float>& scale_bias)
-{
-    for(size_t i=0; i < img.Area(); ++i) {
-        T& val = ((T*)img.ptr)[i];
-        val = val * scale_bias.first + scale_bias.second;
-    }
+    const float type_scale = format_max / type_max;
+    const float offset = -type_scale* mm.first;
+    const float scale = type_max / (mm.second - mm.first);
+    return std::pair<float,float>(offset, scale);
 }
 
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
@@ -57,20 +49,19 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
     // Setup resizable views for video streams
     std::vector<pangolin::GlPixFormat> glfmt;
+    std::vector<std::pair<float,float> > gloffsetscale;
+
     pangolin::DisplayBase().SetLayout(pangolin::LayoutEqual);
     for(unsigned int d=0; d < video.Streams().size(); ++d) {
         pangolin::View& view = pangolin::CreateDisplay().SetAspect(video.Streams()[d].Aspect());
         pangolin::DisplayBase().AddDisplay(view);
         glfmt.push_back(pangolin::GlPixFormat(video.Streams()[d].PixFormat()));
+        gloffsetscale.push_back(std::pair<float,float>(0.0f, 1.0f) );
     }
 
     int frame = 0;
     pangolin::Var<int>  max_frame("max_frame", total_frames );
     pangolin::Var<bool> linear_sampling("linear_sampling", true );
-    pangolin::Var<float> int16_scale("int16.scale", 1<<4 );
-    pangolin::Var<float> int16_bias("int16.bias", 0.0 );
-    pangolin::Var<float> float32_scale("float32.scale", 1.0 );
-    pangolin::Var<float> float32_bias("float32.bias", 0.0 );
 
     std::vector<pangolin::Image<unsigned char> > images;
 
@@ -132,16 +123,16 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::RegisterKeyPressCallback('a', [&](){
         // Adapt scale
         for(unsigned int i=0; i<images.size(); ++i) {
-            if(pangolin::DisplayBase()[i].IsShown()) {
-                if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
-                    std::pair<float,float> sb = GetScaleBias<unsigned short>(images[i]);
-                    int16_scale = 255.0 * sb.first;
-                    int16_bias  = 255.0 * sb.second;
+            if(pangolin::DisplayBase()[i].HasFocus()) {
+                std::pair<float,float> os(0.0f, 1.0f);
+                if(glfmt[i].gltype == GL_UNSIGNED_BYTE) {
+                    os = GetOffsetScale<unsigned char>(images[i], 255.0f, 1.0f);
+                }else if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
+                    os = GetOffsetScale<unsigned short>(images[i], 65535.0f, 1.0f);
                 }else if(glfmt[i].gltype == GL_FLOAT) {
-                    std::pair<float,float> sb = GetScaleBias<float>(images[i]);
-                    float32_scale = sb.first;
-                    float32_bias  = sb.second;
+                    os = GetOffsetScale<float>(images[i], 1.0f, 1.0f);
                 }
+                gloffsetscale[i] = os;
             }
         }
     });
@@ -155,7 +146,6 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glColor3f(1.0f, 1.0f, 1.0f);
 
         if (frame == 0 || frame < max_frame) {
-            images.clear();
             if (video.Grab(&buffer[0], images) ){
                 ++frame;
             }
@@ -165,17 +155,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         {
             if(pangolin::DisplayBase()[i].IsShown()) {
                 pangolin::DisplayBase()[i].Activate();
-                if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
-                    pangolin::GlSlUtilities::Scale(int16_scale, int16_bias);
-                    pangolin::RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
-                    pangolin::GlSlUtilities::UseNone();
-                }else if(glfmt[i].gltype == GL_FLOAT) {
-                    pangolin::GlSlUtilities::Scale(float32_scale, float32_bias);
-                    pangolin::RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
-                    pangolin::GlSlUtilities::UseNone();
-                }else{
-                    pangolin::RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
-                }
+                const std::pair<float,float> os = gloffsetscale[i];
+                pangolin::GlSlUtilities::OffsetAndScale(os.first, os.second);
+                pangolin::RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
+                pangolin::GlSlUtilities::UseNone();
             }
         }
 
