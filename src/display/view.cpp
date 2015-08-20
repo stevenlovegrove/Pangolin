@@ -396,6 +396,11 @@ View& View::SetFocus()
     return *this;
 }
 
+bool View::HasFocus() const
+{
+    return context->activeDisplay == this;
+}
+
 View& View::SetBounds(Attach bottom, Attach top,  Attach left, Attach right, bool keep_aspect)
 {
     SetBounds(top,bottom,left,right,0.0);
