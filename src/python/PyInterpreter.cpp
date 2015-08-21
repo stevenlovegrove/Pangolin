@@ -19,22 +19,6 @@ PyInterpreter::PyInterpreter()
         "import sys\n"
         "import pangolin\n"
         "\n"
-//      "class PangoVar(object):\n"
-//      "   def __init__(self, pango_ns):\n"
-//      "       self.pango_ns = pango_ns\n"
-//      "   \n"
-//      "   def __getattr__(self, name):\n"
-//      "       if(name == '__call__'):\n"
-//      "           return []\n"
-//      "       if(name == '__members__'):\n"
-//      "           return ['A_Double']\n"
-//      "       if(name == '__methods__'):\n"
-//      "           return []\n"
-//      "       print(self.pango_ns + name)\n"
-//      "       return PangoVar(self.pango_ns + name)\n"
-//      "\n"
-//      "ui = PangoVar('ui')\n"
-        "\n"
         "ui = pangolin.PangoVar('ui')\n"
         "\n"
         "try:\n"
@@ -97,6 +81,9 @@ PyUniqueObj PyInterpreter::EvalExec(const std::string& cmd)
         }
     }
 
+    std::cout.flush();
+    std::cerr.flush();
+
     return PyUniqueObj();
 }
 
@@ -115,7 +102,13 @@ std::vector<std::string> PyInterpreter::Complete(const std::string& cmd, int max
                     PyUniqueObj args = PyTuple_Pack( 2, PyString_FromString(cmd.c_str()), PyInt_FromSize_t(i) );
                     PyUniqueObj result = PyObject_CallObject(pycomplete, args);
                     if(result && PyString_Check(result) ) {
-                        ret.push_back( std::string( PyString_AsString(result) ) );
+                        std::string res_str( PyString_AsString(result) );
+                        if( res_str.find("__")==std::string::npos ||
+                            cmd.find("__")!=std::string::npos ||
+                            (cmd.size() > 0 && cmd[cmd.size()-1] == '_')
+                        ) {
+                            ret.push_back( res_str );
+                        }
                     }else{
                         break;
                     }

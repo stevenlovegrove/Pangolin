@@ -46,14 +46,6 @@ PyPangoVar_init(PyPangoVar *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-static PyMemberDef PyPangoVar_members[] = {
-    {NULL}  /* Sentinel */
-};
-
-static PyMethodDef PyPangoVar_methods[] = {
-    {NULL}  /* Sentinel */
-};
-
 static PyObject* PyPangoVar_getattr(PyPangoVar *self, char* name);
 static int PyPangoVar_setattr(PyPangoVar *self, char* name, PyObject* val);
 
@@ -80,14 +72,14 @@ static PyTypeObject PyPangoVarType = {
     0,                                        /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
     "PyPangoVar objects",                     /* tp_doc */
-    0,		                              /* tp_traverse */
-    0,		                              /* tp_clear */
-    0,		                              /* tp_richcompare */
-    0,		                              /* tp_weaklistoffset */
-    0,		                              /* tp_iter */
-    0,		                              /* tp_iternext */
-    PyPangoVar_methods,                       /* tp_methods */
-    PyPangoVar_members,                       /* tp_members */
+    0,		                                  /* tp_traverse */
+    0,		                                  /* tp_clear */
+    0,		                                  /* tp_richcompare */
+    0,		                                  /* tp_weaklistoffset */
+    0,		                                  /* tp_iter */
+    0,		                                  /* tp_iternext */
+    0,                                        /* tp_methods */
+    0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
@@ -102,10 +94,39 @@ static PyTypeObject PyPangoVarType = {
 
 static PyObject* PyPangoVar_getattr(PyPangoVar *self, char* name)
 {
-    const std::string full_name = self->ns.empty() ? name : self->ns + "." + std::string(name);
+    const std::string prefix = self->ns + ".";
+    const std::string full_name = self->ns.empty() ? name : prefix + std::string(name);
+    
+    if( !strcmp(name, "__call__") ||
+            !strcmp(name, "__dict__") ||
+            !strcmp(name, "__methods__") ||
+            !strcmp(name, "__class__") )
+    {
+        // Default behaviour
+        return PyObject_GenericGetAttr((PyObject*)self, PyString_FromString(name));
+    } else if( !strcmp(name, "__members__") ) {
+        const int nss = prefix.size();
+        PyObject* l = PyList_New(0);
+        for(const std::string& s : VarState::I().var_adds) {
+            if(!s.compare(0, nss, prefix)) {
+                int dot = s.find_first_of('.', nss);
+                if(dot != std::string::npos) {
+                    std::string val = s.substr(nss, dot - nss);
+                    PyList_Append(l, PyString_FromString(val.c_str()));
+                }else{
+                    std::string val = s.substr(nss);
+                    PyList_Append(l, PyString_FromString(val.c_str()));
+                }
+            }
+        }
 
-    if( pangolin::VarState::I().Exists(full_name) ) {
-        std::string str_val = pangolin::VarState::I()[full_name]->str->Get();
+        return l;
+    }else if( pangolin::VarState::I().Exists(full_name) ) {
+        std::string str_val;
+        try{
+            str_val = pangolin::VarState::I()[full_name]->str->Get();
+        }catch(pangolin::BadInputException) {
+        }
         return PyString_FromString(str_val.c_str());
     }else{
         PyPangoVar* obj = (PyPangoVar*)PyPangoVar_new(&PyPangoVarType,NULL,NULL);
@@ -113,9 +134,10 @@ static PyObject* PyPangoVar_getattr(PyPangoVar *self, char* name)
             obj->ns = full_name;
             return PyObject_Init((PyObject *)obj,&PyPangoVarType);
         }
-
         return (PyObject *)obj;
     }
+
+    Py_RETURN_NONE;
 }
 
 static int PyPangoVar_setattr(PyPangoVar *self, char* name, PyObject* val)
