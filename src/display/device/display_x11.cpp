@@ -455,23 +455,47 @@ void CreateWindowAndBind(std::string window_title, int w, int h )
 
 }
 
+void X11ToggleFullscreen()
+{
+    const Atom _NET_WM_STATE_FULLSCREEN = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", True);
+    const Atom _NET_WM_STATE = XInternAtom(display, "_NET_WM_STATE", True);
+    XEvent e;
+    e.xclient.type         = ClientMessage;
+    e.xclient.window       = win;
+    e.xclient.message_type = _NET_WM_STATE;
+    e.xclient.format       = 32;
+    e.xclient.data.l[0]    = 2;  // Toggle
+    e.xclient.data.l[1]    = _NET_WM_STATE_FULLSCREEN;
+    e.xclient.data.l[2]    = 0;
+    e.xclient.data.l[3]    = 1;
+    e.xclient.data.l[4]    = 0;
+
+    XSendEvent(display, DefaultRootWindow(display), False, SubstructureRedirectMask | SubstructureNotifyMask, &e);
+    XMoveResizeWindow(display, win, 0, 0, context->windowed_size[0], context->windowed_size[1]);
+}
+
 void StartFullScreen() {
+    if(!context->is_fullscreen) {
+        X11ToggleFullscreen();
+        context->is_fullscreen = true;
+    }
 }
 
 void StopFullScreen() {
+    if(context->is_fullscreen) {
+        X11ToggleFullscreen();
+        context->is_fullscreen = false;
+    }
 }
 
 void SetFullscreen(bool fullscreen)
 {
-    if( fullscreen != context->is_fullscreen )
-    {
-        if(fullscreen) {
-            StartFullScreen();
-        }else{
-            StopFullScreen();
-        }
-        context->is_fullscreen = fullscreen;
+    if(fullscreen) {
+        StartFullScreen();
+    }else{
+        StopFullScreen();
     }
 }
+
 }
 
