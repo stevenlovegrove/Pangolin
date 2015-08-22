@@ -25,6 +25,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+
+// Code based on public domain sample at
+// https://www.opengl.org/wiki/Tutorial:_OpenGL_3.0_Context_Creation_%28GLX%29
+
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/gl/glglut.h>
@@ -66,9 +70,6 @@ static bool isExtensionSupported(const char *extList, const char *extension)
     if (where || *extension == '\0')
         return false;
 
-    /* It takes a bit of care to be fool-proof about parsing the
-     OpenGL extensions string. Don't be fooled by sub-strings,
-     etc. */
     for (start=extList;;) {
         where = strstr(start, extension);
 
@@ -94,17 +95,15 @@ static int ctxErrorHandler( Display *dpy, XErrorEvent *ev )
     return 0;
 }
 
-int CreateX11Window(int width, int height)
+int CreateX11Window(const std::string& title, int width, int height)
 {
     display = XOpenDisplay(NULL);
 
-    if (!display)
-    {
-        printf("Failed to open X display\n");
-        exit(1);
+    if (!display) {
+        throw std::runtime_error("Pangolin X11: Failed to open X display");
     }
 
-    // Get a matching FB config
+    // Desired attributes
     static int visual_attribs[] =
     {
         GLX_X_RENDERABLE    , True,
@@ -119,36 +118,32 @@ int CreateX11Window(int width, int height)
         GLX_STENCIL_SIZE    , 8,
         GLX_DOUBLEBUFFER    , True,
         GLX_SAMPLE_BUFFERS  , 1,
-        GLX_SAMPLES         , 2,
+        GLX_SAMPLES         , 1,
         None
     };
 
-    int glx_major, glx_minor;
 
-    // FBConfigs were added in GLX version 1.3.
+    int glx_major, glx_minor;
     if ( !glXQueryVersion( display, &glx_major, &glx_minor ) ||
          ( ( glx_major == 1 ) && ( glx_minor < 3 ) ) || ( glx_major < 1 ) )
     {
-        printf("Invalid GLX version");
-        exit(1);
+        // FBConfigs were added in GLX version 1.3.
+        throw std::runtime_error("Pangolin X11: Invalid GLX version. Require GLX >= 1.3");
     }
 
-    printf( "Getting matching framebuffer configs\n" );
     int fbcount;
     GLXFBConfig* fbc = glXChooseFBConfig(display, DefaultScreen(display), visual_attribs, &fbcount);
-    if (!fbc)
-    {
-        printf( "Failed to retrieve a framebuffer config\n" );
-        exit(1);
+    if (!fbc) {
+        throw std::runtime_error("Pangolin X11: Unable to retrieve framebuffer options");
     }
-    printf( "Found %d matching FB configs.\n", fbcount );
 
-    // Pick the FB config/visual with the most samples per pixel
-    printf( "Getting XVisualInfos\n" );
-    int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
+    int best_fbc = -1;
+    int worst_fbc = -1;
+    int best_num_samp = -1;
+    int worst_num_samp = 999;
 
-    int i;
-    for (i=0; i<fbcount; ++i)
+    // Enumerate framebuffer options, storing the best and worst that match our attribs
+    for (int i=0; i<fbcount; ++i)
     {
         XVisualInfo *vi = glXGetVisualFromFBConfig( display, fbc[i] );
         if ( vi )
@@ -157,28 +152,23 @@ int CreateX11Window(int width, int height)
             glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf );
             glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLES       , &samples  );
 
-            printf( "  Matching fbconfig %d, visual ID 0x%2x: SAMPLE_BUFFERS = %d,"
-                    " SAMPLES = %d\n",
-                    i, vi -> visualid, samp_buf, samples );
-
-            if ( best_fbc < 0 || samp_buf && samples > best_num_samp )
+            if ( (best_fbc < 0) || (samp_buf>0 && samples>best_num_samp) )
                 best_fbc = i, best_num_samp = samples;
-            if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
+
+            if ( (worst_fbc < 0) || (samp_buf>0 && samples<worst_num_samp) )
                 worst_fbc = i, worst_num_samp = samples;
         }
         XFree( vi );
     }
 
+    // Select the minimum suitable option. The 'best' is often too slow.
     GLXFBConfig bestFbc = fbc[ worst_fbc ];
-
-    // Be sure to free the FBConfig list allocated by glXChooseFBConfig()
     XFree( fbc );
 
     // Get a visual
     XVisualInfo *vi = glXGetVisualFromFBConfig( display, bestFbc );
-    printf( "Chosen visual ID = 0x%x\n", vi->visualid );
 
-    printf( "Creating colormap\n" );
+    // Create colourmap
     XSetWindowAttributes swa;
     swa.colormap = cmap = XCreateColormap( display,
                                            RootWindow( display, vi->screen ),
@@ -187,97 +177,62 @@ int CreateX11Window(int width, int height)
     swa.border_pixel      = 0;
     swa.event_mask        = StructureNotifyMask;
 
-    printf( "Creating window\n" );
+    // Create window
     win = XCreateWindow( display, RootWindow( display, vi->screen ),
                          0, 0, width, height, 0, vi->depth, InputOutput,
                          vi->visual,
                          CWBorderPixel|CWColormap|CWEventMask, &swa );
-    if ( !win )
-    {
-        printf( "Failed to create window.\n" );
-        exit(1);
-    }
 
-    // Done with the visual info data
     XFree( vi );
 
-    XStoreName( display, win, "GL 3.0 Window" );
+    if ( !win ) {
+        throw std::runtime_error("Pangolin X11: Failed to create window." );
+    }
 
-    printf( "Mapping window\n" );
+    XStoreName( display, win, title.c_str() );
     XMapWindow( display, win );
 
-    /* tell the display server what kind of events we would like to see */
+    // Request to be notified of these events
     XSelectInput(display, win, EVENT_MASKS );
 
     // Get the default screen's GLX extension list
-    const char *glxExts = glXQueryExtensionsString( display,
-                                                    DefaultScreen( display ) );
+    const char *glxExts = glXQueryExtensionsString( display, DefaultScreen( display ) );
 
-    // NOTE: It is not necessary to create or make current to a context before
-    // calling glXGetProcAddressARB
-    glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
-    glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)
-            glXGetProcAddressARB( (const GLubyte *) "glXCreateContextAttribsARB" );
+    glXCreateContextAttribsARBProc glXCreateContextAttribsARB =
+            (glXCreateContextAttribsARBProc) glXGetProcAddressARB(
+                (const GLubyte *) "glXCreateContextAttribsARB"
+            );
 
-    ctx = 0;
 
     // Install an X error handler so the application won't exit if GL 3.0
-    // context allocation fails.
-    //
-    // Note this error handler is global.  All display connections in all threads
-    // of a process use the same error handler, so be sure to guard against other
-    // threads issuing X commands while this code is running.
+    // context allocation fails. Handler is global and shared across all threads.
     ctxErrorOccurred = false;
-    int (*oldHandler)(Display*, XErrorEvent*) =
-            XSetErrorHandler(&ctxErrorHandler);
+    int (*oldHandler)(Display*, XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
 
-    // Check for the GLX_ARB_create_context extension string and the function.
-    // If either is not present, use GLX 1.3 context creation method.
-    if ( !isExtensionSupported( glxExts, "GLX_ARB_create_context" ) ||
-         !glXCreateContextAttribsARB )
+    if ( isExtensionSupported( glxExts, "GLX_ARB_create_context" ) && glXCreateContextAttribsARB )
     {
-        printf( "glXCreateContextAttribsARB() not found"
-                " ... using old-style GLX context\n" );
-        ctx = glXCreateNewContext( display, bestFbc, GLX_RGBA_TYPE, 0, True );
-    }
-
-    // If it does, try to get a GL 3.0 context!
-    else
-    {
-        int context_attribs[] =
-        {
+        int context_attribs[] = {
             GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
             GLX_CONTEXT_MINOR_VERSION_ARB, 0,
             //GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
             None
         };
 
-        printf( "Creating context\n" );
-        ctx = glXCreateContextAttribsARB( display, bestFbc, 0,
-                                          True, context_attribs );
+        ctx = glXCreateContextAttribsARB( display, bestFbc, 0, True, context_attribs );
 
         // Sync to ensure any errors generated are processed.
         XSync( display, False );
-        if ( !ctxErrorOccurred && ctx )
-            printf( "Created GL 3.0 context\n" );
-        else
-        {
-            // Couldn't create GL 3.0 context.  Fall back to old-style 2.x context.
-            // When a context version below 3.0 is requested, implementations will
-            // return the newest context version compatible with OpenGL versions less
-            // than version 3.0.
-            // GLX_CONTEXT_MAJOR_VERSION_ARB = 1
-            context_attribs[1] = 1;
-            // GLX_CONTEXT_MINOR_VERSION_ARB = 0
-            context_attribs[3] = 0;
-
+        if ( ctxErrorOccurred || !ctx ) {
             ctxErrorOccurred = false;
-
-            printf( "Failed to create GL 3.0 context"
-                    " ... using old-style GLX context\n" );
-            ctx = glXCreateContextAttribsARB( display, bestFbc, 0,
-                                              True, context_attribs );
+            // Fall back to old-style 2.x context. Implementations will return the newest
+            // context version compatible with OpenGL versions less than version 3.0.
+            context_attribs[1] = 1;  // GLX_CONTEXT_MAJOR_VERSION_ARB = 1
+            context_attribs[3] = 0;  // GLX_CONTEXT_MINOR_VERSION_ARB = 0
+            ctx = glXCreateContextAttribsARB( display, bestFbc, 0, True, context_attribs );
         }
+    } else {
+        // Fallback to GLX 1.3 Context
+        ctx = glXCreateNewContext( display, bestFbc, GLX_RGBA_TYPE, 0, True );
     }
 
     // Sync to ensure any errors generated are processed.
@@ -288,21 +243,14 @@ int CreateX11Window(int width, int height)
 
     if ( ctxErrorOccurred || !ctx )
     {
-        printf( "Failed to create an OpenGL context\n" );
-        exit(1);
+        throw std::runtime_error("Pangolin X11: Failed to create an OpenGL context");
     }
 
     // Verifying that context is a direct context
-    if ( ! glXIsDirect ( display, ctx ) )
-    {
-        printf( "Indirect GLX rendering context obtained\n" );
-    }
-    else
-    {
-        printf( "Direct GLX rendering context obtained\n" );
+    if ( ! glXIsDirect ( display, ctx ) ) {
+        pango_print_warn("Pangolin X11: Indirect GLX rendering context obtained\n");
     }
 
-    printf( "Making context current\n" );
     glXMakeCurrent( display, win, ctx );
 
     return 0;
@@ -430,7 +378,6 @@ void ProcessX11Events()
             break;
         }
     }
-    fflush(stdout);
 }
 
 void FinishFrame()
@@ -448,11 +395,11 @@ void CreateWindowAndBind(std::string window_title, int w, int h )
     PangolinCommonInit();
     context->is_double_buffered = true;
 
-    CreateX11Window(w, h);
+    CreateX11Window(window_title, w, h);
     glewInit();
 
     // Process window events
-
+    ProcessX11Events();
 }
 
 void X11ToggleFullscreen()
