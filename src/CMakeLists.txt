@@ -210,8 +210,9 @@ if(BUILD_PANGOLIN_GUI AND PYTHONLIBS_FOUND AND CPP11_NO_BOOST)
     ${INCDIR}/console/ConsoleInterpreter.h
     ${INCDIR}/console/ConsoleView.h
     ${INCDIR}/python/PyInterpreter.h
+    ${INCDIR}/python/PyModulePangolin.h
     ${INCDIR}/python/PyUniqueObj.h
-    ${INCDIR}/python/PyPango.h
+    ${INCDIR}/python/PyPangoVar.h
   )
   list(APPEND SOURCES
     console/ConsoleView.cpp
