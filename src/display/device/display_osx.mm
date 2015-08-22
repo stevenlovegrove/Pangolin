@@ -173,10 +173,37 @@ static int mapKeymap(int osx_key)
 
 - (void)flagsChanged:(NSEvent *)event
 {
-//    NSLog(@"flagsChanged");
-//    unsigned int flags = [event modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-//    flags & NSShiftKeyMask;
-//    flags & NSCommandKeyMask;
+    unsigned int flags = [event modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+
+    if(flags&NSShiftKeyMask) {
+        pangolin::context->mouse_state |=  pangolin::KeyModifierShift;
+    }else{
+        pangolin::context->mouse_state &= ~pangolin::KeyModifierShift;
+    }
+
+    if(flags&NSControlKeyMask) {
+        pangolin::context->mouse_state |=  pangolin::KeyModifierCtrl;
+    }else{
+        pangolin::context->mouse_state &= ~pangolin::KeyModifierCtrl;
+    }
+
+    if(flags&NSAlternateKeyMask) {
+        pangolin::context->mouse_state |=  pangolin::KeyModifierAlt;
+    }else{
+        pangolin::context->mouse_state &= ~pangolin::KeyModifierAlt;
+    }
+
+    if(flags&NSCommandKeyMask) {
+        pangolin::context->mouse_state |=  pangolin::KeyModifierCmd;
+    }else{
+        pangolin::context->mouse_state &= ~pangolin::KeyModifierCmd;
+    }
+
+    if(flags&NSFunctionKeyMask) {
+        pangolin::context->mouse_state |=  pangolin::KeyModifierFnc;
+    }else{
+        pangolin::context->mouse_state &= ~pangolin::KeyModifierFnc;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////

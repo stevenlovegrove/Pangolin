@@ -74,7 +74,8 @@ enum KeyModifier
     KeyModifierShift = 1<<16,
     KeyModifierCtrl  = 1<<17,
     KeyModifierAlt   = 1<<18,
-    KeyModifierCmd   = 1<<19
+    KeyModifierCmd   = 1<<19,
+    KeyModifierFnc   = 1<<20
 };
 
 enum InputSpecial
