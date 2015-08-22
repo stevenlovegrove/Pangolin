@@ -48,7 +48,7 @@ Display *display = 0;
 Window win = 0;
 GLXContext ctx = 0;
 Colormap cmap;
-const long EVENT_MASKS = ButtonPressMask|StructureNotifyMask;
+const long EVENT_MASKS = ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|ButtonMotionMask|PointerMotionMask|KeyPressMask|KeyReleaseMask;
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
@@ -118,8 +118,8 @@ int CreateX11Window(int width, int height)
         GLX_DEPTH_SIZE      , 24,
         GLX_STENCIL_SIZE    , 8,
         GLX_DOUBLEBUFFER    , True,
-        //      GLX_SAMPLE_BUFFERS  , 1,
-        //      GLX_SAMPLES         , 2,
+        GLX_SAMPLE_BUFFERS  , 1,
+        GLX_SAMPLES         , 2,
         None
     };
 
@@ -169,7 +169,7 @@ int CreateX11Window(int width, int height)
         XFree( vi );
     }
 
-    GLXFBConfig bestFbc = fbc[ best_fbc ];
+    GLXFBConfig bestFbc = fbc[ worst_fbc ];
 
     // Be sure to free the FBConfig list allocated by glXChooseFBConfig()
     XFree( fbc );
@@ -313,7 +313,7 @@ namespace pangolin
 {
 
 // TODO: Actually call this at some point
-void Terminate()
+void X11Terminate()
 {
     glXMakeCurrent( display, 0, 0 );
     glXDestroyContext( display, ctx );
@@ -326,20 +326,108 @@ void Terminate()
 void ProcessX11Events()
 {
     XEvent ev;
-    while(XCheckWindowEvent(display,win,EVENT_MASKS,&ev))
+    while(!pangolin::ShouldQuit() && XCheckWindowEvent(display,win,EVENT_MASKS,&ev))
     {
         switch(ev.type){
         case ConfigureNotify:
-            if (pangolin::context->windowed_size[0] != ev.xconfigure.width
-                    || pangolin::context->windowed_size[1] != ev.xconfigure.height) {
-                pangolin::context->windowed_size[0] = ev.xconfigure.width;
-                pangolin::context->windowed_size[1] = ev.xconfigure.height;
-                printf("Size changed to: %d by %d\n", pangolin::context->windowed_size[0], pangolin::context->windowed_size[1]);
-            }
+            pangolin::process::Resize(ev.xconfigure.width, ev.xconfigure.height);
             break;
         case ButtonPress:
-            Terminate();
-            pangolin::Quit();
+        case ButtonRelease:
+            pangolin::process::Mouse(
+                ev.xbutton.button-1,
+                ev.xbutton.state,
+                ev.xbutton.x, ev.xbutton.y
+            );
+            break;
+        case MotionNotify:
+            if(ev.xmotion.state==0) {
+                pangolin::process::PassiveMouseMotion(ev.xmotion.x, ev.xmotion.y);
+            }else{
+                pangolin::process::MouseMotion(ev.xmotion.x, ev.xmotion.y);
+            }
+            break;
+        case KeyPress:
+        case KeyRelease:
+            int key;
+            char ch;
+            KeySym sym;
+
+            if( XLookupString(&ev.xkey,&ch,1,&sym,0) == 0) {
+                switch (sym) {
+                case XK_F1:        key = PANGO_SPECIAL + PANGO_KEY_F1         ; break;
+                case XK_F2:        key = PANGO_SPECIAL + PANGO_KEY_F2         ; break;
+                case XK_F3:        key = PANGO_SPECIAL + PANGO_KEY_F3         ; break;
+                case XK_F4:        key = PANGO_SPECIAL + PANGO_KEY_F4         ; break;
+                case XK_F5:        key = PANGO_SPECIAL + PANGO_KEY_F5         ; break;
+                case XK_F6:        key = PANGO_SPECIAL + PANGO_KEY_F6         ; break;
+                case XK_F7:        key = PANGO_SPECIAL + PANGO_KEY_F7         ; break;
+                case XK_F8:        key = PANGO_SPECIAL + PANGO_KEY_F8         ; break;
+                case XK_F9:        key = PANGO_SPECIAL + PANGO_KEY_F9         ; break;
+                case XK_F10:       key = PANGO_SPECIAL + PANGO_KEY_F10        ; break;
+                case XK_F11:       key = PANGO_SPECIAL + PANGO_KEY_F11        ; break;
+                case XK_F12:       key = PANGO_SPECIAL + PANGO_KEY_F12        ; break;
+                case XK_Left:      key = PANGO_SPECIAL + PANGO_KEY_LEFT       ; break;
+                case XK_Up:        key = PANGO_SPECIAL + PANGO_KEY_UP         ; break;
+                case XK_Right:     key = PANGO_SPECIAL + PANGO_KEY_RIGHT      ; break;
+                case XK_Down:      key = PANGO_SPECIAL + PANGO_KEY_DOWN       ; break;
+                case XK_Page_Up:   key = PANGO_SPECIAL + PANGO_KEY_PAGE_UP    ; break;
+                case XK_Page_Down: key = PANGO_SPECIAL + PANGO_KEY_PAGE_DOWN  ; break;
+                case XK_Home:      key = PANGO_SPECIAL + PANGO_KEY_HOME       ; break;
+                case XK_End:       key = PANGO_SPECIAL + PANGO_KEY_END        ; break;
+                case XK_Insert:    key = PANGO_SPECIAL + PANGO_KEY_INSERT     ; break;
+                case XK_Shift_L:
+                case XK_Shift_R:
+                    key = -1;
+                    if(ev.type==KeyPress) {
+                        pangolin::context->mouse_state |=  pangolin::KeyModifierShift;
+                    }else{
+                        pangolin::context->mouse_state &= ~pangolin::KeyModifierShift;
+                    }
+                    break;
+                case XK_Control_L:
+                case XK_Control_R:
+                    key = -1;
+                    if(ev.type==KeyPress) {
+                        pangolin::context->mouse_state |=  pangolin::KeyModifierCtrl;
+                    }else{
+                        pangolin::context->mouse_state &= ~pangolin::KeyModifierCtrl;
+                    }
+                    break;
+                case XK_Alt_L:
+                case XK_Alt_R:
+                    key = -1;
+                    if(ev.type==KeyPress) {
+                        pangolin::context->mouse_state |=  pangolin::KeyModifierAlt;
+                    }else{
+                        pangolin::context->mouse_state &= ~pangolin::KeyModifierAlt;
+                    }
+                    break;
+                case XK_Super_L:
+                case XK_Super_R:
+                    key = -1;
+                    if(ev.type==KeyPress) {
+                        pangolin::context->mouse_state |=  pangolin::KeyModifierCmd;
+                    }else{
+                        pangolin::context->mouse_state &= ~pangolin::KeyModifierCmd;
+                    }
+                    break;
+
+                default: key = -1; break;
+                }
+            }else{
+                key = ch;
+            }
+
+            if(key >=0) {
+                if(ev.type == KeyPress) {
+                    pangolin::process::Keyboard(key, ev.xkey.x, ev.xkey.y);
+                }else{
+                    pangolin::process::KeyboardUp(key, ev.xkey.x, ev.xkey.y);
+                }
+            }
+
+            break;
         }
     }
     fflush(stdout);

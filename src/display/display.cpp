@@ -366,7 +366,7 @@ void Mouse( int button_raw, int state, int x, int y)
     last_x = (float)x;
     last_y = (float)y;
 
-    const MouseButton button = (MouseButton)(1 << (button_raw&0x7) );
+    const MouseButton button = (MouseButton)(1 << (button_raw & 0xf) );
     const bool pressed = (state == 0);
     
     context->had_input = context->is_double_buffered ? 2 : 1;
@@ -374,9 +374,9 @@ void Mouse( int button_raw, int state, int x, int y)
     const bool fresh_input = (context->mouse_state == 0);
     
     if( pressed ) {
-        context->mouse_state |= button;
+        context->mouse_state |= (button&7);
     }else{
-        context->mouse_state &= ~button;
+        context->mouse_state &= ~(button&7);
     }
     
 #ifdef HAVE_GLUT

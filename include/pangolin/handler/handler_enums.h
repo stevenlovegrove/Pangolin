@@ -66,7 +66,9 @@ enum MouseButton
     MouseButtonMiddle = 2,
     MouseButtonRight = 4,
     MouseWheelUp = 8,
-    MouseWheelDown = 16
+    MouseWheelDown = 16,
+    MouseWheelRight = 32,
+    MouseWheelLeft = 64,
 };
 
 enum KeyModifier
