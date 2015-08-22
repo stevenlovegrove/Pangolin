@@ -2,7 +2,7 @@
 #include <pangolin/python/PyUniqueObj.h>
 
 #include <Python.h>
-#include <pangolin/python/PyPango.h>
+#include <pangolin/python/PyModulePangolin.h>
 #include <pangolin/python/PyInterpreter.h>
 
 
