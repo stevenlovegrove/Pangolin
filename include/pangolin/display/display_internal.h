@@ -91,8 +91,13 @@ struct PANGOLIN_EXPORT PangolinGl
 #endif
 };
 
+// Implemented in platform specific display file.
 PANGOLIN_EXPORT
-void PangolinCommonInit();
+void PangolinPlatformInit(PangolinGl& context);
+
+// Implemented in platform specific display file.
+PANGOLIN_EXPORT
+void PangolinPlatformDeinit(PangolinGl& context);
 
 #ifdef BUILD_PANGOLIN_VIDEO
   void SaveFramebuffer(VideoOutput& video, const Viewport& v);

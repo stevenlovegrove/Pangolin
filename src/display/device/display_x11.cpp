@@ -260,7 +260,6 @@ int CreateX11Window(const std::string& title, int width, int height)
 namespace pangolin
 {
 
-// TODO: Actually call this at some point
 void X11Terminate()
 {
     glXMakeCurrent( display, 0, 0 );
@@ -392,10 +391,10 @@ void CreateWindowAndBind(std::string window_title, int w, int h )
 {
     // Create Pangolin GL Context
     BindToContext(window_title);
-    PangolinCommonInit();
-    context->is_double_buffered = true;
 
     CreateX11Window(window_title, w, h);
+    context->is_double_buffered = true;
+
     glewInit();
 
     // Process window events
@@ -443,6 +442,16 @@ void SetFullscreen(bool fullscreen)
         StopFullScreen();
     }
 }
+
+void PangolinPlatformInit(PangolinGl& /*context*/)
+{
+}
+
+void PangolinPlatformDeinit(PangolinGl& /*context*/)
+{
+    X11Terminate();
+}
+
 
 }
 

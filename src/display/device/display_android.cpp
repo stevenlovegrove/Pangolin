@@ -996,4 +996,13 @@ void SetFullscreen(bool /*fullscreen*/)
     // Do nothing
 }
 
+void PangolinPlatformInit(PangolinGl& /*context*/)
+{
+}
+
+void PangolinPlatformDeinit(PangolinGl& /*context*/)
+{
+}
+
+
 }

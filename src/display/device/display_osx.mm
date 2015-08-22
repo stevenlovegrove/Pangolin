@@ -512,7 +512,6 @@ void CreateWindowAndBind(std::string window_title, int w, int h )
 {
     // Create Pangolin GL Context
     BindToContext(window_title);
-    PangolinCommonInit();
     context->is_double_buffered = true;
 
 //    // These are important I think!
@@ -564,6 +563,14 @@ void SetFullscreen(bool fullscreen)
     }else{
         StopFullScreen();
     }
+}
+
+void PangolinPlatformInit(PangolinGl& /*context*/)
+{
+}
+
+void PangolinPlatformDeinit(PangolinGl& /*context*/)
+{
 }
 
 }

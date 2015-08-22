@@ -71,6 +71,7 @@ PangolinGl::PangolinGl()
     , console_view(0)
 #endif
 {
+    PangolinPlatformInit(*this);
 }
 
 PangolinGl::~PangolinGl()
@@ -80,6 +81,9 @@ PangolinGl::~PangolinGl()
         delete iv->second;
     }
     named_managed_views.clear();
+
+    // Platform specific cleanup
+    PangolinPlatformDeinit(*this);
 }
 
 void BindToContext(std::string name)
@@ -514,10 +518,5 @@ void DrawTextureToViewport(GLuint texid)
 
     glDisable(GL_TEXTURE_2D);
 }
-
-void PangolinCommonInit()
-{
-}
-
 
 }
