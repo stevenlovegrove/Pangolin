@@ -526,6 +526,9 @@ void CreateWindowAndBind(std::string window_title, int w, int h )
     PangolinAppDelegate *delegate = [[PangolinAppDelegate alloc] init];
 
     [[PangolinNSApplication sharedApplication] setDelegate:delegate];
+    [[PangolinNSApplication sharedApplication] setPresentationOptions:NSFullScreenWindowMask];
+    [delegate.window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenPrimary];
+
 
     [NSApp run_pre];
     [NSApp run_step];
@@ -533,22 +536,34 @@ void CreateWindowAndBind(std::string window_title, int w, int h )
     glewInit();
 }
 
+void OsxToggleFullscreen()
+{
+    PangolinAppDelegate *delegate =
+    [[PangolinNSApplication sharedApplication] delegate];
+    [delegate.window toggleFullScreen:nil];
+}
+
 void StartFullScreen() {
+    if(!context->is_fullscreen) {
+        OsxToggleFullscreen();
+        context->is_fullscreen = true;
+    }
 }
 
 void StopFullScreen() {
+    if(context->is_fullscreen) {
+        OsxToggleFullscreen();
+        context->is_fullscreen = false;
+    }
 }
 
 void SetFullscreen(bool fullscreen)
 {
-    if( fullscreen != context->is_fullscreen )
-    {
-        if(fullscreen) {
-            StartFullScreen();
-        }else{
-            StopFullScreen();
-        }
-        context->is_fullscreen = fullscreen;
+    if(fullscreen) {
+        StartFullScreen();
+    }else{
+        StopFullScreen();
     }
 }
+
 }
