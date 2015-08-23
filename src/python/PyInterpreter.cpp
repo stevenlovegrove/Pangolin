@@ -150,9 +150,6 @@ void PyInterpreter::PushCommand(const std::string& cmd)
             ConsoleLine(output, ConsoleLineTypeOutput)
         );
     }
-
-    std::cout.flush();
-    std::cerr.flush();
 }
 
 bool PyInterpreter::PullLine(ConsoleLine& line)
