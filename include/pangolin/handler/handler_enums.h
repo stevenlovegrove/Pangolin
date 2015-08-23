@@ -37,6 +37,10 @@ const int PANGO_SPECIAL = 128;
 const int PANGO_CTRL = -96;
 const int PANGO_OPTN = 132;
 
+// Ordinary keys
+const int PANGO_KEY_TAB       = 9;
+const int PANGO_KEY_ESCAPE    = 27;
+
 // Special Keys (same as GLUT_ defines)
 const int PANGO_KEY_F1        = 1;
 const int PANGO_KEY_F2        = 2;

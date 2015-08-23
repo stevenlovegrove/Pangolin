@@ -198,7 +198,9 @@ void ConsoleView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
         GlText& txt = current_line.text;
         const std::string cmd = txt.Text();
 
-        if(key=='\n') {
+        if(key=='`') {
+            ToggleShow();
+        } else if(key=='\n') {
             interpreter->PushCommand(cmd);
             line_buffer.push_front(current_line);
             hist_id = -1;

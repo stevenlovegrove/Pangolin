@@ -49,6 +49,7 @@ namespace pangolin
 {
 
 typedef std::map<const std::string,View*> ViewMap;
+typedef std::map<int,boostd::function<void(void)> > KeyhookMap;
 
 struct PANGOLIN_EXPORT PangolinGl
 {
@@ -65,7 +66,7 @@ struct PANGOLIN_EXPORT PangolinGl
     UserApp* user_app;
     
     // Global keypress hooks
-    std::map<int,boostd::function<void(void)> > keypress_hooks;
+    KeyhookMap keypress_hooks;
     
     // Manage fullscreen (ToggleFullscreen is quite new)
     bool is_double_buffered;

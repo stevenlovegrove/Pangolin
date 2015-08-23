@@ -187,6 +187,15 @@ namespace pangolin
   PANGOLIN_EXPORT
   void ToggleConsole();
 
+  /// Convenience functor for toggling pangolin::View.
+  /// Use with RegisterKeyPressCallback for example
+  struct ToggleViewFunctor {
+      inline ToggleViewFunctor(View& view);
+      inline ToggleViewFunctor(const std::string& name);
+      void operator()();
+      View& view;
+  };
+
 }
 
 #endif // PANGOLIN_DISPLAY_H

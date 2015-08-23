@@ -42,9 +42,6 @@
 #include <pangolin/utils/type_convert.h>
 #include <pangolin/image/image_io.h>
 
-#define GLUT_KEY_ESCAPE 27
-#define GLUT_KEY_TAB 9
-
 #ifdef BUILD_PANGOLIN_VARS
   #include <pangolin/var/var.h>
 #endif
@@ -111,6 +108,11 @@ void BindToContext(std::string name)
 #else
         process::Resize(640,480);
 #endif //HAVE_GLUT
+
+        // Default key bindings can be overridden
+        RegisterKeyPressCallback(PANGO_KEY_ESCAPE, Quit );
+        RegisterKeyPressCallback('\t', ToggleFullscreen );
+        RegisterKeyPressCallback('`',  ToggleConsole );
     }else{
         context = ic->second.get();
     }
@@ -310,25 +312,20 @@ void Keyboard( unsigned char key, int x, int y)
         key = '\b';
     }
 #endif
-    
+
     context->had_input = context->is_double_buffered ? 2 : 1;
+
+    // Check if global key hook exists
+    const KeyhookMap::iterator hook = context->keypress_hooks.find(key);
     
-    if( key == GLUT_KEY_ESCAPE) {
-        context->quit = true;
-    }
 #ifdef HAVE_PYTHON
-    // TODO: Use keypress_hook system to allow customisation
-    else if( key == '`') {
-        ToggleConsole();
+    // Console receives all input when it is open
+    if( context->console_view && context->console_view->IsShown() ) {
+        context->console_view->Keyboard(*(context->console_view),key,x,y,true);
     }
-    else if( !(context->console_view && context->console_view->IsShown()) && key == GLUT_KEY_TAB) {
-#else
-    else if( key == GLUT_KEY_TAB) {
 #endif
-        ToggleFullscreen();
-    }
-    else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
-        context->keypress_hooks[key]();
+    else if(hook != context->keypress_hooks.end() ) {
+        hook->second();
     } else if(context->activeDisplay && context->activeDisplay->handler) {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
     }
@@ -511,6 +508,21 @@ void DrawTextureToViewport(GLuint texid)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
     glDisable(GL_TEXTURE_2D);
+}
+
+ToggleViewFunctor::ToggleViewFunctor(View& view)
+    : view(view)
+{
+}
+
+ToggleViewFunctor::ToggleViewFunctor(const std::string& name)
+    : view(Display(name))
+{
+}
+
+void ToggleViewFunctor::operator()()
+{
+    view.ToggleShow();
 }
 
 }
