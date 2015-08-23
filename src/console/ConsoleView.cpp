@@ -17,7 +17,9 @@ void DrawLine(ConsoleView::Line& l)
 
 ConsoleView::ConsoleView(ConsoleInterpreter* interpreter)
     : interpreter(interpreter),
-      font(GlFont::I())
+      font(GlFont::I()),
+      hiding(false),
+      bottom(1.0f)
 {
     SetHandler(this);
 
@@ -48,9 +50,47 @@ void ConsoleView::ProcessOutputLines()
     }
 }
 
+View& ConsoleView::Show(bool should_show)
+{
+    if(should_show) {
+        hiding = false;
+        show = true;
+    }else{
+        hiding = true;
+    }
+    return *this;
+}
+
+void ConsoleView::ToggleShow()
+{
+    Show(!IsShown());
+}
+
+bool ConsoleView::IsShown() const
+{
+    return show && !hiding;
+}
 
 void ConsoleView::Render()
 {
+    const float speed = 0.2;
+
+    if(hiding) {
+        bottom += (1.0f - bottom) * speed;
+        if(1.0 - bottom < 0.01) {
+            bottom = 1.0;
+            show = false;
+            hiding = false;
+            return;
+        }
+    }else{
+        if(bottom > 0.01f) {
+            bottom -= bottom*speed;
+        }else{
+            bottom = 0.0f;
+        }
+    }
+
     ProcessOutputLines();
 
     this->ActivatePixelOrthographic();
@@ -65,8 +105,8 @@ void ConsoleView::Render()
 
     GLfloat verts[] = { 0.0f, (GLfloat)v.h,
                         (GLfloat)v.w, (GLfloat)v.h,
-                        (GLfloat)v.w, 0.0f,
-                        0.0f, 0.0f };
+                        (GLfloat)v.w, bottom*v.h,
+                        0.0f, bottom*v.h };
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, verts);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -74,7 +114,7 @@ void ConsoleView::Render()
 
 
     const int line_space = 15;
-    glTranslated(10.0, 10.0, 0.0 );
+    glTranslated(10.0, 10.0 + bottom*v.h, 0.0 );
     DrawLine(current_line);
     glTranslated(0.0, line_space, 0.0);
     for(size_t l=0; l < line_buffer.size(); ++l) {

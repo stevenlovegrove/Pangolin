@@ -66,7 +66,16 @@ public:
 
     ~ConsoleView();
 
-    void Render();
+    // Replace implementation in View to account for hiding animation
+    View& Show(bool show=true);
+
+    // Replace implementation in View to account for hiding animation
+    void ToggleShow();
+
+    // Replace implementation in View to account for hiding animation
+    bool IsShown() const;
+
+    void Render() PANGOLIN_OVERRIDE;
 
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed) PANGOLIN_OVERRIDE;
 
@@ -86,6 +95,9 @@ private:
     Line current_line;
     std::deque<Line> line_buffer;
     std::map<ConsoleLineType,pangolin::Colour> line_colours;
+
+    bool hiding;
+    GLfloat bottom;
 };
 
 }
