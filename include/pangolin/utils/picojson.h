@@ -762,13 +762,13 @@ template<typename String, typename Iter> inline bool _parse_codepoint(String& ou
     return true;
 }
 
-template<typename String, typename Iter> inline bool _parse_string(String& out, input<Iter>& in) {
+template<typename String, typename Iter> inline bool _parse_string(String& out, input<Iter>& in, int delim='"') {
     while (1) {
         int ch = in.getc();
         if (ch < ' ') {
             in.ungetc();
             return false;
-        } else if (ch == '"') {
+        } else if (ch == delim) {
             return true;
         } else if (ch == '\\') {
             if ((ch = in.getc()) == -1) {
@@ -826,12 +826,14 @@ template <typename Context, typename Iter> inline bool _parse_object(Context& ct
     }
     do {
         std::string key;
-        if (! in.expect('"')
-                || ! _parse_string(key, in)
-                || ! in.expect(':')) {
+        // Support " and ' delimited strings
+        if( in.expect('"') ) {
+            if( !_parse_string(key, in, '"') )
+                return false;
+        }else if (!in.expect('\'') || !_parse_string(key, in,'\'')  ) {
             return false;
         }
-        if (! ctx.parse_object_item(in, key)) {
+        if (!in.expect(':') || !ctx.parse_object_item(in, key)) {
             return false;
         }
     } while (in.expect(','));

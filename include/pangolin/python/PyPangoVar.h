@@ -85,8 +85,9 @@ void SetPangoVarFromPython(const std::string& name, PyObject* val)
             pango_var = PyFloat_AsDouble(val);
         }else{
             PyUniqueObj pystr = PyObject_Repr(val);
+            const std::string str = PyString_AsString(pystr);
             pangolin::Var<std::string> pango_var(name);
-            pango_var = std::string(PyString_AsString(pystr));
+            pango_var = str;
         }
     }catch(std::exception e) {
         pango_print_error("%s\n", e.what());
