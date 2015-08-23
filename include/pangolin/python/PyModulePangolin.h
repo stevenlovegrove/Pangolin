@@ -47,22 +47,24 @@ static PyObject * pango_GetVar(PyObject *self, PyObject *args)
 
 static PyMethodDef PangoMethods[] = {
     {"GetVar",  pango_GetVar, METH_VARARGS, "Get Pangolin Variable."},
-    {NULL, NULL, 0, NULL}
+    {NULL}
 };
 
-PyMODINIT_FUNC InitPangoModule(void)
+PyObject* InitPangoModule()
 {
     if (PyType_Ready(&PyPangoVar::Py_type) >= 0) {
         PyObject* m = Py_InitModule("pangolin", PangoMethods);
         if (m) {
             Py_INCREF(&PyPangoVar::Py_type);
             PyModule_AddObject(m, "PangoVar", (PyObject *)&PyPangoVar::Py_type);
+            return m;
         }else{
             pango_print_error("Unable to initialise pangolin Python module.\n");
         }
     }else{
         pango_print_error("Unable to create pangolin Python objects.\n");
     }
+    return 0;
 }
 
 }

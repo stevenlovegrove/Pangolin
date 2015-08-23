@@ -52,6 +52,7 @@ public:
 
 private:
     std::string ToString(PyObject* py);
+    void CheckPrintClearError();
     PyUniqueObj EvalExec(const std::string& cmd);
 
     std::queue<ConsoleLine> line_queue;

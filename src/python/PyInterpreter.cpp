@@ -4,6 +4,7 @@
 #include <Python.h>
 #include <pangolin/python/PyModulePangolin.h>
 #include <pangolin/python/PyInterpreter.h>
+#include <pangolin/python/PyPangoIO.h>
 
 
 namespace pangolin
@@ -16,11 +17,7 @@ PyInterpreter::PyInterpreter()
     InitPangoModule();
 
     PyRun_SimpleString(
-        "import sys\n"
         "import pangolin\n"
-        "\n"
-        "ui = pangolin.PangoVar('ui')\n"
-        "\n"
         "try:\n"
         "   import readline\n"
         "except ImportError:\n"
@@ -28,7 +25,21 @@ PyInterpreter::PyInterpreter()
         "\n"
         "import rlcompleter\n"
         "pango_completer = rlcompleter.Completer()\n"
+        "ui = pangolin.PangoVar('ui')\n"
     );
+
+    PyObject* mod_sys = PyImport_ImportModule("sys");
+    if(mod_sys) {
+        PyModule_AddObject( mod_sys, "stdout", (PyObject*)new PyPangoIO(
+                &PyPangoIO::Py_type, line_queue, ConsoleLineTypeStdout
+        ) );
+        PyModule_AddObject( mod_sys, "stderr", (PyObject*)new PyPangoIO(
+                &PyPangoIO::Py_type, line_queue, ConsoleLineTypeStderr
+        ) );
+    }else{
+        pango_print_error("Couldn't import module");
+    }
+
 }
 
 PyInterpreter::~PyInterpreter()
@@ -40,6 +51,14 @@ std::string PyInterpreter::ToString(PyObject* py)
 {
     PyUniqueObj pystr = PyObject_Repr(py);
     return std::string( PyString_AsString(pystr) );
+}
+
+void PyInterpreter::CheckPrintClearError()
+{
+    if(PyErr_Occurred()) {
+        PyErr_Print();
+        PyErr_Clear();
+    }
 }
 
 PyUniqueObj PyInterpreter::EvalExec(const std::string& cmd)
@@ -61,7 +80,9 @@ PyUniqueObj PyInterpreter::EvalExec(const std::string& cmd)
                 if(code) {
                     PyUniqueObj eval_args = Py_BuildValue("(OOO)", *code, globals, globals );
                     if(eval_args) {
-                        return PyObject_Call(eval, eval_args, 0);
+                        PyUniqueObj ret = PyObject_Call(eval, eval_args, 0);
+                        CheckPrintClearError();
+                        return ret;
                     }
                 }
             }
@@ -74,16 +95,16 @@ PyUniqueObj PyInterpreter::EvalExec(const std::string& cmd)
                 if(code) {
                     PyUniqueObj eval_args = Py_BuildValue("(OOO)", *code, globals, globals );
                     if(eval_args) {
-                        return PyObject_Call(eval, eval_args, 0);
+                        PyUniqueObj ret = PyObject_Call(eval, eval_args, 0);
+                        CheckPrintClearError();
+                        return ret;
                     }
                 }
             }
         }
     }
 
-    std::cout.flush();
-    std::cerr.flush();
-
+    CheckPrintClearError();
     return PyUniqueObj();
 }
 

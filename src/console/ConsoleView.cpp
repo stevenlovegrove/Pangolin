@@ -24,7 +24,10 @@ ConsoleView::ConsoleView(ConsoleInterpreter* interpreter)
     line_colours[ConsoleLineTypeCmd]        = Colour(1.0,1.0,1.0,1.0);
     line_colours[ConsoleLineTypeCmdOptions] = Colour(0.9,0.9,0.9,1.0);
     line_colours[ConsoleLineTypeOutput]     = Colour(0.0,1.0,1.0,1.0);
-    line_colours[ConsoleLineTypeHelp]       = Colour(1.0,0.5,1.0,1.0);
+    line_colours[ConsoleLineTypeHelp]       = Colour(1.0,0.8,1.0,1.0);
+
+    line_colours[ConsoleLineTypeStdout]     = Colour(0.0,0.0,1.0,1.0);
+    line_colours[ConsoleLineTypeStderr]     = Colour(1.0,0.8,0.8,1.0);
 
     AddLine("Pangolin Python Command Prompt:", ConsoleLineTypeHelp);
     AddLine("===============================", ConsoleLineTypeHelp);
