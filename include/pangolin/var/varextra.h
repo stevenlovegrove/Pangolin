@@ -39,6 +39,12 @@ PANGOLIN_EXPORT
 void ParseVarsFile(const std::string& filename);
 
 PANGOLIN_EXPORT
+void LoadJsonFile(const std::string& filename, const std::string& prefix="");
+
+PANGOLIN_EXPORT
+void SaveJsonFile(const std::string& filename, const std::string& prefix="");
+
+PANGOLIN_EXPORT
 void ProcessHistoricCallbacks(NewVarCallbackFn callback, void* data, const std::string& filter = "");
 
 PANGOLIN_EXPORT

@@ -202,7 +202,7 @@ if(BUILD_PANGOLIN_GUI AND PYTHONLIBS_FOUND AND CPP11_NO_BOOST)
     ${INCDIR}/python/PyInterpreter.h
     ${INCDIR}/python/PyModulePangolin.h
     ${INCDIR}/python/PyUniqueObj.h
-    ${INCDIR}/python/PyPangoVar.h
+    ${INCDIR}/python/PyVar.h
     ${INCDIR}/python/PyPangoIO.h
   )
   list(APPEND SOURCES

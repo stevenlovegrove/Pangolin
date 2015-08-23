@@ -81,8 +81,6 @@ int main( int argc, char* argv[] )
 
   pangolin::Var<bool> record_cube("ui.Record_Cube",false,false);
 
-  pangolin::Var<int> an_ant_eater("ui.an.ant.eater",2);
-
 #ifdef CPP11_NO_BOOST
   // boost::function / std::function objects can be used for Var's too.
   // In C++11, these work great with closures.

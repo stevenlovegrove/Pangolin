@@ -94,27 +94,27 @@ void SetPangoVarFromPython(const std::string& name, PyObject* val)
     }
 }
 
-struct PyPangoVar {
+struct PyVar {
     static PyTypeObject Py_type;
     PyObject_HEAD
 
-    PyPangoVar(PyTypeObject *type)
+    PyVar(PyTypeObject *type)
         : ob_refcnt(1), ob_type(type)
     {
     }
 
-    static void Py_dealloc(PyPangoVar* self)
+    static void Py_dealloc(PyVar* self)
     {
         delete self;
     }
 
     static PyObject * Py_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     {
-        PyPangoVar* self = new PyPangoVar(type);
+        PyVar* self = new PyVar(type);
         return (PyObject *)self;
     }
 
-    static int Py_init(PyPangoVar *self, PyObject *args, PyObject *kwds)
+    static int Py_init(PyVar *self, PyObject *args, PyObject *kwds)
     {
         char* cNamespace = 0;
         if (!PyArg_ParseTuple(args, "s", &cNamespace))
@@ -125,7 +125,7 @@ struct PyPangoVar {
         return 0;
     }
 
-    static PyObject* Py_getattr(PyPangoVar *self, char* name)
+    static PyObject* Py_getattr(PyVar *self, char* name)
     {
         const std::string prefix = self->ns + ".";
         const std::string full_name = self->ns.empty() ? name : prefix + std::string(name);
@@ -157,10 +157,10 @@ struct PyPangoVar {
         }else if( pangolin::VarState::I().Exists(full_name) ) {
             return GetPangoVarAsPython(full_name);
         }else{
-            PyPangoVar* obj = (PyPangoVar*)PyPangoVar::Py_new(&PyPangoVar::Py_type,NULL,NULL);
+            PyVar* obj = (PyVar*)PyVar::Py_new(&PyVar::Py_type,NULL,NULL);
             if(obj) {
                 obj->ns = full_name;
-                return PyObject_Init((PyObject *)obj,&PyPangoVar::Py_type);
+                return PyObject_Init((PyObject *)obj,&PyVar::Py_type);
             }
             return (PyObject *)obj;
         }
@@ -168,7 +168,7 @@ struct PyPangoVar {
         Py_RETURN_NONE;
     }
 
-    static int Py_setattr(PyPangoVar *self, char* name, PyObject* val)
+    static int Py_setattr(PyVar *self, char* name, PyObject* val)
     {
         const std::string full_name = self->ns.empty() ? name : self->ns + "." + std::string(name);
         SetPangoVarFromPython(full_name, val);
@@ -178,16 +178,16 @@ struct PyPangoVar {
     std::string ns;
 };
 
- PyTypeObject PyPangoVar::Py_type = {
+ PyTypeObject PyVar::Py_type = {
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size*/
-    "pangolin.PangoVar",                      /* tp_name*/
-    sizeof(PyPangoVar),                       /* tp_basicsize*/
+    "pangolin.Var",                           /* tp_name*/
+    sizeof(PyVar),                            /* tp_basicsize*/
     0,                                        /* tp_itemsize*/
-    (destructor)PyPangoVar::Py_dealloc,       /* tp_dealloc*/
+    (destructor)PyVar::Py_dealloc,            /* tp_dealloc*/
     0,                                        /* tp_print*/
-    (getattrfunc)PyPangoVar::Py_getattr,      /* tp_getattr*/
-    (setattrfunc)PyPangoVar::Py_setattr,      /* tp_setattr*/
+    (getattrfunc)PyVar::Py_getattr,           /* tp_getattr*/
+    (setattrfunc)PyVar::Py_setattr,           /* tp_setattr*/
     0,                                        /* tp_compare*/
     0,                                        /* tp_repr*/
     0,                                        /* tp_as_number*/
@@ -200,13 +200,13 @@ struct PyPangoVar {
     0,                                        /* tp_setattro*/
     0,                                        /* tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags*/
-    "PyPangoVar object",                      /* tp_doc */
-    0,		                              /* tp_traverse */
-    0,		                              /* tp_clear */
-    0,		                              /* tp_richcompare */
-    0,		                              /* tp_weaklistoffset */
-    0,		                              /* tp_iter */
-    0,		                              /* tp_iternext */
+    "PyVar object",                           /* tp_doc */
+    0,		                                  /* tp_traverse */
+    0,		                                  /* tp_clear */
+    0,		                                  /* tp_richcompare */
+    0,		                                  /* tp_weaklistoffset */
+    0,		                                  /* tp_iter */
+    0,		                                  /* tp_iternext */
     0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
@@ -215,9 +215,9 @@ struct PyPangoVar {
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */
     0,                                        /* tp_dictoffset */
-    (initproc)PyPangoVar::Py_init,            /* tp_init */
+    (initproc)PyVar::Py_init,                 /* tp_init */
     0,                                        /* tp_alloc */
-    (newfunc)PyPangoVar::Py_new,              /* tp_new */
+    (newfunc)PyVar::Py_new,                   /* tp_new */
 };
 
 }

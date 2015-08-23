@@ -55,6 +55,9 @@ public:
     static void AttachPrefix(void* data, const std::string& name, VarValueGeneric& var, bool brand_new );
 
 private:
+    PyObject* pycompleter;
+    PyObject* pycomplete;
+
     std::string ToString(PyObject* py);
     void CheckPrintClearError();
     PyUniqueObj EvalExec(const std::string& cmd);

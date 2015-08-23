@@ -20,7 +20,7 @@ void PyInterpreter::AttachPrefix(void* data, const std::string& name, VarValueGe
         if( self->base_prefixes.find(base_prefix) == self->base_prefixes.end() ) {
             self->base_prefixes.insert(base_prefix);
             std::string cmd =
-                base_prefix + std::string(" = pangolin.PangoVar('") +
+                base_prefix + std::string(" = pangolin.Var('") +
                 base_prefix + std::string("')\n");
             PyRun_SimpleString(cmd.c_str());
         }
@@ -31,7 +31,7 @@ PyInterpreter::PyInterpreter()
 {
     Py_Initialize();
 
-    InitPangoModule();
+    PyObject* mod_pangolin = InitPangoModule();
 
     PyRun_SimpleString(
         "import pangolin\n"
@@ -41,13 +41,22 @@ PyInterpreter::PyInterpreter()
         "   import pyreadline as readline\n"
         "\n"
         "import rlcompleter\n"
-        "pango_completer = rlcompleter.Completer()\n"
+        "pangolin.completer = rlcompleter.Completer()\n"
     );
 
     // Hook namespace prefixes into Python
     RegisterNewVarCallback(&PyInterpreter::AttachPrefix,(void*)this,"");
     ProcessHistoricCallbacks(&PyInterpreter::AttachPrefix,(void*)this,"");
 
+    // Get reference to rlcompleter.Completer() for tab-completion
+    if(mod_pangolin) {
+        pycompleter = PyObject_GetAttrString(mod_pangolin,"completer");
+        if(pycompleter) {
+            pycomplete  = PyObject_GetAttrString(pycompleter,"complete");
+        }
+    }
+
+    // Hook stdout, stderr
     PyObject* mod_sys = PyImport_ImportModule("sys");
     if(mod_sys) {
         PyModule_AddObject( mod_sys, "stdout", (PyObject*)new PyPangoIO(
@@ -133,27 +142,20 @@ std::vector<std::string> PyInterpreter::Complete(const std::string& cmd, int max
     std::vector<std::string> ret;
     PyErr_Clear();
 
-    PyObject* pymain = PyImport_AddModule("__main__");
-    if(pymain) {
-        PyObject* pycompleter = PyObject_GetAttrString(pymain,"pango_completer");
-        if(pycompleter) {
-            PyObject* pycomplete  = PyObject_GetAttrString(pycompleter,"complete");
-            if(pycomplete) {
-                for(int i=0; i < max_options; ++i) {
-                    PyUniqueObj args = PyTuple_Pack( 2, PyString_FromString(cmd.c_str()), PyInt_FromSize_t(i) );
-                    PyUniqueObj result = PyObject_CallObject(pycomplete, args);
-                    if(result && PyString_Check(result) ) {
-                        std::string res_str( PyString_AsString(result) );
-                        if( res_str.find("__")==std::string::npos ||
-                            cmd.find("__")!=std::string::npos ||
-                            (cmd.size() > 0 && cmd[cmd.size()-1] == '_')
-                        ) {
-                            ret.push_back( res_str );
-                        }
-                    }else{
-                        break;
-                    }
+    if(pycomplete) {
+        for(int i=0; i < max_options; ++i) {
+            PyUniqueObj args = PyTuple_Pack( 2, PyString_FromString(cmd.c_str()), PyInt_FromSize_t(i) );
+            PyUniqueObj result = PyObject_CallObject(pycomplete, args);
+            if(result && PyString_Check(result) ) {
+                std::string res_str( PyString_AsString(result) );
+                if( res_str.find("__")==std::string::npos ||
+                    cmd.find("__")!=std::string::npos ||
+                    (cmd.size() > 0 && cmd[cmd.size()-1] == '_')
+                ) {
+                    ret.push_back( res_str );
                 }
+            }else{
+                break;
             }
         }
     }

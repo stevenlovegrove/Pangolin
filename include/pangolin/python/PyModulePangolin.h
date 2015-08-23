@@ -28,35 +28,57 @@
 #pragma once
 
 #include <Python.h>
-#include <pangolin/python/PyPangoVar.h>
+#include <pangolin/python/PyVar.h>
 #include <pangolin/var/var.h>
+#include <pangolin/var/varextra.h>
 
 namespace pangolin
 {
 
-static PyObject * pango_GetVar(PyObject *self, PyObject *args)
+inline PyObject * pangolin_save(PyObject* /*self*/, PyObject* args)
 {
-    const char *var_name = 0;
+    Var<std::string> default_filename("pango.console.default_filename");
+    const char *filename = default_filename.Get().c_str();
+    const char *prefix = "";
 
-    if (!PyArg_ParseTuple(args, "s", &var_name))
+    if (!PyArg_ParseTuple(args, "|ss", &filename, &prefix))
         return NULL;
 
-    pangolin::Var<std::string> v(var_name);
-    return Py_BuildValue("s", v.Get().c_str());
+    SaveJsonFile(filename, prefix);
+
+    Py_RETURN_NONE;
+}
+
+inline PyObject * pangolin_load(PyObject* /*self*/, PyObject* args)
+{
+    Var<std::string> default_filename("pango.console.default_filename");
+    const char *filename = default_filename.Get().c_str();
+    const char *prefix = "";
+
+    if (!PyArg_ParseTuple(args, "|ss", &filename, &prefix))
+        return NULL;
+
+    LoadJsonFile(filename, prefix);
+
+    Py_RETURN_NONE;
 }
 
 static PyMethodDef PangoMethods[] = {
-    {"GetVar",  pango_GetVar, METH_VARARGS, "Get Pangolin Variable."},
+    {"save",  pangolin_save, METH_VARARGS, "Save Pangolin Variables to a file."},
+    {"load",  pangolin_load, METH_VARARGS, "Load Pangolin Variables to a file."},
     {NULL}
 };
 
-PyObject* InitPangoModule()
+inline PyObject* InitPangoModule()
 {
-    if (PyType_Ready(&PyPangoVar::Py_type) >= 0) {
+    // Default settings
+    Var<std::string>("pango.console.default_filename","vars.json");
+
+    if (PyType_Ready(&PyVar::Py_type) >= 0) {
         PyObject* m = Py_InitModule("pangolin", PangoMethods);
         if (m) {
-            Py_INCREF(&PyPangoVar::Py_type);
-            PyModule_AddObject(m, "PangoVar", (PyObject *)&PyPangoVar::Py_type);
+            Py_INCREF(&PyVar::Py_type);
+            PyModule_AddObject(m, "Var", (PyObject *)&PyVar::Py_type);
             return m;
         }else{
             pango_print_error("Unable to initialise pangolin Python module.\n");
