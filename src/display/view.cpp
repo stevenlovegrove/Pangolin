@@ -168,8 +168,16 @@ void View::Resize(const Viewport& p)
     ResizeChildren();
 }
 
+inline int zcompare(const View* lhs, const View* rhs)
+{
+    return lhs->zorder < rhs->zorder;
+}
+
 void View::ResizeChildren()
 {
+    // Sort children into z-order
+    std::sort(views.begin(), views.end(), zcompare);
+
     if( layout == LayoutOverlay )
     {
         for(std::vector<View*>::iterator iv = views.begin(); iv != views.end(); ++iv ) {

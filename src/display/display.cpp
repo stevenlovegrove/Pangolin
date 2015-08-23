@@ -168,14 +168,6 @@ void PostRender()
 
     // Disable scissor each frame
     Viewport::DisableScissor();
-
-#ifdef HAVE_PYTHON
-    if(context->console_view && context->console_view->IsShown()) {
-        // Size to base
-        context->console_view->v = DisplayBase().v;
-        context->console_view->Render();
-    }
-#endif
 }
 
 View& DisplayBase()
@@ -199,6 +191,8 @@ void ToggleConsole()
         context->console_view = new ConsoleView(new PyInterpreter());
         context->named_managed_views["pangolin_console"] = context->console_view;
         context->console_view->SetFocus();
+        context->console_view->zorder = std::numeric_limits<int>::max();
+        DisplayBase().AddDisplay(*context->console_view);
     }else{
         context->console_view->ToggleShow();
         if(context->console_view->IsShown()) {
