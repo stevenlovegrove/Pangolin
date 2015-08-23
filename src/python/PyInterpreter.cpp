@@ -10,6 +10,23 @@
 namespace pangolin
 {
 
+void PyInterpreter::AttachPrefix(void* data, const std::string& name, VarValueGeneric& /*var*/, bool /*brand_new*/ )
+{
+    PyInterpreter* self = (PyInterpreter*)data;
+
+    const int dot = name.find_first_of('.');
+    if(dot != std::string::npos) {
+        const std::string base_prefix = name.substr(0,dot);
+        if( self->base_prefixes.find(base_prefix) == self->base_prefixes.end() ) {
+            self->base_prefixes.insert(base_prefix);
+            std::string cmd =
+                base_prefix + std::string(" = pangolin.PangoVar('") +
+                base_prefix + std::string("')\n");
+            PyRun_SimpleString(cmd.c_str());
+        }
+    }
+}
+
 PyInterpreter::PyInterpreter()
 {
     Py_Initialize();
@@ -25,8 +42,11 @@ PyInterpreter::PyInterpreter()
         "\n"
         "import rlcompleter\n"
         "pango_completer = rlcompleter.Completer()\n"
-        "ui = pangolin.PangoVar('ui')\n"
     );
+
+    // Hook namespace prefixes into Python
+    RegisterNewVarCallback(&PyInterpreter::AttachPrefix,(void*)this,"");
+    ProcessHistoricCallbacks(&PyInterpreter::AttachPrefix,(void*)this,"");
 
     PyObject* mod_sys = PyImport_ImportModule("sys");
     if(mod_sys) {

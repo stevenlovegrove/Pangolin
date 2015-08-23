@@ -27,10 +27,12 @@
 
 #pragma once
 
+#include <pangolin/var/varextra.h>
 #include <pangolin/python/PyUniqueObj.h>
 #include <pangolin/console/ConsoleInterpreter.h>
 #include <pangolin/compat/thread.h>
 #include <queue>
+#include <set>
 
 namespace pangolin
 {
@@ -50,12 +52,15 @@ public:
         const std::string& cmd, int max_options
     ) PANGOLIN_OVERRIDE;
 
+    static void AttachPrefix(void* data, const std::string& name, VarValueGeneric& var, bool brand_new );
+
 private:
     std::string ToString(PyObject* py);
     void CheckPrintClearError();
     PyUniqueObj EvalExec(const std::string& cmd);
 
     std::queue<ConsoleLine> line_queue;
+    std::set<std::string> base_prefixes;
 };
 
 }
