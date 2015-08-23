@@ -87,7 +87,7 @@ void GlText::Clear()
     ymax = std::numeric_limits<int>::min();
 }
 
-void GlText::DrawGlSl()
+void GlText::DrawGlSl() const
 {
 #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
     if(vs.size() && tex) {
@@ -108,7 +108,7 @@ void GlText::DrawGlSl()
 #endif
 }
 
-void GlText::Draw()
+void GlText::Draw() const
 {
     if(vs.size() && tex) {
         glVertexPointer(2, GL_FLOAT, sizeof(XYUV), &vs[0].x);
@@ -125,7 +125,7 @@ void GlText::Draw()
 }
 
 #ifdef BUILD_PANGOLIN_GUI
-void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
+void GlText::Draw(GLfloat x, GLfloat y, GLfloat z) const
 {
     // find object point (x,y,z)' in pixel coords
     GLdouble projection[16];
@@ -168,7 +168,7 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z)
 }
 
 // Render at (x,y) in window coordinates.
-void GlText::DrawWindow(GLfloat x, GLfloat y, GLfloat z)
+void GlText::DrawWindow(GLfloat x, GLfloat y, GLfloat z) const
 {
     // Backup viewport
     GLint    view[4];

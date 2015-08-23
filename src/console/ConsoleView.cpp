@@ -1,25 +1,56 @@
-#include <pangolin/console/ConsoleView.h>
 #include <iterator>
+#include <pangolin/console/ConsoleView.h>
+#include <pangolin/utils/picojson.h>
 
 namespace pangolin
 {
 
-void glColour(const Colour& c)
+inline Colour ParseJson(const json::value& val)
 {
-    glColor4f(c.r,c.g,c.b,c.a);
+    return Colour(
+        val.contains("r") ? val["r"].get<double>() : 0.0,
+        val.contains("g") ? val["g"].get<double>() : 0.0,
+        val.contains("b") ? val["b"].get<double>() : 0.0,
+        val.contains("a") ? val["a"].get<double>() : 1.0
+    );
 }
 
-void DrawLine(ConsoleView::Line& l)
+inline json::value toJson(const Colour& colour)
 {
-    glColour(l.colour);
-    l.text.Draw();
+    json::value ret(json::object_type,true);
+    ret["r"] = colour.r;
+    ret["g"] = colour.g;
+    ret["b"] = colour.b;
+    ret["a"] = colour.a;
+    return ret;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Colour& colour)
+{
+    os << toJson(colour).serialize();
+    return os;
+}
+
+inline std::istream& operator>>(std::istream& is, Colour& colour)
+{
+    json::value val;
+    json::parse(val,is);
+    colour = ParseJson(val);
+    return is;
+}
+
+inline void glColour(const Colour& c)
+{
+    glColor4f(c.r,c.g,c.b,c.a);
 }
 
 ConsoleView::ConsoleView(ConsoleInterpreter* interpreter)
     : interpreter(interpreter),
       font(GlFont::I()),
       hiding(false),
-      bottom(1.0f)
+      bottom(1.0f),
+      background_colour(0.2f, 0.0f, 0.0f, 0.6f),
+      animation_speed(0.2)
 {
     SetHandler(this);
 
@@ -27,13 +58,21 @@ ConsoleView::ConsoleView(ConsoleInterpreter* interpreter)
     line_colours[ConsoleLineTypeCmdOptions] = Colour(0.9,0.9,0.9,1.0);
     line_colours[ConsoleLineTypeOutput]     = Colour(0.0,1.0,1.0,1.0);
     line_colours[ConsoleLineTypeHelp]       = Colour(1.0,0.8,1.0,1.0);
-
     line_colours[ConsoleLineTypeStdout]     = Colour(0.0,0.0,1.0,1.0);
     line_colours[ConsoleLineTypeStderr]     = Colour(1.0,0.8,0.8,1.0);
 
+    Var<Colour>::Attach("pango.console.colours.Background", background_colour);
+    Var<Colour>::Attach("pango.console.colours.Cmd",        line_colours[ConsoleLineTypeCmd]);
+    Var<Colour>::Attach("pango.console.colours.CmdOptions", line_colours[ConsoleLineTypeCmdOptions]);
+    Var<Colour>::Attach("pango.console.colours.Stdout",     line_colours[ConsoleLineTypeStdout]);
+    Var<Colour>::Attach("pango.console.colours.Stderr",     line_colours[ConsoleLineTypeStderr]);
+    Var<Colour>::Attach("pango.console.colours.Output",     line_colours[ConsoleLineTypeOutput]);
+    Var<Colour>::Attach("pango.console.colours.Help",       line_colours[ConsoleLineTypeHelp]);
+
+    Var<float>::Attach("pango.console.animation_speed", animation_speed);
+
     AddLine("Pangolin Python Command Prompt:", ConsoleLineTypeHelp);
     AddLine("===============================", ConsoleLineTypeHelp);
-
 }
 
 ConsoleView::~ConsoleView() {
@@ -71,12 +110,16 @@ bool ConsoleView::IsShown() const
     return show && !hiding;
 }
 
+void ConsoleView::DrawLine(const ConsoleView::Line& l)
+{
+    glColour(line_colours[l.linetype]);
+    l.text.Draw();
+}
+
 void ConsoleView::Render()
 {
-    const float speed = 0.2;
-
     if(hiding) {
-        bottom += (1.0f - bottom) * speed;
+        bottom += (1.0f - bottom) * animation_speed;
         if(1.0 - bottom < 0.01) {
             bottom = 1.0;
             show = false;
@@ -85,7 +128,7 @@ void ConsoleView::Render()
         }
     }else{
         if(bottom > 0.01f) {
-            bottom -= bottom*speed;
+            bottom -= bottom*animation_speed;
         }else{
             bottom = 0.0f;
         }
@@ -101,7 +144,7 @@ void ConsoleView::Render()
     glBlendFunc( GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA );
     glDisable(GL_DEPTH_TEST );
 
-    glColor4f( 0.8, 0.3, 0.3, 0.8 );
+    glColour(background_colour);
 
     GLfloat verts[] = { 0.0f, (GLfloat)v.h,
                         (GLfloat)v.w, (GLfloat)v.h,
@@ -206,8 +249,7 @@ void ConsoleView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 
 void ConsoleView::AddLine(const std::string& text, ConsoleLineType linetype )
 {
-    const Colour& colour = line_colours[linetype];
-    line_buffer.push_front( Line( font.Text("%s",text.c_str()), linetype, colour) );
+    line_buffer.push_front( Line( font.Text("%s",text.c_str()), linetype) );
 }
 
 ConsoleView::Line* ConsoleView::GetLine(int id, ConsoleLineType line_type, const std::string& prefix )

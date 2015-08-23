@@ -35,6 +35,64 @@
 namespace pangolin
 {
 
+PyObject* GetPangoVarAsPython(const std::string& name)
+{
+    VarState::VarStoreContainer::iterator i = VarState::I().vars.find(name);
+    if(i != VarState::I().vars.end()) {
+        VarValueGeneric* var = i->second;
+
+        try{
+            if( !strcmp(var->TypeId(), typeid(bool).name() ) ) {
+                const bool val = Var<bool>(*var).Get();
+                return PyBool_FromLong( val );
+            }else if( !strcmp(var->TypeId(), typeid(short).name() ) ||
+                      !strcmp(var->TypeId(), typeid(int).name() ) ||
+                      !strcmp(var->TypeId(), typeid(long).name() ) ) {
+                const long val = Var<long>(*var).Get();
+                return PyLong_FromLong( val );
+            }else if( !strcmp(var->TypeId(), typeid(double).name() ) ||
+                      !strcmp(var->TypeId(), typeid(float).name() ) ) {
+                const double val = Var<double>(*var).Get();
+                return PyFloat_FromDouble(val);
+            }else{
+                const std::string val = var->str->Get();
+                return PyString_FromString(val.c_str());
+            }
+        }catch(std::exception) {
+        }
+    }
+
+    Py_RETURN_NONE;
+}
+
+void SetPangoVarFromPython(const std::string& name, PyObject* val)
+{
+    try{
+        if(PyString_Check(val)) {
+            pangolin::Var<std::string> pango_var(name);
+            pango_var = PyString_AsString(val);
+        }else if(PyInt_Check(val) ) {
+            pangolin::Var<int> pango_var(name);
+            pango_var = PyInt_AsLong(val);
+        }else if(PyLong_Check(val)) {
+            pangolin::Var<long> pango_var(name);
+            pango_var = PyLong_AsLong(val);
+        }else if(PyBool_Check(val)) {
+            pangolin::Var<bool> pango_var(name);
+            pango_var = (val == Py_True) ? true : false;
+        }else if(PyFloat_Check(val)) {
+            pangolin::Var<double> pango_var(name);
+            pango_var = PyFloat_AsDouble(val);
+        }else{
+            PyUniqueObj pystr = PyObject_Repr(val);
+            pangolin::Var<std::string> pango_var(name);
+            pango_var = std::string(PyString_AsString(pystr));
+        }
+    }catch(std::exception e) {
+        pango_print_error("%s\n", e.what());
+    }
+}
+
 struct PyPangoVar {
     static PyTypeObject Py_type;
     PyObject_HEAD
@@ -96,12 +154,7 @@ struct PyPangoVar {
 
             return l;
         }else if( pangolin::VarState::I().Exists(full_name) ) {
-            std::string str_val;
-            try{
-                str_val = pangolin::VarState::I()[full_name]->str->Get();
-            }catch(pangolin::BadInputException) {
-            }
-            return PyString_FromString(str_val.c_str());
+            return GetPangoVarAsPython(full_name);
         }else{
             PyPangoVar* obj = (PyPangoVar*)PyPangoVar::Py_new(&PyPangoVar::Py_type,NULL,NULL);
             if(obj) {
@@ -117,10 +170,7 @@ struct PyPangoVar {
     static int Py_setattr(PyPangoVar *self, char* name, PyObject* val)
     {
         const std::string full_name = self->ns.empty() ? name : self->ns + "." + std::string(name);
-
-        PyUniqueObj pystr = PyObject_Repr(val);
-        pangolin::Var<std::string> pango_var(full_name);
-        pango_var = std::string(PyString_AsString(pystr));
+        SetPangoVarFromPython(full_name, val);
         return 0;
     }
 

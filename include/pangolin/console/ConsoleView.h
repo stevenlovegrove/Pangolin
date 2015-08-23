@@ -50,14 +50,13 @@ public:
         {
         }
 
-        Line(const GlText& text, ConsoleLineType linetype = ConsoleLineTypeCmd, Colour colour = Colour(1.0,1.0,1.0) )
-            : text(text), linetype(linetype), colour(colour)
+        Line(const GlText& text, ConsoleLineType linetype = ConsoleLineTypeCmd )
+            : text(text), linetype(linetype)
         {
         }
 
         GlText text;
         ConsoleLineType linetype;
-        Colour colour;
     };
 
 
@@ -80,6 +79,8 @@ public:
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed) PANGOLIN_OVERRIDE;
 
 private:
+    void DrawLine(const ConsoleView::Line& l);
+
     void ProcessOutputLines();
 
     void AddLine(const std::string& text, ConsoleLineType linetype = ConsoleLineTypeCmd);
@@ -94,10 +95,13 @@ private:
 
     Line current_line;
     std::deque<Line> line_buffer;
-    std::map<ConsoleLineType,pangolin::Colour> line_colours;
 
     bool hiding;
     GLfloat bottom;
+
+    Colour background_colour;
+    std::map<ConsoleLineType,pangolin::Colour> line_colours;
+    float animation_speed;
 };
 
 }

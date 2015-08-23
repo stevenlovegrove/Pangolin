@@ -37,11 +37,9 @@ enum ConsoleLineType
 {
     ConsoleLineTypeCmd,
     ConsoleLineTypeCmdOptions,
-    ConsoleLineTypeHistory,
     ConsoleLineTypeStdout,
     ConsoleLineTypeStderr,
     ConsoleLineTypeOutput,
-    ConsoleLineTypeError,
     ConsoleLineTypeHelp,
 };
 

@@ -52,16 +52,16 @@ public:
     void Clear();
 
     // Render without transform in text-centric pixel coordinates
-    void Draw();
-    void DrawGlSl();
+    void Draw() const;
+    void DrawGlSl() const;
 
 #ifdef BUILD_PANGOLIN_GUI
     // Render at (x,y,z)' in object coordinates,
     // keeping text size and orientation constant
-    void Draw(GLfloat x, GLfloat y, GLfloat z = 0.0f);
+    void Draw(GLfloat x, GLfloat y, GLfloat z = 0.0f) const;
 
     // Render at (x,y,z)' in window coordinates.
-    void DrawWindow(GLfloat x, GLfloat y, GLfloat z = 0.0f);
+    void DrawWindow(GLfloat x, GLfloat y, GLfloat z = 0.0f) const;
 #endif // BUILD_PANGOLIN_GUI
     
     // Return text that this object signifies.
