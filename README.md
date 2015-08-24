@@ -35,6 +35,11 @@ Check the CMake configure output for details.
 
 * OpenGL (Desktop / ES / ES2)
 
+* Glew
+ * (win) built automatically
+ * (deb) sudo apt-get install libglew-dev
+ * (mac) sudo port install glew
+
 * CMake (for build environment)
  * (win) http://www.cmake.org/cmake/resources/software.html
  * (deb) sudo apt-get install cmake
@@ -42,20 +47,15 @@ Check the CMake configure output for details.
 
 ### Recommended Dependencies ###
 
-* Glew
- * (win) http://glew.sourceforge.net
- * (deb) sudo apt-get install libglew-dev
- * (mac) sudo port install glew
-
-* Glut (Required for window management on OSX/Linux)
- * (deb) sudo apt-get install freeglut3-dev libglu-dev libglew-dev
- * (mac) sudo port install freeglut glew
- * (mac) OsxGlut for smooth scroll/zoom: https://github.com/stevenlovegrove/osxglut
-
 * Boost (optional with C++11. Configure with 'cmake -DCPP11_NO_BOOST=1 ..' )
  * (win) http://www.boost.org/users/download/
  * (deb) sudo apt-get install libboost-dev libboost-thread-dev libboost-filesystem-dev
  * (mac) sudo port install boost
+
+* Python2 / Python3, for drop-down interactive console
+ * (win) http://www.python.org/downloads/windows
+ * (deb) sudo apt-get install libpython2.7-dev
+ * (mac) preinstalled with osx
 
 ### Optional Dependencies for video input ###
 
@@ -77,12 +77,9 @@ Check the CMake configure output for details.
 
 ### Very Optional Dependencies ###
 
-* GLConsole (For graphical drop-down console. Must be built before Pangolin.)
- * https://github.com/arpg/GLConsole
-
 * Eigen / TooN (These matrix types supported in the Pangolin API.)
 
-* CUDA Toolkit (>= 3.2)
+* CUDA Toolkit >= 3.2 (Some CUDA header-only interop utilities included)
  * http://developer.nvidia.com/cuda-downloads
 
 * Doxygen for generating html / pdf documentation.
