@@ -29,6 +29,12 @@
 #define PANGOLIN_DISPLAY_INTERNAL_H
 
 #include <pangolin/platform.h>
+
+#ifdef HAVE_PYTHON
+#include <pangolin/console/ConsoleView.h>
+#include <pangolin/python/PyInterpreter.h>
+#endif // HAVE_PYTHON
+
 #include <pangolin/display/view.h>
 #include <pangolin/compat/function.h>
 #include <pangolin/display/user_app.h>
@@ -40,10 +46,6 @@
 #include <pangolin/video/video_output.h>
 #endif // BUILD_PANGOLIN_VIDEO
 
-#ifdef HAVE_PYTHON
-#include <pangolin/console/ConsoleView.h>
-#include <pangolin/python/PyInterpreter.h>
-#endif // HAVE_PYTHON
 
 namespace pangolin
 {

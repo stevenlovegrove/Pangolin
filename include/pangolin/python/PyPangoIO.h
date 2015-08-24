@@ -27,10 +27,10 @@
 
 #pragma once
 
+#include <Python.h>
 #include <iomanip>
 #include <queue>
 
-#include <Python.h>
 #include <structmember.h>
 
 #include <pangolin/var/var.h>

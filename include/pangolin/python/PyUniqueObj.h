@@ -27,9 +27,10 @@
 
 #pragma once
 
+#include <Python.h>
+
 #include <pangolin/platform.h>
 
-#include <Python.h>
 
 namespace pangolin
 {

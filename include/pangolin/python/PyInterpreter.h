@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <Python.h>
 #include <pangolin/var/varextra.h>
 #include <pangolin/python/PyUniqueObj.h>
 #include <pangolin/console/ConsoleInterpreter.h>

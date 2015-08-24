@@ -28,6 +28,7 @@
 #pragma once
 
 #include <Python.h>
+
 #include <structmember.h>
 #include <iomanip>
 #include <pangolin/var/var.h>
