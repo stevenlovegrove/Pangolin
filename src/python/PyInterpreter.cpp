@@ -28,11 +28,30 @@ void PyInterpreter::AttachPrefix(void* data, const std::string& name, VarValueGe
 }
 
 PyInterpreter::PyInterpreter()
+    : pycompleter(0), pycomplete(0)
 {
+#if PY_MAJOR_VERSION >= 3
+    PyImport_AppendInittab("pangolin", InitPangoModule);
     Py_Initialize();
+#else
+    Py_Initialize();
+    InitPangoModule();
+#endif
 
-    PyObject* mod_pangolin = InitPangoModule();
+    // Hook stdout, stderr to this interpreter
+    PyObject* mod_sys = PyImport_ImportModule("sys");
+    if (mod_sys) {
+        PyModule_AddObject(mod_sys, "stdout", (PyObject*)new PyPangoIO(
+            &PyPangoIO::Py_type, line_queue, ConsoleLineTypeStdout
+            ));
+        PyModule_AddObject(mod_sys, "stderr", (PyObject*)new PyPangoIO(
+            &PyPangoIO::Py_type, line_queue, ConsoleLineTypeStderr
+            ));
+    } else {
+        pango_print_error("Couldn't import module sys.\n");
+    }
 
+    // Attempt to setup readline completion
     PyRun_SimpleString(
         "import pangolin\n"
         "try:\n"
@@ -43,32 +62,24 @@ PyInterpreter::PyInterpreter()
         "import rlcompleter\n"
         "pangolin.completer = rlcompleter.Completer()\n"
     );
-
-    // Hook namespace prefixes into Python
-    RegisterNewVarCallback(&PyInterpreter::AttachPrefix,(void*)this,"");
-    ProcessHistoricCallbacks(&PyInterpreter::AttachPrefix,(void*)this,"");
+    CheckPrintClearError();
 
     // Get reference to rlcompleter.Completer() for tab-completion
+    PyObject* mod_pangolin = PyImport_ImportModule("pangolin");
     if(mod_pangolin) {
         pycompleter = PyObject_GetAttrString(mod_pangolin,"completer");
         if(pycompleter) {
             pycomplete  = PyObject_GetAttrString(pycompleter,"complete");
         }
+    } else {
+        pango_print_error("PyInterpreter: Unable to load module pangolin.\n");
     }
 
-    // Hook stdout, stderr
-    PyObject* mod_sys = PyImport_ImportModule("sys");
-    if(mod_sys) {
-        PyModule_AddObject( mod_sys, "stdout", (PyObject*)new PyPangoIO(
-                &PyPangoIO::Py_type, line_queue, ConsoleLineTypeStdout
-        ) );
-        PyModule_AddObject( mod_sys, "stderr", (PyObject*)new PyPangoIO(
-                &PyPangoIO::Py_type, line_queue, ConsoleLineTypeStderr
-        ) );
-    }else{
-        pango_print_error("Couldn't import module");
-    }
+    // Hook namespace prefixes into Python
+    RegisterNewVarCallback(&PyInterpreter::AttachPrefix, (void*)this, "");
+    ProcessHistoricCallbacks(&PyInterpreter::AttachPrefix, (void*)this, "");
 
+    CheckPrintClearError();
 }
 
 PyInterpreter::~PyInterpreter()
@@ -97,9 +108,13 @@ void PyInterpreter::CheckPrintClearError()
 PyUniqueObj PyInterpreter::EvalExec(const std::string& cmd)
 {
     PyObject* globals = PyModule_GetDict(PyImport_AddModule("__main__"));
+#if PY_MAJOR_VERSION >= 3
+    PyObject* builtin = PyImport_AddModule("builtins");
+#else
     PyObject* builtin = PyImport_AddModule("__builtin__");
+#endif
 
-    if(builtin) {
+    if(globals && builtin) {
         PyUniqueObj compile = PyObject_GetAttrString(builtin, "compile");
         PyUniqueObj eval = PyObject_GetAttrString(builtin, "eval");
 
