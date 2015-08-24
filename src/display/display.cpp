@@ -322,9 +322,9 @@ void Keyboard( unsigned char key, int x, int y)
     // Console receives all input when it is open
     if( context->console_view && context->console_view->IsShown() ) {
         context->console_view->Keyboard(*(context->console_view),key,x,y,true);
-    }
+    }else
 #endif
-    else if(hook != context->keypress_hooks.end() ) {
+    if(hook != context->keypress_hooks.end() ) {
         hook->second();
     } else if(context->activeDisplay && context->activeDisplay->handler) {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
