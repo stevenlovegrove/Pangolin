@@ -175,11 +175,11 @@ inline int zcompare(const View* lhs, const View* rhs)
 
 void View::ResizeChildren()
 {
-    // Sort children into z-order
-    std::sort(views.begin(), views.end(), zcompare);
-
     if( layout == LayoutOverlay )
     {
+        // Sort children into z-order
+        std::sort(views.begin(), views.end(), zcompare);
+
         for(std::vector<View*>::iterator iv = views.begin(); iv != views.end(); ++iv ) {
             (*iv)->Resize(v);
         }
