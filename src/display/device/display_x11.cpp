@@ -292,10 +292,10 @@ void ProcessX11Events()
             break;
         }
         case MotionNotify:
-            if(ev.xmotion.state==0) {
-                pangolin::process::PassiveMouseMotion(ev.xmotion.x, ev.xmotion.y);
-            }else{
+            if(ev.xmotion.state & (Button1Mask|Button2Mask|Button3Mask) ) {
                 pangolin::process::MouseMotion(ev.xmotion.x, ev.xmotion.y);
+            }else{
+                pangolin::process::PassiveMouseMotion(ev.xmotion.x, ev.xmotion.y);
             }
             break;
         case KeyPress:
