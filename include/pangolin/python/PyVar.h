@@ -144,7 +144,7 @@ struct PyVar {
             PyObject* l = PyList_New(0);
             for(const std::string& s : VarState::I().var_adds) {
                 if(!s.compare(0, nss, prefix)) {
-                    int dot = s.find_first_of('.', nss);
+                    size_t dot = s.find_first_of('.', nss);
                     if(dot != std::string::npos) {
                         std::string val = s.substr(nss, dot - nss);
                         PyList_Append(l, PyString_FromString(val.c_str()));

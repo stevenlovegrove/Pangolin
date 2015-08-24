@@ -81,7 +81,7 @@ struct PyPangoIO {
         const char *text = 0;
         if (PyArg_ParseTuple(args, "s", &text)) {
             self->buffer += std::string(text);
-            int nl = self->buffer.find_first_of('\n');
+            size_t nl = self->buffer.find_first_of('\n');
             while(nl != std::string::npos) {
                 const std::string line = self->buffer.substr(0,nl);
                 self->line_queue.push(ConsoleLine(line,self->line_type));

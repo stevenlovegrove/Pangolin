@@ -14,7 +14,7 @@ void PyInterpreter::AttachPrefix(void* data, const std::string& name, VarValueGe
 {
     PyInterpreter* self = (PyInterpreter*)data;
 
-    const int dot = name.find_first_of('.');
+    const size_t dot = name.find_first_of('.');
     if(dot != std::string::npos) {
         const std::string base_prefix = name.substr(0,dot);
         if( self->base_prefixes.find(base_prefix) == self->base_prefixes.end() ) {
