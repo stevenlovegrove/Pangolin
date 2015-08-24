@@ -31,6 +31,7 @@
 #include <structmember.h>
 #include <iomanip>
 #include <pangolin/var/var.h>
+#include <pangolin/python/PyUniqueObj.h>
 
 namespace pangolin
 {

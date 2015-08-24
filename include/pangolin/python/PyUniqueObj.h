@@ -58,7 +58,20 @@ public:
     {
         other.obj = 0;
     }
+
+    void operator=(PyUniqueObj&& other)
+    {
+        Dec();
+        obj = other.obj;
+        other.obj = 0;
+    }
 #endif
+
+    void operator=(PyObject* obj)
+    {
+        Dec();
+        this->obj = obj;
+    }
 
     inline void Dec() {
         if(obj) {
