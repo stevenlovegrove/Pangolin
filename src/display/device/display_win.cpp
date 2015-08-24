@@ -133,33 +133,43 @@ setupPalette(HDC hDC)
     }
 }
 
-unsigned char ConvertWinKeyToPangoKey(unsigned char key)
+unsigned char GetPangoKey(WPARAM wParam, LPARAM lParam)
 {
-    switch (key)
+    switch (wParam)
     {
-    case VK_F1 : return PANGO_SPECIAL + PANGO_KEY_F1;
-    case VK_F2 : return PANGO_SPECIAL + PANGO_KEY_F2;
-    case VK_F3 : return PANGO_SPECIAL + PANGO_KEY_F3;
-    case VK_F4 : return PANGO_SPECIAL + PANGO_KEY_F4;
-    case VK_F5 : return PANGO_SPECIAL + PANGO_KEY_F5;
-    case VK_F6 : return PANGO_SPECIAL + PANGO_KEY_F6;
-    case VK_F7 : return PANGO_SPECIAL + PANGO_KEY_F7;
-    case VK_F8 : return PANGO_SPECIAL + PANGO_KEY_F8;
-    case VK_F9 : return PANGO_SPECIAL + PANGO_KEY_F9;
-    case VK_F10 : return PANGO_SPECIAL + PANGO_KEY_F10;
-    case VK_F11 : return PANGO_SPECIAL + PANGO_KEY_F11;
-    case VK_F12 : return PANGO_SPECIAL + PANGO_KEY_F12;
-    case VK_LEFT   : return PANGO_SPECIAL + PANGO_KEY_LEFT;
-    case VK_UP     : return PANGO_SPECIAL + PANGO_KEY_UP;
-    case VK_RIGHT  : return PANGO_SPECIAL + PANGO_KEY_RIGHT;
-    case VK_DOWN   : return PANGO_SPECIAL + PANGO_KEY_DOWN;
-    //case VK_ : return PANGO_SPECIAL + PANGO_KEY_PAGE_UP;
-    //case VK_ : return PANGO_SPECIAL + PANGO_KEY_PAGE_DOWN;
-    case VK_HOME   : return PANGO_SPECIAL + PANGO_KEY_HOME;
-    case VK_END    : return PANGO_SPECIAL + PANGO_KEY_END;
-    case VK_INSERT : return PANGO_SPECIAL + PANGO_KEY_INSERT;
-    default:       return key;
+    case VK_F1: return PANGO_SPECIAL + PANGO_KEY_F1;
+    case VK_F2: return PANGO_SPECIAL + PANGO_KEY_F2;
+    case VK_F3: return PANGO_SPECIAL + PANGO_KEY_F3;
+    case VK_F4: return PANGO_SPECIAL + PANGO_KEY_F4;
+    case VK_F5: return PANGO_SPECIAL + PANGO_KEY_F5;
+    case VK_F6: return PANGO_SPECIAL + PANGO_KEY_F6;
+    case VK_F7: return PANGO_SPECIAL + PANGO_KEY_F7;
+    case VK_F8: return PANGO_SPECIAL + PANGO_KEY_F8;
+    case VK_F9: return PANGO_SPECIAL + PANGO_KEY_F9;
+    case VK_F10: return PANGO_SPECIAL + PANGO_KEY_F10;
+    case VK_F11: return PANGO_SPECIAL + PANGO_KEY_F11;
+    case VK_F12: return PANGO_SPECIAL + PANGO_KEY_F12;
+    case VK_LEFT: return PANGO_SPECIAL + PANGO_KEY_LEFT;
+    case VK_UP: return PANGO_SPECIAL + PANGO_KEY_UP;
+    case VK_RIGHT: return PANGO_SPECIAL + PANGO_KEY_RIGHT;
+    case VK_DOWN: return PANGO_SPECIAL + PANGO_KEY_DOWN;
+    case VK_HOME: return PANGO_SPECIAL + PANGO_KEY_HOME;
+    case VK_END: return PANGO_SPECIAL + PANGO_KEY_END;
+    case VK_INSERT: return PANGO_SPECIAL + PANGO_KEY_INSERT;
+    case VK_DELETE: return 127;
+    default:
+        const int lBufferSize = 2;
+        WCHAR lBuffer[lBufferSize];
+
+        BYTE State[256];
+        GetKeyboardState(State);
+
+        const UINT scanCode = (lParam >> 8) & 0xFFFFFF00;
+        if( ToUnicode(wParam, scanCode, State, lBuffer, lBufferSize, 0) >=1 ) {
+            return lBuffer[0];
+        }
     }
+    return 0;
 }
 
 LRESULT APIENTRY
@@ -229,12 +239,17 @@ LPARAM lParam)
     }
         break;
     case WM_KEYDOWN:
-        process::Keyboard(ConvertWinKeyToPangoKey((unsigned char)wParam), 1, 1);
+    {
+        unsigned char key = GetPangoKey(wParam, lParam);
+        if(key>0) process::Keyboard(key, 1, 1);
         return 0;
+    }
     case WM_KEYUP:
-        process::KeyboardUp(ConvertWinKeyToPangoKey((unsigned char)wParam), 1, 1);
+    {
+        unsigned char key = GetPangoKey(wParam, lParam);
+        if (key>0) process::KeyboardUp(key, 1, 1);
         return 0;
-
+    }
     case WM_LBUTTONDOWN:
         process::Mouse(0, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
