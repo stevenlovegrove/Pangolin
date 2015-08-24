@@ -922,23 +922,56 @@ void Plotter::ScreenToPlot(int xpix, int ypix, float& xplot, float& yplot)
     yplot = rview.y.min + rview.y.Size() * (ypix - v.b) / (float)v.h;
 }
 
-void Plotter::Mouse(View& view, MouseButton button, int x, int y, bool pressed, int button_state)
+void Plotter::Mouse(View& /*view*/, MouseButton button, int x, int y, bool pressed, int button_state)
 {
     // Update hover status (after potential resizing)
     ScreenToPlot(x, y, hover[0], hover[1]);
 
-    if(button == MouseButtonLeft) {
-        // Update selected range
-        if(pressed) {
-            selection.x.min = hover[0];
-            selection.y.min = hover[1];
-            trigger_value = selection.y.min;
-        }
-        selection.x.max = hover[0];
-        selection.y.max = hover[1];
+    const float scinc = 1.05f;
+    const float scdec = 1.0f/scinc;
 
-    }else if(button == MouseWheelUp || button == MouseWheelDown) {
-        Special(view, InputSpecialZoom, (float)x, (float)y, ((button == MouseWheelDown) ? 0.1f : -0.1f), 0.0f, 0.0f, 0.0f, button_state );
+    const float c[2] = {
+        track || trigger_edge ? last_track_val[0] : hover[0],
+        hover[1]
+    };
+
+    if(button_state & KeyModifierShift) {
+        if(button == MouseWheelUp) {
+            ScaleViewSmooth(1.0f, scinc, c[0], c[1]);
+        }else if(button == MouseWheelDown) {
+            ScaleViewSmooth(1.0f, scdec, c[0], c[1]);
+        }else if(button == MouseWheelLeft) {
+            ScaleViewSmooth(scinc, 1.0f, c[0], c[1]);
+        }else if(button == MouseWheelRight) {
+            ScaleViewSmooth(scdec, 1.0f, c[0], c[1]);
+        }
+    }else if(button_state & KeyModifierCtrl) {
+        if(button == MouseWheelUp) {
+            ScaleViewSmooth(scinc, 1.0f, c[0], c[1]);
+        }else if(button == MouseWheelDown) {
+            ScaleViewSmooth(scdec, 1.0f, c[0], c[1]);
+        }
+    }else{
+        const float mvfactor = 1.0f/20.0f;
+
+        if(button == MouseButtonLeft) {
+            // Update selected range
+            if(pressed) {
+                selection.x.min = hover[0];
+                selection.y.min = hover[1];
+                trigger_value = selection.y.min;
+            }
+            selection.x.max = hover[0];
+            selection.y.max = hover[1];
+        }else if(button == MouseWheelUp) {
+            ScrollViewSmooth(0.0f, +mvfactor*rview.y.Size() );
+        }else if(button == MouseWheelDown) {
+            ScrollViewSmooth(0.0f, -mvfactor*rview.y.Size() );
+        }else if(button == MouseWheelLeft) {
+            ScrollViewSmooth(+mvfactor*rview.x.Size(), 0.0f );
+        }else if(button == MouseWheelRight) {
+            ScrollViewSmooth(-mvfactor*rview.x.Size(), 0.0f );
+        }
     }
 
     FixSelection();

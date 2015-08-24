@@ -37,6 +37,10 @@ const int PANGO_SPECIAL = 128;
 const int PANGO_CTRL = -96;
 const int PANGO_OPTN = 132;
 
+// Ordinary keys
+const int PANGO_KEY_TAB       = 9;
+const int PANGO_KEY_ESCAPE    = 27;
+
 // Special Keys (same as GLUT_ defines)
 const int PANGO_KEY_F1        = 1;
 const int PANGO_KEY_F2        = 2;
@@ -66,7 +70,9 @@ enum MouseButton
     MouseButtonMiddle = 2,
     MouseButtonRight = 4,
     MouseWheelUp = 8,
-    MouseWheelDown = 16
+    MouseWheelDown = 16,
+    MouseWheelRight = 32,
+    MouseWheelLeft = 64,
 };
 
 enum KeyModifier
@@ -74,7 +80,8 @@ enum KeyModifier
     KeyModifierShift = 1<<16,
     KeyModifierCtrl  = 1<<17,
     KeyModifierAlt   = 1<<18,
-    KeyModifierCmd   = 1<<19
+    KeyModifierCmd   = 1<<19,
+    KeyModifierFnc   = 1<<20
 };
 
 enum InputSpecial

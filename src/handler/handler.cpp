@@ -106,7 +106,7 @@ void HandlerScroll::Special(View& d, InputSpecial inType, float x, float y, floa
 {
     if( inType == InputSpecialScroll )
     {
-        d.scroll_offset -= (int)(p2 / abs(p2));
+        d.scroll_offset -= (int)(p2 / fabs(p2));
         d.scroll_offset = std::max(0, std::min(d.scroll_offset, (int)d.views.size()) );
         d.ResizeChildren();
     }else{
@@ -270,7 +270,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
                 if(updotz > 0.98) aboutx = std::min(aboutx, (GLprecision)0.0);
                 if(updotz <-0.98) aboutx = std::max(aboutx, (GLprecision)0.0);
                 // Module rotation around y so we don't spin too fast!
-                abouty *= (1-0.6*abs(updotz));
+                abouty *= (1-0.6*fabs(updotz));
             }
             
             // Right Drag: object centric rotation

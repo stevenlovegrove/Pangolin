@@ -29,6 +29,12 @@
 #define PANGOLIN_DISPLAY_INTERNAL_H
 
 #include <pangolin/platform.h>
+
+#ifdef HAVE_PYTHON
+#include <pangolin/console/ConsoleView.h>
+#include <pangolin/python/PyInterpreter.h>
+#endif // HAVE_PYTHON
+
 #include <pangolin/display/view.h>
 #include <pangolin/compat/function.h>
 #include <pangolin/display/user_app.h>
@@ -40,15 +46,12 @@
 #include <pangolin/video/video_output.h>
 #endif // BUILD_PANGOLIN_VIDEO
 
-#ifdef HAVE_CVARS
-    #define HAVE_GLCONSOLE
-    #include <pangolin/compat/glconsole.h>
-#endif // HAVE_CVARS
 
 namespace pangolin
 {
 
 typedef std::map<const std::string,View*> ViewMap;
+typedef std::map<int,boostd::function<void(void)> > KeyhookMap;
 
 struct PANGOLIN_EXPORT PangolinGl
 {
@@ -65,7 +68,7 @@ struct PANGOLIN_EXPORT PangolinGl
     UserApp* user_app;
     
     // Global keypress hooks
-    std::map<int,boostd::function<void(void)> > keypress_hooks;
+    KeyhookMap keypress_hooks;
     
     // Manage fullscreen (ToggleFullscreen is quite new)
     bool is_double_buffered;
@@ -85,31 +88,23 @@ struct PANGOLIN_EXPORT PangolinGl
     View* record_view;
     VideoOutput recorder;
 #endif
-    
-#ifdef HAVE_GLCONSOLE
-    GLConsole console;
-#endif // HAVE_GLCONSOLE
-    
+
+#ifdef HAVE_PYTHON
+    ConsoleView* console_view;
+#endif
 };
 
+// Implemented in platform specific display file.
 PANGOLIN_EXPORT
-void PangolinCommonInit();
+void PangolinPlatformInit(PangolinGl& context);
+
+// Implemented in platform specific display file.
+PANGOLIN_EXPORT
+void PangolinPlatformDeinit(PangolinGl& context);
 
 #ifdef BUILD_PANGOLIN_VIDEO
   void SaveFramebuffer(VideoOutput& video, const Viewport& v);
 #endif // BUILD_PANGOLIN_VIDEO
-
-#ifdef HAVE_CVARS
-  bool CVarViewList( std::vector<std::string>* args );
-  bool CVarViewShowHide( std::vector<std::string>* args );
-  bool CVarScreencap( std::vector<std::string>* args );
-
-#ifdef BUILD_PANGOLIN_VIDEO
-  bool CVarRecordStart( std::vector<std::string>* args );
-  bool CVarRecordStop( std::vector<std::string>* args );
-#endif // BUILD_PANGOLIN_VIDEO
-    
-#endif // HAVE_CVARS  
 
 }
 

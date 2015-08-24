@@ -143,20 +143,8 @@ if(ANDROID)
 elseif(IOS)
     # Nothing specific in here yet.
 else()
-    find_package(CUDA QUIET)
-    if(CUDA_FOUND AND NOT _CLANG_)
-      set(HAVE_CUDA 1)
-      cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-      set(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE OFF)
-      set(CUDA_NVCC_FLAGS "-O3" )
-      add_definitions(-DCUDA_BUILD)
-      message(STATUS "CUDA Found and Enabled")
-    endif()
-
     if(BUILD_PANGOLIN_GUI)
-        if(_WIN_)
-            list(APPEND SOURCES display/device/display_win.cpp )
-        else()
+        if(FORCE_GLUT)
             find_package(FREEGLUT QUIET)
             find_package(GLUT QUIET)
 
@@ -193,16 +181,37 @@ else()
                 list(APPEND SOURCES display/device/display_glut.cpp )
                 message(STATUS "Glut Found and Enabled")
             endif()
+        elseif(_WIN_)
+            list(APPEND SOURCES display/device/display_win.cpp )
+        elseif(_OSX_)
+            list(APPEND SOURCES display/device/display_osx.mm )
+            list(APPEND LINK_LIBS "-framework Cocoa" )
+        elseif(_LINUX_)
+            list(APPEND SOURCES display/device/display_x11.cpp )
+            list(APPEND LINK_LIBS -lX11 )
         endif()
     endif()
 endif()
 
-find_package(CVARS 2.3 QUIET)
-if(BUILD_PANGOLIN_GUI AND CVARS_FOUND)
-  set(HAVE_CVARS 1)
-  list(APPEND USER_INC  ${CVARS_INCLUDE_DIR} )
-  list(APPEND LINK_LIBS ${CVARS_LIBRARIES} )
-  message(STATUS "CVARS Found and Enabled")
+find_package(PythonLibs QUIET)
+if(BUILD_PANGOLIN_GUI AND PYTHONLIBS_FOUND AND CPP11_NO_BOOST)
+  set(HAVE_PYTHON 1)
+  list(APPEND HEADERS
+    ${INCDIR}/console/ConsoleInterpreter.h
+    ${INCDIR}/console/ConsoleView.h
+    ${INCDIR}/python/PyInterpreter.h
+    ${INCDIR}/python/PyModulePangolin.h
+    ${INCDIR}/python/PyUniqueObj.h
+    ${INCDIR}/python/PyVar.h
+    ${INCDIR}/python/PyPangoIO.h
+  )
+  list(APPEND SOURCES
+    console/ConsoleView.cpp
+    python/PyInterpreter.cpp
+  )
+  list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIR})
+  list(APPEND LINK_LIBS    ${PYTHON_LIBRARY})
+  message(STATUS "Python Found and Enabled")
 endif()
 
 option(BUILD_PANGOLIN_OCULUS "Build support for Oculus HUD" OFF)

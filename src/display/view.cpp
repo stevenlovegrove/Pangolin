@@ -168,10 +168,18 @@ void View::Resize(const Viewport& p)
     ResizeChildren();
 }
 
+inline int zcompare(const View* lhs, const View* rhs)
+{
+    return lhs->zorder < rhs->zorder;
+}
+
 void View::ResizeChildren()
 {
     if( layout == LayoutOverlay )
     {
+        // Sort children into z-order
+        std::sort(views.begin(), views.end(), zcompare);
+
         for(std::vector<View*>::iterator iv = views.begin(); iv != views.end(); ++iv ) {
             (*iv)->Resize(v);
         }
@@ -394,6 +402,11 @@ View& View::SetFocus()
 {
     context->activeDisplay = this;
     return *this;
+}
+
+bool View::HasFocus() const
+{
+    return context->activeDisplay == this;
 }
 
 View& View::SetBounds(Attach bottom, Attach top, Attach left, Attach right)

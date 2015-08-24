@@ -42,9 +42,6 @@
 #include <pangolin/utils/type_convert.h>
 #include <pangolin/image/image_io.h>
 
-#define GLUT_KEY_ESCAPE 27
-#define GLUT_KEY_TAB 9
-
 #ifdef BUILD_PANGOLIN_VARS
   #include <pangolin/var/var.h>
 #endif
@@ -63,11 +60,15 @@ ContextMap contexts;
 __thread PangolinGl* context = 0;
 
 PangolinGl::PangolinGl()
-    : user_app(0), quit(false), mouse_state(0), activeDisplay(0)
+    : user_app(0), quit(false), mouse_state(0),activeDisplay(0)
+#ifdef BUILD_PANGOLIN_VIDEO
+    , record_view(0)
+#endif
+#ifdef HAVE_PYTHON
+    , console_view(0)
+#endif
 {
-#if defined(HAVE_GLCONSOLE) && defined(HAVE_GLES)
-    console.m_fOverlayPercent = 0.5;
-#endif    
+    PangolinPlatformInit(*this);
 }
 
 PangolinGl::~PangolinGl()
@@ -77,6 +78,9 @@ PangolinGl::~PangolinGl()
         delete iv->second;
     }
     named_managed_views.clear();
+
+    // Platform specific cleanup
+    PangolinPlatformDeinit(*this);
 }
 
 void BindToContext(std::string name)
@@ -104,6 +108,11 @@ void BindToContext(std::string name)
 #else
         process::Resize(640,480);
 #endif //HAVE_GLUT
+
+        // Default key bindings can be overridden
+        RegisterKeyPressCallback(PANGO_KEY_ESCAPE, Quit );
+        RegisterKeyPressCallback('\t', ToggleFullscreen );
+        RegisterKeyPressCallback('`',  ToggleConsole );
     }else{
         context = ic->second.get();
     }
@@ -159,12 +168,8 @@ void PostRender()
     }
 #endif // BUILD_PANGOLIN_VIDEO
 
-    DisplayBase().Activate();
+    // Disable scissor each frame
     Viewport::DisableScissor();
-    
-#ifdef HAVE_GLCONSOLE
-    context->console.RenderConsole();
-#endif // HAVE_GLCONSOLE
 }
 
 View& DisplayBase()
@@ -178,6 +183,25 @@ View& CreateDisplay()
     std::stringstream ssguid;
     ssguid << iguid;
     return Display(ssguid.str());
+}
+
+void ToggleConsole()
+{
+#ifdef HAVE_PYTHON
+    if( !context->console_view) {
+        // Create console and let the pangolin context take ownership
+        context->console_view = new ConsoleView(new PyInterpreter());
+        context->named_managed_views["pangolin_console"] = context->console_view;
+        context->console_view->SetFocus();
+        context->console_view->zorder = std::numeric_limits<int>::max();
+        DisplayBase().AddDisplay(*context->console_view);
+    }else{
+        context->console_view->ToggleShow();
+        if(context->console_view->IsShown()) {
+            context->console_view->SetFocus();
+        }
+    }
+#endif
 }
 
 void ToggleFullscreen()
@@ -269,103 +293,6 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 }
 #endif // BUILD_PANGOLIN_VIDEO
 
-#ifdef HAVE_CVARS
-// Pangolin CVar function hooks
-
-bool CVarViewList( std::vector<std::string>* args )
-{
-#ifdef HAVE_GLCONSOLE
-    std::stringstream ss;
-    for(ViewMap::iterator vi = context->named_managed_views.begin();
-        vi != context->named_managed_views.end(); ++vi)
-    {
-        ss << "'" << vi->first << "' " << std::endl;
-    }
-    context->console.EnterLogLine(ss.str().c_str());
-#endif //HAVE_GLCONSOLE
-    return true;
-}
-
-bool CVarViewShowHide( std::vector<std::string>* args )
-{
-    if(args && args->size() == 1) {
-        Display(args->at(0)).ToggleShow();
-    }else{
-#ifdef HAVE_GLCONSOLE
-        context->console.EnterLogLine("USAGE: pango.view.showhide view_name", LINEPROP_ERROR);        
-#endif //HAVE_GLCONSOLE
-    }
-    return true;
-}
-
-// Pangolin CVar function hooks
-bool CVarScreencap( std::vector<std::string>* args )
-{
-    if(args && args->size() > 0) {
-        const std::string file_prefix = args->at(0);
-        float scale = 1.0f;
-        View* view = &DisplayBase();
-        
-        if(args->size() > 1)  scale = Convert<float,std::string>::Do(args->at(1));
-        if(args->size() > 2)  view = &Display(args->at(2));
-
-        if(scale == 1.0f) {
-            view->SaveOnRender(file_prefix);
-        }else{
-            view->SaveRenderNow(file_prefix, scale);
-        }
-
-#ifdef HAVE_GLCONSOLE
-        context->console.EnterLogLine("done.");
-#endif // HAVE_GLCONSOLE
-    }else{
-#ifdef HAVE_GLCONSOLE
-        context->console.EnterLogLine("USAGE: pango.screencap file_prefix [scale=1] [view_name]", LINEPROP_ERROR);
-        context->console.EnterLogLine("   eg: pango.screencap my_shot", LINEPROP_ERROR);
-#endif // HAVE_GLCONSOLE
-    }
-    return false;
-}
-
-#ifdef BUILD_PANGOLIN_VIDEO
-bool CVarRecordStart( std::vector<std::string>* args )
-{
-    if(args && args->size() > 0) {
-        const std::string uri = args->at(0);
-        View* view = &DisplayBase();
-        
-        if(args->size() > 1) {
-            view = &Display(args->at(1));
-        }
-        
-        try {
-            view->RecordOnRender(uri);
-#ifdef HAVE_GLCONSOLE
-            context->console.ToggleConsole();
-#endif // HAVE_GLCONSOLE
-            return true;
-        }catch(VideoException e) {
-#ifdef HAVE_GLCONSOLE
-            context->console.EnterLogLine(e.what(), LINEPROP_ERROR );
-#endif // HAVE_GLCONSOLE
-        }
-    }else{
-#ifdef HAVE_GLCONSOLE
-        context->console.EnterLogLine("USAGE: pango.record.start uri [view_name]", LINEPROP_ERROR);
-        context->console.EnterLogLine("   eg: pango.record.start ffmpeg[fps=60]://screencap.avi", LINEPROP_ERROR);
-#endif // HAVE_GLCONSOLE
-    }
-    return false;
-}
-
-bool CVarRecordStop( std::vector<std::string>* /*args*/ )
-{
-    context->recorder.Close();
-    return true;
-}
-#endif // BUILD_PANGOLIN_VIDEO
-
-#endif // HAVE_CVARS
 
 namespace process
 {
@@ -385,30 +312,20 @@ void Keyboard( unsigned char key, int x, int y)
         key = '\b';
     }
 #endif
-    
+
     context->had_input = context->is_double_buffered ? 2 : 1;
+
+    // Check if global key hook exists
+    const KeyhookMap::iterator hook = context->keypress_hooks.find(key);
     
-    if( key == GLUT_KEY_ESCAPE) {
-        context->quit = true;
-    }
-#ifdef HAVE_GLCONSOLE
-    else if(key == '`') {
-        context->console.ToggleConsole();
-        // Force refresh for several frames whilst panel opens/closes
-        context->had_input = 60*2;
-    }else if(context->console.IsOpen()) {
-        // Direct input to console
-        if( key >= 128 ) {
-            context->console.SpecialFunc(key - 128 );
-        }else{
-            context->console.KeyboardFunc(key);
-        }
-    }
-#endif // HAVE_GLCONSOLE
-    else if( key == GLUT_KEY_TAB) {
-        ToggleFullscreen();
-    } else if(context->keypress_hooks.find(key) != context->keypress_hooks.end() ) {
-        context->keypress_hooks[key]();
+#ifdef HAVE_PYTHON
+    // Console receives all input when it is open
+    if( context->console_view && context->console_view->IsShown() ) {
+        context->console_view->Keyboard(*(context->console_view),key,x,y,true);
+    }else
+#endif
+    if(hook != context->keypress_hooks.end() ) {
+        hook->second();
     } else if(context->activeDisplay && context->activeDisplay->handler) {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
     }
@@ -444,7 +361,7 @@ void Mouse( int button_raw, int state, int x, int y)
     last_x = (float)x;
     last_y = (float)y;
 
-    const MouseButton button = (MouseButton)(1 << (button_raw&0x7) );
+    const MouseButton button = (MouseButton)(1 << (button_raw & 0xf) );
     const bool pressed = (state == 0);
     
     context->had_input = context->is_double_buffered ? 2 : 1;
@@ -452,9 +369,9 @@ void Mouse( int button_raw, int state, int x, int y)
     const bool fresh_input = (context->mouse_state == 0);
     
     if( pressed ) {
-        context->mouse_state |= button;
+        context->mouse_state |= (button&7);
     }else{
-        context->mouse_state &= ~button;
+        context->mouse_state &= ~(button&7);
     }
     
 #ifdef HAVE_GLUT
@@ -593,20 +510,19 @@ void DrawTextureToViewport(GLuint texid)
     glDisable(GL_TEXTURE_2D);
 }
 
-void PangolinCommonInit()
+ToggleViewFunctor::ToggleViewFunctor(View& view)
+    : view(view)
 {
-#ifdef HAVE_CVARS    
-    // Register utilities
-    CVarUtils::CreateCVar("pango.view.list",  &CVarViewList, "List named views." );
-    CVarUtils::CreateCVar("pango.view.showhide",  &CVarViewShowHide, "Show/Hide named view." );
-    CVarUtils::CreateCVar("pango.screencap", &CVarScreencap, "Capture image of window to a file." );
-#ifdef BUILD_PANGOLIN_VIDEO
-    CVarUtils::CreateCVar("pango.record.start", &CVarRecordStart, "Record video of window to a file." );
-    CVarUtils::CreateCVar("pango.record.stop",  &CVarRecordStop, "Stop video recording." );
-#endif // BUILD_PANGOLIN_VIDEO
-
-#endif // HAVE_CVARS
 }
 
+ToggleViewFunctor::ToggleViewFunctor(const std::string& name)
+    : view(Display(name))
+{
+}
+
+void ToggleViewFunctor::operator()()
+{
+    view.ToggleShow();
+}
 
 }

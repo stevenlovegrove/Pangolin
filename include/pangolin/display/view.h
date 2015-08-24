@@ -64,7 +64,7 @@ struct PANGOLIN_EXPORT View
 {
     View(double aspect=0.0)
         : aspect(aspect), top(1.0),left(0.0),right(1.0),bottom(0.0), hlock(LockCenter),vlock(LockCenter),
-          layout(LayoutOverlay), scroll_offset(0), show(1), handler(0) {}
+          layout(LayoutOverlay), scroll_offset(0), show(1), zorder(0), handler(0) {}
     
     virtual ~View() {}
     
@@ -119,9 +119,12 @@ struct PANGOLIN_EXPORT View
     //! Set this view as the active View to receive input
     View& SetFocus();
 
+    //! Returns true iff this view currently has focus and will receive user input
+    bool HasFocus() const;
+
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
     View& SetBounds(Attach bottom, Attach top, Attach left, Attach right);
-
+   
     //! Set bounds for the View using mixed fractional / pixel coordinates (OpenGl view coordinates)
     View& SetBounds(Attach bottom, Attach top, Attach left, Attach right, bool keep_aspect);
     
@@ -208,6 +211,10 @@ struct PANGOLIN_EXPORT View
     
     // Should this view be displayed?
     bool show;
+
+    // Child views are rendered in order of low to high z-order
+    // Views default to 0 z-order
+    int zorder;
     
     // Input event handler (if any)
     Handler* handler;

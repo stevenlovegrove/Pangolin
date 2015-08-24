@@ -112,8 +112,6 @@ void CreateGlutWindowAndBind(std::string window_title, int w, int h, unsigned in
 
     context->is_double_buffered = (mode & GLUT_DOUBLE) != 0;
     TakeGlutCallbacks();
-    
-    PangolinCommonInit();
 }
 
 void SwapGlutBuffersProcessGlutEvents()
@@ -160,6 +158,14 @@ void SetFullscreen(bool fullscreen)
         }
         context->is_fullscreen = fullscreen;
     }
+}
+
+void PangolinPlatformInit(PangolinGl& /*context*/)
+{
+}
+
+void PangolinPlatformDeinit(PangolinGl& /*context*/)
+{
 }
 
 

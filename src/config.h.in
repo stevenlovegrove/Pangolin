@@ -17,7 +17,7 @@
 
 /// Configured libraries
 #cmakedefine HAVE_CUDA
-#cmakedefine HAVE_CVARS
+#cmakedefine HAVE_PYTHON
 
 #cmakedefine CPP11_NO_BOOST
 #cmakedefine HAVE_EIGEN
