@@ -46,8 +46,15 @@ struct PyPangoIO {
     static PyMethodDef Py_methods[];
 
     PyPangoIO(PyTypeObject *type, std::queue<ConsoleLine>& line_queue, ConsoleLineType line_type)
-        : ob_refcnt(1), ob_type(type), line_queue(line_queue), line_type(line_type)
+        : line_queue(line_queue), line_type(line_type)
     {
+#if PY_MAJOR_VERSION >= 3
+        ob_base.ob_refcnt = 1;
+        ob_base.ob_type = type;
+#else
+        ob_refcnt = 1;
+        ob_type = type;
+#endif
     }
 
     static void Py_dealloc(PyPangoIO* self)
@@ -68,12 +75,22 @@ struct PyPangoIO {
 
     static PyObject* Py_getattr(PyPangoIO *self, char* name)
     {
-        return PyObject_GenericGetAttr((PyObject*)self, PyString_FromString(name));
+#if PY_MAJOR_VERSION >= 3
+        PyObject* pystr = PyUnicode_FromString(name);
+#else
+        PyObject* pystr = PyString_FromString(name);
+#endif
+        return PyObject_GenericGetAttr((PyObject*)self, pystr );
     }
 
     static int Py_setattr(PyPangoIO *self, char* name, PyObject* val)
     {
-        return PyObject_GenericSetAttr((PyObject*)self, PyString_FromString(name), val);
+#if PY_MAJOR_VERSION >= 3
+        PyObject* pystr = PyUnicode_FromString(name);
+#else
+        PyObject* pystr = PyString_FromString(name);
+#endif
+        return PyObject_GenericSetAttr((PyObject*)self, pystr, val);
     }
 
     static PyObject* Py_write(PyPangoIO* self, PyObject *args)
@@ -103,8 +120,7 @@ PyMethodDef PyPangoIO::Py_methods[] = {
 };
 
 PyTypeObject PyPangoIO::Py_type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size*/
+    PyVarObject_HEAD_INIT(NULL,0)
     "pangolin.PangoIO",                       /* tp_name*/
     sizeof(PyPangoIO),                        /* tp_basicsize*/
     0,                                        /* tp_itemsize*/

@@ -58,7 +58,11 @@ PyObject* GetPangoVarAsPython(const std::string& name)
                 return PyFloat_FromDouble(val);
             }else{
                 const std::string val = var->str->Get();
+#if PY_MAJOR_VERSION >= 3
+                return PyUnicode_FromString(val.c_str());
+#else
                 return PyString_FromString(val.c_str());
+#endif
             }
         }catch(std::exception) {
         }
@@ -70,24 +74,37 @@ PyObject* GetPangoVarAsPython(const std::string& name)
 void SetPangoVarFromPython(const std::string& name, PyObject* val)
 {
     try{
-        if(PyString_Check(val)) {
-            pangolin::Var<std::string> pango_var(name);
-            pango_var = PyString_AsString(val);
-        }else if(PyInt_Check(val) ) {
-            pangolin::Var<int> pango_var(name);
-            pango_var = PyInt_AsLong(val);
-        }else if(PyLong_Check(val)) {
-            pangolin::Var<long> pango_var(name);
-            pango_var = PyLong_AsLong(val);
-        }else if(PyBool_Check(val)) {
-            pangolin::Var<bool> pango_var(name);
-            pango_var = (val == Py_True) ? true : false;
-        }else if(PyFloat_Check(val)) {
+        if (PyFloat_Check(val)) {
             pangolin::Var<double> pango_var(name);
             pango_var = PyFloat_AsDouble(val);
-        }else{
+        }else if (PyLong_Check(val)) {
+            pangolin::Var<long> pango_var(name);
+            pango_var = PyLong_AsLong(val);
+        }else if (PyBool_Check(val)) {
+            pangolin::Var<bool> pango_var(name);
+            pango_var = (val == Py_True) ? true : false;
+        }
+#if PY_MAJOR_VERSION >= 3
+        else if (PyUnicode_Check(val)) {
+            pangolin::Var<std::string> pango_var(name);
+            pango_var = PyUnicode_AsUTF8(val);
+        }
+#else
+        if (PyString_Check(val)) {
+            pangolin::Var<std::string> pango_var(name);
+            pango_var = PyString_AsString(val);
+        } else if (PyInt_Check(val)) {
+            pangolin::Var<int> pango_var(name);
+            pango_var = PyInt_AsLong(val);
+        }
+#endif
+        else {
             PyUniqueObj pystr = PyObject_Repr(val);
+#if PY_MAJOR_VERSION >= 3
+            const std::string str = PyUnicode_AsUTF8(pystr);
+#else
             const std::string str = PyString_AsString(pystr);
+#endif
             pangolin::Var<std::string> pango_var(name);
             pango_var = str;
         }
@@ -101,8 +118,14 @@ struct PyVar {
     PyObject_HEAD
 
     PyVar(PyTypeObject *type)
-        : ob_refcnt(1), ob_type(type)
     {
+#if PY_MAJOR_VERSION >= 3
+        ob_base.ob_refcnt = 1;
+        ob_base.ob_type = type;
+#else
+        ob_refcnt = 1;
+        ob_type = type;
+#endif
     }
 
     static void Py_dealloc(PyVar* self)
@@ -138,20 +161,23 @@ struct PyVar {
                 !strcmp(name, "__class__") )
         {
             // Default behaviour
+#if PY_MAJOR_VERSION >= 3
+            return PyObject_GenericGetAttr((PyObject*)self, PyUnicode_FromString(name));
+#else
             return PyObject_GenericGetAttr((PyObject*)self, PyString_FromString(name));
+#endif
         } else if( !strcmp(name, "__members__") ) {
             const int nss = prefix.size();
             PyObject* l = PyList_New(0);
             for(const std::string& s : VarState::I().var_adds) {
                 if(!s.compare(0, nss, prefix)) {
                     size_t dot = s.find_first_of('.', nss);
-                    if(dot != std::string::npos) {
-                        std::string val = s.substr(nss, dot - nss);
-                        PyList_Append(l, PyString_FromString(val.c_str()));
-                    }else{
-                        std::string val = s.substr(nss);
-                        PyList_Append(l, PyString_FromString(val.c_str()));
-                    }
+                    std::string val = (dot != std::string::npos) ? s.substr(nss, dot - nss) : s.substr(nss);
+#if PY_MAJOR_VERSION >= 3
+                    PyList_Append(l, PyUnicode_FromString(val.c_str()));
+#else
+                    PyList_Append(l, PyString_FromString(val.c_str()));
+#endif
                 }
             }
 
@@ -181,8 +207,7 @@ struct PyVar {
 };
 
  PyTypeObject PyVar::Py_type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size*/
+     PyVarObject_HEAD_INIT(NULL,0)
     "pangolin.Var",                           /* tp_name*/
     sizeof(PyVar),                            /* tp_basicsize*/
     0,                                        /* tp_itemsize*/

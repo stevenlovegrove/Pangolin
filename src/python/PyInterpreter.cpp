@@ -79,7 +79,11 @@ PyInterpreter::~PyInterpreter()
 std::string PyInterpreter::ToString(PyObject* py)
 {
     PyUniqueObj pystr = PyObject_Repr(py);
-    return std::string( PyString_AsString(pystr) );
+#if PY_MAJOR_VERSION >= 3
+    return std::string(PyUnicode_AsUTF8(pystr));
+#else
+    return std::string(PyString_AsString(pystr));
+#endif
 }
 
 void PyInterpreter::CheckPrintClearError()
@@ -144,10 +148,17 @@ std::vector<std::string> PyInterpreter::Complete(const std::string& cmd, int max
 
     if(pycomplete) {
         for(int i=0; i < max_options; ++i) {
-            PyUniqueObj args = PyTuple_Pack( 2, PyString_FromString(cmd.c_str()), PyInt_FromSize_t(i) );
+#if PY_MAJOR_VERSION >= 3
+            PyUniqueObj args = PyTuple_Pack( 2, PyUnicode_FromString(cmd.c_str()), PyLong_FromSize_t(i) );
             PyUniqueObj result = PyObject_CallObject(pycomplete, args);
-            if(result && PyString_Check(result) ) {
-                std::string res_str( PyString_AsString(result) );
+            if (result && PyUnicode_Check(result)) {
+                std::string res_str(PyUnicode_AsUTF8(result));
+#else
+            PyUniqueObj args = PyTuple_Pack(2, PyString_FromString(cmd.c_str()), PyInt_FromSize_t(i));
+            PyUniqueObj result = PyObject_CallObject(pycomplete, args);
+            if (result && PyString_Check(result)) {
+                std::string res_str(PyString_AsString(result));
+#endif
                 if( res_str.find("__")==std::string::npos ||
                     cmd.find("__")!=std::string::npos ||
                     (cmd.size() > 0 && cmd[cmd.size()-1] == '_')

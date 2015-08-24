@@ -69,13 +69,36 @@ static PyMethodDef PangoMethods[] = {
     {NULL}
 };
 
+struct pangolin_module_state {
+    PyObject *error;
+};
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef PangoModule = {
+    PyModuleDef_HEAD_INIT,
+    "pangolin",
+    NULL,
+    sizeof(struct pangolin_module_state),
+    PangoMethods,
+    NULL,
+    NULL, //myextension_traverse,
+    NULL, //myextension_clear,
+    NULL
+};
+#endif
+
 inline PyObject* InitPangoModule()
 {
     // Default settings
     Var<std::string>("pango.console.default_filename","vars.json");
 
     if (PyType_Ready(&PyVar::Py_type) >= 0) {
+#if PY_MAJOR_VERSION >= 3
+        PyObject *m = PyModule_Create(&PangoModule);
+#else
         PyObject* m = Py_InitModule("pangolin", PangoMethods);
+#endif
+
         if (m) {
             Py_INCREF(&PyVar::Py_type);
             PyModule_AddObject(m, "Var", (PyObject *)&PyVar::Py_type);
