@@ -85,24 +85,26 @@ InitPangoModule()
     // Default settings
     Var<std::string>("pango.console.default_filename","vars.json");
 
-    if (PyType_Ready(&PyVar::Py_type) >= 0) {
+    PyObject *m = 0;
 #if PY_MAJOR_VERSION >= 3
-        PyObject *m = PyModule_Create(&PangoModule);
+        m = PyModule_Create(&PangoModule);
 #else
-        PyObject* m = Py_InitModule("pangolin", PangoMethods);
+        m = Py_InitModule("pangolin", PangoMethods);
 #endif
-
-        if (m) {
+    if(m) {
+        if (PyType_Ready(&PyVar::Py_type) >= 0) {
             Py_INCREF(&PyVar::Py_type);
             PyModule_AddObject(m, "Var", (PyObject *)&PyVar::Py_type);
-            return m;
         }else{
-            pango_print_error("Unable to initialise pangolin Python module.\n");
+            pango_print_error("Unable to create pangolin Python objects.\n");
         }
     }else{
-        pango_print_error("Unable to create pangolin Python objects.\n");
+        pango_print_error("Unable to initialise pangolin Python module.\n");
     }
-    return 0;
+
+#if PY_MAJOR_VERSION >= 3
+    return m;
+#endif
 }
 
 }
