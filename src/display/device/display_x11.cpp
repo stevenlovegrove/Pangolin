@@ -281,12 +281,16 @@ void ProcessX11Events()
             break;
         case ButtonPress:
         case ButtonRelease:
+        {
+            const int button = ev.xbutton.button-1;
+            const int mask = Button1Mask << button;
             pangolin::process::Mouse(
-                ev.xbutton.button-1,
-                ev.xbutton.state,
+                button,
+                ev.xbutton.state & mask,
                 ev.xbutton.x, ev.xbutton.y
             );
             break;
+        }
         case MotionNotify:
             if(ev.xmotion.state==0) {
                 pangolin::process::PassiveMouseMotion(ev.xmotion.x, ev.xmotion.y);
