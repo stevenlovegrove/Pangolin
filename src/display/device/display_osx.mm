@@ -32,6 +32,21 @@
 
 #import <Cocoa/Cocoa.h>
 
+// Hack to fix window focus issue
+// http://www.miscdebris.net/blog/2010/03/30/solution-for-my-mac-os-x-gui-program-doesnt-get-focus-if-its-outside-an-application-bundle/
+#include <Carbon/Carbon.h>
+extern "C" { void CPSEnableForegroundOperation(ProcessSerialNumber* psn); }
+inline void FixOsxFocus()
+{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    ProcessSerialNumber psn;
+    GetCurrentProcess( &psn );
+    CPSEnableForegroundOperation( &psn );
+    SetFrontProcess( &psn );
+#pragma clang diagnostic pop
+}
+
 static float backing_scale = 1.0;
 static std::string window_name = "";
 
@@ -478,7 +493,7 @@ static PangolinNSGLView *view = 0;
     {
         NSOpenGLPFADoubleBuffer,
         NSOpenGLPFADepthSize, 32,
-//        NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion4_1Core,
+        NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersionLegacy,
         0
     };
 
@@ -533,6 +548,8 @@ void CreateWindowAndBind(std::string window_title, int w, int h )
     [NSApp run_step];
 
     glewInit();
+
+    FixOsxFocus();
 }
 
 void OsxToggleFullscreen()
