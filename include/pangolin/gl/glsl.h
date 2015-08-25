@@ -146,7 +146,8 @@ protected:
 
     bool AddPreprocessedShader(
         GlSlShaderType shader_type,
-        const std::string& source_code
+        const std::string& source_code,
+        const std::string& name_for_errors
     );
 
     void ParseGLSL(
@@ -234,7 +235,7 @@ inline bool IsLinkSuccessPrintLog(GLhandleARB prog)
     return true;
 }
 
-inline bool IsCompileSuccessPrintLog(GLhandleARB shader)
+inline bool IsCompileSuccessPrintLog(GLhandleARB shader, const std::string& name_for_errors)
 {
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
@@ -245,9 +246,9 @@ inline bool IsCompileSuccessPrintLog(GLhandleARB shader)
         GLsizei len;
         glGetShaderInfoLog(shader, SHADER_LOG_MAX_LEN, &len, infolog);
         if(len) {
-            pango_print_error("%s\n",infolog);
+            pango_print_error("%s:\n%s\n",name_for_errors.c_str(), infolog);
         }else{
-            pango_print_error("No details provided.\n");
+            pango_print_error("%s:\nNo details provided.\n",name_for_errors.c_str());
         }
         return false;
     }
@@ -283,7 +284,8 @@ inline GlSlProgram::~GlSlProgram()
 
 inline bool GlSlProgram::AddPreprocessedShader(
     GlSlShaderType shader_type,
-    const std::string& source_code
+    const std::string& source_code,
+    const std::string& name_for_errors
 ) {
     if(!prog) {
         prog = glCreateProgram();
@@ -293,7 +295,7 @@ inline bool GlSlProgram::AddPreprocessedShader(
     const char* source = source_code.c_str();
     glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
-    bool success = IsCompileSuccessPrintLog(shader);
+    bool success = IsCompileSuccessPrintLog(shader, name_for_errors);
     if(success) {
         glAttachShader(prog, shader);
         shaders.push_back(shader);
@@ -389,7 +391,7 @@ inline bool GlSlProgram::AddShader(
     std::istringstream iss(source_code);
     std::stringstream buffer;
     ParseGLSL(iss, buffer, program_defines, search_path, ".");
-    return AddPreprocessedShader(shader_type, buffer.str() );
+    return AddPreprocessedShader(shader_type, buffer.str(), "<string>" );
 }
 
 inline bool GlSlProgram::AddShaderFromFile(
@@ -402,7 +404,7 @@ inline bool GlSlProgram::AddShaderFromFile(
     if(ifs.is_open()) {
         std::stringstream buffer;
         ParseGLSL(ifs, buffer, program_defines, search_path, ".");
-        return AddPreprocessedShader(shader_type, buffer.str() );
+        return AddPreprocessedShader(shader_type, buffer.str(), filename );
     }else{
         throw std::runtime_error("Unable to open " + filename );
     }
