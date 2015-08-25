@@ -47,6 +47,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         video.Width() * video.Streams().size(), video.Height()
     );
 
+    // Assume packed OpenGL data unless otherwise specified
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
     // Setup resizable views for video streams
     std::vector<pangolin::GlPixFormat> glfmt;
     std::vector<std::pair<float,float> > gloffsetscale;
