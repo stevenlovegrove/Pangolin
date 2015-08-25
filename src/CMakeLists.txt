@@ -194,7 +194,7 @@ else()
 endif()
 
 find_package(PythonLibs QUIET)
-if(BUILD_PANGOLIN_GUI AND PYTHONLIBS_FOUND AND CPP11_NO_BOOST)
+if(BUILD_PANGOLIN_GUI AND PYTHONLIBS_FOUND)
   set(HAVE_PYTHON 1)
   list(APPEND HEADERS
     ${INCDIR}/console/ConsoleInterpreter.h

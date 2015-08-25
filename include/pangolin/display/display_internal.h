@@ -32,7 +32,6 @@
 
 #ifdef HAVE_PYTHON
 #include <pangolin/console/ConsoleView.h>
-#include <pangolin/python/PyInterpreter.h>
 #endif // HAVE_PYTHON
 
 #include <pangolin/display/view.h>

@@ -27,72 +27,86 @@
 
 #pragma once
 
-#include <Python.h>
-
 #include <pangolin/platform.h>
-
+#include <Python.h>
 
 namespace pangolin
 {
 
-struct PyUniqueObj
+/// Class represents a reference counted PythonObject.
+/// PythonObject is appropriately Py_INCREF'd and Py_DECREF'd
+class PyUniqueObj
 {
 public:
+    inline
     PyUniqueObj()
         : obj(0)
     {
     }
 
+    /// Assumption: PythonObject has already been appropriately INCREF'd.
+    inline
     PyUniqueObj(PyObject* obj)
         : obj(obj)
     {
     }
 
+    inline
+    PyUniqueObj(const PyUniqueObj& other)
+        :obj(other.obj)
+    {
+        if(obj) Py_INCREF(obj);
+    }
+
+    inline
     ~PyUniqueObj()
     {
         if(obj) Py_DECREF(obj);
     }
 
 #ifdef CALLEE_HAS_RVALREF
+    inline
     PyUniqueObj(PyUniqueObj&& other)
         : obj(other.obj)
     {
         other.obj = 0;
     }
 
+    inline
     void operator=(PyUniqueObj&& other)
     {
-        Dec();
+        Release();
         obj = other.obj;
         other.obj = 0;
     }
-#endif
+#endif // CALLEE_HAS_RVALREF
 
+    inline
     void operator=(PyObject* obj)
     {
-        Dec();
+        Release();
         this->obj = obj;
     }
 
-    inline void Dec() {
+    inline
+    void Release() {
         if(obj) {
             Py_DECREF(obj);
             obj = 0;
         }
     }
 
-    inline PyObject* operator*() {
+    inline
+    PyObject* operator*() {
         return obj;
     }
 
-    inline operator PyObject*() {
+    inline
+    operator PyObject*() {
         return obj;
     }
 
 private:
-    // Private copy constructor
-    PyUniqueObj(const PyUniqueObj&) {}
-
     PyObject* obj;
 };
 

@@ -25,12 +25,17 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/platform.h>
+
+#ifdef HAVE_PYTHON
+#include <pangolin/python/PyInterpreter.h>
+#endif // HAVE_PYTHON
+
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <map>
 
-#include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/gl/glglut.h>
 #include <pangolin/gl/gldraw.h>
