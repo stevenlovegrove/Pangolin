@@ -35,6 +35,7 @@
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
 
+#include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
