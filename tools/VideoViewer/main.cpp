@@ -23,6 +23,10 @@ std::pair<float,float> GetOffsetScale(const pangolin::Image<unsigned char>& img,
 
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
+    int frame = 0;
+    pangolin::Var<int>  end_frame("viewer.end_frame", std::numeric_limits<int>::max() );
+    pangolin::Var<bool> linear_sampling("viewer.linear_sampling", true );
+
     // Open Video by URI
     pangolin::VideoRecordRepeat video(input_uri, output_uri);
     int total_frames = std::numeric_limits<int>::max();
@@ -36,7 +40,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::VideoPlaybackInterface* video_playback = video.Cast<pangolin::VideoPlaybackInterface>();
     if( video_playback ) {
         total_frames = video_playback->GetTotalFrames();
-        std::cout << "Video length: " << total_frames << " frames" << std::endl;
+        if(total_frames < std::numeric_limits<int>::max() ) {
+            std::cout << "Video length: " << total_frames << " frames" << std::endl;
+            end_frame = 1;
+        }
     }
 
     std::vector<unsigned char> buffer;
@@ -55,17 +62,14 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     std::vector<pangolin::GlPixFormat> glfmt;
     std::vector<std::pair<float,float> > gloffsetscale;
 
-    pangolin::DisplayBase().SetLayout(pangolin::LayoutEqual);
+    pangolin::View& container = pangolin::Display("streams");
+    container.SetLayout(pangolin::LayoutEqual);
     for(unsigned int d=0; d < video.Streams().size(); ++d) {
         pangolin::View& view = pangolin::CreateDisplay().SetAspect(video.Streams()[d].Aspect());
-        pangolin::DisplayBase().AddDisplay(view);
+        container.AddDisplay(view);
         glfmt.push_back(pangolin::GlPixFormat(video.Streams()[d].PixFormat()));
         gloffsetscale.push_back(std::pair<float,float>(0.0f, 1.0f) );
     }
-
-    int frame = 0;
-    pangolin::Var<int>  max_frame("max_frame", total_frames );
-    pangolin::Var<bool> linear_sampling("linear_sampling", true );
 
     std::vector<pangolin::Image<unsigned char> > images;
 
@@ -73,9 +77,9 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     const int FRAME_SKIP = 30;
 
     // Show/hide streams
-    for(size_t v=0; v < pangolin::DisplayBase().NumChildren() && v < 9; v++) {
-        pangolin::RegisterKeyPressCallback('1'+v, [v](){
-            pangolin::DisplayBase()[v].ToggleShow();
+    for(size_t v=0; v < container.NumChildren() && v < 9; v++) {
+        pangolin::RegisterKeyPressCallback('1'+v, [&](){
+            container[v].ToggleShow();
         } );
     }
 
@@ -91,18 +95,18 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     });
     pangolin::RegisterKeyPressCallback('p', [&](){
         video.Play();
-        max_frame = std::numeric_limits<int>::max();
+        end_frame = std::numeric_limits<int>::max();
         pango_print_info("Playing from file log.\n");
         fflush(stdout);
     });
     pangolin::RegisterKeyPressCallback('s', [&](){
         video.Source();
-        max_frame = std::numeric_limits<int>::max();
+        end_frame = std::numeric_limits<int>::max();
         pango_print_info("Playing from source input.\n");
         fflush(stdout);
     });
     pangolin::RegisterKeyPressCallback(' ', [&](){
-        max_frame = (frame < max_frame) ? frame : std::numeric_limits<int>::max();
+        end_frame = (frame < end_frame) ? frame : std::numeric_limits<int>::max();
     });
     pangolin::RegisterKeyPressCallback(pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_LEFT, [&](){
         if(video_playback) {
@@ -118,7 +122,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
             video_playback->Seek(frame);
         }else{
             // Pause at this frame
-            max_frame = frame+1;
+            end_frame = frame+1;
         }
     });
     pangolin::RegisterKeyPressCallback('l', [&](){ linear_sampling = true; });
@@ -127,7 +131,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::RegisterKeyPressCallback('a', [&](){
         // Adapt scale
         for(unsigned int i=0; i<images.size(); ++i) {
-            if(pangolin::DisplayBase()[i].HasFocus()) {
+            if(container[i].HasFocus()) {
                 std::pair<float,float> os(0.0f, 1.0f);
                 if(glfmt[i].gltype == GL_UNSIGNED_BYTE) {
                     os = GetOffsetScale<unsigned char>(images[i], 255.0f, 1.0f);
@@ -149,7 +153,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         glColor3f(1.0f, 1.0f, 1.0f);
 
-        if (frame == 0 || frame < max_frame) {
+        if (frame == 0 || frame < end_frame) {
             if (video.Grab(&buffer[0], images) ){
                 ++frame;
             }
@@ -157,8 +161,8 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
         for(unsigned int i=0; i<images.size(); ++i)
         {
-            if(pangolin::DisplayBase()[i].IsShown()) {
-                pangolin::DisplayBase()[i].Activate();
+            if(container[i].IsShown()) {
+                container[i].Activate();
                 const std::pair<float,float> os = gloffsetscale[i];
                 pangolin::GlSlUtilities::OffsetAndScale(os.first, os.second);
                 pangolin::RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);

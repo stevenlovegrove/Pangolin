@@ -234,8 +234,14 @@ struct PANGOLIN_EXPORT VideoUvcInterface
 
 struct PANGOLIN_EXPORT VideoPlaybackInterface
 {
+    /// Return monotonic id of current frame
     virtual int GetCurrentFrameId() const = 0;
+
+    /// Return total number of frames to be captured from device,
+    /// or std::numeric_limits<int>::max() on failure.
     virtual int GetTotalFrames() const = 0;
+
+    /// Return -1 on failure, frameid on success
     virtual int Seek(int frameid) = 0;
 };
 

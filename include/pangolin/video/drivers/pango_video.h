@@ -35,27 +35,40 @@ namespace pangolin
 {
 
 class PANGOLIN_EXPORT PangoVideo
-    : public VideoInterface, public VideoPropertiesInterface
+    : public VideoInterface, public VideoPropertiesInterface, public VideoPlaybackInterface
 {
 public:
     PangoVideo(const std::string& filename, bool realtime = true);
     ~PangoVideo();
 
-    size_t SizeBytes() const;
+    // Implement VideoInterface
 
-    const std::vector<StreamInfo>& Streams() const;
+    size_t SizeBytes() const PANGOLIN_OVERRIDE;
 
-    void Start();
+    const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
 
-    void Stop();
+    void Start() PANGOLIN_OVERRIDE;
 
-    bool GrabNext( unsigned char* image, bool wait = true );
+    void Stop() PANGOLIN_OVERRIDE;
 
-    bool GrabNewest( unsigned char* image, bool wait = true );
+    bool GrabNext( unsigned char* image, bool wait = true ) PANGOLIN_OVERRIDE;
 
-    const json::value& DeviceProperties() const;
+    bool GrabNewest( unsigned char* image, bool wait = true ) PANGOLIN_OVERRIDE;
 
-    const json::value& FrameProperties() const;
+    // Implement VideoPropertiesInterface
+
+    const json::value& DeviceProperties() const PANGOLIN_OVERRIDE;
+
+    const json::value& FrameProperties() const PANGOLIN_OVERRIDE;
+
+
+    // Implement VideoPlaybackInterface
+
+    int GetCurrentFrameId() const PANGOLIN_OVERRIDE;
+
+    int GetTotalFrames() const PANGOLIN_OVERRIDE;
+
+    int Seek(int frameid) PANGOLIN_OVERRIDE;
 
 protected:
     int FindSource();
@@ -66,6 +79,7 @@ protected:
     json::value device_properties;
     json::value frame_properties;
     int src_id;
+    int frame_id;
 };
 
 }

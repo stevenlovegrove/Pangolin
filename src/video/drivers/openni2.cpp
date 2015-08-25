@@ -597,7 +597,7 @@ int OpenNiVideo2::Seek(int frameid)
 {
     openni::PlaybackControl* control = devices[0].getPlaybackControl();
     if(control) {
-        return control->seek(video_stream[0], frameid);
+        control->seek(video_stream[0], frameid);
         return frameid;
     }else{
         return -1;

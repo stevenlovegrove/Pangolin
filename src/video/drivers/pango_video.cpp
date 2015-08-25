@@ -35,7 +35,7 @@ namespace pangolin
 const std::string pango_video_type = "raw_video";
 
 PangoVideo::PangoVideo(const std::string& filename, bool realtime)
-    : reader(filename, realtime)
+    : reader(filename, realtime), frame_id(-1)
 {
     src_id = FindSource();
 
@@ -68,12 +68,13 @@ void PangoVideo::Stop()
 
 }
 
-bool PangoVideo::GrabNext( unsigned char* image, bool wait )
+bool PangoVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     if(reader.ReadToSourcePacketAndLock(src_id)) {
         // read this frames actual data
         reader.Read((char*)image, size_bytes);
         reader.ReleaseSourcePacketLock(src_id);
+        ++frame_id;
         return true;
     }else{
         return false;
@@ -101,6 +102,22 @@ const json::value& PangoVideo::FrameProperties() const
     }else{
         throw std::runtime_error("Not initialised");
     }
+}
+
+int PangoVideo::GetCurrentFrameId() const
+{
+    return frame_id;
+}
+
+int PangoVideo::GetTotalFrames() const
+{
+    return std::numeric_limits<int>::max()-1;
+}
+
+int PangoVideo::Seek(int /*frameid*/)
+{
+    // TODO: Implement seek
+    return -1;
 }
 
 int PangoVideo::FindSource()
