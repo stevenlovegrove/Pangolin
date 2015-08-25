@@ -194,7 +194,7 @@ else()
 endif()
 
 find_package(PythonLibs QUIET)
-if(BUILD_PANGOLIN_GUI AND PYTHONLIBS_FOUND)
+if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND PYTHONLIBS_FOUND)
   set(HAVE_PYTHON 1)
   list(APPEND HEADERS
     ${INCDIR}/console/ConsoleInterpreter.h
