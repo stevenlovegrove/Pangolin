@@ -38,8 +38,8 @@ namespace pangolin
 
 GlText::GlText()
     : tex(NULL), width(0),
-      ymin(std::numeric_limits<int>::max()),
-      ymax(std::numeric_limits<int>::min())
+      ymin(std::numeric_limits<GLfloat>::max()),
+      ymax(-std::numeric_limits<GLfloat>::max())
 {
 
 }
@@ -53,19 +53,18 @@ GlText::GlText(const GlText& txt)
 GlText::GlText(const GlTexture& font_tex)
     : tex(&font_tex), width(0),
       ymin(std::numeric_limits<int>::max()),
-      ymax(std::numeric_limits<int>::min())
+      ymax(-std::numeric_limits<int>::max())
 {
+}
+
+void GlText::AddSpace(GLfloat s)
+{
+    width += s;
 }
 
 void GlText::Add(unsigned char c, const GlChar& glc)
 {
-    int k = 0;
     int x = width;
-
-    if(str.size()) {
-        k = glc.Kern(str[str.size()-1]);
-        x += k;
-    }
 
     vs.push_back(glc.GetVert(0) + x);
     vs.push_back(glc.GetVert(1) + x);
@@ -74,7 +73,10 @@ void GlText::Add(unsigned char c, const GlChar& glc)
     vs.push_back(glc.GetVert(2) + x);
     vs.push_back(glc.GetVert(3) + x);
 
+    ymin = std::min(ymin, glc.YMin());
+    ymax = std::min(ymax, glc.YMax());
     width = x + glc.StepX();
+
     str.append(1,c);
 }
 

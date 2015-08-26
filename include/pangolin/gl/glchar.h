@@ -50,29 +50,30 @@ class PANGOLIN_EXPORT GlChar
 {
 public:
     GlChar();
-    GlChar(int tw, int th, int x, int y, int w, int h, int x_step, GLfloat ox, GLfloat oy);
-
-    void SetKern(char c, int kern);
-    int Kern(char c) const;
+    GlChar(int tw, int th, int x, int y, int w, int h, GLfloat x_step, GLfloat ox, GLfloat oy);
     
-    const XYUV& GetVert(size_t i) const {
+    inline const XYUV& GetVert(size_t i) const {
         return vs[i];
     }    
     
-    int StepX() const {
+    inline GLfloat StepX() const {
         return x_step;
     }
-        
-    int StepXKerned(char c) const {
-        return StepX() + Kern(c);
-    }    
-        
+
+    inline GLfloat YMin() const {
+        return y_min;
+    }
+
+    inline GLfloat YMax() const {
+        return y_max;
+    }
+
     void Draw() const;
         
 protected:
-    std::map< char, int > mKernings;
     XYUV vs[4];
-    int x_step;    
+    GLfloat x_step;
+    GLfloat y_min, y_max;
 };
 
 }

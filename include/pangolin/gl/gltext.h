@@ -45,6 +45,8 @@ public:
 
     GlText(const GlTexture& font_tex);
     
+    void AddSpace(GLfloat s);
+
     // Add specified charector to this string.
     void Add(unsigned char c, const GlChar& glc);
 
@@ -70,21 +72,21 @@ public:
     }
     
     // Return width in pixels of this text.
-    int Width() const {
+    GLfloat Width() const {
         return width;
     }
     
     // Return height in pixels of this text.
-    int Height() const {
+    GLfloat Height() const {
         return ymax - ymin;
     }
 
-protected:
+//protected:
     const GlTexture* tex;
     std::string str;
-    unsigned int width;
-    unsigned int ymin;
-    unsigned int ymax;
+    GLfloat width;
+    GLfloat ymin;
+    GLfloat ymax;
     
     std::vector<XYUV> vs;
 };

@@ -368,6 +368,13 @@ endif()
 
 
 #######################################################
+## Embed resource binary files
+
+include(EmbedBinaryFiles)
+embed_binary_files( "_embed_/fonts/*.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fonts.c" )
+list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/fonts.c" )
+
+#######################################################
 ## Add Libraries / Include Directories / Link directories
 
 include_directories( ${LIB_INC_DIR} )

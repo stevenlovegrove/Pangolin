@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Robert Castle, Steven Lovegrove, Gabe Sibley
+ * Copyright (c) 2015 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -40,35 +40,38 @@ class PANGOLIN_EXPORT GlFont
 public:
     // Singleton instance if requested.
     static GlFont& I();
-    
-    // Load font now (requires OpenGL context)
-    bool LoadFontFromText( char* str_xml );
-    bool LoadEmbeddedFont();
-    bool LoadFontFromFile( const std::string& filename );
-    void UnloadFont();
+
+    // Load GL Font data. Delay uploading as texture until first use.
+    GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w=512, int tex_h=512);
+    GlFont(const std::string& filename, float pixel_height, int tex_w=512, int tex_h=512);
+
+    virtual ~GlFont();
 
     // Generate renderable GlText object from this font.
     GlText Text( const char* fmt, ... );
+
+    inline float Height() const {
+        return font_height_px;
+    }
     
 protected:
-    std::string sName;
-    int nSize;
-    bool bBold;
-    bool bItalic;
-    std::string sCharset;
-    bool bUnicode;
-    int nStretchHeight;
-    bool bSmooth;
-    bool bAntiAliasing;
-    int nOutline;
-    int nLineHeight;
-    int nBase;
-    int nScaleWidth;
-    int nScaleHeight;
-    int nPages;
-    
+    void InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h);
+
+    // This can only be called once GL context is initialised
+    void InitialiseGlTexture();
+
+    const static int FIRST_CHAR = 32;
+    const static int NUM_CHARS = 96;
+
+    float font_height_px;
+
+    int tex_w;
+    int tex_h;
+    unsigned char* font_bitmap;
     GlTexture mTex;
-    std::map< char, GlChar > mmCharacters;
+
+    GlChar chardata[NUM_CHARS];
+    GLfloat kern_table[NUM_CHARS*NUM_CHARS];
 };
 
 }

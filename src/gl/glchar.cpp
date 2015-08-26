@@ -31,10 +31,12 @@ namespace pangolin
 {
 
 GlChar::GlChar()
+    : x_step(0.0f)
 {
+    // Uninitialised
 }
 
-GlChar::GlChar(int tw, int th, int x, int y, int w, int h, int advance, GLfloat ox, GLfloat oy)
+GlChar::GlChar(int tw, int th, int x, int y, int w, int h, GLfloat advance, GLfloat ox, GLfloat oy)
     : x_step(advance)
 {
     const GLfloat u = (x-0.5f) / tw;
@@ -47,6 +49,9 @@ GlChar::GlChar(int tw, int th, int x, int y, int w, int h, int advance, GLfloat 
     vs[1] = XYUV(ox, oy-h,   u,v2 );
     vs[2] = XYUV(w+ox, oy-h, u2,v2 );
     vs[3] = XYUV(w+ox, oy,   u2,v );
+
+    y_min = oy-h;
+    y_max = oy;
 }
 
 void GlChar::Draw() const
@@ -60,18 +65,6 @@ void GlChar::Draw() const
     glDisable(GL_TEXTURE_2D);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-}
-
-void GlChar::SetKern(char c, int kern)
-{
-    mKernings[c] = kern;
-}
-
-int GlChar::Kern(char c) const
-{
-    std::map< char, int >::const_iterator k = mKernings.find(c);
-    if(k != mKernings.end())  return k->second;
-    return 0;
 }
 
 }

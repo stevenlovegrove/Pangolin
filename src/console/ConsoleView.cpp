@@ -156,7 +156,7 @@ void ConsoleView::Render()
     glDisableClientState(GL_VERTEX_ARRAY);
 
 
-    const int line_space = 15;
+    const double line_space = font.Height();
     glTranslated(10.0, 10.0 + bottom*v.h, 0.0 );
     DrawLine(current_line);
     glTranslated(0.0, line_space, 0.0);

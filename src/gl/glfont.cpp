@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Steven Lovegrove, Robert Castle, Gabe Sibley
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,6 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
+
 #include <pangolin/gl/glfont.h>
 #include <pangolin/gl/glstate.h>
 #include <pangolin/image/image_io.h>
@@ -34,157 +37,102 @@
 #include <pangolin/gl/glsl.h>
 #endif
 
-#include <pangolin/utils/xml/rapidxml.hpp>
-#include <pangolin/utils/xml/rapidxml_utils.hpp>
-
-#include <stdlib.h>
-#include <cstring>
-#include <fstream>
-
-// Include the default font directly
-#include "glfontdata.h"
-
 #define MAX_TEXT_LENGTH 500
+
+// Embedded fonts:
+extern const unsigned char AnonymousPro_ttf[];
 
 namespace pangolin
 {
 
-void LoadGlImage(GlTexture& tex, const std::string& filename, bool sampling_linear)
-{
-    const GLenum chtypes[] = {
-        GL_ALPHA, GL_LUMINANCE_ALPHA,
-        GL_RGB, GL_RGBA
-    };
-    TypedImage img = LoadImage(filename);
-    const GLint format  = chtypes[img.fmt.channels];
-    const GLint imgtype = GL_UNSIGNED_BYTE;
-    tex.Reinitialise((GLint)img.w, (GLint)img.h, format, sampling_linear, 0, format, imgtype, img.ptr );
-    img.Dealloc();
-}
-
 GlFont& GlFont::I()
 {
-    static GlFont s_font;
+    static GlFont s_font(AnonymousPro_ttf, 15);
     return s_font;
 }
 
-bool GlFont::LoadFontFromText(char* xml_text)
+GlFont::GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h)
 {
-    rapidxml::xml_document<> doc;
-    doc.parse<0>(xml_text);
-    
-    rapidxml::xml_node<>* node_font = doc.first_node("font");
-    if(node_font) {
-        rapidxml::xml_node<>* node_info   = node_font->first_node("info");
-        rapidxml::xml_node<>* node_common = node_font->first_node("common");
-        rapidxml::xml_node<>* node_pages  = node_font->first_node("pages");
-        rapidxml::xml_node<>* node_chars  = node_font->first_node("chars");
-        rapidxml::xml_node<>* node_kerns  = node_font->first_node("kernings");
-        
-        if(node_info && node_common && node_chars) {
-            sName          = node_info->first_attribute_value<std::string>("face");
-            sCharset       = node_info->first_attribute_value<std::string>("charset");
-            nSize          = node_info->first_attribute_value<int>("size");
-            nStretchHeight = node_info->first_attribute_value<int>("stretchH");
-            nOutline       = node_info->first_attribute_value<int>("outline");
-            bBold          = node_info->first_attribute_value<bool>("bold");
-            bItalic        = node_info->first_attribute_value<bool>("italic");
-            bUnicode       = node_info->first_attribute_value<bool>("unicode");
-            bSmooth        = node_info->first_attribute_value<bool>("smooth");
-            bAntiAliasing  = node_info->first_attribute_value<bool>("aa");
-            
-            nBase        = node_common->first_attribute_value<int>("base");
-            nScaleWidth  = node_common->first_attribute_value<int>("scaleW");
-            nScaleHeight = node_common->first_attribute_value<int>("scaleH");
-            nLineHeight  = node_common->first_attribute_value<int>("lineHeight");
-            nPages       = node_common->first_attribute_value<int>("pages");
-            
-            if(node_pages) {
-                for( rapidxml::xml_node<>* xml_page = node_pages->first_node();
-                     xml_page; xml_page = xml_page->next_sibling() )
-                {
-                    const std::string filename = xml_page->first_attribute_value<std::string>( "file" );
-                    LoadGlImage(mTex, filename, false );
-                    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-                }
-            }else{
-                mTex.Reinitialise(nScaleWidth, nScaleHeight, GL_ALPHA,false,0,GL_ALPHA,GL_UNSIGNED_BYTE,font_image_data );
-                glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-            }
-            
-            if( nPages < 1) {
-                std::cerr << "Incorrect number of font pages loaded." << std::endl;
-            }
-            
-            for( rapidxml::xml_node<>* xml_char = node_chars->first_node();
-                 xml_char; xml_char = xml_char->next_sibling() )
-            {
-                char id      = xml_char->first_attribute_value<int>("id");
-                int x        = xml_char->first_attribute_value<int>("x");
-                int y        = xml_char->first_attribute_value<int>("y");
-                int width    = xml_char->first_attribute_value<int>("width");
-                int height   = xml_char->first_attribute_value<int>("height");
-                int xOffset  = xml_char->first_attribute_value<int>("xoffset");
-                int yOffset  = xml_char->first_attribute_value<int>("yoffset");
-                int xAdvance = xml_char->first_attribute_value<int>("xadvance");
-                int page     = xml_char->first_attribute_value<int>("page");
-                
-                if(page != 0) {
-                    std::cerr << "Multi-page font not supported" << std::endl;
-                    page = 0;
-                }
-                
-                mmCharacters[id] = GlChar(nScaleWidth, nScaleHeight,
-                                          x,y,width, height,xAdvance,
-                                          (GLfloat)xOffset, (GLfloat)(nBase - yOffset) );
-            }
-            
-            if(node_kerns) {
-                for( rapidxml::xml_node<>* xml_kern = node_kerns->first_node();
-                     xml_kern; xml_kern = xml_kern->next_sibling() )
-                {
-                    char first  = xml_kern->first_attribute_value<char>("first");
-                    char second = xml_kern->first_attribute_value<char>("second");
-                    int amount  = xml_kern->first_attribute_value<int>("amount");
-                    mmCharacters[second].SetKern(first,amount);
-                }
-            }
+    InitialiseFont(ttf_buffer, pixel_height, tex_w, tex_h);
+}
+
+GlFont::GlFont(const std::string& filename, float pixel_height, int tex_w, int tex_h)
+{
+    unsigned char* ttf_buffer = new unsigned char[1<<20];
+    fread(ttf_buffer, 1, 1<<20, fopen(filename.c_str(), "rb"));
+    InitialiseFont(ttf_buffer, pixel_height, tex_w, tex_h);
+    delete[] ttf_buffer;
+}
+
+GlFont::~GlFont()
+{
+    delete[] font_bitmap;
+}
+
+void GlFont::InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h)
+{
+    font_height_px = pixel_height;
+    this->tex_w = tex_w;
+    this->tex_h = tex_h;
+    font_bitmap = new unsigned char[tex_w*tex_h];
+    const int offset = 0;
+
+    stbtt_fontinfo f;
+    if (!stbtt_InitFont(&f, ttf_buffer, offset)) {
+       throw std::runtime_error("Unable to initialise font");
+    }
+
+    float scale = stbtt_ScaleForPixelHeight(&f, pixel_height);
+
+    STBTT_memset(font_bitmap, 0, tex_w*tex_h);
+    int x = 1;
+    int y = 1;
+    int bottom_y = 1;
+
+    // Generate bitmap and char indices
+    for (int i=0; i < NUM_CHARS; ++i) {
+       int advance, lsb, x0,y0,x1,y1,gw,gh;
+       int g = stbtt_FindGlyphIndex(&f, FIRST_CHAR + i);
+       stbtt_GetGlyphHMetrics(&f, g, &advance, &lsb);
+       stbtt_GetGlyphBitmapBox(&f, g, scale,scale, &x0,&y0,&x1,&y1);
+       gw = x1-x0;
+       gh = y1-y0;
+       if (x + gw + 1 >= tex_w)
+          y = bottom_y, x = 1; // advance to next row
+       if (y + gh + 1 >= tex_h) // check if it fits vertically AFTER potentially moving to next row
+          throw std::runtime_error("Unable to initialise font");
+       STBTT_assert(x+gw < tex_w);
+       STBTT_assert(y+gh < tex_h);
+       stbtt_MakeGlyphBitmap(&f, font_bitmap+x+y*tex_w, gw,gh,tex_w, scale,scale, g);
+
+       chardata[i] = GlChar(tex_w,tex_h, x, y, gw, gh, scale*advance, x0, -y0);
+
+       x = x + gw + 1;
+       if (y+gh+1 > bottom_y)
+          bottom_y = y+gh+1;
+    }
+
+    // Generate kern table
+    for (int i=0; i < NUM_CHARS; ++i) {
+        for (int j=0; j < NUM_CHARS; ++j) {
+            kern_table[i*NUM_CHARS+j] = scale * stbtt_GetCodepointKernAdvance(&f,i,j);
         }
     }
-    return false;
 }
 
-bool GlFont::LoadFontFromFile( const std::string& filename )
+void GlFont::InitialiseGlTexture()
 {
-    try{
-        rapidxml::file<> xmlFile(filename.c_str());
-        return LoadFontFromText( xmlFile.data() );
-    }catch(std::exception) {
-        return false;
+    if(font_bitmap) {
+        mTex.Reinitialise(tex_w,tex_h, GL_ALPHA, true, 0, GL_ALPHA,GL_UNSIGNED_BYTE, font_bitmap);
+        delete[] font_bitmap;
+        font_bitmap = 0;
     }
-}
-
-bool GlFont::LoadEmbeddedFont()
-{
-    // Include an extra byte for the terminating NULL
-    char* str = new char[font_xml_data.size() + 1];
-    std::memcpy(str, font_xml_data.c_str(), font_xml_data.size());
-    str[font_xml_data.size()] = '\0';
-    const bool success = LoadFontFromText(str);
-    delete[] str;
-    return success;
-}
-
-void GlFont::UnloadFont()
-{
-    mTex.Delete();
-    mmCharacters.clear();
 }
 
 GlText GlFont::Text( const char* fmt, ... )
 {
-    if(!mmCharacters.size()) LoadEmbeddedFont();
-    
+    if(!mTex.IsValid()) InitialiseGlTexture();
+
     GlText ret(mTex);
     
     char text[MAX_TEXT_LENGTH];          
@@ -196,12 +144,22 @@ GlText GlFont::Text( const char* fmt, ... )
         va_end( ap );
         
         const size_t len = strlen(text);
+        char lc = ' ' - FIRST_CHAR;
         for(size_t i=0; i < len; ++i) {
-            const char c = text[i];
-            std::map< char, GlChar >::const_iterator it = mmCharacters.find( c );
-            if(it != mmCharacters.end()) {
-                ret.Add(c, it->second);
+            char c = text[i];
+            if( !(FIRST_CHAR <= c /*&& c <FIRST_CHAR+NUM_CHARS*/) ) {
+                c = ' ';
             }
+            GlChar& ch = chardata[c-32];
+
+            // Kerning
+            if(i) {
+                const GLfloat kern = kern_table[ (lc-32)*NUM_CHARS + (c-32) ];
+                ret.AddSpace(kern);
+            }
+
+            ret.Add(c,ch);
+            lc = c;
         }
     }
     return ret;
