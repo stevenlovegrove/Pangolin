@@ -30,21 +30,9 @@
 
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_common.h>
+#include <pangolin/utils/file_extension.h>
 
 namespace pangolin {
-
-enum ImageFileType
-{
-    ImageFileTypePpm,
-    ImageFileTypeTga,
-    ImageFileTypePng,
-    ImageFileTypeJpg,
-    ImageFileTypeTiff,
-    ImageFileTypeGif,
-    ImageFileTypeExr,
-    ImageFileTypePango,
-    ImageFileTypeUnknown
-};
 
 struct TypedImage : public Image<unsigned char>
 {
@@ -72,18 +60,6 @@ struct TypedImage : public Image<unsigned char>
     
     VideoPixelFormat fmt;
 };
-
-PANGOLIN_EXPORT
-std::string FileLowercaseExtention(const std::string& filename);
-
-PANGOLIN_EXPORT
-ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes);
-
-PANGOLIN_EXPORT
-ImageFileType FileTypeExtension(const std::string& ext);
-
-PANGOLIN_EXPORT
-ImageFileType FileType(const std::string& filename);
 
 PANGOLIN_EXPORT
 TypedImage LoadImage(const std::string& filename, ImageFileType file_type);
