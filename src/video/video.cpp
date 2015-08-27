@@ -61,6 +61,7 @@
 #endif
 
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/file_extension.h>
 #include <pangolin/video/drivers/test.h>
 #include <pangolin/video/drivers/images.h>
 #include <pangolin/video/drivers/pvn_video.h>
@@ -349,17 +350,18 @@ VideoInterface* OpenVideo(const Uri& uri)
     {
         video = new ImagesVideo(uri.url);
     }else
-    if(!uri.scheme.compare("file") )
+    if(!uri.scheme.compare("file") || !uri.scheme.compare("pango") || !uri.scheme.compare("pvn") )
     {
-        // TODO: Check file magic
-        if( EndsWith(uri.url,"pvn") ) {
+        const ImageFileType ft = FileType(uri.url);
+
+        if( ft == ImageFileTypePvn ) {
             const bool realtime = uri.Contains("realtime");
             video = new PvnVideo(PathExpand(uri.url).c_str(), realtime);
-        }else if(EndsWith(uri.url,"pango")) {
+        }else if(ft == ImageFileTypePango ) {
             const bool realtime = uri.Contains("realtime");
             video = new PangoVideo(PathExpand(uri.url).c_str(), realtime);
         }else{
-            throw VideoException("Unable to open file type");
+            throw VideoException("Unrecognised file type." );
         }
     }else
     if(!uri.scheme.compare("debayer"))
@@ -616,7 +618,7 @@ VideoInterface* OpenVideo(const Uri& uri)
     }else
 #endif
 	{
-        throw VideoException("Unable to open video URI");
+        throw VideoException("No known video handler for URI '" + uri.scheme + "'");
     }
     
     return video;
