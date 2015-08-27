@@ -371,8 +371,11 @@ endif()
 ## Embed resource binary files
 
 include(EmbedBinaryFiles)
-embed_binary_files( "_embed_/fonts/*.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fonts.c" )
-list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/fonts.c" )
+
+if(BUILD_PANGOLIN_GUI)
+    embed_binary_files( "_embed_/fonts/*.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fonts.c" )
+    list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/fonts.c" )
+endif()
 
 #######################################################
 ## Add Libraries / Include Directories / Link directories
