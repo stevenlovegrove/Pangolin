@@ -78,7 +78,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
     // Show/hide streams
     for(size_t v=0; v < container.NumChildren() && v < 9; v++) {
-        pangolin::RegisterKeyPressCallback('1'+v, [&](){
+        pangolin::RegisterKeyPressCallback('1'+v, [v,&container](){
             container[v].ToggleShow();
         } );
     }
