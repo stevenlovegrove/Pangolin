@@ -151,7 +151,7 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z) const
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0, DisplayBase().v.w, 0, DisplayBase().v.h, -1, 1);
+    glOrtho(-0.5, DisplayBase().v.w-0.5, -0.5, DisplayBase().v.h-0.5, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
@@ -180,7 +180,7 @@ void GlText::DrawWindow(GLfloat x, GLfloat y, GLfloat z) const
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0, DisplayBase().v.w, 0, DisplayBase().v.h, -1, 1);
+    glOrtho(-0.5, DisplayBase().v.w-0.5, -0.5, DisplayBase().v.h-0.5, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();

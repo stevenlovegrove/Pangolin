@@ -105,7 +105,8 @@ void GlFont::InitialiseFont(const unsigned char* ttf_buffer, float pixel_height,
        STBTT_assert(y+gh < tex_h);
        stbtt_MakeGlyphBitmap(&f, font_bitmap+x+y*tex_w, gw,gh,tex_w, scale,scale, g);
 
-       chardata[i] = GlChar(tex_w,tex_h, x, y, gw, gh, scale*advance, x0, -y0);
+       // Adjust offset for edges of pixels
+       chardata[i] = GlChar(tex_w,tex_h, x, y, gw, gh, scale*advance, x0 -0.5, -y0 -0.5);
 
        x = x + gw + 1;
        if (y+gh+1 > bottom_y)
@@ -124,6 +125,7 @@ void GlFont::InitialiseGlTexture()
 {
     if(font_bitmap) {
         mTex.Reinitialise(tex_w,tex_h, GL_ALPHA, true, 0, GL_ALPHA,GL_UNSIGNED_BYTE, font_bitmap);
+//        mTex.SetNearestNeighbour();
         delete[] font_bitmap;
         font_bitmap = 0;
     }
