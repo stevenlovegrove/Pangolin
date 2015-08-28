@@ -46,14 +46,6 @@ namespace pangolin
 // Pointer to context defined in display.cpp
 extern __thread PangolinGl* context;
 
-const static int border = 1;
-
-#ifdef HAVE_GLES
-// a little more finger friendly
-const static int tab_h = 30;
-#else
-const static int tab_h = 20;
-#endif
 
 const static GLfloat colour_s1[4] = {0.2f, 0.2f, 0.2f, 1.0f};
 const static GLfloat colour_s2[4] = {0.6f, 0.6f, 0.6f, 1.0f};
@@ -62,9 +54,9 @@ const static GLfloat colour_fg[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 const static GLfloat colour_tx[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 const static GLfloat colour_dn[4] = {1.0f, 0.7f, 0.7f, 1.0f};
 
-static void* font = GLUT_BITMAP_HELVETICA_12;
-static int text_height = 8; //glutBitmapHeight(font) * 0.7;
-static int cb_height = (int)(text_height * 1.6);
+static GlFont& font = GlFont::I();
+static int cb_height = (int)(font.Height() * 1.0);
+static int tab_h = (int)(font.Height() * 1.4);
 
 boostd::mutex display_mutex;
 
@@ -90,12 +82,20 @@ void GuiVarChanged( Var<T>& var)
 
 void glRect(Viewport v)
 {
-    glRecti(v.l, v.b, v.r(), v.t());
+    GLfloat vs[] = { (float)v.l,(float)v.b,
+                     (float)v.l,(float)v.t(),
+                     (float)v.r(),(float)v.t(),
+                     (float)v.r(),(float)v.b };
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, vs);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 void glRect(Viewport v, int inset)
 {
-    glRecti(v.l+inset,v.b+inset,v.r()-inset,v.t()-inset);
+    glRect(v.Inset(inset));
 }
 
 void DrawShadowRect(Viewport& v)
@@ -234,7 +234,7 @@ Button::Button(string title, VarValueGeneric& tv)
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
-    text_width = glutBitmapLength(font,(unsigned char*)title.c_str());
+    gltext = font.Text(title);
 }
 
 void Button::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
@@ -254,16 +254,14 @@ void Button::Render()
     glColor4fv(colour_fg );
     glRect(v);
     glColor4fv(colour_tx);
-    glRasterPos2f(raster[0],raster[1]-down);
-    glutBitmapString(font,(unsigned char*)title.c_str());
+    gltext.DrawWindow(raster[0],raster[1]-down);
     DrawShadowRect(v, down);
 }
 
 void Button::ResizeChildren()
 {
-    raster[0] = v.l + (v.w-text_width)/2.0f;
-    raster[1] = v.b + (v.h-text_height)/2.0f;
-    vinside = v.Inset(border);
+    raster[0] = floor(v.l + (v.w-gltext.Width())/2.0f);
+    raster[1] = floor(v.b + (v.h-gltext.Height())/2.0f);
 }
 
 #ifdef CPP11_NO_BOOST
@@ -274,7 +272,7 @@ FunctionButton::FunctionButton(string title, VarValueGeneric& tv)
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
-    text_width = glutBitmapLength(font, (unsigned char*)title.c_str());
+    gltext = font.Text(title);
 }
 
 void FunctionButton::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
@@ -294,16 +292,14 @@ void FunctionButton::Render()
     glColor4fv(colour_fg);
     glRect(v);
     glColor4fv(colour_tx);
-    glRasterPos2f(raster[0], raster[1] - down);
-    glutBitmapString(font, (unsigned char*)title.c_str());
+    gltext.DrawWindow(raster[0],raster[1]-down);
     DrawShadowRect(v, down);
 }
 
 void FunctionButton::ResizeChildren()
 {
-    raster[0] = v.l + (v.w - text_width) / 2.0f;
-    raster[1] = v.b + (v.h - text_height) / 2.0f;
-    vinside = v.Inset(border);
+    raster[0] = v.l + (v.w - gltext.Width()) / 2.0f;
+    raster[1] = v.b + (v.h - gltext.Height()) / 2.0f;
 }
 #endif // CPP11_NO_BOOST
 
@@ -315,6 +311,7 @@ Checkbox::Checkbox(std::string title, VarValueGeneric& tv)
     hlock = LockLeft;
     vlock = LockBottom;
     handler = this;
+    gltext = font.Text(title);
 }
 
 void Checkbox::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
@@ -328,7 +325,7 @@ void Checkbox::Mouse(View&, MouseButton button, int x, int y, bool pressed, int 
 void Checkbox::ResizeChildren()
 {
     raster[0] = v.l + cb_height + 4.0f;
-    raster[1] = v.b + (v.h-text_height)/2.0f;
+    raster[1] = v.b + (v.h-gltext.Height())/2.0f;
     const int h = v.h;
     const int t = (int)((h-cb_height) / 2.0f);
     vcb = Viewport(v.l,v.b+t,cb_height,cb_height);
@@ -344,8 +341,7 @@ void Checkbox::Render()
         glRect(vcb);
     }
     glColor4fv(colour_tx);
-    glRasterPos2fv( raster );
-    glutBitmapString(font,(unsigned char*)title.c_str());
+    gltext.DrawWindow(raster[0],raster[1]);
     DrawShadowRect(vcb, val);
 }
 
@@ -359,6 +355,7 @@ Slider::Slider(std::string title, VarValueGeneric& tv)
     vlock = LockBottom;
     handler = this;
     logscale = (int)tv.Meta().logscale;
+    gltext = font.Text(title);
 }
 
 void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
@@ -447,7 +444,7 @@ void Slider::MouseMotion(View&, int x, int y, int mouse_state)
 void Slider::ResizeChildren()
 {
     raster[0] = v.l + 2.0f;
-    raster[1] = v.b + (v.h-text_height)/2.0f;
+    raster[1] = v.b + (v.h-gltext.Height())/2.0f;
 }
 
 void Slider::Render()
@@ -470,15 +467,14 @@ void Slider::Render()
     }
     
     glColor4fv(colour_tx);
-    glRasterPos2fv( raster );
-    glutBitmapString(font,(unsigned char*)title.c_str());
-    
+    gltext.DrawWindow(raster[0], raster[1]);
+
     std::ostringstream oss;
     oss << setprecision(4) << val;
     string str = oss.str();
-    const int l = glutBitmapLength(font,(unsigned char*)str.c_str()) + 2;
-    glRasterPos2f( (GLfloat)(v.l + v.w - l), raster[1] );
-    glutBitmapString(font,(unsigned char*)str.c_str());
+    GlText glval = font.Text(str);
+    const int l = glval.Width() + 2;
+    glval.DrawWindow( (GLfloat)(v.l + v.w - l), raster[1] );
 }
 
 
@@ -492,6 +488,7 @@ TextInput::TextInput(std::string title, VarValueGeneric& tv)
     handler = this;
     sel[0] = -1;
     sel[1] = -1;
+    gltext = font.Text(title);
 }
 
 void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
@@ -563,7 +560,7 @@ void TextInput::Mouse(View& view, MouseButton button, int x, int y, bool pressed
         
         if(do_edit)
         {
-            const int sl = glutBitmapLength(font,(unsigned char*)edit.c_str()) + 2;
+            const int sl = gledit.Width() + 2;
             const int rl = v.l + v.w - sl;
             int ep = edit.length();
             
@@ -573,7 +570,7 @@ void TextInput::Mouse(View& view, MouseButton button, int x, int y, bool pressed
             }else{
                 for( unsigned i=0; i<edit.length(); ++i )
                 {
-                    const int tl = rl + glutBitmapLength(font,(unsigned char*)edit.substr(0,i).c_str());
+                    const int tl = rl + font.Text(edit.substr(0,i)).Width();
                     if(x < tl+2)
                     {
                         ep = i;
@@ -602,7 +599,7 @@ void TextInput::MouseMotion(View&, int x, int y, int mouse_state)
 {
     if(do_edit)
     {
-        const int sl = glutBitmapLength(font,(unsigned char*)edit.c_str()) + 2;
+        const int sl = gledit.Width() + 2;
         const int rl = v.l + v.w - sl;
         int ep = edit.length();
         
@@ -612,7 +609,7 @@ void TextInput::MouseMotion(View&, int x, int y, int mouse_state)
         }else{
             for( unsigned i=0; i<edit.length(); ++i )
             {
-                const int tl = rl + glutBitmapLength(font,(unsigned char*)edit.substr(0,i).c_str());
+                const int tl = rl + font.Text(edit.substr(0,i)).Width();
                 if(x < tl+2)
                 {
                     ep = i;
@@ -629,33 +626,33 @@ void TextInput::MouseMotion(View&, int x, int y, int mouse_state)
 void TextInput::ResizeChildren()
 {
     raster[0] = v.l + 2.0f;
-    raster[1] = v.b + (v.h-text_height) / 2.0f;
+    raster[1] = v.b + (v.h-gltext.Height()) / 2.0f;
 }
 
 void TextInput::Render()
 {
     if(!do_edit) edit = var->Get();
+
+    gledit = font.Text(edit);
     
     glColor4fv(colour_fg);
     glRect(v);
     
-    const int sl = glutBitmapLength(font,(unsigned char*)edit.c_str()) + 2;
+    const int sl = gledit.Width() + 2;
     const int rl = v.l + v.w - sl;
     
     if( do_edit && sel[0] >= 0)
     {
-        const int tl = rl + glutBitmapLength(font,(unsigned char*)edit.substr(0,sel[0]).c_str());
-        const int tr = rl + glutBitmapLength(font,(unsigned char*)edit.substr(0,sel[1]).c_str());
+        const int tl = rl + font.Text(edit.substr(0,sel[0])).Width();
+        const int tr = rl + font.Text(edit.substr(0,sel[1])).Width();
         glColor4fv(colour_dn);
         glRect(Viewport(tl,v.b,tr-tl,v.h));
     }
     
     glColor4fv(colour_tx);
-    glRasterPos2fv( raster );
-    glutBitmapString(font,(unsigned char*)title.c_str());
-    
-    glRasterPos2f( (GLfloat)(rl), raster[1] );
-    glutBitmapString(font,(unsigned char*)edit.c_str());
+    gltext.DrawWindow(raster[0], raster[1]);
+
+    gledit.DrawWindow((GLfloat)(rl), raster[1]);
     DrawShadowRect(v);
 }
 

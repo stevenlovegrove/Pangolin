@@ -32,6 +32,7 @@
 #include <pangolin/var/var.h>
 #include <pangolin/handler/handler.h>
 #include <pangolin/compat/function.h>
+#include <pangolin/gl/glfont.h>
 
 namespace pangolin
 {
@@ -71,9 +72,8 @@ struct PANGOLIN_EXPORT Button : public Widget<bool>
     
     //Cache params on resize
     void ResizeChildren();
-    int text_width;
+    GlText gltext;
     GLfloat raster[2];
-    Viewport vinside;
     bool down;
 };
 
@@ -86,9 +86,8 @@ struct PANGOLIN_EXPORT FunctionButton : public Widget<boostd::function<void(void
 
     //Cache params on resize
     void ResizeChildren();
-    int text_width;
+    GlText gltext;
     GLfloat raster[2];
-    Viewport vinside;
     bool down;
 };
 #endif // CPP11_NO_BOOST
@@ -101,7 +100,7 @@ struct PANGOLIN_EXPORT Checkbox : public Widget<bool>
     
     //Cache params on resize
     void ResizeChildren();
-    int text_width;
+    GlText gltext;
     GLfloat raster[2];
     Viewport vcb;
 };
@@ -116,7 +115,7 @@ struct PANGOLIN_EXPORT Slider : public Widget<double>
     
     //Cache params on resize
     void ResizeChildren();
-    int text_width;
+    GlText gltext;
     GLfloat raster[2];
     bool lock_bounds;
     bool logscale;
@@ -131,10 +130,11 @@ struct PANGOLIN_EXPORT TextInput : public Widget<std::string>
     void Render();
     
     std::string edit;
-    
+    GlText gledit;
+
     //Cache params on resize
     void ResizeChildren();
-    int text_width;
+    GlText gltext;
     GLfloat raster[2];
     bool do_edit;
     int sel[2];

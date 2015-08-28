@@ -74,7 +74,7 @@ void GlText::Add(unsigned char c, const GlChar& glc)
     vs.push_back(glc.GetVert(3) + x);
 
     ymin = std::min(ymin, glc.YMin());
-    ymax = std::min(ymax, glc.YMax());
+    ymax = std::max(ymax, glc.YMax());
     width = x + glc.StepX();
 
     str.append(1,c);
@@ -85,8 +85,8 @@ void GlText::Clear()
     str.clear();
     vs.clear();
     width = 0;
-    ymin = std::numeric_limits<int>::max();
-    ymax = std::numeric_limits<int>::min();
+    ymin = +std::numeric_limits<int>::max();
+    ymax = -std::numeric_limits<int>::max();
 }
 
 void GlText::DrawGlSl() const
@@ -176,14 +176,12 @@ void GlText::DrawWindow(GLfloat x, GLfloat y, GLfloat z) const
     GLint    view[4];
     glGetIntegerv(GL_VIEWPORT, view );
 
-    DisplayBase().Activate();
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    glLoadIdentity();
-    glOrtho(-0.5, DisplayBase().v.w-0.5, -0.5, DisplayBase().v.h-0.5, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    glLoadIdentity();
+
+    DisplayBase().ActivatePixelOrthographic();
 
     glTranslatef( std::floor(x), std::floor(y), z);
     Draw();

@@ -75,9 +75,14 @@ public:
     GLfloat Width() const {
         return width;
     }
-    
+
     // Return height in pixels of this text.
     GLfloat Height() const {
+        return ymax;
+    }
+    
+    // Return height in pixels of this text, including under baseline
+    GLfloat FullHeight() const {
         return ymax - ymin;
     }
 

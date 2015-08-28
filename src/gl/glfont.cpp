@@ -167,4 +167,30 @@ GlText GlFont::Text( const char* fmt, ... )
     return ret;
 }
 
+GlText GlFont::Text( const std::string& str )
+{
+    if(!mTex.IsValid()) InitialiseGlTexture();
+
+    GlText ret(mTex);
+
+    char lc = ' ' - FIRST_CHAR;
+    for(size_t i=0; i < str.length(); ++i) {
+        char c = str[i];
+        if( !(FIRST_CHAR <= c /*&& c <FIRST_CHAR+NUM_CHARS*/) ) {
+            c = ' ';
+        }
+        GlChar& ch = chardata[c-32];
+
+        // Kerning
+        if(i) {
+            const GLfloat kern = kern_table[ (lc-32)*NUM_CHARS + (c-32) ];
+            ret.AddSpace(kern);
+        }
+
+        ret.Add(c,ch);
+        lc = c;
+    }
+    return ret;
+}
+
 }

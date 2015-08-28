@@ -50,6 +50,8 @@ public:
     // Generate renderable GlText object from this font.
     GlText Text( const char* fmt, ... );
 
+    GlText Text( const std::string& str );
+
     inline float Height() const {
         return font_height_px;
     }
