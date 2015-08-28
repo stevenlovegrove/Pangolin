@@ -136,13 +136,20 @@ void ConsoleView::Render()
 
     ProcessOutputLines();
 
-    this->ActivatePixelOrthographic();
-    glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT | GL_TRANSFORM_BIT );
+#ifndef HAVE_GLES
+    glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT | GL_SCISSOR_BIT | GL_VIEWPORT_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
+#endif
 
+    this->ActivatePixelOrthographic();
+    glDisable(GL_DEPTH_TEST );
     glDisable(GL_LIGHTING);
+    glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_LINE_SMOOTH);
+    glDisable( GL_COLOR_MATERIAL );
+    glLineWidth(1.0);
+
     glEnable(GL_BLEND);
     glBlendFunc( GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA );
-    glDisable(GL_DEPTH_TEST );
 
     glColour(background_colour);
 
@@ -165,7 +172,9 @@ void ConsoleView::Render()
         glTranslated(0.0, line_space, 0.0);
     }
 
+#ifndef HAVE_GLES
     glPopAttrib();
+#endif
 }
 
 inline std::string CommonPrefix(const std::vector<std::string>& vec)

@@ -183,8 +183,10 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
 void Panel::Render()
 {
 #ifndef HAVE_GLES
-    glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_SCISSOR_BIT | GL_VIEWPORT_BIT);
+    glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT | GL_SCISSOR_BIT | GL_VIEWPORT_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
 #endif
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     DisplayBase().ActivatePixelOrthographic();
     glDisable(GL_DEPTH_TEST);
@@ -194,10 +196,9 @@ void Panel::Render()
     glDisable( GL_COLOR_MATERIAL );
     glLineWidth(1.0);
     
-    glColor4fv(colour_s2);
-    glRect(v);
     glColor4fv(colour_bg);
-    glRect(v,1);
+    glRect(v);
+    DrawShadowRect(v);
     
     RenderChildren();
     
