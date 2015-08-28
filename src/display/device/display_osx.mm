@@ -32,6 +32,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+const bool USE_RETINA = true;
+
 // Hack to fix window focus issue
 // http://www.miscdebris.net/blog/2010/03/30/solution-for-my-mac-os-x-gui-program-doesnt-get-focus-if-its-outside-an-application-bundle/
 #include <Carbon/Carbon.h>
@@ -80,7 +82,7 @@ extern __thread PangolinGl* context;
 -(void)reshape
 {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-    if ( [ _window respondsToSelector:@selector(backingScaleFactor) ] )
+    if ( USE_RETINA && [ _window respondsToSelector:@selector(backingScaleFactor) ] )
         backing_scale = [_window backingScaleFactor];
     else
 #endif
@@ -501,7 +503,7 @@ static PangolinNSGLView *view = 0;
     view = [[PangolinNSGLView alloc] initWithFrame:self.window.frame pixelFormat:format];
     [format release];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
-    if (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_6)
+    if( USE_RETINA && floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_6)
         [view setWantsBestResolutionOpenGLSurface:YES];
 #endif /*MAC_OS_X_VERSION_MAX_ALLOWED*/
 
