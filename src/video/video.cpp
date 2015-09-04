@@ -60,6 +60,10 @@
 #include <pangolin/video/drivers/teli.h>
 #endif
 
+#ifdef HAVE_PLEORA
+#include <pangolin/video/drivers/pleora.h>
+#endif
+
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/file_extension.h>
 #include <pangolin/video/drivers/test.h>
@@ -617,7 +621,21 @@ VideoInterface* OpenVideo(const Uri& uri)
         }
     }else
 #endif
-	{
+#ifdef HAVE_PLEORA
+    if (!uri.scheme.compare("pleora")) {
+        const std::string model_name = uri.Get<std::string>("model", "");
+        const std::string serial_num = uri.Get<std::string>("sn", "");
+        const size_t idx = uri.Get<size_t>("idx",0);
+        const size_t buffer_count = uri.Get<size_t>("buffers",4);
+
+        video = new PleoraVideo(
+            model_name.empty() ? 0 : model_name.c_str(),
+            serial_num.empty() ? 0 : serial_num.c_str(),
+            idx, buffer_count
+        );
+    }else
+#endif
+    {
         throw VideoException("No known video handler for URI '" + uri.scheme + "'");
     }
     
