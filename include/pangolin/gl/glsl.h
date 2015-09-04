@@ -370,7 +370,7 @@ inline void GlSlProgram::ParseGLSL(
             std::string token(line+token_start, line+token_end);
             std::map<std::string,std::string>::const_iterator it = program_defines.find(token);
             if( it == program_defines.end() ) {
-                pango_print_warn("Expected define missing (defaulting to 0): %s\n%s\n", token.c_str(), line + token_end );
+                pango_print_warn("Expected define missing (defaulting to 0): '%s'\n%s\n", token.c_str(), line + token_end );
                 output << "#define " << token << " 0" << std::endl;
             }else{
                 output << "#define " << token << " " << it->second << std::endl;
