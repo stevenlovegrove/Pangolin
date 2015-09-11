@@ -232,13 +232,53 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool /*wait*/ )
     }
 
     lStream->QueueBuffer( lBuffer );
-
     return good;
 }
 
 bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
 {
-    return GrabNext(image, wait);
+    PvBuffer *lBuffer0 = NULL;
+    PvBuffer *lBuffer = NULL;
+    PvResult lOperationResult;
+
+    const uint32_t timeout = wait ? 0xFFFFFFFF : 0;
+
+    PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout );
+    if ( !lResult.IsOK() ) {
+        pango_print_warn("Pleora error: %s\n", lResult.GetCodeString().GetAscii() );
+        return false;
+    }else if( !lOperationResult.IsOK() ) {
+        pango_print_warn("Pleora error: %s\n", lOperationResult.GetCodeString().GetAscii() );
+        lStream->QueueBuffer( lBuffer );
+        return false;
+    }
+
+    // We have at least one frame. Capture more until we fail, 0 timeout
+    while(true) {
+        PvResult lResult = lStream->RetrieveBuffer( &lBuffer0, &lOperationResult, 0 );
+        if ( !lResult.IsOK() ) {
+            break;
+        }else if( !lOperationResult.IsOK() ) {
+            lStream->QueueBuffer( lBuffer0 );
+            break;
+        }else{
+            lStream->QueueBuffer( lBuffer );
+            lBuffer = lBuffer0;
+        }
+    }
+
+    bool good = false;
+
+    PvPayloadType lType = lBuffer->GetPayloadType();
+    if ( lType == PvPayloadTypeImage )
+    {
+        PvImage *lImage = lBuffer->GetImage();
+        std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+        good = true;
+    }
+
+    lStream->QueueBuffer( lBuffer );
+    return good;
 }
 
 template<typename T>
