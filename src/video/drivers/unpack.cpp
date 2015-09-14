@@ -37,8 +37,8 @@ UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
         throw VideoException("UnpackVideo: VideoInterface in must not be null");
     }
 
-    if(out_fmt.bpp != 16 || out_fmt.channels != 1) {
-        throw VideoException("UnpackVideo: Only supports 16bit output.");
+    if( out_fmt.channels != 1) {
+        throw VideoException("UnpackVideo: Only supports single channel output.");
     }
 
     videoin.push_back(src);
@@ -50,7 +50,7 @@ UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
         // Check compatibility of formats
         const VideoPixelFormat in_fmt = src->Streams()[s].PixFormat();
         if(in_fmt.channels > 1 || in_fmt.bpp <9 || in_fmt.bpp > 16) {
-            throw VideoException("UnpackVideo: currently only supports one channel input.");
+            throw VideoException("UnpackVideo: Only supports one channel input.");
         }
 
         const size_t pitch = (w*out_fmt.bpp)/ 8;
@@ -91,12 +91,13 @@ const std::vector<StreamInfo>& UnpackVideo::Streams() const
     return streams;
 }
 
-void Convert10to16(
+template<typename T>
+void ConvertFrom10bit(
     Image<unsigned char>& out,
     const Image<unsigned char>& in
 ) {
     for(size_t r=0; r<out.h; ++r) {
-        uint16_t* pout = (uint16_t*)(out.ptr + r*out.pitch);
+        T* pout = (T*)(out.ptr + r*out.pitch);
         uint8_t* pin = in.ptr + r*in.pitch;
         const uint8_t* pin_end = in.ptr + (r+1)*in.pitch;
         while(pin != pin_end) {
@@ -105,28 +106,29 @@ void Convert10to16(
             val |= uint64_t(*(pin++)) << 16;
             val |= uint64_t(*(pin++)) << 24;
             val |= uint64_t(*(pin++)) << 32;
-            *(pout++) = (val & 0x00000003FF);
-            *(pout++) = (val & 0x00000FFC00) >> 10;
-            *(pout++) = (val & 0x003FF00000) >> 20;
-            *(pout++) = (val & 0xFFC0000000) >> 30;
+            *(pout++) = T( val & 0x00000003FF);
+            *(pout++) = T((val & 0x00000FFC00) >> 10);
+            *(pout++) = T((val & 0x003FF00000) >> 20);
+            *(pout++) = T((val & 0xFFC0000000) >> 30);
         }
     }
 }
 
-void Convert12to16(
+template<typename T>
+void ConvertFrom12bit(
     Image<unsigned char>& out,
     const Image<unsigned char>& in
 ) {
     for(size_t r=0; r<out.h; ++r) {
-        uint16_t* pout = (uint16_t*)(out.ptr + r*out.pitch);
+        T* pout = (T*)(out.ptr + r*out.pitch);
         uint8_t* pin = in.ptr + r*in.pitch;
         const uint8_t* pin_end = in.ptr + (r+1)*in.pitch;
         while(pin != pin_end) {
             uint32_t val = *(pin++);
             val |= uint32_t(*(pin++)) << 8;
             val |= uint32_t(*(pin++)) << 16;
-            *(pout++) = (val & 0x000FFF);
-            *(pout++) = (val & 0xFFF000) >> 12;
+            *(pout++) = T( val & 0x000FFF);
+            *(pout++) = T((val & 0xFFF000) >> 12);
         }
     }
 }
@@ -139,13 +141,25 @@ bool UnpackVideo::GrabNext( unsigned char* image, bool wait )
             Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
             Image<unsigned char> img_out = Streams()[s].StreamImage(image);
 
-            const int bits = videoin[0]->Streams()[s].PixFormat().bpp;
-            if( bits == 10) {
-                Convert10to16(img_out, img_in);
-            }else if( bits == 12){
-                Convert12to16(img_out, img_in);
+            const int bits_in  = videoin[0]->Streams()[s].PixFormat().bpp;
+
+            if(Streams()[s].PixFormat().format == "GRAY32F") {
+                if( bits_in == 10) {
+                    ConvertFrom10bit<float>(img_out, img_in);
+                }else if( bits_in == 12){
+                    ConvertFrom12bit<float>(img_out, img_in);
+                }else{
+                    throw pangolin::VideoException("Unsupported bitdepths.");
+                }
+            }else if(Streams()[s].PixFormat().format == "GRAY16LE") {
+                if( bits_in == 10) {
+                    ConvertFrom10bit<uint16_t>(img_out, img_in);
+                }else if( bits_in == 12){
+                    ConvertFrom12bit<uint16_t>(img_out, img_in);
+                }else{
+                    throw pangolin::VideoException("Unsupported bitdepths.");
+                }
             }else{
-                throw pangolin::VideoException("Incorrect image bit depth: " + bits);
             }
         }
         return true;

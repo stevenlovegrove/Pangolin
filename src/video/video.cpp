@@ -385,7 +385,12 @@ VideoInterface* OpenVideo(const Uri& uri)
     if(!uri.scheme.compare("unpack"))
     {
         VideoInterface* subvid = OpenVideo(uri.url);
-        video = new UnpackVideo(subvid, VideoFormatFromString("GRAY16LE"));
+        const bool make_float = uri.Contains("float");
+        if(make_float) {
+            video = new UnpackVideo(subvid, VideoFormatFromString("GRAY32F"));
+        }else{
+            video = new UnpackVideo(subvid, VideoFormatFromString("GRAY16LE"));
+        }
     }else
     if(!uri.scheme.compare("join"))
     {
