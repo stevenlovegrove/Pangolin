@@ -90,6 +90,20 @@ inline const PvDeviceInfo* SelectDevice( PvSystem& aSystem, const char* model_na
     return 0;
 }
 
+VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
+{
+    std::string spfmt = pfmt->ToString().GetAscii();
+    if( !spfmt.compare("Mono8") ) {
+        return VideoFormatFromString("GRAY8");
+    }else if( !spfmt.compare("Mono10p") ) {
+        return VideoFormatFromString("GRAY10");
+    }else if( !spfmt.compare("Mono12p") ) {
+        return VideoFormatFromString("GRAY12");
+    }else{
+        throw VideoException("Unknown Pleora pixel format", spfmt);
+    }
+}
+
 PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t buffer_count)
     : lPvSystem(0), lDevice(0), lStream(0)
 {
@@ -140,7 +154,8 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     const int h = DeviceParam<int64_t>("Height");
 
     // Setup pangolin for stream
-    streams.push_back(StreamInfo( VideoFormatFromString("GRAY8"), w, h, w));
+    PvGenEnum* lpixfmt = dynamic_cast<PvGenEnum*>( lDeviceParams->Get("PixelFormat") );
+    streams.push_back(StreamInfo( PleoraFormat(lpixfmt), w, h, w));
     size_bytes = lSize;
 
     Start();
