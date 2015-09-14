@@ -75,11 +75,22 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
 #ifdef CALLEE_HAS_CPP11
     const int FRAME_SKIP = 30;
+    const char show_hide_keys[]  = {'1','2','3','4','5','6','7','8','9'};
+    const char screenshot_keys[] = {'!','"','#','$','%','^','&','*','('};
 
     // Show/hide streams
     for(size_t v=0; v < container.NumChildren() && v < 9; v++) {
-        pangolin::RegisterKeyPressCallback('1'+v, [v,&container](){
+        pangolin::RegisterKeyPressCallback(show_hide_keys[v], [v,&container](){
             container[v].ToggleShow();
+        } );
+        pangolin::RegisterKeyPressCallback(screenshot_keys[v], [v,&images,&video](){
+            if(v < images.size() && images[v].ptr) {
+                try{
+                    pangolin::SaveImage(images[v],video.Streams()[v].PixFormat(), "still.png");
+                }catch(std::exception e){
+                    pango_print_error("Unable to save frame: %s\n", e.what());
+                }
+            }
         } );
     }
 
