@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2015 Steven Lovegrove
+ * Copyright (c) 2014 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,75 +25,50 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_PLEORA_H
-#define PANGOLIN_VIDEO_PLEORA_H
+#ifndef PANGOLIN_VIDEO_UNPACK_H
+#define PANGOLIN_VIDEO_UNPACK_H
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
 
-#include <PvDevice.h>
-#include <PvDeviceGEV.h>
-#include <PvDeviceU3V.h>
-#include <PvStream.h>
-#include <PvStreamGEV.h>
-#include <PvStreamU3V.h>
-#include <PvBuffer.h>
-
-#include <PvSystem.h>
-
-#include <stdlib.h>
-#include <list>
-
 namespace pangolin
 {
 
-typedef std::list<PvBuffer *> BufferList;
-
-class PANGOLIN_EXPORT PleoraVideo : public VideoInterface
+// Video class that debayers its video input using the given method.
+class PANGOLIN_EXPORT UnpackVideo :
+    public VideoInterface, public VideoFilterInterface
 {
 public:
+    UnpackVideo(VideoInterface* videoin, VideoPixelFormat new_fmt);
+    ~UnpackVideo();
 
-    PleoraVideo(const char *model_name, const char *serial_num, size_t index, size_t bpp = 8, size_t buffer_count = 4);
-    ~PleoraVideo();
-
+    //! Implement VideoInput::Start()
     void Start();
 
+    //! Implement VideoInput::Stop()
     void Stop();
 
+    //! Implement VideoInput::SizeBytes()
     size_t SizeBytes() const;
 
+    //! Implement VideoInput::Streams()
     const std::vector<StreamInfo>& Streams() const;
 
+    //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
 
+    //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
+    std::vector<VideoInterface*>& InputStreams();
+
 protected:
-    template<typename T>
-    T DeviceParam(const char* name);
-
-    template<typename T>
-    T StreamParam(const char* name);
-
+    std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
     size_t size_bytes;
-
-    // Pleora handles
-    PvSystem* lPvSystem;
-    PvDevice* lDevice;
-    PvStream* lStream;
-
-    // Genicam device parameters
-    PvGenParameterArray* lDeviceParams;
-    PvGenCommand* lStart;
-    PvGenCommand* lStop;
-
-    // Genicam stream parameters
-    PvGenParameterArray* lStreamParams;
-
-    BufferList lBufferList;
+    unsigned char* buffer;
 };
 
 }
 
-#endif // PANGOLIN_VIDEO_PLEORA_H
+#endif // PANGOLIN_VIDEO_UNPACK_H

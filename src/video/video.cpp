@@ -73,6 +73,7 @@
 #include <pangolin/video/drivers/video_splitter.h>
 #include <pangolin/video/drivers/debayer.h>
 #include <pangolin/video/drivers/shift.h>
+#include <pangolin/video/drivers/unpack.h>
 #include <pangolin/video/drivers/join.h>
 
 namespace pangolin
@@ -381,6 +382,11 @@ VideoInterface* OpenVideo(const Uri& uri)
         VideoInterface* subvid = OpenVideo(uri.url);
         video = new ShiftVideo(subvid, VideoFormatFromString("GRAY8"), shift_right, mask);
     }else
+    if(!uri.scheme.compare("unpack"))
+    {
+        VideoInterface* subvid = OpenVideo(uri.url);
+        video = new UnpackVideo(subvid, VideoFormatFromString("GRAY16LE"));
+    }else
     if(!uri.scheme.compare("join"))
     {
         std::vector<std::string> uris = SplitBrackets(uri.url);
@@ -626,12 +632,13 @@ VideoInterface* OpenVideo(const Uri& uri)
         const std::string model_name = uri.Get<std::string>("model", "");
         const std::string serial_num = uri.Get<std::string>("sn", "");
         const size_t idx = uri.Get<size_t>("idx",0);
+        const size_t bpp = uri.Get<size_t>("bpp",8);
         const size_t buffer_count = uri.Get<size_t>("buffers",4);
 
         video = new PleoraVideo(
             model_name.empty() ? 0 : model_name.c_str(),
             serial_num.empty() ? 0 : serial_num.c_str(),
-            idx, buffer_count
+            idx, bpp, buffer_count
         );
     }else
 #endif

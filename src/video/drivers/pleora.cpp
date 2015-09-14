@@ -104,7 +104,7 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
     }
 }
 
-PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t buffer_count)
+PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t bpp, size_t buffer_count)
     : lPvSystem(0), lDevice(0), lStream(0)
 {
     lPvSystem = new PvSystem();
@@ -132,6 +132,14 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     lStart = dynamic_cast<PvGenCommand*>( lDeviceParams->Get( "AcquisitionStart" ) );
     lStop = dynamic_cast<PvGenCommand*>( lDeviceParams->Get( "AcquisitionStop" ) );
 
+    if( bpp == 8) {
+        lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono8") );
+    }else if(bpp == 10) {
+        lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono10p") );
+    }else if(bpp == 12) {
+        lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono12p") );
+    }
+
     lStreamParams = lStream->GetParameters();
 
     // Reading payload size from device
@@ -155,7 +163,8 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
 
     // Setup pangolin for stream
     PvGenEnum* lpixfmt = dynamic_cast<PvGenEnum*>( lDeviceParams->Get("PixelFormat") );
-    streams.push_back(StreamInfo( PleoraFormat(lpixfmt), w, h, w));
+    const VideoPixelFormat fmt = PleoraFormat(lpixfmt);
+    streams.push_back(StreamInfo(fmt, w, h, (w*fmt.bpp)/8));
     size_bytes = lSize;
 
     Start();
