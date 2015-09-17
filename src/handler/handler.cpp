@@ -91,7 +91,7 @@ void Handler::Special(View& d, InputSpecial inType, float x, float y, float p1, 
 
 void HandlerScroll::Mouse(View& d, MouseButton button, int x, int y, bool pressed, int button_state)
 {
-    if( button == button_state && (button == MouseWheelUp || button == MouseWheelDown) )
+    if( pressed && (button == MouseWheelUp || button == MouseWheelDown) )
     {
         if( button == MouseWheelUp) d.scroll_offset   -= 1;
         if( button == MouseWheelDown) d.scroll_offset += 1;
