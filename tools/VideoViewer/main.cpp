@@ -163,10 +163,9 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         for(unsigned int i=0; i<images.size(); ++i) {
             pangolin::Image<unsigned char>& img = images[i];
             pangolin::ImageViewHandler& ivh = handlers[i];
-//            pangolin::Image<unsigned char> roi = img
 
             // round to pixels, clamp to image border.
-            const bool have_selection = std::isfinite(ivh.GetSelection().Area()) && ivh.GetSelection().Area() != 0;
+            const bool have_selection = std::isfinite(ivh.GetSelection().Area()) && std::abs(ivh.GetSelection().Area()) >= 4;
             pangolin::XYRangef froi = have_selection ? ivh.GetSelection() : ivh.GetViewToRender();
             pangolin::XYRangei iroi = froi.Cast<int>();
             iroi.Clamp(0, images[i].w-1, 0, img.h-1 );
