@@ -10,14 +10,15 @@ class ImageViewHandler : public Handler
 public:
     ImageViewHandler(size_t w, size_t h)
         : linked_view_handler(0), rview_default(-0.5,w-0.5,h-0.5,0-0.5),
-          rview(rview_default), target(rview), use_nn(false)
+          rview(rview_default), target(rview),
+          use_nn(false)
     {
     }
 
     void UpdateView()
     {
         // TODO: Base this on current framerate.
-        const float sf = 1.0f / 20.0f;
+        const float animate_factor = 1.0f / 5.0f;
 
         if( linked_view_handler ) {
             // Synchronise rview and target with linked plotter
@@ -25,9 +26,10 @@ public:
             target = linked_view_handler->target;
             selection = linked_view_handler->selection;
         }else{
+
             // Animate view window toward target
-            pangolin::XYRange d = target - rview;
-            rview += d * sf;
+            pangolin::XYRangef d = target - rview;
+            rview += d * animate_factor;
         }
     }
 
@@ -37,7 +39,7 @@ public:
         yimg = rview.y.min + rview.y.Size() * (ypix - v.b) / (float)v.h;
     }
 
-    void FixSelection(XYRange& sel)
+    void FixSelection(XYRangef& sel)
     {
         // Make sure selection matches sign of current viewport
         if( (sel.x.min<sel.x.max) != (rview.x.min<rview.x.max) ) {
@@ -53,33 +55,33 @@ public:
         return use_nn;
     }
 
-    pangolin::XYRange& GetViewToRender()
+    pangolin::XYRangef& GetViewToRender()
     {
         return rview;
     }
 
-    pangolin::XYRange& GetView()
+    pangolin::XYRangef& GetView()
     {
         return target;
     }
 
-    pangolin::XYRange& GetDefaultView()
+    pangolin::XYRangef& GetDefaultView()
     {
         return rview_default;
     }
 
-    pangolin::XYRange& GetSelection()
+    pangolin::XYRangef& GetSelection()
     {
         return selection;
     }
 
-    void SetView(const pangolin::XYRange& range)
+    void SetView(const pangolin::XYRangef& range)
     {
         ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
         tv.rview = range;
     }
 
-    void SetViewSmooth(const pangolin::XYRange& range)
+    void SetViewSmooth(const pangolin::XYRangef& range)
     {
         ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
         tv.target = range;
@@ -129,7 +131,7 @@ public:
 
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed) override
     {
-        XYRange& sel = linked_view_handler ? linked_view_handler->selection : selection;
+        XYRangef& sel = linked_view_handler ? linked_view_handler->selection : selection;
         const float mvfactor = 1.0f / 10.0f;
         const float c[2] = { rview.x.Mid(), rview.y.Mid() };
 
@@ -181,7 +183,7 @@ public:
 
     void Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state) override
     {
-        XYRange& sel = linked_view_handler ? linked_view_handler->selection : selection;
+        XYRangef& sel = linked_view_handler ? linked_view_handler->selection : selection;
         ScreenToImage(view.v, x, y, hover[0], hover[1]);
 
         const float scinc = 1.05f;
@@ -222,7 +224,7 @@ public:
 
     void MouseMotion(View& view, int x, int y, int button_state) override
     {
-        XYRange& sel = linked_view_handler ? linked_view_handler->selection : selection;
+        XYRangef& sel = linked_view_handler ? linked_view_handler->selection : selection;
         const int d[2] = {x-last_mouse_pos[0], y-last_mouse_pos[1]};
 
         // Update hover status (after potential resizing)
@@ -265,12 +267,14 @@ public:
 
 protected:
     static ImageViewHandler* to_link;
+    static float animate_factor;
+
     ImageViewHandler* linked_view_handler;
 
-    pangolin::XYRange rview_default;
-    pangolin::XYRange rview;
-    pangolin::XYRange target;
-    pangolin::XYRange selection;
+    pangolin::XYRangef rview_default;
+    pangolin::XYRangef rview;
+    pangolin::XYRangef target;
+    pangolin::XYRangef selection;
 
     float hover[2];
     int last_mouse_pos[2];
@@ -278,6 +282,7 @@ protected:
     bool use_nn;
 };
 
+float ImageViewHandler::animate_factor = 1.0f / 2.0f;
 ImageViewHandler* ImageViewHandler::to_link = 0;
 
 }

@@ -349,9 +349,9 @@ void Plotter::ComputeTrackValue( float track_val[2] )
     track_val[1] = 0.0f;
 }
 
-XYRange Plotter::ComputeAutoSelection()
+XYRangef Plotter::ComputeAutoSelection()
 {
-    XYRange range;
+    XYRangef range;
     range.x = target.x;
 
     const DataLogBlock* block = log->FirstBlock();
@@ -722,17 +722,17 @@ void Plotter::SetTickColour(const Colour& col)
     colour_tk = col;
 }
 
-XYRange& Plotter::GetView()
+XYRangef& Plotter::GetView()
 {
     return target;
 }
 
-XYRange& Plotter::GetDefaultView()
+XYRangef& Plotter::GetDefaultView()
 {
     return rview_default;
 }
 
-XYRange& Plotter::GetSelection()
+XYRangef& Plotter::GetSelection()
 {
     return selection;
 }
@@ -771,7 +771,7 @@ void Plotter::UpdateView()
         target.x = linked_plotter_x->target.x;
     }else{
         // Animate view window toward target
-        Range d = target.x - rview.x;
+        Rangef d = target.x - rview.x;
         rview.x += d * sf;
     }
 
@@ -781,12 +781,12 @@ void Plotter::UpdateView()
         target.y = linked_plotter_y->target.y;
     }else{
         // Animate view window toward target
-        Range d = target.y - rview.y;
+        Rangef d = target.y - rview.y;
         rview.y += d * sf;
     }
 }
 
-void Plotter::SetView(const XYRange& range)
+void Plotter::SetView(const XYRangef& range)
 {
     Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
     Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
@@ -795,7 +795,7 @@ void Plotter::SetView(const XYRange& range)
     py.rview.y = range.y;
 }
 
-void Plotter::SetViewSmooth(const XYRange &range)
+void Plotter::SetViewSmooth(const XYRangef &range)
 {
     Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
     Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
@@ -804,7 +804,7 @@ void Plotter::SetViewSmooth(const XYRange &range)
     py.target.y = range.y;
 }
 
-void Plotter::SetDefaultView(const XYRange &range)
+void Plotter::SetDefaultView(const XYRangef &range)
 {
     Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
     Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;

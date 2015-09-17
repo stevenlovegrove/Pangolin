@@ -33,41 +33,52 @@
 namespace pangolin
 {
 
+template<typename T>
 struct Range
 {
     Range()
-        : min(+std::numeric_limits<float>::max()),
-          max(-std::numeric_limits<float>::max())
+        : min(+std::numeric_limits<T>::max()),
+          max(-std::numeric_limits<T>::max())
     {
     }
 
-    Range(float rmin, float rmax)
+    Range(T rmin, T rmax)
         : min(rmin), max(rmax)
     {
     }
 
-    Range& operator+=(float v)
+    Range operator+(T v)
+    {
+        return Range(min+v, max+v);
+    }
+
+    Range operator-(T v)
+    {
+        return Range(min-v, max-v);
+    }
+
+    Range& operator+=(T v)
     {
         min += v;
         max += v;
         return *this;
     }
 
-    Range& operator-=(float v)
+    Range& operator-=(T v)
     {
         min -= v;
         max -= v;
         return *this;
     }
 
-    Range& operator*=(float v)
+    Range& operator*=(T v)
     {
         min *= v;
         max *= v;
         return *this;
     }
 
-    Range& operator/=(float v)
+    Range& operator/=(T v)
     {
         min /= v;
         max /= v;
@@ -100,53 +111,71 @@ struct Range
 
     Range operator*(float s) const
     {
-        return Range(s*min, s*max);
+        return Range(T(s*min), T(s*max));
     }
 
-    float Size() const
+    T Size() const
     {
         return max - min;
     }
 
-    float Mid() const
+    T AbsSize() const
     {
-        return (min + max) / 2.0f;
+        return std::abs(max - min);
+    }
+
+    T Mid() const
+    {
+        return (min + max) / (T)2.0f;
     }
 
     void Scale(float s, float center = 0.0f)
     {
-        min = s*(min-center) + center;
-        max = s*(max-center) + center;
+        min = T(s*(min-center) + center);
+        max = T(s*(max-center) + center);
     }
 
-    void Insert(float v)
+    void Insert(T v)
     {
         min = std::min(min,v);
         max = std::max(max,v);
     }
 
-    void Clear()
+    void Clamp(T vmin, T vmax)
     {
-        min = +std::numeric_limits<float>::max();
-        max = -std::numeric_limits<float>::max();
+        min = std::min(std::max(vmin, min), vmax);
+        max = std::min(std::max(vmin, max), vmax);
     }
 
-    float min;
-    float max;
+    void Clear()
+    {
+        min = +std::numeric_limits<T>::max();
+        max = -std::numeric_limits<T>::max();
+    }
+
+    template<typename To>
+    Range<To> Cast()
+    {
+        return Range<To>(To(min), To(max));
+    }
+
+    T min;
+    T max;
 };
 
+template<typename T>
 struct XYRange
 {
     XYRange()
     {
     }
 
-    XYRange(const Range& xrange, const Range& yrange)
+    XYRange(const Range<T>& xrange, const Range<T>& yrange)
         : x(xrange), y(yrange)
     {
     }
 
-    XYRange(float xmin, float xmax, float ymin, float ymax)
+    XYRange(T xmin, T xmax, T ymin, T ymax)
         : x(xmin,xmax), y(ymin,ymax)
     {
     }
@@ -180,14 +209,37 @@ struct XYRange
         y.Clear();
     }
 
+    void Clamp(T xmin, T xmax, T ymin, T ymax)
+    {
+        x.Clamp(xmin,xmax);
+        y.Clamp(ymin,ymax);
+    }
+
     float Area() const
     {
         return x.Size() * y.Size();
     }
 
-    Range x;
-    Range y;
+    template<typename To>
+    XYRange<To> Cast()
+    {
+        return XYRange<To>(
+            x.template Cast<To>(),
+            y.template Cast<To>()
+        );
+    }
+
+    Range<T> x;
+    Range<T> y;
 };
+
+typedef Range<int> Rangei;
+typedef Range<float> Rangef;
+typedef Range<double> Ranged;
+
+typedef XYRange<int> XYRangei;
+typedef XYRange<float> XYRangef;
+typedef XYRange<double> XYRanged;
 
 }
 

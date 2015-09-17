@@ -197,11 +197,28 @@ protected:
     
     // protected constructor
     GlSlUtilities() {
-        const char* source_scale = "uniform float scale; uniform float bias; uniform sampler2D tex; void main() { gl_FragColor = texture2D(tex,gl_TexCoord[0].st); gl_FragColor.xyz *= scale; gl_FragColor.xyz += vec3(bias,bias,bias); }";
+        const char* source_scale =
+                "uniform float scale;"
+                "uniform float bias;"
+                "uniform sampler2D tex;"
+                "void main() {"
+                "  vec2 uv = gl_TexCoord[0].st;"
+                "  gl_FragColor = texture2D(tex,uv);"
+                "  gl_FragColor.xyz *= scale;"
+                "  gl_FragColor.xyz += vec3(bias,bias,bias);"
+                "}";
         prog_scale.AddShader(GlSlFragmentShader, source_scale);
         prog_scale.Link();
 
-        const char* source_offsetscale = "uniform float offset; uniform float scale; uniform sampler2D tex; void main() { gl_FragColor = texture2D(tex,gl_TexCoord[0].st); gl_FragColor.xyz += vec3(offset,offset,offset); gl_FragColor.xyz *= scale; }";
+        const char* source_offsetscale =
+                "uniform float offset;"
+                "uniform float scale;"
+                "uniform sampler2D tex;"
+                "void main() {"
+                "  gl_FragColor = texture2D(tex,gl_TexCoord[0].st);"
+                "  gl_FragColor.xyz += vec3(offset,offset,offset);"
+                "  gl_FragColor.xyz *= scale;"
+                "}";
         prog_offsetscale.AddShader(GlSlFragmentShader, source_offsetscale);
         prog_offsetscale.Link();
     }

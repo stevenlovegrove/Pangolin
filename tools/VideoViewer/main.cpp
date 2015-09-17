@@ -5,14 +5,18 @@
 #include <pangolin/handler/handler_image.h>
 
 template<typename T>
-std::pair<float,float> GetOffsetScale(const pangolin::Image<unsigned char>& img, float type_max, float format_max)
+std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, float type_max, float format_max)
 {
     std::pair<float,float> mm(std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
-    for(size_t i=0; i < img.Area(); ++i) {
-        const T val = ((T*)img.ptr)[i];
-        if(val != 0) {
-            if(val < mm.first) mm.first = val;
-            if(val > mm.second) mm.second = val;
+
+    for(size_t y=0; y < img.h; ++y) {
+        T* pix = (T*)((char*)img.ptr + y*img.pitch);
+        for(size_t x=0; x < img.w; ++x) {
+            const T val = *(pix++);
+            if(val != 0) {
+                if(val < mm.first) mm.first = val;
+                if(val > mm.second) mm.second = val;
+            }
         }
     }
 
@@ -20,6 +24,17 @@ std::pair<float,float> GetOffsetScale(const pangolin::Image<unsigned char>& img,
     const float offset = -type_scale* mm.first;
     const float scale = type_max / (mm.second - mm.first);
     return std::pair<float,float>(offset, scale);
+}
+
+template<typename T>
+pangolin::Image<T> ImageRoi( pangolin::Image<T> img, const pangolin::XYRangei& roi )
+{
+    const int xmin = std::min(roi.x.min,roi.x.max);
+    const int ymin = std::min(roi.y.min,roi.y.max);
+    return pangolin::Image<T>(
+        roi.x.AbsSize(), roi.y.AbsSize(),
+        img.pitch, img.RowPtr(ymin) + xmin
+    );
 }
 
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
@@ -146,14 +161,24 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::RegisterKeyPressCallback('a', [&](){
         // Adapt scale
         for(unsigned int i=0; i<images.size(); ++i) {
+            pangolin::Image<unsigned char>& img = images[i];
+            pangolin::ImageViewHandler& ivh = handlers[i];
+//            pangolin::Image<unsigned char> roi = img
+
+            // round to pixels, clamp to image border.
+            const bool have_selection = std::isfinite(ivh.GetSelection().Area()) && ivh.GetSelection().Area() != 0;
+            pangolin::XYRangef froi = have_selection ? ivh.GetSelection() : ivh.GetViewToRender();
+            pangolin::XYRangei iroi = froi.Cast<int>();
+            iroi.Clamp(0, images[i].w-1, 0, img.h-1 );
+
             if(container[i].HasFocus()) {
                 std::pair<float,float> os(0.0f, 1.0f);
                 if(glfmt[i].gltype == GL_UNSIGNED_BYTE) {
-                    os = GetOffsetScale<unsigned char>(images[i], 255.0f, 1.0f);
+                    os = GetOffsetScale(ImageRoi(img.Reinterpret<unsigned char>(),iroi), 255.0f, 1.0f);
                 }else if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
-                    os = GetOffsetScale<unsigned short>(images[i], 65535.0f, 1.0f);
+                    os = GetOffsetScale(ImageRoi(img.Reinterpret<unsigned short>(),iroi), 65535.0f, 1.0f);
                 }else if(glfmt[i].gltype == GL_FLOAT) {
-                    os = GetOffsetScale<float>(images[i], 1.0f, 1.0f);
+                    os = GetOffsetScale(ImageRoi(img.Reinterpret<float>(),iroi), 1.0f, 1.0f);
                 }
                 gloffsetscale[i] = os;
             }
@@ -190,20 +215,12 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
                 glLoadIdentity();
 
                 handlers[i].UpdateView();
-                const pangolin::XYRange& xy = handlers[i].GetViewToRender();
+                const pangolin::XYRangef& xy = handlers[i].GetViewToRender();
                 glOrtho(xy.x.min, xy.x.max, xy.y.min, xy.y.max, -1, 1);
 
-//                const GLfloat sq_vert[] = {
-//                    0.0f,0.0f,  (float)image.w, 0.0f,  (float)image.w,
-//                    (float)image.h,  0.0f, (float)image.h
-//                };
-
-                GLfloat l = xy.x.min;
-                GLfloat b = xy.y.min;
-                GLfloat r = xy.x.max;
-                GLfloat t = xy.y.max;
-                GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
-
+                const GLfloat l = xy.x.min; const GLfloat r = xy.x.max;
+                const GLfloat b = xy.y.min; const GLfloat t = xy.y.max;
+                const GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
                 const pangolin::GlPixFormat& fmt = glfmt[i];
 
                 const std::pair<float,float> os = gloffsetscale[i];
@@ -213,12 +230,11 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, handlers[i].UseNN() ? GL_NEAREST : GL_LINEAR);
                 tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
 
-                GLfloat ln = xy.x.min / (float)(image.w);
-                GLfloat bn = xy.y.min / (float)(image.h);
-                GLfloat rn = xy.x.max / (float)(image.w);
-                GLfloat tn = xy.y.max / (float)(image.h);
-
-                GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
+                const GLfloat ln = l / (float)(image.w);
+                const GLfloat bn = b / (float)(image.h);
+                const GLfloat rn = r / (float)(image.w);
+                const GLfloat tn = t / (float)(image.h);
+                const GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
 
                 pangolin::GlSlUtilities::OffsetAndScale(os.first, os.second);
                 glEnable(GL_TEXTURE_2D);
@@ -230,7 +246,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
                 glDisableClientState(GL_TEXTURE_COORD_ARRAY);
                 pangolin::GlSlUtilities::UseNone();
 
-                const pangolin::XYRange& selxy = handlers[i].GetSelection();
+                const pangolin::XYRangef& selxy = handlers[i].GetSelection();
                 const GLfloat sq_select[] = {
                     selxy.x.min, selxy.y.min,
                     selxy.x.max, selxy.y.min,

@@ -41,7 +41,7 @@ struct Image {
     {
     }
 
-    inline Image(size_t w, size_t h, size_t pitch, unsigned char* ptr)
+    inline Image(size_t w, size_t h, size_t pitch, T* ptr)
         : pitch(pitch), ptr(ptr), w(w), h(h)
     {
     }
@@ -71,6 +71,17 @@ struct Image {
     size_t Area() const
     {
         return w * h;
+    }
+
+    template<typename To>
+    Image<To> Reinterpret()
+    {
+        return Image<To>(w,h,pitch, (To*)ptr);
+    }
+
+    T* RowPtr(int r)
+    {
+        return (T*)((char*)ptr + r*pitch);
     }
 
     size_t pitch;

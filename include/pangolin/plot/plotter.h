@@ -83,14 +83,14 @@ public:
 
     void Render();
 
-    XYRange& GetSelection();
+    XYRangef& GetSelection();
 
-    XYRange& GetDefaultView();
-    void SetDefaultView(const XYRange& range);
+    XYRangef& GetDefaultView();
+    void SetDefaultView(const XYRangef& range);
 
-    XYRange& GetView();
-    void SetView(const XYRange& range);
-    void SetViewSmooth(const XYRange& range);
+    XYRangef& GetView();
+    void SetView(const XYRangef& range);
+    void SetViewSmooth(const XYRangef& range);
 
     void ScrollView(float x, float y);
     void ScrollViewSmooth(float x, float y);
@@ -190,13 +190,13 @@ protected:
     std::vector<PlotImplicit> plotimplicits;
 
     Tick tick[2];
-    XYRange rview_default;
-    XYRange rview;
-    XYRange target;
-    XYRange selection;
+    XYRangef rview_default;
+    XYRangef rview;
+    XYRangef target;
+    XYRangef selection;
 
     void ComputeTrackValue( float track_val[2] );
-    XYRange ComputeAutoSelection();
+    XYRangef ComputeAutoSelection();
 
     bool track;
     std::string track_x;
