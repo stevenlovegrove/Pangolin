@@ -2,6 +2,7 @@
 #include <pangolin/video/video_record_repeat.h>
 #include <pangolin/gl/gltexturecache.h>
 #include <pangolin/gl/glpixformat.h>
+#include <pangolin/handler/handler_image.h>
 
 template<typename T>
 std::pair<float,float> GetOffsetScale(const pangolin::Image<unsigned char>& img, float type_max, float format_max)
@@ -65,9 +66,11 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::View& container = pangolin::Display("streams");
     container.SetLayout(pangolin::LayoutEqual);
     for(unsigned int d=0; d < video.Streams().size(); ++d) {
-        pangolin::View& view = pangolin::CreateDisplay().SetAspect(video.Streams()[d].Aspect());
+        const pangolin::StreamInfo& si = video.Streams()[d];
+        pangolin::View& view = pangolin::CreateDisplay().SetAspect(si.Aspect());
+        view.SetHandler(new pangolin::ImageViewHandler(si.Width(), si.Height()) );
         container.AddDisplay(view);
-        glfmt.push_back(pangolin::GlPixFormat(video.Streams()[d].PixFormat()));
+        glfmt.push_back(pangolin::GlPixFormat(si.PixFormat()));
         gloffsetscale.push_back(std::pair<float,float>(0.0f, 1.0f) );
     }
 

@@ -7,8 +7,9 @@ namespace pangolin
 class ImageViewHandler : public Handler
 {
 public:
-    ImageViewHandler()
-        : linked_view_handler(0)
+    ImageViewHandler(size_t w, size_t h)
+        : linked_view_handler(0), rview_default(0,w,0,h),
+          rview(rview_default), target(rview)
     {
     }
 
@@ -22,7 +23,7 @@ public:
             target = linked_view_handler->target;
         }else{
             // Animate view window toward target
-            pangolin::Range d = target - rview;
+            pangolin::XYRange d = target - rview;
             rview += d * sf;
         }
     }
@@ -44,19 +45,19 @@ public:
 
     void SetView(const pangolin::XYRange& range)
     {
-        TextureView& tv = linked_view_handler ? *linked_view_handler : *this;
+        ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
         tv.rview = range;
     }
 
     void SetViewSmooth(const pangolin::XYRange& range)
     {
-        TextureView& tv = linked_view_handler ? *linked_view_handler : *this;
+        ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
         tv.target = range;
     }
 
     void ScrollView(float x, float y)
     {
-        TextureView& tv = linked_view_handler ? *linked_view_handler : *this;
+        ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
         tv.target.x += x;
         tv.target.y += y;
         tv.rview.x += x;
@@ -65,14 +66,14 @@ public:
 
     void ScrollViewSmooth(float x, float y)
     {
-        TextureView& tv = linked_view_handler ? *linked_view_handler : *this;
+        ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
         tv.target.x += x;
         tv.target.y += y;
     }
 
     void ScaleView(float x, float y, float cx, float cy)
     {
-        TextureView& tv = linked_view_handler ? *linked_view_handler : *this;
+        ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
         tv.target.x.Scale(x,cx);
         tv.target.y.Scale(y,cy);
         tv.rview.x.Scale(x,cx);
@@ -81,14 +82,14 @@ public:
 
     void ScaleViewSmooth(float x, float y, float cx, float cy)
     {
-        TextureView& tv = linked_view_handler ? *linked_view_handler : *this;
+        ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
         tv.target.x.Scale(x,cx);
         tv.target.y.Scale(y,cy);
     }
 
     void ResetView()
     {
-        TextureView& tv = linked_view_handler ? *linked_view_handler : *this;
+        ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
         tv.target = tv.rview_default;
     }
 
