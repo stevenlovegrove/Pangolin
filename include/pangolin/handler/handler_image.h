@@ -237,7 +237,7 @@ public:
             sel.y.max = hover[1];
         }else if(button_state == MouseButtonRight )
         {
-            Special(view, InputSpecialScroll, x, y, d[0], d[1], 0.0f, 0.0f, button_state);
+            Special(view, InputSpecialScroll, x, y, d[0], -d[1], 0.0f, 0.0f, button_state);
         }
 
         last_mouse_pos[0] = x;
@@ -251,11 +251,13 @@ public:
 
     void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state) override
     {
+        ScreenToImage(view.v, x, y, hover[0], hover[1]);
+
         if(inType == InputSpecialScroll) {
             const float d[2] = {p1,p2};
             const float is[2] = {rview.x.Size(),rview.y.Size() };
             const float df[2] = {is[0]*d[0]/(float)view.v.w, is[1]*d[1]/(float)view.v.h};
-            ScrollView(-df[0], -df[1]);
+            ScrollView(-df[0], df[1]);
         } else if(inType == InputSpecialZoom) {
             float scale = 1.0 - p1;
             ScaleView(scale, scale, hover[0], hover[1]);
