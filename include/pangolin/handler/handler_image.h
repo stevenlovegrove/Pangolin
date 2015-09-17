@@ -122,7 +122,7 @@ public:
     /// pangolin::Handler
     ///////////////////////////////////////////////////////
 
-    void Keyboard(View&, unsigned char key, int x, int y, bool pressed) override
+    void Keyboard(View&, unsigned char key, int x, int y, bool pressed) PANGOLIN_OVERRIDE
     {
         XYRangef& sel = linked_view_handler ? linked_view_handler->selection : selection;
         const float mvfactor = 1.0f / 10.0f;
@@ -174,7 +174,7 @@ public:
         }
     }
 
-    void Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state) override
+    void Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state) PANGOLIN_OVERRIDE
     {
         XYRangef& sel = linked_view_handler ? linked_view_handler->selection : selection;
         ScreenToImage(view.v, x, y, hover[0], hover[1]);
@@ -215,7 +215,7 @@ public:
         last_mouse_pos[1] = y;
     }
 
-    void MouseMotion(View& view, int x, int y, int button_state) override
+    void MouseMotion(View& view, int x, int y, int button_state) PANGOLIN_OVERRIDE
     {
         XYRangef& sel = linked_view_handler ? linked_view_handler->selection : selection;
         const int d[2] = {x-last_mouse_pos[0], y-last_mouse_pos[1]};
@@ -238,11 +238,11 @@ public:
 
     }
 
-    void PassiveMouseMotion(View&, int x, int y, int button_state) override
+    void PassiveMouseMotion(View&, int x, int y, int button_state) PANGOLIN_OVERRIDE
     {
     }
 
-    void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state) override
+    void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state) PANGOLIN_OVERRIDE
     {
         ScreenToImage(view.v, x, y, hover[0], hover[1]);
 
