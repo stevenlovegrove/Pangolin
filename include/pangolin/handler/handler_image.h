@@ -9,7 +9,9 @@ class ImageViewHandler : public Handler
 {
 public:
     ImageViewHandler(size_t w, size_t h)
-        : linked_view_handler(0), rview_default(-0.5,w-0.5,h-0.5,0-0.5),
+        : linked_view_handler(0),
+          rview_default(-0.5,w-0.5,h-0.5,0-0.5),
+          rview_max(-0.5,w-0.5,-0.5,h-0.5),
           rview(rview_default), target(rview),
           use_nn(false)
     {
@@ -26,6 +28,9 @@ public:
             target = linked_view_handler->target;
             selection = linked_view_handler->selection;
         }else{
+            // Clamp target to image dimensions.
+            AdjustScale();
+            AdjustTranslation();
 
             // Animate view window toward target
             pangolin::XYRangef d = target - rview;
@@ -37,17 +42,6 @@ public:
     {
         ximg = rview.x.min + rview.x.Size() * (xpix - v.l) / (float)v.w;
         yimg = rview.y.min + rview.y.Size() * (ypix - v.b) / (float)v.h;
-    }
-
-    void FixSelection(XYRangef& sel)
-    {
-        // Make sure selection matches sign of current viewport
-        if( (sel.x.min<sel.x.max) != (rview.x.min<rview.x.max) ) {
-            std::swap(sel.x.min, sel.x.max);
-        }
-        if( (sel.y.min<sel.y.max) != (rview.y.min<rview.y.max) ) {
-            std::swap(sel.y.min, sel.y.max);
-        }
     }
 
     bool UseNN() const
@@ -79,6 +73,7 @@ public:
     {
         ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
         tv.rview = range;
+        tv.target = range;
     }
 
     void SetViewSmooth(const pangolin::XYRangef& range)
@@ -90,8 +85,7 @@ public:
     void ScrollView(float x, float y)
     {
         ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
-        tv.target.x += x;
-        tv.target.y += y;
+        ScrollViewSmooth(x,y);
         tv.rview.x += x;
         tv.rview.y += y;
     }
@@ -106,8 +100,7 @@ public:
     void ScaleView(float x, float y, float cx, float cy)
     {
         ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
-        tv.target.x.Scale(x,cx);
-        tv.target.y.Scale(y,cy);
+        ScaleViewSmooth(x,y,cx,cy);
         tv.rview.x.Scale(x,cx);
         tv.rview.y.Scale(y,cy);
     }
@@ -268,12 +261,42 @@ public:
     }
 
 protected:
+    void FixSelection(XYRangef& sel)
+    {
+        // Make sure selection matches sign of current viewport
+        if( (sel.x.min<sel.x.max) != (rview.x.min<rview.x.max) ) {
+            std::swap(sel.x.min, sel.x.max);
+        }
+        if( (sel.y.min<sel.y.max) != (rview.y.min<rview.y.max) ) {
+            std::swap(sel.y.min, sel.y.max);
+        }
+    }
+
+    void AdjustScale()
+    {
+        ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
+        if(tv.target.x.AbsSize() > tv.rview_max.x.AbsSize())
+            tv.target.x.Scale(tv.rview_max.x.AbsSize() / tv.target.x.AbsSize(), tv.target.x.Mid());
+        if(tv.target.y.AbsSize() > tv.rview_max.y.AbsSize())
+            tv.target.y.Scale(tv.rview_max.y.AbsSize() / tv.target.y.AbsSize(), tv.target.y.Mid());
+    }
+
+    void AdjustTranslation()
+    {
+        ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
+        if( tv.target.x.max > tv.rview_max.x.max) tv.target.x -= tv.target.x.max - tv.rview_max.x.max;
+        if( tv.target.x.min < tv.rview_max.x.min) tv.target.x -= tv.target.x.min - tv.rview_max.x.min;
+        if( tv.target.y.min > tv.rview_max.y.max) tv.target.y -= tv.target.y.min - tv.rview_max.y.max;
+        if( tv.target.y.max < tv.rview_max.y.min) tv.target.y -= tv.target.y.max - tv.rview_max.y.min;
+    }
+
     static ImageViewHandler* to_link;
     static float animate_factor;
 
     ImageViewHandler* linked_view_handler;
 
     pangolin::XYRangef rview_default;
+    pangolin::XYRangef rview_max;
     pangolin::XYRangef rview;
     pangolin::XYRangef target;
     pangolin::XYRangef selection;

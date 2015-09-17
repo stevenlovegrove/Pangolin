@@ -147,6 +147,11 @@ struct Range
         max = std::min(std::max(vmin, max), vmax);
     }
 
+    void Clamp(const Range& o)
+    {
+        Clamp(o.min, o.max);
+    }
+
     void Clear()
     {
         min = +std::numeric_limits<T>::max();
@@ -214,6 +219,13 @@ struct XYRange
         x.Clamp(xmin,xmax);
         y.Clamp(ymin,ymax);
     }
+
+    void Clamp(const XYRange& o)
+    {
+        x.Clamp(o.x);
+        y.Clamp(o.y);
+    }
+
 
     float Area() const
     {
