@@ -203,9 +203,14 @@ protected:
                 "uniform sampler2D tex;"
                 "void main() {"
                 "  vec2 uv = gl_TexCoord[0].st;"
-                "  gl_FragColor = texture2D(tex,uv);"
-                "  gl_FragColor.xyz *= scale;"
-                "  gl_FragColor.xyz += vec3(bias,bias,bias);"
+                "  if(0 <= uv.x && uv.x <= 1 && 0 <= uv.y && uv.y <= 1) {"
+                "    gl_FragColor = texture2D(tex,uv);"
+                "    gl_FragColor.xyz *= scale;"
+                "    gl_FragColor.xyz += vec3(bias,bias,bias);"
+                "  }else{"
+                "    float v = 0.1;"
+                "    gl_FragColor.xyz = vec3(v,v,v);"
+                "  }"
                 "}";
         prog_scale.AddShader(GlSlFragmentShader, source_scale);
         prog_scale.Link();
@@ -215,9 +220,15 @@ protected:
                 "uniform float scale;"
                 "uniform sampler2D tex;"
                 "void main() {"
-                "  gl_FragColor = texture2D(tex,gl_TexCoord[0].st);"
-                "  gl_FragColor.xyz += vec3(offset,offset,offset);"
-                "  gl_FragColor.xyz *= scale;"
+                "  vec2 uv = gl_TexCoord[0].st;"
+                "  if(0 <= uv.x && uv.x <= 1 && 0 <= uv.y && uv.y <= 1) {"
+                "    gl_FragColor = texture2D(tex,gl_TexCoord[0].st);"
+                "    gl_FragColor.xyz += vec3(offset,offset,offset);"
+                "    gl_FragColor.xyz *= scale;"
+                "  }else{"
+                "    float v = 0.1;"
+                "    gl_FragColor.xyz = vec3(v,v,v);"
+                "  }"
                 "}";
         prog_offsetscale.AddShader(GlSlFragmentShader, source_offsetscale);
         prog_offsetscale.Link();
