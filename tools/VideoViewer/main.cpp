@@ -26,13 +26,13 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
     int frame = 0;
     pangolin::Var<int>  end_frame("viewer.end_frame", std::numeric_limits<int>::max() );
-    pangolin::Var<bool> linear_sampling("viewer.linear_sampling", true );
 
     // Open Video by URI
     pangolin::VideoRecordRepeat video(input_uri, output_uri);
+    const size_t num_streams = video.Streams().size();
     int total_frames = std::numeric_limits<int>::max();
 
-    if(video.Streams().size() == 0) {
+    if(num_streams == 0) {
         pango_print_error("No video streams from device.\n");
         return;
     }
@@ -52,7 +52,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
     // Create OpenGL window - guess sensible dimensions
     pangolin::CreateWindowAndBind( "VideoViewer",
-        video.Width() * video.Streams().size(), video.Height()
+        video.Width() * num_streams, video.Height()
     );
 
     // Assume packed OpenGL data unless otherwise specified
@@ -62,16 +62,19 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     // Setup resizable views for video streams
     std::vector<pangolin::GlPixFormat> glfmt;
     std::vector<std::pair<float,float> > gloffsetscale;
+    std::vector<pangolin::ImageViewHandler> handlers;
+    handlers.reserve(num_streams);
 
     pangolin::View& container = pangolin::Display("streams");
     container.SetLayout(pangolin::LayoutEqual);
-    for(unsigned int d=0; d < video.Streams().size(); ++d) {
+    for(unsigned int d=0; d < num_streams; ++d) {
         const pangolin::StreamInfo& si = video.Streams()[d];
         pangolin::View& view = pangolin::CreateDisplay().SetAspect(si.Aspect());
-        view.SetHandler(new pangolin::ImageViewHandler(si.Width(), si.Height()) );
         container.AddDisplay(view);
         glfmt.push_back(pangolin::GlPixFormat(si.PixFormat()));
         gloffsetscale.push_back(std::pair<float,float>(0.0f, 1.0f) );
+        handlers.push_back( pangolin::ImageViewHandler(si.Width(), si.Height()) );
+        view.SetHandler(&handlers.back());
     }
 
     std::vector<pangolin::Image<unsigned char> > images;
@@ -122,7 +125,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::RegisterKeyPressCallback(' ', [&](){
         end_frame = (frame < end_frame) ? frame : std::numeric_limits<int>::max();
     });
-    pangolin::RegisterKeyPressCallback(pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_LEFT, [&](){
+    pangolin::RegisterKeyPressCallback(',', [&](){
         if(video_playback) {
             const int frame = std::min(video_playback->GetCurrentFrameId()-FRAME_SKIP, video_playback->GetTotalFrames()-1);
             video_playback->Seek(frame);
@@ -130,7 +133,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
             // We can't go backwards
         }
     });
-    pangolin::RegisterKeyPressCallback(pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_RIGHT, [&](){
+    pangolin::RegisterKeyPressCallback('.', [&](){
         if(video_playback) {
             const int frame = std::max(video_playback->GetCurrentFrameId()+FRAME_SKIP, 0);
             video_playback->Seek(frame);
@@ -139,8 +142,6 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
             end_frame = frame+1;
         }
     });
-    pangolin::RegisterKeyPressCallback('l', [&](){ linear_sampling = true; });
-    pangolin::RegisterKeyPressCallback('n', [&](){ linear_sampling = false; });
 
     pangolin::RegisterKeyPressCallback('a', [&](){
         // Adapt scale
@@ -173,16 +174,77 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
             }
         }
 
+        // Setup to render in normalised coordinates.
+        glMatrixMode(GL_PROJECTION); glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);  glLoadIdentity();
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glLineWidth(1.5f);
+        glDisable(GL_DEPTH_TEST);
+
         for(unsigned int i=0; i<images.size(); ++i)
         {
             if(container[i].IsShown()) {
                 container[i].Activate();
+                pangolin::Image<unsigned char>& image = images[i];
+                glMatrixMode(GL_PROJECTION);
+                glLoadIdentity();
+
+                handlers[i].UpdateView();
+                const pangolin::XYRange& xy = handlers[i].GetViewToRender();
+                glOrtho(xy.x.min, xy.x.max, xy.y.min, xy.y.max, -1, 1);
+
+//                const GLfloat sq_vert[] = {
+//                    0.0f,0.0f,  (float)image.w, 0.0f,  (float)image.w,
+//                    (float)image.h,  0.0f, (float)image.h
+//                };
+
+                GLfloat l = xy.x.min;
+                GLfloat b = xy.y.min;
+                GLfloat r = xy.x.max;
+                GLfloat t = xy.y.max;
+                GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
+
+                const pangolin::GlPixFormat& fmt = glfmt[i];
+
                 const std::pair<float,float> os = gloffsetscale[i];
+                pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, fmt.scalable_internal_format, fmt.glformat, fmt.gltype);
+                tex.Bind();
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, handlers[i].UseNN() ? GL_NEAREST : GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, handlers[i].UseNN() ? GL_NEAREST : GL_LINEAR);
+                tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
+
+                GLfloat ln = xy.x.min / (float)(image.w);
+                GLfloat bn = xy.y.min / (float)(image.h);
+                GLfloat rn = xy.x.max / (float)(image.w);
+                GLfloat tn = xy.y.max / (float)(image.h);
+
+                GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
+
                 pangolin::GlSlUtilities::OffsetAndScale(os.first, os.second);
-                pangolin::RenderToViewport(images[i], glfmt[i], false, true, linear_sampling);
+                glEnable(GL_TEXTURE_2D);
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+                glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+                glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+                glDisable(GL_TEXTURE_2D);
+                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
                 pangolin::GlSlUtilities::UseNone();
+
+                const pangolin::XYRange& selxy = handlers[i].GetSelection();
+                const GLfloat sq_select[] = {
+                    selxy.x.min, selxy.y.min,
+                    selxy.x.max, selxy.y.min,
+                    selxy.x.max, selxy.y.max,
+                    selxy.x.min, selxy.y.max
+                };
+                glColor4f(1.0,0.0,0.0,1.0);
+                glVertexPointer(2, GL_FLOAT, 0, sq_select);
+                glDrawArrays(GL_LINE_LOOP, 0, 4);
             }
         }
+
+        glMatrixMode(GL_MODELVIEW);
+        glDisableClientState(GL_VERTEX_ARRAY);
 
         pangolin::FinishFrame();
     }

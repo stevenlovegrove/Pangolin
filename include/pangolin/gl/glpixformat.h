@@ -54,10 +54,25 @@ struct GlPixFormat
         case 32: gltype = GL_FLOAT; break;
         default: throw std::runtime_error("Unknown channel format");
         }
+
+        if(glformat == GL_LUMINANCE) {
+            if(gltype == GL_UNSIGNED_BYTE) {
+                scalable_internal_format = GL_LUMINANCE8;
+            }else{
+                scalable_internal_format = GL_LUMINANCE32F_ARB;
+            }
+        }else{
+            if(gltype == GL_UNSIGNED_BYTE) {
+                scalable_internal_format = GL_RGBA8;
+            }else{
+                scalable_internal_format = GL_RGBA32F;
+            }
+        }
     }
 
     GLint glformat;
     GLenum gltype;
+    GLint scalable_internal_format;
 };
 
 }

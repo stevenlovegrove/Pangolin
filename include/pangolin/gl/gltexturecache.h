@@ -104,22 +104,7 @@ inline void RenderToViewport(
     bool flipx=false, bool flipy=false,
     bool linear_sampling = true
 ) {
-    GLint internal_format;
-    if(fmt.glformat == GL_LUMINANCE) {
-        if(fmt.gltype == GL_UNSIGNED_BYTE) {
-            internal_format = GL_LUMINANCE8;
-        }else{
-            internal_format = GL_LUMINANCE32F_ARB;
-        }
-    }else{
-        if(fmt.gltype == GL_UNSIGNED_BYTE) {
-            internal_format = GL_RGBA8;
-        }else{
-            internal_format = GL_RGBA32F;
-        }
-    }
-
-    pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, internal_format, fmt.glformat, fmt.gltype);
+    pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, fmt.scalable_internal_format, fmt.glformat, fmt.gltype);
     tex.Bind();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linear_sampling ? GL_LINEAR : GL_NEAREST);
