@@ -337,6 +337,9 @@ if(BUILD_PANGOLIN_VIDEO AND Pleora_FOUND)
   list(APPEND LINK_LIBS ${Pleora_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/pleora.h )
   list(APPEND SOURCES video/drivers/pleora.cpp )
+  # Suppress warnings generated from Pleora SDK.
+  set_source_files_properties(video/drivers/pleora.cpp PROPERTIES COMPILE_FLAGS -Wno-unknown-pragmas)
+  set_source_files_properties(video/video.cpp PROPERTIES COMPILE_FLAGS -Wno-unknown-pragmas)
   message(STATUS "Pleora Found and Enabled" )
 endif()
 
