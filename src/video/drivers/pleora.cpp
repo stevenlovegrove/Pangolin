@@ -125,6 +125,8 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
 
     lStream = PvStream::CreateAndOpen( lDeviceInfo->GetConnectionID(), &lResult );
     if ( !lStream ) {
+        lDevice->Disconnect();
+        PvDevice::Free(lDevice);
         throw pangolin::VideoException("Pleora: Unable to open stream", lResult.GetDescription().GetAscii() );
     }
 
