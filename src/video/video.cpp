@@ -638,12 +638,14 @@ VideoInterface* OpenVideo(const Uri& uri)
         const std::string serial_num = uri.Get<std::string>("sn", "");
         const size_t idx = uri.Get<size_t>("idx",0);
         const size_t bpp = uri.Get<size_t>("bpp",8);
+        const size_t binx = uri.Get<size_t>("binx",1);
+        const size_t biny = uri.Get<size_t>("biny",1);
         const size_t buffer_count = uri.Get<size_t>("buffers",4);
 
         video = new PleoraVideo(
             model_name.empty() ? 0 : model_name.c_str(),
             serial_num.empty() ? 0 : serial_num.c_str(),
-            idx, bpp, buffer_count
+            idx, bpp, binx, biny, buffer_count
         );
     }else
 #endif
