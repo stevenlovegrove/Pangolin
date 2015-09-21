@@ -53,7 +53,7 @@ class PANGOLIN_EXPORT PleoraVideo : public VideoInterface
 {
 public:
 
-    PleoraVideo(const char *model_name, const char *serial_num, size_t index, size_t bpp = 8, size_t buffer_count = 4);
+    PleoraVideo(const char *model_name, const char *serial_num, size_t index, size_t bpp = 8, size_t binX = 1, size_t binY = 1, size_t buffer_count = 4);
     ~PleoraVideo();
 
     void Start();

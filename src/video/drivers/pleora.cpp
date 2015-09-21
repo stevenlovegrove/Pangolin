@@ -104,7 +104,7 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
     }
 }
 
-PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t bpp, size_t buffer_count)
+PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count)
     : lPvSystem(0), lDevice(0), lStream(0)
 {
     lPvSystem = new PvSystem();
@@ -140,6 +140,19 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
         lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono10p") );
     }else if(bpp == 12) {
         lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono12p") );
+    }
+
+
+    {
+
+        PvResult ret =lDeviceParams->SetIntegerValue("BinningHorizontal", binX );
+        if(ret.IsFailure()){
+            pango_print_error("BinningHorizontal %d fail\n", binX);
+        }
+        ret =lDeviceParams->SetIntegerValue("BinningVertical", binY );
+        if(ret.IsFailure()){
+            pango_print_error("BinningVertical %d fail\n", binY);
+        }
     }
 
     lStreamParams = lStream->GetParameters();
