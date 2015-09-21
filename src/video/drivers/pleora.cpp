@@ -143,16 +143,13 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     }
 
 
-    {
-
-        PvResult ret =lDeviceParams->SetIntegerValue("BinningHorizontal", binX );
-        if(ret.IsFailure()){
-            pango_print_error("BinningHorizontal %d fail\n", binX);
-        }
-        ret =lDeviceParams->SetIntegerValue("BinningVertical", binY );
-        if(ret.IsFailure()){
-            pango_print_error("BinningVertical %d fail\n", binY);
-        }
+    lResult =lDeviceParams->SetIntegerValue("BinningHorizontal", binX );
+    if(lResult.IsFailure()){
+        pango_print_error("BinningHorizontal %zu fail\n", binX);
+    }
+    lResult =lDeviceParams->SetIntegerValue("BinningVertical", binY );
+    if(lResult.IsFailure()){
+        pango_print_error("BinningVertical %zu fail\n", binY);
     }
 
     lStreamParams = lStream->GetParameters();
