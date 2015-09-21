@@ -127,8 +127,8 @@ void ConvertFrom12bit(
             uint32_t val = *(pin++);
             val |= uint32_t(*(pin++)) << 8;
             val |= uint32_t(*(pin++)) << 16;
-            *(pout++) = T((val & 0xFFF000) >> 12);
             *(pout++) = T( val & 0x000FFF);
+            *(pout++) = T((val & 0xFFF000) >> 12);
         }
     }
 }
