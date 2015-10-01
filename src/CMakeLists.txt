@@ -211,6 +211,9 @@ if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND PYTHONLIBS_FOUND)
     console/ConsoleView.cpp
     python/PyInterpreter.cpp
   )
+  if(_GCC_)
+    set_source_files_properties(python/PyInterpreter.cpp PROPERTIES COMPILE_FLAGS -fno-strict-aliasing)
+  endif()
   list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIR})
   list(APPEND LINK_LIBS    ${PYTHON_LIBRARY})
   message(STATUS "Python Found and Enabled")
@@ -337,9 +340,11 @@ if(BUILD_PANGOLIN_VIDEO AND Pleora_FOUND)
   list(APPEND LINK_LIBS ${Pleora_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/pleora.h )
   list(APPEND SOURCES video/drivers/pleora.cpp )
-  # Suppress warnings generated from Pleora SDK.
-  set_source_files_properties(video/drivers/pleora.cpp PROPERTIES COMPILE_FLAGS -Wno-unknown-pragmas)
-  set_source_files_properties(video/video.cpp PROPERTIES COMPILE_FLAGS -Wno-unknown-pragmas)
+  if(_GCC_)
+    # Suppress warnings generated from Pleora SDK.
+    set_source_files_properties(video/drivers/pleora.cpp PROPERTIES COMPILE_FLAGS -Wno-unknown-pragmas)
+    set_source_files_properties(video/video.cpp PROPERTIES COMPILE_FLAGS -Wno-unknown-pragmas)
+  endif()
   message(STATUS "Pleora Found and Enabled" )
 endif()
 
