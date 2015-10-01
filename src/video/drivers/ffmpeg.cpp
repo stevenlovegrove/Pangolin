@@ -155,10 +155,10 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         throw VideoException("Couldn't open stream");
     
     if( !ToLowerCopy(codec_hint).compare("mjpeg") )
-#ifdef HAVE_FFMPEG_MAX_ANALYZE_DURATION
-        pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
-#else
+#ifdef HAVE_FFMPEG_MAX_ANALYZE_DURATION2
         pFormatCtx->max_analyze_duration2 = AV_TIME_BASE * 0.0;
+#else
+        pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
 #endif
     
     // Retrieve stream information
