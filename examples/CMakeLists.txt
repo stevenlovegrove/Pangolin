@@ -1,4 +1,4 @@
-find_package(CUDA QUIET)
+#find_package(CUDA QUIET)
 find_package(Oculus QUIET)
 
 # All examples depend on Pangolin GUI
