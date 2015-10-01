@@ -56,13 +56,13 @@ IF(AVCODEC_INCLUDE_DIR AND AVFORMAT_INCLUDE_DIR AND AVUTIL_INCLUDE_DIR AND SWSCA
    include(CheckCXXSourceCompiles)
 
    CHECK_CXX_SOURCE_COMPILES(
-     "#include <libavformat/avformat.h>
+     "#include \"${AVCODEC_INCLUDE_DIR}/libavformat/avformat.h\"
       int main() {
         &AVFormatContext::max_analyze_duration;
       }" HAVE_FFMPEG_MAX_ANALYZE_DURATION
    )
    CHECK_CXX_SOURCE_COMPILES(
-     "#include <libavformat/avformat.h>
+     "#include \"${AVCODEC_INCLUDE_DIR}/libavformat/avformat.h\"
       int main() {
         &avformat_alloc_output_context2;
       }" HAVE_FFMPEG_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
