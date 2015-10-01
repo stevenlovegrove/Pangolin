@@ -105,3 +105,10 @@ can execute:
 ```
 make doc
 ```
+
+## Issues ##
+
+Please visit [Github Issues](https://github.com/stevenlovegrove/Pangolin/issues) to view and report problems with Pangolin. Issues and pull requests should be raised against the devel branch which contains the current development version.
+
+Please note; most Pangolin dependencies are optional - to disable a dependency which may be causing trouble on your machine, simply blank out it's include and library directories with a cmake configuration tool (e.g. ccmake or cmake-gui).
+
