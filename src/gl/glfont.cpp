@@ -59,8 +59,12 @@ GlFont::GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, i
 GlFont::GlFont(const std::string& filename, float pixel_height, int tex_w, int tex_h)
 {
     unsigned char* ttf_buffer = new unsigned char[1<<20];
-    fread(ttf_buffer, 1, 1<<20, fopen(filename.c_str(), "rb"));
-    InitialiseFont(ttf_buffer, pixel_height, tex_w, tex_h);
+    const size_t bytes_read = fread(ttf_buffer, 1, 1<<20, fopen(filename.c_str(), "rb"));
+    if(bytes_read > 0) {
+        InitialiseFont(ttf_buffer, pixel_height, tex_w, tex_h);
+    }else{
+        throw std::runtime_error("Unable to read font from file.");
+    }
     delete[] ttf_buffer;
 }
 
