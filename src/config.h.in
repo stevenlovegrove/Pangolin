@@ -25,13 +25,16 @@
 
 #cmakedefine HAVE_DC1394
 #cmakedefine HAVE_V4L
-#cmakedefine HAVE_FFMPEG
 #cmakedefine HAVE_OPENNI
 #cmakedefine HAVE_OPENNI2
 #cmakedefine HAVE_UVC
 #cmakedefine HAVE_DEPTHSENSE
 #cmakedefine HAVE_TELICAM
 #cmakedefine HAVE_PLEORA
+
+#cmakedefine HAVE_FFMPEG
+#cmakedefine HAVE_FFMPEG_MAX_ANALYZE_DURATION
+#cmakedefine HAVE_FFMPEG_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
 
 #cmakedefine HAVE_GLEW
 #cmakedefine GLEW_STATIC

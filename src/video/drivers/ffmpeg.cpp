@@ -155,11 +155,10 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         throw VideoException("Couldn't open stream");
     
     if( !ToLowerCopy(codec_hint).compare("mjpeg") )
-#if LIBAVFORMAT_VERSION_MAJOR >= 56
-        pFormatCtx->max_analyze_duration2 = AV_TIME_BASE * 0.0;
-#else
-        // Deprecated
+#ifdef HAVE_FFMPEG_MAX_ANALYZE_DURATION
         pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
+#else
+        pFormatCtx->max_analyze_duration2 = AV_TIME_BASE * 0.0;
 #endif
     
     // Retrieve stream information
@@ -456,11 +455,7 @@ static AVStream* CreateStream(AVFormatContext *oc, CodecID codec_id, uint64_t fr
 {
     AVCodec* codec = avcodec_find_encoder(codec_id);
     if (!(codec)) throw
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
-        VideoException("Could not find encoder", avcodec_get_name(codec_id));
-#else
         VideoException("Could not find encoder");
-#endif
 
 #if (LIBAVFORMAT_VERSION_MAJOR >= 54 || (LIBAVFORMAT_VERSION_MAJOR >= 53 && LIBAVFORMAT_VERSION_MINOR >= 21) )
     AVStream* stream = avformat_new_stream(oc, codec);
@@ -695,10 +690,9 @@ void FfmpegVideoOutput::Initialise(std::string filename)
 {
     av_register_all();
 
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+#ifdef HAVE_FFMPEG_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
     int ret = avformat_alloc_output_context2(&oc, NULL, NULL, filename.c_str());
 #else
-    std::cerr << "If you experience encoding problems, consider upgrading to libavformat >= 54" << std::endl;
     oc = avformat_alloc_context();
     oc->oformat = av_guess_format(NULL, filename.c_str(), NULL);
     int ret = oc->oformat ? 0 : -1;
@@ -706,7 +700,7 @@ void FfmpegVideoOutput::Initialise(std::string filename)
 
     if (ret < 0 || !oc) {
         pango_print_error("Could not deduce output format from file extension: using MPEG.\n");
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+#ifdef HAVE_FFMPEG_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
         ret = avformat_alloc_output_context2(&oc, NULL, "mpeg", filename.c_str());
 #else
         oc->oformat = av_guess_format("mpeg", filename.c_str(), NULL);

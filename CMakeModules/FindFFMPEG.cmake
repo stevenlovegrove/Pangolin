@@ -52,6 +52,21 @@ IF(AVCODEC_INCLUDE_DIR AND AVFORMAT_INCLUDE_DIR AND AVUTIL_INCLUDE_DIR AND SWSCA
    SET(FFMPEG_FOUND TRUE)
    SET(FFMPEG_LIBRARIES ${AVCODEC_LIBRARY} ${AVFORMAT_LIBRARY} ${AVUTIL_LIBRARY} ${SWSCALE_LIBRARY})
    SET(FFMPEG_INCLUDE_DIRS ${AVCODEC_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR} ${AVUTIL_INCLUDE_DIR} ${SWSCALE_INCLUDE_DIR})
+
+   include(CheckCXXSourceCompiles)
+
+   CHECK_CXX_SOURCE_COMPILES(
+     "#include <libavformat/avformat.h>
+      int main() {
+        &AVFormatContext::max_analyze_duration;
+      }" HAVE_FFMPEG_MAX_ANALYZE_DURATION
+   )
+   CHECK_CXX_SOURCE_COMPILES(
+     "#include <libavformat/avformat.h>
+      int main() {
+        &avformat_alloc_output_context2;
+      }" HAVE_FFMPEG_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
+   )
 ENDIF()
 
 IF (FFMPEG_FOUND)
