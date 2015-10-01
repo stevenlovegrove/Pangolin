@@ -74,7 +74,7 @@ int main( int argc, char* argv[] )
         "convert:[fmt=RGB24]//v4l:///dev/video0",
         "convert:[fmt=RGB24]//v4l:///dev/video1",
         "openni:[img1=rgb]//",
-        "pleora:[sn="00000215",size="640x480",pos="64x64"]//",
+        "pleora:[sn=00000215,size=640x480,pos=64x64]//",
         "test:[size=160x120,n=1,fmt=RGB24]//"
         ""
     };

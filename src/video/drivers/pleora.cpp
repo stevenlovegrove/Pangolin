@@ -143,19 +143,27 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
         lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono12p") );
     }
 
+    // Height and width will fail if not multiples of 8.
     lDeviceParams->SetIntegerValue("Height", desired_size_y );
     if(lResult.IsFailure()){
         pango_print_error("Height %zu fail\n", desired_size_y);
+        int64_t max, min;
+        lDeviceParams->GetIntegerRange("Height", max, min );
+        lDeviceParams->SetIntegerValue("Height", max );
     }
     lDeviceParams->SetIntegerValue("Width", desired_size_x );
     if(lResult.IsFailure()){
         pango_print_error("Width %zu fail\n", desired_size_x);
+        int64_t max, min;
+        lDeviceParams->GetIntegerRange("Width", max, min );
+        lDeviceParams->SetIntegerValue("Width", max );
     }
 
     lDeviceParams = lDevice->GetParameters();
     const int w = DeviceParam<int64_t>("Width");
     const int h = DeviceParam<int64_t>("Height");
 
+    // Offset will fail if not multiple of 8.
     lDeviceParams->SetIntegerValue("OffsetX", desired_pos_x );
     if(lResult.IsFailure()){
         pango_print_error("OffsetX %zu fail\n", desired_pos_x);
