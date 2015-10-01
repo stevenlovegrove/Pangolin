@@ -104,7 +104,8 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
     }
 }
 
-PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count)
+PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
+                         size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y)
     : lPvSystem(0), lDevice(0), lStream(0)
 {
     lPvSystem = new PvSystem();
@@ -142,6 +143,35 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
         lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono12p") );
     }
 
+    // Height and width will fail if not multiples of 8.
+    lDeviceParams->SetIntegerValue("Height", desired_size_y );
+    if(lResult.IsFailure()){
+        pango_print_error("Height %zu fail\n", desired_size_y);
+        int64_t max, min;
+        lDeviceParams->GetIntegerRange("Height", max, min );
+        lDeviceParams->SetIntegerValue("Height", max );
+    }
+    lDeviceParams->SetIntegerValue("Width", desired_size_x );
+    if(lResult.IsFailure()){
+        pango_print_error("Width %zu fail\n", desired_size_x);
+        int64_t max, min;
+        lDeviceParams->GetIntegerRange("Width", max, min );
+        lDeviceParams->SetIntegerValue("Width", max );
+    }
+
+    lDeviceParams = lDevice->GetParameters();
+    const int w = DeviceParam<int64_t>("Width");
+    const int h = DeviceParam<int64_t>("Height");
+
+    // Offset will fail if not multiple of 8.
+    lDeviceParams->SetIntegerValue("OffsetX", desired_pos_x );
+    if(lResult.IsFailure()){
+        pango_print_error("OffsetX %zu fail\n", desired_pos_x);
+    }
+    lDeviceParams->SetIntegerValue("OffsetX", desired_pos_y );
+    if(lResult.IsFailure()){
+        pango_print_error("OffsetY %zu fail\n", desired_pos_y);
+    }
 
     lResult =lDeviceParams->SetIntegerValue("BinningHorizontal", binX );
     if(lResult.IsFailure()){
@@ -169,9 +199,6 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
         lBuffer->Alloc( static_cast<uint32_t>( lSize ) );
         lBufferList.push_back( lBuffer );
     }
-
-    const int w = DeviceParam<int64_t>("Width");
-    const int h = DeviceParam<int64_t>("Height");
 
     // Setup pangolin for stream
     PvGenEnum* lpixfmt = dynamic_cast<PvGenEnum*>( lDeviceParams->Get("PixelFormat") );
