@@ -309,7 +309,7 @@ void FinishFrame()
     ProcessQueuedWinMessages();
 }
 
-void CreateWindowAndBind(std::string window_title, int w, int h )
+void CreateWindowAndBind(std::string window_title, int w, int h, const Params& /*params*/ )
 {
     // Create Pangolin GL Context
     BindToContext(window_title);

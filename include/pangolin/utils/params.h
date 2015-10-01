@@ -25,27 +25,48 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_URI_H
-#define PANGOLIN_URI_H
+#ifndef PANGOLIN_PARAMS_H
+#define PANGOLIN_PARAMS_H
 
 #include <pangolin/platform.h>
-#include <pangolin/utils/params.h>
+#include <pangolin/utils/type_convert.h>
+
 #include <string>
+#include <map>
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT Uri : public Params
+class PANGOLIN_EXPORT Params
 {
 public:
-    std::string scheme;
-    std::string url;
-};
+    typedef std::map<std::string,std::string> ParamMap;
 
-//! Parse string as Video URI
-PANGOLIN_EXPORT
-Uri ParseUri(const std::string& str_uri);
+    bool Contains(const std::string& key) const
+    {
+        return params.find(key) != params.end();
+    }
+
+    template<typename T>
+    T Get(const std::string& key, T default_val) const
+    {
+        ParamMap::const_iterator v = params.find(key);
+        if(v != params.end()) {
+            return Convert<T, std::string>::Do(v->second);
+        }else{
+            return default_val;
+        }
+    }
+
+    template<typename T>
+    void Set(const std::string& key, const T& val)
+    {
+        params[key] = Convert<std::string,T>::Do(val);
+    }
+
+    ParamMap params;
+};
 
 }
 
-#endif // PANGOLIN_URI_H
+#endif // PANGOLIN_PARAMS_H

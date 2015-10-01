@@ -96,8 +96,10 @@ static int ctxErrorHandler( Display *dpy, XErrorEvent *ev )
     return 0;
 }
 
-int CreateX11Window(const std::string& title, int width, int height)
-{
+int CreateX11Window(
+    const std::string& title, int width, int height,
+    bool glx_doublebuffer,int glx_sample_buffers, int glx_samples
+) {
     display = XOpenDisplay(NULL);
 
     if (!display) {
@@ -117,9 +119,9 @@ int CreateX11Window(const std::string& title, int width, int height)
         GLX_ALPHA_SIZE      , 8,
         GLX_DEPTH_SIZE      , 24,
         GLX_STENCIL_SIZE    , 8,
-        GLX_DOUBLEBUFFER    , True,
-        GLX_SAMPLE_BUFFERS  , 1,
-        GLX_SAMPLES         , 1,
+        GLX_DOUBLEBUFFER    , glx_doublebuffer ? True : False,
+        GLX_SAMPLE_BUFFERS  , glx_sample_buffers,
+        GLX_SAMPLES         , glx_sample_buffers > 0 ? glx_samples : 0,
         None
     };
 
@@ -392,12 +394,16 @@ void FinishFrame()
     ProcessX11Events();
 }
 
-void CreateWindowAndBind(std::string window_title, int w, int h )
+void CreateWindowAndBind(std::string window_title, int w, int h, const Params &params)
 {
     // Create Pangolin GL Context
     BindToContext(window_title);
 
-    CreateX11Window(window_title, w, h);
+    const bool double_buffered = params.Get(PARAM_DOUBLEBUFFER, true);
+    const int  sample_buffers  = params.Get(PARAM_SAMPLE_BUFFERS, 1);
+    const int  samples         = params.Get(PARAM_SAMPLES, 1);
+
+    CreateX11Window(window_title, w, h, double_buffered, sample_buffers, samples);
     context->is_double_buffered = true;
 
     glewInit();

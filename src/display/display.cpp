@@ -56,6 +56,10 @@
 namespace pangolin
 {
 
+const char* PARAM_DOUBLEBUFFER   = "DOUBLEBUFFER";
+const char* PARAM_SAMPLE_BUFFERS = "SAMPLE_BUFFERS";
+const char* PARAM_SAMPLES        = "SAMPLES";
+
 typedef std::map<std::string,boostd::shared_ptr<PangolinGl> > ContextMap;
 
 // Map of active contexts

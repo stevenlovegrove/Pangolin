@@ -975,7 +975,7 @@ void FinishAndroidFrame()
 }
 
 // Implement platform agnostic version
-void CreateWindowAndBind(std::string window_title, int /*w*/, int /*h*/ )
+void CreateWindowAndBind(std::string window_title, int /*w*/, int /*h*/, const Params& /*params*/ )
 {
     CreateAndroidWindowAndBind(window_title);
 

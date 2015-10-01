@@ -136,7 +136,7 @@ void FinishGlutFrame()
 }
 
 // Implement platform agnostic version
-void CreateWindowAndBind(std::string window_title, int w, int h )
+void CreateWindowAndBind(std::string window_title, int w, int h, const Params& /*params*/ )
 {
     CreateGlutWindowAndBind(window_title, w, h);
 }
