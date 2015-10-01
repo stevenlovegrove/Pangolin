@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <pangolin/platform.h>
 #include <Python.h>
+#include <pangolin/platform.h>
 
 namespace pangolin
 {

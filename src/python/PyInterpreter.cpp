@@ -1,7 +1,7 @@
+#include <Python.h>
+
 #include <pangolin/python/PyInterpreter.h>
 #include <pangolin/python/PyUniqueObj.h>
-
-#include <Python.h>
 #include <pangolin/python/PyModulePangolin.h>
 #include <pangolin/python/PyInterpreter.h>
 #include <pangolin/python/PyPangoIO.h>
