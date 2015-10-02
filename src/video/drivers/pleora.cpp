@@ -168,7 +168,7 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     if(lResult.IsFailure()){
         pango_print_error("OffsetX %zu fail\n", desired_pos_x);
     }
-    lDeviceParams->SetIntegerValue("OffsetX", desired_pos_y );
+    lDeviceParams->SetIntegerValue("OffsetY", desired_pos_y );
     if(lResult.IsFailure()){
         pango_print_error("OffsetY %zu fail\n", desired_pos_y);
     }
