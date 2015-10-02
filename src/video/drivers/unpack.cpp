@@ -38,6 +38,7 @@ UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
     }
 
     if( out_fmt.channels != 1) {
+        delete src;
         throw VideoException("UnpackVideo: Only supports single channel output.");
     }
 
@@ -50,6 +51,7 @@ UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
         // Check compatibility of formats
         const VideoPixelFormat in_fmt = src->Streams()[s].PixFormat();
         if(in_fmt.channels > 1 || in_fmt.bpp <9 || in_fmt.bpp > 16) {
+            delete src;
             throw VideoException("UnpackVideo: Only supports one channel input.");
         }
 
