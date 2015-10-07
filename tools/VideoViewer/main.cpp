@@ -183,6 +183,51 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
             }
         }
     });
+
+    pangolin::RegisterKeyPressCallback('g', [&](){
+
+        std::pair<float,float> os_default(0.0f, 1.0f);
+
+        //get the scale and offset from the container that has focus.
+        for(unsigned int i=0; i<images.size(); ++i) {
+            pangolin::Image<unsigned char>& img = images[i];
+            pangolin::ImageViewHandler& ivh = handlers[i];
+
+            // round to pixels, clamp to image border.
+            const bool have_selection = std::isfinite(ivh.GetSelection().Area()) && std::abs(ivh.GetSelection().Area()) >= 4;
+            pangolin::XYRangef froi = have_selection ? ivh.GetSelection() : ivh.GetViewToRender();
+            pangolin::XYRangei iroi = froi.Cast<int>();
+            iroi.Clamp(0, images[i].w-1, 0, img.h-1 );
+
+            if(container[i].HasFocus()) {
+                pangolin::Image<unsigned char>& img = images[i];
+                pangolin::ImageViewHandler& ivh = handlers[i];
+
+                // round to pixels, clamp to image border.
+                const bool have_selection = std::isfinite(ivh.GetSelection().Area()) && std::abs(ivh.GetSelection().Area()) >= 4;
+                pangolin::XYRangef froi = have_selection ? ivh.GetSelection() : ivh.GetViewToRender();
+                pangolin::XYRangei iroi = froi.Cast<int>();
+                iroi.Clamp(0, images[i].w-1, 0, img.h-1 );
+
+                if(glfmt[i].gltype == GL_UNSIGNED_BYTE) {
+                    os_default = GetOffsetScale(ImageRoi(img.Reinterpret<unsigned char>(),iroi), 255.0f, 1.0f);
+                }else if(glfmt[i].gltype == GL_UNSIGNED_SHORT) {
+                    os_default = GetOffsetScale(ImageRoi(img.Reinterpret<unsigned short>(),iroi), 65535.0f, 1.0f);
+                }else if(glfmt[i].gltype == GL_FLOAT) {
+                    os_default = GetOffsetScale(ImageRoi(img.Reinterpret<float>(),iroi), 1.0f, 1.0f);
+                }
+
+            }
+        }
+
+        //Adapt scale for all images equally
+        //TODO : we're assuming the type of all the containers images' are the same.
+        for(unsigned int i=0; i<images.size(); ++i) {
+                gloffsetscale[i] = os_default;
+        }
+
+    });
+
 #endif
 
 
