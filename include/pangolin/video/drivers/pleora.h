@@ -54,7 +54,7 @@ class PANGOLIN_EXPORT PleoraVideo : public VideoInterface
 public:
 
     PleoraVideo(const char *model_name, const char *serial_num, size_t index, size_t bpp = 8, size_t binX = 1, size_t binY = 1, size_t buffer_count = 4,
-                size_t desired_size_x = 0, size_t desired_size_y = 0, size_t desired_pos_x = 0, size_t desired_pos_y = 0);
+                size_t desired_size_x = 0, size_t desired_size_y = 0, size_t desired_pos_x = 0, size_t desired_pos_y = 0, int again = -1, double exposure = 0);
     ~PleoraVideo();
 
     void Start();
@@ -68,6 +68,14 @@ public:
     bool GrabNext( unsigned char* image, bool wait = true );
 
     bool GrabNewest( unsigned char* image, bool wait = true );
+
+    void SetGain(int64_t val);
+
+    int64_t GetGain();
+
+    void SetExposure(double val);
+
+    double GetExposure();
 
 protected:
     template<typename T>
