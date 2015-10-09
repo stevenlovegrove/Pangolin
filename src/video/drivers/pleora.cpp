@@ -105,7 +105,7 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
 }
 
 PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
-                         size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y)
+                         size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int again, double exposure)
     : lPvSystem(0), lDevice(0), lStream(0)
 {
     lPvSystem = new PvSystem();
@@ -181,6 +181,10 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     if(lResult.IsFailure()){
         pango_print_error("BinningVertical %zu fail\n", binY);
     }
+
+    SetGain(again);
+
+    SetExposure(exposure);
 
     lStreamParams = lStream->GetParameters();
 
@@ -342,6 +346,54 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
 
     lStream->QueueBuffer( lBuffer );
     return good;
+}
+
+void PleoraVideo::SetGain(int64_t val) {
+
+    if(val >= 0) {
+        lDeviceParams = lDevice->GetParameters();
+
+        PvResult lResult = lDeviceParams->SetIntegerValue("AnalogGain", val);
+        if(lResult.IsFailure()){
+            pango_print_error("AnalogGain %ld fail\n", val);
+        }
+    }
+}
+
+int64_t PleoraVideo::GetGain() {
+
+    lDeviceParams = lDevice->GetParameters();
+
+    int64_t val;
+    PvResult lResult = lDeviceParams->GetIntegerValue("AnalogGain", val);
+    if(lResult.IsFailure()){
+        pango_print_error("AnalogGain %ld fail\n", val);
+    }
+    return val;
+}
+
+void PleoraVideo::SetExposure(double val) {
+
+    if(val > 0) {
+        lDeviceParams = lDevice->GetParameters();
+
+        PvResult lResult = lDeviceParams->SetFloatValue("ExposureTime", val);
+        if(lResult.IsFailure()){
+            pango_print_error("ExposureTime %f fail\n", val);
+        }
+    }
+}
+
+double PleoraVideo::GetExposure() {
+
+    lDeviceParams = lDevice->GetParameters();
+
+    double val;
+    PvResult lResult = lDeviceParams->GetFloatValue("ExposureTime", val);
+    if(lResult.IsFailure()){
+        pango_print_error("ExposureTime %f fail\n", val);
+    }
+    return val;
 }
 
 template<typename T>

@@ -643,12 +643,15 @@ VideoInterface* OpenVideo(const Uri& uri)
         const size_t buffer_count = uri.Get<size_t>("buffers",4);
         const ImageDim desired_size = uri.Get<ImageDim>("size", ImageDim(0,0));
         const ImageDim desired_pos  = uri.Get<ImageDim>("pos", ImageDim(0,0));
+        const size_t again = uri.Get<size_t>("again",-1);
+        const double exposure = uri.Get<size_t>("exposure",0);
 
         video = new PleoraVideo(
             model_name.empty() ? 0 : model_name.c_str(),
             serial_num.empty() ? 0 : serial_num.c_str(),
             idx, bpp, binx, biny, buffer_count,
-            desired_size.x, desired_size.y, desired_pos.x, desired_pos.y
+            desired_size.x, desired_size.y, desired_pos.x, desired_pos.y,
+            again, exposure
         );
     }else
 #endif
