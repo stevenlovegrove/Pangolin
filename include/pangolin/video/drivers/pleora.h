@@ -77,6 +77,8 @@ public:
 
     double GetExposure();
 
+    void SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, int64_t triggerMode);
+
 protected:
     template<typename T>
     T DeviceParam(const char* name);

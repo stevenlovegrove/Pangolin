@@ -143,6 +143,19 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
         lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono12p") );
     }
 
+
+    lDeviceParams = lDevice->GetParameters();
+
+    lResult =lDeviceParams->SetIntegerValue("BinningHorizontal", binX );
+    if(lResult.IsFailure()){
+        pango_print_info("BinningHorizontal %zu fail\n", binX);
+    }
+    lResult =lDeviceParams->SetIntegerValue("BinningVertical", binY );
+    if(lResult.IsFailure()){
+        pango_print_info("BinningVertical %zu fail\n", binY);
+    }
+
+
     // Height and width will fail if not multiples of 8.
     lDeviceParams->SetIntegerValue("Height", desired_size_y );
     if(lResult.IsFailure()){
@@ -160,6 +173,7 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     }
 
     lDeviceParams = lDevice->GetParameters();
+
     const int w = DeviceParam<int64_t>("Width");
     const int h = DeviceParam<int64_t>("Height");
 
@@ -171,15 +185,6 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     lDeviceParams->SetIntegerValue("OffsetY", desired_pos_y );
     if(lResult.IsFailure()){
         pango_print_error("OffsetY %zu fail\n", desired_pos_y);
-    }
-
-    lResult =lDeviceParams->SetIntegerValue("BinningHorizontal", binX );
-    if(lResult.IsFailure()){
-        pango_print_error("BinningHorizontal %zu fail\n", binX);
-    }
-    lResult =lDeviceParams->SetIntegerValue("BinningVertical", binY );
-    if(lResult.IsFailure()){
-        pango_print_error("BinningVertical %zu fail\n", binY);
     }
 
     SetGain(again);
@@ -382,6 +387,45 @@ void PleoraVideo::SetExposure(double val) {
             pango_print_error("ExposureTime %f fail\n", val);
         }
     }
+}
+
+
+//use 0,0,1 for line0 hardware trigger.
+//use 2,252,0 for software continuous
+void PleoraVideo::SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, int64_t triggerMode) {//TODO: add different types of trigger (software/hardware etc)
+
+
+    PvResult lResult =lDeviceParams->SetEnumValue("AcquisitionMode",acquisitionMode);
+    if(lResult.IsFailure()){
+        pango_print_error("AcquisitionMode %f fail\n", acquisitionMode);
+    }
+
+    lResult = lDeviceParams->SetEnumValue("TriggerSource",triggerSource);
+    if(lResult.IsFailure()){
+        pango_print_error("TriggerSource %f fail\n", triggerSource);
+    }
+
+
+    lResult = lDeviceParams->SetEnumValue("TriggerMode",triggerMode);
+    if(lResult.IsFailure()){
+        pango_print_error("TriggerMode %f fail\n", triggerMode);
+    }
+
+    lDeviceParams = lDevice->GetParameters();
+
+
+    lDeviceParams->GetEnumValue("AcquisitionMode",acquisitionMode);
+    lDeviceParams->GetEnumValue("TriggerSource",triggerSource);
+    lDeviceParams->GetEnumValue("TriggerMode",triggerMode);
+
+
+    pango_print_info("AcquisitionMode %d\n",acquisitionMode);
+    pango_print_info("triggerSource %d\n",triggerSource);
+    pango_print_info("triggerMode %d\n",triggerMode);
+
+
+
+
 }
 
 double PleoraVideo::GetExposure() {
