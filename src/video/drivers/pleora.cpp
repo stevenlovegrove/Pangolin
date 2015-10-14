@@ -392,23 +392,24 @@ void PleoraVideo::SetExposure(double val) {
 
 //use 0,0,1 for line0 hardware trigger.
 //use 2,252,0 for software continuous
-void PleoraVideo::SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, int64_t triggerMode) {//TODO: add different types of trigger (software/hardware etc)
-
+void PleoraVideo::SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, int64_t triggerMode)
+{
+    //TODO: add different types of trigger (software/hardware etc)
 
     PvResult lResult =lDeviceParams->SetEnumValue("AcquisitionMode",acquisitionMode);
     if(lResult.IsFailure()){
-        pango_print_error("AcquisitionMode %f fail\n", acquisitionMode);
+        pango_print_error("AcquisitionMode %lld fail\n", (long long)acquisitionMode);
     }
 
     lResult = lDeviceParams->SetEnumValue("TriggerSource",triggerSource);
     if(lResult.IsFailure()){
-        pango_print_error("TriggerSource %f fail\n", triggerSource);
+        pango_print_error("TriggerSource %lld fail\n", (long long)triggerSource);
     }
 
 
     lResult = lDeviceParams->SetEnumValue("TriggerMode",triggerMode);
     if(lResult.IsFailure()){
-        pango_print_error("TriggerMode %f fail\n", triggerMode);
+        pango_print_error("TriggerMode %lld fail\n", (long long)triggerMode);
     }
 
     lDeviceParams = lDevice->GetParameters();
@@ -419,13 +420,9 @@ void PleoraVideo::SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, i
     lDeviceParams->GetEnumValue("TriggerMode",triggerMode);
 
 
-    pango_print_info("AcquisitionMode %d\n",acquisitionMode);
-    pango_print_info("triggerSource %d\n",triggerSource);
-    pango_print_info("triggerMode %d\n",triggerMode);
-
-
-
-
+    pango_print_info("AcquisitionMode %lld\n", (long long)acquisitionMode);
+    pango_print_info("triggerSource %lld\n", (long long)triggerSource);
+    pango_print_info("triggerMode %lld\n", (long long)triggerMode);
 }
 
 double PleoraVideo::GetExposure() {
