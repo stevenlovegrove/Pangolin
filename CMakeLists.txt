@@ -117,7 +117,7 @@ if(BUILD_PANGOLIN_VARS)
   endif()
 endif()
 
-option(BUILD_PANGOLIN_VIDEO "Build support for Pangolin Video Utilities" ON)
+option(BUILD_PANGOLIN_VIDEO "Build support for Pangolin Video Utilities" OFF)
 if(BUILD_PANGOLIN_VIDEO)
   list(APPEND HEADERS
     ${INCDIR}/threadedfilebuf.h ${INCDIR}/video.h ${INCDIR}/video_common.h
