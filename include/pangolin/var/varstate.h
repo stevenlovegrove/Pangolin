@@ -35,7 +35,7 @@
 #include <pangolin/file_utils.h>
 
 #ifdef HAVE_CVARS
-#include <CVars/CVar.h>
+#include <cvars/CVar.h>
 #endif
 
 namespace pangolin
