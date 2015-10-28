@@ -38,37 +38,6 @@
 namespace pangolin
 {
 
-std::string MakeFilenameUnique(const std::string& filename)
-{
-    if( FileExists(filename) ) {
-        const size_t dot = filename.find_last_of('.');
-        
-        std::string fn;
-        std::string ext;
-        
-        if(dot == filename.npos) {
-            fn = filename;
-            ext = "";
-        }else{
-            fn = filename.substr(0, dot);
-            ext = filename.substr(dot);
-        }
-        
-        int id = 1;
-        std::string new_file;
-        do {
-            id++;
-            std::stringstream ss;
-            ss << fn << "_" << id << ext;
-            new_file = ss.str();
-        }while( FileExists(new_file) );
-
-        return new_file;        
-    }else{
-        return filename;
-    }
-}
-
 VideoOutputInterface* OpenVideoOutput(const Uri& uri)
 {
     VideoOutputInterface* recorder = 0;
@@ -86,7 +55,7 @@ VideoOutputInterface* OpenVideoOutput(const Uri& uri)
         std::string filename = uri.url;
 
         if(uri.Contains("unique_filename")) {        
-            filename = MakeFilenameUnique(filename);
+            filename = MakeUniqueFilename(filename);
         }
         
         recorder = new FfmpegVideoOutput(filename, desired_frame_rate, desired_bit_rate);

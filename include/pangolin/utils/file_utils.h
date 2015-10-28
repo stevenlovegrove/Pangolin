@@ -67,6 +67,8 @@ bool MatchesWildcard(const std::string& str, const std::string& wildcard);
 PANGOLIN_EXPORT
 bool FilesMatchingWildcard(const std::string& wildcard_file_path, std::vector<std::string>& file_vec);
 
+PANGOLIN_EXPORT
+std::string MakeUniqueFilename(const std::string& filename);
 
 // TODO: Tidy these inlines up / move them
 
