@@ -3,6 +3,7 @@
 #include <pangolin/gl/gltexturecache.h>
 #include <pangolin/gl/glpixformat.h>
 #include <pangolin/handler/handler_image.h>
+#include <pangolin/utils/file_utils.h>
 
 template<typename T>
 std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, float type_max, float format_max)
@@ -107,7 +108,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         pangolin::RegisterKeyPressCallback(screenshot_keys[v], [v,&images,&video](){
             if(v < images.size() && images[v].ptr) {
                 try{
-                    pangolin::SaveImage(images[v],video.Streams()[v].PixFormat(), "still.png");
+                    pangolin::SaveImage(
+                        images[v], video.Streams()[v].PixFormat(),
+                        pangolin::MakeUniqueFilename("capture.png")
+                    );
                 }catch(std::exception e){
                     pango_print_error("Unable to save frame: %s\n", e.what());
                 }
