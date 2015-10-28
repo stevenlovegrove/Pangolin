@@ -242,27 +242,35 @@ PleoraVideo::~PleoraVideo()
 
 void PleoraVideo::Start()
 {
-    // Queue all buffers in the stream
-    for( BufferList::iterator lIt = lBufferList.begin(); lIt != lBufferList.end(); lIt++ ) {
-        lStream->QueueBuffer( *lIt );
-    }
+    if(lStream->GetQueuedBufferCount() == 0) {
+        // Queue all buffers in the stream
+        for( BufferList::iterator lIt = lBufferList.begin(); lIt != lBufferList.end(); lIt++ ) {
+            lStream->QueueBuffer( *lIt );
+        }
 
-    lDevice->StreamEnable();
-    lStart->Execute();
+        lDevice->StreamEnable();
+        lStart->Execute();
+    }else{
+        pango_print_warn("PleoraVideo: Already started.\n");
+    }
 }
 
 void PleoraVideo::Stop()
 {
-    lStop->Execute();
-    lDevice->StreamDisable();
+    if(lStream->GetQueuedBufferCount() > 0) {
+        lStop->Execute();
+        lDevice->StreamDisable();
 
-    // Abort all buffers from the stream and dequeue
-    lStream->AbortQueuedBuffers();
-    while ( lStream->GetQueuedBufferCount() > 0 )
-    {
-        PvBuffer *lBuffer = NULL;
-        PvResult lOperationResult;
-        lStream->RetrieveBuffer( &lBuffer, &lOperationResult );
+        // Abort all buffers from the stream and dequeue
+        lStream->AbortQueuedBuffers();
+        while ( lStream->GetQueuedBufferCount() > 0 )
+        {
+            PvBuffer *lBuffer = NULL;
+            PvResult lOperationResult;
+            lStream->RetrieveBuffer( &lBuffer, &lOperationResult );
+        }
+    }else{
+        pango_print_warn("PleoraVideo: Already stopped.\n");
     }
 }
 
