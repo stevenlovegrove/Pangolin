@@ -365,6 +365,10 @@ VideoInterface* OpenVideo(const Uri& uri)
         }else if(ft == ImageFileTypePango ) {
             const bool realtime = uri.Contains("realtime");
             video = new PangoVideo(PathExpand(uri.url).c_str(), realtime);
+        }else if(ft == ImageFileTypeExr || ft == ImageFileTypeGif || ft == ImageFileTypeJpg ||
+                 ft == ImageFileTypePng || ft == ImageFileTypePpm || ft == ImageFileTypeTga ||
+                 ft == ImageFileTypeTiff) {
+            video = new ImagesVideo(PathExpand(uri.url));
         }else{
             throw VideoException("Unrecognised file type." );
         }
