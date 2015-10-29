@@ -122,7 +122,7 @@ public:
     /// pangolin::Handler
     ///////////////////////////////////////////////////////
 
-    void Keyboard(View&, unsigned char key, int x, int y, bool pressed) PANGOLIN_OVERRIDE
+    void Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed) PANGOLIN_OVERRIDE
     {
         XYRangef& sel = linked_view_handler ? linked_view_handler->selection : selection;
         const float mvfactor = 1.0f / 10.0f;
@@ -238,11 +238,11 @@ public:
 
     }
 
-    void PassiveMouseMotion(View&, int x, int y, int button_state) PANGOLIN_OVERRIDE
+    void PassiveMouseMotion(View&, int /*x*/, int /*y*/, int /*button_state*/) PANGOLIN_OVERRIDE
     {
     }
 
-    void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state) PANGOLIN_OVERRIDE
+    void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int /*button_state*/) PANGOLIN_OVERRIDE
     {
         ScreenToImage(view.v, x, y, hover[0], hover[1]);
 
