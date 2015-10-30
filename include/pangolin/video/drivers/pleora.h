@@ -49,7 +49,8 @@ namespace pangolin
 
 typedef std::list<PvBuffer *> BufferList;
 
-class PANGOLIN_EXPORT PleoraVideo : public VideoInterface
+class PANGOLIN_EXPORT PleoraVideo :
+        public VideoInterface, public VideoPropertiesInterface
 {
 public:
 
@@ -79,6 +80,14 @@ public:
 
     void SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, int64_t triggerMode);
 
+    const json::value& DeviceProperties() const {
+        return device_properties;
+    }
+
+    const json::value& FrameProperties() const {
+        return frame_properties;
+    }
+
 protected:
     template<typename T>
     T DeviceParam(const char* name);
@@ -87,6 +96,9 @@ protected:
     T StreamParam(const char* name);
 
     std::vector<StreamInfo> streams;
+    json::value device_properties;
+    json::value frame_properties;
+
     size_t size_bytes;
 
     // Pleora handles

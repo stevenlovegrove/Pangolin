@@ -305,6 +305,8 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         {
             PvImage *lImage = lBuffer->GetImage();
             std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+            frame_properties["reception_time"] = json::value(lBuffer->GetTimestamp());
+            frame_properties["timestamp"] = json::value(lBuffer->GetReceptionTime());
             good = true;
         }
     } else {
@@ -354,6 +356,8 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
     {
         PvImage *lImage = lBuffer->GetImage();
         std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+        frame_properties["reception_time"] = json::value(lBuffer->GetTimestamp());
+        frame_properties["timestamp"] = json::value(lBuffer->GetReceptionTime());
         good = true;
     }
 
