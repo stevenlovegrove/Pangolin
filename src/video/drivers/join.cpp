@@ -50,6 +50,10 @@ VideoJoiner::VideoJoiner(const std::vector<VideoInterface*>& src)
 
 VideoJoiner::~VideoJoiner()
 {
+    for(size_t s=0; s< src.size(); ++s) {
+        src[s]->Stop();
+        delete src[s];
+    }
 }
 
 size_t VideoJoiner::SizeBytes() const

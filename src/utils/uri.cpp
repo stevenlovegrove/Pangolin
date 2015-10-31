@@ -39,41 +39,46 @@ Uri ParseUri(const std::string &str_uri)
     Uri uri;
 
     // Find Scheme delimiter
-    size_t ns = str_uri.find_first_of(':');
+    size_t npos = 0;
+    const size_t ns = str_uri.find(':', npos);
     if( ns != std::string::npos )
     {
         uri.scheme = str_uri.substr(0,ns);
+        npos = ns+1;
     }else{
         uri.scheme = "file";
         uri.url = str_uri;
         return uri;
     }
 
+    // Find Options delimiters
+    if( str_uri.size() > npos && str_uri[npos] == '[' )
+    {
+        const size_t nob = npos;
+        const size_t ncb = str_uri.find(']', nob+1);
+        if(ncb != std::string::npos)
+        {
+            const std::string queries = str_uri.substr(nob+1, ncb - (ns+2) );
+            std::vector<std::string> params;
+            Split(queries, ',', params);
+            for(size_t i=0; i< params.size(); ++i)
+            {
+                std::vector<std::string> args;
+                Split(params[i], '=', args );
+                std::string key = Trim(args[0]);
+                std::string val = args.size() > 1 ? Trim(args[1]) : "";
+                uri.params[key] = val;
+            }
+        }else{
+            throw std::runtime_error("Unable to parse URI: '" + str_uri + "'");
+        }
+        npos = ncb + 1;
+    }
+
     // Find url delimiter
-    size_t nurl = str_uri.find("//",ns+1);
+    size_t nurl = str_uri.find("//", npos);
     if(nurl != std::string::npos)
     {
-        // If there is space between the delimiters, extract protocol arguments
-        if( nurl-ns > 1)
-        {
-            if( str_uri[ns+1] == '[' && str_uri[nurl-1] == ']' )
-            {
-                std::string queries = str_uri.substr(ns+2, nurl-1 - (ns+2) );
-                std::vector<std::string> params;
-                Split(queries, ',', params);
-                for(size_t i=0; i< params.size(); ++i)
-                {
-                    std::vector<std::string> args;
-                    Split(params[i], '=', args );
-                    std::string key = Trim(args[0]);
-                    std::string val = args.size() > 1 ? Trim(args[1]) : "";
-                    uri.params[key] = val;
-                }
-            }else{
-                throw std::runtime_error("Unable to parse URI: '" + str_uri + "'");
-            }
-        }
-
         uri.url = str_uri.substr(nurl+2);
     }
 

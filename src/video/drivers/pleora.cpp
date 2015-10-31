@@ -105,7 +105,7 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
 }
 
 PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
-                         size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y)
+                         size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int again, double exposure)
     : lPvSystem(0), lDevice(0), lStream(0)
 {
     lPvSystem = new PvSystem();
@@ -143,6 +143,19 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
         lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono12p") );
     }
 
+
+    lDeviceParams = lDevice->GetParameters();
+
+    lResult =lDeviceParams->SetIntegerValue("BinningHorizontal", binX );
+    if(lResult.IsFailure()){
+        pango_print_info("BinningHorizontal %zu fail\n", binX);
+    }
+    lResult =lDeviceParams->SetIntegerValue("BinningVertical", binY );
+    if(lResult.IsFailure()){
+        pango_print_info("BinningVertical %zu fail\n", binY);
+    }
+
+
     // Height and width will fail if not multiples of 8.
     lDeviceParams->SetIntegerValue("Height", desired_size_y );
     if(lResult.IsFailure()){
@@ -160,6 +173,7 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     }
 
     lDeviceParams = lDevice->GetParameters();
+
     const int w = DeviceParam<int64_t>("Width");
     const int h = DeviceParam<int64_t>("Height");
 
@@ -168,19 +182,14 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     if(lResult.IsFailure()){
         pango_print_error("OffsetX %zu fail\n", desired_pos_x);
     }
-    lDeviceParams->SetIntegerValue("OffsetX", desired_pos_y );
+    lDeviceParams->SetIntegerValue("OffsetY", desired_pos_y );
     if(lResult.IsFailure()){
         pango_print_error("OffsetY %zu fail\n", desired_pos_y);
     }
 
-    lResult =lDeviceParams->SetIntegerValue("BinningHorizontal", binX );
-    if(lResult.IsFailure()){
-        pango_print_error("BinningHorizontal %zu fail\n", binX);
-    }
-    lResult =lDeviceParams->SetIntegerValue("BinningVertical", binY );
-    if(lResult.IsFailure()){
-        pango_print_error("BinningVertical %zu fail\n", binY);
-    }
+    SetGain(again);
+
+    SetExposure(exposure);
 
     lStreamParams = lStream->GetParameters();
 
@@ -233,27 +242,34 @@ PleoraVideo::~PleoraVideo()
 
 void PleoraVideo::Start()
 {
-    // Queue all buffers in the stream
-    for( BufferList::iterator lIt = lBufferList.begin(); lIt != lBufferList.end(); lIt++ ) {
-        lStream->QueueBuffer( *lIt );
+    if(lStream->GetQueuedBufferCount() == 0) {
+        // Queue all buffers in the stream
+        for( BufferList::iterator lIt = lBufferList.begin(); lIt != lBufferList.end(); lIt++ ) {
+            lStream->QueueBuffer( *lIt );
+        }
+        lDevice->StreamEnable();
+        lStart->Execute();
+    }else{
+        pango_print_warn("PleoraVideo: Already started.\n");
     }
-
-    lDevice->StreamEnable();
-    lStart->Execute();
 }
 
 void PleoraVideo::Stop()
 {
-    lStop->Execute();
-    lDevice->StreamDisable();
+    if(lStream->GetQueuedBufferCount() > 0) {
+        lStop->Execute();
+        lDevice->StreamDisable();
 
-    // Abort all buffers from the stream and dequeue
-    lStream->AbortQueuedBuffers();
-    while ( lStream->GetQueuedBufferCount() > 0 )
-    {
-        PvBuffer *lBuffer = NULL;
-        PvResult lOperationResult;
-        lStream->RetrieveBuffer( &lBuffer, &lOperationResult );
+        // Abort all buffers from the stream and dequeue
+        lStream->AbortQueuedBuffers();
+        while ( lStream->GetQueuedBufferCount() > 0 )
+        {
+            PvBuffer *lBuffer = NULL;
+            PvResult lOperationResult;
+            lStream->RetrieveBuffer( &lBuffer, &lOperationResult );
+        }
+    }else{
+        pango_print_warn("PleoraVideo: Already stopped.\n");
     }
 }
 
@@ -275,7 +291,7 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool /*wait*/ )
     // Retrieve next buffer
     PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, 1000 );
     if ( !lResult.IsOK() ) {
-        pango_print_warn("Pleora error: %s\n", lResult.GetCodeString().GetAscii() );
+        pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
         return false;
     }
 
@@ -288,10 +304,12 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         {
             PvImage *lImage = lBuffer->GetImage();
             std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+            frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
+            frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
             good = true;
         }
     } else {
-        pango_print_warn("Pleora error: %s\n", lOperationResult.GetCodeString().GetAscii() );
+        pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
     }
 
     lStream->QueueBuffer( lBuffer );
@@ -308,10 +326,10 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
 
     PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout );
     if ( !lResult.IsOK() ) {
-        pango_print_warn("Pleora error: %s\n", lResult.GetCodeString().GetAscii() );
+        pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
         return false;
     }else if( !lOperationResult.IsOK() ) {
-        pango_print_warn("Pleora error: %s\n", lOperationResult.GetCodeString().GetAscii() );
+        pango_print_warn("Pleora error: %s,\n'%s'\n", lOperationResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
         lStream->QueueBuffer( lBuffer );
         return false;
     }
@@ -337,11 +355,99 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
     {
         PvImage *lImage = lBuffer->GetImage();
         std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+        frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
         good = true;
     }
 
     lStream->QueueBuffer( lBuffer );
     return good;
+}
+
+void PleoraVideo::SetGain(int64_t val) {
+
+    if(val >= 0) {
+        lDeviceParams = lDevice->GetParameters();
+
+        PvResult lResult = lDeviceParams->SetIntegerValue("AnalogGain", val);
+        if(lResult.IsFailure()){
+            pango_print_error("AnalogGain %ld fail\n", val);
+        } else {
+            frame_properties[PANGO_ANALOG_GAIN] = json::value(val);
+        }
+    }
+}
+
+int64_t PleoraVideo::GetGain() {
+
+    lDeviceParams = lDevice->GetParameters();
+
+    int64_t val;
+    PvResult lResult = lDeviceParams->GetIntegerValue("AnalogGain", val);
+    if(lResult.IsFailure()){
+        pango_print_error("AnalogGain %ld fail\n", val);
+    }
+    return val;
+}
+
+void PleoraVideo::SetExposure(double val) {
+
+    if(val > 0) {
+        lDeviceParams = lDevice->GetParameters();
+
+        PvResult lResult = lDeviceParams->SetFloatValue("ExposureTime", val);
+        if(lResult.IsFailure()){
+            pango_print_error("ExposureTime %f fail\n", val);
+        } else {
+            frame_properties[PANGO_EXPOSURE_US] = json::value(val);
+        }
+    }
+}
+
+
+//use 0,0,1 for line0 hardware trigger.
+//use 2,252,0 for software continuous
+void PleoraVideo::SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, int64_t triggerMode)
+{
+    //TODO: add different types of trigger (software/hardware etc)
+
+    PvResult lResult =lDeviceParams->SetEnumValue("AcquisitionMode",acquisitionMode);
+    if(lResult.IsFailure()){
+        pango_print_error("AcquisitionMode %lld fail\n", (long long)acquisitionMode);
+    }
+
+    lResult = lDeviceParams->SetEnumValue("TriggerSource",triggerSource);
+    if(lResult.IsFailure()){
+        pango_print_error("TriggerSource %lld fail\n", (long long)triggerSource);
+    }
+
+
+    lResult = lDeviceParams->SetEnumValue("TriggerMode",triggerMode);
+    if(lResult.IsFailure()){
+        pango_print_error("TriggerMode %lld fail\n", (long long)triggerMode);
+    }
+
+    lDeviceParams = lDevice->GetParameters();
+
+    lDeviceParams->GetEnumValue("AcquisitionMode",acquisitionMode);
+    lDeviceParams->GetEnumValue("TriggerSource",triggerSource);
+    lDeviceParams->GetEnumValue("TriggerMode",triggerMode);
+
+    pango_print_info("AcquisitionMode %lld\n", (long long)acquisitionMode);
+    pango_print_info("triggerSource %lld\n", (long long)triggerSource);
+    pango_print_info("triggerMode %lld\n", (long long)triggerMode);
+}
+
+double PleoraVideo::GetExposure() {
+
+    lDeviceParams = lDevice->GetParameters();
+
+    double val;
+    PvResult lResult = lDeviceParams->GetFloatValue("ExposureTime", val);
+    if(lResult.IsFailure()){
+        pango_print_error("ExposureTime %f fail\n", val);
+    }
+    return val;
 }
 
 template<typename T>
