@@ -105,6 +105,9 @@
 
 #include <vector>
 
+#define PANGO_HOST_RECEPTION_TIME_US "host_reception_time_us"
+#define PANGO_CAPTURE_TIME_US "capture_time_us
+
 namespace pangolin
 {
 
