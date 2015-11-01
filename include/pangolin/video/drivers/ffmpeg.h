@@ -91,7 +91,7 @@ protected:
     AVPacket        packet;
     int             numBytesOut;
     uint8_t         *buffer;
-    PixelFormat     fmtout;
+    AVPixelFormat     fmtout;
 };
 
 enum FfmpegMethod
@@ -139,8 +139,8 @@ protected:
     VideoInterface* videoin;
     SwsContext *img_convert_ctx;
     
-    PixelFormat     fmtsrc;
-    PixelFormat     fmtdst;
+    AVPixelFormat     fmtsrc;
+    AVPixelFormat     fmtdst;
     AVFrame*        avsrc;
     AVFrame*        avdst;
     uint8_t*        bufsrc;

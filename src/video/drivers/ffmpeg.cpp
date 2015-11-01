@@ -37,18 +37,18 @@ extern "C"
 namespace pangolin
 {
 
-PixelFormat FfmpegFmtFromString(const std::string fmt)
+AVPixelFormat FfmpegFmtFromString(const std::string fmt)
 {
     const std::string lfmt = ToLowerCopy(fmt);
     if(!lfmt.compare("gray8") || !lfmt.compare("grey8") || !lfmt.compare("grey")) {
-        return PIX_FMT_GRAY8;
+        return AV_PIX_FMT_GRAY8;
     }
     return av_get_pix_fmt(lfmt.c_str());
 }
 
-#define TEST_PIX_FMT_RETURN(fmt) case PIX_FMT_##fmt: return #fmt;
+#define TEST_PIX_FMT_RETURN(fmt) case AV_PIX_FMT_##fmt: return #fmt;
 
-std::string FfmpegFmtToString(const PixelFormat fmt)
+std::string FfmpegFmtToString(const AVPixelFormat fmt)
 {
     switch( fmt )
     {
@@ -241,7 +241,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         throw VideoException("Couldn't allocate frames");
     
     fmtout = FfmpegFmtFromString(strfmtout);
-    if(fmtout == PIX_FMT_NONE )
+    if(fmtout == AV_PIX_FMT_NONE )
         throw VideoException("Output format not recognised",strfmtout);
     
     // Image dimensions
@@ -451,7 +451,7 @@ bool FfmpegConverter::GrabNewest( unsigned char* image, bool wait )
 
 // Based on this example
 // http://cekirdek.pardus.org.tr/~ismail/ffmpeg-docs/output-example_8c-source.html
-static AVStream* CreateStream(AVFormatContext *oc, CodecID codec_id, uint64_t frame_rate, int bit_rate, PixelFormat EncoderFormat, int width, int height)
+static AVStream* CreateStream(AVFormatContext *oc, CodecID codec_id, uint64_t frame_rate, int bit_rate, AVPixelFormat EncoderFormat, int width, int height)
 {
     AVCodec* codec = avcodec_find_encoder(codec_id);
     if (!(codec)) throw
@@ -518,8 +518,8 @@ protected:
     FfmpegVideoOutput& recorder;
 
     StreamInfo input_info;
-    PixelFormat input_format;
-    PixelFormat output_format;
+    AVPixelFormat input_format;
+    AVPixelFormat output_format;
 
     AVPicture src_picture;
     AVPicture dst_picture;
