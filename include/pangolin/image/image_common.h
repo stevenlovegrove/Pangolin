@@ -34,6 +34,7 @@
 #include <exception>
 #include <string>
 #include <map>
+#include <vector>
 
 namespace pangolin
 {
