@@ -28,8 +28,6 @@
 #include <pangolin/image/image_common.h>
 #include <pangolin/utils/file_utils.h>
 
-#include <vector>
-
 namespace pangolin
 {
 
