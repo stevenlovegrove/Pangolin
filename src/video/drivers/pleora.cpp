@@ -247,7 +247,6 @@ void PleoraVideo::Start()
         for( BufferList::iterator lIt = lBufferList.begin(); lIt != lBufferList.end(); lIt++ ) {
             lStream->QueueBuffer( *lIt );
         }
-
         lDevice->StreamEnable();
         lStart->Execute();
     }else{
@@ -305,6 +304,8 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         {
             PvImage *lImage = lBuffer->GetImage();
             std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+            frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
+            frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
             good = true;
         }
     } else {
@@ -354,6 +355,8 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
     {
         PvImage *lImage = lBuffer->GetImage();
         std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+        frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
         good = true;
     }
 
@@ -369,6 +372,8 @@ void PleoraVideo::SetGain(int64_t val) {
         PvResult lResult = lDeviceParams->SetIntegerValue("AnalogGain", val);
         if(lResult.IsFailure()){
             pango_print_error("AnalogGain %ld fail\n", val);
+        } else {
+            frame_properties[PANGO_ANALOG_GAIN] = json::value(val);
         }
     }
 }
@@ -393,6 +398,8 @@ void PleoraVideo::SetExposure(double val) {
         PvResult lResult = lDeviceParams->SetFloatValue("ExposureTime", val);
         if(lResult.IsFailure()){
             pango_print_error("ExposureTime %f fail\n", val);
+        } else {
+            frame_properties[PANGO_EXPOSURE_US] = json::value(val);
         }
     }
 }
@@ -422,11 +429,9 @@ void PleoraVideo::SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, i
 
     lDeviceParams = lDevice->GetParameters();
 
-
     lDeviceParams->GetEnumValue("AcquisitionMode",acquisitionMode);
     lDeviceParams->GetEnumValue("TriggerSource",triggerSource);
     lDeviceParams->GetEnumValue("TriggerMode",triggerMode);
-
 
     pango_print_info("AcquisitionMode %lld\n", (long long)acquisitionMode);
     pango_print_info("triggerSource %lld\n", (long long)triggerSource);
