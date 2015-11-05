@@ -32,6 +32,7 @@
 #include <fstream>
 #include <string.h>
 #include <cstring>
+#include <vector>
 
 #ifdef HAVE_PNG
 #include <png.h>
