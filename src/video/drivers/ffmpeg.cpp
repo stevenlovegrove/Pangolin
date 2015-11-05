@@ -539,7 +539,7 @@ void FfmpegVideoOutputStream::WriteAvPacket(AVPacket* pkt)
         pkt->stream_index = stream->index;
         int ret = av_interleaved_write_frame(recorder.oc, pkt);
         if (ret < 0) throw VideoException("Error writing video frame");
-        if(pkt->pts != AV_NOPTS_VALUE) last_pts = pkt->pts;
+        if(pkt->pts != (int64_t)AV_NOPTS_VALUE) last_pts = pkt->pts;
     }
 }
 
