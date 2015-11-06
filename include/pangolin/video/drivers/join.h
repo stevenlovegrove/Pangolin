@@ -49,7 +49,7 @@ public:
 
     void Stop();
 
-    bool Sync(int64_t tol, bool continuous);
+    bool Sync(int64_t tolerance_us, bool continuous);
 
     bool GrabNext( unsigned char* image, bool wait = true );
 

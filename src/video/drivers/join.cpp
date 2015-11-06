@@ -79,7 +79,7 @@ void VideoJoiner::Stop()
     }
 }
 
-bool VideoJoiner::Sync(int64_t tol, bool continuous)
+bool VideoJoiner::Sync(int64_t tolerance_us, bool continuous)
 {
     for(size_t s=0; s< src.size(); ++s)
     {
@@ -88,7 +88,7 @@ bool VideoJoiner::Sync(int64_t tol, bool continuous)
          return false;
     }
     sync_attempts_to_go = MAX_SYNC_ATTEMPTS;
-    sync_tolerance_us = tol;
+    sync_tolerance_us = tolerance_us;
     sync_continuously = continuous;
     return true;
 }
