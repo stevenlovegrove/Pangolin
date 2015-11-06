@@ -97,6 +97,7 @@ bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
 {
     size_t offset = 0;
     std::vector<size_t> offsets;
+    std::vector<int64_t> reception_times;
     int64_t newest = std::numeric_limits<int64_t>::min();
     int64_t oldest = std::numeric_limits<int64_t>::max();
     bool grabbed_any = false;
