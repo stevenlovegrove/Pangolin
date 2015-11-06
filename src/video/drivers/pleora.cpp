@@ -296,10 +296,7 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool /*wait*/ )
     PvResult lOperationResult;
 
     // Retrieve next buffer
-    basetime t1 = TimeNow();
     PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, 1000 );
-    basetime t2 = TimeNow();
-    std::cout<<"grab next   dt us:" <<TimeDiff_us(t1, t2)<<std::endl;
     if ( !lResult.IsOK() ) {
         pango_print_warn("Pleora error: %s, '%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
         return false;
@@ -334,10 +331,7 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
 
     const uint32_t timeout = wait ? 0xFFFFFFFF : 0;
 
-    basetime t1 = TimeNow();
     PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout );
-    basetime t2 = TimeNow();
-    std::cout<<"  grab newest dt us:" <<TimeDiff_us(t1, t2)<<std::endl;
     if ( !lResult.IsOK() ) {
         pango_print_warn("  Pleora error: %s, '%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
         return false;
