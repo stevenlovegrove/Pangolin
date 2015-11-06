@@ -428,7 +428,6 @@ void PleoraVideo::SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, i
         pango_print_error("TriggerSource %lld fail\n", (long long)triggerSource);
     }
 
-
     lResult = lDeviceParams->SetEnumValue("TriggerMode",triggerMode);
     if(lResult.IsFailure()){
         pango_print_error("TriggerMode %lld fail\n", (long long)triggerMode);
@@ -440,9 +439,8 @@ void PleoraVideo::SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, i
     lDeviceParams->GetEnumValue("TriggerSource",triggerSource);
     lDeviceParams->GetEnumValue("TriggerMode",triggerMode);
 
-    pango_print_info("AcquisitionMode %lld\n", (long long)acquisitionMode);
-    pango_print_info("triggerSource %lld\n", (long long)triggerSource);
-    pango_print_info("triggerMode %lld\n", (long long)triggerMode);
+    if((acquisitionMode == 0) && (triggerSource == 0) && (triggerMode == 1))
+        pango_print_info("Pleora: external trigger active\n");
 }
 
 double PleoraVideo::GetExposure() {
