@@ -26,7 +26,6 @@
  */
 
 #include <pangolin/video/drivers/pleora.h>
-#include <pangolin/utils/timer.h>
 
 namespace pangolin
 {
@@ -298,7 +297,7 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool /*wait*/ )
     // Retrieve next buffer
     PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, 1000 );
     if ( !lResult.IsOK() ) {
-        pango_print_warn("Pleora error: %s, '%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
+        pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
         return false;
     }
 
