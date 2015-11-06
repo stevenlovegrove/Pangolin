@@ -410,6 +410,14 @@ VideoInterface* OpenVideo(const Uri& uri)
         }
 
         video = new VideoJoiner(src);
+
+        const unsigned long sync_tol_us = uri.Get<unsigned long>("sync_tolerance_us", 0);
+        const bool sync_continuosly = uri.Get<bool>("sync_continuosly", false);
+        if(sync_tol_us>0) {
+            if(!static_cast<VideoJoiner*>(video)->Sync(sync_tol_us, sync_continuosly)) {
+                pango_print_error("Error not all streams in join support sync_tolerance_us option.\n");
+            }
+        }
     }else
     if(!uri.scheme.compare("split"))
     {
@@ -649,13 +657,14 @@ VideoInterface* OpenVideo(const Uri& uri)
         const ImageDim desired_pos  = uri.Get<ImageDim>("pos", ImageDim(0,0));
         const size_t again = uri.Get<size_t>("again",-1);
         const double exposure = uri.Get<size_t>("exposure",0);
+        const bool ext_trig = uri.Get<bool>("eTrig",false);
 
         video = new PleoraVideo(
             model_name.empty() ? 0 : model_name.c_str(),
             serial_num.empty() ? 0 : serial_num.c_str(),
             idx, bpp, binx, biny, buffer_count,
             desired_size.x, desired_size.y, desired_pos.x, desired_pos.y,
-            again, exposure
+            again, exposure, ext_trig
         );
     }else
 #endif

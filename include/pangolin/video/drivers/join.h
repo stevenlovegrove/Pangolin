@@ -49,6 +49,8 @@ public:
 
     void Stop();
 
+    bool Sync(int64_t tol, bool continuous);
+
     bool GrabNext( unsigned char* image, bool wait = true );
 
     bool GrabNewest( unsigned char* image, bool wait = true );
@@ -59,6 +61,10 @@ protected:
     std::vector<VideoInterface*> src;
     std::vector<StreamInfo> streams;
     size_t size_bytes;
+    int sync_attempts_to_go;
+    int64_t sync_tolerance_us;
+    bool sync_continuously;
+    const static int MAX_SYNC_ATTEMPTS = 50;
 };
 
 

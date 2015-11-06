@@ -98,6 +98,13 @@
 // test - output test video sequence
 //  e.g. "test://"
 //  e.g. "test:[size=640x480,fmt=RGB24]//"
+//
+// pleora usb 3 vision cameras
+//  e.g. "pleora:[bpp=10,size=512x256,pos=712x512,again=1,sn=00000274,exposure=3000,eTrig=true,buffers=10]//"
+//
+// join - join streams
+//  e.g. "join:[sync_tolerance_us=100, sync_continuosly=true]//{pleora:[sn=00000274]//}{pleora:[sn=00000275]//}"
+
 
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_common.h>
