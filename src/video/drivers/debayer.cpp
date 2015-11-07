@@ -177,8 +177,24 @@ color_filter_t DebayerVideo::ColorFilterFromString(std::string str)
   else if(!str.compare("grbg") || !str.compare("GRBG")) return DC1394_COLOR_FILTER_GRBG;
   else if(!str.compare("bggr") || !str.compare("BGGR")) return DC1394_COLOR_FILTER_BGGR;
   else {
-     pango_print_error("Debayer error, %s is not a valid tile tile using RGGB\n", str.c_str());
+     pango_print_error("Debayer error, %s is not a valid tile type using RGGB\n", str.c_str());
      return DC1394_COLOR_FILTER_RGGB;
+  }
+}
+
+bayer_method_t DebayerVideo::BayerMethodFromString(std::string str)
+{
+  if(!str.compare("nearest")) return BAYER_METHOD_NEAREST;
+  else if(!str.compare("simple")) return BAYER_METHOD_SIMPLE;
+  else if(!str.compare("bilinear")) return BAYER_METHOD_BILINEAR;
+  else if(!str.compare("hqlinear")) return BAYER_METHOD_HQLINEAR;
+  else if(!str.compare("downsample")) return BAYER_METHOD_DOWNSAMPLE;
+  else if(!str.compare("edgesense")) return BAYER_METHOD_EDGESENSE;
+  else if(!str.compare("vng")) return BAYER_METHOD_VNG;
+  else if(!str.compare("ahd")) return BAYER_METHOD_AHD;
+  else {
+     pango_print_error("Debayer error, %s is not a valid debayer method using downsample\n", str.c_str());
+     return BAYER_METHOD_DOWNSAMPLE;
   }
 }
 

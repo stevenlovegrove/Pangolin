@@ -82,6 +82,7 @@ public:
     std::vector<VideoInterface*>& InputStreams();
 
     static color_filter_t ColorFilterFromString(std::string str);
+    static bayer_method_t BayerMethodFromString(std::string str);
 
 protected:
     std::vector<VideoInterface*> videoin;
