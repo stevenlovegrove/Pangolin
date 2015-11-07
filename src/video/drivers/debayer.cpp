@@ -92,18 +92,46 @@ const std::vector<StreamInfo>& DebayerVideo::Streams() const
     return streams;
 }
 
-void DownsampleDebayer(
-    Image<unsigned char>& out,
-    const Image<unsigned char>& in
-) {
-    // TODO: Take tile pattern as input
-    for(size_t y=0; y<out.h; ++y) {
-        for(size_t x=0; x<out.w; ++x) {
-            // BGGR Pattern
-            out.ptr[3*(y*out.w+x)+2] = in.ptr[2*y*in.pitch + 2*x];
-            out.ptr[3*(y*out.w+x)+1] = (in.ptr[2*y*in.pitch + 2*x + 1] + in.ptr[(2*y+1)*in.pitch + 2*x]) >> 1;
-            out.ptr[3*(y*out.w+x)+0] = in.ptr[(2*y+1)*in.pitch + 2*x + 1];
+void DownsampleDebayer(Image<unsigned char>& out, const Image<unsigned char>& in, color_filter_t tile)
+{
+    switch(tile) {
+      case DC1394_COLOR_FILTER_RGGB:
+        for(size_t y=0; y<out.h; ++y) {
+          for(size_t x=0; x<out.w; ++x) {
+             out.ptr[3*(y*out.w+x)+2] = in.ptr[(2*y+1)*in.pitch + 2*x + 1];
+             out.ptr[3*(y*out.w+x)+1] = (in.ptr[2*y*in.pitch + 2*x + 1] + in.ptr[(2*y+1)*in.pitch + 2*x]) >> 1;
+             out.ptr[3*(y*out.w+x)+0] = in.ptr[2*y*in.pitch + 2*x];
+          }
         }
+        break;
+      case DC1394_COLOR_FILTER_GBRG:
+        for(size_t y=0; y<out.h; ++y) {
+          for(size_t x=0; x<out.w; ++x) {
+             out.ptr[3*(y*out.w+x)+2] = in.ptr[2*y*in.pitch + 2*x + 1];
+             out.ptr[3*(y*out.w+x)+1] = (in.ptr[2*y*in.pitch + 2*x] + in.ptr[(2*y+1)*in.pitch + 2*x + 1]) >> 1;
+             out.ptr[3*(y*out.w+x)+0] = in.ptr[(2*y+1)*in.pitch + 2*x];
+
+          }
+        }
+        break;
+      case DC1394_COLOR_FILTER_GRBG:
+        for(size_t y=0; y<out.h; ++y) {
+          for(size_t x=0; x<out.w; ++x) {
+             out.ptr[3*(y*out.w+x)+2] = in.ptr[(2*y+1)*in.pitch + 2*x];
+             out.ptr[3*(y*out.w+x)+1] = (in.ptr[2*y*in.pitch + 2*x] + in.ptr[(2*y+1)*in.pitch + 2*x + 1]) >> 1;
+             out.ptr[3*(y*out.w+x)+0] = in.ptr[2*y*in.pitch + 2*x + 1];
+          }
+        }
+        break;
+      case DC1394_COLOR_FILTER_BGGR:
+        for(size_t y=0; y<out.h; ++y) {
+          for(size_t x=0; x<out.w; ++x) {
+             out.ptr[3*(y*out.w+x)+2] = in.ptr[2*y*in.pitch + 2*x];
+             out.ptr[3*(y*out.w+x)+1] = (in.ptr[2*y*in.pitch + 2*x + 1] + in.ptr[(2*y+1)*in.pitch + 2*x]) >> 1;
+             out.ptr[3*(y*out.w+x)+0] = in.ptr[(2*y+1)*in.pitch + 2*x + 1];
+          }
+        }
+        break;
     }
 }
 
@@ -122,7 +150,7 @@ bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
             );
 #else
             // use our simple debayering instead
-            DownsampleDebayer(img_out, img_in);
+            DownsampleDebayer(img_out, img_in, tile);
 #endif
         }
         return true;
@@ -142,5 +170,16 @@ std::vector<VideoInterface*>& DebayerVideo::InputStreams()
     return videoin;
 }
 
+color_filter_t DebayerVideo::ColorFilterFromString(std::string str)
+{
+  if(!str.compare("rggb") || !str.compare("RGGB")) return DC1394_COLOR_FILTER_RGGB;
+  else if(!str.compare("gbrg") || !str.compare("GBRG")) return DC1394_COLOR_FILTER_GBRG;
+  else if(!str.compare("grbg") || !str.compare("GRBG")) return DC1394_COLOR_FILTER_GRBG;
+  else if(!str.compare("bggr") || !str.compare("BGGR")) return DC1394_COLOR_FILTER_BGGR;
+  else {
+     pango_print_error("Debayer error, %s is not a valid tile tile using RGGB\n", str.c_str());
+     return DC1394_COLOR_FILTER_RGGB;
+  }
+}
 
 }

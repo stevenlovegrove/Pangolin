@@ -81,6 +81,8 @@ public:
 
     std::vector<VideoInterface*>& InputStreams();
 
+    static color_filter_t ColorFilterFromString(std::string str);
+
 protected:
     std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
