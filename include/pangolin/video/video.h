@@ -304,6 +304,45 @@ VideoInterface* OpenVideo(const std::string& uri);
 PANGOLIN_EXPORT
 VideoInterface* OpenVideo(const Uri& uri);
 
+//! Create vector of matching interfaces either through direct cast or filter interface.
+template<typename T>
+std::vector<T*> FindMatchingVideoInterfaces( VideoInterface& video )
+{
+    std::vector<T*> matches;
+
+    T* vid = dynamic_cast<T*>(&video);
+    if(vid) {
+        matches.push_back(vid);
+    }
+
+    VideoFilterInterface* vidf = dynamic_cast<VideoFilterInterface*>(&video);
+    if(vidf) {
+        std::vector<T*> fmatches = vidf->FindMatchingStreams<T>();
+        matches.insert(matches.begin(), fmatches.begin(), fmatches.end());
+    }
+
+    return matches;
+}
+
+template<typename T>
+T* FindFirstMatchingVideoInterface( VideoInterface& video )
+{
+    T* vid = dynamic_cast<T*>(&video);
+    if(vid) {
+        return vid;
+    }
+
+    VideoFilterInterface* vidf = dynamic_cast<VideoFilterInterface*>(&video);
+    if(vidf) {
+        std::vector<T*> fmatches = vidf->FindMatchingStreams<T>();
+        if(fmatches.size()) {
+            return fmatches[0];
+        }
+    }
+
+    return 0;
+}
+
 }
 
 #endif // PANGOLIN_VIDEO_H
