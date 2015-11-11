@@ -44,18 +44,25 @@ namespace pangolin
     typedef int64_t basetime;
 #endif
 
+PANGOLIN_EXPORT
 basetime TimeNow();
 
+PANGOLIN_EXPORT
 double Time_s(basetime t);
 
+PANGOLIN_EXPORT
 int64_t Time_us(basetime t);
 
+PANGOLIN_EXPORT
 double TimeDiff_s(basetime start, basetime end);
 
+PANGOLIN_EXPORT
 int64_t TimeDiff_us(basetime start, basetime end);
 
+PANGOLIN_EXPORT
 basetime TimeFromSeconds(double seconds);
 
+PANGOLIN_EXPORT
 basetime TimeAdd(basetime t1, basetime t2);
 
 inline double TimeNow_s()
