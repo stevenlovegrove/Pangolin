@@ -47,6 +47,7 @@
     #undef LoadImage
     #undef near
     #undef far
+    #undef ERROR
 #endif
 
 #ifdef HAVE_GLEW
