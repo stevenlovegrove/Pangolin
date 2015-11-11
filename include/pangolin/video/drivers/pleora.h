@@ -49,12 +49,14 @@ namespace pangolin
 
 typedef std::list<PvBuffer *> BufferList;
 
-class PANGOLIN_EXPORT PleoraVideo : public VideoInterface
+class PANGOLIN_EXPORT PleoraVideo :
+        public VideoInterface, public VideoPropertiesInterface
 {
 public:
 
     PleoraVideo(const char *model_name, const char *serial_num, size_t index, size_t bpp = 8, size_t binX = 1, size_t binY = 1, size_t buffer_count = 4,
-                size_t desired_size_x = 0, size_t desired_size_y = 0, size_t desired_pos_x = 0, size_t desired_pos_y = 0);
+                size_t desired_size_x = 0, size_t desired_size_y = 0, size_t desired_pos_x = 0, size_t desired_pos_y = 0, int again = -1, double exposure = 0,
+                bool ext_trig=false);
     ~PleoraVideo();
 
     void Start();
@@ -69,6 +71,24 @@ public:
 
     bool GrabNewest( unsigned char* image, bool wait = true );
 
+    void SetGain(int64_t val);
+
+    int64_t GetGain();
+
+    void SetExposure(double val);
+
+    double GetExposure();
+
+    void SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, int64_t triggerMode);
+
+    const json::value& DeviceProperties() const {
+        return device_properties;
+    }
+
+    const json::value& FrameProperties() const {
+        return frame_properties;
+    }
+
 protected:
     template<typename T>
     T DeviceParam(const char* name);
@@ -77,6 +97,9 @@ protected:
     T StreamParam(const char* name);
 
     std::vector<StreamInfo> streams;
+    json::value device_properties;
+    json::value frame_properties;
+
     size_t size_bytes;
 
     // Pleora handles

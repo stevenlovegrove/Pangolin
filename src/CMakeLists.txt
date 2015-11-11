@@ -39,6 +39,7 @@ if(BUILD_PANGOLIN_GUI)
     append_glob(HEADERS ${INCDIR}/plot/*.h*)
     append_glob(SOURCES plot/*.cpp)
   endif()
+
 endif()
 
 option(BUILD_PANGOLIN_VARS "Build support for Pangolin Vars" ON)
@@ -196,7 +197,7 @@ else()
 endif()
 
 find_package(PythonLibs QUIET)
-if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND PYTHONLIBS_FOUND)
+if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND PYTHONLIBS_FOUND AND FALSE)
   set(HAVE_PYTHON 1)
   list(APPEND HEADERS
     ${INCDIR}/console/ConsoleInterpreter.h

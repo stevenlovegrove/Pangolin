@@ -51,7 +51,7 @@ int main( int /*argc*/, char* argv[] )
   // share the same aspect ratio, placing them in a raster fasion in the
   // viewport so as to maximise display size.
   pangolin::Display("multi")
-      .SetBounds(1.0, 0.0, 0.0, 1.0)
+      .SetBounds(0.0, 1.0, 0.0, 1.0)
       .SetLayout(pangolin::LayoutEqual)
       .AddDisplay(d_cam1)
       .AddDisplay(d_img1)

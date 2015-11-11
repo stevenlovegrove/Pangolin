@@ -539,7 +539,7 @@ void FfmpegVideoOutputStream::WriteAvPacket(AVPacket* pkt)
         pkt->stream_index = stream->index;
         int ret = av_interleaved_write_frame(recorder.oc, pkt);
         if (ret < 0) throw VideoException("Error writing video frame");
-        last_pts = pkt->pts;
+        if(pkt->pts != (int64_t)AV_NOPTS_VALUE) last_pts = pkt->pts;
     }
 }
 
@@ -559,6 +559,7 @@ void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
         pkt.flags        |= AV_PKT_FLAG_KEY;
         pkt.data          = frame->data[0];
         pkt.size          = sizeof(AVPicture);
+        pkt.pts           = frame->pts;
         ret = 0;
     } else {
         /* encode the image */
@@ -587,7 +588,7 @@ void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
 
 void FfmpegVideoOutputStream::WriteImage(const uint8_t* img, int w, int h, double time=-1.0)
 {
-    const int64_t pts = (time >= 0) ? time / BaseFrameTime() : last_pts + 1;
+    const int64_t pts = (time >= 0) ? time / BaseFrameTime() : ++last_pts;
 
     recorder.StartStream();
 

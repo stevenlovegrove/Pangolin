@@ -29,9 +29,8 @@
 
 namespace pangolin
 {
-
 VideoJoiner::VideoJoiner(const std::vector<VideoInterface*>& src)
-    : src(src), size_bytes(0)
+    : src(src), size_bytes(0), sync_attempts_to_go(-1), sync_continuously(false)
 {
     // Add individual streams
     for(size_t s=0; s< src.size(); ++s)
@@ -50,6 +49,10 @@ VideoJoiner::VideoJoiner(const std::vector<VideoInterface*>& src)
 
 VideoJoiner::~VideoJoiner()
 {
+    for(size_t s=0; s< src.size(); ++s) {
+        src[s]->Stop();
+        delete src[s];
+    }
 }
 
 size_t VideoJoiner::SizeBytes() const
@@ -76,16 +79,62 @@ void VideoJoiner::Stop()
     }
 }
 
-bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
+bool VideoJoiner::Sync(int64_t tolerance_us, bool continuous)
 {
-    bool grabbed_any = false;
-    size_t offset = 0;
     for(size_t s=0; s< src.size(); ++s)
     {
-        VideoInterface& vid = *src[s];
-        grabbed_any |= vid.GrabNext(image+offset,wait);
-        offset += vid.SizeBytes();
+       VideoPropertiesInterface* vpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
+       if(!vpi)
+         return false;
     }
+    sync_attempts_to_go = MAX_SYNC_ATTEMPTS;
+    sync_tolerance_us = tolerance_us;
+    sync_continuously = continuous;
+    return true;
+}
+
+bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
+{
+    size_t offset = 0;
+    std::vector<size_t> offsets;
+    std::vector<int64_t> reception_times;
+    int64_t newest = std::numeric_limits<int64_t>::min();
+    int64_t oldest = std::numeric_limits<int64_t>::max();
+    bool grabbed_any = false;
+
+    for(size_t s=0; s<src.size(); ++s) {
+       VideoInterface& vid = *src[s];
+       grabbed_any |= vid.GrabNext(image+offset,wait);
+       offsets.push_back(offset);
+       offset += vid.SizeBytes();
+       if(sync_attempts_to_go >= 0) {
+          VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
+          if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
+             int64_t rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
+             reception_times.push_back(rt);
+             if(newest < rt) newest = rt;
+             if(oldest > rt) oldest = rt;
+          } else {
+             sync_attempts_to_go = -1;
+             pango_print_error("Stream %lu in join does not support startup_sync_us option.\n", s);
+          }
+       }
+    }
+
+    if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
+       pango_print_warn("Join error, unable to sync streams within %lu us\n", sync_tolerance_us);
+    }
+
+    if(sync_attempts_to_go >= 0) {
+       for(size_t s=0; s<src.size(); ++s) {
+          if(reception_times[s] < (newest - sync_tolerance_us)) {
+             VideoInterface& vid = *src[s];
+             vid.GrabNewest(image+offsets[s],false);
+          }
+       }
+       if(!sync_continuously) --sync_attempts_to_go;
+    }
+
     return grabbed_any;
 }
 

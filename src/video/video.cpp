@@ -365,6 +365,10 @@ VideoInterface* OpenVideo(const Uri& uri)
         }else if(ft == ImageFileTypePango ) {
             const bool realtime = uri.Contains("realtime");
             video = new PangoVideo(PathExpand(uri.url).c_str(), realtime);
+        }else if(ft == ImageFileTypeExr || ft == ImageFileTypeGif || ft == ImageFileTypeJpg ||
+                 ft == ImageFileTypePng || ft == ImageFileTypePpm || ft == ImageFileTypeTga ||
+                 ft == ImageFileTypeTiff) {
+            video = new ImagesVideo(PathExpand(uri.url));
         }else{
             throw VideoException("Unrecognised file type." );
         }
@@ -372,7 +376,11 @@ VideoInterface* OpenVideo(const Uri& uri)
     if(!uri.scheme.compare("debayer"))
     {
         VideoInterface* subvid = OpenVideo(uri.url);
-        video = new DebayerVideo(subvid, DC1394_COLOR_FILTER_BGGR, BAYER_METHOD_HQLINEAR );
+        std::string tile_string = uri.Get<std::string>("tile","rggb");
+        std::string method_string = uri.Get<std::string>("method","downsample");
+        color_filter_t tile = DebayerVideo::ColorFilterFromString(tile_string);
+        bayer_method_t method = DebayerVideo::BayerMethodFromString(method_string);
+        video = new DebayerVideo(subvid, tile, method);
     }else
     if(!uri.scheme.compare("shift"))
     {
@@ -406,6 +414,14 @@ VideoInterface* OpenVideo(const Uri& uri)
         }
 
         video = new VideoJoiner(src);
+
+        const unsigned long sync_tol_us = uri.Get<unsigned long>("sync_tolerance_us", 0);
+        const bool sync_continuosly = uri.Get<bool>("sync_continuosly", false);
+        if(sync_tol_us>0) {
+            if(!static_cast<VideoJoiner*>(video)->Sync(sync_tol_us, sync_continuosly)) {
+                pango_print_error("Error not all streams in join support sync_tolerance_us option.\n");
+            }
+        }
     }else
     if(!uri.scheme.compare("split"))
     {
@@ -643,12 +659,16 @@ VideoInterface* OpenVideo(const Uri& uri)
         const size_t buffer_count = uri.Get<size_t>("buffers",4);
         const ImageDim desired_size = uri.Get<ImageDim>("size", ImageDim(0,0));
         const ImageDim desired_pos  = uri.Get<ImageDim>("pos", ImageDim(0,0));
+        const size_t again = uri.Get<size_t>("again",-1);
+        const double exposure = uri.Get<size_t>("exposure",0);
+        const bool ext_trig = uri.Get<bool>("eTrig",false);
 
         video = new PleoraVideo(
             model_name.empty() ? 0 : model_name.c_str(),
             serial_num.empty() ? 0 : serial_num.c_str(),
             idx, bpp, binx, biny, buffer_count,
-            desired_size.x, desired_size.y, desired_pos.x, desired_pos.y
+            desired_size.x, desired_size.y, desired_pos.x, desired_pos.y,
+            again, exposure, ext_trig
         );
     }else
 #endif

@@ -93,17 +93,30 @@
 //  e.g. "split:[mem1=307200:640x480:1280:GRAY8,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 //
 // debayer - debayer an input video stream
-// e.g.  "debayer://v4l:///dev/video0
+// e.g.  "debayer:[tile="BGGR",method="downsample"]//v4l:///dev/video0
 //
 // test - output test video sequence
 //  e.g. "test://"
 //  e.g. "test:[size=640x480,fmt=RGB24]//"
+//
+// pleora usb 3 vision cameras
+//  e.g. "pleora:[bpp=10,size=512x256,pos=712x512,again=1,sn=00000274,exposure=3000,eTrig=true,buffers=10]//"
+//
+// join - join streams
+//  e.g. "join:[sync_tolerance_us=100, sync_continuosly=true]//{pleora:[sn=00000274]//}{pleora:[sn=00000275]//}"
+
 
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_common.h>
 #include <pangolin/utils/picojson.h>
 
 #include <vector>
+
+#define PANGO_HOST_RECEPTION_TIME_US "host_reception_time_us"
+#define PANGO_CAPTURE_TIME_US "capture_time_us"
+#define PANGO_EXPOSURE_US "exposure_us"
+#define PANGO_ANALOG_GAIN "analog_gain"
+
 
 namespace pangolin
 {
@@ -290,6 +303,45 @@ VideoInterface* OpenVideo(const std::string& uri);
 //! Open Video Interface from Uri specification
 PANGOLIN_EXPORT
 VideoInterface* OpenVideo(const Uri& uri);
+
+//! Create vector of matching interfaces either through direct cast or filter interface.
+template<typename T>
+std::vector<T*> FindMatchingVideoInterfaces( VideoInterface& video )
+{
+    std::vector<T*> matches;
+
+    T* vid = dynamic_cast<T*>(&video);
+    if(vid) {
+        matches.push_back(vid);
+    }
+
+    VideoFilterInterface* vidf = dynamic_cast<VideoFilterInterface*>(&video);
+    if(vidf) {
+        std::vector<T*> fmatches = vidf->FindMatchingStreams<T>();
+        matches.insert(matches.begin(), fmatches.begin(), fmatches.end());
+    }
+
+    return matches;
+}
+
+template<typename T>
+T* FindFirstMatchingVideoInterface( VideoInterface& video )
+{
+    T* vid = dynamic_cast<T*>(&video);
+    if(vid) {
+        return vid;
+    }
+
+    VideoFilterInterface* vidf = dynamic_cast<VideoFilterInterface*>(&video);
+    if(vidf) {
+        std::vector<T*> fmatches = vidf->FindMatchingStreams<T>();
+        if(fmatches.size()) {
+            return fmatches[0];
+        }
+    }
+
+    return 0;
+}
 
 }
 

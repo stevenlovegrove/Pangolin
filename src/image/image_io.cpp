@@ -32,6 +32,7 @@
 #include <fstream>
 #include <string.h>
 #include <cstring>
+#include <vector>
 
 #ifdef HAVE_PNG
 #include <png.h>
@@ -185,7 +186,7 @@ TypedImage LoadPng(const std::string& filename)
         png_set_sig_bytes(png_ptr, nBytes);
         
         //read the file
-        png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+        png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_SWAP_ENDIAN, NULL);
         
         if( png_get_bit_depth(png_ptr, info_ptr) == 1)  {
             //Unpack bools to bytes to ease loading.
@@ -285,28 +286,27 @@ void SavePng(const Image<unsigned char>& image, const pangolin::VideoPixelFormat
         throw std::runtime_error( "PNG Error: unexpected image channel number");
     }
 
-    // Write header (8 bit colour depth)
+    // Write header
     png_set_IHDR(
         png_ptr, info_ptr, image.w, image.h, bit_depth, colour_type,
         PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT
     );
 
-    png_write_info(png_ptr, info_ptr);
-
-    // Write image data
-
+    // Setup rows to write:
+    std::vector<png_bytep> rows(image.h);
     if(top_line_first) {
         for (unsigned int y = 0; y< image.h; y++) {
-            png_write_row(png_ptr, image.ptr + y*image.pitch);
+            rows[y] = image.ptr + y*image.pitch;
         }
     }else{
-        for (int y = (int)image.h-1; y >=0; y--) {
-            png_write_row(png_ptr, image.ptr + y*image.pitch);
+        for (unsigned int y = 0; y< image.h; y++) {
+            rows[y] = image.ptr + (image.h-1-y)*image.pitch;
         }
     }
+    png_set_rows(png_ptr,info_ptr, &rows[0]);
 
-    // End write
-    png_write_end(png_ptr, NULL);
+    // Write image data: switch to little-endian byte order, to match host.
+    png_write_png(png_ptr,info_ptr, PNG_TRANSFORM_SWAP_ENDIAN, 0);
 
     // Free resources
     fclose(fp);
