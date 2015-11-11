@@ -93,7 +93,7 @@
 //  e.g. "split:[mem1=307200:640x480:1280:GRAY8,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 //
 // debayer - debayer an input video stream
-// e.g.  "debayer://v4l:///dev/video0
+// e.g.  "debayer:[tile="BGGR",method="downsample"]//v4l:///dev/video0
 //
 // test - output test video sequence
 //  e.g. "test://"

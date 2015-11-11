@@ -376,7 +376,11 @@ VideoInterface* OpenVideo(const Uri& uri)
     if(!uri.scheme.compare("debayer"))
     {
         VideoInterface* subvid = OpenVideo(uri.url);
-        video = new DebayerVideo(subvid, DC1394_COLOR_FILTER_BGGR, BAYER_METHOD_HQLINEAR );
+        std::string tile_string = uri.Get<std::string>("tile","rggb");
+        std::string method_string = uri.Get<std::string>("method","downsample");
+        color_filter_t tile = DebayerVideo::ColorFilterFromString(tile_string);
+        bayer_method_t method = DebayerVideo::BayerMethodFromString(method_string);
+        video = new DebayerVideo(subvid, tile, method);
     }else
     if(!uri.scheme.compare("shift"))
     {
