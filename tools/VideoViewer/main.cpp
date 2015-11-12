@@ -5,39 +5,6 @@
 #include <pangolin/handler/handler_image.h>
 #include <pangolin/utils/file_utils.h>
 
-template<typename T>
-std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, float type_max, float format_max)
-{
-    std::pair<float,float> mm(std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
-
-    for(size_t y=0; y < img.h; ++y) {
-        T* pix = (T*)((char*)img.ptr + y*img.pitch);
-        for(size_t x=0; x < img.w; ++x) {
-            const T val = *(pix++);
-            if(val != 0) {
-                if(val < mm.first) mm.first = val;
-                if(val > mm.second) mm.second = val;
-            }
-        }
-    }
-
-    const float type_scale = format_max / type_max;
-    const float offset = -type_scale* mm.first;
-    const float scale = type_max / (mm.second - mm.first);
-    return std::pair<float,float>(offset, scale);
-}
-
-template<typename T>
-pangolin::Image<T> ImageRoi( pangolin::Image<T> img, const pangolin::XYRangei& roi )
-{
-    const int xmin = std::min(roi.x.min,roi.x.max);
-    const int ymin = std::min(roi.y.min,roi.y.max);
-    return pangolin::Image<T>(
-        roi.x.AbsSize(), roi.y.AbsSize(),
-        img.pitch, img.RowPtr(ymin) + xmin
-    );
-}
-
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
     int frame = 0;
@@ -247,10 +214,6 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
             }
         }
 
-        // Setup to render in normalised coordinates.
-        glMatrixMode(GL_PROJECTION); glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);  glLoadIdentity();
-        glEnableClientState(GL_VERTEX_ARRAY);
         glLineWidth(1.5f);
         glDisable(GL_DEPTH_TEST);
 
@@ -259,56 +222,25 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
             if(container[i].IsShown()) {
                 container[i].Activate();
                 pangolin::Image<unsigned char>& image = images[i];
-                glMatrixMode(GL_PROJECTION);
-                glLoadIdentity();
 
-                handlers[i].UpdateView();
-                const pangolin::XYRangef& xy = handlers[i].GetViewToRender();
-                glOrtho(xy.x.min, xy.x.max, xy.y.min, xy.y.max, -1, 1);
-
-                const GLfloat l = xy.x.min; const GLfloat r = xy.x.max;
-                const GLfloat b = xy.y.min; const GLfloat t = xy.y.max;
-                const GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
+                // Get texture of correct dimension / format
                 const pangolin::GlPixFormat& fmt = glfmt[i];
-
-                const std::pair<float,float> os = gloffsetscale[i];
                 pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, fmt.scalable_internal_format, fmt.glformat, fmt.gltype);
+
+                // Upload image data to texture
                 tex.Bind();
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, handlers[i].UseNN() ? GL_NEAREST : GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, handlers[i].UseNN() ? GL_NEAREST : GL_LINEAR);
                 tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
 
-                const GLfloat ln = l / (float)(image.w);
-                const GLfloat bn = b / (float)(image.h);
-                const GLfloat rn = r / (float)(image.w);
-                const GLfloat tn = t / (float)(image.h);
-                const GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
-
+                // Render
+                handlers[i].UpdateView();
+                handlers[i].glSetViewOrtho();
+                const std::pair<float,float> os = gloffsetscale[i];
                 pangolin::GlSlUtilities::OffsetAndScale(os.first, os.second);
-                glEnable(GL_TEXTURE_2D);
-                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
-                glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-                glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-                glDisable(GL_TEXTURE_2D);
-                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+                handlers[i].glRenderTexture(tex);
                 pangolin::GlSlUtilities::UseNone();
-
-                const pangolin::XYRangef& selxy = handlers[i].GetSelection();
-                const GLfloat sq_select[] = {
-                    selxy.x.min, selxy.y.min,
-                    selxy.x.max, selxy.y.min,
-                    selxy.x.max, selxy.y.max,
-                    selxy.x.min, selxy.y.max
-                };
-                glColor4f(1.0,0.0,0.0,1.0);
-                glVertexPointer(2, GL_FLOAT, 0, sq_select);
-                glDrawArrays(GL_LINE_LOOP, 0, 4);
+                handlers[i].glRenderOverlay();
             }
         }
-
-        glMatrixMode(GL_MODELVIEW);
-        glDisableClientState(GL_VERTEX_ARRAY);
 
         pangolin::FinishFrame();
     }

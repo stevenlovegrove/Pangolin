@@ -1,6 +1,38 @@
+/* This file is part of the Pangolin Project.
+ * http://github.com/stevenlovegrove/Pangolin
+ *
+ * Copyright (c) 2013 Steven Lovegrove
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#ifndef PANGOLIN_HANDLER_IMAGE_H
+#define PANGOLIN_HANDLER_IMAGE_H
+
+#include <pangolin/image/image_utils.h>
 #include <pangolin/display/viewport.h>
 #include <pangolin/handler/handler.h>
 #include <pangolin/plot/range.h>
+#include <pangolin/gl/gl.h>
 
 namespace pangolin
 {
@@ -36,6 +68,68 @@ public:
             pangolin::XYRangef d = target - rview;
             rview += d * animate_factor;
         }
+    }
+
+    void glSetViewOrtho()
+    {
+        const pangolin::XYRangef& xy = GetViewToRender();
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(xy.x.min, xy.x.max, xy.y.min, xy.y.max, -1, 1);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+    }
+
+    void glRenderTexture(pangolin::GlTexture& tex)
+    {
+        const pangolin::XYRangef& xy = GetViewToRender();
+        const float w = tex.width;
+        const float h = tex.height;
+
+        const GLfloat l = xy.x.min;
+        const GLfloat r = xy.x.max;
+        const GLfloat b = xy.y.min;
+        const GLfloat t = xy.y.max;
+        const GLfloat ln = l / w;
+        const GLfloat rn = r / w;
+        const GLfloat bn = b / h;
+        const GLfloat tn = t / h;
+
+        const GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
+        const GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
+
+        tex.Bind();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
+
+        glEnable(GL_TEXTURE_2D);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+        glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisable(GL_TEXTURE_2D);
+        tex.Unbind();
+    }
+
+    void glRenderOverlay()
+    {
+        const pangolin::XYRangef& selxy = GetSelection();
+        const GLfloat sq_select[] = {
+            selxy.x.min, selxy.y.min,
+            selxy.x.max, selxy.y.min,
+            selxy.x.max, selxy.y.max,
+            selxy.x.min, selxy.y.max
+        };
+        glColor4f(1.0,0.0,0.0,1.0);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(2, GL_FLOAT, 0, sq_select);
+        glDrawArrays(GL_LINE_LOOP, 0, 4);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glColor4f(1.0,1.0,1.0,1.0);
     }
 
     void ScreenToImage(Viewport& v, int xpix, int ypix, float& ximg, float& yimg)
@@ -311,3 +405,4 @@ float ImageViewHandler::animate_factor = 1.0f / 2.0f;
 ImageViewHandler* ImageViewHandler::to_link = 0;
 
 }
+#endif // PANGOLIN_HANDLER_IMAGE_H
