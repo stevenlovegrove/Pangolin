@@ -73,6 +73,7 @@
 #include <pangolin/video/drivers/video_splitter.h>
 #include <pangolin/video/drivers/debayer.h>
 #include <pangolin/video/drivers/shift.h>
+#include <pangolin/video/drivers/mirror.h>
 #include <pangolin/video/drivers/unpack.h>
 #include <pangolin/video/drivers/join.h>
 
@@ -389,6 +390,11 @@ VideoInterface* OpenVideo(const Uri& uri)
 
         VideoInterface* subvid = OpenVideo(uri.url);
         video = new ShiftVideo(subvid, VideoFormatFromString("GRAY8"), shift_right, mask);
+    }else
+    if(!uri.scheme.compare("mirror"))
+    {
+        VideoInterface* subvid = OpenVideo(uri.url);
+        video = new MirrorVideo(subvid);
     }else
     if(!uri.scheme.compare("unpack"))
     {

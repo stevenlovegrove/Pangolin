@@ -69,6 +69,7 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/drivers/pango_video_output.h
     ${INCDIR}/video/drivers/debayer.h
     ${INCDIR}/video/drivers/shift.h
+    ${INCDIR}/video/drivers/mirror.h
     ${INCDIR}/video/drivers/unpack.h
     ${INCDIR}/video/drivers/join.h
   )
@@ -81,6 +82,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/pango_video_output.cpp
     video/drivers/debayer.cpp
     video/drivers/shift.cpp
+    video/drivers/mirror.cpp
     video/drivers/unpack.cpp
     video/drivers/join.cpp
   )
