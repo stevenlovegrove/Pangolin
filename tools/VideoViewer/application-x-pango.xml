@@ -4,6 +4,6 @@
         <comment>Pangolin Video File</comment>
         <icon name="application-x-pango"/>
         <glob-deleteall/>
-        <glob pattern="*.pango"/>
+        <glob pattern="*.pango;*.oni"/>
     </mime-type>
 </mime-info>
