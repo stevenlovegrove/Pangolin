@@ -181,5 +181,17 @@ std::vector<VideoInterface*>& UnpackVideo::InputStreams()
     return videoin;
 }
 
+const json::value& UnpackVideo::DeviceProperties() const
+{
+    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
+    return in_prop ? in_prop->DeviceProperties() : device_properties;
+}
+
+const json::value& UnpackVideo::FrameProperties() const
+{
+    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
+    return in_prop ? in_prop->FrameProperties() : frame_properties;
+}
+
 
 }

@@ -141,5 +141,17 @@ std::vector<VideoInterface*>& MirrorVideo::InputStreams()
     return inputs;
 }
 
+const json::value& MirrorVideo::DeviceProperties() const
+{
+    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin);
+    return in_prop ? in_prop->DeviceProperties() : device_properties;
+}
+
+const json::value& MirrorVideo::FrameProperties() const
+{
+    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin);
+    return in_prop ? in_prop->FrameProperties() : frame_properties;
+}
+
 
 }

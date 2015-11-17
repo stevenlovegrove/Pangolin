@@ -36,7 +36,9 @@ namespace pangolin
 
 // Video class that debayers its video input using the given method.
 class PANGOLIN_EXPORT MirrorVideo :
-    public VideoInterface, public VideoFilterInterface
+    public VideoInterface,
+    public VideoFilterInterface,
+    public VideoPropertiesInterface
 {
 public:
     MirrorVideo(VideoInterface* videoin);
@@ -60,7 +62,14 @@ public:
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
+    //! Implement VideoFilterInterface method
     std::vector<VideoInterface*>& InputStreams();
+
+    //! Implement VideoPropertiesInterface method
+    const json::value& DeviceProperties() const;
+
+    //! Implement VideoPropertiesInterface method
+    const json::value& FrameProperties() const;
 
 protected:
     VideoInterface* videoin;
@@ -68,6 +77,9 @@ protected:
     std::vector<StreamInfo> streams;
     size_t size_bytes;
     unsigned char* buffer;
+
+    json::value device_properties;
+    json::value frame_properties;
 };
 
 }
