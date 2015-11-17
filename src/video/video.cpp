@@ -422,9 +422,9 @@ VideoInterface* OpenVideo(const Uri& uri)
         video = new VideoJoiner(src);
 
         const unsigned long sync_tol_us = uri.Get<unsigned long>("sync_tolerance_us", 0);
-        const bool sync_continuosly = uri.Get<bool>("sync_continuosly", false);
+        const bool sync_continuously = uri.Get<bool>("sync_continuously", false);
         if(sync_tol_us>0) {
-            if(!static_cast<VideoJoiner*>(video)->Sync(sync_tol_us, sync_continuosly)) {
+            if(!static_cast<VideoJoiner*>(video)->Sync(sync_tol_us, sync_continuously)) {
                 pango_print_error("Error not all streams in join support sync_tolerance_us option.\n");
             }
         }
