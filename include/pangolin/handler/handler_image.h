@@ -163,6 +163,13 @@ public:
         return selection;
     }
 
+    void GetHover(float& x, float& y)
+    {
+        ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
+        x = tv.hover_img[0];
+        y = tv.hover_img[1];
+    }
+
     void SetView(const pangolin::XYRangef& range)
     {
         ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
@@ -271,7 +278,7 @@ public:
     void Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state) PANGOLIN_OVERRIDE
     {
         XYRangef& sel = linked_view_handler ? linked_view_handler->selection : selection;
-        ScreenToImage(view.v, x, y, hover[0], hover[1]);
+        ScreenToImage(view.v, x, y, hover_img[0], hover_img[1]);
 
         const float scinc = 1.05f;
         const float scdec = 1.0f/scinc;
@@ -292,15 +299,15 @@ public:
             if(button == MouseButtonLeft) {
                 // Update selected range
                 if(pressed) {
-                    sel.x.min = hover[0];
-                    sel.y.min = hover[1];
+                    sel.x.min = hover_img[0];
+                    sel.y.min = hover_img[1];
                 }
-                sel.x.max = hover[0];
-                sel.y.max = hover[1];
+                sel.x.max = hover_img[0];
+                sel.y.max = hover_img[1];
             }else if(button == MouseWheelUp) {
-                ScaleViewSmooth(scdec, scdec, hover[0], hover[1]);
+                ScaleViewSmooth(scdec, scdec, hover_img[0], hover_img[1]);
             }else if(button == MouseWheelDown) {
-                ScaleViewSmooth(scinc, scinc, hover[0], hover[1]);
+                ScaleViewSmooth(scinc, scinc, hover_img[0], hover_img[1]);
             }
         }
 
@@ -315,13 +322,13 @@ public:
         const int d[2] = {x-last_mouse_pos[0], y-last_mouse_pos[1]};
 
         // Update hover status (after potential resizing)
-        ScreenToImage(view.v, x, y, hover[0], hover[1]);
+        ScreenToImage(view.v, x, y, hover_img[0], hover_img[1]);
 
         if( button_state == MouseButtonLeft )
         {
             // Update selected range
-            sel.x.max = hover[0];
-            sel.y.max = hover[1];
+            sel.x.max = hover_img[0];
+            sel.y.max = hover_img[1];
         }else if(button_state == MouseButtonRight )
         {
             Special(view, InputSpecialScroll, x, y, d[0], -d[1], 0.0f, 0.0f, button_state);
@@ -338,7 +345,7 @@ public:
 
     void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int /*button_state*/) PANGOLIN_OVERRIDE
     {
-        ScreenToImage(view.v, x, y, hover[0], hover[1]);
+        ScreenToImage(view.v, x, y, hover_img[0], hover_img[1]);
 
         if(inType == InputSpecialScroll) {
             const float d[2] = {p1,p2};
@@ -347,11 +354,11 @@ public:
             ScrollView(-df[0], df[1]);
         } else if(inType == InputSpecialZoom) {
             float scale = 1.0 - p1;
-            ScaleView(scale, scale, hover[0], hover[1]);
+            ScaleView(scale, scale, hover_img[0], hover_img[1]);
         }
 
         // Update hover status (after potential resizing)
-        ScreenToImage( view.v, (int)x, (int)y, hover[0], hover[1]);
+        ScreenToImage( view.v, (int)x, (int)y, hover_img[0], hover_img[1]);
     }
 
 protected:
@@ -395,7 +402,7 @@ protected:
     pangolin::XYRangef target;
     pangolin::XYRangef selection;
 
-    float hover[2];
+    float hover_img[2];
     int last_mouse_pos[2];
 
     bool use_nn;
