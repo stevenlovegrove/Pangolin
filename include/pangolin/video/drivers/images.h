@@ -43,6 +43,8 @@ class PANGOLIN_EXPORT ImagesVideo : public VideoInterface
 {
 public:
     ImagesVideo(const std::string& wildcard_path);
+    ImagesVideo(const std::string& wildcard_path, const VideoPixelFormat& raw_fmt, size_t raw_width, size_t raw_height);
+
     ~ImagesVideo();
     
     //! Implement VideoInput::Start()
@@ -70,7 +72,11 @@ protected:
         return filenames[channelNum][frameNum];
     }
     
+    void PopulateFilenames(const std::string& wildcard_path);
+
     bool QueueFrame();
+
+    void ConfigureStreamSizes();
     
     std::vector<StreamInfo> streams;
     size_t size_bytes;
@@ -79,9 +85,14 @@ protected:
     int num_files;
     size_t num_channels;
     std::vector<std::vector<std::string> > filenames;
-    
+
     int num_loaded;
     std::deque<Frame> loaded;
+
+    bool unknowns_are_raw;
+    VideoPixelFormat raw_fmt;
+    size_t raw_width;
+    size_t raw_height;
 };
 
 }

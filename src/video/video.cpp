@@ -360,6 +360,8 @@ VideoInterface* OpenVideo(const Uri& uri)
     {
         const ImageFileType ft = FileType(uri.url);
 
+        const bool raw = uri.Contains("fmt");
+
         if( ft == ImageFileTypePvn ) {
             const bool realtime = uri.Contains("realtime");
             video = new PvnVideo(PathExpand(uri.url).c_str(), realtime);
@@ -368,8 +370,15 @@ VideoInterface* OpenVideo(const Uri& uri)
             video = new PangoVideo(PathExpand(uri.url).c_str(), realtime);
         }else if(ft == ImageFileTypeExr || ft == ImageFileTypeGif || ft == ImageFileTypeJpg ||
                  ft == ImageFileTypePng || ft == ImageFileTypePpm || ft == ImageFileTypeTga ||
-                 ft == ImageFileTypeTiff) {
-            video = new ImagesVideo(PathExpand(uri.url));
+                 ft == ImageFileTypeTiff || raw) {
+            if(raw) {
+                const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
+                const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
+                const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+                video = new ImagesVideo(PathExpand(uri.url), fmt, dim.x, dim.y);
+            }else{
+                video = new ImagesVideo(PathExpand(uri.url));
+            }
         }else{
             throw VideoException("Unrecognised file type." );
         }

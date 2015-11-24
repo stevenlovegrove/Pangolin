@@ -39,7 +39,13 @@ bool ImagesVideo::QueueFrame()
         Frame frame;
         for(size_t c=0; c< num_channels; ++c) {
             const std::string& filename = Filename(num_loaded,c);
-            frame.push_back( LoadImage( filename ) );
+            const ImageFileType file_type = FileType(filename);
+
+            if(file_type == ImageFileTypeUnknown && unknowns_are_raw) {
+                frame.push_back( LoadImage( filename, raw_fmt, raw_width, raw_height, raw_fmt.bpp * raw_width / 8) );
+            }else{
+                frame.push_back( LoadImage( filename, file_type ) );
+            }
         }
         loaded.push_back(frame);
         ++num_loaded;
@@ -48,15 +54,13 @@ bool ImagesVideo::QueueFrame()
     return false;
 }
 
-ImagesVideo::ImagesVideo(const std::string& wildcard_path)
-    : num_files(-1), num_channels(0),
-      num_loaded(0)
+void ImagesVideo::PopulateFilenames(const std::string& wildcard_path)
 {
     const std::vector<std::string> wildcards = Expand(wildcard_path, '[', ']', ',');
     num_channels = wildcards.size();
-    
+
     filenames.resize(num_channels);
-    
+
     for(size_t i = 0; i < wildcards.size(); ++i) {
         const std::string channel_wildcard = PathExpand(wildcards[i]);
         FilesMatchingWildcard(channel_wildcard, filenames[i]);
@@ -72,18 +76,49 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path)
             throw VideoException("No files found for wildcard '" + channel_wildcard + "'");
         }
     }
-    
-    // Load first image in order to determine stream sizes etc
-    QueueFrame();
-    
+}
+
+void ImagesVideo::ConfigureStreamSizes()
+{
     size_bytes = 0;
     for(size_t c=0; c < num_channels; ++c) {
         const TypedImage& img = loaded[0][c];
         const StreamInfo stream_info(img.fmt, img.w, img.h, img.pitch, (unsigned char*)0 + size_bytes);
-        streams.push_back(stream_info);        
+        streams.push_back(stream_info);
         size_bytes += img.h*img.pitch;
     }
+}
+
+ImagesVideo::ImagesVideo(const std::string& wildcard_path)
+    : num_files(-1), num_channels(0),
+      num_loaded(0), unknowns_are_raw(false)
+{
+    // Work out which files to sequence
+    PopulateFilenames(wildcard_path);
     
+    // Load first image in order to determine stream sizes etc
+    QueueFrame();
+
+    ConfigureStreamSizes();
+    
+    // TODO: Queue frames in another thread.
+}
+
+ImagesVideo::ImagesVideo(const std::string& wildcard_path,
+                         const VideoPixelFormat& raw_fmt,
+                         size_t raw_width, size_t raw_height
+)   : num_files(-1), num_channels(0),
+      num_loaded(0), unknowns_are_raw(true), raw_fmt(raw_fmt),
+      raw_width(raw_width), raw_height(raw_height)
+{
+    // Work out which files to sequence
+    PopulateFilenames(wildcard_path);
+
+    // Load first image in order to determine stream sizes etc
+    QueueFrame();
+
+    ConfigureStreamSizes();
+
     // TODO: Queue frames in another thread.
 }
 
