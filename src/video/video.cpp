@@ -671,7 +671,7 @@ VideoInterface* OpenVideo(const Uri& uri)
         const size_t bpp = uri.Get<size_t>("bpp",8);
         const size_t binx = uri.Get<size_t>("binx",1);
         const size_t biny = uri.Get<size_t>("biny",1);
-        const size_t buffer_count = uri.Get<size_t>("buffers",4);
+        const size_t buffer_count = uri.Get<size_t>("buffers", PleoraVideo::DEFAULT_BUFFER_COUNT);
         const ImageDim desired_size = uri.Get<ImageDim>("size", ImageDim(0,0));
         const ImageDim desired_pos  = uri.Get<ImageDim>("pos", ImageDim(0,0));
         const size_t again = uri.Get<size_t>("again",-1);
