@@ -298,7 +298,9 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool wait)
     // Retrieve next buffer
     PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout);
     if ( !lResult.IsOK() ) {
-        pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
+        if(wait || (lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT))) {
+            pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
+        }
         return false;
     }
 
@@ -332,7 +334,9 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
 
     PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout );
     if ( !lResult.IsOK() ) {
-        pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
+        if(wait || (lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT))) {
+            pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
+        }
         return false;
     }else if( !lOperationResult.IsOK() ) {
         pango_print_warn("Pleora error: %s,\n'%s'\n", lOperationResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
