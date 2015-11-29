@@ -289,13 +289,14 @@ const std::vector<StreamInfo>& PleoraVideo::Streams() const
     return streams;
 }
 
-bool PleoraVideo::GrabNext( unsigned char* image, bool /*wait*/ )
+bool PleoraVideo::GrabNext( unsigned char* image, bool wait)
 {
     PvBuffer *lBuffer = NULL;
     PvResult lOperationResult;
+    const uint32_t timeout = wait ? 1000 : 0;
 
     // Retrieve next buffer
-    PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, 1000 );
+    PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout);
     if ( !lResult.IsOK() ) {
         pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
         return false;
@@ -327,7 +328,6 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
     PvBuffer *lBuffer0 = NULL;
     PvBuffer *lBuffer = NULL;
     PvResult lOperationResult;
-
     const uint32_t timeout = wait ? 0xFFFFFFFF : 0;
 
     PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout );
