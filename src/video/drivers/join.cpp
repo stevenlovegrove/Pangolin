@@ -152,7 +152,7 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
   int64_t oldest = std::numeric_limits<int64_t>::max();
   bool grabbed_any = false;
   int first_stream_backlog = 0;
-  int64_t rt;
+  int64_t rt = 0;
 
   bool got_frame = false;
   do {
@@ -171,11 +171,13 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
           grabbed_any = true;
       }
   } while(got_frame);
-  reception_times.push_back(rt);
-  if(newest < rt) newest = rt;
-  if(oldest > rt) oldest = rt;
   offsets.push_back(offset);
   offset += src[0]->SizeBytes();
+  if(sync_attempts_to_go >= 0) {
+      reception_times.push_back(rt);
+      if(newest < rt) newest = rt;
+      if(oldest > rt) oldest = rt;
+  }
 
   for(size_t s=1; s<src.size(); ++s) {
       for (int i=0; i<first_stream_backlog; i++){
@@ -190,11 +192,13 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
               }
           }
       }
-      reception_times.push_back(rt);
-      if(newest < rt) newest = rt;
-      if(oldest > rt) oldest = rt;
       offsets.push_back(offset);
       offset += src[s]->SizeBytes();
+      if(sync_attempts_to_go >= 0) {
+          reception_times.push_back(rt);
+          if(newest < rt) newest = rt;
+          if(oldest > rt) oldest = rt;
+      }
   }
 
   if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
