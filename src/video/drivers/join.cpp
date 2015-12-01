@@ -135,12 +135,87 @@ bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
        if(!sync_continuously) --sync_attempts_to_go;
     }
 
+    std::cout<<sync_continuously<<" "<<oldest<<" "<<newest<<" "<<(newest - oldest)<<std::endl;
     return grabbed_any;
 }
 
 bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
 {
-    return GrabNext(image, wait);
+  // Simply calling GrabNewest on the child streams might cause loss of sync,
+  // instead we perform as many GrabNext as possible on the first stream and
+  // then pull the same number of frames from every other stream.
+
+  size_t offset = 0;
+  std::vector<size_t> offsets;
+  std::vector<int64_t> reception_times;
+  int64_t newest = std::numeric_limits<int64_t>::min();
+  int64_t oldest = std::numeric_limits<int64_t>::max();
+  bool grabbed_any = false;
+  int first_stream_backlog = 0;
+  int64_t rt = 0;
+
+  bool got_frame = false;
+  do {
+      got_frame = src[0]->GrabNext(image+offset,false);
+      if(got_frame) {
+          if(sync_attempts_to_go >= 0) {
+              VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[0]);
+              if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
+                  rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
+              } else {
+                  sync_attempts_to_go = -1;
+                  pango_print_error("Stream %u in join does not support startup_sync_us option.\n", 0);
+              }
+          }
+          first_stream_backlog++;
+          grabbed_any = true;
+      }
+  } while(got_frame);
+  offsets.push_back(offset);
+  offset += src[0]->SizeBytes();
+  if(sync_attempts_to_go >= 0) {
+      reception_times.push_back(rt);
+      if(newest < rt) newest = rt;
+      if(oldest > rt) oldest = rt;
+  }
+
+  for(size_t s=1; s<src.size(); ++s) {
+      for (int i=0; i<first_stream_backlog; i++){
+          grabbed_any |= src[s]->GrabNext(image+offset,true);
+          if(sync_attempts_to_go >= 0) {
+              VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
+              if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
+                  rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
+              } else {
+                  sync_attempts_to_go = -1;
+                  pango_print_error("Stream %lu in join does not support startup_sync_us option.\n", s);
+              }
+          }
+      }
+      offsets.push_back(offset);
+      offset += src[s]->SizeBytes();
+      if(sync_attempts_to_go >= 0) {
+          reception_times.push_back(rt);
+          if(newest < rt) newest = rt;
+          if(oldest > rt) oldest = rt;
+      }
+  }
+
+  if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
+     pango_print_warn("Join error, unable to sync streams within %lu us\n", sync_tolerance_us);
+  }
+
+  if(sync_attempts_to_go >= 0) {
+     for(size_t s=0; s<src.size(); ++s) {
+        if(reception_times[s] < (newest - sync_tolerance_us)) {
+           VideoInterface& vid = *src[s];
+           vid.GrabNewest(image+offsets[s],false);
+        }
+     }
+     if(!sync_continuously) --sync_attempts_to_go;
+  }
+
+  return grabbed_any;
 }
 
 std::vector<VideoInterface*>& VideoJoiner::InputStreams()
