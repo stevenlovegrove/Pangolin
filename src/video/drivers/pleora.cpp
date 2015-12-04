@@ -106,7 +106,7 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
 
 PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
                          size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int again, double exposure, bool ext_trig)
-    : lPvSystem(0), lDevice(0), lStream(0)
+    : size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0), lStreamParams(0)
 {
     lPvSystem = new PvSystem();
     if ( !lPvSystem ) {
@@ -115,12 +115,14 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
 
     const PvDeviceInfo *lDeviceInfo = SelectDevice(*lPvSystem, model_name, serial_num, index);
     if ( !lDeviceInfo ) {
+        delete lPvSystem;
         throw pangolin::VideoException("Pleora: Unable to select device");
     }
 
     PvResult lResult;
     lDevice = PvDevice::CreateAndConnect( lDeviceInfo, &lResult );
     if ( !lDevice ) {
+        delete lPvSystem;
         throw pangolin::VideoException("Pleora: Unable to connect to device", lResult.GetDescription().GetAscii() );
     }
 
@@ -128,6 +130,7 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     if ( !lStream ) {
         lDevice->Disconnect();
         PvDevice::Free(lDevice);
+        delete lPvSystem;
         throw pangolin::VideoException("Pleora: Unable to open stream", lResult.GetDescription().GetAscii() );
     }
 
