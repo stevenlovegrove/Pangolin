@@ -159,7 +159,14 @@ public:
         img.ptr += (size_t)base_ptr;
         return img;
     }
-    
+
+    //! Return Image wrapper around raw base pointer
+    const Image<unsigned char> StreamImage(const unsigned char* base_ptr) const {
+        Image<unsigned char> img = img_offset;
+        img.ptr += (size_t)base_ptr;
+        return img;
+    }
+
 protected:
     VideoPixelFormat fmt;        
     Image<unsigned char> img_offset;
@@ -196,6 +203,8 @@ struct PANGOLIN_EXPORT VideoInterface
 
 struct PANGOLIN_EXPORT VideoPropertiesInterface
 {
+    virtual ~VideoPropertiesInterface() {}
+
     //! Access JSON properties of device
     virtual const json::value& DeviceProperties() const = 0;
 
@@ -217,6 +226,8 @@ enum UvcRequestCode {
 
 struct PANGOLIN_EXPORT VideoFilterInterface
 {
+    virtual ~VideoFilterInterface() {}
+
     template<typename T>
     std::vector<T*> FindMatchingStreams()
     {
@@ -242,11 +253,14 @@ struct PANGOLIN_EXPORT VideoFilterInterface
 
 struct PANGOLIN_EXPORT VideoUvcInterface
 {
+    virtual ~VideoUvcInterface() {}
     virtual int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code) = 0;
 };
 
 struct PANGOLIN_EXPORT VideoPlaybackInterface
 {
+    virtual ~VideoPlaybackInterface() {}
+
     /// Return monotonic id of current frame
     virtual int GetCurrentFrameId() const = 0;
 
