@@ -273,7 +273,9 @@ struct PANGOLIN_EXPORT VideoPlaybackInterface
 };
 
 //! Generic wrapper class for different video sources
-struct PANGOLIN_EXPORT VideoInput : public VideoInterface
+struct PANGOLIN_EXPORT VideoInput :
+    public VideoInterface,
+    public VideoFilterInterface
 {
     VideoInput();
     VideoInput(const std::string& uri);
@@ -281,6 +283,7 @@ struct PANGOLIN_EXPORT VideoInput : public VideoInterface
     
     void Open(const std::string& uri);
     void Reset();
+    void Close();
     
     size_t SizeBytes() const;
     const std::vector<StreamInfo>& Streams() const;
@@ -299,15 +302,17 @@ struct PANGOLIN_EXPORT VideoInput : public VideoInterface
     // Return pointer to inner video class as VideoType
     template<typename VideoType>
     VideoType* Cast() {
-        return dynamic_cast<VideoType*>(video);
+        return dynamic_cast<VideoType*>(videos[0]);
     }
 
     // experimental - not stable
     bool Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait = true, bool newest = false);
     
+    std::vector<VideoInterface*>& InputStreams();
+
 protected:
     Uri uri;
-    VideoInterface* video;
+    std::vector<VideoInterface*> videos;
 };
 
 //! Open Video Interface from string specification (as described in this files header)

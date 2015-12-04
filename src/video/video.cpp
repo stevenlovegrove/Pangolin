@@ -695,72 +695,73 @@ VideoInterface* OpenVideo(const Uri& uri)
 }
 
 VideoInput::VideoInput()
-    : video(0)
 {
 }
 
 VideoInput::VideoInput(const std::string& uri)
-    : video(0)
 {
     Open(uri);
 }
 
 VideoInput::~VideoInput()
 {
-    if(video) delete video;
+    Close();
 }
 
 void VideoInput::Open(const std::string& sUri)
 {
     uri = ParseUri(sUri);
     
-    if(video) {
-        delete video;
-        video = 0;
-    }
+    Close();
     
     // Create video device
-    video = OpenVideo(uri);
+    videos.push_back(OpenVideo(uri));
 }
 
 void VideoInput::Reset()
+
 {
-    if(video) {
-        delete video;
-        video = 0;
-    }
+    Close();
 
     // Create video device
-    video = OpenVideo(uri);
+    videos.push_back(OpenVideo(uri));
+}
+
+void VideoInput::Close()
+{
+    for(size_t v=0; v< videos.size(); ++v) {
+        delete videos[v];
+    }
+    videos.clear();
 }
 
 size_t VideoInput::SizeBytes() const
 {
-    if( !video ) throw VideoException("No video source open");
-    return video->SizeBytes();
+    if( !videos.size() ) throw VideoException("No video source open");
+    return videos[0]->SizeBytes();
 }
 
 const std::vector<StreamInfo>& VideoInput::Streams() const
 {
-    if( !video ) throw VideoException("No video source open");
-    return video->Streams();
+    if( !videos.size() ) throw VideoException("No video source open");
+    return videos[0]->Streams();
 }
 
 unsigned int VideoInput::Width() const
 {
-    if( !video ) throw VideoException("No video source open");
-    return (unsigned int)video->Streams()[0].Width();
+    if( !videos.size() ) throw VideoException("No video source open");
+    return (unsigned int)videos[0]->Streams()[0].Width();
 }
 
 unsigned int VideoInput::Height() const
 {
-    if( !video ) throw VideoException("No video source open");
-    return (unsigned int)video->Streams()[0].Height();
+    if( !videos.size() ) throw VideoException("No video source open");
+    return (unsigned int)videos[0]->Streams()[0].Height();
 }
 
 VideoPixelFormat VideoInput::PixFormat() const
 {
-    if( !video ) throw VideoException("No video source open");
+    if( !videos.size() ) throw VideoException("No video source open");
     return Streams()[0].PixFormat();
 }
 
@@ -771,32 +772,30 @@ const Uri& VideoInput::VideoUri() const
 
 void VideoInput::Start()
 {
-    if( !video ) throw VideoException("No video source open");
-    video->Start();
+    if( !videos.size() ) throw VideoException("No video source open");
+    videos[0]->Start();
 }
 
 void VideoInput::Stop()
 {
-    if( !video ) throw VideoException("No video source open");
-    video->Stop();
+    if( !videos.size() ) throw VideoException("No video source open");
+    videos[0]->Stop();
 }
 
 bool VideoInput::GrabNext( unsigned char* image, bool wait )
 {
-    if( !video ) throw VideoException("No video source open");
-    return video->GrabNext(image,wait);
+    if( !videos.size() ) throw VideoException("No video source open");
+    return videos[0]->GrabNext(image,wait);
 }
 
 bool VideoInput::GrabNewest( unsigned char* image, bool wait )
 {
-    if( !video ) throw VideoException("No video source open");
-    return video->GrabNewest(image,wait);
+    if( !videos.size() ) throw VideoException("No video source open");
+    return videos[0]->GrabNewest(image,wait);
 }
 
 bool VideoInput::Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait, bool newest)
 {
-    if( !video ) throw VideoException("No video source open");
-    
     bool success;
     
     if(newest) {
@@ -813,6 +812,11 @@ bool VideoInput::Grab( unsigned char* buffer, std::vector<Image<unsigned char> >
     }
     
     return success;
+}
+
+std::vector<VideoInterface*>& VideoInput::InputStreams()
+{
+    return videos;
 }
 
 }
