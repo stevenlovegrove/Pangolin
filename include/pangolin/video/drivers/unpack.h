@@ -72,6 +72,8 @@ public:
     const json::value& FrameProperties() const;
 
 protected:
+    void Process(unsigned char* image, const unsigned char* buffer);
+
     std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
     size_t size_bytes;

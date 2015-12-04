@@ -65,8 +65,8 @@ UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
 
 UnpackVideo::~UnpackVideo()
 {
-    delete[] buffer;
     delete videoin[0];
+    delete[] buffer;
 }
 
 //! Implement VideoInput::Start()
@@ -135,35 +135,40 @@ void ConvertFrom12bit(
     }
 }
 
+void UnpackVideo::Process(unsigned char* image, const unsigned char* buffer)
+{
+    for(size_t s=0; s<streams.size(); ++s) {
+        const Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
+        Image<unsigned char> img_out = Streams()[s].StreamImage(image);
+
+        const int bits_in  = videoin[0]->Streams()[s].PixFormat().bpp;
+
+        if(Streams()[s].PixFormat().format == "GRAY32F") {
+            if( bits_in == 10) {
+                ConvertFrom10bit<float>(img_out, img_in);
+            }else if( bits_in == 12){
+                ConvertFrom12bit<float>(img_out, img_in);
+            }else{
+                throw pangolin::VideoException("Unsupported bitdepths.");
+            }
+        }else if(Streams()[s].PixFormat().format == "GRAY16LE") {
+            if( bits_in == 10) {
+                ConvertFrom10bit<uint16_t>(img_out, img_in);
+            }else if( bits_in == 12){
+                ConvertFrom12bit<uint16_t>(img_out, img_in);
+            }else{
+                throw pangolin::VideoException("Unsupported bitdepths.");
+            }
+        }else{
+        }
+    }
+}
+
 //! Implement VideoInput::GrabNext()
 bool UnpackVideo::GrabNext( unsigned char* image, bool wait )
 {    
     if(videoin[0]->GrabNext(buffer,wait)) {
-        for(size_t s=0; s<streams.size(); ++s) {
-            Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
-            Image<unsigned char> img_out = Streams()[s].StreamImage(image);
-
-            const int bits_in  = videoin[0]->Streams()[s].PixFormat().bpp;
-
-            if(Streams()[s].PixFormat().format == "GRAY32F") {
-                if( bits_in == 10) {
-                    ConvertFrom10bit<float>(img_out, img_in);
-                }else if( bits_in == 12){
-                    ConvertFrom12bit<float>(img_out, img_in);
-                }else{
-                    throw pangolin::VideoException("Unsupported bitdepths.");
-                }
-            }else if(Streams()[s].PixFormat().format == "GRAY16LE") {
-                if( bits_in == 10) {
-                    ConvertFrom10bit<uint16_t>(img_out, img_in);
-                }else if( bits_in == 12){
-                    ConvertFrom12bit<uint16_t>(img_out, img_in);
-                }else{
-                    throw pangolin::VideoException("Unsupported bitdepths.");
-                }
-            }else{
-            }
-        }
+        Process(image,buffer);
         return true;
     }else{
         return false;
@@ -173,7 +178,12 @@ bool UnpackVideo::GrabNext( unsigned char* image, bool wait )
 //! Implement VideoInput::GrabNewest()
 bool UnpackVideo::GrabNewest( unsigned char* image, bool wait )
 {
-    return GrabNext(image,wait);
+    if(videoin[0]->GrabNewest(buffer,wait)) {
+        Process(image,buffer);
+        return true;
+    }else{
+        return false;
+    }
 }
 
 std::vector<VideoInterface*>& UnpackVideo::InputStreams()

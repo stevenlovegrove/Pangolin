@@ -74,31 +74,36 @@ const std::vector<StreamInfo>& MirrorVideo::Streams() const
     return streams;
 }
 
+void MirrorVideo::Process(unsigned char* image, const unsigned char* buffer)
+{
+    for(size_t s=0; s<streams.size(); ++s) {
+        const Image<unsigned char> img_in  = videoin->Streams()[s].StreamImage(buffer);
+        Image<unsigned char> img_out = Streams()[s].StreamImage(image);
+
+        const size_t bytes_pp = Streams()[s].PixFormat().bpp / 8;
+
+        for(size_t y=0; y < img_out.h; ++y) {
+            for(size_t x=0; x < img_out.w / 2; ++x) {
+                memcpy(
+                    img_out.ptr + y*img_out.pitch + (img_out.w-1-x)*bytes_pp,
+                    img_in.ptr  + y*img_in.pitch  + x*bytes_pp,
+                    bytes_pp
+                );
+                memcpy(
+                    img_out.ptr + y*img_out.pitch + x*bytes_pp,
+                    img_in.ptr  + y*img_in.pitch  + (img_in.w-x)*bytes_pp,
+                    bytes_pp
+                );
+            }
+        }
+    }
+}
+
 //! Implement VideoInput::GrabNext()
 bool MirrorVideo::GrabNext( unsigned char* image, bool wait )
 {    
     if(videoin->GrabNext(buffer,wait)) {
-        for(size_t s=0; s<streams.size(); ++s) {
-            Image<unsigned char> img_in  = videoin->Streams()[s].StreamImage(buffer);
-            Image<unsigned char> img_out = Streams()[s].StreamImage(image);
-
-            const size_t bytes_pp = Streams()[s].PixFormat().bpp / 8;
-
-            for(size_t y=0; y < img_out.h; ++y) {
-                for(size_t x=0; x < img_out.w / 2; ++x) {
-                    memcpy(
-                        img_out.ptr + y*img_out.pitch + (img_out.w-1-x)*bytes_pp,
-                        img_in.ptr  + y*img_in.pitch  + x*bytes_pp,
-                        bytes_pp
-                    );
-                    memcpy(
-                        img_out.ptr + y*img_out.pitch + x*bytes_pp,
-                        img_in.ptr  + y*img_in.pitch  + (img_in.w-x)*bytes_pp,
-                        bytes_pp
-                    );
-                }
-            }
-        }
+        Process(image, buffer);
         return true;
     }else{
         return false;
@@ -109,27 +114,7 @@ bool MirrorVideo::GrabNext( unsigned char* image, bool wait )
 bool MirrorVideo::GrabNewest( unsigned char* image, bool wait )
 {
     if(videoin->GrabNewest(buffer,wait)) {
-        for(size_t s=0; s<streams.size(); ++s) {
-            Image<unsigned char> img_in  = videoin->Streams()[s].StreamImage(buffer);
-            Image<unsigned char> img_out = Streams()[s].StreamImage(image);
-
-            const size_t bytes_pp = Streams()[s].PixFormat().bpp / 8;
-
-            for(size_t y=0; y < img_out.h; ++y) {
-                for(size_t x=0; x < img_out.w / 2; ++x) {
-                    memcpy(
-                        img_out.ptr + y*img_out.pitch + (img_out.w-1-x)*bytes_pp,
-                        img_in.ptr  + y*img_in.pitch  + x*bytes_pp,
-                        bytes_pp
-                    );
-                    memcpy(
-                        img_out.ptr + y*img_out.pitch + x*bytes_pp,
-                        img_in.ptr  + y*img_in.pitch  + (img_in.w-x)*bytes_pp,
-                        bytes_pp
-                    );
-                }
-            }
-        }
+        Process(image, buffer);
         return true;
     }else{
         return false;
