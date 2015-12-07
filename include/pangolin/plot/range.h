@@ -29,6 +29,7 @@
 #define PANGOLIN_RANGE_H
 
 #include <limits>
+#include <algorithm>
 
 namespace pangolin
 {
