@@ -43,7 +43,7 @@ void MakeTriangleStripIboForVbo(GlBuffer& ibo, int w, int h);
 GlBuffer MakeTriangleStripIboForVbo(int w, int h);
 #endif
 
-void RenderVbo(GlBuffer& vbo);
+void RenderVbo(GlBuffer& vbo, GLenum mode = GL_POINTS);
 
 void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color = true);
 
@@ -96,17 +96,16 @@ inline GlBuffer MakeTriangleStripIboForVbo(int w, int h)
 }
 #endif
 
-inline void RenderVbo(GlBuffer& vbo)
+inline void RenderVbo(GlBuffer& vbo, GLenum mode)
 {
     vbo.Bind();
     glVertexPointer(vbo.count_per_element, vbo.datatype, 0, 0);
     glEnableClientState(GL_VERTEX_ARRAY);
     
-    glDrawArrays(GL_POINTS, 0, vbo.num_elements);
+    glDrawArrays(mode, 0, vbo.num_elements);
     
     glDisableClientState(GL_VERTEX_ARRAY);
     vbo.Unbind();
-    
 }
 
 inline void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color)
