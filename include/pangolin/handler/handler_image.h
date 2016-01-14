@@ -154,6 +154,11 @@ public:
         return rview;
     }
 
+    float GetViewScale()
+    {
+        return rview_max.x.Size() / rview.x.Size();
+    }
+
     pangolin::XYRangef& GetView()
     {
         return target;
@@ -277,6 +282,11 @@ public:
                 ScaleViewSmooth(2.0, 2.0, c[0], c[1]);
             }else if(key == '#') {
                 ResetView();
+            }else if(key == 1) {
+                // ctrl-a: select all.
+                sel = rview;
+            }else{
+                pango_print_debug("Unhandled ImageViewHandler::Keyboard. Key: %u\n", (unsigned int)key);
             }
         }
     }
