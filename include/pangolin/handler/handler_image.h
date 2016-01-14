@@ -144,6 +144,11 @@ public:
         return use_nn;
     }
 
+    bool& UseNN()
+    {
+        return use_nn;
+    }
+
     pangolin::XYRangef& GetViewToRender()
     {
         return rview;

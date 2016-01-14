@@ -74,7 +74,7 @@ struct Image {
     }
 
     template<typename To>
-    Image<To> Reinterpret()
+    Image<To> Reinterpret() const
     {
         return Image<To>(w,h,pitch, (To*)ptr);
     }

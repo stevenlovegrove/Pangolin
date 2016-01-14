@@ -70,6 +70,22 @@ pangolin::Image<T> ImageRoi( pangolin::Image<T> img, const pangolin::XYRangei& r
     );
 }
 
+template<typename T>
+std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, pangolin::XYRangei iroi, const pangolin::GlPixFormat& glfmt)
+{
+    iroi.Clamp(0, img.w-1, 0, img.h-1 );
+
+    if(glfmt.gltype == GL_UNSIGNED_BYTE) {
+        return GetOffsetScale(ImageRoi(img.template Reinterpret<unsigned char>(), iroi), 255.0f, 1.0f);
+    }else if(glfmt.gltype == GL_UNSIGNED_SHORT) {
+        return GetOffsetScale(ImageRoi(img.template Reinterpret<unsigned short>(), iroi), 65535.0f, 1.0f);
+    }else if(glfmt.gltype == GL_FLOAT) {
+        return GetOffsetScale(ImageRoi(img.template Reinterpret<float>(), iroi), 1.0f, 1.0f);
+    }else{
+        return std::pair<float,float>(0.0f, 1.0f);
+    }
+}
+
 }
 
 #endif // PANGOLIN_IMAGE_UTILS_H
