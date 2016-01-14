@@ -159,6 +159,17 @@ struct Range
         max = -std::numeric_limits<T>::max();
     }
 
+    bool Contains(T v) const
+    {
+        return min <= v && v <= max;
+    }
+
+    bool ContainsWeak(T v) const
+    {
+        return (min <= v && v <= max)
+            || (max <= v && v <= min);
+    }
+
     template<typename To>
     Range<To> Cast()
     {
@@ -231,6 +242,16 @@ struct XYRange
     float Area() const
     {
         return x.Size() * y.Size();
+    }
+
+    bool Contains(float px, float py) const
+    {
+        return x.Contains(px) && y.Contains(py);
+    }
+
+    bool ContainsWeak(float px, float py) const
+    {
+        return x.ContainsWeak(px) && y.ContainsWeak(py);
     }
 
     template<typename To>
