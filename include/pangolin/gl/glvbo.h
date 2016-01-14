@@ -102,7 +102,6 @@ inline void RenderVbo(GlBuffer& vbo)
     glVertexPointer(vbo.count_per_element, vbo.datatype, 0, 0);
     glEnableClientState(GL_VERTEX_ARRAY);
     
-    glPointSize(2.0);
     glDrawArrays(GL_POINTS, 0, vbo.num_elements);
     
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -137,7 +136,6 @@ inline void RenderVboIbo(GlBuffer& vbo, GlBuffer& ibo, bool draw_mesh)
         glDrawElements(GL_TRIANGLE_STRIP,ibo.num_elements, ibo.datatype, 0);
         ibo.Unbind();
     }else{
-        glPointSize(2.0);
         glDrawArrays(GL_POINTS, 0, vbo.num_elements);
     }
     
@@ -184,7 +182,6 @@ inline void RenderVboIboCboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& cbo, GlBu
         glDrawElements(GL_TRIANGLE_STRIP,ibo.num_elements, ibo.datatype, 0);
         ibo.Unbind();
     }else{
-        glPointSize(2.0);
         glDrawArrays(GL_POINTS, 0, vbo.num_elements);
     }
     
@@ -219,7 +216,6 @@ inline void RenderVboIboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& nbo, bool dr
         glDrawElements(GL_TRIANGLE_STRIP,ibo.num_elements, ibo.datatype, 0);
         ibo.Unbind();
     }else{
-        glPointSize(2.0);
         glDrawArrays(GL_POINTS, 0, vbo.num_elements);
     }
 
