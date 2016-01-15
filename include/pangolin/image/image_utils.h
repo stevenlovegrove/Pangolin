@@ -33,6 +33,7 @@
 
 #include <pangolin/image/image.h>
 #include <pangolin/plot/range.h>
+#include <pangolin/gl/glpixformat.h>
 
 namespace pangolin
 {
