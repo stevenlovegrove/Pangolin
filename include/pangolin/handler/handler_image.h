@@ -41,6 +41,8 @@ namespace pangolin
 class ImageViewHandler : public Handler
 {
 public:
+    // View ranges store extremes of image (boundary of pixels)
+    // in 'discrete' coords, where 0,0 is center of top-left pixel.
     ImageViewHandler(size_t w, size_t h)
         : linked_view_handler(0),
           rview_default(-0.5,w-0.5,h-0.5,0-0.5),
@@ -88,14 +90,17 @@ public:
         const float w = tex.width;
         const float h = tex.height;
 
+        // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
         const GLfloat l = xy.x.min;
         const GLfloat r = xy.x.max;
         const GLfloat b = xy.y.min;
         const GLfloat t = xy.y.max;
-        const GLfloat ln = l / w;
-        const GLfloat rn = r / w;
-        const GLfloat bn = b / h;
-        const GLfloat tn = t / h;
+
+        // continuous coords, (0,0) - (1,1)
+        const GLfloat ln = (l + 0.5f) / w;
+        const GLfloat rn = (r + 0.5f) / w;
+        const GLfloat bn = (b + 0.5f) / h;
+        const GLfloat tn = (t + 0.5f) / h;
 
         const GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
         const GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
