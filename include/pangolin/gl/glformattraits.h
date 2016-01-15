@@ -73,6 +73,22 @@ struct GlFormatTraits<unsigned short>
     static const GLenum gltype = GL_UNSIGNED_SHORT;
 };
 
+template<>
+struct GlFormatTraits<unsigned int>
+{
+    static const GLint glinternalformat = GL_LUMINANCE;
+    static const GLenum glformat = GL_LUMINANCE;
+    static const GLenum gltype = GL_UNSIGNED_INT;
+};
+
+template<>
+struct GlFormatTraits<int>
+{
+    static const GLint glinternalformat = GL_LUMINANCE;
+    static const GLenum glformat = GL_LUMINANCE;
+    static const GLenum gltype = GL_INT;
+};
+
 }
 
 #endif // PANGOLIN_GLFORMATTRAITS_H
