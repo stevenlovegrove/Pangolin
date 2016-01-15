@@ -60,17 +60,10 @@ static int tab_h = (int)(font.Height() * 1.4);
 
 boostd::mutex display_mutex;
 
-static bool guiVarHasChanged = true;
-
-bool GuiVarHasChanged()
-{
-    return pangolin::Pushed(guiVarHasChanged);
-}
-
 template<typename T>
 void GuiVarChanged( Var<T>& var)
 {
-    guiVarHasChanged = true;
+    VarState::I().FlagVarChanged();
     var.Meta().gui_changed = true;
     
     for(std::vector<GuiVarChangedCallback>::iterator igvc = VarState::I().gui_var_changed_callbacks.begin(); igvc != VarState::I().gui_var_changed_callbacks.end(); ++igvc) {

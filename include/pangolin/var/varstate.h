@@ -63,6 +63,7 @@ class PANGOLIN_EXPORT VarState
 public:
     static VarState& I();
 
+    VarState();
     ~VarState();
 
     void Clear();
@@ -90,6 +91,18 @@ public:
         return vars.find(str) != vars.end();
     }
 
+    void FlagVarChanged()
+    {
+        varHasChanged = true;
+    }
+
+    bool VarHasChanged()
+    {
+        const bool has_changed = varHasChanged;
+        varHasChanged = false;
+        return has_changed;
+    }
+
 //protected:
     typedef std::map<std::string, VarValueGeneric*> VarStoreContainer;
     typedef std::vector<std::string> VarStoreAdditions;
@@ -99,7 +112,17 @@ public:
 
     std::vector<NewVarCallback> new_var_callbacks;
     std::vector<GuiVarChangedCallback> gui_var_changed_callbacks;
+
+    bool varHasChanged;
 };
+
+inline bool GuiVarHasChanged() {
+    return VarState::I().VarHasChanged();
+}
+
+inline void FlagVarChanged() {
+    VarState::I().FlagVarChanged();
+}
 
 }
 

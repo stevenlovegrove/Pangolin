@@ -38,9 +38,6 @@ namespace pangolin
 {
 
 PANGOLIN_EXPORT
-bool GuiVarHasChanged();
-
-PANGOLIN_EXPORT
 View& CreatePanel(const std::string& name);
 
 struct PANGOLIN_EXPORT Panel : public View

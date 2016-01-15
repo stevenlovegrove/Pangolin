@@ -44,6 +44,11 @@ VarState& VarState::I() {
     return singleton;
 }
 
+VarState::VarState()
+    : varHasChanged(false)
+{
+}
+
 VarState::~VarState() {
     Clear();
 }
@@ -233,6 +238,8 @@ void ParseVarsFile(const string& filename)
 PANGOLIN_EXPORT
 void LoadJsonFile(const std::string& filename, const string &prefix)
 {
+    bool some_change = false;
+
     json::value file_json(json::object_type,true);
     std::ifstream f(filename);
     if(f.is_open()) {
@@ -247,15 +254,19 @@ void LoadJsonFile(const std::string& filename, const string &prefix)
                         ++i)
                     {
                         const std::string& name = i->first;
-                        const std::string& val = i->second.get<std::string>();
+                        if(pangolin::StartsWith(name, prefix)) {
+                            const std::string& val = i->second.get<std::string>();
 
-                        VarValueGeneric*& v = VarState::I()[name];
-                        if(!v) {
-                            VarValue<std::string>* nv = new VarValue<std::string>(val);
-                            InitialiseNewVarMetaGeneric<std::string>(*nv, name);
-                            v = nv;
-                        }else{
-                            v->str->Set(val);
+                            VarValueGeneric*& v = VarState::I()[name];
+                            if(!v) {
+                                VarValue<std::string>* nv = new VarValue<std::string>(val);
+                                InitialiseNewVarMetaGeneric<std::string>(*nv, name);
+                                v = nv;
+                            }else{
+                                v->str->Set(val);
+                                v->Meta().gui_changed = true;
+                            }
+                            some_change = true;
                         }
                     }
                 }
@@ -267,6 +278,9 @@ void LoadJsonFile(const std::string& filename, const string &prefix)
         pango_print_error("Unable to load vars from %s\n", filename.c_str());
     }
 
+    if(some_change) {
+        FlagVarChanged();
+    }
 }
 
 PANGOLIN_EXPORT
