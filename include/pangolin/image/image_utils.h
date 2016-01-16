@@ -61,7 +61,7 @@ std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, float type_
 }
 
 template<typename T>
-pangolin::Image<T> ImageRoi( pangolin::Image<T> img, const pangolin::XYRangei& roi )
+pangolin::Image<T> GetImageRoi( pangolin::Image<T> img, const pangolin::XYRangei& roi )
 {
     const int xmin = std::min(roi.x.min,roi.x.max);
     const int ymin = std::min(roi.y.min,roi.y.max);
@@ -77,11 +77,11 @@ std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, pangolin::X
     iroi.Clamp(0, img.w-1, 0, img.h-1 );
 
     if(glfmt.gltype == GL_UNSIGNED_BYTE) {
-        return GetOffsetScale(ImageRoi(img.template Reinterpret<unsigned char>(), iroi), 255.0f, 1.0f);
+        return GetOffsetScale(GetImageRoi(img.template Reinterpret<unsigned char>(), iroi), 255.0f, 1.0f);
     }else if(glfmt.gltype == GL_UNSIGNED_SHORT) {
-        return GetOffsetScale(ImageRoi(img.template Reinterpret<unsigned short>(), iroi), 65535.0f, 1.0f);
+        return GetOffsetScale(GetImageRoi(img.template Reinterpret<unsigned short>(), iroi), 65535.0f, 1.0f);
     }else if(glfmt.gltype == GL_FLOAT) {
-        return GetOffsetScale(ImageRoi(img.template Reinterpret<float>(), iroi), 1.0f, 1.0f);
+        return GetOffsetScale(GetImageRoi(img.template Reinterpret<float>(), iroi), 1.0f, 1.0f);
     }else{
         return std::pair<float,float>(0.0f, 1.0f);
     }
