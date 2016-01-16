@@ -90,7 +90,7 @@ void SetPangoVarFromPython(const std::string& name, PyObject* val)
             pango_var = PyUnicode_AsUTF8(val);
         }
 #else
-        if (PyString_Check(val)) {
+        else if (PyString_Check(val)) {
             pangolin::Var<std::string> pango_var(name);
             pango_var = PyString_AsString(val);
         } else if (PyInt_Check(val)) {
@@ -108,6 +108,7 @@ void SetPangoVarFromPython(const std::string& name, PyObject* val)
             pangolin::Var<std::string> pango_var(name);
             pango_var = str;
         }
+        FlagVarChanged();
     }catch(std::exception e) {
         pango_print_error("%s\n", e.what());
     }
