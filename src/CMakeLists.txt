@@ -86,6 +86,12 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/unpack.cpp
     video/drivers/join.cpp
   )
+
+if(UNIX)
+  list(APPEND HEADERS ${INCDIR}/video/drivers/shared_memory.h)
+  list(APPEND SOURCES video/drivers/shared_memory.cpp)
+endif()
+
 endif()
 
 #######################################################
