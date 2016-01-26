@@ -116,6 +116,7 @@
 #define PANGO_CAPTURE_TIME_US "capture_time_us"
 #define PANGO_EXPOSURE_US "exposure_us"
 #define PANGO_ANALOG_GAIN "analog_gain"
+#define PANGO_SENSOR_TEMPERATURE_C "sensor_temperature_C"
 
 
 namespace pangolin

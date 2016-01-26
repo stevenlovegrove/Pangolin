@@ -318,6 +318,13 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool wait)
             std::memcpy(image, lImage->GetDataPointer(), size_bytes);
             frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
             frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
+			double val;
+			PvResult lResult = lDeviceParams->GetFloatValue("DeviceTemperatureCelsius", val);
+			if (lResult.IsSuccess()) {
+				frame_properties[PANGO_SENSOR_TEMPERATURE_C] = json::value(val);
+			} else {
+				pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
+			}
             good = true;
         }
     } else {
@@ -370,6 +377,13 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
         std::memcpy(image, lImage->GetDataPointer(), size_bytes);
         frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
         frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
+		double val;
+		PvResult lResult = lDeviceParams->GetFloatValue("DeviceTemperatureCelsius", val);
+		if (lResult.IsSuccess()) {
+			frame_properties[PANGO_SENSOR_TEMPERATURE_C] = json::value(val);
+		} else {
+			pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
+		}
         good = true;
     }
 
