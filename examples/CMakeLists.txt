@@ -34,3 +34,5 @@ if(BUILD_PANGOLIN_GUI)
 #      endif()
     endif()
 endif()
+
+add_subdirectory(SharedMemoryVideoWriter)
