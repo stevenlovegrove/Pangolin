@@ -198,6 +198,11 @@ else()
     endif()
 endif()
 
+if(UNIX)
+  append_glob(HEADERS ${INCDIR}/utils/posix/*.h*)
+  append_glob(SOURCES utils/posix/*.cpp)
+endif()
+
 find_package(PythonLibs QUIET)
 if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND PYTHONLIBS_FOUND AND NOT _WIN_)
   set(HAVE_PYTHON 1)
