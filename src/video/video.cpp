@@ -66,6 +66,7 @@
 
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/file_extension.h>
+#include <pangolin/utils/shared_memory_buffer.h>
 #include <pangolin/video/drivers/test.h>
 #include <pangolin/video/drivers/images.h>
 #include <pangolin/video/drivers/pvn_video.h>
@@ -76,6 +77,7 @@
 #include <pangolin/video/drivers/mirror.h>
 #include <pangolin/video/drivers/unpack.h>
 #include <pangolin/video/drivers/join.h>
+#include <pangolin/video/drivers/shared_memory.h>
 
 namespace pangolin
 {
@@ -687,6 +689,23 @@ VideoInterface* OpenVideo(const Uri& uri)
         );
     }else
 #endif
+        if (!uri.scheme.compare("shmem")) {
+            const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(0, 0));
+            const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
+            const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
+            const std::string shmem_name = std::string("/") + uri.url;
+            auto shmem_buffer = open_named_shared_memory_buffer(shmem_name,
+                true);
+            if (dim.x == 0 || dim.y == 0 || !shmem_buffer) {
+                throw VideoException("invalid shared memory parameters");
+            }
+
+            const std::string cond_name = shmem_name + "_cond";
+            auto buffer_full = open_named_condition_variable(cond_name);
+
+            video = new SharedMemoryVideo(dim.x, dim.y, fmt,
+                std::move(shmem_buffer), std::move(buffer_full));
+        } else
     {
         throw VideoException("No known video handler for URI '" + uri.scheme + "'");
     }
