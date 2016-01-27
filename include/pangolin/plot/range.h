@@ -30,6 +30,7 @@
 
 #include <limits>
 #include <algorithm>
+#include <cmath>
 
 namespace pangolin
 {
@@ -122,7 +123,7 @@ struct Range
 
     T AbsSize() const
     {
-        return std::abs(max - min);
+        return std::abs(Size());
     }
 
     T Mid() const
