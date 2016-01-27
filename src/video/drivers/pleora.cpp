@@ -30,6 +30,13 @@
 namespace pangolin
 {
 
+inline void ThrowOnFailure(const PvResult& res)
+{
+    if(res.IsFailure()) {
+        throw std::runtime_error("Failure: " + std::string(res.GetCodeString().GetAscii()) );
+    }
+}
+
 template<typename T>
 struct PleoraParamTraits;
 
@@ -57,9 +64,29 @@ T GetParam(PvGenParameterArray* params, const char* name)
     T ret;
     PvResult res = param->GetValue(ret);
     if(res.IsFailure()) {
-        throw std::runtime_error(res.GetCodeString().GetAscii());
+        throw std::runtime_error("Cannot get value: " + std::string(res.GetCodeString().GetAscii()) );
     }
     return ret;
+}
+
+template<typename T>
+bool SetParam(PvGenParameterArray* params, const char* name, T val)
+{
+    typedef typename PleoraParamTraits<T>::PvType PvType;
+    PvType* param = dynamic_cast<PvType*>( params->Get(name) );
+    if(!param) {
+        throw std::runtime_error("Unable to get parameter handle: " + std::string(name) );
+    }
+
+    if(!param->IsWritable()) {
+        throw std::runtime_error("Cannot set value for " + std::string(name) );
+    }
+
+    PvResult res = param->SetValue(val);
+    if(res.IsFailure()) {
+        throw std::runtime_error("Cannot set value: " + std::string(res.GetCodeString().GetAscii()) );
+    }
+    return true;
 }
 
 inline const PvDeviceInfo* SelectDevice( PvSystem& aSystem, const char* model_name = 0, const char* serial_num = 0, size_t index = 0 )
@@ -147,60 +174,83 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     }
 
 
+    // Device / Stream property handles
     lDeviceParams = lDevice->GetParameters();
+    lStreamParams = lStream->GetParameters();
 
-    lResult =lDeviceParams->SetIntegerValue("BinningHorizontal", binX );
-    if(lResult.IsFailure()){
-        pango_print_info("BinningHorizontal %zu fail\n", binX);
-    }
-    lResult =lDeviceParams->SetIntegerValue("BinningVertical", binY );
-    if(lResult.IsFailure()){
-        pango_print_info("BinningVertical %zu fail\n", binY);
-    }
+    // Get Handles to properties we'll be using.
+    lAnalogGain = lDeviceParams->GetInteger("AnalogGain");
+    lExposure = lDeviceParams->GetFloat("ExposureTime");
+    lAquisitionMode = lDeviceParams->GetEnum("AcquisitionMode");
+    lTriggerSource = lDeviceParams->GetEnum("TriggerSource");
+    lTriggerMode = lDeviceParams->GetEnum("TriggerMode");
+    lTemperatureCelcius = lDeviceParams->GetFloat("DeviceTemperatureCelsius");
 
+    // Setup device binning
+    try {
+        PvGenInteger* devbinx = lDeviceParams->GetInteger("BinningHorizontal");
+        PvGenInteger* devbiny = lDeviceParams->GetInteger("BinningVertical");
+        if( devbinx && devbiny && devbinx->IsWritable() && devbiny->IsWritable()) {
+            ThrowOnFailure(devbinx->SetValue(binX));
+            ThrowOnFailure(devbiny->SetValue(binY));
+        }
+    }catch(std::runtime_error e) {
+        pango_print_error("Binning: %s\n", e.what());
+    }
 
     // Height and width will fail if not multiples of 8.
-    lDeviceParams->SetIntegerValue("Height", desired_size_y );
-    if(lResult.IsFailure()){
-        pango_print_error("Height %zu fail\n", desired_size_y);
-        int64_t max, min;
-        lDeviceParams->GetIntegerRange("Height", max, min );
-        lDeviceParams->SetIntegerValue("Height", max );
-    }
-    lDeviceParams->SetIntegerValue("Width", desired_size_x );
-    if(lResult.IsFailure()){
-        pango_print_error("Width %zu fail\n", desired_size_x);
-        int64_t max, min;
-        lDeviceParams->GetIntegerRange("Width", max, min );
-        lDeviceParams->SetIntegerValue("Width", max );
+    if(desired_size_x || desired_size_y) {
+        try {
+            SetDeviceParam<int64_t>("Width",  desired_size_x);
+            SetDeviceParam<int64_t>("Height", desired_size_y);
+        }catch(std::runtime_error e) {
+            pango_print_error("SetSize: %s\n", e.what());
+
+            int64_t max, min;
+            lDeviceParams->GetIntegerRange("Width", max, min );
+            desired_size_x = max;
+            lDeviceParams->GetIntegerRange("Height", max, min );
+            desired_size_y = max;
+
+            try {
+                SetDeviceParam<int64_t>("Width",  desired_size_x);
+                SetDeviceParam<int64_t>("Height", desired_size_y);
+            }catch(std::runtime_error e) {
+                pango_print_error("Set Full frame: %s\n", e.what());
+            }
+        }
     }
 
-    lDeviceParams = lDevice->GetParameters();
-
+    // Get actual width and height
     const int w = DeviceParam<int64_t>("Width");
     const int h = DeviceParam<int64_t>("Height");
 
-    // Offset will fail if not multiple of 8.
-    lDeviceParams->SetIntegerValue("OffsetX", desired_pos_x );
-    if(lResult.IsFailure()){
-        pango_print_error("OffsetX %zu fail\n", desired_pos_x);
-    }
-    lDeviceParams->SetIntegerValue("OffsetY", desired_pos_y );
-    if(lResult.IsFailure()){
-        pango_print_error("OffsetY %zu fail\n", desired_pos_y);
-    }
-
-    SetGain(again);
-
-    SetExposure(exposure);
-
-    if(ext_trig) {
-        SetupTrigger(0,0,1);
-    } else {
-        SetupTrigger(2, 252, 0);
+    // Attempt to set offset
+    try{
+        SetDeviceParam<int64_t>("OffsetX", desired_pos_x);
+        SetDeviceParam<int64_t>("OffsetY", desired_pos_y);
+    }catch(std::runtime_error e)
+    {
+        pango_print_error("Set Offset: %s\n", e.what());
     }
 
-    lStreamParams = lStream->GetParameters();
+
+    // Attempt to set AnalogGain, Offset
+    try{
+        SetGain(again);
+        SetExposure(exposure);
+    }catch(std::runtime_error e)
+    {
+        pango_print_error("Set Exposure / Gain: %s\n", e.what());
+    }
+
+    // Attempt to set Triggering
+    try{
+        SetupTrigger(ext_trig, 0, 0);
+    }catch(std::runtime_error e)
+    {
+        pango_print_error("Set Trigger: %s\n", e.what());
+    }
 
     // Reading payload size from device
     const uint32_t lSize = lDevice->GetPayloadSize();
@@ -375,15 +425,21 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
     {
         PvImage *lImage = lBuffer->GetImage();
         std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+
+        // Required frame properties
         frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
         frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
-		double val;
-		PvResult lResult = lDeviceParams->GetFloatValue("DeviceTemperatureCelsius", val);
-		if (lResult.IsSuccess()) {
-			frame_properties[PANGO_SENSOR_TEMPERATURE_C] = json::value(val);
-		} else {
-			pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
-		}
+
+        // Optional frame properties
+        if(lTemperatureCelcius) {
+            double val;
+            PvResult lResult = lTemperatureCelcius->GetValue(val);
+            if(lResult.IsSuccess()) {
+                frame_properties[PANGO_SENSOR_TEMPERATURE_C] = json::value(val);
+            } else {
+                pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
+            }
+        }
         good = true;
     }
 
@@ -391,88 +447,62 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
     return good;
 }
 
-void PleoraVideo::SetGain(int64_t val) {
+int64_t PleoraVideo::GetGain()
+{
+    int64_t val;
+    if(lAnalogGain) {
+        ThrowOnFailure( lAnalogGain->GetValue(val) );
+    }
+    return val;
+}
 
-    if(val >= 0) {
-        lDeviceParams = lDevice->GetParameters();
-
-        PvResult lResult = lDeviceParams->SetIntegerValue("AnalogGain", val);
-        if(lResult.IsFailure()){
-            pango_print_error("AnalogGain %ld fail\n", val);
-        } else {
-            frame_properties[PANGO_ANALOG_GAIN] = json::value(val);
-        }
+void PleoraVideo::SetGain(int64_t val)
+{
+    if(val >= 0 && lAnalogGain && lAnalogGain->IsWritable()) {
+        ThrowOnFailure( lAnalogGain->SetValue(val) );
+        frame_properties[PANGO_ANALOG_GAIN] = json::value(val);
     }
 }
 
-int64_t PleoraVideo::GetGain() {
-
-    lDeviceParams = lDevice->GetParameters();
-
-    int64_t val;
-    PvResult lResult = lDeviceParams->GetIntegerValue("AnalogGain", val);
-    if(lResult.IsFailure()){
-        pango_print_error("AnalogGain %ld fail\n", val);
+double PleoraVideo::GetExposure() {
+    double val;
+    if( lExposure ) {
+        ThrowOnFailure( lExposure->GetValue(val));
     }
     return val;
 }
 
 void PleoraVideo::SetExposure(double val) {
-
-    if(val > 0) {
-        lDeviceParams = lDevice->GetParameters();
-
-        PvResult lResult = lDeviceParams->SetFloatValue("ExposureTime", val);
-        if(lResult.IsFailure()){
-            pango_print_error("ExposureTime %f fail\n", val);
-        } else {
-            frame_properties[PANGO_EXPOSURE_US] = json::value(val);
-        }
+    if(val > 0 && lExposure && lExposure->IsWritable() ) {
+        ThrowOnFailure( lExposure->SetValue(val) );
+        frame_properties[PANGO_EXPOSURE_US] = json::value(val);
     }
 }
-
 
 //use 0,0,1 for line0 hardware trigger.
 //use 2,252,0 for software continuous
-void PleoraVideo::SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, int64_t triggerMode)
+void PleoraVideo::SetupTrigger(bool triggerActive, int64_t triggerSource, int64_t acquisitionMode)
 {
-    //TODO: add different types of trigger (software/hardware etc)
+    if(lAquisitionMode && lTriggerSource && lTriggerMode &&
+        lAquisitionMode->IsWritable() && lTriggerSource->IsWritable() && lTriggerMode->IsWritable() )
+    {
+        // Check input is valid.
+        const PvGenEnumEntry* entry_src;
+        const PvGenEnumEntry* entry_acq;
+        lTriggerSource->GetEntryByValue(triggerSource, &entry_src);
+        lAquisitionMode->GetEntryByValue(acquisitionMode, &entry_acq);
 
-    PvResult lResult =lDeviceParams->SetEnumValue("AcquisitionMode",acquisitionMode);
-    if(lResult.IsFailure()){
-        pango_print_error("AcquisitionMode %lld fail\n", (long long)acquisitionMode);
+        if(entry_src && entry_acq) {
+            ThrowOnFailure(lTriggerMode->SetValue(triggerActive ? 1 : 0));
+            if(triggerActive) {
+                pango_print_debug("Pleora: external trigger active\n");
+                ThrowOnFailure(lTriggerSource->SetValue(triggerSource));
+                ThrowOnFailure(lAquisitionMode->SetValue(acquisitionMode));
+            }
+        }else{
+            pango_print_error("Bad values for trigger options.");
+        }
     }
-
-    lResult = lDeviceParams->SetEnumValue("TriggerSource",triggerSource);
-    if(lResult.IsFailure()){
-        pango_print_error("TriggerSource %lld fail\n", (long long)triggerSource);
-    }
-
-    lResult = lDeviceParams->SetEnumValue("TriggerMode",triggerMode);
-    if(lResult.IsFailure()){
-        pango_print_error("TriggerMode %lld fail\n", (long long)triggerMode);
-    }
-
-    lDeviceParams = lDevice->GetParameters();
-
-    lDeviceParams->GetEnumValue("AcquisitionMode",acquisitionMode);
-    lDeviceParams->GetEnumValue("TriggerSource",triggerSource);
-    lDeviceParams->GetEnumValue("TriggerMode",triggerMode);
-
-    if((acquisitionMode == 0) && (triggerSource == 0) && (triggerMode == 1))
-        pango_print_info("Pleora: external trigger active\n");
-}
-
-double PleoraVideo::GetExposure() {
-
-    lDeviceParams = lDevice->GetParameters();
-
-    double val;
-    PvResult lResult = lDeviceParams->GetFloatValue("ExposureTime", val);
-    if(lResult.IsFailure()){
-        pango_print_error("ExposureTime %f fail\n", val);
-    }
-    return val;
 }
 
 template<typename T>
@@ -482,9 +512,21 @@ T PleoraVideo::DeviceParam(const char* name)
 }
 
 template<typename T>
+bool PleoraVideo::SetDeviceParam(const char* name, T val)
+{
+    return SetParam<T>(lDeviceParams, name, val);
+}
+
+template<typename T>
 T PleoraVideo::StreamParam(const char* name)
 {
     return GetParam<T>(lStreamParams, name);
+}
+
+template<typename T>
+bool PleoraVideo::SetStreamParam(const char* name, T val)
+{
+    return SetParam<T>(lStreamParams, name, val);
 }
 
 }

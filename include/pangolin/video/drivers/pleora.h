@@ -81,7 +81,7 @@ public:
 
     double GetExposure();
 
-    void SetupTrigger(int64_t acquisitionMode, int64_t triggerSource, int64_t triggerMode);
+    void SetupTrigger(bool triggerActive, int64_t triggerSource, int64_t acquisitionMode);
 
     const json::value& DeviceProperties() const {
         return device_properties;
@@ -96,7 +96,13 @@ protected:
     T DeviceParam(const char* name);
 
     template<typename T>
+    bool SetDeviceParam(const char* name, T val);
+
+    template<typename T>
     T StreamParam(const char* name);
+
+    template<typename T>
+    bool SetStreamParam(const char* name, T val);
 
     std::vector<StreamInfo> streams;
     json::value device_properties;
@@ -113,6 +119,13 @@ protected:
     PvGenParameterArray* lDeviceParams;
     PvGenCommand* lStart;
     PvGenCommand* lStop;
+
+    PvGenInteger* lAnalogGain;
+    PvGenFloat*   lExposure;
+    PvGenEnum*    lAquisitionMode;
+    PvGenEnum*    lTriggerSource;
+    PvGenEnum*    lTriggerMode;
+    PvGenFloat*   lTemperatureCelcius;
 
     // Genicam stream parameters
     PvGenParameterArray* lStreamParams;
