@@ -50,7 +50,7 @@ UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
 
         // Check compatibility of formats
         const VideoPixelFormat in_fmt = src->Streams()[s].PixFormat();
-        if(in_fmt.channels > 1 || in_fmt.bpp <9 || in_fmt.bpp > 16) {
+        if(in_fmt.channels > 1 || in_fmt.bpp > 16) {
             delete src;
             throw VideoException("UnpackVideo: Only supports one channel input.");
         }
@@ -91,6 +91,21 @@ size_t UnpackVideo::SizeBytes() const
 const std::vector<StreamInfo>& UnpackVideo::Streams() const
 {
     return streams;
+}
+
+template<typename T>
+void ConvertFrom8bit(
+    Image<unsigned char>& out,
+    const Image<unsigned char>& in
+) {
+    for(size_t r=0; r<out.h; ++r) {
+        T* pout = (T*)(out.ptr + r*out.pitch);
+        uint8_t* pin = in.ptr + r*in.pitch;
+        const uint8_t* pin_end = in.ptr + (r+1)*in.pitch;
+        while(pin != pin_end) {
+            *(pout++) = *(pin++);
+        }
+    }
 }
 
 template<typename T>
@@ -144,7 +159,9 @@ void UnpackVideo::Process(unsigned char* image, const unsigned char* buffer)
         const int bits_in  = videoin[0]->Streams()[s].PixFormat().bpp;
 
         if(Streams()[s].PixFormat().format == "GRAY32F") {
-            if( bits_in == 10) {
+            if( bits_in == 8) {
+                ConvertFrom8bit<float>(img_out, img_in);
+            }else if( bits_in == 10) {
                 ConvertFrom10bit<float>(img_out, img_in);
             }else if( bits_in == 12){
                 ConvertFrom12bit<float>(img_out, img_in);
@@ -152,7 +169,9 @@ void UnpackVideo::Process(unsigned char* image, const unsigned char* buffer)
                 throw pangolin::VideoException("Unsupported bitdepths.");
             }
         }else if(Streams()[s].PixFormat().format == "GRAY16LE") {
-            if( bits_in == 10) {
+            if( bits_in == 8) {
+                ConvertFrom8bit<uint16_t>(img_out, img_in);
+            }else if( bits_in == 10) {
                 ConvertFrom10bit<uint16_t>(img_out, img_in);
             }else if( bits_in == 12){
                 ConvertFrom12bit<uint16_t>(img_out, img_in);
