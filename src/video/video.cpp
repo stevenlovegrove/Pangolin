@@ -77,6 +77,8 @@
 #include <pangolin/video/drivers/unpack.h>
 #include <pangolin/video/drivers/join.h>
 
+#include <map>
+
 namespace pangolin
 {
 
@@ -335,6 +337,8 @@ DepthSenseSensorType depthsense_sensor(const std::string& str)
 
 #endif // defined(HAVE_DEPTHSENSE)
 
+static std::map<std::string, VideoInterfaceFactory> s_RegisteredUriSchemes;
+
 VideoInterface* OpenVideo(const std::string& str_uri)
 {
     return OpenVideo( ParseUri(str_uri) );
@@ -343,7 +347,17 @@ VideoInterface* OpenVideo(const std::string& str_uri)
 VideoInterface* OpenVideo(const Uri& uri)
 {
     VideoInterface* video = 0;
-    
+
+    // Allow a client to override internal implementations by checking
+    // registered schemes first.
+    std::map<std::string, VideoInterfaceFactory>::const_iterator it =
+        std::begin(s_RegisteredUriSchemes);
+    while (it != std::end(s_RegisteredUriSchemes)) {
+        if (!uri.scheme.compare(it->first)) {
+            return it->second(uri);
+        }
+    }
+
     if(!uri.scheme.compare("test") )
     {
         const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
@@ -687,11 +701,23 @@ VideoInterface* OpenVideo(const Uri& uri)
         );
     }else
 #endif
+drivers
     {
         throw VideoException("No known video handler for URI '" + uri.scheme + "'");
     }
-    
+
     return video;
+}
+
+void RegisterScheme(std::string scheme,
+    boostd::function<VideoInterface*(const Uri& uri)>& factory)
+{
+    ToLower(scheme);
+    if (s_RegisteredUriSchemes.count(scheme) != 0) {
+        throw VideoException("scheme " + scheme + " is already registered");
+    }
+
+    s_RegisteredUriSchemes[scheme] = factory;
 }
 
 VideoInput::VideoInput()

@@ -106,6 +106,7 @@
 //  e.g. "join:[sync_tolerance_us=100, sync_continuously=true]//{pleora:[sn=00000274]//}{pleora:[sn=00000275]//}"
 
 
+#include <pangolin/compat/function.h>
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_common.h>
 #include <pangolin/utils/picojson.h>
@@ -271,6 +272,8 @@ struct PANGOLIN_EXPORT VideoPlaybackInterface
     /// Return -1 on failure, frameid on success
     virtual int Seek(int frameid) = 0;
 };
+
+typedef boostd::function<VideoInterface*(const Uri& uri)> VideoInterfaceFactory;
 
 //! Generic wrapper class for different video sources
 struct PANGOLIN_EXPORT VideoInput :
