@@ -86,6 +86,12 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/unpack.cpp
     video/drivers/join.cpp
   )
+
+if(UNIX)
+  list(APPEND HEADERS ${INCDIR}/video/drivers/shared_memory.h)
+  list(APPEND SOURCES video/drivers/shared_memory.cpp)
+endif()
+
 endif()
 
 #######################################################
@@ -196,6 +202,11 @@ else()
             list(APPEND LINK_LIBS -lX11 )
         endif()
     endif()
+endif()
+
+if(UNIX)
+  append_glob(HEADERS ${INCDIR}/utils/posix/*.h*)
+  append_glob(SOURCES utils/posix/*.cpp)
 endif()
 
 find_package(PythonLibs QUIET)
