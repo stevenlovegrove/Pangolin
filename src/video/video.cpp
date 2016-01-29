@@ -701,7 +701,6 @@ VideoInterface* OpenVideo(const Uri& uri)
         );
     }else
 #endif
-drivers
     {
         throw VideoException("No known video handler for URI '" + uri.scheme + "'");
     }
