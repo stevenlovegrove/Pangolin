@@ -82,7 +82,9 @@ open_named_condition_variable(const string &name) {
     open_named_shared_memory_buffer(name, true);
   boostd::shared_ptr<ConditionVariableInterface> ptr;
 
-  ptr.reset(new PThreadConditionVariable(shmem));
+  if(shmem) {
+    ptr.reset(new PThreadConditionVariable(shmem));
+  }
   return ptr;
 }
 

@@ -42,12 +42,16 @@ const std::vector<StreamInfo>& SharedMemoryVideo::Streams() const
 
 bool SharedMemoryVideo::GrabNext(unsigned char* image, bool wait)
 {
-    if (wait) {
-        _buffer_full->wait();
-    } else if (!_buffer_full->wait(TimeNow())) {
-        return false;
+    // If a condition variable exists, try waiting on it.
+    if(_buffer_full) {
+        if (wait) {
+            _buffer_full->wait();
+        } else if (!_buffer_full->wait(TimeNow())) {
+            return false;
+        }
     }
 
+    // Read the buffer.
     _shared_memory->lock();
     memcpy(image, _shared_memory->ptr(), _frame_size);
     _shared_memory->unlock();
