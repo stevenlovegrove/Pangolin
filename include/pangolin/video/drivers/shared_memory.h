@@ -28,8 +28,6 @@ public:
 
 private:
   VideoPixelFormat _fmt;
-  size_t _w;
-  size_t _h;
   size_t _frame_size;
   std::vector<StreamInfo> _streams;
   boostd::shared_ptr<SharedMemoryBufferInterface> _shared_memory;

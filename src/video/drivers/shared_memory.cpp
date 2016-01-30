@@ -9,13 +9,12 @@ SharedMemoryVideo::SharedMemoryVideo(size_t w, size_t h, std::string pix_fmt,
     const boostd::shared_ptr<SharedMemoryBufferInterface>& shared_memory,
     const boostd::shared_ptr<ConditionVariableInterface>& buffer_full) :
     _fmt(VideoFormatFromString(pix_fmt)),
-    _w(w),
-    _h(h),
     _frame_size(w*h*_fmt.bpp/8),
     _shared_memory(shared_memory),
     _buffer_full(buffer_full)
 {
-    const StreamInfo stream(_fmt, w, h, _frame_size, 0);
+    const size_t pitch = w * _fmt.bpp/8;
+    const StreamInfo stream(_fmt, w, h, pitch, 0);
     _streams.push_back(stream);
 }
 
