@@ -2,7 +2,7 @@
 
 #include <pangolin/compat/memory.h>
 
-#include <string.h>
+#include <string>
 
 namespace pangolin
 {
