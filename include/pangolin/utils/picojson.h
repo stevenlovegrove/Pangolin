@@ -256,6 +256,9 @@ public:
     const value& operator[](const std::string& key) const;
     bool contains(const std::string& key) const;
 
+    template <typename T>
+    T get_value(const std::string& key, T default_value) const;
+
     /////////////////////////////
     // Serialization
     /////////////////////////////
@@ -474,6 +477,15 @@ inline bool value::contains(const std::string& key) const {
         return i != u_.object_->end();
     }else{
         return false;
+    }
+}
+
+template <typename T>
+inline T value::get_value(const std::string& key, T default_value) const {
+    if(contains(key)) {
+        return (*this)[key].get<T>();
+    }else{
+        return default_value;
     }
 }
 
