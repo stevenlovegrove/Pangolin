@@ -132,7 +132,7 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
 }
 
 PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
-                         size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int again, double exposure, bool ext_trig)
+                         size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int analog_gain, double exposure, bool ext_trig, size_t analog_black_level)
     : size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0), lStreamParams(0)
 {
     lPvSystem = new PvSystem();
@@ -180,6 +180,7 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
 
     // Get Handles to properties we'll be using.
     lAnalogGain = lDeviceParams->GetInteger("AnalogGain");
+    lAnalogBlackLevel = lDeviceParams->GetInteger("AnalogBlackLevel");
     lExposure = lDeviceParams->GetFloat("ExposureTime");
     lAquisitionMode = lDeviceParams->GetEnum("AcquisitionMode");
     lTriggerSource = lDeviceParams->GetEnum("TriggerSource");
@@ -237,7 +238,8 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
 
     // Attempt to set AnalogGain, Offset
     try{
-        SetGain(again);
+        SetGain(analog_gain);
+        SetAnalogBlackLevel(analog_black_level);
         SetExposure(exposure);
     }catch(std::runtime_error e)
     {
@@ -366,15 +368,21 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool wait)
         {
             PvImage *lImage = lBuffer->GetImage();
             std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+
+            // Required frame properties
             frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
             frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
-			double val;
-			PvResult lResult = lDeviceParams->GetFloatValue("DeviceTemperatureCelsius", val);
-			if (lResult.IsSuccess()) {
-				frame_properties[PANGO_SENSOR_TEMPERATURE_C] = json::value(val);
-			} else {
-				pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
-			}
+
+            // Optional frame properties
+            if(lTemperatureCelcius != 0) {
+                double val;
+                PvResult lResult = lTemperatureCelcius->GetValue(val);
+                if(lResult.IsSuccess()) {
+                    frame_properties[PANGO_SENSOR_TEMPERATURE_C] = json::value(val);
+                } else {
+                    pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
+                }
+            }
             good = true;
         }
     } else {
@@ -431,7 +439,7 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
         frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
 
         // Optional frame properties
-        if(lTemperatureCelcius) {
+        if(lTemperatureCelcius != 0) {
             double val;
             PvResult lResult = lTemperatureCelcius->GetValue(val);
             if(lResult.IsSuccess()) {
@@ -461,6 +469,23 @@ void PleoraVideo::SetGain(int64_t val)
     if(val >= 0 && lAnalogGain && lAnalogGain->IsWritable()) {
         ThrowOnFailure( lAnalogGain->SetValue(val) );
         frame_properties[PANGO_ANALOG_GAIN] = json::value(val);
+    }
+}
+
+int64_t PleoraVideo::GetAnalogBlackLevel()
+{
+    int64_t val;
+    if(lAnalogGain) {
+        ThrowOnFailure( lAnalogBlackLevel->GetValue(val) );
+    }
+    return val;
+}
+
+void PleoraVideo::SetAnalogBlackLevel(int64_t val)
+{
+    if(val >= 0 && lAnalogBlackLevel&& lAnalogBlackLevel->IsWritable()) {
+        ThrowOnFailure( lAnalogBlackLevel->SetValue(val) );
+        frame_properties[PANGO_ANALOG_BLACK_LEVEL] = json::value(val);
     }
 }
 

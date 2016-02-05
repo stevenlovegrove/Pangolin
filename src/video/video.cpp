@@ -696,13 +696,14 @@ VideoInterface* OpenVideo(const Uri& uri)
         const size_t again = uri.Get<size_t>("again",-1);
         const double exposure = uri.Get<size_t>("exposure",0);
         const bool ext_trig = uri.Get<bool>("eTrig",false);
+        const size_t analog_black_level= uri.Get<size_t>("abl",0);
 
         video = new PleoraVideo(
             model_name.empty() ? 0 : model_name.c_str(),
             serial_num.empty() ? 0 : serial_num.c_str(),
             idx, bpp, binx, biny, buffer_count,
             desired_size.x, desired_size.y, desired_pos.x, desired_pos.y,
-            again, exposure, ext_trig
+            again, exposure, ext_trig,analog_black_level
         );
     }else
 #endif

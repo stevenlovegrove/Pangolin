@@ -58,7 +58,7 @@ public:
 
     PleoraVideo(const char *model_name, const char *serial_num, size_t index, size_t bpp = 8, size_t binX = 1, size_t binY = 1, size_t buffer_count = DEFAULT_BUFFER_COUNT,
                 size_t desired_size_x = 0, size_t desired_size_y = 0, size_t desired_pos_x = 0, size_t desired_pos_y = 0, int again = -1, double exposure = 0,
-                bool ext_trig=false);
+                bool ext_trig=false, size_t analog_black_level=0);
     ~PleoraVideo();
 
     void Start();
@@ -76,6 +76,10 @@ public:
     void SetGain(int64_t val);
 
     int64_t GetGain();
+
+    void SetAnalogBlackLevel(int64_t val);
+
+    int64_t GetAnalogBlackLevel();
 
     void SetExposure(double val);
 
@@ -121,6 +125,7 @@ protected:
     PvGenCommand* lStop;
 
     PvGenInteger* lAnalogGain;
+    PvGenInteger* lAnalogBlackLevel;
     PvGenFloat*   lExposure;
     PvGenEnum*    lAquisitionMode;
     PvGenEnum*    lTriggerSource;
