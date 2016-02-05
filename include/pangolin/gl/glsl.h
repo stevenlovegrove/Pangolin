@@ -110,6 +110,7 @@ public:
     bool Link();
     
     GLint GetAttributeHandle(const std::string& name);
+    GLint GetProgramResourceIndex(const std::string& name);
     GLint GetUniformHandle(const std::string& name);
 
     // Before setting uniforms, be sure to Bind() the GlSl program first.
@@ -126,6 +127,8 @@ public:
     void SetUniform(const std::string& name, Colour c);
 
     void SetUniform(const std::string& name, const OpenGlMatrix& m);
+
+    void SetShaderStorageBlock(const std::string& name, const int& bindingIndex);
 
     void Bind();
     void SaveBind();
@@ -466,6 +469,11 @@ inline GLint GlSlProgram::GetAttributeHandle(const std::string& name)
     return glGetAttribLocation(prog, name.c_str());
 }
 
+inline GLint GlSlProgram::GetProgramResourceIndex(const std::string& name)
+{
+    return glGetProgramResourceIndex(prog, GL_SHADER_STORAGE_BLOCK, name.c_str());
+}
+
 inline GLint GlSlProgram::GetUniformHandle(const std::string& name)
 {
     return glGetUniformLocation(prog, name.c_str());
@@ -524,6 +532,11 @@ inline void GlSlProgram::SetUniform(const std::string& name, const OpenGlMatrix&
         m[i] = (float)mat.m[i];
     }
     glUniformMatrix4fv( GetUniformHandle(name), 1, GL_FALSE, m);
+}
+
+inline void GlSlProgram::SetShaderStorageBlock(const std::string& name, const int& bindingIndex)
+{
+    glShaderStorageBlockBinding(prog, GetProgramResourceIndex(name), bindingIndex);
 }
 
 inline void GlSlProgram::BindPangolinDefaultAttribLocationsAndLink()
