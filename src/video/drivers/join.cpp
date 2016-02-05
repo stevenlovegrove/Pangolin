@@ -135,7 +135,6 @@ bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
        if(!sync_continuously) --sync_attempts_to_go;
     }
 
-    std::cout<<sync_continuously<<" "<<oldest<<" "<<newest<<" "<<(newest - oldest)<<std::endl;
     return grabbed_any;
 }
 
