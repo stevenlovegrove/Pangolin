@@ -37,6 +37,14 @@ extern "C"
 namespace pangolin
 {
 
+#ifdef HAVE_FFMPEG_AVPIXELFORMAT
+#  define TEST_PIX_FMT_RETURN(fmt) case AV_PIX_FMT_##fmt: return #fmt;
+#else
+#  define AV_PIX_FMT_NONE  PIX_FMT_NONE
+#  define AV_PIX_FMT_GRAY8 PIX_FMT_GRAY8
+#  define TEST_PIX_FMT_RETURN(fmt) case PIX_FMT_##fmt: return #fmt;
+#endif
+
 AVPixelFormat FfmpegFmtFromString(const std::string fmt)
 {
     const std::string lfmt = ToLowerCopy(fmt);
@@ -46,7 +54,6 @@ AVPixelFormat FfmpegFmtFromString(const std::string fmt)
     return av_get_pix_fmt(lfmt.c_str());
 }
 
-#define TEST_PIX_FMT_RETURN(fmt) case AV_PIX_FMT_##fmt: return #fmt;
 
 std::string FfmpegFmtToString(const AVPixelFormat fmt)
 {

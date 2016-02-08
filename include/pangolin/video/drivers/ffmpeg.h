@@ -46,6 +46,10 @@ extern "C"
 #include <libavcodec/avcodec.h>
 }
 
+#ifndef HAVE_FFMPEG_AVPIXELFORMAT
+#  define AVPixelFormat PixelFormat
+#endif
+
 namespace pangolin
 {
 

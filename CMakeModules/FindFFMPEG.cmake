@@ -67,6 +67,12 @@ IF(AVCODEC_INCLUDE_DIR AND AVFORMAT_INCLUDE_DIR AND AVUTIL_INCLUDE_DIR AND SWSCA
         &avformat_alloc_output_context2;
       }" HAVE_FFMPEG_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
    )
+   CHECK_CXX_SOURCE_COMPILES(
+     "#include \"${AVCODEC_INCLUDE_DIR}/libavutil/pixdesc.h\"
+      int main() {
+        AVPixelFormat test = AV_PIX_FMT_GRAY8;
+      }" HAVE_FFMPEG_AVPIXELFORMAT
+   )
 ENDIF()
 
 IF (FFMPEG_FOUND)
