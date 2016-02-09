@@ -28,8 +28,10 @@ public:
   }
 
   bool wait(basetime abstime) {
-    struct timespec pthread_abstime = {.tv_sec = abstime.tv_sec,
-                                       .tv_nsec = abstime.tv_usec * 1000};
+    struct timespec pthread_abstime;
+    pthread_abstime.tv_sec = abstime.tv_sec;
+    pthread_abstime.tv_nsec = abstime.tv_usec * 1000;
+
     _lock();
     int err = pthread_cond_timedwait(&_pthread_data->cond, &_pthread_data->lock,
                            &pthread_abstime);
