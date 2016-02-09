@@ -1107,13 +1107,6 @@ inline bool operator!=(const value& x, const value& y) {
 } // namespace json
 } // namespace pangolin
 
-namespace std {
-template<> inline void swap(pangolin::json::value& x, pangolin::json::value& y)
-{
-    x.swap(y);
-}
-}
-
 inline std::istream& operator>>(std::istream& is, pangolin::json::value& x)
 {
     pangolin::json::set_last_error(std::string());
@@ -1357,26 +1350,6 @@ int main(void)
         string err;
         pangolin::json::_parse(ctx, s, s + strlen(s), &err);
         ok(err.empty(), "null_parse_context");
-    }
-
-    {
-        pangolin::json::value v1, v2;
-        v1 = pangolin::json::value(true);
-        swap(v1, v2);
-        ok(v1.is<pangolin::json::null>(), "swap (null)");
-        ok(v2.get<bool>() == true, "swap (bool)");
-
-        v1 = pangolin::json::value("a");
-        v2 = pangolin::json::value(1.0);
-        swap(v1, v2);
-        ok(v1.get<double>() == 1.0, "swap (dobule)");
-        ok(v2.get<string>() == "a", "swap (string)");
-
-        v1 = pangolin::json::value(pangolin::json::object());
-        v2 = pangolin::json::value(pangolin::json::array());
-        swap(v1, v2);
-        ok(v1.is<pangolin::json::array>(), "swap (array)");
-        ok(v2.is<pangolin::json::object>(), "swap (object)");
     }
 
     {
