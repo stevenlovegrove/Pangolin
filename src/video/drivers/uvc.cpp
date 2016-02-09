@@ -222,17 +222,19 @@ const std::vector<StreamInfo>& UvcVideo::Streams() const
 bool UvcVideo::GrabNext( unsigned char* image, bool wait )
 {
     uvc_frame_t* frame = NULL;
-    uvc_error_t err = uvc_stream_get_frame(strm_, &frame, 0);
+    uvc_error_t err = uvc_stream_get_frame(strm_, &frame, wait ? 0 : -1);
     
     if(err!= UVC_SUCCESS) {
-        uvc_perror(err, "uvc_get_frame");
+        pango_print_error("UvcVideo Error: %s", uvc_strerror(err) );
         return false;
     }else{
         if(frame) {
             memcpy(image, frame->data, frame->data_bytes );
             return true;
         }else{
-            std::cerr << "No data..." << std::endl;
+            if(wait) {
+                pango_print_debug("UvcVideo: No frame data");
+            }
             return false;
         }
     }
