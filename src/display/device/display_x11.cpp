@@ -120,8 +120,6 @@ int CreateX11Window(
         GLX_DEPTH_SIZE      , 24,
         GLX_STENCIL_SIZE    , 8,
         GLX_DOUBLEBUFFER    , glx_doublebuffer ? True : False,
-        GLX_SAMPLE_BUFFERS  , glx_sample_buffers,
-        GLX_SAMPLES         , glx_sample_buffers > 0 ? glx_samples : 0,
         None
     };
 
@@ -155,21 +153,35 @@ int CreateX11Window(
             glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf );
             glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLES       , &samples  );
 
-            if ( (best_fbc < 0) || (samp_buf>0 && samples>best_num_samp) )
-                best_fbc = i, best_num_samp = samples;
+            // Filter for the best available.
+            if ( samples > best_num_samp ) {
+                best_fbc = i;
+                best_num_samp = samples;
+            }
 
-            if ( (worst_fbc < 0) || (samp_buf>0 && samples<worst_num_samp) )
-                worst_fbc = i, worst_num_samp = samples;
+            // Filter lowest settings which match minimum user requirement.
+            if ( samp_buf >= glx_sample_buffers && samples >= glx_samples && samples < worst_num_samp ) {
+                worst_fbc = i;
+                worst_num_samp = samples;
+            }
         }
         XFree( vi );
     }
 
     // Select the minimum suitable option. The 'best' is often too slow.
-    GLXFBConfig bestFbc = fbc[ worst_fbc ];
+    int chosen_fbc_id = worst_fbc;
+
+    // If minimum requested isn't available, return the best that is.
+    if(chosen_fbc_id < 0) {
+        pango_print_warn("Framebuffer with requested attributes not available. Using available framebuffer. You may see visual artifacts.");
+        chosen_fbc_id = best_fbc;
+    }
+
+    GLXFBConfig chosenFbc = fbc[ chosen_fbc_id ];
     XFree( fbc );
 
     // Get a visual
-    XVisualInfo *vi = glXGetVisualFromFBConfig( display, bestFbc );
+    XVisualInfo *vi = glXGetVisualFromFBConfig( display, chosenFbc );
 
     // Create colourmap
     XSetWindowAttributes swa;
@@ -221,7 +233,7 @@ int CreateX11Window(
             None
         };
 
-        ctx = glXCreateContextAttribsARB( display, bestFbc, 0, True, context_attribs );
+        ctx = glXCreateContextAttribsARB( display, chosenFbc, 0, True, context_attribs );
 
         // Sync to ensure any errors generated are processed.
         XSync( display, False );
@@ -231,11 +243,11 @@ int CreateX11Window(
             // context version compatible with OpenGL versions less than version 3.0.
             context_attribs[1] = 1;  // GLX_CONTEXT_MAJOR_VERSION_ARB = 1
             context_attribs[3] = 0;  // GLX_CONTEXT_MINOR_VERSION_ARB = 0
-            ctx = glXCreateContextAttribsARB( display, bestFbc, 0, True, context_attribs );
+            ctx = glXCreateContextAttribsARB( display, chosenFbc, 0, True, context_attribs );
         }
     } else {
         // Fallback to GLX 1.3 Context
-        ctx = glXCreateNewContext( display, bestFbc, GLX_RGBA_TYPE, 0, True );
+        ctx = glXCreateNewContext( display, chosenFbc, GLX_RGBA_TYPE, 0, True );
     }
 
     // Sync to ensure any errors generated are processed.
