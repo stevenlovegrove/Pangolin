@@ -166,6 +166,11 @@ void PangolinPlatformInit(PangolinGl& /*context*/)
 
 void PangolinPlatformDeinit(PangolinGl& /*context*/)
 {
+    // Explicitly destroy GLUT Window
+    const int win_id = glutGetWindow();
+    if(win_id > 0) {
+        glutDestroyWindow(win_id);
+    }
 }
 
 
