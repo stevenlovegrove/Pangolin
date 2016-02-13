@@ -122,7 +122,7 @@ bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
     }
 
     if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
-       pango_print_warn("Join error, unable to sync streams within %lu us\n", sync_tolerance_us);
+       pango_print_warn("Join error, unable to sync streams within %lu us\n", (unsigned long)sync_tolerance_us);
     }
 
     if(sync_attempts_to_go >= 0) {
@@ -201,7 +201,7 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
   }
 
   if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
-     pango_print_warn("Join error, unable to sync streams within %lu us\n", sync_tolerance_us);
+     pango_print_warn("Join error, unable to sync streams within %lu us\n", (unsigned long)sync_tolerance_us);
   }
 
   if(sync_attempts_to_go >= 0) {
