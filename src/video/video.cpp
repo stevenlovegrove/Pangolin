@@ -371,11 +371,9 @@ VideoInterface* OpenVideo(const Uri& uri)
         video = new TestVideo(dim.x,dim.y,n,fmt);
     }else
     // '%' printf specifier used with ffmpeg
-    if(!uri.scheme.compare("files") && uri.url.find('%') == std::string::npos)
-    {
-        video = new ImagesVideo(uri.url);
-    }else
-    if(!uri.scheme.compare("file") || !uri.scheme.compare("pango") || !uri.scheme.compare("pvn") )
+    if((!uri.scheme.compare("files") && uri.url.find('%') == std::string::npos) ||
+        !uri.scheme.compare("file") || !uri.scheme.compare("pango") ||
+        !uri.scheme.compare("pvn") )
     {
         const ImageFileType ft = FileType(uri.url);
 
@@ -387,9 +385,7 @@ VideoInterface* OpenVideo(const Uri& uri)
         }else if(ft == ImageFileTypePango ) {
             const bool realtime = uri.Contains("realtime");
             video = new PangoVideo(PathExpand(uri.url).c_str(), realtime);
-        }else if(ft == ImageFileTypeExr || ft == ImageFileTypeGif || ft == ImageFileTypeJpg ||
-                 ft == ImageFileTypePng || ft == ImageFileTypePpm || ft == ImageFileTypeTga ||
-                 ft == ImageFileTypeTiff || raw) {
+        }else{
             if(raw) {
                 const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
                 const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
@@ -398,8 +394,6 @@ VideoInterface* OpenVideo(const Uri& uri)
             }else{
                 video = new ImagesVideo(PathExpand(uri.url));
             }
-        }else{
-            throw VideoException("Unrecognised file type." );
         }
     }else
     if(!uri.scheme.compare("debayer"))
