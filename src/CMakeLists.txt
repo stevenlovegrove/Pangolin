@@ -87,10 +87,14 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/join.cpp
   )
 
-if(UNIX)
-  list(APPEND HEADERS ${INCDIR}/video/drivers/shared_memory.h)
-  list(APPEND SOURCES video/drivers/shared_memory.cpp)
-endif()
+  if(UNIX)
+    list(APPEND HEADERS ${INCDIR}/video/drivers/shared_memory.h)
+    list(APPEND SOURCES video/drivers/shared_memory.cpp)
+    if(_LINUX_)
+      # Required for shared memory API using some versions of glibc
+      list(APPEND LINK_LIBS rt)
+    endif()
+  endif()
 
 endif()
 
