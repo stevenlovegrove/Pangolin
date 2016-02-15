@@ -34,13 +34,15 @@
 // Video URI's take the following form:
 //  scheme:[param1=value1,param2=value2,...]//device
 //
-// scheme = file | dc1394 | v4l | openni | convert | mjpeg
+// scheme = file | files |
+//          dc1394 | v4l | openni2 | openni | depthsense | pleora |
+//          convert | mjpeg | debayer | split | join | test
 //
 // file/files - read one or more streams from image file(s) / video
 //  e.g. "files://~/data/dataset/img_*.jpg"
 //  e.g. "files://~/data/dataset/img_[left,right]_*.pgm"
 //  e.g. "files:///home/user/sequence/foo%03d.jpeg"
-
+//
 //  e.g. "file:[fmt=GRAY8,size=640x480]///home/user/raw_image.bin"
 //  e.g. "file:[realtime=1]///home/user/video/movie.pango"
 //  e.g. "file:[stream=1]///home/user/video/movie.avi"
@@ -79,6 +81,9 @@
 //  e.g. "depthsense://"
 //  e.g. "depthsense:[img1=depth,img2=rgb]//"
 //
+// pleora - USB 3 vision cameras
+//  e.g. "pleora:[bpp=10,size=512x256,pos=712x512,again=1,sn=00000274,exposure=3000,eTrig=true,buffers=10]//"
+//
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
 //  e.g. "convert:[fmt=GRAY8]//v4l:///dev/video0"
@@ -86,25 +91,21 @@
 // mjpeg - capture from (possibly networked) motion jpeg stream using FFMPEG
 //  e.g. "mjpeg://http://127.0.0.1/?action=stream"
 //
+// debayer - debayer an input video stream
+//  e.g.  "debayer:[tile="BGGR",method="downsample"]//v4l:///dev/video0
+//
 // split - split an input video into a one or more streams based on Region of Interest / memory specification
 //           roiN=X+Y+WxH
 //           memN=Offset:WxH:PitchBytes:Format
 //  e.g. "split:[roi1=0+0+640x480,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 //  e.g. "split:[mem1=307200:640x480:1280:GRAY8,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 //
-// debayer - debayer an input video stream
-// e.g.  "debayer:[tile="BGGR",method="downsample"]//v4l:///dev/video0
+// join - join streams
+//  e.g. "join:[sync_tolerance_us=100, sync_continuously=true]//{pleora:[sn=00000274]//}{pleora:[sn=00000275]//}"
 //
 // test - output test video sequence
 //  e.g. "test://"
 //  e.g. "test:[size=640x480,fmt=RGB24]//"
-//
-// pleora usb 3 vision cameras
-//  e.g. "pleora:[bpp=10,size=512x256,pos=712x512,again=1,sn=00000274,exposure=3000,eTrig=true,buffers=10]//"
-//
-// join - join streams
-//  e.g. "join:[sync_tolerance_us=100, sync_continuously=true]//{pleora:[sn=00000274]//}{pleora:[sn=00000275]//}"
-
 
 #include <pangolin/compat/function.h>
 #include <pangolin/image/image.h>
