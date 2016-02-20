@@ -397,9 +397,13 @@ inline void GlSlProgram::ParseGLSL(
             // G3D style 'expect' directive, annotating expected preprocessor
             // definition with document string
             size_t token_start = 7;
-            while( std::isspace(line[token_start]) ) ++token_start;
+            while(line[token_start] == ' '){
+                ++token_start;
+            }
             size_t token_end = token_start;
-            while( !std::isspace(line[token_end]) ) ++token_end;
+            while(line[token_end]){
+                ++token_end;
+            }
             std::string token(line+token_start, line+token_end);
             std::map<std::string,std::string>::const_iterator it = program_defines.find(token);
             if( it == program_defines.end() ) {
