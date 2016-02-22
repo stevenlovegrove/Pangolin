@@ -84,7 +84,7 @@ template<typename T>
 class Var
 {
 public:
-    static void Attach(
+    static T& Attach(
         const std::string& name, T& variable,
         double min, double max, bool logscale = false
     ) {
@@ -98,9 +98,10 @@ public:
             v = nv;
             InitialiseNewVarMeta<T&>(*nv,name,min,max,1,logscale);
         }
+        return variable;
     }
 
-    static void Attach(
+    static T& Attach(
         const std::string& name, T& variable, bool toggle = false
         ) {
         // Find name in VarStore
@@ -114,6 +115,7 @@ public:
             v = nv;
             InitialiseNewVarMeta<T&>(*nv, name, 0.0, 0.0, toggle);
         }
+        return variable;
     }
 
     ~Var()
