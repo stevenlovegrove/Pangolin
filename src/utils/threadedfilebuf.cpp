@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/utils/threadedfilebuf.h>
+#include <pangolin/utils/file_utils.h>
 
 #include <cstring>
 #include <stdexcept>

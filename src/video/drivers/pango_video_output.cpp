@@ -27,6 +27,7 @@
 
 #include <pangolin/video/drivers/pango_video_output.h>
 #include <pangolin/utils/picojson.h>
+#include <pangolin/utils/file_utils.h>
 #include <set>
 
 namespace pangolin
