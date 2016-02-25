@@ -35,7 +35,9 @@ namespace pangolin
 const std::string pango_video_type = "raw_video";
 
 PangoVideoOutput::PangoVideoOutput(const std::string& filename)
-    : packetstream(filename), packetstreamsrcid(-1)
+    : packetstream(filename),
+      packetstreamsrcid(-1),
+      is_pipe(pangolin::IsPipe(filename))
 {
 }
 
@@ -46,6 +48,11 @@ PangoVideoOutput::~PangoVideoOutput()
 const std::vector<StreamInfo>& PangoVideoOutput::Streams() const
 {
     return streams;
+}
+
+bool PangoVideoOutput::IsPipe() const
+{
+    return is_pipe;
 }
 
 void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::string& uri, const json::value& properties)

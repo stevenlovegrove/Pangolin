@@ -172,6 +172,7 @@ public:
     const std::vector<StreamInfo>& Streams() const;
     void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& properties);
     int WriteStreams(unsigned char* data, const json::value& frame_properties);
+    bool IsPipe() const;
     
 protected:
     void Initialise(std::string filename);
@@ -187,7 +188,8 @@ protected:
     int frame_count;
     
     int base_frame_rate;
-    int bit_rate;    
+    int bit_rate;
+    bool is_pipe;
 };
 
 }

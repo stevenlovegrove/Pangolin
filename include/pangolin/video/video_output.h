@@ -46,8 +46,26 @@
 
 #include <pangolin/video/video.h>
 
+#ifdef _WIN_
+#else
+#include <sys/stat.h>
+#include <stdio.h>
+#endif // _WIN_
+
+
 namespace pangolin
 {
+
+inline bool IsPipe(const std::string& file)
+{
+#ifdef _WIN_
+    return false;
+#else
+    struct stat st;
+    stat(file.c_str(), &st);
+    return ((st.st_mode & S_IFMT) == S_IFIFO);
+#endif // _WIN_
+}
 
 //! Interface to video recording destinations
 struct PANGOLIN_EXPORT VideoOutputInterface
@@ -60,6 +78,8 @@ struct PANGOLIN_EXPORT VideoOutputInterface
     virtual void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri ="", const json::value& properties = json::value() ) = 0;
 
     virtual int WriteStreams(unsigned char* data, const json::value& frame_properties ) = 0;
+
+    virtual bool IsPipe() const = 0;
 };
 
 //! VideoOutput wrap to generically construct instances of VideoOutputInterface.
@@ -80,6 +100,8 @@ public:
 
     int WriteStreams(unsigned char* data, const json::value& frame_properties = json::value() );
     
+    bool IsPipe() const;
+
 protected:
     Uri uri;
     VideoOutputInterface* recorder;

@@ -684,7 +684,7 @@ FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
 
 FfmpegVideoOutput::FfmpegVideoOutput(const std::string& filename, int base_frame_rate, int bit_rate)
     : filename(filename), started(false), oc(NULL),
-      frame_count(0), base_frame_rate(base_frame_rate), bit_rate(bit_rate)
+      frame_count(0), base_frame_rate(base_frame_rate), bit_rate(bit_rate), is_pipe(pangolin::IsPipe(filename))
 {
     Initialise(filename);
 }
@@ -692,6 +692,11 @@ FfmpegVideoOutput::FfmpegVideoOutput(const std::string& filename, int base_frame
 FfmpegVideoOutput::~FfmpegVideoOutput()
 {
     Close();
+}
+
+bool FfmpegVideoOutput::IsPipe() const
+{
+    return is_pipe;
 }
 
 void FfmpegVideoOutput::Initialise(std::string filename)

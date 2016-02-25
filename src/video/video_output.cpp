@@ -125,5 +125,9 @@ int VideoOutput::WriteStreams(unsigned char* data, const json::value& frame_prop
     return recorder->WriteStreams(data, frame_properties);
 }
 
+bool VideoOutput::IsPipe() const
+{
+    return recorder->IsPipe();
+}
 
 }

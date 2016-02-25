@@ -43,6 +43,7 @@ public:
     const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
     void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& device_properties) PANGOLIN_OVERRIDE;
     int WriteStreams(unsigned char* data, const json::value& frame_properties) PANGOLIN_OVERRIDE;
+    bool IsPipe() const PANGOLIN_OVERRIDE;
 
 protected:
     void WriteHeader();
@@ -54,6 +55,7 @@ protected:
     PacketStreamWriter packetstream;
     int packetstreamsrcid;
     size_t total_frame_size;
+    bool is_pipe;
 };
 
 }
