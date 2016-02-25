@@ -375,7 +375,18 @@ VideoInterface* OpenVideo(const Uri& uri)
         !uri.scheme.compare("file") || !uri.scheme.compare("pango") ||
         !uri.scheme.compare("pvn") )
     {
-        const ImageFileType ft = FileType(uri.url);
+        ImageFileType ft = ImageFileTypeUnknown;
+
+        if( !uri.scheme.compare("pango") ) {
+            // User has forced pango type with uri
+            ft = ImageFileTypePango;
+        }else if(!uri.scheme.compare("pvn")) {
+            // User has forced pvn type with uri
+            ft = ImageFileTypePvn;
+        }else{
+            // Infer type from filecontents / filename.
+            ft = FileType(uri.url);
+        }
 
         const bool raw = uri.Contains("fmt");
 
