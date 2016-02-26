@@ -297,7 +297,7 @@ bool IsPipe(const std::string& file)
 #endif // _WIN_
 }
 
-bool PipeHasReader(const std::string& file)
+bool PipeOpen(const std::string& file)
 {
 #ifdef _WIN_
     return false;

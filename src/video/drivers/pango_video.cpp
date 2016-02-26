@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/pango_video.h>
-
+#include <pangolin/utils/file_utils.h>
 #include <pangolin/compat/bind.h>
 
 namespace pangolin
@@ -35,7 +35,7 @@ namespace pangolin
 const std::string pango_video_type = "raw_video";
 
 PangoVideo::PangoVideo(const std::string& filename, bool realtime)
-    : reader(filename, realtime), frame_id(-1)
+    : reader(filename, realtime), frame_id(-1), filename(filename), is_pipe(pangolin::IsPipe(filename))
 {
     src_id = FindSource();
 
@@ -70,6 +70,11 @@ void PangoVideo::Stop()
 
 bool PangoVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
+    if(is_pipe && !pangolin::PipeOpen(filename))
+    {
+        return false;
+    }
+
     if(reader.ReadToSourcePacketAndLock(src_id)) {
         // read this frames actual data
         reader.Read((char*)image, size_bytes);

@@ -74,7 +74,7 @@ PANGOLIN_EXPORT
 bool IsPipe(const std::string& file);
 
 PANGOLIN_EXPORT
-bool PipeHasReader(const std::string& file);
+bool PipeOpen(const std::string& file);
 
 PANGOLIN_EXPORT
 void FlushPipe(const std::string& file);
