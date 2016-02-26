@@ -46,6 +46,7 @@ const unsigned int TAG_LENGTH = 3;
 
 #define PANGO_TAG(a,b,c) ( (c<<16) | (b<<8) | a)
 const uint32_t TAG_PANGO_HDR   = PANGO_TAG('L', 'I', 'N');
+const uint32_t TAG_PANGO_MAGIC = PANGO_TAG('P', 'A', 'N');
 const uint32_t TAG_PANGO_SYNC  = PANGO_TAG('S', 'Y', 'N');
 const uint32_t TAG_PANGO_STATS = PANGO_TAG('S', 'T', 'A');
 const uint32_t TAG_ADD_SOURCE  = PANGO_TAG('S', 'R', 'C');
@@ -135,6 +136,7 @@ protected:
     threadedfilebuf buffer;
     std::ostream writer;
     bool is_open;
+    bool is_pipe;
 
     unsigned int bytes_written;
 };
@@ -186,6 +188,8 @@ protected:
 
     void ProcessMessage();
     void ProcessMessagesUntilSourcePacket(int& nxt_src_id, int64_t &time_us);
+
+    void SkipSync();
 
     bool ReadTag();
     void ReadHeaderPacket();

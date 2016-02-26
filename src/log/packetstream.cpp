@@ -88,12 +88,12 @@ void WaitUntilPlaybackTime_us(int64_t time_us)
 //////////////////////////////////////////////////////////////////////////
 
 PacketStreamWriter::PacketStreamWriter()
-    : writer(&buffer), is_open(false), bytes_written(0)
+    : writer(&buffer), is_open(false), is_pipe(false), bytes_written(0)
 {
 }
 
 PacketStreamWriter::PacketStreamWriter(const std::string& filename, unsigned int buffer_size_bytes )
-    : buffer(pangolin::PathExpand(filename), buffer_size_bytes), writer(&buffer), is_open(true), bytes_written(0)
+    : buffer(pangolin::PathExpand(filename), buffer_size_bytes), writer(&buffer), is_open(true), is_pipe(pangolin::IsPipe(filename)), bytes_written(0)
 {
     // Start of file magic
     writer.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
@@ -103,6 +103,8 @@ PacketStreamWriter::PacketStreamWriter(const std::string& filename, unsigned int
 
 void PacketStreamWriter::Open(const std::string& filename, unsigned int buffer_size_bytes)
 {
+    is_pipe = pangolin::IsPipe(filename);
+
     // Open file for writing
     buffer.open(pangolin::PathExpand(filename), buffer_size_bytes);
     
@@ -139,7 +141,7 @@ bool PacketStreamWriter::IsOpen() const
 
 PacketStreamWriter::~PacketStreamWriter()
 {
-    if(is_open)
+    if(is_open && !is_pipe)
     {
         WriteStats();
     }
@@ -411,7 +413,8 @@ void PacketStreamReader::ProcessMessage()
     if(!ReadTag()) {
         // Dummy end tag
         next_tag = TAG_END;
-    }}
+    }
+}
 
 // return src_id
 void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64_t& time_us)
@@ -452,8 +455,13 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
         case TAG_END:
             nxt_src_id = -1;
             return;
+        case TAG_PANGO_MAGIC:
+        {
+            SkipSync();
+            nxt_src_id = -1;
+            return;
+        }
         default:
-            // TODO: Resync
             throw std::runtime_error("Unknown packet type.");
         }
 
@@ -462,6 +470,24 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
             next_tag = TAG_END;
         }
     }
+}
+
+void PacketStreamReader::SkipSync()
+{
+    //Assume we have just read PAN, read GO
+    char buffer[2];
+    reader.read(buffer, 2);
+
+    if(buffer[0] == 'G' && buffer[1] == 'O')
+    {
+        do
+        {
+            //Skip past the header (assuming it's unchanged), to the next src packet
+            ReadTag();
+        } while (next_tag != TAG_SRC_PACKET);
+    }
+    else
+        throw std::runtime_error("Unknown packet type.");
 }
 
 bool PacketStreamReader::ReadTag()
