@@ -204,7 +204,7 @@ void threadedfilebuf::operator()()
                 }
             } catch(std::out_of_range & e)
             {
-                std::cout << "Please register a SIGPIPE handler for your writer" << std::endl;
+//                std::cout << "Please register a SIGPIPE handler for your writer" << std::endl;
             }
         }
 
