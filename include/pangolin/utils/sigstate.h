@@ -25,40 +25,50 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PANGO_VIDEO_OUTPUT_H
-#define PANGOLIN_PANGO_VIDEO_OUTPUT_H
+#ifndef PANGOLIN_SIGSTATE_H
+#define PANGOLIN_SIGSTATE_H
 
-#include <pangolin/video/video_output.h>
-#include <pangolin/log/packetstream.h>
+#include <map>
+#include <vector>
+#include <pangolin/platform.h>
+#include <pangolin/utils/file_utils.h>
+#include <csignal>
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT PangoVideoOutput : public VideoOutputInterface
+typedef void (*SigCallbackFn)(int);
+
+struct PANGOLIN_EXPORT SigCallback
 {
-public:
-    PangoVideoOutput(const std::string& filename);
-    ~PangoVideoOutput();
+    SigCallback(const int & sig, SigCallbackFn fn, void* data)
+     : sig(sig), fn(fn), data(data), value(false)
+    {
+        std::signal(sig, fn);
+    }
 
-    const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& device_properties) PANGOLIN_OVERRIDE;
-    int WriteStreams(unsigned char* data, const json::value& frame_properties) PANGOLIN_OVERRIDE;
-    bool IsPipe() const PANGOLIN_OVERRIDE;
-
-protected:
-    void WriteHeader();
-
-    std::vector<StreamInfo> streams;
-    std::string input_uri;
-    const std::string filename;
-    json::value device_properties;
-
-    PacketStreamWriter packetstream;
-    int packetstreamsrcid;
-    bool first_frame;
-    size_t total_frame_size;
-    bool is_pipe;
+    int sig;
+    SigCallbackFn fn;
+    void * data;
+    volatile sig_atomic_t value;
 };
 
+class PANGOLIN_EXPORT SigState
+{
+public:
+    static SigState& I();
+
+    SigState();
+    ~SigState();
+
+    void Clear();
+
+    std::map<int, SigCallback> sig_callbacks;
+};
+
+PANGOLIN_EXPORT
+void RegisterNewSigCallback(SigCallbackFn callback, void* data, const int signal);
+
 }
-#endif // PANGOLIN_PANGO_VIDEO_OUTPUT_H
+
+#endif // PANGOLIN_SIGSTATE_H

@@ -28,6 +28,7 @@
 #include <pangolin/video/drivers/pango_video_output.h>
 #include <pangolin/utils/picojson.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/sigstate.h>
 #include <set>
 
 namespace pangolin
@@ -35,11 +36,25 @@ namespace pangolin
 
 const std::string pango_video_type = "raw_video";
 
+void SigPipeHandler(int sig)
+{
+    SigState::I().sig_callbacks.at(sig).value = true;
+}
+
 PangoVideoOutput::PangoVideoOutput(const std::string& filename)
-    : packetstream(filename),
+    : filename(filename),
       packetstreamsrcid(-1),
+      first_frame(true),
       is_pipe(pangolin::IsPipe(filename))
 {
+    if(!is_pipe)
+    {
+        packetstream.Open(filename);
+    }
+    else
+    {
+        RegisterNewSigCallback(&SigPipeHandler, (void*)this, SIGPIPE);
+    }
 }
 
 PangoVideoOutput::~PangoVideoOutput()
@@ -71,6 +86,35 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
         input_uri = uri;
         streams = st;
         device_properties = properties;
+
+        json::value json_header(json::object_type,false);
+        json::value& json_streams = json_header["streams"];
+        json_header["device"] = device_properties;
+
+        total_frame_size = 0;
+        for(unsigned int i=0; i< streams.size(); ++i) {
+            StreamInfo& si = streams[i];
+            total_frame_size += si.SizeBytes();
+
+            json::value& json_stream = json_streams.push_back();
+            json_stream["encoding"] = si.PixFormat().format;
+            json_stream["width"] =    si.Width();
+            json_stream["height"] =   si.Height();
+            json_stream["pitch"] =    si.Pitch();
+            json_stream["offset"] =   (size_t)si.Offset();
+        }
+
+        PacketStreamSource pss = packetstream.CreateSource(
+                pango_video_type, input_uri, json_header,
+                total_frame_size,
+                "struct Frame{"
+                " uint8 stream_data[" + pangolin::Convert<std::string,size_t>::Do(total_frame_size) + "];"
+                "};"
+            );
+
+        packetstreamsrcid = pss.id;
+
+        packetstream.AddSource(pss);
     }else{
         throw std::runtime_error("Unable to add new streams");
     }
@@ -78,35 +122,37 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
 
 void PangoVideoOutput::WriteHeader()
 {
-    json::value json_header(json::object_type,false);
-    json::value& json_streams = json_header["streams"];
-    json_header["device"] = device_properties;
-
-    total_frame_size = 0;
-    for(unsigned int i=0; i< streams.size(); ++i) {
-        StreamInfo& si = streams[i];
-        total_frame_size += si.SizeBytes();
-
-        json::value& json_stream = json_streams.push_back();
-        json_stream["encoding"] = si.PixFormat().format;
-        json_stream["width"] =    si.Width();
-        json_stream["height"] =   si.Height();
-        json_stream["pitch"] =    si.Pitch();
-        json_stream["offset"] =   (size_t)si.Offset();
-    }
-
-    packetstreamsrcid = packetstream.AddSource(
-        pango_video_type, input_uri, json_header,
-        total_frame_size,
-        "struct Frame{"
-        " uint8 stream_data[" + pangolin::Convert<std::string,size_t>::Do(total_frame_size) + "];"
-        "};"
-    );
+    packetstream.WriteSources();
 }
 
 int PangoVideoOutput::WriteStreams(unsigned char* data, const json::value& frame_properties)
 {
-    if(packetstreamsrcid == -1) {
+    if(is_pipe)
+    {
+        if(!packetstream.IsOpen() && pangolin::PipeHasReader(filename))
+        {
+            packetstream.Open(filename);
+
+            first_frame = true;
+        }
+        else if(packetstream.IsOpen() && !pangolin::PipeHasReader(filename))
+        {
+            packetstream.ForceClose();
+
+            SigState::I().sig_callbacks.at(SIGPIPE).value = false;
+
+            pangolin::FlushPipe(filename);
+        }
+
+        if(!packetstream.IsOpen())
+        {
+            return 0;
+        }
+    }
+
+    if(first_frame)
+    {
+        first_frame = false;
         WriteHeader();
     }
 

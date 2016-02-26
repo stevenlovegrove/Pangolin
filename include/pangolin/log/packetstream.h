@@ -81,17 +81,24 @@ public:
     PacketStreamWriter();
     PacketStreamWriter(const std::string& filename, unsigned int buffer_size_bytes = 10000000);
     void Open(const std::string& filename, unsigned int buffer_size_bytes = 10000000);
-
+    void Close();
+    void ForceClose();
 
     ~PacketStreamWriter();
 
-    PacketStreamSourceId AddSource(
+    PacketStreamSource CreateSource(
         const std::string& source_driver,
         const std::string& source_uri,
         const json::value& json_header = json::value(),
         const size_t       packet_size_bytes = 0,
         const std::string& packet_definitions = ""
     );
+
+    void AddSource(const PacketStreamSource& pss);
+
+    void WriteSources();
+
+    bool IsOpen() const;
 
     void WriteSourcePacketMeta(PacketStreamSourceId src, const json::value& json);
 
@@ -127,6 +134,7 @@ protected:
     std::vector<PacketStreamSource> sources;
     threadedfilebuf buffer;
     std::ostream writer;
+    bool is_open;
 
     unsigned int bytes_written;
 };

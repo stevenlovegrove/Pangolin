@@ -27,6 +27,7 @@
 
 #include <pangolin/utils/threadedfilebuf.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/sigstate.h>
 
 #include <cstring>
 #include <stdexcept>
@@ -37,18 +38,20 @@ namespace pangolin
 {
 
 threadedfilebuf::threadedfilebuf()
-    : mem_buffer(0), mem_size(0), mem_max_size(0), mem_start(0), mem_end(0), should_run(false)
+    : mem_buffer(0), mem_size(0), mem_max_size(0), mem_start(0), mem_end(0), should_run(false), is_pipe(false)
 {
 }
 
 threadedfilebuf::threadedfilebuf( const std::string& filename, unsigned int buffer_size_bytes )
-    : mem_buffer(0), mem_size(0), mem_max_size(0), mem_start(0), mem_end(0), should_run(false)
+    : mem_buffer(0), mem_size(0), mem_max_size(0), mem_start(0), mem_end(0), should_run(false), is_pipe(pangolin::IsPipe(filename))
 {
     open(filename, buffer_size_bytes);
 }
 
 void threadedfilebuf::open(const std::string& filename, unsigned int buffer_size_bytes)
 {
+    is_pipe = pangolin::IsPipe(filename);
+
     if (file.is_open()) {
         close();
     }
@@ -72,12 +75,33 @@ void threadedfilebuf::open(const std::string& filename, unsigned int buffer_size
 void threadedfilebuf::close()
 {
     should_run = false;
+
     cond_queued.notify_all();
 
-    write_thread.join();
+    if(write_thread.joinable())
+    {
+        write_thread.join();
+    }
 
-    if (mem_buffer) delete mem_buffer;
+    if(mem_buffer)
+    {
+        delete mem_buffer;
+        mem_buffer = 0;
+    }
+
     file.close();
+}
+
+void threadedfilebuf::soft_close()
+{
+    // Forces sputn to write no bytes and exit early, results in lost data
+    mem_size = 0;
+}
+
+void threadedfilebuf::force_close()
+{
+    soft_close();
+    close();
 }
 
 threadedfilebuf::~threadedfilebuf()
@@ -169,6 +193,21 @@ void threadedfilebuf::operator()()
     
     while(true)
     {
+        if(is_pipe)
+        {
+            try
+            {
+                if(SigState::I().sig_callbacks.at(SIGPIPE).value)
+                {
+                    soft_close();
+                    return;
+                }
+            } catch(std::out_of_range & e)
+            {
+                std::cout << "Please register a SIGPIPE handler for your writer" << std::endl;
+            }
+        }
+
         {
             boostd::unique_lock<boostd::mutex> lock(update_mutex);
             
@@ -182,10 +221,10 @@ void threadedfilebuf::operator()()
                         mem_end - mem_start :
                         mem_max_size - mem_start;
         }
-        
+
         std::streamsize bytes_written =
                 file.sputn(mem_buffer + mem_start, data_to_write );
-        
+
         {
             boostd::unique_lock<boostd::mutex> lock(update_mutex);
             

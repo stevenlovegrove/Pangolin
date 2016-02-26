@@ -48,10 +48,13 @@ public:
     
     void open(const std::string& filename, unsigned int buffer_size_bytes);
     void close();
+    void force_close();
     
     void operator()();
     
 protected:
+    void soft_close();
+
     //! Override streambuf::xsputn for asynchronous write
     std::streamsize xsputn(const char * s, std::streamsize n);
 
@@ -71,6 +74,7 @@ protected:
     boostd::thread write_thread;
 
     bool should_run;
+    bool is_pipe;
 };
 
 }

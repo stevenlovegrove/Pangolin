@@ -88,12 +88,12 @@ void WaitUntilPlaybackTime_us(int64_t time_us)
 //////////////////////////////////////////////////////////////////////////
 
 PacketStreamWriter::PacketStreamWriter()
-    : writer(&buffer), bytes_written(0)
+    : writer(&buffer), is_open(false), bytes_written(0)
 {
 }
 
 PacketStreamWriter::PacketStreamWriter(const std::string& filename, unsigned int buffer_size_bytes )
-    : buffer(pangolin::PathExpand(filename), buffer_size_bytes), writer(&buffer), bytes_written(0)
+    : buffer(pangolin::PathExpand(filename), buffer_size_bytes), writer(&buffer), is_open(true), bytes_written(0)
 {
     // Start of file magic
     writer.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
@@ -110,14 +110,42 @@ void PacketStreamWriter::Open(const std::string& filename, unsigned int buffer_s
     writer.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
 
     WritePangoHeader();
+
+    is_open = true;
+}
+
+void PacketStreamWriter::Close()
+{
+    if(is_open)
+    {
+        buffer.close();
+        is_open = false;
+    }
+}
+
+void PacketStreamWriter::ForceClose()
+{
+    if(is_open)
+    {
+        buffer.force_close();
+        is_open = false;
+    }
+}
+
+bool PacketStreamWriter::IsOpen() const
+{
+    return is_open;
 }
 
 PacketStreamWriter::~PacketStreamWriter()
 {
-    WriteStats();
+    if(is_open)
+    {
+        WriteStats();
+    }
 }
 
-PacketStreamSourceId PacketStreamWriter::AddSource(
+PacketStreamSource PacketStreamWriter::CreateSource(
     const std::string& source_driver,
     const std::string& source_uri,
     const json::value& source_info,
@@ -135,23 +163,33 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
     pss.version = 1;
     pss.data_alignment_bytes = 1;
 
-    json::value json_src;
-    json_src[json_src_driver] = pss.driver;
-    json_src[json_src_id] = pss.id;
-    json_src[json_src_uri] = pss.uri;
-    json_src[json_src_info] = pss.info;
-    json_src[json_src_version] = pss.version;
+    return pss;
+}
 
-    json::value& json_packet = json_src[json_src_packet];
-    json_packet[json_pkt_size_bytes] = pss.data_size_bytes;
-    json_packet[json_pkt_definitions] = pss.data_definitions;
-    json_packet[json_pkt_alignment_bytes] = pss.data_alignment_bytes;
+void PacketStreamWriter::AddSource(const PacketStreamSource& pss)
+{
+    sources.push_back(pss);
+}
 
-    WriteTag(TAG_ADD_SOURCE);
-    json_src.serialize(std::ostream_iterator<char>(writer), true);
+void PacketStreamWriter::WriteSources()
+{
+    for(size_t i = 0; i < sources.size(); i++)
+    {
+        json::value json_src;
+        json_src[json_src_driver] = sources[i].driver;
+        json_src[json_src_id] = sources[i].id;
+        json_src[json_src_uri] = sources[i].uri;
+        json_src[json_src_info] = sources[i].info;
+        json_src[json_src_version] = sources[i].version;
 
-    sources.push_back( pss );
-    return pss.id;
+        json::value& json_packet = json_src[json_src_packet];
+        json_packet[json_pkt_size_bytes] = sources[i].data_size_bytes;
+        json_packet[json_pkt_definitions] = sources[i].data_definitions;
+        json_packet[json_pkt_alignment_bytes] = sources[i].data_alignment_bytes;
+
+        WriteTag(TAG_ADD_SOURCE);
+        json_src.serialize(std::ostream_iterator<char>(writer), true);
+    }
 }
 
 void PacketStreamWriter::WriteSourcePacketMeta(PacketStreamSourceId src, const json::value& json)
@@ -167,7 +205,6 @@ void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char*
     WriteTag(TAG_SRC_PACKET);
     WriteTimestamp();
     WriteCompressedUnsignedInt(src);
-
     // Write packet size if dynamic so it can be skipped over easily
     size_t packet_size = sources[src].data_size_bytes;
     if(packet_size == 0) {

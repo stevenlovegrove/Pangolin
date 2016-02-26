@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2014 Steven Lovegrove
+ * Copyright (c) 2011 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,40 +25,36 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PANGO_VIDEO_OUTPUT_H
-#define PANGOLIN_PANGO_VIDEO_OUTPUT_H
+#include <pangolin/utils/sigstate.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
-#include <pangolin/video/video_output.h>
-#include <pangolin/log/packetstream.h>
+using namespace std;
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT PangoVideoOutput : public VideoOutputInterface
+SigState& SigState::I() {
+    static SigState singleton;
+    return singleton;
+}
+
+SigState::SigState()
 {
-public:
-    PangoVideoOutput(const std::string& filename);
-    ~PangoVideoOutput();
+}
 
-    const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& device_properties) PANGOLIN_OVERRIDE;
-    int WriteStreams(unsigned char* data, const json::value& frame_properties) PANGOLIN_OVERRIDE;
-    bool IsPipe() const PANGOLIN_OVERRIDE;
+SigState::~SigState() {
+    Clear();
+}
 
-protected:
-    void WriteHeader();
+void SigState::Clear() {
+    sig_callbacks.clear();
+}
 
-    std::vector<StreamInfo> streams;
-    std::string input_uri;
-    const std::string filename;
-    json::value device_properties;
-
-    PacketStreamWriter packetstream;
-    int packetstreamsrcid;
-    bool first_frame;
-    size_t total_frame_size;
-    bool is_pipe;
-};
+void RegisterNewSigCallback(SigCallbackFn callback, void* data, const int signal)
+{
+    SigState::I().sig_callbacks.insert(std::pair<int, SigCallback>(signal, SigCallback(signal, callback, data)));
+}
 
 }
-#endif // PANGOLIN_PANGO_VIDEO_OUTPUT_H

@@ -35,6 +35,11 @@
 #else
 #  include <dirent.h>
 #  include <sys/stat.h>
+#  include <sys/signal.h>
+#  include <stdio.h>
+#  include <unistd.h>
+#  include <fcntl.h>
+#  include <errno.h>
 #endif // _WIN_
 
 #include <algorithm>
@@ -279,6 +284,45 @@ std::string MakeUniqueFilename(const std::string& filename)
     }else{
         return filename;
     }
+}
+
+bool IsPipe(const std::string& file)
+{
+#ifdef _WIN_
+    return false;
+#else
+    struct stat st;
+    stat(file.c_str(), &st);
+    return ((st.st_mode & S_IFMT) == S_IFIFO);
+#endif // _WIN_
+}
+
+bool PipeHasReader(const std::string& file)
+{
+#ifdef _WIN_
+    return false;
+#else
+    int fd = open(file.c_str(), O_WRONLY | O_NONBLOCK);
+    if(fd == -1)
+    {
+        return errno != ENXIO;
+    }
+    return true;
+#endif // _WIN_
+}
+
+void FlushPipe(const std::string& file)
+{
+#ifndef _WIN_
+    int fd = open(file.c_str(), O_RDONLY | O_NONBLOCK);
+    char buf[65535];
+    int n = 0;
+    do
+    {
+        n = read(fd, buf, sizeof(buf));
+    } while(n != -1);
+    close(fd);
+#endif
 }
 
 #ifdef _WIN_

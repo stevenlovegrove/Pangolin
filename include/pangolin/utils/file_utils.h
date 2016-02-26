@@ -34,14 +34,6 @@
 #include <vector>
 #include <algorithm>
 
-#ifndef _WIN_
-#include <sys/stat.h>
-#include <sys/signal.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <errno.h>
-#endif // _WIN_
-
 namespace pangolin
 {
 
@@ -77,6 +69,15 @@ bool FilesMatchingWildcard(const std::string& wildcard_file_path, std::vector<st
 
 PANGOLIN_EXPORT
 std::string MakeUniqueFilename(const std::string& filename);
+
+PANGOLIN_EXPORT
+bool IsPipe(const std::string& file);
+
+PANGOLIN_EXPORT
+bool PipeHasReader(const std::string& file);
+
+PANGOLIN_EXPORT
+void FlushPipe(const std::string& file);
 
 // TODO: Tidy these inlines up / move them
 
@@ -124,30 +125,6 @@ inline std::string ToLowerCopy( const std::string& str )
     return out;
 }
 
-inline bool IsPipe(const std::string& file)
-{
-#ifdef _WIN_
-    return false;
-#else
-    struct stat st;
-    stat(file.c_str(), &st);
-    return ((st.st_mode & S_IFMT) == S_IFIFO);
-#endif // _WIN_
-}
-
-inline bool PipeHasReader(const std::string& file)
-{
-#ifdef _WIN_
-    return false;
-#else
-    int ret = ::open(file.c_str(), O_WRONLY | O_NONBLOCK);
-    if(ret == -1)
-    {
-        return errno != ENXIO;
-    }
-    return true;
-#endif // _WIN_
-}
 
 }
 
