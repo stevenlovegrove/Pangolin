@@ -375,6 +375,8 @@ VideoInterface* OpenVideo(const Uri& uri)
         !uri.scheme.compare("file") || !uri.scheme.compare("pango") ||
         !uri.scheme.compare("pvn") )
     {
+        const bool raw = uri.Contains("fmt");
+        const std::string path = PathExpand(uri.url);
         ImageFileType ft = ImageFileTypeUnknown;
 
         if( !uri.scheme.compare("pango") ) {
@@ -388,22 +390,20 @@ VideoInterface* OpenVideo(const Uri& uri)
             ft = FileType(uri.url);
         }
 
-        const bool raw = uri.Contains("fmt");
-
         if( ft == ImageFileTypePvn ) {
             const bool realtime = uri.Contains("realtime");
-            video = new PvnVideo(PathExpand(uri.url).c_str(), realtime);
+            video = new PvnVideo(path.c_str(), realtime);
         }else if(ft == ImageFileTypePango ) {
             const bool realtime = uri.Contains("realtime");
-            video = new PangoVideo(PathExpand(uri.url).c_str(), realtime);
+            video = new PangoVideo(path.c_str(), realtime);
         }else{
             if(raw) {
                 const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
                 const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
                 const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
-                video = new ImagesVideo(PathExpand(uri.url), fmt, dim.x, dim.y);
+                video = new ImagesVideo(path, fmt, dim.x, dim.y);
             }else{
-                video = new ImagesVideo(PathExpand(uri.url));
+                video = new ImagesVideo(path);
             }
         }
     }else
