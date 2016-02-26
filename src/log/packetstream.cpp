@@ -275,12 +275,12 @@ std::string TagName(int v)
 }
 
 PacketStreamReader::PacketStreamReader()
-    : next_tag(0), packets(0)
+    : next_tag(0), packets(0), is_pipe(false)
 {
 }
 
 PacketStreamReader::PacketStreamReader(const std::string& filename, bool realtime)
-    : next_tag(0), packets(0)
+    : next_tag(0), packets(0), is_pipe(pangolin::IsPipe(filename))
 {
     Open(filename, realtime);
 }
@@ -301,6 +301,8 @@ void PacketStreamReader::Open(const std::string& filename, bool realtime)
     if (!reader.good()) {
         throw std::runtime_error("Unable to open file '" + filename + "'.");
     }
+
+    is_pipe = pangolin::IsPipe(filename);
 
     // Check file magic matches expected value
     reader.read(buffer, PANGO_MAGIC_LEN);
@@ -462,7 +464,14 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
             return;
         }
         default:
+        {
+            if(is_pipe)
+            {
+                ReSync();
+                continue;
+            }
             throw std::runtime_error("Unknown packet type.");
+        }
         }
 
         if(!ReadTag()) {
@@ -470,6 +479,24 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
             next_tag = TAG_END;
         }
     }
+}
+
+void PacketStreamReader::ReSync()
+{
+    uint32_t curr_tag = next_tag;
+    char * buffer = (char*)&curr_tag;
+
+    buffer[3] = 0;
+
+    do
+    {
+        buffer[0] = buffer[1];
+        buffer[1] = buffer[2];
+        reader.read((char*)&buffer[2], 1);
+
+    } while (curr_tag != TAG_SRC_PACKET);
+
+    next_tag = curr_tag;
 }
 
 void PacketStreamReader::SkipSync()

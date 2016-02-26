@@ -190,6 +190,7 @@ protected:
     void ProcessMessagesUntilSourcePacket(int& nxt_src_id, int64_t &time_us);
 
     void SkipSync();
+    void ReSync();
 
     bool ReadTag();
     void ReadHeaderPacket();
@@ -206,6 +207,7 @@ protected:
 
     int packets;
     bool realtime;
+    bool is_pipe;
 };
 
 }
