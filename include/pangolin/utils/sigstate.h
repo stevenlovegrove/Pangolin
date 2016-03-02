@@ -34,6 +34,10 @@
 #include <pangolin/utils/file_utils.h>
 #include <csignal>
 
+#ifndef SIGPIPE
+#  define SIGPIPE 13
+#endif // !SIGPIPE
+
 namespace pangolin
 {
 
