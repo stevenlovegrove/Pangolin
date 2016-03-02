@@ -152,20 +152,24 @@ public:
     inline size_t Pitch() const { return img_offset.pitch; }
     
     //! Number of contiguous bytes in memory that the image occupies
-    inline size_t SizeBytes() const { return img_offset.h * img_offset.pitch; }
-    
+    inline size_t SizeBytes() const {
+        // Row size without padding
+        const size_t row_size_bytes = (fmt.bpp*img_offset.w)/8;
+        return (img_offset.h-1) * img_offset.pitch + row_size_bytes;
+    }
+
     //! Offset in bytes relative to start of frame buffer
     inline unsigned char* Offset() const { return img_offset.ptr; }
     
     //! Return Image wrapper around raw base pointer
-    Image<unsigned char> StreamImage(unsigned char* base_ptr) const {
+    inline Image<unsigned char> StreamImage(unsigned char* base_ptr) const {
         Image<unsigned char> img = img_offset;
         img.ptr += (size_t)base_ptr;
         return img;
     }
 
     //! Return Image wrapper around raw base pointer
-    const Image<unsigned char> StreamImage(const unsigned char* base_ptr) const {
+    inline const Image<unsigned char> StreamImage(const unsigned char* base_ptr) const {
         Image<unsigned char> img = img_offset;
         img.ptr += (size_t)base_ptr;
         return img;

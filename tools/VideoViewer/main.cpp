@@ -45,6 +45,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     // Setup resizable views for video streams
     std::vector<pangolin::GlPixFormat> glfmt;
     std::vector<std::pair<float,float> > gloffsetscale;
+    std::vector<size_t> strides;
     std::vector<pangolin::ImageViewHandler> handlers;
     handlers.reserve(num_streams);
 
@@ -56,6 +57,13 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         container.AddDisplay(view);
         glfmt.push_back(pangolin::GlPixFormat(si.PixFormat()));
         gloffsetscale.push_back(std::pair<float,float>(0.0f, 1.0f) );
+        if( si.PixFormat().bpp % 8 ) {
+            pango_print_warn("Stream %i: Unable to display formats that are not a multiple of 8 bits.", d);
+        }
+        if( si.Pitch() % si.PixFormat().bpp ) {
+            pango_print_warn("Stream %i: Unable to display formats whose pitch is not a whole number of pixels.", d);
+        }
+        strides.push_back( (8*si.Pitch()) / si.PixFormat().bpp );
         handlers.push_back( pangolin::ImageViewHandler(si.Width(), si.Height()) );
         view.SetHandler(&handlers.back());
     }
@@ -194,6 +202,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
                 // Upload image data to texture
                 tex.Bind();
+                glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[i]);
                 tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
 
                 // Render

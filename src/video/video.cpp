@@ -511,8 +511,10 @@ VideoInterface* OpenVideo(const Uri& uri)
                 roi2 = ImageRoi(0,subh/2, subw, subh/2 );
             }
 
-            streams.push_back( StreamInfo( stmin.PixFormat(), roi1.w, roi1.h, stmin.Pitch(), (unsigned char*)0 + roi1.y * stmin.Pitch() + roi1.x ) );
-            streams.push_back( StreamInfo( stmin.PixFormat(), roi2.w, roi2.h, stmin.Pitch(), (unsigned char*)0 + roi2.y * stmin.Pitch() + roi2.x ) );
+            const size_t start1 = roi1.y * stmin.Pitch() + stmin.PixFormat().bpp * roi1.x / 8;
+            const size_t start2 = roi2.y * stmin.Pitch() + stmin.PixFormat().bpp * roi2.x / 8;
+            streams.push_back( StreamInfo( stmin.PixFormat(), roi1.w, roi1.h, stmin.Pitch(), (unsigned char*)0 + start1 ) );
+            streams.push_back( StreamInfo( stmin.PixFormat(), roi2.w, roi2.h, stmin.Pitch(), (unsigned char*)0 + start2 ) );
         }
         
         video = new VideoSplitter(subvid,streams);
