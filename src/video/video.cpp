@@ -132,6 +132,28 @@ std::istream& operator>> (std::istream &is, ImageRoi &roi)
     return is;
 }
 
+std::istream& operator>> (std::istream &is, MirrorOptions &mirror)
+{
+    std::string str_mirror;
+    is >> str_mirror;
+    std::transform(str_mirror.begin(), str_mirror.end(), str_mirror.begin(), toupper);
+
+    if(!str_mirror.compare("NONE")) {
+        mirror = MirrorOptionsNone;
+    }else if(!str_mirror.compare("FLIPX")) {
+        mirror = MirrorOptionsFlipX;
+    }else if(!str_mirror.compare("FLIPY")) {
+        mirror = MirrorOptionsFlipY;
+    }else if(!str_mirror.compare("FLIPXY")) {
+        mirror = MirrorOptionsFlipXY;
+    }else{
+        pango_print_warn("Unknown mirror option %s.", str_mirror.c_str());
+        mirror = MirrorOptionsNone;
+    }
+
+    return is;
+}
+
 std::istream& operator>> (std::istream &is, VideoPixelFormat& fmt)
 {
     std::string sfmt;
@@ -427,7 +449,17 @@ VideoInterface* OpenVideo(const Uri& uri)
     if(!uri.scheme.compare("mirror"))
     {
         VideoInterface* subvid = OpenVideo(uri.url);
-        video = new MirrorVideo(subvid);
+
+        std::vector<MirrorOptions> flips;
+
+        for(size_t i=0; i < subvid->Streams().size(); ++i){
+            std::stringstream ss;
+            ss << "stream" << i;
+            const std::string key = ss.str();
+            flips.push_back(uri.Get<MirrorOptions>(key, MirrorOptionsFlipX) );
+        }
+
+        video = new MirrorVideo(subvid, flips);
     }else
     if(!uri.scheme.compare("unpack"))
     {

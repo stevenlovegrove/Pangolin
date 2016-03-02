@@ -34,6 +34,14 @@
 namespace pangolin
 {
 
+enum MirrorOptions
+{
+    MirrorOptionsNone = 0,
+    MirrorOptionsFlipX,
+    MirrorOptionsFlipY,
+    MirrorOptionsFlipXY,
+};
+
 // Video class that debayers its video input using the given method.
 class PANGOLIN_EXPORT MirrorVideo :
     public VideoInterface,
@@ -41,7 +49,7 @@ class PANGOLIN_EXPORT MirrorVideo :
     public VideoPropertiesInterface
 {
 public:
-    MirrorVideo(VideoInterface* videoin);
+    MirrorVideo(VideoInterface* videoin, const std::vector<MirrorOptions>& flips);
     ~MirrorVideo();
 
     //! Implement VideoInput::Start()
@@ -77,6 +85,7 @@ protected:
     VideoInterface* videoin;
     std::vector<VideoInterface*> inputs;
     std::vector<StreamInfo> streams;
+    std::vector<MirrorOptions> flips;
     size_t size_bytes;
     unsigned char* buffer;
 

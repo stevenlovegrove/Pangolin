@@ -84,6 +84,11 @@ struct Image {
         return (T*)((char*)ptr + r*pitch);
     }
 
+    const T* RowPtr(int r) const
+    {
+        return (T*)((char*)ptr + r*pitch);
+    }
+
     size_t pitch;
     T* ptr;
     size_t w;

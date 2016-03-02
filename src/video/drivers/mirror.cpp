@@ -30,8 +30,8 @@
 namespace pangolin
 {
 
-MirrorVideo::MirrorVideo(VideoInterface* src)
-    : videoin(src), size_bytes(0), buffer(0)
+MirrorVideo::MirrorVideo(VideoInterface* src, const std::vector<MirrorOptions>& flips)
+    : videoin(src), flips(flips), size_bytes(0),buffer(0)
 {
     if(!src) {
         throw VideoException("MirrorVideo: VideoInterface in must not be null");
@@ -74,27 +74,100 @@ const std::vector<StreamInfo>& MirrorVideo::Streams() const
     return streams;
 }
 
-void MirrorVideo::Process(unsigned char* image, const unsigned char* buffer)
+void PitchedImageCopy(
+    Image<unsigned char>& img_out,
+    const Image<unsigned char>& img_in,
+    size_t bytes_per_pixel
+) {
+    if( img_out.w != img_in.w || img_out.h != img_in.h ) {
+        throw std::runtime_error("PitchedImageCopy: Incompatible image sizes");
+    }
+
+    for(size_t y=0; y < img_out.h; ++y) {
+        std::memcpy(img_out.RowPtr(y), img_in.RowPtr(y), bytes_per_pixel * img_in.w);
+    }
+}
+
+void FlipY(
+    Image<unsigned char>& img_out,
+    const Image<unsigned char>& img_in,
+    size_t bytes_per_pixel
+) {
+    if( img_out.w != img_in.w || img_out.h != img_in.h ) {
+        throw std::runtime_error("FlipY: Incompatible image sizes");
+    }
+
+    for(size_t y_out=0; y_out < img_out.h; ++y_out) {
+        const size_t y_in = (img_in.h-1) - y_out;
+        std::memcpy(img_out.RowPtr(y_out), img_in.RowPtr(y_in), bytes_per_pixel * img_in.w);
+    }
+}
+
+void FlipX(
+    Image<unsigned char>& img_out,
+    const Image<unsigned char>& img_in,
+    size_t bytes_per_pixel
+) {
+    for(size_t y=0; y < img_out.h; ++y) {
+        for(size_t x=0; x < img_out.w / 2; ++x) {
+            memcpy(
+                img_out.ptr + y*img_out.pitch + (img_out.w-1-x)*bytes_per_pixel,
+                img_in.ptr  + y*img_in.pitch  + x*bytes_per_pixel,
+                bytes_per_pixel
+            );
+            memcpy(
+                img_out.ptr + y*img_out.pitch + x*bytes_per_pixel,
+                img_in.ptr  + y*img_in.pitch  + (img_in.w-x)*bytes_per_pixel,
+                bytes_per_pixel
+            );
+        }
+    }
+}
+
+void FlipXY(
+    Image<unsigned char>& img_out,
+    const Image<unsigned char>& img_in,
+    size_t bytes_per_pixel
+) {
+    for(size_t y_out=0; y_out < img_out.h; ++y_out) {
+        for(size_t x=0; x < img_out.w / 2; ++x) {
+            const size_t y_in = (img_in.h-1) - y_out;
+            memcpy(
+                img_out.ptr + y_out*img_out.pitch + (img_out.w-1-x)*bytes_per_pixel,
+                img_in.ptr  + y_in*img_in.pitch  + x*bytes_per_pixel,
+                bytes_per_pixel
+            );
+            memcpy(
+                img_out.ptr + y_out*img_out.pitch + x*bytes_per_pixel,
+                img_in.ptr  + y_in*img_in.pitch  + (img_in.w-x)*bytes_per_pixel,
+                bytes_per_pixel
+            );
+        }
+    }
+}
+
+void MirrorVideo::Process(unsigned char* buffer_out, const unsigned char* buffer_in)
 {
     for(size_t s=0; s<streams.size(); ++s) {
-        const Image<unsigned char> img_in  = videoin->Streams()[s].StreamImage(buffer);
-        Image<unsigned char> img_out = Streams()[s].StreamImage(image);
+        Image<unsigned char> img_out = Streams()[s].StreamImage(buffer_out);
+        const Image<unsigned char> img_in  = videoin[0].Streams()[s].StreamImage(buffer_in);
+        const size_t bytes_per_pixel = Streams()[s].PixFormat().bpp / 8;
 
-        const size_t bytes_pp = Streams()[s].PixFormat().bpp / 8;
-
-        for(size_t y=0; y < img_out.h; ++y) {
-            for(size_t x=0; x < img_out.w / 2; ++x) {
-                memcpy(
-                    img_out.ptr + y*img_out.pitch + (img_out.w-1-x)*bytes_pp,
-                    img_in.ptr  + y*img_in.pitch  + x*bytes_pp,
-                    bytes_pp
-                );
-                memcpy(
-                    img_out.ptr + y*img_out.pitch + x*bytes_pp,
-                    img_in.ptr  + y*img_in.pitch  + (img_in.w-x)*bytes_pp,
-                    bytes_pp
-                );
-            }
+        switch (flips[s]) {
+        case MirrorOptionsFlipX:
+            FlipX(img_out, img_in, bytes_per_pixel);
+            break;
+        case MirrorOptionsFlipY:
+            FlipY(img_out, img_in, bytes_per_pixel);
+            break;
+        case MirrorOptionsFlipXY:
+            FlipXY(img_out, img_in, bytes_per_pixel);
+            break;
+        default:
+            pango_print_warn("MirrorVideo::Process(): Invalid enum %i.\n", flips[s]);
+        case MirrorOptionsNone:
+            PitchedImageCopy(img_out, img_in, bytes_per_pixel);
+            break;
         }
     }
 }
