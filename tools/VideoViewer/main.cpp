@@ -60,7 +60,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         if( si.PixFormat().bpp % 8 ) {
             pango_print_warn("Stream %i: Unable to display formats that are not a multiple of 8 bits.", d);
         }
-        if( si.Pitch() % si.PixFormat().bpp ) {
+        if( (8*si.Pitch()) % si.PixFormat().bpp ) {
             pango_print_warn("Stream %i: Unable to display formats whose pitch is not a whole number of pixels.", d);
         }
         strides.push_back( (8*si.Pitch()) / si.PixFormat().bpp );
