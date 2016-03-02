@@ -104,6 +104,10 @@ endif()
 # Project headers trump everything (including any potentially installed Pangolin)
 list(APPEND LIB_INC_DIR  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 
+if(UNIX)
+  list(APPEND LINK_LIBS "-lpthread")
+endif()
+
 if(NOT CPP11_NO_BOOST)
     # Boost is required when c++11 is disabled
     find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
