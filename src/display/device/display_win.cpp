@@ -279,9 +279,11 @@ LPARAM lParam)
         return 0;
 
     case WM_MOUSEWHEEL:
-        process::Scroll(0.0f, GET_WHEEL_DELTA_WPARAM(wParam)/20.0f);
+        process::Scroll(0.0f, GET_WHEEL_DELTA_WPARAM(wParam) / 5.0 );
         return 0;
-
+    case WM_MOUSEHWHEEL:
+        process::Scroll(GET_WHEEL_DELTA_WPARAM(wParam) / 5.0, 0.0f);
+        return 0;
     default:
         break;
     }
