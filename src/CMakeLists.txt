@@ -92,7 +92,7 @@ if(BUILD_PANGOLIN_VIDEO)
     list(APPEND SOURCES video/drivers/shared_memory.cpp)
     if(_LINUX_)
       # Required for shared memory API using some versions of glibc
-      list(APPEND LINK_LIBS rt)
+      list(APPEND LINK_LIBS rt pthread)
     endif()
   endif()
 
