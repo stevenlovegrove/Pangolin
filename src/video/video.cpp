@@ -514,8 +514,8 @@ VideoInterface* OpenVideo(const Uri& uri)
 
             if(uri.Contains(key)) {
                 const ImageRoi& roi = uri.Get<ImageRoi>(key, default_roi);
-                StreamInfo stm(stmin.PixFormat(), roi.w, roi.h, stmin.Pitch(), (unsigned char*)0 + roi.y * stmin.Pitch() + roi.x);
-                streams.push_back(stm);
+                const size_t start1 = roi.y * stmin.Pitch() + stmin.PixFormat().bpp * roi.x / 8;
+                streams.push_back( StreamInfo( stmin.PixFormat(), roi.w, roi.h, stmin.Pitch(), (unsigned char*)0 + start1 ) );
             }else{
                 std::stringstream ss;
                 ss << "mem" << (streams.size() + 1);
