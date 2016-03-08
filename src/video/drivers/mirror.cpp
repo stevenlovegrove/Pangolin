@@ -109,15 +109,10 @@ void FlipX(
     size_t bytes_per_pixel
 ) {
     for(size_t y=0; y < img_out.h; ++y) {
-        for(size_t x=0; x < img_out.w / 2; ++x) {
+        for(size_t x=0; x < img_out.w; ++x) {
             memcpy(
-                img_out.ptr + y*img_out.pitch + (img_out.w-1-x)*bytes_per_pixel,
-                img_in.ptr  + y*img_in.pitch  + x*bytes_per_pixel,
-                bytes_per_pixel
-            );
-            memcpy(
-                img_out.ptr + y*img_out.pitch + x*bytes_per_pixel,
-                img_in.ptr  + y*img_in.pitch  + (img_in.w-x)*bytes_per_pixel,
+                img_out.RowPtr(y) + (img_out.w-1-x)*bytes_per_pixel,
+                img_in.RowPtr(y)  + x*bytes_per_pixel,
                 bytes_per_pixel
             );
         }
@@ -130,16 +125,11 @@ void FlipXY(
     size_t bytes_per_pixel
 ) {
     for(size_t y_out=0; y_out < img_out.h; ++y_out) {
-        for(size_t x=0; x < img_out.w / 2; ++x) {
+        for(size_t x=0; x < img_out.w; ++x) {
             const size_t y_in = (img_in.h-1) - y_out;
             memcpy(
-                img_out.ptr + y_out*img_out.pitch + (img_out.w-1-x)*bytes_per_pixel,
-                img_in.ptr  + y_in*img_in.pitch  + x*bytes_per_pixel,
-                bytes_per_pixel
-            );
-            memcpy(
-                img_out.ptr + y_out*img_out.pitch + x*bytes_per_pixel,
-                img_in.ptr  + y_in*img_in.pitch  + (img_in.w-x)*bytes_per_pixel,
+                img_out.RowPtr(y_out) + (img_out.w-1-x)*bytes_per_pixel,
+                img_in.RowPtr(y_in)   + x*bytes_per_pixel,
                 bytes_per_pixel
             );
         }
