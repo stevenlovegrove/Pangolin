@@ -233,6 +233,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
                 handlers[i].glRenderOverlay();
             }
         }
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
         pangolin::FinishFrame();
     }
