@@ -129,10 +129,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
             pango_print_info("Gui doesn't wait for video frame.\n");
         }
     });
-    pangolin::RegisterKeyPressCallback('n', [&](){
+    pangolin::RegisterKeyPressCallback('d', [&](){
         video_newest = !video_newest;
         if(video_newest) {
-            pango_print_info("Capture newest frame from video, discarding old frames.\n");
+            pango_print_info("Discarding old frames.\n");
         }else{
             pango_print_info("Not discarding old frames.\n");
         }
