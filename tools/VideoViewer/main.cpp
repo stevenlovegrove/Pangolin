@@ -9,6 +9,8 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
     int frame = 0;
     pangolin::Var<int>  end_frame("viewer.end_frame", std::numeric_limits<int>::max() );
+    pangolin::Var<bool> video_wait("video.wait", true);
+    pangolin::Var<bool> video_newest("video.newest", false);
 
     // Open Video by URI
     pangolin::VideoRecordRepeat video(input_uri, output_uri);
@@ -119,6 +121,22 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::RegisterKeyPressCallback(' ', [&](){
         end_frame = (frame < end_frame) ? frame : std::numeric_limits<int>::max();
     });
+    pangolin::RegisterKeyPressCallback('w', [&](){
+        video_wait = !video_wait;
+        if(video_wait) {
+            pango_print_info("Gui wait's for video frame.\n");
+        }else{
+            pango_print_info("Gui doesn't wait for video frame.\n");
+        }
+    });
+    pangolin::RegisterKeyPressCallback('n', [&](){
+        video_newest = !video_newest;
+        if(video_newest) {
+            pango_print_info("Capture newest frame from video, discarding old frames.\n");
+        }else{
+            pango_print_info("Not discarding old frames.\n");
+        }
+    });
     pangolin::RegisterKeyPressCallback(',', [&](){
         if(video_playback) {
             const int frame = std::min(video_playback->GetCurrentFrameId()-FRAME_SKIP, video_playback->GetTotalFrames()-1);
@@ -182,7 +200,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glColor3f(1.0f, 1.0f, 1.0f);
 
         if (frame == 0 || frame < end_frame) {
-            if (video.Grab(&buffer[0], images) ){
+            if (video.Grab(&buffer[0], images, video_wait, video_newest) ){
                 ++frame;
             }
         }
