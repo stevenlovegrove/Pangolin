@@ -45,14 +45,14 @@ struct GlPixFormat
         case 1: glformat = GL_LUMINANCE; break;
         case 3: glformat = (fmt.format == "BGR24") ? GL_BGR : GL_RGB; break;
         case 4: glformat = (fmt.format == "BGRA24") ? GL_BGRA : GL_RGBA; break;
-        default: throw std::runtime_error("Unable to display video format");
+        default: throw std::runtime_error("Unable to form OpenGL format from video format: '" + fmt.format + "'.");
         }
 
         switch (fmt.channel_bits[0]) {
         case 8: gltype = GL_UNSIGNED_BYTE; break;
         case 16: gltype = GL_UNSIGNED_SHORT; break;
         case 32: gltype = GL_FLOAT; break;
-        default: throw std::runtime_error("Unknown channel format");
+        default: throw std::runtime_error("Unknown OpenGL data type for video format: '" + fmt.format + "'.");
         }
 
         if(glformat == GL_LUMINANCE) {
