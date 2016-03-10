@@ -94,7 +94,7 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
         total_frame_size = 0;
         for(unsigned int i=0; i< streams.size(); ++i) {
             StreamInfo& si = streams[i];
-            total_frame_size += si.SizeBytes();
+            total_frame_size = std::max( total_frame_size, (size_t)si.Offset() + si.SizeBytes());
 
             json::value& json_stream = json_streams.push_back();
             json_stream["encoding"] = si.PixFormat().format;

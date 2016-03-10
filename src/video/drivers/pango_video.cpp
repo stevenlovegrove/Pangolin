@@ -134,7 +134,7 @@ int PangoVideo::FindSource()
         try {
             if( !src.driver.compare(pango_video_type) ) {
                 // Read sources header
-                size_bytes = 0;
+                size_bytes = src.data_size_bytes;
 
                 device_properties = src.info["device"];
                 const json::value& json_streams = src.info["streams"];
@@ -151,7 +151,6 @@ int PangoVideo::FindSource()
                         (unsigned char*)0 + json_stream["offset"].get<int64_t>()
                     );
 
-                    size_bytes += si.SizeBytes();
                     streams.push_back(si);
                 }
 
