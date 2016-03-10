@@ -131,16 +131,46 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
     }
 }
 
-PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
-                         size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int analog_gain, double exposure, bool ext_trig, size_t analog_black_level)
+PleoraVideo::PleoraVideo(
+        const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
+        size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int analog_gain, double exposure, bool ext_trig, size_t analog_black_level
+)
     : size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0), lStreamParams(0)
 {
+    if(ext_trig) {
+        // Safe-start sequence to prevent TIMEOUT on some cameras with external triggering.
+        InitDevice(model_name, serial_num, index);
+        SetDeviceParams(bpp, binX, binY, desired_size_x, desired_size_y, desired_pos_x, desired_pos_y, analog_gain, exposure, ext_trig, analog_black_level);
+        DeinitDevice();
+    }
+
+    InitDevice(model_name, serial_num, index);
+    SetDeviceParams(bpp, binX, binY, desired_size_x, desired_size_y, desired_pos_x, desired_pos_y, analog_gain, exposure, ext_trig, analog_black_level);
+    InitStream();
+
+    InitPangoStreams();
+    InitBuffers(buffer_count);
+
+    Start();
+}
+
+PleoraVideo::~PleoraVideo()
+{
+    Stop();
+    DeinitBuffers();
+    DeinitStream();
+    DeinitDevice();
+}
+
+void PleoraVideo::InitDevice(
+        const char* model_name, const char* serial_num, size_t index
+) {
     lPvSystem = new PvSystem();
     if ( !lPvSystem ) {
         throw pangolin::VideoException("Pleora: Unable to create PvSystem");
     }
 
-    const PvDeviceInfo *lDeviceInfo = SelectDevice(*lPvSystem, model_name, serial_num, index);
+    lDeviceInfo = SelectDevice(*lPvSystem, model_name, serial_num, index);
     if ( !lDeviceInfo ) {
         delete lPvSystem;
         throw pangolin::VideoException("Pleora: Unable to select device");
@@ -153,15 +183,47 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
         throw pangolin::VideoException("Pleora: Unable to connect to device", lResult.GetDescription().GetAscii() );
     }
 
-    lStream = PvStream::CreateAndOpen( lDeviceInfo->GetConnectionID(), &lResult );
-    if ( !lStream ) {
+    lDeviceParams = lDevice->GetParameters();
+}
+
+void PleoraVideo::DeinitDevice()
+{
+    if(lDevice) {
         lDevice->Disconnect();
-        PvDevice::Free(lDevice);
-        delete lPvSystem;
-        throw pangolin::VideoException("Pleora: Unable to open stream", lResult.GetDescription().GetAscii() );
+        PvDevice::Free( lDevice );
+        lDevice = 0;
     }
 
-    lDeviceParams = lDevice->GetParameters();
+    delete lPvSystem;
+    lPvSystem = 0;
+}
+
+void PleoraVideo::InitStream()
+{
+    // Setup Stream
+    PvResult lResult;
+    lStream = PvStream::CreateAndOpen( lDeviceInfo->GetConnectionID(), &lResult );
+    if ( !lStream ) {
+        DeinitDevice();
+        throw pangolin::VideoException("Pleora: Unable to open stream", lResult.GetDescription().GetAscii() );
+    }
+    lStreamParams = lStream->GetParameters();
+}
+
+void PleoraVideo::DeinitStream()
+{
+    if(lStream) {
+        lStream->Close();
+        PvStream::Free( lStream );
+        lStream = 0;
+    }
+}
+
+void PleoraVideo::SetDeviceParams(
+    size_t bpp,  size_t binX, size_t binY,
+    size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y,
+    int analog_gain, double exposure, bool ext_trig, size_t analog_black_level
+) {
     lStart = dynamic_cast<PvGenCommand*>( lDeviceParams->Get( "AcquisitionStart" ) );
     lStop = dynamic_cast<PvGenCommand*>( lDeviceParams->Get( "AcquisitionStop" ) );
 
@@ -173,10 +235,6 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
         lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono12p") );
     }
 
-
-    // Device / Stream property handles
-    lDeviceParams = lDevice->GetParameters();
-    lStreamParams = lStream->GetParameters();
 
     // Get Handles to properties we'll be using.
     lAnalogGain = lDeviceParams->GetInteger("AnalogGain");
@@ -222,10 +280,6 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
         }
     }
 
-    // Get actual width and height
-    const int w = DeviceParam<int64_t>("Width");
-    const int h = DeviceParam<int64_t>("Height");
-
     // Attempt to set offset
     try{
         SetDeviceParam<int64_t>("OffsetX", desired_pos_x);
@@ -234,7 +288,6 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     {
         pango_print_error("Set Offset: %s\n", e.what());
     }
-
 
     // Attempt to set AnalogGain, Offset
     try{
@@ -253,7 +306,10 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
     {
         pango_print_error("Set Trigger: %s\n", e.what());
     }
+}
 
+void PleoraVideo::InitBuffers(size_t buffer_count)
+{
     // Reading payload size from device
     const uint32_t lSize = lDevice->GetPayloadSize();
 
@@ -269,36 +325,28 @@ PleoraVideo::PleoraVideo(const char* model_name, const char* serial_num, size_t 
         lBuffer->Alloc( static_cast<uint32_t>( lSize ) );
         lBufferList.push_back( lBuffer );
     }
+}
+
+void PleoraVideo::DeinitBuffers()
+{
+    // Free buffers
+    for( BufferList::iterator lIt = lBufferList.begin(); lIt != lBufferList.end(); lIt++ ) {
+        delete *lIt;
+    }
+}
+
+void PleoraVideo::InitPangoStreams()
+{
+    // Get actual width, height and payload size
+    const int w = DeviceParam<int64_t>("Width");
+    const int h = DeviceParam<int64_t>("Height");
+    const uint32_t lSize = lDevice->GetPayloadSize();
 
     // Setup pangolin for stream
     PvGenEnum* lpixfmt = dynamic_cast<PvGenEnum*>( lDeviceParams->Get("PixelFormat") );
     const VideoPixelFormat fmt = PleoraFormat(lpixfmt);
     streams.push_back(StreamInfo(fmt, w, h, (w*fmt.bpp)/8));
     size_bytes = lSize;
-
-    Start();
-}
-
-PleoraVideo::~PleoraVideo()
-{
-    Stop();
-
-    // Free buffers
-    for( BufferList::iterator lIt = lBufferList.begin(); lIt != lBufferList.end(); lIt++ ) {
-        delete *lIt;
-    }
-
-    if(lStream) {
-        lStream->Close();
-        PvStream::Free( lStream );
-    }
-
-    if(lDevice) {
-        lDevice->Disconnect();
-        PvDevice::Free( lDevice );
-    }
-
-    delete lPvSystem;
 }
 
 void PleoraVideo::Start()

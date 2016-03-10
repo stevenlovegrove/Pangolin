@@ -96,6 +96,24 @@ public:
     }
 
 protected:
+    void InitDevice(const char *model_name, const char *serial_num, size_t index);
+    void DeinitDevice();
+
+    void SetDeviceParams(
+        size_t bpp,  size_t binX, size_t binY,
+        size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y,
+        int analog_gain, double exposure, bool ext_trig, size_t analog_black_level
+    );
+
+    void InitStream();
+    void DeinitStream();
+
+    void InitPangoStreams();
+
+    void InitBuffers(size_t buffer_count);
+
+    void DeinitBuffers();
+
     template<typename T>
     T DeviceParam(const char* name);
 
@@ -116,6 +134,7 @@ protected:
 
     // Pleora handles
     PvSystem* lPvSystem;
+    const PvDeviceInfo* lDeviceInfo;
     PvDevice* lDevice;
     PvStream* lStream;
 
