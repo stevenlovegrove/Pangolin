@@ -246,82 +246,86 @@ int V4lVideo::ReadFrame(unsigned char* image)
 
 void V4lVideo::Stop()
 {
-    enum v4l2_buf_type type;
-    
-    switch (io) {
-    case IO_METHOD_READ:
-        /* Nothing to do. */
-        break;
-        
-    case IO_METHOD_MMAP:
-    case IO_METHOD_USERPTR:
-        type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        
-        if (-1 == xioctl (fd, VIDIOC_STREAMOFF, &type))
-            throw VideoException("VIDIOC_STREAMOFF", strerror(errno));
-        
-        break;
+    if(running) {
+        enum v4l2_buf_type type;
+
+        switch (io) {
+        case IO_METHOD_READ:
+            /* Nothing to do. */
+            break;
+
+        case IO_METHOD_MMAP:
+        case IO_METHOD_USERPTR:
+            type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+            if (-1 == xioctl (fd, VIDIOC_STREAMOFF, &type))
+                throw VideoException("VIDIOC_STREAMOFF", strerror(errno));
+
+            break;
+        }
+
+        running = false;
     }
-    
-    running = false;
 }
 
 void V4lVideo::Start()
 {
-    unsigned int i;
-    enum v4l2_buf_type type;
-    
-    switch (io) {
-    case IO_METHOD_READ:
-        /* Nothing to do. */
-        break;
-        
-    case IO_METHOD_MMAP:
-        for (i = 0; i < n_buffers; ++i) {
-            struct v4l2_buffer buf;
-            
-            CLEAR (buf);
-            
-            buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            buf.memory      = V4L2_MEMORY_MMAP;
-            buf.index       = i;
-            
-            if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
-                throw VideoException("VIDIOC_QBUF", strerror(errno));
+    if(!running) {
+        unsigned int i;
+        enum v4l2_buf_type type;
+
+        switch (io) {
+        case IO_METHOD_READ:
+            /* Nothing to do. */
+            break;
+
+        case IO_METHOD_MMAP:
+            for (i = 0; i < n_buffers; ++i) {
+                struct v4l2_buffer buf;
+
+                CLEAR (buf);
+
+                buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                buf.memory      = V4L2_MEMORY_MMAP;
+                buf.index       = i;
+
+                if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
+                    throw VideoException("VIDIOC_QBUF", strerror(errno));
+            }
+
+            type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+            if (-1 == xioctl (fd, VIDIOC_STREAMON, &type))
+                throw VideoException("VIDIOC_STREAMON", strerror(errno));
+
+            break;
+
+        case IO_METHOD_USERPTR:
+            for (i = 0; i < n_buffers; ++i) {
+                struct v4l2_buffer buf;
+
+                CLEAR (buf);
+
+                buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                buf.memory      = V4L2_MEMORY_USERPTR;
+                buf.index       = i;
+                buf.m.userptr   = (unsigned long) buffers[i].start;
+                buf.length      = buffers[i].length;
+
+                if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
+                    throw VideoException("VIDIOC_QBUF", strerror(errno));
+            }
+
+            type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+            if (-1 == xioctl (fd, VIDIOC_STREAMON, &type))
+                throw VideoException ("VIDIOC_STREAMON", strerror(errno));
+
+            break;
         }
-        
-        type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        
-        if (-1 == xioctl (fd, VIDIOC_STREAMON, &type))
-            throw VideoException("VIDIOC_STREAMON", strerror(errno));
-        
-        break;
-        
-    case IO_METHOD_USERPTR:
-        for (i = 0; i < n_buffers; ++i) {
-            struct v4l2_buffer buf;
-            
-            CLEAR (buf);
-            
-            buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            buf.memory      = V4L2_MEMORY_USERPTR;
-            buf.index       = i;
-            buf.m.userptr   = (unsigned long) buffers[i].start;
-            buf.length      = buffers[i].length;
-            
-            if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
-                throw VideoException("VIDIOC_QBUF", strerror(errno));
-        }
-        
-        type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        
-        if (-1 == xioctl (fd, VIDIOC_STREAMON, &type))
-            throw VideoException ("VIDIOC_STREAMON", strerror(errno));
-        
-        break;
+
+        running = true;
     }
-    
-    running = true;
 }
 
 void V4lVideo::uninit_device()
