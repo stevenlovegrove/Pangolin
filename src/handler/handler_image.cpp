@@ -5,7 +5,7 @@ namespace pangolin
 
 ImageViewHandler::ImageViewHandler(size_t w, size_t h)
     : linked_view_handler(0),
-      rview_default(-0.5,w-0.5,h-0.5,0-0.5),
+      rview_default(-0.5,w-0.5,-0.5,h-0.5),
       rview_max(-0.5,w-0.5,-0.5,h-0.5),
       rview(rview_default), target(rview),
       use_nn(false)
@@ -39,7 +39,7 @@ void ImageViewHandler::glSetViewOrtho()
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(xy.x.min, xy.x.max, xy.y.min, xy.y.max, -1, 1);
+    glOrtho(xy.x.min, xy.x.max, xy.y.max, xy.y.min, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
@@ -53,8 +53,8 @@ void ImageViewHandler::glRenderTexture(pangolin::GlTexture& tex)
     // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
     const GLfloat l = xy.x.min;
     const GLfloat r = xy.x.max;
-    const GLfloat b = xy.y.min;
-    const GLfloat t = xy.y.max;
+    const GLfloat b = xy.y.max;
+    const GLfloat t = xy.y.min;
 
     // continuous coords, (0,0) - (1,1)
     const GLfloat ln = (l + 0.5f) / w;
@@ -101,7 +101,7 @@ void ImageViewHandler::glRenderOverlay()
 void ImageViewHandler::ScreenToImage(Viewport& v, int xpix, int ypix, float& ximg, float& yimg)
 {
     ximg = rview.x.min + rview.x.Size() * (xpix - v.l) / (float)v.w;
-    yimg = rview.y.min + rview.y.Size() * (ypix - v.b) / (float)v.h;
+    yimg = rview.y.min + rview.y.Size() * ( 1.0f - (ypix - v.b) / (float)v.h);
 }
 
 bool ImageViewHandler::UseNN() const
@@ -312,7 +312,7 @@ void ImageViewHandler::MouseMotion(View& view, int x, int y, int button_state)
         sel.y.max = hover_img[1];
     }else if(button_state == MouseButtonRight )
     {
-        Special(view, InputSpecialScroll, x, y, d[0], -d[1], 0.0f, 0.0f, button_state);
+        Special(view, InputSpecialScroll, x, y, d[0], d[1], 0.0f, 0.0f, button_state);
     }
 
     last_mouse_pos[0] = x;
@@ -367,8 +367,9 @@ void ImageViewHandler::AdjustTranslation()
     ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
     if( tv.target.x.max > tv.rview_max.x.max) tv.target.x -= tv.target.x.max - tv.rview_max.x.max;
     if( tv.target.x.min < tv.rview_max.x.min) tv.target.x -= tv.target.x.min - tv.rview_max.x.min;
-    if( tv.target.y.min > tv.rview_max.y.max) tv.target.y -= tv.target.y.min - tv.rview_max.y.max;
-    if( tv.target.y.max < tv.rview_max.y.min) tv.target.y -= tv.target.y.max - tv.rview_max.y.min;
+
+    if( tv.target.y.max > tv.rview_max.y.max) tv.target.y -= tv.target.y.max - tv.rview_max.y.max;
+    if( tv.target.y.min < tv.rview_max.y.min) tv.target.y -= tv.target.y.min - tv.rview_max.y.min;
 }
 
 float ImageViewHandler::animate_factor = 1.0f / 2.0f;
