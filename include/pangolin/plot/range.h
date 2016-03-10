@@ -28,9 +28,20 @@
 #ifndef PANGOLIN_RANGE_H
 #define PANGOLIN_RANGE_H
 
+#include <pangolin/platform.h>
+
 #include <limits>
 #include <algorithm>
 #include <cmath>
+
+//prevent including Eigen in cuda files
+#if defined(HAVE_EIGEN) && !defined(__CUDACC__)
+#  define USE_EIGEN
+#endif
+
+#ifdef USE_EIGEN
+#  include <Eigen/Eigen>
+#endif // USE_EIGEN
 
 namespace pangolin
 {
@@ -263,6 +274,15 @@ struct XYRange
             y.template Cast<To>()
         );
     }
+
+#ifdef USE_EIGEN
+    operator Eigen::AlignedBox<T,2>() const {
+        return Eigen::AlignedBox<T,2>(
+            Eigen::Matrix<T,2,1>(x.min, y.min),
+            Eigen::Matrix<T,2,1>(x.max, y.max)
+        );
+    }
+#endif
 
     Range<T> x;
     Range<T> y;
