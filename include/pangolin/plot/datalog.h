@@ -94,6 +94,7 @@ public:
         samples = 0;
         if(nextBlock) {
             delete nextBlock;
+            nextBlock = NULL;
         }
     }
 
