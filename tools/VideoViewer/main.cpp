@@ -5,6 +5,16 @@
 #include <pangolin/handler/handler_image.h>
 #include <pangolin/utils/file_utils.h>
 
+template<typename To, typename From>
+void ConvertPixels(pangolin::Image<To>& to, const pangolin::Image<From>& from)
+{
+    for(size_t y=0; y < to.h; ++y) {
+        for(size_t x=0; x < to.w; ++x) {
+            to.RowPtr(y)[x] = static_cast<To>( from.RowPtr(y)[x] );
+        }
+    }
+}
+
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
     int frame = 0;
@@ -51,6 +61,8 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     std::vector<pangolin::ImageViewHandler> handlers;
     handlers.reserve(num_streams);
 
+    size_t scratch_buffer_bytes = 0;
+
     pangolin::View& container = pangolin::Display("streams");
     container.SetLayout(pangolin::LayoutEqual);
     for(unsigned int d=0; d < num_streams; ++d) {
@@ -65,10 +77,16 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         if( (8*si.Pitch()) % si.PixFormat().bpp ) {
             pango_print_warn("Stream %i: Unable to display formats whose pitch is not a whole number of pixels.", d);
         }
+        if(glfmt.back().gltype == GL_DOUBLE) {
+            scratch_buffer_bytes = std::max(scratch_buffer_bytes, sizeof(float)*si.Width() * si.Height());
+        }
         strides.push_back( (8*si.Pitch()) / si.PixFormat().bpp );
         handlers.push_back( pangolin::ImageViewHandler(si.Width(), si.Height()) );
         view.SetHandler(&handlers.back());
     }
+
+    std::vector<unsigned char> scratch_buffer;
+    scratch_buffer.resize(scratch_buffer_bytes);
 
     std::vector<pangolin::Image<unsigned char> > images;
 
@@ -216,12 +234,20 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
                 // Get texture of correct dimension / format
                 const pangolin::GlPixFormat& fmt = glfmt[i];
-                pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, fmt.scalable_internal_format, fmt.glformat, fmt.gltype);
+                pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, fmt.scalable_internal_format, fmt.glformat, GL_FLOAT);
 
                 // Upload image data to texture
                 tex.Bind();
-                glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[i]);
-                tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
+                if(fmt.gltype == GL_DOUBLE) {
+                    // Convert to float first, using scrath_buffer for storage
+                    pangolin::Image<float> fimage(image.w, image.h, image.w*sizeof(float), (float*)scratch_buffer.data());
+                    ConvertPixels<float,double>( fimage, image.Reinterpret<double>() );
+                    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+                    tex.Upload(fimage.ptr,0,0, fimage.w, fimage.h, fmt.glformat, GL_FLOAT);
+                }else{
+                    glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[i]);
+                    tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
+                }
 
                 // Render
                 handlers[i].UpdateView();

@@ -82,6 +82,8 @@ std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, pangolin::X
         return GetOffsetScale(GetImageRoi(img.template Reinterpret<unsigned short>(), iroi), 65535.0f, 1.0f);
     }else if(glfmt.gltype == GL_FLOAT) {
         return GetOffsetScale(GetImageRoi(img.template Reinterpret<float>(), iroi), 1.0f, 1.0f);
+    }else if(glfmt.gltype == GL_DOUBLE) {
+        return GetOffsetScale(GetImageRoi(img.template Reinterpret<double>(), iroi), 1.0f, 1.0f);
     }else{
         return std::pair<float,float>(0.0f, 1.0f);
     }
