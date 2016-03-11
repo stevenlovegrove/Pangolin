@@ -53,6 +53,14 @@ struct GlFormatTraits<float>
     static const GLenum gltype = GL_FLOAT;
 };
 
+template<>
+struct GlFormatTraits<double>
+{
+    static const GLint glinternalformat = GL_LUMINANCE32F_ARB;
+    static const GLenum glformat = GL_LUMINANCE;
+    static const GLenum gltype = GL_DOUBLE;
+};
+
 //////////////////////////////////////////////////////////////////
 
 template<>
