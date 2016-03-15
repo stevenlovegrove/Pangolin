@@ -155,22 +155,33 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
             pango_print_info("Not discarding old frames.\n");
         }
     });
+    pangolin::RegisterKeyPressCallback('<', [&](){
+        if(video_playback) {
+            const int jump_frame = std::min(video_playback->GetCurrentFrameId()-FRAME_SKIP, video_playback->GetTotalFrames()-1);
+            video_playback->Seek(jump_frame);
+        }else{
+            pango_print_warn("Unable to skip backward.");
+        }
+    });
+    pangolin::RegisterKeyPressCallback('>', [&](){
+        if(video_playback) {
+            const int jump_frame = std::min(video_playback->GetCurrentFrameId()+FRAME_SKIP, video_playback->GetTotalFrames()-1);
+            video_playback->Seek(jump_frame);
+        }else{
+            end_frame = frame + FRAME_SKIP;
+        }
+    });
     pangolin::RegisterKeyPressCallback(',', [&](){
         if(video_playback) {
-            const int frame = std::min(video_playback->GetCurrentFrameId()-FRAME_SKIP, video_playback->GetTotalFrames()-1);
-            video_playback->Seek(frame);
+            const int jump_frame = std::min(video_playback->GetCurrentFrameId()-1, video_playback->GetTotalFrames()-1);
+            video_playback->Seek(jump_frame);
         }else{
-            // We can't go backwards
+            pango_print_warn("Unable to skip backward.");
         }
     });
     pangolin::RegisterKeyPressCallback('.', [&](){
-        if(video_playback) {
-            const int frame = std::max(video_playback->GetCurrentFrameId()+FRAME_SKIP, 0);
-            video_playback->Seek(frame);
-        }else{
-            // Pause at this frame
-            end_frame = frame+1;
-        }
+        // Pause at next frame
+        end_frame = frame+1;
     });
     pangolin::RegisterKeyPressCallback('a', [&](){
         // Adapt scale
