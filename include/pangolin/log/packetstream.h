@@ -45,14 +45,15 @@ const static std::string PANGO_MAGIC = "PANGO";
 const unsigned int TAG_LENGTH = 3;
 
 #define PANGO_TAG(a,b,c) ( (c<<16) | (b<<8) | a)
-const uint32_t TAG_PANGO_HDR   = PANGO_TAG('L', 'I', 'N');
-const uint32_t TAG_PANGO_MAGIC = PANGO_TAG('P', 'A', 'N');
-const uint32_t TAG_PANGO_SYNC  = PANGO_TAG('S', 'Y', 'N');
-const uint32_t TAG_PANGO_STATS = PANGO_TAG('S', 'T', 'A');
-const uint32_t TAG_ADD_SOURCE  = PANGO_TAG('S', 'R', 'C');
-const uint32_t TAG_SRC_JSON    = PANGO_TAG('J', 'S', 'N');
-const uint32_t TAG_SRC_PACKET  = PANGO_TAG('P', 'K', 'T');
-const uint32_t TAG_END         = PANGO_TAG('E', 'N', 'D');
+const uint32_t TAG_PANGO_HDR    = PANGO_TAG('L', 'I', 'N');
+const uint32_t TAG_PANGO_MAGIC  = PANGO_TAG('P', 'A', 'N');
+const uint32_t TAG_PANGO_SYNC   = PANGO_TAG('S', 'Y', 'N');
+const uint32_t TAG_PANGO_STATS  = PANGO_TAG('S', 'T', 'A');
+const uint32_t TAG_PANGO_FOOTER = PANGO_TAG('F', 'T', 'R');
+const uint32_t TAG_ADD_SOURCE   = PANGO_TAG('S', 'R', 'C');
+const uint32_t TAG_SRC_JSON     = PANGO_TAG('J', 'S', 'N');
+const uint32_t TAG_SRC_PACKET   = PANGO_TAG('P', 'K', 'T');
+const uint32_t TAG_END          = PANGO_TAG('E', 'N', 'D');
 #undef PANGO_TAG
 
 struct PANGOLIN_EXPORT PacketStreamSource
@@ -111,6 +112,8 @@ public:
 
     void WriteSync();
 
+    void WriteFooter(const std::streampos footer_pos);
+
 protected:
     inline void WriteCompressedUnsignedInt(size_t n)
     {
@@ -138,6 +141,7 @@ protected:
     bool is_open;
     bool is_pipe;
 
+    std::map<int,std::vector<std::streampos>> src_packet_positions;
     unsigned int bytes_written;
 };
 
@@ -156,13 +160,23 @@ public:
         return sources;
     }
 
-    inline int GetFrameIndex(PacketStreamSourceId src_id) const
+    inline int GetPacketIndex(PacketStreamSourceId src_id) const
     {
-        std::map<int,size_t>::const_iterator it = src_packet_frame_num.find(src_id);
-        if(it != src_packet_frame_num.end()) {
+        std::map<int,size_t>::const_iterator it = src_packet_index.find(src_id);
+        if(it != src_packet_index.end()) {
             return it->second -1;
         }else{
             return 0;
+        }
+    }
+
+    inline int GetNumPackets(PacketStreamSourceId src_id) const
+    {
+        std::map<int,size_t>::const_iterator it = src_num_packets.find(src_id);
+        if(it != src_num_packets.end()) {
+            return it->second;
+        }else{
+            return std::numeric_limits<int>::max();
         }
     }
 
@@ -209,6 +223,8 @@ protected:
     void ReadSourcePacketMeta(json::value &json);
     void ReadNewSourcePacket();
     void ReadStatsPacket();
+    std::streampos ReadFooterPacket();
+    void ReadSeekIndex();
     void ReadOverSourcePacket(PacketStreamSourceId src_id);
     void CacheSrcPacketLocationIncFrame(std::streampos src_packet_pos, int src_id);
 
@@ -216,8 +232,9 @@ protected:
 
     std::vector<PacketStreamSource> sources;
 
-    std::map<int,size_t> src_packet_frame_num;
-    std::map<int,std::vector<std::streampos>> src_packet_seek;
+    std::map<int,size_t> src_num_packets;
+    std::map<int,size_t> src_packet_index;
+    std::map<int,std::vector<std::streampos>> src_packet_positions;
 
     std::ifstream reader;
     boostd::mutex read_mutex;

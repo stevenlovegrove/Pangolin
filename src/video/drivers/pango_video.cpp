@@ -110,12 +110,12 @@ const json::value& PangoVideo::FrameProperties() const
 
 int PangoVideo::GetCurrentFrameId() const
 {
-    return reader.GetFrameIndex(src_id);
+    return reader.GetPacketIndex(src_id);
 }
 
 int PangoVideo::GetTotalFrames() const
 {
-    return std::numeric_limits<int>::max();
+    return reader.GetNumPackets(src_id);
 }
 
 int PangoVideo::Seek(int frameid)
