@@ -35,7 +35,7 @@ namespace pangolin
 const std::string pango_video_type = "raw_video";
 
 PangoVideo::PangoVideo(const std::string& filename, bool realtime)
-    : reader(filename, realtime), frame_id(-1), filename(filename), is_pipe(pangolin::IsPipe(filename))
+    : reader(filename, realtime), filename(filename), is_pipe(pangolin::IsPipe(filename))
 {
     src_id = FindSource();
 
@@ -79,7 +79,6 @@ bool PangoVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         // read this frames actual data
         reader.Read((char*)image, size_bytes);
         reader.ReleaseSourcePacketLock(src_id);
-        ++frame_id;
         return true;
     }else{
         return false;
@@ -111,7 +110,7 @@ const json::value& PangoVideo::FrameProperties() const
 
 int PangoVideo::GetCurrentFrameId() const
 {
-    return frame_id;
+    return reader.GetFrameIndex(src_id);
 }
 
 int PangoVideo::GetTotalFrames() const
@@ -119,10 +118,9 @@ int PangoVideo::GetTotalFrames() const
     return std::numeric_limits<int>::max()-1;
 }
 
-int PangoVideo::Seek(int /*frameid*/)
+int PangoVideo::Seek(int frameid)
 {
-    // TODO: Implement seek
-    return -1;
+    return reader.Seek(src_id, frameid);
 }
 
 int PangoVideo::FindSource()

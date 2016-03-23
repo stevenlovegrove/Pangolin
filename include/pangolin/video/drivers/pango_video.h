@@ -79,7 +79,6 @@ protected:
     json::value device_properties;
     json::value frame_properties;
     int src_id;
-    int frame_id;
     const std::string filename;
     bool is_pipe;
 };

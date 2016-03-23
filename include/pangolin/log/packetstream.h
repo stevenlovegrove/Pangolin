@@ -156,6 +156,18 @@ public:
         return sources;
     }
 
+    inline int GetFrameIndex(PacketStreamSourceId src_id) const
+    {
+        std::map<int,size_t>::const_iterator it = src_packet_frame_num.find(src_id);
+        if(it != src_packet_frame_num.end()) {
+            return it->second -1;
+        }else{
+            return 0;
+        }
+    }
+
+    int Seek(PacketStreamSourceId src_id, int framenum);
+
     bool ReadToSourcePacketAndLock(PacketStreamSourceId src_id);
 
     void ReleaseSourcePacketLock(PacketStreamSourceId src_id);
@@ -198,9 +210,14 @@ protected:
     void ReadNewSourcePacket();
     void ReadStatsPacket();
     void ReadOverSourcePacket(PacketStreamSourceId src_id);
+    void CacheSrcPacketLocationIncFrame(std::streampos src_packet_pos, int src_id);
+
     uint32_t next_tag;
 
     std::vector<PacketStreamSource> sources;
+
+    std::map<int,size_t> src_packet_frame_num;
+    std::map<int,std::vector<std::streampos>> src_packet_seek;
 
     std::ifstream reader;
     boostd::mutex read_mutex;

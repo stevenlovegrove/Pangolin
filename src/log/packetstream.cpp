@@ -331,6 +331,52 @@ PacketStreamReader::~PacketStreamReader()
     Close();
 }
 
+int PacketStreamReader::Seek(PacketStreamSourceId src_id, int framenum)
+{
+    // Ensure positive.
+    framenum = std::max(0, framenum);
+
+    if(src_id > sources.size()) {
+        throw std::runtime_error("Invalid Frame Source ID.");
+    }
+
+    if(!is_pipe) {
+        read_mutex.lock();
+
+        const size_t backup_frame = GetFrameIndex(src_id);
+
+        std::vector<std::streampos>& packet_seek = src_packet_seek[src_id];
+        while(framenum >= (int)packet_seek.size()) {
+            // We need to read ahead
+            int nxt_src_id;
+            int64_t time_us;
+            ProcessMessagesUntilSourcePacket(nxt_src_id, time_us);
+            if(nxt_src_id == -1) {
+                framenum = backup_frame;
+                break;
+            }else{
+                ReadOverSourcePacket(nxt_src_id);
+                ReadTag();
+            }
+        }
+
+        // jump to correct position
+        src_packet_frame_num[src_id] = framenum;
+        reader.clear();
+        reader.seekg(packet_seek[framenum]);
+        ReadTag();
+        if(next_tag != TAG_SRC_PACKET) {
+            throw std::runtime_error("Bad seek");
+        }
+
+        read_mutex.unlock();
+        return framenum;
+    }else{
+        pango_print_warn("Can't seek on pipe.\n");
+        return GetFrameIndex(src_id);
+    }
+}
+
 bool PacketStreamReader::ReadToSourcePacketAndLock(PacketStreamSourceId src_id)
 {
     read_mutex.lock();
@@ -398,10 +444,13 @@ void PacketStreamReader::ProcessMessage()
     }
     case TAG_SRC_PACKET:
     {
+        const std::streampos src_packet_pos = reader.tellg() - (std::streamoff)TAG_LENGTH;
+        ReadTimestamp(); // read and ignore.
         const size_t src_id = ReadCompressedUnsignedInt();
         if(src_id >= sources.size()) {
             throw std::runtime_error("Invalid Packet Source ID.");
         }
+        CacheSrcPacketLocationIncFrame(src_packet_pos, src_id);
         ReadOverSourcePacket(src_id);
         break;
     }
@@ -446,11 +495,13 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
         }
         case TAG_SRC_PACKET:
         {
+            const std::streampos src_packet_pos = reader.tellg() - (std::streamoff)TAG_LENGTH;
             time_us = ReadTimestamp();
             nxt_src_id = ReadCompressedUnsignedInt();
             if(nxt_src_id >= (int)sources.size()) {
                 throw std::runtime_error("Invalid Packet Source ID.");
             }
+            CacheSrcPacketLocationIncFrame(src_packet_pos, nxt_src_id);
             // return, don't break. We're in the middle of this packet.
             return;
         }
@@ -582,6 +633,14 @@ void PacketStreamReader::ReadOverSourcePacket(PacketStreamSourceId src_id)
         size_t size_bytes = ReadCompressedUnsignedInt();
         reader.ignore(size_bytes);
     }
+}
+
+void PacketStreamReader::CacheSrcPacketLocationIncFrame(std::streampos src_packet_pos, int src_id)
+{
+    const size_t frame_num = src_packet_frame_num[src_id]++;
+    std::vector<std::streampos>& packet_seek = src_packet_seek[src_id];
+    packet_seek.resize( std::max(frame_num+1, packet_seek.size()) );
+    packet_seek[frame_num] = src_packet_pos;
 }
 
 
