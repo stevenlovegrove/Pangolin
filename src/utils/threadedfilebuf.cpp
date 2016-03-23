@@ -158,6 +158,7 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
     
     cond_queued.notify_one();
     
+    input_pos += num_bytes;
     return num_bytes;
 }
 
@@ -184,7 +185,19 @@ int threadedfilebuf::overflow(int c)
 
     cond_queued.notify_one();
 
+    input_pos += num_bytes;
     return num_bytes;
+}
+
+std::streampos threadedfilebuf::seekoff(
+    std::streamoff off, std::ios_base::seekdir way,
+    std::ios_base::openmode /*which*/
+) {
+    if(off == 0 && way == ios_base::cur) {
+        return input_pos;
+    }else{
+        return -1;
+    }
 }
 
 void threadedfilebuf::operator()()
