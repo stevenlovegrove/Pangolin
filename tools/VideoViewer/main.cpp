@@ -25,7 +25,6 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     // Open Video by URI
     pangolin::VideoRecordRepeat video(input_uri, output_uri);
     const size_t num_streams = video.Streams().size();
-    int total_frames = std::numeric_limits<int>::max();
 
     if(num_streams == 0) {
         pango_print_error("No video streams from device.\n");
@@ -35,11 +34,11 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     // Check if video supports VideoPlaybackInterface
     pangolin::VideoPlaybackInterface* video_playback = video.Cast<pangolin::VideoPlaybackInterface>();
     if( video_playback ) {
-        total_frames = video_playback->GetTotalFrames();
+        const int total_frames = video_playback->GetTotalFrames();
         if(total_frames < std::numeric_limits<int>::max() ) {
             std::cout << "Video length: " << total_frames << " frames" << std::endl;
-            end_frame = 1;
         }
+        end_frame = 1;
     }
 
     std::vector<unsigned char> buffer;

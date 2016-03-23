@@ -115,7 +115,7 @@ int PangoVideo::GetCurrentFrameId() const
 
 int PangoVideo::GetTotalFrames() const
 {
-    return std::numeric_limits<int>::max()-1;
+    return std::numeric_limits<int>::max();
 }
 
 int PangoVideo::Seek(int frameid)
