@@ -3,13 +3,26 @@
 namespace pangolin
 {
 
-ImageViewHandler::ImageViewHandler(size_t w, size_t h)
+ImageViewHandler::ImageViewHandler()
     : linked_view_handler(0),
-      rview_default(-0.5,w-0.5,-0.5,h-0.5),
-      rview_max(-0.5,w-0.5,-0.5,h-0.5),
-      rview(rview_default), target(rview),
       use_nn(false)
 {
+    SetDimensions(1.0, 1.0);
+}
+
+ImageViewHandler::ImageViewHandler(size_t w, size_t h)
+    : linked_view_handler(0),
+      use_nn(false)
+{
+    SetDimensions(w,h);
+}
+
+void ImageViewHandler::SetDimensions(size_t w, size_t h)
+{
+    rview_default = pangolin::XYRangef(-0.5,w-0.5,-0.5,h-0.5),
+    rview_max = pangolin::XYRangef(-0.5,w-0.5,-0.5,h-0.5),
+    rview = rview_default;
+    target = rview;
 }
 
 void ImageViewHandler::UpdateView()

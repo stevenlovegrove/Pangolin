@@ -183,7 +183,7 @@ struct Range
     }
 
     template<typename To>
-    Range<To> Cast()
+    Range<To> Cast() const
     {
         return Range<To>(To(min), To(max));
     }
@@ -267,7 +267,7 @@ struct XYRange
     }
 
     template<typename To>
-    XYRange<To> Cast()
+    XYRange<To> Cast() const
     {
         return XYRange<To>(
             x.template Cast<To>(),

@@ -96,6 +96,8 @@ public:
 
     void Download(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT) const;
 
+    void Download(TypedImage& image) const;
+
     void Save(const std::string& filename, bool top_line_first = true);
 
     void SetLinear();
@@ -232,6 +234,8 @@ protected:
     
     size_t  m_num_verts;    
 };
+
+size_t GlFormatChannels(GLenum data_layout);
 
 size_t GlDataTypeBytes(GLenum type);
 

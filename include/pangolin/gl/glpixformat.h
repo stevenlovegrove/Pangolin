@@ -29,6 +29,7 @@
 #define PANGOLIN_GLPANGOPIXFORMAT_H
 
 #include <pangolin/gl/glplatform.h>
+#include <pangolin/gl/glformattraits.h>
 #include <pangolin/image/image_common.h>
 #include <stdexcept>
 
@@ -69,6 +70,16 @@ struct GlPixFormat
                 scalable_internal_format = GL_RGBA32F;
             }
         }
+    }
+
+    template<typename T>
+    static GlPixFormat FromType()
+    {
+        GlPixFormat fmt;
+        fmt.glformat = GlFormatTraits<T>::glformat;
+        fmt.gltype = GlFormatTraits<T>::gltype;
+        fmt.scalable_internal_format = GlFormatTraits<T>::glinternalformat;
+        return fmt;
     }
 
     GLint glformat;

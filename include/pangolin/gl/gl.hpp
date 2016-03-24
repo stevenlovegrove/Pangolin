@@ -75,11 +75,26 @@ const static size_t datatype_bytes[] = {
     8  //  #define GL_DOUBLE 0x140A
 };
 
+const static size_t format_channels[] = {
+    1, //  #define GL_RED 0x1903
+    1, //  #define GL_GREEN 0x1904
+    1, //  #define GL_BLUE 0x1905
+    1, //  #define GL_ALPHA 0x1906
+    3, //  #define GL_RGB 0x1907
+    4, //  #define GL_RGBA 0x1908
+    1, //  #define GL_LUMINANCE 0x1909
+    2  //  #define GL_LUMINANCE_ALPHA 0x190A
+};
+
 inline size_t GlDataTypeBytes(GLenum type)
 {
     return datatype_bytes[type - GL_BYTE];
 }
 
+inline size_t GlFormatChannels(GLenum data_layout)
+{
+    return format_channels[data_layout - GL_RED];
+}
 
 //template<typename T>
 //struct GlDataTypeTrait {};
@@ -215,22 +230,36 @@ inline void GlTexture::Download(void* image, GLenum data_layout, GLenum data_typ
     Unbind();
 }
 
-inline void GlTexture::Save(const std::string& filename, bool top_line_first)
+inline void GlTexture::Download(TypedImage& image) const
 {
-    TypedImage image;
-    
-    VideoPixelFormat fmt;
     switch (internal_format)
     {
-    case GL_LUMINANCE: fmt = VideoFormatFromString("GRAY8"); break;
-    case GL_RGB:       fmt = VideoFormatFromString("RGB24"); break;
-    case GL_RGBA:      fmt = VideoFormatFromString("RGBA"); break;
+    case GL_LUMINANCE8:
+        image.Alloc(width, height, VideoFormatFromString("GRAY8") );
+        Download(image.ptr, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+        break;
+    case GL_RGB:
+        image.Alloc(width, height, VideoFormatFromString("RGB24"));
+        Download(image.ptr, GL_RGB, GL_UNSIGNED_BYTE);
+        break;
+    case GL_LUMINANCE32F_ARB:
+        image.Alloc(width, height, VideoFormatFromString("GRAY32F"));
+        Download(image.ptr, GL_LUMINANCE, GL_FLOAT);
+        break;
+    case GL_RGB32F:
+        image.Alloc(width, height, VideoFormatFromString("RGB96F"));
+        Download(image.ptr, GL_RGB, GL_FLOAT);
+        break;
     default:
         throw std::runtime_error("Unknown format");
     }
-    
-    image.Alloc(width, height, fmt);
-    Download(image.ptr, internal_format, GL_UNSIGNED_BYTE);
+
+}
+
+inline void GlTexture::Save(const std::string& filename, bool top_line_first)
+{
+    TypedImage image;
+    Download(image);
     pangolin::SaveImage(image, filename, top_line_first);
     image.Dealloc();
 }

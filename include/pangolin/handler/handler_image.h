@@ -41,9 +41,15 @@ namespace pangolin
 class ImageViewHandler : public Handler
 {
 public:
+    // Default constructor: User must call SetDimensions() once image dimensions are known.
+    // Default range is [0,1] in x and y.
+    ImageViewHandler();
+
     // View ranges store extremes of image (boundary of pixels)
     // in 'discrete' coords, where 0,0 is center of top-left pixel.
     ImageViewHandler(size_t w, size_t h);
+
+    void SetDimensions(size_t w, size_t h);
 
     void UpdateView();
 
