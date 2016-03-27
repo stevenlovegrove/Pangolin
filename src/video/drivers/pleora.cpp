@@ -27,6 +27,7 @@
 
 #include <pangolin/video/drivers/pleora.h>
 #include <unistd.h>
+#include <pangolin/utils/timer.h>
 
 namespace pangolin
 {
@@ -366,6 +367,7 @@ void grab_thread_loop(GrabbedBufferList* p_buff_list, bool* quit_grab_thread, Pv
                 lStream->QueueBuffer(lIt->buff);
                 plStream_mtx->unlock();
                 lIt = p_buff_list->erase(lIt);
+                std::cout<<"-------------------> remove buff" <<std::endl;
             } else {
                 ++lIt;
             }
@@ -389,6 +391,7 @@ void grab_thread_loop(GrabbedBufferList* p_buff_list, bool* quit_grab_thread, Pv
         }
         std::this_thread::yield();
     }
+    std::cout << "Grab thread stopped" << std::endl;
 }
 
 void PleoraVideo::Start()
@@ -446,13 +449,25 @@ const std::vector<StreamInfo>& PleoraVideo::Streams() const
 
 bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
 {
+  pangolin::basetime start;
+  pangolin::basetime end;
   if ( lBuffer->GetPayloadType() == PvPayloadTypeImage ) {
+      start = pangolin::TimeNow();
       PvImage *lImage = lBuffer->GetImage();
+      end = pangolin::TimeNow();
+      std::cout << "GetImage time: " << 1000*pangolin::TimeDiff_s(start, end) << "ms" << std::endl;
+      start = pangolin::TimeNow();
       std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+      end = pangolin::TimeNow();
+      std::cout << "memcpy time: " << 1000*pangolin::TimeDiff_s(start, end) << "ms" << std::endl;
+      start = pangolin::TimeNow();
       // Required frame properties
       frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
       frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
+      end = pangolin::TimeNow();
+      std::cout << "Frame properties time: " << 1000*pangolin::TimeDiff_s(start, end) << "ms" << std::endl;
 
+      start = pangolin::TimeNow();
       // Optional frame properties
       if(lTemperatureCelcius != 0) {
           double val;
@@ -463,6 +478,8 @@ bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
               pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
           }
       }
+      end = pangolin::TimeNow();
+      std::cout << "temperature time: " << 1000*pangolin::TimeDiff_s(start, end) << "ms" << std::endl;
       return true;
   } else {
       return false;
@@ -481,47 +498,77 @@ int has_valid_elements(GrabbedBufferList l)
 
 bool PleoraVideo::GrabNext( unsigned char* image, bool wait)
 {
+    pangolin::basetime start, now, last;
     const uint32_t timeout = wait ? 1000 : 0;
     bool good = false;
-
+    start = pangolin::TimeNow();
+    last = start;
     if(stand_alone_grab_thread) {
         grabbedBuffListMtx.lock();
         int ve = has_valid_elements(lGrabbedBuffList);
         if(ve==0) {
             grabbedBuffListMtx.unlock();
+            now = pangolin::TimeNow();
+            std::cout << "Empty buffer list: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
             return false;
         }
+        std::cout << "Grab next stand alone thread: " << ve << " frames valid, queue size " << lGrabbedBuffList.size() << " popping head" << std::endl;
 
         GrabbedBufferList::iterator front = lGrabbedBuffList.begin();
         while(!front->valid) {
             ++front;
         }
         grabbedBuffListMtx.unlock();
+        now = pangolin::TimeNow();
+        std::cout << "Grabbing it to next frame mtx lock: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
 
         if ( front->res.IsOK() ) {
             good = ParseBuffer(front->buff, image);
         }
+        now = pangolin::TimeNow();
+        std::cout << "ParseBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
 
         grabbedBuffListMtx.lock();
         // Flag frame as used, so that it will get released.
         front->valid = false;
         grabbedBuffListMtx.unlock();
+        now = pangolin::TimeNow();
+        std::cout << "Ivalidating GrabbedBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
     } else {
         PvResult lOperationResult;
         PvBuffer *lBuffer = NULL;
+        std::cout << "Grab next: " << std::endl;
         // Retrieve next buffer
         const PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout);
         if ( !lResult.IsOK() ) {
             if(wait || (lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT))) {
                 pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
             }
+            std::cout << "not OK " << std::endl;
             return false;
         }
+        now = pangolin::TimeNow();
+        std::cout << "RetrieveBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
+
         if ( lOperationResult.IsOK() ) {
             good = ParseBuffer(lBuffer, image);
         }
+        now = pangolin::TimeNow();
+        std::cout << "ParseBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
+
         lStream->QueueBuffer( lBuffer );
+        now = pangolin::TimeNow();
+        std::cout << "QueueBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
     }
+    now = pangolin::TimeNow();
+    std::cout << "Total inner grab: " << 1000*pangolin::TimeDiff_s(start, now) << "ms" << std::endl;
+    std::cout << "good="<<good<<std::endl;
     return good;
 }
 
@@ -530,14 +577,18 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
 {
     const uint32_t timeout = wait ? 0xFFFFFFFF : 0;
     bool good = false;
+    pangolin::basetime start,last,now;
 
     if(stand_alone_grab_thread) {
         grabbedBuffListMtx.lock();
         int ve = has_valid_elements(lGrabbedBuffList);
         if(ve==0) {
             grabbedBuffListMtx.unlock();
+            now = pangolin::TimeNow();
+            std::cout << "Empty buffer list: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
             return false;
         }
+        std::cout << "Grab newest stand alone thread: " << ve << " valid frames in queue queue sieze " << lGrabbedBuffList.size() << std::endl;
 
         GrabbedBufferList::iterator lItOneButLast = lGrabbedBuffList.end();
         --lItOneButLast;
@@ -545,8 +596,12 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
             //Mark old buffers as invalid so that they can be reclaimed.
             if(lIt->valid) {
                 lIt->valid = false;
+                std::cout << "marked 1 frame as invalid" << std::endl;
             }
         }
+        now = pangolin::TimeNow();
+        std::cout << "Flagging old frames as invalid: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
 
         GrabbedBufferList::iterator newest = --(lGrabbedBuffList.end());
         grabbedBuffListMtx.unlock();
@@ -554,25 +609,33 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
         if ( newest->res.IsOK() ) {
             good = ParseBuffer(newest->buff, image);
         }
-
+        now = pangolin::TimeNow();
+        std::cout << "ParseBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
         grabbedBuffListMtx.lock();
         // Flag frame as used, so that it will get released.
         newest->valid = false;
         grabbedBuffListMtx.unlock();
+        now = pangolin::TimeNow();
+        std::cout << "Ivalidating GrabbedBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
     } else {
         PvBuffer *lBuffer0 = NULL;
         PvBuffer *lBuffer = NULL;
         PvResult lOperationResult;
+        std::cout << "Grab newest: " << std::endl;
 
         PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout );
         if ( !lResult.IsOK() ) {
             if(wait || (lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT))) {
                 pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
             }
+            std::cout << "Not Ok" << std::endl;
             return false;
         } else if( !lOperationResult.IsOK() ) {
             pango_print_warn("Pleora error: %s,\n'%s'\n", lOperationResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
             lStream->QueueBuffer( lBuffer );
+            std::cout << "Pleora Error" << std::endl;
             return false;
         }
 
@@ -589,9 +652,23 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
                 lBuffer = lBuffer0;
             }
         }
+        now = pangolin::TimeNow();
+        std::cout << "RetrieveBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
+
         good = ParseBuffer(lBuffer, image);
+        now = pangolin::TimeNow();
+        std::cout << "ParseBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
+
         lStream->QueueBuffer( lBuffer );
+        now = pangolin::TimeNow();
+        std::cout << "QueueBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
     }
+    now = pangolin::TimeNow();
+    std::cout << "Total inner grab: " << 1000*pangolin::TimeDiff_s(start, now) << "ms" << std::endl;
+    std::cout << "good="<<good<<std::endl;
     return good;
 }
 
@@ -629,7 +706,8 @@ void PleoraVideo::SetAnalogBlackLevel(int64_t val)
     }
 }
 
-double PleoraVideo::GetExposure() {
+double PleoraVideo::GetExposure()
+{
     double val;
     if( lExposure ) {
         ThrowOnFailure( lExposure->GetValue(val));
@@ -637,7 +715,8 @@ double PleoraVideo::GetExposure() {
     return val;
 }
 
-void PleoraVideo::SetExposure(double val) {
+void PleoraVideo::SetExposure(double val)
+{
     if(val > 0 && lExposure && lExposure->IsWritable() ) {
         ThrowOnFailure( lExposure->SetValue(val) );
         frame_properties[PANGO_EXPOSURE_US] = json::value(val);
