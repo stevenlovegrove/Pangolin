@@ -82,7 +82,7 @@
 //  e.g. "depthsense:[img1=depth,img2=rgb]//"
 //
 // pleora - USB 3 vision cameras
-//  e.g. "pleora:[bpp=10,size=512x256,pos=712x512,again=1,sn=00000274,exposure=3000,eTrig=true,buffers=10]//"
+//  e.g. "pleora:[use_seprate_thread=true,bpp=10,size=512x256,pos=712x512,again=1,sn=00000274,exposure=3000,eTrig=true,buffers=10]//"
 //
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
