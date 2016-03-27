@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/video/drivers/join.h>
+#include <pangolin/utils/timer.h>
 
 namespace pangolin
 {
@@ -152,7 +153,10 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
   bool grabbed_any = false;
   int first_stream_backlog = 0;
   int64_t rt = 0;
+  pangolin::basetime start,last,now;
 
+  start = pangolin::TimeNow();
+  last = start;
   bool got_frame = false;
   do {
       got_frame = src[0]->GrabNext(image+offset,false);
@@ -177,6 +181,9 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
       if(newest < rt) newest = rt;
       if(oldest > rt) oldest = rt;
   }
+  now = pangolin::TimeNow();
+  std::cout << "JOIN: Stream 1 grab: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+  last = now;
 
   for(size_t s=1; s<src.size(); ++s) {
       for (int i=0; i<first_stream_backlog; i++){
@@ -199,6 +206,9 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
           if(oldest > rt) oldest = rt;
       }
   }
+  now = pangolin::TimeNow();
+  std::cout << "JOIN: Stream 2 grab: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+  last = now;
 
   if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
      pango_print_warn("Join error, unable to sync streams within %lu us\n", (unsigned long)sync_tolerance_us);
@@ -213,6 +223,9 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
      }
      if(!sync_continuously) --sync_attempts_to_go;
   }
+  now = pangolin::TimeNow();
+  std::cout << "JOIN: Sync: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+  last = now;
 
   return grabbed_any;
 }
