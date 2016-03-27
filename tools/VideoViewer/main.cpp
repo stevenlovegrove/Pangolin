@@ -4,6 +4,8 @@
 #include <pangolin/gl/glpixformat.h>
 #include <pangolin/handler/handler_image.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/timer.h>
+#include <unistd.h>
 
 template<typename To, typename From>
 void ConvertPixels(pangolin::Image<To>& to, const pangolin::Image<From>& from)
@@ -21,6 +23,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::Var<int>  end_frame("viewer.end_frame", std::numeric_limits<int>::max() );
     pangolin::Var<bool> video_wait("video.wait", true);
     pangolin::Var<bool> video_newest("video.newest", false);
+    unsigned int delayus = 0;
 
     // Open Video by URI
     pangolin::VideoRecordRepeat video(input_uri, output_uri);
@@ -223,6 +226,17 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     });
 #endif // CALLEE_HAS_CPP11
 
+    pangolin::RegisterKeyPressCallback('z', [&](){
+      // Adapt delay
+      delayus += 1000;
+      std::cout << "                  Fake delay " << delayus << "us" << std::endl;
+    });
+
+    pangolin::RegisterKeyPressCallback('x', [&](){
+      // Adapt delay
+      delayus = (delayus > 1000) ? delayus-1000 : 0;
+      std::cout << "                  Fake delay " << delayus << "us" << std::endl;
+    });
 
     // Stream and display video
     while(!pangolin::ShouldQuit())
@@ -230,11 +244,18 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         glColor3f(1.0f, 1.0f, 1.0f);
 
+        std::cout << "-------------------------------------------------------" << std::endl;
+        const pangolin::basetime start = pangolin::TimeNow();
         if (frame == 0 || frame < end_frame) {
+            const pangolin::basetime start2 = pangolin::TimeNow();
             if (video.Grab(&buffer[0], images, video_wait, video_newest) ){
                 ++frame;
             }
+            const pangolin::basetime end2 = pangolin::TimeNow();
+            std::cout << "single grab time: " << 1000*pangolin::TimeDiff_s(start2, end2) << "ms" << std::endl;
         }
+        const pangolin::basetime end = pangolin::TimeNow();
+        std::cout << "Total grab time: " << 1000*pangolin::TimeDiff_s(start, end) << "ms" << std::endl;
 
         glLineWidth(1.5f);
         glDisable(GL_DEPTH_TEST);
@@ -275,6 +296,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
         pangolin::FinishFrame();
+        usleep(delayus);
     }
 }
 
