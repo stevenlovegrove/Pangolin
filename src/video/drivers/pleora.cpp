@@ -388,7 +388,7 @@ const bool PleoraVideo::DropNFrames(uint32_t n)
             }
             ++lIt;
         }
-        grabbedBuffListMtx.lock();
+        grabbedBuffListMtx.unlock();
     } else {
         PvResult lResult;
         PvBuffer *lBuffer = NULL;
