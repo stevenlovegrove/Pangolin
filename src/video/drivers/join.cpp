@@ -149,18 +149,20 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
 {
 
   if(AllInterfacesAreBufferAware(src)) {
-     uint32_t minN = 0;
+     uint32_t minN = std::numeric_limits<uint32_t>::max();
      //Find smalles number of frames it is safe to drop.
      for(size_t s=0; s<src.size(); ++s) {
          auto bai = dynamic_cast<BufferAwareVideoInterface*>(src[s]);
          minN = std::min(bai->AvailableFrames(), minN);
      }
      //Safely drop minN-1 frames on each interface.
-     for(size_t s=0; s<src.size(); ++s) {
-         auto bai = dynamic_cast<BufferAwareVideoInterface*>(src[s]);
-         if(!bai->DropNFrames(minN - 1)) {
-             pango_print_error("Stream %lu did not drop %u frames altough available.\n", s, minN);
-             return false;
+     if(minN > 1) {
+         for(size_t s=0; s<src.size(); ++s) {
+             auto bai = dynamic_cast<BufferAwareVideoInterface*>(src[s]);
+             if(!bai->DropNFrames(minN - 1)) {
+                 pango_print_error("Stream %lu did not drop %u frames altough available.\n", s, minN);
+                 return false;
+             }
          }
      }
      //GrabNext on each interface.
