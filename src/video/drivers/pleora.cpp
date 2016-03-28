@@ -401,6 +401,7 @@ const bool PleoraVideo::DropNFrames(uint32_t n)
             } else {
                 lStream->QueueBuffer( lBuffer );
             }
+            --n;
         }
     }
 
