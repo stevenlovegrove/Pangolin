@@ -133,6 +133,16 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
     }
 }
 
+
+uint32_t get_num_valid_elements(GrabbedBufferList l)
+{
+  uint32_t cnt = 0;
+  for(GrabbedBufferList::iterator lIt = l.begin(); lIt != l.end(); ++lIt) {
+      if(lIt->valid) cnt++;
+  }
+  return cnt;
+}
+
 PleoraVideo::PleoraVideo(
         const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
         size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int analog_gain, double exposure,
@@ -350,6 +360,51 @@ void PleoraVideo::InitPangoStreams()
     size_bytes = lSize;
 }
 
+const unsigned int PleoraVideo::AvailableFrames()
+{
+    if(stand_alone_grab_thread) {
+        grabbedBuffListMtx.lock();
+        uint32_t ve = get_num_valid_elements(lGrabbedBuffList);
+        grabbedBuffListMtx.lock();
+        return ve;
+    } else {
+        return lStream->GetQueuedBufferCount();
+    }
+}
+
+const bool PleoraVideo::DropNFrames(uint32_t n)
+{
+    if(n > AvailableFrames()) return false;
+
+    if(stand_alone_grab_thread) {
+        grabbedBuffListMtx.lock();
+        GrabbedBufferList::iterator lIt = lGrabbedBuffList.begin();
+        while(n > 0) {
+            //Mark old buffers as invalid so that they can be reclaimed.
+            if(lIt->valid) {
+                lIt->valid = false;
+                --n;
+                std::cout << "DropNFrames: marked 1 frame as invalid" << std::endl;
+            }
+            ++lIt;
+        }
+        grabbedBuffListMtx.lock();
+    } else {
+        PvResult lResult;
+        PvBuffer *lBuffer = NULL;
+        PvResult lOperationResult;
+        while(n > 0) {
+            lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, 0 );
+            if ( !lResult.IsOK() ) {
+                return false;
+            } else {
+                lStream->QueueBuffer( lBuffer );
+            }
+        }
+    }
+
+    return true;
+}
 
 void grab_thread_loop(GrabbedBufferList* p_buff_list, bool* quit_grab_thread, PvStream* lStream, std::mutex* plStream_mtx, std::mutex* p_buff_list_mtx)
 {
@@ -487,15 +542,6 @@ bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
 
 }
 
-int has_valid_elements(GrabbedBufferList l)
-{
-  int cnt = 0;
-  for(GrabbedBufferList::iterator lIt = l.begin(); lIt != l.end(); ++lIt) {
-      if(lIt->valid) cnt++;
-  }
-  return cnt;
-}
-
 bool PleoraVideo::GrabNext( unsigned char* image, bool wait)
 {
     pangolin::basetime start, now, last;
@@ -505,7 +551,7 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool wait)
     last = start;
     if(stand_alone_grab_thread) {
         grabbedBuffListMtx.lock();
-        int ve = has_valid_elements(lGrabbedBuffList);
+        int ve = get_num_valid_elements(lGrabbedBuffList);
         if(ve==0) {
             grabbedBuffListMtx.unlock();
             now = pangolin::TimeNow();
@@ -581,7 +627,7 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
 
     if(stand_alone_grab_thread) {
         grabbedBuffListMtx.lock();
-        int ve = has_valid_elements(lGrabbedBuffList);
+        int ve = get_num_valid_elements(lGrabbedBuffList);
         if(ve==0) {
             grabbedBuffListMtx.unlock();
             now = pangolin::TimeNow();

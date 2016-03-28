@@ -67,7 +67,7 @@ typedef std::list<GrabbedBuffer> GrabbedBufferList;
 typedef std::list<PvBuffer *> BufferList;
 
 class PANGOLIN_EXPORT PleoraVideo :
-        public VideoInterface, public VideoPropertiesInterface
+        public VideoInterface, public VideoPropertiesInterface, public BufferAwareVideoInterface
 {
 public:
 
@@ -111,6 +111,10 @@ public:
     const json::value& FrameProperties() const {
         return frame_properties;
     }
+
+    const uint32_t AvailableFrames();
+
+    const bool DropNFrames(uint32_t n);
 
 protected:
     void InitDevice(const char *model_name, const char *serial_num, size_t index);

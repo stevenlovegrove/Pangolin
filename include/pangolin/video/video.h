@@ -209,6 +209,18 @@ struct PANGOLIN_EXPORT VideoInterface
     virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
 };
 
+struct PANGOLIN_EXPORT BufferAwareVideoInterface
+{
+    virtual ~BufferAwareVideoInterface() {}
+
+    //! Returns number of available frames
+    virtual const uint32_t AvailableFrames() = 0;
+
+    //! Drops N frames in the queue starting from the oldest
+    //! returns false if less than n frames arae available
+    virtual const bool DropNFrames(uint32_t n) = 0;
+};
+
 struct PANGOLIN_EXPORT VideoPropertiesInterface
 {
     virtual ~VideoPropertiesInterface() {}
