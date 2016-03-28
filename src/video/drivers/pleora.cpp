@@ -365,7 +365,7 @@ const unsigned int PleoraVideo::AvailableFrames()
     if(stand_alone_grab_thread) {
         grabbedBuffListMtx.lock();
         uint32_t ve = get_num_valid_elements(lGrabbedBuffList);
-        grabbedBuffListMtx.lock();
+        grabbedBuffListMtx.unlock();
         return ve;
     } else {
         return lStream->GetQueuedBufferCount();
