@@ -133,9 +133,10 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
 
 PleoraVideo::PleoraVideo(
         const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
-        size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int analog_gain, double exposure, bool ext_trig, size_t analog_black_level
+        size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int analog_gain, double exposure,
+        bool ext_trig, size_t analog_black_level, bool get_temperature
 )
-    : size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0), lStreamParams(0)
+    : size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0), lTemperatureCelcius(0), getTemp(get_temperature) , lStreamParams(0)
 {
     if(ext_trig) {
         // Safe-start sequence to prevent TIMEOUT on some cameras with external triggering.
@@ -243,8 +244,10 @@ void PleoraVideo::SetDeviceParams(
     lAquisitionMode = lDeviceParams->GetEnum("AcquisitionMode");
     lTriggerSource = lDeviceParams->GetEnum("TriggerSource");
     lTriggerMode = lDeviceParams->GetEnum("TriggerMode");
-    lTemperatureCelcius = lDeviceParams->GetFloat("DeviceTemperatureCelsius");
-
+    if(getTemp) {
+        lTemperatureCelcius = lDeviceParams->GetFloat("DeviceTemperatureCelsius");
+        pango_print_warn("Warning: get_temperature might add a blocking call taking several ms to each frame read.");
+    }
     // Setup device binning
     try {
         PvGenInteger* devbinx = lDeviceParams->GetInteger("BinningHorizontal");
