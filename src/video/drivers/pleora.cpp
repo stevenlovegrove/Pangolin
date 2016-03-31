@@ -27,7 +27,6 @@
 
 #include <pangolin/video/drivers/pleora.h>
 #include <unistd.h>
-#include <pangolin/utils/timer.h>
 
 namespace pangolin
 {
@@ -133,23 +132,13 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
     }
 }
 
-
-uint32_t get_num_valid_elements(GrabbedBufferList l)
-{
-  uint32_t cnt = 0;
-  for(GrabbedBufferList::iterator lIt = l.begin(); lIt != l.end(); ++lIt) {
-      if(lIt->valid) cnt++;
-  }
-  return cnt;
-}
-
 PleoraVideo::PleoraVideo(
         const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
         size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int analog_gain, double exposure,
         bool ext_trig, size_t analog_black_level, bool use_separate_thread, bool get_temperature
     )
     : size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0), lTemperatureCelcius(0), getTemp(get_temperature),
-      lStreamParams(0), stand_alone_grab_thread(use_separate_thread), quit_grab_thread(true)
+      lStreamParams(0), stand_alone_grab_thread(use_separate_thread), quit_grab_thread(true), validGrabbedBuffers(0)
 {
     if(ext_trig) {
         // Safe-start sequence to prevent TIMEOUT on some cameras with external triggering.
@@ -345,6 +334,7 @@ void PleoraVideo::DeinitBuffers()
     for( BufferList::iterator lIt = lBufferList.begin(); lIt != lBufferList.end(); lIt++ ) {
         delete *lIt;
     }
+    lBufferList.clear();
 }
 
 void PleoraVideo::InitPangoStreams()
@@ -364,10 +354,7 @@ void PleoraVideo::InitPangoStreams()
 const unsigned int PleoraVideo::AvailableFrames()
 {
     if(stand_alone_grab_thread) {
-        grabbedBuffListMtx.lock();
-        uint32_t ve = get_num_valid_elements(lGrabbedBuffList);
-        grabbedBuffListMtx.unlock();
-        return ve;
+        return validGrabbedBuffers;
     } else {
         return lStream->GetQueuedBufferCount();
     }
@@ -384,8 +371,8 @@ const bool PleoraVideo::DropNFrames(uint32_t n)
             //Mark old buffers as invalid so that they can be reclaimed.
             if(lIt->valid) {
                 lIt->valid = false;
+                --validGrabbedBuffers;
                 --n;
-                std::cout << "DropNFrames: marked 1 frame as invalid" << std::endl;
             }
             ++lIt;
         }
@@ -408,49 +395,6 @@ const bool PleoraVideo::DropNFrames(uint32_t n)
     return true;
 }
 
-void grab_thread_loop(GrabbedBufferList* p_buff_list, bool* quit_grab_thread, PvStream* lStream, std::mutex* plStream_mtx, std::mutex* p_buff_list_mtx)
-{
-    PvResult lResult;
-    PvBuffer *lBuffer = NULL;
-    PvResult lOperationResult;
-
-    while(!*quit_grab_thread) {
-        p_buff_list_mtx->lock();
-        // housekeeping
-        GrabbedBufferList::iterator lIt =  p_buff_list->begin();
-        while(lIt != p_buff_list->end()) {
-            if(!lIt->valid) {
-                plStream_mtx->lock();
-                lStream->QueueBuffer(lIt->buff);
-                plStream_mtx->unlock();
-                lIt = p_buff_list->erase(lIt);
-                std::cout<<"-------------------> remove buff" <<std::endl;
-            } else {
-                ++lIt;
-            }
-        }
-        p_buff_list_mtx->unlock();
-
-        // Retrieve next buffer
-        plStream_mtx->lock();
-        lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, 5000);
-        plStream_mtx->unlock();
-
-        if ( !lResult.IsOK() ) {
-            if(lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT)) {
-                pango_print_warn("Pleora error: %s,\n", lResult.GetCodeString().GetAscii());
-                usleep(100000);
-            }
-        } else {
-            p_buff_list_mtx->lock();
-            p_buff_list->push_back(GrabbedBuffer(lBuffer,lOperationResult,true));
-            p_buff_list_mtx->unlock();
-        }
-        std::this_thread::yield();
-    }
-    std::cout << "Grab thread stopped" << std::endl;
-}
-
 void PleoraVideo::Start()
 {
     if(lStream->GetQueuedBufferCount() == 0) {
@@ -463,7 +407,7 @@ void PleoraVideo::Start()
 
         if(stand_alone_grab_thread) {
             quit_grab_thread = false;
-            grab_thread = std::thread(grab_thread_loop,&lGrabbedBuffList, &quit_grab_thread, lStream, &lStreamMtx, &grabbedBuffListMtx);
+            grab_thread = boostd::thread(boostd::ref(*this));
         }
     } else {
         pango_print_warn("PleoraVideo: Already started.\n");
@@ -475,9 +419,12 @@ void PleoraVideo::Stop()
     // stop grab thread
     if(stand_alone_grab_thread) {
         quit_grab_thread = true;
-        grab_thread.join();
+        if(grab_thread.joinable()) {
+           grab_thread.join();
+        }
     }
 
+    lStreamMtx.lock();
     if(lStream->GetQueuedBufferCount() > 0) {
         lStop->Execute();
         lDevice->StreamDisable();
@@ -492,6 +439,7 @@ void PleoraVideo::Stop()
     } else {
         pango_print_warn("PleoraVideo: Already stopped.\n");
     }
+    lStreamMtx.unlock();
 }
 
 size_t PleoraVideo::SizeBytes() const
@@ -506,25 +454,12 @@ const std::vector<StreamInfo>& PleoraVideo::Streams() const
 
 bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
 {
-  pangolin::basetime start;
-  pangolin::basetime end;
   if ( lBuffer->GetPayloadType() == PvPayloadTypeImage ) {
-      start = pangolin::TimeNow();
       PvImage *lImage = lBuffer->GetImage();
-      end = pangolin::TimeNow();
-      std::cout << "GetImage time: " << 1000*pangolin::TimeDiff_s(start, end) << "ms" << std::endl;
-      start = pangolin::TimeNow();
       std::memcpy(image, lImage->GetDataPointer(), size_bytes);
-      end = pangolin::TimeNow();
-      std::cout << "memcpy time: " << 1000*pangolin::TimeDiff_s(start, end) << "ms" << std::endl;
-      start = pangolin::TimeNow();
       // Required frame properties
       frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
       frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
-      end = pangolin::TimeNow();
-      std::cout << "Frame properties time: " << 1000*pangolin::TimeDiff_s(start, end) << "ms" << std::endl;
-
-      start = pangolin::TimeNow();
       // Optional frame properties
       if(lTemperatureCelcius != 0) {
           double val;
@@ -535,8 +470,6 @@ bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
               pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
           }
       }
-      end = pangolin::TimeNow();
-      std::cout << "temperature time: " << 1000*pangolin::TimeDiff_s(start, end) << "ms" << std::endl;
       return true;
   } else {
       return false;
@@ -544,79 +477,113 @@ bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
 
 }
 
+
+
+void PleoraVideo::operator()()
+{
+    PvResult lResult;
+    PvBuffer *lBuffer = NULL;
+    PvResult lOperationResult;
+
+    while(!quit_grab_thread) {
+        grabbedBuffListMtx.lock();
+        // housekeeping
+        GrabbedBufferList::iterator lIt =  lGrabbedBuffList.begin();
+        while(lIt != lGrabbedBuffList.end()) {
+            if(!lIt->valid) {
+                lStreamMtx.lock();
+                lStream->QueueBuffer(lIt->buff);
+                lStreamMtx.unlock();
+                lIt = lGrabbedBuffList.erase(lIt);
+            } else {
+                ++lIt;
+            }
+        }
+        grabbedBuffListMtx.unlock();
+
+        // Retrieve next buffer
+        lStreamMtx.lock();
+        lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, 50000);
+        lStreamMtx.unlock();
+
+        if ( !lResult.IsOK() ) {
+            if(lResult && (lResult.GetCode() == PvResult::Code::NO_MORE_ITEM)) {
+                // No more buffer left in the queue, wait a bit before retrying.
+                usleep(5000);
+            } else if(lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT)) {
+                pango_print_warn("Pleora error: %s,\n", lResult.GetCodeString().GetAscii());
+            }
+        } else {
+            grabbedBuffListMtx.lock();
+            lGrabbedBuffList.push_back(GrabbedBuffer(lBuffer,lOperationResult,true));
+            ++validGrabbedBuffers;
+            grabbedBuffListMtx.unlock();
+            cv.notify_all();
+        }
+        boostd::this_thread::yield();
+    }
+
+    grabbedBuffListMtx.lock();
+    lStreamMtx.lock();
+    // housekeeping
+    GrabbedBufferList::iterator lIt =  lGrabbedBuffList.begin();
+    while(lIt != lGrabbedBuffList.end()) {
+        lStream->QueueBuffer(lIt->buff);
+        lIt = lGrabbedBuffList.erase(lIt);
+    }
+    validGrabbedBuffers = 0;
+    lStreamMtx.unlock();
+    grabbedBuffListMtx.unlock();
+
+    return;
+}
+
 bool PleoraVideo::GrabNext( unsigned char* image, bool wait)
 {
-    pangolin::basetime start, now, last;
     const uint32_t timeout = wait ? 1000 : 0;
     bool good = false;
-    start = pangolin::TimeNow();
-    last = start;
     if(stand_alone_grab_thread) {
-        grabbedBuffListMtx.lock();
-        int ve = get_num_valid_elements(lGrabbedBuffList);
-        if(ve==0) {
-            grabbedBuffListMtx.unlock();
-            now = pangolin::TimeNow();
-            std::cout << "Empty buffer list: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-            return false;
+        if((validGrabbedBuffers==0) && !wait) {
+           return false;
         }
-        std::cout << "Grab next stand alone thread: " << ve << " frames valid, queue size " << lGrabbedBuffList.size() << " popping head" << std::endl;
+        std::unique_lock<std::mutex> lk(cv_m);
+        if((validGrabbedBuffers==0) && wait) {
+           if(cv.wait_for(lk, boostd::chrono::seconds(5)) == boostd::cv_status::timeout)
+                   throw std::runtime_error("Pleora: blocking read for frames reached timeout.");
+        }
+        grabbedBuffListMtx.lock();
 
         GrabbedBufferList::iterator front = lGrabbedBuffList.begin();
         while(!front->valid) {
             ++front;
         }
-        grabbedBuffListMtx.unlock();
-        now = pangolin::TimeNow();
-        std::cout << "Grabbing it to next frame mtx lock: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
 
         if ( front->res.IsOK() ) {
             good = ParseBuffer(front->buff, image);
         }
-        now = pangolin::TimeNow();
-        std::cout << "ParseBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
 
-        grabbedBuffListMtx.lock();
         // Flag frame as used, so that it will get released.
         front->valid = false;
+        --validGrabbedBuffers;
         grabbedBuffListMtx.unlock();
-        now = pangolin::TimeNow();
-        std::cout << "Ivalidating GrabbedBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
     } else {
         PvResult lOperationResult;
         PvBuffer *lBuffer = NULL;
-        std::cout << "Grab next: " << std::endl;
         // Retrieve next buffer
         const PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout);
         if ( !lResult.IsOK() ) {
             if(wait || (lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT))) {
                 pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
             }
-            std::cout << "not OK " << std::endl;
             return false;
         }
-        now = pangolin::TimeNow();
-        std::cout << "RetrieveBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
 
         if ( lOperationResult.IsOK() ) {
             good = ParseBuffer(lBuffer, image);
         }
-        now = pangolin::TimeNow();
-        std::cout << "ParseBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
 
         lStream->QueueBuffer( lBuffer );
-        now = pangolin::TimeNow();
-        std::cout << "QueueBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
     }
-    now = pangolin::TimeNow();
-    std::cout << "Total inner grab: " << 1000*pangolin::TimeDiff_s(start, now) << "ms" << std::endl;
-    std::cout << "good="<<good<<std::endl;
     return good;
 }
 
@@ -625,18 +592,13 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
 {
     const uint32_t timeout = wait ? 0xFFFFFFFF : 0;
     bool good = false;
-    pangolin::basetime start,last,now;
 
     if(stand_alone_grab_thread) {
         grabbedBuffListMtx.lock();
-        int ve = get_num_valid_elements(lGrabbedBuffList);
-        if(ve==0) {
+        if(validGrabbedBuffers==0) {
             grabbedBuffListMtx.unlock();
-            now = pangolin::TimeNow();
-            std::cout << "Empty buffer list: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
             return false;
         }
-        std::cout << "Grab newest stand alone thread: " << ve << " valid frames in queue queue sieze " << lGrabbedBuffList.size() << std::endl;
 
         GrabbedBufferList::iterator lItOneButLast = lGrabbedBuffList.end();
         --lItOneButLast;
@@ -644,46 +606,32 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
             //Mark old buffers as invalid so that they can be reclaimed.
             if(lIt->valid) {
                 lIt->valid = false;
-                std::cout << "marked 1 frame as invalid" << std::endl;
+                --validGrabbedBuffers;
             }
         }
-        now = pangolin::TimeNow();
-        std::cout << "Flagging old frames as invalid: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
-
         GrabbedBufferList::iterator newest = --(lGrabbedBuffList.end());
-        grabbedBuffListMtx.unlock();
 
         if ( newest->res.IsOK() ) {
             good = ParseBuffer(newest->buff, image);
         }
-        now = pangolin::TimeNow();
-        std::cout << "ParseBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
-        grabbedBuffListMtx.lock();
         // Flag frame as used, so that it will get released.
         newest->valid = false;
+        --validGrabbedBuffers;
         grabbedBuffListMtx.unlock();
-        now = pangolin::TimeNow();
-        std::cout << "Ivalidating GrabbedBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
     } else {
         PvBuffer *lBuffer0 = NULL;
         PvBuffer *lBuffer = NULL;
         PvResult lOperationResult;
-        std::cout << "Grab newest: " << std::endl;
 
         PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout );
         if ( !lResult.IsOK() ) {
             if(wait || (lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT))) {
                 pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
             }
-            std::cout << "Not Ok" << std::endl;
             return false;
         } else if( !lOperationResult.IsOK() ) {
             pango_print_warn("Pleora error: %s,\n'%s'\n", lOperationResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
             lStream->QueueBuffer( lBuffer );
-            std::cout << "Pleora Error" << std::endl;
             return false;
         }
 
@@ -700,23 +648,10 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
                 lBuffer = lBuffer0;
             }
         }
-        now = pangolin::TimeNow();
-        std::cout << "RetrieveBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
-
         good = ParseBuffer(lBuffer, image);
-        now = pangolin::TimeNow();
-        std::cout << "ParseBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
 
         lStream->QueueBuffer( lBuffer );
-        now = pangolin::TimeNow();
-        std::cout << "QueueBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
     }
-    now = pangolin::TimeNow();
-    std::cout << "Total inner grab: " << 1000*pangolin::TimeDiff_s(start, now) << "ms" << std::endl;
-    std::cout << "good="<<good<<std::endl;
     return good;
 }
 
@@ -771,8 +706,6 @@ void PleoraVideo::SetExposure(double val)
     }
 }
 
-//use 0,0,1 for line0 hardware trigger.
-//use 2,252,0 for software continuous
 void PleoraVideo::SetupTrigger(bool triggerActive, int64_t triggerSource, int64_t acquisitionMode)
 {
     if(lAquisitionMode && lTriggerSource && lTriggerMode &&

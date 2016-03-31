@@ -84,8 +84,9 @@ bool VideoJoiner::Sync(int64_t tolerance_us, bool continuous)
     for(size_t s=0; s< src.size(); ++s)
     {
        VideoPropertiesInterface* vpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
-       if(!vpi)
+       if(!vpi) {
          return false;
+       }
     }
     sync_attempts_to_go = MAX_SYNC_ATTEMPTS;
     sync_tolerance_us = tolerance_us;
@@ -100,11 +101,13 @@ bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
     std::vector<int64_t> reception_times;
     int64_t newest = std::numeric_limits<int64_t>::min();
     int64_t oldest = std::numeric_limits<int64_t>::max();
-    bool grabbed_any = false;
+    int grabbed_all = src.size();
 
     for(size_t s=0; s<src.size(); ++s) {
        VideoInterface& vid = *src[s];
-       grabbed_any |= vid.GrabNext(image+offset,wait);
+       if(vid.GrabNext(image+offset,wait)) {
+           --grabbed_all;
+       }
        offsets.push_back(offset);
        offset += vid.SizeBytes();
        if(sync_attempts_to_go >= 0) {
@@ -121,24 +124,29 @@ bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
        }
     }
 
+    if(grabbed_all != 0){
+       pango_print_error("GrabNext with wait true should always return a frame %d!\n", grabbed_all);
+    }
+
     if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
        pango_print_warn("Join error, unable to sync streams within %lu us\n", (unsigned long)sync_tolerance_us);
     }
 
-    if(sync_attempts_to_go >= 0) {
+    if((sync_attempts_to_go >= 0)) {
        for(size_t s=0; s<src.size(); ++s) {
           if(reception_times[s] < (newest - sync_tolerance_us)) {
              VideoInterface& vid = *src[s];
-             vid.GrabNewest(image+offsets[s],false);
+             vid.GrabNext(image+offsets[s],false);
           }
        }
        if(!sync_continuously) --sync_attempts_to_go;
     }
 
-    return grabbed_any;
+    return (grabbed_all == 0);
 }
 
-bool AllInterfacesAreBufferAware(std::vector<VideoInterface*>& src){
+bool AllInterfacesAreBufferAware(std::vector<VideoInterface*>& src)
+{
   for(size_t s=0; s<src.size(); ++s) {
       if(!dynamic_cast<BufferAwareVideoInterface*>(src[s])) return false;
   }
@@ -150,22 +158,22 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
 
   if(AllInterfacesAreBufferAware(src)) {
      uint32_t minN = std::numeric_limits<uint32_t>::max();
-     //Find smalles number of frames it is safe to drop.
+     //Find smallest number of frames it is safe to drop.
      for(size_t s=0; s<src.size(); ++s) {
          auto bai = dynamic_cast<BufferAwareVideoInterface*>(src[s]);
-         minN = std::min(bai->AvailableFrames(), minN);
+         unsigned int n = bai->AvailableFrames();
+         minN = std::min(n, minN);
      }
      //Safely drop minN-1 frames on each interface.
      if(minN > 1) {
          for(size_t s=0; s<src.size(); ++s) {
              auto bai = dynamic_cast<BufferAwareVideoInterface*>(src[s]);
              if(!bai->DropNFrames(minN - 1)) {
-                 pango_print_error("Stream %lu did not drop %u frames altough available.\n", s, minN);
+                 pango_print_error("Stream %lu did not drop %u frames altough available.\n", s, (minN-1));
                  return false;
              }
          }
      }
-     //GrabNext on each interface.
      return GrabNext(image, wait);
   } else {
       // Simply calling GrabNewest on the child streams might cause loss of sync,
@@ -226,7 +234,6 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
               if(oldest > rt) oldest = rt;
           }
       }
-
       if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
           pango_print_warn("Join error, unable to sync streams within %lu us\n", (unsigned long)sync_tolerance_us);
       }
@@ -240,6 +247,7 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
           }
           if(!sync_continuously) --sync_attempts_to_go;
       }
+
       return grabbed_any;
   }
 

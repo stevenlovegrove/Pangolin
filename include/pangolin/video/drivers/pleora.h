@@ -43,8 +43,9 @@
 
 #include <stdlib.h>
 #include <list>
-#include <thread>
-#include <mutex>
+#include <pangolin/compat/thread.h>
+#include <pangolin/compat/mutex.h>
+#include <pangolin/compat/condition_variable.h>
 
 namespace pangolin
 {
@@ -116,6 +117,7 @@ public:
 
     const bool DropNFrames(uint32_t n);
 
+    void operator()();
 protected:
     void InitDevice(const char *model_name, const char *serial_num, size_t index);
     void DeinitDevice();
@@ -149,6 +151,7 @@ protected:
 
     bool ParseBuffer(PvBuffer* lBuffer,  unsigned char* image);
 
+
     std::vector<StreamInfo> streams;
     json::value device_properties;
     json::value frame_properties;
@@ -180,11 +183,15 @@ protected:
 
     BufferList lBufferList;
     bool stand_alone_grab_thread;
-    std::thread grab_thread;
     bool quit_grab_thread;
     GrabbedBufferList lGrabbedBuffList;
-    std::mutex lStreamMtx;
-    std::mutex grabbedBuffListMtx;
+    uint32_t validGrabbedBuffers;
+
+    boostd::mutex lStreamMtx;
+    boostd::mutex grabbedBuffListMtx;
+    boostd::condition_variable cv;
+    boostd::thread grab_thread;
+    std::mutex cv_m;
 };
 
 }
