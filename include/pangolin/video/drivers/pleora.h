@@ -151,6 +151,7 @@ protected:
 
     bool ParseBuffer(PvBuffer* lBuffer,  unsigned char* image);
 
+    void RetriveAllAvailableBuffers(uint32_t timeout);
 
     std::vector<StreamInfo> streams;
     json::value device_properties;

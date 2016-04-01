@@ -28,6 +28,17 @@
 #include <pangolin/video/drivers/pleora.h>
 #include <unistd.h>
 
+#ifdef DEBUGPLEORA
+  #include <pangolin/utils/timer.h>
+  #define TSTART() pangolin::basetime start,last,now; start = pangolin::TimeNow(); last = start;
+  #define TGRABANDPRINT(...)  now = pangolin::TimeNow(); fprintf(stderr,"  PLEORA: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr, " %fms.\n",1000*pangolin::TimeDiff_s(last, now)); last = now;
+  #define DBGPRINT(...) fprintf(stderr,"  PLEORA: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr,"\n");
+#else
+  #define TSTART()
+  #define TGRABANDPRINT(...)
+  #define DBGPRINT(...)
+#endif
+
 namespace pangolin
 {
 
@@ -353,16 +364,12 @@ void PleoraVideo::InitPangoStreams()
 
 const unsigned int PleoraVideo::AvailableFrames()
 {
-    if(stand_alone_grab_thread) {
-        return validGrabbedBuffers;
-    } else {
-        return lStream->GetQueuedBufferCount();
-    }
+    return validGrabbedBuffers;
 }
 
 const bool PleoraVideo::DropNFrames(uint32_t n)
 {
-    if(n > AvailableFrames()) return false;
+    if(n > validGrabbedBuffers) return false;
 
     if(stand_alone_grab_thread) {
         grabbedBuffListMtx.lock();
@@ -373,22 +380,18 @@ const bool PleoraVideo::DropNFrames(uint32_t n)
                 lIt->valid = false;
                 --validGrabbedBuffers;
                 --n;
+                DBGPRINT("DropNFrames: marked 1 frame as invalid.")
             }
             ++lIt;
         }
         grabbedBuffListMtx.unlock();
     } else {
-        PvResult lResult;
-        PvBuffer *lBuffer = NULL;
-        PvResult lOperationResult;
         while(n > 0) {
-            lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, 0 );
-            if ( !lResult.IsOK() ) {
-                return false;
-            } else {
-                lStream->QueueBuffer( lBuffer );
-            }
+            lStream->QueueBuffer(lGrabbedBuffList.front().buff);
+            lGrabbedBuffList.pop_front();
+            --validGrabbedBuffers;
             --n;
+            DBGPRINT("DropNFrames: removed 1 frame from the list and requeued it.")
         }
     }
 
@@ -454,12 +457,17 @@ const std::vector<StreamInfo>& PleoraVideo::Streams() const
 
 bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
 {
+  TSTART()
   if ( lBuffer->GetPayloadType() == PvPayloadTypeImage ) {
       PvImage *lImage = lBuffer->GetImage();
+      TGRABANDPRINT("GetImage took ")
       std::memcpy(image, lImage->GetDataPointer(), size_bytes);
+      TGRABANDPRINT("memcpy took ")
       // Required frame properties
       frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
       frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
+      TGRABANDPRINT("Frame properties took ")
+
       // Optional frame properties
       if(lTemperatureCelcius != 0) {
           double val;
@@ -470,6 +478,7 @@ bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
               pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
           }
       }
+      TGRABANDPRINT("GetTemperature took ")
       return true;
   } else {
       return false;
@@ -477,14 +486,13 @@ bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
 
 }
 
-
-
 void PleoraVideo::operator()()
 {
     PvResult lResult;
     PvBuffer *lBuffer = NULL;
     PvResult lOperationResult;
 
+    DBGPRINT("GRABTHREAD: Started.")
     while(!quit_grab_thread) {
         grabbedBuffListMtx.lock();
         // housekeeping
@@ -495,6 +503,7 @@ void PleoraVideo::operator()()
                 lStream->QueueBuffer(lIt->buff);
                 lStreamMtx.unlock();
                 lIt = lGrabbedBuffList.erase(lIt);
+                DBGPRINT("GRABTHREAD: Requeued buffer.")
             } else {
                 ++lIt;
             }
@@ -535,6 +544,8 @@ void PleoraVideo::operator()()
     lStreamMtx.unlock();
     grabbedBuffListMtx.unlock();
 
+    DBGPRINT("GRABTHREAD: Stopped.")
+
     return;
 }
 
@@ -542,47 +553,61 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool wait)
 {
     const uint32_t timeout = wait ? 1000 : 0;
     bool good = false;
+    TSTART()
     if(stand_alone_grab_thread) {
+        DBGPRINT("GrabNext stand alone thread:")
         if((validGrabbedBuffers==0) && !wait) {
-           return false;
+            DBGPRINT("Empty buffer list.")
+            return false;
         }
-        std::unique_lock<std::mutex> lk(cv_m);
         if((validGrabbedBuffers==0) && wait) {
-           if(cv.wait_for(lk, boostd::chrono::seconds(5)) == boostd::cv_status::timeout)
-                   throw std::runtime_error("Pleora: blocking read for frames reached timeout.");
+            std::unique_lock<std::mutex> lk(cv_m);
+            if(cv.wait_for(lk, boostd::chrono::seconds(5)) == boostd::cv_status::timeout)
+                throw std::runtime_error("Pleora: blocking read for frames reached timeout.");
         }
-        grabbedBuffListMtx.lock();
+        TGRABANDPRINT("Waiting for having at least 1 valid buffer took ")
 
+        grabbedBuffListMtx.lock();
+        DBGPRINT("%d frames valid, queue size %ld popping head",validGrabbedBuffers ,lGrabbedBuffList.size());
         GrabbedBufferList::iterator front = lGrabbedBuffList.begin();
         while(!front->valid) {
             ++front;
         }
+        TGRABANDPRINT("Grabbing iterator to next frame (mtx lock) took ")
 
         if ( front->res.IsOK() ) {
             good = ParseBuffer(front->buff, image);
         }
+        TGRABANDPRINT("ParseBuffer (good=%d) took ",good)
 
         // Flag frame as used, so that it will get released.
         front->valid = false;
         --validGrabbedBuffers;
         grabbedBuffListMtx.unlock();
+        TGRABANDPRINT("Invalidating returned buffer took ")
     } else {
-        PvResult lOperationResult;
-        PvBuffer *lBuffer = NULL;
-        // Retrieve next buffer
-        const PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout);
-        if ( !lResult.IsOK() ) {
-            if(wait || (lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT))) {
-                pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
-            }
-            return false;
-        }
+        DBGPRINT("GrabNext no thread:")
 
-        if ( lOperationResult.IsOK() ) {
-            good = ParseBuffer(lBuffer, image);
-        }
+        RetriveAllAvailableBuffers((validGrabbedBuffers==0) ? timeout : 0);
+        TGRABANDPRINT("Retriving all available buffers (valid frames in queue=%d, queue size=%ld) took ",validGrabbedBuffers ,lGrabbedBuffList.size())
 
-        lStream->QueueBuffer( lBuffer );
+        if(validGrabbedBuffers == 0) return false;
+
+        // Retrieve next buffer from list and parse it
+        GrabbedBufferList::iterator front = lGrabbedBuffList.begin();
+        if ( front->res.IsOK() ) {
+            good = ParseBuffer(front->buff, image);
+        }
+        TGRABANDPRINT("Parsing buffer took ")
+
+        lStream->QueueBuffer(front->buff);
+        now = pangolin::TimeNow();
+        std::cout << "\tPLEORA:QueueBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
+        last = now;
+
+        // Remove used buffer from list.
+        lGrabbedBuffList.pop_front();
+        --validGrabbedBuffers;
     }
     return good;
 }
@@ -593,12 +618,16 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
     const uint32_t timeout = wait ? 0xFFFFFFFF : 0;
     bool good = false;
 
+    TSTART()
     if(stand_alone_grab_thread) {
+        DBGPRINT("GrabNewest stand alone thread:")
         grabbedBuffListMtx.lock();
         if(validGrabbedBuffers==0) {
             grabbedBuffListMtx.unlock();
+            DBGPRINT("Empty buffer list, returning")
             return false;
         }
+        DBGPRINT("(valid frames in queue=%d, queue size=%ld)",validGrabbedBuffers ,lGrabbedBuffList.size())
 
         GrabbedBufferList::iterator lItOneButLast = lGrabbedBuffList.end();
         --lItOneButLast;
@@ -607,52 +636,73 @@ bool PleoraVideo::GrabNewest( unsigned char* image, bool wait )
             if(lIt->valid) {
                 lIt->valid = false;
                 --validGrabbedBuffers;
+                DBGPRINT("marked 1 frame as invalid")
             }
         }
-        GrabbedBufferList::iterator newest = --(lGrabbedBuffList.end());
+        TGRABANDPRINT("Flagging old frames as invalid took ")
 
+        GrabbedBufferList::iterator newest = --(lGrabbedBuffList.end());
         if ( newest->res.IsOK() ) {
             good = ParseBuffer(newest->buff, image);
         }
+        TGRABANDPRINT("Parsing buffer took ")
+
         // Flag frame as used, so that it will get released.
         newest->valid = false;
         --validGrabbedBuffers;
         grabbedBuffListMtx.unlock();
+        TGRABANDPRINT("Invalidating returned buffer took ")
     } else {
-        PvBuffer *lBuffer0 = NULL;
-        PvBuffer *lBuffer = NULL;
-        PvResult lOperationResult;
+        DBGPRINT("GrabNewest no thread:")
+        RetriveAllAvailableBuffers((validGrabbedBuffers==0) ? timeout : 0);
+        TGRABANDPRINT("Retriving all available buffers (valid frames in queue=%d, queue size=%ld) took ",validGrabbedBuffers ,lGrabbedBuffList.size())
 
-        PvResult lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout );
-        if ( !lResult.IsOK() ) {
-            if(wait || (lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT))) {
-                pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
-            }
-            return false;
-        } else if( !lOperationResult.IsOK() ) {
-            pango_print_warn("Pleora error: %s,\n'%s'\n", lOperationResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
-            lStream->QueueBuffer( lBuffer );
+        if(validGrabbedBuffers == 0) {
+            DBGPRINT("No valid buffers, returning.")
             return false;
         }
+        if(validGrabbedBuffers > 1) DropNFrames(validGrabbedBuffers-1);
+        TGRABANDPRINT("Dropping %d frames took ", (validGrabbedBuffers-1))
 
-        // We have at least one frame. Capture more until we fail, 0 timeout
-        while(true) {
-            PvResult lResult = lStream->RetrieveBuffer( &lBuffer0, &lOperationResult, 0 );
-            if ( !lResult.IsOK() ) {
-                break;
-            } else if( !lOperationResult.IsOK() ) {
-                lStream->QueueBuffer( lBuffer0 );
-                break;
-            } else {
-                lStream->QueueBuffer( lBuffer );
-                lBuffer = lBuffer0;
-            }
+        // Retrieve next buffer from list and parse it
+        GrabbedBufferList::iterator front = lGrabbedBuffList.begin();
+        if ( front->res.IsOK() ) {
+            good = ParseBuffer(front->buff, image);
         }
-        good = ParseBuffer(lBuffer, image);
+        TGRABANDPRINT("Parsing buffer took ")
 
-        lStream->QueueBuffer( lBuffer );
+        lStream->QueueBuffer(front->buff);
+        TGRABANDPRINT("Requeueing buffer took ")
+
+        // Remove used buffer from list.
+        lGrabbedBuffList.pop_front();
+        --validGrabbedBuffers;
     }
     return good;
+}
+
+void PleoraVideo::RetriveAllAvailableBuffers(uint32_t timeout){
+    PvBuffer *lBuffer = NULL;
+    PvResult lOperationResult;
+    PvResult lResult;
+    TSTART()
+    do {
+        lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, timeout);
+        if ( !lResult.IsOK() ) {
+            if(lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT)) {
+                pango_print_warn("Pleora error: %s,\n'%s'\n", lResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
+            }
+            return;
+        } else if( !lOperationResult.IsOK() ) {
+            pango_print_warn("Pleora error %s,\n'%s'\n", lOperationResult.GetCodeString().GetAscii(), lResult.GetDescription().GetAscii() );
+            lStream->QueueBuffer( lBuffer );
+            return;
+        }
+        lGrabbedBuffList.push_back(GrabbedBuffer(lBuffer,lOperationResult,true));
+        ++validGrabbedBuffers;
+        TGRABANDPRINT("Attempt retrieving buffer (timeout=%d validbuffer=%d) took ", timeout, validGrabbedBuffers)
+        timeout = 0;
+    } while (lResult.IsOK());
 }
 
 int64_t PleoraVideo::GetGain()
@@ -706,6 +756,8 @@ void PleoraVideo::SetExposure(double val)
     }
 }
 
+//use 0,0,1 for line0 hardware trigger.
+//use 2,252,0 for software continuous
 void PleoraVideo::SetupTrigger(bool triggerActive, int64_t triggerSource, int64_t acquisitionMode)
 {
     if(lAquisitionMode && lTriggerSource && lTriggerMode &&
@@ -754,3 +806,7 @@ bool PleoraVideo::SetStreamParam(const char* name, T val)
 }
 
 }
+
+#undef TSTART
+#undef TGRABANDPRINT
+#undef DBGPRINT
