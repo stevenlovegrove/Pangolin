@@ -342,6 +342,8 @@ void OpenNiVideo2::SetupStreamModes()
         streams.push_back(stream);
     }
 
+    SetRegisterDepthToImage(depth_to_color);
+
     use_ir_and_rgb = use_rgb && use_ir;
 }
 
