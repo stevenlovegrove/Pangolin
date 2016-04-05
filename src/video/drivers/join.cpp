@@ -27,6 +27,17 @@
 
 #include <pangolin/video/drivers/join.h>
 
+#ifdef DEBUGJOIN
+  #include <pangolin/utils/timer.h>
+  #define TSTART() pangolin::basetime start,last,now; start = pangolin::TimeNow(); last = start;
+  #define TGRABANDPRINT(...)  now = pangolin::TimeNow(); fprintf(stderr,"JOIN: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr, " %fms.\n",1000*pangolin::TimeDiff_s(last, now)); last = now;
+  #define DBGPRINT(...) fprintf(stderr,"JOIN: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr,"\n");
+#else
+  #define TSTART()
+  #define TGRABANDPRINT(...)
+  #define DBGPRINT(...)
+#endif
+
 namespace pangolin
 {
 VideoJoiner::VideoJoiner(const std::vector<VideoInterface*>& src)
@@ -84,8 +95,9 @@ bool VideoJoiner::Sync(int64_t tolerance_us, bool continuous)
     for(size_t s=0; s< src.size(); ++s)
     {
        VideoPropertiesInterface* vpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
-       if(!vpi)
+       if(!vpi) {
          return false;
+       }
     }
     sync_attempts_to_go = MAX_SYNC_ATTEMPTS;
     sync_tolerance_us = tolerance_us;
@@ -95,126 +107,212 @@ bool VideoJoiner::Sync(int64_t tolerance_us, bool continuous)
 
 bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
 {
+    int64_t rt = 0;
     size_t offset = 0;
     std::vector<size_t> offsets;
     std::vector<int64_t> reception_times;
     int64_t newest = std::numeric_limits<int64_t>::min();
     int64_t oldest = std::numeric_limits<int64_t>::max();
-    bool grabbed_any = false;
+    int grabbed_all = src.size();
 
+    TSTART()
+    DBGPRINT("Entering GrabNext:")
     for(size_t s=0; s<src.size(); ++s) {
-       VideoInterface& vid = *src[s];
-       grabbed_any |= vid.GrabNext(image+offset,wait);
-       offsets.push_back(offset);
-       offset += vid.SizeBytes();
-       if(sync_attempts_to_go >= 0) {
-          VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
-          if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
-             int64_t rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
-             reception_times.push_back(rt);
-             if(newest < rt) newest = rt;
-             if(oldest > rt) oldest = rt;
-          } else {
-             sync_attempts_to_go = -1;
-             pango_print_error("Stream %lu in join does not support startup_sync_us option.\n", s);
-          }
-       }
+        VideoInterface& vid = *src[s];
+        if(vid.GrabNext(image+offset,wait)) {
+            --grabbed_all;
+        }
+        offsets.push_back(offset);
+        offset += vid.SizeBytes();
+        if(sync_attempts_to_go >= 0) {
+           VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
+           if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
+               rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
+               reception_times.push_back(rt);
+               if(newest < rt) newest = rt;
+               if(oldest > rt) oldest = rt;
+           } else {
+               sync_attempts_to_go = -1;
+               pango_print_error("Stream %lu in join does not support startup_sync_us option.\n", s);
+               throw std::runtime_error("Grab next stream does not support startup_sync_us option.\n");
+           }
+        }
+        TGRABANDPRINT("Stream %ld grab took ",s)
+    }
+
+    if(grabbed_all != 0){
+        if(wait==0) {
+            return false;
+        } else {
+            pango_print_error("GrabNext with wait true should always return a frame %d!\n", grabbed_all);
+        }
     }
 
     if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
-       pango_print_warn("Join error, unable to sync streams within %lu us\n", (unsigned long)sync_tolerance_us);
+        pango_print_warn("Join error, unable to sync streams within %lu us\n", (unsigned long)sync_tolerance_us);
     }
 
     if(sync_attempts_to_go >= 0) {
-       for(size_t s=0; s<src.size(); ++s) {
-          if(reception_times[s] < (newest - sync_tolerance_us)) {
-             VideoInterface& vid = *src[s];
-             vid.GrabNewest(image+offsets[s],false);
-          }
-       }
-       if(!sync_continuously) --sync_attempts_to_go;
+        for(size_t n=0; n<10; ++n){
+            for(size_t s=0; s<src.size(); ++s) {
+                if(reception_times[s] < (newest - sync_tolerance_us)) {
+                    VideoInterface& vid = *src[s];
+                    if(vid.GrabNewest(image+offsets[s],false)) {
+                        VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
+                        if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
+                            rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
+                        }
+                        if(newest < rt) newest = rt;
+                        if(oldest > rt) oldest = rt;
+                        reception_times[s] = rt;
+                    }
+                }
+            }
+        }
+        if(!sync_continuously) --sync_attempts_to_go;
     }
 
-    return grabbed_any;
+    if((newest - oldest) > sync_tolerance_us ) {
+        TGRABANDPRINT("NOT IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest)
+    } else {
+        TGRABANDPRINT("    IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest)
+    }
+
+    return true;
+}
+
+bool AllInterfacesAreBufferAware(std::vector<VideoInterface*>& src){
+  for(size_t s=0; s<src.size(); ++s) {
+      if(!dynamic_cast<BufferAwareVideoInterface*>(src[s])) return false;
+  }
+  return true;
 }
 
 bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
 {
-  // Simply calling GrabNewest on the child streams might cause loss of sync,
-  // instead we perform as many GrabNext as possible on the first stream and
-  // then pull the same number of frames from every other stream.
+  TSTART()
+  DBGPRINT("Entering GrabNewest:");
+  if(AllInterfacesAreBufferAware(src)) {
+     DBGPRINT("All interfaces are BufferAwareVideoInterface.")
+     uint32_t minN = std::numeric_limits<uint32_t>::max();
+     //Find smallest number of frames it is safe to drop.
+     for(size_t s=0; s<src.size(); ++s) {
+         auto bai = dynamic_cast<BufferAwareVideoInterface*>(src[s]);
+         unsigned int n = bai->AvailableFrames();
+         minN = std::min(n, minN);
+         DBGPRINT("Interface %ld has %u frames available.",s ,n)
+     }
+     TGRABANDPRINT("Quering avalable frames took ")
+     DBGPRINT("Safe number of buffers to drop: %d.",((minN > 1) ? (minN-1) : 0));
 
-  size_t offset = 0;
-  std::vector<size_t> offsets;
-  std::vector<int64_t> reception_times;
-  int64_t newest = std::numeric_limits<int64_t>::min();
-  int64_t oldest = std::numeric_limits<int64_t>::max();
-  bool grabbed_any = false;
-  int first_stream_backlog = 0;
-  int64_t rt = 0;
+     //Safely drop minN-1 frames on each interface.
+     if(minN > 1) {
+         for(size_t s=0; s<src.size(); ++s) {
+             auto bai = dynamic_cast<BufferAwareVideoInterface*>(src[s]);
+             if(!bai->DropNFrames(minN - 1)) {
+                 pango_print_error("Stream %lu did not drop %u frames altough available.\n", s, (minN-1));
+                 return false;
+             }
+         }
+         TGRABANDPRINT("Dropping %d frames on each interface took ",(minN -1));
+     }
+     return GrabNext(image, wait);
+  } else {
+      DBGPRINT("NOT all interfaces are BufferAwareVideoInterface.")
+      // Simply calling GrabNewest on the child streams might cause loss of sync,
+      // instead we perform as many GrabNext as possible on the first stream and
+      // then pull the same number of frames from every other stream.
+      size_t offset = 0;
+      std::vector<size_t> offsets;
+      std::vector<int64_t> reception_times;
+      int64_t newest = std::numeric_limits<int64_t>::min();
+      int64_t oldest = std::numeric_limits<int64_t>::max();
+      bool grabbed_any = false;
+      int first_stream_backlog = 0;
+      int64_t rt = 0;
+      bool got_frame = false;
 
-  bool got_frame = false;
-  do {
-      got_frame = src[0]->GrabNext(image+offset,false);
-      if(got_frame) {
-          if(sync_attempts_to_go >= 0) {
-              VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[0]);
-              if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
-                  rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
-              } else {
-                  sync_attempts_to_go = -1;
-                  pango_print_error("Stream %u in join does not support startup_sync_us option.\n", 0);
+      do {
+          got_frame = src[0]->GrabNext(image+offset,false);
+          if(got_frame) {
+              if(sync_attempts_to_go >= 0) {
+                  VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[0]);
+                  if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
+                      rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
+                  } else {
+                      sync_attempts_to_go = -1;
+                      pango_print_error("Stream %u in join does not support startup_sync_us option.\n", 0);
+                      throw std::runtime_error("Grab newest stream in join does not support startup_sync_us option.\n");
+                  }
               }
+              first_stream_backlog++;
+              grabbed_any = true;
           }
-          first_stream_backlog++;
-          grabbed_any = true;
-      }
-  } while(got_frame);
-  offsets.push_back(offset);
-  offset += src[0]->SizeBytes();
-  if(sync_attempts_to_go >= 0) {
-      reception_times.push_back(rt);
-      if(newest < rt) newest = rt;
-      if(oldest > rt) oldest = rt;
-  }
-
-  for(size_t s=1; s<src.size(); ++s) {
-      for (int i=0; i<first_stream_backlog; i++){
-          grabbed_any |= src[s]->GrabNext(image+offset,true);
-          if(sync_attempts_to_go >= 0) {
-              VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
-              if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
-                  rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
-              } else {
-                  sync_attempts_to_go = -1;
-                  pango_print_error("Stream %lu in join does not support startup_sync_us option.\n", s);
-              }
-          }
-      }
+      } while(got_frame);
       offsets.push_back(offset);
-      offset += src[s]->SizeBytes();
+      offset += src[0]->SizeBytes();
       if(sync_attempts_to_go >= 0) {
           reception_times.push_back(rt);
           if(newest < rt) newest = rt;
           if(oldest > rt) oldest = rt;
       }
+      TGRABANDPRINT("Stream 0 grab took ");
+
+      for(size_t s=1; s<src.size(); ++s) {
+          for (int i=0; i<first_stream_backlog; i++){
+              grabbed_any |= src[s]->GrabNext(image+offset,true);
+              if(sync_attempts_to_go >= 0) {
+                  VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
+                  if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
+                      rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
+                  } else {
+                      sync_attempts_to_go = -1;
+                      pango_print_error("Stream %lu in join does not support startup_sync_us option.\n", s);
+                  }
+              }
+          }
+          offsets.push_back(offset);
+          offset += src[s]->SizeBytes();
+          if(sync_attempts_to_go >= 0) {
+              reception_times.push_back(rt);
+              if(newest < rt) newest = rt;
+              if(oldest > rt) oldest = rt;
+          }
+      }
+      TGRABANDPRINT("Stream >=1 grab took ");
+
+      if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
+          pango_print_warn("Join error, unable to sync streams within %lu us\n", (unsigned long)sync_tolerance_us);
+      }
+
+      if(sync_attempts_to_go >= 0) {
+          for(size_t n=0; n<10; ++n){
+              for(size_t s=0; s<src.size(); ++s) {
+                  if(reception_times[s] < (newest - sync_tolerance_us)) {
+                      VideoInterface& vid = *src[s];
+                      if(vid.GrabNewest(image+offsets[s],false)) {
+                          VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
+                          if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
+                              rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
+                          }
+                          if(newest < rt) newest = rt;
+                          if(oldest > rt) oldest = rt;
+                          reception_times[s] = rt;
+                      }
+                  }
+              }
+          }
+          if(!sync_continuously) --sync_attempts_to_go;
+      }
+      if((newest - oldest) > sync_tolerance_us ) {
+          TGRABANDPRINT("NOT IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest)
+      } else {
+          TGRABANDPRINT("    IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest)
+      }
+
+      return grabbed_any;
   }
 
-  if((sync_continuously || (sync_attempts_to_go == 0)) && ((newest - oldest) > sync_tolerance_us) ){
-     pango_print_warn("Join error, unable to sync streams within %lu us\n", (unsigned long)sync_tolerance_us);
-  }
-
-  if(sync_attempts_to_go >= 0) {
-     for(size_t s=0; s<src.size(); ++s) {
-        if(reception_times[s] < (newest - sync_tolerance_us)) {
-           VideoInterface& vid = *src[s];
-           vid.GrabNewest(image+offsets[s],false);
-        }
-     }
-     if(!sync_continuously) --sync_attempts_to_go;
-  }
-
-  return grabbed_any;
 }
 
 std::vector<VideoInterface*>& VideoJoiner::InputStreams()
@@ -223,3 +321,7 @@ std::vector<VideoInterface*>& VideoJoiner::InputStreams()
 }
 
 }
+
+#undef TSTART
+#undef TGRABANDPRINT
+#undef DBGPRINT

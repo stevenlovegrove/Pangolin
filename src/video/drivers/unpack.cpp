@@ -27,6 +27,17 @@
 
 #include <pangolin/video/drivers/unpack.h>
 
+#ifdef DEBUGJOIN
+  #include <pangolin/utils/timer.h>
+  #define TSTART() pangolin::basetime start,last,now; start = pangolin::TimeNow(); last = start;
+  #define TGRABANDPRINT(...)  now = pangolin::TimeNow(); fprintf(stderr,"UNPACK: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr, " %fms.\n",1000*pangolin::TimeDiff_s(last, now)); last = now;
+  #define DBGPRINT(...) fprintf(stderr,"UNPACK: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr,"\n");
+#else
+  #define TSTART()
+  #define TGRABANDPRINT(...)
+  #define DBGPRINT(...)
+#endif
+
 namespace pangolin
 {
 
@@ -152,6 +163,7 @@ void ConvertFrom12bit(
 
 void UnpackVideo::Process(unsigned char* image, const unsigned char* buffer)
 {
+    TSTART()
     for(size_t s=0; s<streams.size(); ++s) {
         const Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
         Image<unsigned char> img_out = Streams()[s].StreamImage(image);
@@ -181,6 +193,7 @@ void UnpackVideo::Process(unsigned char* image, const unsigned char* buffer)
         }else{
         }
     }
+    TGRABANDPRINT("Unpacking took ")
 }
 
 //! Implement VideoInput::GrabNext()
@@ -224,3 +237,7 @@ const json::value& UnpackVideo::FrameProperties() const
 
 
 }
+
+#undef TSTART
+#undef TGRABANDPRINT
+#undef DBGPRINT

@@ -82,7 +82,7 @@
 //  e.g. "depthsense:[img1=depth,img2=rgb]//"
 //
 // pleora - USB 3 vision cameras
-//  e.g. "pleora:[bpp=10,size=512x256,pos=712x512,again=1,sn=00000274,exposure=3000,eTrig=true,buffers=10]//"
+//  e.g. "pleora:[use_seprate_thread=true,bpp=10,size=512x256,pos=712x512,again=1,sn=00000274,exposure=3000,eTrig=true,buffers=10]//"
 //
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
@@ -207,6 +207,18 @@ struct PANGOLIN_EXPORT VideoInterface
     //! Optionally wait for a frame if one isn't ready
     //! Returns true iff image was copied
     virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
+};
+
+struct PANGOLIN_EXPORT BufferAwareVideoInterface
+{
+    virtual ~BufferAwareVideoInterface() {}
+
+    //! Returns number of available frames
+    virtual const uint32_t AvailableFrames() = 0;
+
+    //! Drops N frames in the queue starting from the oldest
+    //! returns false if less than n frames arae available
+    virtual const bool DropNFrames(uint32_t n) = 0;
 };
 
 struct PANGOLIN_EXPORT VideoPropertiesInterface
