@@ -24,7 +24,6 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::Var<int>  end_frame("viewer.end_frame", std::numeric_limits<int>::max() );
     pangolin::Var<bool> video_wait("video.wait", true);
     pangolin::Var<bool> video_newest("video.newest", false);
-    unsigned int delayus = 0;
 
     // Open Video by URI
     pangolin::VideoRecordRepeat video(input_uri, output_uri);
@@ -228,6 +227,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 #endif // CALLEE_HAS_CPP11
 
 #ifdef DEBUGVIDEOVIEWER
+    unsigned int delayus = 0;
     pangolin::RegisterKeyPressCallback('z', [&](){
       // Adapt delay
       delayus += 1000;

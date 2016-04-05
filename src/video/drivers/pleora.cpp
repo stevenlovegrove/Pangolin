@@ -601,9 +601,7 @@ bool PleoraVideo::GrabNext( unsigned char* image, bool wait)
         TGRABANDPRINT("Parsing buffer took ")
 
         lStream->QueueBuffer(front->buff);
-        now = pangolin::TimeNow();
-        std::cout << "\tPLEORA:QueueBuffer: " << 1000*pangolin::TimeDiff_s(last, now) << "ms" << std::endl;
-        last = now;
+        TGRABANDPRINT("\tPLEORA:QueueBuffer: ")
 
         // Remove used buffer from list.
         lGrabbedBuffList.pop_front();
