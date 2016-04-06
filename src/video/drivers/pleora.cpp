@@ -362,12 +362,12 @@ void PleoraVideo::InitPangoStreams()
     size_bytes = lSize;
 }
 
-const unsigned int PleoraVideo::AvailableFrames()
+unsigned int PleoraVideo::AvailableFrames() const
 {
     return validGrabbedBuffers;
 }
 
-const bool PleoraVideo::DropNFrames(uint32_t n)
+bool PleoraVideo::DropNFrames(uint32_t n)
 {
     if(n > validGrabbedBuffers) return false;
 

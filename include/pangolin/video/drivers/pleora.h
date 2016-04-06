@@ -113,9 +113,9 @@ public:
         return frame_properties;
     }
 
-    const uint32_t AvailableFrames();
+    uint32_t AvailableFrames() const;
 
-    const bool DropNFrames(uint32_t n);
+    bool DropNFrames(uint32_t n);
 
     void operator()();
 protected:
