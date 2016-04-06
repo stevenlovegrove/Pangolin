@@ -5,8 +5,10 @@
 #include <pangolin/handler/handler_image.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/timer.h>
-#include <unistd.h>
 
+#ifdef DEBUGVIDEOVIEWER
+#  include <pangolin/compat/thread.h>
+#endif // DEBUGVIDEOVIEWER
 
 template<typename To, typename From>
 void ConvertPixels(pangolin::Image<To>& to, const pangolin::Image<From>& from)
@@ -240,7 +242,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     });
 
     pangolin::basetime start,now;
-#endif
+#endif // DEBUGVIDEOVIEWER
 
     // Stream and display video
     while(!pangolin::ShouldQuit())
@@ -249,7 +251,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glColor3f(1.0f, 1.0f, 1.0f);
 
 #ifdef DEBUGVIDEOVIEWER
-        usleep(delayus);
+        boostd::this_thread::sleep_for(boostd::chrono::microseconds(delayus));
         std::cout << "-------------------------------------------------------" << std::endl;
         now = pangolin::TimeNow();
         std::cout << "      FPS: " << 1.0/pangolin::TimeDiff_s(start, now) << " artificial delay: " << (delayus/1000.0) <<"ms"<< std::endl;

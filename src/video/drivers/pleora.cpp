@@ -26,7 +26,6 @@
  */
 
 #include <pangolin/video/drivers/pleora.h>
-#include <unistd.h>
 
 #ifdef DEBUGPLEORA
   #include <pangolin/utils/timer.h>
@@ -518,7 +517,7 @@ void PleoraVideo::operator()()
         if ( !lResult.IsOK() ) {
             if(lResult && (lResult.GetCode() == PvResult::Code::NO_MORE_ITEM)) {
                 // No more buffer left in the queue, wait a bit before retrying.
-                usleep(5000);
+                boostd::this_thread::sleep_for(boostd::chrono::milliseconds(5));
             } else if(lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT)) {
                 pango_print_warn("Pleora error: %s,\n", lResult.GetCodeString().GetAscii());
             }
