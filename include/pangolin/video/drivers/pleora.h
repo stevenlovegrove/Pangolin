@@ -77,6 +77,9 @@ public:
     PleoraVideo(const char *model_name, const char *serial_num, size_t index, size_t bpp = 8, size_t binX = 1, size_t binY = 1, size_t buffer_count = DEFAULT_BUFFER_COUNT,
                 size_t desired_size_x = 0, size_t desired_size_y = 0, size_t desired_pos_x = 0, size_t desired_pos_y = 0, int again = -1, double exposure = 0,
                 bool ext_trig=false, size_t analog_black_level=0, bool use_separate_thread = false, bool get_temperature=false);
+
+    PleoraVideo(Params& p);
+
     ~PleoraVideo();
 
     void Start();
@@ -118,8 +121,11 @@ public:
     bool DropNFrames(uint32_t n);
 
     void operator()();
+
 protected:
+
     void InitDevice(const char *model_name, const char *serial_num, size_t index);
+
     void DeinitDevice();
 
     void SetDeviceParams(
@@ -128,7 +134,10 @@ protected:
         int analog_gain, double exposure, bool ext_trig, size_t analog_black_level
     );
 
+    void SetDeviceParams(Params& p);
+
     void InitStream();
+
     void DeinitStream();
 
     void InitPangoStreams();

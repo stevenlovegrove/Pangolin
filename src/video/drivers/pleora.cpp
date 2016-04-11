@@ -167,6 +167,45 @@ PleoraVideo::PleoraVideo(
     Start();
 }
 
+PleoraVideo::PleoraVideo(Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0),
+    lTemperatureCelcius(0), getTemp(false), lStreamParams(0), stand_alone_grab_thread(false), quit_grab_thread(true), validGrabbedBuffers(0)
+{
+    std::string sn;
+    std::string mn;
+    int index = 0;
+    size_t buffer_count = PleoraVideo::DEFAULT_BUFFER_COUNT;
+    Params device_params;
+
+    for(Params::ParamMap::iterator it = p.params.begin(); it != p.params.end(); it++) {
+        if(it->first == "model"){
+            mn = it->second;
+        } else if(it->first == "sn"){
+            sn = it->second;
+        } else if(it->first == "idx"){
+            index = p.Get<int>("idx", 0);
+        } else if(it->first == "buffers"){
+            buffer_count = p.Get<size_t>("buffers", PleoraVideo::DEFAULT_BUFFER_COUNT);
+        } else {
+            device_params.Set(it->first, it->second);
+        }
+    }
+
+    // Safe-start sequence to prevent TIMEOUT on some cameras with external triggering.
+    InitDevice(mn.empty() ? 0 : mn.c_str(), sn.empty() ? 0 : sn.c_str(), index);
+    SetDeviceParams(device_params);
+    DeinitDevice();
+
+    InitDevice(mn.empty() ? 0 : mn.c_str(), sn.empty() ? 0 : sn.c_str(), index);
+    SetDeviceParams(device_params);
+    InitStream();
+
+    InitPangoStreams();
+    InitBuffers(buffer_count);
+
+    Start();
+}
+
+
 PleoraVideo::~PleoraVideo()
 {
     Stop();
@@ -230,6 +269,53 @@ void PleoraVideo::DeinitStream()
         PvStream::Free( lStream );
         lStream = 0;
     }
+}
+
+
+void PleoraVideo::SetDeviceParams(Params& p) {
+
+    lStart = dynamic_cast<PvGenCommand*>( lDeviceParams->Get( "AcquisitionStart" ) );
+    lStop = dynamic_cast<PvGenCommand*>( lDeviceParams->Get( "AcquisitionStop" ) );
+
+    for(Params::ParamMap::iterator it = p.params.begin(); it != p.params.end(); it++) {
+        if(it->first == "use_separate_thread"){
+            stand_alone_grab_thread = p.Get<bool>("use_separate_thread",false);
+        } else if(it->first == "get_temperature"){
+            getTemp = p.Get<bool>("get_temperature",false);
+        } else {
+            try {
+                lDeviceParams->InvalidateCache();
+                lDeviceParams->Poll();
+                PvGenParameter* par = lDeviceParams->Get(PvString(it->first.c_str()));
+                if(par) {
+                  PvResult r = par->FromString(PvString(it->second.c_str()));
+                  if(!r.IsOK()){
+                     pango_print_error("Error setting parameter %s to:%s Reason:%s\n", it->first.c_str(), it->second.c_str(), r.GetDescription().GetAscii());
+                  } else {
+                     pango_print_info("Setting parameter %s to:%s\n", it->first.c_str(), it->second.c_str());
+                  }
+                } else {
+                  pango_print_error("Parameter %s not recognized\n", it->first.c_str());
+                }
+            } catch(std::runtime_error e) {
+                pango_print_error("Set parameter %s: %s\n", it->first.c_str(), e.what());
+            }
+        }
+    }
+
+    // Get Handles to properties we'll be using.
+    lAnalogGain = lDeviceParams->GetInteger("AnalogGain");
+    lAnalogBlackLevel = lDeviceParams->GetInteger("AnalogBlackLevel");
+    lExposure = lDeviceParams->GetFloat("ExposureTime");
+    lAquisitionMode = lDeviceParams->GetEnum("AcquisitionMode");
+    lTriggerSource = lDeviceParams->GetEnum("TriggerSource");
+    lTriggerMode = lDeviceParams->GetEnum("TriggerMode");
+
+    if(getTemp) {
+        lTemperatureCelcius = lDeviceParams->GetFloat("DeviceTemperatureCelsius");
+        pango_print_warn("Warning: get_temperature might add a blocking call taking several ms to each frame read.");
+    }
+
 }
 
 void PleoraVideo::SetDeviceParams(

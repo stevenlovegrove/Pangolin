@@ -78,6 +78,7 @@
 #include <pangolin/video/drivers/join.h>
 
 #include <map>
+#include <stdlib.h>
 
 #ifdef _UNIX_
 #include <pangolin/utils/posix/shared_memory_buffer.h>
@@ -722,16 +723,42 @@ VideoInterface* OpenVideo(const Uri& uri)
     }else
 #endif
 #ifdef HAVE_PLEORA
+     if (!uri.scheme.compare("newpleora")) {
+         Params params;
+         // Process back to front to respect the order the params have in the command line.
+         for(Params::ParamMap::const_iterator it = uri.params.begin(); it != uri.params.end(); it++) {
+             if(it->first == "size"){
+                 const ImageDim size = uri.Get<ImageDim>("size", ImageDim(0,0));
+                 std::stringstream sx,sy;
+                 sx << size.x;
+                 sy << size.y;
+                 params.Set("Width", sx.str());
+                 params.Set("Height", sy.str());
+             } else if(it->first == "pos"){
+                 const ImageDim pos  = uri.Get<ImageDim>("pos", ImageDim(0,0));
+                 std::stringstream sx,sy;
+                 sx << pos.x;
+                 sy << pos.y;
+                 params.Set("OffsetX", sx.str());
+                 params.Set("OffsetY", sy.str());
+             } else {
+                 params.Set(it->first, it->second);
+             }
+         }
+         video = new PleoraVideo(params);
+    } else
     if (!uri.scheme.compare("pleora")) {
         const std::string model_name = uri.Get<std::string>("model", "");
         const std::string serial_num = uri.Get<std::string>("sn", "");
         const size_t idx = uri.Get<size_t>("idx",0);
-        const size_t bpp = uri.Get<size_t>("bpp",8);
-        const size_t binx = uri.Get<size_t>("binx",1);
-        const size_t biny = uri.Get<size_t>("biny",1);
         const size_t buffer_count = uri.Get<size_t>("buffers", PleoraVideo::DEFAULT_BUFFER_COUNT);
         const ImageDim desired_size = uri.Get<ImageDim>("size", ImageDim(0,0));
         const ImageDim desired_pos  = uri.Get<ImageDim>("pos", ImageDim(0,0));
+
+        const size_t binx = uri.Get<size_t>("binx",1);
+        const size_t biny = uri.Get<size_t>("biny",1);
+        const size_t bpp = uri.Get<size_t>("bpp",8);
+
         const size_t again = uri.Get<size_t>("again",-1);
         const double exposure = uri.Get<size_t>("exposure",0);
         const bool ext_trig = uri.Get<bool>("eTrig",false);
