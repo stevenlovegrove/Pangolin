@@ -152,6 +152,8 @@ struct PANGOLIN_EXPORT GlFramebuffer
     
     void Bind() const;
     void Unbind() const;
+
+    void Reinitialise();
     
     // Attach Colour texture to frame buffer
     // Return attachment texture is bound to (e.g. GL_COLOR_ATTACHMENT0_EXT)

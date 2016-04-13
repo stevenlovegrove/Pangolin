@@ -478,14 +478,15 @@ inline GlRenderBuffer::GlRenderBuffer(GlRenderBuffer&& tex)
 ////////////////////////////////////////////////////////////////////////////
 
 inline GlFramebuffer::GlFramebuffer()
-    : attachments(0)
+    : fbid(0), attachments(0)
 {
-    glGenFramebuffersEXT(1, &fbid);
 }
 
 inline GlFramebuffer::~GlFramebuffer()
 {
-    glDeleteFramebuffersEXT(1, &fbid);
+    if(fbid) {
+        glDeleteFramebuffersEXT(1, &fbid);
+    }
 }
 
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
@@ -515,6 +516,14 @@ inline void GlFramebuffer::Bind() const
 #endif
 }
 
+inline void GlFramebuffer::Reinitialise()
+{
+    if(fbid) {
+        glDeleteFramebuffersEXT(1, &fbid);
+    }
+    glGenFramebuffersEXT(1, &fbid);
+}
+
 inline void GlFramebuffer::Unbind() const
 {
 #ifndef HAVE_GLES
@@ -525,6 +534,8 @@ inline void GlFramebuffer::Unbind() const
 
 inline GLenum GlFramebuffer::AttachColour(GlTexture& tex )
 {
+    if(!fbid) Reinitialise();
+
     const GLenum color_attachment = GL_COLOR_ATTACHMENT0_EXT + attachments;
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, color_attachment, GL_TEXTURE_2D, tex.tid, 0);
@@ -536,6 +547,8 @@ inline GLenum GlFramebuffer::AttachColour(GlTexture& tex )
 
 inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
 {
+    if(!fbid) Reinitialise();
+
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
 #if !defined(HAVE_GLES)
     glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rb.rbid);
