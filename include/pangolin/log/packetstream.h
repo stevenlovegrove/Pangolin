@@ -81,8 +81,8 @@ class PANGOLIN_EXPORT PacketStreamWriter
 {
 public:
     PacketStreamWriter();
-    PacketStreamWriter(const std::string& filename, unsigned int buffer_size_bytes = 10000000);
-    void Open(const std::string& filename, unsigned int buffer_size_bytes = 10000000);
+    PacketStreamWriter(const std::string& filename, size_t buffer_size_bytes = 100*1024*1024);
+    void Open(const std::string& filename, size_t buffer_size_bytes = 100*1024*1024);
     void Close();
     void ForceClose();
 

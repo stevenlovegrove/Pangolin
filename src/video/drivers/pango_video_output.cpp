@@ -41,15 +41,16 @@ void SigPipeHandler(int sig)
     SigState::I().sig_callbacks.at(sig).value = true;
 }
 
-PangoVideoOutput::PangoVideoOutput(const std::string& filename)
+PangoVideoOutput::PangoVideoOutput(const std::string& filename, size_t buffer_size_bytes)
     : filename(filename),
+      packetstream_buffer_size_bytes(buffer_size_bytes),
       packetstreamsrcid(-1),
       first_frame(true),
       is_pipe(pangolin::IsPipe(filename))
 {
     if(!is_pipe)
     {
-        packetstream.Open(filename);
+        packetstream.Open(filename, packetstream_buffer_size_bytes);
     }
     else
     {
@@ -131,7 +132,7 @@ int PangoVideoOutput::WriteStreams(unsigned char* data, const json::value& frame
     {
         if(!packetstream.IsOpen() && pangolin::PipeOpen(filename))
         {
-            packetstream.Open(filename);
+            packetstream.Open(filename, packetstream_buffer_size_bytes);
 
             first_frame = true;
         }

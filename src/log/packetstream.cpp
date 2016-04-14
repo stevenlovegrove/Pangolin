@@ -92,7 +92,7 @@ PacketStreamWriter::PacketStreamWriter()
 {
 }
 
-PacketStreamWriter::PacketStreamWriter(const std::string& filename, unsigned int buffer_size_bytes )
+PacketStreamWriter::PacketStreamWriter(const std::string& filename, size_t buffer_size_bytes )
     : buffer(pangolin::PathExpand(filename), buffer_size_bytes), writer(&buffer), is_open(true), is_pipe(pangolin::IsPipe(filename)), bytes_written(0)
 {
     // Start of file magic
@@ -101,7 +101,7 @@ PacketStreamWriter::PacketStreamWriter(const std::string& filename, unsigned int
     WritePangoHeader();
 }
 
-void PacketStreamWriter::Open(const std::string& filename, unsigned int buffer_size_bytes)
+void PacketStreamWriter::Open(const std::string& filename, size_t buffer_size_bytes)
 {
     is_pipe = pangolin::IsPipe(filename);
 

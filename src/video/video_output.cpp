@@ -44,8 +44,10 @@ VideoOutputInterface* OpenVideoOutput(const Uri& uri)
     
     if(!uri.scheme.compare("pango"))
     {
+        const size_t mb = 1024*1024;
+        const size_t buffer_size_bytes = uri.Get("buffer_size_mb", 100) * mb;
         const std::string filename = uri.url;
-        recorder = new PangoVideoOutput(filename);
+        recorder = new PangoVideoOutput(filename, buffer_size_bytes);
     }else
 #ifdef HAVE_FFMPEG    
     if(!uri.scheme.compare("ffmpeg") )
