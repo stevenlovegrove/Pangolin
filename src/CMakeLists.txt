@@ -228,6 +228,7 @@ if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND PYTHONLIBS_FOUND AND NOT _WIN_
   list(APPEND SOURCES
     console/ConsoleView.cpp
     python/PyInterpreter.cpp
+    python/PyModulePangolin.cpp
   )
   if(_GCC_)
     set_source_files_properties(python/PyInterpreter.cpp PROPERTIES COMPILE_FLAGS -fno-strict-aliasing)
