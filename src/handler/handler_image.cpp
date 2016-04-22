@@ -1,4 +1,5 @@
 #include <pangolin/handler/handler_image.h>
+#include <pangolin/gl/glfont.h>
 
 namespace pangolin
 {
@@ -109,12 +110,37 @@ void ImageViewHandler::glRenderOverlay()
     glDrawArrays(GL_LINE_LOOP, 0, 4);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glColor4f(1.0,1.0,1.0,1.0);
+
+    if( std::abs(selxy.Area()) > 0) {
+        // Render text
+        pangolin::Viewport v;
+        glGetIntegerv( GL_VIEWPORT, &v.l );
+        float xpix, ypix;
+        ImageToScreen(v, selxy.x.max, selxy.y.max, xpix, ypix);
+
+        pangolin::GlFont::I().Text(
+            "%.2f x %.2f",
+            selxy.x.Size(), selxy.y.Size()
+        ).DrawWindow(xpix,ypix);
+
+        pangolin::GlFont::I().Text(
+            "(%.1f,%.1f)->(%.1f,%.1f)",
+            selxy.x.min, selxy.y.min,
+            selxy.x.max, selxy.y.max
+        ).DrawWindow(xpix, ypix - 1.0 * pangolin::GlFont::I().Height());
+    }
 }
 
 void ImageViewHandler::ScreenToImage(Viewport& v, int xpix, int ypix, float& ximg, float& yimg)
 {
     ximg = rview.x.min + rview.x.Size() * (xpix - v.l) / (float)v.w;
     yimg = rview.y.min + rview.y.Size() * ( 1.0f - (ypix - v.b) / (float)v.h);
+}
+
+void ImageViewHandler::ImageToScreen(Viewport& v, float ximg, float yimg, float& xpix, float& ypix)
+{
+    xpix = (ximg -rview.x.min) * (float)v.w / rview.x.Size() + v.l;
+    ypix = v.b - (float)v.h * ((yimg - rview.y.min) / rview.y.Size() - 1.0f);
 }
 
 bool ImageViewHandler::UseNN() const

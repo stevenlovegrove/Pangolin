@@ -61,6 +61,8 @@ public:
 
     void ScreenToImage(Viewport& v, int xpix, int ypix, float& ximg, float& yimg);
 
+    void ImageToScreen(Viewport& v, float ximg, float yimg, float& xpix, float& ypix);
+
     bool UseNN() const;
 
     bool& UseNN();
