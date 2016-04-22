@@ -38,7 +38,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     // Check if video supports VideoPlaybackInterface
     pangolin::VideoPlaybackInterface* video_playback = video.Cast<pangolin::VideoPlaybackInterface>();
     const int total_frames = video_playback ? video_playback->GetTotalFrames() : std::numeric_limits<int>::max();
-    const int slider_size = (video_playback ? 20 : 0);
+    const int slider_size = (total_frames < std::numeric_limits<int>::max() ? 20 : 0);
 
     if( video_playback ) {
         if(total_frames < std::numeric_limits<int>::max() ) {
@@ -95,8 +95,9 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
     // current frame in memory buffer and displaying.
     pangolin::Var<int> frame("ui.frame", -1, 0, total_frames-1 );
-    if(slider_size) {
-        pangolin::Slider frame_slider("frame", frame.Ref() );
+    pangolin::Slider frame_slider("frame", frame.Ref() );
+    if(total_frames < std::numeric_limits<int>::max())
+    {
         frame_slider.SetBounds(0.0, pangolin::Attach::Pix(slider_size), 0.0, 1.0);
         pangolin::DisplayBase().AddDisplay(frame_slider);
     }
