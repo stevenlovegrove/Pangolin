@@ -22,7 +22,6 @@ void ConvertPixels(pangolin::Image<To>& to, const pangolin::Image<From>& from)
 
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
-    int frame = 0;
     pangolin::Var<int>  end_frame("viewer.end_frame", std::numeric_limits<int>::max() );
     pangolin::Var<bool> video_wait("video.wait", true);
     pangolin::Var<bool> video_newest("video.newest", false);
@@ -38,12 +37,14 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
     // Check if video supports VideoPlaybackInterface
     pangolin::VideoPlaybackInterface* video_playback = video.Cast<pangolin::VideoPlaybackInterface>();
+    const int total_frames = video_playback ? video_playback->GetTotalFrames() : std::numeric_limits<int>::max();
+    const int slider_size = (video_playback ? 20 : 0);
+
     if( video_playback ) {
-        const int total_frames = video_playback->GetTotalFrames();
         if(total_frames < std::numeric_limits<int>::max() ) {
             std::cout << "Video length: " << total_frames << " frames" << std::endl;
         }
-        end_frame = 1;
+        end_frame = 0;
     }
 
     std::vector<unsigned char> buffer;
@@ -51,12 +52,14 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
     // Create OpenGL window - guess sensible dimensions
     pangolin::CreateWindowAndBind( "VideoViewer",
-        video.Width() * num_streams, video.Height()
+        video.Width() * num_streams, video.Height() + slider_size
     );
 
     // Assume packed OpenGL data unless otherwise specified
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Setup resizable views for video streams
     std::vector<pangolin::GlPixFormat> glfmt;
@@ -68,7 +71,8 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     size_t scratch_buffer_bytes = 0;
 
     pangolin::View& container = pangolin::Display("streams");
-    container.SetLayout(pangolin::LayoutEqual);
+    container.SetLayout(pangolin::LayoutEqual)
+             .SetBounds(pangolin::Attach::Pix(slider_size), 1.0, 0.0, 1.0);
     for(unsigned int d=0; d < num_streams; ++d) {
         const pangolin::StreamInfo& si = video.Streams()[d];
         pangolin::View& view = pangolin::CreateDisplay().SetAspect(si.Aspect());
@@ -87,6 +91,14 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         strides.push_back( (8*si.Pitch()) / si.PixFormat().bpp );
         handlers.push_back( pangolin::ImageViewHandler(si.Width(), si.Height()) );
         view.SetHandler(&handlers.back());
+    }
+
+    // current frame in memory buffer and displaying.
+    pangolin::Var<int> frame("ui.frame", -1, 0, total_frames-1 );
+    if(slider_size) {
+        pangolin::Slider frame_slider("frame", frame.Ref() );
+        frame_slider.SetBounds(0.0, pangolin::Attach::Pix(slider_size), 0.0, 1.0);
+        pangolin::DisplayBase().AddDisplay(frame_slider);
     }
 
     std::vector<unsigned char> scratch_buffer;
@@ -161,8 +173,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     });
     pangolin::RegisterKeyPressCallback('<', [&](){
         if(video_playback) {
-            const int jump_frame = std::min(video_playback->GetCurrentFrameId()-FRAME_SKIP, video_playback->GetTotalFrames()-1);
-            frame = video_playback->Seek(jump_frame);
+            frame = video_playback->Seek(frame - FRAME_SKIP) -1;
             end_frame = frame + 1;
         }else{
             pango_print_warn("Unable to skip backward.");
@@ -170,8 +181,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     });
     pangolin::RegisterKeyPressCallback('>', [&](){
         if(video_playback) {
-            const int jump_frame = std::min(video_playback->GetCurrentFrameId()+FRAME_SKIP, video_playback->GetTotalFrames()-1);
-            frame = video_playback->Seek(jump_frame);
+            frame = video_playback->Seek(frame + FRAME_SKIP) -1;
             end_frame = frame + 1;
         }else{
             end_frame = frame + FRAME_SKIP;
@@ -179,8 +189,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     });
     pangolin::RegisterKeyPressCallback(',', [&](){
         if(video_playback) {
-            const int jump_frame = std::min(video_playback->GetCurrentFrameId()-1, video_playback->GetTotalFrames()-1);
-            frame = video_playback->Seek(jump_frame);
+            frame = video_playback->Seek(frame - 1) -1;
             end_frame = frame+1;
         }else{
             pango_print_warn("Unable to skip backward.");
@@ -250,6 +259,11 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         glColor3f(1.0f, 1.0f, 1.0f);
 
+        if(frame.GuiChanged()) {
+            frame = video_playback->Seek(frame) -1;
+            end_frame = frame + 1;
+        }
+
 #ifdef DEBUGVIDEOVIEWER
         boostd::this_thread::sleep_for(boostd::chrono::microseconds(delayus));
         std::cout << "-------------------------------------------------------" << std::endl;
@@ -258,9 +272,9 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         std::cout << "-------------------------------------------------------" << std::endl;
         start = now;
 #endif
-        if (frame == 0 || frame < end_frame) {
-            if (video.Grab(&buffer[0], images, video_wait, video_newest) ){
-                ++frame;
+        if ( frame < end_frame ) {
+            if( video.Grab(&buffer[0], images, video_wait, video_newest) ) {
+                frame = frame +1;
             }
         }
 #ifdef DEBUGVIDEOVIEWER
@@ -306,6 +320,8 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         }
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
+        // leave in pixel orthographic for slider to render.
+        pangolin::DisplayBase().ActivatePixelOrthographic();
         pangolin::FinishFrame();
     }
 }
