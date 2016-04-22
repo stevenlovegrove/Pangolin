@@ -322,6 +322,9 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
         // leave in pixel orthographic for slider to render.
         pangolin::DisplayBase().ActivatePixelOrthographic();
+        if(video.IsRecording()) {
+            pangolin::glRecordGraphic(pangolin::DisplayBase().v.w-14, pangolin::DisplayBase().v.h-14, 7);
+        }
         pangolin::FinishFrame();
     }
 }

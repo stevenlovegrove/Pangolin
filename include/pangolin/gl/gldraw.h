@@ -421,6 +421,8 @@ inline void glPixelTransferScale( float scale )
 }
 #endif
 
+void glRecordGraphic(float x, float y, float radius);
+
 }
 
 #endif // PANGOLIN_GLDRAW_H

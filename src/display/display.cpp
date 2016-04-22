@@ -163,6 +163,13 @@ void RenderViews()
     DisplayBase().Render();
 }
 
+void RenderRecordGraphic(const Viewport& v)
+{
+    const float r = 7;
+    v.ActivatePixelOrthographic();
+    glRecordGraphic(v.w-2*r, v.h-2*r, r);
+}
+
 void PostRender()
 {
     while(context->screen_capture.size()) {
@@ -174,6 +181,7 @@ void PostRender()
 #ifdef BUILD_PANGOLIN_VIDEO
     if(context->recorder.IsOpen()) {
         SaveFramebuffer(context->recorder, context->record_view->GetBounds() );
+        RenderRecordGraphic(context->record_view->GetBounds());
     }
 #endif // BUILD_PANGOLIN_VIDEO
 
@@ -284,20 +292,6 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
     glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?
     glReadPixels(v.l, v.b, v.w, v.h, GL_RGB, GL_UNSIGNED_BYTE, &img[0] );
     video.WriteStreams(&img[0]);
-    
-    const int ticks = (int)TimeNow_s();
-    if( ticks % 2 )
-    {
-        v.ActivatePixelOrthographic();
-        // now, render a little red "recording" dot
-        glPushAttrib(GL_ENABLE_BIT);
-        glDisable(GL_LIGHTING);
-        glDisable(GL_DEPTH_TEST);
-        const float r = 7;
-        glColor3ub( 255, 0, 0 );
-        glDrawCircle( v.w-2*r, v.h-2*r, r );
-        glPopAttrib();
-    }
 #endif // HAVE_GLES
 }
 #endif // BUILD_PANGOLIN_VIDEO
