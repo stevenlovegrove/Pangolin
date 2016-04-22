@@ -34,7 +34,7 @@ namespace pangolin
 
 VideoRecordRepeat::VideoRecordRepeat() 
     : video_src(0), video_src_props(0), video_file(0), video_recorder(0),
-    buffer_size_bytes(0), frame_num(0)
+    buffer_size_bytes(0), frame_num(0), record_frame_skip(1)
 {
 }
 
@@ -43,7 +43,7 @@ VideoRecordRepeat::VideoRecordRepeat(
     const std::string& output_uri,
     int buffer_size_bytes
     ) : video_src(0), video_src_props(0), video_file(0), video_recorder(0),
-    buffer_size_bytes(0), frame_num(0)
+    buffer_size_bytes(0), frame_num(0), record_frame_skip(1)
 {
     Open(input_uri, output_uri, buffer_size_bytes);
 }
@@ -211,7 +211,7 @@ bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
 
     if( video_recorder != 0 ) {
         bool success = video_src->GrabNext(image, wait);
-        if( success ) {
+        if( success  && !(frame_num % record_frame_skip) ) {
             video_recorder->WriteStreams(image, video_src_props ?
                 video_src_props->FrameProperties() : json::value()
             );
@@ -231,7 +231,7 @@ bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
     if( video_recorder != 0 )
     {
         bool success = video_src->GrabNewest(image,wait);
-        if( success ) {
+        if( success && !(frame_num % record_frame_skip) ) {
             video_recorder->WriteStreams(image, video_src_props ?
                 video_src_props->FrameProperties() : json::value()
             );
@@ -265,6 +265,11 @@ const json::value& VideoRecordRepeat::FrameProperties() const
 int VideoRecordRepeat::FrameId()
 {
     return frame_num;
+}
+
+void VideoRecordRepeat::SetTimelapse(size_t one_in_n_frames)
+{
+    record_frame_skip = one_in_n_frames;
 }
 
 bool VideoRecordRepeat::IsRecording() const

@@ -102,6 +102,8 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
     
     int FrameId();
 
+    void SetTimelapse(size_t one_in_n_frames);
+
 protected:
     json::value null_props;
     std::string str_uri_input;
@@ -118,6 +120,7 @@ protected:
     int buffer_size_bytes;
     
     int frame_num;
+    size_t record_frame_skip;
 };
 
 }

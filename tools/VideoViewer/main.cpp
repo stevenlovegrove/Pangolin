@@ -22,6 +22,7 @@ void ConvertPixels(pangolin::Image<To>& to, const pangolin::Image<From>& from)
 
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
+    pangolin::Var<int>  record_timelapse_frame_skip("viewer.record_timelapse_frame_skip", 1 );
     pangolin::Var<int>  end_frame("viewer.end_frame", std::numeric_limits<int>::max() );
     pangolin::Var<bool> video_wait("video.wait", true);
     pangolin::Var<bool> video_newest("video.newest", false);
@@ -133,6 +134,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
     pangolin::RegisterKeyPressCallback('r', [&](){
         if(!video.IsRecording()) {
+            video.SetTimelapse( static_cast<size_t>(record_timelapse_frame_skip) );
             video.Record();
             pango_print_info("Started Recording.\n");
         }else{
