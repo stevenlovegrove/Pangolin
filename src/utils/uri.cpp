@@ -67,7 +67,7 @@ Uri ParseUri(const std::string &str_uri)
                 Split(params[i], '=', args );
                 std::string key = Trim(args[0]);
                 std::string val = args.size() > 1 ? Trim(args[1]) : "";
-                uri.params[key] = val;
+                uri.Set(key,val);
             }
         }else{
             throw std::runtime_error("Unable to parse URI: '" + str_uri + "'");

@@ -192,11 +192,6 @@ PleoraVideo::PleoraVideo(Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lS
         }
     }
 
-    // Safe-start sequence to prevent TIMEOUT on some cameras with external triggering.
-    InitDevice(mn.empty() ? 0 : mn.c_str(), sn.empty() ? 0 : sn.c_str(), index);
-    SetDeviceParams(device_params);
-    DeinitDevice();
-
     InitDevice(mn.empty() ? 0 : mn.c_str(), sn.empty() ? 0 : sn.c_str(), index);
     SetDeviceParams(device_params);
     InitStream();
@@ -286,8 +281,6 @@ void PleoraVideo::SetDeviceParams(Params& p) {
             getTemp = p.Get<bool>("get_temperature",false);
         } else {
             try {
-                lDeviceParams->InvalidateCache();
-                lDeviceParams->Poll();
                 PvGenParameter* par = lDeviceParams->Get(PvString(it->first.c_str()));
                 if(par) {
                   PvResult r = par->FromString(PvString(it->second.c_str()));
