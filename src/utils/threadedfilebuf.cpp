@@ -42,13 +42,13 @@ threadedfilebuf::threadedfilebuf()
 {
 }
 
-threadedfilebuf::threadedfilebuf( const std::string& filename, unsigned int buffer_size_bytes )
+threadedfilebuf::threadedfilebuf(const std::string& filename, size_t buffer_size_bytes )
     : mem_buffer(0), mem_size(0), mem_max_size(0), mem_start(0), mem_end(0), should_run(false), is_pipe(pangolin::IsPipe(filename))
 {
     open(filename, buffer_size_bytes);
 }
 
-void threadedfilebuf::open(const std::string& filename, unsigned int buffer_size_bytes)
+void threadedfilebuf::open(const std::string& filename, size_t buffer_size_bytes)
 {
     is_pipe = pangolin::IsPipe(filename);
 
@@ -65,8 +65,8 @@ void threadedfilebuf::open(const std::string& filename, unsigned int buffer_size
     mem_size = 0;
     mem_start = 0;
     mem_end = 0;
-    mem_max_size = buffer_size_bytes;
-    mem_buffer = new char[(size_t)mem_max_size];
+    mem_max_size = static_cast<std::streamsize>(buffer_size_bytes);
+    mem_buffer = new char[static_cast<size_t>(mem_max_size)];
 
     should_run = true;
     write_thread = boostd::thread(boostd::ref(*this));
@@ -123,7 +123,7 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
         mem_start = 0;
         mem_end = 0;
         mem_max_size = num_bytes * 4;
-        mem_buffer = new char[(size_t)mem_max_size];
+        mem_buffer = new char[static_cast<size_t>(mem_max_size)];
     }
 
     {
@@ -141,7 +141,7 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
         if( num_bytes <= array_a_size )
         {
             // copy in one
-            memcpy(mem_buffer + mem_end, data, (size_t)num_bytes);
+            memcpy(mem_buffer + mem_end, data, static_cast<size_t>(num_bytes));
             mem_end += num_bytes;
             mem_size += num_bytes;
         }else{

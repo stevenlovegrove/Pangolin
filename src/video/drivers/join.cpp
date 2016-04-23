@@ -173,12 +173,12 @@ bool VideoJoiner::GrabNext( unsigned char* image, bool wait )
     }
 
     if((newest - oldest) > sync_tolerance_us ) {
-        TGRABANDPRINT("NOT IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest)
+        TGRABANDPRINT("NOT IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest);
+        return !(sync_continuously || (sync_attempts_to_go == 0));
     } else {
-        TGRABANDPRINT("    IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest)
+        TGRABANDPRINT("    IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest);
+        return true;
     }
-
-    return true;
 }
 
 bool AllInterfacesAreBufferAware(std::vector<VideoInterface*>& src){
@@ -305,12 +305,14 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
           if(!sync_continuously) --sync_attempts_to_go;
       }
       if((newest - oldest) > sync_tolerance_us ) {
-          TGRABANDPRINT("NOT IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest)
+          TGRABANDPRINT("NOT IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest);
+          return !(sync_continuously || (sync_attempts_to_go == 0));
       } else {
-          TGRABANDPRINT("    IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest)
+          TGRABANDPRINT("    IN SYNC (continuously=%d attempts_to_go=%d) %ld %ld syncing took ", sync_continuously, sync_attempts_to_go, newest, oldest);
+          return true;
       }
 
-      return grabbed_any;
+//      return grabbed_any;
   }
 
 }
