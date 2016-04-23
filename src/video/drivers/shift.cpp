@@ -121,7 +121,16 @@ bool ShiftVideo::GrabNext( unsigned char* image, bool wait )
 //! Implement VideoInput::GrabNewest()
 bool ShiftVideo::GrabNewest( unsigned char* image, bool wait )
 {
-    return GrabNext(image,wait);
+    if(videoin[0]->GrabNewest(buffer,wait)) {
+        for(size_t s=0; s<streams.size(); ++s) {
+            Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
+            Image<unsigned char> img_out = Streams()[s].StreamImage(image);
+            DoShift16to8(img_out, img_in, shift_right_bits, mask);
+        }
+        return true;
+    }else{
+        return false;
+    }
 }
 
 std::vector<VideoInterface*>& ShiftVideo::InputStreams()
