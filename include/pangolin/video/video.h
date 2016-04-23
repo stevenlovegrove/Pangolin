@@ -81,8 +81,9 @@
 //  e.g. "depthsense://"
 //  e.g. "depthsense:[img1=depth,img2=rgb]//"
 //
-// pleora - USB 3 vision cameras
-//  e.g. "pleora:[use_seprate_thread=true,bpp=10,size=512x256,pos=712x512,again=1,sn=00000274,exposure=3000,eTrig=true,buffers=10]//"
+// pleora - USB 3 vision cameras accepts any option in the same format reported by eBUSPlayer
+//  e.g. for lightwise cameras: "pleora:[use_seprate_thread=true,size=512x256,pos=712x512,sn=00000274,ExposureTime=10000,PixelFormat=Mono12p,AcquisitionMode=SingleFrame,TriggerSource=Line0,TriggerMode=On]//"
+//  e.g. for toshiba cameras: "pleora:[use_seprate_thread=true,size=512x256,pos=712x512,sn=0300056,PixelSize=Bpp12,ExposureTime=10000,ImageFormatSelector=Format1,BinningHorizontal=2,BinningVertical=2]//"
 //
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"

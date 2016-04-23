@@ -144,31 +144,6 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
     }
 }
 
-PleoraVideo::PleoraVideo(
-        const char* model_name, const char* serial_num, size_t index, size_t bpp,  size_t binX, size_t binY, size_t buffer_count,
-        size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y, int analog_gain, double exposure,
-        bool ext_trig, size_t analog_black_level, bool use_separate_thread, bool get_temperature
-    )
-    : size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0), lTemperatureCelcius(0), getTemp(get_temperature),
-      lStreamParams(0), stand_alone_grab_thread(use_separate_thread), quit_grab_thread(true), validGrabbedBuffers(0)
-{
-    if(ext_trig) {
-        // Safe-start sequence to prevent TIMEOUT on some cameras with external triggering.
-        InitDevice(model_name, serial_num, index);
-        SetDeviceParams(bpp, binX, binY, desired_size_x, desired_size_y, desired_pos_x, desired_pos_y, analog_gain, exposure, ext_trig, analog_black_level);
-        DeinitDevice();
-    }
-
-    InitDevice(model_name, serial_num, index);
-    SetDeviceParams(bpp, binX, binY, desired_size_x, desired_size_y, desired_pos_x, desired_pos_y, analog_gain, exposure, ext_trig, analog_black_level);
-    InitStream();
-
-    InitPangoStreams();
-    InitBuffers(buffer_count);
-
-    Start();
-}
-
 PleoraVideo::PleoraVideo(Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0),
     lTemperatureCelcius(0), getTemp(false), lStreamParams(0), stand_alone_grab_thread(false), quit_grab_thread(true), validGrabbedBuffers(0)
 {
@@ -311,94 +286,6 @@ void PleoraVideo::SetDeviceParams(Params& p) {
         pango_print_warn("Warning: get_temperature might add a blocking call taking several ms to each frame read.");
     }
 
-}
-
-void PleoraVideo::SetDeviceParams(
-    size_t bpp,  size_t binX, size_t binY,
-    size_t desired_size_x, size_t desired_size_y, size_t desired_pos_x, size_t desired_pos_y,
-    int analog_gain, double exposure, bool ext_trig, size_t analog_black_level
-) {
-    lStart = dynamic_cast<PvGenCommand*>( lDeviceParams->Get( "AcquisitionStart" ) );
-    lStop = dynamic_cast<PvGenCommand*>( lDeviceParams->Get( "AcquisitionStop" ) );
-
-    if( bpp == 8) {
-        lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono8") );
-    } else if(bpp == 10) {
-        lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono10p") );
-    } else if(bpp == 12) {
-        lDeviceParams->SetEnumValue("PixelFormat", PvString("Mono12p") );
-    }
-
-
-    // Get Handles to properties we'll be using.
-    lAnalogGain = lDeviceParams->GetInteger("AnalogGain");
-    lAnalogBlackLevel = lDeviceParams->GetInteger("AnalogBlackLevel");
-    lExposure = lDeviceParams->GetFloat("ExposureTime");
-    lAquisitionMode = lDeviceParams->GetEnum("AcquisitionMode");
-    lTriggerSource = lDeviceParams->GetEnum("TriggerSource");
-    lTriggerMode = lDeviceParams->GetEnum("TriggerMode");
-    if(getTemp) {
-        lTemperatureCelcius = lDeviceParams->GetFloat("DeviceTemperatureCelsius");
-        pango_print_warn("Warning: get_temperature might add a blocking call taking several ms to each frame read.");
-    }
-    // Setup device binning
-    try {
-        PvGenInteger* devbinx = lDeviceParams->GetInteger("BinningHorizontal");
-        PvGenInteger* devbiny = lDeviceParams->GetInteger("BinningVertical");
-        if( devbinx && devbiny && devbinx->IsWritable() && devbiny->IsWritable()) {
-            ThrowOnFailure(devbinx->SetValue(binX));
-            ThrowOnFailure(devbiny->SetValue(binY));
-        }
-    } catch(std::runtime_error e) {
-        pango_print_error("Binning: %s\n", e.what());
-    }
-
-    // Height and width will fail if not multiples of 8.
-    if(desired_size_x || desired_size_y) {
-        try {
-            SetDeviceParam<int64_t>("Width",  desired_size_x);
-            SetDeviceParam<int64_t>("Height", desired_size_y);
-        } catch(std::runtime_error e) {
-            pango_print_error("SetSize: %s\n", e.what());
-
-            int64_t max, min;
-            lDeviceParams->GetIntegerRange("Width", max, min );
-            desired_size_x = max;
-            lDeviceParams->GetIntegerRange("Height", max, min );
-            desired_size_y = max;
-
-            try {
-                SetDeviceParam<int64_t>("Width",  desired_size_x);
-                SetDeviceParam<int64_t>("Height", desired_size_y);
-            } catch(std::runtime_error e) {
-                pango_print_error("Set Full frame: %s\n", e.what());
-            }
-        }
-    }
-
-    // Attempt to set offset
-    try {
-        SetDeviceParam<int64_t>("OffsetX", desired_pos_x);
-        SetDeviceParam<int64_t>("OffsetY", desired_pos_y);
-    } catch(std::runtime_error e) {
-        pango_print_error("Set Offset: %s\n", e.what());
-    }
-
-    // Attempt to set AnalogGain, Offset
-    try {
-        SetGain(analog_gain);
-        SetAnalogBlackLevel(analog_black_level);
-        SetExposure(exposure);
-    } catch(std::runtime_error e) {
-        pango_print_error("Set Exposure / Gain: %s\n", e.what());
-    }
-
-    // Attempt to set Triggering
-    try {
-        SetupTrigger(ext_trig, 0, 0);
-    } catch(std::runtime_error e) {
-        pango_print_error("Set Trigger: %s\n", e.what());
-    }
 }
 
 void PleoraVideo::InitBuffers(size_t buffer_count)

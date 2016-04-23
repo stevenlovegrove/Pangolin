@@ -723,9 +723,8 @@ VideoInterface* OpenVideo(const Uri& uri)
     }else
 #endif
 #ifdef HAVE_PLEORA
-     if (!uri.scheme.compare("newpleora")) {
+     if (!uri.scheme.compare("pleora")) {
          Params params;
-         // Process back to front to respect the order the params have in the command line.
          for(Params::ParamMap::const_iterator it = uri.params.begin(); it != uri.params.end(); it++) {
              if(it->first == "size"){
                  const ImageDim size = uri.Get<ImageDim>("size", ImageDim(0,0));
@@ -747,34 +746,6 @@ VideoInterface* OpenVideo(const Uri& uri)
          }
          video = new PleoraVideo(params);
     } else
-    if (!uri.scheme.compare("pleora")) {
-        const std::string model_name = uri.Get<std::string>("model", "");
-        const std::string serial_num = uri.Get<std::string>("sn", "");
-        const size_t idx = uri.Get<size_t>("idx",0);
-        const size_t buffer_count = uri.Get<size_t>("buffers", PleoraVideo::DEFAULT_BUFFER_COUNT);
-        const ImageDim desired_size = uri.Get<ImageDim>("size", ImageDim(0,0));
-        const ImageDim desired_pos  = uri.Get<ImageDim>("pos", ImageDim(0,0));
-
-        const size_t binx = uri.Get<size_t>("binx",1);
-        const size_t biny = uri.Get<size_t>("biny",1);
-        const size_t bpp = uri.Get<size_t>("bpp",8);
-
-        const size_t again = uri.Get<size_t>("again",-1);
-        const double exposure = uri.Get<size_t>("exposure",0);
-        const bool ext_trig = uri.Get<bool>("eTrig",false);
-        const size_t analog_black_level= uri.Get<size_t>("abl",0);
-        const bool use_separate_thread = uri.Get<bool>("use_separate_thread",false);
-        const bool get_temperature = uri.Get<bool>("get_temperature",false);
-
-        video = new PleoraVideo(
-            model_name.empty() ? 0 : model_name.c_str(),
-            serial_num.empty() ? 0 : serial_num.c_str(),
-            idx, bpp, binx, biny, buffer_count,
-            desired_size.x, desired_size.y, desired_pos.x, desired_pos.y,
-            again, exposure, ext_trig, analog_black_level, use_separate_thread,
-            get_temperature
-        );
-    }else
 #endif
 #ifdef _UNIX_
     if (!uri.scheme.compare("shmem")) {
