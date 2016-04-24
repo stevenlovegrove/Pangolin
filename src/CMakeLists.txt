@@ -72,6 +72,7 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/drivers/mirror.h
     ${INCDIR}/video/drivers/unpack.h
     ${INCDIR}/video/drivers/join.h
+    ${INCDIR}/video/drivers/thread.h
   )
   list(APPEND SOURCES
     video/drivers/test.cpp
@@ -85,6 +86,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/mirror.cpp
     video/drivers/unpack.cpp
     video/drivers/join.cpp
+    video/drivers/thread.cpp
   )
 
   if(UNIX)
