@@ -27,21 +27,38 @@
 
 #include <pangolin/video/drivers/thread.h>
 
+#define DEBUGTHREAD
+
+#ifdef DEBUGTHREAD
+  #include <pangolin/utils/timer.h>
+  #define TSTART() pangolin::basetime start,last,now; start = pangolin::TimeNow(); last = start;
+  #define TGRABANDPRINT(...)  now = pangolin::TimeNow(); fprintf(stderr,"THREAD: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr, " %fms.\n",1000*pangolin::TimeDiff_s(last, now)); last = now;
+  #define DBGPRINT(...) fprintf(stderr,"THREAD: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr,"\n");
+#else
+  #define TSTART()
+  #define TGRABANDPRINT(...)
+  #define DBGPRINT(...)
+#endif
+
 namespace pangolin
 {
 
-ThreadVideo::ThreadVideo(VideoInterface* src): quit_grab_thread(false)
+ThreadVideo::ThreadVideo(VideoInterface* src, unsigned int num_buffers): quit_grab_thread(true), num_buffers(num_buffers)
 {
     if(!src) {
         throw VideoException("ThreadVideo: VideoInterface in must not be null");
     }
     videoin.push_back(src);
+    // queue init allocates buffers.
+    queue.init(num_buffers, videoin[0]->SizeBytes());
+    Start();
 }
 
 ThreadVideo::~ThreadVideo()
 {
     Stop();
     delete videoin[0];
+    // queue destructor will deallocate buffers.
 }
 
 //! Implement VideoInput::Start()
@@ -65,18 +82,13 @@ void ThreadVideo::Stop()
 //! Implement VideoInput::SizeBytes()
 size_t ThreadVideo::SizeBytes() const
 {
-    return size_bytes;
+    return videoin[0]->SizeBytes();
 }
 
 //! Implement VideoInput::Streams()
 const std::vector<StreamInfo>& ThreadVideo::Streams() const
 {
-    return streams;
-}
-
-std::vector<VideoInterface*>& ThreadVideo::InputStreams()
-{
-    return videoin;
+    return videoin[0]->Streams();
 }
 
 const json::value& ThreadVideo::DeviceProperties() const
@@ -93,107 +105,84 @@ const json::value& ThreadVideo::FrameProperties() const
 
 unsigned int ThreadVideo::AvailableFrames() const
 {
-    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin[0]);
-    if(!vpi)
-    {
-        return 0;
-    }
-    else
-    {
-        return vpi->AvailableFrames();
-    }
+    return queue.AvailableFrames();
 }
 
 bool ThreadVideo::DropNFrames(uint32_t n)
 {
-    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin[0]);
-    if(!vpi)
-    {
-        return false;
-    }
-    else
-    {
-        return vpi->DropNFrames(n);
-    }
+    return queue.DropNFrames(n);
 }
 
 //! Implement VideoInput::GrabNext()
 bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
 {
-    if(videoin[0]->GrabNext(buffer,wait)) {
+    // if something in queue return it
+    if(queue.AvailableFrames() > 0) {
+        unsigned char* i = queue.getNext();
+        std::memcpy(image, i, queue.BufferSizeBytes());
+        queue.returnUsedBuffer(i);
         return true;
-    }else{
-        return false;
+    } else {
+        if(wait) {
+            // Blocking on notification from grab thread.
+            std::unique_lock<std::mutex> lk(cvMtx);
+            if(cv.wait_for(lk, boostd::chrono::seconds(5)) == boostd::cv_status::timeout)
+                throw std::runtime_error("Thread: GrabNext blocking read for frames reached timeout.");
+            unsigned char* i = queue.getNext();
+            std::memcpy(image, i, queue.BufferSizeBytes());
+            queue.returnUsedBuffer(i);
+            return true;
+        } else {
+            // No wait, simply return false.
+            return false;
+        }
     }
 }
 
 //! Implement VideoInput::GrabNewest()
 bool ThreadVideo::GrabNewest( unsigned char* image, bool wait )
 {
-    if(videoin[0]->GrabNewest(buffer,wait)) {
+    // if > 1 in queue, drop all but last & return last
+    // else if wait, mutex block on grab thread
+    // else return false
+    // if something in queue return it
+    if(queue.AvailableFrames() > 0) {
+        unsigned char* i = queue.getNewest();
+        std::memcpy(image, i, queue.BufferSizeBytes());
+        queue.returnUsedBuffer(i);
         return true;
-    }else{
-        return false;
+    } else {
+        if(wait) {
+            // Blocking on notification from grab thread.
+            std::unique_lock<std::mutex> lk(cvMtx);
+            if(cv.wait_for(lk, boostd::chrono::seconds(5)) == boostd::cv_status::timeout)
+                throw std::runtime_error("Thread: GrabNewest blocking read for frames reached timeout.");
+            unsigned char* i = queue.getNext();
+            std::memcpy(image, i, queue.BufferSizeBytes());
+            queue.returnUsedBuffer(i);
+            return true;
+        } else {
+            // No wait, simply return false.
+            return false;
+        }
     }
 }
 
-void PleoraVideo::operator()()
+void ThreadVideo::operator()()
 {
-    PvResult lResult;
-    PvBuffer *lBuffer = NULL;
-    PvResult lOperationResult;
-
     DBGPRINT("GRABTHREAD: Started.")
     while(!quit_grab_thread) {
-        grabbedBuffListMtx.lock();
-        // housekeeping
-        GrabbedBufferList::iterator lIt =  lGrabbedBuffList.begin();
-        while(lIt != lGrabbedBuffList.end()) {
-            if(!lIt->valid) {
-                lStreamMtx.lock();
-                lStream->QueueBuffer(lIt->buff);
-                lStreamMtx.unlock();
-                lIt = lGrabbedBuffList.erase(lIt);
-                DBGPRINT("GRABTHREAD: Requeued buffer.")
-            } else {
-                ++lIt;
-            }
-        }
-        grabbedBuffListMtx.unlock();
-
-        // Retrieve next buffer
-        lStreamMtx.lock();
-        lResult = lStream->RetrieveBuffer( &lBuffer, &lOperationResult, 50000);
-        lStreamMtx.unlock();
-
-        if ( !lResult.IsOK() ) {
-            if(lResult && (lResult.GetCode() == PvResult::Code::NO_MORE_ITEM)) {
-                // No more buffer left in the queue, wait a bit before retrying.
-                boostd::this_thread::sleep_for(boostd::chrono::milliseconds(5));
-            } else if(lResult && !(lResult.GetCode() == PvResult::Code::TIMEOUT)) {
-                pango_print_warn("Pleora error: %s,\n", lResult.GetCodeString().GetAscii());
-            }
-        } else {
-            grabbedBuffListMtx.lock();
-            lGrabbedBuffList.push_back(GrabbedBuffer(lBuffer,lOperationResult,true));
-            ++validGrabbedBuffers;
-            grabbedBuffListMtx.unlock();
+        unsigned char* i = queue.getFreeBuffer();
+        // Blocking Grab next with wait = true
+        if(videoin[0]->GrabNext(i,false)){
+            queue.addValidBuffer(i);
+            DBGPRINT("GRABTHREAD: got frame.")
+            // Let listening thread know we goit a frame in case they are waiting
             cv.notify_all();
         }
         boostd::this_thread::yield();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-
-    grabbedBuffListMtx.lock();
-    lStreamMtx.lock();
-    // housekeeping
-    GrabbedBufferList::iterator lIt =  lGrabbedBuffList.begin();
-    while(lIt != lGrabbedBuffList.end()) {
-        lStream->QueueBuffer(lIt->buff);
-        lIt = lGrabbedBuffList.erase(lIt);
-    }
-    validGrabbedBuffers = 0;
-    lStreamMtx.unlock();
-    grabbedBuffListMtx.unlock();
 
     DBGPRINT("GRABTHREAD: Stopped.")
 
@@ -201,3 +190,7 @@ void PleoraVideo::operator()()
 }
 
 }
+
+#undef TSTART
+#undef TGRABANDPRINT
+#undef DBGPRINT
