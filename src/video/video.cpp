@@ -555,7 +555,8 @@ VideoInterface* OpenVideo(const Uri& uri)
     if(!uri.scheme.compare("thread"))
     {
         VideoInterface* subvid = OpenVideo(uri.url);
-        video = new ThreadVideo(subvid);
+        const int num_buffers = uri.Get<int>("num_buffers", 30);
+        video = new ThreadVideo(subvid, num_buffers);
     }else
 #ifdef HAVE_FFMPEG
     if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){
