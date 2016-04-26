@@ -192,6 +192,9 @@ void ThreadVideo::operator()()
             DBGPRINT("Grab thread got frame. valid:%d free:%d",queue.AvailableFrames(),queue.EmptyBuffers())
             // Let listening threads know we got a frame in case they are waiting.
             cv.notify_all();
+        } else {
+            // Grabbing frames failed, requeue the buffer.
+            queue.returnUsedBuffer(i);
         }
         boostd::this_thread::yield();
     }
