@@ -46,7 +46,8 @@ enum MirrorOptions
 class PANGOLIN_EXPORT MirrorVideo :
     public VideoInterface,
     public VideoFilterInterface,
-    public VideoPropertiesInterface
+    public VideoPropertiesInterface,
+    public BufferAwareVideoInterface
 {
 public:
     MirrorVideo(VideoInterface* videoin, const std::vector<MirrorOptions>& flips);
@@ -78,6 +79,10 @@ public:
 
     //! Implement VideoPropertiesInterface method
     const json::value& FrameProperties() const;
+
+    uint32_t AvailableFrames() const;
+
+    bool DropNFrames(uint32_t n);
 
 protected:
     void Process(unsigned char* image, const unsigned char* buffer);

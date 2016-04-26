@@ -92,19 +92,13 @@ const std::vector<StreamInfo>& ThreadVideo::Streams() const
 const json::value& ThreadVideo::DeviceProperties() const
 {
     VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    if(!in_prop)
-        throw std::runtime_error("ThreadVideo: video in interface does not implement VideoPropertiesInterface.");
-    else
-        return in_prop->FrameProperties();
+    return in_prop ? in_prop->DeviceProperties() : device_properties;
 }
 
 const json::value& ThreadVideo::FrameProperties() const
 {
     VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    if(!in_prop)
-        throw std::runtime_error("ThreadVideo: video in interface does not implement VideoPropertiesInterface.");
-    else
-        return in_prop->FrameProperties();
+    return in_prop ? in_prop->FrameProperties() : frame_properties;
 }
 
 unsigned int ThreadVideo::AvailableFrames() const

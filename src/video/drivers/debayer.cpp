@@ -92,6 +92,35 @@ const std::vector<StreamInfo>& DebayerVideo::Streams() const
     return streams;
 }
 
+
+unsigned int DebayerVideo::AvailableFrames() const
+{
+    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin[0]);
+    if(!vpi)
+    {
+        pango_print_warn("Debayer: child interface is not buffer aware.");
+        return 0;
+    }
+    else
+    {
+        return vpi->AvailableFrames();
+    }
+}
+
+bool DebayerVideo::DropNFrames(uint32_t n)
+{
+    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin[0]);
+    if(!vpi)
+    {
+        pango_print_warn("Debayer: child interface is not buffer aware.");
+        return false;
+    }
+    else
+    {
+        return vpi->DropNFrames(n);
+    }
+}
+
 void DownsampleDebayer(Image<unsigned char>& out, const Image<unsigned char>& in, color_filter_t tile)
 {
     switch(tile) {
@@ -181,6 +210,18 @@ bool DebayerVideo::GrabNewest( unsigned char* image, bool wait )
     }else{
         return false;
     }
+}
+
+const json::value& DebayerVideo::DeviceProperties() const
+{
+    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
+    return in_prop ? in_prop->DeviceProperties() : device_properties;
+}
+
+const json::value& DebayerVideo::FrameProperties() const
+{
+    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
+    return in_prop ? in_prop->FrameProperties() : frame_properties;
 }
 
 std::vector<VideoInterface*>& DebayerVideo::InputStreams()

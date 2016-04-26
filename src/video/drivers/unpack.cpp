@@ -27,7 +27,7 @@
 
 #include <pangolin/video/drivers/unpack.h>
 
-#ifdef DEBUGJOIN
+#ifdef DEBUGUNPACK
   #include <pangolin/utils/timer.h>
   #define TSTART() pangolin::basetime start,last,now; start = pangolin::TimeNow(); last = start;
   #define TGRABANDPRINT(...)  now = pangolin::TimeNow(); fprintf(stderr,"UNPACK: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr, " %fms.\n",1000*pangolin::TimeDiff_s(last, now)); last = now;
@@ -221,6 +221,34 @@ bool UnpackVideo::GrabNewest( unsigned char* image, bool wait )
 std::vector<VideoInterface*>& UnpackVideo::InputStreams()
 {
     return videoin;
+}
+
+unsigned int UnpackVideo::AvailableFrames() const
+{
+    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin[0]);
+    if(!vpi)
+    {
+        pango_print_warn("Unpack: child interface is not buffer aware.");
+        return 0;
+    }
+    else
+    {
+        return vpi->AvailableFrames();
+    }
+}
+
+bool UnpackVideo::DropNFrames(uint32_t n)
+{
+    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin[0]);
+    if(!vpi)
+    {
+        pango_print_warn("Unpack: child interface is not buffer aware.");
+        return false;
+    }
+    else
+    {
+        return vpi->DropNFrames(n);
+    }
 }
 
 const json::value& UnpackVideo::DeviceProperties() const
