@@ -76,6 +76,7 @@
 #include <pangolin/video/drivers/mirror.h>
 #include <pangolin/video/drivers/unpack.h>
 #include <pangolin/video/drivers/join.h>
+#include <pangolin/video/drivers/thread.h>
 
 #include <map>
 
@@ -550,6 +551,12 @@ VideoInterface* OpenVideo(const Uri& uri)
         }
         
         video = new VideoSplitter(subvid,streams);
+    }else
+    if(!uri.scheme.compare("thread"))
+    {
+        VideoInterface* subvid = OpenVideo(uri.url);
+        const int num_buffers = uri.Get<int>("num_buffers", 30);
+        video = new ThreadVideo(subvid, num_buffers);
     }else
 #ifdef HAVE_FFMPEG
     if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){
