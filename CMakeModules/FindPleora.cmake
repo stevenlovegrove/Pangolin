@@ -5,19 +5,23 @@
 #  Pleora_LIBRARIES - link these to use pleora eUSB SDK
 #  Pleora_BASE_DIR - set env varivales to this to use pleora eUSB SDK
 
+if(NOT PLEORA_ARCH)
+  set(PLEORA_ARCH "Ubuntu-12.04-x86_64")
+endif()
 
 set( INCLUDE_SEARCH_PATHS
-	"/opt/pleora/ebus_sdk/Ubuntu-12.04-x86_64/include"
+	"/opt/pleora/ebus_sdk/${PLEORA_ARCH}/include"
 	"$ENV{ProgramFiles}/Pleora Technologies Inc/eBUS SDK/Includes"
 )
 
 set( LIBRARIES_SEARCH_PATHS
-	"/opt/pleora/ebus_sdk/Ubuntu-12.04-x86_64/lib"
+	"/opt/pleora/ebus_sdk/${PLEORA_ARCH}/lib"
 	"$ENV{ProgramFiles}/Pleora Technologies Inc/eBUS SDK/Libraries"
 )
 
 set( GENAPI_SEARCH_PATHS
-   "/opt/pleora/ebus_sdk/Ubuntu-12.04-x86_64/lib/genicam/bin/Linux64_x64"
+   "/opt/pleora/ebus_sdk/${PLEORA_ARCH}/lib/genicam/bin/Linux64_x64"
+   "/opt/pleora/ebus_sdk/${PLEORA_ARCH}/lib/genicam/bin/Linux32_ARM"
    "$ENV{ProgramW6432}/GenICam_v2_4/library/CPP/lib/Win64_x64"
 )
 
@@ -115,7 +119,7 @@ FIND_LIBRARY(
 )
 FIND_LIBRARY(
   GENAPI_LIBRARY
-  NAMES GenApi_gcc40_v2_4 GenApi_MD_VC80_v2_4
+  NAMES GenApi_gcc40_v2_4 GenApi_gcc43_v2_4 GenApi_MD_VC80_v2_4
   HINTS ${PC_GENAPI_LIBRARY_DIR}
   PATH ${GENAPI_SEARCH_PATHS}
 )
