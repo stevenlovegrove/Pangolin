@@ -120,13 +120,14 @@ bool ThreadVideo::DropNFrames(uint32_t n)
 //! Implement VideoInput::GrabNext()
 bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
 {
-
+    TSTART()
     if(queue.AvailableFrames() > 0) {
         // At least one valid frame in queue, return it.
         DBGPRINT("GrabNext at least one frame available.");
         unsigned char* i = queue.getNext();
         std::memcpy(image, i, queue.BufferSizeBytes());
         queue.returnUsedBuffer(i);
+        TGRABANDPRINT("GrabNext memcpy of available frame took")
         return true;
     } else {
         if(wait) {
@@ -139,6 +140,7 @@ bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
             unsigned char* i = queue.getNext();
             std::memcpy(image, i, queue.BufferSizeBytes());
             queue.returnUsedBuffer(i);
+            TGRABANDPRINT("GrabNext wait for lock and memcpy of available frame took")
             return true;
         } else {
             DBGPRINT("GrabNext no available frames no wait.");
@@ -151,12 +153,14 @@ bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
 //! Implement VideoInput::GrabNewest()
 bool ThreadVideo::GrabNewest( unsigned char* image, bool wait )
 {
+    TSTART()
     if(queue.AvailableFrames() > 0) {
         // At least one valid frame in queue, call grabNewest to drop old frame and return the newest.
         DBGPRINT("GrabNewest at least one frame available.");
         unsigned char* i = queue.getNewest();
         std::memcpy(image, i, queue.BufferSizeBytes());
         queue.returnUsedBuffer(i);
+        TGRABANDPRINT("GrabNewest memcpy of available frame took")
         return true;
     } else {
         if(wait) {
@@ -169,6 +173,7 @@ bool ThreadVideo::GrabNewest( unsigned char* image, bool wait )
             unsigned char* i = queue.getNext();
             std::memcpy(image, i, queue.BufferSizeBytes());
             queue.returnUsedBuffer(i);
+            TGRABANDPRINT("GrabNwest wait for lock and memcpy of available frame took")
             return true;
         } else {
             DBGPRINT("GrabNewest no available frames no wait.");
