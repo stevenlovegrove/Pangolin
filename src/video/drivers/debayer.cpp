@@ -162,7 +162,25 @@ bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
 //! Implement VideoInput::GrabNewest()
 bool DebayerVideo::GrabNewest( unsigned char* image, bool wait )
 {
-    return GrabNext(image,wait);
+    if(videoin[0]->GrabNewest(buffer,wait)) {
+        for(size_t s=0; s<streams.size(); ++s) {
+            Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
+            Image<unsigned char> img_out = Streams()[s].StreamImage(image);
+
+#ifdef HAVE_DC1394
+            dc1394_bayer_decoding_8bit(
+                img_in.ptr, img_out.ptr, img_in.w, img_in.h,
+                (dc1394color_filter_t)tile, (dc1394bayer_method_t)method
+            );
+#else
+            // use our simple debayering instead
+            DownsampleDebayer(img_out, img_in, tile);
+#endif
+        }
+        return true;
+    }else{
+        return false;
+    }
 }
 
 std::vector<VideoInterface*>& DebayerVideo::InputStreams()
