@@ -132,7 +132,7 @@ bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
     } else {
         if(wait) {
             // Must return a frame so block on notification from grab thread.
-            std::unique_lock<std::mutex> lk(cvMtx);
+            std::unique_lock<boostd::mutex> lk(cvMtx);
             DBGPRINT("GrabNext no available frames wait for notification.");
             if(cv.wait_for(lk, boostd::chrono::seconds(5)) == boostd::cv_status::timeout)
                 throw std::runtime_error("ThreadVideo: GrabNext blocking read for frames reached timeout.");
@@ -166,7 +166,7 @@ bool ThreadVideo::GrabNewest( unsigned char* image, bool wait )
         if(wait) {
             // Must return a frame so block on notification from grab thread.
             DBGPRINT("GrabNewest no available frames wait for notification.");
-            std::unique_lock<std::mutex> lk(cvMtx);
+            boostd::unique_lock<boostd::mutex> lk(cvMtx);
             if(cv.wait_for(lk, boostd::chrono::seconds(5)) == boostd::cv_status::timeout)
                 throw std::runtime_error("ThreadVideo: GrabNewest blocking read for frames reached timeout.");
             DBGPRINT("GrabNewest got notification.");

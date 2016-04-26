@@ -34,6 +34,7 @@
 #include <pangolin/compat/thread.h>
 #include <pangolin/compat/mutex.h>
 #include <pangolin/compat/condition_variable.h>
+#include <pangolin/compat/locks.h>
 
 namespace pangolin
 {
@@ -48,12 +49,12 @@ public:
 
     ~FixSizeBuffersQueue() {
         // Deallocate everything.
-        std::lock_guard<std::mutex> vlock(vMtx);
+        boostd::lock_guard<boostd::mutex> vlock(vMtx);
         while(validBuffers.size() > 0){
             delete[] validBuffers.front();
             validBuffers.pop_front();
         }
-        std::lock_guard<std::mutex> elock(eMtx);
+        boostd::lock_guard<boostd::mutex> elock(eMtx);
         while(emptyBuffers.size() > 0){
             delete[] emptyBuffers.front();
             emptyBuffers.pop_front();
@@ -64,8 +65,8 @@ public:
         maxNumBuffers = num;
         bufferSizeBytes = sizeBytes;
         // lock queue
-        std::lock_guard<std::mutex> vlock(vMtx);
-        std::lock_guard<std::mutex> elock(eMtx);
+        boostd::lock_guard<boostd::mutex> vlock(vMtx);
+        boostd::lock_guard<boostd::mutex> elock(eMtx);
 
         // Put back any valid buffer to the available buffers queue.
         while(validBuffers.size() > 0){
@@ -79,8 +80,8 @@ public:
     }
 
     BufPType getNewest() {
-        std::lock_guard<std::mutex> vlock(vMtx);
-        std::lock_guard<std::mutex> elock(eMtx);
+        boostd::lock_guard<boostd::mutex> vlock(vMtx);
+        boostd::lock_guard<boostd::mutex> elock(eMtx);
         if(validBuffers.size() == 0) {
             // Empty queue.
             return 0;
@@ -98,7 +99,7 @@ public:
     }
 
     BufPType getNext() {
-        std::lock_guard<std::mutex> vlock(vMtx);
+        boostd::lock_guard<boostd::mutex> vlock(vMtx);
         if(validBuffers.size() == 0) {
             // Empty queue.
             return 0;
@@ -111,8 +112,8 @@ public:
     }
 
     BufPType getFreeBuffer() {
-        std::lock_guard<std::mutex> vlock(vMtx);
-        std::lock_guard<std::mutex> elock(eMtx);
+        boostd::lock_guard<boostd::mutex> vlock(vMtx);
+        boostd::lock_guard<boostd::mutex> elock(eMtx);
         if(emptyBuffers.size() > 0) {
             // Simply get a free buffer from the free buffers list.
             BufPType bp = emptyBuffers.front();
@@ -133,32 +134,32 @@ public:
 
     void addValidBuffer(BufPType bp) {
         // Add buffer to valid buffers queue.
-        std::lock_guard<std::mutex> vlock(vMtx);
+        boostd::lock_guard<boostd::mutex> vlock(vMtx);
         validBuffers.push_back(bp);
     }
 
     void returnUsedBuffer(BufPType bp) {
         // Add buffer back to empty buffers queue.
-        std::lock_guard<std::mutex> elock(eMtx);
+        boostd::lock_guard<boostd::mutex> elock(eMtx);
         emptyBuffers.push_back(bp);
     }
 
     const unsigned int AvailableFrames() const {
-        std::lock_guard<std::mutex> vlock(vMtx);
+        boostd::lock_guard<boostd::mutex> vlock(vMtx);
         return validBuffers.size();
     }
 
     const unsigned int EmptyBuffers() const {
-        std::lock_guard<std::mutex> elock(eMtx);
+        boostd::lock_guard<boostd::mutex> elock(eMtx);
         return emptyBuffers.size();
     }
 
     bool DropNFrames(unsigned int n) {
-        std::lock_guard<std::mutex> vlock(vMtx);
+        boostd::lock_guard<boostd::mutex> vlock(vMtx);
         if(validBuffers.size() < n) {
             return false;
         } else {
-            std::lock_guard<std::mutex> elock(eMtx);
+            boostd::lock_guard<boostd::mutex> elock(eMtx);
             // Requeue all but newest buffers.
             for(unsigned int i=0; i<n; ++i) {
                 emptyBuffers.push_back(validBuffers.front());
