@@ -148,6 +148,11 @@ public:
         return validBuffers.size();
     }
 
+    const unsigned int EmptyBuffers() const {
+        std::lock_guard<std::mutex> elock(eMtx);
+        return emptyBuffers.size();
+    }
+
     bool DropNFrames(unsigned int n) {
         std::lock_guard<std::mutex> vlock(vMtx);
         if(validBuffers.size() < n) {
@@ -171,7 +176,7 @@ private:
     std::list<BufPType> validBuffers;
     std::list<BufPType> emptyBuffers;
     mutable boostd::mutex vMtx;
-    boostd::mutex eMtx;
+    mutable boostd::mutex eMtx;
     unsigned int maxNumBuffers;
     unsigned int bufferSizeBytes;
 };
@@ -222,9 +227,6 @@ protected:
     boostd::condition_variable cv;
     boostd::mutex cvMtx;
     boostd::thread grab_thread;
-
-    json::value device_properties;
-    json::value frame_properties;
 };
 
 }

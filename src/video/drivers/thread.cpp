@@ -27,8 +27,6 @@
 
 #include <pangolin/video/drivers/thread.h>
 
-#define DEBUGTHREAD
-
 #ifdef DEBUGTHREAD
   #include <pangolin/utils/timer.h>
   #define TSTART() pangolin::basetime start,last,now; start = pangolin::TimeNow(); last = start;
@@ -58,7 +56,7 @@ ThreadVideo::~ThreadVideo()
 {
     Stop();
     delete videoin[0];
-    // queue destructor will deallocate buffers.
+    // queue destructor will take care of deallocating buffers.
 }
 
 //! Implement VideoInput::Start()
@@ -94,13 +92,19 @@ const std::vector<StreamInfo>& ThreadVideo::Streams() const
 const json::value& ThreadVideo::DeviceProperties() const
 {
     VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    return in_prop ? in_prop->DeviceProperties() : device_properties;
+    if(!in_prop)
+        throw std::runtime_error("ThreadVideo: video in interface does not implement VideoPropertiesInterface.");
+    else
+        return in_prop->FrameProperties();
 }
 
 const json::value& ThreadVideo::FrameProperties() const
 {
     VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    return in_prop ? in_prop->FrameProperties() : frame_properties;
+    if(!in_prop)
+        throw std::runtime_error("ThreadVideo: video in interface does not implement VideoPropertiesInterface.");
+    else
+        return in_prop->FrameProperties();
 }
 
 unsigned int ThreadVideo::AvailableFrames() const
@@ -116,24 +120,29 @@ bool ThreadVideo::DropNFrames(uint32_t n)
 //! Implement VideoInput::GrabNext()
 bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
 {
-    // if something in queue return it
+
     if(queue.AvailableFrames() > 0) {
+        // At least one valid frame in queue, return it.
+        DBGPRINT("GrabNext at least one frame available.");
         unsigned char* i = queue.getNext();
         std::memcpy(image, i, queue.BufferSizeBytes());
         queue.returnUsedBuffer(i);
         return true;
     } else {
         if(wait) {
-            // Blocking on notification from grab thread.
+            // Must return a frame so block on notification from grab thread.
             std::unique_lock<std::mutex> lk(cvMtx);
+            DBGPRINT("GrabNext no available frames wait for notification.");
             if(cv.wait_for(lk, boostd::chrono::seconds(5)) == boostd::cv_status::timeout)
-                throw std::runtime_error("Thread: GrabNext blocking read for frames reached timeout.");
+                throw std::runtime_error("ThreadVideo: GrabNext blocking read for frames reached timeout.");
+            DBGPRINT("GrabNext got notification.");
             unsigned char* i = queue.getNext();
             std::memcpy(image, i, queue.BufferSizeBytes());
             queue.returnUsedBuffer(i);
             return true;
         } else {
-            // No wait, simply return false.
+            DBGPRINT("GrabNext no available frames no wait.");
+            // No frames available, no wait, simply return false.
             return false;
         }
     }
@@ -142,27 +151,28 @@ bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
 //! Implement VideoInput::GrabNewest()
 bool ThreadVideo::GrabNewest( unsigned char* image, bool wait )
 {
-    // if > 1 in queue, drop all but last & return last
-    // else if wait, mutex block on grab thread
-    // else return false
-    // if something in queue return it
     if(queue.AvailableFrames() > 0) {
+        // At least one valid frame in queue, call grabNewest to drop old frame and return the newest.
+        DBGPRINT("GrabNewest at least one frame available.");
         unsigned char* i = queue.getNewest();
         std::memcpy(image, i, queue.BufferSizeBytes());
         queue.returnUsedBuffer(i);
         return true;
     } else {
         if(wait) {
-            // Blocking on notification from grab thread.
+            // Must return a frame so block on notification from grab thread.
+            DBGPRINT("GrabNewest no available frames wait for notification.");
             std::unique_lock<std::mutex> lk(cvMtx);
             if(cv.wait_for(lk, boostd::chrono::seconds(5)) == boostd::cv_status::timeout)
-                throw std::runtime_error("Thread: GrabNewest blocking read for frames reached timeout.");
+                throw std::runtime_error("ThreadVideo: GrabNewest blocking read for frames reached timeout.");
+            DBGPRINT("GrabNewest got notification.");
             unsigned char* i = queue.getNext();
             std::memcpy(image, i, queue.BufferSizeBytes());
             queue.returnUsedBuffer(i);
             return true;
         } else {
-            // No wait, simply return false.
+            DBGPRINT("GrabNewest no available frames no wait.");
+            // No frames available, no wait, simply return false.
             return false;
         }
     }
@@ -170,21 +180,22 @@ bool ThreadVideo::GrabNewest( unsigned char* image, bool wait )
 
 void ThreadVideo::operator()()
 {
-    DBGPRINT("GRABTHREAD: Started.")
+    DBGPRINT("Grab thread Started.")
+    // Spinning thread attempting to read from videoin[0] as fast as possible
+    // relying on the videoin[0] blocking grab.
     while(!quit_grab_thread) {
+        // Get a buffer from the queue;
         unsigned char* i = queue.getFreeBuffer();
-        // Blocking Grab next with wait = true
-        if(videoin[0]->GrabNext(i,false)){
+        // Blocking grab (i.e. GrabNext with wait = true).
+        if(videoin[0]->GrabNext(i, true)){
             queue.addValidBuffer(i);
-            DBGPRINT("GRABTHREAD: got frame.")
-            // Let listening thread know we goit a frame in case they are waiting
+            DBGPRINT("Grab thread got frame. valid:%d free:%d",queue.AvailableFrames(),queue.EmptyBuffers())
+            // Let listening threads know we got a frame in case they are waiting.
             cv.notify_all();
         }
         boostd::this_thread::yield();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-
-    DBGPRINT("GRABTHREAD: Stopped.")
+    DBGPRINT("Grab thread Stopped.")
 
     return;
 }
