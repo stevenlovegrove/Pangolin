@@ -229,16 +229,16 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 #endif // CALLEE_HAS_CPP11
 
 #ifdef DEBUGVIDEOVIEWER
-    unsigned int delayus = 0;
+    unsigned int delayms = 0;
     pangolin::RegisterKeyPressCallback('z', [&](){
       // Adapt delay
-      delayus += 1000;
-      std::cout << "                  Fake delay " << delayus << "us" << std::endl;
+      delayms += 1;
+      std::cout << "                  Fake delay " << delayms << "ms" << std::endl;
     });
 
     pangolin::RegisterKeyPressCallback('x', [&](){
       // Adapt delay
-      delayus = (delayus > 1000) ? delayus-1000 : 0;
+      delayms = (delayms > 1) ? delayms-1 : 0;
     });
 
     pangolin::basetime start,now;
@@ -251,10 +251,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glColor3f(1.0f, 1.0f, 1.0f);
 
 #ifdef DEBUGVIDEOVIEWER
-        boostd::this_thread::sleep_for(boostd::chrono::microseconds(delayus));
+        boostd::this_thread::sleep_for(boostd::chrono::milliseconds(delayms));
         std::cout << "-------------------------------------------------------" << std::endl;
         now = pangolin::TimeNow();
-        std::cout << "      FPS: " << 1.0/pangolin::TimeDiff_s(start, now) << " artificial delay: " << (delayus/1000.0) <<"ms"<< std::endl;
+        std::cout << "      FPS: " << 1.0/pangolin::TimeDiff_s(start, now) << " artificial delay: " << delayms <<"ms"<< std::endl;
         std::cout << "-------------------------------------------------------" << std::endl;
         start = now;
 #endif
