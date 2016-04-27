@@ -62,9 +62,12 @@ ThreadVideo::~ThreadVideo()
 //! Implement VideoInput::Start()
 void ThreadVideo::Start()
 {
-    videoin[0]->Start();
-    quit_grab_thread = false;
-    grab_thread = boostd::thread(boostd::ref(*this));
+    // Only start thread if not already running.
+    if(quit_grab_thread) {
+        videoin[0]->Start();
+        quit_grab_thread = false;
+        grab_thread = boostd::thread(boostd::ref(*this));
+    }
 }
 
 //! Implement VideoInput::Stop()
