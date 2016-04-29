@@ -85,6 +85,10 @@
 //  e.g. for lightwise cameras: "pleora:[size=512x256,pos=712x512,sn=00000274,ExposureTime=10000,PixelFormat=Mono12p,AcquisitionMode=SingleFrame,TriggerSource=Line0,TriggerMode=On]//"
 //  e.g. for toshiba cameras: "pleora:[size=512x256,pos=712x512,sn=0300056,PixelSize=Bpp12,ExposureTime=10000,ImageFormatSelector=Format1,BinningHorizontal=2,BinningVertical=2]//"
 //
+// thread - thread that continuously pulls from the child streams so that data in, unpackking, debayering can be decoupled from the main application thread
+//  e.g. thread://pleora://
+//  e.g. thread://unpack://pleora:[PixelFormat=Mono12p]//
+//
 // convert - use FFMPEG to convert between video pixel formats
 //  e.g. "convert:[fmt=RGB24]//v4l:///dev/video0"
 //  e.g. "convert:[fmt=GRAY8]//v4l:///dev/video0"
