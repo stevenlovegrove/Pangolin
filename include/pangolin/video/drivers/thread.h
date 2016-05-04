@@ -36,6 +36,8 @@
 #include <pangolin/compat/condition_variable.h>
 #include <pangolin/compat/locks.h>
 
+#include <list>
+
 namespace pangolin
 {
 
