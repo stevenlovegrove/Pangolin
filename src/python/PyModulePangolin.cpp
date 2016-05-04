@@ -46,7 +46,6 @@
 
 namespace pangolin
 {
-extern __thread PangolinGl* context;
 
 #ifdef BUILD_PANGOLIN_VARS
 PyObject * pangolin_save(PyObject* /*self*/, PyObject* args)
@@ -79,7 +78,9 @@ PyObject * pangolin_load(PyObject* /*self*/, PyObject* args)
     Py_RETURN_NONE;
 }
 
-#ifdef BUILD_PANGOLIN_VIDEO
+#if defined(BUILD_PANGOLIN_GUI) && defined(BUILD_PANGOLIN_VIDEO)
+extern __thread PangolinGl* context;
+
 PyObject * pangolin_record_window(PyObject* /*self*/, PyObject* args)
 {
     Var<std::string> default_record_uri("pango.console.default_record_uri");
@@ -95,16 +96,16 @@ PyObject * pangolin_record_window(PyObject* /*self*/, PyObject* args)
     }
     Py_RETURN_NONE;
 }
-#endif // BUILD_PANGOLIN_VIDEO
+#endif // defined(BUILD_PANGOLIN_GUI) && defined(BUILD_PANGOLIN_VIDEO)
 
 static PyMethodDef PangoMethods[] = {
 #ifdef BUILD_PANGOLIN_VARS
     {"save",  pangolin_save, METH_VARARGS, "Save Pangolin Variables to a file."},
     {"load",  pangolin_load, METH_VARARGS, "Load Pangolin Variables to a file."},
 #endif // BUILD_PANGOLIN_VARS
-#ifdef BUILD_PANGOLIN_VIDEO
+#if defined(BUILD_PANGOLIN_GUI) && defined(BUILD_PANGOLIN_VIDEO)
     {"record_window",  pangolin_record_window, METH_VARARGS, "Record window contents to video file."},
-#endif // BUILD_PANGOLIN_VIDEO
+#endif // defined(BUILD_PANGOLIN_GUI) && defined(BUILD_PANGOLIN_VIDEO)
     {NULL}
 };
 
