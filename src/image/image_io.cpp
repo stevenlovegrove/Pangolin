@@ -390,10 +390,14 @@ TypedImage LoadJpg(const std::string& filename)
 #endif
 }
 
-VideoPixelFormat PpmFormat(const std::string& strType, int /*num_colours*/)
+VideoPixelFormat PpmFormat(const std::string& strType, int num_colours)
 {
     if(strType == "P5") {
-        return VideoFormatFromString("GRAY8"); 
+        if(num_colours < 256) {
+            return VideoFormatFromString("GRAY8");
+        } else {
+            return VideoFormatFromString("GRAY16LE");
+        }
     }else if(strType == "P6") {
         return VideoFormatFromString("RGB24"); 
     }else{

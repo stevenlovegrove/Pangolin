@@ -228,6 +228,9 @@ protected:
     boostd::condition_variable cv;
     boostd::mutex cvMtx;
     boostd::thread grab_thread;
+
+    json::value device_properties;
+    json::value frame_properties;
 };
 
 }

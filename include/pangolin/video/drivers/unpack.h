@@ -38,7 +38,8 @@ namespace pangolin
 class PANGOLIN_EXPORT UnpackVideo :
     public VideoInterface,
     public VideoFilterInterface,
-    public VideoPropertiesInterface
+    public VideoPropertiesInterface,
+    public BufferAwareVideoInterface
 {
 public:
     UnpackVideo(VideoInterface* videoin, VideoPixelFormat new_fmt);
@@ -70,6 +71,10 @@ public:
 
     //! Implement VideoPropertiesInterface method
     const json::value& FrameProperties() const;
+
+    uint32_t AvailableFrames() const;
+
+    bool DropNFrames(uint32_t n);
 
 protected:
     void Process(unsigned char* image, const unsigned char* buffer);

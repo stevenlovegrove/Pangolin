@@ -43,9 +43,6 @@
 
 #include <stdlib.h>
 #include <list>
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
-#include <pangolin/compat/condition_variable.h>
 
 namespace pangolin
 {
@@ -116,8 +113,6 @@ public:
 
     bool DropNFrames(uint32_t n);
 
-    void operator()();
-
 protected:
 
     void InitDevice(const char *model_name, const char *serial_num, size_t index);
@@ -182,16 +177,8 @@ protected:
     PvGenParameterArray* lStreamParams;
 
     BufferList lBufferList;
-    bool stand_alone_grab_thread;
-    bool quit_grab_thread;
     GrabbedBufferList lGrabbedBuffList;
     uint32_t validGrabbedBuffers;
-
-    boostd::mutex lStreamMtx;
-    boostd::mutex grabbedBuffListMtx;
-    boostd::condition_variable cv;
-    boostd::thread grab_thread;
-    std::mutex cv_m;
 };
 
 }

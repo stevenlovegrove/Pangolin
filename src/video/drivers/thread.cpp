@@ -62,9 +62,12 @@ ThreadVideo::~ThreadVideo()
 //! Implement VideoInput::Start()
 void ThreadVideo::Start()
 {
-    videoin[0]->Start();
-    quit_grab_thread = false;
-    grab_thread = boostd::thread(boostd::ref(*this));
+    // Only start thread if not already running.
+    if(quit_grab_thread) {
+        videoin[0]->Start();
+        quit_grab_thread = false;
+        grab_thread = boostd::thread(boostd::ref(*this));
+    }
 }
 
 //! Implement VideoInput::Stop()
@@ -92,19 +95,13 @@ const std::vector<StreamInfo>& ThreadVideo::Streams() const
 const json::value& ThreadVideo::DeviceProperties() const
 {
     VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    if(!in_prop)
-        throw std::runtime_error("ThreadVideo: video in interface does not implement VideoPropertiesInterface.");
-    else
-        return in_prop->FrameProperties();
+    return in_prop ? in_prop->DeviceProperties() : device_properties;
 }
 
 const json::value& ThreadVideo::FrameProperties() const
 {
     VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    if(!in_prop)
-        throw std::runtime_error("ThreadVideo: video in interface does not implement VideoPropertiesInterface.");
-    else
-        return in_prop->FrameProperties();
+    return in_prop ? in_prop->FrameProperties() : frame_properties;
 }
 
 unsigned int ThreadVideo::AvailableFrames() const

@@ -202,4 +202,32 @@ const json::value& MirrorVideo::FrameProperties() const
 }
 
 
+unsigned int MirrorVideo::AvailableFrames() const
+{
+    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin);
+    if(!vpi)
+    {
+        pango_print_warn("Mirror: child interface is not buffer aware.");
+        return 0;
+    }
+    else
+    {
+        return vpi->AvailableFrames();
+    }
+}
+
+bool MirrorVideo::DropNFrames(uint32_t n)
+{
+    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin);
+    if(!vpi)
+    {
+        pango_print_warn("Mirror: child interface is not buffer aware.");
+        return false;
+    }
+    else
+    {
+        return vpi->DropNFrames(n);
+    }
+}
+
 }
