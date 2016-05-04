@@ -25,6 +25,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// This definition is required on older compilers for portable printf format macros.
+// Included here to ensure this is defined before Python includes it.
+#define __STDC_FORMAT_MACROS
+
 #include <pangolin/python/PyModulePangolin.h>
 
 #ifdef BUILD_PANGOLIN_VARS
