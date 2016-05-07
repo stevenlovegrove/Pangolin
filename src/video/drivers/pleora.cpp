@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/video/drivers/pleora.h>
+#include <unistd.h>
 
 #ifdef DEBUGPLEORA
   #include <pangolin/utils/timer.h>
@@ -209,6 +210,7 @@ void PleoraVideo::InitDevice(
     lDeviceParams = lDevice->GetParameters();
 }
 
+
 void PleoraVideo::DeinitDevice()
 {
     if(lDevice) {
@@ -251,20 +253,45 @@ void PleoraVideo::SetDeviceParams(Params& p) {
         if(it->first == "get_temperature"){
             getTemp = p.Get<bool>("get_temperature",false);
         } else {
-            try {
-                PvGenParameter* par = lDeviceParams->Get(PvString(it->first.c_str()));
-                if(par) {
-                  PvResult r = par->FromString(PvString(it->second.c_str()));
+            if (it->second == "Execute") {
+              // This is a command, deal with it accordingly.
+              PvGenCommand* cmd = dynamic_cast<PvGenCommand*>(lDeviceParams->Get(it->first.c_str()));
+              if(cmd) {
+                  PvResult r = cmd->Execute();
                   if(!r.IsOK()){
-                     pango_print_error("Error setting parameter %s to:%s Reason:%s\n", it->first.c_str(), it->second.c_str(), r.GetDescription().GetAscii());
+                      pango_print_error("Error executing command %s Reason:%s\n", it->first.c_str(), r.GetDescription().GetAscii());
                   } else {
-                     pango_print_info("Setting parameter %s to:%s\n", it->first.c_str(), it->second.c_str());
+                      pango_print_info("Executed Command %s\n", it->first.c_str());
                   }
-                } else {
-                  pango_print_error("Parameter %s not recognized\n", it->first.c_str());
+                  bool done;
+                  int attempts = 100;
+                  do {
+                      cmd->IsDone(done);
+                      usleep(10000);
+                      attempts--;
+                  } while(!done && (attempts > 0));
+                  if(attempts == 0) {
+                      pango_print_error("Timeout while waiting for command %s done\n", it->first.c_str());
+                  }
+              } else {
+                  pango_print_error("Command %s not recognized\n", it->first.c_str());
+              }
+            } else {
+                try {
+                    PvGenParameter* par = lDeviceParams->Get(PvString(it->first.c_str()));
+                    if(par) {
+                        PvResult r = par->FromString(PvString(it->second.c_str()));
+                        if(!r.IsOK()){
+                            pango_print_error("Error setting parameter %s to:%s Reason:%s\n", it->first.c_str(), it->second.c_str(), r.GetDescription().GetAscii());
+                        } else {
+                            pango_print_info("Setting parameter %s to:%s\n", it->first.c_str(), it->second.c_str());
+                        }
+                    } else {
+                        pango_print_error("Parameter %s not recognized\n", it->first.c_str());
+                    }
+                } catch(std::runtime_error e) {
+                    pango_print_error("Set parameter %s: %s\n", it->first.c_str(), e.what());
                 }
-            } catch(std::runtime_error e) {
-                pango_print_error("Set parameter %s: %s\n", it->first.c_str(), e.what());
             }
         }
     }

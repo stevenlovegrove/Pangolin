@@ -53,7 +53,8 @@ public:
     template<typename T>
     T Get(const std::string& key, T default_val) const
     {
-        for(ParamMap::const_iterator it = params.begin(); it!=params.end(); ++it) {
+        // Return last value passed to the key.
+        for(ParamMap::const_reverse_iterator it = params.rbegin(); it!=params.rend(); ++it) {
             if(it->first == key) return Convert<T, std::string>::Do(it->second);
         }
         return default_val;
@@ -62,12 +63,6 @@ public:
     template<typename T>
     void Set(const std::string& key, const T& val)
     {
-        for(ParamMap::iterator it = params.begin(); it!=params.end(); ++it) {
-            if(it->first == key) {
-                it->second = Convert<std::string,T>::Do(val);
-                return;
-            }
-        }
         params.push_back(std::pair<std::string,std::string>(key,Convert<std::string,T>::Do(val)));
     }
 
