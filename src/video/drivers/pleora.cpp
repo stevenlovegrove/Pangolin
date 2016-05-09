@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/pleora.h>
-#include <unistd.h>
+#include <pangolin/compat/thread.h>
 
 #ifdef DEBUGPLEORA
   #include <pangolin/utils/timer.h>
@@ -264,10 +264,10 @@ void PleoraVideo::SetDeviceParams(Params& p) {
                       pango_print_info("Executed Command %s\n", it->first.c_str());
                   }
                   bool done;
-                  int attempts = 100;
+                  int attempts = 20;
                   do {
                       cmd->IsDone(done);
-                      usleep(10000);
+                      boostd::this_thread::sleep_for(boostd::chrono::milliseconds(1000));
                       attempts--;
                   } while(!done && (attempts > 0));
                   if(attempts == 0) {
