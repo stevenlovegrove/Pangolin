@@ -86,7 +86,7 @@
 //  e.g. for toshiba cameras: "pleora:[size=512x256,pos=712x512,sn=0300056,PixelSize=Bpp12,ExposureTime=10000,ImageFormatSelector=Format1,BinningHorizontal=2,BinningVertical=2]//"
 //  e.g. toshiba alternated "pleora:[UserSetSelector=UserSet1,ExposureTime=10000,PixelSize=Bpp12,Width=1400,OffsetX=0,Height=1800,OffsetY=124,LineSelector=Line1,LineSource=ExposureActive,LineSelector=Line2,LineSource=Off,LineModeAll=6,LineInverterAll=6,UserSetSave=Execute,
 //                                   UserSetSelector=UserSet2,PixelSize=Bpp12,Width=1400,OffsetX=1048,Height=1800,OffsetY=124,ExposureTime=10000,LineSelector=Line1,LineSource=Off,LineSelector=Line2,LineSource=ExposureActive,LineModeAll=6,LineInverterAll=6,UserSetSave=Execute,
-//                                   SequentialShutterIndex=1,SequentialShutterEntry=1,SequentialShutterIndex=2,SequentialShutterEntry=2,SequentialShutterTerminateAt=2,SequentialShutterEnable=On]//"
+//                                   SequentialShutterIndex=1,SequentialShutterEntry=1,SequentialShutterIndex=2,SequentialShutterEntry=2,SequentialShutterTerminateAt=2,SequentialShutterEnable=On,,AcquisitionFrameRateControl=Manual,AcquisitionFrameRate=70]//"
 //
 // thread - thread that continuously pulls from the child streams so that data in, unpackking, debayering can be decoupled from the main application thread
 //  e.g. thread://pleora://
