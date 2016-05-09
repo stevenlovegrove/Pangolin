@@ -641,11 +641,11 @@ VideoInterface* OpenVideo(const Uri& uri)
         OpenNiSensorType img1 = OpenNiRgb;
         OpenNiSensorType img2 = OpenNiUnassigned;
         
-        if(uri.params.find("img1")!=uri.params.end()){
+        if( uri.Contains("img1") ){
             img1 = openni_sensor(uri.Get<std::string>("img1", "depth"));
         }
         
-        if(uri.params.find("img2")!=uri.params.end()){
+        if( uri.Contains("img2") ){
             img2 = openni_sensor(uri.Get<std::string>("img2","rgb"));
         }
 
