@@ -332,7 +332,7 @@ struct PANGOLIN_EXPORT VideoInput :
     // Return pointer to inner video class as VideoType
     template<typename VideoType>
     VideoType* Cast() {
-        return dynamic_cast<VideoType*>(videos[0]);
+        return videos.size() ? dynamic_cast<VideoType*>(videos[0]) : 0;
     }
 
     // experimental - not stable
