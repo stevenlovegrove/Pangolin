@@ -35,12 +35,15 @@
 #  include <Shlobj.h>
 #else
 #  include <dirent.h>
+#  include <sys/types.h>
 #  include <sys/stat.h>
 #  include <sys/signal.h>
 #  include <stdio.h>
+#  include <string.h>
 #  include <unistd.h>
 #  include <fcntl.h>
 #  include <errno.h>
+#  include <poll.h>
 #endif // _WIN_
 
 #include <algorithm>
@@ -289,12 +292,28 @@ bool IsPipe(const std::string& file)
     return false;
 #else
     struct stat st;
-    stat(file.c_str(), &st);
-    return ((st.st_mode & S_IFMT) == S_IFIFO);
+    int err = stat(file.c_str(), &st);
+    return (err == 0) && ((st.st_mode & S_IFMT) == S_IFIFO);
 #endif // _WIN_
 }
 
+bool IsPipe(int fd)
+{
+#ifdef _WIN_
+    return false;
+#else
+    struct stat st;
+    int err = fstat(fd, &st);
+    return (err == 0) && ((st.st_mode & S_IFMT) == S_IFIFO);
+#endif
+}
+
 bool PipeOpen(const std::string& file)
+{
+    return PipeOpenForRead(file);
+}
+
+bool PipeOpenForRead(const std::string& file)
 {
 #ifdef _WIN_
     return false;
@@ -306,6 +325,49 @@ bool PipeOpen(const std::string& file)
     }
     return true;
 #endif // _WIN_
+}
+
+int ReadablePipeFileDescriptor(const std::string& file)
+{
+#ifdef _WIN_
+    return -1;
+#else
+    // Open the file for reading. If there is data to be read, the file
+    // descriptor is returned. Otherwise, it is closed.
+    int fd = open(file.c_str(), O_RDONLY | O_NONBLOCK);
+    if (fd == -1) {
+        return -1;
+    }
+
+    struct pollfd pfd;
+    memset(&pfd, 0, sizeof(pfd));
+    pfd.fd = fd;
+    pfd.events = POLLIN;
+
+    int err = poll(&pfd, 1, 0);
+
+    // If err is 0, the file has no data. If err is negative, an error
+    // occurred.
+    if (err == 1 && pfd.revents & POLLIN) {
+
+        int old = fcntl(fd, F_GETFL);
+        if (old == -1) {
+            close(fd);
+            return -1;
+        }
+
+        err = fcntl(fd, F_SETFL, old & (~O_NONBLOCK));
+        if (err == -1) {
+            close(fd);
+            return -1;
+        }
+
+        return fd;
+    } else {
+        close(fd);
+        return -1;
+    }
+#endif
 }
 
 void FlushPipe(const std::string& file)

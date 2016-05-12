@@ -77,6 +77,15 @@ PANGOLIN_EXPORT
 bool PipeOpen(const std::string& file);
 
 PANGOLIN_EXPORT
+bool IsPipe(int fd);
+
+PANGOLIN_EXPORT
+bool PipeOpenForRead(const std::string& file);
+
+PANGOLIN_EXPORT
+int ReadablePipeFileDescriptor(const std::string& file);
+
+PANGOLIN_EXPORT
 void FlushPipe(const std::string& file);
 
 // TODO: Tidy these inlines up / move them
