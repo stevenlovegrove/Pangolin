@@ -77,7 +77,7 @@ PANGOLIN_EXPORT
 bool IsPipe(int fd);
 
 PANGOLIN_EXPORT
-bool PipeOpenForRead(const std::string& file);
+int WritablePipeFileDescriptor(const std::string& file);
 
 PANGOLIN_EXPORT
 int ReadablePipeFileDescriptor(const std::string& file);

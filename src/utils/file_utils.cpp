@@ -308,17 +308,16 @@ bool IsPipe(int fd)
 #endif
 }
 
-bool PipeOpenForRead(const std::string& file)
+int WritablePipeFileDescriptor(const std::string& file)
 {
 #ifdef _WIN_
     return false;
 #else
-    int fd = open(file.c_str(), O_WRONLY | O_NONBLOCK);
-    if(fd == -1)
-    {
-        return errno != ENXIO;
-    }
-    return true;
+    // open(2) will return ENXIO when there is no reader on the other
+    // side of the pipe, but only if O_WRONLY|O_NONBLOCK is specified.
+    // The file descriptor can be adjusted to be a blocking file
+    // descriptor if it is valid.
+    return open(file.c_str(), O_WRONLY | O_NONBLOCK);
 #endif // _WIN_
 }
 
