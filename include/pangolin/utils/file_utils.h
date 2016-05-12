@@ -79,8 +79,19 @@ bool IsPipe(int fd);
 PANGOLIN_EXPORT
 int WritablePipeFileDescriptor(const std::string& file);
 
+/**
+ * Open the file for reading. Note that it is opened with O_NONBLOCK.  The pipe
+ * open is done in two stages so that the producer knows a reader is waiting
+ * (but not blocked). The reader then checks PipeHasDataToRead() until it
+ * returns true. The file can then be opened. Note that the file descriptor
+ * should be closed after the read stream has been created so that the write
+ * side of the pipe does not get signaled.
+ */
 PANGOLIN_EXPORT
 int ReadablePipeFileDescriptor(const std::string& file);
+
+PANGOLIN_EXPORT
+bool PipeHasDataToRead(int fd);
 
 PANGOLIN_EXPORT
 void FlushPipe(const std::string& file);

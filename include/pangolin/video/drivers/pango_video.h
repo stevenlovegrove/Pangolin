@@ -86,6 +86,7 @@ protected:
     bool realtime;
     bool is_pipe;
     bool is_pipe_open;
+    int pipe_fd;
 };
 
 }

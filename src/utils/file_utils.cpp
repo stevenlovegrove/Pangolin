@@ -326,13 +326,12 @@ int ReadablePipeFileDescriptor(const std::string& file)
 #ifdef _WIN_
     return -1;
 #else
-    // Open the file for reading. If there is data to be read, the file
-    // descriptor is returned. Otherwise, it is closed.
-    int fd = open(file.c_str(), O_RDONLY | O_NONBLOCK);
-    if (fd == -1) {
-        return -1;
-    }
+    return open(file.c_str(), O_RDONLY | O_NONBLOCK);
+#endif
+}
 
+bool PipeHasDataToRead(int fd)
+{
     struct pollfd pfd;
     memset(&pfd, 0, sizeof(pfd));
     pfd.fd = fd;
@@ -342,26 +341,7 @@ int ReadablePipeFileDescriptor(const std::string& file)
 
     // If err is 0, the file has no data. If err is negative, an error
     // occurred.
-    if (err == 1 && pfd.revents & POLLIN) {
-
-        int old = fcntl(fd, F_GETFL);
-        if (old == -1) {
-            close(fd);
-            return -1;
-        }
-
-        err = fcntl(fd, F_SETFL, old & (~O_NONBLOCK));
-        if (err == -1) {
-            close(fd);
-            return -1;
-        }
-
-        return fd;
-    } else {
-        close(fd);
-        return -1;
-    }
-#endif
+    return err == 1 && pfd.revents & POLLIN;
 }
 
 void FlushPipe(const std::string& file)
