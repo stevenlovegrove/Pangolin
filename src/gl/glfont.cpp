@@ -110,7 +110,7 @@ void GlFont::InitialiseFont(const unsigned char* ttf_buffer, float pixel_height,
        stbtt_MakeGlyphBitmap(&f, font_bitmap+x+y*tex_w, gw,gh,tex_w, scale,scale, g);
 
        // Adjust offset for edges of pixels
-       chardata[i] = GlChar(tex_w,tex_h, x, y, gw, gh, scale*advance, x0 -0.5, -y0 -0.5);
+       chardata[i] = GlChar(tex_w,tex_h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
 
        x = x + gw + 1;
        if (y+gh+1 > bottom_y)

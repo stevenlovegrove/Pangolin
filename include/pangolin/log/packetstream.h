@@ -59,7 +59,7 @@ const uint32_t TAG_END          = PANGO_TAG('E', 'N', 'D');
 struct PANGOLIN_EXPORT PacketStreamSource
 {
     std::string     driver;
-    int             id;
+    size_t          id;
     std::string     uri;
     json::value     info;
     json::value     meta;
@@ -69,7 +69,7 @@ struct PANGOLIN_EXPORT PacketStreamSource
     int64_t         data_size_bytes;
 };
 
-typedef unsigned int PacketStreamSourceId;
+typedef size_t PacketStreamSourceId;
 
 PANGOLIN_EXPORT
 int64_t PlaybackTime_us();
@@ -141,8 +141,8 @@ protected:
     bool is_open;
     bool is_pipe;
 
-    std::map<int,std::vector<std::streampos>> src_packet_positions;
-    unsigned int bytes_written;
+    std::map<size_t,std::vector<std::streampos>> src_packet_positions;
+    size_t bytes_written;
 };
 
 class PANGOLIN_EXPORT PacketStreamReader
@@ -160,9 +160,9 @@ public:
         return sources;
     }
 
-    inline int GetPacketIndex(PacketStreamSourceId src_id) const
+    inline size_t GetPacketIndex(PacketStreamSourceId src_id) const
     {
-        std::map<int,size_t>::const_iterator it = src_packet_index.find(src_id);
+        std::map<size_t,size_t>::const_iterator it = src_packet_index.find(src_id);
         if(it != src_packet_index.end()) {
             return it->second -1;
         }else{
@@ -170,17 +170,17 @@ public:
         }
     }
 
-    inline int GetNumPackets(PacketStreamSourceId src_id) const
+    inline size_t GetNumPackets(PacketStreamSourceId src_id) const
     {
-        std::map<int,size_t>::const_iterator it = src_num_packets.find(src_id);
+        std::map<size_t,size_t>::const_iterator it = src_num_packets.find(src_id);
         if(it != src_num_packets.end()) {
             return it->second;
         }else{
-            return std::numeric_limits<int>::max();
+            return std::numeric_limits<size_t>::max();
         }
     }
 
-    int Seek(PacketStreamSourceId src_id, int framenum);
+    size_t Seek(PacketStreamSourceId src_id, size_t framenum);
 
     bool ReadToSourcePacketAndLock(PacketStreamSourceId src_id);
 
@@ -226,15 +226,15 @@ protected:
     std::streampos ReadFooterPacket();
     void ReadSeekIndex();
     void ReadOverSourcePacket(PacketStreamSourceId src_id);
-    void CacheSrcPacketLocationIncFrame(std::streampos src_packet_pos, int src_id);
+    void CacheSrcPacketLocationIncFrame(std::streampos src_packet_pos, size_t src_id);
 
     uint32_t next_tag;
 
     std::vector<PacketStreamSource> sources;
 
-    std::map<int,size_t> src_num_packets;
-    std::map<int,size_t> src_packet_index;
-    std::map<int,std::vector<std::streampos>> src_packet_positions;
+    std::map<size_t,size_t> src_num_packets;
+    std::map<size_t,size_t> src_packet_index;
+    std::map<size_t,std::vector<std::streampos>> src_packet_positions;
 
     std::ifstream reader;
     boostd::mutex read_mutex;

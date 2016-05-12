@@ -30,8 +30,8 @@
 namespace pangolin
 {
 
-void setRandomData(unsigned char * arr, int size){
-  for(int i = 0 ; i < size;i++) {
+void setRandomData(unsigned char * arr, size_t size){
+  for(size_t i = 0 ; i < size;i++) {
 //      arr[i] = (unsigned char)(i * 255.0 / size);
       arr[i] = (unsigned char)(rand()/(RAND_MAX/255.0));
   }

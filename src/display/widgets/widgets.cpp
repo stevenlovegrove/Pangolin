@@ -466,8 +466,8 @@ void Slider::Render()
     oss << setprecision(4) << val;
     string str = oss.str();
     GlText glval = font.Text(str);
-    const int l = glval.Width() + 2;
-    glval.DrawWindow( (GLfloat)(v.l + v.w - l), raster[1] );
+    const float l = glval.Width() + 2.0f;
+    glval.DrawWindow( v.l + v.w - l, raster[1] );
 }
 
 
@@ -536,7 +536,7 @@ void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
             sel[0] = sel[1] = 0;
         }else if(key == 235){
             // end
-            sel[0] = sel[1] = edit.length();
+            sel[0] = sel[1] = (int)edit.length();
         }else if(key < PANGO_SPECIAL){
             edit = edit.substr(0,sel[0]).append(1,key) + edit.substr(sel[1],edit.length()-sel[1]);
             sel[1] = sel[0];
@@ -553,9 +553,9 @@ void TextInput::Mouse(View& view, MouseButton button, int x, int y, bool pressed
         
         if(do_edit)
         {
-            const int sl = gledit.Width() + 2;
+            const int sl = (int)gledit.Width() + 2;
             const int rl = v.l + v.w - sl;
-            int ep = edit.length();
+            int ep = (int)edit.length();
             
             if( x < rl )
             {
@@ -563,7 +563,7 @@ void TextInput::Mouse(View& view, MouseButton button, int x, int y, bool pressed
             }else{
                 for( unsigned i=0; i<edit.length(); ++i )
                 {
-                    const int tl = rl + font.Text(edit.substr(0,i)).Width();
+                    const int tl = (int)(rl + font.Text(edit.substr(0,i)).Width());
                     if(x < tl+2)
                     {
                         ep = i;
@@ -583,7 +583,7 @@ void TextInput::Mouse(View& view, MouseButton button, int x, int y, bool pressed
         }else{
             do_edit = !pressed;
             sel[0] = 0;
-            sel[1] = edit.length();
+            sel[1] = (int)edit.length();
         }
     }
 }
@@ -592,9 +592,9 @@ void TextInput::MouseMotion(View&, int x, int y, int mouse_state)
 {
     if(do_edit)
     {
-        const int sl = gledit.Width() + 2;
+        const int sl = (int)gledit.Width() + 2;
         const int rl = v.l + v.w - sl;
-        int ep = edit.length();
+        int ep = (int)edit.length();
         
         if( x < rl )
         {
@@ -602,7 +602,7 @@ void TextInput::MouseMotion(View&, int x, int y, int mouse_state)
         }else{
             for( unsigned i=0; i<edit.length(); ++i )
             {
-                const int tl = rl + font.Text(edit.substr(0,i)).Width();
+                const int tl = (int)(rl + font.Text(edit.substr(0,i)).Width());
                 if(x < tl+2)
                 {
                     ep = i;
@@ -631,13 +631,13 @@ void TextInput::Render()
     glColor4fv(colour_fg);
     glRect(v);
     
-    const int sl = gledit.Width() + 2;
+    const int sl = (int)gledit.Width() + 2;
     const int rl = v.l + v.w - sl;
     
     if( do_edit && sel[0] >= 0)
     {
-        const int tl = rl + font.Text(edit.substr(0,sel[0])).Width();
-        const int tr = rl + font.Text(edit.substr(0,sel[1])).Width();
+        const int tl = (int)(rl + font.Text(edit.substr(0,sel[0])).Width());
+        const int tr = (int)(rl + font.Text(edit.substr(0,sel[1])).Width());
         glColor4fv(colour_dn);
         glRect(Viewport(tl,v.b,tr-tl,v.h));
     }

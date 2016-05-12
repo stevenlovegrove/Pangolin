@@ -15,7 +15,7 @@ void ConvertPixels(pangolin::Image<To>& to, const pangolin::Image<From>& from)
 {
     for(size_t y=0; y < to.h; ++y) {
         for(size_t x=0; x < to.w; ++x) {
-            to.RowPtr(y)[x] = static_cast<To>( from.RowPtr(y)[x] );
+            to.RowPtr((int)y)[x] = static_cast<To>( from.RowPtr((int)y)[x] );
         }
     }
 }
@@ -53,7 +53,8 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
     // Create OpenGL window - guess sensible dimensions
     pangolin::CreateWindowAndBind( "VideoViewer",
-        video.Width() * num_streams, video.Height() + slider_size
+        (int)(video.Width() * num_streams),
+        (int)(video.Height() + slider_size)
     );
 
     // Assume packed OpenGL data unless otherwise specified
@@ -296,7 +297,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
                 // Get texture of correct dimension / format
                 const pangolin::GlPixFormat& fmt = glfmt[i];
-                pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex(image.w, image.h, fmt.scalable_internal_format, fmt.glformat, GL_FLOAT);
+                pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex((GLsizei)image.w, (GLsizei)image.h, fmt.scalable_internal_format, fmt.glformat, GL_FLOAT);
 
                 // Upload image data to texture
                 tex.Bind();
@@ -305,10 +306,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
                     pangolin::Image<float> fimage(image.w, image.h, image.w*sizeof(float), (float*)scratch_buffer.data());
                     ConvertPixels<float,double>( fimage, image.Reinterpret<double>() );
                     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-                    tex.Upload(fimage.ptr,0,0, fimage.w, fimage.h, fmt.glformat, GL_FLOAT);
+                    tex.Upload(fimage.ptr,0,0, (GLsizei)fimage.w, (GLsizei)fimage.h, fmt.glformat, GL_FLOAT);
                 }else{
-                    glPixelStorei(GL_UNPACK_ROW_LENGTH, strides[i]);
-                    tex.Upload(image.ptr,0,0, image.w, image.h, fmt.glformat, fmt.gltype);
+                    glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)strides[i]);
+                    tex.Upload(image.ptr,0,0, (GLsizei)image.w, (GLsizei)image.h, fmt.glformat, fmt.gltype);
                 }
 
                 // Render
@@ -326,7 +327,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         // leave in pixel orthographic for slider to render.
         pangolin::DisplayBase().ActivatePixelOrthographic();
         if(video.IsRecording()) {
-            pangolin::glRecordGraphic(pangolin::DisplayBase().v.w-14, pangolin::DisplayBase().v.h-14, 7);
+            pangolin::glRecordGraphic(pangolin::DisplayBase().v.w-14.0f, pangolin::DisplayBase().v.h-14.0f, 7.0f);
         }
         pangolin::FinishFrame();
     }

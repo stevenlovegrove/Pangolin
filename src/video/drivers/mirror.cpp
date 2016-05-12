@@ -84,7 +84,7 @@ void PitchedImageCopy(
     }
 
     for(size_t y=0; y < img_out.h; ++y) {
-        std::memcpy(img_out.RowPtr(y), img_in.RowPtr(y), bytes_per_pixel * img_in.w);
+        std::memcpy(img_out.RowPtr((int)y), img_in.RowPtr((int)y), bytes_per_pixel * img_in.w);
     }
 }
 
@@ -99,7 +99,7 @@ void FlipY(
 
     for(size_t y_out=0; y_out < img_out.h; ++y_out) {
         const size_t y_in = (img_in.h-1) - y_out;
-        std::memcpy(img_out.RowPtr(y_out), img_in.RowPtr(y_in), bytes_per_pixel * img_in.w);
+        std::memcpy(img_out.RowPtr((int)y_out), img_in.RowPtr((int)y_in), bytes_per_pixel * img_in.w);
     }
 }
 
@@ -111,8 +111,8 @@ void FlipX(
     for(size_t y=0; y < img_out.h; ++y) {
         for(size_t x=0; x < img_out.w; ++x) {
             memcpy(
-                img_out.RowPtr(y) + (img_out.w-1-x)*bytes_per_pixel,
-                img_in.RowPtr(y)  + x*bytes_per_pixel,
+                img_out.RowPtr((int)y) + (img_out.w-1-x)*bytes_per_pixel,
+                img_in.RowPtr((int)y)  + x*bytes_per_pixel,
                 bytes_per_pixel
             );
         }
@@ -128,8 +128,8 @@ void FlipXY(
         for(size_t x=0; x < img_out.w; ++x) {
             const size_t y_in = (img_in.h-1) - y_out;
             memcpy(
-                img_out.RowPtr(y_out) + (img_out.w-1-x)*bytes_per_pixel,
-                img_in.RowPtr(y_in)   + x*bytes_per_pixel,
+                img_out.RowPtr((int)y_out) + (img_out.w-1-x)*bytes_per_pixel,
+                img_in.RowPtr((int)y_in)   + x*bytes_per_pixel,
                 bytes_per_pixel
             );
         }

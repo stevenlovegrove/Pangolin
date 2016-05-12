@@ -8,7 +8,7 @@ ImageViewHandler::ImageViewHandler()
     : linked_view_handler(0),
       use_nn(false)
 {
-    SetDimensions(1.0, 1.0);
+    SetDimensions(1, 1);
 }
 
 ImageViewHandler::ImageViewHandler(size_t w, size_t h)
@@ -20,8 +20,8 @@ ImageViewHandler::ImageViewHandler(size_t w, size_t h)
 
 void ImageViewHandler::SetDimensions(size_t w, size_t h)
 {
-    rview_default = pangolin::XYRangef(-0.5,w-0.5,-0.5,h-0.5),
-    rview_max = pangolin::XYRangef(-0.5,w-0.5,-0.5,h-0.5),
+    rview_default = pangolin::XYRangef(-0.5f, w-0.5f, -0.5f, h-0.5f),
+    rview_max = pangolin::XYRangef(-0.5f, w-0.5f, -0.5f, h-0.5f),
     rview = rview_default;
     target = rview;
 }
@@ -61,8 +61,8 @@ void ImageViewHandler::glSetViewOrtho()
 void ImageViewHandler::glRenderTexture(pangolin::GlTexture& tex)
 {
     const pangolin::XYRangef& xy = GetViewToRender();
-    const float w = tex.width;
-    const float h = tex.height;
+    const float w = (float)tex.width;
+    const float h = (float)tex.height;
 
     // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
     const GLfloat l = xy.x.min;
@@ -127,11 +127,11 @@ void ImageViewHandler::glRenderOverlay()
             "(%.1f,%.1f)->(%.1f,%.1f)",
             selxy.x.min, selxy.y.min,
             selxy.x.max, selxy.y.max
-        ).DrawWindow(xpix, ypix - 1.0 * pangolin::GlFont::I().Height());
+        ).DrawWindow(xpix, ypix - 1.0f * pangolin::GlFont::I().Height());
     }
 }
 
-void ImageViewHandler::ScreenToImage(Viewport& v, int xpix, int ypix, float& ximg, float& yimg)
+void ImageViewHandler::ScreenToImage(Viewport& v, float xpix, float ypix, float& ximg, float& yimg)
 {
     ximg = rview.x.min + rview.x.Size() * (xpix - v.l) / (float)v.w;
     yimg = rview.y.min + rview.y.Size() * ( 1.0f - (ypix - v.b) / (float)v.h);
@@ -298,7 +298,7 @@ void ImageViewHandler::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, 
 void ImageViewHandler::Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state)
 {
     XYRangef& sel = linked_view_handler ? linked_view_handler->selection : selection;
-    ScreenToImage(view.v, x, y, hover_img[0], hover_img[1]);
+    ScreenToImage(view.v, (float)x, (float)y, hover_img[0], hover_img[1]);
 
     const float scinc = 1.05f;
     const float scdec = 1.0f/scinc;
@@ -342,7 +342,7 @@ void ImageViewHandler::MouseMotion(View& view, int x, int y, int button_state)
     const int d[2] = {x-last_mouse_pos[0], y-last_mouse_pos[1]};
 
     // Update hover status (after potential resizing)
-    ScreenToImage(view.v, x, y, hover_img[0], hover_img[1]);
+    ScreenToImage(view.v, (float)x, (float)y, hover_img[0], hover_img[1]);
 
     if( button_state == MouseButtonLeft )
     {
@@ -351,7 +351,7 @@ void ImageViewHandler::MouseMotion(View& view, int x, int y, int button_state)
         sel.y.max = hover_img[1];
     }else if(button_state == MouseButtonRight )
     {
-        Special(view, InputSpecialScroll, x, y, d[0], d[1], 0.0f, 0.0f, button_state);
+        Special(view, InputSpecialScroll, (float)x, (float)y, (float)d[0], (float)d[1], 0.0f, 0.0f, button_state);
     }
 
     last_mouse_pos[0] = x;
@@ -373,12 +373,12 @@ void ImageViewHandler::Special(View& view, pangolin::InputSpecial inType, float 
         const float df[2] = {is[0]*d[0]/(float)view.v.w, is[1]*d[1]/(float)view.v.h};
         ScrollView(-df[0], df[1]);
     } else if(inType == InputSpecialZoom) {
-        float scale = 1.0 - p1;
+        float scale = 1.0f - p1;
         ScaleView(scale, scale, hover_img[0], hover_img[1]);
     }
 
     // Update hover status (after potential resizing)
-    ScreenToImage( view.v, (int)x, (int)y, hover_img[0], hover_img[1]);
+    ScreenToImage( view.v, x, y, hover_img[0], hover_img[1]);
 }
 
 void ImageViewHandler::FixSelection(XYRangef& sel)

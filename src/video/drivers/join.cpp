@@ -112,7 +112,7 @@ bool VideoJoiner::GrabNext(unsigned char* image, bool wait)
     std::vector<int64_t> reception_times;
     int64_t newest = std::numeric_limits<int64_t>::min();
     int64_t oldest = std::numeric_limits<int64_t>::max();
-    int grabbed_all = src.size();
+    int grabbed_all = (int)src.size();
 
     TSTART()
     DBGPRINT("Entering GrabNext:")
@@ -131,7 +131,7 @@ bool VideoJoiner::GrabNext(unsigned char* image, bool wait)
                if(newest < rt) newest = rt;
                if(oldest > rt) oldest = rt;
            } else {
-               pango_print_error("Stream %lu in join does not support sync_tolerance_us option.\n", s);
+               pango_print_error("Stream %lu in join does not support sync_tolerance_us option.\n", (unsigned long)s);
                throw std::runtime_error("Grab next stream does not support sync_tolerance_us option.\n");
            }
         }
@@ -193,7 +193,7 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
   DBGPRINT("Entering GrabNewest:");
   if(AllInterfacesAreBufferAware(src)) {
      DBGPRINT("All interfaces are BufferAwareVideoInterface.")
-     uint32_t minN = std::numeric_limits<uint32_t>::max();
+     unsigned int minN = std::numeric_limits<unsigned int>::max();
      //Find smallest number of frames it is safe to drop.
      for(size_t s=0; s<src.size(); ++s) {
          auto bai = dynamic_cast<BufferAwareVideoInterface*>(src[s]);
@@ -209,11 +209,11 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
          for(size_t s=0; s<src.size(); ++s) {
              auto bai = dynamic_cast<BufferAwareVideoInterface*>(src[s]);
              if(!bai->DropNFrames(minN - 1)) {
-                 pango_print_error("Stream %lu did not drop %u frames altough available.\n", s, (minN-1));
+                 pango_print_error("Stream %lu did not drop %u frames altough available.\n", (unsigned long)s, (minN-1));
                  return false;
              }
          }
-         TGRABANDPRINT("Dropping %d frames on each interface took ",(minN -1));
+         TGRABANDPRINT("Dropping %u frames on each interface took ",(minN -1));
      }
      return GrabNext(image, wait);
   } else {
@@ -264,7 +264,7 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
                   if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
                       rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
                   } else {
-                      pango_print_error("Stream %lu in join does not support startup_sync_us option.\n", s);
+                      pango_print_error("Stream %lu in join does not support startup_sync_us option.\n", (unsigned long)s);
                   }
               }
           }

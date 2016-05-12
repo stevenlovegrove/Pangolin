@@ -52,8 +52,8 @@ GlText::GlText(const GlText& txt)
 
 GlText::GlText(const GlTexture& font_tex)
     : tex(&font_tex), width(0),
-      ymin(std::numeric_limits<int>::max()),
-      ymax(-std::numeric_limits<int>::max())
+      ymin(std::numeric_limits<GLfloat>::max()),
+      ymax(-std::numeric_limits<GLfloat>::max())
 {
 }
 
@@ -64,7 +64,7 @@ void GlText::AddSpace(GLfloat s)
 
 void GlText::Add(unsigned char c, const GlChar& glc)
 {
-    int x = width;
+    GLfloat x = width;
 
     vs.push_back(glc.GetVert(0) + x);
     vs.push_back(glc.GetVert(1) + x);
@@ -85,8 +85,8 @@ void GlText::Clear()
     str.clear();
     vs.clear();
     width = 0;
-    ymin = +std::numeric_limits<int>::max();
-    ymax = -std::numeric_limits<int>::max();
+    ymin = +std::numeric_limits<GLfloat>::max();
+    ymax = -std::numeric_limits<GLfloat>::max();
 }
 
 void GlText::DrawGlSl() const

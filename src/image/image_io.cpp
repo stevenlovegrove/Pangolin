@@ -288,7 +288,7 @@ void SavePng(const Image<unsigned char>& image, const pangolin::VideoPixelFormat
 
     // Write header
     png_set_IHDR(
-        png_ptr, info_ptr, image.w, image.h, bit_depth, colour_type,
+        png_ptr, info_ptr, (png_uint_32)image.w, (png_uint_32)image.h, bit_depth, colour_type,
         PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT
     );
 

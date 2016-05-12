@@ -48,7 +48,7 @@ ThreadVideo::ThreadVideo(VideoInterface* src, unsigned int num_buffers): quit_gr
     }
     videoin.push_back(src);
     // queue init allocates buffers.
-    queue.init(num_buffers, videoin[0]->SizeBytes());
+    queue.init(num_buffers, (unsigned int)videoin[0]->SizeBytes());
     Start();
 }
 
@@ -104,9 +104,9 @@ const json::value& ThreadVideo::FrameProperties() const
     return in_prop ? in_prop->FrameProperties() : frame_properties;
 }
 
-unsigned int ThreadVideo::AvailableFrames() const
+uint32_t ThreadVideo::AvailableFrames() const
 {
-    return queue.AvailableFrames();
+    return (uint32_t)queue.AvailableFrames();
 }
 
 bool ThreadVideo::DropNFrames(uint32_t n)

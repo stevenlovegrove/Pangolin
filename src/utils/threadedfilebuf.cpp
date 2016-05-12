@@ -215,7 +215,7 @@ void threadedfilebuf::operator()()
                     soft_close();
                     return;
                 }
-            } catch(std::out_of_range & e)
+            } catch(std::out_of_range&)
             {
 //                std::cout << "Please register a SIGPIPE handler for your writer" << std::endl;
             }

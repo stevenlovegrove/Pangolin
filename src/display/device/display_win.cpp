@@ -165,8 +165,8 @@ unsigned char GetPangoKey(WPARAM wParam, LPARAM lParam)
         GetKeyboardState(State);
 
         const UINT scanCode = (lParam >> 8) & 0xFFFFFF00;
-        if( ToUnicode(wParam, scanCode, State, lBuffer, lBufferSize, 0) >=1 ) {
-            return lBuffer[0];
+        if( ToUnicode((UINT)wParam, scanCode, State, lBuffer, lBufferSize, 0) >=1 ) {
+            return (unsigned char)lBuffer[0];
         }
     }
     return 0;
@@ -279,10 +279,10 @@ LPARAM lParam)
         return 0;
 
     case WM_MOUSEWHEEL:
-        process::Scroll(0.0f, GET_WHEEL_DELTA_WPARAM(wParam) / 5.0 );
+        process::Scroll(0.0f, GET_WHEEL_DELTA_WPARAM(wParam) / 5.0f );
         return 0;
     case WM_MOUSEHWHEEL:
-        process::Scroll(GET_WHEEL_DELTA_WPARAM(wParam) / 5.0, 0.0f);
+        process::Scroll(GET_WHEEL_DELTA_WPARAM(wParam) / 5.0f, 0.0f);
         return 0;
     default:
         break;

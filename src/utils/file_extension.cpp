@@ -110,15 +110,16 @@ ImageFileType FileTypeExtension(const std::string& ext)
 ImageFileType FileType(const std::string& filename)
 {
     // Check magic number of file...
-    FILE *fp = fopen(filename.c_str(), "rb");
-    if(fp) {
+    std::ifstream f(filename.c_str(), std::ios::binary );
+    if(f.is_open()) {
         const size_t magic_bytes = 8;
         unsigned char magic[magic_bytes];
-        size_t num_read = fread( (void *)magic, 1, magic_bytes, fp);
-        ImageFileType magic_type = FileTypeMagic(magic, num_read);
-        fclose(fp);
-        if(magic_type != ImageFileTypeUnknown) {
-            return magic_type;
+        f.read((char*)magic, magic_bytes);
+        if(f.good()) {
+            ImageFileType magic_type = FileTypeMagic(magic, magic_bytes);
+            if(magic_type != ImageFileTypeUnknown) {
+                return magic_type;
+            }
         }
     }
 

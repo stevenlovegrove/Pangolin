@@ -113,7 +113,7 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
                 "};"
             );
 
-        packetstreamsrcid = pss.id;
+        packetstreamsrcid = (int)pss.id;
 
         packetstream.AddSource(pss);
     }else{

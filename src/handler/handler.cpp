@@ -185,7 +185,7 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
         if( button == MouseWheelUp || button == MouseWheelDown)
         {
             LieSetIdentity(T_nc);
-            const GLprecision t[] = { 0,0,(button==MouseWheelUp?1:-1)*100*tf};
+            const GLprecision t[3] = { 0,0,(button==MouseWheelUp?1:-1)*100*tf};
             LieSetTranslation<>(T_nc,t);
             if( !(button_state & MouseButtonRight) && !(rot_center[0]==0 && rot_center[1]==0 && rot_center[2]==0) )
             {

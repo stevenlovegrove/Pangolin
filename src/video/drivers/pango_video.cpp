@@ -110,17 +110,17 @@ const json::value& PangoVideo::FrameProperties() const
 
 int PangoVideo::GetCurrentFrameId() const
 {
-    return reader.GetPacketIndex(src_id);
+    return (int)reader.GetPacketIndex(src_id);
 }
 
 int PangoVideo::GetTotalFrames() const
 {
-    return reader.GetNumPackets(src_id);
+    return (int)reader.GetNumPackets(src_id);
 }
 
 int PangoVideo::Seek(int frameid)
 {
-    return reader.Seek(src_id, frameid);
+    return (int)reader.Seek(src_id, std::max(0,frameid) );
 }
 
 int PangoVideo::FindSource()
@@ -152,7 +152,7 @@ int PangoVideo::FindSource()
                     streams.push_back(si);
                 }
 
-                return src_id;
+                return (int)src_id;
             }
         }catch(...) {
             pango_print_info("Unable to parse PacketStream Source. File version incompatible.\n");

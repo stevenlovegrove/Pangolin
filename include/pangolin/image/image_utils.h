@@ -48,8 +48,8 @@ std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, float type_
         for(size_t x=0; x < img.w; ++x) {
             const T val = *(pix++);
             if(val != 0) {
-                if(val < mm.first) mm.first = val;
-                if(val > mm.second) mm.second = val;
+                if(val < mm.first) mm.first = (float)val;
+                if(val > mm.second) mm.second = (float)val;
             }
         }
     }
@@ -74,7 +74,7 @@ pangolin::Image<T> GetImageRoi( pangolin::Image<T> img, const pangolin::XYRangei
 template<typename T>
 std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, pangolin::XYRangei iroi, const pangolin::GlPixFormat& glfmt)
 {
-    iroi.Clamp(0, img.w-1, 0, img.h-1 );
+    iroi.Clamp(0, (int)img.w-1, 0, (int)img.h-1 );
 
     if(glfmt.gltype == GL_UNSIGNED_BYTE) {
         return GetOffsetScale(GetImageRoi(img.template Reinterpret<unsigned char>(), iroi), 255.0f, 1.0f);

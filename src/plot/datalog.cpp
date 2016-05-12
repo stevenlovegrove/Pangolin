@@ -91,7 +91,7 @@ DataLog::~DataLog()
 void DataLog::SetLabels(const std::vector<std::string> & new_labels)
 {
     // Create new labels if needed
-    for( unsigned int i= labels.size(); i < new_labels.size(); ++i )
+    for( size_t i= labels.size(); i < new_labels.size(); ++i )
         labels.push_back( std::string() );
 
     // Add data to existing plots
@@ -104,7 +104,7 @@ const std::vector<std::string>& DataLog::Labels() const
     return labels;
 }
 
-void DataLog::Log(unsigned int dimension, const float* vals, unsigned int samples )
+void DataLog::Log(size_t dimension, const float* vals, unsigned int samples )
 {
     if(!block0) {
         // Create first block
@@ -229,7 +229,7 @@ const DimensionStats& DataLog::Stats(size_t dim) const
     return stats[dim];
 }
 
-unsigned int DataLog::Samples() const
+size_t DataLog::Samples() const
 {
     if(blockn) {
         return blockn->StartId() + blockn->Samples();

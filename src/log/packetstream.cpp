@@ -367,11 +367,8 @@ PacketStreamReader::~PacketStreamReader()
     Close();
 }
 
-int PacketStreamReader::Seek(PacketStreamSourceId src_id, int framenum)
+size_t PacketStreamReader::Seek(PacketStreamSourceId src_id, size_t framenum)
 {
-    // Ensure positive.
-    framenum = std::max(0, framenum);
-
     if(src_id > sources.size()) {
         throw std::runtime_error("Invalid Frame Source ID.");
     }
@@ -382,7 +379,7 @@ int PacketStreamReader::Seek(PacketStreamSourceId src_id, int framenum)
         const size_t backup_frame = GetPacketIndex(src_id);
 
         std::vector<std::streampos>& packet_seek = src_packet_positions[src_id];
-        while(framenum >= (int)packet_seek.size()) {
+        while(framenum >= packet_seek.size()) {
             // We need to read ahead
             int nxt_src_id;
             int64_t time_us;
@@ -541,7 +538,7 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
         {
             const std::streampos src_packet_pos = reader.tellg() - (std::streamoff)TAG_LENGTH;
             time_us = ReadTimestamp();
-            nxt_src_id = ReadCompressedUnsignedInt();
+            nxt_src_id = (int)ReadCompressedUnsignedInt();
             if(nxt_src_id >= (int)sources.size()) {
                 throw std::runtime_error("Invalid Packet Source ID.");
             }
@@ -694,7 +691,7 @@ void PacketStreamReader::ReadSeekIndex()
     // If we were able to backup our position, jump ahead to read footer.
     if(current_pos >= 0) {
         // Move to where we expect TAG_PANGO_PTR to be
-        reader.seekg( -(sizeof(uint64_t)+TAG_LENGTH), std::ios_base::end);
+        reader.seekg( -(std::ifstream::off_type)(sizeof(uint64_t)+TAG_LENGTH), std::ios_base::end);
 
         if(ReadTag() && next_tag == TAG_PANGO_FOOTER) {
             const std::streampos stats_pos = ReadFooterPacket();
@@ -723,7 +720,7 @@ void PacketStreamReader::ReadOverSourcePacket(PacketStreamSourceId src_id)
     }
 }
 
-void PacketStreamReader::CacheSrcPacketLocationIncFrame(std::streampos src_packet_pos, int src_id)
+void PacketStreamReader::CacheSrcPacketLocationIncFrame(std::streampos src_packet_pos, size_t src_id)
 {
     const size_t frame_num = src_packet_index[src_id]++;
     std::vector<std::streampos>& packet_seek = src_packet_positions[src_id];
