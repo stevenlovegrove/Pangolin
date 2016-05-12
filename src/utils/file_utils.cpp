@@ -373,7 +373,7 @@ void FlushPipe(const std::string& file)
     do
     {
         n = read(fd, buf, sizeof(buf));
-    } while(n != -1);
+    } while(n > 0);
     close(fd);
 #endif
 }
