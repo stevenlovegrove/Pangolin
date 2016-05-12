@@ -72,7 +72,7 @@ public:
     void Delete();
     
     //! Reinitialise teture width / height / format
-    void Reinitialise(GLint width, GLint height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL );
+    void Reinitialise(GLsizei width, GLsizei height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL );
     
     void Bind() const;
     void Unbind() const;
@@ -83,10 +83,9 @@ public:
     
     //! Upload data to texture, overwriting a sub-region of it.
     //! data ptr contains packed data_w x data_h of pixel data.
-    void Upload(
-        const void* data,
-        unsigned int tex_x_offset, unsigned int tex_y_offset,
-        unsigned int data_w, unsigned int data_h,
+    void Upload(const void* data,
+        GLsizei tex_x_offset, GLsizei tex_y_offset,
+        GLsizei data_w, GLsizei data_h,
         GLenum data_format, GLenum data_type
     );
 

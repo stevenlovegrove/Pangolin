@@ -158,7 +158,7 @@ inline void GlTexture::Unbind() const
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-inline void GlTexture::Reinitialise(GLint w, GLint h, GLint int_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, GLvoid* data )
+inline void GlTexture::Reinitialise(GLsizei w, GLsizei h, GLint int_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, GLvoid* data )
 {
     if(tid!=0) {
         glDeleteTextures(1,&tid);
@@ -200,8 +200,8 @@ inline void GlTexture::Upload(
 
 inline void GlTexture::Upload(
     const void* data,
-    unsigned int tex_x_offset, unsigned int tex_y_offset,
-    unsigned int data_w, unsigned int data_h,
+    GLsizei tex_x_offset, GLsizei tex_y_offset,
+    GLsizei data_w, GLsizei data_h,
     GLenum data_format, GLenum data_type )
 {
     Bind();
