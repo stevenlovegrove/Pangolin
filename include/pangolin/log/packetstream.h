@@ -192,6 +192,9 @@ public:
         return reader.read(s,n);
     }
 
+private:
+    void InitInternal();
+
 protected:
     inline int64_t ReadTimestamp()
     {

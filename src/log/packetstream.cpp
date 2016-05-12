@@ -324,17 +324,22 @@ void PacketStreamReader::Open(const std::string& filename, bool realtime)
     }
 
     this->realtime = realtime;
-    ++playback_devices;
-
-    const size_t PANGO_MAGIC_LEN = PANGO_MAGIC.size();
-    char buffer[10];
+    is_pipe = pangolin::IsPipe(filename);
 
     reader.open(filename.c_str(), std::ios::in | std::ios::binary);
     if (!reader.good()) {
         throw std::runtime_error("Unable to open file '" + filename + "'.");
     }
 
-    is_pipe = pangolin::IsPipe(filename);
+    InitInternal();
+}
+
+void PacketStreamReader::InitInternal()
+{
+    ++playback_devices;
+
+    const size_t PANGO_MAGIC_LEN = PANGO_MAGIC.size();
+    char buffer[10];
 
     // Check file magic matches expected value
     reader.read(buffer, PANGO_MAGIC_LEN);
