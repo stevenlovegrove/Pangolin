@@ -14,6 +14,7 @@ ExternalProject_Add( __glew
   GIT_TAG 7574ab4d00b683e56adbfdec7da636529dfe65d8
   INSTALL_DIR ${glew_PREFIX}
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${glew_PREFIX}
+             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 )
 
 add_library(_glew STATIC IMPORTED GLOBAL)
@@ -48,6 +49,7 @@ ExternalProject_Add( __zlib
   GIT_TAG v1.2.8
   INSTALL_DIR ${zlib_PREFIX}
   CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${zlib_PREFIX}"
+              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 )
 add_library(_zlib STATIC IMPORTED GLOBAL)
 add_dependencies(_zlib __zlib)
@@ -69,6 +71,7 @@ ExternalProject_Add( __libpng
   CMAKE_ARGS  -DCMAKE_INSTALL_PREFIX=${libpng_PREFIX}
               -DZLIB_INCLUDE_DIR=${zlib_PREFIX}/include
               -DZLIB_LIBRARY=${zlib_PREFIX}/lib/zlibstatic*.lib
+              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
   DEPENDS __zlib
 )
 
@@ -110,6 +113,7 @@ ExternalProject_Add( __libjpeg
   INSTALL_DIR ${libjpeg_PREFIX}
   CMAKE_ARGS  -DCMAKE_INSTALL_PREFIX=${libjpeg_PREFIX}
               -DBUILD_SHARED_LIBS=false
+              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 )
 
 add_library(_libjpeg STATIC IMPORTED GLOBAL)
