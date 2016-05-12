@@ -130,13 +130,13 @@ int PangoVideoOutput::WriteStreams(unsigned char* data, const json::value& frame
 {
     if(is_pipe)
     {
-        if(!packetstream.IsOpen() && pangolin::PipeOpen(filename))
+        if(!packetstream.IsOpen() && pangolin::PipeOpenForRead(filename))
         {
             packetstream.Open(filename, packetstream_buffer_size_bytes);
 
             first_frame = true;
         }
-        else if(packetstream.IsOpen() && !pangolin::PipeOpen(filename))
+        else if(packetstream.IsOpen() && !pangolin::PipeOpenForRead(filename))
         {
             packetstream.ForceClose();
 
