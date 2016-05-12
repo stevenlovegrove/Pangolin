@@ -70,6 +70,9 @@ public:
 
     int Seek(int frameid) PANGOLIN_OVERRIDE;
 
+private:
+    void HandlePipeClosed();
+
 protected:
     int FindSource();
 

@@ -192,6 +192,11 @@ public:
         return reader.read(s,n);
     }
 
+    const std::ifstream& stream() const
+    {
+        return reader;
+    }
+
 private:
     void InitInternal();
 

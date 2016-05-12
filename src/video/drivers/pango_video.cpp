@@ -90,18 +90,15 @@ bool PangoVideo::GrabNext( unsigned char* image, bool /*wait*/ )
             reader.Read((char*)image, size_bytes);
             reader.ReleaseSourcePacketLock(src_id);
             return true;
-        }else{
+        } else {
+            if (is_pipe && !reader.stream().good()) {
+                HandlePipeClosed();
+            }
             return false;
         }
     } catch (std::ios_base::failure& ex) {
         if (is_pipe) {
-            // The pipe was closed by the other end. The pipe will have to be
-            // re-opened, but it is not desirable to block at this point.
-            //
-            // The next time a frame is grabbed, the pipe will be checked and if
-            // it is open, the stream will be re-opened.
-            reader.Close();
-            is_pipe_open = false;
+            HandlePipeClosed();
             return false;
         } else {
             throw ex;
@@ -184,6 +181,17 @@ int PangoVideo::FindSource()
     }
 
     return -1;
+}
+
+void PangoVideo::HandlePipeClosed()
+{
+    // The pipe was closed by the other end. The pipe will have to be
+    // re-opened, but it is not desirable to block at this point.
+    //
+    // The next time a frame is grabbed, the pipe will be checked and if
+    // it is open, the stream will be re-opened.
+    reader.Close();
+    is_pipe_open = false;
 }
 
 }
