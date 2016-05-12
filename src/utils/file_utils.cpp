@@ -308,11 +308,6 @@ bool IsPipe(int fd)
 #endif
 }
 
-bool PipeOpen(const std::string& file)
-{
-    return PipeOpenForRead(file);
-}
-
 bool PipeOpenForRead(const std::string& file)
 {
 #ifdef _WIN_
