@@ -36,7 +36,7 @@
 #endif
 
 #ifdef USE_EIGEN
-#include <Eigen/Eigen>
+#include <Eigen/Core>
 #endif
 
 #ifdef _OSX_

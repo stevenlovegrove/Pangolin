@@ -40,7 +40,7 @@
 #endif
 
 #ifdef USE_EIGEN
-#  include <Eigen/Eigen>
+#  include <Eigen/Core>
 #endif // USE_EIGEN
 
 namespace pangolin

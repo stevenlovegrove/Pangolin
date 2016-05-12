@@ -37,7 +37,7 @@
 #endif
 
 #ifdef USE_EIGEN
-#include <Eigen/Eigen>
+#include <Eigen/Core>
 #endif
 
 #include <math.h>
