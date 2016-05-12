@@ -477,7 +477,10 @@ void PacketStreamReader::ProcessMessage()
     case TAG_SRC_JSON:
     {
         size_t src_id = ReadCompressedUnsignedInt();
-        if(src_id >= sources.size()) {
+        if (src_id == static_cast<size_t>(-1)) {
+            next_tag = TAG_END;
+            return;
+        } else if(src_id >= sources.size()) {
             std::cerr << src_id << std::endl;
             throw std::runtime_error("Invalid Frame Source ID.");
         }
@@ -532,7 +535,9 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
         case TAG_SRC_JSON:
         {
             size_t src_id = ReadCompressedUnsignedInt();
-            if(src_id >= sources.size()) {
+            if (src_id == static_cast<size_t>(-1)) {
+                break;
+            } else if(src_id >= sources.size()) {
                 std::cerr << src_id << std::endl;
                 throw std::runtime_error("Invalid Frame Source ID.");
             }
@@ -543,10 +548,13 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
         {
             const std::streampos src_packet_pos = reader.tellg() - (std::streamoff)TAG_LENGTH;
             time_us = ReadTimestamp();
-            nxt_src_id = (int)ReadCompressedUnsignedInt();
-            if(nxt_src_id >= (int)sources.size()) {
+            size_t src_id = ReadCompressedUnsignedInt();
+            if (src_id == static_cast<size_t>(-1)) {
+                break;
+            } else if(src_id >= sources.size()) {
                 throw std::runtime_error("Invalid Packet Source ID.");
             }
+            nxt_src_id = static_cast<int>(src_id);
             CacheSrcPacketLocationIncFrame(src_packet_pos, nxt_src_id);
             // return, don't break. We're in the middle of this packet.
             return;
@@ -590,10 +598,13 @@ void PacketStreamReader::ReSync()
         buffer[0] = buffer[1];
         buffer[1] = buffer[2];
         reader.read((char*)&buffer[2], 1);
+    } while (reader.good() && curr_tag != TAG_SRC_PACKET);
 
-    } while (curr_tag != TAG_SRC_PACKET);
-
-    next_tag = curr_tag;
+    if (!reader.good()) {
+        next_tag = TAG_END;
+    } else {
+        next_tag = curr_tag;
+    }
 }
 
 void PacketStreamReader::SkipSync()
@@ -602,13 +613,21 @@ void PacketStreamReader::SkipSync()
     char buffer[2];
     reader.read(buffer, 2);
 
+    if (!reader.good()) {
+        next_tag = TAG_END;
+    }
+
     if(buffer[0] == 'G' && buffer[1] == 'O')
     {
         do
         {
             //Skip past the header (assuming it's unchanged), to the next src packet
             ReadTag();
-        } while (next_tag != TAG_SRC_PACKET);
+        } while (reader.good() && next_tag != TAG_SRC_PACKET);
+
+        if (!reader.good()) {
+            next_tag = TAG_END;
+        }
     }
     else
         throw std::runtime_error("Unknown packet type.");
@@ -717,11 +736,15 @@ void PacketStreamReader::ReadOverSourcePacket(PacketStreamSourceId src_id)
 {
     const PacketStreamSource& src = sources[src_id];
 
-    if(src.data_size_bytes > 0) {
+    if (src.data_size_bytes > 0) {
         reader.ignore(src.data_size_bytes);
-    }else{
+    } else {
         size_t size_bytes = ReadCompressedUnsignedInt();
-        reader.ignore(size_bytes);
+        if (size_bytes == static_cast<size_t>(-1)) {
+            return;
+        } else {
+            reader.ignore(size_bytes);
+        }
     }
 }
 

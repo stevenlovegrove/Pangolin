@@ -207,11 +207,15 @@ protected:
     {
         size_t n = 0;
         size_t v = reader.get();
-        while( v & 0x80 ) {
+        while(reader.good() && (v & 0x80)) {
             n |= v & 0x7F;
             n <<= 7;
             v = reader.get();
         }
+        if (!reader.good()) {
+            return static_cast<size_t>(-1);
+        }
+
         return n|v;
     }
 
