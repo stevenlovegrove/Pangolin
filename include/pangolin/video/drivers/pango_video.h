@@ -80,7 +80,9 @@ protected:
     json::value frame_properties;
     int src_id;
     const std::string filename;
+    bool realtime;
     bool is_pipe;
+    bool is_pipe_open;
 };
 
 }

@@ -35,8 +35,13 @@ namespace pangolin
 const std::string pango_video_type = "raw_video";
 
 PangoVideo::PangoVideo(const std::string& filename, bool realtime)
-    : reader(filename, realtime), filename(filename), is_pipe(pangolin::IsPipe(filename))
+    : reader(filename, realtime), filename(filename), realtime(realtime),
+      is_pipe(pangolin::IsPipe(filename)),
+      is_pipe_open(true)
 {
+    // N.B. is_pipe_open can default to true since the reader opens the file and
+    // reads header information from it, which means the pipe must be open and
+    // filled with data.
     src_id = FindSource();
 
     if(src_id == -1) {
@@ -70,18 +75,37 @@ void PangoVideo::Stop()
 
 bool PangoVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
-    if(is_pipe && !pangolin::PipeOpen(filename))
-    {
-        return false;
+    if (is_pipe && !is_pipe_open) {
+        int fd = ReadablePipeFileDescriptor(filename);
+        if (fd != -1) {
+            reader.Open(fd, realtime);
+        } else {
+            return false;
+        }
     }
 
-    if(reader.ReadToSourcePacketAndLock(src_id)) {
-        // read this frames actual data
-        reader.Read((char*)image, size_bytes);
-        reader.ReleaseSourcePacketLock(src_id);
-        return true;
-    }else{
-        return false;
+    try {
+        if(reader.ReadToSourcePacketAndLock(src_id)) {
+            // read this frames actual data
+            reader.Read((char*)image, size_bytes);
+            reader.ReleaseSourcePacketLock(src_id);
+            return true;
+        }else{
+            return false;
+        }
+    } catch (std::ios_base::failure& ex) {
+        if (is_pipe) {
+            // The pipe was closed by the other end. The pipe will have to be
+            // re-opened, but it is not desirable to block at this point.
+            //
+            // The next time a frame is grabbed, the pipe will be checked and if
+            // it is open, the stream will be re-opened.
+            reader.Close();
+            is_pipe_open = false;
+            return false;
+        } else {
+            throw ex;
+        }
     }
 }
 
