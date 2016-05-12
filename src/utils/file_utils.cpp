@@ -32,6 +32,7 @@
 #ifdef _WIN_
 #  define WIN32_LEAN_AND_MEAN
 #  include <Windows.h>
+#  include <Shlobj.h>
 #else
 #  include <dirent.h>
 #  include <sys/stat.h>
@@ -200,15 +201,11 @@ std::string PathExpand(const std::string& sPath)
 {
     if(sPath.length() >0 && sPath[0] == '~') {
 #ifdef _WIN_
-        const size_t buffer_size = 1024;
-        char buffer[buffer_size];
-        size_t size;
         std::string sHomeDir;
-        if (!getenv_s(&size, buffer, buffer_size, "HOMEDRIVE")) {
-            sHomeDir = std::string(buffer, buffer + size);
-            if (!getenv_s(&size, buffer, buffer_size, "HOMEPATH")) {
-                sHomeDir += std::string(buffer, buffer + size);
-            }
+        WCHAR path[MAX_PATH];
+        if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, path))) {
+            std::wstring ws(path);
+            sHomeDir = std::string(ws.begin(), ws.end());
         }
 #else
         std::string sHomeDir = std::string(getenv("HOME"));
