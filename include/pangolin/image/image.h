@@ -49,7 +49,7 @@ struct Image {
     void Dealloc()
     {
         if(ptr) {
-            delete[] ptr;
+            ::operator delete(ptr);
             ptr = NULL;
         }
     }
@@ -60,7 +60,7 @@ struct Image {
         this->w = w;
         this->h = h;
         this->pitch = pitch;
-        this->ptr = new unsigned char[h*pitch];
+        this->ptr = (T*)::operator new(w*pitch);
     }
 
     size_t SizeBytes() const
