@@ -52,7 +52,7 @@ namespace pangolin
 extern __thread PangolinGl* context;
 
 boostd::mutex window_mutex;
-boostd::shared_ptr<X11GlContext> global_gl_context;
+boostd::weak_ptr<X11GlContext> global_gl_context;
 
 const long EVENT_MASKS = ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|ButtonMotionMask|PointerMotionMask|KeyPressMask|KeyReleaseMask;
 
@@ -302,7 +302,7 @@ void X11Window::MakeCurrent(GLXContext ctx)
 
 void X11Window::MakeCurrent()
 {
-    MakeCurrent(glcontext ? glcontext->glcontext : global_gl_context->glcontext);
+    MakeCurrent(glcontext ? glcontext->glcontext : global_gl_context.lock()->glcontext);
 }
 
 void X11Window::ToggleFullscreen()
@@ -466,10 +466,10 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 
     window_mutex.lock();
     boostd::shared_ptr<X11GlContext> newglcontext = boostd::make_shared<X11GlContext>(
-        newdisplay, newfbc, global_gl_context
+        newdisplay, newfbc, global_gl_context.lock()
     );
 
-    if(!global_gl_context) {
+    if(!global_gl_context.lock()) {
         global_gl_context = newglcontext;
     }
     window_mutex.unlock();
