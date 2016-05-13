@@ -30,7 +30,7 @@
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
 
-#include <windowsx.h>
+#include <pangolin/display/device/WinWindow.h>
 
 namespace pangolin
 {
@@ -39,14 +39,54 @@ extern __thread PangolinGl* context;
 
 const char *className = "Pangolin";
 
-WNDCLASS wndClass;
-HWND hWnd;
-HDC hDC;
-HGLRC hGLRC;
-HPALETTE hPalette;
+////////////////////////////////////////////////////////////////////////
+// Utils
+////////////////////////////////////////////////////////////////////////
 
-void
-setupPixelFormat(HDC hDC)
+unsigned char GetPangoKey(WPARAM wParam, LPARAM lParam)
+{
+    switch (wParam)
+    {
+    case VK_F1: return PANGO_SPECIAL + PANGO_KEY_F1;
+    case VK_F2: return PANGO_SPECIAL + PANGO_KEY_F2;
+    case VK_F3: return PANGO_SPECIAL + PANGO_KEY_F3;
+    case VK_F4: return PANGO_SPECIAL + PANGO_KEY_F4;
+    case VK_F5: return PANGO_SPECIAL + PANGO_KEY_F5;
+    case VK_F6: return PANGO_SPECIAL + PANGO_KEY_F6;
+    case VK_F7: return PANGO_SPECIAL + PANGO_KEY_F7;
+    case VK_F8: return PANGO_SPECIAL + PANGO_KEY_F8;
+    case VK_F9: return PANGO_SPECIAL + PANGO_KEY_F9;
+    case VK_F10: return PANGO_SPECIAL + PANGO_KEY_F10;
+    case VK_F11: return PANGO_SPECIAL + PANGO_KEY_F11;
+    case VK_F12: return PANGO_SPECIAL + PANGO_KEY_F12;
+    case VK_LEFT: return PANGO_SPECIAL + PANGO_KEY_LEFT;
+    case VK_UP: return PANGO_SPECIAL + PANGO_KEY_UP;
+    case VK_RIGHT: return PANGO_SPECIAL + PANGO_KEY_RIGHT;
+    case VK_DOWN: return PANGO_SPECIAL + PANGO_KEY_DOWN;
+    case VK_HOME: return PANGO_SPECIAL + PANGO_KEY_HOME;
+    case VK_END: return PANGO_SPECIAL + PANGO_KEY_END;
+    case VK_INSERT: return PANGO_SPECIAL + PANGO_KEY_INSERT;
+    case VK_DELETE: return 127;
+    default:
+        const int lBufferSize = 2;
+        WCHAR lBuffer[lBufferSize];
+
+        BYTE State[256];
+        GetKeyboardState(State);
+
+        const UINT scanCode = (lParam >> 8) & 0xFFFFFF00;
+        if( ToUnicode((UINT)wParam, scanCode, State, lBuffer, lBufferSize, 0) >=1 ) {
+            return (unsigned char)lBuffer[0];
+        }
+    }
+    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////
+// WinWindow Implementation
+////////////////////////////////////////////////////////////////////////
+
+void WinWindow::SetupPixelFormat(HDC hDC)
 {
     PIXELFORMATDESCRIPTOR pfd = {
         sizeof(PIXELFORMATDESCRIPTOR),  /* size */
@@ -84,8 +124,7 @@ setupPixelFormat(HDC hDC)
     }
 }
 
-void
-setupPalette(HDC hDC)
+void WinWindow::SetupPalette(HDC hDC)
 {
     int pixelFormat = GetPixelFormat(hDC);
     PIXELFORMATDESCRIPTOR pfd;
@@ -133,58 +172,83 @@ setupPalette(HDC hDC)
     }
 }
 
-unsigned char GetPangoKey(WPARAM wParam, LPARAM lParam)
+WinWindow::WinWindow(
+    const std::string& window_title, int width, int height
+) : hWnd(0)
 {
-    switch (wParam)
-    {
-    case VK_F1: return PANGO_SPECIAL + PANGO_KEY_F1;
-    case VK_F2: return PANGO_SPECIAL + PANGO_KEY_F2;
-    case VK_F3: return PANGO_SPECIAL + PANGO_KEY_F3;
-    case VK_F4: return PANGO_SPECIAL + PANGO_KEY_F4;
-    case VK_F5: return PANGO_SPECIAL + PANGO_KEY_F5;
-    case VK_F6: return PANGO_SPECIAL + PANGO_KEY_F6;
-    case VK_F7: return PANGO_SPECIAL + PANGO_KEY_F7;
-    case VK_F8: return PANGO_SPECIAL + PANGO_KEY_F8;
-    case VK_F9: return PANGO_SPECIAL + PANGO_KEY_F9;
-    case VK_F10: return PANGO_SPECIAL + PANGO_KEY_F10;
-    case VK_F11: return PANGO_SPECIAL + PANGO_KEY_F11;
-    case VK_F12: return PANGO_SPECIAL + PANGO_KEY_F12;
-    case VK_LEFT: return PANGO_SPECIAL + PANGO_KEY_LEFT;
-    case VK_UP: return PANGO_SPECIAL + PANGO_KEY_UP;
-    case VK_RIGHT: return PANGO_SPECIAL + PANGO_KEY_RIGHT;
-    case VK_DOWN: return PANGO_SPECIAL + PANGO_KEY_DOWN;
-    case VK_HOME: return PANGO_SPECIAL + PANGO_KEY_HOME;
-    case VK_END: return PANGO_SPECIAL + PANGO_KEY_END;
-    case VK_INSERT: return PANGO_SPECIAL + PANGO_KEY_INSERT;
-    case VK_DELETE: return 127;
-    default:
-        const int lBufferSize = 2;
-        WCHAR lBuffer[lBufferSize];
+    const HMODULE hCurrentInst = GetModuleHandle(0);
+    RegisterThisClass(hCurrentInst);
 
-        BYTE State[256];
-        GetKeyboardState(State);
+    HWND thishwnd = CreateWindow(
+        className, window_title.c_str(),
+        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+        0, 0, width, height,
+        NULL, NULL, hCurrentInst, this);
 
-        const UINT scanCode = (lParam >> 8) & 0xFFFFFF00;
-        if( ToUnicode((UINT)wParam, scanCode, State, lBuffer, lBufferSize, 0) >=1 ) {
-            return (unsigned char)lBuffer[0];
-        }
+    if( thishwnd != hWnd ) {
+        throw std::runtime_error("Pangolin Window Creation Failed.");
     }
-    return 0;
+
+    // Setup threadlocal context as this
+    context = this;
+
+    // Display Window
+    ShowWindow(hWnd, SW_SHOW);
+    PangolinGl::is_double_buffered = true;
+}
+
+WinWindow::~WinWindow()
+{
+    DestroyWindow(hWnd);
+}
+
+void WinWindow::RegisterThisClass(HMODULE hCurrentInst)
+{
+    WNDCLASS wndClass;
+    wndClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+    wndClass.lpfnWndProc = WinWindow::WndProc;
+    wndClass.cbClsExtra = 0;
+    wndClass.cbWndExtra = 0;
+    wndClass.hInstance = hCurrentInst;
+    wndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wndClass.lpszMenuName = NULL;
+    wndClass.lpszClassName = className;
+    RegisterClass(&wndClass);
 }
 
 LRESULT APIENTRY
-WndProc(
-HWND hWnd,
-UINT message,
-WPARAM wParam,
-LPARAM lParam)
+WinWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    WinWindow* self = 0;
+
+    if (uMsg == WM_NCCREATE) {
+        LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+        self = reinterpret_cast<WinWindow*>(lpcs->lpCreateParams);
+        if(self) {
+            self->hWnd = hwnd;
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(self));
+        }
+    } else {
+        self = reinterpret_cast<WinWindow*> (GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    }
+
+    if (self) {
+        return self->HandleWinMessages(uMsg, wParam, lParam);
+    } else {
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+}
+
+LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) {
     case WM_CREATE:
         /* initialize OpenGL rendering */
         hDC = GetDC(hWnd);
-        setupPixelFormat(hDC);
-        setupPalette(hDC);
+        SetupPixelFormat(hDC);
+        SetupPalette(hDC);
         hGLRC = wglCreateContext(hDC);
         wglMakeCurrent(hDC, hGLRC);
         //init();
@@ -290,69 +354,10 @@ LPARAM lParam)
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void ProcessQueuedWinMessages()
-{
-    MSG msg;
-    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-        if (msg.message == WM_QUIT) {
-            pangolin::Quit();
-            break;
-        }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-}
-
-void FinishFrame()
-{
-    RenderViews();
-    PostRender();
-    SwapBuffers(hDC);
-    ProcessQueuedWinMessages();
-}
-
-void CreateWindowAndBind(std::string window_title, int w, int h, const Params& /*params*/ )
-{
-    // Create Pangolin GL Context
-    BindToContext(window_title);
-    context->is_double_buffered = true;
-
-    // Create Window
-    const HMODULE hCurrentInst = GetModuleHandle(0);
-    const int nCmdShow = SW_SHOW;
-
-    /* register window class */
-    wndClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-    wndClass.lpfnWndProc = WndProc;
-    wndClass.cbClsExtra = 0;
-    wndClass.cbWndExtra = 0;
-    wndClass.hInstance = hCurrentInst;
-    wndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    wndClass.lpszMenuName = NULL;
-    wndClass.lpszClassName = className;
-    RegisterClass(&wndClass);
-
-    hWnd = CreateWindow(
-        className, window_title.c_str(),
-        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-        0, 0, w, h,
-        NULL, NULL, hCurrentInst, NULL);
-
-    // Display Window
-    ShowWindow(hWnd, nCmdShow);
-    //UpdateWindow(hWnd);
-
-    // Process Messages
-    ProcessQueuedWinMessages();
-    glewInit();
-}
-
-void StartFullScreen() {
-    LONG dwExStyle = GetWindowLong(hWnd, GWL_EXSTYLE) 
+void WinWindow::StartFullScreen() {
+    LONG dwExStyle = GetWindowLong(hWnd, GWL_EXSTYLE)
         & ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
-    LONG dwStyle = GetWindowLong(hWnd, GWL_STYLE) 
+    LONG dwStyle = GetWindowLong(hWnd, GWL_STYLE)
         & ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
 
     SetWindowLong(hWnd, GWL_EXSTYLE, dwExStyle);
@@ -364,7 +369,7 @@ void StartFullScreen() {
     std::memcpy(context->windowed_size, prev, sizeof(prev));
 }
 
-void StopFullScreen() {
+void WinWindow::StopFullScreen() {
 
     ChangeDisplaySettings(NULL, 0);
     ShowCursor(TRUE);
@@ -382,25 +387,62 @@ void StopFullScreen() {
         SWP_FRAMECHANGED);
 }
 
-void SetFullscreen(bool fullscreen)
+void WinWindow::ToggleFullscreen()
 {
-    if( fullscreen != context->is_fullscreen )
-    {
-        if(fullscreen) {
-            StartFullScreen();
-        }else{
-            StopFullScreen();
-        }
-        context->is_fullscreen = fullscreen;
+    if(!context->is_fullscreen) {
+        StartFullScreen();
+        context->is_fullscreen = true;
+    }else{
+        StopFullScreen();
+        context->is_fullscreen = false;
     }
 }
 
-void PangolinPlatformInit(PangolinGl& /*context*/)
+void WinWindow::Move(int x, int y)
 {
 }
 
-void PangolinPlatformDeinit(PangolinGl& /*context*/)
+void WinWindow::Resize(unsigned int w, unsigned int h)
 {
+}
+
+void WinWindow::MakeCurrent()
+{
+    wglMakeCurrent(hDC, hGLRC);
+}
+
+void WinWindow::SwapBuffers()
+{
+    ::SwapBuffers(hDC);
+}
+
+void WinWindow::ProcessEvents()
+{
+    MSG msg;
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        if (msg.message == WM_QUIT) {
+            pangolin::Quit();
+            break;
+        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+}
+
+WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params &params)
+{
+    WinWindow* win = new WinWindow(window_title, w, h);
+
+    // Add to context map
+    AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
+
+    // Process window events
+    context->ProcessEvents();
+
+    win->MakeCurrent();
+    glewInit();
+
+    return *context;
 }
 
 }
