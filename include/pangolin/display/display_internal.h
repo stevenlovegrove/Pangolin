@@ -94,6 +94,8 @@ struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
     ConsoleView* console_view;
 #endif
 
+    boostd::shared_ptr<GlFont> font;
+
     virtual void ToggleFullscreen() PANGOLIN_OVERRIDE {
         pango_print_warn("ToggleFullscreen: Not available with non-pangolin window.\n");
     }
