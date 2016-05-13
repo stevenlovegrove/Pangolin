@@ -83,6 +83,10 @@ public:
 
     VarValueGeneric*& operator[](const std::string& str)
     {
+        VarStoreContainer::iterator it = vars.find(str);
+        if (it == vars.end()) {
+            vars[str] = nullptr;
+        }
         return vars[str];
     }
 
