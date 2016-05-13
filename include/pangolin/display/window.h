@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2014 Steven Lovegrove
+ * Copyright (c) 2016 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,22 +25,32 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_USER_APP_H
-#define PANGOLIN_USER_APP_H
-
-#include <pangolin/platform.h>
+#ifndef PANGOLIN_WINDOW_H
+#define PANGOLIN_WINDOW_H
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT UserApp
+class GlContextInterface
 {
 public:
-    virtual ~UserApp() {}
-    virtual void Init() {}
-    virtual void Render() = 0;
+    virtual ~GlContextInterface() {}
+};
+
+class WindowInterface
+{
+public:
+    virtual ~WindowInterface() {}
+
+    virtual void ToggleFullscreen() = 0;
+    virtual void Move(int x, int y) = 0;
+    virtual void Resize(unsigned int w, unsigned int h) = 0;
+    virtual void MakeCurrent() = 0;
+    virtual void ProcessEvents() = 0;
+    virtual void SwapBuffers() = 0;
 };
 
 }
 
-#endif // PANGOLIN_USER_APP_H
+
+#endif // PANGOLIN_WINDOW_H
