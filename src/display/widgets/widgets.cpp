@@ -54,9 +54,20 @@ const static GLfloat colour_fg[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 const static GLfloat colour_tx[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 const static GLfloat colour_dn[4] = {1.0f, 0.7f, 0.7f, 1.0f};
 
-static GlFont& font = GlFont::I();
-static int cb_height = (int)(font.Height() * 1.0);
-static int tab_h = (int)(font.Height() * 1.4);
+static inline GlFont& font()
+{
+    return GlFont::I();
+}
+
+static inline int cb_height()
+{
+    return (int)(font().Height() * 1.0);
+}
+
+static inline int tab_h()
+{
+    return (int)(font().Height() * 1.4);
+}
 
 boostd::mutex display_mutex;
 
@@ -223,11 +234,11 @@ View& CreatePanel(const std::string& name)
 Button::Button(string title, VarValueGeneric& tv)
     : Widget<bool>(title,tv), down(false)
 {
-    top = 1.0; bottom = Attach::Pix(-tab_h);
+    top = 1.0; bottom = Attach::Pix(-tab_h());
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
-    gltext = font.Text(title);
+    gltext = font().Text(title);
 }
 
 void Button::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
@@ -261,11 +272,11 @@ void Button::ResizeChildren()
 FunctionButton::FunctionButton(string title, VarValueGeneric& tv)
     : Widget<boostd::function<void(void)> >(title, tv), down(false)
 {
-    top = 1.0; bottom = Attach::Pix(-tab_h);
+    top = 1.0; bottom = Attach::Pix(-tab_h());
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
-    gltext = font.Text(title);
+    gltext = font().Text(title);
 }
 
 void FunctionButton::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
@@ -299,12 +310,12 @@ void FunctionButton::ResizeChildren()
 Checkbox::Checkbox(std::string title, VarValueGeneric& tv)
     : Widget<bool>(title,tv)
 {
-    top = 1.0; bottom = Attach::Pix(-tab_h);
+    top = 1.0; bottom = Attach::Pix(-tab_h());
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
     handler = this;
-    gltext = font.Text(title);
+    gltext = font().Text(title);
 }
 
 void Checkbox::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
@@ -317,11 +328,11 @@ void Checkbox::Mouse(View&, MouseButton button, int x, int y, bool pressed, int 
 
 void Checkbox::ResizeChildren()
 {
-    raster[0] = v.l + cb_height + 4.0f;
+    raster[0] = v.l + cb_height() + 4.0f;
     raster[1] = v.b + (v.h-gltext.Height())/2.0f;
     const int h = v.h;
-    const int t = (int)((h-cb_height) / 2.0f);
-    vcb = Viewport(v.l,v.b+t,cb_height,cb_height);
+    const int t = (int)((h-cb_height()) / 2.0f);
+    vcb = Viewport(v.l,v.b+t,cb_height(),cb_height());
 }
 
 void Checkbox::Render()
@@ -342,13 +353,13 @@ void Checkbox::Render()
 Slider::Slider(std::string title, VarValueGeneric& tv)
     : Widget<double>(title+":", tv), lock_bounds(true)
 {
-    top = 1.0; bottom = Attach::Pix(-tab_h);
+    top = 1.0; bottom = Attach::Pix(-tab_h());
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
     handler = this;
     logscale = (int)tv.Meta().logscale;
-    gltext = font.Text(title);
+    gltext = font().Text(title);
 }
 
 void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
@@ -465,7 +476,7 @@ void Slider::Render()
     std::ostringstream oss;
     oss << setprecision(4) << val;
     string str = oss.str();
-    GlText glval = font.Text(str);
+    GlText glval = font().Text(str);
     const float l = glval.Width() + 2.0f;
     glval.DrawWindow( v.l + v.w - l, raster[1] );
 }
@@ -474,14 +485,14 @@ void Slider::Render()
 TextInput::TextInput(std::string title, VarValueGeneric& tv)
     : Widget<std::string>(title+":", tv), do_edit(false)
 {
-    top = 1.0; bottom = Attach::Pix(-tab_h);
+    top = 1.0; bottom = Attach::Pix(-tab_h());
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
     handler = this;
     sel[0] = -1;
     sel[1] = -1;
-    gltext = font.Text(title);
+    gltext = font().Text(title);
 }
 
 void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
@@ -563,7 +574,7 @@ void TextInput::Mouse(View& view, MouseButton button, int x, int y, bool pressed
             }else{
                 for( unsigned i=0; i<edit.length(); ++i )
                 {
-                    const int tl = (int)(rl + font.Text(edit.substr(0,i)).Width());
+                    const int tl = (int)(rl + font().Text(edit.substr(0,i)).Width());
                     if(x < tl+2)
                     {
                         ep = i;
@@ -602,7 +613,7 @@ void TextInput::MouseMotion(View&, int x, int y, int mouse_state)
         }else{
             for( unsigned i=0; i<edit.length(); ++i )
             {
-                const int tl = (int)(rl + font.Text(edit.substr(0,i)).Width());
+                const int tl = (int)(rl + font().Text(edit.substr(0,i)).Width());
                 if(x < tl+2)
                 {
                     ep = i;
@@ -626,7 +637,7 @@ void TextInput::Render()
 {
     if(!do_edit) edit = var->Get();
 
-    gledit = font.Text(edit);
+    gledit = font().Text(edit);
     
     glColor4fv(colour_fg);
     glRect(v);
@@ -636,8 +647,8 @@ void TextInput::Render()
     
     if( do_edit && sel[0] >= 0)
     {
-        const int tl = (int)(rl + font.Text(edit.substr(0,sel[0])).Width());
-        const int tr = (int)(rl + font.Text(edit.substr(0,sel[1])).Width());
+        const int tl = (int)(rl + font().Text(edit.substr(0,sel[0])).Width());
+        const int tr = (int)(rl + font().Text(edit.substr(0,sel[1])).Width());
         glColor4fv(colour_dn);
         glRect(Viewport(tl,v.b,tr-tl,v.h));
     }
