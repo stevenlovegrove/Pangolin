@@ -34,54 +34,54 @@
 #include <pangolin/gl/glglut.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
+#include <pangolin/display/window.h>
+
+#include <pangolin/display/device/X11Window.h>
+#include <pangolin/compat/mutex.h>
 
 #include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
+
 #include <GL/glx.h>
 
 namespace pangolin
 {
 extern __thread PangolinGl* context;
-}
 
-Display *display = 0;
-Window win = 0;
-GLXContext ctx = 0;
-Colormap cmap;
+boostd::mutex window_mutex;
+boostd::shared_ptr<X11GlContext> global_gl_context;
+
 const long EVENT_MASKS = ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|ButtonMotionMask|PointerMotionMask|KeyPressMask|KeyReleaseMask;
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
-typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
+typedef GLXContext (*glXCreateContextAttribsARBProc)(::Display*, ::GLXFBConfig, ::GLXContext, Bool, const int*);
 
-// Helper to check for extension string presence.  Adapted from:
-//   http://www.opengl.org/resources/features/OGLextensions/
-static bool isExtensionSupported(const char *extList, const char *extension)
+// Adapted from: http://www.opengl.org/resources/features/OGLextensions/
+bool isExtensionSupported(const char *extList, const char *extension)
 {
-    const char *start;
-    const char *where, *terminator;
-
     /* Extension names should not have spaces. */
-    where = strchr(extension, ' ');
-    if (where || *extension == '\0')
+    const char* where = strchr(extension, ' ');
+    if (where || *extension == '\0') {
         return false;
+    }
 
-    for (start=extList;;) {
+    for(const char* start=extList;;) {
         where = strstr(start, extension);
-
-        if (!where)
+        if (!where) {
             break;
+        }
 
-        terminator = where + strlen(extension);
+        const char *terminator = where + strlen(extension);
 
-        if ( where == start || *(where - 1) == ' ' )
-            if ( *terminator == ' ' || *terminator == '\0' )
+        if ( where == start || *(where - 1) == ' ' ) {
+            if ( *terminator == ' ' || *terminator == '\0' ) {
                 return true;
+            }
+        }
 
         start = terminator;
     }
@@ -89,25 +89,12 @@ static bool isExtensionSupported(const char *extList, const char *extension)
     return false;
 }
 
-static bool ctxErrorOccurred = false;
-static int ctxErrorHandler( Display *dpy, XErrorEvent *ev )
-{
-    ctxErrorOccurred = true;
-    return 0;
-}
-
-int CreateX11Window(
-    const std::string& title, int width, int height,
-    bool glx_doublebuffer,int glx_sample_buffers, int glx_samples
+::GLXFBConfig ChooseFrameBuffer(
+    ::Display *display, bool glx_doublebuffer,
+    int glx_sample_buffers, int glx_samples
 ) {
-    display = XOpenDisplay(NULL);
-
-    if (!display) {
-        throw std::runtime_error("Pangolin X11: Failed to open X display");
-    }
-
     // Desired attributes
-    static int visual_attribs[] =
+    int visual_attribs[] =
     {
         GLX_X_RENDERABLE    , True,
         GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
@@ -122,15 +109,6 @@ int CreateX11Window(
         GLX_DOUBLEBUFFER    , glx_doublebuffer ? True : False,
         None
     };
-
-
-    int glx_major, glx_minor;
-    if ( !glXQueryVersion( display, &glx_major, &glx_minor ) ||
-         ( ( glx_major == 1 ) && ( glx_minor < 3 ) ) || ( glx_major < 1 ) )
-    {
-        // FBConfigs were added in GLX version 1.3.
-        throw std::runtime_error("Pangolin X11: Invalid GLX version. Require GLX >= 1.3");
-    }
 
     int fbcount;
     GLXFBConfig* fbc = glXChooseFBConfig(display, DefaultScreen(display), visual_attribs, &fbcount);
@@ -177,38 +155,28 @@ int CreateX11Window(
         chosen_fbc_id = best_fbc;
     }
 
-    GLXFBConfig chosenFbc = fbc[ chosen_fbc_id ];
+    ::GLXFBConfig chosenFbc = fbc[ chosen_fbc_id ];
     XFree( fbc );
+    return chosenFbc;
+}
 
-    // Get a visual
-    XVisualInfo *vi = glXGetVisualFromFBConfig( display, chosenFbc );
+static bool ctxErrorOccurred = false;
+static int ctxErrorHandler( ::Display *dpy, ::XErrorEvent *ev )
+{
+    ctxErrorOccurred = true;
+    return 0;
+}
 
-    // Create colourmap
-    XSetWindowAttributes swa;
-    swa.colormap = cmap = XCreateColormap( display,
-                                           RootWindow( display, vi->screen ),
-                                           vi->visual, AllocNone );
-    swa.background_pixmap = None ;
-    swa.border_pixel      = 0;
-    swa.event_mask        = StructureNotifyMask;
-
-    // Create window
-    win = XCreateWindow( display, RootWindow( display, vi->screen ),
-                         0, 0, width, height, 0, vi->depth, InputOutput,
-                         vi->visual,
-                         CWBorderPixel|CWColormap|CWEventMask, &swa );
-
-    XFree( vi );
-
-    if ( !win ) {
-        throw std::runtime_error("Pangolin X11: Failed to create window." );
+GLXContext CreateGlContext(::Display *display, ::GLXFBConfig chosenFbc, GLXContext share_context = 0)
+{
+    int glx_major, glx_minor;
+    if ( !glXQueryVersion( display, &glx_major, &glx_minor ) ||
+         ( ( glx_major == 1 ) && ( glx_minor < 3 ) ) || ( glx_major < 1 ) )
+    {
+        throw std::runtime_error("Pangolin X11: Invalid GLX version. Require GLX >= 1.3");
     }
 
-    XStoreName( display, win, title.c_str() );
-    XMapWindow( display, win );
-
-    // Request to be notified of these events
-    XSelectInput(display, win, EVENT_MASKS );
+    GLXContext new_ctx;
 
     // Get the default screen's GLX extension list
     const char *glxExts = glXQueryExtensionsString( display, DefaultScreen( display ) );
@@ -218,11 +186,10 @@ int CreateX11Window(
                 (const GLubyte *) "glXCreateContextAttribsARB"
             );
 
-
     // Install an X error handler so the application won't exit if GL 3.0
     // context allocation fails. Handler is global and shared across all threads.
     ctxErrorOccurred = false;
-    int (*oldHandler)(Display*, XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
+    int (*oldHandler)(::Display*, ::XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
 
     if ( isExtensionSupported( glxExts, "GLX_ARB_create_context" ) && glXCreateContextAttribsARB )
     {
@@ -233,21 +200,21 @@ int CreateX11Window(
             None
         };
 
-        ctx = glXCreateContextAttribsARB( display, chosenFbc, 0, True, context_attribs );
+        new_ctx = glXCreateContextAttribsARB( display, chosenFbc, share_context, True, context_attribs );
 
         // Sync to ensure any errors generated are processed.
         XSync( display, False );
-        if ( ctxErrorOccurred || !ctx ) {
+        if ( ctxErrorOccurred || !new_ctx ) {
             ctxErrorOccurred = false;
             // Fall back to old-style 2.x context. Implementations will return the newest
             // context version compatible with OpenGL versions less than version 3.0.
             context_attribs[1] = 1;  // GLX_CONTEXT_MAJOR_VERSION_ARB = 1
             context_attribs[3] = 0;  // GLX_CONTEXT_MINOR_VERSION_ARB = 0
-            ctx = glXCreateContextAttribsARB( display, chosenFbc, 0, True, context_attribs );
+            new_ctx = glXCreateContextAttribsARB( display, chosenFbc, share_context, True, context_attribs );
         }
     } else {
         // Fallback to GLX 1.3 Context
-        ctx = glXCreateNewContext( display, chosenFbc, GLX_RGBA_TYPE, 0, True );
+        new_ctx = glXCreateNewContext( display, chosenFbc, GLX_RGBA_TYPE, share_context, True );
     }
 
     // Sync to ensure any errors generated are processed.
@@ -256,39 +223,121 @@ int CreateX11Window(
     // Restore the original error handler
     XSetErrorHandler( oldHandler );
 
-    if ( ctxErrorOccurred || !ctx )
-    {
+    if ( ctxErrorOccurred || !new_ctx ) {
         throw std::runtime_error("Pangolin X11: Failed to create an OpenGL context");
     }
 
     // Verifying that context is a direct context
-    if ( ! glXIsDirect ( display, ctx ) ) {
+    if ( ! glXIsDirect ( display, new_ctx ) ) {
         pango_print_warn("Pangolin X11: Indirect GLX rendering context obtained\n");
     }
 
-    glXMakeCurrent( display, win, ctx );
-
-    return 0;
+    return new_ctx;
 }
 
-
-namespace pangolin
+X11GlContext::X11GlContext(boostd::shared_ptr<X11Display>& d, ::GLXFBConfig chosenFbc, boostd::shared_ptr<X11GlContext> shared_context)
+    : display(d), shared_context(shared_context)
 {
+    // prevent chained sharing
+    while(shared_context && shared_context->shared_context) {
+        shared_context = shared_context->shared_context;
+    }
 
-void X11Terminate()
-{
-    glXMakeCurrent( display, 0, 0 );
-    glXDestroyContext( display, ctx );
-
-    XDestroyWindow( display, win );
-    XFreeColormap( display, cmap );
-    XCloseDisplay( display );
+    glcontext = CreateGlContext(display->display, chosenFbc, shared_context ? shared_context->glcontext : 0);
 }
 
-void ProcessX11Events()
+X11GlContext::~X11GlContext()
+{
+    glXDestroyContext( display->display, glcontext );
+}
+
+X11Window::X11Window(
+    const std::string& title, int width, int height,
+    boostd::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc
+) : display(display), glcontext(0), win(0), cmap(0)
+{
+    // Get a visual
+    XVisualInfo *vi = glXGetVisualFromFBConfig( display->display, chosenFbc );
+
+    // Create colourmap
+    XSetWindowAttributes swa;
+    swa.background_pixmap = None;
+    swa.border_pixel    = 0;
+    swa.event_mask      = StructureNotifyMask;
+    swa.colormap = cmap = XCreateColormap( display->display,
+                                           RootWindow( display->display, vi->screen ),
+                                           vi->visual, AllocNone );
+
+    // Create window
+    win = XCreateWindow( display->display, RootWindow( display->display, vi->screen ),
+                         0, 0, width, height, 0, vi->depth, InputOutput,
+                         vi->visual,
+                         CWBorderPixel|CWColormap|CWEventMask, &swa );
+
+    XFree( vi );
+
+    if ( !win ) {
+        throw std::runtime_error("Pangolin X11: Failed to create window." );
+    }
+
+    XStoreName( display->display, win, title.c_str() );
+    XMapWindow( display->display, win );
+
+    // Request to be notified of these events
+    XSelectInput(display->display, win, EVENT_MASKS );
+}
+
+X11Window::~X11Window()
+{
+    glXMakeCurrent( display->display, 0, 0 );
+    XDestroyWindow( display->display, win );
+    XFreeColormap( display->display, cmap );
+}
+
+void X11Window::MakeCurrent(GLXContext ctx)
+{
+    glXMakeCurrent( display->display, win, ctx );
+    context = this;
+}
+
+void X11Window::MakeCurrent()
+{
+    MakeCurrent(glcontext ? glcontext->glcontext : global_gl_context->glcontext);
+}
+
+void X11Window::ToggleFullscreen()
+{
+    const Atom _NET_WM_STATE_FULLSCREEN = XInternAtom(display->display, "_NET_WM_STATE_FULLSCREEN", True);
+    const Atom _NET_WM_STATE = XInternAtom(display->display, "_NET_WM_STATE", True);
+    XEvent e;
+    e.xclient.type         = ClientMessage;
+    e.xclient.window       = win;
+    e.xclient.message_type = _NET_WM_STATE;
+    e.xclient.format       = 32;
+    e.xclient.data.l[0]    = 2;  // Toggle
+    e.xclient.data.l[1]    = _NET_WM_STATE_FULLSCREEN;
+    e.xclient.data.l[2]    = 0;
+    e.xclient.data.l[3]    = 1;
+    e.xclient.data.l[4]    = 0;
+
+    XSendEvent(display->display, DefaultRootWindow(display->display), False, SubstructureRedirectMask | SubstructureNotifyMask, &e);
+    XMoveResizeWindow(display->display, win, 0, 0, windowed_size[0], windowed_size[1]);
+}
+
+void X11Window::Move(int x, int y)
+{
+    XMoveWindow(display->display, win, x, y);
+}
+
+void X11Window::Resize(unsigned int w, unsigned int h)
+{
+    XResizeWindow(display->display, win, w, h);
+}
+
+void X11Window::ProcessEvents()
 {
     XEvent ev;
-    while(!pangolin::ShouldQuit() && XCheckWindowEvent(display,win,EVENT_MASKS,&ev))
+    while(!pangolin::ShouldQuit() && XCheckWindowEvent(display->display, win, EVENT_MASKS, &ev))
     {
         switch(ev.type){
         case ConfigureNotify:
@@ -398,83 +447,48 @@ void ProcessX11Events()
     }
 }
 
-void FinishFrame()
-{
-    RenderViews();
-    PostRender();
-    glXSwapBuffers ( display, win );
-    ProcessX11Events();
+void X11Window::SwapBuffers() {
+    glXSwapBuffers(display->display, win);
 }
 
-void CreateWindowAndBind(std::string window_title, int w, int h, const Params &params)
+WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params &params)
 {
-    // Create Pangolin GL Context
-    BindToContext(window_title);
-
+    const std::string display_name = params.Get(PARAM_DISPLAYNAME, std::string());
     const bool double_buffered = params.Get(PARAM_DOUBLEBUFFER, true);
     const int  sample_buffers  = params.Get(PARAM_SAMPLE_BUFFERS, 1);
     const int  samples         = params.Get(PARAM_SAMPLES, 1);
 
-    CreateX11Window(window_title, w, h, double_buffered, sample_buffers, samples);
-    context->is_double_buffered = true;
+    boostd::shared_ptr<X11Display> newdisplay = boostd::make_shared<X11Display>(display_name.empty() ? NULL : display_name.c_str() );
+    if (!newdisplay) {
+        throw std::runtime_error("Pangolin X11: Failed to open X display");
+    }
+    ::GLXFBConfig newfbc = ChooseFrameBuffer(newdisplay->display, double_buffered, sample_buffers, samples);
 
+    window_mutex.lock();
+    boostd::shared_ptr<X11GlContext> newglcontext = boostd::make_shared<X11GlContext>(
+        newdisplay, newfbc, global_gl_context
+    );
+
+    if(!global_gl_context) {
+        global_gl_context = newglcontext;
+    }
+    window_mutex.unlock();
+
+    X11Window* win = new X11Window(window_title, w, h, newdisplay, newfbc);
+    win->glcontext = newglcontext;
+    win->is_double_buffered = double_buffered;
+
+    // Add to context map
+    AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
+
+    win->MakeCurrent();
     glewInit();
 
     // Process window events
-    ProcessX11Events();
+    context->ProcessEvents();
+
+    return *context;
 }
-
-void X11ToggleFullscreen()
-{
-    const Atom _NET_WM_STATE_FULLSCREEN = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", True);
-    const Atom _NET_WM_STATE = XInternAtom(display, "_NET_WM_STATE", True);
-    XEvent e;
-    e.xclient.type         = ClientMessage;
-    e.xclient.window       = win;
-    e.xclient.message_type = _NET_WM_STATE;
-    e.xclient.format       = 32;
-    e.xclient.data.l[0]    = 2;  // Toggle
-    e.xclient.data.l[1]    = _NET_WM_STATE_FULLSCREEN;
-    e.xclient.data.l[2]    = 0;
-    e.xclient.data.l[3]    = 1;
-    e.xclient.data.l[4]    = 0;
-
-    XSendEvent(display, DefaultRootWindow(display), False, SubstructureRedirectMask | SubstructureNotifyMask, &e);
-    XMoveResizeWindow(display, win, 0, 0, context->windowed_size[0], context->windowed_size[1]);
-}
-
-void StartFullScreen() {
-    if(!context->is_fullscreen) {
-        X11ToggleFullscreen();
-        context->is_fullscreen = true;
-    }
-}
-
-void StopFullScreen() {
-    if(context->is_fullscreen) {
-        X11ToggleFullscreen();
-        context->is_fullscreen = false;
-    }
-}
-
-void SetFullscreen(bool fullscreen)
-{
-    if(fullscreen) {
-        StartFullScreen();
-    }else{
-        StopFullScreen();
-    }
-}
-
-void PangolinPlatformInit(PangolinGl& /*context*/)
-{
-}
-
-void PangolinPlatformDeinit(PangolinGl& /*context*/)
-{
-    X11Terminate();
-}
-
 
 }
 

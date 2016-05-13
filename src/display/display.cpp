@@ -46,16 +46,21 @@
 #include <pangolin/utils/timer.h>
 #include <pangolin/utils/type_convert.h>
 #include <pangolin/image/image_io.h>
+#include <pangolin/compat/mutex.h>
 
 #ifdef BUILD_PANGOLIN_VARS
   #include <pangolin/var/var.h>
 #endif
 
-#include <pangolin/compat/memory.h>
-
 namespace pangolin
 {
 
+#ifdef BUILD_PANGOLIN_VIDEO
+  // Forward declaration.
+  void SaveFramebuffer(VideoOutput& video, const Viewport& v);
+#endif // BUILD_PANGOLIN_VIDEO
+
+const char* PARAM_DISPLAYNAME    = "DISPLAYNAME";
 const char* PARAM_DOUBLEBUFFER   = "DOUBLEBUFFER";
 const char* PARAM_SAMPLE_BUFFERS = "SAMPLE_BUFFERS";
 const char* PARAM_SAMPLES        = "SAMPLES";
@@ -64,6 +69,7 @@ typedef std::map<std::string,boostd::shared_ptr<PangolinGl> > ContextMap;
 
 // Map of active contexts
 ContextMap contexts;
+boostd::mutex contexts_mutex;
 
 // Context active for current thread
 __thread PangolinGl* context = 0;
@@ -77,7 +83,6 @@ PangolinGl::PangolinGl()
     , console_view(0)
 #endif
 {
-    PangolinPlatformInit(*this);
 }
 
 PangolinGl::~PangolinGl()
@@ -87,43 +92,71 @@ PangolinGl::~PangolinGl()
         delete iv->second;
     }
     named_managed_views.clear();
-
-    // Platform specific cleanup
-    PangolinPlatformDeinit(*this);
 }
 
-void BindToContext(std::string name)
+void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newcontext)
 {
-    ContextMap::iterator ic = contexts.find(name);
-    
-    if( ic == contexts.end() )
-    {
-        // Create and add if not found
-        context = new PangolinGl;
-        contexts[name] = boostd::shared_ptr<PangolinGl>(context);
-        View& dc = context->base;
-        dc.left = 0.0;
-        dc.bottom = 0.0;
-        dc.top = 1.0;
-        dc.right = 1.0;
-        dc.aspect = 0;
-        dc.handler = &StaticHandler;
-        context->is_fullscreen = false;
+    // Set defaults
+    newcontext->base.left = 0.0;
+    newcontext->base.bottom = 0.0;
+    newcontext->base.top = 1.0;
+    newcontext->base.right = 1.0;
+    newcontext->base.aspect = 0;
+    newcontext->base.handler = &StaticHandler;
+    newcontext->is_fullscreen = false;
+
+    // Create and add
+    contexts_mutex.lock();
+    if( contexts.find(name) != contexts.end() ) {
+        contexts_mutex.unlock();
+        throw std::runtime_error("Context already exists.");
+    }
+    contexts[name] = newcontext;
+    contexts_mutex.unlock();
+
+    context = newcontext.get();
+
 #ifdef HAVE_GLUT
-        process::Resize(
-                    glutGet(GLUT_WINDOW_WIDTH),
-                    glutGet(GLUT_WINDOW_HEIGHT)
-                    );
+    process::Resize(
+                glutGet(GLUT_WINDOW_WIDTH),
+                glutGet(GLUT_WINDOW_HEIGHT)
+                );
 #else
-        process::Resize(640,480);
+    process::Resize(640,480);
 #endif //HAVE_GLUT
 
-        // Default key bindings can be overridden
-        RegisterKeyPressCallback(PANGO_KEY_ESCAPE, Quit );
-        RegisterKeyPressCallback('\t', ToggleFullscreen );
-        RegisterKeyPressCallback('`',  ToggleConsole );
+    // Default key bindings can be overridden
+    RegisterKeyPressCallback(PANGO_KEY_ESCAPE, Quit );
+    RegisterKeyPressCallback('\t', ToggleFullscreen );
+    RegisterKeyPressCallback('`',  ToggleConsole );
+}
+
+void DestroyWindow(const std::string& name)
+{
+    contexts_mutex.lock();
+    size_t erased = contexts.erase(name);
+    if(erased == 0) {
+        pango_print_warn("Context '%s' doesn't exist for deletion.\n", name.c_str());
+    }
+    contexts_mutex.unlock();
+}
+
+WindowInterface& BindToContext(std::string name)
+{
+    contexts_mutex.lock();
+    ContextMap::iterator ic = contexts.find(name);
+    PangolinGl* context_to_bind = (ic == contexts.end()) ? 0 : ic->second.get();
+    contexts_mutex.unlock();
+    
+    if( !context_to_bind )
+    {
+        boostd::shared_ptr<PangolinGl> newcontext(new PangolinGl());
+        AddNewContext(name, newcontext);
+        newcontext->MakeCurrent();
+        return *(newcontext.get());
     }else{
-        context = ic->second.get();
+        context_to_bind->MakeCurrent();
+        return *context_to_bind;
     }
 }
 
@@ -157,6 +190,29 @@ bool HasResized()
     return false;
 }
 
+void StartFullScreen() {
+    if(!context->is_fullscreen) {
+        context->ToggleFullscreen();
+        context->is_fullscreen = true;
+    }
+}
+
+void StopFullScreen() {
+    if(context->is_fullscreen) {
+        context->ToggleFullscreen();
+        context->is_fullscreen = false;
+    }
+}
+
+void SetFullscreen(bool fullscreen)
+{
+    if(fullscreen) {
+        StartFullScreen();
+    }else{
+        StopFullScreen();
+    }
+}
+
 void RenderViews()
 {
     Viewport::DisableScissor();
@@ -187,6 +243,14 @@ void PostRender()
 
     // Disable scissor each frame
     Viewport::DisableScissor();
+}
+
+void FinishFrame()
+{
+    RenderViews();
+    PostRender();
+    context->SwapBuffers();
+    context->ProcessEvents();
 }
 
 View& DisplayBase()
