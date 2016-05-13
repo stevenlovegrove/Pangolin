@@ -29,7 +29,9 @@
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/compat/bind.h>
 
-#include <unistd.h>
+#ifndef _WIN_
+#  include <unistd.h>
+#endif
 
 namespace pangolin
 {
@@ -54,9 +56,11 @@ PangoVideo::PangoVideo(const std::string& filename, bool realtime)
 
 PangoVideo::~PangoVideo()
 {
+#ifndef _WIN_
     if (pipe_fd != -1) {
         close(pipe_fd);
     }
+#endif
 }
 
 size_t PangoVideo::SizeBytes() const
@@ -81,6 +85,7 @@ void PangoVideo::Stop()
 
 bool PangoVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
+#ifndef _WIN_
     if (is_pipe && !is_pipe_open) {
         if (pipe_fd == -1) {
             pipe_fd = ReadablePipeFileDescriptor(filename);
@@ -101,6 +106,7 @@ bool PangoVideo::GrabNext( unsigned char* image, bool /*wait*/ )
             return false;
         }
     }
+#endif
 
     try {
         if(reader.ReadToSourcePacketAndLock(src_id)) {

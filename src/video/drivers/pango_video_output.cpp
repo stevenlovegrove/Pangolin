@@ -31,10 +31,7 @@
 #include <pangolin/utils/sigstate.h>
 #include <set>
 
-#ifdef _WIN_
-#  define WIN32_LEAN_AND_MEAN
-#  include <Windows.h>
-#else
+#ifndef _WIN_
 #  include <unistd.h>
 #endif
 
@@ -135,6 +132,7 @@ void PangoVideoOutput::WriteHeader()
 
 int PangoVideoOutput::WriteStreams(unsigned char* data, const json::value& frame_properties)
 {
+#ifndef _WIN_
     if(is_pipe)
     {
         // If there is a reader waiting on the other side of the pipe, open
@@ -175,6 +173,7 @@ int PangoVideoOutput::WriteStreams(unsigned char* data, const json::value& frame
             return 0;
         }
     }
+#endif
 
     if(first_frame)
     {

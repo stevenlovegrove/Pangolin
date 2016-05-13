@@ -332,6 +332,9 @@ int ReadablePipeFileDescriptor(const std::string& file)
 
 bool PipeHasDataToRead(int fd)
 {
+#ifdef _WIN_
+    return false;
+#else
     struct pollfd pfd;
     memset(&pfd, 0, sizeof(pfd));
     pfd.fd = fd;
@@ -342,6 +345,7 @@ bool PipeHasDataToRead(int fd)
     // If err is 0, the file has no data. If err is negative, an error
     // occurred.
     return err == 1 && pfd.revents & POLLIN;
+#endif
 }
 
 void FlushPipe(const std::string& file)
