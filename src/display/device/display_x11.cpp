@@ -285,6 +285,9 @@ X11Window::X11Window(
 
     // Request to be notified of these events
     XSelectInput(display->display, win, EVENT_MASKS );
+
+    delete_message = XInternAtom(display->display, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(display->display, win, &delete_message, 1);
 }
 
 X11Window::~X11Window()
@@ -337,11 +340,17 @@ void X11Window::Resize(unsigned int w, unsigned int h)
 void X11Window::ProcessEvents()
 {
     XEvent ev;
-    while(!pangolin::ShouldQuit() && XCheckWindowEvent(display->display, win, EVENT_MASKS, &ev))
+    while(!pangolin::ShouldQuit() && XPending(display->display) > 0)
     {
+        XNextEvent(display->display, &ev);
+
         switch(ev.type){
         case ConfigureNotify:
             pangolin::process::Resize(ev.xconfigure.width, ev.xconfigure.height);
+            break;
+        case ClientMessage:
+            // We've only registered to receive WM_DELETE_WINDOW, so no further checks needed.
+            pangolin::Quit();
             break;
         case ButtonPress:
         case ButtonRelease:

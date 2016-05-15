@@ -100,6 +100,8 @@ struct X11Window : public PangolinGl
     // Owns the X11 Window and Colourmap
     ::Window win;
     ::Colormap cmap;
+
+    Atom delete_message;
 };
 
 }
