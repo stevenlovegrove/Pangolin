@@ -29,6 +29,7 @@
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
+#include <pangolin/display/device/OsxWindow.h>
 
 #import <Cocoa/Cocoa.h>
 
@@ -515,21 +516,12 @@ static PangolinNSGLView *view = 0;
 namespace pangolin
 {
 
-void FinishFrame()
+WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& /*params*/ )
 {
-    RenderViews();
-    PostRender();
-    [[view openGLContext] flushBuffer];
-//    [[view openGLContext] update];
-//    [view setNeedsDisplay:YES];
-    [NSApp run_step];
-}
+    OsxWindow* win = new OsxWindow(window_title, w, h);
 
-void CreateWindowAndBind(std::string window_title, int w, int h, const Params& /*params*/ )
-{
-    // Create Pangolin GL Context
-    BindToContext(window_title);
-    context->is_double_buffered = true;
+    // Add to context map
+    AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
 
 //    // These are important I think!
 //    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -552,6 +544,8 @@ void CreateWindowAndBind(std::string window_title, int w, int h, const Params& /
     glewInit();
 
     FixOsxFocus();
+
+    return *context;
 }
 
 void OsxToggleFullscreen()
@@ -561,35 +555,66 @@ void OsxToggleFullscreen()
     [delegate.window toggleFullScreen:nil];
 }
 
-void StartFullScreen() {
-    if(!context->is_fullscreen) {
+OsxWindow::OsxWindow(
+    const std::string& title, int width, int height
+) {
+    PangolinGl::is_double_buffered = true;
+}
+
+OsxWindow::~OsxWindow()
+{
+
+}
+
+void OsxWindow::StartFullScreen()
+{
+    if(!is_fullscreen) {
         OsxToggleFullscreen();
-        context->is_fullscreen = true;
+        is_fullscreen = true;
     }
 }
 
-void StopFullScreen() {
-    if(context->is_fullscreen) {
+void OsxWindow::StopFullScreen()
+{
+    if(is_fullscreen) {
         OsxToggleFullscreen();
-        context->is_fullscreen = false;
+        is_fullscreen = false;
     }
 }
 
-void SetFullscreen(bool fullscreen)
+void OsxWindow::ToggleFullscreen()
 {
-    if(fullscreen) {
-        StartFullScreen();
-    }else{
-        StopFullScreen();
-    }
+    OsxToggleFullscreen();
+    context->is_fullscreen = !context->is_fullscreen;
 }
 
-void PangolinPlatformInit(PangolinGl& /*context*/)
+void OsxWindow::Move(int x, int y)
 {
+
 }
 
-void PangolinPlatformDeinit(PangolinGl& /*context*/)
+void OsxWindow::Resize(unsigned int w, unsigned int h)
 {
+
+}
+
+void OsxWindow::MakeCurrent()
+{
+
+}
+
+void OsxWindow::SwapBuffers()
+{
+    [[view openGLContext] flushBuffer];
+//    [[view openGLContext] update];
+//    [view setNeedsDisplay:YES];
+    [NSApp run_step];
+
+}
+
+void OsxWindow::ProcessEvents()
+{
+
 }
 
 }
