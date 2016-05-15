@@ -147,7 +147,7 @@ bool VideoJoiner::GrabNext(unsigned char* image, bool wait)
     }
 
     if(sync_tolerance_us > 0) {
-        if(abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us){
+        if(std::abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us){
             pango_print_warn("Join timestamps not within %lu us trying to sync\n", (unsigned long)sync_tolerance_us);
 
             for(size_t n=0; n<10; ++n){
@@ -168,7 +168,7 @@ bool VideoJoiner::GrabNext(unsigned char* image, bool wait)
             }
         }
 
-        if(abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us ) {
+        if(std::abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us ) {
             TGRABANDPRINT("NOT IN SYNC newest:%ld oldest:%ld delta:%ld syncing took ", newest, oldest, (newest - oldest));
             return false;
         } else {
@@ -279,7 +279,7 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
       TGRABANDPRINT("Stream >=1 grab took ");
 
       if(sync_tolerance_us > 0) {
-          if(abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us){
+          if(std::abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us){
               pango_print_warn("Join timestamps not within %lu us trying to sync\n", (unsigned long)sync_tolerance_us);
 
               for(size_t n=0; n<10; ++n){
@@ -300,7 +300,7 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
               }
           }
 
-          if(abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us ) {
+          if(std::abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us ) {
               TGRABANDPRINT("NOT IN SYNC newest:%ld oldest:%ld delta:%ld syncing took ", newest, oldest, (newest - oldest));
               return false;
           } else {
