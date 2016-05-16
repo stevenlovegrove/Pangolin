@@ -258,7 +258,6 @@ X11Window::X11Window(
 {
     PangolinGl::windowed_size[0] = width;
     PangolinGl::windowed_size[1] = height;
-    PangolinGl::is_double_buffered = double_buffered;
 
     // Get a visual
     XVisualInfo *vi = glXGetVisualFromFBConfig( display->display, chosenFbc );
@@ -489,6 +488,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 
     X11Window* win = new X11Window(window_title, w, h, newdisplay, newfbc);
     win->glcontext = newglcontext;
+    win->is_double_buffered = double_buffered;
 
     // Add to context map
     AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
