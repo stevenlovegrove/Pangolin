@@ -263,7 +263,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         glColor3f(1.0f, 1.0f, 1.0f);
 
-        if(frame.GuiChanged()) {
+        if(video_playback && frame.GuiChanged()) {
             frame = video_playback->Seek(frame) -1;
             end_frame = frame + 1;
         }
