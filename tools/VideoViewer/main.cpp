@@ -98,7 +98,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     // current frame in memory buffer and displaying.
     pangolin::Var<int> frame("ui.frame", -1, 0, total_frames-1 );
     pangolin::Slider frame_slider("frame", frame.Ref() );
-    if(total_frames < std::numeric_limits<int>::max())
+    if(video_playback && total_frames < std::numeric_limits<int>::max())
     {
         frame_slider.SetBounds(0.0, pangolin::Attach::Pix(slider_size), 0.0, 1.0);
         pangolin::DisplayBase().AddDisplay(frame_slider);
@@ -264,7 +264,9 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         glColor3f(1.0f, 1.0f, 1.0f);
 
         if(frame.GuiChanged()) {
-            frame = video_playback->Seek(frame) -1;
+            if(video_playback) {
+                frame = video_playback->Seek(frame) -1;
+            }
             end_frame = frame + 1;
         }
 
