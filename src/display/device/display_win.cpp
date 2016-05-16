@@ -176,6 +176,9 @@ WinWindow::WinWindow(
     const std::string& window_title, int width, int height
 ) : hWnd(0)
 {
+    PangolinGl::windowed_size[0] = width;
+    PangolinGl::windowed_size[1] = height;
+
     const HMODULE hCurrentInst = GetModuleHandle(0);
     RegisterThisClass(hCurrentInst);
 

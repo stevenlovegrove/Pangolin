@@ -30,6 +30,7 @@
 #define __STDC_FORMAT_MACROS
 
 #include <pangolin/python/PyModulePangolin.h>
+#include <pangolin/console/ConsoleView.h>
 
 #ifdef BUILD_PANGOLIN_VARS
 #   include <pangolin/python/PyVar.h>

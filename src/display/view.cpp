@@ -31,6 +31,7 @@
 #include <pangolin/display/display_internal.h>
 #include <pangolin/display/view.h>
 #include <pangolin/display/viewport.h>
+#include <pangolin/display/opengl_render_state.h>
 
 #include <stdexcept>
 

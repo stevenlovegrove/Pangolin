@@ -51,6 +51,7 @@ namespace pangolin
   extern const char* PARAM_DOUBLEBUFFER;   // bool
   extern const char* PARAM_SAMPLE_BUFFERS; // int
   extern const char* PARAM_SAMPLES;        // int
+  extern const char* PARAM_HIGHRES;        // bool - Apple Retina screens only
 
   // Forward Declarations
   struct View;

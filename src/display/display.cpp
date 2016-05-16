@@ -29,6 +29,7 @@
 
 #ifdef HAVE_PYTHON
 #include <pangolin/python/PyInterpreter.h>
+#include <pangolin/console/ConsoleView.h>
 #endif // HAVE_PYTHON
 
 #include <iostream>
@@ -64,6 +65,8 @@ const char* PARAM_DISPLAYNAME    = "DISPLAYNAME";
 const char* PARAM_DOUBLEBUFFER   = "DOUBLEBUFFER";
 const char* PARAM_SAMPLE_BUFFERS = "SAMPLE_BUFFERS";
 const char* PARAM_SAMPLES        = "SAMPLES";
+const char* PARAM_HIGHRES        = "HIGHRES";
+
 
 typedef std::map<std::string,boostd::shared_ptr<PangolinGl> > ContextMap;
 
@@ -122,7 +125,10 @@ void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newco
                 glutGet(GLUT_WINDOW_HEIGHT)
                 );
 #else
-    process::Resize(640,480);
+    process::Resize(
+        newcontext->windowed_size[0],
+        newcontext->windowed_size[1]
+    );
 #endif //HAVE_GLUT
 
     // Default key bindings can be overridden

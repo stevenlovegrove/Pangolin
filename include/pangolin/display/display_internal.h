@@ -31,10 +31,6 @@
 #include <pangolin/platform.h>
 #include <pangolin/display/window.h>
 
-#ifdef HAVE_PYTHON
-#  include <pangolin/console/ConsoleView.h>
-#endif // HAVE_PYTHON
-
 #include <pangolin/display/view.h>
 #include <pangolin/display/user_app.h>
 #include <pangolin/compat/function.h>
@@ -50,6 +46,12 @@
 
 namespace pangolin
 {
+
+// Forward Declarations
+#ifdef HAVE_PYTHON
+class ConsoleView;
+#endif // HAVE_PYTHON
+class GlFont;
 
 typedef std::map<const std::string,View*> ViewMap;
 typedef std::map<int,boostd::function<void(void)> > KeyhookMap;

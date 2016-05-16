@@ -25,45 +25,24 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_OSXWINDOW_H
-#define PANGOLIN_OSXWINDOW_H
+#ifndef PANGOLINNSGLVIEW_H
+#define PANGOLINNSGLVIEW_H
 
-#include <pangolin/platform.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+
 #include <pangolin/display/display_internal.h>
 
-#include <pangolin/display/device/PangolinNSApplication.h>
-#include <pangolin/display/device/PangolinNSGLView.h>
+////////////////////////////////////////////////////////////////////
+// PangolinNSGLView
+////////////////////////////////////////////////////////////////////
 
-namespace pangolin
+@interface PangolinNSGLView : NSOpenGLView
 {
-
-struct OsxWindow : public PangolinGl
-{
-    OsxWindow(const std::string& title, int width, int height, bool USE_RETINA);
-
-    ~OsxWindow();
-
-    void StartFullScreen();
-
-    void StopFullScreen();
-
-    void ToggleFullscreen() PANGOLIN_OVERRIDE;
-
-    void Move(int x, int y) PANGOLIN_OVERRIDE;
-
-    void Resize(unsigned int w, unsigned int h) PANGOLIN_OVERRIDE;
-
-    void MakeCurrent() PANGOLIN_OVERRIDE;
-
-    void SwapBuffers() PANGOLIN_OVERRIDE;
-
-    void ProcessEvents() PANGOLIN_OVERRIDE;
-
-private:
-    NSWindow* _window;
-    PangolinNSGLView *view;
-};
-
+    pangolin::PangolinGl* context;
+    float backing_scale;
 }
+@end
 
-#endif // PANGOLIN_OSXWINDOW_H
+
+#endif // PANGOLINNSGLVIEW_H
