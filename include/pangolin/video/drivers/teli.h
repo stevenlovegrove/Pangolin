@@ -40,8 +40,8 @@ namespace pangolin
 class PANGOLIN_EXPORT TeliVideo : public VideoInterface
 {
 public:
-    TeliVideo();
-    TeliVideo(const ImageRoi& roi);
+    TeliVideo(const Params &p);
+    TeliVideo(const Params &p, const ImageRoi& roi);
     ~TeliVideo();
     
     //! Implement VideoInput::Start()
@@ -70,8 +70,13 @@ public:
         return strm;
     }
 
+    std::string GetParameter(const std::string& name);
+
+    void SetParameter(const std::string& name, const std::string& value);
+
 protected:
     void Initialise(const ImageRoi& roi);
+    void SetDeviceParams(const Params &p);
 
     std::vector<StreamInfo> streams;
     size_t size_bytes;
