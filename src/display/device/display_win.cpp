@@ -176,11 +176,11 @@ WinWindow::WinWindow(
     const std::string& window_title, int width, int height
 ) : hWnd(0)
 {
-    PangolinGl::windowed_size[0] = width;
-    PangolinGl::windowed_size[1] = height;
-
     const HMODULE hCurrentInst = GetModuleHandle(0);
     RegisterThisClass(hCurrentInst);
+
+    PangolinGl::windowed_size[0] = 0;
+    PangolinGl::windowed_size[1] = 0;
 
     HWND thishwnd = CreateWindow(
         className, window_title.c_str(),
@@ -254,7 +254,6 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
         SetupPalette(hDC);
         hGLRC = wglCreateContext(hDC);
         wglMakeCurrent(hDC, hGLRC);
-        //init();
         return 0;
     case WM_DESTROY:
         /* finish OpenGL rendering */
@@ -270,10 +269,8 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
         return 0;
     case WM_SIZE:
         /* track window size changes */
-        if (hGLRC) {
-            process::Resize((int)LOWORD(lParam), (int)HIWORD(lParam));
-            return 0;
-        }
+        process::Resize((int)LOWORD(lParam), (int)HIWORD(lParam));
+        return 0;
     case WM_PALETTECHANGED:
         /* realize palette if this is *not* the current window */
         if (hGLRC && hPalette && (HWND)wParam != hWnd) {
@@ -403,10 +400,16 @@ void WinWindow::ToggleFullscreen()
 
 void WinWindow::Move(int x, int y)
 {
+    if( !SetWindowPos(hWnd, 0, x, y, 0, 0, SWP_NOSIZE) ) {
+        std::cerr << "WinWindow::Move failed" << std::endl;
+    }
 }
 
 void WinWindow::Resize(unsigned int w, unsigned int h)
 {
+    if( !SetWindowPos(hWnd, 0, 0, 0, w, h, SWP_NOMOVE) ) {
+        std::cerr << "WinWindow::Resize failed" << std::endl;
+    }
 }
 
 void WinWindow::MakeCurrent()
@@ -438,11 +441,15 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 
     // Add to context map
     AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
-
-    // Process window events
-    context->ProcessEvents();
-
     win->MakeCurrent();
+    win->ProcessEvents();
+
+    // Hack to make sure the window receives a
+    while(!win->windowed_size[0]) {
+        w -= 1; h -=1;
+        win->Resize(w,h);
+        win->ProcessEvents();
+    }
     glewInit();
 
     return *context;
