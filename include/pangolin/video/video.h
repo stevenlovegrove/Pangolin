@@ -34,9 +34,9 @@
 // Video URI's take the following form:
 //  scheme:[param1=value1,param2=value2,...]//device
 //
-// scheme = file | files |
-//          dc1394 | v4l | openni2 | openni | depthsense | pleora |
-//          convert | mjpeg | debayer | split | join | test
+// scheme = file | files | pango | shmem | dc1394 | uvc | v4l | openni2 |
+//          openni | depthsense | pleora | teli | mjpeg | test |
+//          thread | convert | debayer | split | join | shift | mirror | unpack
 //
 // file/files - read one or more streams from image file(s) / video
 //  e.g. "files://~/data/dataset/img_*.jpg"
@@ -88,7 +88,7 @@
 //                                   UserSetSelector=UserSet2,PixelSize=Bpp12,Width=1400,OffsetX=1048,Height=1800,OffsetY=124,ExposureTime=10000,LineSelector=Line1,LineSource=Off,LineSelector=Line2,LineSource=ExposureActive,LineModeAll=6,LineInverterAll=6,UserSetSave=Execute,
 //                                   SequentialShutterIndex=1,SequentialShutterEntry=1,SequentialShutterIndex=2,SequentialShutterEntry=2,SequentialShutterTerminateAt=2,SequentialShutterEnable=On,,AcquisitionFrameRateControl=Manual,AcquisitionFrameRate=70]//"
 //
-// thread - thread that continuously pulls from the child streams so that data in, unpackking, debayering can be decoupled from the main application thread
+// thread - thread that continuously pulls from the child streams so that data in, unpacking, debayering etc can be decoupled from the main application thread
 //  e.g. thread://pleora://
 //  e.g. thread://unpack://pleora:[PixelFormat=Mono12p]//
 //
@@ -107,6 +107,7 @@
 //           memN=Offset:WxH:PitchBytes:Format
 //  e.g. "split:[roi1=0+0+640x480,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 //  e.g. "split:[mem1=307200:640x480:1280:GRAY8,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
+//  e.g. "split:[stream1=2,stream2=1]//pango://video.pango"
 //
 // join - join streams
 //  e.g. "join:[sync_tolerance_us=100, sync_continuously=true]//{pleora:[sn=00000274]//}{pleora:[sn=00000275]//}"
