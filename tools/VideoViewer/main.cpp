@@ -36,6 +36,13 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         return;
     }
 
+    // Output details of video stream
+    for(size_t s = 0; s < num_streams; ++s) {
+        const pangolin::StreamInfo& si = video.Streams()[s];
+        std::cout << "Stream " << s << ": " << si.Width() << " x " << si.Height()
+                  << " " << si.PixFormat().format << " (pitch: " << si.Pitch() << " bytes)" << std::endl;
+    }
+
     // Check if video supports VideoPlaybackInterface
     pangolin::VideoPlaybackInterface* video_playback = video.Cast<pangolin::VideoPlaybackInterface>();
     const int total_frames = video_playback ? video_playback->GetTotalFrames() : std::numeric_limits<int>::max();

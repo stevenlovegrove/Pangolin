@@ -434,11 +434,17 @@ VideoInterface* OpenVideo(const Uri& uri)
     if(!uri.scheme.compare("debayer"))
     {
         VideoInterface* subvid = OpenVideo(uri.url);
-        std::string tile_string = uri.Get<std::string>("tile","rggb");
-        std::string method_string = uri.Get<std::string>("method","downsample");
-        color_filter_t tile = DebayerVideo::ColorFilterFromString(tile_string);
-        bayer_method_t method = DebayerVideo::BayerMethodFromString(method_string);
-        video = new DebayerVideo(subvid, tile, method);
+        const std::string tile_string = uri.Get<std::string>("tile","rggb");
+        const std::string method = uri.Get<std::string>("method","none");
+        const color_filter_t tile = DebayerVideo::ColorFilterFromString(tile_string);
+
+        std::vector<bayer_method_t> methods;
+        for(size_t s=0; s < subvid->Streams().size(); ++s) {
+            const std::string key = std::string("method") + ToString(s+1);
+            std::string method_s = uri.Get<std::string>(key, method);
+            methods.push_back(DebayerVideo::BayerMethodFromString(method_s));
+        }
+        video = new DebayerVideo(subvid, tile, methods);
     }else
     if(!uri.scheme.compare("shift"))
     {

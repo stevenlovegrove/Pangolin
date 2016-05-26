@@ -28,35 +28,55 @@
 #include <pangolin/video/drivers/debayer.h>
 
 #ifdef HAVE_DC1394
-#include <dc1394/conversions.h>
+#   include <dc1394/conversions.h>
+    const bool have_dc1394 = true;
+#else
+    const bool have_dc1394 = false;
 #endif
 
 namespace pangolin
 {
 
-DebayerVideo::DebayerVideo(VideoInterface* src, color_filter_t tile, bayer_method_t method)
-    : size_bytes(0), buffer(0), tile(tile), method(method)
+pangolin::StreamInfo BayerOutputFormat( const StreamInfo& stream_in, bayer_method_t method, size_t start_offset)
+{
+    const bool downsample = (method == BAYER_METHOD_DOWNSAMPLE) || (method == BAYER_METHOD_DOWNSAMPLE_MONO);
+
+    const size_t w = downsample ? stream_in.Width() / 2 : stream_in.Width();
+    const size_t h = downsample ? stream_in.Height() / 2 : stream_in.Height();
+
+    pangolin::VideoPixelFormat fmt =
+        (method == BAYER_METHOD_NONE) ?
+            stream_in.PixFormat() :
+            pangolin::VideoFormatFromString(
+                (stream_in.PixFormat().bpp == 16) ?
+                (method == BAYER_METHOD_DOWNSAMPLE_MONO ? "GRAY16LE" : "RGB48") :
+                (method == BAYER_METHOD_DOWNSAMPLE_MONO ? "GRAY8" : "RGB24")
+            );
+
+    return pangolin::StreamInfo( fmt, w, h, w*fmt.bpp / 8, (unsigned char*)0 + start_offset );
+}
+
+DebayerVideo::DebayerVideo(VideoInterface* src, color_filter_t tile, const std::vector<bayer_method_t>& bayer_method)
+    : size_bytes(0), buffer(0), tile(tile), methods(bayer_method)
 {
     if(!src) {
         throw VideoException("DebayerVideo: VideoInterface in must not be null");
     }
     videoin.push_back(src);
 
-#ifndef HAVE_DC1394
-    pango_print_warn("debayer: dc1394 unavailable for debayering. Using simple downsampling method instead.\n");
-    this->method = BAYER_METHOD_DOWNSAMPLE;
-#endif
+    while(methods.size() < src->Streams().size()) {
+        methods.push_back(BAYER_METHOD_NONE);
+    }
 
-    const pangolin::VideoPixelFormat rgb_format = pangolin::VideoFormatFromString("RGB24");
     for(size_t s=0; s< src->Streams().size(); ++s) {
-        size_t w = src->Streams()[s].Width();
-        size_t h = src->Streams()[s].Height();
-        if(this->method==BAYER_METHOD_DOWNSAMPLE) {
-            w = w/2;
-            h = h/2;
+        if( (methods[s] < BAYER_METHOD_NONE) && (!have_dc1394 || src->Streams()[0].IsPitched()) ) {
+            pango_print_warn("debayer: Switching to simple downsampling method because No DC1394 or image is pitched.\n");
+            methods[s] = BAYER_METHOD_DOWNSAMPLE;
         }
-        streams.push_back(pangolin::StreamInfo( rgb_format, w, h, w*rgb_format.bpp / 8, (unsigned char*)0 + size_bytes ));
-        size_bytes += w*h*rgb_format.bpp / 8;
+
+        const StreamInfo& stin = src->Streams()[s];
+        streams.push_back(BayerOutputFormat(stin, methods[s], size_bytes));
+        size_bytes += streams.back().SizeBytes();
     }
 
     buffer = new unsigned char[src->SizeBytes()];
@@ -121,46 +141,130 @@ bool DebayerVideo::DropNFrames(uint32_t n)
     }
 }
 
-void DownsampleDebayer(Image<unsigned char>& out, const Image<unsigned char>& in, color_filter_t tile)
+template<typename Tout, typename Tin>
+void DownsampleToMono(Image<Tout>& out, const Image<Tin>& in)
+{
+    for(size_t y=0; y<out.h; ++y) {
+      Tout* pixout = out.RowPtr(y);
+      const Tin* irow0 = in.RowPtr(2*y);
+      const Tin* irow1 = in.RowPtr(2*y+1);
+      for(size_t x=0; x<out.w; ++x) {
+          *(pixout++) = (Tout)irow0[0] + (Tout)irow0[1] + (Tout)irow1[0] + (Tout)irow1[1];
+          irow0 += 2;
+          irow1 += 2;
+      }
+    }
+}
+
+template<typename Tout, typename Tin>
+void DownsampleDebayer(Image<Tout>& out, const Image<Tin>& in, color_filter_t tile)
 {
     switch(tile) {
       case DC1394_COLOR_FILTER_RGGB:
         for(size_t y=0; y<out.h; ++y) {
+          Tout* pixout = out.RowPtr(y);
+          const Tin* irow0 = in.RowPtr(2*y);
+          const Tin* irow1 = in.RowPtr(2*y+1);
           for(size_t x=0; x<out.w; ++x) {
-             out.ptr[3*(y*out.w+x)+2] = in.ptr[(2*y+1)*in.pitch + 2*x + 1];
-             out.ptr[3*(y*out.w+x)+1] = (in.ptr[2*y*in.pitch + 2*x + 1] + in.ptr[(2*y+1)*in.pitch + 2*x]) >> 1;
-             out.ptr[3*(y*out.w+x)+0] = in.ptr[2*y*in.pitch + 2*x];
+              *(pixout++) = irow0[2*x];
+              *(pixout++) = (irow0[2*x+1] + irow1[2*x]) >> 1;
+              *(pixout++) = irow1[2*x+1];
           }
         }
         break;
       case DC1394_COLOR_FILTER_GBRG:
         for(size_t y=0; y<out.h; ++y) {
+          Tout* pixout = out.RowPtr(y);
+          const Tin* irow0 = in.RowPtr(2*y);
+          const Tin* irow1 = in.RowPtr(2*y+1);
           for(size_t x=0; x<out.w; ++x) {
-             out.ptr[3*(y*out.w+x)+2] = in.ptr[2*y*in.pitch + 2*x + 1];
-             out.ptr[3*(y*out.w+x)+1] = (in.ptr[2*y*in.pitch + 2*x] + in.ptr[(2*y+1)*in.pitch + 2*x + 1]) >> 1;
-             out.ptr[3*(y*out.w+x)+0] = in.ptr[(2*y+1)*in.pitch + 2*x];
-
+             *(pixout++) = irow1[2*x];
+             *(pixout++) = (irow0[2*x] + irow1[2*x+1]) >> 1;
+             *(pixout++) = irow0[2*x+1];
           }
         }
         break;
       case DC1394_COLOR_FILTER_GRBG:
         for(size_t y=0; y<out.h; ++y) {
+          Tout* pixout = out.RowPtr(y);
+          const Tin* irow0 = in.RowPtr(2*y);
+          const Tin* irow1 = in.RowPtr(2*y+1);
           for(size_t x=0; x<out.w; ++x) {
-             out.ptr[3*(y*out.w+x)+2] = in.ptr[(2*y+1)*in.pitch + 2*x];
-             out.ptr[3*(y*out.w+x)+1] = (in.ptr[2*y*in.pitch + 2*x] + in.ptr[(2*y+1)*in.pitch + 2*x + 1]) >> 1;
-             out.ptr[3*(y*out.w+x)+0] = in.ptr[2*y*in.pitch + 2*x + 1];
+             *(pixout++) = irow0[2*x+1];
+             *(pixout++) = (irow0[2*x] + irow1[2*x+1]) >> 1;
+             *(pixout++) = irow1[2*x];
           }
         }
         break;
       case DC1394_COLOR_FILTER_BGGR:
         for(size_t y=0; y<out.h; ++y) {
+          Tout* pixout = out.RowPtr(y);
+          const Tin* irow0 = in.RowPtr(2*y);
+          const Tin* irow1 = in.RowPtr(2*y+1);
           for(size_t x=0; x<out.w; ++x) {
-             out.ptr[3*(y*out.w+x)+2] = in.ptr[2*y*in.pitch + 2*x];
-             out.ptr[3*(y*out.w+x)+1] = (in.ptr[2*y*in.pitch + 2*x + 1] + in.ptr[(2*y+1)*in.pitch + 2*x]) >> 1;
-             out.ptr[3*(y*out.w+x)+0] = in.ptr[(2*y+1)*in.pitch + 2*x + 1];
+             *(pixout++) = irow1[2*x+1];
+             *(pixout++) = (irow0[2*x+1] + irow1[2*x]) >> 1;
+             *(pixout++) = irow0[2*x];
           }
         }
         break;
+    }
+}
+
+template<typename T>
+void PitchedImageCopy( Image<T>& img_out, const Image<T>& img_in ) {
+    if( img_out.w != img_in.w || img_out.h != img_in.h || sizeof(T) * img_in.w > img_out.pitch) {
+        throw std::runtime_error("PitchedImageCopy: Incompatible image sizes");
+    }
+
+    for(size_t y=0; y < img_out.h; ++y) {
+        std::memcpy(img_out.RowPtr((int)y), img_in.RowPtr((int)y), sizeof(T) * img_in.w);
+    }
+}
+
+template<typename Tout, typename Tin>
+void ProcessImage(Image<Tout>& img_out, const Image<Tin>& img_in, bayer_method_t method, color_filter_t tile)
+{
+    if(method == BAYER_METHOD_NONE) {
+        PitchedImageCopy(img_out, img_in.template Reinterpret<Tout>() );
+    }else if(method == BAYER_METHOD_DOWNSAMPLE_MONO) {
+        DownsampleToMono(img_out, img_in);
+    }else if(method == BAYER_METHOD_DOWNSAMPLE) {
+        DownsampleDebayer(img_out, img_in, tile);
+    }else{
+#ifdef HAVE_DC1394
+        if(sizeof(Tout) == 8) {
+            dc1394_bayer_decoding_8bit(
+                (uint8_t*)img_in.ptr, (uint8_t*)img_out.ptr, img_in.w, img_in.h,
+                (dc1394color_filter_t)tile, (dc1394bayer_method_t)method
+            );
+        }else if(sizeof(Tout) == 16) {
+            dc1394_bayer_decoding_16bit(
+                (uint16_t*)img_in.ptr, (uint16_t*)img_out.ptr, img_in.w, img_in.h,
+                (dc1394color_filter_t)tile, (dc1394bayer_method_t)method,
+                16
+            );
+        }
+#endif
+    }
+}
+
+void DebayerVideo::ProcessStreams(unsigned char* out, const unsigned char *in)
+{
+    for(size_t s=0; s<streams.size(); ++s) {
+        const StreamInfo& stin = videoin[0]->Streams()[s];
+
+        if(stin.PixFormat().bpp == 8) {
+            Image<unsigned char> img_in  = stin.StreamImage(in);
+            Image<unsigned char> img_out = Streams()[s].StreamImage(out);
+            ProcessImage(img_out, img_in, methods[s], tile);
+        }else if(stin.PixFormat().bpp == 16){
+            Image<uint16_t> img_in = stin.StreamImage(in).Reinterpret<uint16_t>();
+            Image<uint16_t> img_out = Streams()[s].StreamImage(out).Reinterpret<uint16_t>();
+            ProcessImage(img_out, img_in, methods[s], tile);
+        }else{
+            throw std::runtime_error("debayer: unhandled format combination.");
+        }
     }
 }
 
@@ -168,20 +272,7 @@ void DownsampleDebayer(Image<unsigned char>& out, const Image<unsigned char>& in
 bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
 {    
     if(videoin[0]->GrabNext(buffer,wait)) {
-        for(size_t s=0; s<streams.size(); ++s) {
-            Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
-            Image<unsigned char> img_out = Streams()[s].StreamImage(image);
-
-#ifdef HAVE_DC1394
-            dc1394_bayer_decoding_8bit(
-                img_in.ptr, img_out.ptr, img_in.w, img_in.h,
-                (dc1394color_filter_t)tile, (dc1394bayer_method_t)method
-            );
-#else
-            // use our simple debayering instead
-            DownsampleDebayer(img_out, img_in, tile);
-#endif
-        }
+        ProcessStreams(image, buffer);
         return true;
     }else{
         return false;
@@ -192,20 +283,7 @@ bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
 bool DebayerVideo::GrabNewest( unsigned char* image, bool wait )
 {
     if(videoin[0]->GrabNewest(buffer,wait)) {
-        for(size_t s=0; s<streams.size(); ++s) {
-            Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
-            Image<unsigned char> img_out = Streams()[s].StreamImage(image);
-
-#ifdef HAVE_DC1394
-            dc1394_bayer_decoding_8bit(
-                img_in.ptr, img_out.ptr, img_in.w, img_in.h,
-                (dc1394color_filter_t)tile, (dc1394bayer_method_t)method
-            );
-#else
-            // use our simple debayering instead
-            DownsampleDebayer(img_out, img_in, tile);
-#endif
-        }
+        ProcessStreams(image, buffer);
         return true;
     }else{
         return false;
@@ -251,6 +329,8 @@ bayer_method_t DebayerVideo::BayerMethodFromString(std::string str)
   else if(!str.compare("edgesense")) return BAYER_METHOD_EDGESENSE;
   else if(!str.compare("vng")) return BAYER_METHOD_VNG;
   else if(!str.compare("ahd")) return BAYER_METHOD_AHD;
+  else if(!str.compare("mono")) return BAYER_METHOD_DOWNSAMPLE_MONO;
+  else if(!str.compare("none")) return BAYER_METHOD_NONE;
   else {
      pango_print_error("Debayer error, %s is not a valid debayer method using downsample\n", str.c_str());
      return BAYER_METHOD_DOWNSAMPLE;

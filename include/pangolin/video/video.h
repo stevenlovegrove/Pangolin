@@ -159,12 +159,22 @@ public:
     
     //! Pitch: Number of bytes between one image row and the next
     inline size_t Pitch() const { return img_offset.pitch; }
+
+    //! Number of contiguous bytes in memory that the image occupies
+    inline size_t RowBytes() const {
+        // Row size without padding
+        return (fmt.bpp*img_offset.w)/8;
+    }
     
+    //! Returns true iff image contains padding or stridded access
+    //! This implies that the image data is not contiguous in memory.
+    inline bool IsPitched() const {
+        return Pitch() != RowBytes();
+    }
+
     //! Number of contiguous bytes in memory that the image occupies
     inline size_t SizeBytes() const {
-        // Row size without padding
-        const size_t row_size_bytes = (fmt.bpp*img_offset.w)/8;
-        return (img_offset.h-1) * img_offset.pitch + row_size_bytes;
+        return (img_offset.h-1) * img_offset.pitch + RowBytes();
     }
 
     //! Offset in bytes relative to start of frame buffer
