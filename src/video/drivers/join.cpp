@@ -139,11 +139,8 @@ bool VideoJoiner::GrabNext(unsigned char* image, bool wait)
     }
 
     if(grabbed_all != 0){
-        if(wait==0) {
-            return false;
-        } else {
-            pango_print_error("GrabNext with wait true should always return a frame %d!\n", grabbed_all);
-        }
+        // Source is waiting on data or end of stream.
+        return false;
     }
 
     if(sync_tolerance_us > 0) {
