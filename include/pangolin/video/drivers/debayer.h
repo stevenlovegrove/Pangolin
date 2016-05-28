@@ -67,7 +67,7 @@ class PANGOLIN_EXPORT DebayerVideo :
         public BufferAwareVideoInterface
 {
 public:
-    DebayerVideo(VideoInterface* videoin, color_filter_t tile, const std::vector<bayer_method_t> &method);
+    DebayerVideo(VideoInterface* videoin, const std::vector<bayer_method_t> &method, color_filter_t tile);
     ~DebayerVideo();
 
     //! Implement VideoInput::Start()
@@ -109,10 +109,11 @@ protected:
 
     std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
-    std::vector<bayer_method_t> methods;
+
     size_t size_bytes;
     unsigned char* buffer;
 
+    std::vector<bayer_method_t> methods;
     color_filter_t tile;
 
     json::value device_properties;

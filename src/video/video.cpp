@@ -444,7 +444,7 @@ VideoInterface* OpenVideo(const Uri& uri)
             std::string method_s = uri.Get<std::string>(key, method);
             methods.push_back(DebayerVideo::BayerMethodFromString(method_s));
         }
-        video = new DebayerVideo(subvid, tile, methods);
+        video = new DebayerVideo(subvid, methods, tile);
     }else
     if(!uri.scheme.compare("shift"))
     {

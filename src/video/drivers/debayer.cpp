@@ -56,8 +56,8 @@ pangolin::StreamInfo BayerOutputFormat( const StreamInfo& stream_in, bayer_metho
     return pangolin::StreamInfo( fmt, w, h, w*fmt.bpp / 8, (unsigned char*)0 + start_offset );
 }
 
-DebayerVideo::DebayerVideo(VideoInterface* src, color_filter_t tile, const std::vector<bayer_method_t>& bayer_method)
-    : size_bytes(0), buffer(0), tile(tile), methods(bayer_method)
+DebayerVideo::DebayerVideo(VideoInterface* src, const std::vector<bayer_method_t>& bayer_method, color_filter_t tile)
+    : size_bytes(0), buffer(0), methods(bayer_method), tile(tile)
 {
     if(!src) {
         throw VideoException("DebayerVideo: VideoInterface in must not be null");
