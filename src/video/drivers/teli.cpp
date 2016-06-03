@@ -254,10 +254,16 @@ void TeliVideo::Initialise(const ImageRoi& roi)
     }
 
     // Create completion event object for stream.
+#ifdef _WIN_
     hStrmCmpEvt = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (hStrmCmpEvt == NULL)
         throw pangolin::VideoException("TeliSDK: Error creating event.");
-
+#endif
+#ifdef _LINUX_
+    uiStatus = Teli::Sys_CreateSignal(&hStrmCmpEvt);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("TeliSDK: Error creating event.");
+#endif
     uint32_t uiPyldSize = 0;
     uiStatus = Teli::Strm_OpenSimple(cam, &strm, &uiPyldSize, hStrmCmpEvt);
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
@@ -359,8 +365,14 @@ const std::vector<StreamInfo>& TeliVideo::Streams() const
 //! Implement VideoInput::GrabNext()
 bool TeliVideo::GrabNext(unsigned char* image, bool wait)
 {
+#ifdef _WIN_
     unsigned int uiRet = WaitForSingleObject(hStrmCmpEvt, 2000);
     if (uiRet == WAIT_OBJECT_0) {
+#endif
+#ifdef _LINUX_
+    unsigned int uiRet = Teli::Sys_WaitForSignal(hStrmCmpEvt, 2000);
+    if (uiRet == Teli::CAM_API_STS_SUCCESS) {
+#endif
         Teli::CAM_IMAGE_INFO sImageInfo;
         uint32_t uiPyldSize = (uint32_t)size_bytes;
         Teli::CAM_API_STATUS uiStatus = Teli::Strm_ReadCurrentImage(strm, image, &uiPyldSize, &sImageInfo);
