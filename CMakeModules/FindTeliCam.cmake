@@ -13,6 +13,7 @@ find_path(
         "${CMAKE_SOURCE_DIR}/../TeliCamSDK/TeliCamApi/Include"
         /usr/include
         /user/include
+	/opt/TeliCamSDK/include
     PATH_SUFFIXES TeliCam
 )
 
@@ -30,6 +31,7 @@ find_library(
         "${CMAKE_SOURCE_DIR}/../TeliCamSDK/TeliCamApi/lib"
         /usr/lib
         /user/lib
+	/opt/TeliCamSDK/lib
     PATH_SUFFIXES ${TELI_PATH_SUFFIXES}
 )
 
@@ -41,6 +43,7 @@ find_library(
         "${CMAKE_SOURCE_DIR}/../TeliCamSDK/TeliCamApi/lib"
         /usr/lib
         /user/lib
+	/opt/TeliCamSDK/lib
     PATH_SUFFIXES ${TELI_PATH_SUFFIXES}
 )
 

@@ -83,7 +83,12 @@ protected:
 
     Teli::CAM_HANDLE cam;
     Teli::CAM_STRM_HANDLE strm;
+#ifdef _WIN_
     HANDLE hStrmCmpEvt;
+#endif
+#ifdef _LINUX_
+    Teli::SIGNAL_HANDLE hStrmCmpEvt;
+#endif
 };
 
 }
