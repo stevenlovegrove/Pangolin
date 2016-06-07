@@ -189,6 +189,8 @@ struct PANGOLIN_EXPORT GlBuffer
     ~GlBuffer();
 
     bool IsValid() const;
+
+    size_t SizeBytes() const;
     
     void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse );
     void Resize(GLuint num_elements);
@@ -196,6 +198,7 @@ struct PANGOLIN_EXPORT GlBuffer
     void Bind() const;
     void Unbind() const;
     void Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset = 0);
+    void Download(GLvoid* ptr, GLsizeiptr size_bytes, GLintptr offset = 0) const;
     
     GLuint bo;
     GlBufferType buffer_type;
