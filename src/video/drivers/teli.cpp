@@ -32,6 +32,32 @@
 namespace pangolin
 {
 
+// Represet lifetime of Teli SDK. Destructed by static deinitialisation.
+class TeliSystem
+{
+public:
+    static TeliSystem& Instance() {
+        static TeliSystem sys;
+        return sys;
+    }
+
+private:
+    TeliSystem()
+    {
+        Teli::CAM_API_STATUS uiStatus = Teli::Sys_Initialize();
+        if (uiStatus != Teli::CAM_API_STS_SUCCESS && uiStatus != Teli::CAM_API_STS_ALREADY_INITIALIZED)
+            throw pangolin::VideoException("Unable to initialise TeliSDK.");
+    }
+
+    ~TeliSystem()
+    {
+        Teli::CAM_API_STATUS uiStatus = Teli::Sys_Terminate();
+        if (uiStatus != Teli::CAM_API_STS_SUCCESS) {
+            throw pangolin::VideoException("TeliSDK: Error uninitialising.");
+        }
+    }
+};
+
 std::string GetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node)
 {
     Teli::TC_NODE_TYPE node_type;
@@ -171,12 +197,10 @@ void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string
 TeliVideo::TeliVideo(const Params& uri)
 	: cam(0), strm(0), hStrmCmpEvt(0)
 {
-    Teli::CAM_API_STATUS uiStatus = Teli::Sys_Initialize();
-    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-        throw pangolin::VideoException("Unable to initialise TeliSDK.");
+    TeliSystem::Instance();
 
     uint32_t num_cams = 0;
-    uiStatus = Teli::Sys_GetNumOfCameras(&num_cams);
+    Teli::CAM_API_STATUS uiStatus = Teli::Sys_GetNumOfCameras(&num_cams);
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
         throw pangolin::VideoException("Unable to enumerate TeliSDK cameras.");
 
@@ -335,16 +359,12 @@ void TeliVideo::SetDeviceParams(const Params& p)
 TeliVideo::~TeliVideo()
 {
     Teli::CAM_API_STATUS uiStatus = Teli::Strm_Close(strm);
-//    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-//        throw pangolin::VideoException("TeliSDK: Error closing camera stream.");
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        pango_print_warn("TeliSDK: Error closing camera stream.");
 
     uiStatus = Teli::Cam_Close(cam);
-//    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-//        throw pangolin::VideoException("TeliSDK: Error closing camera.");
-
-    uiStatus = Teli::Sys_Terminate();
-//    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-//        throw pangolin::VideoException("TeliSDK: Error uninitialising.");
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        pango_print_warn("TeliSDK: Error closing camera.");
 }
 
 //! Implement VideoInput::Start()
