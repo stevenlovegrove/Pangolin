@@ -86,53 +86,10 @@
 #include <pangolin/video/drivers/shared_memory.h>
 #endif
 
+#include <pangolin/video/iostream_operators.h>
+
 namespace pangolin
 {
-
-std::istream& operator>> (std::istream &is, ImageDim &dim)
-{
-    if(std::isdigit(is.peek()) ) {
-        // Expect 640x480, 640*480, ...
-        is >> dim.x; is.get(); is >> dim.y;
-    }else{
-        // Expect 'VGA', 'QVGA', etc
-        std::string sdim;
-        is >> sdim;
-        ToUpper(sdim);
-
-        if( !sdim.compare("QQVGA") ) {
-            dim = ImageDim(160,120);
-        }else if( !sdim.compare("HQVGA") ) {
-            dim = ImageDim(240,160);
-        }else if( !sdim.compare("QVGA") ) {
-            dim = ImageDim(320,240);
-        }else if( !sdim.compare("WQVGA") ) {
-            dim = ImageDim(360,240);
-        }else if( !sdim.compare("HVGA") ) {
-            dim = ImageDim(480,320);
-        }else if( !sdim.compare("VGA") ) {
-            dim = ImageDim(640,480);
-        }else if( !sdim.compare("WVGA") ) {
-            dim = ImageDim(720,480);
-        }else if( !sdim.compare("SVGA") ) {
-            dim = ImageDim(800,600);
-        }else if( !sdim.compare("DVGA") ) {
-            dim = ImageDim(960,640);
-        }else if( !sdim.compare("WSVGA") ) {
-            dim = ImageDim(1024,600);
-        }else{
-            throw VideoException("Unrecognised image-size string.");
-        }
-    }
-    return is;
-}
-
-std::istream& operator>> (std::istream &is, ImageRoi &roi)
-{
-    is >> roi.x; is.get(); is >> roi.y; is.get();
-    is >> roi.w; is.get(); is >> roi.h;
-    return is;
-}
 
 std::istream& operator>> (std::istream &is, MirrorOptions &mirror)
 {
@@ -153,35 +110,6 @@ std::istream& operator>> (std::istream &is, MirrorOptions &mirror)
         mirror = MirrorOptionsNone;
     }
 
-    return is;
-}
-
-std::istream& operator>> (std::istream &is, VideoPixelFormat& fmt)
-{
-    std::string sfmt;
-    is >> sfmt;
-    fmt = VideoFormatFromString(sfmt);
-    return is;
-}
-
-std::istream& operator>> (std::istream &is, Image<unsigned char>& img)
-{
-    size_t offset;
-    is >> offset; is.get();
-    img.ptr = (unsigned char*)0 + offset;
-    is >> img.w; is.get();
-    is >> img.h; is.get();
-    is >> img.pitch;
-    return is;
-}
-
-std::istream& operator>> (std::istream &is, StreamInfo &stream)
-{
-    VideoPixelFormat fmt;
-    Image<unsigned char> img_offset;
-    is >> img_offset; is.get();
-    is >> fmt;
-    stream = StreamInfo(fmt, img_offset);
     return is;
 }
 
@@ -734,11 +662,7 @@ VideoInterface* OpenVideo(const Uri& uri)
 #endif
 #ifdef HAVE_TELICAM
     if (!uri.scheme.compare("teli")) {
-        if (uri.Contains("roi")) {
-            video = new TeliVideo(uri, uri.Get<ImageRoi>("roi", ImageRoi(0,0,1920,1200) ) );
-        }else{
-            video = new TeliVideo(uri);
-        }
+        video = new TeliVideo(uri);
     }else
 #endif
 #ifdef HAVE_PLEORA

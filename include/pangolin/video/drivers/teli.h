@@ -43,6 +43,8 @@ public:
     TeliVideo(const Params &p);
     TeliVideo(const Params &p, const ImageRoi& roi);
     ~TeliVideo();
+
+    Params OpenCameraAndGetRemainingParameters(Params &params);
     
     //! Implement VideoInput::Start()
     void Start();

@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/video/drivers/teli.h>
+#include <pangolin/video/iostream_operators.h>
 #include <XmlFeatures.h>
 
 namespace pangolin
@@ -167,7 +168,7 @@ void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string
     }
 }
 
-TeliVideo::TeliVideo(const Params& params)
+TeliVideo::TeliVideo(const Params& uri)
 	: cam(0), strm(0), hStrmCmpEvt(0)
 {
     Teli::CAM_API_STATUS uiStatus = Teli::Sys_Initialize();
@@ -182,7 +183,37 @@ TeliVideo::TeliVideo(const Params& params)
     if (num_cams == 0)
      throw pangolin::VideoException("No TeliSDK Cameras available.");
 
-    uiStatus = Teli::Cam_Open(0, &cam, 0, true, 0);
+    // Default to rogue values
+    ImageRoi roi;
+    std::string sn;
+    std::string mn;
+    int cam_index = 0;
+
+    Params device_params;
+
+    for(Params::ParamMap::const_iterator it = uri.params.begin(); it != uri.params.end(); it++) {
+        if(it->first == "model"){
+            mn = it->second;
+        } else if(it->first == "sn"){
+            sn = it->second;
+        } else if(it->first == "idx"){
+            cam_index = uri.Get<int>("idx", 0);
+        } else if(it->first == "roi") {
+            roi = uri.Get<ImageRoi>("roi", ImageRoi(0,0,0,0) );
+        } else {
+            device_params.Set(it->first, it->second);
+        }
+    }
+
+    if(sn.empty() && mn.empty()) {
+        uiStatus = Teli::Cam_Open(cam_index, &cam, 0, true, 0);
+    }else{
+        uiStatus = Teli::Cam_OpenFromInfo(
+            (sn.empty() ? 0 : sn.c_str()),
+            (mn.empty() ? 0 : mn.c_str()),
+            0, &cam, 0, true, 0
+        );
+    }
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
         throw pangolin::VideoException("TeliSDK: Error opening camera");
 
@@ -196,30 +227,12 @@ TeliVideo::TeliVideo(const Params& params)
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
         throw pangolin::VideoException("Unable to get TeliSDK Camera dimensions");
 
-    SetDeviceParams(params);
-    Initialise(ImageRoi(0, 0, width, height));
-}
+    // If roi not set, use cameras native resolution.
+    if(roi.w ==0 || roi.h==0) {
+        roi = ImageRoi(0, 0, width, height);
+    }
 
-TeliVideo::TeliVideo(const Params& params, const ImageRoi& roi)
-: cam(0), strm(0), hStrmCmpEvt(0)
-{
-    Teli::CAM_API_STATUS uiStatus = Teli::Sys_Initialize();
-    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-        throw pangolin::VideoException("Unable to initialise TeliSDK.");
-
-    uint32_t num_cams = 0;
-    uiStatus = Teli::Sys_GetNumOfCameras(&num_cams);
-    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-        throw pangolin::VideoException("Unable to enumerate TeliSDK cameras.");
-
-    if (num_cams == 0)
-        throw pangolin::VideoException("No TeliSDK Cameras available.");
-
-    uiStatus = Teli::Cam_Open(0, &cam, 0, true, 0);
-    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-        throw pangolin::VideoException("TeliSDK: Error opening camera");
-
-    SetDeviceParams(params);
+    SetDeviceParams(device_params);
     Initialise(roi);
 }
 
