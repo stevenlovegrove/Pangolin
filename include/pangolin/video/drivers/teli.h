@@ -30,6 +30,7 @@
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
+#include <pangolin/utils/timer.h>
 
 #include <TeliCamApi.h>
 
@@ -37,7 +38,7 @@ namespace pangolin
 {
 
 // Video class that outputs test video signal.
-class PANGOLIN_EXPORT TeliVideo : public VideoInterface
+class PANGOLIN_EXPORT TeliVideo : public VideoInterface, public VideoPropertiesInterface, public BufferAwareVideoInterface
 {
 public:
     TeliVideo(const Params &p);
@@ -76,6 +77,19 @@ public:
 
     void SetParameter(const std::string& name, const std::string& value);
 
+    //! Returns number of available frames
+     uint32_t AvailableFrames() const;
+
+    //! Drops N frames in the queue starting from the oldest
+    //! returns false if less than n frames arae available
+    bool DropNFrames(uint32_t n);
+
+    //! Access JSON properties of device
+    const json::value& DeviceProperties() const;
+
+    //! Access JSON properties of most recently captured frame
+    const json::value& FrameProperties() const;
+
 protected:
     void Initialise(const ImageRoi& roi);
     void SetDeviceParams(const Params &p);
@@ -91,6 +105,8 @@ protected:
 #ifdef _LINUX_
     Teli::SIGNAL_HANDLE hStrmCmpEvt;
 #endif
+    json::value device_properties;
+    json::value frame_properties;
 };
 
 }

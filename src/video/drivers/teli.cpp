@@ -421,6 +421,8 @@ bool TeliVideo::GrabNext(unsigned char* image, bool wait)
         Teli::CAM_IMAGE_INFO sImageInfo;
         uint32_t uiPyldSize = (uint32_t)size_bytes;
         Teli::CAM_API_STATUS uiStatus = Teli::Strm_ReadCurrentImage(strm, image, &uiPyldSize, &sImageInfo);
+        frame_properties[PANGO_CAPTURE_TIME_US] = json::value(sImageInfo.ullTimestamp/1000);
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(pangolin::Time_us(pangolin::TimeNow()));
         return (uiStatus == Teli::CAM_API_STS_SUCCESS);
     }
 
@@ -431,6 +433,51 @@ bool TeliVideo::GrabNext(unsigned char* image, bool wait)
 bool TeliVideo::GrabNewest(unsigned char* image, bool wait)
 {
     return GrabNext(image,wait);
+}
+
+//! Returns number of available frames
+uint32_t TeliVideo::AvailableFrames() const
+{
+    uint32_t puiCount = 0;
+    Teli::CAM_API_STATUS uiStatus = Teli::GetCamImageBufferFrameCount(cam, &puiCount);
+    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
+        throw pangolin::VideoException("TeliSDK: Error reading frame buffer frame count.");
+    return puiCount;
+}
+
+//! Drops N frames in the queue starting from the oldest
+//! returns false if less than n frames arae available
+bool TeliVideo::DropNFrames(uint32_t n)
+{
+    for (uint32_t i=0;i<n;++i) {
+#ifdef _WIN_
+        unsigned int uiRet = WaitForSingleObject(hStrmCmpEvt, 2000);
+        if (uiRet == WAIT_OBJECT_0) {
+#endif
+#ifdef _LINUX_
+            unsigned int uiRet = Teli::Sys_WaitForSignal(hStrmCmpEvt, 2000);
+            if (uiRet == Teli::CAM_API_STS_SUCCESS) {
+#endif
+                Teli::CAM_IMAGE_INFO sImageInfo;
+                uint32_t uiPyldSize = 0 ;
+                Teli::CAM_API_STATUS uiStatus = Teli::Strm_ReadCurrentImage(strm, 0, &uiPyldSize, &sImageInfo);
+            } else {
+                return false;
+            }
+        }
+    return true;
+}
+
+//! Access JSON properties of device
+const json::value& TeliVideo::DeviceProperties() const
+{
+        return device_properties;
+}
+
+//! Access JSON properties of most recently captured frame
+const json::value& TeliVideo::FrameProperties() const
+{
+    return frame_properties;
 }
 
 }
