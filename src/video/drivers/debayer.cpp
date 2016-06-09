@@ -141,15 +141,16 @@ bool DebayerVideo::DropNFrames(uint32_t n)
     }
 }
 
-template<typename Tout, typename Tin>
+template<typename Tup, typename Tout, typename Tin>
 void DownsampleToMono(Image<Tout>& out, const Image<Tin>& in)
 {
-    for(int y=0; y<out.h; ++y) {
+    for(int y=0; y< (int)out.h; ++y) {
       Tout* pixout = out.RowPtr(y);
       const Tin* irow0 = in.RowPtr(2*y);
       const Tin* irow1 = in.RowPtr(2*y+1);
       for(size_t x=0; x<out.w; ++x) {
-          *(pixout++) = (Tout)irow0[0] + (Tout)irow0[1] + (Tout)irow1[0] + (Tout)irow1[1];
+          Tup val = ((Tup)irow0[0] + (Tup)irow0[1] + (Tup)irow1[0] + (Tup)irow1[1]) / 4;
+          *(pixout++) = (Tout)std::min(std::max(static_cast<Tup>(0), val), static_cast<Tup>(std::numeric_limits<Tout>::max()));
           irow0 += 2;
           irow1 += 2;
       }
@@ -161,7 +162,7 @@ void DownsampleDebayer(Image<Tout>& out, const Image<Tin>& in, color_filter_t ti
 {
     switch(tile) {
       case DC1394_COLOR_FILTER_RGGB:
-        for(int y=0; y<out.h; ++y) {
+        for(int y=0; y< (int)out.h; ++y) {
           Tout* pixout = out.RowPtr(y);
           const Tin* irow0 = in.RowPtr(2*y);
           const Tin* irow1 = in.RowPtr(2*y+1);
@@ -173,7 +174,7 @@ void DownsampleDebayer(Image<Tout>& out, const Image<Tin>& in, color_filter_t ti
         }
         break;
       case DC1394_COLOR_FILTER_GBRG:
-        for(int y=0; y<out.h; ++y) {
+        for(int y=0; y< (int)out.h; ++y) {
           Tout* pixout = out.RowPtr(y);
           const Tin* irow0 = in.RowPtr(2*y);
           const Tin* irow1 = in.RowPtr(2*y+1);
@@ -185,7 +186,7 @@ void DownsampleDebayer(Image<Tout>& out, const Image<Tin>& in, color_filter_t ti
         }
         break;
       case DC1394_COLOR_FILTER_GRBG:
-        for(int y=0; y<out.h; ++y) {
+        for(int y=0; y< (int)out.h; ++y) {
           Tout* pixout = out.RowPtr(y);
           const Tin* irow0 = in.RowPtr(2*y);
           const Tin* irow1 = in.RowPtr(2*y+1);
@@ -197,7 +198,7 @@ void DownsampleDebayer(Image<Tout>& out, const Image<Tin>& in, color_filter_t ti
         }
         break;
       case DC1394_COLOR_FILTER_BGGR:
-        for(int y=0; y<out.h; ++y) {
+        for(int y=0; y< (int)out.h; ++y) {
           Tout* pixout = out.RowPtr(y);
           const Tin* irow0 = in.RowPtr(2*y);
           const Tin* irow1 = in.RowPtr(2*y+1);
@@ -228,7 +229,11 @@ void ProcessImage(Image<Tout>& img_out, const Image<Tin>& img_in, bayer_method_t
     if(method == BAYER_METHOD_NONE) {
         PitchedImageCopy(img_out, img_in.template Reinterpret<Tout>() );
     }else if(method == BAYER_METHOD_DOWNSAMPLE_MONO) {
-        DownsampleToMono(img_out, img_in);
+        if( sizeof(Tout) == 1) {
+            DownsampleToMono<int,Tout, Tin>(img_out, img_in);
+        }else{
+            DownsampleToMono<double,Tout, Tin>(img_out, img_in);
+        }
     }else if(method == BAYER_METHOD_DOWNSAMPLE) {
         DownsampleDebayer(img_out, img_in, tile);
     }else{
