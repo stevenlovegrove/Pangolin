@@ -53,7 +53,7 @@ private:
     {
         Teli::CAM_API_STATUS uiStatus = Teli::Sys_Terminate();
         if (uiStatus != Teli::CAM_API_STS_SUCCESS) {
-            throw pangolin::VideoException("TeliSDK: Error uninitialising.");
+            pango_print_warn("TeliSDK: Error uninitialising.");
         }
     }
 };
