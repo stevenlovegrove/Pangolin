@@ -17,6 +17,24 @@ if(_WIN_)
     option( BUILD_EXTERN_GLEW    "Automatically download, build and compile GLEW" ON)
     option( BUILD_EXTERN_LIBPNG  "Automatically download, build and compile libpng" ON)
     option( BUILD_EXTERN_LIBJPEG "Automatically download, build and compile libjpeg" ON)
+    option( MSVC_USE_STATIC_CRT  "Use static C Runtime with MSVC, /MT instead of /MD" ON)
+
+    # Make sure there are no erroneous C Runtime flags
+    list(APPEND FLAG_VARS
+        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
+        CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
+    )
+    if(MSVC_USE_STATIC_CRT)
+        foreach(FLAG_VAR ${FLAG_VARS})
+            string(REGEX REPLACE "/MD" "/MT" NEW_FLAGS "${${FLAG_VAR}}")
+            set(${FLAG_VAR} "${NEW_FLAGS}" CACHE STRING "" FORCE)
+        endforeach()
+    else()
+        foreach(FLAG_VAR ${FLAG_VARS})
+            string(REGEX REPLACE "/MT" "/MD" NEW_FLAGS "${${FLAG_VAR}}")
+            set(${FLAG_VAR} "${NEW_FLAGS}" CACHE STRING "" FORCE)
+        endforeach()
+    endif()
 else()
     option( BUILD_SHARED_LIBS "Build Shared Library" ON)
 endif()
