@@ -267,6 +267,11 @@ public:
         return *var;
     }
 
+    void destroy()
+    {
+        VarState::I().Remove(Meta().full_name);
+    }
+
 protected:
     // Initialise from existing variable, obtain data / accessor
     void InitialiseFromGeneric(VarValueGeneric* v)

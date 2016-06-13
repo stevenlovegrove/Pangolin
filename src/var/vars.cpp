@@ -72,6 +72,11 @@ void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::st
     VarState::I().new_var_callbacks.push_back(NewVarCallback(filter,callback,data));
 }
 
+void RegisterRemoveVarCallback(RemoveVarCallbackFn callback, void* data, const std::string& filter)
+{
+    VarState::I().remove_var_callbacks.push_back(RemoveVarCallback(filter,callback,data));
+}
+
 void RegisterGuiVarChangedCallback(GuiVarChangedCallbackFn callback, void* data, const std::string& filter)
 {
     VarState::I().gui_var_changed_callbacks.push_back(GuiVarChangedCallback(filter,callback,data));
@@ -301,6 +306,12 @@ void SaveJsonFile(const std::string& filename, const string &prefix)
     }else{
         pango_print_error("Unable to serialise to %s\n", filename.c_str());
     }
+}
+
+PANGOLIN_EXPORT
+void RemoveVariable(const std::string& name)
+{
+    VarState::I().Remove(name);
 }
 
 }
