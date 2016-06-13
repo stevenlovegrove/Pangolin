@@ -50,6 +50,7 @@ struct PANGOLIN_EXPORT Panel : public View
     void Render();
     void ResizeChildren();
     static void AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool brand_new);
+    static void RemoveVariable(void* data, const std::string& name);
 };
 
 template<typename T>

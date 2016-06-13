@@ -45,10 +45,16 @@ PANGOLIN_EXPORT
 void SaveJsonFile(const std::string& filename, const std::string& prefix="");
 
 PANGOLIN_EXPORT
+void RemoveVariable(const std::string& name);
+
+PANGOLIN_EXPORT
 void ProcessHistoricCallbacks(NewVarCallbackFn callback, void* data, const std::string& filter = "");
 
 PANGOLIN_EXPORT
 void RegisterNewVarCallback(NewVarCallbackFn callback, void* data, const std::string& filter = "");
+
+PANGOLIN_EXPORT
+void RegisterRemoveVarCallback(RemoveVarCallbackFn callback, void* data, const std::string& filter = "");
 
 PANGOLIN_EXPORT
 void RegisterGuiVarChangedCallback(GuiVarChangedCallbackFn callback, void* data, const std::string& filter = "");
