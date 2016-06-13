@@ -30,6 +30,7 @@
 
 #include <map>
 #include <vector>
+#include <algorithm>
 #include <pangolin/platform.h>
 #include <pangolin/var/varvalue.h>
 #include <pangolin/utils/file_utils.h>
@@ -38,6 +39,7 @@ namespace pangolin
 {
 
 typedef void (*NewVarCallbackFn)(void* data, const std::string& name, VarValueGeneric& var, bool brand_new);
+typedef void (*RemoveVarCallbackFn)(void* data, const std::string& name);
 typedef void (*GuiVarChangedCallbackFn)(void* data, const std::string& name, VarValueGeneric& var);
 
 struct PANGOLIN_EXPORT NewVarCallback
@@ -46,6 +48,15 @@ struct PANGOLIN_EXPORT NewVarCallback
         :filter(filter),fn(fn),data(data) {}
     std::string filter;
     NewVarCallbackFn fn;
+    void* data;
+};
+
+struct PANGOLIN_EXPORT RemoveVarCallback
+{
+    RemoveVarCallback(const std::string& filter, RemoveVarCallbackFn fn, void* data)
+        :filter(filter),fn(fn),data(data) {}
+    std::string filter;
+    RemoveVarCallbackFn fn;
     void* data;
 };
 
@@ -81,6 +92,20 @@ public:
         }
     }
 
+    void NotifyRemoveVar(const std::string& name )
+    {
+        var_adds.erase(std::remove(var_adds.begin(), var_adds.end(), name), var_adds.end());
+
+        // notify those watching new variables
+        for(std::vector<RemoveVarCallback>::iterator invc = remove_var_callbacks.begin(); invc != remove_var_callbacks.end(); ++invc) {
+            if( StartsWith(name,invc->filter) ) {
+               invc->fn( invc->data, name);
+            }
+        }
+
+        vars.erase(name);
+    }
+
     VarValueGeneric*& operator[](const std::string& str)
     {
         VarStoreContainer::iterator it = vars.find(str);
@@ -107,6 +132,11 @@ public:
         return has_changed;
     }
 
+    void Remove(const std::string& name )
+    {
+        NotifyRemoveVar(name);
+    }
+
 //protected:
     typedef std::map<std::string, VarValueGeneric*> VarStoreContainer;
     typedef std::vector<std::string> VarStoreAdditions;
@@ -115,6 +145,7 @@ public:
     VarStoreAdditions var_adds;
 
     std::vector<NewVarCallback> new_var_callbacks;
+    std::vector<RemoveVarCallback> remove_var_callbacks;
     std::vector<GuiVarChangedCallback> gui_var_changed_callbacks;
 
     bool varHasChanged;

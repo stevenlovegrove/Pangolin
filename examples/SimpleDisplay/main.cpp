@@ -33,13 +33,13 @@ void SampleMethod()
 
 
 int main( int argc, char* argv[] )
-{  
+{
   // Load configuration data
   pangolin::ParseVarsFile("app.cfg");
 
   // Create OpenGL window in single line
   pangolin::CreateWindowAndBind("Main",640,480);
-  
+
   // 3D Mouse handler requires depth testing to be enabled
   glEnable(GL_DEPTH_TEST);
 
@@ -93,10 +93,18 @@ int main( int argc, char* argv[] )
   while( !pangolin::ShouldQuit() )
   {
     // Clear entire screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if( pangolin::Pushed(a_button) )
+    if( pangolin::Pushed(a_button) ){
       std::cout << "You Pushed a button!" << std::endl;
+      static unsigned count = 0;
+      static pangolin::Var<std::string>* toggle;
+      if(++count % 2) toggle = new pangolin::Var<std::string>("ui.Toggle",std::to_string(count/2));
+      else {
+          toggle->destroy();
+          delete toggle;
+      }
+    }
 
     // Overloading of Var<T> operators allows us to treat them like
     // their wrapped types, eg:
@@ -113,7 +121,7 @@ int main( int argc, char* argv[] )
 
     if( pangolin::Pushed(save_cube) )
         d_cam.SaveOnRender("cube");
-    
+
     if( pangolin::Pushed(record_cube) )
         pangolin::DisplayBase().RecordOnRender("ffmpeg:[fps=50,bps=8388608,unique_filename]//screencap.avi");
 

@@ -142,6 +142,7 @@ Panel::Panel(const std::string& auto_register_var_prefix)
     layout = LayoutVertical;
     RegisterNewVarCallback(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
     ProcessHistoricCallbacks(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
+    RegisterRemoveVarCallback(&Panel::RemoveVariable,(void*)this,auto_register_var_prefix);
 }
 
 void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool brand_new )
@@ -181,6 +182,25 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
         }
     }
     
+    display_mutex.unlock();
+}
+
+void Panel::RemoveVariable(void* data, const std::string& name)
+{
+    Panel* thisptr = (Panel*)data;
+
+    display_mutex.lock();
+
+    ViewMap::iterator pnl = context->named_managed_views.find(name);
+
+    if( pnl != context->named_managed_views.end() ) {
+      thisptr->views.erase(std::remove(thisptr->views.begin(), thisptr->views.end(), pnl->second), thisptr->views.end());
+      thisptr->ResizeChildren();
+
+      delete pnl->second;
+      context->named_managed_views.erase(pnl);
+    }
+
     display_mutex.unlock();
 }
 
