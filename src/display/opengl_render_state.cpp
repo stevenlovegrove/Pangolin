@@ -202,8 +202,8 @@ void OpenGlRenderState::ApplyNView(int view) const
 
     // Leave in MODEVIEW mode
     glMatrixMode(GL_MODELVIEW);
-    modelview_premult[view].Load();
-    modelview.Multiply();
+    OpenGlMatrix m = GetModelViewMatrix(view);
+    m.Load();
 
     if(follow) {
         T_cw.Multiply();
