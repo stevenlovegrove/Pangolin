@@ -102,6 +102,15 @@ PangolinGl* GetCurrentContext()
     return context;
 }
 
+PangolinGl *FindContext(const std::string& name)
+{
+    contexts_mutex.lock();
+    ContextMap::iterator ic = contexts.find(name);
+    PangolinGl* context = (ic == contexts.end()) ? 0 : ic->second.get();
+    contexts_mutex.unlock();
+    return context;
+}
+
 void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newcontext)
 {
     // Set defaults
@@ -154,11 +163,7 @@ void DestroyWindow(const std::string& name)
 
 WindowInterface& BindToContext(std::string name)
 {
-    contexts_mutex.lock();
-    ContextMap::iterator ic = contexts.find(name);
-    PangolinGl* context_to_bind = (ic == contexts.end()) ? 0 : ic->second.get();
-    contexts_mutex.unlock();
-    
+    PangolinGl *context_to_bind = FindContext(name);
     if( !context_to_bind )
     {
         boostd::shared_ptr<PangolinGl> newcontext(new PangolinGl());
