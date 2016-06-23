@@ -269,7 +269,9 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
         return 0;
     case WM_SIZE:
         /* track window size changes */
-        process::Resize((int)LOWORD(lParam), (int)HIWORD(lParam));
+        if (context == this) {
+            process::Resize((int)LOWORD(lParam), (int)HIWORD(lParam));
+        }
         return 0;
     case WM_PALETTECHANGED:
         /* realize palette if this is *not* the current window */
@@ -415,6 +417,10 @@ void WinWindow::Resize(unsigned int w, unsigned int h)
 void WinWindow::MakeCurrent()
 {
     wglMakeCurrent(hDC, hGLRC);
+
+    RECT rect;
+    GetWindowRect(hWnd, &rect);
+    Resize(rect.right - rect.left, rect.bottom - rect.top);
 }
 
 void WinWindow::SwapBuffers()
