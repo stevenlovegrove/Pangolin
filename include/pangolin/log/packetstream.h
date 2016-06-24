@@ -182,7 +182,7 @@ public:
 
     size_t Seek(PacketStreamSourceId src_id, size_t framenum);
 
-    bool ReadToSourcePacketAndLock(PacketStreamSourceId src_id);
+    bool ReadToSourcePacketAndLock(PacketStreamSourceId src_id, size_t& num_src_bytes);
 
     void ReleaseSourcePacketLock(PacketStreamSourceId src_id);
 
@@ -197,10 +197,12 @@ public:
         return reader;
     }
 
+
 private:
     void InitInternal();
 
 protected:
+
     inline int64_t ReadTimestamp()
     {
         int64_t time_us;
@@ -225,7 +227,7 @@ protected:
     }
 
     void ProcessMessage();
-    void ProcessMessagesUntilSourcePacket(int& nxt_src_id, int64_t &time_us);
+    void ProcessMessagesUntilSourcePacket(int& nxt_src_id, int64_t &time_us, size_t &num_src_bytes);
 
     void SkipSync();
     void ReSync();

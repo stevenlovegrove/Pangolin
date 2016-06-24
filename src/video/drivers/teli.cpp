@@ -418,20 +418,29 @@ bool TeliVideo::GrabNext(unsigned char* image, bool wait)
     unsigned int uiRet = Teli::Sys_WaitForSignal(hStrmCmpEvt, 2000);
     if (uiRet == Teli::CAM_API_STS_SUCCESS) {
 #endif
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(pangolin::Time_us(pangolin::TimeNow()));
+
+
         Teli::CAM_IMAGE_INFO sImageInfo;
         uint32_t uiPyldSize = (uint32_t)size_bytes;
         Teli::CAM_API_STATUS uiStatus = Teli::Strm_ReadCurrentImage(strm, image, &uiPyldSize, &sImageInfo);
         frame_properties[PANGO_CAPTURE_TIME_US] = json::value(sImageInfo.ullTimestamp/1000);
-        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(pangolin::Time_us(pangolin::TimeNow()));
+        std::cout << "grabbed next frame " <<  frame_properties[PANGO_HOST_RECEPTION_TIME_US].to_str()
+                  << " " << frame_properties[PANGO_CAPTURE_TIME_US].to_str() << std::endl;
         return (uiStatus == Teli::CAM_API_STS_SUCCESS);
     }
-
     return false;
 }
 
 //! Implement VideoInput::GrabNewest()
 bool TeliVideo::GrabNewest(unsigned char* image, bool wait)
 {
+    uint32_t nAvailableFrames = AvailableFrames();
+    if(nAvailableFrames == 0) {
+        //pango_print_warn("No valid buffers, returning.");
+        return false;
+    }
+    if(nAvailableFrames > 1) DropNFrames(nAvailableFrames-1);
     return GrabNext(image,wait);
 }
 
@@ -442,6 +451,8 @@ uint32_t TeliVideo::AvailableFrames() const
     Teli::CAM_API_STATUS uiStatus = Teli::GetCamImageBufferFrameCount(cam, &puiCount);
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
         throw pangolin::VideoException("TeliSDK: Error reading frame buffer frame count.");
+    if (puiCount > 0)
+        std::cout << "TeliVideo: frame buffer count " << puiCount << std::endl;
     return puiCount;
 }
 
