@@ -408,6 +408,11 @@ size_t PacketStreamReader::Seek(PacketStreamSourceId src_id, size_t framenum)
             throw std::runtime_error("Bad seek");
         }
 
+        if(realtime) {
+            // Reset the packet count so that playback time is reset.
+            packets = 0;
+        }
+
         read_mutex.unlock();
         return framenum;
     }else{

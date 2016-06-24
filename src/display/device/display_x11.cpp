@@ -54,7 +54,7 @@ extern __thread PangolinGl* context;
 boostd::mutex window_mutex;
 boostd::weak_ptr<X11GlContext> global_gl_context;
 
-const long EVENT_MASKS = ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|ButtonMotionMask|PointerMotionMask|KeyPressMask|KeyReleaseMask;
+const long EVENT_MASKS = ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|ButtonMotionMask|PointerMotionMask|KeyPressMask|KeyReleaseMask|FocusChangeMask;
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
@@ -367,6 +367,9 @@ void X11Window::ProcessEvents()
             );
             break;
         }
+        case FocusOut:
+            pangolin::context->mouse_state = 0;
+            break;
         case MotionNotify:
             if(ev.xmotion.state & (Button1Mask|Button2Mask|Button3Mask) ) {
                 pangolin::process::MouseMotion(ev.xmotion.x, ev.xmotion.y);
@@ -439,7 +442,6 @@ void X11Window::ProcessEvents()
                         pangolin::context->mouse_state &= ~pangolin::KeyModifierCmd;
                     }
                     break;
-
                 default: key = -1; break;
                 }
             }else{
@@ -492,8 +494,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 
     // Add to context map
     AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
-
-    win->MakeCurrent();
+    BindToContext(window_title);
     glewInit();
 
     // Process window events

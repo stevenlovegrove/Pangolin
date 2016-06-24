@@ -238,12 +238,12 @@ void ProcessImage(Image<Tout>& img_out, const Image<Tin>& img_in, bayer_method_t
         DownsampleDebayer(img_out, img_in, tile);
     }else{
 #ifdef HAVE_DC1394
-        if(sizeof(Tout) == 8) {
+        if(sizeof(Tout) == 1) {
             dc1394_bayer_decoding_8bit(
                 (uint8_t*)img_in.ptr, (uint8_t*)img_out.ptr, img_in.w, img_in.h,
                 (dc1394color_filter_t)tile, (dc1394bayer_method_t)method
             );
-        }else if(sizeof(Tout) == 16) {
+        }else if(sizeof(Tout) == 2) {
             dc1394_bayer_decoding_16bit(
                 (uint16_t*)img_in.ptr, (uint16_t*)img_out.ptr, img_in.w, img_in.h,
                 (dc1394color_filter_t)tile, (dc1394bayer_method_t)method,

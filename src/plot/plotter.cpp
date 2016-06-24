@@ -70,6 +70,7 @@ Plotter::PlotSeries::PlotSeries()
 
 }
 
+// X-Y Plot given C-Code style (GLSL) expressions x and y.
 void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y, Colour colour, std::string title)
 {
     static const std::string vs_header =
@@ -158,6 +159,7 @@ void Plotter::PlotImplicit::CreatePlot(const std::string& code)
             "varying float y;\n"
             "void main() {\n";
     static const std::string fs2 =
+            "   gl_FragColor = z;\n"
             "}\n";
 
     prog.AddShader( GlSlVertexShader, vs );
@@ -174,7 +176,7 @@ void Plotter::PlotImplicit::CreateColouredPlot(const std::string& code)
         "  float b=1.0;\n"
         "  float a=0.5;\n" +
            code +
-        "  gl_FragColor = vec4(r,g,b,a);\n"
+        "  z = vec4(r,g,b,a);\n"
         );
 }
 
@@ -183,7 +185,7 @@ void Plotter::PlotImplicit::CreateInequality(const std::string& ie, Colour c)
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(1);
     oss << "if( !(" << ie << ") ) discard;\n";
-    oss << "gl_FragColor = vec4(" << c.r << "," << c.g << "," << c.b << "," << c.a << ");\n";
+    oss << "z = vec4(" << c.r << "," << c.g << "," << c.b << "," << c.a << ");\n";
 
     CreatePlot( oss.str() );
 }
@@ -278,27 +280,27 @@ Plotter::Plotter(
                          );
     prog_text.BindPangolinDefaultAttribLocationsAndLink();
 
+    const size_t RESERVED_SIZE = 100;
 
     // Setup default PlotSeries
-    plotseries.reserve(10);
-    const std::vector<std::string>& labels = log->Labels();
+    plotseries.reserve(RESERVED_SIZE);
     for(unsigned int i=0; i< 10; ++i) {
         std::ostringstream oss;
         oss << "$" << i;
         plotseries.push_back( PlotSeries() );
         plotseries.back().CreatePlot( "$i", oss.str(),
             colour_wheel.GetUniqueColour(),
-            i < labels.size() ? log->Labels()[i] : oss.str()
+            i < log->Labels().size() ? log->Labels()[i] : oss.str()
         );
     }
 
     // Setup test PlotMarkers
-    plotmarkers.reserve(100);
+    plotmarkers.reserve(RESERVED_SIZE);
 //    plotmarkers.push_back( Marker( Marker::Vertical, 10, Marker::GreaterThan, Colour(1,0,0,0.2)) );
 //    plotmarkers.push_back( Marker( Marker::Horizontal, 1, Marker::LessThan, Colour(0,1,0,0.2)) );
 
     // Setup test implicit plots.
-    plotimplicits.reserve(10);
+    plotimplicits.reserve(RESERVED_SIZE);
 //    plotimplicits.push_back( PlotImplicit() );
 //    plotimplicits.back().CreateInequality("x+y <= 150.0", colour_wheel.GetUniqueColour().WithAlpha(0.2) );
 //    plotimplicits.push_back( PlotImplicit() );
@@ -1033,7 +1035,7 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
         float scaley = 1.0;
 
 #ifdef _OSX_
-        if(button_state & KeyModifierCmd) {
+        if (button_state & KeyModifierCmd) {
 #else
         if (button_state & KeyModifierCtrl) {
 #endif
@@ -1052,6 +1054,24 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
 
     // Update hover status (after potential resizing)
     ScreenToPlot( (int)x, (int)y, hover[0], hover[1]);
+}
+
+void Plotter::AddSeries(
+    const std::string& x_expr, const std::string& y_expr,
+    DrawingMode drawing_mode, Colour colour,
+    const std::string& title
+) {
+    if( !std::isfinite(colour.r) ) {
+        colour = colour_wheel.GetUniqueColour();
+    }
+    plotseries.push_back( PlotSeries() );
+    plotseries.back().CreatePlot(x_expr, y_expr, colour, (title == "$y") ? y_expr : title);
+    plotseries.back().drawing_mode = (GLenum)drawing_mode;
+}
+
+void Plotter::ClearSeries()
+{
+    plotseries.clear();
 }
 
 Marker& Plotter::AddMarker(Marker::Direction d, float value, Marker::Equality leg, Colour c )

@@ -192,9 +192,6 @@ WinWindow::WinWindow(
         throw std::runtime_error("Pangolin Window Creation Failed.");
     }
 
-    // Setup threadlocal context as this
-    context = this;
-
     // Display Window
     ShowWindow(hWnd, SW_SHOW);
     PangolinGl::is_double_buffered = true;
@@ -269,7 +266,9 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
         return 0;
     case WM_SIZE:
         /* track window size changes */
-        process::Resize((int)LOWORD(lParam), (int)HIWORD(lParam));
+        if (context == this) {
+            process::Resize((int)LOWORD(lParam), (int)HIWORD(lParam));
+        }
         return 0;
     case WM_PALETTECHANGED:
         /* realize palette if this is *not* the current window */
@@ -415,6 +414,13 @@ void WinWindow::Resize(unsigned int w, unsigned int h)
 void WinWindow::MakeCurrent()
 {
     wglMakeCurrent(hDC, hGLRC);
+
+    // Setup threadlocal context as this
+    context = this;
+
+    RECT rect;
+    GetWindowRect(hWnd, &rect);
+    Resize(rect.right - rect.left, rect.bottom - rect.top);
 }
 
 void WinWindow::SwapBuffers()
@@ -441,7 +447,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 
     // Add to context map
     AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
-    win->MakeCurrent();
+    BindToContext(window_title);
     win->ProcessEvents();
 
     // Hack to make sure the window receives a

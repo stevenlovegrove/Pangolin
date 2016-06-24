@@ -97,6 +97,20 @@ PangolinGl::~PangolinGl()
     named_managed_views.clear();
 }
 
+PangolinGl* GetCurrentContext()
+{
+    return context;
+}
+
+PangolinGl *FindContext(const std::string& name)
+{
+    contexts_mutex.lock();
+    ContextMap::iterator ic = contexts.find(name);
+    PangolinGl* context = (ic == contexts.end()) ? 0 : ic->second.get();
+    contexts_mutex.unlock();
+    return context;
+}
+
 void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newcontext)
 {
     // Set defaults
@@ -117,8 +131,9 @@ void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newco
     contexts[name] = newcontext;
     contexts_mutex.unlock();
 
+    // Process the following as if this context is now current.
+    PangolinGl *oldContext = context;
     context = newcontext.get();
-
 #ifdef HAVE_GLUT
     process::Resize(
                 glutGet(GLUT_WINDOW_WIDTH),
@@ -135,11 +150,17 @@ void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newco
     RegisterKeyPressCallback(PANGO_KEY_ESCAPE, Quit );
     RegisterKeyPressCallback('\t', ToggleFullscreen );
     RegisterKeyPressCallback('`',  ToggleConsole );
+
+    context = oldContext;
 }
 
 void DestroyWindow(const std::string& name)
 {
     contexts_mutex.lock();
+    PangolinGl *context_to_destroy = FindContext(name);
+    if (context_to_destroy == context) {
+        context = nullptr;
+    }
     size_t erased = contexts.erase(name);
     if(erased == 0) {
         pango_print_warn("Context '%s' doesn't exist for deletion.\n", name.c_str());
@@ -149,11 +170,10 @@ void DestroyWindow(const std::string& name)
 
 WindowInterface& BindToContext(std::string name)
 {
-    contexts_mutex.lock();
-    ContextMap::iterator ic = contexts.find(name);
-    PangolinGl* context_to_bind = (ic == contexts.end()) ? 0 : ic->second.get();
-    contexts_mutex.unlock();
-    
+    // N.B. context is modified prior to invoking MakeCurrent so that
+    // state management callbacks (such as Resize()) can be correctly
+    // processed.
+    PangolinGl *context_to_bind = FindContext(name);
     if( !context_to_bind )
     {
         boostd::shared_ptr<PangolinGl> newcontext(new PangolinGl());
