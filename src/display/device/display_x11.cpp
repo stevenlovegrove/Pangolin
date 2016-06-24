@@ -494,8 +494,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 
     // Add to context map
     AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
-
-    win->MakeCurrent();
+    BindToContext(window_title);
     glewInit();
 
     // Process window events
