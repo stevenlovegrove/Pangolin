@@ -62,6 +62,10 @@ struct WinWindow : public PangolinGl
 
     void ProcessEvents() PANGOLIN_OVERRIDE;
 
+    HGLRC GetGLRenderContext()
+    {
+        return hGLRC;
+    }
 
 private:
     static LRESULT APIENTRY WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
