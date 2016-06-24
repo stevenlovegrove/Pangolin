@@ -97,6 +97,11 @@ PangolinGl::~PangolinGl()
     named_managed_views.clear();
 }
 
+PangolinGl* GetCurrentContext()
+{
+    return context;
+}
+
 void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newcontext)
 {
     // Set defaults
