@@ -36,7 +36,6 @@
 #include <pangolin/utils/picojson.h>
 #include <stdint.h>
 
-
 namespace pangolin
 {
 
@@ -214,16 +213,16 @@ protected:
     {
         size_t n = 0;
         size_t v = reader.get();
+        uint32_t shift = 0;
         while(reader.good() && (v & 0x80)) {
-            n |= v & 0x7F;
-            n <<= 7;
+            n |= (v & 0x7F) << shift;
+            shift += 7;
             v = reader.get();
         }
         if (!reader.good()) {
             return static_cast<size_t>(-1);
         }
-
-        return n|v;
+        return n | (v & 0x7F) << shift;
     }
 
     void ProcessMessage();
