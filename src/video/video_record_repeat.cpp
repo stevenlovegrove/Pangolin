@@ -34,7 +34,7 @@ namespace pangolin
 
 VideoRecordRepeat::VideoRecordRepeat() 
     : video_src(0), video_src_props(0), video_file(0), video_recorder(0),
-    buffer_size_bytes(0), frame_num(0), record_frame_skip(1)
+    buffer_size_bytes(0), frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
 {
 }
 
@@ -43,7 +43,7 @@ VideoRecordRepeat::VideoRecordRepeat(
     const std::string& output_uri,
     int buffer_size_bytes
     ) : video_src(0), video_src_props(0), video_file(0), video_recorder(0),
-    buffer_size_bytes(0), frame_num(0), record_frame_skip(1)
+    buffer_size_bytes(0), frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
 {
     Open(input_uri, output_uri, buffer_size_bytes);
 }
@@ -117,7 +117,7 @@ bool VideoRecordRepeat::Grab( unsigned char* buffer, std::vector<Image<unsigned 
     return success;
 }
 
-void VideoRecordRepeat::Record()
+void VideoRecordRepeat::InitialiseRecorder()
 {
     if( video_recorder ) {
         video_src->Stop();
@@ -135,9 +135,24 @@ void VideoRecordRepeat::Record()
         video_src->Streams(), str_uri_input, video_src_props ?
             video_src_props->DeviceProperties() : json::value()
     );
+}
 
+void VideoRecordRepeat::Record()
+{
+    InitialiseRecorder();
     video_src->Start();
     frame_num = 0;
+    record_continuous = true;
+}
+
+void VideoRecordRepeat::RecordOneFrame()
+{
+    // Append to existing video.
+    if(!video_recorder) {
+        InitialiseRecorder();
+    }
+    record_continuous = false;
+    record_once = true;
 }
 
 void VideoRecordRepeat::Play(bool realtime)
@@ -209,12 +224,15 @@ bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
 {
     frame_num++;
 
-    if( video_recorder != 0 ) {
+    const bool should_record = (record_continuous && !(frame_num % record_frame_skip)) || record_once;
+
+    if( should_record && video_recorder != 0 ) {
         bool success = video_src->GrabNext(image, wait);
-        if( success  && !(frame_num % record_frame_skip) ) {
+        if( success ) {
             video_recorder->WriteStreams(image, video_src_props ?
                 video_src_props->FrameProperties() : json::value()
             );
+            record_once = false;
         }
         return success;
     }else if( video_file != 0 ) {
@@ -228,13 +246,16 @@ bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
 {
     frame_num++;
 
-    if( video_recorder != 0 )
+    const bool should_record = (record_continuous && !(frame_num % record_frame_skip)) || record_once;
+
+    if( should_record && video_recorder != 0 )
     {
         bool success = video_src->GrabNewest(image,wait);
-        if( success && !(frame_num % record_frame_skip) ) {
+        if( success) {
             video_recorder->WriteStreams(image, video_src_props ?
                 video_src_props->FrameProperties() : json::value()
             );
+            record_once = false;
         }
         return success;
     }else if( video_file != 0 ) {

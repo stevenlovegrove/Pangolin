@@ -93,6 +93,8 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
     const std::string& LogFilename() const;
 
     void Record();
+    void RecordOneFrame();
+
     void Play(bool realtime = true);
     void Source();
     
@@ -105,6 +107,8 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
     void SetTimelapse(size_t one_in_n_frames);
 
 protected:
+    void InitialiseRecorder();
+
     json::value null_props;
     std::string str_uri_input;
     Uri uri_input;
@@ -121,6 +125,9 @@ protected:
     
     int frame_num;
     size_t record_frame_skip;
+
+    bool record_once;
+    bool record_continuous;
 };
 
 }
