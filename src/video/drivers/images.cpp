@@ -33,12 +33,12 @@
 namespace pangolin
 {
 
-bool ImagesVideo::QueueFrame()
+bool ImagesVideo::LoadFrame(size_t i)
 {
-    if(num_loaded < num_files) {
-        Frame frame;
+    if(i < num_files) {
+        Frame& frame = loaded[i];
         for(size_t c=0; c< num_channels; ++c) {
-            const std::string& filename = Filename(num_loaded,c);
+            const std::string& filename = Filename(i,c);
             const ImageFileType file_type = FileType(filename);
 
             if(file_type == ImageFileTypeUnknown && unknowns_are_raw) {
@@ -47,8 +47,6 @@ bool ImagesVideo::QueueFrame()
                 frame.push_back( LoadImage( filename, file_type ) );
             }
         }
-        loaded.push_back(frame);
-        ++num_loaded;
         return true;
     }
     return false;
@@ -76,6 +74,9 @@ void ImagesVideo::PopulateFilenames(const std::string& wildcard_path)
             throw VideoException("No files found for wildcard '" + channel_wildcard + "'");
         }
     }
+
+    // Resize empty frames vector to hold future images.
+    loaded.resize(num_files);
 }
 
 void ImagesVideo::ConfigureStreamSizes()
@@ -90,14 +91,14 @@ void ImagesVideo::ConfigureStreamSizes()
 }
 
 ImagesVideo::ImagesVideo(const std::string& wildcard_path)
-    : num_files(-1), num_channels(0),
-      num_loaded(0), unknowns_are_raw(false)
+    : num_files(-1), num_channels(0), next_frame_id(0),
+      unknowns_are_raw(false)
 {
     // Work out which files to sequence
     PopulateFilenames(wildcard_path);
     
     // Load first image in order to determine stream sizes etc
-    QueueFrame();
+    LoadFrame(next_frame_id);
 
     ConfigureStreamSizes();
     
@@ -107,15 +108,15 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path)
 ImagesVideo::ImagesVideo(const std::string& wildcard_path,
                          const VideoPixelFormat& raw_fmt,
                          size_t raw_width, size_t raw_height
-)   : num_files(-1), num_channels(0),
-      num_loaded(0), unknowns_are_raw(true), raw_fmt(raw_fmt),
+)   : num_files(-1), num_channels(0), next_frame_id(0),
+      unknowns_are_raw(true), raw_fmt(raw_fmt),
       raw_width(raw_width), raw_height(raw_height)
 {
     // Work out which files to sequence
     PopulateFilenames(wildcard_path);
 
     // Load first image in order to determine stream sizes etc
-    QueueFrame();
+    LoadFrame(next_frame_id);
 
     ConfigureStreamSizes();
 
@@ -124,7 +125,12 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path,
 
 ImagesVideo::~ImagesVideo()
 {
-    
+    // Free all allocated image data
+    for(int i=0; i<loaded.size(); ++i) {
+        for(int c=0; c < loaded[i].size(); ++c) {
+            loaded[i][c].Dealloc();
+        }
+    }
 }
 
 //! Implement VideoInput::Start()
@@ -154,21 +160,29 @@ const std::vector<StreamInfo>& ImagesVideo::Streams() const
 //! Implement VideoInput::GrabNext()
 bool ImagesVideo::GrabNext( unsigned char* image, bool wait )
 {
-    QueueFrame();
-        
-    if(!loaded.size()) return false;
-    
-    Frame frame = loaded.front();
-    loaded.pop_front();
-            
-    for(size_t c=0; c < num_channels; ++c){
-        TypedImage& img = frame[c];
-        if(!img.ptr) return false;
-        const StreamInfo& si = streams[c];
-        std::memcpy(image + (size_t)si.Offset(), img.ptr, si.SizeBytes());
-        img.Dealloc();
+    if(next_frame_id < loaded.size()) {
+        Frame& frame = loaded[next_frame_id];
+
+        if(frame.size() != num_channels) {
+            LoadFrame(next_frame_id);
+        }
+
+        for(size_t c=0; c < num_channels; ++c){
+            TypedImage& img = frame[c];
+            if(!img.ptr || img.w != streams[c].Width() || img.h != streams[c].Height() ) {
+                return false;
+            }
+            const StreamInfo& si = streams[c];
+            std::memcpy(image + (size_t)si.Offset(), img.ptr, si.SizeBytes());
+            img.Dealloc();
+        }
+        frame.clear();
+
+        next_frame_id++;
+        return true;
     }
-    return true;
+    
+    return false;
 }
 
 //! Implement VideoInput::GrabNewest()
@@ -176,5 +190,22 @@ bool ImagesVideo::GrabNewest( unsigned char* image, bool wait )
 {
     return GrabNext(image,wait);
 }
+
+int ImagesVideo::GetCurrentFrameId() const
+{
+    return (int)next_frame_id - 1;
+}
+
+int ImagesVideo::GetTotalFrames() const
+{
+    return num_files;
+}
+
+int ImagesVideo::Seek(int frameid)
+{
+    next_frame_id = std::max(0, std::min(frameid, num_files));
+    return (int)next_frame_id;
+}
+
 
 }
