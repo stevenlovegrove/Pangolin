@@ -109,16 +109,14 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
 protected:
     void InitialiseRecorder();
 
-    json::value null_props;
+    mutable json::value frame_properties;
+    mutable json::value device_properties;
     std::string str_uri_input;
     Uri uri_input;
     Uri uri_output;
 
     VideoInterface* video_src;
-    VideoPropertiesInterface* video_src_props;
-
     VideoInterface* video_file;
-    VideoPropertiesInterface* video_file_props;
     VideoOutputInterface* video_recorder;
     
     int buffer_size_bytes;

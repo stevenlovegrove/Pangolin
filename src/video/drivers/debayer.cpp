@@ -295,18 +295,6 @@ bool DebayerVideo::GrabNewest( unsigned char* image, bool wait )
     }
 }
 
-const json::value& DebayerVideo::DeviceProperties() const
-{
-    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    return in_prop ? in_prop->DeviceProperties() : device_properties;
-}
-
-const json::value& DebayerVideo::FrameProperties() const
-{
-    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    return in_prop ? in_prop->FrameProperties() : frame_properties;
-}
-
 std::vector<VideoInterface*>& DebayerVideo::InputStreams()
 {
     return videoin;

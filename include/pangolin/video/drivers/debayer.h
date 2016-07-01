@@ -63,7 +63,6 @@ typedef enum {
 class PANGOLIN_EXPORT DebayerVideo :
         public VideoInterface,
         public VideoFilterInterface,
-        public VideoPropertiesInterface,
         public BufferAwareVideoInterface
 {
 public:
@@ -93,12 +92,6 @@ public:
     static color_filter_t ColorFilterFromString(std::string str);
 
     static bayer_method_t BayerMethodFromString(std::string str);
-
-    //! Implement VideoPropertiesInterface method
-    const json::value& DeviceProperties() const;
-
-    //! Implement VideoPropertiesInterface method
-    const json::value& FrameProperties() const;
 
     uint32_t AvailableFrames() const;
 

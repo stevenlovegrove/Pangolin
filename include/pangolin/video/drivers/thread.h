@@ -96,7 +96,7 @@ protected:
     boostd::mutex cvMtx;
     boostd::thread grab_thread;
 
-    json::value device_properties;
+    mutable json::value device_properties;
     json::value frame_properties;
 };
 

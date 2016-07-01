@@ -112,14 +112,13 @@ const std::vector<StreamInfo>& ThreadVideo::Streams() const
 
 const json::value& ThreadVideo::DeviceProperties() const
 {
-    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    return in_prop ? in_prop->DeviceProperties() : device_properties;
+    device_properties = GetVideoDeviceProperties(videoin[0]);
+    return device_properties;
 }
 
 const json::value& ThreadVideo::FrameProperties() const
 {
-    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    return in_prop ? in_prop->FrameProperties() : frame_properties;
+    return frame_properties;
 }
 
 uint32_t ThreadVideo::AvailableFrames() const
@@ -211,10 +210,7 @@ void ThreadVideo::operator()()
             grab.return_status = videoin[0]->GrabNext(grab.buffer, true);
 
             if(grab.return_status){
-                VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-                if(in_prop) {
-                    grab.frame_properties = in_prop->FrameProperties();
-                }
+                grab.frame_properties = GetVideoFrameProperties(videoin[0]);
             }else{
                 std::this_thread::sleep_for(std::chrono::microseconds(grab_fail_thread_sleep_us) );
             }

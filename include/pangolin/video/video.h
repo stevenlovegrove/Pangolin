@@ -403,6 +403,54 @@ T* FindFirstMatchingVideoInterface( VideoInterface& video )
     return 0;
 }
 
+inline
+json::value GetVideoFrameProperties(VideoInterface* video)
+{
+    VideoPropertiesInterface* pi = dynamic_cast<VideoPropertiesInterface*>(video);
+    VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
+
+    if(pi) {
+        return pi->FrameProperties();
+    }else if(fi){
+        if(fi->InputStreams().size() == 1) {
+            return GetVideoFrameProperties(fi->InputStreams()[0]);
+        }else if(fi->InputStreams().size() > 0){
+            // Use first stream's properties as base, but also populate children.
+            json::value json = GetVideoFrameProperties(fi->InputStreams()[0]);
+            json::value& streams = json["streams"];
+            for(size_t i=0; i< fi->InputStreams().size(); ++i) {
+                streams.push_back( GetVideoFrameProperties(fi->InputStreams()[i]) );
+            }
+            return json;
+        }
+    }
+    return json::value();
+}
+
+inline
+json::value GetVideoDeviceProperties(VideoInterface* video)
+{
+    VideoPropertiesInterface* pi = dynamic_cast<VideoPropertiesInterface*>(video);
+    VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
+
+    if(pi) {
+        return pi->FrameProperties();
+    }else if(fi){
+        if(fi->InputStreams().size() == 1) {
+            return GetVideoDeviceProperties(fi->InputStreams()[0]);
+        }else if(fi->InputStreams().size() > 0){
+            // Use first stream's properties as base, but also populate children.
+            json::value json = GetVideoDeviceProperties(fi->InputStreams()[0]);
+            json::value& streams = json["streams"];
+            for(size_t i=0; i< fi->InputStreams().size(); ++i) {
+                streams.push_back( GetVideoDeviceProperties(fi->InputStreams()[i]) );
+            }
+            return json;
+        }
+    }
+    return json::value();
+}
+
 }
 
 #endif // PANGOLIN_VIDEO_H
