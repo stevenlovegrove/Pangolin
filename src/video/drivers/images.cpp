@@ -35,7 +35,7 @@ namespace pangolin
 
 bool ImagesVideo::LoadFrame(size_t i)
 {
-    if(i < num_files) {
+    if( (int)i < num_files) {
         Frame& frame = loaded[i];
         for(size_t c=0; c< num_channels; ++c) {
             const std::string& filename = Filename(i,c);
@@ -126,8 +126,8 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path,
 ImagesVideo::~ImagesVideo()
 {
     // Free all allocated image data
-    for(int i=0; i<loaded.size(); ++i) {
-        for(int c=0; c < loaded[i].size(); ++c) {
+    for(size_t i=0; i<loaded.size(); ++i) {
+        for(size_t c=0; c < loaded[i].size(); ++c) {
             loaded[i][c].Dealloc();
         }
     }

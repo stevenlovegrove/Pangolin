@@ -91,9 +91,9 @@ protected:
     std::vector<StreamInfo> streams;
     size_t size_bytes;
     
-    size_t next_frame_id;
     int num_files;
     size_t num_channels;
+    size_t next_frame_id;
     std::vector<std::vector<std::string> > filenames;
     std::vector<Frame> loaded;
 
