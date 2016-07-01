@@ -183,7 +183,7 @@ bool ThreadVideo::GrabNewest( unsigned char* image, bool wait )
 
         // At least one valid frame in queue, return it.
         DBGPRINT("GrabNewest at least one frame available.");
-        GrabResult grab = wait ? queue.getNext() : queue.getNewest();
+        GrabResult grab = queue.getNewest();
         if(grab.return_status) {
             std::memcpy(image, grab.buffer, videoin[0]->SizeBytes());
             frame_properties = grab.frame_properties;
