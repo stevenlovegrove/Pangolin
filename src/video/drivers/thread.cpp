@@ -215,14 +215,14 @@ void ThreadVideo::operator()()
                 if(in_prop) {
                     grab.frame_properties = in_prop->FrameProperties();
                 }
-
-                DBGPRINT("Grab thread got frame. valid:%d free:%d",queue.AvailableFrames(),queue.EmptyBuffers())
-                // Let listening threads know we got a frame in case they are waiting.
-                cv.notify_all();
             }else{
                 std::this_thread::sleep_for(std::chrono::microseconds(grab_fail_thread_sleep_us) );
             }
             queue.addValidBuffer(grab);
+
+            DBGPRINT("Grab thread got frame. valid:%d free:%d",queue.AvailableFrames(),queue.EmptyBuffers())
+            // Let listening threads know we got a frame in case they are waiting.
+            cv.notify_all();
         }else{
             std::this_thread::sleep_for(std::chrono::microseconds(grab_fail_thread_sleep_us) );
         }
