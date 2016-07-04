@@ -60,9 +60,14 @@ void ImageViewHandler::glSetViewOrtho()
 
 void ImageViewHandler::glRenderTexture(pangolin::GlTexture& tex)
 {
+    glRenderTexture(tex.tid, tex.width, tex.height);
+}
+
+void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height)
+{
     const pangolin::XYRangef& xy = GetViewToRender();
-    const float w = (float)tex.width;
-    const float h = (float)tex.height;
+    const float w = (float)width;
+    const float h = (float)height;
 
     // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
     const GLfloat l = xy.x.min;
@@ -79,7 +84,7 @@ void ImageViewHandler::glRenderTexture(pangolin::GlTexture& tex)
     const GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
     const GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
 
-    tex.Bind();
+    glBindTexture(GL_TEXTURE_2D, tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
 
@@ -92,7 +97,7 @@ void ImageViewHandler::glRenderTexture(pangolin::GlTexture& tex)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisable(GL_TEXTURE_2D);
-    tex.Unbind();
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void ImageViewHandler::glRenderOverlay()
