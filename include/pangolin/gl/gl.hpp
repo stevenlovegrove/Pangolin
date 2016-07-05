@@ -194,7 +194,7 @@ inline void GlTexture::Upload(
     GLenum data_format, GLenum data_type
 ) {
     Bind();
-    glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_format,data_type,data);
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, data_format, data_type, data);
     CheckGlDieOnError();
 }
 
