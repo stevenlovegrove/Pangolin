@@ -140,7 +140,7 @@ inline void glDrawRect( GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, GLenum m
     GLfloat verts[] = { x1,y1,  x2,y1,  x2,y2,  x1,y2 };    
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, verts);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDrawArrays(mode, 0, 4);
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
