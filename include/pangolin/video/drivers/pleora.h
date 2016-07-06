@@ -99,6 +99,10 @@ public:
 
     double GetExposure();
 
+    void SetGamma(double val);
+
+    double GetGamma();
+
     void SetupTrigger(bool triggerActive, int64_t triggerSource, int64_t acquisitionMode);
 
     const json::value& DeviceProperties() const {
@@ -167,6 +171,7 @@ protected:
     PvGenInteger* lAnalogGain;
     PvGenInteger* lAnalogBlackLevel;
     PvGenFloat*   lExposure;
+    PvGenFloat*   lGamma;
     PvGenEnum*    lAquisitionMode;
     PvGenEnum*    lTriggerSource;
     PvGenEnum*    lTriggerMode;
