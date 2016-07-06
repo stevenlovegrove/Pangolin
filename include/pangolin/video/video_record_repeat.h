@@ -38,10 +38,10 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
     : public VideoInterface, public VideoPropertiesInterface
 {
     VideoRecordRepeat();
-    VideoRecordRepeat(const std::string &input_uri, const std::string &output_uri = "video_log.pango", int buffer_size_bytes = 10240000);
+    VideoRecordRepeat(const std::string &input_uri, const std::string &output_uri = "pango:[buffer_size_mb=100]//video_log.pango");
     ~VideoRecordRepeat();
 
-    void Open(const std::string &input_uri, const std::string &output_uri = "video_log.pango", int buffer_size_bytes = 10240000);
+    void Open(const std::string &input_uri, const std::string &output_uri = "pango:[buffer_size_mb=100]//video_log.pango");
     void Close();
 
     /////////////////////////////////////////////////////////////

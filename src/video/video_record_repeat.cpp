@@ -34,27 +34,24 @@ namespace pangolin
 
 VideoRecordRepeat::VideoRecordRepeat() 
     : video_src(0), video_file(0), video_recorder(0),
-    buffer_size_bytes(0), frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
+    frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
 {
 }
 
 VideoRecordRepeat::VideoRecordRepeat(
     const std::string& input_uri,
-    const std::string& output_uri,
-    int buffer_size_bytes
+    const std::string& output_uri
     ) : video_src(0), video_file(0), video_recorder(0),
-    buffer_size_bytes(0), frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
+    frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
 {
-    Open(input_uri, output_uri, buffer_size_bytes);
+    Open(input_uri, output_uri);
 }
 
 void VideoRecordRepeat::Open(
     const std::string& input_uri,
-    const std::string& output_uri,
-    int buffer_size_bytes
+    const std::string& output_uri
     ) 
 {
-    this->buffer_size_bytes = buffer_size_bytes;
     str_uri_input = input_uri;
     uri_input = ParseUri(input_uri);
     uri_output = ParseUri(output_uri);
@@ -81,7 +78,6 @@ void VideoRecordRepeat::Close()
         delete video_file;
         video_file = 0;
     }
-    buffer_size_bytes = 0;
 }
 
 VideoRecordRepeat::~VideoRecordRepeat()
