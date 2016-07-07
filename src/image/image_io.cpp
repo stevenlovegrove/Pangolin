@@ -67,7 +67,7 @@ VideoPixelFormat TgaFormat(int depth, int color_type, int color_map)
             if(depth == 24) {
                 return VideoFormatFromString("RGB24");
             }else if(depth == 32) {
-                return VideoFormatFromString("RGBA");
+                return VideoFormatFromString("RGBA32");
             }
         }else if(color_type == 3){
             // Greyscale
@@ -127,7 +127,7 @@ VideoPixelFormat PngFormat(png_structp png_ptr, png_infop info_ptr )
         if( colour == PNG_COLOR_MASK_COLOR ) {
             return VideoFormatFromString("RGB24");
         } else if( colour == (PNG_COLOR_MASK_COLOR | PNG_COLOR_MASK_ALPHA) ) {
-            return VideoFormatFromString("RGBA");
+            return VideoFormatFromString("RGBA32");
         } else if( colour == PNG_COLOR_MASK_ALPHA ) {
             return VideoFormatFromString("Y400A");
         } else {

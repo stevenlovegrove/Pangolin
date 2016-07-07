@@ -242,6 +242,10 @@ inline void GlTexture::Download(TypedImage& image) const
         image.Alloc(width, height, VideoFormatFromString("RGB24"));
         Download(image.ptr, GL_RGB, GL_UNSIGNED_BYTE);
         break;
+    case GL_RGBA:
+        image.Alloc(width, height, VideoFormatFromString("RGBA32"));
+        Download(image.ptr, GL_RGBA, GL_UNSIGNED_BYTE);
+        break;
     case GL_LUMINANCE32F_ARB:
         image.Alloc(width, height, VideoFormatFromString("GRAY32F"));
         Download(image.ptr, GL_LUMINANCE, GL_FLOAT);
@@ -249,6 +253,10 @@ inline void GlTexture::Download(TypedImage& image) const
     case GL_RGB32F:
         image.Alloc(width, height, VideoFormatFromString("RGB96F"));
         Download(image.ptr, GL_RGB, GL_FLOAT);
+        break;
+    case GL_RGBA32F:
+        image.Alloc(width, height, VideoFormatFromString("RGBA128F"));
+        Download(image.ptr, GL_RGBA, GL_FLOAT);
         break;
     default:
         throw std::runtime_error( "GlTexture::Download - Unknown internal format");
