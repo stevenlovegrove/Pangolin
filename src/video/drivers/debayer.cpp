@@ -268,7 +268,7 @@ void DebayerVideo::ProcessStreams(unsigned char* out, const unsigned char *in)
             Image<uint16_t> img_out = Streams()[s].StreamImage(out).Reinterpret<uint16_t>();
             ProcessImage(img_out, img_in, methods[s], tile);
         }else{
-            throw std::runtime_error("debayer: unhandled format combination.");
+            throw std::runtime_error("debayer: unhandled format combination: " + stin.PixFormat().format );
         }
     }
 }

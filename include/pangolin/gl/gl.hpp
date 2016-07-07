@@ -251,7 +251,7 @@ inline void GlTexture::Download(TypedImage& image) const
         Download(image.ptr, GL_RGB, GL_FLOAT);
         break;
     default:
-        throw std::runtime_error("Unknown format");
+        throw std::runtime_error( "GlTexture::Download - Unknown internal format");
     }
 
 }
