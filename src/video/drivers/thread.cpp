@@ -229,6 +229,11 @@ void ThreadVideo::operator()()
     return;
 }
 
+std::vector<VideoInterface*>& ThreadVideo::InputStreams()
+{
+    return videoin;
+}
+
 }
 
 #undef TSTART

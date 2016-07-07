@@ -38,7 +38,8 @@ namespace pangolin
 {
 
 // Video class that outputs test video signal.
-class PANGOLIN_EXPORT TeliVideo : public VideoInterface, public VideoPropertiesInterface, public BufferAwareVideoInterface
+class PANGOLIN_EXPORT TeliVideo : public VideoInterface, public VideoPropertiesInterface,
+        public BufferAwareVideoInterface, public GenicamVideoInterface
 {
 public:
     TeliVideo(const Params &p);
@@ -78,7 +79,7 @@ public:
     void SetParameter(const std::string& name, const std::string& value);
 
     //! Returns number of available frames
-     uint32_t AvailableFrames() const;
+    uint32_t AvailableFrames() const;
 
     //! Drops N frames in the queue starting from the oldest
     //! returns false if less than n frames arae available

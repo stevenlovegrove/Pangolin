@@ -192,6 +192,31 @@ PleoraVideo::~PleoraVideo()
     DeinitDevice();
 }
 
+std::string PleoraVideo::GetParameter(const std::string& name) {
+    PvGenParameter* par = lDeviceParams->Get(PvString(name.c_str()));
+    if(par) {
+        PvString ret = par->ToString();
+        return std::string(ret.GetAscii());
+    } else {
+        pango_print_error("Parameter %s not recognized\n", name.c_str());
+        return "";
+    }
+}
+
+void PleoraVideo::SetParameter(const std::string& name, const std::string& value) {
+    PvGenParameter* par = lDeviceParams->Get(PvString(name.c_str()));
+    if(par) {
+        PvResult r = par->FromString(PvString(value.c_str()));
+        if(!r.IsOK()){
+            pango_print_error("Error setting parameter %s to:%s Reason:%s\n", name.c_str(), value.c_str(), r.GetDescription().GetAscii());
+        } else {
+            pango_print_info("Setting parameter %s to:%s\n", name.c_str(), value.c_str());
+        }
+    } else {
+        pango_print_error("Parameter %s not recognized\n", name.c_str());
+    }
+}
+
 void PleoraVideo::InitDevice(
         const char* model_name, const char* serial_num, size_t index
 ) {

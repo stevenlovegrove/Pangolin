@@ -38,8 +38,8 @@ namespace pangolin
 
 
 // Video class that creates a thread that keeps pulling frames and processing from its children.
-class PANGOLIN_EXPORT ThreadVideo :
-        public VideoInterface, public VideoPropertiesInterface, public BufferAwareVideoInterface
+class PANGOLIN_EXPORT ThreadVideo :  public VideoInterface, public VideoPropertiesInterface,
+        public BufferAwareVideoInterface, public VideoFilterInterface
 {
 public:
     ThreadVideo(VideoInterface* videoin, size_t num_buffers);
@@ -72,6 +72,8 @@ public:
     bool DropNFrames(uint32_t n);
 
     void operator()();
+
+    std::vector<VideoInterface*>& InputStreams();
 
 protected:
     struct GrabResult
