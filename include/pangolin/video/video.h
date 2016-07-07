@@ -229,6 +229,17 @@ struct PANGOLIN_EXPORT VideoInterface
     virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
 };
 
+//! Interface to GENICAM video capture sources
+struct PANGOLIN_EXPORT GenicamVideoInterface
+{
+    virtual ~GenicamVideoInterface() {}
+
+    virtual std::string GetParameter(const std::string& name) = 0;
+
+    virtual void SetParameter(const std::string& name, const std::string& value) = 0;
+
+};
+
 struct PANGOLIN_EXPORT BufferAwareVideoInterface
 {
     virtual ~BufferAwareVideoInterface() {}

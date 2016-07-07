@@ -101,6 +101,32 @@ bool SetParam(PvGenParameterArray* params, const char* name, T val)
     return true;
 }
 
+std::string GetParameter(const std::string& name) {
+    PvGenParameter* par = lDeviceParams->Get(name);
+    str::string ret;
+    if(par) {
+        PvResult res = param->GetString(ret);
+        if(res.IsFailure()) {
+            pango_print_error("Cannot get value: %s", res.GetCodeString().GetAscii());
+        }
+    }
+    return ret;
+}
+
+void SetParameter(const std::string& name, const std::string& value) {
+    PvGenParameter* par = lDeviceParams->Get(name);
+    if(par) {
+        PvResult r = par->FromString(value);
+        if(!r.IsOK()){
+            pango_print_error("Error setting parameter %s to:%s Reason:%s\n", name, value, r.GetDescription().GetAscii());
+        } else {
+            pango_print_info("Setting parameter %s to:%s\n", name, value);
+        }
+    } else {
+        pango_print_error("Parameter %s not recognized\n", name);
+    }
+}
+
 inline const PvDeviceInfo* SelectDevice( PvSystem& aSystem, const char* model_name = 0, const char* serial_num = 0, size_t index = 0 )
 {
     aSystem.Find();
