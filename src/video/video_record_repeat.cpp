@@ -62,6 +62,9 @@ void VideoRecordRepeat::Open(
     }
 
     video_src = OpenVideo(input_uri);
+
+    // Start off playing from video_src
+    Source();
 }
 
 void VideoRecordRepeat::Close()
@@ -132,6 +135,11 @@ void VideoRecordRepeat::InitialiseRecorder()
 
 void VideoRecordRepeat::Record()
 {
+    // Switch sub-video
+    videos.resize(1);
+    videos[0] = video_src;
+
+    // Initialise recorder and ensure src is started
     InitialiseRecorder();
     video_src->Start();
     frame_num = 0;
@@ -146,6 +154,10 @@ void VideoRecordRepeat::RecordOneFrame()
     }
     record_continuous = false;
     record_once = true;
+
+    // Switch sub-video
+    videos.resize(1);
+    videos[0] = video_src;
 }
 
 void VideoRecordRepeat::Play(bool realtime)
@@ -168,6 +180,10 @@ void VideoRecordRepeat::Play(bool realtime)
     );
 
     frame_num = 0;
+
+    // Switch sub-video
+    videos.resize(1);
+    videos[0] = video_file;
 }
 
 void VideoRecordRepeat::Source()
@@ -182,8 +198,11 @@ void VideoRecordRepeat::Source()
         video_recorder = 0;
     }
 
-    video_src->Start();
     frame_num = 0;
+
+    // Switch sub-video
+    videos.resize(1);
+    videos[0] = video_src;
 }
 
 size_t VideoRecordRepeat::SizeBytes() const
@@ -251,26 +270,6 @@ bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
     }else{
         return video_src->GrabNewest(image,wait);
     }
-}
-
-const json::value& VideoRecordRepeat::DeviceProperties() const
-{
-    if(IsPlaying()) {
-        device_properties = GetVideoDeviceProperties(video_file);
-    }else{
-        device_properties = GetVideoDeviceProperties(video_src);
-    }
-    return device_properties;
-}
-
-const json::value& VideoRecordRepeat::FrameProperties() const
-{
-    if(IsPlaying()) {
-        frame_properties = GetVideoFrameProperties(video_file);
-    }else{
-        frame_properties = GetVideoFrameProperties(video_src);
-    }
-    return frame_properties;
 }
 
 int VideoRecordRepeat::FrameId()

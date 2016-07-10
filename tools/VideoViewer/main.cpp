@@ -44,7 +44,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     }
 
     // Check if video supports VideoPlaybackInterface
-    pangolin::VideoPlaybackInterface* video_playback = video.Cast<pangolin::VideoPlaybackInterface>();
+    pangolin::VideoPlaybackInterface* video_playback = pangolin::FindFirstMatchingVideoInterface<pangolin::VideoPlaybackInterface>(video);
     const int total_frames = video_playback ? video_playback->GetTotalFrames() : std::numeric_limits<int>::max();
     const int slider_size = (total_frames < std::numeric_limits<int>::max() ? 20 : 0);
 
