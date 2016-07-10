@@ -109,7 +109,11 @@ bool PangoVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 #endif
 
     try {
-        if(reader.ReadToSourcePacketAndLock(src_id)) {
+        size_t num_src_bytes = 0;
+        if(reader.ReadToSourcePacketAndLock(src_id, num_src_bytes)) {
+            if (num_src_bytes != size_bytes) {
+              pango_print_error("number of bytes of src package differs from global setting for number of bytes in a frame");
+            }
             // read this frames actual data
             reader.Read((char*)image, size_bytes);
             reader.ReleaseSourcePacketLock(src_id);
