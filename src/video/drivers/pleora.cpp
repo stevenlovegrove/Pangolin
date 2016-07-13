@@ -192,6 +192,31 @@ PleoraVideo::~PleoraVideo()
     DeinitDevice();
 }
 
+std::string PleoraVideo::GetParameter(const std::string& name) {
+    PvGenParameter* par = lDeviceParams->Get(PvString(name.c_str()));
+    if(par) {
+        PvString ret = par->ToString();
+        return std::string(ret.GetAscii());
+    } else {
+        pango_print_error("Parameter %s not recognized\n", name.c_str());
+        return "";
+    }
+}
+
+void PleoraVideo::SetParameter(const std::string& name, const std::string& value) {
+    PvGenParameter* par = lDeviceParams->Get(PvString(name.c_str()));
+    if(par) {
+        PvResult r = par->FromString(PvString(value.c_str()));
+        if(!r.IsOK()){
+            pango_print_error("Error setting parameter %s to:%s Reason:%s\n", name.c_str(), value.c_str(), r.GetDescription().GetAscii());
+        } else {
+            pango_print_info("Setting parameter %s to:%s\n", name.c_str(), value.c_str());
+        }
+    } else {
+        pango_print_error("Parameter %s not recognized\n", name.c_str());
+    }
+}
+
 void PleoraVideo::InitDevice(
         const char* model_name, const char* serial_num, size_t index
 ) {
@@ -304,6 +329,7 @@ void PleoraVideo::SetDeviceParams(Params& p) {
 
     // Get Handles to properties we'll be using.
     lAnalogGain = lDeviceParams->GetInteger("AnalogGain");
+    lGamma = lDeviceParams->GetFloat("Gamma");
     lAnalogBlackLevel = lDeviceParams->GetInteger("AnalogBlackLevel");
     lExposure = lDeviceParams->GetFloat("ExposureTime");
     lAquisitionMode = lDeviceParams->GetEnum("AcquisitionMode");
@@ -560,7 +586,7 @@ void PleoraVideo::SetGain(int64_t val)
 int64_t PleoraVideo::GetAnalogBlackLevel()
 {
     int64_t val;
-    if(lAnalogGain) {
+    if(lAnalogBlackLevel) {
         ThrowOnFailure( lAnalogBlackLevel->GetValue(val) );
     }
     return val;
@@ -588,6 +614,24 @@ void PleoraVideo::SetExposure(double val)
     if(val > 0 && lExposure && lExposure->IsWritable() ) {
         ThrowOnFailure( lExposure->SetValue(val) );
         frame_properties[PANGO_EXPOSURE_US] = json::value(val);
+    }
+}
+
+
+double PleoraVideo::GetGamma()
+{
+    double val;
+    if(lGamma) {
+        ThrowOnFailure(lGamma->GetValue(val));
+    }
+    return val;
+}
+
+void PleoraVideo::SetGamma(double val)
+{
+    if(val > 0 && lGamma && lGamma->IsWritable() ) {
+        ThrowOnFailure( lGamma->SetValue(val) );
+        frame_properties[PANGO_GAMMA] = json::value(val);
     }
 }
 

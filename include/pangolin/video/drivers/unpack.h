@@ -38,7 +38,6 @@ namespace pangolin
 class PANGOLIN_EXPORT UnpackVideo :
     public VideoInterface,
     public VideoFilterInterface,
-    public VideoPropertiesInterface,
     public BufferAwareVideoInterface
 {
 public:
@@ -65,12 +64,6 @@ public:
 
     //! Implement VideoFilterInterface method
     std::vector<VideoInterface*>& InputStreams();
-
-    //! Implement VideoPropertiesInterface method
-    const json::value& DeviceProperties() const;
-
-    //! Implement VideoPropertiesInterface method
-    const json::value& FrameProperties() const;
 
     uint32_t AvailableFrames() const;
 

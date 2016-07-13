@@ -349,7 +349,7 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
 #ifdef HAVE_PNG
     Image<unsigned char> buffer;
 
-    VideoPixelFormat fmt = VideoFormatFromString("RGBA");
+    VideoPixelFormat fmt = VideoFormatFromString("RGBA32");
     buffer.Alloc(v.w, v.h, v.w * fmt.bpp/8 );
     glReadBuffer(GL_BACK);
     glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?

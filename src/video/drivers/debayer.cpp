@@ -268,7 +268,7 @@ void DebayerVideo::ProcessStreams(unsigned char* out, const unsigned char *in)
             Image<uint16_t> img_out = Streams()[s].StreamImage(out).Reinterpret<uint16_t>();
             ProcessImage(img_out, img_in, methods[s], tile);
         }else{
-            throw std::runtime_error("debayer: unhandled format combination.");
+            throw std::runtime_error("debayer: unhandled format combination: " + stin.PixFormat().format );
         }
     }
 }
@@ -293,18 +293,6 @@ bool DebayerVideo::GrabNewest( unsigned char* image, bool wait )
     }else{
         return false;
     }
-}
-
-const json::value& DebayerVideo::DeviceProperties() const
-{
-    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    return in_prop ? in_prop->DeviceProperties() : device_properties;
-}
-
-const json::value& DebayerVideo::FrameProperties() const
-{
-    VideoPropertiesInterface* in_prop = dynamic_cast<VideoPropertiesInterface*>(videoin[0]);
-    return in_prop ? in_prop->FrameProperties() : frame_properties;
 }
 
 std::vector<VideoInterface*>& DebayerVideo::InputStreams()

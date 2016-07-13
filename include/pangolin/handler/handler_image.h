@@ -56,6 +56,7 @@ public:
     void glSetViewOrtho();
 
     void glRenderTexture(pangolin::GlTexture& tex);
+    void glRenderTexture(GLuint tex, GLint width, GLint height);
 
     void glRenderOverlay();
 

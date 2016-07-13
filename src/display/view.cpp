@@ -91,7 +91,7 @@ void SaveViewFromFbo(std::string prefix, View& view, float scale)
 
 #ifdef HAVE_PNG
     Image<unsigned char> buffer;
-    VideoPixelFormat fmt = VideoFormatFromString("RGBA");
+    VideoPixelFormat fmt = VideoFormatFromString("RGBA32");
     buffer.Alloc(w, h, w * fmt.bpp/8 );
     glReadBuffer(GL_BACK);
     glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?

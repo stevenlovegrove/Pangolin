@@ -210,6 +210,9 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         // Pause at next frame
         end_frame = frame+1;
     });
+    pangolin::RegisterKeyPressCallback('0', [&](){
+        video.RecordOneFrame();
+    });
     pangolin::RegisterKeyPressCallback('a', [&](){
         // Adapt scale
         for(unsigned int i=0; i<images.size(); ++i) {

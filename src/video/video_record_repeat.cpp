@@ -33,8 +33,8 @@ namespace pangolin
 {
 
 VideoRecordRepeat::VideoRecordRepeat() 
-    : video_src(0), video_src_props(0), video_file(0), video_recorder(0),
-    buffer_size_bytes(0), frame_num(0), record_frame_skip(1)
+    : video_src(0), video_file(0), video_recorder(0),
+    buffer_size_bytes(0), frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
 {
 }
 
@@ -42,8 +42,8 @@ VideoRecordRepeat::VideoRecordRepeat(
     const std::string& input_uri,
     const std::string& output_uri,
     int buffer_size_bytes
-    ) : video_src(0), video_src_props(0), video_file(0), video_recorder(0),
-    buffer_size_bytes(0), frame_num(0), record_frame_skip(1)
+    ) : video_src(0), video_file(0), video_recorder(0),
+    buffer_size_bytes(0), frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
 {
     Open(input_uri, output_uri, buffer_size_bytes);
 }
@@ -65,7 +65,6 @@ void VideoRecordRepeat::Open(
     }
 
     video_src = OpenVideo(input_uri);
-    video_src_props = dynamic_cast<VideoPropertiesInterface*>(video_src);
 }
 
 void VideoRecordRepeat::Close()
@@ -117,7 +116,7 @@ bool VideoRecordRepeat::Grab( unsigned char* buffer, std::vector<Image<unsigned 
     return success;
 }
 
-void VideoRecordRepeat::Record()
+void VideoRecordRepeat::InitialiseRecorder()
 {
     if( video_recorder ) {
         video_src->Stop();
@@ -132,12 +131,25 @@ void VideoRecordRepeat::Record()
 
     video_recorder = OpenVideoOutput(uri_output);
     video_recorder->SetStreams(
-        video_src->Streams(), str_uri_input, video_src_props ?
-            video_src_props->DeviceProperties() : json::value()
-    );
+        video_src->Streams(), str_uri_input, GetVideoDeviceProperties(video_src) );
+}
 
+void VideoRecordRepeat::Record()
+{
+    InitialiseRecorder();
     video_src->Start();
     frame_num = 0;
+    record_continuous = true;
+}
+
+void VideoRecordRepeat::RecordOneFrame()
+{
+    // Append to existing video.
+    if(!video_recorder) {
+        InitialiseRecorder();
+    }
+    record_continuous = false;
+    record_once = true;
 }
 
 void VideoRecordRepeat::Play(bool realtime)
@@ -158,7 +170,6 @@ void VideoRecordRepeat::Play(bool realtime)
         realtime ? "file:[realtime]//" + uri_output.url :
                    uri_output.url
     );
-    video_file_props = dynamic_cast<VideoPropertiesInterface*>(video_file);
 
     frame_num = 0;
 }
@@ -209,12 +220,13 @@ bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
 {
     frame_num++;
 
-    if( video_recorder != 0 ) {
+    const bool should_record = (record_continuous && !(frame_num % record_frame_skip)) || record_once;
+
+    if( should_record && video_recorder != 0 ) {
         bool success = video_src->GrabNext(image, wait);
-        if( success  && !(frame_num % record_frame_skip) ) {
-            video_recorder->WriteStreams(image, video_src_props ?
-                video_src_props->FrameProperties() : json::value()
-            );
+        if( success ) {
+            video_recorder->WriteStreams(image, GetVideoFrameProperties(video_src) );
+            record_once = false;
         }
         return success;
     }else if( video_file != 0 ) {
@@ -228,13 +240,14 @@ bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
 {
     frame_num++;
 
-    if( video_recorder != 0 )
+    const bool should_record = (record_continuous && !(frame_num % record_frame_skip)) || record_once;
+
+    if( should_record && video_recorder != 0 )
     {
         bool success = video_src->GrabNewest(image,wait);
-        if( success && !(frame_num % record_frame_skip) ) {
-            video_recorder->WriteStreams(image, video_src_props ?
-                video_src_props->FrameProperties() : json::value()
-            );
+        if( success) {
+            video_recorder->WriteStreams(image, GetVideoFrameProperties(video_src) );
+            record_once = false;
         }
         return success;
     }else if( video_file != 0 ) {
@@ -247,19 +260,21 @@ bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
 const json::value& VideoRecordRepeat::DeviceProperties() const
 {
     if(IsPlaying()) {
-        return video_file_props ? video_file_props->DeviceProperties() : null_props;
+        device_properties = GetVideoDeviceProperties(video_file);
     }else{
-        return video_src_props ? video_src_props->DeviceProperties() : null_props;
+        device_properties = GetVideoDeviceProperties(video_src);
     }
+    return device_properties;
 }
 
 const json::value& VideoRecordRepeat::FrameProperties() const
 {
     if(IsPlaying()) {
-        return video_file_props ? video_file_props->FrameProperties() : null_props;
+        frame_properties = GetVideoFrameProperties(video_file);
     }else{
-        return video_src_props ? video_src_props->FrameProperties() : null_props;
+        frame_properties = GetVideoFrameProperties(video_src);
     }
+    return frame_properties;
 }
 
 int VideoRecordRepeat::FrameId()

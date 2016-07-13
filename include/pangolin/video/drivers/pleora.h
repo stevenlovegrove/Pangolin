@@ -64,8 +64,8 @@ typedef std::list<GrabbedBuffer> GrabbedBufferList;
 
 typedef std::list<PvBuffer *> BufferList;
 
-class PANGOLIN_EXPORT PleoraVideo :
-        public VideoInterface, public VideoPropertiesInterface, public BufferAwareVideoInterface
+class PANGOLIN_EXPORT PleoraVideo : public VideoInterface, public VideoPropertiesInterface,
+        public BufferAwareVideoInterface, public GenicamVideoInterface
 {
 public:
 
@@ -87,6 +87,10 @@ public:
 
     bool GrabNewest( unsigned char* image, bool wait = true );
 
+    std::string GetParameter(const std::string& name);
+
+    void SetParameter(const std::string& name, const std::string& value);
+
     void SetGain(int64_t val);
 
     int64_t GetGain();
@@ -98,6 +102,12 @@ public:
     void SetExposure(double val);
 
     double GetExposure();
+
+    void SetGamma(double val);
+
+    double GetGamma();
+
+
 
     void SetupTrigger(bool triggerActive, int64_t triggerSource, int64_t acquisitionMode);
 
@@ -167,6 +177,7 @@ protected:
     PvGenInteger* lAnalogGain;
     PvGenInteger* lAnalogBlackLevel;
     PvGenFloat*   lExposure;
+    PvGenFloat*   lGamma;
     PvGenEnum*    lAquisitionMode;
     PvGenEnum*    lTriggerSource;
     PvGenEnum*    lTriggerMode;

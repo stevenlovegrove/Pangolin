@@ -296,6 +296,17 @@ if(BUILD_PANGOLIN_VIDEO AND FFMPEG_FOUND)
   message(STATUS "ffmpeg Found and Enabled")
 endif()
 
+find_package(LibRealSense QUIET)
+if(BUILD_PANGOLIN_VIDEO AND LIBREALSENSE_FOUND)
+  set(HAVE_LIBREALSENSE 1)
+  list(APPEND INTERNAL_INC  ${LIBREALSENSE_INCLUDE_DIRS} )
+  list(APPEND LINK_LIBS ${LIBREALSENSE_LIBRARIES} )
+  list(APPEND HEADERS ${INCDIR}/video/drivers/realsense.h )
+  list(APPEND SOURCES video/drivers/realsense.cpp)
+  message(STATUS "LibRealSense Found and Enabled")
+endif()
+
+
 find_package(OpenNI QUIET)
 if(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
   set(HAVE_OPENNI 1)

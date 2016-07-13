@@ -31,165 +31,18 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
 
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
-#include <pangolin/compat/condition_variable.h>
-#include <pangolin/compat/locks.h>
-
-#include <list>
+#include <pangolin/utils/fix_size_buffer_queue.h>
 
 namespace pangolin
 {
 
-class FixSizeBuffersQueue
-{
-
-public:
-    typedef unsigned char* BufPType;
-
-    FixSizeBuffersQueue() {}
-
-    ~FixSizeBuffersQueue() {
-        // Deallocate everything.
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-        while(validBuffers.size() > 0){
-            delete[] validBuffers.front();
-            validBuffers.pop_front();
-        }
-        boostd::lock_guard<boostd::mutex> elock(eMtx);
-        while(emptyBuffers.size() > 0){
-            delete[] emptyBuffers.front();
-            emptyBuffers.pop_front();
-        }
-    }
-
-    void init(unsigned int num, unsigned int sizeBytes) {
-        maxNumBuffers = num;
-        bufferSizeBytes = sizeBytes;
-        // lock queue
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-        boostd::lock_guard<boostd::mutex> elock(eMtx);
-
-        // Put back any valid buffer to the available buffers queue.
-        while(validBuffers.size() > 0){
-            emptyBuffers.push_back(validBuffers.front());
-            validBuffers.pop_front();
-        }
-        // Allocate buffers
-        while(emptyBuffers.size() < maxNumBuffers) {
-            emptyBuffers.push_back(new unsigned char[bufferSizeBytes]);
-        }
-    }
-
-    BufPType getNewest() {
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-        boostd::lock_guard<boostd::mutex> elock(eMtx);
-        if(validBuffers.size() == 0) {
-            // Empty queue.
-            return 0;
-        } else {
-            // Requeue all but newest buffers.
-            while(validBuffers.size() > 1) {
-                emptyBuffers.push_back(validBuffers.front());
-                validBuffers.pop_front();
-            }
-            // Return newest buffer.
-            BufPType bp = validBuffers.front();
-            validBuffers.pop_front();
-            return bp;
-        }
-    }
-
-    BufPType getNext() {
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-        if(validBuffers.size() == 0) {
-            // Empty queue.
-            return 0;
-        } else {
-            // Return oldest buffer.
-            BufPType bp = validBuffers.front();
-            validBuffers.pop_front();
-            return bp;
-        }
-    }
-
-    BufPType getFreeBuffer() {
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-        boostd::lock_guard<boostd::mutex> elock(eMtx);
-        if(emptyBuffers.size() > 0) {
-            // Simply get a free buffer from the free buffers list.
-            BufPType bp = emptyBuffers.front();
-            emptyBuffers.pop_front();
-            return bp;
-        } else {
-            if(validBuffers.size() == 0) {
-                // Queue not yet initialized.
-                return 0;
-            } else {
-                // No free buffers return oldest among the valid buffers.
-                BufPType bp = validBuffers.front();
-                validBuffers.pop_front();
-                return bp;
-            }
-        }
-    }
-
-    void addValidBuffer(BufPType bp) {
-        // Add buffer to valid buffers queue.
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-        validBuffers.push_back(bp);
-    }
-
-    void returnUsedBuffer(BufPType bp) {
-        // Add buffer back to empty buffers queue.
-        boostd::lock_guard<boostd::mutex> elock(eMtx);
-        emptyBuffers.push_back(bp);
-    }
-
-    const size_t AvailableFrames() const {
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-        return validBuffers.size();
-    }
-
-    const size_t EmptyBuffers() const {
-        boostd::lock_guard<boostd::mutex> elock(eMtx);
-        return emptyBuffers.size();
-    }
-
-    bool DropNFrames(unsigned int n) {
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-        if(validBuffers.size() < n) {
-            return false;
-        } else {
-            boostd::lock_guard<boostd::mutex> elock(eMtx);
-            // Requeue all but newest buffers.
-            for(unsigned int i=0; i<n; ++i) {
-                emptyBuffers.push_back(validBuffers.front());
-                validBuffers.pop_front();
-            }
-            return true;
-        }
-    }
-
-    unsigned int BufferSizeBytes(){
-        return bufferSizeBytes;
-    }
-
-private:
-    std::list<BufPType> validBuffers;
-    std::list<BufPType> emptyBuffers;
-    mutable boostd::mutex vMtx;
-    mutable boostd::mutex eMtx;
-    unsigned int maxNumBuffers;
-    unsigned int bufferSizeBytes;
-};
 
 // Video class that creates a thread that keeps pulling frames and processing from its children.
-class PANGOLIN_EXPORT ThreadVideo :
-        public VideoInterface, public VideoPropertiesInterface, public BufferAwareVideoInterface
+class PANGOLIN_EXPORT ThreadVideo :  public VideoInterface, public VideoPropertiesInterface,
+        public BufferAwareVideoInterface, public VideoFilterInterface
 {
 public:
-    ThreadVideo(VideoInterface* videoin, unsigned int num_buffers);
+    ThreadVideo(VideoInterface* videoin, size_t num_buffers);
     ~ThreadVideo();
 
     //! Implement VideoInput::Start()
@@ -220,18 +73,32 @@ public:
 
     void operator()();
 
+    std::vector<VideoInterface*>& InputStreams();
+
 protected:
+    struct GrabResult
+    {
+        GrabResult(const size_t buffer_size)
+            : return_status(false),
+              buffer(new unsigned char[buffer_size])
+        {
+        }
+
+        bool return_status;
+        unsigned char* buffer;
+        json::value frame_properties;
+    };
+
     std::vector<VideoInterface*> videoin;
 
     bool quit_grab_thread;
-    unsigned int num_buffers;
-    FixSizeBuffersQueue queue;
+    FixSizeBuffersQueue<GrabResult> queue;
 
     boostd::condition_variable cv;
     boostd::mutex cvMtx;
     boostd::thread grab_thread;
 
-    json::value device_properties;
+    mutable json::value device_properties;
     json::value frame_properties;
 };
 

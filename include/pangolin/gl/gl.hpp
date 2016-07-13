@@ -194,7 +194,7 @@ inline void GlTexture::Upload(
     GLenum data_format, GLenum data_type
 ) {
     Bind();
-    glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_format,data_type,data);
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, data_format, data_type, data);
     CheckGlDieOnError();
 }
 
@@ -242,6 +242,10 @@ inline void GlTexture::Download(TypedImage& image) const
         image.Alloc(width, height, VideoFormatFromString("RGB24"));
         Download(image.ptr, GL_RGB, GL_UNSIGNED_BYTE);
         break;
+    case GL_RGBA:
+        image.Alloc(width, height, VideoFormatFromString("RGBA32"));
+        Download(image.ptr, GL_RGBA, GL_UNSIGNED_BYTE);
+        break;
     case GL_LUMINANCE32F_ARB:
         image.Alloc(width, height, VideoFormatFromString("GRAY32F"));
         Download(image.ptr, GL_LUMINANCE, GL_FLOAT);
@@ -250,8 +254,12 @@ inline void GlTexture::Download(TypedImage& image) const
         image.Alloc(width, height, VideoFormatFromString("RGB96F"));
         Download(image.ptr, GL_RGB, GL_FLOAT);
         break;
+    case GL_RGBA32F:
+        image.Alloc(width, height, VideoFormatFromString("RGBA128F"));
+        Download(image.ptr, GL_RGBA, GL_FLOAT);
+        break;
     default:
-        throw std::runtime_error("Unknown format");
+        throw std::runtime_error( "GlTexture::Download - Unknown internal format");
     }
 
 }

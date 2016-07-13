@@ -126,6 +126,7 @@
 #define PANGO_HOST_RECEPTION_TIME_US "host_reception_time_us"
 #define PANGO_CAPTURE_TIME_US "capture_time_us"
 #define PANGO_EXPOSURE_US "exposure_us"
+#define PANGO_GAMMA "gamma"
 #define PANGO_ANALOG_GAIN "analog_gain"
 #define PANGO_ANALOG_BLACK_LEVEL "analog_black_level"
 #define PANGO_SENSOR_TEMPERATURE_C "sensor_temperature_C"
@@ -226,6 +227,17 @@ struct PANGOLIN_EXPORT VideoInterface
     //! Optionally wait for a frame if one isn't ready
     //! Returns true iff image was copied
     virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
+};
+
+//! Interface to GENICAM video capture sources
+struct PANGOLIN_EXPORT GenicamVideoInterface
+{
+    virtual ~GenicamVideoInterface() {}
+
+    virtual std::string GetParameter(const std::string& name) = 0;
+
+    virtual void SetParameter(const std::string& name, const std::string& value) = 0;
+
 };
 
 struct PANGOLIN_EXPORT BufferAwareVideoInterface
@@ -401,6 +413,54 @@ T* FindFirstMatchingVideoInterface( VideoInterface& video )
     }
 
     return 0;
+}
+
+inline
+json::value GetVideoFrameProperties(VideoInterface* video)
+{
+    VideoPropertiesInterface* pi = dynamic_cast<VideoPropertiesInterface*>(video);
+    VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
+
+    if(pi) {
+        return pi->FrameProperties();
+    }else if(fi){
+        if(fi->InputStreams().size() == 1) {
+            return GetVideoFrameProperties(fi->InputStreams()[0]);
+        }else if(fi->InputStreams().size() > 0){
+            // Use first stream's properties as base, but also populate children.
+            json::value json = GetVideoFrameProperties(fi->InputStreams()[0]);
+            json::value& streams = json["streams"];
+            for(size_t i=0; i< fi->InputStreams().size(); ++i) {
+                streams.push_back( GetVideoFrameProperties(fi->InputStreams()[i]) );
+            }
+            return json;
+        }
+    }
+    return json::value();
+}
+
+inline
+json::value GetVideoDeviceProperties(VideoInterface* video)
+{
+    VideoPropertiesInterface* pi = dynamic_cast<VideoPropertiesInterface*>(video);
+    VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
+
+    if(pi) {
+        return pi->FrameProperties();
+    }else if(fi){
+        if(fi->InputStreams().size() == 1) {
+            return GetVideoDeviceProperties(fi->InputStreams()[0]);
+        }else if(fi->InputStreams().size() > 0){
+            // Use first stream's properties as base, but also populate children.
+            json::value json = GetVideoDeviceProperties(fi->InputStreams()[0]);
+            json::value& streams = json["streams"];
+            for(size_t i=0; i< fi->InputStreams().size(); ++i) {
+                streams.push_back( GetVideoDeviceProperties(fi->InputStreams()[i]) );
+            }
+            return json;
+        }
+    }
+    return json::value();
 }
 
 }
