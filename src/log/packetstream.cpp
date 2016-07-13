@@ -429,6 +429,7 @@ bool PacketStreamReader::ReadToSourcePacketAndLock(PacketStreamSourceId src_id, 
     int nxt_src_id;
     int64_t time_us;
 
+    size_t num_src_bytes0 = num_src_bytes;
     ProcessMessagesUntilSourcePacket(nxt_src_id, time_us, num_src_bytes);
 
     while(nxt_src_id != (int)src_id) {
@@ -440,6 +441,7 @@ bool PacketStreamReader::ReadToSourcePacketAndLock(PacketStreamSourceId src_id, 
             ReadOverSourcePacket(nxt_src_id);
             ReadTag();
         }
+        num_src_bytes = num_src_bytes0; // reset for the case of dynamic packet size (i.e. num_src_bytes=0)
         ProcessMessagesUntilSourcePacket(nxt_src_id, time_us, num_src_bytes);
     }
 
@@ -560,7 +562,9 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
                 throw std::runtime_error("Invalid Packet Source ID.");
             }
             nxt_src_id = static_cast<int>(src_id);
-            num_src_bytes = ReadCompressedUnsignedInt();
+            // only if the size is dynamic read the size from the data
+            if (num_src_bytes == 0)
+              num_src_bytes = ReadCompressedUnsignedInt();
             CacheSrcPacketLocationIncFrame(src_packet_pos, nxt_src_id);
             // return, don't break. We're in the middle of this packet.
             return;
