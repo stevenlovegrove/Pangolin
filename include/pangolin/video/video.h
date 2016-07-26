@@ -446,7 +446,7 @@ json::value GetVideoDeviceProperties(VideoInterface* video)
     VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
 
     if(pi) {
-        return pi->FrameProperties();
+        return pi->DeviceProperties();
     }else if(fi){
         if(fi->InputStreams().size() == 1) {
             return GetVideoDeviceProperties(fi->InputStreams()[0]);
