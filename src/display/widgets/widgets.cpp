@@ -223,7 +223,7 @@ void Panel::ResizeChildren()
 View& CreatePanel(const std::string& name)
 {
     if(context->named_managed_views.find(name) != context->named_managed_views.end()) {
-        throw std::runtime_error("Panel already registered with this name.");
+        throw std::runtime_error("Panel already registered with this name : " + name);
     }
     Panel * p = new Panel(name);
     context->named_managed_views[name] = p;
