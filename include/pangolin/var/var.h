@@ -213,18 +213,18 @@ public:
         var->Reset();
     }
 
-    const T& Get()
+    const T& Get() const
     {
         try{
             return var->Get();
         }catch(BadInputException)
         {
-            Reset();
+            const_cast<Var<T> *>(this)->Reset();
             return var->Get();
         }
     }
 
-    operator const T& ()
+    operator const T& () const
     {
         return Get();
     }
@@ -312,7 +312,8 @@ protected:
     }
 
     // Holds reference to stored variable object
-    VarValueT<T>* var;
+    // N.B. mutable because it is a cached value and Get() is advertised as const.
+    mutable VarValueT<T>* var;
 
     // ptr is non-zero if this object owns the object variable (a wrapper)
     VarValueT<T>* ptr;
