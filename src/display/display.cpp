@@ -154,6 +154,11 @@ void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newco
     context = oldContext;
 }
 
+WindowInterface* GetBoundWindow()
+{
+    return context;
+}
+
 void DestroyWindow(const std::string& name)
 {
     contexts_mutex.lock();

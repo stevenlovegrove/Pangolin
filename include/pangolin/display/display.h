@@ -71,6 +71,10 @@ namespace pangolin
   PANGOLIN_EXPORT
   WindowInterface& CreateWindowAndBind(std::string window_title, int w = 640, int h = 480, const Params& params = Params());
 
+  /// Return pointer to current Pangolin Window context, or nullptr if none bound.
+  PANGOLIN_EXPORT
+  WindowInterface* GetBoundWindow();
+
   PANGOLIN_EXPORT
   void DestroyWindow(const std::string& window_title);
 
