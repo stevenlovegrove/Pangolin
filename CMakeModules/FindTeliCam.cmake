@@ -25,7 +25,7 @@ endif()
 
 find_library(
     TeliCamApi_LIBRARY
-    NAMES TeliCamApi TeliCamApi64
+    NAMES TeliCamApi TeliCamApi64 TeliCamApi_64
     PATHS
         "${PROGRAM_FILES}/Toshiba Teli/TeliCamSDK/TeliCamApi/lib"
         "${CMAKE_SOURCE_DIR}/../TeliCamSDK/TeliCamApi/lib"
@@ -37,7 +37,7 @@ find_library(
 
 find_library(
     TeliCamUtl_LIBRARY
-    NAMES TeliCamUtl TeliCamUtl64
+    NAMES TeliCamUtl TeliCamUtl64 TeliCamUtl_64
     PATHS
         "${PROGRAM_FILES}/Toshiba Teli/TeliCamSDK/TeliCamApi/lib"
         "${CMAKE_SOURCE_DIR}/../TeliCamSDK/TeliCamApi/lib"
