@@ -194,7 +194,7 @@ void Quit()
 
 bool ShouldQuit()
 {
-    return context->quit;
+    return !context || context->quit;
 }
 
 bool HadInput()
