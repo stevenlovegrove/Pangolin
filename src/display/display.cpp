@@ -157,7 +157,8 @@ void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newco
 void DestroyWindow(const std::string& name)
 {
     contexts_mutex.lock();
-    PangolinGl *context_to_destroy = FindContext(name);
+    ContextMap::iterator ic = contexts.find(name);
+    PangolinGl *context_to_destroy = (ic == contexts.end()) ? 0 : ic->second.get();
     if (context_to_destroy == context) {
         context = nullptr;
     }
