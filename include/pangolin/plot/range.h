@@ -297,6 +297,18 @@ typedef XYRange<int> XYRangei;
 typedef XYRange<float> XYRangef;
 typedef XYRange<double> XYRanged;
 
+template<typename T> inline
+Rangei Round(const Range<T>& r)
+{
+    return Rangei( int(r.min+0.5), int(r.max+0.5) );
+}
+
+template<typename T> inline
+XYRangei Round(const XYRange<T>& r)
+{
+    return XYRangei( Round(r.x), Round(r.y) );
+}
+
 }
 
 #endif //PANGOLIN_RANGE_H
