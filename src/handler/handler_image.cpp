@@ -123,6 +123,16 @@ void ImageViewHandler::glRenderOverlay()
         float xpix, ypix;
         ImageToScreen(v, selxy.x.max, selxy.y.max, xpix, ypix);
 
+        // Save previous value
+        GLboolean gl_blend_enabled;
+        glGetBooleanv(GL_BLEND, &gl_blend_enabled);
+        GLint gl_blend_src_alpha;
+        glGetIntegerv(GL_BLEND_SRC_ALPHA, &gl_blend_src_alpha);
+
+        // Ensure that blending is enabled for rendering text.
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         pangolin::GlFont::I().Text(
             "%.2f x %.2f",
             selxy.x.Size(), selxy.y.Size()
@@ -133,6 +143,10 @@ void ImageViewHandler::glRenderOverlay()
             selxy.x.min, selxy.y.min,
             selxy.x.max, selxy.y.max
         ).DrawWindow(xpix, ypix - 1.0f * pangolin::GlFont::I().Height());
+
+        // Restore previous value
+        if(!gl_blend_enabled) glDisable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, gl_blend_src_alpha);
     }
 }
 
