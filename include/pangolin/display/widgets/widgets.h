@@ -116,6 +116,7 @@ struct PANGOLIN_EXPORT Slider : public Widget<double>
     GLfloat raster[2];
     bool lock_bounds;
     bool logscale;
+    bool is_integral_type;
 };
 
 struct PANGOLIN_EXPORT TextInput : public Widget<std::string>

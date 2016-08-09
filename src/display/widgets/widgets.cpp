@@ -349,6 +349,18 @@ void Checkbox::Render()
     DrawShadowRect(vcb, val);
 }
 
+inline bool IsIntegral(const char* typeidname)
+{
+    // TODO: There must be a better way of doing this...
+    return !strcmp(typeidname, typeid(char).name()) ||
+           !strcmp(typeidname, typeid(short).name()) ||
+           !strcmp(typeidname, typeid(int).name())  ||
+           !strcmp(typeidname, typeid(long).name()) ||
+           !strcmp(typeidname, typeid(unsigned char).name()) ||
+           !strcmp(typeidname, typeid(unsigned short).name()) ||
+           !strcmp(typeidname, typeid(unsigned int).name()) ||
+           !strcmp(typeidname, typeid(unsigned long).name());
+}
 
 Slider::Slider(std::string title, VarValueGeneric& tv)
     : Widget<double>(title+":", tv), lock_bounds(true)
@@ -360,6 +372,7 @@ Slider::Slider(std::string title, VarValueGeneric& tv)
     handler = this;
     logscale = (int)tv.Meta().logscale;
     gltext = font().Text(title);
+    is_integral_type = IsIntegral(tv.TypeId());
 }
 
 void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
@@ -437,8 +450,14 @@ void Slider::MouseMotion(View&, int x, int y, int mouse_state)
             val = frac * range + var->Meta().range[0];
         }
         
-        if (logscale) val = exp(val);
-        
+        if (logscale) {
+            val = exp(val);
+        }
+
+        if( is_integral_type ) {
+            val = std::round(val);
+        }
+
         var->Set(val);
         GuiVarChanged(*this);
     }
