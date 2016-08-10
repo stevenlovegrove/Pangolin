@@ -126,8 +126,6 @@ void ImageViewHandler::glRenderOverlay()
         // Save previous value
         GLboolean gl_blend_enabled;
         glGetBooleanv(GL_BLEND, &gl_blend_enabled);
-        GLint gl_blend_src_alpha;
-        glGetIntegerv(GL_BLEND_SRC_ALPHA, &gl_blend_src_alpha);
 
         // Ensure that blending is enabled for rendering text.
         glEnable(GL_BLEND);
@@ -146,7 +144,6 @@ void ImageViewHandler::glRenderOverlay()
 
         // Restore previous value
         if(!gl_blend_enabled) glDisable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, gl_blend_src_alpha);
     }
 }
 
