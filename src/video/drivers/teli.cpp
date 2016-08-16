@@ -460,7 +460,7 @@ bool TeliVideo::DropNFrames(uint32_t n)
 #endif
                 Teli::CAM_IMAGE_INFO sImageInfo;
                 uint32_t uiPyldSize = 0 ;
-                Teli::CAM_API_STATUS uiStatus = Teli::Strm_ReadCurrentImage(strm, 0, &uiPyldSize, &sImageInfo);
+                Teli::Strm_ReadCurrentImage(strm, 0, &uiPyldSize, &sImageInfo);
             } else {
                 return false;
             }
