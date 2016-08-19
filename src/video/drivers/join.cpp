@@ -145,8 +145,8 @@ bool VideoJoiner::GrabNext(unsigned char* image, bool wait)
 
     if(sync_tolerance_us > 0) {
         if(std::abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us){
-            pango_print_warn("Join timestamps not within %lu us trying to sync\n", (unsigned long)sync_tolerance_us);
-
+            pango_print_warn("Join timestamps not within %lu us (%lu us) trying to sync\n", (unsigned long)sync_tolerance_us,
+                             std::abs(newest - oldest - expected_timestamp_delta_us));
             for(size_t n=0; n<10; ++n){
                 for(size_t s=0; s<src.size(); ++s) {
                     if(reception_times[s] < (newest - sync_tolerance_us)) {
@@ -277,7 +277,8 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
 
       if(sync_tolerance_us > 0) {
           if(std::abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us){
-              pango_print_warn("Join timestamps not within %lu us trying to sync\n", (unsigned long)sync_tolerance_us);
+              pango_print_warn("Join timestamps not within %lu us (%lu us) trying to sync\n", (unsigned long)sync_tolerance_us,
+                               std::abs(newest - oldest - expected_timestamp_delta_us));
 
               for(size_t n=0; n<10; ++n){
                   for(size_t s=0; s<src.size(); ++s) {
