@@ -717,7 +717,7 @@ VideoInterface* OpenVideo(const Uri& uri)
     return video;
 }
 
-void RegisterScheme(std::string scheme, const VideoInterfaceFactory& factory)
+void RegisterVideoScheme(std::string scheme, const VideoInterfaceFactory& factory)
 {
     ToLower(scheme);
     if (s_RegisteredUriSchemes.count(scheme) != 0) {
