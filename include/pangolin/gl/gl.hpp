@@ -238,28 +238,39 @@ inline void GlTexture::Download(TypedImage& image) const
         image.Alloc(width, height, VideoFormatFromString("GRAY8") );
         Download(image.ptr, GL_LUMINANCE, GL_UNSIGNED_BYTE);
         break;
-    case GL_RGB:
+    case GL_LUMINANCE16:
+        image.Alloc(width, height, VideoFormatFromString("GRAY16LE") );
+        Download(image.ptr, GL_LUMINANCE, GL_UNSIGNED_SHORT);
+        break;
+    case GL_RGB8:
         image.Alloc(width, height, VideoFormatFromString("RGB24"));
         Download(image.ptr, GL_RGB, GL_UNSIGNED_BYTE);
         break;
-    case GL_RGBA:
+    case GL_RGBA8:
         image.Alloc(width, height, VideoFormatFromString("RGBA32"));
         Download(image.ptr, GL_RGBA, GL_UNSIGNED_BYTE);
         break;
+    case GL_LUMINANCE:
     case GL_LUMINANCE32F_ARB:
         image.Alloc(width, height, VideoFormatFromString("GRAY32F"));
         Download(image.ptr, GL_LUMINANCE, GL_FLOAT);
         break;
+    case GL_RGB:
     case GL_RGB32F:
         image.Alloc(width, height, VideoFormatFromString("RGB96F"));
         Download(image.ptr, GL_RGB, GL_FLOAT);
         break;
+    case GL_RGBA:
     case GL_RGBA32F:
         image.Alloc(width, height, VideoFormatFromString("RGBA128F"));
         Download(image.ptr, GL_RGBA, GL_FLOAT);
         break;
     default:
-        throw std::runtime_error( "GlTexture::Download - Unknown internal format");
+        throw std::runtime_error(
+            "GlTexture::Download - Unknown internal format (" +
+            pangolin::Convert<std::string,GLint>::Do(internal_format) +
+            ")"
+        );
     }
 
 }

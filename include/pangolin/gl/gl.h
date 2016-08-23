@@ -55,7 +55,7 @@ class PANGOLIN_EXPORT GlTexture
 {
 public:
     //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
-    GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL  );
+    GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL  );
     
 #ifdef CALLEE_HAS_RVALREF
     //! Move Constructor
@@ -72,7 +72,7 @@ public:
     void Delete();
     
     //! Reinitialise teture width / height / format
-    void Reinitialise(GLsizei width, GLsizei height, GLint internal_format = GL_RGBA, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL );
+    void Reinitialise(GLsizei width, GLsizei height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL );
     
     void Bind() const;
     void Unbind() const;
