@@ -368,6 +368,10 @@ protected:
     std::vector<VideoInterface*> videos;
 };
 
+//! Allows the client to register a URI scheme
+PANGOLIN_EXPORT
+void RegisterScheme(std::string scheme, const VideoInterfaceFactory& factory);
+
 //! Open Video Interface from string specification (as described in this files header)
 PANGOLIN_EXPORT
 VideoInterface* OpenVideo(const std::string& uri);
