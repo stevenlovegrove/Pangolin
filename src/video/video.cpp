@@ -717,8 +717,7 @@ VideoInterface* OpenVideo(const Uri& uri)
     return video;
 }
 
-void RegisterScheme(std::string scheme,
-    boostd::function<VideoInterface*(const Uri& uri)>& factory)
+void RegisterScheme(std::string scheme, const VideoInterfaceFactory& factory)
 {
     ToLower(scheme);
     if (s_RegisteredUriSchemes.count(scheme) != 0) {
