@@ -370,7 +370,7 @@ protected:
 
 //! Allows the client to register a URI scheme
 PANGOLIN_EXPORT
-void RegisterScheme(std::string scheme, const VideoInterfaceFactory& factory);
+void RegisterVideoScheme(std::string scheme, const VideoInterfaceFactory& factory);
 
 //! Open Video Interface from string specification (as described in this files header)
 PANGOLIN_EXPORT
