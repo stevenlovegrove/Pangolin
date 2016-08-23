@@ -313,6 +313,7 @@ VideoInterface* OpenVideo(const Uri& uri)
         if (!uri.scheme.compare(it->first)) {
             return it->second(uri);
         }
+        ++it;
     }
 
     if(!uri.scheme.compare("test") )
