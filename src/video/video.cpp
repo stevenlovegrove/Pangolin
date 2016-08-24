@@ -519,6 +519,7 @@ VideoInterface* OpenVideo(const Uri& uri)
     if(!uri.scheme.compare("v4l")) {
         const std::string smethod = uri.Get<std::string>("method","mmap");
         const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(0,0));
+        const int exposure_us = uri.Get<int>("ExposureTime", 10000);
         
         io_method method = IO_METHOD_MMAP;
         
@@ -531,6 +532,9 @@ VideoInterface* OpenVideo(const Uri& uri)
         }            
         
         video = new V4lVideo(uri.url.c_str(), method, desired_dim.x, desired_dim.y );
+        if(video) {
+            static_cast<V4lVideo*>(video)->SetExposureUs(exposure_us);
+        }
     }else
 #endif // HAVE_V4L
 #ifdef HAVE_DC1394

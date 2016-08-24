@@ -591,6 +591,8 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
         spix="GRAY8";
     }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
         spix="YUYV422";
+    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16) {
+        spix="GRAY16LE";
     }else{
         // TODO: Add method to translate from V4L to FFMPEG type.
         std::cerr << "V4L Format " << V4lToString(fmt.fmt.pix.pixelformat)
@@ -599,7 +601,20 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
 
     const VideoPixelFormat pfmt = VideoFormatFromString(spix);
     const StreamInfo stream_info(pfmt, width, height, (width*pfmt.bpp)/8, 0);
+
     streams.push_back(stream_info);
+}
+
+void V4lVideo::SetExposureUs(int exposure_us)
+{
+    struct v4l2_control control;
+    control.id = V4L2_CID_EXPOSURE_ABSOLUTE;
+    // v4l specifies exposure in 100us units
+    control.value = exposure_us / 100;
+
+    if (-1 == xioctl (fd, VIDIOC_S_CTRL, &control))
+        pango_print_warn("V4lVideo::SetExposureUs() ioctl error: %d\n", errno);
+
 }
 
 void V4lVideo::close_device()
