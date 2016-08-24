@@ -31,6 +31,7 @@
 #include <pangolin/platform.h>
 #include <pangolin/display/display_internal.h>
 
+#include <stdexcept>
 #include <string>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
