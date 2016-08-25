@@ -138,6 +138,8 @@ public:
 
     void BindPangolinDefaultAttribLocationsAndLink();
 
+    GLint ProgramId() { return prog; }
+
 protected:
     std::string ParseIncludeFilename(
         const std::string& location
