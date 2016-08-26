@@ -26,6 +26,7 @@
 #cmakedefine HAVE_DC1394
 #cmakedefine HAVE_V4L
 #cmakedefine HAVE_OPENNI
+#cmakedefine HAVE_LIBREALSENSE
 #cmakedefine HAVE_OPENNI2
 #cmakedefine HAVE_UVC
 #cmakedefine HAVE_DEPTHSENSE
