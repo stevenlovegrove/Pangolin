@@ -40,6 +40,10 @@
 #include <pangolin/video/drivers/ffmpeg.h>
 #endif
 
+#ifdef HAVE_LIBREALSENSE
+#include <pangolin/video/drivers/realsense.h>
+#endif
+
 #ifdef HAVE_OPENNI
 #include <pangolin/video/drivers/openni.h>
 #endif
@@ -576,6 +580,16 @@ VideoInterface* OpenVideo(const Uri& uri)
         }
     }else
 #endif //HAVE_DC1394
+#ifdef HAVE_LIBREALSENSE
+    if(!uri.scheme.compare("realsense"))
+    {
+        const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+        const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+
+        RealSenseVideo* rsvi = new RealSenseVideo(dim, fps);
+        video = rsvi;
+    }else
+#endif
 #ifdef HAVE_OPENNI
     if(!uri.scheme.compare("openni") || !uri.scheme.compare("kinect"))
     {
