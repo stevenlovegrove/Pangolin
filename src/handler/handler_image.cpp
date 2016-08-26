@@ -6,14 +6,14 @@ namespace pangolin
 
 ImageViewHandler::ImageViewHandler()
     : linked_view_handler(0),
-      use_nn(false)
+      use_nn(false), flipTextureY(false)
 {
     SetDimensions(1, 1);
 }
 
 ImageViewHandler::ImageViewHandler(size_t w, size_t h)
     : linked_view_handler(0),
-      use_nn(false)
+      use_nn(false), flipTextureY(false)
 {
     SetDimensions(w,h);
 }
@@ -65,39 +65,46 @@ void ImageViewHandler::glRenderTexture(pangolin::GlTexture& tex)
 
 void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height)
 {
-    const pangolin::XYRangef& xy = GetViewToRender();
-    const float w = (float)width;
-    const float h = (float)height;
+    if(tex != 0) {
+        const pangolin::XYRangef& xy = GetViewToRender();
+        const float w = (float)width;
+        const float h = (float)height;
 
-    // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
-    const GLfloat l = xy.x.min;
-    const GLfloat r = xy.x.max;
-    const GLfloat b = xy.y.max;
-    const GLfloat t = xy.y.min;
+        // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
+        const GLfloat l = xy.x.min;
+        const GLfloat r = xy.x.max;
+        const GLfloat b = xy.y.max;
+        const GLfloat t = xy.y.min;
 
-    // continuous coords, (0,0) - (1,1)
-    const GLfloat ln = (l + 0.5f) / w;
-    const GLfloat rn = (r + 0.5f) / w;
-    const GLfloat bn = (b + 0.5f) / h;
-    const GLfloat tn = (t + 0.5f) / h;
+        // continuous coords, (0,0) - (1,1)
+        const GLfloat ln = (l + 0.5f) / w;
+        const GLfloat rn = (r + 0.5f) / w;
+        GLfloat bn = (b + 0.5f) / h;
+        GLfloat tn = (t + 0.5f) / h;
 
-    const GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
-    const GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
+        if(flipTextureY) {
+            bn = 1-bn;
+            tn = 1-tn;
+        }
 
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
+        const GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
+        const GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
 
-    glEnable(GL_TEXTURE_2D);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
-    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
+
+        glEnable(GL_TEXTURE_2D);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+        glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
 
 void ImageViewHandler::glRenderOverlay()
@@ -167,6 +174,11 @@ bool ImageViewHandler::UseNN() const
 bool& ImageViewHandler::UseNN()
 {
     return use_nn;
+}
+
+bool& ImageViewHandler::FlipTextureY()
+{
+    return flipTextureY;
 }
 
 pangolin::XYRangef& ImageViewHandler::GetViewToRender()
