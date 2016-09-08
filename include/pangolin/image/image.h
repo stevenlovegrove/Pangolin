@@ -60,7 +60,7 @@ struct Image {
         this->w = w;
         this->h = h;
         this->pitch = pitch;
-        this->ptr = (T*)::operator new(w*pitch);
+        this->ptr = (T*)::operator new(h*pitch);
     }
 
     size_t SizeBytes() const
