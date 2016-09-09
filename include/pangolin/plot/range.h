@@ -283,6 +283,10 @@ struct XYRange
             Eigen::Matrix<T,2,1>(x.max, y.max)
         );
     }
+
+    Eigen::Matrix<T,2,1> Center() const {
+        return Eigen::Matrix<T,2,1>(x.Mid(), y.Mid());
+    }
 #endif
 
     Range<T> x;
