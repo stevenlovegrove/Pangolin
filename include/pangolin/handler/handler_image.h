@@ -34,6 +34,7 @@
 #include <pangolin/handler/handler.h>
 #include <pangolin/plot/range.h>
 #include <pangolin/gl/gl.h>
+#include <pangolin/compat/function.h>
 
 namespace pangolin
 {
@@ -41,6 +42,20 @@ namespace pangolin
 class ImageViewHandler : public Handler
 {
 public:
+    struct EventData {
+        EventData(View& v, ImageViewHandler& h) : view(v), handler(h) {}
+        View& view;
+        ImageViewHandler& handler;
+    };
+
+    struct OnSelectionEventData : public EventData {
+        OnSelectionEventData(View& v, ImageViewHandler& h, bool dragging)
+            : EventData(v,h), dragging(dragging) {}
+        bool dragging;
+    };
+
+    typedef boostd::function<void(OnSelectionEventData)> OnSelectionCallbackFn;
+
     // Default constructor: User must call SetDimensions() once image dimensions are known.
     // Default range is [0,1] in x and y.
     ImageViewHandler();
@@ -109,6 +124,12 @@ public:
     void PassiveMouseMotion(View&, int /*x*/, int /*y*/, int /*button_state*/) PANGOLIN_OVERRIDE;
 
     void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int /*button_state*/) PANGOLIN_OVERRIDE;
+
+    ///////////////////////////////////////////////////////
+    /// Callbacks
+    ///////////////////////////////////////////////////////
+
+    OnSelectionCallbackFn OnSelectionCallback;
 
 protected:
     void FixSelection(XYRangef& sel);

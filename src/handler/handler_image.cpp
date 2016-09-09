@@ -362,6 +362,10 @@ void ImageViewHandler::Mouse(View& view, pangolin::MouseButton button, int x, in
     FixSelection(sel);
     last_mouse_pos[0] = x;
     last_mouse_pos[1] = y;
+
+    if(OnSelectionCallback) {
+        OnSelectionCallback( OnSelectionEventData(view,*this,pressed) );
+    }
 }
 
 void ImageViewHandler::MouseMotion(View& view, int x, int y, int button_state)
@@ -385,6 +389,9 @@ void ImageViewHandler::MouseMotion(View& view, int x, int y, int button_state)
     last_mouse_pos[0] = x;
     last_mouse_pos[1] = y;
 
+    if( button_state == MouseButtonLeft && OnSelectionCallback) {
+        OnSelectionCallback( OnSelectionEventData(view,*this,true) );
+    }
 }
 
 void ImageViewHandler::PassiveMouseMotion(View&, int /*x*/, int /*y*/, int /*button_state*/)
