@@ -351,18 +351,25 @@ void OpenNiVideo2::UpdateProperties()
 {
     json::value& jsopenni = device_properties["openni"];
 
+    json::value& jsdevices = jsopenni["devices"];
+    jsdevices = json::value(json::array_type,false);
+    jsdevices.get<json::array>().resize(numDevices);
+    for (size_t i=0; i<numDevices; ++i) {
+      json::value& jsdevice = jsdevices[i];
 #define SET_PARAM(param_type, param) \
-    { \
+      { \
         param_type val; \
-        if(devices[0].getProperty(param, &val) == openni::STATUS_OK) { \
-            jsdevice[#param] = val; \
+        if(devices[i].getProperty(param, &val) == openni::STATUS_OK) { \
+          jsdevice[#param] = val; \
         } \
-    }
-
-    json::value& jsdevice = jsopenni["device"];
-    SET_PARAM( unsigned long long, XN_MODULE_PROPERTY_USB_INTERFACE );
-    SET_PARAM( bool,  XN_MODULE_PROPERTY_MIRROR );
+      }
+      SET_PARAM( unsigned long long, XN_MODULE_PROPERTY_USB_INTERFACE );
+      SET_PARAM( bool,  XN_MODULE_PROPERTY_MIRROR );
+      char serialNumber[1024];
+      devices[i].getProperty(ONI_DEVICE_PROPERTY_SERIAL_NUMBER, &serialNumber);
+      jsdevice["ONI_DEVICE_PROPERTY_SERIAL_NUMBER"] = std::string(serialNumber);
 #undef SET_PARAM
+    }
 
     json::value& stream = jsopenni["streams"];
     stream = json::value(json::array_type,false);
