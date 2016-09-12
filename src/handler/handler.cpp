@@ -193,9 +193,11 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
     GLprecision T_nc[3*4];
     LieSetIdentity(T_nc);
     
-    if( pressed ) {
+    if( pressed )
+    {
         GetPosNormal(display,x,y,p,Pw,Pc,n,last_z);
-        if(p[2] < 1.0) {
+        if( ValidWinDepth(p[2]) )
+        {
             last_z = p[2];
             std::copy(Pc,Pc+3,rot_center);
         }
