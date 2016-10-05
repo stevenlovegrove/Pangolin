@@ -64,7 +64,7 @@ public:
     
     //! Default constructor represents 'no texture'
     GlTexture();
-    ~GlTexture();
+    virtual ~GlTexture();
 
     bool IsValid() const;
 
@@ -72,7 +72,7 @@ public:
     void Delete();
     
     //! Reinitialise teture width / height / format
-    void Reinitialise(GLsizei width, GLsizei height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL );
+    virtual void Reinitialise(GLsizei width, GLsizei height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL );
     
     void Bind() const;
     void Unbind() const;
