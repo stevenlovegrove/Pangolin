@@ -118,8 +118,8 @@ protected:
     void PrintOpenNI2Modes(openni::SensorType sensorType);
     openni::VideoMode FindOpenNI2Mode(openni::Device &device, openni::SensorType sensorType, int width, int height, int fps, openni::PixelFormat fmt );
 
-    int numDevices;
-    int numStreams;
+    size_t numDevices;
+    size_t numStreams;
 
     openni::Device devices[ONI_MAX_SENSORS];
     OpenNiStreamMode sensor_type[ONI_MAX_SENSORS];

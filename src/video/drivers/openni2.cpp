@@ -224,7 +224,7 @@ void OpenNiVideo2::InitialiseOpenNI()
 
 int OpenNiVideo2::AddDevice(const std::string& device_uri)
 {
-    const int dev_id = numDevices;
+    const size_t dev_id = numDevices;
     openni::Status rc = devices[dev_id].open(device_uri.c_str());
     if (rc != openni::STATUS_OK) {
         throw VideoException( "OpenNI2: Couldn't open device.", openni::OpenNI::getExtendedError() );
@@ -267,7 +267,7 @@ void OpenNiVideo2::SetupStreamModes()
     fromFile = false;//(deviceURI!=NULL);
 
     sizeBytes =0;
-    for(int i=0; i<numStreams; ++i) {
+    for(size_t i=0; i<numStreams; ++i) {
         const OpenNiStreamMode& mode = sensor_type[i];
         openni::SensorType nisensortype;
         openni::PixelFormat nipixelfmt;
@@ -453,7 +453,7 @@ void OpenNiVideo2::SetDepthHoleFilter(bool enable)
 
 void OpenNiVideo2::SetDepthColorSyncEnabled(bool enable)
 {
-    for(int i = 0 ; i < numDevices; i++) {
+    for(size_t i = 0 ; i < numDevices; i++) {
         devices[i].setDepthColorSyncEnabled(enable);
     }
 }
@@ -461,11 +461,11 @@ void OpenNiVideo2::SetDepthColorSyncEnabled(bool enable)
 void OpenNiVideo2::SetRegisterDepthToImage(bool enable)
 {
     if(enable) {
-        for(int i = 0 ; i < numDevices; i++) {
+        for(size_t i = 0 ; i < numDevices; i++) {
             devices[i].setImageRegistrationMode(openni::IMAGE_REGISTRATION_DEPTH_TO_COLOR);
         }
     }else{
-        for(int i = 0 ; i < numDevices ; i++) {
+        for(size_t i = 0 ; i < numDevices ; i++) {
             devices[i].setImageRegistrationMode(openni::IMAGE_REGISTRATION_OFF);
         }
     }
@@ -473,7 +473,7 @@ void OpenNiVideo2::SetRegisterDepthToImage(bool enable)
 
 void OpenNiVideo2::SetPlaybackSpeed(float speed)
 {
-    for(int i = 0 ; i < numDevices; i++) {
+    for(size_t i = 0 ; i < numDevices; i++) {
         openni::PlaybackControl* control = devices[i].getPlaybackControl();
         if(control) control->setSpeed(speed);
     }
@@ -481,7 +481,7 @@ void OpenNiVideo2::SetPlaybackSpeed(float speed)
 
 void OpenNiVideo2::SetPlaybackRepeat(bool enabled)
 {
-    for(int i = 0 ; i < numDevices; i++) {
+    for(size_t i = 0 ; i < numDevices; i++) {
         openni::PlaybackControl* control = devices[i].getPlaybackControl();
         if(control) control->setRepeatEnabled(enabled);
     }
@@ -491,7 +491,7 @@ OpenNiVideo2::~OpenNiVideo2()
 {
     Stop();
 
-    for(int i=0; i<numStreams; ++i) {
+    for(size_t i=0; i<numStreams; ++i) {
         if( video_stream[i].isValid()) {
             video_stream[i].destroy();
         }
