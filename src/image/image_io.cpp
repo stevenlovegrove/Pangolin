@@ -103,7 +103,7 @@ TypedImage LoadTga(const std::string& filename)
             img.Alloc(width, height, TgaFormat(info[4], type[2], type[1]) );
             
             //read in image data
-            const size_t data_size = img.w * img.pitch;
+            const size_t data_size = img.h * img.pitch;
             success &= fread(img.ptr, sizeof(unsigned char), data_size, file) == data_size;
         }
         
