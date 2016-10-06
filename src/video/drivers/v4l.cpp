@@ -103,7 +103,7 @@ size_t V4lVideo::SizeBytes() const
     return image_size;
 }
 
-bool V4lVideo::GrabNext( unsigned char* image, bool wait )
+bool V4lVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     for (;;) {
         fd_set fds;
@@ -368,7 +368,7 @@ void V4lVideo::init_read(unsigned int buffer_size)
     }
 }
 
-void V4lVideo::init_mmap(const char* dev_name)
+void V4lVideo::init_mmap(const char* /*dev_name*/)
 {
     struct v4l2_requestbuffers req;
     
@@ -421,7 +421,7 @@ void V4lVideo::init_mmap(const char* dev_name)
     }
 }
 
-void V4lVideo::init_userp(const char* dev_name, unsigned int buffer_size)
+void V4lVideo::init_userp(const char* /*dev_name*/, unsigned int buffer_size)
 {
     struct v4l2_requestbuffers req;
     unsigned int page_size;

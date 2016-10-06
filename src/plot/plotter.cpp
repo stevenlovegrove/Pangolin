@@ -190,7 +190,7 @@ void Plotter::PlotImplicit::CreateInequality(const std::string& ie, Colour c)
     CreatePlot( oss.str() );
 }
 
-void Plotter::PlotImplicit::CreateDistancePlot(const std::string& dist)
+void Plotter::PlotImplicit::CreateDistancePlot(const std::string& /*dist*/)
 {
 
 }
@@ -864,7 +864,7 @@ void Plotter::ResetView()
     py.target.y = py.rview_default.y;
 }
 
-void Plotter::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+void Plotter::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed)
 {
     const float mvfactor = 1.0f / 10.0f;
 
@@ -1017,12 +1017,12 @@ void Plotter::MouseMotion(View& view, int x, int y, int button_state)
     last_mouse_pos[1] = y;
 }
 
-void Plotter::PassiveMouseMotion(View&, int x, int y, int button_state)
+void Plotter::PassiveMouseMotion(View&, int x, int y, int /*button_state*/)
 {
     ScreenToPlot(x, y, hover[0], hover[1]);
 }
 
-void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
+void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int button_state)
 {
     if(inType == InputSpecialScroll) {
         const float d[2] = {p1,-p2};

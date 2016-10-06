@@ -208,7 +208,7 @@ void DataLog::Clear()
     stats.clear();
 }
 
-void DataLog::Save(std::string filename)
+void DataLog::Save(std::string /*filename*/)
 {
     // TODO: Implement
     throw std::runtime_error("Method not implemented");

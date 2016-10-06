@@ -80,7 +80,7 @@ const std::vector<StreamInfo>& TestVideo::Streams() const
 }
 
 //! Implement VideoInput::GrabNext()
-bool TestVideo::GrabNext( unsigned char* image, bool wait )
+bool TestVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     setRandomData(image, size_bytes);
     return true;
