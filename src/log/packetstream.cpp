@@ -459,7 +459,7 @@ bool PacketStreamReader::ReadToSourcePacketAndLock(PacketStreamSourceId src_id, 
     return true;
 }
 
-void PacketStreamReader::ReleaseSourcePacketLock(PacketStreamSourceId src_id)
+void PacketStreamReader::ReleaseSourcePacketLock(PacketStreamSourceId /*src_id*/)
 {
     ReadTag();
     ++packets;

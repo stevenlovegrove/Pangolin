@@ -158,7 +158,7 @@ const std::vector<StreamInfo>& ImagesVideo::Streams() const
 }
 
 //! Implement VideoInput::GrabNext()
-bool ImagesVideo::GrabNext( unsigned char* image, bool wait )
+bool ImagesVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     if(next_frame_id < loaded.size()) {
         Frame& frame = loaded[next_frame_id];

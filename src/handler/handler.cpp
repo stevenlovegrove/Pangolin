@@ -120,7 +120,7 @@ Handler3D::Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up, flo
     SetZero<3,1>(rot_center);
 }
 
-void Handler3D::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+void Handler3D::Keyboard(View&, unsigned char /*key*/, int /*x*/, int /*y*/, bool /*pressed*/)
 {
     // TODO: hooks for reset / changing mode (perspective / ortho etc)
 }
@@ -317,7 +317,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
     last_pos[1] = (float)y;
 }
 
-void Handler3D::Special(View& display, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
+void Handler3D::Special(View& display, InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int button_state)
 {
     if( !(inType == InputSpecialScroll || inType == InputSpecialRotate) )
         return;

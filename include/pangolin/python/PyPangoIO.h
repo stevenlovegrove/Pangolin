@@ -116,7 +116,7 @@ struct PyPangoIO {
 
 PyMethodDef PyPangoIO::Py_methods[] = {
     {"write", (PyCFunction)PyPangoIO::Py_write, METH_VARARGS, "Write to console" },
-    {NULL}
+    {NULL , NULL , 0 , NULL}
 };
 
 PyTypeObject PyPangoIO::Py_type = {
@@ -158,6 +158,15 @@ PyTypeObject PyPangoIO::Py_type = {
     (initproc)PyPangoIO::Py_init,             /* tp_init */
     0,                                        /* tp_alloc */
     (newfunc)PyPangoIO::Py_new,               /* tp_new */
+    0,                                        /* tp_free */
+    0,                                        /* tp_is_gc */
+    0,                                        /* tp_bases */
+    0,                                        /* tp_mro */
+    0,                                        /* tp_cache */
+    0,                                        /* tp_subclasses */
+    0,                                        /* tp_weaklist */
+    0,                                        /* tp_del */
+    0                                         /* tp_version_tag */
 };
 
 }

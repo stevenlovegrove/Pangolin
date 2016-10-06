@@ -141,13 +141,13 @@ struct PyVar {
         delete self;
     }
 
-    static PyObject * Py_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+    static PyObject * Py_new(PyTypeObject *type, PyObject */*args*/, PyObject */*kwds*/)
     {
         PyVar* self = new PyVar(type);
         return (PyObject *)self;
     }
 
-    static int Py_init(PyVar *self, PyObject *args, PyObject *kwds)
+    static int Py_init(PyVar *self, PyObject *args, PyObject */*kwds*/)
     {
         char* cNamespace = 0;
         if (!PyArg_ParseTuple(args, "s", &cNamespace))
@@ -253,6 +253,15 @@ struct PyVar {
     (initproc)PyVar::Py_init,                 /* tp_init */
     0,                                        /* tp_alloc */
     (newfunc)PyVar::Py_new,                   /* tp_new */
+    0,                                        /* tp_free */
+    0,                                        /* tp_is_gc */
+    0,                                        /* tp_bases */
+    0,                                        /* tp_mro */
+    0,                                        /* tp_cache */
+    0,                                        /* tp_subclasses */
+    0,                                        /* tp_weaklist */
+    0,                                        /* tp_del */
+    0                                         /* tp_version_tag */
 };
 
 }

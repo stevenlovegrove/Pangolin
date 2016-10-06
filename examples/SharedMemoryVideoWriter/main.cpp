@@ -24,7 +24,7 @@ unsigned char generate_value(basetime t, basetime start)
   return static_cast<unsigned char>(d);
 }
 
-int main(int argc, char *argv[])
+int main(/*int argc, char *argv[]*/)
 {
   std::string shmem_name = "/example";
 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     create_named_condition_variable(cond_name);
 
   basetime start = TimeNow();
-  basetime d = {0};
+  basetime d = {0, 0};
   d.tv_usec = 33333;
 
   // Sit in a loop and write gray values based on some timing pattern.

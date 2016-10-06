@@ -201,7 +201,7 @@ inline std::string CommonPrefix(const std::vector<std::string>& vec)
     return vec[0].substr(0,cmn);
 }
 
-void ConsoleView::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+void ConsoleView::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed)
 {
     static int hist_id = -1;
     static std::string prefix;

@@ -143,12 +143,12 @@ public:
         emptyBuffers.push_back(bp);
     }
 
-    const size_t AvailableFrames() const {
+    size_t AvailableFrames() const {
         boostd::lock_guard<boostd::mutex> vlock(vMtx);
         return validBuffers.size();
     }
 
-    const size_t EmptyBuffers() const {
+    size_t EmptyBuffers() const {
         boostd::lock_guard<boostd::mutex> elock(eMtx);
         return emptyBuffers.size();
     }

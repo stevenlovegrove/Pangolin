@@ -32,7 +32,7 @@ void SampleMethod()
 }
 
 
-int main( int argc, char* argv[] )
+int main(/*int argc, char* argv[]*/)
 {  
   // Load configuration data
   pangolin::ParseVarsFile("app.cfg");

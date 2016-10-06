@@ -107,7 +107,7 @@ static PyMethodDef PangoMethods[] = {
 #if defined(BUILD_PANGOLIN_GUI) && defined(BUILD_PANGOLIN_VIDEO)
     {"record_window",  pangolin_record_window, METH_VARARGS, "Record window contents to video file."},
 #endif // defined(BUILD_PANGOLIN_GUI) && defined(BUILD_PANGOLIN_VIDEO)
-    {NULL}
+    {NULL , NULL , 0 , NULL}
 };
 
 #if PY_MAJOR_VERSION >= 3
