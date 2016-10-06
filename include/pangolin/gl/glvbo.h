@@ -127,7 +127,7 @@ inline void RenderVboIbo(GlBuffer& vbo, GlBuffer& ibo, bool draw_mesh)
     
     if(draw_mesh) {
         ibo.Bind();
-        glDrawElements(GL_TRIANGLE_STRIP, ibo.num_elements*ibo.count_per_element, ibo.datatype, 0);
+        glDrawElements(GL_TRIANGLES, ibo.num_elements*ibo.count_per_element, ibo.datatype, 0);
         ibo.Unbind();
     }else{
         glDrawArrays(GL_POINTS, 0, vbo.num_elements);
