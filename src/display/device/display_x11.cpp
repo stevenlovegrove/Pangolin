@@ -161,7 +161,7 @@ bool isExtensionSupported(const char *extList, const char *extension)
 }
 
 static bool ctxErrorOccurred = false;
-static int ctxErrorHandler( ::Display */*dpy*/, ::XErrorEvent */*ev*/ )
+static int ctxErrorHandler( ::Display * /*dpy*/, ::XErrorEvent * /*ev*/ )
 {
     ctxErrorOccurred = true;
     return 0;

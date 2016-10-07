@@ -75,7 +75,7 @@ inline void glRasterPos2fv(const GLfloat *v){
 }
 #endif // HAVE_GLES
 
-inline void glutBitmapString(void */*font*/, const unsigned char *str)
+inline void glutBitmapString(void * /*font*/, const unsigned char *str)
 {
 #ifndef HAVE_GLES
     float g_raster_pos[4];
@@ -87,7 +87,7 @@ inline void glutBitmapString(void */*font*/, const unsigned char *str)
     );
 }
 
-inline int glutBitmapLength(void */*font*/, const unsigned char *str)
+inline int glutBitmapLength(void * /*font*/, const unsigned char *str)
 {
     return (int)(pangolin::GlFont::I().Text((const char *)str).Width());
 }

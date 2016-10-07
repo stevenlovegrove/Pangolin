@@ -141,13 +141,13 @@ struct PyVar {
         delete self;
     }
 
-    static PyObject * Py_new(PyTypeObject *type, PyObject */*args*/, PyObject */*kwds*/)
+    static PyObject * Py_new(PyTypeObject *type, PyObject * /*args*/, PyObject * /*kwds*/)
     {
         PyVar* self = new PyVar(type);
         return (PyObject *)self;
     }
 
-    static int Py_init(PyVar *self, PyObject *args, PyObject */*kwds*/)
+    static int Py_init(PyVar *self, PyObject *args, PyObject * /*kwds*/)
     {
         char* cNamespace = 0;
         if (!PyArg_ParseTuple(args, "s", &cNamespace))
