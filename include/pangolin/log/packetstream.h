@@ -30,10 +30,11 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/threadedfilebuf.h>
+#include <pangolin/utils/picojson.h>
+
 #include <functional>
 #include <mutex>
 #include <condition_variable>
-#include <pangolin/utils/picojson.h>
 #include <stdint.h>
 
 namespace pangolin

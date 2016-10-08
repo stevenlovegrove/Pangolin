@@ -28,11 +28,11 @@
 #ifndef PANGOLIN_VIEW_H
 #define PANGOLIN_VIEW_H
 
+#include <functional>
 #include <vector>
 
 #include <pangolin/display/viewport.h>
 #include <pangolin/display/attach.h>
-#include <functional>
 
 namespace pangolin
 {
