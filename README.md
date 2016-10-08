@@ -33,6 +33,8 @@ Check the CMake configure output for details.
 
 ### Required Dependencies ###
 
+* C++11
+
 * OpenGL (Desktop / ES / ES2)
 
 * Glew
@@ -46,11 +48,6 @@ Check the CMake configure output for details.
  * (mac) sudo port install cmake
 
 ### Recommended Dependencies ###
-
-* Boost (optional with C++11. Configure with 'cmake -DCPP11_NO_BOOST=1 ..' )
- * (win) http://www.boost.org/users/download/
- * (deb) sudo apt-get install libboost-dev libboost-thread-dev libboost-filesystem-dev
- * (mac) sudo port install boost
 
 * Python2 / Python3, for drop-down interactive console
  * (win) http://www.python.org/downloads/windows
