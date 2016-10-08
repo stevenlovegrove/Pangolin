@@ -94,9 +94,9 @@ protected:
     bool quit_grab_thread;
     FixSizeBuffersQueue<GrabResult> queue;
 
-    boostd::condition_variable cv;
-    boostd::mutex cvMtx;
-    boostd::thread grab_thread;
+    std::condition_variable cv;
+    std::mutex cvMtx;
+    std::thread grab_thread;
 
     mutable json::value device_properties;
     json::value frame_properties;

@@ -32,9 +32,9 @@
 #include <pangolin/var/varextra.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/compat/glutbitmap.h>
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
 
+#include <thread>
+#include <mutex>
 #include <iostream>
 #include <iomanip>
 
@@ -69,7 +69,7 @@ static inline int tab_h()
     return (int)(font().Height() * 1.4);
 }
 
-boostd::mutex display_mutex;
+std::mutex display_mutex;
 
 template<typename T>
 void GuiVarChanged( Var<T>& var)
@@ -167,10 +167,8 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
                    !strcmp(var.TypeId(), typeid(unsigned int).name()))
         {
             nv = new Slider(title, var);
-#ifdef CPP11_NO_BOOST
-        } else if (!strcmp(var.TypeId(), typeid(boostd::function<void(void)>).name() ) ) {
+        } else if (!strcmp(var.TypeId(), typeid(std::function<void(void)>).name() ) ) {
             nv = (View*)new FunctionButton(title, var);
-#endif // CPP11_NO_BOOST
         }else{
             nv = new TextInput(title,var);
         }
@@ -268,9 +266,8 @@ void Button::ResizeChildren()
     raster[1] = floor(v.b + (v.h-gltext.Height())/2.0f);
 }
 
-#ifdef CPP11_NO_BOOST
 FunctionButton::FunctionButton(string title, VarValueGeneric& tv)
-    : Widget<boostd::function<void(void)> >(title, tv), down(false)
+    : Widget<std::function<void(void)> >(title, tv), down(false)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h());
     left = 0.0; right = 1.0;
@@ -305,7 +302,6 @@ void FunctionButton::ResizeChildren()
     raster[0] = v.l + (v.w - gltext.Width()) / 2.0f;
     raster[1] = v.b + (v.h - gltext.Height()) / 2.0f;
 }
-#endif // CPP11_NO_BOOST
 
 Checkbox::Checkbox(std::string title, VarValueGeneric& tv)
     : Widget<bool>(title,tv)

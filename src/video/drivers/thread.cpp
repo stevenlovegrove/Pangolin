@@ -84,7 +84,7 @@ void ThreadVideo::Start()
     if(quit_grab_thread) {
         videoin[0]->Start();
         quit_grab_thread = false;
-        grab_thread = boostd::thread(boostd::ref(*this));
+        grab_thread = std::thread(std::ref(*this));
     }
 }
 
@@ -142,9 +142,9 @@ bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
     }else{
         if(queue.AvailableFrames() == 0 && wait) {
             // Must return a frame so block on notification from grab thread.
-            std::unique_lock<boostd::mutex> lk(cvMtx);
+            std::unique_lock<std::mutex> lk(cvMtx);
             DBGPRINT("GrabNext no available frames wait for notification.");
-            if(cv.wait_for(lk, boostd::chrono::milliseconds(capture_timout_ms)) == boostd::cv_status::timeout)
+            if(cv.wait_for(lk, std::chrono::milliseconds(capture_timout_ms)) == std::cv_status::timeout)
                 throw std::runtime_error("ThreadVideo: GrabNext blocking read for frames reached timeout.");
         }
 
@@ -175,9 +175,9 @@ bool ThreadVideo::GrabNewest( unsigned char* image, bool wait )
     }else{
         if(queue.AvailableFrames() == 0 && wait) {
             // Must return a frame so block on notification from grab thread.
-            std::unique_lock<boostd::mutex> lk(cvMtx);
+            std::unique_lock<std::mutex> lk(cvMtx);
             DBGPRINT("GrabNewest no available frames wait for notification.");
-            if(cv.wait_for(lk, boostd::chrono::milliseconds(capture_timout_ms)) == boostd::cv_status::timeout)
+            if(cv.wait_for(lk, std::chrono::milliseconds(capture_timout_ms)) == std::cv_status::timeout)
                 throw std::runtime_error("ThreadVideo: GrabNext blocking read for frames reached timeout.");
         }
 
@@ -222,7 +222,7 @@ void ThreadVideo::operator()()
         }else{
             std::this_thread::sleep_for(std::chrono::microseconds(grab_fail_thread_sleep_us) );
         }
-        boostd::this_thread::yield();
+        std::this_thread::yield();
     }
     DBGPRINT("Grab thread Stopped.")
 

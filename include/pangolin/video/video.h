@@ -116,11 +116,11 @@
 //  e.g. "test://"
 //  e.g. "test:[size=640x480,fmt=RGB24]//"
 
-#include <pangolin/compat/function.h>
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_common.h>
 #include <pangolin/utils/picojson.h>
 
+#include <functional>
 #include <vector>
 
 #define PANGO_HOST_RECEPTION_TIME_US "host_reception_time_us"
@@ -323,7 +323,7 @@ struct PANGOLIN_EXPORT VideoPlaybackInterface
     virtual int Seek(int frameid) = 0;
 };
 
-typedef boostd::function<VideoInterface*(const Uri& uri)> VideoInterfaceFactory;
+typedef std::function<VideoInterface*(const Uri& uri)> VideoInterfaceFactory;
 
 //! Generic wrapper class for different video sources
 struct PANGOLIN_EXPORT VideoInput :

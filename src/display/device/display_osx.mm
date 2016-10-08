@@ -62,7 +62,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     OsxWindow* win = new OsxWindow(window_title, w, h, highres);
 
     // Add to context map
-    AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
+    AddNewContext(window_title, std::shared_ptr<PangolinGl>(win) );
 
     return *context;
 }

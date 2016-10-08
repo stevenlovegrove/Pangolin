@@ -68,7 +68,7 @@ inline void InitialiseNewVarMeta(
     v.Meta().friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
     v.Meta().range[0] = min;
     v.Meta().range[1] = max;
-    if (boostd::is_integral<T>::value) {
+    if (std::is_integral<T>::value) {
         v.Meta().increment = 1.0;
     } else {
         v.Meta().increment = (max - min) / 100.0;
@@ -276,7 +276,7 @@ protected:
         if( !strcmp(v->TypeId(), typeid(T).name()) ) {
             // Same type
             var = (VarValueT<T>*)(v);
-        }else if( boostd::is_same<T,std::string>::value ) {
+        }else if( std::is_same<T,std::string>::value ) {
             // Use types string accessor
             var = (VarValueT<T>*)(v->str);
         }else if( !strcmp(v->TypeId(), typeid(bool).name() ) ) {

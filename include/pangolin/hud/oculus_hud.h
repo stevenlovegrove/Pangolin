@@ -1,12 +1,12 @@
 #ifndef PANGOLIN_OCULUS_HUD_H
 #define PANGOLIN_OCULUS_HUD_H
 
-#include <pangolin/compat/memory.h>
 #include <pangolin/display/view.h>
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glsl.h>
 #include <pangolin/handler/handler_glbuffer.h>
 
+#include <memory>
 #include <OVR.h>
 
 namespace pangolin
@@ -74,7 +74,7 @@ protected:
     OVR::Ptr<OVR::DeviceManager> pManager;
     OVR::Ptr<OVR::HMDDevice> pHMD;
     OVR::Ptr<OVR::SensorDevice> pSensor;
-    boostd::shared_ptr<OVR::SensorFusion> pFusionResult;
+    std::shared_ptr<OVR::SensorFusion> pFusionResult;
     OVR::HMDInfo HMD;
     OVR::Util::Render::StereoConfig stereo;
 

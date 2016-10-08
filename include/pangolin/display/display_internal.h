@@ -33,8 +33,8 @@
 
 #include <pangolin/display/view.h>
 #include <pangolin/display/user_app.h>
-#include <pangolin/compat/function.h>
-#include <pangolin/compat/memory.h>
+#include <functional>
+#include <memory>
 
 #include <map>
 #include <queue>
@@ -54,7 +54,7 @@ class ConsoleView;
 class GlFont;
 
 typedef std::map<const std::string,View*> ViewMap;
-typedef std::map<int,boostd::function<void(void)> > KeyhookMap;
+typedef std::map<int,std::function<void(void)> > KeyhookMap;
 
 struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
 {
@@ -96,7 +96,7 @@ struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
     ConsoleView* console_view;
 #endif
 
-    boostd::shared_ptr<GlFont> font;
+    std::shared_ptr<GlFont> font;
 
     virtual void ToggleFullscreen() PANGOLIN_OVERRIDE {
         pango_print_warn("ToggleFullscreen: Not available with non-pangolin window.\n");
@@ -126,7 +126,7 @@ struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
 };
 
 PangolinGl* GetCurrentContext();
-void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newcontext);
+void AddNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext);
 void DeleteContext(const std::string& name);
 PangolinGl *FindContext(const std::string& name);
 

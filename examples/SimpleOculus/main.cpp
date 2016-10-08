@@ -1,6 +1,6 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/hud/oculus_hud.h>
-#include <pangolin/compat/bind.h>
+#include <functional>
 
 // This Oculus sample is experimental - the OculusHud API is subject to change.
 int main(int argc, char ** argv) {
@@ -17,7 +17,7 @@ int main(int argc, char ** argv) {
         pangolin::CreatePanel("ui")
             .SetBounds(0.0, 0.6, pangolin::Attach::Pix(150), pangolin::Attach::Pix(-150))
     );
-    pangolin::RegisterKeyPressCallback(' ', boostd::bind(&pangolin::View::ToggleShow, boostd::ref(oculus.CommonView()) ) );
+    pangolin::RegisterKeyPressCallback(' ', std::bind(&pangolin::View::ToggleShow, std::ref(oculus.CommonView()) ) );
     pangolin::Var<bool> a_button("ui.A Button",false,false);
     pangolin::Var<double> a_double("ui.A Double",3,0,5);
     pangolin::Var<int> an_int("ui.An Int",2,0,5);

@@ -36,6 +36,7 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include <mutex>
 
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/gl/glglut.h>
@@ -47,7 +48,6 @@
 #include <pangolin/utils/timer.h>
 #include <pangolin/utils/type_convert.h>
 #include <pangolin/image/image_io.h>
-#include <pangolin/compat/mutex.h>
 
 #ifdef BUILD_PANGOLIN_VARS
   #include <pangolin/var/var.h>
@@ -68,11 +68,11 @@ const char* PARAM_SAMPLES        = "SAMPLES";
 const char* PARAM_HIGHRES        = "HIGHRES";
 
 
-typedef std::map<std::string,boostd::shared_ptr<PangolinGl> > ContextMap;
+typedef std::map<std::string,std::shared_ptr<PangolinGl> > ContextMap;
 
 // Map of active contexts
 ContextMap contexts;
-boostd::mutex contexts_mutex;
+std::mutex contexts_mutex;
 
 // Context active for current thread
 __thread PangolinGl* context = 0;
@@ -111,7 +111,7 @@ PangolinGl *FindContext(const std::string& name)
     return context;
 }
 
-void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newcontext)
+void AddNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext)
 {
     // Set defaults
     newcontext->base.left = 0.0;
@@ -182,7 +182,7 @@ WindowInterface& BindToContext(std::string name)
     PangolinGl *context_to_bind = FindContext(name);
     if( !context_to_bind )
     {
-        boostd::shared_ptr<PangolinGl> newcontext(new PangolinGl());
+        std::shared_ptr<PangolinGl> newcontext(new PangolinGl());
         AddNewContext(name, newcontext);
         newcontext->MakeCurrent();
         return *(newcontext.get());
@@ -338,7 +338,7 @@ View& Display(const std::string& name)
     }
 }
 
-void RegisterKeyPressCallback(int key, boostd::function<void(void)> func)
+void RegisterKeyPressCallback(int key, std::function<void(void)> func)
 {
     context->keypress_hooks[key] = func;
 }

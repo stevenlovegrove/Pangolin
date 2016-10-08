@@ -6,8 +6,8 @@ namespace pangolin
 {
 
 SharedMemoryVideo::SharedMemoryVideo(size_t w, size_t h, std::string pix_fmt,
-    const boostd::shared_ptr<SharedMemoryBufferInterface>& shared_memory,
-    const boostd::shared_ptr<ConditionVariableInterface>& buffer_full) :
+    const std::shared_ptr<SharedMemoryBufferInterface>& shared_memory,
+    const std::shared_ptr<ConditionVariableInterface>& buffer_full) :
     _fmt(VideoFormatFromString(pix_fmt)),
     _frame_size(w*h*_fmt.bpp/8),
     _shared_memory(shared_memory),

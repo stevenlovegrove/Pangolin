@@ -39,7 +39,7 @@ template<typename T, typename S>
 class VarWrapper : public VarValueT<T>
 {
 public:
-    typedef typename boostd::remove_reference<S>::type VarS;
+    typedef typename std::remove_reference<S>::type VarS;
 
     VarWrapper(VarValueT<S>& src)
         : src(src)

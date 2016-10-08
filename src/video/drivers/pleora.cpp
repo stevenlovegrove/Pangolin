@@ -298,7 +298,7 @@ void PleoraVideo::SetDeviceParams(Params& p) {
                   int attempts = 20;
                   do {
                       cmd->IsDone(done);
-                      boostd::this_thread::sleep_for(boostd::chrono::milliseconds(1000));
+                      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                       attempts--;
                   } while(!done && (attempts > 0));
                   if(attempts == 0) {

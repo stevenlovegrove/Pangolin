@@ -1,7 +1,8 @@
 #pragma once
 
-#include <pangolin/compat/memory.h>
 #include <pangolin/utils/timer.h>
+
+#include <memory>
 
 namespace pangolin
 {
@@ -19,8 +20,8 @@ public:
   virtual void broadcast() = 0;
 };
 
-boostd::shared_ptr<ConditionVariableInterface> create_named_condition_variable(const
+std::shared_ptr<ConditionVariableInterface> create_named_condition_variable(const
   std::string& name);
-boostd::shared_ptr<ConditionVariableInterface> open_named_condition_variable(const
+std::shared_ptr<ConditionVariableInterface> open_named_condition_variable(const
   std::string& name);
 }
