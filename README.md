@@ -84,15 +84,14 @@ Check the CMake configure output for details.
 ## Building ##
 
 Pangolin uses the CMake portable pre-build tool. To checkout and build pangolin in the
-directory 'build', enabling C++11 support instead of using Boost, execute the
-following at a shell (or the equivelent using a GUI):
+directory 'build', execute the following at a shell (or the equivelent using a GUI):
 
 ```
 git clone https://github.com/stevenlovegrove/Pangolin.git
 cd Pangolin
 mkdir build
 cd build
-cmake -DCPP11_NO_BOOST=1 ..
+cmake ..
 make -j
 ```
 
