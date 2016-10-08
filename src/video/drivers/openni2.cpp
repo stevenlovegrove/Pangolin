@@ -533,7 +533,7 @@ openni::VideoStream * OpenNiVideo2::GetVideoStream(int stream){
     }
 }
 
-bool OpenNiVideo2::GrabNext( unsigned char* image, bool wait )
+bool OpenNiVideo2::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     unsigned char* out_img = image;
 

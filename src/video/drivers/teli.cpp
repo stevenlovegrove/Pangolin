@@ -408,7 +408,7 @@ const std::vector<StreamInfo>& TeliVideo::Streams() const
 }
 
 //! Implement VideoInput::GrabNext()
-bool TeliVideo::GrabNext(unsigned char* image, bool wait)
+bool TeliVideo::GrabNext(unsigned char* image, bool /*wait*/)
 {
 #ifdef _WIN_
     unsigned int uiRet = WaitForSingleObject(hStrmCmpEvt, 2000);
