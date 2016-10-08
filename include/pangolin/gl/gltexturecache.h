@@ -31,8 +31,9 @@
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glformattraits.h>
 #include <pangolin/gl/glpixformat.h>
-#include <pangolin/compat/memory.h>
 #include <pangolin/image/image.h>
+
+#include <memory>
 
 namespace pangolin
 {
@@ -49,9 +50,9 @@ public:
             (((long)glformat)<<10) ^ gltype;
 
         // Lookup texture
-        boostd::shared_ptr<GlTexture>& ptex = texture_map[key];
+        std::shared_ptr<GlTexture>& ptex = texture_map[key];
         if(!ptex) {
-            ptex = boostd::shared_ptr<GlTexture>(new GlTexture());
+            ptex = std::shared_ptr<GlTexture>(new GlTexture());
         }
         GlTexture& tex = *ptex;
 
@@ -79,7 +80,7 @@ public:
 
 protected:
     bool default_sampling_linear;
-    std::map<long, boostd::shared_ptr<GlTexture> > texture_map;
+    std::map<long, std::shared_ptr<GlTexture> > texture_map;
 
     // Protected constructor
     TextureCache()

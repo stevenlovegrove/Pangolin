@@ -27,7 +27,8 @@
 
 #include <pangolin/video/drivers/pango_video.h>
 #include <pangolin/utils/file_utils.h>
-#include <pangolin/compat/bind.h>
+
+#include <functional>
 
 #ifndef _WIN_
 #  include <unistd.h>

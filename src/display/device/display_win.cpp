@@ -446,7 +446,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     WinWindow* win = new WinWindow(window_title, w, h);
 
     // Add to context map
-    AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
+    AddNewContext(window_title, std::shared_ptr<PangolinGl>(win) );
     BindToContext(window_title);
     win->ProcessEvents();
 

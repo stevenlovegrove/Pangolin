@@ -31,9 +31,9 @@
 #include <pangolin/var/varextra.h>
 #include <pangolin/python/PyUniqueObj.h>
 #include <pangolin/console/ConsoleInterpreter.h>
-#include <pangolin/compat/thread.h>
 #include <queue>
 #include <set>
+#include <thread>
 
 namespace pangolin
 {

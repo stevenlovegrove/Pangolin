@@ -19,7 +19,6 @@
 #cmakedefine HAVE_CUDA
 #cmakedefine HAVE_PYTHON
 
-#cmakedefine CPP11_NO_BOOST
 #cmakedefine HAVE_EIGEN
 #cmakedefine HAVE_TOON
 

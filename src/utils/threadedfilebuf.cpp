@@ -69,7 +69,7 @@ void threadedfilebuf::open(const std::string& filename, size_t buffer_size_bytes
     mem_buffer = new char[static_cast<size_t>(mem_max_size)];
 
     should_run = true;
-    write_thread = boostd::thread(boostd::ref(*this));
+    write_thread = std::thread(std::ref(*this));
 }
 
 void threadedfilebuf::close()
@@ -112,7 +112,7 @@ threadedfilebuf::~threadedfilebuf()
 std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_bytes)
 {
     if( num_bytes > mem_max_size ) {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
         // Wait until queue is empty
         while( mem_size > 0 ) {
             cond_dequeued.wait(lock);
@@ -127,7 +127,7 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
     }
 
     {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
         
         // wait until there is space to write into buffer
         while( mem_size + num_bytes > mem_max_size ) {
@@ -167,7 +167,7 @@ int threadedfilebuf::overflow(int c)
     const std::streamsize num_bytes = 1;
 
     {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
 
         // wait until there is space to write into buffer
         while( mem_size + num_bytes > mem_max_size ) {
@@ -222,7 +222,7 @@ void threadedfilebuf::operator()()
         }
 
         {
-            boostd::unique_lock<boostd::mutex> lock(update_mutex);
+            std::unique_lock<std::mutex> lock(update_mutex);
             
             while( mem_size == 0 ) {
                 if(!should_run) return;
@@ -239,7 +239,7 @@ void threadedfilebuf::operator()()
                 file.sputn(mem_buffer + mem_start, data_to_write );
 
         {
-            boostd::unique_lock<boostd::mutex> lock(update_mutex);
+            std::unique_lock<std::mutex> lock(update_mutex);
             
             mem_size -= bytes_written;
             mem_start += bytes_written;

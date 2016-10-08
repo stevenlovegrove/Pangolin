@@ -35,10 +35,10 @@ namespace pangolin
 {
 
 template<typename T>
-class VarValue : public VarValueT<typename boostd::remove_reference<T>::type>
+class VarValue : public VarValueT<typename std::remove_reference<T>::type>
 {
 public:
-    typedef typename boostd::remove_reference<T>::type VarT;
+    typedef typename std::remove_reference<T>::type VarT;
 
     ~VarValue()
     {
@@ -95,7 +95,7 @@ public:
 protected:
     void Init()
     {
-        if(boostd::is_same<VarT,std::string>::value) {
+        if(std::is_same<VarT,std::string>::value) {
             str_ptr = 0;
             this->str = (VarValueT<std::string>*)this;
         }else{

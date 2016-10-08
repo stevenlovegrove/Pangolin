@@ -27,9 +27,9 @@
 
 #include <pangolin/log/packetstream.h>
 #include <pangolin/utils/timer.h>
-#include <pangolin/compat/thread.h>
 #include <pangolin/utils/file_utils.h>
 
+#include <thread>
 #include <iostream>
 #include <string>
 #include <stdio.h>
@@ -67,19 +67,14 @@ void SetCurrentPlaybackTime_us(int64_t time_us)
 
 void WaitUntilPlaybackTime_us(int64_t time_us)
 {
-#if defined(CPP11_NO_BOOST) || BOOST_VERSION >= 104500
     // Wait correct amount of time
     const int64_t time_diff_us = time_us - PlaybackTime_us();
 
-    boostd::this_thread::sleep_for(
-        boostd::chrono::duration_cast<boostd::chrono::milliseconds>(
-            boostd::chrono::microseconds(time_diff_us)
+    std::this_thread::sleep_for(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::microseconds(time_diff_us)
         )
     );
-#else
-    // TODO: Find method instead of busy-wait
-    while (time_us - PlaybackTime_us() > 0);
-#endif
 
 }
 

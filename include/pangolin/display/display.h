@@ -30,11 +30,11 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
-#include <pangolin/compat/function.h>
 #include <pangolin/handler/handler_enums.h>
 #include <pangolin/utils/params.h>
 #include <pangolin/display/window.h>
 
+#include <functional>
 #include <string>
 
 /*! \file display.h
@@ -116,7 +116,7 @@ namespace pangolin
   /// Request to be notified via functor when key is pressed.
   /// Functor may take one parameter which will equal the key pressed
   PANGOLIN_EXPORT
-  void RegisterKeyPressCallback(int key, boostd::function<void(void)> func);
+  void RegisterKeyPressCallback(int key, std::function<void(void)> func);
 
   /// Save window contents to image.
   PANGOLIN_EXPORT

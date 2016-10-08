@@ -106,13 +106,6 @@ endif()
 # Project headers trump everything (including any potentially installed Pangolin)
 list(APPEND LIB_INC_DIR  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 
-if(NOT CPP11_NO_BOOST)
-    # Boost is required when c++11 is disabled
-    find_package(Boost COMPONENTS thread filesystem system REQUIRED QUIET)
-    list(APPEND USER_INC  "${Boost_INCLUDE_DIRS}" )
-    list(APPEND LINK_LIBS "${Boost_LIBRARIES}" )
-endif()
-
 if(BUILD_PANGOLIN_GUI)
     if( ANDROID  )
         # Android specific display code

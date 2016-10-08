@@ -10,7 +10,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeMod
 include(SetPlatformVars)
 
 option( BUILD_EXAMPLES "Build Examples" ON )
-option( CPP11_NO_BOOST "Use c++11 over boost for threading etc." ON )
 
 if(_WIN_)
     option( BUILD_SHARED_LIBS    "Build Shared Library" OFF)
@@ -39,7 +38,7 @@ else()
     option( BUILD_SHARED_LIBS "Build Shared Library" ON)
 endif()
 
-if(CPP11_NO_BOOST AND NOT MSVC)
+if(NOT MSVC)
     set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra ${CMAKE_CXX_FLAGS}" )
     if(_CLANG_)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")

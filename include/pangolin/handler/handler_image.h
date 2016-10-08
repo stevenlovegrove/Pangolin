@@ -34,7 +34,8 @@
 #include <pangolin/handler/handler.h>
 #include <pangolin/plot/range.h>
 #include <pangolin/gl/gl.h>
-#include <pangolin/compat/function.h>
+
+#include <functional>
 
 namespace pangolin
 {
@@ -54,7 +55,7 @@ public:
         bool dragging;
     };
 
-    typedef boostd::function<void(OnSelectionEventData)> OnSelectionCallbackFn;
+    typedef std::function<void(OnSelectionEventData)> OnSelectionCallbackFn;
 
     // Default constructor: User must call SetDimensions() once image dimensions are known.
     // Default range is [0,1] in x and y.

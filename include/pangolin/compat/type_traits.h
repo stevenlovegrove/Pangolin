@@ -32,13 +32,7 @@
 
 #include <typeinfo>
 
-#ifdef CPP11_NO_BOOST
-    #include <type_traits>
-#else
-    #include <boost/type_traits.hpp>
-#endif
-
-#include <pangolin/compat/boostd.h>
+#include <type_traits>
 
 // enable_if From Boost
 namespace pangolin

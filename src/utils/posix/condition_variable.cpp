@@ -15,7 +15,7 @@ struct PThreadSharedData {
 
 class PThreadConditionVariable : public ConditionVariableInterface {
 public:
-  PThreadConditionVariable(boostd::shared_ptr<SharedMemoryBufferInterface> &shmem)
+  PThreadConditionVariable(std::shared_ptr<SharedMemoryBufferInterface> &shmem)
       : _shmem(shmem),
         _pthread_data(reinterpret_cast<PThreadSharedData *>(_shmem->ptr())) {}
 
@@ -49,15 +49,15 @@ private:
 
   void _unlock() { pthread_mutex_unlock(&_pthread_data->lock); }
 
-  boostd::shared_ptr<SharedMemoryBufferInterface> _shmem;
+  std::shared_ptr<SharedMemoryBufferInterface> _shmem;
   PThreadSharedData *_pthread_data;
 };
 
-boostd::shared_ptr<ConditionVariableInterface>
+std::shared_ptr<ConditionVariableInterface>
 create_named_condition_variable(const string &name) {
-  boostd::shared_ptr<SharedMemoryBufferInterface> shmem =
+  std::shared_ptr<SharedMemoryBufferInterface> shmem =
       create_named_shared_memory_buffer(name, sizeof(PThreadSharedData));
-  boostd::shared_ptr<ConditionVariableInterface> ptr;
+  std::shared_ptr<ConditionVariableInterface> ptr;
 
   PThreadSharedData *pthread_data =
       reinterpret_cast<PThreadSharedData *>(shmem->ptr());
@@ -78,11 +78,11 @@ create_named_condition_variable(const string &name) {
   return ptr;
 }
 
-boostd::shared_ptr<ConditionVariableInterface>
+std::shared_ptr<ConditionVariableInterface>
 open_named_condition_variable(const string &name) {
-  boostd::shared_ptr<SharedMemoryBufferInterface> shmem =
+  std::shared_ptr<SharedMemoryBufferInterface> shmem =
     open_named_shared_memory_buffer(name, true);
-  boostd::shared_ptr<ConditionVariableInterface> ptr;
+  std::shared_ptr<ConditionVariableInterface> ptr;
 
   if(shmem) {
     ptr.reset(new PThreadConditionVariable(shmem));

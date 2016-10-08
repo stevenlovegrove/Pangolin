@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pangolin/compat/memory.h>
+#include <memory>
 
 #include <string>
 
@@ -19,8 +19,8 @@ namespace pangolin
     virtual void release() = 0;
   };
 
-  boostd::shared_ptr<SemaphoreInterface> create_named_semaphore(const std::string& name,
+  std::shared_ptr<SemaphoreInterface> create_named_semaphore(const std::string& name,
     unsigned int value);
-  boostd::shared_ptr<SemaphoreInterface> open_named_semaphore(const std::string& name);
+  std::shared_ptr<SemaphoreInterface> open_named_semaphore(const std::string& name);
 
 }

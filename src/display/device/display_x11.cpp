@@ -37,8 +37,8 @@
 #include <pangolin/display/window.h>
 
 #include <pangolin/display/device/X11Window.h>
-#include <pangolin/compat/mutex.h>
 
+#include <mutex>
 #include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,8 +51,8 @@ namespace pangolin
 {
 extern __thread PangolinGl* context;
 
-boostd::mutex window_mutex;
-boostd::weak_ptr<X11GlContext> global_gl_context;
+std::mutex window_mutex;
+std::weak_ptr<X11GlContext> global_gl_context;
 
 const long EVENT_MASKS = ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|ButtonMotionMask|PointerMotionMask|KeyPressMask|KeyReleaseMask|FocusChangeMask;
 
@@ -235,7 +235,7 @@ GLXContext CreateGlContext(::Display *display, ::GLXFBConfig chosenFbc, GLXConte
     return new_ctx;
 }
 
-X11GlContext::X11GlContext(boostd::shared_ptr<X11Display>& d, ::GLXFBConfig chosenFbc, boostd::shared_ptr<X11GlContext> shared_context)
+X11GlContext::X11GlContext(std::shared_ptr<X11Display>& d, ::GLXFBConfig chosenFbc, std::shared_ptr<X11GlContext> shared_context)
     : display(d), shared_context(shared_context)
 {
     // prevent chained sharing
@@ -253,7 +253,7 @@ X11GlContext::~X11GlContext()
 
 X11Window::X11Window(
     const std::string& title, int width, int height,
-    boostd::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc
+    std::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc
 ) : display(display), glcontext(0), win(0), cmap(0)
 {
     PangolinGl::windowed_size[0] = width;
@@ -472,14 +472,14 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     const int  sample_buffers  = params.Get(PARAM_SAMPLE_BUFFERS, 1);
     const int  samples         = params.Get(PARAM_SAMPLES, 1);
 
-    boostd::shared_ptr<X11Display> newdisplay = boostd::make_shared<X11Display>(display_name.empty() ? NULL : display_name.c_str() );
+    std::shared_ptr<X11Display> newdisplay = std::make_shared<X11Display>(display_name.empty() ? NULL : display_name.c_str() );
     if (!newdisplay) {
         throw std::runtime_error("Pangolin X11: Failed to open X display");
     }
     ::GLXFBConfig newfbc = ChooseFrameBuffer(newdisplay->display, double_buffered, sample_buffers, samples);
 
     window_mutex.lock();
-    boostd::shared_ptr<X11GlContext> newglcontext = boostd::make_shared<X11GlContext>(
+    std::shared_ptr<X11GlContext> newglcontext = std::make_shared<X11GlContext>(
         newdisplay, newfbc, global_gl_context.lock()
     );
 
@@ -493,7 +493,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     win->is_double_buffered = double_buffered;
 
     // Add to context map
-    AddNewContext(window_title, boostd::shared_ptr<PangolinGl>(win) );
+    AddNewContext(window_title, std::shared_ptr<PangolinGl>(win) );
     BindToContext(window_title);
     glewInit();
 

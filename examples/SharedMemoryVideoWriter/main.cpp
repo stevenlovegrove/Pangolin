@@ -1,11 +1,11 @@
 #include <pangolin/pangolin.h>
 
-#include <pangolin/compat/memory.h>
 #include <pangolin/utils/posix/condition_variable.h>
 #include <pangolin/utils/posix/shared_memory_buffer.h>
 #include <pangolin/utils/timer.h>
 
 #include <cmath>
+#include <memory>
 
 // This sample acts as a soft camera. It writes a pattern of GRAY8 pixels to the
 // shared memory space. It can be seen in Pangolin's SimpleVideo sample using
@@ -28,7 +28,7 @@ int main(/*int argc, char *argv[]*/)
 {
   std::string shmem_name = "/example";
 
-  boostd::shared_ptr<SharedMemoryBufferInterface> shmem_buffer =
+  std::shared_ptr<SharedMemoryBufferInterface> shmem_buffer =
     create_named_shared_memory_buffer(shmem_name, 640 * 480);
   if (!shmem_buffer) {
     perror("Unable to create shared memory buffer");
@@ -36,7 +36,7 @@ int main(/*int argc, char *argv[]*/)
   }
 
   std::string cond_name = shmem_name + "_cond";
-  boostd::shared_ptr<ConditionVariableInterface> buffer_full =
+  std::shared_ptr<ConditionVariableInterface> buffer_full =
     create_named_condition_variable(cond_name);
 
   basetime start = TimeNow();

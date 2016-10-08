@@ -30,9 +30,9 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/threadedfilebuf.h>
-#include <pangolin/compat/function.h>
-#include <pangolin/compat/mutex.h>
-#include <pangolin/compat/condition_variable.h>
+#include <functional>
+#include <mutex>
+#include <condition_variable>
 #include <pangolin/utils/picojson.h>
 #include <stdint.h>
 
@@ -248,7 +248,7 @@ protected:
     std::map<size_t,std::vector<std::streampos>> src_packet_positions;
 
     std::ifstream reader;
-    boostd::mutex read_mutex;
+    std::mutex read_mutex;
 
     int packets;
     bool realtime;

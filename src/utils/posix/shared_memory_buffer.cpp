@@ -83,10 +83,10 @@ private:
   unsigned int _lockCount;
 };
 
-boostd::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffer(const
+std::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffer(const
   string& name, size_t size)
 {
-  boostd::shared_ptr<SharedMemoryBufferInterface> ptr;
+  std::shared_ptr<SharedMemoryBufferInterface> ptr;
 
   int fd = shm_open(name.c_str(), O_RDWR | O_RDONLY | O_CREAT,
     S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
@@ -107,10 +107,10 @@ boostd::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffe
   return ptr;
 }
 
-boostd::shared_ptr<SharedMemoryBufferInterface> open_named_shared_memory_buffer(const
+std::shared_ptr<SharedMemoryBufferInterface> open_named_shared_memory_buffer(const
   string& name, bool readwrite)
 {
-  boostd::shared_ptr<SharedMemoryBufferInterface> ptr;
+  std::shared_ptr<SharedMemoryBufferInterface> ptr;
 
   int fd = shm_open(name.c_str(), readwrite ? O_RDWR | O_RDONLY : O_RDONLY, 0);
   if (-1 == fd) {

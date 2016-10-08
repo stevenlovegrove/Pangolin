@@ -32,9 +32,10 @@
 #include <streambuf>
 #include <fstream>
 
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
-#include <pangolin/compat/condition_variable.h>
+#include <pangolin/platform.h>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 namespace pangolin
 {
@@ -75,10 +76,10 @@ protected:
 
     std::streampos input_pos;
     
-    boostd::mutex update_mutex;
-    boostd::condition_variable cond_queued;
-    boostd::condition_variable cond_dequeued;
-    boostd::thread write_thread;
+    std::mutex update_mutex;
+    std::condition_variable cond_queued;
+    std::condition_variable cond_dequeued;
+    std::thread write_thread;
 
     bool should_run;
     bool is_pipe;

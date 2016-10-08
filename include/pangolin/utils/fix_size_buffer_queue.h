@@ -29,11 +29,10 @@
 #define PANGOLIN_FIX_SIZE_BUFFER_QUEUE_H
 
 #include <list>
-
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
-#include <pangolin/compat/condition_variable.h>
-#include <pangolin/compat/locks.h>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <mutex>
 
 namespace pangolin
 {
@@ -47,12 +46,12 @@ public:
 
     ~FixSizeBuffersQueue() {
 //        // Deallocate everything.
-//        boostd::lock_guard<boostd::mutex> vlock(vMtx);
+//        std::lock_guard<std::mutex> vlock(vMtx);
 //        while(validBuffers.size() > 0){
 //            delete[] validBuffers.front();
 //            validBuffers.pop_front();
 //        }
-//        boostd::lock_guard<boostd::mutex> elock(eMtx);
+//        std::lock_guard<std::mutex> elock(eMtx);
 //        while(emptyBuffers.size() > 0){
 //            delete[] emptyBuffers.front();
 //            emptyBuffers.pop_front();
@@ -63,8 +62,8 @@ public:
 //        maxNumBuffers = num;
 //        bufferSizeBytes = sizeBytes;
 //        // lock queue
-//        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-//        boostd::lock_guard<boostd::mutex> elock(eMtx);
+//        std::lock_guard<std::mutex> vlock(vMtx);
+//        std::lock_guard<std::mutex> elock(eMtx);
 
 //        // Put back any valid buffer to the available buffers queue.
 //        while(validBuffers.size() > 0){
@@ -78,8 +77,8 @@ public:
 //    }
 
     BufPType getNewest() {
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-        boostd::lock_guard<boostd::mutex> elock(eMtx);
+        std::lock_guard<std::mutex> vlock(vMtx);
+        std::lock_guard<std::mutex> elock(eMtx);
         if(validBuffers.size() == 0) {
             // Empty queue.
             return 0;
@@ -97,7 +96,7 @@ public:
     }
 
     BufPType getNext() {
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
+        std::lock_guard<std::mutex> vlock(vMtx);
         if(validBuffers.size() == 0) {
             // Empty queue.
             return 0;
@@ -110,8 +109,8 @@ public:
     }
 
     BufPType getFreeBuffer() {
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
-        boostd::lock_guard<boostd::mutex> elock(eMtx);
+        std::lock_guard<std::mutex> vlock(vMtx);
+        std::lock_guard<std::mutex> elock(eMtx);
         if(emptyBuffers.size() > 0) {
             // Simply get a free buffer from the free buffers list.
             BufPType bp = emptyBuffers.front();
@@ -133,32 +132,32 @@ public:
 
     void addValidBuffer(BufPType bp) {
         // Add buffer to valid buffers queue.
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
+        std::lock_guard<std::mutex> vlock(vMtx);
         validBuffers.push_back(bp);
     }
 
     void returnOrAddUsedBuffer(BufPType bp) {
         // Add buffer back to empty buffers queue.
-        boostd::lock_guard<boostd::mutex> elock(eMtx);
+        std::lock_guard<std::mutex> elock(eMtx);
         emptyBuffers.push_back(bp);
     }
 
     size_t AvailableFrames() const {
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
+        std::lock_guard<std::mutex> vlock(vMtx);
         return validBuffers.size();
     }
 
     size_t EmptyBuffers() const {
-        boostd::lock_guard<boostd::mutex> elock(eMtx);
+        std::lock_guard<std::mutex> elock(eMtx);
         return emptyBuffers.size();
     }
 
     bool DropNFrames(size_t n) {
-        boostd::lock_guard<boostd::mutex> vlock(vMtx);
+        std::lock_guard<std::mutex> vlock(vMtx);
         if(validBuffers.size() < n) {
             return false;
         } else {
-            boostd::lock_guard<boostd::mutex> elock(eMtx);
+            std::lock_guard<std::mutex> elock(eMtx);
             // Requeue all but newest buffers.
             for(unsigned int i=0; i<n; ++i) {
                 emptyBuffers.push_back(validBuffers.front());
@@ -175,8 +174,8 @@ public:
 private:
     std::list<BufPType> validBuffers;
     std::list<BufPType> emptyBuffers;
-    mutable boostd::mutex vMtx;
-    mutable boostd::mutex eMtx;
+    mutable std::mutex vMtx;
+    mutable std::mutex eMtx;
 //    unsigned int maxNumBuffers;
 //    unsigned int bufferSizeBytes;
 };
