@@ -30,9 +30,10 @@
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
-#include <pangolin/compat/condition_variable.h>
+
+#include <thread>
+#include <mutex
+#include <condition_variable>
 
 // DepthSense SDK for SoftKinetic cameras from Creative
 #include <DepthSense.hxx>
@@ -117,9 +118,9 @@ protected:
 
     int gotDepth;
     int gotColor;
-    boostd::mutex update_mutex;
-    boostd::condition_variable cond_image_filled;
-    boostd::condition_variable cond_image_requested;
+    std::mutex update_mutex;
+    std::condition_variable cond_image_filled;
+    std::condition_variable cond_image_requested;
 
     SensorConfig sensorConfig[2];
 
@@ -161,7 +162,7 @@ protected:
 
     DepthSense::Context g_context;
 
-    boostd::thread event_thread;
+    std::thread event_thread;
     bool is_running;
 
     int running_devices;

@@ -97,7 +97,7 @@ void DepthSenseContext::StartNodes()
 {
     if(!is_running) {
         // Launch EventLoop thread
-        event_thread = boostd::thread(&DepthSenseContext::EventLoop, this );
+        event_thread = std::thread(&DepthSenseContext::EventLoop, this );
     }
 }
 
@@ -428,7 +428,7 @@ void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig, const
 void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data)
 {
     {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
 
         // Wait for fill request
         while (!fill_image) {
@@ -488,7 +488,7 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
 void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data)
 {
     {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
 
         // Wait for fill request
         while(!fill_image) {
@@ -581,7 +581,7 @@ bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
 
     // Wait until it has been filled successfully. 
     {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
         while ((enableDepth && !gotDepth) || (enableColor && !gotColor))
         {
             cond_image_filled.wait(lock);
