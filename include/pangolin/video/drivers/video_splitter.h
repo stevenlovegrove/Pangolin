@@ -1,4 +1,4 @@
-boos/t* This file is part of the Pangolin Project.
+/* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
  * Copyright (c) 2013 Steven Lovegrove
