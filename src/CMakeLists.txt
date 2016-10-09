@@ -235,8 +235,8 @@ if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND PYTHONLIBS_FOUND AND NOT _WIN_
     python/PyModulePangolin.cpp
   )
   if(_GCC_)
-      set_source_files_properties(python/PyInterpreter.cpp PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing")
-      set_source_files_properties(python/PyInterpreter.cpp python/PyModulePangolin.cpp PROPERTIES COMPILE_FLAGS "-Wno-missing-field-initializers")
+    set_source_files_properties(python/PyInterpreter.cpp    PROPERTIES COMPILE_FLAGS "-Wno-missing-field-initializers")
+    set_source_files_properties(python/PyModulePangolin.cpp PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing -Wno-missing-field-initializers")
   endif()
   list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIR})
   list(APPEND LINK_LIBS    ${PYTHON_LIBRARY})
