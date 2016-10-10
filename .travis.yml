@@ -1,0 +1,28 @@
+sudo: required
+dist: trusty
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -qq update ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libeigen3-dev libglew-dev libc++-dev; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install eigen glew ; fi
+
+language: cpp
+
+compiler:
+  - gcc
+  - clang
+
+os:
+  - linux
+  - osx
+
+env:
+  - BUILD_TYPE=Release
+#  - BUILD_TYPE=Debug
+
+script:
+  - mkdir build
+  - cd build
+  - cmake -D CMAKE_BUILD_TYPE=$BUILD_TYPE ..
+  - make -j
