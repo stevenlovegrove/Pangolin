@@ -260,6 +260,10 @@ find_package(Eigen3 QUIET)
 if(EIGEN3_FOUND)
   set(HAVE_EIGEN 1)
   list(APPEND USER_INC  ${EIGEN3_INCLUDE_DIR} )
+  if(_CLANG_)
+    # Eigen causes many of these errors. Suppress.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-register")
+  endif()
   message(STATUS "Eigen Found and Enabled")
 endif()
 
