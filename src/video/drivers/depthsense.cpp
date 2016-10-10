@@ -567,7 +567,7 @@ const std::vector<StreamInfo>& DepthSenseVideo::Streams() const
     return streams;
 }
 
-bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
+bool DepthSenseVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     if(fill_image) {
         throw std::runtime_error("GrabNext Cannot be called concurrently");

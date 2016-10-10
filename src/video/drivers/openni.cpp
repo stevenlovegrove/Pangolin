@@ -189,7 +189,7 @@ void OpenNiVideo::Stop()
     context.StopGeneratingAll();
 }
 
-bool OpenNiVideo::GrabNext( unsigned char* image, bool wait )
+bool OpenNiVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     //    XnStatus nRetVal = context.WaitAndUpdateAll();
     XnStatus nRetVal = context.WaitAnyUpdateAll();
