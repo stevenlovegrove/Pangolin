@@ -23,9 +23,6 @@ Find the latest version on [Github](http://github.com/stevenlovegrove/Pangolin):
 git clone https://github.com/stevenlovegrove/Pangolin.git
 ```
 
-Current build status on [Drone.io](https://drone.io/github.com/stevenlovegrove/Pangolin)
-![Build Status](https://drone.io/github.com/stevenlovegrove/Pangolin/status.png)
-
 ## Dependencies ##
 
 Optional dependencies are enabled when found, otherwise they are silently disabled.
