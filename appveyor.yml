@@ -1,0 +1,19 @@
+os: Visual Studio 2015
+
+clone_folder: c:\projects\Pangolin
+
+platform: x64
+configuration: Release
+
+build:
+  project: c:\projects\Pangolin\build\Pangolin.sln 
+
+install:
+  - ps: wget http://bitbucket.org/eigen/eigen/get/3.2.10.zip -outfile eigen3.zip
+  - cmd: 7z x eigen3.zip -o"C:\projects" -y > nul
+  
+before_build:
+  - cd c:\projects\Pangolin
+  - mkdir build
+  - cd build
+  - cmake -G "Visual Studio 14 2015 Win64" -D EIGEN3_INCLUDE_DIR=C:\projects\eigen-eigen-b9cd8366d4e8 ..
