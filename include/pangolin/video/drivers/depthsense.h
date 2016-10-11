@@ -32,7 +32,7 @@
 #include <pangolin/video/video.h>
 
 #include <thread>
-#include <mutex
+#include <mutex>
 #include <condition_variable>
 
 // DepthSense SDK for SoftKinetic cameras from Creative
