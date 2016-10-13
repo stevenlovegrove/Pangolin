@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/pleora.h>
-#include <pangolin/compat/thread.h>
+#include <thread>
 
 #ifdef DEBUGPLEORA
   #include <pangolin/utils/timer.h>
