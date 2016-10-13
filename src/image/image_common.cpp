@@ -46,6 +46,7 @@ const VideoPixelFormat SupportedVideoPixelFormats[] =
     {"BGR48", 3, {16,16,16}, 48, false},
     {"YUYV422", 3, {4,2,2}, 16, false},
     {"RGBA32",  4, {8,8,8,8}, 32, false},
+    {"BGRA32",  4, {8,8,8,8}, 32, false},
     {"GRAY32F", 1, {32}, 32, false},
     {"GRAY64F", 1, {64}, 64, false},
     {"RGB96F",  3, {32,32,32}, 96, false},

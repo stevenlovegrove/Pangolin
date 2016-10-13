@@ -45,7 +45,7 @@ struct GlPixFormat
         switch( fmt.channels) {
         case 1: glformat = GL_LUMINANCE; break;
         case 3: glformat = (fmt.format == "BGR24" || fmt.format == "BGR48")  ? GL_BGR  : GL_RGB;  break;
-        case 4: glformat = (fmt.format == "BGRA24"|| fmt.format == "BGRA48") ? GL_BGRA : GL_RGBA; break;
+        case 4: glformat = (fmt.format == "BGRA24" || fmt.format == "BGRA32" || fmt.format == "BGRA48") ? GL_BGRA : GL_RGBA; break;
         default: throw std::runtime_error("Unable to form OpenGL format from video format: '" + fmt.format + "'.");
         }
 
