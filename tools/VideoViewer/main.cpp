@@ -7,7 +7,7 @@
 #include <pangolin/utils/timer.h>
 
 #ifdef DEBUGVIDEOVIEWER
-#  include <pangolin/compat/thread.h>
+#  include <thread>
 #endif // DEBUGVIDEOVIEWER
 
 template<typename To, typename From>
