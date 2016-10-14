@@ -41,3 +41,13 @@ MimeType=application/x-pango;image/x-portable-graymap;image/x-portable-pixmap;im
         VERBATIM
     )
 endif()
+
+
+#######################################################
+## Install
+
+install(TARGETS VideoViewer
+  RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+)
