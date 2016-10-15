@@ -79,7 +79,7 @@ struct GlTextureCudaArray : GlTexture
 
 struct CudaScopedMappedPtr
 {
-    CudaScopedMappedPtr(GlBufferCudaPtr& buffer);
+    CudaScopedMappedPtr(const GlBufferCudaPtr& buffer);
     ~CudaScopedMappedPtr();
     void* operator*();
     cudaGraphicsResource* res;
@@ -90,7 +90,7 @@ private:
 
 struct CudaScopedMappedArray
 {
-    CudaScopedMappedArray(GlTextureCudaArray& tex);
+    CudaScopedMappedArray(const GlTextureCudaArray& tex);
     ~CudaScopedMappedArray();
     cudaArray* operator*();
     cudaGraphicsResource* res;
@@ -195,7 +195,7 @@ inline void GlTextureCudaArray::Reinitialise(int width, int height, GLint intern
     }
 }
 
-inline CudaScopedMappedPtr::CudaScopedMappedPtr(GlBufferCudaPtr& buffer)
+inline CudaScopedMappedPtr::CudaScopedMappedPtr(const GlBufferCudaPtr& buffer)
     : res(buffer.cuda_res)
 {
     cudaGraphicsMapResources(1, &res, 0);
@@ -214,7 +214,7 @@ inline void* CudaScopedMappedPtr::operator*()
     return d_ptr;
 }
 
-inline CudaScopedMappedArray::CudaScopedMappedArray(GlTextureCudaArray& tex)
+inline CudaScopedMappedArray::CudaScopedMappedArray(const GlTextureCudaArray& tex)
     : res(tex.cuda_res)
 {
     cudaGraphicsMapResources(1, &res);
