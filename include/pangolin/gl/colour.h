@@ -28,6 +28,8 @@
 #ifndef PANGOLIN_COLOUR
 #define PANGOLIN_COLOUR
 
+#include <cmath>
+
 #include <stdexcept>
 
 namespace pangolin
