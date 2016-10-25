@@ -146,6 +146,8 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
         return VideoFormatFromString("BGR24");
     } else if( !spfmt.compare("BayerBG8") ) {
         return VideoFormatFromString("GRAY8");
+    } else if( !spfmt.compare("BayerBG12") ) {
+        return VideoFormatFromString("GRAY16LE");
     } else {
         throw VideoException("Unknown Pleora pixel format", spfmt);
     }
