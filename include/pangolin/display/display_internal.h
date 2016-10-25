@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_DISPLAY_INTERNAL_H
-#define PANGOLIN_DISPLAY_INTERNAL_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/display/window.h>
@@ -131,6 +130,4 @@ void DeleteContext(const std::string& name);
 PangolinGl *FindContext(const std::string& name);
 
 }
-
-#endif // PANGOLIN_DISPLAY_INTERNAL_H
 

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_FIREWIRE_DEINTERLACE_H
-#define PANGOLIN_FIREWIRE_DEINTERLACE_H
+#pragma once
 
 #include <pangolin/video/video.h>
 #include <vector>
@@ -61,5 +60,3 @@ protected:
 
 
 }
-
-#endif // PANGOLIN_FIREWIRE_DEINTERLACE_H

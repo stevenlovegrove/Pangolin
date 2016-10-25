@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_H
-#define PANGOLIN_H
+#pragma once
 
 #include <pangolin/platform.h>
 
@@ -65,6 +64,3 @@
 
 // Let other libraries headers know about Pangolin
 #define HAVE_PANGOLIN
-
-#endif // PANGOLIN_H
-

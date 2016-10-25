@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_CUDAGL_H
-#define PANGOLIN_CUDAGL_H
+#pragma once
 
 #include <algorithm>
 #include <cuda_runtime.h>
@@ -257,5 +256,3 @@ inline void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b)
 
 
 }
-
-#endif // PANGOLIN_CUDAGL_H

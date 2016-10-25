@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_IMAGE_H
-#define PANGOLIN_IMAGE_H
+#pragma once
 
 #include <cstddef>
 
@@ -96,5 +95,3 @@ struct Image {
 };
 
 }
-
-#endif // PANGOLIN_IMAGE_H

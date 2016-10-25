@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_UVC_H
-#define PANGOLIN_UVC_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
@@ -91,5 +90,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_UVC_H

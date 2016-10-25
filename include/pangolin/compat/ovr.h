@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_COMPAT_OVR_H
-#define PANGOLIN_COMPAT_OVR_H
+#pragma once
 
 #include <pangolin/config.h>
 
@@ -36,5 +35,3 @@
 #endif
 
 #include <OVR.h>
-
-#endif // PANGOLIN_COMPAT_OVR_H

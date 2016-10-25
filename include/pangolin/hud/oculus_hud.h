@@ -1,5 +1,4 @@
-#ifndef PANGOLIN_OCULUS_HUD_H
-#define PANGOLIN_OCULUS_HUD_H
+#pragma once
 
 #include <pangolin/display/view.h>
 #include <pangolin/gl/gl.h>
@@ -88,5 +87,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_OCULUS_HUD_H

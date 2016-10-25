@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_COMPAT_TYPE_TRAITS_H
-#define PANGOLIN_COMPAT_TYPE_TRAITS_H
+#pragma once
 
 #include <pangolin/platform.h>
 
@@ -48,5 +47,3 @@ namespace pangolin
     template <class Cond, class T = void>
     struct enable_if : public enable_if_c<Cond::value, T> {};
 }
-
-#endif // PANGOLIN_COMPAT_TYPE_TRAITS_H

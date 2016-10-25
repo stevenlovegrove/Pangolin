@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_OUTPUT_H
-#define PANGOLIN_VIDEO_OUTPUT_H
+#pragma once
 
 // Pangolin video output supports various formats using
 // different 3rd party libraries. (Only one right now)
@@ -98,5 +97,3 @@ PANGOLIN_EXPORT
 VideoOutputInterface* OpenVideoOutput(const Uri& uri);
 
 }
-
-#endif // PANGOLIN_VIDEO_OUTPUT_H

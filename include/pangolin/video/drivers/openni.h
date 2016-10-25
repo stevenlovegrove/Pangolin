@@ -1,5 +1,4 @@
-#ifndef PANGOLIN_OPENNI_H
-#define PANGOLIN_OPENNI_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 
@@ -71,5 +70,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_OPENNI_H

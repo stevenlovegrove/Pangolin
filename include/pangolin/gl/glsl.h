@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLSL_H
-#define PANGOLIN_GLSL_H
+#pragma once
 
 #include <sstream>
 #include <fstream>
@@ -560,5 +559,3 @@ inline void GlSlProgram::SetShaderStorageBlock(const std::string& name, const in
 #endif
 
 }
-
-#endif // PANGOLIN_CG_H

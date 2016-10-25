@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_WIDGETS_H
-#define PANGOLIN_WIDGETS_H
+#pragma once
 
 #include <pangolin/display/view.h>
 #include <pangolin/var/var.h>
@@ -139,4 +138,3 @@ struct PANGOLIN_EXPORT TextInput : public Widget<std::string>
 
 
 }
-#endif // PANGOLIN_WIDGETS_H

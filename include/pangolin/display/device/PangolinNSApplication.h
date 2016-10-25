@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLINNSAPPLICATION_H
-#define PANGOLINNSAPPLICATION_H
+#pragma once
 
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
@@ -58,5 +57,3 @@
 @interface PangolinAppDelegate : NSObject <NSApplicationDelegate>
 
 @end
-
-#endif // PANGOLINNSAPPLICATION_H

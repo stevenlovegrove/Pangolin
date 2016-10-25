@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLPLATFORM_H
-#define PANGOLIN_GLPLATFORM_H
+#pragma once
 
 //////////////////////////////////////////////////////////
 // Attempt to portably include Necessary OpenGL headers
@@ -80,5 +79,3 @@
 #endif // HAVE_GLES
 
 #include <pangolin/gl/glpangoglu.h>
-
-#endif // PANGOLIN_GLPLATFORM_H

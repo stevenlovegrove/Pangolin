@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_TIMER_H
-#define PANGOLIN_TIMER_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <stdint.h>
@@ -100,5 +99,3 @@ struct Timer
 };
 
 }
-
-#endif //PANGOLIN_TIMER_H

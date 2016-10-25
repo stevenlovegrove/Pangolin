@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_RANGE_H
-#define PANGOLIN_RANGE_H
+#pragma once
 
 #include <pangolin/platform.h>
 
@@ -314,5 +313,3 @@ XYRangei Round(const XYRange<T>& r)
 }
 
 }
-
-#endif //PANGOLIN_RANGE_H

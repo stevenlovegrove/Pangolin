@@ -26,8 +26,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_OPENNI_COMMON_H
-#define PANGOLIN_OPENNI_COMMON_H
+#pragma once
 
 #include <pangolin/image/image_common.h>
 
@@ -67,5 +66,3 @@ struct PANGOLIN_EXPORT OpenNiStreamMode
 };
 
 }
-
-#endif // PANGOLIN_OPENNI_COMMON_H

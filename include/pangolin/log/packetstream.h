@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PACKETSTREAM_H
-#define PANGOLIN_PACKETSTREAM_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/threadedfilebuf.h>
@@ -257,5 +256,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_PACKETSTREAM_H

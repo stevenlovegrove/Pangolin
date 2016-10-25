@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_SIGSTATE_H
-#define PANGOLIN_SIGSTATE_H
+#pragma once
 
 #include <map>
 #include <vector>
@@ -74,5 +73,3 @@ PANGOLIN_EXPORT
 void RegisterNewSigCallback(SigCallbackFn callback, void* data, const int signal);
 
 }
-
-#endif // PANGOLIN_SIGSTATE_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_DISPLAY_GLUT_H
-#define PANGOLIN_DISPLAY_GLUT_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
@@ -74,5 +73,3 @@ PANGOLIN_EXPORT
 void TakeGlutCallbacks();
 
 }
-
-#endif // PANGOLIN_DISPLAY_GLUT_H

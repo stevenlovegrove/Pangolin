@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_HANDLER_ENUMS_H
-#define PANGOLIN_HANDLER_ENUMS_H
+#pragma once
 
 namespace pangolin
 {
@@ -93,5 +92,3 @@ enum InputSpecial
 };
 
 }
-
-#endif // PANGOLIN_HANDLER_ENUMS_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VAR_H
-#define PANGOLIN_VAR_H
+#pragma once
 
 #include <stdexcept>
 #include <string.h>
@@ -320,5 +319,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_VAR_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLFORMATTRAITS_H
-#define PANGOLIN_GLFORMATTRAITS_H
+#pragma once
 
 #include <pangolin/gl/glplatform.h>
 
@@ -98,5 +97,3 @@ struct GlFormatTraits<int>
 };
 
 }
-
-#endif // PANGOLIN_GLFORMATTRAITS_H

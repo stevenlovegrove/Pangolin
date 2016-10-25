@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLTEXTURECACHE_H
-#define PANGOLIN_GLTEXTURECACHE_H
+#pragma once
 
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glformattraits.h>
@@ -114,5 +113,3 @@ inline void RenderToViewport(
 }
 
 }
-
-#endif // PANGOLIN_GLTEXTURECACHE_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_DEPTHSENSE_H
-#define PANGOLIN_DEPTHSENSE_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
@@ -169,5 +168,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_DEPTHSENSE_H

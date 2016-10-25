@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLFONT_H
-#define PANGOLIN_GLFONT_H
+#pragma once
 
 #include <pangolin/gl/gltext.h>
 
@@ -77,5 +76,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_GLFONT_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_THREADED_WRITE_H
-#define PANGOLIN_THREADED_WRITE_H
+#pragma once
 
 #include <iostream>
 #include <streambuf>
@@ -86,6 +85,3 @@ protected:
 };
 
 }
-
-
-#endif // PANGOLIN_THREADED_WRITE_H

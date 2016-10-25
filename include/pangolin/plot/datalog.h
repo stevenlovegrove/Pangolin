@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_DATALOG_H
-#define PANGOLIN_DATALOG_H
+#pragma once
 
 #include <pangolin/platform.h>
 
@@ -223,5 +222,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_DATALOG_H

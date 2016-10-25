@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_IMAGE_IO_H
-#define PANGOLIN_IMAGE_IO_H
+#pragma once
 
 #include <pangolin/image/image.h>
 #include <pangolin/image/image_common.h>
@@ -80,5 +79,3 @@ PANGOLIN_EXPORT
 void FreeImage(TypedImage& img);
 
 }
-
-#endif // PANGOLIN_IMAGE_IO_H

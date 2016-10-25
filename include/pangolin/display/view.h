@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIEW_H
-#define PANGOLIN_VIEW_H
+#pragma once
 
 #include <functional>
 #include <vector>
@@ -232,5 +231,3 @@ private:
 };
 
 }
-
-#endif // PANGOLIN_VIEW_H

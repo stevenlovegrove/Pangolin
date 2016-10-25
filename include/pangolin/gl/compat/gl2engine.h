@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GL2ENGINE_H
-#define PANGOLIN_GL2ENGINE_H
+#pragma once
 
 #include <stack>
 
@@ -319,5 +318,3 @@ inline void glTexEnvf(	GLenum target,
 {
     pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
-
-#endif // PANGOLIN_GL2ENGINE_H

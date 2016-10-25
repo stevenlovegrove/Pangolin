@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_FILE_EXTENSION_H
-#define PANGOLIN_FILE_EXTENSION_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <string>
@@ -61,5 +60,3 @@ PANGOLIN_EXPORT
 ImageFileType FileType(const std::string& filename);
 
 }
-
-#endif // PANGOLIN_FILE_EXTENSION_H

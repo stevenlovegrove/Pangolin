@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PANGO_VIDEO_OUTPUT_H
-#define PANGOLIN_PANGO_VIDEO_OUTPUT_H
+#pragma once
 
 #include <pangolin/video/video_output.h>
 #include <pangolin/log/packetstream.h>
@@ -62,4 +61,3 @@ protected:
 };
 
 }
-#endif // PANGOLIN_PANGO_VIDEO_OUTPUT_H

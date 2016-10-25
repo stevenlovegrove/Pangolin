@@ -26,8 +26,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_OPENNI2_H
-#define PANGOLIN_OPENNI2_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 
@@ -146,5 +145,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_OPENNI2_H

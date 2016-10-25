@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLTEXT_H
-#define PANGOLIN_GLTEXT_H
+#pragma once
 
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glchar.h>
@@ -97,5 +96,3 @@ public:
 };
 
 }
-
-#endif // PANGOLIN_GLTEXT_H

@@ -25,9 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_IOSTREAM_OPERATORS_H
-#define PANGOLIN_IOSTREAM_OPERATORS_H
-
+#pragma once
 
 #include <iostream>
 
@@ -111,5 +109,3 @@ inline std::istream& operator>> (std::istream &is, StreamInfo &stream)
 }
 
 }
-
-#endif // PANGOLIN_IOSTREAM_OPERATORS_H

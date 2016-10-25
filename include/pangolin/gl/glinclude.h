@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLINCLUDE_H
-#define PANGOLIN_GLINCLUDE_H
+#pragma once
 
 #include <pangolin/gl/glplatform.h>
 
@@ -45,5 +44,3 @@ inline void _CheckGlDieOnError( const char *sFile, const int nLine )
     }
 }
 }
-
-#endif // PANGOLIN_GLINCLUDE_H

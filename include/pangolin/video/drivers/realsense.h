@@ -1,7 +1,4 @@
-
-
-#ifndef PANGOLIN_REALSENSE_H
-#define PANGOLIN_REALSENSE_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 
@@ -86,5 +83,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_REALSENSE_H

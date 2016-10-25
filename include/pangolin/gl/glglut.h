@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLGLUT_H
-#define PANGOLIN_GLGLUT_H
+#pragma once
 
 #include "glplatform.h"
 
@@ -47,5 +46,3 @@
         #include <GL/freeglut.h>
     #endif // HAVE_APPLE_OPENGL_FRAMEWORK
 #endif // HAVE_GLUT
-
-#endif // PANGOLIN_GLGLUT_H

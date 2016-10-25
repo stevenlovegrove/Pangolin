@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_TYPE_CONVERT_H
-#define PANGOLIN_TYPE_CONVERT_H
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -209,5 +208,3 @@ T FromString(const std::string& src)
 
 
 }
-
-#endif // PANGOLIN_TYPE_CONVERT_H

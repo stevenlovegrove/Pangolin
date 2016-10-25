@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIEWPORT_H
-#define PANGOLIN_VIEWPORT_H
+#pragma once
 
 #include <pangolin/gl/glinclude.h>
 
@@ -61,5 +60,3 @@ struct PANGOLIN_EXPORT Viewport
 };
 
 }
-
-#endif // PANGOLIN_VIEWPORT_H

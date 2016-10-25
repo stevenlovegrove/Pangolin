@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_COMPAT_GLCONSOLE_H
-#define PANGOLIN_COMPAT_GLCONSOLE_H
+#pragma once
 
 #include <pangolin/platform.h>
 
@@ -75,5 +74,3 @@ public:
 #endif // HAVE_GLES
 
 #include <GLConsole/GLConsole.h>
-
-#endif // PANGOLIN_COMPAT_GLCONSOLE_H

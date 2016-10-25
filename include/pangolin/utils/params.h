@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PARAMS_H
-#define PANGOLIN_PARAMS_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/type_convert.h>
@@ -70,5 +69,3 @@ public:
 };
 
 }
-
-#endif // PANGOLIN_PARAMS_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_V4L_H
-#define PANGOLIN_V4L_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
@@ -109,5 +108,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_V4L_H

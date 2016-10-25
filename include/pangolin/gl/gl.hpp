@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GL_HPP
-#define PANGOLIN_GL_HPP
+#pragma once
 
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glpixformat.h>
@@ -748,6 +747,3 @@ inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
 }
 
 }
-
-
-#endif // PANGOLIN_GL_HPP

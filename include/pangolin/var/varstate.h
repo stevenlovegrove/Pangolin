@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VARSTATE_H
-#define PANGOLIN_VARSTATE_H
+#pragma once
 
 #include <map>
 #include <vector>
@@ -129,5 +128,3 @@ inline void FlagVarChanged() {
 }
 
 }
-
-#endif // PANGOLIN_VARSTATE_H

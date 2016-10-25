@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_RECORD_REPEAT_H
-#define PANGOLIN_VIDEO_RECORD_REPEAT_H
+#pragma once
 
 #include <pangolin/video/video.h>
 #include <pangolin/video/video_output.h>
@@ -145,5 +144,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_VIDEO_RECORD_REPEAT_H

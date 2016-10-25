@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLDRAW_H
-#define PANGOLIN_GLDRAW_H
+#pragma once
 
 #include <pangolin/gl/glinclude.h>
 
@@ -444,5 +443,3 @@ inline void glPixelTransferScale( float scale )
 void glRecordGraphic(float x, float y, float radius);
 
 }
-
-#endif // PANGOLIN_GLDRAW_H

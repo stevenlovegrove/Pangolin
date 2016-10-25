@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_WINDOW_H
-#define PANGOLIN_WINDOW_H
+#pragma once
 
 namespace pangolin
 {
@@ -51,6 +50,3 @@ public:
 };
 
 }
-
-
-#endif // PANGOLIN_WINDOW_H

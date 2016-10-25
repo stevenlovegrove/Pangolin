@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GL_H
-#define PANGOLIN_GL_H
+#pragma once
 
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/display/viewport.h>
@@ -247,5 +246,3 @@ size_t GlDataTypeBytes(GLenum type);
 
 // Include implementation
 #include <pangolin/gl/gl.hpp>
-
-#endif // PANGOLIN_GL_H

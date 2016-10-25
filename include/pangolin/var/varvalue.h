@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VARVALUE_H
-#define PANGOLIN_VARVALUE_H
+#pragma once
 
 #include <pangolin/var/varvaluet.h>
 #include <pangolin/var/varwrapper.h>
@@ -113,5 +112,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_VARVALUE_H

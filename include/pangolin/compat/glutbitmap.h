@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_COMPAT_GLUT_BITMAP_H
-#define PANGOLIN_COMPAT_GLUT_BITMAP_H
+#pragma once
 
 #include <pangolin/gl/glglut.h>
 
@@ -95,5 +94,3 @@ inline int glutBitmapLength(void * /*font*/, const unsigned char *str)
 #define GLUT_BITMAP_HELVETICA_12 0;
 
 #endif // HAVE_GLUT
-
-#endif // PANGOLIN_COMPAT_GLUT_BITMAP_H

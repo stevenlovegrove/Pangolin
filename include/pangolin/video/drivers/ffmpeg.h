@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_FFMPEG_H
-#define PANGOLIN_FFMPEG_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
@@ -193,5 +192,3 @@ protected:
 };
 
 }
-
-#endif //PANGOLIN_FFMPEG_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLVBO_H
-#define PANGOLIN_GLVBO_H
+#pragma once
 
 #include <pangolin/gl/gl.h>
 
@@ -228,5 +227,3 @@ inline void RenderVboIboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& nbo, bool dr
 }
 
 }
-
-#endif // PANGOLIN_GLVBO_H

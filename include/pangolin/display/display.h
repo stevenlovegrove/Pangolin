@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_DISPLAY_H
-#define PANGOLIN_DISPLAY_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
@@ -213,6 +212,4 @@ namespace pangolin
   };
 
 }
-
-#endif // PANGOLIN_DISPLAY_H
 

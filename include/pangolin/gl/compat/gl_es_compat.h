@@ -2,9 +2,6 @@
 
 #include <pangolin/platform.h>
 
-#ifndef PANGOLIN_GL_ES_COMPAT_H
-#define PANGOLIN_GL_ES_COMPAT_H
-
 #define GLdouble     GLfloat
 #define glClearDepth glClearDepthf
 #define glFrustum    glFrustumf
@@ -61,5 +58,3 @@ inline void glRecti(int x1, int y1, int x2, int y2)
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     glDisableClientState(GL_VERTEX_ARRAY);
 }
-
-#endif // PANGOLIN_GL_ES_COMPAT_H

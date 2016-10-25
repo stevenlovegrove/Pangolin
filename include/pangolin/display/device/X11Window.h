@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_X11WINDOW_H
-#define PANGOLIN_X11WINDOW_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/display/display_internal.h>
@@ -106,5 +105,3 @@ struct X11Window : public PangolinGl
 };
 
 }
-
-#endif // PANGOLIN_X11WINDOW_H

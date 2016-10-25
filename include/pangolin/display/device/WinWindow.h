@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_WINWINDOW_H
-#define PANGOLIN_WINWINDOW_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/display/display_internal.h>
@@ -86,5 +85,3 @@ private:
 };
 
 }
-
-#endif // PANGOLIN_WINWINDOW_H

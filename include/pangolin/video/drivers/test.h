@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_TEST_H
-#define PANGOLIN_VIDEO_TEST_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
@@ -65,5 +64,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_VIDEO_TEST_H

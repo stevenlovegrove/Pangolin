@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_COLOUR
-#define PANGOLIN_COLOUR
+#pragma once
 
 #include <cmath>
 
@@ -172,5 +171,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_COLOUR

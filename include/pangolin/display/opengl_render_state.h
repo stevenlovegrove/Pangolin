@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_OPENGLRENDERSTATE_H
-#define PANGOLIN_OPENGLRENDERSTATE_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/simple_math.h>
@@ -412,5 +411,3 @@ inline OpenGlMatrix::operator const OVR::Matrix4f() const
 
 
 }
-
-#endif // PANGOLIN_OPENGLRENDERSTATE_H

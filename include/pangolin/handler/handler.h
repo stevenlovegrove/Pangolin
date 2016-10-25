@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_HANDLER_H
-#define PANGOLIN_HANDLER_H
+#pragma once
 
 #include <pangolin/display/opengl_render_state.h>
 #include <pangolin/handler/handler_enums.h>
@@ -110,5 +109,3 @@ static Handler StaticHandler;
 static HandlerScroll StaticHandlerScroll;
 
 }
-
-#endif // PANGOLIN_HANDLER_H

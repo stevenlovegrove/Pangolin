@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VARVALUET_H
-#define PANGOLIN_VARVALUET_H
+#pragma once
 
 #include <pangolin/var/varvaluegeneric.h>
 #include <pangolin/compat/type_traits.h>
@@ -45,5 +44,3 @@ public:
 };
 
 }
-
-#endif // PANGOLIN_VARVALUET_H

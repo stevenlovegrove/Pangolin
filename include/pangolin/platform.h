@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PLATFORM_H
-#define PANGOLIN_PLATFORM_H
+#pragma once
 
 #include <pangolin/config.h>
 
@@ -72,5 +71,3 @@
 #   define pango_print_error(...) __android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__ );
 #   define pango_print_warn(...)  __android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__ );
 #endif
-
-#endif // PANGOLIN_PLATFORM_H

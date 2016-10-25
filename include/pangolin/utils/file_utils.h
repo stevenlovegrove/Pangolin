@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_FILE_UTILS_H
-#define PANGOLIN_FILE_UTILS_H
+#pragma once
 
 #include <pangolin/platform.h>
 
@@ -144,5 +143,3 @@ inline std::string ToLowerCopy( const std::string& str )
 
 
 }
-
-#endif // PANGOLIN_FILE_UTILS_H

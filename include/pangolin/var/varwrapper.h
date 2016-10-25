@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VARWRAPPER_H
-#define PANGOLIN_VARWRAPPER_H
+#pragma once
 
 #include <pangolin/var/varvaluegeneric.h>
 #include <pangolin/compat/type_traits.h>
@@ -90,5 +89,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_VARWRAPPER_H

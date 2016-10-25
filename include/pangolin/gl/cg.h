@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_CG_H
-#define PANGOLIN_CG_H
+#pragma once
 
 #include <sstream>
 #include <algorithm>
@@ -282,5 +281,3 @@ void CgProgram::UpdateParams()
 
 
 }
-
-#endif // PANGOLIN_CG_H

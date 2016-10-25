@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_FIX_SIZE_BUFFER_QUEUE_H
-#define PANGOLIN_FIX_SIZE_BUFFER_QUEUE_H
+#pragma once
 
 #include <list>
 #include <thread>
@@ -181,5 +180,3 @@ private:
 };
 
 }
-
-#endif // PANGOLIN_FIX_SIZE_BUFFER_QUEUE_H

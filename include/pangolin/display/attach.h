@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_ATTACH_H
-#define PANGOLIN_ATTACH_H
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -85,5 +84,3 @@ struct PANGOLIN_EXPORT Attach {
 };
 
 } // namespace pangolin
-
-#endif // PANGOLIN_ATTACH_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_USER_APP_H
-#define PANGOLIN_USER_APP_H
+#pragma once
 
 #include <pangolin/platform.h>
 
@@ -42,5 +41,3 @@ public:
 };
 
 }
-
-#endif // PANGOLIN_USER_APP_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VARVALUEGENERIC_H
-#define PANGOLIN_VARVALUEGENERIC_H
+#pragma once
 
 #include <string>
 
@@ -83,5 +82,3 @@ public:
 };
 
 }
-
-#endif // PANGOLIN_VARVALUEGENERIC_H

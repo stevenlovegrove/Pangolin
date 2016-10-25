@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_SIMPLE_MATH_H
-#define PANGOLIN_SIMPLE_MATH_H
+#pragma once
 
 #include <iostream>
 #include <string.h>
@@ -436,5 +435,3 @@ void EnforceUpT_cw(P T_cw_4x4[4*4], const P up_w[3])
 }
 
 }
-
-#endif //PANGOLIN_SIMPLE_MATH_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_IMAGE_COMMON_H
-#define PANGOLIN_IMAGE_COMMON_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/type_convert.h>
@@ -84,6 +83,3 @@ PANGOLIN_EXPORT
 VideoPixelFormat VideoFormatFromString(const std::string& format);
 
 }
-
-#endif // PANGOLIN_IMAGE_COMMON_H
-

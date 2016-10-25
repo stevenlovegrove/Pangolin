@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_HANDLER_IMAGE_H
-#define PANGOLIN_HANDLER_IMAGE_H
+#pragma once
 
 #include <pangolin/image/image_utils.h>
 #include <pangolin/display/viewport.h>
@@ -158,4 +157,3 @@ protected:
 };
 
 }
-#endif // PANGOLIN_HANDLER_IMAGE_H

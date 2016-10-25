@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_IMAGE_UTILS_H
-#define PANGOLIN_IMAGE_UTILS_H
+#pragma once
 
 #include <limits>
 #include <utility>
@@ -108,5 +107,3 @@ std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, pangolin::X
 }
 
 }
-
-#endif // PANGOLIN_IMAGE_UTILS_H

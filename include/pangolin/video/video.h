@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_H
-#define PANGOLIN_VIDEO_H
+#pragma once
 
 // Pangolin video supports various cameras and file formats through
 // different 3rd party libraries.
@@ -468,5 +467,3 @@ json::value GetVideoDeviceProperties(VideoInterface* video)
 }
 
 }
-
-#endif // PANGOLIN_VIDEO_H

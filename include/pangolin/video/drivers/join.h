@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_JOIN_H
-#define PANGOLIN_VIDEO_JOIN_H
+#pragma once
 
 #include <pangolin/video/video.h>
 
@@ -67,5 +66,3 @@ protected:
 
 
 }
-
-#endif // PANGOLIN_VIDEO_JOIN_H

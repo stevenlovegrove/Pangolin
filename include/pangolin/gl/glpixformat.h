@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLPANGOPIXFORMAT_H
-#define PANGOLIN_GLPANGOPIXFORMAT_H
+#pragma once
 
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/glformattraits.h>
@@ -88,5 +87,3 @@ struct GlPixFormat
 };
 
 }
-
-#endif // PANGOLIN_GLPANGOPIXFORMAT_H

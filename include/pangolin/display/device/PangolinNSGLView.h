@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLINNSGLVIEW_H
-#define PANGOLINNSGLVIEW_H
+#pragma once
 
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
@@ -44,5 +43,3 @@
 }
 @end
 
-
-#endif // PANGOLINNSGLVIEW_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_SPLITTER_H
-#define PANGOLIN_VIDEO_SPLITTER_H
+#pragma once
 
 #include <pangolin/video/video.h>
 #include <vector>
@@ -63,5 +62,3 @@ protected:
 
 
 }
-
-#endif // PANGOLIN_VIDEO_SPLITTER_H
