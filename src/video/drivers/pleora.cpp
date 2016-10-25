@@ -416,7 +416,8 @@ void PleoraVideo::Start()
         lDevice->StreamEnable();
         lStart->Execute();
     } else {
-        pango_print_warn("PleoraVideo: Already started.\n");
+//        // It isn't an error to repeatedly start
+//        pango_print_warn("PleoraVideo: Already started.\n");
     }
 }
 
@@ -435,7 +436,8 @@ void PleoraVideo::Stop()
             lStream->RetrieveBuffer( &lBuffer, &lOperationResult );
         }
     } else {
-        pango_print_warn("PleoraVideo: Already stopped.\n");
+//        // It isn't an error to repeatedly stop
+//        pango_print_warn("PleoraVideo: Already stopped.\n");
     }
 }
 
