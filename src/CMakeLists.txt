@@ -100,6 +100,11 @@ if(BUILD_PANGOLIN_VIDEO)
 
 endif()
 
+if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND BUILD_PANGOLIN_VIDEO )
+    list(APPEND HEADERS ${INCDIR}/tools/video_viewer.h)
+    list(APPEND SOURCES tools/video_viewer.cpp)
+endif()
+
 #######################################################
 ## Setup required includes / link info
 
