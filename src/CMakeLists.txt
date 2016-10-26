@@ -296,6 +296,10 @@ if(BUILD_PANGOLIN_VIDEO AND FFMPEG_FOUND)
   list(APPEND LINK_LIBS ${FFMPEG_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/ffmpeg.h)
   list(APPEND SOURCES video/drivers/ffmpeg.cpp)
+  if(_GCC_)
+    # FFMPEG is a real pain for deprecating the API.
+    set_source_files_properties(video/drivers/ffmpeg.cpp    PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
+  endif()
   message(STATUS "ffmpeg Found and Enabled")
 endif()
 
