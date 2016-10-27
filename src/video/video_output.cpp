@@ -38,16 +38,18 @@
 namespace pangolin
 {
 
-VideoOutputInterface* OpenVideoOutput(const Uri& uri)
+std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri)
 {
-    VideoOutputInterface* recorder = 0;
+    std::unique_ptr<VideoOutputInterface> recorder;
     
     if(!uri.scheme.compare("pango"))
     {
         const size_t mb = 1024*1024;
         const size_t buffer_size_bytes = uri.Get("buffer_size_mb", 100) * mb;
         const std::string filename = uri.url;
-        recorder = new PangoVideoOutput(filename, buffer_size_bytes);
+        recorder = std::unique_ptr<VideoOutputInterface>(
+            new PangoVideoOutput(filename, buffer_size_bytes)
+        );
     }else
 #ifdef HAVE_FFMPEG    
     if(!uri.scheme.compare("ffmpeg") )
@@ -59,8 +61,10 @@ VideoOutputInterface* OpenVideoOutput(const Uri& uri)
         if(uri.Contains("unique_filename")) {        
             filename = MakeUniqueFilename(filename);
         }
-        
-        recorder = new FfmpegVideoOutput(filename, desired_frame_rate, desired_bit_rate);
+
+        recorder = std::unique_ptr<VideoOutputInterface>(
+            new FfmpegVideoOutput(filename, desired_frame_rate, desired_bit_rate)
+        );
     }else
 #endif
     {
@@ -70,31 +74,28 @@ VideoOutputInterface* OpenVideoOutput(const Uri& uri)
     return recorder;
 }
 
-VideoOutputInterface* OpenVideoOutput(std::string str_uri)
+std::unique_ptr<VideoOutputInterface> OpenVideoOutput(std::string str_uri)
 {
-    Uri uri = ParseUri(str_uri);
+    const Uri uri = ParseUri(str_uri);
     return OpenVideoOutput(uri);
 }
 
 VideoOutput::VideoOutput()
-    : recorder(NULL)
 {
 }
 
 VideoOutput::VideoOutput(const std::string& uri)
-    : recorder(NULL)
 {
     Open(uri);
 }
 
 VideoOutput::~VideoOutput()
 {
-    delete recorder;
 }
 
 bool VideoOutput::IsOpen() const
 {
-    return recorder != 0;
+    return recorder.get();
 }
 
 void VideoOutput::Open(const std::string& str_uri)
@@ -106,10 +107,7 @@ void VideoOutput::Open(const std::string& str_uri)
 
 void VideoOutput::Close()
 {
-    if(recorder) {
-        delete recorder;
-        recorder = 0;
-    }    
+    recorder.reset();
 }
 
 const std::vector<StreamInfo>& VideoOutput::Streams() const

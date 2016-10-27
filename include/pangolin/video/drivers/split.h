@@ -33,12 +33,13 @@
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT FirewireDeinterlace
-    : public VideoInterface
+class PANGOLIN_EXPORT SplitVideo
+    : public VideoInterface, public VideoFilterInterface
 {
 public:
-    FirewireDeinterlace(VideoInterface* videoin);
-    ~FirewireDeinterlace();
+    SplitVideo(std::unique_ptr<VideoInterface>& videoin, const std::vector<StreamInfo>& streams);
+
+    ~SplitVideo();
     
     size_t SizeBytes() const;
     
@@ -50,12 +51,14 @@ public:
     
     bool GrabNext( unsigned char* image, bool wait = true );
     
-    bool GrabNewest( unsigned char* image, bool wait = true );    
+    bool GrabNewest( unsigned char* image, bool wait = true );
+
+    std::vector<VideoInterface*>& InputStreams();
     
 protected:
-    VideoInterface* videoin;
+    std::unique_ptr<VideoInterface> src;
+    std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
-    unsigned char* buffer;
 };
 
 

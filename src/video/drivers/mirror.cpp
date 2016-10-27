@@ -26,28 +26,29 @@
  */
 
 #include <pangolin/video/drivers/mirror.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
 {
 
-MirrorVideo::MirrorVideo(VideoInterface* src, const std::vector<MirrorOptions>& flips)
-    : videoin(src), flips(flips), size_bytes(0),buffer(0)
+MirrorVideo::MirrorVideo(std::unique_ptr<VideoInterface>& src, const std::vector<MirrorOptions>& flips)
+    : videoin(std::move(src)), flips(flips), size_bytes(0),buffer(0)
 {
-    if(!src) {
+    if(!videoin) {
         throw VideoException("MirrorVideo: VideoInterface in must not be null");
     }
 
-    inputs.push_back(videoin);
+    inputs.push_back(videoin.get());
 
-    streams = src->Streams();
-    size_bytes = src->SizeBytes();
+    streams = videoin->Streams();
+    size_bytes = videoin->SizeBytes();
     buffer = new unsigned char[size_bytes];
 }
 
 MirrorVideo::~MirrorVideo()
 {
     delete[] buffer;
-    delete videoin;
 }
 
 //! Implement VideoInput::Start()
@@ -140,7 +141,7 @@ void MirrorVideo::Process(unsigned char* buffer_out, const unsigned char* buffer
 {
     for(size_t s=0; s<streams.size(); ++s) {
         Image<unsigned char> img_out = Streams()[s].StreamImage(buffer_out);
-        const Image<unsigned char> img_in  = videoin[0].Streams()[s].StreamImage(buffer_in);
+        const Image<unsigned char> img_in  = videoin->Streams()[s].StreamImage(buffer_in);
         const size_t bytes_per_pixel = Streams()[s].PixFormat().bpp / 8;
 
         switch (flips[s]) {
@@ -191,7 +192,7 @@ std::vector<VideoInterface*>& MirrorVideo::InputStreams()
 
 unsigned int MirrorVideo::AvailableFrames() const
 {
-    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin);
+    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin.get());
     if(!vpi)
     {
         pango_print_warn("Mirror: child interface is not buffer aware.");
@@ -205,7 +206,7 @@ unsigned int MirrorVideo::AvailableFrames() const
 
 bool MirrorVideo::DropNFrames(uint32_t n)
 {
-    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin);
+    BufferAwareVideoInterface* vpi = dynamic_cast<BufferAwareVideoInterface*>(videoin.get());
     if(!vpi)
     {
         pango_print_warn("Mirror: child interface is not buffer aware.");
@@ -215,6 +216,50 @@ bool MirrorVideo::DropNFrames(uint32_t n)
     {
         return vpi->DropNFrames(n);
     }
+}
+
+std::istream& operator>> (std::istream &is, MirrorOptions &mirror)
+{
+    std::string str_mirror;
+    is >> str_mirror;
+    std::transform(str_mirror.begin(), str_mirror.end(), str_mirror.begin(), toupper);
+
+    if(!str_mirror.compare("NONE")) {
+        mirror = MirrorOptionsNone;
+    }else if(!str_mirror.compare("FLIPX")) {
+        mirror = MirrorOptionsFlipX;
+    }else if(!str_mirror.compare("FLIPY")) {
+        mirror = MirrorOptionsFlipY;
+    }else if(!str_mirror.compare("FLIPXY")) {
+        mirror = MirrorOptionsFlipXY;
+    }else{
+        pango_print_warn("Unknown mirror option %s.", str_mirror.c_str());
+        mirror = MirrorOptionsNone;
+    }
+
+    return is;
+}
+
+PANGOLIN_REGISTER_FACTORY(MirrorVideo)
+{
+    struct MirrorVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+
+            std::vector<MirrorOptions> flips;
+
+            for(size_t i=0; i < subvid->Streams().size(); ++i){
+                std::stringstream ss;
+                ss << "stream" << i;
+                const std::string key = ss.str();
+                flips.push_back(uri.Get<MirrorOptions>(key, MirrorOptionsFlipX) );
+            }
+
+            return std::unique_ptr<VideoInterface> (new MirrorVideo(subvid, flips));
+        }
+    };
+
+    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<MirrorVideoFactory>(), 10, "mirror");
 }
 
 }

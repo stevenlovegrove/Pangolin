@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/join.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 #ifdef DEBUGJOIN
   #include <pangolin/utils/timer.h>
@@ -40,9 +42,13 @@
 
 namespace pangolin
 {
-VideoJoiner::VideoJoiner(const std::vector<VideoInterface*>& src)
-    : src(src), size_bytes(0), sync_tolerance_us(0)
+JoinVideo::JoinVideo(std::vector<std::unique_ptr<VideoInterface> > &src_)
+    : storage(std::move(src_)), size_bytes(0), sync_tolerance_us(0)
 {
+    for(auto& p : storage) {
+        src.push_back(p.get());
+    }
+
     // Add individual streams
     for(size_t s=0; s< src.size(); ++s)
     {
@@ -58,39 +64,38 @@ VideoJoiner::VideoJoiner(const std::vector<VideoInterface*>& src)
     }
 }
 
-VideoJoiner::~VideoJoiner()
+JoinVideo::~JoinVideo()
 {
     for(size_t s=0; s< src.size(); ++s) {
         src[s]->Stop();
-        delete src[s];
     }
 }
 
-size_t VideoJoiner::SizeBytes() const
+size_t JoinVideo::SizeBytes() const
 {
     return size_bytes;
 }
 
-const std::vector<StreamInfo>& VideoJoiner::Streams() const
+const std::vector<StreamInfo>& JoinVideo::Streams() const
 {
     return streams;
 }
 
-void VideoJoiner::Start()
+void JoinVideo::Start()
 {
     for(size_t s=0; s< src.size(); ++s) {
         src[s]->Start();
     }
 }
 
-void VideoJoiner::Stop()
+void JoinVideo::Stop()
 {
     for(size_t s=0; s< src.size(); ++s) {
         src[s]->Stop();
     }
 }
 
-bool VideoJoiner::Sync(int64_t tolerance_us, int64_t expected_delta_us)
+bool JoinVideo::Sync(int64_t tolerance_us, int64_t expected_delta_us)
 {
     for(size_t s=0; s< src.size(); ++s)
     {
@@ -104,7 +109,7 @@ bool VideoJoiner::Sync(int64_t tolerance_us, int64_t expected_delta_us)
     return true;
 }
 
-bool VideoJoiner::GrabNext(unsigned char* image, bool wait)
+bool JoinVideo::GrabNext(unsigned char* image, bool wait)
 {
     int64_t rt = 0;
     size_t offset = 0;
@@ -184,7 +189,7 @@ bool AllInterfacesAreBufferAware(std::vector<VideoInterface*>& src){
   return true;
 }
 
-bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
+bool JoinVideo::GrabNewest( unsigned char* image, bool wait )
 {
   TSTART()
   DBGPRINT("Entering GrabNewest:");
@@ -311,9 +316,68 @@ bool VideoJoiner::GrabNewest( unsigned char* image, bool wait )
 
 }
 
-std::vector<VideoInterface*>& VideoJoiner::InputStreams()
+std::vector<VideoInterface*>& JoinVideo::InputStreams()
 {
     return src;
+}
+
+std::vector<std::string> SplitBrackets(const std::string src, char open = '{', char close = '}')
+{
+    std::vector<std::string> splits;
+
+    int nesting = 0;
+    int begin = -1;
+
+    for(size_t i=0; i < src.length(); ++i) {
+        if(src[i] == open) {
+            if(nesting==0) {
+                begin = (int)i;
+            }
+            nesting++;
+        }else if(src[i] == close) {
+            nesting--;
+            if(nesting == 0) {
+                // matching close bracket.
+                int str_start = begin+1;
+                splits.push_back( src.substr(str_start, i-str_start) );
+            }
+        }
+    }
+
+    return splits;
+}
+
+PANGOLIN_REGISTER_FACTORY(JoinVideo)
+{
+    struct JoinVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+
+            std::vector<std::string> uris = SplitBrackets(uri.url);
+            const unsigned long sync_tol_us = uri.Get<unsigned long>("sync_tolerance_us", 0);
+            const unsigned long expected_delta_us = uri.Get<unsigned long>("expected_delta_us", 0);
+
+            if(uris.size() == 0) {
+                throw VideoException("No VideoSources found in join URL.", "Specify videos to join with curly braces, e.g. join://{test://}{test://}");
+            }
+
+            std::vector<std::unique_ptr<VideoInterface>> src;
+            for(size_t i=0; i<uris.size(); ++i) {
+                src.push_back( pangolin::OpenVideo(uris[i]) );
+            }
+
+            JoinVideo* video_raw = new JoinVideo(src);
+
+            if(sync_tol_us>0) {
+                if(video_raw->Sync(sync_tol_us, expected_delta_us)) {
+                    pango_print_error("Error not all streams in join support sync_tolerance_us option.\n");
+                }
+            }
+
+            return std::unique_ptr<VideoInterface>(video_raw);
+        }
+    };
+
+    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<JoinVideoFactory>(), 10, "join");
 }
 
 }

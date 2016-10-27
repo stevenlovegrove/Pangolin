@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/unpack.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 #ifdef DEBUGUNPACK
   #include <pangolin/utils/timer.h>
@@ -41,19 +43,14 @@
 namespace pangolin
 {
 
-UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
-    : size_bytes(0), buffer(0)
+UnpackVideo::UnpackVideo(std::unique_ptr<VideoInterface> &src_, VideoPixelFormat out_fmt)
+    : src(std::move(src_)), size_bytes(0), buffer(0)
 {
-    if(!src) {
-        throw VideoException("UnpackVideo: VideoInterface in must not be null");
-    }
-
-    if( out_fmt.channels != 1) {
-        delete src;
+    if( !src || out_fmt.channels != 1) {
         throw VideoException("UnpackVideo: Only supports single channel output.");
     }
 
-    videoin.push_back(src);
+    videoin.push_back(src.get());
 
     for(size_t s=0; s< src->Streams().size(); ++s) {
         const size_t w = src->Streams()[s].Width();
@@ -62,7 +59,6 @@ UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
         // Check compatibility of formats
         const VideoPixelFormat in_fmt = src->Streams()[s].PixFormat();
         if(in_fmt.channels > 1 || in_fmt.bpp > 16) {
-            delete src;
             throw VideoException("UnpackVideo: Only supports one channel input.");
         }
 
@@ -76,7 +72,6 @@ UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
 
 UnpackVideo::~UnpackVideo()
 {
-    delete videoin[0];
     delete[] buffer;
 }
 
@@ -249,6 +244,21 @@ bool UnpackVideo::DropNFrames(uint32_t n)
     {
         return vpi->DropNFrames(n);
     }
+}
+
+PANGOLIN_REGISTER_FACTORY(UnpackVideo)
+{
+    struct UnpackVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+            const bool make_float = uri.Contains("float");
+            return std::unique_ptr<VideoInterface>(
+                new UnpackVideo(subvid, VideoFormatFromString(make_float ? "GRAY32F" : "GRAY16LE"))
+            );
+        }
+    };
+
+    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<UnpackVideoFactory>(), 10, "unpack");
 }
 
 }

@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/images.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
 
 #include <cstring>
@@ -207,5 +209,29 @@ int ImagesVideo::Seek(int frameid)
     return (int)next_frame_id;
 }
 
+PANGOLIN_REGISTER_FACTORY(ImagesVideo)
+{
+    struct ImagesVideoVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            const bool raw = uri.Contains("fmt");
+            const std::string path = PathExpand(uri.url);
+
+            if(raw) {
+                const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
+                const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
+                const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+                return std::unique_ptr<VideoInterface>( new ImagesVideo(path, fmt, dim.x, dim.y) );
+            }else{
+                return std::unique_ptr<VideoInterface>( new ImagesVideo(path) );
+            }
+        }
+    };
+
+    auto factory = std::make_shared<ImagesVideoVideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "file");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "files");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "image");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "images");
+}
 
 }

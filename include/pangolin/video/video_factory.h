@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Steven Lovegrove
+ * Copyright (c) 2011-2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,38 +27,50 @@
 
 #pragma once
 
+#include <memory>
 #include <pangolin/video/video.h>
-#include <vector>
+#include <pangolin/utils/static_init.h>
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT VideoSplitter
-    : public VideoInterface, public VideoFilterInterface
+class VideoFactoryInterface
 {
 public:
-    VideoSplitter(VideoInterface* videoin, const std::vector<StreamInfo>& streams);
-
-    ~VideoSplitter();
-    
-    size_t SizeBytes() const;
-    
-    const std::vector<StreamInfo>& Streams() const;
-    
-    void Start();
-    
-    void Stop();
-    
-    bool GrabNext( unsigned char* image, bool wait = true );
-    
-    bool GrabNewest( unsigned char* image, bool wait = true );
-
-    std::vector<VideoInterface*>& InputStreams();
-    
-protected:
-    std::vector<VideoInterface*> videoin;
-    std::vector<StreamInfo> streams;
+    virtual std::unique_ptr<VideoInterface> OpenVideo(const Uri& video_uri) = 0;
 };
 
+class VideoFactoryRegistry
+{
+public:
+    static VideoFactoryRegistry& I();
+
+    ~VideoFactoryRegistry();
+
+    void RegisterFactory(std::shared_ptr<VideoFactoryInterface> factory, uint32_t precedence, const std::string& scheme_name );
+
+    void UnregisterFactory(VideoFactoryInterface* factory);
+
+    void UnregisterAllFactories();
+
+    std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri);
+
+private:
+    struct FactoryItem
+    {
+        uint32_t precedence;
+        std::string scheme;
+        std::shared_ptr<VideoFactoryInterface> factory;
+
+        bool operator<(const FactoryItem& rhs) const {
+            return precedence < rhs.precedence;
+        }
+    };
+
+    // Priority, Factory tuple
+    std::vector<FactoryItem> factories;
+};
+
+#define PANGOLIN_REGISTER_FACTORY(x) PANGOLIN_STATIC_CONSTRUCTOR( Register ## x ## Factory )
 
 }

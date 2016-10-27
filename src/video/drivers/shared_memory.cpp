@@ -1,4 +1,6 @@
 #include <pangolin/video/drivers/shared_memory.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 using namespace std;
 
@@ -62,6 +64,33 @@ bool SharedMemoryVideo::GrabNext(unsigned char* image, bool wait)
 bool SharedMemoryVideo::GrabNewest(unsigned char* image, bool wait)
 {
     return GrabNext(image,wait);
+}
+
+PANGOLIN_REGISTER_FACTORY(SharedMemoryVideo)
+{
+    struct SharedMemoryVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(0, 0));
+            const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
+            const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
+            const std::string shmem_name = std::string("/") + uri.url;
+            std::shared_ptr<SharedMemoryBufferInterface> shmem_buffer =
+                open_named_shared_memory_buffer(shmem_name, true);
+            if (dim.x == 0 || dim.y == 0 || !shmem_buffer) {
+                throw VideoException("invalid shared memory parameters");
+            }
+
+            const std::string cond_name = shmem_name + "_cond";
+            std::shared_ptr<ConditionVariableInterface> buffer_full =
+                open_named_condition_variable(cond_name);
+
+            return std::unique_ptr<VideoInterface>(
+                new SharedMemoryVideo(dim.x, dim.y, fmt, shmem_buffer,buffer_full)
+            );
+        }
+    };
+
+    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<SharedMemoryVideoFactory>(), 10, "shmem");
 }
 
 }

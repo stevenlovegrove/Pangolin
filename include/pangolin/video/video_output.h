@@ -85,15 +85,15 @@ public:
 
 protected:
     Uri uri;
-    VideoOutputInterface* recorder;
+    std::unique_ptr<VideoOutputInterface> recorder;
 };
 
 //! Open VideoOutput Interface from string specification (as described in this files header)
 PANGOLIN_EXPORT
-VideoOutputInterface* OpenVideoOutput(std::string str_uri);
+std::unique_ptr<VideoOutputInterface> OpenVideoOutput(std::string str_uri);
 
 //! Open VideoOutput Interface from Uri specification
 PANGOLIN_EXPORT
-VideoOutputInterface* OpenVideoOutput(const Uri& uri);
+std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri);
 
 }

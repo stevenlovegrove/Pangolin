@@ -88,7 +88,7 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
     // Return pointer to inner video class as VideoType
     template<typename VideoType>
     VideoType* Cast() {
-        return dynamic_cast<VideoType*>(video_src);
+        return dynamic_cast<VideoType*>(video_src.get());
     }
 
     const std::string& LogFilename() const;
@@ -126,9 +126,9 @@ protected:
     Uri uri_input;
     Uri uri_output;
 
-    VideoInterface* video_src;
-    VideoInterface* video_file;
-    VideoOutputInterface* video_recorder;
+    std::unique_ptr<VideoInterface> video_src;
+    std::unique_ptr<VideoInterface> video_file;
+    std::unique_ptr<VideoOutputInterface> video_recorder;
 
     // Use to store either video_src or video_file for VideoFilterInterface,
     // depending on which is active

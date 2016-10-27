@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2014 Steven Lovegrove
+ * Copyright (c) 2011 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,43 +27,53 @@
 
 #pragma once
 
-#include <pangolin/video/video.h>
+#include <pangolin/video/video_interface.h>
+#include <pangolin/utils/uri.h>
 
-namespace pangolin
+namespace pangolin {
+
+//! Generic wrapper class for different video sources
+struct PANGOLIN_EXPORT VideoInput :
+    public VideoInterface,
+    public VideoFilterInterface
 {
+    VideoInput();
+    VideoInput(const std::string& uri);
+    ~VideoInput();
 
-class PANGOLIN_EXPORT JoinVideo
-    : public VideoInterface, public VideoFilterInterface
-{
-public:
-    JoinVideo(std::vector<std::unique_ptr<VideoInterface>> &src);
-
-    ~JoinVideo();
+    void Open(const std::string& uri);
+    void Reset();
+    void Close();
 
     size_t SizeBytes() const;
-
     const std::vector<StreamInfo>& Streams() const;
 
+    // Return details of first stream
+    unsigned Width() const;
+    unsigned Height() const;
+    VideoPixelFormat PixFormat() const;
+    const Uri& VideoUri() const;
+
     void Start();
-
     void Stop();
-
-    bool Sync(int64_t tolerance_us, int64_t expected_delta_us = 0);
-
     bool GrabNext( unsigned char* image, bool wait = true );
-
     bool GrabNewest( unsigned char* image, bool wait = true );
+
+    // Return pointer to inner video class as VideoType
+    template<typename VideoType>
+    VideoType* Cast() {
+        return videos.size() ? dynamic_cast<VideoType*>(videos[0]) : 0;
+    }
+
+    // experimental - not stable
+    bool Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait = true, bool newest = false);
 
     std::vector<VideoInterface*>& InputStreams();
 
 protected:
-    std::vector<std::unique_ptr<VideoInterface>> storage;
-    std::vector<VideoInterface*> src;
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
-    int64_t sync_tolerance_us;
-    int64_t expected_timestamp_delta_us;
+    Uri uri;
+    std::unique_ptr<VideoInterface> src;
+    std::vector<VideoInterface*> videos;
 };
-
 
 }

@@ -28,8 +28,10 @@
 #pragma once
 
 #include <iostream>
+#include <cctype>
 
 #include <pangolin/image/image_common.h>
+#include <pangolin/utils/file_utils.h>
 
 namespace pangolin
 {

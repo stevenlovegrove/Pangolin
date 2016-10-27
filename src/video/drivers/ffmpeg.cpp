@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/ffmpeg.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
 
 extern "C"
@@ -351,8 +353,8 @@ bool FfmpegVideo::GrabNewest(unsigned char *image, bool wait)
     return GrabNext(image,wait);
 }
 
-FfmpegConverter::FfmpegConverter(VideoInterface* videoin, const std::string sfmtdst, FfmpegMethod method )
-    :videoin(videoin)
+FfmpegConverter::FfmpegConverter(std::unique_ptr<VideoInterface> &videoin_, const std::string sfmtdst, FfmpegMethod method )
+    :videoin(std::move(videoin_))
 {
     if( !videoin )
         throw VideoException("Source video interface not specified");
@@ -790,6 +792,36 @@ int FfmpegVideoOutput::WriteStreams(unsigned char* data, const json::value& /*fr
         s.WriteImage(img.ptr, img.w, img.h);
     }
     return frame_count++;
+}
+
+PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
+{
+    struct FfmpegVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){
+                std::string outfmt = uri.Get<std::string>("fmt","RGB24");
+                ToUpper(outfmt);
+                const int video_stream = uri.Get<int>("stream",-1);
+                return std::unique_ptr<VideoInterface>( new FfmpegVideo(uri.url.c_str(), outfmt, "", false, video_stream) );
+            }else if( !uri.scheme.compare("mjpeg")) {
+                return std::unique_ptr<VideoInterface>( new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" ) );
+            }else if( !uri.scheme.compare("convert") ) {
+                std::string outfmt = uri.Get<std::string>("fmt","RGB24");
+                ToUpper(outfmt);
+                std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+                return std::unique_ptr<VideoInterface>( new FfmpegConverter(subvid,outfmt,FFMPEG_POINT) );
+            }else{
+                return std::unique_ptr<VideoInterface>();
+            }
+        }
+    };
+
+    auto factory = std::make_shared<FfmpegVideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "ffmpeg");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "mjpeg");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 20, "convert");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 20, "file");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 20, "files");
 }
 
 }

@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/debayer.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 #ifdef HAVE_DC1394
 #   include <dc1394/conversions.h>
@@ -56,13 +58,13 @@ pangolin::StreamInfo BayerOutputFormat( const StreamInfo& stream_in, bayer_metho
     return pangolin::StreamInfo( fmt, w, h, w*fmt.bpp / 8, (unsigned char*)0 + start_offset );
 }
 
-DebayerVideo::DebayerVideo(VideoInterface* src, const std::vector<bayer_method_t>& bayer_method, color_filter_t tile)
-    : size_bytes(0), buffer(0), methods(bayer_method), tile(tile)
+DebayerVideo::DebayerVideo(std::unique_ptr<VideoInterface> &src_, const std::vector<bayer_method_t>& bayer_method, color_filter_t tile)
+    : src(std::move(src_)), size_bytes(0), methods(bayer_method), tile(tile)
 {
-    if(!src) {
+    if(!src.get()) {
         throw VideoException("DebayerVideo: VideoInterface in must not be null");
     }
-    videoin.push_back(src);
+    videoin.push_back(src.get());
 
     while(methods.size() < src->Streams().size()) {
         methods.push_back(BAYER_METHOD_NONE);
@@ -79,13 +81,11 @@ DebayerVideo::DebayerVideo(VideoInterface* src, const std::vector<bayer_method_t
         size_bytes += streams.back().SizeBytes();
     }
 
-    buffer = new unsigned char[src->SizeBytes()];
+    buffer = std::unique_ptr<unsigned char[]>(new unsigned char[src->SizeBytes()]);
 }
 
 DebayerVideo::~DebayerVideo()
 {
-    delete[] buffer;
-    delete videoin[0];
 }
 
 //! Implement VideoInput::Start()
@@ -276,8 +276,8 @@ void DebayerVideo::ProcessStreams(unsigned char* out, const unsigned char *in)
 //! Implement VideoInput::GrabNext()
 bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
 {    
-    if(videoin[0]->GrabNext(buffer,wait)) {
-        ProcessStreams(image, buffer);
+    if(videoin[0]->GrabNext(buffer.get(),wait)) {
+        ProcessStreams(image, buffer.get());
         return true;
     }else{
         return false;
@@ -287,8 +287,8 @@ bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
 //! Implement VideoInput::GrabNewest()
 bool DebayerVideo::GrabNewest( unsigned char* image, bool wait )
 {
-    if(videoin[0]->GrabNewest(buffer,wait)) {
-        ProcessStreams(image, buffer);
+    if(videoin[0]->GrabNewest(buffer.get(),wait)) {
+        ProcessStreams(image, buffer.get());
         return true;
     }else{
         return false;
@@ -328,6 +328,28 @@ bayer_method_t DebayerVideo::BayerMethodFromString(std::string str)
      pango_print_error("Debayer error, %s is not a valid debayer method using downsample\n", str.c_str());
      return BAYER_METHOD_DOWNSAMPLE;
   }
+}
+
+PANGOLIN_REGISTER_FACTORY(DebayerVideo)
+{
+    struct DebayerVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+            const std::string tile_string = uri.Get<std::string>("tile","rggb");
+            const std::string method = uri.Get<std::string>("method","none");
+            const color_filter_t tile = DebayerVideo::ColorFilterFromString(tile_string);
+
+            std::vector<bayer_method_t> methods;
+            for(size_t s=0; s < subvid->Streams().size(); ++s) {
+                const std::string key = std::string("method") + ToString(s+1);
+                std::string method_s = uri.Get<std::string>(key, method);
+                methods.push_back(DebayerVideo::BayerMethodFromString(method_s));
+            }
+            return std::unique_ptr<VideoInterface>( new DebayerVideo(subvid, methods, tile) );
+        }
+    };
+
+    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<DebayerVideoFactory>(), 10, "debayer");
 }
 
 }

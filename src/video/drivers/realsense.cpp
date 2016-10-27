@@ -1,5 +1,7 @@
 #include <librealsense/rs.hpp>
 #include <pangolin/video/drivers/realsense.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 namespace pangolin {
 
@@ -81,6 +83,19 @@ int RealSenseVideo::GetTotalFrames() const {
 int RealSenseVideo::Seek(int frameid) {
   // TODO
   return -1;
+}
+
+PANGOLIN_REGISTER_FACTORY(RealSenseVideo)
+{
+    struct RealSenseVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+            const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+            return std::unique_ptr<VideoInterface>( new RealSenseVideo(dim, fps) );
+        }
+    };
+
+    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<RealSenseVideoFactory>(), 10, "realsense");
 }
 
 }

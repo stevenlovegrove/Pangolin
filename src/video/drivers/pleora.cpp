@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/pleora.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 #include <thread>
 
 #ifdef DEBUGPLEORA
@@ -686,6 +688,39 @@ template<typename T>
 bool PleoraVideo::SetStreamParam(const char* name, T val)
 {
     return SetParam<T>(lStreamParams, name, val);
+}
+
+PANGOLIN_REGISTER_FACTORY(PleoraVideo)
+{
+    struct PleoraVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            Params params;
+            for(Params::ParamMap::const_iterator it = uri.params.begin(); it != uri.params.end(); it++) {
+                if(it->first == "size"){
+                    const ImageDim size = uri.Get<ImageDim>("size", ImageDim(0,0));
+                    std::stringstream sx,sy;
+                    sx << size.x;
+                    sy << size.y;
+                    params.Set("Width", sx.str());
+                    params.Set("Height", sy.str());
+                } else if(it->first == "pos"){
+                    const ImageDim pos  = uri.Get<ImageDim>("pos", ImageDim(0,0));
+                    std::stringstream sx,sy;
+                    sx << pos.x;
+                    sy << pos.y;
+                    params.Set("OffsetX", sx.str());
+                    params.Set("OffsetY", sy.str());
+                } else {
+                    params.Set(it->first, it->second);
+                }
+            }
+            return std::unique_ptr<VideoInterface>(new PleoraVideo(params));
+        }
+    };
+
+    auto factory = std::make_shared<PleoraVideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "pleora");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "u3v");
 }
 
 }

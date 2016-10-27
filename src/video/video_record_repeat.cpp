@@ -26,23 +26,21 @@
  */
 
 #include <pangolin/video/video_record_repeat.h>
-#include <pangolin/video/drivers/pango_video.h>
+#include <pangolin/video/drivers/pango.h>
 #include <pangolin/video/drivers/pango_video_output.h>
 
 namespace pangolin
 {
 
 VideoRecordRepeat::VideoRecordRepeat() 
-    : video_src(0), video_file(0), video_recorder(0),
-    frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
+    : frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
 {
 }
 
 VideoRecordRepeat::VideoRecordRepeat(
     const std::string& input_uri,
     const std::string& output_uri
-    ) : video_src(0), video_file(0), video_recorder(0),
-    frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
+    ) : frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
 {
     Open(input_uri, output_uri);
 }
@@ -69,18 +67,6 @@ void VideoRecordRepeat::Open(
 
 void VideoRecordRepeat::Close()
 {
-    if (video_recorder) {
-        delete video_recorder;
-        video_recorder = 0;
-    }
-    if (video_src) {
-        delete video_src;
-        video_src = 0;
-    }
-    if (video_file) {
-        delete video_file;
-        video_file = 0;
-    }
 }
 
 VideoRecordRepeat::~VideoRecordRepeat()
@@ -117,27 +103,21 @@ bool VideoRecordRepeat::Grab( unsigned char* buffer, std::vector<Image<unsigned 
 
 void VideoRecordRepeat::InitialiseRecorder()
 {
-    if( video_recorder ) {
-        video_src->Stop();
-        delete video_recorder;
-        video_recorder = 0;
-    }
-
-    if(video_file) {
-        delete video_file;
-        video_file = 0;
-    }
+    video_recorder.reset();
+    video_file.reset();
 
     video_recorder = OpenVideoOutput(uri_output);
     video_recorder->SetStreams(
-        video_src->Streams(), str_uri_input, GetVideoDeviceProperties(video_src) );
+        video_src->Streams(), str_uri_input,
+        GetVideoDeviceProperties(video_src.get())
+    );
 }
 
 void VideoRecordRepeat::Record()
 {
     // Switch sub-video
     videos.resize(1);
-    videos[0] = video_src;
+    videos[0] = video_src.get();
 
     // Initialise recorder and ensure src is started
     InitialiseRecorder();
@@ -157,22 +137,14 @@ void VideoRecordRepeat::RecordOneFrame()
 
     // Switch sub-video
     videos.resize(1);
-    videos[0] = video_src;
+    videos[0] = video_src.get();
 }
 
 void VideoRecordRepeat::Play(bool realtime)
 {
-    if( video_file ) {
-        delete video_file;
-        video_file = 0;
-    }
-
+    video_file.reset();
     video_src->Stop();
-
-    if(video_recorder) {
-        delete video_recorder;
-        video_recorder = 0;
-    }
+    video_recorder.reset();
 
     video_file = OpenVideo(
         realtime ? "file:[realtime]//" + uri_output.url :
@@ -183,26 +155,19 @@ void VideoRecordRepeat::Play(bool realtime)
 
     // Switch sub-video
     videos.resize(1);
-    videos[0] = video_file;
+    videos[0] = video_file.get();
 }
 
 void VideoRecordRepeat::Source()
 {
-    if(video_file) {
-        delete video_file;
-        video_file = 0;
-    }
-
-    if(video_recorder) {
-        delete video_recorder;
-        video_recorder = 0;
-    }
+    video_file.reset();
+    video_recorder.reset();
 
     frame_num = 0;
 
     // Switch sub-video
     videos.resize(1);
-    videos[0] = video_src;
+    videos[0] = video_src.get();
 }
 
 size_t VideoRecordRepeat::SizeBytes() const
@@ -225,10 +190,7 @@ void VideoRecordRepeat::Start()
 void VideoRecordRepeat::Stop()
 {
     // Semantics of this?
-    if(video_recorder) {
-        delete video_recorder;
-        video_recorder = 0;
-    }
+    video_recorder.reset();
 }
 
 bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
@@ -240,7 +202,7 @@ bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
     if( should_record && video_recorder != 0 ) {
         bool success = video_src->GrabNext(image, wait);
         if( success ) {
-            video_recorder->WriteStreams(image, GetVideoFrameProperties(video_src) );
+            video_recorder->WriteStreams(image, GetVideoFrameProperties(video_src.get()) );
             record_once = false;
         }
         return success;
@@ -261,7 +223,7 @@ bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
     {
         bool success = video_src->GrabNewest(image,wait);
         if( success) {
-            video_recorder->WriteStreams(image, GetVideoFrameProperties(video_src) );
+            video_recorder->WriteStreams(image, GetVideoFrameProperties(video_src.get()) );
             record_once = false;
         }
         return success;

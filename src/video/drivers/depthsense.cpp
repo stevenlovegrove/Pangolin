@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/depthsense.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 #include <iomanip>
 
 namespace pangolin
@@ -611,6 +613,44 @@ bool DepthSenseVideo::GrabNewest( unsigned char* image, bool wait )
 double DepthSenseVideo::GetDeltaTime() const
 {
     return depthTs - colorTs;
+}
+
+DepthSenseSensorType depthsense_sensor(const std::string& str)
+{
+    if (!str.compare("rgb")) {
+        return DepthSenseRgb;
+    }
+    else if (!str.compare("depth")) {
+        return DepthSenseDepth;
+    }
+    else if (str.empty()) {
+        return DepthSenseUnassigned;
+    }
+    else{
+        throw pangolin::VideoException("Unknown DepthSense sensor", str);
+    }
+}
+
+PANGOLIN_REGISTER_FACTORY(DepthSenseVideo)
+{
+    struct DepthSenseVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            DepthSenseSensorType img1 = depthsense_sensor(uri.Get<std::string>("img1", "depth"));
+            DepthSenseSensorType img2 = depthsense_sensor(uri.Get<std::string>("img2", ""));
+
+            const ImageDim dim1 = uri.Get<ImageDim>("size1", img1 == DepthSenseDepth ? ImageDim(320, 240) : ImageDim(640, 480) );
+            const ImageDim dim2 = uri.Get<ImageDim>("size2", img2 == DepthSenseDepth ? ImageDim(320, 240) : ImageDim(640, 480) );
+
+            const unsigned int fps1 = uri.Get<unsigned int>("fps1", 30);
+            const unsigned int fps2 = uri.Get<unsigned int>("fps2", 30);
+
+            return std::unique_ptr<VideoInterface>(
+                DepthSenseContext::I().GetDepthSenseVideo(0, img1, img2, dim1, dim2, fps1, fps2, uri)
+            );
+        }
+    };
+
+    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<DepthSenseVideoFactory>(), 10, "depthsense");
 }
 
 }

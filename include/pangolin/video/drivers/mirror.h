@@ -48,7 +48,7 @@ class PANGOLIN_EXPORT MirrorVideo :
     public BufferAwareVideoInterface
 {
 public:
-    MirrorVideo(VideoInterface* videoin, const std::vector<MirrorOptions>& flips);
+    MirrorVideo(std::unique_ptr<VideoInterface>& videoin, const std::vector<MirrorOptions>& flips);
     ~MirrorVideo();
 
     //! Implement VideoInput::Start()
@@ -79,7 +79,7 @@ public:
 protected:
     void Process(unsigned char* image, const unsigned char* buffer);
 
-    VideoInterface* videoin;
+    std::unique_ptr<VideoInterface> videoin;
     std::vector<VideoInterface*> inputs;
     std::vector<StreamInfo> streams;
     std::vector<MirrorOptions> flips;

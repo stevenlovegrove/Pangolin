@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/thread.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 #ifdef DEBUGTHREAD
   #include <pangolin/utils/timer.h>
@@ -44,13 +46,13 @@ namespace pangolin
 const uint64_t grab_fail_thread_sleep_us = 1000;
 const uint64_t capture_timout_ms = 5000;
 
-ThreadVideo::ThreadVideo(VideoInterface* src, size_t num_buffers)
-    : quit_grab_thread(true)
+ThreadVideo::ThreadVideo(std::unique_ptr<VideoInterface> &src_, size_t num_buffers)
+    : src(std::move(src_)), quit_grab_thread(true)
 {
     if(!src) {
         throw VideoException("ThreadVideo: VideoInterface in must not be null");
     }
-    videoin.push_back(src);
+    videoin.push_back(src.get());
 
 //    // queue init allocates buffers.
 //    queue.init(num_buffers, (unsigned int)videoin[0]->SizeBytes());
@@ -66,7 +68,8 @@ ThreadVideo::ThreadVideo(VideoInterface* src, size_t num_buffers)
 ThreadVideo::~ThreadVideo()
 {
     Stop();
-    delete videoin[0];
+
+    src.reset();
 
     // Invalidate all buffers
     queue.DropNFrames(queue.AvailableFrames());
@@ -232,6 +235,19 @@ void ThreadVideo::operator()()
 std::vector<VideoInterface*>& ThreadVideo::InputStreams()
 {
     return videoin;
+}
+
+PANGOLIN_REGISTER_FACTORY(ThreadVideo)
+{
+    struct ThreadVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+            const int num_buffers = uri.Get<int>("num_buffers", 30);
+            return std::unique_ptr<VideoInterface>(new ThreadVideo(subvid, num_buffers));
+        }
+    };
+
+    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<ThreadVideoFactory>(), 10, "thread");
 }
 
 }

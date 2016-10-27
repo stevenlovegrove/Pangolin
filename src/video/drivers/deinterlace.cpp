@@ -25,14 +25,16 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/firewire_deinterlace.h>
+#include <pangolin/video/drivers/deinterlace.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 #include <dc1394/conversions.h>
 
 namespace pangolin
 {
 
-FirewireDeinterlace::FirewireDeinterlace(VideoInterface* videoin)
-    : videoin(videoin), buffer(0)
+DeinterlaceVideo::DeinterlaceVideo(std::unique_ptr<VideoInterface> &videoin_)
+    : videoin(std::move(videoin_)), buffer(0)
 {
     if(videoin->Streams().size() != 1)
         throw VideoException("FirewireDeinterlace input must have exactly one stream");
@@ -49,33 +51,32 @@ FirewireDeinterlace::FirewireDeinterlace(VideoInterface* videoin)
     std::cout << videoin->Streams()[0].Width() << ", " << videoin->Streams()[0].Height() << std::endl;
 }
 
-FirewireDeinterlace::~FirewireDeinterlace()
+DeinterlaceVideo::~DeinterlaceVideo()
 {
     delete[] buffer;
-    delete videoin;
 }
 
-size_t FirewireDeinterlace::SizeBytes() const
+size_t DeinterlaceVideo::SizeBytes() const
 {
     return videoin->SizeBytes();
 }
 
-const std::vector<StreamInfo>& FirewireDeinterlace::Streams() const
+const std::vector<StreamInfo>& DeinterlaceVideo::Streams() const
 {
     return streams;
 }
 
-void FirewireDeinterlace::Start()
+void DeinterlaceVideo::Start()
 {
     videoin->Start();
 }
 
-void FirewireDeinterlace::Stop()
+void DeinterlaceVideo::Stop()
 {
     videoin->Stop();
 }
 
-bool FirewireDeinterlace::GrabNext( unsigned char* image, bool wait )
+bool DeinterlaceVideo::GrabNext( unsigned char* image, bool wait )
 {
     if(videoin->GrabNext(buffer, wait)) {
         return ( dc1394_deinterlace_stereo(buffer,image, videoin->Streams()[0].Width(), 2*videoin->Streams()[0].Height() ) == DC1394_SUCCESS );
@@ -83,7 +84,7 @@ bool FirewireDeinterlace::GrabNext( unsigned char* image, bool wait )
     return false;
 }
 
-bool FirewireDeinterlace::GrabNewest( unsigned char* image, bool wait )
+bool DeinterlaceVideo::GrabNewest( unsigned char* image, bool wait )
 {
     if(videoin->GrabNewest(buffer, wait)) {
         return ( dc1394_deinterlace_stereo(buffer,image, videoin->Streams()[0].Width(), 2*videoin->Streams()[0].Height() ) == DC1394_SUCCESS );
@@ -91,6 +92,16 @@ bool FirewireDeinterlace::GrabNewest( unsigned char* image, bool wait )
     return false;
 }
 
+PANGOLIN_REGISTER_FACTORY(DeinterlaceVideo)
+{
+    struct DeinterlaceVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+            return std::unique_ptr<VideoInterface>( new DeinterlaceVideo(subvid) );
+        }
+    };
 
+    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<DeinterlaceVideoFactory>(), 10, "deinterlace");
+}
 
 }

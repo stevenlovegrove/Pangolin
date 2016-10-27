@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/pango_video_output.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/picojson.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/sigstate.h>

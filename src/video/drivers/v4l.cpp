@@ -27,6 +27,8 @@
  */
 
 #include <pangolin/video/drivers/v4l.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -659,6 +661,37 @@ int V4lVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, U
         return ret;
     }
     return 0;
+}
+
+PANGOLIN_REGISTER_FACTORY(V4lVideo)
+{
+    struct V4lVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            const std::string smethod = uri.Get<std::string>("method","mmap");
+            const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(0,0));
+            const int exposure_us = uri.Get<int>("ExposureTime", 10000);
+
+            io_method method = IO_METHOD_MMAP;
+
+            if(smethod == "read" ) {
+                method = IO_METHOD_READ;
+            }else if(smethod == "mmap" ) {
+                method = IO_METHOD_MMAP;
+            }else if(smethod == "userptr" ) {
+                method = IO_METHOD_USERPTR;
+            }
+
+            V4lVideo* video_raw = new V4lVideo(uri.url.c_str(), method, desired_dim.x, desired_dim.y );
+            if(video_raw) {
+                static_cast<V4lVideo*>(video_raw)->SetExposureUs(exposure_us);
+            }
+            return std::unique_ptr<VideoInterface>(video_raw);
+        }
+    };
+
+    auto factory = std::make_shared<V4lVideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "v4l");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "uvc");
 }
 
 }

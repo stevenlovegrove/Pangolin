@@ -1,11 +1,12 @@
 #######################################################
 ## Library sources
 
+include(EnsureSymbolsLoaded)
+
 macro( append_glob list glob )
     file(GLOB files ${glob})
     set(${list} "${${list}};${files}")
 endmacro()
-
 
 ## Header only includes / core headers
 set( INCDIR "../include/pangolin" )
@@ -21,6 +22,9 @@ append_glob(HEADERS ${INCDIR}/log/*.h*)
 append_glob(SOURCES utils/*.cpp)
 append_glob(SOURCES image/*.cpp)
 append_glob(SOURCES log/*.cpp)
+
+### Store list of static constructors to force-load
+set( ENSURE_SYMBOLS_LOAD "" )
 
 #######################################################
 ## User build options
@@ -63,9 +67,9 @@ if(BUILD_PANGOLIN_VIDEO)
   list(APPEND HEADERS
     ${INCDIR}/video/drivers/test.h
     ${INCDIR}/video/drivers/images.h
-    ${INCDIR}/video/drivers/video_splitter.h
-    ${INCDIR}/video/drivers/pvn_video.h
-    ${INCDIR}/video/drivers/pango_video.h
+    ${INCDIR}/video/drivers/split.h
+    ${INCDIR}/video/drivers/pvn.h
+    ${INCDIR}/video/drivers/pango.h
     ${INCDIR}/video/drivers/pango_video_output.h
     ${INCDIR}/video/drivers/debayer.h
     ${INCDIR}/video/drivers/shift.h
@@ -77,9 +81,9 @@ if(BUILD_PANGOLIN_VIDEO)
   list(APPEND SOURCES
     video/drivers/test.cpp
     video/drivers/images.cpp
-    video/drivers/video_splitter.cpp
-    video/drivers/pvn_video.cpp
-    video/drivers/pango_video.cpp
+    video/drivers/split.cpp
+    video/drivers/pvn.cpp
+    video/drivers/pango.cpp
     video/drivers/pango_video_output.cpp
     video/drivers/debayer.cpp
     video/drivers/shift.cpp
@@ -96,6 +100,19 @@ if(BUILD_PANGOLIN_VIDEO)
       # Required for shared memory API using some versions of glibc
       list(APPEND LINK_LIBS rt pthread)
     endif()
+
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterTestVideoFactory )
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterImagesVideoFactory )
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterSplitVideoFactory )
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterPvnVideoFactory )
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterPangoVideoFactory )
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterDebayerVideoFactory )
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterShiftVideoFactory )
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterMirrorVideoFactory )
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterUnpackVideoFactory )
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterJoinVideoFactory )
+    list(APPEND ENSURE_SYMBOLS_LOAD RegisterThreadVideoFactory )
+
   endif()
 
 endif()
@@ -277,8 +294,9 @@ if(BUILD_PANGOLIN_VIDEO AND DC1394_FOUND)
   set(HAVE_DC1394 1)
   list(APPEND INTERNAL_INC  ${DC1394_INCLUDE_DIR} )
   list(APPEND LINK_LIBS  ${DC1394_LIBRARY} )
-  list(APPEND HEADERS ${INCDIR}/video/drivers/firewire.h ${INCDIR}/video/drivers/firewire_deinterlace.h )
-  list(APPEND SOURCES video/drivers/firewire.cpp video/drivers/firewire_deinterlace.cpp)
+  list(APPEND HEADERS ${INCDIR}/video/drivers/firewire.h ${INCDIR}/video/drivers/deinterlace.h )
+  list(APPEND SOURCES video/drivers/firewire.cpp video/drivers/deinterlace.cpp)
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterFirewireVideoFactory )
   message(STATUS "libdc1394 Found and Enabled")
 endif()
 
@@ -286,6 +304,7 @@ if(BUILD_PANGOLIN_VIDEO AND _LINUX_)
   set(HAVE_V4L 1)
   list(APPEND HEADERS ${INCDIR}/video/drivers/v4l.h)
   list(APPEND SOURCES video/drivers/v4l.cpp)
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterV4lVideoFactory )
   message(STATUS "V4L Found and Enabled")
 endif()
 
@@ -296,6 +315,8 @@ if(BUILD_PANGOLIN_VIDEO AND FFMPEG_FOUND)
   list(APPEND LINK_LIBS ${FFMPEG_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/ffmpeg.h)
   list(APPEND SOURCES video/drivers/ffmpeg.cpp)
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterFfmpegVideoFactory )
+
   if(_GCC_)
     # FFMPEG is a real pain for deprecating the API.
     set_source_files_properties(video/drivers/ffmpeg.cpp    PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
@@ -310,6 +331,7 @@ if(BUILD_PANGOLIN_VIDEO AND LIBREALSENSE_FOUND)
   list(APPEND LINK_LIBS ${LIBREALSENSE_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/realsense.h )
   list(APPEND SOURCES video/drivers/realsense.cpp)
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterRealSenseVideoFactory )
   message(STATUS "LibRealSense Found and Enabled")
 endif()
 
@@ -324,6 +346,7 @@ if(BUILD_PANGOLIN_VIDEO AND OPENNI_FOUND)
   list(APPEND LINK_LIBS ${OPENNI_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/openni.h )
   list(APPEND SOURCES video/drivers/openni.cpp)
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterOpenNiVideoFactory )
   message(STATUS "OpenNI Found and Enabled")
 endif()
 
@@ -337,6 +360,7 @@ if(BUILD_PANGOLIN_VIDEO AND OPENNI2_FOUND)
   list(APPEND LINK_LIBS ${OPENNI2_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/openni2.h )
   list(APPEND SOURCES video/drivers/openni2.cpp)
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterOpenNi2VideoFactory )
   message(STATUS "OpenNI2 Found and Enabled")
 endif()
 
@@ -347,6 +371,7 @@ if(BUILD_PANGOLIN_VIDEO AND uvc_FOUND)
   list(APPEND LINK_LIBS ${uvc_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/uvc.h )
   list(APPEND SOURCES video/drivers/uvc.cpp)
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterUvcVideoFactory )
   if(_WIN_)
     find_package(pthread REQUIRED QUIET)
     list(APPEND LINK_LIBS ${pthread_LIBRARIES} )
@@ -364,6 +389,7 @@ if(BUILD_PANGOLIN_VIDEO AND DepthSense_FOUND)
   list(APPEND LINK_LIBS ${DepthSense_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/depthsense.h )
   list(APPEND SOURCES video/drivers/depthsense.cpp)
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterDepthSenseVideoFactory )
   message(STATUS "DepthSense Found and Enabled")
 endif()
 
@@ -374,6 +400,8 @@ if(BUILD_PANGOLIN_VIDEO AND TeliCam_FOUND)
   list(APPEND LINK_LIBS ${TeliCam_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/teli.h )
   list(APPEND SOURCES video/drivers/teli.cpp )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterTeliVideoFactory )
+
   message(STATUS "TeliCam Found and Enabled" )
 endif()
 
@@ -384,6 +412,8 @@ if(BUILD_PANGOLIN_VIDEO AND Pleora_FOUND)
   list(APPEND LINK_LIBS ${Pleora_LIBRARIES} )
   list(APPEND HEADERS ${INCDIR}/video/drivers/pleora.h )
   list(APPEND SOURCES video/drivers/pleora.cpp )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterPleoraVideoFactory )
+
   if(_GCC_)
     # Suppress warnings generated from Pleora SDK.
     set_source_files_properties(video/drivers/pleora.cpp PROPERTIES COMPILE_FLAGS -Wno-unknown-pragmas)
@@ -448,7 +478,13 @@ include_directories( ${USER_INC} )
 include_directories( ${INTERNAL_INC} )
 
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
-target_link_libraries(${LIBRARY_NAME} ${LINK_LIBS})
+target_link_libraries(${LIBRARY_NAME} PUBLIC ${LINK_LIBS})
+
+## Force some symbols to be included
+## Useful for static constructors in static libraries.
+foreach( symbol ${ENSURE_SYMBOLS_LOAD} )
+    ensure_lib_loads_symbol(${LIBRARY_NAME} ${symbol})
+endforeach()
 
 ## Generate symbol export helper header on MSVC
 IF(MSVC)

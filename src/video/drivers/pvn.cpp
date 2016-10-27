@@ -25,7 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/pvn_video.h>
+#include <pangolin/video/drivers/pvn.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
 
 #include <iostream>
@@ -110,6 +112,25 @@ bool PvnVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 bool PvnVideo::GrabNewest( unsigned char* image, bool wait )
 {
     return GrabNext(image,wait);
+}
+
+PANGOLIN_REGISTER_FACTORY(PvnVideo)
+{
+    struct PvnVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            const std::string path = PathExpand(uri.url);
+
+            if( !uri.scheme.compare("pvn") || FileType(uri.url) == ImageFileTypePvn ) {
+                const bool realtime = uri.Contains("realtime");
+                return std::unique_ptr<VideoInterface>(new PvnVideo(path.c_str(), realtime));
+            }
+            return std::unique_ptr<VideoInterface>();
+        }
+    };
+
+    auto factory = std::make_shared<PvnVideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "pvn");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "file");
 }
 
 }

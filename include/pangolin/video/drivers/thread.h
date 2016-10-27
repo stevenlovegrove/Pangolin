@@ -41,7 +41,7 @@ class PANGOLIN_EXPORT ThreadVideo :  public VideoInterface, public VideoProperti
         public BufferAwareVideoInterface, public VideoFilterInterface
 {
 public:
-    ThreadVideo(VideoInterface* videoin, size_t num_buffers);
+    ThreadVideo(std::unique_ptr<VideoInterface>& videoin, size_t num_buffers);
     ~ThreadVideo();
 
     //! Implement VideoInput::Start()
@@ -88,6 +88,7 @@ protected:
         json::value frame_properties;
     };
 
+    std::unique_ptr<VideoInterface> src;
     std::vector<VideoInterface*> videoin;
 
     bool quit_grab_thread;

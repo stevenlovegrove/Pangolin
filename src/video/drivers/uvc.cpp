@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/uvc.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
 {
@@ -252,6 +254,24 @@ int UvcVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, U
     }else{
         return uvc_get_ctrl(devh_, unit, ctrl, data, len, (uvc_req_code)req_code);
     }
+}
+
+PANGOLIN_REGISTER_FACTORY(UvcVideo)
+{
+    struct UvcVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            int vid = 0;
+            int pid = 0;
+            std::istringstream(uri.Get<std::string>("vid","0x0000")) >> std::hex >> vid;
+            std::istringstream(uri.Get<std::string>("pid","0x0000")) >> std::hex >> pid;
+            const unsigned int dev_id = uri.Get<int>("num",0);
+            const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+            const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+            return std::unique_ptr<VideoInterface>( new UvcVideo(vid,pid,0,dev_id,dim.x,dim.y,fps) );
+        }
+    };
+
+    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<UvcVideoFactory>(), 10, "uvc");
 }
 
 }

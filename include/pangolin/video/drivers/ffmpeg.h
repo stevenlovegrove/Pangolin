@@ -115,7 +115,7 @@ enum FfmpegMethod
 class PANGOLIN_EXPORT FfmpegConverter : public VideoInterface
 {
 public:
-    FfmpegConverter(VideoInterface* videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_POINT);
+    FfmpegConverter(std::unique_ptr<VideoInterface>& videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_POINT);
     ~FfmpegConverter();
     
     //! Implement VideoInput::Start()
@@ -139,7 +139,7 @@ public:
 protected:
     std::vector<StreamInfo> streams;
     
-    VideoInterface* videoin;
+    std::unique_ptr<VideoInterface> videoin;
     SwsContext *img_convert_ctx;
     
     AVPixelFormat     fmtsrc;

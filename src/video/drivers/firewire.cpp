@@ -26,6 +26,9 @@
  */
 
 #include <pangolin/video/drivers/firewire.h>
+#include <pangolin/video/drivers/deinterlace.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 #include <stdio.h>
 #include <stdint.h>
@@ -862,6 +865,105 @@ double FirewireVideo::bus_period_from_iso_speed(dc1394speed_t iso_speed)
     }
     
     return bus_period;
+}
+
+dc1394video_mode_t get_firewire_format7_mode(const std::string fmt)
+{
+    const std::string FMT7_prefix = "FORMAT7_";
+
+    if( StartsWith(fmt, FMT7_prefix) )
+    {
+        int fmt7_mode = 0;
+        std::istringstream iss( fmt.substr(FMT7_prefix.size()) );
+        iss >> fmt7_mode;
+        if( !iss.fail() ) {
+            return (dc1394video_mode_t)(DC1394_VIDEO_MODE_FORMAT7_0 + fmt7_mode);
+        }
+    }
+
+    throw VideoException("Unknown video mode");
+}
+
+dc1394video_mode_t get_firewire_mode(unsigned width, unsigned height, const std::string fmt)
+{
+    for( dc1394video_mode_t video_mode=DC1394_VIDEO_MODE_MIN; video_mode<DC1394_VIDEO_MODE_MAX; video_mode = (dc1394video_mode_t)(video_mode +1) )
+    {
+        try {
+            unsigned w,h;
+            std::string format;
+            Dc1394ModeDetails(video_mode,w,h,format);
+
+            if( w == width && h==height && !fmt.compare(format) )
+                return video_mode;
+        } catch (VideoException e) {}
+    }
+
+    throw VideoException("Unknown video mode");
+}
+
+dc1394framerate_t get_firewire_framerate(float framerate)
+{
+    if(framerate==1.875)     return DC1394_FRAMERATE_1_875;
+    else if(framerate==3.75) return DC1394_FRAMERATE_3_75;
+    else if(framerate==7.5)  return DC1394_FRAMERATE_7_5;
+    else if(framerate==15)   return DC1394_FRAMERATE_15;
+    else if(framerate==30)   return DC1394_FRAMERATE_30;
+    else if(framerate==60)   return DC1394_FRAMERATE_60;
+    else if(framerate==120)  return DC1394_FRAMERATE_120;
+    else if(framerate==240)  return DC1394_FRAMERATE_240;
+    else throw VideoException("Invalid framerate");
+}
+
+PANGOLIN_REGISTER_FACTORY(FirewireVideo)
+{
+    struct FirewireVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            std::string desired_format = uri.Get<std::string>("fmt","RGB24");
+            ToUpper(desired_format);
+            const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+            const ImageDim desired_xy  = uri.Get<ImageDim>("pos", ImageDim(0,0));
+            const int desired_dma = uri.Get<int>("dma", 10);
+            const int desired_iso = uri.Get<int>("iso", 400);
+            const float desired_fps = uri.Get<float>("fps", 30);
+            const bool deinterlace = uri.Get<bool>("deinterlace", 0);
+
+            Guid guid = 0;
+            unsigned deviceid = 0;
+            dc1394framerate_t framerate = get_firewire_framerate(desired_fps);
+            dc1394speed_t iso_speed = (dc1394speed_t)(log(desired_iso/100) / log(2));
+            int dma_buffers = desired_dma;
+
+            VideoInterface* video_raw = nullptr;
+
+            if( StartsWith(desired_format, "FORMAT7") )
+            {
+                dc1394video_mode_t video_mode = get_firewire_format7_mode(desired_format);
+                if( guid.guid == 0 ) {
+                    video_raw = new FirewireVideo(deviceid,video_mode,FirewireVideo::MAX_FR, desired_dim.x, desired_dim.y, desired_xy.x, desired_xy.y, iso_speed, dma_buffers,true);
+                }else{
+                    video_raw = new FirewireVideo(guid,video_mode,FirewireVideo::MAX_FR, desired_dim.x, desired_dim.y, desired_xy.x, desired_xy.y, iso_speed, dma_buffers,true);
+                }
+            }else{
+                dc1394video_mode_t video_mode = get_firewire_mode(desired_dim.x, desired_dim.y,desired_format);
+                if( guid.guid == 0 ) {
+                    video_raw = new FirewireVideo(deviceid,video_mode,framerate,iso_speed,dma_buffers);
+                }else{
+                    video_raw = new FirewireVideo(guid,video_mode,framerate,iso_speed,dma_buffers);
+                }
+            }
+
+            if(deinterlace) {
+                std::unique_ptr<VideoInterface> video(video_raw);
+                video_raw = new DeinterlaceVideo(video);
+            }
+
+            return std::unique_ptr<VideoInterface>(video_raw);
+        }
+    };
+
+    auto factory = std::make_shared<FirewireVideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "firewire");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "dc1394");
 }
 
 }

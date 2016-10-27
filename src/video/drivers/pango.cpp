@@ -25,8 +25,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/pango_video.h>
+#include <pangolin/video/drivers/pango.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/file_extension.h>
 
 #include <functional>
 
@@ -217,6 +220,25 @@ void PangoVideo::HandlePipeClosed()
     // it is open, the stream will be re-opened.
     reader.Close();
     is_pipe_open = false;
+}
+
+PANGOLIN_REGISTER_FACTORY(PangoVideo)
+{
+    struct PangoVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            const std::string path = PathExpand(uri.url);
+
+            if( !uri.scheme.compare("pango") || FileType(uri.url) == ImageFileTypePango ) {
+                const bool realtime = uri.Contains("realtime");
+                return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str(), realtime));
+            }
+            return std::unique_ptr<VideoInterface>();
+        }
+    };
+
+    auto factory = std::make_shared<PangoVideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "pango");
+    VideoFactoryRegistry::I().RegisterFactory(factory,  5, "file");
 }
 
 }

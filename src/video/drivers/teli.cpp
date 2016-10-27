@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/video/drivers/teli.h>
+#include <pangolin/video/video_factory.h>
 #include <pangolin/video/iostream_operators.h>
 #include <XmlFeatures.h>
 
@@ -478,6 +479,19 @@ const json::value& TeliVideo::DeviceProperties() const
 const json::value& TeliVideo::FrameProperties() const
 {
     return frame_properties;
+}
+
+PANGOLIN_REGISTER_FACTORY(TeliVideo)
+{
+    struct TeliVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            return std::unique_ptr<VideoInterface>(new TeliVideo(uri));
+        }
+    };
+
+    auto factory = std::make_shared<TeliVideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "teli");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "u3v");
 }
 
 }

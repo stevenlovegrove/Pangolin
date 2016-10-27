@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/openni.h>
+#include <pangolin/video/video_factory.h>
+#include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
 {
@@ -260,6 +262,38 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 bool OpenNiVideo::GrabNewest( unsigned char* image, bool wait )
 {
     return GrabNext(image,wait);
+}
+
+PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
+{
+    struct OpenNiVideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+            const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+            const bool autoexposure = uri.Get<bool>("autoexposure", true);
+
+            OpenNiSensorType img1 = OpenNiRgb;
+            OpenNiSensorType img2 = OpenNiUnassigned;
+
+            if( uri.Contains("img1") ){
+                img1 = openni_sensor(uri.Get<std::string>("img1", "depth"));
+            }
+
+            if( uri.Contains("img2") ){
+                img2 = openni_sensor(uri.Get<std::string>("img2","rgb"));
+            }
+
+            OpenNiVideo* oniv = new OpenNiVideo(img1, img2, dim, fps);
+            oniv->SetAutoExposure(autoexposure);
+            return std::unique_ptr(oniv);
+        }
+    };
+
+    auto factory = std::make_shared<OpenNiVideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory,  10, "openni1");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 100, "openni");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 100, "oni");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 100, "kinect");
 }
 
 }

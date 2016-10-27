@@ -27,6 +27,7 @@
  */
 
 #include <pangolin/video/drivers/openni2.h>
+#include <pangolin/video/video_factory.h>
 
 #include <PS1080.h>
 #include <OniVersion.h>
@@ -58,7 +59,7 @@ VideoPixelFormat VideoFormatFromOpenNI2(openni::PixelFormat fmt)
     return VideoFormatFromString(pvfmt);
 }
 
-void OpenNiVideo2::PrintOpenNI2Modes(openni::SensorType sensorType)
+void OpenNi2Video::PrintOpenNI2Modes(openni::SensorType sensorType)
 {
     // Query supported modes for device
     const openni::Array<openni::VideoMode>& modes =
@@ -82,7 +83,7 @@ void OpenNiVideo2::PrintOpenNI2Modes(openni::SensorType sensorType)
     }
 }
 
-openni::VideoMode OpenNiVideo2::FindOpenNI2Mode(
+openni::VideoMode OpenNi2Video::FindOpenNI2Mode(
     openni::Device & device,
     openni::SensorType sensorType,
     int width, int height,
@@ -132,7 +133,7 @@ inline openni::SensorType SensorType(const OpenNiSensorType sensor)
     }
 }
 
-OpenNiVideo2::OpenNiVideo2(ImageDim dim, int fps)
+OpenNi2Video::OpenNi2Video(ImageDim dim, int fps)
 {
     InitialiseOpenNI();
 
@@ -154,7 +155,7 @@ OpenNiVideo2::OpenNiVideo2(ImageDim dim, int fps)
     Start();
 }
 
-OpenNiVideo2::OpenNiVideo2(const std::string& device_uri)
+OpenNi2Video::OpenNi2Video(const std::string& device_uri)
 {
     InitialiseOpenNI();
 
@@ -166,7 +167,7 @@ OpenNiVideo2::OpenNiVideo2(const std::string& device_uri)
     Start();
 }
 
-OpenNiVideo2::OpenNiVideo2(const std::string& device_uri, std::vector<OpenNiStreamMode> &stream_modes)
+OpenNi2Video::OpenNi2Video(const std::string& device_uri, std::vector<OpenNiStreamMode> &stream_modes)
 {
     InitialiseOpenNI();
 
@@ -181,7 +182,7 @@ OpenNiVideo2::OpenNiVideo2(const std::string& device_uri, std::vector<OpenNiStre
     Start();
 }
 
-OpenNiVideo2::OpenNiVideo2(std::vector<OpenNiStreamMode>& stream_modes)
+OpenNi2Video::OpenNi2Video(std::vector<OpenNiStreamMode>& stream_modes)
 {
     InitialiseOpenNI();
 
@@ -206,7 +207,7 @@ OpenNiVideo2::OpenNiVideo2(std::vector<OpenNiStreamMode>& stream_modes)
     Start();
 }
 
-void OpenNiVideo2::InitialiseOpenNI()
+void OpenNi2Video::InitialiseOpenNI()
 {
     // Initialise member variables
     numDevices = 0;
@@ -222,7 +223,7 @@ void OpenNiVideo2::InitialiseOpenNI()
     }
 }
 
-int OpenNiVideo2::AddDevice(const std::string& device_uri)
+int OpenNi2Video::AddDevice(const std::string& device_uri)
 {
     const size_t dev_id = numDevices;
     openni::Status rc = devices[dev_id].open(device_uri.c_str());
@@ -233,7 +234,7 @@ int OpenNiVideo2::AddDevice(const std::string& device_uri)
     return dev_id;
 }
 
-void OpenNiVideo2::AddStream(const OpenNiStreamMode& mode)
+void OpenNi2Video::AddStream(const OpenNiStreamMode& mode)
 {
     sensor_type[numStreams] = mode;
     openni::Device& device = devices[mode.device];
@@ -251,7 +252,7 @@ void OpenNiVideo2::AddStream(const OpenNiStreamMode& mode)
     numStreams++;
 }
 
-void OpenNiVideo2::SetupStreamModes()
+void OpenNi2Video::SetupStreamModes()
 {
     streams_properties = &frame_properties["streams"];
     *streams_properties = json::value(json::array_type,false);
@@ -347,7 +348,7 @@ void OpenNiVideo2::SetupStreamModes()
     use_ir_and_rgb = use_rgb && use_ir;
 }
 
-void OpenNiVideo2::UpdateProperties()
+void OpenNi2Video::UpdateProperties()
 {
     json::value& jsopenni = device_properties["openni"];
 
@@ -408,7 +409,7 @@ void OpenNiVideo2::UpdateProperties()
     }
 }
 
-void OpenNiVideo2::SetMirroring(bool enable)
+void OpenNi2Video::SetMirroring(bool enable)
 {
     // Set this property on all streams. It doesn't matter if it fails.
     for(unsigned int i=0; i<Streams().size(); ++i) {
@@ -416,7 +417,7 @@ void OpenNiVideo2::SetMirroring(bool enable)
     }
 }
 
-void OpenNiVideo2::SetAutoExposure(bool enable)
+void OpenNi2Video::SetAutoExposure(bool enable)
 {
     // Set this property on all streams exposing CameraSettings
     for(unsigned int i=0; i<Streams().size(); ++i) {
@@ -425,7 +426,7 @@ void OpenNiVideo2::SetAutoExposure(bool enable)
     }
 }
 
-void OpenNiVideo2::SetAutoWhiteBalance(bool enable)
+void OpenNi2Video::SetAutoWhiteBalance(bool enable)
 {
     // Set this property on all streams exposing CameraSettings
     for(unsigned int i=0; i<Streams().size(); ++i) {
@@ -434,7 +435,7 @@ void OpenNiVideo2::SetAutoWhiteBalance(bool enable)
     }
 }
 
-void OpenNiVideo2::SetDepthCloseRange(bool enable)
+void OpenNi2Video::SetDepthCloseRange(bool enable)
 {
     // Set this property on all streams. It doesn't matter if it fails.
     for(unsigned int i=0; i<Streams().size(); ++i) {
@@ -442,7 +443,7 @@ void OpenNiVideo2::SetDepthCloseRange(bool enable)
     }
 }
 
-void OpenNiVideo2::SetDepthHoleFilter(bool enable)
+void OpenNi2Video::SetDepthHoleFilter(bool enable)
 {
     // Set this property on all streams. It doesn't matter if it fails.
     for(unsigned int i=0; i<Streams().size(); ++i) {
@@ -451,14 +452,14 @@ void OpenNiVideo2::SetDepthHoleFilter(bool enable)
     }
 }
 
-void OpenNiVideo2::SetDepthColorSyncEnabled(bool enable)
+void OpenNi2Video::SetDepthColorSyncEnabled(bool enable)
 {
     for(size_t i = 0 ; i < numDevices; i++) {
         devices[i].setDepthColorSyncEnabled(enable);
     }
 }
 
-void OpenNiVideo2::SetRegisterDepthToImage(bool enable)
+void OpenNi2Video::SetRegisterDepthToImage(bool enable)
 {
     if(enable) {
         for(size_t i = 0 ; i < numDevices; i++) {
@@ -471,7 +472,7 @@ void OpenNiVideo2::SetRegisterDepthToImage(bool enable)
     }
 }
 
-void OpenNiVideo2::SetPlaybackSpeed(float speed)
+void OpenNi2Video::SetPlaybackSpeed(float speed)
 {
     for(size_t i = 0 ; i < numDevices; i++) {
         openni::PlaybackControl* control = devices[i].getPlaybackControl();
@@ -479,7 +480,7 @@ void OpenNiVideo2::SetPlaybackSpeed(float speed)
     }
 }
 
-void OpenNiVideo2::SetPlaybackRepeat(bool enabled)
+void OpenNi2Video::SetPlaybackRepeat(bool enabled)
 {
     for(size_t i = 0 ; i < numDevices; i++) {
         openni::PlaybackControl* control = devices[i].getPlaybackControl();
@@ -487,7 +488,7 @@ void OpenNiVideo2::SetPlaybackRepeat(bool enabled)
     }
 }
 
-OpenNiVideo2::~OpenNiVideo2()
+OpenNi2Video::~OpenNi2Video()
 {
     Stop();
 
@@ -500,31 +501,31 @@ OpenNiVideo2::~OpenNiVideo2()
     openni::OpenNI::shutdown();
 }
 
-size_t OpenNiVideo2::SizeBytes() const
+size_t OpenNi2Video::SizeBytes() const
 {
     return sizeBytes;
 }
 
-const std::vector<StreamInfo>& OpenNiVideo2::Streams() const
+const std::vector<StreamInfo>& OpenNi2Video::Streams() const
 {
     return streams;
 }
 
-void OpenNiVideo2::Start()
+void OpenNi2Video::Start()
 {
     for(unsigned int i=0; i<Streams().size(); ++i) {
         video_stream[i].start();
     }
 }
 
-void OpenNiVideo2::Stop()
+void OpenNi2Video::Stop()
 {
     for(unsigned int i=0; i<Streams().size(); ++i) {
         video_stream[i].stop();
     }
 }
 
-openni::VideoStream * OpenNiVideo2::GetVideoStream(int stream){
+openni::VideoStream * OpenNi2Video::GetVideoStream(int stream){
     if(video_stream[stream].isValid()) {
         return &video_stream[stream];
     }else{
@@ -533,7 +534,7 @@ openni::VideoStream * OpenNiVideo2::GetVideoStream(int stream){
     }
 }
 
-bool OpenNiVideo2::GrabNext( unsigned char* image, bool /*wait*/ )
+bool OpenNi2Video::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     unsigned char* out_img = image;
 
@@ -587,22 +588,22 @@ bool OpenNiVideo2::GrabNext( unsigned char* image, bool /*wait*/ )
     return rc == openni::STATUS_OK;
 }
 
-bool OpenNiVideo2::GrabNewest( unsigned char* image, bool wait )
+bool OpenNi2Video::GrabNewest( unsigned char* image, bool wait )
 {
     return GrabNext(image,wait);
 }
 
-int OpenNiVideo2::GetCurrentFrameId() const
+int OpenNi2Video::GetCurrentFrameId() const
 {
     return current_frame_index;
 }
 
-int OpenNiVideo2::GetTotalFrames() const
+int OpenNi2Video::GetTotalFrames() const
 {
     return total_frames;
 }
 
-int OpenNiVideo2::Seek(int frameid)
+int OpenNi2Video::Seek(int frameid)
 {
     openni::PlaybackControl* control = devices[0].getPlaybackControl();
     if(control) {
@@ -611,6 +612,54 @@ int OpenNiVideo2::Seek(int frameid)
     }else{
         return -1;
     }
+}
+
+PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
+{
+    struct OpenNI2VideoFactory : public VideoFactoryInterface {
+        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+            const bool realtime = uri.Contains("realtime");
+            const ImageDim default_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+            const unsigned int default_fps = uri.Get<unsigned int>("fps", 30);
+
+            std::vector<OpenNiStreamMode> stream_modes;
+
+            int num_streams = 0;
+            std::string simg= "img1";
+            while(uri.Contains(simg)) {
+                OpenNiStreamMode stream = uri.Get<OpenNiStreamMode>(simg, OpenNiStreamMode(OpenNiRgb,default_dim,default_fps,0));
+                stream_modes.push_back(stream);
+                ++num_streams;
+                simg = "img" + ToString(num_streams+1);
+            }
+
+            OpenNi2Video* nivid;
+            if(!uri.url.empty()) {
+                nivid = new OpenNi2Video(pangolin::PathExpand(uri.url));
+            }else if(stream_modes.size()) {
+                nivid = new OpenNi2Video(stream_modes);
+            }else{
+                nivid = new OpenNi2Video(default_dim, default_fps);
+            }
+
+            nivid->SetDepthCloseRange( uri.Get<bool>("closerange",false) );
+            nivid->SetDepthHoleFilter( uri.Get<bool>("holefilter",false) );
+            nivid->SetDepthColorSyncEnabled( uri.Get<bool>("coloursync",false) );
+            nivid->SetPlaybackSpeed(realtime ? 1.0f : -1.0f);
+            nivid->SetAutoExposure(true);
+            nivid->SetAutoWhiteBalance(true);
+            nivid->SetMirroring(false);
+
+            nivid->UpdateProperties();
+
+            return std::unique_ptr<VideoInterface>(nivid);
+        }
+    };
+
+    auto factory = std::make_shared<OpenNI2VideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "openni");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "openni2");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "oni");
 }
 
 }
