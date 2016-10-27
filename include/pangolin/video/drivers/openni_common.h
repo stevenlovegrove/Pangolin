@@ -66,7 +66,7 @@ struct PANGOLIN_EXPORT OpenNiStreamMode
     int device;
 };
 
-OpenNiSensorType openni_sensor(const std::string& str)
+inline OpenNiSensorType openni_sensor(const std::string& str)
 {
     if( !str.compare("grey") || !str.compare("gray") ) {
         return OpenNiGrey;
@@ -98,7 +98,7 @@ OpenNiSensorType openni_sensor(const std::string& str)
 // Find prefix character key
 // Given arguments "depth!5:320x240@15", "!:@", would return map
 // \0->"depth", !->"5", :->"320x240", @->"15"
-std::map<char,std::string> GetTokenSplits(const std::string& str, const std::string& tokens)
+inline std::map<char,std::string> GetTokenSplits(const std::string& str, const std::string& tokens)
 {
     std::map<char,std::string> splits;
 
@@ -120,7 +120,7 @@ std::map<char,std::string> GetTokenSplits(const std::string& str, const std::str
     return splits;
 }
 
-std::istream& operator>> (std::istream &is, OpenNiStreamMode& fmt)
+inline std::istream& operator>> (std::istream &is, OpenNiStreamMode& fmt)
 {
     std::string str;
     is >> str;

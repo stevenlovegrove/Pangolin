@@ -285,7 +285,7 @@ PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
 
             OpenNiVideo* oniv = new OpenNiVideo(img1, img2, dim, fps);
             oniv->SetAutoExposure(autoexposure);
-            return std::unique_ptr(oniv);
+            return std::unique_ptr<VideoInterface>(oniv);
         }
     };
 
