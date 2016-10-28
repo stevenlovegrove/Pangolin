@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/image/image_io.h>
+#include <pangolin/video/drivers/pango.h>
+#include <pangolin/video/drivers/pango_video_output.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -33,6 +35,7 @@
 #include <string.h>
 #include <cstring>
 #include <vector>
+#include <assert.h>
 
 #ifdef HAVE_PNG
 #include <png.h>
@@ -79,6 +82,45 @@ VideoPixelFormat TgaFormat(int depth, int color_type, int color_map)
         }
     }
     throw std::runtime_error("Unsupported TGA format");    
+}
+
+
+
+TypedImage LoadFromVideo(const std::string& uri)
+{
+    std::unique_ptr<VideoInterface> video = OpenVideo(uri);
+    if(!video || video->Streams().size() != 1) {
+        throw pangolin::VideoException("Wrong number of streams: exactly one expected.");
+    }
+
+    std::unique_ptr<uint8_t[]> buffer( new uint8_t[video->SizeBytes()] );
+    const StreamInfo& stream_info = video->Streams()[0];
+
+    // Grab first image from video
+    if(!video->GrabNext(buffer.get(), true)) {
+        throw pangolin::VideoException("Failed to grab image from stream");
+    }
+
+    // Allocate storage for user image to return
+    TypedImage image;
+    image.Alloc(stream_info.Width(), stream_info.Height(), stream_info.PixFormat());
+
+    // Copy image data into user buffer.
+    const Image<unsigned char> img = stream_info.StreamImage(buffer.get());
+    assert(image.pitch <= img.pitch);
+    for(size_t y=0; y < image.h; ++y) {
+        std::memcpy(image.RowPtr(y), img.RowPtr(y), image.pitch);
+    }
+
+    return image;
+}
+
+void SaveToVideo(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& uri, bool /*top_line_first*/)
+{
+    std::unique_ptr<VideoOutputInterface> video = OpenVideoOutput(uri);
+    StreamInfo stream(fmt, image.w, image.h, image.pitch);
+    video->SetStreams({stream});
+    video->WriteStreams(image.ptr);
 }
 
 TypedImage LoadTga(const std::string& filename)
@@ -539,6 +581,8 @@ TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
         return LoadJpg(filename);
     case ImageFileTypePpm:
         return LoadPpm(filename);
+    case ImageFileTypePango:
+        return LoadFromVideo(filename);
     default:
         throw std::runtime_error("Unsupported image file type, '" + filename + "'");
     }
@@ -577,6 +621,8 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelForm
         return SavePng(image, fmt, filename, top_line_first);
     case ImageFileTypeExr:
         return SaveExr(image, fmt, filename, top_line_first);
+    case ImageFileTypePango:
+        return SaveToVideo(image, fmt, filename, top_line_first);
     default:
         throw std::runtime_error("Unsupported image file type, '" + filename + "'");
     }

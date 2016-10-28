@@ -42,7 +42,7 @@ std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri)
 {
     std::unique_ptr<VideoOutputInterface> recorder;
     
-    if(!uri.scheme.compare("pango"))
+    if(!uri.scheme.compare("pango") || !uri.scheme.compare("file") )
     {
         const size_t mb = 1024*1024;
         const size_t buffer_size_bytes = uri.Get("buffer_size_mb", 100) * mb;
