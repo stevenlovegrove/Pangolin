@@ -170,7 +170,7 @@ public:
 
     const std::vector<StreamInfo>& Streams() const;
     void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& properties);
-    int WriteStreams(unsigned char* data, const json::value& frame_properties);
+    int WriteStreams(const unsigned char* data, const json::value& frame_properties) override;
     bool IsPipe() const;
     
 protected:

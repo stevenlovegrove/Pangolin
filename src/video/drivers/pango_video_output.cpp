@@ -132,7 +132,7 @@ void PangoVideoOutput::WriteHeader()
     packetstream.WriteSources();
 }
 
-int PangoVideoOutput::WriteStreams(unsigned char* data, const json::value& frame_properties)
+int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value& frame_properties)
 {
 #ifndef _WIN_
     if(is_pipe)

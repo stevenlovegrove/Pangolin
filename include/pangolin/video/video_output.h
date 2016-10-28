@@ -58,7 +58,7 @@ struct PANGOLIN_EXPORT VideoOutputInterface
 
     virtual void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri ="", const json::value& properties = json::value() ) = 0;
 
-    virtual int WriteStreams(unsigned char* data, const json::value& frame_properties ) = 0;
+    virtual int WriteStreams(const unsigned char* data, const json::value& frame_properties = json::value() ) = 0;
 
     virtual bool IsPipe() const = 0;
 };
@@ -79,7 +79,7 @@ public:
 
     void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri = "", const json::value& properties = json::value() );
 
-    int WriteStreams(unsigned char* data, const json::value& frame_properties = json::value() );
+    int WriteStreams(const unsigned char* data, const json::value& frame_properties = json::value() ) override;
     
     bool IsPipe() const;
 

@@ -783,7 +783,7 @@ void FfmpegVideoOutput::SetStreams(const std::vector<StreamInfo>& str, const std
     }
 }
 
-int FfmpegVideoOutput::WriteStreams(unsigned char* data, const json::value& /*frame_properties*/)
+int FfmpegVideoOutput::WriteStreams(const unsigned char* data, const json::value& /*frame_properties*/)
 {
     for(std::vector<FfmpegVideoOutputStream*>::iterator i = streams.begin(); i!= streams.end(); ++i)
     {
