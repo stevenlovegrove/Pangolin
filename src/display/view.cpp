@@ -60,6 +60,8 @@ double AspectAreaWithinTarget(double target, double test)
 
 void SaveViewFromFbo(std::string prefix, View& view, float scale)
 {
+    PANGOLIN_UNUSED(prefix);
+    
 #ifndef HAVE_GLES
     const Viewport orig = view.v;
     view.v.l = 0;

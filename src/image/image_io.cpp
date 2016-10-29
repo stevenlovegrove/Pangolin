@@ -25,6 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/platform.h>
+
 #include <pangolin/image/image_io.h>
 #include <pangolin/video/drivers/pango.h>
 #include <pangolin/video/drivers/pango_video_output.h>
@@ -192,6 +194,8 @@ void PNGAPI PngWarningsCallback(png_structp /*png_ptr*/, png_const_charp /*warni
 
 TypedImage LoadPng(const std::string& filename)
 {
+    PANGOLIN_UNUSED(filename);
+    
 #ifdef HAVE_PNG
     FILE *in = fopen(filename.c_str(), "rb");
     
@@ -273,6 +277,10 @@ TypedImage LoadPng(const std::string& filename)
 
 void SavePng(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
+    PANGOLIN_UNUSED(image);
+    PANGOLIN_UNUSED(filename);
+    PANGOLIN_UNUSED(top_line_first);
+    
     // Check image has supported bit depth
     for(unsigned int i=1; i < fmt.channels; ++i) {
         if( fmt.channel_bits[i] != fmt.channel_bits[0] ) {
@@ -385,6 +393,8 @@ VideoPixelFormat JpgFormat(jpeg_decompress_struct& /*info*/ )
 
 TypedImage LoadJpg(const std::string& filename)
 {
+    PANGOLIN_UNUSED(filename);
+    
 #ifdef HAVE_JPEG
     FILE * infile = fopen(filename.c_str(), "rb");
 
@@ -521,6 +531,11 @@ void SetOpenEXRChannels(Imf::ChannelList& ch, const pangolin::VideoPixelFormat& 
 
 void SaveExr(const Image<unsigned char>& image_in, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
+    PANGOLIN_UNUSED(image_in);
+    PANGOLIN_UNUSED(fmt);
+    PANGOLIN_UNUSED(filename);
+    PANGOLIN_UNUSED(top_line_first);
+    
 #ifdef HAVE_OPENEXR
     Image<unsigned char> image;
 
