@@ -53,6 +53,8 @@
 #   define PANGOLIN_EXPORT
 #endif //_MSVC_
 
+#define PANGOLIN_UNUSED(x) (void)(x)
+
 #ifdef _APPLE_IOS_
 // Not supported on this platform.
 #define __thread

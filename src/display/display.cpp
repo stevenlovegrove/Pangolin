@@ -350,6 +350,9 @@ void SaveWindowOnRender(std::string prefix)
 
 void SaveFramebuffer(std::string prefix, const Viewport& v)
 {
+    PANGOLIN_UNUSED(prefix);
+    PANGOLIN_UNUSED(v);
+    
 #ifndef HAVE_GLES
 
 #ifdef HAVE_PNG
