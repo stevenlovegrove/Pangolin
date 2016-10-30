@@ -78,12 +78,12 @@ struct Image {
         return Image<To>(w,h,pitch, (To*)ptr);
     }
 
-    T* RowPtr(int r)
+    T* RowPtr(size_t r)
     {
         return (T*)((char*)ptr + r*pitch);
     }
 
-    const T* RowPtr(int r) const
+    const T* RowPtr(size_t r) const
     {
         return (T*)((char*)ptr + r*pitch);
     }
