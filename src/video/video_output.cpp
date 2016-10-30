@@ -95,7 +95,7 @@ VideoOutput::~VideoOutput()
 
 bool VideoOutput::IsOpen() const
 {
-    return recorder.get();
+    return recorder.get() != nullptr;
 }
 
 void VideoOutput::Open(const std::string& str_uri)
