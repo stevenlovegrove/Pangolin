@@ -100,20 +100,19 @@ if(BUILD_PANGOLIN_VIDEO)
       # Required for shared memory API using some versions of glibc
       list(APPEND LINK_LIBS rt pthread)
     endif()
-
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterTestVideoFactory )
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterImagesVideoFactory )
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterSplitVideoFactory )
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterPvnVideoFactory )
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterPangoVideoFactory )
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterDebayerVideoFactory )
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterShiftVideoFactory )
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterMirrorVideoFactory )
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterUnpackVideoFactory )
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterJoinVideoFactory )
-    list(APPEND ENSURE_SYMBOLS_LOAD RegisterThreadVideoFactory )
-
   endif()
+
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterTestVideoFactory )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterImagesVideoFactory )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterSplitVideoFactory )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterPvnVideoFactory )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterPangoVideoFactory )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterDebayerVideoFactory )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterShiftVideoFactory )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterMirrorVideoFactory )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterUnpackVideoFactory )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterJoinVideoFactory )
+  list(APPEND ENSURE_SYMBOLS_LOAD RegisterThreadVideoFactory )
 
 endif()
 
