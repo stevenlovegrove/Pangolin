@@ -1,7 +1,0 @@
-macro( ensure_lib_loads_symbol target symbol)
-    if (MSVC)
-        message("Unable to force load '${symbol}' symbol on Windows.")
-    else()
-        target_link_libraries(${target} PUBLIC "-u ${symbol}")
-    endif()
-endmacro()

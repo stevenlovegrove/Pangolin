@@ -29,7 +29,6 @@
 
 #include <memory>
 #include <pangolin/video/video.h>
-#include <pangolin/utils/static_init.h>
 
 namespace pangolin
 {
@@ -71,6 +70,6 @@ private:
     std::vector<FactoryItem> factories;
 };
 
-#define PANGOLIN_REGISTER_FACTORY(x) PANGOLIN_STATIC_CONSTRUCTOR( Register ## x ## Factory )
+#define PANGOLIN_REGISTER_FACTORY(x) void Register ## x ## Factory()
 
 }

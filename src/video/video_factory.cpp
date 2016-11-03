@@ -26,6 +26,7 @@
  */
 
 #include <pangolin/video/video_factory.h>
+#include <pangolin/video_drivers.h>
 
 namespace pangolin
 {
@@ -65,6 +66,9 @@ void VideoFactoryRegistry::UnregisterAllFactories()
 
 std::unique_ptr<VideoInterface> VideoFactoryRegistry::OpenVideo(const Uri& uri)
 {
+    static bool one_time_init = LoadBuiltInVideoDrivers();
+    PANGOLIN_UNUSED(one_time_init);
+
     // Iterate over all registered factories in order of precedence.
     for(auto& item : factories) {
         if( item.scheme == uri.scheme) {
