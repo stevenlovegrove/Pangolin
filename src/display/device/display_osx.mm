@@ -184,12 +184,12 @@ void OsxWindow::ToggleFullscreen()
     PangolinGl::is_fullscreen = !PangolinGl::is_fullscreen;
 }
 
-void OsxWindow::Move(int x, int y)
+void OsxWindow::Move(int /*x*/, int /*y*/)
 {
 
 }
 
-void OsxWindow::Resize(unsigned int w, unsigned int h)
+void OsxWindow::Resize(unsigned int /*w*/, unsigned int /*h*/)
 {
 
 }
