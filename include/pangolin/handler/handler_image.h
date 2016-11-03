@@ -115,15 +115,15 @@ public:
     /// pangolin::Handler
     ///////////////////////////////////////////////////////
 
-    void Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed) PANGOLIN_OVERRIDE;
+    void Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed) override;
 
-    void Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state) PANGOLIN_OVERRIDE;
+    void Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state) override;
 
-    void MouseMotion(View& view, int x, int y, int button_state) PANGOLIN_OVERRIDE;
+    void MouseMotion(View& view, int x, int y, int button_state) override;
 
-    void PassiveMouseMotion(View&, int /*x*/, int /*y*/, int /*button_state*/) PANGOLIN_OVERRIDE;
+    void PassiveMouseMotion(View&, int /*x*/, int /*y*/, int /*button_state*/) override;
 
-    void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int /*button_state*/) PANGOLIN_OVERRIDE;
+    void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int /*button_state*/) override;
 
     ///////////////////////////////////////////////////////
     /// Callbacks

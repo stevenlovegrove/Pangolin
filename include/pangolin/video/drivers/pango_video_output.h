@@ -39,10 +39,10 @@ public:
     PangoVideoOutput(const std::string& filename, size_t buffer_size_bytes = 100*1024*1024);
     ~PangoVideoOutput();
 
-    const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& device_properties) PANGOLIN_OVERRIDE;
-    int WriteStreams(const unsigned char* data, const json::value& frame_properties) PANGOLIN_OVERRIDE;
-    bool IsPipe() const PANGOLIN_OVERRIDE;
+    const std::vector<StreamInfo>& Streams() const override;
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& device_properties) override;
+    int WriteStreams(const unsigned char* data, const json::value& frame_properties) override;
+    bool IsPipe() const override;
 
 protected:
     void WriteHeader();

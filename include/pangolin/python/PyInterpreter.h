@@ -43,15 +43,15 @@ class PyInterpreter : public ConsoleInterpreter
 public:
     PyInterpreter();
 
-    ~PyInterpreter() PANGOLIN_OVERRIDE;
+    ~PyInterpreter() override;
 
-    void PushCommand(const std::string &cmd) PANGOLIN_OVERRIDE;
+    void PushCommand(const std::string &cmd) override;
 
-    bool PullLine(ConsoleLine& line) PANGOLIN_OVERRIDE;
+    bool PullLine(ConsoleLine& line) override;
 
     std::vector<std::string> Complete(
         const std::string& cmd, int max_options
-    ) PANGOLIN_OVERRIDE;
+    ) override;
 
     static void AttachPrefix(void* data, const std::string& name, VarValueGeneric& var, bool brand_new );
 

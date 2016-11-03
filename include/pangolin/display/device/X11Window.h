@@ -79,19 +79,19 @@ struct X11Window : public PangolinGl
 
     ~X11Window();
 
-    void ToggleFullscreen() PANGOLIN_OVERRIDE;
+    void ToggleFullscreen() override;
 
-    void Move(int x, int y) PANGOLIN_OVERRIDE;
+    void Move(int x, int y) override;
 
-    void Resize(unsigned int w, unsigned int h) PANGOLIN_OVERRIDE;
+    void Resize(unsigned int w, unsigned int h) override;
 
     void MakeCurrent(GLXContext ctx);
 
-    void MakeCurrent() PANGOLIN_OVERRIDE;
+    void MakeCurrent() override;
 
-    void SwapBuffers() PANGOLIN_OVERRIDE;
+    void SwapBuffers() override;
 
-    void ProcessEvents() PANGOLIN_OVERRIDE;
+    void ProcessEvents() override;
 
     // References the X11 display and context.
     std::shared_ptr<X11Display> display;

@@ -41,18 +41,18 @@ struct PANGOLIN_EXPORT VideoRecordRepeat
     // VideoInterface Methods
     /////////////////////////////////////////////////////////////
 
-    size_t SizeBytes() const PANGOLIN_OVERRIDE;
-    const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
-    void Start() PANGOLIN_OVERRIDE;
-    void Stop() PANGOLIN_OVERRIDE;
-    bool GrabNext( unsigned char* image, bool wait = true ) PANGOLIN_OVERRIDE;
-    bool GrabNewest( unsigned char* image, bool wait = true ) PANGOLIN_OVERRIDE;
+    size_t SizeBytes() const override;
+    const std::vector<StreamInfo>& Streams() const override;
+    void Start() override;
+    void Stop() override;
+    bool GrabNext( unsigned char* image, bool wait = true ) override;
+    bool GrabNewest( unsigned char* image, bool wait = true ) override;
 
     /////////////////////////////////////////////////////////////
     // VideoFilterInterface Methods
     /////////////////////////////////////////////////////////////
 
-    std::vector<VideoInterface*>& InputStreams() PANGOLIN_OVERRIDE
+    std::vector<VideoInterface*>& InputStreams() override
     {
         return videos;
     }

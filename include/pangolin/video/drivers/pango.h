@@ -42,32 +42,32 @@ public:
 
     // Implement VideoInterface
 
-    size_t SizeBytes() const PANGOLIN_OVERRIDE;
+    size_t SizeBytes() const override;
 
-    const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
+    const std::vector<StreamInfo>& Streams() const override;
 
-    void Start() PANGOLIN_OVERRIDE;
+    void Start() override;
 
-    void Stop() PANGOLIN_OVERRIDE;
+    void Stop() override;
 
-    bool GrabNext( unsigned char* image, bool wait = true ) PANGOLIN_OVERRIDE;
+    bool GrabNext( unsigned char* image, bool wait = true ) override;
 
-    bool GrabNewest( unsigned char* image, bool wait = true ) PANGOLIN_OVERRIDE;
+    bool GrabNewest( unsigned char* image, bool wait = true ) override;
 
     // Implement VideoPropertiesInterface
 
-    const json::value& DeviceProperties() const PANGOLIN_OVERRIDE;
+    const json::value& DeviceProperties() const override;
 
-    const json::value& FrameProperties() const PANGOLIN_OVERRIDE;
+    const json::value& FrameProperties() const override;
 
 
     // Implement VideoPlaybackInterface
 
-    int GetCurrentFrameId() const PANGOLIN_OVERRIDE;
+    int GetCurrentFrameId() const override;
 
-    int GetTotalFrames() const PANGOLIN_OVERRIDE;
+    int GetTotalFrames() const override;
 
-    int Seek(int frameid) PANGOLIN_OVERRIDE;
+    int Seek(int frameid) override;
 
 private:
     void HandlePipeClosed();

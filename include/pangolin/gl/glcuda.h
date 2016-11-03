@@ -72,7 +72,7 @@ struct GlTextureCudaArray : GlTexture
     GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL);
     ~GlTextureCudaArray();
 
-    void Reinitialise(int width, int height, GLint internal_format, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL) PANGOLIN_OVERRIDE;
+    void Reinitialise(int width, int height, GLint internal_format, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL) override;
     cudaGraphicsResource* cuda_res;
 };
 
