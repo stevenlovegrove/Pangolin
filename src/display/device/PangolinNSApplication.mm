@@ -25,6 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/platform.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/device/PangolinNSApplication.h>
 
@@ -68,6 +69,8 @@
 @implementation PangolinWindowDelegate
 
 - (BOOL)windowShouldClose:(id)sender {
+    PANGOLIN_UNUSED(sender);
+    
     pangolin::Quit();
     return YES;
 }
