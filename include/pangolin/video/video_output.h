@@ -75,13 +75,13 @@ public:
     void Open(const std::string& uri);
     void Close();
 
-    const std::vector<StreamInfo>& Streams() const;
+    const std::vector<StreamInfo>& Streams() const override;
 
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri = "", const json::value& properties = json::value() );
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri = "", const json::value& properties = json::value() ) override;
 
     int WriteStreams(const unsigned char* data, const json::value& frame_properties = json::value() ) override;
     
-    bool IsPipe() const;
+    bool IsPipe() const override;
 
 protected:
     Uri uri;
