@@ -46,17 +46,17 @@ struct OsxWindow : public PangolinGl
 
     void StopFullScreen();
 
-    void ToggleFullscreen() PANGOLIN_OVERRIDE;
+    void ToggleFullscreen() override;
 
-    void Move(int x, int y) PANGOLIN_OVERRIDE;
+    void Move(int x, int y) override;
 
-    void Resize(unsigned int w, unsigned int h) PANGOLIN_OVERRIDE;
+    void Resize(unsigned int w, unsigned int h) override;
 
-    void MakeCurrent() PANGOLIN_OVERRIDE;
+    void MakeCurrent() override;
 
-    void SwapBuffers() PANGOLIN_OVERRIDE;
+    void SwapBuffers() override;
 
-    void ProcessEvents() PANGOLIN_OVERRIDE;
+    void ProcessEvents() override;
 
 private:
     NSWindow* _window;

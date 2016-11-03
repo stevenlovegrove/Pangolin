@@ -49,30 +49,30 @@ public:
     // Implement VideoInterface
     
     //! Implement VideoInput::Start()
-    void Start() PANGOLIN_OVERRIDE;
+    void Start() override;
     
     //! Implement VideoInput::Stop()
-    void Stop() PANGOLIN_OVERRIDE;
+    void Stop() override;
 
     //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const PANGOLIN_OVERRIDE;
+    size_t SizeBytes() const override;
 
     //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
+    const std::vector<StreamInfo>& Streams() const override;
     
     //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true ) PANGOLIN_OVERRIDE;
+    bool GrabNext( unsigned char* image, bool wait = true ) override;
     
     //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true ) PANGOLIN_OVERRIDE;
+    bool GrabNewest( unsigned char* image, bool wait = true ) override;
 
     // Implement VideoPlaybackInterface
 
-    int GetCurrentFrameId() const PANGOLIN_OVERRIDE;
+    int GetCurrentFrameId() const override;
 
-    int GetTotalFrames() const PANGOLIN_OVERRIDE;
+    int GetTotalFrames() const override;
 
-    int Seek(int frameid) PANGOLIN_OVERRIDE;
+    int Seek(int frameid) override;
     
 protected:
     typedef std::vector<TypedImage> Frame;

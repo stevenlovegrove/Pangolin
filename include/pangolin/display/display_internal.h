@@ -97,27 +97,27 @@ struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
 
     std::shared_ptr<GlFont> font;
 
-    virtual void ToggleFullscreen() PANGOLIN_OVERRIDE {
+    virtual void ToggleFullscreen() override {
         pango_print_warn("ToggleFullscreen: Not available with non-pangolin window.\n");
     }
 
-    virtual void ProcessEvents() PANGOLIN_OVERRIDE {
+    virtual void ProcessEvents() override {
         pango_print_warn("ProcessEvents: Not available with non-pangolin window.\n");
     }
 
-    virtual void SwapBuffers() PANGOLIN_OVERRIDE {
+    virtual void SwapBuffers() override {
         pango_print_warn("SwapBuffers: Not available with non-pangolin window.\n");
     }
 
-    virtual void MakeCurrent() PANGOLIN_OVERRIDE {
+    virtual void MakeCurrent() override {
         pango_print_warn("MakeCurrent: Not available with non-pangolin window.\n");
     }
 
-    virtual void Move(int /*x*/, int /*y*/) PANGOLIN_OVERRIDE {
+    virtual void Move(int /*x*/, int /*y*/) override {
         pango_print_warn("Move: Not available with non-pangolin window.\n");
     }
 
-    virtual void Resize(unsigned int /*w*/, unsigned int /*h*/) PANGOLIN_OVERRIDE {
+    virtual void Resize(unsigned int /*w*/, unsigned int /*h*/) override {
         pango_print_warn("Resize: Not available with non-pangolin window.\n");
     }
 

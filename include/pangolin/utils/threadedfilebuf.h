@@ -56,15 +56,15 @@ protected:
     void soft_close();
 
     //! Override streambuf::xsputn for asynchronous write
-    std::streamsize xsputn(const char * s, std::streamsize n) PANGOLIN_OVERRIDE;
+    std::streamsize xsputn(const char * s, std::streamsize n) override;
 
     //! Override streambuf::overflow for asynchronous write
-    int overflow(int c) PANGOLIN_OVERRIDE;
+    int overflow(int c) override;
 
     std::streampos seekoff(
         std::streamoff off, std::ios_base::seekdir way,
         std::ios_base::openmode which = std::ios_base::in | std::ios_base::out
-    ) PANGOLIN_OVERRIDE;
+    ) override;
     
     std::filebuf file;
     char* mem_buffer;
