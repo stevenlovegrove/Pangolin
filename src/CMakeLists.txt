@@ -478,7 +478,7 @@ include_directories( ${USER_INC} )
 include_directories( ${INTERNAL_INC} )
 
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
-target_link_libraries(${LIBRARY_NAME} PUBLIC ${LINK_LIBS})
+target_link_libraries(${LIBRARY_NAME} ${LINK_LIBS})
 
 ## Generate symbol export helper header on MSVC
 IF(MSVC)
