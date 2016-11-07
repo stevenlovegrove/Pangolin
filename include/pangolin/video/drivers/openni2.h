@@ -45,7 +45,7 @@ struct OpenNi2Video : public VideoInterface, public VideoPropertiesInterface, pu
 public:
 
     // Open all RGB and Depth streams from all devices
-    OpenNi2Video(ImageDim dim=ImageDim(640,480), int fps=30);
+    OpenNi2Video(ImageDim dim=ImageDim(640,480), ImageRoi roi=ImageRoi(0,0,0,0), int fps=30);
 
     // Open streams specified
     OpenNi2Video(std::vector<OpenNiStreamMode>& stream_modes);
@@ -64,6 +64,7 @@ public:
     void SetDepthCloseRange(bool enable);
     void SetDepthHoleFilter(bool enable);
     void SetDepthColorSyncEnabled(bool enable);
+    void SetFastCrop(bool enable);
     void SetRegisterDepthToImage(bool enable);
     void SetPlaybackSpeed(float speed);
     void SetPlaybackRepeat(bool enabled);
