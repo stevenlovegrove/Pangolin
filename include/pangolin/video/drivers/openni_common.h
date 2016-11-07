@@ -53,15 +53,16 @@ struct PANGOLIN_EXPORT OpenNiStreamMode
 {
     OpenNiStreamMode(
         OpenNiSensorType sensor_type=OpenNiUnassigned,
-        ImageDim dim=ImageDim(640,480), int fps=30, int device=0
+        ImageDim dim=ImageDim(640,480), ImageRoi roi=ImageRoi(0,0,0,0), int fps=30, int device=0
     )
-        : sensor_type(sensor_type), dim(dim), fps(fps), device(device)
+        : sensor_type(sensor_type), dim(dim), roi(roi), fps(fps), device(device)
     {
 
     }
 
     OpenNiSensorType sensor_type;
     ImageDim dim;
+    ImageRoi roi;
     int fps;
     int device;
 };
@@ -125,7 +126,7 @@ inline std::istream& operator>> (std::istream &is, OpenNiStreamMode& fmt)
     std::string str;
     is >> str;
 
-    std::map<char,std::string> splits = GetTokenSplits(str, "!:@");
+    std::map<char,std::string> splits = GetTokenSplits(str, "!:@#");
 
     if(splits.count(0)) {
         fmt.sensor_type = openni_sensor(splits[0]);
@@ -141,6 +142,10 @@ inline std::istream& operator>> (std::istream &is, OpenNiStreamMode& fmt)
 
     if(splits.count('!')) {
         fmt.device = pangolin::Convert<int,std::string>::Do(splits['!']);
+    }
+
+    if(splits.count('#')) {
+        fmt.roi = pangolin::Convert<ImageRoi,std::string>::Do(splits['#']);
     }
 
     return is;

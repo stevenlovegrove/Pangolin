@@ -133,7 +133,7 @@ inline openni::SensorType SensorType(const OpenNiSensorType sensor)
     }
 }
 
-OpenNi2Video::OpenNi2Video(ImageDim dim, int fps)
+OpenNi2Video::OpenNi2Video(ImageDim dim, ImageRoi roi, int fps)
 {
     InitialiseOpenNI();
 
@@ -147,12 +147,11 @@ OpenNi2Video::OpenNi2Video(ImageDim dim, int fps)
     for(int i = 0 ; i < deviceList.getSize(); i ++) {
         const char*  device_uri = deviceList[i].getUri();
         const int dev_id = AddDevice(device_uri);
-        AddStream(OpenNiStreamMode( OpenNiDepth_1mm, dim, fps, dev_id) );
-        AddStream(OpenNiStreamMode( OpenNiRgb, dim, fps, dev_id) );
+        AddStream(OpenNiStreamMode( OpenNiDepth_1mm, dim, roi, fps, dev_id) );
+        AddStream(OpenNiStreamMode( OpenNiRgb, dim, roi, fps, dev_id) );
     }
 
     SetupStreamModes();
-    Start();
 }
 
 OpenNi2Video::OpenNi2Video(const std::string& device_uri)
@@ -160,11 +159,10 @@ OpenNi2Video::OpenNi2Video(const std::string& device_uri)
     InitialiseOpenNI();
 
     const int dev_id = AddDevice(device_uri);
-    AddStream(OpenNiStreamMode( OpenNiDepth_1mm, ImageDim(), 30, dev_id) );
-    AddStream(OpenNiStreamMode( OpenNiRgb,   ImageDim(), 30, dev_id) );
+    AddStream(OpenNiStreamMode( OpenNiDepth_1mm, ImageDim(), ImageRoi(), 30, dev_id) );
+    AddStream(OpenNiStreamMode( OpenNiRgb,   ImageDim(), ImageRoi(), 30, dev_id) );
 
     SetupStreamModes();
-    Start();
 }
 
 OpenNi2Video::OpenNi2Video(const std::string& device_uri, std::vector<OpenNiStreamMode> &stream_modes)
@@ -179,7 +177,6 @@ OpenNi2Video::OpenNi2Video(const std::string& device_uri, std::vector<OpenNiStre
     }
 
     SetupStreamModes();
-    Start();
 }
 
 OpenNi2Video::OpenNi2Video(std::vector<OpenNiStreamMode>& stream_modes)
@@ -204,7 +201,6 @@ OpenNi2Video::OpenNi2Video(std::vector<OpenNiStreamMode>& stream_modes)
     }
 
     SetupStreamModes();
-    Start();
 }
 
 void OpenNi2Video::InitialiseOpenNI()
@@ -332,10 +328,22 @@ void OpenNi2Video::SetupStreamModes()
         if(rc != openni::STATUS_OK)
             throw VideoException("Couldn't set OpenNI VideoMode", openni::OpenNI::getExtendedError());
 
+        int outputWidth = onivmode.getResolutionX();
+        int outputHeight = onivmode.getResolutionY();
+
+        if (mode.roi.w && mode.roi.h) {
+            rc = video_stream[i].setCropping(mode.roi.x,mode.roi.y,mode.roi.w,mode.roi.h);
+            if(rc != openni::STATUS_OK)
+                throw VideoException("Couldn't set OpenNI cropping", openni::OpenNI::getExtendedError());
+
+            outputWidth = mode.roi.w;
+            outputHeight = mode.roi.h;
+        }
+
         const VideoPixelFormat fmt = VideoFormatFromOpenNI2(nipixelfmt);
         const StreamInfo stream(
-            fmt, onivmode.getResolutionX(), onivmode.getResolutionY(),
-            (onivmode.getResolutionX() * fmt.bpp) / 8,
+            fmt, outputWidth, outputHeight,
+            (outputWidth * fmt.bpp) / 8,
             (unsigned char*)0 + sizeBytes
         );
 
@@ -456,6 +464,14 @@ void OpenNi2Video::SetDepthColorSyncEnabled(bool enable)
 {
     for(size_t i = 0 ; i < numDevices; i++) {
         devices[i].setDepthColorSyncEnabled(enable);
+    }
+}
+
+void OpenNi2Video::SetFastCrop(bool enable)
+{
+    for (unsigned int i = 0; i < Streams().size(); ++i) {
+        video_stream[i].setProperty(XN_STREAM_PROPERTY_FAST_ZOOM_CROP, enable);
+        video_stream[i].setProperty(XN_STREAM_PROPERTY_CROPPING_MODE, enable ? XN_CROPPING_MODE_INCREASED_FPS : XN_CROPPING_MODE_NORMAL);
     }
 }
 
@@ -620,6 +636,7 @@ PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
         std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
             const bool realtime = uri.Contains("realtime");
             const ImageDim default_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+            const ImageRoi default_roi = uri.Get<ImageRoi>("roi", ImageRoi(0,0,0,0));
             const unsigned int default_fps = uri.Get<unsigned int>("fps", 30);
 
             std::vector<OpenNiStreamMode> stream_modes;
@@ -627,7 +644,7 @@ PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
             int num_streams = 0;
             std::string simg= "img1";
             while(uri.Contains(simg)) {
-                OpenNiStreamMode stream = uri.Get<OpenNiStreamMode>(simg, OpenNiStreamMode(OpenNiRgb,default_dim,default_fps,0));
+                OpenNiStreamMode stream = uri.Get<OpenNiStreamMode>(simg, OpenNiStreamMode(OpenNiRgb,default_dim,default_roi,default_fps,0));
                 stream_modes.push_back(stream);
                 ++num_streams;
                 simg = "img" + ToString(num_streams+1);
@@ -639,18 +656,21 @@ PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
             }else if(stream_modes.size()) {
                 nivid = new OpenNi2Video(stream_modes);
             }else{
-                nivid = new OpenNi2Video(default_dim, default_fps);
+                nivid = new OpenNi2Video(default_dim, default_roi, default_fps);
             }
 
             nivid->SetDepthCloseRange( uri.Get<bool>("closerange",false) );
             nivid->SetDepthHoleFilter( uri.Get<bool>("holefilter",false) );
             nivid->SetDepthColorSyncEnabled( uri.Get<bool>("coloursync",false) );
+            nivid->SetFastCrop( uri.Get<bool>("fastcrop",false) );
             nivid->SetPlaybackSpeed(realtime ? 1.0f : -1.0f);
             nivid->SetAutoExposure(true);
             nivid->SetAutoWhiteBalance(true);
             nivid->SetMirroring(false);
 
             nivid->UpdateProperties();
+
+            nivid->Start();
 
             return std::unique_ptr<VideoInterface>(nivid);
         }
