@@ -168,6 +168,7 @@ void VideoRecordRepeat::Source()
     // Switch sub-video
     videos.resize(1);
     videos[0] = video_src.get();
+    video_src->Start();
 }
 
 size_t VideoRecordRepeat::SizeBytes() const
@@ -183,14 +184,12 @@ const std::vector<StreamInfo>& VideoRecordRepeat::Streams() const
 
 void VideoRecordRepeat::Start()
 {
-    // Semantics of this?
-//    video_src->Start();
+    video_src->Start();
 }
 
 void VideoRecordRepeat::Stop()
 {
-    // Semantics of this?
-    video_recorder.reset();
+    video_src->Stop();
 }
 
 bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )

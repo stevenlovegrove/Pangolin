@@ -61,8 +61,6 @@ ThreadVideo::ThreadVideo(std::unique_ptr<VideoInterface> &src_, size_t num_buffe
     {
         queue.returnOrAddUsedBuffer( GrabResult(videoin[0]->SizeBytes()) );
     }
-
-    Start();
 }
 
 ThreadVideo::~ThreadVideo()

@@ -69,7 +69,10 @@ void VideoInput::Open(const std::string& sUri)
     
     // Create video device
     src = OpenVideo(uri);
-    videos.push_back(src.get());
+    if(src) {
+        videos.push_back(src.get());
+        src->Start();
+    }
 }
 
 void VideoInput::Reset()
@@ -79,7 +82,10 @@ void VideoInput::Reset()
 
     // Create video device
     src = OpenVideo(uri);
-    videos.push_back(src.get());
+    if(src) {
+        videos.push_back(src.get());
+        src->Start();
+    }
 }
 
 void VideoInput::Close()

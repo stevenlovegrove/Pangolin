@@ -184,8 +184,6 @@ PleoraVideo::PleoraVideo(Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lS
 
     InitPangoStreams();
     InitBuffers(buffer_count);
-
-    Start();
 }
 
 PleoraVideo::~PleoraVideo()

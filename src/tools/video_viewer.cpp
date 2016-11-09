@@ -272,6 +272,8 @@ void RunVideoViewerUI(const std::string& input_uri, const std::string& output_ur
     pangolin::basetime start,now;
 #endif // DEBUGVIDEOVIEWER
 
+    video.Start();
+
     // Stream and display video
     while(!pangolin::ShouldQuit())
     {
