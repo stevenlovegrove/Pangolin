@@ -41,22 +41,22 @@ public:
     ~TestVideo();
     
     //! Implement VideoInput::Start()
-    void Start();
+    void Start() override;
     
     //! Implement VideoInput::Stop()
-    void Stop();
+    void Stop() override;
 
     //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+    size_t SizeBytes() const override;
 
     //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+    const std::vector<StreamInfo>& Streams() const override;
     
     //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+    bool GrabNext( unsigned char* image, bool wait = true ) override;
     
     //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+    bool GrabNewest( unsigned char* image, bool wait = true ) override;
     
 protected:
     std::vector<StreamInfo> streams;
