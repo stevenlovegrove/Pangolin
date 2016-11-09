@@ -89,6 +89,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/mirror.cpp
     video/drivers/unpack.cpp
     video/drivers/join.cpp
+    video/drivers/json.cpp
     video/drivers/thread.cpp
   )
 
@@ -103,6 +104,7 @@ if(BUILD_PANGOLIN_VIDEO)
     RegisterMirrorVideoFactory
     RegisterUnpackVideoFactory
     RegisterJoinVideoFactory
+    RegisterJsonVideoFactory
     RegisterThreadVideoFactory
   )
 
