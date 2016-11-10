@@ -376,7 +376,7 @@ size_t PacketStreamReader::Seek(PacketStreamSourceId src_id, size_t framenum)
     if(!is_pipe) {
         read_mutex.lock();
 
-        const size_t backup_frame = GetPacketIndex(src_id);
+        size_t backup_frame = GetPacketIndex(src_id);
 
         std::vector<std::streampos>& packet_seek = src_packet_positions[src_id];
         while(framenum >= packet_seek.size()) {
@@ -391,6 +391,7 @@ size_t PacketStreamReader::Seek(PacketStreamSourceId src_id, size_t framenum)
             }else{
                 ReadOverSourcePacket(nxt_src_id);
                 ReadTag();
+                backup_frame = GetPacketIndex(src_id);
             }
         }
 
@@ -507,7 +508,7 @@ void PacketStreamReader::ProcessMessage()
         return;
     default:
         // TODO: Resync
-        throw std::runtime_error("Unknown packet type: '" + TagName(next_tag) + "'");
+        throw std::runtime_error("ProcessMessage: Unknown packet type: '" + TagName(next_tag) + "'");
     }
 
     if(!ReadTag()) {
@@ -542,7 +543,6 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
             if (src_id == static_cast<size_t>(-1)) {
                 break;
             } else if(src_id >= sources.size()) {
-                std::cerr << src_id << std::endl;
                 throw std::runtime_error("Invalid Frame Source ID.");
             }
             ReadSourcePacketMeta(sources[src_id].meta);
@@ -578,12 +578,10 @@ void PacketStreamReader::ProcessMessagesUntilSourcePacket(int &nxt_src_id, int64
         }
         default:
         {
-            if(is_pipe)
-            {
-                ReSync();
-                continue;
-            }
-            throw std::runtime_error("Unknown packet type.");
+            // Unexpected tag - try to resync to stream.
+            pango_print_warn("Unknown packet type: %s. Resyncing()\n", TagName(next_tag).c_str());
+            ReSync();
+            continue;
         }
         }
 
