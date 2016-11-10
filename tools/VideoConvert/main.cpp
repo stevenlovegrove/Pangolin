@@ -1,5 +1,5 @@
 #include <pangolin/pangolin.h>
-#include <pangolin/video/video_record_repeat.h>
+#include <pangolin/video/video_input.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/timer.h>
 
@@ -9,7 +9,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::Var<bool> video_newest("video.newest", false);
 
     // Open Video by URI
-    pangolin::VideoRecordRepeat video(input_uri, output_uri);
+    pangolin::VideoInput video(input_uri, output_uri);
     const size_t num_streams = video.Streams().size();
 
     // Output details of video stream

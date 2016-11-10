@@ -57,6 +57,7 @@
 
 #ifdef BUILD_PANGOLIN_VIDEO
   #include <pangolin/video/video.h>
+  #include <pangolin/video/video_input.h>
   #include <pangolin/video/video_output.h>
 #endif // BUILD_PANGOLIN_VIDEO
 

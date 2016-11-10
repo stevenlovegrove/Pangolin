@@ -1,7 +1,7 @@
 #include <pangolin/tools/video_viewer.h>
 
 #include <pangolin/pangolin.h>
-#include <pangolin/video/video_record_repeat.h>
+#include <pangolin/video/video_input.h>
 #include <pangolin/gl/gltexturecache.h>
 #include <pangolin/gl/glpixformat.h>
 #include <pangolin/handler/handler_image.h>
@@ -33,7 +33,7 @@ void RunVideoViewerUI(const std::string& input_uri, const std::string& output_ur
     pangolin::Var<bool> video_newest("video.newest", false);
 
     // Open Video by URI
-    pangolin::VideoRecordRepeat video(input_uri, output_uri);
+    pangolin::VideoInput video(input_uri, output_uri);
     const size_t num_streams = video.Streams().size();
 
     if(num_streams == 0) {

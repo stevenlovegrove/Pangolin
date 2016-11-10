@@ -5,13 +5,13 @@
  **/
 
 #include <pangolin/pangolin.h>
-#include <pangolin/video/video_record_repeat.h>
+#include <pangolin/video/video_input.h>
 #include <pangolin/var/input_record_repeat.h>
 
 void RecordSample(const std::string input_uri, const std::string output_uri, const std::string ui_file)
 {
     // Setup Video Source
-    pangolin::VideoRecordRepeat video(input_uri, output_uri);
+    pangolin::VideoInput video(input_uri, output_uri);
     const pangolin::VideoPixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();

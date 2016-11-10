@@ -25,19 +25,18 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/video_record_repeat.h>
-#include <pangolin/video/drivers/pango.h>
-#include <pangolin/video/drivers/pango_video_output.h>
+#include <pangolin/video/video_input.h>
+#include <pangolin/video/video_output.h>
 
 namespace pangolin
 {
 
-VideoRecordRepeat::VideoRecordRepeat() 
+VideoInput::VideoInput()
     : frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
 {
 }
 
-VideoRecordRepeat::VideoRecordRepeat(
+VideoInput::VideoInput(
     const std::string& input_uri,
     const std::string& output_uri
     ) : frame_num(0), record_frame_skip(1), record_once(false), record_continuous(false)
@@ -45,7 +44,7 @@ VideoRecordRepeat::VideoRecordRepeat(
     Open(input_uri, output_uri);
 }
 
-void VideoRecordRepeat::Open(
+void VideoInput::Open(
     const std::string& input_uri,
     const std::string& output_uri
     ) 
@@ -59,27 +58,37 @@ void VideoRecordRepeat::Open(
         uri_output.scheme = "pango";
     }
 
-    video_src = OpenVideo(input_uri);
-
     // Start off playing from video_src
+    video_src = OpenVideo(input_uri);
     Source();
 }
 
-void VideoRecordRepeat::Close()
+void VideoInput::Reset()
 {
+    Close();
+
+    // Create video device
+    video_src = OpenVideo(uri_input);
+    Source();
 }
 
-VideoRecordRepeat::~VideoRecordRepeat()
+void VideoInput::Close()
+{
+    video_src.release();
+    videos.clear();
+}
+
+VideoInput::~VideoInput()
 {
     Close();
 }
 
-const std::string& VideoRecordRepeat::LogFilename() const
+const std::string& VideoInput::LogFilename() const
 {
     return uri_output.url;
 }
 
-bool VideoRecordRepeat::Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait, bool newest)
+bool VideoInput::Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait, bool newest)
 {
     if( !video_src ) throw VideoException("No video source open");
 
@@ -101,7 +110,7 @@ bool VideoRecordRepeat::Grab( unsigned char* buffer, std::vector<Image<unsigned 
     return success;
 }
 
-void VideoRecordRepeat::InitialiseRecorder()
+void VideoInput::InitialiseRecorder()
 {
     video_recorder.reset();
     video_file.reset();
@@ -113,7 +122,7 @@ void VideoRecordRepeat::InitialiseRecorder()
     );
 }
 
-void VideoRecordRepeat::Record()
+void VideoInput::Record()
 {
     // Switch sub-video
     videos.resize(1);
@@ -126,7 +135,7 @@ void VideoRecordRepeat::Record()
     record_continuous = true;
 }
 
-void VideoRecordRepeat::RecordOneFrame()
+void VideoInput::RecordOneFrame()
 {
     // Append to existing video.
     if(!video_recorder) {
@@ -140,7 +149,7 @@ void VideoRecordRepeat::RecordOneFrame()
     videos[0] = video_src.get();
 }
 
-void VideoRecordRepeat::Play(bool realtime)
+void VideoInput::Play(bool realtime)
 {
     video_file.reset();
     video_src->Stop();
@@ -158,7 +167,7 @@ void VideoRecordRepeat::Play(bool realtime)
     videos[0] = video_file.get();
 }
 
-void VideoRecordRepeat::Source()
+void VideoInput::Source()
 {
     video_file.reset();
     video_recorder.reset();
@@ -171,28 +180,28 @@ void VideoRecordRepeat::Source()
     video_src->Start();
 }
 
-size_t VideoRecordRepeat::SizeBytes() const
+size_t VideoInput::SizeBytes() const
 {
     if( !video_src ) throw VideoException("No video source open");
     return video_src->SizeBytes();
 }
 
-const std::vector<StreamInfo>& VideoRecordRepeat::Streams() const
+const std::vector<StreamInfo>& VideoInput::Streams() const
 {
     return video_src->Streams();
 }
 
-void VideoRecordRepeat::Start()
+void VideoInput::Start()
 {
     video_src->Start();
 }
 
-void VideoRecordRepeat::Stop()
+void VideoInput::Stop()
 {
     video_src->Stop();
 }
 
-bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
+bool VideoInput::GrabNext( unsigned char* image, bool wait )
 {
     frame_num++;
 
@@ -212,7 +221,7 @@ bool VideoRecordRepeat::GrabNext( unsigned char* image, bool wait )
     }
 }
 
-bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
+bool VideoInput::GrabNewest( unsigned char* image, bool wait )
 {
     frame_num++;
 
@@ -233,22 +242,22 @@ bool VideoRecordRepeat::GrabNewest( unsigned char* image, bool wait )
     }
 }
 
-int VideoRecordRepeat::FrameId()
+int VideoInput::FrameId()
 {
     return frame_num;
 }
 
-void VideoRecordRepeat::SetTimelapse(size_t one_in_n_frames)
+void VideoInput::SetTimelapse(size_t one_in_n_frames)
 {
     record_frame_skip = one_in_n_frames;
 }
 
-bool VideoRecordRepeat::IsRecording() const
+bool VideoInput::IsRecording() const
 {
     return video_recorder != 0;
 }
 
-bool VideoRecordRepeat::IsPlaying() const
+bool VideoInput::IsPlaying() const
 {
     return video_file != 0;
 }
