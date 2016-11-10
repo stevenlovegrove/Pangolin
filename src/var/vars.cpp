@@ -86,7 +86,7 @@ void RegisterGuiVarChangedCallback(GuiVarChangedCallbackFn callback, void* data,
 // Recursively expand val
 string ProcessVal(const string& val )
 {
-    return Transform(val, [](const std::string& k){
+    return Transform(val, [](const std::string& k) -> std::string {
         if( VarState::I().Exists(k) ) {
              return VarState::I()[k]->str->Get();
         }else{
