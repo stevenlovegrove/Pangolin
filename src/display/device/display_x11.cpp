@@ -161,8 +161,12 @@ bool isExtensionSupported(const char *extList, const char *extension)
 }
 
 static bool ctxErrorOccurred = false;
-static int ctxErrorHandler( ::Display * /*dpy*/, ::XErrorEvent * /*ev*/ )
+static int ctxErrorHandler( ::Display * /*dpy*/, ::XErrorEvent * ev )
 {
+    const int buffer_size = 10240;
+    char buffer[buffer_size];
+    XGetErrorText(ev->display, ev->error_code, buffer, buffer_size );
+    pango_print_error("X11 Error: %s\n", buffer);
     ctxErrorOccurred = true;
     return 0;
 }
@@ -241,6 +245,11 @@ X11GlContext::X11GlContext(std::shared_ptr<X11Display>& d, ::GLXFBConfig chosenF
     // prevent chained sharing
     while(shared_context && shared_context->shared_context) {
         shared_context = shared_context->shared_context;
+    }
+
+    // Contexts can't be shared across different displays.
+    if(shared_context && shared_context->display != d) {
+        shared_context.reset();
     }
 
     glcontext = CreateGlContext(display->display, chosenFbc, shared_context ? shared_context->glcontext : 0);
