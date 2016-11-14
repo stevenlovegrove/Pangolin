@@ -538,20 +538,46 @@ void Plotter::Render()
         const Marker& m = plotmarkers[i];
         prog_lines.SetUniform("u_color",  m.colour );
         if(m.direction == Marker::Horizontal) {
-            if(m.leg == 0) {
-                glDrawLine(rview.x.min, m.value,  rview.x.max, m.value );
-            }else if(m.leg == -1) {
-                glDrawRect(rview.x.min, rview.y.min,  rview.x.max, m.value);
-            }else if(m.leg == 1) {
-                glDrawRect(rview.x.min, m.value,  rview.x.max, rview.y.max);
+            Rangef range_x = rview.x;
+            if (m.range) {
+                range_x = *m.range;
+            }
+
+            if(m.leg == Marker::Equal) {
+                glDrawLine(range_x.min, m.value,  range_x.max, m.value );
+            }else if(m.leg == Marker::LessThan) {
+                float y_min_val = rview.y.min;
+                if (m.length) {
+                    y_min_val = m.value - *m.length;
+                }
+                glDrawRect(range_x.min, y_min_val,  range_x.max, m.value);
+            }else if(m.leg == Marker::GreaterThan) {
+                float y_max_val = rview.y.max;
+                if (m.length) {
+                    y_max_val = m.value + *m.length;
+                }
+                glDrawRect(range_x.min, m.value,  range_x.max, y_max_val);
             }
         }else{
-            if(m.leg == 0) {
-                glDrawLine(m.value, rview.y.min,  m.value, rview.y.max );
-            }else if(m.leg == -1) {
-                glDrawRect(rview.x.min, rview.y.min,  m.value, rview.y.max );
-            }else if(m.leg == 1) {
-                glDrawRect(m.value, rview.y.min,  rview.x.max, rview.y.max );
+            Rangef range_y = rview.y;
+            if (m.range) {
+                range_y = *m.range;
+            }
+
+            if(m.leg == Marker::Equal) {
+                glDrawLine(m.value, range_y.min,  m.value, range_y.max);
+            }else if(m.leg == Marker::LessThan) {
+                float x_min_val = rview.x.min;
+                if (m.length) {
+                    x_min_val = m.value - *m.length;
+                }
+                glDrawRect(x_min_val, range_y.min,  m.value, range_y.max);
+            }else if(m.leg == Marker::GreaterThan) {
+                float x_max_val = rview.x.max;
+                if (m.length) {
+                    x_max_val = m.value + *m.length;
+                }
+                glDrawRect(m.value, range_y.min,  x_max_val, range_y.max);
             }
         }
     }
@@ -1074,9 +1100,10 @@ void Plotter::ClearSeries()
     plotseries.clear();
 }
 
-Marker& Plotter::AddMarker(Marker::Direction d, float value, Marker::Equality leg, Colour c )
+Marker& Plotter::AddMarker(Marker::Direction d, float value, Marker::Equality leg, Colour c,
+                           std::unique_ptr<Rangef> range, std::unique_ptr<float> length)
 {
-    plotmarkers.push_back( Marker(d,value,leg,c) );
+    plotmarkers.push_back( Marker(d,value,leg,c, std::move(range), std::move(length)) );
     return plotmarkers.back();
 }
 

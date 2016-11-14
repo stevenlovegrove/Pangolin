@@ -50,8 +50,8 @@ template<typename T>
 struct Range
 {
     Range()
-        : min(+std::numeric_limits<T>::max()),
-          max(-std::numeric_limits<T>::max())
+        : min(std::numeric_limits<T>::max()),
+          max(std::numeric_limits<T>::lowest())
     {
     }
 

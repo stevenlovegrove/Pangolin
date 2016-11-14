@@ -28,6 +28,8 @@
 #ifndef PLOTTER_H
 #define PLOTTER_H
 
+#include <memory>
+
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glsl.h>
 #include <pangolin/gl/colour.h>
@@ -64,8 +66,13 @@ struct Marker
         GreaterThan = 1
     };
 
-    Marker(Direction d, float value, Equality leg = Equal, Colour c = Colour() )
-        : direction(d), value(value), leg(leg), colour(c)
+    // ``range`` and ``length`` are optional in parameters
+    // (using std::unique_ptr until we have std::optional).
+    Marker(Direction d, float value, Equality leg = Equal, Colour c = Colour(),
+           std::unique_ptr<Rangef> range = nullptr,
+           std::unique_ptr<float> length = nullptr)
+        : direction(d), value(value), leg(leg), colour(c), range(std::move(range)),
+          length(std::move(length))
     {
     }
 
@@ -73,6 +80,8 @@ struct Marker
     float value;
     Equality leg;
     Colour colour;
+    std::unique_ptr<Rangef> range;
+    std::unique_ptr<float> length;
 };
 
 class PANGOLIN_EXPORT Plotter : public View, Handler
@@ -147,7 +156,9 @@ public:
     /// This is useful for annotating a critical point or valid region.
     Marker& AddMarker(
         Marker::Direction d, float value,
-        Marker::Equality leg = Marker::Equal, Colour c = Colour()
+        Marker::Equality leg = Marker::Equal, Colour c = Colour(),
+        std::unique_ptr<pangolin::Rangef> range = nullptr,
+        std::unique_ptr<float> length = nullptr
     );
 
     void ClearImplicitPlots();
