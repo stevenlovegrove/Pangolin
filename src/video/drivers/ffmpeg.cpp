@@ -489,10 +489,12 @@ static AVStream* CreateStream(AVFormatContext *oc, CodecID codec_id, uint64_t fr
         stream->codec->bit_rate = bit_rate;
         stream->codec->width    = width;
         stream->codec->height   = height;
-        stream->codec->time_base.den = frame_rate;
         stream->codec->time_base.num = 1;
+        stream->codec->time_base.den = frame_rate;
         stream->codec->gop_size      = 12;
         stream->codec->pix_fmt       = EncoderFormat;
+        stream->time_base.num = 1;
+        stream->time_base.den = frame_rate;
         break;
     default:
         break;
