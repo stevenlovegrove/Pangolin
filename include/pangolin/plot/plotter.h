@@ -65,13 +65,33 @@ struct Marker
     };
 
     Marker(Direction d, float value, Equality leg = Equal, Colour c = Colour() )
-        : direction(d), value(value), leg(leg), colour(c)
+        : colour(c)
+    {
+        if(d == Horizontal) {
+            range.x = Rangef::Open();
+            range.y = Rangef::Containing(value);
+            if(leg == LessThan) {
+                range.y.Insert(std::numeric_limits<float>::lowest() );
+            }else if(leg == GreaterThan) {
+                range.y.Insert(std::numeric_limits<float>::max() );
+            }
+        }else if(d == Vertical) {
+            range.x = Rangef::Containing(value);
+            range.y = Rangef::Open();
+            if(leg == LessThan) {
+                range.x.Insert(std::numeric_limits<float>::lowest() );
+            }else if(leg == GreaterThan) {
+                range.x.Insert(std::numeric_limits<float>::max() );
+            }
+        }
+    }
+
+    Marker(const XYRangef& range, const Colour& c = Colour() )
+        : range(range), colour(c)
     {
     }
 
-    Direction direction;
-    float value;
-    Equality leg;
+    XYRangef range;
     Colour colour;
 };
 
@@ -149,6 +169,8 @@ public:
         Marker::Direction d, float value,
         Marker::Equality leg = Marker::Equal, Colour c = Colour()
     );
+
+    Marker& AddMarker( const Marker& marker );
 
     void ClearImplicitPlots();
     void AddImplicitPlot();

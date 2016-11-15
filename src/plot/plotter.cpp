@@ -536,23 +536,17 @@ void Plotter::Render()
 
     for( size_t i=0; i < plotmarkers.size(); ++i) {
         const Marker& m = plotmarkers[i];
+
+        XYRangef draw_range = m.range;
+        draw_range.Clamp(rview);
+
         prog_lines.SetUniform("u_color",  m.colour );
-        if(m.direction == Marker::Horizontal) {
-            if(m.leg == 0) {
-                glDrawLine(rview.x.min, m.value,  rview.x.max, m.value );
-            }else if(m.leg == -1) {
-                glDrawRect(rview.x.min, rview.y.min,  rview.x.max, m.value);
-            }else if(m.leg == 1) {
-                glDrawRect(rview.x.min, m.value,  rview.x.max, rview.y.max);
-            }
+        if(draw_range.x.Size() == 0.0  || draw_range.y.Size() == 0.0) {
+            // Horizontal or Vertical line
+            glDrawLine(draw_range.x.min, draw_range.y.min,  draw_range.x.max, draw_range.y.max );
         }else{
-            if(m.leg == 0) {
-                glDrawLine(m.value, rview.y.min,  m.value, rview.y.max );
-            }else if(m.leg == -1) {
-                glDrawRect(rview.x.min, rview.y.min,  m.value, rview.y.max );
-            }else if(m.leg == 1) {
-                glDrawRect(m.value, rview.y.min,  rview.x.max, rview.y.max );
-            }
+            // Region
+            glDrawRect(draw_range.x.min, draw_range.y.min,  draw_range.x.max, draw_range.y.max );
         }
     }
 
@@ -1076,7 +1070,12 @@ void Plotter::ClearSeries()
 
 Marker& Plotter::AddMarker(Marker::Direction d, float value, Marker::Equality leg, Colour c )
 {
-    plotmarkers.push_back( Marker(d,value,leg,c) );
+    AddMarker(Marker(d,value,leg,c));
+}
+
+Marker& Plotter::AddMarker( const Marker& marker )
+{
+    plotmarkers.push_back( marker );
     return plotmarkers.back();
 }
 

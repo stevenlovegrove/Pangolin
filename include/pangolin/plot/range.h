@@ -46,9 +46,25 @@
 namespace pangolin
 {
 
+
 template<typename T>
 struct Range
 {
+    static Range<T> Open()
+    {
+        return Range<T>(std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max());
+    }
+
+    static Range<T> Empty()
+    {
+        return Range<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::lowest());
+    }
+
+    static Range<T> Containing(T val)
+    {
+        return Range<T>(val, val);
+    }
+
     Range()
         : min(+std::numeric_limits<T>::max()),
           max(-std::numeric_limits<T>::max())
@@ -167,8 +183,8 @@ struct Range
 
     void Clear()
     {
-        min = +std::numeric_limits<T>::max();
-        max = -std::numeric_limits<T>::max();
+        min = std::numeric_limits<T>::max();
+        max = std::numeric_limits<T>::lowest();
     }
 
     bool Contains(T v) const

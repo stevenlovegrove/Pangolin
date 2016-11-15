@@ -24,6 +24,11 @@ int main(/*int argc, char* argv[]*/)
   plotter.SetBounds(0.0, 1.0, 0.0, 1.0);
   plotter.Track("$i");
 
+  // Add some sample annotations to the plot
+  plotter.AddMarker(pangolin::Marker::Vertical,   -1000, pangolin::Marker::LessThan, pangolin::Colour::Blue().WithAlpha(0.2) );
+  plotter.AddMarker(pangolin::Marker::Horizontal,   100, pangolin::Marker::GreaterThan, pangolin::Colour::Red().WithAlpha(0.2) );
+  plotter.AddMarker(pangolin::Marker::Horizontal,    10, pangolin::Marker::Equal, pangolin::Colour::Green().WithAlpha(0.2) );
+
   pangolin::DisplayBase().AddDisplay(plotter);
 
   float t = 0;
