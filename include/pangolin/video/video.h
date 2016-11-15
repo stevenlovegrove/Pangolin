@@ -116,6 +116,7 @@
 //  e.g. "test:[size=640x480,fmt=RGB24]//"
 
 #include <pangolin/video/video_interface.h>
+#include <pangolin/utils/uri.h>
 
 namespace pangolin
 {
