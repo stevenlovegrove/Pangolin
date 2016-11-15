@@ -246,20 +246,27 @@ PANGOLIN_REGISTER_FACTORY(MirrorVideo)
         std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
 
+            MirrorOptions default_opt = MirrorOptionsFlipX;
+            if(uri.scheme == "flip") default_opt = MirrorOptionsFlipY;
+            if(uri.scheme == "rotate") default_opt = MirrorOptionsFlipXY;
+
             std::vector<MirrorOptions> flips;
 
             for(size_t i=0; i < subvid->Streams().size(); ++i){
                 std::stringstream ss;
                 ss << "stream" << i;
                 const std::string key = ss.str();
-                flips.push_back(uri.Get<MirrorOptions>(key, MirrorOptionsFlipX) );
+                flips.push_back(uri.Get<MirrorOptions>(key, default_opt) );
             }
 
             return std::unique_ptr<VideoInterface> (new MirrorVideo(subvid, flips));
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<MirrorVideoFactory>(), 10, "mirror");
+    auto factory = std::make_shared<MirrorVideoFactory>();
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "mirror");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "flip");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "rotate");
 }
 
 }
