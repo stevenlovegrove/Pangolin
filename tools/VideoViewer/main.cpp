@@ -3,7 +3,7 @@
 
 int main( int argc, char* argv[] )
 {
-    const std::string dflt_output_uri = "pango://video.pango";
+    const std::string dflt_output_uri = "pango:[unique_filename]//video.pango";
 
     if( argc > 1 ) {
         const std::string input_uri = std::string(argv[1]);

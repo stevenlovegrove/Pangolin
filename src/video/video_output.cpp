@@ -46,7 +46,12 @@ std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri)
     {
         const size_t mb = 1024*1024;
         const size_t buffer_size_bytes = uri.Get("buffer_size_mb", 100) * mb;
-        const std::string filename = uri.url;
+        std::string filename = uri.url;
+
+        if(uri.Contains("unique_filename")) {
+            filename = MakeUniqueFilename(filename);
+        }
+
         recorder = std::unique_ptr<VideoOutputInterface>(
             new PangoVideoOutput(filename, buffer_size_bytes)
         );

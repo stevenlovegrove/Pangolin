@@ -40,7 +40,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 
 int main( int argc, char* argv[] )
 {
-    const std::string dflt_output_uri = "pango://video.pango";
+    const std::string dflt_output_uri = "pango:[unique_filename]//video.pango";
 
     if( argc > 1 ) {
         const std::string input_uri = std::string(argv[1]);
@@ -51,8 +51,8 @@ int main( int argc, char* argv[] )
             std::cout << e.what() << std::endl;
         }
     }else{
-        std::cout << "Usage  : VideoViewer [video-uri]" << std::endl << std::endl;
-        std::cout << "Where video-uri describes a stream or file resource, e.g." << std::endl;
+        std::cout << "Usage  : VideoConvert [video-in-uri] [video-out-uri]" << std::endl << std::endl;
+        std::cout << "Where video-in-uri describes a stream or file resource, e.g." << std::endl;
         std::cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << std::endl;
         std::cout << "\tfile:///home/user/video/movie.avi" << std::endl;
         std::cout << "\tfiles:///home/user/seqiemce/foo%03d.jpeg" << std::endl;
