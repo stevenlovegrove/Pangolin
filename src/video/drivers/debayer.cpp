@@ -258,16 +258,21 @@ void DebayerVideo::ProcessStreams(unsigned char* out, const unsigned char *in)
 {
     for(size_t s=0; s<streams.size(); ++s) {
         const StreamInfo& stin = videoin[0]->Streams()[s];
+        Image<unsigned char> img_in  = stin.StreamImage(in);
+        Image<unsigned char> img_out = Streams()[s].StreamImage(out);
 
-        if(stin.PixFormat().bpp == 8) {
-            Image<unsigned char> img_in  = stin.StreamImage(in);
-            Image<unsigned char> img_out = Streams()[s].StreamImage(out);
+        if(methods[s] == BAYER_METHOD_NONE) {
+            const size_t num_bytes = std::min(img_in.w, img_out.w) * stin.PixFormat().bpp / 8;
+            for(size_t y=0; y < img_out.h; ++y) {
+                std::memcpy(img_out.RowPtr((int)y), img_in.RowPtr((int)y), num_bytes);
+            }
+        }else if(stin.PixFormat().bpp == 8) {
             ProcessImage(img_out, img_in, methods[s], tile);
         }else if(stin.PixFormat().bpp == 16){
-            Image<uint16_t> img_in = stin.StreamImage(in).Reinterpret<uint16_t>();
-            Image<uint16_t> img_out = Streams()[s].StreamImage(out).Reinterpret<uint16_t>();
-            ProcessImage(img_out, img_in, methods[s], tile);
-        }else{
+            Image<uint16_t> img_in16  = img_in.Reinterpret<uint16_t>();
+            Image<uint16_t> img_out16 = img_out.Reinterpret<uint16_t>();
+            ProcessImage(img_out16, img_in16, methods[s], tile);
+        }else {
             throw std::runtime_error("debayer: unhandled format combination: " + stin.PixFormat().format );
         }
     }
