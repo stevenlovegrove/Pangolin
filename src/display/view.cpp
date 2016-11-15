@@ -509,7 +509,7 @@ void View::RecordOnRender(const std::string& record_uri)
         context->recorder.Open(record_uri);
         std::vector<StreamInfo> streams;
         const VideoPixelFormat fmt = VideoFormatFromString("RGB24");
-        streams.push_back( StreamInfo(fmt, area.w, area.h, area.w * fmt.bpp) );
+        streams.push_back( StreamInfo(fmt, area.w, area.h, area.w * fmt.bpp / 8) );
         context->recorder.SetStreams(streams);
     }else{
         context->recorder.Close();
