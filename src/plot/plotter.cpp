@@ -1070,7 +1070,7 @@ void Plotter::ClearSeries()
 
 Marker& Plotter::AddMarker(Marker::Direction d, float value, Marker::Equality leg, Colour c )
 {
-    AddMarker(Marker(d,value,leg,c));
+    return AddMarker(Marker(d,value,leg,c));
 }
 
 Marker& Plotter::AddMarker( const Marker& marker )
