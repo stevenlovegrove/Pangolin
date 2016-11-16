@@ -44,6 +44,28 @@ VideoInput::VideoInput(
     Open(input_uri, output_uri);
 }
 
+// Move semantics
+VideoInput::VideoInput(VideoInput&& o)
+{
+    *this = std::move(o);
+}
+
+void VideoInput::operator =(VideoInput&& o)
+{
+    str_uri_input = o.str_uri_input;
+    uri_input = o.uri_input;
+    uri_output = o.uri_output;
+    video_src = std::move(o.video_src);
+    video_file = std::move(o.video_file);
+    video_recorder = std::move(o.video_recorder);
+    videos = std::move(o.videos);
+    buffer_size_bytes = o.buffer_size_bytes;
+    frame_num = o.frame_num;
+    record_frame_skip = o.record_frame_skip;
+    record_once = o.record_once;
+    record_continuous = o.record_continuous;
+}
+
 void VideoInput::Open(
     const std::string& input_uri,
     const std::string& output_uri

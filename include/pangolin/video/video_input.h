@@ -63,6 +63,11 @@ struct PANGOLIN_EXPORT VideoInput
 
     VideoInput();
     VideoInput(const std::string &input_uri, const std::string &output_uri = "pango:[buffer_size_mb=100]//video_log.pango");
+
+    // Move semantics
+    VideoInput(VideoInput&& o);
+    void operator =(VideoInput&& o);
+
     ~VideoInput();
 
     void Open(const std::string &input_uri, const std::string &output_uri = "pango:[buffer_size_mb=100]//video_log.pango");
