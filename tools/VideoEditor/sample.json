@@ -1,0 +1,13 @@
+{
+  "input_videos": {
+      "awesome1" : { "uri" : "ffmpeg://vid1.mov"},
+      "awesome2" : { "uri" : "flip://pango://vid2.pango"}
+  },
+  "timeline" : [
+    { "frame" :    0, "show" : "awesome1" },
+    { "frame" :  600, "show" : "awesome2" },
+    { "frame" :  750, "show" : "awesome1" },
+    { "frame" :  910, "show" : "awesome2" },
+    { "frame" : 4833, "show" : "awesome1" }
+  ]
+}
