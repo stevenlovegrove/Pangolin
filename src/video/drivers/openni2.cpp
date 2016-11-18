@@ -469,8 +469,9 @@ void OpenNi2Video::SetDepthColorSyncEnabled(bool enable)
 
 void OpenNi2Video::SetFastCrop(bool enable)
 {
+    const uint32_t pango_XN_STREAM_PROPERTY_FAST_ZOOM_CROP = 0x1080F009;
     for (unsigned int i = 0; i < Streams().size(); ++i) {
-        video_stream[i].setProperty(XN_STREAM_PROPERTY_FAST_ZOOM_CROP, enable);
+        video_stream[i].setProperty(pango_XN_STREAM_PROPERTY_FAST_ZOOM_CROP, enable);
         video_stream[i].setProperty(XN_STREAM_PROPERTY_CROPPING_MODE, enable ? XN_CROPPING_MODE_INCREASED_FPS : XN_CROPPING_MODE_NORMAL);
     }
 }
