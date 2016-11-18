@@ -75,6 +75,7 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/drivers/mirror.h
     ${INCDIR}/video/drivers/unpack.h
     ${INCDIR}/video/drivers/join.h
+    ${INCDIR}/video/drivers/merge.h
     ${INCDIR}/video/drivers/thread.h
   )
   list(APPEND SOURCES
@@ -89,6 +90,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/mirror.cpp
     video/drivers/unpack.cpp
     video/drivers/join.cpp
+    video/drivers/merge.cpp
     video/drivers/json.cpp
     video/drivers/thread.cpp
   )
@@ -104,6 +106,7 @@ if(BUILD_PANGOLIN_VIDEO)
     RegisterMirrorVideoFactory
     RegisterUnpackVideoFactory
     RegisterJoinVideoFactory
+    RegisterMergeVideoFactory
     RegisterJsonVideoFactory
     RegisterThreadVideoFactory
   )

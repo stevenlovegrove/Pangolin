@@ -170,6 +170,12 @@ struct Range
         max = std::max(max,v);
     }
 
+    void Insert(const Range<T>& r)
+    {
+        Insert(r.min);
+        Insert(r.max);
+    }
+
     void Clamp(T vmin, T vmax)
     {
         min = std::min(std::max(vmin, min), vmax);
@@ -211,6 +217,30 @@ struct Range
 template<typename T>
 struct XYRange
 {
+    static XYRange<T> Open()
+    {
+        return XYRange<T>(
+            Range<T>(std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max()),
+            Range<T>(std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max())
+        );
+    }
+
+    static XYRange<T> Empty()
+    {
+        return XYRange<T>(
+            Range<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::lowest()),
+            Range<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::lowest())
+        );
+    }
+
+    static XYRange<T> Containing(T x, T y)
+    {
+        return XYRange<T>(
+            Range<T>(x, x),
+            Range<T>(y, y)
+        );
+    }
+
     XYRange()
     {
     }
@@ -266,6 +296,17 @@ struct XYRange
         y.Clamp(o.y);
     }
 
+    void Insert(T xval, T yval)
+    {
+        x.Insert(xval);
+        y.Insert(yval);
+    }
+
+    void Insert(XYRange<T> r)
+    {
+        x.Insert(r.x);
+        y.Insert(r.y);
+    }
 
     float Area() const
     {

@@ -61,13 +61,15 @@ struct PANGOLIN_EXPORT VideoPixelFormat
     bool planar;
 };
 
-struct PANGOLIN_EXPORT ImageDim
+struct PANGOLIN_EXPORT Point
 {
-    inline ImageDim() : x(0), y(0) {}
-    inline ImageDim(size_t x, size_t y) : x(x), y(y) {}
+    inline Point() : x(0), y(0) {}
+    inline Point(size_t x, size_t y) : x(x), y(y) {}
     size_t x;
     size_t y;
 };
+
+typedef Point ImageDim;
 
 struct PANGOLIN_EXPORT ImageRoi
 {
