@@ -228,8 +228,8 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
     };
 
     auto factory = std::make_shared<ImagesVideoVideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "file");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "files");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 20, "file");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 20, "files");
     VideoFactoryRegistry::I().RegisterFactory(factory, 10, "image");
     VideoFactoryRegistry::I().RegisterFactory(factory, 10, "images");
 }

@@ -800,7 +800,23 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
 {
     struct FfmpegVideoFactory : public VideoFactoryInterface {
         std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
-            if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") ){
+            const std::array<std::string,49> ffmpeg_ext = {
+                ".3g2",".3gp", ".amv", ".asf", ".avi", ".drc", ".flv", ".flv", ".flv", ".f4v",
+                ".f4p", ".f4a", ".f4b", ".gif", ".gifv", ".m4v", ".mkv", ".mng", ".mov", ".qt",
+                ".mp4", ".m4p", ".m4v", ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".mpg", ".mpeg",
+                ".m2v", ".mxf", ".nsv",  ".ogv", ".ogg", ".rm", ".rmvb", ".roq", ".svi", ".vob",
+                ".webm", ".wmv", ".yuv", ".h264", ".h265"
+            };
+
+            if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") )
+            {
+                if(!uri.scheme.compare("file") || !uri.scheme.compare("files")) {
+                    const std::string ext = FileLowercaseExtention(uri.url);
+                    if(std::find(ffmpeg_ext.begin(), ffmpeg_ext.end(), ext) == ffmpeg_ext.end()) {
+                        // Don't try to load unknown files without the ffmpeg:// scheme.
+                        return std::unique_ptr<VideoInterface>();
+                    }
+                }
                 std::string outfmt = uri.Get<std::string>("fmt","RGB24");
                 ToUpper(outfmt);
                 const int video_stream = uri.Get<int>("stream",-1);
@@ -822,8 +838,8 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
     VideoFactoryRegistry::I().RegisterFactory(factory, 10, "ffmpeg");
     VideoFactoryRegistry::I().RegisterFactory(factory, 10, "mjpeg");
     VideoFactoryRegistry::I().RegisterFactory(factory, 20, "convert");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 20, "file");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 20, "files");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 15, "file");
+    VideoFactoryRegistry::I().RegisterFactory(factory, 15, "files");
 }
 
 }
