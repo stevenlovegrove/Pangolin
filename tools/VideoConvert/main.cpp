@@ -12,6 +12,8 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::VideoInput video(input_uri, output_uri);
     const size_t num_streams = video.Streams().size();
 
+    pangolin::VideoPlaybackInterface* playback = pangolin::FindFirstMatchingVideoInterface<pangolin::VideoPlaybackInterface>(video);
+
     // Output details of video stream
     for(size_t s = 0; s < num_streams; ++s)
     {
@@ -33,6 +35,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     {
         if( !video.Grab(&buffer[0], images, video_wait, video_newest) ) {
             break;
+        }
+        if( playback ) {
+            std::cout << "Frames complete: " << playback->GetCurrentFrameId() << " / " << playback->GetTotalFrames() << '\r';
+            std::cout.flush();
         }
    }
 }
