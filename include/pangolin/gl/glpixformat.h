@@ -48,11 +48,13 @@ struct GlPixFormat
         default: throw std::runtime_error("Unable to form OpenGL format from video format: '" + fmt.format + "'.");
         }
 
+        const bool is_integral = fmt.format.find('F') == std::string::npos;
+
         switch (fmt.channel_bits[0]) {
         case 8: gltype = GL_UNSIGNED_BYTE; break;
         case 16: gltype = GL_UNSIGNED_SHORT; break;
-        case 32: gltype = GL_FLOAT; break;
-        case 64: gltype = GL_DOUBLE; break;
+        case 32: gltype = (is_integral ? GL_UNSIGNED_INT : GL_FLOAT); break;
+        case 64: gltype = (is_integral ? GL_UNSIGNED_INT64_NV : GL_DOUBLE); break;
         default: throw std::runtime_error("Unknown OpenGL data type for video format: '" + fmt.format + "'.");
         }
 
