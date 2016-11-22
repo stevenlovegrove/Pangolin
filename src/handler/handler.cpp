@@ -278,11 +278,13 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             rotation_changed = true;
         }else if( button_state == MouseButtonRight)
         {
-            // Try to correct for different coordinate conventions.
             GLprecision aboutx = -rf * delta[1];
-            GLprecision abouty =  rf * delta[0];
-            OpenGlMatrix& pm = cam_state->GetProjectionMatrix();
-            abouty *= -pm.m[2*4+3];
+            GLprecision abouty = -rf * delta[0];
+
+            // Try to correct for different coordinate conventions.
+            if(cam_state->GetProjectionMatrix().m[2*4+3] <= 0) {
+                abouty *= -1;
+            }
             
             if(enforce_up) {
                 // Special case if view direction is parallel to up vector
