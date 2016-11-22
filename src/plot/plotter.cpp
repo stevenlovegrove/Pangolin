@@ -65,7 +65,7 @@ std::set<int> ConvertSequences(const std::string& str, char seq_char='$', char i
 }
 
 Plotter::PlotSeries::PlotSeries()
-    : drawing_mode(GL_LINE_STRIP)
+    : log(nullptr), drawing_mode(GL_LINE_STRIP)
 {
 
 }
@@ -201,7 +201,7 @@ Plotter::Plotter(
     float tickx, float ticky,
     Plotter* linked_plotter_x,
     Plotter* linked_plotter_y
-)   : log(log),
+)   : default_log(log),
       colour_wheel(0.6f),
       rview_default(left,right,bottom,top), rview(rview_default), target(rview),
       selection(0,0,0,0),
@@ -326,7 +326,7 @@ void Plotter::ComputeTrackValue( float track_val[2] )
 {
     if(trigger_edge) {
         // Track last edge transition matching trigger_edge
-        const DataLogBlock* block = log->LastBlock();
+        const DataLogBlock* block = default_log->LastBlock();
         if(block) {
             int s = (int)block->StartId() + (int)block->Samples() - 1;
             const size_t dim = block->Dimensions();
@@ -347,7 +347,7 @@ void Plotter::ComputeTrackValue( float track_val[2] )
         // Fall back to simple last value tracking
     }
 
-    track_val[0] = (float)log->Samples();
+    track_val[0] = (float)default_log->Samples();
     track_val[1] = 0.0f;
 }
 
@@ -356,7 +356,7 @@ XYRangef Plotter::ComputeAutoSelection()
     XYRangef range;
     range.x = target.x;
 
-    const DataLogBlock* block = log->FirstBlock();
+    const DataLogBlock* block = default_log->FirstBlock();
 
     if(block) {
         for(size_t i=0; i < plotseries.size(); ++i)
@@ -364,8 +364,8 @@ XYRangef Plotter::ComputeAutoSelection()
             if( plotseries[i].attribs.size() == 2 && plotseries[i].attribs[0].plot_id == -1) {
                 const int id = plotseries[i].attribs[1].plot_id;
                 if( 0<= id && id < (int)block->Dimensions()) {
-                    range.y.Insert(log->Stats(id).min);
-                    range.y.Insert(log->Stats(id).max);
+                    range.y.Insert(default_log->Stats(id).min);
+                    range.y.Insert(default_log->Stats(id).max);
                 }
             }
 
@@ -481,7 +481,8 @@ void Plotter::Render()
         prog.SetUniform("u_offset", ox, oy);
         prog.SetUniform("u_color", ps.colour );
 
-        const DataLogBlock* block = log->FirstBlock();
+        // TODO: Try to skip drawing of blocks which aren't in view.
+        const DataLogBlock* block = ps.log ? ps.log->FirstBlock() : default_log->FirstBlock();
         while(block) {
             if(ps.contains_id ) {
                 if(id_size < block->Samples() ) {
@@ -1050,16 +1051,16 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
     ScreenToPlot( (int)x, (int)y, hover[0], hover[1]);
 }
 
-void Plotter::AddSeries(
-    const std::string& x_expr, const std::string& y_expr,
+void Plotter::AddSeries(const std::string& x_expr, const std::string& y_expr,
     DrawingMode drawing_mode, Colour colour,
-    const std::string& title
-) {
+    const std::string& title, DataLog *log)
+{
     if( !std::isfinite(colour.r) ) {
         colour = colour_wheel.GetUniqueColour();
     }
     plotseries.push_back( PlotSeries() );
     plotseries.back().CreatePlot(x_expr, y_expr, colour, (title == "$y") ? y_expr : title);
+    plotseries.back().log = log;
     plotseries.back().drawing_mode = (GLenum)drawing_mode;
 }
 

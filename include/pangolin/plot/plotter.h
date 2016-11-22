@@ -99,7 +99,7 @@ class PANGOLIN_EXPORT Plotter : public View, Handler
 {
 public:
     Plotter(
-        DataLog* log,
+        DataLog* default_log,
         float left=0, float right=600, float bottom=-1, float top=1,
         float tickx=30, float ticky=0.5,
         Plotter* linked_plotter_x = 0,
@@ -157,7 +157,7 @@ public:
     ///    e.g. x_exptr ="$i", y_expr = "sqrt($1)} // index - sqrt(data[0]) plot
     void AddSeries(const std::string& x_expr, const std::string& y_expr,
         DrawingMode drawing_mode = DrawingModeLine, Colour colour = Colour::Unspecified(),
-        const std::string &title = "$y"
+        const std::string &title = "$y", DataLog* log = nullptr
     );
 
     /// Remove all current markers
@@ -202,6 +202,7 @@ protected:
         GlText title;
         bool contains_id;
         std::vector<PlotAttrib> attribs;
+        DataLog* log;
         GLenum drawing_mode;
         Colour colour;
         bool used;
@@ -228,7 +229,7 @@ protected:
     void UpdateView();
     Tick FindTickFactor(float tick);
 
-    DataLog* log;
+    DataLog* default_log;
 
     ColourWheel colour_wheel;
     Colour colour_bg;

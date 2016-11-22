@@ -33,6 +33,7 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include <memory>
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN
@@ -45,6 +46,39 @@
 namespace pangolin
 {
 
+/// Simple statistics recorded for a logged input dimension.
+struct DimensionStats
+{
+    DimensionStats()
+    {
+        Reset();
+    }
+
+    void Reset()
+    {
+        isMonotonic = true;
+        sum = 0.0f;
+        sum_sq = 0.0f;
+        min = std::numeric_limits<float>::max();
+        max = std::numeric_limits<float>::lowest();
+    }
+
+    void Add(const float v)
+    {
+        isMonotonic = isMonotonic && (v >= max);
+        sum += v;
+        sum_sq += v*v;
+        min = std::min(min, v);
+        max = std::max(max, v);
+    }
+
+    bool isMonotonic;
+    float sum;
+    float sum_sq;
+    float min;
+    float max;
+};
+
 class DataLogBlock
 {
 public:
@@ -53,14 +87,14 @@ public:
     /// @param start_id: index of first sample (from entire dataset) in this buffer
     DataLogBlock(size_t dim, size_t max_samples, size_t start_id)
         : dim(dim), max_samples(max_samples), samples(0),
-          start_id(start_id), sample_buffer(0), nextBlock(0)
+          start_id(start_id)
     {
-        sample_buffer = new float[dim*max_samples];
+        sample_buffer = std::unique_ptr<float[]>(new float[dim*max_samples]);
+//        stats = std::unique_ptr<DimensionStats[]>(new DimensionStats[dim]);
     }
 
     ~DataLogBlock()
     {
-        delete[] sample_buffer;
     }
 
     size_t Samples() const
@@ -91,15 +125,12 @@ public:
     void ClearLinked()
     {
         samples = 0;
-        if(nextBlock) {
-            delete nextBlock;
-            nextBlock = NULL;
-        }
+        nextBlock.reset();
     }
 
     DataLogBlock* NextBlock() const
     {
-        return nextBlock;
+        return nextBlock.get();
     }
 
     size_t StartId() const
@@ -109,7 +140,7 @@ public:
 
     float* DimData(size_t d) const
     {
-        return sample_buffer + d;
+        return sample_buffer.get() + d;
     }
 
     size_t Dimensions() const
@@ -122,7 +153,7 @@ public:
         const int id = (int)n - (int)start_id;
 
         if( 0 <= id && id < (int)samples ) {
-            return sample_buffer + dim*id;
+            return sample_buffer.get() + dim*id;
         }else{
             if(nextBlock) {
                 return nextBlock->Sample(n);
@@ -137,25 +168,9 @@ protected:
     size_t max_samples;
     size_t samples;
     size_t start_id;
-    float* sample_buffer;
-    DataLogBlock* nextBlock;
-};
-
-/// Simple statistics recorded for a logged input dimension.
-struct DimensionStats
-{
-    DimensionStats()
-        : isMonotonic(true), sum(0.0f), sum_sq(0.0f),
-          min(std::numeric_limits<float>::max()),
-          max(-std::numeric_limits<float>::max())
-    {
-    }
-
-    bool isMonotonic;
-    float sum;
-    float sum_sq;
-    float min;
-    float max;
+    std::unique_ptr<float[]> sample_buffer;
+//    std::unique_ptr<DimensionStats[]> stats;
+    std::unique_ptr<DataLogBlock> nextBlock;
 };
 
 /// A DataLog can efficiently record floating point sample data of any size.
