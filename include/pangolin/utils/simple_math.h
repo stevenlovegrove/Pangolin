@@ -322,10 +322,10 @@ void LiePutSE3in4x4(P out[4*4], const P in[3*4] )
 template<typename P>
 void LieSE3from4x4(P out[3*4], const P in[4*4] )
 {
-    std::copy(in,in+4, out);
-    std::copy(in+4,in+8, out+3);
-    std::copy(in+8,in+12, out+6);
-    std::copy(in+12,in+16, out+9);
+    std::copy(in,in+3, out);
+    std::copy(in+4,in+7, out+3);
+    std::copy(in+8,in+11, out+6);
+    std::copy(in+12,in+15, out+9);
 }
 
 template<typename P>
