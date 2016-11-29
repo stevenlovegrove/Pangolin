@@ -105,3 +105,12 @@ Please visit [Github Issues](https://github.com/stevenlovegrove/Pangolin/issues)
 
 Please note; most Pangolin dependencies are optional - to disable a dependency which may be causing trouble on your machine, simply blank out it's include and library directories with a cmake configuration tool (e.g. ccmake or cmake-gui).
 
+## Acknowledgements ##
+
+I'd like to thank the growing number of kind contributors to Pangolin for helping to make it more stable and feature rich. Many features of Pangolin have been influenced by other projects such as GFlags, GLConsole, and libcvd in particular. I'd also like to thank the FOSS projects on which Pangolin depends.
+
+For a summary of those who have made code contributions, execute:
+
+```
+git shortlog -sne
+```
