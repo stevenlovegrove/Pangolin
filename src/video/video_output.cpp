@@ -25,6 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/video/video.h>
 #include <pangolin/video/video_output.h>
 
 #include <pangolin/video/drivers/pango_video_output.h>
