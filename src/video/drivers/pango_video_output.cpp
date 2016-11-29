@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/pango_video_output.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/picojson.h>
 #include <pangolin/utils/file_utils.h>
@@ -193,6 +193,28 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value&
     );
 
     return 0;
+}
+
+PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
+{
+    struct PangoVideoFactory : public FactoryInterface<VideoOutputInterface> {
+        std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
+            const size_t mb = 1024*1024;
+            const size_t buffer_size_bytes = uri.Get("buffer_size_mb", 100) * mb;
+            std::string filename = uri.url;
+
+            if(uri.Contains("unique_filename")) {
+                filename = MakeUniqueFilename(filename);
+            }
+
+            return std::unique_ptr<VideoOutputInterface>(
+                new PangoVideoOutput(filename, buffer_size_bytes)
+            );
+        }
+    };
+
+    auto factory = std::make_shared<PangoVideoFactory>();
+    FactoryRegistry<VideoOutputInterface>::I().RegisterFactory(factory, 10, "pango");
 }
 
 }

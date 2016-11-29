@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/ffmpeg.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
 
@@ -798,8 +798,8 @@ int FfmpegVideoOutput::WriteStreams(const unsigned char* data, const json::value
 
 PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
 {
-    struct FfmpegVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct FfmpegVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::array<std::string,49> ffmpeg_ext = {
                 ".3g2",".3gp", ".amv", ".asf", ".avi", ".drc", ".flv", ".flv", ".flv", ".f4v",
                 ".f4p", ".f4a", ".f4b", ".gif", ".gifv", ".m4v", ".mkv", ".mng", ".mov", ".qt",
@@ -835,11 +835,33 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
     };
 
     auto factory = std::make_shared<FfmpegVideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "ffmpeg");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "mjpeg");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 20, "convert");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 15, "file");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 15, "files");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "ffmpeg");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "mjpeg");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 20, "convert");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 15, "file");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 15, "files");
+}
+
+PANGOLIN_REGISTER_FACTORY(FfmpegVideoOutput)
+{
+    struct FfmpegVideoFactory : public FactoryInterface<VideoOutputInterface> {
+        std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
+            int desired_frame_rate = uri.Get("fps", 60);
+            int desired_bit_rate = uri.Get("bps", 20000*1024);
+            std::string filename = uri.url;
+
+            if(uri.Contains("unique_filename")) {
+                filename = MakeUniqueFilename(filename);
+            }
+
+            return std::unique_ptr<VideoOutputInterface>(
+                new FfmpegVideoOutput(filename, desired_frame_rate, desired_bit_rate)
+            );
+        }
+    };
+
+    auto factory = std::make_shared<FfmpegVideoFactory>();
+    FactoryRegistry<VideoOutputInterface>::I().RegisterFactory(factory, 10, "ffmpeg");
 }
 
 }

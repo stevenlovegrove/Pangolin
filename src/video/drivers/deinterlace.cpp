@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/deinterlace.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 #include <dc1394/conversions.h>
 
@@ -94,14 +94,14 @@ bool DeinterlaceVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(DeinterlaceVideo)
 {
-    struct DeinterlaceVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct DeinterlaceVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             return std::unique_ptr<VideoInterface>( new DeinterlaceVideo(subvid) );
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<DeinterlaceVideoFactory>(), 10, "deinterlace");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<DeinterlaceVideoFactory>(), 10, "deinterlace");
 }
 
 }

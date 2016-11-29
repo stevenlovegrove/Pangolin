@@ -28,38 +28,76 @@
 #pragma once
 
 #include <memory>
-#include <pangolin/video/video.h>
+#include <vector>
+#include <algorithm>
+
+#include <pangolin/utils/uri.h>
 
 namespace pangolin
 {
 
-class VideoFactoryInterface
+template<typename T>
+struct FactoryInterface
 {
-public:
-    virtual std::unique_ptr<VideoInterface> OpenVideo(const Uri& video_uri) = 0;
+    typedef T FactoryItem;
+
+    virtual std::unique_ptr<T> Open(const Uri& uri) = 0;
 };
 
-class VideoFactoryRegistry
+template<typename T>
+class FactoryRegistry
 {
 public:
-    static VideoFactoryRegistry& I();
+    // IMPORTANT: Implement for each templated instantiation within a seperate compilation unit.
+    static FactoryRegistry<T>& I();
 
-    ~VideoFactoryRegistry();
+    ~FactoryRegistry()
+    {
+    }
 
-    void RegisterFactory(std::shared_ptr<VideoFactoryInterface> factory, uint32_t precedence, const std::string& scheme_name );
+    void RegisterFactory(std::shared_ptr<FactoryInterface<T>> factory, uint32_t precedence, const std::string& scheme_name )
+    {
+        FactoryItem item = {precedence, scheme_name, factory};
+        factories.push_back( item );
+        std::sort(factories.begin(), factories.end());
+    }
 
-    void UnregisterFactory(VideoFactoryInterface* factory);
+    void UnregisterFactory(FactoryInterface<T>* factory)
+    {
+        for( auto i = factories.end()-1; i != factories.begin(); --i)
+        {
+            if( i->factory.get() == factory ) {
+                factories.erase(i);
+            }
+        }
+    }
 
-    void UnregisterAllFactories();
+    void UnregisterAllFactories()
+    {
+        factories.clear();
+    }
 
-    std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri);
+    std::unique_ptr<T> Open(const Uri& uri)
+    {
+        // Iterate over all registered factories in order of precedence.
+        for(auto& item : factories) {
+            if( item.scheme == uri.scheme) {
+                std::unique_ptr<T> video = item.factory->Open(uri);
+                if(video) {
+                    return video;
+                }
+            }
+        }
+
+        return std::unique_ptr<T>();
+    }
 
 private:
     struct FactoryItem
     {
         uint32_t precedence;
         std::string scheme;
-        std::shared_ptr<VideoFactoryInterface> factory;
+        std::shared_ptr<FactoryInterface<T>> factory;
 
         bool operator<(const FactoryItem& rhs) const {
             return precedence < rhs.precedence;

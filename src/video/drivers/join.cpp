@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/join.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 #ifdef DEBUGJOIN
@@ -349,8 +349,8 @@ std::vector<std::string> SplitBrackets(const std::string src, char open = '{', c
 
 PANGOLIN_REGISTER_FACTORY(JoinVideo)
 {
-    struct JoinVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct JoinVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
 
             std::vector<std::string> uris = SplitBrackets(uri.url);
             const unsigned long sync_tol_us = uri.Get<unsigned long>("sync_tolerance_us", 0);
@@ -377,7 +377,7 @@ PANGOLIN_REGISTER_FACTORY(JoinVideo)
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<JoinVideoFactory>(), 10, "join");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<JoinVideoFactory>(), 10, "join");
 }
 
 }

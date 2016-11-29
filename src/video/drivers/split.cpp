@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/split.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
@@ -87,8 +87,8 @@ std::vector<VideoInterface*>& SplitVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(SplitVideo)
 {
-    struct SplitVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct SplitVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::vector<StreamInfo> streams;
 
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
@@ -152,7 +152,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<SplitVideoFactory>(), 10, "split");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<SplitVideoFactory>(), 10, "split");
 }
 
 }

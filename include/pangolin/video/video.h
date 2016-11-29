@@ -116,6 +116,7 @@
 //  e.g. "test:[size=640x480,fmt=RGB24]//"
 
 #include <pangolin/video/video_interface.h>
+#include <pangolin/video/video_output_interface.h>
 #include <pangolin/utils/uri.h>
 
 namespace pangolin
@@ -128,6 +129,14 @@ std::unique_ptr<VideoInterface> OpenVideo(const std::string& uri);
 //! Open Video Interface from Uri specification
 PANGOLIN_EXPORT
 std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri);
+
+//! Open VideoOutput Interface from string specification (as described in this files header)
+PANGOLIN_EXPORT
+std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const std::string& str_uri);
+
+//! Open VideoOutput Interface from Uri specification
+PANGOLIN_EXPORT
+std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri);
 
 //! Create vector of matching interfaces either through direct cast or filter interface.
 template<typename T>

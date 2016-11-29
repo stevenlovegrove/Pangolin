@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/mirror.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
@@ -242,8 +242,8 @@ std::istream& operator>> (std::istream &is, MirrorOptions &mirror)
 
 PANGOLIN_REGISTER_FACTORY(MirrorVideo)
 {
-    struct MirrorVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct MirrorVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
 
             MirrorOptions default_opt = MirrorOptionsFlipX;
@@ -264,9 +264,9 @@ PANGOLIN_REGISTER_FACTORY(MirrorVideo)
     };
 
     auto factory = std::make_shared<MirrorVideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "mirror");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "flip");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "rotate");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "mirror");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "flip");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "rotate");
 }
 
 }

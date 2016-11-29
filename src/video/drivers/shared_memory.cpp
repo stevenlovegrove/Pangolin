@@ -1,5 +1,5 @@
 #include <pangolin/video/drivers/shared_memory.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 using namespace std;
@@ -68,8 +68,8 @@ bool SharedMemoryVideo::GrabNewest(unsigned char* image, bool wait)
 
 PANGOLIN_REGISTER_FACTORY(SharedMemoryVideo)
 {
-    struct SharedMemoryVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct SharedMemoryVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(0, 0));
             const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
             const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
@@ -90,7 +90,7 @@ PANGOLIN_REGISTER_FACTORY(SharedMemoryVideo)
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<SharedMemoryVideoFactory>(), 10, "shmem");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<SharedMemoryVideoFactory>(), 10, "shmem");
 }
 
 }

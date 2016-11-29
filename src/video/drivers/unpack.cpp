@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/unpack.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 #ifdef DEBUGUNPACK
@@ -248,8 +248,8 @@ bool UnpackVideo::DropNFrames(uint32_t n)
 
 PANGOLIN_REGISTER_FACTORY(UnpackVideo)
 {
-    struct UnpackVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct UnpackVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const std::string fmt = uri.Get("fmt", std::string("GRAY16LE") );
             return std::unique_ptr<VideoInterface>(
@@ -258,7 +258,7 @@ PANGOLIN_REGISTER_FACTORY(UnpackVideo)
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<UnpackVideoFactory>(), 10, "unpack");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<UnpackVideoFactory>(), 10, "unpack");
 }
 
 }

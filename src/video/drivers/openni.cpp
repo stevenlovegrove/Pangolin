@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/openni.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
@@ -266,8 +266,8 @@ bool OpenNiVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
 {
-    struct OpenNiVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct OpenNiVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
             const unsigned int fps = uri.Get<unsigned int>("fps", 30);
             const bool autoexposure = uri.Get<bool>("autoexposure", true);
@@ -290,10 +290,10 @@ PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
     };
 
     auto factory = std::make_shared<OpenNiVideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory,  10, "openni1");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 100, "openni");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 100, "oni");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 100, "kinect");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory,  10, "openni1");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 100, "openni");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 100, "oni");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 100, "kinect");
 }
 
 }

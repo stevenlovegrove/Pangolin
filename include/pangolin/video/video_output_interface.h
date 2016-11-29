@@ -25,67 +25,28 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/video_output.h>
+#pragma once
 
-#include <pangolin/video/drivers/pango_video_output.h>
+#include <vector>
+#include <pangolin/platform.h>
+#include <pangolin/video/stream_info.h>
+#include <pangolin/utils/picojson.h>
 
-#ifdef HAVE_FFMPEG
-#include <pangolin/video/drivers/ffmpeg.h>
-#endif
+namespace pangolin {
 
-#include <pangolin/utils/file_utils.h>
-
-namespace pangolin
+//! Interface to video recording destinations
+struct PANGOLIN_EXPORT VideoOutputInterface
 {
+    virtual ~VideoOutputInterface() {}
 
-VideoOutput::VideoOutput()
-{
-}
+    //! Get format and dimensions of all video streams
+    virtual const std::vector<StreamInfo>& Streams() const = 0;
 
-VideoOutput::VideoOutput(const std::string& uri)
-{
-    Open(uri);
-}
+    virtual void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri ="", const json::value& properties = json::value() ) = 0;
 
-VideoOutput::~VideoOutput()
-{
-}
+    virtual int WriteStreams(const unsigned char* data, const json::value& frame_properties = json::value() ) = 0;
 
-bool VideoOutput::IsOpen() const
-{
-    return recorder.get() != nullptr;
-}
-
-void VideoOutput::Open(const std::string& str_uri)
-{
-    Close();
-    uri = ParseUri(str_uri);
-    recorder = OpenVideoOutput(uri);
-}
-
-void VideoOutput::Close()
-{
-    recorder.reset();
-}
-
-const std::vector<StreamInfo>& VideoOutput::Streams() const
-{
-    return recorder->Streams();
-}
-
-void VideoOutput::SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value &properties)
-{
-    recorder->SetStreams(streams, uri, properties);
-}
-
-int VideoOutput::WriteStreams(const unsigned char* data, const json::value& frame_properties)
-{
-    return recorder->WriteStreams(data, frame_properties);
-}
-
-bool VideoOutput::IsPipe() const
-{
-    return recorder->IsPipe();
-}
+    virtual bool IsPipe() const = 0;
+};
 
 }

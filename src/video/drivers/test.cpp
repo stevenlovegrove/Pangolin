@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/test.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
@@ -96,8 +96,8 @@ bool TestVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(TestVideo)
 {
-    struct TestVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct TestVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
             const int n = uri.Get<int>("n", 1);
             std::string fmt  = uri.Get<std::string>("fmt","RGB24");
@@ -105,7 +105,7 @@ PANGOLIN_REGISTER_FACTORY(TestVideo)
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<TestVideoFactory>(), 10, "test");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<TestVideoFactory>(), 10, "test");
 }
 
 }

@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/debayer.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 #ifdef HAVE_DC1394
@@ -337,8 +337,8 @@ bayer_method_t DebayerVideo::BayerMethodFromString(std::string str)
 
 PANGOLIN_REGISTER_FACTORY(DebayerVideo)
 {
-    struct DebayerVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct DebayerVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const std::string tile_string = uri.Get<std::string>("tile","rggb");
             const std::string method = uri.Get<std::string>("method","none");
@@ -354,7 +354,7 @@ PANGOLIN_REGISTER_FACTORY(DebayerVideo)
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<DebayerVideoFactory>(), 10, "debayer");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<DebayerVideoFactory>(), 10, "debayer");
 }
 
 }

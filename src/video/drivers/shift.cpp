@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/shift.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
@@ -141,8 +141,8 @@ std::vector<VideoInterface*>& ShiftVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(ShiftVideo)
 {
-    struct ShiftVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct ShiftVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const int shift_right = uri.Get<int>("shift", 0);
             const int mask = uri.Get<int>("mask",  0xffff);
 
@@ -153,7 +153,7 @@ PANGOLIN_REGISTER_FACTORY(ShiftVideo)
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<ShiftVideoFactory>(), 10, "shift");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<ShiftVideoFactory>(), 10, "shift");
 }
 
 }

@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/thread.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 #ifdef DEBUGTHREAD
@@ -237,15 +237,15 @@ std::vector<VideoInterface*>& ThreadVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(ThreadVideo)
 {
-    struct ThreadVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct ThreadVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const int num_buffers = uri.Get<int>("num_buffers", 30);
             return std::unique_ptr<VideoInterface>(new ThreadVideo(subvid, num_buffers));
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<ThreadVideoFactory>(), 10, "thread");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<ThreadVideoFactory>(), 10, "thread");
 }
 
 }

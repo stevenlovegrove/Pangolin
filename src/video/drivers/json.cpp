@@ -25,7 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/video_factory.h>
+#include <pangolin/video/video.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/file_extension.h>
 #include <pangolin/utils/transform.h>
@@ -37,8 +38,8 @@ namespace pangolin {
 
 PANGOLIN_REGISTER_FACTORY(JsonVideo)
 {
-    struct JsonVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct JsonVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             if(uri.scheme == "json" || (uri.scheme == "file" && FileLowercaseExtention(uri.url) == ".json")) {
                 const std::string json_filename = PathExpand(uri.url);
                 std::ifstream f( json_filename );
@@ -78,8 +79,8 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
     };
 
     auto factory = std::make_shared<JsonVideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "json");
-    VideoFactoryRegistry::I().RegisterFactory(factory,  5, "file");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "json");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory,  5, "file");
 }
 
 }

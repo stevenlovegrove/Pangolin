@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/pango.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/file_extension.h>
@@ -224,8 +224,8 @@ void PangoVideo::HandlePipeClosed()
 
 PANGOLIN_REGISTER_FACTORY(PangoVideo)
 {
-    struct PangoVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct PangoVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string path = PathExpand(uri.url);
 
             if( !uri.scheme.compare("pango") || FileType(uri.url) == ImageFileTypePango ) {
@@ -237,8 +237,8 @@ PANGOLIN_REGISTER_FACTORY(PangoVideo)
     };
 
     auto factory = std::make_shared<PangoVideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "pango");
-    VideoFactoryRegistry::I().RegisterFactory(factory,  5, "file");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "pango");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory,  5, "file");
 }
 
 }

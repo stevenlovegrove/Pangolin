@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/images.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
 
@@ -211,8 +211,8 @@ int ImagesVideo::Seek(int frameid)
 
 PANGOLIN_REGISTER_FACTORY(ImagesVideo)
 {
-    struct ImagesVideoVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct ImagesVideoVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const bool raw = uri.Contains("fmt");
             const std::string path = PathExpand(uri.url);
 
@@ -228,10 +228,10 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
     };
 
     auto factory = std::make_shared<ImagesVideoVideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory, 20, "file");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 20, "files");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "image");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "images");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 20, "file");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 20, "files");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "image");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "images");
 }
 
 }

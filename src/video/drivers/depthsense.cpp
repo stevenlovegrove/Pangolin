@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/depthsense.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 #include <iomanip>
 
@@ -633,8 +633,8 @@ DepthSenseSensorType depthsense_sensor(const std::string& str)
 
 PANGOLIN_REGISTER_FACTORY(DepthSenseVideo)
 {
-    struct DepthSenseVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct DepthSenseVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             DepthSenseSensorType img1 = depthsense_sensor(uri.Get<std::string>("img1", "depth"));
             DepthSenseSensorType img2 = depthsense_sensor(uri.Get<std::string>("img2", ""));
 
@@ -650,7 +650,7 @@ PANGOLIN_REGISTER_FACTORY(DepthSenseVideo)
         }
     };
 
-    VideoFactoryRegistry::I().RegisterFactory(std::make_shared<DepthSenseVideoFactory>(), 10, "depthsense");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<DepthSenseVideoFactory>(), 10, "depthsense");
 }
 
 }

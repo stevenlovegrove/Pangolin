@@ -27,7 +27,7 @@
  */
 
 #include <pangolin/video/drivers/openni2.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 
 #include <PS1080.h>
 #include <OniVersion.h>
@@ -633,8 +633,8 @@ int OpenNi2Video::Seek(int frameid)
 
 PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
 {
-    struct OpenNI2VideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct OpenNI2VideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const bool realtime = uri.Contains("realtime");
             const ImageDim default_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
             const ImageRoi default_roi = uri.Get<ImageRoi>("roi", ImageRoi(0,0,0,0));
@@ -678,9 +678,9 @@ PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
     };
 
     auto factory = std::make_shared<OpenNI2VideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "openni");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "openni2");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "oni");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "openni");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "openni2");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "oni");
 }
 
 }

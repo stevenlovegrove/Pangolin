@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2011-2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,56 +25,18 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/video/video_output_interface.h>
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/video/video.h>
-#include <pangolin/video/video_output.h>
-#include <pangolin/video_drivers.h>
 
 namespace pangolin
 {
 
-bool one_time_init = false;
-
-std::unique_ptr<VideoInterface> OpenVideo(const std::string& str_uri)
+template<>
+FactoryRegistry<VideoOutputInterface>& FactoryRegistry<VideoOutputInterface>::I()
 {
-    return OpenVideo( ParseUri(str_uri) );
-}
-
-std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri)
-{
-    if(!one_time_init) {
-        one_time_init = LoadBuiltInVideoDrivers();
-    }
-
-    std::unique_ptr<VideoInterface> video =
-            FactoryRegistry<VideoInterface>::I().Open(uri);
-
-    if(!video) {
-        throw VideoException("No known video handler for URI '" + uri.scheme + "'");
-    }
-
-    return video;
-}
-
-std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const std::string& str_uri)
-{
-    return OpenVideoOutput( ParseUri(str_uri) );
-}
-
-std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri)
-{
-    if(!one_time_init) {
-        one_time_init = LoadBuiltInVideoDrivers();
-    }
-
-    std::unique_ptr<VideoOutputInterface> video =
-            FactoryRegistry<VideoOutputInterface>::I().Open(uri);
-
-    if(!video) {
-        throw VideoException("No known video handler for URI '" + uri.scheme + "'");
-    }
-
-    return video;
+    // Singleton instance
+    static FactoryRegistry instance;
+    return instance;
 }
 
 }

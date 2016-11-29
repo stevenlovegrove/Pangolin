@@ -27,7 +27,7 @@
 
 #include <pangolin/video/drivers/firewire.h>
 #include <pangolin/video/drivers/deinterlace.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 #include <stdio.h>
@@ -916,8 +916,8 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 PANGOLIN_REGISTER_FACTORY(FirewireVideo)
 {
-    struct FirewireVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct FirewireVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::string desired_format = uri.Get<std::string>("fmt","RGB24");
             ToUpper(desired_format);
             const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
@@ -962,8 +962,8 @@ PANGOLIN_REGISTER_FACTORY(FirewireVideo)
     };
 
     auto factory = std::make_shared<FirewireVideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "firewire");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "dc1394");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "firewire");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "dc1394");
 }
 
 }

@@ -26,7 +26,7 @@
  */
 
 #include <pangolin/video/drivers/pvn.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
 
@@ -116,8 +116,8 @@ bool PvnVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(PvnVideo)
 {
-    struct PvnVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct PvnVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string path = PathExpand(uri.url);
 
             if( !uri.scheme.compare("pvn") || FileType(uri.url) == ImageFileTypePvn ) {
@@ -129,8 +129,8 @@ PANGOLIN_REGISTER_FACTORY(PvnVideo)
     };
 
     auto factory = std::make_shared<PvnVideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "pvn");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "file");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "pvn");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "file");
 }
 
 }

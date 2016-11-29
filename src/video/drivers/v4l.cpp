@@ -27,7 +27,7 @@
  */
 
 #include <pangolin/video/drivers/v4l.h>
-#include <pangolin/video/video_factory.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
 #include <iostream>
@@ -665,8 +665,8 @@ int V4lVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, U
 
 PANGOLIN_REGISTER_FACTORY(V4lVideo)
 {
-    struct V4lVideoFactory : public VideoFactoryInterface {
-        std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
+    struct V4lVideoFactory : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string smethod = uri.Get<std::string>("method","mmap");
             const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(0,0));
             const int exposure_us = uri.Get<int>("ExposureTime", 10000);
@@ -690,8 +690,8 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
     };
 
     auto factory = std::make_shared<V4lVideoFactory>();
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "v4l");
-    VideoFactoryRegistry::I().RegisterFactory(factory, 10, "uvc");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "v4l");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "uvc");
 }
 
 }

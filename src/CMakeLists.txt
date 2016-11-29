@@ -101,6 +101,7 @@ if(BUILD_PANGOLIN_VIDEO)
     RegisterSplitVideoFactory
     RegisterPvnVideoFactory
     RegisterPangoVideoFactory
+    RegisterPangoVideoOutputFactory
     RegisterDebayerVideoFactory
     RegisterShiftVideoFactory
     RegisterMirrorVideoFactory
@@ -321,6 +322,7 @@ if(BUILD_PANGOLIN_VIDEO AND FFMPEG_FOUND)
   list(APPEND HEADERS ${INCDIR}/video/drivers/ffmpeg.h)
   list(APPEND SOURCES video/drivers/ffmpeg.cpp)
   list(APPEND VIDEO_FACTORY_REG RegisterFfmpegVideoFactory )
+  list(APPEND VIDEO_FACTORY_REG RegisterFfmpegVideoOutputFactory )
 
   if(_GCC_)
     # FFMPEG is a real pain for deprecating the API.
