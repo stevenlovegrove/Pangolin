@@ -251,9 +251,9 @@ PANGOLIN_REGISTER_FACTORY(UnpackVideo)
     struct UnpackVideoFactory : public VideoFactoryInterface {
         std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
-            const bool make_float = uri.Contains("float");
+            const std::string fmt = uri.Get("fmt", std::string("GRAY16LE") );
             return std::unique_ptr<VideoInterface>(
-                new UnpackVideo(subvid, VideoFormatFromString(make_float ? "GRAY32F" : "GRAY16LE"))
+                new UnpackVideo(subvid, VideoFormatFromString(fmt) )
             );
         }
     };
