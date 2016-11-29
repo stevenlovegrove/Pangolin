@@ -30,6 +30,8 @@
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/plot/range.h>
 
+#include <assert.h>
+
 namespace pangolin
 {
 
