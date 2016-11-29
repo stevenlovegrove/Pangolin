@@ -124,7 +124,7 @@ void RunVideoViewerUI(const std::string& input_uri, const std::string& output_ur
 #ifdef CALLEE_HAS_CPP11
     const int FRAME_SKIP = 30;
     const char show_hide_keys[]  = {'1','2','3','4','5','6','7','8','9'};
-    const char screenshot_keys[] = {'!','"','#','$','%','^','&','*','('};
+    const char screenshot_keys[] = {'!','@','#','$','%','^','&','*','('};
 
     // Show/hide streams
     for(size_t v=0; v < container.NumChildren() && v < 9; v++) {
