@@ -29,6 +29,7 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/plot/range.h>
+#include <assert.h> // assert()
 
 #include <assert.h>
 
@@ -71,7 +72,7 @@ MergeVideo::MergeVideo(std::unique_ptr<VideoInterface>& src_, const std::vector<
 
 MergeVideo::~MergeVideo()
 {
-    
+
 }
 
 //! Implement VideoInput::Start()

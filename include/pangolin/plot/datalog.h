@@ -34,6 +34,7 @@
 #include <string>
 #include <limits>
 #include <memory>
+#include <algorithm> // std::min, std::max
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN
