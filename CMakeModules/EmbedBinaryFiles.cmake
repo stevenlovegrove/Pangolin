@@ -1,10 +1,21 @@
 # Creates C resources file from files in given directory
 # Based on http://stackoverflow.com/a/27206982
 function(embed_binary_files file_glob output)
-    # Create empty output file
-    file(WRITE ${output} "")
     # Collect input files
     file(GLOB bins ${file_glob})
+    # Stop when output file is newer than all binary files
+    set(output_new_than_bins 1)
+    foreach(bin ${bins})
+        if(bin IS_NEWER_THAN output)
+            set(output_new_than_bins 0)
+            break()
+        endif()
+    endforeach()
+    if(output_new_than_bins)
+        return()
+    endif()
+    # Create empty output file
+    file(WRITE ${output} "")
     # Iterate through input files
     foreach(bin ${bins})
         # Get short filename
