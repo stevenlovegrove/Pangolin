@@ -41,6 +41,15 @@ class PANGOLIN_EXPORT Params
 public:
     typedef std::vector<std::pair<std::string,std::string>> ParamMap;
 
+    Params()
+    {
+    }
+
+    Params(std::initializer_list<std::pair<std::string,std::string>> l)
+        : params(l)
+    {
+    }
+
     bool Contains(const std::string& key) const
     {
         for(ParamMap::const_iterator it = params.begin(); it!=params.end(); ++it) {
