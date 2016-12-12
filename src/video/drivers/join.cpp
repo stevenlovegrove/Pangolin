@@ -368,7 +368,7 @@ PANGOLIN_REGISTER_FACTORY(JoinVideo)
             JoinVideo* video_raw = new JoinVideo(src);
 
             if(sync_tol_us>0) {
-                if(video_raw->Sync(sync_tol_us, expected_delta_us)) {
+                if(!video_raw->Sync(sync_tol_us, expected_delta_us)) {
                     pango_print_error("Error not all streams in join support sync_tolerance_us option.\n");
                 }
             }
