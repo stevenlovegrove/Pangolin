@@ -155,7 +155,7 @@ VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
     }
 }
 
-PleoraVideo::PleoraVideo(Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0),
+PleoraVideo::PleoraVideo(const Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0),
     lTemperatureCelcius(0), getTemp(false), lStreamParams(0), validGrabbedBuffers(0)
 {
     std::string sn;
@@ -164,15 +164,27 @@ PleoraVideo::PleoraVideo(Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lS
     size_t buffer_count = PleoraVideo::DEFAULT_BUFFER_COUNT;
     Params device_params;
 
-    for(Params::ParamMap::iterator it = p.params.begin(); it != p.params.end(); it++) {
+    for(Params::ParamMap::const_iterator it = p.params.begin(); it != p.params.end(); it++) {
         if(it->first == "model"){
             mn = it->second;
         } else if(it->first == "sn"){
             sn = it->second;
         } else if(it->first == "idx"){
             index = p.Get<int>("idx", 0);
-        } else if(it->first == "buffers"){
-            buffer_count = p.Get<size_t>("buffers", PleoraVideo::DEFAULT_BUFFER_COUNT);
+        } else if(it->first == "size") {
+            const ImageDim dim = p.Get<ImageDim>("size", ImageDim(0,0) );
+            device_params.Set("Width"  , dim.x);
+            device_params.Set("Height" , dim.y);
+        } else if(it->first == "pos") {
+            const ImageDim pos = p.Get<ImageDim>("pos", ImageDim(0,0) );
+            device_params.Set("OffsetX"  , pos.x);
+            device_params.Set("OffsetY" , pos.y);
+        } else if(it->first == "roi") {
+            const ImageRoi roi = p.Get<ImageRoi>("roi", ImageRoi(0,0,0,0) );
+            device_params.Set("Width"  , roi.w);
+            device_params.Set("Height" , roi.h);
+            device_params.Set("OffsetX", roi.x);
+            device_params.Set("OffsetY", roi.y);
         } else {
             device_params.Set(it->first, it->second);
         }
@@ -183,6 +195,7 @@ PleoraVideo::PleoraVideo(Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lS
     InitStream();
 
     InitPangoStreams();
+    InitPangoDeviceProperties();
     InitBuffers(buffer_count);
 }
 
@@ -384,6 +397,29 @@ void PleoraVideo::InitPangoStreams()
     const VideoPixelFormat fmt = PleoraFormat(lpixfmt);
     streams.push_back(StreamInfo(fmt, w, h, (w*fmt.bpp)/8));
     size_bytes = lSize;
+}
+
+void PleoraVideo::InitPangoDeviceProperties()
+{
+    // Store camera details in device properties
+    device_properties["SerialNumber"] = std::string(lDeviceInfo->GetSerialNumber().GetAscii());
+    device_properties["VendorName"] = std::string(lDeviceInfo->GetVendorName().GetAscii());
+    device_properties["ModelName"] = std::string(lDeviceInfo->GetModelName().GetAscii());
+    device_properties["ManufacturerInfo"] = std::string(lDeviceInfo->GetManufacturerInfo().GetAscii());
+    device_properties["Version"] = std::string(lDeviceInfo->GetVersion().GetAscii());
+    device_properties["DisplayID"] = std::string(lDeviceInfo->GetDisplayID().GetAscii());
+    device_properties["UniqueID"] = std::string(lDeviceInfo->GetUniqueID().GetAscii());
+    device_properties["ConnectionID"] = std::string(lDeviceInfo->GetConnectionID().GetAscii());
+
+    pangolin::json::value props(pangolin::json::object_type, true);
+    for(size_t i=0; i < lDeviceParams->GetCount(); ++i) {
+        PvGenParameter* p = (*lDeviceParams)[i];
+        if(p->IsReadable()) {
+            props[p->GetName().GetAscii()] = p->ToString().GetAscii();
+        }
+    }
+
+    device_properties["properties"] = props;
 }
 
 unsigned int PleoraVideo::AvailableFrames() const
@@ -692,27 +728,7 @@ PANGOLIN_REGISTER_FACTORY(PleoraVideo)
 {
     struct PleoraVideoFactory : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            Params params;
-            for(Params::ParamMap::const_iterator it = uri.params.begin(); it != uri.params.end(); it++) {
-                if(it->first == "size"){
-                    const ImageDim size = uri.Get<ImageDim>("size", ImageDim(0,0));
-                    std::stringstream sx,sy;
-                    sx << size.x;
-                    sy << size.y;
-                    params.Set("Width", sx.str());
-                    params.Set("Height", sy.str());
-                } else if(it->first == "pos"){
-                    const ImageDim pos  = uri.Get<ImageDim>("pos", ImageDim(0,0));
-                    std::stringstream sx,sy;
-                    sx << pos.x;
-                    sy << pos.y;
-                    params.Set("OffsetX", sx.str());
-                    params.Set("OffsetY", sy.str());
-                } else {
-                    params.Set(it->first, it->second);
-                }
-            }
-            return std::unique_ptr<VideoInterface>(new PleoraVideo(params));
+            return std::unique_ptr<VideoInterface>(new PleoraVideo(uri));
         }
     };
 

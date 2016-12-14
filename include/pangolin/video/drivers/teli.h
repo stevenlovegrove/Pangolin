@@ -42,7 +42,6 @@ class PANGOLIN_EXPORT TeliVideo : public VideoInterface, public VideoPropertiesI
 {
 public:
     TeliVideo(const Params &p);
-    TeliVideo(const Params &p, const ImageRoi& roi);
     ~TeliVideo();
 
     Params OpenCameraAndGetRemainingParameters(Params &params);
@@ -91,7 +90,8 @@ public:
     const json::value& FrameProperties() const;
 
 protected:
-    void Initialise(const ImageRoi& roi);
+    void Initialise();
+    void InitPangoDeviceProperties();
     void SetDeviceParams(const Params &p);
 
     std::vector<StreamInfo> streams;

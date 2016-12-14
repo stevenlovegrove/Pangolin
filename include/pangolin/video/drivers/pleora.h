@@ -70,7 +70,7 @@ public:
 
     static const size_t DEFAULT_BUFFER_COUNT = 30;
 
-    PleoraVideo(Params& p);
+    PleoraVideo(const Params& p);
 
     ~PleoraVideo();
 
@@ -135,6 +135,8 @@ protected:
     void DeinitStream();
 
     void InitPangoStreams();
+
+    void InitPangoDeviceProperties();
 
     void InitBuffers(size_t buffer_count);
 

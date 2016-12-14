@@ -193,7 +193,7 @@ void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string
     }
 }
 
-TeliVideo::TeliVideo(const Params& uri)
+TeliVideo::TeliVideo(const Params& p)
 	: cam(0), strm(0), hStrmCmpEvt(0)
 {
     TeliSystem::Instance();
@@ -204,25 +204,36 @@ TeliVideo::TeliVideo(const Params& uri)
         throw pangolin::VideoException("Unable to enumerate TeliSDK cameras.");
 
     if (num_cams == 0)
-     throw pangolin::VideoException("No TeliSDK Cameras available.");
+        throw pangolin::VideoException("No TeliSDK Cameras available.");
 
     // Default to rogue values
-    ImageRoi roi;
     std::string sn;
     std::string mn;
     int cam_index = 0;
 
     Params device_params;
 
-    for(Params::ParamMap::const_iterator it = uri.params.begin(); it != uri.params.end(); it++) {
+    for(Params::ParamMap::const_iterator it = p.params.begin(); it != p.params.end(); it++) {
         if(it->first == "model"){
             mn = it->second;
         } else if(it->first == "sn"){
             sn = it->second;
         } else if(it->first == "idx"){
-            cam_index = uri.Get<int>("idx", 0);
+            cam_index = p.Get<int>("idx", 0);
+        } else if(it->first == "size") {
+            const ImageDim dim = p.Get<ImageDim>("size", ImageDim(0,0) );
+            device_params.Set("Width"  , dim.x);
+            device_params.Set("Height" , dim.y);
+        } else if(it->first == "pos") {
+            const ImageDim pos = p.Get<ImageDim>("pos", ImageDim(0,0) );
+            device_params.Set("OffsetX"  , pos.x);
+            device_params.Set("OffsetY" , pos.y);
         } else if(it->first == "roi") {
-            roi = uri.Get<ImageRoi>("roi", ImageRoi(0,0,0,0) );
+            const ImageRoi roi = p.Get<ImageRoi>("roi", ImageRoi(0,0,0,0) );
+            device_params.Set("Width"  , roi.w);
+            device_params.Set("Height" , roi.h);
+            device_params.Set("OffsetX", roi.x);
+            device_params.Set("OffsetY", roi.y);
         } else {
             device_params.Set(it->first, it->second);
         }
@@ -240,23 +251,8 @@ TeliVideo::TeliVideo(const Params& uri)
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
         throw pangolin::VideoException("TeliSDK: Error opening camera");
 
-    uint32_t width = 0;
-    uint32_t height = 0;
-    uiStatus = Teli::GetCamSensorWidth(cam, &width);
-    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-      throw pangolin::VideoException("Unable to get TeliSDK Camera dimensions");
-
-    uiStatus = Teli::GetCamSensorHeight(cam, &height);
-    if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-        throw pangolin::VideoException("Unable to get TeliSDK Camera dimensions");
-
-    // If roi not set, use cameras native resolution.
-    if(roi.w ==0 || roi.h==0) {
-        roi = ImageRoi(0, 0, width, height);
-    }
-
     SetDeviceParams(device_params);
-    Initialise(roi);
+    Initialise();
 }
 
 std::string TeliVideo::GetParameter(const std::string& name)
@@ -281,13 +277,9 @@ void TeliVideo::SetParameter(const std::string& name, const std::string& value)
     }
 }
 
-void TeliVideo::Initialise(const ImageRoi& roi)
+void TeliVideo::Initialise()
 {
-    Teli::CAM_API_STATUS uiStatus = Teli::SetCamRoi(cam, (uint32_t)roi.w, (uint32_t)roi.h, (uint32_t)roi.x, (uint32_t)roi.y);
-    if (uiStatus != Teli::CAM_API_STS_SUCCESS) {
-        std::cerr << "Error: " << std::hex << uiStatus << std::endl;
-        throw pangolin::VideoException("TeliSDK: Error setting SetCamRoi.");
-    }
+    Teli::CAM_API_STATUS uiStatus = Teli::CAM_API_STS_SUCCESS;
 
     // Create completion event object for stream.
 #ifdef _WIN_
@@ -341,14 +333,37 @@ void TeliVideo::Initialise(const ImageRoi& roi)
 
     size_bytes = 0;
     
+    // Use width and height reported by camera
+    uint32_t w = 0;
+    uint32_t h = 0;
+    if( Teli::GetCamWidth(cam, &w) != Teli::CAM_API_STS_SUCCESS || Teli::GetCamHeight(cam, &h) != Teli::CAM_API_STS_SUCCESS) {
+        throw pangolin::VideoException("TeliSDK: Unable to establish stream dimensions.");
+    }
+
     const int n = 1;
     for(size_t c=0; c < n; ++c) {
-        const StreamInfo stream_info(pfmt, roi.w, roi.h, (roi.w*pfmt.bpp) / 8, 0);
-        streams.push_back(stream_info);        
+        const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, 0);
+        streams.push_back(stream_info);
         size_bytes += uiPyldSize;
     }
 
-    Start();
+    InitPangoDeviceProperties();
+}
+
+void TeliVideo::InitPangoDeviceProperties()
+{
+
+    Teli::CAM_INFO info;
+    Teli::Cam_GetInformation(cam, 0, &info);
+
+    // Store camera details in device properties
+    device_properties["SerialNumber"] = std::string(info.szSerialNumber);
+    device_properties["VendorName"] = std::string(info.szManufacturer);
+    device_properties["ModelName"] = std::string(info.szModelName);
+    device_properties["ManufacturerInfo"] = std::string(info.sU3vCamInfo.szManufacturerInfo);
+    device_properties["Version"] = std::string(info.sU3vCamInfo.szDeviceVersion);
+
+    // TODO: Enumerate other settings.
 }
 
 void TeliVideo::SetDeviceParams(const Params& p)
