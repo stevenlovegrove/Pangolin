@@ -4,14 +4,14 @@ function(embed_binary_files file_glob output)
     # Collect input files
     file(GLOB bins ${file_glob})
     # Stop when output file is newer than all binary files
-    set(output_new_than_bins 1)
+    set(output_newer_than_bins 1)
     foreach(bin ${bins})
         if(bin IS_NEWER_THAN output)
-            set(output_new_than_bins 0)
+            set(output_newer_than_bins 0)
             break()
         endif()
     endforeach()
-    if(output_new_than_bins)
+    if(output_newer_than_bins)
         return()
     endif()
     # Create empty output file
