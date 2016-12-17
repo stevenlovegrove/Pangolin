@@ -88,6 +88,41 @@ struct Image {
         return (T*)((char*)ptr + r*pitch);
     }
 
+    T& operator()(size_t x, size_t y)
+    {
+        return RowPtr(y)[x];
+    }
+
+    const T& operator()(size_t x, size_t y) const
+    {
+        return RowPtr(y)[x];
+    }
+
+    const Image<const T> SubImage(size_t x, size_t y, size_t width, size_t height) const
+    {
+        return Image<const T>( width, height, pitch, RowPtr(y)+x);
+    }
+
+    Image<T> SubImage(size_t x, size_t y, size_t width, size_t height)
+    {
+        return Image<T>( width, height, pitch, RowPtr(y)+x);
+    }
+
+    Image<T> SubImage(int width, int height)
+    {
+        return Image<T>(width, height, pitch, ptr);
+    }
+
+    Image<T> Row(int y) const
+    {
+        return SubImage(0,y,w,1);
+    }
+
+    Image<T> Col(int x) const
+    {
+        return SubImage(x,0,1,h);
+    }
+
     size_t pitch;
     T* ptr;
     size_t w;
