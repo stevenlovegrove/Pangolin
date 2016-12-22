@@ -147,7 +147,7 @@ void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string
         const int64_t val = pangolin::Convert<int64_t, std::string>::Do(val_str);
         Teli::CAM_API_STATUS st = Teli::Nd_SetIntValue(cam, node, val);
         if(st != Teli::CAM_API_STS_SUCCESS) {
-            throw std::runtime_error("TeliSDK: Unable to set Teli parameter");
+            throw std::runtime_error("TeliSDK: Unable to set Teli parameter: " + val_str);
         }
         break;
     }
@@ -156,7 +156,7 @@ void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string
         const bool8_t val = pangolin::Convert<bool8_t, std::string>::Do(val_str);
         Teli::CAM_API_STATUS st = Teli::Nd_SetBoolValue(cam, node, val);
         if(st != Teli::CAM_API_STS_SUCCESS) {
-            throw std::runtime_error("TeliSDK: Unable to set Teli parameter");
+            throw std::runtime_error("TeliSDK: Unable to set Teli parameter: " + val_str);
         }
         break;
     }
@@ -165,7 +165,7 @@ void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string
         const float64_t val = pangolin::Convert<float64_t, std::string>::Do(val_str);
         Teli::CAM_API_STATUS st = Teli::Nd_SetFloatValue(cam, node, val);
         if(st != Teli::CAM_API_STS_SUCCESS) {
-            throw std::runtime_error("TeliSDK: Unable to set Teli parameter");
+            throw std::runtime_error("TeliSDK: Unable to set Teli parameter: " + val_str);
         }
         break;
     }
@@ -173,7 +173,7 @@ void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string
     {
         Teli::CAM_API_STATUS st = Teli::Nd_SetStrValue(cam, node, val_str.c_str());
         if(st != Teli::CAM_API_STS_SUCCESS) {
-            throw std::runtime_error("TeliSDK: Unable to set Teli parameter");
+            throw std::runtime_error("TeliSDK: Unable to set Teli parameter: " + val_str);
         }
         break;
     }
@@ -181,7 +181,7 @@ void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string
     {
         Teli::CAM_API_STATUS st = Teli::Nd_SetEnumStrValue(cam, node, val_str.c_str());
         if(st != Teli::CAM_API_STS_SUCCESS) {
-            throw std::runtime_error("TeliSDK: Unable to set Teli parameter");
+            throw std::runtime_error("TeliSDK: Unable to set Teli parameter: " + val_str);
         }
         break;
     }
@@ -246,14 +246,36 @@ TeliVideo::TeliVideo(const Params& uri)
     uint32_t height = 0;
     uiStatus = Teli::GetCamSensorWidth(cam, &width);
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-      throw pangolin::VideoException("Unable to get TeliSDK Camera dimensions");
-
+        throw pangolin::VideoException("Unable to get TeliSDK Camera dimensions");
     uiStatus = Teli::GetCamSensorHeight(cam, &height);
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
         throw pangolin::VideoException("Unable to get TeliSDK Camera dimensions");
 
+    bool decimation_set = true;
+    std::string image_format_selector = GetParameter("ImageFormatSelector");
+    if (image_format_selector == "Format2") {
+        std::string decimation_horizontal_str = GetParameter("DecimationHorizontal");
+        std::string decimation_vertical_str = GetParameter("DecimationVertical");
+        int decimation_horizontal = std::stoi(decimation_horizontal_str);
+        int decimation_vertical = std::stoi(decimation_vertical_str);
+        if (decimation_horizontal!=1 || decimation_vertical!=1) {
+            if (decimation_horizontal!=2 || decimation_vertical!= 2) {
+                throw pangolin::VideoException(std::string("Unsupported decimation:")
+                                               +  decimation_horizontal_str + ", "
+                                               + decimation_vertical_str);
+            }
+            width /= 2;
+            height /= 2;
+            decimation_set = true;
+        }
+    }
+
+    if (decimation_set) {
+        std::cerr << "Decimation parameter set; ignoring roi settings (if provided)." << std::endl;
+    }
+
     // If roi not set, use cameras native resolution.
-    if(roi.w ==0 || roi.h==0) {
+    if(decimation_set || roi.w ==0 || roi.h==0) {
         roi = ImageRoi(0, 0, width, height);
     }
 
@@ -342,11 +364,11 @@ void TeliVideo::Initialise(const ImageRoi& roi)
     }
 
     size_bytes = 0;
-    
+
     const int n = 1;
     for(size_t c=0; c < n; ++c) {
         const StreamInfo stream_info(pfmt, roi.w, roi.h, (roi.w*pfmt.bpp) / 8, 0);
-        streams.push_back(stream_info);        
+        streams.push_back(stream_info);
         size_bytes += uiPyldSize;
     }
 
