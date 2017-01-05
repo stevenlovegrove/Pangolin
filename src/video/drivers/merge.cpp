@@ -45,7 +45,7 @@ MergeVideo::MergeVideo(std::unique_ptr<VideoInterface>& src_, const std::vector<
     // Each stream must have the same format.
     assert(stream_pos.size() == src->Streams().size());
     assert(src->Streams().size() > 0);
-    const VideoPixelFormat fmt = src->Streams()[0].PixFormat();
+    const PixelFormat fmt = src->Streams()[0].PixFormat();
     for(size_t i=1; i < src->Streams().size(); ++i) {
         assert(src->Streams()[i].PixFormat().format == fmt.format);
     }

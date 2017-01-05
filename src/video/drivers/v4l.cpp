@@ -601,7 +601,7 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
                   << " not recognised. Defaulting to '" << spix << std::endl;
     }
 
-    const VideoPixelFormat pfmt = VideoFormatFromString(spix);
+    const PixelFormat pfmt = PixelFormatFromString(spix);
     const StreamInfo stream_info(pfmt, width, height, (width*pfmt.bpp)/8, 0);
 
     streams.push_back(stream_info);

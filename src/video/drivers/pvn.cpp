@@ -67,7 +67,7 @@ void PvnVideo::ReadFileHeader()
     if(file.bad() || !(w >0 && h >0) )
         throw VideoException("Unable to read video header");
     
-    const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
+    const PixelFormat fmt = PixelFormatFromString(sfmt);
     StreamInfo strm0( fmt, w, h, (w*fmt.bpp) / 8, 0);
     
     frame_size_bytes += strm0.Pitch() * strm0.Height();

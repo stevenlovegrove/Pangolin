@@ -276,7 +276,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     }
     
     // Populate stream info for users to query
-    const VideoPixelFormat strm_fmt = VideoFormatFromString(FfmpegFmtToString(fmtout));
+    const PixelFormat strm_fmt = PixelFormatFromString(FfmpegFmtToString(fmtout));
     const StreamInfo stream(strm_fmt, w, h, (w*strm_fmt.bpp)/8, 0);
     streams.push_back(stream);
 }
@@ -395,7 +395,7 @@ FfmpegConverter::FfmpegConverter(std::unique_ptr<VideoInterface> &videoin_, cons
     avpicture_fill((AVPicture*)avdst,bufdst,fmtdst,w,h);
     
     // Create output stream info
-    VideoPixelFormat pxfmtdst = VideoFormatFromString(sfmtdst);
+    PixelFormat pxfmtdst = PixelFormatFromString(sfmtdst);
     const StreamInfo sdst( pxfmtdst, w, h, (w*pxfmtdst.bpp)/8, 0 );
     streams.push_back(sdst);
 }

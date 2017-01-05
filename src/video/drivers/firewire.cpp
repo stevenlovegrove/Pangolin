@@ -376,7 +376,7 @@ void FirewireVideo::init_stream_info()
     dc1394_video_get_mode(camera,&video_mode);
     dc1394_get_color_coding_from_video_mode(camera,video_mode,&color_coding);
     const std::string strformat = Dc1394ColorCodingToString(color_coding);
-    const VideoPixelFormat fmt = VideoFormatFromString(strformat);
+    const PixelFormat fmt = PixelFormatFromString(strformat);
     
     StreamInfo stream(fmt, width, height, (width*fmt.bpp)/8, 0 );
     streams.push_back( stream );

@@ -154,7 +154,7 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int w
     }
 
     // Default to greyscale.
-    VideoPixelFormat pfmt = VideoFormatFromString("GRAY8");
+    PixelFormat pfmt = PixelFormatFromString("GRAY8");
 
     const uvc_format_desc_t* uvc_fmt = uvc_get_format_descs(devh_);
     while( uvc_fmt->bFormatIndex != ctrl_.bFormatIndex && uvc_fmt ) {
@@ -164,7 +164,7 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int w
     if(uvc_fmt) {
         // TODO: Use uvc_fmt->fourccFormat
         if( uvc_fmt->bBitsPerPixel == 16 ) {
-            pfmt = VideoFormatFromString("GRAY16LE");
+            pfmt = PixelFormatFromString("GRAY16LE");
         }
     }
     

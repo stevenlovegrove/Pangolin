@@ -33,6 +33,7 @@
 #include <pangolin/image/image.h>
 
 #include <memory>
+#include <map>
 
 namespace pangolin
 {

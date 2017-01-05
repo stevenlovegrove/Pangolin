@@ -41,8 +41,8 @@ DeinterlaceVideo::DeinterlaceVideo(std::unique_ptr<VideoInterface> &videoin_)
     
     const StreamInfo& stmin = videoin->Streams()[0];
 
-    StreamInfo stm1(VideoFormatFromString("GRAY8"), stmin.Width(), stmin.Height(), stmin.Width(), 0);
-    StreamInfo stm2(VideoFormatFromString("GRAY8"), stmin.Width(), stmin.Height(), stmin.Width(), (unsigned char*)0 + stmin.Width()*stmin.Height());
+    StreamInfo stm1(PixelFormatFromString("GRAY8"), stmin.Width(), stmin.Height(), stmin.Width(), 0);
+    StreamInfo stm2(PixelFormatFromString("GRAY8"), stmin.Width(), stmin.Height(), stmin.Width(), (unsigned char*)0 + stmin.Width()*stmin.Height());
     streams.push_back(stm1);
     streams.push_back(stm2);
 

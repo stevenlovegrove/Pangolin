@@ -56,7 +56,7 @@ JoinVideo::JoinVideo(std::vector<std::unique_ptr<VideoInterface> > &src_)
         for(size_t i=0; i < vid.Streams().size(); ++i)
         {
             const StreamInfo si = vid.Streams()[i];
-            const VideoPixelFormat fmt = si.PixFormat();
+            const PixelFormat fmt = si.PixFormat();
             const Image<unsigned char> img_offset = si.StreamImage((unsigned char*)size_bytes);
             streams.push_back(StreamInfo(fmt, img_offset));
         }

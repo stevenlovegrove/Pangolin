@@ -28,7 +28,6 @@
 
 #pragma once
 
-#include <pangolin/image/image_common.h>
 #include <pangolin/video/iostream_operators.h>
 
 namespace pangolin

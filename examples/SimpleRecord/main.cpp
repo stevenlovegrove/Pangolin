@@ -4,7 +4,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
 {
     // Setup Video Source
     pangolin::VideoInput video(input_uri);
-    const pangolin::VideoPixelFormat vid_fmt = video.PixFormat();
+    const pangolin::PixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();
 

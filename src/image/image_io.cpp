@@ -64,22 +64,22 @@
 
 namespace pangolin {
 
-VideoPixelFormat TgaFormat(int depth, int color_type, int color_map)
+PixelFormat TgaFormat(int depth, int color_type, int color_map)
 {
     if(color_map == 0) {
         if(color_type == 2) {
             // Colour
             if(depth == 24) {
-                return VideoFormatFromString("RGB24");
+                return PixelFormatFromString("RGB24");
             }else if(depth == 32) {
-                return VideoFormatFromString("RGBA32");
+                return PixelFormatFromString("RGBA32");
             }
         }else if(color_type == 3){
             // Greyscale
             if(depth == 8) {
-                return VideoFormatFromString("GRAY8");
+                return PixelFormatFromString("GRAY8");
             }else if(depth == 16) {
-                return VideoFormatFromString("Y400A");
+                return PixelFormatFromString("Y400A");
             }
         }
     }
@@ -117,7 +117,7 @@ TypedImage LoadFromVideo(const std::string& uri)
     return image;
 }
 
-void SaveToVideo(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& uri, bool /*top_line_first*/)
+void SaveToVideo(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& uri, bool /*top_line_first*/)
 {
     std::unique_ptr<VideoOutputInterface> video = OpenVideoOutput(uri);
     StreamInfo stream(fmt, image.w, image.h, image.pitch);
@@ -162,24 +162,24 @@ TypedImage LoadTga(const std::string& filename)
 }
 
 #ifdef HAVE_PNG
-VideoPixelFormat PngFormat(png_structp png_ptr, png_infop info_ptr )
+PixelFormat PngFormat(png_structp png_ptr, png_infop info_ptr )
 {
     const png_byte colour = png_get_color_type(png_ptr, info_ptr);
     const png_byte depth  = png_get_bit_depth(png_ptr, info_ptr);
 
     if( depth == 8 ) {
         if( colour == PNG_COLOR_MASK_COLOR ) {
-            return VideoFormatFromString("RGB24");
+            return PixelFormatFromString("RGB24");
         } else if( colour == (PNG_COLOR_MASK_COLOR | PNG_COLOR_MASK_ALPHA) ) {
-            return VideoFormatFromString("RGBA32");
+            return PixelFormatFromString("RGBA32");
         } else if( colour == PNG_COLOR_MASK_ALPHA ) {
-            return VideoFormatFromString("Y400A");
+            return PixelFormatFromString("Y400A");
         } else {
-            return VideoFormatFromString("GRAY8");
+            return PixelFormatFromString("GRAY8");
         }
     }else if( depth == 16 ) {
         if( colour == 0 ) {
-            return VideoFormatFromString("GRAY16LE");
+            return PixelFormatFromString("GRAY16LE");
         }
     }
 
@@ -275,7 +275,7 @@ TypedImage LoadPng(const std::string& filename)
 #endif
 }
 
-void SavePng(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
+void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
     PANGOLIN_UNUSED(image);
     PANGOLIN_UNUSED(filename);
@@ -384,10 +384,10 @@ METHODDEF(void) my_error_exit(j_common_ptr cinfo)
   longjmp(myerr->setjmp_buffer, 1);
 }
 
-VideoPixelFormat JpgFormat(jpeg_decompress_struct& /*info*/ )
+PixelFormat JpgFormat(jpeg_decompress_struct& /*info*/ )
 {
     // TODO: Actually work this out properly.
-    return VideoFormatFromString("RGB24");
+    return PixelFormatFromString("RGB24");
 }
 #endif
 
@@ -442,16 +442,16 @@ TypedImage LoadJpg(const std::string& filename)
 #endif
 }
 
-VideoPixelFormat PpmFormat(const std::string& strType, int num_colours)
+PixelFormat PpmFormat(const std::string& strType, int num_colours)
 {
     if(strType == "P5") {
         if(num_colours < 256) {
-            return VideoFormatFromString("GRAY8");
+            return PixelFormatFromString("GRAY8");
         } else {
-            return VideoFormatFromString("GRAY16LE");
+            return PixelFormatFromString("GRAY16LE");
         }
     }else if(strType == "P6") {
-        return VideoFormatFromString("RGB24"); 
+        return PixelFormatFromString("RGB24"); 
     }else{
         throw std::runtime_error("Unsupported PPM/PGM format");        
     }
@@ -520,7 +520,7 @@ Imf::PixelType OpenEXRPixelType(int channel_bits)
     }
 }
 
-void SetOpenEXRChannels(Imf::ChannelList& ch, const pangolin::VideoPixelFormat& fmt)
+void SetOpenEXRChannels(Imf::ChannelList& ch, const pangolin::PixelFormat& fmt)
 {
     const char* CHANNEL_NAMES[] = {"R","G","B","A"};
     for(size_t c=0; c < fmt.channels; ++c) {
@@ -529,7 +529,7 @@ void SetOpenEXRChannels(Imf::ChannelList& ch, const pangolin::VideoPixelFormat& 
 }
 #endif //HAVE_OPENEXR
 
-void SaveExr(const Image<unsigned char>& image_in, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
+void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
     PANGOLIN_UNUSED(image_in);
     PANGOLIN_UNUSED(fmt);
@@ -611,7 +611,7 @@ TypedImage LoadImage(const std::string& filename)
 
 TypedImage LoadImage(
     const std::string& filename,
-    const VideoPixelFormat& raw_fmt,
+    const PixelFormat& raw_fmt,
     size_t raw_width, size_t raw_height, size_t raw_pitch
 ) {
     TypedImage img;
@@ -629,7 +629,7 @@ TypedImage LoadImage(
     return img;
 }
 
-void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, ImageFileType file_type, bool top_line_first)
+void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, ImageFileType file_type, bool top_line_first)
 {
     switch (file_type) {
     case ImageFileTypePng:
@@ -643,7 +643,7 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelForm
     }
 }
 
-void SaveImage(const Image<unsigned char>& image, const pangolin::VideoPixelFormat& fmt, const std::string& filename, bool top_line_first)
+void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
     const std::string ext = FileLowercaseExtention(filename);
     const ImageFileType file_type = FileTypeExtension(ext);

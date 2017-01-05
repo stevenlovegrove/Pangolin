@@ -29,7 +29,7 @@
 
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/glformattraits.h>
-#include <pangolin/image/image_common.h>
+#include <pangolin/image/pixel_format.h>
 #include <stdexcept>
 
 namespace pangolin {
@@ -39,7 +39,7 @@ struct GlPixFormat
 {
     GlPixFormat() {}
 
-    GlPixFormat(const VideoPixelFormat& fmt)
+    GlPixFormat(const PixelFormat& fmt)
     {
         switch( fmt.channels) {
         case 1: glformat = GL_LUMINANCE; break;

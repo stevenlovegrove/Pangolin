@@ -108,7 +108,7 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path)
 }
 
 ImagesVideo::ImagesVideo(const std::string& wildcard_path,
-                         const VideoPixelFormat& raw_fmt,
+                         const PixelFormat& raw_fmt,
                          size_t raw_width, size_t raw_height
 )   : num_files(-1), num_channels(0), next_frame_id(0),
       unknowns_are_raw(true), raw_fmt(raw_fmt),
@@ -218,7 +218,7 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
 
             if(raw) {
                 const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
-                const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
+                const PixelFormat fmt = PixelFormatFromString(sfmt);
                 const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
                 return std::unique_ptr<VideoInterface>( new ImagesVideo(path, fmt, dim.x, dim.y) );
             }else{

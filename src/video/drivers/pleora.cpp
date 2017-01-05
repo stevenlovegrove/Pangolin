@@ -131,25 +131,25 @@ inline const PvDeviceInfo* SelectDevice( PvSystem& aSystem, const char* model_na
     return 0;
 }
 
-VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
+PixelFormat PleoraFormat(const PvGenEnum* pfmt)
 {
     std::string spfmt = pfmt->ToString().GetAscii();
     if( !spfmt.compare("Mono8") ) {
-        return VideoFormatFromString("GRAY8");
+        return PixelFormatFromString("GRAY8");
     } else if( !spfmt.compare("Mono10p") ) {
-        return VideoFormatFromString("GRAY10");
+        return PixelFormatFromString("GRAY10");
     } else if( !spfmt.compare("Mono12p") ) {
-        return VideoFormatFromString("GRAY12");
+        return PixelFormatFromString("GRAY12");
     } else if( !spfmt.compare("Mono10") || !spfmt.compare("Mono12")) {
-        return VideoFormatFromString("GRAY16LE");
+        return PixelFormatFromString("GRAY16LE");
     } else if( !spfmt.compare("RGB8") ) {
-        return VideoFormatFromString("RGB24");
+        return PixelFormatFromString("RGB24");
     } else if( !spfmt.compare("BGR8") ) {
-        return VideoFormatFromString("BGR24");
+        return PixelFormatFromString("BGR24");
     } else if( !spfmt.compare("BayerBG8") ) {
-        return VideoFormatFromString("GRAY8");
+        return PixelFormatFromString("GRAY8");
     } else if( !spfmt.compare("BayerBG12") ) {
-        return VideoFormatFromString("GRAY16LE");
+        return PixelFormatFromString("GRAY16LE");
     } else {
         throw VideoException("Unknown Pleora pixel format", spfmt);
     }
@@ -394,7 +394,7 @@ void PleoraVideo::InitPangoStreams()
 
     // Setup pangolin for stream
     PvGenEnum* lpixfmt = dynamic_cast<PvGenEnum*>( lDeviceParams->Get("PixelFormat") );
-    const VideoPixelFormat fmt = PleoraFormat(lpixfmt);
+    const PixelFormat fmt = PleoraFormat(lpixfmt);
     streams.push_back(StreamInfo(fmt, w, h, (w*fmt.bpp)/8));
     size_bytes = lSize;
 }

@@ -10,7 +10,7 @@ namespace pangolin
 SharedMemoryVideo::SharedMemoryVideo(size_t w, size_t h, std::string pix_fmt,
     const std::shared_ptr<SharedMemoryBufferInterface>& shared_memory,
     const std::shared_ptr<ConditionVariableInterface>& buffer_full) :
-    _fmt(VideoFormatFromString(pix_fmt)),
+    _fmt(PixelFormatFromString(pix_fmt)),
     _frame_size(w*h*_fmt.bpp/8),
     _shared_memory(shared_memory),
     _buffer_full(buffer_full)
@@ -72,7 +72,7 @@ PANGOLIN_REGISTER_FACTORY(SharedMemoryVideo)
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(0, 0));
             const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
-            const VideoPixelFormat fmt = VideoFormatFromString(sfmt);
+            const PixelFormat fmt = PixelFormatFromString(sfmt);
             const std::string shmem_name = std::string("/") + uri.url;
             std::shared_ptr<SharedMemoryBufferInterface> shmem_buffer =
                 open_named_shared_memory_buffer(shmem_name, true);

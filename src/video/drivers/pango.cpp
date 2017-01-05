@@ -189,7 +189,7 @@ int PangoVideo::FindSource()
                 for(size_t i=0; i<num_streams; ++i) {
                     const json::value& json_stream = json_streams[i];
                     StreamInfo si(
-                        VideoFormatFromString(
+                        PixelFormatFromString(
                             json_stream["encoding"].get<std::string>()
                         ),
                         json_stream["width"].get<int64_t>(),

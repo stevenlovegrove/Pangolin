@@ -40,7 +40,7 @@ class PANGOLIN_EXPORT UnpackVideo :
     public BufferAwareVideoInterface
 {
 public:
-    UnpackVideo(std::unique_ptr<VideoInterface>& videoin, VideoPixelFormat new_fmt);
+    UnpackVideo(std::unique_ptr<VideoInterface>& videoin, PixelFormat new_fmt);
     ~UnpackVideo();
 
     //! Implement VideoInput::Start()

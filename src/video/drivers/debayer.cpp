@@ -46,10 +46,10 @@ pangolin::StreamInfo BayerOutputFormat( const StreamInfo& stream_in, bayer_metho
     const size_t w = downsample ? stream_in.Width() / 2 : stream_in.Width();
     const size_t h = downsample ? stream_in.Height() / 2 : stream_in.Height();
 
-    pangolin::VideoPixelFormat fmt =
+    pangolin::PixelFormat fmt =
         (method == BAYER_METHOD_NONE) ?
             stream_in.PixFormat() :
-            pangolin::VideoFormatFromString(
+            pangolin::PixelFormatFromString(
                 (stream_in.PixFormat().bpp == 16) ?
                 (method == BAYER_METHOD_DOWNSAMPLE_MONO ? "GRAY16LE" : "RGB48") :
                 (method == BAYER_METHOD_DOWNSAMPLE_MONO ? "GRAY8" : "RGB24")

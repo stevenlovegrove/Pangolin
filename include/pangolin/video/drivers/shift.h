@@ -37,7 +37,7 @@ namespace pangolin
 class PANGOLIN_EXPORT ShiftVideo : public VideoInterface, public VideoFilterInterface
 {
 public:
-    ShiftVideo(std::unique_ptr<VideoInterface>& videoin, VideoPixelFormat new_fmt, int shift_right_bits = 0, unsigned int mask = 0xFFFF);
+    ShiftVideo(std::unique_ptr<VideoInterface>& videoin, PixelFormat new_fmt, int shift_right_bits = 0, unsigned int mask = 0xFFFF);
     ~ShiftVideo();
 
     //! Implement VideoInput::Start()

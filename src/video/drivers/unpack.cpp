@@ -43,7 +43,7 @@
 namespace pangolin
 {
 
-UnpackVideo::UnpackVideo(std::unique_ptr<VideoInterface> &src_, VideoPixelFormat out_fmt)
+UnpackVideo::UnpackVideo(std::unique_ptr<VideoInterface> &src_, PixelFormat out_fmt)
     : src(std::move(src_)), size_bytes(0), buffer(0)
 {
     if( !src || out_fmt.channels != 1) {
@@ -57,7 +57,7 @@ UnpackVideo::UnpackVideo(std::unique_ptr<VideoInterface> &src_, VideoPixelFormat
         const size_t h = src->Streams()[s].Height();
 
         // Check compatibility of formats
-        const VideoPixelFormat in_fmt = src->Streams()[s].PixFormat();
+        const PixelFormat in_fmt = src->Streams()[s].PixFormat();
         if(in_fmt.channels > 1 || in_fmt.bpp > 16) {
             throw VideoException("UnpackVideo: Only supports one channel input.");
         }
@@ -253,7 +253,7 @@ PANGOLIN_REGISTER_FACTORY(UnpackVideo)
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const std::string fmt = uri.Get("fmt", std::string("GRAY16LE") );
             return std::unique_ptr<VideoInterface>(
-                new UnpackVideo(subvid, VideoFormatFromString(fmt) )
+                new UnpackVideo(subvid, PixelFormatFromString(fmt) )
             );
         }
     };

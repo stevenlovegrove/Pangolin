@@ -381,7 +381,7 @@ void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig, const
     const int w = sensorConfig.dim.x;
     const int h = sensorConfig.dim.y;
 
-    const VideoPixelFormat pfmt = VideoFormatFromString("GRAY16LE");
+    const PixelFormat pfmt = PixelFormatFromString("GRAY16LE");
 
     const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0);
     streams.push_back(stream_info);
@@ -417,7 +417,7 @@ void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig, const
     const int w = sensorConfig.dim.x;
     const int h = sensorConfig.dim.y;
 
-    const VideoPixelFormat pfmt = VideoFormatFromString("BGR24");
+    const PixelFormat pfmt = PixelFormatFromString("BGR24");
 
     const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0 + size_bytes);
     streams.push_back(stream_info);

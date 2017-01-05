@@ -79,7 +79,7 @@ struct PANGOLIN_EXPORT VideoInput
     unsigned int Height() const {
         return (unsigned int)Streams()[0].Height();
     }
-    VideoPixelFormat PixFormat() const {
+    PixelFormat PixFormat() const {
         return Streams()[0].PixFormat();
     }
     const Uri& VideoUri() const {

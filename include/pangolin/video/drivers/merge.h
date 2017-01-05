@@ -29,7 +29,7 @@
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
-#include <pangolin/image/image_common.h>
+#include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
 {

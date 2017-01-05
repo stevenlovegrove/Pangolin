@@ -42,7 +42,7 @@ class PANGOLIN_EXPORT ImagesVideo : public VideoInterface, public VideoPlaybackI
 {
 public:
     ImagesVideo(const std::string& wildcard_path);
-    ImagesVideo(const std::string& wildcard_path, const VideoPixelFormat& raw_fmt, size_t raw_width, size_t raw_height);
+    ImagesVideo(const std::string& wildcard_path, const PixelFormat& raw_fmt, size_t raw_width, size_t raw_height);
 
     ~ImagesVideo();
 
@@ -97,7 +97,7 @@ protected:
     std::vector<Frame> loaded;
 
     bool unknowns_are_raw;
-    VideoPixelFormat raw_fmt;
+    PixelFormat raw_fmt;
     size_t raw_width;
     size_t raw_height;
 };

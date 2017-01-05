@@ -93,7 +93,7 @@ void SaveViewFromFbo(std::string prefix, View& view, float scale)
 
 #ifdef HAVE_PNG
     Image<unsigned char> buffer;
-    VideoPixelFormat fmt = VideoFormatFromString("RGBA32");
+    PixelFormat fmt = PixelFormatFromString("RGBA32");
     buffer.Alloc(w, h, w * fmt.bpp/8 );
     glReadBuffer(GL_BACK);
     glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?
@@ -508,7 +508,7 @@ void View::RecordOnRender(const std::string& record_uri)
         context->record_view = this;
         context->recorder.Open(record_uri);
         std::vector<StreamInfo> streams;
-        const VideoPixelFormat fmt = VideoFormatFromString("RGB24");
+        const PixelFormat fmt = PixelFormatFromString("RGB24");
         streams.push_back( StreamInfo(fmt, area.w, area.h, area.w * fmt.bpp / 8) );
         context->recorder.SetStreams(streams);
     }else{

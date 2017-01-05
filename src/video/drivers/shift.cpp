@@ -32,7 +32,7 @@
 namespace pangolin
 {
 
-ShiftVideo::ShiftVideo(std::unique_ptr<VideoInterface> &src_, VideoPixelFormat out_fmt, int shift_right_bits, unsigned int mask)
+ShiftVideo::ShiftVideo(std::unique_ptr<VideoInterface> &src_, PixelFormat out_fmt, int shift_right_bits, unsigned int mask)
     : src(std::move(src_)), size_bytes(0), buffer(0), shift_right_bits(shift_right_bits), mask(mask)
 {
     if(!src) {
@@ -45,7 +45,7 @@ ShiftVideo::ShiftVideo(std::unique_ptr<VideoInterface> &src_, VideoPixelFormat o
         const size_t h = src->Streams()[s].Height();
 
         // Check compatibility of formats
-        const VideoPixelFormat in_fmt = src->Streams()[s].PixFormat();
+        const PixelFormat in_fmt = src->Streams()[s].PixFormat();
         if(in_fmt.channels != out_fmt.channels) {
             throw VideoException("ShiftVideo: output format is not compatible with input format for shifting.");
         }
@@ -148,7 +148,7 @@ PANGOLIN_REGISTER_FACTORY(ShiftVideo)
 
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             return std::unique_ptr<VideoInterface>(
-                new ShiftVideo(subvid, VideoFormatFromString("GRAY8"), shift_right, mask)
+                new ShiftVideo(subvid, PixelFormatFromString("GRAY8"), shift_right, mask)
             );
         }
     };

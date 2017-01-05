@@ -35,7 +35,7 @@
 namespace pangolin
 {
 
-VideoPixelFormat VideoFormatFromOpenNI2(openni::PixelFormat fmt)
+PixelFormat VideoFormatFromOpenNI2(openni::PixelFormat fmt)
 {
     std::string pvfmt;
 
@@ -56,7 +56,7 @@ VideoPixelFormat VideoFormatFromOpenNI2(openni::PixelFormat fmt)
         break;
     }
 
-    return VideoFormatFromString(pvfmt);
+    return PixelFormatFromString(pvfmt);
 }
 
 void OpenNi2Video::PrintOpenNI2Modes(openni::SensorType sensorType)
@@ -340,7 +340,7 @@ void OpenNi2Video::SetupStreamModes()
             outputHeight = mode.roi.h;
         }
 
-        const VideoPixelFormat fmt = VideoFormatFromOpenNI2(nipixelfmt);
+        const PixelFormat fmt = VideoFormatFromOpenNI2(nipixelfmt);
         const StreamInfo stream(
             fmt, outputWidth, outputHeight,
             (outputWidth * fmt.bpp) / 8,

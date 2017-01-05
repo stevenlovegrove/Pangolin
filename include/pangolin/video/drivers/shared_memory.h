@@ -27,7 +27,7 @@ public:
   bool GrabNewest(unsigned char *image, bool wait);
 
 private:
-  VideoPixelFormat _fmt;
+  PixelFormat _fmt;
   size_t _frame_size;
   std::vector<StreamInfo> _streams;
   std::shared_ptr<SharedMemoryBufferInterface> _shared_memory;

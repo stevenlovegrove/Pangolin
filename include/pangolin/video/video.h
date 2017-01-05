@@ -117,6 +117,7 @@
 
 #include <pangolin/video/video_interface.h>
 #include <pangolin/video/video_output_interface.h>
+#include <pangolin/video/video_exception.h>
 #include <pangolin/utils/uri.h>
 
 namespace pangolin

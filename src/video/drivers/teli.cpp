@@ -300,7 +300,7 @@ void TeliVideo::Initialise()
 //    Teli::SetCamPixelFormat(cam, Teli::PXL_FMT_Mono12);
 
     // Read pixel format
-    VideoPixelFormat pfmt;
+    PixelFormat pfmt;
     Teli::CAM_PIXEL_FORMAT teli_fmt;
     uiStatus = Teli::GetCamPixelFormat(cam, &teli_fmt);
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
@@ -310,7 +310,7 @@ void TeliVideo::Initialise()
     case Teli::PXL_FMT_Mono8:
     case Teli::PXL_FMT_BayerGR8:
     case Teli::PXL_FMT_BayerBG8:
-        pfmt = pangolin::VideoFormatFromString("GRAY8");
+        pfmt = pangolin::PixelFormatFromString("GRAY8");
         break;
     case Teli::PXL_FMT_Mono10:
     case Teli::PXL_FMT_Mono12:
@@ -319,13 +319,13 @@ void TeliVideo::Initialise()
     case Teli::PXL_FMT_BayerGR12:
     case Teli::PXL_FMT_BayerBG10:
     case Teli::PXL_FMT_BayerBG12:
-        pfmt = pangolin::VideoFormatFromString("GRAY16LE");
+        pfmt = pangolin::PixelFormatFromString("GRAY16LE");
         break;
     case Teli::PXL_FMT_RGB8:
-        pfmt = pangolin::VideoFormatFromString("RGB24");
+        pfmt = pangolin::PixelFormatFromString("RGB24");
         break;
     case Teli::PXL_FMT_BGR8:
-        pfmt = pangolin::VideoFormatFromString("BGR24");
+        pfmt = pangolin::PixelFormatFromString("BGR24");
         break;
     default:
         throw std::runtime_error("TeliSDK: Unknown pixel format: " + ToString<int>(teli_fmt) );

@@ -41,7 +41,7 @@ void setRandomData(unsigned char * arr, size_t size){
 
 TestVideo::TestVideo(size_t w, size_t h, size_t n, std::string pix_fmt)
 {
-    const VideoPixelFormat pfmt = VideoFormatFromString(pix_fmt);
+    const PixelFormat pfmt = PixelFormatFromString(pix_fmt);
     
     size_bytes = 0;
     

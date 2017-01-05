@@ -28,27 +28,12 @@
 #pragma once
 
 #include <pangolin/platform.h>
-#include <pangolin/utils/type_convert.h>
-#include <pangolin/utils/uri.h>
-#include <exception>
 #include <string>
-#include <map>
 
 namespace pangolin
 {
 
-struct PANGOLIN_EXPORT VideoException : std::exception
-{
-    VideoException(std::string str) : desc(str) {}
-    VideoException(std::string str, std::string detail) {
-        desc = str + "\n\t" + detail;
-    }
-    ~VideoException() throw() {}
-    const char* what() const throw() { return desc.c_str(); }
-    std::string desc;
-};
-
-struct PANGOLIN_EXPORT VideoPixelFormat
+struct PANGOLIN_EXPORT PixelFormat
 {
     // Previously, VideoInterface::PixFormat returned a string.
     // For compatibility, make this string convertable
@@ -61,27 +46,20 @@ struct PANGOLIN_EXPORT VideoPixelFormat
     bool planar;
 };
 
-struct PANGOLIN_EXPORT Point
-{
-    inline Point() : x(0), y(0) {}
-    inline Point(size_t x, size_t y) : x(x), y(y) {}
-    size_t x;
-    size_t y;
-};
-
-typedef Point ImageDim;
-
-struct PANGOLIN_EXPORT ImageRoi
-{
-    inline ImageRoi() : x(0), y(0), w(0), h(0) {}
-    inline ImageRoi(size_t x, size_t y, size_t w, size_t h) : x(x), y(y), w(w), h(h) {}
-    size_t x; size_t y;
-    size_t w; size_t h;
-};
 
 //! Return Pixel Format properties given string specification in
 //! FFMPEG notation.
 PANGOLIN_EXPORT
-VideoPixelFormat VideoFormatFromString(const std::string& format);
+PixelFormat PixelFormatFromString(const std::string& format);
+
+////////////////////////////////////////////////////////////////////
+/// Deprecated aliases for above
+
+PANGOLIN_DEPRECATED
+typedef PixelFormat VideoPixelFormat;
+PANGOLIN_DEPRECATED
+inline PixelFormat VideoFormatFromString(const std::string& format) {
+    return PixelFormatFromString(format);
+}
 
 }

@@ -56,7 +56,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
     bool depth_to_color = false;
     
     for(int i=0; i<2; ++i) {
-        VideoPixelFormat fmt;
+        PixelFormat fmt;
 
         // Establish output pixel format for sensor streams
         switch( sensor_type[i] ) {
@@ -64,14 +64,14 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
         case OpenNiDepth_1mm:
         case OpenNiIr:
         case OpenNiIrProj:
-            fmt = VideoFormatFromString("GRAY16LE");
+            fmt = PixelFormatFromString("GRAY16LE");
             break;
         case OpenNiIr8bit:
         case OpenNiIr8bitProj:
-            fmt = VideoFormatFromString("GRAY8");
+            fmt = PixelFormatFromString("GRAY8");
             break;
         case OpenNiRgb:
-            fmt = VideoFormatFromString("RGB24");
+            fmt = PixelFormatFromString("RGB24");
             break;
         default:
             continue;

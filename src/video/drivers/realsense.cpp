@@ -13,12 +13,12 @@ RealSenseVideo::RealSenseVideo(ImageDim dim, int fps)
     devs_.push_back(ctx_->get_device(i));
 
     devs_[i]->enable_stream(rs::stream::depth, dim_.x, dim_.y, rs::format::z16, fps_);
-    StreamInfo streamD(VideoFormatFromString("GRAY16LE"), dim_.x, dim_.y, dim_.x*2, 0);
+    StreamInfo streamD(PixelFormatFromString("GRAY16LE"), dim_.x, dim_.y, dim_.x*2, 0);
     streams.push_back(streamD);
 
     sizeBytes += streamD.SizeBytes();
     devs_[i]->enable_stream(rs::stream::color, dim_.x, dim_.y, rs::format::rgb8, fps_);
-    StreamInfo streamRGB(VideoFormatFromString("RGB24"), dim_.x, dim_.y, dim_.x*3, (uint8_t*)0+sizeBytes);
+    StreamInfo streamRGB(PixelFormatFromString("RGB24"), dim_.x, dim_.y, dim_.x*3, (uint8_t*)0+sizeBytes);
     streams.push_back(streamRGB);
     sizeBytes += streamRGB.SizeBytes();
 

@@ -25,15 +25,15 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/image/image_common.h>
-#include <pangolin/utils/file_utils.h>
+#include <pangolin/image/pixel_format.h>
 
 #include <vector>
+#include <stdexcept>
 
 namespace pangolin
 {
 
-const VideoPixelFormat SupportedVideoPixelFormats[] =
+const PixelFormat SupportedPixelFormats[] =
 {
     {"GRAY8", 1, {8}, 8, false},
     {"GRAY10", 1, {10}, 10, false},
@@ -55,12 +55,12 @@ const VideoPixelFormat SupportedVideoPixelFormats[] =
     {"",0,{0,0,0,0},0,0}
 };
 
-VideoPixelFormat VideoFormatFromString(const std::string& format)
+PixelFormat PixelFormatFromString(const std::string& format)
 {
-    for(int i=0; !SupportedVideoPixelFormats[i].format.empty(); ++i)
-        if(!format.compare(SupportedVideoPixelFormats[i].format))
-            return SupportedVideoPixelFormats[i];
-    throw VideoException("Unknown Format",format);
+    for(int i=0; !SupportedPixelFormats[i].format.empty(); ++i)
+        if(!format.compare(SupportedPixelFormats[i].format))
+            return SupportedPixelFormats[i];
+    throw std::runtime_error( std::string("Unknown Format: ") + format);
 }
 
 }
