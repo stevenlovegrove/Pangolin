@@ -38,7 +38,7 @@ namespace pangolin
 class PANGOLIN_EXPORT MergeVideo : public VideoInterface, public VideoFilterInterface
 {
 public:
-    MergeVideo(std::unique_ptr<VideoInterface>& src, const std::vector<Point>& stream_pos , int w, int h);
+    MergeVideo(std::unique_ptr<VideoInterface>& src, const std::vector<Point>& stream_pos, size_t w, size_t h);
     ~MergeVideo();
     
     void Start() override;
