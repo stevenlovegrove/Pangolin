@@ -121,7 +121,6 @@ void RunVideoViewerUI(const std::string& input_uri, const std::string& output_ur
 
     std::vector<pangolin::Image<unsigned char> > images;
 
-#ifdef CALLEE_HAS_CPP11
     const int FRAME_SKIP = 30;
     const char show_hide_keys[]  = {'1','2','3','4','5','6','7','8','9'};
     const char screenshot_keys[] = {'!','@','#','$','%','^','&','*','('};
@@ -254,7 +253,6 @@ void RunVideoViewerUI(const std::string& input_uri, const std::string& output_ur
         }
 
     });
-#endif // CALLEE_HAS_CPP11
 
 #ifdef DEBUGVIDEOVIEWER
     unsigned int delayms = 0;

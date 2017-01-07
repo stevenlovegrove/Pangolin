@@ -64,7 +64,6 @@ public:
         if(obj) Py_DECREF(obj);
     }
 
-#ifdef CALLEE_HAS_RVALREF
     inline
     PyUniqueObj(PyUniqueObj&& other)
         : obj(other.obj)
@@ -79,7 +78,6 @@ public:
         obj = other.obj;
         other.obj = 0;
     }
-#endif // CALLEE_HAS_RVALREF
 
     inline
     void operator=(PyObject* obj)

@@ -56,10 +56,8 @@ public:
     //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
     GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL  );
     
-#ifdef CALLEE_HAS_RVALREF
     //! Move Constructor
     GlTexture(GlTexture&& tex);
-#endif
     
     //! Default constructor represents 'no texture'
     GlTexture();
@@ -124,10 +122,8 @@ struct PANGOLIN_EXPORT GlRenderBuffer
 
     void Reinitialise(GLint width, GLint height, GLint internal_format = GL_DEPTH_COMPONENT24);
 
-#ifdef CALLEE_HAS_RVALREF
     //! Move Constructor
     GlRenderBuffer(GlRenderBuffer&& tex);
-#endif
 
     ~GlRenderBuffer();
     
@@ -180,10 +176,8 @@ struct PANGOLIN_EXPORT GlBuffer
     GlBuffer();
     GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
     
-#ifdef CALLEE_HAS_RVALREF
     //! Move Constructor
     GlBuffer(GlBuffer&& tex);
-#endif  
     
     ~GlBuffer();
 

@@ -113,14 +113,12 @@ inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bo
     Reinitialise(width,height,internal_format,sampling_linear,border,glformat,gltype,data);
 }
 
-#ifdef CALLEE_HAS_RVALREF
 inline GlTexture::GlTexture(GlTexture&& tex)
     : internal_format(tex.internal_format), tid(tex.tid)
 {
     tex.internal_format = 0;
     tex.tid = 0;
 }
-#endif
 
 inline bool GlTexture::IsValid() const
 {
@@ -485,13 +483,11 @@ inline GlRenderBuffer::~GlRenderBuffer()
 }
 #endif // HAVE_GLES
 
-#ifdef CALLEE_HAS_RVALREF
 inline GlRenderBuffer::GlRenderBuffer(GlRenderBuffer&& tex)
     : width(tex.width), height(tex.height), rbid(tex.rbid)
 {
     tex.rbid = tex.width = tex.height = 0;
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -592,14 +588,12 @@ inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum 
     Reinitialise(buffer_type, num_elements, datatype, count_per_element, gluse );
 }
 
-#ifdef CALLEE_HAS_RVALREF
 inline GlBuffer::GlBuffer(GlBuffer&& buffer)
     : bo(buffer.bo), buffer_type(buffer.buffer_type), gluse(buffer.gluse), datatype(buffer.datatype),
       num_elements(buffer.num_elements), count_per_element(buffer.count_per_element)
 {
     buffer.bo = 0;
 }
-#endif
 
 inline bool GlBuffer::IsValid() const
 {
