@@ -81,8 +81,9 @@ pangolin::Image<T> GetImageRoi( pangolin::Image<T> img, size_t channels, const p
     const int xmin = std::min(roi.x.min,roi.x.max);
     const int ymin = std::min(roi.y.min,roi.y.max);
     return pangolin::Image<T>(
+        img.RowPtr(ymin) + channels*xmin,
         roi.x.AbsSize(), roi.y.AbsSize(),
-        img.pitch, img.RowPtr(ymin) + channels*xmin
+        img.pitch
     );
 }
 
@@ -94,13 +95,13 @@ std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, pangolin::X
     const size_t num_channels = pangolin::GlFormatChannels(glfmt.glformat);
 
     if(glfmt.gltype == GL_UNSIGNED_BYTE) {
-        return GetOffsetScale(GetImageRoi(img.template Reinterpret<unsigned char>(), num_channels, iroi), num_channels, 255.0f, 1.0f);
+        return GetOffsetScale(GetImageRoi(img.template UnsafeReinterpret<unsigned char>(), num_channels, iroi), num_channels, 255.0f, 1.0f);
     }else if(glfmt.gltype == GL_UNSIGNED_SHORT) {
-        return GetOffsetScale(GetImageRoi(img.template Reinterpret<unsigned short>(), num_channels, iroi), num_channels, 65535.0f, 1.0f);
+        return GetOffsetScale(GetImageRoi(img.template UnsafeReinterpret<unsigned short>(), num_channels, iroi), num_channels, 65535.0f, 1.0f);
     }else if(glfmt.gltype == GL_FLOAT) {
-        return GetOffsetScale(GetImageRoi(img.template Reinterpret<float>(), num_channels, iroi), num_channels, 1.0f, 1.0f);
+        return GetOffsetScale(GetImageRoi(img.template UnsafeReinterpret<float>(), num_channels, iroi), num_channels, 1.0f, 1.0f);
     }else if(glfmt.gltype == GL_DOUBLE) {
-        return GetOffsetScale(GetImageRoi(img.template Reinterpret<double>(), num_channels, iroi), num_channels, 1.0f, 1.0f);
+        return GetOffsetScale(GetImageRoi(img.template UnsafeReinterpret<double>(), num_channels, iroi), num_channels, 1.0f, 1.0f);
     }else{
         return std::pair<float,float>(0.0f, 1.0f);
     }

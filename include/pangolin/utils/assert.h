@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2011 Hauke Strasdat, Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,48 +27,34 @@
 
 #pragma once
 
-#include <pangolin/config.h>
+#include <pangolin/platform.h>
+#include <pangolin/utils/format_string.h>
+#include <iostream>
 
-// Include portable printf-style format macros
-#define __STDC_FORMAT_MACROS
-
-#ifdef _GCC_
-#  define PANGOLIN_DEPRECATED __attribute__((deprecated))
-#elif defined _MSVC_
-#  define PANGOLIN_DEPRECATED __declspec(deprecated)
+#ifdef __GNUC__
+#  define PANGO_FUNCTION __PRETTY_FUNCTION__
+#elif (_MSC_VER >= 1310)
+#  define PANGO_FUNCTION __FUNCTION__
 #else
-#  define PANGOLIN_DEPRECATED
+#  define PANGO_FUNCTION "unknown"
 #endif
 
-#ifdef _MSVC_
-#   define __thread __declspec(thread)
-#   include <pangolin/pangolin_export.h>
-#else
-#   define PANGOLIN_EXPORT
-#endif //_MSVC_
+namespace pangolin {
 
-#define PANGOLIN_UNUSED(x) (void)(x)
-
-#ifdef _APPLE_IOS_
-// Not supported on this platform.
-#define __thread
-#endif // _APPLE_IOS_
-
-// HOST / DEVICE Annotations
-#ifdef __CUDACC__
-#  include <cuda_runtime.h>
-#  define PANGO_HOST_DEVICE __host__ __device__
-#else
-#  define PANGO_HOST_DEVICE
+template <typename... Args> PANGO_HOST_DEVICE
+void abort(const char* function, const char* file, int line, Args&&... args)
+{
+  std::printf("pangolin::abort() in function '%s', file '%s', line %d.\n", function, file, line);
+#ifndef __CUDACC__
+  std::cout << FormatString(std::forward<Args>(args)...) << std::endl;
+  std::abort();
 #endif
+}
 
-// Non-standard check that header exists (Clang, GCC 5.X)
-// Useful for
-#if defined(__has_include)
-#  define PANGO_HEADER_EXISTS(x) __has_include(x)
-#else
-#  define PANGO_HEADER_EXISTS(x) 0
-#endif
+}
 
-#include <pangolin/utils/assert.h>
-#include <pangolin/utils/log.h>
+// Always check, even in debug
+#define PANGO_ENSURE(expr, ...) ((expr) ? ((void)0) : pangolin::abort(PANGO_FUNCTION, __FILE__, __LINE__, ##__VA_ARGS__))
+
+// May be disabled for optimisation
+#define PANGO_ASSERT(expr, ...) ((expr) ? ((void)0) : pangolin::abort(PANGO_FUNCTION, __FILE__, __LINE__, ##__VA_ARGS__))

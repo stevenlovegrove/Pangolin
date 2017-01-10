@@ -42,7 +42,7 @@ public:
         : fmt(fmt), img_offset(img_offset) {}
 
     inline StreamInfo(PixelFormat fmt, size_t w, size_t h, size_t pitch, unsigned char* offset = 0)
-        : fmt(fmt), img_offset(w,h,pitch,offset) {}
+        : fmt(fmt), img_offset(offset,w,h,pitch) {}
 
     //! Format representing how image is layed out in memory
     inline PixelFormat PixFormat() const { return fmt; }

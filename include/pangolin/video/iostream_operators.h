@@ -32,6 +32,7 @@
 
 #include <pangolin/video/video_exception.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/video/stream_info.h>
 
 namespace pangolin
 {

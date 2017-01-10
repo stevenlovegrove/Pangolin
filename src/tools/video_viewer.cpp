@@ -320,7 +320,7 @@ void RunVideoViewerUI(const std::string& input_uri, const std::string& output_ur
                 tex.Bind();
                 if(fmt.gltype == GL_DOUBLE) {
                     // Convert to float first, using scrath_buffer for storage
-                    pangolin::Image<float> fimage(image.w, image.h, image.w*sizeof(float), (float*)scratch_buffer.data());
+                    pangolin::Image<float> fimage((float*)scratch_buffer.data(), image.w, image.h, image.w*sizeof(float));
                     ConvertPixels<float,double>( fimage, image.Reinterpret<double>() );
                     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
                     tex.Upload(fimage.ptr,0,0, (GLsizei)fimage.w, (GLsizei)fimage.h, fmt.glformat, GL_FLOAT);

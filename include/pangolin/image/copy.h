@@ -27,48 +27,19 @@
 
 #pragma once
 
-#include <pangolin/config.h>
+namespace pangolin {
 
-// Include portable printf-style format macros
-#define __STDC_FORMAT_MACROS
+// Hold a reference to an object to be copied
+template<typename T>
+struct CopyObject {
+    CopyObject(const T& obj) : obj(obj) { }
+    const T& obj;
+};
 
-#ifdef _GCC_
-#  define PANGOLIN_DEPRECATED __attribute__((deprecated))
-#elif defined _MSVC_
-#  define PANGOLIN_DEPRECATED __declspec(deprecated)
-#else
-#  define PANGOLIN_DEPRECATED
-#endif
+// Return copy wrapper for assignment to another object.
+template<typename T>
+typename pangolin::CopyObject<T> Copy(const T& obj) {
+    return typename pangolin::CopyObject<T>(obj);
+}
 
-#ifdef _MSVC_
-#   define __thread __declspec(thread)
-#   include <pangolin/pangolin_export.h>
-#else
-#   define PANGOLIN_EXPORT
-#endif //_MSVC_
-
-#define PANGOLIN_UNUSED(x) (void)(x)
-
-#ifdef _APPLE_IOS_
-// Not supported on this platform.
-#define __thread
-#endif // _APPLE_IOS_
-
-// HOST / DEVICE Annotations
-#ifdef __CUDACC__
-#  include <cuda_runtime.h>
-#  define PANGO_HOST_DEVICE __host__ __device__
-#else
-#  define PANGO_HOST_DEVICE
-#endif
-
-// Non-standard check that header exists (Clang, GCC 5.X)
-// Useful for
-#if defined(__has_include)
-#  define PANGO_HEADER_EXISTS(x) __has_include(x)
-#else
-#  define PANGO_HEADER_EXISTS(x) 0
-#endif
-
-#include <pangolin/utils/assert.h>
-#include <pangolin/utils/log.h>
+}

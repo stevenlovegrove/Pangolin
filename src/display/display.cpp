@@ -356,15 +356,12 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
 #ifndef HAVE_GLES
 
 #ifdef HAVE_PNG
-    Image<unsigned char> buffer;
-
     PixelFormat fmt = PixelFormatFromString("RGBA32");
-    buffer.Alloc(v.w, v.h, v.w * fmt.bpp/8 );
+    TypedImage buffer(v.w, v.h, fmt );
     glReadBuffer(GL_BACK);
     glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?
     glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, buffer.ptr );
     SaveImage(buffer, fmt, prefix + ".png", false);
-    buffer.Dealloc();
 #endif // HAVE_PNG
     
 #endif // HAVE_GLES

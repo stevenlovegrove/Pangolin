@@ -92,14 +92,12 @@ void SaveViewFromFbo(std::string prefix, View& view, float scale)
     glFlush();
 
 #ifdef HAVE_PNG
-    Image<unsigned char> buffer;
-    PixelFormat fmt = PixelFormatFromString("RGBA32");
-    buffer.Alloc(w, h, w * fmt.bpp/8 );
+    const PixelFormat fmt = PixelFormatFromString("RGBA32");
+    TypedImage buffer(w, h, fmt );
     glReadBuffer(GL_BACK);
     glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?
     glReadPixels(0,0,w,h, GL_RGBA, GL_UNSIGNED_BYTE, buffer.ptr );
     SaveImage(buffer, fmt, prefix + ".png", false);
-    buffer.Dealloc();
 #endif // HAVE_PNG
     
     // unbind FBO

@@ -127,12 +127,6 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path,
 
 ImagesVideo::~ImagesVideo()
 {
-    // Free all allocated image data
-    for(size_t i=0; i<loaded.size(); ++i) {
-        for(size_t c=0; c < loaded[i].size(); ++c) {
-            loaded[i][c].Dealloc();
-        }
-    }
 }
 
 //! Implement VideoInput::Start()
@@ -176,7 +170,7 @@ bool ImagesVideo::GrabNext( unsigned char* image, bool /*wait*/ )
             }
             const StreamInfo& si = streams[c];
             std::memcpy(image + (size_t)si.Offset(), img.ptr, si.SizeBytes());
-            img.Dealloc();
+            img.Deallocate();
         }
         frame.clear();
 

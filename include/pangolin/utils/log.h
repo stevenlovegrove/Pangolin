@@ -25,50 +25,20 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// TODO: Something a bit more useful here, probably using format_string.h
+
 #pragma once
 
-#include <pangolin/config.h>
-
-// Include portable printf-style format macros
-#define __STDC_FORMAT_MACROS
-
-#ifdef _GCC_
-#  define PANGOLIN_DEPRECATED __attribute__((deprecated))
-#elif defined _MSVC_
-#  define PANGOLIN_DEPRECATED __declspec(deprecated)
+#ifndef _ANDROID_
+#   include <cstdio>
+#   define pango_print_debug(...) printf(__VA_ARGS__)
+#   define pango_print_info(...)  printf(__VA_ARGS__)
+#   define pango_print_error(...) fprintf(stderr, __VA_ARGS__)
+#   define pango_print_warn(...)  fprintf(stderr, __VA_ARGS__)
 #else
-#  define PANGOLIN_DEPRECATED
+#   include <android/log.h>
+#   define pango_print_debug(...) __android_log_print(ANDROID_LOG_DEBUG, "pango", __VA_ARGS__ );
+#   define pango_print_info(...)  __android_log_print(ANDROID_LOG_INFO,  "pango", __VA_ARGS__ );
+#   define pango_print_error(...) __android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__ );
+#   define pango_print_warn(...)  __android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__ );
 #endif
-
-#ifdef _MSVC_
-#   define __thread __declspec(thread)
-#   include <pangolin/pangolin_export.h>
-#else
-#   define PANGOLIN_EXPORT
-#endif //_MSVC_
-
-#define PANGOLIN_UNUSED(x) (void)(x)
-
-#ifdef _APPLE_IOS_
-// Not supported on this platform.
-#define __thread
-#endif // _APPLE_IOS_
-
-// HOST / DEVICE Annotations
-#ifdef __CUDACC__
-#  include <cuda_runtime.h>
-#  define PANGO_HOST_DEVICE __host__ __device__
-#else
-#  define PANGO_HOST_DEVICE
-#endif
-
-// Non-standard check that header exists (Clang, GCC 5.X)
-// Useful for
-#if defined(__has_include)
-#  define PANGO_HEADER_EXISTS(x) __has_include(x)
-#else
-#  define PANGO_HEADER_EXISTS(x) 0
-#endif
-
-#include <pangolin/utils/assert.h>
-#include <pangolin/utils/log.h>

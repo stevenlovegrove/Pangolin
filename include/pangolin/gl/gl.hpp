@@ -216,7 +216,6 @@ inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_l
 {
     TypedImage image = LoadImage(filename);
     Load(image, sampling_linear);
-    FreeImage(image);
 }
 
 #ifndef HAVE_GLES
@@ -232,34 +231,34 @@ inline void GlTexture::Download(TypedImage& image) const
     switch (internal_format)
     {
     case GL_LUMINANCE8:
-        image.Alloc(width, height, PixelFormatFromString("GRAY8") );
+        image.Reinitialise(width, height, PixelFormatFromString("GRAY8") );
         Download(image.ptr, GL_LUMINANCE, GL_UNSIGNED_BYTE);
         break;
     case GL_LUMINANCE16:
-        image.Alloc(width, height, PixelFormatFromString("GRAY16LE") );
+        image.Reinitialise(width, height, PixelFormatFromString("GRAY16LE") );
         Download(image.ptr, GL_LUMINANCE, GL_UNSIGNED_SHORT);
         break;
     case GL_RGB8:
-        image.Alloc(width, height, PixelFormatFromString("RGB24"));
+        image.Reinitialise(width, height, PixelFormatFromString("RGB24"));
         Download(image.ptr, GL_RGB, GL_UNSIGNED_BYTE);
         break;
     case GL_RGBA8:
-        image.Alloc(width, height, PixelFormatFromString("RGBA32"));
+        image.Reinitialise(width, height, PixelFormatFromString("RGBA32"));
         Download(image.ptr, GL_RGBA, GL_UNSIGNED_BYTE);
         break;
     case GL_LUMINANCE:
     case GL_LUMINANCE32F_ARB:
-        image.Alloc(width, height, PixelFormatFromString("GRAY32F"));
+        image.Reinitialise(width, height, PixelFormatFromString("GRAY32F"));
         Download(image.ptr, GL_LUMINANCE, GL_FLOAT);
         break;
     case GL_RGB:
     case GL_RGB32F:
-        image.Alloc(width, height, PixelFormatFromString("RGB96F"));
+        image.Reinitialise(width, height, PixelFormatFromString("RGB96F"));
         Download(image.ptr, GL_RGB, GL_FLOAT);
         break;
     case GL_RGBA:
     case GL_RGBA32F:
-        image.Alloc(width, height, PixelFormatFromString("RGBA128F"));
+        image.Reinitialise(width, height, PixelFormatFromString("RGBA128F"));
         Download(image.ptr, GL_RGBA, GL_FLOAT);
         break;
     default:
@@ -277,7 +276,6 @@ inline void GlTexture::Save(const std::string& filename, bool top_line_first)
     TypedImage image;
     Download(image);
     pangolin::SaveImage(image, filename, top_line_first);
-    image.Dealloc();
 }
 #endif // HAVE_GLES
 

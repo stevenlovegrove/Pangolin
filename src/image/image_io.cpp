@@ -104,8 +104,7 @@ TypedImage LoadFromVideo(const std::string& uri)
     }
 
     // Allocate storage for user image to return
-    TypedImage image;
-    image.Alloc(stream_info.Width(), stream_info.Height(), stream_info.PixFormat());
+    TypedImage image(stream_info.Width(), stream_info.Height(), stream_info.PixFormat());
 
     // Copy image data into user buffer.
     const Image<unsigned char> img = stream_info.StreamImage(buffer.get());
@@ -142,19 +141,16 @@ TypedImage LoadTga(const std::string& filename)
         const int width  = info[0] + (info[1] * 256);
         const int height = info[2] + (info[3] * 256);
         
-        TypedImage img;
         if(success) {
-            img.Alloc(width, height, TgaFormat(info[4], type[2], type[1]) );
+            TypedImage img(width, height, TgaFormat(info[4], type[2], type[1]) );
             
             //read in image data
             const size_t data_size = img.h * img.pitch;
             success &= fread(img.ptr, sizeof(unsigned char), data_size, file) == data_size;
-        }
-        
-        fclose(file);
-        
-        if (success) {
+            fclose(file);
             return img;
+        }else{
+            fclose(file);
         }
     }
     
@@ -255,8 +251,7 @@ TypedImage LoadPng(const std::string& filename)
         const size_t h = png_get_image_height(png_ptr,info_ptr);
         const size_t pitch = png_get_rowbytes(png_ptr, info_ptr);
         
-        TypedImage img;
-        img.Alloc(w, h, PngFormat(png_ptr, info_ptr), pitch);
+        TypedImage img(w, h, PngFormat(png_ptr, info_ptr), pitch);
         
         png_bytepp rows = png_get_rows(png_ptr, info_ptr);
         for( unsigned int r = 0; r < h; r++) {
@@ -419,8 +414,7 @@ TypedImage LoadJpg(const std::string& filename)
     
         const int row_stride = cinfo.output_width * cinfo.output_components;
         
-        TypedImage img;
-        img.Alloc(cinfo.output_width, cinfo.output_height, JpgFormat(cinfo), row_stride);
+        TypedImage img(cinfo.output_width, cinfo.output_height, JpgFormat(cinfo), row_stride);
         
         JSAMPARRAY row_buffer = (*cinfo.mem->alloc_sarray)
                 ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
@@ -482,24 +476,19 @@ TypedImage LoadPpm(std::ifstream& bFile)
     bFile >> num_colors;
     bFile.ignore(1,'\n');
     
-    TypedImage img;
-    bool success = !bFile.fail() && w > 0 && h > 0;
-
-    if(success) {
-        img.Alloc(w, h, PpmFormat(ppm_type, num_colors) );
+    if(!bFile.fail() && w > 0 && h > 0) {
+        TypedImage img(w, h, PpmFormat(ppm_type, num_colors) );
 
         // Read in data
         for(size_t r=0; r<img.h; ++r) {
             bFile.read( (char*)img.ptr + r*img.pitch, img.pitch );
         }
-        success = !bFile.fail();
+        if(!bFile.fail()) {
+            return img;
+        }
     }
 
-    if(!success) {
-        img.Dealloc();
-    }
-
-    return img;
+    throw std::runtime_error("Unable to load PPM file.");
 }
 
 TypedImage LoadPpm(const std::string& filename)
@@ -537,15 +526,17 @@ void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& 
     PANGOLIN_UNUSED(top_line_first);
     
 #ifdef HAVE_OPENEXR
+    ManagedImage<unsigned char> flip_image;
     Image<unsigned char> image;
 
     if(top_line_first) {
         image = image_in;
     }else{
-        image.Alloc(image_in.w,image_in.h,image_in.pitch);
+        flip_image.Reinitialise(image_in.pitch,image_in.h);
         for(size_t y=0; y<image_in.h; ++y) {
-            std::memcpy(image.ptr + y*image.pitch, image_in.ptr + (image_in.h-y-1)*image_in.pitch, image.pitch);
+            std::memcpy(flip_image.RowPtr(y), image_in.RowPtr(y), image_in.pitch);
         }
+        image = flip_image;
     }
 
 
@@ -574,10 +565,6 @@ void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& 
 
     file.setFrameBuffer(frameBuffer);
     file.writePixels(image.h);
-
-    if(!top_line_first) {
-        image.Dealloc();
-    }
 
 #else
     throw std::runtime_error("EXR Support not enabled. Please rebuild Pangolin.");
@@ -614,8 +601,7 @@ TypedImage LoadImage(
     const PixelFormat& raw_fmt,
     size_t raw_width, size_t raw_height, size_t raw_pitch
 ) {
-    TypedImage img;
-    img.Alloc(raw_width, raw_height, raw_fmt, raw_pitch);
+    TypedImage img(raw_width, raw_height, raw_fmt, raw_pitch);
 
     // Read from file, row at a time.
     std::ifstream bFile( filename.c_str(), std::ios::in | std::ios::binary );
@@ -653,11 +639,6 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
 void SaveImage(const TypedImage& image, const std::string& filename, bool top_line_first)
 {
     SaveImage(image, image.fmt, filename, top_line_first);
-}
-
-void FreeImage(TypedImage& img)
-{
-    img.Dealloc();
 }
 
 }
