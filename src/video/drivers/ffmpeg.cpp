@@ -26,10 +26,13 @@
  */
 
 #include <array>
-#include <pangolin/video/drivers/ffmpeg.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/video/drivers/ffmpeg.h>
+
+// Some versions of FFMPEG define this horrid macro in global scope.
+#undef PixelFormat
 
 extern "C"
 {
