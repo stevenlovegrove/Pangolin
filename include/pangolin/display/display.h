@@ -88,9 +88,13 @@ namespace pangolin
   PANGOLIN_EXPORT
   void FinishFrame();
 
-  /// Request that the program exit.
+  /// Request that the window close.
   PANGOLIN_EXPORT
   void Quit();
+
+  /// Request that all windows close.
+  PANGOLIN_EXPORT
+  void QuitAll();
 
   /// Returns true if user has requested to close OpenGL window.
   PANGOLIN_EXPORT

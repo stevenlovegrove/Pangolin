@@ -198,7 +198,11 @@ void VideoInput::Start()
 
 void VideoInput::Stop()
 {
-    video_src->Stop();
+    if(IsRecording()) {
+        video_recorder.release();
+    }else{
+        video_src->Stop();
+    }
 }
 
 bool VideoInput::GrabNext( unsigned char* image, bool wait )

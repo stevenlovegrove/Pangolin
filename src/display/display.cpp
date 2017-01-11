@@ -197,6 +197,13 @@ void Quit()
     context->quit = true;
 }
 
+void QuitAll()
+{
+    for(auto nc : contexts) {
+        nc.second->quit = true;
+    }
+}
+
 bool ShouldQuit()
 {
     return !context || context->quit;

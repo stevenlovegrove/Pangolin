@@ -8,6 +8,18 @@
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/timer.h>
 
+#ifdef _UNIX_
+#include <signal.h>
+void videoviewer_signal_handler(int s)
+{
+    if( s == SIGINT || s == SIGTERM)
+    {
+        // Exit nicely.
+        pangolin::QuitAll();
+    }
+}
+#endif
+
 #ifdef DEBUGVIDEOVIEWER
 #  include <thread>
 #endif // DEBUGVIDEOVIEWER
@@ -27,6 +39,15 @@ void ConvertPixels(pangolin::Image<To>& to, const pangolin::Image<From>& from)
 
 void RunVideoViewerUI(const std::string& input_uri, const std::string& output_uri)
 {
+#ifdef _UNIX_
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = videoviewer_signal_handler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT,  &sigIntHandler, NULL);
+    sigaction(SIGTERM, &sigIntHandler, NULL);
+#endif
+
     pangolin::Var<int>  record_timelapse_frame_skip("viewer.record_timelapse_frame_skip", 1 );
     pangolin::Var<int>  end_frame("viewer.end_frame", std::numeric_limits<int>::max() );
     pangolin::Var<bool> video_wait("video.wait", true);
