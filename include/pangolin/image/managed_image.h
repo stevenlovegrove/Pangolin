@@ -75,7 +75,7 @@ public:
     ManagedImage(unsigned int w, unsigned int h, unsigned int pitch_bytes)
         : Image<T>(
               Allocator().allocate( (h*pitch_bytes) / sizeof(T) + 1),
-               w, h, w*sizeof(T)
+               w, h, pitch_bytes
               )
     {
     }

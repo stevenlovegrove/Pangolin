@@ -37,12 +37,12 @@ struct TypedImage : public ManagedImage<unsigned char>
     typedef ManagedImage<unsigned char> Base;
 
     inline TypedImage()
-        : ManagedImage<unsigned char>()
+        : Base()
     {
     }
 
     inline TypedImage(unsigned int w, unsigned int h, const PixelFormat& fmt)
-        : ManagedImage<unsigned char>(w,h,w*fmt.bpp/8), fmt(fmt)
+        : Base(w,h,w*fmt.bpp/8), fmt(fmt)
     {
     }
 
