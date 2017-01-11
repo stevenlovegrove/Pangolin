@@ -54,7 +54,7 @@ public:
 
     // Row image
     inline
-    ManagedImage(unsigned int w)
+    ManagedImage(size_t w)
         : Image<T>(
               Allocator().allocate(w),
                w, 1, w*sizeof(T)
@@ -63,7 +63,7 @@ public:
     }
 
     inline
-    ManagedImage(unsigned int w, unsigned int h)
+    ManagedImage(size_t w, size_t h)
         : Image<T>(
               Allocator().allocate(w*h),
                w, h, w*sizeof(T)
@@ -72,7 +72,7 @@ public:
     }
 
     inline
-    ManagedImage(unsigned int w, unsigned int h, unsigned int pitch_bytes)
+    ManagedImage(size_t w, size_t h, size_t pitch_bytes)
         : Image<T>(
               Allocator().allocate( (h*pitch_bytes) / sizeof(T) + 1),
                w, h, w*sizeof(T)
@@ -136,7 +136,7 @@ public:
     }
 
     inline
-    void Reinitialise(unsigned int w, unsigned int h)
+    void Reinitialise(size_t w, size_t h)
     {
         if(!Image<T>::ptr || Image<T>::w != w || Image<T>::h != h) {
             *this = ManagedImage<T,Allocator>(w,h);
@@ -144,7 +144,7 @@ public:
     }
 
     inline
-    void Reinitialise(unsigned int w, unsigned int h, unsigned int pitch)
+    void Reinitialise(size_t w, size_t h, size_t pitch)
     {
         if(!Image<T>::ptr || Image<T>::w != w || Image<T>::h != h || Image<T>::pitch != pitch) {
             *this = ManagedImage<T,Allocator>(w,h,pitch);
