@@ -48,7 +48,7 @@ public:
 
     void Stop();
 
-    bool Sync(int64_t tolerance_us, int64_t expected_delta_us = 0);
+    bool Sync(int64_t tolerance_us, double transfer_bandwidth_gbps = 0);
 
     bool GrabNext( unsigned char* image, bool wait = true );
 
@@ -57,12 +57,15 @@ public:
     std::vector<VideoInterface*>& InputStreams();
 
 protected:
+    int64_t GetEndOfCaptureTime(size_t src_index);
+
     std::vector<std::unique_ptr<VideoInterface>> storage;
     std::vector<VideoInterface*> src;
     std::vector<StreamInfo> streams;
     size_t size_bytes;
+
     int64_t sync_tolerance_us;
-    int64_t expected_timestamp_delta_us;
+    int64_t transfer_bandwidth_bytes_per_us;
 };
 
 

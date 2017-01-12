@@ -29,6 +29,8 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
+#define DEBUGJOIN
+
 #ifdef DEBUGJOIN
   #include <pangolin/utils/timer.h>
   #define TSTART() pangolin::basetime start,last,now; start = pangolin::TimeNow(); last = start;
@@ -95,86 +97,96 @@ void JoinVideo::Stop()
     }
 }
 
-bool JoinVideo::Sync(int64_t tolerance_us, int64_t expected_delta_us)
+bool JoinVideo::Sync(int64_t tolerance_us, double transfer_bandwidth_gbps)
 {
+    transfer_bandwidth_bytes_per_us = int64_t((transfer_bandwidth_gbps * 1E3) / 8.0);
+    std::cout << "transfer_bandwidth_gbps: " << transfer_bandwidth_gbps << std::endl;
+
     for(size_t s=0; s< src.size(); ++s)
     {
        VideoPropertiesInterface* vpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
        if(!vpi) {
-         return false;
+           sync_tolerance_us = 0;
+           return false;
        }
     }
+
     sync_tolerance_us = tolerance_us;
-    expected_timestamp_delta_us = expected_delta_us;
+
+    std::cout << "transfer_bandwidth_bytes_per_us: " << transfer_bandwidth_bytes_per_us << std::endl;
     return true;
+}
+
+// Assuming that src_index supports VideoPropertiesInterface and has a valid PANGO_HOST_RECEPTION_TIME_US,
+// returns end-of-capture time.
+int64_t JoinVideo::GetEndOfCaptureTime(size_t src_index)
+{
+    VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[src_index]);
+    PANGO_ENSURE(vidpi);
+    if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
+        int64_t transfer_time_us = 0;
+        if( transfer_bandwidth_bytes_per_us > 0 ) {
+            transfer_time_us =src[src_index]->SizeBytes() / transfer_bandwidth_bytes_per_us;
+            std::cout << "transfer_time_us: " << transfer_time_us << std::endl;
+        }
+        return vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>() - transfer_time_us;
+    } else {
+        PANGO_ENSURE(false, "JoinVideo: Stream % returned image without timestamp.\n", src_index);
+        return 0;
+    }
 }
 
 bool JoinVideo::GrabNext(unsigned char* image, bool wait)
 {
-    int64_t rt = 0;
     size_t offset = 0;
-    std::vector<size_t> offsets;
-    std::vector<int64_t> reception_times;
-    int64_t newest = std::numeric_limits<int64_t>::min();
-    int64_t oldest = std::numeric_limits<int64_t>::max();
-    int grabbed_all = (int)src.size();
+    std::vector<size_t> offsets(src.size(), 0);
+    std::vector<int64_t> capture_us(src.size(), 0);
 
     TSTART()
     DBGPRINT("Entering GrabNext:")
     for(size_t s=0; s<src.size(); ++s) {
-        VideoInterface& vid = *src[s];
-        if(vid.GrabNext(image+offset,wait)) {
-            --grabbed_all;
+        if( src[s]->GrabNext(image+offset,wait) && sync_tolerance_us > 0 ) {
+            capture_us[s] = GetEndOfCaptureTime(s);
         }
-        offsets.push_back(offset);
-        offset += vid.SizeBytes();
-        if(sync_tolerance_us > 0) {
-           VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
-           if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
-               rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
-               reception_times.push_back(rt);
-               if(newest < rt) newest = rt;
-               if(oldest > rt) oldest = rt;
-           } else {
-               pango_print_error("Stream %lu in join does not support sync_tolerance_us option.\n", (unsigned long)s);
-               throw std::runtime_error("Grab next stream does not support sync_tolerance_us option.\n");
-           }
-        }
-        TGRABANDPRINT("Stream %ld grab took ",s)
+        offsets[s] = offset;
+        offset += src[s]->SizeBytes();
+        TGRABANDPRINT("Stream %ld grab took ",s);
     }
 
-    if(grabbed_all != 0){
-        // Source is waiting on data or end of stream.
+    // Check if any streams didn't return an image. This means a stream is waiting on data or has finished.
+    if( std::any_of(capture_us.begin(), capture_us.end(), [](int64_t v){return v == 0;}) ){
         return false;
     }
 
-    if(sync_tolerance_us > 0) {
-        if(std::abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us){
-            pango_print_warn("Join timestamps not within %lu us trying to sync\n", (unsigned long)sync_tolerance_us);
+    // Check Sync if a tolerence has been specified.
+    if(sync_tolerance_us > 0)
+    {
+        auto range = std::minmax_element(capture_us.begin(), capture_us.end());
+        if( (*range.second - *range.first) > sync_tolerance_us)
+        {
+            pango_print_warn("JoinVideo: Source timestamps not within %lu us. Ignoring frames, trying to sync...\n", (unsigned long)sync_tolerance_us);
 
+            // Attempt to resync...
             for(size_t n=0; n<10; ++n){
                 for(size_t s=0; s<src.size(); ++s) {
-                    if(reception_times[s] < (newest - sync_tolerance_us)) {
-                        VideoInterface& vid = *src[s];
-                        if(vid.GrabNewest(image+offsets[s],false)) {
-                            VideoPropertiesInterface* vidpi = dynamic_cast<VideoPropertiesInterface*>(src[s]);
-                            if(vidpi->FrameProperties().contains(PANGO_HOST_RECEPTION_TIME_US)) {
-                                rt = vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>();
-                            }
-                            if(newest < rt) newest = rt;
-                            if(oldest > rt) oldest = rt;
-                            reception_times[s] = rt;
+                    // Catch up frames that are behind
+                    if(capture_us[s] < (*range.second - sync_tolerance_us))
+                    {
+                        if(src[s]->GrabNewest(image+offsets[s],false)) {
+                            capture_us[s] = GetEndOfCaptureTime(s);
                         }
                     }
                 }
             }
         }
 
-        if(std::abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us ) {
-            TGRABANDPRINT("NOT IN SYNC newest:%ld oldest:%ld delta:%ld syncing took ", newest, oldest, (newest - oldest));
+        // Check sync again
+        range = std::minmax_element(capture_us.begin(), capture_us.end());
+        if( (*range.second - *range.first) > sync_tolerance_us) {
+            TGRABANDPRINT("NOT IN SYNC oldest:%ld newest:%ld delta:%ld", *range.first, *range.second, (*range.second - *range.first));
             return false;
         } else {
-            TGRABANDPRINT("    IN SYNC newest:%ld oldest:%ld delta:%ld syncing took ", newest, oldest, (newest - oldest));
+            TGRABANDPRINT("    IN SYNC oldest:%ld newest:%ld delta:%ld", *range.first, *range.second, (*range.second - *range.first));
             return true;
         }
     } else {
@@ -191,6 +203,7 @@ bool AllInterfacesAreBufferAware(std::vector<VideoInterface*>& src){
 
 bool JoinVideo::GrabNewest( unsigned char* image, bool wait )
 {
+  // TODO: Tidy to correspond to GrabNext()
   TSTART()
   DBGPRINT("Entering GrabNewest:");
   if(AllInterfacesAreBufferAware(src)) {
@@ -281,7 +294,7 @@ bool JoinVideo::GrabNewest( unsigned char* image, bool wait )
       TGRABANDPRINT("Stream >=1 grab took ");
 
       if(sync_tolerance_us > 0) {
-          if(std::abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us){
+          if(std::abs(newest - oldest) > sync_tolerance_us){
               pango_print_warn("Join timestamps not within %lu us trying to sync\n", (unsigned long)sync_tolerance_us);
 
               for(size_t n=0; n<10; ++n){
@@ -302,7 +315,7 @@ bool JoinVideo::GrabNewest( unsigned char* image, bool wait )
               }
           }
 
-          if(std::abs(newest - oldest - expected_timestamp_delta_us) > sync_tolerance_us ) {
+          if(std::abs(newest - oldest) > sync_tolerance_us ) {
               TGRABANDPRINT("NOT IN SYNC newest:%ld oldest:%ld delta:%ld syncing took ", newest, oldest, (newest - oldest));
               return false;
           } else {
@@ -353,8 +366,12 @@ PANGOLIN_REGISTER_FACTORY(JoinVideo)
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
 
             std::vector<std::string> uris = SplitBrackets(uri.url);
+
+            // Standard by which we should measure if frames are in sync.
             const unsigned long sync_tol_us = uri.Get<unsigned long>("sync_tolerance_us", 0);
-            const unsigned long expected_delta_us = uri.Get<unsigned long>("expected_delta_us", 0);
+
+            // Bandwidth used to compute exposure end time from reception time for sync logic
+            const double transfer_bandwidth_gbps = uri.Get<double>("transfer_bandwidth_gbps", 0.0);
 
             if(uris.size() == 0) {
                 throw VideoException("No VideoSources found in join URL.", "Specify videos to join with curly braces, e.g. join://{test://}{test://}");
@@ -368,8 +385,8 @@ PANGOLIN_REGISTER_FACTORY(JoinVideo)
             JoinVideo* video_raw = new JoinVideo(src);
 
             if(sync_tol_us>0) {
-                if(!video_raw->Sync(sync_tol_us, expected_delta_us)) {
-                    pango_print_error("Error not all streams in join support sync_tolerance_us option.\n");
+                if(!video_raw->Sync(sync_tol_us, transfer_bandwidth_gbps)) {
+                    pango_print_error("WARNING: not all streams in join support sync_tolerance_us option. Not using tolerance.\n");
                 }
             }
 
