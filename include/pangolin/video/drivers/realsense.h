@@ -4,6 +4,8 @@
 
 #include <pangolin/video/video.h>
 
+#include <pangolin/video/iostream_operators.h>
+
 namespace rs {
 class context;
 class device;
