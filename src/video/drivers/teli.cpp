@@ -178,6 +178,29 @@ void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string
         break;
     }
     case Teli::TC_NODE_TYPE_COMMAND:
+    {
+        status = Teli::Nd_CmdExecute(cam, node, true);
+
+        if (status != Teli::CAM_API_STS_SUCCESS) {
+            pango_print_error("TeliVideo: Nd_CmdExecute returned error, %u", status);
+            break;
+        }
+
+        // Confirm command is successful
+        bool done = false;
+        for(int attempts=20; attempts > 0; --attempts) {
+            // Confirm whether the execution has been accomplished.
+            status = Teli::Nd_GetCmdIsDone(cam, node, &done);
+            if (status != Teli::CAM_API_STS_SUCCESS) {
+                pango_print_error("TeliVideo: Nd_GetCmdIsDone returned error, %u", status);
+                break;
+            }
+            if(done) break;
+        }
+
+        pango_print_error("Timeout while waiting for command %s done\n", node_str.c_str());
+        break;
+    }
     case Teli::TC_NODE_TYPE_REGISTER:
     case Teli::TC_NODE_TYPE_CATEGORY:
     case Teli::TC_NODE_TYPE_ENUM_ENTRY:
