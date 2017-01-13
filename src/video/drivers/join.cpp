@@ -29,7 +29,7 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
-#define DEBUGJOIN
+//#define DEBUGJOIN
 
 #ifdef DEBUGJOIN
   #include <pangolin/utils/timer.h>
