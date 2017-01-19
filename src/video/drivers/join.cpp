@@ -100,7 +100,7 @@ void JoinVideo::Stop()
 bool JoinVideo::Sync(int64_t tolerance_us, double transfer_bandwidth_gbps)
 {
     transfer_bandwidth_bytes_per_us = int64_t((transfer_bandwidth_gbps * 1E3) / 8.0);
-    std::cout << "transfer_bandwidth_gbps: " << transfer_bandwidth_gbps << std::endl;
+//    std::cout << "transfer_bandwidth_gbps: " << transfer_bandwidth_gbps << std::endl;
 
     for(size_t s=0; s< src.size(); ++s)
     {
@@ -113,7 +113,7 @@ bool JoinVideo::Sync(int64_t tolerance_us, double transfer_bandwidth_gbps)
 
     sync_tolerance_us = tolerance_us;
 
-    std::cout << "transfer_bandwidth_bytes_per_us: " << transfer_bandwidth_bytes_per_us << std::endl;
+//    std::cout << "transfer_bandwidth_bytes_per_us: " << transfer_bandwidth_bytes_per_us << std::endl;
     return true;
 }
 
@@ -127,7 +127,6 @@ int64_t JoinVideo::GetEndOfCaptureTime(size_t src_index)
         int64_t transfer_time_us = 0;
         if( transfer_bandwidth_bytes_per_us > 0 ) {
             transfer_time_us =src[src_index]->SizeBytes() / transfer_bandwidth_bytes_per_us;
-            std::cout << "transfer_time_us: " << transfer_time_us << std::endl;
         }
         return vidpi->FrameProperties()[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>() - transfer_time_us;
     } else {
