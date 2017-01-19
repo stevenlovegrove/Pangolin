@@ -114,8 +114,14 @@ inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bo
 }
 
 inline GlTexture::GlTexture(GlTexture&& tex)
-    : internal_format(tex.internal_format), tid(tex.tid)
 {
+    *this = std::move(tex);
+}
+inline void GlTexture::operator=(GlTexture&& tex)
+{
+    internal_format = tex.internal_format;
+    tid = tex.tid;
+
     tex.internal_format = 0;
     tex.tid = 0;
 }
@@ -587,9 +593,18 @@ inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum 
 }
 
 inline GlBuffer::GlBuffer(GlBuffer&& buffer)
-    : bo(buffer.bo), buffer_type(buffer.buffer_type), gluse(buffer.gluse), datatype(buffer.datatype),
-      num_elements(buffer.num_elements), count_per_element(buffer.count_per_element)
 {
+    *this = std::move(buffer);
+}
+
+inline void GlBuffer::operator=(GlBuffer&& buffer)
+{
+    bo = buffer.bo;
+    buffer_type = buffer.buffer_type;
+    gluse = buffer.gluse;
+    datatype = buffer.datatype;
+    num_elements = buffer.num_elements;
+    count_per_element = buffer.count_per_element;
     buffer.bo = 0;
 }
 

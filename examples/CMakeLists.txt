@@ -6,6 +6,7 @@ if(BUILD_PANGOLIN_GUI)
     add_subdirectory(HelloPangolin)
     add_subdirectory(SimpleMultiDisplay)
     add_subdirectory(SimpleDisplayImage)
+    add_subdirectory(SimpleScene)
 
     if(NOT HAVE_GLES OR HAVE_GLES_2)
         add_subdirectory(SimplePlot)

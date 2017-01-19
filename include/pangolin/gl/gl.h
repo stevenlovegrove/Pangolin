@@ -56,8 +56,9 @@ public:
     //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
     GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL  );
     
-    //! Move Constructor
+    //! Move Constructor / asignment
     GlTexture(GlTexture&& tex);
+    void operator=(GlTexture&& tex);
     
     //! Default constructor represents 'no texture'
     GlTexture();
@@ -176,8 +177,9 @@ struct PANGOLIN_EXPORT GlBuffer
     GlBuffer();
     GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
     
-    //! Move Constructor
+    //! Move Constructor / Assignment
     GlBuffer(GlBuffer&& tex);
+    void operator=(GlBuffer&& tex);
     
     ~GlBuffer();
 
