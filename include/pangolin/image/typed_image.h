@@ -41,25 +41,25 @@ struct TypedImage : public ManagedImage<unsigned char>
     {
     }
 
-    inline TypedImage(unsigned int w, unsigned int h, const PixelFormat& fmt)
+    inline TypedImage(size_t w, size_t h, const PixelFormat& fmt)
         : Base(w,h,w*fmt.bpp/8), fmt(fmt)
     {
     }
 
-    inline TypedImage(unsigned int w, unsigned int h, const PixelFormat& fmt, size_t pitch )
+    inline TypedImage(size_t w, size_t h, const PixelFormat& fmt, size_t pitch )
         : Base(w,h, pitch), fmt(fmt)
     {
     }
 
     inline
-    void Reinitialise(unsigned int w, unsigned int h, const PixelFormat& fmt)
+    void Reinitialise(size_t w, size_t h, const PixelFormat& fmt)
     {
         Base::Reinitialise(w, h, w*fmt.bpp/8);
         this->fmt = fmt;
     }
 
     inline
-    void Reinitialise(unsigned int w, unsigned int h, const PixelFormat& fmt, size_t pitch)
+    void Reinitialise(size_t w, size_t h, const PixelFormat& fmt, size_t pitch)
     {
         Base::Reinitialise(w, h, pitch);
         this->fmt = fmt;

@@ -36,7 +36,7 @@
 namespace pangolin
 {
 
-MergeVideo::MergeVideo(std::unique_ptr<VideoInterface>& src_, const std::vector<Point>& stream_pos, int w = 0, int h = 0 )
+MergeVideo::MergeVideo(std::unique_ptr<VideoInterface>& src_, const std::vector<Point>& stream_pos, size_t w = 0, size_t h = 0 )
     : src( std::move(src_) ), buffer(new uint8_t[src->SizeBytes()]), stream_pos(stream_pos)
 {
     videoin.push_back(src.get());
@@ -51,12 +51,12 @@ MergeVideo::MergeVideo(std::unique_ptr<VideoInterface>& src_, const std::vector<
     }
 
     // Compute buffer regions for data copying.
-    XYRangei r = XYRangei::Empty();
+    XYRange<size_t> r = XYRange<size_t>::Empty();
     for(size_t i=0; i < src->Streams().size(); ++i) {
         const StreamInfo& si = src->Streams()[i];
-        const int x = stream_pos[i].x;
-        const int y = stream_pos[i].y;
-        XYRangei sr(x, x + si.Width(), y, y + si.Height());
+        const size_t x = stream_pos[i].x;
+        const size_t y = stream_pos[i].y;
+        XYRange<size_t> sr(x, x + si.Width(), y, y + si.Height());
         r.Insert(sr);
     }
 
