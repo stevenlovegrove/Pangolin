@@ -35,7 +35,7 @@ namespace pangolin {
 
 struct Interactive
 {
-    static thread_local GLuint current_id;
+    static __thread GLuint current_id;
 
     virtual bool Mouse(
         int button,

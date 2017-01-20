@@ -2,6 +2,7 @@
 
 #include <pangolin/handler/handler.h>
 #include <pangolin/scene/renderable.h>
+#include <pangolin/scene/interactive_index.h>
 
 namespace pangolin {
 
