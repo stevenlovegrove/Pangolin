@@ -90,6 +90,7 @@ add_custom_target(uninstall
 
 add_subdirectory("external")
 add_subdirectory("src")
+add_subdirectory("test")
 
 if(BUILD_EXAMPLES)
   set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)

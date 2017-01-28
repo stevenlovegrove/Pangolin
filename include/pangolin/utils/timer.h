@@ -69,6 +69,11 @@ inline double TimeNow_s()
     return Time_s(TimeNow());
 }
 
+inline int64_t TimeNow_us()
+{
+    return Time_us(TimeNow());
+}
+
 inline basetime WaitUntil(basetime t)
 {
     // TODO: use smarter sleep!

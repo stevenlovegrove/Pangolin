@@ -28,7 +28,7 @@
 #pragma once
 
 #include <pangolin/video/video_output.h>
-#include <pangolin/log/packetstream.h>
+#include <pangolin/log/oPacketStream.hpp>
 
 namespace pangolin
 {
@@ -45,17 +45,16 @@ public:
     bool IsPipe() const override;
 
 protected:
-    void WriteHeader();
+//    void WriteHeader();
 
     std::vector<StreamInfo> streams;
     std::string input_uri;
     const std::string filename;
     json::value device_properties;
 
-    PacketStreamWriter packetstream;
+    oPacketStream packetstream;
     size_t packetstream_buffer_size_bytes;
     int packetstreamsrcid;
-    bool first_frame;
     size_t total_frame_size;
     bool is_pipe;
 };

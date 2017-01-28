@@ -28,7 +28,8 @@
 #pragma once
 
 #include <pangolin/video/video.h>
-#include <pangolin/log/packetstream.h>
+//#include <pangolin/log/packetstream.h>
+#include "pangolin/log/iPacketStream.hpp"
 
 namespace pangolin
 {
@@ -56,9 +57,9 @@ public:
 
     // Implement VideoPropertiesInterface
 
-    const json::value& DeviceProperties() const override;
+    const json::value& DeviceProperties() const override {if (-1 == _src_id) throw std::runtime_error("Not initialised"); return _device_properties;};
 
-    const json::value& FrameProperties() const override;
+    const json::value& FrameProperties() const override {return _frame_properties;};
 
 
     // Implement VideoPlaybackInterface
@@ -75,17 +76,19 @@ private:
 protected:
     int FindSource();
 
-    PacketStreamReader reader;
-    size_t size_bytes;
-    std::vector<StreamInfo> streams;
-    json::value device_properties;
-    json::value frame_properties;
-    int src_id;
-    const std::string filename;
-    bool realtime;
-    bool is_pipe;
-    bool is_pipe_open;
-    int pipe_fd;
+    iPacketStream _reader;
+    SyncTime _realtime_sync;
+
+    size_t _size_bytes;
+    std::vector<StreamInfo> _streams;
+    json::value _device_properties;
+    json::value _frame_properties;
+    int _src_id;
+    const std::string _filename;
+    bool _realtime;
+    bool _is_pipe;
+    bool _is_pipe_open;
+    int _pipe_fd;
 };
 
 }

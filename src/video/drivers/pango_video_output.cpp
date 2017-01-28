@@ -51,12 +51,12 @@ PangoVideoOutput::PangoVideoOutput(const std::string& filename, size_t buffer_si
     : filename(filename),
       packetstream_buffer_size_bytes(buffer_size_bytes),
       packetstreamsrcid(-1),
-      first_frame(true),
+      total_frame_size(0),
       is_pipe(pangolin::IsPipe(filename))
 {
     if(!is_pipe)
     {
-        packetstream.Open(filename, packetstream_buffer_size_bytes);
+        packetstream.open(filename, packetstream_buffer_size_bytes);
     }
     else
     {
@@ -81,61 +81,56 @@ bool PangoVideoOutput::IsPipe() const
 void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::string& uri, const json::value& properties)
 {
     std::set<unsigned char*> unique_ptrs;
-    for(size_t i=0; i<st.size(); ++i) {
-        unique_ptrs.insert(st[i].Offset());
+    for (size_t i = 0; i < st.size(); ++i)
+    {
+	unique_ptrs.insert(st[i].Offset());
     }
 
-    if(unique_ptrs.size() < st.size()) {
-        throw std::invalid_argument("Each image must have unique offset into buffer.");
+    if (unique_ptrs.size() < st.size())
+	throw std::invalid_argument("Each image must have unique offset into buffer.");
+
+    if (packetstreamsrcid == -1)
+    {
+	input_uri = uri;
+	streams = st;
+	device_properties = properties;
+
+	json::value json_header(json::object_type, false);
+	json::value& json_streams = json_header["streams"];
+	json_header["device"] = device_properties;
+
+	total_frame_size = 0;
+	for (unsigned int i = 0; i < streams.size(); ++i)
+	{
+	    StreamInfo& si = streams[i];
+	    total_frame_size = std::max(total_frame_size, (size_t) si.Offset() + si.SizeBytes());
+
+	    json::value& json_stream = json_streams.push_back();
+	    json_stream["encoding"] = si.PixFormat().format;
+	    json_stream["width"] = si.Width();
+	    json_stream["height"] = si.Height();
+	    json_stream["pitch"] = si.Pitch();
+	    json_stream["offset"] = (size_t) si.Offset();
+	}
+
+	PacketStreamSource pss;
+	pss.driver = pango_video_type;
+	pss.uri = input_uri;
+	pss.info = json_header;
+	pss.data_size_bytes = total_frame_size;
+	pss.data_definitions = "struct Frame{ uint8 stream_data[" + pangolin::Convert<std::string, size_t>::Do(total_frame_size) + "];};";
+
+	packetstreamsrcid = packetstream.addSource(pss);
+
     }
-
-    if(packetstreamsrcid == -1) {
-        input_uri = uri;
-        streams = st;
-        device_properties = properties;
-
-        json::value json_header(json::object_type,false);
-        json::value& json_streams = json_header["streams"];
-        json_header["device"] = device_properties;
-
-        total_frame_size = 0;
-        for(unsigned int i=0; i< streams.size(); ++i) {
-            StreamInfo& si = streams[i];
-            total_frame_size = std::max( total_frame_size, (size_t)si.Offset() + si.SizeBytes());
-
-            json::value& json_stream = json_streams.push_back();
-            json_stream["encoding"] = si.PixFormat().format;
-            json_stream["width"] =    si.Width();
-            json_stream["height"] =   si.Height();
-            json_stream["pitch"] =    si.Pitch();
-            json_stream["offset"] =   (size_t)si.Offset();
-        }
-
-        PacketStreamSource pss = packetstream.CreateSource(
-                pango_video_type, input_uri, json_header,
-                total_frame_size,
-                "struct Frame{"
-                " uint8 stream_data[" + pangolin::Convert<std::string,size_t>::Do(total_frame_size) + "];"
-                "};"
-            );
-
-        packetstreamsrcid = (int)pss.id;
-
-        packetstream.AddSource(pss);
-    }else{
-        throw std::runtime_error("Unable to add new streams");
-    }
-}
-
-void PangoVideoOutput::WriteHeader()
-{
-    packetstream.WriteSources();
+    else
+	throw std::runtime_error("Unable to add new streams");
 }
 
 int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value& frame_properties)
 {
 #ifndef _WIN_
-    if(is_pipe)
+    if (is_pipe)
     {
         // If there is a reader waiting on the other side of the pipe, open
         // a file descriptor to the file and close it only after the file
@@ -147,19 +142,26 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value&
         // opening a file descriptor will fail and errno will be ENXIO.
         int fd = WritablePipeFileDescriptor(filename);
 
-        if (!packetstream.IsOpen()) {
-            if (fd != -1) {
-                packetstream.Open(filename, packetstream_buffer_size_bytes);
+        if (!packetstream.isOpen())
+        {
+            if (fd != -1)
+            {
+                packetstream.open(filename, packetstream_buffer_size_bytes);
                 close(fd);
-                first_frame = true;
             }
-        } else {
-            if (fd != -1) {
+        }
+        else
+        {
+            if (fd != -1)
+            {
                 // There's a reader on the other side of the pipe.
                 close(fd);
-            } else {
-                if (errno == ENXIO) {
-                    packetstream.ForceClose();
+            }
+            else
+            {
+                if (errno == ENXIO)
+                {
+                    packetstream.forceClose();
                     SigState::I().sig_callbacks.at(SIGPIPE).value = false;
 
                     // This should be unnecessary since per the man page,
@@ -170,27 +172,15 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value&
             }
         }
 
-        if(!packetstream.IsOpen())
-        {
+        if (!packetstream.isOpen())
             return 0;
-        }
     }
 #endif
 
-    if(first_frame)
-    {
-        first_frame = false;
-        WriteHeader();
-    }
+//    if (!frame_properties.is<json::null>())
+//        packetstream.writeMeta(packetstreamsrcid, frame_properties);
 
-    if(!frame_properties.is<json::null>()) {
-        packetstream.WriteSourcePacketMeta(packetstreamsrcid, frame_properties);
-    }
-
-    packetstream.WriteSourcePacket(
-        packetstreamsrcid,
-        (char*)data, total_frame_size
-    );
+    packetstream.writePacket(packetstreamsrcid, reinterpret_cast<const char*>(data), total_frame_size, frame_properties);
 
     return 0;
 }

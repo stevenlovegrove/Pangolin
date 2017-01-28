@@ -129,21 +129,21 @@ TypedImage LoadTga(const std::string& filename)
     FILE *file;
     unsigned char type[4];
     unsigned char info[6];
-    
+
     file = fopen(filename.c_str(), "rb");
-    
+
     if(file) {
         bool success = true;
         success &= fread( &type, sizeof (char), 3, file ) == 3;
         fseek( file, 12, SEEK_SET );
         success &= fread( &info, sizeof (char), 6, file ) == 6;
-        
+
         const int width  = info[0] + (info[1] * 256);
         const int height = info[2] + (info[3] * 256);
-        
+
         if(success) {
             TypedImage img(width, height, TgaFormat(info[4], type[2], type[1]) );
-            
+
             //read in image data
             const size_t data_size = img.h * img.pitch;
             success &= fread(img.ptr, sizeof(unsigned char), data_size, file) == data_size;
@@ -153,8 +153,8 @@ TypedImage LoadTga(const std::string& filename)
             fclose(file);
         }
     }
-    
-    throw std::runtime_error("Unable to load TGA file, '" + filename + "'");    
+
+    throw std::runtime_error("Unable to load TGA file, '" + filename + "'");
 }
 
 #ifdef HAVE_PNG
@@ -191,45 +191,45 @@ void PNGAPI PngWarningsCallback(png_structp /*png_ptr*/, png_const_charp /*warni
 TypedImage LoadPng(const std::string& filename)
 {
     PANGOLIN_UNUSED(filename);
-    
+
 #ifdef HAVE_PNG
     FILE *in = fopen(filename.c_str(), "rb");
-    
+
     if( in )  {
         //check the header
         const size_t nBytes = 8;
         png_byte header[nBytes];
         size_t nread = fread(header, 1, nBytes, in);
         int nIsPNG = png_sig_cmp(header, 0, nread);
-        
+
         if ( nIsPNG != 0 )  {
             throw std::runtime_error( filename + " is not a PNG file" );
         }
-        
+
         //set up initial png structs
         png_structp png_ptr = png_create_read_struct( PNG_LIBPNG_VER_STRING, (png_voidp)NULL, NULL, &PngWarningsCallback);
         if (!png_ptr) {
             throw std::runtime_error( "PNG Init error 1" );
         }
-        
+
         png_infop info_ptr = png_create_info_struct(png_ptr);
         if (!info_ptr)  {
             png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
             throw std::runtime_error( "PNG Init error 2" );
         }
-        
+
         png_infop end_info = png_create_info_struct(png_ptr);
         if (!end_info) {
             png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
             throw std::runtime_error( "PNG Init error 3" );
         }
-        
+
         png_init_io(png_ptr, in);
         png_set_sig_bytes(png_ptr, nBytes);
-        
+
         //read the file
         png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_SWAP_ENDIAN, NULL);
-        
+
         if( png_get_bit_depth(png_ptr, info_ptr) == 1)  {
             //Unpack bools to bytes to ease loading.
             png_set_packing(png_ptr);
@@ -237,34 +237,34 @@ TypedImage LoadPng(const std::string& filename)
             //Expand nonbool colour depths up to 8bpp
             png_set_expand_gray_1_2_4_to_8(png_ptr);
         }
-        
+
         //Get rid of palette, by transforming it to RGB
         if(png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_PALETTE) {
             png_set_palette_to_rgb(png_ptr);
         }
-        
+
         if( png_get_interlace_type(png_ptr,info_ptr) != PNG_INTERLACE_NONE) {
             throw std::runtime_error( "Interlace not yet supported" );
         }
-        
+
         const size_t w = png_get_image_width(png_ptr,info_ptr);
         const size_t h = png_get_image_height(png_ptr,info_ptr);
         const size_t pitch = png_get_rowbytes(png_ptr, info_ptr);
-        
+
         TypedImage img(w, h, PngFormat(png_ptr, info_ptr), pitch);
-        
+
         png_bytepp rows = png_get_rows(png_ptr, info_ptr);
         for( unsigned int r = 0; r < h; r++) {
             memcpy( img.ptr + pitch*r, rows[r], pitch );
         }
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-        
+
         fclose(in);
         return img;
     }
-    
-    throw std::runtime_error("Unable to load PNG file, '" + filename + "'");    
-    
+
+    throw std::runtime_error("Unable to load PNG file, '" + filename + "'");
+
 #else
     throw std::runtime_error("PNG Support not enabled. Please rebuild Pangolin.");
 #endif
@@ -389,45 +389,45 @@ PixelFormat JpgFormat(jpeg_decompress_struct& /*info*/ )
 TypedImage LoadJpg(const std::string& filename)
 {
     PANGOLIN_UNUSED(filename);
-    
+
 #ifdef HAVE_JPEG
     FILE * infile = fopen(filename.c_str(), "rb");
 
     if(infile) {
         struct my_error_mgr jerr;
         jerr.pub.error_exit = my_error_exit;
-    
+
         struct jpeg_decompress_struct cinfo;
         cinfo.err = jpeg_std_error(&jerr.pub);
-    
+
         if (setjmp(jerr.setjmp_buffer)) {
             // If we get here, the JPEG code has signaled an error.
             jpeg_destroy_decompress(&cinfo);
             fclose(infile);
             throw std::runtime_error("Error whilst loading JPEG image, '" + filename + "'");
         }
-    
+
         jpeg_create_decompress(&cinfo);
         jpeg_stdio_src(&cinfo, infile);
         jpeg_read_header(&cinfo, TRUE);
         jpeg_start_decompress(&cinfo);
-    
+
         const int row_stride = cinfo.output_width * cinfo.output_components;
-        
+
         TypedImage img(cinfo.output_width, cinfo.output_height, JpgFormat(cinfo), row_stride);
-        
+
         JSAMPARRAY row_buffer = (*cinfo.mem->alloc_sarray)
                 ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
-        
+
         while (cinfo.output_scanline < cinfo.output_height) {
             const int scanline = cinfo.output_scanline;
             jpeg_read_scanlines(&cinfo, row_buffer, 1);
             memcpy(img.ptr + scanline * img.pitch, row_buffer[0], img.pitch );
         }
-        
+
         jpeg_finish_decompress(&cinfo);
         jpeg_destroy_decompress(&cinfo);
-        fclose(infile);  
+        fclose(infile);
         return img;
     }
     throw std::runtime_error("Unable to load JPEG file, '" + filename + "'");
@@ -445,7 +445,7 @@ PixelFormat PpmFormat(const std::string& strType, int num_colours)
             return PixelFormatFromString("GRAY16LE");
         }
     }else if(strType == "P6") {
-        return PixelFormatFromString("RGB24"); 
+        return PixelFormatFromString("RGB24");
     }else{
         throw std::runtime_error("Unsupported PPM/PGM format");        
     }
