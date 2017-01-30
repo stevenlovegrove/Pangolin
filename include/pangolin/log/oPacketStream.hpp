@@ -36,7 +36,6 @@ class PANGOLIN_EXPORT oPacketStream
 		_buffer.close();
 		_open = false;
 	    }
-	    _sources.clear();
 	};
 	void forceClose()
 	{
@@ -71,7 +70,7 @@ class PANGOLIN_EXPORT oPacketStream
 
 //    private:
 	void writeHeader();
-	void write(PacketStreamSourceId, const PacketStreamSource&);
+	void write(const PacketStreamSource&);
 	void writeMeta(PacketStreamSourceId src, const json::value& data);
 };
 

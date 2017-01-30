@@ -51,14 +51,14 @@ void oPacketStream::writeHeader()
     pango.serialize(std::ostream_iterator<char>(_stream), true);
 
     for (const auto& source : _sources)
-        write(source.id, source);
+        write(source);
 }
 
-void oPacketStream::write(PacketStreamSourceId id, const PacketStreamSource& source)
+void oPacketStream::write(const PacketStreamSource& source)
 {
     json::value serialize;
     serialize[pss_src_driver] = source.driver;
-    serialize[pss_src_id] = id;
+    serialize[pss_src_id] = source.id;
     serialize[pss_src_uri] = source.uri;
     serialize[pss_src_info] = source.info;
     serialize[pss_src_version] = source.version;
@@ -81,11 +81,12 @@ PacketStreamSourceId oPacketStream::addSource(const PacketStreamSource& source)
 {
     PacketStreamSourceId r = _sources.size(); //source id is by vector position, so we must reassign.
     _sources.push_back(source);
+    _sources.back().id = r;
 
     if (_open) //we might be a pipe, in which case we may not be open
-        write(r, source);
+        write(_sources.back());
 
-    return r;
+    return _sources.back().id;
 }
 
 void oPacketStream::writeMeta(PacketStreamSourceId src, const json::value& data)
