@@ -12,6 +12,10 @@ using std::streamoff;
 
 #include <thread>
 
+#include <iostream>
+using std::endl;
+using std::cerr;
+
 namespace pangolin
 {
 
@@ -124,15 +128,17 @@ void iPacketStream::init()
 
     for (auto i : PANGO_MAGIC)
     {
-        if (_stream.get() != i || !_stream.good())
-            throw runtime_error("Unrecognised or corrupted file header.");
+        if (_stream.get() != i)
+            throw runtime_error("Unrecognised file header.");
+        if (!_stream.good())
+            throw runtime_error("Bad stream");
     }
 
     setupIndex();
     parseHeader();
-
     while (peekTag() == TAG_ADD_SOURCE)
         parseNewSource();
+    cerr << "packetstr init: " << _sources.size() << endl;
 }
 
 void iPacketStream::parseHeader()
