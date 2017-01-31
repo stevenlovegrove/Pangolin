@@ -177,10 +177,8 @@ int PangoVideo::Seek(int frameid)
 
 int PangoVideo::FindSource()
 {
-    for(PacketStreamSourceId src_id = 0; src_id < _reader.sources().size(); ++src_id)
+    for(const auto& src : _reader.sources())
     {
-        const PacketStreamSource& src = _reader.sources()[_src_id];
-
         try
         {
             if (!src.driver.compare(pango_video_type))
@@ -207,7 +205,7 @@ int PangoVideo::FindSource()
                     _streams.push_back(si);
                 }
 
-                return static_cast<int>(src_id);
+                return static_cast<int>(src.id);
             }
         }
         catch (...)

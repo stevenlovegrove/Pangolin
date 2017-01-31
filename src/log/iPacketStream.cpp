@@ -12,10 +12,6 @@ using std::streamoff;
 
 #include <thread>
 
-#include <iostream>
-using std::endl;
-using std::cerr;
-
 namespace pangolin
 {
 
@@ -138,7 +134,6 @@ void iPacketStream::init()
     parseHeader();
     while (peekTag() == TAG_ADD_SOURCE)
         parseNewSource();
-    cerr << "packetstr init: " << _sources.size() << endl;
 }
 
 void iPacketStream::parseHeader()

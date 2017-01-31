@@ -28,8 +28,7 @@
 #pragma once
 
 #include <pangolin/video/video.h>
-//#include <pangolin/log/packetstream.h>
-#include "pangolin/log/iPacketStream.hpp"
+#include <pangolin/log/iPacketStream.hpp>
 
 namespace pangolin
 {
