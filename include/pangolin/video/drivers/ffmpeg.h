@@ -139,18 +139,27 @@ public:
 protected:
     std::vector<StreamInfo> streams;
     
-    std::unique_ptr<VideoInterface> videoin;
-    SwsContext *img_convert_ctx;
+    struct ConvertContext
+    {
+        SwsContext*     img_convert_ctx;
+        AVPixelFormat   fmtsrc;
+        AVPixelFormat   fmtdst;
+        AVFrame*        avsrc;
+        AVFrame*        avdst; 
+        size_t          w,h;
+        size_t          src_buffer_offset;
+        size_t          dst_buffer_offset;
+        
+        void convert(const unsigned char * src, unsigned char* dst);
+        
+    };
     
-    AVPixelFormat     fmtsrc;
-    AVPixelFormat     fmtdst;
-    AVFrame*        avsrc;
-    AVFrame*        avdst;
-    uint8_t*        bufsrc;
-    uint8_t*        bufdst;
-    int             numbytessrc;
-    int             numbytesdst;
-    unsigned        w,h;
+    std::unique_ptr<VideoInterface> videoin;
+    std::unique_ptr<unsigned char[]> input_buffer;
+
+    std::vector<ConvertContext> converters;
+    //size_t src_buffer_size;
+    size_t dst_buffer_size;
 };
 
 #if (LIBAVFORMAT_VERSION_MAJOR > 55) || ((LIBAVFORMAT_VERSION_MAJOR == 55) && (LIBAVFORMAT_VERSION_MINOR >= 7))
