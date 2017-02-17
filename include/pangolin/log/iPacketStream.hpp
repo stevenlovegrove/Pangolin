@@ -43,32 +43,71 @@ class PANGOLIN_EXPORT iPacketStream
 	    int64_t time;
 	    size_t size;
 	    size_t sequence_num;
+	    std::streampos stream_location;
 	    json::value meta;
 	    FrameInfo(): src(static_cast<decltype(src)>(-1)), time(-1), size(static_cast<decltype(size)>(-1)), sequence_num(static_cast<decltype(sequence_num)>(-1)){};
-	    bool none(){return src == static_cast<decltype(src)>(-1);};
+	    bool none() const {return src == static_cast<decltype(src)>(-1);};
+	    operator bool() const {return !none();};
 	};
 
     private:
-	sourceIndexType _sources;
-	std::map<size_t,size_t> _next_packet_framenum;
+	class Stream: public std::ifstream
+	{
+	private:
+	    using parent = std::ifstream;
+	    bool _seekable;
+	    pangoTagType _tag;
+	    FrameInfo _frame;
+	    size_t _data_len; //Amount of frame data left to read. Tracks our position within a data block.
 
+	    void cclear() {_data_len = 0; _tag = 0;_frame.src = static_cast<decltype(_frame.src)>(-1);}
+
+	public:
+	    Stream(): _seekable(false){cclear();};
+	    Stream(const std::string& filename):parent(filename.c_str(), std::ios::in | std::ios::binary), _seekable(!IsPipe(filename)){cclear();}
+
+	    bool seekable() const {return _seekable;};
+	    size_t data_len() const {return _data_len;};
+	    void data_len(size_t d) {_data_len = d;};
+
+	    void open(const std::string& filename){close(); parent::open(filename.c_str(), std::ios::in | std::ios::binary); _seekable = !IsPipe(filename);};
+	    void close(){cclear(); if (parent::is_open()) parent::close();};
+
+        void seekg(std::streampos target);
+        void seekg(std::streamoff off, std::ios_base::seekdir way);
+        std::streampos tellg();
+        size_t read(char* target, size_t len);
+        char get();
+        size_t skip(size_t len);
+
+        size_t readUINT();
+        int64_t readTimestamp();
+        pangoTagType peekTag();
+        pangoTagType readTag();
+        pangoTagType readTag(pangoTagType);
+        pangoTagType syncToTag();
+
+        FrameInfo peekFrameHeader(const iPacketStream&);
+        FrameInfo readFrameHeader(const iPacketStream&);
+	};
+
+	sourceIndexType _sources;
+	std::vector<size_t> _next_packet_framenum;
 	packetIndex _index;
 
-	std::ifstream _stream;
-	bool _seekable;
+	Stream _stream;
 	std::recursive_mutex _lock;
-
 	int64_t _starttime;
-//	using handlertype = size_t (*)(const FrameInfo&, iPacketStream&);
-//	std::map<PacketStreamSourceId, handlertype> _handlers;
-	pangoTagType _cachedtag;
+
+//	std::vector<decltype(std::this_thread::get_id())> _subscribers;
+//	std::vector<std::unique_ptr<std::condition_variable_any>> _frame_ready;
 
 
     public:
-	iPacketStream():_seekable(false), _starttime(0),_cachedtag(0){};
-	iPacketStream(const std::string& sourcefile): _stream(sourcefile.c_str(), std::ios::in | std::ios::binary), _seekable(!IsPipe(sourcefile)), _starttime(0), _cachedtag(0){init();};
-	void open(const std::string& sourcefile);
-	void close();
+	iPacketStream():_starttime(0){};
+	iPacketStream(const std::string& filename): _stream(filename), _starttime(0) {init();};
+	void open(const std::string& filename) {_starttime = 0; _stream.open(filename); init();}
+	void close(){_stream.close(); _sources.clear();}
 
 	~iPacketStream(){close();};
 
@@ -79,56 +118,41 @@ class PANGOLIN_EXPORT iPacketStream
 	void release() {_lock.unlock();};
 	decltype(_lock)& mutex() {return _lock;}; //exposes the underlying mutex... this allows std::lock_guard, and similar constructs.
 
-//	void setSrcHandler(PacketStreamSourceId src, handlertype handler){_handlers[src] = handler;};
-//	//callback function must TAKE:
-//	//const FrameInfo& (relevant data about the packet, including source id and size to read)
-//	//iPacketStream& (a reference to *this, so the read can be performed)
-//	//it must RETURN
-//	//size_t (the TOTAL number of bytes the handler read from the stream).
 
 	FrameInfo nextFrame(PacketStreamSourceId src, SyncTime *sync);
-	FrameInfo nextFrame(SyncTime *sync); //from any source
 	size_t readraw(char* target, size_t len);
 	size_t skip(size_t len);
 
 	bool good() const {return _stream.good();};
 
 	size_t getPacketIndex(PacketStreamSourceId src_id) const; //returns the current frame for source
-
 	inline size_t getNumPackets(PacketStreamSourceId src_id) const {return _index.packetCount(src_id);};
 
-
-	FrameInfo seek(PacketStreamSourceId src, size_t framenum, SyncTime *sync = nullptr); //jumps to a particular packet. Throws std::runtime_error if the stream is not seekable.
-	//may read other packets... so mixing this function with the packet handler callback is not recommended.
+	FrameInfo seek(PacketStreamSourceId src, size_t framenum, SyncTime *sync = nullptr); //jumps to a particular packet.
 	//If the address of a SyncTime is passed in, the object will be updated to maintain synchronization after the seek is complete.
+
+//	void subscribe(PacketStreamSourceId);
+//	void unsubscribe(PacketStreamSourceId);
+//	FrameInfo nextFrame(SyncTime*);
+
 
 
     private:
-	pangoTagType readTag();
-	pangoTagType peekTag();
-	pangoTagType readTag(pangoTagType);
-
 	void init();
 	void setupIndex();
 
 	void parseHeader();
 	void parseNewSource();
 	void parseIndex();
-//	void parseSourceMeta();
 	std::streampos parseFooter();
 
-
 	FrameInfo _nextFrame();
-	FrameInfo parsePacketHeader();
 
 	void waitForTimeSync(const SyncTime& timer, int64_t wait_for) const;
 
-	void seekg(std::streampos target){if (!_seekable) return; _cachedtag = 0; _stream.seekg(target);};
-	void seekg (std::streamoff off, std::ios_base::seekdir way) {if (!_seekable) return; _cachedtag = 0; _stream.seekg(off, way);};
-	std::streampos tellg() { return _cachedtag == 0 ? _stream.tellg() : _stream.tellg() - static_cast<std::streamoff>(TAG_LENGTH);};
 
 	void SkipSync();
-	void ReSync();
+	void ReSync() {_stream.syncToTag();};
 
 };
 

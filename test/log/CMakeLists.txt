@@ -1,6 +1,6 @@
 # Find Pangolin (https://github.com/stevenlovegrove/Pangolin)
 find_package(Pangolin 0.4 REQUIRED)
-include_directories(../../include ../../src/include ${CMAKE_BINARY_DIR}/src/include)
+include_directories(${Pangolin_INCLUDE_DIRS})
 
 
 append_glob(LOG_SOURCES ../../src/log/*.cpp)

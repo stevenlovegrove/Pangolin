@@ -36,7 +36,6 @@ struct PANGOLIN_EXPORT PacketStreamSource
     size_t          id;
     std::string     uri;
     json::value     info;
-//    json::value     meta;
     int64_t         version;
     int64_t         data_alignment_bytes;
     std::string     data_definitions;

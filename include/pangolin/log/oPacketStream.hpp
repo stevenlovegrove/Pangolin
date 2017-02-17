@@ -20,6 +20,7 @@ class PANGOLIN_EXPORT oPacketStream
 	sourceIndexType _sources;
 	packetIndex _index;
 	size_t _bytes_written;
+	std::recursive_mutex _lock;
 
     public:
 	oPacketStream():_stream(&_buffer),_indexable(false),_open(false),_bytes_written(0){_stream.exceptions(std::ostream::badbit);};
@@ -72,7 +73,7 @@ class PANGOLIN_EXPORT oPacketStream
 	const decltype(_sources)& sources() const {return _sources;};
 	bool isOpen() const {return _open;};
 
-//    private:
+    private:
 	void writeHeader();
 	void write(const PacketStreamSource&);
 	void writeMeta(PacketStreamSourceId src, const json::value& data);
