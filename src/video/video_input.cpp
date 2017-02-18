@@ -199,7 +199,7 @@ void VideoInput::Start()
 void VideoInput::Stop()
 {
     if(IsRecording()) {
-        video_recorder.release();
+        video_recorder.reset();
     }else{
         video_src->Stop();
     }
