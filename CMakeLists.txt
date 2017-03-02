@@ -17,6 +17,7 @@ SET(CPACK_PACKAGE_VERSION_PATCH "0")
 include(CPack)
 
 option( BUILD_EXAMPLES "Build Examples" ON )
+option( BUILD_TESTS "Build Tests" ON )
 
 if(_WIN_)
     option( BUILD_SHARED_LIBS    "Build Shared Library" OFF)
@@ -90,7 +91,10 @@ add_custom_target(uninstall
 
 add_subdirectory("external")
 add_subdirectory("src")
-add_subdirectory("test")
+
+if(BUILD_TESTS)
+  add_subdirectory("test")
+endif()
 
 if(BUILD_EXAMPLES)
   set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
