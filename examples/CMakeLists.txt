@@ -1,6 +1,3 @@
-#find_package(CUDA QUIET)
-find_package(Oculus QUIET)
-
 # All examples depend on Pangolin GUI
 if(BUILD_PANGOLIN_GUI)
     add_subdirectory(HelloPangolin)
@@ -21,19 +18,15 @@ if(BUILD_PANGOLIN_GUI)
         add_subdirectory(SimpleVideo)
         add_subdirectory(SimpleRecord)
         add_subdirectory(SimpleRepeatVideo)
+        add_subdirectory(SharedMemoryCamera)
       endif()
 
-#      if(Oculus_FOUND)
-#        add_subdirectory(SimpleOculus)
-#      endif()
-
-#      This sample fails on many platforms, so exclude it for now,
-#      until we can create a better cmake test for support.
-#      ## VBODisplay Sample requires CUDA
+#      # This sample fails on many platforms, so exclude it for now,
+#      # until we can create a better cmake test for support.
+#      find_package(CUDA QUIET)
 #      if( CUDA_FOUND )
 #        add_subdirectory(VBODisplay)
 #      endif()
+
     endif()
 endif()
-
-add_subdirectory(SharedMemoryVideoWriter)
