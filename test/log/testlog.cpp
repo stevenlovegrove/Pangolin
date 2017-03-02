@@ -4,8 +4,8 @@
 #include <thread>
 #include <mutex>
 
-#include "pangolin/log/packetstream_reader.h"
-#include "pangolin/log/packetstream_writer.h"
+#include <pangolin/log/packetstream_reader.h>
+#include <pangolin/log/packetstream_writer.h>
 
 using namespace std;
 using namespace pangolin;
