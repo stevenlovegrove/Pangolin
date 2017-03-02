@@ -357,9 +357,10 @@ bool FfmpegVideo::GrabNewest(unsigned char *image, bool wait)
     return GrabNext(image,wait);
 }
 
-void FfmpegConverter::ConvertContext::convert(const unsigned char* src,unsigned char* dst)
+void FfmpegConverter::ConvertContext::convert(const unsigned char* src, unsigned char* dst)
 {
-    avpicture_fill((AVPicture*)avsrc, src + src_buffer_offset, fmtsrc, w, h);
+    // avpicture_fill expects uint8_t* w/o const as the second parameter in earlier versions
+    avpicture_fill((AVPicture*)avsrc, const_cast<unsigned char*>(src + src_buffer_offset), fmtsrc, w, h);
     avpicture_fill((AVPicture*)avdst, dst + dst_buffer_offset, fmtdst, w, h);
     sws_scale(  img_convert_ctx,
                 avsrc->data, avsrc->linesize, 0, h,
@@ -403,8 +404,8 @@ FfmpegConverter::FfmpegConverter(std::unique_ptr<VideoInterface> &videoin_, cons
             converters[i].avdst = av_frame_alloc();
         #else
             // deprecated
-            avsrc = avcodec_alloc_frame();
-            avdst = avcodec_alloc_frame();
+            converters[i].avsrc = avcodec_alloc_frame();
+            converters[i].avdst = avcodec_alloc_frame();
         #endif
         
         const PixelFormat pxfmtdst = PixelFormatFromString(sfmtdst);
