@@ -1,4 +1,29 @@
-#include "pangolin/log/iPacketStream.hpp"
+/* This file is part of the Pangolin Project.
+ * http://github.com/stevenlovegrove/Pangolin
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#include <pangolin/log/packetstream_reader.h>
 
 using std::string;
 using std::istream;
@@ -11,16 +36,10 @@ using std::streamoff;
 
 #include <thread>
 
-#define SCOPED_LOCK lock_guard<decltype(_lock)> lg(_lock)
-
-//#define SCOPED_LOCK
-
-//#define CHK std::cerr << __FILE__ << "::" << __FUNCTION__ << "::" << __LINE__ << std::endl;
-
 namespace pangolin
 {
 
-size_t iPacketStream::Stream::readUINT()
+size_t PacketStreamReader::Stream::readUINT()
 {
     size_t n = 0;
     size_t v = get();
@@ -36,21 +55,21 @@ size_t iPacketStream::Stream::readUINT()
     return n | (v & 0x7F) << shift;
 }
 
-int64_t iPacketStream::Stream::readTimestamp()
+int64_t PacketStreamReader::Stream::readTimestamp()
 {
     int64_t time_us;
     read(reinterpret_cast<char*>(&time_us), sizeof(int64_t));
     return time_us;
 }
 
-pangoTagType iPacketStream::Stream::readTag()
+pangoTagType PacketStreamReader::Stream::readTag()
 {
     auto r = peekTag();
     _tag = 0;
     return r;
 }
 
-pangoTagType iPacketStream::Stream::readTag(pangoTagType x)
+pangoTagType PacketStreamReader::Stream::readTag(pangoTagType x)
 {
     auto r = readTag();
     if (r != x)
@@ -58,7 +77,7 @@ pangoTagType iPacketStream::Stream::readTag(pangoTagType x)
     return r;
 }
 
-pangoTagType iPacketStream::Stream::peekTag()
+pangoTagType PacketStreamReader::Stream::peekTag()
 {
     if (!_tag)
     {
@@ -70,25 +89,25 @@ pangoTagType iPacketStream::Stream::peekTag()
     return _tag;
 }
 
-char iPacketStream::Stream::get()
+char PacketStreamReader::Stream::get()
 {
     if (_data_len)
         _data_len--;
     _tag = 0;
-    return parent::get();
+    return Base::get();
 }
 
-size_t iPacketStream::Stream::read(char* target, size_t len)
+size_t PacketStreamReader::Stream::read(char* target, size_t len)
 {
     _tag = 0;
     _frame.src = static_cast<decltype(_frame.src)>(-1);
-    parent::read(target, len);
+    Base::read(target, len);
     if (_data_len)
         _data_len = std::max(_data_len - gcount(), 0ul);
     return gcount();
 }
 
-size_t iPacketStream::Stream::skip(size_t len)
+size_t PacketStreamReader::Stream::skip(size_t len)
 {
     ignore(len);
     if (_data_len)
@@ -98,29 +117,29 @@ size_t iPacketStream::Stream::skip(size_t len)
     return len;
 }
 
-std::streampos iPacketStream::Stream::tellg()
+std::streampos PacketStreamReader::Stream::tellg()
 {
     if (!seekable())
         return -1;
     if (_tag)
-        return parent::tellg() - std::streamoff(TAG_LENGTH);
-    return parent::tellg();
+        return Base::tellg() - std::streamoff(TAG_LENGTH);
+    return Base::tellg();
 }
 
-void iPacketStream::Stream::seekg(std::streampos target)
+void PacketStreamReader::Stream::seekg(std::streampos target)
 {
     if (!seekable())
         return;
     cclear();
-    parent::seekg(target);
+    Base::seekg(target);
 }
 
-void iPacketStream::Stream::seekg(std::streamoff off, std::ios_base::seekdir way)
+void PacketStreamReader::Stream::seekg(std::streamoff off, std::ios_base::seekdir way)
 {
     if (!seekable())
         return;
     cclear();
-    parent::seekg(off, way);
+    Base::seekg(off, way);
 }
 
 static bool valid(pangoTagType t)
@@ -142,7 +161,7 @@ static bool valid(pangoTagType t)
     }
 }
 
-pangoTagType iPacketStream::Stream::syncToTag() //scan through chars one by one until the last three look like a tag
+pangoTagType PacketStreamReader::Stream::syncToTag() //scan through chars one by one until the last three look like a tag
 {
     peekTag();
     char * buffer = reinterpret_cast<char*>(&_tag);
@@ -164,7 +183,7 @@ pangoTagType iPacketStream::Stream::syncToTag() //scan through chars one by one 
 
 }
 
-iPacketStream::FrameInfo iPacketStream::Stream::peekFrameHeader(const iPacketStream& p)
+PacketStreamReader::FrameInfo PacketStreamReader::Stream::peekFrameHeader(const PacketStreamReader& p)
 {
     if (_frame)
         return _frame;
@@ -189,10 +208,10 @@ iPacketStream::FrameInfo iPacketStream::Stream::peekFrameHeader(const iPacketStr
     else
         _frame.src = readUINT();
 
-    _frame.size = p.sources()[_frame.src].data_size_bytes;
+    _frame.size = p.Sources()[_frame.src].data_size_bytes;
     if (!_frame.size)
         _frame.size = readUINT();
-    _frame.sequence_num = p.getPacketIndex(_frame.src);
+    _frame.sequence_num = p.GetPacketIndex(_frame.src);
     _frame.stream_location = pos;
 
     _tag = TAG_SRC_PACKET;
@@ -200,7 +219,7 @@ iPacketStream::FrameInfo iPacketStream::Stream::peekFrameHeader(const iPacketStr
     return _frame;
 }
 
-iPacketStream::FrameInfo iPacketStream::Stream::readFrameHeader(const iPacketStream& p)
+PacketStreamReader::FrameInfo PacketStreamReader::Stream::readFrameHeader(const PacketStreamReader& p)
 {
     auto r = peekFrameHeader(p);
     _frame.src = static_cast<decltype(_frame.src)>(-1);
@@ -208,9 +227,9 @@ iPacketStream::FrameInfo iPacketStream::Stream::readFrameHeader(const iPacketStr
     return r;
 }
 
-void iPacketStream::init()
+void PacketStreamReader::Init()
 {
-    SCOPED_LOCK;
+    lock_guard<decltype(_mutex)> lg(_mutex);
 
     if (!_stream.is_open())
         throw runtime_error("Cannot open stream.");
@@ -223,13 +242,13 @@ void iPacketStream::init()
             throw runtime_error("Bad stream");
     }
 
-    setupIndex();
-    parseHeader();
+    SetupIndex();
+    ParseHeader();
     while (_stream.peekTag() == TAG_ADD_SOURCE)
-        parseNewSource();
+        ParseNewSource();
 }
 
-void iPacketStream::parseHeader()
+void PacketStreamReader::ParseHeader()
 {
     _stream.readTag(TAG_PANGO_HDR);
 
@@ -243,7 +262,7 @@ void iPacketStream::parseHeader()
     _stream.get(); // consume newline
 }
 
-void iPacketStream::parseNewSource()
+void PacketStreamReader::ParseNewSource()
 {
     _stream.readTag(TAG_ADD_SOURCE);
     json::value json;
@@ -268,7 +287,7 @@ void iPacketStream::parseNewSource()
     _next_packet_framenum[pss.id] = 0;
 }
 
-void iPacketStream::setupIndex()
+void PacketStreamReader::SetupIndex()
 {
     if (!_stream.seekable())
         return;
@@ -279,16 +298,16 @@ void iPacketStream::setupIndex()
 
     if (_stream.peekTag() == TAG_PANGO_FOOTER)
     {
-        _stream.seekg(parseFooter()); //parsing the footer returns the index position
+        _stream.seekg(ParseFooter()); //parsing the footer returns the index position
         if (_stream.peekTag() == TAG_PANGO_STATS)
-            parseIndex();
+            ParseIndex();
     }
 
     _stream.clear();
     _stream.seekg(pos);
 }
 
-streampos iPacketStream::parseFooter() //returns position of index.
+streampos PacketStreamReader::ParseFooter() //returns position of index.
 {
     _stream.readTag(TAG_PANGO_FOOTER);
     uint64_t index;
@@ -296,7 +315,7 @@ streampos iPacketStream::parseFooter() //returns position of index.
     return index;
 }
 
-void iPacketStream::parseIndex()
+void PacketStreamReader::ParseIndex()
 {
     _stream.readTag(TAG_PANGO_STATS);
     json::value json;
@@ -305,12 +324,11 @@ void iPacketStream::parseIndex()
     if (json.contains("src_packet_index")) //this is a two-dimensional serialized array, [source id][sequence number] ---> packet position in stream
     {
         const auto& json_index = json["src_packet_index"].get<json::array>();  //reference to the whole array
-        _index = std::move(packetIndex(json_index));
+        _index = PacketIndex(json_index);
     }
-
 }
 
-iPacketStream::FrameInfo iPacketStream::_nextFrame()
+PacketStreamReader::FrameInfo PacketStreamReader::_nextFrame()
 {
     while (1)
     {
@@ -322,19 +340,19 @@ iPacketStream::FrameInfo iPacketStream::_nextFrame()
             SkipSync();
             break;
         case TAG_ADD_SOURCE:
-            parseNewSource();
+            ParseNewSource();
             break;
         case TAG_SRC_JSON: //frames are sometimes preceded by metadata, but metadata must ALWAYS be followed by a frame from the same source.
         case TAG_SRC_PACKET:
             return _stream.peekFrameHeader(*this);
         case TAG_PANGO_STATS:
-            parseIndex();
+            ParseIndex();
             break;
         case TAG_PANGO_FOOTER: //end of frames
         case TAG_END:
             return FrameInfo(); //none
         case TAG_PANGO_HDR: //shoudln't encounter this
-            parseHeader();
+            ParseHeader();
             break;
         case TAG_PANGO_MAGIC: //or this
             SkipSync();
@@ -348,9 +366,9 @@ iPacketStream::FrameInfo iPacketStream::_nextFrame()
 
 }
 
-iPacketStream::FrameInfo iPacketStream::nextFrame(PacketStreamSourceId src, SyncTime *sync)
+PacketStreamReader::FrameInfo PacketStreamReader::NextFrame(PacketStreamSourceId src, SyncTime *sync)
 {
-    lock(); //we cannot use a scoped lock here, because we may not want to release the lock, depending on what we find.
+    Lock(); //we cannot use a scoped lock here, because we may not want to release the lock, depending on what we find.
     try
     {
         while (1)
@@ -358,7 +376,7 @@ iPacketStream::FrameInfo iPacketStream::nextFrame(PacketStreamSourceId src, Sync
             auto fi = _nextFrame();
             if (!fi)
             {
-                release();
+                Unlock();
                 return fi;
             }
             else //we need to do a few thing with each frame we see.
@@ -375,7 +393,7 @@ iPacketStream::FrameInfo iPacketStream::nextFrame(PacketStreamSourceId src, Sync
             }
 
             if (sync)
-                waitForTimeSync(*sync, fi.time); //if we are doing timesync, wait, even if it's not our packet.
+                WaitForTimeSync(*sync, fi.time); //if we are doing timesync, wait, even if it's not our packet.
 
             if (fi.src == src) //if it's ours, return it and
                 return _stream.readFrameHeader(*this); //don't release lock
@@ -385,17 +403,17 @@ iPacketStream::FrameInfo iPacketStream::nextFrame(PacketStreamSourceId src, Sync
     }
     catch (std::exception &e) //since we are not using a scoped lock, we must catch and release.
     {
-        release();
+        Unlock();
         throw e;
     }
     catch (...) //we will always release, even if we cannot identify the exception.
     {
-        release();
+        Unlock();
         throw std::runtime_error("Caught an unknown exception");
     }
 }
 
-size_t iPacketStream::readraw(char* target, size_t len)
+size_t PacketStreamReader::ReadRaw(char* target, size_t len)
 {
     if (!_stream.data_len())
         throw runtime_error("Packetstream not positioned on data block. nextFrame() should be called before readraw().");
@@ -406,11 +424,11 @@ size_t iPacketStream::readraw(char* target, size_t len)
     }
     auto r = _stream.read(target, len);
     if (!_stream.data_len()) //we are done reading, and should release the lock from nextFrame()
-        release();
+        Unlock();
     return r;
 }
 
-size_t iPacketStream::skip(size_t len)
+size_t PacketStreamReader::Skip(size_t len)
 {
     if (!_stream.data_len())
         throw runtime_error("Packetstream not positioned on data block. nextFrame() should be called before skip().");
@@ -421,20 +439,20 @@ size_t iPacketStream::skip(size_t len)
     }
     auto r = _stream.skip(len);
     if (!_stream.data_len()) //we are done skipping, and should release the lock from nextFrame()
-        release();
+        Unlock();
     return r;
 }
 
-void iPacketStream::waitForTimeSync(const SyncTime& timer, int64_t wait_for) const
+void PacketStreamReader::WaitForTimeSync(const SyncTime& timer, int64_t wait_for) const
 {
     if (!_starttime) //if we couldn't read stream time, we cannot sync.
         return;
-    timer.waitUntilOffset(wait_for - _starttime);
+    timer.WaitUntilOffset(wait_for - _starttime);
 }
 
-iPacketStream::FrameInfo iPacketStream::seek(PacketStreamSourceId src, size_t framenum, SyncTime *sync)
+PacketStreamReader::FrameInfo PacketStreamReader::Seek(PacketStreamSourceId src, size_t framenum, SyncTime *sync)
 {
-    SCOPED_LOCK;
+    lock_guard<decltype(_mutex)> lg(_mutex);
 
     if (!_stream.seekable())
         throw std::runtime_error("Stream is not seekable (probably a pipe).");
@@ -443,7 +461,7 @@ iPacketStream::FrameInfo iPacketStream::seek(PacketStreamSourceId src, size_t fr
         throw std::runtime_error("Invalid Frame Source ID.");
 
     if(_stream.data_len()) //we were in the middle of reading data, and are holding an extra lock. We need to release it, while still holding the scoped lock.
-       skip(_stream.data_len());
+       Skip(_stream.data_len());
 
     while (!_index.has(src, framenum))
     {
@@ -452,7 +470,7 @@ iPacketStream::FrameInfo iPacketStream::seek(PacketStreamSourceId src, size_t fr
         if (_stream.data_len())
             _stream.skip(_stream.data_len());
 
-        auto fi = nextFrame(src, nullptr);
+        auto fi = NextFrame(src, nullptr);
         if (!fi) //if we hit the end, throw
             throw std::out_of_range("frame number not in sequence");
     }
@@ -465,12 +483,12 @@ iPacketStream::FrameInfo iPacketStream::seek(PacketStreamSourceId src, size_t fr
 
     auto r = _stream.peekFrameHeader(*this);  //we need to do this now, because we need r.time in order to sync up our playback.
     if (nullptr != sync && _starttime)
-        sync->resyncToOffset(r.time - _starttime); //if we have a sync timer, we need to reset it to play synchronized frame from where we just did a seek to.
+        sync->ResyncToOffset(r.time - _starttime); //if we have a sync timer, we need to reset it to play synchronized frame from where we just did a seek to.
 
     return r;
 }
 
-void iPacketStream::SkipSync()
+void PacketStreamReader::SkipSync()
 {
     //Assume we have just read PAN, read GO
     if (_stream.get() != 'G' && _stream.get() != 'O')
@@ -480,7 +498,7 @@ void iPacketStream::SkipSync()
         _stream.readTag();
 }
 
-size_t iPacketStream::getPacketIndex(PacketStreamSourceId src_id) const //returns the current frame for source
+size_t PacketStreamReader::GetPacketIndex(PacketStreamSourceId src_id) const //returns the current frame for source
 {
     return _next_packet_framenum.at(src_id);
 }

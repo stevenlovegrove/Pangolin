@@ -28,7 +28,7 @@
 #pragma once
 
 #include <pangolin/video/video_output.h>
-#include <pangolin/log/oPacketStream.hpp>
+#include <pangolin/log/packetstream_writer.h>
 
 namespace pangolin
 {
@@ -52,7 +52,7 @@ protected:
     const std::string filename;
     json::value device_properties;
 
-    oPacketStream packetstream;
+    PacketStreamWriter packetstream;
     size_t packetstream_buffer_size_bytes;
     int packetstreamsrcid;
     size_t total_frame_size;

@@ -56,7 +56,7 @@ PangoVideoOutput::PangoVideoOutput(const std::string& filename, size_t buffer_si
 {
     if(!is_pipe)
     {
-        packetstream.open(filename, packetstream_buffer_size_bytes);
+        packetstream.Open(filename, packetstream_buffer_size_bytes);
     }
     else
     {
@@ -120,7 +120,7 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
 	pss.data_size_bytes = total_frame_size;
 	pss.data_definitions = "struct Frame{ uint8 stream_data[" + pangolin::Convert<std::string, size_t>::Do(total_frame_size) + "];};";
 
-	packetstreamsrcid = packetstream.addSource(pss);
+	packetstreamsrcid = packetstream.AddSource(pss);
 
     }
     else
@@ -142,11 +142,11 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value&
         // opening a file descriptor will fail and errno will be ENXIO.
         int fd = WritablePipeFileDescriptor(filename);
 
-        if (!packetstream.isOpen())
+        if (!packetstream.IsOpen())
         {
             if (fd != -1)
             {
-                packetstream.open(filename, packetstream_buffer_size_bytes);
+                packetstream.Open(filename, packetstream_buffer_size_bytes);
                 close(fd);
             }
         }
@@ -161,7 +161,7 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value&
             {
                 if (errno == ENXIO)
                 {
-                    packetstream.forceClose();
+                    packetstream.ForceClose();
                     SigState::I().sig_callbacks.at(SIGPIPE).value = false;
 
                     // This should be unnecessary since per the man page,
@@ -172,7 +172,7 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value&
             }
         }
 
-        if (!packetstream.isOpen())
+        if (!packetstream.IsOpen())
             return 0;
     }
 #endif
@@ -180,7 +180,7 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value&
 //    if (!frame_properties.is<json::null>())
 //        packetstream.writeMeta(packetstreamsrcid, frame_properties);
 
-    packetstream.writePacket(packetstreamsrcid, reinterpret_cast<const char*>(data), total_frame_size, frame_properties);
+    packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(data), total_frame_size, frame_properties);
 
     return 0;
 }

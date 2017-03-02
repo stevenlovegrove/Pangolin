@@ -88,7 +88,7 @@ void PangoVideo::Stop()
 bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
 {
     _frame_properties = json::value();
-    std::lock_guard<decltype(_reader.mutex())> lg(_reader.mutex());
+    std::lock_guard<decltype(_reader.Mutex())> lg(_reader.Mutex());
 
 #ifndef _WIN_
     if (_is_pipe && !_is_pipe_open)
@@ -104,7 +104,7 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
         // descriptor is owned by the reader.
         if (PipeHasDataToRead(_pipe_fd))
         {
-            _reader.open(_filename);
+            _reader.Open(_filename);
             close(_pipe_fd);
             _is_pipe_open = true;
         }
@@ -115,20 +115,20 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
 
     try
     {
-        auto fi = _reader.nextFrame(_src_id, _realtime ? &_realtime_sync : nullptr);
-        if (!fi.none())
+        auto fi = _reader.NextFrame(_src_id, _realtime ? &_realtime_sync : nullptr);
+        if (!fi.None())
         {
             //update metadata. This should not be stateful, but a higher level interface requires this.
             //todo eventually propagate the goodness up.
             _frame_properties = fi.meta;
 
             // read this frame's actual data
-            _reader.readraw(reinterpret_cast<char*>(image), _size_bytes);
+            _reader.ReadRaw(reinterpret_cast<char*>(image), _size_bytes);
             return true;
         }
         else
         {
-            if (_is_pipe && !_reader.good())
+            if (_is_pipe && !_reader.Good())
                 HandlePipeClosed();
             return false;
         }
@@ -154,22 +154,22 @@ bool PangoVideo::GrabNewest( unsigned char* image, bool wait )
 
 int PangoVideo::GetCurrentFrameId() const
 {
-    return static_cast<int>(_reader.getPacketIndex(_src_id));
+    return static_cast<int>(_reader.GetPacketIndex(_src_id));
 }
 
 int PangoVideo::GetTotalFrames() const
 {
-    return static_cast<int>(_reader.getNumPackets(_src_id));
+    return static_cast<int>(_reader.GetNumPackets(_src_id));
 }
 
 int PangoVideo::Seek(int frameid)
 {
-    std::lock_guard<decltype(_reader.mutex())> lg(_reader.mutex());
+    std::lock_guard<decltype(_reader.Mutex())> lg(_reader.Mutex());
     _frame_properties = json::value(); //clear frame props
 
-    auto fi = _reader.seek(_src_id, frameid, _realtime ? &_realtime_sync : nullptr);
+    auto fi = _reader.Seek(_src_id, frameid, _realtime ? &_realtime_sync : nullptr);
 
-    if (fi.none())
+    if (fi.None())
         return -1;
     else
         return fi.sequence_num;
@@ -177,7 +177,7 @@ int PangoVideo::Seek(int frameid)
 
 int PangoVideo::FindSource()
 {
-    for(const auto& src : _reader.sources())
+    for(const auto& src : _reader.Sources())
     {
         try
         {
@@ -224,7 +224,7 @@ void PangoVideo::HandlePipeClosed()
     //
     // The next time a frame is grabbed, the pipe will be checked and if
     // it is open, the stream will be re-opened.
-    _reader.close();
+    _reader.Close();
     _is_pipe_open = false;
 }
 

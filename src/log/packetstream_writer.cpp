@@ -1,7 +1,31 @@
+/* This file is part of the Pangolin Project.
+ * http://github.com/stevenlovegrove/Pangolin
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 
-#include "pangolin/utils/file_utils.h"
-
-#include "pangolin/log/oPacketStream.hpp"
+#include <pangolin/log/packetstream_writer.h>
+#include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/timer.h>
 
 using std::ios;
 using std::lock_guard;
@@ -43,7 +67,7 @@ static inline void writeTag(std::ostream& writer, const pangoTagType tag)
     writer.write(reinterpret_cast<const char*>(&tag), TAG_LENGTH);
 }
 
-void oPacketStream::writeHeader()
+void PacketStreamWriter::WriteHeader()
 {
     SCOPED_LOCK;
     _stream.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
@@ -57,10 +81,10 @@ void oPacketStream::writeHeader()
     pango.serialize(std::ostream_iterator<char>(_stream), true);
 
     for (const auto& source : _sources)
-        write(source);
+        Write(source);
 }
 
-void oPacketStream::write(const PacketStreamSource& source)
+void PacketStreamWriter::Write(const PacketStreamSource& source)
 {
     SCOPED_LOCK;
     json::value serialize;
@@ -78,14 +102,14 @@ void oPacketStream::write(const PacketStreamSource& source)
 }
 
 
-PacketStreamSourceId oPacketStream::addSource(PacketStreamSource& source)
+PacketStreamSourceId PacketStreamWriter::AddSource(PacketStreamSource& source)
 {
     SCOPED_LOCK;
-    source.id = addSource(const_cast<const PacketStreamSource&>(source));
+    source.id = AddSource(const_cast<const PacketStreamSource&>(source));
     return source.id;
 }
 
-PacketStreamSourceId oPacketStream::addSource(const PacketStreamSource& source)
+PacketStreamSourceId PacketStreamWriter::AddSource(const PacketStreamSource& source)
 {
     SCOPED_LOCK;
     PacketStreamSourceId r = _sources.size(); //source id is by vector position, so we must reassign.
@@ -93,12 +117,12 @@ PacketStreamSourceId oPacketStream::addSource(const PacketStreamSource& source)
     _sources.back().id = r;
 
     if (_open) //we might be a pipe, in which case we may not be open
-        write(_sources.back());
+        Write(_sources.back());
 
     return _sources.back().id;
 }
 
-void oPacketStream::writeMeta(PacketStreamSourceId src, const json::value& data)
+void PacketStreamWriter::WriteMeta(PacketStreamSourceId src, const json::value& data)
 {
     SCOPED_LOCK;
     writeTag(_stream, TAG_SRC_JSON);
@@ -106,14 +130,14 @@ void oPacketStream::writeMeta(PacketStreamSourceId src, const json::value& data)
     data.serialize(std::ostream_iterator<char>(_stream), false);
 }
 
-void oPacketStream::writePacket(PacketStreamSourceId src, const char* source, size_t sourcelen, const json::value& meta)
+void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char* source, size_t sourcelen, const json::value& meta)
 {
     SCOPED_LOCK;
     if (_indexable)
         _index.add(src, _stream.tellp()); //record position for seek index
 
     if (!meta.is<json::null>())
-        writeMeta(src, meta);
+        WriteMeta(src, meta);
 
     writeTag(_stream, TAG_SRC_PACKET);
     writeTimestamp(_stream);
@@ -139,14 +163,14 @@ void oPacketStream::writePacket(PacketStreamSourceId src, const char* source, si
     }
 }
 
-void oPacketStream::writeSync()
+void PacketStreamWriter::WriteSync()
 {
     SCOPED_LOCK;
     for (unsigned i = 0; i < 10; ++i)
 	writeTag(_stream, TAG_PANGO_SYNC);
 }
 
-void oPacketStream::writeEnd()
+void PacketStreamWriter::WriteEnd()
 {
     SCOPED_LOCK;
     if (!_indexable)

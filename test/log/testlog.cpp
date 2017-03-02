@@ -1,21 +1,19 @@
-#include "pangolin/log/iPacketStream.hpp"
-#include "pangolin/log/oPacketStream.hpp"
-using namespace pangolin;
-
-
 #include <sstream>
 #include <iostream>
 #include <unistd.h>
 #include <thread>
 #include <mutex>
+
+#include "pangolin/log/packetstream_reader.h"
+#include "pangolin/log/packetstream_writer.h"
+
 using namespace std;
+using namespace pangolin;
 
 mutex output_m;
 auto& output = cout;
 
-
-
-void writeFakeFrame(const PacketStreamSource& source, size_t sequence_number, oPacketStream& target)
+void writeFakeFrame(const PacketStreamSource& source, size_t sequence_number, PacketStreamWriter& target)
 {
     stringstream r;
     r << "Hello, I am frame number " << sequence_number << " from source number " << source.id << ", named '" << source.driver << "'";
@@ -25,21 +23,21 @@ void writeFakeFrame(const PacketStreamSource& source, size_t sequence_number, oP
     meta["frame number"] = sequence_number;
     meta["driver name"] = source.driver;
 
-    target.writePacket(source.id, r.str().c_str(), r.str().size(), meta);
+    target.WriteSourcePacket(source.id, r.str().c_str(), r.str().size(), meta);
 }
 
 
-iPacketStream::FrameInfo readFakeFrame(PacketStreamSourceId id, iPacketStream& source, SyncTime* t)
+PacketStreamReader::FrameInfo readFakeFrame(PacketStreamSourceId id, PacketStreamReader& source, SyncTime* t)
 {
     char buffer[1024];
 //    source.lock();
-    auto fi = source.nextFrame(id, t);
-    if (fi.none())
+    auto fi = source.NextFrame(id, t);
+    if (fi.None())
     {
 //        source.release();
         return fi;
     }
-    source.readraw(buffer, fi.size);
+    source.ReadRaw(buffer, fi.size);
 //    source.release();
 
     output_m.lock();
@@ -53,7 +51,7 @@ iPacketStream::FrameInfo readFakeFrame(PacketStreamSourceId id, iPacketStream& s
 
 void test_simple()
 {
-    oPacketStream write("test_simple");
+    PacketStreamWriter write("test_simple");
     SyncTime t;
 
     PacketStreamSource video;
@@ -64,8 +62,8 @@ void test_simple()
     infrared.driver = "infrared driver name";
     infrared.uri = "infrared driver fake uri";
 
-    write.addSource(video);
-    write.addSource(infrared);
+    write.AddSource(video);
+    write.AddSource(infrared);
 
     output << "Opened an oPacketStream, writing some fake frames with a time delay to test sync: " << endl;
     for (size_t seqnum = 0; seqnum < 10; seqnum++)
@@ -77,14 +75,14 @@ void test_simple()
     }
 
     output << endl;
-    write.writeEnd();
-    write.close();
+    write.WriteEnd();
+    write.Close();
     sleep(1);
 
     output << "Done writing" << endl;
 
-    iPacketStream read("test_simple");
-    t.start();
+    PacketStreamReader read("test_simple");
+    t.Start();
     output << "Opened an iPacketStream, reading frames with a sync timer. You should see a 1 second delay between each frame." << endl;
 
     while(readFakeFrame(video.id, read, &t));
@@ -92,7 +90,7 @@ void test_simple()
     output << "Done reading frames" << endl;
     output << "Testing seek... let's look for frame 5" << endl;
 
-    if (!read.seek(video.id, 5, &t))
+    if (!read.Seek(video.id, 5, &t))
         throw runtime_error("Something terrible has happened.");
 
     if (!readFakeFrame(video.id, read, &t))
@@ -113,7 +111,7 @@ void test_parallel_multistream_singlefile()
 	    << endl
 	    << "First, hang on while we make a new stream to test on: " << endl;
 
-    oPacketStream write("test_parallel_multistream_singlefile");
+    PacketStreamWriter write("test_parallel_multistream_singlefile");
 
     PacketStreamSource video;
     video.driver = "video driver name";
@@ -123,8 +121,8 @@ void test_parallel_multistream_singlefile()
     infrared.driver = "infrared driver name";
     infrared.uri = "infrared driver fake uri";
 
-    write.addSource(video);
-    write.addSource(infrared);
+    write.AddSource(video);
+    write.AddSource(infrared);
 
     output << "Okay, now let's write some fake frames: three \"infrared\" frames between each \"video\" frame, each spaced by 1 second: " << endl;
 
@@ -144,14 +142,14 @@ void test_parallel_multistream_singlefile()
 	}
     }
 
-    write.writeEnd();
-    write.close();
+    write.WriteEnd();
+    write.Close();
     sleep(1);
 
     output << endl << "All finished. Now we start our sync timer, and launch two reader threads: " << endl << endl;
 
-    iPacketStream read1("test_parallel_multistream_singlefile");
-    iPacketStream read2("test_parallel_multistream_singlefile");
+    PacketStreamReader read1("test_parallel_multistream_singlefile");
+    PacketStreamReader read2("test_parallel_multistream_singlefile");
     SyncTime t;
 
     thread video_reader([&video, &read1, &t]() { while(readFakeFrame(video.id, read1, &t)); });
@@ -168,12 +166,12 @@ void test_parallel_multistream_multifile()
     output << "Next, we shall test sync two streams recorded at different times. This should work just fine, so long as the sync clock is started at the same time, or is shared between threads." << endl
 	    << "Preparing stream #1: " << endl;
 
-    oPacketStream write_vid("test_parallel_multistream_multifile_vid");
+    PacketStreamWriter write_vid("test_parallel_multistream_multifile_vid");
     PacketStreamSource video;
     video.driver = "video driver name";
     video.uri = "video driver fake uri";
 
-    write_vid.addSource(video);
+    write_vid.AddSource(video);
     for (size_t i = 0; i < 10; ++i)
     {
 	writeFakeFrame(video, i, write_vid);
@@ -182,18 +180,18 @@ void test_parallel_multistream_multifile()
 	sleep(4);
     }
 
-    write_vid.writeEnd();
-    write_vid.close();
+    write_vid.WriteEnd();
+    write_vid.Close();
     sleep(1);
 
     output << endl << "Preparing stream #2: " << endl;
 
-    oPacketStream write_inf("test_parallel_multistream_multifile_inf");
+    PacketStreamWriter write_inf("test_parallel_multistream_multifile_inf");
     PacketStreamSource infrared;
     infrared.driver = "infrared driver name";
     infrared.uri = "infrared driver fake uri";
 
-    write_inf.addSource(infrared);
+    write_inf.AddSource(infrared);
     size_t jseq = 0;
     for (size_t i = 0; i < 10; ++i)
     {
@@ -206,13 +204,13 @@ void test_parallel_multistream_multifile()
 	    sleep(1);
 	}
     }
-    write_inf.writeEnd();
-    write_inf.close();
+    write_inf.WriteEnd();
+    write_inf.Close();
 
     output << endl << "All finished. Now we start our sync timer, and launch two reader threads: " << endl << endl;
 
-    iPacketStream read_vid("test_parallel_multistream_multifile_vid");
-    iPacketStream read_inf("test_parallel_multistream_multifile_inf");
+    PacketStreamReader read_vid("test_parallel_multistream_multifile_vid");
+    PacketStreamReader read_inf("test_parallel_multistream_multifile_inf");
     SyncTime t;
 
     thread video_reader([&video, &read_vid, &t]() { while(readFakeFrame(video.id, read_vid, &t)); });
@@ -228,7 +226,7 @@ void test_parallel_singlestream_singlefile()
 	    << endl << endl
 	    << "First, hang on while we make a new stream to test on: " << endl;
 
-    oPacketStream write("test_parallel_singlestream_singlefile");
+    PacketStreamWriter write("test_parallel_singlestream_singlefile");
 
     PacketStreamSource video;
     video.driver = "video driver name";
@@ -238,8 +236,8 @@ void test_parallel_singlestream_singlefile()
     infrared.driver = "infrared driver name";
     infrared.uri = "infrared driver fake uri";
 
-    write.addSource(video);
-    write.addSource(infrared);
+    write.AddSource(video);
+    write.AddSource(infrared);
 
     output << "Okay, now let's write some fake frames: three \"infrared\" frames between each \"video\" frame, each spaced by 1 second: " << endl;
 
@@ -259,12 +257,12 @@ void test_parallel_singlestream_singlefile()
         }
     }
 
-    write.writeEnd();
-    write.close();
+    write.WriteEnd();
+    write.Close();
 
     output << endl << "All finished. Now we start our sync timer, and launch two reader threads: " << endl << endl;
 
-    iPacketStream read("test_parallel_singlestream_singlefile");
+    PacketStreamReader read("test_parallel_singlestream_singlefile");
     SyncTime t;
 
     std::thread video_reader([&video, &read, &t]() { while(readFakeFrame(video.id, read, &t)); });
