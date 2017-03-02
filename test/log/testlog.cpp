@@ -1,6 +1,5 @@
 #include <sstream>
 #include <iostream>
-#include <unistd.h>
 #include <thread>
 #include <mutex>
 
@@ -30,15 +29,15 @@ void writeFakeFrame(const PacketStreamSource& source, size_t sequence_number, Pa
 PacketStreamReader::FrameInfo readFakeFrame(PacketStreamSourceId id, PacketStreamReader& source, SyncTime* t)
 {
     char buffer[1024];
-//    source.lock();
+    //    source.lock();
     auto fi = source.NextFrame(id, t);
     if (fi.None())
     {
-//        source.release();
+        //        source.release();
         return fi;
     }
     source.ReadRaw(buffer, fi.size);
-//    source.release();
+    //    source.release();
 
     output_m.lock();
     output << "Thread " << this_thread::get_id() <<  " read a frame from src " << fi.src << ", of size " << fi.size << "..." << endl;
@@ -68,7 +67,7 @@ void test_simple()
     output << "Opened an oPacketStream, writing some fake frames with a time delay to test sync: " << endl;
     for (size_t seqnum = 0; seqnum < 10; seqnum++)
     {
-        sleep(1);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         writeFakeFrame(video, seqnum, write);
         output << ".";
         output.flush();
@@ -77,7 +76,7 @@ void test_simple()
     output << endl;
     write.WriteEnd();
     write.Close();
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     output << "Done writing" << endl;
 
@@ -107,9 +106,9 @@ void test_simple()
 void test_parallel_multistream_singlefile()
 {
     output << "Okay, now we test parallel processing with sync. " << endl
-	    << "The easiest way is to open multiple iPacketStreams (each wraps its own filehandle), and read in parallel, using a shared SyncTime object." << endl
-	    << endl
-	    << "First, hang on while we make a new stream to test on: " << endl;
+           << "The easiest way is to open multiple iPacketStreams (each wraps its own filehandle), and read in parallel, using a shared SyncTime object." << endl
+           << endl
+           << "First, hang on while we make a new stream to test on: " << endl;
 
     PacketStreamWriter write("test_parallel_multistream_singlefile");
 
@@ -129,22 +128,24 @@ void test_parallel_multistream_singlefile()
     size_t jseq = 0;
     for (size_t i = 0; i < 10; ++i)
     {
-	writeFakeFrame(video, i, write);
-	output << ".";
-	output.flush();
-	sleep(1);
-	for (size_t j = 0; j < 3; ++j)
-	{
-	    writeFakeFrame(infrared, jseq++, write);
-	    output << ".";
-	    output.flush();
-	    sleep(1);
-	}
+        writeFakeFrame(video, i, write);
+        output << ".";
+        output.flush();
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        for (size_t j = 0; j < 3; ++j)
+        {
+            writeFakeFrame(infrared, jseq++, write);
+            output << ".";
+            output.flush();
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
     }
 
     write.WriteEnd();
     write.Close();
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     output << endl << "All finished. Now we start our sync timer, and launch two reader threads: " << endl << endl;
 
@@ -164,7 +165,7 @@ void test_parallel_multistream_singlefile()
 void test_parallel_multistream_multifile()
 {
     output << "Next, we shall test sync two streams recorded at different times. This should work just fine, so long as the sync clock is started at the same time, or is shared between threads." << endl
-	    << "Preparing stream #1: " << endl;
+           << "Preparing stream #1: " << endl;
 
     PacketStreamWriter write_vid("test_parallel_multistream_multifile_vid");
     PacketStreamSource video;
@@ -174,15 +175,15 @@ void test_parallel_multistream_multifile()
     write_vid.AddSource(video);
     for (size_t i = 0; i < 10; ++i)
     {
-	writeFakeFrame(video, i, write_vid);
-	output << ".";
-	output.flush();
-	sleep(4);
+        writeFakeFrame(video, i, write_vid);
+        output << ".";
+        output.flush();
+        std::this_thread::sleep_for(std::chrono::seconds(4));
     }
 
     write_vid.WriteEnd();
     write_vid.Close();
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     output << endl << "Preparing stream #2: " << endl;
 
@@ -195,14 +196,14 @@ void test_parallel_multistream_multifile()
     size_t jseq = 0;
     for (size_t i = 0; i < 10; ++i)
     {
-	sleep(1);
-	for (size_t j = 0; j < 3; ++j)
-	{
-	    writeFakeFrame(infrared, jseq++, write_inf);
-	    output << ".";
-	    output.flush();
-	    sleep(1);
-	}
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        for (size_t j = 0; j < 3; ++j)
+        {
+            writeFakeFrame(infrared, jseq++, write_inf);
+            output << ".";
+            output.flush();
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
     }
     write_inf.WriteEnd();
     write_inf.Close();
@@ -223,8 +224,8 @@ void test_parallel_multistream_multifile()
 void test_parallel_singlestream_singlefile()
 {
     output << "The complex way to do parallel processing involves multiple threads reading a single file. This may be necessary when we cannot open the file multiple times (socket or pipe), or hypothetically if we are very resource constrained."
-	    << endl << endl
-	    << "First, hang on while we make a new stream to test on: " << endl;
+           << endl << endl
+           << "First, hang on while we make a new stream to test on: " << endl;
 
     PacketStreamWriter write("test_parallel_singlestream_singlefile");
 
@@ -247,13 +248,13 @@ void test_parallel_singlestream_singlefile()
         writeFakeFrame(video, i, write);
         output << ".";
         output.flush();
-        sleep(1);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         for (size_t j = 0; j < 3; ++j)
         {
             writeFakeFrame(infrared, jseq++, write);
             output << ".";
             output.flush();
-            sleep(1);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
 
@@ -274,13 +275,13 @@ void test_parallel_singlestream_singlefile()
 
 int main (int, char**)
 {
-   output << "Some function tests for oPacketStream and iPacketStream. " << endl
-	   << "These are just developer tests at this point, with human readable end-to-end function checks, rather than a formal set of unit test which returns pass/fail and provides full coverage. " << endl << endl;
+    output << "Some function tests for oPacketStream and iPacketStream. " << endl
+           << "These are just developer tests at this point, with human readable end-to-end function checks, rather than a formal set of unit test which returns pass/fail and provides full coverage. " << endl << endl;
 
-   test_simple();
-   test_parallel_multistream_singlefile();
-   test_parallel_multistream_multifile();
-//   test_parallel_singlestream_singlefile();
+    test_simple();
+    test_parallel_multistream_singlefile();
+    test_parallel_multistream_multifile();
+    //   test_parallel_singlestream_singlefile();
 
 }
 
