@@ -190,7 +190,7 @@ PacketStreamReader::FrameInfo PacketStreamReader::Stream::peekFrameHeader(const 
     if (_frame)
         return _frame;
 
-    auto pos = tellg();
+    _frame.frame_streampos = tellg();
 
     if (peekTag() == TAG_SRC_JSON)
     {
@@ -198,6 +198,8 @@ PacketStreamReader::FrameInfo PacketStreamReader::Stream::peekFrameHeader(const 
         _frame.src = readUINT();
         json::parse(_frame.meta, *this);
     }
+
+    _frame.packet_streampos = tellg();
 
     readTag(TAG_SRC_PACKET);
     _frame.time = readTimestamp();
@@ -214,7 +216,6 @@ PacketStreamReader::FrameInfo PacketStreamReader::Stream::peekFrameHeader(const 
     if (!_frame.size)
         _frame.size = readUINT();
     _frame.sequence_num = p.GetPacketIndex(_frame.src);
-    _frame.stream_location = pos;
 
     _tag = TAG_SRC_PACKET;
 
@@ -376,40 +377,52 @@ PacketStreamReader::FrameInfo PacketStreamReader::NextFrame(PacketStreamSourceId
         while (1)
         {
             auto fi = _nextFrame();
-            if (!fi)
-            {
+            if (!fi) {
+                // Nothing left in stream
                 Unlock();
                 return fi;
-            }
-            else //we need to do a few thing with each frame we see.
-            {
-                ++_next_packet_framenum[fi.src]; //so we have accurate sequence numbers for frames.
+            } else {
+                // So we have accurate sequence numbers for frames.
+                ++_next_packet_framenum[fi.src];
+
                 if (_stream.seekable())
                 {
-                    if (!_index.has(fi.src, fi.sequence_num))
-                        _index.add(fi.src, fi.sequence_num, fi.stream_location);  //if it's not in the index for some reason, add it.
-                    else if (_index.position(fi.src, fi.sequence_num) != fi.stream_location)
-                        pango_print_warn("Stream position does not index position. Index may be corrupt.\n");
+                    if (!_index.has(fi.src, fi.sequence_num)) {
+                        // If it's not in the index for some reason, add it.
+                        _index.add(fi.src, fi.sequence_num, fi.frame_streampos);
+                    } else if (_index.position(fi.src, fi.sequence_num) != fi.frame_streampos) {
+                        PANGO_ENSURE(_index.position(fi.src, fi.sequence_num) == fi.packet_streampos);
+                        static bool warned_already = false;
+                        if(!warned_already) {
+                            pango_print_warn("CAUTION: Old .pango files do not update frame_properties on seek.\n");
+                            warned_already = true;
+                        }
+                    }
                 }
                 _stream.data_len(fi.size); //now we are positioned on packet data for n characters.
             }
 
-            if (sync)
-                WaitForTimeSync(*sync, fi.time); //if we are doing timesync, wait, even if it's not our packet.
+            if (sync) {
+                //if we are doing timesync, wait, even if it's not our packet.
+                WaitForTimeSync(*sync, fi.time);
+            }
 
-            if (fi.src == src) //if it's ours, return it and
-                return _stream.readFrameHeader(*this); //don't release lock
+            //if it's ours, return it and don't release lock
+            if (fi.src == src) {
+                return _stream.readFrameHeader(*this);
+            }
 
-            _stream.skip(fi.size); //otherwise skip it and get the next one.
+            //otherwise skip it and get the next one.
+            _stream.skip(fi.size);
         }
     }
-    catch (std::exception &e) //since we are not using a scoped lock, we must catch and release.
-    {
+    catch (std::exception &e) {
+        // Since we are not using a scoped lock, we must catch and release.
         Unlock();
         throw e;
     }
-    catch (...) //we will always release, even if we cannot identify the exception.
-    {
+    catch (...)  {
+        // We will always release, even if we cannot identify the exception.
         Unlock();
         throw std::runtime_error("Caught an unknown exception");
     }
@@ -417,16 +430,20 @@ PacketStreamReader::FrameInfo PacketStreamReader::NextFrame(PacketStreamSourceId
 
 size_t PacketStreamReader::ReadRaw(char* target, size_t len)
 {
-    if (!_stream.data_len())
+    if (!_stream.data_len()) {
         throw runtime_error("Packetstream not positioned on data block. nextFrame() should be called before readraw().");
-    else if (_stream.data_len() < len)
-    {
+    } else if (_stream.data_len() < len) {
         pango_print_warn("readraw() requested read of %zu bytes when only %zu bytes remain in data block. Trimming to available data size.", len, _stream.data_len());
         len = _stream.data_len();
     }
+
     auto r = _stream.read(target, len);
-    if (!_stream.data_len()) //we are done reading, and should release the lock from nextFrame()
+
+    if (!_stream.data_len()) {
+        //we are done reading, and should release the lock from nextFrame()
         Unlock();
+    }
+
     return r;
 }
 

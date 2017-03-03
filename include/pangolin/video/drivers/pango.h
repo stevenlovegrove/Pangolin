@@ -55,11 +55,14 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true ) override;
 
     // Implement VideoPropertiesInterface
+    const json::value& DeviceProperties() const override {
+        if (-1 == _src_id) throw std::runtime_error("Not initialised");
+        return _device_properties;
+    }
 
-    const json::value& DeviceProperties() const override {if (-1 == _src_id) throw std::runtime_error("Not initialised"); return _device_properties;};
-
-    const json::value& FrameProperties() const override {return _frame_properties;};
-
+    const json::value& FrameProperties() const override {
+        return _frame_properties;
+    }
 
     // Implement VideoPlaybackInterface
 
