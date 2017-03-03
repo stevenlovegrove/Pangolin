@@ -169,10 +169,11 @@ int PangoVideo::Seek(int frameid)
 
     auto fi = _reader.Seek(_src_id, frameid, _realtime ? &_realtime_sync : nullptr);
 
-    if (fi.None())
+    if (fi.None()) {
         return -1;
-    else
-        return fi.sequence_num;
+    } else {
+        return (int)fi.sequence_num;
+    }
 }
 
 int PangoVideo::FindSource()

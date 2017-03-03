@@ -102,16 +102,18 @@ size_t PacketStreamReader::Stream::read(char* target, size_t len)
     _tag = 0;
     _frame.src = static_cast<decltype(_frame.src)>(-1);
     Base::read(target, len);
-    if (_data_len)
-        _data_len = std::max(_data_len - gcount(), 0ul);
+    if (_data_len) {
+        _data_len = std::max( (int)_data_len - (int)gcount(), (int)0);
+    }
     return gcount();
 }
 
 size_t PacketStreamReader::Stream::skip(size_t len)
 {
     ignore(len);
-    if (_data_len)
-        _data_len = std::max(_data_len - len, 0ul);
+    if (_data_len) {
+        _data_len = std::max( (int)_data_len - (int)gcount(), (int)0);
+    }
     _tag = 0;
     _frame.src = static_cast<decltype(_frame.src)>(-1);
     return len;

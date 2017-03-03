@@ -91,40 +91,39 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
 
     if (packetstreamsrcid == -1)
     {
-	input_uri = uri;
-	streams = st;
-	device_properties = properties;
+        input_uri = uri;
+        streams = st;
+        device_properties = properties;
 
-	json::value json_header(json::object_type, false);
-	json::value& json_streams = json_header["streams"];
-	json_header["device"] = device_properties;
+        json::value json_header(json::object_type, false);
+        json::value& json_streams = json_header["streams"];
+        json_header["device"] = device_properties;
 
-	total_frame_size = 0;
-	for (unsigned int i = 0; i < streams.size(); ++i)
-	{
-	    StreamInfo& si = streams[i];
-	    total_frame_size = std::max(total_frame_size, (size_t) si.Offset() + si.SizeBytes());
+        total_frame_size = 0;
+        for (unsigned int i = 0; i < streams.size(); ++i)
+        {
+            StreamInfo& si = streams[i];
+            total_frame_size = std::max(total_frame_size, (size_t) si.Offset() + si.SizeBytes());
 
-	    json::value& json_stream = json_streams.push_back();
-	    json_stream["encoding"] = si.PixFormat().format;
-	    json_stream["width"] = si.Width();
-	    json_stream["height"] = si.Height();
-	    json_stream["pitch"] = si.Pitch();
-	    json_stream["offset"] = (size_t) si.Offset();
-	}
+            json::value& json_stream = json_streams.push_back();
+            json_stream["encoding"] = si.PixFormat().format;
+            json_stream["width"] = si.Width();
+            json_stream["height"] = si.Height();
+            json_stream["pitch"] = si.Pitch();
+            json_stream["offset"] = (size_t) si.Offset();
+        }
 
-	PacketStreamSource pss;
-	pss.driver = pango_video_type;
-	pss.uri = input_uri;
-	pss.info = json_header;
-	pss.data_size_bytes = total_frame_size;
-	pss.data_definitions = "struct Frame{ uint8 stream_data[" + pangolin::Convert<std::string, size_t>::Do(total_frame_size) + "];};";
+        PacketStreamSource pss;
+        pss.driver = pango_video_type;
+        pss.uri = input_uri;
+        pss.info = json_header;
+        pss.data_size_bytes = total_frame_size;
+        pss.data_definitions = "struct Frame{ uint8 stream_data[" + pangolin::Convert<std::string, size_t>::Do(total_frame_size) + "];};";
 
-	packetstreamsrcid = packetstream.AddSource(pss);
-
+        packetstreamsrcid = (int)packetstream.AddSource(pss);
+    } else {
+        throw std::runtime_error("Unable to add new streams");
     }
-    else
-	throw std::runtime_error("Unable to add new streams");
 }
 
 int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value& frame_properties)

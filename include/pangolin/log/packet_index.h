@@ -50,7 +50,7 @@ public:
     }
 
     bool has(PacketStreamSourceId source, size_t frame) const {
-        return count(source) ? at(source).count(frame) : false;
+        return count(source) ? (at(source).count(frame) > 0) : false;
     }
 
     std::streampos position(PacketStreamSourceId source, size_t frame) const {

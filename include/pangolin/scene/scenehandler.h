@@ -9,32 +9,32 @@ namespace pangolin {
 inline void gluPickMatrix(
     GLdouble x, GLdouble y,
     GLdouble width, GLdouble height,
-    GLint viewport[4])
-{
+    GLint viewport[4]
+) {
     GLfloat m[16];
     GLfloat sx, sy;
     GLfloat tx, ty;
-    sx = viewport[2] / width;
-    sy = viewport[3] / height;
-    tx = (viewport[2] + 2.0 * (viewport[0] - x)) / width;
-    ty = (viewport[3] + 2.0 * (viewport[1] - y)) / height;
+    sx = viewport[2] / (GLfloat)width;
+    sy = viewport[3] / (GLfloat)height;
+    tx = (viewport[2] + 2.0f * (viewport[0] - (GLfloat)x)) / (GLfloat)width;
+    ty = (viewport[3] + 2.0f * (viewport[1] - (GLfloat)y)) / (GLfloat)height;
 #define M(row, col) m[col*4+row]
     M(0, 0) = sx;
-    M(0, 1) = 0.0;
-    M(0, 2) = 0.0;
+    M(0, 1) = 0.0f;
+    M(0, 2) = 0.0f;
     M(0, 3) = tx;
-    M(1, 0) = 0.0;
+    M(1, 0) = 0.0f;
     M(1, 1) = sy;
-    M(1, 2) = 0.0;
+    M(1, 2) = 0.0f;
     M(1, 3) = ty;
-    M(2, 0) = 0.0;
-    M(2, 1) = 0.0;
-    M(2, 2) = 1.0;
-    M(2, 3) = 0.0;
-    M(3, 0) = 0.0;
-    M(3, 1) = 0.0;
-    M(3, 2) = 0.0;
-    M(3, 3) = 1.0;
+    M(2, 0) = 0.0f;
+    M(2, 1) = 0.0f;
+    M(2, 2) = 1.0f;
+    M(2, 3) = 0.0f;
+    M(3, 0) = 0.0f;
+    M(3, 1) = 0.0f;
+    M(3, 2) = 0.0f;
+    M(3, 3) = 1.0f;
 #undef M
     glMultMatrixf(m);
 }
@@ -150,14 +150,14 @@ struct SceneHandler : public Handler3D
                  float x, float y, float p1, float p2, float p3, float p4,
                  int button_state)
     {
-        GetPosNormal(view, x, y, p, Pw, Pc, n);
+        GetPosNormal(view, (int)x, (int)y, p, Pw, Pc, n);
 
         bool handled = false;
 
         if (inType == pangolin::InputSpecialScroll)
         {
             m_selected_objects.clear();
-            ComputeHits(view, *cam_state, x, y, 2*hwin+1, m_selected_objects);
+            ComputeHits(view, *cam_state, (int)x, (int)y, 2*hwin+1, m_selected_objects);
 
             const MouseButton button = p2 > 0 ? MouseWheelUp : MouseWheelDown;
 

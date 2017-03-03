@@ -48,7 +48,7 @@ struct Axis : public Renderable, public Interactive
     {
 #ifdef HAVE_EIGEN
         if((button == MouseWheelUp || button == MouseWheelDown) ) {
-            float scale = (button == MouseWheelUp) ? 0.01 : -0.01;
+            float scale = (button == MouseWheelUp) ? 0.01f : -0.01f;
             if(button_state & KeyModifierShift) scale /= 10;
 
             Eigen::Vector3d rot = Eigen::Vector3d::Zero();
