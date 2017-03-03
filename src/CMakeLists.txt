@@ -237,6 +237,10 @@ endif()
 if(UNIX)
   append_glob(HEADERS ${INCDIR}/utils/posix/*.h*)
   append_glob(SOURCES utils/posix/*.cpp)
+  if(_LINUX_)
+    # Required for shared memory API using some versions of glibc
+    list(APPEND LINK_LIBS rt pthread)
+  endif()
 endif()
 
 find_package(PythonLibs QUIET)
