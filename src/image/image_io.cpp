@@ -28,8 +28,10 @@
 #include <pangolin/platform.h>
 
 #include <pangolin/image/image_io.h>
-#include <pangolin/video/drivers/pango.h>
-#include <pangolin/video/drivers/pango_video_output.h>
+#ifdef BUILD_PANGOLIN_VIDEO
+#  include <pangolin/video/drivers/pango.h>
+#  include <pangolin/video/drivers/pango_video_output.h>
+#endif
 
 #include <algorithm>
 #include <stdexcept>
@@ -90,6 +92,9 @@ PixelFormat TgaFormat(int depth, int color_type, int color_map)
 
 TypedImage LoadFromVideo(const std::string& uri)
 {
+    PANGOLIN_UNUSED(uri);
+    
+#ifdef BUILD_PANGOLIN_VIDEO
     std::unique_ptr<VideoInterface> video = OpenVideo(uri);
     if(!video || video->Streams().size() != 1) {
         throw pangolin::VideoException("Wrong number of streams: exactly one expected.");
@@ -114,14 +119,25 @@ TypedImage LoadFromVideo(const std::string& uri)
     }
 
     return image;
+#else   
+    throw std::runtime_error("Video Support not enabled. Please rebuild Pangolin.");
+#endif
 }
 
 void SaveToVideo(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& uri, bool /*top_line_first*/)
 {
+    PANGOLIN_UNUSED(image);
+    PANGOLIN_UNUSED(fmt);
+    PANGOLIN_UNUSED(uri);
+
+#ifdef BUILD_PANGOLIN_VIDEO
     std::unique_ptr<VideoOutputInterface> video = OpenVideoOutput(uri);
     StreamInfo stream(fmt, image.w, image.h, image.pitch);
     video->SetStreams({stream});
     video->WriteStreams(image.ptr);
+#else   
+    throw std::runtime_error("Video Support not enabled. Please rebuild Pangolin.");
+#endif
 }
 
 TypedImage LoadTga(const std::string& filename)

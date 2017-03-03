@@ -500,6 +500,8 @@ void View::SaveOnRender(const std::string& filename_prefix)
 
 void View::RecordOnRender(const std::string& record_uri)
 {
+    PANGOLIN_UNUSED(record_uri);
+    
 #ifdef BUILD_PANGOLIN_VIDEO
     if(!context->recorder.IsOpen()) {
         Viewport area = GetBounds();
