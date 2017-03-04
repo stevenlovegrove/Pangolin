@@ -67,6 +67,7 @@ if(BUILD_PANGOLIN_VIDEO)
   list(APPEND HEADERS
     ${INCDIR}/video/drivers/test.h
     ${INCDIR}/video/drivers/images.h
+    ${INCDIR}/video/drivers/images_out.h
     ${INCDIR}/video/drivers/split.h
     ${INCDIR}/video/drivers/pvn.h
     ${INCDIR}/video/drivers/pango.h
@@ -82,6 +83,7 @@ if(BUILD_PANGOLIN_VIDEO)
   list(APPEND SOURCES
     video/drivers/test.cpp
     video/drivers/images.cpp
+    video/drivers/images_out.cpp
     video/drivers/split.cpp
     video/drivers/pvn.cpp
     video/drivers/pango.cpp
@@ -99,6 +101,7 @@ if(BUILD_PANGOLIN_VIDEO)
   list(APPEND VIDEO_FACTORY_REG
     RegisterTestVideoFactory
     RegisterImagesVideoFactory
+    RegisterImagesVideoOutputFactory
     RegisterSplitVideoFactory
     RegisterPvnVideoFactory
     RegisterPangoVideoFactory
