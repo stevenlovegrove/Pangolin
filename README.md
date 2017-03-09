@@ -35,7 +35,7 @@ Check the CMake configure output for details.
 * OpenGL (Desktop / ES / ES2)
 
 * Glew
- * (win) built automatically
+ * (win) built automatically (assuming git is on your path)
  * (deb) sudo apt-get install libglew-dev
  * (mac) sudo port install glew
 
@@ -99,11 +99,23 @@ can execute:
 make doc
 ```
 
+**On Windows**, Pangolin will attempt to download and build *glew*, *libjpeg*, *libpng* and *zlib* automatically. It does so assuming that git is available on the path - this assumption may be wrong for windows users who have downloaded Pangolin via a zip file on github. You will instead need to download and compile the dependencies manually, and set the BUILD_EXTERN_(lib) options to false for these libraries. The alternate and recommended approach is to install [gitbash](https://git-scm.com/downloads) and work from within their provided console.
+
 ## Issues ##
 
-Please visit [Github Issues](https://github.com/stevenlovegrove/Pangolin/issues) to view and report problems with Pangolin. Issues and pull requests should be raised against the devel branch which contains the current development version.
+Please visit [Github Issues](https://github.com/stevenlovegrove/Pangolin/issues) to view and report problems with Pangolin. Issues and pull requests should be raised against the master branch which contains the current development version.
 
-Please note; most Pangolin dependencies are optional - to disable a dependency which may be causing trouble on your machine, simply blank out it's include and library directories with a cmake configuration tool (e.g. ccmake or cmake-gui).
+Please note; most Pangolin dependencies are optional - to disable a dependency which may be causing trouble on your machine, set the BUILD_PANGOLIN_(option) variable to false with a cmake configuration tool (e.g. ccmake or cmake-gui).
+
+## Contributions and Continuous Integration ##
+
+For CI, Pangolin uses [travis-ci.org](https://travis-ci.org/stevenlovegrove/Pangolin) for Ubuntu, OSX and [ci.appveyor.com](https://ci.appveyor.com/project/stevenlovegrove/pangolin) for Windows.
+
+To contribute to Pangolin, I would appreciate pull requests against the master branch. This will trigger CI builds for your changes automatically, and help me to merge with confidence.
+
+## Binaries ##
+
+Binaries are available for Windows x64, as output by the Windows CI server: [Appveyor Artifacts](https://ci.appveyor.com/project/stevenlovegrove/pangolin/build/artifacts).
 
 ## Acknowledgements ##
 
