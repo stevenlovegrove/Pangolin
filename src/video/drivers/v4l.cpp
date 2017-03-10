@@ -691,7 +691,6 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
 
     auto factory = std::make_shared<V4lVideoFactory>();
     FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "v4l");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "uvc");
 }
 
 }
