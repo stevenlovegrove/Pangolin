@@ -17,7 +17,6 @@ if(BUILD_PANGOLIN_GUI)
       if(BUILD_PANGOLIN_VIDEO)
         add_subdirectory(SimpleVideo)
         add_subdirectory(SimpleRecord)
-        add_subdirectory(SimpleRepeatVideo)
         add_subdirectory(SharedMemoryCamera)
       endif()
 
