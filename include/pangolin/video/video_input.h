@@ -66,7 +66,6 @@ struct PANGOLIN_EXPORT VideoInput
     ~VideoInput();
 
     void Open(const std::string &input_uri, const std::string &output_uri = "pango:[buffer_size_mb=100]//video_log.pango");
-    void Reset();
     void Close();
 
     // experimental - not stable
@@ -95,12 +94,6 @@ struct PANGOLIN_EXPORT VideoInput
     const std::string& LogFilename() const;
     std::string& LogFilename();
 
-    // Switch to live video source
-    void Source();
-
-    // Switch to previously recorded input
-    void Play(bool realtime = true);
-
     // Switch to live video and record output to file
     void Record();
 
@@ -113,9 +106,6 @@ struct PANGOLIN_EXPORT VideoInput
     // True iff grabbed live frames are being logged to file
     bool IsRecording() const;
 
-    // True iff grabbed frames are from previously recorded video file
-    bool IsPlaying() const;
-
     int FrameId();
 
 
@@ -127,7 +117,6 @@ protected:
     Uri uri_output;
 
     std::unique_ptr<VideoInterface> video_src;
-    std::unique_ptr<VideoInterface> video_file;
     std::unique_ptr<VideoOutputInterface> video_recorder;
 
     // Use to store either video_src or video_file for VideoFilterInterface,
