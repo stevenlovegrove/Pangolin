@@ -44,6 +44,12 @@ public:
     ImagesVideo(const std::string& wildcard_path);
     ImagesVideo(const std::string& wildcard_path, const PixelFormat& raw_fmt, size_t raw_width, size_t raw_height);
 
+    // Explicitly delete copy ctor and assignment operator.
+    // See http://stackoverflow.com/questions/29565299/how-to-use-a-vector-of-unique-pointers-in-a-dll-exported-class-with-visual-studi
+    // >> It appears adding __declspec(dllexport) forces the compiler to define the implicitly-declared copy constructor and copy assignment operator
+    ImagesVideo(const ImagesVideo&) = delete;
+    ImagesVideo& operator=(const ImagesVideo&) = delete;
+
     ~ImagesVideo();
 
     // Implement VideoInterface

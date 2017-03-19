@@ -39,6 +39,12 @@ public:
     JoinVideo(std::vector<std::unique_ptr<VideoInterface>> &src);
 
     ~JoinVideo();
+    
+    // Explicitly delete copy ctor and assignment operator.
+    // See http://stackoverflow.com/questions/29565299/how-to-use-a-vector-of-unique-pointers-in-a-dll-exported-class-with-visual-studi
+    // >> It appears adding __declspec(dllexport) forces the compiler to define the implicitly-declared copy constructor and copy assignment operator
+    JoinVideo(const JoinVideo&) = delete;
+    JoinVideo& operator=(const JoinVideo&) = delete;
 
     size_t SizeBytes() const;
 
