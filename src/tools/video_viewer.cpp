@@ -37,7 +37,7 @@ void ConvertPixels(pangolin::Image<To>& to, const pangolin::Image<From>& from)
     }
 }
 
-void RunVideoViewerUI(const std::string& input_uri, const std::string& output_uri)
+PANGOLIN_EXPORT void RunVideoViewerUI(const std::string& input_uri, const std::string& output_uri)
 {
 #ifdef _UNIX_
     struct sigaction sigIntHandler;
