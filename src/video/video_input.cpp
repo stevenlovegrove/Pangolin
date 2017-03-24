@@ -74,7 +74,7 @@ void VideoInput::Reset()
 
 void VideoInput::Close()
 {
-    video_src.release();
+    video_src.reset();
     videos.clear();
 }
 
