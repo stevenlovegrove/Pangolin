@@ -93,6 +93,7 @@ struct PANGOLIN_EXPORT VideoInput
     }
 
     const std::string& LogFilename() const;
+    std::string& LogFilename();
 
     // Switch to live video source
     void Source();

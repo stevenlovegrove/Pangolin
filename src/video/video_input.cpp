@@ -88,6 +88,11 @@ const std::string& VideoInput::LogFilename() const
     return uri_output.url;
 }
 
+std::string& VideoInput::LogFilename()
+{
+    return uri_output.url;
+}
+
 bool VideoInput::Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait, bool newest)
 {
     if( !video_src ) throw VideoException("No video source open");
