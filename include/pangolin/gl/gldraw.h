@@ -79,7 +79,10 @@ inline void glColorBin( int bin, int max_bins, GLfloat sat=1.0f, GLfloat val=1.0
 }
 
 template<typename T>
-inline void glDrawVertices(size_t num_vertices, const T* const vertex_ptr, GLenum mode, size_t elements_per_vertex = GlFormatTraits<T>::components, size_t vertex_stride_bytes = sizeof(T) )
+inline void glDrawVertices(
+    size_t num_vertices, const T* const vertex_ptr, GLenum mode,
+    size_t elements_per_vertex = GlFormatTraits<T>::components,
+    size_t vertex_stride_bytes = 0 )
 {
     if(num_vertices > 0)
     {
@@ -98,8 +101,8 @@ inline void glDrawColoredVertices(
     size_t num_vertices, const TV* const vertex_ptr, const TV* const color_ptr, GLenum mode,
     size_t elements_per_vertex = GlFormatTraits<TV>::components,
     size_t elements_per_color = GlFormatTraits<TC>::components,
-    size_t vertex_stride_bytes = sizeof(TV),
-    size_t color_stride_bytes = sizeof(TC)
+    size_t vertex_stride_bytes = 0,
+    size_t color_stride_bytes = 0
 ) {
     if(color_ptr) {
         glColorPointer(elements_per_color, GlFormatTraits<TC>::gltype, color_stride_bytes, color_ptr);
