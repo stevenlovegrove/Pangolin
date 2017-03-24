@@ -195,7 +195,7 @@ public:
     
 protected:
     static GlSlUtilities& Instance() {
-        static GlSlUtilities instance;
+        thread_local GlSlUtilities instance;
         return instance;
     }
     
