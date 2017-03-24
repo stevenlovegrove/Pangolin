@@ -42,7 +42,7 @@ GlBuffer MakeTriangleStripIboForVbo(int w, int h);
 
 void RenderVbo(GlBuffer& vbo, GLenum mode = GL_POINTS);
 
-void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color = true);
+void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color = true, GLenum mode = GL_POINTS);
 
 void RenderVboIbo(GlBuffer& vbo, GlBuffer& ibo, bool draw_mesh = true);
 
@@ -103,7 +103,7 @@ inline void RenderVbo(GlBuffer& vbo, GLenum mode)
     vbo.Unbind();
 }
 
-inline void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color)
+inline void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color, GLenum mode )
 {
     if(draw_color) {
         cbo.Bind();
@@ -111,7 +111,7 @@ inline void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color)
         glEnableClientState(GL_COLOR_ARRAY);
     }
     
-    RenderVbo(vbo);
+    RenderVbo(vbo,mode);
     
     if(draw_color) {
         glDisableClientState(GL_COLOR_ARRAY);
