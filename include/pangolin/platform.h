@@ -70,5 +70,12 @@
 #  define PANGO_HEADER_EXISTS(x) 0
 #endif
 
+// Workaround for Apple-Clangs lack of thread_local support
+#if defined(_CLANG_) && defined(_OSX_)
+#  if !__has_feature(cxx_thread_local)
+#     define PANGO_NO_THREADLOCAL
+#  endif
+#endif
+
 #include <pangolin/utils/assert.h>
 #include <pangolin/utils/log.h>

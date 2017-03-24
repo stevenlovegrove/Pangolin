@@ -195,7 +195,14 @@ public:
     
 protected:
     static GlSlUtilities& Instance() {
-        thread_local GlSlUtilities instance;
+        // TODO: BUG: The GlSLUtilities instance needs to be tied
+        // to the OpenGL context, not the thread, or globally.
+#ifndef PANGO_NO_THREADLOCAL
+        thread_local
+#else
+        static
+#endif
+        GlSlUtilities instance;
         return instance;
     }
     
