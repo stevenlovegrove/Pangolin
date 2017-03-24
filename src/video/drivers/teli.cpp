@@ -458,8 +458,8 @@ bool TeliVideo::GrabNext(unsigned char* image, bool /*wait*/)
         Teli::CAM_IMAGE_INFO sImageInfo;
         uint32_t uiPyldSize = (uint32_t)size_bytes;
         Teli::CAM_API_STATUS uiStatus = Teli::Strm_ReadCurrentImage(strm, image, &uiPyldSize, &sImageInfo);
-        frame_properties[PANGO_CAPTURE_TIME_US] = json::value(sImageInfo.ullTimestamp/1000);
-        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(pangolin::Time_us(pangolin::TimeNow()));
+        frame_properties[PANGO_CAPTURE_TIME_US] = picojson::value(sImageInfo.ullTimestamp/1000);
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
         return (uiStatus == Teli::CAM_API_STS_SUCCESS);
     }
 
@@ -506,13 +506,13 @@ bool TeliVideo::DropNFrames(uint32_t n)
 }
 
 //! Access JSON properties of device
-const json::value& TeliVideo::DeviceProperties() const
+const picojson::value& TeliVideo::DeviceProperties() const
 {
         return device_properties;
 }
 
 //! Access JSON properties of most recently captured frame
-const json::value& TeliVideo::FrameProperties() const
+const picojson::value& TeliVideo::FrameProperties() const
 {
     return frame_properties;
 }

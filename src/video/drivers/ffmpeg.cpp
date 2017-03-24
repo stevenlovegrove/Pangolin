@@ -783,7 +783,7 @@ const std::vector<StreamInfo>& FfmpegVideoOutput::Streams() const
     return strs;
 }
 
-void FfmpegVideoOutput::SetStreams(const std::vector<StreamInfo>& str, const std::string& /*uri*/, const json::value& properties)
+void FfmpegVideoOutput::SetStreams(const std::vector<StreamInfo>& str, const std::string& /*uri*/, const picojson::value& properties)
 {
     strs.insert(strs.end(), str.begin(), str.end());
 
@@ -794,12 +794,12 @@ void FfmpegVideoOutput::SetStreams(const std::vector<StreamInfo>& str, const std
         ) );
     }
 
-    if(!properties.is<json::null>()) {
+    if(!properties.is<picojson::null>()) {
         pango_print_warn("Ignoring attached video properties.");
     }
 }
 
-int FfmpegVideoOutput::WriteStreams(const unsigned char* data, const json::value& /*frame_properties*/)
+int FfmpegVideoOutput::WriteStreams(const unsigned char* data, const picojson::value& /*frame_properties*/)
 {
     for(std::vector<FfmpegVideoOutputStream*>::iterator i = streams.begin(); i!= streams.end(); ++i)
     {

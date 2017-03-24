@@ -47,12 +47,12 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
 
     //! Implement VideoPropertiesInterface::Properties()
-    const json::value& DeviceProperties() const {
+    const picojson::value& DeviceProperties() const {
         return device_properties;
     }
 
     //! Implement VideoPropertiesInterface::Properties()
-    const json::value& FrameProperties() const {
+    const picojson::value& FrameProperties() const {
         return frame_properties;
     }
 
@@ -70,9 +70,9 @@ protected:
 
     std::vector<StreamInfo> streams;
 
-    json::value device_properties;
-    json::value frame_properties;
-    json::value* streams_properties;
+    picojson::value device_properties;
+    picojson::value frame_properties;
+    picojson::value* streams_properties;
 
     int current_frame_index;
     int total_frames;

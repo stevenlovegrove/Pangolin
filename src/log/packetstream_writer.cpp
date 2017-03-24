@@ -71,7 +71,7 @@ void PacketStreamWriter::WriteHeader()
 {
     SCOPED_LOCK;
     _stream.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
-    json::value pango;
+    picojson::value pango;
     pango["pangolin_version"] = PANGOLIN_VERSION_STRING;
     pango["time_us"] = Time_us(TimeNow());
     pango["date_created"] = CurrentTimeStr();
@@ -87,7 +87,7 @@ void PacketStreamWriter::WriteHeader()
 void PacketStreamWriter::Write(const PacketStreamSource& source)
 {
     SCOPED_LOCK;
-    json::value serialize;
+    picojson::value serialize;
     serialize[pss_src_driver] = source.driver;
     serialize[pss_src_id] = source.id;
     serialize[pss_src_uri] = source.uri;
@@ -122,7 +122,7 @@ PacketStreamSourceId PacketStreamWriter::AddSource(const PacketStreamSource& sou
     return _sources.back().id;
 }
 
-void PacketStreamWriter::WriteMeta(PacketStreamSourceId src, const json::value& data)
+void PacketStreamWriter::WriteMeta(PacketStreamSourceId src, const picojson::value& data)
 {
     SCOPED_LOCK;
     writeTag(_stream, TAG_SRC_JSON);
@@ -130,13 +130,13 @@ void PacketStreamWriter::WriteMeta(PacketStreamSourceId src, const json::value& 
     data.serialize(std::ostream_iterator<char>(_stream), false);
 }
 
-void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char* source, size_t sourcelen, const json::value& meta)
+void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char* source, size_t sourcelen, const picojson::value& meta)
 {
     SCOPED_LOCK;
     if (_indexable)
         _index.add(src, _stream.tellp()); //record position for seek index
 
-    if (!meta.is<json::null>())
+    if (!meta.is<picojson::null>())
         WriteMeta(src, meta);
 
     writeTag(_stream, TAG_SRC_PACKET);
@@ -179,7 +179,7 @@ void PacketStreamWriter::WriteEnd()
     auto indexpos = _stream.tellp();
 
     writeTag(_stream, TAG_PANGO_STATS);
-    json::value stat;
+    picojson::value stat;
     stat["num_sources"] = _sources.size();
     stat["bytes_written"] = _bytes_written;
     stat["src_packet_index"] = _index.json();

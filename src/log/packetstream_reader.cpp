@@ -196,7 +196,7 @@ PacketStreamReader::FrameInfo PacketStreamReader::Stream::peekFrameHeader(const 
     {
         readTag(TAG_SRC_JSON);
         _frame.src = readUINT();
-        json::parse(_frame.meta, *this);
+        picojson::parse(_frame.meta, *this);
     }
 
     _frame.packet_streampos = tellg();
@@ -255,8 +255,8 @@ void PacketStreamReader::ParseHeader()
 {
     _stream.readTag(TAG_PANGO_HDR);
 
-    json::value json_header;
-    json::parse(json_header, _stream); //looks like right now, we don't do anything with this.
+    picojson::value json_header;
+    picojson::parse(json_header, _stream); //looks like right now, we don't do anything with this.
     _starttime = json_header["time_us"].get<int64_t>();
 
     if (!_starttime)
@@ -268,8 +268,8 @@ void PacketStreamReader::ParseHeader()
 void PacketStreamReader::ParseNewSource()
 {
     _stream.readTag(TAG_ADD_SOURCE);
-    json::value json;
-    json::parse(json, _stream);
+    picojson::value json;
+    picojson::parse(json, _stream);
     _stream.get(); // consume newline
 
     PacketStreamSource pss;
@@ -321,12 +321,12 @@ streampos PacketStreamReader::ParseFooter() //returns position of index.
 void PacketStreamReader::ParseIndex()
 {
     _stream.readTag(TAG_PANGO_STATS);
-    json::value json;
-    json::parse(json, _stream);
+    picojson::value json;
+    picojson::parse(json, _stream);
 
     if (json.contains("src_packet_index")) //this is a two-dimensional serialized array, [source id][sequence number] ---> packet position in stream
     {
-        const auto& json_index = json["src_packet_index"].get<json::array>();  //reference to the whole array
+        const auto& json_index = json["src_packet_index"].get<picojson::array>();  //reference to the whole array
         _index = PacketIndex(json_index);
     }
 }

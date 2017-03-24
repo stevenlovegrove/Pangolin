@@ -64,9 +64,9 @@ public:
 
     const std::vector<StreamInfo>& Streams() const override;
 
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri = "", const json::value& properties = json::value() ) override;
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri = "", const picojson::value& properties = picojson::value() ) override;
 
-    int WriteStreams(const unsigned char* data, const json::value& frame_properties = json::value() ) override;
+    int WriteStreams(const unsigned char* data, const picojson::value& frame_properties = picojson::value() ) override;
     
     bool IsPipe() const override;
 

@@ -67,7 +67,7 @@ public:
         int64_t time;
         size_t size;
         size_t sequence_num;
-        json::value meta;
+        picojson::value meta;
 
         // The 'frame' includes the json and the packet.
         std::streampos frame_streampos;

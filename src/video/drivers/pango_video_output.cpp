@@ -78,7 +78,7 @@ bool PangoVideoOutput::IsPipe() const
     return is_pipe;
 }
 
-void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::string& uri, const json::value& properties)
+void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::string& uri, const picojson::value& properties)
 {
     std::set<unsigned char*> unique_ptrs;
     for (size_t i = 0; i < st.size(); ++i)
@@ -95,8 +95,8 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
         streams = st;
         device_properties = properties;
 
-        json::value json_header(json::object_type, false);
-        json::value& json_streams = json_header["streams"];
+        picojson::value json_header(picojson::object_type, false);
+        picojson::value& json_streams = json_header["streams"];
         json_header["device"] = device_properties;
 
         total_frame_size = 0;
@@ -105,7 +105,7 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
             StreamInfo& si = streams[i];
             total_frame_size = std::max(total_frame_size, (size_t) si.Offset() + si.SizeBytes());
 
-            json::value& json_stream = json_streams.push_back();
+            picojson::value& json_stream = json_streams.push_back();
             json_stream["encoding"] = si.PixFormat().format;
             json_stream["width"] = si.Width();
             json_stream["height"] = si.Height();
@@ -126,7 +126,7 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
     }
 }
 
-int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value& frame_properties)
+int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::value& frame_properties)
 {
 #ifndef _WIN_
     if (is_pipe)
@@ -176,7 +176,7 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const json::value&
     }
 #endif
 
-//    if (!frame_properties.is<json::null>())
+//    if (!frame_properties.is<picojson::null>())
 //        packetstream.writeMeta(packetstreamsrcid, frame_properties);
 
     packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(data), total_frame_size, frame_properties);

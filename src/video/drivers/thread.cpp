@@ -111,13 +111,13 @@ const std::vector<StreamInfo>& ThreadVideo::Streams() const
     return videoin[0]->Streams();
 }
 
-const json::value& ThreadVideo::DeviceProperties() const
+const picojson::value& ThreadVideo::DeviceProperties() const
 {
     device_properties = GetVideoDeviceProperties(videoin[0]);
     return device_properties;
 }
 
-const json::value& ThreadVideo::FrameProperties() const
+const picojson::value& ThreadVideo::FrameProperties() const
 {
     return frame_properties;
 }

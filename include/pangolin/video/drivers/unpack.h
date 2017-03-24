@@ -77,8 +77,8 @@ protected:
     size_t size_bytes;
     unsigned char* buffer;
 
-    json::value device_properties;
-    json::value frame_properties;
+    picojson::value device_properties;
+    picojson::value frame_properties;
 };
 
 }

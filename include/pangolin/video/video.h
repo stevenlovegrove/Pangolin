@@ -179,7 +179,7 @@ T* FindFirstMatchingVideoInterface( VideoInterface& video )
 }
 
 inline
-json::value GetVideoFrameProperties(VideoInterface* video)
+picojson::value GetVideoFrameProperties(VideoInterface* video)
 {
     VideoPropertiesInterface* pi = dynamic_cast<VideoPropertiesInterface*>(video);
     VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
@@ -191,19 +191,19 @@ json::value GetVideoFrameProperties(VideoInterface* video)
             return GetVideoFrameProperties(fi->InputStreams()[0]);
         }else if(fi->InputStreams().size() > 0){
             // Use first stream's properties as base, but also populate children.
-            json::value json = GetVideoFrameProperties(fi->InputStreams()[0]);
-            json::value& streams = json["streams"];
+            picojson::value json = GetVideoFrameProperties(fi->InputStreams()[0]);
+            picojson::value& streams = json["streams"];
             for(size_t i=0; i< fi->InputStreams().size(); ++i) {
                 streams.push_back( GetVideoFrameProperties(fi->InputStreams()[i]) );
             }
             return json;
         }
     }
-    return json::value();
+    return picojson::value();
 }
 
 inline
-json::value GetVideoDeviceProperties(VideoInterface* video)
+picojson::value GetVideoDeviceProperties(VideoInterface* video)
 {
     VideoPropertiesInterface* pi = dynamic_cast<VideoPropertiesInterface*>(video);
     VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
@@ -215,15 +215,15 @@ json::value GetVideoDeviceProperties(VideoInterface* video)
             return GetVideoDeviceProperties(fi->InputStreams()[0]);
         }else if(fi->InputStreams().size() > 0){
             // Use first stream's properties as base, but also populate children.
-            json::value json = GetVideoDeviceProperties(fi->InputStreams()[0]);
-            json::value& streams = json["streams"];
+            picojson::value json = GetVideoDeviceProperties(fi->InputStreams()[0]);
+            picojson::value& streams = json["streams"];
             for(size_t i=0; i< fi->InputStreams().size(); ++i) {
                 streams.push_back( GetVideoDeviceProperties(fi->InputStreams()[i]) );
             }
             return json;
         }
     }
-    return json::value();
+    return picojson::value();
 }
 
 }

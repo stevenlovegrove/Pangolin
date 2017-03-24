@@ -109,8 +109,8 @@ protected:
     std::vector<bayer_method_t> methods;
     color_filter_t tile;
 
-    json::value device_properties;
-    json::value frame_properties;
+    picojson::value device_properties;
+    picojson::value frame_properties;
 };
 
 }

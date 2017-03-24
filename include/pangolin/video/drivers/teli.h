@@ -84,10 +84,10 @@ public:
     bool DropNFrames(uint32_t n);
 
     //! Access JSON properties of device
-    const json::value& DeviceProperties() const;
+    const picojson::value& DeviceProperties() const;
 
     //! Access JSON properties of most recently captured frame
-    const json::value& FrameProperties() const;
+    const picojson::value& FrameProperties() const;
 
 protected:
     void Initialise();
@@ -105,8 +105,8 @@ protected:
 #ifdef _LINUX_
     Teli::SIGNAL_HANDLE hStrmCmpEvt;
 #endif
-    json::value device_properties;
-    json::value frame_properties;
+    picojson::value device_properties;
+    picojson::value frame_properties;
 };
 
 }

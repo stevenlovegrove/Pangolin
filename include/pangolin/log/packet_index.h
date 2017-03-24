@@ -39,11 +39,11 @@ public:
     {
     }
 
-    PacketIndex(const json::array& source)
+    PacketIndex(const picojson::array& source)
     {
             for (size_t src = 0; src < source.size(); ++src)
             {
-                const json::array& row = source[src].get<json::array>();
+                const picojson::array& row = source[src].get<picojson::array>();
                 for (size_t frame = 0; frame < row.size(); ++frame)
                     add(src, frame, row[frame].get<int64_t>());
             }
@@ -75,15 +75,15 @@ public:
         }
     }
 
-    json::array json() const
+    picojson::array json() const
     {
-        json::array index;
+        picojson::array index;
         for (const auto& src : *this)
         {
-            json::array positions;
+            picojson::array positions;
             for (const auto& frame : src.second)
             {
-                positions.push_back(json::value(frame.second));
+                positions.push_back(picojson::value(frame.second));
             }
             index.push_back(positions);
         }

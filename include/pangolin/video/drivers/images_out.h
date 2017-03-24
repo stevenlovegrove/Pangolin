@@ -41,15 +41,15 @@ public:
     ~ImagesVideoOutput();
 
     const std::vector<StreamInfo>& Streams() const override;
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& device_properties) override;
-    int WriteStreams(const unsigned char* data, const json::value& frame_properties) override;
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const picojson::value& device_properties) override;
+    int WriteStreams(const unsigned char* data, const picojson::value& frame_properties) override;
     bool IsPipe() const override;
 
 protected:
     std::vector<StreamInfo> streams;
     std::string input_uri;
-    json::value device_properties;
-    json::value json_frames;
+    picojson::value device_properties;
+    picojson::value json_frames;
 
     size_t image_index;
     std::string image_folder;

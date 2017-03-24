@@ -100,10 +100,10 @@ struct PANGOLIN_EXPORT VideoPropertiesInterface
     virtual ~VideoPropertiesInterface() {}
 
     //! Access JSON properties of device
-    virtual const json::value& DeviceProperties() const = 0;
+    virtual const picojson::value& DeviceProperties() const = 0;
 
     //! Access JSON properties of most recently captured frame
-    virtual const json::value& FrameProperties() const = 0;
+    virtual const picojson::value& FrameProperties() const = 0;
 };
 
 enum UvcRequestCode {

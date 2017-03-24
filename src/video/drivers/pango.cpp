@@ -87,7 +87,7 @@ void PangoVideo::Stop()
 
 bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
 {
-    _frame_properties = json::value();
+    _frame_properties = picojson::value();
     std::lock_guard<decltype(_reader.Mutex())> lg(_reader.Mutex());
 
 #ifndef _WIN_
@@ -165,7 +165,7 @@ int PangoVideo::GetTotalFrames() const
 int PangoVideo::Seek(int frameid)
 {
     std::lock_guard<decltype(_reader.Mutex())> lg(_reader.Mutex());
-    _frame_properties = json::value(); //clear frame props
+    _frame_properties = picojson::value(); //clear frame props
 
     auto fi = _reader.Seek(_src_id, frameid, _realtime ? &_realtime_sync : nullptr);
 
@@ -188,11 +188,11 @@ int PangoVideo::FindSource()
                 _size_bytes = src.data_size_bytes;
 
                 _device_properties = src.info["device"];
-                const json::value& json_streams = src.info["streams"];
+                const picojson::value& json_streams = src.info["streams"];
                 const size_t num_streams = json_streams.size();
                 for (size_t i = 0; i < num_streams; ++i)
                 {
-                    const json::value& json_stream = json_streams[i];
+                    const picojson::value& json_stream = json_streams[i];
                     StreamInfo si(
                             PixelFormatFromString(
                                     json_stream["encoding"].get<std::string>()

@@ -47,8 +47,8 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
                 // Parse json file to determine sub-video
                 if(f.is_open())
                 {
-                    json::value file_json(json::object_type,true);
-                    const std::string err = json::parse(file_json,f);
+                    picojson::value file_json(picojson::object_type,true);
+                    const std::string err = picojson::parse(file_json,f);
                     if(err.empty())
                     {
                         // Json loaded. Parse output.
@@ -56,7 +56,7 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
                         if(!input_uri.empty())
                         {
                             // Transform input_uri based on sub args.
-                            const json::value input_uri_params = file_json.get_value<json::object>("video_uri_defaults", json::object());
+                            const picojson::value input_uri_params = file_json.get_value<picojson::object>("video_uri_defaults", picojson::object());
                             input_uri = Transform(input_uri, [&](const std::string& k) {
                                 return uri.Get<std::string>(k,input_uri_params.get_value<std::string>(k,"#"));
                             });

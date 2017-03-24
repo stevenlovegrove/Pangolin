@@ -17,7 +17,7 @@ void writeFakeFrame(const PacketStreamSource& source, size_t sequence_number, Pa
     stringstream r;
     r << "Hello, I am frame number " << sequence_number << " from source number " << source.id << ", named '" << source.driver << "'";
 
-    json::value meta;
+    picojson::value meta;
     meta["source"] = source.id;
     meta["frame number"] = sequence_number;
     meta["driver name"] = source.driver;

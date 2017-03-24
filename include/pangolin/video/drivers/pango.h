@@ -55,12 +55,12 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true ) override;
 
     // Implement VideoPropertiesInterface
-    const json::value& DeviceProperties() const override {
+    const picojson::value& DeviceProperties() const override {
         if (-1 == _src_id) throw std::runtime_error("Not initialised");
         return _device_properties;
     }
 
-    const json::value& FrameProperties() const override {
+    const picojson::value& FrameProperties() const override {
         return _frame_properties;
     }
 
@@ -83,8 +83,8 @@ protected:
 
     size_t _size_bytes;
     std::vector<StreamInfo> _streams;
-    json::value _device_properties;
-    json::value _frame_properties;
+    picojson::value _device_properties;
+    picojson::value _frame_properties;
     int _src_id;
     const std::string _filename;
     bool _realtime;

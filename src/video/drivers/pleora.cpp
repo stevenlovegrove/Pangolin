@@ -411,7 +411,7 @@ void PleoraVideo::InitPangoDeviceProperties()
     device_properties["UniqueID"] = std::string(lDeviceInfo->GetUniqueID().GetAscii());
     device_properties["ConnectionID"] = std::string(lDeviceInfo->GetConnectionID().GetAscii());
 
-    pangolin::json::value props(pangolin::json::object_type, true);
+    picojson::value props(picojson::object_type, true);
     for(size_t i=0; i < lDeviceParams->GetCount(); ++i) {
         PvGenParameter* p = (*lDeviceParams)[i];
         if(p->IsReadable()) {
@@ -496,8 +496,8 @@ bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
       std::memcpy(image, lImage->GetDataPointer(), size_bytes);
       TGRABANDPRINT("memcpy took ")
       // Required frame properties
-      frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
-      frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
+      frame_properties[PANGO_CAPTURE_TIME_US] = picojson::value(lBuffer->GetTimestamp());
+      frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(lBuffer->GetReceptionTime());
       TGRABANDPRINT("Frame properties took ")
 
       // Optional frame properties
@@ -505,7 +505,7 @@ bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
           double val;
           PvResult lResult = lTemperatureCelcius->GetValue(val);
           if(lResult.IsSuccess()) {
-              frame_properties[PANGO_SENSOR_TEMPERATURE_C] = json::value(val);
+              frame_properties[PANGO_SENSOR_TEMPERATURE_C] = picojson::value(val);
           } else {
               pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
           }
@@ -619,7 +619,7 @@ void PleoraVideo::SetGain(int64_t val)
 {
     if(val >= 0 && lAnalogGain && lAnalogGain->IsWritable()) {
         ThrowOnFailure( lAnalogGain->SetValue(val) );
-        frame_properties[PANGO_ANALOG_GAIN] = json::value(val);
+        frame_properties[PANGO_ANALOG_GAIN] = picojson::value(val);
     }
 }
 
@@ -636,7 +636,7 @@ void PleoraVideo::SetAnalogBlackLevel(int64_t val)
 {
     if(val >= 0 && lAnalogBlackLevel&& lAnalogBlackLevel->IsWritable()) {
         ThrowOnFailure( lAnalogBlackLevel->SetValue(val) );
-        frame_properties[PANGO_ANALOG_BLACK_LEVEL] = json::value(val);
+        frame_properties[PANGO_ANALOG_BLACK_LEVEL] = picojson::value(val);
     }
 }
 
@@ -653,7 +653,7 @@ void PleoraVideo::SetExposure(double val)
 {
     if(val > 0 && lExposure && lExposure->IsWritable() ) {
         ThrowOnFailure( lExposure->SetValue(val) );
-        frame_properties[PANGO_EXPOSURE_US] = json::value(val);
+        frame_properties[PANGO_EXPOSURE_US] = picojson::value(val);
     }
 }
 
@@ -671,7 +671,7 @@ void PleoraVideo::SetGamma(double val)
 {
     if(val > 0 && lGamma && lGamma->IsWritable() ) {
         ThrowOnFailure( lGamma->SetValue(val) );
-        frame_properties[PANGO_GAMMA] = json::value(val);
+        frame_properties[PANGO_GAMMA] = picojson::value(val);
     }
 }
 

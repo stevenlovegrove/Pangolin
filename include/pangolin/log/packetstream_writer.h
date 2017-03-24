@@ -99,7 +99,7 @@ public:
 
     void WriteSourcePacket(
         PacketStreamSourceId src, const char* source,
-        size_t sourcelen, const json::value& meta = json::value()
+        size_t sourcelen, const picojson::value& meta = picojson::value()
     );
 
     // For stream read/write synchronization. Note that this is NOT the same as
@@ -121,7 +121,7 @@ public:
 private:
     void WriteHeader();
     void Write(const PacketStreamSource&);
-    void WriteMeta(PacketStreamSourceId src, const json::value& data);
+    void WriteMeta(PacketStreamSourceId src, const picojson::value& data);
 
     threadedfilebuf _buffer;
     std::ostream _stream;

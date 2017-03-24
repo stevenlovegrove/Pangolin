@@ -74,12 +74,12 @@ const std::vector<StreamInfo>& VideoOutput::Streams() const
     return recorder->Streams();
 }
 
-void VideoOutput::SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value &properties)
+void VideoOutput::SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const picojson::value &properties)
 {
     recorder->SetStreams(streams, uri, properties);
 }
 
-int VideoOutput::WriteStreams(const unsigned char* data, const json::value& frame_properties)
+int VideoOutput::WriteStreams(const unsigned char* data, const picojson::value& frame_properties)
 {
     return recorder->WriteStreams(data, frame_properties);
 }

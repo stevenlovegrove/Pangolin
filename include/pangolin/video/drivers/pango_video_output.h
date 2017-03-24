@@ -40,8 +40,8 @@ public:
     ~PangoVideoOutput();
 
     const std::vector<StreamInfo>& Streams() const override;
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& device_properties) override;
-    int WriteStreams(const unsigned char* data, const json::value& frame_properties) override;
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const picojson::value& device_properties) override;
+    int WriteStreams(const unsigned char* data, const picojson::value& frame_properties) override;
     bool IsPipe() const override;
 
 protected:
@@ -50,7 +50,7 @@ protected:
     std::vector<StreamInfo> streams;
     std::string input_uri;
     const std::string filename;
-    json::value device_properties;
+    picojson::value device_properties;
 
     PacketStreamWriter packetstream;
     size_t packetstream_buffer_size_bytes;

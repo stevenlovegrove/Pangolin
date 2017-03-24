@@ -251,8 +251,8 @@ void OpenNi2Video::AddStream(const OpenNiStreamMode& mode)
 void OpenNi2Video::SetupStreamModes()
 {
     streams_properties = &frame_properties["streams"];
-    *streams_properties = json::value(json::array_type,false);
-    streams_properties->get<json::array>().resize(numStreams);
+    *streams_properties = picojson::value(picojson::array_type,false);
+    streams_properties->get<picojson::array>().resize(numStreams);
 
     use_depth = false;
     use_ir = false;
@@ -358,13 +358,13 @@ void OpenNi2Video::SetupStreamModes()
 
 void OpenNi2Video::UpdateProperties()
 {
-    json::value& jsopenni = device_properties["openni"];
+    picojson::value& jsopenni = device_properties["openni"];
 
-    json::value& jsdevices = jsopenni["devices"];
-    jsdevices = json::value(json::array_type,false);
-    jsdevices.get<json::array>().resize(numDevices);
+    picojson::value& jsdevices = jsopenni["devices"];
+    jsdevices = picojson::value(picojson::array_type,false);
+    jsdevices.get<picojson::array>().resize(numDevices);
     for (size_t i=0; i<numDevices; ++i) {
-      json::value& jsdevice = jsdevices[i];
+      picojson::value& jsdevice = jsdevices[i];
 #define SET_PARAM(param_type, param) \
       { \
         param_type val; \
@@ -380,9 +380,9 @@ void OpenNi2Video::UpdateProperties()
 #undef SET_PARAM
     }
 
-    json::value& stream = jsopenni["streams"];
-    stream = json::value(json::array_type,false);
-    stream.get<json::array>().resize(Streams().size());
+    picojson::value& stream = jsopenni["streams"];
+    stream = picojson::value(picojson::array_type,false);
+    stream.get<picojson::array>().resize(Streams().size());
     for(unsigned int i=0; i<Streams().size(); ++i) {
         if(sensor_type[i].sensor_type != OpenNiUnassigned)
         {
@@ -394,7 +394,7 @@ void OpenNi2Video::UpdateProperties()
                 } \
             }
 
-            json::value& jsstream = stream[i];
+            picojson::value& jsstream = stream[i];
             SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_INPUT_FORMAT );
             SET_PARAM( unsigned long long, XN_STREAM_PROPERTY_CROPPING_MODE );
 
