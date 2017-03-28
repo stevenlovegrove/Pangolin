@@ -115,6 +115,15 @@ struct GlFormatTraits<Eigen::Vector2i>
     static const size_t components = 2;
 };
 
+template <>
+struct GlFormatTraits<Eigen::Vector2f>
+{
+    static const GLint glinternalformat = GL_RGB32F_ARB;
+    static const GLenum glformat = GL_RG;
+    static const GLenum gltype = GL_FLOAT;
+    static const size_t components = 2;
+};
+
 //////////////////////////////////////////////////////////////////
 
 template <>

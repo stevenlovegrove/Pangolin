@@ -7,51 +7,36 @@
 #include <pangolin/handler/handler_image.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/timer.h>
+#include <pangolin/display/image_view.h>
+#include <pangolin/utils/sigstate.h>
 
-#ifdef _UNIX_
-#include <signal.h>
-void videoviewer_signal_handler(int s)
-{
-    if( s == SIGINT || s == SIGTERM)
-    {
-        // Exit nicely.
-        pangolin::QuitAll();
-    }
-}
-#endif
-
-#ifdef DEBUGVIDEOVIEWER
-#  include <thread>
-#endif // DEBUGVIDEOVIEWER
 
 namespace pangolin
 {
 
-template<typename To, typename From>
-void ConvertPixels(pangolin::Image<To>& to, const pangolin::Image<From>& from)
-{
-    for(size_t y=0; y < to.h; ++y) {
-        for(size_t x=0; x < to.w; ++x) {
-            to.RowPtr((int)y)[x] = static_cast<To>( from.RowPtr((int)y)[x] );
-        }
-    }
+void videoviewer_signal_quit(int) {
+    pango_print_info("Caught signal. Program will exit after any IO is complete.\n");
+    pangolin::QuitAll();
 }
 
-PANGOLIN_EXPORT void RunVideoViewerUI(const std::string& input_uri, const std::string& output_uri)
+PANGOLIN_EXPORT
+void RunVideoViewerUI(const std::string& input_uri, const std::string& output_uri)
 {
-#ifdef _UNIX_
-    struct sigaction sigIntHandler;
-    sigIntHandler.sa_handler = videoviewer_signal_handler;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-    sigaction(SIGINT,  &sigIntHandler, NULL);
-    sigaction(SIGTERM, &sigIntHandler, NULL);
-#endif
+    RegisterNewSigCallback(videoviewer_signal_quit, nullptr, SIGINT);
+    RegisterNewSigCallback(videoviewer_signal_quit, nullptr, SIGTERM);
+
+    /////////////////////////////////////////////////////////////////////////
+    /// Register pangolin variables
+    /////////////////////////////////////////////////////////////////////////
 
     pangolin::Var<int>  record_timelapse_frame_skip("viewer.record_timelapse_frame_skip", 1 );
     pangolin::Var<int>  end_frame("viewer.end_frame", std::numeric_limits<int>::max() );
     pangolin::Var<bool> video_wait("video.wait", true);
     pangolin::Var<bool> video_newest("video.newest", false);
+
+    /////////////////////////////////////////////////////////////////////////
+    /// Setup Video streams
+    /////////////////////////////////////////////////////////////////////////
 
     // Open Video by URI
     pangolin::VideoInput video(input_uri, output_uri);
@@ -81,8 +66,12 @@ PANGOLIN_EXPORT void RunVideoViewerUI(const std::string& input_uri, const std::s
         end_frame = 0;
     }
 
-    std::vector<unsigned char> buffer;
-    buffer.resize(video.SizeBytes()+1);
+    std::unique_ptr<unsigned char[]> buffer(new unsigned char[video.SizeBytes()+1]);
+
+    /////////////////////////////////////////////////////////////////////////
+    /// Create GUI
+    /////////////////////////////////////////////////////////////////////////
+
 
     // Create OpenGL window - guess sensible dimensions
     pangolin::CreateWindowAndBind( "VideoViewer",
@@ -90,57 +79,34 @@ PANGOLIN_EXPORT void RunVideoViewerUI(const std::string& input_uri, const std::s
         (int)(video.Height() + slider_size)
     );
 
-    // Assume packed OpenGL data unless otherwise specified
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Setup resizable views for video streams
-    std::vector<pangolin::GlPixFormat> glfmt;
-    std::vector<std::pair<float,float> > gloffsetscale;
-    std::vector<size_t> strides;
-    std::vector<pangolin::ImageViewHandler> handlers;
-    handlers.reserve(num_streams);
+    pangolin::Var<int> frame("ui.frame", -1, 0, total_frames-1 );
+    pangolin::Slider frame_slider("frame", frame.Ref() );
 
-    size_t scratch_buffer_bytes = 0;
+    if(video_playback && total_frames < std::numeric_limits<int>::max())
+    {
+        // frame_slider should be added first so that it can be rendered correctly.
+        pangolin::DisplayBase().AddDisplay(frame_slider);
+        frame_slider.SetBounds(0.0, pangolin::Attach::Pix(slider_size), 0.0, 1.0);
+    }
 
     pangolin::View& container = pangolin::Display("streams");
     container.SetLayout(pangolin::LayoutEqual)
              .SetBounds(pangolin::Attach::Pix(slider_size), 1.0, 0.0, 1.0);
-    for(unsigned int d=0; d < num_streams; ++d) {
-        const pangolin::StreamInfo& si = video.Streams()[d];
-        pangolin::View& view = pangolin::CreateDisplay().SetAspect(si.Aspect());
-        container.AddDisplay(view);
-        glfmt.push_back(pangolin::GlPixFormat(si.PixFormat()));
-        gloffsetscale.push_back(std::pair<float,float>(0.0f, 1.0f) );
-        if( si.PixFormat().bpp % 8 ) {
-            pango_print_warn("Stream %i: Unable to display formats that are not a multiple of 8 bits.", d);
-        }
-        if( (8*si.Pitch()) % si.PixFormat().bpp ) {
-            pango_print_warn("Stream %i: Unable to display formats whose pitch is not a whole number of pixels.", d);
-        }
-        if(glfmt.back().gltype == GL_DOUBLE) {
-            scratch_buffer_bytes = std::max(scratch_buffer_bytes, sizeof(float)*si.Width() * si.Height());
-        }
-        strides.push_back( (8*si.Pitch()) / si.PixFormat().bpp );
-        handlers.push_back( pangolin::ImageViewHandler(si.Width(), si.Height()) );
-        view.SetHandler(&handlers.back());
-    }
 
-    // current frame in memory buffer and displaying.
-    pangolin::Var<int> frame("ui.frame", -1, 0, total_frames-1 );
-    pangolin::Slider frame_slider("frame", frame.Ref() );
-    if(video_playback && total_frames < std::numeric_limits<int>::max())
-    {
-        frame_slider.SetBounds(0.0, pangolin::Attach::Pix(slider_size), 0.0, 1.0);
-        pangolin::DisplayBase().AddDisplay(frame_slider);
+    std::vector<ImageView> stream_views(video.Streams().size());
+    for(auto& sv : stream_views) {
+        container.AddDisplay(sv);
     }
-
-    std::vector<unsigned char> scratch_buffer;
-    scratch_buffer.resize(scratch_buffer_bytes);
 
     std::vector<pangolin::Image<unsigned char> > images;
+
+    /////////////////////////////////////////////////////////////////////////
+    /// Register key shortcuts
+    /////////////////////////////////////////////////////////////////////////
+
 
     const int FRAME_SKIP = 30;
     const char show_hide_keys[]  = {'1','2','3','4','5','6','7','8','9'};
@@ -238,58 +204,10 @@ PANGOLIN_EXPORT void RunVideoViewerUI(const std::string& input_uri, const std::s
     pangolin::RegisterKeyPressCallback('0', [&](){
         video.RecordOneFrame();
     });
-    pangolin::RegisterKeyPressCallback('a', [&](){
-        // Adapt scale
-        for(unsigned int i=0; i<images.size(); ++i) {
-            if(container[i].HasFocus()) {
-                pangolin::Image<unsigned char>& img = images[i];
-                pangolin::ImageViewHandler& ivh = handlers[i];
 
-                const bool have_selection = std::isfinite(ivh.GetSelection().Area()) && std::abs(ivh.GetSelection().Area()) >= 4;
-                pangolin::XYRangef froi = have_selection ? ivh.GetSelection() : ivh.GetViewToRender();
-                gloffsetscale[i] = pangolin::GetOffsetScale(img, froi.Cast<int>(), glfmt[i]);
-            }
-        }
-    });
-    pangolin::RegisterKeyPressCallback('g', [&](){
-        std::pair<float,float> os_default(0.0f, 1.0f);
-
-        // Get the scale and offset from the container that has focus.
-        for(unsigned int i=0; i<images.size(); ++i) {
-            if(container[i].HasFocus()) {
-                pangolin::Image<unsigned char>& img = images[i];
-                pangolin::ImageViewHandler& ivh = handlers[i];
-
-                const bool have_selection = std::isfinite(ivh.GetSelection().Area()) && std::abs(ivh.GetSelection().Area()) >= 4;
-                pangolin::XYRangef froi = have_selection ? ivh.GetSelection() : ivh.GetViewToRender();
-                os_default = pangolin::GetOffsetScale(img, froi.Cast<int>(), glfmt[i]);
-                break;
-            }
-        }
-
-        // Adapt scale for all images equally
-        // TODO : we're assuming the type of all the containers images' are the same.
-        for(unsigned int i=0; i<images.size(); ++i) {
-            gloffsetscale[i] = os_default;
-        }
-
-    });
-
-#ifdef DEBUGVIDEOVIEWER
-    unsigned int delayms = 0;
-    pangolin::RegisterKeyPressCallback('z', [&](){
-      // Adapt delay
-      delayms += 1;
-      std::cout << "                  Fake delay " << delayms << "ms" << std::endl;
-    });
-
-    pangolin::RegisterKeyPressCallback('x', [&](){
-      // Adapt delay
-      delayms = (delayms > 1) ? delayms-1 : 0;
-    });
-
-    pangolin::basetime start,now;
-#endif // DEBUGVIDEOVIEWER
+    /////////////////////////////////////////////////////////////////////////
+    /// Main GUI loop
+    /////////////////////////////////////////////////////////////////////////
 
     video.Start();
 
@@ -306,61 +224,16 @@ PANGOLIN_EXPORT void RunVideoViewerUI(const std::string& input_uri, const std::s
             end_frame = frame + 1;
         }
 
-#ifdef DEBUGVIDEOVIEWER
-        boostd::this_thread::sleep_for(boostd::chrono::milliseconds(delayms));
-        std::cout << "-------------------------------------------------------" << std::endl;
-        now = pangolin::TimeNow();
-        std::cout << "      FPS: " << 1.0/pangolin::TimeDiff_s(start, now) << " artificial delay: " << delayms <<"ms"<< std::endl;
-        std::cout << "-------------------------------------------------------" << std::endl;
-        start = now;
-#endif
         if ( frame < end_frame ) {
             if( video.Grab(&buffer[0], images, video_wait, video_newest) ) {
                 frame = frame +1;
-            }
-        }
-#ifdef DEBUGVIDEOVIEWER
-        const pangolin::basetime end = pangolin::TimeNow();
-        std::cout << "Total grab time: " << 1000*pangolin::TimeDiff_s(start, end) << "ms" << std::endl;
-#endif
 
-        glLineWidth(1.5f);
-        glDisable(GL_DEPTH_TEST);
-
-        for(unsigned int i=0; i<images.size(); ++i)
-        {
-            if(container[i].IsShown()) {
-                container[i].Activate();
-                pangolin::Image<unsigned char>& image = images[i];
-
-                // Get texture of correct dimension / format
-                const pangolin::GlPixFormat& fmt = glfmt[i];
-                pangolin::GlTexture& tex = pangolin::TextureCache::I().GlTex((GLsizei)image.w, (GLsizei)image.h, fmt.scalable_internal_format, fmt.glformat, GL_FLOAT);
-
-                // Upload image data to texture
-                tex.Bind();
-                if(fmt.gltype == GL_DOUBLE) {
-                    // Convert to float first, using scrath_buffer for storage
-                    pangolin::Image<float> fimage((float*)scratch_buffer.data(), image.w, image.h, image.w*sizeof(float));
-                    ConvertPixels<float,double>( fimage, image.Reinterpret<double>() );
-                    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-                    tex.Upload(fimage.ptr,0,0, (GLsizei)fimage.w, (GLsizei)fimage.h, fmt.glformat, GL_FLOAT);
-                }else{
-                    glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)strides[i]);
-                    tex.Upload(image.ptr,0,0, (GLsizei)image.w, (GLsizei)image.h, fmt.glformat, fmt.gltype);
+                // Update images
+                for(unsigned int i=0; i<images.size(); ++i) {
+                    stream_views[i].SetImage(images[i], pangolin::GlPixFormat(video.Streams()[i].PixFormat() ));
                 }
-
-                // Render
-                handlers[i].UpdateView();
-                handlers[i].glSetViewOrtho();
-                const std::pair<float,float> os = gloffsetscale[i];
-                pangolin::GlSlUtilities::OffsetAndScale(os.first, os.second);
-                handlers[i].glRenderTexture(tex);
-                pangolin::GlSlUtilities::UseNone();
-                handlers[i].glRenderOverlay();
             }
         }
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
         // leave in pixel orthographic for slider to render.
         pangolin::DisplayBase().ActivatePixelOrthographic();

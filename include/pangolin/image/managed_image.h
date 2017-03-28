@@ -158,6 +158,18 @@ public:
             Image<T>::ptr = nullptr;
         }
     }
+
+    // Move asignment
+    template<typename TOther, typename AllocOther> inline
+    void OwnAndReinterpret(ManagedImage<TOther,AllocOther>&& img)
+    {
+        Deallocate();
+        Image<T>::pitch = img.pitch;
+        Image<T>::ptr   = (T*)img.ptr;
+        Image<T>::w     = img.w;
+        Image<T>::h     = img.h;
+        img.ptr = nullptr;
+    }
 };
 
 }
