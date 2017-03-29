@@ -177,10 +177,13 @@ public:
     FfmpegVideoOutput( const std::string& filename, int base_frame_rate, int bit_rate );
     ~FfmpegVideoOutput();
 
-    const std::vector<StreamInfo>& Streams() const;
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const picojson::value& properties);
+    const std::vector<StreamInfo>& Streams() const override;
+
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const picojson::value& properties) override;
+
     int WriteStreams(const unsigned char* data, const picojson::value& frame_properties) override;
-    bool IsPipe() const;
+
+    bool IsPipe() const override;
     
 protected:
     void Initialise(std::string filename);
