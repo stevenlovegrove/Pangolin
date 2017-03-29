@@ -17,6 +17,8 @@ class ImageView : public pangolin::View, public pangolin::ImageViewHandler
   public:
     ImageView();
 
+    ~ImageView();
+
     void Render() override;
 
     void Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state) override;
@@ -45,7 +47,7 @@ class ImageView : public pangolin::View, public pangolin::ImageViewHandler
 
     void SetRenderOverlay(const bool& val);
 
-  private:
+//  private:
     // img_to_load contains image data that should be uploaded to the texture on
     // the next render cycle. The data is owned by this object and should be
     // freed after use.

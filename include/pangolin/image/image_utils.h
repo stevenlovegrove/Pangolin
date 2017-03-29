@@ -95,7 +95,7 @@ template<typename T>
 std::pair<float,float> GetOffsetScale(const pangolin::Image<T>& img, size_t channels, float type_max, float format_max)
 {
     // Find min / max of all channels, ignoring 4th alpha channel
-    const std::pair<float,float> mm = GetMinMax<T>(img,channels);
+    const std::pair<float,float> mm = internal::GetMinMax<T>(img,channels);
     const float type_scale = format_max / type_max;
     const float offset = -type_scale* mm.first;
     const float scale = type_max / (mm.second - mm.first);

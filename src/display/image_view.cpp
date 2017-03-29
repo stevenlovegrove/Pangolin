@@ -11,6 +11,10 @@ ImageView::ImageView()
     SetHandler(this);
 }
 
+ImageView::~ImageView()
+{
+}
+
 void ImageView::Render()
 {
     LoadPending();
