@@ -635,6 +635,11 @@ inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements
     Unbind();
 }
 
+inline void GlBuffer::Reinitialise(GlBuffer const& other )
+{
+    Reinitialise(other.buffer_type, other.num_elements, other.datatype, other.count_per_element, other.gluse);
+}
+
 inline void GlBuffer::Resize(GLuint new_num_elements)
 {
     if(bo!=0) {

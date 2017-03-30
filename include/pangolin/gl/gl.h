@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <pangolin/gl/glinclude.h>
 #include <pangolin/display/viewport.h>
+#include <pangolin/gl/glinclude.h>
 #include <pangolin/image/image_io.h>
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
@@ -39,9 +39,9 @@
 #include <Eigen/Core>
 #endif
 
-#include <math.h>
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <math.h>
 
 namespace pangolin
 {
@@ -188,6 +188,7 @@ struct PANGOLIN_EXPORT GlBuffer
     size_t SizeBytes() const;
     
     void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse );
+    void Reinitialise(GlBuffer const& other );
     void Resize(GLuint num_elements);
     
     void Bind() const;
