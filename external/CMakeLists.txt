@@ -24,6 +24,7 @@ ExternalProject_Add( __glew
 add_library(_glew STATIC IMPORTED GLOBAL)
 add_dependencies(_glew __glew)
 set_target_properties(_glew PROPERTIES
+    IMPORTED_LOCATION_RELWITHDEBINFO ${glew_PREFIX}/lib/glew.lib
     IMPORTED_LOCATION_RELEASE ${glew_PREFIX}/lib/glew.lib
     IMPORTED_LOCATION_DEBUG   ${glew_PREFIX}/lib/glewd.lib
 )
@@ -35,6 +36,7 @@ set(GLEW_STATIC 1 PARENT_SCOPE)
 set(ExternConfig "${ExternConfig}
   add_library(_glew STATIC IMPORTED)
   set_target_properties(_glew PROPERTIES
+    IMPORTED_LOCATION_RELWITHDEBINFO ${glew_PREFIX}/lib/glew.lib
     IMPORTED_LOCATION_RELEASE ${glew_PREFIX}/lib/glew.lib
     IMPORTED_LOCATION_DEBUG   ${glew_PREFIX}/lib/glewd.lib
   )")
@@ -63,6 +65,7 @@ add_library(_zlib STATIC IMPORTED GLOBAL)
 add_dependencies(_zlib __zlib)
 set_target_properties(_zlib PROPERTIES
     IMPORTED_LOCATION_RELEASE ${zlib_PREFIX}/lib/zlibstatic.lib
+    IMPORTED_LOCATION_RELWITHDEBINFO ${zlib_PREFIX}/lib/zlibstatic.lib
     IMPORTED_LOCATION_DEBUG   ${zlib_PREFIX}/lib/zlibstaticd.lib
 )
 
@@ -90,7 +93,8 @@ ExternalProject_Add( __libpng
 add_library(_libpng STATIC IMPORTED GLOBAL)
 add_dependencies(_libpng __libpng)
 set_target_properties(_libpng PROPERTIES
-    IMPORTED_LOCATION_RELEASE ${libpng_PREFIX}/lib/libpng16_static.lib
+    IMPORTED_LOCATION_RELWITHDEBINFO ${libpng_PREFIX}/lib/libpng16_static.lib
+	IMPORTED_LOCATION_RELEASE ${libpng_PREFIX}/lib/libpng16_static.lib
     IMPORTED_LOCATION_DEBUG   ${libpng_PREFIX}/lib/libpng16_staticd.lib
 )
 
@@ -102,11 +106,13 @@ set(ExternConfig "${ExternConfig}
   add_library(_zlib STATIC IMPORTED)
   set_target_properties(_zlib PROPERTIES
     IMPORTED_LOCATION_RELEASE ${zlib_PREFIX}/lib/zlibstatic.lib
+    IMPORTED_LOCATION_RELWITHDEBINFO ${zlib_PREFIX}/lib/zlibstatic.lib
     IMPORTED_LOCATION_DEBUG   ${zlib_PREFIX}/lib/zlibstaticd.lib
   )
   add_library(_libpng STATIC IMPORTED)
   set_target_properties(_libpng PROPERTIES
     IMPORTED_LOCATION_RELEASE ${libpng_PREFIX}/lib/libpng16_static.lib
+    IMPORTED_LOCATION_RELWITHDEBINFO ${libpng_PREFIX}/lib/libpng16_static.lib
     IMPORTED_LOCATION_DEBUG   ${libpng_PREFIX}/lib/libpng16_staticd.lib
   )")
 endif()
