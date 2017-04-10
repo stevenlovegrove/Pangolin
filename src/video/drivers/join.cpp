@@ -144,8 +144,12 @@ bool JoinVideo::GrabNext(unsigned char* image, bool wait)
     TSTART()
     DBGPRINT("Entering GrabNext:")
     for(size_t s=0; s<src.size(); ++s) {
-        if( src[s]->GrabNext(image+offset,wait) && sync_tolerance_us > 0 ) {
-            capture_us[s] = GetEndOfCaptureTime(s);
+        if( src[s]->GrabNext(image+offset,wait) ) {
+            if(sync_tolerance_us > 0) {
+                capture_us[s] = GetEndOfCaptureTime(s);
+            }else{
+                capture_us[s] = std::numeric_limits<int64_t>::max();
+            }
         }
         offsets[s] = offset;
         offset += src[s]->SizeBytes();
