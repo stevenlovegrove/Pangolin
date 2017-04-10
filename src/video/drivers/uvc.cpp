@@ -44,6 +44,7 @@ UvcVideo::UvcVideo(int vendor_id, int product_id, const char* sn, int device_id,
     }
     
     InitDevice(vendor_id, product_id, sn, device_id, width, height, fps);
+    InitPangoDeviceProperties();
     Start();
 }
 
@@ -172,6 +173,13 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int w
     streams.push_back(stream_info);
 }
 
+void UvcVideo::InitPangoDeviceProperties()
+{
+    // Store camera details in device properties
+    device_properties["BusNumber"] = std::to_string(uvc_get_bus_number(dev_));
+    device_properties["DeviceAddress"] = std::to_string(uvc_get_device_address(dev_));
+}
+
 void UvcVideo::DeinitDevice()
 {
     Stop();
@@ -232,6 +240,9 @@ bool UvcVideo::GrabNext( unsigned char* image, bool wait )
     }else{
         if(frame) {
             memcpy(image, frame->data, frame->data_bytes );
+            // This is a hack, this ts sould come from the device.
+            frame_properties[PANGO_CAPTURE_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+            frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
             return true;
         }else{
             if(wait) {
@@ -254,6 +265,18 @@ int UvcVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, U
     }else{
         return uvc_get_ctrl(devh_, unit, ctrl, data, len, (uvc_req_code)req_code);
     }
+}
+
+//! Access JSON properties of device
+const picojson::value& UvcVideo::DeviceProperties() const
+{
+        return device_properties;
+}
+
+//! Access JSON properties of most recently captured frame
+const picojson::value& UvcVideo::FrameProperties() const
+{
+    return frame_properties;
 }
 
 PANGOLIN_REGISTER_FACTORY(UvcVideo)

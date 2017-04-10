@@ -29,6 +29,7 @@
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
+#include <pangolin/utils/timer.h>
 
 #ifdef _MSC_VER
 // Define missing timeval struct
@@ -43,7 +44,7 @@ typedef struct timeval {
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT UvcVideo : public VideoInterface, public VideoUvcInterface
+class PANGOLIN_EXPORT UvcVideo : public VideoInterface, public VideoUvcInterface, public VideoPropertiesInterface
 {
 public:
     UvcVideo(int vendor_id, int product_id, const char* sn, int deviceid, int width, int height, int fps);
@@ -73,7 +74,14 @@ public:
     //! Implement VideoUvcInterface::GetCtrl()
     int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code);
 
+    //! Access JSON properties of device
+    const picojson::value& DeviceProperties() const;
+
+    //! Access JSON properties of most recently captured frame
+    const picojson::value& FrameProperties() const;
+
 protected:
+    void InitPangoDeviceProperties();
     static uvc_error_t FindDevice(
         uvc_context_t *ctx, uvc_device_t **dev,
         int vid, int pid, const char *sn, int device_id);
@@ -87,6 +95,8 @@ protected:
     uvc_stream_handle* strm_;
     uvc_stream_ctrl_t ctrl_;
     uvc_frame_t* frame_;
+    picojson::value device_properties;
+    picojson::value frame_properties;
 };
 
 }
