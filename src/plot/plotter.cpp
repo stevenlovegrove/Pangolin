@@ -25,11 +25,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/plot/plotter.h>
 #include <pangolin/gl/gldraw.h>
+#include <pangolin/plot/plotter.h>
 
-#include <iomanip>
 #include <cctype>
+#include <iomanip>
 
 namespace pangolin
 {
@@ -385,7 +385,21 @@ void Plotter::Render()
 #endif
 
     glClearColor(colour_bg.r, colour_bg.g, colour_bg.b, colour_bg.a);
-    ActivateScissorAndClear();
+    ActivateAndScissor();
+
+    if(std::isfinite(colour_bg.a)) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
+    if(extern_draw_function && show) {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(rview.x.min, rview.x.max, rview.y.max, rview.y.min, -1, 1);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        extern_draw_function(*this);
+    }
 
     // Try to create smooth lines
     glDisable(GL_MULTISAMPLE);
