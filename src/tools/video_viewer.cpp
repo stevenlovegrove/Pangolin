@@ -1,14 +1,14 @@
 #include <pangolin/tools/video_viewer.h>
 
-#include <pangolin/pangolin.h>
-#include <pangolin/video/video_input.h>
-#include <pangolin/gl/gltexturecache.h>
-#include <pangolin/gl/glpixformat.h>
-#include <pangolin/handler/handler_image.h>
-#include <pangolin/utils/file_utils.h>
-#include <pangolin/utils/timer.h>
 #include <pangolin/display/image_view.h>
+#include <pangolin/gl/glpixformat.h>
+#include <pangolin/gl/gltexturecache.h>
+#include <pangolin/handler/handler_image.h>
+#include <pangolin/pangolin.h>
+#include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/sigstate.h>
+#include <pangolin/utils/timer.h>
+#include <pangolin/video/video_input.h>
 
 
 namespace pangolin
@@ -22,6 +22,7 @@ void videoviewer_signal_quit(int) {
 VideoViewer::VideoViewer(const std::string& window_name, const std::string& input_uri, const std::string& output_uri)
     : window_name(window_name),
       video_playback(nullptr),
+      video_properties(nullptr),
       output_uri(output_uri),
       current_frame(-1),
       grab_until(std::numeric_limits<int>::max()),
@@ -151,6 +152,10 @@ void VideoViewer::Run()
             if ( frame < grab_until && video.Grab(&buffer[0], images, video_grab_wait, video_grab_newest)) {
                 frame = frame +1;
 
+                if(frame_changed_callback) {
+                    frame_changed_callback(buffer.get(), images, video_properties->FrameProperties());
+                }
+
                 // Update images
                 for(unsigned int i=0; i<images.size(); ++i) {
                     stream_views[i].SetImage(images[i], pangolin::GlPixFormat(video.Streams()[i].PixFormat() ));
@@ -199,6 +204,8 @@ void VideoViewer::OpenInput(const std::string& input_uri)
     }
 
     video_playback = pangolin::FindFirstMatchingVideoInterface<pangolin::VideoPlaybackInterface>(video);
+    video_properties = pangolin::FindFirstMatchingVideoInterface<pangolin::VideoPropertiesInterface>(video);
+
     if(TotalFrames() < std::numeric_limits<int>::max() ) {
         std::cout << "Video length: " << TotalFrames() << " frames" << std::endl;
         grab_until = 0;
@@ -277,6 +284,28 @@ void VideoViewer::ToggleWaitForFrames()
     }
 }
 
+void VideoViewer::SetDiscardBufferedFrames(bool new_state)
+{
+    std::lock_guard<std::mutex> lock(control_mutex);
+    video_grab_newest = new_state;
+    if(video_grab_newest) {
+        pango_print_info("Discarding old frames.\n");
+    }else{
+        pango_print_info("Not discarding old frames.\n");
+    }
+}
+
+void VideoViewer::SetWaitForFrames(bool new_state)
+{
+    std::lock_guard<std::mutex> lock(control_mutex);
+    video_grab_wait = new_state;
+    if(video_grab_wait) {
+        pango_print_info("Gui wait's for video frame.\n");
+    }else{
+        pango_print_info("Gui doesn't wait for video frame.\n");
+    }
+}
+
 void VideoViewer::Skip(int frames)
 {
     std::lock_guard<std::mutex> lock(control_mutex);
@@ -293,6 +322,14 @@ void VideoViewer::Skip(int frames)
     }
 
 }
+
+void VideoViewer::SetFrameChangedCallback(FrameChangedCallbackFn cb)
+{
+    std::lock_guard<std::mutex> lock(control_mutex);
+    frame_changed_callback=cb;
+}
+
+
 
 void VideoViewer::WaitUntilExit()
 {

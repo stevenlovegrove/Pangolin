@@ -5,6 +5,7 @@
 #include <mutex>
 #include <thread>
 #include <string>
+#include <functional>
 
 namespace pangolin
 {
@@ -13,6 +14,10 @@ PANGOLIN_EXPORT
 class VideoViewer
 {
 public:
+    typedef std::function<void(const unsigned char* data,
+                               const std::vector<Image<unsigned char> >& images,
+                               const picojson::value& properties)> FrameChangedCallbackFn;
+
     static constexpr int FRAME_SKIP = 30;
 
     VideoViewer(const std::string& window_name, const std::string& input_uri, const std::string& output_uri = "video.pango" );
@@ -41,9 +46,18 @@ public:
     void ToggleRecord();
     void ToggleDiscardBufferedFrames();
     void ToggleWaitForFrames();
+    void SetDiscardBufferedFrames(bool new_state);
+    void SetWaitForFrames(bool new_state);
     void Skip(int frames);
 
+    // Register to be notified of new image data
+    void SetFrameChangedCallback(FrameChangedCallbackFn cb);
+
     void WaitUntilExit();
+
+
+    VideoInput& Video() {return video;}
+    const VideoInput& Video() const {return video;}
 
 protected:
     void RegisterDefaultKeyShortcutsAndPangoVariables();
@@ -53,8 +67,9 @@ protected:
     std::string window_name;
     std::thread vv_thread;
 
-    pangolin::VideoInput video;
-    pangolin::VideoPlaybackInterface* video_playback;
+    VideoInput video;
+    VideoPlaybackInterface* video_playback;
+    VideoPropertiesInterface* video_properties;
 
     std::string output_uri;
 
@@ -64,6 +79,8 @@ protected:
     bool video_grab_wait;
     bool video_grab_newest;
     bool should_run;
+
+    FrameChangedCallbackFn frame_changed_callback;
 };
 
 
