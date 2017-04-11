@@ -28,6 +28,8 @@
 #ifndef PLOTTER_H
 #define PLOTTER_H
 
+#include <limits>
+
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glsl.h>
 #include <pangolin/gl/colour.h>
