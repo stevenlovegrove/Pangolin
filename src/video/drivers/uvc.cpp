@@ -45,18 +45,23 @@ UvcVideo::UvcVideo(int vendor_id, int product_id, const char* sn, int device_id,
     
     InitDevice(vendor_id, product_id, sn, device_id, width, height, fps);
     InitPangoDeviceProperties();
+
+    // FIX: CRASHING IF WE DON'T START STREAMING STRAIGHT AWAY
+
     Start();
 }
 
 UvcVideo::~UvcVideo()
 {
     DeinitDevice();
-    
-//    if (ctx_) {
-//        // Work out how to kill this properly
-//        uvc_exit(ctx_);
-//        ctx_ = 0;
-//    }   
+
+    if(devh_) uvc_close(devh_);
+    if(dev_) uvc_unref_device(dev_);
+
+    if (ctx_) {
+        uvc_exit(ctx_);
+        ctx_ = 0;
+    }
 }
 
 uvc_error_t UvcVideo::FindDevice(
