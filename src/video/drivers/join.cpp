@@ -25,8 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/join.h>
 #include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/drivers/join.h>
 #include <pangolin/video/iostream_operators.h>
 
 //#define DEBUGJOIN

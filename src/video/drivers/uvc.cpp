@@ -69,6 +69,10 @@ uvc_error_t UvcVideo::FindDevice(
 
   ret = uvc_get_device_list(ctx, &list);
 
+  int cnt = 0;
+  while(list[cnt++]!=NULL);
+  pango_print_info("UVC Descriptor list contains %d devices.\n", (cnt-1));
+
   if (ret != UVC_SUCCESS) {
     return ret;
   }
@@ -82,6 +86,7 @@ uvc_error_t UvcVideo::FindDevice(
 
     if (uvc_get_device_descriptor(test_dev, &desc) != UVC_SUCCESS)
       continue;
+
 
     const bool matches = (!vid || desc->idVendor == vid)
             && (!pid || desc->idProduct == pid)
@@ -187,7 +192,7 @@ void UvcVideo::DeinitDevice()
     if (frame_) {
         uvc_free_frame(frame_);
         frame_ = 0;
-    }    
+    }
 }
 
 void UvcVideo::Start()
