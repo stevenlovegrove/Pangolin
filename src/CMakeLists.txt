@@ -553,6 +553,9 @@ IF(MSVC)
         EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/${LIBRARY_NAME}_export.h"
         STATIC_DEFINE ${LIBRARY_NAME_CAPS}_BUILT_AS_STATIC
     )
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/${LIBRARY_NAME}_export.h"
+      DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
+    )
 ENDIF()
 
 ## Set Special Compiler flags
