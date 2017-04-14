@@ -299,7 +299,7 @@ PANGOLIN_REGISTER_FACTORY(UvcVideo)
             std::istringstream(uri.Get<std::string>("pid","0x0000")) >> std::hex >> pid;
             const unsigned int dev_id = uri.Get<int>("num",0);
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
-            const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+            const unsigned int fps = uri.Get<unsigned int>("fps", 0); // 0 means unspecified.
             return std::unique_ptr<VideoInterface>( new UvcVideo(vid,pid,0,dev_id,dim.x,dim.y,fps) );
         }
     };
