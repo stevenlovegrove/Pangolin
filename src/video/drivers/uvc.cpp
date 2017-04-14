@@ -36,7 +36,8 @@ UvcVideo::UvcVideo(int vendor_id, int product_id, const char* sn, int device_id,
     : ctx_(NULL),
       dev_(NULL),
       devh_(NULL),
-      frame_(NULL)
+      frame_(NULL),
+      is_streaming(false)
 {
     uvc_init(&ctx_, NULL);
     if(!ctx_) {
@@ -202,31 +203,36 @@ void UvcVideo::DeinitDevice()
 
 void UvcVideo::Start()
 {
-    uvc_error_t stream_err = uvc_stream_start(strm_, NULL, this, 0);
-    
-    if (stream_err != UVC_SUCCESS) {
-        uvc_perror(stream_err, "uvc_stream_start");
-        uvc_close(devh_);
-        uvc_unref_device(dev_);
-        throw VideoException("Unable to start streaming.");
-    }
-    
-    if (frame_) {
-        uvc_free_frame(frame_);
-    }
-    
-    size_bytes = ctrl_.dwMaxVideoFrameSize;
-    frame_ = uvc_allocate_frame(size_bytes);
-    if(!frame_) {
-        throw VideoException("Unable to allocate frame.");
+    if(!is_streaming) {
+        uvc_error_t stream_err = uvc_stream_start(strm_, NULL, this, 0);
+
+        if (stream_err != UVC_SUCCESS) {
+            uvc_perror(stream_err, "uvc_stream_start");
+            uvc_close(devh_);
+            uvc_unref_device(dev_);
+            throw VideoException("Unable to start streaming.");
+        }else{
+            is_streaming = true;
+        }
+
+        if (frame_) {
+            uvc_free_frame(frame_);
+        }
+
+        size_bytes = ctrl_.dwMaxVideoFrameSize;
+        frame_ = uvc_allocate_frame(size_bytes);
+        if(!frame_) {
+            throw VideoException("Unable to allocate frame.");
+        }
     }
 }
 
 void UvcVideo::Stop()
 {
-    if(devh_) {
+    if(is_streaming && devh_) {
         uvc_stop_streaming(devh_);
     }
+    is_streaming = false;
 }
 
 size_t UvcVideo::SizeBytes() const

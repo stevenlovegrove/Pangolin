@@ -97,6 +97,7 @@ protected:
     uvc_frame_t* frame_;
     picojson::value device_properties;
     picojson::value frame_properties;
+    bool is_streaming;
 };
 
 }
