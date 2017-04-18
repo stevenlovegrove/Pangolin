@@ -81,7 +81,6 @@ void ImageView::Keyboard(View& view, unsigned char key, int x, int y, bool press
         pangolin::TypedImage img;
         tex.Download(img);
         offset_scale = pangolin::GetOffsetScale(img, pangolin::Round(froi), img.fmt);
-        img.Dealloc();
     }
     else if(key == 'b')
     {
@@ -99,7 +98,6 @@ void ImageView::Keyboard(View& view, unsigned char key, int x, int y, bool press
         pangolin::TypedImage img;
         tex.Download(img);
         std::pair<float, float> mm = pangolin::GetMinMax(img, pangolin::Round(froi), img.fmt);
-        img.Dealloc();
 
         printf("Min / Max in Region: %f / %f\n", mm.first, mm.second);
     }
