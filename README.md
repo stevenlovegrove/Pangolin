@@ -90,6 +90,7 @@ mkdir build
 cd build
 cmake ..
 make -j
+sudo make install
 ```
 
 If you would like to build the documentation and you have Doxygen installed, you
