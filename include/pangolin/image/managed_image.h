@@ -154,7 +154,7 @@ public:
     inline void Deallocate()
     {
         if (Image<T>::ptr) {
-            Allocator().deallocate(Image<T>::ptr, Image<T>::Area());
+            Allocator().deallocate(Image<T>::ptr, (Image<T>::h * Image<T>::pitch) / sizeof(T) );
             Image<T>::ptr = nullptr;
         }
     }
