@@ -27,11 +27,11 @@
 
 #pragma once
 
-#include <pangolin/video/stream_info.h>
 #include <pangolin/utils/picojson.h>
+#include <pangolin/video/stream_info.h>
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #define PANGO_HOST_RECEPTION_TIME_US "host_reception_time_us"
 #define PANGO_CAPTURE_TIME_US        "capture_time_us"
