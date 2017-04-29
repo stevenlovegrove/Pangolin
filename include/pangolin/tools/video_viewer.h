@@ -1,11 +1,11 @@
-#include <pangolin/platform.h>
 #include <pangolin/display/window.h>
+#include <pangolin/platform.h>
 #include <pangolin/video/video_input.h>
 
-#include <mutex>
-#include <thread>
-#include <string>
 #include <functional>
+#include <mutex>
+#include <string>
+#include <thread>
 
 namespace pangolin
 {
@@ -69,7 +69,7 @@ protected:
 
     VideoInput video;
     VideoPlaybackInterface* video_playback;
-    VideoPropertiesInterface* video_properties;
+    VideoInterface* video_interface;
 
     std::string output_uri;
 

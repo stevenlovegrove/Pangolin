@@ -22,7 +22,7 @@ void videoviewer_signal_quit(int) {
 VideoViewer::VideoViewer(const std::string& window_name, const std::string& input_uri, const std::string& output_uri)
     : window_name(window_name),
       video_playback(nullptr),
-      video_properties(nullptr),
+      video_interface(nullptr),
       output_uri(output_uri),
       current_frame(-1),
       grab_until(std::numeric_limits<int>::max()),
@@ -153,7 +153,7 @@ void VideoViewer::Run()
                 frame = frame +1;
 
                 if(frame_changed_callback) {
-                    frame_changed_callback(buffer.get(), images, video_properties->FrameProperties());
+                    frame_changed_callback(buffer.get(), images, GetVideoFrameProperties(video_interface));
                 }
 
                 // Update images
@@ -204,7 +204,7 @@ void VideoViewer::OpenInput(const std::string& input_uri)
     }
 
     video_playback = pangolin::FindFirstMatchingVideoInterface<pangolin::VideoPlaybackInterface>(video);
-    video_properties = pangolin::FindFirstMatchingVideoInterface<pangolin::VideoPropertiesInterface>(video);
+    video_interface = pangolin::FindFirstMatchingVideoInterface<pangolin::VideoInterface>(video);
 
     if(TotalFrames() < std::numeric_limits<int>::max() ) {
         std::cout << "Video length: " << TotalFrames() << " frames" << std::endl;
