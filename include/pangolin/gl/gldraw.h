@@ -98,7 +98,7 @@ inline void glDrawVertices(
 
 template<typename TV, typename TC>
 inline void glDrawColoredVertices(
-    size_t num_vertices, const TV* const vertex_ptr, const TV* const color_ptr, GLenum mode,
+    size_t num_vertices, const TV* const vertex_ptr, const TC* const color_ptr, GLenum mode,
     size_t elements_per_vertex = GlFormatTraits<TV>::components,
     size_t elements_per_color = GlFormatTraits<TC>::components,
     size_t vertex_stride_bytes = 0,
