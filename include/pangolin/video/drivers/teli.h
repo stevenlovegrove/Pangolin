@@ -28,8 +28,8 @@
 #pragma once
 
 #include <pangolin/pangolin.h>
-#include <pangolin/video/video.h>
 #include <pangolin/utils/timer.h>
+#include <pangolin/video/video.h>
 
 #include <TeliCamApi.h>
 
@@ -89,6 +89,8 @@ public:
     //! Access JSON properties of most recently captured frame
     const picojson::value& FrameProperties() const;
 
+    void PopulateEstimatedCenterCaptureTime(pangolin::basetime host_reception_time);
+
 protected:
     void Initialise();
     void InitPangoDeviceProperties();
@@ -105,6 +107,8 @@ protected:
 #ifdef _LINUX_
     Teli::SIGNAL_HANDLE hStrmCmpEvt;
 #endif
+    double transfer_bandwidth_gbps;
+    int exposure_us;
     picojson::value device_properties;
     picojson::value frame_properties;
 };

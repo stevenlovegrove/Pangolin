@@ -63,7 +63,7 @@ public:
     std::vector<VideoInterface*>& InputStreams();
 
 protected:
-    int64_t GetEndOfCaptureTime(size_t src_index);
+    int64_t GetAdjustedCaptureTime(size_t src_index);
 
     std::vector<std::unique_ptr<VideoInterface>> storage;
     std::vector<VideoInterface*> src;

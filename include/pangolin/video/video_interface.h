@@ -40,6 +40,7 @@
 #define PANGO_ANALOG_GAIN            "analog_gain"
 #define PANGO_ANALOG_BLACK_LEVEL     "analog_black_level"
 #define PANGO_SENSOR_TEMPERATURE_C   "sensor_temperature_C"
+#define PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US "estimated_center_capture_time_us"
 
 namespace pangolin {
 
