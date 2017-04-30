@@ -49,6 +49,9 @@ public:
     void SetDiscardBufferedFrames(bool new_state);
     void SetWaitForFrames(bool new_state);
     void Skip(int frames);
+    void ChangeExposure(int delta_us);
+    void ChangeGain(float delta);
+    void SetActiveCamera(int delta);
 
     // Register to be notified of new image data
     void SetFrameChangedCallback(FrameChangedCallbackFn cb);
@@ -79,6 +82,7 @@ protected:
     bool video_grab_wait;
     bool video_grab_newest;
     bool should_run;
+    uint16_t active_cam;
 
     FrameChangedCallbackFn frame_changed_callback;
 };

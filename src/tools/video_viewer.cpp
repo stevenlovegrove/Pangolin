@@ -29,7 +29,8 @@ VideoViewer::VideoViewer(const std::string& window_name, const std::string& inpu
       record_nth_frame(1),
       video_grab_wait(true),
       video_grab_newest(false),
-      should_run(true)
+      should_run(true),
+      active_cam(0)
 {
     pangolin::Var<int>::Attach("ui.frame", current_frame);
 
@@ -182,6 +183,11 @@ void VideoViewer::RegisterDefaultKeyShortcutsAndPangoVariables()
     pangolin::RegisterKeyPressCallback('<', [this](){Skip(-FRAME_SKIP);} );
     pangolin::RegisterKeyPressCallback('>', [this](){Skip(+FRAME_SKIP);} );
     pangolin::RegisterKeyPressCallback('0', [this](){RecordOneFrame();} );
+    pangolin::RegisterKeyPressCallback('E', [this](){ChangeExposure(1000);} );
+    pangolin::RegisterKeyPressCallback('e', [this](){ChangeExposure(-1000);} );
+    pangolin::RegisterKeyPressCallback('G', [this](){ChangeGain(1);} );
+    pangolin::RegisterKeyPressCallback('g', [this](){ChangeGain(-1);} );
+    pangolin::RegisterKeyPressCallback('c', [this](){SetActiveCamera(+1);} );
 }
 
 void VideoViewer::OpenInput(const std::string& input_uri)
@@ -322,6 +328,41 @@ void VideoViewer::Skip(int frames)
     }
 
 }
+
+void VideoViewer::ChangeExposure(int delta_us)
+{
+    std::lock_guard<std::mutex> lock(control_mutex);
+
+    std::vector<pangolin::GenicamVideoInterface*> ifs = FindMatchingVideoInterfaces<pangolin::GenicamVideoInterface>(video);
+
+    int exp = atoi(ifs[active_cam]->GetParameter("ExposureTime").c_str());
+
+    ifs[active_cam]->SetParameter("ExposureTime", std::to_string(exp+delta_us));
+}
+
+void VideoViewer::ChangeGain(float delta)
+{
+    std::lock_guard<std::mutex> lock(control_mutex);
+
+    std::vector<pangolin::GenicamVideoInterface*> ifs = FindMatchingVideoInterfaces<pangolin::GenicamVideoInterface>(video);
+
+    double gain = atoi(ifs[active_cam]->GetParameter("Gain").c_str());
+
+    ifs[active_cam]->SetParameter("Gain", std::to_string(gain+delta));
+}
+
+
+void VideoViewer::SetActiveCamera(int delta)
+{
+    std::lock_guard<std::mutex> lock(control_mutex);
+
+    std::vector<pangolin::GenicamVideoInterface*> ifs = FindMatchingVideoInterfaces<pangolin::GenicamVideoInterface>(video);
+
+    active_cam += delta;
+
+    if(active_cam >= ifs.size()) {active_cam = 0;}
+}
+
 
 void VideoViewer::SetFrameChangedCallback(FrameChangedCallbackFn cb)
 {
