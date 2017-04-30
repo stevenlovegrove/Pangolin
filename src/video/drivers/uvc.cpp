@@ -25,8 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/uvc.h>
 #include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/drivers/uvc.h>
 #include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
@@ -257,7 +257,6 @@ bool UvcVideo::GrabNext( unsigned char* image, bool wait )
         if(frame) {
             memcpy(image, frame->data, frame->data_bytes );
             // This is a hack, this ts sould come from the device.
-            frame_properties[PANGO_CAPTURE_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
             frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
             return true;
         }else{
