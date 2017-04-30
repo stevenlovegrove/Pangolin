@@ -189,6 +189,7 @@ void UvcVideo::InitPangoDeviceProperties()
     // Store camera details in device properties
     device_properties["BusNumber"] = std::to_string(uvc_get_bus_number(dev_));
     device_properties["DeviceAddress"] = std::to_string(uvc_get_device_address(dev_));
+    device_properties[PANGO_HAS_TIMING_DATA] = true;
 }
 
 void UvcVideo::DeinitDevice()

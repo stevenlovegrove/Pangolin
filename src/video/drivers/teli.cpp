@@ -380,7 +380,7 @@ void TeliVideo::Initialise()
     InitPangoDeviceProperties();
 
     // force initialization of local parameters copy.
-    GetParameter("ExposureTime");
+    std::cout<<"teli exposure:"<< GetParameter("ExposureTime") << std::endl;
 }
 
 void TeliVideo::InitPangoDeviceProperties()
@@ -395,6 +395,7 @@ void TeliVideo::InitPangoDeviceProperties()
     device_properties["ModelName"] = std::string(info.szModelName);
     device_properties["ManufacturerInfo"] = std::string(info.sU3vCamInfo.szManufacturerInfo);
     device_properties["Version"] = std::string(info.sU3vCamInfo.szDeviceVersion);
+    device_properties[PANGO_HAS_TIMING_DATA] = true;
 
     // TODO: Enumerate other settings.
 }
@@ -402,7 +403,7 @@ void TeliVideo::InitPangoDeviceProperties()
 void TeliVideo::SetDeviceParams(const Params& p)
 {
     for(Params::ParamMap::const_iterator it = p.params.begin(); it != p.params.end(); it++) {
-        if(it->first == "transfer_bandwidth_bytes_gbps") {
+        if(it->first == "transfer_bandwidth_gbps") {
             transfer_bandwidth_gbps = atof(it->second.c_str());
         } else {
         try{
@@ -461,8 +462,9 @@ const std::vector<StreamInfo>& TeliVideo::Streams() const
 void TeliVideo::PopulateEstimatedCenterCaptureTime(basetime host_reception_time)
 {
     if(transfer_bandwidth_gbps) {
-        const float transfer_time_us = size_bytes / (transfer_bandwidth_gbps * 1e3);
-        frame_properties[PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US] = picojson::value(pangolin::Time_us(host_reception_time) -  (exposure_us/2.0) - transfer_time_us);
+        const float transfer_time_us = size_bytes / int64_t((transfer_bandwidth_gbps * 1E3) / 8.0);
+        std::cout<<"teli: host_reception_time "<< pangolin::Time_us(host_reception_time) << " exposure/2:" << exposure_us/2.0 << " transfer time: " << transfer_time_us << " est_centered_cap: " << int64_t(pangolin::Time_us(host_reception_time) -  (exposure_us/2.0) - transfer_time_us)<< std::endl;
+        frame_properties[PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US] = picojson::value(int64_t(pangolin::Time_us(host_reception_time) -  (exposure_us/2.0) - transfer_time_us));
     }
 }
 
