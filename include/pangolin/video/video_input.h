@@ -85,6 +85,11 @@ struct PANGOLIN_EXPORT VideoInput
         return uri_input;
     }
 
+    void Reset() {
+        Close();
+        Open(uri_input.full_uri, uri_output.full_uri);
+    }
+
     // Return pointer to inner video class as VideoType
     template<typename VideoType>
     VideoType* Cast() {
@@ -112,7 +117,6 @@ struct PANGOLIN_EXPORT VideoInput
 protected:
     void InitialiseRecorder();
 
-    std::string str_uri_input;
     Uri uri_input;
     Uri uri_output;
 

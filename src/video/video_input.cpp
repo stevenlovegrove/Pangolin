@@ -49,7 +49,6 @@ void VideoInput::Open(
     const std::string& output_uri
     ) 
 {
-    str_uri_input = input_uri;
     uri_input = ParseUri(input_uri);
     uri_output = ParseUri(output_uri);
 
@@ -115,7 +114,7 @@ void VideoInput::InitialiseRecorder()
     video_recorder.reset();
     video_recorder = OpenVideoOutput(uri_output);
     video_recorder->SetStreams(
-        video_src->Streams(), str_uri_input,
+        video_src->Streams(), uri_input.full_uri,
         GetVideoDeviceProperties(video_src.get())
     );
 }
