@@ -380,7 +380,7 @@ void TeliVideo::Initialise()
     InitPangoDeviceProperties();
 
     // force initialization of local parameters copy.
-    std::cout<<"teli exposure:"<< GetParameter("ExposureTime") << std::endl;
+    GetParameter("ExposureTime");
 }
 
 void TeliVideo::InitPangoDeviceProperties()
@@ -463,7 +463,6 @@ void TeliVideo::PopulateEstimatedCenterCaptureTime(basetime host_reception_time)
 {
     if(transfer_bandwidth_gbps) {
         const float transfer_time_us = size_bytes / int64_t((transfer_bandwidth_gbps * 1E3) / 8.0);
-        //std::cout<<"teli: host_reception_time "<< pangolin::Time_us(host_reception_time) << " exposure/2:" << exposure_us/2.0 << " transfer time: " << transfer_time_us << " est_centered_cap: " << int64_t(pangolin::Time_us(host_reception_time) -  (exposure_us/2.0) - transfer_time_us)<< std::endl;
         frame_properties[PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US] = picojson::value(int64_t(pangolin::Time_us(host_reception_time) -  (exposure_us/2.0) - transfer_time_us));
     }
 }
