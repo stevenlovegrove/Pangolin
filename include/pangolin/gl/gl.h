@@ -167,7 +167,8 @@ enum GlBufferType
     GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,     // IBO's
 #ifndef HAVE_GLES
     GlPixelPackBuffer = GL_PIXEL_PACK_BUFFER,           // PBO's
-    GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER
+    GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER,
+    GlShaderStorageBuffer = GL_SHADER_STORAGE_BUFFER
 #endif
 };
 
