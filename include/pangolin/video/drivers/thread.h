@@ -30,6 +30,7 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
 
+#include <memory>
 #include <pangolin/utils/fix_size_buffer_queue.h>
 
 namespace pangolin
@@ -83,8 +84,14 @@ protected:
         {
         }
 
+        // No copy constructor.
+        GrabResult(const GrabResult& o) = delete;
+
+        // Default move constructor
+        GrabResult(GrabResult&& o) = default;
+
         bool return_status;
-        unsigned char* buffer;
+        std::unique_ptr<unsigned char[]> buffer;
         picojson::value frame_properties;
     };
 
