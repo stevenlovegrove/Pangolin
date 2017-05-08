@@ -47,7 +47,7 @@ VideoInput::VideoInput(
 void VideoInput::Open(
     const std::string& input_uri,
     const std::string& output_uri
-    ) 
+    )
 {
     uri_input = ParseUri(input_uri);
     uri_output = ParseUri(output_uri);
@@ -68,6 +68,9 @@ void VideoInput::Open(
 
 void VideoInput::Close()
 {
+    // Reset this first so that recording data gets written out to disk ASAP.
+    video_recorder.reset();
+
     video_src.reset();
     videos.clear();
 }
