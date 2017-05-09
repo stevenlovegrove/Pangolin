@@ -191,13 +191,28 @@ picojson::value GetVideoFrameProperties(VideoInterface* video)
             std::vector<VideoPropertiesInterface*> vec_pro =
                     fi->FindMatchingStreams<VideoPropertiesInterface>();
 
-            // Use first stream's properties as base, but also populate children.
-            picojson::value json = vec_pro[0]->FrameProperties();
+            picojson::value json;
 
-            picojson::value& streams = json["streams"];
-            for(size_t i=0; i< vec_pro.size(); ++i) {
-                streams.push_back( vec_pro[i]->FrameProperties() );
+            if(vec_pro.size()) {
+//                // Use first stream's properties as base
+//                json = vec_pro[0]->FrameProperties();
+
+                // Populate for all sub-streams
+                picojson::value& streams = json["streams"];
+                for(size_t i=0; i< vec_pro.size(); ++i) {
+                    const picojson::value& frame_props = vec_pro[i]->FrameProperties();
+
+                    if(frame_props.contains("streams") ) {
+                        const picojson::value& sub_streams = frame_props["streams"];
+                        for(size_t i=0; i < sub_streams.size(); ++i) {
+                            streams.push_back( sub_streams[i] );
+                        }
+                    }else{
+                        streams.push_back( frame_props );
+                    }
+                }
             }
+
             return json;
         }
     }
@@ -217,13 +232,28 @@ picojson::value GetVideoDeviceProperties(VideoInterface* video)
             std::vector<VideoPropertiesInterface*> vec_pro =
                     fi->FindMatchingStreams<VideoPropertiesInterface>();
 
-            // Use first stream's properties as base, but also populate children.
-            picojson::value json = vec_pro[0]->DeviceProperties();
+            picojson::value json;
 
-            picojson::value& streams = json["streams"];
-            for(size_t i=0; i< vec_pro.size(); ++i) {
-                streams.push_back( vec_pro[i]->DeviceProperties() );
+            if(vec_pro.size()) {
+//                // Use first stream's properties as base
+//                json = vec_pro[0]->DeviceProperties();
+
+                // Populate for all sub-streams
+                picojson::value& streams = json["streams"];
+                for(size_t i=0; i< vec_pro.size(); ++i) {
+                    const picojson::value& device_props = vec_pro[i]->DeviceProperties();
+
+                    if(device_props.contains("streams") ) {
+                        const picojson::value& sub_streams = device_props["streams"];
+                        for(size_t i=0; i < sub_streams.size(); ++i) {
+                            streams.push_back( sub_streams[i] );
+                        }
+                    }else{
+                        streams.push_back( device_props );
+                    }
+                }
             }
+
             return json;
         }
     }
