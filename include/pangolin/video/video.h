@@ -187,14 +187,16 @@ picojson::value GetVideoFrameProperties(VideoInterface* video)
     if(pi) {
         return pi->FrameProperties();
     }else if(fi){
-        if(fi->InputStreams().size() == 1) {
-            return GetVideoFrameProperties(fi->InputStreams()[0]);
-        }else if(fi->InputStreams().size() > 0){
+        if(fi->InputStreams().size() > 0){
+            std::vector<VideoPropertiesInterface*> vec_pro =
+                    fi->FindMatchingStreams<VideoPropertiesInterface>();
+
             // Use first stream's properties as base, but also populate children.
-            picojson::value json = GetVideoFrameProperties(fi->InputStreams()[0]);
+            picojson::value json = vec_pro[0]->FrameProperties();
+
             picojson::value& streams = json["streams"];
-            for(size_t i=0; i< fi->InputStreams().size(); ++i) {
-                streams.push_back( GetVideoFrameProperties(fi->InputStreams()[i]) );
+            for(size_t i=0; i< vec_pro.size(); ++i) {
+                streams.push_back( vec_pro[i]->FrameProperties() );
             }
             return json;
         }
@@ -211,14 +213,16 @@ picojson::value GetVideoDeviceProperties(VideoInterface* video)
     if(pi) {
         return pi->DeviceProperties();
     }else if(fi){
-        if(fi->InputStreams().size() == 1) {
-            return GetVideoDeviceProperties(fi->InputStreams()[0]);
-        }else if(fi->InputStreams().size() > 0){
+        if(fi->InputStreams().size() > 0){
+            std::vector<VideoPropertiesInterface*> vec_pro =
+                    fi->FindMatchingStreams<VideoPropertiesInterface>();
+
             // Use first stream's properties as base, but also populate children.
-            picojson::value json = GetVideoDeviceProperties(fi->InputStreams()[0]);
+            picojson::value json = vec_pro[0]->DeviceProperties();
+
             picojson::value& streams = json["streams"];
-            for(size_t i=0; i< fi->InputStreams().size(); ++i) {
-                streams.push_back( GetVideoDeviceProperties(fi->InputStreams()[i]) );
+            for(size_t i=0; i< vec_pro.size(); ++i) {
+                streams.push_back( vec_pro[i]->DeviceProperties() );
             }
             return json;
         }
