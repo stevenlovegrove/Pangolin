@@ -106,8 +106,18 @@ bool JoinVideo::Sync(int64_t tolerance_us, double transfer_bandwidth_gbps)
     {
        picojson::value props = GetVideoDeviceProperties(src[s]);
        if(!props.get_value(PANGO_HAS_TIMING_DATA, false)) {
-           sync_tolerance_us = 0;
-           return false;
+           if (props.contains("streams")) {
+               picojson::value streams = props["streams"];
+               for (size_t i=0; i<streams.size(); ++i) {
+                    if(!streams[i].get_value(PANGO_HAS_TIMING_DATA, false)) {
+                        sync_tolerance_us = 0;
+                        return false;
+                    }
+               }
+           } else {
+               sync_tolerance_us = 0;
+               return false;
+           }
        }
     }
 
@@ -125,6 +135,7 @@ int64_t JoinVideo::GetAdjustedCaptureTime(size_t src_index)
     if(props.contains(PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US)) {
         // great, the driver already gave us an estimated center of capture
         return props[PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US].get<int64_t>();
+
     } else {
         if(props.contains(PANGO_HOST_RECEPTION_TIME_US)) {
             int64_t transfer_time_us = 0;
@@ -133,10 +144,28 @@ int64_t JoinVideo::GetAdjustedCaptureTime(size_t src_index)
             }
             return props[PANGO_HOST_RECEPTION_TIME_US].get<int64_t>() - transfer_time_us;
         } else {
-            PANGO_ENSURE(false, "JoinVideo: Stream % does contain any timestamp info.\n", src_index);
-            return 0;
-        }
-    }
+            if (props.contains("streams")) {
+                picojson::value streams = props["streams"];
+
+                if(streams.size()>0){
+                     if(streams[0].contains(PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US)) {
+                         // great, the driver already gave us an estimated center of capture
+                         return streams[0][PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US].get<int64_t>();
+                     }
+                     else if( streams[0].contains(PANGO_HOST_RECEPTION_TIME_US)) {
+                         int64_t transfer_time_us = 0;
+                         if( transfer_bandwidth_bytes_per_us > 0 ) {
+                             transfer_time_us = src[src_index]->SizeBytes() / transfer_bandwidth_bytes_per_us;
+                         }
+                        return streams[0][PANGO_HOST_RECEPTION_TIME_US].get<int64_t>() - transfer_time_us;
+                    }
+                }
+           }
+       }
+
+       PANGO_ENSURE(false, "JoinVideo: Stream % does contain any timestamp info.\n", src_index);
+       return 0;
+   }
 }
 
 bool JoinVideo::GrabNext(unsigned char* image, bool wait)
