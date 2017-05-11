@@ -33,6 +33,8 @@ VideoViewer::VideoViewer(const std::string& window_name, const std::string& inpu
       active_cam(0)
 {
     pangolin::Var<int>::Attach("ui.frame", current_frame);
+    pangolin::Var<int>::Attach("ui.record_nth_frame", record_nth_frame);
+
 
     if(!input_uri.empty()) {
         OpenInput(input_uri);
