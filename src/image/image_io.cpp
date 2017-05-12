@@ -513,6 +513,51 @@ TypedImage LoadPpm(const std::string& filename)
     return LoadPpm(bFile);
 }
 
+void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
+{
+    std::ofstream bFile( filename.c_str(), std::ios::out | std::ios::binary );
+    
+    // Setup header variables
+    std::string ppm_type = "";
+    int num_colors = 0;
+    int w = (int)image.w;
+    int h = (int)image.h;
+    
+    if(fmt.format == "GRAY8") {
+        ppm_type = "P5";
+        num_colors = 255;
+    }else if(fmt.format == "GRAY16LE") {
+        ppm_type = "P5";
+        num_colors = 65535;
+    }else if(fmt.format == "RGB24") {
+        ppm_type = "P6";
+        num_colors = 255;
+    }else{
+        throw std::runtime_error("Unsupported pixel format");  
+    }
+    
+    // Write header
+    bFile << ppm_type;
+    bFile << " ";
+    bFile << w;
+    bFile << " ";
+    bFile << h;
+    bFile << " ";
+    bFile << num_colors;
+    bFile << "\n";
+    
+    // Write out data
+    if(top_line_first) {
+        for(size_t r=0; r<image.h; ++r) {
+            bFile.write( (char*)image.ptr + r*image.pitch, image.pitch );
+        }
+    }else{
+        for(size_t r=0; r<image.h; ++r) {
+            bFile.write( (char*)image.ptr + (image.h-1-r)*image.pitch, image.pitch );
+        }
+    }
+}
+
 #ifdef HAVE_OPENEXR
 Imf::PixelType OpenEXRPixelType(int channel_bits)
 {
@@ -636,6 +681,8 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
     switch (file_type) {
     case ImageFileTypePng:
         return SavePng(image, fmt, filename, top_line_first);
+    case ImageFileTypePpm:
+        return SavePpm(image, fmt, filename, top_line_first);
     case ImageFileTypeExr:
         return SaveExr(image, fmt, filename, top_line_first);
     case ImageFileTypePango:
