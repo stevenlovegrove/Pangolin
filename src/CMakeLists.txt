@@ -246,9 +246,27 @@ if(UNIX)
   endif()
 endif()
 
-option(BUILD_PANGOLIN_PYTHON "Build support for Pangolin Interactive Console" ON)
+# Optional Python configuration
+# builds pangolin automatically if all the requirements are met
+SET(PYTHON_VERSION_PANGOLIN "2.7" CACHE STRING "Python version Pangolin will use.")
+SET(Python_ADDITIONAL_VERSIONS 2.7 2.7.3 3 3.0 3.1 3.2 3.3 3.4 3.5 3.6)
+SET_PROPERTY(CACHE PYTHON_VERSION_PANGOLIN PROPERTY STRINGS ${Python_ADDITIONAL_VERSIONS})
+SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build3/cmake ${CMAKE_MODULE_PATH})
+OPTION(EXACT_PYTHON_VERSION "Require Python and match PYTHON_VERSION_PANGOLIN exactly, e.g. 2.7.3" OFF)
+IF(EXACT_PYTHON_VERSION)
+  set(EXACT_PYTHON_VERSION_FLAG EXACT REQUIRED)
+ENDIF(EXACT_PYTHON_VERSION)
+# first find the python interpreter
+FIND_PACKAGE(PythonInterp ${PYTHON_VERSION_PANGOLIN} ${EXACT_PYTHON_VERSION_FLAG})
+# python library should exactly match that of the interpreter
+FIND_PACKAGE(PythonLibs ${PYTHON_VERSION_STRING} EXACT)
+SET(DEFAULT_BUILD_PANGOLIN_PYTHON OFF)
+IF(PYTHONLIBS_FOUND)
+	SET(DEFAULT_BUILD_PANGOLIN_PYTHON ON)
+ENDIF(PYTHONLIBS_FOUND)
+OPTION(BUILD_PANGOLIN_PYTHON "Build support for Pangolin Interactive Console" ${DEFAULT_BUILD_PANGOLIN_PYTHON})
+
 if(BUILD_PANGOLIN_PYTHON AND BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND NOT _WIN_)
-  find_package(PythonLibs QUIET)
   if(PYTHONLIBS_FOUND)
     set(HAVE_PYTHON 1)
     list(APPEND HEADERS
@@ -416,7 +434,7 @@ if(BUILD_PANGOLIN_LIBUVC AND BUILD_PANGOLIN_VIDEO)
     if(_WIN_)
       find_package(pthread REQUIRED QUIET)
       list(APPEND LINK_LIBS ${pthread_LIBRARIES} )
-  
+
       find_package(libusb1 REQUIRED QUIET)
       list(APPEND LINK_LIBS ${libusb1_LIBRARIES} )
     endif()
@@ -448,7 +466,7 @@ if(BUILD_PANGOLIN_TELICAM AND BUILD_PANGOLIN_VIDEO)
     list(APPEND HEADERS ${INCDIR}/video/drivers/teli.h )
     list(APPEND SOURCES video/drivers/teli.cpp )
     list(APPEND VIDEO_FACTORY_REG RegisterTeliVideoFactory )
-  
+
     message(STATUS "TeliCam Found and Enabled" )
   endif()
 endif()
@@ -463,7 +481,7 @@ if(BUILD_PANGOLIN_PLEORA AND BUILD_PANGOLIN_VIDEO)
     list(APPEND HEADERS ${INCDIR}/video/drivers/pleora.h )
     list(APPEND SOURCES video/drivers/pleora.cpp )
     list(APPEND VIDEO_FACTORY_REG RegisterPleoraVideoFactory )
-  
+
     if(_GCC_)
       # Suppress warnings generated from Pleora SDK.
       set_source_files_properties(video/drivers/pleora.cpp PROPERTIES COMPILE_FLAGS -Wno-unknown-pragmas)
