@@ -256,11 +256,10 @@ void PacketStreamReader::ParseHeader()
     _stream.readTag(TAG_PANGO_HDR);
 
     picojson::value json_header;
-    picojson::parse(json_header, _stream); //looks like right now, we don't do anything with this.
-    _starttime = json_header["time_us"].get<int64_t>();
+    picojson::parse(json_header, _stream);
 
-    if (!_starttime)
-        pango_print_warn("Unable to read stream start time. Time sync to treat stream as realtime will not work!\n");
+    // File timestamp
+    // _starttime = json_header["time_us"].get<int64_t>();
 
     _stream.get(); // consume newline
 }
@@ -462,14 +461,7 @@ size_t PacketStreamReader::Skip(size_t len)
     return r;
 }
 
-void PacketStreamReader::WaitForTimeSync(const SyncTime& timer, int64_t wait_for) const
-{
-    if (!_starttime) //if we couldn't read stream time, we cannot sync.
-        return;
-    timer.WaitUntilOffset(wait_for - _starttime);
-}
-
-PacketStreamReader::FrameInfo PacketStreamReader::Seek(PacketStreamSourceId src, size_t framenum, SyncTime *sync)
+PacketStreamReader::FrameInfo PacketStreamReader::Seek(PacketStreamSourceId src, size_t framenum)
 {
     lock_guard<decltype(_mutex)> lg(_mutex);
 
@@ -501,8 +493,6 @@ PacketStreamReader::FrameInfo PacketStreamReader::Seek(PacketStreamSourceId src,
     //THIS WILL BREAK _next_packet_framenum FOR ALL OTHER SOURCES. Todo more refactoring to fix.
 
     auto r = _stream.peekFrameHeader(*this);  //we need to do this now, because we need r.time in order to sync up our playback.
-    if (nullptr != sync && _starttime)
-        sync->ResyncToOffset(r.time - _starttime); //if we have a sync timer, we need to reset it to play synchronized frame from where we just did a seek to.
 
     return r;
 }

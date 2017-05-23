@@ -25,16 +25,16 @@
 
 #pragma once
 
-#include <mutex>
 #include <fstream>
+#include <mutex>
 #include <thread>
 
-#include <pangolin/utils/timer.h>
-#include <pangolin/utils/file_utils.h>
-#include <pangolin/log/sync_time.h>
+#include <pangolin/log/packet_index.h>
 #include <pangolin/log/packetstream.h>
 #include <pangolin/log/packetstream_source.h>
-#include <pangolin/log/packet_index.h>
+#include <pangolin/log/sync_time.h>
+#include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/timer.h>
 
 namespace pangolin
 {
@@ -75,12 +75,11 @@ public:
 	};
 
     PacketStreamReader()
-        : _starttime(0)
     {
     }
 
     PacketStreamReader(const std::string& filename)
-        : _stream(filename), _starttime(0)
+        : _stream(filename)
     {
         Init();
     }
@@ -92,7 +91,6 @@ public:
 
     void Open(const std::string& filename)
     {
-        _starttime = 0;
         _stream.open(filename);
         Init();
     }
@@ -148,7 +146,7 @@ public:
     // Jumps to a particular packet.
     // If the address of a SyncTime is passed in, the object will be updated
     // to maintain synchronization after the seek is complete.
-    FrameInfo Seek(PacketStreamSourceId src, size_t framenum, SyncTime *sync = nullptr);
+    FrameInfo Seek(PacketStreamSourceId src, size_t framenum);
 
 private:
     class Stream: public std::ifstream
@@ -255,8 +253,6 @@ private:
 
 	FrameInfo _nextFrame();
 
-    void WaitForTimeSync(const SyncTime& timer, int64_t wait_for) const;
-
 	void SkipSync();
 
     void ReSync() {
@@ -269,7 +265,6 @@ private:
 
     Stream _stream;
     std::recursive_mutex _mutex;
-    int64_t _starttime;
 };
 
 

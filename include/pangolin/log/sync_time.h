@@ -28,6 +28,8 @@
 #include <pangolin/platform.h>
 #include <pangolin/utils/timer.h>
 
+#include <atomic>
+
 namespace pangolin
 {
 
@@ -38,34 +40,47 @@ namespace pangolin
 class PANGOLIN_EXPORT SyncTime
 {
 public:
-    SyncTime()
-        :_start(TimeNow_us())
+    using Clock = std::chrono::system_clock;
+    using Duration = Clock::duration;
+    using TimePoint = Clock::time_point;
+
+    SyncTime(Duration virtual_clock_offset)
     {
+        SetOffset(virtual_clock_offset);
     }
 
-    void Start(){
-        std::lock_guard<std::mutex> lg(_startlock);_start = TimeNow_us();
+    void SetOffset(Duration virtual_clock_offset)
+    {
+        virtual_offset = virtual_clock_offset;
     }
 
-    void WaitUntilOffset(int64_t stream_time_offset) const
-        {
-            const auto viewer_time_offset = TimeNow_us() - _start;
-        if (viewer_time_offset < stream_time_offset) {
-            std::this_thread::sleep_for(
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::microseconds(stream_time_offset - viewer_time_offset)
-                )
-            );
-        }
+    void SetClock(TimePoint virtual_now)
+    {
+        virtual_offset = virtual_now - Clock::now();
     }
 
-    void ResyncToOffset(int64_t stream_time_offset) {
-        std::lock_guard<std::mutex> lg(_startlock);_start = TimeNow_us() - stream_time_offset;
+    TimePoint TimeNow() const
+    {
+        return Clock::now() + virtual_offset;
+    }
+
+    TimePoint ToVirtual(TimePoint real) const
+    {
+        return real + virtual_offset;
+    }
+
+    TimePoint ToReal(TimePoint virt) const
+    {
+        return virt - virtual_offset;
+    }
+
+    void WaitUntil(TimePoint virtual_time) const
+    {
+        std::this_thread::sleep_until( ToReal(virtual_time) );
     }
 
 private:
-    int64_t _start;
-    std::mutex _startlock;
+    std::chrono::system_clock::duration virtual_offset;
 };
 
 }
