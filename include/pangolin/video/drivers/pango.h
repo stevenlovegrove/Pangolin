@@ -76,7 +76,8 @@ private:
     void HandlePipeClosed();
 
 protected:
-    int FindSource();
+    int FindPacketStreamSource();
+    void SetupStreams(const PacketStreamSource& src);
 
     std::shared_ptr<PacketStreamReader> _reader;
 

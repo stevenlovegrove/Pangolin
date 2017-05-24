@@ -42,38 +42,6 @@ namespace pangolin
 class PANGOLIN_EXPORT PacketStreamReader
 {
 public:
-    // Contains information about the queued-up frame. Relies on RVO.
-    // Obtained from nextFrame() function
-    struct FrameInfo
-    {
-        FrameInfo()
-            : src(static_cast<decltype(src)>(-1)), time(-1),
-              size(static_cast<decltype(size)>(-1)),
-              sequence_num(static_cast<decltype(sequence_num)>(-1))
-        {
-        }
-
-        bool None() const
-        {
-            return src == static_cast<decltype(src)>(-1);
-        }
-
-        operator bool() const
-        {
-            return !None();
-        }
-
-        PacketStreamSourceId src;
-        int64_t time;
-        size_t size;
-        size_t sequence_num;
-        picojson::value meta;
-
-        // The 'frame' includes the json and the packet.
-        std::streampos frame_streampos;
-        std::streampos packet_streampos;
-    };
-
     PacketStreamReader();
 
     PacketStreamReader(const std::string& filename);
@@ -133,93 +101,6 @@ public:
     FrameInfo Seek(PacketStreamSourceId src, size_t framenum);
 
 private:
-    class Stream: public std::ifstream
-    {
-    public:
-        Stream()
-            : _seekable(false)
-        {
-            cclear();
-        }
-
-        Stream(const std::string& filename)
-            : Base(filename.c_str(), std::ios::in | std::ios::binary),
-              _seekable(!IsPipe(filename))
-        {
-            cclear();
-        }
-
-        bool seekable() const
-        {
-            return _seekable;
-        }
-
-        size_t data_len() const
-        {
-            return _data_len;
-        }
-
-        void data_len(size_t d)
-        {
-            _data_len = d;
-        }
-
-        void open(const std::string& filename)
-        {
-            close();
-            Base::open(filename.c_str(), std::ios::in | std::ios::binary);
-        }
-
-        void close()
-        {
-            cclear();
-            if (Base::is_open()) Base::close();
-        }
-
-        void seekg(std::streampos target);
-
-        void seekg(std::streamoff off, std::ios_base::seekdir way);
-
-        std::streampos tellg();
-
-        size_t read(char* target, size_t len);
-
-        char get();
-
-        size_t skip(size_t len);
-
-        size_t readUINT();
-
-        int64_t readTimestamp();
-
-        pangoTagType peekTag();
-
-        pangoTagType readTag();
-
-        pangoTagType readTag(pangoTagType);
-
-        pangoTagType syncToTag();
-
-        FrameInfo peekFrameHeader(const PacketStreamReader&);
-
-        FrameInfo readFrameHeader(const PacketStreamReader&);
-
-    private:
-        using Base = std::ifstream;
-
-        bool _seekable;
-        pangoTagType _tag;
-        FrameInfo _frame;
-
-        // Amount of frame data left to read. Tracks our position within a data block.
-        size_t _data_len;
-
-        void cclear() {
-            _data_len = 0;
-            _tag = 0;
-            _frame.src = static_cast<decltype(_frame.src)>(-1);
-        }
-    };
 
     bool GoodToRead();
 
@@ -241,12 +122,15 @@ private:
         _stream.syncToTag();
     }
 
+    FrameInfo readFrameHeader();
+
     std::string _filename;
     SourceIndexType _sources;
     std::vector<size_t> _next_packet_framenum;
     PacketIndex _index;
+    SyncTime::TimePoint packet_stream_start;
 
-    Stream _stream;
+    PacketStream _stream;
     std::recursive_mutex _mutex;
 
     bool _is_pipe;

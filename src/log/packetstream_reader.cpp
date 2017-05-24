@@ -43,189 +43,6 @@ using std::streamoff;
 namespace pangolin
 {
 
-size_t PacketStreamReader::Stream::readUINT()
-{
-    size_t n = 0;
-    size_t v = get();
-    uint32_t shift = 0;
-    while (good() && (v & 0x80))
-    {
-        n |= (v & 0x7F) << shift;
-        shift += 7;
-        v = get();
-    }
-    if (!good())
-        return static_cast<size_t>(-1);
-    return n | (v & 0x7F) << shift;
-}
-
-int64_t PacketStreamReader::Stream::readTimestamp()
-{
-    int64_t time_us;
-    read(reinterpret_cast<char*>(&time_us), sizeof(int64_t));
-    return time_us;
-}
-
-pangoTagType PacketStreamReader::Stream::readTag()
-{
-    auto r = peekTag();
-    _tag = 0;
-    return r;
-}
-
-pangoTagType PacketStreamReader::Stream::readTag(pangoTagType x)
-{
-    auto r = readTag();
-    if (r != x)
-        throw std::runtime_error(("Tag mismatch error: expected tag '" + tagName(r) + "' does not match found tag '" + tagName(x) + "'").c_str());
-    return r;
-}
-
-pangoTagType PacketStreamReader::Stream::peekTag()
-{
-    if (!_tag)
-    {
-        _tag = 0;
-        read(reinterpret_cast<char*>(&_tag), TAG_LENGTH);
-        if (!good())
-            _tag = TAG_END;
-    }
-    return _tag;
-}
-
-char PacketStreamReader::Stream::get()
-{
-    if (_data_len)
-        _data_len--;
-    _tag = 0;
-    return Base::get();
-}
-
-size_t PacketStreamReader::Stream::read(char* target, size_t len)
-{
-    _tag = 0;
-    _frame.src = static_cast<decltype(_frame.src)>(-1);
-    Base::read(target, len);
-    if (_data_len) {
-        _data_len = std::max( (int)_data_len - (int)gcount(), (int)0);
-    }
-    return gcount();
-}
-
-size_t PacketStreamReader::Stream::skip(size_t len)
-{
-    ignore(len);
-    if (_data_len) {
-        _data_len = std::max( (int)_data_len - (int)gcount(), (int)0);
-    }
-    _tag = 0;
-    _frame.src = static_cast<decltype(_frame.src)>(-1);
-    return len;
-}
-
-std::streampos PacketStreamReader::Stream::tellg()
-{
-    if (!seekable())
-        return -1;
-    if (_tag)
-        return Base::tellg() - std::streamoff(TAG_LENGTH);
-    return Base::tellg();
-}
-
-void PacketStreamReader::Stream::seekg(std::streampos target)
-{
-    if (!seekable())
-        return;
-    cclear();
-    Base::seekg(target);
-}
-
-void PacketStreamReader::Stream::seekg(std::streamoff off, std::ios_base::seekdir way)
-{
-    if (!seekable())
-        return;
-    cclear();
-    Base::seekg(off, way);
-}
-
-static bool valid(pangoTagType t)
-{
-    switch (t)
-    {
-    case TAG_PANGO_SYNC:
-        case TAG_ADD_SOURCE:
-        case TAG_SRC_JSON:
-        case TAG_SRC_PACKET:
-        case TAG_PANGO_STATS:
-        case TAG_PANGO_FOOTER:
-        case TAG_END:
-        case TAG_PANGO_HDR:
-        case TAG_PANGO_MAGIC:
-        return true;
-    default:
-        return false;
-    }
-}
-
-pangoTagType PacketStreamReader::Stream::syncToTag() //scan through chars one by one until the last three look like a tag
-{
-    peekTag();
-    char * buffer = reinterpret_cast<char*>(&_tag);
-
-    buffer[3] = 0;
-
-    do
-    {
-        buffer[0] = buffer[1];
-        buffer[1] = buffer[2];
-        buffer[2] = get();
-    }
-    while (good() && !valid(_tag));
-
-    if (!good())
-        _tag = TAG_END;
-
-    return _tag;
-
-}
-
-PacketStreamReader::FrameInfo PacketStreamReader::Stream::peekFrameHeader(const PacketStreamReader& p)
-{
-    if (_frame)
-        return _frame;
-
-    _frame.frame_streampos = tellg();
-
-    if (peekTag() == TAG_SRC_JSON)
-    {
-        readTag(TAG_SRC_JSON);
-        _frame.src = readUINT();
-        picojson::parse(_frame.meta, *this);
-    }
-
-    _frame.packet_streampos = tellg();
-
-    readTag(TAG_SRC_PACKET);
-    _frame.time = readTimestamp();
-
-    if (_frame)
-    {
-        if (readUINT() != _frame.src)
-            throw std::runtime_error("Frame preceded by metadata for a mismatched source. Stream may be corrupt.");
-    }
-    else
-        _frame.src = readUINT();
-
-    _frame.size = p.Sources()[_frame.src].data_size_bytes;
-    if (!_frame.size)
-        _frame.size = readUINT();
-    _frame.sequence_num = p.GetPacketIndex(_frame.src);
-
-    _tag = TAG_SRC_PACKET;
-
-    return _frame;
-}
-
 PacketStreamReader::PacketStreamReader()
     : _pipe_fd(-1)
 {
@@ -285,14 +102,6 @@ void PacketStreamReader::Close() {
 #endif
 }
 
-PacketStreamReader::FrameInfo PacketStreamReader::Stream::readFrameHeader(const PacketStreamReader& p)
-{
-    auto r = peekFrameHeader(p);
-    _frame.src = static_cast<decltype(_frame.src)>(-1);
-    _tag = 0;
-    return r;
-}
-
 void PacketStreamReader::ParseHeader()
 {
     _stream.readTag(TAG_PANGO_HDR);
@@ -301,7 +110,8 @@ void PacketStreamReader::ParseHeader()
     picojson::parse(json_header, _stream);
 
     // File timestamp
-    // _starttime = json_header["time_us"].get<int64_t>();
+    const int64_t start_us = json_header["time_us"].get<int64_t>();
+    packet_stream_start = SyncTime::TimePoint() + std::chrono::microseconds(start_us);
 
     _stream.get(); // consume newline
 }
@@ -404,7 +214,7 @@ bool PacketStreamReader::GoodToRead()
 
 }
 
-PacketStreamReader::FrameInfo PacketStreamReader::_nextFrame()
+FrameInfo PacketStreamReader::_nextFrame()
 {
     while (GoodToRead())
     {
@@ -420,7 +230,7 @@ PacketStreamReader::FrameInfo PacketStreamReader::_nextFrame()
             break;
         case TAG_SRC_JSON: //frames are sometimes preceded by metadata, but metadata must ALWAYS be followed by a frame from the same source.
         case TAG_SRC_PACKET:
-            return _stream.peekFrameHeader(*this);
+            return readFrameHeader();
         case TAG_PANGO_STATS:
             ParseIndex();
             break;
@@ -444,7 +254,7 @@ PacketStreamReader::FrameInfo PacketStreamReader::_nextFrame()
     return FrameInfo();
 }
 
-PacketStreamReader::FrameInfo PacketStreamReader::NextFrame(PacketStreamSourceId src)
+FrameInfo PacketStreamReader::NextFrame(PacketStreamSourceId src)
 {
     Lock(); //we cannot use a scoped lock here, because we may not want to release the lock, depending on what we find.
     try
@@ -479,7 +289,7 @@ PacketStreamReader::FrameInfo PacketStreamReader::NextFrame(PacketStreamSourceId
 
             //if it's ours, return it and don't release lock
             if (fi.src == src) {
-                return _stream.readFrameHeader(*this);
+                return fi;
             }
 
             //otherwise skip it and get the next one.
@@ -532,7 +342,7 @@ size_t PacketStreamReader::Skip(size_t len)
     return r;
 }
 
-PacketStreamReader::FrameInfo PacketStreamReader::Seek(PacketStreamSourceId src, size_t framenum)
+FrameInfo PacketStreamReader::Seek(PacketStreamSourceId src, size_t framenum)
 {
     lock_guard<decltype(_mutex)> lg(_mutex);
 
@@ -563,7 +373,9 @@ PacketStreamReader::FrameInfo PacketStreamReader::Seek(PacketStreamSourceId src,
     _next_packet_framenum[src] = framenum; //this increments when we parse the header in the next line;
     //THIS WILL BREAK _next_packet_framenum FOR ALL OTHER SOURCES. Todo more refactoring to fix.
 
-    auto r = _stream.peekFrameHeader(*this);  //we need to do this now, because we need r.time in order to sync up our playback.
+    // Read header and rest back
+    auto r = readFrameHeader();
+    _stream.seekg(r.packet_streampos);
 
     return r;
 }
@@ -581,6 +393,40 @@ void PacketStreamReader::SkipSync()
 size_t PacketStreamReader::GetPacketIndex(PacketStreamSourceId src_id) const //returns the current frame for source
 {
     return _next_packet_framenum.at(src_id);
+}
+
+FrameInfo PacketStreamReader::readFrameHeader()
+{
+    FrameInfo frame;
+
+    frame.frame_streampos = _stream.tellg();
+
+    if (_stream.peekTag() == TAG_SRC_JSON)
+    {
+        _stream.readTag(TAG_SRC_JSON);
+        frame.src = _stream.readUINT();
+        picojson::parse(frame.meta, _stream);
+    }
+
+    frame.packet_streampos = _stream.tellg();
+
+    _stream.readTag(TAG_SRC_PACKET);
+    frame.time = _stream.readTimestamp();
+
+    if (frame) {
+        if (_stream.readUINT() != frame.src) {
+            throw std::runtime_error("Frame preceded by metadata for a mismatched source. Stream may be corrupt.");
+        }
+    } else {
+        frame.src = _stream.readUINT();
+    }
+
+    frame.size = Sources()[frame.src].data_size_bytes;
+    if (!frame.size)
+        frame.size = _stream.readUINT();
+    frame.sequence_num = GetPacketIndex(frame.src);
+
+    return frame;
 }
 
 }

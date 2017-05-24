@@ -26,7 +26,7 @@ void writeFakeFrame(const PacketStreamSource& source, size_t sequence_number, Pa
 }
 
 
-PacketStreamReader::FrameInfo readFakeFrame(PacketStreamSourceId id, PacketStreamReader& source)
+FrameInfo readFakeFrame(PacketStreamSourceId id, PacketStreamReader& source)
 {
     char buffer[1024];
     //    source.lock();

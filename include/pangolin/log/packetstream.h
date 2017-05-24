@@ -25,48 +25,99 @@
 
 #pragma once
 
+#include <fstream>
+
 #include <pangolin/platform.h>
+
+#include <pangolin/log/frame_info.h>
+#include <pangolin/log/packetstream_tags.h>
+#include <pangolin/utils/file_utils.h>
 
 namespace pangolin
 {
 
-using pangoTagType = uint32_t;
-
-const static std::string PANGO_MAGIC = "PANGO";
-
-const unsigned int TAG_LENGTH = 3;
-
-#define PANGO_TAG(a,b,c) ( (c<<16) | (b<<8) | a)
-const uint32_t TAG_PANGO_HDR    = PANGO_TAG('L', 'I', 'N');
-const uint32_t TAG_PANGO_MAGIC  = PANGO_TAG('P', 'A', 'N');
-const uint32_t TAG_PANGO_SYNC   = PANGO_TAG('S', 'Y', 'N');
-const uint32_t TAG_PANGO_STATS  = PANGO_TAG('S', 'T', 'A');
-const uint32_t TAG_PANGO_FOOTER = PANGO_TAG('F', 'T', 'R');
-const uint32_t TAG_ADD_SOURCE   = PANGO_TAG('S', 'R', 'C');
-const uint32_t TAG_SRC_JSON     = PANGO_TAG('J', 'S', 'N');
-const uint32_t TAG_SRC_PACKET   = PANGO_TAG('P', 'K', 'T');
-const uint32_t TAG_END          = PANGO_TAG('E', 'N', 'D');
-#undef PANGO_TAG
-
-inline std::string tagName(int v)
+class PacketStream: public std::ifstream
 {
-    char b[4];
-    b[0] = v&0xff;
-    b[1] = (v>>8)&0xff;
-    b[2] = (v>>16)&0xff;
-    b[3] = 0x00;
-    return std::string(b);
-}
+public:
+    PacketStream()
+        : _seekable(false)
+    {
+        cclear();
+    }
 
-#define pss_src_driver "driver"
-#define pss_src_id "id"
-#define pss_src_info "info"
-#define pss_src_uri "uri"
-#define pss_src_packet "packet"
-#define pss_src_version         "version"
-#define pss_pkt_alignment_bytes "alignment_bytes"
-#define pss_pkt_definitions "definitions"
-#define pss_pkt_size_bytes  "size_bytes"
-#define pss_pkt_format_written "format_written"
+    PacketStream(const std::string& filename)
+        : Base(filename.c_str(), std::ios::in | std::ios::binary),
+          _seekable(!IsPipe(filename))
+    {
+        cclear();
+    }
+
+    bool seekable() const
+    {
+        return _seekable;
+    }
+
+    size_t data_len() const
+    {
+        return _data_len;
+    }
+
+    void data_len(size_t d)
+    {
+        _data_len = d;
+    }
+
+    void open(const std::string& filename)
+    {
+        close();
+        Base::open(filename.c_str(), std::ios::in | std::ios::binary);
+    }
+
+    void close()
+    {
+        cclear();
+        if (Base::is_open()) Base::close();
+    }
+
+    void seekg(std::streampos target);
+
+    void seekg(std::streamoff off, std::ios_base::seekdir way);
+
+    std::streampos tellg();
+
+    size_t read(char* target, size_t len);
+
+    char get();
+
+    size_t skip(size_t len);
+
+    size_t readUINT();
+
+    int64_t readTimestamp();
+
+    pangoTagType peekTag();
+
+    pangoTagType readTag();
+
+    pangoTagType readTag(pangoTagType);
+
+    pangoTagType syncToTag();
+
+private:
+    using Base = std::ifstream;
+
+    bool _seekable;
+    pangoTagType _tag;
+//    FrameInfo _frame;
+
+    // Amount of frame data left to read. Tracks our position within a data block.
+    size_t _data_len;
+
+    void cclear() {
+        _data_len = 0;
+        _tag = 0;
+    }
+};
+
 
 }

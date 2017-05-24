@@ -47,13 +47,13 @@ PangoVideo::PangoVideo(const std::string& filename, bool realtime)
 
     PANGO_ENSURE(_reader);
 
-    // N.B. is_pipe_open can default to true since the reader opens the file and
-    // reads header information from it, which means the pipe must be open and
-    // filled with data.
-    _src_id = FindSource();
+    _src_id = FindPacketStreamSource();
 
-    if(_src_id == -1)
+    if(_src_id != -1) {
+        SetupStreams(_reader->Sources()[_src_id]);
+    }else{
         throw pangolin::VideoException("No appropriate video streams found in log.");
+    }
 }
 
 PangoVideo::~PangoVideo()
@@ -143,46 +143,47 @@ int PangoVideo::Seek(int frameid)
     }
 }
 
-int PangoVideo::FindSource()
+int PangoVideo::FindPacketStreamSource()
 {
     for(const auto& src : _reader->Sources())
     {
-        try
+        if (!src.driver.compare(pango_video_type))
         {
-            if (!src.driver.compare(pango_video_type))
-            {
-                // Read sources header
-                _size_bytes = src.data_size_bytes;
-
-                _device_properties = src.info["device"];
-                const picojson::value& json_streams = src.info["streams"];
-                const size_t num_streams = json_streams.size();
-                for (size_t i = 0; i < num_streams; ++i)
-                {
-                    const picojson::value& json_stream = json_streams[i];
-                    StreamInfo si(
-                            PixelFormatFromString(
-                                    json_stream["encoding"].get<std::string>()
-                                    ),
-                            json_stream["width"].get<int64_t>(),
-                            json_stream["height"].get<int64_t>(),
-                            json_stream["pitch"].get<int64_t>(),
-                            (unsigned char*) 0 + json_stream["offset"].get<int64_t>()
-                                    );
-
-                    _streams.push_back(si);
-                }
-
-                return static_cast<int>(src.id);
-            }
-        }
-        catch (...)
-        {
-            pango_print_info("Unable to parse PacketStream Source. File version incompatible.\n");
+            return static_cast<int>(src.id);
         }
     }
 
     return -1;
+}
+
+void PangoVideo::SetupStreams(const PacketStreamSource& src)
+{
+    try {
+        // Read sources header
+        _size_bytes = src.data_size_bytes;
+
+        _device_properties = src.info["device"];
+        const picojson::value& json_streams = src.info["streams"];
+        const size_t num_streams = json_streams.size();
+        for (size_t i = 0; i < num_streams; ++i)
+        {
+            const picojson::value& json_stream = json_streams[i];
+            StreamInfo si(
+                    PixelFormatFromString(
+                            json_stream["encoding"].get<std::string>()
+                            ),
+                    json_stream["width"].get<int64_t>(),
+                    json_stream["height"].get<int64_t>(),
+                    json_stream["pitch"].get<int64_t>(),
+                    (unsigned char*) 0 + json_stream["offset"].get<int64_t>()
+                            );
+
+            _streams.push_back(si);
+        }
+    } catch (...)
+    {
+        pango_print_info("Unable to parse PacketStream Source. File version incompatible.\n");
+    }
 }
 
 PANGOLIN_REGISTER_FACTORY(PangoVideo)
