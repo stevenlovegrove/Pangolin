@@ -25,10 +25,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/pvn.h>
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/video/drivers/pvn.h>
+#include <pangolin/video/iostream_operators.h>
 
 #include <iostream>
 
@@ -41,10 +41,10 @@ PvnVideo::PvnVideo(const std::string& filename, bool realtime )
     : frame_size_bytes(0), realtime(realtime), last_frame(TimeNow())
 {
     file.open( PathExpand(filename).c_str(), ios::binary );
-    
+
     if(!file.is_open() )
         throw VideoException("Cannot open file - does not exist or bad permissions.");
-    
+
     ReadFileHeader();
 }
 
@@ -57,7 +57,7 @@ void PvnVideo::ReadFileHeader()
     string sfmt;
     float framerate;
     unsigned w, h;
-        
+
     file >> sfmt;
     file >> w;
     file >> h;
@@ -66,13 +66,13 @@ void PvnVideo::ReadFileHeader()
 
     if(file.bad() || !(w >0 && h >0) )
         throw VideoException("Unable to read video header");
-    
+
     const PixelFormat fmt = PixelFormatFromString(sfmt);
     StreamInfo strm0( fmt, w, h, (w*fmt.bpp) / 8, 0);
-    
+
     frame_size_bytes += strm0.Pitch() * strm0.Height();
-    frame_interval = TimeFromSeconds( 1.0 / framerate);
-    
+//    frame_interval = TimeFromSeconds( 1.0 / framerate);
+
     streams.push_back(strm0);
 }
 
@@ -98,13 +98,13 @@ const std::vector<StreamInfo>& PvnVideo::Streams() const
 bool PvnVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     file.read((char*)image, frame_size_bytes);
-    
+
     const basetime next_frame = TimeAdd(last_frame, frame_interval);
-    
+
     if( realtime ) {
         WaitUntil(next_frame);
     }
-    
+
     last_frame = TimeNow();
     return file.good();
 }

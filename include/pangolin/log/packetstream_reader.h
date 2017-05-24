@@ -44,8 +44,8 @@ class PANGOLIN_EXPORT PacketStreamReader
 public:
     // Contains information about the queued-up frame. Relies on RVO.
     // Obtained from nextFrame() function
-	struct FrameInfo
-	{        
+    struct FrameInfo
+    {
         FrameInfo()
             : src(static_cast<decltype(src)>(-1)), time(-1),
               size(static_cast<decltype(size)>(-1)),
@@ -72,33 +72,17 @@ public:
         // The 'frame' includes the json and the packet.
         std::streampos frame_streampos;
         std::streampos packet_streampos;
-	};
+    };
 
-    PacketStreamReader()
-    {
-    }
+    PacketStreamReader();
 
-    PacketStreamReader(const std::string& filename)
-        : _stream(filename)
-    {
-        Init();
-    }
+    PacketStreamReader(const std::string& filename);
 
-    ~PacketStreamReader()
-    {
-        Close();
-    }
+    ~PacketStreamReader();
 
-    void Open(const std::string& filename)
-    {
-        _stream.open(filename);
-        Init();
-    }
+    void Open(const std::string& filename);
 
-    void Close() {
-        _stream.close();
-        _sources.clear();
-    }
+    void Close();
 
     const SourceIndexType& Sources() const
     {
@@ -124,7 +108,7 @@ public:
         return _mutex;
     }
 
-    FrameInfo NextFrame(PacketStreamSourceId src, SyncTime *sync);
+    FrameInfo NextFrame(PacketStreamSourceId src);
 
     size_t ReadRaw(char* target, size_t len);
 
@@ -184,7 +168,6 @@ private:
         {
             close();
             Base::open(filename.c_str(), std::ios::in | std::ios::binary);
-            _seekable = !IsPipe(filename);
         }
 
         void close()
@@ -238,8 +221,7 @@ private:
         }
     };
 
-
-    void Init();
+    bool GoodToRead();
 
     void SetupIndex();
 
@@ -251,20 +233,24 @@ private:
 
     std::streampos ParseFooter();
 
-	FrameInfo _nextFrame();
+    FrameInfo _nextFrame();
 
-	void SkipSync();
+    void SkipSync();
 
     void ReSync() {
         _stream.syncToTag();
     }
 
+    std::string _filename;
     SourceIndexType _sources;
     std::vector<size_t> _next_packet_framenum;
     PacketIndex _index;
 
     Stream _stream;
     std::recursive_mutex _mutex;
+
+    bool _is_pipe;
+    int _pipe_fd;
 };
 
 

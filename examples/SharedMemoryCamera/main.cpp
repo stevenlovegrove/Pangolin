@@ -13,14 +13,10 @@
 
 using namespace pangolin;
 
-unsigned char generate_value(basetime t, basetime start)
+unsigned char generate_value(double t)
 {
-  int64_t us = TimeDiff_us(start, t);
-
   // 10s sinusoid
-  double d = 10./(M_PI) * ((double)us/1000000);
-  d = std::sin(d);
-  d = d*128 + 128;
+  const double d = std::sin(t * 10.0 / M_PI) * 128.0 + 128.0;
   return static_cast<unsigned char>(d);
 }
 
@@ -39,18 +35,11 @@ int main(/*int argc, char *argv[]*/)
   std::shared_ptr<ConditionVariableInterface> buffer_full =
     create_named_condition_variable(cond_name);
 
-  basetime start = TimeNow();
-  basetime d = {0, 0};
-  d.tv_usec = 33333;
-
   // Sit in a loop and write gray values based on some timing pattern.
-  basetime t = start;
   while (true) {
-    basetime nt = TimeAdd(t, d);
-
     shmem_buffer->lock();
     unsigned char *ptr = shmem_buffer->ptr();
-    unsigned char value = generate_value(t, start);
+    unsigned char value = generate_value(std::chrono::system_clock::now().time_since_epoch().count());
 
     for (int i = 0; i < 640*480; ++i) {
       ptr[i] = value;
@@ -59,6 +48,6 @@ int main(/*int argc, char *argv[]*/)
     shmem_buffer->unlock();
     buffer_full->signal();
 
-    t = WaitUntil(nt);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 }

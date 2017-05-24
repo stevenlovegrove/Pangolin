@@ -44,6 +44,11 @@ public:
     using Duration = Clock::duration;
     using TimePoint = Clock::time_point;
 
+    SyncTime()
+    {
+        SetOffset(std::chrono::milliseconds(0));
+    }
+
     SyncTime(Duration virtual_clock_offset)
     {
         SetOffset(virtual_clock_offset);

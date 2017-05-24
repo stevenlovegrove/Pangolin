@@ -30,13 +30,10 @@ public:
         }
     }
 
-    int64_t PlaybackTime_us() const
-    {
-        return time
-    }
-
 
 private:
+    PlaybackSession() = default;
+
     std::map<std::string,std::shared_ptr<PacketStreamReader>> readers;
     SyncTime time;
 };

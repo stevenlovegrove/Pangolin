@@ -36,6 +36,10 @@ using std::streamoff;
 
 #include <thread>
 
+#ifndef _WIN_
+#  include <unistd.h>
+#endif
+
 namespace pangolin
 {
 
@@ -222,17 +226,31 @@ PacketStreamReader::FrameInfo PacketStreamReader::Stream::peekFrameHeader(const 
     return _frame;
 }
 
-PacketStreamReader::FrameInfo PacketStreamReader::Stream::readFrameHeader(const PacketStreamReader& p)
+PacketStreamReader::PacketStreamReader()
+    : _pipe_fd(-1)
 {
-    auto r = peekFrameHeader(p);
-    _frame.src = static_cast<decltype(_frame.src)>(-1);
-    _tag = 0;
-    return r;
 }
 
-void PacketStreamReader::Init()
+PacketStreamReader::PacketStreamReader(const std::string& filename)
+    : _pipe_fd(-1)
 {
-    lock_guard<decltype(_mutex)> lg(_mutex);
+    Open(filename);
+}
+
+PacketStreamReader::~PacketStreamReader()
+{
+    Close();
+}
+
+void PacketStreamReader::Open(const std::string& filename)
+{
+    std::lock_guard<std::recursive_mutex> lg(_mutex);
+
+    Close();
+
+    _filename = filename;
+    _is_pipe = IsPipe(filename);
+    _stream.open(filename);
 
     if (!_stream.is_open())
         throw runtime_error("Cannot open stream.");
@@ -246,9 +264,33 @@ void PacketStreamReader::Init()
     }
 
     SetupIndex();
+
     ParseHeader();
-    while (_stream.peekTag() == TAG_ADD_SOURCE)
+
+    while (_stream.peekTag() == TAG_ADD_SOURCE) {
         ParseNewSource();
+    }
+}
+
+void PacketStreamReader::Close() {
+    std::lock_guard<std::recursive_mutex> lg(_mutex);
+
+    _stream.close();
+    _sources.clear();
+
+#ifndef _WIN_
+    if (_pipe_fd != -1) {
+        close(_pipe_fd);
+    }
+#endif
+}
+
+PacketStreamReader::FrameInfo PacketStreamReader::Stream::readFrameHeader(const PacketStreamReader& p)
+{
+    auto r = peekFrameHeader(p);
+    _frame.src = static_cast<decltype(_frame.src)>(-1);
+    _tag = 0;
+    return r;
 }
 
 void PacketStreamReader::ParseHeader()
@@ -330,9 +372,41 @@ void PacketStreamReader::ParseIndex()
     }
 }
 
+bool PacketStreamReader::GoodToRead()
+{
+    if(!_stream.good()) {
+#ifndef _WIN_
+        if (_is_pipe)
+        {
+            if (_pipe_fd == -1) {
+                _pipe_fd = ReadablePipeFileDescriptor(_filename);
+            }
+
+            if (_pipe_fd != -1) {
+                // Test whether the pipe has data to be read. If so, open the
+                // file stream and start reading. After this point, the file
+                // descriptor is owned by the reader.
+                if (PipeHasDataToRead(_pipe_fd))
+                {
+                    close(_pipe_fd);
+                    _pipe_fd = -1;
+                    Open(_filename);
+                    return _stream.good();
+                }
+            }
+        }
+#endif
+
+        return false;
+    }
+
+    return true;
+
+}
+
 PacketStreamReader::FrameInfo PacketStreamReader::_nextFrame()
 {
-    while (1)
+    while (GoodToRead())
     {
         auto t = _stream.peekTag();
 
@@ -366,9 +440,11 @@ PacketStreamReader::FrameInfo PacketStreamReader::_nextFrame()
         }
     }
 
+    // No frame
+    return FrameInfo();
 }
 
-PacketStreamReader::FrameInfo PacketStreamReader::NextFrame(PacketStreamSourceId src, SyncTime *sync)
+PacketStreamReader::FrameInfo PacketStreamReader::NextFrame(PacketStreamSourceId src)
 {
     Lock(); //we cannot use a scoped lock here, because we may not want to release the lock, depending on what we find.
     try
@@ -399,11 +475,6 @@ PacketStreamReader::FrameInfo PacketStreamReader::NextFrame(PacketStreamSourceId
                     }
                 }
                 _stream.data_len(fi.size); //now we are positioned on packet data for n characters.
-            }
-
-            if (sync) {
-                //if we are doing timesync, wait, even if it's not our packet.
-                WaitForTimeSync(*sync, fi.time);
             }
 
             //if it's ours, return it and don't release lock
@@ -481,7 +552,7 @@ PacketStreamReader::FrameInfo PacketStreamReader::Seek(PacketStreamSourceId src,
         if (_stream.data_len())
             _stream.skip(_stream.data_len());
 
-        auto fi = NextFrame(src, nullptr);
+        auto fi = NextFrame(src);
         if (!fi) //if we hit the end, throw
             throw std::out_of_range("frame number not in sequence");
     }

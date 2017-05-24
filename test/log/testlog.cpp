@@ -1,7 +1,7 @@
-#include <sstream>
 #include <iostream>
-#include <thread>
 #include <mutex>
+#include <sstream>
+#include <thread>
 
 #include <pangolin/log/packetstream_reader.h>
 #include <pangolin/log/packetstream_writer.h>
@@ -26,11 +26,11 @@ void writeFakeFrame(const PacketStreamSource& source, size_t sequence_number, Pa
 }
 
 
-PacketStreamReader::FrameInfo readFakeFrame(PacketStreamSourceId id, PacketStreamReader& source, SyncTime* t)
+PacketStreamReader::FrameInfo readFakeFrame(PacketStreamSourceId id, PacketStreamReader& source)
 {
     char buffer[1024];
     //    source.lock();
-    auto fi = source.NextFrame(id, t);
+    auto fi = source.NextFrame(id);
     if (fi.None())
     {
         //        source.release();
@@ -81,23 +81,22 @@ void test_simple()
     output << "Done writing" << endl;
 
     PacketStreamReader read("test_simple");
-    t.Start();
     output << "Opened an iPacketStream, reading frames with a sync timer. You should see a 1 second delay between each frame." << endl;
 
-    while(readFakeFrame(video.id, read, &t));
+    while(readFakeFrame(video.id, read));
 
     output << "Done reading frames" << endl;
     output << "Testing seek... let's look for frame 5" << endl;
 
-    if (!read.Seek(video.id, 5, &t))
+    if (!read.Seek(video.id, 5))
         throw runtime_error("Something terrible has happened.");
 
-    if (!readFakeFrame(video.id, read, &t))
+    if (!readFakeFrame(video.id, read))
         throw runtime_error("Something terrible has happened.");
 
     output << "Now let's test resyncing, by reading through the other frames with timesync enabled. You should see the same 1 second delay." << endl;
 
-    while(readFakeFrame(video.id, read, &t));
+    while(readFakeFrame(video.id, read));
 
     output << "TEST COMPLETE" << endl << endl;
 
@@ -153,8 +152,8 @@ void test_parallel_multistream_singlefile()
     PacketStreamReader read2("test_parallel_multistream_singlefile");
     SyncTime t;
 
-    thread video_reader([&video, &read1, &t]() { while(readFakeFrame(video.id, read1, &t)); });
-    thread infrared_reader([&infrared, &read2, &t]() { while(readFakeFrame(infrared.id, read2, &t)); });
+    thread video_reader([&video, &read1, &t]() { while(readFakeFrame(video.id, read1)); });
+    thread infrared_reader([&infrared, &read2, &t]() { while(readFakeFrame(infrared.id, read2)); });
 
     video_reader.join();
     infrared_reader.join();
@@ -214,8 +213,8 @@ void test_parallel_multistream_multifile()
     PacketStreamReader read_inf("test_parallel_multistream_multifile_inf");
     SyncTime t;
 
-    thread video_reader([&video, &read_vid, &t]() { while(readFakeFrame(video.id, read_vid, &t)); });
-    thread infrared_reader([&infrared, &read_inf, &t]() { while(readFakeFrame(infrared.id, read_inf, &t)); });
+    thread video_reader([&video, &read_vid, &t]() { while(readFakeFrame(video.id, read_vid)); });
+    thread infrared_reader([&infrared, &read_inf, &t]() { while(readFakeFrame(infrared.id, read_inf)); });
     video_reader.join();
     infrared_reader.join();
 }
@@ -266,8 +265,8 @@ void test_parallel_singlestream_singlefile()
     PacketStreamReader read("test_parallel_singlestream_singlefile");
     SyncTime t;
 
-    std::thread video_reader([&video, &read, &t]() { while(readFakeFrame(video.id, read, &t)); });
-    std::thread infrared_reader([&infrared, &read, &t]() { while(readFakeFrame(infrared.id, read, &t)); });
+    std::thread video_reader([&video, &read, &t]() { while(readFakeFrame(video.id, read)); });
+    std::thread infrared_reader([&infrared, &read, &t]() { while(readFakeFrame(infrared.id, read)); });
     video_reader.join();
     infrared_reader.join();
 

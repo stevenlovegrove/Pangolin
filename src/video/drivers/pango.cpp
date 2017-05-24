@@ -25,17 +25,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/pango.h>
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/video/iostream_operators.h>
-#include <pangolin/utils/file_utils.h>
+#include <pangolin/log/playback_session.h>
 #include <pangolin/utils/file_extension.h>
+#include <pangolin/utils/file_utils.h>
+#include <pangolin/video/drivers/pango.h>
+#include <pangolin/video/iostream_operators.h>
 
 #include <functional>
-
-#ifndef _WIN_
-#  include <unistd.h>
-#endif
 
 namespace pangolin
 {
@@ -43,11 +40,13 @@ namespace pangolin
 const std::string pango_video_type = "raw_video";
 
 PangoVideo::PangoVideo(const std::string& filename, bool realtime)
-    : _reader(filename), _filename(filename), _realtime(realtime),
-      _is_pipe(pangolin::IsPipe(filename)),
-      _is_pipe_open(true),
-      _pipe_fd(-1)
+    : _filename(filename), _realtime(realtime)
 {
+    // Open shared reference to PacketStreamReader
+    _reader = PlaybackSession::Default().Open(filename);
+
+    PANGO_ENSURE(_reader);
+
     // N.B. is_pipe_open can default to true since the reader opens the file and
     // reads header information from it, which means the pipe must be open and
     // filled with data.
@@ -59,10 +58,6 @@ PangoVideo::PangoVideo(const std::string& filename, bool realtime)
 
 PangoVideo::~PangoVideo()
 {
-#ifndef _WIN_
-    if (_pipe_fd != -1)
-        close(_pipe_fd);
-#endif
 }
 
 size_t PangoVideo::SizeBytes() const
@@ -88,34 +83,11 @@ void PangoVideo::Stop()
 bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
 {
     _frame_properties = picojson::value();
-    std::lock_guard<decltype(_reader.Mutex())> lg(_reader.Mutex());
-
-#ifndef _WIN_
-    if (_is_pipe && !_is_pipe_open)
-    {
-        if (_pipe_fd == -1)
-            _pipe_fd = ReadablePipeFileDescriptor(_filename);
-
-        if (_pipe_fd == -1)
-            return false;
-
-        // Test whether the pipe has data to be read. If so, open the
-        // file stream and start reading. After this point, the file
-        // descriptor is owned by the reader.
-        if (PipeHasDataToRead(_pipe_fd))
-        {
-            _reader.Open(_filename);
-            close(_pipe_fd);
-            _is_pipe_open = true;
-        }
-        else
-            return false;
-    }
-#endif
+    std::lock_guard<decltype(_reader->Mutex())> lg(_reader->Mutex());
 
     try
     {
-        auto fi = _reader.NextFrame(_src_id, _realtime ? &_realtime_sync : nullptr);
+        auto fi = _reader->NextFrame(_src_id);
         if (!fi.None())
         {
             //update metadata. This should not be stateful, but a higher level interface requires this.
@@ -123,21 +95,16 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
             _frame_properties = fi.meta;
 
             // read this frame's actual data
-            _reader.ReadRaw(reinterpret_cast<char*>(image), _size_bytes);
+            _reader->ReadRaw(reinterpret_cast<char*>(image), _size_bytes);
             return true;
         }
         else
         {
-            if (_is_pipe && !_reader.Good())
-                HandlePipeClosed();
             return false;
         }
     }
     catch (std::exception& ex)
     {
-        if (_is_pipe)
-            HandlePipeClosed();
-
         pango_print_warn("%s", ex.what());
         return false;
     }
@@ -154,20 +121,20 @@ bool PangoVideo::GrabNewest( unsigned char* image, bool wait )
 
 int PangoVideo::GetCurrentFrameId() const
 {
-    return static_cast<int>(_reader.GetPacketIndex(_src_id));
+    return static_cast<int>(_reader->GetPacketIndex(_src_id));
 }
 
 int PangoVideo::GetTotalFrames() const
 {
-    return static_cast<int>(_reader.GetNumPackets(_src_id));
+    return static_cast<int>(_reader->GetNumPackets(_src_id));
 }
 
 int PangoVideo::Seek(int frameid)
 {
-    std::lock_guard<decltype(_reader.Mutex())> lg(_reader.Mutex());
+    std::lock_guard<decltype(_reader->Mutex())> lg(_reader->Mutex());
     _frame_properties = picojson::value(); //clear frame props
 
-    auto fi = _reader.Seek(_src_id, frameid, _realtime ? &_realtime_sync : nullptr);
+    auto fi = _reader->Seek(_src_id, frameid);
 
     if (fi.None()) {
         return -1;
@@ -178,7 +145,7 @@ int PangoVideo::Seek(int frameid)
 
 int PangoVideo::FindSource()
 {
-    for(const auto& src : _reader.Sources())
+    for(const auto& src : _reader->Sources())
     {
         try
         {
@@ -216,17 +183,6 @@ int PangoVideo::FindSource()
     }
 
     return -1;
-}
-
-void PangoVideo::HandlePipeClosed()
-{
-    // The pipe was closed by the other end. The pipe will have to be
-    // re-opened, but it is not desirable to block at this point.
-    //
-    // The next time a frame is grabbed, the pipe will be checked and if
-    // it is open, the stream will be re-opened.
-    _reader.Close();
-    _is_pipe_open = false;
 }
 
 PANGOLIN_REGISTER_FACTORY(PangoVideo)

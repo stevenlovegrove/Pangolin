@@ -1,5 +1,5 @@
-#include <pangolin/video/drivers/shared_memory.h>
 #include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/drivers/shared_memory.h>
 #include <pangolin/video/iostream_operators.h>
 
 using namespace std;
@@ -46,9 +46,12 @@ bool SharedMemoryVideo::GrabNext(unsigned char* image, bool wait)
 {
     // If a condition variable exists, try waiting on it.
     if(_buffer_full) {
+        timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+
         if (wait) {
             _buffer_full->wait();
-        } else if (!_buffer_full->wait(TimeNow())) {
+        } else if (!_buffer_full->wait(ts)) {
             return false;
         }
     }

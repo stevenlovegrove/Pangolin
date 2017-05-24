@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <pangolin/video/video.h>
 #include <pangolin/log/packetstream_reader.h>
+#include <pangolin/video/video.h>
 
 namespace pangolin
 {
@@ -78,8 +78,7 @@ private:
 protected:
     int FindSource();
 
-    PacketStreamReader _reader;
-    SyncTime _realtime_sync;
+    std::shared_ptr<PacketStreamReader> _reader;
 
     size_t _size_bytes;
     std::vector<StreamInfo> _streams;
@@ -88,9 +87,6 @@ protected:
     int _src_id;
     const std::string _filename;
     bool _realtime;
-    bool _is_pipe;
-    bool _is_pipe_open;
-    int _pipe_fd;
 };
 
 }
