@@ -26,18 +26,12 @@ void writeFakeFrame(const PacketStreamSource& source, size_t sequence_number, Pa
 }
 
 
-FrameInfo readFakeFrame(PacketStreamSourceId id, PacketStreamReader& source)
+Packet readFakeFrame(PacketStreamSourceId id, PacketStreamReader& source)
 {
     char buffer[1024];
     //    source.lock();
-    auto fi = source.NextFrame(id);
-    if (fi.None())
-    {
-        //        source.release();
-        return fi;
-    }
-    source.ReadRaw(buffer, fi.size);
-    //    source.release();
+    Packet fi = source.NextFrame(id);
+    fi.ReadRaw(buffer, fi.size);
 
     output_m.lock();
     output << "Thread " << this_thread::get_id() <<  " read a frame from src " << fi.src << ", of size " << fi.size << "..." << endl;

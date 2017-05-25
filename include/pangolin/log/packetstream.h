@@ -57,16 +57,6 @@ public:
         return _seekable;
     }
 
-    size_t data_len() const
-    {
-        return _data_len;
-    }
-
-    void data_len(size_t d)
-    {
-        _data_len = d;
-    }
-
     void open(const std::string& filename)
     {
         close();
@@ -108,13 +98,11 @@ private:
 
     bool _seekable;
     pangoTagType _tag;
-//    FrameInfo _frame;
 
     // Amount of frame data left to read. Tracks our position within a data block.
-    size_t _data_len;
+
 
     void cclear() {
-        _data_len = 0;
         _tag = 0;
     }
 };

@@ -136,9 +136,6 @@ void PacketStreamReader::ParseNewSource()
     if (_sources.size() != pss.id)
         throw runtime_error("Id mismatch parsing source descriptors. Possible corrupt stream?");
     _sources.push_back(pss);
-    if (_next_packet_framenum.size() < pss.id + 1)
-        _next_packet_framenum.resize(pss.id + 1);
-    _next_packet_framenum[pss.id] = 0;
 }
 
 void PacketStreamReader::SetupIndex()
@@ -214,11 +211,11 @@ bool PacketStreamReader::GoodToRead()
 
 }
 
-FrameInfo PacketStreamReader::_nextFrame()
+Packet PacketStreamReader::NextFrame()
 {
     while (GoodToRead())
     {
-        auto t = _stream.peekTag();
+        const pangoTagType t = _stream.peekTag();
 
         switch (t)
         {
@@ -230,13 +227,13 @@ FrameInfo PacketStreamReader::_nextFrame()
             break;
         case TAG_SRC_JSON: //frames are sometimes preceded by metadata, but metadata must ALWAYS be followed by a frame from the same source.
         case TAG_SRC_PACKET:
-            return readFrameHeader();
+            return Packet(_stream, _mutex, _sources);
         case TAG_PANGO_STATS:
             ParseIndex();
             break;
         case TAG_PANGO_FOOTER: //end of frames
         case TAG_END:
-            return FrameInfo(); //none
+            throw std::runtime_error("PacketStreamReader: end of stream");
         case TAG_PANGO_HDR: //shoudln't encounter this
             ParseHeader();
             break;
@@ -251,133 +248,31 @@ FrameInfo PacketStreamReader::_nextFrame()
     }
 
     // No frame
-    return FrameInfo();
+    throw std::runtime_error("PacketStreamReader: no frame");
 }
 
-FrameInfo PacketStreamReader::NextFrame(PacketStreamSourceId src)
+Packet PacketStreamReader::NextFrame(PacketStreamSourceId src)
 {
-    Lock(); //we cannot use a scoped lock here, because we may not want to release the lock, depending on what we find.
-    try
+    while (1)
     {
-        while (1)
-        {
-            auto fi = _nextFrame();
-            if (!fi) {
-                // Nothing left in stream
-                Unlock();
-                return fi;
-            } else {
-                // So we have accurate sequence numbers for frames.
-                ++_next_packet_framenum[fi.src];
-
-                if (_stream.seekable())
-                {
-                    if (!_index.has(fi.src, fi.sequence_num)) {
-                        // If it's not in the index for some reason, add it.
-                        _index.add(fi.src, fi.sequence_num, fi.frame_streampos);
-                    } else if (_index.position(fi.src, fi.sequence_num) != fi.frame_streampos) {
-                        PANGO_ENSURE(_index.position(fi.src, fi.sequence_num) == fi.packet_streampos);
-                        static bool warned_already = false;
-                        if(!warned_already) {
-                            pango_print_warn("CAUTION: Old .pango files do not update frame_properties on seek.\n");
-                            warned_already = true;
-                        }
-                    }
-                }
-                _stream.data_len(fi.size); //now we are positioned on packet data for n characters.
-            }
-
-            //if it's ours, return it and don't release lock
-            if (fi.src == src) {
-                return fi;
-            }
-
-            //otherwise skip it and get the next one.
-            _stream.skip(fi.size);
+        auto fi = NextFrame();
+        if (fi.src == src) {
+            return fi;
         }
     }
-    catch (std::exception &e) {
-        // Since we are not using a scoped lock, we must catch and release.
-        Unlock();
-        throw e;
-    }
-    catch (...)  {
-        // We will always release, even if we cannot identify the exception.
-        Unlock();
-        throw std::runtime_error("Caught an unknown exception");
-    }
 }
 
-size_t PacketStreamReader::ReadRaw(char* target, size_t len)
+size_t PacketStreamReader::Seek(PacketStreamSourceId src, size_t framenum)
 {
-    if (!_stream.data_len()) {
-        throw runtime_error("Packetstream not positioned on data block. nextFrame() should be called before readraw().");
-    } else if (_stream.data_len() < len) {
-        pango_print_warn("readraw() requested read of %zu bytes when only %zu bytes remain in data block. Trimming to available data size.", len, _stream.data_len());
-        len = _stream.data_len();
-    }
+    PANGO_ASSERT(src < _sources.size());
+    PANGO_ASSERT(_stream.seekable());
+    PANGO_ASSERT(_index.has(src, framenum));
 
-    auto r = _stream.read(target, len);
-
-    if (!_stream.data_len()) {
-        //we are done reading, and should release the lock from nextFrame()
-        Unlock();
-    }
-
-    return r;
-}
-
-size_t PacketStreamReader::Skip(size_t len)
-{
-    if (!_stream.data_len())
-        throw runtime_error("Packetstream not positioned on data block. nextFrame() should be called before skip().");
-    else if (_stream.data_len() < len)
-    {
-        pango_print_warn("skip() requested skip of %zu bytes when only %zu bytes remain in data block. Trimming to remaining data size.", len, _stream.data_len());
-        len = _stream.data_len();
-    }
-    auto r = _stream.skip(len);
-    if (!_stream.data_len()) //we are done skipping, and should release the lock from nextFrame()
-        Unlock();
-    return r;
-}
-
-FrameInfo PacketStreamReader::Seek(PacketStreamSourceId src, size_t framenum)
-{
     lock_guard<decltype(_mutex)> lg(_mutex);
 
-    if (!_stream.seekable())
-        throw std::runtime_error("Stream is not seekable (probably a pipe).");
+    _stream.seekg(_index.position(src, framenum));
 
-    if (src > _sources.size())
-        throw std::runtime_error("Invalid Frame Source ID.");
-
-    if(_stream.data_len()) //we were in the middle of reading data, and are holding an extra lock. We need to release it, while still holding the scoped lock.
-       Skip(_stream.data_len());
-
-    while (!_index.has(src, framenum))
-    {
-        pango_print_warn("seek index miss... reading ahead.\n");
-
-        if (_stream.data_len())
-            _stream.skip(_stream.data_len());
-
-        auto fi = NextFrame(src);
-        if (!fi) //if we hit the end, throw
-            throw std::out_of_range("frame number not in sequence");
-    }
-
-    auto target_header_start = _index.position(src, framenum);
-
-    _stream.seekg(target_header_start);
-    _next_packet_framenum[src] = framenum; //this increments when we parse the header in the next line;
-    //THIS WILL BREAK _next_packet_framenum FOR ALL OTHER SOURCES. Todo more refactoring to fix.
-
-    // Read header and rest back
-    auto r = readFrameHeader();
-    _stream.seekg(r.packet_streampos);
-
-    return r;
+    return framenum;
 }
 
 void PacketStreamReader::SkipSync()
@@ -392,41 +287,7 @@ void PacketStreamReader::SkipSync()
 
 size_t PacketStreamReader::GetPacketIndex(PacketStreamSourceId src_id) const //returns the current frame for source
 {
-    return _next_packet_framenum.at(src_id);
-}
-
-FrameInfo PacketStreamReader::readFrameHeader()
-{
-    FrameInfo frame;
-
-    frame.frame_streampos = _stream.tellg();
-
-    if (_stream.peekTag() == TAG_SRC_JSON)
-    {
-        _stream.readTag(TAG_SRC_JSON);
-        frame.src = _stream.readUINT();
-        picojson::parse(frame.meta, _stream);
-    }
-
-    frame.packet_streampos = _stream.tellg();
-
-    _stream.readTag(TAG_SRC_PACKET);
-    frame.time = _stream.readTimestamp();
-
-    if (frame) {
-        if (_stream.readUINT() != frame.src) {
-            throw std::runtime_error("Frame preceded by metadata for a mismatched source. Stream may be corrupt.");
-        }
-    } else {
-        frame.src = _stream.readUINT();
-    }
-
-    frame.size = Sources()[frame.src].data_size_bytes;
-    if (!frame.size)
-        frame.size = _stream.readUINT();
-    frame.sequence_num = GetPacketIndex(frame.src);
-
-    return frame;
+    return Sources()[src_id].next_packet_id;
 }
 
 }

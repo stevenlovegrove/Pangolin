@@ -87,21 +87,10 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
 
     try
     {
-        auto fi = _reader->NextFrame(_src_id);
-        if (!fi.None())
-        {
-            //update metadata. This should not be stateful, but a higher level interface requires this.
-            //todo eventually propagate the goodness up.
-            _frame_properties = fi.meta;
-
-            // read this frame's actual data
-            _reader->ReadRaw(reinterpret_cast<char*>(image), _size_bytes);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        Packet fi = _reader->NextFrame(_src_id);
+        _frame_properties = fi.meta;
+        fi.ReadRaw(reinterpret_cast<char*>(image), _size_bytes);
+        return true;
     }
     catch (std::exception& ex)
     {
@@ -132,15 +121,8 @@ int PangoVideo::GetTotalFrames() const
 int PangoVideo::Seek(int frameid)
 {
     std::lock_guard<decltype(_reader->Mutex())> lg(_reader->Mutex());
-    _frame_properties = picojson::value(); //clear frame props
-
-    auto fi = _reader->Seek(_src_id, frameid);
-
-    if (fi.None()) {
-        return -1;
-    } else {
-        return (int)fi.sequence_num;
-    }
+    _frame_properties = picojson::value();
+    return _reader->Seek(_src_id, frameid);
 }
 
 int PangoVideo::FindPacketStreamSource()

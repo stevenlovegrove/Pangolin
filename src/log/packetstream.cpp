@@ -54,8 +54,6 @@ pangoTagType PacketStream::peekTag()
 
 char PacketStream::get()
 {
-    if (_data_len)
-        _data_len--;
     _tag = 0;
     return Base::get();
 }
@@ -64,18 +62,12 @@ size_t PacketStream::read(char* target, size_t len)
 {
     _tag = 0;
     Base::read(target, len);
-    if (_data_len) {
-        _data_len = std::max( (int)_data_len - (int)gcount(), (int)0);
-    }
     return gcount();
 }
 
 size_t PacketStream::skip(size_t len)
 {
     ignore(len);
-    if (_data_len) {
-        _data_len = std::max( (int)_data_len - (int)gcount(), (int)0);
-    }
     _tag = 0;
     return len;
 }
