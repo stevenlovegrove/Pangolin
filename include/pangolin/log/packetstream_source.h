@@ -21,8 +21,7 @@ struct PANGOLIN_EXPORT PacketStreamSource
           version(0),
           data_alignment_bytes(1),
           data_size_bytes(0),
-          next_packet_id(0),
-          next_packet_time_us(0)
+          next_packet_id(0)
     {
     }
 
@@ -34,6 +33,15 @@ struct PANGOLIN_EXPORT PacketStreamSource
             return std::streampos(-1);
         }
 
+    }
+
+    int64_t NextPacketTime() const
+    {
+        if(next_packet_id < index.size()) {
+            return index[next_packet_id].capture_time;
+        }else{
+            return 0;
+        }
     }
 
     std::string     driver;
@@ -50,7 +58,6 @@ struct PANGOLIN_EXPORT PacketStreamSource
 
     // Based on current position in stream
     size_t          next_packet_id;
-    int64_t         next_packet_time_us;
 };
 
 }

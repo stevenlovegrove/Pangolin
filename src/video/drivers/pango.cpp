@@ -48,14 +48,12 @@ PangoVideo::PangoVideo(const std::string& filename)
       _src_id(FindPacketStreamSource()),
       _source(nullptr)
 {
-    if(_src_id != -1) {
-        _source = &_reader->Sources()[_src_id];
-        SetupStreams(*_source);
-        _seekx.Connect(_playback_session.Time().Seek, [&](SyncTime::TimePoint t){Seek(t);} );
-        _event_promise.WaitAndRenew(_source->next_packet_time_us);
-    }else{
-        throw pangolin::VideoException("No appropriate video streams found in log.");
-    }
+    PANGO_ENSURE(_src_id != -1, "No appropriate video streams found in log.");
+
+    _source = &_reader->Sources()[_src_id];
+    SetupStreams(*_source);
+    _seekx.Connect(_playback_session.Time().Seek, [&](SyncTime::TimePoint t){Seek(t);} );
+    _event_promise.WaitAndRenew(_source->NextPacketTime());
 }
 
 PangoVideo::~PangoVideo()
@@ -89,7 +87,7 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
         Packet fi = _reader->NextFrame(_src_id);
         _frame_properties = fi.meta;
         fi.ReadRaw(reinterpret_cast<char*>(image), _size_bytes);
-        _event_promise.WaitAndRenew(_source->next_packet_time_us);
+        _event_promise.WaitAndRenew(_source->NextPacketTime());
         return true;
     }
     catch(...)

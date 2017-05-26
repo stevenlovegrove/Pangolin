@@ -72,7 +72,6 @@ public:
     size_t Seek(PacketStreamSourceId src, size_t framenum);
 
 private:
-
     bool GoodToRead();
 
     void SetupIndex();
@@ -81,7 +80,9 @@ private:
 
     void ParseNewSource();
 
-    void ParseIndex();
+    bool ParseIndex();
+
+    void RebuildIndex();
 
     std::streampos ParseFooter();
 

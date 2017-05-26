@@ -37,7 +37,7 @@ namespace pangolin
 
 bool ImagesVideo::LoadFrame(size_t i)
 {
-    if( (int)i < num_files) {
+    if( i < num_files) {
         Frame& frame = loaded[i];
         for(size_t c=0; c< num_channels; ++c) {
             const std::string& filename = Filename(i,c);
@@ -98,12 +98,12 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path)
 {
     // Work out which files to sequence
     PopulateFilenames(wildcard_path);
-    
+
     // Load first image in order to determine stream sizes etc
     LoadFrame(next_frame_id);
 
     ConfigureStreamSizes();
-    
+
     // TODO: Queue frames in another thread.
 }
 
@@ -132,13 +132,13 @@ ImagesVideo::~ImagesVideo()
 //! Implement VideoInput::Start()
 void ImagesVideo::Start()
 {
-    
+
 }
 
 //! Implement VideoInput::Stop()
 void ImagesVideo::Stop()
 {
-    
+
 }
 
 //! Implement VideoInput::SizeBytes()
@@ -177,7 +177,7 @@ bool ImagesVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         next_frame_id++;
         return true;
     }
-    
+
     return false;
 }
 

@@ -80,13 +80,14 @@ void PacketStreamReader::Open(const std::string& filename)
             throw runtime_error("Bad stream");
     }
 
-    SetupIndex();
 
     ParseHeader();
 
     while (_stream.peekTag() == TAG_ADD_SOURCE) {
         ParseNewSource();
     }
+
+    SetupIndex();
 }
 
 void PacketStreamReader::Close() {
@@ -146,19 +147,32 @@ void PacketStreamReader::SetupIndex()
     if (!_stream.seekable())
         return;
 
-    auto pos = _stream.tellg();
-    _stream.seekg(-(static_cast<istream::off_type>(sizeof(uint64_t)) + TAG_LENGTH), ios_base::end); //a footer is a tag + index position. //todo: this will choke on trailing whitespace. Make it not choke on trailing whitespace.
-    //todo also: this will break if the footer size changes. Make this more dynamic.
+    // Save current position
+    std::streampos pos = _stream.tellg();
 
+    bool index_good = false;
+
+    // Look for footer at end of file (TAG_PANGO_FOOTER + index position).
+    _stream.seekg(-(static_cast<istream::off_type>(sizeof(uint64_t)) + TAG_LENGTH), ios_base::end);
     if (_stream.peekTag() == TAG_PANGO_FOOTER)
     {
-        _stream.seekg(ParseFooter()); //parsing the footer returns the index position
-        if (_stream.peekTag() == TAG_PANGO_STATS)
-            ParseIndex();
+        //parsing the footer returns the index position
+        _stream.seekg(ParseFooter());
+        if (_stream.peekTag() == TAG_PANGO_STATS) {
+            // Read the pre-build index from the file
+            index_good = ParseIndex();
+        }
     }
 
+    // Restore previous location
     _stream.clear();
     _stream.seekg(pos);
+
+    // Fix the index if needed
+//    if(!index_good)
+    {
+        RebuildIndex();
+    }
 }
 
 streampos PacketStreamReader::ParseFooter() //returns position of index.
@@ -169,15 +183,17 @@ streampos PacketStreamReader::ParseFooter() //returns position of index.
     return index;
 }
 
-void PacketStreamReader::ParseIndex()
+bool PacketStreamReader::ParseIndex()
 {
     _stream.readTag(TAG_PANGO_STATS);
     picojson::value json;
     picojson::parse(json, _stream);
 
-    // This is a two-dimensional serialized array, [source id][sequence number] ---> packet position in stream
-    if (json.contains("src_packet_index"))
+    bool index_good = json.contains("src_packet_index");
+
+    if (index_good)
     {
+        // This is a two-dimensional serialized array, [source id][sequence number] ---> packet position in stream
         const auto& json_index = json["src_packet_index"].get<picojson::array>();
 
         // We shouldn't have seen more sources than exist in the index
@@ -192,6 +208,8 @@ void PacketStreamReader::ParseIndex()
             }
         }
     }
+
+    return index_good;
 }
 
 bool PacketStreamReader::GoodToRead()
@@ -275,6 +293,43 @@ Packet PacketStreamReader::NextFrame(PacketStreamSourceId src)
         if (fi.src == src) {
             return fi;
         }
+    }
+}
+
+void PacketStreamReader::RebuildIndex()
+{
+    lock_guard<decltype(_mutex)> lg(_mutex);
+
+    // Clear existing cached index
+    if(_stream.seekable()) {
+        // Save current position
+        std::streampos pos = _stream.tellg();
+        for(PacketStreamSource& s : _sources) {
+            s.index.clear();
+            s.next_packet_id = 0;
+        }
+
+        // Read through entire file, updating index
+        try{
+            while (1)
+            {
+                // This will throw if we've run out of frames
+                auto fi = NextFrame();
+                PacketStreamSource& s = _sources[fi.src];
+                PANGO_ENSURE(s.index.size() == fi.sequence_num);
+                s.index.push_back({fi.frame_streampos, fi.time});
+            }
+        }catch(...){
+        }
+
+        // Reset Packet id's
+        for(PacketStreamSource& s : _sources) {
+            s.next_packet_id = 0;
+        }
+
+        // Restore previous location
+        _stream.clear();
+        _stream.seekg(pos);
     }
 }
 

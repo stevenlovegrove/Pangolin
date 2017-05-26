@@ -113,6 +113,7 @@ public:
             queue_changed.wait(l, [&](){
                 return time_queue_us.top() == event_time_us;
             });
+
             // Dequeue
             time_queue_us.pop();
         }
@@ -136,7 +137,7 @@ public:
     Signal<TimePoint> Seek;
 
 private:
-    std::priority_queue<int64_t> time_queue_us;
+    std::priority_queue<int64_t,std::vector<int64_t>,std::greater<int64_t>> time_queue_us;
     Duration virtual_offset;
     std::mutex time_mutex;
     std::condition_variable queue_changed;
