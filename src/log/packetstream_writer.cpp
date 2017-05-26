@@ -56,9 +56,8 @@ static inline const std::string CurrentTimeStr()
     return buffer;
 }
 
-static inline void writeTimestamp(std::ostream& writer)
+static inline void writeTimestamp(std::ostream& writer, int64_t time_us)
 {
-    const auto time_us = Time_us(TimeNow());
     writer.write(reinterpret_cast<const char*>(&time_us), sizeof(decltype(time_us)));
 }
 
@@ -132,15 +131,16 @@ void PacketStreamWriter::WriteMeta(PacketStreamSourceId src, const picojson::val
 
 void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char* source, size_t sourcelen, const picojson::value& meta)
 {
+    const int64_t time_us = Time_us(TimeNow());
+
     SCOPED_LOCK;
-    if (_indexable)
-        _index.add(src, _stream.tellp()); //record position for seek index
+    _sources[src].index.push_back({_stream.tellp(), time_us});
 
     if (!meta.is<picojson::null>())
         WriteMeta(src, meta);
 
     writeTag(_stream, TAG_SRC_PACKET);
-    writeTimestamp(_stream);
+    writeTimestamp(_stream, time_us);
     writeCompressedUnsignedInt(_stream, src);
 
     if (_sources[src].data_size_bytes)
@@ -170,6 +170,16 @@ void PacketStreamWriter::WriteSync()
 	writeTag(_stream, TAG_PANGO_SYNC);
 }
 
+picojson::value ToJsonPacketIndex(PacketStreamSource& src)
+{
+    picojson::array positions;
+    for (const PacketStreamSource::PacketInfo& frame : src.index)
+    {
+        positions.emplace_back(frame.pos);
+    }
+    return positions;
+}
+
 void PacketStreamWriter::WriteEnd()
 {
     SCOPED_LOCK;
@@ -182,13 +192,14 @@ void PacketStreamWriter::WriteEnd()
     picojson::value stat;
     stat["num_sources"] = _sources.size();
     stat["bytes_written"] = _bytes_written;
-    stat["src_packet_index"] = _index.json();
+    stat["src_packet_index"] = picojson::array();
+    for(auto& s : _sources) {
+        stat["src_packet_index"].push_back(ToJsonPacketIndex(s));
+    }
+
     stat.serialize(std::ostream_iterator<char>(_stream), false);
     writeTag(_stream, TAG_PANGO_FOOTER);
     _stream.write(reinterpret_cast<char*>(&indexpos), sizeof(uint64_t));
 }
 
-
 }
-
-

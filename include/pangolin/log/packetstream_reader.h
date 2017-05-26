@@ -42,7 +42,7 @@ namespace pangolin
 // Encapsulate serialized reading of Packet from stream.
 struct Packet
 {
-    Packet(PacketStream& s, std::recursive_mutex& mutex, SourceIndexType& srcs)
+    Packet(PacketStream& s, std::recursive_mutex& mutex, std::vector<PacketStreamSource>& srcs)
         : _stream(s), lock(mutex)
     {
         ParsePacketHeader(s, srcs);
@@ -87,7 +87,7 @@ struct Packet
     std::streampos frame_streampos;
 
 private:
-    void ParsePacketHeader(PacketStream& s, SourceIndexType& srcs)
+    void ParsePacketHeader(PacketStream& s, std::vector<PacketStreamSource>& srcs)
     {
         size_t json_src = -1;
 
@@ -140,21 +140,10 @@ public:
 
     void Close();
 
-    const SourceIndexType& Sources() const
+    const std::vector<PacketStreamSource>&
+    Sources() const
     {
         return _sources;
-    }
-
-    // User is responsible for locking, since we cannot know the desired
-    // locking behaviour
-    void Lock()
-    {
-        _mutex.lock();
-    }
-
-    void Unlock()
-    {
-        _mutex.unlock();
     }
 
     // Exposes the underlying mutex... this allows std::lock_guard,
@@ -164,6 +153,10 @@ public:
         return _mutex;
     }
 
+    // Grab Next available frame packetstream
+    Packet NextFrame();
+
+    // Grab Next available frame in packetstream from src, discarding other frames.
     Packet NextFrame(PacketStreamSourceId src);
 
     bool Good() const
@@ -171,17 +164,7 @@ public:
         return _stream.good();
     }
 
-    // Returns the current frame for source
-    size_t GetPacketIndex(PacketStreamSourceId src_id) const;
-
-    inline size_t GetNumPackets(PacketStreamSourceId src_id) const
-    {
-        return _index.packetCount(src_id);
-    }
-
     // Jumps to a particular packet.
-    // If the address of a SyncTime is passed in, the object will be updated
-    // to maintain synchronization after the seek is complete.
     size_t Seek(PacketStreamSourceId src, size_t framenum);
 
 private:
@@ -198,8 +181,6 @@ private:
 
     std::streampos ParseFooter();
 
-    Packet NextFrame();
-
     void SkipSync();
 
     void ReSync() {
@@ -207,8 +188,7 @@ private:
     }
 
     std::string _filename;
-    SourceIndexType _sources;
-    PacketIndex _index;
+    std::vector<PacketStreamSource> _sources;
     SyncTime::TimePoint packet_stream_start;
 
     PacketStream _stream;
@@ -226,7 +206,3 @@ private:
 
 
 }
-
-
-
-

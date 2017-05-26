@@ -110,7 +110,7 @@ public:
     // the underlying ostream.
     void WriteEnd();
 
-    const SourceIndexType& Sources() const {
+    const std::vector<PacketStreamSource>& Sources() const {
         return _sources;
     }
 
@@ -127,13 +127,10 @@ private:
     std::ostream _stream;
     bool _indexable, _open;
 
-    SourceIndexType _sources;
-    PacketIndex _index;
+    std::vector<PacketStreamSource> _sources;
     size_t _bytes_written;
     std::recursive_mutex _lock;
 };
 
 
 }
-
-

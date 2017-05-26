@@ -175,7 +175,13 @@ void PacketStreamReader::ParseIndex()
     if (json.contains("src_packet_index")) //this is a two-dimensional serialized array, [source id][sequence number] ---> packet position in stream
     {
         const auto& json_index = json["src_packet_index"].get<picojson::array>();  //reference to the whole array
-        _index = PacketIndex(json_index);
+        PANGO_ENSURE(json_index.size() == _sources.size());
+        for(size_t i=0; i < _sources.size(); ++i) {
+            _sources[i].index.resize(json_index[i].size());
+            for(size_t f=0; f < json_index[i].size(); ++f) {
+                _sources[i].index[i].pos = json_index[i][f].get<int64_t>();
+            }
+        }
     }
 }
 
@@ -264,15 +270,19 @@ Packet PacketStreamReader::NextFrame(PacketStreamSourceId src)
 
 size_t PacketStreamReader::Seek(PacketStreamSourceId src, size_t framenum)
 {
-    PANGO_ASSERT(src < _sources.size());
-    PANGO_ASSERT(_stream.seekable());
-    PANGO_ASSERT(_index.has(src, framenum));
-
     lock_guard<decltype(_mutex)> lg(_mutex);
 
-    _stream.seekg(_index.position(src, framenum));
+    PANGO_ASSERT(_stream.seekable());
+    PANGO_ASSERT(src < _sources.size());
+    PacketStreamSource& source = _sources[src];
+    PANGO_ASSERT(framenum < source.index.size());
 
-    return framenum;
+    if(source.index[framenum].pos > 0) {
+        _stream.seekg(source.index[framenum].pos);
+        return framenum;
+    }else{
+        return source.next_packet_id;
+    }
 }
 
 void PacketStreamReader::SkipSync()
@@ -285,10 +295,4 @@ void PacketStreamReader::SkipSync()
         _stream.readTag();
 }
 
-size_t PacketStreamReader::GetPacketIndex(PacketStreamSourceId src_id) const //returns the current frame for source
-{
-    return Sources()[src_id].next_packet_id;
 }
-
-}
-

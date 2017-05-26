@@ -40,7 +40,7 @@ namespace pangolin
 const std::string pango_video_type = "raw_video";
 
 PangoVideo::PangoVideo(const std::string& filename, bool realtime)
-    : _filename(filename), _realtime(realtime)
+    : _source(nullptr), _filename(filename),  _realtime(realtime)
 {
     // Open shared reference to PacketStreamReader
     _reader = PlaybackSession::Default().Open(filename);
@@ -50,7 +50,8 @@ PangoVideo::PangoVideo(const std::string& filename, bool realtime)
     _src_id = FindPacketStreamSource();
 
     if(_src_id != -1) {
-        SetupStreams(_reader->Sources()[_src_id]);
+        _source = &_reader->Sources()[_src_id];
+        SetupStreams(*_source);
     }else{
         throw pangolin::VideoException("No appropriate video streams found in log.");
     }
@@ -110,12 +111,12 @@ bool PangoVideo::GrabNewest( unsigned char* image, bool wait )
 
 int PangoVideo::GetCurrentFrameId() const
 {
-    return static_cast<int>(_reader->GetPacketIndex(_src_id));
+    return (int)(_reader->Sources()[_src_id].next_packet_id);
 }
 
 int PangoVideo::GetTotalFrames() const
 {
-    return static_cast<int>(_reader->GetNumPackets(_src_id));
+    return _source->index.size();
 }
 
 int PangoVideo::Seek(int frameid)

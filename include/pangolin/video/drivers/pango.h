@@ -80,6 +80,7 @@ protected:
     void SetupStreams(const PacketStreamSource& src);
 
     std::shared_ptr<PacketStreamReader> _reader;
+    const PacketStreamSource* _source;
 
     size_t _size_bytes;
     std::vector<StreamInfo> _streams;

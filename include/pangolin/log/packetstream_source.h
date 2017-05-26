@@ -2,6 +2,7 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/picojson.h>
+#include <iostream>
 
 namespace pangolin {
 
@@ -9,6 +10,12 @@ using PacketStreamSourceId = size_t;
 
 struct PANGOLIN_EXPORT PacketStreamSource
 {
+    struct PacketInfo
+    {
+        std::streampos pos;
+        int64_t capture_time;
+    };
+
     PacketStreamSource()
         : id(static_cast<PacketStreamSourceId>(-1)), version(1),
           data_alignment_bytes(1), data_size_bytes(0),
@@ -28,6 +35,15 @@ struct PANGOLIN_EXPORT PacketStreamSource
         data_size_bytes(packet_size_bytes),
         next_packet_id(0)
     {
+    }
+
+    std::streampos FindSeekLocation(size_t packet_id)
+    {
+        if(packet_id < index.size()) {
+            return index[packet_id].pos;
+        }else{
+            return std::streampos(-1);
+        }
 
     }
 
@@ -39,9 +55,9 @@ struct PANGOLIN_EXPORT PacketStreamSource
     int64_t         data_alignment_bytes;
     std::string     data_definitions;
     int64_t         data_size_bytes;
-    size_t          next_packet_id;
-};
 
-using SourceIndexType = std::vector<PacketStreamSource>;
+    size_t          next_packet_id;
+    std::vector<PacketInfo> index;
+};
 
 }
