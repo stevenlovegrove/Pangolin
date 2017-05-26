@@ -123,19 +123,22 @@ void PacketStreamReader::ParseNewSource()
     picojson::parse(json, _stream);
     _stream.get(); // consume newline
 
-    PacketStreamSource pss;
+
+    const size_t src_id = json[pss_src_id].get<int64_t>();
+
+    if(_sources.size() <= src_id) {
+        _sources.resize(src_id+1);
+    }
+
+    PacketStreamSource& pss = _sources[src_id];
+    pss.id = src_id;
     pss.driver = json[pss_src_driver].get<string>();
-    pss.id = json[pss_src_id].get<int64_t>();
     pss.uri = json[pss_src_uri].get<string>();
     pss.info = json[pss_src_info];
     pss.version = json[pss_src_version].get<int64_t>();
     pss.data_alignment_bytes = json[pss_src_packet][pss_pkt_alignment_bytes].get<int64_t>();
     pss.data_definitions = json[pss_src_packet][pss_pkt_definitions].get<string>();
     pss.data_size_bytes = json[pss_src_packet][pss_pkt_size_bytes].get<int64_t>();
-
-    if (_sources.size() != pss.id)
-        throw runtime_error("Id mismatch parsing source descriptors. Possible corrupt stream?");
-    _sources.push_back(pss);
 }
 
 void PacketStreamReader::SetupIndex()
@@ -172,14 +175,20 @@ void PacketStreamReader::ParseIndex()
     picojson::value json;
     picojson::parse(json, _stream);
 
-    if (json.contains("src_packet_index")) //this is a two-dimensional serialized array, [source id][sequence number] ---> packet position in stream
+    // This is a two-dimensional serialized array, [source id][sequence number] ---> packet position in stream
+    if (json.contains("src_packet_index"))
     {
-        const auto& json_index = json["src_packet_index"].get<picojson::array>();  //reference to the whole array
-        PANGO_ENSURE(json_index.size() == _sources.size());
+        const auto& json_index = json["src_packet_index"].get<picojson::array>();
+
+        // We shouldn't have seen more sources than exist in the index
+        PANGO_ENSURE(_sources.size() <= json_index.size());
+        _sources.resize(json_index.size());
+
+        // Populate index
         for(size_t i=0; i < _sources.size(); ++i) {
             _sources[i].index.resize(json_index[i].size());
             for(size_t f=0; f < json_index[i].size(); ++f) {
-                _sources[i].index[i].pos = json_index[i][f].get<int64_t>();
+                _sources[i].index[f].pos = json_index[i][f].get<int64_t>();
             }
         }
     }
@@ -261,6 +270,7 @@ Packet PacketStreamReader::NextFrame(PacketStreamSourceId src)
 {
     while (1)
     {
+        // This will throw if nothing is left.
         auto fi = NextFrame();
         if (fi.src == src) {
             return fi;

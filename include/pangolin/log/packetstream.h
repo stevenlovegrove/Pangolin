@@ -29,7 +29,6 @@
 
 #include <pangolin/platform.h>
 
-#include <pangolin/log/frame_info.h>
 #include <pangolin/log/packetstream_tags.h>
 #include <pangolin/utils/file_utils.h>
 
@@ -40,26 +39,27 @@ class PacketStream: public std::ifstream
 {
 public:
     PacketStream()
-        : _seekable(false)
+        : _is_pipe(false)
     {
         cclear();
     }
 
     PacketStream(const std::string& filename)
         : Base(filename.c_str(), std::ios::in | std::ios::binary),
-          _seekable(!IsPipe(filename))
+          _is_pipe(IsPipe(filename))
     {
         cclear();
     }
 
     bool seekable() const
     {
-        return _seekable;
+        return !_is_pipe;
     }
 
     void open(const std::string& filename)
     {
         close();
+        _is_pipe = IsPipe(filename);
         Base::open(filename.c_str(), std::ios::in | std::ios::binary);
     }
 
@@ -96,7 +96,7 @@ public:
 private:
     using Base = std::ifstream;
 
-    bool _seekable;
+    bool _is_pipe;
     pangoTagType _tag;
 
     // Amount of frame data left to read. Tracks our position within a data block.

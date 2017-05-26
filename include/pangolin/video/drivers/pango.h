@@ -37,7 +37,7 @@ class PANGOLIN_EXPORT PangoVideo
     : public VideoInterface, public VideoPropertiesInterface, public VideoPlaybackInterface
 {
 public:
-    PangoVideo(const std::string& filename, bool realtime = true);
+    PangoVideo(const std::string& filename);
     ~PangoVideo();
 
     // Implement VideoInterface
@@ -88,6 +88,8 @@ protected:
     picojson::value _frame_properties;
     int _src_id;
     const std::string _filename;
+
+    SyncTimeEventPromise _event_promise;
     bool _realtime;
 };
 

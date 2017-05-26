@@ -39,8 +39,9 @@ namespace pangolin
 
 const std::string pango_video_type = "raw_video";
 
-PangoVideo::PangoVideo(const std::string& filename, bool realtime)
-    : _source(nullptr), _filename(filename),  _realtime(realtime)
+PangoVideo::PangoVideo(const std::string& filename)
+    : _source(nullptr), _filename(filename),
+      _event_promise(PlaybackSession::Default().Time())
 {
     // Open shared reference to PacketStreamReader
     _reader = PlaybackSession::Default().Open(filename);
@@ -52,6 +53,7 @@ PangoVideo::PangoVideo(const std::string& filename, bool realtime)
     if(_src_id != -1) {
         _source = &_reader->Sources()[_src_id];
         SetupStreams(*_source);
+        _event_promise.WaitAndRenew(_source->next_packet_time_us);
     }else{
         throw pangolin::VideoException("No appropriate video streams found in log.");
     }
@@ -91,12 +93,8 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
         Packet fi = _reader->NextFrame(_src_id);
         _frame_properties = fi.meta;
         fi.ReadRaw(reinterpret_cast<char*>(image), _size_bytes);
+        _event_promise.WaitAndRenew(_source->next_packet_time_us);
         return true;
-    }
-    catch (std::exception& ex)
-    {
-        pango_print_warn("%s", ex.what());
-        return false;
     }
     catch(...)
     {
@@ -141,31 +139,26 @@ int PangoVideo::FindPacketStreamSource()
 
 void PangoVideo::SetupStreams(const PacketStreamSource& src)
 {
-    try {
-        // Read sources header
-        _size_bytes = src.data_size_bytes;
+    // Read sources header
+    _size_bytes = src.data_size_bytes;
 
-        _device_properties = src.info["device"];
-        const picojson::value& json_streams = src.info["streams"];
-        const size_t num_streams = json_streams.size();
-        for (size_t i = 0; i < num_streams; ++i)
-        {
-            const picojson::value& json_stream = json_streams[i];
-            StreamInfo si(
-                    PixelFormatFromString(
-                            json_stream["encoding"].get<std::string>()
-                            ),
-                    json_stream["width"].get<int64_t>(),
-                    json_stream["height"].get<int64_t>(),
-                    json_stream["pitch"].get<int64_t>(),
-                    (unsigned char*) 0 + json_stream["offset"].get<int64_t>()
-                            );
-
-            _streams.push_back(si);
-        }
-    } catch (...)
+    _device_properties = src.info["device"];
+    const picojson::value& json_streams = src.info["streams"];
+    const size_t num_streams = json_streams.size();
+    for (size_t i = 0; i < num_streams; ++i)
     {
-        pango_print_info("Unable to parse PacketStream Source. File version incompatible.\n");
+        const picojson::value& json_stream = json_streams[i];
+        StreamInfo si(
+                PixelFormatFromString(
+                        json_stream["encoding"].get<std::string>()
+                        ),
+                json_stream["width"].get<int64_t>(),
+                json_stream["height"].get<int64_t>(),
+                json_stream["pitch"].get<int64_t>(),
+                (unsigned char*) 0 + json_stream["offset"].get<int64_t>()
+                        );
+
+        _streams.push_back(si);
     }
 }
 
@@ -176,8 +169,7 @@ PANGOLIN_REGISTER_FACTORY(PangoVideo)
             const std::string path = PathExpand(uri.url);
 
             if( !uri.scheme.compare("pango") || FileType(uri.url) == ImageFileTypePango ) {
-                const bool realtime = uri.Contains("realtime");
-                return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str(), realtime));
+                return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str()));
             }
             return std::unique_ptr<VideoInterface>();
         }

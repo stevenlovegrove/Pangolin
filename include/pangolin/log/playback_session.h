@@ -5,6 +5,7 @@
 
 #include <pangolin/log/packetstream_reader.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/registration.h>
 
 namespace pangolin {
 
@@ -30,6 +31,10 @@ public:
         }
     }
 
+    SyncTime& Time()
+    {
+        return time;
+    }
 
 private:
     PlaybackSession() = default;

@@ -29,6 +29,9 @@
 #include <pangolin/utils/timer.h>
 
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <queue>
 
 namespace pangolin
 {
@@ -48,6 +51,9 @@ public:
     {
         SetOffset(std::chrono::milliseconds(0));
     }
+
+    // No copy constructor
+    SyncTime(const SyncTime&) = delete;
 
     SyncTime(Duration virtual_clock_offset)
     {
@@ -84,8 +90,78 @@ public:
         std::this_thread::sleep_until( ToReal(virtual_time) );
     }
 
+    int64_t QueueEvent(int64_t event_time_us)
+    {
+        std::lock_guard<std::mutex> l(time_mutex);
+
+        if(event_time_us) {
+            time_queue_us.push(event_time_us);
+        }
+
+        return event_time_us;
+    }
+
+    int64_t WaitDequeueAndQueueEvent(int64_t event_time_us, int64_t new_event_time_us =0 )
+    {
+        std::unique_lock<std::mutex> l(time_mutex);
+
+        if(event_time_us) {
+            PANGO_ENSURE(time_queue_us.size());
+
+            // Wait until we're top the priority-queue
+            queue_changed.wait(l, [&](){
+                return time_queue_us.top() == event_time_us;
+            });
+            // Dequeue
+            time_queue_us.pop();
+        }
+
+        if(new_event_time_us) {
+            // Add the new event whilst we still hold the lock, so that our
+            // event can't be missed
+            time_queue_us.push(new_event_time_us);
+
+            if(time_queue_us.top() == new_event_time_us) {
+                // Return to avoid yielding when we're next.
+                return new_event_time_us;
+            }
+        }
+
+        // Only yield if another device is next
+        queue_changed.notify_all();
+        return new_event_time_us;
+    }
+
 private:
-    std::chrono::system_clock::duration virtual_offset;
+    std::priority_queue<int64_t> time_queue_us;
+    Duration virtual_offset;
+    std::mutex time_mutex;
+    std::condition_variable queue_changed;
+};
+
+struct SyncTimeEventPromise
+{
+    SyncTimeEventPromise(SyncTime& sync, int64_t time_us = 0)
+        : sync(sync), time_us(time_us)
+    {
+        sync.QueueEvent(time_us);
+    }
+
+    ~SyncTimeEventPromise()
+    {
+        if(time_us) {
+            sync.WaitDequeueAndQueueEvent(time_us);
+        }
+    }
+
+    void WaitAndRenew(int64_t new_time_us)
+    {
+        time_us = sync.WaitDequeueAndQueueEvent(time_us, new_time_us);
+    }
+
+private:
+    SyncTime& sync;
+    int64_t time_us;
 };
 
 }

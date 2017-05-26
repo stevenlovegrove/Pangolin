@@ -27,11 +27,10 @@
 
 #include <ostream>
 
-#include <pangolin/utils/threadedfilebuf.h>
-#include <pangolin/utils/file_utils.h>
 #include <pangolin/log/packetstream.h>
 #include <pangolin/log/packetstream_source.h>
-#include <pangolin/log/packet_index.h>
+#include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/threadedfilebuf.h>
 
 namespace pangolin
 {

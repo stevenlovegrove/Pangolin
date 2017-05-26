@@ -29,103 +29,14 @@
 #include <mutex>
 #include <thread>
 
-#include <pangolin/log/packet_index.h>
-#include <pangolin/log/packetstream.h>
-#include <pangolin/log/packetstream_source.h>
+#include <pangolin/log/packet.h>
+
 #include <pangolin/log/sync_time.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/timer.h>
 
 namespace pangolin
 {
-
-// Encapsulate serialized reading of Packet from stream.
-struct Packet
-{
-    Packet(PacketStream& s, std::recursive_mutex& mutex, std::vector<PacketStreamSource>& srcs)
-        : _stream(s), lock(mutex)
-    {
-        ParsePacketHeader(s, srcs);
-    }
-
-    Packet(const Packet&) = delete;
-
-    Packet(Packet&& o)
-        : src(o.src), time(o.time), size(o.size), sequence_num(o.sequence_num),
-          meta(std::move(o.meta)), frame_streampos(o.frame_streampos), _stream(o._stream),
-          lock(std::move(o.lock)), _data_len(o._data_len)
-    {
-        o._data_len = 0;
-    }
-
-    ~Packet()
-    {
-        ReadRemaining();
-    }
-
-    size_t ReadRaw(char* target, size_t len)
-    {
-        PANGO_ENSURE(len <= _data_len);
-        const size_t num_read = _stream.read(target, len);
-        _data_len -= num_read;
-        return num_read;
-    }
-
-    size_t Skip(size_t len)
-    {
-        PANGO_ENSURE(len <= _data_len);
-        const size_t num_read = _stream.skip(len);
-        _data_len -= num_read;
-        return num_read;
-    }
-
-    PacketStreamSourceId src;
-    int64_t time;
-    size_t size;
-    size_t sequence_num;
-    picojson::value meta;
-    std::streampos frame_streampos;
-
-private:
-    void ParsePacketHeader(PacketStream& s, std::vector<PacketStreamSource>& srcs)
-    {
-        size_t json_src = -1;
-
-        frame_streampos = s.tellg();
-        if (s.peekTag() == TAG_SRC_JSON)
-        {
-            s.readTag(TAG_SRC_JSON);
-            json_src = s.readUINT();
-            picojson::parse(meta, s);
-        }
-
-        s.readTag(TAG_SRC_PACKET);
-        time = s.readTimestamp();
-
-        src = s.readUINT();
-        PANGO_ENSURE(json_src == size_t(-1) || json_src == src, "Frame preceded by metadata for a mismatched source. Stream may be corrupt.");
-
-        PacketStreamSource& src_packet = srcs[src];
-
-        size = src_packet.data_size_bytes;
-        if (!size) {
-            size = s.readUINT();
-        }
-        sequence_num = src_packet.next_packet_id++;
-        _data_len = size;
-    }
-
-    void ReadRemaining()
-    {
-        while(_data_len) {
-            Skip(_data_len);
-        }
-    }
-
-    PacketStream& _stream;
-    std::unique_lock<std::recursive_mutex> lock;
-    size_t _data_len;
-};
 
 class PANGOLIN_EXPORT PacketStreamReader
 {
