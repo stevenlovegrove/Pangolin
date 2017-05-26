@@ -57,13 +57,6 @@ public:
         return _sources;
     }
 
-    // Exposes the underlying mutex... this allows std::lock_guard,
-    // and similar constructs.
-    std::recursive_mutex& Mutex()
-    {
-        return _mutex;
-    }
-
     // Grab Next available frame packetstream
     Packet NextFrame();
 

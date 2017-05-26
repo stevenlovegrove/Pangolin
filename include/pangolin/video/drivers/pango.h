@@ -28,6 +28,7 @@
 #pragma once
 
 #include <pangolin/log/packetstream_reader.h>
+#include <pangolin/log/playback_session.h>
 #include <pangolin/video/video.h>
 
 namespace pangolin
@@ -66,11 +67,13 @@ public:
 
     // Implement VideoPlaybackInterface
 
-    int GetCurrentFrameId() const override;
+    size_t GetCurrentFrameId() const override;
 
-    int GetTotalFrames() const override;
+    size_t GetTotalFrames() const override;
 
-    int Seek(int frameid) override;
+    size_t Seek(size_t frameid) override;
+
+    void Seek(SyncTime::TimePoint time);
 
 private:
     void HandlePipeClosed();
@@ -79,18 +82,19 @@ protected:
     int FindPacketStreamSource();
     void SetupStreams(const PacketStreamSource& src);
 
+    const std::string _filename;
+    PlaybackSession& _playback_session;
     std::shared_ptr<PacketStreamReader> _reader;
+    SyncTimeEventPromise _event_promise;
+    int _src_id;
     const PacketStreamSource* _source;
 
     size_t _size_bytes;
     std::vector<StreamInfo> _streams;
     picojson::value _device_properties;
     picojson::value _frame_properties;
-    int _src_id;
-    const std::string _filename;
 
-    SyncTimeEventPromise _event_promise;
-    bool _realtime;
+    Connection<SyncTime::TimePoint> _seekx;
 };
 
 }

@@ -26,6 +26,7 @@
 #pragma once
 
 #include <pangolin/platform.h>
+#include <pangolin/utils/signal_slot.h>
 #include <pangolin/utils/timer.h>
 
 #include <atomic>
@@ -131,6 +132,8 @@ public:
         queue_changed.notify_all();
         return new_event_time_us;
     }
+
+    Signal<TimePoint> Seek;
 
 private:
     std::priority_queue<int64_t> time_queue_us;

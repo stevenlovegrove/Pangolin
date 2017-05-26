@@ -25,10 +25,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/images.h>
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/video/drivers/images.h>
+#include <pangolin/video/iostream_operators.h>
 
 #include <cstring>
 
@@ -64,13 +64,13 @@ void ImagesVideo::PopulateFilenames(const std::string& wildcard_path)
     for(size_t i = 0; i < wildcards.size(); ++i) {
         const std::string channel_wildcard = PathExpand(wildcards[i]);
         FilesMatchingWildcard(channel_wildcard, filenames[i]);
-        if(num_files < 0) {
-            num_files = (int)filenames[i].size();
+        if(num_files == size_t(-1)) {
+            num_files = filenames[i].size();
         }else{
-            if( num_files != (int)filenames[i].size() ) {
+            if( num_files != filenames[i].size() ) {
                 std::cerr << "Warning: Video Channels have unequal number of files" << std::endl;
             }
-            num_files = std::min(num_files, (int)filenames[i].size());
+            num_files = std::min(num_files, filenames[i].size());
         }
         if(num_files == 0) {
             throw VideoException("No files found for wildcard '" + channel_wildcard + "'");
@@ -187,20 +187,20 @@ bool ImagesVideo::GrabNewest( unsigned char* image, bool wait )
     return GrabNext(image,wait);
 }
 
-int ImagesVideo::GetCurrentFrameId() const
+size_t ImagesVideo::GetCurrentFrameId() const
 {
     return (int)next_frame_id - 1;
 }
 
-int ImagesVideo::GetTotalFrames() const
+size_t ImagesVideo::GetTotalFrames() const
 {
     return num_files;
 }
 
-int ImagesVideo::Seek(int frameid)
+size_t ImagesVideo::Seek(size_t frameid)
 {
-    next_frame_id = std::max(0, std::min(frameid, num_files));
-    return (int)next_frame_id;
+    next_frame_id = std::max(size_t(0), std::min(frameid, num_files));
+    return next_frame_id;
 }
 
 PANGOLIN_REGISTER_FACTORY(ImagesVideo)

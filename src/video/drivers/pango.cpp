@@ -29,6 +29,7 @@
 #include <pangolin/log/playback_session.h>
 #include <pangolin/utils/file_extension.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/signal_slot.h>
 #include <pangolin/video/drivers/pango.h>
 #include <pangolin/video/iostream_operators.h>
 
@@ -40,19 +41,17 @@ namespace pangolin
 const std::string pango_video_type = "raw_video";
 
 PangoVideo::PangoVideo(const std::string& filename)
-    : _source(nullptr), _filename(filename),
-      _event_promise(PlaybackSession::Default().Time())
+    : _filename(filename),
+      _playback_session(PlaybackSession::Default()),
+      _reader(_playback_session.Open(filename)),
+      _event_promise(_playback_session.Time()),
+      _src_id(FindPacketStreamSource()),
+      _source(nullptr)
 {
-    // Open shared reference to PacketStreamReader
-    _reader = PlaybackSession::Default().Open(filename);
-
-    PANGO_ENSURE(_reader);
-
-    _src_id = FindPacketStreamSource();
-
     if(_src_id != -1) {
         _source = &_reader->Sources()[_src_id];
         SetupStreams(*_source);
+        _seekx.Connect(_playback_session.Time().Seek, [&](SyncTime::TimePoint t){Seek(t);} );
         _event_promise.WaitAndRenew(_source->next_packet_time_us);
     }else{
         throw pangolin::VideoException("No appropriate video streams found in log.");
@@ -85,9 +84,6 @@ void PangoVideo::Stop()
 
 bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
 {
-    _frame_properties = picojson::value();
-    std::lock_guard<decltype(_reader->Mutex())> lg(_reader->Mutex());
-
     try
     {
         Packet fi = _reader->NextFrame(_src_id);
@@ -98,6 +94,7 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
     }
     catch(...)
     {
+        _frame_properties = picojson::value();
         return false;
     }
 }
@@ -107,21 +104,31 @@ bool PangoVideo::GrabNewest( unsigned char* image, bool wait )
     return GrabNext(image, wait);
 }
 
-int PangoVideo::GetCurrentFrameId() const
+size_t PangoVideo::GetCurrentFrameId() const
 {
     return (int)(_reader->Sources()[_src_id].next_packet_id);
 }
 
-int PangoVideo::GetTotalFrames() const
+size_t PangoVideo::GetTotalFrames() const
 {
     return _source->index.size();
 }
 
-int PangoVideo::Seek(int frameid)
+size_t PangoVideo::Seek(size_t next_frame_id)
 {
-    std::lock_guard<decltype(_reader->Mutex())> lg(_reader->Mutex());
-    _frame_properties = picojson::value();
-    return _reader->Seek(_src_id, frameid);
+    // Get time for seek
+    if(next_frame_id < _source->index.size()) {
+        const int64_t capture_time = _source->index[next_frame_id].capture_time;
+        _playback_session.Time().Seek(SyncTime::TimePoint(std::chrono::microseconds(capture_time)));
+        return next_frame_id;
+    }else{
+        return _source->next_packet_id;
+    }
+}
+
+void PangoVideo::Seek(SyncTime::TimePoint /*time*/)
+{
+    std::cout << "Seek" << std::endl;
 }
 
 int PangoVideo::FindPacketStreamSource()
