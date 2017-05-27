@@ -3,8 +3,8 @@
 namespace pangolin {
 
 
-Packet::Packet(PacketStream& s, std::recursive_mutex& mutex, std::vector<PacketStreamSource>& srcs)
-    : _stream(s), lock(mutex)
+Packet::Packet(PacketStream& s, std::unique_lock<std::recursive_mutex>&& lock, std::vector<PacketStreamSource>& srcs)
+    : _stream(s), lock(std::move(lock))
 {
     ParsePacketHeader(s, srcs);
 }

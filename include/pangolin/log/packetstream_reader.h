@@ -71,6 +71,9 @@ public:
     // Jumps to a particular packet.
     size_t Seek(PacketStreamSourceId src, size_t framenum);
 
+    // Jumps to the first packet with time >= time
+    size_t Seek(PacketStreamSourceId src, SyncTime::TimePoint time);
+
 private:
     bool GoodToRead();
 

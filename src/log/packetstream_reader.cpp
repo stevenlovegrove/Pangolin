@@ -246,6 +246,8 @@ bool PacketStreamReader::GoodToRead()
 
 Packet PacketStreamReader::NextFrame()
 {
+    std::unique_lock<std::recursive_mutex> lock(_mutex);
+
     while (GoodToRead())
     {
         const pangoTagType t = _stream.peekTag();
@@ -260,7 +262,7 @@ Packet PacketStreamReader::NextFrame()
             break;
         case TAG_SRC_JSON: //frames are sometimes preceded by metadata, but metadata must ALWAYS be followed by a frame from the same source.
         case TAG_SRC_PACKET:
-            return Packet(_stream, _mutex, _sources);
+            return Packet(_stream, std::move(lock), _sources);
         case TAG_PANGO_STATS:
             ParseIndex();
             break;
@@ -345,6 +347,31 @@ size_t PacketStreamReader::Seek(PacketStreamSourceId src, size_t framenum)
     if(source.index[framenum].pos > 0) {
         _stream.seekg(source.index[framenum].pos);
         return framenum;
+    }else{
+        return source.next_packet_id;
+    }
+}
+
+// Jumps to the first packet with time >= time
+size_t PacketStreamReader::Seek(PacketStreamSourceId src, SyncTime::TimePoint time)
+{
+    PacketStreamSource& source = _sources[src];
+
+    PacketStreamSource::PacketInfo v = {
+        0, std::chrono::duration_cast<std::chrono::microseconds>(time.time_since_epoch()).count()
+    };
+
+    // Find time in indextime
+    auto lb = std::lower_bound(
+        source.index.begin(), source.index.end(), v,
+        [](const PacketStreamSource::PacketInfo& a, const PacketStreamSource::PacketInfo& b){
+            return a.capture_time < b.capture_time;
+        }
+    );
+
+    if(lb != source.index.end()) {
+        const size_t frame_num = lb - source.index.begin();
+        return Seek(src, frame_num);
     }else{
         return source.next_packet_id;
     }

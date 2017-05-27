@@ -51,6 +51,7 @@ public:
     SyncTime()
     {
         SetOffset(std::chrono::milliseconds(0));
+        Seek.Connect([this](TimePoint t){OnSeek(t);});
     }
 
     // No copy constructor
@@ -137,6 +138,14 @@ public:
     Signal<TimePoint> Seek;
 
 private:
+    void OnSeek(TimePoint)
+    {
+//        std::unique_lock<std::mutex> l(time_mutex);
+//        while(!time_queue_us.empty()) {
+//            time_queue_us.pop();
+//        }
+    }
+
     std::priority_queue<int64_t,std::vector<int64_t>,std::greater<int64_t>> time_queue_us;
     Duration virtual_offset;
     std::mutex time_mutex;
@@ -148,11 +157,13 @@ struct SyncTimeEventPromise
     SyncTimeEventPromise(SyncTime& sync, int64_t time_us = 0)
         : sync(sync), time_us(time_us)
     {
+        std::lock_guard<std::mutex> l(m);
         sync.QueueEvent(time_us);
     }
 
     ~SyncTimeEventPromise()
     {
+        std::lock_guard<std::mutex> l(m);
         if(time_us) {
             sync.WaitDequeueAndQueueEvent(time_us);
         }
@@ -160,12 +171,14 @@ struct SyncTimeEventPromise
 
     void WaitAndRenew(int64_t new_time_us)
     {
+        std::lock_guard<std::mutex> l(m);
         time_us = sync.WaitDequeueAndQueueEvent(time_us, new_time_us);
     }
 
 private:
     SyncTime& sync;
     int64_t time_us;
+    std::mutex m;
 };
 
 }
