@@ -487,6 +487,7 @@ void Plotter::Render()
     for(size_t i=0; i < plotseries.size(); ++i)
     {
         PlotSeries& ps = plotseries[i];
+
         GlSlProgram& prog = ps.prog;
         ps.used = false;
 
@@ -496,7 +497,10 @@ void Plotter::Render()
         prog.SetUniform("u_color", ps.colour );
 
         // TODO: Try to skip drawing of blocks which aren't in view.
-        const DataLogBlock* block = ps.log ? ps.log->FirstBlock() : default_log->FirstBlock();
+        DataLog* log = ps.log ? ps.log : default_log;
+        std::lock_guard<std::mutex> l(log->access_mutex);
+
+        const DataLogBlock* block = log->FirstBlock();
         while(block) {
             if(ps.contains_id ) {
                 if(id_size < block->Samples() ) {

@@ -345,11 +345,11 @@ size_t PacketStreamReader::Seek(PacketStreamSourceId src, size_t framenum)
     PANGO_ASSERT(framenum < source.index.size());
 
     if(source.index[framenum].pos > 0) {
+        _stream.clear();
         _stream.seekg(source.index[framenum].pos);
-        return framenum;
-    }else{
-        return source.next_packet_id;
+        source.next_packet_id = framenum;
     }
+    return source.next_packet_id;
 }
 
 // Jumps to the first packet with time >= time

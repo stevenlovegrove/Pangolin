@@ -73,8 +73,6 @@ public:
 
     size_t Seek(size_t frameid) override;
 
-    void Seek(SyncTime::TimePoint time);
-
 private:
     void HandlePipeClosed();
 
@@ -94,7 +92,9 @@ protected:
     picojson::value _device_properties;
     picojson::value _frame_properties;
 
-    Connection<SyncTime::TimePoint> _seekx;
+    Connection<SyncTime::TimePoint> session_seek;
+    Connection<> session_start;
+    Connection<> session_stop;
 };
 
 }

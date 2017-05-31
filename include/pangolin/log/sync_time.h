@@ -48,19 +48,20 @@ public:
     using Duration = Clock::duration;
     using TimePoint = Clock::time_point;
 
-    SyncTime()
+    struct SeekInterruption: std::runtime_error
     {
-        SetOffset(std::chrono::milliseconds(0));
-        Seek.Connect([this](TimePoint t){OnSeek(t);});
+        SeekInterruption() : std::runtime_error("Time queue invalidated by seek"){}
+    };
+
+    SyncTime(Duration virtual_clock_offset = std::chrono::milliseconds(0))
+        : seeking(false)
+    {
+        SetOffset(virtual_clock_offset);
+        OnSeek.Connect([this](TimePoint t){OnSeekFunc(t);});
     }
 
     // No copy constructor
     SyncTime(const SyncTime&) = delete;
-
-    SyncTime(Duration virtual_clock_offset)
-    {
-        SetOffset(virtual_clock_offset);
-    }
 
     void SetOffset(Duration virtual_clock_offset)
     {
@@ -92,15 +93,18 @@ public:
         std::this_thread::sleep_until( ToReal(virtual_time) );
     }
 
-    int64_t QueueEvent(int64_t event_time_us)
+    int64_t QueueEvent(int64_t new_event_time_us)
     {
-        std::lock_guard<std::mutex> l(time_mutex);
+        return WaitDequeueAndQueueEvent(0, new_event_time_us);
+    }
 
-        if(event_time_us) {
-            time_queue_us.push(event_time_us);
-        }
+    void DequeueEvent(int64_t event_time_us)
+    {
+        std::unique_lock<std::mutex> l(time_mutex);
 
-        return event_time_us;
+        auto i = std::find(time_queue_us.begin(), time_queue_us.end(), event_time_us);
+        PANGO_ENSURE(i != time_queue_us.end());
+        time_queue_us.erase(i);
     }
 
     int64_t WaitDequeueAndQueueEvent(int64_t event_time_us, int64_t new_event_time_us =0 )
@@ -112,19 +116,24 @@ public:
 
             // Wait until we're top the priority-queue
             queue_changed.wait(l, [&](){
-                return time_queue_us.top() == event_time_us;
+                if(seeking) {
+                    // Time queue will be invalidated on seek.
+                    // Unblock without action
+                    throw SeekInterruption();
+                }
+                return time_queue_us.back() == event_time_us;
             });
 
             // Dequeue
-            time_queue_us.pop();
+            time_queue_us.pop_back();
         }
 
         if(new_event_time_us) {
             // Add the new event whilst we still hold the lock, so that our
             // event can't be missed
-            time_queue_us.push(new_event_time_us);
+            insert_sorted(time_queue_us, new_event_time_us, std::greater<int64_t>());
 
-            if(time_queue_us.top() == new_event_time_us) {
+            if(time_queue_us.back() == new_event_time_us) {
                 // Return to avoid yielding when we're next.
                 return new_event_time_us;
             }
@@ -135,10 +144,34 @@ public:
         return new_event_time_us;
     }
 
-    Signal<TimePoint> Seek;
+    void NotifyAll()
+    {
+        queue_changed.notify_all();
+    }
+
+    std::mutex& TimeMutex()
+    {
+        return time_mutex;
+    }
+
+    void Seek(TimePoint t)
+    {
+        seeking = true;
+        OnTimeStop();
+        queue_changed.notify_all();
+        OnSeek(t);
+        OnTimeStart();
+        seeking=false;
+    }
+
+    Signal<> OnTimeStart;
+
+    Signal<> OnTimeStop;
+
+    Signal<TimePoint> OnSeek;
 
 private:
-    void OnSeek(TimePoint)
+    void OnSeekFunc(TimePoint)
     {
 //        std::unique_lock<std::mutex> l(time_mutex);
 //        while(!time_queue_us.empty()) {
@@ -146,10 +179,20 @@ private:
 //        }
     }
 
-    std::priority_queue<int64_t,std::vector<int64_t>,std::greater<int64_t>> time_queue_us;
+    template< typename T, typename Pred >
+    static typename std::vector<T>::iterator
+    insert_sorted( std::vector<T> & vec, T const& item, Pred pred )
+    {
+        return vec.insert (
+           std::upper_bound( vec.begin(), vec.end(), item, pred ), item
+        );
+    }
+
+    std::vector<int64_t> time_queue_us;
     Duration virtual_offset;
     std::mutex time_mutex;
     std::condition_variable queue_changed;
+    bool seeking;
 };
 
 struct SyncTimeEventPromise
@@ -157,21 +200,27 @@ struct SyncTimeEventPromise
     SyncTimeEventPromise(SyncTime& sync, int64_t time_us = 0)
         : sync(sync), time_us(time_us)
     {
-        std::lock_guard<std::mutex> l(m);
+//        std::lock_guard<std::mutex> l(m);
         sync.QueueEvent(time_us);
     }
 
     ~SyncTimeEventPromise()
     {
-        std::lock_guard<std::mutex> l(m);
+        Cancel();
+    }
+
+    void Cancel()
+    {
+//        std::lock_guard<std::mutex> l(m);
         if(time_us) {
-            sync.WaitDequeueAndQueueEvent(time_us);
+            sync.DequeueEvent(time_us);
+            time_us = 0;
         }
     }
 
     void WaitAndRenew(int64_t new_time_us)
     {
-        std::lock_guard<std::mutex> l(m);
+//        std::lock_guard<std::mutex> l(m);
         time_us = sync.WaitDequeueAndQueueEvent(time_us, new_time_us);
     }
 

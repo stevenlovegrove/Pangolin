@@ -54,12 +54,22 @@ PangoVideo::PangoVideo(const std::string& filename)
     SetupStreams(*_source);
 
     // Make sure we time-seek with other playback devices
-    _seekx.Connect(
-        _playback_session.Time().Seek,
+    session_seek.Connect(
+        _playback_session.Time().OnSeek,
         [&](SyncTime::TimePoint t){
-            _event_promise.WaitAndRenew(0);
+            _event_promise.Cancel();
             _reader->Seek(_src_id, t);
+            _event_promise.WaitAndRenew(_source->NextPacketTime());
         }
+    );
+
+    session_start.Connect(
+        _playback_session.Time().OnTimeStart,
+        [&](){}
+    );
+    session_stop.Connect(
+        _playback_session.Time().OnTimeStop,
+        [&](){}
     );
 
     _event_promise.WaitAndRenew(_source->NextPacketTime());
@@ -126,17 +136,11 @@ size_t PangoVideo::Seek(size_t next_frame_id)
     // Get time for seek
     if(next_frame_id < _source->index.size()) {
         const int64_t capture_time = _source->index[next_frame_id].capture_time;
-        Seek(SyncTime::TimePoint(std::chrono::microseconds(capture_time)));
+        _playback_session.Time().Seek(SyncTime::TimePoint(std::chrono::microseconds(capture_time)));
         return next_frame_id;
     }else{
         return _source->next_packet_id;
     }
-}
-
-void PangoVideo::Seek(SyncTime::TimePoint time)
-{
-    _event_promise.WaitAndRenew(0);
-    _playback_session.Time().Seek(time);
 }
 
 int PangoVideo::FindPacketStreamSource()
