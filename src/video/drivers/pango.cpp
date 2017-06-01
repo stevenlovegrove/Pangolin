@@ -63,15 +63,6 @@ PangoVideo::PangoVideo(const std::string& filename)
         }
     );
 
-    session_start.Connect(
-        _playback_session.Time().OnTimeStart,
-        [&](){}
-    );
-    session_stop.Connect(
-        _playback_session.Time().OnTimeStop,
-        [&](){}
-    );
-
     _event_promise.WaitAndRenew(_source->NextPacketTime());
 }
 

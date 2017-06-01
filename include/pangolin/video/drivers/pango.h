@@ -93,8 +93,6 @@ protected:
     picojson::value _frame_properties;
 
     Connection<SyncTime::TimePoint> session_seek;
-    Connection<> session_start;
-    Connection<> session_stop;
 };
 
 }
