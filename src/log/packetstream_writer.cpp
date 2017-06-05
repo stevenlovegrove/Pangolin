@@ -170,16 +170,6 @@ void PacketStreamWriter::WriteSync()
 	writeTag(_stream, TAG_PANGO_SYNC);
 }
 
-picojson::value ToJsonPacketIndex(PacketStreamSource& src)
-{
-    picojson::array positions;
-    for (const PacketStreamSource::PacketInfo& frame : src.index)
-    {
-        positions.emplace_back(frame.pos);
-    }
-    return positions;
-}
-
 void PacketStreamWriter::WriteEnd()
 {
     SCOPED_LOCK;
@@ -193,8 +183,16 @@ void PacketStreamWriter::WriteEnd()
     stat["num_sources"] = _sources.size();
     stat["bytes_written"] = _bytes_written;
     stat["src_packet_index"] = picojson::array();
-    for(auto& s : _sources) {
-        stat["src_packet_index"].push_back(ToJsonPacketIndex(s));
+    stat["src_packet_times"] = picojson::array();
+
+    for(auto& src : _sources) {
+        picojson::array pkt_index, pkt_times;
+        for (const PacketStreamSource::PacketInfo& frame : src.index) {
+            pkt_index.emplace_back(frame.pos);
+            pkt_times.emplace_back(frame.capture_time);
+        }
+        stat["src_packet_index"].push_back(std::move(pkt_index));
+        stat["src_packet_times"].push_back(std::move(pkt_times));
     }
 
     stat.serialize(std::ostream_iterator<char>(_stream), false);

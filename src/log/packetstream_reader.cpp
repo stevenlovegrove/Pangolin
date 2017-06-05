@@ -169,7 +169,7 @@ void PacketStreamReader::SetupIndex()
     _stream.seekg(pos);
 
     // Fix the index if needed
-//    if(!index_good)
+    if(!index_good)
     {
         RebuildIndex();
     }
@@ -189,22 +189,27 @@ bool PacketStreamReader::ParseIndex()
     picojson::value json;
     picojson::parse(json, _stream);
 
-    bool index_good = json.contains("src_packet_index");
+    bool index_good = json.contains("src_packet_index") && json.contains("src_packet_times");
 
     if (index_good)
     {
         // This is a two-dimensional serialized array, [source id][sequence number] ---> packet position in stream
         const auto& json_index = json["src_packet_index"].get<picojson::array>();
+        const auto& json_times = json["src_packet_times"].get<picojson::array>();
 
         // We shouldn't have seen more sources than exist in the index
         PANGO_ENSURE(_sources.size() <= json_index.size());
+        PANGO_ENSURE(json_index.size() == json_times.size());
+
         _sources.resize(json_index.size());
 
         // Populate index
         for(size_t i=0; i < _sources.size(); ++i) {
+            PANGO_ENSURE(json_index[i].size() == json_times[i].size());
             _sources[i].index.resize(json_index[i].size());
             for(size_t f=0; f < json_index[i].size(); ++f) {
                 _sources[i].index[f].pos = json_index[i][f].get<int64_t>();
+                _sources[i].index[f].capture_time = json_times[i][f].get<int64_t>();
             }
         }
     }
@@ -301,6 +306,8 @@ Packet PacketStreamReader::NextFrame(PacketStreamSourceId src)
 void PacketStreamReader::RebuildIndex()
 {
     lock_guard<decltype(_mutex)> lg(_mutex);
+
+    pango_print_warn("Index for % bad / outdated. Rebuilding.\n", _filename);
 
     // Clear existing cached index
     if(_stream.seekable()) {
