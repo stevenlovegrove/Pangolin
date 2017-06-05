@@ -27,6 +27,7 @@ VideoViewer::VideoViewer(const std::string& window_name, const std::string& inpu
       current_frame(-1),
       grab_until(std::numeric_limits<int>::max()),
       record_nth_frame(1),
+      draw_nth_frame(1),
       video_grab_wait(true),
       video_grab_newest(false),
       should_run(true),
@@ -160,8 +161,10 @@ void VideoViewer::Run()
                 }
 
                 // Update images
-                for(unsigned int i=0; i<images.size(); ++i) {
-                    stream_views[i].SetImage(images[i], pangolin::GlPixFormat(video.Streams()[i].PixFormat() ));
+                if((frame-1) % draw_nth_frame == 0) {
+                    for(unsigned int i=0; i<images.size(); ++i) {
+                        stream_views[i].SetImage(images[i], pangolin::GlPixFormat(video.Streams()[i].PixFormat() ));
+                    }
                 }
             }
         }
@@ -302,6 +305,14 @@ void VideoViewer::SetDiscardBufferedFrames(bool new_state)
         pango_print_info("Not discarding old frames.\n");
     }
 }
+
+
+void VideoViewer::DrawEveryNFrames(int n)
+{
+    draw_nth_frame=n;
+}
+
+
 
 void VideoViewer::SetWaitForFrames(bool new_state)
 {
