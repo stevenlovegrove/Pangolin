@@ -24,6 +24,7 @@
  */
 
 #include <pangolin/log/packetstream_reader.h>
+#include <pangolin/log/packetstream_writer.h>
 
 using std::string;
 using std::istream;
@@ -172,6 +173,7 @@ void PacketStreamReader::SetupIndex()
     if(!index_good)
     {
         RebuildIndex();
+        AppendIndex();
     }
 }
 
@@ -189,7 +191,7 @@ bool PacketStreamReader::ParseIndex()
     picojson::value json;
     picojson::parse(json, _stream);
 
-    bool index_good = json.contains("src_packet_index") && json.contains("src_packet_times");
+    const bool index_good = json.contains("src_packet_index") && json.contains("src_packet_times");
 
     if (index_good)
     {
@@ -307,12 +309,13 @@ void PacketStreamReader::RebuildIndex()
 {
     lock_guard<decltype(_mutex)> lg(_mutex);
 
-    pango_print_warn("Index for % bad / outdated. Rebuilding.\n", _filename);
-
-    // Clear existing cached index
     if(_stream.seekable()) {
+        pango_print_warn("Index for '%s' bad / outdated. Rebuilding.\n", _filename.c_str());
+
         // Save current position
         std::streampos pos = _stream.tellg();
+
+        // Clear existing index
         for(PacketStreamSource& s : _sources) {
             s.index.clear();
             s.next_packet_id = 0;
@@ -339,6 +342,24 @@ void PacketStreamReader::RebuildIndex()
         // Restore previous location
         _stream.clear();
         _stream.seekg(pos);
+    }
+}
+
+void PacketStreamReader::AppendIndex()
+{
+    lock_guard<decltype(_mutex)> lg(_mutex);
+
+    if(_stream.seekable()) {
+        // Open file again for append
+        std::ofstream of(_filename, std::ios::app | std::ios::binary);
+        if(of.is_open()) {
+            pango_print_warn("Appending new index to '%s'.\n", _filename.c_str());
+            auto indexpos = of.tellp();
+            writeTag(of, TAG_PANGO_STATS);
+            SourceStats(_sources).serialize(std::ostream_iterator<char>(of), false);
+            writeTag(of, TAG_PANGO_FOOTER);
+            of.write(reinterpret_cast<char*>(&indexpos), sizeof(uint64_t));
+        }
     }
 }
 

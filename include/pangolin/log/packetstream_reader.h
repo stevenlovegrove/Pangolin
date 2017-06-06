@@ -87,6 +87,8 @@ private:
 
     void RebuildIndex();
 
+    void AppendIndex();
+
     std::streampos ParseFooter();
 
     void SkipSync();

@@ -53,7 +53,7 @@ public:
 
     bool seekable() const
     {
-        return !_is_pipe;
+        return is_open() && !_is_pipe;
     }
 
     void open(const std::string& filename)

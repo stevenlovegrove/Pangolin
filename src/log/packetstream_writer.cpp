@@ -37,16 +37,6 @@ using std::lock_guard;
 namespace pangolin
 {
 
-static inline void writeCompressedUnsignedInt(std::ostream& writer, size_t n)
-{
-    while (n >= 0x80)
-    {
-	writer.put(0x80 | (n & 0x7F));
-	n >>= 7;
-    }
-    writer.put(static_cast<unsigned char>(n));
-}
-
 static inline const std::string CurrentTimeStr()
 {
     time_t time_now = time(0);
@@ -54,16 +44,6 @@ static inline const std::string CurrentTimeStr()
     char buffer[80];
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %X", &time_struct);
     return buffer;
-}
-
-static inline void writeTimestamp(std::ostream& writer, int64_t time_us)
-{
-    writer.write(reinterpret_cast<const char*>(&time_us), sizeof(decltype(time_us)));
-}
-
-static inline void writeTag(std::ostream& writer, const pangoTagType tag)
-{
-    writer.write(reinterpret_cast<const char*>(&tag), TAG_LENGTH);
 }
 
 void PacketStreamWriter::WriteHeader()
@@ -167,7 +147,7 @@ void PacketStreamWriter::WriteSync()
 {
     SCOPED_LOCK;
     for (unsigned i = 0; i < 10; ++i)
-	writeTag(_stream, TAG_PANGO_SYNC);
+    writeTag(_stream, TAG_PANGO_SYNC);
 }
 
 void PacketStreamWriter::WriteEnd()
@@ -177,25 +157,8 @@ void PacketStreamWriter::WriteEnd()
         return;
 
     auto indexpos = _stream.tellp();
-
     writeTag(_stream, TAG_PANGO_STATS);
-    picojson::value stat;
-    stat["num_sources"] = _sources.size();
-    stat["bytes_written"] = _bytes_written;
-    stat["src_packet_index"] = picojson::array();
-    stat["src_packet_times"] = picojson::array();
-
-    for(auto& src : _sources) {
-        picojson::array pkt_index, pkt_times;
-        for (const PacketStreamSource::PacketInfo& frame : src.index) {
-            pkt_index.emplace_back(frame.pos);
-            pkt_times.emplace_back(frame.capture_time);
-        }
-        stat["src_packet_index"].push_back(std::move(pkt_index));
-        stat["src_packet_times"].push_back(std::move(pkt_times));
-    }
-
-    stat.serialize(std::ostream_iterator<char>(_stream), false);
+    SourceStats(_sources).serialize(std::ostream_iterator<char>(_stream), false);
     writeTag(_stream, TAG_PANGO_FOOTER);
     _stream.write(reinterpret_cast<char*>(&indexpos), sizeof(uint64_t));
 }
