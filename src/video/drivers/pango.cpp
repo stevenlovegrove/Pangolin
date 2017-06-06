@@ -54,8 +54,7 @@ PangoVideo::PangoVideo(const std::string& filename)
     SetupStreams(*_source);
 
     // Make sure we time-seek with other playback devices
-    session_seek.Connect(
-        _playback_session.Time().OnSeek,
+    session_seek = _playback_session.Time().OnSeek.Connect(
         [&](SyncTime::TimePoint t){
             _event_promise.Cancel();
             _reader->Seek(_src_id, t);

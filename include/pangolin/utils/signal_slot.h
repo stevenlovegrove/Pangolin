@@ -3,6 +3,8 @@
 #include <functional>
 #include <map>
 
+#include <pangolin/utils/registration.h>
+
 namespace pangolin {
 
 // Based on http://simmesimme.github.io/tutorials/2015/09/20/signal-slot
@@ -11,6 +13,7 @@ class Signal
 {
 public:
     using Id = size_t;
+    using Reg = Registration<Id>;
 
     Signal()
         : current_id_(0)
@@ -23,9 +26,9 @@ public:
 
     // connects a std::function to the signal. The returned
     // value can be used to disconnect the function again
-    Id Connect(const std::function<void(Args...)>& slot) const {
+    Reg Connect(const std::function<void(Args...)>& slot) const {
         slots_.insert(std::make_pair(++current_id_, slot));
-        return current_id_;
+        return Reg(current_id_, [this](Id id){ Disconnect(id);});
     }
 
     // disconnects a previously connected function
@@ -48,34 +51,6 @@ public:
 private:
     mutable std::map<Id, std::function<void(Args...)>> slots_;
     mutable Id current_id_;
-};
-
-template <typename... Args>
-class Connection
-{
-public:
-    using SignalT = Signal<Args...>;
-
-    Connection()
-        : signal(nullptr), id(0)
-    {
-    }
-
-    ~Connection()
-    {
-        if(signal) {
-            signal->Disconnect(id);
-        }
-    }
-
-    void Connect(SignalT& signal, const std::function<void(Args...)>& slot) {
-        this->signal = &signal;
-        id = signal.Connect(slot);
-    }
-
-private:
-    SignalT* signal;
-    typename SignalT::Id id;
 };
 
 }

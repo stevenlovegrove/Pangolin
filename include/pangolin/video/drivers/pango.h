@@ -92,7 +92,7 @@ protected:
     picojson::value _device_properties;
     picojson::value _frame_properties;
 
-    Connection<SyncTime::TimePoint> session_seek;
+    Registration<size_t> session_seek;
 };
 
 }
