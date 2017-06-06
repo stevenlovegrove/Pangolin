@@ -88,7 +88,9 @@ void PacketStreamReader::Open(const std::string& filename)
         ParseNewSource();
     }
 
-    SetupIndex();
+    if(!SetupIndex()) {
+        FixFileIndex();
+    }
 }
 
 void PacketStreamReader::Close() {
@@ -143,38 +145,33 @@ void PacketStreamReader::ParseNewSource()
     pss.data_size_bytes = json[pss_src_packet][pss_pkt_size_bytes].get<int64_t>();
 }
 
-void PacketStreamReader::SetupIndex()
+bool PacketStreamReader::SetupIndex()
 {
-    if (!_stream.seekable())
-        return;
-
-    // Save current position
-    std::streampos pos = _stream.tellg();
-
     bool index_good = false;
 
-    // Look for footer at end of file (TAG_PANGO_FOOTER + index position).
-    _stream.seekg(-(static_cast<istream::off_type>(sizeof(uint64_t)) + TAG_LENGTH), ios_base::end);
-    if (_stream.peekTag() == TAG_PANGO_FOOTER)
+    if (_stream.seekable())
     {
-        //parsing the footer returns the index position
-        _stream.seekg(ParseFooter());
-        if (_stream.peekTag() == TAG_PANGO_STATS) {
-            // Read the pre-build index from the file
-            index_good = ParseIndex();
+        // Save current position
+        std::streampos pos = _stream.tellg();
+
+        // Look for footer at end of file (TAG_PANGO_FOOTER + index position).
+        _stream.seekg(-(static_cast<istream::off_type>(sizeof(uint64_t)) + TAG_LENGTH), ios_base::end);
+        if (_stream.peekTag() == TAG_PANGO_FOOTER)
+        {
+            //parsing the footer returns the index position
+            _stream.seekg(ParseFooter());
+            if (_stream.peekTag() == TAG_PANGO_STATS) {
+                // Read the pre-build index from the file
+                index_good = ParseIndex();
+            }
         }
+
+        // Restore previous location
+        _stream.clear();
+        _stream.seekg(pos);
     }
 
-    // Restore previous location
-    _stream.clear();
-    _stream.seekg(pos);
-
-    // Fix the index if needed
-    if(!index_good)
-    {
-        RebuildIndex();
-        AppendIndex();
-    }
+    return index_good;
 }
 
 streampos PacketStreamReader::ParseFooter() //returns position of index.
@@ -360,6 +357,15 @@ void PacketStreamReader::AppendIndex()
             writeTag(of, TAG_PANGO_FOOTER);
             of.write(reinterpret_cast<char*>(&indexpos), sizeof(uint64_t));
         }
+    }
+}
+
+void PacketStreamReader::FixFileIndex()
+{
+    if(_stream.seekable())
+    {
+        RebuildIndex();
+        AppendIndex();
     }
 }
 

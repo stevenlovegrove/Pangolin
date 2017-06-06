@@ -74,10 +74,12 @@ public:
     // Jumps to the first packet with time >= time
     size_t Seek(PacketStreamSourceId src, SyncTime::TimePoint time);
 
+    void FixFileIndex();
+
 private:
     bool GoodToRead();
 
-    void SetupIndex();
+    bool SetupIndex();
 
     void ParseHeader();
 
