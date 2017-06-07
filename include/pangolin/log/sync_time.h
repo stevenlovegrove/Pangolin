@@ -154,14 +154,24 @@ public:
         return time_mutex;
     }
 
-    void Seek(TimePoint t)
+    void Stop()
     {
         seeking = true;
         OnTimeStop();
         queue_changed.notify_all();
-        OnSeek(t);
+    }
+
+    void Start()
+    {
         OnTimeStart();
         seeking=false;
+    }
+
+    void Seek(TimePoint t)
+    {
+        Stop();
+        OnSeek(t);
+        Start();
     }
 
     Signal<> OnTimeStart;
