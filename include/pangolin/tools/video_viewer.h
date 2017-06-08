@@ -23,7 +23,7 @@ public:
     VideoViewer(const std::string& window_name, const std::string& input_uri, const std::string& output_uri = "video.pango" );
     VideoViewer(const VideoViewer&) = delete;
 
-    ~VideoViewer();
+    virtual ~VideoViewer();
 
     void Quit();
 
