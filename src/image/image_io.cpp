@@ -34,12 +34,12 @@
 #endif
 
 #include <algorithm>
-#include <stdexcept>
-#include <fstream>
-#include <string.h>
-#include <cstring>
-#include <vector>
 #include <assert.h>
+#include <cstring>
+#include <fstream>
+#include <stdexcept>
+#include <string.h>
+#include <vector>
 
 #ifdef HAVE_PNG
 #include <png.h>
@@ -54,9 +54,9 @@
 #endif // HAVE_JPEG
 
 #ifdef HAVE_OPENEXR
-#include <ImfOutputFile.h>
-#include <ImfInputFile.h>
 #include <ImfChannelList.h>
+#include <ImfInputFile.h>
+#include <ImfOutputFile.h>
 #endif // HAVE_OPENEXR
 
 #ifdef _WIN_
@@ -85,7 +85,7 @@ PixelFormat TgaFormat(int depth, int color_type, int color_map)
             }
         }
     }
-    throw std::runtime_error("Unsupported TGA format");    
+    throw std::runtime_error("Unsupported TGA format");
 }
 
 
@@ -93,7 +93,7 @@ PixelFormat TgaFormat(int depth, int color_type, int color_map)
 TypedImage LoadFromVideo(const std::string& uri)
 {
     PANGOLIN_UNUSED(uri);
-    
+
 #ifdef BUILD_PANGOLIN_VIDEO
     std::unique_ptr<VideoInterface> video = OpenVideo(uri);
     if(!video || video->Streams().size() != 1) {
@@ -119,7 +119,7 @@ TypedImage LoadFromVideo(const std::string& uri)
     }
 
     return image;
-#else   
+#else
     throw std::runtime_error("Video Support not enabled. Please rebuild Pangolin.");
 #endif
 }
@@ -135,7 +135,7 @@ void SaveToVideo(const Image<unsigned char>& image, const pangolin::PixelFormat&
     StreamInfo stream(fmt, image.w, image.h, image.pitch);
     video->SetStreams({stream});
     video->WriteStreams(image.ptr);
-#else   
+#else
     throw std::runtime_error("Video Support not enabled. Please rebuild Pangolin.");
 #endif
 }
@@ -243,9 +243,7 @@ TypedImage LoadPng(const std::string& filename)
         png_init_io(png_ptr, in);
         png_set_sig_bytes(png_ptr, nBytes);
 
-        //read the file
-        png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_SWAP_ENDIAN, NULL);
-
+        // Setup transformation options
         if( png_get_bit_depth(png_ptr, info_ptr) == 1)  {
             //Unpack bools to bytes to ease loading.
             png_set_packing(png_ptr);
@@ -258,6 +256,9 @@ TypedImage LoadPng(const std::string& filename)
         if(png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_PALETTE) {
             png_set_palette_to_rgb(png_ptr);
         }
+
+        //read the file
+        png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_SWAP_ENDIAN, NULL);
 
         if( png_get_interlace_type(png_ptr,info_ptr) != PNG_INTERLACE_NONE) {
             throw std::runtime_error( "Interlace not yet supported" );
@@ -291,7 +292,7 @@ void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
     PANGOLIN_UNUSED(image);
     PANGOLIN_UNUSED(filename);
     PANGOLIN_UNUSED(top_line_first);
-    
+
     // Check image has supported bit depth
     for(unsigned int i=1; i < fmt.channels; ++i) {
         if( fmt.channel_bits[i] != fmt.channel_bits[0] ) {
@@ -447,7 +448,7 @@ TypedImage LoadJpg(const std::string& filename)
         return img;
     }
     throw std::runtime_error("Unable to load JPEG file, '" + filename + "'");
-#else   
+#else
     throw std::runtime_error("JPEG Support not enabled. Please rebuild Pangolin.");
 #endif
 }
@@ -463,7 +464,7 @@ PixelFormat PpmFormat(const std::string& strType, int num_colours)
     }else if(strType == "P6") {
         return PixelFormatFromString("RGB24");
     }else{
-        throw std::runtime_error("Unsupported PPM/PGM format");        
+        throw std::runtime_error("Unsupported PPM/PGM format");
     }
 }
 
@@ -491,7 +492,7 @@ TypedImage LoadPpm(std::ifstream& bFile)
     PpmConsumeWhitespaceAndComments(bFile);
     bFile >> num_colors;
     bFile.ignore(1,'\n');
-    
+
     if(!bFile.fail() && w > 0 && h > 0) {
         TypedImage img(w, h, PpmFormat(ppm_type, num_colors) );
 
@@ -585,7 +586,7 @@ void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& 
     PANGOLIN_UNUSED(fmt);
     PANGOLIN_UNUSED(filename);
     PANGOLIN_UNUSED(top_line_first);
-    
+
 #ifdef HAVE_OPENEXR
     ManagedImage<unsigned char> flip_image;
     Image<unsigned char> image;

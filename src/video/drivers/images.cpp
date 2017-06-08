@@ -25,10 +25,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/images.h>
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/video/drivers/images.h>
+#include <pangolin/video/iostream_operators.h>
 
 #include <cstring>
 
@@ -37,7 +37,7 @@ namespace pangolin
 
 bool ImagesVideo::LoadFrame(size_t i)
 {
-    if( (int)i < num_files) {
+    if( i < num_files) {
         Frame& frame = loaded[i];
         for(size_t c=0; c< num_channels; ++c) {
             const std::string& filename = Filename(i,c);
@@ -64,13 +64,13 @@ void ImagesVideo::PopulateFilenames(const std::string& wildcard_path)
     for(size_t i = 0; i < wildcards.size(); ++i) {
         const std::string channel_wildcard = PathExpand(wildcards[i]);
         FilesMatchingWildcard(channel_wildcard, filenames[i]);
-        if(num_files < 0) {
-            num_files = (int)filenames[i].size();
+        if(num_files == size_t(-1)) {
+            num_files = filenames[i].size();
         }else{
-            if( num_files != (int)filenames[i].size() ) {
+            if( num_files != filenames[i].size() ) {
                 std::cerr << "Warning: Video Channels have unequal number of files" << std::endl;
             }
-            num_files = std::min(num_files, (int)filenames[i].size());
+            num_files = std::min(num_files, filenames[i].size());
         }
         if(num_files == 0) {
             throw VideoException("No files found for wildcard '" + channel_wildcard + "'");
@@ -98,12 +98,12 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path)
 {
     // Work out which files to sequence
     PopulateFilenames(wildcard_path);
-    
+
     // Load first image in order to determine stream sizes etc
     LoadFrame(next_frame_id);
 
     ConfigureStreamSizes();
-    
+
     // TODO: Queue frames in another thread.
 }
 
@@ -132,13 +132,13 @@ ImagesVideo::~ImagesVideo()
 //! Implement VideoInput::Start()
 void ImagesVideo::Start()
 {
-    
+
 }
 
 //! Implement VideoInput::Stop()
 void ImagesVideo::Stop()
 {
-    
+
 }
 
 //! Implement VideoInput::SizeBytes()
@@ -177,7 +177,7 @@ bool ImagesVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         next_frame_id++;
         return true;
     }
-    
+
     return false;
 }
 
@@ -187,20 +187,20 @@ bool ImagesVideo::GrabNewest( unsigned char* image, bool wait )
     return GrabNext(image,wait);
 }
 
-int ImagesVideo::GetCurrentFrameId() const
+size_t ImagesVideo::GetCurrentFrameId() const
 {
     return (int)next_frame_id - 1;
 }
 
-int ImagesVideo::GetTotalFrames() const
+size_t ImagesVideo::GetTotalFrames() const
 {
     return num_files;
 }
 
-int ImagesVideo::Seek(int frameid)
+size_t ImagesVideo::Seek(size_t frameid)
 {
-    next_frame_id = std::max(0, std::min(frameid, num_files));
-    return (int)next_frame_id;
+    next_frame_id = std::max(size_t(0), std::min(frameid, num_files));
+    return next_frame_id;
 }
 
 PANGOLIN_REGISTER_FACTORY(ImagesVideo)

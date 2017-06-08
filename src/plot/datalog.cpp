@@ -27,12 +27,12 @@
 
 #include <pangolin/plot/datalog.h>
 
-#include <limits>
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
-#include <stdexcept>
-#include <algorithm>
 #include <iostream>
+#include <limits>
+#include <stdexcept>
 
 namespace pangolin
 {
@@ -97,6 +97,8 @@ DataLog::~DataLog()
 
 void DataLog::SetLabels(const std::vector<std::string> & new_labels)
 {
+    std::lock_guard<std::mutex> l(access_mutex);
+
     // Create new labels if needed
     for( size_t i= labels.size(); i < new_labels.size(); ++i )
         labels.push_back( std::string() );
@@ -203,6 +205,8 @@ void DataLog::Log(const std::vector<float> & vals)
 
 void DataLog::Clear()
 {
+    std::lock_guard<std::mutex> l(access_mutex);
+
     if(block0) {
         block0->ClearLinked();
         blockn = block0;

@@ -37,16 +37,6 @@ using std::lock_guard;
 namespace pangolin
 {
 
-static inline void writeCompressedUnsignedInt(std::ostream& writer, size_t n)
-{
-    while (n >= 0x80)
-    {
-	writer.put(0x80 | (n & 0x7F));
-	n >>= 7;
-    }
-    writer.put(static_cast<unsigned char>(n));
-}
-
 static inline const std::string CurrentTimeStr()
 {
     time_t time_now = time(0);
@@ -54,17 +44,6 @@ static inline const std::string CurrentTimeStr()
     char buffer[80];
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %X", &time_struct);
     return buffer;
-}
-
-static inline void writeTimestamp(std::ostream& writer)
-{
-    const auto time_us = Time_us(TimeNow());
-    writer.write(reinterpret_cast<const char*>(&time_us), sizeof(decltype(time_us)));
-}
-
-static inline void writeTag(std::ostream& writer, const pangoTagType tag)
-{
-    writer.write(reinterpret_cast<const char*>(&tag), TAG_LENGTH);
 }
 
 void PacketStreamWriter::WriteHeader()
@@ -132,15 +111,16 @@ void PacketStreamWriter::WriteMeta(PacketStreamSourceId src, const picojson::val
 
 void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char* source, size_t sourcelen, const picojson::value& meta)
 {
+    const int64_t time_us = Time_us(TimeNow());
+
     SCOPED_LOCK;
-    if (_indexable)
-        _index.add(src, _stream.tellp()); //record position for seek index
+    _sources[src].index.push_back({_stream.tellp(), time_us});
 
     if (!meta.is<picojson::null>())
         WriteMeta(src, meta);
 
     writeTag(_stream, TAG_SRC_PACKET);
-    writeTimestamp(_stream);
+    writeTimestamp(_stream, time_us);
     writeCompressedUnsignedInt(_stream, src);
 
     if (_sources[src].data_size_bytes)
@@ -167,7 +147,7 @@ void PacketStreamWriter::WriteSync()
 {
     SCOPED_LOCK;
     for (unsigned i = 0; i < 10; ++i)
-	writeTag(_stream, TAG_PANGO_SYNC);
+    writeTag(_stream, TAG_PANGO_SYNC);
 }
 
 void PacketStreamWriter::WriteEnd()
@@ -177,18 +157,10 @@ void PacketStreamWriter::WriteEnd()
         return;
 
     auto indexpos = _stream.tellp();
-
     writeTag(_stream, TAG_PANGO_STATS);
-    picojson::value stat;
-    stat["num_sources"] = _sources.size();
-    stat["bytes_written"] = _bytes_written;
-    stat["src_packet_index"] = _index.json();
-    stat.serialize(std::ostream_iterator<char>(_stream), false);
+    SourceStats(_sources).serialize(std::ostream_iterator<char>(_stream), false);
     writeTag(_stream, TAG_PANGO_FOOTER);
     _stream.write(reinterpret_cast<char*>(&indexpos), sizeof(uint64_t));
 }
 
-
 }
-
-

@@ -27,9 +27,9 @@
 
 #pragma once
 
+#include <pangolin/image/image_io.h>
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
-#include <pangolin/image/image_io.h>
 
 #include <deque>
 #include <vector>
@@ -74,11 +74,11 @@ public:
 
     // Implement VideoPlaybackInterface
 
-    int GetCurrentFrameId() const override;
+    size_t GetCurrentFrameId() const override;
 
-    int GetTotalFrames() const override;
+    size_t GetTotalFrames() const override;
 
-    int Seek(int frameid) override;
+    size_t Seek(size_t frameid) override;
     
 protected:
     typedef std::vector<TypedImage> Frame;
@@ -96,7 +96,7 @@ protected:
     std::vector<StreamInfo> streams;
     size_t size_bytes;
     
-    int num_files;
+    size_t num_files;
     size_t num_channels;
     size_t next_frame_id;
     std::vector<std::vector<std::string> > filenames;

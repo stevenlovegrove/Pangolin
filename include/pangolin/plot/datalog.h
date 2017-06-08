@@ -29,12 +29,13 @@
 
 #include <pangolin/platform.h>
 
-#include <stdexcept>
-#include <vector>
-#include <string>
+#include <algorithm> // std::min, std::max
 #include <limits>
 #include <memory>
-#include <algorithm> // std::min, std::max
+#include <mutex>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN
@@ -227,6 +228,8 @@ public:
 
     // Return stats computed for each dimension if enabled.
     const DimensionStats& Stats(size_t dim) const;
+
+    std::mutex access_mutex;
 
 protected:
     unsigned int block_samples_alloc;

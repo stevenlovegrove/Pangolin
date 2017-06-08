@@ -2,5 +2,5 @@
 find_package(Pangolin 0.4 REQUIRED)
 include_directories(${Pangolin_INCLUDE_DIRS})
 
-add_executable(Testlog testlog.cpp )
-target_link_libraries(Testlog ${Pangolin_LIBRARIES})
+#add_executable(Testlog testlog.cpp )
+#target_link_libraries(Testlog ${Pangolin_LIBRARIES})

@@ -158,14 +158,14 @@ struct PANGOLIN_EXPORT VideoPlaybackInterface
     virtual ~VideoPlaybackInterface() {}
 
     /// Return monotonic id of current frame
-    virtual int GetCurrentFrameId() const = 0;
+    virtual size_t GetCurrentFrameId() const = 0;
 
     /// Return total number of frames to be captured from device,
-    /// or std::numeric_limits<int>::max() on failure.
-    virtual int GetTotalFrames() const = 0;
+    /// or 0 if unknown.
+    virtual size_t GetTotalFrames() const = 0;
 
-    /// Return -1 on failure, frameid on success
-    virtual int Seek(int frameid) = 0;
+    /// Return frameid on success, or next frame on failure
+    virtual size_t Seek(size_t frameid) = 0;
 };
 
 }

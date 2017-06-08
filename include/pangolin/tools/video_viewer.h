@@ -52,6 +52,8 @@ public:
     void ChangeExposure(int delta_us);
     void ChangeGain(float delta);
     void SetActiveCamera(int delta);
+    void DrawEveryNFrames(int n);
+
 
     // Register to be notified of new image data
     void SetFrameChangedCallback(FrameChangedCallbackFn cb);
@@ -79,6 +81,7 @@ protected:
     int current_frame;
     int grab_until;
     int record_nth_frame;
+    int draw_nth_frame;
     bool video_grab_wait;
     bool video_grab_newest;
     bool should_run;

@@ -116,13 +116,11 @@ if(BUILD_PANGOLIN_VIDEO)
     RegisterThreadVideoFactory
   )
 
-  if(UNIX)
+  if(LINUX)
     list(APPEND HEADERS ${INCDIR}/video/drivers/shared_memory.h)
     list(APPEND SOURCES video/drivers/shared_memory.cpp)
-    if(_LINUX_)
-      # Required for shared memory API using some versions of glibc
-      list(APPEND LINK_LIBS rt pthread)
-    endif()
+    # Required for shared memory API using some versions of glibc
+    list(APPEND LINK_LIBS rt pthread)
   endif()
 
 endif()
@@ -416,7 +414,7 @@ if(BUILD_PANGOLIN_LIBUVC AND BUILD_PANGOLIN_VIDEO)
     if(_WIN_)
       find_package(pthread REQUIRED QUIET)
       list(APPEND LINK_LIBS ${pthread_LIBRARIES} )
-  
+
       find_package(libusb1 REQUIRED QUIET)
       list(APPEND LINK_LIBS ${libusb1_LIBRARIES} )
     endif()
@@ -448,7 +446,7 @@ if(BUILD_PANGOLIN_TELICAM AND BUILD_PANGOLIN_VIDEO)
     list(APPEND HEADERS ${INCDIR}/video/drivers/teli.h )
     list(APPEND SOURCES video/drivers/teli.cpp )
     list(APPEND VIDEO_FACTORY_REG RegisterTeliVideoFactory )
-  
+
     message(STATUS "TeliCam Found and Enabled" )
   endif()
 endif()
@@ -463,7 +461,7 @@ if(BUILD_PANGOLIN_PLEORA AND BUILD_PANGOLIN_VIDEO)
     list(APPEND HEADERS ${INCDIR}/video/drivers/pleora.h )
     list(APPEND SOURCES video/drivers/pleora.cpp )
     list(APPEND VIDEO_FACTORY_REG RegisterPleoraVideoFactory )
-  
+
     if(_GCC_)
       # Suppress warnings generated from Pleora SDK.
       set_source_files_properties(video/drivers/pleora.cpp PROPERTIES COMPILE_FLAGS -Wno-unknown-pragmas)
