@@ -389,7 +389,7 @@ struct my_error_mgr
 
 typedef struct my_error_mgr * my_error_ptr;
 
-METHODDEF(void) my_error_exit(j_common_ptr cinfo)
+METHODDEF(void) my_error_exit2(j_common_ptr cinfo)
 {
   my_error_ptr myerr = (my_error_ptr) cinfo->err;
   (*cinfo->err->output_message) (cinfo);
@@ -412,7 +412,7 @@ TypedImage LoadJpg(const std::string& filename)
 
     if(infile) {
         struct my_error_mgr jerr;
-        jerr.pub.error_exit = my_error_exit;
+        jerr.pub.error_exit = my_error_exit2;
 
         struct jpeg_decompress_struct cinfo;
         cinfo.err = jpeg_std_error(&jerr.pub);
@@ -517,13 +517,13 @@ TypedImage LoadPpm(const std::string& filename)
 void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
     std::ofstream bFile( filename.c_str(), std::ios::out | std::ios::binary );
-    
+
     // Setup header variables
     std::string ppm_type = "";
     int num_colors = 0;
     int w = (int)image.w;
     int h = (int)image.h;
-    
+
     if(fmt.format == "GRAY8") {
         ppm_type = "P5";
         num_colors = 255;
@@ -534,9 +534,9 @@ void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
         ppm_type = "P6";
         num_colors = 255;
     }else{
-        throw std::runtime_error("Unsupported pixel format");  
+        throw std::runtime_error("Unsupported pixel format");
     }
-    
+
     // Write header
     bFile << ppm_type;
     bFile << " ";
@@ -546,7 +546,7 @@ void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
     bFile << " ";
     bFile << num_colors;
     bFile << "\n";
-    
+
     // Write out data
     if(top_line_first) {
         for(size_t r=0; r<image.h; ++r) {

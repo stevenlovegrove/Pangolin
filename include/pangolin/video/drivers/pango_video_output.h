@@ -27,8 +27,10 @@
 
 #pragma once
 
-#include <pangolin/video/video_output.h>
 #include <pangolin/log/packetstream_writer.h>
+#include <pangolin/video/video_output.h>
+
+#include <pangolin/video/encoders/stream_encoder.h>
 
 namespace pangolin
 {
@@ -36,7 +38,7 @@ namespace pangolin
 class PANGOLIN_EXPORT PangoVideoOutput : public VideoOutputInterface
 {
 public:
-    PangoVideoOutput(const std::string& filename, size_t buffer_size_bytes = 100*1024*1024);
+    PangoVideoOutput(const std::string& filename, size_t buffer_size_bytes, const std::map<size_t, std::string> &stream_encoder_uris);
     ~PangoVideoOutput();
 
     const std::vector<StreamInfo>& Streams() const override;
@@ -57,6 +59,10 @@ protected:
     int packetstreamsrcid;
     size_t total_frame_size;
     bool is_pipe;
+
+    bool fixed_size;
+    std::map<size_t, std::string> stream_encoder_uris;
+    std::vector<std::unique_ptr<StreamEncoder>> stream_encoders;
 };
 
 }
