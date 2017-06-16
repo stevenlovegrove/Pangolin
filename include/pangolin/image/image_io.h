@@ -27,6 +27,8 @@
 
 #pragma once
 
+#include <pangolin/platform.h>
+
 #include <pangolin/image/typed_image.h>
 #include <pangolin/utils/file_extension.h>
 
