@@ -57,7 +57,6 @@ public:
         : seeking(false)
     {
         SetOffset(virtual_clock_offset);
-        OnSeek.Connect([this](TimePoint t){OnSeekFunc(t);});
     }
 
     // No copy constructor
@@ -181,14 +180,6 @@ public:
     Signal<TimePoint> OnSeek;
 
 private:
-    void OnSeekFunc(TimePoint)
-    {
-//        std::unique_lock<std::mutex> l(time_mutex);
-//        while(!time_queue_us.empty()) {
-//            time_queue_us.pop();
-//        }
-    }
-
     template< typename T, typename Pred >
     static typename std::vector<T>::iterator
     insert_sorted( std::vector<T> & vec, T const& item, Pred pred )

@@ -45,7 +45,7 @@ pangoTagType PacketStream::peekTag()
     if (!_tag)
     {
         _tag = 0;
-        read(reinterpret_cast<char*>(&_tag), TAG_LENGTH);
+        Base::read(reinterpret_cast<char*>(&_tag), TAG_LENGTH);
         if (!good())
             _tag = TAG_END;
     }

@@ -157,7 +157,7 @@ TypedImage LoadJpg(std::istream& is) {
     if (r != JPEG_HEADER_OK) {
         throw std::runtime_error("Failed to read JPEG header.");
     } else if (cinfo.num_components != 3 && cinfo.num_components != 1) {
-        throw std::runtime_error("Unsupported number of color components: " + cinfo.num_components);
+        throw std::runtime_error("Unsupported number of color components");
     } else {
         jpeg_start_decompress(&cinfo);
         // resize storage if necessary
@@ -212,8 +212,8 @@ void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostre
     }
 
     jpeg_set_defaults(&cinfo);
-    jpeg_set_quality(&cinfo, quality, true);
-    jpeg_start_compress(&cinfo, true);
+    jpeg_set_quality(&cinfo, quality, (boolean)true);
+    jpeg_start_compress(&cinfo, (boolean)true);
 
     JSAMPROW row;
     while (cinfo.next_scanline < cinfo.image_height) {

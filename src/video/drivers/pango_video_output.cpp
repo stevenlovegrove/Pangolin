@@ -119,6 +119,7 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
             std::string encoder_name = si.PixFormat().format;
             if(stream_encoder_uris.find(i) != stream_encoder_uris.end()) {
                 // instantiate encoder and write it's name to the stream properties
+                json_stream["decoded"] = si.PixFormat().format;
                 encoder_name = stream_encoder_uris[i];
                 stream_encoders[i] = StreamEncoderFactory::I().GetEncoder(encoder_name, si.PixFormat());
                 fixed_size = false;
@@ -129,8 +130,6 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
             json_stream["height"] = si.Height();
             json_stream["pitch"] = si.Pitch();
             json_stream["offset"] = (size_t) si.Offset();
-            json_stream["decoded"] = si.PixFormat().format;
-
         }
 
         PacketStreamSource pss;
