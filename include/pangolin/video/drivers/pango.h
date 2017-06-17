@@ -29,6 +29,7 @@
 
 #include <pangolin/log/packetstream_reader.h>
 #include <pangolin/log/playback_session.h>
+#include <pangolin/video/encoders/stream_encoder.h>
 #include <pangolin/video/video.h>
 
 namespace pangolin
@@ -88,7 +89,9 @@ protected:
     const PacketStreamSource* _source;
 
     size_t _size_bytes;
+    bool _fixed_size;
     std::vector<StreamInfo> _streams;
+    std::vector<ImageDecoderFunc> stream_decoder;
     picojson::value _device_properties;
     picojson::value _frame_properties;
 

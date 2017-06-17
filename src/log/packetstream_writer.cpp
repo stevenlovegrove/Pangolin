@@ -123,24 +123,15 @@ void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char*
     writeTimestamp(_stream, time_us);
     writeCompressedUnsignedInt(_stream, src);
 
-    if (_sources[src].data_size_bytes)
-    {
+    if (_sources[src].data_size_bytes) {
         if (sourcelen != static_cast<size_t>(_sources[src].data_size_bytes))
             throw std::runtime_error("oPacketStream::writePacket --> Tried to write a fixed-size packet with bad size.");
-//	if (compressed)
-//	   todo something;
-//	else
-        _stream.write(source, sourcelen);
-        _bytes_written += sourcelen;
-    }
-    else
-    {
+    } else {
         writeCompressedUnsignedInt(_stream, sourcelen);
-
-        //todo handle compressed
-        _stream.write(source, sourcelen);
-        _bytes_written += sourcelen;
     }
+
+    _stream.write(source, sourcelen);
+    _bytes_written += sourcelen;
 }
 
 void PacketStreamWriter::WriteSync()

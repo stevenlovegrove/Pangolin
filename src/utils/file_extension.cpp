@@ -39,54 +39,54 @@ std::string ImageFileType2Name(ImageFileType t)
     switch(t)
     {
     case ImageFileTypePpm:
-	return "ImageFileTypePpm";
+    return "ImageFileTypePpm";
     case ImageFileTypeTga:
-	return "ImageFileTypeTga";
+    return "ImageFileTypeTga";
     case ImageFileTypePng:
-	return "ImageFileTypePng";
+    return "ImageFileTypePng";
     case ImageFileTypeJpg:
-	return "ImageFileTypeJpg";
+    return "ImageFileTypeJpg";
     case ImageFileTypeTiff:
-	return "ImageFileTypeTiff";
+    return "ImageFileTypeTiff";
     case ImageFileTypeGif:
-	return "ImageFileTypeGif";
+    return "ImageFileTypeGif";
     case ImageFileTypeExr:
-	return "ImageFileTypeExr";
+    return "ImageFileTypeExr";
     case ImageFileTypePango:
-	return "ImageFileTypePango";
+    return "ImageFileTypePango";
     case ImageFileTypePvn:
-	return "ImageFileTypePvn";
+    return "ImageFileTypePvn";
     case ImageFileTypeUnknown:
     default:
-	return "ImageFileTypeUnknown";
+    return "ImageFileTypeUnknown";
     }
 }
 
 ImageFileType Name2ImageFileType(const std::string& name)
 {
     if (name.substr(0, 13) != "ImageFileType")
-	return ImageFileTypeUnknown;
+    return ImageFileTypeUnknown;
 
     auto ext = name.substr(13);
 
     if ("Ppm" == ext)
-	return ImageFileTypePpm;
+        return ImageFileTypePpm;
     else if ("Tga" == ext)
-	return ImageFileTypeTga;
+        return ImageFileTypeTga;
     else if ("Png" == ext)
-    	return ImageFileTypePng;
+        return ImageFileTypePng;
     else if ("Jpg" == ext)
-    	return ImageFileTypeJpg;
+        return ImageFileTypeJpg;
     else if ("Tiff" == ext)
-    	return ImageFileTypeTiff;
+        return ImageFileTypeTiff;
     else if ("Gif" == ext)
-    	return ImageFileTypeGif;
+        return ImageFileTypeGif;
     else if ("Exr" == ext)
-    	return ImageFileTypeExr;
+        return ImageFileTypeExr;
     else if ("Pango" == ext)
-    	return ImageFileTypePango;
+        return ImageFileTypePango;
     else if ("Pvn" == ext)
-	return ImageFileTypePvn;
+        return ImageFileTypePvn;
 
     return ImageFileTypeUnknown;
 }

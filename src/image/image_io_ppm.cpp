@@ -1,5 +1,3 @@
-#include <pangolin/platform.h>
-
 #include <fstream>
 #include <pangolin/image/typed_image.h>
 

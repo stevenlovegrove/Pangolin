@@ -32,6 +32,8 @@
 
 #include <pangolin/video/encoders/stream_encoder.h>
 
+#include <functional>
+
 namespace pangolin
 {
 
@@ -62,7 +64,7 @@ protected:
 
     bool fixed_size;
     std::map<size_t, std::string> stream_encoder_uris;
-    std::vector<std::unique_ptr<StreamEncoder>> stream_encoders;
+    std::vector<ImageEncoderFunc> stream_encoders;
 };
 
 }

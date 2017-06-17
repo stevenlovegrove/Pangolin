@@ -27,10 +27,10 @@
 
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/memstreambuf.h>
 #include <pangolin/utils/picojson.h>
 #include <pangolin/utils/sigstate.h>
 #include <pangolin/video/drivers/pango_video_output.h>
-#include <pangolin/video/encoders/stream_encoder.h>
 #include <pangolin/video/iostream_operators.h>
 #include <set>
 
@@ -196,24 +196,18 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
     }
 #endif
 
-//    if (!frame_properties.is<picojson::null>())
-//        packetstream.writeMeta(packetstreamsrcid, frame_properties);
-
-
     if(!fixed_size) {
-        std::vector<unsigned char> encoded;
-        encoded.reserve(total_frame_size);
+        memstreambuf encoded(total_frame_size);
+        std::ostream encode_stream(&encoded);
 
         for(size_t i=0; i < streams.size(); ++i) {
             const Image<unsigned char> stream_image = streams[i].StreamImage(data);
 
             if(stream_encoders[i]) {
                 // Encode to buffer
-                stream_encoders[i]->Encode(encoded, stream_image);
+                stream_encoders[i](encode_stream, stream_image);
             }else{
-                const size_t existing_size = encoded.size();
-                encoded.resize(existing_size + streams[i].SizeBytes());
-                std::memcpy(encoded.data()+existing_size, stream_image.ptr, streams[i].SizeBytes());
+                encoded.sputn((char*)stream_image.ptr, streams[i].SizeBytes());
             }
         }
         packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(encoded.data()), encoded.size(), frame_properties);

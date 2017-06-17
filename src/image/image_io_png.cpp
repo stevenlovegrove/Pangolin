@@ -134,7 +134,7 @@ TypedImage LoadPng(const std::string& filename)
     return LoadPng(f);
 }
 
-void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::ostream& stream, bool top_line_first)
+void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& stream, bool top_line_first)
 {
     // Check image has supported bit depth
     for(unsigned int i=1; i < fmt.channels; ++i) {

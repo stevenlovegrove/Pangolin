@@ -185,13 +185,15 @@ TypedImage LoadJpg(const std::string& filename) {
 }
 
 void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostream& os) {
+    const int quality = 10; // (0..100)
+
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr       jerr;
 
     if (fmt.channels != 1 && fmt.channels != 3) {
         throw std::runtime_error("Unsupported number of image channels.");
     }
-    if (fmt.bpp != 8) {
+    if (fmt.bpp != 8 &&  fmt.bpp != 24) {
         throw std::runtime_error("Unsupported image depth.");
     }
 
@@ -210,7 +212,7 @@ void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostre
     }
 
     jpeg_set_defaults(&cinfo);
-    jpeg_set_quality (&cinfo, 100, true); // set max quality. [0..100]
+    jpeg_set_quality(&cinfo, quality, true);
     jpeg_start_compress(&cinfo, true);
 
     JSAMPROW row;

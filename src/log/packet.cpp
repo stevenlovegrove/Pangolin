@@ -12,7 +12,7 @@ Packet::Packet(PacketStream& s, std::unique_lock<std::recursive_mutex>&& lock, s
 Packet::Packet(Packet&& o)
     : src(o.src), time(o.time), size(o.size), sequence_num(o.sequence_num),
       meta(std::move(o.meta)), frame_streampos(o.frame_streampos), _stream(o._stream),
-      lock(std::move(o.lock)), _data_len(o._data_len)
+      lock(std::move(o.lock)), data_streampos(o.data_streampos), _data_len(o._data_len)
 {
     o._data_len = 0;
 }
@@ -22,20 +22,18 @@ Packet::~Packet()
     ReadRemaining();
 }
 
-size_t Packet::ReadRaw(char* target, size_t len)
+size_t Packet::BytesRead() const
 {
-    PANGO_ENSURE(len <= _data_len);
-    const size_t num_read = _stream.read(target, len);
-    _data_len -= num_read;
-    return num_read;
+    return _stream.tellg() - data_streampos;
 }
 
-size_t Packet::Skip(size_t len)
+int Packet::BytesRemaining() const
 {
-    PANGO_ENSURE(len <= _data_len);
-    const size_t num_read = _stream.skip(len);
-    _data_len -= num_read;
-    return num_read;
+    if(_data_len) {
+        return (int)_data_len - (int)BytesRead();
+    }else{
+        return 0;
+    }
 }
 
 void Packet::ParsePacketHeader(PacketStream& s, std::vector<PacketStreamSource>& srcs)
@@ -63,13 +61,18 @@ void Packet::ParsePacketHeader(PacketStream& s, std::vector<PacketStreamSource>&
         size = s.readUINT();
     }
     sequence_num = src_packet.next_packet_id++;
+
     _data_len = size;
+    data_streampos = s.tellg();
 }
 
 void Packet::ReadRemaining()
 {
-    while(_data_len) {
-        Skip(_data_len);
+    int bytes_left = BytesRemaining();
+
+    while(bytes_left > 0) {
+        Stream().skip(bytes_left);
+        bytes_left = BytesRemaining();
     }
 }
 
