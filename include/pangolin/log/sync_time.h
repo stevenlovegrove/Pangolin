@@ -201,7 +201,6 @@ struct SyncTimeEventPromise
     SyncTimeEventPromise(SyncTime& sync, int64_t time_us = 0)
         : sync(sync), time_us(time_us)
     {
-//        std::lock_guard<std::mutex> l(m);
         sync.QueueEvent(time_us);
     }
 
@@ -212,7 +211,6 @@ struct SyncTimeEventPromise
 
     void Cancel()
     {
-//        std::lock_guard<std::mutex> l(m);
         if(time_us) {
             sync.DequeueEvent(time_us);
             time_us = 0;
@@ -221,14 +219,12 @@ struct SyncTimeEventPromise
 
     void WaitAndRenew(int64_t new_time_us)
     {
-//        std::lock_guard<std::mutex> l(m);
         time_us = sync.WaitDequeueAndQueueEvent(time_us, new_time_us);
     }
 
 private:
     SyncTime& sync;
     int64_t time_us;
-    std::mutex m;
 };
 
 }
