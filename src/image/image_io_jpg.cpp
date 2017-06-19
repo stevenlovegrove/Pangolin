@@ -184,8 +184,8 @@ TypedImage LoadJpg(const std::string& filename) {
     return LoadJpg(f);
 }
 
-void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostream& os) {
-    const int quality = 10; // (0..100)
+void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostream& os, float quality) {
+    const int iquality = (int)std::max(std::min(quality, 100.0f),0.0f);
 
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr       jerr;
@@ -212,7 +212,7 @@ void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostre
     }
 
     jpeg_set_defaults(&cinfo);
-    jpeg_set_quality(&cinfo, quality, (boolean)true);
+    jpeg_set_quality(&cinfo, iquality, (boolean)true);
     jpeg_start_compress(&cinfo, (boolean)true);
 
     JSAMPROW row;
@@ -225,9 +225,9 @@ void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostre
     jpeg_destroy_compress(&cinfo);
 }
 
-void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, const std::string& filename) {
+void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, const std::string& filename, float quality) {
     std::ofstream f(filename);
-    SaveJpg(img, fmt, f);
+    SaveJpg(img, fmt, f, quality);
 }
 
 }

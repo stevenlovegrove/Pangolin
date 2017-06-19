@@ -49,10 +49,10 @@ enum ImageFileType
 
 
 PANGOLIN_EXPORT
-std::string ImageFileType2Name(ImageFileType);
+std::string ImageFileTypeToName(ImageFileType);
 
 PANGOLIN_EXPORT
-ImageFileType Name2ImageFileType(const std::string&);
+ImageFileType NameToImageFileType(const std::string&);
 
 PANGOLIN_EXPORT
 std::string FileLowercaseExtention(const std::string& filename);

@@ -31,7 +31,6 @@
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/signal_slot.h>
 #include <pangolin/video/drivers/pango.h>
-#include <pangolin/video/encoders/stream_encoder.h>
 #include <pangolin/video/iostream_operators.h>
 
 #include <functional>

@@ -18,15 +18,15 @@ PixelFormat PpmFormat(const std::string& strType, int num_colours)
     }
 }
 
-void PpmConsumeWhitespaceAndComments(std::ifstream& bFile)
+void PpmConsumeWhitespaceAndComments(std::istream& in)
 {
     // TODO: Make a little more general / more efficient
-    while( bFile.peek() == ' ' )  bFile.get();
-    while( bFile.peek() == '\n' ) bFile.get();
-    while( bFile.peek() == '#' )  bFile.ignore(4096, '\n');
+    while( in.peek() == ' ' )  in.get();
+    while( in.peek() == '\n' ) in.get();
+    while( in.peek() == '#' )  in.ignore(4096, '\n');
 }
 
-TypedImage LoadPpm(std::ifstream& bFile)
+TypedImage LoadPpm(std::istream& in)
 {
     // Parse header
     std::string ppm_type = "";
@@ -34,23 +34,23 @@ TypedImage LoadPpm(std::ifstream& bFile)
     int w = 0;
     int h = 0;
 
-    bFile >> ppm_type;
-    PpmConsumeWhitespaceAndComments(bFile);
-    bFile >> w;
-    PpmConsumeWhitespaceAndComments(bFile);
-    bFile >> h;
-    PpmConsumeWhitespaceAndComments(bFile);
-    bFile >> num_colors;
-    bFile.ignore(1,'\n');
+    in >> ppm_type;
+    PpmConsumeWhitespaceAndComments(in);
+    in >> w;
+    PpmConsumeWhitespaceAndComments(in);
+    in >> h;
+    PpmConsumeWhitespaceAndComments(in);
+    in >> num_colors;
+    in.ignore(1,'\n');
 
-    if(!bFile.fail() && w > 0 && h > 0) {
+    if(!in.fail() && w > 0 && h > 0) {
         TypedImage img(w, h, PpmFormat(ppm_type, num_colors) );
 
         // Read in data
         for(size_t r=0; r<img.h; ++r) {
-            bFile.read( (char*)img.ptr + r*img.pitch, img.pitch );
+            in.read( (char*)img.ptr + r*img.pitch, img.pitch );
         }
-        if(!bFile.fail()) {
+        if(!in.fail()) {
             return img;
         }
     }
@@ -58,16 +58,8 @@ TypedImage LoadPpm(std::ifstream& bFile)
     throw std::runtime_error("Unable to load PPM file.");
 }
 
-TypedImage LoadPpm(const std::string& filename)
+void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first)
 {
-    std::ifstream bFile( filename.c_str(), std::ios::in | std::ios::binary );
-    return LoadPpm(bFile);
-}
-
-void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
-{
-    std::ofstream bFile( filename.c_str(), std::ios::out | std::ios::binary );
-
     // Setup header variables
     std::string ppm_type = "";
     int num_colors = 0;
@@ -88,23 +80,23 @@ void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
     }
 
     // Write header
-    bFile << ppm_type;
-    bFile << " ";
-    bFile << w;
-    bFile << " ";
-    bFile << h;
-    bFile << " ";
-    bFile << num_colors;
-    bFile << "\n";
+    out << ppm_type;
+    out << " ";
+    out << w;
+    out << " ";
+    out << h;
+    out << " ";
+    out << num_colors;
+    out << "\n";
 
     // Write out data
     if(top_line_first) {
         for(size_t r=0; r<image.h; ++r) {
-            bFile.write( (char*)image.ptr + r*image.pitch, image.pitch );
+            out.write( (char*)image.ptr + r*image.pitch, image.pitch );
         }
     }else{
         for(size_t r=0; r<image.h; ++r) {
-            bFile.write( (char*)image.ptr + (image.h-1-r)*image.pitch, image.pitch );
+            out.write( (char*)image.ptr + (image.h-1-r)*image.pitch, image.pitch );
         }
     }
 }

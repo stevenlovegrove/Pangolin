@@ -34,58 +34,57 @@
 namespace pangolin
 {
 
-std::string ImageFileType2Name(ImageFileType t)
+std::string ImageFileTypeToName(ImageFileType t)
 {
     switch(t)
     {
     case ImageFileTypePpm:
-    return "ImageFileTypePpm";
+        return "ppm";
     case ImageFileTypeTga:
-    return "ImageFileTypeTga";
+        return "tga";
     case ImageFileTypePng:
-    return "ImageFileTypePng";
+        return "png";
     case ImageFileTypeJpg:
-    return "ImageFileTypeJpg";
+        return "jpg";
     case ImageFileTypeTiff:
-    return "ImageFileTypeTiff";
+        return "tiff";
     case ImageFileTypeGif:
-    return "ImageFileTypeGif";
+        return "gif";
     case ImageFileTypeExr:
-    return "ImageFileTypeExr";
+        return "exr";
     case ImageFileTypePango:
-    return "ImageFileTypePango";
+        return "pango";
     case ImageFileTypePvn:
-    return "ImageFileTypePvn";
+        return "pvn";
     case ImageFileTypeUnknown:
     default:
-    return "ImageFileTypeUnknown";
+        return "unknown";
     }
 }
 
-ImageFileType Name2ImageFileType(const std::string& name)
+ImageFileType NameToImageFileType(const std::string& name)
 {
-    if (name.substr(0, 13) != "ImageFileType")
-    return ImageFileTypeUnknown;
-
-    auto ext = name.substr(13);
-
-    if ("Ppm" == ext)
+    if ("ppm" == name)
         return ImageFileTypePpm;
-    else if ("Tga" == ext)
+    else if ("pgm" == name)
+        return ImageFileTypePpm;
+    else if ("tga" == name)
         return ImageFileTypeTga;
-    else if ("Png" == ext)
+    else if ("png" == name)
         return ImageFileTypePng;
-    else if ("Jpg" == ext)
+    else if ("jpg" == name)
         return ImageFileTypeJpg;
-    else if ("Tiff" == ext)
+    else if ("jpeg" == name)
+        return ImageFileTypeJpg;
+    else if ("tiff" == name)
         return ImageFileTypeTiff;
-    else if ("Gif" == ext)
+    else if ("gif" == name)
         return ImageFileTypeGif;
-    else if ("Exr" == ext)
+    else if ("exr" == name)
         return ImageFileTypeExr;
-    else if ("Pango" == ext)
+    else if ("pango" == name)
         return ImageFileTypePango;
-    else if ("Pvn" == ext)
+    else if ("pvn" == name)
         return ImageFileTypePvn;
 
     return ImageFileTypeUnknown;

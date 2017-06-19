@@ -207,10 +207,4 @@ void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
 }
 
-void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
-{
-    std::ofstream f(filename);
-    SavePng(image, fmt, f, top_line_first);
-}
-
 }

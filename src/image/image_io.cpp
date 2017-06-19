@@ -31,20 +31,28 @@
 
 namespace pangolin {
 
+// PNG
 TypedImage LoadPng(std::istream& in);
-TypedImage LoadJpg(std::istream& in);
 void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first);
-void SaveJpg(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out);
 
+// JPG
+TypedImage LoadJpg(std::istream& in);
+void SaveJpg(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, float quality);
 
-TypedImage LoadTga(const std::string& filename);
-TypedImage LoadPpm(const std::string& filename);
+// PPM
+TypedImage LoadPpm(std::istream& in);
+void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first);
+
+// TGA
+TypedImage LoadTga(std::istream& in);
+
+// Pango
 TypedImage LoadPango(const std::string& filename);
-
-void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
-void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
-void SaveExr(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
 void SavePango(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
+
+// EXR
+void SaveExr(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
+
 
 TypedImage LoadImage(std::istream& in, ImageFileType file_type)
 {
@@ -53,6 +61,10 @@ TypedImage LoadImage(std::istream& in, ImageFileType file_type)
         return LoadPng(in);
     case ImageFileTypeJpg:
         return LoadJpg(in);
+    case ImageFileTypePpm:
+        return LoadPpm(in);
+    case ImageFileTypeTga:
+        return LoadTga(in);
     default:
         throw std::runtime_error("Unable to load image file-type through std::istream");
     }
@@ -61,18 +73,16 @@ TypedImage LoadImage(std::istream& in, ImageFileType file_type)
 TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
 {
     switch (file_type) {
-    case ImageFileTypeTga:
-        return LoadTga(filename);
-    case ImageFileTypePpm:
-        return LoadPpm(filename);
-    case ImageFileTypePango:
-        return LoadPango(filename);
     case ImageFileTypePng:
     case ImageFileTypeJpg:
+    case ImageFileTypePpm:
+    case ImageFileTypeTga:
     {
         std::ifstream ifs(filename);
         return LoadImage(ifs, file_type);
     }
+    case ImageFileTypePango:
+        return LoadPango(filename);
     default:
         throw std::runtime_error("Unsupported image file type, '" + filename + "'");
     }
@@ -84,49 +94,50 @@ TypedImage LoadImage(const std::string& filename)
     return LoadImage( filename, file_type );
 }
 
-void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, ImageFileType file_type, bool top_line_first)
+void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, ImageFileType file_type, bool top_line_first, float quality)
 {
     switch (file_type) {
     case ImageFileTypePng:
         return SavePng(image, fmt, out, top_line_first);
     case ImageFileTypeJpg:
-        return SaveJpg(image, fmt, out);
+        return SaveJpg(image, fmt, out, quality);
+    case ImageFileTypePpm:
+        return SavePpm(image,fmt,out,top_line_first);
     default:
         throw std::runtime_error("Unable to save image file-type through std::istream");
     }
 }
 
 
-void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, ImageFileType file_type, bool top_line_first)
+void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, ImageFileType file_type, bool top_line_first, float quality)
 {
     switch (file_type) {
+    case ImageFileTypePng:
+    case ImageFileTypeJpg:
     case ImageFileTypePpm:
-        return SavePpm(image, fmt, filename, top_line_first);
+    {
+        std::ofstream ofs(filename);
+        return SaveImage(image, fmt, ofs, file_type, top_line_first, quality);
+    }
     case ImageFileTypeExr:
         return SaveExr(image, fmt, filename, top_line_first);
     case ImageFileTypePango:
         return SavePango(image, fmt, filename, top_line_first);
-    case ImageFileTypePng:
-    case ImageFileTypeJpg:
-    {
-        std::ofstream ofs(filename);
-        return SaveImage(image, fmt, ofs, file_type, top_line_first);
-    }
     default:
         throw std::runtime_error("Unsupported image file type, '" + filename + "'");
     }
 }
 
-void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
+void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first, float quality)
 {
     const std::string ext = FileLowercaseExtention(filename);
     const ImageFileType file_type = FileTypeExtension(ext);
-    SaveImage(image, fmt, filename,file_type, top_line_first);
+    SaveImage(image, fmt, filename,file_type, top_line_first, quality);
 }
 
-void SaveImage(const TypedImage& image, const std::string& filename, bool top_line_first)
+void SaveImage(const TypedImage& image, const std::string& filename, bool top_line_first, float quality)
 {
-    SaveImage(image, image.fmt, filename, top_line_first);
+    SaveImage(image, image.fmt, filename, top_line_first, quality);
 }
 
 }

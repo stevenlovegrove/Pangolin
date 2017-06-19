@@ -229,12 +229,20 @@ PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
                 filename = MakeUniqueFilename(filename);
             }
 
+            // Default encoder
+            std::string default_encoder = "";
+
+            if(uri.Contains("encoder")) {
+                default_encoder = uri.Get<std::string>("encoder","");
+            }
+
+            // Encoders for each stream
             std::map<size_t, std::string> stream_encoder_uris;
-            for(int i=0;i<100;++i)
+            for(size_t i=0; i<uri.params.size(); ++i)
             {
                 const std::string encoder_key = pangolin::FormatString("encoder%",i+1);
                 if(uri.Contains(encoder_key)) {
-                    stream_encoder_uris[i] = uri.Get<std::string>(encoder_key,"");
+                    stream_encoder_uris[i] = uri.Get<std::string>(encoder_key, default_encoder);
                 }
             }
 

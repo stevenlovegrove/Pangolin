@@ -29,7 +29,7 @@
 
 #include <pangolin/log/packetstream_reader.h>
 #include <pangolin/log/playback_session.h>
-#include <pangolin/video/encoders/stream_encoder.h>
+#include <pangolin/video/stream_encoder_factory.h>
 #include <pangolin/video/video.h>
 
 namespace pangolin
