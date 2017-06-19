@@ -101,14 +101,18 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
         }else{
             for(size_t s=0; s < _streams.size(); ++s) {
                 StreamInfo& si = _streams[s];
-                unsigned char* dst = image + (size_t)si.Offset();
+                pangolin::Image<unsigned char> dst = si.StreamImage(image);
 
                 if(stream_decoder[s]) {
                     pangolin::TypedImage img = stream_decoder[s](fi.Stream());
+                    PANGO_ENSURE(img.IsValid());
+
                     // TODO: We can avoid this copy by decoding directly into img
-                    std::memcpy(dst, img.ptr, si.SizeBytes());
+                    dst.CopyFrom(img);
                 }else{
-                    fi.Stream().read((char*)dst, si.SizeBytes());
+                    for(size_t row =0; row < dst.h; ++row) {
+                        fi.Stream().read((char*)dst.RowPtr(row), si.RowBytes());
+                    }
                 }
             }
         }

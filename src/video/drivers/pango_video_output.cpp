@@ -117,7 +117,7 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
             picojson::value& json_stream = json_streams.push_back();
 
             std::string encoder_name = si.PixFormat().format;
-            if(stream_encoder_uris.find(i) != stream_encoder_uris.end()) {
+            if(stream_encoder_uris.find(i) != stream_encoder_uris.end() && !stream_encoder_uris[i].empty() ) {
                 // instantiate encoder and write it's name to the stream properties
                 json_stream["decoded"] = si.PixFormat().format;
                 encoder_name = stream_encoder_uris[i];
@@ -200,15 +200,23 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
         std::ostream encode_stream(&encoded);
 
         for(size_t i=0; i < streams.size(); ++i) {
-            const Image<unsigned char> stream_image = streams[i].StreamImage(data);
+            const StreamInfo& si = streams[i];
+            const Image<unsigned char> stream_image = si.StreamImage(data);
 
             if(stream_encoders[i]) {
                 // Encode to buffer
                 stream_encoders[i](encode_stream, stream_image);
             }else{
-                encoded.sputn((char*)stream_image.ptr, streams[i].SizeBytes());
+                if(stream_image.IsContiguous()) {
+                    encode_stream.write((char*)stream_image.ptr, streams[i].SizeBytes());
+                }else{
+                    for(size_t row=0; row < stream_image.h; ++row) {
+                        encode_stream.write((char*)stream_image.RowPtr(row), si.RowBytes());
+                    }
+                }
             }
         }
+        encode_stream.flush();
         packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(encoded.data()), encoded.size(), frame_properties);
     }else{
         packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(data), total_frame_size, frame_properties);
@@ -238,12 +246,10 @@ PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
 
             // Encoders for each stream
             std::map<size_t, std::string> stream_encoder_uris;
-            for(size_t i=0; i<uri.params.size(); ++i)
+            for(size_t i=0; i<100; ++i)
             {
                 const std::string encoder_key = pangolin::FormatString("encoder%",i+1);
-                if(uri.Contains(encoder_key)) {
-                    stream_encoder_uris[i] = uri.Get<std::string>(encoder_key, default_encoder);
-                }
+                stream_encoder_uris[i] = uri.Get<std::string>(encoder_key, default_encoder);
             }
 
             return std::unique_ptr<VideoOutputInterface>(
