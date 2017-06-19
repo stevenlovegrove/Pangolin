@@ -472,7 +472,7 @@ void Mouse( int button_raw, int state, int x, int y)
     
     context->had_input = context->is_double_buffered ? 2 : 1;
     
-    const bool fresh_input = (context->mouse_state == 0);
+    const bool fresh_input = ( (context->mouse_state & 7) == 0);
     
     if( pressed ) {
         context->mouse_state |= (button&7);
