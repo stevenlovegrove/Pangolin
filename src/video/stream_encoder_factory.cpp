@@ -1,7 +1,8 @@
 #include <pangolin/video/stream_encoder_factory.h>
 
-#include <pangolin/utils/type_convert.h>
+#include <cctype>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/type_convert.h>
 
 namespace pangolin {
 

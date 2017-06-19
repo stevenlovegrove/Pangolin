@@ -2,10 +2,15 @@
 
 #include <fstream>
 #include <pangolin/image/image_io.h>
-#include <png.h>
 #include <vector>
 
+#ifdef HAVE_PNG
+#  include <png.h>
+#endif // HAVE_PNG
+
 namespace pangolin {
+
+#ifdef HAVE_PNG
 
 PixelFormat PngFormat(png_structp png_ptr, png_infop info_ptr )
 {
@@ -63,8 +68,12 @@ void pango_png_stream_write_flush(png_structp pngPtr)
     s->flush();
 }
 
+#endif // HAVE_PNG
+
+
 TypedImage LoadPng(std::istream& source)
 {
+#ifdef HAVE_PNG
     //so First, we validate our stream with the validate function I just mentioned
     if (!pango_png_validate(source)) {
         throw std::runtime_error("Not valid PNG header");
@@ -126,6 +135,10 @@ TypedImage LoadPng(std::istream& source)
     png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 
     return img;
+#else
+    PANGOLIN_UNUSED(source);
+    throw std::runtime_error("Rebuild Pangolin for PNG support.");
+#endif // HAVE_PNG
 }
 
 TypedImage LoadPng(const std::string& filename)
@@ -136,6 +149,7 @@ TypedImage LoadPng(const std::string& filename)
 
 void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& stream, bool top_line_first)
 {
+#ifdef HAVE_PNG
     // Check image has supported bit depth
     for(unsigned int i=1; i < fmt.channels; ++i) {
         if( fmt.channel_bits[i] != fmt.channel_bits[0] ) {
@@ -205,6 +219,10 @@ void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
     // Free resources
     png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+#else
+    PANGOLIN_UNUSED(source);
+    throw std::runtime_error("Rebuild Pangolin for PNG support.");
+#endif // HAVE_PNG
 }
 
 }

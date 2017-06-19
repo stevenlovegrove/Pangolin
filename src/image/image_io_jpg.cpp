@@ -1,18 +1,25 @@
+#include <algorithm>
 #include <fstream>
-#include <jpeglib.h>
+
 
 #include <pangolin/platform.h>
 
 #include <pangolin/image/typed_image.h>
 
-#ifdef _WIN_
-// Undef windows Macro polution from jpeglib.h
-#undef LoadImage
-#endif
+#ifdef HAVE_JPEG
+#  include <jpeglib.h>
+#  ifdef _WIN_
+//   Undef windows Macro polution from jpeglib.h
+#    undef LoadImage
+#  endif
+#endif // HAVE_JPEG
+
 
 // Inspired by https://cs.stanford.edu/~acoates/jpegAndIOS.txt
 
 namespace pangolin {
+
+#ifdef HAVE_JPEG
 
 const static size_t PANGO_JPEG_BUF_SIZE = 16384;
 
@@ -141,7 +148,10 @@ void pango_jpeg_set_dest_mgr(j_compress_ptr cinfo, std::ostream& os) {
     dest->os = &os;
 }
 
+#endif // HAVE_JPEG
+
 TypedImage LoadJpg(std::istream& is) {
+#ifdef HAVE_JPEG
     TypedImage image;
 
     struct jpeg_decompress_struct cinfo;
@@ -177,6 +187,11 @@ TypedImage LoadJpg(std::istream& is) {
     jpeg_destroy_decompress(&cinfo);
 
     return image;
+#else
+    PANGOLIN_UNUSED(is);
+    throw std::runtime_error("Rebuild Pangolin for JPEG support.");
+#endif // HAVE_JPEG
+
 }
 
 TypedImage LoadJpg(const std::string& filename) {
@@ -185,6 +200,7 @@ TypedImage LoadJpg(const std::string& filename) {
 }
 
 void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostream& os, float quality) {
+#ifdef HAVE_JPEG
     const int iquality = (int)std::max(std::min(quality, 100.0f),0.0f);
 
     struct jpeg_compress_struct cinfo;
@@ -223,6 +239,13 @@ void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostre
 
     jpeg_finish_compress(&cinfo);
     jpeg_destroy_compress(&cinfo);
+#else
+    PANGOLIN_UNUSED(img);
+    PANGOLIN_UNUSED(fmt);
+    PANGOLIN_UNUSED(os);
+    PANGOLIN_UNUSED(quality);
+    throw std::runtime_error("Rebuild Pangolin for JPEG support.");
+#endif // HAVE_JPEG
 }
 
 void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, const std::string& filename, float quality) {
