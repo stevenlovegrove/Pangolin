@@ -427,8 +427,8 @@ void Plotter::Render()
 
     const float min_space = 80.0;
     int ta[2] = {1,1};
-    while(v.w * ta[0] *tick[0].val / w < min_space) ta[0] *=2;
-    while(v.h * ta[1] *tick[1].val / h < min_space) ta[1] *=2;
+    while(v.w != 0 && v.w * ta[0] *tick[0].val / w < min_space) ta[0] *=2;
+    while(v.h != 0 && v.h * ta[1] *tick[1].val / h < min_space) ta[1] *=2;
 
     const float tdelta[2] = {
         tick[0].val * ta[0],
