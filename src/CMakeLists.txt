@@ -520,6 +520,16 @@ if(BUILD_PANGOLIN_LIBOPENEXR)
   endif()
 endif()
 
+option(BUILD_PANGOLIN_ZSTD "Build support for libzstd compression" ON)
+if(BUILD_PANGOLIN_ZSTD)
+  find_package(zstd QUIET)
+  if(zstd_FOUND)
+    set(HAVE_ZSTD 1)
+    list(APPEND INTERNAL_INC ${zstd_INCLUDE_DIR} )
+    list(APPEND LINK_LIBS ${zstd_LIBRARY} )
+    message(STATUS "libzstd Found and Enabled")
+  endif()
+endif()
 
 #######################################################
 ## Embed resource binary files

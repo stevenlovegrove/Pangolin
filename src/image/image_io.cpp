@@ -53,6 +53,9 @@ void SavePango(const Image<unsigned char>& image, const pangolin::PixelFormat& f
 // EXR
 void SaveExr(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
 
+// ZSTD (https://github.com/facebook/zstd)
+TypedImage LoadZstd(std::istream& in);
+void SaveZstd(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, int compression_level);
 
 TypedImage LoadImage(std::istream& in, ImageFileType file_type)
 {
@@ -65,6 +68,8 @@ TypedImage LoadImage(std::istream& in, ImageFileType file_type)
         return LoadPpm(in);
     case ImageFileTypeTga:
         return LoadTga(in);
+    case ImageFileTypeZstd:
+        return LoadZstd(in);
     default:
         throw std::runtime_error("Unable to load image file-type through std::istream");
     }
@@ -77,6 +82,7 @@ TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
     case ImageFileTypeJpg:
     case ImageFileTypePpm:
     case ImageFileTypeTga:
+    case ImageFileTypeZstd:
     {
         std::ifstream ifs(filename);
         return LoadImage(ifs, file_type);
@@ -103,6 +109,8 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
         return SaveJpg(image, fmt, out, quality);
     case ImageFileTypePpm:
         return SavePpm(image,fmt,out,top_line_first);
+    case ImageFileTypeZstd:
+        return SaveZstd(image,fmt,out, quality);
     default:
         throw std::runtime_error("Unable to save image file-type through std::istream");
     }
@@ -115,6 +123,7 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
     case ImageFileTypePng:
     case ImageFileTypeJpg:
     case ImageFileTypePpm:
+    case ImageFileTypeZstd:
     {
         std::ofstream ofs(filename);
         return SaveImage(image, fmt, ofs, file_type, top_line_first, quality);
