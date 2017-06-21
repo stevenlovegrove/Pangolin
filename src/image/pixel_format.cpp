@@ -27,8 +27,8 @@
 
 #include <pangolin/image/pixel_format.h>
 
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 namespace pangolin
 {

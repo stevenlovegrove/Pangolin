@@ -108,7 +108,9 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
                     PANGO_ENSURE(img.IsValid());
 
                     // TODO: We can avoid this copy by decoding directly into img
-                    dst.CopyFrom(img);
+                    for(size_t row =0; row < dst.h; ++row) {
+                        std::memcpy(dst.RowPtr(row), img.RowPtr(row), si.RowBytes());
+                    }
                 }else{
                     for(size_t row =0; row < dst.h; ++row) {
                         fi.Stream().read((char*)dst.RowPtr(row), si.RowBytes());

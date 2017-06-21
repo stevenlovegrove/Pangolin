@@ -33,7 +33,7 @@ namespace pangolin {
 
 // PNG
 TypedImage LoadPng(std::istream& in);
-void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first);
+void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first, int zlib_compression_level );
 
 // JPG
 TypedImage LoadJpg(std::istream& in);
@@ -104,7 +104,7 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
 {
     switch (file_type) {
     case ImageFileTypePng:
-        return SavePng(image, fmt, out, top_line_first);
+        return SavePng(image, fmt, out, top_line_first, quality);
     case ImageFileTypeJpg:
         return SaveJpg(image, fmt, out, quality);
     case ImageFileTypePpm:

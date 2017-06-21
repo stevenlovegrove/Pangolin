@@ -34,11 +34,6 @@ void SetOpenEXRChannels(Imf::ChannelList& ch, const pangolin::PixelFormat& fmt)
 
 void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
 {
-    PANGOLIN_UNUSED(image_in);
-    PANGOLIN_UNUSED(fmt);
-    PANGOLIN_UNUSED(filename);
-    PANGOLIN_UNUSED(top_line_first);
-
 #ifdef HAVE_OPENEXR
     ManagedImage<unsigned char> flip_image;
     Image<unsigned char> image;
@@ -81,6 +76,10 @@ void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& 
     file.writePixels(image.h);
 
 #else
+    PANGOLIN_UNUSED(image_in);
+    PANGOLIN_UNUSED(fmt);
+    PANGOLIN_UNUSED(filename);
+    PANGOLIN_UNUSED(top_line_first);
     throw std::runtime_error("EXR Support not enabled. Please rebuild Pangolin.");
 #endif // HAVE_OPENEXR
 }

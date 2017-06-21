@@ -147,7 +147,7 @@ TypedImage LoadPng(const std::string& filename)
     return LoadPng(f);
 }
 
-void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& stream, bool top_line_first)
+void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& stream, bool top_line_first, int zlib_compression_level)
 {
 #ifdef HAVE_PNG
     // Check image has supported bit depth
@@ -179,6 +179,8 @@ void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
         png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
         throw std::runtime_error( "PNG Error: Error during png creation." );
     }
+
+    png_set_compression_level(png_ptr, zlib_compression_level);
 
     png_set_write_fn(png_ptr,(png_voidp)&stream, pango_png_stream_write, pango_png_stream_write_flush);
 
@@ -220,7 +222,10 @@ void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
     png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
 #else
-    PANGOLIN_UNUSED(source);
+    PANGOLIN_UNUSED(image);
+    PANGOLIN_UNUSED(fmt);
+    PANGOLIN_UNUSED(stream);
+    PANGOLIN_UNUSED(top_line_first);
     throw std::runtime_error("Rebuild Pangolin for PNG support.");
 #endif // HAVE_PNG
 }
