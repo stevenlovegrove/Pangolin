@@ -84,7 +84,7 @@ TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
     case ImageFileTypeTga:
     case ImageFileTypeZstd:
     {
-        std::ifstream ifs(filename);
+        std::ifstream ifs(filename, std::ios_base::in|std::ios_base::binary);
         return LoadImage(ifs, file_type);
     }
     case ImageFileTypePango:
