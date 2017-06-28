@@ -109,18 +109,17 @@ void PacketStreamWriter::WriteMeta(PacketStreamSourceId src, const picojson::val
     data.serialize(std::ostream_iterator<char>(_stream), false);
 }
 
-void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char* source, size_t sourcelen, const picojson::value& meta)
+void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char* source, const int64_t receive_time_us, size_t sourcelen, const picojson::value& meta)
 {
-    const int64_t time_us = Time_us(TimeNow());
 
     SCOPED_LOCK;
-    _sources[src].index.push_back({_stream.tellp(), time_us});
+    _sources[src].index.push_back({_stream.tellp(), receive_time_us});
 
     if (!meta.is<picojson::null>())
         WriteMeta(src, meta);
 
     writeTag(_stream, TAG_SRC_PACKET);
-    writeTimestamp(_stream, time_us);
+    writeTimestamp(_stream, receive_time_us);
     writeCompressedUnsignedInt(_stream, src);
 
     if (_sources[src].data_size_bytes) {

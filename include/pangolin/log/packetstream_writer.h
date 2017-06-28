@@ -97,7 +97,7 @@ public:
     PacketStreamSourceId AddSource(const PacketStreamSource& source);
 
     void WriteSourcePacket(
-        PacketStreamSourceId src, const char* source,
+        PacketStreamSourceId src, const char* source,const int64_t receive_time_us,
         size_t sourcelen, const picojson::value& meta = picojson::value()
     );
 
