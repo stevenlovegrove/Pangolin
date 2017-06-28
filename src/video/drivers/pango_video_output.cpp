@@ -33,6 +33,7 @@
 #include <pangolin/utils/timer.h>
 #include <pangolin/video/drivers/pango_video_output.h>
 #include <pangolin/video/iostream_operators.h>
+#include <pangolin/video/video_interface.h>
 #include <set>
 
 #ifndef _WIN_
@@ -148,6 +149,8 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
 
 int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::value& frame_properties)
 {
+    const int64_t host_reception_time_us = frame_properties.get_value(PANGO_HOST_RECEPTION_TIME_US, Time_us(TimeNow()));
+
 #ifndef _WIN_
     if (is_pipe)
     {
@@ -196,17 +199,6 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
     }
 #endif
 
-    int64_t receive_time_us;
-
-    if (frame_properties.contains("timestamp_us"))
-    {
-        receive_time_us = frame_properties["timestamp_us"].get<int64_t>();
-    }
-    else
-    {
-        receive_time_us = Time_us(TimeNow());
-    }
-
     if(!fixed_size) {
         memstreambuf encoded(total_frame_size);
         std::ostream encode_stream(&encoded);
@@ -229,9 +221,9 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
             }
         }
         encode_stream.flush();
-        packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(encoded.data()), receive_time_us, encoded.size(), frame_properties);
+        packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(encoded.data()), host_reception_time_us, encoded.size(), frame_properties);
     }else{
-        packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(data), receive_time_us, total_frame_size, frame_properties);
+        packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(data), host_reception_time_us, total_frame_size, frame_properties);
     }
 
     return 0;
