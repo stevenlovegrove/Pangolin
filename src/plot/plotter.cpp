@@ -426,9 +426,31 @@ void Plotter::Render()
     prog_lines.SetUniform("u_color",  colour_tk );
 
     const float min_space = 80.0;
-    int ta[2] = {1,1};
-    while(v.w != 0 && v.w * ta[0] *tick[0].val / w < min_space) ta[0] *=2;
-    while(v.h != 0 && v.h * ta[1] *tick[1].val / h < min_space) ta[1] *=2;
+    float ta[2] = {1,1};
+
+
+    while(true)
+    {
+        if(v.w * ta[0] *tick[0].val / w < min_space)
+            ta[0] *=2;
+        if(v.w * ta[0] *tick[0].val / w < min_space)
+            ta[0] =(5*ta[0])/2;
+        if(v.w * ta[0] *tick[0].val / w < min_space)
+            ta[0] *=2;
+        else
+            break;
+    }
+    while(true)
+    {
+        if(v.h * ta[1] *tick[1].val / h < min_space)
+            ta[1] *=2;
+        if(v.h * ta[1] *tick[1].val / h < min_space)
+            ta[1] =(5*ta[1])/2;
+        if(v.h * ta[1] *tick[1].val / h < min_space)
+            ta[1] *=2;
+        else
+            break;
+    }
 
     const float tdelta[2] = {
         tick[0].val * ta[0],
