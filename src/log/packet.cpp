@@ -70,7 +70,7 @@ void Packet::ReadRemaining()
 {
     int bytes_left = BytesRemaining();
 
-    while(bytes_left > 0) {
+    while(bytes_left > 0 && Stream().good()) {
         Stream().skip(bytes_left);
         bytes_left = BytesRemaining();
     }
