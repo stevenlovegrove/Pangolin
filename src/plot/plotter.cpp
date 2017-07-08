@@ -411,8 +411,8 @@ void Plotter::Render()
     glDisable(GL_LIGHTING);
     glDisable( GL_DEPTH_TEST );
 
-    const float w = rview.x.Size();
-    const float h = rview.y.Size();
+    const float w = std::abs(rview.x.Size());
+    const float h = std::abs(rview.y.Size());
     const float ox = -rview.x.Mid();
     const float oy = -rview.y.Mid();
     const float sx = 2.0f / w;
@@ -428,25 +428,28 @@ void Plotter::Render()
     const float min_space = 80.0;
     float ta[2] = {1,1};
 
-
     while(true)
     {
-        if(v.w * ta[0] *tick[0].val / w < min_space)
+        const float interval = v.w * ta[0] *tick[0].val / w;
+
+        if(ta[0] * interval < min_space)
             ta[0] *=2;
-        if(v.w * ta[0] *tick[0].val / w < min_space)
+        if(ta[0] * interval < min_space)
             ta[0] =(5*ta[0])/2;
-        if(v.w * ta[0] *tick[0].val / w < min_space)
+        if(ta[0] * interval < min_space)
             ta[0] *=2;
         else
             break;
     }
     while(true)
     {
-        if(v.h * ta[1] *tick[1].val / h < min_space)
+        const float interval = v.h * ta[1] *tick[1].val / h;
+
+        if(ta[1] * interval < min_space)
             ta[1] *=2;
-        if(v.h * ta[1] *tick[1].val / h < min_space)
+        if(ta[1] * interval < min_space)
             ta[1] =(5*ta[1])/2;
-        if(v.h * ta[1] *tick[1].val / h < min_space)
+        if(ta[1] * interval < min_space)
             ta[1] *=2;
         else
             break;
