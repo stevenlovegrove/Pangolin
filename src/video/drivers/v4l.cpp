@@ -26,28 +26,28 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/v4l.h>
 #include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/drivers/v4l.h>
 #include <pangolin/video/iostream_operators.h>
 
+#include <assert.h>
 #include <iostream>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
-#include <assert.h>
 
-#include <fcntl.h>
-#include <unistd.h>
 #include <errno.h>
-#include <malloc.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/ioctl.h>
-#include <linux/uvcvideo.h>
+#include <fcntl.h>
 #include <linux/usb/video.h>
+#include <linux/uvcvideo.h>
+#include <malloc.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define CLEAR(x) memset (&(x), 0, sizeof (x))
 
@@ -595,6 +595,8 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
         spix="YUYV422";
     }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16) {
         spix="GRAY16LE";
+    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y10) {
+        spix="GRAY10";
     }else{
         // TODO: Add method to translate from V4L to FFMPEG type.
         std::cerr << "V4L Format " << V4lToString(fmt.fmt.pix.pixelformat)
