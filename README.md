@@ -89,8 +89,11 @@ cd Pangolin
 mkdir build
 cd build
 cmake ..
-make -j
+make -j 
 ```
+
+If pc crashes with make -j try:
+make
 
 If you would like to build the documentation and you have Doxygen installed, you
 can execute:
