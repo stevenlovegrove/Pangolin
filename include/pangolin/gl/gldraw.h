@@ -29,6 +29,7 @@
 
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/gl/glformattraits.h>
+#include <pangolin/display/opengl_render_state.h>
 
 #include <vector>
 #include <math.h>
@@ -412,13 +413,20 @@ inline void glSetFrameOfReference( const Eigen::Matrix4d& T_wf )
 #endif
 }
 
+inline void glSetFrameOfReference( const pangolin::OpenGlMatrix& T_wf )
+{
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glMultMatrixd( T_wf.m );
+}
+
 inline void glUnsetFrameOfReference()
 {
     glPopMatrix();
 }
 
 template<typename T, typename S>
-inline void glDrawAxis( const Eigen::Matrix<T,4,4>& T_wf, S scale )
+inline void glDrawAxis( const T& T_wf, S scale )
 {
     glSetFrameOfReference(T_wf);
     glDrawAxis(scale);
