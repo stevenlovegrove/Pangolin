@@ -417,11 +417,11 @@ inline void glUnsetFrameOfReference()
     glPopMatrix();
 }
 
-template<typename T>
-inline void glDrawAxis( const Eigen::Matrix<T,4,4>& T_wf, T scale )
+template<typename T, typename S>
+inline void glDrawAxis( const Eigen::Matrix<T,4,4>& T_wf, S scale )
 {
     glSetFrameOfReference(T_wf);
-    glDrawAxis( (float)scale );
+    glDrawAxis(scale);
     glUnsetFrameOfReference();
 }
 
