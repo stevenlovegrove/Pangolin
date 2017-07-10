@@ -411,8 +411,8 @@ void Plotter::Render()
     glDisable(GL_LIGHTING);
     glDisable( GL_DEPTH_TEST );
 
-    const float w = std::abs(rview.x.Size());
-    const float h = std::abs(rview.y.Size());
+    const float w = rview.x.AbsSize();
+    const float h = rview.y.AbsSize();
     const float ox = -rview.x.Mid();
     const float oy = -rview.y.Mid();
     const float sx = 2.0f / w;
@@ -430,7 +430,7 @@ void Plotter::Render()
 
     while(true)
     {
-        const float interval = v.w * ta[0] *tick[0].val / w;
+        const float interval = v.w * tick[0].val / w;
 
         if(ta[0] * interval < min_space)
             ta[0] *=2;
@@ -443,7 +443,7 @@ void Plotter::Render()
     }
     while(true)
     {
-        const float interval = v.h * ta[1] *tick[1].val / h;
+        const float interval = v.h * tick[1].val / h;
 
         if(ta[1] * interval < min_space)
             ta[1] *=2;
