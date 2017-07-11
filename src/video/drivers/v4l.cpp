@@ -146,8 +146,7 @@ bool V4lVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         
         /* EAGAIN - continue select loop. */
     }
-    // This is a hack, this ts sould come from the device.
-    frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+
     return true;
 }
 
@@ -178,7 +177,9 @@ int V4lVideo::ReadFrame(unsigned char* image)
                 throw VideoException("read", strerror(errno));
             }
         }
-        
+        // This is a hack, this ts sould come from the device.
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+
         //            process_image(buffers[0].start);
         memcpy(image,buffers[0].start,buffers[0].length);
         
@@ -204,7 +205,9 @@ int V4lVideo::ReadFrame(unsigned char* image)
                 throw VideoException("VIDIOC_DQBUF", strerror(errno));
             }
         }
-        
+        // This is a hack, this ts sould come from the device.
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+
         assert (buf.index < n_buffers);
         
         //            process_image (buffers[buf.index].start);
@@ -236,7 +239,9 @@ int V4lVideo::ReadFrame(unsigned char* image)
                 throw VideoException("VIDIOC_DQBUF", strerror(errno));
             }
         }
-        
+        // This is a hack, this ts sould come from the device.
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+
         for (i = 0; i < n_buffers; ++i)
             if (buf.m.userptr == (unsigned long) buffers[i].start
                     && buf.length == buffers[i].length)
