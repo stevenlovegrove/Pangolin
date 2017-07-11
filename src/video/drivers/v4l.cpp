@@ -27,6 +27,7 @@
  */
 
 #include <pangolin/factory/factory_registry.h>
+#include <pangolin/utils/timer.h>
 #include <pangolin/video/drivers/v4l.h>
 #include <pangolin/video/iostream_operators.h>
 
@@ -81,6 +82,8 @@ V4lVideo::V4lVideo(const char* dev_name, io_method io, unsigned iwidth, unsigned
 {
     open_device(dev_name);
     init_device(dev_name,iwidth,iheight,0);
+    InitPangoDeviceProperties();
+
     Start();
 }
 
@@ -93,6 +96,12 @@ V4lVideo::~V4lVideo()
     
     uninit_device();
     close_device();
+}
+
+void V4lVideo::InitPangoDeviceProperties()
+{
+    // Store camera details in device properties
+    device_properties[PANGO_HAS_TIMING_DATA] = true;
 }
 
 const std::vector<StreamInfo>& V4lVideo::Streams() const
@@ -137,6 +146,8 @@ bool V4lVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         
         /* EAGAIN - continue select loop. */
     }
+    // This is a hack, this ts sould come from the device.
+    frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
     return true;
 }
 
@@ -665,6 +676,18 @@ int V4lVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, U
     return 0;
 }
 
+//! Access JSON properties of device
+const picojson::value& V4lVideo::DeviceProperties() const
+{
+        return device_properties;
+}
+
+//! Access JSON properties of most recently captured frame
+const picojson::value& V4lVideo::FrameProperties() const
+{
+    return frame_properties;
+}
+
 PANGOLIN_REGISTER_FACTORY(V4lVideo)
 {
     struct V4lVideoFactory : public FactoryInterface<VideoInterface> {
@@ -694,6 +717,7 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
     auto factory = std::make_shared<V4lVideoFactory>();
     FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "v4l");
 }
+
 
 }
 
