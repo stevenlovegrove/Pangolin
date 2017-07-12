@@ -139,7 +139,6 @@ protected:
     bool use_rgb;
     bool depth_to_color;
     bool use_ir_and_rgb;
-    bool fromFile;
 
     size_t current_frame_index;
     size_t total_frames;
