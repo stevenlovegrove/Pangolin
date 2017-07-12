@@ -633,7 +633,18 @@ void V4lVideo::SetExposureUs(int exposure_us)
     control.value = exposure_us / 100;
 
     if (-1 == xioctl (fd, VIDIOC_S_CTRL, &control))
-        pango_print_warn("V4lVideo::SetExposureUs() ioctl error: %d\n", errno);
+        pango_print_warn("V4lVideo::SetExposureUs() ioctl error: %s\n", strerror(errno));
+
+}
+
+void V4lVideo::SetGain(double gain)
+{
+    struct v4l2_control control;
+    control.id = V4L2_CID_GAIN;
+    control.value = gain;
+
+    if (-1 == xioctl (fd, VIDIOC_S_CTRL, &control))
+        pango_print_warn("V4lVideo::SetGain() ioctl error: %s\n", strerror(errno));
 
 }
 
@@ -699,7 +710,6 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string smethod = uri.Get<std::string>("method","mmap");
             const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(0,0));
-            const int exposure_us = uri.Get<int>("ExposureTime", 10000);
 
             io_method method = IO_METHOD_MMAP;
 
@@ -712,8 +722,11 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
             }
 
             V4lVideo* video_raw = new V4lVideo(uri.url.c_str(), method, desired_dim.x, desired_dim.y );
-            if(video_raw) {
-                static_cast<V4lVideo*>(video_raw)->SetExposureUs(exposure_us);
+            if(video_raw  && uri.Contains("ExposureTime")) {
+                static_cast<V4lVideo*>(video_raw)->SetExposureUs(uri.Get<int>("ExposureTime", 10000));
+            }
+            if(video_raw  && uri.Contains("Gain")) {
+                static_cast<V4lVideo*>(video_raw)->SetGain(uri.Get<int>("Gain", 1));
             }
             return std::unique_ptr<VideoInterface>(video_raw);
         }

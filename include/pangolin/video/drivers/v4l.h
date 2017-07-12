@@ -76,6 +76,8 @@ public:
 
     void SetExposureUs(int exposure_us);
 
+    void SetGain(double gain);
+
     int GetFileDescriptor() const{
         return fd;
     }
