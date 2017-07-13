@@ -25,7 +25,7 @@ int main( int argc, char* argv[] )
     argagg::parser argparser {{
         { "help", {"-h", "--help"}, "Print usage information and exit.", 0},
         { "header", {"-H","--header"}, "Treat 1st row as column titles", 0},
-        { "x", {"-x"}, "X-axis variable (default: '$i')", 1},
+        { "x", {"-x"}, "X-axis series to plot, seperated by commas (default: '$i')", 1},
         { "y", {"-y"}, "Y-axis series to plot, seperated by commas (eg: '$0,sin($1),sqrt($2+$3)' )", 1},
         { "delim", {"-d"}, "expected column delimitter (default: ',')", 1},
         { "xrange", {"-X","--x-range"}, "X-Axis min:max view (default: '0:100')", 1},
@@ -42,7 +42,7 @@ int main( int argc, char* argv[] )
     }
 
     // Default values
-    const std::string x = args["x"].as<std::string>("$i");
+    const std::string xs = args["x"].as<std::string>("$i");
     const std::string ys = args["y"].as<std::string>("$0");
     const char delim = args["delim"].as<char>(',');
     const pangolin::Rangef xrange = args["xrange"].as<>(pangolin::Rangef(0.0f,100.0f));
@@ -81,9 +81,16 @@ int main( int argc, char* argv[] )
     pangolin::Plotter plotter(&log, xrange.min, xrange.max, yrange.min, yrange.max, 0.001, 0.001);
     if( (bool)args["x"] || (bool)args["y"]) {
         plotter.ClearSeries();
+        std::vector<std::string> xvec = pangolin::Split(xs,',');
         std::vector<std::string> yvec = pangolin::Split(ys,',');
-        for(const std::string& y : yvec) {
-            plotter.AddSeries(x,y);
+
+        if( !(xvec.size() == 1 || xvec.size() == yvec.size()) ) {
+            std::cout << "x-series dimensions must be one, or equal to y-series dimensions" << std::endl;
+            return -1;
+        }
+
+        for(size_t i=0; i < yvec.size(); ++i) {
+            plotter.AddSeries( (xvec.size()==1) ? xvec[0] : xvec[i],yvec[i]);
         }
     }
 
