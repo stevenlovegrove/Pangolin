@@ -27,9 +27,10 @@ int main( int argc, char* argv[] )
         { "header", {"-H","--header"}, "Treat 1st row as column titles", 0},
         { "x", {"-x"}, "X-axis series to plot, seperated by commas (default: '$i')", 1},
         { "y", {"-y"}, "Y-axis series to plot, seperated by commas (eg: '$0,sin($1),sqrt($2+$3)' )", 1},
-        { "delim", {"-d"}, "expected column delimitter (default: ',')", 1},
+        { "delim", {"-d"}, "Expected column delimitter (default: ',')", 1},
         { "xrange", {"-X","--x-range"}, "X-Axis min:max view (default: '0:100')", 1},
         { "yrange", {"-Y","--y-range"}, "Y-Axis min:max view (default: '0:100')", 1},
+        { "skip", {"-s","--skip"}, "Skip n rows of file, seperated by commas per file (default: '0,...')", 1},
     }};
 
     argagg::parser_results args = argparser.parse(argc, argv);
@@ -47,6 +48,17 @@ int main( int argc, char* argv[] )
     const char delim = args["delim"].as<char>(',');
     const pangolin::Rangef xrange = args["xrange"].as<>(pangolin::Rangef(0.0f,100.0f));
     const pangolin::Rangef yrange = args["yrange"].as<>(pangolin::Rangef(0.0f,100.0f));
+    const std::string skips = args["skip"].as<std::string>("");
+    const std::vector<std::string> skipvecstr = pangolin::Split(skips,',');
+    std::vector<size_t> skipvec;
+    for(const std::string& s : skipvecstr) {
+        skipvec.push_back(std::stoul(s));
+    }
+    if( !(skipvec.size() == 0 || skipvec.size() == args.count()) )
+    {
+        std::cerr << "Skip argument must be empty or correspond to the number of files specified (" << args.count() << ")" << std::endl;
+        return -1;
+    }
 
     pangolin::DataLog log;
 
@@ -61,6 +73,10 @@ int main( int argc, char* argv[] )
     // Load asynchronously incase the file is large or is being read interactively from stdin
     bool keep_loading = true;
     std::thread data_thread([&](){
+        if(!csv_loader.SkipStreamRows(skipvec)) {
+            return;
+        }
+
         std::vector<std::string> row;
 
         while(keep_loading && csv_loader.ReadRow(row)) {

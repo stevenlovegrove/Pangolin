@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pangolin/platform.h>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -21,6 +22,24 @@ public:
                 PANGO_ASSERT(pFile->is_open());
             }
         }
+    }
+
+    bool SkipStreamRows(const std::vector<size_t>& rows_to_skip)
+    {
+        if(rows_to_skip.size()) {
+            PANGO_ASSERT(rows_to_skip.size() == streams.size());
+            std::vector<std::string> dummy_row;
+
+            for(size_t i=0; i < streams.size(); ++i) {
+                for(size_t r=0; r < rows_to_skip[i]; ++r) {
+                    if(!AppendColumns(dummy_row, *streams[i], delim)) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     bool ReadRow(std::vector<std::string>& row)
