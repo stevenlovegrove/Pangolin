@@ -47,8 +47,9 @@ namespace pangolin
 enum DrawingMode
 {
     DrawingModePoints = GL_POINTS,
-    DrawingModeLine = GL_LINE_STRIP,
     DrawingModeDashed = GL_LINES,
+    DrawingModeLine = GL_LINE_STRIP,
+    DrawingModeNone,
 };
 
 struct Marker
