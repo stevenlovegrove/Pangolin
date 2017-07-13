@@ -13,7 +13,7 @@ class PlaybackSession
 {
 public:
     // Singleton Instance
-    static PlaybackSession& Default();
+    static std::shared_ptr<PlaybackSession> Default();
 
     // Return thread-safe, shared instance of PacketStreamReader, providing
     // serialised read for PacketStreamReader
@@ -37,8 +37,6 @@ public:
     }
 
 private:
-    PlaybackSession() = default;
-
     std::map<std::string,std::shared_ptr<PacketStreamReader>> readers;
     SyncTime time;
 };

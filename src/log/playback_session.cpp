@@ -2,9 +2,9 @@
 
 namespace pangolin {
 
-PlaybackSession& PlaybackSession::Default()
+std::shared_ptr<PlaybackSession> PlaybackSession::Default()
 {
-    static PlaybackSession instance;
+    static std::shared_ptr<PlaybackSession> instance = std::make_shared<PlaybackSession>();
     return instance;
 }
 

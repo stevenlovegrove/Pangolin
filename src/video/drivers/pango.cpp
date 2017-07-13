@@ -40,11 +40,11 @@ namespace pangolin
 
 const std::string pango_video_type = "raw_video";
 
-PangoVideo::PangoVideo(const std::string& filename)
+PangoVideo::PangoVideo(const std::string& filename, std::shared_ptr<PlaybackSession> playback_session)
     : _filename(filename),
-      _playback_session(PlaybackSession::Default()),
-      _reader(_playback_session.Open(filename)),
-      _event_promise(_playback_session.Time()),
+      _playback_session(playback_session),
+      _reader(_playback_session->Open(filename)),
+      _event_promise(_playback_session->Time()),
       _src_id(FindPacketStreamSource()),
       _source(nullptr)
 {
@@ -54,7 +54,7 @@ PangoVideo::PangoVideo(const std::string& filename)
     SetupStreams(*_source);
 
     // Make sure we time-seek with other playback devices
-    session_seek = _playback_session.Time().OnSeek.Connect(
+    session_seek = _playback_session->Time().OnSeek.Connect(
         [&](SyncTime::TimePoint t){
             _event_promise.Cancel();
             _reader->Seek(_src_id, t);
@@ -149,7 +149,7 @@ size_t PangoVideo::Seek(size_t next_frame_id)
     // Get time for seek
     if(next_frame_id < _source->index.size()) {
         const int64_t capture_time = _source->index[next_frame_id].capture_time;
-        _playback_session.Time().Seek(SyncTime::TimePoint(std::chrono::microseconds(capture_time)));
+        _playback_session->Time().Seek(SyncTime::TimePoint(std::chrono::microseconds(capture_time)));
         return next_frame_id;
     }else{
         return _source->next_packet_id;
@@ -218,7 +218,17 @@ PANGOLIN_REGISTER_FACTORY(PangoVideo)
             const std::string path = PathExpand(uri.url);
 
             if( !uri.scheme.compare("pango") || FileType(uri.url) == ImageFileTypePango ) {
-                return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str()));
+                bool use_ordered_playback = uri.Get<bool>("OrderedPlayback", false);
+                std::shared_ptr<PlaybackSession> playback_session;
+                if (use_ordered_playback)
+                {
+                    playback_session = PlaybackSession::Default();
+                }
+                else
+                {
+                    playback_session = std::make_shared<PlaybackSession>();
+                }
+                return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str(), playback_session));
             }
             return std::unique_ptr<VideoInterface>();
         }

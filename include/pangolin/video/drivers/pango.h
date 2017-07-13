@@ -39,7 +39,7 @@ class PANGOLIN_EXPORT PangoVideo
     : public VideoInterface, public VideoPropertiesInterface, public VideoPlaybackInterface
 {
 public:
-    PangoVideo(const std::string& filename);
+    PangoVideo(const std::string& filename, std::shared_ptr<PlaybackSession> playback_session);
     ~PangoVideo();
 
     // Implement VideoInterface
@@ -82,7 +82,7 @@ protected:
     void SetupStreams(const PacketStreamSource& src);
 
     const std::string _filename;
-    PlaybackSession& _playback_session;
+    std::shared_ptr<PlaybackSession> _playback_session;
     std::shared_ptr<PacketStreamReader> _reader;
     SyncTimeEventPromise _event_promise;
     int _src_id;
