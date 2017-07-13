@@ -51,7 +51,7 @@ extern __thread PangolinGl* context;
 GlFont& GlFont::I()
 {
     if (!context->font) {
-        context->font.reset(new GlFont(AnonymousPro_ttf, 15));
+        context->font.reset(new GlFont(AnonymousPro_ttf, 30));
     }
     return *context->font.get();
 }

@@ -285,13 +285,9 @@ Plotter::Plotter(
     // Setup default PlotSeries
     plotseries.reserve(RESERVED_SIZE);
     for(unsigned int i=0; i< 10; ++i) {
-        std::ostringstream oss;
-        oss << "$" << i;
-        plotseries.push_back( PlotSeries() );
-        plotseries.back().CreatePlot( "$i", oss.str(),
-            colour_wheel.GetUniqueColour(),
-            i < log->Labels().size() ? log->Labels()[i] : oss.str()
-        );
+        std::ostringstream ss;
+        ss << "$" << i;
+        AddSeries("$i", ss.str());
     }
 
     // Setup test PlotMarkers
@@ -628,7 +624,7 @@ void Plotter::Render()
             prog_text.SetUniform("u_color", ps.colour );
             prog_text.SetUniform("u_offset",
                 v.w-5-ps.title.Width() -(v.w/2.0f),
-                v.h-15*(++keyid) -(v.h/2.0f)
+                v.h-1.5*ps.title.Height()*(++keyid) -(v.h/2.0f)
             );
             ps.title.DrawGlSl();
         }
@@ -1102,9 +1098,33 @@ void Plotter::AddSeries(const std::string& x_expr, const std::string& y_expr,
         colour = colour_wheel.GetUniqueColour();
     }
     plotseries.push_back( PlotSeries() );
-    plotseries.back().CreatePlot(x_expr, y_expr, colour, (title == "$y") ? y_expr : title);
+    plotseries.back().CreatePlot(x_expr, y_expr, colour, (title == "$y") ? PlotTitleFromExpr(y_expr) : title);
     plotseries.back().log = log;
     plotseries.back().drawing_mode = (GLenum)drawing_mode;
+}
+
+std::string Plotter::PlotTitleFromExpr(const std::string& expr) const
+{
+    const std::vector<std::string>& labels = default_log->Labels();
+
+    std::stringstream exp_in(expr);
+    std::stringstream exp_out;
+    while(exp_in) {
+        int c = exp_in.get();
+        if(c=='$') {
+            size_t id = -1;
+            exp_in >> id;
+            if(id < labels.size()) {
+                exp_out << '\'' << labels[id] << '\'';
+            }else{
+                exp_out << '$' << id;
+            }
+        }else{
+            exp_out << (char)c;
+        }
+    }
+
+    return exp_out.str();
 }
 
 void Plotter::ClearSeries()

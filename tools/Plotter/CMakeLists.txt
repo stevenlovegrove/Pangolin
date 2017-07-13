@@ -2,42 +2,42 @@
 find_package(Pangolin 0.4 REQUIRED)
 include_directories(${Pangolin_INCLUDE_DIRS})
 
-add_executable(VideoViewer main.cpp)
-target_link_libraries(VideoViewer ${Pangolin_LIBRARIES})
+add_executable(Plotter main.cpp)
+target_link_libraries(Plotter ${Pangolin_LIBRARIES})
 
 
 # Make file association
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND ${CMAKE_MAJOR_VERSION} VERSION_GREATER "2.9.9" )
     file( GENERATE
-        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/pango.desktop"
+        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/pangoplot.desktop"
         CONTENT
 "[Desktop Entry]
 Version=1.0
 Type=Application
-Categories=AudioVideo;Player;Video;
-Name=PangoVideoViewer
-GenericName=Video Viewer
-Comment=View images and video
-Exec=$<TARGET_FILE:VideoViewer> %U
-TryExec=$<TARGET_FILE:VideoViewer>
+Categories=
+Name=PangoPlotter
+GenericName=Plotter
+Comment=View CSV data series
+Exec=$<TARGET_FILE:Plotter> %U
+TryExec=$<TARGET_FILE:Plotter>
 Icon=application-x-pango
 Terminal=false
 StartupNotify=false
-MimeType=application/x-pango;image/x-portable-graymap;image/x-portable-pixmap;image/x-tga;image/tiff;image/jpeg;image/png;"
+MimeType=application/x-pangoplot;text/comma-separated-values,text/csv,application/csv"
     )
 
     add_custom_target(
-        register-mime-info-videoviewer
+        register-mime-info-plotter
         COMMAND mkdir -p $ENV{HOME}/.local/share/mime/packages/
         COMMAND mkdir -p $ENV{HOME}/.local/share/applications/
         COMMAND mkdir -p $ENV{HOME}/.local/share/icons/hicolor/scalable/mimetypes/
-        COMMAND cp "${CMAKE_CURRENT_SOURCE_DIR}/application-x-pango.xml" $ENV{HOME}/.local/share/mime/packages/
-        COMMAND cp "${CMAKE_CURRENT_SOURCE_DIR}/application-x-pango.svg" $ENV{HOME}/.local/share/icons/hicolor/scalable/mimetypes/
-        COMMAND cp "${CMAKE_CURRENT_BINARY_DIR}/pango.desktop"           $ENV{HOME}/.local/share/applications/
+        COMMAND cp "${CMAKE_CURRENT_SOURCE_DIR}/application-x-pangoplot.xml" $ENV{HOME}/.local/share/mime/packages/
+        COMMAND cp "${CMAKE_CURRENT_SOURCE_DIR}/../VideoViewer/application-x-pango.svg" $ENV{HOME}/.local/share/icons/hicolor/scalable/mimetypes/
+        COMMAND cp "${CMAKE_CURRENT_BINARY_DIR}/pangoplot.desktop"       $ENV{HOME}/.local/share/applications/
         COMMAND gtk-update-icon-cache   $ENV{HOME}/.local/share/icons/hicolor -f -t
         COMMAND update-mime-database    $ENV{HOME}/.local/share/mime
         COMMAND update-desktop-database $ENV{HOME}/.local/share/applications
-        DEPENDS VideoViewer
+        DEPENDS Plotter
         VERBATIM
     )
 endif()
@@ -46,7 +46,7 @@ endif()
 #######################################################
 ## Install
 
-install(TARGETS VideoViewer
+install(TARGETS Plotter
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
