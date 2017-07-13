@@ -7,14 +7,17 @@
 
 #include "csv_data_loader.h"
 
+namespace argagg{ namespace convert {
+
 template<>
-pangolin::Rangef argagg::convert::arg<pangolin::Rangef>(char const* str)
+pangolin::Rangef arg<pangolin::Rangef>(char const* str)
 {
     std::stringstream ss(str);
     pangolin::Rangef r;
     ss >> r.min; ss.get(); ss >> r.max;
     return r;
 }
+}}
 
 int main( int argc, char* argv[] )
 {
