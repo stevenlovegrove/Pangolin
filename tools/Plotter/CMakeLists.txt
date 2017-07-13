@@ -14,7 +14,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND ${CMAKE_MAJOR_VERSION} VERSION_GREAT
 "[Desktop Entry]
 Version=1.0
 Type=Application
-Categories=
+Categories=Utility
 Name=PangoPlotter
 GenericName=Plotter
 Comment=View CSV data series
@@ -23,7 +23,7 @@ TryExec=$<TARGET_FILE:Plotter>
 Icon=application-x-pango
 Terminal=false
 StartupNotify=false
-MimeType=application/x-pangoplot;text/comma-separated-values,text/csv,application/csv"
+MimeType=text/csv;text/comma-separated-values;application/x-pangoplot;application/csv"
     )
 
     add_custom_target(
