@@ -78,7 +78,7 @@ std::mutex contexts_mutex;
 __thread PangolinGl* context = 0;
 
 PangolinGl::PangolinGl()
-    : user_app(0), quit(false), mouse_state(0),activeDisplay(0)
+    : user_app(0), is_high_res(false), quit(false), mouse_state(0),activeDisplay(0)
 #ifdef BUILD_PANGOLIN_VIDEO
     , record_view(0)
 #endif
