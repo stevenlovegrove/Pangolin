@@ -9,6 +9,8 @@
 
 namespace pangolin {
 
+class Params;
+
 class PlaybackSession
 {
 public:
@@ -35,6 +37,8 @@ public:
     {
         return time;
     }
+
+    static std::shared_ptr<PlaybackSession> ChooseFromParams(const Params& params);
 
 private:
     std::map<std::string,std::shared_ptr<PacketStreamReader>> readers;

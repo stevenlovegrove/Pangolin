@@ -218,17 +218,7 @@ PANGOLIN_REGISTER_FACTORY(PangoVideo)
             const std::string path = PathExpand(uri.url);
 
             if( !uri.scheme.compare("pango") || FileType(uri.url) == ImageFileTypePango ) {
-                bool use_ordered_playback = uri.Get<bool>("OrderedPlayback", false);
-                std::shared_ptr<PlaybackSession> playback_session;
-                if (use_ordered_playback)
-                {
-                    playback_session = PlaybackSession::Default();
-                }
-                else
-                {
-                    playback_session = std::make_shared<PlaybackSession>();
-                }
-                return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str(), playback_session));
+                return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str(), PlaybackSession::ChooseFromParams(uri)));
             }
             return std::unique_ptr<VideoInterface>();
         }
