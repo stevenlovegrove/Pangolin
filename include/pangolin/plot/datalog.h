@@ -234,7 +234,7 @@ public:
 protected:
     unsigned int block_samples_alloc;
     std::vector<std::string> labels;
-    DataLogBlock* block0;
+    std::unique_ptr<DataLogBlock> block0;
     DataLogBlock* blockn;
     std::vector<DimensionStats> stats;
     bool record_stats;
