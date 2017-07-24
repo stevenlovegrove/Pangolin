@@ -1,3 +1,2 @@
-DisableFormat:   true
-IncludeCategories:
-IncludeIsMainRegex:
+DisableFormat: true
+SortIncludes: false
