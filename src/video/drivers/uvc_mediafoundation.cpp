@@ -66,6 +66,7 @@ UvcMediaFoundationVideo::~UvcMediaFoundationVideo()
 
 void UvcMediaFoundationVideo::Start()
 {
+
 }
 
 void UvcMediaFoundationVideo::Stop()
@@ -169,7 +170,7 @@ int UvcMediaFoundationVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* d
     }
 
     HRESULT hr;
-    KSP_NODE s;
+    KSP_NODE s = {};
     ULONG ulBytesReturned;
 
     s.Property.Set = GUID_EXTENSION_UNIT_DESCRIPTOR_OV580;
@@ -285,13 +286,16 @@ bool UvcMediaFoundationVideo::FindDevice(int vendorId, int productId, int device
     for(UINT32 i = 0; i < deviceCount; ++i)
     {
         devices[i]->Release();
+        devices[i] = nullptr;
     }
+    devices = nullptr;
 
     CoTaskMemFree(devices);
 
     if(searchAttributes != nullptr)
     {
         searchAttributes->Release();
+        searchAttributes = nullptr;
     }
 
     // Find the DirectShow device
@@ -317,6 +321,7 @@ bool UvcMediaFoundationVideo::FindDevice(int vendorId, int productId, int device
             if(FAILED(hr))
             {
                 moniker->Release();
+                moniker = nullptr;
                 continue;
             }
 
@@ -568,6 +573,7 @@ void UvcMediaFoundationVideo::DeinitDevice()
     if(mediaSource)
     {
         mediaSource->Shutdown();
+        mediaSource->Release();
         mediaSource = nullptr;
     }
 
