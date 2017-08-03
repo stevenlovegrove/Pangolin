@@ -126,7 +126,7 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
     case ImageFileTypePpm:
     case ImageFileTypeZstd:
     {
-        std::ofstream ofs(filename);
+        std::ofstream ofs(filename, std::ios_base::binary);
         return SaveImage(image, fmt, ofs, file_type, top_line_first, quality);
     }
     case ImageFileTypeExr:
