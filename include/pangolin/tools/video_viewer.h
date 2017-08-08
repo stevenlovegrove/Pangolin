@@ -68,6 +68,11 @@ public:
     VideoInput& Video() {return video;}
     const VideoInput& Video() const {return video;}
 
+    void SetRecordNthFrame(int record_nth_frame_) {
+      record_nth_frame = record_nth_frame_;
+    }
+
+
 protected:
     void RegisterDefaultKeyShortcutsAndPangoVariables();
 
