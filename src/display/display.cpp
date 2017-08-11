@@ -483,6 +483,9 @@ void Mouse( int button_raw, int state, int x, int y)
 #ifdef HAVE_GLUT
     context->mouse_state &= 0x0000ffff;
     context->mouse_state |= glutGetModifiers() << 16;
+#elif defined(_WIN_)
+    context->mouse_state &= 0x0000ffff;
+    context->mouse_state |= (button_raw >> 4) << 16;
 #endif
     
     if(fresh_input) {

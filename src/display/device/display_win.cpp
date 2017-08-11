@@ -82,6 +82,16 @@ unsigned char GetPangoKey(WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+int GetMouseModifierKey(WPARAM wParam)
+{
+  //maps windows key modifier to glutGetModifiers values
+  int gluKeyModVal = 0;
+  if (wParam & MK_SHIFT) gluKeyModVal += 1;
+  if (wParam & MK_CONTROL) gluKeyModVal += 2;
+  if (HIBYTE(GetKeyState(VK_MENU))) gluKeyModVal += 4;
+  return gluKeyModVal << 4;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // WinWindow Implementation
 ////////////////////////////////////////////////////////////////////////
@@ -314,23 +324,23 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
         return 0;
     }
     case WM_LBUTTONDOWN:
-        process::Mouse(0, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        process::Mouse(0 | GetMouseModifierKey(wParam), 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
     case WM_MBUTTONDOWN:
-        process::Mouse(1, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        process::Mouse(1 | GetMouseModifierKey(wParam), 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
     case WM_RBUTTONDOWN:
-        process::Mouse(2, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        process::Mouse(2 | GetMouseModifierKey(wParam), 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
 
     case WM_LBUTTONUP:
-        process::Mouse(0, 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        process::Mouse(0 | GetMouseModifierKey(wParam), 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
     case WM_MBUTTONUP:
-        process::Mouse(1, 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        process::Mouse(1 | GetMouseModifierKey(wParam), 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
     case WM_RBUTTONUP:
-        process::Mouse(2, 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        process::Mouse(2 | GetMouseModifierKey(wParam), 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
 
     case WM_MOUSEMOVE:
