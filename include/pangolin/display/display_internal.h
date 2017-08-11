@@ -76,7 +76,8 @@ struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
     bool is_double_buffered;
     bool is_fullscreen;
     GLint windowed_size[2];
-    
+    bool is_high_res;
+
     // State relating to interactivity
     bool quit;
     int had_input;

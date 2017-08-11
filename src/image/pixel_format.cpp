@@ -27,12 +27,13 @@
 
 #include <pangolin/image/pixel_format.h>
 
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 namespace pangolin
 {
 
+// Not to exceed 8 byte Format code.
 const PixelFormat SupportedPixelFormats[] =
 {
     {"GRAY8", 1, {8}, 8, false},

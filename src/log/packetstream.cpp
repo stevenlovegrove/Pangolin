@@ -45,7 +45,7 @@ pangoTagType PacketStream::peekTag()
     if (!_tag)
     {
         _tag = 0;
-        read(reinterpret_cast<char*>(&_tag), TAG_LENGTH);
+        Base::read(reinterpret_cast<char*>(&_tag), TAG_LENGTH);
         if (!good())
             _tag = TAG_END;
     }
@@ -74,27 +74,27 @@ size_t PacketStream::skip(size_t len)
 
 std::streampos PacketStream::tellg()
 {
-    if (!seekable())
-        return -1;
-    if (_tag)
+    if (_tag) {
         return Base::tellg() - std::streamoff(TAG_LENGTH);
-    return Base::tellg();
+    }else{
+        return Base::tellg();
+    }
 }
 
 void PacketStream::seekg(std::streampos target)
 {
-    if (!seekable())
-        return;
-    cclear();
-    Base::seekg(target);
+    if (seekable()) {
+        cclear();
+        Base::seekg(target);
+    }
 }
 
 void PacketStream::seekg(std::streamoff off, std::ios_base::seekdir way)
 {
-    if (!seekable())
-        return;
-    cclear();
-    Base::seekg(off, way);
+    if (seekable()) {
+        cclear();
+        Base::seekg(off, way);
+    }
 }
 
 static bool valid(pangoTagType t)

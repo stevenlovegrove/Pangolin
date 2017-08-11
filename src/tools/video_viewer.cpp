@@ -40,27 +40,46 @@ VideoViewer::VideoViewer(const std::string& window_name, const std::string& inpu
     if(!input_uri.empty()) {
         OpenInput(input_uri);
     }
-
-    vv_thread = std::thread(&VideoViewer::Run, this);
 }
 
 VideoViewer::~VideoViewer()
 {
+    QuitAndWait();
+
+}
+
+void VideoViewer::Quit()
+{
+    // Signal any running thread to stop
+    should_run = false;
+}
+
+void VideoViewer::QuitAndWait()
+{
     Quit();
 
-    // Wait for programming to close.
     if(vv_thread.joinable()) {
         vv_thread.join();
     }
 }
 
-void VideoViewer::Quit()
+void VideoViewer::RunAsync()
 {
-    should_run = false;
+    if(!should_run) {
+        // Make sure any other thread has finished
+        if(vv_thread.joinable()) {
+            vv_thread.join();
+        }
+
+        // Launch in another thread
+        vv_thread = std::thread(&VideoViewer::Run, this);
+    }
 }
 
 void VideoViewer::Run()
 {
+    should_run = true;
+
     /////////////////////////////////////////////////////////////////////////
     /// Register pangolin variables
     /////////////////////////////////////////////////////////////////////////
@@ -204,7 +223,7 @@ void VideoViewer::OpenInput(const std::string& input_uri)
     for(size_t s = 0; s < video.Streams().size(); ++s) {
         const pangolin::StreamInfo& si = video.Streams()[s];
         std::cout << FormatString(
-            "Stream %: % x % % (pitch: % bytes",
+            "Stream %: % x % % (pitch: % bytes)",
             s, si.Width(), si.Height(), si.PixFormat().format, si.Pitch()
         ) << std::endl;
     }
@@ -399,7 +418,7 @@ void RunVideoViewerUI(const std::string& input_uri, const std::string& output_ur
     RegisterNewSigCallback(videoviewer_signal_quit, nullptr, SIGTERM);
 
     VideoViewer vv("VideoViewer", input_uri, output_uri);
-    vv.WaitUntilExit();
+    vv.Run();
 }
 
 }

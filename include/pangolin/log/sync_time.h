@@ -57,7 +57,6 @@ public:
         : seeking(false)
     {
         SetOffset(virtual_clock_offset);
-        OnSeek.Connect([this](TimePoint t){OnSeekFunc(t);});
     }
 
     // No copy constructor
@@ -181,14 +180,6 @@ public:
     Signal<TimePoint> OnSeek;
 
 private:
-    void OnSeekFunc(TimePoint)
-    {
-//        std::unique_lock<std::mutex> l(time_mutex);
-//        while(!time_queue_us.empty()) {
-//            time_queue_us.pop();
-//        }
-    }
-
     template< typename T, typename Pred >
     static typename std::vector<T>::iterator
     insert_sorted( std::vector<T> & vec, T const& item, Pred pred )
@@ -210,7 +201,6 @@ struct SyncTimeEventPromise
     SyncTimeEventPromise(SyncTime& sync, int64_t time_us = 0)
         : sync(sync), time_us(time_us)
     {
-//        std::lock_guard<std::mutex> l(m);
         sync.QueueEvent(time_us);
     }
 
@@ -221,7 +211,6 @@ struct SyncTimeEventPromise
 
     void Cancel()
     {
-//        std::lock_guard<std::mutex> l(m);
         if(time_us) {
             sync.DequeueEvent(time_us);
             time_us = 0;
@@ -230,14 +219,12 @@ struct SyncTimeEventPromise
 
     void WaitAndRenew(int64_t new_time_us)
     {
-//        std::lock_guard<std::mutex> l(m);
         time_us = sync.WaitDequeueAndQueueEvent(time_us, new_time_us);
     }
 
 private:
     SyncTime& sync;
     int64_t time_us;
-    std::mutex m;
 };
 
 }

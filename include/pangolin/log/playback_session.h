@@ -9,11 +9,13 @@
 
 namespace pangolin {
 
+class Params;
+
 class PlaybackSession
 {
 public:
     // Singleton Instance
-    static PlaybackSession& Default();
+    static std::shared_ptr<PlaybackSession> Default();
 
     // Return thread-safe, shared instance of PacketStreamReader, providing
     // serialised read for PacketStreamReader
@@ -36,9 +38,9 @@ public:
         return time;
     }
 
-private:
-    PlaybackSession() = default;
+    static std::shared_ptr<PlaybackSession> ChooseFromParams(const Params& params);
 
+private:
     std::map<std::string,std::shared_ptr<PacketStreamReader>> readers;
     SyncTime time;
 };

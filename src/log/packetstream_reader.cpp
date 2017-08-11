@@ -177,8 +177,9 @@ bool PacketStreamReader::SetupIndex()
 streampos PacketStreamReader::ParseFooter() //returns position of index.
 {
     _stream.readTag(TAG_PANGO_FOOTER);
-    uint64_t index;
-    _stream.read(reinterpret_cast<char*>(&index), sizeof(index));
+    uint64_t index=0;
+    size_t bytes_read = _stream.read(reinterpret_cast<char*>(&index), sizeof(index));
+    PANGO_ENSURE(bytes_read == sizeof(index));
     return index;
 }
 
@@ -351,7 +352,7 @@ void PacketStreamReader::AppendIndex()
         std::ofstream of(_filename, std::ios::app | std::ios::binary);
         if(of.is_open()) {
             pango_print_warn("Appending new index to '%s'.\n", _filename.c_str());
-            auto indexpos = of.tellp();
+            uint64_t indexpos = (uint64_t)of.tellp();
             writeTag(of, TAG_PANGO_STATS);
             SourceStats(_sources).serialize(std::ostream_iterator<char>(of), false);
             writeTag(of, TAG_PANGO_FOOTER);

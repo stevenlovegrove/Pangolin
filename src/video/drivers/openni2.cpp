@@ -260,9 +260,6 @@ void OpenNi2Video::SetupStreamModes()
     depth_to_color = false;
     use_ir_and_rgb = false;
 
-    //    const char* deviceURI = openni::ANY_DEVICE;
-    fromFile = false;//(deviceURI!=NULL);
-
     sizeBytes =0;
     for(size_t i=0; i<numStreams; ++i) {
         const OpenNiStreamMode& mode = sensor_type[i];
@@ -324,9 +321,12 @@ void OpenNi2Video::SetupStreamModes()
             throw e;
         }
 
-        openni::Status rc = video_stream[i].setVideoMode(onivmode);
-        if(rc != openni::STATUS_OK)
-            throw VideoException("Couldn't set OpenNI VideoMode", openni::OpenNI::getExtendedError());
+        openni::Status rc;
+        if(!devices[mode.device].isFile()){//trying to setVideoMode on a file results in an OpenNI error
+            rc = video_stream[i].setVideoMode(onivmode);
+            if(rc != openni::STATUS_OK)
+                throw VideoException("Couldn't set OpenNI VideoMode", openni::OpenNI::getExtendedError());
+        }
 
         int outputWidth = onivmode.getResolutionX();
         int outputHeight = onivmode.getResolutionY();

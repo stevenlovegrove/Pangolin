@@ -40,8 +40,13 @@ struct Packet
     Packet(Packet&& o);
     ~Packet();
 
-    size_t ReadRaw(char* target, size_t len);
-    size_t Skip(size_t len);
+    size_t BytesRead() const;
+    int BytesRemaining() const;
+
+    PacketStream& Stream()
+    {
+        return _stream;
+    }
 
     PacketStreamSourceId src;
     int64_t time;
@@ -55,7 +60,10 @@ private:
     void ReadRemaining();
 
     PacketStream& _stream;
+
     std::unique_lock<std::recursive_mutex> lock;
+
+    std::streampos data_streampos;
     size_t _data_len;
 };
 

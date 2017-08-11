@@ -78,7 +78,7 @@ std::mutex contexts_mutex;
 __thread PangolinGl* context = 0;
 
 PangolinGl::PangolinGl()
-    : user_app(0), quit(false), mouse_state(0),activeDisplay(0)
+    : user_app(0), is_high_res(false), quit(false), mouse_state(0),activeDisplay(0)
 #ifdef BUILD_PANGOLIN_VIDEO
     , record_view(0)
 #endif
@@ -472,7 +472,7 @@ void Mouse( int button_raw, int state, int x, int y)
     
     context->had_input = context->is_double_buffered ? 2 : 1;
     
-    const bool fresh_input = (context->mouse_state == 0);
+    const bool fresh_input = ( (context->mouse_state & 7) == 0);
     
     if( pressed ) {
         context->mouse_state |= (button&7);

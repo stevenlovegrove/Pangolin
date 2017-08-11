@@ -27,10 +27,15 @@
 
 #pragma once
 
+#include <pangolin/platform.h>
+
 #include <pangolin/image/typed_image.h>
 #include <pangolin/utils/file_extension.h>
 
 namespace pangolin {
+
+PANGOLIN_EXPORT
+TypedImage LoadImage(std::istream& in, ImageFileType file_type);
 
 PANGOLIN_EXPORT
 TypedImage LoadImage(const std::string& filename, ImageFileType file_type);
@@ -41,10 +46,20 @@ TypedImage LoadImage(const std::string& filename);
 PANGOLIN_EXPORT
 TypedImage LoadImage(const std::string& filename, const PixelFormat& raw_fmt, size_t raw_width, size_t raw_height, size_t raw_pitch);
 
+/// Quality \in [0..100] for lossy formats
 PANGOLIN_EXPORT
-void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first = true);
+void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, ImageFileType file_type, bool top_line_first = true, float quality = 100.0f);
 
+/// Quality \in [0..100] for lossy formats
 PANGOLIN_EXPORT
-void SaveImage(const TypedImage& image, const std::string& filename, bool top_line_first = true);
+void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, ImageFileType file_type, bool top_line_first = true, float quality = 100.0f);
+
+/// Quality \in [0..100] for lossy formats
+PANGOLIN_EXPORT
+void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first = true, float quality = 100.0f);
+
+/// Quality \in [0..100] for lossy formats
+PANGOLIN_EXPORT
+void SaveImage(const TypedImage& image, const std::string& filename, bool top_line_first = true, float quality = 100.0f);
 
 }

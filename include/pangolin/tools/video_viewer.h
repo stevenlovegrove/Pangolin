@@ -25,7 +25,11 @@ public:
 
     virtual ~VideoViewer();
 
+    void Run();
+    void RunAsync();
+
     void Quit();
+    void QuitAndWait();
 
     inline int TotalFrames() const
     {
@@ -66,7 +70,6 @@ public:
 
 protected:
     void RegisterDefaultKeyShortcutsAndPangoVariables();
-    void Run();
 
     std::mutex control_mutex;
     std::string window_name;

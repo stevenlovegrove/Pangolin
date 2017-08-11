@@ -57,12 +57,13 @@ namespace pangolin
 
 WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& params )
 {
-    bool highres = params.Get<bool>(PARAM_HIGHRES, true);
+    const bool is_highres = params.Get<bool>(PARAM_HIGHRES, true);
 
-    OsxWindow* win = new OsxWindow(window_title, w, h, highres);
+    OsxWindow* win = new OsxWindow(window_title, w, h, is_highres);
 
     // Add to context map
     AddNewContext(window_title, std::shared_ptr<PangolinGl>(win) );
+    context->is_high_res = is_highres;
 
     return *context;
 }

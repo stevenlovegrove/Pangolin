@@ -25,9 +25,18 @@ public:
     Registration(const Registration&) = delete;
 
     // Default move constructor
-    Registration(Registration&&) = default;
+    Registration(Registration&& o)
+    {
+        *this = std::move(o);
+    }
 
-    Registration<TokenType>& operator =(Registration<TokenType>&&) = default;
+    Registration<TokenType>& operator =(Registration<TokenType>&& o)
+    {
+        token = o.token;
+        unregister = std::move(o.unregister);
+        o.unregister = nullptr;
+        return *this;
+    }
 
     ~Registration()
     {
