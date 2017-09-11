@@ -1,4 +1,5 @@
 #include <pangolin/log/packetstream.h>
+#include <stdexcept>
 
 namespace pangolin {
 
