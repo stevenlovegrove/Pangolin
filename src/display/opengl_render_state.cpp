@@ -189,7 +189,7 @@ OpenGlMatrix& OpenGlRenderState::GetViewOffset(unsigned int view)
 
 OpenGlMatrix OpenGlRenderState::GetViewOffset(unsigned int view) const
 {
-    if( projection.size() <= view ) {
+    if( modelview_premult.size() <= view ) {
         return IdentityMatrix();
     }
     return modelview_premult[view];
