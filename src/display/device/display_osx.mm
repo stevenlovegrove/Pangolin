@@ -185,14 +185,16 @@ void OsxWindow::ToggleFullscreen()
     PangolinGl::is_fullscreen = !PangolinGl::is_fullscreen;
 }
 
-void OsxWindow::Move(int /*x*/, int /*y*/)
+void OsxWindow::Move(int x, int y)
 {
-
+    [_window setFrame:CGRectMake(x, y, [_window frame].size.width,
+      [_window frame].size.height) display:NO];
 }
 
-void OsxWindow::Resize(unsigned int /*w*/, unsigned int /*h*/)
+void OsxWindow::Resize(unsigned int w, unsigned int h)
 {
-
+    [_window setFrame:CGRectMake([_window frame].origin.x,
+      [_window frame].origin.y, w, h) display:NO];
 }
 
 void OsxWindow::MakeCurrent()
