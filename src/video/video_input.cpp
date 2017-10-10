@@ -206,11 +206,6 @@ bool VideoInput::GrabNewest( unsigned char* image, bool wait )
     return success;
 }
 
-int VideoInput::FrameId()
-{
-    return frame_num;
-}
-
 void VideoInput::SetTimelapse(size_t one_in_n_frames)
 {
     record_frame_skip = one_in_n_frames;
