@@ -145,6 +145,15 @@ struct GlFormatTraits<Eigen::Matrix<unsigned char,3,1>>
 };
 
 template <>
+struct GlFormatTraits<Eigen::Matrix<unsigned short,3,1>>
+{
+    static const GLint glinternalformat = GL_RGBA32F_ARB;
+    static const GLenum glformat = GL_RGB;
+    static const GLenum gltype = GL_UNSIGNED_SHORT;
+    static const size_t components = 3;
+};
+
+template <>
 struct GlFormatTraits<Eigen::Vector3f>
 {
     static const GLint glinternalformat = GL_RGB32F_ARB;
@@ -170,6 +179,15 @@ struct GlFormatTraits<Eigen::Matrix<unsigned char,4,1>>
     static const GLint glinternalformat = GL_RGBA;
     static const GLenum glformat = GL_RGBA;
     static const GLenum gltype = GL_UNSIGNED_BYTE;
+    static const size_t components = 4;
+};
+
+template <>
+struct GlFormatTraits<Eigen::Matrix<unsigned short,4,1>>
+{
+    static const GLint glinternalformat = GL_RGBA32F_ARB;
+    static const GLenum glformat = GL_RGBA;
+    static const GLenum gltype = GL_UNSIGNED_SHORT;
     static const size_t components = 4;
 };
 
