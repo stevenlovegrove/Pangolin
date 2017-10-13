@@ -30,7 +30,104 @@ void SetOpenEXRChannels(Imf::ChannelList& ch, const pangolin::PixelFormat& fmt)
         ch.insert( CHANNEL_NAMES[c], Imf::Channel(OpenEXRPixelType(fmt.channel_bits[c])) );
     }
 }
+
+class StdIStream: public Imf::IStream
+{
+  public:
+    StdIStream (std::istream &is):
+        Imf::IStream ("stream"),
+        _is (&is)
+    {
+    }
+
+    virtual bool read (char c[/*n*/], int n)
+    {
+        if (!*_is)
+            throw std::runtime_error("Unexpected end of file.");
+        _is->read (c, n);
+        if (_is->gcount() < n)
+        {
+            throw std::runtime_error("Early end of file");
+            return false;
+        }
+        return true;
+    }
+
+    virtual Imf::Int64 tellg ()
+    {
+        return std::streamoff (_is->tellg());
+    }
+
+    virtual void seekg (Imf::Int64 pos)
+    {
+        _is->seekg (pos);
+    }
+
+    virtual void clear ()
+    {
+        _is->clear();
+    }
+
+  private:
+    std::istream *	_is;
+};
+
+
 #endif //HAVE_OPENEXR
+
+TypedImage LoadExr(std::istream& source)
+{
+#ifdef HAVE_OPENEXR
+    StdIStream istream(source);
+    Imf::InputFile file(istream);
+    Imath::Box2i dw = file.header().dataWindow();
+    int width = dw.max.x - dw.min.x + 1;
+    int height = dw.max.y - dw.min.y + 1;
+
+    // assume RGBA format for now
+    PixelFormat format = PixelFormatFromString("RGBA128F");
+    TypedImage img(width, height, format, width*sizeof(float)*4);
+
+    char *imgBase = (char *) img.ptr - (dw.min.x + dw.min.y * width)*sizeof(float)*4;
+
+    Imf::FrameBuffer fb;
+    fb.insert("R", Imf::Slice(
+                    Imf::FLOAT, imgBase,
+                    sizeof(float) * 4,
+                    sizeof(float) * 4 * width,
+                    1, 1,
+                    0.0));
+
+    fb.insert("G", Imf::Slice(
+                    Imf::FLOAT, imgBase + sizeof(float),
+                    sizeof(float) * 4,
+                    sizeof(float) * 4 * width,
+                    1, 1,
+                    0.0));
+
+    fb.insert("B", Imf::Slice(
+                    Imf::FLOAT, imgBase + sizeof(float)*2,
+                    sizeof(float) * 4,
+                    sizeof(float) * 4 * width,
+                    1, 1,
+                    0.0));
+
+    fb.insert("A", Imf::Slice(
+                    Imf::FLOAT, imgBase + sizeof(float)*3,
+                    sizeof(float) * 4,
+                    sizeof(float) * 4 * width,
+                    1, 1,
+                    0.0));
+
+    file.setFrameBuffer(fb);
+    file.readPixels(dw.min.y, dw.max.y);
+
+    return img;
+#else
+    PANGOLIN_UNUSED(source);
+    throw std::runtime_error("Rebuild Pangolin for EXR support.");
+#endif //HAVE_OPENEXR
+}
 
 void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
 {

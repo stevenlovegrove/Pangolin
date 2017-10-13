@@ -51,6 +51,7 @@ TypedImage LoadPango(const std::string& filename);
 void SavePango(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
 
 // EXR
+TypedImage LoadExr(std::istream& source);
 void SaveExr(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
 
 // ZSTD (https://github.com/facebook/zstd)
@@ -70,6 +71,8 @@ TypedImage LoadImage(std::istream& in, ImageFileType file_type)
         return LoadTga(in);
     case ImageFileTypeZstd:
         return LoadZstd(in);
+    case ImageFileTypeExr:
+        return LoadExr(in);
     default:
         throw std::runtime_error("Unable to load image file-type through std::istream");
     }
@@ -83,6 +86,7 @@ TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
     case ImageFileTypePpm:
     case ImageFileTypeTga:
     case ImageFileTypeZstd:
+    case ImageFileTypeExr:
     {
         std::ifstream ifs(filename, std::ios_base::in|std::ios_base::binary);
         return LoadImage(ifs, file_type);
