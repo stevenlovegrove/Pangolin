@@ -181,9 +181,10 @@ void VideoViewer::Run()
 
                 // Update images
                 if((frame-1) % draw_nth_frame == 0) {
-                    for(unsigned int i=0; i<images.size(); ++i) {
-                        stream_views[i].SetImage(images[i], pangolin::GlPixFormat(video.Streams()[i].PixFormat() ));
-                    }
+                    for(unsigned int i=0; i<images.size(); ++i) 
+                        if(stream_views[i].IsShown()) {
+                            stream_views[i].SetImage(images[i], pangolin::GlPixFormat(video.Streams()[i].PixFormat() ));
+                        }
                 }
             }
         }
@@ -328,6 +329,7 @@ void VideoViewer::SetDiscardBufferedFrames(bool new_state)
 
 void VideoViewer::DrawEveryNFrames(int n)
 {
+    pango_print_info("Drawing every one in %d frames.\n",n);
     draw_nth_frame=n;
 }
 
