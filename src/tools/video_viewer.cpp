@@ -330,7 +330,16 @@ void VideoViewer::SetDiscardBufferedFrames(bool new_state)
 
 void VideoViewer::DrawEveryNFrames(int n)
 {
-    pango_print_info("Drawing every one in %d frames.\n",n);
+    if(n <= 0) {
+        pango_print_warn("Cannot draw every %d frames. Ignoring request.\n",n);
+        return;
+    }
+
+    if(n != draw_nth_frame && n == 1)
+        pango_print_info("Drawing every frame.\n");
+    if(n != draw_nth_frame && n > 1)
+        pango_print_info("Drawing one in every %d frames.\n",n);
+
     draw_nth_frame=n;
 }
 
