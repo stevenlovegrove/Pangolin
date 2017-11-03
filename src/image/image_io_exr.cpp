@@ -7,6 +7,7 @@
 #include <ImfChannelList.h>
 #include <ImfInputFile.h>
 #include <ImfOutputFile.h>
+#include <ImfIO.h>
 #endif // HAVE_OPENEXR
 
 namespace pangolin {
