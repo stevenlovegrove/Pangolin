@@ -172,7 +172,7 @@ void TiledFlipX(Image<unsigned char>& img_out, const Image<unsigned char>& img_i
                     ChainSwap2(d[y][x], d[y][TSZ - 1 - x]);
 
             for(size_t y = 0; y < yspan; y++)
-                memcpy(img_out.RowPtr(yout + y) + (xout + TSZ - yspan) * BPP, d[y] + TSZ - yspan, xspan * BPP);
+                memcpy(img_out.RowPtr(yout + y) + (xout + TSZ - xspan) * BPP, d[y] + TSZ - xspan, xspan * BPP);
         }
 }
 
@@ -206,7 +206,7 @@ void TiledRotate180(Image<unsigned char>& img_out, const Image<unsigned char>& i
                     ChainSwap2(d[y][x], d[TSZ - 1 - y][TSZ - 1 - x]);
 
             for(size_t y = TSZ - yspan; y < TSZ; y++)
-                memcpy(img_out.RowPtr(yout + y) + (xout + TSZ - yspan) * BPP, d[y] + TSZ - yspan, xspan * BPP);
+                memcpy(img_out.RowPtr(yout + y) + (xout + TSZ - xspan) * BPP, d[y] + TSZ - xspan, xspan * BPP);
         }
 }
 
