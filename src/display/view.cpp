@@ -505,11 +505,15 @@ void View::RecordOnRender(const std::string& record_uri)
     if(!context->recorder.IsOpen()) {
         Viewport area = GetBounds();
         context->record_view = this;
-        context->recorder.Open(record_uri);
-        std::vector<StreamInfo> streams;
-        const PixelFormat fmt = PixelFormatFromString("RGB24");
-        streams.push_back( StreamInfo(fmt, area.w, area.h, area.w * fmt.bpp / 8) );
-        context->recorder.SetStreams(streams);
+        try{
+            context->recorder.Open(record_uri);
+            std::vector<StreamInfo> streams;
+            const PixelFormat fmt = PixelFormatFromString("RGB24");
+            streams.push_back( StreamInfo(fmt, area.w, area.h, area.w * fmt.bpp / 8) );
+            context->recorder.SetStreams(streams);
+        }catch(const std::exception& e) {
+            pango_print_error("Unable to open VideoRecorder:\n\t%s\n", e.what());
+        }
     }else{
         context->recorder.Close();
     }
