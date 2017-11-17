@@ -110,9 +110,15 @@ struct PANGOLIN_EXPORT OpenGlMatrix {
 #ifdef USE_EIGEN
     template<typename P>
     OpenGlMatrix(const Eigen::Matrix<P,4,4>& mat);
+
+    template<typename P>
+    OpenGlMatrix(const Eigen::Transform<P,3,Eigen::Affine>& mat) : OpenGlMatrix(mat.matrix()) { }
     
     template<typename P>
     operator Eigen::Matrix<P,4,4>() const;
+
+    template<typename P>
+    operator Eigen::Transform<P,3,Eigen::Affine>() const;
 #endif // USE_EIGEN
 
 #ifdef HAVE_TOON
@@ -301,6 +307,12 @@ template<typename P>
 OpenGlMatrix::operator Eigen::Matrix<P,4,4>() const
 {
     return ToEigen<P>(*this);
+}
+
+template<typename P>
+OpenGlMatrix::operator Eigen::Transform<P,3,Eigen::Affine>() const
+{
+    return Eigen::Transform<P,3,Eigen::Affine>(ToEigen<P>(*this));
 }
 
 template<typename P> inline
