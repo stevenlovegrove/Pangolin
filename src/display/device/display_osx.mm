@@ -57,7 +57,7 @@ namespace pangolin
 
 WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& params )
 {
-    const bool is_highres = params.Get<bool>(PARAM_HIGHRES, true);
+    const bool is_highres = params.Get<bool>(PARAM_HIGHRES, false);
 
     OsxWindow* win = new OsxWindow(window_title, w, h, is_highres);
 
