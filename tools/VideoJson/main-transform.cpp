@@ -33,7 +33,7 @@ int main( int argc, char* argv[] )
 
             // Ensure the index gets rewritten, and update the device properties.
             src.index.clear();
-            src.info["device_properties"] = src_json["device_properties"];
+            src.info["device"] = src_json["device_properties"];
             writer.AddSource(src);
         }
 
