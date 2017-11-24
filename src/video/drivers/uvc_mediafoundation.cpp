@@ -196,6 +196,31 @@ int UvcMediaFoundationVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* d
     return 0;
 }
 
+bool UvcMediaFoundationVideo::GetExposure(int& exp_us)
+{
+    pango_print_warn("GetExposure not implemented for UvcMediaFoundationVideo");
+    return false;
+}
+
+bool UvcMediaFoundationVideo::SetExposure(int exp_us)
+{ 
+    pango_print_warn("SetExposure not implemented for UvcMediaFoundationVideo");
+    return false;
+}
+
+bool UvcMediaFoundationVideo::GetGain(float& gain)
+{
+    pango_print_warn("GetGain not implemented for UvcMediaFoundationVideo");
+    return false;
+}
+
+bool UvcMediaFoundationVideo::SetGain(float gain)
+{
+    pango_print_warn("SetGain not implemented for UvcMediaFoundationVideo");
+    return false;
+}
+
+
 const picojson::value& UvcMediaFoundationVideo::DeviceProperties() const
 {
     return device_properties;

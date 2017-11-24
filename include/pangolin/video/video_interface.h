@@ -152,6 +152,10 @@ struct PANGOLIN_EXPORT VideoUvcInterface
 {
     virtual ~VideoUvcInterface() {}
     virtual int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code) = 0;
+    virtual bool GetExposure(int& exp_us) = 0;
+    virtual bool SetExposure(int exp_us) = 0;
+    virtual bool GetGain(float& gain) = 0;
+    virtual bool SetGain(float gain) = 0;
 };
 
 struct PANGOLIN_EXPORT VideoPlaybackInterface

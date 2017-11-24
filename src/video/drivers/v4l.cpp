@@ -625,27 +625,72 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
     streams.push_back(stream_info);
 }
 
-void V4lVideo::SetExposureUs(int exposure_us)
+bool V4lVideo::SetExposure(int exposure_us)
 {
-    struct v4l2_control control;
-    control.id = V4L2_CID_EXPOSURE_ABSOLUTE;
+    struct v4l2_ext_controls ctrls = {};
+    struct v4l2_ext_control ctrl = {};
+
+    ctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
     // v4l specifies exposure in 100us units
-    control.value = exposure_us / 100;
+    ctrl.value = int(exposure_us / 100.0);
+    ctrls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
+    ctrls.count = 1;
+    ctrls.controls = &ctrl;
 
-    if (-1 == xioctl (fd, VIDIOC_S_CTRL, &control))
-        pango_print_warn("V4lVideo::SetExposureUs() ioctl error: %s\n", strerror(errno));
-
+    if (-1 == xioctl(fd, VIDIOC_S_EXT_CTRLS, &ctrls)){
+        pango_print_warn("V4lVideo::SetExposure() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        return true;
+    }
 }
 
-void V4lVideo::SetGain(double gain)
+bool V4lVideo::GetExposure(int& exposure_us)
+{
+    struct v4l2_ext_controls ctrls = {};
+    struct v4l2_ext_control ctrl = {};
+
+    ctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
+    ctrls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
+    ctrls.count = 1;
+    ctrls.controls = &ctrl;
+
+    if (-1 == xioctl(fd, VIDIOC_G_EXT_CTRLS, &ctrls)){
+        pango_print_warn("V4lVideo::GetExposure() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        // v4l specifies exposure in 100us units
+        exposure_us = ctrls.controls->value * 100;
+        return true;
+    }
+}
+
+bool V4lVideo::SetGain(float gain)
 {
     struct v4l2_control control;
     control.id = V4L2_CID_GAIN;
     control.value = gain;
 
-    if (-1 == xioctl (fd, VIDIOC_S_CTRL, &control))
+    if (-1 == xioctl (fd, VIDIOC_S_CTRL, &control)) {
         pango_print_warn("V4lVideo::SetGain() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        return true;
+    }
+}
 
+bool V4lVideo::GetGain(float& gain)
+{
+    struct v4l2_control control;
+    control.id = V4L2_CID_GAIN;
+
+    if (-1 == xioctl (fd, VIDIOC_G_CTRL, &control)) {
+        pango_print_warn("V4lVideo::GetGain() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        gain = control.value;
+        return true;
+    }
 }
 
 void V4lVideo::close_device()
@@ -723,7 +768,7 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
 
             V4lVideo* video_raw = new V4lVideo(uri.url.c_str(), method, desired_dim.x, desired_dim.y );
             if(video_raw  && uri.Contains("ExposureTime")) {
-                static_cast<V4lVideo*>(video_raw)->SetExposureUs(uri.Get<int>("ExposureTime", 10000));
+                static_cast<V4lVideo*>(video_raw)->SetExposure(uri.Get<int>("ExposureTime", 10000));
             }
             if(video_raw  && uri.Contains("Gain")) {
                 static_cast<V4lVideo*>(video_raw)->SetGain(uri.Get<int>("Gain", 1));

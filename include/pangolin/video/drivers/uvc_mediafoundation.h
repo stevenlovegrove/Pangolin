@@ -41,6 +41,18 @@ class PANGOLIN_EXPORT UvcMediaFoundationVideo
     //! Implement VideoUvcInterface::GetCtrl()
     int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, pangolin::UvcRequestCode req_code);
 
+    //! Implement VideoUvcInterface::GetExposure()
+    bool GetExposure(int& exp_us);
+
+    //! Implement VideoUvcInterface::SetExposure()
+    bool SetExposure(int exp_us);
+
+    //! Implement VideoUvcInterface::GetGain()
+    bool GetGain(float& gain);
+
+    //! Implement VideoUvcInterface::SetGain()
+    bool SetGain(float gain);
+
     //! Access JSON properties of device
     const picojson::value& DeviceProperties() const;
 
