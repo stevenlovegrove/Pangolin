@@ -61,6 +61,8 @@ struct GlPixFormat
         if(glformat == GL_LUMINANCE) {
             if(gltype == GL_UNSIGNED_BYTE) {
                 scalable_internal_format = GL_LUMINANCE8;
+            }else if(gltype == GL_UNSIGNED_SHORT){
+                scalable_internal_format = GL_LUMINANCE16;
             }else{
                 scalable_internal_format = GL_LUMINANCE32F_ARB;
             }
