@@ -272,7 +272,7 @@ TeliVideo::TeliVideo(const Params& p)
         );
     }
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-        throw pangolin::VideoException("TeliSDK: Error opening camera");
+        throw pangolin::VideoException(FormatString("TeliSDK: Error opening camera, sn='%'", sn));
 
     SetDeviceParams(device_params);
     Initialise();
