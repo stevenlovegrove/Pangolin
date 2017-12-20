@@ -128,6 +128,11 @@ bool ThreadVideo::DropNFrames(uint32_t n)
 bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
 {
     TSTART()
+
+    if(queue.EmptyBuffers() == 0) {
+       pango_print_warn("Thread %12p has run out of %d buffers\n", this, (int)queue.AvailableFrames());
+    }
+
     if(queue.AvailableFrames() == 0 && !wait) {
         // No frames available, no wait, simply return false.
         DBGPRINT("GrabNext no available frames no wait.");

@@ -322,6 +322,8 @@ void FlipX(Image<unsigned char>& img_out, const Image<unsigned char>& img_in, si
         TiledFlipX<3, 80>(img_out, img_in);
     else if(bytes_per_pixel == 4)
         TiledFlipX<4, 80>(img_out, img_in);
+    else if(bytes_per_pixel == 6)
+        TiledFlipX<6, 64>(img_out, img_in);
     else {
         for(size_t y = 0; y < img_out.h; ++y) {
             for(size_t x = 0; x < img_out.w; ++x) {
@@ -343,6 +345,8 @@ void FlipXY(Image<unsigned char>& img_out, const Image<unsigned char>& img_in, s
         TiledRotate180<3, 80>(img_out, img_in);
     else if(bytes_per_pixel == 4)
         TiledRotate180<4, 80>(img_out, img_in);
+    else if(bytes_per_pixel == 6)
+        TiledRotate180<6, 64>(img_out, img_in);
     else {
         for(size_t y_out = 0; y_out < img_out.h; ++y_out) {
             for(size_t x = 0; x < img_out.w; ++x) {
@@ -365,6 +369,8 @@ void RotateCW(Image<unsigned char>& img_out, const Image<unsigned char>& img_in,
         TiledRotateCW<3, 80>(img_out, img_in);
     else if(bytes_per_pixel == 4)
         TiledRotateCW<4, 80>(img_out, img_in);
+    else if(bytes_per_pixel == 6)
+        TiledRotateCW<6, 64>(img_out, img_in);
     else {
         for(size_t yout = 0; yout < img_out.h; ++yout)
             for(size_t xout = 0; xout < img_out.w; ++xout) {
@@ -387,6 +393,8 @@ void Transpose(Image<unsigned char>& img_out, const Image<unsigned char>& img_in
         TiledTranspose<3, 80>(img_out, img_in);
     else if(bytes_per_pixel == 4)
         TiledTranspose<4, 80>(img_out, img_in);
+    else if(bytes_per_pixel == 6)
+        TiledTranspose<6, 64>(img_out, img_in);
     else {
         for(size_t yout = 0; yout < img_out.h; ++yout)
             for(size_t xout = 0; xout < img_out.w; ++xout) {
@@ -409,6 +417,8 @@ void RotateCCW(Image<unsigned char>& img_out, const Image<unsigned char>& img_in
         TiledRotateCCW<3, 80>(img_out, img_in);
     else if(bytes_per_pixel == 4)
         TiledRotateCCW<4, 80>(img_out, img_in);
+    else if(bytes_per_pixel == 6)
+        TiledRotateCCW<6, 64>(img_out, img_in);
     else {
         for(size_t yout = 0; yout < img_out.h; ++yout)
             for(size_t xout = 0; xout < img_out.w; ++xout) {
