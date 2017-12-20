@@ -136,7 +136,7 @@ bool PangoVideo::GrabNewest( unsigned char* image, bool wait )
 
 size_t PangoVideo::GetCurrentFrameId() const
 {
-    return (int)(_reader->Sources()[_src_id].next_packet_id);
+    return (int)(_reader->Sources()[_src_id].next_packet_id) - 1;
 }
 
 size_t PangoVideo::GetTotalFrames() const

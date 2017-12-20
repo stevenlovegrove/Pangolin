@@ -163,6 +163,7 @@ struct PANGOLIN_EXPORT VideoPlaybackInterface
     virtual ~VideoPlaybackInterface() {}
 
     /// Return monotonic id of current frame
+    /// The 'current frame' is the frame returned from the last successful call to Grab
     virtual size_t GetCurrentFrameId() const = 0;
 
     /// Return total number of frames to be captured from device,
