@@ -69,6 +69,8 @@ struct GlPixFormat
         }else{
             if(gltype == GL_UNSIGNED_BYTE) {
                 scalable_internal_format = GL_RGBA8;
+            }else if(gltype == GL_UNSIGNED_SHORT) {
+                scalable_internal_format = GL_RGBA16;
             }else{
                 scalable_internal_format = GL_RGBA32F;
             }
