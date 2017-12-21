@@ -30,10 +30,6 @@
 
 #include <pangolin/video/drivers/pango_video_output.h>
 
-#ifdef HAVE_FFMPEG
-#include <pangolin/video/drivers/ffmpeg.h>
-#endif
-
 #include <pangolin/utils/file_utils.h>
 
 namespace pangolin
