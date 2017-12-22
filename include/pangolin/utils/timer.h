@@ -38,12 +38,12 @@ namespace pangolin
 // These methods exist for backwards compatibility.
 // They are deprecated in favour of direct use of std::chrono in C++11
 
-using baseclock = std::chrono::system_clock;
+using baseclock = std::chrono::steady_clock;
 using basetime = baseclock::time_point;
 
 inline basetime TimeNow()
 {
-    return std::chrono::system_clock::now();
+    return baseclock::now();
 }
 
 inline double Time_s(basetime t)

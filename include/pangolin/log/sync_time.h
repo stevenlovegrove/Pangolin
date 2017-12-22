@@ -44,7 +44,7 @@ namespace pangolin
 class PANGOLIN_EXPORT SyncTime
 {
 public:
-    using Clock = std::chrono::system_clock;
+    using Clock = baseclock;
     using Duration = Clock::duration;
     using TimePoint = Clock::time_point;
 
