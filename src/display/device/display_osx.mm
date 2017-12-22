@@ -85,14 +85,14 @@ OsxWindow::OsxWindow(
     // Make sure Application is initialised correctly.
     // This can be run repeatedly.
 
-    NSApp = [PangolinNSApplication sharedApplication];
+    [NSApplication sharedApplication];
     PangolinAppDelegate *delegate = [[PangolinAppDelegate alloc] init];
 
-    [[PangolinNSApplication sharedApplication] setDelegate:delegate];
-    [[PangolinNSApplication sharedApplication] setPresentationOptions:NSFullScreenWindowMask];
+    [NSApp setDelegate:delegate];
+    [NSApp setPresentationOptions:NSFullScreenWindowMask];
 
-    [NSApp run_pre];
-    [NSApp run_step];
+    [PangolinNSApplication run_pre];
+    [PangolinNSApplication run_step];
 
     ///////////////////////////////////////////////////////////////////////
     // Create Window
@@ -151,7 +151,7 @@ OsxWindow::OsxWindow(
 
     [_window setContentView:view];
 
-    [NSApp run_step];
+    [PangolinNSApplication run_step];
 
     glewInit();
 
@@ -211,7 +211,7 @@ void OsxWindow::SwapBuffers()
 
 void OsxWindow::ProcessEvents()
 {
-    [NSApp run_step];
+    [PangolinNSApplication run_step];
 }
 
 }
