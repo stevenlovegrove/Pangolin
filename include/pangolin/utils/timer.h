@@ -40,6 +40,7 @@ namespace pangolin
 
 using baseclock = std::chrono::steady_clock;
 using basetime = baseclock::time_point;
+static_assert(baseclock::is_steady, "baseclock must be steady to be robust against system time settings");
 
 inline basetime TimeNow()
 {
