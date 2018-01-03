@@ -69,8 +69,8 @@ IF(AVCODEC_INCLUDE_DIR AND AVFORMAT_INCLUDE_DIR AND AVUTIL_INCLUDE_DIR AND AVDEV
    CHECK_CXX_SOURCE_COMPILES(
      "#include \"${AVCODEC_INCLUDE_DIR}/libavformat/avformat.h\"
       int main() {
-        sizeof(AVFormatContext::max_analyze_duration2);
-      }" HAVE_FFMPEG_MAX_ANALYZE_DURATION2
+        sizeof(AVFormatContext::max_analyze_duration);
+      }" HAVE_FFMPEG_MAX_ANALYZE_DURATION
    )
    CHECK_CXX_SOURCE_COMPILES(
      "#include \"${AVCODEC_INCLUDE_DIR}/libavformat/avformat.h\"
