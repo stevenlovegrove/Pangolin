@@ -33,6 +33,14 @@
 #include <pangolin/display/device/PangolinNSGLView.h>
 #include <pangolin/display/device/PangolinNSApplication.h>
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
+#  define NSFullScreenWindowMask      NSWindowStyleMaskFullScreen
+#  define NSTitledWindowMask          NSWindowStyleMaskTitled
+#  define NSMiniaturizableWindowMask  NSWindowStyleMaskMiniaturizable
+#  define NSResizableWindowMask       NSWindowStyleMaskResizable
+#  define NSClosableWindowMask        NSWindowStyleMaskClosable
+#endif
+
 // Hack to fix window focus issue
 // http://www.miscdebris.net/blog/2010/03/30/solution-for-my-mac-os-x-gui-program-doesnt-get-focus-if-its-outside-an-application-bundle/
 extern "C" { void CPSEnableForegroundOperation(ProcessSerialNumber* psn); }
