@@ -1,4 +1,4 @@
-#include <librealsense/rs.hpp>
+#include <rs.hpp>
 #include <pangolin/video/drivers/realsense.h>
 #include <pangolin/factory/factory_registry.h>
 
