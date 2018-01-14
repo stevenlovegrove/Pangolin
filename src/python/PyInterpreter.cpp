@@ -5,7 +5,12 @@
 #include <pangolin/python/PyModulePangolin.h>
 #include <pangolin/python/PyInterpreter.h>
 #include <pangolin/python/PyPangoIO.h>
+#include <pangolin/utils/file_utils.h>
 
+#ifdef _UNIX_
+#   include <stdio.h>
+#   include <dlfcn.h>
+#endif
 
 namespace pangolin
 {
@@ -38,6 +43,15 @@ PyInterpreter::PyInterpreter()
     InitPangoModule();
 #endif
 
+    std::string pypangopath;
+#ifdef _UNIX_
+    Dl_info info;
+    if (dladdr((void*)InitPangoModule, &info)) {
+        const std::string pypangomodule = FindPath(PathParent(info.dli_fname), "/pypangolin.so");
+        pypangopath = PathParent(pypangomodule);
+    }
+#endif
+
     // Hook stdout, stderr to this interpreter
     PyObject* mod_sys = PyImport_ImportModule("sys");
     if (mod_sys) {
@@ -63,6 +77,13 @@ PyInterpreter::PyInterpreter()
         "pangolin.completer = rlcompleter.Completer()\n"
     );
     CheckPrintClearError();
+
+    if(!pypangopath.empty()) {
+        PyRun_SimpleString("import sys" );
+        PyRun_SimpleString( FormatString("sys.path.insert(0,'%')", pypangopath).c_str() );
+        PyRun_SimpleString("import pypangolin\n");
+        CheckPrintClearError();
+    }
 
     // Get reference to rlcompleter.Completer() for tab-completion
     PyObject* mod_pangolin = PyImport_ImportModule("pangolin");

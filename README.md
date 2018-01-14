@@ -117,6 +117,26 @@ To contribute to Pangolin, I would appreciate pull requests against the master b
 
 Binaries are available for Windows x64, as output by the Windows CI server: [Appveyor Artifacts](https://ci.appveyor.com/project/stevenlovegrove/pangolin/build/artifacts).
 
+## Bindings ##
+
+### Python ###
+
+Pangolin python bindings are enabled via [pybind11](www.pybind11.com). These bindings can be used both standalone and from within Pangolin's drop-down console (press the back-tick key, `).
+
+To enable the bindings, you must checkout the pybind submodule and install the pybind11 python module:
+
+```
+sudo pip install pybind11
+git submodule init && git submodule update
+```
+
+The python module pypangolin must be on your python path, either through installation, or by setting it explicitly:
+
+```
+import sys
+sys.path.append('path/of/pypangolin.so/')
+```
+
 ## Acknowledgements ##
 
 I'd like to thank the growing number of kind contributors to Pangolin for helping to make it more stable and feature rich. Many features of Pangolin have been influenced by other projects such as GFlags, GLConsole, and libcvd in particular. I'd also like to thank the FOSS projects on which Pangolin depends.

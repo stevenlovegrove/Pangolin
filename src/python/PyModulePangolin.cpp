@@ -31,6 +31,7 @@
 
 #include <pangolin/python/PyModulePangolin.h>
 #include <pangolin/console/ConsoleView.h>
+#include <pangolin/utils/file_utils.h>
 
 #ifdef BUILD_PANGOLIN_VARS
 #   include <pangolin/python/PyVar.h>
@@ -43,7 +44,6 @@
 #   include <pangolin/display/display_internal.h>
 #   include <pangolin/display/view.h>
 #endif // BUILD_PANGOLIN_VIDEO
-
 
 namespace pangolin
 {

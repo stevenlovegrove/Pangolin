@@ -530,7 +530,7 @@ include_directories( ${USER_INC} )
 include_directories( ${INTERNAL_INC} )
 
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
-target_link_libraries(${LIBRARY_NAME} ${LINK_LIBS})
+target_link_libraries(${LIBRARY_NAME} PUBLIC ${LINK_LIBS})
 
 ## Generate symbol export helper header on MSVC
 IF(MSVC)
@@ -579,6 +579,19 @@ CreateMethodCallFile(
     "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/window_frameworks.h"
     "pangolin" "LoadBuiltInWindowFrameworks" "${WINDOW_FACTORY_REG}"
 )
+
+#######################################################
+## Python wrapper
+
+option(BUILD_PYPANGOLIN_MODULE "Python wrapper for Pangolin" ON)
+if(BUILD_PYPANGOLIN_MODULE AND EXISTS "../external/pybind11/CMakeLists.txt" )
+    # run git submodule init && git submodule update to get pybind
+    add_subdirectory(../external/pybind11 ${CMAKE_CURRENT_BINARY_DIR}/pybind )
+    file(GLOB pypangolin_SRC "python/pypangolin/*.hpp" "python/pypangolin/*.cpp" )
+    pybind11_add_module(pypangolin ${pypangolin_SRC})
+    target_link_libraries(pypangolin PRIVATE ${LIBRARY_NAME})
+    target_include_directories(pypangolin PRIVATE "${USER_INC}")
+endif()
 
 #######################################################
 ## Generate Doxygen documentation target (make doc)
