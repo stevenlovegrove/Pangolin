@@ -470,7 +470,7 @@ std::unique_ptr<WindowInterface> CreateWinWindowAndBind(std::string window_title
     }
     glewInit();
 
-    return context;
+    return win;
 }
 
 PANGOLIN_REGISTER_FACTORY(WinWindow)
