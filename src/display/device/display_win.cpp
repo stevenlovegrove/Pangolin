@@ -25,6 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/display/display.h>
@@ -468,7 +469,7 @@ unique_ptr<WindowInterface> CreateWinWindowAndBind(std::string window_title, int
     }
     glewInit();
 
-    return context;
+    return win;
 }
 
 PANGOLIN_REGISTER_FACTORY(WinWindow)

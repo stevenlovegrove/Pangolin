@@ -25,6 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/display/display.h>
@@ -72,7 +73,7 @@ std::unique_ptr<WindowInterface> CreateOsxWindowAndBind(std::string window_title
     AddNewContext(window_title, std::shared_ptr<PangolinGl>(win) );
     context->is_high_res = is_highres;
 
-    return context;
+    return win;
 }
 
 OsxWindow::OsxWindow(
