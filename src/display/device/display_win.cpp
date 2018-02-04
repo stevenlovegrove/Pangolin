@@ -32,6 +32,7 @@
 #include <pangolin/display/display_internal.h>
 
 #include <pangolin/display/device/WinWindow.h>
+#include <memory>
 
 namespace pangolin
 {
@@ -469,7 +470,7 @@ unique_ptr<WindowInterface> CreateWinWindowAndBind(std::string window_title, int
     }
     glewInit();
 
-    return win;
+    return context;
 }
 
 PANGOLIN_REGISTER_FACTORY(WinWindow)

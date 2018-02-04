@@ -33,6 +33,7 @@
 #include <pangolin/display/device/OsxWindow.h>
 #include <pangolin/display/device/PangolinNSGLView.h>
 #include <pangolin/display/device/PangolinNSApplication.h>
+#include <memory>
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
 #  define NSFullScreenWindowMask      NSWindowStyleMaskFullScreen
