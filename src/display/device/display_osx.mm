@@ -65,7 +65,7 @@ extern __thread PangolinGl* context;
 namespace pangolin
 {
 
-std::unique_ptr<WindowInterface> CreateOsxWindowAndBind(std::string window_title, int w, int h, const bool is_highres)
+WindowInterface* CreateOsxWindowAndBind(std::string window_title, int w, int h, const bool is_highres)
 {
 
     OsxWindow* win = new OsxWindow(window_title, w, h, is_highres);
