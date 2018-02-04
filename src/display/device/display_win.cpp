@@ -453,7 +453,7 @@ void WinWindow::ProcessEvents()
     }
 }
 
-std::unique_ptr<WindowInterface> CreateWinWindowAndBind(std::string window_title, int w, int h)
+WindowInterface* CreateWinWindowAndBind(std::string window_title, int w, int h)
 {
     WinWindow* win = new WinWindow(window_title, w, h);
 
