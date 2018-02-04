@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2011-2018 Steven Lovegrove, Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -451,7 +451,7 @@ void WinWindow::ProcessEvents()
     }
 }
 
-WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params &params)
+unique_ptr<WindowInterface> CreateWinWindowAndBind(std::string window_title, int w, int h)
 {
     WinWindow* win = new WinWindow(window_title, w, h);
 
@@ -468,7 +468,23 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     }
     glewInit();
 
-    return *context;
+    return context;
+}
+
+PANGOLIN_REGISTER_FACTORY(WinWindow)
+{
+  struct WinWindowFactory : public FactoryInterface<WindowInterface> {
+    std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
+          
+      const std::string window_title = uri.Get<std::string>("window_title", "window");
+      const int w = uri.Get<int>("w", 640);
+      const int h = uri.Get<int>("h", 480);
+      return std::unique_ptr<WindowInterface>(CreateWinWindowAndBind(window_title, w, h));
+    }
+  };
+  
+  auto factory = std::make_shared<WinWindowFactory>();
+  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "winwindow");
 }
 
 }

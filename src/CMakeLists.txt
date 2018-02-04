@@ -25,6 +25,7 @@ append_glob(SOURCES log/*.cpp)
 ### Store list of Video factory registery methods to call for init.
 include(CreateMethodCallFile)
 set( VIDEO_FACTORY_REG "" )
+set( WINDOW_FACTORY_REG "" )
 
 #######################################################
 ## User build options
@@ -222,12 +223,15 @@ else()
                 message(STATUS "Glut Found and Enabled")
             endif()
         elseif(_WIN_)
+            list(APPEND WINDOW_FACTORY_REG RegisterWinWindowFactory)
             list(APPEND SOURCES display/device/display_win.cpp )
         elseif(_OSX_)
+            list(APPEND WINDOW_FACTORY_REG RegisterOsxWindowFactory)
             list(APPEND SOURCES display/device/display_osx.mm display/device/PangolinNSApplication.mm display/device/PangolinNSGLView.mm  )
             list(APPEND LINK_LIBS "-framework Cocoa" )
         elseif(_LINUX_)
             find_package(X11 REQUIRED)
+            list(APPEND WINDOW_FACTORY_REG RegisterX11WindowFactory)
             list(APPEND USER_INC ${X11_INCLUDE_DIR})
             list(APPEND SOURCES display/device/display_x11.cpp )
             list(APPEND LINK_LIBS ${X11_LIBRARIES} )
@@ -600,6 +604,15 @@ configure_file(
 CreateMethodCallFile(
     "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/video_drivers.h"
     "pangolin" "LoadBuiltInVideoDrivers" "${VIDEO_FACTORY_REG}"
+)
+
+#######################################################
+## Create window_frameworks.h file for inclusion in library
+## This loads video driver factories based on cmake configuration
+
+CreateMethodCallFile(
+    "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/window_frameworks.h"
+    "pangolin" "LoadBuiltInWindowFrameworks" "${WINDOW_FACTORY_REG}"
 )
 
 #######################################################

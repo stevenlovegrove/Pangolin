@@ -35,6 +35,7 @@
 
 #include <functional>
 #include <string>
+#include <memory>
 
 /*! \file display.h
  * This file contains a number of global methods for creating and
