@@ -37,10 +37,10 @@
 namespace pangolin
 {
 
-extern __thread PangolinGl* context;
-
 const char *className = "Pangolin";
 
+extern __thread PangolinGl* context;
+  
 ////////////////////////////////////////////////////////////////////////
 // Utils
 ////////////////////////////////////////////////////////////////////////
@@ -453,22 +453,9 @@ void WinWindow::ProcessEvents()
     }
 }
 
-WindowInterface* CreateWinWindowAndBind(std::string window_title, int w, int h)
+std::unique_ptr<WindowInterface> CreateWinWindowAndBind(std::string window_title, int w, int h)
 {
     WinWindow* win = new WinWindow(window_title, w, h);
-
-    // Add to context map
-    AddNewContext(window_title, std::shared_ptr<PangolinGl>(win) );
-    BindToContext(window_title);
-    win->ProcessEvents();
-
-    // Hack to make sure the window receives a
-    while(!win->windowed_size[0]) {
-        w -= 1; h -=1;
-        win->Resize(w,h);
-        win->ProcessEvents();
-    }
-    glewInit();
 
     return win;
 }

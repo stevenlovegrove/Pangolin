@@ -29,6 +29,10 @@
 #include <pangolin/display/display.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/window_frameworks.h>
+#include <pangolin/platform.h>
+#include <pangolin/gl/glinclude.h>
+#include <pangolin/display/display.h>
+#include <pangolin/display/display_internal.h>
 
 #ifdef BUILD_PANGOLIN_VARS
   #include <pangolin/var/var.h>
@@ -39,6 +43,8 @@
 
 namespace pangolin
 {
+
+  extern __thread PangolinGl* context;
 
   bool one_time_window_frameworks_init = false;
 
@@ -85,12 +91,32 @@ namespace pangolin
 #endif
     Uri uri = ParseUri(s.str());    
     std::unique_ptr<WindowInterface> window = FactoryRegistry<WindowInterface>::I().Open(uri);
-
     if(!window) {
       throw WindowExceptionNoKnownHandler(uri.scheme);
     }
 
-    return *(window.release());
+    AddNewContext(window_title, std::shared_ptr<PangolinGl>(dynamic_cast<PangolinGl*>(window.release())) );
+#if defined(_LINUX_)
+    BindToContext(window_title);
+    glewInit();
+    context->ProcessEvents();
+#elif defined(_OSX_)
+    context->is_high_res = is_highres;
+#elif defined(_WIN_)
+    BindToContext(window_title);
+    win->ProcessEvents();
 
+    // Hack to make sure the window receives a
+    while(!win->windowed_size[0]) {
+      w -= 1; h -=1;
+      win->Resize(w,h);
+      win->ProcessEvents();
+    }
+    glewInit();
+#else
+#error "not detected any supported system"
+#endif
+    
+    return *context;
   }
 }

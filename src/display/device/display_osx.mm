@@ -59,22 +59,15 @@ inline void FixOsxFocus()
 
 namespace pangolin
 {
+
 extern __thread PangolinGl* context;
-}
 
-namespace pangolin
-{
-
-WindowInterface* CreateOsxWindowAndBind(std::string window_title, int w, int h, const bool is_highres)
+std::unique_ptr<WindowInterface> CreateOsxWindowAndBind(std::string window_title, int w, int h, const bool is_highres)
 {
 
     OsxWindow* win = new OsxWindow(window_title, w, h, is_highres);
 
-    // Add to context map
-    AddNewContext(window_title, std::shared_ptr<PangolinGl>(win) );
-    context->is_high_res = is_highres;
-
-    return win;
+    return std::unique_ptr<WindowInterface>(win);
 }
 
 OsxWindow::OsxWindow(
