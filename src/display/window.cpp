@@ -104,14 +104,14 @@ namespace pangolin
     context->is_high_res = is_highres;
 #elif defined(_WIN_)
     BindToContext(window_title);
-    win->ProcessEvents();
+    window->ProcessEvents();
 
-    // Hack to make sure the window receives a
-    while(!window->windowed_size[0]) {
-      w -= 1; h -=1;
-      window->Resize(w,h);
-      window->ProcessEvents();
-    }
+    // // Hack to make sure the window receives a
+    // while(!window->windowed_size[0]) {
+    //   w -= 1; h -=1;
+    //   window->Resize(w,h);
+    //   window->ProcessEvents();
+    // }
     glewInit();
 #else
 #error "not detected any supported system"
