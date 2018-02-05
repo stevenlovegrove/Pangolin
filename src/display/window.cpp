@@ -107,10 +107,10 @@ namespace pangolin
     win->ProcessEvents();
 
     // Hack to make sure the window receives a
-    while(!win->windowed_size[0]) {
+    while(!window->windowed_size[0]) {
       w -= 1; h -=1;
-      win->Resize(w,h);
-      win->ProcessEvents();
+      window->Resize(w,h);
+      window->ProcessEvents();
     }
     glewInit();
 #else

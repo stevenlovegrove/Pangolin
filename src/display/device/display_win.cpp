@@ -457,7 +457,7 @@ std::unique_ptr<WindowInterface> CreateWinWindowAndBind(std::string window_title
 {
     WinWindow* win = new WinWindow(window_title, w, h);
 
-    return win;
+    return std::unique_ptr<WindowInterface>(win);
 }
 
 PANGOLIN_REGISTER_FACTORY(WinWindow)
