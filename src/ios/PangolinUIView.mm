@@ -30,6 +30,7 @@
 #import <pangolin/ios/PangolinUIView.h>
 #import <pangolin/ios/PangolinAppDelegate.h>
 
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/pangolin.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
@@ -183,5 +184,19 @@ namespace pangolin
         throw std::runtime_error("pangolin::FinishFrame() Not supported on this platform");
     }
     
+    PANGOLIN_REGISTER_FACTORY(IosWindow)
+    {
+      struct IosWindowFactory : public FactoryInterface<WindowInterface> {
+      std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
+        
+        const std::string window_title = uri.Get<std::string>("window_title", "window");
+        CreateAndroidWindowAndBind(window_title);
+        return NULL;
+      }
+    };
+
+    auto factory = std::make_shared<AndroidWindowFactory>();
+    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "androidwindow");
+  }
 }
 
