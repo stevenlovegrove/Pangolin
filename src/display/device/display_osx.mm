@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2011-2018 Steven Lovegrove, Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,6 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/display/display.h>
@@ -32,6 +33,7 @@
 #include <pangolin/display/device/OsxWindow.h>
 #include <pangolin/display/device/PangolinNSGLView.h>
 #include <pangolin/display/device/PangolinNSApplication.h>
+#include <memory>
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
 #  define NSFullScreenWindowMask      NSWindowStyleMaskFullScreen
@@ -57,23 +59,15 @@ inline void FixOsxFocus()
 
 namespace pangolin
 {
+
 extern __thread PangolinGl* context;
-}
 
-namespace pangolin
+std::unique_ptr<WindowInterface> CreateOsxWindowAndBind(std::string window_title, int w, int h, const bool is_highres)
 {
-
-WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& params )
-{
-    const bool is_highres = params.Get<bool>(PARAM_HIGHRES, true);
 
     OsxWindow* win = new OsxWindow(window_title, w, h, is_highres);
 
-    // Add to context map
-    AddNewContext(window_title, std::shared_ptr<PangolinGl>(win) );
-    context->is_high_res = is_highres;
-
-    return *context;
+    return std::unique_ptr<WindowInterface>(win);
 }
 
 OsxWindow::OsxWindow(
@@ -221,5 +215,24 @@ void OsxWindow::ProcessEvents()
 {
     [PangolinNSApplication run_step];
 }
+
+PANGOLIN_REGISTER_FACTORY(OsxWindow)
+{
+  struct OsxWindowFactory : public FactoryInterface<WindowInterface> {
+    std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
+
+      const std::string window_title = uri.Get<std::string>("window_title", "window");
+      const int w = uri.Get<int>("w", 640);
+      const int h = uri.Get<int>("h", 480);
+      const bool is_highres = uri.Get<bool>("is_highres", true);
+      return std::unique_ptr<WindowInterface>(CreateOsxWindowAndBind(window_title, w, h, is_highres));
+    }
+  };
+
+  auto factory = std::make_shared<OsxWindowFactory>();
+  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "osxwindow");
+}
+
+
 
 }

@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2011-2018 Steven Lovegrove, Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,6 +29,7 @@
 // Code based on public domain sample at
 // https://www.opengl.org/wiki/Tutorial:_OpenGL_3.0_Context_Creation_%28GLX%29
 
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/gl/glglut.h>
@@ -49,6 +50,7 @@
 
 namespace pangolin
 {
+
 extern __thread PangolinGl* context;
 
 std::mutex window_mutex;
@@ -474,13 +476,8 @@ void X11Window::SwapBuffers() {
     glXSwapBuffers(display->display, win);
 }
 
-WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params &params)
+std::unique_ptr<WindowInterface> CreateX11WindowAndBind(const std::string& window_title, const int w, const int h, const std::string& display_name, const bool double_buffered, const int  sample_buffers, const int  samples)
 {
-    const std::string display_name = params.Get(PARAM_DISPLAYNAME, std::string());
-    const bool double_buffered = params.Get(PARAM_DOUBLEBUFFER, true);
-    const int  sample_buffers  = params.Get(PARAM_SAMPLE_BUFFERS, 1);
-    const int  samples         = params.Get(PARAM_SAMPLES, 1);
-
     std::shared_ptr<X11Display> newdisplay = std::make_shared<X11Display>(display_name.empty() ? NULL : display_name.c_str() );
     if (!newdisplay) {
         throw std::runtime_error("Pangolin X11: Failed to open X display");
@@ -501,15 +498,27 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     win->glcontext = newglcontext;
     win->is_double_buffered = double_buffered;
 
-    // Add to context map
-    AddNewContext(window_title, std::shared_ptr<PangolinGl>(win) );
-    BindToContext(window_title);
-    glewInit();
+    return std::unique_ptr<WindowInterface>(win);
+}
 
-    // Process window events
-    context->ProcessEvents();
+PANGOLIN_REGISTER_FACTORY(X11Window)
+{
+  struct X11WindowFactory : public FactoryInterface<WindowInterface> {
+    std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
+          
+      const std::string window_title = uri.Get<std::string>("window_title", "window");
+      const int w = uri.Get<int>("w", 640);
+      const int h = uri.Get<int>("h", 480);
+      const std::string display_name = uri.Get<std::string>("display_name", "");
+      const bool double_buffered = uri.Get<bool>("double_buffered", true);
+      const int sample_buffers = uri.Get<int>("sample_buffers", 1);
+      const int samples = uri.Get<int>("samples", 1);
+      return std::unique_ptr<WindowInterface>(CreateX11WindowAndBind(window_title, w, h, display_name, double_buffered, sample_buffers, samples));
+    }
+  };
 
-    return *context;
+    auto factory = std::make_shared<X11WindowFactory>();
+    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "x11window");
 }
 
 }
