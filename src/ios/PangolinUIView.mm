@@ -173,7 +173,7 @@ namespace pangolin
     }
         
     // Implement platform agnostic version
-    void CreateWindowAndBind(std::string window_title, int w, int h )
+    void CreateIosWindowAndBind(std::string window_title, int w, int h )
     {
         throw std::runtime_error("pangolin::CreateWindowAndBind(...) Not supported on this platform");
     }
@@ -190,13 +190,13 @@ namespace pangolin
       std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
         
         const std::string window_title = uri.Get<std::string>("window_title", "window");
-        CreateAndroidWindowAndBind(window_title);
+        CreateIosWindowAndBind(window_title, 0, 0);
         return NULL;
       }
     };
 
-    auto factory = std::make_shared<AndroidWindowFactory>();
-    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "androidwindow");
+    auto factory = std::make_shared<IosWindowFactory>();
+    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "ioswindow");
   }
 }
 
