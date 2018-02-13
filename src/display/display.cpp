@@ -345,9 +345,15 @@ View& Display(const std::string& name)
     }
 }
 
-void RegisterKeyPressCallback(int key, std::function<void(void)> func)
+void RegisterKeyPressCallback(int key, std::function<void(int)> func)
 {
     context->keypress_hooks[key] = func;
+}
+
+void RegisterKeyPressCallback(int key, std::function<void()> func)
+{
+    auto aug_func = [=](int) { func(); };
+    RegisterKeyPressCallback(key, aug_func);
 }
 
 void SaveWindowOnRender(std::string prefix)
@@ -431,7 +437,7 @@ void Keyboard( unsigned char key, int x, int y)
     }else
 #endif
     if(hook != context->keypress_hooks.end() ) {
-        hook->second();
+        hook->second(key);
     } else if(context->activeDisplay && context->activeDisplay->handler) {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
     }

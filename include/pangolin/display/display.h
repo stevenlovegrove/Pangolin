@@ -117,9 +117,13 @@ namespace pangolin
   void PostRender();
 
   /// Request to be notified via functor when key is pressed.
-  /// Functor may take one parameter which will equal the key pressed
   PANGOLIN_EXPORT
   void RegisterKeyPressCallback(int key, std::function<void(void)> func);
+
+  /// Request to be notified via functor when key is pressed.
+  /// Functor takes one parameter which will equal the key pressed
+  PANGOLIN_EXPORT
+  void RegisterKeyPressCallback(int key, std::function<void(int)> func);
 
   /// Save window contents to image.
   PANGOLIN_EXPORT
