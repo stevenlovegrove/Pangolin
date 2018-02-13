@@ -272,7 +272,7 @@ void PostRender()
         context->screen_capture.pop();
         SaveFramebuffer(fv.first, fv.second);
     }
-    
+
 #ifdef BUILD_PANGOLIN_VIDEO
     if(context->recorder.IsOpen()) {
         SaveFramebuffer(context->recorder, context->record_view->GetBounds() );
@@ -352,8 +352,7 @@ void RegisterKeyPressCallback(int key, std::function<void(int)> func)
 
 void RegisterKeyPressCallback(int key, std::function<void()> func)
 {
-    auto aug_func = [=](int) { func(); };
-    RegisterKeyPressCallback(key, aug_func);
+    RegisterKeyPressCallback(key, [=](int) { func(); });
 }
 
 void SaveWindowOnRender(std::string prefix)
@@ -365,7 +364,7 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
 {
     PANGOLIN_UNUSED(prefix);
     PANGOLIN_UNUSED(v);
-    
+
 #ifndef HAVE_GLES
 
 #ifdef HAVE_PNG
@@ -376,14 +375,14 @@ void SaveFramebuffer(std::string prefix, const Viewport& v)
     glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, buffer.ptr );
     SaveImage(buffer, fmt, prefix + ".png", false);
 #endif // HAVE_PNG
-    
+
 #endif // HAVE_GLES
 }
 
 #ifdef BUILD_PANGOLIN_VIDEO
 void SaveFramebuffer(VideoOutput& video, const Viewport& v)
 {
-#ifndef HAVE_GLES    
+#ifndef HAVE_GLES
     const StreamInfo& si = video.Streams()[0];
     if(video.Streams().size()==0 || (int)si.Width() != v.w || (int)si.Height() != v.h) {
         video.Close();
@@ -393,7 +392,7 @@ void SaveFramebuffer(VideoOutput& video, const Viewport& v)
     static basetime last_time = TimeNow();
     const basetime time_now = TimeNow();
     last_time = time_now;
-    
+
     static std::vector<unsigned char> img;
     img.resize(v.w*v.h*4);
 
@@ -415,7 +414,7 @@ void Keyboard( unsigned char key, int x, int y)
 {
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;
-    
+
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
     // Switch backspace and delete for OSX!
     if(key== '\b') {
@@ -429,7 +428,7 @@ void Keyboard( unsigned char key, int x, int y)
 
     // Check if global key hook exists
     const KeyhookMap::iterator hook = context->keypress_hooks.find(key);
-    
+
 #ifdef HAVE_PYTHON
     // Console receives all input when it is open
     if( context->console_view && context->console_view->IsShown() ) {
@@ -447,7 +446,7 @@ void KeyboardUp(unsigned char key, int x, int y)
 {
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;
-    
+
     if(context->activeDisplay && context->activeDisplay->handler)
     {
         context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,false);
@@ -469,23 +468,23 @@ void Mouse( int button_raw, int state, int x, int y)
 {
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;
-    
+
     last_x = (float)x;
     last_y = (float)y;
 
     const MouseButton button = (MouseButton)(1 << (button_raw & 0xf) );
     const bool pressed = (state == 0);
-    
+
     context->had_input = context->is_double_buffered ? 2 : 1;
-    
+
     const bool fresh_input = ( (context->mouse_state & 7) == 0);
-    
+
     if( pressed ) {
         context->mouse_state |= (button&7);
     }else{
         context->mouse_state &= ~(button&7);
     }
-    
+
 #ifdef HAVE_GLUT
     context->mouse_state &= 0x0000ffff;
     context->mouse_state |= glutGetModifiers() << 16;
@@ -493,7 +492,7 @@ void Mouse( int button_raw, int state, int x, int y)
     context->mouse_state &= 0x0000ffff;
     context->mouse_state |= (button_raw >> 4) << 16;
 #endif
-    
+
     if(fresh_input) {
         context->base.handler->Mouse(context->base,button,x,y,pressed,context->mouse_state);
     }else if(context->activeDisplay && context->activeDisplay->handler) {
@@ -505,12 +504,12 @@ void MouseMotion( int x, int y)
 {
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;
-    
+
     last_x = (float)x;
     last_y = (float)y;
-    
+
     context->had_input = context->is_double_buffered ? 2 : 1;
-    
+
     if( context->activeDisplay)
     {
         if( context->activeDisplay->handler )
@@ -524,9 +523,9 @@ void PassiveMouseMotion(int x, int y)
 {
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;
-    
+
     context->base.handler->PassiveMouseMotion(context->base,x,y,context->mouse_state);
-    
+
     last_x = (float)x;
     last_y = (float)y;
 }
@@ -555,9 +554,9 @@ void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, flo
     // Assume coords already match OpenGl Window Coords
 
     context->had_input = context->is_double_buffered ? 2 : 1;
-    
+
     const bool fresh_input = (context->mouse_state == 0);
-    
+
     if(fresh_input) {
         context->base.handler->Special(context->base,inType,x,y,p1,p2,p3,p4,context->mouse_state);
     }else if(context->activeDisplay && context->activeDisplay->handler) {
@@ -570,8 +569,8 @@ void Scroll(float x, float y)
 #ifdef HAVE_GLUT
     context->mouse_state &= 0x0000ffff;
     context->mouse_state |= glutGetModifiers() << 16;
-#endif    
-    
+#endif
+
     SpecialInput(InputSpecialScroll, last_x, last_y, x, y, 0, 0);
 }
 
@@ -580,8 +579,8 @@ void Zoom(float m)
 #ifdef HAVE_GLUT
     context->mouse_state &= 0x0000ffff;
     context->mouse_state |= glutGetModifiers() << 16;
-#endif    
-    
+#endif
+
     SpecialInput(InputSpecialZoom, last_x, last_y, m, 0, 0, 0);
 }
 
@@ -590,8 +589,8 @@ void Rotate(float r)
 #ifdef HAVE_GLUT
     context->mouse_state &= 0x0000ffff;
     context->mouse_state |= glutGetModifiers() << 16;
-#endif    
-    
+#endif
+
     SpecialInput(InputSpecialRotate, last_x, last_y, r, 0, 0, 0);
 }
 
@@ -608,15 +607,15 @@ void DrawTextureToViewport(GLuint texid)
     OpenGlRenderState::ApplyIdentity();
     glBindTexture(GL_TEXTURE_2D, texid);
     glEnable(GL_TEXTURE_2D);
-    
+
     GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
     glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-    glEnableClientState(GL_VERTEX_ARRAY);   
+    glEnableClientState(GL_VERTEX_ARRAY);
 
     GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
     glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-         
+
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     glDisableClientState(GL_VERTEX_ARRAY);
