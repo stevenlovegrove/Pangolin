@@ -72,7 +72,7 @@ namespace pangolin
       << "]";
     
 #elif defined(_WIN_)    
-    s << "x11window://["
+    s << "winwindow://["
       << "window_title=" << window_title << ","
       << "w=" << w << ","
       << "h=" << h 
@@ -80,12 +80,14 @@ namespace pangolin
 #elif defined(_OSX_)
     const bool is_highres = params.Get(PARAM_HIGHRES, true);
 
-    s << "x11window://["
+    s << "osxwindow://["
       << "window_title=" << window_title << ","
       << "w=" << w << ","
       << "h=" << h << ","
       << "is_highres=" << is_highres
       << "]";
+#elif defined(__EMSCRIPTEN__)
+#error "emscripten detected"
 #else
 #error "not detected any supported system"
 #endif
@@ -113,6 +115,8 @@ namespace pangolin
     //   window->ProcessEvents();
     // }
     glewInit();
+#elif defined(__EMSCRIPTEN__)
+#error "emscripten detected"
 #else
 #error "not detected any supported system"
 #endif
