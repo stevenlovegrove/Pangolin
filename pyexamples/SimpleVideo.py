@@ -13,7 +13,6 @@ def main(vid_uri):
 
     # Just show first frame for now
     for i in range(0,1):
-        # img is a numpy array
         arr = vid.Grab()
         Image.fromarray(arr).show()
 
