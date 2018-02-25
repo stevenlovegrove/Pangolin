@@ -38,6 +38,8 @@
 #include <map>
 #include <mutex>
 
+#include <pangolin/factory/factory_registry.h>
+#include <pangolin/window_frameworks.h>
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/gl/glglut.h>
 #include <pangolin/gl/gldraw.h>
@@ -73,6 +75,7 @@ typedef std::map<std::string,std::shared_ptr<PangolinGl> > ContextMap;
 // Map of active contexts
 ContextMap contexts;
 std::mutex contexts_mutex;
+bool one_time_window_frameworks_init = false;
 
 // Context active for current thread
 __thread PangolinGl* context = 0;
@@ -111,7 +114,49 @@ PangolinGl *FindContext(const std::string& name)
     return context;
 }
 
-void AddNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext)
+WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& params)
+{
+    std::unique_lock<std::mutex> l(contexts_mutex);
+
+    if(!one_time_window_frameworks_init) {
+        one_time_window_frameworks_init = LoadBuiltInWindowFrameworks();
+    }
+
+    pangolin::Uri win_uri;
+    win_uri.params = params.params;
+    win_uri.Set("w", w);
+    win_uri.Set("h", h);
+    win_uri.Set("window_title", window_title);
+
+#if defined(_LINUX_)
+    win_uri.scheme = "x11";
+#elif defined(_WIN_)
+    win_uri.scheme = "winapi";
+#elif defined(_OSX_)
+    win_uri.scheme = "cocoa";
+#else
+#   error "No default window api for this platform."
+#endif
+
+
+    std::unique_ptr<WindowInterface> window = FactoryRegistry<WindowInterface>::I().Open(win_uri);
+
+    // We're expecting not only a WindowInterface, but a PangolinGl.
+    if(!window || !dynamic_cast<PangolinGl*>(window.get())) {
+        throw WindowExceptionNoKnownHandler(win_uri.scheme);
+    }
+
+    std::shared_ptr<PangolinGl> context(dynamic_cast<PangolinGl*>(window.release()));
+    RegisterNewContext(window_title, context );
+    context->MakeCurrent();
+    context->ProcessEvents();
+    glewInit();
+
+    return *context;
+}
+
+// Assumption: unique lock is held on contexts_mutex for multi-threaded operation
+void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext)
 {
     // Set defaults
     newcontext->base.left = 0.0;
@@ -123,13 +168,10 @@ void AddNewContext(const std::string& name, std::shared_ptr<PangolinGl> newconte
     newcontext->is_fullscreen = false;
 
     // Create and add
-    contexts_mutex.lock();
     if( contexts.find(name) != contexts.end() ) {
-        contexts_mutex.unlock();
         throw std::runtime_error("Context already exists.");
     }
     contexts[name] = newcontext;
-    contexts_mutex.unlock();
 
     // Process the following as if this context is now current.
     PangolinGl *oldContext = context;
@@ -176,6 +218,8 @@ void DestroyWindow(const std::string& name)
 
 WindowInterface& BindToContext(std::string name)
 {
+    std::unique_lock<std::mutex> l(contexts_mutex);
+
     // N.B. context is modified prior to invoking MakeCurrent so that
     // state management callbacks (such as Resize()) can be correctly
     // processed.
@@ -183,7 +227,7 @@ WindowInterface& BindToContext(std::string name)
     if( !context_to_bind )
     {
         std::shared_ptr<PangolinGl> newcontext(new PangolinGl());
-        AddNewContext(name, newcontext);
+        RegisterNewContext(name, newcontext);
         newcontext->MakeCurrent();
         return *(newcontext.get());
     }else{
