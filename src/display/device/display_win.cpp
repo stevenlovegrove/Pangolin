@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) 2011-2018 Steven Lovegrove, Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,20 +25,22 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
 
 #include <pangolin/display/device/WinWindow.h>
+#include <memory>
 
 namespace pangolin
 {
 
-extern __thread PangolinGl* context;
-
 const char *className = "Pangolin";
 
+extern __thread PangolinGl* context;
+  
 ////////////////////////////////////////////////////////////////////////
 // Utils
 ////////////////////////////////////////////////////////////////////////
@@ -451,24 +453,27 @@ void WinWindow::ProcessEvents()
     }
 }
 
-WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params &params)
+std::unique_ptr<WindowInterface> CreateWinWindowAndBind(std::string window_title, int w, int h)
 {
     WinWindow* win = new WinWindow(window_title, w, h);
 
-    // Add to context map
-    AddNewContext(window_title, std::shared_ptr<PangolinGl>(win) );
-    BindToContext(window_title);
-    win->ProcessEvents();
+    return std::unique_ptr<WindowInterface>(win);
+}
 
-    // Hack to make sure the window receives a
-    while(!win->windowed_size[0]) {
-        w -= 1; h -=1;
-        win->Resize(w,h);
-        win->ProcessEvents();
+PANGOLIN_REGISTER_FACTORY(WinWindow)
+{
+  struct WinWindowFactory : public FactoryInterface<WindowInterface> {
+    std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
+          
+      const std::string window_title = uri.Get<std::string>("window_title", "window");
+      const int w = uri.Get<int>("w", 640);
+      const int h = uri.Get<int>("h", 480);
+      return std::unique_ptr<WindowInterface>(CreateWinWindowAndBind(window_title, w, h));
     }
-    glewInit();
-
-    return *context;
+  };
+  
+  auto factory = std::make_shared<WinWindowFactory>();
+  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "winwindow");
 }
 
 }

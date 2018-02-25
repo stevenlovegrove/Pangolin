@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2016 Steven Lovegrove
+ * Copyright (c) 2011-2017 Steven Lovegrove, Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,51 +25,18 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
-#include <exception>
-#include <pangolin/platform.h>
-#include <string>
+#include <pangolin/display/window.h>
+#include <pangolin/factory/factory_registry.h>
 
 namespace pangolin
 {
 
-class GlContextInterface
+template<>
+FactoryRegistry<WindowInterface>& FactoryRegistry<WindowInterface>::I()
 {
-public:
-    virtual ~GlContextInterface() {}
-};
-
-class WindowInterface
-{
-public:
-    virtual ~WindowInterface() {}
-
-    virtual void ToggleFullscreen() = 0;
-    virtual void Move(int x, int y) = 0;
-    virtual void Resize(unsigned int w, unsigned int h) = 0;
-    virtual void MakeCurrent() = 0;
-    virtual void ProcessEvents() = 0;
-    virtual void SwapBuffers() = 0;
-};
-
-
-struct PANGOLIN_EXPORT WindowException : std::exception
-{
-    WindowException(std::string str) : desc(str) {}
-    WindowException(std::string str, std::string detail) {
-        desc = str + "\n\t" + detail;
-    }
-    ~WindowException() throw() {}
-    const char* what() const throw() { return desc.c_str(); }
-    std::string desc;
-};
-
-struct PANGOLIN_EXPORT WindowExceptionNoKnownHandler : public WindowException
-{
-    WindowExceptionNoKnownHandler(const std::string& scheme)
-        : WindowException("No known window handler for URI '" + scheme + "'")
-    {
-    }
-};
+    // Singleton instance
+    static FactoryRegistry instance;
+    return instance;
+}
 
 }

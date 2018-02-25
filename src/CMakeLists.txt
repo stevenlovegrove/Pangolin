@@ -25,6 +25,7 @@ append_glob(SOURCES log/*.cpp)
 ### Store list of Video factory registery methods to call for init.
 include(CreateMethodCallFile)
 set( VIDEO_FACTORY_REG "" )
+set( WINDOW_FACTORY_REG "" )
 
 #######################################################
 ## User build options
@@ -141,6 +142,7 @@ if(BUILD_PANGOLIN_GUI)
         # Android specific display code
         list(APPEND HEADERS ${INCDIR}/display/device/display_android.h )
         list(APPEND SOURCES display/device/display_android.cpp )
+        list(APPEND WINDOW_FACTORY_REG RegisterAndroidWindowFactory)
 
         if(HAVE_GLES_2)
             list(APPEND LINK_LIBS "-lEGL;-lGLESv2" )
@@ -151,6 +153,7 @@ if(BUILD_PANGOLIN_GUI)
         list(APPEND LINK_LIBS "-framework OpenGLES" )
         list(APPEND HEADERS "${INCDIR}/ios/PangolinAppDelegate.h" "${INCDIR}/ios/PangolinViewController.h" )
         list(APPEND SOURCES "ios/PangolinAppDelegate.mm" "ios/PangolinViewController.mm" )
+        list(APPEND WINDOW_FACTORY_REG RegisterIosWindowFactory)
     else()
         find_package(OpenGL REQUIRED QUIET)
         list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR}" )
@@ -184,50 +187,16 @@ elseif(IOS)
     # Nothing specific in here yet.
 else()
     if(BUILD_PANGOLIN_GUI)
-        if(FORCE_GLUT)
-            find_package(FREEGLUT QUIET)
-            find_package(GLUT QUIET)
-
-            if(_OSX_)
-              INCLUDE(CheckCXXSourceRuns)
-              set(CMAKE_REQUIRED_LIBRARIES ${GLUT_LIBRARY})
-              CHECK_CXX_SOURCE_RUNS("#include <GLUT/glut.h>\n int main () {return glutGetProcAddress(\"glutScrollFunc\") ? 0 : -1;};" HAVE_MODIFIED_OSXGLUT)
-              if(NOT HAVE_MODIFIED_OSXGLUT)
-                    message(STATUS "Install modified osxglut for smooth scroll support / pinch / zoom.")
-                    message(STATUS "(https://github.com/stevenlovegrove/osxglut)")
-              endif()
-            endif()
-
-            # Prefer OSX_MODIFIED_GLUT > FREEGLUT > GLUT
-            if(FREEGLUT_FOUND AND NOT HAVE_MODIFIED_OSXGLUT)
-              set(HAVE_FREEGLUT 1)
-              list(APPEND USER_INC  ${FREEGLUT_INCLUDE_DIR} )
-              list(APPEND LINK_LIBS ${FREEGLUT_LIBRARY} )
-            elseif(GLUT_FOUND)
-              list(APPEND USER_INC  ${GLUT_INCLUDE_DIR} )
-              list(APPEND LINK_LIBS ${GLUT_LIBRARY} )
-              if(_OSX_)
-                set(HAVE_APPLE_OPENGL_FRAMEWORK 1)
-                if(NOT HAVE_MODIFIED_OSXGLUT)
-                    message(STATUS "Using Apple Framework GLUT.")
-                    message(STATUS "Install Freeglut or modified osxglut for scroll support.")
-                endif()
-              endif()
-            endif()
-
-            if(FREEGLUT_FOUND OR GLUT_FOUND)
-                set(HAVE_GLUT 1)
-                list(APPEND HEADERS ${INCDIR}/display/device/display_glut.h )
-                list(APPEND SOURCES display/device/display_glut.cpp )
-                message(STATUS "Glut Found and Enabled")
-            endif()
-        elseif(_WIN_)
+        if(_WIN_)
+            list(APPEND WINDOW_FACTORY_REG RegisterWinWindowFactory)
             list(APPEND SOURCES display/device/display_win.cpp )
         elseif(_OSX_)
+            list(APPEND WINDOW_FACTORY_REG RegisterOsxWindowFactory)
             list(APPEND SOURCES display/device/display_osx.mm display/device/PangolinNSApplication.mm display/device/PangolinNSGLView.mm  )
             list(APPEND LINK_LIBS "-framework Cocoa" )
         elseif(_LINUX_)
             find_package(X11 REQUIRED)
+            list(APPEND WINDOW_FACTORY_REG RegisterX11WindowFactory)
             list(APPEND USER_INC ${X11_INCLUDE_DIR})
             list(APPEND SOURCES display/device/display_x11.cpp )
             list(APPEND LINK_LIBS ${X11_LIBRARIES} )
@@ -600,6 +569,15 @@ configure_file(
 CreateMethodCallFile(
     "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/video_drivers.h"
     "pangolin" "LoadBuiltInVideoDrivers" "${VIDEO_FACTORY_REG}"
+)
+
+#######################################################
+## Create window_frameworks.h file for inclusion in library
+## This loads video driver factories based on cmake configuration
+
+CreateMethodCallFile(
+    "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/window_frameworks.h"
+    "pangolin" "LoadBuiltInWindowFrameworks" "${WINDOW_FACTORY_REG}"
 )
 
 #######################################################

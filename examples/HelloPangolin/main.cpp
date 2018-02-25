@@ -1,7 +1,7 @@
 #include <pangolin/pangolin.h>
 
 int main( int /*argc*/, char** /*argv*/ )
-{  
+{
     pangolin::CreateWindowAndBind("Main",640,480);
     glEnable(GL_DEPTH_TEST);
 
