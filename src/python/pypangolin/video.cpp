@@ -7,6 +7,9 @@
 #include <pangolin/video/video_interface.h>
 #include <pangolin/video/video_input.h>
 
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+
 namespace py_pangolin {
 
     class PyVideoInterface: public pangolin::VideoInterface{
@@ -339,7 +342,30 @@ namespace py_pangolin {
       .def("InputStreams", &pangolin::VideoInput::InputStreams)
       .def("Open", &pangolin::VideoInput::Open, pybind11::arg("input_uri"), pybind11::arg("output_uri")="pango:[buffer_size_mb=100]//video_log.pango")      
       .def("Close", &pangolin::VideoInput::Close)
-      .def("Grab", &pangolin::VideoInput::Grab, pybind11::arg("buffer"), pybind11::arg("images"), pybind11::arg("wait")=true, pybind11::arg("newest")=false)
+//      .def("Grab", &pangolin::VideoInput::Grab, pybind11::arg("buffer"), pybind11::arg("images"), pybind11::arg("wait")=true, pybind11::arg("newest")=false)
+      .def("Grab", [](pangolin::VideoInput& vi, bool wait, bool newest){
+            unsigned char *buffer = new unsigned char[vi.SizeBytes()];
+
+            std::vector<pangolin::Image<unsigned char>> imgs;
+            vi.Grab(buffer,imgs,wait,newest);
+
+            // Create a Python object that will free the allocated memory
+            pybind11::capsule free_when_done(buffer,[](void* f) {
+                unsigned char* buffer = (unsigned char*)f;
+                delete[] buffer;
+            });
+
+            // Let's just return the first stream for the moment
+            const pangolin::StreamInfo& si = vi.Streams()[0];
+            const int c = si.PixFormat().channels;
+            const int Bpc = si.PixFormat().bpp / (8*c);
+
+            return pybind11::array_t<unsigned char>(
+                {(int)si.Height(), (int)si.Width(), c },
+                {(int)si.Pitch(), c, Bpc},
+                buffer,
+                free_when_done);
+      }, pybind11::arg("wait")=true, pybind11::arg("newest")=false )
       .def("Width", &pangolin::VideoInput::Width)
       .def("Height", &pangolin::VideoInput::Height)
       .def("PixFormat", &pangolin::VideoInput::PixFormat)

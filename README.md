@@ -123,10 +123,10 @@ Binaries are available for Windows x64, as output by the Windows CI server: [App
 
 Pangolin python bindings are enabled via [pybind11](www.pybind11.com). These bindings can be used both standalone and from within Pangolin's drop-down console (press the back-tick key, `).
 
-To enable the bindings, you must checkout the pybind submodule and install the pybind11 python module:
+To enable the bindings, you must checkout the pybind submodule. To use pangolin in python, it's recommend to install a few other python packages too:
 
 ```
-sudo pip install pybind11
+sudo python -mpip install numpy pyopengl Pillow pybind11
 git submodule init && git submodule update
 ```
 

@@ -2,34 +2,34 @@ import sys
 sys.path.append('../build/src')
 
 import math
-import pypangolin
+import pypangolin as pango
 
 def a_callback():
     print("a pressed")
 
-window_a=pypangolin.CreateWindowAndBind("main py_pangolin", 640, 480)
-log=pypangolin.DataLog()
+window_a=pango.CreateWindowAndBind("main py_pangolin", 640, 480)
+log=pango.DataLog()
 log.SetLabels(["sin(t)", "cos(t)", "sin(t)+cos(t)"])
 
 tinc=0.01
-plotter=pypangolin.Plotter(log,0,4*math.pi/tinc,-2,2,math.pi/(4*tinc),0.5);
-plotter.SetBounds(pypangolin.Attach(0),
-                  pypangolin.Attach(1),
-                  pypangolin.Attach(0),
-                  pypangolin.Attach(1))
+plotter=pango.Plotter(log,0,4*math.pi/tinc,-2,2,math.pi/(4*tinc),0.5);
+plotter.SetBounds(pango.Attach(0),
+                  pango.Attach(1),
+                  pango.Attach(0),
+                  pango.Attach(1))
 plotter.Track("$i")
-plotter.AddMarker(pypangolin.Marker.Vertical, -1000, pypangolin.Marker.LessThan, pypangolin.Colour.Blue().WithAlpha(0.2))
-plotter.AddMarker(pypangolin.Marker.Horizontal, 100, pypangolin.Marker.GreaterThan, pypangolin.Colour.Red().WithAlpha(0.2))
-plotter.AddMarker(pypangolin.Marker.Horizontal,  10, pypangolin.Marker.Equal, pypangolin.Colour.Green().WithAlpha(0.2))
+plotter.AddMarker(pango.Marker.Vertical, -1000, pango.Marker.LessThan, pango.Colour.Blue().WithAlpha(0.2))
+plotter.AddMarker(pango.Marker.Horizontal, 100, pango.Marker.GreaterThan, pango.Colour.Red().WithAlpha(0.2))
+plotter.AddMarker(pango.Marker.Horizontal,  10, pango.Marker.Equal, pango.Colour.Green().WithAlpha(0.2))
 
-plotter.AddToDisplay(pypangolin.DisplayBase())
+plotter.AddToDisplay(pango.DisplayBase())
 
 t=0;
 
-while not pypangolin.ShouldQuit():
-    pypangolin.glClearColorBifferBitOrDepthBufferBit()
+while not pango.ShouldQuit():
+    pango.glClearColorBifferBitOrDepthBufferBit()
 
     log.Log(math.sin(t), math.cos(t), math.sin(t)+math.cos(t))
     t+=tinc
     
-    pypangolin.FinishFrame()
+    pango.FinishFrame()
