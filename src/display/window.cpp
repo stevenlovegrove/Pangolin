@@ -61,7 +61,7 @@ namespace pangolin
     const int  sample_buffers  = params.Get(PARAM_SAMPLE_BUFFERS, 1);
     const int  samples         = params.Get(PARAM_SAMPLES, 1);
     
-    s << "x11window://["
+    s << "x11:["
       << "window_title=" << window_title << ","
       << "w=" << w << ","
       << "h=" << h << ","
@@ -72,7 +72,7 @@ namespace pangolin
       << "]";
     
 #elif defined(_WIN_)    
-    s << "winwindow://["
+    s << "winapi:["
       << "window_title=" << window_title << ","
       << "w=" << w << ","
       << "h=" << h
@@ -80,7 +80,7 @@ namespace pangolin
 #elif defined(_OSX_)
     const bool is_highres = params.Get(PARAM_HIGHRES, true);
 
-    s << "osxwindow://["
+    s << "cacao:["
       << "window_title=" << window_title << ","
       << "w=" << w << ","
       << "h=" << h << ","
