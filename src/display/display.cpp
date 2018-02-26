@@ -42,7 +42,6 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/window_frameworks.h>
 #include <pangolin/gl/glinclude.h>
-#include <pangolin/gl/glglut.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
@@ -189,17 +188,10 @@ void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> new
     // Process the following as if this context is now current.
     PangolinGl *oldContext = context;
     context = newcontext.get();
-#ifdef HAVE_GLUT
-    process::Resize(
-                glutGet(GLUT_WINDOW_WIDTH),
-                glutGet(GLUT_WINDOW_HEIGHT)
-                );
-#else
     process::Resize(
         newcontext->windowed_size[0],
         newcontext->windowed_size[1]
     );
-#endif //HAVE_GLUT
 
     // Default key bindings can be overridden
     RegisterKeyPressCallback(PANGO_KEY_ESCAPE, Quit );
@@ -537,10 +529,7 @@ void Mouse( int button_raw, int state, int x, int y)
         context->mouse_state &= ~(button&7);
     }
     
-#ifdef HAVE_GLUT
-    context->mouse_state &= 0x0000ffff;
-    context->mouse_state |= glutGetModifiers() << 16;
-#elif defined(_WIN_)
+#if defined(_WIN_)
     context->mouse_state &= 0x0000ffff;
     context->mouse_state |= (button_raw >> 4) << 16;
 #endif
@@ -618,31 +607,16 @@ void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, flo
 
 void Scroll(float x, float y)
 {
-#ifdef HAVE_GLUT
-    context->mouse_state &= 0x0000ffff;
-    context->mouse_state |= glutGetModifiers() << 16;
-#endif    
-    
     SpecialInput(InputSpecialScroll, last_x, last_y, x, y, 0, 0);
 }
 
 void Zoom(float m)
 {
-#ifdef HAVE_GLUT
-    context->mouse_state &= 0x0000ffff;
-    context->mouse_state |= glutGetModifiers() << 16;
-#endif    
-    
     SpecialInput(InputSpecialZoom, last_x, last_y, m, 0, 0, 0);
 }
 
 void Rotate(float r)
 {
-#ifdef HAVE_GLUT
-    context->mouse_state &= 0x0000ffff;
-    context->mouse_state |= glutGetModifiers() << 16;
-#endif    
-    
     SpecialInput(InputSpecialRotate, last_x, last_y, r, 0, 0, 0);
 }
 

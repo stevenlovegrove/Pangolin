@@ -27,9 +27,7 @@
 
 #pragma once
 
-#include <pangolin/gl/glglut.h>
-
-#ifndef HAVE_GLUT
+#include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/glfont.h>
 
 #ifdef HAVE_GLES
@@ -92,5 +90,3 @@ inline int glutBitmapLength(void * /*font*/, const unsigned char *str)
 }
 
 #define GLUT_BITMAP_HELVETICA_12 0;
-
-#endif // HAVE_GLUT

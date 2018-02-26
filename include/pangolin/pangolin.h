@@ -37,9 +37,6 @@
   #include <pangolin/gl/colour.h>
   #include <pangolin/display/display.h>
   #include <pangolin/display/view.h>
-  #ifdef HAVE_GLUT
-    #include <pangolin/display/device/display_glut.h>
-  #endif // HAVE_GLUT
   #ifdef _ANDROID_
     #include <pangolin/display/device/display_android.h>
   #endif

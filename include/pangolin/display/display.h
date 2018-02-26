@@ -152,8 +152,7 @@ namespace pangolin
     PANGOLIN_EXPORT
     void Resize(int width, int height);
 
-    /// Event based rendering entry point (from e.g.
-    /// glutMainLoop). Not currently supported.
+    /// Event based rendering entry point. Not currently supported.
     PANGOLIN_EXPORT
     void Display();
 
