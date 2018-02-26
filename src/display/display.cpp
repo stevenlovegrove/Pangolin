@@ -28,7 +28,7 @@
 #include <pangolin/platform.h>
 
 #ifdef HAVE_PYTHON
-#include <pangolin/python/PyInterpreter.h>
+#include <pangolin/python/pyinterpreter.h>
 #include <pangolin/console/ConsoleView.h>
 #endif // HAVE_PYTHON
 
@@ -37,9 +37,11 @@
 #include <string>
 #include <map>
 #include <mutex>
+#include <cstdlib>
 
+#include <pangolin/factory/factory_registry.h>
+#include <pangolin/window_frameworks.h>
 #include <pangolin/gl/glinclude.h>
-#include <pangolin/gl/glglut.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
@@ -73,6 +75,7 @@ typedef std::map<std::string,std::shared_ptr<PangolinGl> > ContextMap;
 // Map of active contexts
 ContextMap contexts;
 std::mutex contexts_mutex;
+bool one_time_window_frameworks_init = false;
 
 // Context active for current thread
 __thread PangolinGl* context = 0;
@@ -111,7 +114,61 @@ PangolinGl *FindContext(const std::string& name)
     return context;
 }
 
-void AddNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext)
+WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& params)
+{
+    std::unique_lock<std::mutex> l(contexts_mutex);
+
+    if(!one_time_window_frameworks_init) {
+        one_time_window_frameworks_init = LoadBuiltInWindowFrameworks();
+    }
+
+    pangolin::Uri win_uri;
+
+    if(const char* extra_params = std::getenv("PANGOLIN_WINDOW_URI"))
+    {
+        // Take any defaults from the environment
+        win_uri = pangolin::ParseUri(extra_params);
+    }
+
+    // Override with anything the program specified
+    win_uri.Set("w", w);
+    win_uri.Set("h", h);
+    win_uri.Set("window_title", window_title);
+    win_uri.params.insert(std::end(win_uri.params), std::begin(params.params), std::end(params.params));
+
+    // Fall back to default scheme if non specified.
+    if(win_uri.scheme.empty()) {
+#if defined(_LINUX_)
+      win_uri.scheme = "x11";
+#elif defined(_WIN_)
+      win_uri.scheme = "winapi";
+#elif defined(_OSX_)
+      win_uri.scheme = "cocoa";
+#else
+#     error "No default window api for this platform."
+#endif
+    }
+
+    std::unique_ptr<WindowInterface> window = FactoryRegistry<WindowInterface>::I().Open(win_uri);
+
+    // We're expecting not only a WindowInterface, but a PangolinGl.
+    if(!window || !dynamic_cast<PangolinGl*>(window.get())) {
+        throw WindowExceptionNoKnownHandler(win_uri.scheme);
+    }
+
+    std::shared_ptr<PangolinGl> context(dynamic_cast<PangolinGl*>(window.release()));
+    RegisterNewContext(window_title, context );
+    // is_high_res will alter default font size and a few other gui elements.
+    context->is_high_res = win_uri.Get(PARAM_HIGHRES,false);
+    context->MakeCurrent();
+    context->ProcessEvents();
+    glewInit();
+
+    return *context;
+}
+
+// Assumption: unique lock is held on contexts_mutex for multi-threaded operation
+void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext)
 {
     // Set defaults
     newcontext->base.left = 0.0;
@@ -123,28 +180,18 @@ void AddNewContext(const std::string& name, std::shared_ptr<PangolinGl> newconte
     newcontext->is_fullscreen = false;
 
     // Create and add
-    contexts_mutex.lock();
     if( contexts.find(name) != contexts.end() ) {
-        contexts_mutex.unlock();
         throw std::runtime_error("Context already exists.");
     }
     contexts[name] = newcontext;
-    contexts_mutex.unlock();
 
     // Process the following as if this context is now current.
     PangolinGl *oldContext = context;
     context = newcontext.get();
-#ifdef HAVE_GLUT
-    process::Resize(
-                glutGet(GLUT_WINDOW_WIDTH),
-                glutGet(GLUT_WINDOW_HEIGHT)
-                );
-#else
     process::Resize(
         newcontext->windowed_size[0],
         newcontext->windowed_size[1]
     );
-#endif //HAVE_GLUT
 
     // Default key bindings can be overridden
     RegisterKeyPressCallback(PANGO_KEY_ESCAPE, Quit );
@@ -176,6 +223,8 @@ void DestroyWindow(const std::string& name)
 
 WindowInterface& BindToContext(std::string name)
 {
+    std::unique_lock<std::mutex> l(contexts_mutex);
+
     // N.B. context is modified prior to invoking MakeCurrent so that
     // state management callbacks (such as Resize()) can be correctly
     // processed.
@@ -183,7 +232,7 @@ WindowInterface& BindToContext(std::string name)
     if( !context_to_bind )
     {
         std::shared_ptr<PangolinGl> newcontext(new PangolinGl());
-        AddNewContext(name, newcontext);
+        RegisterNewContext(name, newcontext);
         newcontext->MakeCurrent();
         return *(newcontext.get());
     }else{
@@ -480,10 +529,7 @@ void Mouse( int button_raw, int state, int x, int y)
         context->mouse_state &= ~(button&7);
     }
     
-#ifdef HAVE_GLUT
-    context->mouse_state &= 0x0000ffff;
-    context->mouse_state |= glutGetModifiers() << 16;
-#elif defined(_WIN_)
+#if defined(_WIN_)
     context->mouse_state &= 0x0000ffff;
     context->mouse_state |= (button_raw >> 4) << 16;
 #endif
@@ -561,31 +607,16 @@ void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, flo
 
 void Scroll(float x, float y)
 {
-#ifdef HAVE_GLUT
-    context->mouse_state &= 0x0000ffff;
-    context->mouse_state |= glutGetModifiers() << 16;
-#endif    
-    
     SpecialInput(InputSpecialScroll, last_x, last_y, x, y, 0, 0);
 }
 
 void Zoom(float m)
 {
-#ifdef HAVE_GLUT
-    context->mouse_state &= 0x0000ffff;
-    context->mouse_state |= glutGetModifiers() << 16;
-#endif    
-    
     SpecialInput(InputSpecialZoom, last_x, last_y, m, 0, 0, 0);
 }
 
 void Rotate(float r)
 {
-#ifdef HAVE_GLUT
-    context->mouse_state &= 0x0000ffff;
-    context->mouse_state |= glutGetModifiers() << 16;
-#endif    
-    
     SpecialInput(InputSpecialRotate, last_x, last_y, r, 0, 0, 0);
 }
 

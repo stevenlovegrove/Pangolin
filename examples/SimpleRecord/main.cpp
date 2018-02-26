@@ -41,7 +41,7 @@ void RecordSample(const std::string input_uri, const std::string record_uri)
         vVideo.Activate();
         texVideo.RenderToViewportFlipY();
 
-        // Swap back buffer with front and process window events via GLUT
+        // Swap back buffer with front and process window events
         pangolin::FinishFrame();
     }
 

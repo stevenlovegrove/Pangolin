@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Steven Lovegrove
+ * Copyright (c) Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,11 +27,11 @@
 
 #pragma once
 
-#include <pangolin/config.h>
+#include <pybind11/pybind11.h>
 
-#ifndef _MSVC_
-// Suppress warnings in OVR library headers
-#pragma GCC system_header
-#endif
+namespace py_pangolin {
+  
+  void bind_attach(pybind11::module &m);
 
-#include <OVR.h>
+}  // py_pangolin
+

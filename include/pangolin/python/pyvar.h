@@ -32,7 +32,7 @@
 #include <structmember.h>
 #include <iomanip>
 #include <pangolin/var/var.h>
-#include <pangolin/python/PyUniqueObj.h>
+#include <pangolin/python/pyuniqueobj.h>
 
 namespace pangolin
 {
@@ -216,7 +216,7 @@ struct PyVar {
 
  PyTypeObject PyVar::Py_type = {
      PyVarObject_HEAD_INIT(NULL,0)
-    "pangolin.Var",                           /* tp_name*/
+    "pypangolin.Var",                         /* tp_name*/
     sizeof(PyVar),                            /* tp_basicsize*/
     0,                                        /* tp_itemsize*/
     (destructor)PyVar::Py_dealloc,            /* tp_dealloc*/

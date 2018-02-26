@@ -1021,6 +1021,6 @@ PANGOLIN_REGISTER_FACTORY(AndroidWindow)
   };
 
   auto factory = std::make_shared<AndroidWindowFactory>();
-  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "androidwindow");
+  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "android");
   }
 }

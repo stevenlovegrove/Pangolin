@@ -31,7 +31,6 @@
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/var/varextra.h>
 #include <pangolin/utils/file_utils.h>
-#include <pangolin/compat/glutbitmap.h>
 
 #include <thread>
 #include <mutex>

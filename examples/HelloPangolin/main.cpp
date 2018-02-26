@@ -3,8 +3,7 @@
 
 int main( int /*argc*/, char** /*argv*/ )
 {
-    try{
-    pangolin::WindowInterface& a = pangolin::CreateWindowAndBind("Main",640,480);
+    pangolin::CreateWindowAndBind("Main",640,480);
     glEnable(GL_DEPTH_TEST);
 
     // Define Projection and initial ModelView matrix
@@ -31,8 +30,5 @@ int main( int /*argc*/, char** /*argv*/ )
         // Swap frames and Process Events
         pangolin::FinishFrame();
 //    }
-    }catch(const std::exception& e){
-	std::cerr << "error " << e.what() << std::endl;
-    }
     return 0;
 }

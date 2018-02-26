@@ -1,11 +1,36 @@
+/* This file is part of the Pangolin Project.
+ * http://github.com/stevenlovegrove/Pangolin
+ *
+ * Copyright (c) 2011 Steven Lovegrove
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include <Python.h>
 
-#include <pangolin/python/PyInterpreter.h>
-#include <pangolin/python/PyUniqueObj.h>
-#include <pangolin/python/PyModulePangolin.h>
-#include <pangolin/python/PyInterpreter.h>
-#include <pangolin/python/PyPangoIO.h>
-
+#include <pangolin/python/pypangolin_init.h>
+#include <pangolin/python/pyinterpreter.h>
+#include <pangolin/python/pyuniqueobj.h>
+#include <pangolin/python/pypangoio.h>
+#include <pangolin/utils/file_utils.h>
 
 namespace pangolin
 {
@@ -20,7 +45,7 @@ void PyInterpreter::AttachPrefix(void* data, const std::string& name, VarValueGe
         if( self->base_prefixes.find(base_prefix) == self->base_prefixes.end() ) {
             self->base_prefixes.insert(base_prefix);
             std::string cmd =
-                base_prefix + std::string(" = pangolin.Var('") +
+                base_prefix + std::string(" = pypangolin.Var('") +
                 base_prefix + std::string("')\n");
             PyRun_SimpleString(cmd.c_str());
         }
@@ -31,11 +56,11 @@ PyInterpreter::PyInterpreter()
     : pycompleter(0), pycomplete(0)
 {
 #if PY_MAJOR_VERSION >= 3
-    PyImport_AppendInittab("pangolin", InitPangoModule);
+    PyImport_AppendInittab("pypangolin", InitPyPangolinModule);
     Py_Initialize();
 #else
     Py_Initialize();
-    InitPangoModule();
+    InitPyPangolinModule();
 #endif
 
     // Hook stdout, stderr to this interpreter
@@ -53,19 +78,19 @@ PyInterpreter::PyInterpreter()
 
     // Attempt to setup readline completion
     PyRun_SimpleString(
-        "import pangolin\n"
+        "import pypangolin\n"
         "try:\n"
         "   import readline\n"
         "except ImportError:\n"
         "   import pyreadline as readline\n"
         "\n"
         "import rlcompleter\n"
-        "pangolin.completer = rlcompleter.Completer()\n"
+        "pypangolin.completer = rlcompleter.Completer()\n"
     );
     CheckPrintClearError();
 
     // Get reference to rlcompleter.Completer() for tab-completion
-    PyObject* mod_pangolin = PyImport_ImportModule("pangolin");
+    PyObject* mod_pangolin = PyImport_ImportModule("pypangolin");
     if(mod_pangolin) {
         pycompleter = PyObject_GetAttrString(mod_pangolin,"completer");
         if(pycompleter) {

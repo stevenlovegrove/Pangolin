@@ -32,7 +32,6 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
-#include <pangolin/gl/glglut.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
 #include <pangolin/display/window.h>
