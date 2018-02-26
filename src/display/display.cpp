@@ -75,7 +75,7 @@ typedef std::map<std::string,std::shared_ptr<PangolinGl> > ContextMap;
 // Map of active contexts
 ContextMap contexts;
 std::mutex contexts_mutex;
-bool one_time_window_frameworks_init = false;
+bool one_time_display_frameworks_init = false;
 
 // Context active for current thread
 __thread PangolinGl* context = 0;
@@ -118,8 +118,8 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 {
     std::unique_lock<std::mutex> l(contexts_mutex);
 
-    if(!one_time_window_frameworks_init) {
-        one_time_window_frameworks_init = LoadBuiltInWindowFrameworks();
+    if(!one_time_display_frameworks_init) {
+        one_time_display_frameworks_init = LoadBuiltInWindowFrameworks();
     }
 
     pangolin::Uri win_uri;
@@ -144,6 +144,8 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
       win_uri.scheme = "winapi";
 #elif defined(_OSX_)
       win_uri.scheme = "cocoa";
+#elif defined(__EMSCRIPTEN__)
+      win_uri.scheme = "emscriptenwindow";
 #else
 #     error "No default window api for this platform."
 #endif

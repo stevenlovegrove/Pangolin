@@ -72,8 +72,8 @@ if(_OSX_)
 endif()
 
 if(EMSCRIPTEN)
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" )
-    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" )
+    set( CMAKE_CXX_FLAGS "-s FULL_ES2=1 -s FULL_ES3=1 ${CMAKE_CXX_FLAGS}" )
+    set( CMAKE_C_FLAGS "-s FULL_ES2=1 -s FULL_ES3=1 ${CMAKE_C_FLAGS}" )
 endif()
 
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}
