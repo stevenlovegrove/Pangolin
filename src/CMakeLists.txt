@@ -215,7 +215,13 @@ endif()
 
 option(BUILD_PANGOLIN_PYTHON "Build support for Pangolin Interactive Console" ON)
 if(BUILD_PANGOLIN_PYTHON AND BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND NOT _WIN_)
-  find_package(pybind11 QUIET)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../external/pybind11/CMakeLists.txt")
+      add_subdirectory("../external/pybind11" "${CMAKE_CURRENT_BINARY_DIR}/external/pybind11")
+      set( pybind11_FOUND true)
+  else()
+      find_package(pybind11 QUIET)
+  endif()
+
   if(pybind11_FOUND)
     set(HAVE_PYTHON 1)
 
