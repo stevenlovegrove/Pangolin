@@ -75,7 +75,7 @@ namespace pangolin
     s << "winwindow://["
       << "window_title=" << window_title << ","
       << "w=" << w << ","
-      << "h=" << h 
+      << "h=" << h
       << "]";
 #elif defined(_OSX_)
     const bool is_highres = params.Get(PARAM_HIGHRES, true);
@@ -87,16 +87,19 @@ namespace pangolin
       << "is_highres=" << is_highres
       << "]";
 #elif defined(__EMSCRIPTEN__)
-#error "emscripten detected"
+    s << "emscriptenwindow:["
+      << "window_title=" << window_title << ","
+      << "w=" << w << ","
+      << "h=" << h
+      << "]";
 #else
 #error "not detected any supported system"
 #endif
-    Uri uri = ParseUri(s.str());    
+    Uri uri = ParseUri(s.str());
     std::unique_ptr<WindowInterface> window = FactoryRegistry<WindowInterface>::I().Open(uri);
     if(!window) {
       throw WindowExceptionNoKnownHandler(uri.scheme);
     }
-
     AddNewContext(window_title, std::shared_ptr<PangolinGl>(dynamic_cast<PangolinGl*>(window.release())) );
 #if defined(_LINUX_)
     BindToContext(window_title);
@@ -106,17 +109,12 @@ namespace pangolin
     context->is_high_res = is_highres;
 #elif defined(_WIN_)
     BindToContext(window_title);
-    window->ProcessEvents();
-
-    // // Hack to make sure the window receives a
-    // while(!window->windowed_size[0]) {
-    //   w -= 1; h -=1;
-    //   window->Resize(w,h);
-    //   window->ProcessEvents();
-    // }
+    context->ProcessEvents();
     glewInit();
 #elif defined(__EMSCRIPTEN__)
-#error "emscripten detected"
+    BindToContext(window_title);
+    glewInit();
+    context->ProcessEvents();
 #else
 #error "not detected any supported system"
 #endif

@@ -38,12 +38,16 @@ void glRecordGraphic(float x, float y, float radius)
     if( ticks % 2 )
     {
         // now, render a little red "recording" dot
+#ifndef HAVE_GLES
         glPushAttrib(GL_ENABLE_BIT);
+#endif
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
         glColor3ub( 255, 0, 0 );
         glDrawCircle( x, y, radius );
+#ifndef HAVE_GLES
         glPopAttrib();
+#endif
     }
 
 }

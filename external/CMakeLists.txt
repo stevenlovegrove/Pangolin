@@ -23,23 +23,41 @@ ExternalProject_Add( __glew
 
 add_library(_glew STATIC IMPORTED GLOBAL)
 add_dependencies(_glew __glew)
-set_target_properties(_glew PROPERTIES
-    IMPORTED_LOCATION_RELWITHDEBINFO ${glew_PREFIX}/lib/glew.lib
-    IMPORTED_LOCATION_RELEASE ${glew_PREFIX}/lib/glew.lib
-    IMPORTED_LOCATION_DEBUG   ${glew_PREFIX}/lib/glewd.lib
-)
+if(__WIN__)
+  set_target_properties(_glew PROPERTIES
+      IMPORTED_LOCATION_RELWITHDEBINFO ${glew_PREFIX}/lib/glew.lib
+      IMPORTED_LOCATION_RELEASE ${glew_PREFIX}/lib/glew.lib
+      IMPORTED_LOCATION_DEBUG   ${glew_PREFIX}/lib/glewd.lib
+  )
+else()
+  set_target_properties(_glew PROPERTIES
+      IMPORTED_LOCATION_RELWITHDEBINFO ${glew_PREFIX}/lib/libglew.a
+      IMPORTED_LOCATION_RELEASE ${glew_PREFIX}/lib/libglew.a
+      IMPORTED_LOCATION_DEBUG   ${glew_PREFIX}/lib/libglewd.a
+  )
+endif()
 
 set(GLEW_FOUND true PARENT_SCOPE)
 set(GLEW_INCLUDE_DIR "${glew_PREFIX}/include" PARENT_SCOPE)
 set(GLEW_LIBRARY _glew PARENT_SCOPE)
 set(GLEW_STATIC 1 PARENT_SCOPE)
-set(ExternConfig "${ExternConfig}
-  add_library(_glew STATIC IMPORTED)
-  set_target_properties(_glew PROPERTIES
-    IMPORTED_LOCATION_RELWITHDEBINFO ${glew_PREFIX}/lib/glew.lib
-    IMPORTED_LOCATION_RELEASE ${glew_PREFIX}/lib/glew.lib
-    IMPORTED_LOCATION_DEBUG   ${glew_PREFIX}/lib/glewd.lib
-  )")
+if(__WIN__)
+  set(ExternConfig "${ExternConfig}
+    add_library(_glew STATIC IMPORTED)
+    set_target_properties(_glew PROPERTIES
+      IMPORTED_LOCATION_RELWITHDEBINFO ${glew_PREFIX}/lib/glew.lib
+      IMPORTED_LOCATION_RELEASE ${glew_PREFIX}/lib/glew.lib
+      IMPORTED_LOCATION_DEBUG   ${glew_PREFIX}/lib/glewd.lib
+    )")
+else()
+  set(ExternConfig "${ExternConfig}
+    add_library(_glew STATIC IMPORTED)
+    set_target_properties(_glew PROPERTIES
+      IMPORTED_LOCATION_RELWITHDEBINFO ${glew_PREFIX}/lib/libglew.a
+      IMPORTED_LOCATION_RELEASE ${glew_PREFIX}/lib/libglew.a
+      IMPORTED_LOCATION_DEBUG   ${glew_PREFIX}/lib/libglewd.a
+    )")
+endif()
 endif()
 
 if( BUILD_EXTERN_LIBPNG )

@@ -59,7 +59,7 @@ if(ANDROID)
     include(AndroidUtils)
 endif()
 
-if(ANDROID OR IOS)
+if(ANDROID OR IOS OR EMSCRIPTEN)
     set(HAVE_GLES 1)
     option(BUILD_FOR_GLES_2 "Build for OpenGL ES 2 instead of ES 1" ON )
     if(BUILD_FOR_GLES_2)
@@ -69,6 +69,11 @@ endif()
 
 if(_OSX_)
     set(CMAKE_MACOSX_RPATH ON)
+endif()
+
+if(EMSCRIPTEN)
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" )
+    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" )
 endif()
 
 # Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}

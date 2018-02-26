@@ -18,8 +18,9 @@ ImageView::~ImageView()
 void ImageView::Render()
 {
     LoadPending();
-
+#ifndef HAVE_GLES
     glPushAttrib(GL_DEPTH_BITS);
+#endif
     glDisable(GL_DEPTH_TEST);
 
     Activate();
@@ -51,7 +52,9 @@ void ImageView::Render()
         extern_draw_function(*this);
     }
 
+#ifndef HAVE_GLES
     glPopAttrib();
+#endif
 }
 
 void ImageView::Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state)
@@ -179,9 +182,13 @@ ImageView& ImageView::SetImage(const pangolin::GlTexture& texture)
         tex.Reinitialise(texture.width, texture.height, texture.internal_format, true);
     }
 
+#if defined(__EMSCRIPTEN__)
+    glCopyImageSubDataNV(
+            texture.tid, GL_TEXTURE_2D, 0, 0, 0, 0, tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0, tex.width, tex.height, 1);
+#else
     glCopyImageSubData(
             texture.tid, GL_TEXTURE_2D, 0, 0, 0, 0, tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0, tex.width, tex.height, 1);
-
+#endif
     return *this;
 }
 

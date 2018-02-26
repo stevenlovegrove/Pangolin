@@ -1,8 +1,10 @@
 #include <pangolin/pangolin.h>
+#include <iostream>
 
 int main( int /*argc*/, char** /*argv*/ )
 {
-    pangolin::CreateWindowAndBind("Main",640,480);
+    try{
+    pangolin::WindowInterface& a = pangolin::CreateWindowAndBind("Main",640,480);
     glEnable(GL_DEPTH_TEST);
 
     // Define Projection and initial ModelView matrix
@@ -17,8 +19,8 @@ int main( int /*argc*/, char** /*argv*/ )
             .SetBounds(0.0, 1.0, 0.0, 1.0, -640.0f/480.0f)
             .SetHandler(&handler);
 
-    while( !pangolin::ShouldQuit() )
-    {
+//    while( !pangolin::ShouldQuit() )
+//    {
         // Clear screen and activate view to render into
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         d_cam.Activate(s_cam);
@@ -28,7 +30,9 @@ int main( int /*argc*/, char** /*argv*/ )
 
         // Swap frames and Process Events
         pangolin::FinishFrame();
+//    }
+    }catch(const std::exception& e){
+	std::cerr << "error " << e.what() << std::endl;
     }
-    
     return 0;
 }

@@ -27,20 +27,20 @@
 
 #pragma once
 
-#include <pangolin/platform.h>
+//#include <pangolin/platform.h>
 #include <pangolin/display/display_internal.h>
 
 #include <stdexcept>
 #include <string>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <GL/glx.h>
+#include <emscripten.h>
+#include <emscripten/html5.h>
 
 namespace pangolin
 {
 
 struct EmscriptenWindow : public PangolinGl
 {
+ public:
     EmscriptenWindow(const std::string& title, int width, int height);
 
     ~EmscriptenWindow();
@@ -51,13 +51,14 @@ struct EmscriptenWindow : public PangolinGl
 
     void Resize(unsigned int w, unsigned int h) override;
 
-    void MakeCurrent(GLXContext ctx);
-
     void MakeCurrent() override;
 
     void SwapBuffers() override;
 
     void ProcessEvents() override;
+ private:
+    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = NULL;
+    GLuint program = 0;
 };
 
 }

@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2014 Steven Lovegrove
+ * Copyright (c) 2014-2018 Steven Lovegrove, Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,8 +29,8 @@
 
 #include <stack>
 
-#include <pangolin/opengl_render_state.h>
-#include <pangolin/glsl.h>
+#include <pangolin/display/opengl_render_state.h>
+#include <pangolin/gl/glsl.h>
 
 namespace pangolin {
 
@@ -250,7 +250,7 @@ inline void glLoadMatrixd(const GLdouble* m)
     gl.UpdateMatrices();
 }
 
-inline void glMultMatrixf(const GLfloat* m)
+inline void glMultMatrixf(const GLfloat* /*m*/)
 {
 //    pangolin::GlEngine& gl = pangolin::glEngine();
 //    float res[16];
@@ -259,7 +259,7 @@ inline void glMultMatrixf(const GLfloat* m)
     pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
-inline void glMultMatrixd(const GLdouble* m)
+inline void glMultMatrixd(const GLdouble* /*m*/)
 {
     pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
@@ -302,19 +302,19 @@ inline void glColor4f(	GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
     pangolin::glEngine().SetColor(red,green,blue,alpha);
 }
 
-inline void glShadeModel( GLenum mode)
+inline void glShadeModel( GLenum /*mode*/)
 {
     pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
-inline void glPointSize(GLfloat size)
+inline void glPointSize(GLfloat /*size*/)
 {
     pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
-inline void glTexEnvf(	GLenum target,
-    GLenum pname,
-    GLfloat param)
+inline void glTexEnvf(	GLenum /*target*/,
+    GLenum /*pname*/,
+    GLfloat /*param*/)
 {
     pango_print_error("Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
