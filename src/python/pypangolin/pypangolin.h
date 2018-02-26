@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) Andrey Mnatsakanov, Steven Lovegrove
+ * Copyright (c) Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,9 +25,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
+#include <pybind11/embed.h>
 
 #include "attach.hpp"
 #include "colour.hpp"
@@ -47,25 +49,29 @@
 #include "widget.hpp"
 #include "window.hpp"
 
+namespace pypangolin {
 
-PYBIND11_MODULE(pypangolin, m) {
-  m.doc() = "pypangolin python wrapper for Pangolin rapid prototyping graphics and video library.";
+inline void PopulateModule(pybind11::module& m)
+{
+    m.doc() = "pypangolin python wrapper for Pangolin rapid prototyping graphics and video library.";
 
-  py_pangolin::bind_var(m);
-  py_pangolin::bind_viewport(m);
-  py_pangolin::bind_view(m);
-  py_pangolin::bind_window(m);
-  py_pangolin::bind_display(m);
-  py_pangolin::bind_params(m);
-  py_pangolin::bind_opengl_render_state(m);
-  py_pangolin::bind_attach(m);
-  py_pangolin::bind_colour(m);
-  py_pangolin::bind_datalog(m);
-  py_pangolin::bind_plotter(m);
-  py_pangolin::bind_handler(m);
-  py_pangolin::bind_gl_draw(m);
-  py_pangolin::bind_widget(m);
-  py_pangolin::bind_pixel_format(m);
-  py_pangolin::bind_image<unsigned char>(m, "Image");
-  py_pangolin::bind_video(m);
+    py_pangolin::bind_var(m);
+    py_pangolin::bind_viewport(m);
+    py_pangolin::bind_view(m);
+    py_pangolin::bind_window(m);
+    py_pangolin::bind_display(m);
+    py_pangolin::bind_params(m);
+    py_pangolin::bind_opengl_render_state(m);
+    py_pangolin::bind_attach(m);
+    py_pangolin::bind_colour(m);
+    py_pangolin::bind_datalog(m);
+    py_pangolin::bind_plotter(m);
+    py_pangolin::bind_handler(m);
+    py_pangolin::bind_gl_draw(m);
+    py_pangolin::bind_widget(m);
+    py_pangolin::bind_pixel_format(m);
+    py_pangolin::bind_image<unsigned char>(m, "Image");
+    py_pangolin::bind_video(m);
+}
+
 }

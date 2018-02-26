@@ -215,30 +215,39 @@ endif()
 
 option(BUILD_PANGOLIN_PYTHON "Build support for Pangolin Interactive Console" ON)
 if(BUILD_PANGOLIN_PYTHON AND BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND NOT _WIN_)
-  find_package(PythonLibs QUIET)
-  if(PYTHONLIBS_FOUND)
+  find_package(pybind11 QUIET)
+  if(pybind11_FOUND)
     set(HAVE_PYTHON 1)
+
+    file(GLOB pypangolin_SRC "python/pypangolin/*.cpp" )
+    file(GLOB pypangolin_HDR "python/pypangolin/*.hpp" )
     list(APPEND HEADERS
         ${INCDIR}/console/ConsoleInterpreter.h
         ${INCDIR}/console/ConsoleView.h
-        ${INCDIR}/python/PyInterpreter.h
-        ${INCDIR}/python/PyModulePangolin.h
-        ${INCDIR}/python/PyUniqueObj.h
-        ${INCDIR}/python/PyVar.h
-        ${INCDIR}/python/PyPangoIO.h
+        ${INCDIR}/python/pyinterpreter.h
+        ${INCDIR}/python/pypangolin_init.h
+        ${INCDIR}/python/pyuniqueobj.h
+        ${INCDIR}/python/pyvar.h
+        ${INCDIR}/python/pypangoio.h
+        ${pypangolin_HDR}
     )
     list(APPEND SOURCES
         console/ConsoleView.cpp
-        python/PyInterpreter.cpp
-        python/PyModulePangolin.cpp
+        python/pyinterpreter.cpp
+        python/pypangolin_init.cpp
+        ${pypangolin_SRC}
     )
+
+    # pybind11 stuff
+    list(APPEND LINK_LIBS PRIVATE pybind11::embed)
+
     if(_GCC_)
         set_source_files_properties(python/PyInterpreter.cpp    PROPERTIES COMPILE_FLAGS "-Wno-missing-field-initializers")
         set_source_files_properties(python/PyModulePangolin.cpp PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing -Wno-missing-field-initializers")
     endif()
     list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIR})
     list(APPEND LINK_LIBS    ${PYTHON_LIBRARY})
-    message(STATUS "Python Found and Enabled")
+    message(STATUS "Python Found and Enabled (with pybind11)")
   endif()
 endif()
 
@@ -518,8 +527,8 @@ endif()
 include(EmbedBinaryFiles)
 
 if(BUILD_PANGOLIN_GUI)
-    embed_binary_files( "_embed_/fonts/*.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fonts.c" )
-    list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/fonts.c" )
+    embed_binary_files( "_embed_/fonts/*.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp" )
+    list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp" )
 endif()
 
 #######################################################
@@ -573,7 +582,7 @@ CreateMethodCallFile(
 
 #######################################################
 ## Create window_frameworks.h file for inclusion in library
-## This loads video driver factories based on cmake configuration
+## This loads windowing framwork factories based on cmake configuration
 
 CreateMethodCallFile(
     "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/window_frameworks.h"
@@ -584,10 +593,8 @@ CreateMethodCallFile(
 ## Python wrapper
 
 option(BUILD_PYPANGOLIN_MODULE "Python wrapper for Pangolin" ON)
-if(BUILD_PYPANGOLIN_MODULE AND EXISTS "../external/pybind11/CMakeLists.txt" )
-    # run git submodule init && git submodule update to get pybind
-    add_subdirectory(../external/pybind11 ${CMAKE_CURRENT_BINARY_DIR}/pybind )
-    file(GLOB pypangolin_SRC "python/pypangolin/*.hpp" "python/pypangolin/*.cpp" )
+if(BUILD_PYPANGOLIN_MODULE AND HAVE_PYTHON )
+    file(GLOB pypangolin_SRC "python/pypangolin/*.hpp" "python/pypangolin/*.cpp" "python/pypangolin_module.cpp")
     pybind11_add_module(pypangolin ${pypangolin_SRC})
     target_link_libraries(pypangolin PRIVATE ${LIBRARY_NAME})
     target_include_directories(pypangolin PRIVATE "${USER_INC}")

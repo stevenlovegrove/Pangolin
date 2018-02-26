@@ -28,7 +28,7 @@
 #include <pangolin/platform.h>
 
 #ifdef HAVE_PYTHON
-#include <pangolin/python/PyInterpreter.h>
+#include <pangolin/python/pyinterpreter.h>
 #include <pangolin/console/ConsoleView.h>
 #endif // HAVE_PYTHON
 

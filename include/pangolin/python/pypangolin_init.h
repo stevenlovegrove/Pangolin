@@ -35,6 +35,6 @@ namespace pangolin
 {
 
 PANGOLIN_EXPORT
-PyMODINIT_FUNC InitPangoModule();
+PyMODINIT_FUNC InitPyPangolinModule();
 
 }

@@ -26,17 +26,11 @@
  */
 #include <Python.h>
 
-#include <pangolin/python/PyInterpreter.h>
-#include <pangolin/python/PyUniqueObj.h>
-#include <pangolin/python/PyModulePangolin.h>
-#include <pangolin/python/PyInterpreter.h>
-#include <pangolin/python/PyPangoIO.h>
+#include <pangolin/python/pypangolin_init.h>
+#include <pangolin/python/pyinterpreter.h>
+#include <pangolin/python/pyuniqueobj.h>
+#include <pangolin/python/pypangoio.h>
 #include <pangolin/utils/file_utils.h>
-
-#ifdef _UNIX_
-#   include <stdio.h>
-#   include <dlfcn.h>
-#endif
 
 namespace pangolin
 {
@@ -51,7 +45,7 @@ void PyInterpreter::AttachPrefix(void* data, const std::string& name, VarValueGe
         if( self->base_prefixes.find(base_prefix) == self->base_prefixes.end() ) {
             self->base_prefixes.insert(base_prefix);
             std::string cmd =
-                base_prefix + std::string(" = pangolin.Var('") +
+                base_prefix + std::string(" = pypangolin.Var('") +
                 base_prefix + std::string("')\n");
             PyRun_SimpleString(cmd.c_str());
         }
@@ -62,20 +56,11 @@ PyInterpreter::PyInterpreter()
     : pycompleter(0), pycomplete(0)
 {
 #if PY_MAJOR_VERSION >= 3
-    PyImport_AppendInittab("pangolin", InitPangoModule);
+    PyImport_AppendInittab("pypangolin", InitPyPangolinModule);
     Py_Initialize();
 #else
     Py_Initialize();
-    InitPangoModule();
-#endif
-
-    std::string pypangopath;
-#ifdef _UNIX_
-    Dl_info info;
-    if (dladdr((void*)InitPangoModule, &info)) {
-        const std::string pypangomodule = FindPath(PathParent(info.dli_fname), "/pypangolin.so");
-        pypangopath = PathParent(pypangomodule);
-    }
+    InitPyPangolinModule();
 #endif
 
     // Hook stdout, stderr to this interpreter
@@ -93,26 +78,19 @@ PyInterpreter::PyInterpreter()
 
     // Attempt to setup readline completion
     PyRun_SimpleString(
-        "import pangolin\n"
+        "import pypangolin\n"
         "try:\n"
         "   import readline\n"
         "except ImportError:\n"
         "   import pyreadline as readline\n"
         "\n"
         "import rlcompleter\n"
-        "pangolin.completer = rlcompleter.Completer()\n"
+        "pypangolin.completer = rlcompleter.Completer()\n"
     );
     CheckPrintClearError();
 
-    if(!pypangopath.empty()) {
-        PyRun_SimpleString("import sys" );
-        PyRun_SimpleString( FormatString("sys.path.insert(0,'%')", pypangopath).c_str() );
-        PyRun_SimpleString("import pypangolin\n");
-        CheckPrintClearError();
-    }
-
     // Get reference to rlcompleter.Completer() for tab-completion
-    PyObject* mod_pangolin = PyImport_ImportModule("pangolin");
+    PyObject* mod_pangolin = PyImport_ImportModule("pypangolin");
     if(mod_pangolin) {
         pycompleter = PyObject_GetAttrString(mod_pangolin,"completer");
         if(pycompleter) {

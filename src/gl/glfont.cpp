@@ -41,7 +41,7 @@
 #define MAX_TEXT_LENGTH 500
 
 // Embedded fonts:
-extern "C" const unsigned char AnonymousPro_ttf[];
+extern const unsigned char AnonymousPro_ttf[];
 
 namespace pangolin
 {
