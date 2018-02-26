@@ -224,7 +224,7 @@ PANGOLIN_REGISTER_FACTORY(OsxWindow)
       const std::string window_title = uri.Get<std::string>("window_title", "window");
       const int w = uri.Get<int>("w", 640);
       const int h = uri.Get<int>("h", 480);
-      const bool is_highres = uri.Get<bool>("is_highres", true);
+      const bool is_highres = uri.Get<bool>(PARAM_HIGHRES, false);
       return std::unique_ptr<WindowInterface>(CreateOsxWindowAndBind(window_title, w, h, is_highres));
     }
   };

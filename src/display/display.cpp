@@ -37,6 +37,7 @@
 #include <string>
 #include <map>
 #include <mutex>
+#include <cstdlib>
 
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/window_frameworks.h>
@@ -123,21 +124,31 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     }
 
     pangolin::Uri win_uri;
-    win_uri.params = params.params;
+
+    if(const char* extra_params = std::getenv("PANGOLIN_WINDOW_URI"))
+    {
+        // Take any defaults from the environment
+        win_uri = pangolin::ParseUri(extra_params);
+    }
+
+    // Override with anything the program specified
     win_uri.Set("w", w);
     win_uri.Set("h", h);
     win_uri.Set("window_title", window_title);
+    win_uri.params.insert(std::end(win_uri.params), std::begin(params.params), std::end(params.params));
 
+    // Fall back to default scheme if non specified.
+    if(win_uri.scheme.empty()) {
 #if defined(_LINUX_)
-    win_uri.scheme = "x11";
+      win_uri.scheme = "x11";
 #elif defined(_WIN_)
-    win_uri.scheme = "winapi";
+      win_uri.scheme = "winapi";
 #elif defined(_OSX_)
-    win_uri.scheme = "cocoa";
+      win_uri.scheme = "cocoa";
 #else
-#   error "No default window api for this platform."
+#     error "No default window api for this platform."
 #endif
-
+    }
 
     std::unique_ptr<WindowInterface> window = FactoryRegistry<WindowInterface>::I().Open(win_uri);
 
@@ -148,6 +159,8 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 
     std::shared_ptr<PangolinGl> context(dynamic_cast<PangolinGl*>(window.release()));
     RegisterNewContext(window_title, context );
+    // is_high_res will alter default font size and a few other gui elements.
+    context->is_high_res = win_uri.Get(PARAM_HIGHRES,false);
     context->MakeCurrent();
     context->ProcessEvents();
     glewInit();
