@@ -593,8 +593,6 @@ CreateMethodCallFile(
 )
 
 #######################################################
-<<<<<<< HEAD
-=======
 ## Python wrapper
 
 option(BUILD_PYPANGOLIN_MODULE "Python wrapper for Pangolin" ON)
@@ -606,7 +604,6 @@ if(BUILD_PYPANGOLIN_MODULE AND HAVE_PYTHON )
 endif()
 
 #######################################################
->>>>>>> 2fda7e496af56ac66c9218f85fa41d3a7ff120ad
 ## Generate Doxygen documentation target (make doc)
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
