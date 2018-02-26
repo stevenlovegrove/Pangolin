@@ -581,11 +581,7 @@ CreateMethodCallFile(
 
 #######################################################
 ## Create window_frameworks.h file for inclusion in library
-<<<<<<< HEAD
-## This loads video driver factories based on cmake configuration
-=======
 ## This loads windowing framwork factories based on cmake configuration
->>>>>>> 2fda7e496af56ac66c9218f85fa41d3a7ff120ad
 
 CreateMethodCallFile(
     "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/window_frameworks.h"
