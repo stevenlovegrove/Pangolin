@@ -113,7 +113,7 @@ GLXContext CreateGlContext(::Display *display, ::GLXFBConfig chosenFbc, GLXConte
     // Get the default screen's GLX extension list
     const char *glxExts = glXQueryExtensionsString( display, DefaultScreen( display ) );
 
-     glXCreateContextAttribsARB =
+    glXCreateContextAttribsARBProc glXCreateContextAttribsARB =
             (glXCreateContextAttribsARBProc) glXGetProcAddressARB(
                 (const GLubyte *) "glXCreateContextAttribsARB"
             );
