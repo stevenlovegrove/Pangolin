@@ -58,7 +58,8 @@ const long EVENT_MASKS = ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|B
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
-
+typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
+ 
 bool isExtensionSupported(const char *extList, const char *extension)
 {
     /* Extension names should not have spaces. */
@@ -112,7 +113,7 @@ GLXContext CreateGlContext(::Display *display, ::GLXFBConfig chosenFbc, GLXConte
     // Get the default screen's GLX extension list
     const char *glxExts = glXQueryExtensionsString( display, DefaultScreen( display ) );
 
-    glXCreateContextAttribsARBProc glXCreateContextAttribsARB =
+     glXCreateContextAttribsARB =
             (glXCreateContextAttribsARBProc) glXGetProcAddressARB(
                 (const GLubyte *) "glXCreateContextAttribsARB"
             );

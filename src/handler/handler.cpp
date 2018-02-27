@@ -134,7 +134,11 @@ void Handler3D::PixelUnproject( View& view, GLprecision winx, GLprecision winy, 
 {
     const GLint viewport[4] = {view.v.l,view.v.b,view.v.w,view.v.h};
     const pangolin::OpenGlMatrix proj = cam_state->GetProjectionMatrix();
+#if defined(__EMSCRIPTEN__)
+    glUnProject(winx, winy, winz, (const float*)Identity4d, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
+#else
     glUnProject(winx, winy, winz, Identity4d, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
+#endif
 }
 
 void Handler3D::GetPosNormal(pangolin::View& view, int winx, int winy, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision nw[3], GLprecision default_z)
