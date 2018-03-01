@@ -354,11 +354,14 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_MOUSEWHEEL:
-        process::Scroll(0.0f, GET_WHEEL_DELTA_WPARAM(wParam) / 5.0f );
-        return 0;
-    case WM_MOUSEHWHEEL:
-        process::Scroll(GET_WHEEL_DELTA_WPARAM(wParam) / 5.0f, 0.0f);
-        return 0;
+	{
+		const int wheel = GET_WHEEL_DELTA_WPARAM(wParam);
+		const int wmag = (int)std::max(1.0,std::abs(wheel / 20.0));
+		for (int i = 0; i < wmag; ++i) {
+			process::Mouse( ((wheel > 0) ? 3 : 4) | GetMouseModifierKey(wParam), 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		}
+		return 0;
+	}
     default:
         break;
     }
