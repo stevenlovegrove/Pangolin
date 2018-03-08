@@ -443,8 +443,8 @@ PANGOLIN_REGISTER_FACTORY(X11Window)
     }
   };
 
-    auto factory = std::make_shared<X11WindowFactory>();
-    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "x11");
+  auto factory = std::make_shared<X11WindowFactory>();
+  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "x11");
 }
 
 }

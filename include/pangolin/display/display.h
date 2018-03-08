@@ -89,6 +89,11 @@ namespace pangolin
   PANGOLIN_EXPORT
   void FinishFrame();
 
+#if defined(__EMSCRIPTEN__)
+  PANGOLIN_EXPORT
+  void MainLoop(std::function<void(void)> func, int fps=10);
+#endif
+  
   /// Request that the window close.
   PANGOLIN_EXPORT
   void Quit();

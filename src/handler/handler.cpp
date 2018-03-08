@@ -242,6 +242,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         
         if( button_state == MouseButtonMiddle )
         {
+          std::cout << "Miggle drag" << std::endl;
             // Middle Drag: Rotate around view
 
             // Try to correct for different coordinate conventions.
@@ -253,6 +254,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             Rotation<>(T_nc, aboutx, abouty, (GLprecision)0.0);
         }else if( button_state == MouseButtonLeft )
         {
+          std::cout << "Left drag" << std::endl;
             // Left Drag: in plane translate
             if( ValidWinDepth(last_z) )
             {
@@ -267,6 +269,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             }
         }else if( button_state == (MouseButtonLeft | MouseButtonRight) )
         {
+          std::cout << "Left and Right Drag" << std::endl;
             // Left and Right Drag: in plane rotate about object
             //        Rotation<>(T_nc,0.0,0.0, delta[0]*0.01);
             
@@ -282,6 +285,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             rotation_changed = true;
         }else if( button_state == MouseButtonRight)
         {
+          std::cout << "Right Drag" << std::endl;
             GLprecision aboutx = -rf * delta[1];
             GLprecision abouty = -rf * delta[0];
 

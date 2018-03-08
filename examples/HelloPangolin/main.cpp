@@ -1,6 +1,8 @@
 #include <pangolin/pangolin.h>
 #include <iostream>
 
+#include <unistd.h>
+
 int main( int /*argc*/, char** /*argv*/ )
 {
     pangolin::CreateWindowAndBind("Main",640,480);
@@ -18,8 +20,12 @@ int main( int /*argc*/, char** /*argv*/ )
             .SetBounds(0.0, 1.0, 0.0, 1.0, -640.0f/480.0f)
             .SetHandler(&handler);
 
-//    while( !pangolin::ShouldQuit() )
-//    {
+#if defined(__EMSCRIPTEN__)
+    pangolin::MainLoop([&]()
+#else
+    while( !pangolin::ShouldQuit() )
+#endif
+      {
         // Clear screen and activate view to render into
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         d_cam.Activate(s_cam);
@@ -29,6 +35,10 @@ int main( int /*argc*/, char** /*argv*/ )
 
         // Swap frames and Process Events
         pangolin::FinishFrame();
-//    }
+      }
+#if defined(__EMSCRIPTEN__)
+    );
+#else
+#endif
     return 0;
 }

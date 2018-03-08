@@ -32,12 +32,18 @@
 
 #include <stdexcept>
 #include <string>
+#include <list>
+
 #include <emscripten.h>
 #include <emscripten/html5.h>
 
 namespace pangolin
 {
 
+struct EmscriptenEvent{
+  int eventType;
+};
+  
 struct EmscriptenWindow : public PangolinGl
 {
  public:
@@ -56,6 +62,8 @@ struct EmscriptenWindow : public PangolinGl
     void SwapBuffers() override;
 
     void ProcessEvents() override;
+
+    std::list<EmscriptenEvent> event_list;
  private:
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = NULL;
     GLuint program = 0;

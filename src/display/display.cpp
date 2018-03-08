@@ -55,6 +55,10 @@
   #include <pangolin/var/var.h>
 #endif
 
+#if defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+#endif
+
 namespace pangolin
 {
 
@@ -342,6 +346,16 @@ void FinishFrame()
     context->SwapBuffers();
     context->ProcessEvents();
 }
+
+#if defined(__EMSCRIPTEN__)
+void MainLoop(std::function<void(void)> func, int fps)
+{
+  auto thunk=[](void* arg){
+    (*static_cast<std::function<void(void)>*>(arg))();
+  };
+  emscripten_set_main_loop_arg(thunk, &func, 0, 1);
+}
+#endif
 
 View& DisplayBase()
 {
