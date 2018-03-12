@@ -53,7 +53,7 @@ namespace pangolin
 extern __thread PangolinGl* context;
 
 std::mutex window_mutex;
-
+std::weak_ptr<X11GlContext> global_gl_context;
 const long EVENT_MASKS = ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|ButtonMotionMask|PointerMotionMask|KeyPressMask|KeyReleaseMask|FocusChangeMask;
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
@@ -88,6 +88,78 @@ bool isExtensionSupported(const char *extList, const char *extension)
     return false;
 }
 
+::GLXFBConfig ChooseFrameBuffer(
+    ::Display *display, bool glx_doublebuffer,
+    int glx_sample_buffers, int glx_samples
+) {
+    // Desired attributes
+    int visual_attribs[] =
+    {
+        GLX_X_RENDERABLE    , True,
+        GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+        GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+        GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
+        GLX_RED_SIZE        , 8,
+        GLX_GREEN_SIZE      , 8,
+        GLX_BLUE_SIZE       , 8,
+        GLX_ALPHA_SIZE      , 8,
+        GLX_DEPTH_SIZE      , 24,
+        GLX_STENCIL_SIZE    , 8,
+        GLX_DOUBLEBUFFER    , glx_doublebuffer ? True : False,
+        None
+    };
+
+    int fbcount;
+    GLXFBConfig* fbc = glXChooseFBConfig(display, DefaultScreen(display), visual_attribs, &fbcount);
+    if (!fbc) {
+        throw std::runtime_error("Pangolin X11: Unable to retrieve framebuffer options");
+    }
+
+    int best_fbc = -1;
+    int worst_fbc = -1;
+    int best_num_samp = -1;
+    int worst_num_samp = 999;
+
+    // Enumerate framebuffer options, storing the best and worst that match our attribs
+    for (int i=0; i<fbcount; ++i)
+    {
+        XVisualInfo *vi = glXGetVisualFromFBConfig( display, fbc[i] );
+        if ( vi )
+        {
+            int samp_buf, samples;
+            glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf );
+            glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLES       , &samples  );
+
+            // Filter for the best available.
+            if ( samples > best_num_samp ) {
+                best_fbc = i;
+                best_num_samp = samples;
+            }
+
+            // Filter lowest settings which match minimum user requirement.
+            if ( samp_buf >= glx_sample_buffers && samples >= glx_samples && samples < worst_num_samp ) {
+                worst_fbc = i;
+                worst_num_samp = samples;
+            }
+        }
+        XFree( vi );
+    }
+
+    // Select the minimum suitable option. The 'best' is often too slow.
+    int chosen_fbc_id = worst_fbc;
+
+    // If minimum requested isn't available, return the best that is.
+    if(chosen_fbc_id < 0) {
+        pango_print_warn("Framebuffer with requested attributes not available. Using available framebuffer. You may see visual artifacts.");
+        chosen_fbc_id = best_fbc;
+    }
+
+    ::GLXFBConfig chosenFbc = fbc[ chosen_fbc_id ];
+    XFree( fbc );
+    return chosenFbc;
+}
+
+  
 static bool ctxErrorOccurred = false;
 static int ctxErrorHandler( ::Display * /*dpy*/, ::XErrorEvent * ev )
 {
