@@ -23,7 +23,7 @@ ExternalProject_Add( __glew
 
 add_library(_glew STATIC IMPORTED GLOBAL)
 add_dependencies(_glew __glew)
-if(__WIN__)
+if(_WIN_)
   set_target_properties(_glew PROPERTIES
       IMPORTED_LOCATION_RELWITHDEBINFO ${glew_PREFIX}/lib/glew.lib
       IMPORTED_LOCATION_RELEASE ${glew_PREFIX}/lib/glew.lib
@@ -41,7 +41,7 @@ set(GLEW_FOUND true PARENT_SCOPE)
 set(GLEW_INCLUDE_DIR "${glew_PREFIX}/include" PARENT_SCOPE)
 set(GLEW_LIBRARY _glew PARENT_SCOPE)
 set(GLEW_STATIC 1 PARENT_SCOPE)
-if(__WIN__)
+if(_WIN_)
   set(ExternConfig "${ExternConfig}
     add_library(_glew STATIC IMPORTED)
     set_target_properties(_glew PROPERTIES
