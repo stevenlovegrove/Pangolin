@@ -34,7 +34,11 @@ int main(/*int argc, char* argv[]*/)
   float t = 0;
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
+#if defined(__EMSCRIPTEN__)
+  pangolin::MainLoop([&]()
+#else
   while( !pangolin::ShouldQuit() )
+#endif
   {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -44,6 +48,8 @@ int main(/*int argc, char* argv[]*/)
     // Render graph, Swap frames and Process Events
     pangolin::FinishFrame();
   }
-
+#if defined(__EMSCRIPTEN__)
+  );
+#endif
   return 0;
 }

@@ -64,7 +64,11 @@ void Viewport::ActivatePixelOrthographic() const
     Activate();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+#if defined (__EMSCRIPTEN__)
+    glOrthoEM(-0.5, w-0.5, -0.5, h-0.5, -1, 1);
+#else
     glOrtho(-0.5, w-0.5, -0.5, h-0.5, -1, 1);
+#endif
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }

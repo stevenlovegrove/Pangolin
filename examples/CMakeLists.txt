@@ -1,24 +1,29 @@
 # All examples depend on Pangolin GUI
 if(BUILD_PANGOLIN_GUI)
-    add_subdirectory(HelloPangolin)
-    add_subdirectory(SimpleMultiDisplay)
-    add_subdirectory(SimpleDisplayImage)
-    add_subdirectory(SimpleScene)
+    if(EMSCRIPTEN)
+       add_subdirectory(HelloPangolin)
+       add_subdirectory(SimpleDisplay)
+       add_subdirectory(SimplePlot)
+    else(EMSCRIPTEN)
+       add_subdirectory(HelloPangolin)
+       add_subdirectory(SimpleMultiDisplay)
+       add_subdirectory(SimpleDisplayImage)
+       add_subdirectory(SimpleScene)
 
-    if(NOT HAVE_GLES OR HAVE_GLES_2)
-        add_subdirectory(SimplePlot)
-    endif()
+       if(NOT HAVE_GLES OR HAVE_GLES_2)
+           add_subdirectory(SimplePlot)
+       endif()
 
-    ## These samples require Pangolin Var support
-    if(BUILD_PANGOLIN_VARS)
-      add_subdirectory(SimpleDisplay)
+       ## These samples require Pangolin Var support
+       if(BUILD_PANGOLIN_VARS)
+          add_subdirectory(SimpleDisplay)
 
-      ## Video Samples require Pangolin Video support
-      if(BUILD_PANGOLIN_VIDEO)
-        add_subdirectory(SimpleVideo)
-        add_subdirectory(SimpleRecord)
-        add_subdirectory(SharedMemoryCamera)
-      endif()
+          ## Video Samples require Pangolin Video support
+          if(BUILD_PANGOLIN_VIDEO)
+            add_subdirectory(SimpleVideo)
+            add_subdirectory(SimpleRecord)
+            add_subdirectory(SharedMemoryCamera)
+          endif()
 
 #      # This sample fails on many platforms, so exclude it for now,
 #      # until we can create a better cmake test for support.
@@ -27,5 +32,6 @@ if(BUILD_PANGOLIN_GUI)
 #        add_subdirectory(VBODisplay)
 #      endif()
 
-    endif()
-endif()
+       endif(BUILD_PANGOLIN_VARS)
+    endif(EMSCRIPTEN)
+endif(BUILD_PANGOLIN_GUI)

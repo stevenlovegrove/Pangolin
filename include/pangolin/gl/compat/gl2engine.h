@@ -297,6 +297,16 @@ inline void glOrtho(
     gl.UpdateMatrices();
 }
 
+inline void glOrthoEM(
+    GLdouble l, GLdouble r,
+    GLdouble b, GLdouble t,
+    GLdouble n, GLdouble f)
+{
+    pangolin::GlEngine& gl = pangolin::glEngine();
+    gl.currentmatrix->top() = pangolin::ProjectionMatrixOrthographic(l,r,b,t,n,f);
+    gl.UpdateMatrices();
+}
+
 inline void glColor4f(	GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
     pangolin::glEngine().SetColor(red,green,blue,alpha);

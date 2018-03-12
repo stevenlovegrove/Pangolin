@@ -40,10 +40,6 @@
 namespace pangolin
 {
 
-struct EmscriptenEvent{
-  int eventType;
-};
-  
 struct EmscriptenWindow : public PangolinGl
 {
  public:
@@ -63,7 +59,8 @@ struct EmscriptenWindow : public PangolinGl
 
     void ProcessEvents() override;
 
-    std::list<EmscriptenEvent> event_list;
+    int x;
+    int y;
  private:
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = NULL;
     GLuint program = 0;

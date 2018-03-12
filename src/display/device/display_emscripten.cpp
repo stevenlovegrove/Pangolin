@@ -46,51 +46,126 @@ namespace pangolin
 
 extern __thread PangolinGl* context;
 
+int spec_key(const char* key_string){
+  if(strlen(key_string)==1){
+    return -1;
+  }
+  if(strcmp(key_string, "F1")==0) return PANGO_SPECIAL + PANGO_KEY_F1;
+  if(strcmp(key_string, "F2")==0) return PANGO_SPECIAL + PANGO_KEY_F2;
+  if(strcmp(key_string, "F3")==0) return PANGO_SPECIAL + PANGO_KEY_F3;
+  if(strcmp(key_string, "F4")==0) return PANGO_SPECIAL + PANGO_KEY_F4;
+  if(strcmp(key_string, "F5")==0) return PANGO_SPECIAL + PANGO_KEY_F5;
+  if(strcmp(key_string, "F6")==0) return PANGO_SPECIAL + PANGO_KEY_F6;
+  if(strcmp(key_string, "F7")==0) return PANGO_SPECIAL + PANGO_KEY_F7;
+  if(strcmp(key_string, "F8")==0) return PANGO_SPECIAL + PANGO_KEY_F8;
+  if(strcmp(key_string, "F9")==0) return PANGO_SPECIAL + PANGO_KEY_F9;
+  if(strcmp(key_string, "F10")==0)return PANGO_SPECIAL + PANGO_KEY_F10;
+  if(strcmp(key_string, "F11")==0)return PANGO_SPECIAL + PANGO_KEY_F11;
+  if(strcmp(key_string, "F12")==0)return PANGO_SPECIAL + PANGO_KEY_F12;
+  if(strcmp(key_string, "ArrowLeft")==0)return PANGO_SPECIAL + PANGO_KEY_LEFT;
+  if(strcmp(key_string, "ArrowUp")==0)return PANGO_SPECIAL + PANGO_KEY_UP;
+  if(strcmp(key_string, "ArrowRight")==0)return PANGO_SPECIAL + PANGO_KEY_RIGHT;
+  if(strcmp(key_string, "ArrowDown")==0)return PANGO_SPECIAL + PANGO_KEY_DOWN;
+  if(strcmp(key_string, "PageUp")==0)return PANGO_SPECIAL + PANGO_KEY_PAGE_UP;
+  if(strcmp(key_string, "PageDown")==0)return PANGO_SPECIAL + PANGO_KEY_PAGE_DOWN;
+  if(strcmp(key_string, "Home")==0)return PANGO_SPECIAL + PANGO_KEY_HOME;
+  if(strcmp(key_string, "End")==0)return PANGO_SPECIAL + PANGO_KEY_END;
+  if(strcmp(key_string, "Insert")==0)return PANGO_SPECIAL + PANGO_KEY_INSERT;
+  return -1;
+}
+
+  int mod_key(const char* key_string, bool pressed){
+  if(strlen(key_string)==1){
+    return -1;
+  }
+  if(strcmp(key_string, "Shift")==0){
+    if(pressed) {
+      pangolin::context->mouse_state |=  pangolin::KeyModifierShift;
+    }else{
+      pangolin::context->mouse_state &= ~pangolin::KeyModifierShift;
+    }
+    return 0;
+  }
+  if(strcmp(key_string, "Control")==0){
+    if(pressed) {
+      pangolin::context->mouse_state |=  pangolin::KeyModifierCtrl;
+    }else{
+      pangolin::context->mouse_state &= ~pangolin::KeyModifierCtrl;
+    }
+    return 0;
+  }
+  if(strcmp(key_string, "Alt")==0){
+    if(pressed) {
+      pangolin::context->mouse_state |=  pangolin::KeyModifierAlt;
+    }else{
+      pangolin::context->mouse_state &= ~pangolin::KeyModifierAlt;
+    }
+    return 0;
+  }
+  if(strcmp(key_string, "Meta")==0){
+    if(pressed) {
+      pangolin::context->mouse_state |=  pangolin::KeyModifierCmd;
+    }else{
+      pangolin::context->mouse_state &= ~pangolin::KeyModifierCmd;
+    }
+    return 0;
+  }
+  return -1;
+}
+
 std::mutex window_mutex;
 
-  static inline const char *emscripten_event_type_to_string(int eventType) {
-    const char *events[] = { "(invalid)", "(none)", "keypress", "keydown", "keyup", "click", "mousedown", "mouseup", "dblclick", "mousemove", "wheel", "resize", 
-                             "scroll", "blur", "focus", "focusin", "focusout", "deviceorientation", "devicemotion", "orientationchange", "fullscreenchange", "pointerlockchange", 
-                             "visibilitychange", "touchstart", "touchend", "touchmove", "touchcancel", "gamepadconnected", "gamepaddisconnected", "beforeunload", 
-                             "batterychargingchange", "batterylevelchange", "webglcontextlost", "webglcontextrestored", "mouseenter", "mouseleave", "mouseover", "mouseout", "(invalid)" };
-    ++eventType;
-    if (eventType < 0) eventType = 0;
-    if (eventType >= sizeof(events)/sizeof(events[0])) eventType = sizeof(events)/sizeof(events[0])-1;
-    return events[eventType];
-  }
-  
   EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *userData){
-      printf("%s, key: \"%s\", code: \"%s\", location: %lu,%s%s%s%s repeat: %d, locale: \"%s\", char: \"%s\", charCode: %lu, keyCode: %lu, which: %lu\n",
-           emscripten_event_type_to_string(eventType), e->key, e->code, e->location, 
-           e->ctrlKey ? " CTRL" : "", e->shiftKey ? " SHIFT" : "", e->altKey ? " ALT" : "", e->metaKey ? " META" : "", 
-           e->repeat, e->locale, e->charValue, e->charCode, e->keyCode, e->which);
+    EmscriptenWindow* w=(EmscriptenWindow*)userData;
+    if(eventType==EMSCRIPTEN_EVENT_KEYPRESS)return false;
+    int key = mod_key(e->key, eventType==EMSCRIPTEN_EVENT_KEYDOWN?true:false);
+    if(key != -1){
+      return false;
+    }
+    key = spec_key(e->key);
+    if(key != -1){
+      if(eventType==EMSCRIPTEN_EVENT_KEYDOWN) {
+        pangolin::process::Keyboard(key, w->x, w->y);
+      }else{
+        pangolin::process::KeyboardUp(key, w->x, w->y);
+      }
+      return false;
+    }
+    if(strlen(e->key)==1){
+      if(eventType==EMSCRIPTEN_EVENT_KEYDOWN) {
+        pangolin::process::Keyboard((e->ctrlKey?PANGO_CTRL:0) + e->key[0], w->x, w->y);
+      }else{
+        pangolin::process::KeyboardUp((e->ctrlKey?PANGO_CTRL:0) + e->key[0], w->x, w->y);
+      }      
+    }
     return false;
   }
   EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userData){
+    int state = 1;
+    EmscriptenWindow* w=(EmscriptenWindow*)userData;
+    w->x = e->clientX;
+    w->y = e->clientY;
+
     switch(eventType) {
-    case EMSCRIPTEN_EVENT_MOUSEDOWN: {// mousedown
-      std::cout << "mouse down" << std::endl;
+    case EMSCRIPTEN_EVENT_MOUSEDOWN:
+      state=0;
+    case EMSCRIPTEN_EVENT_MOUSEUP: {
+      pangolin::process::Mouse(e->button, state, e->clientX, e->clientY);
+      break;
     }
       break;
-    case EMSCRIPTEN_EVENT_MOUSEUP: { //mouseup
-      std::cout << "mouse up" << std::endl;
-    }
-      break;
-    case EMSCRIPTEN_EVENT_MOUSEMOVE: { //mousemove
+    case EMSCRIPTEN_EVENT_MOUSEMOVE: {
       if(e->buttons){
-        std::cout<<"motion"<<std::endl;
-        pangolin::process::MouseMotion(e->movementX, e->movementY);
+        pangolin::process::MouseMotion(e->clientX, e->clientY);
       } else {
-        pangolin::process::PassiveMouseMotion(e->movementX, e->movementY);
+        pangolin::process::PassiveMouseMotion(e->clientX, e->clientY);
       }
     }
       break;
     case EMSCRIPTEN_EVENT_MOUSEOVER:{
-      std::cout << "mouse enter" << std::endl;
     }
       break;
     case EMSCRIPTEN_EVENT_MOUSEOUT:{
-      std::cout << "mouse leave" << std::endl;
     }
       break;
     default:

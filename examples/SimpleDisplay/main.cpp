@@ -28,7 +28,7 @@ std::istream& operator>> (std::istream& is, CustomType& o){
 
 void SampleMethod()
 {
-    std::cout << "You typed ctrl-r or pushed reset" << std::endl;
+    std::cout << "You typed ctrl-a or pushed reset" << std::endl;
 }
 
 
@@ -84,10 +84,14 @@ int main(/*int argc, char* argv[]*/)
   pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'b', pangolin::SetVarFunctor<double>("ui.A_Double", 3.5));
 
   // Demonstration of how we can register a keyboard hook to trigger a method
-  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'r', SampleMethod);
+  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 97/*a*/, SampleMethod);
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
+#if defined(__EMSCRIPTEN__)
+  pangolin::MainLoop([&]()
+#else
   while( !pangolin::ShouldQuit() )
+#endif
   {
     // Clear entire screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
@@ -124,6 +128,8 @@ int main(/*int argc, char* argv[]*/)
     // Swap frames and Process Events
     pangolin::FinishFrame();
   }
-
+#if defined(__EMSCRIPTEN__)
+  );
+#endif
   return 0;
 }

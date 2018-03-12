@@ -33,6 +33,8 @@
 #include <pangolin/display/view.h>
 #endif
 
+#include <pangolin/gl/glinclude.h>
+
 namespace pangolin
 {
 
