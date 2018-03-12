@@ -1,8 +1,6 @@
 #include <pangolin/pangolin.h>
 #include <iostream>
 
-#include <unistd.h>
-
 int main( int /*argc*/, char** /*argv*/ )
 {
     pangolin::CreateWindowAndBind("Main",640,480);
