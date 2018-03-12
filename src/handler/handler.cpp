@@ -254,17 +254,22 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         }else if( button_state == MouseButtonLeft )
         {
             // Left Drag: in plane translate
-            if( ValidWinDepth(last_z) )
+#if !defined(__EMSCRIPTEN__)
+          if( ValidWinDepth(last_z) )
             {
-                GLprecision np[3];
-                PixelUnproject(display, x, y, last_z, np);
-                const GLprecision t[] = { np[0] - rot_center[0], np[1] - rot_center[1], 0};
-                LieSetTranslation<>(T_nc,t);
-                std::copy(np,np+3,rot_center);
-            }else{
-                const GLprecision t[] = { -10*delta[0]*tf, 10*delta[1]*tf, 0};
-                LieSetTranslation<>(T_nc,t);
+              GLprecision np[3];
+              PixelUnproject(display, x, y, last_z, np);
+              const GLprecision t[] = { np[0] - rot_center[0], np[1] - rot_center[1], 0};
+              LieSetTranslation<>(T_nc,t);
+              std::copy(np,np+3,rot_center);
             }
+          else{
+#endif
+            const GLprecision t[] = { -10*delta[0]*tf, 10*delta[1]*tf, 0};
+            LieSetTranslation<>(T_nc,t);
+#if !defined(__EMSCRIPTEN__)
+          }
+#endif
         }else if( button_state == (MouseButtonLeft | MouseButtonRight) )
         {
             // Left and Right Drag: in plane rotate about object
