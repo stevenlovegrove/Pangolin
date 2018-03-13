@@ -134,8 +134,8 @@ void Handler3D::PixelUnproject( View& view, GLprecision winx, GLprecision winy, 
 {
     const GLint viewport[4] = {view.v.l,view.v.b,view.v.w,view.v.h};
     const pangolin::OpenGlMatrix proj = cam_state->GetProjectionMatrix();
-#if defined(__EMSCRIPTEN__)
-    glUnProject(winx, winy, winz, (const float*)Identity4d, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
+#ifdef HAVE_GLES
+    glUnProject(winx, winy, winz, Identity4f, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
 #else
     glUnProject(winx, winy, winz, Identity4d, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
 #endif
@@ -149,7 +149,7 @@ void Handler3D::GetPosNormal(pangolin::View& view, int winx, int winy, GLprecisi
     const int zsize = zl*zl;
     GLfloat zs[zsize];
 
-#ifndef HAVE_GLES
+#if !defined(HAVE_GLES) || defined(__EMSCRIPTEN__)
     glReadBuffer(GL_FRONT);
     glReadPixels(winx-hwin,winy-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
 #else
@@ -254,7 +254,6 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         }else if( button_state == MouseButtonLeft )
         {
             // Left Drag: in plane translate
-#if !defined(__EMSCRIPTEN__)
           if( ValidWinDepth(last_z) )
             {
               GLprecision np[3];
@@ -264,12 +263,9 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
               std::copy(np,np+3,rot_center);
             }
           else{
-#endif
             const GLprecision t[] = { -10*delta[0]*tf, 10*delta[1]*tf, 0};
             LieSetTranslation<>(T_nc,t);
-#if !defined(__EMSCRIPTEN__)
           }
-#endif
         }else if( button_state == (MouseButtonLeft | MouseButtonRight) )
         {
             // Left and Right Drag: in plane rotate about object
