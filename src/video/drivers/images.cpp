@@ -54,10 +54,57 @@ bool ImagesVideo::LoadFrame(size_t i)
     return false;
 }
 
+void ImagesVideo::PopulateFilenamesFromJson(const std::string& filename)
+{
+    std::ifstream ifs( PathExpand(filename));
+    picojson::value json;
+    const std::string err = picojson::parse(json, ifs);
+    if(err.empty()) {
+        const std::string folder = PathParent(filename) + "/";
+        device_properties = json["device_properties"];
+        json_frames = json["frames"];
+
+        num_files = json_frames.size();
+        if(num_files == 0) {
+            throw VideoException("Empty Json Image archive.");
+        }
+
+        num_channels = json_frames[0]["stream_files"].size();
+        if(num_channels == 0) {
+            throw VideoException("Empty Json Image archive.");
+        }
+
+        filenames.resize(num_channels);
+        for(size_t c=0; c < num_channels; ++c) {
+            filenames[c].resize(num_files);
+            for(size_t i = 0; i < num_files; ++i) {
+                const std::string path = json_frames[i]["stream_files"][c].get<std::string>();
+                filenames[c][i] = (path.size() && path[0] == '/') ? path : (folder + path);
+            }
+        }
+        loaded.resize(num_files);
+    }else{
+        throw VideoException(err);
+    }
+}
+
 void ImagesVideo::PopulateFilenames(const std::string& wildcard_path)
 {
     const std::vector<std::string> wildcards = Expand(wildcard_path, '[', ']', ',');
     num_channels = wildcards.size();
+
+    if(wildcards.size() == 1 ) {
+        const std::string expanded_path = PathExpand(wildcards[0]);
+        const std::string possible_archive_path = expanded_path + "/archive.json";
+
+        if (FileLowercaseExtention(expanded_path) == ".json" ) {
+            PopulateFilenamesFromJson(wildcards[0]);
+            return;
+        }else if(wildcards.size() == 1 && FileExists(possible_archive_path)){
+            PopulateFilenamesFromJson(possible_archive_path);
+            return;
+        }
+    }
 
     filenames.resize(num_channels);
 
@@ -201,6 +248,25 @@ size_t ImagesVideo::Seek(size_t frameid)
 {
     next_frame_id = std::max(size_t(0), std::min(frameid, num_files));
     return next_frame_id;
+}
+
+const picojson::value& ImagesVideo::DeviceProperties() const
+{
+    return device_properties;
+}
+
+const picojson::value& ImagesVideo::FrameProperties() const
+{
+    const size_t frame = GetCurrentFrameId();
+
+    if( frame < json_frames.size()) {
+        const picojson::value& frame_props = json_frames[frame];
+        if(frame_props.contains("frame_properties")) {
+            return frame_props["frame_properties"];
+        }
+    }
+
+    return null_props;
 }
 
 PANGOLIN_REGISTER_FACTORY(ImagesVideo)
