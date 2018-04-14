@@ -35,6 +35,7 @@
 
 #include <functional>
 #include <string>
+#include <memory>
 
 /*! \file display.h
  * This file contains a number of global methods for creating and
@@ -151,8 +152,7 @@ namespace pangolin
     PANGOLIN_EXPORT
     void Resize(int width, int height);
 
-    /// Event based rendering entry point (from e.g.
-    /// glutMainLoop). Not currently supported.
+    /// Event based rendering entry point. Not currently supported.
     PANGOLIN_EXPORT
     void Display();
 

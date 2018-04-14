@@ -27,6 +27,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
@@ -1004,5 +1005,22 @@ void PangolinPlatformDeinit(PangolinGl& /*context*/)
 {
 }
 
+PANGOLIN_REGISTER_FACTORY(AndroidWindow)
+{
+  struct AndroidWindowFactory : public FactoryInterface<WindowInterface> {
+    std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
+        
+      const std::string window_title = uri.Get<std::string>("window_title", "window");
+      CreateAndroidWindowAndBind(window_title);
+#ifdef HAVE_GLES_2
+      // Bind default compatibility shader
+      pangolin::glEngine().prog_fixed.Bind();
+#endif
+      return NULL;
+    }
+  };
 
+  auto factory = std::make_shared<AndroidWindowFactory>();
+  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "android");
+  }
 }

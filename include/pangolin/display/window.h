@@ -26,6 +26,9 @@
  */
 
 #pragma once
+#include <exception>
+#include <pangolin/platform.h>
+#include <string>
 
 namespace pangolin
 {
@@ -47,6 +50,26 @@ public:
     virtual void MakeCurrent() = 0;
     virtual void ProcessEvents() = 0;
     virtual void SwapBuffers() = 0;
+};
+
+
+struct PANGOLIN_EXPORT WindowException : std::exception
+{
+    WindowException(std::string str) : desc(str) {}
+    WindowException(std::string str, std::string detail) {
+        desc = str + "\n\t" + detail;
+    }
+    ~WindowException() throw() {}
+    const char* what() const throw() { return desc.c_str(); }
+    std::string desc;
+};
+
+struct PANGOLIN_EXPORT WindowExceptionNoKnownHandler : public WindowException
+{
+    WindowExceptionNoKnownHandler(const std::string& scheme)
+        : WindowException("No known window handler for URI '" + scheme + "'")
+    {
+    }
 };
 
 }

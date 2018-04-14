@@ -184,7 +184,13 @@ std::string PathParent(const std::string& path, int levels)
 
 std::string FindPath(const std::string& child_path, const std::string& signature_path)
 {
-    std::string path = child_path;
+    std::string path = PathExpand(child_path);
+#ifdef _UNIX_
+    char abs_path[PATH_MAX];
+    if (realpath(path.c_str(), abs_path)) {
+        path = abs_path;
+    }
+#endif
     std::string signature = signature_path;
     PathOsNormaliseInplace(path);
     PathOsNormaliseInplace(signature);

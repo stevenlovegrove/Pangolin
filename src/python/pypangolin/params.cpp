@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,16 +25,17 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#include "params.hpp"
+#include <pangolin/utils/params.h>
 
-#include <Python.h>
+namespace py_pangolin {
 
-#include <pangolin/platform.h>
+    void bind_params(pybind11::module &m) {
+      pybind11::class_<pangolin::Params>(m, "Params")
+        .def(pybind11::init<>())
+        .def("Contains", &pangolin::Params::Contains)
+        .def("Set", &pangolin::Params::Set<int>)
+        .def("Get", &pangolin::Params::Get<int>);
+    }
 
-namespace pangolin
-{
-
-PANGOLIN_EXPORT
-PyMODINIT_FUNC InitPangoModule();
-
-}
+}  // py_pangolin

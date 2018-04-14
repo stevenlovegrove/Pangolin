@@ -25,6 +25,7 @@ append_glob(SOURCES log/*.cpp)
 ### Store list of Video factory registery methods to call for init.
 include(CreateMethodCallFile)
 set( VIDEO_FACTORY_REG "" )
+set( WINDOW_FACTORY_REG "" )
 
 #######################################################
 ## User build options
@@ -141,6 +142,7 @@ if(BUILD_PANGOLIN_GUI)
         # Android specific display code
         list(APPEND HEADERS ${INCDIR}/display/device/display_android.h )
         list(APPEND SOURCES display/device/display_android.cpp )
+        list(APPEND WINDOW_FACTORY_REG RegisterAndroidWindowFactory)
 
         if(HAVE_GLES_2)
             list(APPEND LINK_LIBS "-lEGL;-lGLESv2" )
@@ -151,6 +153,7 @@ if(BUILD_PANGOLIN_GUI)
         list(APPEND LINK_LIBS "-framework OpenGLES" )
         list(APPEND HEADERS "${INCDIR}/ios/PangolinAppDelegate.h" "${INCDIR}/ios/PangolinViewController.h" )
         list(APPEND SOURCES "ios/PangolinAppDelegate.mm" "ios/PangolinViewController.mm" )
+        list(APPEND WINDOW_FACTORY_REG RegisterIosWindowFactory)
     else()
         find_package(OpenGL REQUIRED QUIET)
         list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR}" )
@@ -184,50 +187,16 @@ elseif(IOS)
     # Nothing specific in here yet.
 else()
     if(BUILD_PANGOLIN_GUI)
-        if(FORCE_GLUT)
-            find_package(FREEGLUT QUIET)
-            find_package(GLUT QUIET)
-
-            if(_OSX_)
-              INCLUDE(CheckCXXSourceRuns)
-              set(CMAKE_REQUIRED_LIBRARIES ${GLUT_LIBRARY})
-              CHECK_CXX_SOURCE_RUNS("#include <GLUT/glut.h>\n int main () {return glutGetProcAddress(\"glutScrollFunc\") ? 0 : -1;};" HAVE_MODIFIED_OSXGLUT)
-              if(NOT HAVE_MODIFIED_OSXGLUT)
-                    message(STATUS "Install modified osxglut for smooth scroll support / pinch / zoom.")
-                    message(STATUS "(https://github.com/stevenlovegrove/osxglut)")
-              endif()
-            endif()
-
-            # Prefer OSX_MODIFIED_GLUT > FREEGLUT > GLUT
-            if(FREEGLUT_FOUND AND NOT HAVE_MODIFIED_OSXGLUT)
-              set(HAVE_FREEGLUT 1)
-              list(APPEND USER_INC  ${FREEGLUT_INCLUDE_DIR} )
-              list(APPEND LINK_LIBS ${FREEGLUT_LIBRARY} )
-            elseif(GLUT_FOUND)
-              list(APPEND USER_INC  ${GLUT_INCLUDE_DIR} )
-              list(APPEND LINK_LIBS ${GLUT_LIBRARY} )
-              if(_OSX_)
-                set(HAVE_APPLE_OPENGL_FRAMEWORK 1)
-                if(NOT HAVE_MODIFIED_OSXGLUT)
-                    message(STATUS "Using Apple Framework GLUT.")
-                    message(STATUS "Install Freeglut or modified osxglut for scroll support.")
-                endif()
-              endif()
-            endif()
-
-            if(FREEGLUT_FOUND OR GLUT_FOUND)
-                set(HAVE_GLUT 1)
-                list(APPEND HEADERS ${INCDIR}/display/device/display_glut.h )
-                list(APPEND SOURCES display/device/display_glut.cpp )
-                message(STATUS "Glut Found and Enabled")
-            endif()
-        elseif(_WIN_)
+        if(_WIN_)
+            list(APPEND WINDOW_FACTORY_REG RegisterWinWindowFactory)
             list(APPEND SOURCES display/device/display_win.cpp )
         elseif(_OSX_)
+            list(APPEND WINDOW_FACTORY_REG RegisterOsxWindowFactory)
             list(APPEND SOURCES display/device/display_osx.mm display/device/PangolinNSApplication.mm display/device/PangolinNSGLView.mm  )
             list(APPEND LINK_LIBS "-framework Cocoa" )
         elseif(_LINUX_)
             find_package(X11 REQUIRED)
+            list(APPEND WINDOW_FACTORY_REG RegisterX11WindowFactory)
             list(APPEND USER_INC ${X11_INCLUDE_DIR})
             list(APPEND SOURCES display/device/display_x11.cpp )
             list(APPEND LINK_LIBS ${X11_LIBRARIES} )
@@ -246,43 +215,45 @@ endif()
 
 option(BUILD_PANGOLIN_PYTHON "Build support for Pangolin Interactive Console" ON)
 if(BUILD_PANGOLIN_PYTHON AND BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND NOT _WIN_)
-  find_package(PythonLibs QUIET)
-  if(PYTHONLIBS_FOUND)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../external/pybind11/CMakeLists.txt")
+      add_subdirectory("../external/pybind11" "${CMAKE_CURRENT_BINARY_DIR}/external/pybind11")
+      set( pybind11_FOUND true)
+  else()
+      find_package(pybind11 QUIET)
+  endif()
+
+  if(pybind11_FOUND)
     set(HAVE_PYTHON 1)
+
+    file(GLOB pypangolin_SRC "python/pypangolin/*.cpp" )
+    file(GLOB pypangolin_HDR "python/pypangolin/*.hpp" )
     list(APPEND HEADERS
         ${INCDIR}/console/ConsoleInterpreter.h
         ${INCDIR}/console/ConsoleView.h
-        ${INCDIR}/python/PyInterpreter.h
-        ${INCDIR}/python/PyModulePangolin.h
-        ${INCDIR}/python/PyUniqueObj.h
-        ${INCDIR}/python/PyVar.h
-        ${INCDIR}/python/PyPangoIO.h
+        ${INCDIR}/python/pyinterpreter.h
+        ${INCDIR}/python/pypangolin_init.h
+        ${INCDIR}/python/pyuniqueobj.h
+        ${INCDIR}/python/pyvar.h
+        ${INCDIR}/python/pypangoio.h
+        ${pypangolin_HDR}
     )
     list(APPEND SOURCES
         console/ConsoleView.cpp
-        python/PyInterpreter.cpp
-        python/PyModulePangolin.cpp
+        python/pyinterpreter.cpp
+        python/pypangolin_init.cpp
+        ${pypangolin_SRC}
     )
+
+    # pybind11 stuff
+    list(APPEND LINK_LIBS PRIVATE pybind11::embed)
+
     if(_GCC_)
         set_source_files_properties(python/PyInterpreter.cpp    PROPERTIES COMPILE_FLAGS "-Wno-missing-field-initializers")
         set_source_files_properties(python/PyModulePangolin.cpp PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing -Wno-missing-field-initializers")
     endif()
     list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIR})
     list(APPEND LINK_LIBS    ${PYTHON_LIBRARY})
-    message(STATUS "Python Found and Enabled")
-  endif()
-endif()
-
-option(BUILD_PANGOLIN_OCULUS "Build support for Oculus HUD" OFF)
-if(BUILD_PANGOLIN_OCULUS)
-  find_package(Oculus QUIET)
-  if(Oculus_FOUND)
-    set(HAVE_OCULUS 1)
-    list(APPEND HEADERS ${INCDIR}/hud/oculus_hud.h )
-    list(APPEND SOURCES hud/oculus_hud.cpp )
-    list(APPEND USER_INC ${Oculus_INCLUDE_DIRS} )
-    list(APPEND LINK_LIBS ${Oculus_LIBRARIES} )
-    message(STATUS "Oculus Rift Found and Enabled")
+    message(STATUS "Python Found and Enabled (with pybind11)")
   endif()
 endif()
 
@@ -549,8 +520,8 @@ endif()
 include(EmbedBinaryFiles)
 
 if(BUILD_PANGOLIN_GUI)
-    embed_binary_files( "_embed_/fonts/*.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fonts.c" )
-    list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/fonts.c" )
+    embed_binary_files( "_embed_/fonts/*.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp" )
+    list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp" )
 endif()
 
 #######################################################
@@ -561,7 +532,7 @@ include_directories( ${USER_INC} )
 include_directories( ${INTERNAL_INC} )
 
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
-target_link_libraries(${LIBRARY_NAME} ${LINK_LIBS})
+target_link_libraries(${LIBRARY_NAME} PUBLIC ${LINK_LIBS})
 
 ## Generate symbol export helper header on MSVC
 IF(MSVC)
@@ -601,6 +572,26 @@ CreateMethodCallFile(
     "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/video_drivers.h"
     "pangolin" "LoadBuiltInVideoDrivers" "${VIDEO_FACTORY_REG}"
 )
+
+#######################################################
+## Create window_frameworks.h file for inclusion in library
+## This loads windowing framwork factories based on cmake configuration
+
+CreateMethodCallFile(
+    "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/window_frameworks.h"
+    "pangolin" "LoadBuiltInWindowFrameworks" "${WINDOW_FACTORY_REG}"
+)
+
+#######################################################
+## Python wrapper
+
+option(BUILD_PYPANGOLIN_MODULE "Python wrapper for Pangolin" ON)
+if(BUILD_PYPANGOLIN_MODULE AND HAVE_PYTHON )
+    file(GLOB pypangolin_SRC "python/pypangolin/*.hpp" "python/pypangolin/*.cpp" "python/pypangolin_module.cpp")
+    pybind11_add_module(pypangolin ${pypangolin_SRC})
+    target_link_libraries(pypangolin PRIVATE ${LIBRARY_NAME})
+    target_include_directories(pypangolin PRIVATE "${USER_INC}")
+endif()
 
 #######################################################
 ## Generate Doxygen documentation target (make doc)

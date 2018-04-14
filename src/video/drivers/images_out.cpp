@@ -35,7 +35,7 @@ namespace pangolin {
 
 ImagesVideoOutput::ImagesVideoOutput(const std::string& image_folder, const std::string& json_file_out, const std::string& image_file_extension)
     : json_frames(picojson::array_type,true),
-      image_index(0), image_folder( PathExpand(image_folder) ), image_file_extension(image_file_extension)
+      image_index(0), image_folder( PathExpand(image_folder) + "/" ), image_file_extension(image_file_extension)
 {
     if(!json_file_out.empty()) {
         file.open(json_file_out);
@@ -49,12 +49,7 @@ ImagesVideoOutput::~ImagesVideoOutput()
 {
     if(file.is_open())
     {
-        std::string video_uri = "images://" + image_folder + "/image_*_[0";
-        for(size_t s=1; s < streams.size(); ++s) {
-            video_uri += pangolin::FormatString(",%",s);
-        }
-        video_uri += "].";
-        video_uri += image_file_extension;
+        const std::string video_uri = "images://" + image_folder + "archive.json";
         picojson::value json_file;
         json_file["device_properties"] = device_properties;
         json_file["frames"] = json_frames;
@@ -85,10 +80,10 @@ int ImagesVideoOutput::WriteStreams(const unsigned char* data, const picojson::v
     // Write each stream image to file.
     for(size_t s=0; s < streams.size(); ++s) {
         const pangolin::StreamInfo& si = streams[s];
-        const std::string filename = pangolin::FormatString("%/image_%%%_%.%", image_folder ,std::setfill('0'),std::setw(10),image_index, s, image_file_extension);
+        const std::string filename = pangolin::FormatString("image_%%%_%.%",std::setfill('0'),std::setw(10),image_index, s, image_file_extension);
         json_filenames.push_back(filename);
         const Image<unsigned char> img = si.StreamImage(data);
-        pangolin::SaveImage(img, si.PixFormat(), filename);
+        pangolin::SaveImage(img, si.PixFormat(), image_folder + filename);
     }
 
     // Add frame_properties to json file.

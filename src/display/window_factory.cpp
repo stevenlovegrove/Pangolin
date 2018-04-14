@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Steven Lovegrove
+ * Copyright (c) 2011-2017 Steven Lovegrove, Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,13 +25,18 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#include <pangolin/display/window.h>
+#include <pangolin/factory/factory_registry.h>
 
-#include <pangolin/config.h>
+namespace pangolin
+{
 
-#ifndef _MSVC_
-// Suppress warnings in OVR library headers
-#pragma GCC system_header
-#endif
+template<>
+FactoryRegistry<WindowInterface>& FactoryRegistry<WindowInterface>::I()
+{
+    // Singleton instance
+    static FactoryRegistry instance;
+    return instance;
+}
 
-#include <OVR.h>
+}

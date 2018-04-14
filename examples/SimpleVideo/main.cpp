@@ -59,7 +59,7 @@ void VideoSample(const std::string uri)
         vVideo.Activate();
         texVideo.RenderToViewportFlipY();
 
-        // Swap back buffer with front and process window events via GLUT
+        // Swap back buffer with front and process window events
         pangolin::FinishFrame();
     }
 

@@ -40,10 +40,7 @@
 #cmakedefine HAVE_GLEW
 #cmakedefine GLEW_STATIC
 
-#cmakedefine HAVE_GLUT
-#cmakedefine HAVE_FREEGLUT
 #cmakedefine HAVE_APPLE_OPENGL_FRAMEWORK
-#cmakedefine HAVE_MODIFIED_OSXGLUT
 #cmakedefine HAVE_GLES
 #cmakedefine HAVE_GLES_2
 #cmakedefine HAVE_OCULUS

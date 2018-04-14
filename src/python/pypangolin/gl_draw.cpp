@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,46 +25,17 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#include "gl_draw.hpp"
+#include <pangolin/gl/gldraw.h>
 
-#include <Python.h>
-#include <pangolin/var/varextra.h>
-#include <pangolin/python/PyUniqueObj.h>
-#include <pangolin/console/ConsoleInterpreter.h>
-#include <queue>
-#include <set>
-#include <thread>
+namespace py_pangolin {
 
-namespace pangolin
-{
+  void bind_gl_draw(pybind11::module &m){
+    m.def("glDrawColouredCube",
+          &pangolin::glDrawColouredCube,
+          pybind11::arg("axis_min") = -0.5f,
+          pybind11::arg("axis_max") = +0.5f);
+  }
 
-class PyInterpreter : public ConsoleInterpreter
-{
-public:
-    PyInterpreter();
 
-    ~PyInterpreter() override;
-
-    void PushCommand(const std::string &cmd) override;
-
-    bool PullLine(ConsoleLine& line) override;
-
-    std::vector<std::string> Complete(
-        const std::string& cmd, int max_options
-    ) override;
-
-    static void AttachPrefix(void* data, const std::string& name, VarValueGeneric& var, bool brand_new );
-
-private:
-    PyObject* pycompleter;
-    PyObject* pycomplete;
-
-    std::string ToString(PyObject* py);
-    void CheckPrintClearError();
-    PyUniqueObj EvalExec(const std::string& cmd);
-
-    std::queue<ConsoleLine> line_queue;
-    std::set<std::string> base_prefixes;
-};
-
-}
+}  // py_pangolin
