@@ -134,9 +134,6 @@ endif()
 #######################################################
 ## Setup required includes / link info
 
-# Project headers trump everything (including any potentially installed Pangolin)
-list(APPEND LIB_INC_DIR  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
-
 if(BUILD_PANGOLIN_GUI)
     if( ANDROID  )
         # Android specific display code
@@ -527,11 +524,14 @@ endif()
 #######################################################
 ## Add Libraries / Include Directories / Link directories
 
-include_directories( ${LIB_INC_DIR} )
-include_directories( ${USER_INC} )
-include_directories( ${INTERNAL_INC} )
+set(INSTALL_INCLUDE_DIR "include")
 
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
+target_include_directories(${LIBRARY_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                                                  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+                                                  $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>
+                                                  ${USER_INC}
+                                           PRIVATE ${INTERNAL_INC})
 target_link_libraries(${LIBRARY_NAME} PUBLIC ${LINK_LIBS})
 
 ## Generate symbol export helper header on MSVC
@@ -545,7 +545,7 @@ IF(MSVC)
         STATIC_DEFINE ${LIBRARY_NAME_CAPS}_BUILT_AS_STATIC
     )
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/${LIBRARY_NAME}_export.h"
-      DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
+      DESTINATION ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}/${LIBRARY_NAME}
     )
 ENDIF()
 
@@ -612,7 +612,7 @@ endif()
 set( CMAKECONFIG_INSTALL_DIR lib/cmake/${PROJECT_NAME} )
 file( RELATIVE_PATH REL_INCLUDE_DIR
     "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
-    "${CMAKE_INSTALL_PREFIX}/include"
+    "${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}"
 )
 
 # Export library for easy inclusion from other cmake projects. APPEND allows
@@ -626,7 +626,7 @@ configure_file(${PROJECT_NAME}ConfigVersion.cmake.in
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" @ONLY)
 
 # Build tree config
-set( EXPORT_LIB_INC_DIR ${LIB_INC_DIR} )
+set( EXPORT_LIB_INC_DIR "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY IMMEDIATE )
 
@@ -647,10 +647,10 @@ endif()
 ## Install headers / targets
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/config.h"
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}/${LIBRARY_NAME}
 )
 install(DIRECTORY ${INCDIR}
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}
 )
 install(TARGETS ${LIBRARY_NAME}
   EXPORT ${PROJECT_NAME}Targets
