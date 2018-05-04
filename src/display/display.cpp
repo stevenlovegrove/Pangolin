@@ -139,7 +139,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     // Fall back to default scheme if non specified.
     if(win_uri.scheme.empty()) {
 #if defined(_LINUX_)
-      win_uri.scheme = "x11";
+      win_uri.scheme = "linux";
 #elif defined(_WIN_)
       win_uri.scheme = "winapi";
 #elif defined(_OSX_)

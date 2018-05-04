@@ -195,6 +195,25 @@ else()
             list(APPEND SOURCES display/device/display_osx.mm display/device/PangolinNSApplication.mm display/device/PangolinNSGLView.mm  )
             list(APPEND LINK_LIBS "-framework Cocoa" )
         elseif(_LINUX_)
+            # Wayland
+            find_package(PkgConfig)
+            pkg_check_modules(wayland-client QUIET wayland-client)
+            if(wayland-client_FOUND)
+                pkg_check_modules(wayland-egl REQUIRED wayland-egl)
+                pkg_check_modules(wayland-cursor REQUIRED wayland-cursor)
+                pkg_check_modules(xkbcommon REQUIRED xkbcommon)
+                pkg_check_modules(egl REQUIRED egl)
+                list(APPEND WINDOW_FACTORY_REG RegisterWaylandWindowFactory)
+                list(APPEND SOURCES display/device/display_wayland.cpp)
+                list(APPEND LINK_LIBS
+                    ${wayland-egl_LIBRARIES}
+                    ${wayland-cursor_LIBRARIES}
+                    ${xkbcommon_LIBRARIES}
+                    ${egl_LIBRARIES}
+                )
+            endif()
+
+            # X11
             find_package(X11 REQUIRED)
             list(APPEND WINDOW_FACTORY_REG RegisterX11WindowFactory)
             list(APPEND USER_INC ${X11_INCLUDE_DIR})
