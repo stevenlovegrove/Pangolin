@@ -245,14 +245,15 @@ if(BUILD_PANGOLIN_PYTHON AND BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND NOT 
     )
 
     # pybind11 stuff
-    list(APPEND LINK_LIBS PRIVATE pybind11::embed)
+    list(APPEND INTERNAL_INC ${PYBIND11_INCLUDE_DIR})
+    list(APPEND LINK_LIBS PRIVATE ${pybind11_LIBRARIES})
 
     if(_GCC_)
         set_source_files_properties(python/PyInterpreter.cpp    PROPERTIES COMPILE_FLAGS "-Wno-missing-field-initializers")
         set_source_files_properties(python/PyModulePangolin.cpp PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing -Wno-missing-field-initializers")
     endif()
-    list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIR})
-    list(APPEND LINK_LIBS    ${PYTHON_LIBRARY})
+    list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIRS})
+    list(APPEND LINK_LIBS    ${PYTHON_LIBRARIES})
     message(STATUS "Python Found and Enabled (with pybind11)")
   endif()
 endif()
