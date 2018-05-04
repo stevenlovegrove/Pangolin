@@ -430,6 +430,46 @@ inline void GlTexture::RenderToViewportFlipXFlipY() const
     glDisable(GL_TEXTURE_2D);
 }
 
+inline void GlTexture::Render3D(const GLfloat* const vertex_ptr, bool oneFaceOnly, bool backFaceTransparent) const
+{
+
+    glVertexPointer(3, GL_FLOAT, 0, vertex_ptr);
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
+    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    if(oneFaceOnly)
+    {
+        // draw only front face
+        glCullFace(GL_FRONT);
+        glEnable(GL_CULL_FACE);
+    }
+
+    glEnable(GL_TEXTURE_2D);
+    Bind();
+
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisable(GL_TEXTURE_2D);
+
+    if(oneFaceOnly)
+    {
+        if(!backFaceTransparent)
+        {
+            // draw back face with current color
+            glCullFace(GL_BACK);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        }
+
+        glDisable(GL_CULL_FACE);
+    }
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+}
+
 ////////////////////////////////////////////////////////////////////////////
 
 inline GlRenderBuffer::GlRenderBuffer()
