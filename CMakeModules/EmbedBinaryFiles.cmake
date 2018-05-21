@@ -27,6 +27,6 @@ function(embed_binary_files file_glob output)
         # Convert hex data for C compatibility
         string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," filedata ${filedata})
         # Append data to output file
-        file(APPEND ${output} "const unsigned char ${filename}[] = {${filedata}};\nconst unsigned ${filename}_size = sizeof(${filename});\n")
+        file(APPEND ${output} "extern const unsigned char ${filename}[] = {${filedata}};\nextern const unsigned ${filename}_size = sizeof(${filename});\n")
     endforeach()
 endfunction()

@@ -126,7 +126,7 @@ struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
 };
 
 PangolinGl* GetCurrentContext();
-void AddNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext);
+void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext);
 void DeleteContext(const std::string& name);
 PangolinGl *FindContext(const std::string& name);
 

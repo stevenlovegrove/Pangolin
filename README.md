@@ -35,35 +35,38 @@ Check the CMake configure output for details.
 * OpenGL (Desktop / ES / ES2)
 
 * Glew
- * (win) built automatically (assuming git is on your path)
- * (deb) sudo apt-get install libglew-dev
- * (mac) sudo port install glew
+  * (win) built automatically (assuming git is on your path)
+  * (deb) `sudo apt-get install libglew-dev`
+  * (mac) `sudo port install glew`
 
 * CMake (for build environment)
- * (win) http://www.cmake.org/cmake/resources/software.html
- * (deb) sudo apt-get install cmake
- * (mac) sudo port install cmake
+  * (win) http://www.cmake.org/cmake/resources/software.html
+  * (deb) `sudo apt-get install cmake`
+  * (mac) `sudo port install cmake`
 
 ### Recommended Dependencies ###
 
 * Python2 / Python3, for drop-down interactive console
- * (win) http://www.python.org/downloads/windows
- * (deb) sudo apt-get install libpython2.7-dev
- * (mac) preinstalled with osx
+  * (win) http://www.python.org/downloads/windows
+  * (deb) `sudo apt-get install libpython2.7-dev`
+  * (mac) preinstalled with osx
+  * (for pybind11) `git submodule init && git submodule update`
+  * (useful modules) `sudo python -mpip install numpy pyopengl Pillow pybind11`
+  
 
 ### Optional Dependencies for video input ###
 
 * FFMPEG (For video decoding and image rescaling)
- * (deb) sudo apt-get install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev
+  * (deb) `sudo apt-get install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev`
 
 * DC1394 (For firewire input)
- * (deb) sudo apt-get install libdc1394-22-dev libraw1394-dev
+  * (deb) `sudo apt-get install libdc1394-22-dev libraw1394-dev`
 
 * libuvc (For cross-platform webcam video input via libusb)
- * git://github.com/ktossell/libuvc.git
+  * git://github.com/ktossell/libuvc.git
 
 * libjpeg, libpng, libtiff, libopenexr (For reading still-image sequences)
- * (deb) sudo apt-get install libjpeg-dev libpng12-dev libtiff5-dev libopenexr-dev
+  * (deb) `sudo apt-get install libjpeg-dev libpng12-dev libtiff5-dev libopenexr-dev`
 
 * OpenNI / OpenNI2 (For Kinect / Xtrion / Primesense capture)
 
@@ -74,7 +77,7 @@ Check the CMake configure output for details.
 * Eigen / TooN (These matrix types supported in the Pangolin API.)
 
 * CUDA Toolkit >= 3.2 (Some CUDA header-only interop utilities included)
- * http://developer.nvidia.com/cuda-downloads
+  * http://developer.nvidia.com/cuda-downloads
 
 * Doxygen for generating html / pdf documentation.
 
@@ -116,6 +119,47 @@ To contribute to Pangolin, I would appreciate pull requests against the master b
 ## Binaries ##
 
 Binaries are available for Windows x64, as output by the Windows CI server: [Appveyor Artifacts](https://ci.appveyor.com/project/stevenlovegrove/pangolin/build/artifacts).
+
+## Bindings ##
+
+### Python ###
+
+Pangolin python bindings are enabled via [pybind11](www.pybind11.com). These bindings can be used both standalone and from within Pangolin's drop-down console (press the back-tick key, `).
+
+To enable the bindings, you must checkout the pybind submodule. To use pangolin in python, it's recommend to install a few other python packages too:
+
+```
+sudo python -mpip install numpy pyopengl Pillow pybind11
+git submodule init && git submodule update
+```
+
+The python module pypangolin must be on your python path, either through installation, or by setting it explicitly:
+
+```
+import sys
+sys.path.append('path/of/pypangolin.so')
+```
+
+## Scheme syntax for windowing and video
+
+Pangolin uses 'URI' syntax for modularising video drivers and windowing backends. The syntax follows along the lines of `module_name:[option1=value1,option2=value2,...]//module_resource_to_open`. Some examples for using this URI syntax with the VideoViewer tool is as follows:
+
+```
+VideoViewer test://
+VideoViewer uvc:[size=640x480]///dev/video0
+VideoViewer flip://debayer:[tile=rggb,method=downsample]//file://~/somefile.pango
+```
+
+Notice that for video, some modules support chaining to construct a simple filter graph. See include/pangolin/video/video.h for more examples.
+
+For windowing, you can also customize default arguments for Pangolin applications by setting the `PANGOLIN_WINDOW_URI` environment variable. For instance, on high-DPI screens (in this example on OSX), you could set:
+
+
+```
+setenv PANGOLIN_WINDOW_URI "cocoa:[HIGHRES=true]//"
+```
+
+Some window parameters that may be interesting to override are `DISPLAYNAME`, `DOUBLEBUFFER`, `SAMPLE_BUFFERS`, `SAMPLES`, `HIGHRES`. Window modules currently include `x11`, `winapi`, `cocoa`.
 
 ## Acknowledgements ##
 
