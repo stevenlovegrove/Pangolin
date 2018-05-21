@@ -214,6 +214,9 @@ struct PyVar {
     std::string ns;
 };
 
+// The uninitialized variable can be ignored.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
  PyTypeObject PyVar::Py_type = {
      PyVarObject_HEAD_INIT(NULL,0)
     "pypangolin.Var",                         /* tp_name*/
@@ -263,5 +266,6 @@ struct PyVar {
     0,                                        /* tp_del */
     0                                         /* tp_version_tag */
 };
+#pragma GCC diagnostic pop
 
 }

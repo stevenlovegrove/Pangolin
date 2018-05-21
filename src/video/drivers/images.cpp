@@ -31,6 +31,7 @@
 #include <pangolin/video/iostream_operators.h>
 
 #include <cstring>
+#include <fstream>
 
 namespace pangolin
 {
@@ -100,7 +101,7 @@ void ImagesVideo::PopulateFilenames(const std::string& wildcard_path)
         if (FileLowercaseExtention(expanded_path) == ".json" ) {
             PopulateFilenamesFromJson(wildcards[0]);
             return;
-        }else if(wildcards.size() == 1 && FileExists(possible_archive_path)){
+        }else if(FileExists(possible_archive_path)){
             PopulateFilenamesFromJson(possible_archive_path);
             return;
         }
@@ -259,7 +260,7 @@ const picojson::value& ImagesVideo::FrameProperties() const
 {
     const size_t frame = GetCurrentFrameId();
 
-    if( frame < json_frames.size()) {
+    if( json_frames.evaluate_as_boolean() && frame < json_frames.size()) {
         const picojson::value& frame_props = json_frames[frame];
         if(frame_props.contains("frame_properties")) {
             return frame_props["frame_properties"];

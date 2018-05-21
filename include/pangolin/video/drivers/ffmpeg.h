@@ -55,7 +55,7 @@ namespace pangolin
 class PANGOLIN_EXPORT FfmpegVideo : public VideoInterface
 {
 public:
-    FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false, int user_video_stream = -1);
+    FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false, int user_video_stream = -1, ImageDim size = ImageDim(0,0));
     ~FfmpegVideo();
     
     //! Implement VideoInput::Start()
@@ -77,7 +77,7 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
     
 protected:
-    void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false , int user_video_stream = -1);
+    void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false , int user_video_stream = -1, ImageDim size= ImageDim(0,0));
     
     std::vector<StreamInfo> streams;
     

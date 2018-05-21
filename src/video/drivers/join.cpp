@@ -225,7 +225,10 @@ bool JoinVideo::GrabNext(unsigned char* image, bool wait)
             TGRABANDPRINT("    IN SYNC oldest:%ld newest:%ld delta:%ld", *range.first, *range.second, (*range.second - *range.first));
             return true;
         }
-    } else {
+    }
+    else
+    {
+        pango_print_warn("JoinVideo: sync_tolerance_us = 0, frames are not synced!");
         return true;
     }
 }

@@ -156,6 +156,11 @@ size_t PangoVideo::Seek(size_t next_frame_id)
     }
 }
 
+std::string PangoVideo::GetSourceUri()
+{
+    return _source_uri;
+}
+
 int PangoVideo::FindPacketStreamSource()
 {
     for(const auto& src : _reader->Sources())
@@ -174,6 +179,7 @@ void PangoVideo::SetupStreams(const PacketStreamSource& src)
     // Read sources header
     _fixed_size = src.data_size_bytes != 0;
     _size_bytes = src.data_size_bytes;
+    _source_uri = src.uri;
 
     _device_properties = src.info["device"];
     const picojson::value& json_streams = src.info["streams"];
@@ -195,8 +201,12 @@ void PangoVideo::SetupStreams(const PacketStreamSource& src)
             stream_decoder.push_back(nullptr);
         }
 
+        PixelFormat fmt = PixelFormatFromString(encoding);
+
+        fmt.channel_bit_depth = json_stream.get_value<int64_t>("channel_bit_depth", 0);
+
         StreamInfo si(
-                PixelFormatFromString(encoding),
+                fmt,
                 json_stream["width"].get<int64_t>(),
                 json_stream["height"].get<int64_t>(),
                 json_stream["pitch"].get<int64_t>(),
@@ -206,6 +216,7 @@ void PangoVideo::SetupStreams(const PacketStreamSource& src)
         if(!_fixed_size) {
             _size_bytes += si.SizeBytes();
         }
+
 
         _streams.push_back(si);
     }

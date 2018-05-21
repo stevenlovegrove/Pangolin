@@ -134,11 +134,14 @@ bool V4lVideo::GrabNext( unsigned char* image, bool /*wait*/ )
             if (EINTR == errno)
                 continue;
             
+            // This is a terminal condition that must be propogated up.
             throw VideoException ("select", strerror(errno));
         }
         
         if (0 == r) {
-            throw VideoException("select Timeout", strerror(errno));
+            // Timeout has occured - This is longer than any reasonable frame interval,
+            // but not necessarily terminal, so return false to indicate that no frame was captured.
+            return false;
         }
         
         if (ReadFrame(image))

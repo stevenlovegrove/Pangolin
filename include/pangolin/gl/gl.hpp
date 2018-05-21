@@ -285,6 +285,20 @@ inline void GlTexture::Download(TypedImage& image) const
 
 }
 
+inline void GlTexture::CopyFrom(const GlTexture& tex)
+{
+    if(!tid || width != tex.width || height != tex.height ||
+       internal_format != tex.internal_format)
+    {
+        Reinitialise(tex.width, tex.height, tex.internal_format, true);
+    }
+
+    glCopyImageSubData(tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0,
+                       tid, GL_TEXTURE_2D, 0, 0, 0, 0,
+                       width, height, 1);
+    CheckGlDieOnError();
+}
+
 inline void GlTexture::Save(const std::string& filename, bool top_line_first)
 {
     TypedImage image;

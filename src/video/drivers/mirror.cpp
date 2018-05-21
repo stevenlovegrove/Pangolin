@@ -532,11 +532,15 @@ std::istream& operator>> (std::istream &is, MirrorOptions &mirror)
 
     if(!str_mirror.compare("NONE")) {
         mirror = MirrorOptionsNone;
-    }else if(!str_mirror.compare("FLIPX")) {
+    }else if(!str_mirror.compare("FLIPX") || !str_mirror.compare("MIRROR")) {
         mirror = MirrorOptionsFlipX;
-    }else if(!str_mirror.compare("FLIPY")) {
+    }else if(!str_mirror.compare("FLIPY") || !str_mirror.compare("FLIP")) {
         mirror = MirrorOptionsFlipY;
-    }else if(!str_mirror.compare("FLIPXY")) {
+    }else if(!str_mirror.compare("ROTATECW")) {
+        mirror = MirrorOptionsRotateCW;
+    }else if(!str_mirror.compare("ROTATECCW")) {
+        mirror = MirrorOptionsRotateCCW;
+    }else if(!str_mirror.compare("FLIPXY") || !str_mirror.compare("TRANSPOSE")) {
         mirror = MirrorOptionsFlipXY;
     }else{
         pango_print_warn("Unknown mirror option %s.", str_mirror.c_str());
@@ -552,7 +556,7 @@ PANGOLIN_REGISTER_FACTORY(MirrorVideo)
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
 
-            MirrorOptions default_opt = MirrorOptionsFlipX;
+            MirrorOptions default_opt = MirrorOptionsNone;
             if(uri.scheme == "flip") default_opt = MirrorOptionsFlipY;
             if(uri.scheme == "rotate") default_opt = MirrorOptionsFlipXY;
             if(uri.scheme == "transpose") default_opt = MirrorOptionsTranspose;
@@ -579,6 +583,7 @@ PANGOLIN_REGISTER_FACTORY(MirrorVideo)
     FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "transpose");
     FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "rotateCW");
     FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "rotateCCW");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "transform");
 }
 
 }

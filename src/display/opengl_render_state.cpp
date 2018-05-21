@@ -456,6 +456,35 @@ OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, GLprecision fu, GLpre
 // Camera Axis:
 //   X - Right, Y - Down, Z - Forward
 // Image Origin:
+//   Top Right
+// Pricipal point specified with image origin (0,0) at top right of top-right pixel (not center)
+OpenGlMatrixSpec ProjectionMatrixRDF_TopRight(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar )
+{
+    // http://www.songho.ca/opengl/gl_projectionmatrix.html
+    const GLprecision L = +(w-u0) * zNear / fu;
+    const GLprecision R = -(u0) * zNear / fu;
+    const GLprecision T = -(v0) * zNear / fv;
+    const GLprecision B = +(h-v0) * zNear / fv;
+
+    OpenGlMatrixSpec P;
+    P.type = GlProjectionStack;
+    std::fill_n(P.m,4*4,0);
+
+    P.m[0*4+0] = 2 * zNear / (R-L);
+    P.m[1*4+1] = 2 * zNear / (T-B);
+
+    P.m[2*4+0] = (R+L)/(L-R);
+    P.m[2*4+1] = (T+B)/(B-T);
+    P.m[2*4+2] = (zFar +zNear) / (zFar - zNear);
+    P.m[2*4+3] = 1.0;
+
+    P.m[3*4+2] =  (2*zFar*zNear)/(zNear - zFar);
+    return P;
+}
+
+// Camera Axis:
+//   X - Right, Y - Down, Z - Forward
+// Image Origin:
 //   Bottom Left
 // Pricipal point specified with image origin (0,0) at top left of top-left pixel (not center)
 OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar )
@@ -478,6 +507,35 @@ OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, GLprecision fu, GL
     P.m[2*4+2] = (zFar +zNear) / (zFar - zNear);
     P.m[2*4+3] = 1.0;
     
+    P.m[3*4+2] =  (2*zFar*zNear)/(zNear - zFar);
+    return P;
+}
+
+// Camera Axis:
+//   X - Right, Y - Down, Z - Forward
+// Image Origin:
+//   Bottom Right
+// Pricipal point specified with image origin (0,0) at top right of top-right pixel (not center)
+OpenGlMatrixSpec ProjectionMatrixRDF_BottomRight(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar )
+{
+    // http://www.songho.ca/opengl/gl_projectionmatrix.html
+    const GLprecision R = -(u0) * zNear / fu;
+    const GLprecision L = +(w-u0) * zNear / fu;
+    const GLprecision B = -(v0) * zNear / fv;
+    const GLprecision T = +(h-v0) * zNear / fv;
+
+    OpenGlMatrixSpec P;
+    P.type = GlProjectionStack;
+    std::fill_n(P.m,4*4,0);
+
+    P.m[0*4+0] = 2 * zNear / (R-L);
+    P.m[1*4+1] = 2 * zNear / (T-B);
+
+    P.m[2*4+0] = (R+L)/(L-R);
+    P.m[2*4+1] = (T+B)/(B-T);
+    P.m[2*4+2] = (zFar +zNear) / (zFar - zNear);
+    P.m[2*4+3] = 1.0;
+
     P.m[3*4+2] =  (2*zFar*zNear)/(zNear - zFar);
     return P;
 }

@@ -361,8 +361,11 @@ void VideoViewer::Skip(int frames)
     std::lock_guard<std::mutex> lock(control_mutex);
 
     if(video_playback) {
-        current_frame = video_playback->Seek(current_frame + frames) -1;
-        grab_until = current_frame + 1;
+        const int next_frame = current_frame + frames;
+        if (next_frame >= 0) {
+            current_frame = video_playback->Seek(next_frame) -1;
+            grab_until = current_frame + 1;
+        } 
     }else{
         if(frames >= 0) {
             grab_until = current_frame + frames;

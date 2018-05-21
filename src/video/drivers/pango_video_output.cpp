@@ -127,6 +127,7 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
                 fixed_size = false;
             }
 
+            json_stream["channel_bit_depth"] = si.PixFormat().channel_bit_depth;
             json_stream["encoding"] = encoder_name;
             json_stream["width"] = si.Width();
             json_stream["height"] = si.Height();

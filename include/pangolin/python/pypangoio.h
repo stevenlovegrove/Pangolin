@@ -119,6 +119,9 @@ PyMethodDef PyPangoIO::Py_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+#pragma GCC diagnostic push // Ignore python missing initializer warning.
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 PyTypeObject PyPangoIO::Py_type = {
     PyVarObject_HEAD_INIT(NULL,0)
     "pangolin.PangoIO",                       /* tp_name*/
@@ -168,5 +171,8 @@ PyTypeObject PyPangoIO::Py_type = {
     0,                                        /* tp_del */
     0                                         /* tp_version_tag */
 };
+
+#pragma GCC diagnostic pop  // Return to normal
+
 
 }

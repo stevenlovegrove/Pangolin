@@ -485,6 +485,9 @@ void Slider::Render()
     }
     
     glColor4fv(colour_tx);
+    if(gltext.Text() != var->Meta().friendly) {
+        gltext = font().Text(var->Meta().friendly);
+    }
     gltext.DrawWindow(raster[0], raster[1]);
 
     std::ostringstream oss;
