@@ -94,6 +94,7 @@ add_subdirectory("external")
 add_subdirectory("src")
 
 if(BUILD_TESTS)
+  set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
   add_subdirectory("test")
 endif()
 
