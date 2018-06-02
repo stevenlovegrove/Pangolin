@@ -250,7 +250,7 @@ inline void glDraw_z0(GLfloat scale, int grid)
     }
 }
 
-inline void glDrawFrustrum( GLfloat u0, GLfloat v0, GLfloat fu, GLfloat fv, int w, int h, GLfloat scale )
+inline void glDrawFrustum( GLfloat u0, GLfloat v0, GLfloat fu, GLfloat fv, int w, int h, GLfloat scale )
 {
     const GLfloat xl = scale * u0;
     const GLfloat xh = scale * (w*fu + u0);
@@ -434,16 +434,16 @@ inline void glDrawAxis( const T& T_wf, S scale )
 }
 
 template<typename T>
-inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, GLfloat scale )
+inline void glDrawFrustum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, GLfloat scale )
 {
-    glDrawFrustrum((GLfloat)Kinv(0,2), (GLfloat)Kinv(1,2), (GLfloat)Kinv(0,0), (GLfloat)Kinv(1,1), w, h, scale);
+    glDrawFrustum((GLfloat)Kinv(0,2), (GLfloat)Kinv(1,2), (GLfloat)Kinv(0,0), (GLfloat)Kinv(1,1), w, h, scale);
 }
 
 template<typename T>
-inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, const Eigen::Matrix<T,4,4>& T_wf, T scale )
+inline void glDrawFrustum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, const Eigen::Matrix<T,4,4>& T_wf, T scale )
 {
     glSetFrameOfReference(T_wf);
-    glDrawFrustrum(Kinv,w,h,scale);
+    glDrawFrustum(Kinv,w,h,scale);
     glUnsetFrameOfReference();
 }
 
