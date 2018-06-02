@@ -157,7 +157,7 @@ if(BUILD_PANGOLIN_GUI)
         list(APPEND LINK_LIBS "${OPENGL_LIBRARIES}" )
 
         if(NOT BUILD_EXTERN_GLEW)
-            find_package(GLEW QUIET)
+            find_package(GLEW REQUIRED QUIET)
         endif()
         if(GLEW_FOUND)
             list(APPEND USER_INC  "${GLEW_INCLUDE_DIR}" )
