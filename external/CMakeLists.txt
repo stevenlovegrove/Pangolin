@@ -25,7 +25,7 @@ add_dependencies(_glew __glew)
 set_target_properties(_glew PROPERTIES
     IMPORTED_LOCATION_RELWITHDEBINFO ${CMAKE_INSTALL_PREFIX}/lib/glew.lib
     IMPORTED_LOCATION_RELEASE ${CMAKE_INSTALL_PREFIX}/lib/glew.lib
-    IMPORTED_LOCATION_DEBUG   ${CMAKE_INSTALL_PREFIX}}/lib/glewd.lib
+    IMPORTED_LOCATION_DEBUG   ${CMAKE_INSTALL_PREFIX}/lib/glewd.lib
 )
 
 set(GLEW_FOUND true PARENT_SCOPE)
