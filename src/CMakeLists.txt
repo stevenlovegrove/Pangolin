@@ -554,11 +554,11 @@ endif()
 set(INSTALL_INCLUDE_DIR "include")
 
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
+# 'System' includes shield us from warnings in those includes.
+target_include_directories(${LIBRARY_NAME} SYSTEM PUBLIC ${USER_INC} PRIVATE ${INTERNAL_INC})
 target_include_directories(${LIBRARY_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
                                                   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-                                                  $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>
-                                                  ${USER_INC}
-                                           PRIVATE ${INTERNAL_INC})
+                                                  $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>)
 target_link_libraries(${LIBRARY_NAME} PUBLIC ${LINK_LIBS})
 
 ## Generate symbol export helper header on MSVC

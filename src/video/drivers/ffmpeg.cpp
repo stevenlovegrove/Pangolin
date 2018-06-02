@@ -34,6 +34,12 @@
 // Some versions of FFMPEG define this horrid macro in global scope.
 #undef PixelFormat
 
+// It is impossible to keep up with ffmpeg deprecations, so ignore these warnings.
+#if defined(_GCC_) || defined(_CLANG_)
+#  pragma GCC diagnostic ignored "-Wdeprecated"
+#endif
+
+
 extern "C"
 {
 #include <libavformat/avio.h>
@@ -822,13 +828,13 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
 {
     struct FfmpegVideoFactory : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            const std::array<std::string,49> ffmpeg_ext = {
-                ".3g2",".3gp", ".amv", ".asf", ".avi", ".drc", ".flv", ".flv", ".flv", ".f4v",
+            const std::array<std::string,43> ffmpeg_ext = {{
+                ".3g2",".3gp", ".amv", ".asf", ".avi", ".drc", ".flv", ".f4v",
                 ".f4p", ".f4a", ".f4b", ".gif", ".gifv", ".m4v", ".mkv", ".mng", ".mov", ".qt",
                 ".mp4", ".m4p", ".m4v", ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".mpg", ".mpeg",
                 ".m2v", ".mxf", ".nsv",  ".ogv", ".ogg", ".rm", ".rmvb", ".roq", ".svi", ".vob",
                 ".webm", ".wmv", ".yuv", ".h264", ".h265"
-            };
+            }};
 
             if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") )
             {

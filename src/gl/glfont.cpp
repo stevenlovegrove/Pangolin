@@ -25,10 +25,6 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#define STB_TRUETYPE_IMPLEMENTATION
-#define STBTT_STATIC
-#include "stb_truetype.h"
-
 #include <pangolin/display/display_internal.h>
 #include <pangolin/gl/glfont.h>
 #include <pangolin/gl/glstate.h>
@@ -37,6 +33,18 @@
 
 #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
 #include <pangolin/gl/glsl.h>
+#endif
+
+#define STB_TRUETYPE_IMPLEMENTATION
+#define STBTT_STATIC
+
+#if defined(_GCC_) || defined(_CLANG_)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wunused-function"
+#  include "stb_truetype.h"
+#  pragma GCC diagnostic pop
+#else
+#  include "stb_truetype.h"
 #endif
 
 #define MAX_TEXT_LENGTH 500
