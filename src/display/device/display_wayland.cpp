@@ -582,13 +582,13 @@ static void pointer_handle_axis(void *data, struct wl_pointer */*wl_pointer*/, u
     }
 }
 
-static void pointer_handle_frame(void */*data*/, struct wl_pointer */*wl_pointer*/) { }
+//static void pointer_handle_frame(void */*data*/, struct wl_pointer */*wl_pointer*/) { }
 
-static void pointer_handle_axis_source(void */*data*/, struct wl_pointer */*wl_pointer*/, uint32_t /*axis_source*/) { }
+//static void pointer_handle_axis_source(void */*data*/, struct wl_pointer */*wl_pointer*/, uint32_t /*axis_source*/) { }
 
-static void pointer_handle_axis_stop(void */*data*/, struct wl_pointer */*wl_pointer*/, uint32_t /*time*/, uint32_t /*axis*/) { }
+//static void pointer_handle_axis_stop(void */*data*/, struct wl_pointer */*wl_pointer*/, uint32_t /*time*/, uint32_t /*axis*/) { }
 
-static void pointer_handle_axis_discrete(void */*data*/, struct wl_pointer */*wl_pointer*/, uint32_t /*axis*/, int32_t /*discrete*/) { }
+//static void pointer_handle_axis_discrete(void */*data*/, struct wl_pointer */*wl_pointer*/, uint32_t /*axis*/, int32_t /*discrete*/) { }
 
 static const struct wl_pointer_listener pointer_listener = {
     pointer_handle_enter,
@@ -664,7 +664,9 @@ static void keyboard_handle_modifiers(void *data, struct wl_keyboard */*keyboard
     xkb_state_update_mask(w->xkb_state, mods_depressed, mods_latched, mods_locked, 0, 0, group);
 }
 
+#if WAYLAND_VERSION_GE(1,12)
 static void keyboard_handle_repeat_info(void */*data*/, struct wl_keyboard */*wl_keyboard*/, int32_t /*rate*/, int32_t /*delay*/) { }
+#endif
 
 static const struct wl_keyboard_listener keyboard_listener = {
     keyboard_handle_keymap,
