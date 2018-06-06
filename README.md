@@ -57,7 +57,7 @@ Check the CMake configure output for details.
 ### Optional Dependencies for video input ###
 
 * FFMPEG (For video decoding and image rescaling)
-  * (deb) `sudo apt-get install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev`
+  * (deb) `sudo apt-get install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev`
 
 * DC1394 (For firewire input)
   * (deb) `sudo apt-get install libdc1394-22-dev libraw1394-dev`
