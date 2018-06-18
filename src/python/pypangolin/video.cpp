@@ -369,24 +369,59 @@ namespace py_pangolin {
             unsigned char *buffer = new unsigned char[vi.SizeBytes()];
 
             std::vector<pangolin::Image<unsigned char>> imgs;
-            vi.Grab(buffer,imgs,wait,newest);
+            pybind11::list imgsList;
 
-            // Create a Python object that will free the allocated memory
-            pybind11::capsule free_when_done(buffer,[](void* f) {
-                unsigned char* buffer = (unsigned char*)f;
-                delete[] buffer;
-            });
+            if(vi.Grab(buffer,imgs,wait,newest)) {
+                for(size_t s=0; s < vi.Streams().size(); ++s) {
+                    // Let's just return the first stream for the moment
+                    const pangolin::StreamInfo& si = vi.Streams()[s];
+                    const pangolin::Image<uint8_t> img = si.StreamImage(buffer);
 
-            // Let's just return the first stream for the moment
-            const pangolin::StreamInfo& si = vi.Streams()[0];
-            const int c = si.PixFormat().channels;
-            const int Bpc = si.PixFormat().bpp / (8*c);
+                    const int c = si.PixFormat().channels;
+                    const int Bpp = si.PixFormat().bpp / (8);
+                    const int Bpc = Bpp / c;
+                    const int bpc = si.PixFormat().bpp / c;
+                    PANGO_ASSERT(bpc == 8 || bpc == 16, "only support 8 or 16 bits channel");
 
-            return pybind11::array_t<unsigned char>(
-                {(int)si.Height(), (int)si.Width(), c },
-                {(int)si.Pitch(), c, Bpc},
-                buffer,
-                free_when_done);
+                    pangolin::Image<uint8_t> dstImage(
+                        new unsigned char[img.h * img.w * Bpp],
+                        img.w, img.h, img.w*Bpp
+                    );
+
+                    pangolin::PitchedCopy((char*)dstImage.ptr, dstImage.pitch, (char*)img.ptr, img.pitch, img.w * Bpp, img.h);
+
+                    // Create a Python object that will free the allocated memory
+                    pybind11::capsule free_when_done(dstImage.ptr,[](void* f) {
+                      unsigned char* buffer = (unsigned char*)f;
+                      delete[] buffer;
+                    });
+
+                    if (bpc == 8){
+                        imgsList.append(
+                            pybind11::array_t<uint8_t>(
+                            {(int)dstImage.h, (int)dstImage.w, c },
+                            {(int)dstImage.pitch, Bpp, Bpc},
+                            (uint8_t*)dstImage.ptr,
+                            free_when_done)
+                            );
+                    }
+                    else if (bpc == 16){
+                        imgsList.append(
+                            pybind11::array_t<uint16_t>(
+                            {(int)dstImage.h, (int)dstImage.w, c },
+                            {(int)dstImage.pitch, Bpp, Bpc},
+                            (uint16_t*)dstImage.ptr,
+                            free_when_done)
+                            );
+                    }
+                    else{
+                        PANGO_ASSERT(false, "incompatible bpc");
+                    }
+                }
+            }
+            delete[] buffer;
+            return imgsList;
+
       }, pybind11::arg("wait")=true, pybind11::arg("newest")=false )
       .def("Width", &pangolin::VideoInput::Width)
       .def("Height", &pangolin::VideoInput::Height)
@@ -410,6 +445,67 @@ namespace py_pangolin {
 //      .def("SetStreams", (void (pangolin::VideoOutput::*)(const std::vector<pangolin::StreamInfo>&, const std::string&, const picojson::value&))&pangolin::VideoOutput::SetStreams, pybind11::arg("streams"), pybind11::arg("uri")="", pybind11::arg("properties") = picojson::value())
 //      .def("SetStreams", (void (pangolin::VideoOutput::*)(const std::string&, const picojson::value&))&pangolin::VideoOutput::SetStreams, pybind11::arg("uri")="", pybind11::arg("properties") = picojson::value())
 //      .def("WriteStreams", &pangolin::VideoOutput::WriteStreams, pybind11::arg("data"), pybind11::arg("frame_properties") = picojson::value())
+      .def("WriteStreams", [](pangolin::VideoOutput& vo, pybind11::list images){
+        if(vo.SizeBytes()==0) {
+            // Setup stream info
+            for(auto& i : images) {
+                // num bits per channel
+                auto arr = pybind11::array::ensure(i);
+                int bpc;
+                if(pybind11::isinstance<pybind11::array_t<std::uint8_t>>(arr)){
+                   bpc = 8;
+                } else if (pybind11::isinstance<pybind11::array_t<std::uint16_t>>(arr)){
+                   bpc = 16;
+                } else {
+                   PANGO_ASSERT(false, "numpy dtype must be either uint8_t or uint16_t");
+                }
+
+                // num channels
+                PANGO_ASSERT(arr.ndim() == 2 || arr.ndim() == 3, "Method only accepts ndarrays of 2 or 3 dimensions.");
+                const size_t channels = (arr.ndim() == 3) ? arr.shape(2) : 1;
+                PANGO_ASSERT(channels==1 || channels==3);
+
+                //format string
+                std::string fmtStr;
+                if (bpc == 8 && channels == 3){
+                    fmtStr = "RGB24";
+                } else if (bpc == 8 && channels == 1){
+                    fmtStr = "GRAY8";
+                } else if (bpc == 16 && channels ==1){
+                    fmtStr = "GRAY16LE";
+                } else {
+                    PANGO_ASSERT(false, "format is not supported");
+                }
+                vo.AddStream(pangolin::PixelFormatFromString(fmtStr), arr.shape(1), arr.shape(0));
+            }
+            vo.SetStreams("python://");
+        }
+
+        std::unique_ptr<uint8_t[]> buffer(new uint8_t[vo.SizeBytes()]);
+        std::vector<pangolin::Image<unsigned char>> bimgs = vo.GetOutputImages(buffer.get());
+        PANGO_ASSERT(bimgs.size() == images.size(), "length of input streams not consistent");
+        for(size_t i=0; i < images.size(); ++i) {
+            const pangolin::StreamInfo& so = vo.Streams()[i];
+            const unsigned int bpc = so.PixFormat().channel_bit_depth;
+            const unsigned int Bpp = so.PixFormat().bpp / (8);
+            PANGO_ASSERT(bpc == 8 || bpc == 16, "only support 8 or 16 bit depth");
+            if (bpc == 8){
+                pybind11::array_t<unsigned char> arr = images[i].cast<pybind11::array_t<unsigned char>>();
+                pangolin::Image<uint8_t> srcImg(arr.mutable_data(0,0), bimgs[i].w, bimgs[i].h, bimgs[i].w * Bpp);
+                pangolin::PitchedCopy((char*)bimgs[i].ptr, bimgs[i].pitch, (char*)srcImg.ptr,
+                                      srcImg.pitch, srcImg.pitch, srcImg.h);
+            }else if (bpc == 16){
+                pybind11::array_t<uint16_t> arr = images[i].cast<pybind11::array_t<uint16_t>>();
+                pangolin::Image<uint16_t> srcImg(arr.mutable_data(0,0), bimgs[i].w, bimgs[i].h, bimgs[i].w * Bpp);
+                pangolin::PitchedCopy((char*)bimgs[i].ptr, bimgs[i].pitch, (char*)srcImg.ptr,
+                                      srcImg.pitch, srcImg.pitch, srcImg.h);
+            }else{
+                PANGO_ASSERT(false, "format is not supported");
+            }
+
+        }
+        vo.WriteStreams(buffer.get());
+      }, pybind11::arg("images"))
       .def("IsPipe", &pangolin::VideoOutput::IsPipe)
       .def("AddStream", (void (pangolin::VideoOutput::*)(const pangolin::PixelFormat&, size_t,size_t,size_t))&pangolin::VideoOutput::AddStream)
       .def("AddStream", (void (pangolin::VideoOutput::*)(const pangolin::PixelFormat&, size_t,size_t))&pangolin::VideoOutput::AddStream)
