@@ -24,6 +24,13 @@ public:
         return buffer.data();
     }
 
+    void clear()
+    {
+        buffer.clear();
+    }
+
+    std::vector<unsigned char> buffer;
+
 protected:
     std::streamsize xsputn(const char_type* __s, std::streamsize __n) override
     {
@@ -36,8 +43,6 @@ protected:
         buffer.push_back( static_cast<unsigned char>(__c) );
         return __c;
     }
-
-    std::vector<unsigned char> buffer;
 };
 
 }

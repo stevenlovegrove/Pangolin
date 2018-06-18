@@ -607,22 +607,32 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
         break;
     }
     
+    uint32_t bit_depth = 0;
+
     std::string spix="GRAY8";
     if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_GREY) {
         spix="GRAY8";
+        bit_depth = 8;
     }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
         spix="YUYV422";
+        bit_depth = 8;
+    } else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY) {
+        spix="UYVY422";
+        bit_depth = 8;
     }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16) {
         spix="GRAY16LE";
+        bit_depth = 16;
     }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y10) {
         spix="GRAY10";
+        bit_depth = 10;
     }else{
         // TODO: Add method to translate from V4L to FFMPEG type.
         std::cerr << "V4L Format " << V4lToString(fmt.fmt.pix.pixelformat)
                   << " not recognised. Defaulting to '" << spix << std::endl;
     }
 
-    const PixelFormat pfmt = PixelFormatFromString(spix);
+    PixelFormat pfmt = PixelFormatFromString(spix);
+    pfmt.channel_bit_depth = bit_depth;
     const StreamInfo stream_info(pfmt, width, height, (width*pfmt.bpp)/8, 0);
 
     streams.push_back(stream_info);

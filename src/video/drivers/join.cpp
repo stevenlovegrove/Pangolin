@@ -228,7 +228,7 @@ bool JoinVideo::GrabNext(unsigned char* image, bool wait)
     }
     else
     {
-        pango_print_warn("JoinVideo: sync_tolerance_us = 0, frames are not synced!");
+        pango_print_warn("JoinVideo: sync_tolerance_us = 0, frames are not synced!\n");
         return true;
     }
 }
