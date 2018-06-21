@@ -14,6 +14,13 @@ public:
         buffer.reserve(initial_buffer_size);
     }
 
+    // Avoiding use of std::streambuf's move constructor, since it is missing for old GCC
+    memstreambuf(memstreambuf&& o)
+        : buffer(std::move(o.buffer))
+    {
+        pubseekpos(o.pubseekoff(0, std::ios_base::cur));
+    }
+
     size_t size() const
     {
         return buffer.size();
