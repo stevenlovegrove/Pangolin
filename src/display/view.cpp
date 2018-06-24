@@ -389,13 +389,7 @@ void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx,
 
 void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
 {
-    const GLint viewport[4] = {v.l,v.b,v.w,v.h};
-    const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
-#ifndef HAVE_GLES
-    glUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
-#else
-    glUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
-#endif
+    v.GetCamCoordinates(cam_state, winx, winy, winzdepth, x, y, z);
 }
 
 View& View::SetFocus()
