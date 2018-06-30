@@ -33,15 +33,17 @@ Check the CMake configure output for details.
 * C++11
 
 * OpenGL (Desktop / ES / ES2)
-
+  * (rpm) `sudo yum install freeglut*`
 * Glew
   * (win) built automatically (assuming git is on your path)
   * (deb) `sudo apt-get install libglew-dev`
+  * (rpm) `sudo yum install glew*`
   * (mac) `sudo port install glew`
 
 * CMake (for build environment)
   * (win) http://www.cmake.org/cmake/resources/software.html
   * (deb) `sudo apt-get install cmake`
+  * (rpm) `sudo yum install cmake`
   * (mac) `sudo port install cmake`
 
 ### Recommended Dependencies ###
