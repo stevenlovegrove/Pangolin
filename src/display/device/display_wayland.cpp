@@ -70,7 +70,7 @@ struct ButtonSurface {
         wl_subsurface_set_desync(subsurface);
         egl_context = eglCreateContext (egl_display, config, EGL_NO_CONTEXT, nullptr);
         egl_window = wl_egl_window_create(surface, width, height);
-        egl_surface = eglCreateWindowSurface(egl_display, config, egl_window, nullptr);
+        egl_surface = eglCreateWindowSurface(egl_display, config, (EGLNativeWindowType)egl_window, nullptr);
     }
 
     ~ButtonSurface() {
@@ -150,7 +150,7 @@ struct DecorationSurface {
         wl_subsurface_set_desync(subsurface);
         egl_context = eglCreateContext(egl_display, config, EGL_NO_CONTEXT, nullptr);
         egl_window = wl_egl_window_create(surface, 50, 50);
-        egl_surface = eglCreateWindowSurface(egl_display, config, egl_window, nullptr);
+        egl_surface = eglCreateWindowSurface(egl_display, config, (EGLNativeWindowType)egl_window, nullptr);
     }
 
     ~DecorationSurface() {
@@ -750,7 +750,7 @@ WaylandDisplay::WaylandDisplay(const int width, const int height, const std::str
 
     wl_display_roundtrip(wdisplay);
 
-    egl_display = eglGetDisplay(wdisplay);
+    egl_display = eglGetDisplay((EGLNativeDisplayType)wdisplay);
     if(!egl_display) {
         std::cerr << "Failed to open Wayland display" << std::endl;
     }
