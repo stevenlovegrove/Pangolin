@@ -25,9 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 // Code based on public domain sample at
-// https://www.opengl.org/wiki/Tutorial:_OpenGL_3.0_Context_Creation_%28GLX%29
+// https://github.com/chadversary/gl-examples/blob/master/src/x11-egl/create-x-egl-gl-surface.cpp
 
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
@@ -40,20 +39,43 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <cstdarg>
 
-#include <GL/glx.h>
+#include <EGL/egl.h>
+
+#define CheckEGLDieOnError() pangolin::_CheckEGLDieOnError( __FILE__, __LINE__ );
+namespace pangolin {
+inline void _CheckEGLDieOnError( const char *sFile, const int nLine )
+{
+    EGLint glError = eglGetError();
+    if( glError != EGL_SUCCESS ) {
+        pango_print_error( "EGL Error: %s (%x)\n", glErrorString(glError), glError );
+        pango_print_error("In: %s, line %d\n", sFile, nLine);
+        exit(EXIT_FAILURE);
+    }
+}
+}
 
 namespace pangolin
 {
+
+void
+error_fatal(const char* format, ...) {
+    printf("error: ");
+
+    va_list va;
+    va_start(va, format);
+    vprintf(format, va);
+    va_end(va);
+
+    printf("\n");
+    exit(1);
+}
 
 std::mutex window_mutex;
 std::weak_ptr<X11GlContext> global_gl_context;
 
 const long EVENT_MASKS = ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|ButtonMotionMask|PointerMotionMask|KeyPressMask|KeyReleaseMask|FocusChangeMask;
-
-#define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
-#define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
-typedef GLXContext (*glXCreateContextAttribsARBProc)(::Display*, ::GLXFBConfig, ::GLXContext, Bool, const int*);
 
 // Adapted from: http://www.opengl.org/resources/features/OGLextensions/
 bool isExtensionSupported(const char *extList, const char *extension)
@@ -84,77 +106,6 @@ bool isExtensionSupported(const char *extList, const char *extension)
     return false;
 }
 
-::GLXFBConfig ChooseFrameBuffer(
-    ::Display *display, bool glx_doublebuffer,
-    int glx_sample_buffers, int glx_samples
-) {
-    // Desired attributes
-    int visual_attribs[] =
-    {
-        GLX_X_RENDERABLE    , True,
-        GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
-        GLX_RENDER_TYPE     , GLX_RGBA_BIT,
-        GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
-        GLX_RED_SIZE        , 8,
-        GLX_GREEN_SIZE      , 8,
-        GLX_BLUE_SIZE       , 8,
-        GLX_ALPHA_SIZE      , 8,
-        GLX_DEPTH_SIZE      , 24,
-        GLX_STENCIL_SIZE    , 8,
-        GLX_DOUBLEBUFFER    , glx_doublebuffer ? True : False,
-        None
-    };
-
-    int fbcount;
-    GLXFBConfig* fbc = glXChooseFBConfig(display, DefaultScreen(display), visual_attribs, &fbcount);
-    if (!fbc) {
-        throw std::runtime_error("Pangolin X11: Unable to retrieve framebuffer options");
-    }
-
-    int best_fbc = -1;
-    int worst_fbc = -1;
-    int best_num_samp = -1;
-    int worst_num_samp = 999;
-
-    // Enumerate framebuffer options, storing the best and worst that match our attribs
-    for (int i=0; i<fbcount; ++i)
-    {
-        XVisualInfo *vi = glXGetVisualFromFBConfig( display, fbc[i] );
-        if ( vi )
-        {
-            int samp_buf, samples;
-            glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf );
-            glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLES       , &samples  );
-
-            // Filter for the best available.
-            if ( samples > best_num_samp ) {
-                best_fbc = i;
-                best_num_samp = samples;
-            }
-
-            // Filter lowest settings which match minimum user requirement.
-            if ( samp_buf >= glx_sample_buffers && samples >= glx_samples && samples < worst_num_samp ) {
-                worst_fbc = i;
-                worst_num_samp = samples;
-            }
-        }
-        XFree( vi );
-    }
-
-    // Select the minimum suitable option. The 'best' is often too slow.
-    int chosen_fbc_id = worst_fbc;
-
-    // If minimum requested isn't available, return the best that is.
-    if(chosen_fbc_id < 0) {
-        pango_print_warn("Framebuffer with requested attributes not available. Using available framebuffer. You may see visual artifacts.");
-        chosen_fbc_id = best_fbc;
-    }
-
-    ::GLXFBConfig chosenFbc = fbc[ chosen_fbc_id ];
-    XFree( fbc );
-    return chosenFbc;
-}
-
 static bool ctxErrorOccurred = false;
 static int ctxErrorHandler( ::Display * /*dpy*/, ::XErrorEvent * ev )
 {
@@ -166,102 +117,134 @@ static int ctxErrorHandler( ::Display * /*dpy*/, ::XErrorEvent * ev )
     return 0;
 }
 
-GLXContext CreateGlContext(::Display *display, ::GLXFBConfig chosenFbc, GLXContext share_context = 0)
+X11GlContext::X11GlContext(std::shared_ptr<X11Display>& xdisplay) : display(xdisplay)
 {
-    int glx_major, glx_minor;
-    if ( !glXQueryVersion( display, &glx_major, &glx_minor ) ||
-         ( ( glx_major == 1 ) && ( glx_minor < 3 ) ) || ( glx_major < 1 ) )
-    {
-        throw std::runtime_error("Pangolin X11: Invalid GLX version. Require GLX >= 1.3");
-    }
-
-    GLXContext new_ctx;
-
-    // Get the default screen's GLX extension list
-    const char *glxExts = glXQueryExtensionsString( display, DefaultScreen( display ) );
-
-    glXCreateContextAttribsARBProc glXCreateContextAttribsARB =
-            (glXCreateContextAttribsARBProc) glXGetProcAddressARB(
-                (const GLubyte *) "glXCreateContextAttribsARB"
-            );
 
     // Install an X error handler so the application won't exit if GL 3.0
     // context allocation fails. Handler is global and shared across all threads.
     ctxErrorOccurred = false;
-    int (*oldHandler)(::Display*, ::XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
+    XSetErrorHandler(&ctxErrorHandler);
 
-    if ( isExtensionSupported( glxExts, "GLX_ARB_create_context" ) && glXCreateContextAttribsARB )
-    {
-        int context_attribs[] = {
-            GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-            GLX_CONTEXT_MINOR_VERSION_ARB, 0,
-            //GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-            None
-        };
+    EGLint ignore;
+    EGLBoolean ok;
 
-        new_ctx = glXCreateContextAttribsARB( display, chosenFbc, share_context, True, context_attribs );
+    ok = eglBindAPI(EGL_OPENGL_API);
+    if (!ok)
+        error_fatal("eglBindAPI(0x%x) failed", EGL_OPENGL_API);
+    CheckEGLDieOnError();
 
-        // Sync to ensure any errors generated are processed.
-        XSync( display, False );
-        if ( ctxErrorOccurred || !new_ctx ) {
-            ctxErrorOccurred = false;
-            // Fall back to old-style 2.x context. Implementations will return the newest
-            // context version compatible with OpenGL versions less than version 3.0.
-            context_attribs[1] = 1;  // GLX_CONTEXT_MAJOR_VERSION_ARB = 1
-            context_attribs[3] = 0;  // GLX_CONTEXT_MINOR_VERSION_ARB = 0
-            new_ctx = glXCreateContextAttribsARB( display, chosenFbc, share_context, True, context_attribs );
-        }
-    } else {
-        // Fallback to GLX 1.3 Context
-        new_ctx = glXCreateNewContext( display, chosenFbc, GLX_RGBA_TYPE, share_context, True );
-    }
+    egl_display = eglGetDisplay(xdisplay->display);
+    if (egl_display == EGL_NO_DISPLAY)
+        error_fatal("eglGetDisplay() failed");
+    CheckEGLDieOnError();
 
-    // Sync to ensure any errors generated are processed.
-    XSync( display, False );
+    ok = eglInitialize(egl_display, &ignore, &ignore);
+    if (!ok)
+        error_fatal("eglInitialize() failed");
+    CheckEGLDieOnError();
 
-    // Restore the original error handler
-    XSetErrorHandler( oldHandler );
+//    std::cout << "EGL version: " << eglQueryString(egl_display, EGL_VERSION) << std::endl;
+//    std::cout << "EGL vendor: " << eglQueryString(egl_display, EGL_VENDOR) << std::endl;
+//    std::cout << "EGL apis: " << eglQueryString(egl_display, EGL_CLIENT_APIS) << std::endl;
+//    std::cout << "EGL extensions: " << eglQueryString(egl_display, EGL_EXTENSIONS) << std::endl;
+//    CheckEGLDieOnError();
 
-    if ( ctxErrorOccurred || !new_ctx ) {
-        throw std::runtime_error("Pangolin X11: Failed to create an OpenGL context");
-    }
+    const EGLint egl_config_attribs[] = {
+        EGL_COLOR_BUFFER_TYPE,     EGL_RGB_BUFFER,
+        EGL_BUFFER_SIZE,           32,
+        EGL_RED_SIZE,              8,
+        EGL_GREEN_SIZE,            8,
+        EGL_BLUE_SIZE,             8,
+        EGL_ALPHA_SIZE,            8,
 
-    // Verifying that context is a direct context
-    if ( ! glXIsDirect ( display, new_ctx ) ) {
-        pango_print_warn("Pangolin X11: Indirect GLX rendering context obtained\n");
-    }
+        EGL_DEPTH_SIZE,            24,
+        EGL_STENCIL_SIZE,          8,
 
-    return new_ctx;
-}
+        EGL_SAMPLE_BUFFERS,        0,
+        EGL_SAMPLES,               0,
 
-X11GlContext::X11GlContext(std::shared_ptr<X11Display>& d, ::GLXFBConfig chosenFbc, std::shared_ptr<X11GlContext> shared_context)
-    : display(d), shared_context(shared_context)
-{
-    // prevent chained sharing
-    while(shared_context && shared_context->shared_context) {
-        shared_context = shared_context->shared_context;
-    }
+        EGL_SURFACE_TYPE,          EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE,       EGL_OPENGL_BIT,
 
-    // Contexts can't be shared across different displays.
-    if(shared_context && shared_context->display != d) {
-        shared_context.reset();
-    }
+        EGL_NONE,
+    };
 
-    glcontext = CreateGlContext(display->display, chosenFbc, shared_context ? shared_context->glcontext : 0);
+    EGLint configs_size = 256;
+    EGLConfig* configs = new EGLConfig[configs_size];
+    EGLint num_configs;
+    ok = eglChooseConfig(
+        egl_display,
+        egl_config_attribs,
+        configs,
+        configs_size, // num requested configs
+        &num_configs); // num returned configs
+    if (!ok)
+        error_fatal("eglChooseConfig() failed");
+    if (num_configs == 0)
+        error_fatal("failed to find suitable EGLConfig");
+    egl_config = configs[0];
+    delete [] configs;
+    CheckEGLDieOnError();
+
+    const EGLint egl_context_attribs[] = {
+        EGL_NONE,
+    };
+
+    egl_context = eglCreateContext(
+            egl_display,
+            egl_config,
+            EGL_NO_CONTEXT,
+            egl_context_attribs);
+    if (!egl_context)
+        error_fatal("eglCreateContext() failed");
+    CheckEGLDieOnError();
+
+    // Check if surface is double buffered.
+    EGLint render_buffer;
+    ok = eglQueryContext(
+        egl_display,
+        egl_context,
+        EGL_RENDER_BUFFER,
+        &render_buffer);
+    if (!ok)
+        error_fatal("eglQueyContext(EGL_RENDER_BUFFER) failed");
+    if (render_buffer == EGL_SINGLE_BUFFER)
+        printf("warn: EGL surface is single buffered\n");
+    CheckEGLDieOnError();
 }
 
 X11GlContext::~X11GlContext()
 {
-    glXDestroyContext( display->display, glcontext );
+    // cleanup EGL
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    if(egl_context) eglDestroyContext(egl_display, egl_context);
+    if(egl_surface) eglDestroySurface(egl_display, egl_surface);
+    if(egl_display) eglTerminate(egl_display);
 }
 
 X11Window::X11Window(
     const std::string& title, int width, int height,
-    std::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc
-) : display(display), glcontext(0), win(0), cmap(0)
+    std::shared_ptr<X11Display>& display, std::shared_ptr<X11GlContext> newglcontext
+) : display(display), glcontext(newglcontext), win(0), cmap(0)
 {
     // Get a visual
-    XVisualInfo *vi = glXGetVisualFromFBConfig( display->display, chosenFbc );
+    EGLint vid;
+    if(eglGetConfigAttrib(glcontext->egl_display, glcontext->egl_config,
+                          EGL_NATIVE_VISUAL_ID, &vid)!=EGL_TRUE)
+    {
+        error_fatal("eglGetConfigAttrib() failed");
+    }
+    CheckEGLDieOnError();
+
+    XVisualInfo x11_visual_info_template;
+    x11_visual_info_template.visualid = VisualID(vid);
+
+    int num_visuals;
+    XVisualInfo *vi = XGetVisualInfo(
+        display->display, VisualIDMask, &x11_visual_info_template, &num_visuals);
+
+    if(!vi)
+        error_fatal("XGetVisualInfo() failed");
 
     // Create colourmap
     XSetWindowAttributes swa;
@@ -278,11 +261,11 @@ X11Window::X11Window(
                          vi->visual,
                          CWBorderPixel|CWColormap|CWEventMask, &swa );
 
-    XFree( vi );
-
     if ( !win ) {
         throw std::runtime_error("Pangolin X11: Failed to create window." );
     }
+
+    XFree(vi);
 
     // set name in window switching (alt-tab) list
     {
@@ -301,28 +284,43 @@ X11Window::X11Window(
 
     delete_message = XInternAtom(display->display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(display->display, win, &delete_message, 1);
+
+    const EGLint egl_surface_attribs[] = {
+        EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
+        EGL_NONE,
+    };
+
+    glcontext->egl_surface = eglCreateWindowSurface(
+            glcontext->egl_display,
+            glcontext->egl_config,
+            win,
+            egl_surface_attribs);
+    if (!glcontext->egl_surface)
+        error_fatal("eglCreateWindowSurface() failed");
+    CheckEGLDieOnError();
 }
 
 X11Window::~X11Window()
 {
-    glXMakeCurrent( display->display, 0, 0 );
     XDestroyWindow( display->display, win );
     XFreeColormap( display->display, cmap );
 }
 
-void X11Window::MakeCurrent(GLXContext ctx)
+void X11Window::MakeCurrent(EGLContext ctx)
 {
-    glXMakeCurrent( display->display, win, ctx );
+    eglMakeCurrent( glcontext->egl_display, glcontext->egl_surface, glcontext->egl_surface, ctx );
 }
 
 void X11Window::MakeCurrent()
 {
-    MakeCurrent(glcontext ? glcontext->glcontext : global_gl_context.lock()->glcontext);
+    CheckEGLDieOnError();
+    MakeCurrent(glcontext ? glcontext->egl_context : global_gl_context.lock()->egl_context);
+    CheckEGLDieOnError();
 }
 
 void X11Window::RemoveCurrent()
 {
-    glXMakeCurrent(display->display, 0, nullptr);
+    eglMakeCurrent(glcontext->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 void X11Window::ShowFullscreen(const TrueFalseToggle true_false)
@@ -477,7 +475,12 @@ void X11Window::ProcessEvents()
 }
 
 void X11Window::SwapBuffers() {
-    glXSwapBuffers(display->display, win);
+    CheckEGLDieOnError();
+    EGLBoolean suc = eglSwapBuffers(glcontext->egl_display, glcontext->egl_surface);
+    if(suc==EGL_FALSE) {
+        std::cerr << "egl swap failed" << std::endl;
+    }
+    CheckEGLDieOnError();
 }
 
 std::unique_ptr<WindowInterface> CreateX11WindowAndBind(const std::string& window_title, const int w, const int h, const std::string& display_name, const bool double_buffered, const int  sample_buffers, const int  samples)
@@ -486,20 +489,16 @@ std::unique_ptr<WindowInterface> CreateX11WindowAndBind(const std::string& windo
     if (!newdisplay) {
         throw std::runtime_error("Pangolin X11: Failed to open X display");
     }
-    ::GLXFBConfig newfbc = ChooseFrameBuffer(newdisplay->display, double_buffered, sample_buffers, samples);
 
     window_mutex.lock();
-    std::shared_ptr<X11GlContext> newglcontext = std::make_shared<X11GlContext>(
-        newdisplay, newfbc, global_gl_context.lock()
-    );
+    std::shared_ptr<X11GlContext> newglcontext = std::make_shared<X11GlContext>(newdisplay);
 
     if(!global_gl_context.lock()) {
         global_gl_context = newglcontext;
     }
     window_mutex.unlock();
 
-    X11Window* win = new X11Window(window_title, w, h, newdisplay, newfbc);
-    win->glcontext = newglcontext;
+    X11Window* win = new X11Window(window_title, w, h, newdisplay, newglcontext);
 
     return std::unique_ptr<WindowInterface>(win);
 }
