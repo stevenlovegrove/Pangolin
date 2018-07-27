@@ -22,6 +22,7 @@ def main(flags):
 		vout_uri = "pango://demo.pango"
 
 	vid = pango.VideoInput(vid_uri)
+	print(vid.GetCurrentFrameId())
 	vout = pango.VideoOutput(vout_uri)
 
     # print metadata
