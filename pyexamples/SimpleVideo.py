@@ -31,21 +31,25 @@ def main(flags):
 	print("format: channels: {}, channel_bits: {}, planar: {}".format(
 		fmt.channels, fmt.bpp, fmt.planar))
 
-    # initialize display
-	allStreams = vid.Grab()	
-	numstreams = len(allStreams)
 
-	streams = [stream] if stream else list(range(numstreams))
-	assert streams[-1] < numstreams, 'specified stream {} is out of bnd'.format(stream)
+	# user specified initial frame
+	vid.Seek(flags.startFrame)
+	if flags.endFrame is None:
+		flags.endFrame = vid.GetTotalFrames()
+
+    # initialize display
+	numStreams = vid.GetNumStreams()
+	streams = [stream] if stream else list(range(numStreams))
+	assert streams[-1] < numStreams, 'specified stream {} is out of bnd'.format(stream)
 
 	fig, axes = plt.subplots(len(streams), 1, figsize=(12, 12*len(streams)), squeeze=False)
 	fig.show()
 
     # show each frame
-	frameCounter = 0
-	while (allStreams):
-		# if frameCounter > 20:
-		# 	break
+	while (vid.GetCurrentFrameId() < flags.endFrame):
+		# grab the next frame
+		allStreams = vid.Grab()
+
 		vout.WriteStreams(allStreams);
 		for i, s in enumerate(streams):
 			arr = allStreams[s]
@@ -56,16 +60,13 @@ def main(flags):
 			else:
 				axes[i,0].imshow(arr)
 
-		# grab the next frame
-		allStreams = vid.Grab()
-		frameCounter += 1
-
 		# update figures
 		fig.canvas.draw()
 
 		# printing
-		if frameCounter % 10 == 0:
-			print('frame: {}'.format(frameCounter))
+		if vid.GetCurrentFrameId() % 10 == 0:
+			print('frame: {} / {}'.format(
+				vid.GetCurrentFrameId(), vid.GetTotalFrames()))
 
 if __name__ == "__main__":
     # input flags
@@ -74,6 +75,12 @@ if __name__ == "__main__":
     parser.add_argument(
         '--pango', type=str,
         help='path to the input pango file.')
+    parser.add_argument(
+        '--startFrame', type=int, default=0,
+        help='path to the input pango file.')
+    parser.add_argument(
+		'--endFrame', type=int, default=None,
+		help='path to the input pango file.')
     parser.add_argument(
         '--pangoOut', type=str, default=None,
         help='path to the output pango file.')
