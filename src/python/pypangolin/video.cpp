@@ -423,6 +423,19 @@ namespace py_pangolin {
             return imgsList;
 
       }, pybind11::arg("wait")=true, pybind11::arg("newest")=false )
+      .def("GetNumStreams", [](pangolin::VideoInput& vi){
+        return vi.Streams().size();
+        })
+      .def("GetCurrentFrameId", [](pangolin::VideoInput& vi){
+        return vi.Cast<pangolin::VideoPlaybackInterface>()->GetCurrentFrameId();
+        })
+      .def("GetTotalFrames", [](pangolin::VideoInput& vi){
+        return vi.Cast<pangolin::VideoPlaybackInterface>()->GetTotalFrames();
+        })
+      .def("Seek", [](pangolin::VideoInput& vi, size_t frameid){
+        vi.Cast<pangolin::VideoPlaybackInterface>()->Seek(frameid);
+        return;
+        })
       .def("Width", &pangolin::VideoInput::Width)
       .def("Height", &pangolin::VideoInput::Height)
       .def("PixFormat", &pangolin::VideoInput::PixFormat)
