@@ -91,7 +91,7 @@ add_library(_libpng STATIC IMPORTED GLOBAL)
 add_dependencies(_libpng __libpng)
 set_target_properties(_libpng PROPERTIES
     IMPORTED_LOCATION_RELWITHDEBINFO ${CMAKE_INSTALL_PREFIX}/lib/libpng16_static.lib
-	IMPORTED_LOCATION_RELEASE ${CMAKE_INSTALL_PREFIX}/lib/libpng16_static.lib
+    IMPORTED_LOCATION_RELEASE ${CMAKE_INSTALL_PREFIX}/lib/libpng16_static.lib
     IMPORTED_LOCATION_DEBUG   ${CMAKE_INSTALL_PREFIX}/lib/libpng16_staticd.lib
 )
 
@@ -149,5 +149,16 @@ set(ExternConfig "${ExternConfig}
     IMPORTED_LOCATION \"${CMAKE_INSTALL_PREFIX}/lib/jpeg.lib\"
   )")
 endif()
+
+# GLFW
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+# link glfw statically static and keep settings for pangolin
+# https://stackoverflow.com/a/31140797/8144672
+set(BUILD_SHARED_LIBS_SAVED "${BUILD_SHARED_LIBS}")
+set(BUILD_SHARED_LIBS OFF)
+add_subdirectory(glfw)
+set(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS_SAVED}")
 
 set(ExternConfig "${ExternConfig}" PARENT_SCOPE)

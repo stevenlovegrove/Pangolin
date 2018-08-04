@@ -190,6 +190,11 @@ if(BUILD_PANGOLIN_GUI)
         list(APPEND SOURCES display/device/display_headless.cpp)
         list(APPEND LINK_LIBS ${OPENGL_egl_LIBRARY} )
     endif()
+
+    # glfw
+    list(APPEND WINDOW_FACTORY_REG RegisterGLFWWindowFactory)
+    list(APPEND SOURCES display/device/display_glfw.cpp)
+    list(APPEND LINK_LIBS glfw)
 endif()
 
 #######################################################
