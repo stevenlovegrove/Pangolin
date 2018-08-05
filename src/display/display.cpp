@@ -80,6 +80,11 @@ bool one_time_window_frameworks_init = false;
 // Context active for current thread
 __thread PangolinGl* context = 0;
 
+namespace
+{
+PangolinGl *FindContextNoLock(const std::string& name);
+}
+
 PangolinGl::PangolinGl()
     : user_app(0), is_high_res(false), quit(false), mouse_state(0),activeDisplay(0)
 #ifdef BUILD_PANGOLIN_VIDEO
@@ -108,8 +113,7 @@ PangolinGl* GetCurrentContext()
 PangolinGl *FindContext(const std::string& name)
 {
     contexts_mutex.lock();
-    ContextMap::iterator ic = contexts.find(name);
-    PangolinGl* context = (ic == contexts.end()) ? 0 : ic->second.get();
+    PangolinGl* context = FindContextNoLock( name );
     contexts_mutex.unlock();
     return context;
 }
@@ -228,7 +232,7 @@ WindowInterface& BindToContext(std::string name)
     // N.B. context is modified prior to invoking MakeCurrent so that
     // state management callbacks (such as Resize()) can be correctly
     // processed.
-    PangolinGl *context_to_bind = FindContext(name);
+    PangolinGl *context_to_bind = FindContextNoLock(name);
     if( !context_to_bind )
     {
         std::shared_ptr<PangolinGl> newcontext(new PangolinGl());
@@ -665,4 +669,13 @@ void ToggleViewFunctor::operator()()
     view.ToggleShow();
 }
 
+namespace
+{
+PangolinGl *FindContextNoLock(const std::string& name)
+{
+    ContextMap::iterator ic = contexts.find(name);
+    PangolinGl* context = (ic == contexts.end()) ? 0 : ic->second.get();
+    return context;
+}
+}
 }
