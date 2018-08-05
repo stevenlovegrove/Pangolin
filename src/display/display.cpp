@@ -112,9 +112,8 @@ PangolinGl* GetCurrentContext()
 
 PangolinGl *FindContext(const std::string& name)
 {
-    contexts_mutex.lock();
+    std::unique_lock<decltype(contexts_mutex)> l(contexts_mutex);
     PangolinGl* context = FindContextNoLock( name );
-    contexts_mutex.unlock();
     return context;
 }
 
