@@ -202,6 +202,12 @@ void OsxWindow::Resize(unsigned int w, unsigned int h)
 void OsxWindow::MakeCurrent()
 {
     [[view openGLContext] makeCurrentContext];
+    context = this;
+}
+
+void OsxWindow::RemoveCurrent()
+{
+    [NSOpenGLContext clearCurrentContext];
 }
 
 void OsxWindow::SwapBuffers()
