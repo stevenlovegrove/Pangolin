@@ -15,6 +15,7 @@ install:
   
 before_build:
   - cd c:/projects/Pangolin
+  - git submodule update --init --recursive --remote
   - mkdir bin
   - mkdir build
   - cd build

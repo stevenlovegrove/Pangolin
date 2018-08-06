@@ -24,6 +24,7 @@ matrix:
       env: PARALLEL_BUILD="--parallel 8"
 
 script:
+  - git submodule update --init --recursive --remote
   - mkdir build
   - cd build
   - cmake -D CMAKE_BUILD_TYPE=Release ..
