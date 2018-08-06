@@ -66,9 +66,9 @@ static const std::unordered_map<EGLint, std::string> egl_error_msg = {
 namespace pangolin {
 inline void _CheckEGLDieOnError( const char *sFile, const int nLine )
 {
-    EGLint eglError = eglGetError();
+    const EGLint eglError = eglGetError();
     if( eglError != EGL_SUCCESS ) {
-        pango_print_error("EGL Error: %s (%x)\n", egl_error_msg.at(eglError), eglError);
+        pango_print_error("EGL Error: %s (%x)\n", egl_error_msg.at(eglError).c_str(), eglError);
         pango_print_error("In: %s, line %d\n", sFile, nLine);
         exit(EXIT_FAILURE);
     }
@@ -327,7 +327,17 @@ X11Window::~X11Window()
 
 void X11Window::MakeCurrent(EGLContext ctx)
 {
-    eglMakeCurrent( glcontext->egl_display, glcontext->egl_surface, glcontext->egl_surface, ctx );
+    if(eglMakeCurrent( glcontext->egl_display, glcontext->egl_surface, glcontext->egl_surface, ctx )==EGL_FALSE) {
+        const EGLint eglError = eglGetError();
+        if(eglError==EGL_BAD_ACCESS) {
+            std::cerr << "Received 'EGL_BAD_ACCESS' trying to set current EGL context." << std::endl;
+            std::cerr << "When calling 'MakeCurrent()' from a different thread, you need to unset the previous context first by calling 'RemoveCurrent()'." << std::endl;
+        }
+        else {
+            pango_print_error("X11Window::MakeCurrent(): EGL Error %s (%x)\n", egl_error_msg.at(eglError).c_str(), eglError);
+        }
+        exit(EXIT_FAILURE);
+    }
 }
 
 void X11Window::MakeCurrent()
