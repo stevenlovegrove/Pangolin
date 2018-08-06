@@ -40,16 +40,35 @@
 #include <string.h>
 #include <unistd.h>
 #include <cstdarg>
+#include <unordered_map>
 
 #include <EGL/egl.h>
+
+static const std::unordered_map<EGLint, std::string> egl_error_msg = {
+    {EGL_SUCCESS, "EGL_SUCCESS"},
+    {EGL_NOT_INITIALIZED, "EGL_NOT_INITIALIZED"},
+    {EGL_BAD_ACCESS, "EGL_BAD_ACCESS"},
+    {EGL_BAD_ALLOC, "EGL_BAD_ALLOC"},
+    {EGL_BAD_ATTRIBUTE, "EGL_BAD_ATTRIBUTE"},
+    {EGL_BAD_CONTEXT, "EGL_BAD_CONTEXT"},
+    {EGL_BAD_CONFIG, "EGL_BAD_CONFIG"},
+    {EGL_BAD_CURRENT_SURFACE, "EGL_BAD_CURRENT_SURFACE"},
+    {EGL_BAD_DISPLAY, "EGL_BAD_DISPLAY"},
+    {EGL_BAD_SURFACE, "EGL_BAD_SURFACE"},
+    {EGL_BAD_MATCH, "EGL_BAD_MATCH"},
+    {EGL_BAD_PARAMETER, "EGL_BAD_PARAMETER"},
+    {EGL_BAD_NATIVE_PIXMAP, "EGL_BAD_NATIVE_PIXMAP"},
+    {EGL_BAD_NATIVE_WINDOW, "EGL_BAD_NATIVE_WINDOW"},
+    {EGL_CONTEXT_LOST, "EGL_CONTEXT_LOST"},
+};
 
 #define CheckEGLDieOnError() pangolin::_CheckEGLDieOnError( __FILE__, __LINE__ );
 namespace pangolin {
 inline void _CheckEGLDieOnError( const char *sFile, const int nLine )
 {
-    EGLint glError = eglGetError();
-    if( glError != EGL_SUCCESS ) {
-        pango_print_error( "EGL Error: %s (%x)\n", glErrorString(glError), glError );
+    EGLint eglError = eglGetError();
+    if( eglError != EGL_SUCCESS ) {
+        pango_print_error("EGL Error: %s (%x)\n", egl_error_msg.at(eglError), eglError);
         pango_print_error("In: %s, line %d\n", sFile, nLine);
         exit(EXIT_FAILURE);
     }
