@@ -74,7 +74,7 @@ typedef std::map<std::string,std::shared_ptr<PangolinGl> > ContextMap;
 
 // Map of active contexts
 ContextMap contexts;
-std::mutex contexts_mutex;
+std::recursive_mutex contexts_mutex;
 bool one_time_window_frameworks_init = false;
 
 // Context active for current thread
@@ -116,7 +116,7 @@ PangolinGl *FindContext(const std::string& name)
 
 WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& params)
 {
-    std::unique_lock<std::mutex> l(contexts_mutex);
+    std::unique_lock<std::recursive_mutex> l(contexts_mutex);
 
     if(!one_time_window_frameworks_init) {
         one_time_window_frameworks_init = LoadBuiltInWindowFrameworks();
@@ -223,7 +223,7 @@ void DestroyWindow(const std::string& name)
 
 WindowInterface& BindToContext(std::string name)
 {
-    std::unique_lock<std::mutex> l(contexts_mutex);
+    std::unique_lock<std::recursive_mutex> l(contexts_mutex);
 
     // N.B. context is modified prior to invoking MakeCurrent so that
     // state management callbacks (such as Resize()) can be correctly
