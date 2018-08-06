@@ -392,6 +392,8 @@ struct WaylandWindow : public PangolinGl
 
     void MakeCurrent() override;
 
+    void RemoveCurrent() override;
+
     void SwapBuffers() override;
 
     void ProcessEvents() override;
@@ -834,6 +836,10 @@ WaylandWindow::~WaylandWindow() { }
 void WaylandWindow::MakeCurrent() {
     eglMakeCurrent(display->egl_display, display->egl_surface, display->egl_surface, display->egl_context);
     context = this;
+}
+
+void WaylandWindow::RemoveCurrent() {
+    eglMakeCurrent(display->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 void WaylandWindow::ToggleFullscreen() {
