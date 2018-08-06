@@ -93,6 +93,7 @@ directory 'build', execute the following at a shell (or the equivelent using a G
 ```
 git clone https://github.com/stevenlovegrove/Pangolin.git
 cd Pangolin
+git submodule update --init --recursive
 mkdir build
 cd build
 cmake ..
