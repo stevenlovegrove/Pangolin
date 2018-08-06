@@ -435,6 +435,11 @@ void WinWindow::MakeCurrent()
     Resize(rect.right - rect.left, rect.bottom - rect.top);
 }
 
+void WinWindow::RemoveCurrent()
+{
+    wglMakeCurrent(NULL, NULL);
+}
+
 void WinWindow::SwapBuffers()
 {
     ::SwapBuffers(hDC);
