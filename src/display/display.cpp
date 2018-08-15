@@ -233,7 +233,6 @@ WindowInterface& BindToContext(std::string name)
     {
         std::shared_ptr<PangolinGl> newcontext(new PangolinGl());
         RegisterNewContext(name, newcontext);
-        newcontext->MakeCurrent();
         return *(newcontext.get());
     }else{
         context_to_bind->MakeCurrent();
