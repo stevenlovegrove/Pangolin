@@ -35,9 +35,9 @@ set(GLEW_STATIC 1 PARENT_SCOPE)
 set(ExternConfig "${ExternConfig}
   add_library(_glew STATIC IMPORTED)
   set_target_properties(_glew PROPERTIES
-    IMPORTED_LOCATION_RELWITHDEBINFO ${CMAKE_INSTALL_PREFIX}/lib/glew.lib
-    IMPORTED_LOCATION_RELEASE ${CMAKE_INSTALL_PREFIX}/lib/glew.lib
-    IMPORTED_LOCATION_DEBUG   ${CMAKE_INSTALL_PREFIX}/lib/glewd.lib
+    IMPORTED_LOCATION_RELWITHDEBINFO \"${CMAKE_INSTALL_PREFIX}/lib/glew.lib\"
+    IMPORTED_LOCATION_RELEASE \"${CMAKE_INSTALL_PREFIX}/lib/glew.lib\"
+    IMPORTED_LOCATION_DEBUG   \"${CMAKE_INSTALL_PREFIX}/lib/glewd.lib\"
   )")
 endif()
 
@@ -102,15 +102,15 @@ set(ZLIB_LIBRARY _zlib PARENT_SCOPE)
 set(ExternConfig "${ExternConfig}
   add_library(_zlib STATIC IMPORTED)
   set_target_properties(_zlib PROPERTIES
-    IMPORTED_LOCATION_RELEASE ${CMAKE_INSTALL_PREFIX}/lib/zlibstatic.lib
-    IMPORTED_LOCATION_RELWITHDEBINFO ${CMAKE_INSTALL_PREFIX}/lib/zlibstatic.lib
-    IMPORTED_LOCATION_DEBUG   ${CMAKE_INSTALL_PREFIX}/lib/zlibstaticd.lib
+    IMPORTED_LOCATION_RELEASE \"${CMAKE_INSTALL_PREFIX}/lib/zlibstatic.lib\"
+    IMPORTED_LOCATION_RELWITHDEBINFO \"${CMAKE_INSTALL_PREFIX}/lib/zlibstatic.lib\"
+    IMPORTED_LOCATION_DEBUG   \"${CMAKE_INSTALL_PREFIX}/lib/zlibstaticd.lib\"
   )
   add_library(_libpng STATIC IMPORTED)
   set_target_properties(_libpng PROPERTIES
-    IMPORTED_LOCATION_RELEASE ${CMAKE_INSTALL_PREFIX}/lib/libpng16_static.lib
-    IMPORTED_LOCATION_RELWITHDEBINFO ${CMAKE_INSTALL_PREFIX}/lib/libpng16_static.lib
-    IMPORTED_LOCATION_DEBUG   ${CMAKE_INSTALL_PREFIX}/lib/libpng16_staticd.lib
+    IMPORTED_LOCATION_RELEASE \"${CMAKE_INSTALL_PREFIX}/lib/libpng16_static.lib\"
+    IMPORTED_LOCATION_RELWITHDEBINFO \"${CMAKE_INSTALL_PREFIX}/lib/libpng16_static.lib\"
+    IMPORTED_LOCATION_DEBUG   \"${CMAKE_INSTALL_PREFIX}/lib/libpng16_staticd.lib\"
   )")
 endif()
 
@@ -146,7 +146,7 @@ set(JPEG_LIBRARY _libjpeg PARENT_SCOPE)
 set(ExternConfig "${ExternConfig}
   add_library(_libjpeg STATIC IMPORTED)
   set_target_properties(_libjpeg PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/jpeg.lib
+    IMPORTED_LOCATION \"${CMAKE_INSTALL_PREFIX}/lib/jpeg.lib\"
   )")
 endif()
 
