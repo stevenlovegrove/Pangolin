@@ -321,6 +321,11 @@ void X11Window::MakeCurrent()
     MakeCurrent(glcontext ? glcontext->glcontext : global_gl_context.lock()->glcontext);
 }
 
+void X11Window::RemoveCurrent()
+{
+    glXMakeCurrent(display->display, 0, nullptr);
+}
+
 void X11Window::ToggleFullscreen()
 {
     const Atom _NET_WM_STATE_FULLSCREEN = XInternAtom(display->display, "_NET_WM_STATE_FULLSCREEN", True);
