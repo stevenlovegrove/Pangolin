@@ -381,7 +381,7 @@ namespace py_pangolin {
                     const int Bpp = si.PixFormat().bpp / (8);
                     const int Bpc = Bpp / c;
                     const int bpc = si.PixFormat().bpp / c;
-                    PANGO_ASSERT(bpc == 8 || bpc == 16, "only support 8 or 16 bits channel");
+                    PANGO_ASSERT(bpc == 8 || bpc == 16 || bpc == 32, "only support 8, 16, 32 bits channel");
 
                     pangolin::Image<uint8_t> dstImage(
                         new unsigned char[img.h * img.w * Bpp],
@@ -396,7 +396,7 @@ namespace py_pangolin {
                       delete[] buffer;
                     });
 
-                    if (bpc == 8){
+                    if (bpc == 8) {
                         imgsList.append(
                             pybind11::array_t<uint8_t>(
                             {(int)dstImage.h, (int)dstImage.w, c },
@@ -413,6 +413,31 @@ namespace py_pangolin {
                             (uint16_t*)dstImage.ptr,
                             free_when_done)
                             );
+                    }
+                    else if (bpc == 32){
+                        if (si.PixFormat().format == "GRAY32")
+                        {
+                            imgsList.append(
+                                pybind11::array_t<uint32_t>(
+                                {(int)dstImage.h, (int)dstImage.w, c },
+                                {(int)dstImage.pitch, Bpp, Bpc},
+                                (uint32_t*)dstImage.ptr,
+                                free_when_done)
+                                );
+                        }
+                        else if (si.PixFormat().format == "GRAY32F")
+                        {
+                            imgsList.append(
+                                pybind11::array_t<float>(
+                                {(int)dstImage.h, (int)dstImage.w, c },
+                                {(int)dstImage.pitch, Bpp, Bpc},
+                                (float*)dstImage.ptr,
+                                free_when_done)
+                                );
+                        }
+                        else{
+                            PANGO_ASSERT(false, "unsupported 32 bpc format");
+                        }
                     }
                     else{
                         PANGO_ASSERT(false, "incompatible bpc");
