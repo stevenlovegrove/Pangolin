@@ -378,6 +378,7 @@ namespace py_pangolin {
                     const pangolin::Image<uint8_t> img = si.StreamImage(buffer);
 
                     const int c = si.PixFormat().channels;
+                    const std::string fmt = si.PixFormat().format;
                     const int Bpp = si.PixFormat().bpp / (8);
                     const int Bpc = Bpp / c;
                     const int bpc = si.PixFormat().bpp / c;
@@ -415,7 +416,7 @@ namespace py_pangolin {
                             );
                     }
                     else if (bpc == 32){
-                        if (si.PixFormat().format == "GRAY32")
+                        if (fmt == "GRAY32")
                         {
                             imgsList.append(
                                 pybind11::array_t<uint32_t>(
@@ -425,7 +426,9 @@ namespace py_pangolin {
                                 free_when_done)
                                 );
                         }
-                        else if (si.PixFormat().format == "GRAY32F")
+                        else if (fmt == "GRAY32F" ||
+                                 fmt == "RGB96F" ||
+                                 fmt == "RGBA128F")
                         {
                             imgsList.append(
                                 pybind11::array_t<float>(
