@@ -543,22 +543,22 @@ namespace py_pangolin {
             const unsigned int bpc = so.PixFormat().channel_bit_depth;
             const unsigned int Bpp = so.PixFormat().bpp / (8);
             if (bpc == 8){
-                pybind11::array_t<uint8_t> arr = images[i].cast<pybind11::array_t<unsigned char>>();
+                pybind11::array_t<uint8_t> arr = images[i].cast<pybind11::array_t<unsigned char, pybind11::array::c_style | pybind11::array::forcecast>>();
                 pangolin::Image<uint8_t> srcImg(arr.mutable_data(0,0), bimgs[i].w, bimgs[i].h, bimgs[i].w * Bpp);
                 pangolin::PitchedCopy((char*)bimgs[i].ptr, bimgs[i].pitch, (char*)srcImg.ptr,
                                       srcImg.pitch, srcImg.pitch, srcImg.h);
             }else if (bpc == 12 || bpc == 16){
-                pybind11::array_t<uint16_t> arr = images[i].cast<pybind11::array_t<uint16_t>>();
+                pybind11::array_t<uint16_t> arr = images[i].cast<pybind11::array_t<uint16_t, pybind11::array::c_style | pybind11::array::forcecast>>();
                 pangolin::Image<uint16_t> srcImg(arr.mutable_data(0,0), bimgs[i].w, bimgs[i].h, bimgs[i].w * Bpp);
                 pangolin::PitchedCopy((char*)bimgs[i].ptr, bimgs[i].pitch, (char*)srcImg.ptr,
                                       srcImg.pitch, srcImg.pitch, srcImg.h);
             }else if (bpc == 32){
-                pybind11::array_t<float_t> arr = images[i].cast<pybind11::array_t<float_t>>();
+                pybind11::array_t<float_t> arr = images[i].cast<pybind11::array_t<float_t, pybind11::array::c_style | pybind11::array::forcecast>>();
                 pangolin::Image<float_t> srcImg(arr.mutable_data(0,0), bimgs[i].w, bimgs[i].h, bimgs[i].w * Bpp);
                 pangolin::PitchedCopy((char*)bimgs[i].ptr, bimgs[i].pitch, (char*)srcImg.ptr,
                                       srcImg.pitch, srcImg.pitch, srcImg.h);
             }else if (bpc == 64){
-                pybind11::array_t<double_t> arr = images[i].cast<pybind11::array_t<double_t>>();
+                pybind11::array_t<double_t> arr = images[i].cast<pybind11::array_t<double_t, pybind11::array::c_style | pybind11::array::forcecast>>();
                 pangolin::Image<double_t> srcImg(arr.mutable_data(0,0), bimgs[i].w, bimgs[i].h, bimgs[i].w * Bpp);
                 pangolin::PitchedCopy((char*)bimgs[i].ptr, bimgs[i].pitch, (char*)srcImg.ptr,
                                       srcImg.pitch, srcImg.pitch, srcImg.h);
