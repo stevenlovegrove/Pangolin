@@ -500,31 +500,34 @@ namespace py_pangolin {
             for(size_t i = 0; i < images.size(); ++i){
                 // num bits per channel
                 auto arr = pybind11::array::ensure(images[i]);
-                int bpc;
-                if(pybind11::isinstance<pybind11::array_t<std::uint8_t>>(arr)){
-                   bpc = 8;
-                } else if (pybind11::isinstance<pybind11::array_t<std::uint16_t>>(arr)){
-                   bpc = 16;
-                } else {
-                   PANGO_ASSERT(false, "numpy dtype must be either uint8_t or uint16_t");
-                }
 
                 // num channels
                 PANGO_ASSERT(arr.ndim() == 2 || arr.ndim() == 3, "Method only accepts ndarrays of 2 or 3 dimensions.");
                 const size_t channels = (arr.ndim() == 3) ? arr.shape(2) : 1;
-                PANGO_ASSERT(channels==1 || channels==3);
 
-                //format string
                 std::string fmtStr;
-                if (bpc == 8 && channels == 3){
-                    fmtStr = "RGB24";
-                } else if (bpc == 8 && channels == 1){
-                    fmtStr = "GRAY8";
-                } else if (bpc == 16 && channels ==1){
-                    fmtStr = "GRAY16LE";
+                if(pybind11::isinstance<pybind11::array_t<std::uint8_t>>(arr)){
+                   if(channels == 1) fmtStr = "GRAY8";
+                   else if(channels == 3) fmtStr = "RGB24";
+                   else if(channels == 4) fmtStr = "RGBA32";
+                   else PANGO_ASSERT(false, "Only 1, 3 and 4 channel uint8_t formats are supported.");
+                } else if (pybind11::isinstance<pybind11::array_t<std::uint16_t>>(arr)){
+                   if(channels == 1) fmtStr = "GRAY16LE";
+                   else if(channels == 3) fmtStr = "RGB48";
+                   else if(channels == 4) fmtStr = "RGBA64";
+                   else PANGO_ASSERT(false, "Only 1, 3 and 4 channel uint16_t formats are supported.");
+                } else if (pybind11::isinstance<pybind11::array_t<std::float_t>>(arr)){
+                    if(channels == 1) fmtStr = "GRAY32F";
+                    else if(channels == 3) fmtStr = "RGB96F";
+                    else if(channels == 4) fmtStr = "RGBA128F";
+                    else PANGO_ASSERT(false, "Only 1, 3 and 4 channel float_t formats are supported.");
+                } else if (pybind11::isinstance<pybind11::array_t<std::double_t>>(arr)){
+                    if(channels == 1) fmtStr = "GRAY64F";
+                    else PANGO_ASSERT(false, "Only 1 channel double_t format is supported.");
                 } else {
-                    PANGO_ASSERT(false, "format is not supported");
+                    PANGO_ASSERT(false, "numpy dtype must be either uint8_t, uint16_t, float_t or double_t");
                 }
+
                 pangolin::PixelFormat pf = pangolin::PixelFormatFromString(fmtStr);
                 pf.channel_bit_depth = (unsigned int) streamsBitDepth[i];
                 vo.AddStream(pf, arr.shape(1), arr.shape(0));
@@ -539,19 +542,28 @@ namespace py_pangolin {
             const pangolin::StreamInfo& so = vo.Streams()[i];
             const unsigned int bpc = so.PixFormat().channel_bit_depth;
             const unsigned int Bpp = so.PixFormat().bpp / (8);
-            PANGO_ASSERT(bpc == 8 || bpc == 16 || bpc == 12, "only support 8, 12 or 16 bit depth");
             if (bpc == 8){
-                pybind11::array_t<unsigned char> arr = images[i].cast<pybind11::array_t<unsigned char>>();
+                pybind11::array_t<uint8_t> arr = images[i].cast<pybind11::array_t<unsigned char>>();
                 pangolin::Image<uint8_t> srcImg(arr.mutable_data(0,0), bimgs[i].w, bimgs[i].h, bimgs[i].w * Bpp);
                 pangolin::PitchedCopy((char*)bimgs[i].ptr, bimgs[i].pitch, (char*)srcImg.ptr,
                                       srcImg.pitch, srcImg.pitch, srcImg.h);
-            }else if (bpc == 16 || bpc == 12){
+            }else if (bpc == 12 || bpc == 16){
                 pybind11::array_t<uint16_t> arr = images[i].cast<pybind11::array_t<uint16_t>>();
                 pangolin::Image<uint16_t> srcImg(arr.mutable_data(0,0), bimgs[i].w, bimgs[i].h, bimgs[i].w * Bpp);
                 pangolin::PitchedCopy((char*)bimgs[i].ptr, bimgs[i].pitch, (char*)srcImg.ptr,
                                       srcImg.pitch, srcImg.pitch, srcImg.h);
+            }else if (bpc == 32){
+                pybind11::array_t<float_t> arr = images[i].cast<pybind11::array_t<float_t>>();
+                pangolin::Image<float_t> srcImg(arr.mutable_data(0,0), bimgs[i].w, bimgs[i].h, bimgs[i].w * Bpp);
+                pangolin::PitchedCopy((char*)bimgs[i].ptr, bimgs[i].pitch, (char*)srcImg.ptr,
+                                      srcImg.pitch, srcImg.pitch, srcImg.h);
+            }else if (bpc == 64){
+                pybind11::array_t<double_t> arr = images[i].cast<pybind11::array_t<double_t>>();
+                pangolin::Image<double_t> srcImg(arr.mutable_data(0,0), bimgs[i].w, bimgs[i].h, bimgs[i].w * Bpp);
+                pangolin::PitchedCopy((char*)bimgs[i].ptr, bimgs[i].pitch, (char*)srcImg.ptr,
+                                      srcImg.pitch, srcImg.pitch, srcImg.h);
             }else{
-                PANGO_ASSERT(false, "format is not supported");
+                PANGO_ASSERT(false, "format must have 8, 12, 16, 32 or 64 bit depth");
             }
 
         }
