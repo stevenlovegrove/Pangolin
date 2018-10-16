@@ -635,12 +635,12 @@ if(BUILD_PYPANGOLIN_MODULE AND HAVE_PYTHON )
 endif()
 
 #######################################################
-## Generate Doxygen documentation target (make doc)
+## Generate Doxygen documentation target (make pangolin_doc)
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../doc )
-    add_custom_target(doc
+    add_custom_target(pangolin_doc
         ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../doc
         COMMENT "Generating API documentation with Doxygen" VERBATIM
