@@ -6,6 +6,13 @@ set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 
+if (_WIN_ AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+   #If no install path is specified used the build dir. This helps avoid defaulting to paths with spaces
+   #Path's with spaces fail the CMake ExternalCommand in the external/ dir
+   set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/installed" CACHE PATH "default install path" FORCE )
+   message(STATUS "Changed default install prefix to ${CMAKE_INSTALL_PREFIX}")
+endif()
+
 # Platform configuration vars
 include(SetPlatformVars)
 
