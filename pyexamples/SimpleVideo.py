@@ -49,13 +49,19 @@ def main(flags):
     # show each frame
     streamsBitDepth = vid.GetStreamsBitDepth()
     print('streamsBitDepth', streamsBitDepth)
-    while (vid.GetCurrentFrameId() < flags.endFrame):
-        # grab the next frame
-        allStreams = vid.Grab()
 
-        vout.WriteStreams(allStreams, streamsBitDepth);
+    # To run over the whole sequence (starting from seeked frame) you could simply use:
+    # for frame in vid:
+    #     ...
+
+    for i, frame in zip(range(flags.startFrame, flags.endFrame), vid):
+
+        # Alternatively, frames can be grabbed manually until the returned list is empty:
+        # frame = vid.Grab()
+
+        vout.WriteStreams(frame, streamsBitDepth);
         for i, s in enumerate(streams):
-            arr = allStreams[s]
+            arr = frame[s]
             # print(arr.shape)
             axes[i,0].cla()
             if arr.shape[-1] == 1:
@@ -67,9 +73,9 @@ def main(flags):
         fig.canvas.draw()
 
         # printing
-        if vid.GetCurrentFrameId() % 10 == 0:
-            print('frame: {} / {}'.format(
-                vid.GetCurrentFrameId(), vid.GetTotalFrames()))
+        print('frame: {} / {}'.format(
+                vid.GetCurrentFrameId(), vid.GetTotalFrames()),
+                end='\r', flush=True)
 
 if __name__ == "__main__":
     # input flags
@@ -80,10 +86,10 @@ if __name__ == "__main__":
         help='path to the input pango file.')
     parser.add_argument(
         '--startFrame', type=int, default=0,
-        help='path to the input pango file.')
+        help='index of the start frame (inclusive)')
     parser.add_argument(
         '--endFrame', type=int, default=None,
-        help='path to the input pango file.')
+        help='index of the end frame (exclusive)')
     parser.add_argument(
         '--pangoOut', type=str, default=None,
         help='path to the output pango file.')
