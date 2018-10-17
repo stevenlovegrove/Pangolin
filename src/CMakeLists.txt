@@ -156,13 +156,17 @@ if(BUILD_PANGOLIN_GUI)
         list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR}" )
         list(APPEND LINK_LIBS "${OPENGL_LIBRARIES}" )
 
-        if(NOT BUILD_EXTERN_GLEW)
-            find_package(GLEW REQUIRED QUIET)
-        endif()
-        if(GLEW_FOUND)
-            list(APPEND USER_INC  "${GLEW_INCLUDE_DIR}" )
+
+	if(BUILD_EXTERN_GLEW AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../external/glew/CMakeLists.txt")
+            add_subdirectory("../external/glew" "${CMAKE_CURRENT_BINARY_DIR}/external/glew")
+	    set(GLEW_FOUND true)
+	    #We are building with GLEW but we dont have to install the GLEW deps so keep header private
+	    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../external/glew/include")
+	    list(APPEND INTERNAL_INC  "${CMAKE_CURRENT_SOURCE_DIR}/../external/glew/include")
             list(APPEND LINK_LIBS "${GLEW_LIBRARY}" )
             set(HAVE_GLEW 1)
+        else()
+            find_package(GLEW REQUIRED QUIET)
         endif()
     endif()
 

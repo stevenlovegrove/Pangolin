@@ -1,3 +1,15 @@
 [submodule "external/pybind11"]
 	path = external/pybind11
 	url = https://github.com/pybind/pybind11.git
+[submodule "external/glew"]
+	path = external/glew
+	url = https://github.com/Perlmint/glew-cmake.git
+[submodule "/external/zlib"]
+	path = external/zlib
+	url = https://github.com/madler/zlib.git
+[submodule "external/libpng"]
+	path = external/libpng
+	url = https://github.com/glennrp/libpng.git
+[submodule "external/libjpeg"]
+	path = external/libjpeg
+	url = https://github.com/LuaDist/libjpeg.git

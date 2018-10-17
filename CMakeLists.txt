@@ -87,7 +87,6 @@ configure_file(
 add_custom_target(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
-add_subdirectory("external")
 add_subdirectory("src")
 
 if(BUILD_TESTS)
@@ -95,7 +94,8 @@ if(BUILD_TESTS)
   add_subdirectory("test")
 endif()
 
-if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES AND NOT BUILD_EXTERN_GLEW)
+  #if we build glew you will need to update the examples to point to the GLEW headers/libs
   set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
   add_subdirectory(examples)
   add_subdirectory(tools)
