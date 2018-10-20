@@ -88,6 +88,8 @@ ImageFileType NameToImageFileType(const std::string& name)
         return ImageFileTypePvn;
     else if ("zstd" == name)
         return ImageFileTypeZstd;
+    else if ("lzf" == name)
+        return ImageFileTypeLz4;
 
     return ImageFileTypeUnknown;
 }
@@ -114,6 +116,8 @@ ImageFileType FileTypeExtension(const std::string& ext)
         return ImageFileTypePango;
     } else if( ext == ".zstd"  ) {
         return ImageFileTypeZstd;
+    } else if( ext == ".lzf"  ) {
+        return ImageFileTypeLz4;
     } else {
         return ImageFileTypeUnknown;
     }
@@ -145,6 +149,7 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
         const unsigned char magic_exr[]   = "\x76\x2F\x31\x01";
         const unsigned char magic_pango[] = "PANGO";
         const unsigned char magic_pango_zstd[] = "ZSTD";
+        const unsigned char magic_pango_lz4[] = "LZ4";
 
         if( !strncmp((char*)data, (char*)magic_png, 8) ) {
             return ImageFileTypePng;
@@ -163,6 +168,8 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
             return ImageFileTypePango;
         }else if( !strncmp((char*)data, (char*)magic_pango_zstd,4) ) {
             return ImageFileTypeZstd;
+        }else if( !strncmp((char*)data, (char*)magic_pango_lz4,3) ) {
+            return ImageFileTypeLz4;
         }else if( data[0] == 'P' && '0' < data[1] && data[1] < '9') {
             return ImageFileTypePpm;
         }
