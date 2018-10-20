@@ -552,6 +552,17 @@ if(BUILD_PANGOLIN_ZSTD)
   endif()
 endif()
 
+option(BUILD_PANGOLIN_LZ4 "Build support for liblz4 compression" ON)
+if(BUILD_PANGOLIN_LZ4)
+  find_package(Lz4 QUIET)
+  if(Lz4_FOUND)
+    set(HAVE_LZ4 1)
+    list(APPEND INTERNAL_INC ${Lz4_INCLUDE_DIRS} )
+    list(APPEND LINK_LIBS ${Lz4_LIBRARIES} )
+    message(STATUS "liblz4 Found and Enabled")
+  endif()
+endif()
+
 #######################################################
 ## Embed resource binary files
 
