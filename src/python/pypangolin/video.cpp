@@ -31,6 +31,7 @@
 
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+#include <pybind11/eval.h>
 
 namespace py_pangolin {
 
@@ -367,6 +368,18 @@ namespace py_pangolin {
       return imgsList;
   }
 
+  picojson::value PicojsonFromPyObject(pybind11::object& obj)
+  {
+      // convert frame_properties to std::string via json.dumps(...)
+      pybind11::module pymodjson = pybind11::module::import("json");
+      auto pydumps = pymodjson.attr("dumps");
+      const std::string json = pydumps(obj).cast<pybind11::str>();
+      std::stringstream ss(json);
+      picojson::value pjson;
+      picojson::parse(pjson, ss);
+      return pjson;
+  }
+
   void bind_video(pybind11::module& m){
         pybind11::class_<pangolin::VideoInterface, PyVideoInterface > video_interface(m, "VideoInterface");
     video_interface
@@ -465,7 +478,6 @@ namespace py_pangolin {
       .def("InputStreams", &pangolin::VideoInput::InputStreams)
       .def("Open", &pangolin::VideoInput::Open, pybind11::arg("input_uri"), pybind11::arg("output_uri")="pango:[buffer_size_mb=100]//video_log.pango")      
       .def("Close", &pangolin::VideoInput::Close)
-//      .def("Grab", &pangolin::VideoInput::Grab, pybind11::arg("buffer"), pybind11::arg("images"), pybind11::arg("wait")=true, pybind11::arg("newest")=false)
       .def("Grab", VideoInputGrab, pybind11::arg("wait")=true, pybind11::arg("newest")=false )
       .def("GetStreamsBitDepth", [](pangolin::VideoInput& vi){
         std::vector<int> bitDepthList;
@@ -487,6 +499,22 @@ namespace py_pangolin {
         vi.Cast<pangolin::VideoPlaybackInterface>()->Seek(frameid);
         return;
         })
+      .def("DeviceProperties", [](pangolin::VideoInput& vi) -> pybind11::object {
+            // Use std::string as an intermediate representation
+            const std::string props = vi.template Cast<pangolin::VideoPropertiesInterface>()->DeviceProperties().serialize();
+            pybind11::module pymodjson = pybind11::module::import("json");
+            auto pyloads = pymodjson.attr("loads");
+            auto json = pyloads(pybind11::str(props));
+            return json;
+            })
+      .def("FrameProperties", [](pangolin::VideoInput& vi) -> pybind11::object {
+            // Use std::string as an intermediate representation
+            const std::string props = vi.template Cast<pangolin::VideoPropertiesInterface>()->FrameProperties().serialize();
+            pybind11::module pymodjson = pybind11::module::import("json");
+            auto pyloads = pymodjson.attr("loads");
+            auto json = pyloads(pybind11::str(props));
+            return json;
+            })
       .def("Width", &pangolin::VideoInput::Width)
       .def("Height", &pangolin::VideoInput::Height)
       .def("PixFormat", &pangolin::VideoInput::PixFormat)
@@ -507,11 +535,10 @@ namespace py_pangolin {
       .def("Open", &pangolin::VideoOutput::Open)
       .def("Close", &pangolin::VideoOutput::Close)
       .def("Streams", &pangolin::VideoOutput::Streams)
-//      .def("SetStreams", (void (pangolin::VideoOutput::*)(const std::vector<pangolin::StreamInfo>&, const std::string&, const picojson::value&))&pangolin::VideoOutput::SetStreams, pybind11::arg("streams"), pybind11::arg("uri")="", pybind11::arg("properties") = picojson::value())
-//      .def("SetStreams", (void (pangolin::VideoOutput::*)(const std::string&, const picojson::value&))&pangolin::VideoOutput::SetStreams, pybind11::arg("uri")="", pybind11::arg("properties") = picojson::value())
-//      .def("WriteStreams", &pangolin::VideoOutput::WriteStreams, pybind11::arg("data"), pybind11::arg("frame_properties") = picojson::value())
-      .def("WriteStreams", [](pangolin::VideoOutput& vo, pybind11::list images, const std::vector<int> &streamsBitDepth){
+      .def("WriteStreams", [](pangolin::VideoOutput& vo, pybind11::list images, const std::vector<int> &streamsBitDepth, pybind11::object frame_properties, pybind11::object device_properties, const std::string& descriptive_uri){
         if(vo.SizeBytes()==0) {
+            PANGO_ASSERT(streamsBitDepth.size() == images.size() || streamsBitDepth.size() == 0);
+
             // Setup stream info
             for(size_t i = 0; i < images.size(); ++i){
                 // num bits per channel
@@ -545,10 +572,23 @@ namespace py_pangolin {
                 }
 
                 pangolin::PixelFormat pf = pangolin::PixelFormatFromString(fmtStr);
-                pf.channel_bit_depth = (unsigned int) streamsBitDepth[i];
+                if(streamsBitDepth.size())
+                    pf.channel_bit_depth = (unsigned int) streamsBitDepth[i];
+
                 vo.AddStream(pf, arr.shape(1), arr.shape(0));
             }
-            vo.SetStreams("python://");
+
+            picojson::value json_device_properties;
+            if(device_properties) {
+                json_device_properties = PicojsonFromPyObject(device_properties);
+            }
+
+            vo.SetStreams(descriptive_uri, json_device_properties);
+        }
+
+        picojson::value json_frame_properties;
+        if(frame_properties) {
+            json_frame_properties = PicojsonFromPyObject(frame_properties);
         }
 
         std::unique_ptr<uint8_t[]> buffer(new uint8_t[vo.SizeBytes()]);
@@ -581,10 +621,9 @@ namespace py_pangolin {
             }else{
                 PANGO_ASSERT(false, "format must have 8, 12, 16, 32 or 64 bit depth");
             }
-
         }
-        vo.WriteStreams(buffer.get());
-      }, pybind11::arg("images"), pybind11::arg("streamsBitDepth"))
+        vo.WriteStreams(buffer.get(), json_frame_properties);
+      }, pybind11::arg("images"), pybind11::arg("streamsBitDepth") = std::vector<int>(), pybind11::arg("frame_properties") = pybind11::none(), pybind11::arg("device_properties") = pybind11::none(), pybind11::arg("descriptive_uri") = "python://")
       .def("IsPipe", &pangolin::VideoOutput::IsPipe)
       .def("AddStream", (void (pangolin::VideoOutput::*)(const pangolin::PixelFormat&, size_t,size_t,size_t))&pangolin::VideoOutput::AddStream)
       .def("AddStream", (void (pangolin::VideoOutput::*)(const pangolin::PixelFormat&, size_t,size_t))&pangolin::VideoOutput::AddStream)
