@@ -12,10 +12,10 @@
 
 namespace pangolin {
 #if (__cplusplus >= 201703L)
-template <typename... Ts>
-using variant = std::variant<Ts...>;
+using std::variant;
+using std::get;
 #else
-template <typename... Ts>
-using variant = mpark::variant<Ts...>;
+using mpark::variant;
+using mpark::get;
 #endif
 }

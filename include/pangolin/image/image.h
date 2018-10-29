@@ -53,6 +53,8 @@ namespace pangolin
 template<typename T>
 struct Image
 {
+    using PixelType = T;
+
     inline Image()
         : pitch(0), ptr(0), w(0), h(0)
     {
@@ -338,13 +340,25 @@ struct Image
     }
 
     PANGO_HOST_DEVICE inline
-    Image<T> Row(int y) const
+    const Image<T> Row(int y) const
     {
         return SubImage(0,y,w,1);
     }
 
     PANGO_HOST_DEVICE inline
-    Image<T> Col(int x) const
+    Image<T> Row(int y)
+    {
+        return SubImage(0,y,w,1);
+    }
+
+    PANGO_HOST_DEVICE inline
+    const Image<T> Col(int x) const
+    {
+        return SubImage(x,0,1,h);
+    }
+
+    PANGO_HOST_DEVICE inline
+    Image<T> Col(int x)
     {
         return SubImage(x,0,1,h);
     }

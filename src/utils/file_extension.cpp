@@ -56,6 +56,10 @@ std::string ImageFileTypeToName(ImageFileType t)
         return "pango";
     case ImageFileTypePvn:
         return "pvn";
+    case ImageFileTypePly:
+        return "ply";
+    case ImageFileTypeObj:
+        return "obj";
     case ImageFileTypeUnknown:
     default:
         return "unknown";
@@ -90,6 +94,10 @@ ImageFileType NameToImageFileType(const std::string& name)
         return ImageFileTypeZstd;
     else if ("lzf" == name)
         return ImageFileTypeLz4;
+    else if ("ply" == name)
+        return ImageFileTypePly;
+    else if ("obj" == name)
+        return ImageFileTypeObj;
 
     return ImageFileTypeUnknown;
 }
@@ -118,6 +126,10 @@ ImageFileType FileTypeExtension(const std::string& ext)
         return ImageFileTypeZstd;
     } else if( ext == ".lzf"  ) {
         return ImageFileTypeLz4;
+    } else if( ext == ".ply"  ) {
+        return ImageFileTypePly;
+    } else if( ext == ".obj"  ) {
+        return ImageFileTypeObj;
     } else {
         return ImageFileTypeUnknown;
     }
@@ -150,6 +162,7 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
         const unsigned char magic_pango[] = "PANGO";
         const unsigned char magic_pango_zstd[] = "ZSTD";
         const unsigned char magic_pango_lz4[] = "LZ4";
+        const unsigned char magic_ply[]   = "ply";
 
         if( !strncmp((char*)data, (char*)magic_png, 8) ) {
             return ImageFileTypePng;
@@ -170,6 +183,8 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
             return ImageFileTypeZstd;
         }else if( !strncmp((char*)data, (char*)magic_pango_lz4,3) ) {
             return ImageFileTypeLz4;
+        }else if( !strncmp((char*)data, (char*)magic_ply, 3) ) {
+            return ImageFileTypePly;
         }else if( data[0] == 'P' && '0' < data[1] && data[1] < '9') {
             return ImageFileTypePpm;
         }

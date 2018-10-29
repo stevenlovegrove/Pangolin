@@ -25,49 +25,5 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
-
-#include <pangolin/platform.h>
-#include <string>
-
-namespace pangolin
-{
-
-enum ImageFileType
-{
-    ImageFileTypePpm,
-    ImageFileTypeTga,
-    ImageFileTypePng,
-    ImageFileTypeJpg,
-    ImageFileTypeTiff,
-    ImageFileTypeGif,
-    ImageFileTypeExr,
-    ImageFileTypePango,
-    ImageFileTypePvn,
-    ImageFileTypeZstd,
-    ImageFileTypeLz4,
-    ImageFileTypePly,
-    ImageFileTypeObj,
-    ImageFileTypeUnknown
-};
-
-
-PANGOLIN_EXPORT
-std::string ImageFileTypeToName(ImageFileType);
-
-PANGOLIN_EXPORT
-ImageFileType NameToImageFileType(const std::string&);
-
-PANGOLIN_EXPORT
-std::string FileLowercaseExtention(const std::string& filename);
-
-PANGOLIN_EXPORT
-ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes);
-
-PANGOLIN_EXPORT
-ImageFileType FileTypeExtension(const std::string& ext);
-
-PANGOLIN_EXPORT
-ImageFileType FileType(const std::string& filename);
-
-}
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tinyobj/tiny_obj_loader.h>
