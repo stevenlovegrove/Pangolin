@@ -15,12 +15,13 @@ set( HEADERS
 append_glob(HEADERS ${INCDIR}/utils/*.h*)
 append_glob(HEADERS ${INCDIR}/image/*.h*)
 append_glob(HEADERS ${INCDIR}/log/*.h*)
+append_glob(HEADERS ${INCDIR}/geometry/*.h*)
 
 ### Store list of source files
 append_glob(SOURCES utils/*.cpp)
 append_glob(SOURCES image/*.cpp)
 append_glob(SOURCES log/*.cpp)
-
+append_glob(SOURCES geometry/*.cpp)
 
 ### Store list of Video factory registery methods to call for init.
 include(CreateMethodCallFile)

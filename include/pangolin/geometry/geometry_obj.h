@@ -25,49 +25,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#include <pangolin/geometry/geometry.h>
 
-#include <pangolin/platform.h>
-#include <string>
+namespace pangolin {
 
-namespace pangolin
-{
-
-enum ImageFileType
-{
-    ImageFileTypePpm,
-    ImageFileTypeTga,
-    ImageFileTypePng,
-    ImageFileTypeJpg,
-    ImageFileTypeTiff,
-    ImageFileTypeGif,
-    ImageFileTypeExr,
-    ImageFileTypePango,
-    ImageFileTypePvn,
-    ImageFileTypeZstd,
-    ImageFileTypeLz4,
-    ImageFileTypePly,
-    ImageFileTypeObj,
-    ImageFileTypeUnknown
-};
-
-
-PANGOLIN_EXPORT
-std::string ImageFileTypeToName(ImageFileType);
-
-PANGOLIN_EXPORT
-ImageFileType NameToImageFileType(const std::string&);
-
-PANGOLIN_EXPORT
-std::string FileLowercaseExtention(const std::string& filename);
-
-PANGOLIN_EXPORT
-ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes);
-
-PANGOLIN_EXPORT
-ImageFileType FileTypeExtension(const std::string& ext);
-
-PANGOLIN_EXPORT
-ImageFileType FileType(const std::string& filename);
+pangolin::Geometry LoadGeometryObj(const std::string& filename);
 
 }

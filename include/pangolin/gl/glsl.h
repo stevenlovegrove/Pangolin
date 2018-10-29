@@ -141,20 +141,22 @@ public:
 
     GLint ProgramId() { return prog; }
 
+    // Unlink all shaders from program
+    void ClearShaders();
+
 protected:
-    struct ShaderFile
+    struct ShaderFileOrCode
     {
         GlSlShaderType shader_type;
         std::string filename;
+        std::string code;
         std::map<std::string,std::string> program_defines;
         std::vector<std::string> search_path;
     };
 
-    // Unlink all shaders from program
-    void ClearShaders();
 
     // Convenience method to load shader description
-    bool AddShaderFile(const ShaderFile &shader_file);
+    bool AddShaderFile(const ShaderFileOrCode &shader_file);
 
     std::string ParseIncludeFilename(
         const std::string& location
@@ -172,7 +174,7 @@ protected:
         const std::string& name_for_errors
     );
 
-    void ParseGLSL(
+    void PreprocessGLSL(
         std::istream& input,
         std::ostream& output,
         const std::map<std::string,std::string>& program_defines,
@@ -190,7 +192,7 @@ protected:
     std::vector<GLhandleARB> shaders;
     GLenum prog;
     GLint prev_prog;
-    std::vector<ShaderFile> shader_files;
+    std::vector<ShaderFileOrCode> shader_files;
 };
 
 class GlSlUtilities
@@ -390,7 +392,7 @@ inline std::string GlSlProgram::SearchIncludePath(
     return "";
 }
 
-inline void GlSlProgram::ParseGLSL(
+inline void GlSlProgram::PreprocessGLSL(
         std::istream& input, std::ostream& output,
         const std::map<std::string,std::string>& program_defines,
         const std::vector<std::string> &search_path,
@@ -412,7 +414,7 @@ inline void GlSlProgram::ParseGLSL(
             std::ifstream ifs(resolved_file.c_str());
             if(ifs.good()) {
                 const std::string file_path = pangolin::PathParent(resolved_file);
-                ParseGLSL(ifs, output, program_defines, search_path, file_path);
+                PreprocessGLSL(ifs, output, program_defines, search_path, file_path);
             }else{
                 throw std::runtime_error("GLSL Parser: Unable to open " + import_file );
             }
@@ -443,18 +445,6 @@ inline void GlSlProgram::ParseGLSL(
     }
 }
 
-inline bool GlSlProgram::AddShader(
-    GlSlShaderType shader_type,
-    const std::string& source_code,
-    const std::map<std::string,std::string>& program_defines,
-    const std::vector<std::string>& search_path
-) {
-    std::istringstream iss(source_code);
-    std::stringstream buffer;
-    ParseGLSL(iss, buffer, program_defines, search_path, ".");
-    return AddPreprocessedShader(shader_type, buffer.str(), "<string>" );
-}
-
 inline void GlSlProgram::ClearShaders()
 {
     // Remove and delete each shader
@@ -465,30 +455,37 @@ inline void GlSlProgram::ClearShaders()
     shaders.clear();
 }
 
-inline bool GlSlProgram::AddShaderFile(const ShaderFile& shader_file)
+inline bool GlSlProgram::AddShaderFile(const ShaderFileOrCode& shader_file)
 {
-    std::ifstream ifs(shader_file.filename.c_str());
-    if(ifs.is_open()) {
-        std::stringstream buffer;
-        ParseGLSL(ifs, buffer, shader_file.program_defines, shader_file.search_path, ".");
-        const std::string code = buffer.str();
+    std::stringstream buffer;
 
-        if(shader_file.shader_type == GlSlAnnotatedShader) {
-            const std::map<GlSlShaderType,std::string> split_progs = SplitAnnotatedShaders(code);
-            for(const auto& type_code : split_progs) {
-                if(!AddPreprocessedShader(type_code.first, type_code.second, shader_file.filename )) {
-                    return false;
-                }
-            }
-            return true;
+    if(shader_file.code.empty()) {
+        std::ifstream ifs(shader_file.filename.c_str());
+        if(ifs.is_open()) {
+            PreprocessGLSL(ifs, buffer, shader_file.program_defines, shader_file.search_path, ".");
         }else{
-            return AddPreprocessedShader(shader_file.shader_type, code, shader_file.filename );
+            throw std::runtime_error(FormatString("Unable to open shader file '%'", shader_file.filename));
         }
     }else{
-        throw std::runtime_error("Unable to open " + shader_file.filename );
+        std::istringstream iss(shader_file.code);
+        PreprocessGLSL(iss, buffer, shader_file.program_defines, shader_file.search_path, ".");
+    }
+
+    const std::string code = buffer.str();
+    const std::string input_name = !shader_file.filename.empty() ? shader_file.filename : "<string>";
+
+    if(shader_file.shader_type == GlSlAnnotatedShader) {
+        const std::map<GlSlShaderType,std::string> split_progs = SplitAnnotatedShaders(code);
+        for(const auto& type_code : split_progs) {
+            if(!AddPreprocessedShader(type_code.first, type_code.second, input_name )) {
+                return false;
+            }
+        }
+        return true;
+    }else{
+        return AddPreprocessedShader(shader_file.shader_type, code, input_name);
     }
 }
-
 
 inline bool GlSlProgram::AddShaderFromFile(
     GlSlShaderType shader_type,
@@ -496,9 +493,27 @@ inline bool GlSlProgram::AddShaderFromFile(
     const std::map<std::string,std::string>& program_defines,
     const std::vector<std::string>& search_path
 ) {
-    ShaderFile shader_file = {
+    ShaderFileOrCode shader_file = {
         shader_type,
         pangolin::PathExpand(filename),
+        std::string(),
+        program_defines,
+        search_path
+    };
+    shader_files.push_back(shader_file);
+    return AddShaderFile(shader_file);
+}
+
+inline bool GlSlProgram::AddShader(
+    GlSlShaderType shader_type,
+    const std::string& source_code,
+    const std::map<std::string,std::string>& program_defines,
+    const std::vector<std::string>& search_path
+) {
+    ShaderFileOrCode shader_file = {
+        shader_type,
+        std::string(),
+        source_code,
         program_defines,
         search_path
     };

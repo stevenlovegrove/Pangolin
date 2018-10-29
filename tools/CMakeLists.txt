@@ -5,4 +5,6 @@ if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS )
       add_subdirectory(VideoJson)
       add_subdirectory(Plotter)
   endif()
+
+  add_subdirectory(ModelViewer)
 endif()

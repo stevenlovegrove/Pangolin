@@ -20,6 +20,8 @@ include(CPack)
 option( BUILD_EXAMPLES "Build Examples" ON )
 option( BUILD_TESTS "Build Tests" ON )
 
+set (CMAKE_CXX_STANDARD 14)
+
 if(_WIN_)
     option( BUILD_SHARED_LIBS    "Build Shared Library" OFF)
     option( BUILD_EXTERN_GLEW    "Automatically download, build and compile GLEW" ON)
@@ -48,7 +50,7 @@ else()
 endif()
 
 if(NOT MSVC)
-    set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra ${CMAKE_CXX_FLAGS}" )
+    set( CMAKE_CXX_FLAGS "-Wall -Wextra ${CMAKE_CXX_FLAGS}" )
 endif()
 
 if(ANDROID)
