@@ -70,6 +70,7 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/drivers/images.h
     ${INCDIR}/video/drivers/images_out.h
     ${INCDIR}/video/drivers/split.h
+    ${INCDIR}/video/drivers/truncate.h
     ${INCDIR}/video/drivers/pvn.h
     ${INCDIR}/video/drivers/pango.h
     ${INCDIR}/video/drivers/pango_video_output.h
@@ -86,6 +87,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/images.cpp
     video/drivers/images_out.cpp
     video/drivers/split.cpp
+    video/drivers/truncate.cpp
     video/drivers/pvn.cpp
     video/drivers/pango.cpp
     video/drivers/pango_video_output.cpp
@@ -104,6 +106,7 @@ if(BUILD_PANGOLIN_VIDEO)
     RegisterImagesVideoFactory
     RegisterImagesVideoOutputFactory
     RegisterSplitVideoFactory
+    RegisterTruncateVideoFactory
     RegisterPvnVideoFactory
     RegisterPangoVideoFactory
     RegisterPangoVideoOutputFactory

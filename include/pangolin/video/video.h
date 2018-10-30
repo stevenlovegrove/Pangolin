@@ -108,6 +108,10 @@
 //  e.g. "split:[mem1=307200:640x480:1280:GRAY8,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 //  e.g. "split:[stream1=2,stream2=1]//pango://video.pango"
 //
+// truncate - select a subregion of a video based on start and end (last index+1) index
+//  e.g. Generate 30 random frames: "truncate:[end=30]//test://"
+//  e.g. "truncate:[begin=100,end=120]"
+//
 // join - join streams
 //  e.g. "join:[sync_tolerance_us=100, sync_continuously=true]//{pleora:[sn=00000274]//}{pleora:[sn=00000275]//}"
 //
