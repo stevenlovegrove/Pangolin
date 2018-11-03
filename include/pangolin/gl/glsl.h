@@ -359,7 +359,7 @@ inline bool GlSlProgram::AddPreprocessedShader(
         prog = glCreateProgram();
     }
 
-    PrintSourceCode(source_code);
+//    PrintSourceCode(source_code);
 
     GLhandleARB shader = glCreateShader(shader_type);
     const char* source = source_code.c_str();
