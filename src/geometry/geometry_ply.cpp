@@ -133,6 +133,60 @@ void ParsePlyAscii(pangolin::Geometry& /*geom*/, const PlyHeaderDetails& /*ply*/
     throw std::runtime_error("Not implemented.");
 }
 
+void AddVertexNormals(pangolin::Geometry& geom)
+{
+    auto it_geom = geom.buffers.find("geometry");
+    auto it_face = geom.objects.find("default");
+
+    if(it_geom != geom.buffers.end() && it_face != geom.objects.end())
+    {
+        const auto it_vbo = it_geom->second.attributes.find("vertex");
+        const auto it_ibo = it_face->second.attributes.find("vertex_indices");
+
+        if(it_vbo != it_geom->second.attributes.end() && it_ibo != it_face->second.attributes.end()) {
+            const auto& ibo = get<Image<uint32_t>>(it_ibo->second);
+            const auto& vbo = get<Image<float>>(it_vbo->second);
+
+            // Assume we have triangles.
+            PANGO_ASSERT(ibo.w == 3 && vbo.w == 3);
+
+            ManagedImage<float> vert_normals(3, vbo.h);
+            ManagedImage<size_t> vert_face_count(1, vbo.h);
+            vert_normals.Fill(0.0f);
+            vert_face_count.Fill(0);
+
+            float ab[3];
+            float ac[3];
+            float fn[3];
+
+            for(size_t i=0; i < ibo.h; ++i) {
+                uint32_t i0 = ibo(0,i);
+                uint32_t i1 = ibo(1,i);
+                uint32_t i2 = ibo(2,i);
+                MatSub<3,1>(ab, vbo.RowPtr(i1), vbo.RowPtr(i0));
+                MatSub<3,1>(ac, vbo.RowPtr(i2), vbo.RowPtr(i0));
+                VecCross3(fn, ab, ac);
+                Normalise<3>(fn);
+                for(size_t v=0; v < 3; ++v) {
+                    MatAdd<3,1>(vert_normals.RowPtr(ibo(v,i)), vert_normals.RowPtr(ibo(v,i)), fn);
+                    ++vert_face_count(0,ibo(v,i));
+                }
+            }
+
+            for(size_t v=0; v < vert_normals.h; ++v) {
+                // Compute average
+                MatMul<3,1>(vert_normals.RowPtr(v), 1.0f / vert_face_count(0,v));
+            }
+
+            auto& el = geom.buffers["normal"];
+            (ManagedImage<float>&)el = std::move(vert_normals);
+            auto& attr_norm = el.attributes["normal"];
+            attr_norm = MakeAttribute(GL_FLOAT, el.h, 3, el.ptr, el.pitch);
+        }
+    }
+
+}
+
 void StandardizeXyzToVertex(pangolin::Geometry& geom)
 {
     auto it_verts = geom.buffers.find("geometry");
@@ -239,6 +293,7 @@ void Standardize(pangolin::Geometry& geom)
 {
     StandardizeXyzToVertex(geom);
     StandardizeMultiTextureFaceToXyzuv(geom);
+    AddVertexNormals(geom);
 }
 
 inline int ReadGlIntType(GLenum type, std::istream& is)

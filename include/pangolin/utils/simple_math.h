@@ -184,6 +184,15 @@ void MatTranspose(P m[N*N] )
             std::swap<P>(m[N*c+r],m[N*r+c]);
 }
 
+// m = a x b
+template<typename P>
+void VecCross3(P m[3], const P a[3], const P b[3])
+{
+    m[0] = a[1]*b[2] - a[2]*b[1];
+    m[1] = a[2]*b[0] - a[0]*b[2];
+    m[2] = a[0]*b[1] - a[1]*b[0];
+}
+
 // s = skewSymetrixMatrix(v)
 template<typename P>
 void MatSkew(P s[3*3], const P v[3] )
