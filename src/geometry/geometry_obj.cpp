@@ -108,13 +108,13 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
             }
             if(tiny_ns.IsValid()) {
                 new_ns = verts.UnsafeReinterpret<float>().SubImage(float_offset,0,3,num_verts);
-                verts.attributes["normals"] = new_ns;
+                verts.attributes["normal"] = new_ns;
                 float_offset += 3;
                 // Don't copy - we'll have to re-order
             }
             if(tiny_cs.IsValid()) {
                 new_cs = verts.UnsafeReinterpret<float>().SubImage(float_offset,0,3,num_verts);
-                verts.attributes["colors"] = new_cs;
+                verts.attributes["color"] = new_cs;
                 float_offset += 3;
                 new_cs.CopyFrom(tiny_cs);
             }

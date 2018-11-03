@@ -92,7 +92,7 @@ void UnbindGlElements(GlSlProgram& prog, const GlGeometry::Element& el)
     el.Unbind();
 }
 
-void GlDraw(GlSlProgram& prog, const GlGeometry& geom)
+void GlDraw(GlSlProgram& prog, const GlGeometry& geom, const GlTexture* matcap)
 {
     // Bind textures
     int num_tex_bound = 0;
@@ -100,6 +100,13 @@ void GlDraw(GlSlProgram& prog, const GlGeometry& geom)
         glActiveTexture(GL_TEXTURE0 + num_tex_bound);
         tex.second.Bind();
         prog.SetUniform(tex.first, (int)num_tex_bound);
+        ++num_tex_bound;
+    }
+
+    if(matcap) {
+        glActiveTexture(GL_TEXTURE0 + num_tex_bound);
+        matcap->Bind();
+        prog.SetUniform("matcap", (int)num_tex_bound);
         ++num_tex_bound;
     }
 

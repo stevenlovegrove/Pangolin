@@ -340,6 +340,16 @@ inline GlSlProgram::~GlSlProgram()
     }
 }
 
+inline void PrintSourceCode(const std::string& src)
+{
+    std::stringstream ss(src);
+    std::string line;
+
+    for(int linenum=1; std::getline(ss,line,'\n'); ++linenum) {
+        std::cout << linenum << ":\t" << line << std::endl;
+    }
+}
+
 inline bool GlSlProgram::AddPreprocessedShader(
     GlSlShaderType shader_type,
     const std::string& source_code,
@@ -348,6 +358,8 @@ inline bool GlSlProgram::AddPreprocessedShader(
     if(!prog) {
         prog = glCreateProgram();
     }
+
+    PrintSourceCode(source_code);
 
     GLhandleARB shader = glCreateShader(shader_type);
     const char* source = source_code.c_str();
