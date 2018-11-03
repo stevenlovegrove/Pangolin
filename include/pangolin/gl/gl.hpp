@@ -113,6 +113,11 @@ inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bo
     Reinitialise(width,height,internal_format,sampling_linear,border,glformat,gltype,data);
 }
 
+inline GlTexture::GlTexture(const TypedImage& img, bool sampling_linear)
+{
+    this->Load(img, sampling_linear);
+}
+
 inline GlTexture::GlTexture(GlTexture&& tex)
 {
     *this = std::move(tex);

@@ -33,13 +33,14 @@ namespace pangolin {
 
 struct GlGeometry
 {
+    GlGeometry() = default;
+    GlGeometry(GlGeometry&&) = default;
+
     struct Element : public GlBufferData
     {
         Element() = default;
         Element(Element&&) = default;
-        Element(const Element&) = default;
         Element& operator=(Element&&) = default;
-        Element& operator=(const Element&) = default;
 
         Element(GlBufferType buffer_type, size_t size_bytes, GLenum gluse, uint8_t* data)
             : GlBufferData(buffer_type, size_bytes, gluse, data)
