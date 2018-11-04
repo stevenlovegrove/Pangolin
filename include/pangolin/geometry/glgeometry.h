@@ -25,6 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
+
 #include <pangolin/geometry/geometry.h>
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glsl.h>

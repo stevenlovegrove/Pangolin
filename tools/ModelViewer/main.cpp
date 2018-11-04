@@ -1,3 +1,7 @@
+#include <thread>
+#include <future>
+#include <queue>
+
 #include <pangolin/pangolin.h>
 #include <pangolin/geometry/geometry.h>
 #include <pangolin/gl/glsl.h>
@@ -11,31 +15,8 @@
 #include <pangolin/utils/argagg.hpp>
 
 #include "shader.h"
-
-inline std::vector<std::string> ExpandGlobOption(const argagg::option_results& opt)
-{
-    std::vector<std::string> expanded;
-    for(const auto& o : opt.all)
-    {
-        const std::string r = o.as<std::string>();
-        pangolin::FilesMatchingWildcard(r, expanded);
-    }
-    return expanded;
-}
-
-template<typename Tout, typename Tin, typename F>
-inline std::vector<Tout> TryLoad(const std::vector<Tin>& in, const F& load_func)
-{
-    std::vector<Tout> loaded;
-    for(const Tin& file : in)
-    {
-        try {
-            loaded.emplace_back(load_func(file));
-        }catch(std::exception) {
-        }
-    }
-    return loaded;
-}
+#include "rendertree.h"
+#include "util.h"
 
 int main( int argc, char** argv )
 {
@@ -48,6 +29,7 @@ int main( int argc, char** argv )
         { "mode", {"--mode"}, "Render mode to use {show_uv, show_texture, show_color, show_normal, show_matcap, show_vertex}", 1},
         { "worldnormals", {"--world","-w"}, "Use world normals instead of camera normals", 0},
         { "bounds", {"--aabb"}, "Show axis-aligned bounding-box", 0},
+        { "spin", {"--spin"}, "Spin models around an axis {none, negx, x, negy, y, negz, z}", 1},
     }};
 
     argagg::parser_results args = argparser.parse(argc, argv);
@@ -60,11 +42,17 @@ int main( int argc, char** argv )
     // Options
     enum class RenderMode { uv=0, tex, color, normal, matcap, vertex, num_modes };
     const std::string mode_names[] = {"SHOW_UV", "SHOW_TEXTURE", "SHOW_COLOR", "SHOW_NORMAL", "SHOW_MATCAP", "SHOW_VERTEX"};
+    const std::string spin_names[] = {"NONE", "NEGX", "X", "NEGY", "Y", "NEGZ", "Z"};
     const char mode_key[] = {'u','t','c','n','m','v'};
     RenderMode current_mode = RenderMode::normal;
     for(int i=0; i < (int)RenderMode::num_modes; ++i)
         if(pangolin::ToUpperCopy(args["mode"].as<std::string>("SHOW_NORMAL")) == mode_names[i])
             current_mode = RenderMode(i);
+    pangolin::AxisDirection spin_direction = pangolin::AxisNone;
+    for(int i=0; i <= (int)pangolin::AxisZ; ++i)
+        if(pangolin::ToUpperCopy(args["spin"].as<std::string>("none")) == spin_names[i])
+            spin_direction = pangolin::AxisDirection(i);
+
     bool world_normals = args.has_option("worldnormals");
     bool show_bounds = args.has_option("bounds");
     int mesh_to_show = -1;
@@ -73,31 +61,60 @@ int main( int argc, char** argv )
     pangolin::CreateWindowAndBind("Main",640,480);
     glEnable(GL_DEPTH_TEST);
 
-    // Load Geometry
-    using GeomBB = std::pair<GlGeometry, Eigen::AlignedBox3f>;
-    Eigen::Vector3f center(0,0,0);
-    Eigen::Vector3f view(0,0,0);
-    std::vector<GeomBB> glgeoms = TryLoad<GeomBB>(ExpandGlobOption(args["model"]), [&center,&view](const std::string& f){
-        const pangolin::Geometry g = pangolin::LoadGeometry(f);
-        const auto aabb = pangolin::GetAxisAlignedBox(g);
-        center += aabb.center();
-        view += center + Eigen::Vector3f(1.2,1.2,1.2) * std::max( (aabb.max() - center).norm(), (center - aabb.min()).norm());
-        return GeomBB(pangolin::ToGlGeometry(g), aabb);
-    });
-    center.array() /= (float)glgeoms.size();
-    view.array() /= (float)glgeoms.size();
+    // Define Projection and initial ModelView matrix
+    pangolin::OpenGlRenderState s_cam(
+        pangolin::ProjectionMatrix(640,480,420,420,320,240,0.2,1000),
+        pangolin::ModelViewLookAt(1.0, 1.0, 1.0, 0.0, 0.0, 0.0, pangolin::AxisY)
+    );
+
+    // Load Geometry asynchronously
+    std::vector<std::future<pangolin::Geometry>> geom_to_load;
+    for(const auto& f : ExpandGlobOption(args["model"]))
+    {
+        geom_to_load.emplace_back( std::async(std::launch::async,[f](){
+            return pangolin::LoadGeometry(f);
+        }) );
+    }
+
+    // Render tree for holding object position
+    RenderNode root;
+    std::vector<std::shared_ptr<GlGeomRenderable>> renderables;
+    pangolin::AxisDirection spin_other = pangolin::AxisNone;
+    auto spin_transform = std::make_shared<SpinTransform>(spin_direction);
+    auto show_renderable = [&](int index){
+        mesh_to_show = index;
+        for(size_t i=0; i < renderables.size(); ++i) {
+            if(renderables[i]) renderables[i]->show = (index == -1 || index == i) ? true : false;
+        }
+    };
+
+    // Pull once piece of loaded geometry onto the GPU if ready
+    Eigen::AlignedBox3f total_aabb;
+    auto LoadGeometryToGpu = [&]()
+    {
+        for(auto& future_geom : geom_to_load) {
+            if( future_geom.valid() && is_ready(future_geom) ) {
+                auto geom = future_geom.get();
+                auto aabb = pangolin::GetAxisAlignedBox(geom);
+                total_aabb.extend(aabb);
+                const auto center = total_aabb.center();
+                const auto view = center + Eigen::Vector3f(1.2,1.2,1.2) * std::max( (total_aabb.max() - center).norm(), (center - total_aabb.min()).norm());
+                const auto mvm = pangolin::ModelViewLookAt(view[0], view[1], view[2], center[0], center[1], center[2], pangolin::AxisY);
+                s_cam.SetModelViewMatrix(mvm);
+                auto renderable = std::make_shared<GlGeomRenderable>(pangolin::ToGlGeometry(geom), aabb);
+                renderables.push_back(renderable);
+                RenderNode::Edge edge = { spin_transform, { renderable, {} } };
+                root.edges.emplace_back(std::move(edge));
+                break;
+            }
+        }
+    };
 
     // Load Any matcap materials
     size_t matcap_index = 0;
     std::vector<pangolin::GlTexture> matcaps = TryLoad<pangolin::GlTexture>(ExpandGlobOption(args["matcap"]), [](const std::string& f){
         return pangolin::GlTexture(pangolin::LoadImage(f));
     });
-
-    // Define Projection and initial ModelView matrix
-    pangolin::OpenGlRenderState s_cam(
-        pangolin::ProjectionMatrix(640,480,420,420,320,240,0.2,1000),
-        pangolin::ModelViewLookAt(view[0], view[1], view[2], center[0], center[1], center[2], pangolin::AxisY)
-    );
 
     // Create Interactive View in window
     pangolin::Handler3D handler(s_cam);
@@ -126,39 +143,26 @@ int main( int argc, char** argv )
     pangolin::RegisterKeyPressCallback('-', [&](){matcap_index = (matcap_index+matcaps.size()-1)%matcaps.size();});
     pangolin::RegisterKeyPressCallback('w', [&](){world_normals = !world_normals;});
     pangolin::RegisterKeyPressCallback('b', [&](){show_bounds = !show_bounds;});
-    pangolin::RegisterKeyPressCallback(PANGO_SPECIAL + PANGO_KEY_RIGHT, [&](){mesh_to_show = (mesh_to_show + 1) % glgeoms.size();});
-    pangolin::RegisterKeyPressCallback(PANGO_SPECIAL + PANGO_KEY_LEFT, [&](){mesh_to_show = (mesh_to_show + glgeoms.size()-1) % glgeoms.size();});
-    pangolin::RegisterKeyPressCallback(' ', [&](){mesh_to_show = -1;});
+    pangolin::RegisterKeyPressCallback(PANGO_SPECIAL + PANGO_KEY_RIGHT, [&](){show_renderable((mesh_to_show + 1) % renderables.size());});
+    pangolin::RegisterKeyPressCallback(PANGO_SPECIAL + PANGO_KEY_LEFT, [&](){show_renderable((mesh_to_show + renderables.size()-1) % renderables.size());});
+    pangolin::RegisterKeyPressCallback(' ', [&](){show_renderable(-1);});
+    pangolin::RegisterKeyPressCallback('a', [&](){std::swap(spin_transform->dir, spin_other);});
 
     while( !pangolin::ShouldQuit() )
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Load any pending geometry to the GPU.
+        LoadGeometryToGpu();
+
         if(d_cam.IsShown()) {
             d_cam.Activate(s_cam);
 
-            if(show_bounds) {
-                for(size_t i=0; i < glgeoms.size(); ++i)
-                {
-                    if(mesh_to_show==-1 || mesh_to_show == (int)i) {
-                        glColor3f(1.0,0.0,0.0);
-                        pangolin::glDrawAlignedBox(glgeoms[i].second);
-                    }
-                }
-            }
-
             prog.Bind();
-            prog.SetUniform("KT_cw", s_cam.GetProjectionModelViewMatrix() );
-            prog.SetUniform("T_cam_norm", world_normals ? pangolin::IdentityMatrix() : s_cam.GetModelViewMatrix() );
-            for(size_t i=0; i < glgeoms.size(); ++i)
-            {
-                if(mesh_to_show==-1 || mesh_to_show == (int)i) {
-                    pangolin::GlDraw(
-                        prog, glgeoms[i].first, (current_mode == RenderMode::matcap && matcap_index < matcaps.size())
-                                ? &(matcaps[matcap_index]) : nullptr
-                    );
-                }
-            }
+            render_tree(
+                prog, root, s_cam.GetProjectionMatrix(), s_cam.GetModelViewMatrix(),
+                matcaps.size() ? &matcaps[matcap_index] : nullptr
+            );
             prog.Unbind();
         }
 
