@@ -1,6 +1,6 @@
 #pragma once
 
-const std::string shader = R"Shader(
+const std::string default_shader = R"Shader(
 /////////////////////////////////////////
 @start vertex
 #version 120
@@ -88,5 +88,43 @@ void main() {
 #else
     gl_FragColor = vec4(vP / 100.0,1.0);
 #endif
+}
+)Shader";
+
+const std::string equi_env_shader = R"Shader(
+/////////////////////////////////////////
+@start vertex
+#version 120
+attribute vec2 vertex;
+attribute vec2 xy;
+varying vec2 vXY;
+
+void main() {
+    vXY = xy;
+    gl_Position = vec4(vertex,0.0,1.0);
+}
+
+@start fragment
+#version 120
+#define M_PI 3.1415926538
+uniform sampler2D texture_0;
+uniform mat3 R_env_camKinv;
+varying vec2 vXY;
+
+vec2 RayToEquirect(vec3 ray)
+{
+    float n = 1.0;
+    float m = 1.0;
+    float lamda = acos(ray.y/sqrt(1.0-ray.z*ray.z));
+    if(ray.x < 0) lamda = -lamda;
+    float phi = asin(ray.z);
+    float u = n*lamda/(2.0*M_PI)+n/2.0;
+    float v = m/2.0 + m*phi/M_PI;
+    return vec2(u,v);
+}
+
+void main() {
+    vec3 ray_env = normalize(R_env_camKinv * vec3(vXY, 1.0));
+    gl_FragColor = texture2D(texture_0, RayToEquirect(ray_env));
 }
 )Shader";
