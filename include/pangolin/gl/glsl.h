@@ -128,6 +128,13 @@ public:
 
     void SetUniform(const std::string& name, const OpenGlMatrix& m);
 
+#ifdef HAVE_EIGEN
+    void SetUniform(const std::string& name, const Eigen::Matrix3f& m);
+    void SetUniform(const std::string& name, const Eigen::Matrix4f& m);
+    void SetUniform(const std::string& name, const Eigen::Matrix3d& m);
+    void SetUniform(const std::string& name, const Eigen::Matrix4d& m);
+#endif
+
 #if GL_VERSION_4_3
     GLint GetProgramResourceIndex(const std::string& name);
     void SetShaderStorageBlock(const std::string& name, const int& bindingIndex);
@@ -137,12 +144,19 @@ public:
     void SaveBind();
     void Unbind();
 
-    void BindPangolinDefaultAttribLocationsAndLink();
 
-    GLint ProgramId() { return prog; }
+    void BindPangolinDefaultAttribLocationsAndLink();
 
     // Unlink all shaders from program
     void ClearShaders();
+
+    GLint ProgramId() const {
+        return prog;
+    }
+
+    bool Valid() const {
+        return ProgramId() != 0;
+    }
 
 protected:
     struct ShaderFileOrCode
@@ -680,6 +694,25 @@ inline void GlSlProgram::SetUniform(const std::string& name, const OpenGlMatrix&
     }
     glUniformMatrix4fv( GetUniformHandle(name), 1, GL_FALSE, m);
 }
+
+#ifdef HAVE_EIGEN
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix3f& m)
+{
+    glUniformMatrix3fv( GetUniformHandle(name), 1, GL_FALSE, m.data());
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix4f& m)
+{
+    glUniformMatrix4fv( GetUniformHandle(name), 1, GL_FALSE, m.data());
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix3d& m)
+{
+    glUniformMatrix3dv( GetUniformHandle(name), 1, GL_FALSE, m.data());
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix4d& m)
+{
+    glUniformMatrix4dv( GetUniformHandle(name), 1, GL_FALSE, m.data());
+}
+#endif
 
 inline void GlSlProgram::BindPangolinDefaultAttribLocationsAndLink()
 {
