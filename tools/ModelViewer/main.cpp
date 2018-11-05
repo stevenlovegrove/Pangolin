@@ -180,7 +180,8 @@ int main( int argc, char** argv )
             if(env_prog.Valid()) {
                 glDisable(GL_DEPTH_TEST);
                 env_prog.Bind();
-                Eigen::Matrix3f R_env_cam = ((Eigen::Matrix4d)s_cam.GetModelViewMatrix()).block<3,3>(0,0).cast<float>().transpose();
+                const Eigen::Matrix4d T_cam_env = s_cam.GetModelViewMatrix();
+                const Eigen::Matrix3f R_env_cam = T_cam_env.topLeftCorner<3,3>().cast<float>().transpose();
                 Eigen::Matrix3f Kinv;
                 Kinv << 1.0/f, 0.0, -(w/2.0)/f,
                         0.0, 1.0/f, -(h/2.0)/f,
