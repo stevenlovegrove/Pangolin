@@ -22,13 +22,13 @@ int main( int argc, char** argv )
 {
     const float w = 640.0f;
     const float h = 480.0f;
-    const float f = 200.0f;
+    const float f = 300.0f;
 
     using namespace pangolin;
 
     argagg::parser argparser {{
         { "help", {"-h", "--help"}, "Print usage information and exit.", 0},
-        { "model", {"-m","--model"}, "3D Model to load (obj or ply)", 1},
+        { "model", {"-m","--model","--mesh"}, "3D Model to load (obj or ply)", 1},
         { "matcap", {"--matcap"}, "Matcap (material capture) images to load for shading", 1},
         { "envmap", {"--envmap","-e"}, "Equirect environment map for skybox", 1},
         { "mode", {"--mode"}, "Render mode to use {show_uv, show_texture, show_color, show_normal, show_matcap, show_vertex}", 1},
@@ -72,6 +72,12 @@ int main( int argc, char** argv )
         pangolin::ModelViewLookAt(1.0, 1.0, 1.0, 0.0, 0.0, 0.0, pangolin::AxisY)
     );
 
+    // Create Interactive View in window
+    pangolin::Handler3D handler(s_cam);
+    pangolin::View& d_cam = pangolin::CreateDisplay()
+            .SetBounds(0.0, 1.0, 0.0, 1.0, -w/h)
+            .SetHandler(&handler);
+
     // Load Geometry asynchronously
     std::vector<std::future<pangolin::Geometry>> geom_to_load;
     for(const auto& f : ExpandGlobOption(args["model"]))
@@ -93,7 +99,7 @@ int main( int argc, char** argv )
         }
     };
 
-    // Pull once piece of loaded geometry onto the GPU if ready
+    // Pull one piece of loaded geometry onto the GPU if ready
     Eigen::AlignedBox3f total_aabb;
     auto LoadGeometryToGpu = [&]()
     {
@@ -127,18 +133,6 @@ int main( int argc, char** argv )
         return pangolin::GlTexture(pangolin::LoadImage(f));
     });
 
-    pangolin::GlSlProgram env_prog;
-    if(envmaps.size()) {
-        env_prog.AddShader(pangolin::GlSlAnnotatedShader, equi_env_shader);
-        env_prog.Link();
-    }
-
-    // Create Interactive View in window
-    pangolin::Handler3D handler(s_cam);
-    pangolin::View& d_cam = pangolin::CreateDisplay()
-            .SetBounds(0.0, 1.0, 0.0, 1.0, -w/h)
-            .SetHandler(&handler);
-
     // GlSl Graphics shader program for display
     pangolin::GlSlProgram default_prog;
     auto LoadProgram = [&](const RenderMode mode){
@@ -152,6 +146,12 @@ int main( int argc, char** argv )
         default_prog.Link();
     };
     LoadProgram(current_mode);
+
+    pangolin::GlSlProgram env_prog;
+    if(envmaps.size()) {
+        env_prog.AddShader(pangolin::GlSlAnnotatedShader, equi_env_shader);
+        env_prog.Link();
+    }
 
     // Setup keyboard shortcuts.
     for(int i=0; i < (int)RenderMode::num_modes; ++i)
@@ -194,7 +194,7 @@ int main( int argc, char** argv )
                 if(vertex_handle >= 0 && xy_handle >= 0 ) {
                     glActiveTexture(GL_TEXTURE0);
                     envmaps[envmap_index].Bind();
-                    const GLfloat ndc[] = { -1.0f,1.0f,  1.0f,1.0f,  1.0f,-1.0f,  -1.0f,-1.0f };
+                    const GLfloat ndc[] = { 1.0f,1.0f,  -1.0f,1.0f,  -1.0f,-1.0f,  1.0f,-1.0f };
                     const GLfloat pix[] = { 0.0f,0.0f,  w,0.0f,  w,h,  0.0f,h };
 
                     glEnableVertexAttribArray(vertex_handle);
@@ -208,9 +208,6 @@ int main( int argc, char** argv )
                     env_prog.Unbind();
                     glEnable(GL_DEPTH_TEST);
                 }
-
-
-
             }
 
             default_prog.Bind();

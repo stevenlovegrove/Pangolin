@@ -46,7 +46,6 @@ struct Geometry
     struct Element : public ManagedImage<uint8_t> {
         Element() = default;
         Element(Element&&) = default;
-        Element(const Element&) = default;
         Element& operator=(Element&&) = default;
         Element& operator=(const Element&) = default;
 
