@@ -132,7 +132,7 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
                 continue;
             }
 
-            auto faces = geom.objects.insert({shape.name, Geometry::Element()});
+            auto faces = geom.objects.emplace(shape.name, Geometry::Element());
 
             if(std::all_of( shape.mesh.num_face_vertices.begin(), shape.mesh.num_face_vertices.end(),
                 [](unsigned char num){return num==3;}
