@@ -621,6 +621,7 @@ inline GlBufferData::GlBufferData(GlBufferType buffer_type, GLuint size_bytes, G
 
 //! Move Constructor
 inline GlBufferData::GlBufferData(GlBufferData&& tex)
+    : bo(0)
 {
     *this = std::move(tex);
 }

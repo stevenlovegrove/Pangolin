@@ -218,6 +218,7 @@ struct PANGOLIN_EXPORT GlBuffer : public GlBufferData
     //! Default constructor represents 'no buffer'
     GlBuffer();
     GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
+    GlBuffer(const GlBuffer&) = delete;
     
     //! Move Constructor
     GlBuffer(GlBuffer&& tex);
@@ -230,8 +231,6 @@ struct PANGOLIN_EXPORT GlBuffer : public GlBufferData
     GLenum datatype;
     GLuint num_elements;
     GLuint count_per_element;
-private:
-    GlBuffer(const GlBuffer&) {}
 };
 
 class PANGOLIN_EXPORT GlSizeableBuffer
