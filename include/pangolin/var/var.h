@@ -95,7 +95,14 @@ public:
             // new VarRef<T> (owned by VarStore)
             VarValue<T&>* nv = new VarValue<T&>(variable);
             v = nv;
-            InitialiseNewVarMeta<T&>(*nv,name,min,max,1,logscale);
+            if(logscale) {
+                if (min <= 0 || max <= 0) {
+                    throw std::runtime_error("LogScale: range of numbers must be positive!");
+                }
+                InitialiseNewVarMeta(*nv, name, std::log(min), std::log(max), 1, logscale);
+            }else{
+                InitialiseNewVarMeta(*nv, name, min, max, 1, logscale);
+            }
         }
         return variable;
     }

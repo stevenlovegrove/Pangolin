@@ -26,28 +26,29 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/v4l.h>
 #include <pangolin/factory/factory_registry.h>
+#include <pangolin/utils/timer.h>
+#include <pangolin/video/drivers/v4l.h>
 #include <pangolin/video/iostream_operators.h>
 
+#include <assert.h>
 #include <iostream>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
-#include <assert.h>
 
-#include <fcntl.h>
-#include <unistd.h>
 #include <errno.h>
-#include <malloc.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <sys/ioctl.h>
-#include <linux/uvcvideo.h>
+#include <fcntl.h>
 #include <linux/usb/video.h>
+#include <linux/uvcvideo.h>
+#include <malloc.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define CLEAR(x) memset (&(x), 0, sizeof (x))
 
@@ -81,6 +82,8 @@ V4lVideo::V4lVideo(const char* dev_name, io_method io, unsigned iwidth, unsigned
 {
     open_device(dev_name);
     init_device(dev_name,iwidth,iheight,0);
+    InitPangoDeviceProperties();
+
     Start();
 }
 
@@ -93,6 +96,12 @@ V4lVideo::~V4lVideo()
     
     uninit_device();
     close_device();
+}
+
+void V4lVideo::InitPangoDeviceProperties()
+{
+    // Store camera details in device properties
+    device_properties[PANGO_HAS_TIMING_DATA] = true;
 }
 
 const std::vector<StreamInfo>& V4lVideo::Streams() const
@@ -125,11 +134,14 @@ bool V4lVideo::GrabNext( unsigned char* image, bool /*wait*/ )
             if (EINTR == errno)
                 continue;
             
+            // This is a terminal condition that must be propogated up.
             throw VideoException ("select", strerror(errno));
         }
         
         if (0 == r) {
-            throw VideoException("select Timeout", strerror(errno));
+            // Timeout has occured - This is longer than any reasonable frame interval,
+            // but not necessarily terminal, so return false to indicate that no frame was captured.
+            return false;
         }
         
         if (ReadFrame(image))
@@ -137,6 +149,7 @@ bool V4lVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         
         /* EAGAIN - continue select loop. */
     }
+
     return true;
 }
 
@@ -167,7 +180,9 @@ int V4lVideo::ReadFrame(unsigned char* image)
                 throw VideoException("read", strerror(errno));
             }
         }
-        
+        // This is a hack, this ts sould come from the device.
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+
         //            process_image(buffers[0].start);
         memcpy(image,buffers[0].start,buffers[0].length);
         
@@ -193,7 +208,9 @@ int V4lVideo::ReadFrame(unsigned char* image)
                 throw VideoException("VIDIOC_DQBUF", strerror(errno));
             }
         }
-        
+        // This is a hack, this ts sould come from the device.
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+
         assert (buf.index < n_buffers);
         
         //            process_image (buffers[buf.index].start);
@@ -225,7 +242,9 @@ int V4lVideo::ReadFrame(unsigned char* image)
                 throw VideoException("VIDIOC_DQBUF", strerror(errno));
             }
         }
-        
+        // This is a hack, this ts sould come from the device.
+        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+
         for (i = 0; i < n_buffers; ++i)
             if (buf.m.userptr == (unsigned long) buffers[i].start
                     && buf.length == buffers[i].length)
@@ -588,35 +607,103 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
         break;
     }
     
+    uint32_t bit_depth = 0;
+
     std::string spix="GRAY8";
     if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_GREY) {
         spix="GRAY8";
+        bit_depth = 8;
     }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
         spix="YUYV422";
+        bit_depth = 8;
+    } else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY) {
+        spix="UYVY422";
+        bit_depth = 8;
     }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16) {
         spix="GRAY16LE";
+        bit_depth = 16;
+    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y10) {
+        spix="GRAY10";
+        bit_depth = 10;
     }else{
         // TODO: Add method to translate from V4L to FFMPEG type.
         std::cerr << "V4L Format " << V4lToString(fmt.fmt.pix.pixelformat)
                   << " not recognised. Defaulting to '" << spix << std::endl;
     }
 
-    const PixelFormat pfmt = PixelFormatFromString(spix);
+    PixelFormat pfmt = PixelFormatFromString(spix);
+    pfmt.channel_bit_depth = bit_depth;
     const StreamInfo stream_info(pfmt, width, height, (width*pfmt.bpp)/8, 0);
 
     streams.push_back(stream_info);
 }
 
-void V4lVideo::SetExposureUs(int exposure_us)
+bool V4lVideo::SetExposure(int exposure_us)
+{
+    struct v4l2_ext_controls ctrls = {};
+    struct v4l2_ext_control ctrl = {};
+
+    ctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
+    // v4l specifies exposure in 100us units
+    ctrl.value = int(exposure_us / 100.0);
+    ctrls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
+    ctrls.count = 1;
+    ctrls.controls = &ctrl;
+
+    if (-1 == xioctl(fd, VIDIOC_S_EXT_CTRLS, &ctrls)){
+        pango_print_warn("V4lVideo::SetExposure() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        return true;
+    }
+}
+
+bool V4lVideo::GetExposure(int& exposure_us)
+{
+    struct v4l2_ext_controls ctrls = {};
+    struct v4l2_ext_control ctrl = {};
+
+    ctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
+    ctrls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
+    ctrls.count = 1;
+    ctrls.controls = &ctrl;
+
+    if (-1 == xioctl(fd, VIDIOC_G_EXT_CTRLS, &ctrls)){
+        pango_print_warn("V4lVideo::GetExposure() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        // v4l specifies exposure in 100us units
+        exposure_us = ctrls.controls->value * 100;
+        return true;
+    }
+}
+
+bool V4lVideo::SetGain(float gain)
 {
     struct v4l2_control control;
-    control.id = V4L2_CID_EXPOSURE_ABSOLUTE;
-    // v4l specifies exposure in 100us units
-    control.value = exposure_us / 100;
+    control.id = V4L2_CID_GAIN;
+    control.value = gain;
 
-    if (-1 == xioctl (fd, VIDIOC_S_CTRL, &control))
-        pango_print_warn("V4lVideo::SetExposureUs() ioctl error: %d\n", errno);
+    if (-1 == xioctl (fd, VIDIOC_S_CTRL, &control)) {
+        pango_print_warn("V4lVideo::SetGain() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        return true;
+    }
+}
 
+bool V4lVideo::GetGain(float& gain)
+{
+    struct v4l2_control control;
+    control.id = V4L2_CID_GAIN;
+
+    if (-1 == xioctl (fd, VIDIOC_G_CTRL, &control)) {
+        pango_print_warn("V4lVideo::GetGain() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        gain = control.value;
+        return true;
+    }
 }
 
 void V4lVideo::close_device()
@@ -663,13 +750,24 @@ int V4lVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, U
     return 0;
 }
 
+//! Access JSON properties of device
+const picojson::value& V4lVideo::DeviceProperties() const
+{
+        return device_properties;
+}
+
+//! Access JSON properties of most recently captured frame
+const picojson::value& V4lVideo::FrameProperties() const
+{
+    return frame_properties;
+}
+
 PANGOLIN_REGISTER_FACTORY(V4lVideo)
 {
     struct V4lVideoFactory : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string smethod = uri.Get<std::string>("method","mmap");
             const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(0,0));
-            const int exposure_us = uri.Get<int>("ExposureTime", 10000);
 
             io_method method = IO_METHOD_MMAP;
 
@@ -682,8 +780,11 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
             }
 
             V4lVideo* video_raw = new V4lVideo(uri.url.c_str(), method, desired_dim.x, desired_dim.y );
-            if(video_raw) {
-                static_cast<V4lVideo*>(video_raw)->SetExposureUs(exposure_us);
+            if(video_raw  && uri.Contains("ExposureTime")) {
+                static_cast<V4lVideo*>(video_raw)->SetExposure(uri.Get<int>("ExposureTime", 10000));
+            }
+            if(video_raw  && uri.Contains("Gain")) {
+                static_cast<V4lVideo*>(video_raw)->SetGain(uri.Get<int>("Gain", 1));
             }
             return std::unique_ptr<VideoInterface>(video_raw);
         }
@@ -692,6 +793,7 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
     auto factory = std::make_shared<V4lVideoFactory>();
     FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "v4l");
 }
+
 
 }
 

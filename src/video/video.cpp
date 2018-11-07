@@ -50,7 +50,7 @@ std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri)
             FactoryRegistry<VideoInterface>::I().Open(uri);
 
     if(!video) {
-        throw VideoException("No known video handler for URI '" + uri.scheme + "'");
+        throw VideoExceptionNoKnownHandler(uri.scheme);
     }
 
     return video;

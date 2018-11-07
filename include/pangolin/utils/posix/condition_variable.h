@@ -15,7 +15,7 @@ public:
   }
 
   virtual void wait() = 0;
-  virtual bool wait(basetime t) = 0;
+  virtual bool wait(timespec t) = 0;
   virtual void signal() = 0;
   virtual void broadcast() = 0;
 };

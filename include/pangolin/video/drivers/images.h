@@ -27,9 +27,9 @@
 
 #pragma once
 
+#include <pangolin/image/image_io.h>
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
-#include <pangolin/image/image_io.h>
 
 #include <deque>
 #include <vector>
@@ -38,7 +38,7 @@ namespace pangolin
 {
 
 // Video class that outputs test video signal.
-class PANGOLIN_EXPORT ImagesVideo : public VideoInterface, public VideoPlaybackInterface
+class PANGOLIN_EXPORT ImagesVideo : public VideoInterface, public VideoPlaybackInterface, public VideoPropertiesInterface
 {
 public:
     ImagesVideo(const std::string& wildcard_path);
@@ -52,33 +52,36 @@ public:
 
     ~ImagesVideo();
 
+    ///////////////////////////////////
     // Implement VideoInterface
     
-    //! Implement VideoInput::Start()
     void Start() override;
     
-    //! Implement VideoInput::Stop()
     void Stop() override;
 
-    //! Implement VideoInput::SizeBytes()
     size_t SizeBytes() const override;
 
-    //! Implement VideoInput::Streams()
     const std::vector<StreamInfo>& Streams() const override;
     
-    //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true ) override;
     
-    //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true ) override;
 
+    ///////////////////////////////////
     // Implement VideoPlaybackInterface
 
-    int GetCurrentFrameId() const override;
+    size_t GetCurrentFrameId() const override;
 
-    int GetTotalFrames() const override;
+    size_t GetTotalFrames() const override;
 
-    int Seek(int frameid) override;
+    size_t Seek(size_t frameid) override;
+
+    ///////////////////////////////////
+    // Implement VideoPropertiesInterface
+
+    const picojson::value& DeviceProperties() const override;
+
+    const picojson::value& FrameProperties() const override;
     
 protected:
     typedef std::vector<TypedImage> Frame;
@@ -89,6 +92,8 @@ protected:
     
     void PopulateFilenames(const std::string& wildcard_path);
 
+    void PopulateFilenamesFromJson(const std::string& filename);
+
     bool LoadFrame(size_t i);
 
     void ConfigureStreamSizes();
@@ -96,7 +101,7 @@ protected:
     std::vector<StreamInfo> streams;
     size_t size_bytes;
     
-    int num_files;
+    size_t num_files;
     size_t num_channels;
     size_t next_frame_id;
     std::vector<std::vector<std::string> > filenames;
@@ -106,6 +111,11 @@ protected:
     PixelFormat raw_fmt;
     size_t raw_width;
     size_t raw_height;
+
+    // Load any json properties if they are defined
+    picojson::value device_properties;
+    picojson::value json_frames;
+    picojson::value null_props;
 };
 
 }

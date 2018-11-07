@@ -95,6 +95,8 @@ public:
 
     void Download(TypedImage& image) const;
 
+    void CopyFrom(const GlTexture& tex);
+
     void Save(const std::string& filename, bool top_line_first = true);
 
     void SetLinear();
@@ -167,7 +169,8 @@ enum GlBufferType
     GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,     // IBO's
 #ifndef HAVE_GLES
     GlPixelPackBuffer = GL_PIXEL_PACK_BUFFER,           // PBO's
-    GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER
+    GlPixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER,
+    GlShaderStorageBuffer = GL_SHADER_STORAGE_BUFFER
 #endif
 };
 

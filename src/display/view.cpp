@@ -25,13 +25,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/platform.h>
-#include <pangolin/gl/gl.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
+#include <pangolin/display/opengl_render_state.h>
 #include <pangolin/display/view.h>
 #include <pangolin/display/viewport.h>
-#include <pangolin/display/opengl_render_state.h>
+#include <pangolin/gl/gl.h>
+#include <pangolin/platform.h>
 
 #include <stdexcept>
 
@@ -61,30 +61,30 @@ double AspectAreaWithinTarget(double target, double test)
 void SaveViewFromFbo(std::string prefix, View& view, float scale)
 {
     PANGOLIN_UNUSED(prefix);
-    
+
 #ifndef HAVE_GLES
     const Viewport orig = view.v;
     view.v.l = 0;
     view.v.b = 0;
     view.v.w = (int)(view.v.w * scale);
     view.v.h = (int)(view.v.h * scale);
-    
+
     const int w = view.v.w;
     const int h = view.v.h;
-    
+
     float origLineWidth;
     glGetFloatv(GL_LINE_WIDTH, &origLineWidth);
     glLineWidth(origLineWidth * scale);
-    
+
     float origPointSize;
     glGetFloatv(GL_POINT_SIZE, &origPointSize);
     glPointSize(origPointSize * scale);
-    
+
     // Create FBO
     GlTexture color(w,h);
     GlRenderBuffer depth(w,h);
     GlFramebuffer fbo(color, depth);
-    
+
     // Render into FBO
     fbo.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -99,14 +99,14 @@ void SaveViewFromFbo(std::string prefix, View& view, float scale)
     glReadPixels(0,0,w,h, GL_RGBA, GL_UNSIGNED_BYTE, buffer.ptr );
     SaveImage(buffer, fmt, prefix + ".png", false);
 #endif // HAVE_PNG
-    
+
     // unbind FBO
     fbo.Unbind();
-    
+
     // restore viewport / line width
     view.v = orig;
     glLineWidth(origLineWidth);
-    glPointSize(origPointSize); 
+    glPointSize(origPointSize);
 #endif // HAVE_GLES
 }
 
@@ -117,16 +117,16 @@ void View::Resize(const Viewport& p)
     v.b = AttachAbs(p.b,p.t(),bottom);
     int r = AttachAbs(p.l,p.r(),right);
     int t = AttachAbs(p.b,p.t(),top);
-    
+
     // Make sure left and right, top and bottom are correct order
     if( t < v.b ) std::swap(t,v.b);
     if( r < v.l ) std::swap(r,v.l);
-    
+
     v.w = r - v.l;
     v.h = t - v.b;
-    
+
     vp = v;
-    
+
     // Adjust based on aspect requirements
     if( aspect != 0 )
     {
@@ -165,7 +165,7 @@ void View::Resize(const Viewport& p)
             }
         }
     }
-    
+
     ResizeChildren();
 }
 
@@ -215,21 +215,21 @@ void View::ResizeChildren()
         // Allocate vertical space equally
         const size_t visiblechildren = NumVisibleChildren();
         const float height = (float)v.h / (float)visiblechildren;
-        
+
         for( size_t i=0; i < visiblechildren; ++i) {
             Viewport space(v.l, (GLint)(v.b+(visiblechildren-1-i)*height), v.w, (GLint)(height) );
             VisibleChild(i).Resize(space);
-        }        
+        }
     }else if(layout == LayoutEqualHorizontal )
     {
         // Allocate vertical space equally
         const size_t visiblechildren = NumVisibleChildren();
         const float width = (float)v.w / (float)visiblechildren;
-        
+
         for( size_t i=0; i < visiblechildren; ++i) {
             Viewport space( (GLint)(v.l+i*width), v.b, (GLint)width, v.h);
             VisibleChild(i).Resize(space);
-        }        
+        }
     }else if(layout == LayoutEqual )
     {
         const size_t visiblechildren = NumVisibleChildren();
@@ -238,21 +238,20 @@ void View::ResizeChildren()
         {
             // This containers aspect
             const double this_a = std::fabs(v.aspect());
-            
+
             // Use first child with fixed aspect for all children
             double child_a = std::fabs(VisibleChild(0).aspect);
             for(size_t i=1; (child_a==0) && i < visiblechildren; ++i ) {
                 child_a = std::fabs(VisibleChild(i).aspect);
             }
-            
+
             if(child_a == 0) {
-                std::cerr << "LayoutEqual requires that each child has same aspect, but no child with fixed aspect found. Using 1:1." << std::endl;
                 child_a = 1;
             }
-            
+
             double a = visiblechildren*child_a;
             double area = AspectAreaWithinTarget(this_a, a);
-            
+
             size_t cols = visiblechildren-1;
             for(; cols > 0; --cols)
             {
@@ -264,7 +263,7 @@ void View::ResizeChildren()
                 area = new_area;
                 a = na;
             }
-            
+
             cols++;
             const size_t rows = visiblechildren / cols + (visiblechildren % cols == 0 ? 0 : 1);
             size_t cw, ch;
@@ -276,7 +275,7 @@ void View::ResizeChildren()
                 ch = v.h / rows;
                 cw = (int)(ch * child_a);
             }
-            
+
             for(size_t i=0; i< visiblechildren; ++i )
             {
                 size_t c = i % cols;
@@ -286,7 +285,7 @@ void View::ResizeChildren()
             }
         }
     }
-    
+
 }
 
 void View::Render()
@@ -301,8 +300,8 @@ void View::RenderChildren()
 {
     for(std::vector<View*>::iterator iv = views.begin(); iv != views.end(); ++iv )
     {
-        if((*iv)->show) (*iv)->Render();        
-    }    
+        if((*iv)->show) (*iv)->Render();
+    }
 }
 
 void View::Activate() const
@@ -347,16 +346,16 @@ void View::ActivateScissorAndClear(const OpenGlRenderState& state ) const
 void View::ActivatePixelOrthographic() const
 {
     v.ActivatePixelOrthographic();
-}  
+}
 
 void View::ActivateIdentity() const
 {
     v.ActivateIdentity();
-}  
+}
 
 GLfloat View::GetClosestDepth(int x, int y, int radius) const
 {
-    // TODO: Get to work on android    
+    // TODO: Get to work on android
 
 #ifdef _MSVC_
     // MSVC Requires fixed sized arrays on stack
@@ -368,14 +367,14 @@ GLfloat View::GetClosestDepth(int x, int y, int radius) const
 
     const int zsize = zl*zl;
     GLfloat zs[zsize];
-    
+
 #ifndef HAVE_GLES
     glReadBuffer(GL_FRONT);
     glReadPixels(x-radius,y-radius,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
 #else
-    std::fill(zs,zs+zsize, 0.8);    
+    std::fill(zs,zs+zsize, 0.8);
 #endif
-    
+
     const GLfloat mindepth = *(std::min_element(zs,zs+zsize));
     return mindepth;
 }
@@ -390,13 +389,7 @@ void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx,
 
 void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
 {
-    const GLint viewport[4] = {v.l,v.b,v.w,v.h};
-    const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
-#ifndef HAVE_GLES    
-    glUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
-#else
-    glUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
-#endif
+    v.GetCamCoordinates(cam_state, winx, winy, winzdepth, x, y, z);
 }
 
 View& View::SetFocus()
@@ -461,10 +454,10 @@ View& View::AddDisplay(View& child)
     std::vector<View*>::iterator f = std::find(
                 context->base.views.begin(), context->base.views.end(), &child
                 );
-    
+
     if( f != context->base.views.end() )
         context->base.views.erase(f);
-    
+
     views.push_back(&child);
     context->base.ResizeChildren();
     return *this;
@@ -501,16 +494,20 @@ void View::SaveOnRender(const std::string& filename_prefix)
 void View::RecordOnRender(const std::string& record_uri)
 {
     PANGOLIN_UNUSED(record_uri);
-    
+
 #ifdef BUILD_PANGOLIN_VIDEO
     if(!context->recorder.IsOpen()) {
         Viewport area = GetBounds();
         context->record_view = this;
-        context->recorder.Open(record_uri);
-        std::vector<StreamInfo> streams;
-        const PixelFormat fmt = PixelFormatFromString("RGB24");
-        streams.push_back( StreamInfo(fmt, area.w, area.h, area.w * fmt.bpp / 8) );
-        context->recorder.SetStreams(streams);
+        try{
+            context->recorder.Open(record_uri);
+            std::vector<StreamInfo> streams;
+            const PixelFormat fmt = PixelFormatFromString("RGB24");
+            streams.push_back( StreamInfo(fmt, area.w, area.h, area.w * fmt.bpp / 8) );
+            context->recorder.SetStreams(streams);
+        }catch(const std::exception& e) {
+            pango_print_error("Unable to open VideoRecorder:\n\t%s\n", e.what());
+        }
     }else{
         context->recorder.Close();
     }
@@ -567,7 +564,7 @@ View* View::FindChild(int x, int y)
     for( std::vector<View*>::const_reverse_iterator i = views.rbegin(); i != views.rend(); ++i )
         if( (*i)->show && (*i)->GetBounds().Contains(x,y) )
             return (*i);
-    return 0;    
+    return 0;
 }
 
 View& View::SetHandler(Handler* h)

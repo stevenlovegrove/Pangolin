@@ -29,41 +29,41 @@ public:
     ~RealSenseVideo();
 
     //! Implement VideoInput::Start()
-    void Start();
+    void Start() override;
 
     //! Implement VideoInput::Stop()
-    void Stop();
+    void Stop() override;
 
     //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+    size_t SizeBytes() const override;
 
     //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+    const std::vector<StreamInfo>& Streams() const override;
 
     //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+    bool GrabNext( unsigned char* image, bool wait = true ) override;
 
     //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+    bool GrabNewest( unsigned char* image, bool wait = true ) override;
 
     //! Implement VideoPropertiesInterface::Properties()
-    const picojson::value& DeviceProperties() const {
+    const picojson::value& DeviceProperties() const override {
         return device_properties;
     }
 
     //! Implement VideoPropertiesInterface::Properties()
-    const picojson::value& FrameProperties() const {
+    const picojson::value& FrameProperties() const override {
         return frame_properties;
     }
 
     //! Implement VideoPlaybackInterface::GetCurrentFrameId
-    int GetCurrentFrameId() const;
+    size_t GetCurrentFrameId() const override;
 
     //! Implement VideoPlaybackInterface::GetTotalFrames
-    int GetTotalFrames() const ;
+    size_t GetTotalFrames() const override;
 
     //! Implement VideoPlaybackInterface::Seek
-    int Seek(int frameid);
+    size_t Seek(size_t frameid) override;
 
 protected:
     size_t sizeBytes;
@@ -74,14 +74,14 @@ protected:
     picojson::value frame_properties;
     picojson::value* streams_properties;
 
-    int current_frame_index;
-    int total_frames;
+    size_t current_frame_index;
+    size_t total_frames;
 
     rs::context* ctx_;
     std::vector<rs::device*> devs_;
 
     ImageDim  dim_;
-    int fps_;
+    size_t fps_;
 };
 
 }

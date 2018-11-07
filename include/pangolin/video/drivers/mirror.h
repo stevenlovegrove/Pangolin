@@ -39,6 +39,9 @@ enum MirrorOptions
     MirrorOptionsFlipX,
     MirrorOptionsFlipY,
     MirrorOptionsFlipXY,
+    MirrorOptionsTranspose,
+    MirrorOptionsRotateCW,
+    MirrorOptionsRotateCCW,
 };
 
 // Video class that debayers its video input using the given method.

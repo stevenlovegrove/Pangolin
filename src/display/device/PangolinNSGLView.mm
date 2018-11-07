@@ -5,6 +5,15 @@
 #include <pangolin/display/display_internal.h>
 #include <pangolin/handler/handler_enums.h>
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
+#  define NSDeviceIndependentModifierFlagsMask NSEventModifierFlagDeviceIndependentFlagsMask
+#  define  NSShiftKeyMask NSEventModifierFlagShift
+#  define  NSControlKeyMask NSEventModifierFlagControl
+#  define  NSAlternateKeyMask NSEventModifierFlagOption
+#  define  NSCommandKeyMask NSEventModifierFlagCommand
+#  define  NSFunctionKeyMask NSEventModifierFlagFunction
+#endif
+
 namespace pangolin
 {
 extern __thread PangolinGl* context;

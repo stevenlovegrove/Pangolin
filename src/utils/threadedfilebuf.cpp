@@ -32,6 +32,11 @@
 #include <cstring>
 #include <stdexcept>
 
+#ifdef USE_POSIX_FILE_IO
+#include <unistd.h>
+#include <fcntl.h>
+#endif
+
 using namespace std;
 
 namespace pangolin
@@ -52,12 +57,25 @@ void threadedfilebuf::open(const std::string& filename, size_t buffer_size_bytes
 {
     is_pipe = pangolin::IsPipe(filename);
 
+#ifdef USE_POSIX_FILE_IO
+    if (filenum != -1) {
+#else
     if (file.is_open()) {
+#endif
         close();
     }
 
+#ifdef USE_POSIX_FILE_IO
+    filenum = ::open(filename.c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_SYNC, S_IRWXU);
+#else
     file.open(filename.c_str(), ios::out | ios::binary);
+#endif
+
+#ifdef USE_POSIX_FILE_IO
+    if (filenum == -1) {
+#else
     if(!file.is_open()) {
+#endif
         throw std::runtime_error("Unable to open '" + filename + "' for writing.");
     }
 
@@ -89,7 +107,12 @@ void threadedfilebuf::close()
         mem_buffer = 0;
     }
 
+#ifdef USE_POSIX_FILE_IO
+    ::close(filenum);
+    filenum = -1;
+#else
     file.close();
+#endif
 }
 
 void threadedfilebuf::soft_close()
@@ -235,8 +258,16 @@ void threadedfilebuf::operator()()
                         mem_max_size - mem_start;
         }
 
+#ifdef USE_POSIX_FILE_IO
+        int bytes_written = ::write(filenum, mem_buffer + mem_start, data_to_write);
+        if(bytes_written == -1)
+        {
+            throw std::runtime_error("Unable to write data.");
+        }
+#else
         std::streamsize bytes_written =
                 file.sputn(mem_buffer + mem_start, data_to_write );
+#endif
 
         {
             std::unique_lock<std::mutex> lock(update_mutex);

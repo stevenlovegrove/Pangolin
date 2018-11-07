@@ -34,11 +34,11 @@
 // PangolinNSApplication
 ////////////////////////////////////////////////////////////////////
 
-@interface PangolinNSApplication : NSApplication {
+@interface PangolinNSApplication : NSObject {
 }
 
-- (void)run_pre;
-- (void)run_step;
++ (void)run_pre;
++ (void)run_step;
 
 @end
 

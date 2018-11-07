@@ -204,7 +204,7 @@ struct Image
     {
         PANGO_ASSERT(IsValid());
 
-        const std::pair<T,T> minmax(std::numeric_limits<T>::max(), std::numeric_limits<T>::lowest());
+        std::pair<T,T> minmax(std::numeric_limits<T>::max(), std::numeric_limits<T>::lowest());
         for(size_t r=0; r < h; ++r) {
             const T* ptr = RowPtr(r);
             const T* end = ptr + w;

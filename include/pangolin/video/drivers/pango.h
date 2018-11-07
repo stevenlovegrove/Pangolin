@@ -27,8 +27,10 @@
 
 #pragma once
 
-#include <pangolin/video/video.h>
 #include <pangolin/log/packetstream_reader.h>
+#include <pangolin/log/playback_session.h>
+#include <pangolin/video/stream_encoder_factory.h>
+#include <pangolin/video/video.h>
 
 namespace pangolin
 {
@@ -37,7 +39,7 @@ class PANGOLIN_EXPORT PangoVideo
     : public VideoInterface, public VideoPropertiesInterface, public VideoPlaybackInterface
 {
 public:
-    PangoVideo(const std::string& filename, bool realtime = true);
+    PangoVideo(const std::string& filename, std::shared_ptr<PlaybackSession> playback_session);
     ~PangoVideo();
 
     // Implement VideoInterface
@@ -66,31 +68,37 @@ public:
 
     // Implement VideoPlaybackInterface
 
-    int GetCurrentFrameId() const override;
+    size_t GetCurrentFrameId() const override;
 
-    int GetTotalFrames() const override;
+    size_t GetTotalFrames() const override;
 
-    int Seek(int frameid) override;
+    size_t Seek(size_t frameid) override;
+
+    std::string GetSourceUri();
 
 private:
     void HandlePipeClosed();
 
 protected:
-    int FindSource();
+    int FindPacketStreamSource();
+    void SetupStreams(const PacketStreamSource& src);
 
-    PacketStreamReader _reader;
-    SyncTime _realtime_sync;
+    const std::string _filename;
+    std::shared_ptr<PlaybackSession> _playback_session;
+    std::shared_ptr<PacketStreamReader> _reader;
+    SyncTimeEventPromise _event_promise;
+    int _src_id;
+    const PacketStreamSource* _source;
 
     size_t _size_bytes;
+    bool _fixed_size;
     std::vector<StreamInfo> _streams;
+    std::vector<ImageDecoderFunc> stream_decoder;
     picojson::value _device_properties;
     picojson::value _frame_properties;
-    int _src_id;
-    const std::string _filename;
-    bool _realtime;
-    bool _is_pipe;
-    bool _is_pipe_open;
-    int _pipe_fd;
+    std::string _source_uri;
+
+    Registration<size_t> session_seek;
 };
 
 }

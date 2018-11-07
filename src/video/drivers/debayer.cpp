@@ -55,6 +55,8 @@ pangolin::StreamInfo BayerOutputFormat( const StreamInfo& stream_in, bayer_metho
                 (method == BAYER_METHOD_DOWNSAMPLE_MONO ? "GRAY8" : "RGB24")
             );
 
+    fmt.channel_bit_depth = stream_in.PixFormat().channel_bit_depth;
+
     return pangolin::StreamInfo( fmt, w, h, w*fmt.bpp / 8, (unsigned char*)0 + start_offset );
 }
 

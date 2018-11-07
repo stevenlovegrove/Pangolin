@@ -27,12 +27,12 @@
 
 #include <pangolin/plot/datalog.h>
 
-#include <limits>
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
-#include <stdexcept>
-#include <algorithm>
 #include <iostream>
+#include <limits>
+#include <stdexcept>
 
 namespace pangolin
 {
@@ -46,6 +46,7 @@ void DataLogBlock::AddSamples(size_t num_samples, size_t dimensions, const float
         if(dimensions > dim) {
             // If dimensions is too high for this block, start a new bigger one
             nextBlock = std::unique_ptr<DataLogBlock>(new DataLogBlock(dimensions, max_samples, start_id + samples));
+            nextBlock->AddSamples(num_samples,dimensions,data_dim_major);
         }else{
             // Try to copy samples to this block
             const size_t samples_to_copy = std::min(num_samples, SampleSpaceLeft());
@@ -86,7 +87,7 @@ void DataLogBlock::AddSamples(size_t num_samples, size_t dimensions, const float
 }
 
 DataLog::DataLog(unsigned int buffer_size)
-    : block_samples_alloc(buffer_size), block0(0), blockn(0), record_stats(true)
+    : block_samples_alloc(buffer_size), block0(nullptr), blockn(nullptr), record_stats(true)
 {
 }
 
@@ -97,6 +98,8 @@ DataLog::~DataLog()
 
 void DataLog::SetLabels(const std::vector<std::string> & new_labels)
 {
+    std::lock_guard<std::mutex> l(access_mutex);
+
     // Create new labels if needed
     for( size_t i= labels.size(); i < new_labels.size(); ++i )
         labels.push_back( std::string() );
@@ -115,8 +118,8 @@ void DataLog::Log(size_t dimension, const float* vals, unsigned int samples )
 {
     if(!block0) {
         // Create first block
-        block0 = new DataLogBlock(dimension, block_samples_alloc, 0);
-        blockn = block0;
+        block0 = std::unique_ptr<DataLogBlock>(new DataLogBlock(dimension, block_samples_alloc, 0));
+        blockn = block0.get();
     }
 
     if(record_stats) {
@@ -203,10 +206,11 @@ void DataLog::Log(const std::vector<float> & vals)
 
 void DataLog::Clear()
 {
-    if(block0) {
-        block0->ClearLinked();
-        blockn = block0;
-    }
+    std::lock_guard<std::mutex> l(access_mutex);
+
+    blockn = nullptr;
+    block0 = nullptr;
+
     stats.clear();
 }
 
@@ -218,7 +222,7 @@ void DataLog::Save(std::string /*filename*/)
 
 const DataLogBlock* DataLog::FirstBlock() const
 {
-    return block0;
+    return block0.get();
 }
 
 const DataLogBlock* DataLog::LastBlock() const

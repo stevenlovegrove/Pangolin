@@ -38,10 +38,12 @@
 #define PANGO_CAPTURE_TIME_US        "capture_time_us"
 #define PANGO_EXPOSURE_US            "exposure_us"
 #define PANGO_GAMMA                  "gamma"
-#define PANGO_ANALOG_GAIN            "analog_gain"
+// analog gain is in linear scale and not dB
+#define PANGO_ANALOG_GAIN            "analog_gain" 
 #define PANGO_ANALOG_BLACK_LEVEL     "analog_black_level"
 #define PANGO_SENSOR_TEMPERATURE_C   "sensor_temperature_C"
 #define PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US "estimated_center_capture_time_us"
+#define PANGO_FRAME_COUNTER          "frame_counter"
 
 namespace pangolin {
 
@@ -151,6 +153,10 @@ struct PANGOLIN_EXPORT VideoUvcInterface
 {
     virtual ~VideoUvcInterface() {}
     virtual int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code) = 0;
+    virtual bool GetExposure(int& exp_us) = 0;
+    virtual bool SetExposure(int exp_us) = 0;
+    virtual bool GetGain(float& gain) = 0;
+    virtual bool SetGain(float gain) = 0;
 };
 
 struct PANGOLIN_EXPORT VideoPlaybackInterface
@@ -158,14 +164,15 @@ struct PANGOLIN_EXPORT VideoPlaybackInterface
     virtual ~VideoPlaybackInterface() {}
 
     /// Return monotonic id of current frame
-    virtual int GetCurrentFrameId() const = 0;
+    /// The 'current frame' is the frame returned from the last successful call to Grab
+    virtual size_t GetCurrentFrameId() const = 0;
 
     /// Return total number of frames to be captured from device,
-    /// or std::numeric_limits<int>::max() on failure.
-    virtual int GetTotalFrames() const = 0;
+    /// or 0 if unknown.
+    virtual size_t GetTotalFrames() const = 0;
 
-    /// Return -1 on failure, frameid on success
-    virtual int Seek(int frameid) = 0;
+    /// Return frameid on success, or next frame on failure
+    virtual size_t Seek(size_t frameid) = 0;
 };
 
 }

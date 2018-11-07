@@ -27,37 +27,60 @@ VideoViewer::VideoViewer(const std::string& window_name, const std::string& inpu
       current_frame(-1),
       grab_until(std::numeric_limits<int>::max()),
       record_nth_frame(1),
+      draw_nth_frame(1),
       video_grab_wait(true),
       video_grab_newest(false),
       should_run(true),
       active_cam(0)
 {
     pangolin::Var<int>::Attach("ui.frame", current_frame);
+    pangolin::Var<int>::Attach("ui.record_nth_frame", record_nth_frame);
+    pangolin::Var<int>::Attach("ui.draw_nth_frame", draw_nth_frame);
+
 
     if(!input_uri.empty()) {
         OpenInput(input_uri);
     }
-
-    vv_thread = std::thread(&VideoViewer::Run, this);
 }
 
 VideoViewer::~VideoViewer()
 {
+    QuitAndWait();
+
+}
+
+void VideoViewer::Quit()
+{
+    // Signal any running thread to stop
+    should_run = false;
+}
+
+void VideoViewer::QuitAndWait()
+{
     Quit();
 
-    // Wait for programming to close.
     if(vv_thread.joinable()) {
         vv_thread.join();
     }
 }
 
-void VideoViewer::Quit()
+void VideoViewer::RunAsync()
 {
-    should_run = false;
+    if(!should_run) {
+        // Make sure any other thread has finished
+        if(vv_thread.joinable()) {
+            vv_thread.join();
+        }
+
+        // Launch in another thread
+        vv_thread = std::thread(&VideoViewer::Run, this);
+    }
 }
 
 void VideoViewer::Run()
 {
+    should_run = true;
+
     /////////////////////////////////////////////////////////////////////////
     /// Register pangolin variables
     /////////////////////////////////////////////////////////////////////////
@@ -158,8 +181,11 @@ void VideoViewer::Run()
                 }
 
                 // Update images
-                for(unsigned int i=0; i<images.size(); ++i) {
-                    stream_views[i].SetImage(images[i], pangolin::GlPixFormat(video.Streams()[i].PixFormat() ));
+                if((frame-1) % draw_nth_frame == 0) {
+                    for(unsigned int i=0; i<images.size(); ++i) 
+                        if(stream_views[i].IsShown()) {
+                            stream_views[i].SetImage(images[i], pangolin::GlPixFormat(video.Streams()[i].PixFormat() ));
+                        }
                 }
             }
         }
@@ -199,7 +225,7 @@ void VideoViewer::OpenInput(const std::string& input_uri)
     for(size_t s = 0; s < video.Streams().size(); ++s) {
         const pangolin::StreamInfo& si = video.Streams()[s];
         std::cout << FormatString(
-            "Stream %: % x % % (pitch: % bytes",
+            "Stream %: % x % % (pitch: % bytes)",
             s, si.Width(), si.Height(), si.PixFormat().format, si.Pitch()
         ) << std::endl;
     }
@@ -301,6 +327,24 @@ void VideoViewer::SetDiscardBufferedFrames(bool new_state)
     }
 }
 
+
+void VideoViewer::DrawEveryNFrames(int n)
+{
+    if(n <= 0) {
+        pango_print_warn("Cannot draw every %d frames. Ignoring request.\n",n);
+        return;
+    }
+
+    if(n != draw_nth_frame && n == 1)
+        pango_print_info("Drawing every frame.\n");
+    if(n != draw_nth_frame && n > 1)
+        pango_print_info("Drawing one in every %d frames.\n",n);
+
+    draw_nth_frame=n;
+}
+
+
+
 void VideoViewer::SetWaitForFrames(bool new_state)
 {
     std::lock_guard<std::mutex> lock(control_mutex);
@@ -317,8 +361,11 @@ void VideoViewer::Skip(int frames)
     std::lock_guard<std::mutex> lock(control_mutex);
 
     if(video_playback) {
-        current_frame = video_playback->Seek(current_frame + frames) -1;
-        grab_until = current_frame + 1;
+        const int next_frame = current_frame + frames;
+        if (next_frame >= 0) {
+            current_frame = video_playback->Seek(next_frame) -1;
+            grab_until = current_frame + 1;
+        } 
     }else{
         if(frames >= 0) {
             grab_until = current_frame + frames;
@@ -386,7 +433,7 @@ void RunVideoViewerUI(const std::string& input_uri, const std::string& output_ur
     RegisterNewSigCallback(videoviewer_signal_quit, nullptr, SIGTERM);
 
     VideoViewer vv("VideoViewer", input_uri, output_uri);
-    vv.WaitUntilExit();
+    vv.Run();
 }
 
 }

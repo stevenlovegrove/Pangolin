@@ -111,9 +111,6 @@ struct PANGOLIN_EXPORT VideoInput
     // True iff grabbed live frames are being logged to file
     bool IsRecording() const;
 
-    int FrameId();
-
-
 protected:
     void InitialiseRecorder();
 

@@ -283,6 +283,54 @@ int UvcVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, U
     }
 }
 
+bool UvcVideo::SetExposure(int exp_us)
+{
+    uint32_t e = uint32_t(exp_us);
+
+    if (uvc_set_exposure_abs(devh_, e) < 0) {
+        pango_print_warn("UvcVideo::setExposure() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        return true;
+    }
+}
+
+bool UvcVideo::GetExposure(int& exp_us)
+{
+    uint32_t e;
+    if (uvc_get_exposure_abs(devh_, &e, uvc_req_code::UVC_GET_CUR) < 0) {
+        pango_print_warn("UvcVideo::GetExposure() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        exp_us = e;
+        return true;
+    }
+}
+
+bool UvcVideo::SetGain(float gain)
+{
+    uint16_t g = uint16_t(gain);
+
+    if (uvc_set_gain(devh_, g) < 0) {
+        pango_print_warn("UvcVideo::setGain() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        return true;
+    }
+}
+
+bool UvcVideo::GetGain(float& gain)
+{
+    uint16_t g;
+    if (uvc_get_gain(devh_, &g, uvc_req_code::UVC_GET_CUR) < 0) {
+        pango_print_warn("UvcVideo::GetGain() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        gain = g;
+        return true;
+    }
+}
+
 //! Access JSON properties of device
 const picojson::value& UvcVideo::DeviceProperties() const
 {

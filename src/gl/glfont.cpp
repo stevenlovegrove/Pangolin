@@ -25,9 +25,6 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#define STB_TRUETYPE_IMPLEMENTATION
-#include "stb_truetype.h"
-
 #include <pangolin/display/display_internal.h>
 #include <pangolin/gl/glfont.h>
 #include <pangolin/gl/glstate.h>
@@ -38,10 +35,22 @@
 #include <pangolin/gl/glsl.h>
 #endif
 
+#define STB_TRUETYPE_IMPLEMENTATION
+#define STBTT_STATIC
+
+#if defined(_GCC_) || defined(_CLANG_)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wunused-function"
+#  include "stb_truetype.h"
+#  pragma GCC diagnostic pop
+#else
+#  include "stb_truetype.h"
+#endif
+
 #define MAX_TEXT_LENGTH 500
 
 // Embedded fonts:
-extern "C" const unsigned char AnonymousPro_ttf[];
+extern const unsigned char AnonymousPro_ttf[];
 
 namespace pangolin
 {
@@ -51,7 +60,7 @@ extern __thread PangolinGl* context;
 GlFont& GlFont::I()
 {
     if (!context->font) {
-        context->font.reset(new GlFont(AnonymousPro_ttf, 15));
+        context->font.reset(new GlFont(AnonymousPro_ttf, context->is_high_res ? 30 : 15));
     }
     return *context->font.get();
 }

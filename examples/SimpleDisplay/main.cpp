@@ -81,7 +81,7 @@ int main(/*int argc, char* argv[]*/)
   pangolin::Var<std::function<void(void)> > reset("ui.Reset", SampleMethod);
 
   // Demonstration of how we can register a keyboard hook to alter a Var
-  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'b', pangolin::SetVarFunctor<double>("ui.A Double", 3.5));
+  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'b', pangolin::SetVarFunctor<double>("ui.A_Double", 3.5));
 
   // Demonstration of how we can register a keyboard hook to trigger a method
   pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'r', SampleMethod);

@@ -58,7 +58,7 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
                             // Transform input_uri based on sub args.
                             const picojson::value input_uri_params = file_json.get_value<picojson::object>("video_uri_defaults", picojson::object());
                             input_uri = Transform(input_uri, [&](const std::string& k) {
-                                return uri.Get<std::string>(k,input_uri_params.get_value<std::string>(k,"#"));
+                                return uri.Get<std::string>(k, input_uri_params.contains(k) ? input_uri_params[k].to_str() : "#");
                             });
 
                             return pangolin::OpenVideo(input_uri);

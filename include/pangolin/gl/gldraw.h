@@ -29,6 +29,7 @@
 
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/gl/glformattraits.h>
+#include <pangolin/display/opengl_render_state.h>
 
 #include <vector>
 #include <math.h>
@@ -249,7 +250,7 @@ inline void glDraw_z0(GLfloat scale, int grid)
     }
 }
 
-inline void glDrawFrustrum( GLfloat u0, GLfloat v0, GLfloat fu, GLfloat fv, int w, int h, GLfloat scale )
+inline void glDrawFrustum( GLfloat u0, GLfloat v0, GLfloat fu, GLfloat fv, int w, int h, GLfloat scale )
 {
     const GLfloat xl = scale * u0;
     const GLfloat xh = scale * (w*fu + u0);
@@ -412,30 +413,37 @@ inline void glSetFrameOfReference( const Eigen::Matrix4d& T_wf )
 #endif
 }
 
+inline void glSetFrameOfReference( const pangolin::OpenGlMatrix& T_wf )
+{
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glMultMatrixd( T_wf.m );
+}
+
 inline void glUnsetFrameOfReference()
 {
     glPopMatrix();
 }
 
-template<typename T>
-inline void glDrawAxis( const Eigen::Matrix<T,4,4>& T_wf, T scale )
+template<typename T, typename S>
+inline void glDrawAxis( const T& T_wf, S scale )
 {
     glSetFrameOfReference(T_wf);
-    glDrawAxis( (float)scale );
+    glDrawAxis(scale);
     glUnsetFrameOfReference();
 }
 
 template<typename T>
-inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, GLfloat scale )
+inline void glDrawFrustum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, GLfloat scale )
 {
-    glDrawFrustrum((GLfloat)Kinv(0,2), (GLfloat)Kinv(1,2), (GLfloat)Kinv(0,0), (GLfloat)Kinv(1,1), w, h, scale);
+    glDrawFrustum((GLfloat)Kinv(0,2), (GLfloat)Kinv(1,2), (GLfloat)Kinv(0,0), (GLfloat)Kinv(1,1), w, h, scale);
 }
 
 template<typename T>
-inline void glDrawFrustrum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, const Eigen::Matrix<T,4,4>& T_wf, T scale )
+inline void glDrawFrustum( const Eigen::Matrix<T,3,3>& Kinv, int w, int h, const Eigen::Matrix<T,4,4>& T_wf, T scale )
 {
     glSetFrameOfReference(T_wf);
-    glDrawFrustrum(Kinv,w,h,scale);
+    glDrawFrustum(Kinv,w,h,scale);
     glUnsetFrameOfReference();
 }
 

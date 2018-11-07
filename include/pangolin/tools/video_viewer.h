@@ -1,3 +1,5 @@
+#pragma once
+
 #include <pangolin/display/window.h>
 #include <pangolin/platform.h>
 #include <pangolin/video/video_input.h>
@@ -23,9 +25,13 @@ public:
     VideoViewer(const std::string& window_name, const std::string& input_uri, const std::string& output_uri = "video.pango" );
     VideoViewer(const VideoViewer&) = delete;
 
-    ~VideoViewer();
+    virtual ~VideoViewer();
+
+    void Run();
+    void RunAsync();
 
     void Quit();
+    void QuitAndWait();
 
     inline int TotalFrames() const
     {
@@ -52,6 +58,8 @@ public:
     void ChangeExposure(int delta_us);
     void ChangeGain(float delta);
     void SetActiveCamera(int delta);
+    void DrawEveryNFrames(int n);
+
 
     // Register to be notified of new image data
     void SetFrameChangedCallback(FrameChangedCallbackFn cb);
@@ -62,9 +70,13 @@ public:
     VideoInput& Video() {return video;}
     const VideoInput& Video() const {return video;}
 
+    void SetRecordNthFrame(int record_nth_frame_) {
+      record_nth_frame = record_nth_frame_;
+    }
+
+
 protected:
     void RegisterDefaultKeyShortcutsAndPangoVariables();
-    void Run();
 
     std::mutex control_mutex;
     std::string window_name;
@@ -79,6 +91,7 @@ protected:
     int current_frame;
     int grab_until;
     int record_nth_frame;
+    int draw_nth_frame;
     bool video_grab_wait;
     bool video_grab_newest;
     bool should_run;

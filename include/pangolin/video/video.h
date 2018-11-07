@@ -108,6 +108,10 @@
 //  e.g. "split:[mem1=307200:640x480:1280:GRAY8,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 //  e.g. "split:[stream1=2,stream2=1]//pango://video.pango"
 //
+// truncate - select a subregion of a video based on start and end (last index+1) index
+//  e.g. Generate 30 random frames: "truncate:[end=30]//test://"
+//  e.g. "truncate:[begin=100,end=120]"
+//
 // join - join streams
 //  e.g. "join:[sync_tolerance_us=100, sync_continuously=true]//{pleora:[sn=00000274]//}{pleora:[sn=00000275]//}"
 //
@@ -190,13 +194,27 @@ picojson::value GetVideoFrameProperties(VideoInterface* video)
         if(fi->InputStreams().size() == 1) {
             return GetVideoFrameProperties(fi->InputStreams()[0]);
         }else if(fi->InputStreams().size() > 0){
-            // Use first stream's properties as base, but also populate children.
-            picojson::value json = GetVideoFrameProperties(fi->InputStreams()[0]);
-            picojson::value& streams = json["streams"];
+            picojson::value streams;
+
             for(size_t i=0; i< fi->InputStreams().size(); ++i) {
-                streams.push_back( GetVideoFrameProperties(fi->InputStreams()[i]) );
+                const picojson::value dev_props = GetVideoFrameProperties(fi->InputStreams()[i]);
+                if(dev_props.contains("streams")) {
+                    const picojson::value& dev_streams = dev_props["streams"];
+                    for(size_t i=0; i < dev_streams.size(); ++i) {
+                        streams.push_back(dev_streams[i]);
+                    }
+                }else{
+                    streams.push_back(dev_props);
+                }
             }
-            return json;
+
+            if(streams.size() > 1) {
+                picojson::value json = streams[0];
+                json["streams"] = streams;
+                return json;
+            }else{
+                return streams[0];
+            }
         }
     }
     return picojson::value();
@@ -214,13 +232,27 @@ picojson::value GetVideoDeviceProperties(VideoInterface* video)
         if(fi->InputStreams().size() == 1) {
             return GetVideoDeviceProperties(fi->InputStreams()[0]);
         }else if(fi->InputStreams().size() > 0){
-            // Use first stream's properties as base, but also populate children.
-            picojson::value json = GetVideoDeviceProperties(fi->InputStreams()[0]);
-            picojson::value& streams = json["streams"];
+            picojson::value streams;
+
             for(size_t i=0; i< fi->InputStreams().size(); ++i) {
-                streams.push_back( GetVideoDeviceProperties(fi->InputStreams()[i]) );
+                const picojson::value dev_props = GetVideoDeviceProperties(fi->InputStreams()[i]);
+                if(dev_props.contains("streams")) {
+                    const picojson::value& dev_streams = dev_props["streams"];
+                    for(size_t i=0; i < dev_streams.size(); ++i) {
+                        streams.push_back(dev_streams[i]);
+                    }
+                }else{
+                    streams.push_back(dev_props);
+                }
             }
-            return json;
+
+            if(streams.size() > 1) {
+                picojson::value json = streams[0];
+                json["streams"] = streams;
+                return json;
+            }else{
+                return streams[0];
+            }
         }
     }
     return picojson::value();

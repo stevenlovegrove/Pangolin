@@ -272,7 +272,7 @@ TeliVideo::TeliVideo(const Params& p)
         );
     }
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
-        throw pangolin::VideoException("TeliSDK: Error opening camera");
+        throw pangolin::VideoException(FormatString("TeliSDK: Error opening camera, sn='%'", sn));
 
     SetDeviceParams(device_params);
     Initialise();
@@ -285,7 +285,7 @@ std::string TeliVideo::GetParameter(const std::string& name)
     if( st == Teli::CAM_API_STS_SUCCESS) {
         std::string value = GetNodeValStr(cam, node, name);
         if(name == "ExposureTime") {
-            exposure_us = atoi(value.c_str());
+            exposure_us = std::atoi(value.c_str());
         }
         return value;
     }else{
@@ -480,6 +480,7 @@ bool TeliVideo::GrabNext(unsigned char* image, bool /*wait*/)
         Teli::CAM_IMAGE_INFO sImageInfo;
         uint32_t uiPyldSize = (uint32_t)size_bytes;
         Teli::CAM_API_STATUS uiStatus = Teli::Strm_ReadCurrentImage(strm, image, &uiPyldSize, &sImageInfo);
+        frame_properties[PANGO_EXPOSURE_US] = picojson::value(exposure_us);
         frame_properties[PANGO_CAPTURE_TIME_US] = picojson::value(sImageInfo.ullTimestamp/1000);
         basetime now = pangolin::TimeNow();
         frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(now));
