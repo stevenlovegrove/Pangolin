@@ -2,6 +2,8 @@
  * http://github.com/stevenlovegrove/Pangolin
  *
  * Copyright (c) Andrey Mnatsakanov
+ * Copyright (c) Qi Hang
+ * Copyright (c) Adel Ahmadyan
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -30,9 +32,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
-
-//namespace py = pybind11;
-//using namespace pybind11::literals;
 
 namespace py_pangolin {
 
@@ -255,7 +254,7 @@ namespace py_pangolin {
     m.def("DrawPoints", 
           (void (*) (pybind11::array_t<double>)) &DrawPoints, 
           pybind11::arg("points"));
-          
+
     m.def("DrawPoints", 
           (void (*) (pybind11::array_t<double>, pybind11::array_t<double>)) &DrawPoints, 
           pybind11::arg("points"), 

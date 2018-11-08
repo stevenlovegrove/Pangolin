@@ -36,6 +36,7 @@
 #include "datalog.hpp"
 #include "display.hpp"
 #include "gl_draw.hpp"
+#include "gl.hpp"
 #include "handler.hpp"
 #include "image.hpp"
 #include "opengl_render_state.hpp"
@@ -68,6 +69,7 @@ inline void PopulateModule(pybind11::module& m)
     py_pangolin::bind_plotter(m);
     py_pangolin::bind_handler(m);
     py_pangolin::bind_gl_draw(m);
+    py_pangolin::bind_gl(m);
     py_pangolin::bind_widget(m);
     py_pangolin::bind_pixel_format(m);
     py_pangolin::bind_image<unsigned char>(m, "Image");
