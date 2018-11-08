@@ -1,5 +1,5 @@
 # https://github.com/stevenlovegrove/Pangolin/tree/master/examples/SimpleDisplayImage
-https://github.com/uoip/pangolin/blob/master/python/examples/SimpleDisplayImage.py
+# https://github.com/uoip/pangolin/blob/master/python/examples/SimpleDisplayImage.py
 
 import sys
 # If this example doesn't work, it's probably because this path is wrong...
