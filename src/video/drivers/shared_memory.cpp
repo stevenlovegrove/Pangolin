@@ -71,7 +71,7 @@ bool SharedMemoryVideo::GrabNewest(unsigned char* image, bool wait)
 
 PANGOLIN_REGISTER_FACTORY(SharedMemoryVideo)
 {
-    struct SharedMemoryVideoFactory : public FactoryInterface<VideoInterface> {
+    struct SharedMemoryVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(0, 0));
             const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");

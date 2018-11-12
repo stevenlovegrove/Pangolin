@@ -31,7 +31,6 @@
 
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
-#include <pybind11/eval.h>
 
 namespace py_pangolin {
 
@@ -90,22 +89,33 @@ namespace py_pangolin {
     public:
       using pangolin::GenicamVideoInterface::GenicamVideoInterface;
 
-      std::string GetParameter(const std::string& name) override {
+      bool GetParameter(const std::string& name, std::string& result) override {
         PYBIND11_OVERLOAD_PURE(
-                               std::string,
+                               bool,
                                pangolin::GenicamVideoInterface,
                                GetParameter,
-                               name);
+                               name,
+                               result);
       }
 
-      void SetParameter(const std::string& name, const std::string& value) override {
+      bool SetParameter(const std::string& name, const std::string& value) override {
         PYBIND11_OVERLOAD_PURE(
-                               void,
+                               bool,
                                pangolin::GenicamVideoInterface,
                                SetParameter,
                                name,
                                value);
       }
+      size_t CameraCount() const override
+      {
+          PYBIND11_OVERLOAD_PURE(
+                                 size_t,
+                                 pangolin::GenicamVideoInterface,
+                                 CameraCount);
+      }
+
+
+
     };
 
     class PyBufferAwareVideoInterface: public pangolin::BufferAwareVideoInterface{

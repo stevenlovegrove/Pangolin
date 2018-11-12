@@ -28,6 +28,7 @@
 #include "opengl_render_state.hpp"
 #include <pangolin/display/opengl_render_state.h>
 #include <pybind11/operators.h>
+#include <pybind11/numpy.h>
 
 namespace py_pangolin {
 
@@ -60,15 +61,19 @@ namespace py_pangolin {
       .def("SetIdentity", &pangolin::OpenGlMatrix::SetIdentity)
       .def("Transpose", &pangolin::OpenGlMatrix::Transpose)
       .def("Inverse", &pangolin::OpenGlMatrix::Inverse)
-      //      .def("__call__", &pangolin::OpenGlMatrix::operator())
+      .def("Matrix", [](pangolin::OpenGlMatrix& mat){
+            using T = pangolin::GLprecision;
+            return pybind11::array_t<T>( {4, 4 }, {1*sizeof(T), 4*sizeof(T)}, mat.m );
+      })
       .def(pybind11::self * pybind11::self);
 
     pybind11::class_<pangolin::OpenGlMatrixSpec, pangolin::OpenGlMatrix>(m, "OpenGlMatrixSpec")
       .def(pybind11::init<>());
 
     m.def("ProjectionMatrixRUB_BottomLeft", &pangolin::ProjectionMatrixRUB_BottomLeft);
-    m.def("ProjectionMatrixRDF_TopLeft", &pangolin::ProjectionMatrixRDF_TopLeft);
+    m.def("ProjectionMatrixRUB_TopLeft", &pangolin::ProjectionMatrixRUB_TopLeft);
     m.def("ProjectionMatrixRDF_BottomLeft", &pangolin::ProjectionMatrixRDF_BottomLeft);
+    m.def("ProjectionMatrixRDF_TopLeft", &pangolin::ProjectionMatrixRDF_TopLeft);
     m.def("ProjectionMatrix", &pangolin::ProjectionMatrix);
     m.def("ProjectionMatrixOrthographic", &pangolin::ProjectionMatrixOrthographic);
     m.def("ModelViewLookAtRUB", &pangolin::ModelViewLookAtRUB);
@@ -78,7 +83,7 @@ namespace py_pangolin {
     m.def("IdentityMatrix", (pangolin::OpenGlMatrix (*)())&pangolin::IdentityMatrix);
     m.def("IdentityMatrix", (pangolin::OpenGlMatrixSpec (*)(pangolin::OpenGlStack))&pangolin::IdentityMatrix);
     m.def("negIdentityMatrix", &pangolin::negIdentityMatrix);
-    
+
     pybind11::class_<pangolin::OpenGlRenderState>(m, "OpenGlRenderState")
       .def(pybind11::init<const pangolin::OpenGlMatrix&>())
       .def(pybind11::init<const pangolin::OpenGlMatrix&, const pangolin::OpenGlMatrix&>())
@@ -97,9 +102,9 @@ namespace py_pangolin {
       .def("DisableProjectiveTexturing", &pangolin::OpenGlRenderState::DisableProjectiveTexturing)
       .def("Follow", &pangolin::OpenGlRenderState::Follow, pybind11::arg("T_wc"), pybind11::arg("follow")=true)
       .def("Unfollow", &pangolin::OpenGlRenderState::Unfollow)
-      .def("GetProjectionMatrix", (pangolin::OpenGlMatrix& (pangolin::OpenGlRenderState::*)(unsigned int))&pangolin::OpenGlRenderState::GetProjectionMatrix)      
+      .def("GetProjectionMatrix", (pangolin::OpenGlMatrix& (pangolin::OpenGlRenderState::*)(unsigned int))&pangolin::OpenGlRenderState::GetProjectionMatrix)
       .def("GetProjectionMatrix", (pangolin::OpenGlMatrix (pangolin::OpenGlRenderState::*)(unsigned int) const)&pangolin::OpenGlRenderState::GetProjectionMatrix)
-      .def("GetViewOffset", (pangolin::OpenGlMatrix& (pangolin::OpenGlRenderState::*)(unsigned int))&pangolin::OpenGlRenderState::GetViewOffset)      
+      .def("GetViewOffset", (pangolin::OpenGlMatrix& (pangolin::OpenGlRenderState::*)(unsigned int))&pangolin::OpenGlRenderState::GetViewOffset)
       .def("GetViewOffset", (pangolin::OpenGlMatrix (pangolin::OpenGlRenderState::*)(unsigned int) const)&pangolin::OpenGlRenderState::GetViewOffset)
       .def("GetModelViewMatrix", (pangolin::OpenGlMatrix (pangolin::OpenGlRenderState::*)(int) const)&pangolin::OpenGlRenderState::GetModelViewMatrix)
       .def("ApplyNView", &pangolin::OpenGlRenderState::ApplyNView);

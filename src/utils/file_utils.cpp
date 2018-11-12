@@ -444,45 +444,6 @@ bool FileExists(const std::string& filename)
 
 #else // _WIN_
 
-//bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>& file_vec)
-//{
-//	size_t nLastSlash = wildcard.find_last_of("/\\");
-    
-//    std::string sPath;
-//    std::string sFileWc;
-    
-//    if(nLastSlash != std::string::npos) {
-//        sPath =   wildcard.substr(0, nLastSlash);
-//        sFileWc = wildcard.substr(nLastSlash+1, std::string::npos);
-//    }else{
-//        sPath = ".";
-//        sFileWc = wildcard;
-//    }
-    
-//    sPath = PathExpand(sPath);
-        
-//    struct dirent **namelist;
-//    int n = scandir(sPath.c_str(), &namelist, 0, alphasort ); // sort alpha-numeric
-////    int n = scandir(sPath.c_str(), &namelist, 0, versionsort ); // sort aa1 < aa10 < aa100 etc.
-//    if (n >= 0){
-//        std::list<std::string> file_list;
-//        while( n-- ){
-//            const std::string sName(namelist[n]->d_name);
-//            if( sName != "." && sName != ".." && MatchesWildcard(sName, sFileWc) ) {
-//                const std::string sFullName = sPath + "/" + sName;
-//                file_list.push_front( sFullName );
-//            }
-//            free(namelist[n]);
-//        }
-//        free(namelist);
-        
-//        file_vec.reserve(file_list.size());
-//        file_vec.insert(file_vec.begin(), file_list.begin(), file_list.end());
-//        return file_vec.size() > 0;
-//    }
-//    return false;
-//}
-
 bool FilesMatchingWildcard(const std::string& in_wildcard, std::vector<std::string>& file_vec)
 {
     const std::string wildcard = PathExpand(in_wildcard);

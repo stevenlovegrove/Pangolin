@@ -50,20 +50,20 @@ MirrorVideo::MirrorVideo(std::unique_ptr<VideoInterface>& src, const std::vector
             case MirrorOptionsNone:
             streams.push_back(videoin->Streams()[i]);
             break;
-            
+
             case MirrorOptionsTranspose:
             case MirrorOptionsRotateCW:
             case MirrorOptionsRotateCCW:
-            
+
             unsigned char*ptr=videoin->Streams()[i].Offset();
             size_t w=videoin->Streams()[i].Height();
             size_t h=videoin->Streams()[i].Width();
             size_t Bpp=videoin->Streams()[i].PixFormat().bpp / 8;
-            
+
             streams.emplace_back(videoin->Streams()[i].PixFormat(),pangolin::Image<unsigned char>(ptr,w,h,w*Bpp));
             break;
         };
-    
+
     size_bytes = videoin->SizeBytes();
     buffer = new unsigned char[size_bytes];
 }
@@ -434,7 +434,7 @@ void RotateCCW(Image<unsigned char>& img_out, const Image<unsigned char>& img_in
 
 void MirrorVideo::Process(unsigned char* buffer_out, const unsigned char* buffer_in)
 {
-    
+
     for(size_t s=0; s<streams.size(); ++s) {
         Image<unsigned char> img_out = Streams()[s].StreamImage(buffer_out);
         const Image<unsigned char> img_in  = videoin->Streams()[s].StreamImage(buffer_in);
@@ -466,12 +466,12 @@ void MirrorVideo::Process(unsigned char* buffer_out, const unsigned char* buffer
             break;
         }
     }
-    
+
 }
 
 //! Implement VideoInput::GrabNext()
 bool MirrorVideo::GrabNext( unsigned char* image, bool wait )
-{    
+{
     if(videoin->GrabNext(buffer,wait)) {
         Process(image, buffer);
         return true;
@@ -552,7 +552,7 @@ std::istream& operator>> (std::istream &is, MirrorOptions &mirror)
 
 PANGOLIN_REGISTER_FACTORY(MirrorVideo)
 {
-    struct MirrorVideoFactory : public FactoryInterface<VideoInterface> {
+    struct MirrorVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
 

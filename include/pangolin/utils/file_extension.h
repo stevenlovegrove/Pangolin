@@ -46,6 +46,7 @@ enum ImageFileType
     ImageFileTypePvn,
     ImageFileTypeZstd,
     ImageFileTypeLz4,
+    ImageFileTypeP12b,
     ImageFileTypePly,
     ImageFileTypeObj,
     ImageFileTypeUnknown

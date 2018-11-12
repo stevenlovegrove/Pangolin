@@ -387,7 +387,7 @@ std::vector<std::string> SplitBrackets(const std::string src, char open = '{', c
 
 PANGOLIN_REGISTER_FACTORY(JoinVideo)
 {
-    struct JoinVideoFactory : public FactoryInterface<VideoInterface> {
+    struct JoinVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
 
             std::vector<std::string> uris = SplitBrackets(uri.url);

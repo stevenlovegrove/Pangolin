@@ -73,7 +73,7 @@ void BindGlElement(GlSlProgram& prog, const GlGeometry::Element& el)
         if(attrib_handle >= 0) {
             glEnableVertexAttribArray(attrib_handle);
             glVertexAttribPointer(
-                attrib_handle, attr.count_per_element, attr.gltype, GL_FALSE,
+                attrib_handle, attr.count_per_element, attr.gltype, GL_TRUE,
                 attr.stride_bytes,
                 (uint8_t*)0 + attr.offset
             );

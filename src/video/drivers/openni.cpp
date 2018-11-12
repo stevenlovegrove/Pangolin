@@ -36,25 +36,25 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
 {
     sensor_type[0] = s1;
     sensor_type[1] = s2;
-    
+
     XnStatus nRetVal = XN_STATUS_OK;
     nRetVal = context.Init();
     if (nRetVal != XN_STATUS_OK) {
         std::cerr << "context.Init: " << xnGetStatusString(nRetVal) << std::endl;
     }
-    
+
     XnMapOutputMode mapMode;
     mapMode.nXRes = dim.x;
     mapMode.nYRes = dim.y;
     mapMode.nFPS = fps;
-    
+
     sizeBytes = 0;
-    
+
     bool use_depth = false;
     bool use_ir = false;
     bool use_rgb = false;
     bool depth_to_color = false;
-    
+
     for(int i=0; i<2; ++i) {
         PixelFormat fmt;
 
@@ -76,7 +76,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
         default:
             continue;
         }
-        
+
         switch( sensor_type[i] ) {
         case OpenNiDepth_1mm_Registered:
             depth_to_color = true;
@@ -115,7 +115,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
             }
         }
     }
-    
+
     if( use_rgb ) {
         nRetVal = imageNode.Create(context);
         if (nRetVal != XN_STATUS_OK) {
@@ -149,7 +149,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
             }
         }
     }
-    
+
     if( use_ir ) {
         nRetVal = irNode.Create(context);
         if (nRetVal != XN_STATUS_OK) {
@@ -161,7 +161,7 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
             }
         }
     }
-        
+
     Start();
 }
 
@@ -182,7 +182,7 @@ const std::vector<StreamInfo>& OpenNiVideo::Streams() const
 
 void OpenNiVideo::Start()
 {
-    //    XnStatus nRetVal = 
+    //    XnStatus nRetVal =
     context.StartGeneratingAll();
 }
 
@@ -196,13 +196,13 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool /*wait*/ )
     //    XnStatus nRetVal = context.WaitAndUpdateAll();
     XnStatus nRetVal = context.WaitAnyUpdateAll();
     //    nRetVal = context.WaitOneUpdateAll(imageNode);
-    
+
     if (nRetVal != XN_STATUS_OK) {
         std::cerr << "Failed updating data: " << xnGetStatusString(nRetVal) << std::endl;
         return false;
     }else{
         unsigned char* out_img = image;
-        
+
         for(int i=0; i<2; ++i) {
             switch (sensor_type[i]) {
             case OpenNiDepth_1mm:
@@ -251,10 +251,10 @@ bool OpenNiVideo::GrabNext( unsigned char* image, bool /*wait*/ )
                 continue;
                 break;
             }
-            
+
             out_img += streams[i].SizeBytes();
         }
-        
+
         return true;
     }
 }
@@ -266,7 +266,7 @@ bool OpenNiVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
 {
-    struct OpenNiVideoFactory : public FactoryInterface<VideoInterface> {
+    struct OpenNiVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
             const unsigned int fps = uri.Get<unsigned int>("fps", 30);
@@ -297,4 +297,3 @@ PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
 }
 
 }
-

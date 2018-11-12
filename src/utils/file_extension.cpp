@@ -94,6 +94,8 @@ ImageFileType NameToImageFileType(const std::string& name)
         return ImageFileTypeZstd;
     else if ("lzf" == name)
         return ImageFileTypeLz4;
+    else if ("p12b" == name)
+        return ImageFileTypeP12b;
     else if ("ply" == name)
         return ImageFileTypePly;
     else if ("obj" == name)
@@ -126,6 +128,8 @@ ImageFileType FileTypeExtension(const std::string& ext)
         return ImageFileTypeZstd;
     } else if( ext == ".lzf"  ) {
         return ImageFileTypeLz4;
+    } else if( ext == ".p12b"  ) {
+        return ImageFileTypeP12b;
     } else if( ext == ".ply"  ) {
         return ImageFileTypePly;
     } else if( ext == ".obj"  ) {
@@ -162,6 +166,7 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
         const unsigned char magic_pango[] = "PANGO";
         const unsigned char magic_pango_zstd[] = "ZSTD";
         const unsigned char magic_pango_lz4[] = "LZ4";
+        const unsigned char magic_pango_p12b[] = "P12B";
         const unsigned char magic_ply[]   = "ply";
 
         if( !strncmp((char*)data, (char*)magic_png, 8) ) {
@@ -183,6 +188,8 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
             return ImageFileTypeZstd;
         }else if( !strncmp((char*)data, (char*)magic_pango_lz4,3) ) {
             return ImageFileTypeLz4;
+        }else if( !strncmp((char*)data, (char*)magic_pango_p12b,4) ) {
+            return ImageFileTypeP12b;
         }else if( !strncmp((char*)data, (char*)magic_ply, 3) ) {
             return ImageFileTypePly;
         }else if( data[0] == 'P' && '0' < data[1] && data[1] < '9') {

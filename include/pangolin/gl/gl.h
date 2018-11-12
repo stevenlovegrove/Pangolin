@@ -61,7 +61,7 @@ public:
     
     //! Move Constructor / asignment
     GlTexture(GlTexture&& tex);
-    void operator=(GlTexture&& tex);
+    GlTexture& operator=(GlTexture&& tex);
     
     //! Default constructor represents 'no texture'
     GlTexture();
@@ -149,7 +149,9 @@ struct PANGOLIN_EXPORT GlFramebuffer
     
     GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth);
     GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth);
-    
+    GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlRenderBuffer& depth);
+    GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlTexture& colour3, GlRenderBuffer& depth);
+
     void Bind() const;
     void Unbind() const;
 

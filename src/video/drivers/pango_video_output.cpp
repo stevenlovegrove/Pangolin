@@ -264,7 +264,7 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
 
 PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
 {
-    struct PangoVideoFactory : public FactoryInterface<VideoOutputInterface> {
+    struct PangoVideoFactory final : public FactoryInterface<VideoOutputInterface> {
         std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
             const size_t mb = 1024*1024;
             const size_t buffer_size_bytes = uri.Get("buffer_size_mb", 100) * mb;
@@ -297,6 +297,7 @@ PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
 
     auto factory = std::make_shared<PangoVideoFactory>();
     FactoryRegistry<VideoOutputInterface>::I().RegisterFactory(factory, 10, "pango");
+    FactoryRegistry<VideoOutputInterface>::I().RegisterFactory(factory, 10, "file");
 }
 
 }

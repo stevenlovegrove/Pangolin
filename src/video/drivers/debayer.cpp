@@ -339,7 +339,7 @@ bayer_method_t DebayerVideo::BayerMethodFromString(std::string str)
 
 PANGOLIN_REGISTER_FACTORY(DebayerVideo)
 {
-    struct DebayerVideoFactory : public FactoryInterface<VideoInterface> {
+    struct DebayerVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const std::string tile_string = uri.Get<std::string>("tile","rggb");

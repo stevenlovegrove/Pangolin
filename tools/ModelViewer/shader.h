@@ -1,6 +1,8 @@
 #pragma once
 
-const std::string default_shader = R"Shader(
+namespace pangolin {
+
+const std::string default_model_shader = R"Shader(
 /////////////////////////////////////////
 @start vertex
 #version 120
@@ -128,3 +130,5 @@ void main() {
     gl_FragColor = texture2D(texture_0, RayToEquirect(ray_env));
 }
 )Shader";
+
+}

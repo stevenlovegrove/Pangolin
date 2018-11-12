@@ -216,6 +216,56 @@ void StandardizeXyzToVertex(pangolin::Geometry& geom)
     }
 }
 
+void StandardizeRgbToColor(pangolin::Geometry& geom)
+{
+    auto it_verts = geom.buffers.find("geometry");
+
+    if(it_verts != geom.buffers.end()) {
+        auto& verts = it_verts->second;
+        auto it_r = verts.attributes.find("r");
+        auto it_g = verts.attributes.find("g");
+        auto it_b = verts.attributes.find("b");
+        auto it_a = verts.attributes.find("a");
+
+        if(!all_found(verts.attributes, it_r, it_b, it_g)) {
+            it_r = verts.attributes.find("red");
+            it_g = verts.attributes.find("green");
+            it_b = verts.attributes.find("blue");
+            it_a = verts.attributes.find("alpha");
+        }
+
+        if(all_found(verts.attributes, it_r, it_g, it_b)) {
+            const bool have_alpha = it_a != verts.attributes.end();
+
+            if(verts.attributes.find("color") == verts.attributes.end()) {
+                auto& color = verts.attributes["color"];
+                color = it_r->second;
+
+                // TODO: Check that these really are contiguous in memory...
+                // Pick the right format
+                uint32_t gltype = GL_FLOAT;
+                uint8_t* ptr = nullptr;
+
+                visit([&](auto&& attrib){
+                    using T = std::decay_t<decltype(attrib)>;
+                    gltype = GlFormatTraits<typename T::PixelType>::gltype;
+                    ptr = (uint8_t*)attrib.ptr;
+                }, it_r->second);
+
+                color = MakeAttribute(
+                    gltype,
+                    verts.h, have_alpha ? 4 : 3,
+                    ptr, verts.pitch
+                );
+            }
+            verts.attributes.erase(it_r);
+            verts.attributes.erase(it_g);
+            verts.attributes.erase(it_b);
+            if(have_alpha) verts.attributes.erase(it_a);
+        }
+    }
+}
+
 void StandardizeMultiTextureFaceToXyzuv(pangolin::Geometry& geom)
 {
     const auto it_multi_texture_face = geom.buffers.find("multi_texture_face");
@@ -292,6 +342,7 @@ void StandardizeMultiTextureFaceToXyzuv(pangolin::Geometry& geom)
 void Standardize(pangolin::Geometry& geom)
 {
     StandardizeXyzToVertex(geom);
+    StandardizeRgbToColor(geom);
     StandardizeMultiTextureFaceToXyzuv(geom);
     AddVertexNormals(geom);
 }

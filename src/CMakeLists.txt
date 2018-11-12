@@ -79,6 +79,7 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/drivers/shift.h
     ${INCDIR}/video/drivers/mirror.h
     ${INCDIR}/video/drivers/unpack.h
+    ${INCDIR}/video/drivers/pack.h
     ${INCDIR}/video/drivers/join.h
     ${INCDIR}/video/drivers/merge.h
     ${INCDIR}/video/drivers/thread.h
@@ -96,6 +97,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/shift.cpp
     video/drivers/mirror.cpp
     video/drivers/unpack.cpp
+    video/drivers/pack.cpp
     video/drivers/join.cpp
     video/drivers/merge.cpp
     video/drivers/json.cpp
@@ -115,6 +117,7 @@ if(BUILD_PANGOLIN_VIDEO)
     RegisterShiftVideoFactory
     RegisterMirrorVideoFactory
     RegisterUnpackVideoFactory
+    RegisterPackVideoFactory
     RegisterJoinVideoFactory
     RegisterMergeVideoFactory
     RegisterJsonVideoFactory

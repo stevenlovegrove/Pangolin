@@ -45,8 +45,8 @@ struct RenderableTransform
 
 struct FixedTransform : public RenderableTransform
 {
-    FixedTransform()
-        : T_pc(pangolin::IdentityMatrix())
+    FixedTransform(Eigen::Matrix4f T_pc = Eigen::Matrix4f::Identity())
+        : T_pc(T_pc)
     {
     }
 

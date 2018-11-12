@@ -31,12 +31,15 @@
 
 namespace pangolin
 {
+constexpr int META_FLAG_NONE      = 0x0000;
+constexpr int META_FLAG_TOGGLE    = 0x0001;
+constexpr int META_FLAG_READONLY  = 0x0002;
 
 struct VarMeta
 {
     VarMeta() :
         increment(0.),
-        flags(0),
+        flags(META_FLAG_NONE),
         gui_changed(false),
         logscale(false),
         generic(false)

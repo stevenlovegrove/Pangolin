@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2015 Steven Lovegrove
+ * Copyright (c) 2014 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -28,27 +28,24 @@
 #pragma once
 
 #include <pangolin/pangolin.h>
-#include <pangolin/utils/timer.h>
 #include <pangolin/video/video.h>
-
-#include <TeliCamApi.h>
 
 namespace pangolin
 {
 
-// Video class that outputs test video signal.
-class PANGOLIN_EXPORT TeliVideo : public VideoInterface, public VideoPropertiesInterface,
-        public BufferAwareVideoInterface, public GenicamVideoInterface
+// Video class that packs its video input using the given method.
+class PANGOLIN_EXPORT PackVideo :
+    public VideoInterface,
+    public VideoFilterInterface,
+    public BufferAwareVideoInterface
 {
 public:
-    TeliVideo(const Params &p);
-    ~TeliVideo();
+    PackVideo(std::unique_ptr<VideoInterface>& videoin, PixelFormat new_fmt);
+    ~PackVideo();
 
-    Params OpenCameraAndGetRemainingParameters(Params &params);
-    
     //! Implement VideoInput::Start()
     void Start();
-    
+
     //! Implement VideoInput::Stop()
     void Stop();
 
@@ -57,60 +54,29 @@ public:
 
     //! Implement VideoInput::Streams()
     const std::vector<StreamInfo>& Streams() const;
-    
+
     //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
-    
+
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
-    inline Teli::CAM_HANDLE GetCameraHandle() {
-        return cam;
-    }
+    //! Implement VideoFilterInterface method
+    std::vector<VideoInterface*>& InputStreams();
 
-    inline Teli::CAM_STRM_HANDLE GetCameraStreamHandle() {
-        return strm;
-    }
-
-    bool GetParameter(const std::string& name, std::string& result);
-
-    bool SetParameter(const std::string& name, const std::string& value);
-
-    //! Returns number of available frames
     uint32_t AvailableFrames() const;
 
-    //! Drops N frames in the queue starting from the oldest
-    //! returns false if less than n frames arae available
     bool DropNFrames(uint32_t n);
 
-    //! Access JSON properties of device
-    const picojson::value& DeviceProperties() const;
-
-    //! Access JSON properties of most recently captured frame
-    const picojson::value& FrameProperties() const;
-
-    void PopulateEstimatedCenterCaptureTime(pangolin::basetime host_reception_time);
-
 protected:
-    void Initialise();
-    void InitPangoDeviceProperties();
-    void SetDeviceParams(const Params &p);
-    void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string node_str, std::string val_str);
+    void Process(unsigned char* image, const unsigned char* buffer);
 
+    std::unique_ptr<VideoInterface> src;
+    std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
     size_t size_bytes;
+    unsigned char* buffer;
 
-    Teli::CAM_HANDLE cam;
-    Teli::CAM_STRM_HANDLE strm;
-
-#ifdef _WIN_
-    HANDLE hStrmCmpEvt;
-#endif
-#ifdef _LINUX_
-    Teli::SIGNAL_HANDLE hStrmCmpEvt;
-#endif
-    double transfer_bandwidth_gbps;
-    int exposure_us;
     picojson::value device_properties;
     picojson::value frame_properties;
 };

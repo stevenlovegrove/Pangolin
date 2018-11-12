@@ -55,8 +55,8 @@ public:
     void SetDiscardBufferedFrames(bool new_state);
     void SetWaitForFrames(bool new_state);
     void Skip(int frames);
-    void ChangeExposure(int delta_us);
-    void ChangeGain(float delta);
+    bool ChangeExposure(int delta_us);
+    bool ChangeGain(float delta);
     void SetActiveCamera(int delta);
     void DrawEveryNFrames(int n);
 

@@ -122,13 +122,19 @@ inline GlTexture::GlTexture(GlTexture&& tex)
 {
     *this = std::move(tex);
 }
-inline void GlTexture::operator=(GlTexture&& tex)
-{
-    internal_format = tex.internal_format;
-    tid = tex.tid;
 
-    tex.internal_format = 0;
-    tex.tid = 0;
+inline GlTexture& GlTexture::operator=(GlTexture&& tex)
+{
+    if (&tex != this) {
+        internal_format = tex.internal_format;
+        tid = tex.tid;
+        width = tex.width;
+        height = tex.height;
+        
+        tex.internal_format = 0;
+        tex.tid = 0;
+    }
+    return *this;
 }
 
 inline bool GlTexture::IsValid() const
@@ -549,6 +555,29 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRe
     glGenFramebuffersEXT(1, &fbid);
     AttachColour(colour0);
     AttachColour(colour1);
+    AttachDepth(depth);
+    CheckGlDieOnError();
+}
+
+inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlRenderBuffer& depth)
+    : attachments(0)
+{
+    glGenFramebuffersEXT(1, &fbid);
+    AttachColour(colour0);
+    AttachColour(colour1);
+    AttachColour(colour2);
+    AttachDepth(depth);
+    CheckGlDieOnError();
+}
+
+inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlTexture& colour3, GlRenderBuffer& depth)
+    : attachments(0)
+{
+    glGenFramebuffersEXT(1, &fbid);
+    AttachColour(colour0);
+    AttachColour(colour1);
+    AttachColour(colour2);
+    AttachColour(colour3);
     AttachDepth(depth);
     CheckGlDieOnError();
 }

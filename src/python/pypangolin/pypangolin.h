@@ -48,6 +48,7 @@
 #include "viewport.hpp"
 #include "widget.hpp"
 #include "window.hpp"
+#include "image_view.hpp"
 
 namespace pypangolin {
 
@@ -72,6 +73,7 @@ inline void PopulateModule(pybind11::module& m)
     py_pangolin::bind_pixel_format(m);
     py_pangolin::bind_image<unsigned char>(m, "Image");
     py_pangolin::bind_video(m);
+    py_pangolin::bind_image_view(m);
 }
 
 }

@@ -37,6 +37,7 @@ struct GlGeometry
 {
     GlGeometry() = default;
     GlGeometry(GlGeometry&&) = default;
+    GlGeometry& operator=(GlGeometry&&) = default;
 
     struct Element : public GlBufferData
     {

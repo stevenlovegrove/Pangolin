@@ -43,6 +43,7 @@
 #define PANGO_ANALOG_BLACK_LEVEL     "analog_black_level"
 #define PANGO_SENSOR_TEMPERATURE_C   "sensor_temperature_C"
 #define PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US "estimated_center_capture_time_us"
+#define PANGO_JOIN_OFFSET_US         "join_offset_us"
 #define PANGO_FRAME_COUNTER          "frame_counter"
 
 namespace pangolin {
@@ -81,10 +82,14 @@ struct PANGOLIN_EXPORT GenicamVideoInterface
 {
     virtual ~GenicamVideoInterface() {}
 
-    virtual std::string GetParameter(const std::string& name) = 0;
+    virtual bool GetParameter(const std::string& name, std::string& result) = 0;
 
-    virtual void SetParameter(const std::string& name, const std::string& value) = 0;
+    virtual bool SetParameter(const std::string& name, const std::string& value) = 0;
 
+    virtual size_t CameraCount() const
+    {
+        return 1;
+    }
 };
 
 struct PANGOLIN_EXPORT BufferAwareVideoInterface

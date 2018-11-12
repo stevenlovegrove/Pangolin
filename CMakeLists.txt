@@ -17,8 +17,9 @@ SET(CPACK_PACKAGE_VERSION_MINOR ${PANGOLIN_VERSION_MINOR})
 SET(CPACK_PACKAGE_VERSION_PATCH "0")
 include(CPack)
 
-option( BUILD_EXAMPLES "Build Examples" ON )
 option( BUILD_TESTS "Build Tests" ON )
+option( BUILD_TOOLS "Build Examples" ON )
+option( BUILD_EXAMPLES "Build Tools" ON )
 
 set (CMAKE_CXX_STANDARD 14)
 
@@ -93,12 +94,16 @@ add_subdirectory("external")
 add_subdirectory("src")
 
 if(BUILD_TESTS)
-  set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
-  add_subdirectory("test")
+    set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
+    add_subdirectory("test")
+endif()
+
+if(BUILD_TOOLS)
+    set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
+    add_subdirectory(tools)
 endif()
 
 if(BUILD_EXAMPLES)
-  set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
-  add_subdirectory(examples)
-  add_subdirectory(tools)
+    set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
+    add_subdirectory(examples)
 endif()

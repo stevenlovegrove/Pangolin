@@ -32,6 +32,8 @@
 
 // Needed for enum type. TODO: Make this independent of GL
 #include <pangolin/gl/glplatform.h>
+#include <pangolin/image/image_io.h>
+#include <pangolin/utils/file_utils.h>
 
 namespace pangolin {
 
@@ -70,11 +72,18 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
 
     std::string warn;
     std::string err;
-    if(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str())) {
+    if(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str(), PathParent(filename).c_str())) {
         PANGO_ASSERT(attrib.vertices.size() % 3 == 0);
         PANGO_ASSERT(attrib.normals.size() % 3 == 0);
         PANGO_ASSERT(attrib.colors.size() % 3 == 0);
         PANGO_ASSERT(attrib.texcoords.size() % 2 == 0);
+
+        // Load textures - a bit of a hack for now.
+        for(size_t i=0; i < materials.size(); ++i) {
+            if(!materials[i].diffuse_texname.empty()) {
+                geom.textures[FormatString("texture_%",i)] = LoadImage(PathParent(filename) + "/" + materials[i].diffuse_texname);
+            }
+        }
 
         const size_t num_verts = attrib.vertices.size() / 3;
 //        PANGO_ASSERT(all_of(
@@ -157,20 +166,25 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
                 faces->second.attributes["vertex_indices"] = new_ibo;
 
                 // Reorder normals
-                for(size_t f=0; f < num_faces; ++f) {
-                    for(size_t v=0; v < 3; ++v) {
-                        size_t vi = ibo_vs(0,3*f+v);
-                        size_t ni = ibo_ns(0,3*f+v);
-                        new_ns.Row(vi).CopyFrom(tiny_ns.Row(ni));
-                        Normalise<3>(new_ns.RowPtr(vi));
+                if(new_ns.IsValid()) {
+                    for(size_t f=0; f < num_faces; ++f) {
+                        for(size_t v=0; v < 3; ++v) {
+                            size_t vi = ibo_vs(0,3*f+v);
+                            size_t ni = ibo_ns(0,3*f+v);
+                            new_ns.Row(vi).CopyFrom(tiny_ns.Row(ni));
+                            Normalise<3>(new_ns.RowPtr(vi));
+                        }
                     }
                 }
+
                 // Reorder uvs
-                for(size_t f=0; f < num_faces; ++f) {
-                    for(size_t v=0; v < 3; ++v) {
-                        size_t vi = ibo_vs(0,3*f+v);
-                        size_t ti = ibo_ts(0,3*f+v);
-                        new_ts.Row(vi).CopyFrom(tinu_ts.Row(ti));
+                if(new_ts.IsValid()) {
+                    for(size_t f=0; f < num_faces; ++f) {
+                        for(size_t v=0; v < 3; ++v) {
+                            size_t vi = ibo_vs(0,3*f+v);
+                            size_t ti = ibo_ts(0,3*f+v);
+                            new_ts.Row(vi).CopyFrom(tinu_ts.Row(ti));
+                        }
                     }
                 }
             }else if(std::all_of( shape.mesh.num_face_vertices.begin(), shape.mesh.num_face_vertices.end(),

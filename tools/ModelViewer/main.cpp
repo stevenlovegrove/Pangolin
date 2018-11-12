@@ -18,6 +18,9 @@
 #include "rendertree.h"
 #include "util.h"
 
+#include <Eigen/SVD>
+#include <Eigen/Geometry>
+
 int main( int argc, char** argv )
 {
     const float w = 640.0f;
@@ -32,8 +35,8 @@ int main( int argc, char** argv )
         { "matcap", {"--matcap"}, "Matcap (material capture) images to load for shading", 1},
         { "envmap", {"--envmap","-e"}, "Equirect environment map for skybox", 1},
         { "mode", {"--mode"}, "Render mode to use {show_uv, show_texture, show_color, show_normal, show_matcap, show_vertex}", 1},
-        { "worldnormals", {"--world","-w"}, "Use world normals instead of camera normals", 0},
         { "bounds", {"--aabb"}, "Show axis-aligned bounding-box", 0},
+        { "cull_backfaces", {"--cull"}, "Enable backface culling", 0},
         { "spin", {"--spin"}, "Spin models around an axis {none, negx, x, negy, y, negz, z}", 1},
     }};
 
@@ -58,8 +61,12 @@ int main( int argc, char** argv )
         if(pangolin::ToUpperCopy(args["spin"].as<std::string>("none")) == spin_names[i])
             spin_direction = pangolin::AxisDirection(i);
 
-    bool world_normals = args.has_option("worldnormals");
     bool show_bounds = args.has_option("bounds");
+    bool show_axis = args.has_option("show_axis");
+    bool show_x0 = args.has_option("show_x0");
+    bool show_y0 = args.has_option("show_y0");
+    bool show_z0 = args.has_option("show_z0");
+    bool cull_backfaces = args.has_option("cull_backfaces");
     int mesh_to_show = -1;
 
     // Create Window for rendering
@@ -142,7 +149,7 @@ int main( int argc, char** argv )
         for(int i=0; i < (int)RenderMode::num_modes-1; ++i) {
             prog_defines[mode_names[i]] = std::to_string((int)mode == i);
         }
-        default_prog.AddShader(pangolin::GlSlAnnotatedShader, default_shader, prog_defines);
+        default_prog.AddShader(pangolin::GlSlAnnotatedShader, default_model_shader, prog_defines);
         default_prog.Link();
     };
     LoadProgram(current_mode);
@@ -156,31 +163,61 @@ int main( int argc, char** argv )
     // Setup keyboard shortcuts.
     for(int i=0; i < (int)RenderMode::num_modes; ++i)
         pangolin::RegisterKeyPressCallback(mode_key[i], [&,i](){LoadProgram((RenderMode)i);});
-    pangolin::RegisterKeyPressCallback('=', [&](){matcap_index = (matcap_index+1)%matcaps.size();});
-    pangolin::RegisterKeyPressCallback('-', [&](){matcap_index = (matcap_index+matcaps.size()-1)%matcaps.size();});
-    pangolin::RegisterKeyPressCallback('w', [&](){world_normals = !world_normals;});
-    pangolin::RegisterKeyPressCallback('b', [&](){show_bounds = !show_bounds;});
-    pangolin::RegisterKeyPressCallback(PANGO_SPECIAL + PANGO_KEY_RIGHT, [&](){show_renderable((mesh_to_show + 1) % renderables.size());});
-    pangolin::RegisterKeyPressCallback(PANGO_SPECIAL + PANGO_KEY_LEFT, [&](){show_renderable((mesh_to_show + renderables.size()-1) % renderables.size());});
-    pangolin::RegisterKeyPressCallback(']', [&](){envmap_index = ((envmap_index + 1) % envmaps.size());});
-    pangolin::RegisterKeyPressCallback('[', [&](){envmap_index = ((envmap_index + envmaps.size()-1) % envmaps.size());});
+
+    pangolin::RegisterKeyPressCallback(PANGO_SPECIAL + PANGO_KEY_RIGHT, [&](){if(renderables.size()) show_renderable((mesh_to_show + 1) % renderables.size());});
+    pangolin::RegisterKeyPressCallback(PANGO_SPECIAL + PANGO_KEY_LEFT, [&](){if(renderables.size()) show_renderable((mesh_to_show + renderables.size()-1) % renderables.size());});
     pangolin::RegisterKeyPressCallback(' ', [&](){show_renderable(-1);});
-    pangolin::RegisterKeyPressCallback('a', [&](){std::swap(spin_transform->dir, spin_other);});
+
+    if(matcaps.size()) {
+        pangolin::RegisterKeyPressCallback('=', [&](){matcap_index = (matcap_index+1)%matcaps.size();});
+        pangolin::RegisterKeyPressCallback('-', [&](){matcap_index = (matcap_index+matcaps.size()-1)%matcaps.size();});
+    }
+    if(envmaps.size()) {
+        pangolin::RegisterKeyPressCallback(']', [&](){envmap_index = ((envmap_index + 1) % envmaps.size());});
+        pangolin::RegisterKeyPressCallback('[', [&](){envmap_index = ((envmap_index + envmaps.size()-1) % envmaps.size());});
+    }
+    pangolin::RegisterKeyPressCallback('s', [&](){std::swap(spin_transform->dir, spin_other);});
+    pangolin::RegisterKeyPressCallback('b', [&](){show_bounds = !show_bounds;});
+    pangolin::RegisterKeyPressCallback('0', [&](){cull_backfaces = !cull_backfaces;});
+
+    // Show axis and axis planes
+    pangolin::RegisterKeyPressCallback('a', [&](){show_axis = !show_axis;});
+    pangolin::RegisterKeyPressCallback('x', [&](){show_x0 = !show_x0;});
+    pangolin::RegisterKeyPressCallback('y', [&](){show_y0 = !show_y0;});
+    pangolin::RegisterKeyPressCallback('z', [&](){show_z0 = !show_z0;});
+
+    Eigen::Vector3d Pick_w = handler.Selected_P_w();
+    std::vector<Eigen::Vector3d> Picks_w;
 
     while( !pangolin::ShouldQuit() )
     {
+        if( (handler.Selected_P_w() - Pick_w).norm() > 1E-6)
+        {
+            Pick_w = handler.Selected_P_w();
+            Picks_w.push_back(Pick_w);
+            std::cout << pangolin::FormatString("\"Translation\": [%,%,%]", Pick_w[0], Pick_w[1], Pick_w[2])
+                      << std::endl;
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Load any pending geometry to the GPU.
         LoadGeometryToGpu();
 
+
         if(d_cam.IsShown()) {
             d_cam.Activate();
+
+            if(cull_backfaces) {
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_BACK);
+            }
 
             if(env_prog.Valid()) {
                 glDisable(GL_DEPTH_TEST);
                 env_prog.Bind();
-                Eigen::Matrix3f R_env_cam = ((Eigen::Matrix4d)s_cam.GetModelViewMatrix()).block<3,3>(0,0).cast<float>().transpose();
+                const Eigen::Matrix4d mvmat = s_cam.GetModelViewMatrix();
+                const Eigen::Matrix3f R_env_cam = mvmat.block<3,3>(0,0).cast<float>().transpose();
                 Eigen::Matrix3f Kinv;
                 Kinv << 1.0/f, 0.0, -(w/2.0)/f,
                         0.0, 1.0/f, -(h/2.0)/f,
@@ -216,6 +253,14 @@ int main( int argc, char** argv )
                 matcaps.size() ? &matcaps[matcap_index] : nullptr
             );
             default_prog.Unbind();
+
+            s_cam.Apply();
+            if(show_x0) pangolin::glDraw_x0(10.0, 10);
+            if(show_y0) pangolin::glDraw_y0(10.0, 10);
+            if(show_z0) pangolin::glDraw_z0(10.0, 10);
+            if(show_axis) pangolin::glDrawAxis(10.0);
+
+            glDisable(GL_CULL_FACE);
         }
 
         pangolin::FinishFrame();

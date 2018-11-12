@@ -200,8 +200,8 @@ picojson::value GetVideoFrameProperties(VideoInterface* video)
                 const picojson::value dev_props = GetVideoFrameProperties(fi->InputStreams()[i]);
                 if(dev_props.contains("streams")) {
                     const picojson::value& dev_streams = dev_props["streams"];
-                    for(size_t i=0; i < dev_streams.size(); ++i) {
-                        streams.push_back(dev_streams[i]);
+                    for(size_t j=0; j < dev_streams.size(); ++j) {
+                        streams.push_back(dev_streams[j]);
                     }
                 }else{
                     streams.push_back(dev_props);
@@ -238,8 +238,8 @@ picojson::value GetVideoDeviceProperties(VideoInterface* video)
                 const picojson::value dev_props = GetVideoDeviceProperties(fi->InputStreams()[i]);
                 if(dev_props.contains("streams")) {
                     const picojson::value& dev_streams = dev_props["streams"];
-                    for(size_t i=0; i < dev_streams.size(); ++i) {
-                        streams.push_back(dev_streams[i]);
+                    for(size_t j=0; j < dev_streams.size(); ++j) {
+                        streams.push_back(dev_streams[j]);
                     }
                 }else{
                     streams.push_back(dev_props);

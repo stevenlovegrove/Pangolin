@@ -210,9 +210,6 @@ Plotter::Plotter(
       linked_plotter_x(linked_plotter_x),
       linked_plotter_y(linked_plotter_y)
 {
-    if(!log) {
-        throw std::runtime_error("DataLog not specified");
-    }
     // Prevent links to ourselves - this could cause infinite recursion.
     if(linked_plotter_x == this) this->linked_plotter_x = 0;
     if(linked_plotter_y == this) this->linked_plotter_y = 0;
@@ -287,7 +284,7 @@ Plotter::Plotter(
     for(unsigned int i=0; i< 10; ++i) {
         std::ostringstream ss;
         ss << "$" << i;
-        AddSeries("$i", ss.str());
+        if(log) AddSeries("$i", ss.str());
     }
 
     // Setup test PlotMarkers

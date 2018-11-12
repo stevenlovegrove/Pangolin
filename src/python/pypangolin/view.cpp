@@ -73,5 +73,14 @@ namespace py_pangolin {
       .def("VisibleChild", &pangolin::View::VisibleChild)
       .def("FindChild", &pangolin::View::FindChild)
       .def("NumVisibleChildren", &pangolin::View::NumVisibleChildren);
+
+    pybind11::enum_<pangolin::Layout>(m, "Layout")
+        .value("Overlay", pangolin::LayoutOverlay)
+        .value("Vertical", pangolin::LayoutVertical)
+        .value("Horizontal", pangolin::LayoutHorizontal)
+        .value("Equal", pangolin::LayoutEqual)
+        .value("EqualVertical", pangolin::LayoutEqualVertical)
+        .value("EqualHorizontal", pangolin::LayoutEqualHorizontal);
+
   }
 }  // py_pangolin

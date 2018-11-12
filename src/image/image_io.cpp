@@ -62,6 +62,10 @@ void SaveZstd(const Image<unsigned char>& image, const pangolin::PixelFormat& fm
 TypedImage LoadLz4(std::istream& in);
 void SaveLz4(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, int compression_level);
 
+// packed 12 bit image (obtained from unpacked 16bit)
+TypedImage LoadPacked12bit(std::istream& in);
+void SavePacked12bit(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, int compression_level);
+
 TypedImage LoadImage(std::istream& in, ImageFileType file_type)
 {
     switch (file_type) {
@@ -77,6 +81,8 @@ TypedImage LoadImage(std::istream& in, ImageFileType file_type)
         return LoadZstd(in);
     case ImageFileTypeLz4:
         return LoadLz4(in);
+    case ImageFileTypeP12b:
+        return LoadPacked12bit(in);
     case ImageFileTypeExr:
         return LoadExr(in);
     default:
@@ -93,6 +99,7 @@ TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
     case ImageFileTypeTga:
     case ImageFileTypeZstd:
     case ImageFileTypeLz4:
+    case ImageFileTypeP12b:
     case ImageFileTypeExr:
     {
         std::ifstream ifs(filename, std::ios_base::in|std::ios_base::binary);
@@ -125,6 +132,8 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
         return SaveZstd(image,fmt,out, quality);
     case ImageFileTypeLz4:
         return SaveLz4(image,fmt,out, quality);
+    case ImageFileTypeP12b:
+        return SavePacked12bit(image,fmt,out, quality);
     default:
         throw std::runtime_error("Unable to save image file-type through std::istream");
     }
@@ -139,6 +148,7 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
     case ImageFileTypePpm:
     case ImageFileTypeZstd:
     case ImageFileTypeLz4:
+    case ImageFileTypeP12b:
     {
         std::ofstream ofs(filename, std::ios_base::binary);
         return SaveImage(image, fmt, ofs, file_type, top_line_first, quality);

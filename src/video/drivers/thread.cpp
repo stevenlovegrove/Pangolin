@@ -251,7 +251,7 @@ std::vector<VideoInterface*>& ThreadVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(ThreadVideo)
 {
-    struct ThreadVideoFactory : public FactoryInterface<VideoInterface> {
+    struct ThreadVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const int num_buffers = uri.Get<int>("num_buffers", 30);

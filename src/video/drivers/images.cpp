@@ -134,7 +134,7 @@ void ImagesVideo::ConfigureStreamSizes()
     size_bytes = 0;
     for(size_t c=0; c < num_channels; ++c) {
         const TypedImage& img = loaded[0][c];
-        const StreamInfo stream_info(img.fmt, img.w, img.h, img.pitch, (unsigned char*)0 + size_bytes);
+        const StreamInfo stream_info(img.fmt, img.w, img.h, img.pitch, (unsigned char*)(size_bytes));
         streams.push_back(stream_info);
         size_bytes += img.h*img.pitch;
     }
@@ -272,7 +272,7 @@ const picojson::value& ImagesVideo::FrameProperties() const
 
 PANGOLIN_REGISTER_FACTORY(ImagesVideo)
 {
-    struct ImagesVideoVideoFactory : public FactoryInterface<VideoInterface> {
+    struct ImagesVideoVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const bool raw = uri.Contains("fmt");
             const std::string path = PathExpand(uri.url);
