@@ -17,6 +17,8 @@ int main( int /*argc*/, char** /*argv*/ )
             .SetBounds(0.0, 1.0, 0.0, 1.0, -640.0f/480.0f)
             .SetHandler(&handler);
 
+    pangolin::SaveWindowOnRender("window");
+
     while( !pangolin::ShouldQuit() )
     {
         // Clear screen and activate view to render into
