@@ -589,6 +589,7 @@ PANGOLIN_REGISTER_FACTORY(WinWindow)
   
   auto factory = std::make_shared<WinWindowFactory>();
   FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "winapi");
+  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 100,  "default");
 }
 
 }

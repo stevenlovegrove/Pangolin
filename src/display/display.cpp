@@ -128,26 +128,19 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     {
         // Take any defaults from the environment
         win_uri = pangolin::ParseUri(extra_params);
+    }else{
+        // Otherwise revert to 'default' scheme.
+        win_uri.scheme = "default";
     }
 
+    // Allow params to override
+    win_uri.scheme = params.Get("scheme", win_uri.scheme);
+
     // Override with anything the program specified
+    win_uri.params.insert(std::end(win_uri.params), std::begin(params.params), std::end(params.params));
     win_uri.Set("w", w);
     win_uri.Set("h", h);
     win_uri.Set("window_title", window_title);
-    win_uri.params.insert(std::end(win_uri.params), std::begin(params.params), std::end(params.params));
-
-    // Fall back to default scheme if non specified.
-    if(win_uri.scheme.empty()) {
-#if defined(_LINUX_)
-      win_uri.scheme = "linux";
-#elif defined(_WIN_)
-      win_uri.scheme = "winapi";
-#elif defined(_OSX_)
-      win_uri.scheme = "cocoa";
-#else
-#     error "No default window api for this platform."
-#endif
-    }
 
     std::unique_ptr<WindowInterface> window = FactoryRegistry<WindowInterface>::I().Open(win_uri);
 

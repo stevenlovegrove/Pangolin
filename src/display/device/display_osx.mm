@@ -237,6 +237,8 @@ PANGOLIN_REGISTER_FACTORY(OsxWindow)
 
   auto factory = std::make_shared<OsxWindowFactory>();
   FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "cocoa");
+  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 100,  "default");
+
 }
 
 
