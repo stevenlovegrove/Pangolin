@@ -19,18 +19,17 @@ int main( int /*argc*/, char** /*argv*/ )
 
     pangolin::SaveWindowOnRender("window");
 
-    while( !pangolin::ShouldQuit() )
-    {
-        // Clear screen and activate view to render into
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        d_cam.Activate(s_cam);
+    // Clear screen and activate view to render into
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    d_cam.Activate(s_cam);
 
-        // Render OpenGL Cube
-        pangolin::glDrawColouredCube();
+    // Render OpenGL Cube
+    pangolin::glDrawColouredCube();
 
-        // Swap frames and Process Events
-        pangolin::FinishFrame();
-    }
+    // Swap frames and Process Events
+    pangolin::FinishFrame();
+
+    pangolin::QuitAll();
     
     return 0;
 }
