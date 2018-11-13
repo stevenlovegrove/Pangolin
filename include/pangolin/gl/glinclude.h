@@ -39,8 +39,8 @@ inline void _CheckGlDieOnError( const char *sFile, const int nLine )
 {
     GLenum glError = glGetError();
     if( glError != GL_NO_ERROR ) {
-        pango_print_error( "OpenGL Error: %s (%d)\n", glErrorString(glError), glError );
-		pango_print_error("In: %s, line %d\n", sFile, nLine);
+        pango_print_error( "OpenGL Error: %s (%x)\n", glErrorString(glError), glError );
+        pango_print_error("In: %s, line %d\n", sFile, nLine);
     }
 }
 }
