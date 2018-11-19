@@ -1,6 +1,7 @@
 #include <iterator>
 #include <pangolin/console/ConsoleView.h>
 #include <pangolin/utils/picojson.h>
+#include <pangolin/gl/gldraw.h>
 
 namespace pangolin
 {
@@ -47,6 +48,7 @@ inline void glColour(const Colour& c)
 ConsoleView::ConsoleView(ConsoleInterpreter* interpreter)
     : interpreter(interpreter),
       font(GlFont::I()),
+      carat(0),
       hiding(false),
       bottom(1.0f),
       background_colour(0.2f, 0.0f, 0.0f, 0.6f),
@@ -116,10 +118,14 @@ bool ConsoleView::IsShown() const
     return show && !hiding;
 }
 
-void ConsoleView::DrawLine(const ConsoleView::Line& l)
+void ConsoleView::DrawLine(const ConsoleView::Line& l, int carat=-1)
 {
     glColour(line_colours[l.linetype]);
     l.text.Draw();
+    if(carat >= 0) {
+        const double w = font.Text(l.text.str.substr(0,carat)).Width();
+        glDrawLine(w,-2,w,font.Height()-4);
+    }
 }
 
 void ConsoleView::Render()
@@ -171,7 +177,7 @@ void ConsoleView::Render()
 
     const double line_space = font.Height();
     glTranslated(10.0, 10.0 + bottom*v.h, 0.0 );
-    DrawLine(current_line);
+    DrawLine(current_line, carat);
     glTranslated(0.0, line_space, 0.0);
     for(size_t l=0; l < line_buffer.size(); ++l) {
         DrawLine(line_buffer[l]);
@@ -221,6 +227,7 @@ void ConsoleView::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool 
             hist_id = -1;
             prefix = "";
             edited = true;
+            carat = 0;
             txt.Clear();
         }else if(key=='\t') {
             std::vector<std::string> options = interpreter->Complete(cmd,100);
@@ -228,6 +235,7 @@ void ConsoleView::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool 
                 const std::string common = CommonPrefix(options);
                 if(common != cmd) {
                     current_line = font.Text("%s", common.c_str());
+                    carat = common.size();
                 }else{
                     std::stringstream s;
                     std::copy(options.begin(), options.end(), std::ostream_iterator<std::string>(s,", "));
@@ -254,11 +262,27 @@ void ConsoleView::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool 
                 current_line = *hist_line;
                 hist_id--;
             }
+        }else if(key==PANGO_SPECIAL + PANGO_KEY_LEFT) {
+            if(carat > 0) carat--;
+        }else if(key==PANGO_SPECIAL + PANGO_KEY_RIGHT) {
+            if(carat < (int)txt.str.size()) carat++;
         }else if(key=='\b') {
-            txt = font.Text("%s", txt.Text().substr(0,txt.Text().size()-1).c_str() );
+            if(carat > 0) {
+                std::string newstr = txt.Text();
+                newstr.erase(newstr.begin()+carat-1);
+                txt = font.Text("%s", newstr.c_str() );
+                carat--;
+                edited = true;
+            }
+        }else if(key==PANGO_CTRL + 'c') {
+            txt = font.Text("");
+            carat = 0;
             edited = true;
         }else if(key < PANGO_SPECIAL){
-            txt = font.Text("%s%c", txt.Text().c_str(), key);
+            std::string newstr = txt.Text();
+            newstr.insert(carat, 1, key);
+            txt = font.Text("%s", newstr.c_str());
+            ++carat;
             edited = true;
         }
     }
@@ -274,11 +298,14 @@ ConsoleView::Line* ConsoleView::GetLine(int id, ConsoleLineType line_type, const
     int match = 0;
     for(Line& l : line_buffer)
     {
-        if(l.linetype == line_type && l.text.Text().substr(0,prefix.size()) == prefix  ) {
-            if(id == match) {
-                return &l;
-            }else{
-                ++match;
+        if(l.linetype == line_type) {
+            const std::string substr = l.text.Text().substr(0,prefix.size());
+            if(substr == prefix  ) {
+                if(id == match) {
+                    return &l;
+                }else{
+                    ++match;
+                }
             }
         }
     }
