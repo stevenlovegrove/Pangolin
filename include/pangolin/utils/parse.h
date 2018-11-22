@@ -29,6 +29,7 @@
 #define PANGOLIN_PARSE_H
 
 #include <string>
+#include <cctype>
 
 namespace pangolin
 {
