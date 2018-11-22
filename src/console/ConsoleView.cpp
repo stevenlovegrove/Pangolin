@@ -233,7 +233,7 @@ void ConsoleView::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool 
             std::vector<std::string> options = interpreter->Complete(cmd,100);
             if(options.size()) {
                 const std::string common = CommonPrefix(options);
-                if(common != cmd) {
+                if(common.size() > cmd.size()) {
                     current_line = font.Text("%s", common.c_str());
                     carat = common.size();
                 }else{
@@ -266,12 +266,23 @@ void ConsoleView::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool 
             if(carat > 0) carat--;
         }else if(key==PANGO_SPECIAL + PANGO_KEY_RIGHT) {
             if(carat < (int)txt.str.size()) carat++;
+        }else if(key==PANGO_SPECIAL + PANGO_KEY_HOME) {
+            carat = 0;
+        }else if(key==PANGO_SPECIAL + PANGO_KEY_END) {
+            carat = txt.Text().size();
         }else if(key=='\b') {
             if(carat > 0) {
                 std::string newstr = txt.Text();
                 newstr.erase(newstr.begin()+carat-1);
                 txt = font.Text("%s", newstr.c_str() );
                 carat--;
+                edited = true;
+            }
+        }else if(key==127) { // delete
+            if(carat < (int)txt.Text().size() ) {
+                std::string newstr = txt.Text();
+                newstr.erase(newstr.begin()+carat);
+                txt = font.Text("%s", newstr.c_str() );
                 edited = true;
             }
         }else if(key==PANGO_CTRL + 'c') {
