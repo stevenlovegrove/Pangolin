@@ -185,8 +185,7 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
     
     ViewMap::iterator pnl = context->named_managed_views.find(name);
     
-    // Only add if a widget by the same name doesn't
-    // already exist
+    // Only add if a widget by the same name doesn't already exist
     if( pnl == context->named_managed_views.end() )
     {
         View* nv = NULL;
@@ -194,8 +193,15 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
             nv = (var.Meta().flags & META_FLAG_TOGGLE) ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
         } else if (!strcmp(var.TypeId(), typeid(double).name()) ||
                    !strcmp(var.TypeId(), typeid(float).name()) ||
-                   !strcmp(var.TypeId(), typeid(int).name()) ||
-                   !strcmp(var.TypeId(), typeid(unsigned int).name()))
+                   !strcmp(var.TypeId(), typeid(int8_t).name()) ||
+                   !strcmp(var.TypeId(), typeid(uint8_t).name()) ||
+                   !strcmp(var.TypeId(), typeid(int16_t).name()) ||
+                   !strcmp(var.TypeId(), typeid(uint16_t).name()) ||
+                   !strcmp(var.TypeId(), typeid(int32_t).name()) ||
+                   !strcmp(var.TypeId(), typeid(uint32_t).name()) ||
+                   !strcmp(var.TypeId(), typeid(int64_t).name()) ||
+                   !strcmp(var.TypeId(), typeid(uint64_t).name())
+                   )
         {
             nv = new Slider(title, var);
         } else if (!strcmp(var.TypeId(), typeid(std::function<void(void)>).name() ) ) {

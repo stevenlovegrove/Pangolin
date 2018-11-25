@@ -291,43 +291,34 @@ protected:
     // Initialise from existing variable, obtain data / accessor
     void InitialiseFromGeneric(VarValueGeneric* v)
     {
+        // Macro hack to prevent code duplication
+#   define PANGO_VAR_TYPES(x)                                \
+        x(bool) x(int8_t) x(uint8_t) x(int16_t) x(uint16_t)  \
+        x(int32_t) x(uint32_t) x(int64_t) x(uint64_t)        \
+        x(float) x(double)
+
         if( !strcmp(v->TypeId(), typeid(T).name()) ) {
             // Same type
             var = (VarValueT<T>*)(v);
         }else if( std::is_same<T,std::string>::value ) {
             // Use types string accessor
             var = (VarValueT<T>*)(v->str);
-        }else if( !strcmp(v->TypeId(), typeid(bool).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,bool>( *(VarValueT<bool>*)v );
-            var = ptr;
-        }else if( !strcmp(v->TypeId(), typeid(short).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,short>( *(VarValueT<short>*)v );
-            var = ptr;
-        }else if( !strcmp(v->TypeId(), typeid(int).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,int>( *(VarValueT<int>*)v );
-            var = ptr;
-        }else if( !strcmp(v->TypeId(), typeid(long).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,long>( *(VarValueT<long>*)v );
-            var = ptr;
-        }else if( !strcmp(v->TypeId(), typeid(float).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,float>( *(VarValueT<float>*)v );
-            var = ptr;
-        }else if( !strcmp(v->TypeId(), typeid(double).name() ) ) {
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,double>( *(VarValueT<double>*)v );
-            var = ptr;
-        }else{
+        }else
+#       define PANGO_CHECK_WRAP(x)                           \
+        if( !strcmp(v->TypeId(), typeid(x).name() ) ) {      \
+            ptr = new VarWrapper<T,x>( *(VarValueT<x>*)v );  \
+            var = ptr;                                       \
+        }else
+        PANGO_VAR_TYPES(PANGO_CHECK_WRAP)
+        {
             // other types: have to go via string
             // Wrapper, owned by this object
             ptr = new VarWrapper<T,std::string>( *(v->str) );
             var = ptr;
         }
     }
+#undef PANGO_VAR_TYPES
+#undef PANGO_CHECK_WRAP
 
     // Holds reference to stored variable object
     // N.B. mutable because it is a cached value and Get() is advertised as const.
