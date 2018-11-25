@@ -25,7 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/display/widgets/widgets.h>
+#include <pangolin/display/widgets.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
 #include <pangolin/gl/gldraw.h>
@@ -44,7 +44,7 @@ namespace pangolin
 
 // Pointer to context defined in display.cpp
 extern __thread PangolinGl* context;
-
+extern const unsigned char AnonymousPro_ttf[];
 
 const static GLfloat colour_s1[4] = {0.2f, 0.2f, 0.2f, 1.0f};
 const static GLfloat colour_s2[4] = {0.6f, 0.6f, 0.6f, 1.0f};
@@ -55,7 +55,38 @@ const static GLfloat colour_dn[4] = {1.0f, 0.7f, 0.7f, 1.0f};
 
 static inline GlFont& font()
 {
-    return GlFont::I();
+    PANGO_ASSERT(context);
+    if(!context->font) {
+        context->font = std::make_shared<GlFont>(AnonymousPro_ttf, 12);
+    }
+    return *(context->font.get());
+}
+
+// Render at (x,y) in window coordinates.
+inline void DrawWindow(GlText& text, GLfloat x, GLfloat y, GLfloat z = 0.0)
+{
+    // Backup viewport
+    GLint    view[4];
+    glGetIntegerv(GL_VIEWPORT, view );
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    DisplayBase().ActivatePixelOrthographic();
+
+    glTranslatef( std::floor(x), std::floor(y), z);
+    text.Draw();
+
+    // Restore viewport
+    glViewport(view[0],view[1],view[2],view[3]);
+
+    // Restore modelview / project matrices
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 }
 
 static inline int cb_height()
@@ -255,7 +286,7 @@ void Button::Render()
     glColor4fv(colour_fg );
     glRect(v);
     glColor4fv(colour_tx);
-    gltext.DrawWindow(raster[0],raster[1]-down);
+    DrawWindow(gltext, raster[0], raster[1]-down);
     DrawShadowRect(v, down);
 }
 
@@ -292,7 +323,7 @@ void FunctionButton::Render()
     glColor4fv(colour_fg);
     glRect(v);
     glColor4fv(colour_tx);
-    gltext.DrawWindow(raster[0],raster[1]-down);
+    DrawWindow(gltext, raster[0], raster[1]-down);
     DrawShadowRect(v, down);
 }
 
@@ -340,7 +371,7 @@ void Checkbox::Render()
         glRect(vcb);
     }
     glColor4fv(colour_tx);
-    gltext.DrawWindow(raster[0],raster[1]);
+    DrawWindow(gltext, raster[0], raster[1]);
     DrawShadowRect(vcb, val);
 }
 
@@ -488,14 +519,14 @@ void Slider::Render()
     if(gltext.Text() != var->Meta().friendly) {
         gltext = font().Text(var->Meta().friendly);
     }
-    gltext.DrawWindow(raster[0], raster[1]);
+    DrawWindow(gltext, raster[0], raster[1]);
 
     std::ostringstream oss;
     oss << setprecision(4) << val;
     string str = oss.str();
     GlText glval = font().Text(str);
     const float l = glval.Width() + 2.0f;
-    glval.DrawWindow( v.l + v.w - l, raster[1] );
+    DrawWindow(glval,  v.l + v.w - l, raster[1] );
 }
 
 
@@ -671,9 +702,9 @@ void TextInput::Render()
     }
     
     glColor4fv(colour_tx);
-    gltext.DrawWindow(raster[0], raster[1]);
+    DrawWindow(gltext, raster[0], raster[1]);
 
-    gledit.DrawWindow((GLfloat)(rl), raster[1]);
+    DrawWindow(gledit, (GLfloat)(rl), raster[1]);
     if(can_edit) DrawShadowRect(v);
 }
 

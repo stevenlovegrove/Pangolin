@@ -27,10 +27,10 @@
 
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
-#include <pangolin/display/opengl_render_state.h>
 #include <pangolin/display/view.h>
-#include <pangolin/display/viewport.h>
 #include <pangolin/gl/gl.h>
+#include <pangolin/gl/viewport.h>
+#include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/platform.h>
 
 #include <stdexcept>

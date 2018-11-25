@@ -25,8 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/display/viewport.h>
 #include <algorithm>
+#include <pangolin/gl/viewport.h>
 #include <pangolin/utils/simple_math.h>
 
 namespace pangolin {

@@ -30,7 +30,7 @@
 #include <functional>
 #include <vector>
 
-#include <pangolin/display/viewport.h>
+#include <pangolin/gl/viewport.h>
 #include <pangolin/display/attach.h>
 
 namespace pangolin

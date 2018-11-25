@@ -40,11 +40,11 @@
 #include <cstdlib>
 
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/window_frameworks.h>
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
+#include <pangolin/display/window_frameworks.h>
 #include <pangolin/handler/handler.h>
 #include <pangolin/utils/simple_math.h>
 #include <pangolin/utils/timer.h>

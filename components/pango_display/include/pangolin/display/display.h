@@ -29,9 +29,9 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
-#include <pangolin/handler/handler_enums.h>
-#include <pangolin/utils/params.h>
+#include <pangolin/display/handler_enums.h>
 #include <pangolin/display/window.h>
+#include <pangolin/utils/params.h>
 
 #include <functional>
 #include <string>

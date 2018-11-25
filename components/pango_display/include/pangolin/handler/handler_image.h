@@ -28,11 +28,11 @@
 #pragma once
 
 #include <pangolin/image/image_utils.h>
-#include <pangolin/display/viewport.h>
 #include <pangolin/display/view.h>
 #include <pangolin/handler/handler.h>
-#include <pangolin/plot/range.h>
+#include <pangolin/gl/viewport.h>
 #include <pangolin/gl/gl.h>
+#include <pangolin/utils/range.h>
 
 #include <functional>
 

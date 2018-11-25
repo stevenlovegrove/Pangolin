@@ -246,7 +246,7 @@ void SaveJsonFile(const std::string& filename, const string &prefix)
     }
 
     picojson::value file_json(picojson::object_type,true);
-    file_json["pangolin_version"] = PANGOLIN_VERSION_STRING;
+//    file_json["pangolin_version"] = PANGOLIN_VERSION_STRING;
     file_json["vars"] = vars;
 
     std::ofstream f(filename);

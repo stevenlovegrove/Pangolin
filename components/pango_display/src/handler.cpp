@@ -25,9 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/handler/handler.h>
 #include <pangolin/display/display_internal.h>
 #include <pangolin/display/view.h>
+#include <pangolin/handler/handler.h>
 
 namespace pangolin
 {
