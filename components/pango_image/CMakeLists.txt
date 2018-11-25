@@ -40,7 +40,6 @@ if(BUILD_PANGOLIN_LIBOPENEXR)
         target_compile_definitions(${COMPONENT} PRIVATE HAVE_OPENEXR)
         target_include_directories(${COMPONENT} PRIVATE ${OpenEXR_INCLUDE_DIR} )
         target_link_libraries(${COMPONENT} PRIVATE ${OpenEXR_LIBRARY})
-        message(STATUS "sdf:${CXX_COMPILER_ID}" )
         target_compile_options(${COMPONENT} PRIVATE
             $<$<OR:$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
             -Wno-deprecated-register>

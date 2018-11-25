@@ -13,6 +13,9 @@ set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 #)
 
 project(Pangolin)
+set(PANGOLIN_VERSION_MAJOR 0)
+set(PANGOLIN_VERSION_MINOR 5)
+set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
 # Prevent in source builds
 if(EXISTS "${PROJECT_BINARY_DIR}/CMakeLists.txt")
@@ -68,5 +71,17 @@ foreach(component_cmake ${components_cmake})
 endforeach()
 
 
+# Export Targets
 export(TARGETS ${component_list} NAMESPACE pangolin:: FILE PangolinTargets.cmake)
-#export(PACKAGE Pangolin)
+export(PACKAGE Pangolin)
+
+# Version information
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" @ONLY)
+
+# Build tree config
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY IMMEDIATE )
+
+set(Pangolin_DIR ${CMAKE_CURRENT_BINARY_DIR})
+add_subdirectory(examples)

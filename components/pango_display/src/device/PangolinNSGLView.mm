@@ -3,7 +3,7 @@
 #include <pangolin/display/device/PangolinNSGLView.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
-#include <pangolin/handler/handler_enums.h>
+#include <pangolin/display/handler_enums.h>
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
 #  define NSDeviceIndependentModifierFlagsMask NSEventModifierFlagDeviceIndependentFlagsMask

@@ -143,16 +143,16 @@ void ImageViewHandler::glRenderOverlay()
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        pangolin::GlFont::I().Text(
-            "%.2f x %.2f",
-            selxy.x.Size(), selxy.y.Size()
-        ).DrawWindow(xpix,ypix);
+//        pangolin::GlFont::I().Text(
+//            "%.2f x %.2f",
+//            selxy.x.Size(), selxy.y.Size()
+//        ).DrawWindow(xpix,ypix);
 
-        pangolin::GlFont::I().Text(
-            "(%.1f,%.1f)->(%.1f,%.1f)",
-            selxy.x.min, selxy.y.min,
-            selxy.x.max, selxy.y.max
-        ).DrawWindow(xpix, ypix - 1.0f * pangolin::GlFont::I().Height());
+//        pangolin::GlFont::I().Text(
+//            "(%.1f,%.1f)->(%.1f,%.1f)",
+//            selxy.x.min, selxy.y.min,
+//            selxy.x.max, selxy.y.max
+//        ).DrawWindow(xpix, ypix - 1.0f * pangolin::GlFont::I().Height());
 
         // Restore previous value
         if(!gl_blend_enabled) glDisable(GL_BLEND);

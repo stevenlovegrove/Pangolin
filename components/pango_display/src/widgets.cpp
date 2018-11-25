@@ -39,12 +39,13 @@
 
 using namespace std;
 
+extern const unsigned char AnonymousPro_ttf[];
+
 namespace pangolin
 {
 
 // Pointer to context defined in display.cpp
 extern __thread PangolinGl* context;
-extern const unsigned char AnonymousPro_ttf[];
 
 const static GLfloat colour_s1[4] = {0.2f, 0.2f, 0.2f, 1.0f};
 const static GLfloat colour_s2[4] = {0.6f, 0.6f, 0.6f, 1.0f};
@@ -57,7 +58,7 @@ static inline GlFont& font()
 {
     PANGO_ASSERT(context);
     if(!context->font) {
-        context->font = std::make_shared<GlFont>(AnonymousPro_ttf, 12);
+        context->font = std::make_shared<GlFont>(AnonymousPro_ttf, 25);
     }
     return *(context->font.get());
 }

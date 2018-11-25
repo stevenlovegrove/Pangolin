@@ -1,0 +1,11 @@
+# Compute paths
+get_filename_component( PROJECT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
+
+# Library dependencies (contains definitions for IMPORTED targets)
+if( NOT @PROJECT_NAME@_BINARY_DIR )
+  include( "${PROJECT_CMAKE_DIR}/@PROJECT_NAME@Targets.cmake" )
+endif()
+
+SET( Pangolin_CMAKEMODULES @CMAKE_CURRENT_SOURCE_DIR@/../cmake )
+SET( Pangolin_LIBRARIES    pango_display )
+SET( Pangolin_LIBRARY      "${Pangolin_LIBRARIES}" )
