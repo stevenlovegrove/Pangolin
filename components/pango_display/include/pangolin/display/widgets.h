@@ -46,13 +46,13 @@ struct PANGOLIN_EXPORT Panel : public View
     Panel(const std::string& auto_register_var_prefix);
     void Render();
     void ResizeChildren();
-    static void AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool brand_new);
+    static void AddVariable(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric> &var, bool brand_new);
 };
 
 template<typename T>
 struct Widget : public View, Handler, Var<T>
 {
-    Widget(std::string title, VarValueGeneric& tv)
+    Widget(std::string title, const std::shared_ptr<VarValueGeneric>& tv)
         : Var<T>(tv), title(title)
     {
         handler = this;
@@ -63,7 +63,7 @@ struct Widget : public View, Handler, Var<T>
 
 struct PANGOLIN_EXPORT Button : public Widget<bool>
 {
-    Button(std::string title, VarValueGeneric& tv);
+    Button(std::string title, const std::shared_ptr<VarValueGeneric> &tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
     void Render();
     
@@ -76,7 +76,7 @@ struct PANGOLIN_EXPORT Button : public Widget<bool>
 
 struct PANGOLIN_EXPORT FunctionButton : public Widget<std::function<void(void)> >
 {
-    FunctionButton(std::string title, VarValueGeneric& tv);
+    FunctionButton(std::string title, const std::shared_ptr<VarValueGeneric> &tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
     void Render();
 
@@ -89,7 +89,7 @@ struct PANGOLIN_EXPORT FunctionButton : public Widget<std::function<void(void)> 
 
 struct PANGOLIN_EXPORT Checkbox : public Widget<bool>
 {
-    Checkbox(std::string title, VarValueGeneric& tv);
+    Checkbox(std::string title, const std::shared_ptr<VarValueGeneric>& tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
     void Render();
     
@@ -102,7 +102,7 @@ struct PANGOLIN_EXPORT Checkbox : public Widget<bool>
 
 struct PANGOLIN_EXPORT Slider : public Widget<double>
 {
-    Slider(std::string title, VarValueGeneric& tv);
+    Slider(std::string title, const std::shared_ptr<VarValueGeneric>& tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
     void MouseMotion(View&, int x, int y, int mouse_state);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
@@ -119,7 +119,7 @@ struct PANGOLIN_EXPORT Slider : public Widget<double>
 
 struct PANGOLIN_EXPORT TextInput : public Widget<std::string>
 {
-    TextInput(std::string title, VarValueGeneric& tv);
+    TextInput(std::string title, const std::shared_ptr<VarValueGeneric>& tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
     void MouseMotion(View&, int x, int y, int mouse_state);
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);

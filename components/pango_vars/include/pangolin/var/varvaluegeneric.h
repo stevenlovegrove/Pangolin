@@ -28,6 +28,8 @@
 #pragma once
 
 #include <string>
+#include <pangolin/utils/file_utils.h>
+#include <memory>
 
 namespace pangolin
 {
@@ -37,15 +39,37 @@ constexpr int META_FLAG_READONLY  = 0x0002;
 
 struct VarMeta
 {
-    VarMeta() :
-        increment(0.),
-        flags(META_FLAG_NONE),
-        gui_changed(false),
-        logscale(false),
-        generic(false)
+    VarMeta(
+        const std::string& full_name = "",
+        double min_val = 0.0, double max_val = 0.0,
+        double increment = 0.0, int flags = META_FLAG_NONE,
+        bool logscale = false, bool generic = false
+    ) :
+        full_name(full_name),
+        increment(increment),
+        flags(flags),
+        logscale(logscale),
+        generic(generic),
+        gui_changed(false)
     {
-        range[0] = 0.;
-        range[1] = 0.;
+        SetName(full_name);
+        if(logscale) {
+            if (min_val <= 0 || max_val <= 0) {
+                throw std::runtime_error("LogScale: range of numbers must be positive!");
+            }
+            range[0] = std::log(min_val);
+            range[1] = std::log(max_val);
+        }else{
+            range[0] = min_val;
+            range[1] = max_val;
+        }
+    }
+
+    void SetName(const std::string& full_name)
+    {
+        this->full_name = full_name;
+        const std::vector<std::string> parts = pangolin::Split(full_name, '.');
+        friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
     }
 
     std::string full_name;
@@ -67,7 +91,6 @@ class VarValueGeneric
 {
 public:
     VarValueGeneric()
-        : str(0)
     {
     }
 
@@ -81,7 +104,7 @@ public:
 
 //protected:
     // String serialisation object.
-    VarValueT<std::string>* str;
+    std::shared_ptr<VarValueT<std::string>> str;
 };
 
 }

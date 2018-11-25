@@ -29,6 +29,7 @@
 
 #include <pangolin/var/varvaluet.h>
 #include <pangolin/var/varwrapper.h>
+#include <pangolin/utils/is_streamable.h>
 
 namespace pangolin
 {
@@ -38,11 +39,6 @@ class VarValue : public VarValueT<typename std::remove_reference<T>::type>
 {
 public:
     typedef typename std::remove_reference<T>::type VarT;
-
-    ~VarValue()
-    {
-        delete str_ptr;
-    }
 
     VarValue()
     {
@@ -92,19 +88,32 @@ public:
     }
 
 protected:
-    void Init()
+    template<typename TT> static
+    typename std::enable_if<is_streamable<TT>::value, std::shared_ptr<VarValueT<std::string>>>::type
+    MakeStringWrapper( const std::shared_ptr<VarValueT<TT>>& v )
     {
-        if(std::is_same<VarT,std::string>::value) {
-            str_ptr = 0;
-            this->str = (VarValueT<std::string>*)this;
-        }else{
-            str_ptr = new VarWrapper<std::string,VarT>(*this);
-            this->str = str_ptr;
-        }
+        return std::make_shared<VarWrapper<std::string,VarT>>(v);
     }
 
-    // If non-zero, this class owns this str pointer in the base-class.
-    VarValueT<std::string>* str_ptr;
+    template<typename TT> static
+    typename std::enable_if<!is_streamable<TT>::value, std::shared_ptr<VarValueT<std::string>>>::type
+    MakeStringWrapper( const std::shared_ptr<VarValueT<TT>>& v )
+    {
+        return std::shared_ptr<VarValueT<std::string>>();
+    }
+
+    void Init()
+    {
+        // shared_ptr reference to self without deleter.
+        auto self = std::shared_ptr<VarValueT<VarT>>(this, [](VarValueT<VarT>*){} );
+
+        if(std::is_same<VarT,std::string>::value) {
+            // str is reference to this - remove shared_ptr's deleter
+            this->str = std::dynamic_pointer_cast<VarValueT<std::string>>(self);
+        }else{
+            this->str = MakeStringWrapper<VarT>(self);
+        }
+    }
 
     T value;
     VarT default_value;

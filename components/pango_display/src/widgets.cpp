@@ -164,11 +164,11 @@ Panel::Panel(const std::string& auto_register_var_prefix)
     ProcessHistoricCallbacks(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
 }
 
-void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool /*brand_new*/)
+void Panel::AddVariable(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& var, bool /*brand_new*/)
 {
     Panel* thisptr = (Panel*)data;
     
-    const string& title = var.Meta().friendly;
+    const string& title = var->Meta().friendly;
     
     display_mutex.lock();
     
@@ -178,17 +178,24 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
     if( pnl == GetCurrentContext()->named_managed_views.end() )
     {
         View* nv = NULL;
-        if( !strcmp(var.TypeId(), typeid(bool).name()) ) {
-            nv = (var.Meta().flags & META_FLAG_TOGGLE) ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
-        } else if (!strcmp(var.TypeId(), typeid(double).name()) ||
-                   !strcmp(var.TypeId(), typeid(float).name()) ||
-                   !strcmp(var.TypeId(), typeid(int).name()) ||
-                   !strcmp(var.TypeId(), typeid(unsigned int).name()))
+        if( !strcmp(var->TypeId(), typeid(bool).name()) ) {
+            nv = (var->Meta().flags & META_FLAG_TOGGLE) ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
+        } else if (!strcmp(var->TypeId(), typeid(double).name()) ||
+                   !strcmp(var->TypeId(), typeid(float).name()) ||
+                   !strcmp(var->TypeId(), typeid(int8_t).name()) ||
+                   !strcmp(var->TypeId(), typeid(uint8_t).name()) ||
+                   !strcmp(var->TypeId(), typeid(int16_t).name()) ||
+                   !strcmp(var->TypeId(), typeid(uint16_t).name()) ||
+                   !strcmp(var->TypeId(), typeid(int32_t).name()) ||
+                   !strcmp(var->TypeId(), typeid(uint32_t).name()) ||
+                   !strcmp(var->TypeId(), typeid(int64_t).name()) ||
+                   !strcmp(var->TypeId(), typeid(uint64_t).name())
+                   )
         {
             nv = new Slider(title, var);
-        } else if (!strcmp(var.TypeId(), typeid(std::function<void(void)>).name() ) ) {
+        } else if (!strcmp(var->TypeId(), typeid(std::function<void(void)>).name() ) ) {
             nv = (View*)new FunctionButton(title, var);
-        }else{
+        }else if(var->str){
             nv = new TextInput(title,var);
         }
         if(nv) {
@@ -248,7 +255,7 @@ View& CreatePanel(const std::string& name)
     return *p;
 }
 
-Button::Button(string title, VarValueGeneric& tv)
+Button::Button(string title, const std::shared_ptr<VarValueGeneric>& tv)
     : Widget<bool>(title,tv), down(false)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h());
@@ -285,7 +292,7 @@ void Button::ResizeChildren()
     raster[1] = floor(v.b + (v.h-gltext.Height())/2.0f);
 }
 
-FunctionButton::FunctionButton(string title, VarValueGeneric& tv)
+FunctionButton::FunctionButton(string title, const std::shared_ptr<VarValueGeneric> &tv)
     : Widget<std::function<void(void)> >(title, tv), down(false)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h());
@@ -322,7 +329,7 @@ void FunctionButton::ResizeChildren()
     raster[1] = v.b + (v.h - gltext.Height()) / 2.0f;
 }
 
-Checkbox::Checkbox(std::string title, VarValueGeneric& tv)
+Checkbox::Checkbox(std::string title, const std::shared_ptr<VarValueGeneric> &tv)
     : Widget<bool>(title,tv)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h());
@@ -377,7 +384,7 @@ inline bool IsIntegral(const char* typeidname)
            !strcmp(typeidname, typeid(unsigned long).name());
 }
 
-Slider::Slider(std::string title, VarValueGeneric& tv)
+Slider::Slider(std::string title, const std::shared_ptr<VarValueGeneric> &tv)
     : Widget<double>(title+":", tv), lock_bounds(true)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h());
@@ -519,8 +526,8 @@ void Slider::Render()
 }
 
 
-TextInput::TextInput(std::string title, VarValueGeneric& tv)
-    : Widget<std::string>(title+":", tv), can_edit(!(tv.Meta().flags & META_FLAG_READONLY)), do_edit(false)
+TextInput::TextInput(std::string title, const std::shared_ptr<VarValueGeneric> &tv)
+    : Widget<std::string>(title+":", tv), can_edit(!(tv->Meta().flags & META_FLAG_READONLY)), do_edit(false)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h());
     left = 0.0; right = 1.0;

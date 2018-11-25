@@ -40,10 +40,10 @@ class VarWrapper : public VarValueT<T>
 public:
     typedef typename std::remove_reference<S>::type VarS;
 
-    VarWrapper(VarValueT<S>& src)
+    VarWrapper(const std::shared_ptr<VarValueT<S>>& src)
         : src(src)
     {
-        this->str = src.str;
+        this->str = src->str;
     }
 
     const char* TypeId() const
@@ -53,22 +53,22 @@ public:
 
     void Reset()
     {
-        src.Reset();
+        src->Reset();
 
         // If reset throws, it will go up to the user, since there is nothing
         // more we can do
-        cache = Convert<T,VarS>::Do(src.Get());
+        cache = Convert<T,VarS>::Do(src->Get());
     }
 
     VarMeta& Meta()
     {
-        return src.Meta();
+        return src->Meta();
     }
 
     const T& Get() const
     {
         // This might throw, but we can't reset because this is a const method
-        cache = Convert<T,VarS>::Do(src.Get());
+        cache = Convert<T,VarS>::Do(src->Get());
         return cache;
     }
 
@@ -76,7 +76,7 @@ public:
     {
         cache = val;
         try {
-            src.Set( Convert<VarS, T>::Do(val) );
+            src->Set( Convert<VarS, T>::Do(val) );
         }catch(const BadInputException &e) {
             pango_print_warn("Unable to set variable with type %s from %s. Resetting.", typeid(VarS).name(), typeid(T).name() );
             Reset();
@@ -85,7 +85,7 @@ public:
 
 protected:
     mutable T cache;
-    VarValueT<S>& src;
+    std::shared_ptr<VarValueT<S>> src;
 };
 
 }

@@ -56,7 +56,7 @@ template<typename T>
 struct SetVarFunctor
 {
     SetVarFunctor(const std::string& name, T val) : varName(name), setVal(val) {}
-    void operator()() { Var<T>(varName).Ref().Set(setVal); }
+    void operator()() { Var<T>(varName).Ref()->Set(setVal); }
     std::string varName;
     T setVal;
 };
