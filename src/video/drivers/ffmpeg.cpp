@@ -529,8 +529,6 @@ static AVStream* CreateStream(AVFormatContext *oc, CodecID codec_id, uint64_t fr
         stream->codec->time_base.den = frame_rate;
         stream->codec->gop_size      = 12;
         stream->codec->pix_fmt       = EncoderFormat;
-        stream->time_base.num = 1;
-        stream->time_base.den = frame_rate;
         break;
     default:
         break;
@@ -585,9 +583,23 @@ void FfmpegVideoOutputStream::WriteAvPacket(AVPacket* pkt)
 {
     if (pkt->size) {
         pkt->stream_index = stream->index;
+        int64_t pts = pkt->pts;
+        /* convert unit from CODEC's timestamp to stream's one */
+#define C2S(field)                                              \
+        do {                                                    \
+          if (pkt->field != (int64_t) AV_NOPTS_VALUE)           \
+            pkt->field = av_rescale_q(pkt->field,               \
+                                      stream->codec->time_base, \
+                                      stream->time_base);       \
+        } while (0)
+
+        C2S(pts);
+        C2S(dts);
+        C2S(duration);
+#undef C2S
         int ret = av_interleaved_write_frame(recorder.oc, pkt);
         if (ret < 0) throw VideoException("Error writing video frame");
-        if(pkt->pts != (int64_t)AV_NOPTS_VALUE) last_pts = pkt->pts;
+        if(pkt->pts != (int64_t)AV_NOPTS_VALUE) last_pts = pts;
     }
 }
 
