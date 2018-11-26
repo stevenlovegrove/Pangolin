@@ -29,6 +29,7 @@
 
 #include <pangolin/var/varvaluet.h>
 #include <pangolin/var/varwrapper.h>
+#include <pangolin/utils/is_streamable.h>
 
 namespace pangolin
 {
@@ -87,6 +88,20 @@ public:
     }
 
 protected:
+    template<typename TT> static
+    typename std::enable_if<is_streamable<TT>::value, std::shared_ptr<VarValueT<std::string>>>::type
+    MakeStringWrapper( const std::shared_ptr<VarValueT<TT>>& v )
+    {
+        return std::make_shared<VarWrapper<std::string,VarT>>(v);
+    }
+
+    template<typename TT> static
+    typename std::enable_if<!is_streamable<TT>::value, std::shared_ptr<VarValueT<std::string>>>::type
+    MakeStringWrapper( const std::shared_ptr<VarValueT<TT>>& v )
+    {
+        return std::shared_ptr<VarValueT<std::string>>();
+    }
+
     void Init()
     {
         // shared_ptr reference to self without deleter.
@@ -96,7 +111,7 @@ protected:
             // str is reference to this - remove shared_ptr's deleter
             this->str = std::dynamic_pointer_cast<VarValueT<std::string>>(self);
         }else{
-            this->str = std::make_shared<VarWrapper<std::string,VarT>>(self);
+            this->str = MakeStringWrapper<VarT>(self);
         }
     }
 

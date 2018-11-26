@@ -206,7 +206,7 @@ void Panel::AddVariable(void* data, const std::string& name, const std::shared_p
             nv = new Slider(title, var);
         } else if (!strcmp(var->TypeId(), typeid(std::function<void(void)>).name() ) ) {
             nv = (View*)new FunctionButton(title, var);
-        }else{
+        }else if(var->str){
             nv = new TextInput(title,var);
         }
         if(nv) {

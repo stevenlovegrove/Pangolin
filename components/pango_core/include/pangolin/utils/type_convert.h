@@ -40,36 +40,6 @@ struct BadInputException : std::exception {
 };
 }
 
-namespace std
-{
-// Dummy methods to serialise functions / functors / lambdas etc
-#ifdef CALLEE_HAS_VARIADIC_TEMPLATES
-template<typename Ret, typename... Args>
-inline std::istream& operator>>(std::istream& /*is*/, std::function<Ret(Args...)>& /*f*/) {
-    throw pangolin::BadInputException();
-}
-template<typename Ret, typename... Args>
-inline std::ostream& operator<<(std::ostream& /*os*/, const std::function<Ret(Args...)>& /*f*/) {
-    throw pangolin::BadInputException();
-}
-#else
-template<typename Ret, typename Arg>
-inline std::istream& operator>>(std::istream& /*is*/, std::function<Ret(Arg)>& /*f*/) {
-    throw pangolin::BadInputException();
-}
-template<typename Ret, typename Arg>
-inline std::ostream& operator<<(std::ostream& /*os*/, const std::function<Ret(Arg)>& /*f*/) {
-    throw pangolin::BadInputException();
-}
-inline std::istream& operator>>(std::istream& /*is*/, std::function<void(void)>& /*f*/) {
-    throw pangolin::BadInputException();
-}
-inline std::ostream& operator<<(std::ostream& /*os*/, const std::function<void(void)>& /*f*/) {
-    throw pangolin::BadInputException();
-}
-#endif
-}
-
 namespace pangolin
 {
 

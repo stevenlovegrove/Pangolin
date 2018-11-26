@@ -31,13 +31,13 @@
 #include <string.h>
 #include <cmath>
 
+#include <pangolin/utils/is_streamable.h>
 #include <pangolin/var/varvalue.h>
 #include <pangolin/var/varwrapper.h>
 #include <pangolin/var/varstate.h>
 
 namespace pangolin
 {
-
 
 template<typename T>
 inline void InitialiseNewVarMeta(
@@ -63,12 +63,26 @@ inline void InitialiseNewVarMetaGeneric(
     InitialiseNewVarMeta(v, name);
 }
 
+template <typename T, typename S>
+typename std::enable_if<is_streamable<S>::value && is_streamable<T>::value, std::shared_ptr<VarValueT<T>>>::type
+Wrapped(const std::shared_ptr<VarValueT<S>>& src) noexcept
+{
+    return std::make_shared<VarWrapper<T,S>>(src);
+}
+
+template <typename T, typename S>
+typename std::enable_if<!(is_streamable<S>::value && is_streamable<T>::value), std::shared_ptr<VarValueT<T>>>::type
+Wrapped(const std::shared_ptr<VarValueT<S>>&)
+{
+    throw std::runtime_error("Unable to wrap Var");
+}
+
 // Initialise from existing variable, obtain data / accessor
 template<typename T>
-std::shared_ptr<VarValueT<T>> InitialiseFromGeneric(const std::shared_ptr<VarValueGeneric>& v)
+std::shared_ptr<VarValueT<T>> InitialiseFromPreviouslyTypedVar(const std::shared_ptr<VarValueGeneric>& v)
 {
     // Macro hack to prevent code duplication
-#   define PANGO_VAR_TYPES(x)                                \
+#   define PANGO_VAR_TYPES(x)                            \
     x(bool) x(int8_t) x(uint8_t) x(int16_t) x(uint16_t)  \
     x(int32_t) x(uint32_t) x(int64_t) x(uint64_t)        \
     x(float) x(double)
@@ -80,16 +94,16 @@ std::shared_ptr<VarValueT<T>> InitialiseFromGeneric(const std::shared_ptr<VarVal
         // Use types string accessor
         return std::dynamic_pointer_cast<VarValueT<T>>(v->str);
     }else
-#       define PANGO_CHECK_WRAP(x)                                  \
-    if( !strcmp(v->TypeId(), typeid(x).name() ) ) {             \
+#       define PANGO_CHECK_WRAP(x)                                                       \
+    if( !strcmp(v->TypeId(), typeid(x).name() ) ) {                                      \
         std::shared_ptr<VarValueT<x>> xval = std::dynamic_pointer_cast<VarValueT<x>>(v); \
-        return std::make_shared<VarWrapper<T,x>>(xval);         \
+        return Wrapped<T,x>(xval);                                                       \
     }else
     PANGO_VAR_TYPES(PANGO_CHECK_WRAP)
     {
         // other types: have to go via string
         // Wrapper, owned by this object
-        return std::make_shared<VarWrapper<T,std::string>>(v->str);
+        return Wrapped<T,std::string>(v->str);
     }
 #undef PANGO_VAR_TYPES
 #undef PANGO_CHECK_WRAP
@@ -145,21 +159,21 @@ public:
 
     Var( const std::shared_ptr<VarValueGeneric>& v )
     {
-        var = InitialiseFromGeneric<T>(v);
+        var = InitialiseFromPreviouslyTypedVar<T>(v);
     }
 
     Var( const std::string& name, const T& value = T(), const VarMeta& meta = VarMeta() )
     {
         // Find name in VarStore
         std::shared_ptr<VarValueGeneric>& v = VarState::I()[name];
-        if(v && v->Meta().generic) {
-            var = InitialiseFromGeneric<T>(v);
+        if(v && !v->Meta().generic) {
+            var = InitialiseFromPreviouslyTypedVar<T>(v);
         }else{
             // new VarValue<T> (owned by VarStore)
             std::shared_ptr<VarValue<T>> nv;
             if(v && v->str) {
-                // Specialise generic variable
-                nv = std::make_shared<VarValue<T>>( Convert<T,std::string>::Do( v->str->Get() ) );
+                // Specialise generic variable (which has previously just been a string)
+//                nv = std::make_shared<VarValue<T>>( Convert<T,std::string>::Do( v->str->Get() ) );
             }else{
                 nv = std::make_shared<VarValue<T>>( value );
             }

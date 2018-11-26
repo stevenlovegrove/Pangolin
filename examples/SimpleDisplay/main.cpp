@@ -113,8 +113,20 @@ auto serialize(Ar& ar, T& val)
     val.serialize(ar);
 }
 
+
+
+class C {};
+
+//int main2() {
+//    std::cout << is_streamable2<std::stringstream, C>::value << std::endl;
+//    std::cout << is_streamable2<std::stringstream, int>::value << std::endl;
+//    return 0;
+//}
+
 int main(/*int argc, char* argv[]*/)
 {  
+    using namespace pangolin;
+
 //    MyArchiver ar;
 //    CustomType test1;
 //    CustomType2 test2;
@@ -145,8 +157,11 @@ int main(/*int argc, char* argv[]*/)
     pangolin::CreatePanel("ui")
             .SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(UI_WIDTH));
 
-//    pangolin::Var<CustomType> test("ui.test", CustomType(0,1,"test"));
-    pangolin::Var<int> test("ui.test", 1, 0, 5);
+    pangolin::Var<CustomType> test("ui.test", CustomType(0,1,"test"));
+//    pangolin::Var<int> test("ui.test", 1, 0, 5);
+
+    pangolin::Var<std::function<void(void)> >("ui.Reset", [](){std::cout << "Hello" << std::endl;});
+
 
     while( !pangolin::ShouldQuit() )
     {
