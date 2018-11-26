@@ -180,7 +180,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     AVDictionary* options = nullptr;
     if(size.x != 0 && size.y != 0) {
         std::string s = std::to_string(size.x) + "x" + std::to_string(size.y);
-	av_dict_set(&options, "video_size", s.c_str(), 0);
+        av_dict_set(&options, "video_size", s.c_str(), 0);
     }
     if( avformat_open_input(&pFormatCtx, url.c_str(), fmt, &options) )
 #else
@@ -556,6 +556,7 @@ public:
     const StreamInfo& GetStreamInfo() const;
 
     void WriteImage(const uint8_t* img, int w, int h, double time);
+    void Flush();
 
 protected:
     void WriteAvPacket(AVPacket* pkt);
@@ -681,6 +682,30 @@ void FfmpegVideoOutputStream::WriteImage(const uint8_t* img, int w, int h, doubl
     WriteFrame(frame);
 }
 
+void FfmpegVideoOutputStream::Flush()
+{
+#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
+    if (stream->codec->codec->capabilities & AV_CODEC_CAP_DELAY) {
+        /* some CODECs like H.264 needs flushing buffered frames by encoding NULL frames. */
+        /* cf. https://www.ffmpeg.org/doxygen/trunk/group__lavc__encoding.html#ga2c08a4729f72f9bdac41b5533c4f2642 */
+
+        AVPacket pkt;
+        pkt.data = NULL;
+        pkt.size = 0;
+        av_init_packet(&pkt);
+
+        int got_packet = 1;
+        while (got_packet) {
+            int ret = avcodec_encode_video2(stream->codec, &pkt, NULL, &got_packet);
+            if (ret < 0) throw VideoException("Error encoding video frame");
+            WriteAvPacket(&pkt);
+        }
+
+        av_free_packet(&pkt);
+    }
+#endif
+}
+
 const StreamInfo& FfmpegVideoOutputStream::GetStreamInfo() const
 {
     return input_info;
@@ -717,6 +742,8 @@ FfmpegVideoOutputStream::FfmpegVideoOutputStream(
 
 FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
 {
+    Flush();
+
     if(sws_ctx) {
         sws_freeContext(sws_ctx);
     }
@@ -792,12 +819,13 @@ void FfmpegVideoOutput::StartStream()
 
 void FfmpegVideoOutput::Close()
 {
-    av_write_trailer(oc);
-
     for(std::vector<FfmpegVideoOutputStream*>::iterator i = streams.begin(); i!=streams.end(); ++i)
     {
+        (*i)->Flush();
         delete *i;
     }
+
+    av_write_trailer(oc);
 
     if (!(oc->oformat->flags & AVFMT_NOFILE)) avio_close(oc->pb);
 
