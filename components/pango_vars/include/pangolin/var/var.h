@@ -38,46 +38,61 @@
 namespace pangolin
 {
 
-template<typename T>
-inline void InitialiseNewVarMetaGeneric(
-    VarValue<T>& v, const std::string& name
-) {
-    // Initialise meta parameters
-    const std::vector<std::string> parts = pangolin::Split(name,'.');
-    v.Meta().full_name = name;
-    v.Meta().friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
-    v.Meta().range[0] = 0.0;
-    v.Meta().range[1] = 0.0;
-    v.Meta().increment = 0.0;
-    v.Meta().flags = META_FLAG_NONE;
-    v.Meta().logscale = false;
-    v.Meta().generic = true;
-
-    VarState::I().NotifyNewVar<T>(name, v);
-}
 
 template<typename T>
 inline void InitialiseNewVarMeta(
-    VarValue<T>& v, const std::string& name,
-    double min = 0, double max = 0, int flags = META_FLAG_TOGGLE,
-    bool logscale = false
+    std::shared_ptr<VarValue<T>>& v, const std::string& name
 ) {
-    // Initialise meta parameters
-    const std::vector<std::string> parts = pangolin::Split(name,'.');
-    v.Meta().full_name = name;
-    v.Meta().friendly = parts.size() > 0 ? parts[parts.size()-1] : "";
-    v.Meta().range[0] = min;
-    v.Meta().range[1] = max;
+    v->Meta().SetName(name);
+
     if (std::is_integral<T>::value) {
-        v.Meta().increment = 1.0;
+        v->Meta().increment = 1.0;
     } else {
-        v.Meta().increment = (max - min) / 100.0;
+        v->Meta().increment = (v->Meta().range[1] - v->Meta().range[0]) / 100.0;
     }
-    v.Meta().flags = flags;
-    v.Meta().logscale = logscale;
-    v.Meta().generic = false;
 
     VarState::I().NotifyNewVar<T>(name, v);
+
+}
+
+template<typename T>
+inline void InitialiseNewVarMetaGeneric(
+    std::shared_ptr<VarValue<T>>& v, const std::string& name
+) {
+    v->Meta().generic = true;
+    InitialiseNewVarMeta(v, name);
+}
+
+// Initialise from existing variable, obtain data / accessor
+template<typename T>
+std::shared_ptr<VarValueT<T>> InitialiseFromGeneric(const std::shared_ptr<VarValueGeneric>& v)
+{
+    // Macro hack to prevent code duplication
+#   define PANGO_VAR_TYPES(x)                                \
+    x(bool) x(int8_t) x(uint8_t) x(int16_t) x(uint16_t)  \
+    x(int32_t) x(uint32_t) x(int64_t) x(uint64_t)        \
+    x(float) x(double)
+
+    if( !strcmp(v->TypeId(), typeid(T).name()) ) {
+        // Same type
+        return std::dynamic_pointer_cast<VarValueT<T>>(v);
+    }else if( std::is_same<T,std::string>::value ) {
+        // Use types string accessor
+        return std::dynamic_pointer_cast<VarValueT<T>>(v->str);
+    }else
+#       define PANGO_CHECK_WRAP(x)                                  \
+    if( !strcmp(v->TypeId(), typeid(x).name() ) ) {             \
+        std::shared_ptr<VarValueT<x>> xval = std::dynamic_pointer_cast<VarValueT<x>>(v); \
+        return std::make_shared<VarWrapper<T,x>>(xval);         \
+    }else
+    PANGO_VAR_TYPES(PANGO_CHECK_WRAP)
+    {
+        // other types: have to go via string
+        // Wrapper, owned by this object
+        return std::make_shared<VarWrapper<T,std::string>>(v->str);
+    }
+#undef PANGO_VAR_TYPES
+#undef PANGO_CHECK_WRAP
 }
 
 template<typename T>
@@ -85,145 +100,91 @@ class Var
 {
 public:
     static T& Attach(
+        const std::string& name, T& variable, const VarMeta& meta = VarMeta()
+    ) {
+        // Find name in VarStore
+        std::shared_ptr<VarValueGeneric>& v = VarState::I()[name];
+        if(v) {
+            VarValueT<T>* tval = dynamic_cast<VarValue<T>*>(v.get());
+            if(tval && &tval->Get() == &variable) {
+                // Attaching the same variable twice with same name, ignore
+            }else{
+                // Same name, different variable
+                throw std::runtime_error("Different Var with that name already exists.");
+            }
+        }else{
+            // New reference Var owned by var store
+            auto nv = std::make_shared<VarValue<T&>>(variable);
+            v = nv;
+            v->Meta() = meta;
+            InitialiseNewVarMeta<T&>(nv, name);
+        }
+        return variable;
+    }
+
+    static T& Attach(
         const std::string& name, T& variable,
         double min, double max, bool logscale = false
     ) {
-        // Find name in VarStore
-        VarValueGeneric*& v = VarState::I()[name];
-        if(v) {
-            throw std::runtime_error("Var with that name already exists.");
-        }else{
-            // new VarRef<T> (owned by VarStore)
-            VarValue<T&>* nv = new VarValue<T&>(variable);
-            v = nv;
-            if(logscale) {
-                if (min <= 0 || max <= 0) {
-                    throw std::runtime_error("LogScale: range of numbers must be positive!");
-                }
-                InitialiseNewVarMeta<T&>(*nv, name, std::log(min), std::log(max), META_FLAG_TOGGLE, logscale);
-            }else{
-                InitialiseNewVarMeta<T&>(*nv, name, min, max, META_FLAG_TOGGLE, logscale);
-            }
-        }
-        return variable;
+        return Attach(name, variable, VarMeta(name, min, max, 0.0, META_FLAG_NONE, logscale));
     }
 
-    static T& Attach(
-        const std::string& name, T& variable, int flags = META_FLAG_NONE
-        ) {
-        // Find name in VarStore
-        VarValueGeneric*& v = VarState::I()[name];
-        if (v) {
-            throw std::runtime_error("Var with that name already exists.");
-        }
-        else{
-            // new VarRef<T> (owned by VarStore)
-            VarValue<T&>* nv = new VarValue<T&>(variable);
-            v = nv;
-            InitialiseNewVarMeta<T&>(*nv, name, 0.0, 0.0, flags);
-        }
-        return variable;
+    static T& Attach( const std::string& name, T& variable, int flags )
+    {
+        return Attach(name, variable, VarMeta(name, 0., 0., 0., flags) );
     }
 
-    static T& Attach(
-        const std::string& name, T& variable, bool toggle
-        ) {
-        return Attach(name, variable, toggle ? META_FLAG_TOGGLE : META_FLAG_NONE);
+    static T& Attach( const std::string& name, T& variable, bool toggle )
+    {
+        return Attach(name, variable, VarMeta(name, 0., 0., 0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE) );
     }
 
     ~Var()
     {
-        delete ptr;
     }
 
-    Var( VarValueGeneric& v )
-        : ptr(0)
+    Var( const std::shared_ptr<VarValueGeneric>& v )
     {
-        InitialiseFromGeneric(&v);
+        var = InitialiseFromGeneric<T>(v);
     }
 
-
-    Var( const std::string& name )
-        : ptr(0)
+    Var( const std::string& name, const T& value = T(), const VarMeta& meta = VarMeta() )
     {
         // Find name in VarStore
-        VarValueGeneric*& v = VarState::I()[name];
-        if(v && !v->Meta().generic) {
-            InitialiseFromGeneric(v);
+        std::shared_ptr<VarValueGeneric>& v = VarState::I()[name];
+        if(v && v->Meta().generic) {
+            var = InitialiseFromGeneric<T>(v);
         }else{
             // new VarValue<T> (owned by VarStore)
-            VarValue<T>* nv;
-            if(v) {
+            std::shared_ptr<VarValue<T>> nv;
+            if(v && v->str) {
                 // Specialise generic variable
-                nv = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
-                delete v;
+                nv = std::make_shared<VarValue<T>>( Convert<T,std::string>::Do( v->str->Get() ) );
             }else{
-                nv = new VarValue<T>( T() );
+                nv = std::make_shared<VarValue<T>>( value );
             }
-            v = nv;
-            var = nv;
-            InitialiseNewVarMeta(*nv, name);
+            v = var = nv;
+            nv->Meta() = meta;
+            InitialiseNewVarMeta(nv, name);
         }
     }
 
-    Var(const std::string& name, const T& value, int flags = META_FLAG_NONE)
-        : ptr(0)
+    Var(const std::string& name, const T& value, int flags)
+        : Var(name, value, VarMeta(name, 0., 0.,0., flags))
     {
-        // Find name in VarStore
-        VarValueGeneric*& v = VarState::I()[name];
-        if(v && !v->Meta().generic) {
-            InitialiseFromGeneric(v);
-        }else{
-            // new VarValue<T> (owned by VarStore)
-            VarValue<T>* nv;
-            if(v) {
-                // Specialise generic variable
-                nv = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
-                delete v;
-            }else{
-                nv = new VarValue<T>(value);
-            }
-            v = nv;
-            var = nv;
-            InitialiseNewVarMeta(*nv, name, 0, 1, flags);
-        }
     }
 
     Var(const std::string& name, const T& value, bool toggle)
-        : Var(name, value, toggle ? META_FLAG_TOGGLE : META_FLAG_NONE)
+        : Var(name, value, VarMeta(name, 0., 0.,0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE))
     {
     }
 
     Var(
         const std::string& name, const T& value,
         double min, double max, bool logscale = false
-    ) : ptr(0)
+    )
+        : Var(name, value, VarMeta(name, min, max, 0., META_FLAG_NONE, logscale))
     {
-        // Find name in VarStore
-        VarValueGeneric*& v = VarState::I()[name];
-        if(v && !v->Meta().generic) {
-            InitialiseFromGeneric(v);
-        }else{
-            // new VarValue<T> (owned by VarStore)
-            VarValue<T>* nv;
-            if(v) {
-                // Specialise generic variable
-                nv = new VarValue<T>( Convert<T,std::string>::Do( v->str->Get() ) );
-                delete v;
-            }else{
-                nv = new VarValue<T>(value);
-            }
-            var = nv;
-            v = nv;
-            if(logscale) {
-                if (min <= 0 || max <= 0) {
-                    throw std::runtime_error("LogScale: range of numbers must be positive!");
-                }
-                InitialiseNewVarMeta(*nv, name, std::log(min), std::log(max), META_FLAG_TOGGLE, true);
-            }else{
-                InitialiseNewVarMeta(*nv, name, min, max);
-            }
-        }
     }
 
     void Reset()
@@ -282,50 +243,21 @@ public:
         return false;
     }
 
-    VarValueT<T>& Ref()
+    std::shared_ptr<VarValueT<T>> Ref()
     {
-        return *var;
+        return var;
     }
-
-protected:
-    // Initialise from existing variable, obtain data / accessor
-    void InitialiseFromGeneric(VarValueGeneric* v)
-    {
-        // Macro hack to prevent code duplication
-#   define PANGO_VAR_TYPES(x)                                \
-        x(bool) x(int8_t) x(uint8_t) x(int16_t) x(uint16_t)  \
-        x(int32_t) x(uint32_t) x(int64_t) x(uint64_t)        \
-        x(float) x(double)
-
-        if( !strcmp(v->TypeId(), typeid(T).name()) ) {
-            // Same type
-            var = (VarValueT<T>*)(v);
-        }else if( std::is_same<T,std::string>::value ) {
-            // Use types string accessor
-            var = (VarValueT<T>*)(v->str);
-        }else
-#       define PANGO_CHECK_WRAP(x)                           \
-        if( !strcmp(v->TypeId(), typeid(x).name() ) ) {      \
-            ptr = new VarWrapper<T,x>( *(VarValueT<x>*)v );  \
-            var = ptr;                                       \
-        }else
-        PANGO_VAR_TYPES(PANGO_CHECK_WRAP)
-        {
-            // other types: have to go via string
-            // Wrapper, owned by this object
-            ptr = new VarWrapper<T,std::string>( *(v->str) );
-            var = ptr;
-        }
-    }
-#undef PANGO_VAR_TYPES
-#undef PANGO_CHECK_WRAP
 
     // Holds reference to stored variable object
     // N.B. mutable because it is a cached value and Get() is advertised as const.
-    mutable VarValueT<T>* var;
-
-    // ptr is non-zero if this object owns the object variable (a wrapper)
-    VarValueT<T>* ptr;
+    mutable std::shared_ptr<VarValueT<T>> var;
 };
+
+// Just forward to the static method
+template<typename T, typename... Ts>
+inline T& AttachVar(std::string& name, T& var, Ts... ts)
+{
+    Var<T>::Attach(name, var, ts...);
+}
 
 }

@@ -39,11 +39,6 @@ class VarValue : public VarValueT<typename std::remove_reference<T>::type>
 public:
     typedef typename std::remove_reference<T>::type VarT;
 
-    ~VarValue()
-    {
-        delete str_ptr;
-    }
-
     VarValue()
     {
         Init();
@@ -94,17 +89,16 @@ public:
 protected:
     void Init()
     {
+        // shared_ptr reference to self without deleter.
+        auto self = std::shared_ptr<VarValueT<VarT>>(this, [](VarValueT<VarT>*){} );
+
         if(std::is_same<VarT,std::string>::value) {
-            str_ptr = 0;
-            this->str = (VarValueT<std::string>*)this;
+            // str is reference to this - remove shared_ptr's deleter
+            this->str = std::dynamic_pointer_cast<VarValueT<std::string>>(self);
         }else{
-            str_ptr = new VarWrapper<std::string,VarT>(*this);
-            this->str = str_ptr;
+            this->str = std::make_shared<VarWrapper<std::string,VarT>>(self);
         }
     }
-
-    // If non-zero, this class owns this str pointer in the base-class.
-    VarValueT<std::string>* str_ptr;
 
     T value;
     VarT default_value;

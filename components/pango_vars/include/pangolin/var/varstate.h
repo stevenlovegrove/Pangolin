@@ -29,6 +29,7 @@
 
 #include <map>
 #include <vector>
+#include <memory>
 #include <pangolin/platform.h>
 #include <pangolin/var/varvalue.h>
 #include <pangolin/utils/file_utils.h>
@@ -36,8 +37,8 @@
 namespace pangolin
 {
 
-typedef void (*NewVarCallbackFn)(void* data, const std::string& name, VarValueGeneric& var, bool brand_new);
-typedef void (*GuiVarChangedCallbackFn)(void* data, const std::string& name, VarValueGeneric& var);
+typedef void (*NewVarCallbackFn)(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& var, bool brand_new);
+typedef void (*GuiVarChangedCallbackFn)(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& var);
 
 struct PANGOLIN_EXPORT NewVarCallback
 {
@@ -68,7 +69,7 @@ public:
     void Clear();
 
     template<typename T>
-    void NotifyNewVar(const std::string& name, VarValue<T>& var )
+    void NotifyNewVar(const std::string& name, std::shared_ptr<VarValue<T>>& var )
     {
         var_adds.push_back(name);
 
@@ -80,7 +81,7 @@ public:
         }
     }
 
-    VarValueGeneric*& operator[](const std::string& str)
+    std::shared_ptr<VarValueGeneric>& operator[](const std::string& str)
     {
         VarStoreContainer::iterator it = vars.find(str);
         if (it == vars.end()) {
@@ -107,7 +108,7 @@ public:
     }
 
 //protected:
-    typedef std::map<std::string, VarValueGeneric*> VarStoreContainer;
+    typedef std::map<std::string, std::shared_ptr<VarValueGeneric>> VarStoreContainer;
     typedef std::vector<std::string> VarStoreAdditions;
 
     VarStoreContainer vars;

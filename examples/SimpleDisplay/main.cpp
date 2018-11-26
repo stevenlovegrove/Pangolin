@@ -3,127 +3,163 @@
 
 struct CustomType
 {
-  CustomType()
-    : x(0), y(0.0f) {}
+    CustomType() = default;
+    CustomType(int x, float y, const std::string& z)
+        : x(x), y(y), z(z) {}
 
-  CustomType(int x, float y, std::string z)
-    : x(x), y(y), z(z) {}
+    int x;
+    double y;
+    std::string z;
 
-  int x;
-  float y;
-  std::string z;
+    template <class Archive>
+    void serialize( Archive & ar )
+    {
+        ar( x, y, z );
+    }
 };
 
-std::ostream& operator<< (std::ostream& os, const CustomType& o){
-  os << o.x << " " << o.y << " " << o.z;
-  return os;
-}
-
-std::istream& operator>> (std::istream& is, CustomType& o){
-  is >> o.x;
-  is >> o.y;
-  is >> o.z;
-  return is;
-}
-
-void SampleMethod()
+struct CustomType2
 {
-    std::cout << "You typed ctrl-r or pushed reset" << std::endl;
+    CustomType2() = default;
+    CustomType2(int x, float y, const std::string& z)
+        : x(x), y(y), z(z){}
+
+    int x;
+    float y;
+    std::string z;
+    CustomType w;
+};
+
+template<typename T>
+struct PangoVarDisplayTraits
+{
+    // Default - try to display as-is
+};
+
+template<>
+struct PangoVarDisplayTraits<CustomType>
+{
+    template<typename Ar>
+    void Display(Ar& ar, CustomType& t)
+    {
+//        pangolin::Var<int>Attach(t.x, )
+    }
+};
+
+inline void MakeVoid() {}
+
+class MyArchiver
+{
+public:
+    MyArchiver()
+        : depth(0), num(0)
+    {
+    }
+
+    template<typename... Ts>
+    void operator()(Ts&... ts)
+    {
+        ++depth;
+        Recurse(ts...);
+        --depth;
+    }
+
+    template<typename T>
+    void AddLeaf(T& v)
+    {
+        std::string label = std::string("ui.") + std::string(depth,'_') + std::to_string(num);
+        pangolin::Var<T>::Attach(label, v);
+        typeids.push_back(label);
+        ++num;
+    }
+
+private:
+
+    template<typename T>
+    void Recurse(T& v)
+    {
+        serialize(*this, v);
+    }
+
+    template<typename T, typename... Ts>
+    void Recurse(T& v, Ts&... ts)
+    {
+        serialize(*this, v);
+        Recurse(ts...);
+    }
+
+    size_t depth;
+    size_t num;
+
+public:
+    std::vector<std::string> typeids;
+};
+
+void serialize(MyArchiver& ar, int& t) { ar.AddLeaf(t); }
+void serialize(MyArchiver& ar, float& t) { ar.AddLeaf(t); }
+void serialize(MyArchiver& ar, double& t) { ar.AddLeaf(t); }
+void serialize(MyArchiver& ar, std::string& t) { ar.AddLeaf(t); }
+
+
+void serialize(MyArchiver& ar, CustomType2& t)
+{
+    ar(t.x, t.y, t.z, t.w);
 }
 
+template<class Ar, class T>
+auto serialize(Ar& ar, T& val)
+ -> decltype(  std::declval<T&>().template serialize<Ar>(std::declval<Ar&>()) , MakeVoid() )
+{
+    val.serialize(ar);
+}
 
 int main(/*int argc, char* argv[]*/)
 {  
-  // Load configuration data
-  pangolin::ParseVarsFile("app.cfg");
+//    MyArchiver ar;
+//    CustomType test1;
+//    CustomType2 test2;
 
-  // Create OpenGL window in single line
-  pangolin::CreateWindowAndBind("Main",640,480);
-  
-  // 3D Mouse handler requires depth testing to be enabled
-  glEnable(GL_DEPTH_TEST);
+//    serialize(ar, test1);
+//    serialize(ar, test2);
 
-  // Define Camera Render Object (for view / scene browsing)
-  pangolin::OpenGlRenderState s_cam(
-    pangolin::ProjectionMatrix(640,480,420,420,320,240,0.1,1000),
-    pangolin::ModelViewLookAt(-0,0.5,-3, 0,0,0, pangolin::AxisY)
-  );
 
-  const int UI_WIDTH = 180;
+    // Create OpenGL window in single line
+    pangolin::CreateWindowAndBind("Main",640,480);
+    glEnable(GL_DEPTH_TEST);
 
-  // Add named OpenGL viewport to window and provide 3D Handler
-  pangolin::View& d_cam = pangolin::CreateDisplay()
-    .SetBounds(0.0, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0, -640.0f/480.0f)
-    .SetHandler(new pangolin::Handler3D(s_cam));
+    // Define Camera Render Object (for view / scene browsing)
+    pangolin::OpenGlRenderState s_cam(
+                pangolin::ProjectionMatrix(640,480,420,420,320,240,0.1,1000),
+                pangolin::ModelViewLookAt(-0,0.5,-3, 0,0,0, pangolin::AxisY)
+                );
 
-  // Add named Panel and bind to variables beginning 'ui'
-  // A Panel is just a View with a default layout and input handling
-  pangolin::CreatePanel("ui")
-      .SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(UI_WIDTH));
+    const int UI_WIDTH = 300;
 
-  // Safe and efficient binding of named variables.
-  // Specialisations mean no conversions take place for exact types
-  // and conversions between scalar types are cheap.
-  pangolin::Var<bool> a_button("ui.A_Button",false,false);
-  pangolin::Var<double> a_double("ui.A_Double",3,0,5);
-  pangolin::Var<int> an_int("ui.An_Int",2,0,5);
-  pangolin::Var<double> a_double_log("ui.Log_scale var",3,1,1E4, true);
-  pangolin::Var<bool> a_checkbox("ui.A_Checkbox",false,true);
-  pangolin::Var<int> an_int_no_input("ui.An_Int_No_Input",2);
-  pangolin::Var<CustomType> any_type("ui.Some_Type", CustomType(0,1.2f,"Hello") );
+    // Add named OpenGL viewport to window and provide 3D Handler
+    pangolin::View& d_cam = pangolin::CreateDisplay()
+            .SetBounds(0.0, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0, -640.0f/480.0f)
+            .SetHandler(new pangolin::Handler3D(s_cam));
 
-  pangolin::Var<bool> save_window("ui.Save_Window",false,false);
-  pangolin::Var<bool> save_cube("ui.Save_Cube",false,false);
+    // Add named Panel and bind to variables beginning 'ui'
+    // A Panel is just a View with a default layout and input handling
+    pangolin::CreatePanel("ui")
+            .SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(UI_WIDTH));
 
-  pangolin::Var<bool> record_cube("ui.Record_Cube",false,false);
+//    pangolin::Var<CustomType> test("ui.test", CustomType(0,1,"test"));
+    pangolin::Var<int> test("ui.test", 1, 0, 5);
 
-  // std::function objects can be used for Var's too. These work great with C++11 closures.
-  pangolin::Var<std::function<void(void)> > reset("ui.Reset", SampleMethod);
+    while( !pangolin::ShouldQuit() )
+    {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // Demonstration of how we can register a keyboard hook to alter a Var
-  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'b', pangolin::SetVarFunctor<double>("ui.A_Double", 3.5));
+        if(d_cam.IsShown()) {
+            d_cam.Activate(s_cam);
+            glColor3f(1.0,1.0,1.0);
+            pangolin::glDrawColouredCube();
+        }
 
-  // Demonstration of how we can register a keyboard hook to trigger a method
-  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'r', SampleMethod);
+        pangolin::FinishFrame();
+    }
 
-  // Default hooks for exiting (Esc) and fullscreen (tab).
-  while( !pangolin::ShouldQuit() )
-  {
-    // Clear entire screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
-
-    if( pangolin::Pushed(a_button) )
-      std::cout << "You Pushed a button!" << std::endl;
-
-    // Overloading of Var<T> operators allows us to treat them like
-    // their wrapped types, eg:
-    if( a_checkbox )
-      an_int = (int)a_double;
-
-    if( !any_type->z.compare("robot"))
-        any_type = CustomType(1,2.3f,"Boogie");
-
-    an_int_no_input = an_int;
-
-    if( pangolin::Pushed(save_window) )
-        pangolin::SaveWindowOnRender("window");
-
-    if( pangolin::Pushed(save_cube) )
-        d_cam.SaveOnRender("cube");
-    
-    if( pangolin::Pushed(record_cube) )
-        pangolin::DisplayBase().RecordOnRender("ffmpeg:[fps=50,bps=8388608,unique_filename]//screencap.avi");
-
-    // Activate efficiently by object
-    d_cam.Activate(s_cam);
-
-    // Render some stuff
-    glColor3f(1.0,1.0,1.0);
-    pangolin::glDrawColouredCube();
-
-    // Swap frames and Process Events
-    pangolin::FinishFrame();
-  }
-
-  return 0;
+    return 0;
 }

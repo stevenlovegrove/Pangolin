@@ -55,9 +55,6 @@ VarState::~VarState() {
 }
 
 void VarState::Clear() {
-    for(VarStoreContainer::iterator i = vars.begin(); i != vars.end(); ++i) {
-        delete i->second;
-    }
     vars.clear();
     var_adds.clear();
 }
@@ -68,7 +65,7 @@ void ProcessHistoricCallbacks(NewVarCallbackFn callback, void* data, const std::
     {
         const std::string& name = *i;
         if (StartsWith(name, filter)) {
-            callback(data, name, *VarState::I()[name], false);
+            callback(data, name, VarState::I()[name], false);
         }
     }
 }
@@ -99,12 +96,13 @@ void AddVar(const std::string& name, const string& val )
 {
     const std::string full = ProcessVal(val);
 
-    VarValueGeneric*& v = VarState::I()[name];
+    std::shared_ptr<VarValueGeneric>& v = VarState::I()[name];
     if(!v) {
-        VarValue<std::string>* nv = new VarValue<std::string>(val);
-        InitialiseNewVarMetaGeneric<std::string>(*nv, name);
+        auto nv = std::make_shared<VarValue<std::string>>(val);
+        InitialiseNewVarMetaGeneric<std::string>(nv, name);
         v = nv;
     }
+    v->Meta().gui_changed = true;
     v->str->Set(full);
 }
 
@@ -196,16 +194,7 @@ void LoadJsonFile(const std::string& filename, const string &prefix)
                         const std::string& name = i->first;
                         if(pangolin::StartsWith(name, prefix)) {
                             const std::string& val = i->second.get<std::string>();
-
-                            VarValueGeneric*& v = VarState::I()[name];
-                            if(!v) {
-                                VarValue<std::string>* nv = new VarValue<std::string>(val);
-                                InitialiseNewVarMetaGeneric<std::string>(*nv, name);
-                                v = nv;
-                            }else{
-                                v->str->Set(val);
-                                v->Meta().gui_changed = true;
-                            }
+                            AddVar(name, val);
                             some_change = true;
                         }
                     }
