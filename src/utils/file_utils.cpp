@@ -30,7 +30,9 @@
 #include <pangolin/utils/file_utils.h>
 
 #ifdef _WIN_
-#  define WIN32_LEAN_AND_MEAN
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
 #  include <Windows.h>
 #  include <Shlobj.h>
 #else
