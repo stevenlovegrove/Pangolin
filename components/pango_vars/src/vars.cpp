@@ -99,7 +99,7 @@ void AddVar(const std::string& name, const string& val )
     std::shared_ptr<VarValueGeneric>& v = VarState::I()[name];
     if(!v) {
         auto nv = std::make_shared<VarValue<std::string>>(val);
-        InitialiseNewVarMetaGeneric<std::string>(nv, name);
+        NewFreshVariable<std::string>(nv, name, true);
         v = nv;
     }
     v->Meta().gui_changed = true;

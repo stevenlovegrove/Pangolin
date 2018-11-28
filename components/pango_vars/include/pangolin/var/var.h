@@ -40,10 +40,11 @@ namespace pangolin
 {
 
 template<typename T>
-inline void InitialiseNewVarMeta(
-    std::shared_ptr<VarValue<T>>& v, const std::string& name
+inline void NewFreshVariable(
+    std::shared_ptr<VarValue<T>>& v, const std::string& name, bool generic = false
 ) {
     v->Meta().SetName(name);
+    v->Meta().generic = generic;
 
     if (std::is_integral<T>::value) {
         v->Meta().increment = 1.0;
@@ -51,16 +52,12 @@ inline void InitialiseNewVarMeta(
         v->Meta().increment = (v->Meta().range[1] - v->Meta().range[0]) / 100.0;
     }
 
+    if(!generic) {
+        // See if this is a composite type
+    }
+
     VarState::I().NotifyNewVar<T>(name, v);
 
-}
-
-template<typename T>
-inline void InitialiseNewVarMetaGeneric(
-    std::shared_ptr<VarValue<T>>& v, const std::string& name
-) {
-    v->Meta().generic = true;
-    InitialiseNewVarMeta(v, name);
 }
 
 template <typename T, typename S>
@@ -101,9 +98,13 @@ std::shared_ptr<VarValueT<T>> InitialiseFromPreviouslyTypedVar(const std::shared
     }else
     PANGO_VAR_TYPES(PANGO_CHECK_WRAP)
     {
-        // other types: have to go via string
-        // Wrapper, owned by this object
-        return Wrapped<T,std::string>(v->str);
+        if(v->str) {
+            // other types: have to go via string
+            // Wrapper, owned by this object
+            return Wrapped<T,std::string>(v->str);
+        }else{
+            throw std::runtime_error("Unable to wrap previously initialized variable as this type");
+        }
     }
 #undef PANGO_VAR_TYPES
 #undef PANGO_CHECK_WRAP
@@ -131,7 +132,7 @@ public:
             auto nv = std::make_shared<VarValue<T&>>(variable);
             v = nv;
             v->Meta() = meta;
-            InitialiseNewVarMeta<T&>(nv, name);
+            NewFreshVariable<T&>(nv, name);
         }
         return variable;
     }
@@ -173,13 +174,14 @@ public:
             std::shared_ptr<VarValue<T>> nv;
             if(v && v->str) {
                 // Specialise generic variable (which has previously just been a string)
+                // TODO: Re-enable this
 //                nv = std::make_shared<VarValue<T>>( Convert<T,std::string>::Do( v->str->Get() ) );
             }else{
                 nv = std::make_shared<VarValue<T>>( value );
             }
             v = var = nv;
             nv->Meta() = meta;
-            InitialiseNewVarMeta(nv, name);
+            NewFreshVariable(nv, name);
         }
     }
 
