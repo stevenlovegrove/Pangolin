@@ -2,7 +2,7 @@
 
 int main( int /*argc*/, char** /*argv*/ )
 {
-    pangolin::CreateWindowAndBind("Main",640,480,pangolin::Params(),"headless");
+    pangolin::CreateWindowAndBind("Main",640,480,pangolin::Params({{"scheme", "headless"}}));
     glEnable(GL_DEPTH_TEST);
 
     // Define Projection and initial ModelView matrix
