@@ -114,7 +114,7 @@ PangolinGl *FindContext(const std::string& name)
     return context;
 }
 
-WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& params, const std::string& scheme)
+WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& params)
 {
     std::unique_lock<std::recursive_mutex> l(contexts_mutex);
 
@@ -131,7 +131,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     }
 
     // Override with anything the program specified
-    if(!scheme.empty()) { win_uri.Set("scheme", scheme); }
+    if(!params.Get<std::string>("scheme").empty()) { win_uri.Set("scheme", params.Get<std::string>("scheme")); }
     win_uri.Set("w", w);
     win_uri.Set("h", h);
     win_uri.Set("window_title", window_title);

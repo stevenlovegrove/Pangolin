@@ -69,7 +69,7 @@ namespace pangolin
   /// Initialise OpenGL window (determined by platform) and bind context.
   /// This method will choose an available windowing system if one is present.
   PANGOLIN_EXPORT
-  WindowInterface& CreateWindowAndBind(std::string window_title, int w = 640, int h = 480, const Params& params = Params(), const std::string& scheme = std::string());
+  WindowInterface& CreateWindowAndBind(std::string window_title, int w = 640, int h = 480, const Params& params = Params());
 
   /// Return pointer to current Pangolin Window context, or nullptr if none bound.
   PANGOLIN_EXPORT
