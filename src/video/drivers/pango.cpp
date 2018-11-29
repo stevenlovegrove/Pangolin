@@ -228,7 +228,7 @@ PANGOLIN_REGISTER_FACTORY(PangoVideo)
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string path = PathExpand(uri.url);
 
-            if( !uri.scheme.compare("pango") || FileType(uri.url) == ImageFileTypePango ) {
+            if( !uri.Get<std::string>("scheme").compare("pango") || FileType(uri.url) == ImageFileTypePango ) {
                 return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str(), PlaybackSession::ChooseFromParams(uri)));
             }
             return std::unique_ptr<VideoInterface>();

@@ -82,7 +82,7 @@ public:
     {
         // Iterate over all registered factories in order of precedence.
         for(auto& item : factories) {
-            if( item.scheme == uri.scheme) {
+            if( item.scheme == uri.Get<std::string>("scheme")) {
                 std::unique_ptr<T> video = item.factory->Open(uri);
                 if(video) {
                     return video;

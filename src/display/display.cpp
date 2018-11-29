@@ -131,20 +131,20 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     }
 
     // Override with anything the program specified
-    if(!scheme.empty()) { win_uri.scheme = scheme; }
+    if(!scheme.empty()) { win_uri.Set("scheme", scheme); }
     win_uri.Set("w", w);
     win_uri.Set("h", h);
     win_uri.Set("window_title", window_title);
     win_uri.params.insert(std::end(win_uri.params), std::begin(params.params), std::end(params.params));
 
     // Fall back to default scheme if non specified.
-    if(win_uri.scheme.empty()) {
+    if(win_uri.Get<std::string>("scheme").empty()) {
 #if defined(_LINUX_)
-      win_uri.scheme = "linux";
+      win_uri.Get<std::string>("scheme") = "linux";
 #elif defined(_WIN_)
-      win_uri.scheme = "winapi";
+      win_uri.Get<std::string>("scheme") = "winapi";
 #elif defined(_OSX_)
-      win_uri.scheme = "cocoa";
+      win_uri.Get<std::string>("scheme") = "cocoa";
 #else
 #     error "No default window api for this platform."
 #endif
@@ -154,7 +154,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 
     // We're expecting not only a WindowInterface, but a PangolinGl.
     if(!window || !dynamic_cast<PangolinGl*>(window.get())) {
-        throw WindowExceptionNoKnownHandler(win_uri.scheme);
+        throw WindowExceptionNoKnownHandler(win_uri.Get<std::string>("scheme"));
     }
 
     std::shared_ptr<PangolinGl> context(dynamic_cast<PangolinGl*>(window.release()));

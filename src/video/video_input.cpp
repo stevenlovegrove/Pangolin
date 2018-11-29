@@ -52,9 +52,9 @@ void VideoInput::Open(
     uri_input = ParseUri(input_uri);
     uri_output = ParseUri(output_uri);
 
-    if (uri_output.scheme == "file") {
+    if (uri_output.Get<std::string>("scheme") == "file") {
         // Default to pango output
-        uri_output.scheme = "pango";
+        uri_output.Get<std::string>("scheme") = "pango";
     }
 
     // Start off playing from video_src

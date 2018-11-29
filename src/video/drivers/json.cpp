@@ -40,7 +40,7 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
 {
     struct JsonVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            if(uri.scheme == "json" || (uri.scheme == "file" && FileLowercaseExtention(uri.url) == ".json")) {
+            if(uri.Get<std::string>("scheme") == "json" || (uri.Get<std::string>("scheme") == "file" && FileLowercaseExtention(uri.url) == ".json")) {
                 const std::string json_filename = PathExpand(uri.url);
                 std::ifstream f( json_filename );
 

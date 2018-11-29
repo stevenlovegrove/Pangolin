@@ -120,7 +120,7 @@ PANGOLIN_REGISTER_FACTORY(PvnVideo)
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string path = PathExpand(uri.url);
 
-            if( !uri.scheme.compare("pvn") || FileType(uri.url) == ImageFileTypePvn ) {
+            if( !uri.Get<std::string>("scheme").compare("pvn") || FileType(uri.url) == ImageFileTypePvn ) {
                 const bool realtime = uri.Contains("realtime");
                 return std::unique_ptr<VideoInterface>(new PvnVideo(path.c_str(), realtime));
             }

@@ -888,9 +888,9 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
                 ".webm", ".wmv", ".yuv", ".h264", ".h265"
             }};
 
-            if(!uri.scheme.compare("ffmpeg") || !uri.scheme.compare("file") || !uri.scheme.compare("files") )
+            if(!uri.Get<std::string>("scheme").compare("ffmpeg") || !uri.Get<std::string>("scheme").compare("file") || !uri.Get<std::string>("scheme").compare("files") )
             {
-                if(!uri.scheme.compare("file") || !uri.scheme.compare("files")) {
+                if(!uri.Get<std::string>("scheme").compare("file") || !uri.Get<std::string>("scheme").compare("files")) {
                     const std::string ext = FileLowercaseExtention(uri.url);
                     if(std::find(ffmpeg_ext.begin(), ffmpeg_ext.end(), ext) == ffmpeg_ext.end()) {
                         // Don't try to load unknown files without the ffmpeg:// scheme.
@@ -901,13 +901,13 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
                 ToUpper(outfmt);
                 const int video_stream = uri.Get<int>("stream",-1);
                 return std::unique_ptr<VideoInterface>( new FfmpegVideo(uri.url.c_str(), outfmt, "", false, video_stream) );
-            }else if( !uri.scheme.compare("v4lmjpeg")) {
+            }else if( !uri.Get<std::string>("scheme").compare("v4lmjpeg")) {
                 const int video_stream = uri.Get<int>("stream",-1);
                 const ImageDim size = uri.Get<ImageDim>("size",ImageDim(0,0));
                 return std::unique_ptr<VideoInterface>( new FfmpegVideo(uri.url.c_str(),"RGB24", "video4linux", false, video_stream, size) );
-            } else if( !uri.scheme.compare("mjpeg")) {
+            } else if( !uri.Get<std::string>("scheme").compare("mjpeg")) {
                 return std::unique_ptr<VideoInterface>( new FfmpegVideo(uri.url.c_str(),"RGB24", "MJPEG" ) );
-            }else if( !uri.scheme.compare("convert") ) {
+            }else if( !uri.Get<std::string>("scheme").compare("convert") ) {
                 std::string outfmt = uri.Get<std::string>("fmt","RGB24");
                 ToUpper(outfmt);
                 std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);

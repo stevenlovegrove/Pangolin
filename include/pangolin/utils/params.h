@@ -59,7 +59,7 @@ public:
     }
 
     template<typename T>
-    T Get(const std::string& key, T default_val) const
+    T Get(const std::string& key, const T default_val = T()) const
     {
         // Return last value passed to the key.
         for(ParamMap::const_reverse_iterator it = params.rbegin(); it!=params.rend(); ++it) {

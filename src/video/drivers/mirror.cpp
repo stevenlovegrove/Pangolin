@@ -557,11 +557,11 @@ PANGOLIN_REGISTER_FACTORY(MirrorVideo)
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
 
             MirrorOptions default_opt = MirrorOptionsNone;
-            if(uri.scheme == "flip") default_opt = MirrorOptionsFlipY;
-            if(uri.scheme == "rotate") default_opt = MirrorOptionsFlipXY;
-            if(uri.scheme == "transpose") default_opt = MirrorOptionsTranspose;
-            if(uri.scheme == "rotateCW") default_opt = MirrorOptionsRotateCW;
-            if(uri.scheme == "rotateCCW") default_opt = MirrorOptionsRotateCCW;
+            if(uri.Get<std::string>("scheme") == "flip") default_opt = MirrorOptionsFlipY;
+            if(uri.Get<std::string>("scheme") == "rotate") default_opt = MirrorOptionsFlipXY;
+            if(uri.Get<std::string>("scheme") == "transpose") default_opt = MirrorOptionsTranspose;
+            if(uri.Get<std::string>("scheme") == "rotateCW") default_opt = MirrorOptionsRotateCW;
+            if(uri.Get<std::string>("scheme") == "rotateCCW") default_opt = MirrorOptionsRotateCCW;
 
             std::vector<MirrorOptions> flips;
 

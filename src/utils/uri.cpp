@@ -44,10 +44,10 @@ Uri ParseUri(const std::string &str_uri)
     const size_t ns = str_uri.find(':', npos);
     if( ns != std::string::npos )
     {
-        uri.scheme = str_uri.substr(0,ns);
+        uri.Set("scheme", str_uri.substr(0,ns));
         npos = ns+1;
     }else{
-        uri.scheme = "file";
+        uri.Set("scheme", "file");
         uri.url = str_uri;
         return uri;
     }
@@ -88,7 +88,7 @@ Uri ParseUri(const std::string &str_uri)
 
 std::ostream& operator<< (std::ostream &out, Uri &uri)
 {
-    out << "scheme: " << uri.scheme << std::endl;
+    out << "scheme: " << uri.Get<std::string>("scheme") << std::endl;
     out << "url:    " << uri.url << std::endl;
     out << "params:" << std::endl;
 
