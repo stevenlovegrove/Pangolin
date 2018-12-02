@@ -24,7 +24,6 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/join.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/merge.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/json.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/drivers/thread.cpp
 )
 
 list(APPEND VIDEO_FACTORY_REG
@@ -44,13 +43,14 @@ list(APPEND VIDEO_FACTORY_REG
     RegisterJoinVideoFactory
     RegisterMergeVideoFactory
     RegisterJsonVideoFactory
-    RegisterThreadVideoFactory
 )
 
 target_include_directories(${COMPONENT}
     PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include"
     PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
+
+
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image pango_packetstream)
 
 # Create window_frameworks.h file for inclusion in library

@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2014 Steven Lovegrove
+ * Copyright (c) 2018 Andrey Mnatsakanov
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,24 +25,45 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HANDLER_GLBUFFER_H
-#define HANDLER_GLBUFFER_H
+#pragma once
 
-#include <pangolin/handler/handler.h>
-#include <pangolin/gl/gl.h>
+//#include <pangolin/platform.h>
+#include <pangolin/display/display_internal.h>
+
+#include <stdexcept>
+#include <string>
+#include <list>
+
+#include <emscripten.h>
+#include <emscripten/html5.h>
 
 namespace pangolin
 {
 
-struct Handler3DFramebuffer : public pangolin::HandlerBase3D
+struct EmscriptenWindow : public PangolinGl
 {
-    Handler3DFramebuffer(GlFramebuffer& fb, pangolin::OpenGlRenderState& cam_state, pangolin::AxisDirection enforce_up=pangolin::AxisNone, float trans_scale=0.01f);
-    void GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision /*n*/[3], GLprecision default_z);
+ public:
+    EmscriptenWindow(const std::string& title, int width, int height);
 
-protected:
-    GlFramebuffer& fb;
+    ~EmscriptenWindow();
+
+    void ToggleFullscreen() override;
+
+    void Move(int x, int y) override;
+
+    void Resize(unsigned int w, unsigned int h) override;
+
+    void MakeCurrent() override;
+
+    void SwapBuffers() override;
+
+    void ProcessEvents() override;
+
+    int x;
+    int y;
+ private:
+    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = NULL;
+    GLuint program = 0;
 };
 
 }
-
-#endif // HANDLER_GLBUFFER_H

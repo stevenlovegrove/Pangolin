@@ -10,35 +10,14 @@
 #define glColor3fv(a)       glColor4f(a[0], a[1], a[2], 1.0f)
 #define glColor3f(a,b,c)    glColor4f(a, b, c, 1.0f)
 
-#define GL_CLAMP                    GL_CLAMP_TO_EDGE
-
-#ifdef HAVE_GLES_2
-    #define glGenFramebuffersEXT        glGenFramebuffers
-    #define glDeleteFramebuffersEXT     glDeleteFramebuffers
-    #define glBindFramebufferEXT        glBindFramebuffer
-    #define glDrawBuffers               glDrawBuffers
-    #define glFramebufferTexture2DEXT   glFramebufferTexture2D
-    #define GL_FRAMEBUFFER_EXT          GL_FRAMEBUFFER
-    #define GL_DEPTH_COMPONENT24        GL_DEPTH_COMPONENT16 // <----
-    #define GL_COLOR_ATTACHMENT0_EXT    GL_COLOR_ATTACHMENT0
-    #define GL_DEPTH_ATTACHMENT_EXT     GL_DEPTH_ATTACHMENT
-#else
-    #define glOrtho                     glOrthof
-    #define glGenFramebuffersEXT        glGenFramebuffersOES
-    #define glDeleteFramebuffersEXT     glDeleteFramebuffersOES
-    #define glBindFramebufferEXT        glBindFramebufferOES
-    #define glDrawBuffers               glDrawBuffersOES
-    #define glFramebufferTexture2DEXT   glFramebufferTexture2DOES
-    #define GL_FRAMEBUFFER_EXT          GL_FRAMEBUFFER_OES
-    #define GL_DEPTH_COMPONENT24        GL_DEPTH_COMPONENT24_OES
-    #define GL_COLOR_ATTACHMENT0_EXT    GL_COLOR_ATTACHMENT0_OES
-#endif
+#define glGenFramebuffersEXT        glGenFramebuffers
+#define glDeleteFramebuffersEXT     glDeleteFramebuffers
+#define glBindFramebufferEXT        glBindFramebuffer
+#define glFramebufferTexture2DEXT   glFramebufferTexture2D
 
 #define glGetDoublev                glGetFloatv
 
-#ifdef HAVE_GLES_2
-#include <pangolin/gl2engine.h>
-#endif
+#include <pangolin/gl/compat/gl2engine.h>
 
 inline void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
 {

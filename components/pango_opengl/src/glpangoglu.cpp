@@ -30,12 +30,23 @@
 
 namespace pangolin {
 
-const GLubyte gNotErrorLookup[] = "XX";
-
-const GLubyte* glErrorString(GLenum /*error*/)
+const GLubyte* glErrorString(GLenum err)
 {
-    // TODO: Implement glErrorString
-    return gNotErrorLookup;
+    switch (err)
+    {
+    case GL_NO_ERROR:                      return (GLubyte*)"GL_NO_ERROR";
+    case GL_INVALID_ENUM:                  return (GLubyte*)"GL_INVALID_ENUM";
+    case GL_INVALID_VALUE:                 return (GLubyte*)"GL_INVALID_VALUE";
+    case GL_INVALID_OPERATION:             return (GLubyte*)"GL_INVALID_OPERATION";
+    case GL_STACK_OVERFLOW:                return (GLubyte*)"GL_STACK_OVERFLOW";
+    case GL_STACK_UNDERFLOW:               return (GLubyte*)"GL_STACK_UNDERFLOW";
+    case GL_OUT_OF_MEMORY:                 return (GLubyte*)"GL_OUT_OF_MEMORY";
+    case 0x8031: /* not core */            return (GLubyte*)"GL_TABLE_TOO_LARGE_EXT";
+    case 0x8065: /* not core */            return (GLubyte*)"GL_TEXTURE_TOO_LARGE_EXT";
+    case GL_INVALID_FRAMEBUFFER_OPERATION: return (GLubyte*)"GL_INVALID_FRAMEBUFFER_OPERATION";
+    default:
+        return (GLubyte*)"[Unknown error code]";
+    }
 }
 
 // Based on glu implementation.
@@ -91,11 +102,10 @@ int InvertMatrix(const P m[16], P invOut[16])
 }
 
 // Based on glu implementation
-GLint glProject(
-    float objx, float objy, float objz,
-    const float modelMatrix[16],
-    const float projMatrix[16],
-    const GLint viewport[4],
+GLint glProject(float objx, float objy, float objz,
+    const float * const modelMatrix,
+    const float * const projMatrix,
+    const GLint * const viewport,
     float* winx, float* winy, float* winz)
 {
     float t1[4] = {objx, objy, objz, 1.0f};
@@ -130,11 +140,10 @@ GLint glProject(
 }
 
 // Based on glu implementation
-GLint glUnProject(
-    float winx, float winy, float winz,
-    const float mv[16],
-    const float proj[16],
-    const GLint viewport[4],
+GLint glUnProject(float winx, float winy, float winz,
+    const float * const mv,
+    const float * const proj,
+    const GLint * const viewport,
     float* objx, float* objy, float* objz)
 {
     float t1[16];
@@ -176,11 +185,10 @@ GLint glUnProject(
 }
 
 // Based on glu implementation
-GLint glProject(
-    double objx, double objy, double objz,
-    const double modelMatrix[16],
-    const double projMatrix[16],
-    const GLint viewport[4],
+GLint glProject(double objx, double objy, double objz,
+    const double * const modelMatrix,
+    const double * const projMatrix,
+    const GLint * const viewport,
     double* winx, double* winy, double* winz)
 {
     double t1[4] = {objx, objy, objz, 1.0f};
@@ -215,11 +223,10 @@ GLint glProject(
 }
 
 // Based on glu implementation
-GLint glUnProject(
-    double winx, double winy, double winz,
-    const double mv[16],
-    const double proj[16],
-    const GLint viewport[4],
+GLint glUnProject(double winx, double winy, double winz,
+    const double * const mv,
+    const double * const proj,
+    const GLint * const viewport,
     double* objx, double* objy, double* objz)
 {
     double t1[16];

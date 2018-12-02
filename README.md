@@ -161,6 +161,27 @@ setenv PANGOLIN_WINDOW_URI "cocoa:[HIGHRES=true]//"
 
 Some window parameters that may be interesting to override are `DISPLAYNAME`, `DOUBLEBUFFER`, `SAMPLE_BUFFERS`, `SAMPLES`, `HIGHRES`. Window modules currently include `x11`, `winapi`, `cocoa`.
 
+## Emscripten (Compile for web) ##
+
+Emscripten is a neat c++ compiler which can output javascript executable code. That's right, your Pangolin programs can run on the web, too!
+
+Follow Emscriptens instructions to install the SDK (summerized below):
+
+```
+mkdir ~/tools && cd ~/tools
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk && ./emsdk install latest && ./emsdk activate latest
+```
+
+To build Pangolin with the Emscripten toolchain, create a new build directory, make sure Emscripten is on your PATH, and use the `emconfigure` utility to run CMake with the custom toolchain settings:
+
+```
+cd ~/code/Pangolin
+mkdir build-em && cd build-em
+source ~/tools/emsdk/emsdk_env.sh
+emconfigure
+```
+
 ## Acknowledgements ##
 
 I'd like to thank the growing number of kind contributors to Pangolin for helping to make it more stable and feature rich. Many features of Pangolin have been influenced by other projects such as GFlags, GLConsole, and libcvd in particular. I'd also like to thank the FOSS projects on which Pangolin depends.

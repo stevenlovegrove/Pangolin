@@ -28,6 +28,7 @@
 #include <pangolin/display/display_internal.h>
 #include <pangolin/display/view.h>
 #include <pangolin/handler/handler.h>
+#include <pangolin/display/display.h>
 
 namespace pangolin
 {
@@ -114,45 +115,35 @@ void HandlerScroll::Special(View& d, InputSpecial inType, float x, float y, floa
     }
 }
 
-Handler3D::Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up, float trans_scale, float zoom_fraction)
+HandlerBase3D::HandlerBase3D(OpenGlRenderState& cam_state, AxisDirection enforce_up, float trans_scale, float zoom_fraction)
     : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), zf(zoom_fraction), cameraspec(CameraSpecOpenGl), last_z(0.8)
 {
     SetZero<3,1>(rot_center);
 }
 
-void Handler3D::Keyboard(View&, unsigned char /*key*/, int /*x*/, int /*y*/, bool /*pressed*/)
+void HandlerBase3D::Keyboard(View&, unsigned char /*key*/, int /*x*/, int /*y*/, bool /*pressed*/)
 {
     // TODO: hooks for reset / changing mode (perspective / ortho etc)
 }
 
-bool Handler3D::ValidWinDepth(GLprecision depth)
+bool HandlerBase3D::ValidWinDepth(GLprecision depth)
 {
     return depth != 1;
 }
 
-void Handler3D::PixelUnproject( View& view, GLprecision winx, GLprecision winy, GLprecision winz, GLprecision Pc[3])
+void HandlerBase3D::PixelUnproject( View& view, GLprecision winx, GLprecision winy, GLprecision winz, GLprecision Pc[3])
 {
     const GLint viewport[4] = {view.v.l,view.v.b,view.v.w,view.v.h};
     const pangolin::OpenGlMatrix proj = cam_state->GetProjectionMatrix();
-    glUnProject(winx, winy, winz, Identity4d, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
+    glUnProject(winx, winy, winz, IdentityMatrix().m, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
 }
 
-void Handler3D::GetPosNormal(pangolin::View& view, int winx, int winy, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision nw[3], GLprecision default_z)
+void HandlerBase3D::GetPosNormalImpl(pangolin::View& view, int winx, int winy, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision nw[3], GLprecision default_z, float* zs)
 {
-    // TODO: Get to work on android
-
     const int zl = (hwin*2+1);
     const int zsize = zl*zl;
-    GLfloat zs[zsize];
 
-#ifndef HAVE_GLES
-    glReadBuffer(GL_FRONT);
-    glReadPixels(winx-hwin,winy-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
-#else
-    std::fill(zs,zs+zsize, 1);
-#endif
     GLfloat mindepth = *(std::min_element(zs,zs+zsize));
-
     if(mindepth == 1) mindepth = (GLfloat)default_z;
 
     p[0] = winx; p[1] = winy; p[2] = mindepth;
@@ -170,7 +161,7 @@ void Handler3D::GetPosNormal(pangolin::View& view, int winx, int winy, GLprecisi
     PixelUnproject(view, winx+hwin, winy, zs[hwin*zl + zl-1], Pr );
     PixelUnproject(view, winx, winy-hwin, zs[hwin+1],         Pb );
     PixelUnproject(view, winx, winy+hwin, zs[zsize-(hwin+1)], Pt );
-    
+
     // n = ((Pr-Pl).cross(Pt-Pb)).normalized();
     GLprecision PrmPl[3]; GLprecision PtmPb[3];
     MatSub<3,1>(PrmPl,Pr,Pl);
@@ -184,7 +175,20 @@ void Handler3D::GetPosNormal(pangolin::View& view, int winx, int winy, GLprecisi
     LieApplySO3(nw,T_wc,nc);
 }
 
-void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)
+void HandlerBase3D::GetPosNormal(pangolin::View& view, int winx, int winy, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision nw[3], GLprecision default_z)
+{
+    const int zl = (hwin*2+1);
+    const int zsize = zl*zl;
+    GLfloat zs[zsize];
+
+    CheckGlDieOnError();
+    glReadBuffer(GL_FRONT);
+    CheckGlDieOnError();
+    glReadPixels(winx-hwin,winy-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
+    GetPosNormalImpl(view, winx, winy, p, Pw, Pc, nw, default_z, zs);
+}
+
+void HandlerBase3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)
 {
     // mouse down
     last_pos[0] = (float)x;
@@ -222,7 +226,7 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
     }
 }
 
-void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
+void HandlerBase3D::MouseMotion(View& display, int x, int y, int button_state)
 {
     const GLprecision rf = 0.01;
     const float delta[2] = { (float)x - last_pos[0], (float)y - last_pos[1] };
@@ -340,7 +344,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
     last_pos[1] = (float)y;
 }
 
-void Handler3D::Special(View& display, InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int button_state)
+void HandlerBase3D::Special(View& display, InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int button_state)
 {
     if( !(inType == InputSpecialScroll || inType == InputSpecialRotate) )
         return;
@@ -397,5 +401,67 @@ void Handler3D::Special(View& display, InputSpecial inType, float x, float y, fl
     }
     
 }
+
+#ifdef HAVE_GLES
+Handler3DBlitCopy::Handler3DBlitCopy(pangolin::OpenGlRenderState& cam_state, pangolin::AxisDirection enforce_up, float trans_scale)
+    : pangolin::HandlerBase3D(cam_state,enforce_up, trans_scale)
+{
+}
+
+void Handler3DBlitCopy::GetPosNormal(pangolin::View& view, int winx, int winy, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision n[3], GLprecision default_z)
+{
+    // Go around the houses so we can get depth data
+    const int w = pangolin::DisplayBase().v.w;
+    const int h = pangolin::DisplayBase().v.h;
+
+    // Make sure our buffers are the right size for the current screen buffer
+    if(!rgb.IsValid() || rgb.width != w || rgb.height != h)
+    {
+        // Reinitialize all buffers
+        fb_blit.Reinitialise();
+        rgb_blit.Reinitialise(w,h,GL_RGB, true, 0, GL_RGB, GL_UNSIGNED_BYTE);
+        depth_blit.Reinitialise(w,h,GL_DEPTH24_STENCIL8, false, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8);
+        fb_blit.AttachColour(rgb_blit);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fb_blit.fbid);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depth_blit.tid, 0);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+        fb.Reinitialise();
+        rgb.Reinitialise(w,h,GL_R32F, true, 0, GL_RED, GL_FLOAT);
+        depth.Reinitialise(w,h,GL_DEPTH24_STENCIL8, false, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8);
+        fb.AttachColour(rgb);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fb.fbid);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depth.tid, 0);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    }
+
+    // Copy screens depth buffer to our blit framebuffer
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb_blit.fbid);
+    glBlitFramebuffer(0,0,w,h, 0,0,w,h, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Render the depth buffer to our regular buffer (so depth ends up in color buffer)
+    fb.Bind();
+    glViewport(0,0,w,h);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glColor4f(1.0,1.0,1.0,1.0);
+    depth_blit.RenderToViewport();
+    depth_blit.Unbind();
+
+    const int zl = (hwin*2+1);
+    const int zsize = zl*zl;
+    GLfloat zs[4*zsize];
+    GLfloat zsr[zsize];
+
+    // GLES3 only supports ReadPixels with GL_RGBA
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glReadPixels(winx-hwin,winy-hwin,zl,zl,GL_RGBA,GL_FLOAT,zs);
+    for(size_t i=0; i < zsize; ++i) zsr[i] = zs[4*i];
+    fb.Unbind();
+
+    HandlerBase3D::GetPosNormalImpl(view,winx,winy,p,Pw,Pc,n,default_z,zsr);
+}
+#endif
 
 }

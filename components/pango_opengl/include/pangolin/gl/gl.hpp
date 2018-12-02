@@ -282,6 +282,18 @@ inline void GlTexture::Download(TypedImage& image) const
         image.Reinitialise(width, height, PixelFormatFromString("RGBA128F"));
         Download(image.ptr, GL_RGBA, GL_FLOAT);
         break;
+    case GL_DEPTH_COMPONENT16:
+        image.Reinitialise(width, height, PixelFormatFromString("GRAY16LE"));
+        Download(image.ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
+        break;
+    case GL_DEPTH_COMPONENT24:
+        image.Reinitialise(width, height, PixelFormatFromString("GRAY32"));
+        Download(image.ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
+        break;
+    case GL_DEPTH_COMPONENT32F:
+        image.Reinitialise(width, height, PixelFormatFromString("GRAY32F"));
+        Download(image.ptr, GL_DEPTH_COMPONENT, GL_FLOAT);
+        break;
     default:
         throw std::runtime_error(
             "GlTexture::Download - Unknown internal format (" +
@@ -300,7 +312,7 @@ inline void GlTexture::CopyFrom(const GlTexture& tex)
         Reinitialise(tex.width, tex.height, tex.internal_format, true);
     }
 
-    glCopyImageSubData(tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0,
+    glCopyImageSubDataNV(tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0,
                        tid, GL_TEXTURE_2D, 0, 0, 0, 0,
                        width, height, 1);
     CheckGlDieOnError();
@@ -354,7 +366,9 @@ inline void GlTexture::RenderToViewport() const
     glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
+#ifndef HAVE_GLES
     glEnable(GL_TEXTURE_2D);
+#endif
     Bind();
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -362,7 +376,9 @@ inline void GlTexture::RenderToViewport() const
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
+#ifndef HAVE_GLES
     glDisable(GL_TEXTURE_2D);
+#endif
 }
 
 inline void GlTexture::RenderToViewport(Viewport tex_vp, bool flipx, bool flipy) const
@@ -509,7 +525,7 @@ inline void GlRenderBuffer::Reinitialise(GLint width, GLint height, GLint intern
 inline GlRenderBuffer::~GlRenderBuffer()
 {
     // We have no GL context whilst exiting.
-    if( width!=0 && !pangolin::ShouldQuit() ) {
+    if( width!=0 ) {
         glDeleteTextures(1, &rbid);
     }
 }
@@ -580,9 +596,7 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTe
 inline void GlFramebuffer::Bind() const
 {
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
-#ifndef HAVE_GLES
     glDrawBuffers( attachments, attachment_buffers );
-#endif
 }
 
 inline void GlFramebuffer::Reinitialise()
@@ -595,9 +609,7 @@ inline void GlFramebuffer::Reinitialise()
 
 inline void GlFramebuffer::Unbind() const
 {
-#ifndef HAVE_GLES
     glDrawBuffers( 1, attachment_buffers );
-#endif
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
 
