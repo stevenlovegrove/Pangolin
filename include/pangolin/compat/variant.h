@@ -14,8 +14,12 @@ namespace pangolin {
 #if (__cplusplus >= 201703L)
 using std::variant;
 using std::get;
+using std::get_if;
+using std::visit;
 #else
 using mpark::variant;
 using mpark::get;
+using mpark::get_if;
+using mpark::visit;
 #endif
 }

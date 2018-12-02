@@ -238,25 +238,19 @@ void StandardizeRgbToColor(pangolin::Geometry& geom)
             const bool have_alpha = it_a != verts.attributes.end();
 
             if(verts.attributes.find("color") == verts.attributes.end()) {
-                auto& color = verts.attributes["color"];
-                color = it_r->second;
+                Geometry::Element::Attribute& red = it_r->second;
+                Geometry::Element::Attribute& color = verts.attributes["color"];
 
                 // TODO: Check that these really are contiguous in memory...
-                // Pick the right format
-                uint32_t gltype = GL_FLOAT;
-                uint8_t* ptr = nullptr;
-
-                visit([&](auto&& attrib){
-                    using T = std::decay_t<decltype(attrib)>;
-                    gltype = GlFormatTraits<typename T::PixelType>::gltype;
-                    ptr = (uint8_t*)attrib.ptr;
-                }, it_r->second);
-
-                color = MakeAttribute(
-                    gltype,
-                    verts.h, have_alpha ? 4 : 3,
-                    ptr, verts.pitch
-                );
+                if(auto attrib = mpark::get_if<Image<float>>(&red)) {
+                    color = Image<float>(attrib->ptr, have_alpha ? 4 : 3, verts.h, verts.pitch);
+                }else if(auto attrib = get_if<Image<uint8_t>>(&red)) {
+                    color = Image<uint8_t>(attrib->ptr, have_alpha ? 4 : 3, verts.h, verts.pitch);
+                }else if(auto attrib = get_if<Image<uint16_t>>(&red)) {
+                    color = Image<uint16_t>(attrib->ptr, have_alpha ? 4 : 3, verts.h, verts.pitch);
+                }else if(auto attrib = get_if<Image<uint32_t>>(&red)) {
+                    color = Image<uint32_t>(attrib->ptr, have_alpha ? 4 : 3, verts.h, verts.pitch);
+                }
             }
             verts.attributes.erase(it_r);
             verts.attributes.erase(it_g);
