@@ -42,7 +42,7 @@ if(BUILD_PANGOLIN_LIBOPENEXR)
         target_link_libraries(${COMPONENT} PRIVATE ${OpenEXR_LIBRARY})
         target_compile_options(${COMPONENT} PRIVATE
             $<$<OR:$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wno-deprecated-register>
+            -Wno-deprecated-register -Wno-deprecated>
         )
         message(STATUS "libopenexr Found and Enabled")
     endif()

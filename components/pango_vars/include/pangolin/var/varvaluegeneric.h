@@ -29,6 +29,7 @@
 
 #include <string>
 #include <pangolin/utils/file_utils.h>
+#include <memory>
 
 namespace pangolin
 {
