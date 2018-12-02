@@ -1911,7 +1911,7 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
       bool end_line_bit = 0;
       while (!IS_NEW_LINE(token[0])) {
         // get index from string
-        int idx;
+        int idx = 0;
         fixIndex(parseInt(&token), 0, &idx);
 
         size_t n = strspn(token, " \t\r");

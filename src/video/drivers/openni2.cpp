@@ -269,6 +269,10 @@ void OpenNi2Video::SetupStreamModes()
         switch( mode.sensor_type ) {
         case OpenNiDepth_1mm_Registered:
             depth_to_color = true;
+            nisensortype = openni::SENSOR_DEPTH;
+            nipixelfmt = openni::PIXEL_FORMAT_DEPTH_1_MM;
+            use_depth = true;
+            break;
         case OpenNiDepth_1mm:
             nisensortype = openni::SENSOR_DEPTH;
             nipixelfmt = openni::PIXEL_FORMAT_DEPTH_1_MM;

@@ -459,11 +459,11 @@ void MirrorVideo::Process(unsigned char* buffer_out, const unsigned char* buffer
         case MirrorOptionsTranspose:
             Transpose(img_out, img_in, bytes_per_pixel);
             break;
-        default:
-            pango_print_warn("MirrorVideo::Process(): Invalid enum %i.\n", flips[s]);
         case MirrorOptionsNone:
             PitchedImageCopy(img_out, img_in, bytes_per_pixel);
             break;
+        default:
+            pango_print_warn("MirrorVideo::Process(): Invalid enum %i.\n", flips[s]);
         }
     }
 

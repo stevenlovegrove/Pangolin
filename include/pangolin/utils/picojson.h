@@ -275,7 +275,7 @@ private:
 typedef value::array array;
 typedef value::object object;
 
-inline value::value() : type_(null_type) {}
+inline value::value() : type_(null_type), u_({false}) {}
 
 inline value::value(int type, bool) : type_(type) {
     switch (type) {
