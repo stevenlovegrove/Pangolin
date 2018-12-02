@@ -300,7 +300,7 @@ inline void GlTexture::CopyFrom(const GlTexture& tex)
         Reinitialise(tex.width, tex.height, tex.internal_format, true);
     }
 
-    glCopyImageSubData(tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0,
+    glCopyImageSubDataNV(tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0,
                        tid, GL_TEXTURE_2D, 0, 0, 0, 0,
                        width, height, 1);
     CheckGlDieOnError();
@@ -509,7 +509,7 @@ inline void GlRenderBuffer::Reinitialise(GLint width, GLint height, GLint intern
 inline GlRenderBuffer::~GlRenderBuffer()
 {
     // We have no GL context whilst exiting.
-    if( width!=0 && !pangolin::ShouldQuit() ) {
+    if( width!=0 ) {
         glDeleteTextures(1, &rbid);
     }
 }

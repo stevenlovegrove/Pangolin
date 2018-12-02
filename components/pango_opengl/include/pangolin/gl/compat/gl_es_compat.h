@@ -37,7 +37,7 @@
 #define glGetDoublev                glGetFloatv
 
 #ifdef HAVE_GLES_2
-#include <pangolin/gl2engine.h>
+#include <pangolin/gl/compat/gl2engine.h>
 #endif
 
 inline void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)

@@ -39,9 +39,9 @@ const GLubyte* glErrorString(GLenum error);
 PANGOLIN_EXPORT
 GLint glProject(
     float objx, float objy, float objz,
-    const float modelMatrix[16],
-    const float projMatrix[16],
-    const GLint viewport[4],
+    const float* const modelMatrix/*[16]*/,
+    const float* const projMatrix/*[16]*/,
+    const GLint* const viewport/*[4]*/,
     float* winx, float* winy, float* winz
 );
 
@@ -50,9 +50,9 @@ GLint glProject(
 PANGOLIN_EXPORT
 GLint glUnProject(
     float winx, float winy, float winz,
-    const float modelMatrix[16],
-    const float projMatrix[16],
-    const GLint viewport[4],
+    const float* const modelMatrix/*[16]*/,
+    const float* const projMatrix/*[16]*/,
+    const GLint* const viewport/*[4]*/,
     float* objx, float* objy, float* objz
 );
 
@@ -60,9 +60,9 @@ GLint glUnProject(
 PANGOLIN_EXPORT
 GLint glProject(
     double objx, double objy, double objz,
-    const double modelMatrix[16],
-    const double projMatrix[16],
-    const GLint viewport[4],
+    const double* const modelMatrix/*[16]*/,
+    const double* const projMatrix/*[16]*/,
+    const GLint*  const viewport/*[4]*/,
     double* winx, double* winy, double* winz
 );
 
@@ -71,9 +71,9 @@ GLint glProject(
 PANGOLIN_EXPORT
 GLint glUnProject(
     double winx, double winy, double winz,
-    const double modelMatrix[16],
-    const double projMatrix[16],
-    const GLint viewport[4],
+    const double* const modelMatrix/*[16]*/,
+    const double* const projMatrix/*[16]*/,
+    const GLint*  const viewport/*[4]*/,
     double* objx, double* objy, double* objz
 );
 

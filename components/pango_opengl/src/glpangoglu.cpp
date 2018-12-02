@@ -91,11 +91,10 @@ int InvertMatrix(const P m[16], P invOut[16])
 }
 
 // Based on glu implementation
-GLint glProject(
-    float objx, float objy, float objz,
-    const float modelMatrix[16],
-    const float projMatrix[16],
-    const GLint viewport[4],
+GLint glProject(float objx, float objy, float objz,
+    const float * const modelMatrix,
+    const float * const projMatrix,
+    const GLint * const viewport,
     float* winx, float* winy, float* winz)
 {
     float t1[4] = {objx, objy, objz, 1.0f};
@@ -130,11 +129,10 @@ GLint glProject(
 }
 
 // Based on glu implementation
-GLint glUnProject(
-    float winx, float winy, float winz,
-    const float mv[16],
-    const float proj[16],
-    const GLint viewport[4],
+GLint glUnProject(float winx, float winy, float winz,
+    const float * const mv,
+    const float * const proj,
+    const GLint * const viewport,
     float* objx, float* objy, float* objz)
 {
     float t1[16];
@@ -176,11 +174,10 @@ GLint glUnProject(
 }
 
 // Based on glu implementation
-GLint glProject(
-    double objx, double objy, double objz,
-    const double modelMatrix[16],
-    const double projMatrix[16],
-    const GLint viewport[4],
+GLint glProject(double objx, double objy, double objz,
+    const double * const modelMatrix,
+    const double * const projMatrix,
+    const GLint * const viewport,
     double* winx, double* winy, double* winz)
 {
     double t1[4] = {objx, objy, objz, 1.0f};
@@ -215,11 +212,10 @@ GLint glProject(
 }
 
 // Based on glu implementation
-GLint glUnProject(
-    double winx, double winy, double winz,
-    const double mv[16],
-    const double proj[16],
-    const GLint viewport[4],
+GLint glUnProject(double winx, double winy, double winz,
+    const double * const mv,
+    const double * const proj,
+    const GLint * const viewport,
     double* objx, double* objy, double* objz)
 {
     double t1[16];

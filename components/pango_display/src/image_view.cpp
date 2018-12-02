@@ -180,7 +180,7 @@ ImageView& ImageView::SetImage(const pangolin::GlTexture& texture)
         tex.Reinitialise(texture.width, texture.height, texture.internal_format, true);
     }
 
-    glCopyImageSubData(
+    glCopyImageSubDataNV(
             texture.tid, GL_TEXTURE_2D, 0, 0, 0, 0, tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0, tex.width, tex.height, 1);
 
     return *this;
