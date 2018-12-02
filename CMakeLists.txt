@@ -1,109 +1,71 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.8)
 project("Pangolin")
 set(PANGOLIN_VERSION_MAJOR 0)
 set(PANGOLIN_VERSION_MINOR 5)
 set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
+## Hunter is used to manage dependent libraries
+## To control these manually, use cmake -DHUNTER_ENABLED=NO
+#include("CMakeModules/HunterGate.cmake")
+#HunterGate(
+#    URL "https://github.com/ruslo/hunter/archive/v0.23.58.tar.gz"
+#    SHA1 "ee80dc91f91f5eb6892f80a0a92c83b4de8e980a"
+#)
 
-# Platform configuration vars
-include(SetPlatformVars)
+project(Pangolin)
 
-SET(CPACK_GENERATOR "DEB")
-
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Steven Lovegrove")
-SET(CPACK_PACKAGE_VERSION_MAJOR ${PANGOLIN_VERSION_MAJOR})
-SET(CPACK_PACKAGE_VERSION_MINOR ${PANGOLIN_VERSION_MINOR})
-SET(CPACK_PACKAGE_VERSION_PATCH "0")
-include(CPack)
-
-option( BUILD_TESTS "Build Tests" ON )
-option( BUILD_TOOLS "Build Examples" ON )
-option( BUILD_EXAMPLES "Build Tools" ON )
-
-set (CMAKE_CXX_STANDARD 14)
-
-if(_WIN_)
-    option( BUILD_SHARED_LIBS    "Build Shared Library" OFF)
-    option( BUILD_EXTERN_GLEW    "Automatically download, build and compile GLEW" ON)
-    option( BUILD_EXTERN_LIBPNG  "Automatically download, build and compile libpng" ON)
-    option( BUILD_EXTERN_LIBJPEG "Automatically download, build and compile libjpeg" ON)
-    option( MSVC_USE_STATIC_CRT  "Use static C Runtime with MSVC, /MT instead of /MD" ON)
-
-    # Make sure there are no erroneous C Runtime flags
-    list(APPEND FLAG_VARS
-        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
-        CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
-    )
-    if(MSVC_USE_STATIC_CRT)
-        foreach(FLAG_VAR ${FLAG_VARS})
-            string(REGEX REPLACE "/MD" "/MT" NEW_FLAGS "${${FLAG_VAR}}")
-            set(${FLAG_VAR} "${NEW_FLAGS}" CACHE STRING "" FORCE)
-        endforeach()
-    else()
-        foreach(FLAG_VAR ${FLAG_VARS})
-            string(REGEX REPLACE "/MT" "/MD" NEW_FLAGS "${${FLAG_VAR}}")
-            set(${FLAG_VAR} "${NEW_FLAGS}" CACHE STRING "" FORCE)
-        endforeach()
-    endif()
-else()
-    option( BUILD_SHARED_LIBS "Build Shared Library" ON)
+# Prevent in source builds
+if(EXISTS "${PROJECT_BINARY_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR "Source build detected: please use a subdir. You may remove 'CMakeCache.txt' and 'CMakeFiles'.")
 endif()
 
-if(NOT MSVC)
-    set( CMAKE_CXX_FLAGS "-Wall -Wextra ${CMAKE_CXX_FLAGS}" )
+# Make our own cmake imports accessible
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+# Default build type (Override with cmake .. -DCMAKE_BUILD_TYPE=...)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+  message(STATUS "Setting build type to '${CMAKE_BUILD_TYPE}' as none was specified.")
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-if(ANDROID)
-    set(ANDROID_PACKAGE_NAME "com.github.stevenlovegrove.pangolin")
-    include(AndroidUtils)
-endif()
 
-if(ANDROID OR IOS)
-    set(HAVE_GLES 1)
-    option(BUILD_FOR_GLES_2 "Build for OpenGL ES 2 instead of ES 1" ON )
-    if(BUILD_FOR_GLES_2)
-        set(HAVE_GLES_2 1)
-    endif()
-endif()
+#hunter_add_package(glew)
+#hunter_add_package(PNG)
+#hunter_add_package(Jpeg)
+#hunter_add_package(TIFF)
+#hunter_add_package(lz4)
+#hunter_add_package(pybind11)
+#hunter_add_package(Eigen)
 
-if(_OSX_)
-    set(CMAKE_MACOSX_RPATH ON)
-endif()
+#find_package(glew REQUIRED)
+#find_package(PNG)
+#find_package(JPEG)
+#find_package(TIFF)
+#find_package(lz4)
+#find_package(pybind11)
+#find_package(Eigen3)
 
-# Overide with cmake -DCMAKE_BUILD_TYPE=Debug {dir}
-if( NOT CMAKE_BUILD_TYPE AND NOT _WIN_ )
-   message("Build type not set (defaults to release)")
-   message("-DCMAKE_BUILD_TYPE=Debug for debug")
-   set( CMAKE_BUILD_TYPE Release )
-endif()
+# TODO: Add EXR
 
-string(TOLOWER ${PROJECT_NAME} LIBRARY_NAME)
+#add_executable(foo test.cpp)
+#target_link_libraries(foo glew::glew pybind11::pybind11 pybind11::embed pybind11::module PNG::png JPEG::jpeg lz4::lz4 TIFF::libtiff Eigen3::Eigen)
 
-# make an uninstall target
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY
-)
+option( BUILD_SHARED_LIBS "Build Shared Library" ON)
 
-add_custom_target(pangolin_uninstall
-  "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+# Add all pangolin components
+file(GLOB components_cmake "${CMAKE_CURRENT_LIST_DIR}/components/*/CMakeLists.txt")
+set(component_list "")
+foreach(component_cmake ${components_cmake})
+    get_filename_component(component_dir ${component_cmake} DIRECTORY)
+    get_filename_component(component_name ${component_dir} NAME)
+    add_library(${component_name} "")
+    list(APPEND component_list ${component_name})
+endforeach()
+foreach(component_cmake ${components_cmake})
+    include(${component_cmake})
+endforeach()
 
-add_subdirectory("external")
-add_subdirectory("src")
 
-if(BUILD_TESTS)
-    set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
-    add_subdirectory("test")
-endif()
-
-if(BUILD_TOOLS)
-    set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
-    add_subdirectory(tools)
-endif()
-
-if(BUILD_EXAMPLES)
-    set(Pangolin_DIR ${Pangolin_BINARY_DIR}/src)
-    add_subdirectory(examples)
-endif()
+export(TARGETS ${component_list} NAMESPACE pangolin:: FILE PangolinTargets.cmake)
+#export(PACKAGE Pangolin)
