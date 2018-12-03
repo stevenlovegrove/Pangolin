@@ -654,7 +654,7 @@ inline GlBufferData::GlBufferData(GlBufferData&& tex)
 {
     *this = std::move(tex);
 }
-inline void GlBufferData::operator=(GlBufferData&& tex)
+inline GlBufferData& GlBufferData::operator=(GlBufferData&& tex)
 {
     Free();
     this->bo = tex.bo;
@@ -662,6 +662,7 @@ inline void GlBufferData::operator=(GlBufferData&& tex)
     this->gluse = tex.gluse;
     this->size_bytes = tex.size_bytes;
     tex.bo = 0;
+    return *this;
 }
 
 inline GlBufferData::~GlBufferData()
@@ -744,17 +745,18 @@ inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum 
 
 
 inline GlBuffer::GlBuffer(GlBuffer&& o)
-    : datatype(o.datatype), num_elements(o.num_elements), count_per_element(o.count_per_element)
+    : GlBufferData()
 {
     *this = std::move(o);
 }
-inline void GlBuffer::operator=(GlBuffer&& o)
+
+inline GlBuffer& GlBuffer::operator=(GlBuffer&& o)
 {
-    this->bo = o.bo;
-    this->buffer_type = o.buffer_type;
-    this->gluse = o.gluse;
-    this->size_bytes = o.size_bytes;
-    o.bo = 0;
+    datatype = o.datatype;
+    num_elements = o.num_elements;
+    count_per_element = o.count_per_element;
+    GlBufferData::operator =(std::move(o));
+    return *this;
 }
 
 inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse, const unsigned char* data )

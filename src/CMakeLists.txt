@@ -224,6 +224,12 @@ else()
                     ${xkbcommon_LIBRARIES}
                     ${egl_LIBRARIES}
                 )
+                list(APPEND INTERNAL_INC
+                    ${wayland-egl_INCLUDE_DIRS}
+                    ${wayland-cursor_INCLUDE_DIRS}
+                    ${xkbcommon_INCLUDE_DIRS}
+                    ${egl_INCLUDE_DIRS}
+                )
             endif()
 
             # X11

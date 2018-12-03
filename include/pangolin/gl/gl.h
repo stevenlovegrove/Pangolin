@@ -191,7 +191,7 @@ struct PANGOLIN_EXPORT GlBufferData
 
     //! Move Constructor
     GlBufferData(GlBufferData&& tex);
-    void operator=(GlBufferData&& tex);
+    GlBufferData& operator=(GlBufferData&& tex);
 
     bool IsValid() const;
 
@@ -224,7 +224,7 @@ struct PANGOLIN_EXPORT GlBuffer : public GlBufferData
     
     //! Move Constructor
     GlBuffer(GlBuffer&& tex);
-    void operator=(GlBuffer&& tex);
+    GlBuffer& operator=(GlBuffer&& tex);
     
     void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse, const unsigned char* data = nullptr );
     void Reinitialise(GlBuffer const& other );
