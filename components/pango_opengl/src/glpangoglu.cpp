@@ -30,12 +30,23 @@
 
 namespace pangolin {
 
-const GLubyte gNotErrorLookup[] = "XX";
-
-const GLubyte* glErrorString(GLenum /*error*/)
+const GLubyte* glErrorString(GLenum err)
 {
-    // TODO: Implement glErrorString
-    return gNotErrorLookup;
+    switch (err)
+    {
+    case GL_NO_ERROR:                      return (GLubyte*)"GL_NO_ERROR";
+    case GL_INVALID_ENUM:                  return (GLubyte*)"GL_INVALID_ENUM";
+    case GL_INVALID_VALUE:                 return (GLubyte*)"GL_INVALID_VALUE";
+    case GL_INVALID_OPERATION:             return (GLubyte*)"GL_INVALID_OPERATION";
+    case GL_STACK_OVERFLOW:                return (GLubyte*)"GL_STACK_OVERFLOW";
+    case GL_STACK_UNDERFLOW:               return (GLubyte*)"GL_STACK_UNDERFLOW";
+    case GL_OUT_OF_MEMORY:                 return (GLubyte*)"GL_OUT_OF_MEMORY";
+    case 0x8031: /* not core */            return (GLubyte*)"GL_TABLE_TOO_LARGE_EXT";
+    case 0x8065: /* not core */            return (GLubyte*)"GL_TEXTURE_TOO_LARGE_EXT";
+    case GL_INVALID_FRAMEBUFFER_OPERATION: return (GLubyte*)"GL_INVALID_FRAMEBUFFER_OPERATION";
+    default:
+        return (GLubyte*)"[Unknown error code]";
+    }
 }
 
 // Based on glu implementation.

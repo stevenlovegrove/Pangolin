@@ -58,7 +58,7 @@ static inline GlFont& font()
 {
     PANGO_ASSERT(context);
     if(!context->font) {
-        context->font = std::make_shared<GlFont>(AnonymousPro_ttf, 25);
+        context->font = std::make_shared<GlFont>(AnonymousPro_ttf, 18);
     }
     return *(context->font.get());
 }

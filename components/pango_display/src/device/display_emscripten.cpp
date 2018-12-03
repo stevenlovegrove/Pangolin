@@ -143,22 +143,22 @@ std::mutex window_mutex;
   EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userData){
     int state = 1;
     EmscriptenWindow* w=(EmscriptenWindow*)userData;
-    w->x = e->clientX;
-    w->y = e->clientY;
+    w->x = e->canvasX;
+    w->y = e->canvasY;
 
     switch(eventType) {
     case EMSCRIPTEN_EVENT_MOUSEDOWN:
       state=0;
     case EMSCRIPTEN_EVENT_MOUSEUP: {
-      pangolin::process::Mouse(e->button, state, e->clientX, e->clientY);
+      pangolin::process::Mouse(e->button, state, w->x, w->y);
       break;
     }
       break;
     case EMSCRIPTEN_EVENT_MOUSEMOVE: {
       if(e->buttons){
-        pangolin::process::MouseMotion(e->clientX, e->clientY);
+        pangolin::process::MouseMotion(w->x, w->y);
       } else {
-        pangolin::process::PassiveMouseMotion(e->clientX, e->clientY);
+        pangolin::process::PassiveMouseMotion(w->x, w->y);
       }
     }
       break;
@@ -174,10 +174,19 @@ std::mutex window_mutex;
     return false;
   }
   EM_BOOL wheel_callback(int eventType, const EmscriptenWheelEvent *e, void *userData){
-    return false;
+    EmscriptenWindow* w=(EmscriptenWindow*)userData;
+    pangolin::process::SpecialInput(InputSpecialScroll, w->x, w->windowed_size[1] - w->y, e->deltaX, -e->deltaY, 0, 0);
+    return true;
   }
   EM_BOOL uievent_callback(int eventType, const EmscriptenUiEvent *e, void *userData){
-    return false;
+      switch(eventType) {
+      case EMSCRIPTEN_EVENT_RESIZE:
+          int width, height;
+          emscripten_get_canvas_element_size("#canvas", &width, &height);
+          pangolin::process::Resize(width, height);
+          break;
+      }
+    return true;
   }
   EM_BOOL focusevent_callback(int eventType, const EmscriptenFocusEvent *e, void *userData){
     return false;
@@ -218,21 +227,21 @@ std::mutex window_mutex;
 
 #define TEST(error) if(error!=EMSCRIPTEN_RESULT_SUCCESS)std::cerr << "error: " << __FILE__<< ":" << __LINE__ << std::endl
 
-  EmscriptenWindow:: EmscriptenWindow(const std::string& title, int width, int height)
+  EmscriptenWindow:: EmscriptenWindow(const std::string& /*title*/, int width, int height)
   {
-    PangolinGl::windowed_size[0] = width;
-    PangolinGl::windowed_size[1] = height;
     EmscriptenWebGLContextAttributes attr;
     emscripten_webgl_init_context_attributes(&attr);
-    attr.alpha = attr.depth = attr.stencil = attr.antialias = attr.preserveDrawingBuffer = attr.preferLowPowerToHighPerformance = attr.failIfMajorPerformanceCaveat = 1;
-    attr.enableExtensionsByDefault = 1;
-    attr.premultipliedAlpha = 0;
-    attr.majorVersion = 1;
+    attr.majorVersion = 2;
     attr.minorVersion = 0;
     ctx = emscripten_webgl_create_context(0, &attr);
     if( ctx < 0 ) {
       throw std::runtime_error("Pangolin Emscripten: Failed to create window." );
     }
+
+    emscripten_get_canvas_element_size("#canvas", &width, &height);
+
+    PangolinGl::windowed_size[0] = width;
+    PangolinGl::windowed_size[1] = height;
 
     EMSCRIPTEN_RESULT ret = emscripten_set_keypress_callback(0, this, 1, key_callback);
     TEST(ret);
@@ -262,8 +271,8 @@ std::mutex window_mutex;
     TEST(ret);
     ret = emscripten_set_resize_callback(0, this, 1, uievent_callback);
     TEST(ret);
-    ret = emscripten_set_scroll_callback(0, this, 1, uievent_callback);
-    TEST(ret);
+//    ret = emscripten_set_scroll_callback(0, this, 1, uievent_callback);
+//    TEST(ret);
     ret = emscripten_set_blur_callback(0, this, 1, focusevent_callback);
     TEST(ret);
     ret = emscripten_set_focus_callback(0, this, 1, focusevent_callback);
@@ -317,10 +326,9 @@ std::mutex window_mutex;
 
   void EmscriptenWindow::MakeCurrent()
   {
-    emscripten_webgl_make_context_current(ctx);
-    emscripten_set_canvas_element_size("#canvas", PangolinGl::windowed_size[0], PangolinGl::windowed_size[1]);
-    pangolin::glEngine().prog_fixed.Bind();
     context = this;
+    emscripten_webgl_make_context_current(ctx);
+    pangolin::glEngine().prog_fixed.Bind();
   }
 
   void  EmscriptenWindow::ToggleFullscreen()
@@ -333,6 +341,7 @@ std::mutex window_mutex;
 
   void EmscriptenWindow::Resize(unsigned int w, unsigned int h)
   {
+      emscripten_set_canvas_element_size("#canvas", w, h);
   }
   
   void EmscriptenWindow::ProcessEvents(){

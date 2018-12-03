@@ -29,6 +29,7 @@
 
 #include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/display/handler_enums.h>
+#include <pangolin/gl/gl.h>
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN
@@ -68,13 +69,14 @@ struct PANGOLIN_EXPORT HandlerScroll : Handler
     void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state);
 };
 
-struct PANGOLIN_EXPORT Handler3D : Handler
+struct PANGOLIN_EXPORT HandlerBase3D : Handler
 {
-    Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction= PANGO_DFLT_HANDLER3D_ZF);
+    HandlerBase3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction= PANGO_DFLT_HANDLER3D_ZF);
 
     virtual bool ValidWinDepth(GLprecision depth);
     virtual void PixelUnproject( View& view, GLprecision winx, GLprecision winy, GLprecision winz, GLprecision Pc[3]);
     virtual void GetPosNormal(View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision nw[3], GLprecision default_z = 1.0);
+    virtual void GetPosNormalImpl(View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision nw[3], GLprecision default_z, float *zs);
 
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
@@ -109,6 +111,27 @@ protected:
 
     int funcKeyState;
 };
+
+#ifndef HAVE_GLES
+using Handler3D = HandlerBase3D;
+#else
+struct Handler3DBlitCopy : public pangolin::HandlerBase3D
+{
+    Handler3DBlitCopy(pangolin::OpenGlRenderState& cam_state, pangolin::AxisDirection enforce_up=pangolin::AxisNone, float trans_scale=0.01f);
+    void GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision /*n*/[3], GLprecision default_z);
+
+protected:
+    GlTexture rgb_blit;
+    GlTexture depth_blit;
+    GlFramebuffer fb_blit;
+
+    GlTexture rgb;
+    GlTexture depth;
+    GlFramebuffer fb;
+};
+using Handler3D = Handler3DBlitCopy;
+#endif
+
 
 static Handler StaticHandler;
 static HandlerScroll StaticHandlerScroll;
