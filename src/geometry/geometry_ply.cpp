@@ -30,6 +30,11 @@
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/variadic_all.h>
 #include <pangolin/utils/parse.h>
+#include <pangolin/utils/type_convert.h>
+#include <pangolin/utils/simple_math.h>
+
+// TODO: Should really remove need for GL here.
+#include <pangolin/gl/gl.h>
 
 namespace pangolin {
 

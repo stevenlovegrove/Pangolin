@@ -29,7 +29,11 @@
 #include <pangolin/geometry/geometry_ply.h>
 #include <pangolin/geometry/geometry_obj.h>
 
+#include <pangolin/utils/file_extension.h>
 #include <pangolin/utils/file_utils.h>
+
+// TODO: Should really get rid of this from API
+#include <pangolin/gl/gl.h>
 
 namespace pangolin {
 

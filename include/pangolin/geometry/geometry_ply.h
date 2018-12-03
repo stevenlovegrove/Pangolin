@@ -25,10 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/geometry/geometry.h>
 #include <pangolin/platform.h>
-#include <pangolin/gl/gl.h>
 #include <pangolin/compat/variant.h>
+#include <pangolin/geometry/geometry.h>
 
 #include <fstream>
 #include <vector>
@@ -63,12 +62,17 @@ enum PlyType {
     PlyTypeSize
 #undef FORMAT_ENUM
 };
-const GLenum PlyTypeGl[] = {
-    GL_BYTE, GL_UNSIGNED_BYTE,
-    GL_SHORT, GL_UNSIGNED_SHORT,
-    GL_INT, GL_UNSIGNED_INT,
-    GL_FLOAT, GL_DOUBLE,
-    GL_NONE
+const size_t PlyTypeGl[] = {
+//    GL_BYTE, GL_UNSIGNED_BYTE,
+    0x1400, 0x1401,
+//    GL_SHORT, GL_UNSIGNED_SHORT,
+    0x1402, 0x1403,
+//    GL_INT, GL_UNSIGNED_INT,
+    0x1404, 0x1405,
+//    GL_FLOAT, GL_DOUBLE,
+    0x1406, 0x140A,
+//    GL_NONE,
+    0
 };
 
 #undef FORMAT_ENUM
@@ -77,11 +81,11 @@ struct PlyPropertyDetails
 {
     std::string name;
 
-    // Type of property
-    GLenum type;
+    // Type of property (GLenum)
+    size_t type;
 
-    // Type of list index if a list, or 0 otherwise.
-    GLenum list_index_type;
+    // Type of list index if a list, or 0 otherwise. (GLenum)
+    size_t list_index_type;
 
     // Offset from element start
     size_t offset_bytes;
