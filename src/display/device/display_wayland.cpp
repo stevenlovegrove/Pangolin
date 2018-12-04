@@ -357,9 +357,9 @@ struct WaylandDisplay {
     int lasty=0;
 
     std::vector<EGLConfig> egl_configs;
-    EGLSurface egl_surface;
-    EGLContext egl_context;
-    EGLDisplay egl_display;
+    EGLSurface egl_surface = nullptr;
+    EGLContext egl_context = nullptr;
+    EGLDisplay egl_display = nullptr;
 
     EGLint width, height;
     bool is_fullscreen;
@@ -824,6 +824,8 @@ WaylandDisplay::~WaylandDisplay() {
     if(wsurface)        wl_surface_destroy(wsurface);
     if(wregistry)       wl_registry_destroy(wregistry);
     if(wdisplay)        wl_display_disconnect(wdisplay);
+
+    if(xkb_context) xkb_context_unref(xkb_context);
 }
 
 WaylandWindow::WaylandWindow(const int w, const int h, std::unique_ptr<WaylandDisplay> display) : display(std::move(display)){
