@@ -923,6 +923,7 @@ PANGOLIN_REGISTER_FACTORY(WaylandWindow)
     auto factory = std::make_shared<WaylandWindowFactory>();
     FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "wayland");
     FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 9,  "linux");
+    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 90,  "default");
 }
 
 } // namespace pangolin
