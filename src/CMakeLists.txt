@@ -17,6 +17,9 @@ append_glob(HEADERS ${INCDIR}/image/*.h*)
 append_glob(HEADERS ${INCDIR}/log/*.h*)
 append_glob(HEADERS ${INCDIR}/geometry/*.h*)
 
+# Range.h is used even when BUILD_PANGOLIN_GUI is not enabled.
+list(APPEND HEADERS ${INCDIR}/plot/range.h)
+
 ### Store list of source files
 append_glob(SOURCES utils/*.cpp)
 append_glob(SOURCES image/*.cpp)
