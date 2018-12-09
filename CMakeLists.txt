@@ -58,3 +58,4 @@ configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
 
 set(Pangolin_DIR ${CMAKE_CURRENT_BINARY_DIR})
 add_subdirectory(examples)
+add_subdirectory(tools)

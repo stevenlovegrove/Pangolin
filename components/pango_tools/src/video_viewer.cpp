@@ -1,14 +1,16 @@
 #include <pangolin/tools/video_viewer.h>
 
-#include <pangolin/display/image_view.h>
+#include <pangolin/gl/gldraw.h>
 #include <pangolin/gl/glpixformat.h>
 #include <pangolin/gl/gltexturecache.h>
-#include <pangolin/handler/handler_image.h>
-#include <pangolin/pangolin.h>
+#include <pangolin/display/image_view.h>
+#include <pangolin/display/widgets.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/sigstate.h>
 #include <pangolin/utils/timer.h>
 #include <pangolin/video/video_input.h>
+#include <pangolin/handler/handler_image.h>
+#include <pangolin/var/var.h>
 
 
 namespace pangolin
