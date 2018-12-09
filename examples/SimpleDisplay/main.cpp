@@ -127,12 +127,12 @@ int main(/*int argc, char* argv[]*/)
 {  
     using namespace pangolin;
 
-    MyArchiver ar;
-    CustomType test1;
-    CustomType2 test2;
+//    MyArchiver ar;
+//    CustomType test1;
+//    CustomType2 test2;
 
-    serialize(ar, test1);
-    serialize(ar, test2);
+//    serialize(ar, test1);
+//    serialize(ar, test2);
 
 
     // Create OpenGL window in single line
@@ -145,7 +145,7 @@ int main(/*int argc, char* argv[]*/)
                 pangolin::ModelViewLookAt(-0,0.5,-3, 0,0,0, pangolin::AxisY)
                 );
 
-    const int UI_WIDTH = 300;
+    const int UI_WIDTH = 180;
 
     // Add named OpenGL viewport to window and provide 3D Handler
     pangolin::View& d_cam = pangolin::CreateDisplay()
@@ -157,9 +157,9 @@ int main(/*int argc, char* argv[]*/)
     pangolin::CreatePanel("ui")
             .SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(UI_WIDTH));
 
-//    pangolin::Var<CustomType> test("ui.test", CustomType(0,1,"test"));
-//    pangolin::Var<int> test2("ui.test2", 1, 0, 5);
-//    pangolin::Var<bool> test3("ui.test3", true, true);
+    pangolin::Var<CustomType> test("ui.test", CustomType(0,1,"test"));
+    pangolin::Var<int> test2("ui.test2", 1, 0, 5);
+    pangolin::Var<bool> test3("ui.test3", true, true);
 
     pangolin::Var<std::function<void(void)> >("ui.Reset", [](){
         std::cout << "Hello" << std::endl;

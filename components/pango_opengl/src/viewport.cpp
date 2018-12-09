@@ -64,8 +64,7 @@ void Viewport::ActivatePixelOrthographic() const
 {
     Activate();
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-0.5, w-0.5, -0.5, h-0.5, -1, 1);
+    pangolin::ProjectionMatrixOrthographic(-0.5, w-0.5, -0.5, h-0.5, -1.0, 1.0).Load();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }

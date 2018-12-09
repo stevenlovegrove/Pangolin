@@ -51,7 +51,10 @@ target_include_directories(${COMPONENT}
     PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include"
     PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
-target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image pango_packetstream)
+
+find_package(Threads REQUIRED)
+
+target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image pango_packetstream Threads::Threads)
 
 # Create window_frameworks.h file for inclusion in library
 # This loads windowing framework factories based on cmake configuration
