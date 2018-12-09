@@ -105,6 +105,11 @@ PangolinGl* GetCurrentContext()
     return context;
 }
 
+void SetCurrentContext(PangolinGl* context_)
+{
+    context = context_;
+}
+
 PangolinGl *FindContext(const std::string& name)
 {
     contexts_mutex.lock();

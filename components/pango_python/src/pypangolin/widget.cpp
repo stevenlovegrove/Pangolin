@@ -26,7 +26,7 @@
  */
 
 #include "widget.hpp"
-#include <pangolin/display/widgets/widgets.h>
+#include <pangolin/display/widgets.h>
 
 namespace py_pangolin {
 

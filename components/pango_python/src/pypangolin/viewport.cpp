@@ -26,7 +26,7 @@
  */
 
 #include "viewport.hpp"
-#include <pangolin/display/viewport.h>
+#include <pangolin/gl/viewport.h>
 
 namespace py_pangolin {
 

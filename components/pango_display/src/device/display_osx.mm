@@ -60,8 +60,6 @@ inline void FixOsxFocus()
 namespace pangolin
 {
 
-extern __thread PangolinGl* context;
-
 std::unique_ptr<WindowInterface> CreateOsxWindowAndBind(std::string window_title, int w, int h, const bool is_highres)
 {
 
@@ -73,8 +71,7 @@ std::unique_ptr<WindowInterface> CreateOsxWindowAndBind(std::string window_title
 OsxWindow::OsxWindow(
     const std::string& title, int width, int height, bool USE_RETINA
 ) {
-    context = this;
-
+    SetCurrentContext(this);
     PangolinGl::is_double_buffered = true;
     PangolinGl::windowed_size[0] = width;
     PangolinGl::windowed_size[1] = height;
@@ -202,7 +199,7 @@ void OsxWindow::Resize(unsigned int w, unsigned int h)
 void OsxWindow::MakeCurrent()
 {
     [[view openGLContext] makeCurrentContext];
-    context = this;
+    SetCurrentContext(this);
 }
 
 void OsxWindow::RemoveCurrent()

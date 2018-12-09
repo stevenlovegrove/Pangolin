@@ -28,6 +28,7 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/drivers/join.h>
 #include <pangolin/video/iostream_operators.h>
+#include <pangolin/video/video.h>
 
 //#define DEBUGJOIN
 

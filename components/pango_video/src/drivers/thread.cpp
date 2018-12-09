@@ -28,6 +28,7 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/drivers/thread.h>
 #include <pangolin/video/iostream_operators.h>
+#include <pangolin/video/video.h>
 
 #ifdef DEBUGTHREAD
   #include <pangolin/utils/timer.h>

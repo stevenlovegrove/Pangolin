@@ -43,7 +43,7 @@
     #include <pangolin/display/device/display_android.h>
   #endif
 //  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-//    #include <pangolin/plot/plotter.h>
+    #include <pangolin/plot/plotter.h>
 //  #endif
 //#endif // BUILD_PANGOLIN_GUI
 
@@ -54,11 +54,11 @@
   #endif // BUILD_PANGOLIN_GUI
 //#endif // BUILD_PANGOLIN_VARS
 
-#ifdef BUILD_PANGOLIN_VIDEO
+//#ifdef BUILD_PANGOLIN_VIDEO
   #include <pangolin/video/video.h>
   #include <pangolin/video/video_input.h>
   #include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
+//#endif // BUILD_PANGOLIN_VIDEO
 
 #include <pangolin/image/image_io.h>
 

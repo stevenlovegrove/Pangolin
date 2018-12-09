@@ -1,7 +1,7 @@
 #pragma once
 
-#include <pangolin/display/opengl_render_state.h>
-#include <pangolin/display/viewport.h>
+#include <pangolin/gl/opengl_render_state.h>
+#include <pangolin/gl/viewport.h>
 #include <pangolin/gl/gldraw.h>
 
 #include <pangolin/scene/renderable.h>

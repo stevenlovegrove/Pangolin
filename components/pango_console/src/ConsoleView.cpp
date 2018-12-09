@@ -2,6 +2,7 @@
 #include <pangolin/console/ConsoleView.h>
 #include <pangolin/utils/picojson.h>
 #include <pangolin/gl/gldraw.h>
+#include <pangolin/display/default_font.h>
 
 namespace pangolin
 {
@@ -47,7 +48,7 @@ inline void glColour(const Colour& c)
 
 ConsoleView::ConsoleView(ConsoleInterpreter* interpreter)
     : interpreter(interpreter),
-      font(GlFont::I()),
+      font(default_font()),
       carat(0),
       hiding(false),
       bottom(1.0f),

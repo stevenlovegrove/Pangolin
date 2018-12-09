@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <pangolin/video/video.h>
 #include <vector>
+#include <pangolin/video/video_interface.h>
 
 namespace pangolin
 {

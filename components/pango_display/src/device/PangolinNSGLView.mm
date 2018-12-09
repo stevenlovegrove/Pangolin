@@ -14,11 +14,6 @@
 #  define  NSFunctionKeyMask NSEventModifierFlagFunction
 #endif
 
-namespace pangolin
-{
-extern __thread PangolinGl* context;
-}
-
 ////////////////////////////////////////////////////////////////////
 // Input maps
 ////////////////////////////////////////////////////////////////////
@@ -69,7 +64,7 @@ int mapKeymap(int osx_key)
 -(id)initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat *)format
 {
     self = [super initWithFrame:frameRect pixelFormat:format];
-    context = pangolin::context;
+    context = pangolin::GetCurrentContext();
     return(self);
 }
 

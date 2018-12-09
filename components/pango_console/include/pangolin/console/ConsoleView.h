@@ -29,12 +29,11 @@
 
 #include <deque>
 
-#include <pangolin/platform.h>
 #include <pangolin/gl/glfont.h>
+#include <pangolin/gl/colour.h>
 #include <pangolin/var/var.h>
 #include <pangolin/display/view.h>
 #include <pangolin/handler/handler.h>
-#include <pangolin/gl/colour.h>
 
 #include <pangolin/console/ConsoleInterpreter.h>
 

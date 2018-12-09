@@ -27,13 +27,12 @@
 
 #pragma once
 
-#include <pangolin/pangolin.h>
-#include <pangolin/video/iostream_operators.h>
-#include <pangolin/video/video.h>
-
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+
+#include <pangolin/video/video_interface.h>
+#include <pangolin/video/iostream_operators.h>
 
 // DepthSense SDK for SoftKinetic cameras from Creative
 #include <DepthSense.hxx>

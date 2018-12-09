@@ -27,9 +27,8 @@
 
 #pragma once
 
+#include <pangolin/video/video_output_interface.h>
 #include <pangolin/log/packetstream_writer.h>
-#include <pangolin/video/video_output.h>
-
 #include <pangolin/video/stream_encoder_factory.h>
 
 #include <functional>

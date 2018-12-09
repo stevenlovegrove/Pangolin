@@ -7,5 +7,5 @@ if( NOT @PROJECT_NAME@_BINARY_DIR )
 endif()
 
 SET( Pangolin_CMAKEMODULES @CMAKE_CURRENT_SOURCE_DIR@/../cmake )
-SET( Pangolin_LIBRARIES    pango_display )
+SET( Pangolin_LIBRARIES    @component_list@ )
 SET( Pangolin_LIBRARY      "${Pangolin_LIBRARIES}" )

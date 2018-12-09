@@ -1,7 +1,5 @@
 #pragma once
 
-#include <pangolin/pangolin.h>
-#include <pangolin/video/video.h>
 #include <pangolin/video/video_interface.h>
 
 struct IMFActivate;

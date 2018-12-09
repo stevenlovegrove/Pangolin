@@ -27,10 +27,8 @@
 
 #pragma once
 
-#include <pangolin/pangolin.h>
-#include <pangolin/video/video.h>
-
 #include <memory>
+#include <pangolin/video/video_interface.h>
 #include <pangolin/utils/fix_size_buffer_queue.h>
 
 namespace pangolin

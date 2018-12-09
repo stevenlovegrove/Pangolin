@@ -28,6 +28,7 @@
 #include <pangolin/display/widgets.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
+#include <pangolin/display/default_font.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/var/varextra.h>
 #include <pangolin/utils/file_utils.h>
@@ -44,24 +45,12 @@ extern const unsigned char AnonymousPro_ttf[];
 namespace pangolin
 {
 
-// Pointer to context defined in display.cpp
-extern __thread PangolinGl* context;
-
 const static GLfloat colour_s1[4] = {0.2f, 0.2f, 0.2f, 1.0f};
 const static GLfloat colour_s2[4] = {0.6f, 0.6f, 0.6f, 1.0f};
 const static GLfloat colour_bg[4] = {0.9f, 0.9f, 0.9f, 1.0f};
 const static GLfloat colour_fg[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 const static GLfloat colour_tx[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 const static GLfloat colour_dn[4] = {1.0f, 0.7f, 0.7f, 1.0f};
-
-static inline GlFont& font()
-{
-    PANGO_ASSERT(context);
-    if(!context->font) {
-        context->font = std::make_shared<GlFont>(AnonymousPro_ttf, 18);
-    }
-    return *(context->font.get());
-}
 
 // Render at (x,y) in window coordinates.
 inline void DrawWindow(GlText& text, GLfloat x, GLfloat y, GLfloat z = 0.0)
@@ -92,12 +81,12 @@ inline void DrawWindow(GlText& text, GLfloat x, GLfloat y, GLfloat z = 0.0)
 
 static inline int cb_height()
 {
-    return (int)(font().Height() * 1.0);
+    return (int)(default_font().Height() * 1.0);
 }
 
 static inline int tab_h()
 {
-    return (int)(font().Height() * 1.4);
+    return (int)(default_font().Height() * 1.4);
 }
 
 std::mutex display_mutex;
@@ -183,10 +172,10 @@ void Panel::AddVariable(void* data, const std::string& name, const std::shared_p
     
     display_mutex.lock();
     
-    ViewMap::iterator pnl = context->named_managed_views.find(name);
+    ViewMap::iterator pnl = GetCurrentContext()->named_managed_views.find(name);
     
     // Only add if a widget by the same name doesn't already exist
-    if( pnl == context->named_managed_views.end() )
+    if( pnl == GetCurrentContext()->named_managed_views.end() )
     {
         View* nv = NULL;
         if( !strcmp(var->TypeId(), typeid(bool).name()) ) {
@@ -210,7 +199,7 @@ void Panel::AddVariable(void* data, const std::string& name, const std::shared_p
             nv = new TextInput(title,var);
         }
         if(nv) {
-            context->named_managed_views[name] = nv;
+            GetCurrentContext()->named_managed_views[name] = nv;
             thisptr->views.push_back( nv );
             thisptr->ResizeChildren();
         }
@@ -257,12 +246,12 @@ void Panel::ResizeChildren()
 
 View& CreatePanel(const std::string& name)
 {
-    if(context->named_managed_views.find(name) != context->named_managed_views.end()) {
+    if(GetCurrentContext()->named_managed_views.find(name) != GetCurrentContext()->named_managed_views.end()) {
         throw std::runtime_error("Panel already registered with this name.");
     }
     Panel * p = new Panel(name);
-    context->named_managed_views[name] = p;
-    context->base.views.push_back(p);
+    GetCurrentContext()->named_managed_views[name] = p;
+    GetCurrentContext()->base.views.push_back(p);
     return *p;
 }
 
@@ -273,7 +262,7 @@ Button::Button(string title, const std::shared_ptr<VarValueGeneric>& tv)
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
-    gltext = font().Text(title);
+    gltext = default_font().Text(title);
 }
 
 void Button::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool pressed, int /*mouse_state*/)
@@ -310,7 +299,7 @@ FunctionButton::FunctionButton(string title, const std::shared_ptr<VarValueGener
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
-    gltext = font().Text(title);
+    gltext = default_font().Text(title);
 }
 
 void FunctionButton::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool pressed, int /*mouse_state*/)
@@ -348,7 +337,7 @@ Checkbox::Checkbox(std::string title, const std::shared_ptr<VarValueGeneric> &tv
     hlock = LockLeft;
     vlock = LockBottom;
     handler = this;
-    gltext = font().Text(title);
+    gltext = default_font().Text(title);
 }
 
 void Checkbox::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool pressed, int /*mouse_state*/)
@@ -404,7 +393,7 @@ Slider::Slider(std::string title, const std::shared_ptr<VarValueGeneric> &tv)
     vlock = LockBottom;
     handler = this;
     logscale = (int)tv->Meta().logscale;
-    gltext = font().Text(title);
+    gltext = default_font().Text(title);
     is_integral_type = IsIntegral(tv->TypeId());
 }
 
@@ -524,14 +513,14 @@ void Slider::Render()
     
     glColor4fv(colour_tx);
     if(gltext.Text() != var->Meta().friendly) {
-        gltext = font().Text(var->Meta().friendly);
+        gltext = default_font().Text(var->Meta().friendly);
     }
     DrawWindow(gltext, raster[0], raster[1]);
 
     std::ostringstream oss;
     oss << setprecision(4) << val;
     string str = oss.str();
-    GlText glval = font().Text(str);
+    GlText glval = default_font().Text(str);
     const float l = glval.Width() + 2.0f;
     DrawWindow(glval,  v.l + v.w - l, raster[1] );
 }
@@ -547,7 +536,7 @@ TextInput::TextInput(std::string title, const std::shared_ptr<VarValueGeneric> &
     handler = this;
     sel[0] = -1;
     sel[1] = -1;
-    gltext = font().Text(title);
+    gltext = default_font().Text(title);
 }
 
 void TextInput::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed)
@@ -629,7 +618,7 @@ void TextInput::Mouse(View& /*view*/, MouseButton button, int x, int /*y*/, bool
             }else{
                 for( unsigned i=0; i<edit.length(); ++i )
                 {
-                    const int tl = (int)(rl + font().Text(edit.substr(0,i)).Width());
+                    const int tl = (int)(rl + default_font().Text(edit.substr(0,i)).Width());
                     if(x < tl+2)
                     {
                         ep = i;
@@ -668,7 +657,7 @@ void TextInput::MouseMotion(View&, int x, int /*y*/, int /*mouse_state*/)
         }else{
             for( unsigned i=0; i<edit.length(); ++i )
             {
-                const int tl = (int)(rl + font().Text(edit.substr(0,i)).Width());
+                const int tl = (int)(rl + default_font().Text(edit.substr(0,i)).Width());
                 if(x < tl+2)
                 {
                     ep = i;
@@ -692,7 +681,7 @@ void TextInput::Render()
 {
     if(!do_edit) edit = var->Get();
 
-    gledit = font().Text(edit);
+    gledit = default_font().Text(edit);
     
     glColor4fv(colour_fg);
     if(can_edit) glRect(v);
@@ -702,8 +691,8 @@ void TextInput::Render()
     
     if( do_edit && sel[0] >= 0)
     {
-        const int tl = (int)(rl + font().Text(edit.substr(0,sel[0])).Width());
-        const int tr = (int)(rl + font().Text(edit.substr(0,sel[1])).Width());
+        const int tl = (int)(rl + default_font().Text(edit.substr(0,sel[0])).Width());
+        const int tr = (int)(rl + default_font().Text(edit.substr(0,sel[1])).Width());
         glColor4fv(colour_dn);
         glRect(Viewport(tl,v.b,tr-tl,v.h));
     }

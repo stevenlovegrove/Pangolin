@@ -28,6 +28,7 @@
 #include <pangolin/video/drivers/debayer.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
+#include <pangolin/video/video.h>
 
 #ifdef HAVE_DC1394
 #   include <dc1394/conversions.h>

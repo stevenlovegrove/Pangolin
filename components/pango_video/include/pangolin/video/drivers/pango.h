@@ -27,10 +27,10 @@
 
 #pragma once
 
+#include <pangolin/video/video_interface.h>
+#include <pangolin/video/stream_encoder_factory.h>
 #include <pangolin/log/packetstream_reader.h>
 #include <pangolin/log/playback_session.h>
-#include <pangolin/video/stream_encoder_factory.h>
-#include <pangolin/video/video.h>
 
 namespace pangolin
 {

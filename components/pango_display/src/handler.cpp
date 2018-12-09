@@ -41,7 +41,7 @@ void Handler::Keyboard(View& d, unsigned char key, int x, int y, bool pressed)
     View* child = d.FindChild(x,y);
     if( child)
     {
-        context->activeDisplay = child;
+        GetCurrentContext()->activeDisplay = child;
         if( child->handler)
             child->handler->Keyboard(*child,key,x,y,pressed);
     }
@@ -52,7 +52,7 @@ void Handler::Mouse(View& d, MouseButton button, int x, int y, bool pressed, int
     View* child = d.FindChild(x,y);
     if( child )
     {
-        context->activeDisplay = child;
+        GetCurrentContext()->activeDisplay = child;
         if( child->handler)
             child->handler->Mouse(*child,button,x,y,pressed,button_state);
     }
@@ -63,7 +63,7 @@ void Handler::MouseMotion(View& d, int x, int y, int button_state)
     View* child = d.FindChild(x,y);
     if( child )
     {
-        context->activeDisplay = child;
+        GetCurrentContext()->activeDisplay = child;
         if( child->handler)
             child->handler->MouseMotion(*child,x,y,button_state);
     }
@@ -84,7 +84,7 @@ void Handler::Special(View& d, InputSpecial inType, float x, float y, float p1, 
     View* child = d.FindChild( (int)x, (int)y);
     if( child )
     {
-        context->activeDisplay = child;
+        GetCurrentContext()->activeDisplay = child;
         if( child->handler)
             child->handler->Special(*child,inType, x,y, p1, p2, p3, p4, button_state);
     }

@@ -31,7 +31,7 @@
 #include <map>
 #include <random>
 
-#include <pangolin/display/opengl_render_state.h>
+#include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/scene/interactive.h>
 
 namespace pangolin {
@@ -41,65 +41,20 @@ class Renderable
 public:
     using guid_t = GLuint;
 
-    static guid_t UniqueGuid()
-    {
-        static std::random_device rd;
-        static std::mt19937 gen(rd());
-        return (guid_t)gen();
-    }
+    static guid_t UniqueGuid();
 
-    Renderable(const std::weak_ptr<Renderable>& parent = std::weak_ptr<Renderable>())
-        : guid(UniqueGuid()), parent(parent), T_pc(IdentityMatrix()), should_show(true)
-    {
-    }
+    Renderable(const std::weak_ptr<Renderable>& parent = std::weak_ptr<Renderable>());
 
-    virtual ~Renderable()
-    {
-    }
+    virtual ~Renderable();
 
     // Default implementation simply renders children.
-    virtual void Render(const RenderParams& params = RenderParams()) {
-        RenderChildren(params);
-    }
+    virtual void Render(const RenderParams& params = RenderParams());
 
-    void RenderChildren(const RenderParams& params)
-    {
-        for(auto& p : children) {
-            Renderable& r = *p.second;
-            if(r.should_show) {
-                glPushMatrix();
-                r.T_pc.Multiply();
-                r.Render(params);
-                if(r.manipulator) {
-                    r.manipulator->Render(params);
-                }
-                glPopMatrix();
-            }
-        }
-    }
+    void RenderChildren(const RenderParams& params);
 
-    std::shared_ptr<Renderable> FindChild(guid_t guid)
-    {
-        auto o = children.find(guid);
-        if(o != children.end()) {
-            return o->second;
-        }
+    std::shared_ptr<Renderable> FindChild(guid_t guid);
 
-        for(auto& kv : children ) {
-            std::shared_ptr<Renderable> c = kv.second->FindChild(guid);
-            if(c) return c;
-        }
-
-        return std::shared_ptr<Renderable>();
-    }
-
-    Renderable& Add(const std::shared_ptr<Renderable>& child)
-    {
-        if(child) {
-            children[child->guid] = child;
-        };
-        return *this;
-    }
+    Renderable& Add(const std::shared_ptr<Renderable>& child);
 
     // Renderable properties
     const guid_t guid;

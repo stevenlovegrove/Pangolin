@@ -53,7 +53,7 @@ public:
         const std::string& cmd, int max_options
     ) override;
 
-    static void AttachPrefix(void* data, const std::string& name, VarValueGeneric& var, bool brand_new );
+    static void AttachPrefix(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& var, bool brand_new );
 
 private:
     PyObject* pycompleter;

@@ -27,11 +27,9 @@
 
 #pragma once
 
-#include <pangolin/pangolin.h>
-#include <pangolin/video/video.h>
-#include <pangolin/utils/timer.h>
-
 #include <fstream>
+#include <pangolin/video/video_interface.h>
+#include <pangolin/utils/timer.h>
 
 namespace pangolin
 {

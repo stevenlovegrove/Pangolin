@@ -27,7 +27,7 @@
 
 #include "handler.hpp"
 #include <pangolin/handler/handler.h>
-#include <pangolin/display/opengl_render_state.h>
+#include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/plot/plotter.h>
 
 

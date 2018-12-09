@@ -1,9 +1,6 @@
 #pragma once
 
-#include <pangolin/pangolin.h>
-
-#include <pangolin/video/video.h>
-
+#include <pangolin/video/video_interface.h>
 #include <pangolin/video/iostream_operators.h>
 
 namespace rs2 {

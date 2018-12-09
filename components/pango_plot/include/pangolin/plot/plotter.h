@@ -36,8 +36,8 @@
 #include <pangolin/gl/glfont.h>
 #include <pangolin/gl/glsl.h>
 #include <pangolin/handler/handler.h>
+#include <pangolin/utils/range.h>
 #include <pangolin/plot/datalog.h>
-#include <pangolin/plot/range.h>
 
 #include <set>
 

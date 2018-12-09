@@ -1,7 +1,6 @@
 #pragma once
 
-#include <pangolin/pangolin.h>
-#include <pangolin/video/video.h>
+#include <pangolin/video/video_interface.h>
 #include <pangolin/utils/posix/condition_variable.h>
 #include <pangolin/utils/posix/shared_memory_buffer.h>
 

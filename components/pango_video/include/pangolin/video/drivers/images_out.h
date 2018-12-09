@@ -28,7 +28,7 @@
 #pragma once
 
 #include <fstream>
-#include <pangolin/video/video_output.h>
+#include <pangolin/video/video_output_interface.h>
 #include <pangolin/log/packetstream_writer.h>
 
 namespace pangolin

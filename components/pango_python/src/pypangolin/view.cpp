@@ -27,7 +27,7 @@
 
 #include "view.hpp"
 #include <pangolin/display/view.h>
-#include <pangolin/display/opengl_render_state.h>
+#include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/handler/handler.h>
 
 namespace py_pangolin {

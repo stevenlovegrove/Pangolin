@@ -1,8 +1,6 @@
 #pragma once
 
-#include <pangolin/pangolin.h>
-
-#include <pangolin/video/video.h>
+#include <pangolin/video/video_interface.h>
 #include <pangolin/video/drivers/openni_common.h>
 
 // Workaround poor OpenNI Platform test on Linux before including XnCppWrapper.h

@@ -52,18 +52,18 @@ namespace py_pangolin {
   pybind11::object var_t::get_attr(const std::string &name){
     pangolin::VarState::VarStoreContainer::iterator i = pangolin::VarState::I().vars.find(ns+name);
     if(i != pangolin::VarState::I().vars.end()) {
-      pangolin::VarValueGeneric* var = i->second;
+      std::shared_ptr<pangolin::VarValueGeneric> var = i->second;
       if( !strcmp(var->TypeId(), typeid(bool).name() ) ) {
-        const bool val = pangolin::Var<bool>(*var).Get();
+        const bool val = pangolin::Var<bool>(var).Get();
         return pybind11::bool_(val);
       }else if( !strcmp(var->TypeId(), typeid(short).name() ) ||
                 !strcmp(var->TypeId(), typeid(int).name() ) ||
                 !strcmp(var->TypeId(), typeid(long).name() ) ) {
-        const long val = pangolin::Var<long>(*var).Get();
+        const long val = pangolin::Var<long>(var).Get();
         return pybind11::int_(val);
       }else if( !strcmp(var->TypeId(), typeid(double).name() ) ||
                 !strcmp(var->TypeId(), typeid(float).name() ) ) {
-        const double val = pangolin::Var<double>(*var).Get();
+        const double val = pangolin::Var<double>(var).Get();
         return pybind11::float_(val);
       }else{
         const std::string val = var->str->Get();

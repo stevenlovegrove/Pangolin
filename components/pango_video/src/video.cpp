@@ -28,7 +28,7 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/video.h>
 #include <pangolin/video/video_output.h>
-#include <pangolin/video_drivers.h>
+#include <pangolin/video/video_drivers.h>
 
 namespace pangolin
 {

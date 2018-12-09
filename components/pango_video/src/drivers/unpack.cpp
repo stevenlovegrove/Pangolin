@@ -28,6 +28,7 @@
 #include <pangolin/video/drivers/unpack.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
+#include <pangolin/video/video.h>
 
 #ifdef DEBUGUNPACK
   #include <pangolin/utils/timer.h>

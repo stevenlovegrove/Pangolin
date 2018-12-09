@@ -27,10 +27,8 @@
 
 #pragma once
 
-#include <pangolin/pangolin.h>
+#include <pangolin/video/video_interface.h>
 #include <pangolin/utils/timer.h>
-#include <pangolin/video/video.h>
-
 #include <TeliCamApi.h>
 
 namespace pangolin

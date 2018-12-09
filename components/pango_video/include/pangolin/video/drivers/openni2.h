@@ -28,9 +28,7 @@
 
 #pragma once
 
-#include <pangolin/pangolin.h>
-
-#include <pangolin/video/video.h>
+#include <pangolin/video/video_interface.h>
 #include <pangolin/video/drivers/openni_common.h>
 
 #include <OpenNI.h>

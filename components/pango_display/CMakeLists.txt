@@ -10,6 +10,7 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/handler_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/handler_glbuffer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/default_font.cpp
 )
 
 set( WINDOW_FACTORY_REG "" )
@@ -45,6 +46,14 @@ else()
         target_include_directories(${COMPONENT} PRIVATE ${X11_INCLUDE_DIR} )
     endif()
     target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"x11\"")
+endif()
+
+# headless offscreen rendering via EGL
+find_package(OpenGL QUIET COMPONENTS EGL)
+if(OpenGL_EGL_FOUND)
+    list(APPEND WINDOW_FACTORY_REG RegisterNoneWindowFactory)
+    target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/device/display_headless.cpp )
+    target_link_libraries(${COMPONENT} PRIVATE ${OPENGL_egl_LIBRARY} )
 endif()
 
 # Create window_frameworks.h file for inclusion in library

@@ -27,8 +27,7 @@
 
 #pragma once
 
-#include <pangolin/pangolin.h>
-#include <pangolin/video/video.h>
+#include <pangolin/video/video_interface.h>
 
 #include <asm/types.h>
 #include <linux/videodev2.h>

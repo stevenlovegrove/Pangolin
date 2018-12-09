@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
-project("Pangolin")
-set(PANGOLIN_VERSION_MAJOR 0)
-set(PANGOLIN_VERSION_MINOR 5)
-set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
-project(Pangolin)
+project("Pangolin")
 set(PANGOLIN_VERSION_MAJOR 0)
 set(PANGOLIN_VERSION_MINOR 5)
 set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
@@ -47,7 +43,8 @@ foreach(component_cmake ${components_cmake})
 endforeach()
 
 # Export Targets
-export(TARGETS ${component_list} NAMESPACE pangolin:: FILE PangolinTargets.cmake)
+#export(TARGETS ${component_list} NAMESPACE pangolin:: FILE PangolinTargets.cmake)
+export(TARGETS ${component_list} FILE PangolinTargets.cmake)
 export(PACKAGE Pangolin)
 
 # Version information

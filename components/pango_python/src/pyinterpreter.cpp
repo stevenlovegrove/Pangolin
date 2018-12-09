@@ -31,11 +31,12 @@
 #include <pangolin/python/pyuniqueobj.h>
 #include <pangolin/python/pypangoio.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/var/varextra.h>
 
 namespace pangolin
 {
 
-void PyInterpreter::AttachPrefix(void* data, const std::string& name, VarValueGeneric& /*var*/, bool /*brand_new*/ )
+void PyInterpreter::AttachPrefix(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& /*var*/, bool /*brand_new*/ )
 {
     PyInterpreter* self = (PyInterpreter*)data;
 

@@ -27,9 +27,8 @@
 
 #pragma once
 
+#include <pangolin/video/video_interface.h>
 #include <pangolin/image/image_io.h>
-#include <pangolin/pangolin.h>
-#include <pangolin/video/video.h>
 
 #include <deque>
 #include <vector>

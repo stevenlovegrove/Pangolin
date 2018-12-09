@@ -28,6 +28,7 @@
 #include <pangolin/video/drivers/truncate.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
+#include <pangolin/video/video.h>
 
 namespace pangolin
 {

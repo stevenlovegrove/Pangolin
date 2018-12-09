@@ -29,7 +29,7 @@
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/video/drivers/pvn.h>
 #include <pangolin/video/iostream_operators.h>
-
+#include <pangolin/utils/file_extension.h>
 #include <iostream>
 
 using namespace std;

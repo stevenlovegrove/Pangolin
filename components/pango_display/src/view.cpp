@@ -394,13 +394,13 @@ void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, do
 
 View& View::SetFocus()
 {
-    context->activeDisplay = this;
+    GetCurrentContext()->activeDisplay = this;
     return *this;
 }
 
 bool View::HasFocus() const
 {
-    return context->activeDisplay == this;
+    return GetCurrentContext()->activeDisplay == this;
 }
 
 View& View::SetBounds(Attach bottom, Attach top, Attach left, Attach right)
@@ -409,7 +409,7 @@ View& View::SetBounds(Attach bottom, Attach top, Attach left, Attach right)
     this->top = top;
     this->right = right;
     this->bottom = bottom;
-    context->base.ResizeChildren();
+    GetCurrentContext()->base.ResizeChildren();
     return *this;
 }
 
@@ -430,7 +430,7 @@ View& View::SetBounds(Attach bottom, Attach top,  Attach left, Attach right, dou
 View& View::SetAspect(double aspect)
 {
     this->aspect = aspect;
-    context->base.ResizeChildren();
+    GetCurrentContext()->base.ResizeChildren();
     return *this;
 }
 
@@ -452,21 +452,21 @@ View& View::AddDisplay(View& child)
 {
     // detach child from any other view, and add to this
     std::vector<View*>::iterator f = std::find(
-                context->base.views.begin(), context->base.views.end(), &child
+                GetCurrentContext()->base.views.begin(), GetCurrentContext()->base.views.end(), &child
                 );
 
-    if( f != context->base.views.end() )
-        context->base.views.erase(f);
+    if( f != GetCurrentContext()->base.views.end() )
+        GetCurrentContext()->base.views.erase(f);
 
     views.push_back(&child);
-    context->base.ResizeChildren();
+    GetCurrentContext()->base.ResizeChildren();
     return *this;
 }
 
 View& View::Show(bool show)
 {
     this->show = show;
-    context->base.ResizeChildren();
+    GetCurrentContext()->base.ResizeChildren();
     return *this;
 }
 
@@ -488,7 +488,7 @@ Viewport View::GetBounds() const
 void View::SaveOnRender(const std::string& filename_prefix)
 {
     const Viewport tosave = this->v.Intersect(this->vp);
-    context->screen_capture.push(std::pair<std::string,Viewport>(filename_prefix,tosave ) );
+    GetCurrentContext()->screen_capture.push(std::pair<std::string,Viewport>(filename_prefix,tosave ) );
 }
 
 void View::RecordOnRender(const std::string& record_uri)
