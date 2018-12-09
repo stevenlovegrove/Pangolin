@@ -1,0 +1,5 @@
+test/**
+!test/test.cpp
+!test/example.cpp
+!test/CMakeLists.txt
+build/

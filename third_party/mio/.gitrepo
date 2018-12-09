@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:mandreyel/mio.git
+	branch = master
+	commit = c7c7163a82457d71ecb80e5e3d831dd808117483
+	parent = 43d35fcfe84449fe480b3da1314364d5895972c1
+	method = merge
+	cmdver = 0.4.0
