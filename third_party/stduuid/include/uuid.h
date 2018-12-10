@@ -12,14 +12,17 @@
 #include <functional>
 #include <type_traits>
 #include <assert.h>
-#include <gsl/span>
+
+#ifdef STDUUID_USE_GSL
+#  include <gsl/span>
+#endif
 
 #ifdef _WIN32
-#include <objbase.h>
+#  include <objbase.h>
 #elif defined(__linux__) || defined(__unix__)
-#include <uuid/uuid.h>
+#  include <uuid/uuid.h>
 #elif defined(__APPLE__)
-#include <CoreFoundation/CFUUID.h>
+#  include <CoreFoundation/CFUUID.h>
 #endif
 
 namespace uuids
@@ -285,10 +288,12 @@ namespace uuids
 
    struct uuid_error : public std::runtime_error
    {
+#ifdef STDUUID_USE_GSL
       explicit uuid_error(std::string_view message)
          : std::runtime_error(message.data())
       {
       }
+#endif
 
       explicit uuid_error(char const * message)
          : std::runtime_error(message)
@@ -459,10 +464,12 @@ namespace uuids
    public:
       constexpr uuid() noexcept : data({}) {};
 
+#ifdef STDUUID_USE_GSL
       explicit uuid(gsl::span<value_type, 16> bytes)
       {
          std::copy(std::cbegin(bytes), std::cend(bytes), std::begin(data));
       }
+#endif
       
       template<typename ForwardIterator>
       explicit uuid(ForwardIterator first, ForwardIterator last)
@@ -515,10 +522,12 @@ namespace uuids
       constexpr uuid_const_iterator begin() const noexcept { return uuid_const_iterator(&data[0], 0); }
       constexpr uuid_const_iterator end() const noexcept { return uuid_const_iterator(&data[0], 16); }
 
+#ifdef STDUUID_USE_GSL
       inline gsl::span<std::byte const, 16> as_bytes() const
       {
          return gsl::span<std::byte const, 16>(reinterpret_cast<std::byte const*>(data.data()), 16);
       }
+#endif
 
       template <typename TChar>
       static uuid from_string(TChar const * const str, size_t const size)
@@ -566,6 +575,7 @@ namespace uuids
          return uuid{ std::cbegin(data), std::cend(data) };
       }
 
+#ifdef STDUUID_USE_GSL
       static uuid from_string(std::string_view str)
       {
          return from_string(str.data(), str.size());
@@ -575,6 +585,7 @@ namespace uuids
       {
          return from_string(str.data(), str.size());
       }
+#endif
 
    private:
       std::array<value_type, 16> data{ { 0 } };
@@ -792,6 +803,7 @@ namespace uuids
          : nsuuid(namespace_uuid)
       {}
 
+#ifdef STDUUID_USE_GSL
       uuid operator()(std::string_view name)
       {
          reset();
@@ -805,6 +817,7 @@ namespace uuids
          process_characters(name.data(), name.size());
          return make_uuid();
       }
+#endif
 
    private:
       void reset() 
