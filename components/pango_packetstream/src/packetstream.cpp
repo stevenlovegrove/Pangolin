@@ -26,14 +26,14 @@ int64_t PacketStream::readTimestamp()
     return time_us;
 }
 
-pangoTagType PacketStream::readTag()
+PangoTagType PacketStream::readTag()
 {
     auto r = peekTag();
     _tag = 0;
     return r;
 }
 
-pangoTagType PacketStream::readTag(pangoTagType x)
+PangoTagType PacketStream::readTag(PangoTagType x)
 {
     auto r = readTag();
     if (r != x)
@@ -41,7 +41,7 @@ pangoTagType PacketStream::readTag(pangoTagType x)
     return r;
 }
 
-pangoTagType PacketStream::peekTag()
+PangoTagType PacketStream::peekTag()
 {
     if (!_tag)
     {
@@ -102,7 +102,7 @@ void PacketStream::seekg(std::streamoff off, std::ios_base::seekdir way)
     }
 }
 
-static bool valid(pangoTagType t)
+static bool valid(PangoTagType t)
 {
     switch (t)
     {
@@ -121,7 +121,7 @@ static bool valid(pangoTagType t)
     }
 }
 
-pangoTagType PacketStream::syncToTag() //scan through chars one by one until the last three look like a tag
+PangoTagType PacketStream::syncToTag() //scan through chars one by one until the last three look like a tag
 {
     peekTag();
     char * buffer = reinterpret_cast<char*>(&_tag);
