@@ -146,7 +146,7 @@ inline void writeTimestamp(std::ostream& writer, int64_t time_us)
     writer.write(reinterpret_cast<const char*>(&time_us), sizeof(decltype(time_us)));
 }
 
-inline void writeTag(std::ostream& writer, const pangoTagType tag)
+inline void writeTag(std::ostream& writer, const PangoTagType tag)
 {
     writer.write(reinterpret_cast<const char*>(&tag), TAG_LENGTH);
 }

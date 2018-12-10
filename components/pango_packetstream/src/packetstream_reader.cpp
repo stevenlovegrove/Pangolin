@@ -255,7 +255,7 @@ Packet PacketStreamReader::NextFrame()
 
     while (GoodToRead())
     {
-        const pangoTagType t = _stream.peekTag();
+        const PangoTagType t = _stream.peekTag();
 
         switch (t)
         {

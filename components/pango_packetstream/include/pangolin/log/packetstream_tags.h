@@ -4,7 +4,7 @@
 
 namespace pangolin {
 
-using pangoTagType = uint32_t;
+using PangoTagType = uint32_t;
 
 const static std::string PANGO_MAGIC = "PANGO";
 
@@ -22,15 +22,15 @@ const static std::string pss_pkt_format_written = "format_written";
 const unsigned int TAG_LENGTH = 3;
 
 #define PANGO_TAG(a,b,c) ( (c<<16) | (b<<8) | a)
-const uint32_t TAG_PANGO_HDR    = PANGO_TAG('L', 'I', 'N');
-const uint32_t TAG_PANGO_MAGIC  = PANGO_TAG('P', 'A', 'N');
-const uint32_t TAG_PANGO_SYNC   = PANGO_TAG('S', 'Y', 'N');
-const uint32_t TAG_PANGO_STATS  = PANGO_TAG('S', 'T', 'A');
-const uint32_t TAG_PANGO_FOOTER = PANGO_TAG('F', 'T', 'R');
-const uint32_t TAG_ADD_SOURCE   = PANGO_TAG('S', 'R', 'C');
-const uint32_t TAG_SRC_JSON     = PANGO_TAG('J', 'S', 'N');
-const uint32_t TAG_SRC_PACKET   = PANGO_TAG('P', 'K', 'T');
-const uint32_t TAG_END          = PANGO_TAG('E', 'N', 'D');
+const PangoTagType TAG_PANGO_HDR    = PANGO_TAG('L', 'I', 'N');
+const PangoTagType TAG_PANGO_MAGIC  = PANGO_TAG('P', 'A', 'N');
+const PangoTagType TAG_PANGO_SYNC   = PANGO_TAG('S', 'Y', 'N');
+const PangoTagType TAG_PANGO_STATS  = PANGO_TAG('S', 'T', 'A');
+const PangoTagType TAG_PANGO_FOOTER = PANGO_TAG('F', 'T', 'R');
+const PangoTagType TAG_ADD_SOURCE   = PANGO_TAG('S', 'R', 'C');
+const PangoTagType TAG_SRC_JSON     = PANGO_TAG('J', 'S', 'N');
+const PangoTagType TAG_SRC_PACKET   = PANGO_TAG('P', 'K', 'T');
+const PangoTagType TAG_END          = PANGO_TAG('E', 'N', 'D');
 #undef PANGO_TAG
 
 inline std::string tagName(int v)

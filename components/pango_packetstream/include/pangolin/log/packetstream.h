@@ -85,19 +85,19 @@ public:
 
     int64_t readTimestamp();
 
-    pangoTagType peekTag();
+    PangoTagType peekTag();
 
-    pangoTagType readTag();
+    PangoTagType readTag();
 
-    pangoTagType readTag(pangoTagType);
+    PangoTagType readTag(PangoTagType);
 
-    pangoTagType syncToTag();
+    PangoTagType syncToTag();
 
 private:
     using Base = std::ifstream;
 
     bool _is_pipe;
-    pangoTagType _tag;
+    PangoTagType _tag;
 
     // Amount of frame data left to read. Tracks our position within a data block.
 
