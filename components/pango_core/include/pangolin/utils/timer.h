@@ -107,7 +107,7 @@ struct Timer
     double Elapsed_s()
     {
         basetime currtime = TimeNow();
-        return TimeDiff_s(start,currtime);
+        return TimeDiff_us(start,currtime) * 1E-6;
     }
     
     basetime start;

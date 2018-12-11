@@ -183,6 +183,14 @@ PacketLog::Input& PacketLog::OpenFile(const std::string& file, FileMode mode)
     return *input.get();
 }
 
+
+
+
+void TestMmap()
+{
+
+}
+
 void TestOld()
 {
     PacketLog log;
