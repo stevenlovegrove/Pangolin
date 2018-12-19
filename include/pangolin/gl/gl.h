@@ -55,10 +55,13 @@ class PANGOLIN_EXPORT GlTexture
 public:
     //! internal_format normally one of GL_RGBA8, GL_LUMINANCE8, GL_INTENSITY16
     GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL  );
+
+    // Construct this texture from a CPU image
+    GlTexture(const TypedImage& img, bool sampling_linear=true);
     
     //! Move Constructor / asignment
     GlTexture(GlTexture&& tex);
-    void operator=(GlTexture&& tex);
+    GlTexture& operator=(GlTexture&& tex);
     
     //! Default constructor represents 'no texture'
     GlTexture();
@@ -94,6 +97,8 @@ public:
     void Download(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT) const;
 
     void Download(TypedImage& image) const;
+
+    void CopyFrom(const GlTexture& tex);
 
     void Save(const std::string& filename, bool top_line_first = true);
 
@@ -150,7 +155,9 @@ struct PANGOLIN_EXPORT GlFramebuffer
     
     GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth);
     GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth);
-    
+    GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlRenderBuffer& depth);
+    GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlTexture& colour3, GlRenderBuffer& depth);
+
     void Bind() const;
     void Unbind() const;
 
@@ -169,6 +176,7 @@ struct PANGOLIN_EXPORT GlFramebuffer
 
 enum GlBufferType
 {
+    GlUndefined = 0,
     GlArrayBuffer = GL_ARRAY_BUFFER,                    // VBO's, CBO's, NBO's
     GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,     // IBO's
 #ifndef HAVE_GLES
@@ -178,25 +186,24 @@ enum GlBufferType
 #endif
 };
 
-struct PANGOLIN_EXPORT GlBuffer
+// This encapsulates a GL Buffer object.
+struct PANGOLIN_EXPORT GlBufferData
 {
     //! Default constructor represents 'no buffer'
-    GlBuffer();
-    GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
-    
-    //! Move Constructor / Assignment
-    GlBuffer(GlBuffer&& tex);
-    void operator=(GlBuffer&& tex);
-    
-    ~GlBuffer();
+    GlBufferData();
+    GlBufferData(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse = GL_DYNAMIC_DRAW, const unsigned char* data = 0 );
+    virtual ~GlBufferData();
+    void Free();
+
+    //! Move Constructor
+    GlBufferData(GlBufferData&& tex);
+    GlBufferData& operator=(GlBufferData&& tex);
 
     bool IsValid() const;
 
     size_t SizeBytes() const;
     
-    void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse );
-    void Reinitialise(GlBuffer const& other );
-    void Resize(GLuint num_elements);
+    void Reinitialise(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse = GL_DYNAMIC_DRAW, const unsigned char* data = 0 );
     
     void Bind() const;
     void Unbind() const;
@@ -206,12 +213,32 @@ struct PANGOLIN_EXPORT GlBuffer
     GLuint bo;
     GlBufferType buffer_type;
     GLenum gluse;
+    GLuint size_bytes;
+
+private:
+    GlBufferData(const GlBufferData&) {}
+};
+
+// This encapsulates a GL Buffer object, also storing information about its contents.
+// You should try to use GlBufferData instead.
+struct PANGOLIN_EXPORT GlBuffer : public GlBufferData
+{
+    //! Default constructor represents 'no buffer'
+    GlBuffer();
+    GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW );
+    GlBuffer(const GlBuffer&) = delete;
     
+    //! Move Constructor
+    GlBuffer(GlBuffer&& tex);
+    GlBuffer& operator=(GlBuffer&& tex);
+    
+    void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse, const unsigned char* data = nullptr );
+    void Reinitialise(GlBuffer const& other );
+    void Resize(GLuint num_elements);
+            
     GLenum datatype;
     GLuint num_elements;
     GLuint count_per_element;
-private:
-    GlBuffer(const GlBuffer&) {}
 };
 
 class PANGOLIN_EXPORT GlSizeableBuffer

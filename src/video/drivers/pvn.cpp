@@ -116,7 +116,7 @@ bool PvnVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(PvnVideo)
 {
-    struct PvnVideoFactory : public FactoryInterface<VideoInterface> {
+    struct PvnVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string path = PathExpand(uri.url);
 

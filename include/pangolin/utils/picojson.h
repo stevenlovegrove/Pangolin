@@ -275,7 +275,7 @@ private:
 typedef value::array array;
 typedef value::object object;
 
-inline value::value() : type_(null_type) {}
+inline value::value() : type_(null_type), u_({false}) {}
 
 inline value::value(int type, bool) : type_(type) {
     switch (type) {
@@ -1056,6 +1056,12 @@ template <typename Context, typename Iter> inline Iter _parse(Context& ctx, cons
 template <typename Iter> inline Iter parse(value& out, const Iter& first, const Iter& last, std::string* err) {
     default_parse_context ctx(&out);
     return _parse(ctx, first, last, err);
+}
+
+inline std::string parse(value &out, const std::string &s) {
+  std::string err;
+  parse(out, s.begin(), s.end(), &err);
+  return err;
 }
 
 inline std::string parse(value& out, std::istream& is) {

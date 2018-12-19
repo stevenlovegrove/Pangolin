@@ -1,12 +1,20 @@
 sudo: required
-dist: trusty
+dist: xenial
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -qq update ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libeigen3-dev libglew-dev libc++-dev; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions && pyenv global system 3.6; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libeigen3-dev libglew-dev libc++-dev libwayland-dev libxkbcommon-dev libegl1-mesa-dev; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions && pyenv global system 3.7; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install eigen glew ; fi
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      # install newer libstdc++ (from ubuntu-toolchain-r/test PPA), since otherwise clang fails with old libstdc++-4.8
+      - libstdc++-5-dev
 
 language: cpp
 
@@ -20,7 +28,6 @@ os:
 
 env:
   - BUILD_TYPE=Release
-#  - BUILD_TYPE=Debug
 
 script:
   - mkdir build

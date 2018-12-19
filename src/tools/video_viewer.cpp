@@ -361,8 +361,11 @@ void VideoViewer::Skip(int frames)
     std::lock_guard<std::mutex> lock(control_mutex);
 
     if(video_playback) {
-        current_frame = video_playback->Seek(current_frame + frames) -1;
-        grab_until = current_frame + 1;
+        const int next_frame = current_frame + frames;
+        if (next_frame >= 0) {
+            current_frame = video_playback->Seek(next_frame) -1;
+            grab_until = current_frame + 1;
+        } 
     }else{
         if(frames >= 0) {
             grab_until = current_frame + frames;
@@ -373,26 +376,36 @@ void VideoViewer::Skip(int frames)
 
 }
 
-void VideoViewer::ChangeExposure(int delta_us)
+bool VideoViewer::ChangeExposure(int delta_us)
 {
     std::lock_guard<std::mutex> lock(control_mutex);
 
     std::vector<pangolin::GenicamVideoInterface*> ifs = FindMatchingVideoInterfaces<pangolin::GenicamVideoInterface>(video);
+    std::string exposure_time;
+    if (ifs[active_cam]->GetParameter("ExposureTime",exposure_time))
+    {
+            return false;
+    }
 
-    int exp = atoi(ifs[active_cam]->GetParameter("ExposureTime").c_str());
+    int exp = atoi(exposure_time.c_str());
 
-    ifs[active_cam]->SetParameter("ExposureTime", std::to_string(exp+delta_us));
+    return ifs[active_cam]->SetParameter("ExposureTime", std::to_string(exp+delta_us));
 }
 
-void VideoViewer::ChangeGain(float delta)
+bool VideoViewer::ChangeGain(float delta)
 {
     std::lock_guard<std::mutex> lock(control_mutex);
 
     std::vector<pangolin::GenicamVideoInterface*> ifs = FindMatchingVideoInterfaces<pangolin::GenicamVideoInterface>(video);
 
-    double gain = atoi(ifs[active_cam]->GetParameter("Gain").c_str());
+    std::string gain_string;
+    if (!ifs[active_cam]->GetParameter("Gain", gain_string))
+    {
+        return false;
+    }
+    double gain = atoi(gain_string.c_str());
 
-    ifs[active_cam]->SetParameter("Gain", std::to_string(gain+delta));
+    return ifs[active_cam]->SetParameter("Gain", std::to_string(gain+delta));
 }
 
 

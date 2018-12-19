@@ -138,7 +138,7 @@ std::string GetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std:
     }
 }
 
-void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string node_str, std::string val_str)
+void TeliVideo::SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string node_str, std::string val_str)
 {
     Teli::TC_NODE_TYPE node_type;
     Teli::CAM_API_STATUS st = Teli::Nd_GetType(cam, node, &node_type);
@@ -278,32 +278,29 @@ TeliVideo::TeliVideo(const Params& p)
     Initialise();
 }
 
-std::string TeliVideo::GetParameter(const std::string& name)
+ bool TeliVideo::GetParameter(const std::string& name, std::string& result)
 {
     Teli::CAM_NODE_HANDLE node;
     Teli::CAM_API_STATUS st = Teli::Nd_GetNode(cam, name.c_str(), &node);
     if( st == Teli::CAM_API_STS_SUCCESS) {
-        std::string value = GetNodeValStr(cam, node, name);
-        if(name == "ExposureTime") {
-            exposure_us = std::atoi(value.c_str());
-        }
-        return value;
+        result = GetNodeValStr(cam, node, name);
+        return true;
     }else{
-        throw std::runtime_error("TeliSDK: Unable to get reference to node:" + name);
+        pango_print_warn("TeliSDK: Unable to get reference to node: %s", name.c_str());
+        return false;
     }
 }
 
-void TeliVideo::SetParameter(const std::string& name, const std::string& value)
+bool TeliVideo::SetParameter(const std::string& name, const std::string& value)
 {
     Teli::CAM_NODE_HANDLE node;
     Teli::CAM_API_STATUS st = Teli::Nd_GetNode(cam, name.c_str(), &node);
     if( st == Teli::CAM_API_STS_SUCCESS) {
         SetNodeValStr(cam, node, name, value);
-        if(name == "ExposureTime") {
-            exposure_us = atoi(value.c_str());
-        }
+        return true;
     }else{
-        throw std::runtime_error("TeliSDK: Unable to get reference to node:" + name);
+        pango_print_warn("TeliSDK: Unable to get reference to node: %s", name.c_str());
+        return false;
     }
 }
 
@@ -326,8 +323,6 @@ void TeliVideo::Initialise()
     uiStatus = Teli::Strm_OpenSimple(cam, &strm, &uiPyldSize, hStrmCmpEvt);
     if (uiStatus != Teli::CAM_API_STS_SUCCESS)
         throw pangolin::VideoException("TeliSDK: Error opening camera stream.");
-
-//    Teli::SetCamPixelFormat(cam, Teli::PXL_FMT_Mono12);
 
     // Read pixel format
     PixelFormat pfmt;
@@ -362,7 +357,7 @@ void TeliVideo::Initialise()
     }
 
     size_bytes = 0;
-    
+
     // Use width and height reported by camera
     uint32_t w = 0;
     uint32_t h = 0;
@@ -378,9 +373,6 @@ void TeliVideo::Initialise()
     }
 
     InitPangoDeviceProperties();
-
-    // force initialization of local parameters copy.
-    GetParameter("ExposureTime");
 }
 
 void TeliVideo::InitPangoDeviceProperties()
@@ -533,7 +525,7 @@ bool TeliVideo::DropNFrames(uint32_t n)
 //! Access JSON properties of device
 const picojson::value& TeliVideo::DeviceProperties() const
 {
-        return device_properties;
+    return device_properties;
 }
 
 //! Access JSON properties of most recently captured frame
@@ -544,7 +536,7 @@ const picojson::value& TeliVideo::FrameProperties() const
 
 PANGOLIN_REGISTER_FACTORY(TeliVideo)
 {
-    struct TeliVideoFactory : public FactoryInterface<VideoInterface> {
+    struct TeliVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             return std::unique_ptr<VideoInterface>(new TeliVideo(uri));
         }

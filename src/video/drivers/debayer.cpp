@@ -55,6 +55,8 @@ pangolin::StreamInfo BayerOutputFormat( const StreamInfo& stream_in, bayer_metho
                 (method == BAYER_METHOD_DOWNSAMPLE_MONO ? "GRAY8" : "RGB24")
             );
 
+    fmt.channel_bit_depth = stream_in.PixFormat().channel_bit_depth;
+
     return pangolin::StreamInfo( fmt, w, h, w*fmt.bpp / 8, (unsigned char*)0 + start_offset );
 }
 
@@ -337,7 +339,7 @@ bayer_method_t DebayerVideo::BayerMethodFromString(std::string str)
 
 PANGOLIN_REGISTER_FACTORY(DebayerVideo)
 {
-    struct DebayerVideoFactory : public FactoryInterface<VideoInterface> {
+    struct DebayerVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const std::string tile_string = uri.Get<std::string>("tile","rggb");

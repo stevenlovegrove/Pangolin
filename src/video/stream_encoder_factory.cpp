@@ -41,7 +41,8 @@ inline EncoderDetails EncoderDetailsFromString(const std::string& encoder_spec)
 ImageEncoderFunc StreamEncoderFactory::GetEncoder(const std::string& encoder_spec, const PixelFormat& fmt)
 {
     const EncoderDetails encdet = EncoderDetailsFromString(encoder_spec);
-    PANGO_ENSURE(encdet.file_type != ImageFileTypeUnknown);
+    if(encdet.file_type == ImageFileTypeUnknown)
+        throw std::invalid_argument("Unsupported encoder format: " + encoder_spec);
 
     return [fmt,encdet](std::ostream& os, const Image<unsigned char>& img){
         SaveImage(img,fmt,os,encdet.file_type,true,encdet.quality);

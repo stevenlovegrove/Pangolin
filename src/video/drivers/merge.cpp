@@ -141,7 +141,7 @@ std::vector<VideoInterface*>& MergeVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(MergeVideo)
 {
-    struct MergeVideoFactory : public FactoryInterface<VideoInterface> {
+    struct MergeVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(0,0));
 

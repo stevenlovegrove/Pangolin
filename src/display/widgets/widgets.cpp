@@ -159,7 +159,7 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
     {
         View* nv = NULL;
         if( !strcmp(var.TypeId(), typeid(bool).name()) ) {
-            nv = var.Meta().flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
+            nv = (var.Meta().flags & META_FLAG_TOGGLE) ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
         } else if (!strcmp(var.TypeId(), typeid(double).name()) ||
                    !strcmp(var.TypeId(), typeid(float).name()) ||
                    !strcmp(var.TypeId(), typeid(int).name()) ||
@@ -485,6 +485,9 @@ void Slider::Render()
     }
     
     glColor4fv(colour_tx);
+    if(gltext.Text() != var->Meta().friendly) {
+        gltext = font().Text(var->Meta().friendly);
+    }
     gltext.DrawWindow(raster[0], raster[1]);
 
     std::ostringstream oss;
@@ -497,7 +500,7 @@ void Slider::Render()
 
 
 TextInput::TextInput(std::string title, VarValueGeneric& tv)
-    : Widget<std::string>(title+":", tv), do_edit(false)
+    : Widget<std::string>(title+":", tv), can_edit(!(tv.Meta().flags & META_FLAG_READONLY)), do_edit(false)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h());
     left = 0.0; right = 1.0;
@@ -511,7 +514,7 @@ TextInput::TextInput(std::string title, VarValueGeneric& tv)
 
 void TextInput::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed)
 {
-    if(pressed && do_edit)
+    if(can_edit && pressed && do_edit)
     {
         const bool selection = sel[1] > sel[0] && sel[0] >= 0;
         
@@ -573,7 +576,7 @@ void TextInput::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pr
 
 void TextInput::Mouse(View& /*view*/, MouseButton button, int x, int /*y*/, bool pressed, int /*mouse_state*/)
 {
-    if(button != MouseWheelUp && button != MouseWheelDown )
+    if(can_edit && button != MouseWheelUp && button != MouseWheelDown )
     {
         
         if(do_edit)
@@ -615,7 +618,7 @@ void TextInput::Mouse(View& /*view*/, MouseButton button, int x, int /*y*/, bool
 
 void TextInput::MouseMotion(View&, int x, int /*y*/, int /*mouse_state*/)
 {
-    if(do_edit)
+    if(can_edit && do_edit)
     {
         const int sl = (int)gledit.Width() + 2;
         const int rl = v.l + v.w - sl;
@@ -654,7 +657,7 @@ void TextInput::Render()
     gledit = font().Text(edit);
     
     glColor4fv(colour_fg);
-    glRect(v);
+    if(can_edit) glRect(v);
     
     const int sl = (int)gledit.Width() + 2;
     const int rl = v.l + v.w - sl;
@@ -671,7 +674,7 @@ void TextInput::Render()
     gltext.DrawWindow(raster[0], raster[1]);
 
     gledit.DrawWindow((GLfloat)(rl), raster[1]);
-    DrawShadowRect(v);
+    if(can_edit) DrawShadowRect(v);
 }
 
 }

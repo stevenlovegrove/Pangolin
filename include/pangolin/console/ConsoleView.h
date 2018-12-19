@@ -47,6 +47,7 @@ public:
     struct Line
     {
         Line()
+            : linetype(ConsoleLineTypeCmd)
         {
         }
 
@@ -81,7 +82,7 @@ public:
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed) override;
 
 private:
-    void DrawLine(const ConsoleView::Line& l);
+    void DrawLine(const ConsoleView::Line& l, int carat);
 
     void ProcessOutputLines();
 
@@ -93,8 +94,7 @@ private:
 
     GlFont& font;
 
-    std::map<ConsoleLineType, GlText> prompts;
-
+    int carat;
     Line current_line;
     std::deque<Line> line_buffer;
 

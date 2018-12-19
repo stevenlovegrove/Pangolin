@@ -72,9 +72,9 @@ public:
         return strm;
     }
 
-    std::string GetParameter(const std::string& name);
+    bool GetParameter(const std::string& name, std::string& result);
 
-    void SetParameter(const std::string& name, const std::string& value);
+    bool SetParameter(const std::string& name, const std::string& value);
 
     //! Returns number of available frames
     uint32_t AvailableFrames() const;
@@ -95,12 +95,14 @@ protected:
     void Initialise();
     void InitPangoDeviceProperties();
     void SetDeviceParams(const Params &p);
+    void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string node_str, std::string val_str);
 
     std::vector<StreamInfo> streams;
     size_t size_bytes;
 
     Teli::CAM_HANDLE cam;
     Teli::CAM_STRM_HANDLE strm;
+
 #ifdef _WIN_
     HANDLE hStrmCmpEvt;
 #endif

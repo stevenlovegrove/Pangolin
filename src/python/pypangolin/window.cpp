@@ -67,6 +67,13 @@ namespace py_pangolin {
                              MakeCurrent);
     }
 
+    void RemoveCurrent() override {
+      PYBIND11_OVERLOAD_PURE(
+                             void,
+                             pangolin::WindowInterface,
+                             RemoveCurrent);
+    }
+
     void ProcessEvents() override {
       PYBIND11_OVERLOAD_PURE(
                              void,

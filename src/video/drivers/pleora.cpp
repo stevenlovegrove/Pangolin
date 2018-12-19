@@ -726,7 +726,7 @@ bool PleoraVideo::SetStreamParam(const char* name, T val)
 
 PANGOLIN_REGISTER_FACTORY(PleoraVideo)
 {
-    struct PleoraVideoFactory : public FactoryInterface<VideoInterface> {
+    struct PleoraVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             return std::unique_ptr<VideoInterface>(new PleoraVideo(uri));
         }

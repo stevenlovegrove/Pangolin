@@ -225,7 +225,10 @@ bool JoinVideo::GrabNext(unsigned char* image, bool wait)
             TGRABANDPRINT("    IN SYNC oldest:%ld newest:%ld delta:%ld", *range.first, *range.second, (*range.second - *range.first));
             return true;
         }
-    } else {
+    }
+    else
+    {
+        pango_print_warn("JoinVideo: sync_tolerance_us = 0, frames are not synced!\n");
         return true;
     }
 }
@@ -384,7 +387,7 @@ std::vector<std::string> SplitBrackets(const std::string src, char open = '{', c
 
 PANGOLIN_REGISTER_FACTORY(JoinVideo)
 {
-    struct JoinVideoFactory : public FactoryInterface<VideoInterface> {
+    struct JoinVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
 
             std::vector<std::string> uris = SplitBrackets(uri.url);

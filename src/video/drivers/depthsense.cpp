@@ -139,7 +139,7 @@ DepthSenseVideo::~DepthSenseVideo()
 {
     if (g_cnode.isSet()) DepthSenseContext::I().Context().unregisterNode(g_cnode);
     if (g_dnode.isSet()) DepthSenseContext::I().Context().unregisterNode(g_dnode);
-    
+
     fill_image = (unsigned char*)ROGUE_ADDR;
     cond_image_requested.notify_all();
 
@@ -309,7 +309,7 @@ void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node, const Uri& 
 {
     DepthSense::Type type = node.getType();
     picojson::value& jsnode = device_properties[type.name()];
-    
+
     std::vector<DepthSense::PropertyBase> properties = type.getProperties();
     for(std::vector<DepthSense::PropertyBase>::const_iterator it = properties.begin(); it != properties.end(); ++it) {
         const DepthSense::PropertyBase& prop = *it;
@@ -581,7 +581,7 @@ bool DepthSenseVideo::GrabNext( unsigned char* image, bool /*wait*/ )
     fill_image = image;
     cond_image_requested.notify_one();
 
-    // Wait until it has been filled successfully. 
+    // Wait until it has been filled successfully.
     {
         std::unique_lock<std::mutex> lock(update_mutex);
         while ((enableDepth && !gotDepth) || (enableColor && !gotColor))
@@ -633,7 +633,7 @@ DepthSenseSensorType depthsense_sensor(const std::string& str)
 
 PANGOLIN_REGISTER_FACTORY(DepthSenseVideo)
 {
-    struct DepthSenseVideoFactory : public FactoryInterface<VideoInterface> {
+    struct DepthSenseVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             DepthSenseSensorType img1 = depthsense_sensor(uri.Get<std::string>("img1", "depth"));
             DepthSenseSensorType img2 = depthsense_sensor(uri.Get<std::string>("img2", ""));

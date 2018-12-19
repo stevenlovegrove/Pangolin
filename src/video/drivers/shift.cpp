@@ -106,7 +106,7 @@ void DoShift16to8(
 
 //! Implement VideoInput::GrabNext()
 bool ShiftVideo::GrabNext( unsigned char* image, bool wait )
-{    
+{
     if(videoin[0]->GrabNext(buffer,wait)) {
         for(size_t s=0; s<streams.size(); ++s) {
             Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
@@ -141,7 +141,7 @@ std::vector<VideoInterface*>& ShiftVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(ShiftVideo)
 {
-    struct ShiftVideoFactory : public FactoryInterface<VideoInterface> {
+    struct ShiftVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const int shift_right = uri.Get<int>("shift", 0);
             const int mask = uri.Get<int>("mask",  0xffff);

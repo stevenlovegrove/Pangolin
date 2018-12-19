@@ -38,7 +38,7 @@ DeinterlaceVideo::DeinterlaceVideo(std::unique_ptr<VideoInterface> &videoin_)
 {
     if(videoin->Streams().size() != 1)
         throw VideoException("FirewireDeinterlace input must have exactly one stream");
-    
+
     const StreamInfo& stmin = videoin->Streams()[0];
 
     StreamInfo stm1(PixelFormatFromString("GRAY8"), stmin.Width(), stmin.Height(), stmin.Width(), 0);
@@ -94,7 +94,7 @@ bool DeinterlaceVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(DeinterlaceVideo)
 {
-    struct DeinterlaceVideoFactory : public FactoryInterface<VideoInterface> {
+    struct DeinterlaceVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             return std::unique_ptr<VideoInterface>( new DeinterlaceVideo(subvid) );

@@ -34,6 +34,23 @@
 #include <pangolin/display/device/WinWindow.h>
 #include <memory>
 
+#define CheckWGLDieOnError() pangolin::_CheckWLDieOnError( __FILE__, __LINE__ );
+namespace pangolin {
+inline void _CheckWLDieOnError( const char *sFile, const int nLine )
+{
+    DWORD errorCode = GetLastError();
+    if(errorCode!=0) {
+        LPVOID lpMsgBuf;
+        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),(LPTSTR) &lpMsgBuf, 0, NULL);
+        // MessageBox( NULL, (LPCTSTR)lpMsgBuf, ("Error "+std::to_string(errorCode)).c_str(), MB_OK | MB_ICONINFORMATION );
+        pango_print_error("Error %i: %s", errorCode, (char *)lpMsgBuf);
+        pango_print_error("In: %s, line %d\n", sFile, nLine);
+        // exit(EXIT_FAILURE);
+    }
+}
+}
+
 namespace pangolin
 {
 
@@ -124,14 +141,14 @@ void WinWindow::SetupPixelFormat(HDC hDC)
 
     pixelFormat = ChoosePixelFormat(hDC, &pfd);
     if (pixelFormat == 0) {
-        MessageBox(WindowFromDC(hDC), "ChoosePixelFormat failed.", "Error",
-            MB_ICONERROR | MB_OK);
+        MessageBox(WindowFromDC(hDC), "ChoosePixelFormat failed.", "Error", MB_ICONERROR | MB_OK);
+        CheckWGLDieOnError();
         exit(1);
     }
 
     if (SetPixelFormat(hDC, pixelFormat, &pfd) != TRUE) {
-        MessageBox(WindowFromDC(hDC), "SetPixelFormat failed.", "Error",
-            MB_ICONERROR | MB_OK);
+        MessageBox(WindowFromDC(hDC), "SetPixelFormat failed.", "Error", MB_ICONERROR | MB_OK);
+        CheckWGLDieOnError();
         exit(1);
     }
 }
@@ -139,11 +156,19 @@ void WinWindow::SetupPixelFormat(HDC hDC)
 void WinWindow::SetupPalette(HDC hDC)
 {
     int pixelFormat = GetPixelFormat(hDC);
+    if(!pixelFormat) {
+        std::cerr << "GetPixelFormat() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
+
     PIXELFORMATDESCRIPTOR pfd;
     LOGPALETTE* pPal;
     int paletteSize;
 
-    DescribePixelFormat(hDC, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+    if(!DescribePixelFormat(hDC, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd)) {
+        std::cerr << "DescribePixelFormat() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 
     if (pfd.dwFlags & PFD_NEED_PALETTE) {
         paletteSize = 1 << pfd.cColorBits;
@@ -152,8 +177,7 @@ void WinWindow::SetupPalette(HDC hDC)
         return;
     }
 
-    pPal = (LOGPALETTE*)
-        malloc(sizeof(LOGPALETTE) + paletteSize * sizeof(PALETTEENTRY));
+    pPal = (LOGPALETTE*) malloc(sizeof(LOGPALETTE) + paletteSize * sizeof(PALETTEENTRY));
     pPal->palVersion = 0x300;
     pPal->palNumEntries = paletteSize;
 
@@ -182,6 +206,9 @@ void WinWindow::SetupPalette(HDC hDC)
         SelectPalette(hDC, hPalette, FALSE);
         RealizePalette(hDC);
     }
+    else {
+        std::cerr << "CreatePalette() failed" << std::endl;
+    }
 }
 
 WinWindow::WinWindow(
@@ -189,16 +216,24 @@ WinWindow::WinWindow(
 ) : hWnd(0)
 {
     const HMODULE hCurrentInst = GetModuleHandle(0);
+    if(hCurrentInst==NULL) {
+        std::cerr << "GetModuleHandle() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
     RegisterThisClass(hCurrentInst);
 
-    PangolinGl::windowed_size[0] = 0;
-    PangolinGl::windowed_size[1] = 0;
+    PangolinGl::windowed_size[0] = width;
+    PangolinGl::windowed_size[1] = height;
 
     HWND thishwnd = CreateWindow(
         className, window_title.c_str(),
         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
         0, 0, width, height,
         NULL, NULL, hCurrentInst, this);
+    if(thishwnd==NULL) {
+        std::cerr << "CreateWindow() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 
     if( thishwnd != hWnd ) {
         throw std::runtime_error("Pangolin Window Creation Failed.");
@@ -211,7 +246,10 @@ WinWindow::WinWindow(
 
 WinWindow::~WinWindow()
 {
-    DestroyWindow(hWnd);
+    if(!DestroyWindow(hWnd)) {
+        std::cerr << "DestroyWindow() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 }
 
 void WinWindow::RegisterThisClass(HMODULE hCurrentInst)
@@ -227,7 +265,10 @@ void WinWindow::RegisterThisClass(HMODULE hCurrentInst)
     wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     wndClass.lpszMenuName = NULL;
     wndClass.lpszClassName = className;
-    RegisterClass(&wndClass);
+    if(!RegisterClass(&wndClass)) {
+        std::cerr << "RegisterClass() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 }
 
 LRESULT APIENTRY
@@ -259,16 +300,32 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         /* initialize OpenGL rendering */
         hDC = GetDC(hWnd);
+        if(hDC==NULL) {
+            std::cerr << "WM_CREATE GetDC() failed" << std::endl;
+        }
         SetupPixelFormat(hDC);
         SetupPalette(hDC);
         hGLRC = wglCreateContext(hDC);
-        wglMakeCurrent(hDC, hGLRC);
+        if(!hGLRC) {
+            std::cerr << "WM_CREATE wglCreateContext() failed" << std::endl;
+            CheckWGLDieOnError();
+        }
+        if(!wglMakeCurrent(hDC, hGLRC)) {
+            std::cerr << "WM_CREATE wglMakeCurrent() failed" << std::endl;
+            CheckWGLDieOnError();
+        }
         return 0;
     case WM_DESTROY:
         /* finish OpenGL rendering */
         if (hGLRC) {
-            wglMakeCurrent(NULL, NULL);
-            wglDeleteContext(hGLRC);
+            if(!wglMakeCurrent(NULL, NULL)) {
+                std::cerr << "WM_DESTROY wglMakeCurrent() failed" << std::endl;
+                CheckWGLDieOnError();
+            }
+            if(!wglDeleteContext(hGLRC)) {
+                std::cerr << "WM_DESTROY wglDeleteContext() failed" << std::endl;
+                CheckWGLDieOnError();
+            }
         }
         if (hPalette) {
             DeleteObject(hPalette);
@@ -285,9 +342,15 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_PALETTECHANGED:
         /* realize palette if this is *not* the current window */
         if (hGLRC && hPalette && (HWND)wParam != hWnd) {
-            UnrealizeObject(hPalette);
-            SelectPalette(hDC, hPalette, FALSE);
-            RealizePalette(hDC);
+            if(!UnrealizeObject(hPalette)) {
+                std::cerr << "WM_PALETTECHANGED UnrealizeObject() failed" << std::endl;
+            }
+            if(!SelectPalette(hDC, hPalette, FALSE)) {
+                std::cerr << "WM_PALETTECHANGED SelectPalette() failed" << std::endl;
+            }
+            if(RealizePalette(hDC)==GDI_ERROR) {
+                std::cerr << "WM_PALETTECHANGED RealizePalette() failed" << std::endl;
+            }
             //redraw();
             break;
         }
@@ -295,9 +358,15 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_QUERYNEWPALETTE:
         /* realize palette if this is the current window */
         if (hGLRC && hPalette) {
-            UnrealizeObject(hPalette);
-            SelectPalette(hDC, hPalette, FALSE);
-            RealizePalette(hDC);
+            if(!UnrealizeObject(hPalette)) {
+                std::cerr << "WM_QUERYNEWPALETTE UnrealizeObject() failed" << std::endl;
+            }
+            if(!SelectPalette(hDC, hPalette, FALSE)) {
+                std::cerr << "WM_QUERYNEWPALETTE SelectPalette() failed" << std::endl;
+            }
+            if(RealizePalette(hDC)==GDI_ERROR) {
+                std::cerr << "WM_QUERYNEWPALETTE RealizePalette() failed" << std::endl;
+            }
             //redraw();
             return TRUE;
         }
@@ -368,11 +437,25 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
 void WinWindow::StartFullScreen() {
     LONG dwExStyle = GetWindowLong(hWnd, GWL_EXSTYLE)
         & ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+    if(dwExStyle==0) {
+        std::cerr << "GetWindowLong() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
     LONG dwStyle = GetWindowLong(hWnd, GWL_STYLE)
         & ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
+    if(dwStyle==0) {
+        std::cerr << "GetWindowLong() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 
-    SetWindowLong(hWnd, GWL_EXSTYLE, dwExStyle);
-    SetWindowLong(hWnd, GWL_STYLE, dwStyle);
+    if(!SetWindowLong(hWnd, GWL_EXSTYLE, dwExStyle)) {
+        std::cerr << "SetWindowLong() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
+    if(!SetWindowLong(hWnd, GWL_STYLE, dwStyle)) {
+        std::cerr << "SetWindowLong() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 
     GLint prev[2];
     std::memcpy(prev, context->windowed_size, sizeof(prev));
@@ -381,21 +464,34 @@ void WinWindow::StartFullScreen() {
 }
 
 void WinWindow::StopFullScreen() {
-
     ChangeDisplaySettings(NULL, 0);
     ShowCursor(TRUE);
 
     LONG dwExStyle = GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
     LONG dwStyle = GetWindowLong(hWnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW;
 
-    SetWindowLong(hWnd, GWL_EXSTYLE, dwExStyle);
-    SetWindowLong(hWnd, GWL_STYLE, dwStyle);
+    if(dwExStyle==0) {
+        std::cerr << "GetWindowLong() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
+    if(dwStyle==0) {
+        std::cerr << "GetWindowLong() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 
-    SetWindowPos(hWnd,
-        HWND_TOP,
-        0, 0,
-        context->windowed_size[0], context->windowed_size[1],
-        SWP_FRAMECHANGED);
+    if(!SetWindowLong(hWnd, GWL_EXSTYLE, dwExStyle)) {
+        std::cerr << "SetWindowLong() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
+    if(!SetWindowLong(hWnd, GWL_STYLE, dwStyle)) {
+        std::cerr << "SetWindowLong() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
+
+    if(!SetWindowPos(hWnd, HWND_TOP, 0, 0, context->windowed_size[0], context->windowed_size[1], SWP_FRAMECHANGED)) {
+        std::cerr << "SetWindowPos() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 }
 
 void WinWindow::ToggleFullscreen()
@@ -413,6 +509,7 @@ void WinWindow::Move(int x, int y)
 {
     if( !SetWindowPos(hWnd, 0, x, y, 0, 0, SWP_NOSIZE) ) {
         std::cerr << "WinWindow::Move failed" << std::endl;
+        CheckWGLDieOnError();
     }
 }
 
@@ -420,24 +517,42 @@ void WinWindow::Resize(unsigned int w, unsigned int h)
 {
     if( !SetWindowPos(hWnd, 0, 0, 0, w, h, SWP_NOMOVE) ) {
         std::cerr << "WinWindow::Resize failed" << std::endl;
+        CheckWGLDieOnError();
     }
 }
 
 void WinWindow::MakeCurrent()
 {
-    wglMakeCurrent(hDC, hGLRC);
+    if(wglMakeCurrent(hDC, hGLRC)==FALSE) {
+        std::cerr << "wglMakeCurrent() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 
     // Setup threadlocal context as this
     context = this;
 
     RECT rect;
-    GetWindowRect(hWnd, &rect);
+    if(!GetWindowRect(hWnd, &rect)) {
+        std::cerr << "GetWindowRect() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
     Resize(rect.right - rect.left, rect.bottom - rect.top);
+}
+
+void WinWindow::RemoveCurrent()
+{
+    if(wglMakeCurrent(NULL, NULL)==0) {
+        std::cerr << "wglMakeCurrent() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 }
 
 void WinWindow::SwapBuffers()
 {
-    ::SwapBuffers(hDC);
+    if(!::SwapBuffers(hDC)) {
+        std::cerr << "SwapBuffers() failed" << std::endl;
+        CheckWGLDieOnError();
+    }
 }
 
 void WinWindow::ProcessEvents()
@@ -474,6 +589,7 @@ PANGOLIN_REGISTER_FACTORY(WinWindow)
   
   auto factory = std::make_shared<WinWindowFactory>();
   FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "winapi");
+  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 100,  "default");
 }
 
 }

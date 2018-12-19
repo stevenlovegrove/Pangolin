@@ -108,6 +108,10 @@
 //  e.g. "split:[mem1=307200:640x480:1280:GRAY8,roi2=640+0+640x480]//files:///home/user/sequence/foo%03d.jpeg"
 //  e.g. "split:[stream1=2,stream2=1]//pango://video.pango"
 //
+// truncate - select a subregion of a video based on start and end (last index+1) index
+//  e.g. Generate 30 random frames: "truncate:[end=30]//test://"
+//  e.g. "truncate:[begin=100,end=120]"
+//
 // join - join streams
 //  e.g. "join:[sync_tolerance_us=100, sync_continuously=true]//{pleora:[sn=00000274]//}{pleora:[sn=00000275]//}"
 //
@@ -196,8 +200,8 @@ picojson::value GetVideoFrameProperties(VideoInterface* video)
                 const picojson::value dev_props = GetVideoFrameProperties(fi->InputStreams()[i]);
                 if(dev_props.contains("streams")) {
                     const picojson::value& dev_streams = dev_props["streams"];
-                    for(size_t i=0; i < dev_streams.size(); ++i) {
-                        streams.push_back(dev_streams[i]);
+                    for(size_t j=0; j < dev_streams.size(); ++j) {
+                        streams.push_back(dev_streams[j]);
                     }
                 }else{
                     streams.push_back(dev_props);
@@ -234,8 +238,8 @@ picojson::value GetVideoDeviceProperties(VideoInterface* video)
                 const picojson::value dev_props = GetVideoDeviceProperties(fi->InputStreams()[i]);
                 if(dev_props.contains("streams")) {
                     const picojson::value& dev_streams = dev_props["streams"];
-                    for(size_t i=0; i < dev_streams.size(); ++i) {
-                        streams.push_back(dev_streams[i]);
+                    for(size_t j=0; j < dev_streams.size(); ++j) {
+                        streams.push_back(dev_streams[j]);
                     }
                 }else{
                     streams.push_back(dev_props);

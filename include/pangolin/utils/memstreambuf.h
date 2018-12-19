@@ -14,6 +14,13 @@ public:
         buffer.reserve(initial_buffer_size);
     }
 
+    // Avoiding use of std::streambuf's move constructor, since it is missing for old GCC
+    memstreambuf(memstreambuf&& o)
+        : buffer(std::move(o.buffer))
+    {
+        pubseekpos(o.pubseekoff(0, std::ios_base::cur));
+    }
+
     size_t size() const
     {
         return buffer.size();
@@ -23,6 +30,13 @@ public:
     {
         return buffer.data();
     }
+
+    void clear()
+    {
+        buffer.clear();
+    }
+
+    std::vector<unsigned char> buffer;
 
 protected:
     std::streamsize xsputn(const char_type* __s, std::streamsize __n) override
@@ -36,8 +50,6 @@ protected:
         buffer.push_back( static_cast<unsigned char>(__c) );
         return __c;
     }
-
-    std::vector<unsigned char> buffer;
 };
 
 }

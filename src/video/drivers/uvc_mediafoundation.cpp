@@ -203,7 +203,7 @@ bool UvcMediaFoundationVideo::GetExposure(int& exp_us)
 }
 
 bool UvcMediaFoundationVideo::SetExposure(int exp_us)
-{ 
+{
     pango_print_warn("SetExposure not implemented for UvcMediaFoundationVideo");
     return false;
 }
@@ -640,7 +640,7 @@ bool UvcMediaFoundationVideo::SymLinkIDMatches(const std::wstring& symLink, cons
 
 PANGOLIN_REGISTER_FACTORY(UvcMediaFoundationVideo)
 {
-    struct UvcVideoFactory : public FactoryInterface<VideoInterface>
+    struct UvcVideoFactory final : public FactoryInterface<VideoInterface>
     {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override
         {

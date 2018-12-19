@@ -50,6 +50,7 @@
 #cmakedefine HAVE_TIFF
 #cmakedefine HAVE_OPENEXR
 #cmakedefine HAVE_ZSTD
+#cmakedefine HAVE_LZ4
 
 /// Platform
 #cmakedefine _UNIX_

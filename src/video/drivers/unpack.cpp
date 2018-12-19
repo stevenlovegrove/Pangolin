@@ -193,7 +193,7 @@ void UnpackVideo::Process(unsigned char* image, const unsigned char* buffer)
 
 //! Implement VideoInput::GrabNext()
 bool UnpackVideo::GrabNext( unsigned char* image, bool wait )
-{    
+{
     if(videoin[0]->GrabNext(buffer,wait)) {
         Process(image,buffer);
         return true;
@@ -248,7 +248,7 @@ bool UnpackVideo::DropNFrames(uint32_t n)
 
 PANGOLIN_REGISTER_FACTORY(UnpackVideo)
 {
-    struct UnpackVideoFactory : public FactoryInterface<VideoInterface> {
+    struct UnpackVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const std::string fmt = uri.Get("fmt", std::string("GRAY16LE") );

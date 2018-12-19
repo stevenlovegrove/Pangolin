@@ -269,6 +269,10 @@ void OpenNi2Video::SetupStreamModes()
         switch( mode.sensor_type ) {
         case OpenNiDepth_1mm_Registered:
             depth_to_color = true;
+            nisensortype = openni::SENSOR_DEPTH;
+            nipixelfmt = openni::PIXEL_FORMAT_DEPTH_1_MM;
+            use_depth = true;
+            break;
         case OpenNiDepth_1mm:
             nisensortype = openni::SENSOR_DEPTH;
             nipixelfmt = openni::PIXEL_FORMAT_DEPTH_1_MM;
@@ -633,7 +637,7 @@ size_t OpenNi2Video::Seek(size_t frameid)
 
 PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
 {
-    struct OpenNI2VideoFactory : public FactoryInterface<VideoInterface> {
+    struct OpenNI2VideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const bool realtime = uri.Contains("realtime");
             const ImageDim default_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
