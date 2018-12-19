@@ -7,6 +7,12 @@ if(BUILD_PANGOLIN_GUI)
     add_subdirectory(SimpleDisplayImage)
     add_subdirectory(SimpleScene)
 
+    if(NOT APPLE)
+        # OSX doesn't allow windows on anything but main thread?
+        # Also, Pangolin's destructor for OSX window is unimplemented.
+        add_subdirectory(SimpleMultiWindow)
+    endif()
+
     if(NOT HAVE_GLES OR HAVE_GLES_2)
         add_subdirectory(SimplePlot)
     endif()
