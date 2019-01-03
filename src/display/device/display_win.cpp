@@ -222,9 +222,6 @@ WinWindow::WinWindow(
     }
     RegisterThisClass(hCurrentInst);
 
-    PangolinGl::windowed_size[0] = width;
-    PangolinGl::windowed_size[1] = height;
-
     HWND thishwnd = CreateWindow(
         className, window_title.c_str(),
         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
@@ -238,6 +235,13 @@ WinWindow::WinWindow(
     if( thishwnd != hWnd ) {
         throw std::runtime_error("Pangolin Window Creation Failed.");
     }
+
+    // Gets the size of the window, excluding the top bar
+    RECT cRect;
+    GetClientRect(thishwnd, &cRect);
+
+    PangolinGl::windowed_size[0] = cRect.right;
+    PangolinGl::windowed_size[1] = cRect.bottom;
 
     // Display Window
     ShowWindow(hWnd, SW_SHOW);
