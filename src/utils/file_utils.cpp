@@ -35,6 +35,9 @@
 #  endif
 #  include <Windows.h>
 #  include <Shlobj.h>
+#  ifdef UNICODE
+#    include <codecvt>
+#  endif
 #else
 #  include <dirent.h>
 #  include <sys/types.h>
