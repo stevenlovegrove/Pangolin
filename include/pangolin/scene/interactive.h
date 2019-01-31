@@ -37,6 +37,8 @@ struct Interactive
 {
     static __thread GLuint current_id;
 
+    virtual ~Interactive() {}
+
     virtual bool Mouse(
         int button,
         const GLprecision win[3], const GLprecision obj[3], const GLprecision normal[3],
