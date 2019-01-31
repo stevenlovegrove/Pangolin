@@ -85,7 +85,7 @@ int main( int argc, char* argv[] )
                 std::cout << "Trying: " << input_uris[i] << std::endl;
                 RecordSample(input_uris[i], record_uri);
                 return 0;
-            }catch(pangolin::VideoException) {}
+            }catch(const pangolin::VideoException&) {}
         }
     }
 

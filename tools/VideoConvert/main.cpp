@@ -53,7 +53,7 @@ int main( int argc, char* argv[] )
         const std::string output_uri = (argc > 2) ? std::string(argv[2]) : dflt_output_uri;
         try{
             VideoViewer(input_uri, output_uri);
-        } catch (pangolin::VideoException e) {
+        } catch (const pangolin::VideoException& e) {
             std::cout << e.what() << std::endl;
         }
     }else{

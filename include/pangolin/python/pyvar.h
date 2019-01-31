@@ -64,7 +64,7 @@ PyObject* GetPangoVarAsPython(const std::string& name)
                 return PyString_FromString(val.c_str());
 #endif
             }
-        }catch(std::exception) {
+        }catch(const std::exception&) {
         }
     }
 
@@ -116,7 +116,7 @@ void SetPangoVarFromPython(const std::string& name, PyObject* val)
             pango_var.Meta().gui_changed = true;
         }
         FlagVarChanged();
-    }catch(std::exception e) {
+    }catch(const std::exception& e) {
         pango_print_error("%s\n", e.what());
     }
 }

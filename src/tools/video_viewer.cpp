@@ -148,7 +148,7 @@ void VideoViewer::Run()
                         images[v], video.Streams()[v].PixFormat(),
                         pangolin::MakeUniqueFilename("capture.png")
                     );
-                }catch(std::exception e){
+                }catch(const std::exception& e){
                     pango_print_error("Unable to save frame: %s\n", e.what());
                 }
             }

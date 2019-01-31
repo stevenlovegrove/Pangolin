@@ -895,7 +895,7 @@ dc1394video_mode_t get_firewire_mode(unsigned width, unsigned height, const std:
 
             if( w == width && h==height && !fmt.compare(format) )
                 return video_mode;
-        } catch (VideoException e) {}
+        } catch (const VideoException& e) {}
     }
 
     throw VideoException("Unknown video mode");

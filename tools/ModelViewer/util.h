@@ -23,7 +23,7 @@ inline std::vector<Tout> TryLoad(const std::vector<Tin>& in, const F& load_func)
     {
         try {
             loaded.emplace_back(load_func(file));
-        }catch(std::exception) {
+        }catch(const std::exception&) {
         }
     }
     return loaded;
