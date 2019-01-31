@@ -75,7 +75,7 @@ void OpenNi2Video::PrintOpenNI2Modes(openni::SensorType sensorType)
         std::string sfmt = "PangolinUnknown";
         try{
             sfmt = VideoFormatFromOpenNI2(modes[i].getPixelFormat()).format;
-        }catch(VideoException){}
+        }catch(const VideoException&){}
         pango_print_info( "  %dx%d, %d fps, %s\n",
             modes[i].getResolutionX(), modes[i].getResolutionY(),
             modes[i].getFps(), sfmt.c_str()
@@ -318,7 +318,7 @@ void OpenNi2Video::SetupStreamModes()
         openni::VideoMode onivmode;
         try {
             onivmode = FindOpenNI2Mode(devices[mode.device], nisensortype, mode.dim.x, mode.dim.y, mode.fps, nipixelfmt);
-        }catch(VideoException e) {
+        }catch(const VideoException& e) {
             pango_print_error("Unable to find compatible OpenNI Video Mode. Please choose from:\n");
             PrintOpenNI2Modes(nisensortype);
             fflush(stdout);

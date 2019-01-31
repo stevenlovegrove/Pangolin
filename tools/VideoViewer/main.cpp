@@ -10,7 +10,7 @@ int main( int argc, char* argv[] )
         const std::string output_uri = (argc > 2) ? std::string(argv[2]) : dflt_output_uri;
         try{
             pangolin::RunVideoViewerUI(input_uri, output_uri);
-        } catch (pangolin::VideoException e) {
+        } catch (const pangolin::VideoException& e) {
             std::cout << e.what() << std::endl;
         }
     }else{
@@ -43,7 +43,7 @@ int main( int argc, char* argv[] )
                 pango_print_info("Trying: %s\n", input_uris[i].c_str());
                 pangolin::RunVideoViewerUI(input_uris[i], dflt_output_uri);
                 return 0;
-            }catch(pangolin::VideoException) { }
+            }catch(const pangolin::VideoException&) { }
         }
     }
 

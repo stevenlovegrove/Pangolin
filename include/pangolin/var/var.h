@@ -251,7 +251,7 @@ public:
     {
         try{
             return &(var->Get());
-        }catch(BadInputException)
+        }catch(const BadInputException&)
         {
             Reset();
             return &(var->Get());
