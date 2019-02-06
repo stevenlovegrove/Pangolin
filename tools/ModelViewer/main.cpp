@@ -115,8 +115,8 @@ int main( int argc, char** argv )
                 auto geom = future_geom.get();
                 auto aabb = pangolin::GetAxisAlignedBox(geom);
                 total_aabb.extend(aabb);
-                const auto center = total_aabb.center();
-                const auto view = center + Eigen::Vector3f(1.2,1.2,1.2) * std::max( (total_aabb.max() - center).norm(), (center - total_aabb.min()).norm());
+                const Eigen::Vector3f center = total_aabb.center();
+                const Eigen::Vector3f view = center + Eigen::Vector3f(1.2f,1.2f,1.2f) * std::max( (total_aabb.max() - center).norm(), (center - total_aabb.min()).norm());
                 const auto mvm = pangolin::ModelViewLookAt(view[0], view[1], view[2], center[0], center[1], center[2], pangolin::AxisY);
                 s_cam.SetModelViewMatrix(mvm);
                 auto renderable = std::make_shared<GlGeomRenderable>(pangolin::ToGlGeometry(geom), aabb);
