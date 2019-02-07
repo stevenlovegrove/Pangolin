@@ -235,7 +235,7 @@ public:
     {
         try{
             return var->Get();
-        }catch(const BadInputException &e)
+        }catch(const BadInputException&)
         {
             const_cast<Var<T> *>(this)->Reset();
             return var->Get();
