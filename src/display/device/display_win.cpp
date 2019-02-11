@@ -215,7 +215,7 @@ WinWindow::WinWindow(
     const std::string& window_title, int width, int height
 ) : hWnd(0)
 {
-    const HMODULE hCurrentInst = GetModuleHandle(0);
+    const HMODULE hCurrentInst = GetModuleHandleA(nullptr);
     if(hCurrentInst==NULL) {
         std::cerr << "GetModuleHandle() failed" << std::endl;
         CheckWGLDieOnError();
@@ -277,20 +277,20 @@ WinWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     WinWindow* self = 0;
 
     if (uMsg == WM_NCCREATE) {
-        LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+        auto lpcs = reinterpret_cast<LPCREATESTRUCTA>(lParam);
         self = reinterpret_cast<WinWindow*>(lpcs->lpCreateParams);
         if(self) {
             self->hWnd = hwnd;
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(self));
+            SetWindowLongPtrA(hwnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(self));
         }
     } else {
-        self = reinterpret_cast<WinWindow*> (GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        self = reinterpret_cast<WinWindow*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
     }
 
     if (self) {
         return self->HandleWinMessages(uMsg, wParam, lParam);
     } else {
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        return DefWindowProcA(hwnd, uMsg, wParam, lParam);
     }
 }
 
@@ -431,29 +431,29 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
     default:
         break;
     }
-    return DefWindowProc(hWnd, message, wParam, lParam);
+    return DefWindowProcA(hWnd, message, wParam, lParam);
 }
 
 void WinWindow::StartFullScreen() {
-    LONG dwExStyle = GetWindowLong(hWnd, GWL_EXSTYLE)
+    LONG dwExStyle = GetWindowLongA(hWnd, GWL_EXSTYLE)
         & ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
     if(dwExStyle==0) {
-        std::cerr << "GetWindowLong() failed" << std::endl;
+        std::cerr << "GetWindowLongA() failed" << std::endl;
         CheckWGLDieOnError();
     }
-    LONG dwStyle = GetWindowLong(hWnd, GWL_STYLE)
+    LONG dwStyle = GetWindowLongA(hWnd, GWL_STYLE)
         & ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
     if(dwStyle==0) {
-        std::cerr << "GetWindowLong() failed" << std::endl;
+        std::cerr << "GetWindowLongA() failed" << std::endl;
         CheckWGLDieOnError();
     }
 
-    if(!SetWindowLong(hWnd, GWL_EXSTYLE, dwExStyle)) {
-        std::cerr << "SetWindowLong() failed" << std::endl;
+    if(!SetWindowLongA(hWnd, GWL_EXSTYLE, dwExStyle)) {
+        std::cerr << "SetWindowLongA() failed" << std::endl;
         CheckWGLDieOnError();
     }
-    if(!SetWindowLong(hWnd, GWL_STYLE, dwStyle)) {
-        std::cerr << "SetWindowLong() failed" << std::endl;
+    if(!SetWindowLongA(hWnd, GWL_STYLE, dwStyle)) {
+        std::cerr << "SetWindowLongA() failed" << std::endl;
         CheckWGLDieOnError();
     }
 
@@ -467,24 +467,24 @@ void WinWindow::StopFullScreen() {
     ChangeDisplaySettings(NULL, 0);
     ShowCursor(TRUE);
 
-    LONG dwExStyle = GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-    LONG dwStyle = GetWindowLong(hWnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW;
+    LONG dwExStyle = GetWindowLongA(hWnd, GWL_EXSTYLE) | WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
+    LONG dwStyle = GetWindowLongA(hWnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW;
 
     if(dwExStyle==0) {
-        std::cerr << "GetWindowLong() failed" << std::endl;
+        std::cerr << "GetWindowLongA() failed" << std::endl;
         CheckWGLDieOnError();
     }
     if(dwStyle==0) {
-        std::cerr << "GetWindowLong() failed" << std::endl;
+        std::cerr << "GetWindowLongA() failed" << std::endl;
         CheckWGLDieOnError();
     }
 
-    if(!SetWindowLong(hWnd, GWL_EXSTYLE, dwExStyle)) {
-        std::cerr << "SetWindowLong() failed" << std::endl;
+    if(!SetWindowLongA(hWnd, GWL_EXSTYLE, dwExStyle)) {
+        std::cerr << "SetWindowLongA() failed" << std::endl;
         CheckWGLDieOnError();
     }
-    if(!SetWindowLong(hWnd, GWL_STYLE, dwStyle)) {
-        std::cerr << "SetWindowLong() failed" << std::endl;
+    if(!SetWindowLongA(hWnd, GWL_STYLE, dwStyle)) {
+        std::cerr << "SetWindowLongA() failed" << std::endl;
         CheckWGLDieOnError();
     }
 
@@ -558,13 +558,13 @@ void WinWindow::SwapBuffers()
 void WinWindow::ProcessEvents()
 {
     MSG msg;
-    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
         if (msg.message == WM_QUIT) {
             pangolin::Quit();
             break;
         }
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        DispatchMessageA(&msg);
     }
 }
 
