@@ -45,6 +45,10 @@ namespace py_pangolin {
     m.def("CreateWindowAndBindWithParams",
           &pangolin::CreateWindowAndBind,
           pybind11::return_value_policy::reference);
+	
+    m.def("DestroyWindow",
+          &pangolin::DestroyWindow,
+          pybind11::arg("window_title"));
 
     m.def("CreateDisplay",
           &pangolin::CreateDisplay,
@@ -76,6 +80,7 @@ namespace py_pangolin {
           &pangolin::Display,
           pybind11::return_value_policy::reference,
           pybind11::arg("name"));
+
   }
 
 }  // Py_pangolin
