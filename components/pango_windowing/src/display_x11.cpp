@@ -521,7 +521,7 @@ void X11Window::SwapBuffers() {
     CheckEGLDieOnError();
 }
 
-std::unique_ptr<WindowInterface> CreateX11WindowAndBind(const std::string& window_title, const int w, const int h, const std::string& display_name, const bool double_buffered, const int  sample_buffers, const int  samples)
+std::unique_ptr<WindowInterface> CreateX11WindowAndBind(const std::string& window_title, const int w, const int h, const std::string& display_name)
 {
     std::shared_ptr<X11Display> newdisplay = std::make_shared<X11Display>(display_name.empty() ? NULL : display_name.c_str() );
     if (!newdisplay) {
@@ -572,10 +572,7 @@ PANGOLIN_REGISTER_FACTORY(X11Window)
       const int w = uri.Get<int>("w", 640);
       const int h = uri.Get<int>("h", 480);
       const std::string display_name = uri.Get<std::string>("display_name", "");
-      const bool double_buffered = uri.Get<bool>("double_buffered", true);
-      const int sample_buffers = uri.Get<int>("sample_buffers", 1);
-      const int samples = uri.Get<int>("samples", 1);
-      return std::unique_ptr<WindowInterface>(CreateX11WindowAndBind(window_title, w, h, display_name, double_buffered, sample_buffers, samples));
+      return std::unique_ptr<WindowInterface>(CreateX11WindowAndBind(window_title, w, h, display_name));
     }
   };
 
