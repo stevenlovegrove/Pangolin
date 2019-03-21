@@ -52,7 +52,7 @@ int main( int argc, char* argv[] )
                 std::cout << "Frames complete: " << pkt.sequence_num << " / " << reader.Sources()[pkt.src].index.size() << '\r';
                 std::cout.flush();
             }
-        }catch(std::runtime_error)
+        }catch(const std::runtime_error &)
         {
         }
         std::cout << std::endl << "+ done" << std::endl;
