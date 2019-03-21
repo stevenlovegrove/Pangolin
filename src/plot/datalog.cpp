@@ -221,7 +221,7 @@ void DataLog::Save(std::string filename)
       if (!Labels().empty()) {
         csvStream << Labels()[0];
 
-        for (int i = 1; i < Labels().size(); ++i) {
+        for (size_t i = 1; i < Labels().size(); ++i) {
           csvStream << "," << Labels()[i];
         }
 
@@ -233,11 +233,11 @@ void DataLog::Save(std::string filename)
 
     while (block) {
 
-      for (int i = 0; i < block->Samples(); ++i) {
+      for (size_t i = 0; i < block->Samples(); ++i) {
 
         csvStream << block->Sample(i)[0];
 
-        for (int d = 1; d < block->Dimensions(); ++d) {
+        for (size_t d = 1; d < block->Dimensions(); ++d) {
 
           csvStream << "," << block->Sample(i)[d];
 
