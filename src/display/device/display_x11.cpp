@@ -374,10 +374,9 @@ void X11Window::ProcessEvents()
         case ButtonRelease:
         {
             const int button = ev.xbutton.button-1;
-            const int mask = Button1Mask << button;
             pangolin::process::Mouse(
                 button,
-                ev.xbutton.state & mask,
+                ev.xbutton.type == ButtonRelease,
                 ev.xbutton.x, ev.xbutton.y
             );
             break;
