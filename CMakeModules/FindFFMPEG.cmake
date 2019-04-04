@@ -7,50 +7,50 @@
 # Find header files
 FIND_PATH(
   AVCODEC_INCLUDE_DIR libavcodec/avcodec.h
-  /usr/include /usr/local/include /opt/local/include
+  /usr/include /usr/local/include /opt/local/include /usr/include/x86_64-linux-gnu
 )
 FIND_PATH(
   AVFORMAT_INCLUDE_DIR libavformat/avformat.h
-  /usr/include /usr/local/include /opt/local/include
+  /usr/include /usr/local/include /opt/local/include /usr/include/x86_64-linux-gnu
 )
 FIND_PATH(
   AVDEVICE_INCLUDE_DIR libavdevice/avdevice.h
-  /usr/include /usr/local/include /opt/local/include
+  /usr/include /usr/local/include /opt/local/include /usr/include/x86_64-linux-gnu
 )
 FIND_PATH(
   AVUTIL_INCLUDE_DIR libavutil/avutil.h
-  /usr/include /usr/local/include /opt/local/include
+  /usr/include /usr/local/include /opt/local/include /usr/include/x86_64-linux-gnu
 )
 FIND_PATH(
   SWSCALE_INCLUDE_DIR libswscale/swscale.h
-  /usr/include /usr/local/include /opt/local/include
+  /usr/include /usr/local/include /opt/local/include /usr/include/x86_64-linux-gnu
 )
 
 # Find Library files
 FIND_LIBRARY(
   AVCODEC_LIBRARY
   NAMES avcodec
-  PATH /usr/lib /usr/local/lib /opt/local/lib
+  PATH /usr/lib /usr/local/lib /opt/local/lib /usr/lib/x86_64-linux-gnu
 )
 FIND_LIBRARY(
   AVFORMAT_LIBRARY
   NAMES avformat
-  PATH /usr/lib /usr/local/lib /opt/local/lib
+  PATH /usr/lib /usr/local/lib /opt/local/lib /usr/lib/x86_64-linux-gnu
 )
 FIND_LIBRARY(
   AVDEVICE_LIBRARY
   NAMES avdevice
-  PATH /usr/lib /usr/local/lib /opt/local/lib
+  PATH /usr/lib /usr/local/lib /opt/local/lib /usr/lib/x86_64-linux-gnu
 )
 FIND_LIBRARY(
   AVUTIL_LIBRARY
   NAMES avutil
-  PATH /usr/lib /usr/local/lib /opt/local/lib
+  PATH /usr/lib /usr/local/lib /opt/local/lib /usr/lib/x86_64-linux-gnu
 )
 FIND_LIBRARY(
   SWSCALE_LIBRARY
   NAMES swscale
-  PATH /usr/lib /usr/local/lib /opt/local/lib
+  PATH /usr/lib /usr/local/lib /opt/local/lib /usr/lib/x86_64-linux-gnu
 )
 
 IF( EXISTS "${AVUTIL_INCLUDE_DIR}/libavutil/pixdesc.h" )
