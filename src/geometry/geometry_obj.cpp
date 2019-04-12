@@ -49,11 +49,15 @@ struct hash<tinyobj::index_t> {
 
 };
 
-bool operator==(const ::tinyobj::index_t a, const ::tinyobj::index_t b) {
+} // namespace std
+
+namespace tinyobj {
+    
+bool operator==(const index_t a, const index_t b) {
     return a.vertex_index == b.vertex_index && a.normal_index == b.normal_index && a.texcoord_index == b.texcoord_index;
 }
 
-} // namespace std
+} // namespace tinyobj
 
 namespace pangolin {
 
