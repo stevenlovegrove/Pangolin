@@ -25,6 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <unordered_set>
+
 #include <pangolin/geometry/geometry_obj.h>
 #include <tinyobj/tiny_obj_loader.h>
 #include <pangolin/utils/variadic_all.h>
@@ -34,6 +36,24 @@
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/utils/file_utils.h>
+
+namespace std {
+
+template<>
+struct hash<tinyobj::index_t> {
+
+    std::size_t operator()(const tinyobj::index_t & t) const noexcept {
+        static std::hash<int> h;
+        return h(t.vertex_index) ^ h(t.normal_index) ^ h(t.texcoord_index);
+    }
+
+};
+
+bool operator==(const ::tinyobj::index_t a, const ::tinyobj::index_t b) {
+    return a.vertex_index == b.vertex_index && a.normal_index == b.normal_index && a.texcoord_index == b.texcoord_index;
+}
+
+} // namespace std
 
 namespace pangolin {
 
@@ -81,11 +101,18 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
         // Load textures - a bit of a hack for now.
         for(size_t i=0; i < materials.size(); ++i) {
             if(!materials[i].diffuse_texname.empty()) {
-                geom.textures[FormatString("texture_%",i)] = LoadImage(PathParent(filename) + "/" + materials[i].diffuse_texname);
+                TypedImage& tex_image = geom.textures[FormatString("texture_%",i)];
+                tex_image = LoadImage(PathParent(filename) + "/" + materials[i].diffuse_texname);
+                const int row_bytes = tex_image.w * tex_image.fmt.bpp / 8;
+                std::vector<unsigned char> tmp_row(row_bytes);
+                for (std::size_t y=0; y < (tex_image.h >> 1); ++y) {
+                    std::memcpy(tmp_row.data(), tex_image.RowPtr(y), row_bytes);
+                    std::memcpy(tex_image.RowPtr(y), tex_image.RowPtr(tex_image.h - 1 - y), row_bytes);
+                    std::memcpy(tex_image.RowPtr(tex_image.h - 1 - y), tmp_row.data(), row_bytes);
+                }
             }
         }
 
-        const size_t num_verts = attrib.vertices.size() / 3;
 //        PANGO_ASSERT(all_of(
 //            [&](const size_t& v){return (v == 0) || (v == num_verts);},
 //            attrib.normals.size() / 3,
@@ -100,38 +127,74 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
         Image<float> tiny_vs = GetImageWrapper(attrib.vertices, 3);
         Image<float> tiny_ns = GetImageWrapper(attrib.normals, 3);
         Image<float> tiny_cs = GetImageWrapper(attrib.colors, 3);
-        Image<float> tinu_ts = GetImageWrapper(attrib.texcoords, 2);
+        Image<float> tiny_ts = GetImageWrapper(attrib.texcoords, 2);
 
+        // Some vertices are used with multiple texture coordinates or multiple normals, and will need to be split.
+        // First, we'll find the number of unique combinations of vertex, texture, and normal indices used, as each
+        // will result in a separate vertex in the buffers
+        std::unordered_map<tinyobj::index_t, std::size_t> reindex_map;
+
+        for(auto& shape : shapes) {
+
+            if(shape.mesh.indices.size() == 0) {
+                continue;
+            }
+
+            const size_t num_indices = shape.mesh.indices.size() ;
+
+            for(size_t i=0; i < num_indices; ++i) {
+
+                const tinyobj::index_t index = shape.mesh.indices[i];
+
+                if (reindex_map.find(index) == reindex_map.end()) {
+
+                    reindex_map.insert(std::pair<tinyobj::index_t, std::size_t>(index, reindex_map.size()));
+
+                }
+
+            }
+
+        }
+
+        const int num_unique_verts = reindex_map.size();
 
         // Create unified verts attribute
         auto& verts = geom.buffers["geometry"];
         Image<float> new_vs, new_ns, new_cs, new_ts;
         {
-            verts.Reinitialise(sizeof(float)*(tiny_vs.w + tiny_ns.w + tiny_cs.w + tinu_ts.w), num_verts);
+            verts.Reinitialise(sizeof(float)*(tiny_vs.w + tiny_ns.w + tiny_cs.w + tiny_ts.w),num_unique_verts);
             size_t float_offset = 0;
             if(tiny_vs.IsValid()) {
-                new_vs = verts.UnsafeReinterpret<float>().SubImage(float_offset,0,3,num_verts);
+                new_vs = verts.UnsafeReinterpret<float>().SubImage(float_offset,0,3,num_unique_verts);
                 verts.attributes["vertex"] = new_vs;
                 float_offset += 3;
-                new_vs.CopyFrom(tiny_vs);
+                for (auto& el : reindex_map) {
+                    new_vs.Row(el.second).CopyFrom(tiny_vs.Row(el.first.vertex_index));
+                }
             }
             if(tiny_ns.IsValid()) {
-                new_ns = verts.UnsafeReinterpret<float>().SubImage(float_offset,0,3,num_verts);
+                new_ns = verts.UnsafeReinterpret<float>().SubImage(float_offset,0,3,num_unique_verts);
                 verts.attributes["normal"] = new_ns;
                 float_offset += 3;
-                // Don't copy - we'll have to re-order
+                for (auto& el : reindex_map) {
+                    new_ns.Row(el.second).CopyFrom(tiny_ns.Row(el.first.normal_index));
+                }
             }
             if(tiny_cs.IsValid()) {
-                new_cs = verts.UnsafeReinterpret<float>().SubImage(float_offset,0,3,num_verts);
+                new_cs = verts.UnsafeReinterpret<float>().SubImage(float_offset,0,3,num_unique_verts);
                 verts.attributes["color"] = new_cs;
                 float_offset += 3;
-                new_cs.CopyFrom(tiny_cs);
+                for (auto& el : reindex_map) {
+                    new_cs.Row(el.second).CopyFrom(tiny_cs.Row(el.first.vertex_index));
+                }
             }
-            if(tinu_ts.IsValid()) {
-                new_ts = verts.UnsafeReinterpret<float>().SubImage(float_offset,0,3,num_verts);
+            if(tiny_ts.IsValid()) {
+                new_ts = verts.UnsafeReinterpret<float>().SubImage(float_offset,0,2,num_unique_verts);
                 verts.attributes["uv"] = new_ts;
                 float_offset += 2;
-                // Don't copy - we'll have to re-order
+                for (auto& el : reindex_map) {
+                    new_ts.Row(el.second).CopyFrom(tiny_ts.Row(el.first.texcoord_index));
+                }
             }
             PANGO_ASSERT(float_offset * sizeof(float) == verts.w);
         }
@@ -151,42 +214,16 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
                 const size_t num_faces = shape.mesh.indices.size() / 3;
                 PANGO_ASSERT(num_indices % 3 == 0);
 
-                Image<uint32_t> ibo_vs((uint32_t*)&shape.mesh.indices[0].vertex_index, 1, num_indices, sizeof(tinyobj::index_t));
-                Image<uint32_t> ibo_ns((uint32_t*)&shape.mesh.indices[0].normal_index, 1, num_indices, sizeof(tinyobj::index_t));
-                Image<uint32_t> ibo_ts((uint32_t*)&shape.mesh.indices[0].texcoord_index, 1, num_indices, sizeof(tinyobj::index_t));
-
                 // Use vert_ibo as our new IBO
                 faces->second.Reinitialise(3*sizeof(uint32_t), num_indices);
                 Image<uint32_t> new_ibo = faces->second.UnsafeReinterpret<uint32_t>().SubImage(0,0,3,num_faces);
                 for(size_t f=0; f < num_faces; ++f) {
                     for(size_t v=0; v < 3; ++v) {
-                        new_ibo(v,f) = ibo_vs(0,3*f+v);
+                        new_ibo(v,f) = reindex_map[shape.mesh.indices[3 * f + v]];
                     }
                 }
                 faces->second.attributes["vertex_indices"] = new_ibo;
 
-                // Reorder normals
-                if(new_ns.IsValid()) {
-                    for(size_t f=0; f < num_faces; ++f) {
-                        for(size_t v=0; v < 3; ++v) {
-                            size_t vi = ibo_vs(0,3*f+v);
-                            size_t ni = ibo_ns(0,3*f+v);
-                            new_ns.Row(vi).CopyFrom(tiny_ns.Row(ni));
-                            Normalise<3>(new_ns.RowPtr(vi));
-                        }
-                    }
-                }
-
-                // Reorder uvs
-                if(new_ts.IsValid()) {
-                    for(size_t f=0; f < num_faces; ++f) {
-                        for(size_t v=0; v < 3; ++v) {
-                            size_t vi = ibo_vs(0,3*f+v);
-                            size_t ti = ibo_ts(0,3*f+v);
-                            new_ts.Row(vi).CopyFrom(tinu_ts.Row(ti));
-                        }
-                    }
-                }
             }else if(std::all_of( shape.mesh.num_face_vertices.begin(), shape.mesh.num_face_vertices.end(),
                 [](unsigned char num){return num==4;}
             )) {
