@@ -31,6 +31,7 @@
 #include <pangolin/video/iostream_operators.h>
 
 #include <cstring>
+#include <fstream>
 
 namespace pangolin
 {
@@ -100,7 +101,7 @@ void ImagesVideo::PopulateFilenames(const std::string& wildcard_path)
         if (FileLowercaseExtention(expanded_path) == ".json" ) {
             PopulateFilenamesFromJson(wildcards[0]);
             return;
-        }else if(wildcards.size() == 1 && FileExists(possible_archive_path)){
+        }else if(FileExists(possible_archive_path)){
             PopulateFilenamesFromJson(possible_archive_path);
             return;
         }
@@ -133,7 +134,7 @@ void ImagesVideo::ConfigureStreamSizes()
     size_bytes = 0;
     for(size_t c=0; c < num_channels; ++c) {
         const TypedImage& img = loaded[0][c];
-        const StreamInfo stream_info(img.fmt, img.w, img.h, img.pitch, (unsigned char*)0 + size_bytes);
+        const StreamInfo stream_info(img.fmt, img.w, img.h, img.pitch, (unsigned char*)(size_bytes));
         streams.push_back(stream_info);
         size_bytes += img.h*img.pitch;
     }
@@ -259,7 +260,7 @@ const picojson::value& ImagesVideo::FrameProperties() const
 {
     const size_t frame = GetCurrentFrameId();
 
-    if( frame < json_frames.size()) {
+    if( json_frames.evaluate_as_boolean() && frame < json_frames.size()) {
         const picojson::value& frame_props = json_frames[frame];
         if(frame_props.contains("frame_properties")) {
             return frame_props["frame_properties"];
@@ -271,7 +272,7 @@ const picojson::value& ImagesVideo::FrameProperties() const
 
 PANGOLIN_REGISTER_FACTORY(ImagesVideo)
 {
-    struct ImagesVideoVideoFactory : public FactoryInterface<VideoInterface> {
+    struct ImagesVideoVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const bool raw = uri.Contains("fmt");
             const std::string path = PathExpand(uri.url);

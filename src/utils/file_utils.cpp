@@ -30,9 +30,14 @@
 #include <pangolin/utils/file_utils.h>
 
 #ifdef _WIN_
-#  define WIN32_LEAN_AND_MEAN
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
 #  include <Windows.h>
 #  include <Shlobj.h>
+#  ifdef UNICODE
+#    include <codecvt>
+#  endif
 #else
 #  include <dirent.h>
 #  include <sys/types.h>
@@ -444,43 +449,40 @@ bool FileExists(const std::string& filename)
 
 #else // _WIN_
 
-bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>& file_vec)
+bool FilesMatchingWildcard(const std::string& in_wildcard, std::vector<std::string>& file_vec)
 {
-	size_t nLastSlash = wildcard.find_last_of("/\\");
-    
-    std::string sPath;
-    std::string sFileWc;
-    
-    if(nLastSlash != std::string::npos) {
-        sPath =   wildcard.substr(0, nLastSlash);                  
-        sFileWc = wildcard.substr(nLastSlash+1, std::string::npos);
-    }else{
-        sPath = ".";
-        sFileWc = wildcard;
-    }
-    
-    sPath = PathExpand(sPath);
-        
-    struct dirent **namelist;
-    int n = scandir(sPath.c_str(), &namelist, 0, alphasort ); // sort alpha-numeric
-//    int n = scandir(sPath.c_str(), &namelist, 0, versionsort ); // sort aa1 < aa10 < aa100 etc.
-    if (n >= 0){
-        std::list<std::string> file_list;
-        while( n-- ){
-            const std::string sName(namelist[n]->d_name);
-            if( sName != "." && sName != ".." && MatchesWildcard(sName, sFileWc) ) {
-                const std::string sFullName = sPath + "/" + sName;
-                file_list.push_front( sFullName );
+    const std::string wildcard = PathExpand(in_wildcard);
+    const size_t first_wildcard = wildcard.find_first_of("?*");
+    if(first_wildcard != std::string::npos) {
+        const std::string root = PathParent(wildcard.substr(0,first_wildcard));
+        struct dirent **namelist;
+        int n = scandir(root.c_str(), &namelist, 0, alphasort );
+        if (n >= 0) {
+            const size_t next_slash = wildcard.find_first_of("/\\",first_wildcard+1);
+            std::string dir_wildcard, rest;
+            if(next_slash != std::string::npos) {
+                dir_wildcard = wildcard.substr(root.size()+1, next_slash-root.size()-1);
+                rest = wildcard.substr(next_slash);
+            }else{
+                dir_wildcard = wildcard.substr(root.size()+1);
             }
-            free(namelist[n]);
+
+            while(n--) {
+                const std::string file_name(namelist[n]->d_name);
+                if( file_name != "." && file_name != ".." && MatchesWildcard(file_name, dir_wildcard) ) {
+                    const std::string sub_wildcard = root + "/" + file_name + rest;
+                    FilesMatchingWildcard(sub_wildcard, file_vec);
+                    if(dir_wildcard == "**") {
+                        const std::string sub_wildcard2 = root + "/" + file_name + "/**" + rest;
+                        FilesMatchingWildcard(sub_wildcard2, file_vec);
+                    }
+                }
+            }
         }
-        free(namelist);
-        
-        file_vec.reserve(file_list.size());
-        file_vec.insert(file_vec.begin(), file_list.begin(), file_list.end());
-        return file_vec.size() > 0;
+    }else if(FileExists(wildcard)) {
+        file_vec.push_back(wildcard);
     }
-    return false;
+    return file_vec.size() > 0;
 }
 
 bool FileExists(const std::string& filename)

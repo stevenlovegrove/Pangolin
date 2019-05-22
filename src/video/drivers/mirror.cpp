@@ -50,20 +50,20 @@ MirrorVideo::MirrorVideo(std::unique_ptr<VideoInterface>& src, const std::vector
             case MirrorOptionsNone:
             streams.push_back(videoin->Streams()[i]);
             break;
-            
+
             case MirrorOptionsTranspose:
             case MirrorOptionsRotateCW:
             case MirrorOptionsRotateCCW:
-            
+
             unsigned char*ptr=videoin->Streams()[i].Offset();
             size_t w=videoin->Streams()[i].Height();
             size_t h=videoin->Streams()[i].Width();
             size_t Bpp=videoin->Streams()[i].PixFormat().bpp / 8;
-            
+
             streams.emplace_back(videoin->Streams()[i].PixFormat(),pangolin::Image<unsigned char>(ptr,w,h,w*Bpp));
             break;
         };
-    
+
     size_bytes = videoin->SizeBytes();
     buffer = new unsigned char[size_bytes];
 }
@@ -434,7 +434,7 @@ void RotateCCW(Image<unsigned char>& img_out, const Image<unsigned char>& img_in
 
 void MirrorVideo::Process(unsigned char* buffer_out, const unsigned char* buffer_in)
 {
-    
+
     for(size_t s=0; s<streams.size(); ++s) {
         Image<unsigned char> img_out = Streams()[s].StreamImage(buffer_out);
         const Image<unsigned char> img_in  = videoin->Streams()[s].StreamImage(buffer_in);
@@ -459,19 +459,19 @@ void MirrorVideo::Process(unsigned char* buffer_out, const unsigned char* buffer
         case MirrorOptionsTranspose:
             Transpose(img_out, img_in, bytes_per_pixel);
             break;
-        default:
-            pango_print_warn("MirrorVideo::Process(): Invalid enum %i.\n", flips[s]);
         case MirrorOptionsNone:
             PitchedImageCopy(img_out, img_in, bytes_per_pixel);
             break;
+        default:
+            pango_print_warn("MirrorVideo::Process(): Invalid enum %i.\n", flips[s]);
         }
     }
-    
+
 }
 
 //! Implement VideoInput::GrabNext()
 bool MirrorVideo::GrabNext( unsigned char* image, bool wait )
-{    
+{
     if(videoin->GrabNext(buffer,wait)) {
         Process(image, buffer);
         return true;
@@ -532,11 +532,15 @@ std::istream& operator>> (std::istream &is, MirrorOptions &mirror)
 
     if(!str_mirror.compare("NONE")) {
         mirror = MirrorOptionsNone;
-    }else if(!str_mirror.compare("FLIPX")) {
+    }else if(!str_mirror.compare("FLIPX") || !str_mirror.compare("MIRROR")) {
         mirror = MirrorOptionsFlipX;
-    }else if(!str_mirror.compare("FLIPY")) {
+    }else if(!str_mirror.compare("FLIPY") || !str_mirror.compare("FLIP")) {
         mirror = MirrorOptionsFlipY;
-    }else if(!str_mirror.compare("FLIPXY")) {
+    }else if(!str_mirror.compare("ROTATECW")) {
+        mirror = MirrorOptionsRotateCW;
+    }else if(!str_mirror.compare("ROTATECCW")) {
+        mirror = MirrorOptionsRotateCCW;
+    }else if(!str_mirror.compare("FLIPXY") || !str_mirror.compare("TRANSPOSE")) {
         mirror = MirrorOptionsFlipXY;
     }else{
         pango_print_warn("Unknown mirror option %s.", str_mirror.c_str());
@@ -548,11 +552,11 @@ std::istream& operator>> (std::istream &is, MirrorOptions &mirror)
 
 PANGOLIN_REGISTER_FACTORY(MirrorVideo)
 {
-    struct MirrorVideoFactory : public FactoryInterface<VideoInterface> {
+    struct MirrorVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
 
-            MirrorOptions default_opt = MirrorOptionsFlipX;
+            MirrorOptions default_opt = MirrorOptionsNone;
             if(uri.scheme == "flip") default_opt = MirrorOptionsFlipY;
             if(uri.scheme == "rotate") default_opt = MirrorOptionsFlipXY;
             if(uri.scheme == "transpose") default_opt = MirrorOptionsTranspose;
@@ -579,6 +583,7 @@ PANGOLIN_REGISTER_FACTORY(MirrorVideo)
     FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "transpose");
     FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "rotateCW");
     FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "rotateCCW");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "transform");
 }
 
 }

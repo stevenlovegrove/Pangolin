@@ -45,10 +45,25 @@ public:
     virtual ~WindowInterface() {}
 
     virtual void ToggleFullscreen() = 0;
+
     virtual void Move(int x, int y) = 0;
+
     virtual void Resize(unsigned int w, unsigned int h) = 0;
+
+    /**
+     * @brief MakeCurrent set the current context
+     * to be called in a thread before accessing OpenGL
+     */
     virtual void MakeCurrent() = 0;
+
+    /**
+     * @brief RemoveCurrent remove the current context
+     * to be called at the end of a thread
+     */
+    virtual void RemoveCurrent() = 0;
+
     virtual void ProcessEvents() = 0;
+
     virtual void SwapBuffers() = 0;
 };
 

@@ -128,6 +128,13 @@ public:
 
     void SetUniform(const std::string& name, const OpenGlMatrix& m);
 
+#ifdef HAVE_EIGEN
+    void SetUniform(const std::string& name, const Eigen::Matrix3f& m);
+    void SetUniform(const std::string& name, const Eigen::Matrix4f& m);
+    void SetUniform(const std::string& name, const Eigen::Matrix3d& m);
+    void SetUniform(const std::string& name, const Eigen::Matrix4d& m);
+#endif
+
 #if GL_VERSION_4_3
     GLint GetProgramResourceIndex(const std::string& name);
     void SetShaderStorageBlock(const std::string& name, const int& bindingIndex);
@@ -137,24 +144,33 @@ public:
     void SaveBind();
     void Unbind();
 
+
     void BindPangolinDefaultAttribLocationsAndLink();
-
-    GLint ProgramId() { return prog; }
-
-protected:
-    struct ShaderFile
-    {
-        GlSlShaderType shader_type;
-        std::string filename;
-        std::map<std::string,std::string> program_defines;
-        std::vector<std::string> search_path;
-    };
 
     // Unlink all shaders from program
     void ClearShaders();
 
+    GLint ProgramId() const {
+        return prog;
+    }
+
+    bool Valid() const {
+        return ProgramId() != 0;
+    }
+
+protected:
+    struct ShaderFileOrCode
+    {
+        GlSlShaderType shader_type;
+        std::string filename;
+        std::string code;
+        std::map<std::string,std::string> program_defines;
+        std::vector<std::string> search_path;
+    };
+
+
     // Convenience method to load shader description
-    bool AddShaderFile(const ShaderFile &shader_file);
+    bool AddShaderFile(const ShaderFileOrCode &shader_file);
 
     std::string ParseIncludeFilename(
         const std::string& location
@@ -172,7 +188,7 @@ protected:
         const std::string& name_for_errors
     );
 
-    void ParseGLSL(
+    void PreprocessGLSL(
         std::istream& input,
         std::ostream& output,
         const std::map<std::string,std::string>& program_defines,
@@ -190,7 +206,7 @@ protected:
     std::vector<GLhandleARB> shaders;
     GLenum prog;
     GLint prev_prog;
-    std::vector<ShaderFile> shader_files;
+    std::vector<ShaderFileOrCode> shader_files;
 };
 
 class GlSlUtilities
@@ -338,6 +354,16 @@ inline GlSlProgram::~GlSlProgram()
     }
 }
 
+inline void PrintSourceCode(const std::string& src)
+{
+    std::stringstream ss(src);
+    std::string line;
+
+    for(int linenum=1; std::getline(ss,line,'\n'); ++linenum) {
+        std::cout << linenum << ":\t" << line << std::endl;
+    }
+}
+
 inline bool GlSlProgram::AddPreprocessedShader(
     GlSlShaderType shader_type,
     const std::string& source_code,
@@ -346,6 +372,8 @@ inline bool GlSlProgram::AddPreprocessedShader(
     if(!prog) {
         prog = glCreateProgram();
     }
+
+//    PrintSourceCode(source_code);
 
     GLhandleARB shader = glCreateShader(shader_type);
     const char* source = source_code.c_str();
@@ -390,7 +418,7 @@ inline std::string GlSlProgram::SearchIncludePath(
     return "";
 }
 
-inline void GlSlProgram::ParseGLSL(
+inline void GlSlProgram::PreprocessGLSL(
         std::istream& input, std::ostream& output,
         const std::map<std::string,std::string>& program_defines,
         const std::vector<std::string> &search_path,
@@ -412,7 +440,7 @@ inline void GlSlProgram::ParseGLSL(
             std::ifstream ifs(resolved_file.c_str());
             if(ifs.good()) {
                 const std::string file_path = pangolin::PathParent(resolved_file);
-                ParseGLSL(ifs, output, program_defines, search_path, file_path);
+                PreprocessGLSL(ifs, output, program_defines, search_path, file_path);
             }else{
                 throw std::runtime_error("GLSL Parser: Unable to open " + import_file );
             }
@@ -443,18 +471,6 @@ inline void GlSlProgram::ParseGLSL(
     }
 }
 
-inline bool GlSlProgram::AddShader(
-    GlSlShaderType shader_type,
-    const std::string& source_code,
-    const std::map<std::string,std::string>& program_defines,
-    const std::vector<std::string>& search_path
-) {
-    std::istringstream iss(source_code);
-    std::stringstream buffer;
-    ParseGLSL(iss, buffer, program_defines, search_path, ".");
-    return AddPreprocessedShader(shader_type, buffer.str(), "<string>" );
-}
-
 inline void GlSlProgram::ClearShaders()
 {
     // Remove and delete each shader
@@ -465,30 +481,37 @@ inline void GlSlProgram::ClearShaders()
     shaders.clear();
 }
 
-inline bool GlSlProgram::AddShaderFile(const ShaderFile& shader_file)
+inline bool GlSlProgram::AddShaderFile(const ShaderFileOrCode& shader_file)
 {
-    std::ifstream ifs(shader_file.filename.c_str());
-    if(ifs.is_open()) {
-        std::stringstream buffer;
-        ParseGLSL(ifs, buffer, shader_file.program_defines, shader_file.search_path, ".");
-        const std::string code = buffer.str();
+    std::stringstream buffer;
 
-        if(shader_file.shader_type == GlSlAnnotatedShader) {
-            const std::map<GlSlShaderType,std::string> split_progs = SplitAnnotatedShaders(code);
-            for(const auto& type_code : split_progs) {
-                if(!AddPreprocessedShader(type_code.first, type_code.second, shader_file.filename )) {
-                    return false;
-                }
-            }
-            return true;
+    if(shader_file.code.empty()) {
+        std::ifstream ifs(shader_file.filename.c_str());
+        if(ifs.is_open()) {
+            PreprocessGLSL(ifs, buffer, shader_file.program_defines, shader_file.search_path, ".");
         }else{
-            return AddPreprocessedShader(shader_file.shader_type, code, shader_file.filename );
+            throw std::runtime_error(FormatString("Unable to open shader file '%'", shader_file.filename));
         }
     }else{
-        throw std::runtime_error("Unable to open " + shader_file.filename );
+        std::istringstream iss(shader_file.code);
+        PreprocessGLSL(iss, buffer, shader_file.program_defines, shader_file.search_path, ".");
+    }
+
+    const std::string code = buffer.str();
+    const std::string input_name = !shader_file.filename.empty() ? shader_file.filename : "<string>";
+
+    if(shader_file.shader_type == GlSlAnnotatedShader) {
+        const std::map<GlSlShaderType,std::string> split_progs = SplitAnnotatedShaders(code);
+        for(const auto& type_code : split_progs) {
+            if(!AddPreprocessedShader(type_code.first, type_code.second, input_name )) {
+                return false;
+            }
+        }
+        return true;
+    }else{
+        return AddPreprocessedShader(shader_file.shader_type, code, input_name);
     }
 }
-
 
 inline bool GlSlProgram::AddShaderFromFile(
     GlSlShaderType shader_type,
@@ -496,9 +519,27 @@ inline bool GlSlProgram::AddShaderFromFile(
     const std::map<std::string,std::string>& program_defines,
     const std::vector<std::string>& search_path
 ) {
-    ShaderFile shader_file = {
+    ShaderFileOrCode shader_file = {
         shader_type,
         pangolin::PathExpand(filename),
+        std::string(),
+        program_defines,
+        search_path
+    };
+    shader_files.push_back(shader_file);
+    return AddShaderFile(shader_file);
+}
+
+inline bool GlSlProgram::AddShader(
+    GlSlShaderType shader_type,
+    const std::string& source_code,
+    const std::map<std::string,std::string>& program_defines,
+    const std::vector<std::string>& search_path
+) {
+    ShaderFileOrCode shader_file = {
+        shader_type,
+        std::string(),
+        source_code,
         program_defines,
         search_path
     };
@@ -653,6 +694,25 @@ inline void GlSlProgram::SetUniform(const std::string& name, const OpenGlMatrix&
     }
     glUniformMatrix4fv( GetUniformHandle(name), 1, GL_FALSE, m);
 }
+
+#ifdef HAVE_EIGEN
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix3f& m)
+{
+    glUniformMatrix3fv( GetUniformHandle(name), 1, GL_FALSE, m.data());
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix4f& m)
+{
+    glUniformMatrix4fv( GetUniformHandle(name), 1, GL_FALSE, m.data());
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix3d& m)
+{
+    glUniformMatrix3dv( GetUniformHandle(name), 1, GL_FALSE, m.data());
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix4d& m)
+{
+    glUniformMatrix4dv( GetUniformHandle(name), 1, GL_FALSE, m.data());
+}
+#endif
 
 inline void GlSlProgram::BindPangolinDefaultAttribLocationsAndLink()
 {

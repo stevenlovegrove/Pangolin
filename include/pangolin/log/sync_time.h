@@ -100,10 +100,10 @@ public:
     void DequeueEvent(int64_t event_time_us)
     {
         std::unique_lock<std::mutex> l(time_mutex);
-
         auto i = std::find(time_queue_us.begin(), time_queue_us.end(), event_time_us);
         PANGO_ENSURE(i != time_queue_us.end());
         time_queue_us.erase(i);
+        queue_changed.notify_all();
     }
 
     int64_t WaitDequeueAndQueueEvent(int64_t event_time_us, int64_t new_event_time_us =0 )

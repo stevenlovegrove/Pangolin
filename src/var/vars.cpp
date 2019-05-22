@@ -33,7 +33,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <sstream>
 
 using namespace std;
 
@@ -238,7 +237,7 @@ void SaveJsonFile(const std::string& filename, const string &prefix)
             try{
                 const std::string val = VarState::I()[name]->str->Get();
                 vars[name] = val;
-            }catch(BadInputException)
+            }catch(const BadInputException&)
             {
                 // Ignore things we can't serialise
             }

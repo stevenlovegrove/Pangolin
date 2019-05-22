@@ -214,10 +214,42 @@ void DataLog::Clear()
     stats.clear();
 }
 
-void DataLog::Save(std::string /*filename*/)
+void DataLog::Save(std::string filename)
 {
-    // TODO: Implement
-    throw std::runtime_error("Method not implemented");
+    std::ofstream csvStream(filename);
+
+      if (!Labels().empty()) {
+        csvStream << Labels()[0];
+
+        for (size_t i = 1; i < Labels().size(); ++i) {
+          csvStream << "," << Labels()[i];
+        }
+
+        csvStream << std::endl;
+
+    }
+
+    const DataLogBlock * block = FirstBlock();
+
+    while (block) {
+
+      for (size_t i = 0; i < block->Samples(); ++i) {
+
+        csvStream << block->Sample(i)[0];
+
+        for (size_t d = 1; d < block->Dimensions(); ++d) {
+
+          csvStream << "," << block->Sample(i)[d];
+
+        }
+
+        csvStream << std::endl;
+
+      }
+
+      block = block->NextBlock();
+
+    }
 }
 
 const DataLogBlock* DataLog::FirstBlock() const

@@ -73,6 +73,25 @@ class StdIStream: public Imf::IStream
     std::istream *	_is;
 };
 
+PixelFormat GetPixelFormat(const Imf::Header& header)
+{
+    const Imf::ChannelList &channels = header.channels();
+    size_t count = 0;
+    for (Imf::ChannelList::ConstIterator i = channels.begin(); i != channels.end(); ++i){
+        const Imf::Channel& channel = i.channel();
+        if (channel.type != Imf::FLOAT){
+            throw std::invalid_argument("Currently, only 32-bit float OpenEXR files are supported.");
+        }
+        count += 1;
+    }
+
+    switch (count) {
+        case 1: return PixelFormatFromString("GRAY32F");
+        case 3: return PixelFormatFromString("RGB96F");
+        case 4: return PixelFormatFromString("RGBA128F");
+        default: throw std::invalid_argument("Currently, only 1, 3 or 4-channel OpenEXR files are supported.");
+    }
+}
 
 #endif //HAVE_OPENEXR
 
@@ -81,44 +100,28 @@ TypedImage LoadExr(std::istream& source)
 #ifdef HAVE_OPENEXR
     StdIStream istream(source);
     Imf::InputFile file(istream);
+    PANGO_ENSURE(file.isComplete());
+
     Imath::Box2i dw = file.header().dataWindow();
     int width = dw.max.x - dw.min.x + 1;
     int height = dw.max.y - dw.min.y + 1;
 
-    // assume RGBA format for now
-    PixelFormat format = PixelFormatFromString("RGBA128F");
-    TypedImage img(width, height, format, width*sizeof(float)*4);
+    PixelFormat format = GetPixelFormat(file.header());
+    TypedImage img(width, height, format);
 
-    char *imgBase = (char *) img.ptr - (dw.min.x + dw.min.y * width)*sizeof(float)*4;
-
+    char *imgBase = (char *) img.ptr - (dw.min.x + dw.min.y * width) * sizeof(float) * format.channels;
     Imf::FrameBuffer fb;
-    fb.insert("R", Imf::Slice(
-                    Imf::FLOAT, imgBase,
-                    sizeof(float) * 4,
-                    sizeof(float) * 4 * width,
-                    1, 1,
-                    0.0));
 
-    fb.insert("G", Imf::Slice(
-                    Imf::FLOAT, imgBase + sizeof(float),
-                    sizeof(float) * 4,
-                    sizeof(float) * 4 * width,
-                    1, 1,
-                    0.0));
-
-    fb.insert("B", Imf::Slice(
-                    Imf::FLOAT, imgBase + sizeof(float)*2,
-                    sizeof(float) * 4,
-                    sizeof(float) * 4 * width,
-                    1, 1,
-                    0.0));
-
-    fb.insert("A", Imf::Slice(
-                    Imf::FLOAT, imgBase + sizeof(float)*3,
-                    sizeof(float) * 4,
-                    sizeof(float) * 4 * width,
-                    1, 1,
-                    0.0));
+    const Imf::ChannelList &channels = file.header().channels();
+    size_t c = 0;
+    for (Imf::ChannelList::ConstIterator i = channels.begin(); i != channels.end(); ++i){
+        fb.insert(i.name(), Imf::Slice(
+                        Imf::FLOAT, imgBase + sizeof(float) * c++,
+                        sizeof(float) * format.channels,
+                        sizeof(float) * format.channels * size_t(width),
+                        1, 1,
+                        0.0));
+    }
 
     file.setFrameBuffer(fb);
     file.readPixels(dw.min.y, dw.max.y);

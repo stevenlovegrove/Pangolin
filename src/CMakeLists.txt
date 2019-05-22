@@ -15,12 +15,13 @@ set( HEADERS
 append_glob(HEADERS ${INCDIR}/utils/*.h*)
 append_glob(HEADERS ${INCDIR}/image/*.h*)
 append_glob(HEADERS ${INCDIR}/log/*.h*)
+append_glob(HEADERS ${INCDIR}/geometry/*.h*)
 
 ### Store list of source files
 append_glob(SOURCES utils/*.cpp)
 append_glob(SOURCES image/*.cpp)
 append_glob(SOURCES log/*.cpp)
-
+append_glob(SOURCES geometry/*.cpp)
 
 ### Store list of Video factory registery methods to call for init.
 include(CreateMethodCallFile)
@@ -70,6 +71,7 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/drivers/images.h
     ${INCDIR}/video/drivers/images_out.h
     ${INCDIR}/video/drivers/split.h
+    ${INCDIR}/video/drivers/truncate.h
     ${INCDIR}/video/drivers/pvn.h
     ${INCDIR}/video/drivers/pango.h
     ${INCDIR}/video/drivers/pango_video_output.h
@@ -77,6 +79,7 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/drivers/shift.h
     ${INCDIR}/video/drivers/mirror.h
     ${INCDIR}/video/drivers/unpack.h
+    ${INCDIR}/video/drivers/pack.h
     ${INCDIR}/video/drivers/join.h
     ${INCDIR}/video/drivers/merge.h
     ${INCDIR}/video/drivers/thread.h
@@ -86,6 +89,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/images.cpp
     video/drivers/images_out.cpp
     video/drivers/split.cpp
+    video/drivers/truncate.cpp
     video/drivers/pvn.cpp
     video/drivers/pango.cpp
     video/drivers/pango_video_output.cpp
@@ -93,6 +97,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/shift.cpp
     video/drivers/mirror.cpp
     video/drivers/unpack.cpp
+    video/drivers/pack.cpp
     video/drivers/join.cpp
     video/drivers/merge.cpp
     video/drivers/json.cpp
@@ -104,6 +109,7 @@ if(BUILD_PANGOLIN_VIDEO)
     RegisterImagesVideoFactory
     RegisterImagesVideoOutputFactory
     RegisterSplitVideoFactory
+    RegisterTruncateVideoFactory
     RegisterPvnVideoFactory
     RegisterPangoVideoFactory
     RegisterPangoVideoOutputFactory
@@ -111,6 +117,7 @@ if(BUILD_PANGOLIN_VIDEO)
     RegisterShiftVideoFactory
     RegisterMirrorVideoFactory
     RegisterUnpackVideoFactory
+    RegisterPackVideoFactory
     RegisterJoinVideoFactory
     RegisterMergeVideoFactory
     RegisterJsonVideoFactory
@@ -133,9 +140,6 @@ endif()
 
 #######################################################
 ## Setup required includes / link info
-
-# Project headers trump everything (including any potentially installed Pangolin)
-list(APPEND LIB_INC_DIR  "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 
 if(BUILD_PANGOLIN_GUI)
     if( ANDROID  )
@@ -174,6 +178,14 @@ if(BUILD_PANGOLIN_GUI)
         list(APPEND HEADERS ${INCDIR}/gl2engine.h )
         list(APPEND SOURCES gl2engine.cpp)
     endif()
+
+    # headless offscreen rendering via EGL
+    find_package(OpenGL QUIET COMPONENTS EGL)
+    if(OpenGL_EGL_FOUND)
+        list(APPEND WINDOW_FACTORY_REG RegisterNoneWindowFactory)
+        list(APPEND SOURCES display/device/display_headless.cpp)
+        list(APPEND LINK_LIBS ${OPENGL_egl_LIBRARY} )
+    endif()
 endif()
 
 #######################################################
@@ -195,11 +207,43 @@ else()
             list(APPEND SOURCES display/device/display_osx.mm display/device/PangolinNSApplication.mm display/device/PangolinNSGLView.mm  )
             list(APPEND LINK_LIBS "-framework Cocoa" )
         elseif(_LINUX_)
-            find_package(X11 REQUIRED)
-            list(APPEND WINDOW_FACTORY_REG RegisterX11WindowFactory)
-            list(APPEND USER_INC ${X11_INCLUDE_DIR})
-            list(APPEND SOURCES display/device/display_x11.cpp )
-            list(APPEND LINK_LIBS ${X11_LIBRARIES} )
+            # Wayland
+            find_package(PkgConfig)
+            pkg_check_modules(wayland-client QUIET wayland-client)
+            pkg_check_modules(wayland-egl QUIET wayland-egl)
+            pkg_check_modules(wayland-cursor QUIET wayland-cursor)
+            pkg_check_modules(xkbcommon QUIET xkbcommon)
+            pkg_check_modules(egl QUIET egl)
+
+            if(wayland-client_FOUND AND wayland-egl_FOUND AND wayland-cursor_FOUND AND xkbcommon_FOUND AND egl_FOUND)
+                list(APPEND WINDOW_FACTORY_REG RegisterWaylandWindowFactory)
+                list(APPEND SOURCES display/device/display_wayland.cpp)
+                list(APPEND LINK_LIBS
+                    ${wayland-egl_LIBRARIES}
+                    ${wayland-cursor_LIBRARIES}
+                    ${xkbcommon_LIBRARIES}
+                    ${egl_LIBRARIES}
+                )
+                list(APPEND INTERNAL_INC
+                    ${wayland-egl_INCLUDE_DIRS}
+                    ${wayland-cursor_INCLUDE_DIRS}
+                    ${xkbcommon_INCLUDE_DIRS}
+                    ${egl_INCLUDE_DIRS}
+                )
+            endif()
+
+            # X11
+            find_package(X11 QUIET)
+            if(X11_FOUND)
+                list(APPEND WINDOW_FACTORY_REG RegisterX11WindowFactory)
+                list(APPEND USER_INC ${X11_INCLUDE_DIR})
+                list(APPEND SOURCES display/device/display_x11.cpp )
+                list(APPEND LINK_LIBS ${X11_LIBRARIES} )
+            endif()
+
+            if(NOT wayland-client_FOUND AND NOT X11_FOUND)
+                message(FATAL_ERROR "At least one of X11 or Wayland must be found for Pangolin GUI support.")
+            endif()
         endif()
     endif()
 endif()
@@ -245,14 +289,15 @@ if(BUILD_PANGOLIN_PYTHON AND BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND NOT 
     )
 
     # pybind11 stuff
-    list(APPEND LINK_LIBS PRIVATE pybind11::embed)
+    list(APPEND INTERNAL_INC ${PYBIND11_INCLUDE_DIR})
+    list(APPEND LINK_LIBS PRIVATE ${pybind11_LIBRARIES})
 
     if(_GCC_)
         set_source_files_properties(python/PyInterpreter.cpp    PROPERTIES COMPILE_FLAGS "-Wno-missing-field-initializers")
         set_source_files_properties(python/PyModulePangolin.cpp PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing -Wno-missing-field-initializers")
     endif()
-    list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIR})
-    list(APPEND LINK_LIBS    ${PYTHON_LIBRARY})
+    list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIRS})
+    list(APPEND LINK_LIBS    ${PYTHON_LIBRARIES})
     message(STATUS "Python Found and Enabled (with pybind11)")
   endif()
 endif()
@@ -335,6 +380,20 @@ if(BUILD_PANGOLIN_LIBREALSENSE AND BUILD_PANGOLIN_VIDEO)
     list(APPEND SOURCES video/drivers/realsense.cpp)
     list(APPEND VIDEO_FACTORY_REG RegisterRealSenseVideoFactory )
     message(STATUS "LibRealSense Found and Enabled")
+  endif()
+endif()
+
+option(BUILD_PANGOLIN_LIBREALSENSE2 "Build support for LibRealSense2 video input" ON)
+if(BUILD_PANGOLIN_LIBREALSENSE2 AND BUILD_PANGOLIN_VIDEO)
+  find_package(LibRealSense2 QUIET)
+  if(LIBREALSENSE2_FOUND)
+    set(HAVE_LIBREALSENSE2 1)
+    list(APPEND INTERNAL_INC  ${LIBREALSENSE2_INCLUDE_DIRS} )
+    list(APPEND LINK_LIBS ${LIBREALSENSE2_LIBRARIES} )
+    list(APPEND HEADERS ${INCDIR}/video/drivers/realsense2.h )
+    list(APPEND SOURCES video/drivers/realsense2.cpp)
+    list(APPEND VIDEO_FACTORY_REG RegisterRealSense2VideoFactory )
+    message(STATUS "LibRealSense2 Found and Enabled")
   endif()
 endif()
 
@@ -514,6 +573,17 @@ if(BUILD_PANGOLIN_ZSTD)
   endif()
 endif()
 
+option(BUILD_PANGOLIN_LZ4 "Build support for liblz4 compression" ON)
+if(BUILD_PANGOLIN_LZ4)
+  find_package(Lz4 QUIET)
+  if(Lz4_FOUND)
+    set(HAVE_LZ4 1)
+    list(APPEND INTERNAL_INC ${Lz4_INCLUDE_DIRS} )
+    list(APPEND LINK_LIBS ${Lz4_LIBRARIES} )
+    message(STATUS "liblz4 Found and Enabled")
+  endif()
+endif()
+
 #######################################################
 ## Embed resource binary files
 
@@ -527,11 +597,14 @@ endif()
 #######################################################
 ## Add Libraries / Include Directories / Link directories
 
-include_directories( ${LIB_INC_DIR} )
-include_directories( ${USER_INC} )
-include_directories( ${INTERNAL_INC} )
+set(INSTALL_INCLUDE_DIR "include")
 
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
+# 'System' includes shield us from warnings in those includes.
+target_include_directories(${LIBRARY_NAME} SYSTEM PUBLIC ${USER_INC} PRIVATE ${INTERNAL_INC})
+target_include_directories(${LIBRARY_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                                                  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+                                                  $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>)
 target_link_libraries(${LIBRARY_NAME} PUBLIC ${LINK_LIBS})
 
 ## Generate symbol export helper header on MSVC
@@ -545,7 +618,7 @@ IF(MSVC)
         STATIC_DEFINE ${LIBRARY_NAME_CAPS}_BUILT_AS_STATIC
     )
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/${LIBRARY_NAME}_export.h"
-      DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
+      DESTINATION ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}/${LIBRARY_NAME}
     )
 ENDIF()
 
@@ -594,12 +667,12 @@ if(BUILD_PYPANGOLIN_MODULE AND HAVE_PYTHON )
 endif()
 
 #######################################################
-## Generate Doxygen documentation target (make doc)
+## Generate Doxygen documentation target (make pangolin_doc)
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../doc )
-    add_custom_target(doc
+    add_custom_target(pangolin_doc
         ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../doc
         COMMENT "Generating API documentation with Doxygen" VERBATIM
@@ -612,7 +685,7 @@ endif()
 set( CMAKECONFIG_INSTALL_DIR lib/cmake/${PROJECT_NAME} )
 file( RELATIVE_PATH REL_INCLUDE_DIR
     "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
-    "${CMAKE_INSTALL_PREFIX}/include"
+    "${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}"
 )
 
 # Export library for easy inclusion from other cmake projects. APPEND allows
@@ -626,7 +699,7 @@ configure_file(${PROJECT_NAME}ConfigVersion.cmake.in
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" @ONLY)
 
 # Build tree config
-set( EXPORT_LIB_INC_DIR ${LIB_INC_DIR} )
+set( EXPORT_LIB_INC_DIR "${PROJECT_SOURCE_DIR}/include;${CMAKE_CURRENT_BINARY_DIR}/include" )
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY IMMEDIATE )
 
@@ -647,10 +720,10 @@ endif()
 ## Install headers / targets
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/${LIBRARY_NAME}/config.h"
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${LIBRARY_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}/${LIBRARY_NAME}
 )
 install(DIRECTORY ${INCDIR}
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}
 )
 install(TARGETS ${LIBRARY_NAME}
   EXPORT ${PROJECT_NAME}Targets

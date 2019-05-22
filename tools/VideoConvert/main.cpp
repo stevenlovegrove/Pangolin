@@ -53,7 +53,7 @@ int main( int argc, char* argv[] )
         const std::string output_uri = (argc > 2) ? std::string(argv[2]) : dflt_output_uri;
         try{
             VideoViewer(input_uri, output_uri);
-        } catch (pangolin::VideoException e) {
+        } catch (const pangolin::VideoException& e) {
             std::cout << e.what() << std::endl;
         }
     }else{
@@ -61,7 +61,7 @@ int main( int argc, char* argv[] )
         std::cout << "Where video-in-uri describes a stream or file resource, e.g." << std::endl;
         std::cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << std::endl;
         std::cout << "\tfile:///home/user/video/movie.avi" << std::endl;
-        std::cout << "\tfiles:///home/user/seqiemce/foo%03d.jpeg" << std::endl;
+        std::cout << "\tfiles:///home/user/seqiemce/foo*.jpeg" << std::endl;
         std::cout << "\tdc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0" << std::endl;
         std::cout << "\tdc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << std::endl;
         std::cout << "\tv4l:///dev/video0" << std::endl;

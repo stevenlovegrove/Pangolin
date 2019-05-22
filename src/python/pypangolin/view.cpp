@@ -69,9 +69,18 @@ namespace py_pangolin {
       .def("RecordOnRender", &pangolin::View::RecordOnRender)
       .def("SaveRenderNow", &pangolin::View::SaveRenderNow)
       .def("NumChildren", &pangolin::View::NumChildren)
-      .def("GetChild", [] (pangolin::View &v, size_t i) -> pangolin::View& { return v[i];})
+      .def("GetChild", [] (pangolin::View &v, size_t i) -> pangolin::View& { return v[i];}, pybind11::return_value_policy::reference)
       .def("VisibleChild", &pangolin::View::VisibleChild)
       .def("FindChild", &pangolin::View::FindChild)
       .def("NumVisibleChildren", &pangolin::View::NumVisibleChildren);
+
+    pybind11::enum_<pangolin::Layout>(m, "Layout")
+        .value("Overlay", pangolin::LayoutOverlay)
+        .value("Vertical", pangolin::LayoutVertical)
+        .value("Horizontal", pangolin::LayoutHorizontal)
+        .value("Equal", pangolin::LayoutEqual)
+        .value("EqualVertical", pangolin::LayoutEqualVertical)
+        .value("EqualHorizontal", pangolin::LayoutEqualHorizontal);
+
   }
 }  // py_pangolin

@@ -31,6 +31,12 @@ class ImageView : public pangolin::View, public pangolin::ImageViewHandler
 
     ImageView& SetImage(const pangolin::Image<unsigned char>& img, const pangolin::GlPixFormat& glfmt, bool delayed_upload = false);
 
+    template<typename T> inline
+    ImageView& SetImage(const pangolin::Image<T>& img, bool delayed_upload = false)
+    {
+        return SetImage(img.template UnsafeReinterpret<unsigned char>(), GlPixFormat::FromType<T>(), delayed_upload);
+    }
+
     ImageView& SetImage(const pangolin::TypedImage& img, bool delayed_upload = false);
 
     ImageView& SetImage(const pangolin::GlTexture& texture);

@@ -35,6 +35,7 @@
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/video/video_interface.h>
 #include <set>
+#include <future>
 
 #ifndef _WIN_
 #  include <unistd.h>
@@ -127,6 +128,7 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
                 fixed_size = false;
             }
 
+            json_stream["channel_bit_depth"] = si.PixFormat().channel_bit_depth;
             json_stream["encoding"] = encoder_name;
             json_stream["width"] = si.Width();
             json_stream["height"] = si.Height();
@@ -200,10 +202,21 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
 #endif
 
     if(!fixed_size) {
-        memstreambuf encoded(total_frame_size);
-        std::ostream encode_stream(&encoded);
+        // TODO: Make this more efficient (without so many allocs and memcpy's)
 
-        for(size_t i=0; i < streams.size(); ++i) {
+        std::vector<memstreambuf> encoded_stream_data;
+
+        // Create buffers for compressed data: the first will be reused for all the data later
+        encoded_stream_data.emplace_back(total_frame_size);
+        for(size_t i=1; i < streams.size(); ++i) {
+            encoded_stream_data.emplace_back(streams[i].SizeBytes());
+        }
+
+        // lambda encodes frame data i to encoded_stream_data[i]
+        auto encode_stream = [&](int i){
+            encoded_stream_data[i].clear();
+            std::ostream encode_stream(&encoded_stream_data[i]);
+
             const StreamInfo& si = streams[i];
             const Image<unsigned char> stream_image = si.StreamImage(data);
 
@@ -219,8 +232,28 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
                     }
                 }
             }
+            return true;
+        };
+
+        // Compress each stream (>0 in another thread)
+        std::vector<std::future<bool>> encode_finished;
+        for(size_t i=1; i < streams.size(); ++i) {
+            encode_finished.emplace_back(std::async(std::launch::async, [&,i](){
+                return encode_stream(i);
+            }));
         }
-        encode_stream.flush();
+        // Encode stream 0 in this thread
+        encode_stream(0);
+
+        // Reuse our first compression stream for the rest of the data too.
+        std::vector<uint8_t>& encoded = encoded_stream_data[0].buffer;
+
+        // Wait on all threads to finish and copy into data packet
+        for(size_t i=1; i < streams.size(); ++i) {
+            encode_finished[i-1].get();
+            encoded.insert(encoded.end(), encoded_stream_data[i].buffer.begin(), encoded_stream_data[i].buffer.end());
+        }
+
         packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(encoded.data()), host_reception_time_us, encoded.size(), frame_properties);
     }else{
         packetstream.WriteSourcePacket(packetstreamsrcid, reinterpret_cast<const char*>(data), host_reception_time_us, total_frame_size, frame_properties);
@@ -231,7 +264,7 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
 
 PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
 {
-    struct PangoVideoFactory : public FactoryInterface<VideoOutputInterface> {
+    struct PangoVideoFactory final : public FactoryInterface<VideoOutputInterface> {
         std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
             const size_t mb = 1024*1024;
             const size_t buffer_size_bytes = uri.Get("buffer_size_mb", 100) * mb;
@@ -264,6 +297,7 @@ PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
 
     auto factory = std::make_shared<PangoVideoFactory>();
     FactoryRegistry<VideoOutputInterface>::I().RegisterFactory(factory, 10, "pango");
+    FactoryRegistry<VideoOutputInterface>::I().RegisterFactory(factory, 10, "file");
 }
 
 }

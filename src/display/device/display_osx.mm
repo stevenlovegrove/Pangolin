@@ -35,7 +35,7 @@
 #include <pangolin/display/device/PangolinNSApplication.h>
 #include <memory>
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
 #  define NSFullScreenWindowMask      NSWindowStyleMaskFullScreen
 #  define NSTitledWindowMask          NSWindowStyleMaskTitled
 #  define NSMiniaturizableWindowMask  NSWindowStyleMaskMiniaturizable
@@ -202,6 +202,12 @@ void OsxWindow::Resize(unsigned int w, unsigned int h)
 void OsxWindow::MakeCurrent()
 {
     [[view openGLContext] makeCurrentContext];
+    context = this;
+}
+
+void OsxWindow::RemoveCurrent()
+{
+    [NSOpenGLContext clearCurrentContext];
 }
 
 void OsxWindow::SwapBuffers()
@@ -231,6 +237,8 @@ PANGOLIN_REGISTER_FACTORY(OsxWindow)
 
   auto factory = std::make_shared<OsxWindowFactory>();
   FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "cocoa");
+  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 100,  "default");
+
 }
 
 

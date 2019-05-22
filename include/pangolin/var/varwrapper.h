@@ -77,7 +77,7 @@ public:
         cache = val;
         try {
             src.Set( Convert<VarS, T>::Do(val) );
-        }catch(BadInputException) {
+        }catch(const BadInputException&) {
             pango_print_warn("Unable to set variable with type %s from %s. Resetting.", typeid(VarS).name(), typeid(T).name() );
             Reset();
         }

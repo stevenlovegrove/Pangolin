@@ -103,7 +103,7 @@ bool ImagesVideoOutput::IsPipe() const
 
 PANGOLIN_REGISTER_FACTORY(ImagesVideoOutput)
 {
-    struct ImagesVideoFactory : public FactoryInterface<VideoOutputInterface> {
+    struct ImagesVideoFactory final : public FactoryInterface<VideoOutputInterface> {
         std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
             const std::string images_folder = PathExpand(uri.url);
             const std::string json_filename = images_folder + "/archive.json";
@@ -124,4 +124,3 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideoOutput)
 }
 
 }
-

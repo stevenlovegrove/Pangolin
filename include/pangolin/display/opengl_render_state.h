@@ -223,11 +223,19 @@ PANGOLIN_EXPORT
 OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar );
 
 PANGOLIN_EXPORT
+OpenGlMatrixSpec ProjectionMatrixRUB_TopLeft(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar );
+
+PANGOLIN_EXPORT
 OpenGlMatrixSpec ProjectionMatrixRDF_TopLeft(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar );
+
+PANGOLIN_EXPORT
+OpenGlMatrixSpec ProjectionMatrixRDF_TopRight(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar );
 
 PANGOLIN_EXPORT
 OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar );
 
+PANGOLIN_EXPORT
+OpenGlMatrixSpec ProjectionMatrixRDF_BottomRight(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar );
 
 //! Use OpenGl's default frame RUB_BottomLeft
 PANGOLIN_EXPORT

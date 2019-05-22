@@ -64,7 +64,7 @@ PyObject* GetPangoVarAsPython(const std::string& name)
                 return PyString_FromString(val.c_str());
 #endif
             }
-        }catch(std::exception) {
+        }catch(const std::exception&) {
         }
     }
 
@@ -116,7 +116,7 @@ void SetPangoVarFromPython(const std::string& name, PyObject* val)
             pango_var.Meta().gui_changed = true;
         }
         FlagVarChanged();
-    }catch(std::exception e) {
+    }catch(const std::exception& e) {
         pango_print_error("%s\n", e.what());
     }
 }
@@ -214,6 +214,9 @@ struct PyVar {
     std::string ns;
 };
 
+// The uninitialized variable can be ignored.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
  PyTypeObject PyVar::Py_type = {
      PyVarObject_HEAD_INIT(NULL,0)
     "pypangolin.Var",                         /* tp_name*/
@@ -263,5 +266,6 @@ struct PyVar {
     0,                                        /* tp_del */
     0                                         /* tp_version_tag */
 };
+#pragma GCC diagnostic pop
 
 }

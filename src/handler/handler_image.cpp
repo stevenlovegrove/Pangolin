@@ -6,14 +6,14 @@ namespace pangolin
 
 ImageViewHandler::ImageViewHandler()
     : linked_view_handler(0),
-      use_nn(false), flipTextureY(false)
+      use_nn(false), flipTextureX(false), flipTextureY(false)
 {
     SetDimensions(1, 1);
 }
 
 ImageViewHandler::ImageViewHandler(size_t w, size_t h)
     : linked_view_handler(0),
-      use_nn(false), flipTextureY(false)
+      use_nn(false), flipTextureX(false), flipTextureY(false)
 {
     SetDimensions(w,h);
 }
@@ -77,10 +77,15 @@ void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height)
         const GLfloat t = xy.y.min;
 
         // continuous coords, (0,0) - (1,1)
-        const GLfloat ln = (l + 0.5f) / w;
-        const GLfloat rn = (r + 0.5f) / w;
+        GLfloat ln = (l + 0.5f) / w;
+        GLfloat rn = (r + 0.5f) / w;
         GLfloat bn = (b + 0.5f) / h;
         GLfloat tn = (t + 0.5f) / h;
+
+        if(flipTextureX) {
+            ln = 1-ln;
+            rn = 1-rn;
+        }
 
         if(flipTextureY) {
             bn = 1-bn;
@@ -174,6 +179,11 @@ bool ImageViewHandler::UseNN() const
 bool& ImageViewHandler::UseNN()
 {
     return use_nn;
+}
+
+bool& ImageViewHandler::FlipTextureX()
+{
+    return flipTextureX;
 }
 
 bool& ImageViewHandler::FlipTextureY()

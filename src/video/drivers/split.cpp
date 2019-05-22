@@ -87,7 +87,7 @@ std::vector<VideoInterface*>& SplitVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(SplitVideo)
 {
-    struct SplitVideoFactory : public FactoryInterface<VideoInterface> {
+    struct SplitVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::vector<StreamInfo> streams;
 
@@ -144,8 +144,8 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
 
                 const size_t start1 = roi1.y * st1.Pitch() + st1.PixFormat().bpp * roi1.x / 8;
                 const size_t start2 = roi2.y * st1.Pitch() + st1.PixFormat().bpp * roi2.x / 8;
-                streams.push_back( StreamInfo( st1.PixFormat(), roi1.w, roi1.h, st1.Pitch(), (unsigned char*)0 + start1 ) );
-                streams.push_back( StreamInfo( st1.PixFormat(), roi2.w, roi2.h, st1.Pitch(), (unsigned char*)0 + start2 ) );
+                streams.push_back( StreamInfo( st1.PixFormat(), roi1.w, roi1.h, st1.Pitch(), (unsigned char*)(start1) ) );
+                streams.push_back( StreamInfo( st1.PixFormat(), roi2.w, roi2.h, st1.Pitch(), (unsigned char*)(start2) ) );
             }
 
             return std::unique_ptr<VideoInterface>( new SplitVideo(subvid,streams) );

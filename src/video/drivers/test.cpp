@@ -42,31 +42,31 @@ void setRandomData(unsigned char * arr, size_t size){
 TestVideo::TestVideo(size_t w, size_t h, size_t n, std::string pix_fmt)
 {
     const PixelFormat pfmt = PixelFormatFromString(pix_fmt);
-    
+
     size_bytes = 0;
-    
+
     for(size_t c=0; c < n; ++c) {
         const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp)/8, 0);
-        streams.push_back(stream_info);        
+        streams.push_back(stream_info);
         size_bytes += w*h*(pfmt.bpp)/8;
     }
 }
 
 TestVideo::~TestVideo()
 {
-    
+
 }
 
 //! Implement VideoInput::Start()
 void TestVideo::Start()
 {
-    
+
 }
 
 //! Implement VideoInput::Stop()
 void TestVideo::Stop()
 {
-    
+
 }
 
 //! Implement VideoInput::SizeBytes()
@@ -96,7 +96,7 @@ bool TestVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(TestVideo)
 {
-    struct TestVideoFactory : public FactoryInterface<VideoInterface> {
+    struct TestVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
             const int n = uri.Get<int>("n", 1);

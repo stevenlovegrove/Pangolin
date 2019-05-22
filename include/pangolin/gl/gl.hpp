@@ -113,17 +113,28 @@ inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bo
     Reinitialise(width,height,internal_format,sampling_linear,border,glformat,gltype,data);
 }
 
+inline GlTexture::GlTexture(const TypedImage& img, bool sampling_linear)
+{
+    this->Load(img, sampling_linear);
+}
+
 inline GlTexture::GlTexture(GlTexture&& tex)
 {
     *this = std::move(tex);
 }
-inline void GlTexture::operator=(GlTexture&& tex)
-{
-    internal_format = tex.internal_format;
-    tid = tex.tid;
 
-    tex.internal_format = 0;
-    tex.tid = 0;
+inline GlTexture& GlTexture::operator=(GlTexture&& tex)
+{
+    if (&tex != this) {
+        internal_format = tex.internal_format;
+        tid = tex.tid;
+        width = tex.width;
+        height = tex.height;
+        
+        tex.internal_format = 0;
+        tex.tid = 0;
+    }
+    return *this;
 }
 
 inline bool GlTexture::IsValid() const
@@ -283,6 +294,20 @@ inline void GlTexture::Download(TypedImage& image) const
         );
     }
 
+}
+
+inline void GlTexture::CopyFrom(const GlTexture& tex)
+{
+    if(!tid || width != tex.width || height != tex.height ||
+       internal_format != tex.internal_format)
+    {
+        Reinitialise(tex.width, tex.height, tex.internal_format, true);
+    }
+
+    glCopyImageSubData(tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0,
+                       tid, GL_TEXTURE_2D, 0, 0, 0, 0,
+                       width, height, 1);
+    CheckGlDieOnError();
 }
 
 inline void GlTexture::Save(const std::string& filename, bool top_line_first)
@@ -534,6 +559,29 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRe
     CheckGlDieOnError();
 }
 
+inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlRenderBuffer& depth)
+    : attachments(0)
+{
+    glGenFramebuffersEXT(1, &fbid);
+    AttachColour(colour0);
+    AttachColour(colour1);
+    AttachColour(colour2);
+    AttachDepth(depth);
+    CheckGlDieOnError();
+}
+
+inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlTexture& colour3, GlRenderBuffer& depth)
+    : attachments(0)
+{
+    glGenFramebuffersEXT(1, &fbid);
+    AttachColour(colour0);
+    AttachColour(colour1);
+    AttachColour(colour2);
+    AttachColour(colour3);
+    AttachDepth(depth);
+    CheckGlDieOnError();
+}
+
 inline void GlFramebuffer::Bind() const
 {
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
@@ -589,58 +637,135 @@ inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline GlBuffer::GlBuffer()
-    : bo(0), num_elements(0)
+inline GlBufferData::GlBufferData()
+    : bo(0)
 {
 }
 
-inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
-    : bo(0), num_elements(0)
+inline GlBufferData::GlBufferData(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse, const unsigned char* data )
+    : bo(0)
 {
-    Reinitialise(buffer_type, num_elements, datatype, count_per_element, gluse );
+    Reinitialise(buffer_type, size_bytes, gluse, data );
 }
 
-inline GlBuffer::GlBuffer(GlBuffer&& buffer)
+//! Move Constructor
+inline GlBufferData::GlBufferData(GlBufferData&& tex)
+    : bo(0)
 {
-    *this = std::move(buffer);
+    *this = std::move(tex);
+}
+inline GlBufferData& GlBufferData::operator=(GlBufferData&& tex)
+{
+    Free();
+    this->bo = tex.bo;
+    this->buffer_type = tex.buffer_type;
+    this->gluse = tex.gluse;
+    this->size_bytes = tex.size_bytes;
+    tex.bo = 0;
+    return *this;
 }
 
-inline void GlBuffer::operator=(GlBuffer&& buffer)
+inline GlBufferData::~GlBufferData()
 {
-    bo = buffer.bo;
-    buffer_type = buffer.buffer_type;
-    gluse = buffer.gluse;
-    datatype = buffer.datatype;
-    num_elements = buffer.num_elements;
-    count_per_element = buffer.count_per_element;
-    buffer.bo = 0;
+    Free();
 }
 
-inline bool GlBuffer::IsValid() const
+inline void GlBufferData::Free()
+{
+    if(bo!=0) {
+        glDeleteBuffers(1, &bo);
+    }
+}
+
+inline bool GlBufferData::IsValid() const
 {
     return bo != 0;
 }
 
-inline size_t GlBuffer::SizeBytes() const
+inline size_t GlBufferData::SizeBytes() const
 {
-    return num_elements * GlDataTypeBytes(datatype) * count_per_element;
+    return size_bytes;
 }
 
-inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
+inline void GlBufferData::Reinitialise(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse, const unsigned char* data )
 {
-    this->buffer_type = buffer_type;
-    this->gluse = gluse;
-    this->datatype = datatype;
-    this->num_elements = num_elements;
-    this->count_per_element = count_per_element;
-
     if(!bo) {
         glGenBuffers(1, &bo);
     }
 
+    this->buffer_type = buffer_type;
+    this->gluse = gluse;
+    this->size_bytes = size_bytes;
+
     Bind();
-    glBufferData(buffer_type, num_elements*GlDataTypeBytes(datatype)*count_per_element, 0, gluse);
+    glBufferData(buffer_type, size_bytes, data, gluse);
     Unbind();
+}
+
+inline void GlBufferData::Bind() const
+{
+    glBindBuffer(buffer_type, bo);
+}
+
+inline void GlBufferData::Unbind() const
+{
+    glBindBuffer(buffer_type, 0);
+}
+
+inline void GlBufferData::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
+{
+    if(offset + size_bytes > this->size_bytes) {
+        throw std::runtime_error("GlBufferData: Trying to upload past capacity.");
+    }
+
+    Bind();
+    glBufferSubData(buffer_type,offset,size_bytes,data);
+    Unbind();
+}
+
+inline void GlBufferData::Download(GLvoid* data, GLsizeiptr size_bytes, GLintptr offset) const
+{
+    Bind();
+    glGetBufferSubData(buffer_type, offset, size_bytes, data);
+    Unbind();
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+inline GlBuffer::GlBuffer()
+    : GlBufferData(), num_elements(0)
+{
+}
+
+inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
+    : GlBufferData(buffer_type, num_elements * count_per_element * GlDataTypeBytes(datatype), gluse),
+      datatype(datatype), num_elements(num_elements), count_per_element(count_per_element)
+{
+}
+
+
+inline GlBuffer::GlBuffer(GlBuffer&& o)
+    : GlBufferData()
+{
+    *this = std::move(o);
+}
+
+inline GlBuffer& GlBuffer::operator=(GlBuffer&& o)
+{
+    datatype = o.datatype;
+    num_elements = o.num_elements;
+    count_per_element = o.count_per_element;
+    GlBufferData::operator =(std::move(o));
+    return *this;
+}
+
+inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse, const unsigned char* data )
+{
+    this->datatype = datatype;
+    this->num_elements = num_elements;
+    this->count_per_element = count_per_element;
+    const GLuint size_bytes = num_elements * count_per_element * GlDataTypeBytes(datatype);
+    GlBufferData::Reinitialise(buffer_type, size_bytes, gluse, data);
 }
 
 inline void GlBuffer::Reinitialise(GlBuffer const& other )
@@ -671,36 +796,6 @@ inline void GlBuffer::Resize(GLuint new_num_elements)
     num_elements = new_num_elements;
 }
 
-inline GlBuffer::~GlBuffer()
-{
-    if(bo!=0) {
-        glDeleteBuffers(1, &bo);
-    }
-}
-
-inline void GlBuffer::Bind() const
-{
-    glBindBuffer(buffer_type, bo);
-}
-
-inline void GlBuffer::Unbind() const
-{
-    glBindBuffer(buffer_type, 0);
-}
-
-inline void GlBuffer::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
-{
-    Bind();
-    glBufferSubData(buffer_type,offset,size_bytes, data);
-    Unbind();
-}
-
-inline void GlBuffer::Download(GLvoid* data, GLsizeiptr size_bytes, GLintptr offset) const
-{
-    Bind();
-    glGetBufferSubData(buffer_type, offset, size_bytes, data);
-    Unbind();
-}
 
 ////////////////////////////////////////////////////////////////////////////
 

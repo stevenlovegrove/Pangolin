@@ -6,7 +6,7 @@ namespace pangolin
 {
 
 ImageView::ImageView()
-    : offset_scale(0.0, 1.0), lastPressed(false), mouseReleased(false), mousePressed(false), overlayRender(true)
+    : offset_scale(0.0f, 1.0f), lastPressed(false), mouseReleased(false), mousePressed(false), overlayRender(true)
 {
     SetHandler(this);
 }
@@ -138,6 +138,7 @@ ImageView& ImageView::SetImage(void* ptr, size_t w, size_t h, size_t pitch, pang
 
     PANGO_ASSERT(pitch % pix_bytes == 0);
     const size_t stride = pitch / pix_bytes;
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, stride);
 
     // Initialise if it didn't already exist or the size was too small

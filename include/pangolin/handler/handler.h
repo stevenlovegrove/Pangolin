@@ -87,6 +87,9 @@ struct PANGOLIN_EXPORT Handler3D : Handler
         return Eigen::Map<const Eigen::Matrix<GLprecision,3,1>>(Pw).cast<double>();
     }
 #endif
+    inline int KeyState() const{
+        return funcKeyState;
+    }
 
 protected:
     OpenGlRenderState* cam_state;
@@ -103,6 +106,8 @@ protected:
     GLprecision Pw[3];
     GLprecision Pc[3];
     GLprecision n[3];
+
+    int funcKeyState;
 };
 
 static Handler StaticHandler;

@@ -103,7 +103,7 @@ int main( int argc, char* argv[] )
                 std::cout << "Trying: " << uris[i] << std::endl;
                 VideoSample(uris[i]);
                 return 0;
-            }catch(pangolin::VideoException) { }
+            }catch(const pangolin::VideoException&) { }
         }
     }
 

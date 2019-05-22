@@ -15,9 +15,10 @@ install:
   
 before_build:
   - cd c:/projects/Pangolin
+  - mkdir bin
   - mkdir build
   - cd build
-  - cmake -G "Visual Studio 14 2015 Win64" -D EIGEN3_INCLUDE_DIR=C:/projects/eigen-eigen-b9cd8366d4e8 ..
+  - cmake -G "Visual Studio 14 2015 Win64" -D EIGEN3_INCLUDE_DIR=C:/projects/eigen-eigen-b9cd8366d4e8 -D CMAKE_INSTALL_PREFIX=../bin ..
 
 on_success:
   - 7z a pangolin_build.zip "c:/projects/Pangolin/build/src/include" "c:/projects/Pangolin/build/src/Release/pangolin.lib" "c:/projects/Pangolin/build/tools/*/Release/*.exe" "c:/projects/Pangolin/build/examples/*/Release/*.exe"

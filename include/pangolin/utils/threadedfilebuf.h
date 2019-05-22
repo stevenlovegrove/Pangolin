@@ -36,6 +36,11 @@
 #include <mutex>
 #include <condition_variable>
 
+#ifdef _LINUX_
+// On linux, using posix file i/o to allow sync writes.
+#define USE_POSIX_FILE_IO
+#endif
+
 namespace pangolin
 {
 
@@ -66,7 +71,12 @@ protected:
         std::ios_base::openmode which = std::ios_base::in | std::ios_base::out
     ) override;
     
+#ifdef USE_POSIX_FILE_IO
+    int filenum = -1;
+#else
     std::filebuf file;
+#endif
+
     char* mem_buffer;
     std::streamsize mem_size;
     std::streamsize mem_max_size;
