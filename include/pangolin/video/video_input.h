@@ -62,6 +62,7 @@ struct PANGOLIN_EXPORT VideoInput
     /////////////////////////////////////////////////////////////
 
     VideoInput();
+    VideoInput(VideoInput&& other) = default;
     VideoInput(const std::string &input_uri, const std::string &output_uri = "pango:[buffer_size_mb=100]//video_log.pango");
     ~VideoInput();
 

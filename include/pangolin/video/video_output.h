@@ -55,6 +55,7 @@ class PANGOLIN_EXPORT VideoOutput : public VideoOutputInterface
 {
 public:
     VideoOutput();
+    VideoOutput(VideoOutput&& other) = default;
     VideoOutput(const std::string& uri);
     ~VideoOutput();
     
