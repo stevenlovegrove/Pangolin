@@ -34,17 +34,12 @@ namespace py_pangolin {
   
   void bind_display(pybind11::module &m) {
     m.def("CreateWindowAndBind",
-          [](const std::string& title, int w=640, int h=480) -> pangolin::WindowInterface& {
-            return pangolin::CreateWindowAndBind(title, w, h);
-          },
+          &pangolin::CreateWindowAndBind,
           pybind11::return_value_policy::reference,
           pybind11::arg("window_title"),
           pybind11::arg("w") = 640,
-          pybind11::arg("h") = 480);
-
-    m.def("CreateWindowAndBindWithParams",
-          &pangolin::CreateWindowAndBind,
-          pybind11::return_value_policy::reference);
+          pybind11::arg("h") = 480,
+          pybind11::arg("params") = pangolin::Params());
 	
     m.def("DestroyWindow",
           &pangolin::DestroyWindow,
