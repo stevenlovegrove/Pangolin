@@ -35,7 +35,9 @@ namespace py_pangolin {
         .def(pybind11::init<>())
         .def("Contains", &pangolin::Params::Contains)
         .def("Set", &pangolin::Params::Set<int>)
-        .def("Get", &pangolin::Params::Get<int>);
+        .def("Get", &pangolin::Params::Get<int>)
+        .def("Set", &pangolin::Params::Set<std::string>)
+        .def("Get", &pangolin::Params::Get<std::string>);
     }
 
 }  // py_pangolin

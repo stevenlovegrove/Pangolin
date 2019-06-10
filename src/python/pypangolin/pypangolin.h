@@ -57,11 +57,11 @@ inline void PopulateModule(pybind11::module& m)
     m.doc() = "pypangolin python wrapper for Pangolin rapid prototyping graphics and video library.";
 
     py_pangolin::bind_var(m);
+    py_pangolin::bind_params(m);
     py_pangolin::bind_viewport(m);
     py_pangolin::bind_view(m);
     py_pangolin::bind_window(m);
     py_pangolin::bind_display(m);
-    py_pangolin::bind_params(m);
     py_pangolin::bind_opengl_render_state(m);
     py_pangolin::bind_attach(m);
     py_pangolin::bind_colour(m);
