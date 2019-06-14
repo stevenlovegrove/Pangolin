@@ -6,7 +6,7 @@
 
 #include <pangolin/pangolin.h>
 
-void SetGlFormat(GLint& glformat, GLenum& gltype, const pangolin::VideoPixelFormat& fmt)
+void SetGlFormat(GLint& glformat, GLenum& gltype, const pangolin::PixelFormat& fmt)
 {
     switch( fmt.channels) {
     case 1: glformat = GL_LUMINANCE; break;
@@ -27,7 +27,7 @@ void VideoSample(const std::string uri)
 {
     // Setup Video Source
     pangolin::VideoInput video(uri);
-    const pangolin::VideoPixelFormat vid_fmt = video.PixFormat();
+    const pangolin::PixelFormat vid_fmt = video.PixFormat();
     const unsigned w = video.Width();
     const unsigned h = video.Height();
 
@@ -59,7 +59,7 @@ void VideoSample(const std::string uri)
         vVideo.Activate();
         texVideo.RenderToViewportFlipY();
 
-        // Swap back buffer with front and process window events via GLUT
+        // Swap back buffer with front and process window events
         pangolin::FinishFrame();
     }
 
@@ -103,7 +103,7 @@ int main( int argc, char* argv[] )
                 std::cout << "Trying: " << uris[i] << std::endl;
                 VideoSample(uris[i]);
                 return 0;
-            }catch(pangolin::VideoException) { }
+            }catch(const pangolin::VideoException&) { }
         }
     }
 

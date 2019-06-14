@@ -26,7 +26,9 @@
  */
 
 #include <pangolin/video/drivers/pleora.h>
-#include <pangolin/compat/thread.h>
+#include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/iostream_operators.h>
+#include <thread>
 
 #ifdef DEBUGPLEORA
   #include <pangolin/utils/timer.h>
@@ -129,29 +131,31 @@ inline const PvDeviceInfo* SelectDevice( PvSystem& aSystem, const char* model_na
     return 0;
 }
 
-VideoPixelFormat PleoraFormat(const PvGenEnum* pfmt)
+PixelFormat PleoraFormat(const PvGenEnum* pfmt)
 {
     std::string spfmt = pfmt->ToString().GetAscii();
     if( !spfmt.compare("Mono8") ) {
-        return VideoFormatFromString("GRAY8");
+        return PixelFormatFromString("GRAY8");
     } else if( !spfmt.compare("Mono10p") ) {
-        return VideoFormatFromString("GRAY10");
+        return PixelFormatFromString("GRAY10");
     } else if( !spfmt.compare("Mono12p") ) {
-        return VideoFormatFromString("GRAY12");
+        return PixelFormatFromString("GRAY12");
     } else if( !spfmt.compare("Mono10") || !spfmt.compare("Mono12")) {
-        return VideoFormatFromString("GRAY16LE");
+        return PixelFormatFromString("GRAY16LE");
     } else if( !spfmt.compare("RGB8") ) {
-        return VideoFormatFromString("RGB24");
+        return PixelFormatFromString("RGB24");
     } else if( !spfmt.compare("BGR8") ) {
-        return VideoFormatFromString("BGR24");
+        return PixelFormatFromString("BGR24");
     } else if( !spfmt.compare("BayerBG8") ) {
-        return VideoFormatFromString("GRAY8");
+        return PixelFormatFromString("GRAY8");
+    } else if( !spfmt.compare("BayerBG12") ) {
+        return PixelFormatFromString("GRAY16LE");
     } else {
         throw VideoException("Unknown Pleora pixel format", spfmt);
     }
 }
 
-PleoraVideo::PleoraVideo(Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0),
+PleoraVideo::PleoraVideo(const Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lStream(0), lDeviceParams(0), lStart(0), lStop(0),
     lTemperatureCelcius(0), getTemp(false), lStreamParams(0), validGrabbedBuffers(0)
 {
     std::string sn;
@@ -160,15 +164,27 @@ PleoraVideo::PleoraVideo(Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lS
     size_t buffer_count = PleoraVideo::DEFAULT_BUFFER_COUNT;
     Params device_params;
 
-    for(Params::ParamMap::iterator it = p.params.begin(); it != p.params.end(); it++) {
+    for(Params::ParamMap::const_iterator it = p.params.begin(); it != p.params.end(); it++) {
         if(it->first == "model"){
             mn = it->second;
         } else if(it->first == "sn"){
             sn = it->second;
         } else if(it->first == "idx"){
             index = p.Get<int>("idx", 0);
-        } else if(it->first == "buffers"){
-            buffer_count = p.Get<size_t>("buffers", PleoraVideo::DEFAULT_BUFFER_COUNT);
+        } else if(it->first == "size") {
+            const ImageDim dim = p.Get<ImageDim>("size", ImageDim(0,0) );
+            device_params.Set("Width"  , dim.x);
+            device_params.Set("Height" , dim.y);
+        } else if(it->first == "pos") {
+            const ImageDim pos = p.Get<ImageDim>("pos", ImageDim(0,0) );
+            device_params.Set("OffsetX"  , pos.x);
+            device_params.Set("OffsetY" , pos.y);
+        } else if(it->first == "roi") {
+            const ImageRoi roi = p.Get<ImageRoi>("roi", ImageRoi(0,0,0,0) );
+            device_params.Set("Width"  , roi.w);
+            device_params.Set("Height" , roi.h);
+            device_params.Set("OffsetX", roi.x);
+            device_params.Set("OffsetY", roi.y);
         } else {
             device_params.Set(it->first, it->second);
         }
@@ -179,9 +195,8 @@ PleoraVideo::PleoraVideo(Params& p): size_bytes(0), lPvSystem(0), lDevice(0), lS
     InitStream();
 
     InitPangoStreams();
+    InitPangoDeviceProperties();
     InitBuffers(buffer_count);
-
-    Start();
 }
 
 PleoraVideo::~PleoraVideo()
@@ -298,7 +313,7 @@ void PleoraVideo::SetDeviceParams(Params& p) {
                   int attempts = 20;
                   do {
                       cmd->IsDone(done);
-                      boostd::this_thread::sleep_for(boostd::chrono::milliseconds(1000));
+                      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                       attempts--;
                   } while(!done && (attempts > 0));
                   if(attempts == 0) {
@@ -379,9 +394,32 @@ void PleoraVideo::InitPangoStreams()
 
     // Setup pangolin for stream
     PvGenEnum* lpixfmt = dynamic_cast<PvGenEnum*>( lDeviceParams->Get("PixelFormat") );
-    const VideoPixelFormat fmt = PleoraFormat(lpixfmt);
+    const PixelFormat fmt = PleoraFormat(lpixfmt);
     streams.push_back(StreamInfo(fmt, w, h, (w*fmt.bpp)/8));
     size_bytes = lSize;
+}
+
+void PleoraVideo::InitPangoDeviceProperties()
+{
+    // Store camera details in device properties
+    device_properties["SerialNumber"] = std::string(lDeviceInfo->GetSerialNumber().GetAscii());
+    device_properties["VendorName"] = std::string(lDeviceInfo->GetVendorName().GetAscii());
+    device_properties["ModelName"] = std::string(lDeviceInfo->GetModelName().GetAscii());
+    device_properties["ManufacturerInfo"] = std::string(lDeviceInfo->GetManufacturerInfo().GetAscii());
+    device_properties["Version"] = std::string(lDeviceInfo->GetVersion().GetAscii());
+    device_properties["DisplayID"] = std::string(lDeviceInfo->GetDisplayID().GetAscii());
+    device_properties["UniqueID"] = std::string(lDeviceInfo->GetUniqueID().GetAscii());
+    device_properties["ConnectionID"] = std::string(lDeviceInfo->GetConnectionID().GetAscii());
+
+    picojson::value props(picojson::object_type, true);
+    for(size_t i=0; i < lDeviceParams->GetCount(); ++i) {
+        PvGenParameter* p = (*lDeviceParams)[i];
+        if(p->IsReadable()) {
+            props[p->GetName().GetAscii()] = p->ToString().GetAscii();
+        }
+    }
+
+    device_properties["properties"] = props;
 }
 
 unsigned int PleoraVideo::AvailableFrames() const
@@ -414,7 +452,8 @@ void PleoraVideo::Start()
         lDevice->StreamEnable();
         lStart->Execute();
     } else {
-        pango_print_warn("PleoraVideo: Already started.\n");
+//        // It isn't an error to repeatedly start
+//        pango_print_warn("PleoraVideo: Already started.\n");
     }
 }
 
@@ -433,7 +472,8 @@ void PleoraVideo::Stop()
             lStream->RetrieveBuffer( &lBuffer, &lOperationResult );
         }
     } else {
-        pango_print_warn("PleoraVideo: Already stopped.\n");
+//        // It isn't an error to repeatedly stop
+//        pango_print_warn("PleoraVideo: Already stopped.\n");
     }
 }
 
@@ -456,8 +496,8 @@ bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
       std::memcpy(image, lImage->GetDataPointer(), size_bytes);
       TGRABANDPRINT("memcpy took ")
       // Required frame properties
-      frame_properties[PANGO_CAPTURE_TIME_US] = json::value(lBuffer->GetTimestamp());
-      frame_properties[PANGO_HOST_RECEPTION_TIME_US] = json::value(lBuffer->GetReceptionTime());
+      frame_properties[PANGO_CAPTURE_TIME_US] = picojson::value(lBuffer->GetTimestamp());
+      frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(lBuffer->GetReceptionTime());
       TGRABANDPRINT("Frame properties took ")
 
       // Optional frame properties
@@ -465,7 +505,7 @@ bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer,  unsigned char* image)
           double val;
           PvResult lResult = lTemperatureCelcius->GetValue(val);
           if(lResult.IsSuccess()) {
-              frame_properties[PANGO_SENSOR_TEMPERATURE_C] = json::value(val);
+              frame_properties[PANGO_SENSOR_TEMPERATURE_C] = picojson::value(val);
           } else {
               pango_print_error("DeviceTemperatureCelsius %f fail\n", val);
           }
@@ -579,7 +619,7 @@ void PleoraVideo::SetGain(int64_t val)
 {
     if(val >= 0 && lAnalogGain && lAnalogGain->IsWritable()) {
         ThrowOnFailure( lAnalogGain->SetValue(val) );
-        frame_properties[PANGO_ANALOG_GAIN] = json::value(val);
+        frame_properties[PANGO_ANALOG_GAIN] = picojson::value(val);
     }
 }
 
@@ -596,7 +636,7 @@ void PleoraVideo::SetAnalogBlackLevel(int64_t val)
 {
     if(val >= 0 && lAnalogBlackLevel&& lAnalogBlackLevel->IsWritable()) {
         ThrowOnFailure( lAnalogBlackLevel->SetValue(val) );
-        frame_properties[PANGO_ANALOG_BLACK_LEVEL] = json::value(val);
+        frame_properties[PANGO_ANALOG_BLACK_LEVEL] = picojson::value(val);
     }
 }
 
@@ -613,7 +653,7 @@ void PleoraVideo::SetExposure(double val)
 {
     if(val > 0 && lExposure && lExposure->IsWritable() ) {
         ThrowOnFailure( lExposure->SetValue(val) );
-        frame_properties[PANGO_EXPOSURE_US] = json::value(val);
+        frame_properties[PANGO_EXPOSURE_US] = picojson::value(val);
     }
 }
 
@@ -631,7 +671,7 @@ void PleoraVideo::SetGamma(double val)
 {
     if(val > 0 && lGamma && lGamma->IsWritable() ) {
         ThrowOnFailure( lGamma->SetValue(val) );
-        frame_properties[PANGO_GAMMA] = json::value(val);
+        frame_properties[PANGO_GAMMA] = picojson::value(val);
     }
 }
 
@@ -682,6 +722,19 @@ template<typename T>
 bool PleoraVideo::SetStreamParam(const char* name, T val)
 {
     return SetParam<T>(lStreamParams, name, val);
+}
+
+PANGOLIN_REGISTER_FACTORY(PleoraVideo)
+{
+    struct PleoraVideoFactory final : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
+            return std::unique_ptr<VideoInterface>(new PleoraVideo(uri));
+        }
+    };
+
+    auto factory = std::make_shared<PleoraVideoFactory>();
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "pleora");
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "u3v");
 }
 
 }

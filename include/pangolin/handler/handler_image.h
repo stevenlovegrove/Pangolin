@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_HANDLER_IMAGE_H
-#define PANGOLIN_HANDLER_IMAGE_H
+#pragma once
 
 #include <pangolin/image/image_utils.h>
 #include <pangolin/display/viewport.h>
@@ -35,12 +34,28 @@
 #include <pangolin/plot/range.h>
 #include <pangolin/gl/gl.h>
 
+#include <functional>
+
 namespace pangolin
 {
 
 class ImageViewHandler : public Handler
 {
 public:
+    struct EventData {
+        EventData(View& v, ImageViewHandler& h) : view(v), handler(h) {}
+        View& view;
+        ImageViewHandler& handler;
+    };
+
+    struct OnSelectionEventData : public EventData {
+        OnSelectionEventData(View& v, ImageViewHandler& h, bool dragging)
+            : EventData(v,h), dragging(dragging) {}
+        bool dragging;
+    };
+
+    typedef std::function<void(OnSelectionEventData)> OnSelectionCallbackFn;
+
     // Default constructor: User must call SetDimensions() once image dimensions are known.
     // Default range is [0,1] in x and y.
     ImageViewHandler();
@@ -67,6 +82,10 @@ public:
     bool UseNN() const;
 
     bool& UseNN();
+
+    bool& FlipTextureX();
+
+    bool& FlipTextureY();
 
     pangolin::XYRangef& GetViewToRender();
 
@@ -98,15 +117,21 @@ public:
     /// pangolin::Handler
     ///////////////////////////////////////////////////////
 
-    void Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed) PANGOLIN_OVERRIDE;
+    void Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed) override;
 
-    void Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state) PANGOLIN_OVERRIDE;
+    void Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state) override;
 
-    void MouseMotion(View& view, int x, int y, int button_state) PANGOLIN_OVERRIDE;
+    void MouseMotion(View& view, int x, int y, int button_state) override;
 
-    void PassiveMouseMotion(View&, int /*x*/, int /*y*/, int /*button_state*/) PANGOLIN_OVERRIDE;
+    void PassiveMouseMotion(View&, int /*x*/, int /*y*/, int /*button_state*/) override;
 
-    void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int /*button_state*/) PANGOLIN_OVERRIDE;
+    void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int /*button_state*/) override;
+
+    ///////////////////////////////////////////////////////
+    /// Callbacks
+    ///////////////////////////////////////////////////////
+
+    OnSelectionCallbackFn OnSelectionCallback;
 
 protected:
     void FixSelection(XYRangef& sel);
@@ -130,7 +155,8 @@ protected:
     int last_mouse_pos[2];
 
     bool use_nn;
+    bool flipTextureX;
+    bool flipTextureY;
 };
 
 }
-#endif // PANGOLIN_HANDLER_IMAGE_H

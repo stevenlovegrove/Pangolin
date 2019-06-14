@@ -1,5 +1,5 @@
 #include <pangolin/pangolin.h>
-#include <pangolin/video/video_record_repeat.h>
+#include <pangolin/video/video_input.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/timer.h>
 
@@ -9,8 +9,10 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     pangolin::Var<bool> video_newest("video.newest", false);
 
     // Open Video by URI
-    pangolin::VideoRecordRepeat video(input_uri, output_uri);
+    pangolin::VideoInput video(input_uri, output_uri);
     const size_t num_streams = video.Streams().size();
+
+    pangolin::VideoPlaybackInterface* playback = pangolin::FindFirstMatchingVideoInterface<pangolin::VideoPlaybackInterface>(video);
 
     // Output details of video stream
     for(size_t s = 0; s < num_streams; ++s)
@@ -34,28 +36,32 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
         if( !video.Grab(&buffer[0], images, video_wait, video_newest) ) {
             break;
         }
+        if( playback ) {
+            std::cout << "Frames complete: " << playback->GetCurrentFrameId() << " / " << playback->GetTotalFrames() << '\r';
+            std::cout.flush();
+        }
    }
 }
 
 
 int main( int argc, char* argv[] )
 {
-    const std::string dflt_output_uri = "pango://video.pango";
+    const std::string dflt_output_uri = "pango:[unique_filename]//video.pango";
 
     if( argc > 1 ) {
         const std::string input_uri = std::string(argv[1]);
         const std::string output_uri = (argc > 2) ? std::string(argv[2]) : dflt_output_uri;
         try{
             VideoViewer(input_uri, output_uri);
-        } catch (pangolin::VideoException e) {
+        } catch (const pangolin::VideoException& e) {
             std::cout << e.what() << std::endl;
         }
     }else{
-        std::cout << "Usage  : VideoViewer [video-uri]" << std::endl << std::endl;
-        std::cout << "Where video-uri describes a stream or file resource, e.g." << std::endl;
+        std::cout << "Usage  : VideoConvert [video-in-uri] [video-out-uri]" << std::endl << std::endl;
+        std::cout << "Where video-in-uri describes a stream or file resource, e.g." << std::endl;
         std::cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << std::endl;
         std::cout << "\tfile:///home/user/video/movie.avi" << std::endl;
-        std::cout << "\tfiles:///home/user/seqiemce/foo%03d.jpeg" << std::endl;
+        std::cout << "\tfiles:///home/user/seqiemce/foo*.jpeg" << std::endl;
         std::cout << "\tdc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0" << std::endl;
         std::cout << "\tdc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << std::endl;
         std::cout << "\tv4l:///dev/video0" << std::endl;

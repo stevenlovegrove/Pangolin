@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VAREXTRA_H
-#define PANGOLIN_VAREXTRA_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/var/var.h>
@@ -91,5 +90,3 @@ inline std::ostream& operator<<(std::ostream& s, Var<T>& rhs)
 }
 
 }
-
-#endif // PANGOLIN_VAREXTRA_H

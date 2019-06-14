@@ -25,14 +25,15 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_DEPTHSENSE_H
-#define PANGOLIN_DEPTHSENSE_H
+#pragma once
 
 #include <pangolin/pangolin.h>
+#include <pangolin/video/iostream_operators.h>
 #include <pangolin/video/video.h>
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
-#include <pangolin/compat/condition_variable.h>
+
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 // DepthSense SDK for SoftKinetic cameras from Creative
 #include <DepthSense.hxx>
@@ -74,12 +75,12 @@ public:
     bool GrabNewest( unsigned char* image, bool wait = true );
     
     //! Implement VideoInput::DeviceProperties()
-    const json::value& DeviceProperties() const {
+    const picojson::value& DeviceProperties() const {
         return device_properties;
     }
 
     //! Implement VideoInput::DeviceProperties()
-    const json::value& FrameProperties() const {
+    const picojson::value& FrameProperties() const {
         return frame_properties;
     }
 protected:
@@ -101,9 +102,9 @@ protected:
     double GetDeltaTime() const;
 
     std::vector<StreamInfo> streams;
-    json::value device_properties;
-    json::value frame_properties;
-    json::value* streams_properties;
+    picojson::value device_properties;
+    picojson::value frame_properties;
+    picojson::value* streams_properties;
 
 
     DepthSense::Device device;
@@ -117,9 +118,9 @@ protected:
 
     int gotDepth;
     int gotColor;
-    boostd::mutex update_mutex;
-    boostd::condition_variable cond_image_filled;
-    boostd::condition_variable cond_image_requested;
+    std::mutex update_mutex;
+    std::condition_variable cond_image_filled;
+    std::condition_variable cond_image_requested;
 
     SensorConfig sensorConfig[2];
 
@@ -161,12 +162,10 @@ protected:
 
     DepthSense::Context g_context;
 
-    boostd::thread event_thread;
+    std::thread event_thread;
     bool is_running;
 
     int running_devices;
 };
 
 }
-
-#endif // PANGOLIN_DEPTHSENSE_H

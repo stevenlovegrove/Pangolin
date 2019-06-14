@@ -47,6 +47,7 @@ public:
     struct Line
     {
         Line()
+            : linetype(ConsoleLineTypeCmd)
         {
         }
 
@@ -76,12 +77,12 @@ public:
     // Replace implementation in View to account for hiding animation
     bool IsShown() const;
 
-    void Render() PANGOLIN_OVERRIDE;
+    void Render() override;
 
-    void Keyboard(View&, unsigned char key, int x, int y, bool pressed) PANGOLIN_OVERRIDE;
+    void Keyboard(View&, unsigned char key, int x, int y, bool pressed) override;
 
 private:
-    void DrawLine(const ConsoleView::Line& l);
+    void DrawLine(const ConsoleView::Line& l, int carat);
 
     void ProcessOutputLines();
 
@@ -93,8 +94,7 @@ private:
 
     GlFont& font;
 
-    std::map<ConsoleLineType, GlText> prompts;
-
+    int carat;
     Line current_line;
     std::deque<Line> line_buffer;
 

@@ -27,12 +27,12 @@
 
 #include <pangolin/plot/datalog.h>
 
-#include <limits>
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
-#include <stdexcept>
-#include <algorithm>
 #include <iostream>
+#include <limits>
+#include <stdexcept>
 
 namespace pangolin
 {
@@ -45,19 +45,20 @@ void DataLogBlock::AddSamples(size_t num_samples, size_t dimensions, const float
     }else{
         if(dimensions > dim) {
             // If dimensions is too high for this block, start a new bigger one
-            nextBlock = new DataLogBlock(dimensions, max_samples, start_id + samples);
+            nextBlock = std::unique_ptr<DataLogBlock>(new DataLogBlock(dimensions, max_samples, start_id + samples));
+            nextBlock->AddSamples(num_samples,dimensions,data_dim_major);
         }else{
             // Try to copy samples to this block
             const size_t samples_to_copy = std::min(num_samples, SampleSpaceLeft());
 
             if(dimensions == dim) {
                 // Copy entire block all together
-                std::copy(data_dim_major, data_dim_major + samples_to_copy*dim, sample_buffer+samples*dim);
+                std::copy(data_dim_major, data_dim_major + samples_to_copy*dim, sample_buffer.get()+samples*dim);
                 samples += samples_to_copy;
                 data_dim_major += samples_to_copy*dim;
             }else{
                 // Copy sample at a time, filling with NaN's where needed.
-                float* dst = sample_buffer;
+                float* dst = sample_buffer.get();
                 for(size_t i=0; i< samples_to_copy; ++i) {
                     std::copy(data_dim_major, data_dim_major + dimensions, dst);
                     for(size_t ii = dimensions; ii < dim; ++ii) {
@@ -69,9 +70,16 @@ void DataLogBlock::AddSamples(size_t num_samples, size_t dimensions, const float
                 samples += samples_to_copy;
             }
 
+//            // Update Stats
+//            for(size_t s=0; s < samples_to_copy; ++s) {
+//                for(size_t d = 0; d < dimensions; ++d) {
+//                    stats[d].Add(data_dim_major[s*dim + d]);
+//                }
+//            }
+
             // Copy remaining data to next block (this one is full)
             if(samples_to_copy < num_samples) {
-                nextBlock = new DataLogBlock(dim, max_samples, start_id + Samples());
+                nextBlock = std::unique_ptr<DataLogBlock>(new DataLogBlock(dim, max_samples, start_id + Samples()));
                 nextBlock->AddSamples(num_samples-samples_to_copy, dimensions, data_dim_major);
             }
         }
@@ -79,7 +87,7 @@ void DataLogBlock::AddSamples(size_t num_samples, size_t dimensions, const float
 }
 
 DataLog::DataLog(unsigned int buffer_size)
-    : block_samples_alloc(buffer_size), block0(0), blockn(0), record_stats(true)
+    : block_samples_alloc(buffer_size), block0(nullptr), blockn(nullptr), record_stats(true)
 {
 }
 
@@ -90,6 +98,8 @@ DataLog::~DataLog()
 
 void DataLog::SetLabels(const std::vector<std::string> & new_labels)
 {
+    std::lock_guard<std::mutex> l(access_mutex);
+
     // Create new labels if needed
     for( size_t i= labels.size(); i < new_labels.size(); ++i )
         labels.push_back( std::string() );
@@ -108,8 +118,8 @@ void DataLog::Log(size_t dimension, const float* vals, unsigned int samples )
 {
     if(!block0) {
         // Create first block
-        block0 = new DataLogBlock(dimension, block_samples_alloc, 0);
-        blockn = block0;
+        block0 = std::unique_ptr<DataLogBlock>(new DataLogBlock(dimension, block_samples_alloc, 0));
+        blockn = block0.get();
     }
 
     if(record_stats) {
@@ -119,12 +129,7 @@ void DataLog::Log(size_t dimension, const float* vals, unsigned int samples )
         for(unsigned int d=0; d<dimension; ++d) {
             DimensionStats& ds = stats[d];
             for(unsigned int s=0; s<samples; ++s) {
-                const float v = vals[s*dimension+d];
-                ds.isMonotonic = ds.isMonotonic && (v >= ds.max);
-                ds.sum += v;
-                ds.sum_sq += v*v;
-                ds.min = std::min(ds.min, v);
-                ds.max = std::max(ds.max, v);
+                ds.Add(vals[s*dimension+d]);
             }
         }
     }
@@ -201,22 +206,55 @@ void DataLog::Log(const std::vector<float> & vals)
 
 void DataLog::Clear()
 {
-    if(block0) {
-        block0->ClearLinked();
-        blockn = block0;
-    }
+    std::lock_guard<std::mutex> l(access_mutex);
+
+    blockn = nullptr;
+    block0 = nullptr;
+
     stats.clear();
 }
 
 void DataLog::Save(std::string filename)
 {
-    // TODO: Implement
-    throw std::runtime_error("Method not implemented");
+    std::ofstream csvStream(filename);
+
+      if (!Labels().empty()) {
+        csvStream << Labels()[0];
+
+        for (size_t i = 1; i < Labels().size(); ++i) {
+          csvStream << "," << Labels()[i];
+        }
+
+        csvStream << std::endl;
+
+    }
+
+    const DataLogBlock * block = FirstBlock();
+
+    while (block) {
+
+      for (size_t i = 0; i < block->Samples(); ++i) {
+
+        csvStream << block->Sample(i)[0];
+
+        for (size_t d = 1; d < block->Dimensions(); ++d) {
+
+          csvStream << "," << block->Sample(i)[d];
+
+        }
+
+        csvStream << std::endl;
+
+      }
+
+      block = block->NextBlock();
+
+    }
 }
 
 const DataLogBlock* DataLog::FirstBlock() const
 {
-    return block0;
+    return block0.get();
 }
 
 const DataLogBlock* DataLog::LastBlock() const

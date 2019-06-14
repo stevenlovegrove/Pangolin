@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLVBO_H
-#define PANGOLIN_GLVBO_H
+#pragma once
 
 #include <pangolin/gl/gl.h>
 
@@ -39,13 +38,11 @@ namespace pangolin
 
 void MakeTriangleStripIboForVbo(GlBuffer& ibo, int w, int h);
 
-#ifdef CALLEE_HAS_RVALREF
 GlBuffer MakeTriangleStripIboForVbo(int w, int h);
-#endif
 
 void RenderVbo(GlBuffer& vbo, GLenum mode = GL_POINTS);
 
-void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color = true);
+void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color = true, GLenum mode = GL_POINTS);
 
 void RenderVboIbo(GlBuffer& vbo, GlBuffer& ibo, bool draw_mesh = true);
 
@@ -87,14 +84,12 @@ inline void MakeTriangleStripIboForVbo(GlBuffer& ibo, int w, int h)
     delete[] buffer;
 }
 
-#ifdef CALLEE_HAS_RVALREF
 inline GlBuffer MakeTriangleStripIboForVbo(int w, int h)
 {
     GlBuffer ibo;
     MakeTriangleStripIboForVbo(ibo,w,h);
     return ibo;
 }
-#endif
 
 inline void RenderVbo(GlBuffer& vbo, GLenum mode)
 {
@@ -108,7 +103,7 @@ inline void RenderVbo(GlBuffer& vbo, GLenum mode)
     vbo.Unbind();
 }
 
-inline void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color)
+inline void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color, GLenum mode )
 {
     if(draw_color) {
         cbo.Bind();
@@ -116,7 +111,7 @@ inline void RenderVboCbo(GlBuffer& vbo, GlBuffer& cbo, bool draw_color)
         glEnableClientState(GL_COLOR_ARRAY);
     }
     
-    RenderVbo(vbo);
+    RenderVbo(vbo,mode);
     
     if(draw_color) {
         glDisableClientState(GL_COLOR_ARRAY);
@@ -228,5 +223,3 @@ inline void RenderVboIboNbo(GlBuffer& vbo, GlBuffer& ibo, GlBuffer& nbo, bool dr
 }
 
 }
-
-#endif // PANGOLIN_GLVBO_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PLATFORM_H
-#define PANGOLIN_PLATFORM_H
+#pragma once
 
 #include <pangolin/config.h>
 
@@ -41,12 +40,6 @@
 #  define PANGOLIN_DEPRECATED
 #endif
 
-#if (__cplusplus > 199711L) || (_MSC_VER >= 1700)
-#  define PANGOLIN_OVERRIDE override
-#else
-#  define PANGOLIN_OVERRIDE
-#endif
-
 #ifdef _MSVC_
 #   define __thread __declspec(thread)
 #   include <pangolin/pangolin_export.h>
@@ -54,23 +47,35 @@
 #   define PANGOLIN_EXPORT
 #endif //_MSVC_
 
+#define PANGOLIN_UNUSED(x) (void)(x)
+
 #ifdef _APPLE_IOS_
 // Not supported on this platform.
 #define __thread
 #endif // _APPLE_IOS_
 
-#ifndef _ANDROID_
-#   include <cstdio>
-#   define pango_print_debug(...) printf(__VA_ARGS__)
-#   define pango_print_info(...)  printf(__VA_ARGS__)
-#   define pango_print_error(...) fprintf(stderr, __VA_ARGS__)
-#   define pango_print_warn(...)  fprintf(stderr, __VA_ARGS__)
+// HOST / DEVICE Annotations
+#ifdef __CUDACC__
+#  include <cuda_runtime.h>
+#  define PANGO_HOST_DEVICE __host__ __device__
 #else
-#   include <android/log.h>
-#   define pango_print_debug(...) __android_log_print(ANDROID_LOG_DEBUG, "pango", __VA_ARGS__ );
-#   define pango_print_info(...)  __android_log_print(ANDROID_LOG_INFO,  "pango", __VA_ARGS__ );
-#   define pango_print_error(...) __android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__ );
-#   define pango_print_warn(...)  __android_log_print(ANDROID_LOG_ERROR, "pango", __VA_ARGS__ );
+#  define PANGO_HOST_DEVICE
 #endif
 
-#endif // PANGOLIN_PLATFORM_H
+// Non-standard check that header exists (Clang, GCC 5.X)
+// Useful for
+#if defined(__has_include)
+#  define PANGO_HEADER_EXISTS(x) __has_include(x)
+#else
+#  define PANGO_HEADER_EXISTS(x) 0
+#endif
+
+// Workaround for Apple-Clangs lack of thread_local support
+#if defined(_CLANG_) && defined(_OSX_)
+#  if !__has_feature(cxx_thread_local)
+#     define PANGO_NO_THREADLOCAL
+#  endif
+#endif
+
+#include <pangolin/utils/assert.h>
+#include <pangolin/utils/log.h>

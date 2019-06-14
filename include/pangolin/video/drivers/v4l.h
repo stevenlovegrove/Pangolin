@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_V4L_H
-#define PANGOLIN_V4L_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
@@ -48,7 +47,7 @@ struct buffer {
     size_t length;
 };
 
-class PANGOLIN_EXPORT V4lVideo : public VideoInterface, public VideoUvcInterface
+class PANGOLIN_EXPORT V4lVideo : public VideoInterface, public VideoUvcInterface, public VideoPropertiesInterface
 {
 public:
     V4lVideo(const char* dev_name, io_method io = IO_METHOD_MMAP, unsigned iwidth=0, unsigned iheight=0);
@@ -75,13 +74,28 @@ public:
     //! Implement VideoUvcInterface::IoCtrl()
     int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code);
 
-    void SetExposureUs(int exposure_us);
+    bool GetExposure(int& exp_us);
+
+    bool SetExposure(int exp_us);
+
+    bool GetGain(float& gain);
+
+    bool SetGain(float gain);
 
     int GetFileDescriptor() const{
         return fd;
     }
+
+    //! Access JSON properties of device
+    const picojson::value& DeviceProperties() const;
+
+    //! Access JSON properties of most recently captured frame
+    const picojson::value& FrameProperties() const;
     
 protected:
+    void InitPangoDeviceProperties();
+
+
     int ReadFrame(unsigned char* image);
     void Mainloop();
     
@@ -106,8 +120,9 @@ protected:
     unsigned height;
     float fps;
     size_t image_size;
+
+    picojson::value device_properties;
+    picojson::value frame_properties;
 };
 
 }
-
-#endif // PANGOLIN_V4L_H

@@ -32,6 +32,11 @@
 #include <cstring>
 #include <stdexcept>
 
+#ifdef USE_POSIX_FILE_IO
+#include <unistd.h>
+#include <fcntl.h>
+#endif
+
 using namespace std;
 
 namespace pangolin
@@ -52,12 +57,25 @@ void threadedfilebuf::open(const std::string& filename, size_t buffer_size_bytes
 {
     is_pipe = pangolin::IsPipe(filename);
 
+#ifdef USE_POSIX_FILE_IO
+    if (filenum != -1) {
+#else
     if (file.is_open()) {
+#endif
         close();
     }
 
+#ifdef USE_POSIX_FILE_IO
+    filenum = ::open(filename.c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_SYNC, S_IRWXU);
+#else
     file.open(filename.c_str(), ios::out | ios::binary);
+#endif
+
+#ifdef USE_POSIX_FILE_IO
+    if (filenum == -1) {
+#else
     if(!file.is_open()) {
+#endif
         throw std::runtime_error("Unable to open '" + filename + "' for writing.");
     }
 
@@ -69,7 +87,7 @@ void threadedfilebuf::open(const std::string& filename, size_t buffer_size_bytes
     mem_buffer = new char[static_cast<size_t>(mem_max_size)];
 
     should_run = true;
-    write_thread = boostd::thread(boostd::ref(*this));
+    write_thread = std::thread(std::ref(*this));
 }
 
 void threadedfilebuf::close()
@@ -89,7 +107,12 @@ void threadedfilebuf::close()
         mem_buffer = 0;
     }
 
+#ifdef USE_POSIX_FILE_IO
+    ::close(filenum);
+    filenum = -1;
+#else
     file.close();
+#endif
 }
 
 void threadedfilebuf::soft_close()
@@ -112,7 +135,7 @@ threadedfilebuf::~threadedfilebuf()
 std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_bytes)
 {
     if( num_bytes > mem_max_size ) {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
         // Wait until queue is empty
         while( mem_size > 0 ) {
             cond_dequeued.wait(lock);
@@ -127,7 +150,7 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
     }
 
     {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
         
         // wait until there is space to write into buffer
         while( mem_size + num_bytes > mem_max_size ) {
@@ -167,7 +190,7 @@ int threadedfilebuf::overflow(int c)
     const std::streamsize num_bytes = 1;
 
     {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
 
         // wait until there is space to write into buffer
         while( mem_size + num_bytes > mem_max_size ) {
@@ -222,7 +245,7 @@ void threadedfilebuf::operator()()
         }
 
         {
-            boostd::unique_lock<boostd::mutex> lock(update_mutex);
+            std::unique_lock<std::mutex> lock(update_mutex);
             
             while( mem_size == 0 ) {
                 if(!should_run) return;
@@ -235,11 +258,19 @@ void threadedfilebuf::operator()()
                         mem_max_size - mem_start;
         }
 
+#ifdef USE_POSIX_FILE_IO
+        int bytes_written = ::write(filenum, mem_buffer + mem_start, data_to_write);
+        if(bytes_written == -1)
+        {
+            throw std::runtime_error("Unable to write data.");
+        }
+#else
         std::streamsize bytes_written =
                 file.sputn(mem_buffer + mem_start, data_to_write );
+#endif
 
         {
-            boostd::unique_lock<boostd::mutex> lock(update_mutex);
+            std::unique_lock<std::mutex> lock(update_mutex);
             
             mem_size -= bytes_written;
             mem_start += bytes_written;

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_OUTPUT_H
-#define PANGOLIN_VIDEO_OUTPUT_H
+#pragma once
 
 // Pangolin video output supports various formats using
 // different 3rd party libraries. (Only one right now)
@@ -44,25 +43,12 @@
 //  e.g. ffmpeg://output_file.avi
 //  e.g. ffmpeg:[fps=30,bps=1000000,unique_filename]//output_file.avi
 
-#include <pangolin/video/video.h>
+#include <pangolin/video/video_output_interface.h>
+#include <pangolin/utils/uri.h>
+#include <memory>
 
 namespace pangolin
 {
-
-//! Interface to video recording destinations
-struct PANGOLIN_EXPORT VideoOutputInterface
-{
-    virtual ~VideoOutputInterface() {}
-
-    //! Get format and dimensions of all video streams
-    virtual const std::vector<StreamInfo>& Streams() const = 0;
-
-    virtual void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri ="", const json::value& properties = json::value() ) = 0;
-
-    virtual int WriteStreams(unsigned char* data, const json::value& frame_properties ) = 0;
-
-    virtual bool IsPipe() const = 0;
-};
 
 //! VideoOutput wrap to generically construct instances of VideoOutputInterface.
 class PANGOLIN_EXPORT VideoOutput : public VideoOutputInterface
@@ -76,27 +62,31 @@ public:
     void Open(const std::string& uri);
     void Close();
 
-    const std::vector<StreamInfo>& Streams() const;
+    const std::vector<StreamInfo>& Streams() const override;
 
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri = "", const json::value& properties = json::value() );
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri = "", const picojson::value& properties = picojson::value() ) override;
 
-    int WriteStreams(unsigned char* data, const json::value& frame_properties = json::value() );
-    
-    bool IsPipe() const;
+    int WriteStreams(const unsigned char* data, const picojson::value& frame_properties = picojson::value() ) override;
+
+    bool IsPipe() const override;
+
+    void AddStream(const PixelFormat& pf, size_t w,size_t h,size_t pitch);
+
+    void AddStream(const PixelFormat& pf, size_t w,size_t h);
+
+    void SetStreams(const std::string& uri = "", const picojson::value& properties = picojson::value() );
+
+    size_t SizeBytes(void) const ;
+
+    std::vector<Image<unsigned char>> GetOutputImages(unsigned char* buffer) const ;
+
+    std::vector<Image<unsigned char>> GetOutputImages(std::vector<unsigned char>& buffer) const ;
+
 
 protected:
+    std::vector<StreamInfo> streams;
     Uri uri;
-    VideoOutputInterface* recorder;
+    std::unique_ptr<VideoOutputInterface> recorder;
 };
 
-//! Open VideoOutput Interface from string specification (as described in this files header)
-PANGOLIN_EXPORT
-VideoOutputInterface* OpenVideoOutput(std::string str_uri);
-
-//! Open VideoOutput Interface from Uri specification
-PANGOLIN_EXPORT
-VideoOutputInterface* OpenVideoOutput(const Uri& uri);
-
 }
-
-#endif // PANGOLIN_VIDEO_OUTPUT_H

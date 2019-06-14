@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_HANDLER_H
-#define PANGOLIN_HANDLER_H
+#pragma once
 
 #include <pangolin/display/opengl_render_state.h>
 #include <pangolin/handler/handler_enums.h>
@@ -72,8 +71,11 @@ struct PANGOLIN_EXPORT HandlerScroll : Handler
 struct PANGOLIN_EXPORT Handler3D : Handler
 {
     Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up=AxisNone, float trans_scale=0.01f, float zoom_fraction= PANGO_DFLT_HANDLER3D_ZF);
-    
-    virtual void GetPosNormal(View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision n[3], GLprecision default_z = 1.0);
+
+    virtual bool ValidWinDepth(GLprecision depth);
+    virtual void PixelUnproject( View& view, GLprecision winx, GLprecision winy, GLprecision winz, GLprecision Pc[3]);
+    virtual void GetPosNormal(View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision nw[3], GLprecision default_z = 1.0);
+
     void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state);
     void MouseMotion(View&, int x, int y, int button_state);
@@ -85,6 +87,9 @@ struct PANGOLIN_EXPORT Handler3D : Handler
         return Eigen::Map<const Eigen::Matrix<GLprecision,3,1>>(Pw).cast<double>();
     }
 #endif
+    inline int KeyState() const{
+        return funcKeyState;
+    }
 
 protected:
     OpenGlRenderState* cam_state;
@@ -101,11 +106,11 @@ protected:
     GLprecision Pw[3];
     GLprecision Pc[3];
     GLprecision n[3];
+
+    int funcKeyState;
 };
 
 static Handler StaticHandler;
 static HandlerScroll StaticHandlerScroll;
 
 }
-
-#endif // PANGOLIN_HANDLER_H

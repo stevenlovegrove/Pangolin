@@ -25,14 +25,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_WIDGETS_H
-#define PANGOLIN_WIDGETS_H
+#pragma once
 
 #include <pangolin/display/view.h>
 #include <pangolin/var/var.h>
 #include <pangolin/handler/handler.h>
-#include <pangolin/compat/function.h>
 #include <pangolin/gl/glfont.h>
+
+#include <functional>
 
 namespace pangolin
 {
@@ -74,8 +74,7 @@ struct PANGOLIN_EXPORT Button : public Widget<bool>
     bool down;
 };
 
-#ifdef CPP11_NO_BOOST
-struct PANGOLIN_EXPORT FunctionButton : public Widget<boostd::function<void(void)> >
+struct PANGOLIN_EXPORT FunctionButton : public Widget<std::function<void(void)> >
 {
     FunctionButton(std::string title, VarValueGeneric& tv);
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state);
@@ -87,7 +86,6 @@ struct PANGOLIN_EXPORT FunctionButton : public Widget<boostd::function<void(void
     GLfloat raster[2];
     bool down;
 };
-#endif // CPP11_NO_BOOST
 
 struct PANGOLIN_EXPORT Checkbox : public Widget<bool>
 {
@@ -134,10 +132,10 @@ struct PANGOLIN_EXPORT TextInput : public Widget<std::string>
     void ResizeChildren();
     GlText gltext;
     GLfloat raster[2];
+    bool can_edit;
     bool do_edit;
     int sel[2];
 };
 
 
 }
-#endif // PANGOLIN_WIDGETS_H

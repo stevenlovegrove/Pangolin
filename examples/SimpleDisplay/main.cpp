@@ -32,7 +32,7 @@ void SampleMethod()
 }
 
 
-int main( int argc, char* argv[] )
+int main(/*int argc, char* argv[]*/)
 {  
   // Load configuration data
   pangolin::ParseVarsFile("app.cfg");
@@ -77,14 +77,11 @@ int main( int argc, char* argv[] )
 
   pangolin::Var<bool> record_cube("ui.Record_Cube",false,false);
 
-#ifdef CPP11_NO_BOOST
-  // boost::function / std::function objects can be used for Var's too.
-  // In C++11, these work great with closures.
+  // std::function objects can be used for Var's too. These work great with C++11 closures.
   pangolin::Var<std::function<void(void)> > reset("ui.Reset", SampleMethod);
-#endif
 
   // Demonstration of how we can register a keyboard hook to alter a Var
-  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'b', pangolin::SetVarFunctor<double>("ui.A Double", 3.5));
+  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'b', pangolin::SetVarFunctor<double>("ui.A_Double", 3.5));
 
   // Demonstration of how we can register a keyboard hook to trigger a method
   pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'r', SampleMethod);

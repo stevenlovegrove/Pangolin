@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_URI_H
-#define PANGOLIN_URI_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/params.h>
@@ -40,6 +39,7 @@ class PANGOLIN_EXPORT Uri : public Params
 public:
     std::string scheme;
     std::string url;
+    std::string full_uri;
 };
 
 //! Parse string as Video URI
@@ -47,5 +47,3 @@ PANGOLIN_EXPORT
 Uri ParseUri(const std::string& str_uri);
 
 }
-
-#endif // PANGOLIN_URI_H

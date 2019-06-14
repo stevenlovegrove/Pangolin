@@ -25,17 +25,17 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_DISPLAY_H
-#define PANGOLIN_DISPLAY_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
-#include <pangolin/compat/function.h>
 #include <pangolin/handler/handler_enums.h>
 #include <pangolin/utils/params.h>
 #include <pangolin/display/window.h>
 
+#include <functional>
 #include <string>
+#include <memory>
 
 /*! \file display.h
  * This file contains a number of global methods for creating and
@@ -89,9 +89,13 @@ namespace pangolin
   PANGOLIN_EXPORT
   void FinishFrame();
 
-  /// Request that the program exit.
+  /// Request that the window close.
   PANGOLIN_EXPORT
   void Quit();
+
+  /// Request that all windows close.
+  PANGOLIN_EXPORT
+  void QuitAll();
 
   /// Returns true if user has requested to close OpenGL window.
   PANGOLIN_EXPORT
@@ -116,7 +120,7 @@ namespace pangolin
   /// Request to be notified via functor when key is pressed.
   /// Functor may take one parameter which will equal the key pressed
   PANGOLIN_EXPORT
-  void RegisterKeyPressCallback(int key, boostd::function<void(void)> func);
+  void RegisterKeyPressCallback(int key, std::function<void(void)> func);
 
   /// Save window contents to image.
   PANGOLIN_EXPORT
@@ -148,8 +152,7 @@ namespace pangolin
     PANGOLIN_EXPORT
     void Resize(int width, int height);
 
-    /// Event based rendering entry point (from e.g.
-    /// glutMainLoop). Not currently supported.
+    /// Event based rendering entry point. Not currently supported.
     PANGOLIN_EXPORT
     void Display();
 
@@ -213,6 +216,4 @@ namespace pangolin
   };
 
 }
-
-#endif // PANGOLIN_DISPLAY_H
 

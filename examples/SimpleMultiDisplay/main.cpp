@@ -7,7 +7,7 @@ void setImageData(unsigned char * imageArray, int size){
   }
 }
 
-int main( int /*argc*/, char* argv[] )
+int main(/*int argc, char* argv[]*/)
 {
   // Create OpenGL window in single line
   pangolin::CreateWindowAndBind("Main",640,480);

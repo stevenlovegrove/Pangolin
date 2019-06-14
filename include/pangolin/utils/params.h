@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PARAMS_H
-#define PANGOLIN_PARAMS_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/type_convert.h>
@@ -41,6 +40,15 @@ class PANGOLIN_EXPORT Params
 {
 public:
     typedef std::vector<std::pair<std::string,std::string>> ParamMap;
+
+    Params()
+    {
+    }
+
+    Params(std::initializer_list<std::pair<std::string,std::string>> l)
+        : params(l)
+    {
+    }
 
     bool Contains(const std::string& key) const
     {
@@ -70,5 +78,3 @@ public:
 };
 
 }
-
-#endif // PANGOLIN_PARAMS_H

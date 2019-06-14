@@ -27,7 +27,7 @@ MimeType=application/x-pango;image/x-portable-graymap;image/x-portable-pixmap;im
     )
 
     add_custom_target(
-        install-mime-info
+        register-mime-info-videoviewer
         COMMAND mkdir -p $ENV{HOME}/.local/share/mime/packages/
         COMMAND mkdir -p $ENV{HOME}/.local/share/applications/
         COMMAND mkdir -p $ENV{HOME}/.local/share/icons/hicolor/scalable/mimetypes/
@@ -41,3 +41,13 @@ MimeType=application/x-pango;image/x-portable-graymap;image/x-portable-pixmap;im
         VERBATIM
     )
 endif()
+
+
+#######################################################
+## Install
+
+install(TARGETS VideoViewer
+  RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+)

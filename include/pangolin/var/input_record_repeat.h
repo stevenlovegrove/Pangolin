@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_INPUT_RECORD_REPEAT_H
-#define PANGOLIN_INPUT_RECORD_REPEAT_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 
@@ -85,5 +84,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_INPUT_RECORD_REPEAT_H

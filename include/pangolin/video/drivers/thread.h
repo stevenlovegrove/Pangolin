@@ -25,12 +25,12 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_THREAD_H
-#define PANGOLIN_VIDEO_THREAD_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
 
+#include <memory>
 #include <pangolin/utils/fix_size_buffer_queue.h>
 
 namespace pangolin
@@ -42,7 +42,7 @@ class PANGOLIN_EXPORT ThreadVideo :  public VideoInterface, public VideoProperti
         public BufferAwareVideoInterface, public VideoFilterInterface
 {
 public:
-    ThreadVideo(VideoInterface* videoin, size_t num_buffers);
+    ThreadVideo(std::unique_ptr<VideoInterface>& videoin, size_t num_buffers);
     ~ThreadVideo();
 
     //! Implement VideoInput::Start()
@@ -63,9 +63,9 @@ public:
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
-    const json::value& DeviceProperties() const;
+    const picojson::value& DeviceProperties() const;
 
-    const json::value& FrameProperties() const;
+    const picojson::value& FrameProperties() const;
 
     uint32_t AvailableFrames() const;
 
@@ -84,24 +84,29 @@ protected:
         {
         }
 
+        // No copy constructor.
+        GrabResult(const GrabResult& o) = delete;
+
+        // Default move constructor
+        GrabResult(GrabResult&& o) = default;
+
         bool return_status;
-        unsigned char* buffer;
-        json::value frame_properties;
+        std::unique_ptr<unsigned char[]> buffer;
+        picojson::value frame_properties;
     };
 
+    std::unique_ptr<VideoInterface> src;
     std::vector<VideoInterface*> videoin;
 
     bool quit_grab_thread;
     FixSizeBuffersQueue<GrabResult> queue;
 
-    boostd::condition_variable cv;
-    boostd::mutex cvMtx;
-    boostd::thread grab_thread;
+    std::condition_variable cv;
+    std::mutex cvMtx;
+    std::thread grab_thread;
 
-    mutable json::value device_properties;
-    json::value frame_properties;
+    mutable picojson::value device_properties;
+    picojson::value frame_properties;
 };
 
 }
-
-#endif // PANGOLIN_VIDEO_THREAD_H

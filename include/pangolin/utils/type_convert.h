@@ -25,13 +25,12 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_TYPE_CONVERT_H
-#define PANGOLIN_TYPE_CONVERT_H
+#pragma once
 
 #include <iostream>
 #include <sstream>
 
-#include <pangolin/compat/function.h>
+#include <functional>
 #include <pangolin/compat/type_traits.h>
 
 namespace pangolin
@@ -46,26 +45,26 @@ namespace std
 // Dummy methods to serialise functions / functors / lambdas etc
 #ifdef CALLEE_HAS_VARIADIC_TEMPLATES
 template<typename Ret, typename... Args>
-inline std::istream& operator>>(std::istream& /*is*/, boostd::function<Ret(Args...)>& /*f*/) {
+inline std::istream& operator>>(std::istream& /*is*/, std::function<Ret(Args...)>& /*f*/) {
     throw pangolin::BadInputException();
 }
 template<typename Ret, typename... Args>
-inline std::ostream& operator<<(std::ostream& /*os*/, const boostd::function<Ret(Args...)>& /*f*/) {
+inline std::ostream& operator<<(std::ostream& /*os*/, const std::function<Ret(Args...)>& /*f*/) {
     throw pangolin::BadInputException();
 }
 #else
 template<typename Ret, typename Arg>
-inline std::istream& operator>>(std::istream& /*is*/, boostd::function<Ret(Arg)>& /*f*/) {
+inline std::istream& operator>>(std::istream& /*is*/, std::function<Ret(Arg)>& /*f*/) {
     throw pangolin::BadInputException();
 }
 template<typename Ret, typename Arg>
-inline std::ostream& operator<<(std::ostream& /*os*/, const boostd::function<Ret(Arg)>& /*f*/) {
+inline std::ostream& operator<<(std::ostream& /*os*/, const std::function<Ret(Arg)>& /*f*/) {
     throw pangolin::BadInputException();
 }
-inline std::istream& operator>>(std::istream& /*is*/, boostd::function<void(void)>& /*f*/) {
+inline std::istream& operator>>(std::istream& /*is*/, std::function<void(void)>& /*f*/) {
     throw pangolin::BadInputException();
 }
-inline std::ostream& operator<<(std::ostream& /*os*/, const boostd::function<void(void)>& /*f*/) {
+inline std::ostream& operator<<(std::ostream& /*os*/, const std::function<void(void)>& /*f*/) {
     throw pangolin::BadInputException();
 }
 #endif
@@ -128,7 +127,7 @@ struct Convert<bool,std::string> {
 // From strings
 template<typename T>
 struct Convert<T,std::string, typename pangolin::enable_if_c<
-        !boostd::is_same<T,std::string>::value
+        !std::is_same<T,std::string>::value
         >::type > {
     static T Do(const std::string& src)
     {
@@ -146,7 +145,7 @@ struct Convert<T,std::string, typename pangolin::enable_if_c<
 // To strings
 template<typename S>
 struct Convert<std::string, S, typename pangolin::enable_if_c<
-        !boostd::is_same<S,std::string>::value
+        !std::is_same<S,std::string>::value
         >::type > {
     static std::string Do(const S& src)
     {
@@ -159,9 +158,9 @@ struct Convert<std::string, S, typename pangolin::enable_if_c<
 // Between scalars
 template<typename T, typename S>
 struct Convert<T, S, typename pangolin::enable_if_c<
-        boostd::is_scalar<T>::value && !boostd::is_same<T, bool>::value &&
-        boostd::is_scalar<S>::value && !boostd::is_same<S, bool>::value &&
-        !boostd::is_same<S,T>::value
+        std::is_scalar<T>::value && !std::is_same<T, bool>::value &&
+        std::is_scalar<S>::value && !std::is_same<S, bool>::value &&
+        !std::is_same<S,T>::value
         >::type > {
     static T Do(const S& src)
     {
@@ -172,9 +171,9 @@ struct Convert<T, S, typename pangolin::enable_if_c<
 // From Scalars to bool (different than scalar definition to avoid MSVC Warnings)
 template<typename T, typename S>
 struct Convert<T, S, typename pangolin::enable_if_c<
-    boostd::is_same<T, bool>::value &&
-    boostd::is_scalar<S>::value &&
-    !boostd::is_same<S, T>::value
+    std::is_same<T, bool>::value &&
+    std::is_scalar<S>::value &&
+    !std::is_same<S, T>::value
 >::type > {
     static T Do(const S& src)
     {
@@ -185,9 +184,9 @@ struct Convert<T, S, typename pangolin::enable_if_c<
 // From bool to Scalars (different than scalar definition to avoid MSVC Warnings)
 template<typename T, typename S>
 struct Convert<T, S, typename pangolin::enable_if_c<
-    boostd::is_scalar<T>::value &&
-    boostd::is_same<S, bool>::value &&
-    !boostd::is_same<S, T>::value
+    std::is_scalar<T>::value &&
+    std::is_same<S, bool>::value &&
+    !std::is_same<S, T>::value
 >::type > {
     static T Do(const S& src)
     {
@@ -209,5 +208,3 @@ T FromString(const std::string& src)
 
 
 }
-
-#endif // PANGOLIN_TYPE_CONVERT_H

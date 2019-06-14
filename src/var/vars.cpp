@@ -29,10 +29,10 @@
 #include <pangolin/var/varstate.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/picojson.h>
+#include <pangolin/utils/transform.h>
 
 #include <iostream>
 #include <fstream>
-#include <sstream>
 
 using namespace std;
 
@@ -82,77 +82,16 @@ void RegisterGuiVarChangedCallback(GuiVarChangedCallbackFn callback, void* data,
     VarState::I().gui_var_changed_callbacks.push_back(GuiVarChangedCallback(filter,callback,data));
 }
 
-// Find the open brace preceeded by '$'
-const char* FirstOpenBrace(const char* str)
-{
-    bool symbol = false;
-    
-    for(; *str != '\0'; ++str ) {
-        if( *str == '$') {
-            symbol = true;
-        }else{
-            if( symbol ) {
-                if( *str == '{' ) {
-                    return str;
-                } else {
-                    symbol = false;
-                }
-            }
-        }
-    }
-    return 0;
-}
-
-// Find the first matching end brace. str includes open brace
-const char* MatchingEndBrace(const char* str)
-{
-    int b = 0;
-    for(; *str != '\0'; ++str ) {
-        if( *str == '{' ) {
-            ++b;
-        }else if( *str == '}' ) {
-            --b;
-            if( b == 0 ) {
-                return str;
-            }
-        }
-    }
-    return 0;
-}
-
 // Recursively expand val
 string ProcessVal(const string& val )
 {
-    string expanded = val;
-    
-    while(true)
-    {
-        const char* brace = FirstOpenBrace(expanded.c_str());
-        if(brace)
-        {
-            const char* endbrace = MatchingEndBrace(brace);
-            if( endbrace )
-            {
-                ostringstream oss;
-                oss << std::string(expanded.c_str(), brace-1);
-
-                const string inexpand = ProcessVal( std::string(brace+1,endbrace) );
-                if( VarState::I().Exists(inexpand) ) {
-                    oss << VarState::I()[inexpand]->str->Get();
-                }else{
-                    pango_print_error("Unabled to expand: [%s].\nMake sure it is defined and terminated with a semi-colon.\n", inexpand.c_str() );
-                    oss << "#";
-                }
-
-                oss << std::string(endbrace+1, expanded.c_str() + expanded.length() );
-                expanded = oss.str();
-                continue;
-            }
+    return Transform(val, [](const std::string& k) -> std::string {
+        if( VarState::I().Exists(k) ) {
+             return VarState::I()[k]->str->Get();
+        }else{
+            return std::string("#");
         }
-        break;
-    }
-    
-    return expanded;
+    });
 }
 
 void AddVar(const std::string& name, const string& val )
@@ -240,17 +179,17 @@ void LoadJsonFile(const std::string& filename, const string &prefix)
 {
     bool some_change = false;
 
-    json::value file_json(json::object_type,true);
+    picojson::value file_json(picojson::object_type,true);
     std::ifstream f(filename);
     if(f.is_open()) {
-        const std::string err = json::parse(file_json,f);
+        const std::string err = picojson::parse(file_json,f);
         if(err.empty()) {
             if(file_json.contains("vars") ) {
-                json::value vars = file_json["vars"];
-                if(vars.is<json::object>()) {
-                    for(json::object::iterator
-                        i = vars.get<json::object>().begin();
-                        i!= vars.get<json::object>().end();
+                picojson::value vars = file_json["vars"];
+                if(vars.is<picojson::object>()) {
+                    for(picojson::object::iterator
+                        i = vars.get<picojson::object>().begin();
+                        i!= vars.get<picojson::object>().end();
                         ++i)
                     {
                         const std::string& name = i->first;
@@ -286,7 +225,7 @@ void LoadJsonFile(const std::string& filename, const string &prefix)
 PANGOLIN_EXPORT
 void SaveJsonFile(const std::string& filename, const string &prefix)
 {
-    json::value vars(json::object_type,true);
+    picojson::value vars(picojson::object_type,true);
 
     for(VarState::VarStoreAdditions::const_iterator
         i  = VarState::I().var_adds.begin();
@@ -298,14 +237,14 @@ void SaveJsonFile(const std::string& filename, const string &prefix)
             try{
                 const std::string val = VarState::I()[name]->str->Get();
                 vars[name] = val;
-            }catch(BadInputException)
+            }catch(const BadInputException&)
             {
                 // Ignore things we can't serialise
             }
         }
     }
 
-    json::value file_json(json::object_type,true);
+    picojson::value file_json(picojson::object_type,true);
     file_json["pangolin_version"] = PANGOLIN_VERSION_STRING;
     file_json["vars"] = vars;
 

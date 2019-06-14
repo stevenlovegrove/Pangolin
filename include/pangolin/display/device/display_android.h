@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_DISPLAY_ANDROID_H
-#define PANGOLIN_DISPLAY_ANDROID_H
+#pragma once
 
 #include <poll.h>
 #include <pthread.h>
@@ -332,5 +331,3 @@ void android_app_post_exec_cmd(struct android_app* android_app, int8_t cmd);
 #ifdef __cplusplus
 }
 #endif
-
-#endif // PANGOLIN_DISPLAY_ANDROID_H

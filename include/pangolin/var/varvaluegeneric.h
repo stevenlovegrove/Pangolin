@@ -25,19 +25,21 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VARVALUEGENERIC_H
-#define PANGOLIN_VARVALUEGENERIC_H
+#pragma once
 
 #include <string>
 
 namespace pangolin
 {
+constexpr int META_FLAG_NONE      = 0x0000;
+constexpr int META_FLAG_TOGGLE    = 0x0001;
+constexpr int META_FLAG_READONLY  = 0x0002;
 
 struct VarMeta
 {
     VarMeta() :
         increment(0.),
-        flags(0),
+        flags(META_FLAG_NONE),
         gui_changed(false),
         logscale(false),
         generic(false)
@@ -83,5 +85,3 @@ public:
 };
 
 }
-
-#endif // PANGOLIN_VARVALUEGENERIC_H

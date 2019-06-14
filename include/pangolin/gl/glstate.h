@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLSTATE_H
-#define PANGOLIN_GLSTATE_H
+#pragma once
 
 #include <pangolin/gl/glinclude.h>
 #include <stack>
@@ -219,5 +218,3 @@ public:
 };
 
 }
-
-#endif // PANGOLIN_GLSTATE_H

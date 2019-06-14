@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pangolin/compat/memory.h>
+#include <memory>
 
 #include <string>
 
@@ -18,8 +18,8 @@ namespace pangolin
     virtual std::string name() = 0;
   };
 
-  boostd::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffer(const
+  std::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffer(const
     std::string& name, size_t size);
-  boostd::shared_ptr<SharedMemoryBufferInterface> open_named_shared_memory_buffer(const
+  std::shared_ptr<SharedMemoryBufferInterface> open_named_shared_memory_buffer(const
     std::string& name, bool readwrite);
 }

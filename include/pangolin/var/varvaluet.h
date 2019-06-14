@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VARVALUET_H
-#define PANGOLIN_VARVALUET_H
+#pragma once
 
 #include <pangolin/var/varvaluegeneric.h>
 #include <pangolin/compat/type_traits.h>
@@ -38,12 +37,10 @@ template<typename T>
 class VarValueT : public VarValueGeneric
 {
 public:
-    typedef typename boostd::remove_reference<T>::type VarT;
+    typedef typename std::remove_reference<T>::type VarT;
 
     virtual const VarT& Get() const = 0;
     virtual void Set(const VarT& val) = 0;
 };
 
 }
-
-#endif // PANGOLIN_VARVALUET_H

@@ -25,20 +25,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_COMPAT_TYPE_TRAITS_H
-#define PANGOLIN_COMPAT_TYPE_TRAITS_H
+#pragma once
 
 #include <pangolin/platform.h>
 
 #include <typeinfo>
 
-#ifdef CPP11_NO_BOOST
-    #include <type_traits>
-#else
-    #include <boost/type_traits.hpp>
-#endif
-
-#include <pangolin/compat/boostd.h>
+#include <type_traits>
 
 // enable_if From Boost
 namespace pangolin
@@ -54,5 +47,3 @@ namespace pangolin
     template <class Cond, class T = void>
     struct enable_if : public enable_if_c<Cond::value, T> {};
 }
-
-#endif // PANGOLIN_COMPAT_TYPE_TRAITS_H

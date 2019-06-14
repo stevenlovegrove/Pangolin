@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_FIREWIRE_H
-#define PANGOLIN_FIREWIRE_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
@@ -253,5 +252,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_FIREWIRE_H

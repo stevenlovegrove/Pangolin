@@ -25,11 +25,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PANGO_VIDEO_OUTPUT_H
-#define PANGOLIN_PANGO_VIDEO_OUTPUT_H
+#pragma once
 
+#include <pangolin/log/packetstream_writer.h>
 #include <pangolin/video/video_output.h>
-#include <pangolin/log/packetstream.h>
+
+#include <pangolin/video/stream_encoder_factory.h>
+
+#include <functional>
 
 namespace pangolin
 {
@@ -37,29 +40,31 @@ namespace pangolin
 class PANGOLIN_EXPORT PangoVideoOutput : public VideoOutputInterface
 {
 public:
-    PangoVideoOutput(const std::string& filename, size_t buffer_size_bytes = 100*1024*1024);
+    PangoVideoOutput(const std::string& filename, size_t buffer_size_bytes, const std::map<size_t, std::string> &stream_encoder_uris);
     ~PangoVideoOutput();
 
-    const std::vector<StreamInfo>& Streams() const PANGOLIN_OVERRIDE;
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const json::value& device_properties) PANGOLIN_OVERRIDE;
-    int WriteStreams(unsigned char* data, const json::value& frame_properties) PANGOLIN_OVERRIDE;
-    bool IsPipe() const PANGOLIN_OVERRIDE;
+    const std::vector<StreamInfo>& Streams() const override;
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const picojson::value& device_properties) override;
+    int WriteStreams(const unsigned char* data, const picojson::value& frame_properties) override;
+    bool IsPipe() const override;
 
 protected:
-    void WriteHeader();
+//    void WriteHeader();
 
     std::vector<StreamInfo> streams;
     std::string input_uri;
     const std::string filename;
-    json::value device_properties;
+    picojson::value device_properties;
 
     PacketStreamWriter packetstream;
     size_t packetstream_buffer_size_bytes;
     int packetstreamsrcid;
-    bool first_frame;
     size_t total_frame_size;
     bool is_pipe;
+
+    bool fixed_size;
+    std::map<size_t, std::string> stream_encoder_uris;
+    std::vector<ImageEncoderFunc> stream_encoders;
 };
 
 }
-#endif // PANGOLIN_PANGO_VIDEO_OUTPUT_H

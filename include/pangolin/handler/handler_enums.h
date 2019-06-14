@@ -25,14 +25,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_HANDLER_ENUMS_H
-#define PANGOLIN_HANDLER_ENUMS_H
+#pragma once
 
 namespace pangolin
 {
 
 // Supported Key modifiers for GlobalKeyPressCallback.
-// e.g. PANGO_CTRL + 'r', PANGO_SPECIAL + GLUT_KEY_RIGHT, etc.
+// e.g. PANGO_CTRL + 'r', PANGO_SPECIAL + PANGO_KEY_RIGHT, etc.
 const int PANGO_SPECIAL = 128;
 const int PANGO_CTRL = -96;
 const int PANGO_OPTN = 132;
@@ -93,5 +92,3 @@ enum InputSpecial
 };
 
 }
-
-#endif // PANGOLIN_HANDLER_ENUMS_H

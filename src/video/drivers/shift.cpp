@@ -26,24 +26,26 @@
  */
 
 #include <pangolin/video/drivers/shift.h>
+#include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
 {
 
-ShiftVideo::ShiftVideo(VideoInterface* src, VideoPixelFormat out_fmt, int shift_right_bits, unsigned int mask)
-    : size_bytes(0), buffer(0), shift_right_bits(shift_right_bits), mask(mask)
+ShiftVideo::ShiftVideo(std::unique_ptr<VideoInterface> &src_, PixelFormat out_fmt, int shift_right_bits, unsigned int mask)
+    : src(std::move(src_)), size_bytes(0), buffer(0), shift_right_bits(shift_right_bits), mask(mask)
 {
     if(!src) {
         throw VideoException("ShiftVideo: VideoInterface in must not be null");
     }
-    videoin.push_back(src);
+    videoin.push_back(src.get());
 
     for(size_t s=0; s< src->Streams().size(); ++s) {
         const size_t w = src->Streams()[s].Width();
         const size_t h = src->Streams()[s].Height();
 
         // Check compatibility of formats
-        const VideoPixelFormat in_fmt = src->Streams()[s].PixFormat();
+        const PixelFormat in_fmt = src->Streams()[s].PixFormat();
         if(in_fmt.channels != out_fmt.channels) {
             throw VideoException("ShiftVideo: output format is not compatible with input format for shifting.");
         }
@@ -62,7 +64,6 @@ ShiftVideo::ShiftVideo(VideoInterface* src, VideoPixelFormat out_fmt, int shift_
 ShiftVideo::~ShiftVideo()
 {
     delete[] buffer;
-    delete videoin[0];
 }
 
 //! Implement VideoInput::Start()
@@ -105,7 +106,7 @@ void DoShift16to8(
 
 //! Implement VideoInput::GrabNext()
 bool ShiftVideo::GrabNext( unsigned char* image, bool wait )
-{    
+{
     if(videoin[0]->GrabNext(buffer,wait)) {
         for(size_t s=0; s<streams.size(); ++s) {
             Image<unsigned char> img_in  = videoin[0]->Streams()[s].StreamImage(buffer);
@@ -138,5 +139,21 @@ std::vector<VideoInterface*>& ShiftVideo::InputStreams()
     return videoin;
 }
 
+PANGOLIN_REGISTER_FACTORY(ShiftVideo)
+{
+    struct ShiftVideoFactory final : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
+            const int shift_right = uri.Get<int>("shift", 0);
+            const int mask = uri.Get<int>("mask",  0xffff);
+
+            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+            return std::unique_ptr<VideoInterface>(
+                new ShiftVideo(subvid, PixelFormatFromString("GRAY8"), shift_right, mask)
+            );
+        }
+    };
+
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<ShiftVideoFactory>(), 10, "shift");
+}
 
 }

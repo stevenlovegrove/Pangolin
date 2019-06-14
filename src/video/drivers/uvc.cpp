@@ -25,7 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/drivers/uvc.h>
+#include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
 {
@@ -34,26 +36,33 @@ UvcVideo::UvcVideo(int vendor_id, int product_id, const char* sn, int device_id,
     : ctx_(NULL),
       dev_(NULL),
       devh_(NULL),
-      frame_(NULL)
+      frame_(NULL),
+      is_streaming(false)
 {
     uvc_init(&ctx_, NULL);
     if(!ctx_) {
         throw VideoException("Unable to open UVC Context");
     }
-    
+
     InitDevice(vendor_id, product_id, sn, device_id, width, height, fps);
+    InitPangoDeviceProperties();
+
+    // FIX: CRASHING IF WE DON'T START STREAMING STRAIGHT AWAY
+
     Start();
 }
 
 UvcVideo::~UvcVideo()
 {
     DeinitDevice();
-    
-//    if (ctx_) {
-//        // Work out how to kill this properly
-//        uvc_exit(ctx_);
-//        ctx_ = 0;
-//    }   
+
+    if(devh_) uvc_close(devh_);
+    if(dev_) uvc_unref_device(dev_);
+
+    if (ctx_) {
+        uvc_exit(ctx_);
+        ctx_ = 0;
+    }
 }
 
 uvc_error_t UvcVideo::FindDevice(
@@ -65,6 +74,10 @@ uvc_error_t UvcVideo::FindDevice(
   uvc_device_t *test_dev;
 
   ret = uvc_get_device_list(ctx, &list);
+
+  int cnt = 0;
+  while(list[cnt++]!=NULL);
+  pango_print_info("UVC Descriptor list contains %d devices.\n", (cnt-1));
 
   if (ret != UVC_SUCCESS) {
     return ret;
@@ -79,6 +92,7 @@ uvc_error_t UvcVideo::FindDevice(
 
     if (uvc_get_device_descriptor(test_dev, &desc) != UVC_SUCCESS)
       continue;
+
 
     const bool matches = (!vid || desc->idVendor == vid)
             && (!pid || desc->idProduct == pid)
@@ -118,7 +132,7 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int w
     if(!dev_) {
         throw VideoException("Unable to open UVC Device - no pointer returned.");
     }
-    
+
     uvc_error_t open_err = uvc_open(dev_, &devh_);
     if (open_err != UVC_SUCCESS) {
         uvc_perror(open_err, "uvc_open");
@@ -127,7 +141,7 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int w
     }
 
     //uvc_print_diag(devh_, stderr);
-    
+
     uvc_error_t mode_err = uvc_get_stream_ctrl_format_size(
                 devh_, &ctrl_,
                 UVC_FRAME_FORMAT_ANY,
@@ -135,7 +149,7 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int w
                 fps);
 
     //uvc_print_stream_ctrl(&ctrl_, stderr);
-            
+
     if (mode_err != UVC_SUCCESS) {
         uvc_perror(mode_err, "uvc_get_stream_ctrl_format_size");
         uvc_close(devh_);
@@ -152,7 +166,7 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int w
     }
 
     // Default to greyscale.
-    VideoPixelFormat pfmt = VideoFormatFromString("GRAY8");
+    PixelFormat pfmt = PixelFormatFromString("GRAY8");
 
     const uvc_format_desc_t* uvc_fmt = uvc_get_format_descs(devh_);
     while( uvc_fmt->bFormatIndex != ctrl_.bFormatIndex && uvc_fmt ) {
@@ -162,51 +176,64 @@ void UvcVideo::InitDevice(int vid, int pid, const char* sn, int device_id, int w
     if(uvc_fmt) {
         // TODO: Use uvc_fmt->fourccFormat
         if( uvc_fmt->bBitsPerPixel == 16 ) {
-            pfmt = VideoFormatFromString("GRAY16LE");
+            pfmt = PixelFormatFromString("GRAY16LE");
         }
     }
-    
+
     const StreamInfo stream_info(pfmt, width, height, (width*pfmt.bpp)/8, 0);
     streams.push_back(stream_info);
+}
+
+void UvcVideo::InitPangoDeviceProperties()
+{
+    // Store camera details in device properties
+    device_properties["BusNumber"] = std::to_string(uvc_get_bus_number(dev_));
+    device_properties["DeviceAddress"] = std::to_string(uvc_get_device_address(dev_));
+    device_properties[PANGO_HAS_TIMING_DATA] = true;
 }
 
 void UvcVideo::DeinitDevice()
 {
     Stop();
-    
+
     if (frame_) {
         uvc_free_frame(frame_);
         frame_ = 0;
-    }    
+    }
 }
 
 void UvcVideo::Start()
 {
-    uvc_error_t stream_err = uvc_stream_start(strm_, NULL, this, 0);
-    
-    if (stream_err != UVC_SUCCESS) {
-        uvc_perror(stream_err, "uvc_stream_start");
-        uvc_close(devh_);
-        uvc_unref_device(dev_);
-        throw VideoException("Unable to start streaming.");
-    }
-    
-    if (frame_) {
-        uvc_free_frame(frame_);
-    }
-    
-    size_bytes = ctrl_.dwMaxVideoFrameSize;
-    frame_ = uvc_allocate_frame(size_bytes);
-    if(!frame_) {
-        throw VideoException("Unable to allocate frame.");
+    if(!is_streaming) {
+        uvc_error_t stream_err = uvc_stream_start(strm_, NULL, this, 0);
+
+        if (stream_err != UVC_SUCCESS) {
+            uvc_perror(stream_err, "uvc_stream_start");
+            uvc_close(devh_);
+            uvc_unref_device(dev_);
+            throw VideoException("Unable to start streaming.");
+        }else{
+            is_streaming = true;
+        }
+
+        if (frame_) {
+            uvc_free_frame(frame_);
+        }
+
+        size_bytes = ctrl_.dwMaxVideoFrameSize;
+        frame_ = uvc_allocate_frame(size_bytes);
+        if(!frame_) {
+            throw VideoException("Unable to allocate frame.");
+        }
     }
 }
 
 void UvcVideo::Stop()
 {
-    if(devh_) {
+    if(is_streaming && devh_) {
         uvc_stop_streaming(devh_);
     }
+    is_streaming = false;
 }
 
 size_t UvcVideo::SizeBytes() const
@@ -223,13 +250,15 @@ bool UvcVideo::GrabNext( unsigned char* image, bool wait )
 {
     uvc_frame_t* frame = NULL;
     uvc_error_t err = uvc_stream_get_frame(strm_, &frame, wait ? 0 : -1);
-    
+
     if(err!= UVC_SUCCESS) {
         pango_print_error("UvcVideo Error: %s", uvc_strerror(err) );
         return false;
     }else{
         if(frame) {
             memcpy(image, frame->data, frame->data_bytes );
+            // This is a hack, this ts sould come from the device.
+            frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
             return true;
         }else{
             if(wait) {
@@ -252,6 +281,84 @@ int UvcVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, U
     }else{
         return uvc_get_ctrl(devh_, unit, ctrl, data, len, (uvc_req_code)req_code);
     }
+}
+
+bool UvcVideo::SetExposure(int exp_us)
+{
+    uint32_t e = uint32_t(exp_us);
+
+    if (uvc_set_exposure_abs(devh_, e) < 0) {
+        pango_print_warn("UvcVideo::setExposure() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        return true;
+    }
+}
+
+bool UvcVideo::GetExposure(int& exp_us)
+{
+    uint32_t e;
+    if (uvc_get_exposure_abs(devh_, &e, uvc_req_code::UVC_GET_CUR) < 0) {
+        pango_print_warn("UvcVideo::GetExposure() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        exp_us = e;
+        return true;
+    }
+}
+
+bool UvcVideo::SetGain(float gain)
+{
+    uint16_t g = uint16_t(gain);
+
+    if (uvc_set_gain(devh_, g) < 0) {
+        pango_print_warn("UvcVideo::setGain() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        return true;
+    }
+}
+
+bool UvcVideo::GetGain(float& gain)
+{
+    uint16_t g;
+    if (uvc_get_gain(devh_, &g, uvc_req_code::UVC_GET_CUR) < 0) {
+        pango_print_warn("UvcVideo::GetGain() ioctl error: %s\n", strerror(errno));
+        return false;
+    } else {
+        gain = g;
+        return true;
+    }
+}
+
+//! Access JSON properties of device
+const picojson::value& UvcVideo::DeviceProperties() const
+{
+        return device_properties;
+}
+
+//! Access JSON properties of most recently captured frame
+const picojson::value& UvcVideo::FrameProperties() const
+{
+    return frame_properties;
+}
+
+PANGOLIN_REGISTER_FACTORY(UvcVideo)
+{
+    struct UvcVideoFactory final : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
+            int vid = 0;
+            int pid = 0;
+            std::istringstream(uri.Get<std::string>("vid","0x0000")) >> std::hex >> vid;
+            std::istringstream(uri.Get<std::string>("pid","0x0000")) >> std::hex >> pid;
+            const unsigned int dev_id = uri.Get<int>("num",0);
+            const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+            const unsigned int fps = uri.Get<unsigned int>("fps", 0); // 0 means unspecified.
+            return std::unique_ptr<VideoInterface>( new UvcVideo(vid,pid,0,dev_id,dim.x,dim.y,fps) );
+        }
+    };
+
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<UvcVideoFactory>(), 10, "uvc");
 }
 
 }

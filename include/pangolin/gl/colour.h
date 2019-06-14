@@ -25,8 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_COLOUR
-#define PANGOLIN_COLOUR
+#pragma once
+
+#include <cmath>
 
 #include <stdexcept>
 
@@ -60,18 +61,18 @@ struct Colour
 
     /// Default constructs white.
     inline Colour()
-        : red(1.0), green(1.0), blue(1.0), alpha(1.0)
+        : red(1.0f), green(1.0f), blue(1.0f), alpha(1.0f)
     {
     }
 
     /// Construct from component values
-    inline Colour(float red, float green, float blue, float alpha = 1.0)
+    inline Colour(const float red, const float green, const float blue, const float alpha = 1.0f)
         : red(red), green(green), blue(blue), alpha(alpha)
     {
     }
 
     /// Construct from rgba array.
-    inline Colour(float rgba[4])
+    inline Colour(const float rgba[4])
     {
         r = rgba[0];
         g = rgba[1];
@@ -86,7 +87,7 @@ struct Colour
     }
 
     /// Return this colour with alpha adjusted.
-    inline Colour WithAlpha(float alpha)
+    inline Colour WithAlpha(const float alpha)
     {
         return Colour(r,g,b,alpha);
     }
@@ -95,7 +96,7 @@ struct Colour
     /// @param hue Colour hue in range [0,1]
     /// @param sat Saturation in range [0,1]
     /// @param val Value / Brightness in range [0,1].
-    static inline Colour Hsv(float hue, float sat = 1.0, float val = 1.0, float alpha = 1.0)
+    static inline Colour Hsv(const float hue, const float sat = 1.0f, const float val = 1.0f, const float alpha = 1.0f)
     {
           const float h = 6.0f * hue;
           const int i = (int)floor(h);
@@ -142,7 +143,7 @@ class ColourWheel
 {
 public:
     /// Construct ColourWheel with Saturation, Value and Alpha constant.
-    inline ColourWheel(float saturation=0.5, float value=1.0, float alpha = 1.0)
+    inline ColourWheel(float saturation = 0.5f, float value = 1.0f, float alpha = 1.0f)
         : unique_colours(0), sat(saturation), val(value), alpha(alpha)
     {
 
@@ -170,5 +171,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_COLOUR

@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/depthsense.h>
+#include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/iostream_operators.h>
 #include <iomanip>
 
 namespace pangolin
@@ -97,7 +99,7 @@ void DepthSenseContext::StartNodes()
 {
     if(!is_running) {
         // Launch EventLoop thread
-        event_thread = boostd::thread(&DepthSenseContext::EventLoop, this );
+        event_thread = std::thread(&DepthSenseContext::EventLoop, this );
     }
 }
 
@@ -123,8 +125,8 @@ DepthSenseVideo::DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType
       enableDepth(false), enableColor(false), depthTs(0.0), colorTs(0.0), size_bytes(0)
 {
     streams_properties = &frame_properties["streams"];
-    *streams_properties = json::value(json::array_type, false);
-    streams_properties->get<json::array>().resize(2);
+    *streams_properties = picojson::value(picojson::array_type, false);
+    streams_properties->get<picojson::array>().resize(2);
 
     sensorConfig[0] = {s1, dim1, fps1};
     sensorConfig[1] = {s2, dim2, fps2};
@@ -137,16 +139,16 @@ DepthSenseVideo::~DepthSenseVideo()
 {
     if (g_cnode.isSet()) DepthSenseContext::I().Context().unregisterNode(g_cnode);
     if (g_dnode.isSet()) DepthSenseContext::I().Context().unregisterNode(g_dnode);
-    
+
     fill_image = (unsigned char*)ROGUE_ADDR;
     cond_image_requested.notify_all();
 
     DepthSenseContext::I().DeviceClosing();
 }
 
-json::value Json(DepthSense::IntrinsicParameters& p)
+picojson::value Json(DepthSense::IntrinsicParameters& p)
 {
-    json::value js;
+    picojson::value js;
     js["model"] = "polynomial";
     js["width"] = p.width;
     js["height"] = p.height;
@@ -165,9 +167,9 @@ json::value Json(DepthSense::IntrinsicParameters& p)
     return js;
 }
 
-json::value Json(DepthSense::ExtrinsicParameters& p)
+picojson::value Json(DepthSense::ExtrinsicParameters& p)
 {
-    json::value js;
+    picojson::value js;
     js["rows"] = "3";
     js["cols"] = "4";
 
@@ -227,16 +229,16 @@ void DepthSenseVideo::ConfigureNodes(const Uri& uri)
     DepthSense::StereoCameraParameters scp = device.getStereoCameraParameters();
 
     //Set json device properties for intrinsics and extrinsics
-    json::value& jsintrinsics = device_properties["intrinsics"];
-    if (jsintrinsics.is<json::null>()) {
-        jsintrinsics = json::value(json::array_type, false);
-        jsintrinsics.get<json::array>().resize(streams.size());
+    picojson::value& jsintrinsics = device_properties["intrinsics"];
+    if (jsintrinsics.is<picojson::null>()) {
+        jsintrinsics = picojson::value(picojson::array_type, false);
+        jsintrinsics.get<picojson::array>().resize(streams.size());
         if (depthmap_stream >= 0) jsintrinsics[depthmap_stream] = Json(scp.depthIntrinsics);
         if (rgb_stream >= 0) jsintrinsics[rgb_stream] = Json(scp.colorIntrinsics);
     }
 
-    json::value& jsextrinsics = device_properties["extrinsics"];
-    if(jsextrinsics.is<json::null>()){
+    picojson::value& jsextrinsics = device_properties["extrinsics"];
+    if(jsextrinsics.is<picojson::null>()){
         jsextrinsics = Json(scp.extrinsics);
     }
 }
@@ -306,8 +308,8 @@ inline DepthSense::FrameFormat ImageDim2FrameFormat(const ImageDim& dim)
 void DepthSenseVideo::UpdateParameters(const DepthSense::Node& node, const Uri& uri)
 {
     DepthSense::Type type = node.getType();
-    json::value& jsnode = device_properties[type.name()];
-    
+    picojson::value& jsnode = device_properties[type.name()];
+
     std::vector<DepthSense::PropertyBase> properties = type.getProperties();
     for(std::vector<DepthSense::PropertyBase>::const_iterator it = properties.begin(); it != properties.end(); ++it) {
         const DepthSense::PropertyBase& prop = *it;
@@ -379,7 +381,7 @@ void DepthSenseVideo::ConfigureDepthNode(const SensorConfig& sensorConfig, const
     const int w = sensorConfig.dim.x;
     const int h = sensorConfig.dim.y;
 
-    const VideoPixelFormat pfmt = VideoFormatFromString("GRAY16LE");
+    const PixelFormat pfmt = PixelFormatFromString("GRAY16LE");
 
     const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0);
     streams.push_back(stream_info);
@@ -415,7 +417,7 @@ void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig, const
     const int w = sensorConfig.dim.x;
     const int h = sensorConfig.dim.y;
 
-    const VideoPixelFormat pfmt = VideoFormatFromString("BGR24");
+    const PixelFormat pfmt = PixelFormatFromString("BGR24");
 
     const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp) / 8, (unsigned char*)0 + size_bytes);
     streams.push_back(stream_info);
@@ -428,7 +430,7 @@ void DepthSenseVideo::ConfigureColorNode(const SensorConfig& sensorConfig, const
 void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data)
 {
     {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
 
         // Wait for fill request
         while (!fill_image) {
@@ -438,7 +440,7 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
         // Update per-frame parameters
         //printf("Color delta: %.1f\n", fabs(colorTs - data.timeOfCapture));
         colorTs = data.timeOfCapture;
-        json::value& jsstream = frame_properties["streams"][rgb_stream];
+        picojson::value& jsstream = frame_properties["streams"][rgb_stream];
         jsstream["time_us"] = data.timeOfCapture;
 
         if (fill_image != (unsigned char*)ROGUE_ADDR) {
@@ -488,7 +490,7 @@ void DepthSenseVideo::onNewColorSample(DepthSense::ColorNode node, DepthSense::C
 void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data)
 {
     {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
 
         // Wait for fill request
         while(!fill_image) {
@@ -499,7 +501,7 @@ void DepthSenseVideo::onNewDepthSample(DepthSense::DepthNode node, DepthSense::D
         //printf("Depth delta: %.1f\n", fabs(depthTs - data.timeOfCapture));
         depthTs = data.timeOfCapture;
 
-        json::value& jsstream = frame_properties["streams"][depthmap_stream];
+        picojson::value& jsstream = frame_properties["streams"][depthmap_stream];
         jsstream["time_us"] = depthTs;
 
         if(fill_image != (unsigned char*)ROGUE_ADDR) {
@@ -567,7 +569,7 @@ const std::vector<StreamInfo>& DepthSenseVideo::Streams() const
     return streams;
 }
 
-bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
+bool DepthSenseVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     if(fill_image) {
         throw std::runtime_error("GrabNext Cannot be called concurrently");
@@ -579,9 +581,9 @@ bool DepthSenseVideo::GrabNext( unsigned char* image, bool wait )
     fill_image = image;
     cond_image_requested.notify_one();
 
-    // Wait until it has been filled successfully. 
+    // Wait until it has been filled successfully.
     {
-        boostd::unique_lock<boostd::mutex> lock(update_mutex);
+        std::unique_lock<std::mutex> lock(update_mutex);
         while ((enableDepth && !gotDepth) || (enableColor && !gotColor))
         {
             cond_image_filled.wait(lock);
@@ -611,6 +613,44 @@ bool DepthSenseVideo::GrabNewest( unsigned char* image, bool wait )
 double DepthSenseVideo::GetDeltaTime() const
 {
     return depthTs - colorTs;
+}
+
+DepthSenseSensorType depthsense_sensor(const std::string& str)
+{
+    if (!str.compare("rgb")) {
+        return DepthSenseRgb;
+    }
+    else if (!str.compare("depth")) {
+        return DepthSenseDepth;
+    }
+    else if (str.empty()) {
+        return DepthSenseUnassigned;
+    }
+    else{
+        throw pangolin::VideoException("Unknown DepthSense sensor", str);
+    }
+}
+
+PANGOLIN_REGISTER_FACTORY(DepthSenseVideo)
+{
+    struct DepthSenseVideoFactory final : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
+            DepthSenseSensorType img1 = depthsense_sensor(uri.Get<std::string>("img1", "depth"));
+            DepthSenseSensorType img2 = depthsense_sensor(uri.Get<std::string>("img2", ""));
+
+            const ImageDim dim1 = uri.Get<ImageDim>("size1", img1 == DepthSenseDepth ? ImageDim(320, 240) : ImageDim(640, 480) );
+            const ImageDim dim2 = uri.Get<ImageDim>("size2", img2 == DepthSenseDepth ? ImageDim(320, 240) : ImageDim(640, 480) );
+
+            const unsigned int fps1 = uri.Get<unsigned int>("fps1", 30);
+            const unsigned int fps2 = uri.Get<unsigned int>("fps2", 30);
+
+            return std::unique_ptr<VideoInterface>(
+                DepthSenseContext::I().GetDepthSenseVideo(0, img1, img2, dim1, dim2, fps1, fps2, uri)
+            );
+        }
+    };
+
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<DepthSenseVideoFactory>(), 10, "depthsense");
 }
 
 }

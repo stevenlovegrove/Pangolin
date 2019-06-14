@@ -120,50 +120,68 @@ Handler3D::Handler3D(OpenGlRenderState& cam_state, AxisDirection enforce_up, flo
     SetZero<3,1>(rot_center);
 }
 
-void Handler3D::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+void Handler3D::Keyboard(View&, unsigned char /*key*/, int /*x*/, int /*y*/, bool /*pressed*/)
 {
     // TODO: hooks for reset / changing mode (perspective / ortho etc)
 }
 
-void Handler3D::GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision n[3], GLprecision default_z)
+bool Handler3D::ValidWinDepth(GLprecision depth)
 {
-    // TODO: Get to work on android    
+    return depth != 1;
+}
+
+void Handler3D::PixelUnproject( View& view, GLprecision winx, GLprecision winy, GLprecision winz, GLprecision Pc[3])
+{
     const GLint viewport[4] = {view.v.l,view.v.b,view.v.w,view.v.h};
     const pangolin::OpenGlMatrix proj = cam_state->GetProjectionMatrix();
-    const pangolin::OpenGlMatrix mv = cam_state->GetModelViewMatrix();
-    //      const pangolin::OpenGlMatrix id = IdentityMatrix();
-    
+    glUnProject(winx, winy, winz, Identity4d, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
+}
+
+void Handler3D::GetPosNormal(pangolin::View& view, int winx, int winy, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision nw[3], GLprecision default_z)
+{
+    // TODO: Get to work on android
+
     const int zl = (hwin*2+1);
     const int zsize = zl*zl;
     GLfloat zs[zsize];
-    
-#ifndef HAVE_GLES    
+
+#ifndef HAVE_GLES
     glReadBuffer(GL_FRONT);
-    glReadPixels(x-hwin,y-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
+    glReadPixels(winx-hwin,winy-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
 #else
     std::fill(zs,zs+zsize, 1);
 #endif
     GLfloat mindepth = *(std::min_element(zs,zs+zsize));
-    
+
     if(mindepth == 1) mindepth = (GLfloat)default_z;
-    
-    p[0] = x; p[1] = y; p[2] = mindepth;
-    glUnProject(x, y, mindepth, mv.m, proj.m, viewport, &Pw[0], &Pw[1], &Pw[2]);
-//      glUnProject(x, y, mindepth, id.m, proj.m, viewport, &Pc[0], &Pc[1], &Pc[2]);
-    LieApplySE34x4vec3(Pc, mv.m, Pw);
-    
+
+    p[0] = winx; p[1] = winy; p[2] = mindepth;
+    PixelUnproject(view, winx, winy, mindepth, Pc);
+
+    const pangolin::OpenGlMatrix mv = cam_state->GetModelViewMatrix();
+
+    GLprecision T_wc[3*4];
+    LieSE3from4x4(T_wc, mv.Inverse().m );
+    LieApplySE3vec(Pw, T_wc, Pc);
+
+    // Neighboring points in camera coordinates
     GLprecision Pl[3]; GLprecision Pr[3]; GLprecision Pb[3]; GLprecision Pt[3];
-    glUnProject(x-hwin, y, zs[hwin*zl + 0],    mv.m, proj.m, viewport, &Pl[0], &Pl[1], &Pl[2]);
-    glUnProject(x+hwin, y, zs[hwin*zl + zl-1], mv.m, proj.m, viewport, &Pr[0], &Pr[1], &Pr[2]);
-    glUnProject(x, y-hwin, zs[hwin+1],         mv.m, proj.m, viewport, &Pb[0], &Pb[1], &Pb[2]);
-    glUnProject(x, y+hwin, zs[zsize-(hwin+1)], mv.m, proj.m, viewport, &Pt[0], &Pt[1], &Pt[2]);
+    PixelUnproject(view, winx-hwin, winy, zs[hwin*zl + 0],    Pl );
+    PixelUnproject(view, winx+hwin, winy, zs[hwin*zl + zl-1], Pr );
+    PixelUnproject(view, winx, winy-hwin, zs[hwin+1],         Pb );
+    PixelUnproject(view, winx, winy+hwin, zs[zsize-(hwin+1)], Pt );
     
-    //      n = ((Pr-Pl).cross(Pt-Pb)).normalized();
+    // n = ((Pr-Pl).cross(Pt-Pb)).normalized();
     GLprecision PrmPl[3]; GLprecision PtmPb[3];
     MatSub<3,1>(PrmPl,Pr,Pl);
     MatSub<3,1>(PtmPb,Pt,Pb);
-    CrossProduct(n, PrmPl, PtmPb);
-    Normalise<3>(n);
+
+    GLprecision nc[3];
+    CrossProduct(nc, PrmPl, PtmPb);
+    Normalise<3>(nc);
+
+    // T_wc is col major, so the rotation component is first.
+    LieApplySO3(nw,T_wc,nc);
 }
 
 void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pressed, int button_state)
@@ -174,10 +192,13 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
     
     GLprecision T_nc[3*4];
     LieSetIdentity(T_nc);
-    
-    if( pressed ) {
+
+    funcKeyState = 0;
+    if( pressed )
+    {
         GetPosNormal(display,x,y,p,Pw,Pc,n,last_z);
-        if(p[2] < 1.0) {
+        if( ValidWinDepth(p[2]) )
+        {
             last_z = p[2];
             std::copy(Pc,Pc+3,rot_center);
         }
@@ -196,6 +217,8 @@ void Handler3D::Mouse(View& display, MouseButton button, int x, int y, bool pres
             OpenGlMatrix& spec = cam_state->GetModelViewMatrix();
             LieMul4x4bySE3<>(spec.m,T_nc,spec.m);
         }
+
+        funcKeyState = button_state;
     }
 }
 
@@ -204,10 +227,28 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
     const GLprecision rf = 0.01;
     const float delta[2] = { (float)x - last_pos[0], (float)y - last_pos[1] };
     const float mag = delta[0]*delta[0] + delta[1]*delta[1];
-    
+
+    if((button_state & KeyModifierCtrl) && (button_state & KeyModifierShift))
+    {
+        GLprecision T_nc[3 * 4];
+        LieSetIdentity(T_nc);
+
+        GetPosNormal(display, x, y, p, Pw, Pc, n, last_z);
+        if(ValidWinDepth(p[2]))
+        {
+            last_z = p[2];
+            std::copy(Pc, Pc + 3, rot_center);
+        }
+
+        funcKeyState = button_state;
+    }
+    else
+    {
+        funcKeyState = 0;
+    }
+
     // TODO: convert delta to degrees based of fov
     // TODO: make transformation with respect to cam spec
-    
     if( mag < 50.0f*50.0f )
     {
         OpenGlMatrix& mv = cam_state->GetModelViewMatrix();
@@ -230,10 +271,10 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
         }else if( button_state == MouseButtonLeft )
         {
             // Left Drag: in plane translate
-            if( last_z != 1 )
+            if( ValidWinDepth(last_z) )
             {
                 GLprecision np[3];
-                display.GetCamCoordinates(*cam_state,x,y,last_z, np[0], np[1], np[2]);
+                PixelUnproject(display, x, y, last_z, np);
                 const GLprecision t[] = { np[0] - rot_center[0], np[1] - rot_center[1], 0};
                 LieSetTranslation<>(T_nc,t);
                 std::copy(np,np+3,rot_center);
@@ -258,11 +299,13 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
             rotation_changed = true;
         }else if( button_state == MouseButtonRight)
         {
-            // Try to correct for different coordinate conventions.
             GLprecision aboutx = -rf * delta[1];
-            GLprecision abouty =  rf * delta[0];
-            OpenGlMatrix& pm = cam_state->GetProjectionMatrix();
-            abouty *= -pm.m[2*4+3];
+            GLprecision abouty = -rf * delta[0];
+
+            // Try to correct for different coordinate conventions.
+            if(cam_state->GetProjectionMatrix().m[2*4+3] <= 0) {
+                abouty *= -1;
+            }
             
             if(enforce_up) {
                 // Special case if view direction is parallel to up vector
@@ -297,7 +340,7 @@ void Handler3D::MouseMotion(View& display, int x, int y, int button_state)
     last_pos[1] = (float)y;
 }
 
-void Handler3D::Special(View& display, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
+void Handler3D::Special(View& display, InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int button_state)
 {
     if( !(inType == InputSpecialScroll || inType == InputSpecialRotate) )
         return;

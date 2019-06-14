@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_PLEORA_H
-#define PANGOLIN_VIDEO_PLEORA_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
@@ -71,7 +70,7 @@ public:
 
     static const size_t DEFAULT_BUFFER_COUNT = 30;
 
-    PleoraVideo(Params& p);
+    PleoraVideo(const Params& p);
 
     ~PleoraVideo();
 
@@ -111,11 +110,11 @@ public:
 
     void SetupTrigger(bool triggerActive, int64_t triggerSource, int64_t acquisitionMode);
 
-    const json::value& DeviceProperties() const {
+    const picojson::value& DeviceProperties() const {
         return device_properties;
     }
 
-    const json::value& FrameProperties() const {
+    const picojson::value& FrameProperties() const {
         return frame_properties;
     }
 
@@ -136,6 +135,8 @@ protected:
     void DeinitStream();
 
     void InitPangoStreams();
+
+    void InitPangoDeviceProperties();
 
     void InitBuffers(size_t buffer_count);
 
@@ -158,8 +159,8 @@ protected:
     void RetriveAllAvailableBuffers(uint32_t timeout);
 
     std::vector<StreamInfo> streams;
-    json::value device_properties;
-    json::value frame_properties;
+    picojson::value device_properties;
+    picojson::value frame_properties;
 
     size_t size_bytes;
 
@@ -193,5 +194,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_VIDEO_PLEORA_H

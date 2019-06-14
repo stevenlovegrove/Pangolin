@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_OSXWINDOW_H
-#define PANGOLIN_OSXWINDOW_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/display/display_internal.h>
@@ -47,17 +46,19 @@ struct OsxWindow : public PangolinGl
 
     void StopFullScreen();
 
-    void ToggleFullscreen() PANGOLIN_OVERRIDE;
+    void ToggleFullscreen() override;
 
-    void Move(int x, int y) PANGOLIN_OVERRIDE;
+    void Move(int x, int y) override;
 
-    void Resize(unsigned int w, unsigned int h) PANGOLIN_OVERRIDE;
+    void Resize(unsigned int w, unsigned int h) override;
 
-    void MakeCurrent() PANGOLIN_OVERRIDE;
+    void MakeCurrent() override;
 
-    void SwapBuffers() PANGOLIN_OVERRIDE;
+    void RemoveCurrent() override;
 
-    void ProcessEvents() PANGOLIN_OVERRIDE;
+    void SwapBuffers() override;
+
+    void ProcessEvents() override;
 
 private:
     NSWindow* _window;
@@ -65,5 +66,3 @@ private:
 };
 
 }
-
-#endif // PANGOLIN_OSXWINDOW_H

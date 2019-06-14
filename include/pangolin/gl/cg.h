@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_CG_H
-#define PANGOLIN_CG_H
+#pragma once
 
 #include <sstream>
 #include <algorithm>
@@ -80,7 +79,7 @@ public:
     CgLoader();
     ~CgLoader();
     
-    // Call AFTER glutInit (or similar)
+    // Call AFTER glewInit (or similar)
     void Initialise();
     
     CgProgram LoadProgramFromFile(const std::string& file, const std::string& function, bool isVertexShader );
@@ -282,5 +281,3 @@ void CgProgram::UpdateParams()
 
 
 }
-
-#endif // PANGOLIN_CG_H

@@ -31,10 +31,9 @@
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/var/varextra.h>
 #include <pangolin/utils/file_utils.h>
-#include <pangolin/compat/glutbitmap.h>
-#include <pangolin/compat/thread.h>
-#include <pangolin/compat/mutex.h>
 
+#include <thread>
+#include <mutex>
 #include <iostream>
 #include <iomanip>
 
@@ -69,7 +68,7 @@ static inline int tab_h()
     return (int)(font().Height() * 1.4);
 }
 
-boostd::mutex display_mutex;
+std::mutex display_mutex;
 
 template<typename T>
 void GuiVarChanged( Var<T>& var)
@@ -144,7 +143,7 @@ Panel::Panel(const std::string& auto_register_var_prefix)
     ProcessHistoricCallbacks(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
 }
 
-void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool brand_new )
+void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& var, bool /*brand_new*/)
 {
     Panel* thisptr = (Panel*)data;
     
@@ -160,17 +159,15 @@ void Panel::AddVariable(void* data, const std::string& name, VarValueGeneric& va
     {
         View* nv = NULL;
         if( !strcmp(var.TypeId(), typeid(bool).name()) ) {
-            nv = var.Meta().flags ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
+            nv = (var.Meta().flags & META_FLAG_TOGGLE) ? (View*)new Checkbox(title,var) : (View*)new Button(title,var);
         } else if (!strcmp(var.TypeId(), typeid(double).name()) ||
                    !strcmp(var.TypeId(), typeid(float).name()) ||
                    !strcmp(var.TypeId(), typeid(int).name()) ||
                    !strcmp(var.TypeId(), typeid(unsigned int).name()))
         {
             nv = new Slider(title, var);
-#ifdef CPP11_NO_BOOST
-        } else if (!strcmp(var.TypeId(), typeid(boostd::function<void(void)>).name() ) ) {
+        } else if (!strcmp(var.TypeId(), typeid(std::function<void(void)>).name() ) ) {
             nv = (View*)new FunctionButton(title, var);
-#endif // CPP11_NO_BOOST
         }else{
             nv = new TextInput(title,var);
         }
@@ -241,7 +238,7 @@ Button::Button(string title, VarValueGeneric& tv)
     gltext = font().Text(title);
 }
 
-void Button::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
+void Button::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool pressed, int /*mouse_state*/)
 {
     if(button == MouseButtonLeft )
     {
@@ -268,9 +265,8 @@ void Button::ResizeChildren()
     raster[1] = floor(v.b + (v.h-gltext.Height())/2.0f);
 }
 
-#ifdef CPP11_NO_BOOST
 FunctionButton::FunctionButton(string title, VarValueGeneric& tv)
-    : Widget<boostd::function<void(void)> >(title, tv), down(false)
+    : Widget<std::function<void(void)> >(title, tv), down(false)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h());
     left = 0.0; right = 1.0;
@@ -279,7 +275,7 @@ FunctionButton::FunctionButton(string title, VarValueGeneric& tv)
     gltext = font().Text(title);
 }
 
-void FunctionButton::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
+void FunctionButton::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool pressed, int /*mouse_state*/)
 {
     if (button == MouseButtonLeft)
     {
@@ -305,7 +301,6 @@ void FunctionButton::ResizeChildren()
     raster[0] = v.l + (v.w - gltext.Width()) / 2.0f;
     raster[1] = v.b + (v.h - gltext.Height()) / 2.0f;
 }
-#endif // CPP11_NO_BOOST
 
 Checkbox::Checkbox(std::string title, VarValueGeneric& tv)
     : Widget<bool>(title,tv)
@@ -318,7 +313,7 @@ Checkbox::Checkbox(std::string title, VarValueGeneric& tv)
     gltext = font().Text(title);
 }
 
-void Checkbox::Mouse(View&, MouseButton button, int x, int y, bool pressed, int mouse_state)
+void Checkbox::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool pressed, int /*mouse_state*/)
 {
     if( button == MouseButtonLeft && pressed ) {
         var->Set(!var->Get());
@@ -375,7 +370,7 @@ Slider::Slider(std::string title, VarValueGeneric& tv)
     is_integral_type = IsIntegral(tv.TypeId());
 }
 
-void Slider::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+void Slider::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed)
 {
     if( pressed && var->Meta().range[0] < var->Meta().range[1] )
     {
@@ -434,7 +429,7 @@ void Slider::Mouse(View& view, MouseButton button, int x, int y, bool pressed, i
     }
 }
 
-void Slider::MouseMotion(View&, int x, int y, int mouse_state)
+void Slider::MouseMotion(View&, int x, int /*y*/, int /*mouse_state*/)
 {
     if( var->Meta().range[0] != var->Meta().range[1] )
     {
@@ -490,6 +485,9 @@ void Slider::Render()
     }
     
     glColor4fv(colour_tx);
+    if(gltext.Text() != var->Meta().friendly) {
+        gltext = font().Text(var->Meta().friendly);
+    }
     gltext.DrawWindow(raster[0], raster[1]);
 
     std::ostringstream oss;
@@ -502,7 +500,7 @@ void Slider::Render()
 
 
 TextInput::TextInput(std::string title, VarValueGeneric& tv)
-    : Widget<std::string>(title+":", tv), do_edit(false)
+    : Widget<std::string>(title+":", tv), can_edit(!(tv.Meta().flags & META_FLAG_READONLY)), do_edit(false)
 {
     top = 1.0; bottom = Attach::Pix(-tab_h());
     left = 0.0; right = 1.0;
@@ -514,9 +512,9 @@ TextInput::TextInput(std::string title, VarValueGeneric& tv)
     gltext = font().Text(title);
 }
 
-void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
+void TextInput::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed)
 {
-    if(pressed && do_edit)
+    if(can_edit && pressed && do_edit)
     {
         const bool selection = sel[1] > sel[0] && sel[0] >= 0;
         
@@ -576,9 +574,9 @@ void TextInput::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
     }
 }
 
-void TextInput::Mouse(View& view, MouseButton button, int x, int y, bool pressed, int mouse_state)
+void TextInput::Mouse(View& /*view*/, MouseButton button, int x, int /*y*/, bool pressed, int /*mouse_state*/)
 {
-    if(button != MouseWheelUp && button != MouseWheelDown )
+    if(can_edit && button != MouseWheelUp && button != MouseWheelDown )
     {
         
         if(do_edit)
@@ -618,9 +616,9 @@ void TextInput::Mouse(View& view, MouseButton button, int x, int y, bool pressed
     }
 }
 
-void TextInput::MouseMotion(View&, int x, int y, int mouse_state)
+void TextInput::MouseMotion(View&, int x, int /*y*/, int /*mouse_state*/)
 {
-    if(do_edit)
+    if(can_edit && do_edit)
     {
         const int sl = (int)gledit.Width() + 2;
         const int rl = v.l + v.w - sl;
@@ -659,7 +657,7 @@ void TextInput::Render()
     gledit = font().Text(edit);
     
     glColor4fv(colour_fg);
-    glRect(v);
+    if(can_edit) glRect(v);
     
     const int sl = (int)gledit.Width() + 2;
     const int rl = v.l + v.w - sl;
@@ -676,7 +674,7 @@ void TextInput::Render()
     gltext.DrawWindow(raster[0], raster[1]);
 
     gledit.DrawWindow((GLfloat)(rl), raster[1]);
-    DrawShadowRect(v);
+    if(can_edit) DrawShadowRect(v);
 }
 
 }

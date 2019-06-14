@@ -27,6 +27,7 @@
 
 #include <pangolin/display/viewport.h>
 #include <algorithm>
+#include <pangolin/utils/simple_math.h>
 
 namespace pangolin {
 
@@ -96,6 +97,17 @@ Viewport Viewport::Intersect(const Viewport& vp) const
     GLint nb = std::max(b,vp.b);
     GLint nt = std::min(t(),vp.t());
     return Viewport(nl,nb, nr-nl, nt-nb);
+}
+
+void Viewport::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
+{
+    const GLint viewport[4] = {l, b, w, h};
+    const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
+#ifndef HAVE_GLES
+    glUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
+#else
+    glUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
+#endif
 }
 
 }

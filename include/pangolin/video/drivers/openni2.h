@@ -26,8 +26,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_OPENNI2_H
-#define PANGOLIN_OPENNI2_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 
@@ -41,21 +40,21 @@ namespace pangolin
 const int MAX_OPENNI2_STREAMS = 2 * ONI_MAX_SENSORS;
 
 //! Interface to video capture sources
-struct OpenNiVideo2 : public VideoInterface, public VideoPropertiesInterface, public VideoPlaybackInterface
+struct OpenNi2Video : public VideoInterface, public VideoPropertiesInterface, public VideoPlaybackInterface
 {
 public:
 
     // Open all RGB and Depth streams from all devices
-    OpenNiVideo2(ImageDim dim=ImageDim(640,480), int fps=30);
+    OpenNi2Video(ImageDim dim=ImageDim(640,480), ImageRoi roi=ImageRoi(0,0,0,0), int fps=30);
 
     // Open streams specified
-    OpenNiVideo2(std::vector<OpenNiStreamMode>& stream_modes);
+    OpenNi2Video(std::vector<OpenNiStreamMode>& stream_modes);
 
     // Open openni file
-    OpenNiVideo2(const std::string& filename);
+    OpenNi2Video(const std::string& filename);
 
     // Open openni file with certain params
-    OpenNiVideo2(const std::string& filename, std::vector<OpenNiStreamMode>& stream_modes);
+    OpenNi2Video(const std::string& filename, std::vector<OpenNiStreamMode>& stream_modes);
     
     void UpdateProperties();
 
@@ -65,48 +64,49 @@ public:
     void SetDepthCloseRange(bool enable);
     void SetDepthHoleFilter(bool enable);
     void SetDepthColorSyncEnabled(bool enable);
+    void SetFastCrop(bool enable);
     void SetRegisterDepthToImage(bool enable);
     void SetPlaybackSpeed(float speed);
     void SetPlaybackRepeat(bool enabled);
 
-    ~OpenNiVideo2();
+    ~OpenNi2Video();
 
     //! Implement VideoInput::Start()
-    void Start();
+    void Start() override;
 
     //! Implement VideoInput::Stop()
-    void Stop();
+    void Stop() override;
 
     //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+    size_t SizeBytes() const override;
 
     //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+    const std::vector<StreamInfo>& Streams() const override;
 
     //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+    bool GrabNext( unsigned char* image, bool wait = true ) override;
 
     //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+    bool GrabNewest( unsigned char* image, bool wait = true ) override;
 
     //! Implement VideoPropertiesInterface::Properties()
-    const json::value& DeviceProperties() const {
+    const picojson::value& DeviceProperties() const  override{
         return device_properties;
     }
 
     //! Implement VideoPropertiesInterface::Properties()
-    const json::value& FrameProperties() const {
+    const picojson::value& FrameProperties() const  override{
         return frame_properties;
     }
 
     //! Implement VideoPlaybackInterface::GetCurrentFrameId
-    int GetCurrentFrameId() const;
+    size_t GetCurrentFrameId() const override;
 
     //! Implement VideoPlaybackInterface::GetTotalFrames
-    int GetTotalFrames() const ;
+    size_t GetTotalFrames() const override;
 
     //! Implement VideoPlaybackInterface::Seek
-    int Seek(int frameid);
+    size_t Seek(size_t frameid) override;
 
     openni::VideoStream* GetVideoStream(int stream);
 
@@ -118,8 +118,8 @@ protected:
     void PrintOpenNI2Modes(openni::SensorType sensorType);
     openni::VideoMode FindOpenNI2Mode(openni::Device &device, openni::SensorType sensorType, int width, int height, int fps, openni::PixelFormat fmt );
 
-    int numDevices;
-    int numStreams;
+    size_t numDevices;
+    size_t numStreams;
 
     openni::Device devices[ONI_MAX_SENSORS];
     OpenNiStreamMode sensor_type[ONI_MAX_SENSORS];
@@ -130,21 +130,18 @@ protected:
     std::vector<StreamInfo> streams;
     size_t sizeBytes;
 
-    json::value device_properties;
-    json::value frame_properties;
-    json::value* streams_properties;
+    picojson::value device_properties;
+    picojson::value frame_properties;
+    picojson::value* streams_properties;
 
     bool use_depth;
     bool use_ir;
     bool use_rgb;
     bool depth_to_color;
     bool use_ir_and_rgb;
-    bool fromFile;
 
-    int current_frame_index;
-    int total_frames;
+    size_t current_frame_index;
+    size_t total_frames;
 };
 
 }
-
-#endif // PANGOLIN_OPENNI2_H

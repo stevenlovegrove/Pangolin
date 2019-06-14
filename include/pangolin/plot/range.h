@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_RANGE_H
-#define PANGOLIN_RANGE_H
+#pragma once
 
 #include <pangolin/platform.h>
 
@@ -47,9 +46,25 @@
 namespace pangolin
 {
 
+
 template<typename T>
 struct Range
 {
+    static Range<T> Open()
+    {
+        return Range<T>(std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max());
+    }
+
+    static Range<T> Empty()
+    {
+        return Range<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::lowest());
+    }
+
+    static Range<T> Containing(T val)
+    {
+        return Range<T>(val, val);
+    }
+
     Range()
         : min(+std::numeric_limits<T>::max()),
           max(-std::numeric_limits<T>::max())
@@ -155,6 +170,12 @@ struct Range
         max = std::max(max,v);
     }
 
+    void Insert(const Range<T>& r)
+    {
+        Insert(r.min);
+        Insert(r.max);
+    }
+
     void Clamp(T vmin, T vmax)
     {
         min = std::min(std::max(vmin, min), vmax);
@@ -168,8 +189,8 @@ struct Range
 
     void Clear()
     {
-        min = +std::numeric_limits<T>::max();
-        max = -std::numeric_limits<T>::max();
+        min = std::numeric_limits<T>::max();
+        max = std::numeric_limits<T>::lowest();
     }
 
     bool Contains(T v) const
@@ -196,6 +217,30 @@ struct Range
 template<typename T>
 struct XYRange
 {
+    static XYRange<T> Open()
+    {
+        return XYRange<T>(
+            Range<T>(std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max()),
+            Range<T>(std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max())
+        );
+    }
+
+    static XYRange<T> Empty()
+    {
+        return XYRange<T>(
+            Range<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::lowest()),
+            Range<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::lowest())
+        );
+    }
+
+    static XYRange<T> Containing(T x, T y)
+    {
+        return XYRange<T>(
+            Range<T>(x, x),
+            Range<T>(y, y)
+        );
+    }
+
     XYRange()
     {
     }
@@ -251,6 +296,17 @@ struct XYRange
         y.Clamp(o.y);
     }
 
+    void Insert(T xval, T yval)
+    {
+        x.Insert(xval);
+        y.Insert(yval);
+    }
+
+    void Insert(XYRange<T> r)
+    {
+        x.Insert(r.x);
+        y.Insert(r.y);
+    }
 
     float Area() const
     {
@@ -283,6 +339,10 @@ struct XYRange
             Eigen::Matrix<T,2,1>(x.max, y.max)
         );
     }
+
+    Eigen::Matrix<T,2,1> Center() const {
+        return Eigen::Matrix<T,2,1>(x.Mid(), y.Mid());
+    }
 #endif
 
     Range<T> x;
@@ -310,5 +370,3 @@ XYRangei Round(const XYRange<T>& r)
 }
 
 }
-
-#endif //PANGOLIN_RANGE_H

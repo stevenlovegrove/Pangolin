@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_MIRROR_H
-#define PANGOLIN_VIDEO_MIRROR_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
@@ -40,6 +39,9 @@ enum MirrorOptions
     MirrorOptionsFlipX,
     MirrorOptionsFlipY,
     MirrorOptionsFlipXY,
+    MirrorOptionsTranspose,
+    MirrorOptionsRotateCW,
+    MirrorOptionsRotateCCW,
 };
 
 // Video class that debayers its video input using the given method.
@@ -49,7 +51,7 @@ class PANGOLIN_EXPORT MirrorVideo :
     public BufferAwareVideoInterface
 {
 public:
-    MirrorVideo(VideoInterface* videoin, const std::vector<MirrorOptions>& flips);
+    MirrorVideo(std::unique_ptr<VideoInterface>& videoin, const std::vector<MirrorOptions>& flips);
     ~MirrorVideo();
 
     //! Implement VideoInput::Start()
@@ -80,17 +82,15 @@ public:
 protected:
     void Process(unsigned char* image, const unsigned char* buffer);
 
-    VideoInterface* videoin;
+    std::unique_ptr<VideoInterface> videoin;
     std::vector<VideoInterface*> inputs;
     std::vector<StreamInfo> streams;
     std::vector<MirrorOptions> flips;
     size_t size_bytes;
     unsigned char* buffer;
 
-    json::value device_properties;
-    json::value frame_properties;
+    picojson::value device_properties;
+    picojson::value frame_properties;
 };
 
 }
-
-#endif // PANGOLIN_VIDEO_MIRROR_H

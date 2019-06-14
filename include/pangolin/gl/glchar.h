@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLCHAR_H
-#define PANGOLIN_GLCHAR_H
+#pragma once
 
 #include <pangolin/gl/glplatform.h>
 #include <map>
@@ -77,5 +76,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_GLCHAR_H

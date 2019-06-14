@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_FILE_EXTENSION_H
-#define PANGOLIN_FILE_EXTENSION_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <string>
@@ -45,8 +44,20 @@ enum ImageFileType
     ImageFileTypeExr,
     ImageFileTypePango,
     ImageFileTypePvn,
+    ImageFileTypeZstd,
+    ImageFileTypeLz4,
+    ImageFileTypeP12b,
+    ImageFileTypePly,
+    ImageFileTypeObj,
     ImageFileTypeUnknown
 };
+
+
+PANGOLIN_EXPORT
+std::string ImageFileTypeToName(ImageFileType);
+
+PANGOLIN_EXPORT
+ImageFileType NameToImageFileType(const std::string&);
 
 PANGOLIN_EXPORT
 std::string FileLowercaseExtention(const std::string& filename);
@@ -61,5 +72,3 @@ PANGOLIN_EXPORT
 ImageFileType FileType(const std::string& filename);
 
 }
-
-#endif // PANGOLIN_FILE_EXTENSION_H

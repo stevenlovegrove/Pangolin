@@ -2,7 +2,7 @@
 
 #include <pangolin/pangolin.h>
 
-int main( int /*argc*/, char* argv[] )
+int main(/*int argc, char* argv[]*/)
 {
   // Create OpenGL window in single line
   pangolin::CreateWindowAndBind("Main",640,480);
@@ -23,6 +23,11 @@ int main( int /*argc*/, char* argv[] )
   pangolin::Plotter plotter(&log,0.0f,4.0f*(float)M_PI/tinc,-2.0f,2.0f,(float)M_PI/(4.0f*tinc),0.5f);
   plotter.SetBounds(0.0, 1.0, 0.0, 1.0);
   plotter.Track("$i");
+
+  // Add some sample annotations to the plot
+  plotter.AddMarker(pangolin::Marker::Vertical,   -1000, pangolin::Marker::LessThan, pangolin::Colour::Blue().WithAlpha(0.2f) );
+  plotter.AddMarker(pangolin::Marker::Horizontal,   100, pangolin::Marker::GreaterThan, pangolin::Colour::Red().WithAlpha(0.2f) );
+  plotter.AddMarker(pangolin::Marker::Horizontal,    10, pangolin::Marker::Equal, pangolin::Colour::Green().WithAlpha(0.2f) );
 
   pangolin::DisplayBase().AddDisplay(plotter);
 

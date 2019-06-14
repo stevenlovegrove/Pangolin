@@ -25,8 +25,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/platform.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/device/PangolinNSApplication.h>
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
+#  define NSAnyEventMask NSEventMaskAny
+#endif
 
 ////////////////////////////////////////////////////////////////////
 // PangolinNSApplication
@@ -34,7 +39,7 @@
 
 @implementation PangolinNSApplication
 
-- (void)run_pre
++ (void)run_pre
 {
     [[NSNotificationCenter defaultCenter]
         postNotificationName:NSApplicationWillFinishLaunchingNotification
@@ -44,18 +49,18 @@
         object:NSApp];
 }
 
-- (void)run_step
++ (void)run_step
 {
     NSEvent *event;
     do{
-        event = [self
+        event = [NSApp
                 nextEventMatchingMask:NSAnyEventMask
                 untilDate:nil
 //                untilDate: [NSDate distantFuture]
                 inMode:NSDefaultRunLoopMode
                 dequeue:YES];
-        [self sendEvent:event];
-        [self updateWindows];
+        [NSApp sendEvent:event];
+        [NSApp updateWindows];
     }while(event != nil);
 }
 
@@ -68,6 +73,8 @@
 @implementation PangolinWindowDelegate
 
 - (BOOL)windowShouldClose:(id)sender {
+    PANGOLIN_UNUSED(sender);
+    
     pangolin::Quit();
     return YES;
 }

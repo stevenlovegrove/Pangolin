@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLPANGOGLU_H
-#define PANGOLIN_GLPANGOGLU_H
+#pragma once
 
 #include <pangolin/gl/glplatform.h>
 
@@ -79,5 +78,3 @@ GLint glUnProject(
 );
 
 }
-
-#endif // PANGOLIN_GLPANGOGLU_H

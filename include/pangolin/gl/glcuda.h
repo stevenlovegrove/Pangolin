@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_CUDAGL_H
-#define PANGOLIN_CUDAGL_H
+#pragma once
 
 #include <algorithm>
 #include <cuda_runtime.h>
@@ -70,16 +69,16 @@ struct GlTextureCudaArray : GlTexture
 {
     GlTextureCudaArray();
     // Some internal_formats aren't accepted. I have trouble with GL_RGB8
-    GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear = true);
+    GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL);
     ~GlTextureCudaArray();
 
-    void Reinitialise(int width, int height, GLint internal_format, bool sampling_linear = true);
+    void Reinitialise(int width, int height, GLint internal_format, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL) override;
     cudaGraphicsResource* cuda_res;
 };
 
 struct CudaScopedMappedPtr
 {
-    CudaScopedMappedPtr(GlBufferCudaPtr& buffer);
+    CudaScopedMappedPtr(const GlBufferCudaPtr& buffer);
     ~CudaScopedMappedPtr();
     void* operator*();
     cudaGraphicsResource* res;
@@ -90,7 +89,7 @@ private:
 
 struct CudaScopedMappedArray
 {
-    CudaScopedMappedArray(GlTextureCudaArray& tex);
+    CudaScopedMappedArray(const GlTextureCudaArray& tex);
     ~CudaScopedMappedArray();
     cudaArray* operator*();
     cudaGraphicsResource* res;
@@ -164,8 +163,8 @@ inline GlTextureCudaArray::GlTextureCudaArray()
     // Not a texture
 }
 
-inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear)
-    :GlTexture(width,height,internal_format, sampling_linear)
+inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, GLvoid *data)
+    :GlTexture(width,height,internal_format, sampling_linear, border, glformat, gltype, data)
 {
     // TODO: specify flags too
     const cudaError_t err = cudaGraphicsGLRegisterImage(&cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
@@ -181,13 +180,13 @@ inline GlTextureCudaArray::~GlTextureCudaArray()
     }
 }
 
-inline void GlTextureCudaArray::Reinitialise(int width, int height, GLint internal_format, bool sampling_linear)
+inline void GlTextureCudaArray::Reinitialise(int width, int height, GLint internal_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, GLvoid* data)
 {
     if(cuda_res) {
         cudaGraphicsUnregisterResource(cuda_res);
     }
 
-    GlTexture::Reinitialise(width, height, internal_format, sampling_linear);
+    GlTexture::Reinitialise(width, height, internal_format, sampling_linear, border, glformat, gltype, data);
 
     const cudaError_t err = cudaGraphicsGLRegisterImage(&cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
     if( err != cudaSuccess ) {
@@ -195,7 +194,7 @@ inline void GlTextureCudaArray::Reinitialise(int width, int height, GLint intern
     }
 }
 
-inline CudaScopedMappedPtr::CudaScopedMappedPtr(GlBufferCudaPtr& buffer)
+inline CudaScopedMappedPtr::CudaScopedMappedPtr(const GlBufferCudaPtr& buffer)
     : res(buffer.cuda_res)
 {
     cudaGraphicsMapResources(1, &res, 0);
@@ -214,7 +213,7 @@ inline void* CudaScopedMappedPtr::operator*()
     return d_ptr;
 }
 
-inline CudaScopedMappedArray::CudaScopedMappedArray(GlTextureCudaArray& tex)
+inline CudaScopedMappedArray::CudaScopedMappedArray(const GlTextureCudaArray& tex)
     : res(tex.cuda_res)
 {
     cudaGraphicsMapResources(1, &res);
@@ -257,5 +256,3 @@ inline void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b)
 
 
 }
-
-#endif // PANGOLIN_CUDAGL_H

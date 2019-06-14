@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_VIDEO_SHIFT_H
-#define PANGOLIN_VIDEO_SHIFT_H
+#pragma once
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
@@ -38,7 +37,7 @@ namespace pangolin
 class PANGOLIN_EXPORT ShiftVideo : public VideoInterface, public VideoFilterInterface
 {
 public:
-    ShiftVideo(VideoInterface* videoin, VideoPixelFormat new_fmt, int shift_right_bits = 0, unsigned int mask = 0xFFFF);
+    ShiftVideo(std::unique_ptr<VideoInterface>& videoin, PixelFormat new_fmt, int shift_right_bits = 0, unsigned int mask = 0xFFFF);
     ~ShiftVideo();
 
     //! Implement VideoInput::Start()
@@ -62,6 +61,7 @@ public:
     std::vector<VideoInterface*>& InputStreams();
 
 protected:
+    std::unique_ptr<VideoInterface> src;
     std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
     size_t size_bytes;
@@ -71,5 +71,3 @@ protected:
 };
 
 }
-
-#endif // PANGOLIN_VIDEO_SHIFT_H

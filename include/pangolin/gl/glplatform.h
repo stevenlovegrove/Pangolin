@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GLPLATFORM_H
-#define PANGOLIN_GLPLATFORM_H
+#pragma once
 
 //////////////////////////////////////////////////////////
 // Attempt to portably include Necessary OpenGL headers
@@ -41,8 +40,12 @@
     #endif
 
     // Don't define min / max macros in windows.h or other unnecessary macros
-    #define NOMINMAX
-    #define WIN32_LEAN_AND_MEAN
+    #ifndef NOMINMAX
+    #  define NOMINMAX
+    #endif
+    #ifndef WIN32_LEAN_AND_MEAN
+    #  define WIN32_LEAN_AND_MEAN
+    #endif
     #include <Windows.h>
 
     // Undef nuisance Windows.h macros which interfere with our methods
@@ -80,5 +83,3 @@
 #endif // HAVE_GLES
 
 #include <pangolin/gl/glpangoglu.h>
-
-#endif // PANGOLIN_GLPLATFORM_H

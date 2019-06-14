@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_X11WINDOW_H
-#define PANGOLIN_X11WINDOW_H
+#pragma once
 
 #include <pangolin/platform.h>
 #include <pangolin/display/display_internal.h>
@@ -60,12 +59,12 @@ struct X11Display
 
 struct X11GlContext : public GlContextInterface
 {
-    X11GlContext(boostd::shared_ptr<X11Display> &d, ::GLXFBConfig chosenFbc, boostd::shared_ptr<X11GlContext> shared_context = boostd::shared_ptr<X11GlContext>() );
+    X11GlContext(std::shared_ptr<X11Display> &d, ::GLXFBConfig chosenFbc, std::shared_ptr<X11GlContext> shared_context = std::shared_ptr<X11GlContext>() );
     ~X11GlContext();
 
-    boostd::shared_ptr<X11Display> display;
+    std::shared_ptr<X11Display> display;
 
-    boostd::shared_ptr<X11GlContext> shared_context;
+    std::shared_ptr<X11GlContext> shared_context;
 
     // Owns the OpenGl Context
     ::GLXContext glcontext;
@@ -75,28 +74,30 @@ struct X11Window : public PangolinGl
 {
     X11Window(
         const std::string& title, int width, int height,
-        boostd::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc
+        std::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc
     );
 
     ~X11Window();
 
-    void ToggleFullscreen() PANGOLIN_OVERRIDE;
+    void ToggleFullscreen() override;
 
-    void Move(int x, int y) PANGOLIN_OVERRIDE;
+    void Move(int x, int y) override;
 
-    void Resize(unsigned int w, unsigned int h) PANGOLIN_OVERRIDE;
+    void Resize(unsigned int w, unsigned int h) override;
 
     void MakeCurrent(GLXContext ctx);
 
-    void MakeCurrent() PANGOLIN_OVERRIDE;
+    void MakeCurrent() override;
 
-    void SwapBuffers() PANGOLIN_OVERRIDE;
+    void RemoveCurrent() override;
 
-    void ProcessEvents() PANGOLIN_OVERRIDE;
+    void SwapBuffers() override;
+
+    void ProcessEvents() override;
 
     // References the X11 display and context.
-    boostd::shared_ptr<X11Display> display;
-    boostd::shared_ptr<X11GlContext> glcontext;
+    std::shared_ptr<X11Display> display;
+    std::shared_ptr<X11GlContext> glcontext;
 
     // Owns the X11 Window and Colourmap
     ::Window win;
@@ -106,5 +107,3 @@ struct X11Window : public PangolinGl
 };
 
 }
-
-#endif // PANGOLIN_X11WINDOW_H

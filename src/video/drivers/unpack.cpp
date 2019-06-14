@@ -26,6 +26,8 @@
  */
 
 #include <pangolin/video/drivers/unpack.h>
+#include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/iostream_operators.h>
 
 #ifdef DEBUGUNPACK
   #include <pangolin/utils/timer.h>
@@ -41,28 +43,22 @@
 namespace pangolin
 {
 
-UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
-    : size_bytes(0), buffer(0)
+UnpackVideo::UnpackVideo(std::unique_ptr<VideoInterface> &src_, PixelFormat out_fmt)
+    : src(std::move(src_)), size_bytes(0), buffer(0)
 {
-    if(!src) {
-        throw VideoException("UnpackVideo: VideoInterface in must not be null");
-    }
-
-    if( out_fmt.channels != 1) {
-        delete src;
+    if( !src || out_fmt.channels != 1) {
         throw VideoException("UnpackVideo: Only supports single channel output.");
     }
 
-    videoin.push_back(src);
+    videoin.push_back(src.get());
 
     for(size_t s=0; s< src->Streams().size(); ++s) {
         const size_t w = src->Streams()[s].Width();
         const size_t h = src->Streams()[s].Height();
 
         // Check compatibility of formats
-        const VideoPixelFormat in_fmt = src->Streams()[s].PixFormat();
+        const PixelFormat in_fmt = src->Streams()[s].PixFormat();
         if(in_fmt.channels > 1 || in_fmt.bpp > 16) {
-            delete src;
             throw VideoException("UnpackVideo: Only supports one channel input.");
         }
 
@@ -76,7 +72,6 @@ UnpackVideo::UnpackVideo(VideoInterface* src, VideoPixelFormat out_fmt)
 
 UnpackVideo::~UnpackVideo()
 {
-    delete videoin[0];
     delete[] buffer;
 }
 
@@ -198,7 +193,7 @@ void UnpackVideo::Process(unsigned char* image, const unsigned char* buffer)
 
 //! Implement VideoInput::GrabNext()
 bool UnpackVideo::GrabNext( unsigned char* image, bool wait )
-{    
+{
     if(videoin[0]->GrabNext(buffer,wait)) {
         Process(image,buffer);
         return true;
@@ -249,6 +244,21 @@ bool UnpackVideo::DropNFrames(uint32_t n)
     {
         return vpi->DropNFrames(n);
     }
+}
+
+PANGOLIN_REGISTER_FACTORY(UnpackVideo)
+{
+    struct UnpackVideoFactory final : public FactoryInterface<VideoInterface> {
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
+            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+            const std::string fmt = uri.Get("fmt", std::string("GRAY16LE") );
+            return std::unique_ptr<VideoInterface>(
+                new UnpackVideo(subvid, PixelFormatFromString(fmt) )
+            );
+        }
+    };
+
+    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<UnpackVideoFactory>(), 10, "unpack");
 }
 
 }

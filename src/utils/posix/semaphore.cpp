@@ -54,9 +54,9 @@ private:
   string _name;
 };
 
-boostd::shared_ptr<SemaphoreInterface> create_named_semaphore(const string& name, unsigned int value)
+std::shared_ptr<SemaphoreInterface> create_named_semaphore(const string& name, unsigned int value)
 {
-  boostd::shared_ptr<SemaphoreInterface> ptr;
+  std::shared_ptr<SemaphoreInterface> ptr;
   sem_t *semaphore = sem_open(name.c_str(), O_CREAT | O_EXCL,
     S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP, value);
   if (NULL == semaphore) {
@@ -67,9 +67,9 @@ boostd::shared_ptr<SemaphoreInterface> create_named_semaphore(const string& name
   return ptr;
 }
 
-boostd::shared_ptr<SemaphoreInterface> open_named_semaphore(const string& name)
+std::shared_ptr<SemaphoreInterface> open_named_semaphore(const string& name)
 {
-  boostd::shared_ptr<SemaphoreInterface> ptr;
+  std::shared_ptr<SemaphoreInterface> ptr;
   sem_t *semaphore = sem_open(name.c_str(), 0);
 
   if (NULL == semaphore) {
