@@ -37,6 +37,7 @@ Check the CMake configure output for details.
 * Glew
   * (win) built automatically (assuming git is on your path)
   * (deb) `sudo apt-get install libglew-dev`
+  * (dnf) `sudo dnf install mesa-libEGL-devel`
   * (mac) `sudo port install glew`
 
 * CMake (for build environment)
