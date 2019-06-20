@@ -103,7 +103,7 @@ void threadedfilebuf::close()
 
     if(mem_buffer)
     {
-        delete mem_buffer;
+        delete [] mem_buffer;
         mem_buffer = 0;
     }
 
@@ -142,7 +142,7 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
         }
 
         // Allocate bigger buffer
-        delete mem_buffer;
+        delete [] mem_buffer;
         mem_start = 0;
         mem_end = 0;
         mem_max_size = num_bytes * 4;
