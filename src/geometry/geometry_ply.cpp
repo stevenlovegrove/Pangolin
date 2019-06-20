@@ -247,7 +247,7 @@ void StandardizeRgbToColor(pangolin::Geometry& geom)
                 Geometry::Element::Attribute& color = verts.attributes["color"];
 
                 // TODO: Check that these really are contiguous in memory...
-                if(auto attrib = mpark::get_if<Image<float>>(&red)) {
+                if(auto attrib = get_if<Image<float>>(&red)) {
                     color = Image<float>(attrib->ptr, have_alpha ? 4 : 3, verts.h, verts.pitch);
                 }else if(auto attrib = get_if<Image<uint8_t>>(&red)) {
                     color = Image<uint8_t>(attrib->ptr, have_alpha ? 4 : 3, verts.h, verts.pitch);
