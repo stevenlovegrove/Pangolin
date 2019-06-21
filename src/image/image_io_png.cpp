@@ -226,6 +226,7 @@ void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
     PANGOLIN_UNUSED(fmt);
     PANGOLIN_UNUSED(stream);
     PANGOLIN_UNUSED(top_line_first);
+    PANGOLIN_UNUSED(zlib_compression_level);
     throw std::runtime_error("Rebuild Pangolin for PNG support.");
 #endif // HAVE_PNG
 }
