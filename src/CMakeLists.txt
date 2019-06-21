@@ -141,6 +141,9 @@ endif()
 #######################################################
 ## Setup required includes / link info
 
+option(DISPLAY_X11 "X11 Window Interface" ON)
+option(DISPLAY_WAYLAND "Wayland Window Interface" OFF)
+
 if(BUILD_PANGOLIN_GUI)
     if( ANDROID  )
         # Android specific display code
@@ -205,41 +208,38 @@ else()
             list(APPEND LINK_LIBS "-framework Cocoa" )
         elseif(_LINUX_)
             # Wayland
-            find_package(PkgConfig)
-            pkg_check_modules(wayland-client QUIET wayland-client)
-            pkg_check_modules(wayland-egl QUIET wayland-egl)
-            pkg_check_modules(wayland-cursor QUIET wayland-cursor)
-            pkg_check_modules(xkbcommon QUIET xkbcommon)
-            pkg_check_modules(egl QUIET egl)
+            find_package(Wayland QUIET)
+            if(DISPLAY_WAYLAND OR WAYLAND_CLIENT_FOUND)
+                find_package(Wayland REQUIRED)
+                find_package(PkgConfig)
+                pkg_check_modules(xkbcommon REQUIRED xkbcommon)
+                pkg_check_modules(egl QUIET egl)
 
-            if(wayland-client_FOUND AND wayland-egl_FOUND AND wayland-cursor_FOUND AND xkbcommon_FOUND AND egl_FOUND)
                 list(APPEND WINDOW_FACTORY_REG RegisterWaylandWindowFactory)
                 list(APPEND SOURCES display/device/display_wayland.cpp)
                 list(APPEND LINK_LIBS
-                    ${wayland-egl_LIBRARIES}
-                    ${wayland-cursor_LIBRARIES}
-                    ${xkbcommon_LIBRARIES}
+                    ${WAYLAND_CLIENT_LIBRARIES}
+                    ${WAYLAND_EGL_LIBRARIES}
+                    ${WAYLAND_CURSOR_LIBRARIES}
                     ${egl_LIBRARIES}
+                    ${xkbcommon_LIBRARIES}
                 )
                 list(APPEND INTERNAL_INC
-                    ${wayland-egl_INCLUDE_DIRS}
-                    ${wayland-cursor_INCLUDE_DIRS}
-                    ${xkbcommon_INCLUDE_DIRS}
+                    ${WAYLAND_CLIENT_INCLUDE_DIR}
+                    ${WAYLAND_EGL_INCLUDE_DIR}
+                    ${WAYLAND_CURSOR_INCLUDE_DIR}
                     ${egl_INCLUDE_DIRS}
+                    ${xkbcommon_INCLUDE_DIRS}
                 )
             endif()
 
             # X11
             find_package(X11 QUIET)
-            if(X11_FOUND)
+            if(DISPLAY_X11 AND X11_FOUND)
                 list(APPEND WINDOW_FACTORY_REG RegisterX11WindowFactory)
                 list(APPEND USER_INC ${X11_INCLUDE_DIR})
                 list(APPEND SOURCES display/device/display_x11.cpp )
                 list(APPEND LINK_LIBS ${X11_LIBRARIES} )
-            endif()
-
-            if(NOT wayland-client_FOUND AND NOT X11_FOUND)
-                message(FATAL_ERROR "At least one of X11 or Wayland must be found for Pangolin GUI support.")
             endif()
         endif()
     endif()
