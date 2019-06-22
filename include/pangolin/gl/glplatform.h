@@ -55,9 +55,7 @@
     #undef ERROR
 #endif
 
-#ifdef HAVE_GLEW
-    #include <GL/glew.h>
-#endif
+#include <GL/glew.h>
 
 #ifdef HAVE_GLES
     #if defined(_ANDROID_)
