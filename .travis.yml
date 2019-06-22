@@ -10,19 +10,21 @@ before_install:
 
 language: cpp
 
-compiler:
-  - gcc
-  - clang
-
-os:
-  - linux
-  - osx
-
-env:
-  - BUILD_TYPE=Release
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      env: PARALLEL_BUILD="-- -j 8"
+    - os: linux
+      compiler: clang
+      env: PARALLEL_BUILD="-- -j 8"
+    - os: osx
+      env: PARALLEL_BUILD="-- -j 8"
+    - os: windows
+      env: PARALLEL_BUILD="--parallel 8"
 
 script:
   - mkdir build
   - cd build
-  - cmake -D CMAKE_BUILD_TYPE=$BUILD_TYPE ..
-  - make -j4
+  - cmake -D CMAKE_BUILD_TYPE=Release ..
+  - cmake --build . $PARALLEL_BUILD
