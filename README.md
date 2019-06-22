@@ -53,7 +53,10 @@ Check the CMake configure output for details.
   * (mac) preinstalled with osx
   * (for pybind11) `git submodule init && git submodule update`
   * (useful modules) `sudo python -mpip install numpy pyopengl Pillow pybind11`
-  
+
+* Wayland
+  * pkg-config: `sudo apt install pkg-config`
+  * Wayland and EGL:`sudo apt install libegl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols`
 
 ### Optional Dependencies for video input ###
 
