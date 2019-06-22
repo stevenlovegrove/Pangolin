@@ -825,7 +825,9 @@ WaylandDisplay::WaylandDisplay(const int width, const int height, const std::str
     xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 
     wdisplay = wl_display_connect(nullptr);
-    if (wdisplay == nullptr) { return; }
+    if (wdisplay == nullptr) {
+        throw std::runtime_error("Cannot connect to Wayland compositor!");
+    }
 
     wregistry = wl_display_get_registry(wdisplay);
     wl_registry_add_listener(wregistry, &wregistry_listener, this);
@@ -834,7 +836,7 @@ WaylandDisplay::WaylandDisplay(const int width, const int height, const std::str
 
     egl_display = eglGetDisplay((EGLNativeDisplayType)wdisplay);
     if(!egl_display) {
-        std::cerr << "Failed to open Wayland display" << std::endl;
+        std::cerr << "Failed to open EGL display" << std::endl;
     }
 
     EGLint major, minor;
@@ -866,6 +868,16 @@ WaylandDisplay::WaylandDisplay(const int width, const int height, const std::str
     egl_surface = eglCreateWindowSurface(egl_display, egl_configs[0], (EGLNativeWindowType)egl_window, nullptr);
     if (egl_surface == EGL_NO_SURFACE) {
         std::cerr << "Cannot create EGL surface" << std::endl;
+    }
+
+    if(
+#if USE_WL_XDG
+    xshell
+#else
+    wshell
+#endif
+    ==nullptr) {
+        throw std::runtime_error("No Wayland shell available!");
     }
 
 #if USE_WL_XDG
@@ -989,17 +1001,21 @@ void WaylandWindow::SwapBuffers() {
 
 std::unique_ptr<WindowInterface> CreateWaylandWindowAndBind(const std::string window_title, const int w, const int h, const std::string /*display_name*/, const bool /*double_buffered*/, const int /*sample_buffers*/, const int /*samples*/) {
 
-    std::unique_ptr<WaylandDisplay> newdisplay = std::unique_ptr<WaylandDisplay>(new WaylandDisplay(w, h, window_title));
-    // return null pointer for fallback to X11
-    if(!newdisplay->wdisplay) { return nullptr; }
+    try{
+        std::unique_ptr<WaylandDisplay> newdisplay = std::unique_ptr<WaylandDisplay>(new WaylandDisplay(w, h, window_title));
 
-    // glewInit() fails with SIGSEGV for glew < 2.0 since it links to GLX
-    if(atoi((char*)glewGetString(GLEW_VERSION_MAJOR))<2)
+        // glewInit() fails with SIGSEGV for glew < 2.0 since it links to GLX
+        if(atoi((char*)glewGetString(GLEW_VERSION_MAJOR))<2)
+            return nullptr;
+
+        WaylandWindow* win = new WaylandWindow(w, h, std::move(newdisplay));
+
+        return std::unique_ptr<WindowInterface>(win);
+    }
+    catch(const std::runtime_error&) {
+        // return null pointer for fallback to X11
         return nullptr;
-
-    WaylandWindow* win = new WaylandWindow(w, h, std::move(newdisplay));
-
-    return std::unique_ptr<WindowInterface>(win);
+    }
 }
 
 } // namespace wayland
