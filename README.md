@@ -1,4 +1,4 @@
-What is Pangolin {#mainpage}
+What is Pangolin
 ====================================
 
 Pangolin is a lightweight portable rapid development library for managing OpenGL
@@ -33,22 +33,23 @@ Check the CMake configure output for details.
 * C++11
 
 * OpenGL (Desktop / ES / ES2)
+  * (lin) `sudo apt install libgl1-mesa-dev`
 
 * Glew
   * (win) built automatically (assuming git is on your path)
-  * (deb) `sudo apt-get install libglew-dev`
+  * (deb) `sudo apt install libglew-dev`
   * (mac) `sudo port install glew`
 
 * CMake (for build environment)
   * (win) http://www.cmake.org/cmake/resources/software.html
-  * (deb) `sudo apt-get install cmake`
+  * (deb) `sudo apt install cmake`
   * (mac) `sudo port install cmake`
 
 ### Recommended Dependencies ###
 
 * Python2 / Python3, for drop-down interactive console
   * (win) http://www.python.org/downloads/windows
-  * (deb) `sudo apt-get install libpython2.7-dev`
+  * (deb) `sudo apt install libpython2.7-dev`
   * (mac) preinstalled with osx
   * (for pybind11) `git submodule init && git submodule update`
   * (useful modules) `sudo python -mpip install numpy pyopengl Pillow pybind11`
@@ -57,16 +58,16 @@ Check the CMake configure output for details.
 ### Optional Dependencies for video input ###
 
 * FFMPEG (For video decoding and image rescaling)
-  * (deb) `sudo apt-get install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev`
+  * (deb) `sudo apt install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev`
 
 * DC1394 (For firewire input)
-  * (deb) `sudo apt-get install libdc1394-22-dev libraw1394-dev`
+  * (deb) `sudo apt install libdc1394-22-dev libraw1394-dev`
 
 * libuvc (For cross-platform webcam video input via libusb)
   * git://github.com/ktossell/libuvc.git
 
 * libjpeg, libpng, libtiff, libopenexr (For reading still-image sequences)
-  * (deb) `sudo apt-get install libjpeg-dev libpng12-dev libtiff5-dev libopenexr-dev`
+  * (deb) `sudo apt install libjpeg-dev libpng12-dev libtiff5-dev libopenexr-dev`
 
 * OpenNI / OpenNI2 (For Kinect / Xtrion / Primesense capture)
 
