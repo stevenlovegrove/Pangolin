@@ -548,7 +548,7 @@ static AVStream* CreateStream(AVFormatContext *oc, CodecID codec_id, uint64_t fr
 class FfmpegVideoOutputStream
 {
 public:
-    FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate, int bit_rate, const StreamInfo& input_info );
+    FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate, int bit_rate, const StreamInfo& input_info, bool flip );
     ~FfmpegVideoOutputStream();
 
     const StreamInfo& GetStreamInfo() const;
@@ -730,12 +730,12 @@ double FfmpegVideoOutputStream::BaseFrameTime()
 
 FfmpegVideoOutputStream::FfmpegVideoOutputStream(
     FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate,
-    int bit_rate, const StreamInfo& input_info
+    int bit_rate, const StreamInfo& input_info, bool flip_image
 )
     : recorder(recorder), input_info(input_info),
       input_format(FfmpegFmtFromString(input_info.PixFormat())),
       output_format( FfmpegFmtFromString("YUV420P") ),
-      last_pts(-1), sws_ctx(NULL), frame(NULL), flip(true)
+      last_pts(-1), sws_ctx(NULL), frame(NULL), flip(flip_image)
 {
     stream = CreateStream(recorder.oc, codec_id, frame_rate, bit_rate, output_format, input_info.Width(), input_info.Height() );
 
@@ -765,9 +765,9 @@ FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
     avcodec_close(stream->codec);
 }
 
-FfmpegVideoOutput::FfmpegVideoOutput(const std::string& filename, int base_frame_rate, int bit_rate)
+FfmpegVideoOutput::FfmpegVideoOutput(const std::string& filename, int base_frame_rate, int bit_rate, bool flip_image)
     : filename(filename), started(false), oc(NULL),
-      frame_count(0), base_frame_rate(base_frame_rate), bit_rate(bit_rate), is_pipe(pangolin::IsPipe(filename))
+      frame_count(0), base_frame_rate(base_frame_rate), bit_rate(bit_rate), is_pipe(pangolin::IsPipe(filename)), flip(flip_image)
 {
     Initialise(filename);
 }
@@ -856,7 +856,7 @@ void FfmpegVideoOutput::SetStreams(const std::vector<StreamInfo>& str, const std
     for(std::vector<StreamInfo>::const_iterator i = str.begin(); i!= str.end(); ++i)
     {
         streams.push_back( new FfmpegVideoOutputStream(
-            *this, oc->oformat->video_codec, base_frame_rate, bit_rate, *i
+            *this, oc->oformat->video_codec, base_frame_rate, bit_rate, *i, flip
         ) );
     }
 
@@ -931,8 +931,9 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideoOutput)
 {
     struct FfmpegVideoFactory final : public FactoryInterface<VideoOutputInterface> {
         std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
-            int desired_frame_rate = uri.Get("fps", 60);
-            int desired_bit_rate = uri.Get("bps", 20000*1024);
+            const int desired_frame_rate = uri.Get("fps", 60);
+            const int desired_bit_rate = uri.Get("bps", 20000*1024);
+            const bool flip = uri.Get("flip", false);
             std::string filename = uri.url;
 
             if(uri.Contains("unique_filename")) {
@@ -940,7 +941,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideoOutput)
             }
 
             return std::unique_ptr<VideoOutputInterface>(
-                new FfmpegVideoOutput(filename, desired_frame_rate, desired_bit_rate)
+                new FfmpegVideoOutput(filename, desired_frame_rate, desired_bit_rate, flip)
             );
         }
     };
