@@ -52,7 +52,7 @@ struct hash<tinyobj::index_t> {
 } // namespace std
 
 namespace tinyobj {
-    
+
 bool operator==(const index_t a, const index_t b) {
     return a.vertex_index == b.vertex_index && a.normal_index == b.normal_index && a.texcoord_index == b.texcoord_index;
 }
@@ -105,7 +105,9 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
         // Load textures - a bit of a hack for now.
         for(size_t i=0; i < materials.size(); ++i) {
             if(!materials[i].diffuse_texname.empty()) {
-                TypedImage& tex_image = geom.textures[FormatString("texture_%",i)];
+              const std::string tex_name = FormatString("texture_%",i);
+              try {
+                TypedImage& tex_image = geom.textures[tex_name];
                 tex_image = LoadImage(PathParent(filename) + "/" + materials[i].diffuse_texname);
                 const int row_bytes = tex_image.w * tex_image.fmt.bpp / 8;
                 std::vector<unsigned char> tmp_row(row_bytes);
@@ -114,6 +116,10 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
                     std::memcpy(tex_image.RowPtr(y), tex_image.RowPtr(tex_image.h - 1 - y), row_bytes);
                     std::memcpy(tex_image.RowPtr(tex_image.h - 1 - y), tmp_row.data(), row_bytes);
                 }
+              } catch(const std::exception& e) {
+                pango_print_warn("Unable to read texture '%s'\n", tex_name.c_str());
+                geom.textures.erase(tex_name);
+              }
             }
         }
 
