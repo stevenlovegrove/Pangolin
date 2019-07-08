@@ -31,10 +31,23 @@
 namespace py_pangolin {
 
   void bind_gl_draw(pybind11::module &m){
+
+    m.def("glDrawAxis",
+          (void (*)(float))&pangolin::glDrawAxis);
+
     m.def("glDrawColouredCube",
           &pangolin::glDrawColouredCube,
           pybind11::arg("axis_min") = -0.5f,
           pybind11::arg("axis_max") = +0.5f);
+
+    m.def("glDraw_x0",
+          &pangolin::glDraw_x0);
+    m.def("glDraw_y0",
+          &pangolin::glDraw_y0);
+    m.def("glDraw_z0",
+          &pangolin::glDraw_z0);
+
+
   }
 
 
