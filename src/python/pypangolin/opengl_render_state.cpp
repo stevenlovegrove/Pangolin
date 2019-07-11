@@ -54,7 +54,7 @@ namespace py_pangolin {
       .def("Scale", &pangolin::OpenGlMatrix::Scale)
       .def("RotateX", &pangolin::OpenGlMatrix::RotateX)
       .def("RotateY", &pangolin::OpenGlMatrix::RotateY)
-      .def("RotateZ", &pangolin::OpenGlMatrix::RotateX)
+      .def("RotateZ", &pangolin::OpenGlMatrix::RotateZ)
       .def(pybind11::init<>())
       .def("Load", &pangolin::OpenGlMatrix::Load)
       .def("Multiply", &pangolin::OpenGlMatrix::Multiply)
