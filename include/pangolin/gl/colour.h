@@ -163,6 +163,11 @@ public:
         return GetColourBin(unique_colours++);
     }
 
+    /// Reset colour wheel counter to initial state
+    inline void Reset() {
+      unique_colours = 0;
+    }
+
 protected:
     int unique_colours;
     float sat;
