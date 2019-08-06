@@ -1161,5 +1161,9 @@ void Plotter::ClearMarkers()
     plotmarkers.clear();
 }
 
+void Plotter::ResetColourWheel()
+{
+    colour_wheel.Reset();
+}
 
 }
