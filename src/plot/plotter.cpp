@@ -829,6 +829,8 @@ void Plotter::SetView(const XYRangef& range)
 
     px.rview.x = range.x;
     py.rview.y = range.y;
+    px.target.x = range.x;
+    py.target.y = range.y;
 }
 
 void Plotter::SetViewSmooth(const XYRangef &range)
