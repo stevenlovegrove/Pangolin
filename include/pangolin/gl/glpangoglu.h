@@ -31,9 +31,8 @@
 
 namespace pangolin {
 
-/// Clone of gluProject
 PANGOLIN_EXPORT
-const GLubyte* glErrorString(GLenum error);
+const char* glErrorString(GLenum error);
 
 /// Clone of gluProject
 PANGOLIN_EXPORT
