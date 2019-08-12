@@ -21,6 +21,12 @@ namespace pangolin {
 
 #ifdef HAVE_JPEG
 
+void error_handler(j_common_ptr cinfo) {
+    char msg[JMSG_LENGTH_MAX];
+    (*(cinfo->err->format_message)) (cinfo, msg);
+    throw std::runtime_error(msg);
+}
+
 const static size_t PANGO_JPEG_BUF_SIZE = 16384;
 
 struct pango_jpeg_source_mgr {
@@ -159,6 +165,7 @@ TypedImage LoadJpg(std::istream& is) {
 
     // Setup decompression structure
     cinfo.err = jpeg_std_error(&jerr);
+    jerr.error_exit = error_handler;
     jpeg_create_decompress(&cinfo);
     pango_jpeg_set_source_mgr(&cinfo, is);
 
