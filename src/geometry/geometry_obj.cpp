@@ -225,7 +225,7 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
                 PANGO_ASSERT(num_indices % 3 == 0);
 
                 // Use vert_ibo as our new IBO
-                faces->second.Reinitialise(3*sizeof(uint32_t), num_indices);
+                faces->second.Reinitialise(3*sizeof(uint32_t), num_faces);
                 Image<uint32_t> new_ibo = faces->second.UnsafeReinterpret<uint32_t>().SubImage(0,0,3,num_faces);
                 for(size_t f=0; f < num_faces; ++f) {
                     for(size_t v=0; v < 3; ++v) {
