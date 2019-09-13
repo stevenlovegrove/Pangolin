@@ -138,6 +138,10 @@ if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND BUILD_PANGOLIN_VIDEO )
     list(APPEND SOURCES tools/video_viewer.cpp)
 endif()
 
+if(LINUX)
+    set(OpenGL_GL_PREFERENCE "GLVND")
+endif()
+
 #######################################################
 ## Setup required includes / link info
 
