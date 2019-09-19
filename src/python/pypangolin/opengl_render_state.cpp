@@ -27,6 +27,7 @@
 
 #include "opengl_render_state.hpp"
 #include <pangolin/display/opengl_render_state.h>
+#include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>
 
@@ -56,6 +57,8 @@ namespace py_pangolin {
       .def("RotateY", &pangolin::OpenGlMatrix::RotateY)
       .def("RotateZ", &pangolin::OpenGlMatrix::RotateZ)
       .def(pybind11::init<>())
+      .def(pybind11::init<const Eigen::Matrix<float, 4, 4> >())
+      .def(pybind11::init<const Eigen::Matrix<double, 4, 4> >())
       .def("Load", &pangolin::OpenGlMatrix::Load)
       .def("Multiply", &pangolin::OpenGlMatrix::Multiply)
       .def("SetIdentity", &pangolin::OpenGlMatrix::SetIdentity)
