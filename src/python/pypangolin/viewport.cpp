@@ -46,8 +46,11 @@ namespace py_pangolin {
       .def("DisableScissor", &pangolin::Viewport::DisableScissor)
       .def("r", &pangolin::Viewport::r)
       .def("t", &pangolin::Viewport::t)
-      .def("aspect", &pangolin::Viewport::aspect);
+      .def("aspect", &pangolin::Viewport::aspect)
+      .def_readwrite("l", &pangolin::Viewport::l)
+      .def_readwrite("b", &pangolin::Viewport::b)
+      .def_readwrite("w", &pangolin::Viewport::w)
+      .def_readwrite("h", &pangolin::Viewport::h);
   }
 
 }  // py_pangolin
-
