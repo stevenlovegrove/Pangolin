@@ -76,8 +76,8 @@ int mapKeymap(int osx_key)
 -(void)reshape
 {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-    if ( [self wantsBestResolutionOpenGLSurface] && [ _window respondsToSelector:@selector(backingScaleFactor) ] )
-        backing_scale = [_window backingScaleFactor];
+    if ( [self wantsBestResolutionOpenGLSurface] && [ self.window respondsToSelector:@selector(backingScaleFactor) ] )
+        backing_scale = [self.window backingScaleFactor];
     else
 #endif
         backing_scale = 1.0;

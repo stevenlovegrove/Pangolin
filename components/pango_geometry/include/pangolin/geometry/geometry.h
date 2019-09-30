@@ -47,7 +47,6 @@ struct Geometry
         Element() = default;
         Element(Element&&) = default;
         Element& operator=(Element&&) = default;
-        Element& operator=(const Element&) = default;
 
         Element(size_t stride_bytes, size_t num_elements)
             : ManagedImage<uint8_t>(stride_bytes, num_elements)
