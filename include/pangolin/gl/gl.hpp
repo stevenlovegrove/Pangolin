@@ -92,7 +92,9 @@ inline size_t GlDataTypeBytes(GLenum type)
 
 inline size_t GlFormatChannels(GLenum data_layout)
 {
-    return format_channels[data_layout - GL_RED];
+  if (data_layout == GL_BGR) return 3;
+  if (data_layout == GL_BGRA) return 4;
+  return format_channels[data_layout - GL_RED];
 }
 
 //template<typename T>
