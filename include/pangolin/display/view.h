@@ -64,7 +64,7 @@ struct PANGOLIN_EXPORT View
 {
     View(double aspect=0.0)
         : aspect(aspect), top(1.0),left(0.0),right(1.0),bottom(0.0), hlock(LockCenter),vlock(LockCenter),
-          layout(LayoutOverlay), scroll_offset(0), show(1), zorder(0), handler(0) {}
+          layout(LayoutOverlay), scroll_offset(0), show(1), zorder(0), handler(0), scroll_show(1) {}
     
     virtual ~View() {}
     
@@ -228,6 +228,8 @@ struct PANGOLIN_EXPORT View
 private:
     // Private copy constructor
     View(View&) { /* Do Not copy - take reference instead*/ }
+    
+    bool scroll_show;
 };
 
 }
