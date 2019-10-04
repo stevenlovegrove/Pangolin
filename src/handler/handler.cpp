@@ -95,7 +95,7 @@ void HandlerScroll::Mouse(View& d, MouseButton button, int x, int y, bool presse
     {
         if( button == MouseWheelUp) d.scroll_offset   -= 1;
         if( button == MouseWheelDown) d.scroll_offset += 1;
-        d.scroll_offset = std::max(0, std::min(d.scroll_offset, (int)d.views.size()) );
+        d.scroll_offset = std::max(0, std::min(d.scroll_offset, (int)d.NumVisibleChildren()-1) );
         d.ResizeChildren();
     }else{
         Handler::Mouse(d,button,x,y,pressed,button_state);
@@ -107,7 +107,7 @@ void HandlerScroll::Special(View& d, InputSpecial inType, float x, float y, floa
     if( inType == InputSpecialScroll )
     {
         d.scroll_offset -= (int)(p2 / fabs(p2));
-        d.scroll_offset = std::max(0, std::min(d.scroll_offset, (int)d.views.size()) );
+        d.scroll_offset = std::max(0, std::min(d.scroll_offset, (int)d.NumVisibleChildren()-1) );
         d.ResizeChildren();
     }else{
         Handler::Special(d,inType,x,y,p1,p2,p3,p4,button_state);
