@@ -47,6 +47,7 @@ namespace py_pangolin {
     pybind11::class_<pangolin::GlTexture>(m, "GlTexture")
       .def(pybind11::init<>())
       .def(pybind11::init<GLint, GLint, GLint, bool, int, GLenum, GLenum>(), pybind11::arg("width"), pybind11::arg("height"), pybind11::arg("internal_format") = GL_RGBA8, pybind11::arg("sampling_linear") = true, pybind11::arg("border") = 0, pybind11::arg("glformat") = GL_RGBA, pybind11::arg("gltype") = GL_UNSIGNED_BYTE)
+      .def("Reinitialise", &pangolin::GlTexture::Reinitialise)
       .def("Upload", [](pangolin::GlTexture & texture, pybind11::buffer b, GLenum data_format, GLenum type){
         pybind11::buffer_info info = b.request();
         texture.Upload(info.ptr, data_format, type);
@@ -68,7 +69,11 @@ namespace py_pangolin {
       .def("Reinitialise", &pangolin::GlRenderBuffer::Reinitialise);
 
     pybind11::class_<pangolin::GlFramebuffer>(m, "GlFramebuffer")
+      .def(pybind11::init<>())
       .def(pybind11::init<pangolin::GlTexture &, pangolin::GlRenderBuffer &>())
+      .def("Reinitialise", &pangolin::GlFramebuffer::Reinitialise)
+      .def("AttachColour", &pangolin::GlFramebuffer::AttachColour)
+      .def("AttachDepth", &pangolin::GlFramebuffer::AttachDepth)
       .def("Bind", &pangolin::GlFramebuffer::Bind)
       .def("Unbind", &pangolin::GlFramebuffer::Unbind);
 
