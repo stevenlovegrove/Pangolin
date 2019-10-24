@@ -94,7 +94,7 @@ int main( int argc, char* argv[] )
 
     pangolin::CreateWindowAndBind("Plotter", 640, 480);
 
-    pangolin::Plotter plotter(&log, xrange.min, xrange.max, yrange.min, yrange.max, 0.001, 0.001);
+    pangolin::Plotter plotter(&log, std::make_unique<pangolin::ColourWheel>(0.6), xrange.min, xrange.max, yrange.min, yrange.max, 0.001, 0.001);
     if( (bool)args["x"] || (bool)args["y"]) {
         plotter.ClearSeries();
         std::vector<std::string> xvec = pangolin::Split(xs,',');
