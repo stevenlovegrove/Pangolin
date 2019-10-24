@@ -197,12 +197,13 @@ void Plotter::PlotImplicit::CreateDistancePlot(const std::string& /*dist*/)
 
 Plotter::Plotter(
     DataLog* log,
+    std::unique_ptr<ColourProvider>&& colour_prov,
     float left, float right, float bottom, float top,
     float tickx, float ticky,
     Plotter* linked_plotter_x,
     Plotter* linked_plotter_y
 )   : default_log(log),
-      colour_wheel(0.6f),
+      colour_provider(std::move(colour_prov)),
       rview_default(left,right,bottom,top), rview(rview_default), target(rview),
       selection(0,0,0,0),
       track(false), track_x("$i"), track_y(""),
@@ -1110,7 +1111,7 @@ void Plotter::AddSeries(const std::string& x_expr, const std::string& y_expr,
     const std::string& title, DataLog *log)
 {
     if( !std::isfinite(colour.r) ) {
-        colour = colour_wheel.GetUniqueColour();
+        colour = colour_provider->GetNext();
     }
     plotseries.push_back( PlotSeries() );
     plotseries.back().CreatePlot(x_expr, y_expr, colour, (title == "$y") ? PlotTitleFromExpr(y_expr) : title);
@@ -1163,9 +1164,9 @@ void Plotter::ClearMarkers()
     plotmarkers.clear();
 }
 
-void Plotter::ResetColourWheel()
+void Plotter::ResetColourProvider()
 {
-    colour_wheel.Reset();
+    colour_provider->Reset();
 }
 
 }
