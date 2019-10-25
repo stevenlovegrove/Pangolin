@@ -141,7 +141,7 @@ class ColourProvider
 public:
     /// Adds a colour to this provider. Some providers that generate colours
     /// might not need to implement this (e.g. ColourWheel)
-    virtual void Add(const Colour& colour) {};
+    virtual void Add(const Colour& /*colour*/) {};
 
     /// Get next colour. In the case of generation it would create a new one.
     virtual Colour GetNext() = 0;
