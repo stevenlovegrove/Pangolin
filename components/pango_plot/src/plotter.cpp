@@ -198,6 +198,20 @@ void Plotter::PlotImplicit::CreateDistancePlot(const std::string& /*dist*/)
 
 Plotter::Plotter(
     DataLog* log,
+    float left, float right, float bottom, float top,
+    float tickx, float ticky,
+    Plotter* linked_plotter_x,
+    Plotter* linked_plotter_y
+)   : Plotter(log,
+      std::make_unique<pangolin::ColourWheel>(0.6),
+      left,right,bottom,top,
+      tickx, ticky,
+      linked_plotter_x, linked_plotter_y)
+{
+}
+
+Plotter::Plotter(
+    DataLog* log,
     std::unique_ptr<ColourProvider>&& colour_prov,
     float left, float right, float bottom, float top,
     float tickx, float ticky,
