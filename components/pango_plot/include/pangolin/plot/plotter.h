@@ -101,6 +101,17 @@ struct Marker
 class PANGOLIN_EXPORT Plotter : public View, Handler
 {
 public:
+
+    /// Constructor without a colour provider. Defaults to a color wheel
+    Plotter(
+        DataLog* default_log,
+        float left = 0, float right = 600, float bottom = -1, float top = 1,
+        float tickx = 30, float ticky = 0.5,
+        Plotter* linked_plotter_x = 0,
+        Plotter* linked_plotter_y = 0
+    );
+
+    /// Constructor that allows the passing of a colour provider
     Plotter(
         DataLog* default_log,
         std::unique_ptr<ColourProvider>&& colour_prov,
