@@ -212,57 +212,59 @@ else()
             list(APPEND LINK_LIBS "-framework Cocoa" )
         elseif(_LINUX_)
             # Wayland
-            find_package(Wayland QUIET)
-            if(DISPLAY_WAYLAND OR WAYLAND_CLIENT_FOUND)
-                find_package(Wayland REQUIRED)
-                find_package(PkgConfig)
-                pkg_check_modules(xkbcommon REQUIRED xkbcommon)
-                pkg_check_modules(egl QUIET egl)
+            if(DISPLAY_WAYLAND)
+                find_package(Wayland QUIET)
+                if(WAYLAND_CLIENT_FOUND)
+                    find_package(Wayland REQUIRED)
+                    find_package(PkgConfig)
+                    pkg_check_modules(xkbcommon REQUIRED xkbcommon)
+                    pkg_check_modules(egl QUIET egl)
 
-                # find Wayland protocols
-                pkg_get_variable(WAYLAND_PROTOCOLS_DIR wayland-protocols pkgdatadir)
+                    # find Wayland protocols
+                    pkg_get_variable(WAYLAND_PROTOCOLS_DIR wayland-protocols pkgdatadir)
 
-                # generate header for protocol 'xdg_shell'
-                set(XDG_PROT_DEF "${WAYLAND_PROTOCOLS_DIR}/stable/xdg-shell/xdg-shell.xml")
-                if(EXISTS ${XDG_PROT_DEF})
-                    # use the 'xdg_shell' protocol
-                    add_definitions(-DUSE_WL_XDG=1)
+                    # generate header for protocol 'xdg_shell'
+                    set(XDG_PROT_DEF "${WAYLAND_PROTOCOLS_DIR}/stable/xdg-shell/xdg-shell.xml")
+                    if(EXISTS ${XDG_PROT_DEF})
+                        # use the 'xdg_shell' protocol
+                        add_definitions(-DUSE_WL_XDG=1)
 
-                    # find 'wayland-scanner' executable
-                    pkg_get_variable(WAYLAND_SCANNER wayland-scanner wayland_scanner)
+                        # find 'wayland-scanner' executable
+                        pkg_get_variable(WAYLAND_SCANNER wayland-scanner wayland_scanner)
 
-                    # generate protocol implementation
-                    add_custom_command(
-                        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.h
-                        COMMAND ${WAYLAND_SCANNER} client-header ${XDG_PROT_DEF} xdg-shell-client-protocol.h)
-                    add_custom_command(
-                        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-protocol.c
-                        COMMAND ${WAYLAND_SCANNER} private-code ${XDG_PROT_DEF} xdg-shell-protocol.c
-                        DEPENDS xdg-shell-client-protocol.h)
-                    include_directories(${CMAKE_CURRENT_BINARY_DIR})
-                    list(APPEND SOURCES xdg-shell-protocol.c)
+                        # generate protocol implementation
+                        add_custom_command(
+                            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.h
+                            COMMAND ${WAYLAND_SCANNER} client-header ${XDG_PROT_DEF} xdg-shell-client-protocol.h)
+                        add_custom_command(
+                            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-protocol.c
+                            COMMAND ${WAYLAND_SCANNER} private-code ${XDG_PROT_DEF} xdg-shell-protocol.c
+                            DEPENDS xdg-shell-client-protocol.h)
+                        include_directories(${CMAKE_CURRENT_BINARY_DIR})
+                        list(APPEND SOURCES xdg-shell-protocol.c)
 
-                else()
-                    # use deprecated 'wl_shell' interface
-                    add_definitions(-DUSE_WL_XDG=0)
+                    else()
+                        # use deprecated 'wl_shell' interface
+                        add_definitions(-DUSE_WL_XDG=0)
+                    endif()
+
+                    list(APPEND WINDOW_FACTORY_REG RegisterWaylandWindowFactory)
+                    list(APPEND SOURCES display/device/display_wayland.cpp)
+                    list(APPEND LINK_LIBS
+                        ${WAYLAND_CLIENT_LIBRARIES}
+                        ${WAYLAND_EGL_LIBRARIES}
+                        ${WAYLAND_CURSOR_LIBRARIES}
+                        ${egl_LIBRARIES}
+                        ${xkbcommon_LIBRARIES}
+                    )
+                    list(APPEND INTERNAL_INC
+                        ${WAYLAND_CLIENT_INCLUDE_DIR}
+                        ${WAYLAND_EGL_INCLUDE_DIR}
+                        ${WAYLAND_CURSOR_INCLUDE_DIR}
+                        ${egl_INCLUDE_DIRS}
+                        ${xkbcommon_INCLUDE_DIRS}
+                    )
                 endif()
-
-                list(APPEND WINDOW_FACTORY_REG RegisterWaylandWindowFactory)
-                list(APPEND SOURCES display/device/display_wayland.cpp)
-                list(APPEND LINK_LIBS
-                    ${WAYLAND_CLIENT_LIBRARIES}
-                    ${WAYLAND_EGL_LIBRARIES}
-                    ${WAYLAND_CURSOR_LIBRARIES}
-                    ${egl_LIBRARIES}
-                    ${xkbcommon_LIBRARIES}
-                )
-                list(APPEND INTERNAL_INC
-                    ${WAYLAND_CLIENT_INCLUDE_DIR}
-                    ${WAYLAND_EGL_INCLUDE_DIR}
-                    ${WAYLAND_CURSOR_INCLUDE_DIR}
-                    ${egl_INCLUDE_DIRS}
-                    ${xkbcommon_INCLUDE_DIRS}
-                )
             endif()
 
             # X11
