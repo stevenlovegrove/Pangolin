@@ -124,7 +124,7 @@ if(BUILD_PANGOLIN_VIDEO)
     RegisterThreadVideoFactory
   )
 
-  if(LINUX)
+  if(_LINUX_)
     list(APPEND HEADERS ${INCDIR}/video/drivers/shared_memory.h)
     list(APPEND SOURCES video/drivers/shared_memory.cpp)
     # Required for shared memory API using some versions of glibc
@@ -138,7 +138,7 @@ if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND BUILD_PANGOLIN_VIDEO )
     list(APPEND SOURCES tools/video_viewer.cpp)
 endif()
 
-if(LINUX)
+if(_LINUX_)
     set(OpenGL_GL_PREFERENCE "GLVND")
 endif()
 
