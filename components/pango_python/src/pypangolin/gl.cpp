@@ -48,6 +48,9 @@ namespace py_pangolin {
       .def(pybind11::init<>())
       .def(pybind11::init<GLint, GLint, GLint, bool, int, GLenum, GLenum>(), pybind11::arg("width"), pybind11::arg("height"), pybind11::arg("internal_format") = GL_RGBA8, pybind11::arg("sampling_linear") = true, pybind11::arg("border") = 0, pybind11::arg("glformat") = GL_RGBA, pybind11::arg("gltype") = GL_UNSIGNED_BYTE)
       .def("Reinitialise", &pangolin::GlTexture::Reinitialise)
+      .def("Id", [](pangolin::GlTexture & texture){ return texture.tid; })
+      .def("Bind", &pangolin::GlTexture::Bind)
+      .def("Unbind", &pangolin::GlTexture::Unbind)
       .def("Upload", [](pangolin::GlTexture & texture, pybind11::buffer b, GLenum data_format, GLenum type){
         pybind11::buffer_info info = b.request();
         texture.Upload(info.ptr, data_format, type);
