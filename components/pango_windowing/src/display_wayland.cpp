@@ -475,23 +475,28 @@ static void handle_configure_toplevel(void *data, struct xdg_toplevel */*xdg_top
         main_h = std::max((w->height)-2*int(w->decoration->border_size)-int(w->decoration->title_size), int(min_height));
     }
 
+    w->width = main_w;
+    w->height = main_h;
+}
+
+static void handle_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial) {
+    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
+
     // resize main surface
-    wl_egl_window_resize(w->egl_window, main_w, main_h, 0, 0);
+    wl_egl_window_resize(w->egl_window, w->width, w->height, 0, 0);
 
     // set opaque region
     struct wl_region* wregion = wl_compositor_create_region(w->wcompositor);
-    wl_region_add(wregion, 0, 0, main_w, main_h);
+    wl_region_add(wregion, 0, 0, w->width, w->height);
     wl_surface_set_opaque_region(w->wsurface, wregion);
     wl_region_destroy(wregion);
 
     // resize all decoration elements
-    w->decoration->resize(main_w, main_h);
+    w->decoration->resize(w->width, w->height);
 
     // notify Panglin views about resized area
-    pangolin::process::Resize(main_w, main_h);
-}
+    pangolin::process::Resize(w->width, w->height);
 
-static void handle_configure(void */*data*/, struct xdg_surface *xdg_surface, uint32_t serial) {
     xdg_surface_ack_configure(xdg_surface, serial);
 }
 
