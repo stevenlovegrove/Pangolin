@@ -372,7 +372,6 @@ struct WaylandDisplay {
         EGL_RED_SIZE        , 8,
         EGL_GREEN_SIZE      , 8,
         EGL_BLUE_SIZE       , 8,
-        EGL_ALPHA_SIZE      , 8,
         EGL_DEPTH_SIZE      , 24,
         EGL_STENCIL_SIZE    , 8,
         EGL_NONE
@@ -484,12 +483,6 @@ static void handle_configure(void *data, struct xdg_surface *xdg_surface, uint32
 
     // resize main surface
     wl_egl_window_resize(w->egl_window, w->width, w->height, 0, 0);
-
-    // set opaque region
-    struct wl_region* wregion = wl_compositor_create_region(w->wcompositor);
-    wl_region_add(wregion, 0, 0, w->width, w->height);
-    wl_surface_set_opaque_region(w->wsurface, wregion);
-    wl_region_destroy(wregion);
 
     // resize all decoration elements
     w->decoration->resize(w->width, w->height);
@@ -838,7 +831,7 @@ WaylandDisplay::WaylandDisplay(const int width, const int height, const std::str
     wl_display_sync(wdisplay);
 
     // construct window decoration
-    const pangolin::Colour grey(0.5f, 0.5f, 0.5f, 0.5f);
+    const pangolin::Colour grey(0.5f, 0.5f, 0.5f);
     decoration = std::unique_ptr<Decoration>(new Decoration(5, 20, grey, wcompositor, wsubcompositor, wsurface, egl_display, egl_configs[0]));
     decoration->create();
     decoration->resize(width, height);
