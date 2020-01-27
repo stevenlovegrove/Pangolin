@@ -55,6 +55,8 @@ namespace py_pangolin {
     m.def("glDrawFrustum", (void (*)(const Eigen::Matrix3f &, int, int, const Eigen::Matrix4f &, float)) &pangolin::glDrawFrustum<float>);
     m.def("glDrawFrustum", (void (*)(const Eigen::Matrix3d &, int, int, const Eigen::Matrix4d &, double)) &pangolin::glDrawFrustum<double>);
 
+    m.def("glDrawTexture", (void (*)(GLenum, GLint)) &pangolin::glDrawTexture);
+
     m.def("glDrawAxis", (void (*)(float)) &pangolin::glDrawAxis);
     m.def("glDrawAxis", (void (*)(const Eigen::Matrix4f &, float)) &pangolin::glDrawAxis<Eigen::Matrix4f, float>);
     m.def("glDrawAxis", (void (*)(const Eigen::Matrix4d &, float)) &pangolin::glDrawAxis<Eigen::Matrix4d, float>);
