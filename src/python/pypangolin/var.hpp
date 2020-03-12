@@ -33,6 +33,13 @@
 
 namespace py_pangolin {
 
+  struct PyVarMeta {
+    double low;
+    double high;
+    bool logscale;
+    bool toggle;
+    bool read_only;
+  };
 
   void bind_var(pybind11::module& m);
   
@@ -44,7 +51,7 @@ namespace py_pangolin {
     pybind11::object get_attr(const std::string &name);
 
     template <typename T>
-    void set_attr_(const std::string& name, T val);
+    void set_attr_(const std::string& name, T val, const PyVarMeta & meta = {});
 
     std::vector<std::string>& get_members();     
   protected:
@@ -56,5 +63,5 @@ namespace py_pangolin {
     std::vector<std::string> members;
     std::string ns;
   };
+  
 }  // py_pangolin
-
