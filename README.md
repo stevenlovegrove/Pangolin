@@ -103,7 +103,7 @@ If you would like to build the documentation and you have Doxygen installed, you
 can execute:
 
 ```
-cmake --build . --target doc
+cmake --build . --target pangolin_doc
 ```
 
 **On Windows**, Pangolin will attempt to download and build *glew*, *libjpeg*, *libpng* and *zlib* automatically. It does so assuming that git is available on the path - this assumption may be wrong for windows users who have downloaded Pangolin via a zip file on github. You will instead need to download and compile the dependencies manually, and set the BUILD_EXTERN_(lib) options to false for these libraries. The alternate and recommended approach is to install [gitbash](https://git-scm.com/downloads) and work from within their provided console.
