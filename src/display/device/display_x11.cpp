@@ -293,6 +293,15 @@ X11Window::X11Window(
         throw std::runtime_error("Pangolin X11: Failed to create window." );
     }
 
+    // set name in window switching (alt-tab) list
+    {
+      XClassHint class_hint;
+      class_hint.res_class = const_cast<char*>(title.c_str());
+      class_hint.res_name = const_cast<char*>("");
+      XSetClassHint( display->display, win, &class_hint );
+    }
+
+    // set window title
     XStoreName( display->display, win, title.c_str() );
     XMapWindow( display->display, win );
 

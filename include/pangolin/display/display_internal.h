@@ -59,7 +59,10 @@ struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
 {
     PangolinGl();
     ~PangolinGl();
-    
+
+    // Callback for render loop
+    std::function<void()> on_render;
+
     // Base container for displays
     View base;
     
@@ -126,13 +129,16 @@ struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
         pango_print_warn("Resize: Not available with non-pangolin window.\n");
     }
 
+    virtual void SetOnRender(std::function<void()> on_render) override;
 
+    virtual void Run() override;
 };
 
 PangolinGl* GetCurrentContext();
 void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext);
 void DeleteContext(const std::string& name);
 PangolinGl *FindContext(const std::string& name);
+void SetCurrentContext(PangolinGl* newcontext);
 
 }
 

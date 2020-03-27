@@ -27,6 +27,7 @@
 
 #pragma once
 #include <exception>
+#include <functional>
 #include <pangolin/platform.h>
 #include <string>
 
@@ -65,6 +66,10 @@ public:
     virtual void ProcessEvents() = 0;
 
     virtual void SwapBuffers() = 0;
+
+    virtual void SetOnRender(std::function<void()> on_render) = 0;
+
+    virtual void Run() = 0;
 };
 
 

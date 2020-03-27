@@ -100,6 +100,23 @@ PangolinGl::~PangolinGl()
     named_managed_views.clear();
 }
 
+void PangolinGl::SetOnRender(std::function<void ()> on_render) {
+  this->on_render = on_render;
+}
+
+void PangolinGl::Run() {
+  while (!ShouldQuit()) {
+    if (on_render) {
+      on_render();
+    }
+    FinishFrame();
+  }
+}
+
+void SetCurrentContext(PangolinGl* newcontext) {
+  context = newcontext;
+}
+
 PangolinGl* GetCurrentContext()
 {
     return context;

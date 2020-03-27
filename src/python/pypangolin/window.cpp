@@ -27,7 +27,7 @@
 
 #include "window.hpp"
 #include <pangolin/display/window.h>
-
+#include <functional>
 
 namespace py_pangolin {
 
@@ -89,6 +89,20 @@ namespace py_pangolin {
                              SwapBuffers);
     }
 
+    void SetOnRender(std::function<void ()> on_render) override {
+      PYBIND11_OVERLOAD_PURE(
+                             void,
+                             pangolin::WindowInterface,
+                             SetOnRender,
+                             on_render);
+    }
+
+    void Run() override {
+      PYBIND11_OVERLOAD_PURE(
+                             void,
+                             pangolin::WindowInterface,
+                             Run);
+    }
   };
   
   void bind_window(pybind11::module &m) {

@@ -44,7 +44,7 @@ inline void _CheckWLDieOnError( const char *sFile, const int nLine )
         FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
             NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),(LPTSTR) &lpMsgBuf, 0, NULL);
         // MessageBox( NULL, (LPCTSTR)lpMsgBuf, ("Error "+std::to_string(errorCode)).c_str(), MB_OK | MB_ICONINFORMATION );
-        pango_print_error("Error %i: %s", errorCode, (char *)lpMsgBuf);
+        pango_print_error("Error %i: %ws", errorCode, (WCHAR *)lpMsgBuf);
         pango_print_error("In: %s, line %d\n", sFile, nLine);
         // exit(EXIT_FAILURE);
     }
@@ -57,7 +57,7 @@ namespace pangolin
 const char *className = "Pangolin";
 
 extern __thread PangolinGl* context;
-  
+
 ////////////////////////////////////////////////////////////////////////
 // Utils
 ////////////////////////////////////////////////////////////////////////
@@ -250,7 +250,7 @@ WinWindow::WinWindow(
 
 WinWindow::~WinWindow()
 {
-    if(!DestroyWindow(hWnd)) {
+    if(IsWindow(hWnd) && !DestroyWindow(hWnd)) {
         std::cerr << "DestroyWindow() failed" << std::endl;
         CheckWGLDieOnError();
     }
@@ -316,6 +316,13 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
         }
         if(!wglMakeCurrent(hDC, hGLRC)) {
             std::cerr << "WM_CREATE wglMakeCurrent() failed" << std::endl;
+            CheckWGLDieOnError();
+        }
+        return 0;
+    case WM_CLOSE:
+    case WM_QUIT:
+        if(!DestroyWindow(hWnd)) {
+            std::cerr << "DestroyWindow() failed" << std::endl;
             CheckWGLDieOnError();
         }
         return 0;
@@ -583,14 +590,14 @@ PANGOLIN_REGISTER_FACTORY(WinWindow)
 {
   struct WinWindowFactory : public FactoryInterface<WindowInterface> {
     std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
-          
+
       const std::string window_title = uri.Get<std::string>("window_title", "window");
       const int w = uri.Get<int>("w", 640);
       const int h = uri.Get<int>("h", 480);
       return std::unique_ptr<WindowInterface>(CreateWinWindowAndBind(window_title, w, h));
     }
   };
-  
+
   auto factory = std::make_shared<WinWindowFactory>();
   FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "winapi");
   FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 100,  "default");
