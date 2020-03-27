@@ -91,7 +91,7 @@ public:
         // Find name in VarStore
         VarValueGeneric*& v = VarState::I()[name];
         if(v) {
-            throw std::runtime_error(std::string("Var with the following name already exists: ") + name);
+            throw std::runtime_error("Var named '" + name + "' already exists.");
         }else{
             // new VarRef<T> (owned by VarStore)
             VarValue<T&>* nv = new VarValue<T&>(variable);
@@ -114,7 +114,7 @@ public:
         // Find name in VarStore
         VarValueGeneric*& v = VarState::I()[name];
         if (v) {
-            throw std::runtime_error(std::string("Var with the following name already exists: ") + name);
+            throw std::runtime_error("Var named '" + name + "' already exists.");
         }
         else{
             // new VarRef<T> (owned by VarStore)

@@ -58,6 +58,7 @@ void VarState::Clear() {
         delete i->second;
     }
     vars.clear();
+    backedNames.clear();
     var_adds.clear();
 }
 
