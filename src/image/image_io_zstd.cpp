@@ -103,8 +103,8 @@ TypedImage LoadZstd(std::istream& in)
 
     while(read_size_hint)
     {
-        const size_t read = in.readsome(input_buffer.get(), read_size_hint);
-        ZSTD_inBuffer input = { input_buffer.get(), read, 0 };
+        in.read(input_buffer.get(), read_size_hint);
+        ZSTD_inBuffer input = { input_buffer.get(), read_size_hint, 0 };
         while (input.pos < input.size) {
             read_size_hint = ZSTD_decompressStream(dstream, &output , &input);
             if (ZSTD_isError(read_size_hint)) {
