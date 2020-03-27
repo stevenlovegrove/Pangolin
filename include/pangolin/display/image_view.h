@@ -15,7 +15,7 @@ namespace pangolin
 class ImageView : public pangolin::View, public pangolin::ImageViewHandler
 {
   public:
-    ImageView();
+    ImageView(const std::string & title ="");
 
     ~ImageView();
 

@@ -5,8 +5,8 @@
 namespace pangolin
 {
 
-ImageView::ImageView()
-    : offset_scale(0.0f, 1.0f), lastPressed(false), mouseReleased(false), mousePressed(false), overlayRender(true)
+ImageView::ImageView(const std::string & title)
+    : pangolin::ImageViewHandler(title), offset_scale(0.0f, 1.0f), lastPressed(false), mouseReleased(false), mousePressed(false), overlayRender(true)
 {
     SetHandler(this);
 }

@@ -58,7 +58,7 @@ public:
 
     // Default constructor: User must call SetDimensions() once image dimensions are known.
     // Default range is [0,1] in x and y.
-    ImageViewHandler();
+    ImageViewHandler(const std::string & title = "");
 
     // View ranges store extremes of image (boundary of pixels)
     // in 'discrete' coords, where 0,0 is center of top-left pixel.
@@ -157,6 +157,8 @@ protected:
     bool use_nn;
     bool flipTextureX;
     bool flipTextureY;
+    std::string title;
+
 };
 
 }

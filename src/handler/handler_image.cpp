@@ -4,9 +4,8 @@
 namespace pangolin
 {
 
-ImageViewHandler::ImageViewHandler()
-    : linked_view_handler(0),
-      use_nn(false), flipTextureX(false), flipTextureY(false)
+ImageViewHandler::ImageViewHandler(const std::string & title)
+    : linked_view_handler(0), use_nn(false), flipTextureX(false), flipTextureY(false), title(title)
 {
     SetDimensions(1, 1);
 }
@@ -128,20 +127,28 @@ void ImageViewHandler::glRenderOverlay()
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glColor4f(1.0,1.0,1.0,1.0);
 
-    if( std::abs(selxy.Area()) > 0) {
-        // Render text
-        pangolin::Viewport v;
+    const bool have_text = std::abs(selxy.Area()) > 0 || !title.empty();
+
+    GLboolean gl_blend_enabled;
+    pangolin::Viewport v;
+
+    if( have_text ) {
+
         glGetIntegerv( GL_VIEWPORT, &v.l );
-        float xpix, ypix;
-        ImageToScreen(v, selxy.x.max, selxy.y.max, xpix, ypix);
 
         // Save previous value
-        GLboolean gl_blend_enabled;
         glGetBooleanv(GL_BLEND, &gl_blend_enabled);
 
         // Ensure that blending is enabled for rendering text.
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    }
+
+    if( std::abs(selxy.Area()) > 0) {
+        // Render text
+        float xpix, ypix;
+        ImageToScreen(v, selxy.x.max, selxy.y.max, xpix, ypix);
 
         pangolin::GlFont::I().Text(
             "%.2f x %.2f",
@@ -154,9 +161,22 @@ void ImageViewHandler::glRenderOverlay()
             selxy.x.max, selxy.y.max
         ).DrawWindow(xpix, ypix - 1.0f * pangolin::GlFont::I().Height());
 
+    }
+
+    if (!title.empty()) {
+
+        pangolin::GlFont::I().Text(
+            title
+          ).DrawWindow(v.l + 8, v.t() - 4 - pangolin::GlFont::I().Height());
+
+    }
+
+    if (have_text) {
+
         // Restore previous value
         if(!gl_blend_enabled) glDisable(GL_BLEND);
     }
+
 }
 
 void ImageViewHandler::ScreenToImage(Viewport& v, float xpix, float ypix, float& ximg, float& yimg)
