@@ -25,6 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// Silence all the OSX GL deprecation messages.
+#define GL_SILENCE_DEPRECATION
+
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
