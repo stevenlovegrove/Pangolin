@@ -183,6 +183,16 @@ public:
     /// Reset colour wheel to initial state. May be useful together with ClearSeries() / ClearMarkers()
     void ResetColourWheel();
 
+    void ShowHoverLines(bool show)
+    {
+        showHoverLines = show;
+    }
+
+    void ShowTicks(bool show)
+    {
+        showTicks = show;
+    }
+
 protected:
     struct PANGOLIN_EXPORT Tick
     {
@@ -275,6 +285,9 @@ protected:
 
     Plotter* linked_plotter_x;
     Plotter* linked_plotter_y;
+
+    bool showTicks;
+    bool showHoverLines;
 };
 
 } // namespace pangolin

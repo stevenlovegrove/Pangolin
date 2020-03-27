@@ -304,6 +304,8 @@ Plotter::Plotter(
     // Setup texture spectogram style plots
     // ...
 
+    showTicks = true;
+    showHoverLines = true;
 }
 
 Plotter::~Plotter()
@@ -462,13 +464,15 @@ void Plotter::Render()
         (int)ceil(rview.y.min / tdelta[1]),
         (int)ceil(rview.y.max / tdelta[1])
     };
+    if(showTicks)
+    {
+        for( int i=tx[0]; i<tx[1]; ++i ) {
+            glDrawLine((i)*tdelta[0], rview.y.min,   (i)*tdelta[0], rview.y.max);
+        }
 
-    for( int i=tx[0]; i<tx[1]; ++i ) {
-        glDrawLine((i)*tdelta[0], rview.y.min,   (i)*tdelta[0], rview.y.max);
-    }
-
-    for( int i=ty[0]; i<ty[1]; ++i ) {
-        glDrawLine(rview.x.min, (i)*tdelta[1],  rview.x.max, (i)*tdelta[1]);
+        for( int i=ty[0]; i<ty[1]; ++i ) {
+            glDrawLine(rview.x.min, (i)*tdelta[1],  rview.x.max, (i)*tdelta[1]);
+        }
     }
     prog_lines.Unbind();
 
@@ -594,19 +598,21 @@ void Plotter::Render()
     // Draw hover / selection
     glLineWidth(1.5f);
 
-    // hover over
-    prog_lines.SetUniform("u_color",  colour_ax.WithAlpha(0.3f) );
-    glDrawLine(hover[0], rview.y.min,  hover[0], rview.y.max );
-    glDrawLine(rview.x.min, hover[1],  rview.x.max, hover[1] );
+    if(showHoverLines)
+    {
+        // hover over
+        prog_lines.SetUniform("u_color",  colour_ax.WithAlpha(0.3f) );
+        glDrawLine(hover[0], rview.y.min,  hover[0], rview.y.max );
+        glDrawLine(rview.x.min, hover[1],  rview.x.max, hover[1] );
 
-    // range
-    prog_lines.SetUniform("u_color",  colour_ax.WithAlpha(0.5) );
-    glDrawLine(selection.x.min, rview.y.min,  selection.x.min, rview.y.max );
-    glDrawLine(selection.x.max, rview.y.min,  selection.x.max, rview.y.max );
-    glDrawLine(rview.x.min, selection.y.min,  rview.x.max, selection.y.min );
-    glDrawLine(rview.x.min, selection.y.max,  rview.x.max, selection.y.max );
-    glDrawRect(selection.x.min, selection.y.min,  selection.x.max, selection.y.max);
-
+        // range
+        prog_lines.SetUniform("u_color",  colour_ax.WithAlpha(0.5) );
+        glDrawLine(selection.x.min, rview.y.min,  selection.x.min, rview.y.max );
+        glDrawLine(selection.x.max, rview.y.min,  selection.x.max, rview.y.max );
+        glDrawLine(rview.x.min, selection.y.min,  rview.x.max, selection.y.min );
+        glDrawLine(rview.x.min, selection.y.max,  rview.x.max, selection.y.max );
+        glDrawRect(selection.x.min, selection.y.min,  selection.x.max, selection.y.max);
+    }
     prog_lines.Unbind();
 
     prog_text.SaveBind();

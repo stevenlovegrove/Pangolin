@@ -29,10 +29,7 @@
 
 #include <algorithm>
 #include <fstream>
-#include <iomanip>
-#include <iostream>
 #include <limits>
-#include <stdexcept>
 
 namespace pangolin
 {
@@ -218,38 +215,39 @@ void DataLog::Save(std::string filename)
 {
     std::ofstream csvStream(filename);
 
-      if (!Labels().empty()) {
-        csvStream << Labels()[0];
+    if (!Labels().empty()) {
+      csvStream << Labels()[0];
 
-        for (size_t i = 1; i < Labels().size(); ++i) {
-          csvStream << "," << Labels()[i];
-        }
+      for (size_t i = 1; i < Labels().size(); ++i) {
+        csvStream << "," << Labels()[i];
+      }
 
-        csvStream << std::endl;
+      csvStream << std::endl;
 
-    }
+  }
 
-    const DataLogBlock * block = FirstBlock();
+  const DataLogBlock * block = FirstBlock();
 
-    while (block) {
+  while (block) {
 
-      for (size_t i = 0; i < block->Samples(); ++i) {
+    for (size_t i = 0; i < block->Samples(); ++i) {
 
-        csvStream << block->Sample(i)[0];
+      csvStream << block->Sample(i)[0];
 
-        for (size_t d = 1; d < block->Dimensions(); ++d) {
+      for (size_t d = 1; d < block->Dimensions(); ++d) {
 
-          csvStream << "," << block->Sample(i)[d];
-
-        }
-
-        csvStream << std::endl;
+        csvStream << "," << block->Sample(i)[d];
 
       }
 
-      block = block->NextBlock();
+      csvStream << std::endl;
 
     }
+
+    block = block->NextBlock();
+
+  }
+
 }
 
 const DataLogBlock* DataLog::FirstBlock() const
