@@ -54,6 +54,10 @@ void SavePango(const Image<unsigned char>& image, const pangolin::PixelFormat& f
 TypedImage LoadExr(std::istream& source);
 void SaveExr(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
 
+// BMP
+TypedImage LoadBmp(std::istream& source);
+void SaveBmp(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first);
+
 // ZSTD (https://github.com/facebook/zstd)
 TypedImage LoadZstd(std::istream& in);
 void SaveZstd(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, int compression_level);
@@ -85,6 +89,8 @@ TypedImage LoadImage(std::istream& in, ImageFileType file_type)
         return LoadPacked12bit(in);
     case ImageFileTypeExr:
         return LoadExr(in);
+    case ImageFileTypeBmp:
+        return LoadBmp(in);
     default:
         throw std::runtime_error("Unable to load image file-type through std::istream");
     }
@@ -101,6 +107,7 @@ TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
     case ImageFileTypeLz4:
     case ImageFileTypeP12b:
     case ImageFileTypeExr:
+    case ImageFileTypeBmp:
     {
         std::ifstream ifs(filename, std::ios_base::in|std::ios_base::binary);
         return LoadImage(ifs, file_type);
@@ -134,6 +141,8 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
         return SaveLz4(image,fmt,out, quality);
     case ImageFileTypeP12b:
         return SavePacked12bit(image,fmt,out, quality);
+    case ImageFileTypeBmp:
+        return SaveBmp(image,fmt,out, top_line_first);
     default:
         throw std::runtime_error("Unable to save image file-type through std::istream");
     }
@@ -149,6 +158,7 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
     case ImageFileTypeZstd:
     case ImageFileTypeLz4:
     case ImageFileTypeP12b:
+    case ImageFileTypeBmp:
     {
         std::ofstream ofs(filename, std::ios_base::binary);
         return SaveImage(image, fmt, ofs, file_type, top_line_first, quality);

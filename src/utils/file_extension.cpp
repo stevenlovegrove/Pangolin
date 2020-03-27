@@ -52,6 +52,8 @@ std::string ImageFileTypeToName(ImageFileType t)
         return "gif";
     case ImageFileTypeExr:
         return "exr";
+    case ImageFileTypeBmp:
+        return "bmp";
     case ImageFileTypePango:
         return "pango";
     case ImageFileTypePvn:
@@ -86,6 +88,8 @@ ImageFileType NameToImageFileType(const std::string& name)
         return ImageFileTypeGif;
     else if ("exr" == name)
         return ImageFileTypeExr;
+    else if ("bmp" == name)
+        return ImageFileTypeBmp;
     else if ("pango" == name)
         return ImageFileTypePango;
     else if ("pvn" == name)
@@ -118,6 +122,8 @@ ImageFileType FileTypeExtension(const std::string& ext)
         return ImageFileTypeTiff;
     } else if( ext == ".exr"  ) {
         return ImageFileTypeExr;
+    } else if( ext == ".bmp"  ) {
+        return ImageFileTypeBmp;
     } else if( ext == ".ppm" || ext == ".pgm" || ext == ".pbm" || ext == ".pxm" || ext == ".pdm" ) {
         return ImageFileTypePpm;
     } else if( ext == ".pvn"  ) {
@@ -163,6 +169,7 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
         const unsigned char magic_tiff1[] = "\x49\x49\x2A\x00";
         const unsigned char magic_tiff2[] = "\x4D\x4D\x00\x2A";
         const unsigned char magic_exr[]   = "\x76\x2F\x31\x01";
+        const unsigned char magic_bmp[]   = "BM";
         const unsigned char magic_pango[] = "PANGO";
         const unsigned char magic_pango_zstd[] = "ZSTD";
         const unsigned char magic_pango_lz4[] = "LZ4";
@@ -182,6 +189,8 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
             return ImageFileTypeTiff;
         }else if( !strncmp((char*)data, (char*)magic_exr,4) ) {
             return ImageFileTypeExr;
+        }else if( !strncmp((char*)data, (char*)magic_bmp,2) ) {
+            return ImageFileTypeBmp;
         }else if( !strncmp((char*)data, (char*)magic_pango,5) ) {
             return ImageFileTypePango;
         }else if( !strncmp((char*)data, (char*)magic_pango_zstd,4) ) {

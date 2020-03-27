@@ -42,6 +42,7 @@ enum ImageFileType
     ImageFileTypeTiff,
     ImageFileTypeGif,
     ImageFileTypeExr,
+    ImageFileTypeBmp,
     ImageFileTypePango,
     ImageFileTypePvn,
     ImageFileTypeZstd,
