@@ -109,6 +109,12 @@ struct Timer
         basetime currtime = TimeNow();
         return TimeDiff_s(start,currtime);
     }
+
+    double Elapsed_us()
+    {
+        basetime currtime = TimeNow();
+        return TimeDiff_us(start,currtime);
+    }
     
     basetime start;
 };

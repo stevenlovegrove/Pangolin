@@ -220,7 +220,7 @@ void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
 
     // Free resources
     png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
-    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
 #else
     PANGOLIN_UNUSED(image);
     PANGOLIN_UNUSED(fmt);

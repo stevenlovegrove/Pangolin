@@ -27,7 +27,7 @@ public:
   {
   }
 
-  ~PosixSharedMemoryBuffer()
+  ~PosixSharedMemoryBuffer() override
   {
     close(_fd);
     munmap(_ptr, _size);
@@ -37,7 +37,7 @@ public:
     }
   }
 
-  bool tryLock()
+  bool tryLock() override
   {
     if (_lockCount == 0) {
       int err = flock(_fd, LOCK_EX|LOCK_NB);
@@ -48,7 +48,7 @@ public:
     return _lockCount != 0;
   }
 
-  void lock()
+  void lock() override
   {
     if (_lockCount == 0) {
       flock(_fd, LOCK_EX);
@@ -56,7 +56,7 @@ public:
     _lockCount++;
   }
 
-  void unlock()
+  void unlock() override
   {
     if (_lockCount != 0) {
       flock(_fd, LOCK_UN);
@@ -64,12 +64,12 @@ public:
     _lockCount--;
   }
 
-  unsigned char *ptr()
+  unsigned char *ptr() override
   {
     return _ptr;
   }
 
-  std::string name()
+  std::string name() override
   {
     return _name;
   }

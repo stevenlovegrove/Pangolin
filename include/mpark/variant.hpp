@@ -238,7 +238,7 @@ namespace std {
 #define MPARK_BUILTIN_UNREACHABLE
 #endif
 
-#if __has_builtin(__type_pack_element)
+#if __has_builtin(__type_pack_element) && !defined(__CUDACC__)
 #define MPARK_TYPE_PACK_ELEMENT
 #endif
 

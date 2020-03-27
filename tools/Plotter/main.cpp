@@ -84,7 +84,7 @@ int main( int argc, char* argv[] )
             for(size_t i=0; i< row_num.size(); ++i) {
                 try{
                     row_num[i] = std::stof(row[i]);
-                }catch(const std::invalid_argument& e){
+                }catch(const std::invalid_argument&){
                     std::cerr << "Warning: couldn't parse '" << row[i] << "' as numeric data (use -H option to include header)" << std::endl;
                 }
             }

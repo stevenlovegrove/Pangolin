@@ -32,7 +32,7 @@
 
 #include <vector>
 
-#if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
+#if defined(HAVE_EIGEN)
 #define USE_EIGEN
 #endif
 

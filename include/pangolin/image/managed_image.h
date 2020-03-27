@@ -74,9 +74,8 @@ public:
     inline
     ManagedImage(size_t w, size_t h, size_t pitch_bytes)
         : Image<T>(
-              Allocator().allocate( (h*pitch_bytes) / sizeof(T) + 1),
-               w, h, pitch_bytes
-              )
+              Allocator().allocate( (h*pitch_bytes) / sizeof(T)),
+               w, h, pitch_bytes)
     {
     }
 

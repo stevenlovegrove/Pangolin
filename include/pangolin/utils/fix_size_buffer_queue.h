@@ -30,7 +30,6 @@
 #include <condition_variable>
 #include <list>
 #include <mutex>
-#include <mutex>
 #include <thread>
 
 namespace pangolin

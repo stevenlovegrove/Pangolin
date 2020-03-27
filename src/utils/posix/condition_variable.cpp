@@ -19,15 +19,15 @@ public:
       : _shmem(shmem),
         _pthread_data(reinterpret_cast<PThreadSharedData *>(_shmem->ptr())) {}
 
-  ~PThreadConditionVariable() {}
+  ~PThreadConditionVariable() override {}
 
-  void wait() {
+  void wait() override {
     _lock();
     pthread_cond_wait(&_pthread_data->cond, &_pthread_data->lock);
     _unlock();
   }
 
-  bool wait(timespec abstime) {
+  bool wait(timespec abstime) override {
     _lock();
     int err = pthread_cond_timedwait(&_pthread_data->cond, &_pthread_data->lock,
                            &abstime);
@@ -36,9 +36,9 @@ public:
     return 0 == err;
   }
 
-  void signal() { pthread_cond_signal(&_pthread_data->cond); }
+  void signal() override { pthread_cond_signal(&_pthread_data->cond); }
 
-  void broadcast() { pthread_cond_broadcast(&_pthread_data->cond); }
+  void broadcast() override { pthread_cond_broadcast(&_pthread_data->cond); }
 
 private:
   void _lock() { pthread_mutex_lock(&_pthread_data->lock); }

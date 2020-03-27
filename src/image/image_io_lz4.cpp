@@ -71,7 +71,7 @@ TypedImage LoadLz4(std::istream& in)
     const int decompressed_size = LZ4_decompress_safe(input_buffer.get(), (char*)img.ptr, header.compressed_size, img.SizeBytes());
     if (decompressed_size < 0)
         throw std::runtime_error(FormatString("A negative result from LZ4_decompress_safe indicates a failure trying to decompress the data.  See exit code (%) for value returned.", decompressed_size));
-      if (decompressed_size == 0)
+    if (decompressed_size == 0)
         throw std::runtime_error("I'm not sure this function can ever return 0.  Documentation in lz4.h doesn't indicate so.");
     if (decompressed_size != (int)img.SizeBytes())
         throw std::runtime_error(FormatString("decompressed size % is not equal to predicted size %", decompressed_size, img.SizeBytes()));

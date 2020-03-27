@@ -23,7 +23,7 @@ public:
   {
   }
 
-  ~PosixSemaphore()
+  ~PosixSemaphore() override
   {
     if (_ownership) {
       sem_unlink(_name.c_str());
@@ -32,18 +32,18 @@ public:
     }
   }
 
-  bool tryAcquire()
+  bool tryAcquire() override
   {
     int err = sem_trywait(_semaphore);
     return err == 0;
   }
 
-  void acquire()
+  void acquire() override
   {
     sem_wait(_semaphore);
   }
 
-  void release()
+  void release() override
   {
     sem_post(_semaphore);
   }
