@@ -35,12 +35,43 @@
 #ifdef USE_POSIX_FILE_IO
 #include <unistd.h>
 #include <fcntl.h>
+
+// Optionally use direct file i/o to avoid the cache.
+#define USE_DIRECT_FILE_IO
+#define POSIX_BLOCK_SIZE 4096
 #endif
 
 using namespace std;
 
 namespace pangolin
 {
+
+namespace
+{
+char* allocate_buffer(size_t mem_max_size)
+{
+#ifdef USE_DIRECT_FILE_IO
+    void *mem_alloc;
+    int result = posix_memalign(&mem_alloc, POSIX_BLOCK_SIZE, mem_max_size);
+    if(result)
+    {
+        throw std::runtime_error("posix_memalign failed with result: " + std::to_string(result));
+    }
+    return static_cast<char*>(mem_alloc);
+#else
+    return new char[static_cast<size_t>(mem_max_size)];
+#endif
+}
+
+void free_buffer(char* mem_buffer)
+{
+#ifdef USE_DIRECT_FILE_IO
+    free(mem_buffer);
+#else
+    delete mem_buffer;
+#endif
+}
+}
 
 threadedfilebuf::threadedfilebuf()
     : mem_buffer(0), mem_size(0), mem_max_size(0), mem_start(0), mem_end(0), should_run(false), is_pipe(false)
@@ -66,7 +97,15 @@ void threadedfilebuf::open(const std::string& filename, size_t buffer_size_bytes
     }
 
 #ifdef USE_POSIX_FILE_IO
-    filenum = ::open(filename.c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_SYNC, S_IRWXU);
+
+    // File is read/write for user and group, read only for other.
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+#ifdef USE_DIRECT_FILE_IO
+    filenum = ::open(filename.c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_DIRECT | O_SYNC, mode);
+#else
+    filenum = ::open(filename.c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_SYNC, mode);
+#endif
+
 #else
     file.open(filename.c_str(), ios::out | ios::binary);
 #endif
@@ -84,8 +123,7 @@ void threadedfilebuf::open(const std::string& filename, size_t buffer_size_bytes
     mem_start = 0;
     mem_end = 0;
     mem_max_size = static_cast<std::streamsize>(buffer_size_bytes);
-    mem_buffer = new char[static_cast<size_t>(mem_max_size)];
-
+    mem_buffer = allocate_buffer(mem_max_size);
     should_run = true;
     write_thread = std::thread(std::ref(*this));
 }
@@ -103,7 +141,7 @@ void threadedfilebuf::close()
 
     if(mem_buffer)
     {
-        delete [] mem_buffer;
+        free_buffer(mem_buffer);
         mem_buffer = 0;
     }
 
@@ -142,25 +180,25 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
         }
 
         // Allocate bigger buffer
-        delete [] mem_buffer;
+        free_buffer(mem_buffer);
         mem_start = 0;
         mem_end = 0;
         mem_max_size = num_bytes * 4;
-        mem_buffer = new char[static_cast<size_t>(mem_max_size)];
+        mem_buffer = allocate_buffer(mem_max_size);
     }
 
     {
         std::unique_lock<std::mutex> lock(update_mutex);
-        
+
         // wait until there is space to write into buffer
         while( mem_size + num_bytes > mem_max_size ) {
             cond_dequeued.wait(lock);
         }
-        
+
         // add image to end of mem_buffer
         const std::streamsize array_a_size =
                 (mem_start <= mem_end) ? (mem_max_size - mem_end) : (mem_start - mem_end);
-        
+
         if( num_bytes <= array_a_size )
         {
             // copy in one
@@ -174,13 +212,13 @@ std::streamsize threadedfilebuf::xsputn(const char* data, std::streamsize num_by
             mem_end = array_b_size;
             mem_size += num_bytes;
         }
-        
+
         if(mem_end == mem_max_size)
             mem_end = 0;
     }
-    
+
     cond_queued.notify_one();
-    
+
     input_pos += num_bytes;
     return num_bytes;
 }
@@ -226,7 +264,7 @@ std::streampos threadedfilebuf::seekoff(
 void threadedfilebuf::operator()()
 {
     std::streamsize data_to_write = 0;
-    
+
     while(true)
     {
         if(is_pipe)
@@ -246,10 +284,19 @@ void threadedfilebuf::operator()()
 
         {
             std::unique_lock<std::mutex> lock(update_mutex);
-            
-            while( mem_size == 0 ) {
-                if(!should_run) return;
+
+            // Wait until there is data to write or we are stopping the write thread.
+#ifdef USE_DIRECT_FILE_IO
+            while(mem_size < POSIX_BLOCK_SIZE && should_run) {
+#else
+            while(mem_size == 0 && should_run) {
+#endif
                 cond_queued.wait(lock);
+            }
+
+            if (mem_size == 0 && !should_run)
+            {
+                return;
             }
 
             data_to_write =
@@ -258,6 +305,26 @@ void threadedfilebuf::operator()()
                         mem_max_size - mem_start;
         }
 
+        // Adjust write size if appropriate.
+#ifdef USE_DIRECT_FILE_IO
+        if (!should_run && data_to_write < POSIX_BLOCK_SIZE)
+        {
+            // Stopping the write thread - allow non-direct write of final block.
+            int fopts = fcntl(filenum, F_GETFL);
+            int result = fcntl(filenum, F_SETFL, fopts & ~O_DIRECT);
+            if (result == -1)
+            {
+                throw std::runtime_error("fcntl failed with result: " + std::to_string(result));
+            }
+        }
+        else
+        {
+            // Direct writes are limited to block size boundaries
+            data_to_write = data_to_write - (data_to_write%POSIX_BLOCK_SIZE);
+        }
+#endif
+
+        // Write data through to disk.
 #ifdef USE_POSIX_FILE_IO
         int bytes_written = ::write(filenum, mem_buffer + mem_start, data_to_write);
         if(bytes_written == -1)
@@ -271,14 +338,14 @@ void threadedfilebuf::operator()()
 
         {
             std::unique_lock<std::mutex> lock(update_mutex);
-            
+
             mem_size -= bytes_written;
             mem_start += bytes_written;
-            
+
             if(mem_start == mem_max_size)
                 mem_start = 0;
         }
-        
+
         cond_dequeued.notify_all();
     }
 }
