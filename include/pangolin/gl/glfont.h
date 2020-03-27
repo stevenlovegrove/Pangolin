@@ -38,11 +38,12 @@ class PANGOLIN_EXPORT GlFont
 {
 public:
     // Singleton instance if requested.
-    static GlFont& I();
+    static GlFont& I(const int pixel_height = 15);
 
     // Load GL Font data. Delay uploading as texture until first use.
     GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w=512, int tex_h=512);
     GlFont(const std::string& filename, float pixel_height, int tex_w=512, int tex_h=512);
+    GlFont(float pixel_height, int tex_w=512, int tex_h=512);
 
     virtual ~GlFont();
 
@@ -54,7 +55,7 @@ public:
     inline float Height() const {
         return font_height_px;
     }
-    
+
 protected:
     void InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h);
 

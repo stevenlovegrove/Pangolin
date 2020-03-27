@@ -57,12 +57,17 @@ namespace pangolin
 
 extern __thread PangolinGl* context;
 
-GlFont& GlFont::I()
+GlFont& GlFont::I(const int pixel_height)
 {
     if (!context->font) {
-        context->font.reset(new GlFont(AnonymousPro_ttf, context->is_high_res ? 30 : 15));
+        context->font.reset(new GlFont(AnonymousPro_ttf, context->is_high_res ? pixel_height*2 : pixel_height));
     }
     return *context->font.get();
+}
+
+GlFont::GlFont(float pixel_height, int tex_w, int tex_h)
+{
+    InitialiseFont(AnonymousPro_ttf, pixel_height, tex_w, tex_h);
 }
 
 GlFont::GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h)
@@ -154,15 +159,15 @@ GlText GlFont::Text( const char* fmt, ... )
     if(!mTex.IsValid()) InitialiseGlTexture();
 
     GlText ret(mTex);
-    
-    char text[MAX_TEXT_LENGTH];          
+
+    char text[MAX_TEXT_LENGTH];
     va_list ap;
-    
+
     if( fmt != NULL ) {
         va_start( ap, fmt );
         vsnprintf( text, MAX_TEXT_LENGTH, fmt, ap );
         va_end( ap );
-        
+
         const size_t len = strlen(text);
         char lc = ' ' - FIRST_CHAR;
         for(size_t i=0; i < len; ++i) {
