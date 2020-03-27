@@ -146,7 +146,10 @@ void Handler3D::GetPosNormal(pangolin::View& view, int winx, int winy, GLprecisi
     GLfloat zs[zsize];
 
 #ifndef HAVE_GLES
-    glReadBuffer(GL_FRONT);
+    GLint readid = 0;
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readid);
+    // Choose attachment based on the bound framebuffer since GL_FRONT doesn't exist for FBOs
+    glReadBuffer(readid == 0 ? GL_FRONT : GL_COLOR_ATTACHMENT0);
     glReadPixels(winx-hwin,winy-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
 #else
     std::fill(zs,zs+zsize, 1);
