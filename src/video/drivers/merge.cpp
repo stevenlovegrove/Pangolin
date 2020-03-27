@@ -142,21 +142,42 @@ std::vector<VideoInterface*>& MergeVideo::InputStreams()
 PANGOLIN_REGISTER_FACTORY(MergeVideo)
 {
     struct MergeVideoFactory final : public FactoryInterface<VideoInterface> {
+        MergeVideoFactory()
+        {
+            param_set_ = {{
+                {"size","0x0","Destination image size. 0x0 will dynamically create a bounding box size from all the streams and their x,y positions"},
+                {"pos\\d+","0x0","posK, 0 <= K < N, where N is the number of streams. Destination x,y positions to merge video streams into."}
+            }};
+        }
+
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(0,0));
+            ParamReader reader(param_set_, uri);
+
+            const ImageDim dim = reader.Get<ImageDim>("size", ImageDim(0,0));
 
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             std::vector<Point> points;
             Point p(0,0);
             for(size_t s=0; s < subvid->Streams().size(); ++s) {
                 const StreamInfo& si = subvid->Streams()[s];
-                p = uri.Get<Point>("pos"+std::to_string(s+1), p);
+                p = reader.Get<Point>("pos"+std::to_string(s+1), p);
                 points.push_back(p);
                 p.x += si.Width();
             }
 
             return std::unique_ptr<VideoInterface>(new MergeVideo(subvid, points, dim.x, dim.y));
         }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme,"Merges streams with destination x,y coordinates", param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        ParamSet param_set_;
     };
 
     FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<MergeVideoFactory>(), 10, "merge");

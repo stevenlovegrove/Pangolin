@@ -19,6 +19,7 @@ append_glob(HEADERS ${INCDIR}/geometry/*.h*)
 
 ### Store list of source files
 append_glob(SOURCES utils/*.cpp)
+append_glob(SOURCES factory/*.cpp)
 append_glob(SOURCES image/*.cpp)
 append_glob(SOURCES log/*.cpp)
 append_glob(SOURCES geometry/*.cpp)
@@ -78,6 +79,7 @@ if(BUILD_PANGOLIN_VIDEO)
     ${INCDIR}/video/drivers/debayer.h
     ${INCDIR}/video/drivers/shift.h
     ${INCDIR}/video/drivers/mirror.h
+    ${INCDIR}/video/drivers/gamma.h
     ${INCDIR}/video/drivers/unpack.h
     ${INCDIR}/video/drivers/pack.h
     ${INCDIR}/video/drivers/join.h
@@ -96,6 +98,7 @@ if(BUILD_PANGOLIN_VIDEO)
     video/drivers/debayer.cpp
     video/drivers/shift.cpp
     video/drivers/mirror.cpp
+    video/drivers/gamma.cpp
     video/drivers/unpack.cpp
     video/drivers/pack.cpp
     video/drivers/join.cpp
@@ -116,6 +119,7 @@ if(BUILD_PANGOLIN_VIDEO)
     RegisterDebayerVideoFactory
     RegisterShiftVideoFactory
     RegisterMirrorVideoFactory
+    RegisterGammaVideoFactory
     RegisterUnpackVideoFactory
     RegisterPackVideoFactory
     RegisterJoinVideoFactory

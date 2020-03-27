@@ -29,6 +29,9 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
+#include <unordered_map>
+#include <vector>
+
 namespace pangolin
 {
 
@@ -464,6 +467,7 @@ void MirrorVideo::Process(unsigned char* buffer_out, const unsigned char* buffer
             break;
         default:
             pango_print_warn("MirrorVideo::Process(): Invalid enum %i.\n", flips[s]);
+            break;
         }
     }
 
@@ -524,56 +528,167 @@ bool MirrorVideo::DropNFrames(uint32_t n)
     }
 }
 
+namespace {
+const std::vector< std::pair<MirrorOptions,std::vector<std::string> > > MirrorOptionsToStringMap = {
+    {MirrorOptionsNone,{"None"}},
+    {MirrorOptionsFlipX,{"FlipX","Mirror"}},
+    {MirrorOptionsFlipY,{"FlipY","Flip"}},
+    {MirrorOptionsFlipXY,{"FlipXY"}},
+    {MirrorOptionsTranspose,{"Transpose"}},
+    {MirrorOptionsRotateCW,{"RotateCW"}},
+    {MirrorOptionsRotateCCW,{"RotateCCW"}}
+};
+
+const std::vector<std::string> GetMirrorOptionEnumNames(MirrorOptions mirror)
+{
+    auto it = std::find_if( MirrorOptionsToStringMap.begin(), MirrorOptionsToStringMap.end(),
+        [mirror](const auto& item){return item.first == mirror;}
+    );
+    if( it != MirrorOptionsToStringMap.end() ){
+        return it->second;
+    }
+    return {};
+}
+
+MirrorOptions GetMirrorOptionFromName( const std::string& enum_name )
+{
+    std::string enum_name_caps = enum_name;
+    std::transform( enum_name.begin(), enum_name.end(), enum_name_caps.begin(), toupper);
+
+    for(const auto& item: MirrorOptionsToStringMap){
+        std::vector<std::string> enum_names = item.second;
+        for(auto& name: enum_names){
+            std::transform(name.begin(), name.end(), name.begin(), toupper);
+        }
+
+        auto it = std::find( enum_names.begin(), enum_names.end(), enum_name_caps);
+        if( it != enum_names.end()){
+            return item.first;
+        }
+    }
+    pango_print_warn("Unknown mirror name %s.", enum_name.c_str());
+    return MirrorOptions::MirrorOptionsNone;
+}
+
+std::ostream& operator << ( std::ostream& out, const std::vector<std::string>& stringvec )
+{
+    for(int i=0;i<stringvec.size();i++){
+        out << stringvec[i];
+        if( i < (stringvec.size()-1)){
+            out << "|";
+        }
+    };
+    return out;
+}
+
+} // namespace
+
 std::istream& operator>> (std::istream &is, MirrorOptions &mirror)
 {
     std::string str_mirror;
     is >> str_mirror;
-    std::transform(str_mirror.begin(), str_mirror.end(), str_mirror.begin(), toupper);
-
-    if(!str_mirror.compare("NONE")) {
-        mirror = MirrorOptionsNone;
-    }else if(!str_mirror.compare("FLIPX") || !str_mirror.compare("MIRROR")) {
-        mirror = MirrorOptionsFlipX;
-    }else if(!str_mirror.compare("FLIPY") || !str_mirror.compare("FLIP")) {
-        mirror = MirrorOptionsFlipY;
-    }else if(!str_mirror.compare("ROTATECW")) {
-        mirror = MirrorOptionsRotateCW;
-    }else if(!str_mirror.compare("ROTATECCW")) {
-        mirror = MirrorOptionsRotateCCW;
-    }else if(!str_mirror.compare("FLIPXY") || !str_mirror.compare("TRANSPOSE")) {
-        mirror = MirrorOptionsFlipXY;
-    }else{
-        pango_print_warn("Unknown mirror option %s.", str_mirror.c_str());
-        mirror = MirrorOptionsNone;
-    }
-
+    mirror = GetMirrorOptionFromName( str_mirror );
     return is;
 }
+
 
 PANGOLIN_REGISTER_FACTORY(MirrorVideo)
 {
     struct MirrorVideoFactory final : public FactoryInterface<VideoInterface> {
+
+        static void VectorPrinterHelper(const std::vector<std::string>& stringvec, std::ostream& ss)
+        {
+            for(int i=0;i<stringvec.size();i++){
+                ss << stringvec[i];
+                if( i < (stringvec.size()-1)){
+                    ss << "|";
+                }
+            };
+        }
+
+        MirrorVideoFactory()
+        {
+
+            std::stringstream ss;
+            ss << "streamN, where N >=0. Values are: ";
+
+            ss << GetMirrorOptionEnumNames(MirrorOptionsNone) << ",";
+            ss << GetMirrorOptionEnumNames(MirrorOptionsFlipX) << ",";
+            ss << GetMirrorOptionEnumNames(MirrorOptionsFlipY) << ",";
+            ss << GetMirrorOptionEnumNames(MirrorOptionsFlipXY) << ",";
+            ss << GetMirrorOptionEnumNames(MirrorOptionsTranspose) << ",";
+            ss << GetMirrorOptionEnumNames(MirrorOptionsRotateCW) << ",";
+            ss << GetMirrorOptionEnumNames(MirrorOptionsRotateCCW) << ",";
+
+            std::string desc = ss.str();
+
+            param_sets_["mirror"] = {{
+                // This is according to the original implementation that mirror is NONE transform
+                // even though maybe a good default couldbe FlipX
+                {"stream\\d+",GetMirrorOptionEnumNames(MirrorOptionsNone)[0],desc}
+            }};
+
+            param_sets_["flip"] = {{
+                {"stream\\d+",GetMirrorOptionEnumNames(MirrorOptionsFlipY)[0],desc}
+            }};
+
+            param_sets_["rotate"] = {{
+                {"stream\\d+",GetMirrorOptionEnumNames(MirrorOptionsFlipXY)[0],desc}
+            }};
+
+            param_sets_["transpose"] = {{
+                {"stream\\d+",GetMirrorOptionEnumNames(MirrorOptionsTranspose)[0],desc}
+            }};
+
+            param_sets_["rotateCW"] = {{
+                {"stream\\d+",GetMirrorOptionEnumNames(MirrorOptionsRotateCW)[0],desc}
+            }};
+
+            param_sets_["rotateCCW"] = {{
+                {"stream\\d+",GetMirrorOptionEnumNames(MirrorOptionsRotateCCW)[0],desc}
+            }};
+
+            param_sets_["transform"] = {{
+                {"stream\\d+",GetMirrorOptionEnumNames(MirrorOptionsNone)[0],desc}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
 
-            MirrorOptions default_opt = MirrorOptionsNone;
-            if(uri.scheme == "flip") default_opt = MirrorOptionsFlipY;
-            if(uri.scheme == "rotate") default_opt = MirrorOptionsFlipXY;
-            if(uri.scheme == "transpose") default_opt = MirrorOptionsTranspose;
-            if(uri.scheme == "rotateCW") default_opt = MirrorOptionsRotateCW;
-            if(uri.scheme == "rotateCCW") default_opt = MirrorOptionsRotateCCW;
+            if(param_sets_.count(uri.scheme) == 0){
+                throw std::runtime_error( uri.scheme + " was not found among the supported schemes within the \"mirror\" video driver" );
+            }
 
+            ParamReader reader(param_sets_.at(uri.scheme),uri);
             std::vector<MirrorOptions> flips;
 
             for(size_t i=0; i < subvid->Streams().size(); ++i){
                 std::stringstream ss;
                 ss << "stream" << i;
                 const std::string key = ss.str();
-                flips.push_back(uri.Get<MirrorOptions>(key, default_opt) );
+                flips.push_back(reader.Get<MirrorOptions>(key) );
             }
 
             return std::unique_ptr<VideoInterface> (new MirrorVideo(subvid, flips));
         }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            if(param_sets_.count(scheme) == 0){
+                throw std::runtime_error( scheme + " was not found among the supported schemes within the \"mirror\" video driver" );
+            }
+            return FactoryHelpData(scheme,"Geometrically transform the video images",param_sets_.at(scheme));
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            if(param_sets_.count(scheme) == 0){
+                throw std::runtime_error( scheme + " was not found among the supported schemes within the \"mirror\" video driver" );
+            }
+            return ValidateUriAgainstParamSet(scheme, param_sets_.at(scheme), uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        // scheme_name -> ParamSet
+        std::unordered_map<std::string,ParamSet> param_sets_;
     };
 
     auto factory = std::make_shared<MirrorVideoFactory>();

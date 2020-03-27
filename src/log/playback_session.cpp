@@ -9,10 +9,18 @@ std::shared_ptr<PlaybackSession> PlaybackSession::Default()
     return instance;
 }
 
+std::shared_ptr<PlaybackSession> PlaybackSession::ChooseFromParams(const ParamReader& reader)
+{
+    return Choose(reader.Get<bool>("OrderedPlayback"));
+}
+
 std::shared_ptr<PlaybackSession> PlaybackSession::ChooseFromParams(const Params& params)
 {
-    bool use_ordered_playback = params.Get<bool>("OrderedPlayback", false);
-    std::shared_ptr<pangolin::PlaybackSession> playback_session;
+    return Choose(params.Get<bool>("OrderedPlayback", false));
+}
+
+std::shared_ptr<PlaybackSession> PlaybackSession::Choose(bool use_ordered_playback)
+{
     if(use_ordered_playback)
     {
         return Default();
@@ -22,5 +30,4 @@ std::shared_ptr<PlaybackSession> PlaybackSession::ChooseFromParams(const Params&
         return std::make_shared<PlaybackSession>();
     }
 }
-
 }

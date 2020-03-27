@@ -174,7 +174,7 @@ class PANGOLIN_EXPORT FfmpegVideoOutput
 {
     friend class FfmpegVideoOutputStream;
 public:
-    FfmpegVideoOutput( const std::string& filename, int base_frame_rate, int bit_rate, bool flip = false );
+    FfmpegVideoOutput( const std::string& filename, int base_frame_rate, int bit_rate, bool flip = false);
     ~FfmpegVideoOutput();
 
     const std::vector<StreamInfo>& Streams() const override;

@@ -31,7 +31,6 @@
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/signal_slot.h>
 #include <pangolin/video/drivers/pango.h>
-#include <pangolin/video/iostream_operators.h>
 
 #include <functional>
 
@@ -217,22 +216,40 @@ void PangoVideo::SetupStreams(const PacketStreamSource& src)
             _size_bytes += si.SizeBytes();
         }
 
-
         _streams.push_back(si);
     }
 }
 
 PANGOLIN_REGISTER_FACTORY(PangoVideo)
 {
-    struct PangoVideoFactory : public FactoryInterface<VideoInterface> {
+    struct PangoVideoFactory final : public FactoryInterface<VideoInterface> {
+        PangoVideoFactory()
+        {
+            param_set_ = {{
+                {"OrderedPlayback","false","Whether the playback respects the order of every data as they were recorded. Important for simulated playback."}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string path = PathExpand(uri.url);
 
+            ParamReader reader(param_set_,uri);
+
             if( !uri.scheme.compare("pango") || FileType(uri.url) == ImageFileTypePango ) {
-                return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str(), PlaybackSession::ChooseFromParams(uri)));
+                return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str(), PlaybackSession::ChooseFromParams(reader)));
             }
             return std::unique_ptr<VideoInterface>();
         }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme,"Plays a pango recording",param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        ParamSet param_set_;
     };
 
     auto factory = std::make_shared<PangoVideoFactory>();

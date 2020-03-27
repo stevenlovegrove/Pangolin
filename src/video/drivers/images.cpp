@@ -111,7 +111,7 @@ void ImagesVideo::PopulateFilenames(const std::string& wildcard_path)
 
     for(size_t i = 0; i < wildcards.size(); ++i) {
         const std::string channel_wildcard = PathExpand(wildcards[i]);
-        FilesMatchingWildcard(channel_wildcard, filenames[i]);
+        FilesMatchingWildcard(channel_wildcard, filenames[i],  SortMethod::NATURAL);
         if(num_files == size_t(-1)) {
             num_files = filenames[i].size();
         }else{
@@ -273,19 +273,39 @@ const picojson::value& ImagesVideo::FrameProperties() const
 PANGOLIN_REGISTER_FACTORY(ImagesVideo)
 {
     struct ImagesVideoVideoFactory final : public FactoryInterface<VideoInterface> {
+        ImagesVideoVideoFactory()
+        {
+            param_set_ = {{
+                {"fmt","GRAY8","Pixel format, see pixel format help for all possible values"},
+                {"size","640x480","Image size"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            const bool raw = uri.Contains("fmt");
+            ParamReader reader(param_set_,uri);
+
+            const bool raw = reader.Contains("fmt");
             const std::string path = PathExpand(uri.url);
 
             if(raw) {
-                const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
+                const std::string sfmt = reader.Get<std::string>("fmt");
                 const PixelFormat fmt = PixelFormatFromString(sfmt);
-                const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
+                const ImageDim dim = reader.Get<ImageDim>("size");
                 return std::unique_ptr<VideoInterface>( new ImagesVideo(path, fmt, dim.x, dim.y) );
             }else{
                 return std::unique_ptr<VideoInterface>( new ImagesVideo(path) );
             }
         }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme, "Video from images", param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        ParamSet param_set_;
     };
 
     auto factory = std::make_shared<ImagesVideoVideoFactory>();

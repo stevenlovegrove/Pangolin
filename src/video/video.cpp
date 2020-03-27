@@ -71,7 +71,7 @@ std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri)
             FactoryRegistry<VideoOutputInterface>::I().Open(uri);
 
     if(!video) {
-        throw VideoException("No known video handler for URI '" + uri.scheme + "'");
+        throw VideoException("No known video handler for URI '" + uri.scheme + "', or device not found.");
     }
 
     return video;

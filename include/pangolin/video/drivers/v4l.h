@@ -50,12 +50,12 @@ struct buffer {
 class PANGOLIN_EXPORT V4lVideo : public VideoInterface, public VideoUvcInterface, public VideoPropertiesInterface
 {
 public:
-    V4lVideo(const char* dev_name, io_method io = IO_METHOD_MMAP, unsigned iwidth=0, unsigned iheight=0);
+    V4lVideo(const char* dev_name, uint32_t period, io_method io = IO_METHOD_MMAP, unsigned iwidth=0, unsigned iheight=0, unsigned v4l_format=V4L2_PIX_FMT_YUYV);
     ~V4lVideo();
-    
+
     //! Implement VideoInput::Start()
     void Start();
-    
+
     //! Implement VideoInput::Stop()
     void Stop();
 
@@ -64,10 +64,10 @@ public:
 
     //! Implement VideoInput::Streams()
     const std::vector<StreamInfo>& Streams() const;
-    
+
     //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
-    
+
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
 
@@ -91,26 +91,26 @@ public:
 
     //! Access JSON properties of most recently captured frame
     const picojson::value& FrameProperties() const;
-    
+
 protected:
     void InitPangoDeviceProperties();
 
 
-    int ReadFrame(unsigned char* image);
+    int ReadFrame(unsigned char* image, bool wait = true);
     void Mainloop();
-    
+
     void init_read(unsigned int buffer_size);
     void init_mmap(const char* dev_name);
     void init_userp(const char* dev_name, unsigned int buffer_size);
-    
+
     void init_device(const char* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps, unsigned v4l_format = V4L2_PIX_FMT_YUYV, v4l2_field field = V4L2_FIELD_INTERLACED);
     void uninit_device();
-    
+
     void open_device(const char* dev_name);
     void close_device();
-    
+
     std::vector<StreamInfo> streams;
-    
+
     io_method io;
     int       fd;
     buffer*   buffers;
@@ -120,6 +120,7 @@ protected:
     unsigned height;
     float fps;
     size_t image_size;
+    uint32_t period;
 
     picojson::value device_properties;
     picojson::value frame_properties;

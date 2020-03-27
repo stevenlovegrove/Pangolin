@@ -31,6 +31,6 @@ int main( int argc, char* argv[] )
 
         std::cout << all_properties.serialize(true) << std::endl;
     }else{
-        std::cout << "Usage: \n\tPangoJsonPrint filename.pango" << std::endl;
+        std::cout << "Usage: \n\tPangolinVideoJson filename.pango" << std::endl;
     }
 }

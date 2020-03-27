@@ -35,7 +35,7 @@ template<>
 FactoryRegistry<VideoInterface>& FactoryRegistry<VideoInterface>::I()
 {
     // Singleton instance
-    static FactoryRegistry instance;
+    static FactoryRegistry instance("VideoInterface");
     return instance;
 }
 

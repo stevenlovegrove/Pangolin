@@ -60,8 +60,8 @@ pangolin::StreamInfo BayerOutputFormat( const StreamInfo& stream_in, bayer_metho
     return pangolin::StreamInfo( fmt, w, h, w*fmt.bpp / 8, (unsigned char*)0 + start_offset );
 }
 
-DebayerVideo::DebayerVideo(std::unique_ptr<VideoInterface> &src_, const std::vector<bayer_method_t>& bayer_method, color_filter_t tile)
-    : src(std::move(src_)), size_bytes(0), methods(bayer_method), tile(tile)
+DebayerVideo::DebayerVideo(std::unique_ptr<VideoInterface> &src_, const std::vector<bayer_method_t>& bayer_method, color_filter_t tile, const WbGains& input_wb_gains)
+    : src(std::move(src_)), size_bytes(0), methods(bayer_method), tile(tile), wb_gains(input_wb_gains)
 {
     if(!src.get()) {
         throw VideoException("DebayerVideo: VideoInterface in must not be null");
@@ -82,7 +82,6 @@ DebayerVideo::DebayerVideo(std::unique_ptr<VideoInterface> &src_, const std::vec
         streams.push_back(BayerOutputFormat(stin, methods[s], size_bytes));
         size_bytes += streams.back().SizeBytes();
     }
-
     buffer = std::unique_ptr<unsigned char[]>(new unsigned char[src->SizeBytes()]);
 }
 
@@ -160,54 +159,59 @@ void DownsampleToMono(Image<Tout>& out, const Image<Tin>& in)
 }
 
 template<typename Tout, typename Tin>
-void DownsampleDebayer(Image<Tout>& out, const Image<Tin>& in, color_filter_t tile)
+void DownsampleDebayer(Image<Tout>& out, const Image<Tin>& in, color_filter_t tile, WbGains wb_gains, const bool has_metadata_line)
 {
+    int y_offset = 0;
+    if (has_metadata_line) {
+        ++y_offset;
+    }
+
     switch(tile) {
       case DC1394_COLOR_FILTER_RGGB:
         for(int y=0; y< (int)out.h; ++y) {
           Tout* pixout = out.RowPtr(y);
-          const Tin* irow0 = in.RowPtr(2*y);
-          const Tin* irow1 = in.RowPtr(2*y+1);
+          const Tin* irow0 = in.RowPtr(2*y+y_offset);
+          const Tin* irow1 = in.RowPtr(2*y+1+y_offset);
           for(size_t x=0; x<out.w; ++x) {
-              *(pixout++) = irow0[2*x];
-              *(pixout++) = (irow0[2*x+1] + irow1[2*x]) >> 1;
-              *(pixout++) = irow1[2*x+1];
+              *(pixout++) = irow0[2*x] * wb_gains.r;
+              *(pixout++) = ((irow0[2*x+1] + irow1[2*x]) >> 1) * wb_gains.g;
+              *(pixout++) = irow1[2*x+1] * wb_gains.b;
           }
         }
         break;
       case DC1394_COLOR_FILTER_GBRG:
         for(int y=0; y< (int)out.h; ++y) {
           Tout* pixout = out.RowPtr(y);
-          const Tin* irow0 = in.RowPtr(2*y);
-          const Tin* irow1 = in.RowPtr(2*y+1);
+          const Tin* irow0 = in.RowPtr(2*y+y_offset);
+          const Tin* irow1 = in.RowPtr(2*y+1+y_offset);
           for(size_t x=0; x<out.w; ++x) {
-             *(pixout++) = irow1[2*x];
-             *(pixout++) = (irow0[2*x] + irow1[2*x+1]) >> 1;
-             *(pixout++) = irow0[2*x+1];
+             *(pixout++) = irow1[2*x] * wb_gains.r;
+             *(pixout++) = ((irow0[2*x] + irow1[2*x+1]) >> 1) * wb_gains.g;
+             *(pixout++) = irow0[2*x+1] * wb_gains.b;
           }
         }
         break;
       case DC1394_COLOR_FILTER_GRBG:
         for(int y=0; y< (int)out.h; ++y) {
           Tout* pixout = out.RowPtr(y);
-          const Tin* irow0 = in.RowPtr(2*y);
-          const Tin* irow1 = in.RowPtr(2*y+1);
+          const Tin* irow0 = in.RowPtr(2*y+y_offset);
+          const Tin* irow1 = in.RowPtr(2*y+1+y_offset);
           for(size_t x=0; x<out.w; ++x) {
-             *(pixout++) = irow0[2*x+1];
-             *(pixout++) = (irow0[2*x] + irow1[2*x+1]) >> 1;
-             *(pixout++) = irow1[2*x];
+             *(pixout++) = irow0[2*x+1] * wb_gains.r;
+             *(pixout++) = ((irow0[2*x] + irow1[2*x+1]) >> 1) * wb_gains.g;
+             *(pixout++) = irow1[2*x] * wb_gains.b;
           }
         }
         break;
       case DC1394_COLOR_FILTER_BGGR:
         for(int y=0; y< (int)out.h; ++y) {
           Tout* pixout = out.RowPtr(y);
-          const Tin* irow0 = in.RowPtr(2*y);
-          const Tin* irow1 = in.RowPtr(2*y+1);
+          const Tin* irow0 = in.RowPtr(2*y+y_offset);
+          const Tin* irow1 = in.RowPtr(2*y+1+y_offset);
           for(size_t x=0; x<out.w; ++x) {
-             *(pixout++) = irow1[2*x+1];
-             *(pixout++) = (irow0[2*x+1] + irow1[2*x]) >> 1;
-             *(pixout++) = irow0[2*x];
+             *(pixout++) = irow1[2*x+1] * wb_gains.r;
+             *(pixout++) = ((irow0[2*x+1] + irow1[2*x]) >> 1) * wb_gains.g;
+             *(pixout++) = irow0[2*x] * wb_gains.b;
           }
         }
         break;
@@ -226,7 +230,7 @@ void PitchedImageCopy( Image<T>& img_out, const Image<T>& img_in ) {
 }
 
 template<typename Tout, typename Tin>
-void ProcessImage(Image<Tout>& img_out, const Image<Tin>& img_in, bayer_method_t method, color_filter_t tile)
+void ProcessImage(Image<Tout>& img_out, const Image<Tin>& img_in, bayer_method_t method, color_filter_t tile, WbGains wb_gains, const bool has_metadata_line)
 {
     if(method == BAYER_METHOD_NONE) {
         PitchedImageCopy(img_out, img_in.template UnsafeReinterpret<Tout>() );
@@ -237,7 +241,7 @@ void ProcessImage(Image<Tout>& img_out, const Image<Tin>& img_in, bayer_method_t
             DownsampleToMono<double,Tout, Tin>(img_out, img_in);
         }
     }else if(method == BAYER_METHOD_DOWNSAMPLE) {
-        DownsampleDebayer(img_out, img_in, tile);
+        DownsampleDebayer(img_out, img_in, tile, wb_gains, has_metadata_line);
     }else{
 #ifdef HAVE_DC1394
         if(sizeof(Tout) == 1) {
@@ -258,6 +262,8 @@ void ProcessImage(Image<Tout>& img_out, const Image<Tin>& img_in, bayer_method_t
 
 void DebayerVideo::ProcessStreams(unsigned char* out, const unsigned char *in)
 {
+    const bool has_metadata_line = frame_properties.get_value<bool>(PANGO_HAS_LINE0_METADATA, false);
+
     for(size_t s=0; s<streams.size(); ++s) {
         const StreamInfo& stin = videoin[0]->Streams()[s];
         Image<unsigned char> img_in  = stin.StreamImage(in);
@@ -269,11 +275,11 @@ void DebayerVideo::ProcessStreams(unsigned char* out, const unsigned char *in)
                 std::memcpy(img_out.RowPtr((int)y), img_in.RowPtr((int)y), num_bytes);
             }
         }else if(stin.PixFormat().bpp == 8) {
-            ProcessImage(img_out, img_in, methods[s], tile);
+            ProcessImage(img_out, img_in, methods[s], tile, wb_gains, has_metadata_line);
         }else if(stin.PixFormat().bpp == 16){
             Image<uint16_t> img_in16  = img_in.UnsafeReinterpret<uint16_t>();
             Image<uint16_t> img_out16 = img_out.UnsafeReinterpret<uint16_t>();
-            ProcessImage(img_out16, img_in16, methods[s], tile);
+            ProcessImage(img_out16, img_in16, methods[s], tile, wb_gains, has_metadata_line);
         }else {
             throw std::runtime_error("debayer: unhandled format combination: " + stin.PixFormat().format );
         }
@@ -282,8 +288,9 @@ void DebayerVideo::ProcessStreams(unsigned char* out, const unsigned char *in)
 
 //! Implement VideoInput::GrabNext()
 bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
-{    
+{
     if(videoin[0]->GrabNext(buffer.get(),wait)) {
+        frame_properties = GetVideoFrameProperties(videoin[0]);
         ProcessStreams(image, buffer.get());
         return true;
     }else{
@@ -295,6 +302,7 @@ bool DebayerVideo::GrabNext( unsigned char* image, bool wait )
 bool DebayerVideo::GrabNewest( unsigned char* image, bool wait )
 {
     if(videoin[0]->GrabNewest(buffer.get(),wait)) {
+        frame_properties = GetVideoFrameProperties(videoin[0]);
         ProcessStreams(image, buffer.get());
         return true;
     }else{
@@ -340,20 +348,44 @@ bayer_method_t DebayerVideo::BayerMethodFromString(std::string str)
 PANGOLIN_REGISTER_FACTORY(DebayerVideo)
 {
     struct DebayerVideoFactory final : public FactoryInterface<VideoInterface> {
+        DebayerVideoFactory()
+        {
+            param_set_ = {{
+                {"tile","rggb","Tiling pattern: possible values: rggb,gbrg,grbg,bggr"},
+                {"method(\\d+)?","none","method, or methodN for multiple sub-streams, N >= 1. Possible values: nearest,simple,bilinear,hqlinear,downsample,edgesense,vng,ahd,mono,none. For methodN, the default values are set to the value of method."},
+                {"wb_r","1.0","White balance - red component"},
+                {"wb_g","1.0","White balance - green component"},
+                {"wb_b","1.0","White balance - blue component"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
+            ParamReader reader(param_set_,uri);
+
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
-            const std::string tile_string = uri.Get<std::string>("tile","rggb");
-            const std::string method = uri.Get<std::string>("method","none");
+            const std::string tile_string = reader.Get<std::string>("tile");
+            const std::string method = reader.Get<std::string>("method");
             const color_filter_t tile = DebayerVideo::ColorFilterFromString(tile_string);
+            WbGains input_wb_gains(reader.Get<float>("wb_r"), reader.Get<float>("wb_g"), reader.Get<float>("wb_b"));
 
             std::vector<bayer_method_t> methods;
             for(size_t s=0; s < subvid->Streams().size(); ++s) {
                 const std::string key = std::string("method") + ToString(s+1);
-                std::string method_s = uri.Get<std::string>(key, method);
+                std::string method_s = reader.Get<std::string>(key, method);
                 methods.push_back(DebayerVideo::BayerMethodFromString(method_s));
             }
-            return std::unique_ptr<VideoInterface>( new DebayerVideo(subvid, methods, tile) );
+            return std::unique_ptr<VideoInterface>( new DebayerVideo(subvid, methods, tile, input_wb_gains) );
         }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme,"Demosaics raw RGB sensor data (one or multiple streams) to RGB images", param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        ParamSet param_set_;
     };
 
     FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<DebayerVideoFactory>(), 10, "debayer");

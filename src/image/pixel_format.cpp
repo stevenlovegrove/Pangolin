@@ -27,8 +27,8 @@
 
 #include <pangolin/image/pixel_format.h>
 
-#include <stdexcept>
 #include <vector>
+#include <stdexcept>
 
 namespace pangolin
 {
@@ -55,7 +55,10 @@ const PixelFormat SupportedPixelFormats[] =
     {"GRAY32F", 1, {32}, 32, 32, false},
     {"GRAY64F", 1, {64}, 64, 64, false},
     {"RGB96F",  3, {32,32,32}, 96, 32, false},
+    {"RGB48F",  3, {16,16,16}, 48, 16, false},
+    {"RGBA64F",  4, {16,16,16,16}, 64, 16, false},
     {"RGBA128F",  4, {32,32,32,32}, 128, 32, false},
+    {"ABGR128F",  4, {32,32,32,32}, 128, 32, false},
     {"",0,{0,0,0,0},0,0,0}
 };
 
@@ -65,6 +68,17 @@ PixelFormat PixelFormatFromString(const std::string& format)
         if(!format.compare(SupportedPixelFormats[i].format))
             return SupportedPixelFormats[i];
     throw std::runtime_error( std::string("Unknown Format: ") + format);
+}
+
+std::vector<PixelFormat> GetSupportedPixelFormats()
+{
+    std::vector<PixelFormat> result;
+    const PixelFormat* pixelFormat = SupportedPixelFormats;
+    while( pixelFormat->format.length() > 0 ){
+        result.push_back( *pixelFormat );
+        pixelFormat++;
+    }
+    return result;
 }
 
 }

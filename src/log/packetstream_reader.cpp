@@ -71,7 +71,10 @@ void PacketStreamReader::Open(const std::string& filename)
     _stream.open(filename);
 
     if (!_stream.is_open())
-        throw runtime_error("Cannot open stream.");
+        throw runtime_error(
+            "Cannot open stream from " + filename +
+            "\nAre you sure the file exists?"
+            );
 
     for (auto i : PANGO_MAGIC)
     {

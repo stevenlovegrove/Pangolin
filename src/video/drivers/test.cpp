@@ -97,12 +97,30 @@ bool TestVideo::GrabNewest( unsigned char* image, bool wait )
 PANGOLIN_REGISTER_FACTORY(TestVideo)
 {
     struct TestVideoFactory final : public FactoryInterface<VideoInterface> {
+        TestVideoFactory()
+        {
+            param_set_ = {{
+                {"size","640x480","Image dimension"},
+                {"n","1","Number of streams"},
+                {"fmt","RGB24","Pixel format: see pixel format help for all possible values"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
-            const int n = uri.Get<int>("n", 1);
-            std::string fmt  = uri.Get<std::string>("fmt","RGB24");
+            ParamReader reader(param_set_, uri);
+            const ImageDim dim = reader.Get<ImageDim>("size");
+            const int n = reader.Get<int>("n");
+            std::string fmt  = reader.Get<std::string>("fmt");
             return std::unique_ptr<VideoInterface>(new TestVideo(dim.x,dim.y,n,fmt));
         }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme,"A test video factory", param_set_);
+        }
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+        ParamSet param_set_;
     };
 
     FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<TestVideoFactory>(), 10, "test");

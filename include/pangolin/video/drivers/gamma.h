@@ -29,21 +29,20 @@
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
-
-#include <memory>
-#include <pangolin/utils/fix_size_buffer_queue.h>
+#include <set>
 
 namespace pangolin
 {
 
-
-// Video class that creates a thread that keeps pulling frames and processing from its children.
-class PANGOLIN_EXPORT ThreadVideo :  public VideoInterface, public VideoPropertiesInterface,
-        public BufferAwareVideoInterface, public VideoFilterInterface
+// Video class that applies gamma to its video input
+class PANGOLIN_EXPORT GammaVideo :
+    public VideoInterface,
+    public VideoFilterInterface,
+    public BufferAwareVideoInterface
 {
 public:
-    ThreadVideo(std::unique_ptr<VideoInterface>& videoin, size_t num_buffers, const std::string& name);
-    ~ThreadVideo();
+    GammaVideo(std::unique_ptr<VideoInterface>& videoin, const std::map<size_t, float> &stream_gammas);
+    ~GammaVideo();
 
     //! Implement VideoInput::Start()
     void Start();
@@ -58,56 +57,29 @@ public:
     const std::vector<StreamInfo>& Streams() const;
 
     //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+    bool GrabNext( uint8_t* image, bool wait = true );
 
     //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+    bool GrabNewest( uint8_t* image, bool wait = true );
 
-    const picojson::value& DeviceProperties() const;
-
-    const picojson::value& FrameProperties() const;
+    //! Implement VideoFilterInterface method
+    std::vector<VideoInterface*>& InputStreams();
 
     uint32_t AvailableFrames() const;
 
     bool DropNFrames(uint32_t n);
 
-    void operator()();
-
-    std::vector<VideoInterface*>& InputStreams();
-
 protected:
-    struct GrabResult
-    {
-        GrabResult(const size_t buffer_size)
-            : return_status(false),
-              buffer(new unsigned char[buffer_size])
-        {
-        }
-
-        // No copy constructor.
-        GrabResult(const GrabResult& o) = delete;
-
-        // Default move constructor
-        GrabResult(GrabResult&& o) = default;
-
-        bool return_status;
-        std::unique_ptr<unsigned char[]> buffer;
-        picojson::value frame_properties;
-    };
+    void Process(uint8_t* image, const uint8_t* buffer);
 
     std::unique_ptr<VideoInterface> src;
     std::vector<VideoInterface*> videoin;
 
-    bool quit_grab_thread;
-    FixSizeBuffersQueue<GrabResult> queue;
-
-    std::condition_variable cv;
-    std::mutex cvMtx;
-    std::thread grab_thread;
-    std::string thread_name;
-
-    mutable picojson::value device_properties;
-    picojson::value frame_properties;
+    std::vector<StreamInfo> streams;
+    size_t size_bytes;
+    std::unique_ptr<uint8_t[]> buffer;
+    const std::map<size_t, float> stream_gammas;
+    std::set<std::string> formats_supported;
 };
 
 }

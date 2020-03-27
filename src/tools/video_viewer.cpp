@@ -113,7 +113,7 @@ void VideoViewer::Run()
         container.AddDisplay(sv);
     }
 
-    pangolin::View& record_graphic = pangolin::Display("record_glyth").
+    pangolin::View& record_graphic = pangolin::Display("record_glyph").
             SetBounds(pangolin::Attach::Pix(-28),1.0f, pangolin::Attach::Pix(-28), 1.0f);
     record_graphic.extern_draw_function = [&](pangolin::View& v){
         if(video.IsRecording()) {
@@ -179,7 +179,7 @@ void VideoViewer::Run()
 
                 // Update images
                 if((frame-1) % draw_nth_frame == 0) {
-                    for(unsigned int i=0; i<images.size(); ++i) 
+                    for(unsigned int i=0; i<images.size(); ++i)
                         if(stream_views[i].IsShown()) {
                             stream_views[i].SetImage(images[i], pangolin::GlPixFormat(video.Streams()[i].PixFormat() ));
                         }
@@ -362,7 +362,7 @@ void VideoViewer::Skip(int frames)
         if (next_frame >= 0) {
             current_frame = video_playback->Seek(next_frame) -1;
             grab_until = current_frame + 1;
-        } 
+        }
     }else{
         if(frames >= 0) {
             grab_until = current_frame + frames;

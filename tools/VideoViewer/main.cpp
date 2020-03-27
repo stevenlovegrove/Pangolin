@@ -1,13 +1,35 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/tools/video_viewer.h>
+#include <pangolin/utils/argagg.hpp>
+#include <pangolin/utils/help.h>
 
 int main( int argc, char* argv[] )
 {
     const std::string dflt_output_uri = "pango:[unique_filename]//video.pango";
 
-    if( argc > 1 ) {
-        const std::string input_uri = std::string(argv[1]);
-        const std::string output_uri = (argc > 2) ? std::string(argv[2]) : dflt_output_uri;
+    argagg::parser argparser = {{
+        { "help", {"-h", "--help"}, "shows this help! duh!", 0},
+        { "registry", {"-r", "--registry"}, "filters the help message by registry", 1},
+        { "scheme", {"-s", "--scheme"}, "filters the help message by scheme", 1},
+        { "verbose", {"-v","--verbose"}, "verbose level in number, 0=list of schemes(default),1=scheme parameters,2=parameter details", 1}
+    }};
+
+    argagg::parser_results args = argparser.parse(argc, argv);
+    if( args["help"]){
+        std::cerr << "Generation options" << std::endl;
+        std::cerr << argparser;
+        std::cerr << std::endl;
+        pangolin::HelpParams help_params;
+        help_params.verbosity = pangolin::HelpVerbosity(std::min(std::max(args["verbose"].as<int>(0),0),2));
+        help_params.registry = args["registry"].as<std::string>("");
+        help_params.scheme = args["scheme"].as<std::string>("");
+        pangolin::Help( help_params, std::cerr );
+        return 0;
+    }
+
+    if( args.pos.size() > 0 ) {
+        const std::string input_uri = std::string(args.pos[0]);
+        const std::string output_uri = (args.pos.size() > 1 ) ? std::string(args.pos[1]) : dflt_output_uri;
         try{
             pangolin::RunVideoViewerUI(input_uri, output_uri);
         } catch (const pangolin::VideoException& e) {
@@ -23,18 +45,7 @@ int main( int argc, char* argv[] )
             ""
         };
 
-        std::cout << "Usage  : VideoViewer [video-uri]" << std::endl << std::endl;
-        std::cout << "Where video-uri describes a stream or file resource, e.g." << std::endl;
-        std::cout << "\tfile:[realtime=1]///home/user/video/movie.pvn" << std::endl;
-        std::cout << "\tfile:///home/user/video/movie.avi" << std::endl;
-        std::cout << "\tfiles:///home/user/seqiemce/foo*.jpeg" << std::endl;
-        std::cout << "\tdc1394:[fmt=RGB24,size=640x480,fps=30,iso=400,dma=10]//0" << std::endl;
-        std::cout << "\tdc1394:[fmt=FORMAT7_1,size=640x480,pos=2+2,iso=400,dma=10]//0" << std::endl;
-        std::cout << "\tv4l:///dev/video0" << std::endl;
-        std::cout << "\tconvert:[fmt=RGB24]//v4l:///dev/video0" << std::endl;
-        std::cout << "\tmjpeg://http://127.0.0.1/?action=stream" << std::endl;
-        std::cout << "\topenni:[img1=rgb]//" << std::endl;
-        std::cout << std::endl;
+        pangolin::Help( pangolin::HelpParams(), std::cerr );
 
         // Try to open some video device
         for(int i=0; !input_uris[i].empty(); ++i )
@@ -43,7 +54,9 @@ int main( int argc, char* argv[] )
                 pango_print_info("Trying: %s\n", input_uris[i].c_str());
                 pangolin::RunVideoViewerUI(input_uris[i], dflt_output_uri);
                 return 0;
-            }catch(const pangolin::VideoException&) { }
+            }catch(const pangolin::VideoException &e) {
+              std::cout << e.what() << std::endl;
+            }
         }
     }
 

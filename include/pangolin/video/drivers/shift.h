@@ -29,6 +29,7 @@
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
+#include <set>
 
 namespace pangolin
 {
@@ -37,7 +38,9 @@ namespace pangolin
 class PANGOLIN_EXPORT ShiftVideo : public VideoInterface, public VideoFilterInterface
 {
 public:
-    ShiftVideo(std::unique_ptr<VideoInterface>& videoin, PixelFormat new_fmt, int shift_right_bits = 0, unsigned int mask = 0xFFFF);
+    ShiftVideo(std::unique_ptr<VideoInterface>& videoin,
+               const std::map<size_t, int>& shift_right_bits,
+               const std::map<size_t, uint32_t>& masks);
     ~ShiftVideo();
 
     //! Implement VideoInput::Start()
@@ -53,21 +56,24 @@ public:
     const std::vector<StreamInfo>& Streams() const;
 
     //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+    bool GrabNext( uint8_t* image, bool wait = true );
 
     //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+    bool GrabNewest( uint8_t* image, bool wait = true );
 
     std::vector<VideoInterface*>& InputStreams();
 
 protected:
+    void Process(uint8_t* buffer_out, const uint8_t* buffer_in);
+
     std::unique_ptr<VideoInterface> src;
     std::vector<VideoInterface*> videoin;
     std::vector<StreamInfo> streams;
     size_t size_bytes;
-    unsigned char* buffer;
-    int shift_right_bits;
-    unsigned int mask;
+    std::unique_ptr<uint8_t[]> buffer;
+    const std::map<size_t, int> shift_right_bits;
+    const std::map<size_t, uint32_t> masks;
+    std::set<std::string> formats_supported;
 };
 
 }

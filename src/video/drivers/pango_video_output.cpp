@@ -265,20 +265,30 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
 PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
 {
     struct PangoVideoFactory final : public FactoryInterface<VideoOutputInterface> {
+        PangoVideoFactory()
+        {
+            param_set_ = {{
+                {"buffer_size_mb","100","Buffer size in MB"},
+                {"unique_filename","","This is flag to create a unique file name in the case of file already exists."},
+                {"encoder(\\d+)?"," ","encoder or encoderN, 1 <= N <= 100. The default values of encoderN are set to encoder"}
+            }};
+        }
         std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
+            ParamReader reader(param_set_, uri);
+
             const size_t mb = 1024*1024;
-            const size_t buffer_size_bytes = uri.Get("buffer_size_mb", 100) * mb;
+            const size_t buffer_size_bytes = reader.Get<size_t>("buffer_size_mb") * mb;
             std::string filename = uri.url;
 
-            if(uri.Contains("unique_filename")) {
+            if(reader.Contains("unique_filename")) {
                 filename = MakeUniqueFilename(filename);
             }
 
             // Default encoder
             std::string default_encoder = "";
 
-            if(uri.Contains("encoder")) {
-                default_encoder = uri.Get<std::string>("encoder","");
+            if(reader.Contains("encoder")) {
+                default_encoder = reader.Get<std::string>("encoder","");
             }
 
             // Encoders for each stream
@@ -286,13 +296,24 @@ PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
             for(size_t i=0; i<100; ++i)
             {
                 const std::string encoder_key = pangolin::FormatString("encoder%",i+1);
-                stream_encoder_uris[i] = uri.Get<std::string>(encoder_key, default_encoder);
+                stream_encoder_uris[i] = reader.Get<std::string>(encoder_key, default_encoder);
             }
 
             return std::unique_ptr<VideoOutputInterface>(
                 new PangoVideoOutput(filename, buffer_size_bytes, stream_encoder_uris)
             );
         }
+        FactoryHelpData Help(const std::string& scheme ) const override {
+            return FactoryHelpData(scheme,"Writes to a pango file",param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        ParamSet param_set_;
     };
 
     auto factory = std::make_shared<PangoVideoFactory>();

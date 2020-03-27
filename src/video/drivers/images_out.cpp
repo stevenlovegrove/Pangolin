@@ -104,10 +104,18 @@ bool ImagesVideoOutput::IsPipe() const
 PANGOLIN_REGISTER_FACTORY(ImagesVideoOutput)
 {
     struct ImagesVideoFactory final : public FactoryInterface<VideoOutputInterface> {
+        ImagesVideoFactory()
+        {
+            param_set_ = {{
+                {"fmt","png","Output image format. Possible values are all Pangolin image formats e.g.: png,jpg,jpeg,ppm,pgm,pxm,pdm,zstd,lzf,p12b,exr,pango"}
+            }};
+        }
         std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
+            ParamReader reader(param_set_,uri);
+
             const std::string images_folder = PathExpand(uri.url);
             const std::string json_filename = images_folder + "/archive.json";
-            const std::string image_extension = uri.Get<std::string>("fmt", "png");
+            const std::string image_extension = reader.Get<std::string>("fmt");
 
             if(FileExists(json_filename)) {
                 throw std::runtime_error("Dataset already exists in directory.");
@@ -117,6 +125,18 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideoOutput)
                 new ImagesVideoOutput(images_folder, json_filename, image_extension)
             );
         }
+
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme,"Writes video frames a images",param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        ParamSet param_set_;
     };
 
     auto factory = std::make_shared<ImagesVideoFactory>();

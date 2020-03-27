@@ -76,6 +76,9 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
                 return std::unique_ptr<VideoInterface>();
             }
         }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme, "interesting json keys: video_uri, video_uri_defaults.");
+        }
     };
 
     auto factory = std::make_shared<JsonVideoFactory>();

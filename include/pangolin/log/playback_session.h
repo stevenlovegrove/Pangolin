@@ -6,6 +6,7 @@
 #include <pangolin/log/packetstream_reader.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/registration.h>
+#include <pangolin/utils/uri.h>
 
 namespace pangolin {
 
@@ -33,14 +34,21 @@ public:
         }
     }
 
+    // Should only be called if there's no playbacks
+    // in flight
+    void Clear() {
+      readers.clear();
+      time.Reset();
+    }
+
     SyncTime& Time()
     {
         return time;
     }
-
+    static std::shared_ptr<PlaybackSession> ChooseFromParams(const ParamReader& reader);
     static std::shared_ptr<PlaybackSession> ChooseFromParams(const Params& params);
-
 private:
+    static std::shared_ptr<PlaybackSession> Choose(bool ordered_playback);
     std::map<std::string,std::shared_ptr<PacketStreamReader>> readers;
     SyncTime time;
 };

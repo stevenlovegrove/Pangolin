@@ -77,11 +77,11 @@ inline std::string V4lToString(int32_t v)
     return std::string(cc);
 }
 
-V4lVideo::V4lVideo(const char* dev_name, io_method io, unsigned iwidth, unsigned iheight)
-    : io(io), fd(-1), buffers(0), n_buffers(0), running(false)
+V4lVideo::V4lVideo(const char* dev_name, uint32_t period, io_method io, unsigned iwidth, unsigned iheight, unsigned v4l_format)
+    : io(io), fd(-1), buffers(0), n_buffers(0), running(false), period(period)
 {
     open_device(dev_name);
-    init_device(dev_name,iwidth,iheight,0);
+    init_device(dev_name,iwidth,iheight,0,v4l_format);
     InitPangoDeviceProperties();
 
     Start();
@@ -114,7 +114,7 @@ size_t V4lVideo::SizeBytes() const
     return image_size;
 }
 
-bool V4lVideo::GrabNext( unsigned char* image, bool /*wait*/ )
+bool V4lVideo::GrabNext( unsigned char* image, bool wait )
 {
     for (;;) {
         fd_set fds;
@@ -125,8 +125,8 @@ bool V4lVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         FD_SET (fd, &fds);
 
         /* Timeout. */
-        tv.tv_sec = 2;
-        tv.tv_usec = 0;
+        tv.tv_sec = 0;
+        tv.tv_usec = 2 * period;
 
         r = select (fd + 1, &fds, NULL, NULL, &tv);
 
@@ -144,7 +144,7 @@ bool V4lVideo::GrabNext( unsigned char* image, bool /*wait*/ )
             return false;
         }
 
-        if (ReadFrame(image))
+        if (ReadFrame(image, wait))
             break;
 
         /* EAGAIN - continue select loop. */
@@ -159,7 +159,7 @@ bool V4lVideo::GrabNewest( unsigned char* image, bool wait )
     return GrabNext(image,wait);
 }
 
-int V4lVideo::ReadFrame(unsigned char* image)
+int V4lVideo::ReadFrame(unsigned char* image, bool wait)
 {
     struct v4l2_buffer buf;
     unsigned int i;
@@ -195,6 +195,10 @@ int V4lVideo::ReadFrame(unsigned char* image)
         buf.memory = V4L2_MEMORY_MMAP;
 
         if (-1 == xioctl (fd, VIDIOC_DQBUF, &buf)) {
+            // Sleep for one period if wait is specified
+            if (wait) {
+              std::this_thread::sleep_for(std::chrono::microseconds(period));
+            }
             switch (errno) {
             case EAGAIN:
                 return 0;
@@ -279,8 +283,11 @@ void V4lVideo::Stop()
         case IO_METHOD_USERPTR:
             type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-            if (-1 == xioctl (fd, VIDIOC_STREAMOFF, &type))
-                throw VideoException("VIDIOC_STREAMOFF", strerror(errno));
+            if (-1 == xioctl (fd, VIDIOC_STREAMOFF, &type)) {
+                // throwing on dtors is not good, commenting out for now
+                // throw VideoException("VIDIOC_STREAMOFF", strerror(errno));
+                pango_print_warn("V4lVideo::Stop() VIDIOC_STREAMOFF error: %s\n", strerror(errno));
+            }
 
             break;
         }
@@ -625,6 +632,12 @@ void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheig
     }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y10) {
         spix="GRAY10";
         bit_depth = 10;
+    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y12) {
+        spix="GRAY12";
+        bit_depth = 12;
+    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB24) {
+        spix="RGB24";
+        bit_depth = 24;
     }else{
         // TODO: Add method to translate from V4L to FFMPEG type.
         std::cerr << "V4L Format " << V4lToString(fmt.fmt.pix.pixelformat)
@@ -765,9 +778,41 @@ const picojson::value& V4lVideo::FrameProperties() const
 PANGOLIN_REGISTER_FACTORY(V4lVideo)
 {
     struct V4lVideoFactory final : public FactoryInterface<VideoInterface> {
+        V4lVideoFactory()
+        {
+            param_set_ = {{
+                {"method","mmap","Possible values are: read, mmap, userptr"},
+                {"size","0x0","Desired image size"},
+                {"format","YUYV422","Desired image format"},
+                {"period","50000","Period in microsecs"},
+                {"ExposureTime","10000","Exposure time in microsecs"},
+                {"Gain","1","Image gain parameter"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            const std::string smethod = uri.Get<std::string>("method","mmap");
-            const ImageDim desired_dim = uri.Get<ImageDim>("size", ImageDim(0,0));
+            ParamReader reader(param_set_,uri);
+
+            const std::string smethod = reader.Get<std::string>("method");
+            const ImageDim desired_dim = reader.Get<ImageDim>("size");
+            const std::string sformat = reader.Get<std::string>("format");
+
+            unsigned format = V4L2_PIX_FMT_YUYV;
+
+            if(sformat == "GRAY8") {
+                format = V4L2_PIX_FMT_GREY;
+            } else if(sformat == "YUYV422") {
+                format = V4L2_PIX_FMT_YUYV;
+            } else if(sformat == "UYVY422") {
+                format = V4L2_PIX_FMT_UYVY;
+            } else if(sformat == "GRAY16LE") {
+                format = V4L2_PIX_FMT_Y16;
+            } else if(sformat == "GRAY10") {
+                format = V4L2_PIX_FMT_Y10;
+            } else if(sformat == "GRAY12") {
+                format = V4L2_PIX_FMT_Y12;
+            } else if(sformat == "RGB24") {
+                format = V4L2_PIX_FMT_RGB24;
+            }
 
             io_method method = IO_METHOD_MMAP;
 
@@ -779,15 +824,28 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
                 method = IO_METHOD_USERPTR;
             }
 
-            V4lVideo* video_raw = new V4lVideo(uri.url.c_str(), method, desired_dim.x, desired_dim.y );
+            uint32_t period = reader.Get<int>("period");
+
+            V4lVideo* video_raw = new V4lVideo(uri.url.c_str(), period, method, desired_dim.x, desired_dim.y, format);
             if(video_raw  && uri.Contains("ExposureTime")) {
-                static_cast<V4lVideo*>(video_raw)->SetExposure(uri.Get<int>("ExposureTime", 10000));
+                static_cast<V4lVideo*>(video_raw)->SetExposure(reader.Get<int>("ExposureTime"));
             }
             if(video_raw  && uri.Contains("Gain")) {
-                static_cast<V4lVideo*>(video_raw)->SetGain(uri.Get<int>("Gain", 1));
+                static_cast<V4lVideo*>(video_raw)->SetGain(reader.Get<int>("Gain"));
             }
             return std::unique_ptr<VideoInterface>(video_raw);
         }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme,"Opens a v4l compatible video stream",param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        ParamSet param_set_;
     };
 
     auto factory = std::make_shared<V4lVideoFactory>();

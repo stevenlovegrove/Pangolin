@@ -46,8 +46,8 @@ namespace pangolin
 const uint64_t grab_fail_thread_sleep_us = 1000;
 const uint64_t capture_timout_ms = 5000;
 
-ThreadVideo::ThreadVideo(std::unique_ptr<VideoInterface> &src_, size_t num_buffers)
-    : src(std::move(src_)), quit_grab_thread(true)
+ThreadVideo::ThreadVideo(std::unique_ptr<VideoInterface> &src_, size_t num_buffers, const std::string& name)
+    : src(std::move(src_)), quit_grab_thread(true), thread_name(name)
 {
     if(!src) {
         throw VideoException("ThreadVideo: VideoInterface in must not be null");
@@ -55,11 +55,10 @@ ThreadVideo::ThreadVideo(std::unique_ptr<VideoInterface> &src_, size_t num_buffe
     videoin.push_back(src.get());
 
 //    // queue init allocates buffers.
-//    queue.init(num_buffers, (unsigned int)videoin[0]->SizeBytes());
-
+    const size_t buffer_size = videoin[0]->SizeBytes();
     for(size_t i=0; i < num_buffers; ++i)
     {
-        queue.returnOrAddUsedBuffer( GrabResult(videoin[0]->SizeBytes()) );
+        queue.returnOrAddUsedBuffer( GrabResult(buffer_size) );
     }
 }
 
@@ -130,7 +129,7 @@ bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
     TSTART()
 
     if(queue.EmptyBuffers() == 0) {
-       pango_print_warn("Thread %12p has run out of %d buffers\n", this, (int)queue.AvailableFrames());
+       pango_print_warn("Thread %s(%12p) has run out of %d buffers\n", thread_name.c_str(), this, (int)queue.AvailableFrames());
     }
 
     if(queue.AvailableFrames() == 0 && !wait) {
@@ -139,12 +138,16 @@ bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
         return false;
     }else{
         if(queue.AvailableFrames() == 0 && wait) {
+            if (quit_grab_thread)
+            {
+                return false;
+            }
             // Must return a frame so block on notification from grab thread.
             std::unique_lock<std::mutex> lk(cvMtx);
             DBGPRINT("GrabNext no available frames wait for notification.");
             if(cv.wait_for(lk, std::chrono::milliseconds(capture_timout_ms)) == std::cv_status::timeout)
             {
-                pango_print_warn("ThreadVideo: GrabNext blocking read for frames reached timeout.");
+                pango_print_warn("ThreadVideo: GrabNext blocking read for frames reached timeout.\n");
                 return false;
             }
         }
@@ -153,7 +156,8 @@ bool ThreadVideo::GrabNext( unsigned char* image, bool wait )
         GrabResult grab = queue.getNext();
         if(grab.return_status) {
             DBGPRINT("GrabNext at least one frame available.");
-            std::memcpy(image, grab.buffer.get(), videoin[0]->SizeBytes());
+            const size_t buffer_size = videoin[0]->SizeBytes();
+            std::memcpy(image, grab.buffer.get(), buffer_size);
             frame_properties = grab.frame_properties;
         }else{
             DBGPRINT("GrabNext returned false")
@@ -180,7 +184,7 @@ bool ThreadVideo::GrabNewest( unsigned char* image, bool wait )
             DBGPRINT("GrabNewest no available frames wait for notification.");
             if(cv.wait_for(lk, std::chrono::milliseconds(capture_timout_ms)) == std::cv_status::timeout)
             {
-                pango_print_warn("ThreadVideo: GrabNext blocking read for frames reached timeout.");
+                pango_print_warn("ThreadVideo: GrabNewest blocking read for frames reached timeout.\n");
                 return false;
             }
         }
@@ -216,7 +220,12 @@ void ThreadVideo::operator()()
                 grab.return_status = videoin[0]->GrabNext(grab.buffer.get(), true);
             }catch(const VideoException& e) {
                 // User doesn't have the opportunity to catch exceptions here.
-                pango_print_warn("ThreadVideo caught VideoException (%s)\n",  e.what());
+                std::string what = e.what();
+                pango_print_warn("ThreadVideo caught VideoException (%s)\n",  what.c_str());
+                if (what.find("No such device") != std::string::npos) {
+                  pango_print_warn("Device is gone, exiting thread.\n");
+                  quit_grab_thread = true;
+                }
                 grab.return_status = false;
             }catch(const std::exception& e){
                 // User doesn't have the opportunity to catch exceptions here.
@@ -252,11 +261,31 @@ std::vector<VideoInterface*>& ThreadVideo::InputStreams()
 PANGOLIN_REGISTER_FACTORY(ThreadVideo)
 {
     struct ThreadVideoFactory final : public FactoryInterface<VideoInterface> {
-        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
-            const int num_buffers = uri.Get<int>("num_buffers", 30);
-            return std::unique_ptr<VideoInterface>(new ThreadVideo(subvid, num_buffers));
+        ThreadVideoFactory()
+        {
+            param_set_ = {{
+                {"num_buffers", "30", "Size of the input queue/buffer for this thread"},
+                {"name","Unnamed","Name of the thread"}
+            }};
         }
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
+            ParamReader reader(param_set_,uri);
+            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+            const int num_buffers = reader.Get<int>("num_buffers");
+            const std::string name = reader.Get<std::string>("name");
+            return std::unique_ptr<VideoInterface>(new ThreadVideo(subvid, num_buffers, name));
+        }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme,"Runs the URL part of the URI in a seperate thread", param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        ParamSet param_set_;
     };
 
     FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<ThreadVideoFactory>(), 10, "thread");

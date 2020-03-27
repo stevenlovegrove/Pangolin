@@ -46,8 +46,9 @@ private:
     TeliSystem()
     {
         Teli::CAM_API_STATUS uiStatus = Teli::Sys_Initialize();
-        if (uiStatus != Teli::CAM_API_STS_SUCCESS && uiStatus != Teli::CAM_API_STS_ALREADY_INITIALIZED)
-            throw pangolin::VideoException("Unable to initialise TeliSDK.");
+        if (uiStatus != Teli::CAM_API_STS_SUCCESS && uiStatus != Teli::CAM_API_STS_ALREADY_INITIALIZED) {
+            throw pangolin::VideoException(FormatString("Unable to initialise TeliSDK (%).", uiStatus));
+          }
     }
 
     ~TeliSystem()
@@ -126,7 +127,7 @@ std::string GetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std:
     case Teli::TC_NODE_TYPE_ENUM_ENTRY:
     case Teli::TC_NODE_TYPE_PORT:
     default:
-        throw VideoException("TeliSDK: Unsupported node_type: " + node_type);
+        throw VideoException(FormatString("TeliSDK: Unsupported node_type: %", node_type));
     }
 
     if(status != Teli::CAM_API_STS_SUCCESS) {
@@ -539,6 +540,9 @@ PANGOLIN_REGISTER_FACTORY(TeliVideo)
     struct TeliVideoFactory final : public FactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             return std::unique_ptr<VideoInterface>(new TeliVideo(uri));
+        }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme,"Opens up a TeliCam interface. Warning: currenly all the Uri parameters are passed to the TeliCam driver directly without any validation.");
         }
     };
 

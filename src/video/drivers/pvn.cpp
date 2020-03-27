@@ -117,15 +117,33 @@ bool PvnVideo::GrabNewest( unsigned char* image, bool wait )
 PANGOLIN_REGISTER_FACTORY(PvnVideo)
 {
     struct PvnVideoFactory final : public FactoryInterface<VideoInterface> {
+        PvnVideoFactory()
+        {
+            param_set_ = {{
+                {"realtime","","This is just a flag, not a value"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string path = PathExpand(uri.url);
 
+            ParamReader reader(param_set_,uri);
             if( !uri.scheme.compare("pvn") || FileType(uri.url) == ImageFileTypePvn ) {
-                const bool realtime = uri.Contains("realtime");
+                const bool realtime = reader.Contains("realtime");
                 return std::unique_ptr<VideoInterface>(new PvnVideo(path.c_str(), realtime));
             }
             return std::unique_ptr<VideoInterface>();
         }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme,"Handles a PVN video",param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        ParamSet param_set_;
     };
 
     auto factory = std::make_shared<PvnVideoFactory>();

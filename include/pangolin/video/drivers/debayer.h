@@ -33,6 +33,19 @@
 namespace pangolin
 {
 
+struct WbGains {
+    WbGains():r(1.0f), g(1.0f), b(1.0f){}
+    WbGains(float r_in, float g_in, float b_in):r(r_in), g(g_in), b(b_in){
+        PANGO_ASSERT(r_in >= 0.0f && r_in <= 1.0f &&
+                     g_in >= 0.0f && g_in <= 1.0f &&
+                     b_in >= 0.0f && b_in <= 1.0f ,
+                     "[Debayer] White balance gains must be between 0.0 and 1.0");
+    }
+    float r;
+    float g;
+    float b;
+};
+
 // Enum to match libdc1394's dc1394_bayer_method_t
 typedef enum {
     BAYER_METHOD_NEAREST = 0,
@@ -65,7 +78,7 @@ class PANGOLIN_EXPORT DebayerVideo :
         public BufferAwareVideoInterface
 {
 public:
-    DebayerVideo(std::unique_ptr<VideoInterface>& videoin, const std::vector<bayer_method_t> &method, color_filter_t tile);
+    DebayerVideo(std::unique_ptr<VideoInterface>& videoin, const std::vector<bayer_method_t> &method, color_filter_t tile, const WbGains& input_wb_gains);
     ~DebayerVideo();
 
     //! Implement VideoInput::Start()
@@ -108,6 +121,8 @@ protected:
 
     std::vector<bayer_method_t> methods;
     color_filter_t tile;
+
+    WbGains wb_gains;
 
     picojson::value device_properties;
     picojson::value frame_properties;

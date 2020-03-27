@@ -249,16 +249,36 @@ bool UnpackVideo::DropNFrames(uint32_t n)
 PANGOLIN_REGISTER_FACTORY(UnpackVideo)
 {
     struct UnpackVideoFactory final : public FactoryInterface<VideoInterface> {
+        UnpackVideoFactory()
+        {
+            param_set_ = {{
+                {"fmt","GRAY16LE","Pixel format of the video to unpack. See help for pixel formats for all possible values."}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
+            ParamReader reader(param_set_,uri);
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
-            const std::string fmt = uri.Get("fmt", std::string("GRAY16LE") );
+            const std::string fmt = reader.Get("fmt", std::string("GRAY16LE") );
             return std::unique_ptr<VideoInterface>(
                 new UnpackVideo(subvid, PixelFormatFromString(fmt) )
             );
         }
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme, "Unpacks a video from a given format", param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
+
+        ParamSet param_set_;
     };
 
     FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<UnpackVideoFactory>(), 10, "unpack");
+
+
 }
 
 }

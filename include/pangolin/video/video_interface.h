@@ -45,6 +45,7 @@
 #define PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US "estimated_center_capture_time_us"
 #define PANGO_JOIN_OFFSET_US         "join_offset_us"
 #define PANGO_FRAME_COUNTER          "frame_counter"
+#define PANGO_HAS_LINE0_METADATA     "line0_metadata"
 
 namespace pangolin {
 

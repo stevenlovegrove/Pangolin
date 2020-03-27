@@ -29,6 +29,8 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 
+#include <exception>
+
 namespace pangolin
 {
 
@@ -88,6 +90,15 @@ std::vector<VideoInterface*>& SplitVideo::InputStreams()
 PANGOLIN_REGISTER_FACTORY(SplitVideo)
 {
     struct SplitVideoFactory final : public FactoryInterface<VideoInterface> {
+        ParamSet param_set_;
+
+        SplitVideoFactory(){
+            param_set_ = {{
+                {"roi\\d+","0x0","Region of Interest as WidthxHeight"},
+                {"mem\\d+","width,height,pitch,pixelformat*","By default dynamically set from the first stream"},
+                {"stream\\d+","0","Integer"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::vector<StreamInfo> streams;
 
@@ -95,6 +106,8 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
             if(subvid->Streams().size() == 0) {
                 throw VideoException("VideoSplitter input must have at least one stream");
             }
+
+            ParamReader param_reader(param_set_, uri);
 
             while(true) {
                 const size_t n = streams.size() + 1;
@@ -104,17 +117,17 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
 
                 if(uri.Contains(key_roi)) {
                     const StreamInfo& st1 = subvid->Streams()[0];
-                    const ImageRoi& roi = uri.Get<ImageRoi>(key_roi, ImageRoi() );
+                    const ImageRoi& roi = param_reader.Get<ImageRoi>(key_roi); //uri.Get<ImageRoi>(key_roi, ImageRoi() );
                     if(roi.w == 0 || roi.h == 0) {
                         throw VideoException("split: empty ROI.");
                     }
                     const size_t start1 = roi.y * st1.Pitch() + st1.PixFormat().bpp * roi.x / 8;
                     streams.push_back( StreamInfo( st1.PixFormat(), roi.w, roi.h, st1.Pitch(), (unsigned char*)0 + start1 ) );
                 }else if(uri.Contains(key_mem)) {
-                    const StreamInfo& info = uri.Get<StreamInfo>(key_mem, subvid->Streams()[0] );
+                    const StreamInfo& info = param_reader.Get(key_mem, subvid->Streams()[0]); //uri.Get<StreamInfo>(key_mem, subvid->Streams()[0] );
                     streams.push_back(info);
                 }else if(uri.Contains(key_str)) {
-                    const size_t old_stream = uri.Get<size_t>(key_str, 0) -1;
+                    const size_t old_stream = param_reader.Get<size_t>(key_str) - 1; //uri.Get<size_t>(key_str, 0) -1;
                     if(old_stream >= subvid->Streams().size()) {
                         throw VideoException("split: requesting source stream which does not exist.");
                     }
@@ -150,6 +163,16 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
 
             return std::unique_ptr<VideoInterface>( new SplitVideo(subvid,streams) );
         }
+
+        FactoryHelpData Help( const std::string& scheme ) const override {
+            return FactoryHelpData(scheme, "", param_set_);
+        }
+
+        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
+            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
+        }
+
+        bool IsValidated( const std::string& scheme ) const override {return true;}
     };
 
     FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<SplitVideoFactory>(), 10, "split");
