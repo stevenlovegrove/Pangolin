@@ -77,20 +77,40 @@ PixelFormat GetPixelFormat(const Imf::Header& header)
 {
     const Imf::ChannelList &channels = header.channels();
     size_t count = 0;
+
+    std::stringstream pixelFormat;
+    size_t depth = 0;
     for (Imf::ChannelList::ConstIterator i = channels.begin(); i != channels.end(); ++i){
         const Imf::Channel& channel = i.channel();
-        if (channel.type != Imf::FLOAT){
-            throw std::invalid_argument("Currently, only 32-bit float OpenEXR files are supported.");
+        if(depth == 0)
+        {
+          switch(channel.type)
+          {
+            case Imf::FLOAT: depth = 32; break;
+            case Imf::HALF: depth = 16; break;
+            default:
+              throw std::invalid_argument("Currently, only floating-point OpenEXR files are supported.");
+          }
         }
         count += 1;
+        pixelFormat << i.name();
     }
 
-    switch (count) {
-        case 1: return PixelFormatFromString("GRAY32F");
-        case 3: return PixelFormatFromString("RGB96F");
-        case 4: return PixelFormatFromString("RGBA128F");
-        default: throw std::invalid_argument("Currently, only 1, 3 or 4-channel OpenEXR files are supported.");
+    std::string colors = pixelFormat.str();
+    if (colors == "Y") {
+      colors = "GRAY";
     }
+
+    if ((count == 1 && colors != "GRAY")
+        || (count == 3 && colors != "RGB")
+        || (count == 4 && colors != "RGBA" && colors != "ABGR")) {
+      throw std::runtime_error("bad color format");
+    }
+    if (count != 1 && count != 3 && count != 4) {
+      throw std::invalid_argument("Currently, only 1, 3 or 4-channel OpenEXR files are supported.");
+    }
+
+    return PixelFormatFromString(colors + std::to_string(depth*count) + "F");
 }
 
 #endif //HAVE_OPENEXR
@@ -100,7 +120,7 @@ TypedImage LoadExr(std::istream& source)
 #ifdef HAVE_OPENEXR
     StdIStream istream(source);
     Imf::InputFile file(istream);
-    PANGO_ENSURE(file.isComplete());
+    PANGO_WARNING(file.isComplete());
 
     Imath::Box2i dw = file.header().dataWindow();
     int width = dw.max.x - dw.min.x + 1;
@@ -114,13 +134,35 @@ TypedImage LoadExr(std::istream& source)
 
     const Imf::ChannelList &channels = file.header().channels();
     size_t c = 0;
-    for (Imf::ChannelList::ConstIterator i = channels.begin(); i != channels.end(); ++i){
-        fb.insert(i.name(), Imf::Slice(
-                        Imf::FLOAT, imgBase + sizeof(float) * c++,
-                        sizeof(float) * format.channels,
-                        sizeof(float) * format.channels * size_t(width),
-                        1, 1,
-                        0.0));
+    unsigned int d = format.channel_bit_depth;
+    Imf::PixelType pixeltype;
+    switch(d)
+    {
+      case 16: pixeltype = Imf::HALF; break;
+      case 32: pixeltype = Imf::FLOAT; break;
+      throw std::invalid_argument("Currently, only floating-point OpenEXR files are supported.");
+    }
+    unsigned int pixelsize = d/8;
+
+    auto writeChannel = [&](Imf::ChannelList::ConstIterator& i, size_t j) {
+      fb.insert(i.name(), Imf::Slice(
+                      pixeltype, imgBase + pixelsize * j,
+                      pixelsize * format.channels,
+                      pixelsize * format.channels * size_t(width)));
+    };
+    if(format.format == "ABGR128F") {
+      format.format = "RGBA128F";
+      static std::map<std::string, size_t> channelOrder = {
+        {"R", 0}, {"G", 1}, {"B", 2}, {"A", 3}
+      };
+      for (Imf::ChannelList::ConstIterator i = channels.begin(); i != channels.end(); ++i) {
+        writeChannel(i, channelOrder[i.name()]);
+      }
+    }
+    else {
+      for (Imf::ChannelList::ConstIterator i = channels.begin(); i != channels.end(); ++i) {
+        writeChannel(i, c++);
+      }
     }
 
     file.setFrameBuffer(fb);
@@ -142,9 +184,9 @@ void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& 
     if(top_line_first) {
         image = image_in;
     }else{
-        flip_image.Reinitialise(image_in.pitch,image_in.h);
+        flip_image.Reinitialise(image_in.w, image_in.h, image_in.pitch);
         for(size_t y=0; y<image_in.h; ++y) {
-            std::memcpy(flip_image.RowPtr(y), image_in.RowPtr(y), image_in.pitch);
+            std::memcpy(flip_image.RowPtr(y), image_in.RowPtr(image_in.h - 1 - y), image_in.pitch);
         }
         image = flip_image;
     }
@@ -156,21 +198,22 @@ void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& 
     Imf::OutputFile file (filename.c_str(), header);
     Imf::FrameBuffer frameBuffer;
 
-    int ch=0;
     size_t ch_bits = 0;
-    for(Imf::ChannelList::Iterator it = header.channels().begin(); it != header.channels().end(); ++it)
+    const char* CHANNEL_NAMES[] = {"R","G","B","A"};
+    for(unsigned int i=0; i<fmt.channels; i++)
     {
+        const Imf::Channel *channel = header.channels().findChannel(CHANNEL_NAMES[i]);
         frameBuffer.insert(
-            it.name(),
+            CHANNEL_NAMES[i],
             Imf::Slice(
-                it.channel().type,
-                (char*)image.ptr + ch_bits/8,
-                fmt.channel_bits[ch]/8,
-                image.pitch
+                channel->type,
+                (char*)image.ptr + (ch_bits/8),
+                fmt.bpp/8,  // xstride
+                image.pitch // ystride
             )
         );
 
-        ch_bits += fmt.channel_bits[ch++];
+        ch_bits += fmt.channel_bits[i];
     }
 
     file.setFrameBuffer(frameBuffer);
