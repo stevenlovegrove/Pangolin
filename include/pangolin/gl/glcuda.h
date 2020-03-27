@@ -29,9 +29,10 @@
 
 #include <algorithm>
 #include <cuda_runtime.h>
-#include <cuda_gl_interop.h>
 
 #include "gl.h"
+// Must include glew.h before gl.h
+#include <cuda_gl_interop.h>
 
 namespace pangolin
 {

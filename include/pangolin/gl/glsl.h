@@ -90,7 +90,7 @@ public:
     GlSlProgram(GlSlProgram&& tex);
 
     ~GlSlProgram();
-    
+
     bool AddShader(
         GlSlShaderType shader_type,
         const std::string& source_code,
@@ -109,7 +109,7 @@ public:
 
     // Remove all shaders from this program, and reload from files.
     bool ReloadShaderFiles();
-    
+
     GLint GetAttributeHandle(const std::string& name);
     GLint GetUniformHandle(const std::string& name);
 
@@ -129,6 +129,7 @@ public:
     void SetUniform(const std::string& name, const OpenGlMatrix& m);
 
 #ifdef HAVE_EIGEN
+    void SetUniform(const std::string& name, const Eigen::Vector3f& v);
     void SetUniform(const std::string& name, const Eigen::Matrix3f& m);
     void SetUniform(const std::string& name, const Eigen::Matrix4f& m);
     void SetUniform(const std::string& name, const Eigen::Matrix3d& m);
@@ -220,6 +221,14 @@ public:
         return prog;
     }
 
+    inline static GlSlProgram& OffsetAndScaleGamma(float offset, float scale) {
+        GlSlProgram& prog = Instance().prog_offsetscalegamma;
+        prog.Bind();
+        prog.SetUniform("offset", offset);
+        prog.SetUniform("scale",  scale);
+        return prog;
+    }
+
     inline static GlSlProgram& Scale(float scale, float bias = 0.0f) {
         GlSlProgram& prog = Instance().prog_scale;
         prog.Bind();
@@ -227,12 +236,12 @@ public:
         prog.SetUniform("bias",  bias);
         return prog;
     }
-    
+
     inline static void UseNone()
     {
         glUseProgram(0);
     }
-    
+
 protected:
     static GlSlUtilities& Instance() {
         // TODO: BUG: The GlSLUtilities instance needs to be tied
@@ -245,7 +254,7 @@ protected:
         GlSlUtilities instance;
         return instance;
     }
-    
+
     // protected constructor
     GlSlUtilities() {
         const char* source_scale =
@@ -266,7 +275,28 @@ protected:
         prog_scale.AddShader(GlSlFragmentShader, source_scale);
         prog_scale.Link();
 
-        const char* source_offsetscale =
+        // shader performs automatically gamma correction, assuming that image data is linear
+        // maps to (approximate) sRGB
+        const char* source_offsetscalegamma =
+                "uniform float offset;"
+                "uniform float scale;"
+                "uniform sampler2D tex;"
+                "void main() {"
+                "  vec2 uv = gl_TexCoord[0].st;"
+                "  if(0.0 <= uv.x && uv.x <= 1.0 && 0.0 <= uv.y && uv.y <= 1.0) {"
+                "    gl_FragColor = texture2D(tex,gl_TexCoord[0].st);"
+                "    gl_FragColor.xyz += vec3(offset,offset,offset);"
+                "    gl_FragColor.xyz *= scale;"
+                "    gl_FragColor.xyz = pow(gl_FragColor.xyz,vec3(0.45,0.45,0.45));"
+                "  }else{"
+                "    float v = 0.1;"
+                "    gl_FragColor.xyz = vec3(v,v,v);"
+                "  }"
+                "}";
+        prog_offsetscalegamma.AddShader(GlSlFragmentShader, source_offsetscalegamma);
+        prog_offsetscalegamma.Link();
+
+         const char* source_offsetscale =
                 "uniform float offset;"
                 "uniform float scale;"
                 "uniform sampler2D tex;"
@@ -284,9 +314,10 @@ protected:
         prog_offsetscale.AddShader(GlSlFragmentShader, source_offsetscale);
         prog_offsetscale.Link();
     }
-    
+
     GlSlProgram prog_scale;
     GlSlProgram prog_offsetscale;
+    GlSlProgram prog_offsetscalegamma;
 };
 
 
@@ -314,7 +345,7 @@ inline bool IsLinkSuccessPrintLog(GLhandleARB prog)
     return true;
 }
 
-inline bool IsCompileSuccessPrintLog(GLhandleARB shader, const std::string& name_for_errors)
+inline bool IsCompileSuccessPrintLog(GLhandleARB shader, const std::string& name_for_errors, const std::string& source_code = {})
 {
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
@@ -328,6 +359,10 @@ inline bool IsCompileSuccessPrintLog(GLhandleARB shader, const std::string& name
             pango_print_error("%s:\n%s\n",name_for_errors.c_str(), infolog);
         }else{
             pango_print_error("%s:\nNo details provided.\n",name_for_errors.c_str());
+        }
+        if(!source_code.empty())
+        {
+            pango_print_error("In source code:\n%s\n",source_code.c_str());
         }
         return false;
     }
@@ -373,13 +408,11 @@ inline bool GlSlProgram::AddPreprocessedShader(
         prog = glCreateProgram();
     }
 
-//    PrintSourceCode(source_code);
-
     GLhandleARB shader = glCreateShader(shader_type);
     const char* source = source_code.c_str();
     glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
-    bool success = IsCompileSuccessPrintLog(shader, name_for_errors);
+    bool success = IsCompileSuccessPrintLog(shader, name_for_errors, source_code);
     if(success) {
         glAttachShader(prog, shader);
         shaders.push_back(shader);
@@ -696,6 +729,10 @@ inline void GlSlProgram::SetUniform(const std::string& name, const OpenGlMatrix&
 }
 
 #ifdef HAVE_EIGEN
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector3f& v)
+{
+    glUniform3f( GetUniformHandle(name), v[0], v[1], v[2]);
+}
 inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix3f& m)
 {
     glUniformMatrix3fv( GetUniformHandle(name), 1, GL_FALSE, m.data());

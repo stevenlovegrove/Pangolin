@@ -67,8 +67,8 @@ struct GlFormatTraits<unsigned short>
 template<>
 struct GlFormatTraits<unsigned int>
 {
-    static const GLint glinternalformat = GL_LUMINANCE32I_EXT;
-    static const GLenum glformat = GL_LUMINANCE;
+    static const GLint glinternalformat = GL_LUMINANCE32UI_EXT;
+    static const GLenum glformat = GL_LUMINANCE_INTEGER_EXT;
     static const GLenum gltype = GL_UNSIGNED_INT;
     static const size_t components = 1;
 };
@@ -77,7 +77,7 @@ template<>
 struct GlFormatTraits<int>
 {
     static const GLint glinternalformat = GL_LUMINANCE32I_EXT;
-    static const GLenum glformat = GL_LUMINANCE;
+    static const GLenum glformat = GL_LUMINANCE_INTEGER_EXT;
     static const GLenum gltype = GL_INT;
     static const size_t components = 1;
 };
@@ -105,6 +105,24 @@ struct GlFormatTraits<double>
 #ifdef HAVE_EIGEN
 
 //////////////////////////////////////////////////////////////////
+
+template <>
+struct GlFormatTraits<Eigen::Matrix<unsigned char,2,1>>
+{
+    static const GLint glinternalformat = GL_RG8;
+    static const GLenum glformat = GL_RG;
+    static const GLenum gltype = GL_UNSIGNED_BYTE;
+    static const size_t components = 2;
+};
+
+template <>
+struct GlFormatTraits<Eigen::Matrix<unsigned short,2,1>>
+{
+    static const GLint glinternalformat = GL_RG16;
+    static const GLenum glformat = GL_RG;
+    static const GLenum gltype = GL_UNSIGNED_SHORT;
+    static const size_t components = 2;
+};
 
 template <>
 struct GlFormatTraits<Eigen::Vector2i>

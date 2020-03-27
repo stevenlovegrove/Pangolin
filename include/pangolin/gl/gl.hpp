@@ -265,6 +265,16 @@ inline void GlTexture::Download(TypedImage& image) const
         image.Reinitialise(width, height, PixelFormatFromString("RGBA32"));
         Download(image.ptr, GL_RGBA, GL_UNSIGNED_BYTE);
         break;
+    case GL_RED_INTEGER:
+        image.Reinitialise(width, height, PixelFormatFromString("GRAY32") );
+        Download(image.ptr, GL_RED, GL_UNSIGNED_INT);
+        break;
+    case GL_LUMINANCE:
+    case GL_LUMINANCE32F_ARB:
+    case GL_R32F:
+        image.Reinitialise(width, height, PixelFormatFromString("GRAY32F"));
+        Download(image.ptr, GL_LUMINANCE, GL_FLOAT);
+        break;
     case GL_RGB16:
         image.Reinitialise(width, height, PixelFormatFromString("RGB48"));
         Download(image.ptr, GL_RGB, GL_UNSIGNED_SHORT);
@@ -273,10 +283,13 @@ inline void GlTexture::Download(TypedImage& image) const
         image.Reinitialise(width, height, PixelFormatFromString("RGBA64"));
         Download(image.ptr, GL_RGBA, GL_UNSIGNED_SHORT);
         break;
-    case GL_LUMINANCE:
-    case GL_LUMINANCE32F_ARB:
-        image.Reinitialise(width, height, PixelFormatFromString("GRAY32F"));
-        Download(image.ptr, GL_LUMINANCE, GL_FLOAT);
+    case GL_RGB16F:
+        image.Reinitialise(width, height, PixelFormatFromString("RGB48F"));
+        Download(image.ptr, GL_RGB, GL_HALF_FLOAT);
+        break;
+    case GL_RGBA16F:
+        image.Reinitialise(width, height, PixelFormatFromString("RGBA64F"));
+        Download(image.ptr, GL_RGBA, GL_HALF_FLOAT);
         break;
     case GL_RGB:
     case GL_RGB32F:
@@ -735,7 +748,7 @@ inline void GlBufferData::Download(GLvoid* data, GLsizeiptr size_bytes, GLintptr
 ////////////////////////////////////////////////////////////////////////////
 
 inline GlBuffer::GlBuffer()
-    : GlBufferData(), num_elements(0)
+    : GlBufferData(), datatype(0), num_elements(0), count_per_element(0)
 {
 }
 
@@ -777,7 +790,7 @@ inline void GlBuffer::Reinitialise(GlBuffer const& other )
 
 inline void GlBuffer::Resize(GLuint new_num_elements)
 {
-    if(bo!=0) {
+    if(bo!=0 && num_elements > 0) {
 #ifndef HAVE_GLES
         // Backup current data, reinit memory, restore old data
         const size_t backup_elements = std::min(new_num_elements,num_elements);

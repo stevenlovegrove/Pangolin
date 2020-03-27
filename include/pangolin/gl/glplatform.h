@@ -55,7 +55,9 @@
     #undef ERROR
 #endif
 
-#include <GL/glew.h>
+#ifdef HAVE_GLEW
+    #include <GL/glew.h>
+#endif
 
 #ifdef HAVE_GLES
     #if defined(_ANDROID_)
@@ -74,6 +76,7 @@
     #endif
 #else
     #ifdef _OSX_
+        #define GL_SILENCE_DEPRECATION
         #include <OpenGL/gl.h>
     #else
         #include <GL/gl.h>

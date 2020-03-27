@@ -101,6 +101,13 @@ public:
         return *this;
     }
 
+    void Remove(const std::shared_ptr<Renderable>& child)
+    {
+        if(child) {
+            children.erase(child->guid);
+        }
+    }
+
     // Renderable properties
     const guid_t guid;
     std::weak_ptr<Renderable> parent;

@@ -43,8 +43,8 @@ struct GlPixFormat
     {
         switch( fmt.channels) {
         case 1: glformat = GL_LUMINANCE; break;
-        case 3: glformat = (fmt.format == "BGR24" || fmt.format == "BGR48")  ? GL_BGR  : GL_RGB;  break;
-        case 4: glformat = (fmt.format == "BGRA24" || fmt.format == "BGRA32" || fmt.format == "BGRA48") ? GL_BGRA : GL_RGBA; break;
+        case 3: glformat = fmt.format.substr(0, 3) == "BGR"? GL_BGR  : GL_RGB;  break;
+        case 4: glformat = fmt.format.substr(0, 4) == "BGRA"? GL_BGRA : GL_RGBA; break;
         default: throw std::runtime_error("Unable to form OpenGL format from video format: '" + fmt.format + "'.");
         }
 
@@ -52,6 +52,8 @@ struct GlPixFormat
 
         switch (fmt.channel_bits[0]) {
         case 8: gltype = GL_UNSIGNED_BYTE; break;
+        case 10: gltype = GL_UNSIGNED_SHORT; break;
+        case 12: gltype = GL_UNSIGNED_SHORT; break;
         case 16: gltype = GL_UNSIGNED_SHORT; break;
         case 32: gltype = (is_integral ? GL_UNSIGNED_INT : GL_FLOAT); break;
         case 64: gltype = (is_integral ? GL_UNSIGNED_INT64_NV : GL_DOUBLE); break;
@@ -62,7 +64,14 @@ struct GlPixFormat
             if(gltype == GL_UNSIGNED_BYTE) {
                 scalable_internal_format = GL_LUMINANCE8;
             }else if(gltype == GL_UNSIGNED_SHORT){
-                scalable_internal_format = GL_LUMINANCE16;
+                if(fmt.channel_bits[0] == 12) {
+                    scalable_internal_format = GL_LUMINANCE12;
+                }
+                else if(fmt.channel_bits[0] == 10) {
+                    scalable_internal_format = GL_LUMINANCE12; // there is no GL_LUMINANCE10
+                } else {
+                    scalable_internal_format = GL_LUMINANCE16;
+                }
             }else{
                 scalable_internal_format = GL_LUMINANCE32F_ARB;
             }
@@ -70,7 +79,13 @@ struct GlPixFormat
             if(gltype == GL_UNSIGNED_BYTE) {
                 scalable_internal_format = GL_RGBA8;
             }else if(gltype == GL_UNSIGNED_SHORT) {
-                scalable_internal_format = GL_RGBA16;
+                if(fmt.channel_bits[0] == 10) {
+                    scalable_internal_format = GL_RGB10;
+                } else if(fmt.channel_bits[0] == 12) {
+                    scalable_internal_format = GL_RGB12;
+                } else {
+                    scalable_internal_format = GL_RGBA16;
+                }
             }else{
                 scalable_internal_format = GL_RGBA32F;
             }
