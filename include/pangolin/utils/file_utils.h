@@ -63,14 +63,20 @@ std::string PathExpand(const std::string& sPath);
 PANGOLIN_EXPORT
 bool MatchesWildcard(const std::string& str, const std::string& wildcard);
 
+enum class SortMethod {
+  STANDARD,
+  NATURAL 
+};
+
 // Fill 'file_vec' with the files that match the glob-like 'wildcard_file_path'
 // ? can be used to match any single charector
 // * can be used to match any sequence of charectors in a directory
 // ** can be used to match any directories across any number of levels
 //   e.g. FilesMatchingWildcard("~/*/code/*.h", vec);
 //   e.g. FilesMatchingWildcard("~/**/*.png", vec);
+// sort the file_vec according to the specified sorting method.
 PANGOLIN_EXPORT
-bool FilesMatchingWildcard(const std::string& wildcard_file_path, std::vector<std::string>& file_vec);
+bool FilesMatchingWildcard(const std::string& wildcard_file_path, std::vector<std::string>& file_vec, SortMethod sort_method = SortMethod::STANDARD);
 
 PANGOLIN_EXPORT
 std::string MakeUniqueFilename(const std::string& filename);

@@ -54,6 +54,7 @@
 #include <algorithm>
 #include <sstream>
 #include <list>
+#include <NaturalSort/natural_sort.hpp>
 
 namespace pangolin
 {
@@ -394,7 +395,8 @@ void FlushPipe(const std::string& file)
 #   define ws2s(X) (X)
 #endif // UNICODE
 
-bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>& file_vec)
+bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>& file_vec, 
+    SortMethod sort_method )
 {
 	size_t nLastSlash = wildcard.find_last_of("/\\");
     
@@ -426,8 +428,15 @@ bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>
     }
 
     // TOOD: Use different comparison to achieve better ordering.
-    std::sort(files.begin(), files.end() );
-
+    switch(sort_method) {
+      case SortMethod::NATURAL:
+        SI::natural::sort(files.begin(), files.end());
+        break;
+      case SortMethod::STANDARD:
+      default:
+        std::sort(files.begin(), files.end() );
+    }
+    
     // Put file list at end of file_vec
     file_vec.insert(file_vec.end(), files.begin(), files.end() );
 
@@ -449,14 +458,14 @@ bool FileExists(const std::string& filename)
 
 #else // _WIN_
 
-bool FilesMatchingWildcard(const std::string& in_wildcard, std::vector<std::string>& file_vec)
+bool FilesMatchingWildcard_(const std::string& in_wildcard, std::vector<std::string>& file_vec)
 {
     const std::string wildcard = PathExpand(in_wildcard);
     const size_t first_wildcard = wildcard.find_first_of("?*");
     if(first_wildcard != std::string::npos) {
         const std::string root = PathParent(wildcard.substr(0,first_wildcard));
         struct dirent **namelist;
-        int n = scandir(root.c_str(), &namelist, 0, alphasort );
+        int n = scandir(root.c_str(), &namelist, 0, alphasort);
         if (n >= 0) {
             const size_t next_slash = wildcard.find_first_of("/\\",first_wildcard+1);
             std::string dir_wildcard, rest;
@@ -471,19 +480,38 @@ bool FilesMatchingWildcard(const std::string& in_wildcard, std::vector<std::stri
                 const std::string file_name(namelist[n]->d_name);
                 if( file_name != "." && file_name != ".." && MatchesWildcard(file_name, dir_wildcard) ) {
                     const std::string sub_wildcard = root + "/" + file_name + rest;
-                    FilesMatchingWildcard(sub_wildcard, file_vec);
+                    FilesMatchingWildcard_(sub_wildcard, file_vec);
                     if(dir_wildcard == "**") {
                         const std::string sub_wildcard2 = root + "/" + file_name + "/**" + rest;
-                        FilesMatchingWildcard(sub_wildcard2, file_vec);
+                        FilesMatchingWildcard_(sub_wildcard2, file_vec);
                     }
                 }
             }
         }
-    }else if(FileExists(wildcard)) {
+    } else if(FileExists(wildcard)) {
         file_vec.push_back(wildcard);
     }
     return file_vec.size() > 0;
 }
+
+bool FilesMatchingWildcard(const std::string& in_wildcard, std::vector<std::string>& file_vec, SortMethod sort_method)
+{
+    if (FilesMatchingWildcard_(in_wildcard, file_vec)) {
+        // sort all file entries in file_vec to make sure anything that was
+        // added is sorted in properly.
+        switch (sort_method) {
+          case SortMethod::NATURAL:
+            SI::natural::sort(file_vec.begin(), file_vec.end());
+            break;
+          case SortMethod::STANDARD:
+          default:
+            std::sort(file_vec.begin(), file_vec.end() );
+        }
+        return true;
+    }
+    return false;
+}
+
 
 bool FileExists(const std::string& filename)
 {
