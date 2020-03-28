@@ -80,7 +80,6 @@ OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim,
         switch( sensor_type[i] ) {
         case OpenNiDepth_1mm_Registered:
             depth_to_color = true;
-            break;
         case OpenNiDepth_1mm:
             use_depth = true;
             break;
