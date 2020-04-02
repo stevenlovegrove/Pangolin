@@ -90,6 +90,7 @@ int mapKeymap(int osx_key)
     pangolin::process::Resize(self.bounds.size.width * backing_scale, self.bounds.size.height * backing_scale);
 
     [[self openGLContext] update];
+    [super reshape];
 }
 
 -(BOOL)acceptsFirstResponder

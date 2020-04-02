@@ -64,7 +64,7 @@ TypedImage LoadBmp(std::istream& in)
 
   TypedImage img(w, h, fmt);
 
-  for (size_t y = (h - 1); y != -1; y--)
+  for (int y = (h - 1); y != -1; y--)
   {
     char* p_pix = (char*)img.RowPtr(y);
     in.read(p_pix, w * fmt.channels);
@@ -86,7 +86,7 @@ TypedImage LoadBmp(std::istream& in)
   return img;
 }
 
-void SaveBmp(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first)
+void SaveBmp(const Image<unsigned char>& /*image*/, const pangolin::PixelFormat& /*fmt*/, std::ostream& /*out*/, bool /*top_line_first*/)
 {
   throw std::runtime_error("SaveBMP: Not implemented");
 }

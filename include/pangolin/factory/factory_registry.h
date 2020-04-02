@@ -75,7 +75,7 @@ public:
     virtual bool IsValidated( const std::string& scheme ) const = 0;
 
     //Helper function validate uri against a paramset
-    static bool ValidateUriAgainstParamSet( const std::string& scheme, const ParamSet& param_set, const Uri& uri, std::unordered_set<std::string>& unrecognized_params )
+    static bool ValidateUriAgainstParamSet( const std::string& /*scheme*/, const ParamSet& param_set, const Uri& uri, std::unordered_set<std::string>& unrecognized_params )
     {
         ParamReader param_reader( param_set, uri );
         unrecognized_params = param_reader.FindUnrecognizedUriParams();
@@ -91,8 +91,8 @@ struct FactoryInterface : FactoryInterfaceBase
     virtual std::unique_ptr<T> Open(const Uri& uri) = 0;
 
     virtual FactoryHelpData Help( const std::string& scheme ) const override {return FactoryHelpData(scheme);}
-    virtual bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params ) const override {return true;};
-    virtual bool IsValidated( const std::string& scheme ) const override { return false;}
+    virtual bool ValidateUri( const std::string&, const Uri&, std::unordered_set<std::string>&) const override {return true;};
+    virtual bool IsValidated( const std::string&) const override { return false;}
 };
 
 struct FactoryMetaData {

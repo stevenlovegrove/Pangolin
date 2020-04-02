@@ -172,7 +172,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
             return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
         }
 
-        bool IsValidated( const std::string& scheme ) const override {return true;}
+        bool IsValidated( const std::string& ) const override {return true;}
     };
 
     FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<SplitVideoFactory>(), 10, "split");

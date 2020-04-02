@@ -64,7 +64,7 @@ PackVideo::PackVideo(std::unique_ptr<VideoInterface> &src_, PixelFormat out_fmt)
 
         // round up to ensure enough bytes for packing
         const size_t pitch = (w*out_fmt.bpp)/ 8 + ((w*out_fmt.bpp) % 8 > 0? 1 : 0);
-        streams.push_back(pangolin::StreamInfo( out_fmt, w, h, pitch, (unsigned char*)0 + size_bytes ));
+        streams.push_back(pangolin::StreamInfo( out_fmt, w, h, pitch, reinterpret_cast<uint8_t*>(size_bytes) ));
         size_bytes += h*pitch;
     }
 
@@ -263,7 +263,7 @@ PANGOLIN_REGISTER_FACTORY(PackVideo)
             return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
         }
 
-        bool IsValidated( const std::string& scheme ) const override {return true;}
+        bool IsValidated( const std::string& ) const override {return true;}
 
         ParamSet param_set_;
     };

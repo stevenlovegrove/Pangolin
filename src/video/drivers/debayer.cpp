@@ -57,7 +57,7 @@ pangolin::StreamInfo BayerOutputFormat( const StreamInfo& stream_in, bayer_metho
 
     fmt.channel_bit_depth = stream_in.PixFormat().channel_bit_depth;
 
-    return pangolin::StreamInfo( fmt, w, h, w*fmt.bpp / 8, (unsigned char*)0 + start_offset );
+    return pangolin::StreamInfo( fmt, w, h, w*fmt.bpp / 8, reinterpret_cast<unsigned char*>(start_offset) );
 }
 
 DebayerVideo::DebayerVideo(std::unique_ptr<VideoInterface> &src_, const std::vector<bayer_method_t>& bayer_method, color_filter_t tile, const WbGains& input_wb_gains)
@@ -383,7 +383,7 @@ PANGOLIN_REGISTER_FACTORY(DebayerVideo)
             return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
         }
 
-        bool IsValidated( const std::string& scheme ) const override {return true;}
+        bool IsValidated( const std::string& ) const override {return true;}
 
         ParamSet param_set_;
     };

@@ -572,7 +572,7 @@ MirrorOptions GetMirrorOptionFromName( const std::string& enum_name )
 
 std::ostream& operator << ( std::ostream& out, const std::vector<std::string>& stringvec )
 {
-    for(int i=0;i<stringvec.size();i++){
+    for(size_t i=0; i < stringvec.size(); i++){
         out << stringvec[i];
         if( i < (stringvec.size()-1)){
             out << "|";
@@ -598,7 +598,7 @@ PANGOLIN_REGISTER_FACTORY(MirrorVideo)
 
         static void VectorPrinterHelper(const std::vector<std::string>& stringvec, std::ostream& ss)
         {
-            for(int i=0;i<stringvec.size();i++){
+            for(size_t i=0; i < stringvec.size(); i++){
                 ss << stringvec[i];
                 if( i < (stringvec.size()-1)){
                     ss << "|";
@@ -685,7 +685,7 @@ PANGOLIN_REGISTER_FACTORY(MirrorVideo)
             return ValidateUriAgainstParamSet(scheme, param_sets_.at(scheme), uri, unrecognized_params );
         }
 
-        bool IsValidated( const std::string& scheme ) const override {return true;}
+        bool IsValidated( const std::string& ) const override {return true;}
 
         // scheme_name -> ParamSet
         std::unordered_map<std::string,ParamSet> param_sets_;

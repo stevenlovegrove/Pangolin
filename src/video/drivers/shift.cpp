@@ -85,11 +85,11 @@ ShiftVideo::ShiftVideo(std::unique_ptr<VideoInterface>& src_,
                 out_fmt = PixelFormatFromString("BGRA32");
             }
 
-            streams.push_back(pangolin::StreamInfo(out_fmt, w, h, w*out_fmt.bpp / 8, (uint8_t*)0 + size_bytes ));
+            streams.push_back(pangolin::StreamInfo(out_fmt, w, h, w*out_fmt.bpp / 8, reinterpret_cast<uint8_t*>(size_bytes) ));
         }
         else
         {
-            streams.push_back(pangolin::StreamInfo(src->Streams()[s].PixFormat(), w, h, w*src->Streams()[s].PixFormat().bpp / 8, (uint8_t*)0 + size_bytes ));
+            streams.push_back(pangolin::StreamInfo(src->Streams()[s].PixFormat(), w, h, w*src->Streams()[s].PixFormat().bpp / 8, reinterpret_cast<uint8_t*>(size_bytes) ));
         }
 
         size_bytes += streams.back().SizeBytes();
@@ -244,7 +244,7 @@ PANGOLIN_REGISTER_FACTORY(ShiftVideo)
             return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
         }
 
-        bool IsValidated( const std::string& scheme ) const override {return true;}
+        bool IsValidated( const std::string& ) const override {return true;}
 
         ParamSet param_set_;
     };
