@@ -43,9 +43,9 @@ static const std::unordered_map<GLenum, std::string> gl_error_string = {
     {GL_STACK_OVERFLOW, "GL_STACK_OVERFLOW: An attempt has been made to perform an operation that would cause an internal stack to overflow."},
 };
 
-const char* glErrorString(GLenum error)
+const GLubyte* glErrorString(GLenum error)
 {
-  return gl_error_string.count(error) ? gl_error_string.at(error).c_str() : nullptr;
+  return reinterpret_cast<const GLubyte*>(gl_error_string.count(error) ? gl_error_string.at(error).c_str() : nullptr);
 }
 
 // Based on glu implementation.
