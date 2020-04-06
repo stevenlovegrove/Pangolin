@@ -425,7 +425,7 @@ inline void GlSlProgram::PreprocessGLSL(
         const std::string &current_path
 ) {
     const size_t MAXLINESIZE = 10240;
-    char line[MAXLINESIZE];
+    char line[MAXLINESIZE] = "";
 
     while(!input.eof()) {
         // Take like from source
