@@ -31,7 +31,37 @@
 
 namespace py_pangolin {
 
+  void DrawPoints(pybind11::array_t<double> points) {
+      auto r = points.unchecked<2>();
+      glBegin(GL_POINTS);
+      for (ssize_t i = 0; i < r.shape(0); ++i) {
+          glVertex3d(r(i, 0), r(i, 1), r(i, 2));
+      } 
+      glEnd();
+  }
+
+  void DrawPoints(pybind11::array_t<double> points, pybind11::array_t<double> colors) {
+      auto r = points.unchecked<2>();
+      auto rc = colors.unchecked<2>();
+
+      glBegin(GL_POINTS);
+      for (ssize_t i = 0; i < r.shape(0); ++i) {
+          glColor3f(rc(i, 0), rc(i, 1), rc(i, 2));
+          glVertex3d(r(i, 0), r(i, 1), r(i, 2));
+      }
+      glEnd();
+  }
+
   void bind_gl_draw(pybind11::module &m){
+
+   m.def("DrawPoints", 
+          (void (*) (pybind11::array_t<double>)) &DrawPoints, 
+          pybind11::arg("points"));
+
+    m.def("DrawPoints", 
+          (void (*) (pybind11::array_t<double>, pybind11::array_t<double>)) &DrawPoints, 
+          pybind11::arg("points"), 
+          pybind11::arg("colors"));
 
     m.def("glDrawAxis",
           (void (*)(float))&pangolin::glDrawAxis);
