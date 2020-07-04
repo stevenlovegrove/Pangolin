@@ -18,9 +18,7 @@
 #include <unistd.h>
 #include <cstdlib>
 
-#if USE_WL_XDG
 #include <xdg-shell-client-protocol.h>
-#endif
 
 #define WAYLAND_VERSION_GE(MAJ, MIN) WAYLAND_VERSION_MAJOR >= MAJ && WAYLAND_VERSION_MINOR >= MIN
 
@@ -30,16 +28,16 @@ extern __thread PangolinGl* context;
 
 namespace wayland {
 
-static const std::map<enum wl_shell_surface_resize, std::string> resize_cursor = {
-    {WL_SHELL_SURFACE_RESIZE_NONE, "grabbing"},
-    {WL_SHELL_SURFACE_RESIZE_TOP, "top_side"},
-    {WL_SHELL_SURFACE_RESIZE_BOTTOM, "bottom_side"},
-    {WL_SHELL_SURFACE_RESIZE_LEFT, "left_side"},
-    {WL_SHELL_SURFACE_RESIZE_TOP_LEFT, "top_left_corner"},
-    {WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT, "bottom_left_corner"},
-    {WL_SHELL_SURFACE_RESIZE_RIGHT, "right_side"},
-    {WL_SHELL_SURFACE_RESIZE_TOP_RIGHT, "top_right_corner"},
-    {WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT, "bottom_right_corner"}
+static const std::map<enum xdg_toplevel_resize_edge, std::string> resize_cursor = {
+    {XDG_TOPLEVEL_RESIZE_EDGE_NONE, "grabbing"},
+    {XDG_TOPLEVEL_RESIZE_EDGE_TOP, "top_side"},
+    {XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM, "bottom_side"},
+    {XDG_TOPLEVEL_RESIZE_EDGE_LEFT, "left_side"},
+    {XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT, "top_left_corner"},
+    {XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT, "bottom_left_corner"},
+    {XDG_TOPLEVEL_RESIZE_EDGE_RIGHT, "right_side"},
+    {XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT, "top_right_corner"},
+    {XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT, "bottom_right_corner"},
 };
 
 struct ButtonSurface {
@@ -136,12 +134,12 @@ struct DecorationSurface {
     uint border_size;
     uint title_bar_size;
 
-    enum wl_shell_surface_resize function;
+    enum xdg_toplevel_resize_edge function;
 
     DecorationSurface(wl_compositor* compositor, wl_subcompositor* subcompositor,
                       wl_surface* source, EGLDisplay egl_display, EGLConfig config,
                       const uint _border_size, const uint _title_bar_size,
-                      enum wl_shell_surface_resize type, pangolin::Colour _colour
+                      enum xdg_toplevel_resize_edge type, pangolin::Colour _colour
                       ) :
         egl_display(egl_display),
         colour(_colour),
@@ -169,39 +167,39 @@ struct DecorationSurface {
     void calc_dim(const int main_w, const int main_h, int &x, int &y, int &w, int &h) const {
         // get position and dimension from type and main surface
         switch (function) {
-        case WL_SHELL_SURFACE_RESIZE_NONE:
+        case XDG_TOPLEVEL_RESIZE_EDGE_NONE:
             x=0; y=-title_bar_size;
             w=main_w; h=title_bar_size;
             break;
-        case WL_SHELL_SURFACE_RESIZE_TOP:
+        case XDG_TOPLEVEL_RESIZE_EDGE_TOP:
             x=0; y=-title_bar_size-border_size;
             w=main_w; h=border_size;
             break;
-        case WL_SHELL_SURFACE_RESIZE_BOTTOM:
+        case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM:
             x=0; y=main_h;
             w=main_w; h=border_size;
             break;
-        case WL_SHELL_SURFACE_RESIZE_LEFT:
+        case XDG_TOPLEVEL_RESIZE_EDGE_LEFT:
             x=-border_size; y=-title_bar_size;
             w=border_size; h=main_h+title_bar_size;
             break;
-        case WL_SHELL_SURFACE_RESIZE_TOP_LEFT:
+        case XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT:
             x=-border_size; y=-border_size-title_bar_size;
             w=border_size; h=border_size;
             break;
-        case WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT:
+        case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT:
             x=-border_size; y=main_h;
             w=border_size; h=border_size;
             break;
-        case WL_SHELL_SURFACE_RESIZE_RIGHT:
+        case XDG_TOPLEVEL_RESIZE_EDGE_RIGHT:
             x=main_w; y=-title_bar_size;
             w=border_size; h=main_h+title_bar_size;
             break;
-        case WL_SHELL_SURFACE_RESIZE_TOP_RIGHT:
+        case XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT:
             x=main_w; y=-border_size-title_bar_size;
             w=border_size; h=border_size;
             break;
-        case WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT:
+        case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT:
             x=main_w; y=main_h;
             w=border_size; h=border_size;
             break;
@@ -249,19 +247,19 @@ struct Decoration {
         decorations.reserve(9);
 
         // title bar, 2D movement
-        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, WL_SHELL_SURFACE_RESIZE_NONE, colour);
+        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, XDG_TOPLEVEL_RESIZE_EDGE_NONE, colour);
 
         // sides, 1D resizing
-        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, WL_SHELL_SURFACE_RESIZE_LEFT, colour);
-        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, WL_SHELL_SURFACE_RESIZE_RIGHT, colour);
-        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, WL_SHELL_SURFACE_RESIZE_TOP, colour);
-        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, WL_SHELL_SURFACE_RESIZE_BOTTOM, colour);
+        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, XDG_TOPLEVEL_RESIZE_EDGE_LEFT, colour);
+        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, XDG_TOPLEVEL_RESIZE_EDGE_RIGHT, colour);
+        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, XDG_TOPLEVEL_RESIZE_EDGE_TOP, colour);
+        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM, colour);
 
         // corners, 2D resizing
-        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, WL_SHELL_SURFACE_RESIZE_TOP_LEFT, colour);
-        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, WL_SHELL_SURFACE_RESIZE_TOP_RIGHT, colour);
-        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT, colour);
-        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT, colour);
+        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT, colour);
+        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT, colour);
+        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT, colour);
+        decorations.emplace_back(compositor, subcompositor, surface, egl_display, config, border_size, title_size, XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT, colour);
 
         // buttons
         buttons.reserve(2);
@@ -302,7 +300,7 @@ struct Decoration {
     }
 
     const std::string getCursorForCurrentSurface() const {
-        return resize_cursor.count((enum wl_shell_surface_resize)last_type) ? resize_cursor.at((enum wl_shell_surface_resize)last_type) : "left_ptr";
+        return resize_cursor.count((enum xdg_toplevel_resize_edge)last_type) ? resize_cursor.at((enum xdg_toplevel_resize_edge)last_type) : "left_ptr";
     }
 
     std::vector<DecorationSurface> decorations;
@@ -337,14 +335,9 @@ struct WaylandDisplay {
     struct wl_subcompositor *wsubcompositor = nullptr;
     struct wl_surface *wsurface = nullptr;
     struct wl_egl_window *egl_window = nullptr;
-#if USE_WL_XDG
     struct xdg_wm_base *xshell = nullptr;
     struct xdg_surface *xshell_surface = nullptr;
     struct xdg_toplevel *xshell_toplevel = nullptr;
-#else
-    struct wl_shell *wshell = nullptr;
-    struct wl_shell_surface *wshell_surface = nullptr;
-#endif
 
     struct wl_seat *wseat = nullptr;
     struct wl_keyboard *wkeyboard = nullptr;
@@ -453,11 +446,7 @@ static const std::map<uint,int> wl_key_special_ids = {
     {KEY_INSERT, PANGO_KEY_INSERT},
 };
 
-#if USE_WL_XDG
 static void handle_configure_toplevel(void *data, struct xdg_toplevel */*xdg_toplevel*/, int32_t width, int32_t height, struct wl_array */*states*/) {
-#else
-static void handle_configure(void *data, struct wl_shell_surface */*shell_surface*/, uint32_t /*edges*/, int32_t width, int32_t height) {
-#endif
 
     const static uint min_width = 70;
     const static uint min_height = 70;
@@ -502,7 +491,6 @@ static void handle_configure(void *data, struct wl_shell_surface */*shell_surfac
     pangolin::process::Resize(main_w, main_h);
 }
 
-#if USE_WL_XDG
 static void handle_configure(void */*data*/, struct xdg_surface *xdg_surface, uint32_t serial) {
     xdg_surface_ack_configure(xdg_surface, serial);
 }
@@ -527,19 +515,6 @@ static void xdg_wm_base_ping(void */*data*/, struct xdg_wm_base *xdg_wm_base, ui
 static const struct xdg_wm_base_listener shell_listener = {
     .ping = xdg_wm_base_ping
 };
-#else
-static void handle_ping(void */*data*/, struct wl_shell_surface *shell_surface, uint32_t serial) {
-    wl_shell_surface_pong(shell_surface, serial);
-}
-
-static void handle_popup_done(void */*data*/, struct wl_shell_surface */*shell_surface*/) { }
-
-static const struct wl_shell_surface_listener shell_surface_listener = {
-    handle_ping,
-    handle_configure,
-    handle_popup_done
-};
-#endif
 
 static void pointer_handle_enter(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t /*sx*/, wl_fixed_t /*sy*/) {
     WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
@@ -588,26 +563,18 @@ static void pointer_handle_button(void *data, struct wl_pointer */*wl_pointer*/,
         // resizing using window decoration
         if((button==BTN_LEFT) && (state==WL_POINTER_BUTTON_STATE_PRESSED)) {
             switch (w->decoration->last_type) {
-            case WL_SHELL_SURFACE_RESIZE_NONE:
-#if USE_WL_XDG
+            case XDG_TOPLEVEL_RESIZE_EDGE_NONE:
                 xdg_toplevel_move(w->xshell_toplevel, w->wseat, serial);
-#else
-                wl_shell_surface_move(w->wshell_surface, w->wseat, serial);
-#endif
                 break;
-            case WL_SHELL_SURFACE_RESIZE_TOP:
-            case WL_SHELL_SURFACE_RESIZE_BOTTOM:
-            case WL_SHELL_SURFACE_RESIZE_LEFT:
-            case WL_SHELL_SURFACE_RESIZE_TOP_LEFT:
-            case WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT:
-            case WL_SHELL_SURFACE_RESIZE_RIGHT:
-            case WL_SHELL_SURFACE_RESIZE_TOP_RIGHT:
-            case WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT:
-#if USE_WL_XDG
+            case XDG_TOPLEVEL_RESIZE_EDGE_TOP:
+            case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM:
+            case XDG_TOPLEVEL_RESIZE_EDGE_LEFT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_RIGHT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT:
                 xdg_toplevel_resize(w->xshell_toplevel, w->wseat, serial, w->decoration->last_type);
-#else
-                wl_shell_surface_resize(w->wshell_surface, w->wseat, serial, w->decoration->last_type);
-#endif
                 break;
             case ButtonSurface::type::CLOSE:
                 pangolin::QuitAll();
@@ -615,23 +582,10 @@ static void pointer_handle_button(void *data, struct wl_pointer */*wl_pointer*/,
             case ButtonSurface::type::MAXIMISE:
                 w->is_maximised = !w->is_maximised;
                 if(w->is_maximised) {
-#if USE_WL_XDG
                     xdg_toplevel_set_maximized(w->xshell_toplevel);
-#else
-                    // store original window size
-                    wl_egl_window_get_attached_size(w->egl_window, &w->width, &w->height);
-                    wl_shell_surface_set_maximized(w->wshell_surface, nullptr);
-#endif
                 }
                 else {
-#if USE_WL_XDG
                     xdg_toplevel_unset_maximized(w->xshell_toplevel);
-#else
-                    wl_shell_surface_set_toplevel(w->wshell_surface);
-                    handle_configure(data, nullptr, 0,
-                                     w->width+2*w->decoration->border_size,
-                                     w->height+2*w->decoration->border_size+w->decoration->title_size);
-#endif
                 }
 
                 break;
@@ -795,15 +749,9 @@ static void global_registry_handler(void *data, struct wl_registry *registry, ui
     else if (strcmp(interface, wl_subcompositor_interface.name) == 0) {
         w->wsubcompositor = static_cast<wl_subcompositor*>(wl_registry_bind(registry, id, &wl_subcompositor_interface, version));
     }
-#if USE_WL_XDG
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0) {
         w->xshell = reinterpret_cast<xdg_wm_base*> (wl_registry_bind(registry, id, &xdg_wm_base_interface, version));
     }
-#else
-    else if (strcmp(interface, wl_shell_interface.name) == 0) {
-        w->wshell = reinterpret_cast<wl_shell*> (wl_registry_bind(registry, id, &wl_shell_interface, version));
-    }
-#endif
     else if (strcmp(interface, wl_seat_interface.name) == 0) {
         w->wseat = reinterpret_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, version));
         wl_seat_add_listener(w->wseat, &seat_listener, data);
@@ -870,17 +818,10 @@ WaylandDisplay::WaylandDisplay(const int width, const int height, const std::str
         std::cerr << "Cannot create EGL surface" << std::endl;
     }
 
-    if(
-#if USE_WL_XDG
-    xshell
-#else
-    wshell
-#endif
-    ==nullptr) {
+    if(xshell==nullptr) {
         throw std::runtime_error("No Wayland shell available!");
     }
 
-#if USE_WL_XDG
     xdg_wm_base_add_listener(xshell, &shell_listener, this);
     xshell_surface = xdg_wm_base_get_xdg_surface(xshell, wsurface);
     xdg_surface_add_listener(xshell_surface, &shell_surface_listener, this);
@@ -888,13 +829,6 @@ WaylandDisplay::WaylandDisplay(const int width, const int height, const std::str
     xdg_toplevel_add_listener(xshell_toplevel, &toplevel_listener, this);
     xdg_toplevel_set_title(xshell_toplevel, title.c_str());
     xdg_toplevel_set_app_id(xshell_toplevel, title.c_str());
-#else
-    wshell_surface = wl_shell_get_shell_surface(wshell, wsurface);
-    wl_shell_surface_add_listener(wshell_surface, &shell_surface_listener, this);
-    wl_shell_surface_set_toplevel(wshell_surface);
-    wl_shell_surface_set_title(wshell_surface, title.c_str());
-    wl_shell_surface_set_class(wshell_surface, title.c_str());
-#endif
 
     wl_display_sync(wdisplay);
 
@@ -915,14 +849,9 @@ WaylandDisplay::~WaylandDisplay() {
     if(egl_display) eglTerminate(egl_display);
 
     // cleanup Wayland
-#if USE_WL_XDG
     if(xshell_surface)  xdg_surface_destroy(xshell_surface);
     if(xshell_toplevel) xdg_toplevel_destroy(xshell_toplevel);
     if(xshell)          xdg_wm_base_destroy(xshell);
-#else
-    if(wshell_surface)  wl_shell_surface_destroy(wshell_surface);
-    if(wshell)          wl_shell_destroy(wshell);
-#endif
 
     if(wsurface)        wl_surface_destroy(wsurface);
     if(wregistry)       wl_registry_destroy(wregistry);
@@ -952,30 +881,11 @@ void WaylandWindow::ToggleFullscreen() {
     display->is_fullscreen = is_fullscreen; // state for Wayland
     if(is_fullscreen) {
         display->decoration->destroy();
-#if USE_WL_XDG
         xdg_toplevel_set_fullscreen(display->xshell_toplevel, nullptr);
-#else
-        wl_shell_surface_set_fullscreen(display->wshell_surface, WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, nullptr);
-#endif
     }
     else {
         display->decoration->create();
-#if USE_WL_XDG
         xdg_toplevel_unset_fullscreen(display->xshell_toplevel);
-#else
-        wl_shell_surface_set_toplevel(display->wshell_surface);
-#endif
-
-#if !USE_WL_XDG
-        if(display->is_maximised) {
-            wl_shell_surface_set_maximized(display->wshell_surface, nullptr);
-        }
-        else {
-            handle_configure(static_cast<void*>(display.get()), nullptr, 0,
-                             windowed_size[0]+2*display->decoration->border_size,
-                             windowed_size[1]+2*display->decoration->border_size+display->decoration->title_size);
-        }
-#endif
     }
 
     wl_display_sync(display->wdisplay);
