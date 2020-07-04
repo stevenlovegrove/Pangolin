@@ -23,6 +23,7 @@ include(PangolinFactory)
 
 option( BUILD_TOOLS "Build Tools" ON )
 option( BUILD_EXAMPLES "Build Examples" ON )
+option( BUILD_ASAN "enable AddressSanitizer for Debug builds to detect memory issues" OFF)
 
 # Default build type (Override with cmake .. -DCMAKE_BUILD_TYPE=...)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -60,6 +61,25 @@ elseif(EMSCRIPTEN)
     set(CMAKE_EXE_LINKER_FLAGS "-sASYNCIFY=1 -sDISABLE_EXCEPTION_CATCHING=0 -sGL_ASSERTIONS=1 -sFULL_ES2=1 -sFULL_ES3=1 --bind")
 else()
     option( BUILD_SHARED_LIBS "Build Shared Library" ON)
+endif()
+
+if (BUILD_ASAN)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} \
+        -fsanitize=address \
+        -fsanitize=bool \
+        -fsanitize=bounds \
+        -fsanitize=enum \
+        -fsanitize=float-cast-overflow \
+        -fsanitize=float-divide-by-zero \
+        -fsanitize=nonnull-attribute \
+        -fsanitize=returns-nonnull-attribute \
+        -fsanitize=signed-integer-overflow \
+        -fsanitize=undefined \
+        -fsanitize=vla-bound \
+        -fno-sanitize=alignment \
+        -fsanitize=leak \
+        -fsanitize=object-size \
+    ")
 endif()
 
 #######################################################
