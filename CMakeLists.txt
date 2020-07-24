@@ -18,8 +18,8 @@ SET(CPACK_PACKAGE_VERSION_PATCH "0")
 include(CPack)
 
 option( BUILD_TESTS "Build Tests" ON )
-option( BUILD_TOOLS "Build Examples" ON )
-option( BUILD_EXAMPLES "Build Tools" ON )
+option( BUILD_TOOLS "Build Tools" ON )
+option( BUILD_EXAMPLES "Build Examples" ON )
 
 set (CMAKE_CXX_STANDARD 14)
 
