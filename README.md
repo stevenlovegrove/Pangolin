@@ -106,6 +106,25 @@ can execute:
 cmake --build . --target pangolin_doc
 ```
 
+## Building Python bindings ##
+
+```
+git clone https://github.com/stevenlovegrove/Pangolin.git
+cd Pangolin
+mkdir build
+cd build
+cmake .. -DBUILD_SHARED_LIBS=OFF
+cmake --build .
+```
+
+```
+pip install numpy pyopengl Pillow pybind11
+git submodule init && git submodule update
+```
+
+`.so` file will be located in `build/src`.
+
+
 **On Windows**, Pangolin will attempt to download and build *glew*, *libjpeg*, *libpng* and *zlib* automatically. It does so assuming that git is available on the path - this assumption may be wrong for windows users who have downloaded Pangolin via a zip file on github. You will instead need to download and compile the dependencies manually, and set the BUILD_EXTERN_(lib) options to false for these libraries. The alternate and recommended approach is to install [gitbash](https://git-scm.com/downloads) and work from within their provided console.
 
 ## Issues ##
