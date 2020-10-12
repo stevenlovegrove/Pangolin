@@ -112,7 +112,7 @@ int main(/*int argc, char* argv[]*/)
         d_cam.SaveOnRender("cube");
     
     if( pangolin::Pushed(record_cube) )
-        pangolin::DisplayBase().RecordOnRender("ffmpeg:[fps=50,bps=8388608,unique_filename,flip=true]//screencap.avi");
+        pangolin::DisplayBase().RecordOnRender("ffmpeg:[fps=50,bps=8388608,unique_filename,flip=true]//screencap.mp4");
 
     // Activate efficiently by object
     d_cam.Activate(s_cam);
