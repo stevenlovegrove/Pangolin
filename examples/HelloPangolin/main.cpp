@@ -1,4 +1,7 @@
-#include <pangolin/pangolin.h>
+#include <pangolin/display/display.h>
+#include <pangolin/display/view.h>
+#include <pangolin/handler/handler.h>
+#include <pangolin/gl/gldraw.h>
 
 int main( int /*argc*/, char** /*argv*/ )
 {
