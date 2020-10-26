@@ -29,8 +29,8 @@
 
 #include <stack>
 
-#include <pangolin/opengl_render_state.h>
-#include <pangolin/glsl.h>
+#include <pangolin/display/opengl_render_state.h>
+#include <pangolin/gl/glsl.h>
 
 namespace pangolin {
 
