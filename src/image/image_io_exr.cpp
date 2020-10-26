@@ -97,7 +97,7 @@ PixelFormat GetPixelFormat(const Imf::Header& header)
     }
 
     std::string colors = pixelFormat.str();
-    if (colors == "Y") {
+    if (colors == "Y" || colors == "R") {
       colors = "GRAY";
     }
 
