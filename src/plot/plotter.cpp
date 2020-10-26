@@ -83,7 +83,7 @@ void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y,
 
     static const std::string vs_footer =
             "    vec2 pos = vec2(x, y);\n"
-            "    gl_Position = vec4(u_scale * (pos + u_offset),0,1);\n"
+            "    gl_Position = vec4(u_scale * (pos + u_offset),0.0,1.0);\n"
             "    v_color = u_color;\n"
             "}\n";
 
