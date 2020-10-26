@@ -209,7 +209,7 @@ void PangoVideo::SetupStreams(const PacketStreamSource& src)
                 json_stream["width"].get<int64_t>(),
                 json_stream["height"].get<int64_t>(),
                 json_stream["pitch"].get<int64_t>(),
-                (unsigned char*) 0 + json_stream["offset"].get<int64_t>()
+                reinterpret_cast<unsigned char*>(json_stream["offset"].get<int64_t>())
                         );
 
         if(!_fixed_size) {
@@ -247,7 +247,7 @@ PANGOLIN_REGISTER_FACTORY(PangoVideo)
             return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
         }
 
-        bool IsValidated( const std::string& scheme ) const override {return true;}
+        bool IsValidated( const std::string& ) const override {return true;}
 
         ParamSet param_set_;
     };

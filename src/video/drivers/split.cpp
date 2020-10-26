@@ -122,7 +122,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
                         throw VideoException("split: empty ROI.");
                     }
                     const size_t start1 = roi.y * st1.Pitch() + st1.PixFormat().bpp * roi.x / 8;
-                    streams.push_back( StreamInfo( st1.PixFormat(), roi.w, roi.h, st1.Pitch(), (unsigned char*)0 + start1 ) );
+                    streams.push_back( StreamInfo( st1.PixFormat(), roi.w, roi.h, st1.Pitch(), reinterpret_cast<unsigned char*>(start1) ) );
                 }else if(uri.Contains(key_mem)) {
                     const StreamInfo& info = param_reader.Get(key_mem, subvid->Streams()[0]); //uri.Get<StreamInfo>(key_mem, subvid->Streams()[0] );
                     streams.push_back(info);

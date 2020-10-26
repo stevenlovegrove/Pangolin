@@ -75,7 +75,7 @@ void BindGlElement(GlSlProgram& prog, const GlGeometry::Element& el)
             glVertexAttribPointer(
                 attrib_handle, attr.count_per_element, attr.gltype, GL_TRUE,
                 attr.stride_bytes,
-                (uint8_t*)0 + attr.offset
+                reinterpret_cast<uint8_t*>(attr.offset)
             );
         }
     }
@@ -123,7 +123,7 @@ void GlDraw(GlSlProgram& prog, const GlGeometry& geom, const GlTexture* matcap)
             auto& attrib = it_indices->second;
             glDrawElements(
                GL_TRIANGLES, attrib.count_per_element * attrib.num_elements,
-               attrib.gltype, (uint8_t*)0 + attrib.offset
+               attrib.gltype, reinterpret_cast<uint8_t*>(attrib.offset)
             );
             buffer.second.Unbind();
         }

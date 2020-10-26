@@ -607,7 +607,7 @@ PANGOLIN_REGISTER_FACTORY(JoinVideo)
             return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
         }
 
-        bool IsValidated( const std::string& scheme ) const override {return true;}
+        bool IsValidated( const std::string& ) const override {return true;}
 
         ParamSet param_set_;
     };
