@@ -96,6 +96,13 @@ namespace py_pangolin {
       }, pybind11::arg("data"), pybind11::arg("size_bytes"), pybind11::arg("offset")=0)
       .def_readwrite("size_bytes", &pangolin::GlBufferData::size_bytes);
 
+    pybind11::class_<pangolin::GlBuffer, pangolin::GlBufferData>(m, "GlBuffer")
+      .def(pybind11::init<>())
+      .def(pybind11::init<pangolin::GlBufferType, GLuint, GLenum, GLuint, GLenum>(), pybind11::arg("buffer_type"), pybind11::arg("num_elements"), pybind11::arg("datatype"), pybind11::arg("count_per_element"), pybind11::arg("gluse")=GL_DYNAMIC_DRAW)
+      .def("Resize", &pangolin::GlBuffer::Resize, pybind11::arg("num_elements"))
+      .def_readwrite("num_elements", &pangolin::GlBuffer::num_elements)
+      .def_readwrite("count_per_element", &pangolin::GlBuffer::count_per_element);
+
   }
 
 

@@ -28,6 +28,7 @@
 #include "gl_draw.hpp"
 #include <pangolin/gl/gldraw.h>
 #include <pybind11/eigen.h>
+#include <pybind11/stl.h>
 
 namespace py_pangolin {
 
@@ -62,6 +63,31 @@ namespace py_pangolin {
     m.def("glSetFrameOfReference", (void (*)(const Eigen::Matrix4d &)) &pangolin::glSetFrameOfReference);
 
     m.def("glUnsetFrameOfReference", &pangolin::glUnsetFrameOfReference);
+
+    m.def("glDrawVertices", &pangolin::glDrawPoints<float, 2, std::allocator<Eigen::Vector2f> >);
+    m.def("glDrawVertices", &pangolin::glDrawPoints<float, 3, std::allocator<Eigen::Vector3f> >);
+    m.def("glDrawVertices", &pangolin::glDrawPoints<double, 2, std::allocator<Eigen::Vector2d> >);
+    m.def("glDrawVertices", &pangolin::glDrawPoints<double, 3, std::allocator<Eigen::Vector3d> >);
+
+    m.def("glDrawPoints", &pangolin::glDrawPoints<float, 2, std::allocator<Eigen::Vector2f> >);
+    m.def("glDrawPoints", &pangolin::glDrawPoints<float, 3, std::allocator<Eigen::Vector3f> >);
+    m.def("glDrawPoints", &pangolin::glDrawPoints<double, 2, std::allocator<Eigen::Vector2d> >);
+    m.def("glDrawPoints", &pangolin::glDrawPoints<double, 3, std::allocator<Eigen::Vector3d> >);
+
+    m.def("glDrawLines", &pangolin::glDrawLines<float, 2, std::allocator<Eigen::Vector2f> >);
+    m.def("glDrawLines", &pangolin::glDrawLines<float, 3, std::allocator<Eigen::Vector3f> >);
+    m.def("glDrawLines", &pangolin::glDrawLines<double, 2, std::allocator<Eigen::Vector2d> >);
+    m.def("glDrawLines", &pangolin::glDrawLines<double, 3, std::allocator<Eigen::Vector3d> >);
+
+    m.def("glDrawLineStrip", &pangolin::glDrawLineStrip<float, 2, std::allocator<Eigen::Vector2f> >);
+    m.def("glDrawLineStrip", &pangolin::glDrawLineStrip<float, 3, std::allocator<Eigen::Vector3f> >);
+    m.def("glDrawLineStrip", &pangolin::glDrawLineStrip<double, 2, std::allocator<Eigen::Vector2d> >);
+    m.def("glDrawLineStrip", &pangolin::glDrawLineStrip<double, 3, std::allocator<Eigen::Vector3d> >);
+
+    m.def("glDrawLineLoop", &pangolin::glDrawLineLoop<float, 2, std::allocator<Eigen::Vector2f> >);
+    m.def("glDrawLineLoop", &pangolin::glDrawLineLoop<float, 3, std::allocator<Eigen::Vector3f> >);
+    m.def("glDrawLineLoop", &pangolin::glDrawLineLoop<double, 2, std::allocator<Eigen::Vector2d> >);
+    m.def("glDrawLineLoop", &pangolin::glDrawLineLoop<double, 3, std::allocator<Eigen::Vector3d> >);
 
     m.def("glDrawAlignedBox", (void (*)(const Eigen::AlignedBox2f &, GLenum)) &pangolin::glDrawAlignedBox<float>, pybind11::arg("box"), pybind11::arg("mode") = GL_TRIANGLE_FAN);
 
