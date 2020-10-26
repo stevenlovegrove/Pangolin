@@ -254,7 +254,9 @@ void VideoViewer::CloseInput()
 void VideoViewer::Record()
 {
     std::lock_guard<std::mutex> lock(control_mutex);
-    video.Record();
+    if(!video.IsRecording()) {
+        video.Record();
+    }
 }
 
 void VideoViewer::RecordOneFrame()
