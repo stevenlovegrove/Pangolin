@@ -1,7 +1,7 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/tools/video_viewer.h>
 #include <pangolin/utils/argagg.hpp>
-#include <pangolin/utils/help.h>
+#include <pangolin/video/help.h>
 
 int main( int argc, char* argv[] )
 {

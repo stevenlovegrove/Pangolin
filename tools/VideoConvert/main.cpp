@@ -1,10 +1,9 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video_input.h>
-#include <pangolin/video_drivers.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/utils/argagg.hpp>
 #include <pangolin/image/pixel_format.h>
-#include <pangolin/utils/help.h>
+#include <pangolin/video/help.h>
 
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
