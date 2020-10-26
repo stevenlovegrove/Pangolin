@@ -228,9 +228,13 @@ void DataLog::Save(std::string filename)
 
   const DataLogBlock * block = FirstBlock();
 
+  size_t i = 0;
+
   while (block) {
 
-    for (size_t i = 0; i < block->Samples(); ++i) {
+    const size_t blockEnd = i + block->Samples();
+
+    for (; i < blockEnd; ++i) {
 
       csvStream << block->Sample(i)[0];
 
