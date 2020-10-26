@@ -58,10 +58,14 @@ std::string ImageFileTypeToName(ImageFileType t)
         return "pango";
     case ImageFileTypePvn:
         return "pvn";
+    case ImageFileTypeVrs:
+        return "vrs";
     case ImageFileTypePly:
         return "ply";
     case ImageFileTypeObj:
         return "obj";
+    case ImageFileTypeArw:
+        return "arw";
     case ImageFileTypeUnknown:
     default:
         return "unknown";
@@ -94,6 +98,8 @@ ImageFileType NameToImageFileType(const std::string& name)
         return ImageFileTypePango;
     else if ("pvn" == name)
         return ImageFileTypePvn;
+    else if ("vrs" == name)
+        return ImageFileTypeVrs;
     else if ("zstd" == name)
         return ImageFileTypeZstd;
     else if ("lzf" == name)
@@ -104,6 +110,8 @@ ImageFileType NameToImageFileType(const std::string& name)
         return ImageFileTypePly;
     else if ("obj" == name)
         return ImageFileTypeObj;
+    else if ("arw" == name)
+        return ImageFileTypeArw;
 
     return ImageFileTypeUnknown;
 }
@@ -128,6 +136,8 @@ ImageFileType FileTypeExtension(const std::string& ext)
         return ImageFileTypePpm;
     } else if( ext == ".pvn"  ) {
         return ImageFileTypePvn;
+    } else if( ext == ".vrs"  ) {
+        return ImageFileTypeVrs;
     } else if( ext == ".pango"  ) {
         return ImageFileTypePango;
     } else if( ext == ".zstd"  ) {
@@ -140,6 +150,8 @@ ImageFileType FileTypeExtension(const std::string& ext)
         return ImageFileTypePly;
     } else if( ext == ".obj"  ) {
         return ImageFileTypeObj;
+    } else if( ext == ".ARW"  ) {
+        return ImageFileTypeArw;
     } else {
         return ImageFileTypeUnknown;
     }
@@ -174,6 +186,7 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
         const unsigned char magic_pango_zstd[] = "ZSTD";
         const unsigned char magic_pango_lz4[] = "LZ4";
         const unsigned char magic_pango_p12b[] = "P12B";
+        const unsigned char magic_vrs[] = "VisionR";
         const unsigned char magic_ply[]   = "ply";
 
         if( !strncmp((char*)data, (char*)magic_png, 8) ) {
@@ -193,6 +206,8 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
             return ImageFileTypeBmp;
         }else if( !strncmp((char*)data, (char*)magic_pango,5) ) {
             return ImageFileTypePango;
+        }else if( !strncmp((char*)data, (char*)magic_vrs,7) ) {
+            return ImageFileTypeVrs;
         }else if( !strncmp((char*)data, (char*)magic_pango_zstd,4) ) {
             return ImageFileTypeZstd;
         }else if( !strncmp((char*)data, (char*)magic_pango_lz4,3) ) {

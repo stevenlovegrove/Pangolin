@@ -45,11 +45,13 @@ enum ImageFileType
     ImageFileTypeBmp,
     ImageFileTypePango,
     ImageFileTypePvn,
+    ImageFileTypeVrs,
     ImageFileTypeZstd,
     ImageFileTypeLz4,
     ImageFileTypeP12b,
     ImageFileTypePly,
     ImageFileTypeObj,
+    ImageFileTypeArw,
     ImageFileTypeUnknown
 };
 

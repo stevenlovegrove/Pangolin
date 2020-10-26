@@ -446,7 +446,8 @@ bool FilesMatchingWildcard(const std::string& wildcard, std::vector<std::string>
 bool FileExists(const std::string& filename)
 {
     std::string search_filename = filename;
-    if(filename.length() > 0 && filename[filename.length()-1] == '\\') {
+    if(filename.length() > 0 && 
+      (filename[filename.length()-1] == '\\' || filename[filename.length() - 1] == '/')) {
         search_filename.resize(filename.length()-1);
     }
     WIN32_FIND_DATA wfd;
