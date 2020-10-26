@@ -39,8 +39,13 @@
 namespace pangolin
 {
 /* yes I know, the top of this file is quite ugly */
+#ifdef _MSC_VER
+# define ALIGN32_BEG __declspec(align(32))
+# define ALIGN32_END
+#else
 # define ALIGN32_BEG
 # define ALIGN32_END __attribute__((aligned(32)))
+#endif
 
 /* declare some AVX constants -- why can't I figure a better way to do that? */
 #define _PS256_CONST(Name, Val)                                            \
@@ -54,13 +59,17 @@ _PS256_CONST(1  , 1.0f);
 _PS256_CONST(0p5, 0.5f);
 /* the smallest non denormalized float number */
 
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wnarrowing"
+#endif
 _PS256_CONST_TYPE(min_norm_pos, int, 0x00800000);
 _PS256_CONST_TYPE(inv_mant_mask, int, ~0x7f800000);
 _PS256_CONST_TYPE(sign_mask, int, 0x80000000);
 _PS256_CONST_TYPE(inv_sign_mask, int, ~0x80000000);
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
 _PI32_CONST256(0, 0);
 _PI32_CONST256(1, 1);
