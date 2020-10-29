@@ -57,7 +57,7 @@ struct SceneHandler : public Handler3D
         GLuint closestNumNames = 0;
         GLuint closestZ = std::numeric_limits<GLuint>::max();
         for (int i = 0; i < hits; i++) {
-            if (buf[1] < closestZ) {
+            if (buf[1] < closestZ && buf[0] != 0) {
                 closestNames = buf + 3;
                 closestNumNames = buf[0];
                 closestZ = buf[1];
