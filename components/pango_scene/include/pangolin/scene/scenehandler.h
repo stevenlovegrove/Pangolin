@@ -39,7 +39,14 @@ inline void gluPickMatrix(
     glMultMatrixf(m);
 }
 
+struct SelectedObject {
 
+  SelectedObject(const GLuint pickId, Interactive* const interactive)
+    : pickId(pickId), interactive(interactive) {}
+
+  GLuint pickId;
+  Interactive* interactive;
+};
 
 struct SceneHandler : public Handler3D
 {
@@ -51,29 +58,27 @@ struct SceneHandler : public Handler3D
 
     }
 
-    void ProcessHitBuffer(GLint hits, GLuint* buf, std::map<GLuint, Interactive*>& hit_map )
+    void ProcessHitBuffer(GLint hits, GLuint* buf, std::map<GLuint, SelectedObject>& hit_map )
     {
-        GLuint* closestNames = 0;
-        GLuint closestNumNames = 0;
-        GLuint closestZ = std::numeric_limits<GLuint>::max();
-        for (int i = 0; i < hits; i++) {
-            if (buf[1] < closestZ && buf[0] != 0) {
-                closestNames = buf + 3;
-                closestNumNames = buf[0];
-                closestZ = buf[1];
+        for (int hit = 0; hit < hits; hit++)
+        {
+            // buf[0] is the amount of named objects
+            // buf[1] is the z distance
+            // buf[2] is an array of names (aka pickId) with length buf[0]
+            for(unsigned int name = 0; name < buf[0]; name++)
+            {
+                const int pickId = (buf + 3)[name];
+                hit_map.emplace(std::pair(buf[1],
+                                          SelectedObject(pickId, InteractiveIndex::I().Find(pickId))));
             }
             buf += buf[0] + 3;
-        }
-        for (unsigned int i = 0; i < closestNumNames; i++) {
-            const int pickId = closestNames[i];
-            hit_map[pickId] = InteractiveIndex::I().Find(pickId);
         }
     }
 
     void ComputeHits(pangolin::View& view,
                      const pangolin::OpenGlRenderState& cam_state,
                      int x, int y, int grab_width,
-                     std::map<GLuint, Interactive*>& hit_objects )
+                     std::map<GLuint, SelectedObject>& hit_objects )
     {
         // Get views viewport / modelview /projection
         GLint viewport[4] = {view.v.l, view.v.b, view.v.w, view.v.h};
@@ -118,10 +123,12 @@ struct SceneHandler : public Handler3D
             ComputeHits(view, *cam_state, x, y, 2*hwin+1, m_selected_objects);
         }
 
-        for (auto kv : m_selected_objects)
+        for ( auto selected_object_it = m_selected_objects.begin();
+              !handled && selected_object_it != m_selected_objects.end();
+              selected_object_it++ )
         {
-            Interactive* ir = dynamic_cast<Interactive*>(kv.second);
-            handled |= ir && ir->Mouse( button, p, Pw, n, pressed, button_state, kv.first);
+            Interactive* ir = dynamic_cast<Interactive*>(selected_object_it->second.interactive);
+            handled |= ir && ir->Mouse( button, p, Pw, n, pressed, button_state, selected_object_it->second.pickId);
         }
 
         if (!handled) {
@@ -133,11 +140,13 @@ struct SceneHandler : public Handler3D
     {
         GetPosNormal(view, x, y, p, Pw, Pc, n);
         bool handled = false;
-        for (auto kv : m_selected_objects)
-        {
-            Interactive* ir = dynamic_cast<Interactive*>(kv.second);
 
-            handled |= ir && ir->MouseMotion( p, Pw, n, button_state, kv.first);
+        for ( auto selected_object_it = m_selected_objects.begin();
+              !handled && selected_object_it != m_selected_objects.end();
+              selected_object_it++ )
+        {
+            Interactive* ir = dynamic_cast<Interactive*>(selected_object_it->second.interactive);
+            handled |= ir && ir->MouseMotion( p, Pw, n, button_state, selected_object_it->second.pickId);
         }
         if (!handled) {
             pangolin::Handler3D::MouseMotion(view, x, y, button_state);
@@ -159,10 +168,12 @@ struct SceneHandler : public Handler3D
 
             const MouseButton button = p2 > 0 ? MouseWheelUp : MouseWheelDown;
 
-            for (auto kv : m_selected_objects)
+            for ( auto selected_object_it = m_selected_objects.begin();
+                  !handled && selected_object_it != m_selected_objects.end();
+                  selected_object_it++ )
             {
-                Interactive* ir = dynamic_cast<Interactive*>(kv.second);
-                handled |= ir && ir->Mouse( button, p, Pw, n, true, button_state, kv.first);
+                Interactive* ir = dynamic_cast<Interactive*>(selected_object_it->second.interactive);
+                handled |= ir && ir->Mouse( button, p, Pw, n, true, button_state, selected_object_it->second.pickId);
             }
         }
 
@@ -172,7 +183,8 @@ struct SceneHandler : public Handler3D
         }
     }
 
-    std::map<GLuint, Interactive*> m_selected_objects;
+    // map from z distance to interactive element with pick id
+    std::map<GLuint, SelectedObject> m_selected_objects;
     Renderable& scene;
     unsigned int grab_width;
 };
