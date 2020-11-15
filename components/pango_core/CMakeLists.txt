@@ -1,5 +1,15 @@
 get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_compile_definitions(${COMPONENT} PUBLIC "_OSX_")
+elseif(WIN32 OR WIN64)
+    target_compile_definitions(${COMPONENT} PUBLIC "_WIN_")
+elseif(EMSCRIPTEN)
+    target_compile_definitions(${COMPONENT} PUBLIC "_EMSCRIPTEN_")
+else()
+    target_compile_definitions(${COMPONENT} PUBLIC "_LINUX_")
+endif()
+
 target_sources( ${COMPONENT}
 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/file_extension.cpp

@@ -13,6 +13,12 @@ endif()
 # Make our own cmake imports accessible
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
+include(CreateMethodCallFile)
+include(SetPlatformVars)
+
+option( BUILD_TOOLS "Build Examples" ON )
+option( BUILD_EXAMPLES "Build Tools" ON )
+
 # Default build type (Override with cmake .. -DCMAKE_BUILD_TYPE=...)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
@@ -20,9 +26,33 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-include(CreateMethodCallFile)
+if(_WIN_)
+    option( BUILD_SHARED_LIBS    "Build Shared Library" OFF)
+    option( MSVC_USE_STATIC_CRT  "Use static C Runtime with MSVC, /MT instead of /MD" ON)
 
-option( BUILD_SHARED_LIBS "Build Shared Library" ON)
+    # Make sure there are no erroneous C Runtime flags
+    list(APPEND FLAG_VARS
+        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
+        CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
+    )
+    if(MSVC_USE_STATIC_CRT)
+        foreach(FLAG_VAR ${FLAG_VARS})
+            string(REGEX REPLACE "/MD" "/MT" NEW_FLAGS "${${FLAG_VAR}}")
+            set(${FLAG_VAR} "${NEW_FLAGS}" CACHE STRING "" FORCE)
+        endforeach()
+    else()
+        foreach(FLAG_VAR ${FLAG_VARS})
+            string(REGEX REPLACE "/MT" "/MD" NEW_FLAGS "${${FLAG_VAR}}")
+            set(${FLAG_VAR} "${NEW_FLAGS}" CACHE STRING "" FORCE)
+        endforeach()
+    endif()
+else()
+    option( BUILD_SHARED_LIBS "Build Shared Library" ON)
+endif()
+
+if(_OSX_)
+    set(CMAKE_MACOSX_RPATH ON)
+endif()
 
 if(EMSCRIPTEN)
     include(EmscriptenUtils)
@@ -46,7 +76,6 @@ foreach(component_cmake ${components_cmake})
 endforeach()
 
 # Export Targets
-#export(TARGETS ${component_list} NAMESPACE pangolin:: FILE PangolinTargets.cmake)
 export(TARGETS ${component_list} FILE PangolinTargets.cmake)
 export(PACKAGE Pangolin)
 
@@ -59,5 +88,11 @@ configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY IMMEDIATE )
 
 set(Pangolin_DIR ${CMAKE_CURRENT_BINARY_DIR})
-add_subdirectory(examples)
-add_subdirectory(tools)
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+if(BUILD_TOOLS)
+    add_subdirectory(tools)
+endif()

@@ -1,0 +1,24 @@
+os: Visual Studio 2015
+
+clone_folder: c:/projects/Pangolin
+
+platform: x64
+configuration: Release
+
+build:
+  verbosity: minimal
+  project: c:/projects/Pangolin/build/Pangolin.sln 
+
+install:
+  - cmd: vcpkg install glew eigen3 libjpeg-turbo libpng openexr tiff --triplet x64-windows
+  
+before_build:
+  - cd c:/projects/Pangolin
+  - mkdir bin
+  - mkdir build
+  - cd build
+  - cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=../bin ..
+
+on_success:
+  - 7z a pangolin_build.zip "c:/projects/Pangolin/build/src/include" "c:/projects/Pangolin/build/src/Release/pangolin.lib" "c:/projects/Pangolin/build/tools/*/Release/*.exe" "c:/projects/Pangolin/build/examples/*/Release/*.exe"
+  - appveyor PushArtifact pangolin_build.zip
