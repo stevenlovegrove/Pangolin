@@ -20,6 +20,9 @@ PRIVATE
 find_package (Eigen3 REQUIRED CONFIG QUIET)
 target_compile_definitions(${COMPONENT} PUBLIC HAVE_EIGEN)
 
+if(_LINUX_)
+    set(OpenGL_GL_PREFERENCE "GLVND")
+endif()
 find_package(OpenGL REQUIRED QUIET)
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image Eigen3::Eigen ${OPENGL_LIBRARIES} )

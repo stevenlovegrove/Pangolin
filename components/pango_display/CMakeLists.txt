@@ -49,6 +49,9 @@ else()
 endif()
 
 # headless offscreen rendering via EGL
+if(_LINUX_)
+    set(OpenGL_GL_PREFERENCE "GLVND")
+endif()
 find_package(OpenGL QUIET COMPONENTS EGL)
 if(OpenGL_EGL_FOUND)
     list(APPEND WINDOW_FACTORY_REG RegisterNoneWindowFactory)
@@ -73,4 +76,4 @@ target_include_directories(${COMPONENT}
 # Embed font
 include(EmbedBinaryFiles)
 embed_binary_files( "${CMAKE_CURRENT_LIST_DIR}/src/fonts/*.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp" )
-target_sources( ${COMPONENT} PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp" )
+target_sources( ${COMPONENT} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp" )
