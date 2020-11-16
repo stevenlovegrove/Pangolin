@@ -1,4 +1,7 @@
-#include <pangolin/pangolin.h>
+#include <pangolin/display/display.h>
+#include <pangolin/display/view.h>
+#include <pangolin/gl/gl.h>
+
 #include <thread>
 
 static const std::string window_name = "HelloPangolinThreads";

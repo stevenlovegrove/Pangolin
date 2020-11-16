@@ -1,4 +1,5 @@
-#include <pangolin/pangolin.h>
+#include <pangolin/display/display.h>
+#include <pangolin/display/view.h>
 #include <pangolin/scene/axis.h>
 #include <pangolin/scene/scenehandler.h>
 

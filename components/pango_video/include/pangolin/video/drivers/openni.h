@@ -11,7 +11,7 @@
 
 // OpenNI generates SO MANY warnings, we'll just disable all for this header(!)
 // GCC and clang will listen to this pramga.
-#ifndef _MSVC_
+#ifdef __GNUC__
 #pragma GCC system_header
 #endif
 #include <XnCppWrapper.h>

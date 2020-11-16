@@ -4,7 +4,11 @@
  *                     Imperial College London
  **/
 
-#include <pangolin/pangolin.h>
+#include <pangolin/display/display.h>
+#include <pangolin/display/view.h>
+#include <pangolin/video/video_input.h>
+#include <pangolin/gl/gl.h>
+
 
 void SetGlFormat(GLint& glformat, GLenum& gltype, const pangolin::PixelFormat& fmt)
 {

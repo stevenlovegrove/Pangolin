@@ -1,5 +1,13 @@
 #include <iostream>
-#include <pangolin/pangolin.h>
+
+#include <pangolin/display/display.h>
+#include <pangolin/display/view.h>
+#include <pangolin/display/widgets.h>
+#include <pangolin/handler/handler.h>
+#include <pangolin/var/var.h>
+#include <pangolin/var/varextra.h>
+#include <pangolin/gl/gl.h>
+#include <pangolin/gl/gldraw.h>
 
 struct CustomType
 {
@@ -34,9 +42,6 @@ void SampleMethod()
 
 int main(/*int argc, char* argv[]*/)
 {  
-  // Load configuration data
-  pangolin::ParseVarsFile("app.cfg");
-
   // Create OpenGL window in single line
   pangolin::CreateWindowAndBind("Main",640,480);
   

@@ -35,7 +35,7 @@
 #undef PixelFormat
 
 // It is impossible to keep up with ffmpeg deprecations, so ignore these warnings.
-#if defined(_GCC_) || defined(_CLANG_)
+#if defined(__GNUC__)
 #  pragma GCC diagnostic ignored "-Wdeprecated"
 #endif
 

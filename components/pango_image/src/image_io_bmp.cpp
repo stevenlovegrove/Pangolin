@@ -64,7 +64,7 @@ TypedImage LoadBmp(std::istream& in)
 
   TypedImage img(w, h, fmt);
 
-  for (int y = (h - 1); y != -1; y--)
+  for (int y = ( (int)h - 1); y != -1; y--)
   {
     char* p_pix = (char*)img.RowPtr(y);
     in.read(p_pix, w * fmt.channels);

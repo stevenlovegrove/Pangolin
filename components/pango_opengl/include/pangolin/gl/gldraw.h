@@ -90,9 +90,9 @@ inline void glDrawVertices(
         PANGO_ENSURE(vertex_ptr != nullptr);
         PANGO_ENSURE(mode != GL_LINES || num_vertices % 2 == 0, "number of vertices (%) must be even in GL_LINES mode", num_vertices );
 
-        glVertexPointer(elements_per_vertex, GlFormatTraits<T>::gltype, vertex_stride_bytes, vertex_ptr);
+        glVertexPointer((GLint)elements_per_vertex, GlFormatTraits<T>::gltype, (GLsizei)vertex_stride_bytes, vertex_ptr);
         glEnableClientState(GL_VERTEX_ARRAY);
-        glDrawArrays(mode, 0, num_vertices);
+        glDrawArrays(mode, 0, (GLsizei)num_vertices);
         glDisableClientState(GL_VERTEX_ARRAY);
     }
 }
@@ -106,7 +106,7 @@ inline void glDrawColoredVertices(
     size_t color_stride_bytes = 0
 ) {
     if(color_ptr) {
-        glColorPointer(elements_per_color, GlFormatTraits<TC>::gltype, color_stride_bytes, color_ptr);
+        glColorPointer((GLint)elements_per_color, GlFormatTraits<TC>::gltype, (GLsizei)color_stride_bytes, color_ptr);
         glEnableClientState(GL_COLOR_ARRAY);
         glDrawVertices<TV>(num_vertices, vertex_ptr, mode, elements_per_vertex, vertex_stride_bytes);
         glDisableClientState(GL_COLOR_ARRAY);

@@ -1,4 +1,8 @@
-#include <pangolin/pangolin.h>
+#include <pangolin/display/display.h>
+#include <pangolin/display/view.h>
+#include <pangolin/gl/gl.h>
+#include <pangolin/gl/gldraw.h>
+#include <pangolin/video/video_input.h>
 
 void RecordSample(const std::string input_uri, const std::string record_uri)
 {

@@ -225,8 +225,8 @@ void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostre
     jpeg_create_compress(&cinfo);
     pango_jpeg_set_dest_mgr(&cinfo, os);
 
-    cinfo.image_width      = img.w;
-    cinfo.image_height     = img.h;
+    cinfo.image_width      = (JDIMENSION)img.w;
+    cinfo.image_height     = (JDIMENSION)img.h;
     cinfo.input_components = fmt.channels;
     if (fmt.channels == 3) {
         cinfo.in_color_space   = JCS_RGB;

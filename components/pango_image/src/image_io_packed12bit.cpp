@@ -14,7 +14,7 @@ struct packed12bit_image_header
 };
 #pragma pack(pop)
 
-void SavePacked12bit(const Image<uint8_t>& image, const pangolin::PixelFormat& fmt, std::ostream& out, int /*compression_level*/)
+void SavePacked12bit(const Image<uint8_t>& image, const pangolin::PixelFormat& fmt, std::ostream& out)
 {
 
   if (fmt.bpp != 16) {
@@ -39,8 +39,10 @@ void SavePacked12bit(const Image<uint8_t>& image, const pangolin::PixelFormat& f
     }
 
   packed12bit_image_header header;
-  strncpy(header.magic,"P12B",4);
-  strncpy(header.fmt, fmt.format.c_str(), sizeof(header.fmt));
+  static_assert (sizeof(header.magic) ==  4, "[bug]");
+  memcpy(header.magic, "P12B", 4);
+  memset(header.fmt, '\0', sizeof(header.fmt));
+  memcpy(header.fmt, fmt.format.c_str(), std::min(sizeof(header.fmt), fmt.format.size()) );
   header.w = image.w;
   header.h = image.h;
   out.write((char*)&header, sizeof(header));

@@ -37,7 +37,7 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #define STBTT_STATIC
 
-#if defined(_GCC_) || defined(_CLANG_)
+#if defined(__GNUC__)
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wunused-function"
 #  include "stb_truetype.h"

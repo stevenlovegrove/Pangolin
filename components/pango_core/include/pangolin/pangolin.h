@@ -27,40 +27,33 @@
 
 #pragma once
 
+// This header is here for compatibility when building
+// all of Pangolin. You are recommended to include only
+// what you need, especially when building without a
+// particular feature, such as GUI for Video, otherwise
+// you'll receive errors.
+
 #include <pangolin/platform.h>
 
-//#ifdef BUILD_PANGOLIN_GUI
-  #include <pangolin/gl/gl.h>
-  #include <pangolin/gl/gldraw.h>
-  #include <pangolin/gl/glvbo.h>
-  #include <pangolin/gl/glstate.h>
-  #include <pangolin/gl/colour.h>
-  #include <pangolin/display/display.h>
-  #include <pangolin/display/view.h>
-  #include <pangolin/display/widgets.h>
-  #include <pangolin/handler/handler.h>
-  #ifdef _ANDROID_
-    #include <pangolin/display/device/display_android.h>
-  #endif
-//  #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-    #include <pangolin/plot/plotter.h>
-//  #endif
-//#endif // BUILD_PANGOLIN_GUI
-
-//#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/varextra.h>
-  #ifdef BUILD_PANGOLIN_GUI
-    #include <pangolin/display/widgets/widgets.h>
-  #endif // BUILD_PANGOLIN_GUI
-//#endif // BUILD_PANGOLIN_VARS
-
-//#ifdef BUILD_PANGOLIN_VIDEO
-  #include <pangolin/video/video.h>
-  #include <pangolin/video/video_input.h>
-  #include <pangolin/video/video_output.h>
-//#endif // BUILD_PANGOLIN_VIDEO
-
+#include <pangolin/display/display.h>
+#include <pangolin/display/view.h>
+#include <pangolin/display/widgets.h>
+#include <pangolin/gl/colour.h>
+#include <pangolin/gl/gl.h>
+#include <pangolin/gl/gldraw.h>
+#include <pangolin/gl/glstate.h>
+#include <pangolin/gl/glvbo.h>
+#include <pangolin/handler/handler.h>
 #include <pangolin/image/image_io.h>
+#include <pangolin/plot/plotter.h>
+#include <pangolin/var/varextra.h>
+#include <pangolin/video/video.h>
+#include <pangolin/video/video_input.h>
+#include <pangolin/video/video_output.h>
+
+#ifdef _ANDROID_
+#  include <pangolin/display/device/display_android.h>
+#endif
 
 // Let other libraries headers know about Pangolin
 #define HAVE_PANGOLIN

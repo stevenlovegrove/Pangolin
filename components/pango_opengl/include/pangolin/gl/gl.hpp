@@ -760,7 +760,7 @@ inline GlBuffer::GlBuffer()
 }
 
 inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
-    : GlBufferData(buffer_type, num_elements * count_per_element * GlDataTypeBytes(datatype), gluse),
+    : GlBufferData(buffer_type, GLuint(num_elements * count_per_element * GlDataTypeBytes(datatype)), gluse),
       datatype(datatype), num_elements(num_elements), count_per_element(count_per_element)
 {
 }
@@ -786,7 +786,7 @@ inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements
     this->datatype = datatype;
     this->num_elements = num_elements;
     this->count_per_element = count_per_element;
-    const GLuint size_bytes = num_elements * count_per_element * GlDataTypeBytes(datatype);
+    const GLuint size_bytes = GLuint(num_elements * count_per_element * GlDataTypeBytes(datatype));
     GlBufferData::Reinitialise(buffer_type, size_bytes, gluse, data);
 }
 

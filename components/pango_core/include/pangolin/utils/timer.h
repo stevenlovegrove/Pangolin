@@ -50,7 +50,7 @@ inline basetime TimeNow()
 inline double Time_s(basetime t)
 {
     using namespace std::chrono;
-    return duration_cast<seconds>( t.time_since_epoch() ).count();
+    return (double)duration_cast<seconds>( t.time_since_epoch() ).count();
 }
 
 inline int64_t Time_us(basetime t)
@@ -113,7 +113,7 @@ struct Timer
     double Elapsed_us()
     {
         basetime currtime = TimeNow();
-        return TimeDiff_us(start,currtime);
+        return (double)TimeDiff_us(start,currtime);
     }
     
     basetime start;

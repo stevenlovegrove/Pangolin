@@ -1,6 +1,10 @@
 #include <limits>
 #include <iostream>
-#include <pangolin/pangolin.h>
+
+#include <pangolin/display/display.h>
+#include <pangolin/display/view.h>
+#include <pangolin/handler/handler.h>
+#include <pangolin/gl/gldraw.h>
 
 void setImageData(unsigned char * imageArray, int size){
   for(int i = 0 ; i < size;i++) {
