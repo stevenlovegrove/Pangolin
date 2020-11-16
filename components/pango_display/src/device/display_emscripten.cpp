@@ -46,6 +46,8 @@ namespace pangolin
 
 extern __thread PangolinGl* context;
 
+constexpr char em_dom_id[] = "#canvas";
+
 int spec_key(const char* key_string){
   if(strlen(key_string)==1){
     return -1;
@@ -182,7 +184,7 @@ std::mutex window_mutex;
       switch(eventType) {
       case EMSCRIPTEN_EVENT_RESIZE:
           int width, height;
-          emscripten_get_canvas_element_size("#canvas", &width, &height);
+          emscripten_get_canvas_element_size(em_dom_id, &width, &height);
           pangolin::process::Resize(width, height);
           break;
       }
@@ -233,73 +235,73 @@ std::mutex window_mutex;
     emscripten_webgl_init_context_attributes(&attr);
     attr.majorVersion = 2;
     attr.minorVersion = 0;
-    ctx = emscripten_webgl_create_context(0, &attr);
+    ctx = emscripten_webgl_create_context(em_dom_id, &attr);
     if( ctx < 0 ) {
       throw std::runtime_error("Pangolin Emscripten: Failed to create window." );
     }
 
-    emscripten_get_canvas_element_size("#canvas", &width, &height);
+    emscripten_get_canvas_element_size(em_dom_id, &width, &height);
 
     PangolinGl::windowed_size[0] = width;
     PangolinGl::windowed_size[1] = height;
 
-    EMSCRIPTEN_RESULT ret = emscripten_set_keypress_callback(0, this, 1, key_callback);
+    EMSCRIPTEN_RESULT ret = emscripten_set_keypress_callback(em_dom_id, this, 1, key_callback);
     TEST(ret);
-    ret = emscripten_set_keydown_callback(0, this, 1, key_callback);
+    ret = emscripten_set_keydown_callback(em_dom_id, this, 1, key_callback);
     TEST(ret);
-    ret = emscripten_set_keyup_callback(0, this, 1, key_callback);
+    ret = emscripten_set_keyup_callback(em_dom_id, this, 1, key_callback);
     TEST(ret);
-    ret = emscripten_set_click_callback(0, this, 1, mouse_callback);
+    ret = emscripten_set_click_callback(em_dom_id, this, 1, mouse_callback);
     TEST(ret);
-    ret = emscripten_set_mousedown_callback(0, this, 1, mouse_callback);
+    ret = emscripten_set_mousedown_callback(em_dom_id, this, 1, mouse_callback);
     TEST(ret);
-    ret = emscripten_set_mouseup_callback(0, this, 1, mouse_callback);
+    ret = emscripten_set_mouseup_callback(em_dom_id, this, 1, mouse_callback);
     TEST(ret);
-    ret = emscripten_set_dblclick_callback(0, this, 1, mouse_callback);
+    ret = emscripten_set_dblclick_callback(em_dom_id, this, 1, mouse_callback);
     TEST(ret);
-    ret = emscripten_set_mousemove_callback(0, this, 1, mouse_callback);
+    ret = emscripten_set_mousemove_callback(em_dom_id, this, 1, mouse_callback);
     TEST(ret);
-    ret = emscripten_set_mouseenter_callback(0, this, 1, mouse_callback);
+    ret = emscripten_set_mouseenter_callback(em_dom_id, this, 1, mouse_callback);
     TEST(ret);
-    ret = emscripten_set_mouseleave_callback(0, this, 1, mouse_callback);
+    ret = emscripten_set_mouseleave_callback(em_dom_id, this, 1, mouse_callback);
     TEST(ret);
-    ret = emscripten_set_mouseover_callback(0, this, 1, mouse_callback);
+    ret = emscripten_set_mouseover_callback(em_dom_id, this, 1, mouse_callback);
     TEST(ret);
-    ret = emscripten_set_mouseout_callback(0, this, 1, mouse_callback);
+    ret = emscripten_set_mouseout_callback(em_dom_id, this, 1, mouse_callback);
     TEST(ret);
-    ret = emscripten_set_wheel_callback(0, this, 1, wheel_callback);
+    ret = emscripten_set_wheel_callback(em_dom_id, this, 1, wheel_callback);
     TEST(ret);
-    ret = emscripten_set_resize_callback(0, this, 1, uievent_callback);
+    ret = emscripten_set_resize_callback(em_dom_id, this, 1, uievent_callback);
     TEST(ret);
-//    ret = emscripten_set_scroll_callback(0, this, 1, uievent_callback);
+//    ret = emscripten_set_scroll_callback(em_dom_id, this, 1, uievent_callback);
 //    TEST(ret);
-    ret = emscripten_set_blur_callback(0, this, 1, focusevent_callback);
+    ret = emscripten_set_blur_callback(em_dom_id, this, 1, focusevent_callback);
     TEST(ret);
-    ret = emscripten_set_focus_callback(0, this, 1, focusevent_callback);
+    ret = emscripten_set_focus_callback(em_dom_id, this, 1, focusevent_callback);
     TEST(ret);
-    ret = emscripten_set_focusin_callback(0, this, 1, focusevent_callback);
+    ret = emscripten_set_focusin_callback(em_dom_id, this, 1, focusevent_callback);
     TEST(ret);
-    ret = emscripten_set_focusout_callback(0, this, 1, focusevent_callback);
+    ret = emscripten_set_focusout_callback(em_dom_id, this, 1, focusevent_callback);
     TEST(ret);
     ret = emscripten_set_deviceorientation_callback(this, 1, deviceorientation_callback);
     TEST(ret);
     ret = emscripten_set_devicemotion_callback(this, 1, devicemotion_callback);
     TEST(ret);
-    //    ret = emscripten_set_orientationchange_callback(0, 1, orientationchange_callback);
+    //    ret = emscripten_set_orientationchange_callback(em_dom_id, 1, orientationchange_callback);
     //TEST(ret);
-    ret = emscripten_set_fullscreenchange_callback(0, this, 1, fullscreenchange_callback);
+    ret = emscripten_set_fullscreenchange_callback(em_dom_id, this, 1, fullscreenchange_callback);
     TEST(ret);
-    ret = emscripten_set_pointerlockchange_callback(0, this, 1, pointerlockchange_callback);
+    ret = emscripten_set_pointerlockchange_callback(em_dom_id, this, 1, pointerlockchange_callback);
     TEST(ret);
     ret = emscripten_set_visibilitychange_callback(this, 1, visibilitychange_callback);
     TEST(ret);
-    ret = emscripten_set_touchstart_callback(0, this, 1, touch_callback);
+    ret = emscripten_set_touchstart_callback(em_dom_id, this, 1, touch_callback);
     TEST(ret);
-    ret = emscripten_set_touchend_callback(0, this, 1, touch_callback);
+    ret = emscripten_set_touchend_callback(em_dom_id, this, 1, touch_callback);
     TEST(ret);
-    ret = emscripten_set_touchmove_callback(0, this, 1, touch_callback);
+    ret = emscripten_set_touchmove_callback(em_dom_id, this, 1, touch_callback);
     TEST(ret);
-    ret = emscripten_set_touchcancel_callback(0, this, 1, touch_callback);
+    ret = emscripten_set_touchcancel_callback(em_dom_id, this, 1, touch_callback);
     TEST(ret);
     ret = emscripten_set_gamepadconnected_callback(this, 1, gamepad_callback);
     TEST(ret);
@@ -311,9 +313,9 @@ std::mutex window_mutex;
     //TEST(ret);
     // ret = emscripten_set_batterylevelchange_callback(0, battery_callback);
     //TEST(ret);
-    ret = emscripten_set_webglcontextlost_callback(0, this, 1, webglcontext_callback);
+    ret = emscripten_set_webglcontextlost_callback(em_dom_id, this, 1, webglcontext_callback);
     TEST(ret);
-    ret = emscripten_set_webglcontextrestored_callback(0, this, 1, webglcontext_callback);
+    ret = emscripten_set_webglcontextrestored_callback(em_dom_id, this, 1, webglcontext_callback);
     TEST(ret);
 
     EM_ASM(Module['noExitRuntime'] = true);
@@ -341,7 +343,7 @@ std::mutex window_mutex;
 
   void EmscriptenWindow::Resize(unsigned int w, unsigned int h)
   {
-      emscripten_set_canvas_element_size("#canvas", w, h);
+      emscripten_set_canvas_element_size(em_dom_id, w, h);
   }
   
   void EmscriptenWindow::ProcessEvents(){

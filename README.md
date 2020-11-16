@@ -19,7 +19,7 @@ and IOS.
 
 Find the latest version on [Github](http://github.com/stevenlovegrove/Pangolin):
 
-```
+```bash
 git clone https://github.com/stevenlovegrove/Pangolin.git
 ```
 
@@ -90,7 +90,7 @@ Check the CMake configure output for details.
 Pangolin uses the CMake portable pre-build tool. To checkout and build pangolin in the
 directory 'build', execute the following at a shell (or the equivelent using a GUI):
 
-```
+```bash
 git clone https://github.com/stevenlovegrove/Pangolin.git
 cd Pangolin
 mkdir build
@@ -102,7 +102,7 @@ cmake --build .
 If you would like to build the documentation and you have Doxygen installed, you
 can execute:
 
-```
+```bash
 cmake --build . --target pangolin_doc
 ```
 
@@ -132,14 +132,14 @@ Pangolin python bindings are enabled via [pybind11](www.pybind11.com). These bin
 
 To enable the bindings, you must checkout the pybind submodule. To use pangolin in python, it's recommend to install a few other python packages too:
 
-```
+```bash
 sudo python -mpip install numpy pyopengl Pillow pybind11
 git submodule init && git submodule update
 ```
 
 The python module pypangolin must be on your python path, either through installation, or by setting it explicitly:
 
-```
+```python
 import sys
 sys.path.append('path/of/pypangolin.so')
 ```
@@ -148,7 +148,7 @@ sys.path.append('path/of/pypangolin.so')
 
 Pangolin uses 'URI' syntax for modularising video drivers and windowing backends. The syntax follows along the lines of `module_name:[option1=value1,option2=value2,...]//module_resource_to_open`. Some examples for using this URI syntax with the VideoViewer tool is as follows:
 
-```
+```bash
 VideoViewer test://
 VideoViewer uvc:[size=640x480]///dev/video0
 VideoViewer flip://debayer:[tile=rggb,method=downsample]//file://~/somefile.pango
@@ -159,7 +159,7 @@ Notice that for video, some modules support chaining to construct a simple filte
 For windowing, you can also customize default arguments for Pangolin applications by setting the `PANGOLIN_WINDOW_URI` environment variable. For instance, on high-DPI screens (in this example on OSX), you could set:
 
 
-```
+```bash
 setenv PANGOLIN_WINDOW_URI "cocoa:[HIGHRES=true]//"
 ```
 
@@ -171,7 +171,7 @@ Emscripten is a neat c++ compiler which can output javascript executable code. T
 
 Follow Emscriptens instructions to install the SDK (summerized below):
 
-```
+```bash
 mkdir ~/tools && cd ~/tools
 git clone https://github.com/emscripten-core/emsdk.git
 cd emsdk && ./emsdk install latest && ./emsdk activate latest
@@ -179,11 +179,11 @@ cd emsdk && ./emsdk install latest && ./emsdk activate latest
 
 To build Pangolin with the Emscripten toolchain, create a new build directory, make sure Emscripten is on your PATH, and use the `emconfigure` utility to run CMake with the custom toolchain settings:
 
-```
+```bash
 cd ~/code/Pangolin
 mkdir build-em && cd build-em
 source ~/tools/emsdk/emsdk_env.sh
-emconfigure
+emcmake cmake ..
 ```
 
 ## Acknowledgements ##
@@ -192,6 +192,6 @@ I'd like to thank the growing number of kind contributors to Pangolin for helpin
 
 For a summary of those who have made code contributions, execute:
 
-```
+```bash
 git shortlog -sne
 ```
