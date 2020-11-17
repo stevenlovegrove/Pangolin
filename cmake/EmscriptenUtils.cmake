@@ -7,7 +7,7 @@ if(EMSCRIPTEN)
     <title>${prog_name}</title>
 </head>
 <body oncontextmenu=\"return false;\">
-    <canvas id=\"canvas\"></canvas>
+    <canvas id=\"canvas\" tabindex=-1></canvas>
     <script type=\"text/javascript\">
         var canvas = document.getElementById(\"canvas\");
         canvas.width = window.innerWidth;
@@ -15,7 +15,6 @@ if(EMSCRIPTEN)
         var Module = {};
         Module.canvas = canvas;
         Module.arguments = ['test://'];
-        console.log(\"test\");
         window.onerror = function(message, source, lineno, colno, error) {
           console.log(Module.pango_get_exception_message(error));
           return false;

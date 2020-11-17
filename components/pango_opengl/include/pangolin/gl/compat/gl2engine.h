@@ -43,7 +43,6 @@ public:
             "attribute vec3 a_normal;\n"
             "attribute vec2 a_texcoord;\n"
             "uniform vec4 u_color;\n"
-            "uniform mat4 u_modelViewMatrix;\n"
             "uniform mat4 u_modelViewProjectionMatrix;\n"
             "varying vec4 v_frontColor;\n"
             "varying vec2 v_texcoord;\n"
@@ -85,7 +84,6 @@ public:
 
         // Save locations of uniforms
         u_color = prog_fixed.GetUniformHandle("u_color");
-        u_modelViewMatrix = prog_fixed.GetUniformHandle("u_modelViewMatrix");
         u_modelViewProjectionMatrix = prog_fixed.GetUniformHandle("u_modelViewProjectionMatrix");
         u_texture = prog_fixed.GetUniformHandle("u_texture");
         u_textureEnable = prog_fixed.GetUniformHandle("u_textureEnable");
@@ -99,7 +97,6 @@ public:
     {
         OpenGlMatrix pmv = projection.top() * modelview.top();
         prog_fixed.SaveBind();
-        glUniformMatrix4fv( u_modelViewMatrix, 1, false, modelview.top().m );
         glUniformMatrix4fv( u_modelViewProjectionMatrix, 1, false, pmv.m );
         prog_fixed.Unbind();
     }
@@ -130,7 +127,6 @@ public:
     GlSlProgram  prog_fixed;
 
     GLint u_color;
-    GLint u_modelViewMatrix;
     GLint u_modelViewProjectionMatrix;
     GLint u_texture;
     GLint u_textureEnable;
