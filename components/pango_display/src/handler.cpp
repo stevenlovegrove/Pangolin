@@ -143,15 +143,6 @@ void HandlerBase3D::GetPosNormalImpl(pangolin::View& view, int winx, int winy, G
     const int zl = (hwin*2+1);
     const int zsize = zl*zl;
 
-#ifndef HAVE_GLES
-    GLint readid = 0;
-    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readid);
-    // Choose attachment based on the bound framebuffer since GL_FRONT doesn't exist for FBOs
-    glReadBuffer(readid == 0 ? GL_FRONT : GL_COLOR_ATTACHMENT0);
-    glReadPixels(winx-hwin,winy-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
-#else
-    std::fill(zs,zs+zsize, 1);
-#endif
     GLfloat mindepth = *(std::min_element(zs,zs+zsize));
     if(mindepth == 1) mindepth = (GLfloat)default_z;
 
@@ -190,9 +181,10 @@ void HandlerBase3D::GetPosNormal(pangolin::View& view, int winx, int winy, GLpre
     const int zsize = zl*zl;
     GLfloat zs[zsize];
 
-    CheckGlDieOnError();
-    glReadBuffer(GL_FRONT);
-    CheckGlDieOnError();
+    GLint readid = 0;
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readid);
+    // Choose attachment based on the bound framebuffer since GL_FRONT doesn't exist for FBOs
+    glReadBuffer(readid == 0 ? GL_FRONT : GL_COLOR_ATTACHMENT0);
     glReadPixels(winx-hwin,winy-hwin,zl,zl,GL_DEPTH_COMPONENT,GL_FLOAT,zs);
     GetPosNormalImpl(view, winx, winy, p, Pw, Pc, nw, default_z, zs);
 }
@@ -419,12 +411,18 @@ Handler3DBlitCopy::Handler3DBlitCopy(pangolin::OpenGlRenderState& cam_state, pan
 
 void Handler3DBlitCopy::GetPosNormal(pangolin::View& view, int winx, int winy, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision n[3], GLprecision default_z)
 {
-    // Go around the houses so we can get depth data
+    // Go around the houses so we can get depth data...
+    // With GLES3 / WebGL 2.0, we can't read from the depth buffer or download ROI's of GL textures
+    // The process below is the simplest I could make work that avoids a large GPU -> CPU download.
+
     const int w = pangolin::DisplayBase().v.w;
     const int h = pangolin::DisplayBase().v.h;
 
+    GLint num_bits;
+    glGetIntegerv(GL_DEPTH_BITS, &num_bits);
+
     // Make sure our buffers are the right size for the current screen buffer
-    if(!rgb.IsValid() || rgb.width != w || rgb.height != h)
+    if(!depth_blit.IsValid() || depth_blit.width != w || depth_blit.height != h)
     {
         // Reinitialize all buffers
         fb_blit.Reinitialise();

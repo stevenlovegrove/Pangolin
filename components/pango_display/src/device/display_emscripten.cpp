@@ -118,8 +118,6 @@ int mod_key(const char* key_string, bool pressed){
 std::mutex window_mutex;
 
 EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *userData){
-    std::cout << "key_callback" << std::endl;
-
     EmscriptenWindow* w=(EmscriptenWindow*)userData;
     if(eventType==EMSCRIPTEN_EVENT_KEYPRESS)return false;
     int key = mod_key(e->key, eventType==EMSCRIPTEN_EVENT_KEYDOWN?true:false);
@@ -185,7 +183,6 @@ EM_BOOL wheel_callback(int eventType, const EmscriptenWheelEvent *e, void *userD
     return true;
 }
 EM_BOOL uievent_callback(int eventType, const EmscriptenUiEvent *e, void *userData){
-    std::cout << "uievent_callback" << std::endl;
     switch(eventType) {
     case EMSCRIPTEN_EVENT_RESIZE:
         int width, height;
@@ -194,42 +191,6 @@ EM_BOOL uievent_callback(int eventType, const EmscriptenUiEvent *e, void *userDa
         break;
     }
     return true;
-}
-EM_BOOL focusevent_callback(int eventType, const EmscriptenFocusEvent *e, void *userData){
-    return false;
-}
-EM_BOOL deviceorientation_callback(int eventType, const EmscriptenDeviceOrientationEvent *e, void *userData){
-    return false;
-}
-EM_BOOL devicemotion_callback(int eventType, const EmscriptenDeviceMotionEvent *e, void *userData){
-    return false;
-}
-EM_BOOL orientationchange_callback(int eventType, const EmscriptenOrientationChangeEvent *e, void *userData){
-    return false;
-}
-EM_BOOL fullscreenchange_callback(int eventType, const EmscriptenFullscreenChangeEvent *e, void *userData){
-    return false;
-}
-EM_BOOL pointerlockchange_callback(int eventType, const EmscriptenPointerlockChangeEvent *e, void *userData){
-    return false;
-}
-EM_BOOL visibilitychange_callback(int eventType, const EmscriptenVisibilityChangeEvent *e, void *userData){
-    return false;
-}
-EM_BOOL touch_callback(int eventType, const EmscriptenTouchEvent *e, void *userData){
-    return false;
-}
-EM_BOOL gamepad_callback(int eventType, const EmscriptenGamepadEvent *e, void *userData){
-    return false;
-}
-const char *beforeunload_callback(int eventType, const void *reserved, void *userData){
-    return nullptr; // "Are You sure?";
-}
-EM_BOOL battery_callback(int eventType, const EmscriptenBatteryEvent *e, void *userData){
-    return true;
-}
-EM_BOOL webglcontext_callback(int eventType, const void *reserved, void *userData){
-    return false;
 }
 
 #define TEST(error) if(error!=EMSCRIPTEN_RESULT_SUCCESS)std::cerr << "error: " << __FILE__<< ":" << __LINE__ << std::endl
@@ -240,10 +201,14 @@ EmscriptenWindow:: EmscriptenWindow(const std::string& /*title*/, int width, int
     emscripten_webgl_init_context_attributes(&attr);
     attr.majorVersion = 2;
     attr.minorVersion = 0;
+    attr.stencil = true;
+    attr.depth = true;
     ctx = emscripten_webgl_create_context(em_dom_id, &attr);
     if( ctx < 0 ) {
         throw std::runtime_error("Pangolin Emscripten: Failed to create window." );
     }
+    // Try to enable some extensions we'll probably need.
+    emscripten_webgl_enable_extension(ctx, "EXT_float_blend");
 
     emscripten_get_canvas_element_size(em_dom_id, &width, &height);
 
@@ -279,53 +244,11 @@ EmscriptenWindow:: EmscriptenWindow(const std::string& /*title*/, int width, int
     TEST(ret);
     ret = emscripten_set_resize_callback(em_dom_id, this, 1, uievent_callback);
     TEST(ret);
-    //    ret = emscripten_set_scroll_callback(em_dom_id, this, 1, uievent_callback);
-    //    TEST(ret);
-    ret = emscripten_set_blur_callback(em_dom_id, this, 1, focusevent_callback);
-    TEST(ret);
-    ret = emscripten_set_focus_callback(em_dom_id, this, 1, focusevent_callback);
-    TEST(ret);
-    ret = emscripten_set_focusin_callback(em_dom_id, this, 1, focusevent_callback);
-    TEST(ret);
-    ret = emscripten_set_focusout_callback(em_dom_id, this, 1, focusevent_callback);
-    TEST(ret);
-    ret = emscripten_set_deviceorientation_callback(this, 1, deviceorientation_callback);
-    TEST(ret);
-    ret = emscripten_set_devicemotion_callback(this, 1, devicemotion_callback);
-    TEST(ret);
-    //    ret = emscripten_set_orientationchange_callback(em_dom_id, 1, orientationchange_callback);
-    //TEST(ret);
-    ret = emscripten_set_fullscreenchange_callback(em_dom_id, this, 1, fullscreenchange_callback);
-    TEST(ret);
-    ret = emscripten_set_pointerlockchange_callback(em_dom_id, this, 1, pointerlockchange_callback);
-    TEST(ret);
-    ret = emscripten_set_visibilitychange_callback(this, 1, visibilitychange_callback);
-    TEST(ret);
-    ret = emscripten_set_touchstart_callback(em_dom_id, this, 1, touch_callback);
-    TEST(ret);
-    ret = emscripten_set_touchend_callback(em_dom_id, this, 1, touch_callback);
-    TEST(ret);
-    ret = emscripten_set_touchmove_callback(em_dom_id, this, 1, touch_callback);
-    TEST(ret);
-    ret = emscripten_set_touchcancel_callback(em_dom_id, this, 1, touch_callback);
-    TEST(ret);
-    ret = emscripten_set_gamepadconnected_callback(this, 1, gamepad_callback);
-    TEST(ret);
-    ret = emscripten_set_gamepaddisconnected_callback(this, 1, gamepad_callback);
-    TEST(ret);
-    ret = emscripten_set_beforeunload_callback(this, beforeunload_callback);
-    TEST(ret);
-    //ret = emscripten_set_batterychargingchange_callback(0, battery_callback);
-    //TEST(ret);
-    // ret = emscripten_set_batterylevelchange_callback(0, battery_callback);
-    //TEST(ret);
-    ret = emscripten_set_webglcontextlost_callback(em_dom_id, this, 1, webglcontext_callback);
-    TEST(ret);
-    ret = emscripten_set_webglcontextrestored_callback(em_dom_id, this, 1, webglcontext_callback);
-    TEST(ret);
 
     EM_ASM(Module['noExitRuntime'] = true);
 }
+
+#undef TEST
 
 EmscriptenWindow::~ EmscriptenWindow()
 {
