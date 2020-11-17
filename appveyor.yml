@@ -10,7 +10,7 @@ build:
   project: c:/projects/Pangolin/build/Pangolin.sln 
 
 install:
-  - cmd: vcpkg install glew eigen3 libjpeg-turbo libpng openexr tiff --triplet x64-windows
+  - cmd: vcpkg install glew eigen3 libjpeg-turbo libpng openexr tiff ffmpeg --triplet x64-windows
   
 before_build:
   - cd c:/projects/Pangolin

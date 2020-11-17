@@ -14,6 +14,15 @@ if(EMSCRIPTEN)
         canvas.height = window.innerHeight;
         var Module = {};
         Module.canvas = canvas;
+        Module.arguments = ['test://'];
+        console.log(\"test\");
+        window.onerror = function(message, source, lineno, colno, error) {
+          console.log(Module.pango_get_exception_message(error));
+          return false;
+        };
+        window.addEventListener(\"unhandledrejection\", function(promiseRejectionEvent) {
+            console.log(Module.pango_get_exception_message(promiseRejectionEvent.reason));
+        });
     </script>
     <script type=\"text/javascript\" src=\"${prog_name}.js\"></script>
 </body>

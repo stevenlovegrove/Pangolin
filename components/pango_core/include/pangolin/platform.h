@@ -42,7 +42,6 @@
 
 #ifdef _MSC_VER
 #   define __thread __declspec(thread)
-#   include <pangolin/pangolin_export.h>
 #else
 #   define PANGOLIN_EXPORT
 #endif //_MSVC_
@@ -56,8 +55,10 @@
 #endif
 
 // Workaround for Apple-Clangs lack of thread_local support
-#if defined(__clang__) && !__has_feature(cxx_thread_local)
-#   define PANGO_NO_THREADLOCAL
+#if defined(__clang__)
+#  if !__has_feature(cxx_thread_local)
+#    define PANGO_NO_THREADLOCAL
+#  endif
 #endif
 
 #include <pangolin/utils/assert.h>

@@ -377,3 +377,13 @@ std::mutex window_mutex;
   }
 
 }
+
+#include <emscripten/bind.h>
+
+std::string pango_get_exception_message(intptr_t exceptionPtr) {
+  return std::string(reinterpret_cast<std::exception *>(exceptionPtr)->what());
+}
+
+EMSCRIPTEN_BINDINGS(Bindings) {
+  emscripten::function("pango_get_exception_message", &pango_get_exception_message);
+};

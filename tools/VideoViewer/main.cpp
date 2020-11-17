@@ -37,9 +37,9 @@ int main( int argc, char* argv[] )
         }
     }else{
         const std::string input_uris[] = {
-            "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
             "convert:[fmt=RGB24]//v4l:///dev/video0",
             "convert:[fmt=RGB24]//v4l:///dev/video1",
+            "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
             "openni:[img1=rgb]//",
             "test:[size=160x120,n=1,fmt=RGB24]//"
             ""
@@ -54,7 +54,7 @@ int main( int argc, char* argv[] )
                 pango_print_info("Trying: %s\n", input_uris[i].c_str());
                 pangolin::RunVideoViewerUI(input_uris[i], dflt_output_uri);
                 return 0;
-            }catch(const pangolin::VideoException &e) {
+            }catch(const std::exception &e) {
               std::cout << e.what() << std::endl;
             }
         }

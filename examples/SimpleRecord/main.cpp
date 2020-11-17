@@ -57,9 +57,11 @@ int main( int argc, char* argv[] )
     std::string record_uri = "ffmpeg:[fps=30,bps=8388608]//video.avi";
 
     std::string input_uris[] = {
-        "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
         "convert:[fmt=RGB24]//v4l:///dev/video0",
         "convert:[fmt=RGB24]//v4l:///dev/video1",
+        "dc1394:[fps=30,dma=10,size=640x480,iso=400]//0",
+        "openni:[img1=rgb]//",
+        "test:[size=160x120,n=1,fmt=RGB24]//"
         ""
     };
 
@@ -89,7 +91,7 @@ int main( int argc, char* argv[] )
                 std::cout << "Trying: " << input_uris[i] << std::endl;
                 RecordSample(input_uris[i], record_uri);
                 return 0;
-            }catch(const pangolin::VideoException&) {}
+            }catch(const std::exception&) {}
         }
     }
 
