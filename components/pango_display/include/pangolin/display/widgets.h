@@ -130,11 +130,15 @@ struct PANGOLIN_EXPORT TextInput : public Widget<std::string>
 
     //Cache params on resize
     void ResizeChildren();
+    void CalcVisibleEditPart();
     GlText gltext;
-    GLfloat raster[2];
     bool can_edit;
     bool do_edit;
     int sel[2];
+    GLfloat vertical_margin;
+    GLfloat horizontal_margin = 2.f;
+    int input_width;
+    int edit_visible_part[2] = {0,1};
 };
 
 
