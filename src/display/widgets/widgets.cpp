@@ -68,6 +68,11 @@ static inline int tab_h()
     return (int)(font().Height() * 1.4);
 }
 
+static inline float x_width()
+{
+  return font().Text("x").Width();
+}
+
 std::mutex display_mutex;
 
 template<typename T>
@@ -510,7 +515,7 @@ void Slider::Render()
 TextInput::TextInput(std::string title, VarValueGeneric& tv)
     : Widget<std::string>(title+":", tv), can_edit(!(tv.Meta().flags & META_FLAG_READONLY)), do_edit(false)
 {
-    top = 1.0; bottom = Attach::Pix(-tab_h());
+    top = 1.0; bottom = Attach::Pix(-2 * tab_h());
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
@@ -579,6 +584,7 @@ void TextInput::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pr
             sel[0]++;
             sel[1]++;
         }
+        CalcVisibleEditPart();
     }
 }
 
@@ -589,17 +595,18 @@ void TextInput::Mouse(View& /*view*/, MouseButton button, int x, int /*y*/, bool
         
         if(do_edit)
         {
-            const int sl = (int)gledit.Width() + 2;
+            const int sl = (int)gledit.Width() + vertical_margin;
             const int rl = v.l + v.w - sl;
-            int ep = (int)edit.length();
+            std::string edit_visible = edit.substr(edit_visible_part[0], edit_visible_part[1]);
+            int ep = (int)edit_visible.length();
             
             if( x < rl )
             {
                 ep = 0;
             }else{
-                for( unsigned i=0; i<edit.length(); ++i )
+                for( unsigned i=0; i<edit_visible.length(); ++i )
                 {
-                    const int tl = (int)(rl + font().Text(edit.substr(0,i)).Width());
+                    const int tl = (int)(rl + font().Text(edit_visible.substr(0,i)).Width());
                     if(x < tl+2)
                     {
                         ep = i;
@@ -609,9 +616,9 @@ void TextInput::Mouse(View& /*view*/, MouseButton button, int x, int /*y*/, bool
             }
             if(pressed)
             {
-                sel[0] = sel[1] = ep;
+                sel[0] = sel[1] = ep + edit_visible_part[0];
             }else{
-                sel[1] = ep;
+                sel[1] = ep + edit_visible_part[0];
             }
             
             if(sel[0] > sel[1])
@@ -630,7 +637,8 @@ void TextInput::MouseMotion(View&, int x, int /*y*/, int /*mouse_state*/)
     {
         const int sl = (int)gledit.Width() + 2;
         const int rl = v.l + v.w - sl;
-        int ep = (int)edit.length();
+        std::string edit_visible = edit.substr(edit_visible_part[0], edit_visible_part[1]);
+        int ep = (int)edit_visible.length();
         
         if( x < rl )
         {
@@ -638,7 +646,7 @@ void TextInput::MouseMotion(View&, int x, int /*y*/, int /*mouse_state*/)
         }else{
             for( unsigned i=0; i<edit.length(); ++i )
             {
-                const int tl = (int)(rl + font().Text(edit.substr(0,i)).Width());
+                const int tl = (int)(rl + font().Text(edit_visible.substr(0,i)).Width());
                 if(x < tl+2)
                 {
                     ep = i;
@@ -647,46 +655,65 @@ void TextInput::MouseMotion(View&, int x, int /*y*/, int /*mouse_state*/)
             }
         }
         
-        sel[1] = ep;
+        sel[1] = ep + edit_visible_part[0];
     }
 }
 
 
 void TextInput::ResizeChildren()
 {
-    raster[0] = v.l + 2.0f;
-    raster[1] = v.b + (v.h-gltext.Height()) / 2.0f;
+    vertical_margin = (v.h-2.f*gltext.Height()) / 4.0f;
+    input_width = v.w - 2 * horizontal_margin;
+    int max_possible_chars = floor(input_width / x_width());
+    edit_visible_part[1] = max_possible_chars;
+    CalcVisibleEditPart();
 }
+
+void TextInput::CalcVisibleEditPart()
+{
+    edit_visible_part[0] =  0;
+
+    if(font().Text(edit).Width() > input_width)
+    {
+      if(sel[1] >= 0 )
+      {
+        edit_visible_part[0] = max(0, sel[1] - edit_visible_part[1]);
+      }
+    }
+};
 
 void TextInput::Render()
 {
     if(!do_edit) edit = var->Get();
 
-    gledit = font().Text(edit);
+    Viewport input_v(v.l,v.b,v.w,v.h / 2);
     
     glColor4fv(colour_fg);
-    if(can_edit) glRect(v);
-    
-    const int sl = (int)gledit.Width() + 2;
+    if(can_edit) glRect(input_v);
+
+    std::string edit_visible = edit.substr(edit_visible_part[0], edit_visible_part[1]);
+    gledit = font().Text(edit_visible);
+
+    const int sl = (int)gledit.Width() + horizontal_margin;
     const int rl = v.l + v.w - sl;
 
     if( do_edit && sel[0] >= 0)
     {
-        const int tl = (int)(rl + font().Text(edit.substr(0,sel[0])).Width());
-        const int tr = (int)(rl + font().Text(edit.substr(0,sel[1])).Width());
+        const int tl = (int)(rl + font().Text(edit_visible.substr(0,sel[0] - edit_visible_part[0])).Width());
+        const int tr = (int)(rl + font().Text(edit_visible.substr(0,sel[1] - edit_visible_part[0])).Width());
         glColor4fv(colour_dn);
-        glRect(Viewport(tl,v.b,tr-tl,v.h));
+        glRect(Viewport(tl,input_v.b,tr-tl,input_v.h));
 
         glColor4fv(colour_tx);
-        GLfloat caret[4] = {(float) tr, (float) v.b, (float) tr, (float) v.b + v.h};
+        GLfloat caret[4] = {(float) tr, (float) input_v.b, (float) tr, (float) input_v.b + input_v.h};
         glLine(caret);
     }
 
     glColor4fv(colour_tx);
-    gltext.DrawWindow(raster[0], raster[1]);
+    gltext.DrawWindow(v.l + horizontal_margin, v.b + gltext.Height() + 3.f * vertical_margin);
 
-    gledit.DrawWindow((GLfloat)(rl), raster[1]);
-    if(can_edit) DrawShadowRect(v);
+    gledit.DrawWindow((GLfloat)(rl), input_v.b + vertical_margin);
+    if(can_edit) DrawShadowRect(input_v);
 }
 
 }
