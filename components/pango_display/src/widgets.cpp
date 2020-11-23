@@ -106,6 +106,14 @@ void GuiVarChanged( Var<T>& var)
     }
 }
 
+void glLine(GLfloat vs[4])
+{
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, vs);
+    glDrawArrays( GL_LINE_STRIP, 0, 2);
+    glDisableClientState(GL_VERTEX_ARRAY);
+}
+
 void glRect(Viewport v)
 {
     GLfloat vs[] = { (float)v.l,(float)v.b,
@@ -703,6 +711,10 @@ void TextInput::Render()
         const int tr = (int)(rl + default_font().Text(edit.substr(0,sel[1])).Width());
         glColor4fv(colour_dn);
         glRect(Viewport(tl,v.b,tr-tl,v.h));
+
+        glColor4fv(colour_tx);
+        GLfloat caret[4] = {(float) tr, (float) v.b, (float) tr, (float) v.b + v.h};
+        glLine(caret);
     }
 
     glColor4fv(colour_tx);
