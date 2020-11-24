@@ -1,29 +1,26 @@
-sudo: required
+# Defaults
+os: linux
 dist: focal
-
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt -qq update ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt install -qq --no-install-suggests --no-install-recommends libeigen3-dev libgl1-mesa-dev libglew-dev libc++-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions && pyenv global system 3.8; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update       ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install glew ; fi
-
 language: cpp
 
-matrix:
+jobs:
   include:
-    - os: linux
-      compiler: gcc
-      env: PARALLEL_BUILD="-- -j 8"
-    - os: linux
-      compiler: clang
-      env: PARALLEL_BUILD="-- -j 8"
+    # Native jobs
+    - compiler: gcc
+    - compiler: clang
     - os: osx
-      env: PARALLEL_BUILD="-- -j 8"
-#    - os: windows
-#      env: PARALLEL_BUILD="--parallel 8"
+    # emscripten job
+    - language: node_js
+      node_js: node
+      before_install:
+        - docker run -dit --name emscripten -v $(pwd):/src emscripten/emsdk:latest bash
+      script:
+        - docker exec -it emscripten bash scripts/build_emscripten.sh
+
+before_install:
+  - ./scripts/install_prerequisites.sh -v -u -m "apt-get brew"
 
 script:
   - mkdir build && cd build
   - cmake -D CMAKE_BUILD_TYPE=Release ..
-  - cmake --build . $PARALLEL_BUILD
+  - cmake --build . -j 8
