@@ -1,0 +1,81 @@
+name: Build
+
+on: [push]
+
+env:
+  BUILD_TYPE: Release
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-11.0]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Dependencies
+      run: $GITHUB_WORKSPACE/scripts/install_prerequisites.sh -v -m "apt-get brew"
+
+    - name: Create Build Directory
+      run: cmake -E make_directory ${{runner.workspace}}/build
+
+    - name: Configure CMake
+      working-directory: ${{runner.workspace}}/build
+      run: cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE $GITHUB_WORKSPACE
+
+    - name: Build
+      working-directory: ${{runner.workspace}}/build
+      run: cmake --build . --config $BUILD_TYPE
+
+  emscripten:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: pangolin
+
+    - uses: actions/checkout@v2
+      with:
+        path: eigen
+        repository: 'libigl/eigen'
+
+    - name: Create Build Directories
+      run: |
+        cmake -E make_directory ${{runner.workspace}}/eigen-build
+        cmake -E make_directory ${{runner.workspace}}/pangolin-build
+
+    - name: Start Emscripten Docker
+      run: docker run -dit --name emscripten -v ${{runner.workspace}}:/src emscripten/emsdk:latest bash
+
+    - name: Configure Eigen
+      run: docker exec -t -w /src/eigen-build emscripten cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE /src/Pangolin/eigen
+
+    - name: Configure Pangolin
+      run: docker exec -t -w /src/pangolin-build emscripten emcmake cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DEigen3_DIR=/src/eigen-build /src/Pangolin/pangolin
+
+    - name: Build Pangolin
+      run: docker exec -t -w /src/pangolin-build emscripten cmake --build .
+
+    - name: Copy Examples to www folder
+      run: |
+        mkdir -p ${{runner.workspace}}/www/emscripten
+        rsync -zarvm --include="*/" --include="*.html" --include="*.js" --include="*.wasm" --exclude="*" ${{runner.workspace}}/pangolin-build/examples ${{runner.workspace}}/www/emscripten
+
+    - name: Deploy Examples to GitHub Pages
+      if: success()
+      uses: crazy-max/ghaction-github-pages@v2.2.0
+      with:
+        target_branch: gh-pages
+        keep_history: true
+        # build_dir path relative to ${{runner.workspace}}/Pangolin
+        build_dir: ../www
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
