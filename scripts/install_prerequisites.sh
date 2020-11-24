@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+# exit when any command fails
+set -e
 
 MANAGERS=(dnf apt-get port vcpkg brew)
 MANAGER=""
@@ -79,20 +82,20 @@ if ((VERBOSE > 0)); then echo "Using \"$MANAGER\" package manager (select anothe
 if [[ "$MANAGER" == "apt-get" ]]; then
     PKGS_UPDATE="apt-get -qq update"
     PKGS_OPTIONS+=(install --no-install-suggests --no-install-recommends)
-    if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run) fi
-    if ((VERBOSE = 0)); then PKGS_OPTIONS+=(--qq) fi
+    if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
+    if ((VERBOSE = 0)); then PKGS_OPTIONS+=(--qq); fi
     PKGS_REQUIRED+=(libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev)
     PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev libjpeg-turbo-dev libpng-dev cmake)
 elif [[ "$MANAGER" == "port" ]]; then
     PKGS_UPDATE="port selfupdate -q"
-    PKGS_OPTIONS+=(install -q)
-    if ((DRYRUN > 0));  then PKGS_OPTIONS+=(-y) fi
-    if ((VERBOSE = 0)); then PKGS_OPTIONS+=(--q) fi
-    PKGS_REQUIRED+=(glew eigen3-devel libjpeg-turbo libpng cmake+gui)
+    PKGS_OPTIONS+=(-N install -q)
+    if ((DRYRUN > 0));  then PKGS_OPTIONS+=(-y); fi
+    if ((VERBOSE = 0)); then PKGS_OPTIONS+=(--q); fi
+    PKGS_REQUIRED+=(glew eigen3-devel libjpeg-turbo libpng cmake)
 elif [[ "$MANAGER" == "brew" ]]; then
     PKGS_UPDATE="brew update"
     PKGS_OPTIONS+=(install)
-    if ((VERBOSE > 0)); then PKGS_OPTIONS+=(--verbose) fi
+    if ((VERBOSE > 0)); then PKGS_OPTIONS+=(--verbose); fi
     PKGS_REQUIRED+=(glew eigen jpeg-turbo libpng cmake)
 else
     echo "Error: Don't know how to use \"$MANAGER\", please fix the script." >&2

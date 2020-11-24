@@ -13,7 +13,7 @@ jobs:
     - language: node_js
       node_js: node
       before_install:
-        - docker run -dit --name emscripten -v $(pwd):/src emscripten/emsdk:latest bash
+        - docker run -dit --name emscripten -v $TRAVIS_BUILD_DIR:/src emscripten/emsdk:latest bash
       script:
         - docker exec -it emscripten bash scripts/build_emscripten.sh
 
