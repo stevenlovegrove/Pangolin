@@ -1,0 +1,25 @@
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+    <title>SimpleDisplayImage</title>
+</head>
+<body oncontextmenu="return false;">
+    <canvas id="canvas" tabindex=-1></canvas>
+    <script type="text/javascript">
+        var canvas = document.getElementById("canvas");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        var Module = {};
+        Module.canvas = canvas;
+        Module.arguments = ['test://'];
+        window.onerror = function(message, source, lineno, colno, error) {
+          console.log(Module.pango_get_exception_message(error));
+          return false;
+        };
+        window.addEventListener("unhandledrejection", function(promiseRejectionEvent) {
+            console.log(Module.pango_get_exception_message(promiseRejectionEvent.reason));
+        });
+    </script>
+    <script type="text/javascript" src="SimpleDisplayImage.js"></script>
+</body>
+</html>
