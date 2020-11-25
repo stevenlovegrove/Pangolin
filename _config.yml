@@ -1,10 +1,9 @@
 # Site settings
 title: Pangolin
 email: stevenlovegrove@gmail.com
-description: > 
-  Pangolin C++ Library Homepage
+description: Pangolin C++ Library Homepage
+url: "https://stevenlovegrove.github.io"
 baseurl: "/Pangolin"
-url: "https://stevenlovegrove.github.io/Pangolin"
 twitter_username: stevenjl
 github_username:  stevenlovegrove
 
@@ -13,5 +12,6 @@ markdown: kramdown
 theme: jekyll-theme-minimal
 logo: https://raw.githubusercontent.com/stevenlovegrove/Pangolin/master/tools/VideoViewer/application-x-pango.svg
 show_downloads: "false"
-gems:
-  - jekyll-feed
+
+plugins:
+  - jekyll-relative-links

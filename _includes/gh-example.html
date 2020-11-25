@@ -1,0 +1,12 @@
+<p id="{{ include.example }}" style="height:{{ include.height }}"/>
+<script>
+githubEmbed('#{{ include.example }}', {
+    "owner": "stevenlovegrove",   "repo": "Pangolin",   "ref": "master",
+    "embed": [
+      {"type": "cpp", "label": "main.cpp",
+      "path": "examples/{{ include.example }}/main.cpp"}, 
+      {"type": "cmake", "label": "CMakeLists.txt",
+      "path": "examples/{{ include.example }}/CMakeLists.txt"}
+    ]
+});
+</script>

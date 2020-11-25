@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Building Pangolin
-permalink: /build/
+permalink: /:basename/
 ---
 
 Building Pangolin
