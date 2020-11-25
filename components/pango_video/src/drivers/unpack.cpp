@@ -249,37 +249,32 @@ bool UnpackVideo::DropNFrames(uint32_t n)
 
 PANGOLIN_REGISTER_FACTORY(UnpackVideo)
 {
-    struct UnpackVideoFactory final : public FactoryInterface<VideoInterface> {
-        UnpackVideoFactory()
+    struct UnpackVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
-                {"fmt","GRAY16LE","Pixel format of the video to unpack. See help for pixel formats for all possible values."}
+            return {{"unpack",10}};
+        }
+        const char* Description() const override
+        {
+            return "Converts from a potentially packed pixel format to a higher bit-depth format (e.g. 10 to 16 bit).";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"fmt","GRAY16LE","Destination pixel format."}
             }};
         }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            ParamReader reader(param_set_,uri);
+            ParamReader reader(Params(),uri);
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const std::string fmt = reader.Get("fmt", std::string("GRAY16LE") );
             return std::unique_ptr<VideoInterface>(
                 new UnpackVideo(subvid, PixelFormatFromString(fmt) )
             );
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme, "Unpacks a video from a given format", param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<UnpackVideoFactory>(), 10, "unpack");
-
-
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<UnpackVideoFactory>());
 }
 
 }

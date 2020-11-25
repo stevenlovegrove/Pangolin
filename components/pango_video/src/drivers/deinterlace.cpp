@@ -94,14 +94,14 @@ bool DeinterlaceVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(DeinterlaceVideo)
 {
-    struct DeinterlaceVideoFactory final : public FactoryInterface<VideoInterface> {
+    struct DeinterlaceVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             return std::unique_ptr<VideoInterface>( new DeinterlaceVideo(subvid) );
         }
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<DeinterlaceVideoFactory>(), 10, "deinterlace");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<DeinterlaceVideoFactory>(), 10, "deinterlace");
 }
 
 }

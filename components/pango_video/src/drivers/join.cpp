@@ -553,11 +553,19 @@ std::vector<std::string> SplitBrackets(const std::string src, char open = '{', c
 
 PANGOLIN_REGISTER_FACTORY(JoinVideo)
 {
-    struct JoinVideoFactory final : public FactoryInterface<VideoInterface>
+    struct JoinVideoFactory final : public TypedFactoryInterface<VideoInterface>
     {
-        JoinVideoFactory()
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
+            return {{"join",10}, {"zip",10}};
+        }
+        const char* Description() const override
+        {
+            return "Zips two or more videos together to create a new video containing all of constituent streams in correspondence.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"sync_tolerance_us", "0", "The maximum timestamp difference (in microsecs) between images that are considered to be in sync for joining"},
                 {"transfer_bandwidth_gbps","0", "Bandwidth used to compute exposure end time from reception time for sync logic"},
                 {"Verbose","false","For verbose error/warning messages"}
@@ -567,7 +575,7 @@ PANGOLIN_REGISTER_FACTORY(JoinVideo)
         {
             std::vector<std::string> uris = SplitBrackets(uri.url);
 
-            ParamReader reader(param_set_,uri);
+            ParamReader reader(Params(), uri);
 
             // Standard by which we should measure if frames are in sync.
             const unsigned long sync_tol_us = reader.Get<unsigned long>("sync_tolerance_us");
@@ -601,20 +609,9 @@ PANGOLIN_REGISTER_FACTORY(JoinVideo)
 
             return std::unique_ptr<VideoInterface>(video_raw);
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme,"Joins multiple video images into one",param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<JoinVideoFactory>(), 10, "join");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<JoinVideoFactory>());
 }
 }
 

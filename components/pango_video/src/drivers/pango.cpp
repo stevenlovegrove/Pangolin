@@ -53,7 +53,7 @@ PangoVideo::PangoVideo(const std::string& filename, std::shared_ptr<PlaybackSess
     SetupStreams(*_source);
 
     // Make sure we time-seek with other playback devices
-    session_seek = _playback_session->Time().OnSeek.Connect(
+    session_seek = _playback_session->Time().OnSeek.connect(
         [&](SyncTime::TimePoint t){
             _event_promise.Cancel();
             _reader->Seek(_src_id, t);
@@ -222,39 +222,34 @@ void PangoVideo::SetupStreams(const PacketStreamSource& src)
 
 PANGOLIN_REGISTER_FACTORY(PangoVideo)
 {
-    struct PangoVideoFactory final : public FactoryInterface<VideoInterface> {
-        PangoVideoFactory()
+    struct PangoVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
+            return {{"pango",10}, {"file",5}};
+        }
+        const char* Description() const override
+        {
+            return "Plays Pango video container format.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"OrderedPlayback","false","Whether the playback respects the order of every data as they were recorded. Important for simulated playback."}
             }};
         }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::string path = PathExpand(uri.url);
 
-            ParamReader reader(param_set_,uri);
+            ParamReader reader(Params(),uri);
 
             if( !uri.scheme.compare("pango") || FileType(uri.url) == ImageFileTypePango ) {
                 return std::unique_ptr<VideoInterface>(new PangoVideo(path.c_str(), PlaybackSession::ChooseFromParams(reader)));
             }
             return std::unique_ptr<VideoInterface>();
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme,"Plays a pango recording",param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    auto factory = std::make_shared<PangoVideoFactory>();
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "pango");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory,  5, "file");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<PangoVideoFactory>());
 }
 
 }

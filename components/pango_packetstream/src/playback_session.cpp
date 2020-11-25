@@ -1,5 +1,4 @@
 #include <pangolin/log/playback_session.h>
-#include <pangolin/utils/params.h>
 
 namespace pangolin {
 

@@ -241,35 +241,33 @@ bool PackVideo::DropNFrames(uint32_t n)
 
 PANGOLIN_REGISTER_FACTORY(PackVideo)
 {
-    struct PackVideoFactory final : public FactoryInterface<VideoInterface> {
-        PackVideoFactory()
+    struct PackVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
+            return {{"pack",10}};
+        }
+        const char* Description() const override
+        {
+            return "Packs a video from a given format.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"fmt","GRAY16LE","Pixel format of the video to unpack. See help for pixel formats for all possible values."}
             }};
         }
+
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            ParamReader reader(param_set_,uri);
+            ParamReader reader(Params(),uri);
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const std::string fmt = reader.Get<std::string>("fmt");
             return std::unique_ptr<VideoInterface>(
                 new PackVideo(subvid, PixelFormatFromString(fmt) )
             );
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme, "Packs a video from a given format", param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<PackVideoFactory>(), 10, "pack");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<PackVideoFactory>());
 }
 
 }

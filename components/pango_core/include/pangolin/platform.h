@@ -33,9 +33,9 @@
 #define PANGOLIN_UNUSED(x) (void)(x)
 
 #ifdef __GNUC__
-#  define PANGOLIN_DEPRECATED __attribute__((deprecated))
+#  define PANGOLIN_DEPRECATED(x) __attribute__((deprecated(x)))
 #elif defined(_MSC_VER)
-#  define PANGOLIN_DEPRECATED __declspec(deprecated)
+#  define PANGOLIN_DEPRECATED __declspec(deprecated(x))
 #else
 #  define PANGOLIN_DEPRECATED
 #endif

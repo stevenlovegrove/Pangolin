@@ -1,0 +1,47 @@
+get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(${COMPONENT} PRIVATE "-framework Cocoa" )
+    target_sources( ${COMPONENT}
+        PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/src/display_osx.mm
+        ${CMAKE_CURRENT_LIST_DIR}/src/PangolinNSApplication.mm
+        ${CMAKE_CURRENT_LIST_DIR}/src/PangolinNSGLView.mm
+    )
+    target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"cocoa\"")
+    target_compile_options(${COMPONENT} PRIVATE
+        $<$<OR:$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+        -Wno-deprecated-declarations>
+    )
+elseif(WIN32 OR WIN64)
+    target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/display_win.cpp )
+    target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"winapi\"")
+elseif(EMSCRIPTEN)
+    target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/display_emscripten.cpp )
+    target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"emscripten\"")
+else()
+    find_package(X11 QUIET)
+    if(X11_FOUND)
+        target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/display_x11.cpp )
+        target_link_libraries(${COMPONENT} PRIVATE ${X11_LIBRARIES} )
+        target_include_directories(${COMPONENT} PRIVATE ${X11_INCLUDE_DIR} )
+    endif()
+    target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"x11\"")
+endif()
+
+# headless offscreen rendering via EGL
+if(_LINUX_)
+    set(OpenGL_GL_PREFERENCE "GLVND")
+endif()
+find_package(OpenGL QUIET COMPONENTS EGL)
+if(OpenGL_EGL_FOUND)
+    target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/display_headless.cpp )
+    target_link_libraries(${COMPONENT} PRIVATE ${OPENGL_egl_LIBRARY} )
+endif()
+
+target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl pango_vars )
+
+target_include_directories(${COMPONENT}
+    PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
+)

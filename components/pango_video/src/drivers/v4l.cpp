@@ -777,7 +777,7 @@ const picojson::value& V4lVideo::FrameProperties() const
 
 PANGOLIN_REGISTER_FACTORY(V4lVideo)
 {
-    struct V4lVideoFactory final : public FactoryInterface<VideoInterface> {
+    struct V4lVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         V4lVideoFactory()
         {
             param_set_ = {{
@@ -835,8 +835,8 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
             }
             return std::unique_ptr<VideoInterface>(video_raw);
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme,"Opens a v4l compatible video stream",param_set_);
+        FactoryUseInfo Help( const std::string& scheme ) const override {
+            return FactoryUseInfo(scheme,"Opens a v4l compatible video stream",param_set_);
         }
 
         bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
@@ -849,7 +849,7 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
     };
 
     auto factory = std::make_shared<V4lVideoFactory>();
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "v4l");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "v4l");
 }
 
 

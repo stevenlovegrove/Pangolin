@@ -100,7 +100,7 @@ size_t RealSense2Video::Seek(size_t /*frameid*/) {
 
 PANGOLIN_REGISTER_FACTORY(RealSense2Video)
 {
-    struct RealSense2VideoFactory : public FactoryInterface<VideoInterface> {
+    struct RealSense2VideoFactory : public TypedFactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
             const unsigned int fps = uri.Get<unsigned int>("fps", 30);
@@ -108,7 +108,7 @@ PANGOLIN_REGISTER_FACTORY(RealSense2Video)
         }
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<RealSense2VideoFactory>(), 10, "realsense2");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<RealSense2VideoFactory>(), 10, "realsense2");
 }
 
 }

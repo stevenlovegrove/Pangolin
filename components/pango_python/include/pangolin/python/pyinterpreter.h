@@ -30,7 +30,7 @@
 #include <Python.h>
 #include <pangolin/var/varextra.h>
 #include <pangolin/python/pyuniqueobj.h>
-#include <pangolin/console/ConsoleInterpreter.h>
+#include <pangolin/console/InterpreterInterface.h>
 #include <queue>
 #include <set>
 #include <thread>
@@ -38,7 +38,7 @@
 namespace pangolin
 {
 
-class PyInterpreter : public ConsoleInterpreter
+class PyInterpreter : public InterpreterInterface
 {
 public:
     PyInterpreter();
@@ -47,7 +47,7 @@ public:
 
     void PushCommand(const std::string &cmd) override;
 
-    bool PullLine(ConsoleLine& line) override;
+    bool PullLine(InterpreterLine& line) override;
 
     std::vector<std::string> Complete(
         const std::string& cmd, int max_options
@@ -63,7 +63,7 @@ private:
     void CheckPrintClearError();
     PyUniqueObj EvalExec(const std::string& cmd);
 
-    std::queue<ConsoleLine> line_queue;
+    std::queue<InterpreterLine> line_queue;
     std::set<std::string> base_prefixes;
 };
 

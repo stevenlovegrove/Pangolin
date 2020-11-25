@@ -9,37 +9,6 @@
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/gldraw.h>
 
-struct CustomType
-{
-  CustomType()
-    : x(0), y(0.0f) {}
-
-  CustomType(int x, float y, std::string z)
-    : x(x), y(y), z(z) {}
-
-  int x;
-  float y;
-  std::string z;
-};
-
-std::ostream& operator<< (std::ostream& os, const CustomType& o){
-  os << o.x << " " << o.y << " " << o.z;
-  return os;
-}
-
-std::istream& operator>> (std::istream& is, CustomType& o){
-  is >> o.x;
-  is >> o.y;
-  is >> o.z;
-  return is;
-}
-
-void SampleMethod()
-{
-    std::cout << "You typed ctrl-r or pushed reset" << std::endl;
-}
-
-
 int main(/*int argc, char* argv[]*/)
 {  
   // Create OpenGL window in single line
@@ -58,7 +27,7 @@ int main(/*int argc, char* argv[]*/)
 
   // Add named OpenGL viewport to window and provide 3D Handler
   pangolin::View& d_cam = pangolin::CreateDisplay()
-    .SetBounds(0.0, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0, -640.0f/480.0f)
+    .SetBounds(0.0, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0, 640.0f/480.0f)
     .SetHandler(new pangolin::Handler3D(s_cam));
 
   // Add named Panel and bind to variables beginning 'ui'
@@ -72,24 +41,23 @@ int main(/*int argc, char* argv[]*/)
   pangolin::Var<bool> a_button("ui.A_Button",false,false);
   pangolin::Var<double> a_double("ui.A_Double",3,0,5);
   pangolin::Var<int> an_int("ui.An_Int",2,0,5);
-  pangolin::Var<double> a_double_log("ui.Log_scale var",3,1,1E4, true);
+  pangolin::Var<double> a_double_log("ui.Log_scale",3,1,1E4, true);
   pangolin::Var<bool> a_checkbox("ui.A_Checkbox",false,true);
   pangolin::Var<int> an_int_no_input("ui.An_Int_No_Input",2);
-  pangolin::Var<CustomType> any_type("ui.Some_Type", CustomType(0,1.2f,"Hello") );
-
-  pangolin::Var<bool> save_window("ui.Save_Window",false,false);
-  pangolin::Var<bool> save_cube("ui.Save_Cube",false,false);
-
-  pangolin::Var<bool> record_cube("ui.Record_Cube",false,false);
 
   // std::function objects can be used for Var's too. These work great with C++11 closures.
-  pangolin::Var<std::function<void(void)> > reset("ui.Reset", SampleMethod);
+  pangolin::Var<std::function<void(void)>> save_window("ui.Save_Window", [](){
+      pangolin::SaveWindowOnRender("window");
+  });
+
+  pangolin::Var<std::function<void(void)>> save_cube_view("ui.Save_Cube", [&d_cam](){
+      pangolin::SaveWindowOnRender("cube", d_cam.v);
+  });
 
   // Demonstration of how we can register a keyboard hook to alter a Var
-  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'b', pangolin::SetVarFunctor<double>("ui.A_Double", 3.5));
-
-  // Demonstration of how we can register a keyboard hook to trigger a method
-  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'r', SampleMethod);
+  pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'b', [&](){
+      a_double = 3.5;
+  });
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
@@ -105,26 +73,16 @@ int main(/*int argc, char* argv[]*/)
     if( a_checkbox )
       an_int = (int)a_double;
 
-    if( !any_type->z.compare("robot"))
-        any_type = CustomType(1,2.3f,"Boogie");
-
     an_int_no_input = an_int;
 
-    if( pangolin::Pushed(save_window) )
-        pangolin::SaveWindowOnRender("window");
+    if(d_cam.IsShown()) {
+        // Activate efficiently by object
+        d_cam.Activate(s_cam);
 
-    if( pangolin::Pushed(save_cube) )
-        d_cam.SaveOnRender("cube");
-    
-    if( pangolin::Pushed(record_cube) )
-        pangolin::DisplayBase().RecordOnRender("ffmpeg:[fps=50,bps=8388608,unique_filename]//screencap.avi");
-
-    // Activate efficiently by object
-    d_cam.Activate(s_cam);
-
-    // Render some stuff
-    glColor3f(1.0,1.0,1.0);
-    pangolin::glDrawColouredCube();
+        // Render some stuff
+        glColor3f(1.0,1.0,1.0);
+        pangolin::glDrawColouredCube();
+    }
 
     // Swap frames and Process Events
     pangolin::FinishFrame();

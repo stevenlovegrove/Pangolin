@@ -637,7 +637,7 @@ size_t OpenNi2Video::Seek(size_t frameid)
 
 PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
 {
-    struct OpenNI2VideoFactory final : public FactoryInterface<VideoInterface> {
+    struct OpenNI2VideoFactory final : public TypedFactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const bool realtime = uri.Contains("realtime");
             const ImageDim default_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
@@ -682,9 +682,9 @@ PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
     };
 
     auto factory = std::make_shared<OpenNI2VideoFactory>();
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "openni");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "openni2");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "oni");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "openni");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "openni2");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "oni");
 }
 
 }

@@ -34,7 +34,7 @@
 #include <structmember.h>
 
 #include <pangolin/var/var.h>
-#include <pangolin/console/ConsoleInterpreter.h>
+#include <pangolin/console/InterpreterInterface.h>
 
 namespace pangolin
 {
@@ -45,7 +45,7 @@ struct PyPangoIO {
     static PyTypeObject Py_type;
     static PyMethodDef Py_methods[];
 
-    PyPangoIO(PyTypeObject *type, std::queue<ConsoleLine>& line_queue, ConsoleLineType line_type)
+    PyPangoIO(PyTypeObject *type, std::queue<InterpreterLine>& line_queue, InterpreterLineType line_type)
         : line_queue(line_queue), line_type(line_type)
     {
 #if PY_MAJOR_VERSION >= 3
@@ -101,7 +101,7 @@ struct PyPangoIO {
             size_t nl = self->buffer.find_first_of('\n');
             while(nl != std::string::npos) {
                 const std::string line = self->buffer.substr(0,nl);
-                self->line_queue.push(ConsoleLine(line,self->line_type));
+                self->line_queue.push(InterpreterLine(line,self->line_type));
                 self->buffer = self->buffer.substr(nl+1);
                 nl = self->buffer.find_first_of('\n');
             }
@@ -110,8 +110,8 @@ struct PyPangoIO {
     }
 
     std::string buffer;
-    std::queue<ConsoleLine>& line_queue;
-    ConsoleLineType line_type;
+    std::queue<InterpreterLine>& line_queue;
+    InterpreterLineType line_type;
 };
 
 PyMethodDef PyPangoIO::Py_methods[] = {

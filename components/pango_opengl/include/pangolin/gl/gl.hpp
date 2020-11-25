@@ -233,11 +233,14 @@ inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_l
     Load(image, sampling_linear);
 }
 
-#ifndef HAVE_GLES
 inline void GlTexture::Download(void* image, GLenum data_layout, GLenum data_type) const
 {
     Bind();
+#ifndef HAVE_GLES
     glGetTexImage(GL_TEXTURE_2D, 0, data_layout, data_type, image);
+#else
+    throw std::runtime_error("glGetTexImage not implemented on this platform.");
+#endif // HAVE_GLES
     Unbind();
 }
 
@@ -321,6 +324,7 @@ inline void GlTexture::Download(TypedImage& image) const
 
 inline void GlTexture::CopyFrom(const GlTexture& tex)
 {
+#ifndef HAVE_GLES
     if(!tid || width != tex.width || height != tex.height ||
        internal_format != tex.internal_format)
     {
@@ -331,6 +335,9 @@ inline void GlTexture::CopyFrom(const GlTexture& tex)
                        tid, GL_TEXTURE_2D, 0, 0, 0, 0,
                        width, height, 1);
     CheckGlDieOnError();
+#else
+    throw std::runtime_error("glCopyImageSubDataNV not implemented on this platform.");
+#endif
 }
 
 inline void GlTexture::Save(const std::string& filename, bool top_line_first)
@@ -339,7 +346,6 @@ inline void GlTexture::Save(const std::string& filename, bool top_line_first)
     Download(image);
     pangolin::SaveImage(image, filename, top_line_first);
 }
-#endif // HAVE_GLES
 
 inline void GlTexture::SetLinear()
 {
@@ -881,6 +887,20 @@ inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
         new_size *= 2;
     }
     return new_size;
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+inline TypedImage ReadFramebuffer(const Viewport& v, const std::string& pixel_format)
+{
+    const PixelFormat fmt = PixelFormatFromString(pixel_format);
+    const GlPixFormat glfmt(fmt);
+
+    TypedImage buffer(v.w, v.h, fmt );
+    glReadBuffer(GL_BACK);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(v.l, v.b, v.w, v.h, glfmt.glformat, glfmt.gltype, buffer.ptr );
+    return buffer;
 }
 
 }

@@ -7,4 +7,3 @@ PRIVATE
 
 target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 target_link_libraries(${COMPONENT} PUBLIC pango_core)
-target_compile_definitions(${COMPONENT} PUBLIC BUILD_PANGOLIN_VARS)

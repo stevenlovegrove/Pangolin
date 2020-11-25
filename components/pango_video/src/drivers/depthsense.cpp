@@ -633,7 +633,7 @@ DepthSenseSensorType depthsense_sensor(const std::string& str)
 
 PANGOLIN_REGISTER_FACTORY(DepthSenseVideo)
 {
-    struct DepthSenseVideoFactory final : public FactoryInterface<VideoInterface> {
+    struct DepthSenseVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             DepthSenseSensorType img1 = depthsense_sensor(uri.Get<std::string>("img1", "depth"));
             DepthSenseSensorType img2 = depthsense_sensor(uri.Get<std::string>("img2", ""));
@@ -650,7 +650,7 @@ PANGOLIN_REGISTER_FACTORY(DepthSenseVideo)
         }
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<DepthSenseVideoFactory>(), 10, "depthsense");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<DepthSenseVideoFactory>(), 10, "depthsense");
 }
 
 }

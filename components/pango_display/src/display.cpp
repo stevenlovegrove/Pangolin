@@ -27,10 +27,6 @@
 
 #include <pangolin/platform.h>
 
-#ifdef HAVE_PYTHON
-#include <pangolin/python/pyinterpreter.h>
-#include <pangolin/console/ConsoleView.h>
-#endif // HAVE_PYTHON
 
 #include <iostream>
 #include <sstream>
@@ -38,37 +34,24 @@
 #include <map>
 #include <mutex>
 #include <cstdlib>
+#include <memory>
 
-#include <pangolin/factory/factory_registry.h>
 #include <pangolin/gl/glinclude.h>
+#include <pangolin/gl/gl.h>
 #include <pangolin/gl/gldraw.h>
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/display_internal.h>
-#include <pangolin/display/window_frameworks.h>
 #include <pangolin/handler/handler.h>
 #include <pangolin/utils/simple_math.h>
 #include <pangolin/utils/timer.h>
 #include <pangolin/utils/type_convert.h>
 #include <pangolin/image/image_io.h>
-
-#ifdef BUILD_PANGOLIN_VARS
-  #include <pangolin/var/var.h>
-#endif
+#include <pangolin/console/ConsoleView.h>
+#include <pangolin/var/var.h>
 
 namespace pangolin
 {
-
-#ifdef BUILD_PANGOLIN_VIDEO
-  // Forward declaration.
-  void SaveFramebuffer(VideoOutput& video, const Viewport& v);
-#endif // BUILD_PANGOLIN_VIDEO
-
-const char* PARAM_DISPLAYNAME    = "DISPLAYNAME";
-const char* PARAM_DOUBLEBUFFER   = "DOUBLEBUFFER";
-const char* PARAM_SAMPLE_BUFFERS = "SAMPLE_BUFFERS";
-const char* PARAM_SAMPLES        = "SAMPLES";
-const char* PARAM_HIGHRES        = "HIGHRES";
-
 
 typedef std::map<std::string,std::shared_ptr<PangolinGl> > ContextMap;
 
@@ -81,13 +64,7 @@ bool one_time_window_frameworks_init = false;
 __thread PangolinGl* context = 0;
 
 PangolinGl::PangolinGl()
-    : user_app(0), is_high_res(false), quit(false), mouse_state(0),activeDisplay(0)
-#ifdef BUILD_PANGOLIN_VIDEO
-    , record_view(0)
-#endif
-#ifdef HAVE_PYTHON
-    , console_view(0)
-#endif
+    : user_app(0), quit(false), mouse_state(0),activeDisplay(0)
 {
 }
 
@@ -98,6 +75,14 @@ PangolinGl::~PangolinGl()
         delete iv->second;
     }
     named_managed_views.clear();
+}
+
+void PangolinGl::MakeCurrent()
+{
+    SetCurrentContext(this);
+    if(window) {
+        window->MakeCurrent();
+    }
 }
 
 void PangolinGl::SetOnRender(std::function<void ()> on_render) {
@@ -135,10 +120,6 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 {
     std::unique_lock<std::recursive_mutex> l(contexts_mutex);
 
-    if(!one_time_window_frameworks_init) {
-        one_time_window_frameworks_init = LoadBuiltInWindowFrameworks();
-    }
-
     pangolin::Uri win_uri;
 
     if(const char* extra_params = std::getenv("PANGOLIN_WINDOW_URI"))
@@ -159,22 +140,41 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     win_uri.Set("h", h);
     win_uri.Set("window_title", window_title);
 
-    std::unique_ptr<WindowInterface> window = FactoryRegistry<WindowInterface>::I().Open(win_uri);
+    auto context = std::make_shared<PangolinGl>();
+    context->window = FactoryRegistry::I()->Construct<WindowInterface>(win_uri);
+    assert(context->window);
 
-    // We're expecting not only a WindowInterface, but a PangolinGl.
-    if(!window || !dynamic_cast<PangolinGl*>(window.get())) {
-        throw WindowExceptionNoKnownHandler(win_uri.scheme);
-    }
+    RegisterNewContext(window_title, context);
 
-    std::shared_ptr<PangolinGl> context(dynamic_cast<PangolinGl*>(window.release()));
-    RegisterNewContext(window_title, context );
-    // is_high_res will alter default font size and a few other gui elements.
-    context->is_high_res = win_uri.Get(PARAM_HIGHRES,false);
+    context->window->CloseSignal.connect( [](){
+        pangolin::Quit();
+    });
+    context->window->ResizeSignal.connect( [](ResizeEvent event){
+        process::Resize(event.width, event.height);
+    });
+    context->window->KeyboardSignal.connect( [](KeyboardEvent event) {
+        process::Keyboard(event.key, event.x, event.y, event.pressed);
+    });
+    context->window->MouseSignal.connect( [](MouseEvent event){
+        process::Mouse(event.button, event.state, event.x, event.y);
+    });
+    context->window->MouseMotionSignal.connect( [](MouseMotionEvent event){
+        process::MouseMotion(event.x, event.y);
+    });
+    context->window->PassiveMouseMotionSignal.connect( [](MouseMotionEvent event){
+        process::PassiveMouseMotion(event.x, event.y);
+    });
+    context->window->SpecialInputSignal.connect( [](SpecialInputEvent event){
+        process::SpecialInput(event.inType, event.x, event.y, event.p[0], event.p[1], event.p[2], event.p[3]);
+    });
+
     context->MakeCurrent();
-    context->ProcessEvents();
     glewInit();
 
-    return *context;
+    // And finally process pending window events (such as resize) now that we've setup our callbacks.
+    context->window->ProcessEvents();
+
+    return *context->window;
 }
 
 // Assumption: unique lock is held on contexts_mutex for multi-threaded operation
@@ -187,7 +187,6 @@ void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> new
     newcontext->base.right = 1.0;
     newcontext->base.aspect = 0;
     newcontext->base.handler = &StaticHandler;
-    newcontext->is_fullscreen = false;
 
     // Create and add
     if( contexts.find(name) != contexts.end() ) {
@@ -198,22 +197,18 @@ void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> new
     // Process the following as if this context is now current.
     PangolinGl *oldContext = context;
     context = newcontext.get();
-    process::Resize(
-        newcontext->windowed_size[0],
-        newcontext->windowed_size[1]
-    );
 
     // Default key bindings can be overridden
     RegisterKeyPressCallback(PANGO_KEY_ESCAPE, Quit );
-    RegisterKeyPressCallback('\t', ToggleFullscreen );
-    RegisterKeyPressCallback('`',  ToggleConsole );
+    RegisterKeyPressCallback('\t', [](){ShowFullscreen(TrueFalseToggle::Toggle);} );
+    RegisterKeyPressCallback('`',  [](){ShowConsole(TrueFalseToggle::Toggle);} );
 
     context = oldContext;
 }
 
 WindowInterface* GetBoundWindow()
 {
-    return context;
+    return context->window.get();
 }
 
 void DestroyWindow(const std::string& name)
@@ -231,7 +226,7 @@ void DestroyWindow(const std::string& name)
     contexts_mutex.unlock();
 }
 
-WindowInterface& BindToContext(std::string name)
+void BindToContext(std::string name)
 {
     std::unique_lock<std::recursive_mutex> l(contexts_mutex);
 
@@ -243,10 +238,8 @@ WindowInterface& BindToContext(std::string name)
     {
         std::shared_ptr<PangolinGl> newcontext(new PangolinGl());
         RegisterNewContext(name, newcontext);
-        return *(newcontext.get());
     }else{
         context_to_bind->MakeCurrent();
-        return *context_to_bind;
     }
 }
 
@@ -267,47 +260,10 @@ bool ShouldQuit()
     return !context || context->quit;
 }
 
-bool HadInput()
+void ShowFullscreen(TrueFalseToggle on_off)
 {
-    if( context->had_input > 0 )
-    {
-        --context->had_input;
-        return true;
-    }
-    return false;
-}
-
-bool HasResized()
-{
-    if( context->has_resized > 0 )
-    {
-        --context->has_resized;
-        return true;
-    }
-    return false;
-}
-
-void StartFullScreen() {
-    if(!context->is_fullscreen) {
-        context->ToggleFullscreen();
-        context->is_fullscreen = true;
-    }
-}
-
-void StopFullScreen() {
-    if(context->is_fullscreen) {
-        context->ToggleFullscreen();
-        context->is_fullscreen = false;
-    }
-}
-
-void SetFullscreen(bool fullscreen)
-{
-    if(fullscreen) {
-        StartFullScreen();
-    }else{
-        StopFullScreen();
-    }
+    if(context && context->window)
+        context->window->ShowFullscreen(on_off);
 }
 
 void RenderViews()
@@ -316,27 +272,13 @@ void RenderViews()
     DisplayBase().Render();
 }
 
-void RenderRecordGraphic(const Viewport& v)
-{
-    const float r = 7;
-    v.ActivatePixelOrthographic();
-    glRecordGraphic(v.w-2*r, v.h-2*r, r);
-}
-
 void PostRender()
 {
     while(context->screen_capture.size()) {
         std::pair<std::string,Viewport> fv = context->screen_capture.front();
         context->screen_capture.pop();
-        SaveFramebuffer(fv.first, fv.second);
+        SaveWindowNow(fv.first, fv.second);
     }
-
-#ifdef BUILD_PANGOLIN_VIDEO
-    if(context->recorder.IsOpen()) {
-        SaveFramebuffer(context->recorder, context->record_view->GetBounds() );
-        RenderRecordGraphic(context->record_view->GetBounds());
-    }
-#endif // BUILD_PANGOLIN_VIDEO
 
     // Disable scissor each frame
     Viewport::DisableScissor();
@@ -346,8 +288,10 @@ void FinishFrame()
 {
     RenderViews();
     PostRender();
-    context->SwapBuffers();
-    context->ProcessEvents();
+    if(context->window) {
+        context->window->SwapBuffers();
+        context->window->ProcessEvents();
+    }
 }
 
 View& DisplayBase()
@@ -363,28 +307,34 @@ View& CreateDisplay()
     return Display(ssguid.str());
 }
 
-void ToggleConsole()
+void ShowConsole(TrueFalseToggle on_off)
 {
-#ifdef HAVE_PYTHON
     if( !context->console_view) {
-        // Create console and let the pangolin context take ownership
-        context->console_view = new ConsoleView(new PyInterpreter());
-        context->named_managed_views["pangolin_console"] = context->console_view;
-        context->console_view->SetFocus();
-        context->console_view->zorder = std::numeric_limits<int>::max();
-        DisplayBase().AddDisplay(*context->console_view);
+        Uri interpreter_uri = ParseUri("python://");
+
+        try {
+            // Instantiate interpreter
+            std::shared_ptr<InterpreterInterface> interpreter
+                    = FactoryRegistry::I()->Construct<InterpreterInterface>(interpreter_uri);
+            assert(interpreter);
+
+            // Create console and let the pangolin context take ownership
+            context->console_view = std::make_unique<ConsoleView>(interpreter);
+            context->console_view->zorder = std::numeric_limits<int>::max();
+            DisplayBase().AddDisplay(*context->console_view);
+            context->console_view->SetFocus();
+        }  catch (std::exception&) {
+        }
     }else{
-        context->console_view->ToggleShow();
+        context->console_view->Show(
+            to_bool(on_off, context->console_view->IsShown())
+        );
+
         if(context->console_view->IsShown()) {
             context->console_view->SetFocus();
         }
     }
-#endif
-}
 
-void ToggleFullscreen()
-{
-    SetFullscreen(!context->is_fullscreen);
 }
 
 View& Display(const std::string& name)
@@ -408,114 +358,55 @@ void RegisterKeyPressCallback(int key, std::function<void(void)> func)
     context->keypress_hooks[key] = func;
 }
 
-void SaveWindowOnRender(std::string prefix)
+void SaveWindowOnRender(const std::string& filename, const Viewport& v)
 {
-    context->screen_capture.push(std::pair<std::string,Viewport>(prefix, context->base.v) );
+    context->screen_capture.push(std::pair<std::string,Viewport>(filename, v) );
 }
 
-void SaveFramebuffer(std::string prefix, const Viewport& v)
+void SaveWindowNow(const std::string& filename_hint, const Viewport& v)
 {
-    PANGOLIN_UNUSED(prefix);
-    PANGOLIN_UNUSED(v);
+    const Viewport to_save = v.area() ? v.Intersect(DisplayBase().v) : DisplayBase().v;
+    std::string filename = filename_hint;
+    if(FileLowercaseExtention(filename) == "")  filename += ".png";
 
-#ifndef HAVE_GLES
-
-#ifdef HAVE_PNG
-    PixelFormat fmt = PixelFormatFromString("RGBA32");
-    TypedImage buffer(v.w, v.h, fmt );
-    glReadBuffer(GL_BACK);
-    glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?
-    glReadPixels(v.l, v.b, v.w, v.h, GL_RGBA, GL_UNSIGNED_BYTE, buffer.ptr );
-    SaveImage(buffer, fmt, prefix + ".png", false);
-#endif // HAVE_PNG
-
-#endif // HAVE_GLES
-}
-
-#ifdef BUILD_PANGOLIN_VIDEO
-void SaveFramebuffer(VideoOutput& video, const Viewport& v)
-{
-#ifndef HAVE_GLES
-    const StreamInfo& si = video.Streams()[0];
-    if(video.Streams().size()==0 || (int)si.Width() != v.w || (int)si.Height() != v.h) {
-        video.Close();
-        return;
+    try {
+        glFlush();
+        TypedImage buffer = ReadFramebuffer(to_save, "RGBA32");
+        SaveImage(buffer, filename, false);
+    }  catch (std::exception& e) {
+        std::cerr << e.what() << std::endl;
     }
-
-    static basetime last_time = TimeNow();
-    const basetime time_now = TimeNow();
-    last_time = time_now;
-
-    static std::vector<unsigned char> img;
-    img.resize(v.w*v.h*4);
-
-    glReadBuffer(GL_BACK);
-    glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?
-    glReadPixels(v.l, v.b, v.w, v.h, GL_RGB, GL_UNSIGNED_BYTE, &img[0] );
-    video.WriteStreams(&img[0]);
-#endif // HAVE_GLES
 }
-#endif // BUILD_PANGOLIN_VIDEO
-
 
 namespace process
 {
 float last_x = 0;
 float last_y = 0;
 
-void Keyboard( unsigned char key, int x, int y)
+void Keyboard(unsigned char key, int x, int y, bool pressed)
 {
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;
 
-#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-    // Switch backspace and delete for OSX!
-    if(key== '\b') {
-        key = 127;
-    }else if(key == 127) {
-        key = '\b';
-    }
-#endif
+    if(pressed) {
+        // Check if global key hook exists
+        const KeyhookMap::iterator hook = context->keypress_hooks.find(key);
 
-    context->had_input = context->is_double_buffered ? 2 : 1;
-
-    // Check if global key hook exists
-    const KeyhookMap::iterator hook = context->keypress_hooks.find(key);
-
-#ifdef HAVE_PYTHON
-    // Console receives all input when it is open
-    if( context->console_view && context->console_view->IsShown() ) {
-        context->console_view->Keyboard(*(context->console_view),key,x,y,true);
-    }else
-#endif
-    if(hook != context->keypress_hooks.end() ) {
-        hook->second();
-    } else if(context->activeDisplay && context->activeDisplay->handler) {
-        context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
+        // Console receives all input when it is open
+        if( context->console_view && context->console_view->IsShown() ) {
+            context->console_view->Keyboard(*(context->console_view),key,x,y,true);
+        }else if(hook != context->keypress_hooks.end() ) {
+            hook->second();
+        } else if(context->activeDisplay && context->activeDisplay->handler) {
+            context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
+        }
+    }else{
+        if(context->activeDisplay && context->activeDisplay->handler)
+        {
+            context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,false);
+        }
     }
 }
-
-void KeyboardUp(unsigned char key, int x, int y)
-{
-    // Force coords to match OpenGl Window Coords
-    y = context->base.v.h - y;
-
-    if(context->activeDisplay && context->activeDisplay->handler)
-    {
-        context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,false);
-    }
-}
-
-void SpecialFunc(int key, int x, int y)
-{
-    Keyboard(key+128,x,y);
-}
-
-void SpecialFuncUp(int key, int x, int y)
-{
-    KeyboardUp(key+128,x,y);
-}
-
 
 void Mouse( int button_raw, int state, int x, int y)
 {
@@ -527,8 +418,6 @@ void Mouse( int button_raw, int state, int x, int y)
 
     const MouseButton button = (MouseButton)(1 << (button_raw & 0xf) );
     const bool pressed = (state == 0);
-
-    context->had_input = context->is_double_buffered ? 2 : 1;
 
     const bool fresh_input = ( (context->mouse_state & 7) == 0);
 
@@ -558,8 +447,6 @@ void MouseMotion( int x, int y)
     last_x = (float)x;
     last_y = (float)y;
 
-    context->had_input = context->is_double_buffered ? 2 : 1;
-
     if( context->activeDisplay)
     {
         if( context->activeDisplay->handler )
@@ -580,30 +467,16 @@ void PassiveMouseMotion(int x, int y)
     last_y = (float)y;
 }
 
-void Display()
-{
-    // No implementation
-}
-
 void Resize( int width, int height )
 {
-    if( !context->is_fullscreen )
-    {
-        context->windowed_size[0] = width;
-        context->windowed_size[1] = height;
-    }
-    // TODO: Fancy display managers seem to cause this to mess up?
-    context->had_input = 20; //context->is_double_buffered ? 2 : 1;
-    context->has_resized = 20; //context->is_double_buffered ? 2 : 1;
     Viewport win(0,0,width,height);
     context->base.Resize(win);
 }
 
 void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4)
 {
-    // Assume coords already match OpenGl Window Coords
-
-    context->had_input = context->is_double_buffered ? 2 : 1;
+    // Force coords to match OpenGl Window Coords
+    y = context->base.v.h - y;
 
     const bool fresh_input = (context->mouse_state == 0);
 
@@ -614,27 +487,6 @@ void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, flo
     }
 }
 
-void Scroll(float x, float y)
-{
-    SpecialInput(InputSpecialScroll, last_x, last_y, x, y, 0, 0);
-}
-
-void Zoom(float m)
-{
-    SpecialInput(InputSpecialZoom, last_x, last_y, m, 0, 0, 0);
-}
-
-void Rotate(float r)
-{
-    SpecialInput(InputSpecialRotate, last_x, last_y, r, 0, 0, 0);
-}
-
-void SubpixMotion(float x, float y, float pressure, float rotation, float tiltx, float tilty)
-{
-    // Force coords to match OpenGl Window Coords
-    y = context->base.v.h - y;
-    SpecialInput(InputSpecialTablet, x, y, pressure, rotation, tiltx, tilty);
-}
 }
 
 void DrawTextureToViewport(GLuint texid)
@@ -657,21 +509,6 @@ void DrawTextureToViewport(GLuint texid)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
     glDisable(GL_TEXTURE_2D);
-}
-
-ToggleViewFunctor::ToggleViewFunctor(View& view)
-    : view(view)
-{
-}
-
-ToggleViewFunctor::ToggleViewFunctor(const std::string& name)
-    : view(Display(name))
-{
-}
-
-void ToggleViewFunctor::operator()()
-{
-    view.ToggleShow();
 }
 
 }

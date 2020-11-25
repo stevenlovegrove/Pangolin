@@ -916,7 +916,7 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 
 PANGOLIN_REGISTER_FACTORY(FirewireVideo)
 {
-    struct FirewireVideoFactory final : public FactoryInterface<VideoInterface> {
+    struct FirewireVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::string desired_format = uri.Get<std::string>("fmt","RGB24");
             ToUpper(desired_format);
@@ -962,8 +962,8 @@ PANGOLIN_REGISTER_FACTORY(FirewireVideo)
     };
 
     auto factory = std::make_shared<FirewireVideoFactory>();
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "firewire");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "dc1394");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "firewire");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "dc1394");
 }
 
 }

@@ -208,7 +208,7 @@ public:
     OpenGlMatrix GetModelViewMatrix(int i) const;
     void ApplyNView(int view) const;
     
-    PANGOLIN_DEPRECATED
+    PANGOLIN_DEPRECATED("Use SetProjectionMatrix() or SetModelViewMatrix() instead.")
     OpenGlRenderState& Set(OpenGlMatrixSpec spec);
     
 protected:

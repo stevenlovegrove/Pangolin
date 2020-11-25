@@ -8,6 +8,7 @@ MANAGER=""
 VERBOSE=0
 DRYRUN=0
 UPDATE=0
+REQUIRED_RECOMMENDED_ALL=1
 SUDO=""
 
 PKGS_UPDATE=""
@@ -42,12 +43,13 @@ while (( "$#" )); do
       fi
       ;;
     -h|--help)
-      echo "$0 [-vh] [-m package-manager-list]"
+      echo "$0 [-vh] [-m package-manager-list] [required|recommended|all]"
       echo "  -m, --package-manager:     preferred package manager order (default: \"${MANAGERS[*]}\")"
       echo "  -v, --verbose:             verbose output"
       echo "  -d, --dry-run:             print actions, but do not execute"
       echo "  -u, --udpate-package-list: update package manager package list"
       echo "  -h, --help:                this help message"
+      echo " (required|recommended|all) the set of dependencies to select."
       exit 0
       ;;
     -*|--*=) # unsupported flags
@@ -55,11 +57,35 @@ while (( "$#" )); do
       exit 1
       ;;
     *) # preserve positional arguments
-      PARAMS="$PARAMS $1"
+      PARAMS="$1"
       shift
       ;;
   esac
 done
+
+# Make lower case
+PARAMS=$(echo "$PARAMS" | tr '[:upper:]' '[:lower:]' | tr -s "[:blank:]")
+
+# Work out which set of dependencies we're installing
+case "$PARAMS" in
+  required)
+    REQUIRED_RECOMMENDED_ALL=0
+    if ((VERBOSE > 0)); then echo "Selecting required dependencies only."; fi
+    ;;
+  ""|recommended)
+    REQUIRED_RECOMMENDED_ALL=1
+    if ((VERBOSE > 0)); then echo "Selecting required+recommended dependencies."; fi
+    ;;
+  all)
+    REQUIRED_RECOMMENDED_ALL=2
+    if ((VERBOSE > 0)); then echo "Selecting all available dependencies."; fi
+    ;;
+  *)
+    echo "Unrecognized positional argument \"$PARAMS\". Expecting one of (required,recommended [default],all)"
+    exit 1
+    ;;
+esac
+
 
 # Find an available package manager from the preferred list
 for m in ${MANAGERS[@]}
@@ -76,7 +102,6 @@ then
       echo "Error: No preferred package managers from list [${MANAGERS[*]}] found. Use -m to select manually." >&2
       exit 1
 fi
-
 if ((VERBOSE > 0)); then echo "Using \"$MANAGER\" package manager (select another using -m)"; fi
 
 # Setup prereq commands and packages.
@@ -85,21 +110,31 @@ if [[ "$MANAGER" == "apt-get" ]]; then
     PKGS_UPDATE="apt-get -qq update"
     PKGS_OPTIONS+=(install --no-install-suggests --no-install-recommends)
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
-    if ((VERBOSE = 0)); then PKGS_OPTIONS+=(--qq); fi
+    if ((VERBOSE == 0)); then PKGS_OPTIONS+=(--qq); fi
     PKGS_REQUIRED+=(libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev)
-    PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev libjpeg-dev libpng-dev cmake)
+    PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev cmake)
+    PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev)
+    PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev)
+    PKGS_ALL+=(libdc1394-22-dev libraw1394-dev)
 elif [[ "$MANAGER" == "port" ]]; then
     SUDO="sudo"
     PKGS_UPDATE="port selfupdate -q"
     PKGS_OPTIONS+=(-N install -q)
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(-y); fi
-    if ((VERBOSE = 0)); then PKGS_OPTIONS+=(--q); fi
-    PKGS_REQUIRED+=(glew eigen3-devel jpeg libpng cmake)
+    if ((VERBOSE == 0)); then PKGS_OPTIONS+=(--q); fi
+    PKGS_REQUIRED+=(glew eigen3-devel cmake +gui)
+    PKGS_RECOMMENDED+=(jpeg libpng openexr tiff ffmpeg-devel lz4 zstd py37-pybind11)
+    PKGS_ALL+=(libdc1394 openni)
 elif [[ "$MANAGER" == "brew" ]]; then
     PKGS_UPDATE="brew update"
     PKGS_OPTIONS+=(install)
     if ((VERBOSE > 0)); then PKGS_OPTIONS+=(--verbose); fi
-    PKGS_REQUIRED+=(glew eigen libjpeg libpng cmake)
+    PKGS_REQUIRED+=(glew eigen cmake)
+    PKGS_RECOMMENDED+=(libjpeg libpng)
+    # Brew doesn't have a dryrun option
+    if ((DRYRUN > 0));  then
+        MANAGER="echo $MANAGER"
+    fi
 else
     echo "Error: Don't know how to use \"$MANAGER\", please fix the script." >&2
     exit 1
@@ -109,5 +144,12 @@ if ((UPDATE > 0)); then
     $PKGS_UPDATE
 fi
 
+if ((REQUIRED_RECOMMENDED_ALL < 2)); then PKGS_ALL=(); fi
+if ((REQUIRED_RECOMMENDED_ALL < 1)); then PKGS_RECOMMENDED=(); fi
+
+PACKAGES=( "${PKGS_REQUIRED[*]}" "${PKGS_RECOMMENDED[*]}" "${PKGS_ALL[*]}" )
+
+if ((VERBOSE > 0)); then echo "Requesting install of: ${PACKAGES[*]}"; fi
+
 # Install
-$SUDO $MANAGER ${PKGS_OPTIONS[*]} ${PKGS_REQUIRED[*]}
+$SUDO $MANAGER ${PKGS_OPTIONS[*]} ${PACKAGES[*]}

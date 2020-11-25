@@ -55,12 +55,13 @@ PANGOLIN_EXPORT
 PixelFormat PixelFormatFromString(const std::string& format);
 
 std::vector<PixelFormat> GetSupportedPixelFormats();
+
 ////////////////////////////////////////////////////////////////////
 /// Deprecated aliases for above
 
-PANGOLIN_DEPRECATED
+PANGOLIN_DEPRECATED("Use PixelFormat instead")
 typedef PixelFormat VideoPixelFormat;
-PANGOLIN_DEPRECATED
+PANGOLIN_DEPRECATED("Use PixelFormatFromString instead")
 inline PixelFormat VideoFormatFromString(const std::string& format) {
     return PixelFormatFromString(format);
 }

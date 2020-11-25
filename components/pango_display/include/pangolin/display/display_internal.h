@@ -28,7 +28,7 @@
 #pragma once
 
 #include <pangolin/platform.h>
-#include <pangolin/display/window.h>
+#include <pangolin/windowing/window.h>
 
 #include <pangolin/display/view.h>
 #include <pangolin/display/user_app.h>
@@ -38,27 +38,22 @@
 #include <map>
 #include <queue>
 
-#ifdef BUILD_PANGOLIN_VIDEO
-#  include <pangolin/video/video_output.h>
-#endif // BUILD_PANGOLIN_VIDEO
-
-
 namespace pangolin
 {
 
 // Forward Declarations
-#ifdef HAVE_PYTHON
 class ConsoleView;
-#endif // HAVE_PYTHON
 class GlFont;
 
 typedef std::map<const std::string,View*> ViewMap;
 typedef std::map<int,std::function<void(void)> > KeyhookMap;
 
-struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
+struct PANGOLIN_EXPORT PangolinGl
 {
     PangolinGl();
     ~PangolinGl();
+
+    void MakeCurrent();
 
     // Callback for render loop
     std::function<void()> on_render;
@@ -75,63 +70,21 @@ struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
     // Global keypress hooks
     KeyhookMap keypress_hooks;
     
-    // Manage fullscreen (ToggleFullscreen is quite new)
-    bool is_double_buffered;
-    bool is_fullscreen;
-    GLint windowed_size[2];
-    bool is_high_res;
-
     // State relating to interactivity
     bool quit;
-    int had_input;
-    int has_resized;
     int mouse_state;
     View* activeDisplay;
     
     std::queue<std::pair<std::string,Viewport> > screen_capture;
     
-#ifdef BUILD_PANGOLIN_VIDEO
-    View* record_view;
-    VideoOutput recorder;
-#endif
-
-#ifdef HAVE_PYTHON
-    ConsoleView* console_view;
-#endif
-
+    std::shared_ptr<WindowInterface> window;
     std::shared_ptr<GlFont> font;
 
-    virtual void ToggleFullscreen() override {
-        pango_print_warn("ToggleFullscreen: Not available with non-pangolin window.\n");
-    }
+    std::unique_ptr<ConsoleView> console_view;
 
-    virtual void ProcessEvents() override {
-        pango_print_warn("ProcessEvents: Not available with non-pangolin window.\n");
-    }
+    void SetOnRender(std::function<void()> on_render);
 
-    virtual void SwapBuffers() override {
-        pango_print_warn("SwapBuffers: Not available with non-pangolin window.\n");
-    }
-
-    virtual void MakeCurrent() override {
-        pango_print_warn("MakeCurrent: Not available with non-pangolin window.\n");
-    }
-
-    virtual void RemoveCurrent() override {
-        pango_print_warn("RemoveCurrent: Not available with non-pangolin window.\n");
-    }
-
-    virtual void Move(int /*x*/, int /*y*/) override {
-        pango_print_warn("Move: Not available with non-pangolin window.\n");
-    }
-
-    virtual void Resize(unsigned int /*w*/, unsigned int /*h*/) override {
-        pango_print_warn("Resize: Not available with non-pangolin window.\n");
-    }
-
-    virtual void SetOnRender(std::function<void()> on_render) override;
-
-    virtual void Run() override;
+    void Run();
 };
 
 PangolinGl* GetCurrentContext();

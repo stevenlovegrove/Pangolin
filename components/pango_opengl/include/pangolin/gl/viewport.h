@@ -28,7 +28,6 @@
 #pragma once
 
 #include <pangolin/gl/glinclude.h>
-#include <pangolin/gl/opengl_render_state.h>
 
 namespace pangolin
 {
@@ -52,13 +51,12 @@ struct PANGOLIN_EXPORT Viewport
     Viewport Inset(int horiz, int vert) const;
     Viewport Intersect(const Viewport& vp) const;
 
-    void GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const;
-    
     static void DisableScissor();
     
     GLint r() const { return l+w;}
     GLint t() const { return b+h;}
     GLfloat aspect() const { return (GLfloat)w / (GLfloat)h; }
+    GLint area() const { return w * h; }
     GLint l,b,w,h;
 };
 

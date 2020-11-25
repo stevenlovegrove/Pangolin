@@ -878,7 +878,7 @@ int FfmpegVideoOutput::WriteStreams(const unsigned char* data, const picojson::v
 
 PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
 {
-    struct FfmpegVideoFactory : public FactoryInterface<VideoInterface> {
+    struct FfmpegVideoFactory : public TypedFactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const std::array<std::string,43> ffmpeg_ext = {{
                 ".3g2",".3gp", ".amv", ".asf", ".avi", ".drc", ".flv", ".f4v",
@@ -919,17 +919,17 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
     };
 
     auto factory = std::make_shared<FfmpegVideoFactory>();
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "ffmpeg");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "v4lmjpeg");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "mjpeg");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 20, "convert");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 15, "file");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 15, "files");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "ffmpeg");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "v4lmjpeg");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "mjpeg");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 20, "convert");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 15, "file");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 15, "files");
 }
 
 PANGOLIN_REGISTER_FACTORY(FfmpegVideoOutput)
 {
-    struct FfmpegVideoFactory final : public FactoryInterface<VideoOutputInterface> {
+    struct FfmpegVideoFactory final : public TypedFactoryInterface<VideoOutputInterface> {
         std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
             const int desired_frame_rate = uri.Get("fps", 60);
             const int desired_bit_rate = uri.Get("bps", 20000*1024);
@@ -947,7 +947,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideoOutput)
     };
 
     auto factory = std::make_shared<FfmpegVideoFactory>();
-    FactoryRegistry<VideoOutputInterface>::I().RegisterFactory(factory, 10, "ffmpeg");
+    FactoryRegistry::I()->RegisterFactory<VideoOutputInterface>(factory, 10, "ffmpeg");
 }
 
 }

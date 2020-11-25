@@ -58,58 +58,6 @@ double AspectAreaWithinTarget(double target, double test)
         return target / test;
 }
 
-void SaveViewFromFbo(std::string prefix, View& view, float scale)
-{
-    PANGOLIN_UNUSED(prefix);
-
-#ifndef HAVE_GLES
-    const Viewport orig = view.v;
-    view.v.l = 0;
-    view.v.b = 0;
-    view.v.w = (int)(view.v.w * scale);
-    view.v.h = (int)(view.v.h * scale);
-
-    const int w = view.v.w;
-    const int h = view.v.h;
-
-    float origLineWidth;
-    glGetFloatv(GL_LINE_WIDTH, &origLineWidth);
-    glLineWidth(origLineWidth * scale);
-
-    float origPointSize;
-    glGetFloatv(GL_POINT_SIZE, &origPointSize);
-    glPointSize(origPointSize * scale);
-
-    // Create FBO
-    GlTexture color(w,h);
-    GlRenderBuffer depth(w,h);
-    GlFramebuffer fbo(color, depth);
-
-    // Render into FBO
-    fbo.Bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    view.Render();
-    glFlush();
-
-#ifdef HAVE_PNG
-    const PixelFormat fmt = PixelFormatFromString("RGBA32");
-    TypedImage buffer(w, h, fmt );
-    glReadBuffer(GL_BACK);
-    glPixelStorei(GL_PACK_ALIGNMENT, 1); // TODO: Avoid this?
-    glReadPixels(0,0,w,h, GL_RGBA, GL_UNSIGNED_BYTE, buffer.ptr );
-    SaveImage(buffer, fmt, prefix + ".png", false);
-#endif // HAVE_PNG
-
-    // unbind FBO
-    fbo.Unbind();
-
-    // restore viewport / line width
-    view.v = orig;
-    glLineWidth(origLineWidth);
-    glPointSize(origPointSize);
-#endif // HAVE_GLES
-}
-
 void View::Resize(const Viewport& p)
 {
     // Compute Bounds based on specification
@@ -390,7 +338,13 @@ void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx,
 
 void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
 {
-    v.GetCamCoordinates(cam_state, winx, winy, winzdepth, x, y, z);
+    const GLint viewport[4] = {v.l, v.b, v.w, v.h};
+    const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
+#ifndef HAVE_GLES
+    glUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
+#else
+    glUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
+#endif
 }
 
 View& View::SetFocus()
@@ -486,40 +440,14 @@ Viewport View::GetBounds() const
     return Viewport( std::max(v.l, vp.l), std::max(v.b, vp.b), std::min(v.w, vp.w), std::min(v.h, vp.h) );
 }
 
-void View::SaveOnRender(const std::string& filename_prefix)
+void View::SaveOnRender(const std::string& filename_hint)
 {
-    const Viewport tosave = this->v.Intersect(this->vp);
-    GetCurrentContext()->screen_capture.push(std::pair<std::string,Viewport>(filename_prefix,tosave ) );
+    SaveWindowOnRender(filename_hint, this->v.Intersect(this->vp));
 }
 
-void View::RecordOnRender(const std::string& record_uri)
+void View::SaveRenderNow(const std::string& filename_hint)
 {
-    PANGOLIN_UNUSED(record_uri);
-
-#ifdef BUILD_PANGOLIN_VIDEO
-    if(!context->recorder.IsOpen()) {
-        Viewport area = GetBounds();
-        context->record_view = this;
-        try{
-            context->recorder.Open(record_uri);
-            std::vector<StreamInfo> streams;
-            const PixelFormat fmt = PixelFormatFromString("RGB24");
-            streams.push_back( StreamInfo(fmt, area.w, area.h, area.w * fmt.bpp / 8) );
-            context->recorder.SetStreams(streams);
-        }catch(const std::exception& e) {
-            pango_print_error("Unable to open VideoRecorder:\n\t%s\n", e.what());
-        }
-    }else{
-        context->recorder.Close();
-    }
-#else
-    std::cerr << "Error: Video Support hasn't been built into this library." << std::endl;
-#endif // BUILD_PANGOLIN_VIDEO
-}
-
-void View::SaveRenderNow(const std::string& filename_prefix, float scale)
-{
-    SaveViewFromFbo(filename_prefix, *this, scale);
+    SaveWindowNow(filename_hint, this->v);
 }
 
 View& View::operator[](size_t i)

@@ -5,8 +5,7 @@
 
 #include <pangolin/log/packetstream_reader.h>
 #include <pangolin/utils/file_utils.h>
-#include <pangolin/utils/registration.h>
-#include <pangolin/utils/uri.h>
+#include <pangolin/utils/param_set.h>
 
 namespace pangolin {
 

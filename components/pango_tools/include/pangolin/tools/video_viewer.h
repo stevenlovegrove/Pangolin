@@ -1,7 +1,7 @@
 #pragma once
 
-#include <pangolin/display/window.h>
 #include <pangolin/platform.h>
+#include <pangolin/windowing/window.h>
 #include <pangolin/video/video_input.h>
 
 #include <functional>

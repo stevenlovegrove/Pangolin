@@ -537,18 +537,18 @@ const picojson::value& TeliVideo::FrameProperties() const
 
 PANGOLIN_REGISTER_FACTORY(TeliVideo)
 {
-    struct TeliVideoFactory final : public FactoryInterface<VideoInterface> {
+    struct TeliVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             return std::unique_ptr<VideoInterface>(new TeliVideo(uri));
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme,"Opens up a TeliCam interface. Warning: currenly all the Uri parameters are passed to the TeliCam driver directly without any validation.");
+        FactoryUseInfo Help( const std::string& scheme ) const override {
+            return FactoryUseInfo(scheme,"Opens up a TeliCam interface. Warning: currenly all the Uri parameters are passed to the TeliCam driver directly without any validation.");
         }
     };
 
     auto factory = std::make_shared<TeliVideoFactory>();
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "teli");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "u3v");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "teli");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "u3v");
 }
 
 }

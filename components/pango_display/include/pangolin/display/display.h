@@ -29,9 +29,9 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
-#include <pangolin/display/handler_enums.h>
-#include <pangolin/display/window.h>
+#include <pangolin/gl/viewport.h>
 #include <pangolin/utils/params.h>
+#include <pangolin/windowing/window.h>
 
 #include <functional>
 #include <string>
@@ -45,17 +45,8 @@
 namespace pangolin
 {
 
-  // CreateWindowAndBind parameter key names.
-  // X11 Window options:
-  extern const char* PARAM_DISPLAYNAME;    // std::string
-  extern const char* PARAM_DOUBLEBUFFER;   // bool
-  extern const char* PARAM_SAMPLE_BUFFERS; // int
-  extern const char* PARAM_SAMPLES;        // int
-  extern const char* PARAM_HIGHRES;        // bool - Apple Retina screens only
-
   // Forward Declarations
   struct View;
-  struct Viewport;
   class  UserApp;
   
   /// Give this OpenGL context a name or switch contexts.
@@ -64,7 +55,7 @@ namespace pangolin
   /// if you have used CreateWindowAndBind() to create a window
   /// or launched a pangolin::UserApp
   PANGOLIN_EXPORT
-  WindowInterface& BindToContext(std::string name);
+  void BindToContext(std::string name);
 
   /// Initialise OpenGL window (determined by platform) and bind context.
   /// This method will choose an available windowing system if one is present.
@@ -101,14 +92,6 @@ namespace pangolin
   PANGOLIN_EXPORT
   bool ShouldQuit();
 
-  /// Returns true if user has interacted with the window since this was last called.
-  PANGOLIN_EXPORT
-  bool HadInput();
-
-  /// Returns true if user has resized the window.
-  PANGOLIN_EXPORT
-  bool HasResized();
-
   /// Renders any views with default draw methods.
   PANGOLIN_EXPORT
   void RenderViews();
@@ -122,39 +105,34 @@ namespace pangolin
   PANGOLIN_EXPORT
   void RegisterKeyPressCallback(int key, std::function<void(void)> func);
 
-  /// Save window contents to image.
+  /// Save the contents of current window within the specified viewport (whole window by default).
+  /// This will be called during pangolin::FinishFrame().
+  /// \param filename_hint can be a complete filename (absolute or relative to working directory).
+  /// \param the portion of the window to save. Default construction will save entire window.
   PANGOLIN_EXPORT
-  void SaveWindowOnRender(std::string filename_prefix);
-  
+  void SaveWindowOnRender(const std::string& filename_hint, const Viewport& v = Viewport());
+
+  /// Save the contents of current window within the specified viewport (whole window by default).
+  /// This will block whilst waiting for pending draw calls to complete and then save the current contents.
+  /// \param filename_hint can be a complete filename (absolute or relative to working directory).
+  /// \param the portion of the window to save. Default construction will save entire window.
   PANGOLIN_EXPORT
-  void SaveFramebuffer(std::string prefix, const Viewport& v);
+  void SaveWindowNow(const std::string& filename_hint, const Viewport& v = Viewport());
   
   namespace process
   {
-    /// Tell pangolin to process input to drive display.
-    /// You will need to call this manually if you haven't let
-    /// Pangolin register callbacks from your windowing system
-    PANGOLIN_EXPORT
-    void Keyboard( unsigned char key, int x, int y);
-
-    PANGOLIN_EXPORT
-    void KeyboardUp(unsigned char key, int x, int y);
-    
-    PANGOLIN_EXPORT
-    void SpecialFunc(int key, int x, int y);
-    
-    PANGOLIN_EXPORT
-    void SpecialFuncUp(int key, int x, int y);
-
     /// Tell pangolin base window size has changed
     /// You will need to call this manually if you haven't let
     /// Pangolin register callbacks from your windowing system
     PANGOLIN_EXPORT
     void Resize(int width, int height);
 
-    /// Event based rendering entry point. Not currently supported.
+    /// Tell pangolin to process input to drive display.
+    /// You will need to call this manually if you haven't let
+    /// Pangolin register callbacks from your windowing system
     PANGOLIN_EXPORT
-    void Display();
+    void Keyboard( unsigned char key, int x, int y, bool pressed);
+
 
     PANGOLIN_EXPORT
     void Mouse( int button, int state, int x, int y);
@@ -166,20 +144,7 @@ namespace pangolin
     void PassiveMouseMotion(int x, int y);
 
     PANGOLIN_EXPORT
-    void Scroll(float x, float y);
-
-    PANGOLIN_EXPORT
-    void Zoom(float m);
-
-    PANGOLIN_EXPORT
-    void Rotate(float r);
-    
-    PANGOLIN_EXPORT
-    void SubpixMotion(float x, float y, float pressure, float rotation, float tiltx, float tilty);
-
-    PANGOLIN_EXPORT
     void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4);
-
   }
 
   /// Retrieve 'base' display, corresponding to entire window.
@@ -194,26 +159,29 @@ namespace pangolin
   PANGOLIN_EXPORT
   View& CreateDisplay();
 
-  /// Switch between windowed and fullscreen mode.
-  PANGOLIN_EXPORT
-  void ToggleFullscreen();
-
   /// Switch windows/fullscreenmode = fullscreen.
   PANGOLIN_EXPORT
-  void SetFullscreen(bool fullscreen = true);
+  void ShowFullscreen(TrueFalseToggle on_off);
 
   /// Toggle display of Pangolin console
   PANGOLIN_EXPORT
-  void ToggleConsole();
+  void ShowConsole(TrueFalseToggle on_off);
 
-  /// Convenience functor for toggling pangolin::View.
-  /// Use with RegisterKeyPressCallback for example
-  struct ToggleViewFunctor {
-      inline ToggleViewFunctor(View& view);
-      inline ToggleViewFunctor(const std::string& name);
-      void operator()();
-      View& view;
-  };
+  ////////////////////////////////////////////////////
+
+  PANGOLIN_DEPRECATED("Use ShowFullscreen(...) instead")
+  inline void ToggleFullscreen() {
+      ShowFullscreen(TrueFalseToggle::Toggle);
+  }
+  PANGOLIN_DEPRECATED("Use ShowFullscreen(...) instead")
+  inline void SetFullscreen(bool fullscreen = true) {
+      ShowFullscreen( (TrueFalseToggle)fullscreen);
+  }
+  PANGOLIN_DEPRECATED("Use ShowConsole(...) instead")
+  inline void ToggleConsole()
+  {
+      ShowConsole(TrueFalseToggle::Toggle);
+  }
 
 }
 

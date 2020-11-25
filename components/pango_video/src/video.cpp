@@ -28,7 +28,6 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/video.h>
 #include <pangolin/video/video_output.h>
-#include <pangolin/video/video_drivers.h>
 
 namespace pangolin
 {
@@ -42,12 +41,8 @@ std::unique_ptr<VideoInterface> OpenVideo(const std::string& str_uri)
 
 std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri)
 {
-    if(!one_time_init) {
-        one_time_init = LoadBuiltInVideoDrivers();
-    }
-
     std::unique_ptr<VideoInterface> video =
-            FactoryRegistry<VideoInterface>::I().Open(uri);
+            FactoryRegistry::I()->Construct<VideoInterface>(uri);
 
     if(!video) {
         throw VideoExceptionNoKnownHandler(uri.scheme);
@@ -63,12 +58,8 @@ std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const std::string& str_uri
 
 std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri)
 {
-    if(!one_time_init) {
-        one_time_init = LoadBuiltInVideoDrivers();
-    }
-
     std::unique_ptr<VideoOutputInterface> video =
-            FactoryRegistry<VideoOutputInterface>::I().Open(uri);
+            FactoryRegistry::I()->Construct<VideoOutputInterface>(uri);
 
     if(!video) {
         throw VideoException("No known video handler for URI '" + uri.scheme + "', or device not found.");

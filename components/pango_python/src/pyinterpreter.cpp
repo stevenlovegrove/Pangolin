@@ -32,6 +32,7 @@
 #include <pangolin/python/pypangoio.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/var/varextra.h>
+#include <pangolin/factory/factory_registry.h>
 
 namespace pangolin
 {
@@ -221,12 +222,12 @@ void PyInterpreter::PushCommand(const std::string& cmd)
     if(obj && obj != Py_None) {
         const std::string output = ToString(obj);
         line_queue.push(
-            ConsoleLine(output, ConsoleLineTypeOutput)
+            InterpreterLine(output, ConsoleLineTypeOutput)
         );
     }
 }
 
-bool PyInterpreter::PullLine(ConsoleLine& line)
+bool PyInterpreter::PullLine(InterpreterLine& line)
 {
     if(line_queue.size()) {
         line = line_queue.front();
@@ -235,6 +236,29 @@ bool PyInterpreter::PullLine(ConsoleLine& line)
     }else{
         return false;
     }
+}
+
+PANGOLIN_REGISTER_FACTORY(PyInterpreter)
+{
+    struct PyInterpreterFactory final : public TypedFactoryInterface<InterpreterInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"python",10}};
+        }
+        const char* Description() const override
+        {
+            return "Python line interpreter.";
+        }
+        ParamSet Params() const override
+        {
+            return {{}};
+        }
+        std::unique_ptr<InterpreterInterface> Open(const Uri& /*uri*/) override {
+            return std::unique_ptr<InterpreterInterface>(new PyInterpreter());
+        }
+    };
+
+    return FactoryRegistry::I()->RegisterFactory<InterpreterInterface>(std::make_shared<PyInterpreterFactory>());
 }
 
 }

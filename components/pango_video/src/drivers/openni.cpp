@@ -268,7 +268,7 @@ bool OpenNiVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
 {
-    struct OpenNiVideoFactory final : public FactoryInterface<VideoInterface> {
+    struct OpenNiVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
             const unsigned int fps = uri.Get<unsigned int>("fps", 30);
@@ -292,10 +292,10 @@ PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
     };
 
     auto factory = std::make_shared<OpenNiVideoFactory>();
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory,  10, "openni1");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 100, "openni");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 100, "oni");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 100, "kinect");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory,  10, "openni1");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 100, "openni");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 100, "oni");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 100, "kinect");
 }
 
 }

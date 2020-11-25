@@ -96,34 +96,33 @@ bool TestVideo::GrabNewest( unsigned char* image, bool wait )
 
 PANGOLIN_REGISTER_FACTORY(TestVideo)
 {
-    struct TestVideoFactory final : public FactoryInterface<VideoInterface> {
-        TestVideoFactory()
+    struct TestVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
+            return {{"test",10}};
+        }
+        const char* Description() const override
+        {
+            return "A test video feed with pixel-wise white noise.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"size","640x480","Image dimension"},
                 {"n","1","Number of streams"},
                 {"fmt","RGB24","Pixel format: see pixel format help for all possible values"}
             }};
         }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            ParamReader reader(param_set_, uri);
+            ParamReader reader(Params(), uri);
             const ImageDim dim = reader.Get<ImageDim>("size");
             const int n = reader.Get<int>("n");
             std::string fmt  = reader.Get<std::string>("fmt");
             return std::unique_ptr<VideoInterface>(new TestVideo(dim.x,dim.y,n,fmt));
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme,"A test video factory", param_set_);
-        }
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string&) const override {return true;}
-        ParamSet param_set_;
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<TestVideoFactory>(), 10, "test");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<TestVideoFactory>());
 }
 
 }

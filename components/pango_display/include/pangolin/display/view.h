@@ -165,18 +165,6 @@ struct PANGOLIN_EXPORT View
     //! The minimum of vp and v
     Viewport GetBounds() const;
     
-    //! Specify that this views region in the framebuffer should be saved to
-    //! a file just before the buffer is flipped.
-    void SaveOnRender(const std::string& filename_prefix);
-    
-    //! Specify that this views region in the framebuffer should be saved to
-    //! a video just before the buffer is flipped
-    void RecordOnRender(const std::string& record_uri);
-    
-    //! Uses the views default render method to draw into an FBO 'scale' times
-    //! the size of the view and save to a file.
-    void SaveRenderNow(const std::string& filename_prefix, float scale = 1);
-    
     //! Return number of child views attached to this view
     size_t NumChildren() const;
     
@@ -224,6 +212,14 @@ struct PANGOLIN_EXPORT View
     
     // External draw function
     std::function<void(View&)> extern_draw_function;
+
+    ////////////////////////////////////////////////
+
+    PANGOLIN_DEPRECATED("Use pangolin::SaveWindowOnRender(...) instead.")
+    void SaveOnRender(const std::string& filename_hint);
+
+    PANGOLIN_DEPRECATED("Use pangolin::SaveWindowNow(...) instead.")
+    void SaveRenderNow(const std::string& filename_hint);
     
 private:
     // Private copy constructor

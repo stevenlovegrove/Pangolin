@@ -55,11 +55,11 @@ namespace py_pangolin {
     m.def("FinishFrame",
           &pangolin::FinishFrame);
 
-    m.def("ToggleFullscreen",
-          &pangolin::ToggleFullscreen);
+    m.def("ShowFullscreen",
+          &pangolin::ShowFullscreen);
 
-    m.def("ToggleConsole",
-          &pangolin::ToggleConsole);
+    m.def("ShowConsole",
+          &pangolin::ShowConsole);
 
     m.def("RegisterKeyPressCallback",
           [](int v, const std::function<void()>& f){

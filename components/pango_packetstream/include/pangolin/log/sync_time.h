@@ -180,11 +180,11 @@ public:
         Start();
     }
 
-    Signal<> OnTimeStart;
+    Signal<void(void)> OnTimeStart;
 
-    Signal<> OnTimeStop;
+    Signal<void(void)> OnTimeStop;
 
-    Signal<TimePoint> OnSeek;
+    Signal<void(TimePoint)> OnSeek;
 
 private:
     template< typename T, typename Pred >

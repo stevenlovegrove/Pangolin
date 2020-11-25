@@ -264,17 +264,25 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
 
 PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
 {
-    struct PangoVideoFactory final : public FactoryInterface<VideoOutputInterface> {
-        PangoVideoFactory()
+    struct PangoVideoFactory final : public TypedFactoryInterface<VideoOutputInterface> {
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
+            return {{"pango",10}, {"file",10}};
+        }
+        const char* Description() const override
+        {
+            return "Output to a Pango video container.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"buffer_size_mb","100","Buffer size in MB"},
                 {"unique_filename","","This is flag to create a unique file name in the case of file already exists."},
                 {"encoder(\\d+)?"," ","encoder or encoderN, 1 <= N <= 100. The default values of encoderN are set to encoder"}
             }};
         }
         std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
-            ParamReader reader(param_set_, uri);
+            ParamReader reader(Params(), uri);
 
             const size_t mb = 1024*1024;
             const size_t buffer_size_bytes = reader.Get<size_t>("buffer_size_mb") * mb;
@@ -303,22 +311,9 @@ PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
                 new PangoVideoOutput(filename, buffer_size_bytes, stream_encoder_uris)
             );
         }
-        FactoryHelpData Help(const std::string& scheme ) const override {
-            return FactoryHelpData(scheme,"Writes to a pango file",param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    auto factory = std::make_shared<PangoVideoFactory>();
-    FactoryRegistry<VideoOutputInterface>::I().RegisterFactory(factory, 10, "pango");
-    FactoryRegistry<VideoOutputInterface>::I().RegisterFactory(factory, 10, "file");
+    return FactoryRegistry::I()->RegisterFactory<VideoOutputInterface>(std::make_shared<PangoVideoFactory>());
 }
 
 }

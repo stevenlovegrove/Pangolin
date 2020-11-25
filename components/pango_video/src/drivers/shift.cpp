@@ -202,19 +202,27 @@ std::vector<VideoInterface*>& ShiftVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(ShiftVideo)
 {
-    struct ShiftVideoFactory final : public FactoryInterface<VideoInterface> {
-        ShiftVideoFactory()
+    struct ShiftVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
-                {"shift\\d+","0","shiftN, where 1 <= N <= 100"},
-                {"mask\\d+","65535","maskN, where 1 <= N <= 100"},
+            return {{"shift",10}};
+        }
+        const char* Description() const override
+        {
+            return "Video Filter: bitwise shift pixel values.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"shift\\d+","0","shiftN, N:[1,streams]. Right shift pixel values."},
+                {"mask\\d+","65535","maskN, N:[1,streams]. Bitwise pixel mask (after shift)"},
             }};
         }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::map<size_t, int> shift_right_bits;
             std::map<size_t, uint32_t> masks;
 
-            ParamReader reader(param_set_, uri);
+            ParamReader reader(Params(), uri);
 
             for(size_t i=0; i<100; ++i)
             {
@@ -237,20 +245,9 @@ PANGOLIN_REGISTER_FACTORY(ShiftVideo)
                 new ShiftVideo(subvid, shift_right_bits, masks)
             );
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme, "", param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<ShiftVideoFactory>(), 10, "shift");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<ShiftVideoFactory>());
 }
 
 }

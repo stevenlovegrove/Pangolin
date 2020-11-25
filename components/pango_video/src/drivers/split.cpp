@@ -90,16 +90,24 @@ std::vector<VideoInterface*>& SplitVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(SplitVideo)
 {
-    struct SplitVideoFactory final : public FactoryInterface<VideoInterface> {
-        ParamSet param_set_;
-
-        SplitVideoFactory(){
-            param_set_ = {{
+    struct SplitVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"split",10}};
+        }
+        const char* Description() const override
+        {
+            return "Transforms a set of video streams into a new set by providing region-of-interest, raw memory layout, or stream order specification.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"roi\\d+","0x0","Region of Interest as WidthxHeight"},
                 {"mem\\d+","width,height,pitch,pixelformat*","By default dynamically set from the first stream"},
                 {"stream\\d+","0","Integer"}
             }};
         }
+
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::vector<StreamInfo> streams;
 
@@ -108,7 +116,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
                 throw VideoException("VideoSplitter input must have at least one stream");
             }
 
-            ParamReader param_reader(param_set_, uri);
+            ParamReader param_reader(Params(), uri);
 
             while(true) {
                 const size_t n = streams.size() + 1;
@@ -164,19 +172,9 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
 
             return std::unique_ptr<VideoInterface>( new SplitVideo(subvid,streams) );
         }
-
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme, "", param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<SplitVideoFactory>(), 10, "split");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<SplitVideoFactory>());
 }
 
 }

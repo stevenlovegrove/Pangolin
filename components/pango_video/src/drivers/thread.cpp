@@ -261,7 +261,7 @@ std::vector<VideoInterface*>& ThreadVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(ThreadVideo)
 {
-    struct ThreadVideoFactory final : public FactoryInterface<VideoInterface> {
+    struct ThreadVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         ThreadVideoFactory()
         {
             param_set_ = {{
@@ -276,8 +276,8 @@ PANGOLIN_REGISTER_FACTORY(ThreadVideo)
             const std::string name = reader.Get<std::string>("name");
             return std::unique_ptr<VideoInterface>(new ThreadVideo(subvid, num_buffers, name));
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme,"Runs the URL part of the URI in a seperate thread", param_set_);
+        FactoryUseInfo Help( const std::string& scheme ) const override {
+            return FactoryUseInfo(scheme,"Runs the URL part of the URI in a seperate thread", param_set_);
         }
 
         bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
@@ -289,7 +289,7 @@ PANGOLIN_REGISTER_FACTORY(ThreadVideo)
         ParamSet param_set_;
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<ThreadVideoFactory>(), 10, "thread");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<ThreadVideoFactory>(), 10, "thread");
 }
 
 }

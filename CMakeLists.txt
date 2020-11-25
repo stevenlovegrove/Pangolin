@@ -5,7 +5,7 @@ set(PANGOLIN_VERSION_MAJOR 0)
 set(PANGOLIN_VERSION_MINOR 5)
 set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Prevent in source builds
@@ -19,8 +19,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include(CreateMethodCallFile)
 include(SetPlatformVars)
 
-option( BUILD_TOOLS "Build Examples" ON )
-option( BUILD_EXAMPLES "Build Tools" ON )
+option( BUILD_TOOLS "Build Tools" ON )
+option( BUILD_EXAMPLES "Build Examples" ON )
 
 # Default build type (Override with cmake .. -DCMAKE_BUILD_TYPE=...)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)

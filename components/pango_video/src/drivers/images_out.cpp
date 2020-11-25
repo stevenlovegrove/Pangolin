@@ -103,15 +103,23 @@ bool ImagesVideoOutput::IsPipe() const
 
 PANGOLIN_REGISTER_FACTORY(ImagesVideoOutput)
 {
-    struct ImagesVideoFactory final : public FactoryInterface<VideoOutputInterface> {
-        ImagesVideoFactory()
+    struct ImagesVideoFactory final : public TypedFactoryInterface<VideoOutputInterface> {
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
+            return {{"images",10}};
+        }
+        const char* Description() const override
+        {
+            return "Writes video frames out to sequance of images + json index file.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"fmt","png","Output image format. Possible values are all Pangolin image formats e.g.: png,jpg,jpeg,ppm,pgm,pxm,pdm,zstd,lzf,p12b,exr,pango"}
             }};
         }
         std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override {
-            ParamReader reader(param_set_,uri);
+            ParamReader reader(Params(),uri);
 
             const std::string images_folder = PathExpand(uri.url);
             const std::string json_filename = images_folder + "/archive.json";
@@ -125,22 +133,9 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideoOutput)
                 new ImagesVideoOutput(images_folder, json_filename, image_extension)
             );
         }
-
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme,"Writes video frames a images",param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string&) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    auto factory = std::make_shared<ImagesVideoFactory>();
-    FactoryRegistry<VideoOutputInterface>::I().RegisterFactory(factory, 10, "images");
+    return FactoryRegistry::I()->RegisterFactory<VideoOutputInterface>(std::make_shared<ImagesVideoFactory>());
 }
 
 }

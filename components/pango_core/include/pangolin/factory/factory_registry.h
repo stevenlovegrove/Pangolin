@@ -27,240 +27,153 @@
 
 #pragma once
 
-#include <memory>
 #include <vector>
-#include <algorithm>
+#include <map>
 #include <unordered_set>
+#include <algorithm>
+#include <typeindex>
 #include <regex>
 #include <exception>
 
-#include <pangolin/utils/uri.h>
+#include <pangolin/factory/factory.h>
 
 namespace pangolin
 {
 
-struct FactoryParamHelpData {
-    std::string name;
-    std::string default_value;
-    std::string description;
-};
-
-class FactoryHelpData {
-public:
-    FactoryHelpData( const std::string& scheme, const std::string& description = "", const ParamSet& param_set = ParamSet()) :
-        scheme_(scheme), description_(description), param_set_(param_set) {}
-
-    std::string GetScheme(){return scheme_;}
-    std::string GetSynopsis();
-    std::string GetDescription();
-    std::vector<FactoryParamHelpData> GetParamsHelp();
-private:
-    std::string scheme_;
-    std::string description_;
-    ParamSet    param_set_;
-};
-
-class FactoryInterfaceBase {
-public:
-    virtual ~FactoryInterfaceBase(){};
-
-    // The following methods are taking scheme as arguments because
-    // a single instance of Factory can serve multiple schemes
-    virtual FactoryHelpData Help( const std::string& scheme ) const = 0;
-
-    // Returning empty set means this factory validates this URI.
-    virtual bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params ) const = 0;
-
-    // Return true if this scheme is at all validated by this factory
-    virtual bool IsValidated( const std::string& scheme ) const = 0;
-
-    //Helper function validate uri against a paramset
-    static bool ValidateUriAgainstParamSet( const std::string& /*scheme*/, const ParamSet& param_set, const Uri& uri, std::unordered_set<std::string>& unrecognized_params )
-    {
-        ParamReader param_reader( param_set, uri );
-        unrecognized_params = param_reader.FindUnrecognizedUriParams();
-        return unrecognized_params.size() == 0;
-    }
-};
-
-template<typename T>
-struct FactoryInterface : FactoryInterfaceBase
-{
-    typedef T FactoryItem;
-    virtual ~FactoryInterface() = default;
-    virtual std::unique_ptr<T> Open(const Uri& uri) = 0;
-
-    virtual FactoryHelpData Help( const std::string& scheme ) const override {return FactoryHelpData(scheme);}
-    virtual bool ValidateUri( const std::string&, const Uri&, std::unordered_set<std::string>&) const override {return true;};
-    virtual bool IsValidated( const std::string&) const override { return false;}
-};
-
-struct FactoryMetaData {
-    uint32_t precedence;
-    std::string scheme;
-    std::shared_ptr<FactoryInterfaceBase> factory;
-
-
-    FactoryMetaData( uint32_t pre,
-                     const std::string& scheme_name,
-                     std::shared_ptr<FactoryInterfaceBase> factoryInterface )
-        : precedence( pre ),
-          scheme(scheme_name),
-          factory(factoryInterface)
-    {}
-
-    FactoryHelpData Help() const
-    {
-        return factory->Help( scheme );
-    }
-
-    bool IsValidated() const
-    {
-        return factory->IsValidated( scheme );
-    }
-
-
-};
-
-class FactoryRegistryBase {
-public:
-    FactoryRegistryBase( const std::string& type );
-    virtual ~FactoryRegistryBase() {};
-    const std::string& GetType() const { return type;}
-    static const std::vector< const FactoryRegistryBase* >& GetFactoryRegistryList() {return registry_list;};
-
-    virtual std::vector<FactoryMetaData> GetSchemeFactories() const = 0;
-private:
-    std::string type;
-    static std::vector<const FactoryRegistryBase*> registry_list;
-};
-
-class FactoryRegistryException : public std::exception {
-public:
-    FactoryRegistryException( bool scheme_matched,
-                              bool all_params_matched,
-                              const Uri& uri,
-                              const std::unordered_set<std::string>& unrecognized_params ){
-        std::stringstream ss;
-
-        if( !scheme_matched ){
-            error_msg_ = "No matching scheme for \"" + uri.scheme + "\"";
-        }
-        else if( all_params_matched ){
-            error_msg_=  "URI " + uri.full_uri + " couldn't be opened even though all the parameters were recognized. "
-                                                 "Perhaps their values are invalid? Is the resource accessible? "
-                                                 "Perhaps there is an instance of the scheme \"" + uri.scheme + "\" that is not validated?";
-        }
-        else{
-            for(const auto& param : unrecognized_params ){
-                ss << param << ",";
-            }
-            error_msg_ = "No instance of the scheme \"" + uri.scheme + "\" recognized all the parameters. Infact, the parameter(s) [" + ss.str() + "] were not recognized by any instance. Double check spelling!";
-        }
-    }
-    virtual const char* what() const throw() override {
-        return error_msg_.c_str();
-    }
-private:
-    std::string error_msg_;
-};
-
-template<typename T>
-class FactoryRegistry : public FactoryRegistryBase
+/// Registry class for managing FactoryInterface instances.
+/// Use Factory instantiation to decouple implementation and use
+/// of interface types and easy configure construction through
+/// a URI-like syntax.
+class FactoryRegistry
 {
 public:
-    FactoryRegistry( const std::string &type_name = "unknown ")
-        : FactoryRegistryBase( type_name ) {}
-    // IMPORTANT: Implement for each templated instantiation within a seperate compilation unit.
-    static FactoryRegistry<T>& I();
+    /// Singleton instance of FactoryRegistry
+    static std::shared_ptr<FactoryRegistry> I();
 
-    ~FactoryRegistry()
+    ~FactoryRegistry() {}
+
+    /// Register a new TypedFactoryInterface with the registry
+    template<typename T>
+    bool RegisterFactory( const std::shared_ptr<TypedFactoryInterface<T>>& factory )
     {
+        TypeRegistry& registry = type_registries[typeid(T)];
+        registry.push_back(factory);
+        return true;
     }
 
-    virtual std::vector<FactoryMetaData> GetSchemeFactories() const override
+    /// Unregister an existing factory.
+    /// Do nothing if factory isn't registered.
+    template<typename T>
+    void UnregisterFactory(TypedFactoryInterface<T>* factory)
     {
-        std::vector<FactoryMetaData> result;
-        for(const auto& f: factories){
-            result.emplace_back ( f.precedence, f.scheme, f.factory );
-        }
-        return result;
+        TypeRegistry& registry = type_registries[typeid(T)];
+
+        registry.erase(
+           std::remove_if( registry.begin(), registry.end(),
+              [&](auto& i){ return i.factory.get() == factory;}),
+           registry.end());
     }
 
-    void RegisterFactory(std::shared_ptr<FactoryInterface<T>> factory, uint32_t precedence, const std::string& scheme_name )
-    {
-        FactoryItem item = {precedence, scheme_name, factory};
-        factories.push_back( item );
-        std::sort(factories.begin(), factories.end());
-    }
-
-    void UnregisterFactory(FactoryInterface<T>* factory)
-    {
-        for( auto i = factories.end()-1; i != factories.begin(); --i)
-        {
-            if( i->factory.get() == factory ) {
-                factories.erase(i);
-            }
-        }
-    }
-
+    /// Remove all Factories from all types
     void UnregisterAllFactories()
     {
-        factories.clear();
+        type_registries.clear();
     }
 
-    std::unordered_set<std::string> IntersectParamSet(const std::unordered_set<std::string>& a, const std::unordered_set<std::string>& b )
+    /// Attempt to Construct an instance of \tparam T using the highest precedence
+    /// \class FactoryInterface which acceps \param uri
+    /// \throws FactoryRegistry::Exception
+    template<typename T>
+    std::unique_ptr<T> Construct(const Uri& uri)
     {
-        std::unordered_set<std::string> c;
-        std::set_intersection( a.begin(), a.end(), b.begin(), b.end(), std::inserter( c, c.begin() ) );
-        return c;
-    }
+        TypeRegistry& registry = type_registries[typeid(T)];
 
-    std::unique_ptr<T> Open(const Uri& uri)
-    {
-        // Iterate over all registered factories in order of precedence.
-        std::unordered_set<std::string> orphan_params;
-        bool all_params_matched = false;
-        bool scheme_matched = false;
+        TypeRegistry candidates;
+        std::copy_if(registry.begin(), registry.end(), std::back_inserter(candidates), [&](auto& factory){
+            const auto schemes = factory->Schemes();
+            return schemes.find(uri.scheme) != schemes.end();
+        });
 
-        for(auto& item : factories) {
-            if( item.scheme == uri.scheme) {
-                scheme_matched = true;
+        if(candidates.size() == 0) {
+            throw NoMatchingSchemeException( uri);
+        }
 
-                std::unordered_set<std::string> unrecognized_params;
-                bool validated = item.factory->ValidateUri(item.scheme,uri,unrecognized_params);
-                orphan_params = orphan_params.size() == 0 ? unrecognized_params : IntersectParamSet( orphan_params, unrecognized_params );
+        // Order candidates by precedence.
+        std::sort(candidates.begin(), candidates.end(), [&](auto& lhs, auto& rhs){
+            // We know that all candidates contain scheme
+            return lhs->Schemes()[uri.scheme] < lhs->Schemes()[uri.scheme];
+        });
 
-                if( validated ){
-                    all_params_matched = true;
-                    std::unique_ptr<T> video = item.factory->Open(uri);
-                    if(video) {
-                        return video;
-                    }
+        // Try candidates in order
+        for(auto& factory : candidates) {
+            std::unordered_set<std::string> orphan_params = ParamReader( factory->Params(), uri ).FindUnrecognizedUriParams();
+            if( orphan_params.size() == 0 )
+            {
+                TypedFactoryInterface<T>* factoryT = dynamic_cast<TypedFactoryInterface<T>*>(factory.get());
+                if(factoryT) {
+                    std::unique_ptr<T> video = factoryT->Open(uri);
+                    if(video) return video;
                 }
-
+            }else{
+                throw ParameterMismatchException(uri, orphan_params);
             }
         }
 
-        throw FactoryRegistryException( scheme_matched, all_params_matched, uri, orphan_params  );
+        throw NoFactorySucceededException(uri);
     }
 
-private:
-    struct FactoryItem
-    {
-        uint32_t precedence;
-        std::string scheme;
-        std::shared_ptr<FactoryInterface<T>> factory;
+    /// Base class for FactoryRegistry Exceptions
+    class Exception : public std::exception {
+    public:
+        Exception(const Uri& uri) : uri(uri) {
+            err = "Unable to open URI " + uri.full_uri + ".";
+        }
+        virtual const char* what() const throw() override {
+            return err.c_str();
+        }
+        const Uri uri;
+        std::string err;
+    };
 
-        bool operator<(const FactoryItem& rhs) const {
-            return precedence < rhs.precedence;
+    class NoMatchingSchemeException : public Exception {
+    public:
+        NoMatchingSchemeException(const Uri& uri) : Exception(uri) {
+            err += " No matching scheme.";
         }
     };
 
-    // Priority, Factory tuple
-    std::vector<FactoryItem> factories;
+    class NoFactorySucceededException : public Exception {
+    public:
+        NoFactorySucceededException(const Uri& uri) : Exception(uri) {
+            err += " No factory succeeded.";
+        }
+    };
+
+    class ParameterMismatchException : public Exception {
+    public:
+        ParameterMismatchException(const Uri& uri, const std::unordered_set<std::string>& unrecognized_params) :
+            Exception(uri), unrecognized_params(unrecognized_params) {
+            std::stringstream ss;
+            for(const auto& p : unrecognized_params ) ss << p << ",";
+            err += " Unrecognized options for scheme (" + ss.str() + ")";
+        }
+        const std::unordered_set<std::string> unrecognized_params;
+    };
+
+private:
+    using TypeRegistry = std::vector<std::shared_ptr<FactoryInterface>>;
+    std::map<std::type_index, TypeRegistry> type_registries;
 };
 
-#define PANGOLIN_REGISTER_FACTORY(x) void Register ## x ## Factory()
-
+/// This macro can be used as a template for registering a factory class
+/// \tparam x is the factory interface class (such as WindowInterface, VideoInterface, etc)
+/// \return true iff registration was successful.
+// Forward declaration; static load variable; definition
+#define PANGOLIN_REGISTER_FACTORY(x) \
+    bool Register ## x ## Factory(); \
+    static const bool Load ## x ## Success = Register ## x ## Factory(); \
+    bool Register ## x ## Factory()
+    // {
+    //    return FactoryRegistry::I()->RegisterFactory<x>(std::make_shared<MyFactoryClass>());
+    // }
 }

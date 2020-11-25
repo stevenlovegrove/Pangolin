@@ -272,16 +272,24 @@ const picojson::value& ImagesVideo::FrameProperties() const
 
 PANGOLIN_REGISTER_FACTORY(ImagesVideo)
 {
-    struct ImagesVideoVideoFactory final : public FactoryInterface<VideoInterface> {
-        ImagesVideoVideoFactory()
+    struct ImagesVideoVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
+            return {{"file",20}, {"files",20}, {"image",10}, {"images",10}};
+        }
+        const char* Description() const override
+        {
+            return "Load an image collection as a video. Supports one or more synchronized streams.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"fmt","GRAY8","Pixel format, see pixel format help for all possible values"},
                 {"size","640x480","Image size"}
             }};
         }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            ParamReader reader(param_set_,uri);
+            ParamReader reader(Params(),uri);
 
             const bool raw = reader.Contains("fmt");
             const std::string path = PathExpand(uri.url);
@@ -295,24 +303,9 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
                 return std::unique_ptr<VideoInterface>( new ImagesVideo(path) );
             }
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme, "Video from images", param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    auto factory = std::make_shared<ImagesVideoVideoFactory>();
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 20, "file");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 20, "files");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "image");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "images");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<ImagesVideoVideoFactory>());
 }
 
 }

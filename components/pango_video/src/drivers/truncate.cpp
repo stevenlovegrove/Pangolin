@@ -91,13 +91,21 @@ std::vector<VideoInterface*>& TruncateVideo::InputStreams()
 
 PANGOLIN_REGISTER_FACTORY(TruncateVideo)
 {
-    struct TruncateVideoFactory : public FactoryInterface<VideoInterface> {
-        TruncateVideoFactory()
+    struct TruncateVideoFactory : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
-                {"begin","0","Beginning of the stream"},
-                {"end","size_t::max*","Dynamically set to the max of size_t"},
-            }};
+            return {{"truncate",10}};
+        }
+        const char* Description() const override
+        {
+            return "Truncates the length of a video stream with begin and end markers";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                    {"begin","0","Beginning of the stream"},
+                    {"end","size_t::max*","Dynamically set to the max of size_t"},
+                }};
         }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
@@ -105,26 +113,15 @@ PANGOLIN_REGISTER_FACTORY(TruncateVideo)
                 throw VideoException("VideoTruncater input must have at least one stream");
             }
 
-            ParamReader reader(param_set_,uri);
+            ParamReader reader(Params(),uri);
             const size_t start = reader.Get<size_t>("begin");
             const size_t end = reader.Get<size_t>("end", std::numeric_limits<size_t>::max());
 
             return std::unique_ptr<VideoInterface>( new TruncateVideo(subvid,start,end) );
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme,"Truncates the length of a video stream with begin and end markers", param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<TruncateVideoFactory>(), 10, "truncate");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<TruncateVideoFactory>());
 }
 
 }

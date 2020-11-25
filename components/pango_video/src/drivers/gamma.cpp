@@ -329,7 +329,7 @@ bool GammaVideo::DropNFrames(uint32_t n)
 
 PANGOLIN_REGISTER_FACTORY(GammaVideo)
 {
-    struct GammaVideoFactory final : public FactoryInterface<VideoInterface> {
+    struct GammaVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         GammaVideoFactory()
         {
             param_set_ = {{
@@ -355,8 +355,8 @@ PANGOLIN_REGISTER_FACTORY(GammaVideo)
 
             return std::unique_ptr<VideoInterface> (new GammaVideo(subvid, stream_gammas));
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme, "Gamma corrects a set of video streams", param_set_);
+        FactoryUseInfo Help( const std::string& scheme ) const override {
+            return FactoryUseInfo(scheme, "Gamma corrects a set of video streams", param_set_);
         }
 
         bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
@@ -369,7 +369,7 @@ PANGOLIN_REGISTER_FACTORY(GammaVideo)
     };
 
     auto factory = std::make_shared<GammaVideoFactory>();
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "gamma");
+    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "gamma");
 }
 
 }

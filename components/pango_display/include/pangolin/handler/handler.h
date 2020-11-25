@@ -28,8 +28,8 @@
 #pragma once
 
 #include <pangolin/gl/opengl_render_state.h>
-#include <pangolin/display/handler_enums.h>
 #include <pangolin/gl/gl.h>
+#include <pangolin/windowing/handler_enums.h>
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
 #define USE_EIGEN

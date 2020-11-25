@@ -26,7 +26,7 @@
  */
 
 #include "opengl_render_state.hpp"
-#include <pangolin/display/opengl_render_state.h>
+#include <pangolin/gl/opengl_render_state.h>
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>

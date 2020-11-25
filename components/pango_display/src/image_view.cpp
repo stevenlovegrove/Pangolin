@@ -19,7 +19,9 @@ void ImageView::Render()
 {
     LoadPending();
 
+#ifndef HAVE_GLES
     glPushAttrib(GL_DEPTH_BITS);
+#endif
     glDisable(GL_DEPTH_TEST);
 
     Activate();
@@ -51,7 +53,9 @@ void ImageView::Render()
         extern_draw_function(*this);
     }
 
+#ifndef HAVE_GLES
     glPopAttrib();
+#endif
 }
 
 void ImageView::Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state)

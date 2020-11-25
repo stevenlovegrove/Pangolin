@@ -26,7 +26,7 @@
  */
 
 #include "window.hpp"
-#include <pangolin/display/window.h>
+#include <pangolin/windowing/window.h>
 #include <functional>
 
 namespace py_pangolin {
@@ -35,11 +35,12 @@ namespace py_pangolin {
     public:
     using pangolin::WindowInterface::WindowInterface;
 
-    void ToggleFullscreen() override {
+    void ShowFullscreen(const pangolin::TrueFalseToggle on_off) override {
       PYBIND11_OVERLOAD_PURE(
                              void,
                              pangolin::WindowInterface,
-                             ToggleFullscreen);
+                             ShowFullscreen,
+                             on_off);
     }
 
     void Move(int x, int y) override {
@@ -89,7 +90,7 @@ namespace py_pangolin {
                              SwapBuffers);
     }
 
-    void SetOnRender(std::function<void ()> on_render) override {
+    void SetOnRender(std::function<void ()> on_render) {
       PYBIND11_OVERLOAD_PURE(
                              void,
                              pangolin::WindowInterface,
@@ -97,7 +98,7 @@ namespace py_pangolin {
                              on_render);
     }
 
-    void Run() override {
+    void Run() {
       PYBIND11_OVERLOAD_PURE(
                              void,
                              pangolin::WindowInterface,
@@ -109,7 +110,7 @@ namespace py_pangolin {
     pybind11::class_<pangolin::WindowInterface, PyWindowInterface > windows_interface(m, "WindowsInterface");
     windows_interface
       .def(pybind11::init<>())
-      .def("ToggleFullscreen", &pangolin::WindowInterface::ToggleFullscreen)
+      .def("ShowFullscreen", &pangolin::WindowInterface::ShowFullscreen)
       .def("Move", &pangolin::WindowInterface::Move)
       .def("Resize", &pangolin::WindowInterface::Resize)
       .def("MakeCurrent", &pangolin::WindowInterface::MakeCurrent)

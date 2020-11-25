@@ -348,10 +348,18 @@ bayer_method_t DebayerVideo::BayerMethodFromString(std::string str)
 
 PANGOLIN_REGISTER_FACTORY(DebayerVideo)
 {
-    struct DebayerVideoFactory final : public FactoryInterface<VideoInterface> {
-        DebayerVideoFactory()
+    struct DebayerVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
+            return {{"debayer",10}};
+        }
+        const char* Description() const override
+        {
+            return "Demosaics raw RGB sensor data (one or multiple streams) to RGB images";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"tile","rggb","Tiling pattern: possible values: rggb,gbrg,grbg,bggr"},
                 {"method(\\d+)?","none","method, or methodN for multiple sub-streams, N >= 1. Possible values: nearest,simple,bilinear,hqlinear,downsample,edgesense,vng,ahd,mono,none. For methodN, the default values are set to the value of method."},
                 {"wb_r","1.0","White balance - red component"},
@@ -360,7 +368,7 @@ PANGOLIN_REGISTER_FACTORY(DebayerVideo)
             }};
         }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            ParamReader reader(param_set_,uri);
+            ParamReader reader(DebayerVideoFactory::Params(),uri);
 
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const std::string tile_string = reader.Get<std::string>("tile");
@@ -376,20 +384,9 @@ PANGOLIN_REGISTER_FACTORY(DebayerVideo)
             }
             return std::unique_ptr<VideoInterface>( new DebayerVideo(subvid, methods, tile, input_wb_gains) );
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme,"Demosaics raw RGB sensor data (one or multiple streams) to RGB images", param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(std::make_shared<DebayerVideoFactory>(), 10, "debayer");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>( std::make_shared<DebayerVideoFactory>());
 }
 
 }

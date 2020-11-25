@@ -4,8 +4,6 @@ target_sources( ${COMPONENT}
 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/stream_encoder_factory.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/video_input.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/video_interface_factory.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/video_output_interface_factory.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/video_output.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/video.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/help.cpp
@@ -14,12 +12,11 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/images_out.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/split.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/truncate.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/drivers/pvn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/pango.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/pango_video_output.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/debayer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/shift.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/drivers/mirror.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/drivers/transform.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/unpack.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/pack.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/join.cpp
@@ -33,12 +30,11 @@ list(APPEND VIDEO_FACTORY_REG
     RegisterImagesVideoOutputFactory
     RegisterSplitVideoFactory
     RegisterTruncateVideoFactory
-    RegisterPvnVideoFactory
     RegisterPangoVideoFactory
     RegisterPangoVideoOutputFactory
     RegisterDebayerVideoFactory
     RegisterShiftVideoFactory
-    RegisterMirrorVideoFactory
+    RegisterTransformVideoFactory
     RegisterUnpackVideoFactory
     RegisterPackVideoFactory
     RegisterJoinVideoFactory

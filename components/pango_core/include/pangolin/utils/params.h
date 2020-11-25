@@ -36,9 +36,8 @@
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT Params
+struct PANGOLIN_EXPORT Params
 {
-public:
     typedef std::vector<std::pair<std::string,std::string>> ParamMap;
 
     Params()

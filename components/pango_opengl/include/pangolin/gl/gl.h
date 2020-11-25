@@ -267,6 +267,8 @@ size_t GlFormatChannels(GLenum data_layout);
 
 size_t GlDataTypeBytes(GLenum type);
 
+TypedImage ReadFramebuffer(const Viewport& v, const std::string& pixel_format = "RGBA32");
+
 }
 
 // Include implementation

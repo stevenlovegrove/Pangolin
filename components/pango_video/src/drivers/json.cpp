@@ -38,7 +38,21 @@ namespace pangolin {
 
 PANGOLIN_REGISTER_FACTORY(JsonVideo)
 {
-    struct JsonVideoFactory final : public FactoryInterface<VideoInterface> {
+    struct JsonVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"json",10}, {"file",5}};
+        }
+        const char* Description() const override
+        {
+            return "Construct Video URI from supplied json file. Json file should contain video_uri string and video_uri_defaults map for overridable substitutions.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"*","","Override any video_uri_defaults keys in the json file."},
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             if(uri.scheme == "json" || (uri.scheme == "file" && FileLowercaseExtention(uri.url) == ".json")) {
                 const std::string json_filename = PathExpand(uri.url);
@@ -76,14 +90,9 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
                 return std::unique_ptr<VideoInterface>();
             }
         }
-        FactoryHelpData Help( const std::string& scheme ) const override {
-            return FactoryHelpData(scheme, "interesting json keys: video_uri, video_uri_defaults.");
-        }
     };
 
-    auto factory = std::make_shared<JsonVideoFactory>();
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory, 10, "json");
-    FactoryRegistry<VideoInterface>::I().RegisterFactory(factory,  5, "file");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<JsonVideoFactory>());
 }
 
 }
