@@ -21,7 +21,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install Dependencies
-      run: $GITHUB_WORKSPACE/scripts/install_prerequisites.sh -v -m "apt-get brew"
+      run: $GITHUB_WORKSPACE/scripts/install_prerequisites.sh -v -u -m "apt-get brew"
 
     - name: Create Build Directory
       run: cmake -E make_directory ${{runner.workspace}}/build

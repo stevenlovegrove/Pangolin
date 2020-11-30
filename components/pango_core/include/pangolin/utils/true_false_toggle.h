@@ -15,6 +15,7 @@ inline bool to_bool(const TrueFalseToggle on_off_toggle, const bool current_valu
     case TrueFalseToggle::True: return true;
     case TrueFalseToggle::False: return false;
     case TrueFalseToggle::Toggle: return !current_value;
+    default: return false;
     }
 }
 

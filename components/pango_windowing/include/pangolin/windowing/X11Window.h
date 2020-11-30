@@ -28,9 +28,9 @@
 #pragma once
 
 #include <pangolin/platform.h>
-#include <pangolin/display/display_internal.h>
-
+#include <pangolin/windowing/window.h>
 #include <stdexcept>
+#include <memory>
 #include <string>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -70,7 +70,7 @@ struct X11GlContext : public GlContextInterface
     ::GLXContext glcontext;
 };
 
-struct X11Window : public PangolinGl
+struct X11Window : public WindowInterface
 {
     X11Window(
         const std::string& title, int width, int height,
@@ -79,7 +79,7 @@ struct X11Window : public PangolinGl
 
     ~X11Window();
 
-    void ToggleFullscreen() override;
+    void ShowFullscreen(const TrueFalseToggle on_off) override;
 
     void Move(int x, int y) override;
 

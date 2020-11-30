@@ -327,7 +327,7 @@ PANGOLIN_REGISTER_FACTORY(EmscriptenWindow)
             return std::unique_ptr<WindowInterface>(CreateEmscriptenWindowAndBind(window_title, w, h));
         }
     };
-    FactoryRegistry::I()->RegisterFactory<WindowInterface>(std::make_shared<EmscriptenWindowFactory>());
+    return FactoryRegistry::I()->RegisterFactory<WindowInterface>(std::make_shared<EmscriptenWindowFactory>());
 }
 
 }

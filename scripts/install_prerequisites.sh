@@ -29,8 +29,8 @@ while (( "$#" )); do
       DRYRUN=1
       shift
       ;;
-    -u|--udpate-package-list)
-      UDPATE=1
+    -u|--update-package-list)
+      UPDATE=1
       shift
       ;;
     -m|--package-manager)
@@ -47,7 +47,7 @@ while (( "$#" )); do
       echo "  -m, --package-manager:     preferred package manager order (default: \"${MANAGERS[*]}\")"
       echo "  -v, --verbose:             verbose output"
       echo "  -d, --dry-run:             print actions, but do not execute"
-      echo "  -u, --udpate-package-list: update package manager package list"
+      echo "  -u, --update-package-list: update package manager package list"
       echo "  -h, --help:                this help message"
       echo " (required|recommended|all) the set of dependencies to select."
       exit 0
@@ -107,7 +107,7 @@ if ((VERBOSE > 0)); then echo "Using \"$MANAGER\" package manager (select anothe
 # Setup prereq commands and packages.
 if [[ "$MANAGER" == "apt-get" ]]; then
     SUDO="sudo"
-    PKGS_UPDATE="apt-get -qq update"
+    PKGS_UPDATE="apt-get update"
     PKGS_OPTIONS+=(install --no-install-suggests --no-install-recommends)
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
     if ((VERBOSE == 0)); then PKGS_OPTIONS+=(--qq); fi
@@ -116,9 +116,21 @@ if [[ "$MANAGER" == "apt-get" ]]; then
     PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev)
     PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev)
     PKGS_ALL+=(libdc1394-22-dev libraw1394-dev)
+elif [[ "$MANAGER" == "dnf" ]]; then
+    SUDO="sudo"
+    PKGS_UPDATE="dnf check-update"
+    PKGS_OPTIONS+=(install)
+    PKGS_REQUIRED+=(wayland-devel libxkbcommon-devel)
+    PKGS_REQUIRED+=(glew-devel eigen3 cmake)
+    PKGS_RECOMMENDED+=(libjpeg-devel libpng-devel)
+    PKGS_RECOMMENDED+=()
+    PKGS_ALL+=(libdc1394-22-devel libraw1394-devel)    
+    if ((DRYRUN > 0));  then
+        MANAGER="echo $MANAGER"
+    fi
 elif [[ "$MANAGER" == "port" ]]; then
     SUDO="sudo"
-    PKGS_UPDATE="port selfupdate -q"
+    PKGS_UPDATE="port sync -q"
     PKGS_OPTIONS+=(-N install -q)
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(-y); fi
     if ((VERBOSE == 0)); then PKGS_OPTIONS+=(--q); fi
@@ -126,7 +138,7 @@ elif [[ "$MANAGER" == "port" ]]; then
     PKGS_RECOMMENDED+=(jpeg libpng openexr tiff ffmpeg-devel lz4 zstd py37-pybind11)
     PKGS_ALL+=(libdc1394 openni)
 elif [[ "$MANAGER" == "brew" ]]; then
-    PKGS_UPDATE="brew update"
+    PKGS_UPDATE=""
     PKGS_OPTIONS+=(install)
     if ((VERBOSE > 0)); then PKGS_OPTIONS+=(--verbose); fi
     PKGS_REQUIRED+=(glew eigen cmake)
@@ -141,7 +153,8 @@ else
 fi
 
 if ((UPDATE > 0)); then
-    $PKGS_UPDATE
+    if ((VERBOSE > 0)); then echo "Requesting \"$MANAGER\" package update."; fi
+    $SUDO $PKGS_UPDATE
 fi
 
 if ((REQUIRED_RECOMMENDED_ALL < 2)); then PKGS_ALL=(); fi

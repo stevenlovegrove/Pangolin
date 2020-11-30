@@ -32,11 +32,7 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
-#include <pangolin/display/display.h>
-#include <pangolin/display/display_internal.h>
-#include <pangolin/display/window.h>
-
-#include <pangolin/display/device/X11Window.h>
+#include <pangolin/windowing/X11Window.h>
 
 #include <mutex>
 #include <stdexcept>
@@ -49,8 +45,6 @@
 
 namespace pangolin
 {
-
-extern __thread PangolinGl* context;
 
 std::mutex window_mutex;
 std::weak_ptr<X11GlContext> global_gl_context;
@@ -266,9 +260,6 @@ X11Window::X11Window(
     std::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc
 ) : display(display), glcontext(0), win(0), cmap(0)
 {
-    PangolinGl::windowed_size[0] = width;
-    PangolinGl::windowed_size[1] = height;
-
     // Get a visual
     XVisualInfo *vi = glXGetVisualFromFBConfig( display->display, chosenFbc );
 
@@ -322,7 +313,6 @@ X11Window::~X11Window()
 void X11Window::MakeCurrent(GLXContext ctx)
 {
     glXMakeCurrent( display->display, win, ctx );
-    context = this;
 }
 
 void X11Window::MakeCurrent()
@@ -335,7 +325,7 @@ void X11Window::RemoveCurrent()
     glXMakeCurrent(display->display, 0, nullptr);
 }
 
-void X11Window::ToggleFullscreen()
+void X11Window::ShowFullscreen(const TrueFalseToggle true_false)
 {
     const Atom _NET_WM_STATE_FULLSCREEN = XInternAtom(display->display, "_NET_WM_STATE_FULLSCREEN", True);
     const Atom _NET_WM_STATE = XInternAtom(display->display, "_NET_WM_STATE", True);
@@ -344,14 +334,14 @@ void X11Window::ToggleFullscreen()
     e.xclient.window       = win;
     e.xclient.message_type = _NET_WM_STATE;
     e.xclient.format       = 32;
-    e.xclient.data.l[0]    = 2;  // Toggle
+    e.xclient.data.l[0]    = (int)true_false;  // Toggle
     e.xclient.data.l[1]    = _NET_WM_STATE_FULLSCREEN;
     e.xclient.data.l[2]    = 0;
     e.xclient.data.l[3]    = 1;
     e.xclient.data.l[4]    = 0;
 
     XSendEvent(display->display, DefaultRootWindow(display->display), False, SubstructureRedirectMask | SubstructureNotifyMask, &e);
-    XMoveResizeWindow(display->display, win, 0, 0, windowed_size[0], windowed_size[1]);
+//    XMoveResizeWindow(display->display, win, 0, 0, windowed_size[0], windowed_size[1]);
 }
 
 void X11Window::Move(int x, int y)
@@ -367,37 +357,42 @@ void X11Window::Resize(unsigned int w, unsigned int h)
 void X11Window::ProcessEvents()
 {
     XEvent ev;
-    while(!pangolin::ShouldQuit() && XPending(display->display) > 0)
+    while(XPending(display->display) > 0)
     {
         XNextEvent(display->display, &ev);
 
         switch(ev.type){
         case ConfigureNotify:
-            pangolin::process::Resize(ev.xconfigure.width, ev.xconfigure.height);
+            ResizeSignal(ResizeEvent({ev.xconfigure.width, ev.xconfigure.height}));
             break;
         case ClientMessage:
             // We've only registered to receive WM_DELETE_WINDOW, so no further checks needed.
-            pangolin::Quit();
+            CloseSignal();
             break;
         case ButtonPress:
         case ButtonRelease:
         {
             const int button = ev.xbutton.button-1;
-            pangolin::process::Mouse(
-                button,
-                ev.xbutton.type == ButtonRelease,
-                ev.xbutton.x, ev.xbutton.y
-            );
-            break;
+            MouseSignal(MouseEvent({
+               button,
+               ev.xbutton.type == ButtonRelease,
+               (float)ev.xbutton.x, (float)ev.xbutton.y
+           }));
+           break;
         }
         case FocusOut:
-            pangolin::context->mouse_state = 0;
+            // TODO
+//            pangolin::context->mouse_state = 0;
             break;
         case MotionNotify:
             if(ev.xmotion.state & (Button1Mask|Button2Mask|Button3Mask) ) {
-                pangolin::process::MouseMotion(ev.xmotion.x, ev.xmotion.y);
+                MouseMotionSignal(MouseMotionEvent({
+                   (float)ev.xbutton.x, (float)ev.xbutton.y
+                }));
             }else{
-                pangolin::process::PassiveMouseMotion(ev.xmotion.x, ev.xmotion.y);
+                PassiveMouseMotionSignal(MouseMotionEvent({
+                   (float)ev.xbutton.x, (float)ev.xbutton.y
+                }));
             }
             break;
         case KeyPress:
@@ -432,38 +427,39 @@ void X11Window::ProcessEvents()
                 case XK_Shift_L:
                 case XK_Shift_R:
                     key = -1;
-                    if(ev.type==KeyPress) {
-                        pangolin::context->mouse_state |=  pangolin::KeyModifierShift;
-                    }else{
-                        pangolin::context->mouse_state &= ~pangolin::KeyModifierShift;
-                    }
+                    // TODO
+//                    if(ev.type==KeyPress) {
+//                        pangolin::context->mouse_state |=  pangolin::KeyModifierShift;
+//                    }else{
+//                        pangolin::context->mouse_state &= ~pangolin::KeyModifierShift;
+//                    }
                     break;
                 case XK_Control_L:
                 case XK_Control_R:
                     key = -1;
-                    if(ev.type==KeyPress) {
-                        pangolin::context->mouse_state |=  pangolin::KeyModifierCtrl;
-                    }else{
-                        pangolin::context->mouse_state &= ~pangolin::KeyModifierCtrl;
-                    }
+//                    if(ev.type==KeyPress) {
+//                        pangolin::context->mouse_state |=  pangolin::KeyModifierCtrl;
+//                    }else{
+//                        pangolin::context->mouse_state &= ~pangolin::KeyModifierCtrl;
+//                    }
                     break;
                 case XK_Alt_L:
                 case XK_Alt_R:
                     key = -1;
-                    if(ev.type==KeyPress) {
-                        pangolin::context->mouse_state |=  pangolin::KeyModifierAlt;
-                    }else{
-                        pangolin::context->mouse_state &= ~pangolin::KeyModifierAlt;
-                    }
+//                    if(ev.type==KeyPress) {
+//                        pangolin::context->mouse_state |=  pangolin::KeyModifierAlt;
+//                    }else{
+//                        pangolin::context->mouse_state &= ~pangolin::KeyModifierAlt;
+//                    }
                     break;
                 case XK_Super_L:
                 case XK_Super_R:
                     key = -1;
-                    if(ev.type==KeyPress) {
-                        pangolin::context->mouse_state |=  pangolin::KeyModifierCmd;
-                    }else{
-                        pangolin::context->mouse_state &= ~pangolin::KeyModifierCmd;
-                    }
+//                    if(ev.type==KeyPress) {
+//                        pangolin::context->mouse_state |=  pangolin::KeyModifierCmd;
+//                    }else{
+//                        pangolin::context->mouse_state &= ~pangolin::KeyModifierCmd;
+//                    }
                     break;
                 default: key = -1; break;
                 }
@@ -472,11 +468,9 @@ void X11Window::ProcessEvents()
             }
 
             if(key >=0) {
-                if(ev.type == KeyPress) {
-                    pangolin::process::Keyboard(key, ev.xkey.x, ev.xkey.y);
-                }else{
-                    pangolin::process::KeyboardUp(key, ev.xkey.x, ev.xkey.y);
-                }
+                KeyboardSignal(KeyboardEvent({
+                    (unsigned char)key, ev.type == KeyPress, (float)ev.xkey.x, (float)ev.xkey.y
+                }));
             }
 
             break;
@@ -515,7 +509,28 @@ std::unique_ptr<WindowInterface> CreateX11WindowAndBind(const std::string& windo
 PANGOLIN_REGISTER_FACTORY(X11Window)
 {
   struct X11WindowFactory : public TypedFactoryInterface<WindowInterface> {
-    std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
+      std::map<std::string,Precedence> Schemes() const override
+      {
+          return {{"x11",10}, {"linux",10}, {"default",100}};
+      }
+      const char* Description() const override
+      {
+          return "Use X11 native window";
+      }
+      ParamSet Params() const override
+      {
+          return {{
+              {"window_title","window","Title of application Window"},
+              {"w","640","Requested window width"},
+              {"h","480","Requested window height"},
+              {"display_name","","The display name to open the window on"},
+              {"double_buffered","true","Whether the window should be double buffered"},
+              {"sample_buffers","1",""},
+              {"samples","1",""},
+          }};
+      }
+
+      std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
           
       const std::string window_title = uri.Get<std::string>("window_title", "window");
       const int w = uri.Get<int>("w", 640);
@@ -528,10 +543,7 @@ PANGOLIN_REGISTER_FACTORY(X11Window)
     }
   };
 
-    auto factory = std::make_shared<X11WindowFactory>();
-    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "x11");
-    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "linux");
-    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 100,  "default");
+  return FactoryRegistry::I()->RegisterFactory<WindowInterface>(std::make_shared<X11WindowFactory>());
 }
 
 }

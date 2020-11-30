@@ -1,10 +1,8 @@
-#include <pangolin/display/display_internal.h>
+#include <pangolin/windowing/window.h>
 #include <pangolin/factory/factory_registry.h>
 #include <EGL/egl.h>
 
 namespace pangolin {
-
-extern __thread PangolinGl* context;
 
 namespace headless {
 
@@ -40,12 +38,12 @@ private:
 
 constexpr EGLint EGLDisplayHL::attribs[];
 
-struct HeadlessWindow : public PangolinGl {
+struct HeadlessWindow : public WindowInterface {
     HeadlessWindow(const int width, const int height);
 
     ~HeadlessWindow() override;
 
-    void ToggleFullscreen() override;
+    void ShowFullscreen(const TrueFalseToggle on_off) override;
 
     void Move(const int x, const int y) override;
 
@@ -117,22 +115,19 @@ void EGLDisplayHL::removeCurrent() {
 }
 
 HeadlessWindow::HeadlessWindow(const int w, const int h) : display(w, h) {
-    windowed_size[0] = w;
-    windowed_size[1] = h;
 }
 
 HeadlessWindow::~HeadlessWindow() { }
 
 void HeadlessWindow::MakeCurrent() {
     display.makeCurrent();
-    context = this;
 }
 
 void HeadlessWindow::RemoveCurrent() {
     display.removeCurrent();
 }
 
-void HeadlessWindow::ToggleFullscreen() { }
+void HeadlessWindow::ShowFullscreen(const TrueFalseToggle) { }
 
 void HeadlessWindow::Move(const int /*x*/, const int /*y*/) { }
 
@@ -149,6 +144,21 @@ void HeadlessWindow::SwapBuffers() {
 
 PANGOLIN_REGISTER_FACTORY(NoneWindow) {
 struct HeadlessWindowFactory : public TypedFactoryInterface<WindowInterface> {
+    std::map<std::string,Precedence> Schemes() const override
+    {
+        return {{"none",10}, {"nogui",10}, {"headless",10}};
+    }
+    const char* Description() const override
+    {
+        return "Headless GL Buffer";
+    }
+    ParamSet Params() const override
+    {
+        return {{
+            {"w","640","Requested buffer width"},
+            {"h","480","Requested buffer height"},
+        }};
+    }
     std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
         return std::unique_ptr<WindowInterface>(new headless::HeadlessWindow(uri.Get<int>("w", 640), uri.Get<int>("h", 480)));
     }
@@ -156,10 +166,7 @@ struct HeadlessWindowFactory : public TypedFactoryInterface<WindowInterface> {
     virtual ~HeadlessWindowFactory() { }
 };
 
-auto factory = std::make_shared<HeadlessWindowFactory>();
-FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 1, "none");
-FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 1, "nogui");
-FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 1, "headless");
+return FactoryRegistry::I()->RegisterFactory<WindowInterface>(std::make_shared<HeadlessWindowFactory>());
 }
 
 } // namespace pangolin
