@@ -36,20 +36,20 @@
 #include <cstdlib>
 #include <memory>
 
-#include <pangolin/gl/glinclude.h>
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/factory/RegisterFactoriesWindowInterface.h>
 #include <pangolin/display/display.h>
-#include <pangolin/display/display_internal.h>
-#include <pangolin/handler/handler.h>
+#include <pangolin/display/process.h>
+#include <pangolin/console/ConsoleView.h>
 #include <pangolin/utils/simple_math.h>
 #include <pangolin/utils/timer.h>
 #include <pangolin/utils/type_convert.h>
 #include <pangolin/image/image_io.h>
-#include <pangolin/console/ConsoleView.h>
 #include <pangolin/var/var.h>
+
+#include "pangolin_gl.h"
 
 namespace pangolin
 {
@@ -59,45 +59,10 @@ typedef std::map<std::string,std::shared_ptr<PangolinGl> > ContextMap;
 // Map of active contexts
 ContextMap contexts;
 std::recursive_mutex contexts_mutex;
-bool one_time_window_frameworks_init = false;
 
 // Context active for current thread
 __thread PangolinGl* context = 0;
 
-PangolinGl::PangolinGl()
-    : user_app(0), quit(false), mouse_state(0),activeDisplay(0)
-{
-}
-
-PangolinGl::~PangolinGl()
-{
-    // Free displays owned by named_managed_views
-    for(ViewMap::iterator iv = named_managed_views.begin(); iv != named_managed_views.end(); ++iv) {
-        delete iv->second;
-    }
-    named_managed_views.clear();
-}
-
-void PangolinGl::MakeCurrent()
-{
-    SetCurrentContext(this);
-    if(window) {
-        window->MakeCurrent();
-    }
-}
-
-void PangolinGl::SetOnRender(std::function<void ()> on_render) {
-    this->on_render = on_render;
-}
-
-void PangolinGl::Run() {
-    while (!ShouldQuit()) {
-        if (on_render) {
-            on_render();
-        }
-        FinishFrame();
-    }
-}
 
 void SetCurrentContext(PangolinGl* newcontext) {
     context = newcontext;
@@ -153,23 +118,23 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     context->window->CloseSignal.connect( [](){
         pangolin::Quit();
     });
-    context->window->ResizeSignal.connect( [](ResizeEvent event){
+    context->window->ResizeSignal.connect( [](WindowResizeEvent event){
         process::Resize(event.width, event.height);
     });
     context->window->KeyboardSignal.connect( [](KeyboardEvent event) {
-        process::Keyboard(event.key, event.x, event.y, event.pressed);
+        process::Keyboard(event.key, event.x, event.y, event.pressed, event.key_modifiers);
     });
     context->window->MouseSignal.connect( [](MouseEvent event){
-        process::Mouse(event.button, event.state, event.x, event.y);
+        process::Mouse(event.button, event.pressed, event.x, event.y, event.key_modifiers);
     });
     context->window->MouseMotionSignal.connect( [](MouseMotionEvent event){
-        process::MouseMotion(event.x, event.y);
+        process::MouseMotion(event.x, event.y, event.key_modifiers);
     });
     context->window->PassiveMouseMotionSignal.connect( [](MouseMotionEvent event){
-        process::PassiveMouseMotion(event.x, event.y);
+        process::PassiveMouseMotion(event.x, event.y, event.key_modifiers);
     });
     context->window->SpecialInputSignal.connect( [](SpecialInputEvent event){
-        process::SpecialInput(event.inType, event.x, event.y, event.p[0], event.p[1], event.p[2], event.p[3]);
+        process::SpecialInput(event.inType, event.x, event.y, event.p[0], event.p[1], event.p[2], event.p[3], event.key_modifiers);
     });
 
     context->MakeCurrent();
@@ -270,32 +235,10 @@ void ShowFullscreen(TrueFalseToggle on_off)
         context->window->ShowFullscreen(on_off);
 }
 
-void RenderViews()
-{
-    Viewport::DisableScissor();
-    DisplayBase().Render();
-}
-
-void PostRender()
-{
-    while(context->screen_capture.size()) {
-        std::pair<std::string,Viewport> fv = context->screen_capture.front();
-        context->screen_capture.pop();
-        SaveWindowNow(fv.first, fv.second);
-    }
-
-    // Disable scissor each frame
-    Viewport::DisableScissor();
-}
 
 void FinishFrame()
 {
-    RenderViews();
-    PostRender();
-    if(context->window) {
-        context->window->SwapBuffers();
-        context->window->ProcessEvents();
-    }
+    if(context) context->FinishFrame();
 }
 
 View& DisplayBase()
@@ -380,139 +323,6 @@ void SaveWindowNow(const std::string& filename_hint, const Viewport& v)
     }  catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
     }
-}
-
-namespace process
-{
-float last_x = 0;
-float last_y = 0;
-
-void Keyboard(unsigned char key, int x, int y, bool pressed)
-{
-    // Force coords to match OpenGl Window Coords
-    y = context->base.v.h - y;
-
-    if(pressed) {
-        // Check if global key hook exists
-        const KeyhookMap::iterator hook = context->keypress_hooks.find(key);
-
-        // Console receives all input when it is open
-        if( context->console_view && context->console_view->IsShown() ) {
-            context->console_view->Keyboard(*(context->console_view),key,x,y,true);
-        }else if(hook != context->keypress_hooks.end() ) {
-            hook->second();
-        } else if(context->activeDisplay && context->activeDisplay->handler) {
-            context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
-        }
-    }else{
-        if(context->activeDisplay && context->activeDisplay->handler)
-        {
-            context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,false);
-        }
-    }
-}
-
-void Mouse( int button_raw, int state, int x, int y)
-{
-    // Force coords to match OpenGl Window Coords
-    y = context->base.v.h - y;
-
-    last_x = (float)x;
-    last_y = (float)y;
-
-    const MouseButton button = (MouseButton)(1 << (button_raw & 0xf) );
-    const bool pressed = (state == 0);
-
-    const bool fresh_input = ( (context->mouse_state & 7) == 0);
-
-    if( pressed ) {
-        context->mouse_state |= (button&7);
-    }else{
-        context->mouse_state &= ~(button&7);
-    }
-
-#if defined(_WIN_)
-    context->mouse_state &= 0x0000ffff;
-    context->mouse_state |= (button_raw >> 4) << 16;
-#endif
-
-    if(fresh_input) {
-        context->base.handler->Mouse(context->base,button,x,y,pressed,context->mouse_state);
-    }else if(context->activeDisplay && context->activeDisplay->handler) {
-        context->activeDisplay->handler->Mouse(*(context->activeDisplay),button,x,y,pressed,context->mouse_state);
-    }
-}
-
-void MouseMotion( int x, int y)
-{
-    // Force coords to match OpenGl Window Coords
-    y = context->base.v.h - y;
-
-    last_x = (float)x;
-    last_y = (float)y;
-
-    if( context->activeDisplay)
-    {
-        if( context->activeDisplay->handler )
-            context->activeDisplay->handler->MouseMotion(*(context->activeDisplay),x,y,context->mouse_state);
-    }else{
-        context->base.handler->MouseMotion(context->base,x,y,context->mouse_state);
-    }
-}
-
-void PassiveMouseMotion(int x, int y)
-{
-    // Force coords to match OpenGl Window Coords
-    y = context->base.v.h - y;
-
-    context->base.handler->PassiveMouseMotion(context->base,x,y,context->mouse_state);
-
-    last_x = (float)x;
-    last_y = (float)y;
-}
-
-void Resize( int width, int height )
-{
-    Viewport win(0,0,width,height);
-    context->base.Resize(win);
-}
-
-void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4)
-{
-    // Force coords to match OpenGl Window Coords
-    y = context->base.v.h - y;
-
-    const bool fresh_input = (context->mouse_state == 0);
-
-    if(fresh_input) {
-        context->base.handler->Special(context->base,inType,x,y,p1,p2,p3,p4,context->mouse_state);
-    }else if(context->activeDisplay && context->activeDisplay->handler) {
-        context->activeDisplay->handler->Special(*(context->activeDisplay),inType,x,y,p1,p2,p3,p4,context->mouse_state);
-    }
-}
-
-}
-
-void DrawTextureToViewport(GLuint texid)
-{
-    OpenGlRenderState::ApplyIdentity();
-    glBindTexture(GL_TEXTURE_2D, texid);
-    glEnable(GL_TEXTURE_2D);
-
-    GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
-    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-    glEnableClientState(GL_VERTEX_ARRAY);
-
-    GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
-    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-    glDisable(GL_TEXTURE_2D);
 }
 
 }

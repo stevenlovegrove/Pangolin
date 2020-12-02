@@ -33,7 +33,7 @@
 #include <pangolin/platform.h>
 #include <pangolin/utils/signal_slot.h>
 #include <pangolin/utils/true_false_toggle.h>
-#include <pangolin/windowing/handler_enums.h>
+#include <pangolin/windowing/handler_bitsets.h>
 
 namespace pangolin
 {
@@ -45,39 +45,38 @@ constexpr char PARAM_SAMPLE_BUFFERS[] = "SAMPLE_BUFFERS\0"; // int
 constexpr char PARAM_SAMPLES[]        = "SAMPLES\0";        // int
 constexpr char PARAM_HIGHRES[]        = "HIGHRES\0";        // bool
 
-struct ResizeEvent
+struct WindowResizeEvent
 {
     int width;
     int height;
 };
 
-struct KeyboardEvent
+struct WindowInputEvent
+{
+    float x;
+    float y;
+    KeyModifierBitmask key_modifiers;
+};
+
+struct KeyboardEvent : public WindowInputEvent
 {
     unsigned char key;
     bool pressed;
-    float x;
-    float y;
 };
 
-struct MouseEvent
+struct MouseEvent : public WindowInputEvent
 {
     int button;
-    int state;
-    float x;
-    float y;
+    bool pressed;
 };
 
-struct MouseMotionEvent
+struct MouseMotionEvent : public WindowInputEvent
 {
-    float x;
-    float y;
 };
 
-struct SpecialInputEvent
+struct SpecialInputEvent : public WindowInputEvent
 {
     InputSpecial inType;
-    float x;
-    float y;
     float p[4];
 };
 
@@ -119,8 +118,8 @@ public:
     /// to the back buffer.
     virtual void SwapBuffers() = 0;
 
-    Signal<void()>              CloseSignal;
-    Signal<void(ResizeEvent)>   ResizeSignal;
+    Signal<void()>                    CloseSignal;
+    Signal<void(WindowResizeEvent)>   ResizeSignal;
     Signal<void(KeyboardEvent)> KeyboardSignal;
     Signal<void(MouseEvent)>    MouseSignal;
     Signal<void(MouseMotionEvent)> MouseMotionSignal;

@@ -119,34 +119,6 @@ namespace pangolin
   PANGOLIN_EXPORT
   void SaveWindowNow(const std::string& filename_hint, const Viewport& v = Viewport());
   
-  namespace process
-  {
-    /// Tell pangolin base window size has changed
-    /// You will need to call this manually if you haven't let
-    /// Pangolin register callbacks from your windowing system
-    PANGOLIN_EXPORT
-    void Resize(int width, int height);
-
-    /// Tell pangolin to process input to drive display.
-    /// You will need to call this manually if you haven't let
-    /// Pangolin register callbacks from your windowing system
-    PANGOLIN_EXPORT
-    void Keyboard( unsigned char key, int x, int y, bool pressed);
-
-
-    PANGOLIN_EXPORT
-    void Mouse( int button, int state, int x, int y);
-
-    PANGOLIN_EXPORT
-    void MouseMotion( int x, int y);
-
-    PANGOLIN_EXPORT
-    void PassiveMouseMotion(int x, int y);
-
-    PANGOLIN_EXPORT
-    void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4);
-  }
-
   /// Retrieve 'base' display, corresponding to entire window.
   PANGOLIN_EXPORT
   View& DisplayBase();
@@ -166,22 +138,6 @@ namespace pangolin
   /// Toggle display of Pangolin console
   PANGOLIN_EXPORT
   void ShowConsole(TrueFalseToggle on_off);
-
-  ////////////////////////////////////////////////////
-
-  PANGOLIN_DEPRECATED("Use ShowFullscreen(...) instead")
-  inline void ToggleFullscreen() {
-      ShowFullscreen(TrueFalseToggle::Toggle);
-  }
-  PANGOLIN_DEPRECATED("Use ShowFullscreen(...) instead")
-  inline void SetFullscreen(bool fullscreen = true) {
-      ShowFullscreen( (TrueFalseToggle)fullscreen);
-  }
-  PANGOLIN_DEPRECATED("Use ShowConsole(...) instead")
-  inline void ToggleConsole()
-  {
-      ShowConsole(TrueFalseToggle::Toggle);
-  }
-
 }
 
+#include <pangolin/display/display.hpp>

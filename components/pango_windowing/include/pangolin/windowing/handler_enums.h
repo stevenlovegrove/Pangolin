@@ -65,13 +65,13 @@ const int PANGO_KEY_INSERT    = 108;
 
 enum MouseButton
 {
-    MouseButtonLeft = 1,
-    MouseButtonMiddle = 2,
-    MouseButtonRight = 4,
-    MouseWheelUp = 8,
-    MouseWheelDown = 16,
-    MouseWheelRight = 32,
-    MouseWheelLeft = 64,
+    MouseButtonLeft   = 1<<0,
+    MouseButtonMiddle = 1<<1,
+    MouseButtonRight  = 1<<2,
+    MouseWheelUp      = 1<<3,
+    MouseWheelDown    = 1<<4,
+    MouseWheelRight   = 1<<5,
+    MouseWheelLeft    = 1<<6,
 };
 
 enum KeyModifier

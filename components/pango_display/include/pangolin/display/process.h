@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2018 Andrey Mnatsakanov
+ * Copyright (c) 2011 Steven Lovegrove, Richard Newcombe
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,46 +27,33 @@
 
 #pragma once
 
-#include <pangolin/windowing/window.h>
-
-#include <stdexcept>
-#include <string>
-#include <list>
-
-#include <emscripten.h>
-#include <emscripten/html5.h>
+#include <pangolin/platform.h>
+#include <pangolin/windowing/handler_bitsets.h>
 
 namespace pangolin
 {
 
-struct EmscriptenWindow : public WindowInterface
+/// You can use these methods to drive Pangolin events when it
+/// doesn't own the OpenGL Context. You can probably ignore these.
+namespace process
 {
- public:
-    EmscriptenWindow();
+  PANGOLIN_EXPORT
+  void Resize(int width, int height);
 
-    ~EmscriptenWindow();
+  PANGOLIN_EXPORT
+  void Keyboard(unsigned char key, int x, int y, bool pressed, KeyModifierBitmask key_modifiers);
 
-    void Move(int x, int y) override;
+  PANGOLIN_EXPORT
+  void Mouse(int button, bool pressed, int x, int y, KeyModifierBitmask key_modifiers);
 
-    void Resize(unsigned int w, unsigned int h) override;
+  PANGOLIN_EXPORT
+  void MouseMotion( int x, int y, KeyModifierBitmask key_modifiers);
 
-    void ShowFullscreen(const TrueFalseToggle on_off) override;
+  PANGOLIN_EXPORT
+  void PassiveMouseMotion(int x, int y, KeyModifierBitmask key_modifiers);
 
-    void MakeCurrent() override;
-
-    void RemoveCurrent() override;
-
-    void SwapBuffers() override;
-
-    void ProcessEvents() override;
-
-    int x;
-    int y;
-    KeyModifierBitmask key_modifier_state;
- private:
-    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = NULL;
-    GLuint program = 0;
-    bool done_init_events;
-};
+  PANGOLIN_EXPORT
+  void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, KeyModifierBitmask key_modifiers);
+}
 
 }

@@ -25,18 +25,20 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <thread>
+#include <mutex>
+#include <iostream>
+#include <iomanip>
+
 #include <pangolin/display/widgets.h>
 #include <pangolin/display/display.h>
-#include <pangolin/display/display_internal.h>
 #include <pangolin/display/default_font.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/var/varextra.h>
 #include <pangolin/utils/file_utils.h>
 
-#include <thread>
-#include <mutex>
-#include <iostream>
-#include <iomanip>
+#include "pangolin_gl.h"
+
 
 using namespace std;
 

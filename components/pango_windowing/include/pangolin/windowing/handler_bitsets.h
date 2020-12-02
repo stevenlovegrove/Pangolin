@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2018 Andrey Mnatsakanov
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,46 +27,14 @@
 
 #pragma once
 
-#include <pangolin/windowing/window.h>
-
-#include <stdexcept>
-#include <string>
-#include <list>
-
-#include <emscripten.h>
-#include <emscripten/html5.h>
+#include <pangolin/utils/bitmask.h>
+#include <pangolin/windowing/handler_enums.h>
 
 namespace pangolin
 {
 
-struct EmscriptenWindow : public WindowInterface
-{
- public:
-    EmscriptenWindow();
+using MouseButtonBitmask = bitmask<MouseButton,true>;
 
-    ~EmscriptenWindow();
-
-    void Move(int x, int y) override;
-
-    void Resize(unsigned int w, unsigned int h) override;
-
-    void ShowFullscreen(const TrueFalseToggle on_off) override;
-
-    void MakeCurrent() override;
-
-    void RemoveCurrent() override;
-
-    void SwapBuffers() override;
-
-    void ProcessEvents() override;
-
-    int x;
-    int y;
-    KeyModifierBitmask key_modifier_state;
- private:
-    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = NULL;
-    GLuint program = 0;
-    bool done_init_events;
-};
+using KeyModifierBitmask = bitmask<KeyModifier,true>;
 
 }

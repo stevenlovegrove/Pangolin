@@ -363,7 +363,7 @@ void X11Window::ProcessEvents()
 
         switch(ev.type){
         case ConfigureNotify:
-            ResizeSignal(ResizeEvent({ev.xconfigure.width, ev.xconfigure.height}));
+            ResizeSignal(WindowResizeEvent({ev.xconfigure.width, ev.xconfigure.height}));
             break;
         case ClientMessage:
             // We've only registered to receive WM_DELETE_WINDOW, so no further checks needed.
@@ -375,7 +375,7 @@ void X11Window::ProcessEvents()
             const int button = ev.xbutton.button-1;
             MouseSignal(MouseEvent({
                button,
-               ev.xbutton.type == ButtonRelease,
+               ev.xbutton.type == ButtonPress,
                (float)ev.xbutton.x, (float)ev.xbutton.y
            }));
            break;

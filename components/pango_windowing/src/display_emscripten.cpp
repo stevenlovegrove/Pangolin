@@ -72,46 +72,36 @@ int spec_key(const char* key_string){
     return -1;
 }
 
-int mod_key(const char* key_string, bool pressed){
-//    if(strlen(key_string)==1){
-//        return -1;
-//    }
-//    if(strcmp(key_string, "Shift")==0){
-//        if(pressed) {
-//            pangolin::context->mouse_state |=  pangolin::KeyModifierShift;
-//        }else{
-//            pangolin::context->mouse_state &= ~pangolin::KeyModifierShift;
-//        }
-//        return 0;
-//    }
-//    if(strcmp(key_string, "Control")==0){
-//        if(pressed) {
-//            pangolin::context->mouse_state |=  pangolin::KeyModifierCtrl;
-//        }else{
-//            pangolin::context->mouse_state &= ~pangolin::KeyModifierCtrl;
-//        }
-//        return 0;
-//    }
-//    if(strcmp(key_string, "Alt")==0){
-//        if(pressed) {
-//            pangolin::context->mouse_state |=  pangolin::KeyModifierAlt;
-//        }else{
-//            pangolin::context->mouse_state &= ~pangolin::KeyModifierAlt;
-//        }
-//        return 0;
-//    }
-//    if(strcmp(key_string, "Meta")==0){
-//        if(pressed) {
-//            pangolin::context->mouse_state |=  pangolin::KeyModifierCmd;
-//        }else{
-//            pangolin::context->mouse_state &= ~pangolin::KeyModifierCmd;
-//        }
-//        return 0;
-//    }
-    return -1;
+KeyModifier mod_key(const char* key_string){
+    if(strlen(key_string)==1) return KeyModifier(0);
+    if(strcmp(key_string, "Shift")==0)  return pangolin::KeyModifierShift;
+    if(strcmp(key_string, "Control")==0) return pangolin::KeyModifierCtrl;
+    if(strcmp(key_string, "Alt")==0) return pangolin::KeyModifierAlt;
+    if(strcmp(key_string, "Meta")==0) return pangolin::KeyModifierCmd;
+    return KeyModifier(0);
 }
 
 std::mutex window_mutex;
+
+pangolin::KeyModifierBitmask GetKeyModifierBitmask(const EmscriptenKeyboardEvent *event)
+{
+    pangolin::KeyModifierBitmask mask;
+    if(event->shiftKey) mask |=  pangolin::KeyModifierShift;
+    if(event->ctrlKey) mask |=  pangolin::KeyModifierCtrl;
+    if(event->altKey) mask |=  pangolin::KeyModifierAlt;
+    if(event->metaKey) mask |=  pangolin::KeyModifierCmd;
+    return mask;
+}
+
+pangolin::KeyModifierBitmask GetKeyModifierBitmask(const EmscriptenMouseEvent *event)
+{
+    pangolin::KeyModifierBitmask mask;
+    if(event->shiftKey) mask |=  pangolin::KeyModifierShift;
+    if(event->ctrlKey) mask |=  pangolin::KeyModifierCtrl;
+    if(event->altKey) mask |=  pangolin::KeyModifierAlt;
+    if(event->metaKey) mask |=  pangolin::KeyModifierCmd;
+    return mask;
+}
 
 EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *userData){
     EmscriptenWindow* w=(EmscriptenWindow*)userData;
@@ -119,56 +109,52 @@ EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *user
     if(eventType==EMSCRIPTEN_EVENT_KEYPRESS)
         return false;
 
-    int key = mod_key(e->key, eventType==EMSCRIPTEN_EVENT_KEYDOWN?true:false);
-
-    if(key != -1){
-        return false;
-    }
-    key = spec_key(e->key);
-    if(key != -1){
-        w->KeyboardSignal(KeyboardEvent({
-            (uint8_t)key, eventType==EMSCRIPTEN_EVENT_KEYDOWN,
-            (float)w->x, (float)w->y
-        }));
-        return false;
-    }
-    if(strlen(e->key)==1){
-        w->KeyboardSignal(KeyboardEvent({
-            (uint8_t)((e->ctrlKey?PANGO_CTRL:0) + e->key[0]),
-            eventType==EMSCRIPTEN_EVENT_KEYDOWN,
-            (float)w->x, (float)w->y
-        }));
+    const KeyModifier mod = mod_key(e->key);
+    if(mod == 0) {
+        // Not a modifier key
+        int key = spec_key(e->key);
+        if(key != -1){
+            w->KeyboardSignal(KeyboardEvent({
+                (float)w->x, (float)w->y, GetKeyModifierBitmask(e),
+                (uint8_t)key, eventType==EMSCRIPTEN_EVENT_KEYDOWN
+            }));
+        }
+        if(strlen(e->key)==1){
+            w->KeyboardSignal(KeyboardEvent({
+                (float)w->x, (float)w->y, GetKeyModifierBitmask(e),
+                (uint8_t)((e->ctrlKey?PANGO_CTRL:0) + e->key[0]),
+                eventType==EMSCRIPTEN_EVENT_KEYDOWN
+            }));
+        }
+    }else{
+        w->key_modifier_state.set(mod, eventType==EMSCRIPTEN_EVENT_KEYDOWN);
     }
     return false;
 }
 
 EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userData){
-    int state = 1;
     EmscriptenWindow* w=(EmscriptenWindow*)userData;
     w->x = e->targetX;
     w->y = e->targetY;
 
     switch(eventType) {
     case EMSCRIPTEN_EVENT_MOUSEDOWN:
-        state=0;
-    case EMSCRIPTEN_EVENT_MOUSEUP: {
-        w->MouseSignal(MouseEvent({e->button, state, (float)w->x, (float)w->y}));
+    case EMSCRIPTEN_EVENT_MOUSEUP:
+        w->MouseSignal(MouseEvent({
+            (float)w->x, (float)w->y, GetKeyModifierBitmask(e),
+            e->button, eventType == EMSCRIPTEN_EVENT_MOUSEDOWN
+        }));
         break;
-    }
-        break;
-    case EMSCRIPTEN_EVENT_MOUSEMOVE: {
+    case EMSCRIPTEN_EVENT_MOUSEMOVE:
         if(e->buttons){
-            w->MouseMotionSignal(MouseMotionEvent({(float)w->x, (float)w->y}));
+            w->MouseMotionSignal(MouseMotionEvent({(float)w->x, (float)w->y, GetKeyModifierBitmask(e)}));
         } else {
-            w->PassiveMouseMotionSignal(MouseMotionEvent({(float)w->x, (float)w->y}));
+            w->PassiveMouseMotionSignal(MouseMotionEvent({(float)w->x, (float)w->y, GetKeyModifierBitmask(e)}));
         }
-    }
         break;
-    case EMSCRIPTEN_EVENT_MOUSEOVER:{
-    }
+    case EMSCRIPTEN_EVENT_MOUSEOVER:
         break;
-    case EMSCRIPTEN_EVENT_MOUSEOUT:{
-    }
+    case EMSCRIPTEN_EVENT_MOUSEOUT:
         break;
     default:
         break;
@@ -178,7 +164,11 @@ EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userD
 
 EM_BOOL wheel_callback(int eventType, const EmscriptenWheelEvent *e, void *userData){
     EmscriptenWindow* w=(EmscriptenWindow*)userData;
-    w->SpecialInputSignal(SpecialInputEvent({InputSpecialScroll, (float)w->x, (float)w->y, (float)e->deltaX, (float)e->deltaY, 0, 0}));
+    w->SpecialInputSignal(SpecialInputEvent({
+        (float)w->x, (float)w->y, w->key_modifier_state,
+        InputSpecialScroll,
+        (float)e->deltaX, (float)e->deltaY, 0, 0
+    }));
     return true;
 }
 EM_BOOL uievent_callback(int eventType, const EmscriptenUiEvent *e, void *userData){
@@ -187,7 +177,7 @@ EM_BOOL uievent_callback(int eventType, const EmscriptenUiEvent *e, void *userDa
     case EMSCRIPTEN_EVENT_RESIZE:
         int width, height;
         emscripten_get_canvas_element_size(em_dom_id, &width, &height);
-        w->ResizeSignal(ResizeEvent({width, height}));
+        w->ResizeSignal(WindowResizeEvent({width, height}));
         break;
     }
     return true;
@@ -284,7 +274,7 @@ void EmscriptenWindow::ProcessEvents()
         done_init_events = true;
         int width, height;
         emscripten_get_canvas_element_size(em_dom_id, &width, &height);
-        ResizeSignal(ResizeEvent({width, height}));
+        ResizeSignal(WindowResizeEvent({width, height}));
     }
 }
 

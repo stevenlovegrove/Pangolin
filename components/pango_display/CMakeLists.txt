@@ -3,6 +3,8 @@ get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 target_sources( ${COMPONENT}
 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/display.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/process.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/pangolin_gl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/handler_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/handler_glbuffer.cpp

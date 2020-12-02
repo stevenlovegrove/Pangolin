@@ -53,7 +53,15 @@ struct PANGOLIN_EXPORT PangolinGl
     PangolinGl();
     ~PangolinGl();
 
+    void Run();
+
     void MakeCurrent();
+    void FinishFrame();
+
+    void RenderViews();
+    void PostRender();
+
+    void SetOnRender(std::function<void()> on_render);
 
     // Callback for render loop
     std::function<void()> on_render;
@@ -81,10 +89,6 @@ struct PANGOLIN_EXPORT PangolinGl
     std::shared_ptr<GlFont> font;
 
     std::unique_ptr<ConsoleView> console_view;
-
-    void SetOnRender(std::function<void()> on_render);
-
-    void Run();
 };
 
 PangolinGl* GetCurrentContext();

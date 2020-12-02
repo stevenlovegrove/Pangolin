@@ -25,21 +25,18 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <stdexcept>
 #include <pangolin/display/display.h>
-#include <pangolin/display/display_internal.h>
 #include <pangolin/display/view.h>
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/viewport.h>
 #include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/platform.h>
 
-#include <stdexcept>
+#include "pangolin_gl.h"
 
 namespace pangolin
 {
-
-// Pointer to context defined in display.cpp
-extern __thread PangolinGl* context;
 
 const int panal_v_margin = 6;
 

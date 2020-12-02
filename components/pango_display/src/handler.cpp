@@ -25,16 +25,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/display/display_internal.h>
 #include <pangolin/display/view.h>
 #include <pangolin/handler/handler.h>
 #include <pangolin/display/display.h>
 
+#include "pangolin_gl.h"
+
 namespace pangolin
 {
-
-// Pointer to context defined in display.cpp
-extern __thread PangolinGl* context;
 
 void Handler::Keyboard(View& d, unsigned char key, int x, int y, bool pressed)
 {
