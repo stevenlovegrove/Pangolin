@@ -354,12 +354,35 @@ void X11Window::Resize(unsigned int w, unsigned int h)
     XResizeWindow(display->display, win, w, h);
 }
 
+KeyModifierBitmask GetEventFlagsFromXState(unsigned int state) {
+  KeyModifierBitmask flags;
+
+  if (state & ShiftMask)
+    flags |= KeyModifierShift;
+  if (state & ControlMask)
+    flags |= KeyModifierCtrl;
+  if (state & Mod1Mask)
+    flags |= KeyModifierAlt;
+  if (state & Mod4Mask)
+    flags |= KeyModifierCmd;
+  if (state & Mod5Mask) // altgr
+    flags |= KeyModifierAlt;
+//  if (state & LockMask) // capslock
+//  if (state & Mod2Mask) // numlock
+//  if (state & Mod3Mask) // mod3
+//  if (state & Button1Mask) // LEFT_MOUSE_BUTTON;
+//  if (state & Button2Mask) // MIDDLE_MOUSE_BUTTON;
+//  if (state & Button3Mask) // RIGHT_MOUSE_BUTTON;
+  return flags;
+}
+
 void X11Window::ProcessEvents()
 {
     XEvent ev;
     while(XPending(display->display) > 0)
     {
         XNextEvent(display->display, &ev);
+
 
         switch(ev.type){
         case ConfigureNotify:
@@ -374,9 +397,9 @@ void X11Window::ProcessEvents()
         {
             const int button = ev.xbutton.button-1;
             MouseSignal(MouseEvent({
-               button,
-               ev.xbutton.type == ButtonPress,
-               (float)ev.xbutton.x, (float)ev.xbutton.y
+               (float)ev.xbutton.x, (float)ev.xbutton.y,
+               GetEventFlagsFromXState(ev.xkey.state),
+               button, ev.xbutton.type == ButtonPress
            }));
            break;
         }
@@ -387,11 +410,13 @@ void X11Window::ProcessEvents()
         case MotionNotify:
             if(ev.xmotion.state & (Button1Mask|Button2Mask|Button3Mask) ) {
                 MouseMotionSignal(MouseMotionEvent({
-                   (float)ev.xbutton.x, (float)ev.xbutton.y
+                    (float)ev.xbutton.x, (float)ev.xbutton.y,
+                    GetEventFlagsFromXState(ev.xkey.state),
                 }));
             }else{
                 PassiveMouseMotionSignal(MouseMotionEvent({
-                   (float)ev.xbutton.x, (float)ev.xbutton.y
+                    (float)ev.xbutton.x, (float)ev.xbutton.y,
+                    GetEventFlagsFromXState(ev.xkey.state)
                 }));
             }
             break;
@@ -426,42 +451,15 @@ void X11Window::ProcessEvents()
                 case XK_Insert:    key = PANGO_SPECIAL + PANGO_KEY_INSERT     ; break;
                 case XK_Shift_L:
                 case XK_Shift_R:
-                    key = -1;
-                    // TODO
-//                    if(ev.type==KeyPress) {
-//                        pangolin::context->mouse_state |=  pangolin::KeyModifierShift;
-//                    }else{
-//                        pangolin::context->mouse_state &= ~pangolin::KeyModifierShift;
-//                    }
-                    break;
                 case XK_Control_L:
                 case XK_Control_R:
-                    key = -1;
-//                    if(ev.type==KeyPress) {
-//                        pangolin::context->mouse_state |=  pangolin::KeyModifierCtrl;
-//                    }else{
-//                        pangolin::context->mouse_state &= ~pangolin::KeyModifierCtrl;
-//                    }
-                    break;
                 case XK_Alt_L:
                 case XK_Alt_R:
-                    key = -1;
-//                    if(ev.type==KeyPress) {
-//                        pangolin::context->mouse_state |=  pangolin::KeyModifierAlt;
-//                    }else{
-//                        pangolin::context->mouse_state &= ~pangolin::KeyModifierAlt;
-//                    }
-                    break;
                 case XK_Super_L:
                 case XK_Super_R:
+                default:
                     key = -1;
-//                    if(ev.type==KeyPress) {
-//                        pangolin::context->mouse_state |=  pangolin::KeyModifierCmd;
-//                    }else{
-//                        pangolin::context->mouse_state &= ~pangolin::KeyModifierCmd;
-//                    }
                     break;
-                default: key = -1; break;
                 }
             }else{
                 key = ch;
@@ -469,7 +467,9 @@ void X11Window::ProcessEvents()
 
             if(key >=0) {
                 KeyboardSignal(KeyboardEvent({
-                    (unsigned char)key, ev.type == KeyPress, (float)ev.xkey.x, (float)ev.xkey.y
+                    (float)ev.xkey.x, (float)ev.xkey.y,
+                    GetEventFlagsFromXState(ev.xkey.state),
+                    (unsigned char)key, ev.type == KeyPress
                 }));
             }
 
