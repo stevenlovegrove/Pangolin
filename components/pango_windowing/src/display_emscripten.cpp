@@ -126,20 +126,18 @@ EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *user
     }
     key = spec_key(e->key);
     if(key != -1){
-        w->KeyboardSignal(KeyboardEvent({(uint8_t)key, eventType==EMSCRIPTEN_EVENT_KEYDOWN, (float)w->x, (float)w->y}));
-//        if(eventType==EMSCRIPTEN_EVENT_KEYDOWN) {
-//            pangolin::process::Keyboard(key, w->x, w->y);
-//        }else{
-//            pangolin::process::KeyboardUp(key, w->x, w->y);
-//        }
+        w->KeyboardSignal(KeyboardEvent({
+            (uint8_t)key, eventType==EMSCRIPTEN_EVENT_KEYDOWN,
+            (float)w->x, (float)w->y
+        }));
         return false;
     }
     if(strlen(e->key)==1){
-        w->KeyboardSignal(KeyboardEvent({(uint8_t)((e->ctrlKey?PANGO_CTRL:0) + e->key[0]), eventType==EMSCRIPTEN_EVENT_KEYDOWN, (float)w->x, (float)w->y}));
-
-//        pangolin::process::Keyboard(
-//            (e->ctrlKey?PANGO_CTRL:0) + e->key[0], w->x, w->y, eventType==EMSCRIPTEN_EVENT_KEYDOWN
-//        );
+        w->KeyboardSignal(KeyboardEvent({
+            (uint8_t)((e->ctrlKey?PANGO_CTRL:0) + e->key[0]),
+            eventType==EMSCRIPTEN_EVENT_KEYDOWN,
+            (float)w->x, (float)w->y
+        }));
     }
     return false;
 }
@@ -155,17 +153,14 @@ EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userD
         state=0;
     case EMSCRIPTEN_EVENT_MOUSEUP: {
         w->MouseSignal(MouseEvent({e->button, state, (float)w->x, (float)w->y}));
-//        pangolin::process::Mouse(e->button, state, w->x, w->y);
         break;
     }
         break;
     case EMSCRIPTEN_EVENT_MOUSEMOVE: {
         if(e->buttons){
             w->MouseMotionSignal(MouseMotionEvent({(float)w->x, (float)w->y}));
-//            pangolin::process::MouseMotion(w->x, w->y);
         } else {
             w->PassiveMouseMotionSignal(MouseMotionEvent({(float)w->x, (float)w->y}));
-//            pangolin::process::PassiveMouseMotion(w->x, w->y);
         }
     }
         break;
@@ -184,7 +179,6 @@ EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userD
 EM_BOOL wheel_callback(int eventType, const EmscriptenWheelEvent *e, void *userData){
     EmscriptenWindow* w=(EmscriptenWindow*)userData;
     w->SpecialInputSignal(SpecialInputEvent({InputSpecialScroll, (float)w->x, (float)w->y, (float)e->deltaX, (float)e->deltaY, 0, 0}));
-//    pangolin::process::SpecialInput(InputSpecialScroll, w->x, w->y, e->deltaX, e->deltaY, 0, 0);
     return true;
 }
 EM_BOOL uievent_callback(int eventType, const EmscriptenUiEvent *e, void *userData){
@@ -194,7 +188,6 @@ EM_BOOL uievent_callback(int eventType, const EmscriptenUiEvent *e, void *userDa
         int width, height;
         emscripten_get_canvas_element_size(em_dom_id, &width, &height);
         w->ResizeSignal(ResizeEvent({width, height}));
-//        pangolin::process::Resize(width, height);
         break;
     }
     return true;
@@ -202,7 +195,8 @@ EM_BOOL uievent_callback(int eventType, const EmscriptenUiEvent *e, void *userDa
 
 #define TEST(error) if(error!=EMSCRIPTEN_RESULT_SUCCESS)std::cerr << "error: " << __FILE__<< ":" << __LINE__ << std::endl
 
-EmscriptenWindow:: EmscriptenWindow(const std::string& /*title*/, int width, int height)
+EmscriptenWindow:: EmscriptenWindow()
+    : done_init_events(false)
 {
     EmscriptenWebGLContextAttributes attr;
     emscripten_webgl_init_context_attributes(&attr);
@@ -216,8 +210,6 @@ EmscriptenWindow:: EmscriptenWindow(const std::string& /*title*/, int width, int
     }
     // Try to enable some extensions we'll probably need.
     emscripten_webgl_enable_extension(ctx, "EXT_float_blend");
-
-    emscripten_get_canvas_element_size(em_dom_id, &width, &height);
 
     EMSCRIPTEN_RESULT ret;
     ret = emscripten_set_keypress_callback(em_dom_id, this, 1, key_callback);
@@ -288,16 +280,16 @@ void EmscriptenWindow::Resize(unsigned int w, unsigned int h)
 void EmscriptenWindow::ProcessEvents()
 {
     // Emscripten will trigger callbacks.
+    if(!done_init_events) {
+        done_init_events = true;
+        int width, height;
+        emscripten_get_canvas_element_size(em_dom_id, &width, &height);
+        ResizeSignal(ResizeEvent({width, height}));
+    }
 }
 
 void  EmscriptenWindow::SwapBuffers() {
     emscripten_sleep(10);
-}
-
-std::unique_ptr<WindowInterface> CreateEmscriptenWindowAndBind(const std::string& window_title, const int w, const int h)
-{
-    EmscriptenWindow* win = new EmscriptenWindow(window_title, w, h);
-    return std::unique_ptr<WindowInterface>(win);
 }
 
 PANGOLIN_REGISTER_FACTORY(EmscriptenWindow)
@@ -314,17 +306,16 @@ PANGOLIN_REGISTER_FACTORY(EmscriptenWindow)
         ParamSet Params() const override
         {
             return {{
-                {"window_title","window","Title of application Window"},
-                {"w","640","Requested window width"},
-                {"h","480","Requested window height"},
+                {"window_title","-","Ignored"},
+                {"w","640","Ignored"},
+                {"h","480","Ignored"},
             }};
         }
 
         std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
-            const std::string window_title = uri.Get<std::string>("window_title", "window");
-            const int w = uri.Get<int>("w", 640);
-            const int h = uri.Get<int>("h", 480);
-            return std::unique_ptr<WindowInterface>(CreateEmscriptenWindowAndBind(window_title, w, h));
+            // We're going to be naughty and actually ignore the title, width and height,
+            // but list them as parameters to be compatible with other windowing libs.
+            return std::unique_ptr<WindowInterface>(new EmscriptenWindow());
         }
     };
     return FactoryRegistry::I()->RegisterFactory<WindowInterface>(std::make_shared<EmscriptenWindowFactory>());

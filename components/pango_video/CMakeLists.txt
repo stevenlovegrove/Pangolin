@@ -24,22 +24,16 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/drivers/json.cpp
 )
 
-list(APPEND VIDEO_FACTORY_REG
-    RegisterTestVideoFactory
-    RegisterImagesVideoFactory
-    RegisterImagesVideoOutputFactory
-    RegisterSplitVideoFactory
-    RegisterTruncateVideoFactory
-    RegisterPangoVideoFactory
-    RegisterPangoVideoOutputFactory
-    RegisterDebayerVideoFactory
-    RegisterShiftVideoFactory
-    RegisterTransformVideoFactory
-    RegisterUnpackVideoFactory
-    RegisterPackVideoFactory
-    RegisterJoinVideoFactory
-    RegisterMergeVideoFactory
-    RegisterJsonVideoFactory
+PangolinRegisterFactory(
+    VideoInterface
+    TestVideo ImagesVideo SplitVideo TruncateVideo PangoVideo
+    DebayerVideo ShiftVideo TransformVideo UnpackVideo PackVideo
+    JoinVideo MergeVideo JsonVideo
+)
+
+PangolinRegisterFactory(
+    VideoOutputInterface
+    ImagesVideoOutput PangoVideoOutput
 )
 
 target_include_directories(${COMPONENT}
@@ -49,10 +43,3 @@ target_include_directories(${COMPONENT}
 
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image pango_packetstream)
-
-# Create window_frameworks.h file for inclusion in library
-# This loads windowing framework factories based on cmake configuration
-CreateMethodCallFile(
-    "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/video/video_drivers.h"
-    "pangolin" "LoadBuiltInVideoDrivers" "${VIDEO_FACTORY_REG}"
-)

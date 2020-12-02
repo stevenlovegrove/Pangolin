@@ -166,10 +166,24 @@ private:
 };
 
 /// This macro can be used as a template for registering a factory class
+/// You should add a corresponding line in your cmake:
+///    `PangolinRegisterFactory(MyInterfaceType MyFactoryType)`
 /// \tparam x is the factory interface class (such as WindowInterface, VideoInterface, etc)
 /// \return true iff registration was successful.
 // Forward declaration; static load variable; definition
 #define PANGOLIN_REGISTER_FACTORY(x) \
+    bool Register ## x ## Factory()
+    // {
+    //    return FactoryRegistry::I()->RegisterFactory<x>(std::make_shared<MyFactoryClass>());
+    // }
+
+/// This macro can be used as a template for registering a factory class.
+/// It will automatically register itself via static initialization, but this may not work
+/// correctly in some circumstances.
+/// \tparam x is the factory interface class (such as WindowInterface, VideoInterface, etc)
+/// \return true iff registration was successful.
+// Forward declaration; static load variable; definition
+#define PANGOLIN_REGISTER_FACTORY_WITH_STATIC_INITIALIZER(x) \
     bool Register ## x ## Factory(); \
     static const bool Load ## x ## Success = Register ## x ## Factory(); \
     bool Register ## x ## Factory()

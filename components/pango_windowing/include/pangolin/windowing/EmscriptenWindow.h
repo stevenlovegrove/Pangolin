@@ -42,7 +42,7 @@ namespace pangolin
 struct EmscriptenWindow : public WindowInterface
 {
  public:
-    EmscriptenWindow(const std::string& title, int width, int height);
+    EmscriptenWindow();
 
     ~EmscriptenWindow();
 
@@ -65,6 +65,7 @@ struct EmscriptenWindow : public WindowInterface
  private:
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = NULL;
     GLuint program = 0;
+    bool done_init_events;
 };
 
 }

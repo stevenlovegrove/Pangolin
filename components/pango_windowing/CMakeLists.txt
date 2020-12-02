@@ -13,12 +13,15 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         $<$<OR:$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
         -Wno-deprecated-declarations>
     )
+    PangolinRegisterFactory(WindowInterface OsxWindow)
 elseif(WIN32 OR WIN64)
     target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/display_win.cpp )
     target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"winapi\"")
+    PangolinRegisterFactory(WindowInterface WinWindow)
 elseif(EMSCRIPTEN)
     target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/display_emscripten.cpp )
     target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"emscripten\"")
+    PangolinRegisterFactory(WindowInterface EmscriptenWindow)
 else()
     find_package(X11 QUIET)
     if(X11_FOUND)
@@ -27,6 +30,7 @@ else()
         target_include_directories(${COMPONENT} PRIVATE ${X11_INCLUDE_DIR} )
     endif()
     target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"x11\"")
+    PangolinRegisterFactory(WindowInterface X11Window)
 endif()
 
 # headless offscreen rendering via EGL
@@ -39,9 +43,5 @@ if(OpenGL_EGL_FOUND)
     target_link_libraries(${COMPONENT} PRIVATE ${OPENGL_egl_LIBRARY} )
 endif()
 
-target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl pango_vars )
-
-target_include_directories(${COMPONENT}
-    PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
-    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
-)
+target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl )
+target_include_directories(${COMPONENT} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)

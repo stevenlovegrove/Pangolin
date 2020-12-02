@@ -18,6 +18,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 include(CreateMethodCallFile)
 include(SetPlatformVars)
+include(PangolinFactory)
 
 option( BUILD_TOOLS "Build Tools" ON )
 option( BUILD_EXAMPLES "Build Examples" ON )
@@ -72,6 +73,9 @@ endforeach()
 foreach(component_cmake ${components_cmake})
     include(${component_cmake})
 endforeach()
+
+# Create Factory Registry files to force symbol loading
+PangolinCreateFactoryRegisterFile( "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/factory" pangolin)
 
 # Export Targets
 export(TARGETS ${component_list} FILE PangolinTargets.cmake)

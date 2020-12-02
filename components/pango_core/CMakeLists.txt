@@ -22,8 +22,11 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/factory/factory_registry.cpp
 )
 
-find_package(Threads)
 
 target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 target_compile_features(${COMPONENT} PUBLIC cxx_decltype_auto )
-target_link_libraries(${COMPONENT} Threads::Threads)
+
+find_package(Threads QUIET)
+if(Threads_FOUND)
+    target_link_libraries(${COMPONENT} PUBLIC Threads::Threads)
+endif()
