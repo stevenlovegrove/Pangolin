@@ -41,6 +41,8 @@ if(pybind11_FOUND)
     )
     target_compile_definitions(${COMPONENT} PRIVATE HAVE_PYTHON)
 
+    PangolinRegisterFactory( InterpreterInterface PyInterpreter )
+
     # Add python module as another target
     pybind11_add_module(pypangolin ${CMAKE_CURRENT_LIST_DIR}/../pango_core/src/dummy.cpp)
     target_link_libraries(pypangolin PRIVATE ${COMPONENT})
