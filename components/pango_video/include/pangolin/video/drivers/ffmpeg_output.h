@@ -27,49 +27,52 @@
 
 #pragma once
 
-#include <fstream>
-#include <pangolin/video/video_interface.h>
-#include <pangolin/utils/timer.h>
+#include <pangolin/video/video_output_interface.h>
+#include <pangolin/video/drivers/ffmpeg_common.h>
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT PvnVideo : public VideoInterface
+#if (LIBAVFORMAT_VERSION_MAJOR > 55) || ((LIBAVFORMAT_VERSION_MAJOR == 55) && (LIBAVFORMAT_VERSION_MINOR >= 7))
+typedef AVCodecID CodecID;
+#endif
+
+// Forward declaration
+class FfmpegVideoOutputStream;
+
+class PANGOLIN_EXPORT FfmpegVideoOutput
+    : public VideoOutputInterface
 {
+    friend class FfmpegVideoOutputStream;
 public:
-    PvnVideo(const std::string& filename, bool realtime = false);
-    ~PvnVideo();
-    
-    //! Implement VideoInput::Start()
-    void Start();
-    
-    //! Implement VideoInput::Stop()
-    void Stop();
+    FfmpegVideoOutput( const std::string& filename, int base_frame_rate, int bit_rate, bool flip = false);
+    ~FfmpegVideoOutput();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+    const std::vector<StreamInfo>& Streams() const override;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
-    
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
-    
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
-    
+    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const picojson::value& properties) override;
+
+    int WriteStreams(const unsigned char* data, const picojson::value& frame_properties) override;
+
+    bool IsPipe() const override;
+
 protected:
-    int frames;
-    std::ifstream file;
+    void Initialise(std::string filename);
+    void StartStream();
+    void Close();
 
-    std::vector<StreamInfo> streams;
-    size_t frame_size_bytes;
-    
-    bool realtime;
-    pangolin::basetime frame_interval;
-    pangolin::basetime last_frame;
-    
-    void ReadFileHeader();
+    std::string filename;
+    bool started;
+    AVFormatContext *oc;
+    std::vector<FfmpegVideoOutputStream*> streams;
+    std::vector<StreamInfo> strs;
+
+    int frame_count;
+
+    int base_frame_rate;
+    int bit_rate;
+    bool is_pipe;
+    bool flip;
 };
 
 }

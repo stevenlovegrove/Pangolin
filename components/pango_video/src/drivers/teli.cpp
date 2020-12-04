@@ -538,6 +538,20 @@ const picojson::value& TeliVideo::FrameProperties() const
 PANGOLIN_REGISTER_FACTORY(TeliVideo)
 {
     struct TeliVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"teli",10}, {"u3v",5}};
+        }
+        const char* Description() const override
+        {
+            return "Uses Toshiba TeliCam library to open u3v camera.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"*","Enumerates arguments dynamically from camera. Use native u3v properties."}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             return std::unique_ptr<VideoInterface>(new TeliVideo(uri));
         }
@@ -546,9 +560,7 @@ PANGOLIN_REGISTER_FACTORY(TeliVideo)
         }
     };
 
-    auto factory = std::make_shared<TeliVideoFactory>();
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "teli");
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "u3v");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<TeliVideoFactory>());
 }
 
 }

@@ -87,6 +87,21 @@ size_t RealSenseVideo::Seek(size_t frameid) {
 PANGOLIN_REGISTER_FACTORY(RealSenseVideo)
 {
     struct RealSenseVideoFactory : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"realsense1",10}, {"realsense",20}};
+        }
+        const char* Description() const override
+        {
+            return "Stream from RealSense devices.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"size","640x480","Image dimension"},
+                {"fps","30","Frames per second"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
             const unsigned int fps = uri.Get<unsigned int>("fps", 30);
@@ -94,7 +109,7 @@ PANGOLIN_REGISTER_FACTORY(RealSenseVideo)
         }
     };
 
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<RealSenseVideoFactory>(), 10, "realsense");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<RealSenseVideoFactory>());
 }
 
 }

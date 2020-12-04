@@ -917,6 +917,26 @@ dc1394framerate_t get_firewire_framerate(float framerate)
 PANGOLIN_REGISTER_FACTORY(FirewireVideo)
 {
     struct FirewireVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"dc1394",10}, {"firewire",10}};
+        }
+        const char* Description() const override
+        {
+            return "Access Firewire (dc1394) cameras";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"fmt","RGB24","Pixel format: see pixel format help for all possible values. "},
+                {"size","640x480","Image dimensions in pixels. Will be crop from full sensor resolution."},
+                {"pos","0+0","top-left requested pixel offset"},
+                {"dma","10","Direct Memory Access (DMA) device queue size"},
+                {"iso","400","ISO sensitivity"},
+                {"fps","30","Frame per Second"},
+                {"deinterlace","0","Apply deinterlacing on video stream (0 off, 1 on)"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             std::string desired_format = uri.Get<std::string>("fmt","RGB24");
             ToUpper(desired_format);
@@ -961,9 +981,7 @@ PANGOLIN_REGISTER_FACTORY(FirewireVideo)
         }
     };
 
-    auto factory = std::make_shared<FirewireVideoFactory>();
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "firewire");
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "dc1394");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<FirewireVideoFactory>());
 }
 
 }

@@ -778,9 +778,17 @@ const picojson::value& V4lVideo::FrameProperties() const
 PANGOLIN_REGISTER_FACTORY(V4lVideo)
 {
     struct V4lVideoFactory final : public TypedFactoryInterface<VideoInterface> {
-        V4lVideoFactory()
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
+            return {{"v4l",10}};
+        }
+        const char* Description() const override
+        {
+            return "Use V4L to open a video device";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"method","mmap","Possible values are: read, mmap, userptr"},
                 {"size","0x0","Desired image size"},
                 {"format","YUYV422","Desired image format"},
@@ -790,7 +798,7 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
             }};
         }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            ParamReader reader(param_set_,uri);
+            ParamReader reader(Params(), uri);
 
             const std::string smethod = reader.Get<std::string>("method");
             const ImageDim desired_dim = reader.Get<ImageDim>("size");
@@ -835,21 +843,9 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
             }
             return std::unique_ptr<VideoInterface>(video_raw);
         }
-        FactoryUseInfo Help( const std::string& scheme ) const override {
-            return FactoryUseInfo(scheme,"Opens a v4l compatible video stream",param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& scheme ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    auto factory = std::make_shared<V4lVideoFactory>();
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "v4l");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<V4lVideoFactory>());
 }
 
 

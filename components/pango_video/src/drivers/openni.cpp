@@ -269,6 +269,24 @@ bool OpenNiVideo::GrabNewest( unsigned char* image, bool wait )
 PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
 {
     struct OpenNiVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"openni1",10}, {"openni",100}, {"kinect",100}};
+        }
+        const char* Description() const override
+        {
+            return "OpenNI v1 Driver to access Kinect / Primesense devices.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"size","640x480","Image dimension"},
+                {"fps","30","Frames per second"},
+                {"autoexposure","1","enable (1) or disable (0) RGB autoexposure"},
+                {"img1","depth","Camera stream to use for stream 1 {depth,rgb,ir}"},
+                {"img2","","Camera stream to use for stream 2 {depth,rgb,ir}"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
             const unsigned int fps = uri.Get<unsigned int>("fps", 30);
@@ -291,11 +309,7 @@ PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
         }
     };
 
-    auto factory = std::make_shared<OpenNiVideoFactory>();
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory,  10, "openni1");
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 100, "openni");
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 100, "oni");
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 100, "kinect");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>( std::make_shared<OpenNiVideoFactory>());
 }
 
 }

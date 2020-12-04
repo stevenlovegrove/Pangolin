@@ -24,7 +24,7 @@ RealSense2Video::RealSense2Video(ImageDim dim, int fps)
 
     {   //config color
         cfg->enable_stream(RS2_STREAM_COLOR, dim_.x, dim_.y, RS2_FORMAT_RGB8, fps_);
-        StreamInfo streamRGB(PixelFormatFromString("RGB24"), dim_.x, dim_.y, dim_.x*3, (uint8_t*)0+sizeBytes);
+        StreamInfo streamRGB(PixelFormatFromString("RGB24"), dim_.x, dim_.y, dim_.x*3, reinterpret_cast<uint8_t*>(sizeBytes));
         streams.push_back(streamRGB);
         sizeBytes += streamRGB.SizeBytes();
     }
@@ -101,6 +101,21 @@ size_t RealSense2Video::Seek(size_t /*frameid*/) {
 PANGOLIN_REGISTER_FACTORY(RealSense2Video)
 {
     struct RealSense2VideoFactory : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"realsense2",10}, {"realsense",10}};
+        }
+        const char* Description() const override
+        {
+            return "Stream from RealSense devices.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"size","640x480","Image dimension"},
+                {"fps","30","Frames per second"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
             const unsigned int fps = uri.Get<unsigned int>("fps", 30);
@@ -108,7 +123,7 @@ PANGOLIN_REGISTER_FACTORY(RealSense2Video)
         }
     };
 
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<RealSense2VideoFactory>(), 10, "realsense2");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<RealSense2VideoFactory>());
 }
 
 }

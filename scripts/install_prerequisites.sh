@@ -115,16 +115,15 @@ if [[ "$MANAGER" == "apt-get" ]]; then
     PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev cmake)
     PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev)
     PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev)
-    PKGS_ALL+=(libdc1394-22-dev libraw1394-dev)
+    PKGS_ALL+=(libdc1394-22-dev libraw1394-dev libopenni-dev)
 elif [[ "$MANAGER" == "dnf" ]]; then
     SUDO="sudo"
     PKGS_UPDATE="dnf check-update"
     PKGS_OPTIONS+=(install)
     PKGS_REQUIRED+=(wayland-devel libxkbcommon-devel)
     PKGS_REQUIRED+=(glew-devel eigen3 cmake)
-    PKGS_RECOMMENDED+=(libjpeg-devel libpng-devel)
-    PKGS_RECOMMENDED+=()
-    PKGS_ALL+=(libdc1394-22-devel libraw1394-devel)    
+    PKGS_RECOMMENDED+=(libjpeg-devel libpng-devel OpenEXR-devel)
+    PKGS_ALL+=(libdc1394-22-devel libraw1394-devel librealsense-devel openni-devel)
     if ((DRYRUN > 0));  then
         MANAGER="echo $MANAGER"
     fi

@@ -262,34 +262,31 @@ std::vector<VideoInterface*>& ThreadVideo::InputStreams()
 PANGOLIN_REGISTER_FACTORY(ThreadVideo)
 {
     struct ThreadVideoFactory final : public TypedFactoryInterface<VideoInterface> {
-        ThreadVideoFactory()
+        std::map<std::string,Precedence> Schemes() const override
         {
-            param_set_ = {{
+            return {{"thread",10}};
+        }
+        const char* Description() const override
+        {
+            return "Queues sub-video frames in thread.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
                 {"num_buffers", "30", "Size of the input queue/buffer for this thread"},
                 {"name","Unnamed","Name of the thread"}
             }};
         }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            ParamReader reader(param_set_,uri);
+            ParamReader reader(Params(), uri);
             std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
             const int num_buffers = reader.Get<int>("num_buffers");
             const std::string name = reader.Get<std::string>("name");
             return std::unique_ptr<VideoInterface>(new ThreadVideo(subvid, num_buffers, name));
         }
-        FactoryUseInfo Help( const std::string& scheme ) const override {
-            return FactoryUseInfo(scheme,"Runs the URL part of the URI in a seperate thread", param_set_);
-        }
-
-        bool ValidateUri( const std::string& scheme, const Uri& uri, std::unordered_set<std::string>& unrecognized_params) const override {
-            return ValidateUriAgainstParamSet(scheme, param_set_, uri, unrecognized_params );
-        }
-
-        bool IsValidated( const std::string& ) const override {return true;}
-
-        ParamSet param_set_;
     };
 
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<ThreadVideoFactory>(), 10, "thread");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<ThreadVideoFactory>());
 }
 
 }

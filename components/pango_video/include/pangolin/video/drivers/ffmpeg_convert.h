@@ -28,21 +28,34 @@
 #pragma once
 
 #include <pangolin/video/video_interface.h>
-#include <pangolin/video/iostream_operators.h>
 #include <pangolin/video/drivers/ffmpeg_common.h>
 
-namespace pangolin
-{
+namespace pangolin {
 
-class PANGOLIN_EXPORT FfmpegVideo : public VideoInterface
+enum FfmpegMethod
+{
+    FFMPEG_FAST_BILINEAR =    1,
+    FFMPEG_BILINEAR      =    2,
+    FFMPEG_BICUBIC       =    4,
+    FFMPEG_X             =    8,
+    FFMPEG_POINT         = 0x10,
+    FFMPEG_AREA          = 0x20,
+    FFMPEG_BICUBLIN      = 0x40,
+    FFMPEG_GAUSS         = 0x80,
+    FFMPEG_SINC          =0x100,
+    FFMPEG_LANCZOS       =0x200,
+    FFMPEG_SPLINE        =0x400
+};
+
+class PANGOLIN_EXPORT FfmpegConverter : public VideoInterface
 {
 public:
-    FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false, int user_video_stream = -1, ImageDim size = ImageDim(0,0));
-    ~FfmpegVideo();
-    
+    FfmpegConverter(std::unique_ptr<VideoInterface>& videoin, const std::string pixelfmtout = "RGB24", FfmpegMethod method = FFMPEG_POINT);
+    ~FfmpegConverter();
+
     //! Implement VideoInput::Start()
     void Start();
-    
+
     //! Implement VideoInput::Stop()
     void Stop();
 
@@ -51,32 +64,37 @@ public:
 
     //! Implement VideoInput::Streams()
     const std::vector<StreamInfo>& Streams() const;
-    
+
     //! Implement VideoInput::GrabNext()
     bool GrabNext( unsigned char* image, bool wait = true );
-    
+
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true );
-    
+
 protected:
-    void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false , int user_video_stream = -1, ImageDim size= ImageDim(0,0));
-    
     std::vector<StreamInfo> streams;
-    
-    SwsContext      *img_convert_ctx;
-    AVFormatContext *pFormatCtx;
-    int             videoStream;
-    int             audioStream;
-    AVCodecContext  *pVidCodecCtx;
-    AVCodecContext  *pAudCodecCtx;
-    AVCodec         *pVidCodec;
-    AVCodec         *pAudCodec;
-    AVFrame         *pFrame;
-    AVFrame         *pFrameOut;
-    AVPacket        packet;
-    int             numBytesOut;
-    uint8_t         *buffer;
-    AVPixelFormat     fmtout;
+
+    struct ConvertContext
+    {
+        SwsContext*     img_convert_ctx;
+        AVPixelFormat   fmtsrc;
+        AVPixelFormat   fmtdst;
+        AVFrame*        avsrc;
+        AVFrame*        avdst;
+        size_t          w,h;
+        size_t          src_buffer_offset;
+        size_t          dst_buffer_offset;
+
+        void convert(const unsigned char * src, unsigned char* dst);
+
+    };
+
+    std::unique_ptr<VideoInterface> videoin;
+    std::unique_ptr<unsigned char[]> input_buffer;
+
+    std::vector<ConvertContext> converters;
+    //size_t src_buffer_size;
+    size_t dst_buffer_size;
 };
 
 }

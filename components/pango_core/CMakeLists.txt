@@ -22,6 +22,17 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/factory/factory_registry.cpp
 )
 
+if (UNIX)
+    target_sources( ${COMPONENT} PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/src/posix/condition_variable.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/posix/semaphore.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/posix/shared_memory_buffer.cpp
+    )
+    if (NOT APPLE)
+        target_link_libraries(${COMPONENT} PUBLIC rt)
+    endif()
+endif()
+
 
 target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 target_compile_features(${COMPONENT} PUBLIC cxx_decltype_auto )

@@ -17,11 +17,12 @@ FIND_PATH(
 
 FIND_LIBRARY(
   libusb1_LIBRARIES
-  NAMES libusb-1.0
+  NAMES usb-1.0
   PATHS
     c:/dev/sysroot32/usr/lib
     ${CMAKE_SOURCE_DIR}/../libusb1/lib
     /usr/lib
+    /usr/lib64
     /usr/local/lib
     /opt/local/lib
 )

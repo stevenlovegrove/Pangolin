@@ -346,6 +346,24 @@ const picojson::value& UvcVideo::FrameProperties() const
 PANGOLIN_REGISTER_FACTORY(UvcVideo)
 {
     struct UvcVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"uvc",10}};
+        }
+        const char* Description() const override
+        {
+            return "Use libuvc to open UVC USB device";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"size","640x480","Image dimension"},
+                {"fps","0","Frames per second (0:unspecified)"},
+                {"num","0","Open the nth device (no need for vid and pid)"},
+                {"vid","0x0000","Open based on USB VID and PID"},
+                {"pid","0x0000","Open based on USB VID and PID"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             int vid = 0;
             int pid = 0;
@@ -358,7 +376,7 @@ PANGOLIN_REGISTER_FACTORY(UvcVideo)
         }
     };
 
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<UvcVideoFactory>(), 10, "uvc");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<UvcVideoFactory>());
 }
 
 }

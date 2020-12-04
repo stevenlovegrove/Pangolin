@@ -467,7 +467,7 @@ void TransformVideo::Process(unsigned char* buffer_out, const unsigned char* buf
             PitchedImageCopy(img_out, img_in, bytes_per_pixel);
             break;
         default:
-            pango_print_warn("TransformVideo::Process(): Invalid enum %i.\n", flips[s]);
+            pango_print_warn("TransformVideo::Process(): Invalid enum %i.\n", int(flips[s]));
             break;
         }
     }

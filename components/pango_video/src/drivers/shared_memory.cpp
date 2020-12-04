@@ -72,6 +72,21 @@ bool SharedMemoryVideo::GrabNewest(unsigned char* image, bool wait)
 PANGOLIN_REGISTER_FACTORY(SharedMemoryVideo)
 {
     struct SharedMemoryVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"shmem",10}};
+        }
+        const char* Description() const override
+        {
+            return "Stream from posix shared memory";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"fmt","RGB24","Pixel format: see pixel format help for all possible values"},
+                {"size","640x480","Image dimension"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(0, 0));
             const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");
@@ -93,7 +108,7 @@ PANGOLIN_REGISTER_FACTORY(SharedMemoryVideo)
         }
     };
 
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<SharedMemoryVideoFactory>(), 10, "shmem");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<SharedMemoryVideoFactory>());
 }
 
 }

@@ -101,7 +101,7 @@ public:
         // Order candidates by precedence.
         std::sort(candidates.begin(), candidates.end(), [&](auto& lhs, auto& rhs){
             // We know that all candidates contain scheme
-            return lhs->Schemes()[uri.scheme] < lhs->Schemes()[uri.scheme];
+            return lhs->Schemes()[uri.scheme] < rhs->Schemes()[uri.scheme];
         });
 
         // Try candidates in order

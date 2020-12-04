@@ -727,14 +727,26 @@ bool PleoraVideo::SetStreamParam(const char* name, T val)
 PANGOLIN_REGISTER_FACTORY(PleoraVideo)
 {
     struct PleoraVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"pleora",10}, {"u3v",10}};
+        }
+        const char* Description() const override
+        {
+            return "Uses Pleora EBusSDK to open u3v camera.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"*","Enumerates arguments dynamically from camera. Use native u3v properties."}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             return std::unique_ptr<VideoInterface>(new PleoraVideo(uri));
         }
     };
 
-    auto factory = std::make_shared<PleoraVideoFactory>();
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "pleora");
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "u3v");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<PleoraVideoFactory>());
 }
 
 }
