@@ -1047,7 +1047,7 @@ bool UvcMediaFoundationVideo::SymLinkIDMatches(const std::wstring& symLink, cons
 
 PANGOLIN_REGISTER_FACTORY(UvcMediaFoundationVideo)
 {
-    struct UvcVideoFactory final : public TypedFactoryInterface<VideoInterface>
+    struct UvcMediaFoundationVideoFactory final : public TypedFactoryInterface<VideoInterface>
     {
         std::map<std::string,Precedence> Schemes() const override
         {
@@ -1085,7 +1085,7 @@ PANGOLIN_REGISTER_FACTORY(UvcMediaFoundationVideo)
         }
     };
 
-    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<UvcVideoFactory>());
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<UvcMediaFoundationVideoFactory>());
 }
 }
 

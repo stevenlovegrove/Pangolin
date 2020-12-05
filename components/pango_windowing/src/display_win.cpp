@@ -28,10 +28,7 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/gl/glinclude.h>
-#include <pangolin/display/display.h>
-#include <pangolin/display/display_internal.h>
-
-#include <pangolin/display/device/WinWindow.h>
+#include <pangolin/windowing/WinWindow.h>
 #include <memory>
 
 #define CheckWGLDieOnError() pangolin::_CheckWLDieOnError( __FILE__, __LINE__ );
@@ -55,8 +52,6 @@ namespace pangolin
 {
 
 const char *className = "Pangolin";
-
-extern __thread PangolinGl* context;
 
 ////////////////////////////////////////////////////////////////////////
 // Utils
@@ -101,14 +96,13 @@ unsigned char GetPangoKey(WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-int GetMouseModifierKey(WPARAM wParam)
+KeyModifierBitmask GetMouseModifierKey(WPARAM wParam)
 {
-  //maps windows key modifier to glutGetModifiers values
-  int gluKeyModVal = 0;
-  if (wParam & MK_SHIFT) gluKeyModVal += 1;
-  if (wParam & MK_CONTROL) gluKeyModVal += 2;
-  if (HIBYTE(GetKeyState(VK_MENU))) gluKeyModVal += 4;
-  return gluKeyModVal << 4;
+    KeyModifierBitmask mask;
+    if (wParam & MK_SHIFT) mask |= KeyModifierShift;
+    if (wParam & MK_CONTROL) mask |= KeyModifierCtrl;
+    if (HIBYTE(GetKeyState(VK_MENU))) mask |= KeyModifierCmd;
+    return mask;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -213,7 +207,7 @@ void WinWindow::SetupPalette(HDC hDC)
 
 WinWindow::WinWindow(
     const std::string& window_title, int width, int height
-) : hWnd(0)
+) : hWnd(0), bIsFullscreen(false)
 {
     const HMODULE hCurrentInst = GetModuleHandleA(nullptr);
     if(hCurrentInst==NULL) {
@@ -235,13 +229,6 @@ WinWindow::WinWindow(
     if( thishwnd != hWnd ) {
         throw std::runtime_error("Pangolin Window Creation Failed.");
     }
-
-    // Gets the size of the window, excluding the top bar
-    RECT cRect;
-    GetClientRect(thishwnd, &cRect);
-
-    PangolinGl::windowed_size[0] = cRect.right;
-    PangolinGl::windowed_size[1] = cRect.bottom;
 
     // Display Window
     ShowWindow(hWnd, SW_SHOW);
@@ -344,10 +331,7 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         return 0;
     case WM_SIZE:
-        /* track window size changes */
-        if (context == this) {
-            process::Resize((int)LOWORD(lParam), (int)HIWORD(lParam));
-        }
+        ResizeSignal(WindowResizeEvent({(int)LOWORD(lParam), (int)HIWORD(lParam)}));
         return 0;
     case WM_PALETTECHANGED:
         /* realize palette if this is *not* the current window */
@@ -377,66 +361,89 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
             if(RealizePalette(hDC)==GDI_ERROR) {
                 std::cerr << "WM_QUERYNEWPALETTE RealizePalette() failed" << std::endl;
             }
-            //redraw();
             return TRUE;
         }
         break;
     case WM_PAINT:
-    {
-        //PAINTSTRUCT ps;
-        //BeginPaint(hWnd, &ps);
-        //if (hGLRC) {
-        //    redraw();
-        //}
-        //EndPaint(hWnd, &ps);
-        //return 0;
-    }
         break;
     case WM_KEYDOWN:
-    {
-        unsigned char key = GetPangoKey(wParam, lParam);
-        if(key>0) process::Keyboard(key, 1, 1);
-        return 0;
-    }
     case WM_KEYUP:
     {
         unsigned char key = GetPangoKey(wParam, lParam);
-        if (key>0) process::KeyboardUp(key, 1, 1);
+        if(key > 0) {
+            // TODO: Fix
+            KeyboardSignal(KeyboardEvent({
+                afLastMousePos[0], afLastMousePos[1],
+                KeyModifierBitmask(),
+                (unsigned char)key, message == WM_KEYDOWN
+            }));
+        }
         return 0;
     }
     case WM_LBUTTONDOWN:
-        process::Mouse(0 | GetMouseModifierKey(wParam), 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        MouseSignal(MouseEvent({
+            (float)GET_X_LPARAM(lParam), (float)GET_Y_LPARAM(lParam),
+            GetMouseModifierKey(wParam), 0, true
+        }));
         return 0;
     case WM_MBUTTONDOWN:
-        process::Mouse(1 | GetMouseModifierKey(wParam), 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        MouseSignal(MouseEvent({
+            (float)GET_X_LPARAM(lParam), (float)GET_Y_LPARAM(lParam),
+            GetMouseModifierKey(wParam), 1, true
+        }));
         return 0;
     case WM_RBUTTONDOWN:
-        process::Mouse(2 | GetMouseModifierKey(wParam), 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        MouseSignal(MouseEvent({
+            (float)GET_X_LPARAM(lParam), (float)GET_Y_LPARAM(lParam),
+            GetMouseModifierKey(wParam), 2, true
+        }));
         return 0;
-
     case WM_LBUTTONUP:
-        process::Mouse(0 | GetMouseModifierKey(wParam), 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        MouseSignal(MouseEvent({
+            (float)GET_X_LPARAM(lParam), (float)GET_Y_LPARAM(lParam),
+            GetMouseModifierKey(wParam), 0, false
+        }));
         return 0;
     case WM_MBUTTONUP:
-        process::Mouse(1 | GetMouseModifierKey(wParam), 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        MouseSignal(MouseEvent({
+            (float)GET_X_LPARAM(lParam), (float)GET_Y_LPARAM(lParam),
+            GetMouseModifierKey(wParam), 1, false
+        }));
         return 0;
     case WM_RBUTTONUP:
-        process::Mouse(2 | GetMouseModifierKey(wParam), 1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        MouseSignal(MouseEvent({
+            (float)GET_X_LPARAM(lParam), (float)GET_Y_LPARAM(lParam),
+            GetMouseModifierKey(wParam), 2, false
+        }));
         return 0;
-
     case WM_MOUSEMOVE:
         if (wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON) ) {
-            process::MouseMotion(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            MouseMotionSignal(MouseMotionEvent({
+                (float)GET_X_LPARAM(lParam), (float)GET_Y_LPARAM(lParam),
+                GetMouseModifierKey(wParam),
+            }));
         } else{
-            process::PassiveMouseMotion(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            PassiveMouseMotionSignal(MouseMotionEvent({
+                (float)GET_X_LPARAM(lParam), (float)GET_Y_LPARAM(lParam),
+                GetMouseModifierKey(wParam),
+            }));
         }
+        afLastMousePos[0] = (float)GET_X_LPARAM(lParam);
+        afLastMousePos[1] = (float)GET_Y_LPARAM(lParam); 
         return 0;
-
     case WM_MOUSEWHEEL:
-        process::Scroll(0.0f, GET_WHEEL_DELTA_WPARAM(wParam) / 5.0f );
+        SpecialInputSignal(SpecialInputEvent({
+            afLastMousePos[0], afLastMousePos[1],
+            GetMouseModifierKey(wParam), InputSpecialScroll,
+            {0.0f, GET_WHEEL_DELTA_WPARAM(wParam) / 5.0f, 0.0f, 0.0f }
+        }));
         return 0;
     case WM_MOUSEHWHEEL:
-        process::Scroll(GET_WHEEL_DELTA_WPARAM(wParam) / 5.0f, 0.0f);
+        SpecialInputSignal(SpecialInputEvent({
+            afLastMousePos[0], afLastMousePos[1],
+            GetMouseModifierKey(wParam), InputSpecialScroll,
+            {GET_WHEEL_DELTA_WPARAM(wParam) / 5.0f, 0.0f, 0.0f, 0.0f }
+        }));
         return 0;
     default:
         break;
@@ -467,10 +474,10 @@ void WinWindow::StartFullScreen() {
         CheckWGLDieOnError();
     }
 
-    GLint prev[2];
-    std::memcpy(prev, context->windowed_size, sizeof(prev));
+    // Save windowed size so that we can un-fullscreen to
+    // to this dimension
+    GetWindowRect(hWnd, &cWindowedRect);
     ShowWindow(hWnd, SW_SHOWMAXIMIZED);
-    std::memcpy(context->windowed_size, prev, sizeof(prev));
 }
 
 void WinWindow::StopFullScreen() {
@@ -498,21 +505,22 @@ void WinWindow::StopFullScreen() {
         CheckWGLDieOnError();
     }
 
-    if(!SetWindowPos(hWnd, HWND_TOP, 0, 0, context->windowed_size[0], context->windowed_size[1], SWP_FRAMECHANGED)) {
-        std::cerr << "SetWindowPos() failed" << std::endl;
-        CheckWGLDieOnError();
-    }
+    // Restore previous size
+    Resize(cWindowedRect.right-cWindowedRect.left, cWindowedRect.bottom-cWindowedRect.top);
+    Move(cWindowedRect.left, cWindowedRect.top);
 }
 
-void WinWindow::ToggleFullscreen()
+void WinWindow::ShowFullscreen(const TrueFalseToggle on_off)
 {
-    if(!context->is_fullscreen) {
-        StartFullScreen();
-        context->is_fullscreen = true;
-    }else{
-        StopFullScreen();
-        context->is_fullscreen = false;
+    const bool target = to_bool(on_off, bIsFullscreen);
+    if(target != bIsFullscreen) {
+        if(target) {
+            StartFullScreen();
+        }else{
+            StopFullScreen();
+        }
     }
+    bIsFullscreen = target;
 }
 
 void WinWindow::Move(int x, int y)
@@ -537,9 +545,6 @@ void WinWindow::MakeCurrent()
         std::cerr << "wglMakeCurrent() failed" << std::endl;
         CheckWGLDieOnError();
     }
-
-    // Setup threadlocal context as this
-    context = this;
 
     RECT rect;
     if(!GetWindowRect(hWnd, &rect)) {
@@ -567,10 +572,18 @@ void WinWindow::SwapBuffers()
 
 void WinWindow::ProcessEvents()
 {
+    static bool needs_init = true;
+    if(needs_init) {
+        RECT cRect;
+        GetClientRect(hWnd, &cRect);
+        ResizeSignal(WindowResizeEvent({cRect.right, cRect.bottom}));
+        needs_init = false;
+    }
+
     MSG msg;
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
         if (msg.message == WM_QUIT) {
-            pangolin::Quit();
+            CloseSignal();
             break;
         }
         TranslateMessage(&msg);
@@ -588,6 +601,22 @@ std::unique_ptr<WindowInterface> CreateWinWindowAndBind(std::string window_title
 PANGOLIN_REGISTER_FACTORY(WinWindow)
 {
   struct WinWindowFactory : public TypedFactoryInterface<WindowInterface> {
+      std::map<std::string,Precedence> Schemes() const override
+      {
+          return {{"winapi",10}, {"default",100}};
+      }
+      const char* Description() const override
+      {
+          return "Use Windows native window";
+      }
+      ParamSet Params() const override
+      {
+          return {{
+              {"window_title","window","Title of application Window"},
+              {"w","640","Requested window width"},
+              {"h","480","Requested window height"}
+          }};
+      }
     std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
 
       const std::string window_title = uri.Get<std::string>("window_title", "window");
@@ -597,9 +626,7 @@ PANGOLIN_REGISTER_FACTORY(WinWindow)
     }
   };
 
-  auto factory = std::make_shared<WinWindowFactory>();
-  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "winapi");
-  FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 100,  "default");
+  return FactoryRegistry::I()->RegisterFactory<WindowInterface>(std::make_shared<WinWindowFactory>());
 }
 
 }

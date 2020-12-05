@@ -35,13 +35,15 @@
 #ifdef __GNUC__
 #  define PANGOLIN_DEPRECATED(x) __attribute__((deprecated(x)))
 #elif defined(_MSC_VER)
-#  define PANGOLIN_DEPRECATED __declspec(deprecated(x))
+#  define PANGOLIN_DEPRECATED(x) __declspec(deprecated(x))
 #else
-#  define PANGOLIN_DEPRECATED
+#  define PANGOLIN_DEPRECATED(x)
 #endif
 
 #ifdef _MSC_VER
 #   define __thread __declspec(thread)
+//  TODO: Fix this for shared libs on Windows
+#   define PANGOLIN_EXPORT
 #else
 #   define PANGOLIN_EXPORT
 #endif //_MSVC_

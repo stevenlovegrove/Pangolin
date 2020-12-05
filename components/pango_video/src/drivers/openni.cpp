@@ -271,7 +271,7 @@ PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
     struct OpenNiVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         std::map<std::string,Precedence> Schemes() const override
         {
-            return {{"openni1",10}, {"openni",100}, {"kinect",100}};
+            return {{"openni1",10}, {"openni",100}, {"oni",100}};
         }
         const char* Description() const override
         {

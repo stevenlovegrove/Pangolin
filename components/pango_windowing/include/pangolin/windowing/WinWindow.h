@@ -27,17 +27,15 @@
 
 #pragma once
 
-#include <pangolin/platform.h>
-#include <pangolin/display/display_internal.h>
-
 #include <string>
-
+#include <pangolin/platform.h>
+#include <pangolin/windowing/window.h>
 #include <windowsx.h>
 
 namespace pangolin
 {
 
-struct WinWindow : public PangolinGl
+struct WinWindow : public WindowInterface
 {
     WinWindow(
         const std::string& title, int width, int height
@@ -45,23 +43,19 @@ struct WinWindow : public PangolinGl
 
     ~WinWindow();
 
-    void StartFullScreen();
-
-    void StopFullScreen();
-
-    void ToggleFullscreen() override;
-
     void Move(int x, int y) override;
 
     void Resize(unsigned int w, unsigned int h) override;
+
+    void ShowFullscreen(const TrueFalseToggle on_off) override;
 
     void MakeCurrent() override;
 
     void RemoveCurrent() override;
 
-    void SwapBuffers() override;
-
     void ProcessEvents() override;
+
+    void SwapBuffers() override;
 
     HGLRC GetGLRenderContext()
     {
@@ -69,6 +63,9 @@ struct WinWindow : public PangolinGl
     }
 
 private:
+    void StartFullScreen();
+    void StopFullScreen();
+
     static LRESULT APIENTRY WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     LRESULT HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam);
@@ -84,6 +81,9 @@ private:
     HDC hDC;
     HGLRC hGLRC;
     HPALETTE hPalette;
+    bool bIsFullscreen;
+    RECT cWindowedRect;
+    float afLastMousePos[2];
 };
 
 }

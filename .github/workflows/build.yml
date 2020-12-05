@@ -15,20 +15,24 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-11.0]
+        include:
+        - os: ubuntu-20.04
+        - os: macos-11.0
+        - os: windows-2019
+          cmake_toolchain_file: "C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
 
     steps:
     - uses: actions/checkout@v2
 
     - name: Install Dependencies
-      run: $GITHUB_WORKSPACE/scripts/install_prerequisites.sh -v -u -m "apt-get brew" all
+      run: $GITHUB_WORKSPACE/scripts/install_prerequisites.sh -v -u -m "apt-get brew vcpkg" all
 
     - name: Create Build Directory
       run: cmake -E make_directory ${{runner.workspace}}/build
 
     - name: Configure CMake
       working-directory: ${{runner.workspace}}/build
-      run: cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE $GITHUB_WORKSPACE
+      run: cmake -DCMAKE_TOOLCHAIN_FILE=${{matrix.cmake_toolchain_file}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE $GITHUB_WORKSPACE
 
     - name: Build
       working-directory: ${{runner.workspace}}/build

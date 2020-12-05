@@ -137,7 +137,6 @@ elif [[ "$MANAGER" == "port" ]]; then
     PKGS_RECOMMENDED+=(jpeg libpng openexr tiff ffmpeg-devel lz4 zstd py37-pybind11)
     PKGS_ALL+=(libdc1394 openni)
 elif [[ "$MANAGER" == "brew" ]]; then
-    PKGS_UPDATE=""
     PKGS_OPTIONS+=(install)
     if ((VERBOSE > 0)); then PKGS_OPTIONS+=(--verbose); fi
     PKGS_REQUIRED+=(glew eigen cmake)
@@ -146,6 +145,12 @@ elif [[ "$MANAGER" == "brew" ]]; then
     if ((DRYRUN > 0));  then
         MANAGER="echo $MANAGER"
     fi
+elif [[ "$MANAGER" == "vcpkg" ]]; then
+    PKGS_OPTIONS+=(install --triplet=x64-windows )
+    if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
+    PKGS_REQUIRED+=(glew eigen3)
+    PKGS_RECOMMENDED+=(libjpeg-turbo libpng openexr tiff ffmpeg lz4 zstd)
+    PKGS_ALL+=(openni2 realsense2)
 else
     echo "Error: Don't know how to use \"$MANAGER\", please fix the script." >&2
     exit 1

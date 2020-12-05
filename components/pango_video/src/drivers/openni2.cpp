@@ -32,6 +32,11 @@
 #include <OniVersion.h>
 #include <PS1080.h>
 
+// OpenNI must be including a horrid windows header
+// which defines these nasty macros.
+#undef max
+#undef min
+
 namespace pangolin
 {
 
@@ -638,6 +643,27 @@ size_t OpenNi2Video::Seek(size_t frameid)
 PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
 {
     struct OpenNI2VideoFactory final : public TypedFactoryInterface<VideoInterface> {
+        std::map<std::string,Precedence> Schemes() const override
+        {
+            return {{"openni2",10}, {"openni",10}, {"oni",10}};
+        }
+        const char* Description() const override
+        {
+            return "OpenNI v2 Driver to access Kinect / Primesense devices.";
+        }
+        ParamSet Params() const override
+        {
+            return {{
+                {"size","640x480","Image dimension"},
+                {"fps","30","Framerate"},
+                {"roi","0+0+0x0","Region of interest"},
+                {"realtime","","If playback rate should be slowed to real-time speed."},
+                {"img\\d+", "","Device stream for nth image. Choose from [gray,rgb,ir,depth1mm,depth100um,depth_reg,ir8,ir24,ir+,ir8+]"},
+                {"closerange","false","Use close-range mode (lower projector intensity)"},
+                {"holefilter","false","Enable hole filter"},
+                {"fastcrop","false","?"}
+            }};
+        }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             const bool realtime = uri.Contains("realtime");
             const ImageDim default_dim = uri.Get<ImageDim>("size", ImageDim(640,480));
@@ -681,10 +707,9 @@ PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
         }
     };
 
-    auto factory = std::make_shared<OpenNI2VideoFactory>();
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "openni");
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "openni2");
-    FactoryRegistry::I()->RegisterFactory<VideoInterface>(factory, 10, "oni");
+    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(
+        std::make_shared<OpenNI2VideoFactory>()
+    );
 }
 
 }
