@@ -5,6 +5,7 @@ set -e
 
 MANAGERS=(dnf apt-get port vcpkg brew)
 MANAGER=""
+LIST=0
 VERBOSE=0
 DRYRUN=0
 UPDATE=0
@@ -29,6 +30,10 @@ while (( "$#" )); do
       DRYRUN=1
       shift
       ;;
+    -l|--list)
+      LIST=1
+      shift
+      ;;
     -u|--update-package-list)
       UPDATE=1
       shift
@@ -47,6 +52,7 @@ while (( "$#" )); do
       echo "  -m, --package-manager:     preferred package manager order (default: \"${MANAGERS[*]}\")"
       echo "  -v, --verbose:             verbose output"
       echo "  -d, --dry-run:             print actions, but do not execute"
+      echo "  -l, --list:                just list the packages to install"
       echo "  -u, --update-package-list: update package manager package list"
       echo "  -h, --help:                this help message"
       echo " (required|recommended|all) the set of dependencies to select."
@@ -146,6 +152,7 @@ elif [[ "$MANAGER" == "brew" ]]; then
         MANAGER="echo $MANAGER"
     fi
 elif [[ "$MANAGER" == "vcpkg" ]]; then
+    # TODO: this should be a config option somehow...
     PKGS_OPTIONS+=(install --triplet=x64-windows )
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
     PKGS_REQUIRED+=(glew eigen3)
@@ -156,15 +163,20 @@ else
     exit 1
 fi
 
-if ((UPDATE > 0)); then
-    if ((VERBOSE > 0)); then echo "Requesting \"$MANAGER\" package update."; fi
-    $SUDO $PKGS_UPDATE
-fi
-
 if ((REQUIRED_RECOMMENDED_ALL < 2)); then PKGS_ALL=(); fi
 if ((REQUIRED_RECOMMENDED_ALL < 1)); then PKGS_RECOMMENDED=(); fi
 
 PACKAGES=( "${PKGS_REQUIRED[*]}" "${PKGS_RECOMMENDED[*]}" "${PKGS_ALL[*]}" )
+
+if ((LIST > 0)); then
+    echo "${PACKAGES[*]}"
+    exit 0
+fi
+
+if ((UPDATE > 0)); then
+    if ((VERBOSE > 0)); then echo "Requesting \"$MANAGER\" package update."; fi
+    $SUDO $PKGS_UPDATE
+fi
 
 if ((VERBOSE > 0)); then echo "Requesting install of: ${PACKAGES[*]}"; fi
 

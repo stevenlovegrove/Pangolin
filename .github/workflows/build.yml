@@ -17,22 +17,53 @@ jobs:
       matrix:
         include:
         - os: ubuntu-20.04
+          package_manager: "apt-get"
+
         - os: macos-11.0
+          package_manager: "brew"
+
         - os: windows-2019
-          cmake_toolchain_file: "C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          package_manager: "vcpkg"
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout Pangolin
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: "(vcpkg only) Setup cache key"
+      if: ${{ matrix.package_manager == 'vcpkg' }}
+      run: |
+        export PACKAGES=$($GITHUB_WORKSPACE/scripts/install_prerequisites.sh -l -m ${{matrix.package_manager}} all)
+        echo "PACKAGES=$PACKAGES" >> $GITHUB_ENV
+
+    - name: "(vcpkg only) Restore any cached ports"
+      uses: lukka/run-vcpkg@v6
+      if: ${{ matrix.package_manager == 'vcpkg' }}
+      with:
+        setupOnly: true
+        vcpkgDirectory: '${{github.workspace}}/scripts/vcpkg'
+        appendedCacheKey: '${{env.PACKAGES}}'
+        vcpkgTriplet: x64-windows
+
+    - name: "(vcpkg only) Setup CMake Toolchain file"
+      if: ${{ matrix.package_manager == 'vcpkg' }}
+      run: |
+        export TOOLCHAIN_FILE="${{github.workspace}}/scripts/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        echo "${{github.workspace}}/scripts/vcpkg" >> $GITHUB_PATH
+        echo "TOOLCHAIN_FILE=$TOOLCHAIN_FILE" >> $GITHUB_ENV
 
     - name: Install Dependencies
-      run: $GITHUB_WORKSPACE/scripts/install_prerequisites.sh -v -u -m "apt-get brew vcpkg" all
-
-    - name: Create Build Directory
-      run: cmake -E make_directory ${{runner.workspace}}/build
+      run: |
+        echo "vcpkg location: $(which vcpkg)"
+        echo "CMake toolchain file: $TOOLCHAIN_FILE"
+        $GITHUB_WORKSPACE/scripts/install_prerequisites.sh -v -u -m ${{matrix.package_manager}} all
 
     - name: Configure CMake
-      working-directory: ${{runner.workspace}}/build
-      run: cmake -DCMAKE_TOOLCHAIN_FILE=${{matrix.cmake_toolchain_file}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE $GITHUB_WORKSPACE
+      working-directory: ${{runner.workspace}}
+      run: |
+        mkdir -p build && cd build
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
@@ -42,11 +73,13 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout Pangolin
+      uses: actions/checkout@v2
       with:
         path: pangolin
 
-    - uses: actions/checkout@v2
+    - name: Checkout Eigen
+      uses: actions/checkout@v2
       with:
         path: eigen
         repository: 'libigl/eigen'
@@ -73,8 +106,8 @@ jobs:
         mkdir -p ${{runner.workspace}}/www/emscripten
         rsync -zarvm --include="*/" --include="*.html" --include="*.js" --include="*.wasm" --exclude="*" ${{runner.workspace}}/pangolin-build/examples ${{runner.workspace}}/www/emscripten
 
-    - name: Deploy Examples to GitHub Pages
-      if: success()
+    - name: Deploy Examples to GitHub Pages (for pushes to master)
+      if: success() && (github.ref == 'refs/heads/master')
       uses: crazy-max/ghaction-github-pages@v2.2.0
       with:
         target_branch: gh-pages

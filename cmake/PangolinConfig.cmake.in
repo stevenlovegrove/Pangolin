@@ -9,3 +9,10 @@ endif()
 SET( Pangolin_CMAKEMODULES @CMAKE_CURRENT_SOURCE_DIR@/../cmake )
 SET( Pangolin_LIBRARIES    @component_list@ )
 SET( Pangolin_LIBRARY      "${Pangolin_LIBRARIES}" )
+
+include(CMakeFindDependencyMacro)
+find_dependency(Eigen3)
+
+if (UNIX)
+  find_dependency(Threads)
+endif()
