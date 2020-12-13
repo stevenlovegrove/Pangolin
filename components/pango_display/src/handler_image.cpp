@@ -1,5 +1,5 @@
 #include <pangolin/handler/handler_image.h>
-#include <pangolin/gl/glfont.h>
+#include <pangolin/display/default_font.h>
 
 namespace pangolin
 {
@@ -150,24 +150,23 @@ void ImageViewHandler::glRenderOverlay()
         float xpix, ypix;
         ImageToScreen(v, selxy.x.max, selxy.y.max, xpix, ypix);
 
-        // TODO: FIX THIS
-        // pangolin::GlFont::I().Text(
-        //     "%.2f x %.2f",
-        //     selxy.x.Size(), selxy.y.Size()
-        // ).DrawWindow(xpix,ypix);
+        auto& font = pangolin::default_font();
 
-        // pangolin::GlFont::I().Text(
-        //     "(%.1f,%.1f)->(%.1f,%.1f)",
-        //     selxy.x.min, selxy.y.min,
-        //     selxy.x.max, selxy.y.max
-        // ).DrawWindow(xpix, ypix - 1.0f * pangolin::GlFont::I().Height());
+        font.Text(
+            "%.2f x %.2f",
+            selxy.x.Size(), selxy.y.Size()
+        ).DrawWindow(xpix,ypix);
+
+        font.Text(
+            "(%.1f,%.1f)->(%.1f,%.1f)",
+            selxy.x.min, selxy.y.min,
+            selxy.x.max, selxy.y.max
+        ).DrawWindow(xpix, ypix - 1.0f * font.Height());
     }
 
     if (!title.empty()) {
-        // TODO: FIX THIS
-//        pangolin::GlFont::I().Text(
-//            title
-//          ).DrawWindow(v.l + 8, v.t() - 4 - pangolin::GlFont::I().Height());
+        auto& font = pangolin::default_font();
+        font.Text(title).DrawWindow(v.l + 8, v.t() - 4 - font.Height());
     }
 
     if (have_text) {
@@ -433,7 +432,7 @@ void ImageViewHandler::Special(View& view, pangolin::InputSpecial inType, float 
         const float d[2] = {p1,p2};
         const float is[2] = {rview.x.Size(),rview.y.Size() };
         const float df[2] = {is[0]*d[0]/(float)view.v.w, is[1]*d[1]/(float)view.v.h};
-        ScrollView(-df[0], df[1]);
+        ScrollView(-df[0], -df[1]);
     } else if(inType == InputSpecialZoom) {
         float scale = 1.0f - p1;
         ScaleView(scale, scale, hover_img[0], hover_img[1]);

@@ -28,11 +28,6 @@
 #include <pangolin/gl/gltext.h>
 #include <pangolin/gl/glsl.h>
 
-#ifdef BUILD_PANGOLIN_GUI
-#include <pangolin/display/display.h>
-#include <pangolin/display/view.h>
-#endif
-
 namespace pangolin
 {
 
@@ -110,6 +105,20 @@ void GlText::DrawGlSl() const
 #endif
 }
 
+void SetWindowOrthographic()
+{
+    // We'll set an arbitrary viewport with known dimensions
+    // >= window dimensions so we can draw in pixel units.
+    GLint dims[2];
+    glGetIntegerv(GL_MAX_VIEWPORT_DIMS,dims);
+    glViewport(0,0,dims[0], dims[1]);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-0.5, dims[0]-0.5, -0.5, dims[1]-0.5, -1, 1);
+    glMatrixMode(GL_MODELVIEW);
+}
+
 void GlText::Draw() const
 {
     if(vs.size() && tex) {
@@ -126,7 +135,6 @@ void GlText::Draw() const
     }
 }
 
-#ifdef BUILD_PANGOLIN_GUI
 void GlText::Draw(GLfloat x, GLfloat y, GLfloat z) const
 {
     // find object point (x,y,z)' in pixel coords
@@ -147,22 +155,18 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z) const
     pangolin::glProject(x, y, z, modelview, projection, view,
         scrn, scrn + 1, scrn + 2);
 
-    DisplayBase().Activate();
+    // Save current state
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    glLoadIdentity();
-    glOrtho(-0.5, DisplayBase().v.w-0.5, -0.5, DisplayBase().v.h-0.5, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    glLoadIdentity();
 
+    SetWindowOrthographic();
     glTranslatef(std::floor((GLfloat)scrn[0]), std::floor((GLfloat)scrn[1]), (GLfloat)scrn[2]);
     Draw();
 
-    // Restore viewport
+    // Restore viewport & matrices
     glViewport(view[0],view[1],view[2],view[3]);
-
-    // Restore modelview / project matrices
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
@@ -172,31 +176,24 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z) const
 // Render at (x,y) in window coordinates.
 void GlText::DrawWindow(GLfloat x, GLfloat y, GLfloat z) const
 {
-    // Backup viewport
+    // Backup viewport & matrices
     GLint    view[4];
     glGetIntegerv(GL_VIEWPORT, view );
-
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
-    DisplayBase().ActivatePixelOrthographic();
-
+    SetWindowOrthographic();
     glTranslatef( std::floor(x), std::floor(y), z);
     Draw();
 
-    // Restore viewport
+    // Restore viewport & matrices
     glViewport(view[0],view[1],view[2],view[3]);
-
-    // Restore modelview / project matrices
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 }
-
-#endif // BUILD_PANGOLIN_GUI
-
 
 }

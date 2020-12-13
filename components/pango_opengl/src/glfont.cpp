@@ -164,7 +164,7 @@ GlText GlFont::Text( const char* fmt, ... )
             if( !(FIRST_CHAR <= c /*&& c <FIRST_CHAR+NUM_CHARS*/) ) {
                 c = ' ';
             }
-            GlChar& ch = chardata[c-32];
+            const GlChar& ch = chardata[c-32];
 
             // Kerning
             if(i) {
@@ -191,7 +191,7 @@ GlText GlFont::Text( const std::string& str )
         if( !(FIRST_CHAR <= c /*&& c <FIRST_CHAR+NUM_CHARS*/) ) {
             c = ' ';
         }
-        GlChar& ch = chardata[c-32];
+        const GlChar& ch = chardata[c-32];
 
         // Kerning
         if(i) {
