@@ -1087,17 +1087,14 @@ void Plotter::Special(View&, InputSpecial inType, float x, float y, float p1, fl
 
         ScrollView(-df[0], -df[1]);
     } else if(inType == InputSpecialZoom) {
-        float scalex = 1.0;
-        float scaley = 1.0;
+        float scalex = 1.0f-p1;
+        float scaley = 1.0f-p1;
 
-#ifdef _OSX_
-        if (button_state & KeyModifierCmd) {
-#else
-        if (button_state & KeyModifierCtrl) {
-#endif
-            scalex = 1-p1;
-        }else{
-            scaley = 1-p1;
+        if (button_state & (KeyModifierCmd | KeyModifierCtrl)) {
+            scaley = 1.0f;
+        }
+        if (button_state & (KeyModifierShift)) {
+            scalex = 1.0f;
         }
 
         const float c[2] = {

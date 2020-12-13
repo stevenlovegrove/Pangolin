@@ -404,8 +404,6 @@ void X11Window::ProcessEvents()
            break;
         }
         case FocusOut:
-            // TODO
-//            pangolin::context->mouse_state = 0;
             break;
         case MotionNotify:
             if(ev.xmotion.state & (Button1Mask|Button2Mask|Button3Mask) ) {

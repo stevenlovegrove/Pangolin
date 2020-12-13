@@ -19,10 +19,6 @@ public:
     // Open all RGB and Depth streams from all devices
     RealSenseVideo(ImageDim dim=ImageDim(640,480), int fps=30);
 
-    // Open streams specified
-    // TODO
-    //RealSenseVideo(std::vector<OpenNiStreamMode>& stream_modes);
-
     ~RealSenseVideo();
 
     //! Implement VideoInput::Start()

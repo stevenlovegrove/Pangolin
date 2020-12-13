@@ -371,7 +371,6 @@ LRESULT WinWindow::HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam)
     {
         unsigned char key = GetPangoKey(wParam, lParam);
         if(key > 0) {
-            // TODO: Fix
             KeyboardSignal(KeyboardEvent({
                 afLastMousePos[0], afLastMousePos[1],
                 KeyModifierBitmask(),

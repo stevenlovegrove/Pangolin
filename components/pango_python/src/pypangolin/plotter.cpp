@@ -87,7 +87,7 @@ namespace py_pangolin {
            pybind11::arg("right")=600,
            pybind11::arg("bottom")=-1,
            pybind11::arg("top")=1,
-           pybind11::arg("// TODO: ickx")=30,
+           pybind11::arg("tickx")=30,
            pybind11::arg("ticky")=0.5)
 
       .def("Render", &pangolin::Plotter::Render)
