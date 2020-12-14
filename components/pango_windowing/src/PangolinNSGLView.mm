@@ -147,7 +147,6 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
         ));
     }
     unsigned int flags = [event modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-    std::cout << flags << std::endl;
 }
 
 -(void)keyUp:(NSEvent *)event
