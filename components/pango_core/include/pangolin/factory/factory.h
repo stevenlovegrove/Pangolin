@@ -10,7 +10,7 @@ namespace pangolin
 class FactoryInterface {
 public:
     using Name = std::string;
-    using Precedence = uint32_t;
+    using Precedence = int32_t;
 
     virtual ~FactoryInterface(){};
 

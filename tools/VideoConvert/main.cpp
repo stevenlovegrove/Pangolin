@@ -3,7 +3,7 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/utils/argagg.hpp>
 #include <pangolin/image/pixel_format.h>
-#include <pangolin/video/help.h>
+#include <pangolin/video/video_help.h>
 
 void VideoViewer(const std::string& input_uri, const std::string& output_uri)
 {
@@ -49,7 +49,6 @@ int main( int argc, char* argv[] )
 {
     argagg::parser argparser = {{
         { "help", {"-h", "--help"}, "shows this help! duh!", 0},
-        { "registry", {"-r", "--registry"}, "filters the help message by registry", 1},
         { "scheme", {"-s", "--scheme"}, "filters the help message by scheme", 1},
         { "verbose", {"-v","--verbose"}, "verbose level in number, 0=list of schemes(default),1=scheme parameters,2=parameter details", 1}
     }};
@@ -59,11 +58,9 @@ int main( int argc, char* argv[] )
         std::cerr << "Generation options" << std::endl;
         std::cerr << argparser;
         std::cerr << std::endl;
-        pangolin::HelpParams help_params;
-        help_params.verbosity = pangolin::HelpVerbosity(std::min(std::max(args["verbose"].as<int>(0),0),2));
-        help_params.registry = args["registry"].as<std::string>("");
-        help_params.scheme = args["scheme"].as<std::string>("");
-        pangolin::Help( help_params, std::cerr );
+        const std::string scheme_filter = args["scheme"].as<std::string>("");
+        const int v = std::clamp(args["verbose"].as<int>(scheme_filter.empty() ? 0 : 2), 0, 2);
+        pangolin::VideoHelp(std::cerr, scheme_filter, (pangolin::HelpVerbosity)v );
         return 0;
     }
 
@@ -78,7 +75,7 @@ int main( int argc, char* argv[] )
             std::cout << e.what() << std::endl;
         }
     }else{
-        pangolin::Help( pangolin::HelpParams(), std::cerr );
+        pangolin::VideoHelp();
         return -1;
     }
 

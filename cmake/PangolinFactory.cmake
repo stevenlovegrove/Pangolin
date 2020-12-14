@@ -12,7 +12,7 @@ macro(PangolinCreateFactoryRegisterFile directory namespace)
 
         file(APPEND ${filename} "\n\n")
 
-        file(APPEND ${filename} "  void RegisterFactories${interface_name}() {\n")
+        file(APPEND ${filename} "  inline void RegisterFactories${interface_name}() {\n")
         file(APPEND ${filename} "    static bool inited = false;\n")
         file(APPEND ${filename} "    if(inited) return;\n")
         file(APPEND ${filename} "    inited = true;\n")

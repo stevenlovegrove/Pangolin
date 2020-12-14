@@ -225,7 +225,7 @@ PANGOLIN_REGISTER_FACTORY(PangoVideo)
     struct PangoVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         std::map<std::string,Precedence> Schemes() const override
         {
-            return {{"pango",10}, {"file",5}};
+            return {{"pango",0}, {"file",5}};
         }
         const char* Description() const override
         {

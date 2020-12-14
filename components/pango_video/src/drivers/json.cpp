@@ -41,7 +41,7 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
     struct JsonVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         std::map<std::string,Precedence> Schemes() const override
         {
-            return {{"json",10}, {"file",5}};
+            return {{"json",0}, {"file",5}};
         }
         const char* Description() const override
         {

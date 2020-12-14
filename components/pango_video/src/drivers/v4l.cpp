@@ -780,7 +780,7 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
     struct V4lVideoFactory final : public TypedFactoryInterface<VideoInterface> {
         std::map<std::string,Precedence> Schemes() const override
         {
-            return {{"v4l",10}};
+            return {{"v4l",0}, {"uvc",20}};
         }
         const char* Description() const override
         {

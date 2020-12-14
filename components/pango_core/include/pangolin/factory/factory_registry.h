@@ -47,6 +47,8 @@ namespace pangolin
 class FactoryRegistry
 {
 public:
+    using TypeRegistry = std::vector<std::shared_ptr<FactoryInterface>>;
+
     /// Singleton instance of FactoryRegistry
     static std::shared_ptr<FactoryRegistry> I();
 
@@ -122,6 +124,21 @@ public:
         throw NoFactorySucceededException(uri);
     }
 
+    const TypeRegistry& GetFactories(std::type_index type) const
+    {
+        const auto& ifac = type_registries.find(type);
+        if(ifac != type_registries.end()) {
+            return ifac->second;
+        }else{
+            throw std::runtime_error("No factories for this type.");
+        }
+    }
+
+    template<typename T>
+    const TypeRegistry& GetFactories() const {
+        return GetFactories(typeid(T));
+    }
+
     /// Base class for FactoryRegistry Exceptions
     class Exception : public std::exception {
     public:
@@ -161,7 +178,6 @@ public:
     };
 
 private:
-    using TypeRegistry = std::vector<std::shared_ptr<FactoryInterface>>;
     std::map<std::type_index, TypeRegistry> type_registries;
 };
 

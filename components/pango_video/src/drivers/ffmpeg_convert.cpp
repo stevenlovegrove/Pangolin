@@ -130,7 +130,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideoConvert)
     struct FfmpegVideoFactory : public TypedFactoryInterface<VideoInterface> {
         std::map<std::string,Precedence> Schemes() const override
         {
-            return {{"ffmpeg_convert", 10}, {"convert", 20}};
+            return {{"ffmpeg_convert", 0}, {"convert", 20}};
         }
         const char* Description() const override
         {

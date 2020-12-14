@@ -8,7 +8,7 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/video_input.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/video_output.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/video.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/help.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/video_help.cpp
     ${DRIVER_DIR}/test.cpp
     ${DRIVER_DIR}/images.cpp
     ${DRIVER_DIR}/images_out.cpp
