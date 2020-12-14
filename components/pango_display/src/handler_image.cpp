@@ -51,8 +51,7 @@ void ImageViewHandler::glSetViewOrtho()
     const pangolin::XYRangef& xy = GetViewToRender();
 
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(xy.x.min, xy.x.max, xy.y.max, xy.y.min, -1, 1);
+    ProjectionMatrixOrthographic(xy.x.min, xy.x.max, xy.y.max, xy.y.min, -1.0f, 1.0f).Load();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }

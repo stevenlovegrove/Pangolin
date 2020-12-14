@@ -114,8 +114,7 @@ void SetWindowOrthographic()
     glViewport(0,0,dims[0], dims[1]);
 
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-0.5, dims[0]-0.5, -0.5, dims[1]-0.5, -1, 1);
+    ProjectionMatrixOrthographic(-0.5, dims[0]-0.5, -0.5, dims[1]-0.5, -1.0, 1.0).Load();
     glMatrixMode(GL_MODELVIEW);
 }
 

@@ -102,8 +102,6 @@ struct SceneHandler : public Handler3D
         glFlush();
 
         GLint nHits = glRenderMode(GL_RENDER);
-        //    std::cout << " -- Number of Hits are: " << nHits << std::endl;
-        //    std::cout << " -- size of hitobjects: " << hit_objects.size() << std::endl;
         if (nHits > 0) {
             ProcessHitBuffer(nHits, vSelectBuf, hit_objects);
         }

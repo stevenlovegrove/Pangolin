@@ -389,8 +389,7 @@ void Plotter::Render()
 
     if(extern_draw_function && show) {
         glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(rview.x.min, rview.x.max, rview.y.max, rview.y.min, -1, 1);
+        ProjectionMatrixOrthographic(rview.x.min, rview.x.max, rview.y.max, rview.y.min, -1.0f, 1.0f).Load();
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
