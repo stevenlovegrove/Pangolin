@@ -42,8 +42,7 @@
 
 #ifdef _MSC_VER
 #   define __thread __declspec(thread)
-//  TODO: Fix this for shared libs on Windows
-#   define PANGOLIN_EXPORT
+#   include <pangolin/pangolin_export.h>
 #else
 #   define PANGOLIN_EXPORT
 #endif //_MSVC_

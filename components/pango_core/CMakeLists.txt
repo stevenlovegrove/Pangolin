@@ -42,3 +42,18 @@ find_package(Threads QUIET)
 if(Threads_FOUND)
     target_link_libraries(${COMPONENT} PUBLIC Threads::Threads)
 endif()
+
+## Generate symbol export helper header on MSVC
+IF(MSVC)
+    include(GenerateExportHeader)
+    GENERATE_EXPORT_HEADER( ${COMPONENT}
+        BASE_NAME PANGOLIN
+        EXPORT_MACRO_NAME PANGOLIN_EXPORT
+        EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/pangolin_export.h"
+        STATIC_DEFINE PANGOLIN_BUILT_AS_STATIC
+    )
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/pangolin_export.h"
+      DESTINATION ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}/pangolin
+    )
+    target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include")
+ENDIF()
