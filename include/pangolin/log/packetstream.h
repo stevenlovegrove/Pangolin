@@ -35,7 +35,7 @@
 namespace pangolin
 {
 
-class PacketStream: public std::ifstream
+class PANGOLIN_EXPORT PacketStream: public std::ifstream
 {
 public:
     PacketStream()
