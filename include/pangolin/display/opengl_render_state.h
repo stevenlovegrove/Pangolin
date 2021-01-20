@@ -279,7 +279,7 @@ TooN::Matrix<4,4> ToTooN(const OpenGlMatrixSpec& ms);
 TooN::SE3<> ToTooN_SE3(const OpenGlMatrixSpec& ms);
 #endif
 
-#ifdef HAVE_EIGEN
+#ifdef USE_EIGEN
 template<typename P>
 Eigen::Matrix<P,4,4> ToEigen(const OpenGlMatrix& ms);
 #endif
