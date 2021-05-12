@@ -299,6 +299,7 @@ inline OpenGlMatrix OpenGlMatrix::ColMajor4x4(const P* col_major_4x4)
 }
 
 inline OpenGlMatrix::OpenGlMatrix() {
+    SetIdentity();
 }
 
 #ifdef USE_EIGEN

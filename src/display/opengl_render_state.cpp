@@ -158,9 +158,9 @@ void OpenGlRenderState::Apply() const
     glMatrixMode(GL_MODELVIEW);
     modelview.Load();
 
-    if(follow) {
-        T_cw.Multiply();
-    }
+    // if(follow) {
+    //     T_cw.Multiply();
+    // }
 }
 
 OpenGlMatrix& OpenGlRenderState::GetProjectionMatrix(unsigned int view)
@@ -339,24 +339,31 @@ void OpenGlRenderState::DisableProjectiveTexturing() const
 
 void OpenGlRenderState::Follow(const OpenGlMatrix& T_wc, bool follow)
 {
+
+    const OpenGlMatrix T_vc = GetModelViewMatrix() * (this->T_cw) * T_wc;
+
     this->T_cw = T_wc.Inverse();
-    
-    if(follow != this->follow) {
-        if(follow) {
-            const OpenGlMatrix T_vc = GetModelViewMatrix() * T_wc;
-            SetModelViewMatrix(T_vc);
-            this->follow = true;
-        }else{
-            Unfollow();
-        }
-    }
+
+    SetModelViewMatrix(T_vc);
+    this->follow = follow;
+
+    //! old code
+    // if(follow != this->follow) {
+    //     if(follow) {
+    //         const OpenGlMatrix T_vc = GetModelViewMatrix() * T_wc;
+    //         SetModelViewMatrix(T_vc);
+    //         this->follow = true;
+    //     }else{
+    //         Unfollow();
+    //     }
+    // }
 }
 
 void OpenGlRenderState::Unfollow()
 {
-    const OpenGlMatrix T_vw = GetModelViewMatrix() * T_cw;
-    SetModelViewMatrix(T_vw);
-    this->follow = false;
+    // const OpenGlMatrix T_vw = GetModelViewMatrix() * T_cw;
+    // SetModelViewMatrix(T_vw);
+    // this->follow = false;
 }
 
 // Use OpenGl's default frame of reference
