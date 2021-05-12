@@ -110,6 +110,12 @@ public:
     void RenderToViewport(Viewport tex_vp, bool flipx=false, bool flipy=false) const;
     void RenderToViewportFlipY() const;
     void RenderToViewportFlipXFlipY() const;
+
+    //! Draw texture in 3D space given 4 vertex.
+    //! vertex_ptr pointer to vertex, it assumes size is 12 GLfloats (4x3) and vertex are in clockwise order
+    //! oneFaceOnly only draw texture in front face
+    //! backFaceTransparent if oneFaceOnly is enabled, back face is transparent or with solid color
+    void Render3D(const GLfloat* const vertex_ptr, bool oneFaceOnly=false, bool backFaceTransparent=false) const;
     
     GLint internal_format;
     GLuint tid;

@@ -63,6 +63,12 @@ int main(/*int argc, char* argv[]*/)
     glColor3f(1.0,1.0,1.0);
     imageTexture.RenderToViewport();
 
+    //display the image in 3D
+    d_cam.Activate(s_cam);
+    glColor3f(1.0,1.0,1.0);
+    GLfloat img_vertex[] = { -0.8,-0.6,3, 0.8,-0.6,3, 0.8,0.6,3, -0.8,0.6,3 };
+    imageTexture.Render3D(img_vertex);
+
     pangolin::FinishFrame();
   }
 
