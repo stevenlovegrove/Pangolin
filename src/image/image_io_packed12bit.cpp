@@ -39,7 +39,7 @@ void SavePacked12bit(const Image<uint8_t>& image, const pangolin::PixelFormat& f
     }
 
   packed12bit_image_header header;
-  strncpy(header.magic,"P12B",4);
+  memcpy(header.magic,"P12B",4);
   strncpy(header.fmt, fmt.format.c_str(), sizeof(header.fmt));
   header.w = image.w;
   header.h = image.h;

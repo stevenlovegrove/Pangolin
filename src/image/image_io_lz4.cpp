@@ -39,7 +39,7 @@ void SaveLz4(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
         throw std::runtime_error("A result of 0 for LZ4 means compression worked, but was stopped because the destination buffer couldn't hold all the information.");
 
     lz4_image_header header;
-    strncpy(header.magic,"LZ4",3);
+    memcpy(header.magic,"LZ4",3);
     strncpy(header.fmt, fmt.format.c_str(), sizeof(header.fmt));
     header.w = image.w;
     header.h = image.h;
