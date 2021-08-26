@@ -5,7 +5,7 @@
 #include <pangolin/image/pixel_format.h>
 #include <pangolin/video/video_help.h>
 
-void VideoViewer(const std::string& input_uri, const std::string& output_uri)
+void VideoConvert(const std::string& input_uri, const std::string& output_uri)
 {
     pangolin::Var<bool> video_wait("video.wait", true);
     pangolin::Var<bool> video_newest("video.newest", false);
@@ -32,7 +32,7 @@ void VideoViewer(const std::string& input_uri, const std::string& output_uri)
     // Record all frames
     video.Record();
 
-    // Stream and display video
+    // Stream video
     while(true)
     {
         if( !video.Grab(&buffer[0], images, video_wait, video_newest) ) {
@@ -54,10 +54,15 @@ int main( int argc, char* argv[] )
     }};
 
     argagg::parser_results args = argparser.parse(argc, argv);
-    if( args["help"]){
-        std::cerr << "Generation options" << std::endl;
-        std::cerr << argparser;
-        std::cerr << std::endl;
+    if( args["help"] || args.pos.size() == 0 ){
+        std::cerr << "Usage:\n";
+        std::cerr << "  VideoConvert [options] VideoInputUri\n\n";
+        std::cerr << "Examples:\n";
+        std::cerr << "  VideoConvert test:[size=160x120,n=1,fmt=RGB24]//   Show the 'test' video driver with 160x120 resolution, 1 stream, RGB format.\n";
+        std::cerr << "  VideoConvert --help -s image                       Find out how to use the 'image' video driver\n\n";
+        std::cerr << "Options:\n";
+        std::cerr << argparser << std::endl;
+
         const std::string scheme_filter = args["scheme"].as<std::string>("");
         const int v = std::clamp(args["verbose"].as<int>(scheme_filter.empty() ? 0 : 2), 0, 2);
         pangolin::VideoHelp(std::cerr, scheme_filter, (pangolin::HelpVerbosity)v );
@@ -66,17 +71,12 @@ int main( int argc, char* argv[] )
 
     const std::string dflt_output_uri = "pango:[unique_filename]//video.pango";
 
-    if( args.pos.size() > 0 ) {
-        const std::string input_uri = std::string(args.pos[0]);
-        const std::string output_uri = ( args.pos.size() > 1) ? std::string(args.pos[1]) : dflt_output_uri;
-        try{
-            VideoViewer(input_uri, output_uri);
-        } catch (const pangolin::VideoException& e) {
-            std::cout << e.what() << std::endl;
-        }
-    }else{
-        pangolin::VideoHelp();
-        return -1;
+    const std::string input_uri = std::string(args.pos[0]);
+    const std::string output_uri = ( args.pos.size() > 1) ? std::string(args.pos[1]) : dflt_output_uri;
+    try{
+        VideoConvert(input_uri, output_uri);
+    } catch (const pangolin::VideoException& e) {
+        std::cout << e.what() << std::endl;
     }
 
     return 0;
