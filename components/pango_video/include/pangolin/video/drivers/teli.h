@@ -29,6 +29,12 @@
 
 #include <pangolin/video/video_interface.h>
 #include <pangolin/utils/timer.h>
+
+#if defined(_WIN_)
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+#endif
+
 #include <TeliCamApi.h>
 
 namespace pangolin

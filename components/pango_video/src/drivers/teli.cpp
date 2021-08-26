@@ -555,9 +555,6 @@ PANGOLIN_REGISTER_FACTORY(TeliVideo)
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
             return std::unique_ptr<VideoInterface>(new TeliVideo(uri));
         }
-        FactoryUseInfo Help( const std::string& scheme ) const override {
-            return FactoryUseInfo(scheme,"Opens up a TeliCam interface. Warning: currenly all the Uri parameters are passed to the TeliCam driver directly without any validation.");
-        }
     };
 
     return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<TeliVideoFactory>());
