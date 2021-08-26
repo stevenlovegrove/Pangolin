@@ -77,6 +77,22 @@ Wrapped(const std::shared_ptr<VarValueT<S>>&)
     throw std::runtime_error("Unable to wrap Var");
 }
 
+template<typename T>
+typename std::enable_if<!is_streamable<T>::value, std::shared_ptr<VarValue<T>>>::type
+InitialiseFromPreviouslyGenericVar(const std::shared_ptr<VarValueGeneric>& v)
+{
+    // We can't initialize this variable from a 'generic' string type.
+    throw BadInputException();
+}
+template<typename T>
+typename std::enable_if<is_streamable<T>::value, std::shared_ptr<VarValue<T>>>::type
+InitialiseFromPreviouslyGenericVar(const std::shared_ptr<VarValueGeneric>& v)
+{
+    return std::make_shared<VarValue<T>>( Convert<T,std::string>::Do( v->str->Get() ) );
+}
+
+
+
 // Initialise from existing variable, obtain data / accessor
 template<typename T>
 std::shared_ptr<VarValueT<T>> InitialiseFromPreviouslyTypedVar(const std::shared_ptr<VarValueGeneric>& v)
@@ -169,14 +185,15 @@ public:
         if(v && !v->Meta().generic) {
             var = InitialiseFromPreviouslyTypedVar<T>(v);
         }else{
-            // new VarValue<T> (owned by VarStore)
             std::shared_ptr<VarValue<T>> nv;
-            if(v && v->str) {
+            if(v && v->Meta().generic) {
                 // Specialise generic variable (which has previously just been a string)
-//                nv = std::make_shared<VarValue<T>>( Convert<T,std::string>::Do( v->str->Get() ) );
+                nv = InitialiseFromPreviouslyGenericVar<T>(v);
             }else{
+                // Create brand new variable
                 nv = std::make_shared<VarValue<T>>( value );
             }
+            // Create / replace in VarState and set meta data
             v = var = nv;
             nv->Meta() = meta;
             InitialiseNewVarMeta(nv, name);
