@@ -219,3 +219,10 @@ target_include_directories(${COMPONENT}
 )
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image pango_packetstream)
+
+
+find_package(Catch2 2 QUIET)
+if(Catch2_FOUND)
+    add_executable(test_video_uris ${CMAKE_CURRENT_LIST_DIR}/tests/tests_video_uri.cpp)
+    target_link_libraries(test_video_uris PRIVATE Catch2::Catch2 ${COMPONENT})
+endif()
