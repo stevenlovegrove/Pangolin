@@ -133,7 +133,7 @@ void ParsePlyHeader(PlyHeaderDetails& ply, std::istream& is)
 
 void ParsePlyAscii(pangolin::Geometry& /*geom*/, const PlyHeaderDetails& /*ply*/, std::istream& /*is*/)
 {
-    throw std::runtime_error("Not implemented.");
+    throw std::runtime_error("ASCII Ply loading not currently supported. Consider converting to binary.");
 }
 
 void AddVertexNormals(pangolin::Geometry& geom)
