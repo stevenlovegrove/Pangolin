@@ -128,7 +128,7 @@ public:
 
     void SetUniform(const std::string& name, const OpenGlMatrix& m);
 
-#ifdef HAVE_EIGEN
+#ifdef USE_EIGEN
     void SetUniform(const std::string& name, const Eigen::Vector3f& v);
     void SetUniform(const std::string& name, const Eigen::Matrix3f& m);
     void SetUniform(const std::string& name, const Eigen::Matrix4f& m);
