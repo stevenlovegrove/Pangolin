@@ -15,7 +15,12 @@ int main( int /*argc*/, char** /*argv*/ )
     );
 
     pangolin::Renderable tree;
-    tree.Add( std::make_shared<pangolin::Axis>() );
+    for(size_t i=0; i < 10; ++i ) 
+    {
+        auto axis_i = std::make_shared<pangolin::Axis>();
+        axis_i->T_pc = pangolin::OpenGlMatrix::Translate(i*2.0, i*0.1, 0.0);
+        tree.Add(axis_i);
+    }
 
     // Create Interactive View in window
     pangolin::SceneHandler handler(tree, s_cam);
