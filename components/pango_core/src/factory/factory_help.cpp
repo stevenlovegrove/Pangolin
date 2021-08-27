@@ -2,6 +2,7 @@
 #include <numeric>
 #include <pangolin/factory/factory_help.h>
 #include <pangolin/factory/factory_registry.h>
+#include <limits>
 
 namespace pangolin {
 
