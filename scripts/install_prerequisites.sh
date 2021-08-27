@@ -138,7 +138,6 @@ elif [[ "$MANAGER" == "port" ]]; then
     PKGS_UPDATE="port sync -q"
     PKGS_OPTIONS+=(-N install -q)
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(-y); fi
-    if ((VERBOSE == 0)); then PKGS_OPTIONS+=(--q); fi
     PKGS_REQUIRED+=(glew eigen3-devel cmake +gui)
     PKGS_RECOMMENDED+=(jpeg libpng openexr tiff ffmpeg-devel lz4 zstd py37-pybind11)
     PKGS_ALL+=(libdc1394 openni)
