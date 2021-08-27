@@ -34,7 +34,7 @@
 namespace pangolin
 {
 
-struct Handler3DFramebuffer : public pangolin::HandlerBase3D
+struct PANGOLIN_EXPORT Handler3DFramebuffer : public pangolin::HandlerBase3D
 {
     Handler3DFramebuffer(GlFramebuffer& fb, pangolin::OpenGlRenderState& cam_state, pangolin::AxisDirection enforce_up=pangolin::AxisNone, float trans_scale=0.01f);
     void GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision /*n*/[3], GLprecision default_z);

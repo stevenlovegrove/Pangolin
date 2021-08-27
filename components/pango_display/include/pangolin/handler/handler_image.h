@@ -39,7 +39,7 @@
 namespace pangolin
 {
 
-class ImageViewHandler : public Handler
+class PANGOLIN_EXPORT ImageViewHandler : public Handler
 {
 public:
     struct EventData {

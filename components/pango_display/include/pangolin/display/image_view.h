@@ -12,7 +12,7 @@
 namespace pangolin
 {
 
-class ImageView : public pangolin::View, public pangolin::ImageViewHandler
+class PANGOLIN_EXPORT ImageView : public pangolin::View, public pangolin::ImageViewHandler
 {
   public:
     ImageView(const std::string & title ="");

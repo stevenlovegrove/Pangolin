@@ -45,48 +45,48 @@ constexpr char PARAM_SAMPLE_BUFFERS[] = "SAMPLE_BUFFERS\0"; // int
 constexpr char PARAM_SAMPLES[]        = "SAMPLES\0";        // int
 constexpr char PARAM_HIGHRES[]        = "HIGHRES\0";        // bool
 
-struct WindowResizeEvent
+struct PANGOLIN_EXPORT WindowResizeEvent
 {
     int width;
     int height;
 };
 
-struct WindowInputEvent
+struct PANGOLIN_EXPORT WindowInputEvent
 {
     float x;
     float y;
     KeyModifierBitmask key_modifiers;
 };
 
-struct KeyboardEvent : public WindowInputEvent
+struct PANGOLIN_EXPORT KeyboardEvent : public WindowInputEvent
 {
     unsigned char key;
     bool pressed;
 };
 
-struct MouseEvent : public WindowInputEvent
+struct PANGOLIN_EXPORT MouseEvent : public WindowInputEvent
 {
     int button;
     bool pressed;
 };
 
-struct MouseMotionEvent : public WindowInputEvent
+struct PANGOLIN_EXPORT MouseMotionEvent : public WindowInputEvent
 {
 };
 
-struct SpecialInputEvent : public WindowInputEvent
+struct PANGOLIN_EXPORT SpecialInputEvent : public WindowInputEvent
 {
     InputSpecial inType;
     float p[4];
 };
 
-class GlContextInterface
+class PANGOLIN_EXPORT GlContextInterface
 {
 public:
     virtual ~GlContextInterface() {}
 };
 
-class WindowInterface
+class PANGOLIN_EXPORT WindowInterface
 {
 public:
     virtual ~WindowInterface() {}

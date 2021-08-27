@@ -115,7 +115,7 @@ protected:
 #ifndef HAVE_GLES
 using Handler3D = HandlerBase3D;
 #else
-struct Handler3DBlitCopy : public pangolin::HandlerBase3D
+struct PANGOLIN_EXPORT Handler3DBlitCopy : public pangolin::HandlerBase3D
 {
     Handler3DBlitCopy(pangolin::OpenGlRenderState& cam_state, pangolin::AxisDirection enforce_up=pangolin::AxisNone, float trans_scale=0.01f);
     void GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision /*n*/[3], GLprecision default_z = 1.0);
