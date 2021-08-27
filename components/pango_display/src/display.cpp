@@ -300,9 +300,14 @@ View& Display(const std::string& name)
     }
 }
 
-void RegisterKeyPressCallback(int key, std::function<void(void)> func)
+void RegisterKeyPressCallback(int key, std::function<void(int)> func)
 {
     context->keypress_hooks[key] = func;
+}
+
+void RegisterKeyPressCallback(int key, std::function<void(void)> func)
+{
+    context->keypress_hooks[key] = [=](int){func();};
 }
 
 void SaveWindowOnRender(const std::string& filename, const Viewport& v)

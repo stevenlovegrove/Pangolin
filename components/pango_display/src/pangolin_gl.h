@@ -46,7 +46,7 @@ class ConsoleView;
 class GlFont;
 
 typedef std::map<const std::string,View*> ViewMap;
-typedef std::map<int,std::function<void(void)> > KeyhookMap;
+typedef std::map<int,std::function<void(int)> > KeyhookMap;
 
 struct PANGOLIN_EXPORT PangolinGl
 {
