@@ -17,12 +17,4 @@ PRIVATE
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl pango_windowing pango_vars )
 
-target_include_directories(${COMPONENT}
-    PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
-    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
-)
-
-# Embed font
-include(EmbedBinaryFiles)
-embed_binary_files( "${CMAKE_CURRENT_LIST_DIR}/src/fonts/*.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp" )
-target_sources( ${COMPONENT} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp" )
+target_include_directories(${COMPONENT} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include )

@@ -1,7 +1,8 @@
 get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
+file(GLOB BINARY_FILES_TO_EMBED "${CMAKE_CURRENT_LIST_DIR}/src/fonts/*.ttf")
 include(EmbedBinaryFiles)
-embed_binary_files( "fonts/*.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp" )
+embed_binary_files_rule(fonts.cpp ${BINARY_FILES_TO_EMBED})
 
 target_sources( ${COMPONENT}
 PRIVATE

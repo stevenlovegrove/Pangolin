@@ -16,7 +16,7 @@ if(EXISTS "${PROJECT_BINARY_DIR}/CMakeLists.txt")
 endif()
 
 # Make our own cmake imports accessible
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 include(CreateMethodCallFile)
 include(SetPlatformVars)

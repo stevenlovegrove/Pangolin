@@ -213,10 +213,7 @@ endif()
 
 #########################################################
 
-target_include_directories(${COMPONENT}
-    PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include"
-    PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include"
-)
+target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include" )
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image pango_packetstream)
 
