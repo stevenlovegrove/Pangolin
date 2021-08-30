@@ -27,9 +27,8 @@
 
 #pragma once
 
-#include <Python.h>
+#include <pybind11/embed.h>
 #include <pangolin/var/varextra.h>
-#include <pangolin/python/pyuniqueobj.h>
 #include <pangolin/console/InterpreterInterface.h>
 #include <queue>
 #include <set>
@@ -56,12 +55,14 @@ public:
     static void AttachPrefix(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& var, bool brand_new );
 
 private:
-    PyObject* pycompleter;
-    PyObject* pycomplete;
+    pybind11::scoped_interpreter guard;
 
-    std::string ToString(PyObject* py);
+    pybind11::object pycompleter;
+    pybind11::object pycomplete;
+
+    std::string ToString(const pybind11::object& py);
+    pybind11::object EvalExec(const std::string& cmd);
     void CheckPrintClearError();
-    PyUniqueObj EvalExec(const std::string& cmd);
 
     std::queue<InterpreterLine> line_queue;
     std::set<std::string> base_prefixes;

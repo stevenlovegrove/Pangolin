@@ -27,7 +27,7 @@
 
 #include "pypangolin/pypangolin.h"
 
-PYBIND11_MODULE(pypangolin, m) {
+PYBIND11_EMBEDDED_MODULE(pypangolin, m) {
     pypangolin::PopulateModule(m);
 }
 

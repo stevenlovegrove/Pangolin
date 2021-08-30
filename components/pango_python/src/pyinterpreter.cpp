@@ -24,15 +24,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <Python.h>
-
-#include <pangolin/python/pypangolin_init.h>
 #include <pangolin/python/pyinterpreter.h>
-#include <pangolin/python/pyuniqueobj.h>
-#include <pangolin/python/pypangoio.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/var/varextra.h>
 #include <pangolin/factory/factory_registry.h>
+
+#include <pybind11/embed.h>
+namespace py = pybind11;
+
+#include "pypangolin/pypangoio.h"
 
 namespace pangolin
 {
@@ -55,73 +55,64 @@ void PyInterpreter::AttachPrefix(void* data, const std::string& name, const std:
 }
 
 PyInterpreter::PyInterpreter()
-    : pycompleter(0), pycomplete(0)
 {
-#if PY_MAJOR_VERSION >= 3
-    PyImport_AppendInittab("pypangolin", InitPyPangolinModule);
-    Py_Initialize();
-#else
-    Py_Initialize();
-    InitPyPangolinModule();
-#endif
-
-    // Hook stdout, stderr to this interpreter
-    PyObject* mod_sys = PyImport_ImportModule("sys");
-    if (mod_sys) {
-        PyModule_AddObject(mod_sys, "stdout", (PyObject*)new PyPangoIO(
+    using namespace py_pangolin;
+    auto pypangolin = py::module_::import("pypangolin");
+    
+    auto sys = py::module_::import("sys");
+    if(sys) {
+        PyModule_AddObject(
+            sys.ptr(), "stdout", (PyObject*)new PyPangoIO(
             &PyPangoIO::Py_type, line_queue, ConsoleLineTypeStdout
-            ));
-        PyModule_AddObject(mod_sys, "stderr", (PyObject*)new PyPangoIO(
+        ));
+        PyModule_AddObject(
+            sys.ptr(), "stderr", (PyObject*)new PyPangoIO(
             &PyPangoIO::Py_type, line_queue, ConsoleLineTypeStderr
-            ));
-    } else {
-        pango_print_error("Couldn't import module sys.\n");
-    }
+        ));
+     } else {
+         pango_print_error("Couldn't import module sys.\n");
+     }
 
-    // Attempt to setup readline completion
-    PyRun_SimpleString(
-        "import pypangolin\n"
-        "try:\n"
-        "   import readline\n"
-        "except ImportError:\n"
-        "   import pyreadline as readline\n"
-        "\n"
-        "import rlcompleter\n"
-        "pypangolin.completer = rlcompleter.Completer()\n"
-    );
-    CheckPrintClearError();
+    // // Attempt to setup readline completion
+    // PyRun_SimpleString(
+    //     "import pypangolin\n"
+    //     "try:\n"
+    //     "   import readline\n"
+    //     "except ImportError:\n"
+    //     "   import pyreadline as readline\n"
+    //     "\n"
+    //     "import rlcompleter\n"
+    //     "pypangolin.completer = rlcompleter.Completer()\n"
+    // );
+    // CheckPrintClearError();
 
-    // Get reference to rlcompleter.Completer() for tab-completion
-    PyObject* mod_pangolin = PyImport_ImportModule("pypangolin");
-    if(mod_pangolin) {
-        pycompleter = PyObject_GetAttrString(mod_pangolin,"completer");
-        if(pycompleter) {
-            pycomplete  = PyObject_GetAttrString(pycompleter,"complete");
-        }
-    } else {
-        pango_print_error("PyInterpreter: Unable to load module pangolin.\n");
-    }
+    // // Get reference to rlcompleter.Completer() for tab-completion
+    // PyObject* mod_pangolin = PyImport_ImportModule("pypangolin");
+    // if(mod_pangolin) {
+    //     pycompleter = PyObject_GetAttrString(mod_pangolin,"completer");
+    //     if(pycompleter) {
+    //         pycomplete  = PyObject_GetAttrString(pycompleter,"complete");
+    //     }
+    // } else {
+    //     pango_print_error("PyInterpreter: Unable to load module pangolin.\n");
+    // }
 
-    // Hook namespace prefixes into Python
-    RegisterNewVarCallback(&PyInterpreter::AttachPrefix, (void*)this, "");
-    ProcessHistoricCallbacks(&PyInterpreter::AttachPrefix, (void*)this, "");
+    // // Hook namespace prefixes into Python
+    // RegisterNewVarCallback(&PyInterpreter::AttachPrefix, (void*)this, "");
+    // ProcessHistoricCallbacks(&PyInterpreter::AttachPrefix, (void*)this, "");
 
-    CheckPrintClearError();
+    // CheckPrintClearError();
 }
 
 PyInterpreter::~PyInterpreter()
 {
-    Py_Finalize();
+//    Py_Finalize();
 }
 
-std::string PyInterpreter::ToString(PyObject* py)
+std::string PyInterpreter::ToString(const py::object& py)
 {
-    PyUniqueObj pystr = PyObject_Repr(py);
-#if PY_MAJOR_VERSION >= 3
-    return std::string(PyUnicode_AsUTF8(pystr));
-#else
-    return std::string(PyString_AsString(pystr));
-#endif
+    auto pystr = py::repr(py);
+    return std::string(PyUnicode_AsUTF8(pystr.ptr()));
 }
 
 void PyInterpreter::CheckPrintClearError()
@@ -132,55 +123,11 @@ void PyInterpreter::CheckPrintClearError()
     }
 }
 
-PyUniqueObj PyInterpreter::EvalExec(const std::string& cmd)
+py::object PyInterpreter::EvalExec(const std::string& cmd)
 {
-    PyObject* globals = PyModule_GetDict(PyImport_AddModule("__main__"));
-#if PY_MAJOR_VERSION >= 3
-    PyObject* builtin = PyImport_AddModule("builtins");
-#else
-    PyObject* builtin = PyImport_AddModule("__builtin__");
-#endif
-
-    if(globals && builtin) {
-        PyUniqueObj compile = PyObject_GetAttrString(builtin, "compile");
-        PyUniqueObj eval = PyObject_GetAttrString(builtin, "eval");
-
-        if(compile && eval)
-        {
-            PyErr_Clear();
-            PyUniqueObj compile_eval_args = Py_BuildValue("(sss)", cmd.c_str(), "<string>", "eval" );
-            if(compile_eval_args)
-            {
-                PyUniqueObj code = PyObject_Call(compile, compile_eval_args, 0);
-                if(code) {
-                    PyUniqueObj eval_args = Py_BuildValue("(OOO)", *code, globals, globals );
-                    if(eval_args) {
-                        PyUniqueObj ret = PyObject_Call(eval, eval_args, 0);
-                        CheckPrintClearError();
-                        return ret;
-                    }
-                }
-            }
-
-            PyErr_Clear();
-            PyUniqueObj compile_exec_args = Py_BuildValue("(sss)", cmd.c_str(), "<string>", "exec" );
-            if(compile_exec_args)
-            {
-                PyUniqueObj code = PyObject_Call(compile, compile_exec_args, 0);
-                if(code) {
-                    PyUniqueObj eval_args = Py_BuildValue("(OOO)", *code, globals, globals );
-                    if(eval_args) {
-                        PyUniqueObj ret = PyObject_Call(eval, eval_args, 0);
-                        CheckPrintClearError();
-                        return ret;
-                    }
-                }
-            }
-        }
-    }
-
+    auto ret = py::eval(cmd);
     CheckPrintClearError();
-    return PyUniqueObj();
+    return ret;
 }
 
 std::vector<std::string> PyInterpreter::Complete(const std::string& cmd, int max_options)
@@ -188,38 +135,38 @@ std::vector<std::string> PyInterpreter::Complete(const std::string& cmd, int max
     std::vector<std::string> ret;
     PyErr_Clear();
 
-    if(pycomplete) {
-        for(int i=0; i < max_options; ++i) {
-#if PY_MAJOR_VERSION >= 3
-            PyUniqueObj args = PyTuple_Pack( 2, PyUnicode_FromString(cmd.c_str()), PyLong_FromSize_t(i) );
-            PyUniqueObj result = PyObject_CallObject(pycomplete, args);
-            if (result && PyUnicode_Check(result)) {
-                std::string res_str(PyUnicode_AsUTF8(result));
-#else
-            PyUniqueObj args = PyTuple_Pack(2, PyString_FromString(cmd.c_str()), PyInt_FromSize_t(i));
-            PyUniqueObj result = PyObject_CallObject(pycomplete, args);
-            if (result && PyString_Check(result)) {
-                std::string res_str(PyString_AsString(result));
-#endif
-                if( res_str.find("__")==std::string::npos ||
-                    cmd.find("__")!=std::string::npos ||
-                    (cmd.size() > 0 && cmd[cmd.size()-1] == '_')
-                ) {
-                    ret.push_back( res_str );
-                }
-            }else{
-                break;
-            }
-        }
-    }
+//    if(pycomplete) {
+//        for(int i=0; i < max_options; ++i) {
+//#if PY_MAJOR_VERSION >= 3
+//            PyUniqueObj args = PyTuple_Pack( 2, PyUnicode_FromString(cmd.c_str()), PyLong_FromSize_t(i) );
+//            PyUniqueObj result = PyObject_CallObject(pycomplete, args);
+//            if (result && PyUnicode_Check(result)) {
+//                std::string res_str(PyUnicode_AsUTF8(result));
+//#else
+//            PyUniqueObj args = PyTuple_Pack(2, PyString_FromString(cmd.c_str()), PyInt_FromSize_t(i));
+//            PyUniqueObj result = PyObject_CallObject(pycomplete, args);
+//            if (result && PyString_Check(result)) {
+//                std::string res_str(PyString_AsString(result));
+//#endif
+//                if( res_str.find("__")==std::string::npos ||
+//                    cmd.find("__")!=std::string::npos ||
+//                    (cmd.size() > 0 && cmd[cmd.size()-1] == '_')
+//                ) {
+//                    ret.push_back( res_str );
+//                }
+//            }else{
+//                break;
+//            }
+//        }
+//    }
 
     return ret;
 }
 
 void PyInterpreter::PushCommand(const std::string& cmd)
 {
-    PyUniqueObj obj = EvalExec(cmd);
-    if(obj && obj != Py_None) {
+    auto obj = EvalExec(cmd);
+    if(obj) {
         const std::string output = ToString(obj);
         line_queue.push(
             InterpreterLine(output, ConsoleLineTypeOutput)
