@@ -39,7 +39,6 @@
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/factory/RegisterFactoriesWindowInterface.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/process.h>
 #include <pangolin/console/ConsoleView.h>
@@ -84,9 +83,6 @@ PangolinGl *FindContext(const std::string& name)
 
 WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& params)
 {
-    // Make sure factories are loaded
-    RegisterFactoriesWindowInterface();
-
     std::unique_lock<std::recursive_mutex> l(contexts_mutex);
 
     pangolin::Uri win_uri;

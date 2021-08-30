@@ -238,7 +238,7 @@ bool PyInterpreter::PullLine(InterpreterLine& line)
     }
 }
 
-PANGOLIN_REGISTER_FACTORY_WITH_STATIC_INITIALIZER(PyInterpreter)
+PANGOLIN_REGISTER_FACTORY(PyInterpreter)
 {
     struct PyInterpreterFactory final : public TypedFactoryInterface<InterpreterInterface> {
         std::map<std::string,Precedence> Schemes() const override

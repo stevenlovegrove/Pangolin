@@ -1,6 +1,5 @@
 #include <pangolin/video/video_help.h>
 #include <pangolin/video/video_interface.h>
-#include <pangolin/factory/RegisterFactoriesVideoInterface.h>
 
 namespace pangolin
 {
@@ -25,8 +24,6 @@ void VideoHelp( std::ostream& out, const std::string& scheme_filter, HelpVerbosi
 #else
     const bool use_color = false;
 #endif
-
-    RegisterFactoriesVideoInterface();
 
     if( verbosity >= HelpVerbosity::SYNOPSIS ) {
         PrintSchemeHelp(out, use_color);
