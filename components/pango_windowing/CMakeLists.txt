@@ -43,5 +43,7 @@ if(OpenGL_EGL_FOUND)
     target_link_libraries(${COMPONENT} PRIVATE ${OPENGL_egl_LIBRARY} )
 endif()
 
+
+target_sources(${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/window.cpp) 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl )
 target_include_directories(${COMPONENT} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)

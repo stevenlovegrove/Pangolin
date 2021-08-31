@@ -30,9 +30,11 @@
 #include <functional>
 #include <array>
 #include <string>
+#include <memory>
 #include <pangolin/platform.h>
 #include <pangolin/utils/signal_slot.h>
 #include <pangolin/utils/true_false_toggle.h>
+#include <pangolin/utils/uri.h>
 #include <pangolin/windowing/handler_bitsets.h>
 
 namespace pangolin
@@ -126,5 +128,9 @@ public:
     Signal<void(MouseMotionEvent)> PassiveMouseMotionSignal;
     Signal<void(SpecialInputEvent)> SpecialInputSignal;
 };
+
+//! Open Video Interface from Uri specification
+PANGOLIN_EXPORT
+std::unique_ptr<WindowInterface> CreateWindow(const Uri& uri);
 
 }
