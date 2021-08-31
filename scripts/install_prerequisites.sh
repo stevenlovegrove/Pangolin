@@ -120,7 +120,7 @@ if [[ "$MANAGER" == "apt-get" ]]; then
     PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev cmake)
     PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev)
     PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev)
-    PKGS_ALL+=(libdc1394-22-dev libraw1394-dev libopenni-dev)
+    PKGS_ALL+=(libdc1394-22-dev libraw1394-dev libopenni-dev python3.9-dev python3-distutils)
 elif [[ "$MANAGER" == "dnf" ]]; then
     SUDO="sudo"
     PKGS_UPDATE="dnf check-update"
