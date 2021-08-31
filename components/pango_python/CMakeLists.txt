@@ -1,9 +1,13 @@
 get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
-# find_package(pybind11 CONFIG REQUIRED)
 find_package(Python COMPONENTS Interpreter Development QUIET)
 if(Python_FOUND)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/pybind11)
+    # If we've inited the submodule, use that
+    if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/pybind11/CMakeLists.txt")
+        add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/pybind11)
+    else()
+        find_package(pybind11 CONFIG QUIET)
+    endif()
 endif()
 
 if(Python_FOUND AND pybind11_FOUND)
