@@ -1,10 +1,12 @@
 get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 # find_package(pybind11 CONFIG REQUIRED)
-find_package(Python COMPONENTS Interpreter Development REQUIRED)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/pybind11)
+find_package(Python COMPONENTS Interpreter Development QUIET)
+if(Python_FOUND)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/pybind11)
+endif()
 
-if(pybind11_FOUND)
+if(Python_FOUND AND pybind11_FOUND)
     target_sources( ${COMPONENT} PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin_module.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pyinterpreter.cpp
