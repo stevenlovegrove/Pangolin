@@ -100,7 +100,9 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     win_uri.scheme = params.Get("scheme", win_uri.scheme);
 
     // Override with anything the program specified
-    win_uri.params.insert(std::end(win_uri.params), std::begin(params.params), std::end(params.params));
+    for(const auto& param : params.params) {
+        if(param.first != "scheme") win_uri.params.push_back(param);
+    }
     win_uri.Set("w", w);
     win_uri.Set("h", h);
     win_uri.Set("window_title", window_title);

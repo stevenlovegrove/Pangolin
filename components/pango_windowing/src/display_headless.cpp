@@ -157,6 +157,7 @@ struct HeadlessWindowFactory : public TypedFactoryInterface<WindowInterface> {
         return {{
             {"w","640","Requested buffer width"},
             {"h","480","Requested buffer height"},
+            {"window_title","main","Title (Unused)"},
         }};
     }
     std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
