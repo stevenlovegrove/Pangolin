@@ -73,40 +73,38 @@ PyInterpreter::PyInterpreter()
          pango_print_error("Couldn't import module sys.\n");
      }
 
-    // // Attempt to setup readline completion
-    // PyRun_SimpleString(
-    //     "import pypangolin\n"
-    //     "try:\n"
-    //     "   import readline\n"
-    //     "except ImportError:\n"
-    //     "   import pyreadline as readline\n"
-    //     "\n"
-    //     "import rlcompleter\n"
-    //     "pypangolin.completer = rlcompleter.Completer()\n"
-    // );
-    // CheckPrintClearError();
+     // Attempt to setup readline completion
+    py::exec(
+         "import pypangolin\n"
+         "try:\n"
+         "   import readline\n"
+         "except ImportError:\n"
+         "   import pyreadline as readline\n"
+         "\n"
+         "import rlcompleter\n"
+         "pypangolin.completer = rlcompleter.Completer()\n"
+     );
+     CheckPrintClearError();
 
-    // // Get reference to rlcompleter.Completer() for tab-completion
-    // PyObject* mod_pangolin = PyImport_ImportModule("pypangolin");
-    // if(mod_pangolin) {
-    //     pycompleter = PyObject_GetAttrString(mod_pangolin,"completer");
-    //     if(pycompleter) {
-    //         pycomplete  = PyObject_GetAttrString(pycompleter,"complete");
-    //     }
-    // } else {
-    //     pango_print_error("PyInterpreter: Unable to load module pangolin.\n");
-    // }
+     // Get reference to rlcompleter.Completer() for tab-completion
+     pycompleter = pypangolin.attr("completer");
+     pycomplete  = pycompleter.attr("complete");
 
-    // // Hook namespace prefixes into Python
-    // RegisterNewVarCallback(&PyInterpreter::AttachPrefix, (void*)this, "");
-    // ProcessHistoricCallbacks(&PyInterpreter::AttachPrefix, (void*)this, "");
+     // Hook namespace prefixes into Python
+     RegisterNewVarCallback(&PyInterpreter::AttachPrefix, (void*)this, "");
+     ProcessHistoricCallbacks(&PyInterpreter::AttachPrefix, (void*)this, "");
 
-    // CheckPrintClearError();
+     CheckPrintClearError();
+
+     // TODO: For some reason the completion will crash when the command contains '.'
+     // unless we have executed anything that returns a value...
+     // We probably have a PyRef issue, maybe?
+     py::eval<py::eval_single_statement>("import sys");
+     py::eval<py::eval_single_statement>("sys.version");
 }
 
 PyInterpreter::~PyInterpreter()
 {
-//    Py_Finalize();
 }
 
 std::string PyInterpreter::ToString(const py::object& py)
@@ -125,52 +123,60 @@ void PyInterpreter::CheckPrintClearError()
 
 py::object PyInterpreter::EvalExec(const std::string& cmd)
 {
-    auto ret = py::eval(cmd);
-    CheckPrintClearError();
+    py::object ret = py::none();
+
+    if(!cmd.empty()) {
+        try {
+            ret = py::eval(cmd);
+        }  catch (const pybind11::error_already_set& e) {
+            line_queue.push(
+                InterpreterLine(e.what(), ConsoleLineTypeStderr)
+            );
+        }
+        CheckPrintClearError();
+    }
+
     return ret;
 }
 
 std::vector<std::string> PyInterpreter::Complete(const std::string& cmd, int max_options)
 {
+    // TODO: When there is exactly 1 completion and it is smaller than our current string, we must invoke again with the prefix removed.
+
     std::vector<std::string> ret;
     PyErr_Clear();
 
-//    if(pycomplete) {
-//        for(int i=0; i < max_options; ++i) {
-//#if PY_MAJOR_VERSION >= 3
-//            PyUniqueObj args = PyTuple_Pack( 2, PyUnicode_FromString(cmd.c_str()), PyLong_FromSize_t(i) );
-//            PyUniqueObj result = PyObject_CallObject(pycomplete, args);
-//            if (result && PyUnicode_Check(result)) {
-//                std::string res_str(PyUnicode_AsUTF8(result));
-//#else
-//            PyUniqueObj args = PyTuple_Pack(2, PyString_FromString(cmd.c_str()), PyInt_FromSize_t(i));
-//            PyUniqueObj result = PyObject_CallObject(pycomplete, args);
-//            if (result && PyString_Check(result)) {
-//                std::string res_str(PyString_AsString(result));
-//#endif
-//                if( res_str.find("__")==std::string::npos ||
-//                    cmd.find("__")!=std::string::npos ||
-//                    (cmd.size() > 0 && cmd[cmd.size()-1] == '_')
-//                ) {
-//                    ret.push_back( res_str );
-//                }
-//            }else{
-//                break;
-//            }
-//        }
-//    }
+    if(pycomplete) {
+        for(int i=0; i < max_options; ++i) {
+            auto args = PyTuple_Pack( 2, PyUnicode_FromString(cmd.c_str()), PyLong_FromSize_t(i) );
+            auto result = PyObject_CallObject(pycomplete.ptr(), args);
+
+            if (result && PyUnicode_Check(result)) {
+                std::string res_str(PyUnicode_AsUTF8(result));
+                ret.push_back( res_str );
+                Py_DecRef(args);
+                Py_DecRef(result);
+            }else{
+                Py_DecRef(args);
+                Py_DecRef(result);
+                break;
+            }
+        }
+    }
 
     return ret;
 }
 
 void PyInterpreter::PushCommand(const std::string& cmd)
 {
-    auto obj = EvalExec(cmd);
-    if(obj) {
-        const std::string output = ToString(obj);
-        line_queue.push(
-            InterpreterLine(output, ConsoleLineTypeOutput)
-        );
+    if(!cmd.empty()) {
+        try {
+            py::eval<py::eval_single_statement>(cmd);
+        }  catch (const pybind11::error_already_set& e) {
+            line_queue.push(
+                InterpreterLine(e.what(), ConsoleLineTypeStderr)
+            );
+        }
     }
 }
 
