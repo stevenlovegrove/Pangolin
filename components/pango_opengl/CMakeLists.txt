@@ -49,10 +49,20 @@ else()
     find_package(OpenGL REQUIRED QUIET)
     find_package(GLEW REQUIRED QUIET)
     target_include_directories( ${COMPONENT} PUBLIC
-        $<BUILD_INTERFACE:${OPENGL_INCLUDE_DIR}>
         $<BUILD_INTERFACE:${GLEW_INCLUDE_DIR}>
     )
     target_link_libraries( ${COMPONENT} PUBLIC
-        ${GLEW_LIBRARY} ${OPENGL_LIBRARIES}
+        ${GLEW_LIBRARY}
     )
+
+    if(_LINUX_)
+        # EGL specific
+        find_package(OpenGL REQUIRED COMPONENTS OpenGL EGL)
+        target_link_libraries(${COMPONENT} PUBLIC ${GLEW_LIBRARY} OpenGL::EGL)
+        target_include_directories( ${COMPONENT} PUBLIC $<BUILD_INTERFACE:${OPENGL_EGL_INCLUDE_DIRS}>)
+    else()
+        # OpenGL defaults
+        target_link_libraries(${COMPONENT} PUBLIC ${GLEW_LIBRARY} ${OPENGL_LIBRARIES})
+        target_include_directories( ${COMPONENT} PUBLIC $<BUILD_INTERFACE:${OPENGL_INCLUDE_DIR}>)
+    endif()
 endif()
