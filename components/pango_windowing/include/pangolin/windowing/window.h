@@ -129,8 +129,8 @@ public:
     Signal<void(SpecialInputEvent)> SpecialInputSignal;
 };
 
-//! Open Video Interface from Uri specification
+//! Open Window Interface from Uri specification
 PANGOLIN_EXPORT
-std::unique_ptr<WindowInterface> CreateWindow(const Uri& uri);
+std::unique_ptr<WindowInterface> ConstructWindow(const Uri& uri);
 
 }

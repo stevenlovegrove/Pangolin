@@ -4,7 +4,7 @@
 namespace pangolin
 {
 
-std::unique_ptr<WindowInterface> CreateWindow(const Uri& uri)
+std::unique_ptr<WindowInterface> ConstructWindow(const Uri& uri)
 {
     return FactoryRegistry::I()->Construct<WindowInterface>(uri);
 }

@@ -106,7 +106,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     win_uri.Set("window_title", window_title);
 
     auto context = std::make_shared<PangolinGl>();
-    context->window = CreateWindow(win_uri);
+    context->window = ConstructWindow(win_uri);
     assert(context->window);
 
     RegisterNewContext(window_title, context);
