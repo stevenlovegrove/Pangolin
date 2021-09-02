@@ -31,8 +31,8 @@
 #include <map>
 #include <unordered_map>
 #include <vector>
+#include <variant>
 #include <pangolin/image/typed_image.h>
-#include <pangolin/compat/variant.h>
 
 #ifdef HAVE_EIGEN
 #include <Eigen/Geometry>
@@ -52,7 +52,7 @@ struct Geometry
             : ManagedImage<uint8_t>(stride_bytes, num_elements)
         {}
 
-        using Attribute = variant<Image<float>,Image<uint32_t>,Image<uint16_t>,Image<uint8_t>>;
+        using Attribute = std::variant<Image<float>,Image<uint32_t>,Image<uint16_t>,Image<uint8_t>>;
         // "vertex", "rgb", "normal", "uv", "tris", "quads", ...
         std::map<std::string, Attribute> attributes;
     };
@@ -76,7 +76,7 @@ inline Eigen::AlignedBox3f GetAxisAlignedBox(const Geometry& geom)
     for(const auto& b : geom.buffers) {
         const auto& it_vert = b.second.attributes.find("vertex");
         if(it_vert != b.second.attributes.end()) {
-            const Image<float>& vs = get<Image<float>>(it_vert->second);
+            const Image<float>& vs = std::get<Image<float>>(it_vert->second);
             for(size_t i=0; i < vs.h; ++i) {
                 const Eigen::Map<const Eigen::Vector3f> v(vs.RowPtr(i));
                 box.extend(v);

@@ -147,8 +147,8 @@ void AddVertexNormals(pangolin::Geometry& geom)
         const auto it_ibo = it_face->second.attributes.find("vertex_indices");
 
         if(it_vbo != it_geom->second.attributes.end() && it_ibo != it_face->second.attributes.end()) {
-            const auto& ibo = get<Image<uint32_t>>(it_ibo->second);
-            const auto& vbo = get<Image<float>>(it_vbo->second);
+            const auto& ibo = std::get<Image<uint32_t>>(it_ibo->second);
+            const auto& vbo = std::get<Image<float>>(it_vbo->second);
 
             // Assume we have triangles.
             PANGO_ASSERT(ibo.w == 3 && vbo.w == 3);
@@ -202,9 +202,9 @@ void StandardizeXyzToVertex(pangolin::Geometry& geom)
         if(all_found(verts.attributes, it_x, it_y, it_z)) {
             if(verts.attributes.find("vertex") == verts.attributes.end()) {
                 auto& vertex = verts.attributes["vertex"];
-                auto& imx = get<Image<float>>(it_x->second);
-                auto& imy = get<Image<float>>(it_y->second);
-                auto& imz = get<Image<float>>(it_z->second);
+                auto& imx = std::get<Image<float>>(it_x->second);
+                auto& imy = std::get<Image<float>>(it_y->second);
+                auto& imz = std::get<Image<float>>(it_z->second);
 
                 if(imx.ptr + 1 == imy.ptr && imy.ptr + 1 == imz.ptr) {
                     vertex = Image<float>((float*)imx.ptr, 3, verts.h, imx.pitch);
@@ -245,13 +245,13 @@ void StandardizeRgbToColor(pangolin::Geometry& geom)
                 Geometry::Element::Attribute& color = verts.attributes["color"];
 
                 // TODO: Check that these really are contiguous in memory...
-                if(auto attrib = get_if<Image<float>>(&red)) {
+                if(auto attrib = std::get_if<Image<float>>(&red)) {
                     color = Image<float>(attrib->ptr, have_alpha ? 4 : 3, verts.h, verts.pitch);
-                }else if(auto attrib = get_if<Image<uint8_t>>(&red)) {
+                }else if(auto attrib = std::get_if<Image<uint8_t>>(&red)) {
                     color = Image<uint8_t>(attrib->ptr, have_alpha ? 4 : 3, verts.h, verts.pitch);
-                }else if(auto attrib = get_if<Image<uint16_t>>(&red)) {
+                }else if(auto attrib = std::get_if<Image<uint16_t>>(&red)) {
                     color = Image<uint16_t>(attrib->ptr, have_alpha ? 4 : 3, verts.h, verts.pitch);
-                }else if(auto attrib = get_if<Image<uint32_t>>(&red)) {
+                }else if(auto attrib = std::get_if<Image<uint32_t>>(&red)) {
                     color = Image<uint32_t>(attrib->ptr, have_alpha ? 4 : 3, verts.h, verts.pitch);
                 }
             }
@@ -290,13 +290,13 @@ void StandardizeMultiTextureFaceToXyzuv(pangolin::Geometry& geom)
                     it_uv_ibo != it_multi_texture_face->second.attributes.end()
             ) {
                 // We're going to create a new vertex buffer to hold uv's too
-                auto& orig_ibo = get<Image<uint32_t>>(it_ibo->second);
-                const auto& orig_xyz = get<Image<float>>(it_vbo->second);
-                const auto& uv_ibo = get<Image<uint32_t>>(it_uv_ibo->second);
-                const auto& u = get<Image<float>>(it_u->second);
-                const auto& v = get<Image<float>>(it_v->second);
-                const auto& tx = get<Image<uint8_t>>(it_tx->second);
-                const auto& tn = get<Image<uint32_t>>(it_tn->second);
+                auto& orig_ibo = std::get<Image<uint32_t>>(it_ibo->second);
+                const auto& orig_xyz = std::get<Image<float>>(it_vbo->second);
+                const auto& uv_ibo = std::get<Image<uint32_t>>(it_uv_ibo->second);
+                const auto& u = std::get<Image<float>>(it_u->second);
+                const auto& v = std::get<Image<float>>(it_v->second);
+                const auto& tx = std::get<Image<uint8_t>>(it_tx->second);
+                const auto& tn = std::get<Image<uint32_t>>(it_tn->second);
 
                 PANGO_ASSERT(u.h == v.h);
                 PANGO_ASSERT(orig_ibo.w == 3 && uv_ibo.w == 3);

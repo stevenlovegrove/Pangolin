@@ -25,9 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <variant>
 #include <pangolin/platform.h>
 #include <pangolin/geometry/geometry.h>
-#include <pangolin/compat/variant.h>
 #include <pangolin/geometry/geometry.h>
 
 #include <fstream>
