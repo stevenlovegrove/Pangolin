@@ -28,12 +28,15 @@
 #include <pangolin/video/video.h>
 #include <pangolin/video/video_output.h>
 #include <pangolin/factory/factory_registry.h>
+#include <pangolin/factory/RegisterFactoriesVideoInterface.h>
+#include <pangolin/factory/RegisterFactoriesVideoOutputInterface.h>
 
 namespace pangolin
 {
 
 std::unique_ptr<VideoInterface> OpenVideo(const std::string& str_uri)
 {
+    RegisterFactoriesVideoInterface();
     return OpenVideo( ParseUri(str_uri) );
 }
 
@@ -51,6 +54,7 @@ std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri)
 
 std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const std::string& str_uri)
 {
+    RegisterFactoriesVideoOutputInterface();
     return OpenVideoOutput( ParseUri(str_uri) );
 }
 

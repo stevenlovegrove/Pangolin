@@ -181,18 +181,32 @@ private:
     std::map<std::type_index, TypeRegistry> type_registries;
 };
 
-/// This macro can be used as a template for registering a factory class
-/// You should add a corresponding line in your cmake:
+/// Macro to define factory entry point. Add a corresponding line in your cmake:
 ///    `PangolinRegisterFactory(MyInterfaceType MyFactoryType)`
+/// in order to have the method added to an initialization method for MyInterfaceType
+///
+/// \tparam x is the factory interface class (such as WindowInterface, VideoInterface, etc)
+/// \return true iff registration was successful.
+#define PANGOLIN_REGISTER_FACTORY(x) \
+    bool Register ## x ## Factory()
+//  {
+//    return FactoryRegistry::I()->RegisterFactory<x>(std::make_shared<MyFactoryClass>());
+//  }
+
+/// Macro to define factory entry point with automatic static initialization.
+/// Use this instead of the macro above to automatically register a factory when the compilation
+/// unit is loaded, and you can guarentee the symbols will remain.
+/// e.g. within a dynamic library which you will explicitly load, or within the same
+/// compilation unit as your main().
+///
 /// \tparam x is the factory interface class (such as WindowInterface, VideoInterface, etc)
 /// \return true iff registration was successful.
 // Forward declaration; static load variable; definition
-#define PANGOLIN_REGISTER_FACTORY(x) \
+#define PANGOLIN_REGISTER_FACTORY_WITH_STATIC_INITIALIZER(x) \
     bool Register ## x ## Factory(); \
     static const bool Load ## x ## Success = Register ## x ## Factory(); \
     bool Register ## x ## Factory()
-    // {
-    //    return FactoryRegistry::I()->RegisterFactory<x>(std::make_shared<MyFactoryClass>());
-    // }
-
+//  {
+//    return FactoryRegistry::I()->RegisterFactory<x>(std::make_shared<MyFactoryClass>());
+//  }
 }

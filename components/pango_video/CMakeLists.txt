@@ -213,9 +213,15 @@ endif()
 
 #########################################################
 
-target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include" )
+target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image pango_packetstream)
+
+# Create RegisterFactoriesVideoInterface() method call file to load built drivers and add as source
+create_factory_registry_file( "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/factory" VideoInterface )
+create_factory_registry_file( "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/factory" VideoOutputInterface )
+target_sources(${COMPONENT} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/factory/RegisterFactoriesVideoInterface.h")
+target_sources(${COMPONENT} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/factory/RegisterFactoriesVideoOutputInterface.h")
 
 
 find_package(Catch2 2 QUIET)
