@@ -71,9 +71,13 @@ foreach(component_cmake ${components_cmake})
     add_library(${component_name} "")
     list(APPEND component_list ${component_name})
 endforeach()
+
 foreach(component_cmake ${components_cmake})
     include(${component_cmake})
 endforeach()
+
+#######################################################
+## Build Tree Export
 
 # Export Targets
 export(TARGETS ${component_list} FILE PangolinTargets.cmake)
@@ -81,11 +85,44 @@ export(PACKAGE Pangolin)
 
 # Version information
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake.in
-  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" @ONLY)
+"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" @ONLY)
 
 # Build tree config
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY IMMEDIATE )
+${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY IMMEDIATE )
+
+
+#######################################################
+## Install headers / targets
+
+# This relative path allows installed files to be relocatable.
+set( CMAKECONFIG_INSTALL_DIR lib/cmake/${PROJECT_NAME} )
+file( RELATIVE_PATH REL_INCLUDE_DIR
+    "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
+    "${CMAKE_INSTALL_PREFIX}/include"
+)
+
+install(
+    TARGETS ${component_list}
+    EXPORT ${PROJECT_NAME}Targets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+)
+
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+          "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+)
+install(
+    EXPORT ${PROJECT_NAME}Targets DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+)
+
+
+#######################################################
+## Tools / Examples
 
 set(Pangolin_DIR ${CMAKE_CURRENT_BINARY_DIR})
 

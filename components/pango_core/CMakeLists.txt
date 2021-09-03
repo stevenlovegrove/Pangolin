@@ -35,8 +35,14 @@ if (UNIX)
 endif()
 
 
-target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 target_compile_features(${COMPONENT} PUBLIC cxx_decltype_auto )
+target_include_directories(${COMPONENT} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
+  DESTINATION ${CMAKE_INSTALL_PREFIX}
+)
 
 find_package(Threads QUIET)
 if(Threads_FOUND)
@@ -52,10 +58,13 @@ IF(MSVC)
         EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/pangolin_export.h"
         STATIC_DEFINE PANGOLIN_BUILT_AS_STATIC
     )
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/pangolin_export.h"
-      DESTINATION ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}/pangolin
+    target_include_directories(${COMPONENT} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<INSTALL_INTERFACE:include>
     )
-    target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include")
+    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include"
+      DESTINATION ${CMAKE_INSTALL_PREFIX}
+    )
 ENDIF()
 
 find_package(Catch2 2 QUIET)

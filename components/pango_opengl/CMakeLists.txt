@@ -22,7 +22,13 @@ find_package (Eigen3 REQUIRED CONFIG QUIET)
 target_compile_definitions(${COMPONENT} PUBLIC HAVE_EIGEN HAVE_GLEW)
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image Eigen3::Eigen)
-target_include_directories(${COMPONENT} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+target_include_directories(${COMPONENT} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
+  DESTINATION ${CMAKE_INSTALL_PREFIX}
+)
 
 if(EMSCRIPTEN)
     target_compile_definitions(${COMPONENT} PUBLIC HAVE_GLES HAVE_GLES_2)

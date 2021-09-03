@@ -11,4 +11,10 @@ PRIVATE
 )
 
 target_link_libraries(${COMPONENT} pango_core pango_image tinyobj Eigen3::Eigen)
-target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include" )
+target_include_directories(${COMPONENT} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
+  DESTINATION ${CMAKE_INSTALL_PREFIX}
+)

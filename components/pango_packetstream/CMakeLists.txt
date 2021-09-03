@@ -9,6 +9,12 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/playback_session.cpp
 )
 
-target_include_directories(${COMPONENT} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 target_compile_definitions(${COMPONENT} PRIVATE "PANGOLIN_VERSION_STRING=\"${PANGOLIN_VERSION}\"")
 target_link_libraries(${COMPONENT} PUBLIC pango_core)
+target_include_directories(${COMPONENT} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
+  DESTINATION ${CMAKE_INSTALL_PREFIX}
+)

@@ -6,7 +6,7 @@ if( NOT @PROJECT_NAME@_BINARY_DIR )
   include( "${PROJECT_CMAKE_DIR}/@PROJECT_NAME@Targets.cmake" )
 endif()
 
-SET( Pangolin_CMAKEMODULES @CMAKE_CURRENT_SOURCE_DIR@/../cmake )
+SET( Pangolin_CMAKEMODULES @CMAKE_CURRENT_SOURCE_DIR@/cmake )
 SET( Pangolin_LIBRARIES    @component_list@ )
 SET( Pangolin_LIBRARY      "${Pangolin_LIBRARIES}" )
 

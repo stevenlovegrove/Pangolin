@@ -39,14 +39,18 @@ if(Python_FOUND AND pybind11_FOUND)
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/window.cpp
     )
 
-    target_include_directories(${COMPONENT}
-        PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include"
-    )
+    target_compile_definitions(${COMPONENT} PRIVATE HAVE_PYTHON)
     target_link_libraries(${COMPONENT}
         PRIVATE pango_core pango_display pango_plot pango_video pango_vars
         pybind11::embed
     )
-    target_compile_definitions(${COMPONENT} PRIVATE HAVE_PYTHON)
+    target_include_directories(${COMPONENT} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    )
+    install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
+        DESTINATION ${CMAKE_INSTALL_PREFIX}
+    )
 
     PangolinRegisterFactory( InterpreterInterface PyInterpreter )
 
