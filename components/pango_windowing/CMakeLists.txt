@@ -41,6 +41,7 @@ find_package(OpenGL QUIET COMPONENTS EGL)
 if(OpenGL_EGL_FOUND)
     target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/display_headless.cpp )
     target_link_libraries(${COMPONENT} PRIVATE ${OPENGL_egl_LIBRARY} )
+    PangolinRegisterFactory(WindowInterface HeadlessWindow)
 endif()
 
 
