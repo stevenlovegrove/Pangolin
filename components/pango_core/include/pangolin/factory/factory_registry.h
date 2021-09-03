@@ -143,7 +143,13 @@ public:
     class Exception : public std::exception {
     public:
         Exception(const Uri& uri) : uri(uri) {
-            err = "Unable to open URI " + uri.full_uri + ".";
+            err = "Unable to open URI";
+            err += "\n  full_uri: " + uri.full_uri;
+            err += "\n  scheme: " + uri.scheme;
+            err += "\n  params:\n";
+            for(const auto& p : uri.params) {
+                err += "    " + p.first + " = " + p.second + "\n";
+            }
         }
         virtual const char* what() const throw() override {
             return err.c_str();
