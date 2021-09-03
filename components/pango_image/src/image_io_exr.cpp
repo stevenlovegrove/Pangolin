@@ -102,7 +102,7 @@ PixelFormat GetPixelFormat(const Imf::Header& header)
     }
 
     if ((count == 1 && colors != "GRAY")
-        || (count == 3 && colors != "RGB")
+        || (count == 3 && colors != "RGB" && colors != "BGR")
         || (count == 4 && colors != "RGBA" && colors != "ABGR")) {
       throw std::runtime_error("bad color format");
     }
