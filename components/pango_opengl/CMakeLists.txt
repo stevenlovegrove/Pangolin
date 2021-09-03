@@ -38,9 +38,12 @@ else()
         set(OpenGL_GL_PREFERENCE "GLVND")
     endif()
     find_package(OpenGL REQUIRED QUIET)
-    target_include_directories(${COMPONENT} PUBLIC ${OPENGL_INCLUDE_DIR})
-
     find_package(GLEW REQUIRED QUIET)
-    target_include_directories(${COMPONENT} PUBLIC ${GLEW_INCLUDE_DIR} )
-    target_link_libraries(${COMPONENT} PUBLIC ${GLEW_LIBRARY} ${OPENGL_LIBRARIES})
+    target_include_directories( ${COMPONENT} PUBLIC
+        $<BUILD_INTERFACE:${OPENGL_INCLUDE_DIR}>
+        $<BUILD_INTERFACE:${GLEW_INCLUDE_DIR}>
+    )
+    target_link_libraries( ${COMPONENT} PUBLIC
+        ${GLEW_LIBRARY} ${OPENGL_LIBRARIES}
+    )
 endif()
