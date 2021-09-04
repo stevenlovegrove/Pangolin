@@ -70,6 +70,10 @@ jobs:
       working-directory: ${{runner.workspace}}/build
       run: cmake --build . --config $BUILD_TYPE
 
+    - name: Run all tests
+      working-directory: ${{runner.workspace}}/build
+      run: cmake --build . --config $BUILD_TYPE -t test
+
   emscripten:
     runs-on: ubuntu-20.04
 
