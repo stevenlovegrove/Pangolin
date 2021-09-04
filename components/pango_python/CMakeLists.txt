@@ -65,6 +65,19 @@ if(Python_FOUND AND pybind11_FOUND)
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
         $<INSTALL_INTERFACE:include>
     )
+
+    # Create a target for generating a python wheel
+    include(MakePythonWheel)
+    MakeWheel( pypangolin
+        VERSION ${PANGOLIN_VERSION}
+        SUMMARY "Pangolin is a lightweight portable rapid development library for managing OpenGL display / interaction and abstracting video input."
+        HOMEPAGE "https://github.com/stevenlovegrove/Pangolin"
+        AUTHOR "Steven Lovegrove"
+        EMAIL "stevenlovegrove@gmail.com"
+        LICENCE "MIT"
+        REQUIRES "pyopengl;pyopengl-accelerate;numpy;pillow;pybind11"
+        PRINT_HELP
+    )
 else()
     set_target_properties(${COMPONENT} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
     target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../pango_core/src/dummy.cpp )

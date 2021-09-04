@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: @python_module@
+Version: @MAKEWHEEL_VERSION@
+Summary: @MAKEWHEEL_SUMMARY@
+Home-page: @MAKEWHEEL_HOMEPAGE@
+Author: @MAKEWHEEL_AUTHOR@
+Author-email: @MAKEWHEEL_EMAIL@
+License: @MAKEWHEEL_LICENCE@
+Description-Content-Type: text/markdown
+@MAKEWHEEL_REQUIRES@
+
+@MAKEWHEEL_DESCRIPTION@
