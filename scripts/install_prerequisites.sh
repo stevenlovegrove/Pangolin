@@ -119,7 +119,7 @@ if [[ "$MANAGER" == "apt-get" ]]; then
     PKGS_REQUIRED+=(libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev)
     PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev cmake)
     PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev)
-    PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev catch2)
+    PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev)
     PKGS_ALL+=(libdc1394-22-dev libraw1394-dev libopenni-dev python3.9-dev python3-distutils)
 elif [[ "$MANAGER" == "dnf" ]]; then
     SUDO="sudo"
@@ -144,7 +144,7 @@ elif [[ "$MANAGER" == "brew" ]]; then
     PKGS_OPTIONS+=(install)
     if ((VERBOSE > 0)); then PKGS_OPTIONS+=(--verbose); fi
     PKGS_REQUIRED+=(glew eigen cmake)
-    PKGS_RECOMMENDED+=(libjpeg libpng)
+    PKGS_RECOMMENDED+=(libjpeg libpng openexr libtiff ffmpeg lz4 zstd catch2)
     # Brew doesn't have a dryrun option
     if ((DRYRUN > 0));  then
         MANAGER="echo $MANAGER"
