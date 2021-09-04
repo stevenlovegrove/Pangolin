@@ -11,10 +11,7 @@ if(Python_FOUND)
 endif()
 
 if(Python_FOUND AND pybind11_FOUND)
-    target_sources( ${COMPONENT} PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin_module.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/pyinterpreter.cpp
-
+    set(SRC_BINDINGS
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/attach.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/colour.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/datalog.cpp
@@ -39,10 +36,17 @@ if(Python_FOUND AND pybind11_FOUND)
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/window.cpp
     )
 
-    target_compile_definitions(${COMPONENT} PRIVATE HAVE_PYTHON)
+    target_sources(
+        ${COMPONENT} PRIVATE 
+        ${CMAKE_CURRENT_LIST_DIR}/src/pyinterpreter.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin_embed.cpp 
+        ${SRC_BINDINGS} 
+    )
+
+    target_compile_definitions(${COMPONENT} PUBLIC HAVE_PYTHON)
     target_link_libraries(${COMPONENT}
-        PRIVATE pango_core pango_display pango_plot pango_video pango_vars
-        pybind11::embed
+        pango_core pango_display pango_plot pango_video pango_vars
+        pybind11::embed 
     )
     target_include_directories(${COMPONENT} PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
@@ -54,9 +58,13 @@ if(Python_FOUND AND pybind11_FOUND)
 
     PangolinRegisterFactory( InterpreterInterface PyInterpreter )
 
-    # Add python module as another target
-    pybind11_add_module(pypangolin ${CMAKE_CURRENT_LIST_DIR}/../pango_core/src/dummy.cpp)
-    target_link_libraries(pypangolin PRIVATE ${COMPONENT})
+    # Add python module as another target. For some reason, it doesn't work to just link against ${COMPONENT}
+    pybind11_add_module(pypangolin ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin_module.cpp ${SRC_BINDINGS})
+    target_link_libraries(pypangolin PRIVATE pango_core pango_display pango_plot pango_video pango_vars pybind11::module)
+    target_include_directories(pypangolin PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    )
 else()
     set_target_properties(${COMPONENT} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
     target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../pango_core/src/dummy.cpp )

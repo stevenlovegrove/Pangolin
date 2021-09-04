@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011 Steven Lovegrove
+ * Copyright (c) Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,35 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#include "pypangolin/pypangolin.h"
 
-#include <pybind11/embed.h>
-#include <iomanip>
-#include <queue>
-
-#include <pangolin/var/var.h>
-#include <pangolin/console/InterpreterInterface.h>
-
-namespace py_pangolin
-{
-
-using namespace pangolin;
-
-void bind_pango_write_object(pybind11::module& m);
-
-struct PyPangoIO {
-    PyPangoIO(std::queue<InterpreterLine>& line_queue, InterpreterLineType line_type);
-
-    void write(const std::string& text);
-
-    void flush();
-
-    std::string buffer;
-    std::queue<InterpreterLine>& line_queue;
-    InterpreterLineType line_type;
-};
-
-
-
-
+PYBIND11_EMBEDDED_MODULE(pypangolin, m) {
+    pypangolin::PopulateModule(m);
 }

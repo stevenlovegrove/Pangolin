@@ -61,14 +61,13 @@ PyInterpreter::PyInterpreter()
     
     auto sys = py::module_::import("sys");
     if(sys) {
-        PyModule_AddObject(
-            sys.ptr(), "stdout", (PyObject*)new PyPangoIO(
-            &PyPangoIO::Py_type, line_queue, ConsoleLineTypeStdout
-        ));
-        PyModule_AddObject(
-            sys.ptr(), "stderr", (PyObject*)new PyPangoIO(
-            &PyPangoIO::Py_type, line_queue, ConsoleLineTypeStderr
-        ));
+        // TODO: What is the lifetime of PyPangoIO?
+        PyPangoIO* wrap_stdout = new PyPangoIO(line_queue, ConsoleLineTypeStdout);
+        PyPangoIO* wrap_stderr = new PyPangoIO(line_queue, ConsoleLineTypeStderr);
+        sys.add_object("stdout", py::cast(wrap_stdout), true);
+        sys.add_object("stderr", py::cast(wrap_stderr), true);
+        // PyModule_AddObject(sys.ptr(), "stdout", py::cast(wrap_stdout).ptr());
+        // PyModule_AddObject(sys.ptr(), "stderr", py::cast(wrap_stderr).ptr());
      } else {
          pango_print_error("Couldn't import module sys.\n");
      }
@@ -191,7 +190,7 @@ bool PyInterpreter::PullLine(InterpreterLine& line)
     }
 }
 
-PANGOLIN_REGISTER_FACTORY(PyInterpreter)
+PANGOLIN_REGISTER_FACTORY_WITH_STATIC_INITIALIZER(PyInterpreter)
 {
     struct PyInterpreterFactory final : public TypedFactoryInterface<InterpreterInterface> {
         std::map<std::string,Precedence> Schemes() const override
