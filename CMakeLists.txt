@@ -62,7 +62,24 @@ else()
     option( BUILD_SHARED_LIBS "Build Shared Library" ON)
 endif()
 
-# Add all pangolin components
+#######################################################
+## Testing setup
+
+option( BUILD_TESTS "Build Tests" ON)
+find_package(Catch2 2 QUIET)
+if(Catch2_FOUND)
+    include(CTest)
+    include(Catch)
+else()
+    if(BUILD_TESTS)
+        message(WARNING "Building Tests requested, but Catch2 library not found.")
+        set( BUILD_TESTS OFF)
+    endif()
+endif()
+
+#######################################################
+## Add all pangolin components
+
 file(GLOB components_cmake "${CMAKE_CURRENT_LIST_DIR}/components/*/CMakeLists.txt")
 set(component_list "")
 foreach(component_cmake ${components_cmake})

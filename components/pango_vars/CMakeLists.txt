@@ -14,8 +14,8 @@ install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
   DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
-find_package(Catch2 2 QUIET)
-if(Catch2_FOUND)
+if(BUILD_TESTS)
     add_executable(test_vars ${CMAKE_CURRENT_LIST_DIR}/tests/test_all.cpp)
     target_link_libraries(test_vars PRIVATE Catch2::Catch2 ${COMPONENT})
+    catch_discover_tests(test_vars)
 endif()
