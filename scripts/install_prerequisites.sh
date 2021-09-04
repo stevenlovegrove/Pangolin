@@ -154,7 +154,7 @@ elif [[ "$MANAGER" == "vcpkg" ]]; then
     PKGS_OPTIONS+=(install --triplet=x64-windows )
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
     PKGS_REQUIRED+=(glew eigen3)
-    PKGS_RECOMMENDED+=(libjpeg-turbo libpng openexr tiff ffmpeg lz4 zstd)
+    PKGS_RECOMMENDED+=(libjpeg-turbo libpng openexr tiff ffmpeg lz4 zstd python3)
     PKGS_ALL+=(openni2 realsense2)
 else
     echo "Error: Don't know how to use \"$MANAGER\", please fix the script." >&2

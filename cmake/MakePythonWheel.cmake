@@ -10,20 +10,31 @@ function( MakeWheel python_module)
     ##########################################
     ## Build necessary variables for paths / variables
     string(REPLACE "-" ";" SOABI_PARTS ${Python_SOABI})
-    list(GET SOABI_PARTS 0 pythontag )
-    list(GET SOABI_PARTS 1 pythonversion )
-    list(GET SOABI_PARTS 2 pythonplatform )
+    list(LENGTH SOABI_PARTS SOABI_LEN)
+    if( SOABI_LEN EQUAL 2)
+        list(GET SOABI_PARTS 0 pythontag_version )
+        list(GET SOABI_PARTS 1 pythonplatform )
+    elseif( SOABI_LEN EQUAL 3)
+        list(GET SOABI_PARTS 0 pythontag )
+        list(GET SOABI_PARTS 1 pythonversion )
+        list(GET SOABI_PARTS 2 pythonplatform )
 
-    # https://www.python.org/dev/peps/pep-0425/#python-tag
-    string( TOLOWER "${pythontag}" pythontag )
-    if(pythontag STREQUAL "cpython")
-        set(pythontag_short "cp")
-    elseif(pythontag STREQUAL "ironpython")
-        set(pythontag_short "ip")
-    elseif(pythontag STREQUAL "pypy")
-        set(pythontag_short "pp")
-    elseif(pythontag STREQUAL "jython")
-        set(pythontag_short "jp")
+        # https://www.python.org/dev/peps/pep-0425/#python-tag
+        string( TOLOWER "${pythontag}" pythontag )
+        if(pythontag STREQUAL "cpython")
+            set(pythontag_short "cp")
+        elseif(pythontag STREQUAL "ironpython")
+            set(pythontag_short "ip")
+        elseif(pythontag STREQUAL "pypy")
+            set(pythontag_short "pp")
+        elseif(pythontag STREQUAL "jython")
+            set(pythontag_short "jp")
+        endif()
+
+        set(pythontag_version "${pythontag_short}${pythonversion}")
+    else()
+        message(WARNING "Unable to generate Python Wheel rules as Python_SOABI (${Python_SOABI}) not understood.")
+        return()
     endif()
 
     ##########################################
@@ -37,7 +48,6 @@ function( MakeWheel python_module)
     string(REPLACE "." "_" platformtag ${platformtag})
 
     # https://www.python.org/dev/peps/pep-0427/#file-format
-    set(pythontag_version "${pythontag_short}${pythonversion}")
     set(complete_tag "${pythontag_version}-${pythontag_version}-${platformtag}")
     set(wheel_filename "${CMAKE_BINARY_DIR}/${python_module}-${version}-${complete_tag}.whl")
     set(wheel_distinfo "${CMAKE_BINARY_DIR}/${python_module}-${version}.dist-info")
