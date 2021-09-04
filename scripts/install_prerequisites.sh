@@ -119,7 +119,7 @@ if [[ "$MANAGER" == "apt-get" ]]; then
     PKGS_REQUIRED+=(libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev)
     PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev cmake)
     PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev)
-    PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev)
+    PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev catch2)
     PKGS_ALL+=(libdc1394-22-dev libraw1394-dev libopenni-dev python3.9-dev python3-distutils)
 elif [[ "$MANAGER" == "dnf" ]]; then
     SUDO="sudo"
@@ -138,7 +138,7 @@ elif [[ "$MANAGER" == "port" ]]; then
     PKGS_OPTIONS+=(-N install -q)
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(-y); fi
     PKGS_REQUIRED+=(glew eigen3-devel cmake +gui)
-    PKGS_RECOMMENDED+=(jpeg libpng openexr tiff ffmpeg-devel lz4 zstd py37-pybind11)
+    PKGS_RECOMMENDED+=(jpeg libpng openexr tiff ffmpeg-devel lz4 zstd py37-pybind11 catch2)
     PKGS_ALL+=(libdc1394 openni)
 elif [[ "$MANAGER" == "brew" ]]; then
     PKGS_OPTIONS+=(install)
@@ -154,7 +154,7 @@ elif [[ "$MANAGER" == "vcpkg" ]]; then
     PKGS_OPTIONS+=(install --triplet=x64-windows )
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
     PKGS_REQUIRED+=(glew eigen3)
-    PKGS_RECOMMENDED+=(libjpeg-turbo libpng openexr tiff ffmpeg lz4 zstd python3)
+    PKGS_RECOMMENDED+=(libjpeg-turbo libpng openexr tiff ffmpeg lz4 zstd python3 Catch2)
     PKGS_ALL+=(openni2 realsense2)
 else
     echo "Error: Don't know how to use \"$MANAGER\", please fix the script." >&2

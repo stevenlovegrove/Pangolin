@@ -72,7 +72,7 @@ jobs:
 
     - name: Run all tests
       working-directory: ${{runner.workspace}}/build
-      run: cmake --build . --config $BUILD_TYPE -t test
+      run: ctest
 
   emscripten:
     runs-on: ubuntu-20.04
