@@ -75,12 +75,8 @@ public:
     void Set(const T& val)
     {
         cache = val;
-        try {
-            src->Set( Convert<VarS, T>::Do(val) );
-        }catch(const BadInputException &) {
-            pango_print_warn("Unable to set variable with type %s from %s. Resetting.", typeid(VarS).name(), typeid(T).name() );
-            Reset();
-        }
+        // This might throw - needs to be dealt with by user
+        src->Set( Convert<VarS, T>::Do(val) );
     }
 
 protected:

@@ -225,13 +225,7 @@ public:
 
     const T& Get() const
     {
-        try{
-            return var->Get();
-        }catch(const BadInputException&)
-        {
-            const_cast<Var<T> *>(this)->Reset();
-            return var->Get();
-        }
+        return var->Get();
     }
 
     operator const T& () const
@@ -241,13 +235,7 @@ public:
 
     const T* operator->()
     {
-        try{
-            return &(var->Get());
-        }catch(BadInputException)
-        {
-            Reset();
-            return &(var->Get());
-        }
+        return &(var->Get());
     }
 
     void operator=(const T& val)
