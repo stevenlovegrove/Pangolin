@@ -111,6 +111,10 @@ jobs:
         mkdir -p ${{runner.workspace}}/www/emscripten
         rsync -zarvm --include="*/" --include="*.html" --include="*.js" --include="*.wasm" --exclude="*" ${{runner.workspace}}/pangolin-build/examples ${{runner.workspace}}/www/emscripten
 
+    - name: Copy README to www folder
+      run: |
+        cp "${{github.workspace}}/README.md" "${{runner.workspace}}/www/index.md"
+
     - name: Deploy Examples to GitHub Pages (for pushes to master)
       if: success() && (github.ref == 'refs/heads/master')
       uses: crazy-max/ghaction-github-pages@v2.2.0
