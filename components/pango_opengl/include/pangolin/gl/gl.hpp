@@ -670,10 +670,17 @@ inline GlBufferData::GlBufferData()
 {
 }
 
-inline GlBufferData::GlBufferData(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse, const unsigned char* data )
+inline GlBufferData::GlBufferData(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse, const void* data )
     : bo(0)
 {
     Reinitialise(buffer_type, size_bytes, gluse, data );
+}
+
+template<typename T>
+GlBufferData::GlBufferData(GlBufferType buffer_type, const std::vector<T>& data, GLenum gluse)
+    : bo(0)
+{
+    Reinitialise(buffer_type, data.size()*sizeof(T), gluse, &data[0]);
 }
 
 //! Move Constructor
@@ -682,6 +689,7 @@ inline GlBufferData::GlBufferData(GlBufferData&& tex)
 {
     *this = std::move(tex);
 }
+
 inline GlBufferData& GlBufferData::operator=(GlBufferData&& tex)
 {
     Free();
@@ -715,7 +723,7 @@ inline GLsizeiptr GlBufferData::SizeBytes() const
     return size_bytes;
 }
 
-inline void GlBufferData::Reinitialise(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse, const unsigned char* data )
+inline void GlBufferData::Reinitialise(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse, const void* data )
 {
     if(!bo) {
         glGenBuffers(1, &bo);
@@ -758,6 +766,26 @@ inline void GlBufferData::Download(GLvoid* data, GLsizeiptr size_bytes, GLintptr
     Unbind();
 }
 
+template<typename T>
+inline void GlBufferData::Upload(const std::vector<T>& data, GLintptr offset)
+{
+    const size_t total_bytes = data.size() * sizeof(T);
+    assert(offset + total_bytes <= size_bytes);
+    Upload(&data[0], total_bytes, offset);
+}
+
+#ifdef USE_EIGEN
+template<typename Derived>
+inline void GlBufferData::Upload(const Eigen::DenseBase<Derived>& data, GLintptr offset)
+{
+    typedef typename Eigen::DenseBase<Derived>::Scalar Scalar;
+    const size_t num_elements = data.outerSize();
+    const size_t matrix_bytes = data.outerStride() * num_elements;
+    assert(offset + matrix_bytes <= size_bytes);
+    Upload(data.data(), matrix_bytes, offset);
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////
 
 inline GlBuffer::GlBuffer()
@@ -787,7 +815,7 @@ inline GlBuffer& GlBuffer::operator=(GlBuffer&& o)
     return *this;
 }
 
-inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse, const unsigned char* data )
+inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse, const void *data )
 {
     this->datatype = datatype;
     this->num_elements = num_elements;
@@ -824,6 +852,20 @@ inline void GlBuffer::Resize(GLuint new_num_elements)
     num_elements = new_num_elements;
 }
 
+#ifdef USE_EIGEN
+    template<typename Scalar, int R, int C>
+    GlBuffer::GlBuffer(GlBufferType buffer_type, const std::vector<Eigen::Matrix<Scalar, R,C>>& data, GLenum gluse)
+        : GlBufferData(buffer_type, data, gluse)
+    {
+        typedef typename Eigen::Matrix<Scalar, R,C> Element;
+        static_assert( Element::SizeAtCompileTime != Eigen::Dynamic, "No Dynamically sized elements.");
+        static_assert( Element::SizeAtCompileTime * sizeof(Scalar) == sizeof(Element), "No padded elements.");
+
+        datatype = pangolin::GlFormatTraits<Scalar>::gltype;
+        num_elements = data.size();
+        count_per_element = Element::SizeAtCompileTime;
+    }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////
 
