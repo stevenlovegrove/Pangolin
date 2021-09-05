@@ -1,89 +1,67 @@
 What is Pangolin
 ====================================
 
-Pangolin is a lightweight portable rapid development library for managing OpenGL
-display / interaction and abstracting video input. At its heart is a simple
-OpenGl viewport manager which can help to modularise 3D visualisation without
-adding to its complexity, and offers an advanced but intuitive 3D navigation
-handler. Pangolin also provides a mechanism for manipulating program variables
-through config files and ui integration, and has a flexible real-time plotter
-for visualising graphical data.
+Pangolin is a set of lightweight and portable utility libraries for prototyping 3D, numeric or video based programs and algorithms. It is used quite widely in the field of Computer Vision as a means to remove platform-specific boilerplate and make it easy to visualize data.
 
-The ethos of Pangolin is to reduce the boilerplate code that normally
-gets written to visualise and interact with (typically image and 3D
-based) systems, without compromising performance. It also enables write-once
-code for a number of platforms, currently including Windows, Linux, OSX, Android
-and IOS.
+The general ethos of Pangolin is to minimize boilerplate and maximize portability and flexibility through simple interfaces and factories over things like windowing and video. It also offers a suite of utilities for interactive debugging, such as 3D manipulation, plotters, tweak variables, and a drop-down Quake-like console for python scripting and live tweaking.
+
+
+
+## Main features
+
+* Cross Platform Windowing
+  * Build for **Windows**, **Linux**, **OSX** and the **Web** (with [Emscripten](https://emscripten.org/))
+  * Support different windowing implementations including off-screen buffers
+* Viewport Management and Interaction
+  * Simple and performant viewport management
+  * Intuitive 3D navigation and handlers
+  * Utilities to work with Computer Vision & Robotics camera and coordinate conventions
+* Video Input and Output
+  * Extensive video input/output wrappers for ordinary and machine-vision cameras and media formats
+  * Flexible filter interface for easily post-processing video channels and formats, etc.
+* Tweak Variables
+  * There are 101 widgeting libraries and several 'tweak' var libraries - Pangolin offers another implementation with a few pros and cons
+  * One-line definitions and extensible types
+* Drop-down Console
+  * Extensible for different shells, but currently supports Python live console
+  * Easy access to introspect tweak variables
+
+
 
 ## Code ##
 
 Find the latest version on [Github](http://github.com/stevenlovegrove/Pangolin):
 
 ```bash
-git clone https://github.com/stevenlovegrove/Pangolin.git
+# Clone Pangolin along with it's submodules
+git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
 ```
+
+
 
 ## Dependencies ##
 
-Optional dependencies are enabled when found, otherwise they are silently disabled.
-Check the CMake configure output for details.
+*Pangolin* is split into a few *components* so you can include just what you need. Most dependencies are *optional* so you can pick and mix for your needs. Rather than enforcing a particular package manager, you can use a simple [script](https://github.com/stevenlovegrove/Pangolin/blob/master/scripts/install_prerequisites.sh) to generate a list of (**required**, **recommended** or **all**) packages for installation for that manager (e.g. apt, port, brew, dnf, vcpkg):
 
-### Required Dependencies ###
+```bash
+# See what package manager and packages are recommended
+./scripts/install_prerequisites --dry-run recommended
 
-* C++11
+# Override the package manager choice and install all packages
+./scripts/install_prerequisites -m brew all
+```
 
-* OpenGL (Desktop / ES / ES2)
-  * (lin) `sudo apt install libgl1-mesa-dev`
+You'll see the dependencies are generally
 
-* Glew
-  * (win) built automatically (assuming git is on your path)
-  * (deb) `sudo apt install libglew-dev`
-  * (mac) `sudo port install glew`
+* Build system (cmake, **required**)
+* Windowing system (X11, Cocoa, Win, Web, ...)
+* Rendering (OpenGL, GLES)
+* Video and Image loading (DC1394, ffmpeg, jpeg, png, ...)
+* Wrappers / Cross Compilers (Python3, pybind, Emscripten, ...)
 
-* CMake (for build environment)
-  * (win) http://www.cmake.org/cmake/resources/software.html
-  * (deb) `sudo apt install cmake`
-  * (mac) `sudo port install cmake`
+Pangolin does it's best to build something with what it gets, so dependencies which are not found will be silently ignored. If you need a particular feature, check the output of the `cmake ..` stage and look for the *Found and Enabled* lines.
 
-### Recommended Dependencies ###
 
-* Python2 / Python3, for drop-down interactive console
-  * (win) http://www.python.org/downloads/windows
-  * (deb) `sudo apt install libpython2.7-dev`
-  * (mac) preinstalled with osx
-  * (for pybind11) `git submodule init && git submodule update`
-  * (useful modules) `sudo python -mpip install numpy pyopengl Pillow pybind11`
-
-* Wayland
-  * pkg-config: `sudo apt install pkg-config`
-  * Wayland and EGL:`sudo apt install libegl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols`
-
-### Optional Dependencies for video input ###
-
-* FFMPEG (For video decoding and image rescaling)
-  * (deb) `sudo apt install ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev`
-
-* DC1394 (For firewire input)
-  * (deb) `sudo apt install libdc1394-22-dev libraw1394-dev`
-
-* libuvc (For cross-platform webcam video input via libusb)
-  * git://github.com/ktossell/libuvc.git
-
-* libjpeg, libpng, libtiff, libopenexr (For reading still-image sequences)
-  * (deb) `sudo apt install libjpeg-dev libpng12-dev libtiff5-dev libopenexr-dev`
-
-* OpenNI / OpenNI2 (For Kinect / Xtrion / Primesense capture)
-
-* DepthSense SDK
-
-### Very Optional Dependencies ###
-
-* Eigen / TooN (These matrix types supported in the Pangolin API.)
-
-* CUDA Toolkit >= 3.2 (Some CUDA header-only interop utilities included)
-  * http://developer.nvidia.com/cuda-downloads
-
-* Doxygen for generating html / pdf documentation.
 
 ## Building ##
 
@@ -91,22 +69,60 @@ Pangolin uses the CMake portable pre-build tool. To checkout and build pangolin 
 directory 'build', execute the following at a shell (or the equivelent using a GUI):
 
 ```bash
-git clone https://github.com/stevenlovegrove/Pangolin.git
-cd Pangolin
-mkdir build
-cd build
+# Get Pangolin
+cd ~/your_fav_code_directory
+git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
+cd Pangolin 
+
+# Install dependencies (as described above, or your preferred method)
+./scripts/install_prerequisites recommended
+
+# Configure and build
+mkdir build && cd build
 cmake ..
 cmake --build .
+
+# GIVEME THE PYTHON STUFF!!!!
+cmake --build . -t pypangolin_wheel
+# The cmake .. step tells you which python is being used, and the exact command to copy and paste for installing the pypangolin wheel.
+
+# Run me some tests!
+ctest
 ```
 
-If you would like to build the documentation and you have Doxygen installed, you
-can execute:
+![Master Build](https://github.com/stevenlovegrove/pangolin/actions/workflows/build.yml/badge.svg?branch=master) p.s. The *master* branch is an active development branch. Choose a [stable tag](https://github.com/stevenlovegrove/Pangolin/tags) if you prefer.
 
-```bash
-cmake --build . --target pangolin_doc
-```
 
-**On Windows**, Pangolin will attempt to download and build *glew*, *libjpeg*, *libpng* and *zlib* automatically. It does so assuming that git is available on the path - this assumption may be wrong for windows users who have downloaded Pangolin via a zip file on github. You will instead need to download and compile the dependencies manually, and set the BUILD_EXTERN_(lib) options to false for these libraries. The alternate and recommended approach is to install [gitbash](https://git-scm.com/downloads) and work from within their provided console.
+
+####On Windows
+
+ I'd recommend building natively with the [Build Tools for Visual Studio 2019](https://visualstudio.microsoft.com/downloads/) toolchain (and not mingw or WSL etc which is unsupported). I recommend [gitbash](https://git-scm.com/downloads) for executing the bash snippets on this page and cloning Pangolin. You can work from within their provided console or the fancy new [Windows Terminal](https://devblogs.microsoft.com/commandline/introducing-windows-terminal/) which is a huge improvement to the developer experience on Windows.
+
+#### With Python
+
+You have to be careful about what python version Pangolin has found and is attempting to link against. It will tell you during the `cmake ..` step and you can change it by explicitly telling it the python executable with `cmake -DPYTHON_EXECUTABLE=/path/to/python ..`or ``cmake -DPYTHON_EXECUTABLE=`which python3` `` to use the python accessed through the `python3` alias.
+
+==NOTE== The python wheel is only currently working on MacOS. On Linux, you'll need to load the .so manually `import sys; sys.path.append('path/of/pypangolin.so')`. On Windows, you're out of luck right now. Help appreciated!
+
+#### On the Web
+
+See **Emscripten (Compile for web)** below.
+
+
+
+## Examples
+
+Pangolin is mostly documented through it's simple examples which you can find in the [*examples*](https://github.com/stevenlovegrove/Pangolin/tree/master/examples) folder and *[examples/PythonExamples](examples/PythonExamples)* for python versions. You can also browse and even interact with some online:
+
+###### Browse some online
+
+https://stevenlovegrove.github.io/Pangolin/examples/
+
+###### Run some in your browser! E.g.
+
+https://stevenlovegrove.github.io/Pangolin/emscripten/examples/SimplePlot/
+
+
 
 ## Issues ##
 
@@ -114,39 +130,31 @@ Please visit [Github Issues](https://github.com/stevenlovegrove/Pangolin/issues)
 
 Please note; most Pangolin dependencies are optional - to disable a dependency which may be causing trouble on your machine, set the BUILD_PANGOLIN_(option) variable to false with a cmake configuration tool (e.g. ccmake or cmake-gui).
 
+#### Common Runtime Problems
+
+==Framebuffer with requested attributes not available.==: You're building against an old or unaccelerated OpenGL version. Either your graphics drivers are not correctly installed or you are on an unusual platform (such as within Docker, in a VM, working over an X forwarding SSH session) which has limited graphics acceleration. For the former case, you need to make sure your system is using appropriate drivers (you can test glxgears / glxinfo on linux for instance). There isn't much you can do about the latter except changing your setup (e.g. finding a VM which can better accelerate your graphics, or perhaps using the [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) wrapper around docker to correctly pass through the graphics driver)
+
+#### Common Python Problems
+
+==error: unknown target 'pypangolin_wheels'== : cmake didn't find your python. Go back and adjust your cmake variables (such as the tip above) until you see something like "Selected Python: '/opt/local/bin/python3.9'" in the output.
+
+==ModuleNotFoundError: No module named 'pypangolin'==: Did you install the wheel (see the bash comment under build)? Are you running using the same Python as Pangolin found during the `cmake ..` step?
+
+
+
 ## Contributions and Continuous Integration ##
 
-For CI, Pangolin uses [travis-ci.org](https://travis-ci.org/stevenlovegrove/Pangolin) for Ubuntu, OSX and [ci.appveyor.com](https://ci.appveyor.com/project/stevenlovegrove/pangolin) for Windows.
+For CI, Pangolin uses [Github Actions](https://github.com/stevenlovegrove/Pangolin/actions) for Windows, MacOS, Linux and Emscripten (Web).
 
-To contribute to Pangolin, I would appreciate pull requests against the master branch. This will trigger CI builds for your changes automatically, and help me to merge with confidence.
+To contribute to Pangolin, I would appreciate pull requests against the master branch. If you raise an issue, please include your environment (compiler, operating system, etc).
 
-## Binaries ##
 
-Binaries are available for Windows x64, as output by the Windows CI server: [Appveyor Artifacts](https://ci.appveyor.com/project/stevenlovegrove/pangolin/build/artifacts).
-
-## Bindings ##
-
-### Python ###
-
-Pangolin python bindings are enabled via [pybind11](www.pybind11.com). These bindings can be used both standalone and from within Pangolin's drop-down console (press the back-tick key, `).
-
-To enable the bindings, you must checkout the pybind submodule. To use pangolin in python, it's recommend to install a few other python packages too:
-
-```bash
-sudo python -mpip install numpy pyopengl Pillow pybind11
-git submodule init && git submodule update
-```
-
-The python module pypangolin must be on your python path, either through installation, or by setting it explicitly:
-
-```python
-import sys
-sys.path.append('path/of/pypangolin.so')
-```
 
 ## Scheme syntax for windowing and video
 
-Pangolin uses 'URI' syntax for modularising video drivers and windowing backends. The syntax follows along the lines of `module_name:[option1=value1,option2=value2,...]//module_resource_to_open`. Some examples for using this URI syntax with the VideoViewer tool is as follows:
+Pangolin uses 'URI' syntax for modularising video drivers and windowing backends. The syntax follows along the lines of `module_name:[option1=value1,option2=value2,...]//module_resource_to_open`.
+
+Some examples for using this URI syntax with the VideoViewer tool is as follows:
 
 ```bash
 VideoViewer test://
@@ -164,6 +172,8 @@ setenv PANGOLIN_WINDOW_URI "cocoa:[HIGHRES=true]//"
 ```
 
 Some window parameters that may be interesting to override are `DISPLAYNAME`, `DOUBLEBUFFER`, `SAMPLE_BUFFERS`, `SAMPLES`, `HIGHRES`. Window modules currently include `x11`, `winapi`, `cocoa`.
+
+
 
 ## Emscripten (Compile for web) ##
 
