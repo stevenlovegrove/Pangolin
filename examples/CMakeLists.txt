@@ -1,3 +1,4 @@
+add_subdirectory(_Tutorial)
 add_subdirectory(HelloPangolin)
 add_subdirectory(HelloPangolinThreads)
 add_subdirectory(SimpleDisplay)
