@@ -9,7 +9,7 @@ github_username:  stevenlovegrove
 
 # Build settings
 markdown: kramdown
-theme: jekyll-theme-minimal
+theme: jekyll-theme-cayman
 logo: https://raw.githubusercontent.com/stevenlovegrove/Pangolin/master/tools/VideoViewer/application-x-pango.svg
 show_downloads: "false"
 
