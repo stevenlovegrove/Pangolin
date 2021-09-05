@@ -113,7 +113,7 @@ jobs:
 
     - name: Copy README to www folder
       run: |
-        cp "${{github.workspace}}/README.md" "${{runner.workspace}}/www/index.md"
+        cp "${{github.workspace}}/pangolin/README.md" "${{runner.workspace}}/www/index.md"
 
     - name: Deploy Examples to GitHub Pages (for pushes to master)
       if: success() && (github.ref == 'refs/heads/master')
