@@ -94,7 +94,7 @@ ctest
 
 
 
-####On Windows
+#### On Windows
 
  I'd recommend building natively with the [Build Tools for Visual Studio 2019](https://visualstudio.microsoft.com/downloads/) toolchain (and not mingw or WSL etc which is unsupported). I recommend [gitbash](https://git-scm.com/downloads) for executing the bash snippets on this page and cloning Pangolin. You can work from within their provided console or the fancy new [Windows Terminal](https://devblogs.microsoft.com/commandline/introducing-windows-terminal/) which is a huge improvement to the developer experience on Windows.
 
@@ -102,7 +102,7 @@ ctest
 
 You have to be careful about what python version Pangolin has found and is attempting to link against. It will tell you during the `cmake ..` step and you can change it by explicitly telling it the python executable with `cmake -DPYTHON_EXECUTABLE=/path/to/python ..`or ``cmake -DPYTHON_EXECUTABLE=`which python3` `` to use the python accessed through the `python3` alias.
 
-==NOTE== The python wheel is only currently working on MacOS. On Linux, you'll need to load the .so manually `import sys; sys.path.append('path/of/pypangolin.so')`. On Windows, you're out of luck right now. Help appreciated!
+**NOTE** The python wheel is only currently working on MacOS. On Linux, you'll need to load the .so manually `import sys; sys.path.append('path/of/pypangolin.so')`. On Windows, you're out of luck right now. Help appreciated!
 
 #### On the Web
 
@@ -132,13 +132,13 @@ Please note; most Pangolin dependencies are optional - to disable a dependency w
 
 #### Common Runtime Problems
 
-==Framebuffer with requested attributes not available.==: You're building against an old or unaccelerated OpenGL version. Either your graphics drivers are not correctly installed or you are on an unusual platform (such as within Docker, in a VM, working over an X forwarding SSH session) which has limited graphics acceleration. For the former case, you need to make sure your system is using appropriate drivers (you can test glxgears / glxinfo on linux for instance). There isn't much you can do about the latter except changing your setup (e.g. finding a VM which can better accelerate your graphics, or perhaps using the [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) wrapper around docker to correctly pass through the graphics driver)
+<u>Framebuffer with requested attributes not available</u>: You're building against an old or unaccelerated OpenGL version. Either your graphics drivers are not correctly installed or you are on an unusual platform (such as within Docker, in a VM, working over an X forwarding SSH session) which has limited graphics acceleration. For the former case, you need to make sure your system is using appropriate drivers (you can test glxgears / glxinfo on linux for instance). There isn't much you can do about the latter except changing your setup (e.g. finding a VM which can better accelerate your graphics, or perhaps using the [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) wrapper around docker to correctly pass through the graphics driver)
 
 #### Common Python Problems
 
-==error: unknown target 'pypangolin_wheels'== : cmake didn't find your python. Go back and adjust your cmake variables (such as the tip above) until you see something like "Selected Python: '/opt/local/bin/python3.9'" in the output.
+<u>error: unknown target 'pypangolin_wheels'</u> : cmake didn't find your python. Go back and adjust your cmake variables (such as the tip above) until you see something like "Selected Python: '/opt/local/bin/python3.9'" in the output.
 
-==ModuleNotFoundError: No module named 'pypangolin'==: Did you install the wheel (see the bash comment under build)? Are you running using the same Python as Pangolin found during the `cmake ..` step?
+<u>ModuleNotFoundError: No module named 'pypangolin'</u>: Did you install the wheel (see the bash comment under build)? Are you running using the same Python as Pangolin found during the `cmake ..` step?
 
 
 
@@ -150,11 +150,14 @@ To contribute to Pangolin, I would appreciate pull requests against the master b
 
 
 
-## Scheme syntax for windowing and video
+## Extensibility & Factories
 
-Pangolin uses 'URI' syntax for modularising video drivers and windowing backends. The syntax follows along the lines of `module_name:[option1=value1,option2=value2,...]//module_resource_to_open`.
+Pangolin uses an extensible factory mechanism for modularising video drivers, windowing backends and console interpreters. Concrete instances are instantiated from a particular factory using a URI string which identifies which factory to use and what parameters it should use. As strings, URI's are a useful mechanism for providing and validating configuration from an end user. The URI form is:
+`module_name:[option1=value1,option2=value2,...]//module_resource_to_open`.
 
-Some examples for using this URI syntax with the VideoViewer tool is as follows:
+#### Video URI's
+
+The *VideoViewer* tool takes these URI's directly in order to specify what images or video to load and show:
 
 ```bash
 VideoViewer test://
@@ -162,13 +165,19 @@ VideoViewer uvc:[size=640x480]///dev/video0
 VideoViewer flip://debayer:[tile=rggb,method=downsample]//file://~/somefile.pango
 ```
 
-Notice that for video, some modules support chaining to construct a simple filter graph. See include/pangolin/video/video.h for more examples.
+Notice that for video, some modules support chaining to construct a simple filter graph. 
 
-For windowing, you can also customize default arguments for Pangolin applications by setting the `PANGOLIN_WINDOW_URI` environment variable. For instance, on high-DPI screens (in this example on OSX), you could set:
+#### Window URI's
+
+Windowing in Pangolin is also backed by a factory. When an application calls CreateWindowAndBind() or similar, the default:// URI is specified. This can be overriden to use different windowing options by setting the`PANGOLIN_WINDOW_URI` environment variable. e.g.
 
 
 ```bash
-setenv PANGOLIN_WINDOW_URI "cocoa:[HIGHRES=true]//"
+# Use the X11 Window Driver and override the default window size
+PANGOLIN_WINDOW_URI="x11:[width=1024,height=768]//" ./some_pangolin_app
+
+# Create a 'virtual' window using a framebuffer
+PANGOLIN_WINDOW_URI="headless://" ./another_pangolin_app
 ```
 
 Some window parameters that may be interesting to override are `DISPLAYNAME`, `DOUBLEBUFFER`, `SAMPLE_BUFFERS`, `SAMPLES`, `HIGHRES`. Window modules currently include `x11`, `winapi`, `cocoa`.
