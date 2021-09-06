@@ -7,53 +7,35 @@ function( MakeWheel python_module)
     cmake_parse_arguments(MAKEWHEEL "PRINT_HELP" "MODULE;VERSION;SUMMARY;DESCRIPTION;HOMEPAGE;AUTHOR;EMAIL;LICENCE" "REQUIRES" ${ARGN} )
     set(version ${MAKEWHEEL_VERSION})
 
-    ##########################################
-    ## Build necessary variables for paths / variables
-    string(REPLACE "-" ";" SOABI_PARTS ${Python_SOABI})
-    list(LENGTH SOABI_PARTS SOABI_LEN)
-    if( SOABI_LEN EQUAL 2)
-        list(GET SOABI_PARTS 0 pythontag_version )
-        list(GET SOABI_PARTS 1 pythonplatform )
-    elseif( SOABI_LEN EQUAL 3)
-        list(GET SOABI_PARTS 0 pythontag )
-        list(GET SOABI_PARTS 1 pythonversion )
-        list(GET SOABI_PARTS 2 pythonplatform )
-
-        # https://www.python.org/dev/peps/pep-0425/#python-tag
-        string( TOLOWER "${pythontag}" pythontag )
-        if(pythontag STREQUAL "cpython")
-            set(pythontag_short "cp")
-        elseif(pythontag STREQUAL "ironpython")
-            set(pythontag_short "ip")
-        elseif(pythontag STREQUAL "pypy")
-            set(pythontag_short "pp")
-        elseif(pythontag STREQUAL "jython")
-            set(pythontag_short "jp")
-        endif()
-
-        set(pythontag_version "${pythontag_short}${pythonversion}")
-    else()
-        message(WARNING "Unable to generate Python Wheel rules as Python_SOABI (${Python_SOABI}) not understood.")
-        return()
-    endif()
-
-    ##########################################
-    # execute python to get correct platform string.
     execute_process(
-        COMMAND ${Python_EXECUTABLE} -c "import distutils.util; print(distutils.util.get_platform())"
-        OUTPUT_VARIABLE platformtag
+        COMMAND ${Python_EXECUTABLE} -c "
+from setuptools.dist import Distribution
+from setuptools import Extension
+
+def wheel_name(**kwargs):
+    # create a fake distribution from arguments
+    dist = Distribution(attrs=kwargs)
+    # finalize bdist_wheel command
+    bdist_wheel_cmd = dist.get_command_obj('bdist_wheel')
+    bdist_wheel_cmd.ensure_finalized()
+    # assemble wheel file name
+    distname = bdist_wheel_cmd.wheel_dist_name
+    tag = '-'.join(bdist_wheel_cmd.get_tag())
+    return f'{distname};{tag}'
+
+print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Extension('dummy', ['summy.c'])]))
+"
+        OUTPUT_VARIABLE wheel_filename
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    string(REPLACE "-" "_" platformtag ${platformtag})
-    string(REPLACE "." "_" platformtag ${platformtag})
+    list(GET wheel_filename 0 distname)
+    list(GET wheel_filename 1 platformtag)
+    set(complete_tag "${distname}-${platformtag}")
 
-    # https://www.python.org/dev/peps/pep-0427/#file-format
-    set(complete_tag "${pythontag_version}-${pythontag_version}-${platformtag}")
-    set(wheel_filename "${CMAKE_BINARY_DIR}/${python_module}-${version}-${complete_tag}.whl")
+    set(wheel_filename "${CMAKE_BINARY_DIR}/${complete_tag}.whl")
     set(wheel_distinfo "${CMAKE_BINARY_DIR}/${python_module}-${version}.dist-info")
     set(wheel_data "${CMAKE_BINARY_DIR}/${python_module}-${version}.data")
     set(wheel_generator_string "pango_wheelgen_${version}")
-
 
     if( MAKEWHEEL_REQUIRES )
         set(MAKEWHEEL_REQUIRES "Requires-Dist: ${MAKEWHEEL_REQUIRES}")

@@ -102,7 +102,7 @@ ctest
 
 You have to be careful about what python version Pangolin has found and is attempting to link against. It will tell you during the `cmake ..` step and you can change it by explicitly telling it the python executable with `cmake -DPYTHON_EXECUTABLE=/path/to/python ..`or ``cmake -DPYTHON_EXECUTABLE=`which python3` `` to use the python accessed through the `python3` alias.
 
-**NOTE** The python wheel is only currently working on MacOS. On Linux, you'll need to load the .so manually `import sys; sys.path.append('path/of/pypangolin.so')`. On Windows, you're out of luck right now. Help appreciated!
+**NOTE** The python wheel is only currently working on MacOS and Linux. On Windows, you're out of luck right now. Help appreciated!
 
 #### On the Web
 
