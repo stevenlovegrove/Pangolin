@@ -90,7 +90,7 @@ cmake --build . -t pypangolin_wheel
 ctest
 ```
 
-![Master Build](https://github.com/stevenlovegrove/pangolin/actions/workflows/build.yml/badge.svg?branch=master) p.s. The *master* branch is an active development branch. Choose a [stable tag](https://github.com/stevenlovegrove/Pangolin/tags) if you prefer.
+![Master Build](https://github.com/stevenlovegrove/pangolin/actions/workflows/build.yml/badge.svg?branch=master) p.s. The *master* branch is a development branch. Choose a [stable tag](https://github.com/stevenlovegrove/Pangolin/tags) if you prefer.
 
 
 
@@ -106,23 +106,14 @@ You have to be careful about what python version Pangolin has found and is attem
 
 #### On the Web
 
-See **Emscripten (Compile for web)** below.
-
+See [**Emscripten (Compile for web)**](#emscripten-compile-for-web) below.
 
 
 ## Examples
 
-Pangolin is mostly documented through it's simple examples which you can find in the [*examples*](https://github.com/stevenlovegrove/Pangolin/tree/master/examples) folder and *[examples/PythonExamples](examples/PythonExamples)* for python versions. You can also browse and even interact with some online:
+Pangolin is mostly documented through it's simple examples which you can find in the [*examples*](https://github.com/stevenlovegrove/Pangolin/tree/master/examples) folder and [*examples/PythonExamples*](https://github.com/stevenlovegrove/Pangolin/tree/master/examples/PythonExamples) for python versions.
 
-###### Browse some online
-
-https://stevenlovegrove.github.io/Pangolin/examples/
-
-###### Run some in your browser! E.g.
-
-https://stevenlovegrove.github.io/Pangolin/emscripten/examples/SimplePlot/
-
-
+Browse some [**online**](https://stevenlovegrove.github.io/Pangolin/examples) and even run them in your browser, such as [**SimplePlot**](https://stevenlovegrove.github.io/Pangolin/emscripten/examples/SimplePlot), [**SimpleDisplay**](https://stevenlovegrove.github.io/Pangolin/emscripten/examples/SimpleDisplay/) and [**SimpleMultiDisplay**](https://stevenlovegrove.github.io/Pangolin/emscripten/examples/SimpleMultiDisplay/).
 
 ## Issues ##
 
