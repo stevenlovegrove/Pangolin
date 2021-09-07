@@ -82,9 +82,8 @@ mkdir build && cd build
 cmake ..
 cmake --build .
 
-# GIVEME THE PYTHON STUFF!!!!
-cmake --build . -t pypangolin_wheel
-# The cmake .. step tells you which python is being used, and the exact command to copy and paste for installing the pypangolin wheel.
+# GIVEME THE PYTHON STUFF!!!! (Check the output to verify selected python version)
+cmake --build . -t pypangolin_pip_install
 
 # Run me some tests!
 ctest
@@ -102,7 +101,9 @@ ctest
 
 You have to be careful about what python version Pangolin has found and is attempting to link against. It will tell you during the `cmake ..` step and you can change it by explicitly telling it the python executable with `cmake -DPYTHON_EXECUTABLE=/path/to/python ..`or ``cmake -DPYTHON_EXECUTABLE=`which python3` `` to use the python accessed through the `python3` alias.
 
-**NOTE** The python wheel is only currently working on MacOS and Linux. On Windows, you're out of luck right now. Help appreciated!
+If python is found, the pypangolin module will be built with the default `all` target. A Python wheel can be built manually using the `pypangolin_wheel` target, and the wheel can be installed / uninstalled with `pypangolin_pip_install` and `pypangolin_pip_uninstall` targets.
+
+**NOTE** The python wheel and install targets are only currently working on MacOS and Linux. On Windows, you're out of luck right now. Help appreciated!
 
 #### On the Web
 
