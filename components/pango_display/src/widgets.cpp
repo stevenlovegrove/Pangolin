@@ -388,6 +388,9 @@ void Checkbox::Render()
         glRect(vcb);
     }
     glColor4fv(colour_tx);
+    if(gltext.Text() != var->Meta().friendly) {
+        gltext = default_font().Text(var->Meta().friendly);
+    }
     DrawWindow(gltext, raster[0], raster[1]);
     DrawShadowRect(vcb, val);
 }
