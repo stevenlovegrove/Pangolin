@@ -185,7 +185,7 @@ struct PANGOLIN_EXPORT GlBufferData
 {
     //! Default constructor represents 'no buffer'
     GlBufferData();
-    GlBufferData(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse = GL_DYNAMIC_DRAW, const unsigned char* data = 0 );
+    GlBufferData(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse = GL_DYNAMIC_DRAW, const unsigned char* data = 0 );
     virtual ~GlBufferData();
     void Free();
 
@@ -195,9 +195,9 @@ struct PANGOLIN_EXPORT GlBufferData
 
     bool IsValid() const;
 
-    size_t SizeBytes() const;
+    GLsizeiptr SizeBytes() const;
     
-    void Reinitialise(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse = GL_DYNAMIC_DRAW, const unsigned char* data = 0 );
+    void Reinitialise(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse = GL_DYNAMIC_DRAW, const unsigned char* data = 0 );
     
     void Bind() const;
     void Unbind() const;
@@ -207,7 +207,7 @@ struct PANGOLIN_EXPORT GlBufferData
     GLuint bo;
     GlBufferType buffer_type;
     GLenum gluse;
-    GLuint size_bytes;
+    GLsizeiptr size_bytes;
 
 private:
     GlBufferData(const GlBufferData&) {}

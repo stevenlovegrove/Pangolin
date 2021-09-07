@@ -670,7 +670,7 @@ inline GlBufferData::GlBufferData()
 {
 }
 
-inline GlBufferData::GlBufferData(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse, const unsigned char* data )
+inline GlBufferData::GlBufferData(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse, const unsigned char* data )
     : bo(0)
 {
     Reinitialise(buffer_type, size_bytes, gluse, data );
@@ -710,12 +710,12 @@ inline bool GlBufferData::IsValid() const
     return bo != 0;
 }
 
-inline size_t GlBufferData::SizeBytes() const
+inline GLsizeiptr GlBufferData::SizeBytes() const
 {
     return size_bytes;
 }
 
-inline void GlBufferData::Reinitialise(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse, const unsigned char* data )
+inline void GlBufferData::Reinitialise(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse, const unsigned char* data )
 {
     if(!bo) {
         glGenBuffers(1, &bo);
