@@ -52,6 +52,9 @@ public:
     inline float Height() const {
         return font_height_px;
     }
+    inline float MaxWidth() const {
+        return font_max_width_px;
+    }
 
 protected:
     void InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h);
@@ -63,6 +66,7 @@ protected:
     const static int NUM_CHARS = 96;
 
     float font_height_px;
+    float font_max_width_px;
 
     int tex_w;
     int tex_h;

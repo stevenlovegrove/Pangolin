@@ -50,6 +50,8 @@
 
 #include "pangolin_gl.h"
 
+extern const unsigned char AnonymousPro_ttf[];
+
 namespace pangolin
 {
 
@@ -61,7 +63,6 @@ std::recursive_mutex contexts_mutex;
 
 // Context active for current thread
 __thread PangolinGl* context = 0;
-
 
 void SetCurrentContext(PangolinGl* newcontext) {
     context = newcontext;
@@ -96,13 +97,20 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
         win_uri.scheme = "default";
     }
 
-    // Allow params to override
-    win_uri.scheme = params.Get("scheme", win_uri.scheme);
-
     // Override with anything the program specified
     for(const auto& param : params.params) {
         if(param.first != "scheme") win_uri.params.push_back(param);
     }
+
+    // Special params that shouldn't get passed to window factory
+    win_uri.scheme = win_uri.Get("scheme", win_uri.scheme);
+    const std::string default_font = win_uri.Get<std::string>("default_font","");
+    const int default_font_size = win_uri.Get("default_font_size", 18);
+    win_uri.Remove("scheme");
+    win_uri.Remove("default_font");
+    win_uri.Remove("default_font_size");
+
+    // Additional arguments we will send to factory
     win_uri.Set("w", w);
     win_uri.Set("h", h);
     win_uri.Set("window_title", window_title);
@@ -134,6 +142,14 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     context->window->SpecialInputSignal.connect( [](SpecialInputEvent event){
         process::SpecialInput(event.inType, event.x, event.y, event.p[0], event.p[1], event.p[2], event.p[3], event.key_modifiers);
     });
+
+    // If there is a special font request
+    if( !default_font.empty() ) {
+        const std::string font_filename = PathExpand(default_font);
+        context->font = std::make_shared<GlFont>(font_filename, default_font_size);
+    }else{
+        context->font = std::make_shared<GlFont>(AnonymousPro_ttf, default_font_size);
+    }
 
     context->MakeCurrent();
     glewInit();

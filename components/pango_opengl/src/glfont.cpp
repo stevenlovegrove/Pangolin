@@ -66,13 +66,18 @@ GlFont::GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, i
 
 GlFont::GlFont(const std::string& filename, float pixel_height, int tex_w, int tex_h)
 {
+    using namespace std::string_literals;
+
     unsigned char* ttf_buffer = new unsigned char[1<<20];
-    const size_t bytes_read = fread(ttf_buffer, 1, 1<<20, fopen(filename.c_str(), "rb"));
-    if(bytes_read > 0) {
-        InitialiseFont(ttf_buffer, pixel_height, tex_w, tex_h);
-    }else{
-        throw std::runtime_error("Unable to read font from file.");
-    }
+    FILE* font_file = fopen(filename.c_str(), "rb");
+    if(!font_file)
+        throw std::runtime_error("Unable to open file: "s + filename);
+
+    const size_t bytes_read = fread(ttf_buffer, 1, 1<<20, font_file);
+    if(!bytes_read)
+        throw std::runtime_error("Unable to read font from file: "s + filename);
+
+    InitialiseFont(ttf_buffer, pixel_height, tex_w, tex_h);
     delete[] ttf_buffer;
 }
 
@@ -84,6 +89,8 @@ GlFont::~GlFont()
 void GlFont::InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h)
 {
     font_height_px = pixel_height;
+    font_max_width_px = 0;
+
     this->tex_w = tex_w;
     this->tex_h = tex_h;
     font_bitmap = new unsigned char[tex_w*tex_h];
@@ -109,6 +116,8 @@ void GlFont::InitialiseFont(const unsigned char* ttf_buffer, float pixel_height,
        stbtt_GetGlyphBitmapBox(&f, g, scale,scale, &x0,&y0,&x1,&y1);
        gw = x1-x0;
        gh = y1-y0;
+       font_max_width_px = std::max(font_max_width_px, (float)gw);
+
        if (x + gw + 1 >= tex_w)
           y = bottom_y, x = 1; // advance to next row
        if (y + gh + 1 >= tex_h) // check if it fits vertically AFTER potentially moving to next row

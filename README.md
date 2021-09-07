@@ -164,14 +164,38 @@ Windowing in Pangolin is also backed by a factory. When an application calls Cre
 
 
 ```bash
-# Use the X11 Window Driver and override the default window size
-PANGOLIN_WINDOW_URI="x11:[width=1024,height=768]//" ./some_pangolin_app
+# Use the X11 Window Driver and override the default double buffered option
+PANGOLIN_WINDOW_URI="x11:[double_buffered=false]//" ./some_pangolin_app
 
 # Create a 'virtual' window using a framebuffer
 PANGOLIN_WINDOW_URI="headless://" ./another_pangolin_app
 ```
 
 Some window parameters that may be interesting to override are `DISPLAYNAME`, `DOUBLEBUFFER`, `SAMPLE_BUFFERS`, `SAMPLES`, `HIGHRES`. Window modules currently include `x11`, `winapi`, `cocoa`.
+
+#### Fonts
+
+Additionally, there are a couple of special parameters that can be passed through the `PANGOLIN_WINDOW_URI` environment variable to change the default font or adjust the default font size:
+
+```bash
+PANGOLIN_WINDOW_URI="default:[default_font_size=20]//" ./some_pangolin_app
+
+PANGOLIN_WINDOW_URI="default:[default_font=my_awesome_font.ttf,default_font_size=20]//" ./some_pangolin_app
+```
+
+To use Pangolin in your applications whilst being conciencious of chaning fonts, you can query how long fonts or text are with:
+
+```C++
+#include <pangolin/display/default_font.h>
+int func()
+{
+    // E.g. Choose sensible size for Pangolin Panel
+    const int PANEL_WIDTH = 20* pangolin::default_font().MaxWidth();
+    ...
+    // E.g. Work out some column width etc.
+    const int COL_WIDTH = pangolin::default_font().Text("How big is this text?").Width();
+}
+```
 
 
 

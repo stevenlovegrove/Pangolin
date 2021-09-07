@@ -32,13 +32,18 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 namespace pangolin
 {
 
 struct PANGOLIN_EXPORT Params
 {
-    typedef std::vector<std::pair<std::string,std::string>> ParamMap;
+    // Why not an actual map here?
+    // Well, in some drivers (notably USB3Vision based drivers) order
+    // matters, sometimes with duplicate keys.
+    typedef std::pair<std::string,std::string> KeyValue;
+    typedef std::vector<KeyValue> ParamMap;
 
     Params()
     {
@@ -49,6 +54,7 @@ struct PANGOLIN_EXPORT Params
     {
     }
 
+    // \returns true iff any entry has the key \param key
     bool Contains(const std::string& key) const
     {
         for(ParamMap::const_iterator it = params.begin(); it!=params.end(); ++it) {
@@ -57,6 +63,8 @@ struct PANGOLIN_EXPORT Params
         return false;
     }
 
+    // \returns the value of the last entry with key \param key
+    //          or \param default_val if no such entry exists
     template<typename T>
     T Get(const std::string& key, T default_val) const
     {
@@ -67,10 +75,20 @@ struct PANGOLIN_EXPORT Params
         return default_val;
     }
 
+    // Adds a new entry with key \param key and value \param val to the end of the parameters list
+    // note: Any existing entry with key \param key will remain, but be overriden users with map-semantics.
     template<typename T>
     void Set(const std::string& key, const T& val)
     {
         params.push_back(std::pair<std::string,std::string>(key,Convert<std::string,T>::Do(val)));
+    }
+
+    // Remove all entries with key \param key
+    void Remove(const std::string& key)
+    {
+        params.erase(std::remove_if(params.begin(), params.end(), [&key](const KeyValue& kv){
+            return kv.first == key;
+        }), params.end());
     }
 
     ParamMap params;

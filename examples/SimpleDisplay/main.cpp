@@ -1,13 +1,14 @@
 #include <iostream>
 
-#include <pangolin/display/display.h>
-#include <pangolin/display/view.h>
-#include <pangolin/display/widgets.h>
-#include <pangolin/handler/handler.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/gldraw.h>
+#include <pangolin/display/display.h>
+#include <pangolin/display/view.h>
+#include <pangolin/display/widgets.h>
+#include <pangolin/display/default_font.h>
+#include <pangolin/handler/handler.h>
 
 int main(/*int argc, char* argv[]*/)
 {  
@@ -23,7 +24,9 @@ int main(/*int argc, char* argv[]*/)
     pangolin::ModelViewLookAt(-0,0.5,-3, 0,0,0, pangolin::AxisY)
   );
 
-  const int UI_WIDTH = 180;
+  // Choose a sensible left UI Panel width based on the width of 20
+  // charectors from the default font.
+  const int UI_WIDTH = 20* pangolin::default_font().MaxWidth();
 
   // Add named OpenGL viewport to window and provide 3D Handler
   pangolin::View& d_cam = pangolin::CreateDisplay()
