@@ -29,6 +29,7 @@
 #include <pangolin/gl/glstate.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/utils/type_convert.h>
+#include <pangolin/utils/file_utils.h>
 
 #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
 #include <pangolin/gl/glsl.h>
@@ -66,19 +67,8 @@ GlFont::GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, i
 
 GlFont::GlFont(const std::string& filename, float pixel_height, int tex_w, int tex_h)
 {
-    using namespace std::string_literals;
-
-    unsigned char* ttf_buffer = new unsigned char[1<<20];
-    FILE* font_file = fopen(filename.c_str(), "rb");
-    if(!font_file)
-        throw std::runtime_error("Unable to open file: "s + filename);
-
-    const size_t bytes_read = fread(ttf_buffer, 1, 1<<20, font_file);
-    if(!bytes_read)
-        throw std::runtime_error("Unable to read font from file: "s + filename);
-
-    InitialiseFont(ttf_buffer, pixel_height, tex_w, tex_h);
-    delete[] ttf_buffer;
+    const std::string file_contents = GetFileContents(filename);
+    InitialiseFont(reinterpret_cast<const unsigned char*>(file_contents.data()), pixel_height, tex_w, tex_h);
 }
 
 GlFont::~GlFont()
@@ -98,7 +88,7 @@ void GlFont::InitialiseFont(const unsigned char* ttf_buffer, float pixel_height,
 
     stbtt_fontinfo f;
     if (!stbtt_InitFont(&f, ttf_buffer, offset)) {
-       throw std::runtime_error("Unable to initialise font");
+       throw std::runtime_error("Unable to initialise font: stbtt_InitFont failed.");
     }
 
     float scale = stbtt_ScaleForPixelHeight(&f, pixel_height);
@@ -121,7 +111,7 @@ void GlFont::InitialiseFont(const unsigned char* ttf_buffer, float pixel_height,
        if (x + gw + 1 >= tex_w)
           y = bottom_y, x = 1; // advance to next row
        if (y + gh + 1 >= tex_h) // check if it fits vertically AFTER potentially moving to next row
-          throw std::runtime_error("Unable to initialise font");
+          throw std::runtime_error("Unable to initialise font: run out of texture pixel space.");
        STBTT_assert(x+gw < tex_w);
        STBTT_assert(y+gh < tex_h);
        stbtt_MakeGlyphBitmap(&f, font_bitmap+x+y*tex_w, gw,gh,tex_w, scale,scale, g);
