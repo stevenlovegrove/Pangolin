@@ -1,12 +1,4 @@
 #pragma once
 
-#include <signals/signals.hpp>
+#include <sigslot/signal.hpp>
 
-namespace pangolin {
-
-template<typename ... A>
-using Signal= fteng::signal<A...>;
-
-using Connection = fteng::connection;
-
-}

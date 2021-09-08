@@ -99,7 +99,7 @@ protected:
     picojson::value _frame_properties;
     std::string _source_uri;
 
-    Connection session_seek;
+    sigslot::scoped_connection session_seek;
 };
 
 }

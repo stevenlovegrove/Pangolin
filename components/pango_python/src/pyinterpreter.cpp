@@ -37,19 +37,20 @@ namespace py = pybind11;
 namespace pangolin
 {
 
-void PyInterpreter::AttachPrefix(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& /*var*/, bool /*brand_new*/ )
+void  PyInterpreter::NewVarCallback(const pangolin::VarState::Event& e)
 {
-    PyInterpreter* self = (PyInterpreter*)data;
-
-    const size_t dot = name.find_first_of('.');
-    if(dot != std::string::npos) {
-        const std::string base_prefix = name.substr(0,dot);
-        if( self->base_prefixes.find(base_prefix) == self->base_prefixes.end() ) {
-            self->base_prefixes.insert(base_prefix);
-            std::string cmd =
-                base_prefix + std::string(" = pypangolin.Var('") +
-                base_prefix + std::string("')\n");
-            PyRun_SimpleString(cmd.c_str());
+    if(e.action == VarState::Event::Action::Added) {
+        const std::string name = e.var->Meta().full_name;
+        const size_t dot = name.find_first_of('.');
+        if(dot != std::string::npos) {
+            const std::string base_prefix = name.substr(0,dot);
+            if( base_prefixes.find(base_prefix) == base_prefixes.end() ) {
+                base_prefixes.insert(base_prefix);
+                std::string cmd =
+                    base_prefix + std::string(" = pypangolin.Var('") +
+                    base_prefix + std::string("')\n");
+                PyRun_SimpleString(cmd.c_str());
+            }
         }
     }
 }
@@ -66,8 +67,6 @@ PyInterpreter::PyInterpreter()
         PyPangoIO* wrap_stderr = new PyPangoIO(line_queue, ConsoleLineTypeStderr);
         sys.add_object("stdout", py::cast(wrap_stdout), true);
         sys.add_object("stderr", py::cast(wrap_stderr), true);
-        // PyModule_AddObject(sys.ptr(), "stdout", py::cast(wrap_stdout).ptr());
-        // PyModule_AddObject(sys.ptr(), "stderr", py::cast(wrap_stderr).ptr());
      } else {
          pango_print_error("Couldn't import module sys.\n");
      }
@@ -89,9 +88,11 @@ PyInterpreter::PyInterpreter()
      pycompleter = pypangolin.attr("completer");
      pycomplete  = pycompleter.attr("complete");
 
-     // Hook namespace prefixes into Python
-     RegisterNewVarCallback(&PyInterpreter::AttachPrefix, (void*)this, "");
-     ProcessHistoricCallbacks(&PyInterpreter::AttachPrefix, (void*)this, "");
+     // Register for notifications on var additions
+     var_added_connection = VarState::I().RegisterForVarEvents(
+         std::bind(&PyInterpreter::NewVarCallback,this,std::placeholders::_1),
+         true
+     );
 
      CheckPrintClearError();
 

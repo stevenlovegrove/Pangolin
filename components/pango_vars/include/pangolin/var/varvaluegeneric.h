@@ -28,8 +28,9 @@
 #pragma once
 
 #include <string>
-#include <pangolin/utils/file_utils.h>
 #include <memory>
+#include <cmath>
+#include <pangolin/utils/file_utils.h>
 
 namespace pangolin
 {

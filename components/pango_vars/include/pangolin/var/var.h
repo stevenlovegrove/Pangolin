@@ -40,133 +40,34 @@ namespace pangolin
 {
 
 template<typename T>
-inline void InitialiseNewVarMeta(
-    std::shared_ptr<VarValue<T>>& v, const std::string& name
-) {
-    v->Meta().SetName(name);
-
-    if (std::is_integral<T>::value) {
-        v->Meta().increment = 1.0;
-    } else {
-        v->Meta().increment = (v->Meta().range[1] - v->Meta().range[0]) / 100.0;
-    }
-
-    VarState::I().NotifyNewVar<T>(name, v);
-
-}
-
-template<typename T>
-inline void InitialiseNewVarMetaGeneric(
-    std::shared_ptr<VarValue<T>>& v, const std::string& name
-) {
-    v->Meta().generic = true;
-    InitialiseNewVarMeta(v, name);
-}
-
-template <typename T, typename S>
-typename std::enable_if<is_streamable<S>::value && is_streamable<T>::value, std::shared_ptr<VarValueT<T>>>::type
-Wrapped(const std::shared_ptr<VarValueT<S>>& src) noexcept
-{
-    return std::make_shared<VarWrapper<T,S>>(src);
-}
-
-template <typename T, typename S>
-typename std::enable_if<!(is_streamable<S>::value && is_streamable<T>::value), std::shared_ptr<VarValueT<T>>>::type
-Wrapped(const std::shared_ptr<VarValueT<S>>&)
-{
-    throw std::runtime_error("Unable to wrap Var");
-}
-
-template<typename T>
-typename std::enable_if<!is_streamable<T>::value, std::shared_ptr<VarValue<T>>>::type
-InitialiseFromPreviouslyGenericVar(const std::shared_ptr<VarValueGeneric>& v)
-{
-    // We can't initialize this variable from a 'generic' string type.
-    throw BadInputException();
-}
-template<typename T>
-typename std::enable_if<is_streamable<T>::value, std::shared_ptr<VarValue<T>>>::type
-InitialiseFromPreviouslyGenericVar(const std::shared_ptr<VarValueGeneric>& v)
-{
-    return std::make_shared<VarValue<T>>( Convert<T,std::string>::Do( v->str->Get() ) );
-}
-
-
-
-// Initialise from existing variable, obtain data / accessor
-template<typename T>
-std::shared_ptr<VarValueT<T>> InitialiseFromPreviouslyTypedVar(const std::shared_ptr<VarValueGeneric>& v)
-{
-    // Macro hack to prevent code duplication
-#   define PANGO_VAR_TYPES(x)                            \
-    x(bool) x(int8_t) x(uint8_t) x(int16_t) x(uint16_t)  \
-    x(int32_t) x(uint32_t) x(int64_t) x(uint64_t)        \
-    x(float) x(double)
-
-    if( !strcmp(v->TypeId(), typeid(T).name()) ) {
-        // Same type
-        return std::dynamic_pointer_cast<VarValueT<T>>(v);
-    }else if( std::is_same<T,std::string>::value ) {
-        // Use types string accessor
-        return std::dynamic_pointer_cast<VarValueT<T>>(v->str);
-    }else
-#       define PANGO_CHECK_WRAP(x)                                                       \
-    if( !strcmp(v->TypeId(), typeid(x).name() ) ) {                                      \
-        std::shared_ptr<VarValueT<x>> xval = std::dynamic_pointer_cast<VarValueT<x>>(v); \
-        return Wrapped<T,x>(xval);                                                       \
-    }else
-    PANGO_VAR_TYPES(PANGO_CHECK_WRAP)
-    {
-        // other types: have to go via string
-        // Wrapper, owned by this object
-        return Wrapped<T,std::string>(v->str);
-    }
-#undef PANGO_VAR_TYPES
-#undef PANGO_CHECK_WRAP
-}
-
-template<typename T>
 class Var
 {
 public:
-    static T& Attach(
-        const std::string& name, T& variable, const VarMeta& meta = VarMeta()
-    ) {
-        // Find name in VarStore
-        std::shared_ptr<VarValueGeneric>& v = VarState::I()[name];
-        if(v) {
-            VarValueT<T>* tval = dynamic_cast<VarValue<T>*>(v.get());
-            if(tval && &tval->Get() == &variable) {
-                // Attaching the same variable twice with same name, ignore
-            }else{
-                // Same name, different variable
-                throw std::runtime_error("Different Var with that name already exists.");
-            }
-        }else{
-            // New reference Var owned by var store
-            auto nv = std::make_shared<VarValue<T&>>(variable);
-            v = nv;
-            v->Meta() = meta;
-            InitialiseNewVarMeta<T&>(nv, name);
-        }
+    static T& Attach( T& variable, const VarMeta& meta ) {
+        VarState::I().AttachVar<T&>(variable,meta);
         return variable;
+    }
+
+    static T& Attach( const std::string& name, T& variable )
+    {
+        return Attach(variable, VarMeta(name));
     }
 
     static T& Attach(
         const std::string& name, T& variable,
         double min, double max, bool logscale = false
     ) {
-        return Attach(name, variable, VarMeta(name, min, max, 0.0, META_FLAG_NONE, logscale));
+        return Attach(variable, VarMeta(name, min, max, DefaultIncrementForType<T>(min,max), META_FLAG_NONE, logscale));
     }
 
     static T& Attach( const std::string& name, T& variable, int flags )
     {
-        return Attach(name, variable, VarMeta(name, 0., 0., 0., flags) );
+        return Attach(variable, VarMeta(name, 0., 0., 0., flags) );
     }
 
     static T& Attach( const std::string& name, T& variable, bool toggle )
     {
-        return Attach(name, variable, VarMeta(name, 0., 0., 0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE) );
+        return Attach(variable, VarMeta(name, 0., 0., 0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE) );
     }
 
     ~Var()
@@ -174,53 +75,44 @@ public:
     }
 
     Var( const std::shared_ptr<VarValueGeneric>& v )
+        : var(InitialiseFromPreviouslyTypedVar<T>(v))
     {
-        var = InitialiseFromPreviouslyTypedVar<T>(v);
     }
 
-    Var( const std::string& name, const T& value = T(), const VarMeta& meta = VarMeta() )
+    Var( const T& value, const VarMeta& meta )
+        : var(InitialiseFromPreviouslyTypedVar<T>(VarState::I().GetOrCreateVar<T>(value, meta)))
     {
-        // Find name in VarStore
-        std::shared_ptr<VarValueGeneric>& v = VarState::I()[name];
-        if(v && !v->Meta().generic) {
-            var = InitialiseFromPreviouslyTypedVar<T>(v);
-        }else{
-            std::shared_ptr<VarValue<T>> nv;
-            if(v && v->Meta().generic) {
-                // Specialise generic variable (which has previously just been a string)
-                nv = InitialiseFromPreviouslyGenericVar<T>(v);
-            }else{
-                // Create brand new variable
-                nv = std::make_shared<VarValue<T>>( value );
-            }
-            // Create / replace in VarState and set meta data
-            v = var = nv;
-            nv->Meta() = meta;
-            InitialiseNewVarMeta(nv, name);
-        }
+    }
+
+    Var( const std::string& name, const T& value = T() )
+        : Var(value, VarMeta(name))
+    {
     }
 
     Var(const std::string& name, const T& value, int flags)
-        : Var(name, value, VarMeta(name, 0., 0.,0., flags))
+        : Var(value, VarMeta(name, 0., 0.,0., flags))
     {
     }
 
     Var(const std::string& name, const T& value, bool toggle)
-        : Var(name, value, VarMeta(name, 0., 0.,0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE))
+        : Var(value, VarMeta(name, 0., 0.,0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE))
     {
     }
 
-    Var(
-        const std::string& name, const T& value,
-        double min, double max, bool logscale = false
-    )
-        : Var(name, value, VarMeta(name, min, max, 0., META_FLAG_NONE, logscale))
+    Var(const std::string& name, const T& value,
+        double min, double max, bool logscale = false)
+        : Var(value, VarMeta(name, min, max, DefaultIncrementForType<T>(min,max), META_FLAG_NONE, logscale))
     {
     }
 
     void Reset()
     {
         var->Reset();
+    }
+
+    void Detach()
+    {
+        VarState::I().Remove(Meta().full_name);
     }
 
     const T& Get() const
@@ -238,14 +130,16 @@ public:
         return &(var->Get());
     }
 
-    void operator=(const T& val)
+    Var<T>& operator=(const T& val)
     {
         var->Set(val);
+        return *this;
     }
 
-    void operator=(const Var<T>& v)
+    Var<T>& operator=(const Var<T>& v)
     {
         var->Set(v.var->Get());
+        return *this;
     }
 
     VarMeta& Meta()
@@ -255,11 +149,7 @@ public:
 
     bool GuiChanged()
     {
-        if(var->Meta().gui_changed) {
-            var->Meta().gui_changed = false;
-            return true;
-        }
-        return false;
+        return Meta().gui_changed && !(Meta().gui_changed = false);
     }
 
     std::shared_ptr<VarValueT<T>> Ref()
@@ -272,11 +162,11 @@ public:
     mutable std::shared_ptr<VarValueT<T>> var;
 };
 
-// Just forward to the static method
-template<typename T, typename... Ts>
-inline T& AttachVar(std::string& name, T& var, Ts... ts)
+template<typename T>
+inline std::ostream& operator<<(std::ostream& s, Var<T>& rhs)
 {
-    Var<T>::Attach(name, var, ts...);
+    s << rhs.operator const T &();
+    return s;
 }
 
 }

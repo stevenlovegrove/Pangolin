@@ -52,9 +52,9 @@ public:
         const std::string& cmd, int max_options
     ) override;
 
-    static void AttachPrefix(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& var, bool brand_new );
-
 private:
+    void  NewVarCallback(const pangolin::VarState::Event& e);
+
     pybind11::scoped_interpreter guard;
 
     pybind11::object pycompleter;
@@ -66,6 +66,7 @@ private:
 
     std::queue<InterpreterLine> line_queue;
     std::set<std::string> base_prefixes;
+    sigslot::scoped_connection var_added_connection;
 };
 
 }

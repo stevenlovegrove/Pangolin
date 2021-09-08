@@ -64,13 +64,13 @@ ConsoleView::ConsoleView(const std::shared_ptr<InterpreterInterface> &interprete
     line_colours[ConsoleLineTypeStdout]     = Colour(0.0f,0.0f,1.0f,1.0f);
     line_colours[ConsoleLineTypeStderr]     = Colour(1.0f,0.8f,0.8f,1.0f);
 
-    Var<Colour>::Attach("pangolin.console.colours.Background", background_colour);
-    Var<Colour>::Attach("pangolin.console.colours.Cmd",        line_colours[ConsoleLineTypeCmd]);
-    Var<Colour>::Attach("pangolin.console.colours.CmdOptions", line_colours[ConsoleLineTypeCmdOptions]);
-    Var<Colour>::Attach("pangolin.console.colours.Stdout",     line_colours[ConsoleLineTypeStdout]);
-    Var<Colour>::Attach("pangolin.console.colours.Stderr",     line_colours[ConsoleLineTypeStderr]);
-    Var<Colour>::Attach("pangolin.console.colours.Output",     line_colours[ConsoleLineTypeOutput]);
-    Var<Colour>::Attach("pangolin.console.colours.Help",       line_colours[ConsoleLineTypeHelp]);
+    Var<Colour>::Attach("pango.console.colours.Background", background_colour);
+    Var<Colour>::Attach("pango.console.colours.Cmd",        line_colours[ConsoleLineTypeCmd]);
+    Var<Colour>::Attach("pango.console.colours.CmdOptions", line_colours[ConsoleLineTypeCmdOptions]);
+    Var<Colour>::Attach("pango.console.colours.Stdout",     line_colours[ConsoleLineTypeStdout]);
+    Var<Colour>::Attach("pango.console.colours.Stderr",     line_colours[ConsoleLineTypeStderr]);
+    Var<Colour>::Attach("pango.console.colours.Output",     line_colours[ConsoleLineTypeOutput]);
+    Var<Colour>::Attach("pango.console.colours.Help",       line_colours[ConsoleLineTypeHelp]);
 
     Var<float>::Attach("pango.console.animation_speed", animation_speed);
 

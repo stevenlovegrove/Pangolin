@@ -120,13 +120,13 @@ public:
     /// to the back buffer.
     virtual void SwapBuffers() = 0;
 
-    Signal<void()>                    CloseSignal;
-    Signal<void(WindowResizeEvent)>   ResizeSignal;
-    Signal<void(KeyboardEvent)> KeyboardSignal;
-    Signal<void(MouseEvent)>    MouseSignal;
-    Signal<void(MouseMotionEvent)> MouseMotionSignal;
-    Signal<void(MouseMotionEvent)> PassiveMouseMotionSignal;
-    Signal<void(SpecialInputEvent)> SpecialInputSignal;
+    sigslot::signal<>                    CloseSignal;
+    sigslot::signal<WindowResizeEvent>   ResizeSignal;
+    sigslot::signal<KeyboardEvent> KeyboardSignal;
+    sigslot::signal<MouseEvent>    MouseSignal;
+    sigslot::signal<MouseMotionEvent> MouseMotionSignal;
+    sigslot::signal<MouseMotionEvent> PassiveMouseMotionSignal;
+    sigslot::signal<SpecialInputEvent> SpecialInputSignal;
 };
 
 //! Open Window Interface from Uri specification

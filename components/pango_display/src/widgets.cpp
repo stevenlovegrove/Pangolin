@@ -42,8 +42,6 @@
 
 using namespace std;
 
-extern const unsigned char AnonymousPro_ttf[];
-
 namespace pangolin
 {
 
@@ -53,6 +51,9 @@ const static GLfloat colour_bg[4] = {0.9f, 0.9f, 0.9f, 1.0f};
 const static GLfloat colour_fg[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 const static GLfloat colour_tx[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 const static GLfloat colour_dn[4] = {1.0f, 0.7f, 0.7f, 1.0f};
+
+// TODO: It doesn't look like this is doing anything meaningful right now...
+std::mutex display_mutex;
 
 // Render at (x,y) in window coordinates.
 inline void DrawWindow(GlText& text, GLfloat x, GLfloat y, GLfloat z = 0.0)
@@ -96,19 +97,11 @@ static inline float x_width()
   return default_font().Text("x").Width();
 }
 
-std::mutex display_mutex;
-
 template<typename T>
-void GuiVarChanged( Var<T>& var)
+inline void MarkVarChangedByGui(VarValueT<T>& var)
 {
-    VarState::I().FlagVarChanged();
     var.Meta().gui_changed = true;
-
-    for(std::vector<GuiVarChangedCallback>::iterator igvc = VarState::I().gui_var_changed_callbacks.begin(); igvc != VarState::I().gui_var_changed_callbacks.end(); ++igvc) {
-        if( StartsWith(var.Meta().full_name, igvc->filter) ) {
-           igvc->fn( igvc->data, var.Meta().full_name, var.Ref() );
-        }
-    }
+    FlagVarChanged();
 }
 
 void glLine(GLfloat vs[4])
@@ -172,17 +165,36 @@ Panel::Panel()
 }
 
 Panel::Panel(const std::string& auto_register_var_prefix)
+    : auto_register_var_prefix(auto_register_var_prefix)
 {
     handler = &StaticHandlerScroll;
     layout = LayoutVertical;
-    RegisterNewVarCallback(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
-    ProcessHistoricCallbacks(&Panel::AddVariable,(void*)this,auto_register_var_prefix);
+
+    // Register for notifications on var additions
+    var_added_connection = VarState::I().RegisterForVarEvents(
+        std::bind(&Panel::NewVarCallback,this,std::placeholders::_1),
+        true
+    );
 }
 
-void Panel::AddVariable(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& var, bool /*brand_new*/)
+void Panel::NewVarCallback(const VarState::Event& e)
 {
-    Panel* thisptr = (Panel*)data;
-    
+    const std::string name = e.var->Meta().full_name;
+    if(!StartsWith(name, auto_register_var_prefix))
+        return;
+
+    switch(e.action) {
+    case VarState::Event::Action::Added:
+        AddVariable(name, e.var);
+        break;
+    case VarState::Event::Action::Removed:
+        RemoveVariable(name);
+        break;
+    }
+}
+
+void Panel::AddVariable(const std::string& name, const std::shared_ptr<VarValueGeneric>& var)
+{
     const string& title = var->Meta().friendly;
     
     display_mutex.lock();
@@ -215,9 +227,26 @@ void Panel::AddVariable(void* data, const std::string& name, const std::shared_p
         }
         if(nv) {
             GetCurrentContext()->named_managed_views[name] = nv;
-            thisptr->views.push_back( nv );
-            thisptr->ResizeChildren();
+            views.push_back( nv );
+            ResizeChildren();
         }
+    }
+
+    display_mutex.unlock();
+}
+
+void Panel::RemoveVariable(const std::string& name)
+{
+    display_mutex.lock();
+
+    ViewMap::iterator pnl = GetCurrentContext()->named_managed_views.find(name);
+
+    if( pnl != GetCurrentContext()->named_managed_views.end() ) {
+      views.erase(std::remove(views.begin(), views.end(), pnl->second), views.end());
+      ResizeChildren();
+
+      delete pnl->second;
+      GetCurrentContext()->named_managed_views.erase(pnl);
     }
 
     display_mutex.unlock();
@@ -287,7 +316,7 @@ void Button::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool pressed
         down = pressed;
         if( !pressed ) {
             var->Set(!var->Get());
-            GuiVarChanged(*this);
+            MarkVarChangedByGui(*var);
         }
     }
 }
@@ -327,7 +356,7 @@ void FunctionButton::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool
         down = pressed;
         if (!pressed) {
             var->Get()();
-            GuiVarChanged(*this);
+            MarkVarChangedByGui(*var);
         }
     }
 }
@@ -365,7 +394,7 @@ void Checkbox::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool press
 {
     if( button == MouseButtonLeft && pressed ) {
         var->Set(!var->Get());
-        GuiVarChanged(*this);
+        MarkVarChangedByGui(*var);
     }
 }
 
@@ -434,12 +463,13 @@ void Slider::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool press
             if (key == '+') inc *=  0.1;
             const double newval = max(var->Meta().range[0], min(var->Meta().range[1], val + inc));
             var->Set( logscale ? exp(newval) : newval );
+            MarkVarChangedByGui(*var);
         }else if(key == 'r'){
             Reset();
+            MarkVarChangedByGui(*var);
         }else{
             return;
         }
-        GuiVarChanged(*this);
     }
 }
 
@@ -505,7 +535,7 @@ void Slider::MouseMotion(View&, int x, int /*y*/, int /*mouse_state*/)
         }
 
         var->Set(val);
-        GuiVarChanged(*this);
+        MarkVarChangedByGui(*var);
     }
 }
 
@@ -572,7 +602,7 @@ void TextInput::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pr
         if(key == 13)
         {
             var->Set(edit);
-            GuiVarChanged(*this);
+            MarkVarChangedByGui(*var);
 
             do_edit = false;
             sel[0] = sel[1] = -1;

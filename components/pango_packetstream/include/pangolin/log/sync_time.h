@@ -180,11 +180,11 @@ public:
         Start();
     }
 
-    Signal<void(void)> OnTimeStart;
+    sigslot::signal<> OnTimeStart;
 
-    Signal<void(void)> OnTimeStop;
+    sigslot::signal<> OnTimeStop;
 
-    Signal<void(TimePoint)> OnSeek;
+    sigslot::signal<TimePoint> OnSeek;
 
 private:
     template< typename T, typename Pred >

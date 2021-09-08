@@ -43,10 +43,12 @@ namespace py_pangolin {
 
   void bind_var(pybind11::module& m);
   
+  // This class exposes Pangolin top-level Var namespaces to
+  // Python.
   class var_t
   {
   public:
-    var_t(const std::string& ns);
+    var_t(const std::string& top_level_ns);
     virtual ~var_t() noexcept;
     pybind11::object get_attr(const std::string &name);
 
@@ -60,8 +62,11 @@ namespace py_pangolin {
     var_t& operator=(const var_t &other);
     var_t& operator=(var_t &&other) noexcept;
   private:
+    void new_var_callback(const pangolin::VarState::Event &);
+
     std::vector<std::string> members;
-    std::string ns;
+    std::string namespace_prefix;
+    sigslot::scoped_connection var_callback_connection;
   };
   
 }  // py_pangolin

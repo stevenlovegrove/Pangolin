@@ -32,12 +32,35 @@
 
 namespace py_pangolin {
 
-var_t::var_t(const std::string& ns_){
-  if(ns_==""){
-    throw std::invalid_argument("not support empty argument");
-  }
-  ns=ns_+".";
+var_t::var_t(const std::string& top_level_ns){
+   if( top_level_ns=="" || top_level_ns.find_first_of('.') != std::string::npos ) {
+       throw std::invalid_argument("Expected top level namespace name, got '" + top_level_ns + "'");
+   }
+
+  namespace_prefix=top_level_ns+".";
+
+  // Callback function to populate sub-namespaces
+  var_callback_connection = pangolin::VarState::I().RegisterForVarEvents(
+      std::bind(&var_t::new_var_callback,this,std::placeholders::_1),
+      true
+  );
 }
+
+void  var_t::new_var_callback(const pangolin::VarState::Event& e)
+{
+    if(e.action == pangolin::VarState::Event::Action::Added) {
+        const int namespace_size = namespace_prefix.size();
+        const std::string name = e.var->Meta().full_name;
+        if (!name.compare(0, namespace_size, namespace_prefix)) {
+            const size_t dot = name.find_first_of('.', namespace_size);
+            members.push_back(
+                        (dot != std::string::npos) ? name.substr(namespace_size, dot - namespace_size) :
+                                                     name.substr(namespace_size)
+                                                     );
+        }
+    }
+}
+
   
 var_t::~var_t() noexcept{}
 
@@ -54,61 +77,52 @@ var_t& var_t::operator=(var_t &&/*other*/) noexcept{
 }
 
 pybind11::object var_t::get_attr(const std::string &name){
-  pangolin::VarState::VarStoreContainer::iterator i = pangolin::VarState::I().vars.find(ns+name);
-  if (i != pangolin::VarState::I().vars.end()) {
-    const std::shared_ptr<pangolin::VarValueGeneric>& var = i->second;
-    if (!strcmp(var->TypeId(), typeid(bool).name())) {
-      const bool val = pangolin::Var<bool>(var).Get();
-      return pybind11::bool_(val);
-    } else if (!strcmp(var->TypeId(), typeid(short).name()) ||
-               !strcmp(var->TypeId(), typeid(int).name()) ||
-               !strcmp(var->TypeId(), typeid(long).name())) {
-      const long val = pangolin::Var<long>(var).Get();
-      return pybind11::int_(val);
-    } else if (!strcmp(var->TypeId(), typeid(double).name()) ||
-                !strcmp(var->TypeId(), typeid(float).name())) {
-      const double val = pangolin::Var<double>(var).Get();
-      return pybind11::float_(val);
-    } else {
-      const std::string val = var->str->Get();
-      return pybind11::str(val);
+    const std::shared_ptr<pangolin::VarValueGeneric> var = pangolin::VarState::I().GetByName(namespace_prefix+name);
+    if(var) {
+        if (!strcmp(var->TypeId(), typeid(bool).name())) {
+            const bool val = pangolin::Var<bool>(var).Get();
+            return pybind11::bool_(val);
+        } else if (!strcmp(var->TypeId(), typeid(short).name()) ||
+                   !strcmp(var->TypeId(), typeid(int).name()) ||
+                   !strcmp(var->TypeId(), typeid(long).name())) {
+            const long val = pangolin::Var<long>(var).Get();
+            return pybind11::int_(val);
+        } else if (!strcmp(var->TypeId(), typeid(double).name()) ||
+                   !strcmp(var->TypeId(), typeid(float).name())) {
+            const double val = pangolin::Var<double>(var).Get();
+            return pybind11::float_(val);
+        } else {
+            const std::string val = var->str->Get();
+            return pybind11::str(val);
+        }
     }
-  }
-  return pybind11::none();
+    return pybind11::none();
 }
-    
 
 template <typename T>
 void var_t::set_attr_(const std::string& name, T val, const PyVarMeta & meta){
-  pangolin::VarState::VarStoreContainer::iterator i = pangolin::VarState::I().vars.find(ns+name);
-  if (i != pangolin::VarState::I().vars.end()) {
-      std::shared_ptr<pangolin::VarValueGeneric>& var = i->second;
-      pangolin::Var<T> v(var);
-      v = val;
+    using namespace pangolin;
+
+    const std::string full_name = namespace_prefix+name;
+    auto p_var = VarState::I().GetByName(full_name);
+
+  if (p_var) {
+      Var<T> setter(p_var);
+      setter = val;
   } else {
     int flags = pangolin::META_FLAG_NONE;
     if (meta.toggle) flags |= pangolin::META_FLAG_TOGGLE;
     if (meta.read_only)  flags |= pangolin::META_FLAG_READONLY;
-    pangolin::Var<T> pango_var(ns+name, val, flags);
+    pangolin::Var<T> pango_var(namespace_prefix+name, val, flags);
     pango_var.Meta().gui_changed = true;
     pango_var.Meta().range[0] = meta.low;
     pango_var.Meta().range[1] = meta.high;
     pango_var.Meta().logscale = meta.logscale;
-    pangolin::FlagVarChanged();
-      
   }
 }
     
 std::vector<std::string>& var_t::get_members(){
-  const int nss = ns.size();
-  members.clear();
-  for (const std::string& s : pangolin::VarState::I().var_adds) {
-    if (!s.compare(0, nss, ns)) {
-      size_t dot = s.find_first_of('.', nss);
-      members.push_back((dot != std::string::npos) ? s.substr(nss, dot - nss) : s.substr(nss));
-    }
-  }
-  return members;
+    return members;
 }
 
 template <typename ... Ts>

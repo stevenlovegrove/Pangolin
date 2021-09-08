@@ -30,151 +30,240 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <any>
+#include <cassert>
 #include <pangolin/platform.h>
 #include <pangolin/var/varvalue.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/signal_slot.h>
+#include <pangolin/var/varinit.h>
 
 namespace pangolin
 {
-
-typedef void (*NewVarCallbackFn)(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& var, bool brand_new);
-typedef void (*GuiVarChangedCallbackFn)(void* data, const std::string& name, const std::shared_ptr<VarValueGeneric>& var);
-
-struct PANGOLIN_EXPORT NewVarCallback
-{
-    NewVarCallback(const std::string& filter, NewVarCallbackFn fn, void* data)
-        :filter(filter),fn(fn),data(data) {}
-    std::string filter;
-    NewVarCallbackFn fn;
-    void* data;
-};
-
-struct PANGOLIN_EXPORT GuiVarChangedCallback
-{
-    GuiVarChangedCallback(const std::string& filter, GuiVarChangedCallbackFn fn, void* data)
-        :filter(filter),fn(fn),data(data) {}
-    std::string filter;
-    GuiVarChangedCallbackFn fn;
-    void* data;
-};
 
 class PANGOLIN_EXPORT VarState
 {
 public:
     static VarState& I();
 
-    template<typename T>
-    static std::string GetAttachedName(const T& backing) {
-      auto* var = VarState::I()[&backing];
-      if (var == nullptr) {
-        return "";
-      }
-      return var->Meta().full_name;
-    }
-
-    template<typename T>
-    static void SetAttachedValue(T& backing, T value) {
-      backing = value;
-      auto* var = VarState::I()[&backing];
-      if (var == nullptr) {
-        return;
-      }
-      var->Meta().gui_changed = true;
-    }
-
-    template<typename T>
-    static bool AttachedChanged(T& v) {
-      auto* var = VarState::I()[&v];
-      if (var == nullptr) {
-        return false;
-      }
-      bool result = var->Meta().gui_changed;
-      var->Meta().gui_changed = false;
-      return result;
-    }
-
-
     VarState();
     ~VarState();
 
+    /// \returns true iff a pangolin var with key name \param key exists in the index.
+    bool Exists(const std::string& key) const;
+
+    /// Register a user defined variable in memory into the VarState index.
+    /// Note that the user memory must have a lifetime which exceeds all accesses through
+    /// pangolin::Vars. The parameter remains owned by the user who must take care of
+    /// appropriate deallocation.
+    ///
+    /// \tparam T The type of \param variable to register
+    /// \param variable The variable to make available in the VarState index.
+    /// \param meta Meta information about the variable that will allow tools to introspect
+    ///             and modify it. In particular, \param meta.name is the user accessible name
+    ///             and is also used as input to lookup any Var in the index.
+    template<typename T>
+    std::shared_ptr<VarValueGeneric> AttachVar( T& variable, const VarMeta& meta );
+
+    /// Get a reference to an existing Var in the index, or create one if it doesn't exist.
+    /// The variable name to be used is inside of \param meta.name. Lifetime of Created
+    /// variables is managed through shared_ptr reference counting.
+    ///
+    /// \tparam T The underlying type of the Var to create
+    /// \param value The initial value for the Var if it doesn't already exist and gets created
+    /// \param meta Meta information about the variable that will allow tools to introspect
+    ///             and modify it. In particular, \param meta.name is the user accessible name
+    ///             and is also used as input to lookup any Var in the index.
+    template<typename T>
+    std::shared_ptr<VarValueGeneric> GetOrCreateVar( const T& value, const VarMeta& meta );
+
+    /// \return A reference to the corresponding var with name \param full_name, or nullptr
+    ///         if no such Var exists
+    std::shared_ptr<VarValueGeneric> GetByName(const std::string& full_name);
+
+    /// \return A reference to the corresponding var with underlying memory \param value, or nullptr
+    ///         if no such Var exists
+    template<typename T>
+    std::shared_ptr<VarValueGeneric> GetByReference(const T& value);
+
+    /// Callback Event structure for notification of Var Additions and Deletions
+    struct Event {
+        /// Function signature for user callbacks
+        using Function = std::function<void(const Event&)>;
+
+        /// Type of Var Event
+        enum class Action {
+            Added,    // A Var was added to the VarState index
+            Removed   // A Var was removed from the VarState index
+        };
+
+        /// The kind of event
+        Action action;
+
+        /// The Var in question
+        /// Note: removals occur immediately following the callback
+        std::shared_ptr<VarValueGeneric> var;
+    };
+
+    /// Register to be informed of Var additions and removals
+    /// \param callback_function User callback to use for notifications
+    /// \param include_historic Request to receive addition callbacks for current Vars
+    /// \returns A \class Connection object for handling \param callback_function lifetime
+    sigslot::connection RegisterForVarEvents( Event::Function callback_function, bool include_historic);
+
+    /// Type of Var settings file
+    enum class FileKind
+    {
+        detected, // detect based on filename / contents
+        json,     // use json format
+        config    // use config format
+    };
+
+    /// Clear the VarState index of pangolin Vars.
+    /// Any remaining user instances of pangolin::Vars will remain valid but the
+    /// underlying data will be deallocated appropriately when no longer referenced
     void Clear();
 
+    /// Removes a Var with the given name from the VarState index if it exists
+    /// \returns true iff a var was found to remove
+    bool Remove(const std::string& name);
+
+    /// Load Var state from file
+    void LoadFromFile(const std::string& filename, FileKind kind = FileKind::detected);
+
+    /// Save current Var state to file
+    void SaveToFile(const std::string& filename, FileKind kind = FileKind::json);
+
+private:
+    typedef std::map<std::string, std::shared_ptr<VarValueGeneric>> VarStoreMap;
+    typedef std::map<const void*, std::weak_ptr<VarValueGeneric>> VarStoreMapReverse;
+    typedef std::vector<std::weak_ptr<VarValueGeneric>> VarStoreAdditions;
+
     template<typename T>
-    void NotifyNewVar(const std::string& name, std::shared_ptr<VarValue<T>>& var )
-    {
-        // map the var.value pointer to the name so we can lookup by backing value.
-        backedNames[&var->Get()] = name;
-        var_adds.push_back(name);
+    VarStoreMap::iterator AddVar(
+        const std::shared_ptr<VarValue<T>>& var,
+        bool record_and_notify = true
+    );
 
-        // notify those watching new variables
-        for(std::vector<NewVarCallback>::iterator invc = new_var_callbacks.begin(); invc != new_var_callbacks.end(); ++invc) {
-            if( StartsWith(name,invc->filter) ) {
-               invc->fn( invc->data, name, var, true);
-            }
-        }
-    }
+    template<typename T>
+    VarStoreMap::iterator AddUpgradedVar(
+        const std::shared_ptr<VarValue<T>>& var,
+        const VarStoreMap::iterator& existing,
+        bool record_and_notify = true
+    );
 
-    std::shared_ptr<VarValueGeneric>& operator[](const std::string& str)
-    {
-        VarStoreContainer::iterator it = vars.find(str);
-        if (it == vars.end()) {
-            vars[str] = nullptr;
-        }
-        return vars[str];
-    }
+    void AddOrSetGeneric(const std::string& name, const std::string& value);
+    std::string ProcessVal(const std::string& val );
 
-    // do not allow the map to be set using this operator.
-    std::shared_ptr<VarValueGeneric> operator[](const void* backingValue) const
-    {
-        auto nameIter = backedNames.find(backingValue);
-        if (nameIter == backedNames.end()) {
-          return nullptr;
-        }
-        auto varIter = vars.find(nameIter->second);
-        if (varIter == vars.end()) {
-          return nullptr;
-        }
-        return varIter->second;
-    }
+    void LoadFromJsonStream(std::istream& is);
+    void LoadFromConfigStream(std::istream& is);
+    void SaveToJsonStream(std::ostream& os);
 
-    bool Exists(const std::string& str) const
-    {
-        return vars.find(str) != vars.end();
-    }
+    sigslot::signal<Event> VarEventSignal;
 
-    void FlagVarChanged()
-    {
-        varHasChanged = true;
-    }
-
-    bool VarHasChanged()
-    {
-        const bool has_changed = varHasChanged;
-        varHasChanged = false;
-        return has_changed;
-    }
-
-//protected:
-    typedef std::map<std::string, std::shared_ptr<VarValueGeneric>> VarStoreContainer;
-    typedef std::vector<std::string> VarStoreAdditions;
-    typedef std::map<const void*, std::string> BackingNameMap;
-
-    VarStoreContainer vars;
-    VarStoreAdditions var_adds;
-    BackingNameMap backedNames;
-
-    std::vector<NewVarCallback> new_var_callbacks;
-    std::vector<GuiVarChangedCallback> gui_var_changed_callbacks;
-
-    bool varHasChanged;
+    VarStoreMap vars;
+    VarStoreMapReverse vars_reverse;
+    VarStoreAdditions vars_add_order;
 };
 
-inline bool GuiVarHasChanged() {
-    return VarState::I().VarHasChanged();
+
+/////////////////////////////////////////////////////////////////////////////
+/// Implementation
+/////////////////////////////////////////////////////////////////////////////
+
+template<typename T>
+std::shared_ptr<VarValueGeneric> VarState::AttachVar(
+    T& variable, const VarMeta& meta
+) {
+    VarStoreMap::iterator it = vars.find(meta.full_name);
+
+    if (it != vars.end()) {
+        std::shared_ptr<VarValueGeneric> generic = it->second;
+
+        // Variable already exists
+        std::shared_ptr<VarValue<T>> tval = std::dynamic_pointer_cast<VarValue<T>>(it->second);
+
+        // We have a problem if the variable doesn't point to the same thing.
+        if( !tval || (&(tval->Get()) != &variable) ) {
+            throw std::runtime_error("Different Var with that name already exists.");
+        }
+    }else{
+        it = AddVar(std::make_shared<VarValue<T>>(variable, meta) );
+    }
+    return it->second;
 }
 
-inline void FlagVarChanged() {
-    VarState::I().FlagVarChanged();
+template<typename T>
+std::shared_ptr<VarValueGeneric> VarState::GetOrCreateVar(
+    const T& value, const VarMeta& meta
+) {
+    VarStoreMap::iterator it = vars.find(meta.full_name);
+
+    if (it != vars.end()) {
+        if(it->second->Meta().generic) {
+            // upgrade from untyped 'generic' type now we have first typed reference
+            AddUpgradedVar(InitialiseFromPreviouslyGenericVar<T>(it->second), it);
+        }
+    }else{
+        it = AddVar(std::make_shared<VarValue<T>>( value, meta ) );
+    }
+
+    return it->second;
+}
+
+inline std::shared_ptr<VarValueGeneric> VarState::GetByName(const std::string& full_name) {
+    VarStoreMap::iterator it = vars.find(full_name);
+
+    if (it != vars.end()) {
+        return it->second;
+    }
+
+    return nullptr;
+}
+
+template<typename T>
+std::shared_ptr<VarValueGeneric> VarState::GetByReference(const T& value)
+{
+    const void* backingValue = &value;
+    auto it = vars_reverse.find(backingValue);
+
+    if (it != vars_reverse.end())
+        if( auto p_var = it->second.lock())
+            return p_var;
+
+    return nullptr;
+}
+
+template<typename T>
+VarState::VarStoreMap::iterator VarState::AddVar(
+    const std::shared_ptr<VarValue<T>>& var,
+    bool record_and_notify
+) {
+    const auto [it, success] = vars.insert(VarStoreMap::value_type(var->Meta().full_name, var));
+    assert(success);
+
+    if(record_and_notify) {
+        vars_reverse[&var->Get()] = var;
+        vars_add_order.push_back(var);
+        VarEventSignal(Event{Event::Action::Added, var});
+    }
+    return it;
+}
+
+template<typename T>
+VarState::VarStoreMap::iterator VarState::AddUpgradedVar(
+    const std::shared_ptr<VarValue<T>>& var,
+    const VarStoreMap::iterator& existing,
+    bool record_and_notify
+) {
+    existing->second = var;
+
+    if(record_and_notify) {
+        vars_reverse[&var->Get()] = var;
+        vars_add_order.push_back(var);
+        VarEventSignal(Event{Event::Action::Added, var});
+    }
+    return existing;
 }
 
 }
