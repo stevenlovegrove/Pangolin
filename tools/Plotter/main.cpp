@@ -1,11 +1,12 @@
-#include <pangolin/pangolin.h>
 #include <pangolin/utils/argagg.hpp>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/display/display.h>
+#include <pangolin/plot/plotter.h>
+#include <pangolin/plot/loaders/csv_table_loader.h>
 
 #include <functional>
 #include <thread>
 
-#include "csv_data_loader.h"
 
 namespace argagg{ namespace convert {
 
@@ -62,7 +63,7 @@ int main( int argc, char* argv[] )
 
     pangolin::DataLog log;
 
-    CsvDataLoader csv_loader(args.all_as<std::string>(), delim);
+    pangolin::CsvTableLoader csv_loader(args.all_as<std::string>(), delim);
 
     if(args["header"]) {
         std::vector<std::string> labels;
@@ -73,7 +74,7 @@ int main( int argc, char* argv[] )
     // Load asynchronously incase the file is large or is being read interactively from stdin
     bool keep_loading = true;
     std::thread data_thread([&](){
-        if(!csv_loader.SkipStreamRows(skipvec)) {
+        if(!csv_loader.SkipLines(skipvec)) {
             return;
         }
 

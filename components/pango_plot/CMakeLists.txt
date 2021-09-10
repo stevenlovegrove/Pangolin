@@ -4,6 +4,7 @@ target_sources( ${COMPONENT}
 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/datalog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/plotter.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/loaders/csv_table_loader.cpp
 )
 
 target_link_libraries(${COMPONENT} pango_display)
