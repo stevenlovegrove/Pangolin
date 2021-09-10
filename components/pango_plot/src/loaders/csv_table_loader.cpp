@@ -4,8 +4,8 @@
 
 namespace pangolin {
 
-CsvTableLoader::CsvTableLoader(const std::vector<std::string>& csv_files, char delim)
-    : delim(delim)
+CsvTableLoader::CsvTableLoader(const std::vector<std::string>& csv_files, char delim, char comment)
+    : delim(delim), comment(comment)
 {
     for(const auto& f : csv_files) {
         if(f == "-") {
@@ -27,7 +27,7 @@ bool CsvTableLoader::SkipLines(const std::vector<size_t>& lines_per_input)
 
         for(size_t i=0; i < streams.size(); ++i) {
             for(size_t r=0; r < lines_per_input[i]; ++r) {
-                if(!AppendColumns(dummy_row, *streams[i], delim)) {
+                if(!AppendColumns(dummy_row, *streams[i], delim, '\0')) {
                     return false;
                 }
             }
@@ -42,7 +42,7 @@ bool CsvTableLoader::ReadRow(std::vector<std::string>& row)
     row.clear();
 
     for(auto& s : streams) {
-        if(!AppendColumns(row, *s, delim)) {
+        if(!AppendColumns(row, *s, delim, comment)) {
             return false;
         }
     }
@@ -50,11 +50,14 @@ bool CsvTableLoader::ReadRow(std::vector<std::string>& row)
     return true;
 }
 
-bool CsvTableLoader::AppendColumns(std::vector<std::string>& cols, std::istream& s, char delim)
+bool CsvTableLoader::AppendColumns(std::vector<std::string>& cols, std::istream& s, char delim, char comment)
 {
     // Read line from stream
     std::string row;
-    std::getline(s,row);
+    do {
+        std::getline(s,row);
+    }while(row.length() > 0 && row[0] == comment);
+
 
     // Failure if no lines to read
     if(!s.good()) return false;
