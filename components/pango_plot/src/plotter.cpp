@@ -630,7 +630,7 @@ void Plotter::Render()
             prog_text.SetUniform("u_color", ps.colour );
             prog_text.SetUniform("u_offset",
                 v.w-5-ps.title.Width() -(v.w/2.0f),
-                v.h-1.5*ps.title.Height()*(++keyid) -(v.h/2.0f)
+                v.h-1.2*default_font().Height()*(++keyid) -(v.h/2.0f)
             );
             ps.title.DrawGlSl();
         }
@@ -1127,7 +1127,7 @@ std::string Plotter::PlotTitleFromExpr(const std::string& expr) const
 
     std::stringstream exp_in(expr);
     std::stringstream exp_out;
-    while(exp_in) {
+    while(!exp_in.eof()) {
         int c = exp_in.get();
         if(c=='$') {
             size_t id = -1;
