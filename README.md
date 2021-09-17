@@ -45,10 +45,10 @@ git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
 
 ```bash
 # See what package manager and packages are recommended
-./scripts/install_prerequisites --dry-run recommended
+./scripts/install_prerequisites.sh --dry-run recommended
 
 # Override the package manager choice and install all packages
-./scripts/install_prerequisites -m brew all
+./scripts/install_prerequisites.sh -m brew all
 ```
 
 You'll see the dependencies are generally
@@ -75,7 +75,7 @@ git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
 cd Pangolin 
 
 # Install dependencies (as described above, or your preferred method)
-./scripts/install_prerequisites recommended
+./scripts/install_prerequisites.sh recommended
 
 # Configure and build
 mkdir build && cd build
