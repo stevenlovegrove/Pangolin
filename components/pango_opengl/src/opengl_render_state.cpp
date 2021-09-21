@@ -399,7 +399,7 @@ OpenGlMatrixSpec ProjectionMatrixOrthographic(GLprecision l, GLprecision r, GLpr
 // Image Origin:
 //   Bottom Left
 // Caution: Principal point defined with respect to image origin (0,0) at
-//          top left of top-left pixel (not center, and in different frame
+//          bottom left of bottom-left pixel (not center, and in different frame
 //          of reference to projection function image)
 OpenGlMatrixSpec ProjectionMatrixRUB_BottomLeft(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar )
 {
@@ -516,7 +516,7 @@ OpenGlMatrixSpec ProjectionMatrixRDF_TopRight(int w, int h, GLprecision fu, GLpr
 //   X - Right, Y - Down, Z - Forward
 // Image Origin:
 //   Bottom Left
-// Pricipal point specified with image origin (0,0) at top left of top-left pixel (not center)
+// Pricipal point specified with image origin (0,0) at bottom left of bottom-left pixel (not center)
 OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar )
 {
     // http://www.songho.ca/opengl/gl_projectionmatrix.html
@@ -545,7 +545,7 @@ OpenGlMatrixSpec ProjectionMatrixRDF_BottomLeft(int w, int h, GLprecision fu, GL
 //   X - Right, Y - Down, Z - Forward
 // Image Origin:
 //   Bottom Right
-// Pricipal point specified with image origin (0,0) at top right of top-right pixel (not center)
+// Pricipal point specified with image origin (0,0) at bottom right of bottom-right pixel (not center)
 OpenGlMatrixSpec ProjectionMatrixRDF_BottomRight(int w, int h, GLprecision fu, GLprecision fv, GLprecision u0, GLprecision v0, GLprecision zNear, GLprecision zFar )
 {
     // http://www.songho.ca/opengl/gl_projectionmatrix.html
