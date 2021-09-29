@@ -27,7 +27,13 @@ print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Ext
 "
         OUTPUT_VARIABLE wheel_filename
         OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
     )
+    if(NOT wheel_filename)
+        message(STATUS "Python module `setuptools` required for correct wheel filename generation. Please install if needed.")
+        set(wheel_filename "unknown;unknown")
+    endif()
+
     list(GET wheel_filename 0 distname)
     list(GET wheel_filename 1 platformtag)
     set(complete_tag "${distname}-${platformtag}")
