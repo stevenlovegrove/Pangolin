@@ -386,7 +386,7 @@ void X11Window::ProcessEvents()
 
         switch(ev.type){
         case ConfigureNotify:
-            ResizeSignal(WindowResizeEvent({ev.xconfigure.width, ev.xconfigure.height}));
+            ResizeSignal(WindowResizeEvent{ev.xconfigure.width, ev.xconfigure.height});
             break;
         case ClientMessage:
             // We've only registered to receive WM_DELETE_WINDOW, so no further checks needed.
@@ -396,26 +396,26 @@ void X11Window::ProcessEvents()
         case ButtonRelease:
         {
             const int button = ev.xbutton.button-1;
-            MouseSignal(MouseEvent({
+            MouseSignal(MouseEvent{
                (float)ev.xbutton.x, (float)ev.xbutton.y,
                GetEventFlagsFromXState(ev.xkey.state),
                button, ev.xbutton.type == ButtonPress
-           }));
+           });
            break;
         }
         case FocusOut:
             break;
         case MotionNotify:
             if(ev.xmotion.state & (Button1Mask|Button2Mask|Button3Mask) ) {
-                MouseMotionSignal(MouseMotionEvent({
+                MouseMotionSignal(MouseMotionEvent{
                     (float)ev.xbutton.x, (float)ev.xbutton.y,
                     GetEventFlagsFromXState(ev.xkey.state),
-                }));
+                });
             }else{
-                PassiveMouseMotionSignal(MouseMotionEvent({
+                PassiveMouseMotionSignal(MouseMotionEvent{
                     (float)ev.xbutton.x, (float)ev.xbutton.y,
                     GetEventFlagsFromXState(ev.xkey.state)
-                }));
+                });
             }
             break;
         case KeyPress:
@@ -464,11 +464,11 @@ void X11Window::ProcessEvents()
             }
 
             if(key >=0) {
-                KeyboardSignal(KeyboardEvent({
+                KeyboardSignal(KeyboardEvent{
                     (float)ev.xkey.x, (float)ev.xkey.y,
                     GetEventFlagsFromXState(ev.xkey.state),
                     (unsigned char)key, ev.type == KeyPress
-                }));
+                });
             }
 
             break;
