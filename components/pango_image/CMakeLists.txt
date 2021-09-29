@@ -44,6 +44,8 @@ if(BUILD_PANGOLIN_LIBOPENEXR)
             $<$<OR:$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
             -Wno-deprecated-register -Wno-deprecated>
         )
+        # https://github.com/stevenlovegrove/Pangolin/issues/677
+        set_target_properties(${COMPONENT} PROPERTIES CXX_STANDARD 11)
         message(STATUS "libopenexr Found and Enabled")
     endif()
 endif()
