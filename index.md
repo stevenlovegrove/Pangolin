@@ -85,7 +85,7 @@ cmake --build .
 # GIVEME THE PYTHON STUFF!!!! (Check the output to verify selected python version)
 cmake --build . -t pypangolin_pip_install
 
-# Run me some tests!
+# Run me some tests! (Requires Catch2 which must be manually installed on Ubuntu.)
 ctest
 ```
 
