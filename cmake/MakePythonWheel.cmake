@@ -3,6 +3,8 @@
 #  https://www.benjack.io/2017/06/12/python-cpp-tests.html also interesting
 #  https://www.python.org/dev/peps/pep-0427/ the official package format description
 
+set(_MAKE_PYTHON_WHEEL_LIST_DIR "${CMAKE_CURRENT_LIST_DIR}")
+
 function( MakeWheel python_module)
     cmake_parse_arguments(MAKEWHEEL "PRINT_HELP" "MODULE;VERSION;SUMMARY;DESCRIPTION;HOMEPAGE;AUTHOR;EMAIL;LICENCE" "REQUIRES" ${ARGN} )
     set(version ${MAKEWHEEL_VERSION})
@@ -50,7 +52,7 @@ print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Ext
 
     ##########################################
     ## Create dist info folder
-    file(GLOB wheel_info_files "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/wheel-dist-info/*" )
+    file(GLOB wheel_info_files "${_MAKE_PYTHON_WHEEL_LIST_DIR}/wheel-dist-info/*" )
     file(WRITE "${wheel_distinfo}/RECORD" "")
     foreach(template_path ${wheel_info_files})
         get_filename_component(template_name "${template_path}" NAME)
