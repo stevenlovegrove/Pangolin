@@ -40,7 +40,7 @@
 
 #ifdef USE_EIGEN
 #  include <Eigen/Core>
-#  include <Eigen/src/Geometry/AlignedBox.h>
+#  include <Eigen/Geometry>
 #endif // USE_EIGEN
 
 namespace pangolin

@@ -35,12 +35,12 @@
 #include <math.h>
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files
-#define USE_EIGEN
+#  define USE_EIGEN
 #endif
 
 #ifdef USE_EIGEN
-#include <Eigen/Core>
-#include <Eigen/src/Geometry/AlignedBox.h>
+#  include <Eigen/Core>
+#  include <Eigen/Geometry>
 #endif // USE_EIGEN
 
 namespace pangolin
