@@ -299,6 +299,24 @@ std::string MakeUniqueFilename(const std::string& filename)
     }
 }
 
+// Based on https://insanecoding.blogspot.com/2011/11/how-to-read-in-file-in-c.html
+std::string GetFileContents(const std::string& filename)
+{
+    std::ifstream in(filename.c_str(), std::ios::in | std::ios::binary);
+    if (in)
+    {
+        std::string contents;
+        in.seekg(0, std::ios::end);
+        contents.resize(in.tellg());
+        in.seekg(0, std::ios::beg);
+        in.read(&contents[0], contents.size());
+        in.close();
+        return(contents);
+    }else{
+        throw std::runtime_error(std::string("Unable to open file: ") + filename);
+    }
+}
+
 bool IsPipe(const std::string& file)
 {
 #ifdef _WIN_
@@ -520,25 +538,6 @@ bool FileExists(const std::string& filename)
     struct stat buf;
     return stat(filename.c_str(), &buf) != -1;
 }
-
-// Based on https://insanecoding.blogspot.com/2011/11/how-to-read-in-file-in-c.html
-std::string GetFileContents(const std::string& filename)
-{
-    std::ifstream in(filename.c_str(), std::ios::in | std::ios::binary);
-    if (in)
-    {
-        std::string contents;
-        in.seekg(0, std::ios::end);
-        contents.resize(in.tellg());
-        in.seekg(0, std::ios::beg);
-        in.read(&contents[0], contents.size());
-        in.close();
-        return(contents);
-    }else{
-        throw std::runtime_error(std::string("Unable to open file: ") + filename);
-    }
-}
-
 
 #endif //_WIN_
 
