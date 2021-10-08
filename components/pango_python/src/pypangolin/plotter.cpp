@@ -33,8 +33,18 @@
 
 namespace py_pangolin {
 
-  //extern pybind11::class_<pangolin::Handler, PyHandler> handler;
-  
+  template<typename P>
+  void bind_range(pybind11::module& m, const char* python_name_postfix)
+  {
+      pybind11::class_<pangolin::Range<P>>(m, (std::string("Range") + python_name_postfix).c_str() )
+          .def_readwrite("min", &pangolin::Range<P>::min)
+          .def_readwrite("max", &pangolin::Range<P>::max);
+
+      pybind11::class_<pangolin::XYRange<P>>(m, (std::string("XYRange") + python_name_postfix).c_str() )
+          .def_readwrite("x", &pangolin::XYRange<P>::x)
+          .def_readwrite("y", &pangolin::XYRange<P>::y);
+  }
+
   void bind_plotter(pybind11::module& m){
   //   pybind11::class_<pangolin::Handler, PyHandler> handler1(m, "Handler1");
   //   handler1
@@ -44,6 +54,8 @@ namespace py_pangolin {
   //     .def("MouseMotion", &pangolin::Handler::MouseMotion)
   //     .def("PassiveMouseMotion", &pangolin::Handler::PassiveMouseMotion)
   //     .def("Special", &pangolin::Handler::Special);
+
+    bind_range<float>(m, "f");
 
     pybind11::enum_<pangolin::DrawingMode>(m, "DrawingMode")
       .value("DrawingModePoints", pangolin::DrawingMode::DrawingModePoints)
