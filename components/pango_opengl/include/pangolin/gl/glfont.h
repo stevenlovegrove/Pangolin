@@ -31,6 +31,7 @@
 
 #include <cstdio>
 #include <cstdarg>
+#include <unordered_map>
 
 namespace pangolin {
 
@@ -47,7 +48,8 @@ public:
     // Generate renderable GlText object from this font.
     GlText Text( const char* fmt, ... );
 
-    GlText Text( const std::string& str );
+    // Utf8 encoded string
+    GlText Text( const std::string& utf8 );
 
     inline float Height() const {
         return font_height_px;
@@ -62,19 +64,19 @@ protected:
     // This can only be called once GL context is initialised
     void InitialiseGlTexture();
 
-    const static int FIRST_CHAR = 32;
-    const static int NUM_CHARS = 96;
-
     float font_height_px;
     float font_max_width_px;
 
     int tex_w;
     int tex_h;
-    unsigned char* font_bitmap;
+    std::unique_ptr<unsigned char[]> font_bitmap;
     GlTexture mTex;
 
-    GlChar chardata[NUM_CHARS];
-    GLfloat kern_table[NUM_CHARS*NUM_CHARS];
+    using codepoint_t = uint32_t;
+    using codepointpair_t = std::pair<codepoint_t, codepoint_t>;
+
+    std::map<codepoint_t, GlChar> chardata;
+    std::map<codepointpair_t, GLfloat> kern_table;
 };
 
 }

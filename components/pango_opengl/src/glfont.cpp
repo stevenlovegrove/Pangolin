@@ -25,6 +25,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <locale>
+#include <codecvt>
+
 #include <pangolin/gl/glfont.h>
 #include <pangolin/gl/glstate.h>
 #include <pangolin/image/image_io.h>
@@ -55,14 +58,104 @@ PANGOLIN_EXPORT extern const unsigned char AnonymousPro_ttf[];
 namespace pangolin
 {
 
-GlFont::GlFont(float pixel_height, int tex_w, int tex_h)
+// Hacked version of stbtt_FindGlyphIndex to extract valid codepoints in font
+// Good reference for file format here https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6cmap.html
+std::vector<std::pair<uint32_t,uint32_t>> GetCodepointRanges(const stbtt_fontinfo *info)
 {
-    InitialiseFont(AnonymousPro_ttf, pixel_height, tex_w, tex_h);
+    std::vector<std::pair<uint32_t,uint32_t>> ranges;
+
+    stbtt_uint8 *data = info->data;
+    stbtt_uint32 index_map = info->index_map;
+
+    stbtt_uint16 format = ttUSHORT(data + index_map + 0);
+    if (format == 0) { // apple byte encoding
+        stbtt_int32 bytes = ttUSHORT(data + index_map + 2);
+        ranges.emplace_back(0, bytes-6);
+    } else if (format == 6) {
+        stbtt_uint32 first = ttUSHORT(data + index_map + 6);
+        stbtt_uint32 count = ttUSHORT(data + index_map + 8);
+        ranges.emplace_back(first, first+count);
+    } else if (format == 2) {
+        STBTT_assert(0); // @TODO: high-byte mapping for japanese/chinese/korean
+    } else if (format == 4) { // standard mapping for windows fonts: binary search collection of ranges
+        const stbtt_uint16 segcount = ttUSHORT(data+index_map+6) >> 1;
+
+        // table ranges from [0 to segcount-1]
+        stbtt_uint8 *endCodeTable = data + index_map + 14;
+        stbtt_uint8 *startCodeTable = endCodeTable + 2*segcount + 2;
+
+        for(size_t seg = 0; seg < segcount; ++seg) {
+            const uint16_t startCode = ttUSHORT(startCodeTable + 2*seg);
+            const uint16_t endCode = ttUSHORT(endCodeTable + 2*seg);
+
+            if(endCode != 0xFFFF) {
+                const size_t num_in_segment = endCode - startCode;
+                std::cout << startCode << " -> " << endCode << " (" << num_in_segment << ")";
+                if(startCode < endCode) {
+                    ranges.emplace_back(startCode,endCode+1);
+                }else{
+                    if(startCode != endCode) std::cout << "*";
+                }
+                std::cout  << std::endl;
+            }else{
+                std::cout << "End Segment." << std::endl;
+                break;
+            }
+        }
+    } else if (format == 12 || format == 13) {
+        const stbtt_uint32 ngroups = ttULONG(data + index_map + 12);
+        stbtt_uint8* range_table = data + index_map + 12 + 4;
+
+        for(size_t group = 0; group < ngroups; ++group)
+        {
+            const uint32_t startCode = ttULONG(range_table + 4*(3*group));
+            const uint32_t endCode = ttULONG(range_table + 4*(3*group+1));
+            ranges.emplace_back(startCode,endCode+1);
+        }
+    } else{
+        STBTT_assert(0);
+    }
+
+    return ranges;
 }
 
-GlFont::GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h)
+std::string vformat(const char * format, va_list args)
 {
-    InitialiseFont(ttf_buffer, pixel_height, tex_w, tex_h);
+  std::string result;
+  va_list args_len;
+  va_copy(args_len, args);
+
+  const int len = vsnprintf(nullptr, 0, format, args_len);
+  va_end(args_len);
+
+  if (len > 0) {
+    result.resize(len);
+    // Guarenteed to write up to len only (+1 is left by vsnprintf for '\0')
+    vsnprintf(result.data(), len+1, format, args);
+    va_end(args);
+  }
+
+  return result;
+}
+
+std::string format(const char * format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  const std::string s = vformat(format, args);
+  va_end(args);
+  return s;
+}
+
+
+GlFont::GlFont(float pixel_height, int tex_w, int tex_h)
+{
+    InitialiseFont( AnonymousPro_ttf, pixel_height, tex_w, tex_h );
+}
+
+GlFont::GlFont(const unsigned char* truetype_data, float pixel_height, int tex_w, int tex_h)
+{
+    InitialiseFont(truetype_data, pixel_height, tex_w, tex_h);
 }
 
 GlFont::GlFont(const std::string& filename, float pixel_height, int tex_w, int tex_h)
@@ -73,61 +166,75 @@ GlFont::GlFont(const std::string& filename, float pixel_height, int tex_w, int t
 
 GlFont::~GlFont()
 {
-    delete[] font_bitmap;
 }
 
-void GlFont::InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h)
+void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_height, int tex_w, int tex_h)
 {
     font_height_px = pixel_height;
     font_max_width_px = 0;
 
     this->tex_w = tex_w;
     this->tex_h = tex_h;
-    font_bitmap = new unsigned char[tex_w*tex_h];
+    font_bitmap = std::make_unique<unsigned char[]>(tex_w*tex_h);
     const int offset = 0;
 
     stbtt_fontinfo f;
-    if (!stbtt_InitFont(&f, ttf_buffer, offset)) {
+    if (!stbtt_InitFont(&f, truetype_data, offset)) {
        throw std::runtime_error("Unable to initialise font: stbtt_InitFont failed.");
     }
 
     float scale = stbtt_ScaleForPixelHeight(&f, pixel_height);
 
-    STBTT_memset(font_bitmap, 0, tex_w*tex_h);
+    STBTT_memset(font_bitmap.get(), 0, tex_w*tex_h);
     int x = 1;
     int y = 1;
     int bottom_y = 1;
 
-    // Generate bitmap and char indices
-    for (int i=0; i < NUM_CHARS; ++i) {
-       int advance, lsb, x0,y0,x1,y1,gw,gh;
-       int g = stbtt_FindGlyphIndex(&f, FIRST_CHAR + i);
-       stbtt_GetGlyphHMetrics(&f, g, &advance, &lsb);
-       stbtt_GetGlyphBitmapBox(&f, g, scale,scale, &x0,&y0,&x1,&y1);
-       gw = x1-x0;
-       gh = y1-y0;
-       font_max_width_px = std::max(font_max_width_px, (float)gw);
+    const auto ranges = GetCodepointRanges(&f);
 
-       if (x + gw + 1 >= tex_w)
-          y = bottom_y, x = 1; // advance to next row
-       if (y + gh + 1 >= tex_h) // check if it fits vertically AFTER potentially moving to next row
-          throw std::runtime_error("Unable to initialise font: run out of texture pixel space.");
-       STBTT_assert(x+gw < tex_w);
-       STBTT_assert(y+gh < tex_h);
-       stbtt_MakeGlyphBitmap(&f, font_bitmap+x+y*tex_w, gw,gh,tex_w, scale,scale, g);
+//    size_t num = 0;
+//    for(const auto& r : ranges) {
+//        std::cout << r.first << " -> " << r.second << " (" << (r.second - r.first) << ")" << std::endl;
+//        num += r.second - r.first;
+//    }
 
-       // Adjust offset for edges of pixels
-       chardata[i] = GlChar(tex_w,tex_h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
+//    std::cout << "Total: " << num << std::endl;
 
-       x = x + gw + 1;
-       if (y+gh+1 > bottom_y)
-          bottom_y = y+gh+1;
+    for(const auto& r : ranges) {
+        for(uint32_t codepoint=r.first; codepoint < r.second; ++codepoint) {
+            int advance, lsb, x0,y0,x1,y1,gw,gh;
+            int g = stbtt_FindGlyphIndex(&f, codepoint);
+            stbtt_GetGlyphHMetrics(&f, g, &advance, &lsb);
+            stbtt_GetGlyphBitmapBox(&f, g, scale,scale, &x0,&y0,&x1,&y1);
+            gw = x1-x0;
+            gh = y1-y0;
+            font_max_width_px = std::max(font_max_width_px, (float)gw);
+
+            if (x + gw + 1 >= tex_w)
+               y = bottom_y, x = 1; // advance to next row
+            if (y + gh + 1 >= tex_h) // check if it fits vertically AFTER potentially moving to next row
+               throw std::runtime_error("Unable to initialise font: run out of texture pixel space.");
+            STBTT_assert(x+gw < tex_w);
+            STBTT_assert(y+gh < tex_h);
+            stbtt_MakeGlyphBitmap(&f, font_bitmap.get()+x+y*tex_w, gw,gh,tex_w, scale,scale, g);
+
+            // Adjust offset for edges of pixels
+            chardata.try_emplace(codepoint, tex_w,tex_h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
+
+            x = x + gw + 1;
+            if (y+gh+1 > bottom_y)
+               bottom_y = y+gh+1;
+        }
     }
 
-    // Generate kern table
-    for (int i=0; i < NUM_CHARS; ++i) {
-        for (int j=0; j < NUM_CHARS; ++j) {
-            kern_table[i*NUM_CHARS+j] = scale * stbtt_GetCodepointKernAdvance(&f,i,j);
+    // This could be a nasty slow loop...
+    for(const auto& r1 : ranges) {
+        for(uint32_t cp1=r1.first; cp1 < r1.second; ++cp1) {
+            for(const auto& r2 : ranges) {
+                for(uint32_t cp2=r2.first; cp2 < r2.second; ++cp2) {
+                    kern_table[codepointpair_t(cp1,cp2)] = scale * stbtt_GetCodepointKernAdvance(&f,cp1,cp2);
+                }
+            }
         }
     }
 }
@@ -135,72 +242,52 @@ void GlFont::InitialiseFont(const unsigned char* ttf_buffer, float pixel_height,
 void GlFont::InitialiseGlTexture()
 {
     if(font_bitmap) {
-        mTex.Reinitialise(tex_w,tex_h, GL_ALPHA, true, 0, GL_ALPHA,GL_UNSIGNED_BYTE, font_bitmap);
-//        mTex.SetNearestNeighbour();
-        delete[] font_bitmap;
-        font_bitmap = 0;
+        mTex.Reinitialise(tex_w,tex_h, GL_ALPHA, true, 0, GL_ALPHA,GL_UNSIGNED_BYTE, font_bitmap.get());
+        font_bitmap.reset();
     }
 }
 
-GlText GlFont::Text( const char* fmt, ... )
+GlText GlFont::Text( const char* format, ... )
 {
+    va_list args;
+    va_start(args, format);
+    const std::string s = vformat(format, args);
+    va_end(args);
+    return Text(s);
+}
+
+GlText GlFont::Text(const std::string& utf8 )
+{
+    const std::u32string utf32 = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(utf8);
+
     if(!mTex.IsValid()) InitialiseGlTexture();
 
     GlText ret(mTex);
+    ret.str = utf8;
 
-    char text[MAX_TEXT_LENGTH];
-    va_list ap;
+    char32_t last_c = '\0';
 
-    if( fmt != NULL ) {
-        va_start( ap, fmt );
-        vsnprintf( text, MAX_TEXT_LENGTH, fmt, ap );
-        va_end( ap );
-
-        const size_t len = strlen(text);
-        char lc = ' ' - FIRST_CHAR;
-        for(size_t i=0; i < len; ++i) {
-            char c = text[i];
-            if( !(FIRST_CHAR <= c /*&& c <FIRST_CHAR+NUM_CHARS*/) ) {
-                c = ' ';
-            }
-            const GlChar& ch = chardata[c-32];
+    for(char32_t c : utf32)
+    {
+        const auto it = chardata.find(c);
+        if(it != chardata.end()) {
+            const GlChar& ch = it->second;
 
             // Kerning
-            if(i) {
-                const GLfloat kern = kern_table[ (lc-32)*NUM_CHARS + (c-32) ];
+            if(last_c) {
+                codepointpair_t key(last_c, c);
+                const auto kit = kern_table.find(key);
+                const GLfloat kern = (kit != kern_table.end()) ? kit->second : font_max_width_px;
                 ret.AddSpace(kern);
             }
 
-            ret.Add(c,ch);
-            lc = c;
+            ret.Add(' ', ch);
+            last_c = c;
+        }else{
+            // codepoint doesn't exists in font
         }
     }
-    return ret;
-}
 
-GlText GlFont::Text( const std::string& str )
-{
-    if(!mTex.IsValid()) InitialiseGlTexture();
-
-    GlText ret(mTex);
-
-    char lc = ' ' - FIRST_CHAR;
-    for(size_t i=0; i < str.length(); ++i) {
-        char c = str[i];
-        if( !(FIRST_CHAR <= c /*&& c <FIRST_CHAR+NUM_CHARS*/) ) {
-            c = ' ';
-        }
-        const GlChar& ch = chardata[c-32];
-
-        // Kerning
-        if(i) {
-            const GLfloat kern = kern_table[ (lc-32)*NUM_CHARS + (c-32) ];
-            ret.AddSpace(kern);
-        }
-
-        ret.Add(c,ch);
-        lc = c;
-    }
     return ret;
 }
 

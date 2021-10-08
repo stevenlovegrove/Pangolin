@@ -146,7 +146,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     // If there is a special font request
     if( !default_font.empty() ) {
         const std::string font_filename = PathExpand(default_font);
-        context->font = std::make_shared<GlFont>(font_filename, default_font_size);
+        context->font = std::make_shared<GlFont>(font_filename, default_font_size, 2048, 2048);
     }else{
         context->font = std::make_shared<GlFont>(AnonymousPro_ttf, default_font_size);
     }

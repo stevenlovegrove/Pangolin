@@ -13,8 +13,9 @@
 int main(/*int argc, char* argv[]*/)
 {  
   // Create OpenGL window in single line
-  pangolin::CreateWindowAndBind("Main",640,480);
-  
+//    pangolin::CreateWindowAndBind("Main",640,480);
+    pangolin::CreateWindowAndBind("Main",640,480,{{"default_font","~/Downloads/Zhi_Mang_Xing/ZhiMangXing-Regular.ttf"}});
+
   // 3D Mouse handler requires depth testing to be enabled
   glEnable(GL_DEPTH_TEST);
 
@@ -41,7 +42,7 @@ int main(/*int argc, char* argv[]*/)
   // Safe and efficient binding of named variables.
   // Specialisations mean no conversions take place for exact types
   // and conversions between scalar types are cheap.
-  pangolin::Var<bool> a_button("ui.A_Button",false,false);
+  pangolin::Var<bool> a_button("ui.他们所有的设备和仪器彷佛都是有生命的。",false,false);
   pangolin::Var<double> a_double("ui.A_Double",3,0,5);
   pangolin::Var<int> an_int("ui.An_Int",2,0,5);
   pangolin::Var<double> a_double_log("ui.Log_scale",3,1,1E4, true);
