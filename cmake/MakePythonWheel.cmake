@@ -85,7 +85,7 @@ print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Ext
     add_custom_target(
         "${python_module}_pip_install"
         DEPENDS "${python_module}_wheel"
-        COMMAND ${Python_EXECUTABLE} -mpip install "${wheel_filename}"
+        COMMAND ${Python_EXECUTABLE} -mpip install "${wheel_filename}" --force-reinstall
         COMMENT "Installing for selected Python '${Python_EXECUTABLE}'"
     )
 
