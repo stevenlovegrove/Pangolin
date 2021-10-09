@@ -1,9 +1,8 @@
 #include <pangolin/platform.h>
-#include <pangolin/display/display.h>
-#include <pangolin/display/display_internal.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/gl/colour.h>
 #include <pangolin/gl/gldraw.h>
+#include <pangolin/windowing/window.h>
 
 #include <wayland-client.h>
 #include <wayland-egl.h>
@@ -23,8 +22,6 @@
 #define WAYLAND_VERSION_GE(MAJ, MIN) WAYLAND_VERSION_MAJOR >= MAJ && WAYLAND_VERSION_MINOR >= MIN
 
 namespace pangolin {
-
-extern __thread PangolinGl* context;
 
 namespace wayland {
 
@@ -324,8 +321,10 @@ struct Decoration {
 const uint Decoration::button_width = 25;
 const uint Decoration::button_height = 15;
 
+struct WaylandWindow;
+
 struct WaylandDisplay {
-    WaylandDisplay(const int width, const int height, const std::string title = "");
+    WaylandDisplay();
 
     ~WaylandDisplay();
 
@@ -333,11 +332,7 @@ struct WaylandDisplay {
     struct wl_registry *wregistry = nullptr;
     struct wl_compositor *wcompositor = nullptr;
     struct wl_subcompositor *wsubcompositor = nullptr;
-    struct wl_surface *wsurface = nullptr;
-    struct wl_egl_window *egl_window = nullptr;
     struct xdg_wm_base *xshell = nullptr;
-    struct xdg_surface *xshell_surface = nullptr;
-    struct xdg_toplevel *xshell_toplevel = nullptr;
 
     struct wl_seat *wseat = nullptr;
     struct wl_keyboard *wkeyboard = nullptr;
@@ -352,21 +347,12 @@ struct WaylandDisplay {
     struct xkb_context *xkb_context = nullptr;
     struct xkb_keymap *keymap = nullptr;
     struct xkb_state *xkb_state = nullptr;
-
-    std::unique_ptr<Decoration> decoration;
-
-    bool pressed = false;
-    int lastx=0;
-    int lasty=0;
+    KeyModifierBitmask flags;
 
     std::vector<EGLConfig> egl_configs;
-    EGLSurface egl_surface = nullptr;
     EGLContext egl_context = nullptr;
     EGLDisplay egl_display = nullptr;
 
-    EGLint width, height;
-    bool is_fullscreen;
-    bool is_maximised;
     static constexpr EGLint attribs[] = {
         EGL_RENDERABLE_TYPE , EGL_OPENGL_BIT,
         EGL_RED_SIZE        , 8,
@@ -376,17 +362,21 @@ struct WaylandDisplay {
         EGL_STENCIL_SIZE    , 8,
         EGL_NONE
     };
+
+    // assume a single window for now
+    WaylandWindow* window;
 };
 
 constexpr EGLint WaylandDisplay::attribs[];
 
-struct WaylandWindow : public PangolinGl
+struct WaylandWindow : public WindowInterface
 {
-    WaylandWindow(const int width, const int height, std::unique_ptr<WaylandDisplay> display);
+public:
+    WaylandWindow(const int width, const int height, const std::string& title, std::shared_ptr<WaylandDisplay> display);
 
     ~WaylandWindow() override;
 
-    void ToggleFullscreen() override;
+    void ShowFullscreen(const TrueFalseToggle on_off) override;
 
     void Move(const int x, const int y) override;
 
@@ -400,7 +390,25 @@ struct WaylandWindow : public PangolinGl
 
     void ProcessEvents() override;
 
-    std::unique_ptr<WaylandDisplay> display;
+//private:
+    std::shared_ptr<WaylandDisplay> display;
+
+    EGLint width, height;
+    bool is_fullscreen;
+    bool is_maximised;
+
+    bool pressed = false;
+    int lastx=0;
+    int lasty=0;
+
+    struct wl_surface *wsurface = nullptr;
+    struct wl_egl_window *egl_window = nullptr;
+    struct xdg_surface *xshell_surface = nullptr;
+    struct xdg_toplevel *xshell_toplevel = nullptr;
+
+    EGLSurface egl_surface = nullptr;
+
+    std::shared_ptr<Decoration> decoration;
 };
 
 // map wayland ids to pangolin ids
@@ -450,7 +458,7 @@ static void handle_configure_toplevel(void *data, struct xdg_toplevel */*xdg_top
     const static uint min_width = 70;
     const static uint min_height = 70;
 
-    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
+    WaylandWindow* const w = static_cast<WaylandWindow*>(data);
 
     const bool provided = !(width==0 && height==0);
 
@@ -479,7 +487,7 @@ static void handle_configure_toplevel(void *data, struct xdg_toplevel */*xdg_top
 }
 
 static void handle_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial) {
-    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
+    WaylandWindow* const w = static_cast<WaylandWindow*>(data);
 
     // resize main surface
     wl_egl_window_resize(w->egl_window, w->width, w->height, 0, 0);
@@ -488,7 +496,7 @@ static void handle_configure(void *data, struct xdg_surface *xdg_surface, uint32
     w->decoration->resize(w->width, w->height);
 
     // notify Panglin views about resized area
-    pangolin::process::Resize(w->width, w->height);
+    w->ResizeSignal(WindowResizeEvent{w->width, w->height});
 
     xdg_surface_ack_configure(xdg_surface, serial);
 }
@@ -497,8 +505,8 @@ static const struct xdg_surface_listener shell_surface_listener = {
     handle_configure,
 };
 
-static void handle_toplevel_close(void */*data*/, struct xdg_toplevel */*xdg_toplevel*/) {
-    pangolin::QuitAll();
+static void handle_toplevel_close(void *data, struct xdg_toplevel */*xdg_toplevel*/) {
+    static_cast<WaylandWindow*>(data)->CloseSignal();
 }
 
 static const struct xdg_toplevel_listener toplevel_listener = {
@@ -515,38 +523,41 @@ static const struct xdg_wm_base_listener shell_listener = {
 };
 
 static void pointer_handle_enter(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t /*sx*/, wl_fixed_t /*sy*/) {
-    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
+    WaylandDisplay* const d = static_cast<WaylandDisplay*>(data);
+    WaylandWindow* const w = d->window;
     w->decoration->setTypeFromSurface(surface);
 
     const std::string cursor = w->decoration->getCursorForCurrentSurface();
 
-    const auto image = wl_cursor_theme_get_cursor(w->cursor_theme, cursor.c_str())->images[0];
-    wl_pointer_set_cursor(pointer, serial, w->cursor_surface, image->hotspot_x, image->hotspot_y);
-    wl_surface_attach(w->cursor_surface, wl_cursor_image_get_buffer(image), 0, 0);
-    wl_surface_damage(w->cursor_surface, 0, 0, image->width, image->height);
-    wl_surface_commit(w->cursor_surface);
+    const auto image = wl_cursor_theme_get_cursor(d->cursor_theme, cursor.c_str())->images[0];
+    wl_pointer_set_cursor(pointer, serial, d->cursor_surface, image->hotspot_x, image->hotspot_y);
+    wl_surface_attach(d->cursor_surface, wl_cursor_image_get_buffer(image), 0, 0);
+    wl_surface_damage(d->cursor_surface, 0, 0, image->width, image->height);
+    wl_surface_commit(d->cursor_surface);
 }
 
 static void pointer_handle_leave(void *data, struct wl_pointer */*pointer*/, uint32_t /*serial*/, struct wl_surface */*surface*/) {
-    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
-    w->pressed = false;
+    WaylandDisplay* const d = static_cast<WaylandDisplay*>(data);
+    d->window->pressed = false;
 }
 
 static void pointer_handle_motion(void *data, struct wl_pointer */*pointer*/, uint32_t /*time*/, wl_fixed_t sx, wl_fixed_t sy) {
-    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
+    WaylandDisplay* const d = static_cast<WaylandDisplay*>(data);
+    WaylandWindow* const w = d->window;
 
     w->lastx=wl_fixed_to_int(sx);
     w->lasty=wl_fixed_to_int(sy);
     if(w->pressed) {
-        pangolin::process::MouseMotion(w->lastx, w->lasty);
+        w->MouseMotionSignal(MouseMotionEvent{{float(w->lastx), float(w->lasty), d->flags}});
     }
     else {
-        pangolin::process::PassiveMouseMotion(w->lastx, w->lasty);
+        w->PassiveMouseMotionSignal(MouseMotionEvent{{float(w->lastx), float(w->lasty), d->flags}});
     }
 }
 
 static void pointer_handle_button(void *data, struct wl_pointer */*wl_pointer*/, uint32_t serial, uint32_t /*time*/, uint32_t button, uint32_t state) {
-    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
+    WaylandDisplay* const d = static_cast<WaylandDisplay*>(data);
+    WaylandWindow* const w = d->window;
 
     if(w->decoration->last_type<0) {
         // input goes to pangoling view
@@ -554,7 +565,7 @@ static void pointer_handle_button(void *data, struct wl_pointer */*wl_pointer*/,
             return;
 
         w->pressed = (state==WL_POINTER_BUTTON_STATE_PRESSED);
-        pangolin::process::Mouse(wl_button_ids.at(button), (state==WL_POINTER_BUTTON_STATE_RELEASED), w->lastx, w->lasty);
+        w->MouseSignal(MouseEvent{{float(w->lastx), float(w->lasty), d->flags}, wl_button_ids.at(button), w->pressed});
     }
     else {
         // input goes to window decoration
@@ -562,7 +573,7 @@ static void pointer_handle_button(void *data, struct wl_pointer */*wl_pointer*/,
         if((button==BTN_LEFT) && (state==WL_POINTER_BUTTON_STATE_PRESSED)) {
             switch (w->decoration->last_type) {
             case XDG_TOPLEVEL_RESIZE_EDGE_NONE:
-                xdg_toplevel_move(w->xshell_toplevel, w->wseat, serial);
+                xdg_toplevel_move(w->xshell_toplevel, d->wseat, serial);
                 break;
             case XDG_TOPLEVEL_RESIZE_EDGE_TOP:
             case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM:
@@ -572,10 +583,10 @@ static void pointer_handle_button(void *data, struct wl_pointer */*wl_pointer*/,
             case XDG_TOPLEVEL_RESIZE_EDGE_RIGHT:
             case XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT:
             case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT:
-                xdg_toplevel_resize(w->xshell_toplevel, w->wseat, serial, w->decoration->last_type);
+                xdg_toplevel_resize(w->xshell_toplevel, d->wseat, serial, w->decoration->last_type);
                 break;
             case ButtonSurface::type::CLOSE:
-                pangolin::QuitAll();
+                w->CloseSignal();
                 break;
             case ButtonSurface::type::MAXIMISE:
                 w->is_maximised = !w->is_maximised;
@@ -593,17 +604,21 @@ static void pointer_handle_button(void *data, struct wl_pointer */*wl_pointer*/,
 }
 
 static void pointer_handle_axis(void *data, struct wl_pointer */*wl_pointer*/, uint32_t /*time*/, uint32_t axis, wl_fixed_t value) {
-    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
+    WaylandDisplay* const d = static_cast<WaylandDisplay*>(data);
+    WaylandWindow* const w = d->window;
 
-    int button_id = -1;
+    const float v = wl_fixed_to_double(value);
+    float dx = 0, dy = 0;
+
     switch (axis) {
-    case REL_X: button_id = (value<0) ? 3 : 4; break;   // up, down
-    case REL_Y: button_id = (value<0) ? 5 : 6; break;   // left, right
+    case REL_X: dy = v; break;   // up, down
+    case REL_Y: dx = v; break;   // left, right
     }
 
-    if(button_id>0) {
-        pangolin::process::Mouse(button_id, 0, w->lastx, w->lasty);
-    }
+    w->SpecialInputSignal(SpecialInputEvent({
+        {float(w->lastx), float(w->lasty), d->flags},
+        InputSpecialScroll, {dx, dy, 0, 0}
+    }));
 }
 
 #if WAYLAND_VERSION_GE(1,12)
@@ -633,15 +648,15 @@ static const struct wl_pointer_listener pointer_listener = {
 };
 
 static void keyboard_handle_keymap(void *data, struct wl_keyboard */*keyboard*/, uint32_t /*format*/, int fd, uint32_t size) {
-    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
+    WaylandDisplay* const d = static_cast<WaylandDisplay*>(data);
 
     char *keymap_string = static_cast<char*>(mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0));
-    xkb_keymap_unref(w->keymap);
-    w->keymap = xkb_keymap_new_from_string(w->xkb_context, keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
+    xkb_keymap_unref(d->keymap);
+    d->keymap = xkb_keymap_new_from_string(d->xkb_context, keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
     munmap(keymap_string, size);
     close(fd);
-    xkb_state_unref(w->xkb_state);
-    w->xkb_state = xkb_state_new(w->keymap);
+    xkb_state_unref(d->xkb_state);
+    d->xkb_state = xkb_state_new(d->keymap);
 }
 
 static void keyboard_handle_enter(void */*data*/, struct wl_keyboard */*keyboard*/, uint32_t /*serial*/, struct wl_surface */*surface*/, struct wl_array */*keys*/) { }
@@ -649,15 +664,17 @@ static void keyboard_handle_enter(void */*data*/, struct wl_keyboard */*keyboard
 static void keyboard_handle_leave(void */*data*/, struct wl_keyboard */*keyboard*/, uint32_t /*serial*/, struct wl_surface */*surface*/) { }
 
 static void keyboard_handle_key(void *data, struct wl_keyboard */*keyboard*/, uint32_t /*serial*/, uint32_t /*time*/, uint32_t key, uint32_t state) {
-    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
+    WaylandDisplay* const d = static_cast<WaylandDisplay*>(data);
+    WaylandWindow* const w = d->window;
 
     // modifier keys
     if(wl_key_mod_ids.count(key)) {
         if(state==WL_KEYBOARD_KEY_STATE_PRESSED) {
-            pangolin::context->mouse_state |=  wl_key_mod_ids.at(key);
+            d->flags |= wl_key_mod_ids.at(key);
         }
         else if (state==WL_KEYBOARD_KEY_STATE_RELEASED) {
-            pangolin::context->mouse_state &= ~wl_key_mod_ids.at(key);
+            // NOTE: "d->flags &= ~wl_key_mod_ids.at(key);" does not work here
+            d->flags.set(wl_key_mod_ids.at(key), false);
         }
         return;
     }
@@ -670,7 +687,7 @@ static void keyboard_handle_key(void *data, struct wl_keyboard */*keyboard*/, ui
     }
     else {
         // character keys
-        const uint32_t utf32 = xkb_state_key_get_utf32(w->xkb_state, key+8);
+        const uint32_t utf32 = xkb_state_key_get_utf32(d->xkb_state, key+8);
         // filter non-ASCII
         if(utf32>0 && utf32<=127) {
             pango_key = int(utf32);
@@ -678,18 +695,14 @@ static void keyboard_handle_key(void *data, struct wl_keyboard */*keyboard*/, ui
     }
 
     if(pango_key>0) {
-        if(state==WL_KEYBOARD_KEY_STATE_PRESSED) {
-            pangolin::process::Keyboard(uint8_t(pango_key), w->lastx, w->lasty);
-        }else if(state==WL_KEYBOARD_KEY_STATE_RELEASED){
-            pangolin::process::KeyboardUp(uint8_t(pango_key), w->lastx, w->lasty);
-        }
+        w->KeyboardSignal(KeyboardEvent{{float(w->lastx), float(w->lasty), d->flags}, uint8_t(pango_key), state==WL_KEYBOARD_KEY_STATE_PRESSED});
     }
 }
 
 static void keyboard_handle_modifiers(void *data, struct wl_keyboard */*keyboard*/, uint32_t /*serial*/, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) {
-    WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
+    WaylandDisplay* const d = static_cast<WaylandDisplay*>(data);
 
-    xkb_state_update_mask(w->xkb_state, mods_depressed, mods_latched, mods_locked, 0, 0, group);
+    xkb_state_update_mask(d->xkb_state, mods_depressed, mods_latched, mods_locked, 0, 0, group);
 }
 
 #if WAYLAND_VERSION_GE(1,12)
@@ -767,7 +780,7 @@ static const struct wl_registry_listener wregistry_listener = {
     global_registry_remover
 };
 
-WaylandDisplay::WaylandDisplay(const int width, const int height, const std::string title) : width(width), height(height) {
+WaylandDisplay::WaylandDisplay() {
     xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 
     wdisplay = wl_display_connect(nullptr);
@@ -804,86 +817,111 @@ WaylandDisplay::WaylandDisplay(const int width, const int height, const std::str
 
     egl_context = eglCreateContext(egl_display, egl_configs[0], EGL_NO_CONTEXT, nullptr);
 
-    wsurface = wl_compositor_create_surface(wcompositor);
-
-    egl_window = wl_egl_window_create(wsurface, width, height);
-    if(!egl_window) {
-        std::cerr << "Cannot create EGL window" << std::endl;
-    }
-
-    egl_surface = eglCreateWindowSurface(egl_display, egl_configs[0], (EGLNativeWindowType)egl_window, nullptr);
-    if (egl_surface == EGL_NO_SURFACE) {
-        std::cerr << "Cannot create EGL surface" << std::endl;
-    }
-
     if(xshell==nullptr) {
         throw std::runtime_error("No Wayland shell available!");
     }
 
     xdg_wm_base_add_listener(xshell, &shell_listener, this);
-    xshell_surface = xdg_wm_base_get_xdg_surface(xshell, wsurface);
+
+    wl_display_roundtrip(wdisplay);
+}
+
+WaylandDisplay::~WaylandDisplay() {
+    // cleanup EGL
+    if(egl_context) eglDestroyContext(egl_display, egl_context);
+    if(egl_display) eglTerminate(egl_display);
+
+    // cleanup Wayland
+    if(wkeyboard)       wl_keyboard_destroy(wkeyboard);
+    if(pointer)         wl_pointer_destroy(pointer);
+    if(cursor_surface)  wl_surface_destroy(cursor_surface);
+    if(cursor_theme)    wl_cursor_theme_destroy(cursor_theme);
+    if(shm)             wl_shm_destroy(shm);
+    if(wseat)           wl_seat_destroy(wseat);
+    if(xshell)          xdg_wm_base_destroy(xshell);
+    if(wsubcompositor)  wl_subcompositor_destroy(wsubcompositor);
+    if(wcompositor)     wl_compositor_destroy(wcompositor);
+    if(wregistry)       wl_registry_destroy(wregistry);
+    if(wdisplay)        wl_display_disconnect(wdisplay);
+
+    if(xkb_context) xkb_context_unref(xkb_context);
+    if(xkb_state)   xkb_state_unref(xkb_state);
+    if(keymap)      xkb_keymap_unref(keymap);
+}
+
+WaylandWindow::WaylandWindow(const int w, const int h,
+                             const std::string& title,
+                             std::shared_ptr<WaylandDisplay> display)
+    : display(display)
+{
+    wsurface = wl_compositor_create_surface(display->wcompositor);
+
+    display->window = this;
+
+    width = w;
+    height = h;
+
+    egl_window = wl_egl_window_create(wsurface, w, h);
+    if(!egl_window) {
+        std::cerr << "Cannot create EGL window" << std::endl;
+    }
+
+    egl_surface = eglCreateWindowSurface(display->egl_display, display->egl_configs[0], (EGLNativeWindowType)egl_window, nullptr);
+    if (egl_surface == EGL_NO_SURFACE) {
+        std::cerr << "Cannot create EGL surface" << std::endl;
+    }
+
+    xshell_surface = xdg_wm_base_get_xdg_surface(display->xshell, wsurface);
     xdg_surface_add_listener(xshell_surface, &shell_surface_listener, this);
     xshell_toplevel = xdg_surface_get_toplevel(xshell_surface);
     xdg_toplevel_add_listener(xshell_toplevel, &toplevel_listener, this);
     xdg_toplevel_set_title(xshell_toplevel, title.c_str());
     xdg_toplevel_set_app_id(xshell_toplevel, title.c_str());
 
-    wl_display_sync(wdisplay);
-
     // construct window decoration
     const pangolin::Colour grey(0.5f, 0.5f, 0.5f);
-    decoration = std::unique_ptr<Decoration>(new Decoration(5, 20, grey, wcompositor, wsubcompositor, wsurface, egl_display, egl_configs[0]));
+    decoration = std::unique_ptr<Decoration>(new Decoration(5, 20, grey, display->wcompositor, display->wsubcompositor, wsurface, display->egl_display, display->egl_configs[0]));
     decoration->create();
     decoration->resize(width, height);
 }
 
-WaylandDisplay::~WaylandDisplay() {
+WaylandWindow::~WaylandWindow() {
     if(decoration)  decoration->destroy();
 
     // cleanup EGL
-    if(egl_context) eglDestroyContext(egl_display, egl_context);
-    if(egl_surface) eglDestroySurface(egl_display, egl_surface);
+    if(egl_surface) eglDestroySurface(display->egl_display, egl_surface);
     if(egl_window)  wl_egl_window_destroy(egl_window);
-    if(egl_display) eglTerminate(egl_display);
 
     // cleanup Wayland
     if(xshell_surface)  xdg_surface_destroy(xshell_surface);
     if(xshell_toplevel) xdg_toplevel_destroy(xshell_toplevel);
-    if(xshell)          xdg_wm_base_destroy(xshell);
 
     if(wsurface)        wl_surface_destroy(wsurface);
-    if(wregistry)       wl_registry_destroy(wregistry);
-    if(wdisplay)        wl_display_disconnect(wdisplay);
-
-    if(xkb_context) xkb_context_unref(xkb_context);
 }
-
-WaylandWindow::WaylandWindow(const int w, const int h, std::unique_ptr<WaylandDisplay> display) : display(std::move(display)){
-    windowed_size[0] = w;
-    windowed_size[1] = h;
-}
-
-WaylandWindow::~WaylandWindow() { }
 
 void WaylandWindow::MakeCurrent() {
-    eglMakeCurrent(display->egl_display, display->egl_surface, display->egl_surface, display->egl_context);
-    context = this;
+    eglMakeCurrent(display->egl_display, egl_surface, egl_surface, display->egl_context);
 }
 
 void WaylandWindow::RemoveCurrent() {
     eglMakeCurrent(display->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
-void WaylandWindow::ToggleFullscreen() {
-    is_fullscreen = !is_fullscreen;         // state for Pangolin
-    display->is_fullscreen = is_fullscreen; // state for Wayland
-    if(is_fullscreen) {
-        display->decoration->destroy();
-        xdg_toplevel_set_fullscreen(display->xshell_toplevel, nullptr);
-    }
-    else {
-        display->decoration->create();
-        xdg_toplevel_unset_fullscreen(display->xshell_toplevel);
+void WaylandWindow::ShowFullscreen(const TrueFalseToggle on_off) {
+    switch (on_off) {
+    case TrueFalseToggle::False:
+        is_fullscreen = false;
+        decoration->create();
+        xdg_toplevel_unset_fullscreen(xshell_toplevel);
+        break;
+    case TrueFalseToggle::True:
+        is_fullscreen = true;
+        decoration->destroy();
+        xdg_toplevel_set_fullscreen(xshell_toplevel, nullptr);
+        break;
+    case TrueFalseToggle::Toggle:
+        ShowFullscreen(TrueFalseToggle(!is_fullscreen));
+        break;
     }
 
     wl_display_sync(display->wdisplay);
@@ -896,10 +934,10 @@ void WaylandWindow::Resize(const unsigned int /*w*/, const unsigned int /*h*/) {
 void WaylandWindow::ProcessEvents() { }
 
 void WaylandWindow::SwapBuffers() {
-    eglSwapBuffers(display->egl_display, display->egl_surface);
+    eglSwapBuffers(display->egl_display, egl_surface);
 
     // draw all decoration elements
-    display->decoration->draw();
+    decoration->draw();
 
     MakeCurrent();
 
@@ -910,13 +948,13 @@ void WaylandWindow::SwapBuffers() {
 std::unique_ptr<WindowInterface> CreateWaylandWindowAndBind(const std::string window_title, const int w, const int h, const std::string /*display_name*/, const bool /*double_buffered*/, const int /*sample_buffers*/, const int /*samples*/) {
 
     try{
-        std::unique_ptr<WaylandDisplay> newdisplay = std::unique_ptr<WaylandDisplay>(new WaylandDisplay(w, h, window_title));
+        std::unique_ptr<WaylandDisplay> newdisplay = std::make_unique<WaylandDisplay>();
 
         // glewInit() fails with SIGSEGV for glew < 2.0 since it links to GLX
         if(atoi((char*)glewGetString(GLEW_VERSION_MAJOR))<2)
             return nullptr;
 
-        WaylandWindow* win = new WaylandWindow(w, h, std::move(newdisplay));
+        WaylandWindow* win = new WaylandWindow(w, h, window_title, std::move(newdisplay));
 
         return std::unique_ptr<WindowInterface>(win);
     }
@@ -931,6 +969,29 @@ std::unique_ptr<WindowInterface> CreateWaylandWindowAndBind(const std::string wi
 PANGOLIN_REGISTER_FACTORY(WaylandWindow)
 {
   struct WaylandWindowFactory : public TypedFactoryInterface<WindowInterface> {
+    std::map<std::string,Precedence> Schemes() const override
+    {
+      return {{"wayland",10}, {"linux",9}, {"default",90}};
+    }
+
+    const char* Description() const override
+    {
+      return "Use X11 native window";
+    }
+
+    ParamSet Params() const override
+    {
+      return {{
+          {"window_title","window","Title of application Window"},
+          {"w","640","Requested window width"},
+          {"h","480","Requested window height"},
+          {"display_name","","The display name to open the window on"},
+          {"double_buffered","true","Whether the window should be double buffered"},
+          {"sample_buffers","1",""},
+          {"samples","1",""},
+      }};
+    }
+
     std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
 
       const std::string window_title = uri.Get<std::string>("window_title", "window");
@@ -946,11 +1007,7 @@ PANGOLIN_REGISTER_FACTORY(WaylandWindow)
     virtual ~WaylandWindowFactory() { }
   };
 
-    auto factory = std::make_shared<WaylandWindowFactory>();
-    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 10, "wayland");
-    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 9,  "linux");
-    FactoryRegistry<WindowInterface>::I().RegisterFactory(factory, 90,  "default");
+    return FactoryRegistry::I()->RegisterFactory<WindowInterface>(std::make_shared<WaylandWindowFactory>());
 }
 
 } // namespace pangolin
-
