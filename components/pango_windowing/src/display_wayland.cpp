@@ -21,6 +21,13 @@
 
 #define WAYLAND_VERSION_GE(MAJ, MIN) WAYLAND_VERSION_MAJOR >= MAJ && WAYLAND_VERSION_MINOR >= MIN
 
+// The "wl_array_for_each" C macro for C++
+// https://github.com/libretro/RetroArch/blob/a9125fffaa981cab811ba6caf4d756fa6ef9a561/input/common/wayland_common.h#L50-L53
+#define WL_ARRAY_FOR_EACH(pos, array, type) \
+    for (pos = (type)(array)->data; \
+         (const char *) pos < ((const char *) (array)->data + (array)->size); \
+         (pos)++)
+
 namespace pangolin {
 
 namespace wayland {
@@ -453,12 +460,30 @@ static const std::map<uint,int> wl_key_special_ids = {
     {KEY_INSERT, PANGO_KEY_INSERT},
 };
 
-static void handle_configure_toplevel(void *data, struct xdg_toplevel */*xdg_toplevel*/, int32_t width, int32_t height, struct wl_array */*states*/) {
+static void handle_configure_toplevel(void *data, struct xdg_toplevel */*xdg_toplevel*/, int32_t width, int32_t height, struct wl_array *states) {
 
     const static uint min_width = 70;
     const static uint min_height = 70;
 
     WaylandWindow* const w = static_cast<WaylandWindow*>(data);
+
+    // reset window states
+    w->is_maximised = w->is_fullscreen = false;
+
+    // set new window states
+    const enum xdg_toplevel_state *state;
+    WL_ARRAY_FOR_EACH(state, states, const enum xdg_toplevel_state*) {
+        switch (*state) {
+        case XDG_TOPLEVEL_STATE_MAXIMIZED:
+            w->is_maximised = true;
+            break;
+        case XDG_TOPLEVEL_STATE_FULLSCREEN:
+            w->is_fullscreen = true;
+            break;
+        default:
+            break;
+        }
+    }
 
     const bool provided = !(width==0 && height==0);
 
@@ -589,12 +614,11 @@ static void pointer_handle_button(void *data, struct wl_pointer */*wl_pointer*/,
                 w->CloseSignal();
                 break;
             case ButtonSurface::type::MAXIMISE:
-                w->is_maximised = !w->is_maximised;
                 if(w->is_maximised) {
-                    xdg_toplevel_set_maximized(w->xshell_toplevel);
+                    xdg_toplevel_unset_maximized(w->xshell_toplevel);
                 }
                 else {
-                    xdg_toplevel_unset_maximized(w->xshell_toplevel);
+                    xdg_toplevel_set_maximized(w->xshell_toplevel);
                 }
 
                 break;
@@ -910,12 +934,10 @@ void WaylandWindow::RemoveCurrent() {
 void WaylandWindow::ShowFullscreen(const TrueFalseToggle on_off) {
     switch (on_off) {
     case TrueFalseToggle::False:
-        is_fullscreen = false;
         decoration->create();
         xdg_toplevel_unset_fullscreen(xshell_toplevel);
         break;
     case TrueFalseToggle::True:
-        is_fullscreen = true;
         decoration->destroy();
         xdg_toplevel_set_fullscreen(xshell_toplevel, nullptr);
         break;
