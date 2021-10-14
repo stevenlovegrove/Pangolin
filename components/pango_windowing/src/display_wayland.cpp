@@ -307,6 +307,16 @@ struct Decoration {
         return resize_cursor.count((enum xdg_toplevel_resize_edge)last_type) ? resize_cursor.at((enum xdg_toplevel_resize_edge)last_type) : "left_ptr";
     }
 
+    void toContentSize(const int window_w, const int window_h, int &content_w, int &content_h) {
+        content_w = window_w - (2*border_size);
+        content_h = window_h - (2*border_size + title_size);
+    }
+
+    void toWindowSize(const int content_w, const int content_h, int &window_w, int &window_h) {
+        window_w = content_w + (2*border_size);
+        window_h = content_h + (2*border_size + title_size);
+    }
+
     std::vector<DecorationSurface> decorations;
     int last_type;
 
@@ -501,10 +511,11 @@ static void handle_configure_toplevel(void *data, struct xdg_toplevel */*xdg_top
     if (restore_w==0) restore_w = w->width;
     if (restore_h==0) restore_h = w->height;
 
-    if(!w->is_fullscreen) {
+    if(!w->is_fullscreen && (width!=0 && height!=0)) {
         // has decoration
-        w->width = std::max(restore_w-int(2*w->decoration->border_size), int(min_width));
-        w->height = std::max(restore_h-2*int(w->decoration->border_size)-int(w->decoration->title_size), int(min_height));
+        w->decoration->toContentSize(restore_w, restore_h, w->width, w->height);
+        w->width = std::max(w->width, int(min_width));
+        w->height = std::max(w->height, int(min_height));
     }
     else {
         w->width = restore_w;
