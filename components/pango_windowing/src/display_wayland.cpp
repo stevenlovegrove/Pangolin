@@ -403,6 +403,9 @@ public:
     EGLint width, height;
     bool is_fullscreen;
     bool is_maximised;
+    // store floating window dimensions to restore to,
+    // when returning from maximised or fullscreen
+    int floating_width = 0, floating_height = 0;
 
     bool pressed = false;
     int lastx=0;
@@ -485,30 +488,35 @@ static void handle_configure_toplevel(void *data, struct xdg_toplevel */*xdg_top
         }
     }
 
-    const bool provided = !(width==0 && height==0);
+    // set proposed dimensions, this includes the entire window with decorations
+    int restore_w = width;
+    int restore_h = height;
 
-    int main_w, main_h;
-    if(provided) {
-        // use the provided dimensions
-        if(w->is_fullscreen) {
-            // without decorations
-            main_w = width;
-            main_h = height;
-        }
-        else {
-            // with decorations
-            main_w = std::max(width-int(2*w->decoration->border_size), int(min_width));
-            main_h = std::max(height-2*int(w->decoration->border_size)-int(w->decoration->title_size), int(min_height));
-        }
+    // restore from stored floating state if not specified
+    if (restore_w==0) restore_w = w->floating_width;
+    if (restore_h==0) restore_h = w->floating_height;
+
+    // use initially provided dimensions if floating was never set,
+    // these are in the "content" dimensions
+    if (restore_w==0) restore_w = w->width;
+    if (restore_h==0) restore_h = w->height;
+
+    if(!w->is_fullscreen) {
+        // has decoration
+        w->width = std::max(restore_w-int(2*w->decoration->border_size), int(min_width));
+        w->height = std::max(restore_h-2*int(w->decoration->border_size)-int(w->decoration->title_size), int(min_height));
     }
     else {
-        // restore from saved dimensions
-        main_w = std::max((w->width)-int(2*w->decoration->border_size), int(min_width));
-        main_h = std::max((w->height)-2*int(w->decoration->border_size)-int(w->decoration->title_size), int(min_height));
+        w->width = restore_w;
+        w->height = restore_h;
     }
 
-    w->width = main_w;
-    w->height = main_h;
+    // store the current state as floating state,
+    // if we are neither maximised nor fullscreen
+    if (!w->is_maximised && !w->is_fullscreen) {
+        w->floating_width = w->width;
+        w->floating_height = w->height;
+    }
 }
 
 static void handle_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial) {
