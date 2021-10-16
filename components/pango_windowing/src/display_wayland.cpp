@@ -73,7 +73,6 @@ struct ButtonSurface {
     {
         surface = wl_compositor_create_surface(compositor);
         subsurface = wl_subcompositor_get_subsurface(subcompositor, surface, source);
-        wl_subsurface_set_desync(subsurface);
         egl_context = eglCreateContext (egl_display, config, EGL_NO_CONTEXT, nullptr);
         egl_window = wl_egl_window_create(surface, width, height);
         egl_surface = eglCreateWindowSurface(egl_display, config, (EGLNativeWindowType)egl_window, nullptr);
@@ -123,6 +122,7 @@ struct ButtonSurface {
             glEnd();
             break;
         }
+        eglSwapInterval(egl_display, 0);
         eglSwapBuffers(egl_display, egl_surface);
     }
 };
@@ -153,7 +153,6 @@ struct DecorationSurface {
     {
         surface = wl_compositor_create_surface(compositor);
         subsurface = wl_subcompositor_get_subsurface(subcompositor, surface, source);
-        wl_subsurface_set_desync(subsurface);
         egl_context = eglCreateContext(egl_display, config, EGL_NO_CONTEXT, nullptr);
         egl_window = wl_egl_window_create(surface, 50, 50);
         egl_surface = eglCreateWindowSurface(egl_display, config, (EGLNativeWindowType)egl_window, nullptr);
@@ -221,6 +220,7 @@ struct DecorationSurface {
         eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
         glClearColor(colour.r, colour.g, colour.b, colour.a);
         glClear(GL_COLOR_BUFFER_BIT);
+        eglSwapInterval(egl_display, 0);
         eglSwapBuffers(egl_display, egl_surface);
     }
 };
@@ -971,7 +971,7 @@ void WaylandWindow::SwapBuffers() {
 
     MakeCurrent();
 
-    wl_display_roundtrip(display->wdisplay);
+    wl_display_dispatch(display->wdisplay);
 }
 
 
