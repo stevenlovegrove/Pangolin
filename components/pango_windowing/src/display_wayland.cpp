@@ -691,7 +691,9 @@ static void keyboard_handle_keymap(void *data, struct wl_keyboard */*keyboard*/,
     d->xkb_state = xkb_state_new(d->keymap);
 }
 
-static void keyboard_handle_enter(void */*data*/, struct wl_keyboard */*keyboard*/, uint32_t /*serial*/, struct wl_surface */*surface*/, struct wl_array */*keys*/) { }
+static void keyboard_handle_enter(void *data, struct wl_keyboard */*keyboard*/, uint32_t /*serial*/, struct wl_surface */*surface*/, struct wl_array */*keys*/) {
+    static_cast<WaylandDisplay*>(data)->flags = {};
+}
 
 static void keyboard_handle_leave(void */*data*/, struct wl_keyboard */*keyboard*/, uint32_t /*serial*/, struct wl_surface */*surface*/) { }
 
