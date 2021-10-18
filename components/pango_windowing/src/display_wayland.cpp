@@ -690,10 +690,21 @@ static const struct wl_pointer_listener pointer_listener = {
 #endif
 };
 
-static void keyboard_handle_keymap(void *data, struct wl_keyboard */*keyboard*/, uint32_t /*format*/, int fd, uint32_t size) {
+static void keyboard_handle_keymap(void *data, struct wl_keyboard */*keyboard*/, uint32_t format, int fd, uint32_t size) {
+    if ((!data) || (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1)) {
+        std::cerr << "wrong keymap format, got " << format << ", expected WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1" << std::endl;
+        close(fd);
+        return;
+    }
+
     WaylandDisplay* const d = static_cast<WaylandDisplay*>(data);
 
-    char *keymap_string = static_cast<char*>(mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0));
+    char *keymap_string = static_cast<char*>(mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0));
+    if (keymap_string == MAP_FAILED) {
+        std::cerr << "keymap mmap failed: " << std::string(std::strerror(errno)) << std::endl;
+        close(fd);
+        return;
+    }
     xkb_keymap_unref(d->keymap);
     d->keymap = xkb_keymap_new_from_string(d->xkb_context, keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
     munmap(keymap_string, size);
