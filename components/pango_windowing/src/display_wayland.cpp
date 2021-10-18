@@ -426,6 +426,9 @@ public:
     struct xdg_surface *xshell_surface = nullptr;
     struct xdg_toplevel *xshell_toplevel = nullptr;
 
+    // we can only attach a buffer to a surface after it has been configured at least once
+    bool configured = false;
+
     EGLSurface egl_surface = nullptr;
 
     std::shared_ptr<Decoration> decoration;
@@ -543,6 +546,8 @@ static void handle_configure(void *data, struct xdg_surface *xdg_surface, uint32
     w->ResizeSignal(WindowResizeEvent{w->width, w->height});
 
     xdg_surface_ack_configure(xdg_surface, serial);
+
+    w->configured = true;
 }
 
 static const struct xdg_surface_listener shell_surface_listener = {
@@ -939,6 +944,16 @@ WaylandWindow::WaylandWindow(const int w, const int h,
     decoration = std::unique_ptr<Decoration>(new Decoration(5, 20, grey, display->wcompositor, display->wsubcompositor, wsurface, display->egl_display, display->egl_configs[0]));
     decoration->create();
     decoration->resize(width, height);
+
+    wl_surface_commit(wsurface);
+
+    wl_display_roundtrip(display->wdisplay);
+    wl_display_roundtrip(display->wdisplay);
+
+    // wait for the first configure event
+    while (!configured) {
+        wl_display_dispatch(display->wdisplay);
+    }
 }
 
 WaylandWindow::~WaylandWindow() {
