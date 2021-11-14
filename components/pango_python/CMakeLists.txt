@@ -44,10 +44,10 @@ if(Python_FOUND AND pybind11_FOUND)
     )
 
     target_compile_definitions(${COMPONENT} PUBLIC HAVE_PYTHON)
-    target_link_libraries(${COMPONENT}
+    target_link_libraries(${COMPONENT} PUBLIC
         pango_core pango_display pango_plot pango_video pango_vars
-        pybind11::embed 
     )
+    target_link_libraries(${COMPONENT} PRIVATE pybind11::embed )
     target_include_directories(${COMPONENT} PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
         $<INSTALL_INTERFACE:include>
