@@ -39,8 +39,6 @@ else()
         pkg_check_modules(xkbcommon REQUIRED xkbcommon)
 
         target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/display_wayland.cpp )
-#        target_link_libraries(${COMPONENT} PRIVATE ${X11_LIBRARIES} )
-#        target_include_directories(${COMPONENT} PRIVATE ${X11_INCLUDE_DIR} )
 
         target_link_libraries(${COMPONENT} PRIVATE ${X11_LIBRARIES}
             ${WAYLAND_CLIENT_LIBRARIES}
@@ -68,9 +66,10 @@ else()
         target_include_directories(${COMPONENT} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
         target_sources( ${COMPONENT} PRIVATE xdg-shell-protocol.c)
 
+        # register window factory
+        target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"wayland\"")
+        PangolinRegisterFactory(WindowInterface WaylandWindow)
     endif()
-    target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"wayland\"")
-    PangolinRegisterFactory(WindowInterface WaylandWindow)
 endif()
 
 # headless offscreen rendering via EGL
@@ -85,7 +84,7 @@ if(OpenGL_EGL_FOUND)
 endif()
 
 
-target_sources(${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/window.cpp) 
+target_sources(${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/window.cpp)
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl )
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
