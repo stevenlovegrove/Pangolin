@@ -28,9 +28,8 @@ else()
         target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/display_x11.cpp )
         target_link_libraries(${COMPONENT} PRIVATE ${X11_LIBRARIES} )
         target_include_directories(${COMPONENT} PRIVATE ${X11_INCLUDE_DIR} )
+        PangolinRegisterFactory(WindowInterface X11Window)
     endif()
-    target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"x11\"")
-    PangolinRegisterFactory(WindowInterface X11Window)
 
     # Wayland
     find_package(Wayland QUIET)
@@ -69,6 +68,8 @@ else()
         # register window factory
         target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"wayland\"")
         PangolinRegisterFactory(WindowInterface WaylandWindow)
+    else()
+        target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"x11\"")
     endif()
 endif()
 
