@@ -33,7 +33,8 @@ else()
 
     # Wayland
     find_package(Wayland QUIET)
-    if(WAYLAND_CLIENT_FOUND)
+    pkg_check_modules(wayland-protocols QUIET wayland-protocols>=1.13)
+    if(WAYLAND_CLIENT_FOUND AND wayland-protocols_FOUND)
         find_package(PkgConfig)
         pkg_check_modules(xkbcommon REQUIRED xkbcommon)
 
