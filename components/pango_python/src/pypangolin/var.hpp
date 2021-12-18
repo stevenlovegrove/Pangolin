@@ -55,6 +55,8 @@ namespace py_pangolin {
     template <typename T>
     void set_attr_(const std::string& name, T val, const PyVarMeta & meta = {});
 
+    pybind11::object gui_changed(const std::string &name);
+
     std::vector<std::string>& get_members();     
   protected:
     var_t(const var_t &other);
