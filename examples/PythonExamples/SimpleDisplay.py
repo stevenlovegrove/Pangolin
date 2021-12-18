@@ -36,6 +36,7 @@ def main():
     )
     var_ui = pango.Var("ui")
     var_ui.a_Button = False
+    var_ui.a_Toggle = (False, pango.VarMeta(toggle=True))
     var_ui.a_double = (0.0, pango.VarMeta(0, 5))
     var_ui.an_int = (2, pango.VarMeta(0, 5))
     var_ui.a_double_log = (3.0, pango.VarMeta(1, 1e4, logscale=True))
@@ -52,7 +53,8 @@ def main():
         if var_ui.a_checkbox:
             var_ui.an_int = var_ui.a_double
 
-        var_ui.an_int_no_input = var_ui.an_int
+        if var_ui.GuiChanged('an_int'):
+            var_ui.an_int_no_input = var_ui.an_int
 
         d_cam.Activate(s_cam)
         pango.glDrawColouredCube()
