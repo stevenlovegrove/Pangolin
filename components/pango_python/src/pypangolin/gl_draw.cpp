@@ -93,7 +93,19 @@ namespace py_pangolin {
     m.def("glDrawLineLoop", &pangolin::glDrawLineLoop<double, 3, std::allocator<Eigen::Vector3d> >);
 
     m.def("glDrawAlignedBox", (void (*)(const Eigen::AlignedBox2f &, GLenum)) &pangolin::glDrawAlignedBox<float>, pybind11::arg("box"), pybind11::arg("mode") = GL_TRIANGLE_FAN);
+ 
+    m.def("glDrawCirclePerimeter", (void (*)(float, float, float)) &pangolin::glDrawCirclePerimeter);
+    m.def("glDrawCirclePerimeter", (void (*)(const Eigen::Vector2d &, double)) &pangolin::glDrawCirclePerimeter);
 
+    m.def("glDrawRectPerimeter", &pangolin::glDrawRectPerimeter);
+
+    m.def("glDrawCross",  (void (*)(GLfloat, GLfloat, GLfloat)) &pangolin::glDrawCross);
+    m.def("glDrawCross",  (void (*)(GLfloat, GLfloat, GLfloat, GLfloat)) &pangolin::glDrawCross);
+    m.def("glDrawCross",  (void (*)(const Eigen::Vector2d &, double)) &pangolin::glDrawCross);
+    m.def("glDrawCross",  (void (*)(const Eigen::Vector3d &, double)) &pangolin::glDrawCross);
+
+    m.def("glDrawCircle", (void (*)(float, float, float)) &pangolin::glDrawCircle);
+    m.def("glDrawCircle", (void (*)(const Eigen::Vector2d &, double)) &pangolin::glDrawCircle);
   }
 
 
