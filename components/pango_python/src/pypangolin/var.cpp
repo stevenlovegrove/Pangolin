@@ -120,6 +120,18 @@ void var_t::set_attr_(const std::string& name, T val, const PyVarMeta & meta){
     pango_var.Meta().logscale = meta.logscale;
   }
 }
+
+
+pybind11::object var_t::gui_changed(const std::string &name){
+    const std::shared_ptr<pangolin::VarValueGeneric> var = pangolin::VarState::I().GetByName(namespace_prefix+name);
+    if(var) {
+        bool result = var->Meta().gui_changed;
+        var->Meta().gui_changed = false;
+        return pybind11::bool_(result);
+    }
+    return pybind11::none();
+}
+
     
 std::vector<std::string>& var_t::get_members(){
     return members;
@@ -162,7 +174,8 @@ void bind_var(pybind11::module& m){
   pybind11::class_<py_pangolin::var_t> varClass(m, "Var");
     varClass.def(pybind11::init<const std::string &>())
       .def("__members__", &py_pangolin::var_t::get_members)
-      .def("__getattr__", &py_pangolin::var_t::get_attr);
+      .def("__getattr__", &py_pangolin::var_t::get_attr)
+      .def("GuiChanged", &py_pangolin::var_t::gui_changed);
 
   VarBinder<bool, int, double, std::string, std::function<void(void)> >::Bind(varClass);
 
