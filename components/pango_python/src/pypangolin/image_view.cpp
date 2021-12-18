@@ -35,16 +35,47 @@ namespace py_pangolin {
     using namespace pangolin;
     pybind11::class_<ImageView, View>(m, "ImageView")
       .def(pybind11::init<>())
-      .def("SetImage", [](ImageView& view, pybind11::array_t<float>& img) -> ImageView&{
+      .def("SetImage", [](ImageView& view, pybind11::array_t<float>& img, const std::string & format) -> ImageView&{
         if(img.ndim() == 2) {
-            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), img.shape(1) * sizeof(float));
-            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString("GRAY32F")) );
+            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), img.strides(0));
+            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString(format.empty() ? "GRAY32F" : format)) );
         }else if(img.ndim() == 3 && img.shape()[2] == 3) {
-            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), 3 * img.shape(1) * sizeof(float));
-            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString("RGB96F")) );
+            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), img.strides(0));
+            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString(format.empty() ? "RGB96F" : format)) );
+        }else if(img.ndim() == 3 && img.shape()[2] == 4) {
+            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), img.strides(0));
+            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString(format.empty() ? "RGB128F" : format)) );
         }else{
             throw std::runtime_error("Unsupported format for now.");
         }
-      });
+      }, "Set image to display by ImageView", pybind11::arg("img"), pybind11::arg("format") = "")
+      .def("SetImage", [](ImageView& view, pybind11::array_t<uint8_t>& img, const std::string & format) -> ImageView&{
+        if(img.ndim() == 2) {
+            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), img.strides(0));
+            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString(format.empty() ? "GRAY8" : format)) );
+        }else if(img.ndim() == 3 && img.shape()[2] == 3) {
+            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), img.strides(0));
+            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString(format.empty() ? "RGB24" : format)) );
+        }else if(img.ndim() == 3 && img.shape()[2] == 4) {
+            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), img.strides(0));
+            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString(format.empty() ? "RGB32" : format)) );
+        }else{
+            throw std::runtime_error("Unsupported format for now.");
+        }
+      }, "Set image to display by ImageView", pybind11::arg("img"), pybind11::arg("format") = "")
+      .def("SetImage", [](ImageView& view, pybind11::array_t<uint16_t>& img, const std::string & format) -> ImageView&{
+        if(img.ndim() == 2) {
+            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), img.strides(0));
+            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString(format.empty() ? "GRAY16" : format)) );
+        }else if(img.ndim() == 3 && img.shape()[2] == 3) {
+            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), img.strides(0));
+            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString(format.empty() ? "RGB48" : format)) );
+        }else if(img.ndim() == 3 && img.shape()[2] == 4) {
+            Image<uint8_t> wrapper((uint8_t*)img.mutable_data(0,0), img.shape(1), img.shape(0), img.strides(0));
+            return view.SetImage(wrapper, GlPixFormat(PixelFormatFromString(format.empty() ? "RGB64" : format)) );
+        }else{
+            throw std::runtime_error("Unsupported format for now.");
+        }
+      }, "Set image to display by ImageView", pybind11::arg("img"), pybind11::arg("format") = "");
   }
 }  // py_pangolin
