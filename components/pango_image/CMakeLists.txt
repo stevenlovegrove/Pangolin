@@ -72,6 +72,17 @@ if(BUILD_PANGOLIN_ZSTD)
     endif()
 endif()
 
+option(BUILD_PANGOLIN_LIBRAW "Build support for raw images (libraw)" ON)
+if(BUILD_PANGOLIN_LIBRAW)
+    find_package(libraw QUIET)
+    if(libraw_FOUND)
+        target_compile_definitions(${COMPONENT} PRIVATE HAVE_LIBRAW)
+        target_include_directories(${COMPONENT} PRIVATE ${libraw_INCLUDE_DIR} )
+        target_link_libraries(${COMPONENT} PRIVATE ${libraw_LIBRARIES})
+        message(STATUS "libraw Found and Enabled")
+    endif()
+endif()
+
 target_sources( ${COMPONENT}
 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/pixel_format.cpp
@@ -87,6 +98,7 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/image_io_tga.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/image_io_bmp.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/image_io_zstd.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/image_io_libraw.cpp
 )
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core)

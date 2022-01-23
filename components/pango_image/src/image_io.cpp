@@ -70,6 +70,9 @@ void SaveLz4(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
 TypedImage LoadPacked12bit(std::istream& in);
 void SavePacked12bit(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out);
 
+// LibRaw raw camera files
+TypedImage LoadLibRaw(const std::string& filename);
+
 TypedImage LoadImage(std::istream& in, ImageFileType file_type)
 {
     switch (file_type) {
@@ -114,6 +117,10 @@ TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
     }
     case ImageFileTypePango:
         return LoadPango(filename);
+    case ImageFileTypeArw:
+        [[fallthrough]];
+    case ImageFileTypeTiff:
+        return LoadLibRaw(filename);
     default:
         throw std::runtime_error("Unsupported image file type, '" + filename + "'");
     }
