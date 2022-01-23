@@ -147,6 +147,7 @@ struct PANGOLIN_EXPORT GlFramebuffer
     GlFramebuffer();
     ~GlFramebuffer();
     
+    GlFramebuffer(GlTexture& colour);
     GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth);
     GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth);
     GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlRenderBuffer& depth);

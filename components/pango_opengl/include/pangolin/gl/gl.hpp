@@ -573,6 +573,14 @@ inline GlFramebuffer::~GlFramebuffer()
     }
 }
 
+inline GlFramebuffer::GlFramebuffer(GlTexture& colour)
+    : attachments(0)
+{
+    glGenFramebuffersEXT(1, &fbid);
+    AttachColour(colour);
+    CheckGlDieOnError();
+}
+
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
     : attachments(0)
 {
