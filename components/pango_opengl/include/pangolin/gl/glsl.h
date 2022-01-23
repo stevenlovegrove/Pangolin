@@ -129,9 +129,17 @@ public:
     void SetUniform(const std::string& name, const OpenGlMatrix& m);
 
 #ifdef USE_EIGEN
+    void SetUniform(const std::string& name, const Eigen::Vector2f& v);
     void SetUniform(const std::string& name, const Eigen::Vector3f& v);
+    void SetUniform(const std::string& name, const Eigen::Vector4f& v);
+    void SetUniform(const std::string& name, const Eigen::Matrix2f& m);
     void SetUniform(const std::string& name, const Eigen::Matrix3f& m);
     void SetUniform(const std::string& name, const Eigen::Matrix4f& m);
+
+    void SetUniform(const std::string& name, const Eigen::Vector2d& v);
+    void SetUniform(const std::string& name, const Eigen::Vector3d& v);
+    void SetUniform(const std::string& name, const Eigen::Vector4d& v);
+    void SetUniform(const std::string& name, const Eigen::Matrix2d& m);
     void SetUniform(const std::string& name, const Eigen::Matrix3d& m);
     void SetUniform(const std::string& name, const Eigen::Matrix4d& m);
 #endif
@@ -729,9 +737,21 @@ inline void GlSlProgram::SetUniform(const std::string& name, const OpenGlMatrix&
 }
 
 #ifdef HAVE_EIGEN
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector2f& v)
+{
+    glUniform2f( GetUniformHandle(name), v[0], v[1]);
+}
 inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector3f& v)
 {
     glUniform3f( GetUniformHandle(name), v[0], v[1], v[2]);
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector4f& v)
+{
+    glUniform4f( GetUniformHandle(name), v[0], v[1], v[2], v[3]);
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix2f& m)
+{
+    glUniformMatrix2fv( GetUniformHandle(name), 1, GL_FALSE, m.data());
 }
 inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix3f& m)
 {
@@ -740,6 +760,23 @@ inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix
 inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix4f& m)
 {
     glUniformMatrix4fv( GetUniformHandle(name), 1, GL_FALSE, m.data());
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector2d& v)
+{
+    glUniform2d( GetUniformHandle(name), v[0], v[1]);
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector3d& v)
+{
+    glUniform3d( GetUniformHandle(name), v[0], v[1], v[2]);
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector4d& v)
+{
+    glUniform4d( GetUniformHandle(name), v[0], v[1], v[2], v[3]);
+}
+inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix2d& m)
+{
+    glUniformMatrix2dv( GetUniformHandle(name), 1, GL_FALSE, m.data());
 }
 inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix3d& m)
 {
