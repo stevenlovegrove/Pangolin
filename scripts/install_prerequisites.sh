@@ -3,7 +3,7 @@
 # exit when any command fails
 set -e
 
-MANAGERS=(dnf apt-get port vcpkg brew)
+MANAGERS=(dnf apt port vcpkg brew)
 MANAGER=""
 LIST=0
 VERBOSE=0
@@ -111,9 +111,9 @@ fi
 if ((VERBOSE > 0)); then echo "Using \"$MANAGER\" package manager (select another using -m)"; fi
 
 # Setup prereq commands and packages.
-if [[ "$MANAGER" == "apt-get" ]]; then
+if [[ "$MANAGER" == "apt" ]]; then
     SUDO="sudo"
-    PKGS_UPDATE="apt-get update"
+    PKGS_UPDATE="apt update"
     PKGS_OPTIONS+=(install --no-install-suggests --no-install-recommends)
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
     PKGS_REQUIRED+=(libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev)
