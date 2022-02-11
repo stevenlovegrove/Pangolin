@@ -78,12 +78,15 @@ cd Pangolin
 ./scripts/install_prerequisites.sh recommended
 
 # Configure and build
-mkdir build && cd build
-cmake ..
-cmake --build .
+cmake -B build
+cmake --build build
+
+# with Ninja for faster builds (sudo apt install ninja-build)
+cmake -B build -GNinja
+cmake --build build
 
 # GIVEME THE PYTHON STUFF!!!! (Check the output to verify selected python version)
-cmake --build . -t pypangolin_pip_install
+cmake --build build -t pypangolin_pip_install
 
 # Run me some tests! (Requires Catch2 which must be manually installed on Ubuntu.)
 ctest
