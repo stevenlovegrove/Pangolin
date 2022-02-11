@@ -117,7 +117,7 @@ if [[ "$MANAGER" == "apt" ]]; then
     PKGS_OPTIONS+=(install --no-install-suggests --no-install-recommends)
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
     PKGS_REQUIRED+=(libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev)
-    PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev cmake)
+    PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev cmake g++ ninja-build)
     PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev)
     PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev)
     PKGS_ALL+=(libdc1394-22-dev libraw1394-dev libopenni-dev python3.9-dev python3-distutils)
@@ -125,7 +125,7 @@ elif [[ "$MANAGER" == "dnf" ]]; then
     SUDO="sudo"
     PKGS_UPDATE="dnf check-update"
     PKGS_OPTIONS+=(install)
-    PKGS_REQUIRED+=(wayland-devel libxkbcommon-devel)
+    PKGS_REQUIRED+=(wayland-devel libxkbcommon-devel g++ ninja-build)
     PKGS_REQUIRED+=(glew-devel eigen3 cmake)
     PKGS_RECOMMENDED+=(libjpeg-devel libpng-devel OpenEXR-devel)
     PKGS_ALL+=(libdc1394-22-devel libraw1394-devel librealsense-devel openni-devel)
@@ -137,13 +137,13 @@ elif [[ "$MANAGER" == "port" ]]; then
     PKGS_UPDATE="port sync -q"
     PKGS_OPTIONS+=(-N install -q)
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(-y); fi
-    PKGS_REQUIRED+=(glew eigen3-devel cmake +gui)
+    PKGS_REQUIRED+=(glew eigen3-devel cmake +gui ninja)
     PKGS_RECOMMENDED+=(jpeg libpng openexr tiff ffmpeg-devel lz4 zstd py37-pybind11 catch2)
     PKGS_ALL+=(libdc1394 openni)
 elif [[ "$MANAGER" == "brew" ]]; then
     PKGS_OPTIONS+=(install)
     if ((VERBOSE > 0)); then PKGS_OPTIONS+=(--verbose); fi
-    PKGS_REQUIRED+=(glew eigen cmake)
+    PKGS_REQUIRED+=(glew eigen cmake ninja)
     PKGS_RECOMMENDED+=(libjpeg libpng openexr libtiff ffmpeg lz4 zstd catch2)
     # Brew doesn't have a dryrun option
     if ((DRYRUN > 0));  then
