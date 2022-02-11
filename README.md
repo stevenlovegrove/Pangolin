@@ -72,7 +72,7 @@ directory 'build', execute the following at a shell (or the equivelent using a G
 # Get Pangolin
 cd ~/your_fav_code_directory
 git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
-cd Pangolin 
+cd Pangolin
 
 # Install dependencies (as described above, or your preferred method)
 ./scripts/install_prerequisites.sh recommended
@@ -160,7 +160,7 @@ VideoViewer uvc:[size=640x480]///dev/video0
 VideoViewer flip://debayer:[tile=rggb,method=downsample]//file://~/somefile.pango
 ```
 
-Notice that for video, some modules support chaining to construct a simple filter graph. 
+Notice that for video, some modules support chaining to construct a simple filter graph.
 
 #### Window URI's
 
