@@ -36,12 +36,13 @@ namespace pangolin
 
 std::unique_ptr<VideoInterface> OpenVideo(const std::string& str_uri)
 {
-    RegisterFactoriesVideoInterface();
     return OpenVideo( ParseUri(str_uri) );
 }
 
 std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri)
 {
+    RegisterFactoriesVideoInterface();
+
     std::unique_ptr<VideoInterface> video =
             FactoryRegistry::I()->Construct<VideoInterface>(uri);
 
@@ -54,12 +55,13 @@ std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri)
 
 std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const std::string& str_uri)
 {
-    RegisterFactoriesVideoOutputInterface();
     return OpenVideoOutput( ParseUri(str_uri) );
 }
 
 std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri)
 {
+    RegisterFactoriesVideoOutputInterface();
+
     std::unique_ptr<VideoOutputInterface> video =
             FactoryRegistry::I()->Construct<VideoOutputInterface>(uri);
 
