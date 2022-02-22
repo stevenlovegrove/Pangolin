@@ -1,7 +1,12 @@
 get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
-find_package(Python COMPONENTS Interpreter Development QUIET)
-if(Python_FOUND)
+option(BUILD_PANGOLIN_PYTHON "Build support for Pangolin Interactive Console" ON)
+
+if(BUILD_PANGOLIN_PYTHON)
+  find_package(Python COMPONENTS Interpreter Development QUIET)
+endif()
+
+if(BUILD_PANGOLIN_PYTHON AND Python_FOUND)
     # If we've inited the submodule, use that
     if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/pybind11/CMakeLists.txt")
         add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/pybind11)
@@ -10,7 +15,7 @@ if(Python_FOUND)
     endif()
 endif()
 
-if(Python_FOUND AND pybind11_FOUND)
+if(BUILD_PANGOLIN_PYTHON AND Python_FOUND AND pybind11_FOUND)
     set(SRC_BINDINGS
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/attach.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/colour.cpp
@@ -79,6 +84,7 @@ if(Python_FOUND AND pybind11_FOUND)
         PRINT_HELP
     )
 else()
-    set_target_properties(${COMPONENT} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
+    #TODO: with the following line uncommented and BUILD_PANGOLIN_PYTHON=OFF, `make install` fails b/c it tries to install a missing libpango_python.a
+    #set_target_properties(${COMPONENT} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
     target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../pango_core/src/dummy.cpp )
 endif()
