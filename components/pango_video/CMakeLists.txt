@@ -87,7 +87,7 @@ if(BUILD_PANGOLIN_FFMPEG)
         # FFMPEG is a real pain for deprecating the API.
         set_source_files_properties(${DRIVER_DIR}/ffmpeg.cpp  PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
       endif()
-      message(STATUS "ffmpeg Found and Enabled")
+      message(STATUS "ffmpeg Found and Enabled: ${FFMPEG_INCLUDE_DIRS}")
   endif()
 endif()
 

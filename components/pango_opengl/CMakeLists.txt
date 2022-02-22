@@ -19,6 +19,7 @@ PRIVATE
 )
 
 find_package (Eigen3 REQUIRED CONFIG QUIET)
+message(STATUS "Found Eigen: '${EIGEN3_INCLUDE_DIRS}'")
 target_compile_definitions(${COMPONENT} PUBLIC HAVE_EIGEN HAVE_GLEW)
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image Eigen3::Eigen)
