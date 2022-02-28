@@ -277,7 +277,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
     struct FfmpegVideoFactory : public TypedFactoryInterface<VideoInterface> {
         std::map<std::string,Precedence> Schemes() const override
         {
-            return {{"ffpeg",0}, {"file",15}, {"files",15}};
+            return {{"ffmpeg",0}, {"file",15}, {"files",15}};
         }
         const char* Description() const override
         {
