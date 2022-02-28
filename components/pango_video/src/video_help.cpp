@@ -1,6 +1,9 @@
 #include <pangolin/video/video_help.h>
 #include <pangolin/video/video_interface.h>
 
+#include <pangolin/factory/RegisterFactoriesVideoInterface.h>
+#include <pangolin/factory/RegisterFactoriesVideoOutputInterface.h>
+
 namespace pangolin
 {
 
@@ -19,6 +22,8 @@ void PrintPixelFormats(std::ostream& out, bool color)
 
 void VideoHelp( std::ostream& out, const std::string& scheme_filter, HelpVerbosity verbosity)
 {
+    RegisterFactoriesVideoInterface();
+
 #ifndef _WIN32_
     const bool use_color = true;
 #else
