@@ -42,15 +42,34 @@ extern "C"
 #include <libavformat/avio.h>
 #include <libavutil/mathematics.h>
 #include <libavdevice/avdevice.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 }
+
+// Found https://github.com/leandromoreira/ffmpeg-libav-tutorial
+// Best reference I've seen for ffmpeg api
 
 namespace pangolin
 {
 
-FfmpegVideo::FfmpegVideo(const std::string filename, const std::string strfmtout, const std::string codec_hint, bool dump_info, int user_video_stream, ImageDim size)
-    :pFormatCtx(0)
+std::string ffmpeg_error_string(int err)
 {
-    InitUrl(filename, strfmtout, codec_hint, dump_info, user_video_stream, size);
+    std::string ret(256, '\0');
+    av_make_error_string(ret.data(), ret.size(), err);
+    return ret;
+}
+
+std::ostream& operator<<(std::ostream& os, const AVRational& v)
+{
+    os << v.num << "/" << v.den;
+    return os;
+}
+
+
+FfmpegVideo::FfmpegVideo(const std::string filename, const std::string strfmtout, const std::string codec_hint, bool dump_info, int user_video_stream, ImageDim size)
+    :pFormatCtx(nullptr), pCodecContext(nullptr)
+{
+    InitUrl(PathExpand(filename), strfmtout, codec_hint, dump_info, user_video_stream, size);
 }
 
 void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, const std::string codec_hint, bool dump_info, int user_video_stream, ImageDim size)
@@ -58,12 +77,14 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     if( url.find('*') != url.npos )
         throw VideoException("Wildcards not supported. Please use ffmpegs printf style formatting for image sequences. e.g. img-000000%04d.ppm");
 
-    // Register all formats and codecs
-    av_register_all();
     // Register all devices
     avdevice_register_all();
 
-    AVInputFormat* fmt = NULL;
+#if (LIBAVFORMAT_VERSION_MAJOR >= 59)
+    const AVInputFormat* fmt = nullptr;
+#else
+    AVInputFormat* fmt = nullptr;
+#endif
 
     if( !codec_hint.empty() ) {
         fmt = av_find_input_format(codec_hint.c_str());
@@ -89,6 +110,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         pFormatCtx->max_analyze_duration = AV_TIME_BASE * 0.0;
 #endif
 
+
     // Retrieve stream information
 #if (LIBAVFORMAT_VERSION_MAJOR >= 53)
     if(avformat_find_stream_info(pFormatCtx, 0)<0)
@@ -108,53 +130,94 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
 #endif
     }
 
-    // Find the first video stream
-    videoStream=-1;
-    audioStream=-1;
+    const AVCodec *pCodec = nullptr;
+    const AVCodecParameters *pCodecParameters =  NULL;
+    int found_video_streams = 0;
 
-    std::vector<int> videoStreams;
-    std::vector<int> audioStreams;
-
-    for(unsigned i=0; i<pFormatCtx->nb_streams; i++)
+    // loop though all the streams and print its main information
+    for (int i = 0; i < pFormatCtx->nb_streams; i++)
     {
-        if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO)
-        {
-            videoStreams.push_back(i);
-        }else if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_AUDIO)
-        {
-            audioStreams.push_back(i);
+        AVStream * stream = pFormatCtx->streams[i];
+        const AVCodecParameters *pLocalCodecParameters = stream->codecpar;
+
+        // finds the registered decoder for a codec ID
+        const AVCodec *pLocalCodec = avcodec_find_decoder(pLocalCodecParameters->codec_id);
+        if (!pLocalCodec) {
+            pango_print_debug("Skipping stream with unsupported codec.\n");
+            stream->discard = AVDISCARD_ALL;
+            continue;
+        }
+
+        // When the stream is a video we store its index, codec parameters and codec
+        if (pLocalCodecParameters->codec_type == AVMEDIA_TYPE_VIDEO) {
+            if (found_video_streams == user_video_stream) {
+                pCodec = pLocalCodec;
+                pCodecParameters = pLocalCodecParameters;
+                videoStream = i;
+            }
+            ++found_video_streams;
+        }else{
+            stream->discard = AVDISCARD_ALL;
+            pango_print_debug("Skipping stream with supported but non-video codec.\n");
         }
     }
 
-    if(videoStreams.size()==0)
-        throw VideoException("Couldn't find a video stream");
+    if(found_video_streams==0 || user_video_stream >= found_video_streams)
+        throw VideoException("Couldn't find appropriate video stream");
 
-    if(0 <= user_video_stream && user_video_stream < (int)videoStreams.size() ) {
-        videoStream = videoStreams[user_video_stream];
-    }else{
-        videoStream = videoStreams[0];
+    packet = av_packet_alloc();
+    if (!packet)
+        throw VideoException("Failed to allocated memory for AVPacket");
+
+    // try to work out how many frames we have in video and conversion from frames to pts
+    auto vid_stream = pFormatCtx->streams[videoStream];
+
+    auto set_or_check = [this](int64_t& var, int64_t val){
+        if(!var) {
+            var = val;
+        }else if(var != val) {
+            pango_print_warn("Inconsistent calculation for video.");
+        }
+    };
+
+    numFrames = vid_stream->nb_frames;
+
+    // try to fix missing duration if we have numFrames
+    if(numFrames > 0 && vid_stream->duration <= 0 && vid_stream->avg_frame_rate.num > 0) {
+        auto duration_s = av_div_q( av_make_q(numFrames,1), vid_stream->avg_frame_rate);
+        auto duration_pts = av_div_q( duration_s, vid_stream->time_base);
+        if(duration_pts.den == 1) {
+            vid_stream->duration = duration_pts.num;
+        }else{
+            pango_print_warn("Non integral result for duration in pts. Ignoring.\n");
+        }
     }
 
-    // Get a pointer to the codec context for the video stream
-    pVidCodecCtx = pFormatCtx->streams[videoStream]->codec;
+    // try to fix numFrames if we have no duration
+    if(numFrames <= 0 && vid_stream->duration > 0 && vid_stream->avg_frame_rate.num > 0 && vid_stream->time_base.num > 0) {
+        auto duration_s = av_mul_q( av_make_q(vid_stream->duration,1), vid_stream->time_base);
+        auto frames_rational = av_mul_q(duration_s, vid_stream->avg_frame_rate);
+        if(frames_rational.num > 0 && frames_rational.den == 1) {
+            numFrames = frames_rational.num;
+        }else{
+            pango_print_warn("Non integral result for numFrames. Ignoring.\n");
+        }
+    }
+
+    if(numFrames && vid_stream->duration && vid_stream->duration % numFrames == 0) {
+        ptsPerFrame = vid_stream->duration / numFrames;
+    }else{
+        ptsPerFrame = 0;
+        numFrames = 0;
+        pango_print_warn("Video Doesn't contain seeking information\n");
+    }
+
+    next_frame = 0;
 
     // Find the decoder for the video stream
-    pVidCodec=avcodec_find_decoder(pVidCodecCtx->codec_id);
+    pVidCodec = pCodec;
     if(pVidCodec==0)
         throw VideoException("Codec not found");
-
-    // Open video codec
-#if LIBAVCODEC_VERSION_MAJOR > 52
-    if(avcodec_open2(pVidCodecCtx, pVidCodec,0)<0)
-#else
-    if(avcodec_open(pVidCodecCtx, pVidCodec)<0)
-#endif
-        throw VideoException("Could not open codec");
-
-    // Hack to correct wrong frame rates that seem to be generated by some codecs
-    if(pVidCodecCtx->time_base.num>1000 && pVidCodecCtx->time_base.den==1)
-        pVidCodecCtx->time_base.den=1000;
-
 
     // Allocate video frames
 #if LIBAVUTIL_VERSION_MAJOR >= 54
@@ -172,46 +235,57 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     if(fmtout == AV_PIX_FMT_NONE )
         throw VideoException("Output format not recognised",strfmtout);
 
+    pCodecContext = avcodec_alloc_context3(pCodec);
+    if (!pCodecContext)
+        throw VideoException("failed to allocated memory for AVCodecContext");
+
+    if (avcodec_parameters_to_context(pCodecContext, pCodecParameters) < 0)
+        throw VideoException("failed to copy codec params to codec context");
+
+    if (avcodec_open2(pCodecContext, pCodec, NULL) < 0)
+        throw VideoException("failed to open codec through avcodec_open2");
+
+
     // Image dimensions
-    const int w = pVidCodecCtx->width;
-    const int h = pVidCodecCtx->height;
+    const int w = pCodecContext->width;
+    const int h = pCodecContext->height;
 
-    // Determine required buffer size and allocate buffer
-    numBytesOut=avpicture_get_size(fmtout, w, h);
-
-    buffer= new uint8_t[numBytesOut];
-
-    // Assign appropriate parts of buffer to image planes in pFrameRGB
-    avpicture_fill((AVPicture *)pFrameOut, buffer, fmtout, w, h);
+    pFrameOut->width = w;
+    pFrameOut->height = h;
+    pFrameOut->format = fmtout;
+    if(av_frame_get_buffer(pFrameOut, 0) != 0) {
+        throw VideoException("");
+    }
 
     // Allocate SWS for converting pixel formats
     img_convert_ctx = sws_getContext(w, h,
-                                     pVidCodecCtx->pix_fmt,
+                                     pCodecContext->pix_fmt,
                                      w, h, fmtout, SWS_FAST_BILINEAR,
                                      NULL, NULL, NULL);
-    if(img_convert_ctx == NULL) {
+    if(!img_convert_ctx) {
         throw VideoException("Cannot initialize the conversion context");
     }
 
     // Populate stream info for users to query
-    const PixelFormat strm_fmt = PixelFormatFromString(FfmpegFmtToString(fmtout));
-    const StreamInfo stream(strm_fmt, w, h, (w*strm_fmt.bpp)/8, 0);
-    streams.push_back(stream);
+    numBytesOut = 0;
+    {
+        const PixelFormat strm_fmt = PixelFormatFromString(FfmpegFmtToString(fmtout));
+        const size_t pitch = (w*strm_fmt.bpp)/8;
+        const size_t size_bytes = h*pitch;
+        streams.emplace_back(strm_fmt, w, h, pitch, (unsigned char*)0 + numBytesOut);
+        numBytesOut += size_bytes;
+    }
+
+    auto s = pFormatCtx->streams[videoStream];
 }
 
 FfmpegVideo::~FfmpegVideo()
 {
-    // Free the RGB image
-    delete[] buffer;
     av_free(pFrameOut);
-
-    // Free the YUV frame
     av_free(pFrame);
 
-    // Close the codec
-    avcodec_close(pVidCodecCtx);
+    avcodec_close(pCodecContext);
 
-    // Close the video file
 #if (LIBAVFORMAT_VERSION_MAJOR >= 54 || (LIBAVFORMAT_VERSION_MAJOR >= 53 && LIBAVFORMAT_VERSION_MINOR >= 21) )
     avformat_close_input(&pFormatCtx);
 #else
@@ -219,7 +293,6 @@ FfmpegVideo::~FfmpegVideo()
     av_close_input_file(pFormatCtx);
 #endif
 
-    // Free pixel conversion context
     sws_freeContext(img_convert_ctx);
 }
 
@@ -243,34 +316,74 @@ void FfmpegVideo::Stop()
 
 bool FfmpegVideo::GrabNext(unsigned char* image, bool /*wait*/)
 {
-    int gotFrame = 0;
+    auto vid_stream = pFormatCtx->streams[videoStream];
 
-    while(!gotFrame && av_read_frame(pFormatCtx, &packet)>=0)
+    while(true)
     {
-        // Is this a packet from the video stream?
-        if(packet.stream_index==videoStream)
-        {
-            // Decode video frame
-            avcodec_decode_video2(pVidCodecCtx, pFrame, &gotFrame, &packet);
-        }
+        const int rx_res = avcodec_receive_frame(pCodecContext, pFrame);
+        if(rx_res == 0) {
+            const int expected_pts = vid_stream->start_time + next_frame * ptsPerFrame;
+            if(ptsPerFrame > 0 && expected_pts > pFrame->pts) {
+                // We dont have the right frame, probably from seek to keyframe.
+                continue;
+            }
 
-        // Did we get a video frame?
-        if(gotFrame) {
-            sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pVidCodecCtx->height, pFrameOut->data, pFrameOut->linesize);
+            sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecContext->height, pFrameOut->data, pFrameOut->linesize);
             memcpy(image,pFrameOut->data[0],numBytesOut);
+            next_frame++;
+            return true;
+        }else{
+            while(true) {
+                const int read_res = av_read_frame(pFormatCtx, packet);
+                if(read_res == 0) {
+                    if(packet->stream_index==videoStream) {
+                        if(avcodec_send_packet(pCodecContext, packet) == 0) {
+                            break; // have frame for codex
+                        }
+                    }
+                    av_packet_unref(packet);
+                }else{
+                    // No more packets for codec
+                    return false;
+                }
+            }
         }
-
-        // Free the packet that was allocated by av_read_frame
-        av_free_packet(&packet);
     }
-
-    return gotFrame;
 }
 
 bool FfmpegVideo::GrabNewest(unsigned char *image, bool wait)
 {
     return GrabNext(image,wait);
 }
+
+size_t FfmpegVideo::GetCurrentFrameId() const
+{
+    return next_frame-1;
+}
+
+size_t FfmpegVideo::GetTotalFrames() const
+{
+    return numFrames;
+}
+
+size_t FfmpegVideo::Seek(size_t frameid)
+{
+    if(ptsPerFrame && frameid != next_frame) {
+        const int64_t pts = ptsPerFrame*frameid;
+        const int res = avformat_seek_file(pFormatCtx, videoStream, 0, pts, pts, 0);
+        avcodec_flush_buffers(pCodecContext);
+
+        if(res >= 0) {
+            // success - next frame to read will be frameid, so 'current frame' is one before that.
+            next_frame = frameid;
+        }else{
+            pango_print_info("error whilst seeking. %u, %s\n", (unsigned)frameid, ffmpeg_error_string(res).data());
+        }
+    }
+
+    return next_frame;
+}
+
 
 PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
 {
@@ -287,7 +400,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
         {
             return {{
                 {"fmt","RGB24","Use FFMPEG to decode to this output format."},
-                {"stream","-1","Decode all streams (-1) or the selected stream only in a multi-stream video."},
+                {"stream","0","Decode stream with this index."},
                 {"codec_hint","","Apply a hint to FFMPEG on codec. Examples include {MJPEG,video4linux,...}"},
                 {"size","","Request a particular size output from FFMPEG"},
                 {"verbose","0","Output FFMPEG instantiation information."},
@@ -315,7 +428,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
             std::string codec_hint = uri.Get<std::string>("codec_hint","");
             ToUpper(outfmt);
             ToUpper(codec_hint);
-            const int video_stream = uri.Get<int>("stream",-1);
+            const int video_stream = uri.Get<int>("stream",0);
             const ImageDim size = uri.Get<ImageDim>("size",ImageDim(0,0));
             return std::unique_ptr<VideoInterface>( new FfmpegVideo(uri.url.c_str(), outfmt, codec_hint, verbose, video_stream) );
         }
