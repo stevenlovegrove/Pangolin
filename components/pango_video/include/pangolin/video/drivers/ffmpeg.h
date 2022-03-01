@@ -34,30 +34,35 @@
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT FfmpegVideo : public VideoInterface
+class PANGOLIN_EXPORT FfmpegVideo : public VideoInterface, public VideoPlaybackInterface
 {
 public:
     FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false, int user_video_stream = -1, ImageDim size = ImageDim(0,0));
     ~FfmpegVideo();
     
     //! Implement VideoInput::Start()
-    void Start();
+    void Start() override;
     
     //! Implement VideoInput::Stop()
-    void Stop();
+    void Stop() override;
 
     //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+    size_t SizeBytes() const override;
 
     //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+    const std::vector<StreamInfo>& Streams() const override;
     
     //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+    bool GrabNext( unsigned char* image, bool wait = true ) override;
     
     //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+    bool GrabNewest( unsigned char* image, bool wait = true ) override;
     
+    //! VideoPlaybackInterface methods
+    size_t GetCurrentFrameId() const override;
+    size_t GetTotalFrames() const override;
+    size_t Seek(size_t frameid) override;
+
 protected:
     void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false , int user_video_stream = -1, ImageDim size= ImageDim(0,0));
     
@@ -66,17 +71,16 @@ protected:
     SwsContext      *img_convert_ctx;
     AVFormatContext *pFormatCtx;
     int             videoStream;
-    int             audioStream;
-    AVCodecContext  *pVidCodecCtx;
-    AVCodecContext  *pAudCodecCtx;
-    AVCodec         *pVidCodec;
-    AVCodec         *pAudCodec;
+    int64_t         numFrames;
+    const AVCodec         *pVidCodec;
+    const AVCodec         *pAudCodec;
+    AVCodecContext *pCodecContext;
     AVFrame         *pFrame;
     AVFrame         *pFrameOut;
-    AVPacket        packet;
+    AVPacket        *packet;
     int             numBytesOut;
-    uint8_t         *buffer;
     AVPixelFormat     fmtout;
+    int64_t current_frame;
 };
 
 }

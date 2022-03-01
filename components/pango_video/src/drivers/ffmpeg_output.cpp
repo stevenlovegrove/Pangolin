@@ -13,7 +13,7 @@ namespace pangolin {
 // http://cekirdek.pardus.org.tr/~ismail/ffmpeg-docs/output-example_8c-source.html
 static AVStream* CreateStream(AVFormatContext *oc, AVCodecID codec_id, uint64_t frame_rate, int bit_rate, AVPixelFormat EncoderFormat, int width, int height)
 {
-    AVCodec* codec = avcodec_find_encoder(codec_id);
+    const AVCodec* codec = avcodec_find_encoder(codec_id);
     if (!(codec)) throw
         VideoException("Could not find encoder");
 

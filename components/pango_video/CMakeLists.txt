@@ -74,13 +74,14 @@ if(BUILD_PANGOLIN_FFMPEG)
   if(FFMPEG_FOUND)
       target_sources( ${COMPONENT} PRIVATE
           ${DRIVER_DIR}/ffmpeg.cpp
-          ${DRIVER_DIR}/ffmpeg_convert.cpp
-          ${DRIVER_DIR}/ffmpeg_output.cpp
+#          ${DRIVER_DIR}/ffmpeg_convert.cpp
+#          ${DRIVER_DIR}/ffmpeg_output.cpp
       )
       target_link_libraries(${COMPONENT} PRIVATE ${FFMPEG_LIBRARIES} )
       target_include_directories(${COMPONENT} PRIVATE ${FFMPEG_INCLUDE_DIRS} )
-      PangolinRegisterFactory( VideoInterface FfmpegVideo FfmpegVideoConvert)
-      PangolinRegisterFactory( VideoOutputInterface FfmpegVideoOutput)
+      PangolinRegisterFactory( VideoInterface FfmpegVideo)
+#      PangolinRegisterFactory( VideoInterface FfmpegVideo FfmpegVideoConvert)
+#      PangolinRegisterFactory( VideoOutputInterface FfmpegVideoOutput)
       if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # FFMPEG is a real pain for deprecating the API.
         set_source_files_properties(${DRIVER_DIR}/ffmpeg.cpp  PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
