@@ -63,6 +63,9 @@ public:
     size_t GetTotalFrames() const override;
     size_t Seek(size_t frameid) override;
 
+    size_t Width() const { return next_image.w; }
+    size_t Height() const { return next_image.h; }
+
 protected:
     bool LoadNext();
 
