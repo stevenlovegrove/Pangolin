@@ -25,13 +25,14 @@ PRIVATE
     ${DRIVER_DIR}/merge.cpp
     ${DRIVER_DIR}/json.cpp
     ${DRIVER_DIR}/thread.cpp
+    ${DRIVER_DIR}/mjpeg.cpp
 )
 
 PangolinRegisterFactory(
     VideoInterface
     TestVideo ImagesVideo SplitVideo TruncateVideo PangoVideo
     DebayerVideo ShiftVideo TransformVideo UnpackVideo PackVideo
-    JoinVideo MergeVideo JsonVideo
+    JoinVideo MergeVideo JsonVideo MjpegVideo
 )
 
 PangolinRegisterFactory(
