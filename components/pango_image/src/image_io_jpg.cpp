@@ -69,6 +69,7 @@ static void pango_jpeg_term_source(j_decompress_ptr cinfo) {
     pango_jpeg_source_mgr* src = (pango_jpeg_source_mgr*)cinfo->src;
     src->is->clear();
     src->is->seekg( src->is->tellg() - (std::streampos)src->pub.bytes_in_buffer );
+    src->pub.bytes_in_buffer = 0;
 }
 
 static void pango_jpeg_set_source_mgr(j_decompress_ptr cinfo, std::istream& is) {
@@ -199,6 +200,60 @@ TypedImage LoadJpg(std::istream& is) {
     throw std::runtime_error("Rebuild Pangolin for JPEG support.");
 #endif // HAVE_JPEG
 
+}
+
+std::vector<std::streampos> GetMJpegOffsets(std::ifstream& is) {
+    std::vector<std::streampos> offsets;
+
+#ifdef HAVE_JPEG
+    struct jpeg_decompress_struct cinfo;
+    struct jpeg_error_mgr jerr;
+    cinfo.err = jpeg_std_error(&jerr);
+    jerr.error_exit = error_handler;
+    jpeg_create_decompress(&cinfo);
+    pango_jpeg_set_source_mgr(&cinfo, is);
+
+    try {
+        while(true) {
+            // read info from header.
+            std::streampos jpeg_start_pos = is.tellg();
+            int r = jpeg_read_header(&cinfo, TRUE);
+            if (r != JPEG_HEADER_OK) {
+                throw std::runtime_error("Failed to read JPEG header.");
+            } else if (cinfo.num_components != 3 && cinfo.num_components != 1) {
+                throw std::runtime_error("Unsupported number of color components");
+            } else {
+                jpeg_start_decompress(&cinfo);
+
+                // resize storage if necessary
+                JSAMPARRAY imageBuffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE,
+                                                                    cinfo.output_width*cinfo.output_components, 1);
+                // TODO: Is there a better way to truly skip ANY decoding?
+#ifdef LIBJPEG_TURBO_VERSION
+                // bug in libjpeg-turbo prevents us from skipping to end, so skip to end-1
+                jpeg_skip_scanlines(&cinfo, cinfo.output_height-1);
+                jpeg_read_scanlines(&cinfo, imageBuffer, 1);
+#else
+                for (size_t y = 0; y < cinfo.output_height; y++) {
+                    jpeg_read_scanlines(&cinfo, imageBuffer, 1);
+                }
+#endif
+                jpeg_finish_decompress(&cinfo);
+                offsets.push_back(jpeg_start_pos);
+                cinfo.src->term_source(&cinfo);
+            }
+        }
+    }  catch (const std::runtime_error&) {
+    }
+
+    jpeg_destroy_decompress(&cinfo);
+
+    if(offsets.size() > 0) {
+        is.clear(); // clear eof marker
+        is.seekg(offsets[0]);
+    }
+#endif
+    return offsets;
 }
 
 TypedImage LoadJpg(const std::string& filename) {
