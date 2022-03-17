@@ -16,6 +16,7 @@ extern "C"
 #include <libswscale/swscale.h>
 #include <libavutil/pixdesc.h>
 #include <libavcodec/avcodec.h>
+#include <libavutil/imgutils.h>
 
 // Some versions of FFMPEG define this horrid macro in global scope.
 #undef PixelFormat

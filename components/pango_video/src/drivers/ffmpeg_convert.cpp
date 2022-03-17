@@ -10,14 +10,15 @@
 
 namespace pangolin {
 
+// Defined in ffmpeg.cpp
+int pango_sws_scale_frame(struct SwsContext *c, AVFrame *dst, const AVFrame *src);
+
 void FfmpegConverter::ConvertContext::convert(const unsigned char* src, unsigned char* dst)
 {
-    // avpicture_fill expects uint8_t* w/o const as the second parameter in earlier versions
-    avpicture_fill((AVPicture*)avsrc, const_cast<unsigned char*>(src + src_buffer_offset), fmtsrc, w, h);
-    avpicture_fill((AVPicture*)avdst, dst + dst_buffer_offset, fmtdst, w, h);
-    sws_scale(  img_convert_ctx,
-                avsrc->data, avsrc->linesize, 0, h,
-                avdst->data, avdst->linesize         );
+    // Copy into ffmpeg src buffer from user buffer
+    memcpy(avsrc->buf[0]->data, src + src_buffer_offset, avsrc->buf[0]->size);
+    pango_sws_scale_frame(img_convert_ctx, avdst, avsrc);
+    av_image_copy_to_buffer(dst + dst_buffer_offset, avdst->buf[0]->size, avdst->data, avdst->linesize, fmtdst, avdst->width, avdst->height, 1);
 }
 
 FfmpegConverter::FfmpegConverter(std::unique_ptr<VideoInterface> &videoin_, const std::string sfmtdst, FfmpegMethod method )
@@ -52,22 +53,23 @@ FfmpegConverter::FfmpegConverter(std::unique_ptr<VideoInterface> &videoin_, cons
         converters[i].src_buffer_offset=instrm.Offset() - (unsigned char*)0;
         //converters[i].src_buffer_offset=src_buffer_size;
 
-        #if LIBAVUTIL_VERSION_MAJOR >= 54
-            converters[i].avsrc = av_frame_alloc();
-            converters[i].avdst = av_frame_alloc();
-        #else
-            // deprecated
-            converters[i].avsrc = avcodec_alloc_frame();
-            converters[i].avdst = avcodec_alloc_frame();
-        #endif
+        converters[i].avsrc = av_frame_alloc();
+        converters[i].avsrc->width = instrm.Width();
+        converters[i].avsrc->height = instrm.Height();
+        converters[i].avsrc->format = FfmpegFmtFromString(instrm.PixFormat());
+        av_frame_get_buffer(converters[i].avsrc, 0);
+
+        converters[i].avdst = av_frame_alloc();
+        converters[i].avdst->width = instrm.Width();
+        converters[i].avdst->height = instrm.Height();
+        converters[i].avdst->format = FfmpegFmtFromString(sfmtdst);
+        av_frame_get_buffer(converters[i].avdst, 0);
 
         const PixelFormat pxfmtdst = PixelFormatFromString(sfmtdst);
         const StreamInfo sdst( pxfmtdst, instrm.Width(), instrm.Height(), (instrm.Width()*pxfmtdst.bpp)/8, (unsigned char*)0 + converters[i].dst_buffer_offset );
         streams.push_back(sdst);
 
-
-        //src_buffer_size += instrm.SizeBytes();
-        dst_buffer_size += avpicture_get_size(converters[i].fmtdst, instrm.Width(), instrm.Height());
+        dst_buffer_size += av_image_get_buffer_size(converters[i].fmtdst, instrm.Width(), instrm.Height(), 0);
     }
 
 }
@@ -106,7 +108,7 @@ bool FfmpegConverter::GrabNext( unsigned char* image, bool wait )
     if( videoin->GrabNext(input_buffer.get(),wait) )
     {
         for(ConvertContext&c:converters) {
-            c.convert(input_buffer.get(),image);
+            c.convert(input_buffer.get(), image);
         }
         return true;
     }

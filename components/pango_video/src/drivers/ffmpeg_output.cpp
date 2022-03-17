@@ -9,6 +9,9 @@
 
 namespace pangolin {
 
+// Defined in ffmpeg.cpp
+int pango_sws_scale_frame(struct SwsContext *c, AVFrame *dst, const AVFrame *src);
+
 AVCodecContext* CreateVideoCodecContext(AVCodecID codec_id, uint64_t frame_rate, int bit_rate, AVPixelFormat EncoderFormat, int width, int height)
 {
     const AVCodec* codec = avcodec_find_encoder(codec_id);
@@ -77,7 +80,7 @@ void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
        if (response == AVERROR(EAGAIN) || response == AVERROR_EOF) {
          break;
        } else if (response < 0) {
-         pango_print_error("Error while receiving packet from encoder: %s\n", av_err2str(response));
+         pango_print_error("Error while receiving packet from encoder.\n");
          return;
        }
 
@@ -106,14 +109,6 @@ void FfmpegVideoOutputStream::WriteImage(const uint8_t* img, int w, int h)
     av_frame_make_writable(src_frame);
     memcpy(src_frame->buf[0]->data, img, src_frame->buf[0]->size);
 
-
-//    if(flip) {
-//        for(int i=0; i<4; ++i) {
-//            src_picture.data[i] += (h-1) * src_picture.linesize[i];
-//            src_picture.linesize[i] *= -1;
-//        }
-//    }
-
     recorder.StartStream();
 
     AVFrame* frame_to_write = nullptr;
@@ -128,7 +123,7 @@ void FfmpegVideoOutputStream::WriteImage(const uint8_t* img, int w, int h)
             if (!sws_ctx) throw VideoException("Could not initialize the conversion context");
         }
         av_frame_make_writable(frame);
-        sws_scale_frame(sws_ctx, frame, src_frame);
+        pango_sws_scale_frame(sws_ctx, frame, src_frame);
         frame_to_write = frame;
     } else {
         frame_to_write = src_frame;
@@ -183,6 +178,18 @@ FfmpegVideoOutputStream::FfmpegVideoOutputStream(
     src_frame->height = input_info.Height();
     if(av_frame_get_buffer(src_frame,0)) {
         throw VideoException("Could not allocate picture");
+    }
+
+    if(flip) {
+        // setup data pointer to end of memory, and negate line sizes.
+        for(int i=0; i<4; ++i) {
+            if(src_frame->data[i]) {
+                src_frame->data[i] += (src_frame->height-1) * src_frame->linesize[i];
+            }
+            if(src_frame->linesize[i]) {
+                src_frame->linesize[i] *= -1;
+            }
+        }
     }
 }
 

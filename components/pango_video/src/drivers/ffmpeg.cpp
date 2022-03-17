@@ -65,6 +65,14 @@ std::ostream& operator<<(std::ostream& os, const AVRational& v)
     return os;
 }
 
+// Implementation of sws_scale_frame for versions which don't have it.
+int pango_sws_scale_frame(struct SwsContext *c, AVFrame *dst, const AVFrame *src)
+{
+    return sws_scale(c,
+        src->data, src->linesize, 0, src->height,
+        dst->data, dst->linesize
+    );
+}
 
 FfmpegVideo::FfmpegVideo(const std::string filename, const std::string strfmtout, const std::string codec_hint, bool dump_info, int user_video_stream, ImageDim size)
     :pFormatCtx(nullptr), pCodecContext(nullptr)
@@ -299,8 +307,8 @@ bool FfmpegVideo::GrabNext(unsigned char* image, bool /*wait*/)
                 // We dont have the right frame, probably from seek to keyframe.
                 continue;
             }
-            sws_scale_frame(img_convert_ctx, pFrameOut, pFrame);
-            memcpy(image,pFrameOut->data[0],numBytesOut);
+            pango_sws_scale_frame(img_convert_ctx, pFrameOut, pFrame);
+            av_image_copy_to_buffer(image, numBytesOut, pFrameOut->data, pFrameOut->linesize, fmtout, pFrameOut->width, pFrameOut->height, 1);
             next_frame++;
             return true;
         }else{
