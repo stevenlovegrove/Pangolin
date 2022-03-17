@@ -90,17 +90,12 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         fmt = av_find_input_format(codec_hint.c_str());
     }
 
-#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
     AVDictionary* options = nullptr;
     if(size.x != 0 && size.y != 0) {
         std::string s = std::to_string(size.x) + "x" + std::to_string(size.y);
         av_dict_set(&options, "video_size", s.c_str(), 0);
     }
     if( avformat_open_input(&pFormatCtx, url.c_str(), fmt, &options) )
-#else
-    // Deprecated - can't use with mjpeg
-    if( av_open_input_file(&pFormatCtx, url.c_str(), fmt, 0, NULL) )
-#endif
         throw VideoException("Couldn't open stream");
 
     if( !ToLowerCopy(codec_hint).compare("mjpeg") )
@@ -112,22 +107,12 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
 
 
     // Retrieve stream information
-#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
     if(avformat_find_stream_info(pFormatCtx, 0)<0)
-#else
-    // Deprecated
-    if(av_find_stream_info(pFormatCtx)<0)
-#endif
         throw VideoException("Couldn't find stream information");
 
     if(dump_info) {
         // Dump information about file onto standard error
-#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
         av_dump_format(pFormatCtx, 0, url.c_str(), false);
-#else
-        // Deprecated
-        dump_format(pFormatCtx, 0, url.c_str(), false);
-#endif
     }
 
     const AVCodec *pCodec = nullptr;
@@ -220,14 +205,8 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         throw VideoException("Codec not found");
 
     // Allocate video frames
-#if LIBAVUTIL_VERSION_MAJOR >= 54
     pFrame = av_frame_alloc();
     pFrameOut = av_frame_alloc();
-#else
-    // deprecated
-    pFrame = avcodec_alloc_frame();
-    pFrameOut = avcodec_alloc_frame();
-#endif
     if(!pFrame || !pFrameOut)
         throw VideoException("Couldn't allocate frames");
 
@@ -285,14 +264,7 @@ FfmpegVideo::~FfmpegVideo()
     av_free(pFrame);
 
     avcodec_close(pCodecContext);
-
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54 || (LIBAVFORMAT_VERSION_MAJOR >= 53 && LIBAVFORMAT_VERSION_MINOR >= 21) )
     avformat_close_input(&pFormatCtx);
-#else
-    // Deprecated
-    av_close_input_file(pFormatCtx);
-#endif
-
     sws_freeContext(img_convert_ctx);
 }
 
@@ -327,8 +299,7 @@ bool FfmpegVideo::GrabNext(unsigned char* image, bool /*wait*/)
                 // We dont have the right frame, probably from seek to keyframe.
                 continue;
             }
-
-            sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecContext->height, pFrameOut->data, pFrameOut->linesize);
+            sws_scale_frame(img_convert_ctx, pFrameOut, pFrame);
             memcpy(image,pFrameOut->data[0],numBytesOut);
             next_frame++;
             return true;

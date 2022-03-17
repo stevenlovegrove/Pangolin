@@ -75,4 +75,37 @@ protected:
     bool flip;
 };
 
+class FfmpegVideoOutputStream
+{
+public:
+    FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate, int bit_rate, const StreamInfo& input_info, bool flip );
+    ~FfmpegVideoOutputStream();
+
+    const StreamInfo& GetStreamInfo() const;
+
+    void WriteImage(const uint8_t* img, int w, int h);
+    void Flush();
+
+protected:
+    void WriteAvPacket(AVPacket* pkt);
+    void WriteFrame(AVFrame* frame);
+    double BaseFrameTime();
+
+    FfmpegVideoOutput& recorder;
+
+    StreamInfo input_info;
+    AVPixelFormat input_format;
+    AVPixelFormat output_format;
+    int64_t last_pts;
+
+    // These pointers are owned by class
+    AVStream* stream;
+    SwsContext *sws_ctx;
+    AVFrame* src_frame;
+    AVFrame* frame;
+    AVCodecContext* codec_context;
+
+    bool flip;
+};
+
 }

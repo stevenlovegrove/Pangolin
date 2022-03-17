@@ -9,229 +9,141 @@
 
 namespace pangolin {
 
-// Based on this example
-// http://cekirdek.pardus.org.tr/~ismail/ffmpeg-docs/output-example_8c-source.html
-static AVStream* CreateStream(AVFormatContext *oc, AVCodecID codec_id, uint64_t frame_rate, int bit_rate, AVPixelFormat EncoderFormat, int width, int height)
+AVCodecContext* CreateVideoCodecContext(AVCodecID codec_id, uint64_t frame_rate, int bit_rate, AVPixelFormat EncoderFormat, int width, int height)
 {
     const AVCodec* codec = avcodec_find_encoder(codec_id);
-    if (!(codec)) throw
-        VideoException("Could not find encoder");
+    if (!(codec))
+        throw VideoException("Could not find encoder");
 
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54 || (LIBAVFORMAT_VERSION_MAJOR >= 53 && LIBAVFORMAT_VERSION_MINOR >= 21) )
-    AVStream* stream = avformat_new_stream(oc, codec);
-#else
-    AVStream* stream = av_new_stream(oc, codec_id);
-#endif
+    if(codec->type != AVMEDIA_TYPE_VIDEO)
+        throw VideoException("Encoder is not a video encoder");
 
+    AVCodecContext* codec_context = avcodec_alloc_context3(codec);
+    if(!codec_context)
+        throw VideoException("Unable to create codec context");
+
+    codec_context->codec_id = codec_id;
+    codec_context->bit_rate = bit_rate;
+    codec_context->width    = width;
+    codec_context->height   = height;
+    codec_context->time_base = av_make_q(1,frame_rate);
+    codec_context->framerate = av_make_q(frame_rate,1);
+    codec_context->gop_size      = 10;
+    codec_context->max_b_frames  = 1;
+    codec_context->pix_fmt       = EncoderFormat;
+
+    /* open the codec */
+    int ret = avcodec_open2(codec_context, nullptr, nullptr);
+    if (ret < 0)  throw VideoException("Could not open video codec");
+
+    return codec_context;
+}
+
+// Based on this example
+// http://cekirdek.pardus.org.tr/~ismail/ffmpeg-docs/output-example_8c-source.html
+static AVStream* CreateStream(AVFormatContext *oc, AVCodecContext* codec_context)
+{
+    /* Some formats want stream headers to be separate. */
+    if (oc->oformat->flags & AVFMT_GLOBALHEADER)
+        codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+    AVStream* stream = avformat_new_stream(oc, codec_context->codec);
     if (!stream) throw VideoException("Could not allocate stream");
 
     stream->id = oc->nb_streams-1;
-
-    switch (codec->type) {
-//    case AVMEDIA_TYPE_AUDIO:
-//        stream->id = 1;
-//        stream->codec->sample_fmt  = AV_SAMPLE_FMT_S16;
-//        stream->codec->bit_rate    = 64000;
-//        stream->codec->sample_rate = 44100;
-//        stream->codec->channels    = 2;
-//        break;
-    case AVMEDIA_TYPE_VIDEO:
-        stream->codec->codec_id = codec_id;
-        stream->codec->bit_rate = bit_rate;
-        stream->codec->width    = width;
-        stream->codec->height   = height;
-        stream->codec->time_base.num = 1;
-        stream->codec->time_base.den = frame_rate;
-        stream->codec->gop_size      = 12;
-        stream->codec->pix_fmt       = EncoderFormat;
-        break;
-    default:
-        break;
-    }
-
-    /* Some formats want stream headers to be separate. */
-    if (oc->oformat->flags & AVFMT_GLOBALHEADER)
-        stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-
-    /* open the codec */
-    int ret = avcodec_open2(stream->codec, codec, NULL);
-    if (ret < 0)  throw VideoException("Could not open video codec");
+    stream->time_base = codec_context->time_base;
+    stream->avg_frame_rate = codec_context->framerate;
+    stream->r_frame_rate = stream->avg_frame_rate;
+    stream->duration = codec_context->framerate.num * 60 / codec_context->framerate.den;
+    avcodec_parameters_from_context(stream->codecpar, codec_context);
 
     return stream;
 }
 
-class FfmpegVideoOutputStream
-{
-public:
-    FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate, int bit_rate, const StreamInfo& input_info, bool flip );
-    ~FfmpegVideoOutputStream();
-
-    const StreamInfo& GetStreamInfo() const;
-
-    void WriteImage(const uint8_t* img, int w, int h, double time);
-    void Flush();
-
-protected:
-    void WriteAvPacket(AVPacket* pkt);
-    void WriteFrame(AVFrame* frame);
-    double BaseFrameTime();
-
-    FfmpegVideoOutput& recorder;
-
-    StreamInfo input_info;
-    AVPixelFormat input_format;
-    AVPixelFormat output_format;
-
-    AVPicture src_picture;
-    AVPicture dst_picture;
-    int64_t last_pts;
-
-    // These pointers are owned by class
-    AVStream* stream;
-    SwsContext *sws_ctx;
-    AVFrame* frame;
-
-    bool flip;
-};
-
-void FfmpegVideoOutputStream::WriteAvPacket(AVPacket* pkt)
-{
-    if (pkt->size) {
-        pkt->stream_index = stream->index;
-        int64_t pts = pkt->pts;
-        /* convert unit from CODEC's timestamp to stream's one */
-#define C2S(field)                                              \
-        do {                                                    \
-          if (pkt->field != (int64_t) AV_NOPTS_VALUE)           \
-            pkt->field = av_rescale_q(pkt->field,               \
-                                      stream->codec->time_base, \
-                                      stream->time_base);       \
-        } while (0)
-
-        C2S(pts);
-        C2S(dts);
-        C2S(duration);
-#undef C2S
-        int ret = av_interleaved_write_frame(recorder.oc, pkt);
-        if (ret < 0) throw VideoException("Error writing video frame");
-        if(pkt->pts != (int64_t)AV_NOPTS_VALUE) last_pts = pts;
-    }
-}
-
 void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
 {
-    AVPacket pkt;
-    pkt.data = NULL;
-    pkt.size = 0;
-    av_init_packet(&pkt);
+    AVPacket* pkt = av_packet_alloc();
+    av_init_packet(pkt);
+    pkt->data = NULL;
+    pkt->size = 0;
 
     int ret;
     int got_packet = 1;
 
-#if FF_API_LAVF_FMT_RAWPICTURE
-    // Setup AVPacket
-    if (recorder.oc->oformat->flags & AVFMT_RAWPICTURE) {
-        /* Raw video case - directly store the picture in the packet */
-        pkt.flags        |= AV_PKT_FLAG_KEY;
-        pkt.data          = frame->data[0];
-        pkt.size          = sizeof(AVPicture);
-        pkt.pts           = frame->pts;
-        ret = 0;
-    } else {
-#else
-    {
-#endif
-        /* encode the image */
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
-        ret = avcodec_encode_video2(stream->codec, &pkt, frame, &got_packet);
-#else
-        // TODO: Why is ffmpeg so fussy about this buffer size?
-        //       Making this too big results in garbled output.
-        //       Too small and it will fail entirely.
-        pkt.size = 50* FF_MIN_BUFFER_SIZE; //std::max(FF_MIN_BUFFER_SIZE, frame->width * frame->height * 4 );
-        // TODO: Make sure this is being freed by av_free_packet
-        pkt.data = (uint8_t*) malloc(pkt.size);
-        pkt.pts = frame->pts;
-        ret = avcodec_encode_video(stream->codec, pkt.data, pkt.size, frame);
-        got_packet = ret > 0;
-#endif
-        if (ret < 0) throw VideoException("Error encoding video frame");
-    }
+    /* encode the image */
+    int response = avcodec_send_frame(codec_context, frame);
+    while (response >= 0) {
+       response = avcodec_receive_packet(codec_context, pkt);
+       if (response == AVERROR(EAGAIN) || response == AVERROR_EOF) {
+         break;
+       } else if (response < 0) {
+         pango_print_error("Error while receiving packet from encoder: %s\n", av_err2str(response));
+         return;
+       }
 
-    if (ret >= 0 && got_packet) {
-        WriteAvPacket(&pkt);
-    }
+       pkt->stream_index = stream->index;
+//       pkt->pts = frame->pts;
+//       pkt->dts = frame->pkt_dts;
+//       pkt->time_base = codec_context->time_base;
+       pkt->duration = 1; //av_div_q(codec_context->framerate, codec_context->time_base).num;
+//       av_packet_rescale_ts(pkt, codec_context->time_base, pkt->time_base);
 
-    av_free_packet(&pkt);
+       if (pkt->size) {
+           int64_t pts = pkt->pts;
+           int ret = av_interleaved_write_frame(recorder.oc, pkt);
+           if (ret < 0) throw VideoException("Error writing video frame");
+           if(pkt->pts != (int64_t)AV_NOPTS_VALUE) last_pts = pts;
+       }
+     }
+     av_packet_free(&pkt);
+     return;
 }
 
-void FfmpegVideoOutputStream::WriteImage(const uint8_t* img, int w, int h, double time=-1.0)
+void FfmpegVideoOutputStream::WriteImage(const uint8_t* img, int w, int h)
 {
-    const int64_t pts = (time >= 0) ? time / BaseFrameTime() : ++last_pts;
+    static int64_t pts = 0;
+
+    av_frame_make_writable(src_frame);
+    memcpy(src_frame->buf[0]->data, img, src_frame->buf[0]->size);
+
+
+//    if(flip) {
+//        for(int i=0; i<4; ++i) {
+//            src_picture.data[i] += (h-1) * src_picture.linesize[i];
+//            src_picture.linesize[i] *= -1;
+//        }
+//    }
 
     recorder.StartStream();
 
-    AVCodecContext *c = stream->codec;
+    AVFrame* frame_to_write = nullptr;
 
-    if(flip) {
-        // Earlier versions of ffmpeg do not annotate img as const, although it is
-        avpicture_fill(&src_picture,const_cast<uint8_t*>(img),input_format,w,h);
-        for(int i=0; i<4; ++i) {
-            src_picture.data[i] += (h-1) * src_picture.linesize[i];
-            src_picture.linesize[i] *= -1;
-        }
-    }else{
-        // Earlier versions of ffmpeg do not annotate img as const, although it is
-        avpicture_fill(&src_picture,const_cast<uint8_t*>(img),input_format,w,h);
-    }
-
-    if (c->pix_fmt != input_format || c->width != w || c->height != h) {
+    if (codec_context->pix_fmt != input_format || codec_context->width != w || codec_context->height != h) {
         if(!sws_ctx) {
             sws_ctx = sws_getCachedContext( sws_ctx,
                 w, h, input_format,
-                c->width, c->height, c->pix_fmt,
+                codec_context->width, codec_context->height, codec_context->pix_fmt,
                 SWS_BICUBIC, NULL, NULL, NULL
             );
             if (!sws_ctx) throw VideoException("Could not initialize the conversion context");
         }
-        sws_scale(sws_ctx,
-            src_picture.data, src_picture.linesize, 0, h,
-            dst_picture.data, dst_picture.linesize
-        );
-        *((AVPicture *)frame) = dst_picture;
+        av_frame_make_writable(frame);
+        sws_scale_frame(sws_ctx, frame, src_frame);
+        frame_to_write = frame;
     } else {
-        *((AVPicture *)frame) = src_picture;
+        frame_to_write = src_frame;
     }
 
-    frame->pts = pts;
-    frame->width =  w;
-    frame->height = h;
-    frame->format = c->pix_fmt;
-    WriteFrame(frame);
+    if(frame_to_write) {
+        frame_to_write->pts = pts;
+        WriteFrame(frame_to_write);
+        ++pts;
+    }
 }
 
 void FfmpegVideoOutputStream::Flush()
 {
-#if (LIBAVFORMAT_VERSION_MAJOR >= 54)
-    if (stream->codec->codec->capabilities & AV_CODEC_CAP_DELAY) {
-        /* some CODECs like H.264 needs flushing buffered frames by encoding NULL frames. */
-        /* cf. https://www.ffmpeg.org/doxygen/trunk/group__lavc__encoding.html#ga2c08a4729f72f9bdac41b5533c4f2642 */
-
-        AVPacket pkt;
-        pkt.data = NULL;
-        pkt.size = 0;
-        av_init_packet(&pkt);
-
-        int got_packet = 1;
-        while (got_packet) {
-            int ret = avcodec_encode_video2(stream->codec, &pkt, NULL, &got_packet);
-            if (ret < 0) throw VideoException("Error encoding video frame");
-            WriteAvPacket(&pkt);
-        }
-
-        av_free_packet(&pkt);
-    }
-#endif
+    WriteFrame(nullptr);
 }
 
 const StreamInfo& FfmpegVideoOutputStream::GetStreamInfo() const
@@ -241,7 +153,7 @@ const StreamInfo& FfmpegVideoOutputStream::GetStreamInfo() const
 
 double FfmpegVideoOutputStream::BaseFrameTime()
 {
-    return (double)stream->codec->time_base.num / (double)stream->codec->time_base.den;
+    return (double)codec_context->time_base.num / (double)codec_context->time_base.den;
 }
 
 FfmpegVideoOutputStream::FfmpegVideoOutputStream(
@@ -253,19 +165,25 @@ FfmpegVideoOutputStream::FfmpegVideoOutputStream(
       output_format( FfmpegFmtFromString("YUV420P") ),
       last_pts(-1), sws_ctx(NULL), frame(NULL), flip(flip_image)
 {
-    stream = CreateStream(recorder.oc, codec_id, frame_rate, bit_rate, output_format, input_info.Width(), input_info.Height() );
-
-    // Allocate the encoded raw picture.
-    int ret = avpicture_alloc(&dst_picture, stream->codec->pix_fmt, stream->codec->width, stream->codec->height);
-    if (ret < 0) throw VideoException("Could not allocate picture");
+    codec_context = CreateVideoCodecContext(codec_id, frame_rate, bit_rate, output_format, input_info.Width(), input_info.Height());
+    stream = CreateStream(recorder.oc, codec_context);
 
     // Allocate frame
-#if LIBAVUTIL_VERSION_MAJOR >= 54
     frame = av_frame_alloc();
-#else
-    // Deprecated
-    frame = avcodec_alloc_frame();
-#endif
+    frame->format = codec_context->pix_fmt;
+    frame->width = codec_context->width;
+    frame->height = codec_context->height;
+    if(av_frame_get_buffer(frame,0)) {
+        throw VideoException("Could not allocate picture");
+    }
+
+    src_frame = av_frame_alloc();
+    src_frame->format = input_format;
+    src_frame->width = input_info.Width();
+    src_frame->height = input_info.Height();
+    if(av_frame_get_buffer(src_frame,0)) {
+        throw VideoException("Could not allocate picture");
+    }
 }
 
 FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
@@ -277,8 +195,7 @@ FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
     }
 
     av_free(frame);
-    av_free(dst_picture.data[0]);
-    avcodec_close(stream->codec);
+    avcodec_close(codec_context);
 }
 
 FfmpegVideoOutput::FfmpegVideoOutput(const std::string& filename, int base_frame_rate, int bit_rate, bool flip_image)
@@ -300,23 +217,11 @@ bool FfmpegVideoOutput::IsPipe() const
 
 void FfmpegVideoOutput::Initialise(std::string filename)
 {
-    av_register_all();
-
-#ifdef HAVE_FFMPEG_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
     int ret = avformat_alloc_output_context2(&oc, NULL, NULL, filename.c_str());
-#else
-    oc = avformat_alloc_context();
-    oc->oformat = av_guess_format(NULL, filename.c_str(), NULL);
-    int ret = oc->oformat ? 0 : -1;
-#endif
 
     if (ret < 0 || !oc) {
         pango_print_error("Could not deduce output format from file extension: using MPEG.\n");
-#ifdef HAVE_FFMPEG_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
         ret = avformat_alloc_output_context2(&oc, NULL, "mpeg", filename.c_str());
-#else
-        oc->oformat = av_guess_format("mpeg", filename.c_str(), NULL);
-#endif
         if (ret < 0 || !oc) throw VideoException("Couldn't create AVFormatContext");
     }
 
@@ -330,12 +235,7 @@ void FfmpegVideoOutput::Initialise(std::string filename)
 void FfmpegVideoOutput::StartStream()
 {
     if(!started) {
-#if (LIBAVFORMAT_VERSION_MAJOR >= 53)
         av_dump_format(oc, 0, filename.c_str(), 1);
-#else
-        // Deprecated
-        dump_format(oc, 0, filename.c_str(), 1);
-#endif
 
         /* Write the stream header, if any. */
         int ret = avformat_write_header(oc, NULL);
