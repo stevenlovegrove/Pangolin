@@ -33,6 +33,7 @@
 #include <pangolin/utils/type_convert.h>
 #include <algorithm>
 #include <stdexcept>
+#include <assert.h>
 
 namespace pangolin
 {
