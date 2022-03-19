@@ -22,8 +22,8 @@ inline bool to_bool(const TrueFalseToggle on_off_toggle, const bool current_valu
 inline bool should_toggle(const TrueFalseToggle on_off_toggle, const bool current_value)
 {
     return ( (on_off_toggle == TrueFalseToggle::Toggle) ||
-             (current_value && on_off_toggle ==TrueFalseToggle::False)
-            );
+             (current_value != (on_off_toggle==TrueFalseToggle::True))
+           );
 }
 
 }
