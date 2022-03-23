@@ -61,17 +61,14 @@ jobs:
         $GITHUB_WORKSPACE/scripts/install_prerequisites.sh -v -u -m ${{matrix.package_manager}} all
 
     - name: Configure CMake
-      working-directory: ${{runner.workspace}}
       run: |
-        mkdir -p build && cd build
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" -DBUILD_TESTS=ON
+        cmake -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" -DBUILD_TESTS=ON
 
     - name: Build
-      working-directory: ${{runner.workspace}}/build
-      run: cmake --build . --config $BUILD_TYPE
+      run: cmake --build build --config $BUILD_TYPE
 
     - name: Run all tests
-      working-directory: ${{runner.workspace}}/build
+      working-directory: ${{runner.workspace}}/Pangolin/build
       run: ctest
 
   emscripten:
