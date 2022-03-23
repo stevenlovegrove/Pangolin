@@ -65,7 +65,7 @@ endif()
 #######################################################
 ## Testing setup
 
-option( BUILD_TESTS "Build Tests" ON)
+option( BUILD_TESTS "Build Tests" OFF)
 find_package(Catch2 2 QUIET)
 if(Catch2_FOUND)
     include(CTest)
