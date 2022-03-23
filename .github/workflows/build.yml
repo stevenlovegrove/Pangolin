@@ -64,7 +64,7 @@ jobs:
       working-directory: ${{runner.workspace}}
       run: |
         mkdir -p build && cd build
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" -DBUILD_TESTS=ON
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
