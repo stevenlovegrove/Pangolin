@@ -1017,11 +1017,7 @@ void WaylandWindow::SwapBuffers() {
 std::unique_ptr<WindowInterface> CreateWaylandWindowAndBind(const std::string window_title, const int w, const int h, const std::string /*display_name*/, const bool /*double_buffered*/, const int /*sample_buffers*/, const int /*samples*/) {
 
     try{
-        std::unique_ptr<WaylandDisplay> newdisplay = std::make_unique<WaylandDisplay>();
-
-        WaylandWindow* win = new WaylandWindow(w, h, window_title, std::move(newdisplay));
-
-        return std::unique_ptr<WindowInterface>(win);
+        return std::make_unique<WaylandWindow>(w, h, window_title, std::make_shared<WaylandDisplay>());
     }
     catch(const std::runtime_error&) {
         // return null pointer for fallback to X11
