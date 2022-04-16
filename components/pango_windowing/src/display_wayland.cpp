@@ -816,20 +816,20 @@ static void global_registry_handler(void *data, struct wl_registry *registry, ui
     WaylandDisplay* const w = static_cast<WaylandDisplay*>(data);
 
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
-        w->wcompositor = reinterpret_cast<wl_compositor*> (wl_registry_bind(registry, id, &wl_compositor_interface, version));
+        w->wcompositor = reinterpret_cast<wl_compositor*> (wl_registry_bind(registry, id, &wl_compositor_interface, std::min<uint32_t>(version,4)));
     }
     else if (strcmp(interface, wl_subcompositor_interface.name) == 0) {
-        w->wsubcompositor = static_cast<wl_subcompositor*>(wl_registry_bind(registry, id, &wl_subcompositor_interface, version));
+        w->wsubcompositor = static_cast<wl_subcompositor*>(wl_registry_bind(registry, id, &wl_subcompositor_interface, std::min<uint32_t>(version,1)));
     }
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0) {
-        w->xshell = reinterpret_cast<xdg_wm_base*> (wl_registry_bind(registry, id, &xdg_wm_base_interface, version));
+        w->xshell = reinterpret_cast<xdg_wm_base*> (wl_registry_bind(registry, id, &xdg_wm_base_interface, std::min<uint32_t>(version,3)));
     }
     else if (strcmp(interface, wl_seat_interface.name) == 0) {
-        w->wseat = reinterpret_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, version));
+        w->wseat = reinterpret_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, std::min<uint32_t>(version,5)));
         wl_seat_add_listener(w->wseat, &seat_listener, data);
     }
     else if (strcmp(interface, wl_shm_interface.name) == 0) {
-        w->shm = static_cast<wl_shm*>(wl_registry_bind(registry, id, &wl_shm_interface, version));
+        w->shm = static_cast<wl_shm*>(wl_registry_bind(registry, id, &wl_shm_interface, std::min<uint32_t>(version,1)));
         w->cursor_theme = wl_cursor_theme_load(nullptr, 16, w->shm);
     }
 }
