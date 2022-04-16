@@ -32,10 +32,12 @@ else()
     endif()
 
     # Wayland
-    find_package(Wayland QUIET)
+    find_package(PkgConfig)
+    pkg_check_modules(WAYLAND_CLIENT wayland-client QUIET)
     pkg_check_modules(wayland-protocols QUIET wayland-protocols>=1.13)
     if(WAYLAND_CLIENT_FOUND AND wayland-protocols_FOUND)
-        find_package(PkgConfig)
+        pkg_check_modules(WAYLAND_EGL wayland-egl REQUIRED)
+        pkg_check_modules(WAYLAND_CURSOR wayland-cursor REQUIRED)
         pkg_check_modules(xkbcommon REQUIRED xkbcommon)
 
         target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/display_wayland.cpp )
@@ -44,7 +46,6 @@ else()
             ${WAYLAND_CLIENT_LIBRARIES}
             ${WAYLAND_EGL_LIBRARIES}
             ${WAYLAND_CURSOR_LIBRARIES}
-            ${egl_LIBRARIES}
             ${xkbcommon_LIBRARIES}
         )
 
