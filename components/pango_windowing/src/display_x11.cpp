@@ -179,11 +179,9 @@ X11GlContext::X11GlContext(std::shared_ptr<X11Display>& xdisplay) : display(xdis
 
     const EGLint egl_config_attribs[] = {
         EGL_COLOR_BUFFER_TYPE,     EGL_RGB_BUFFER,
-        EGL_BUFFER_SIZE,           32,
         EGL_RED_SIZE,              8,
         EGL_GREEN_SIZE,            8,
         EGL_BLUE_SIZE,             8,
-        EGL_ALPHA_SIZE,            8,
 
         EGL_DEPTH_SIZE,            24,
         EGL_STENCIL_SIZE,          8,
