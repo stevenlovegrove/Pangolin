@@ -853,8 +853,6 @@ static const struct wl_registry_listener wregistry_listener = {
 };
 
 WaylandDisplay::WaylandDisplay() {
-    xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-
     wdisplay = wl_display_connect(nullptr);
     if (wdisplay == nullptr) {
         throw std::runtime_error("Cannot connect to Wayland compositor!");
@@ -864,6 +862,8 @@ WaylandDisplay::WaylandDisplay() {
     wl_registry_add_listener(wregistry, &wregistry_listener, this);
 
     wl_display_roundtrip(wdisplay);
+
+    xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 
     egl_display = eglGetDisplay((EGLNativeDisplayType)wdisplay);
     if(!egl_display) {
