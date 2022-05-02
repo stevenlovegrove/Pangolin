@@ -72,6 +72,8 @@ public:
 
     void glRenderTexture(pangolin::GlTexture& tex);
     void glRenderTexture(GLuint tex, GLint width, GLint height);
+    void glRenderTexture(GLuint tex, GLint width, GLint height, XYRangef tex_region);
+
 
     void glRenderOverlay();
 

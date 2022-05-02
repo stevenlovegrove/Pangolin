@@ -110,6 +110,55 @@ void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height)
     }
 }
 
+void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height, XYRangef tex_region)
+{
+    if(tex != 0) {
+        const pangolin::XYRangef& xy = tex_region;
+        const float w = (float)width;
+        const float h = (float)height;
+
+        // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
+        const GLfloat l = xy.x.min;
+        const GLfloat r = xy.x.max;
+        const GLfloat b = xy.y.max;
+        const GLfloat t = xy.y.min;
+
+        // continuous coords, (0,0) - (1,1)
+        GLfloat ln = 0.0;
+        GLfloat rn = 1.0;
+        GLfloat bn = 0.0;
+        GLfloat tn = 1.0;
+
+        if(flipTextureX) {
+            ln = 1-ln;
+            rn = 1-rn;
+        }
+
+        if(flipTextureY) {
+            bn = 1-bn;
+            tn = 1-tn;
+        }
+
+        const GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
+        const GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
+
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
+
+        glEnable(GL_TEXTURE_2D);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+        glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+}
+
 void ImageViewHandler::glRenderOverlay()
 {
     const pangolin::XYRangef& selxy = GetSelection();
