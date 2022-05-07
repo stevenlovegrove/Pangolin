@@ -29,6 +29,7 @@
 #include <pangolin/display/view.h>
 #include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/handler/handler.h>
+#include <pybind11/functional.h>
 
 namespace py_pangolin {
 
