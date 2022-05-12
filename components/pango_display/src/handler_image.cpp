@@ -5,7 +5,7 @@ namespace pangolin
 {
 
 ImageViewHandler::ImageViewHandler(const std::string & title)
-    : linked_view_handler(0), use_nn(false), flipTextureX(false), flipTextureY(false), title(title)
+    : linked_view_handler(0), use_nn(false), flipTextureX(false), flipTextureY(false), thetaQuarterTurn(0), title(title)
 {
     SetDimensions(1, 1);
 }
@@ -17,12 +17,27 @@ ImageViewHandler::ImageViewHandler(size_t w, size_t h)
     SetDimensions(w,h);
 }
 
+void ImageViewHandler::SetRviewDefaultAndMax()
+{
+  if (GetThetaQuarterTurn()%2==0)
+  {
+    rview_default = pangolin::XYRangef(-0.5f, original_img_width-0.5f, -0.5f, original_img_height-0.5f),
+    rview_max = pangolin::XYRangef(-0.5f, original_img_width-0.5f, -0.5f, original_img_height-0.5f);
+  }
+  else{
+    rview_default = pangolin::XYRangef(-0.5f, original_img_height-0.5f, -0.5f, original_img_width-0.5f),
+    rview_max = pangolin::XYRangef(-0.5f, original_img_height-0.5f, -0.5f, original_img_width-0.5f);
+  }
+  rview = rview_default;
+  target = rview;
+}
+
 void ImageViewHandler::SetDimensions(size_t w, size_t h)
 {
-    rview_default = pangolin::XYRangef(-0.5f, w-0.5f, -0.5f, h-0.5f),
-    rview_max = pangolin::XYRangef(-0.5f, w-0.5f, -0.5f, h-0.5f),
-    rview = rview_default;
-    target = rview;
+    // w and h are dimensions of the input image
+    original_img_width = w;
+    original_img_height = h;
+    SetRviewDefaultAndMax();
 }
 
 void ImageViewHandler::UpdateView()
@@ -51,9 +66,20 @@ void ImageViewHandler::glSetViewOrtho()
     const pangolin::XYRangef& xy = GetViewToRender();
 
     glMatrixMode(GL_PROJECTION);
-    ProjectionMatrixOrthographic(xy.x.min, xy.x.max, xy.y.max, xy.y.min, -1.0f, 1.0f).Load();
+    glLoadIdentity();
+    glOrtho(xy.x.min, xy.x.max, xy.y.max, xy.y.min, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+}
+
+void ImageViewHandler::glSetModelView()
+{
+  // this is to correct for requested rotation of the image
+  // after this call the draw (for instance lines) should be in original coordinates
+  const pangolin::XYRangef& xy = GetDefaultView();
+  glTranslatef((float)xy.x.Size() / 2 - 0.5, (float)xy.y.Size() / 2 - 0.5, 0);
+  glRotatef(90 * GetThetaQuarterTurn(), 0, 0, 1);
+  glTranslatef(-(float)original_img_width/2 + 0.5 , -(float)original_img_height / 2 + 0.5, 0);
 }
 
 void ImageViewHandler::glRenderTexture(pangolin::GlTexture& tex)
@@ -61,24 +87,23 @@ void ImageViewHandler::glRenderTexture(pangolin::GlTexture& tex)
     glRenderTexture(tex.tid, tex.width, tex.height);
 }
 
-void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height)
+void ImageViewHandler::glRenderTexture(GLuint tex, GLint original_img_width, GLint original_img_height)
 {
     if(tex != 0) {
-        const pangolin::XYRangef& xy = GetViewToRender();
-        const float w = (float)width;
-        const float h = (float)height;
+        const pangolin::XYRangef& xy = GetViewToRender(); // in viewport frame
+        const float w_vp_max = thetaQuarterTurn%2==0? original_img_width:original_img_height;
+        const float h_vp_max = thetaQuarterTurn%2==0? original_img_height:original_img_width;
 
-        // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
+        // discrete coords, (-0.5, -0.5) - ({w,h}-0.5, {h, w}-0.5)
         const GLfloat l = xy.x.min;
         const GLfloat r = xy.x.max;
         const GLfloat b = xy.y.max;
         const GLfloat t = xy.y.min;
-
-        // continuous coords, (0,0) - (1,1)
-        GLfloat ln = (l + 0.5f) / w;
-        GLfloat rn = (r + 0.5f) / w;
-        GLfloat bn = (b + 0.5f) / h;
-        GLfloat tn = (t + 0.5f) / h;
+        // continuous coords, (0,0) - (1,1) in viewport coordinates
+        GLfloat ln = (l + 0.5f) / w_vp_max;
+        GLfloat rn = (r + 0.5f) / w_vp_max;
+        GLfloat bn = (b + 0.5f) / h_vp_max;
+        GLfloat tn = (t + 0.5f) / h_vp_max;
 
         if(flipTextureX) {
             ln = 1-ln;
@@ -89,10 +114,18 @@ void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height)
             bn = 1-bn;
             tn = 1-tn;
         }
-
         const GLfloat sq_vert[]  = { l,t,  r,t,  r,b,  l,b };
-        const GLfloat sq_tex[]  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
-
+        std::vector<GLfloat> sq_tex  = { ln,tn,  rn,tn,  rn,bn,  ln,bn };
+        // here we transform in from the view fronm viewport coordinate texture coordinate
+        // We rotate the viewport rectangle around (0.5, 0.5) from a quarter turn
+        // to get the part of the texture to display
+        if (GetThetaQuarterTurn()%4==1) {
+          sq_tex  = { tn,1-ln,  tn,1-rn, bn,1-rn, bn,1-ln};
+        } else if (GetThetaQuarterTurn()%4==2) {
+          sq_tex  = { 1-ln,1-tn, 1-rn,1-tn, 1-rn,1-bn,  1-ln,1-bn };
+        } else if (GetThetaQuarterTurn()%4==3) {
+          sq_tex  = { 1-tn,ln,  1-tn,rn,  1-bn,rn, 1-bn,ln };
+        }
         glBindTexture(GL_TEXTURE_2D, tex);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, UseNN() ? GL_NEAREST : GL_LINEAR);
@@ -100,7 +133,7 @@ void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height)
         glEnable(GL_TEXTURE_2D);
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+        glTexCoordPointer(2, GL_FLOAT, 0, sq_tex.data());
         glVertexPointer(2, GL_FLOAT, 0, sq_vert);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -112,19 +145,24 @@ void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height)
 
 void ImageViewHandler::glRenderOverlay()
 {
-    const pangolin::XYRangef& selxy = GetSelection();
+    pangolin::XYRangef& selxy = GetSelection();
     const GLfloat sq_select[] = {
         selxy.x.min, selxy.y.min,
         selxy.x.max, selxy.y.min,
         selxy.x.max, selxy.y.max,
         selxy.x.min, selxy.y.max
     };
+    glPushMatrix();
+    // the selection is given in image coordinates
+    // hence we call glSetModelView
+    glSetModelView();
     glColor4f(1.0,0.0,0.0,1.0);
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, sq_select);
     glDrawArrays(GL_LINE_LOOP, 0, 4);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glColor4f(1.0,1.0,1.0,1.0);
+    glPopMatrix();
 
     const bool have_text = std::abs(selxy.Area()) > 0 || !title.empty();
 
@@ -174,16 +212,76 @@ void ImageViewHandler::glRenderOverlay()
     }
 }
 
-void ImageViewHandler::ScreenToImage(Viewport& v, float xpix, float ypix, float& ximg, float& yimg)
+void ImageViewHandler::ScreenToScaledViewPort(Viewport& v, float xpix_screen, float ypix_screen, float& x_vp, float& y_vp)
 {
-    ximg = rview.x.min + rview.x.Size() * (xpix - v.l) / (float)v.w;
-    yimg = rview.y.min + rview.y.Size() * ( 1.0f - (ypix - v.b) / (float)v.h);
+    // This returns, from a pixel in screen frame, a coordinate in the image viewport frame.
+    // This is *not* the pixel coordinate frame in the original image, the image could be rotated
+    // if thetaQuarterTurn is non zero.
+    x_vp = rview.x.min + rview.x.Size() * (xpix_screen - v.l) / (float)v.w;
+    y_vp = rview.y.min + rview.y.Size() * ( 1.0f - (ypix_screen - v.b) / (float)v.h);
+}
+
+void ImageViewHandler::ScaledViewPortToScreen(Viewport& v,  float x_vp, float y_vp, float& xpix_screen, float& ypix_screen)
+{
+  // This returns, from a pixel in viewport frame, a coordinate in the screen frame (in pixel)
+  xpix_screen = v.l + (x_vp - rview.x.min) * (float)v.w / rview.x.Size();
+  ypix_screen = v.b - (float)v.h * ((y_vp - rview.y.min) / rview.y.Size() - 1.0f);
+
+}
+
+void ImageViewHandler::ScreenToImage(Viewport& v, float xpix_screen, float ypix_screen, float& x_original_img, float& y_original_img)
+{
+    // this returns, from a pixel in screen frame, a coordinate in the original image array frame
+    float x_vp, y_vp;
+    ScreenToScaledViewPort(v, xpix_screen, ypix_screen, x_vp, y_vp);
+
+    if (GetThetaQuarterTurn() % 4 == 0)
+    {
+      x_original_img = x_vp;
+      y_original_img = y_vp;
+    }
+    else if (GetThetaQuarterTurn() % 4 == 1)
+    {
+        x_original_img = y_vp;
+        y_original_img = rview_max.x.Size() - x_vp - 1;
+    }
+    else if (GetThetaQuarterTurn() % 4 == 2)
+    {
+        x_original_img = rview_max.x.Size() - x_vp - 1;
+        y_original_img = rview_max.y.Size() - y_vp - 1;
+    }
+    else
+    {
+        x_original_img =  (rview_max.y.Size() - y_vp - 1);
+        y_original_img = x_vp;
+    }
 }
 
 void ImageViewHandler::ImageToScreen(Viewport& v, float ximg, float yimg, float& xpix, float& ypix)
 {
-    xpix = (ximg -rview.x.min) * (float)v.w / rview.x.Size() + v.l;
-    ypix = v.b - (float)v.h * ((yimg - rview.y.min) / rview.y.Size() - 1.0f);
+    // this returns, from a coordinate in the original image array frame,  a pixel in screen frame
+    float x_vp, y_vp;
+    if (GetThetaQuarterTurn() % 4 == 0)
+    {
+        x_vp = ximg;
+        y_vp = yimg;
+    }
+    else if (GetThetaQuarterTurn() % 4 == 1)
+    {
+        x_vp = rview_max.x.Size() - yimg + 1;
+        y_vp = ximg;
+    }
+    else if (GetThetaQuarterTurn() % 4 == 2)
+    {
+        x_vp = rview_max.x.Size() - ximg + 1;
+        y_vp = rview_max.y.Size() - yimg + 1;
+    }
+    else
+    {
+      x_vp = yimg;
+      y_vp = rview_max.y.Size() - ximg + 1;
+    }
+    ScaledViewPortToScreen(v, x_vp, y_vp, xpix, ypix);
 }
 
 bool ImageViewHandler::UseNN() const
@@ -199,6 +297,20 @@ bool& ImageViewHandler::UseNN()
 bool& ImageViewHandler::FlipTextureX()
 {
     return flipTextureX;
+}
+
+int ImageViewHandler::GetThetaQuarterTurn()
+{
+    return thetaQuarterTurn;
+}
+
+void ImageViewHandler::SetThetaQuarterTurn(int _thetaQuarterTurn)
+{
+  if (_thetaQuarterTurn!=thetaQuarterTurn)
+  {
+    thetaQuarterTurn = _thetaQuarterTurn;
+    SetRviewDefaultAndMax();
+  }
 }
 
 bool& ImageViewHandler::FlipTextureY()
@@ -297,7 +409,6 @@ void ImageViewHandler::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, 
     const float mvfactor = 1.0f / 10.0f;
     const float c[2] = { rview.x.Mid(), rview.y.Mid() };
 
-
     if(pressed) {
         if(key == '\r') {
             if( sel.Area() != 0.0f && std::isfinite(sel.Area()) ) {
@@ -351,8 +462,8 @@ void ImageViewHandler::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, 
 void ImageViewHandler::Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state)
 {
     XYRangef& sel = linked_view_handler ? linked_view_handler->selection : selection;
+    ScreenToScaledViewPort(view.v, (float)x, (float)y, hover_vp[0], hover_vp[1]);
     ScreenToImage(view.v, (float)x, (float)y, hover_img[0], hover_img[1]);
-
     const float scinc = 1.05f;
     const float scdec = 1.0f/scinc;
 
@@ -378,9 +489,9 @@ void ImageViewHandler::Mouse(View& view, pangolin::MouseButton button, int x, in
             sel.x.max = hover_img[0];
             sel.y.max = hover_img[1];
         }else if(button == MouseWheelUp) {
-            ScaleViewSmooth(scdec, scdec, hover_img[0], hover_img[1]);
+            ScaleViewSmooth(scdec, scdec, hover_vp[0], hover_vp[1]);
         }else if(button == MouseWheelDown) {
-            ScaleViewSmooth(scinc, scinc, hover_img[0], hover_img[1]);
+            ScaleViewSmooth(scinc, scinc, hover_vp[0], hover_vp[1]);
         }
     }
 
@@ -400,6 +511,7 @@ void ImageViewHandler::MouseMotion(View& view, int x, int y, int button_state)
 
     // Update hover status (after potential resizing)
     ScreenToImage(view.v, (float)x, (float)y, hover_img[0], hover_img[1]);
+    ScreenToScaledViewPort(view.v, (float)x, (float)y, hover_vp[0], hover_vp[1]);
 
     if( button_state == MouseButtonLeft )
     {
@@ -431,7 +543,7 @@ void ImageViewHandler::Special(View& view, pangolin::InputSpecial inType, float 
         const float d[2] = {p1,p2};
         const float is[2] = {rview.x.Size(),rview.y.Size() };
         const float df[2] = {is[0]*d[0]/(float)view.v.w, is[1]*d[1]/(float)view.v.h};
-        ScrollView(-df[0], -df[1]);
+        ScrollView(-df[0], df[1]);
     } else if(inType == InputSpecialZoom) {
         float scale = 1.0f - p1;
         ScaleView(scale, scale, hover_img[0], hover_img[1]);

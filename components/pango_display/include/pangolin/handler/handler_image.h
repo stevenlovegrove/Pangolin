@@ -70,6 +70,11 @@ public:
 
     void glSetViewOrtho();
 
+    // This functions sets the model view matrix so that
+    // the subsequent draw functions can use the texture pixels coordinates.
+    // This corrects for the rotation stored in the thetaQuarterTurn.
+    void glSetModelView();
+
     void glRenderTexture(pangolin::GlTexture& tex);
     void glRenderTexture(GLuint tex, GLint width, GLint height);
 
@@ -113,6 +118,11 @@ public:
 
     void ResetView();
 
+    /// Get the current rotation applied to the texture before drawing
+    int GetThetaQuarterTurn();
+    /// Set the current rotation applied to the texture before drawing
+    virtual void SetThetaQuarterTurn(int _thetaQuarterTurn);
+
     ///////////////////////////////////////////////////////
     /// pangolin::Handler
     ///////////////////////////////////////////////////////
@@ -140,10 +150,20 @@ protected:
 
     void AdjustTranslation();
 
+    void ScreenToScaledViewPort(Viewport& v, float xpix, float ypix_screen, float& x_vp, float& y_vp);
+    void ScaledViewPortToScreen(Viewport& v, float x_vp, float y_vp, float& xpix_screen, float& ypix_screen);
+    void ScaledViewPortToImg(float xsv, float ysv, float& ximg, float& yimg);
+    void ImgToScaledViewPort(float ximg, float yimg, float& xsv, float& ysv);
+    void SetRviewDefaultAndMax();
+
     static ImageViewHandler* to_link;
     static float animate_factor;
 
     ImageViewHandler* linked_view_handler;
+
+    // keep the size of the original image around
+    int original_img_width;
+    int original_img_height;
 
     pangolin::XYRangef rview_default;
     pangolin::XYRangef rview_max;
@@ -151,14 +171,19 @@ protected:
     pangolin::XYRangef target;
     pangolin::XYRangef selection;
 
+    // coordinate in the viewport
+    float hover_vp[2];
+    // coordinate in the image/texture
     float hover_img[2];
     int last_mouse_pos[2];
 
     bool use_nn;
     bool flipTextureX;
     bool flipTextureY;
-    std::string title;
 
+    // The number of 90deg rotations to apply to the texture before displaying.
+    int thetaQuarterTurn;
+    std::string title;
 };
 
 }
