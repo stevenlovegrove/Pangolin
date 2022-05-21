@@ -41,7 +41,7 @@ class PANGOLIN_EXPORT ImagesVideo : public VideoInterface, public VideoPlaybackI
 {
 public:
     ImagesVideo(const std::string& wildcard_path);
-    ImagesVideo(const std::string& wildcard_path, const PixelFormat& raw_fmt, size_t raw_width, size_t raw_height);
+    ImagesVideo(const std::string& wildcard_path, const PixelFormat& raw_fmt, size_t raw_width, size_t raw_height, size_t raw_pitch);
 
     // Explicitly delete copy ctor and assignment operator.
     // See http://stackoverflow.com/questions/29565299/how-to-use-a-vector-of-unique-pointers-in-a-dll-exported-class-with-visual-studi
@@ -110,6 +110,7 @@ protected:
     PixelFormat raw_fmt;
     size_t raw_width;
     size_t raw_height;
+    size_t raw_pitch;
 
     // Load any json properties if they are defined
     picojson::value device_properties;
