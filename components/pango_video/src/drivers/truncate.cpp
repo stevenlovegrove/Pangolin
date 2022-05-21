@@ -40,7 +40,7 @@ TruncateVideo::TruncateVideo(std::unique_ptr<VideoInterface> &src_, size_t begin
 
     if(VideoPlaybackInterface* v = GetVideoPlaybackInterface()){
         // Guard against the obscure case of nested TruncateVideo filters
-        if( !pangolin::FindFirstMatchingVideoInterface<TruncateVideo>(*src_) ) {
+        if( !pangolin::FindFirstMatchingVideoInterface<TruncateVideo>(*src) ) {
             next_frame_to_grab = v->Seek(begin);
         }
     }
