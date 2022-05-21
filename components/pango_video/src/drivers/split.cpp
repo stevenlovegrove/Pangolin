@@ -102,7 +102,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
         ParamSet Params() const override
         {
             return {{
-                {"roi\\d+","0x0","Region of Interest as WidthxHeight"},
+                {"roi\\d+","X+Y+WxH","Region of Interest as WidthxHeight"},
                 {"mem\\d+","width,height,pitch,pixelformat*","By default dynamically set from the first stream"},
                 {"stream\\d+","0","Integer"}
             }};
@@ -126,7 +126,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
 
                 if(uri.Contains(key_roi)) {
                     const StreamInfo& st1 = subvid->Streams()[0];
-                    const ImageRoi& roi = param_reader.Get<ImageRoi>(key_roi); //uri.Get<ImageRoi>(key_roi, ImageRoi() );
+                    const ImageRoi& roi = param_reader.Get<ImageRoi>(key_roi, ImageRoi());
                     if(roi.w == 0 || roi.h == 0) {
                         throw VideoException("split: empty ROI.");
                     }
