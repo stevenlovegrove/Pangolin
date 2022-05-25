@@ -26,7 +26,7 @@ option(BUILD_PANGOLIN_LIBTIFF "Build support for libtiff image input" ON)
 if(BUILD_PANGOLIN_LIBTIFF)
     find_package(TIFF QUIET)
     if(TIFF_FOUND)
-        target_compile_definitions(${COMPONENT} PRIVATE HAVE_TIFF)
+        target_compile_definitions(${COMPONENT} PRIVATE HAVE_LIBTIFF)
         target_include_directories(${COMPONENT} PRIVATE ${TIFF_INCLUDE_DIR} )
         target_link_libraries(${COMPONENT} PRIVATE ${TIFF_LIBRARY})
         message(STATUS "libtiff Found and Enabled")
@@ -99,6 +99,7 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/image_io_bmp.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/image_io_zstd.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/image_io_libraw.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/image_io_tiff.cpp
 )
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core)
