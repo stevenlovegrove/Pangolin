@@ -44,7 +44,8 @@ TypedImage LoadTiff(
     const auto planar = GetOrThrow<uint16_t>(tif, TIFFTAG_PLANARCONFIG);
 //    const auto photom = GetOrThrow<uint16_t>(tif, TIFFTAG_PHOTOMETRIC);
 
-    assert(width >= 0 && height >= 0 && channels >= 0 && bits_per_channel > 0);
+    // comparison of unsigned with >= 0 is always true!
+    //assert(width >= 0 && height >= 0 && channels >= 0 && bits_per_channel > 0);
 
     if(planar != PLANARCONFIG_CONTIG /*|| photom != PHOTOMETRIC_RGB*/ || bits_per_channel % 8 != 0 || !(channels == 1 || channels == 3))
         throw std::runtime_error("TIFF support is currently limited. Consider contributing to image_io_tiff.cpp.");
@@ -58,7 +59,7 @@ TypedImage LoadTiff(
 
     TypedImage image(width, height, PixelFormatFromString(sfmt));
     const tsize_t scanlength_bytes = TIFFScanlineSize(tif);
-    if(scanlength_bytes != image.pitch)
+    if(scanlength_bytes != tsize_t(image.pitch))
         throw std::runtime_error("TIFF: unexpected scanline length");
 
     for (size_t row = 0; row < height; ++row) {

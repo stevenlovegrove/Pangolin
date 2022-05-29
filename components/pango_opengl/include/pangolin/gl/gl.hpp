@@ -787,7 +787,6 @@ inline void GlBufferData::Upload(const std::vector<T>& data, GLintptr offset)
 template<typename Derived>
 inline void GlBufferData::Upload(const Eigen::DenseBase<Derived>& data, GLintptr offset)
 {
-    typedef typename Eigen::DenseBase<Derived>::Scalar Scalar;
     const size_t num_elements = data.outerSize();
     const size_t matrix_bytes = data.outerStride() * num_elements;
     assert(offset + matrix_bytes <= size_bytes);
