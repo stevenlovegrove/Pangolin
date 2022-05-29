@@ -49,9 +49,9 @@ struct VarMeta
         full_name(full_name),
         increment(increment),
         flags(flags),
+        gui_changed(false),
         logscale(logscale),
-        generic(generic),
-        gui_changed(false)
+        generic(generic)
     {
         SetName(full_name);
         if(logscale) {
