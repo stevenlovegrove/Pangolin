@@ -11,6 +11,7 @@
   <depend>libglew-dev</depend>
   <depend>cmake</depend>
   <depend>python3-dev</depend>
+  <build_depend>eigen</build_depend>
   <export>
     <build_type>cmake</build_type>
   </export>
