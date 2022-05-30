@@ -1,16 +1,18 @@
 <?xml version="1.0"?>
-<!-- ROS Catkin package.xml file -->
 <package format="2">
   <name>pangolin</name>
-  <version>0.7.0</version>
-  <description>pangolin</description>
+  <version>0.8.0</version>
+  <description>Pangolin is a set of lightweight and portable utility libraries for prototyping 3D, numeric or video based programs and algorithms.</description>
   <maintainer email="stevenlovegrove@gmail.com">Steven Lovegrove</maintainer>
   <author     email="stevenlovegrove@gmail.com">Steven Lovegrove</author>
   <license>MIT</license>
+
   <buildtool_depend>cmake</buildtool_depend>
+
   <depend>libglew-dev</depend>
   <depend>python3-dev</depend>
   <build_depend>eigen</build_depend>
+
   <export>
     <build_type>cmake</build_type>
   </export>
