@@ -66,7 +66,7 @@ Pangolin does it's best to build something with what it gets, so dependencies wh
 ## Building ##
 
 Pangolin uses the CMake portable pre-build tool. To checkout and build pangolin in the
-directory 'build', execute the following at a shell (or the equivelent using a GUI):
+directory 'build', execute the following at a shell (or the equivalent using a GUI):
 
 ```bash
 # Get Pangolin
@@ -187,7 +187,7 @@ PANGOLIN_WINDOW_URI="default:[default_font_size=20]//" ./some_pangolin_app
 PANGOLIN_WINDOW_URI="default:[default_font=my_awesome_font.ttf,default_font_size=20]//" ./some_pangolin_app
 ```
 
-To use Pangolin in your applications whilst being conciencious of chaning fonts, you can query how long fonts or text are with:
+To use Pangolin in your applications whilst being conscientious of changing fonts, you can query how long fonts or text are with:
 
 ```C++
 #include <pangolin/display/default_font.h>
@@ -207,7 +207,7 @@ int func()
 
 Emscripten is a neat c++ compiler which can output javascript executable code. That's right, your Pangolin programs can run on the web, too!
 
-Follow Emscriptens instructions to install the SDK (summerized below):
+Follow Emscriptens instructions to install the SDK (summarized below):
 
 ```bash
 mkdir ~/tools && cd ~/tools
