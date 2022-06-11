@@ -39,8 +39,9 @@ while (( "$#" )); do
       shift
       ;;
     -m|--package-manager)
-      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
-        MANAGERS=($2)
+      if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
+        # MANAGERS=($2)
+        mapfile -t MANAGERS <<< "$2"
         shift 2
       else
         echo "Error: Argument for $1 is missing" >&2
@@ -58,7 +59,7 @@ while (( "$#" )); do
       echo " (required|recommended|all) the set of dependencies to select."
       exit 0
       ;;
-    -*|--*=) # unsupported flags
+    -*=) # unsupported flags
       echo "Error: Unsupported flag $1" >&2
       exit 1
       ;;
@@ -94,9 +95,9 @@ esac
 
 
 # Find an available package manager from the preferred list
-for m in ${MANAGERS[@]}
+for m in "${MANAGERS[@]}"
 do
-    if [ -x "$(command -v $m)" ]; then
+    if [ -x "$(command -v "$m")" ]; then
         MANAGER="$m"
         break
     fi
@@ -113,8 +114,8 @@ if ((VERBOSE > 0)); then echo "Using \"$MANAGER\" package manager (select anothe
 # Setup prereq commands and packages.
 if [[ "$MANAGER" == "apt" ]]; then
     SUDO="sudo"
-    PKGS_UPDATE="apt update"
-    PKGS_OPTIONS+=(install --no-install-suggests --no-install-recommends)
+    PKGS_UPDATE="apt update -y"
+    PKGS_OPTIONS+=(install --no-install-suggests --no-install-recommends -y)
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
     PKGS_REQUIRED+=(libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev)
     PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev cmake g++ ninja-build)
@@ -164,7 +165,7 @@ fi
 if ((REQUIRED_RECOMMENDED_ALL < 2)); then PKGS_ALL=(); fi
 if ((REQUIRED_RECOMMENDED_ALL < 1)); then PKGS_RECOMMENDED=(); fi
 
-PACKAGES=( "${PKGS_REQUIRED[*]}" "${PKGS_RECOMMENDED[*]}" "${PKGS_ALL[*]}" )
+PACKAGES=( "${PKGS_REQUIRED[@]}" "${PKGS_RECOMMENDED[@]}" "${PKGS_ALL[@]}" )
 
 if ((LIST > 0)); then
     echo "${PACKAGES[*]}"
@@ -173,10 +174,11 @@ fi
 
 if ((UPDATE > 0)); then
     if ((VERBOSE > 0)); then echo "Requesting \"$MANAGER\" package update."; fi
+    # shellcheck disable=SC2086
     $SUDO $PKGS_UPDATE
 fi
 
 if ((VERBOSE > 0)); then echo "Requesting install of: ${PACKAGES[*]}"; fi
 
 # Install
-$SUDO $MANAGER ${PKGS_OPTIONS[*]} ${PACKAGES[*]}
+$SUDO "$MANAGER" "${PKGS_OPTIONS[@]}" "${PACKAGES[@]}"
