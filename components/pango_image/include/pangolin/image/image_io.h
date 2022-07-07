@@ -44,7 +44,7 @@ PANGOLIN_EXPORT
 TypedImage LoadImage(const std::string& filename);
 
 PANGOLIN_EXPORT
-TypedImage LoadImage(const std::string& filename, const PixelFormat& raw_fmt, size_t raw_width, size_t raw_height, size_t raw_pitch);
+TypedImage LoadImage(const std::string& filename, const PixelFormat& raw_fmt, size_t raw_width, size_t raw_height, size_t raw_pitch, size_t offset = 0);
 
 /// Quality \in [0..100] for lossy formats
 PANGOLIN_EXPORT
