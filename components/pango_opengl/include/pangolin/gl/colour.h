@@ -176,9 +176,15 @@ public:
     }
 
     /// Return next unique colour from ColourWheel.
-    inline Colour GetNext() override
+    inline Colour GetUniqueColour()
     {
         return GetColourBin(unique_colours++);
+    }
+
+    /// Return next unique colour from ColourWheel for ColorProvider.
+    inline Colour GetNext() override
+    {
+        return GetUniqueColour();
     }
 
     /// Reset colour wheel counter to initial state
