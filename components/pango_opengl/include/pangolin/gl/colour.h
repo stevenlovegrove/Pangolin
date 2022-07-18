@@ -148,6 +148,9 @@ public:
 
     /// Reset colours
     virtual void Reset() = 0;
+
+    /// Virtual destructor to ensure correct destruction of derived classes
+    virtual ~ColourProvider() = default;
 };
 
 /// A ColourWheel is like a continuous colour palate that can be sampled.
