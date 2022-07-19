@@ -192,8 +192,14 @@ public:
     void ClearImplicitPlots();
     void AddImplicitPlot();
 
-    /// Reset colour wheel to initial state. May be useful together with ClearSeries() / ClearMarkers()
+    /// Reset colour provider to initial state. May be useful together with ClearSeries() / ClearMarkers()
     void ResetColourProvider();
+
+    /// Alias for ResetColourProvider for API compatibility.
+    void ResetColourWheel()
+    {
+        ResetColourProvider();
+    }
 
     void ShowHoverLines(bool show)
     {
