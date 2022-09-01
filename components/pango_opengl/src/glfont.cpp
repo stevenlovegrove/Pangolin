@@ -52,9 +52,6 @@
 
 #define MAX_TEXT_LENGTH 500
 
-// Embedded fonts:
-PANGOLIN_EXPORT extern const unsigned char AnonymousPro_ttf[];
-
 namespace pangolin
 {
 
@@ -139,12 +136,6 @@ std::string format(const char * format, ...)
   const std::string s = vformat(format, args);
   va_end(args);
   return s;
-}
-
-
-GlFont::GlFont(float pixel_height, int tex_w, int tex_h)
-{
-    InitialiseFont( AnonymousPro_ttf, pixel_height, tex_w, tex_h );
 }
 
 GlFont::GlFont(const unsigned char* truetype_data, float pixel_height, int tex_w, int tex_h)

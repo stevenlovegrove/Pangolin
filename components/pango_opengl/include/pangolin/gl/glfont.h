@@ -41,7 +41,6 @@ public:
     // Load GL Font data. Delay uploading as texture until first use.
     GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w=512, int tex_h=512);
     GlFont(const std::string& filename, float pixel_height, int tex_w=512, int tex_h=512);
-    GlFont(float pixel_height, int tex_w=512, int tex_h=512);
 
     virtual ~GlFont();
 
