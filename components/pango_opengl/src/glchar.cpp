@@ -36,19 +36,26 @@ GlChar::GlChar()
     // Uninitialised
 }
 
-GlChar::GlChar(int tw, int th, int x, int y, int w, int h, GLfloat advance, GLfloat ox, GLfloat oy)
-    : x_step(advance)
+// x and y are in 'discrete' coords, where (0,0) is center of top-left pixel.
+GlChar::GlChar(size_t atlas_index, int tw, int th, GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat advance, GLfloat ox, GLfloat oy)
+    : x_step(advance), atlas_index(atlas_index)
 {
-    const GLfloat u = (GLfloat)x / (GLfloat)tw;
-    const GLfloat v = (GLfloat)y / (GLfloat)th;
-    const GLfloat u2 = (GLfloat)(x + w) / (GLfloat)tw;
-    const GLfloat v2 = (GLfloat)(y + h) / (GLfloat)th;
+    // Convert to u,v tex coords \in [0,1]
+    // u,v point to the top-left corner of top-left pixel
+    // (hence why we don't have the +0.5 converstion)
+    const GLfloat u = x / (GLfloat)tw;
+    const GLfloat v = y / (GLfloat)th;
+    const GLfloat u2 = u + w / (GLfloat)tw;
+    const GLfloat v2 = v + h / (GLfloat)th;
+
+    // 0, 3
+    // 1, 2
 
     // Setup u,v tex coords
-    vs[0] = XYUV(ox, oy,     u,v );
-    vs[1] = XYUV(ox, oy-h,   u,v2 );
-    vs[2] = XYUV(w+ox, oy-h, u2,v2 );
-    vs[3] = XYUV(w+ox, oy,   u2,v );
+    vs[0] = XYUV(ox,   oy,   u,  v );
+    vs[1] = XYUV(ox,   oy-h, u,  v2 );
+    vs[2] = XYUV(w+ox, oy-h, u2, v2 );
+    vs[3] = XYUV(w+ox, oy,   u2, v );
 
     y_min = oy-h;
     y_max = oy;

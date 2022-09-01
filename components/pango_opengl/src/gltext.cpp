@@ -57,7 +57,7 @@ void GlText::AddSpace(GLfloat s)
     width += s;
 }
 
-void GlText::Add(unsigned char c, const GlChar& glc)
+void GlText::Add(const GlChar& glc)
 {
     GLfloat x = width;
 
@@ -71,8 +71,6 @@ void GlText::Add(unsigned char c, const GlChar& glc)
     ymin = std::min(ymin, glc.YMin());
     ymax = std::max(ymax, glc.YMax());
     width = x + glc.StepX();
-
-    str.append(1,c);
 }
 
 void GlText::Clear()
@@ -105,7 +103,7 @@ void GlText::DrawGlSl() const
 #endif
 }
 
-void SetWindowOrthographic()
+void SetWindowOrthographicContinuous()
 {
     // We'll set an arbitrary viewport with known dimensions
     // >= window dimensions so we can draw in pixel units.
@@ -114,7 +112,7 @@ void SetWindowOrthographic()
     glViewport(0,0,dims[0], dims[1]);
 
     glMatrixMode(GL_PROJECTION);
-    ProjectionMatrixOrthographic(-0.5, dims[0]-0.5, -0.5, dims[1]-0.5, -1.0, 1.0).Load();
+    ProjectionMatrixOrthographic(0.0, dims[0], 0.0, dims[1], -1.0, 1.0).Load();
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -160,7 +158,7 @@ void GlText::Draw(GLfloat x, GLfloat y, GLfloat z) const
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
-    SetWindowOrthographic();
+    SetWindowOrthographicContinuous();
     glTranslatef(std::floor((GLfloat)scrn[0]), std::floor((GLfloat)scrn[1]), (GLfloat)scrn[2]);
     Draw();
 
@@ -183,7 +181,7 @@ void GlText::DrawWindow(GLfloat x, GLfloat y, GLfloat z) const
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
-    SetWindowOrthographic();
+    SetWindowOrthographicContinuous();
     glTranslatef( std::floor(x), std::floor(y), z);
     Draw();
 

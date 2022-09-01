@@ -38,9 +38,17 @@ namespace pangolin {
 class PANGOLIN_EXPORT GlFont
 {
 public:
+    enum class FontBitmapType
+    {
+        Alpha = 0,
+        SDF,
+        MSDF
+    };
+
     // Load GL Font data. Delay uploading as texture until first use.
-    GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w=512, int tex_h=512);
-    GlFont(const std::string& filename, float pixel_height, int tex_w=512, int tex_h=512);
+    GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w=1024, int tex_h=1024, bool use_alpha_font=true);
+    GlFont(const std::string& filename, float pixel_height, int tex_w=1024, int tex_h=1024, bool use_alpha_font=true);
+    GlFont(const std::string& atlas_filename, const std::string& json_filename);
 
     virtual ~GlFont();
 
@@ -57,17 +65,29 @@ public:
         return font_max_width_px;
     }
 
-protected:
-    void InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h);
+//protected:
+    ManagedImage<Eigen::Vector4f> MakeFontLookupImage();
+    ManagedImage<uint16_t> MakeFontIndexImage(const std::string& utf8);
+    std::u16string to_index_string(const std::u32string& utf32);
+    std::u16string to_index_string(const std::string& utf8);
+
+    void InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h, bool use_alpha_font);
+    void InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std::string& atlas_json);
+
 
     // This can only be called once GL context is initialised
     void InitialiseGlTexture();
 
     float font_height_px;
     float font_max_width_px;
+    float default_advance_px;
 
-    ManagedImage<unsigned char> font_bitmap;
+    FontBitmapType bitmap_type;
+    std::array<float,2> bitmap_max_sdf_dist_uv;
+
+    TypedImage font_bitmap;
     GlTexture mTex;
+    bool use_alpha_font;
 
     using codepoint_t = uint32_t;
     using codepointpair_t = std::pair<codepoint_t, codepoint_t>;

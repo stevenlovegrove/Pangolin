@@ -300,6 +300,8 @@ public:
 
     void Unbind() const;
 
+    // TODO: this only works (on Linux) for floating point types
+    //       Add switch to use glVertexAttribIPointer when appropriate.
     void AddVertexAttrib(
         GLuint attrib_location,
         const GlBuffer& bo,
