@@ -37,7 +37,7 @@ namespace pangolin
 
 struct OsxWindow : public WindowInterface
 {
-    OsxWindow(const std::string& title, int width, int height, bool USE_RETINA);
+    OsxWindow(const std::string& title, int width, int height, bool USE_RETINA, NSOpenGLPixelFormatAttribute gl_profile);
 
     ~OsxWindow();
 

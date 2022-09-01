@@ -46,6 +46,7 @@ constexpr char PARAM_DOUBLEBUFFER[]   = "DOUBLEBUFFER\0";   // bool
 constexpr char PARAM_SAMPLE_BUFFERS[] = "SAMPLE_BUFFERS\0"; // int
 constexpr char PARAM_SAMPLES[]        = "SAMPLES\0";        // int
 constexpr char PARAM_HIGHRES[]        = "HIGHRES\0";        // bool
+constexpr char PARAM_GL_PROFILE[]     = "GL_PROFILE\0";     // std::string
 
 struct PANGOLIN_EXPORT WindowResizeEvent
 {

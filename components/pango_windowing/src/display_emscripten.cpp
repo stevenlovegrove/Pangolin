@@ -299,6 +299,7 @@ PANGOLIN_REGISTER_FACTORY(EmscriptenWindow)
                 {"window_title","-","Ignored"},
                 {"w","640","Ignored"},
                 {"h","480","Ignored"},
+                {PARAM_GL_PROFILE,"Ignored for now"},
             }};
         }
 
