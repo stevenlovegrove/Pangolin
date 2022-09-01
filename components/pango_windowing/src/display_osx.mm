@@ -61,16 +61,8 @@ inline void FixOsxFocus()
 namespace pangolin
 {
 
-std::unique_ptr<WindowInterface> CreateOsxWindowAndBind(std::string window_title, int w, int h, const bool is_highres)
-{
-
-    OsxWindow* win = new OsxWindow(window_title, w, h, is_highres);
-
-    return std::unique_ptr<WindowInterface>(win);
-}
-
 OsxWindow::OsxWindow(
-    const std::string& title, int width, int height, bool USE_RETINA
+    const std::string& title, int width, int height, bool USE_RETINA, NSOpenGLPixelFormatAttribute gl_profile
 ) {
     ///////////////////////////////////////////////////////////////////////
     // Make sure Application is initialised correctly.
@@ -107,7 +99,7 @@ OsxWindow::OsxWindow(
     {
         NSOpenGLPFADoubleBuffer,
         NSOpenGLPFADepthSize, 32,
-        NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersionLegacy,
+        NSOpenGLPFAOpenGLProfile, gl_profile,
         0
     };
 
@@ -192,9 +184,10 @@ PANGOLIN_REGISTER_FACTORY(OsxWindow)
     {
         return {{
             {"window_title","window","Title of application Window"},
-            {"HIGHRES","true","Use 'retina' resolution"},
             {"w","640","Requested window width"},
             {"h","480","Requested window height"},
+            {PARAM_HIGHRES,"true","Use 'retina' resolution"},
+            {PARAM_GL_PROFILE,"legacy","OpenGL profile to use. One of [LEGACY, 3.2 CORE, 4.1 CORE]"},
         }};
     }
     std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
@@ -203,7 +196,21 @@ PANGOLIN_REGISTER_FACTORY(OsxWindow)
       const int w = uri.Get<int>("w", 640);
       const int h = uri.Get<int>("h", 480);
       const bool is_highres = uri.Get<bool>(PARAM_HIGHRES, true);
-      return std::unique_ptr<WindowInterface>(CreateOsxWindowAndBind(window_title, w, h, is_highres));
+      const std::string str_profile = uri.Get<std::string>(PARAM_GL_PROFILE, "LEGACY");
+
+      NSOpenGLPixelFormatAttribute profile;
+
+      if(str_profile == "LEGACY") {
+        profile = NSOpenGLProfileVersionLegacy;
+      } else if(str_profile == "3.2 CORE") {
+        profile = NSOpenGLProfileVersion3_2Core;
+      } else if(str_profile == "4.1 CORE") {
+        profile = NSOpenGLProfileVersion4_1Core;
+      }else{
+        throw std::runtime_error(std::string("'") + str_profile + "' : unknown GL Profile.");
+      }
+
+      return std::unique_ptr<WindowInterface>(new OsxWindow(window_title, w, h, is_highres, profile));
     }
   };
 

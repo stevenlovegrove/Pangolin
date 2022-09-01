@@ -39,8 +39,9 @@ class PANGOLIN_EXPORT GlFont
 {
 public:
     // Load GL Font data. Delay uploading as texture until first use.
-    GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w=512, int tex_h=512);
-    GlFont(const std::string& filename, float pixel_height, int tex_w=512, int tex_h=512);
+    GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w=1024, int tex_h=1024);
+    GlFont(const std::string& filename, float pixel_height, int tex_w=1024, int tex_h=1024);
+    GlFont(const std::string& atlas_filename, const std::string& json_filename);
 
     virtual ~GlFont();
 
@@ -59,6 +60,8 @@ public:
 
 protected:
     void InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h);
+    void InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std::string& atlas_json);
+
 
     // This can only be called once GL context is initialised
     void InitialiseGlTexture();
@@ -66,7 +69,7 @@ protected:
     float font_height_px;
     float font_max_width_px;
 
-    ManagedImage<unsigned char> font_bitmap;
+    TypedImage font_bitmap;
     GlTexture mTex;
 
     using codepoint_t = uint32_t;

@@ -33,6 +33,7 @@
 #include <pangolin/image/image_io.h>
 #include <pangolin/utils/type_convert.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/picojson.h>
 
 #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
 #include <pangolin/gl/glsl.h>
@@ -149,6 +150,12 @@ GlFont::GlFont(const std::string& filename, float pixel_height, int tex_w, int t
     InitialiseFont(reinterpret_cast<const unsigned char*>(file_contents.data()), pixel_height, tex_w, tex_h);
 }
 
+GlFont::GlFont(const std::string& atlas_filename, const std::string& json_filename)
+{
+    InitialiseFontFromAtlas(atlas_filename, json_filename);
+}
+
+
 GlFont::~GlFont()
 {
 }
@@ -158,7 +165,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
     font_height_px = pixel_height;
     font_max_width_px = 0;
 
-    font_bitmap.Reinitialise(tex_w,tex_h);
+    font_bitmap.Reinitialise(tex_w,tex_h,PixelFormatFromString("GRAY8"));
     const int offset = 0;
 
     stbtt_fontinfo f;
@@ -177,28 +184,70 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
 
     for(const auto& r : ranges) {
         for(uint32_t codepoint=r.first; codepoint < r.second; ++codepoint) {
-            int advance, lsb, x0,y0,x1,y1,gw,gh;
             int g = stbtt_FindGlyphIndex(&f, codepoint);
+            int advance, lsb;
             stbtt_GetGlyphHMetrics(&f, g, &advance, &lsb);
-            stbtt_GetGlyphBitmapBox(&f, g, scale,scale, &x0,&y0,&x1,&y1);
-            gw = x1-x0;
-            gh = y1-y0;
-            font_max_width_px = std::max(font_max_width_px, (float)gw);
 
-            if (x + gw + 1 >= tex_w)
-               y = bottom_y, x = 1; // advance to next row
-            if (y + gh + 1 >= tex_h) // check if it fits vertically AFTER potentially moving to next row
-               throw std::runtime_error("Unable to initialise font: run out of texture pixel space.");
-            STBTT_assert(x+gw < tex_w);
-            STBTT_assert(y+gh < tex_h);
-            stbtt_MakeGlyphBitmap(&f, font_bitmap.RowPtr(y)+x, gw,gh, font_bitmap.pitch, scale, scale, g);
+            if(true) {
+                // Render atlas of charector alpha maps
 
-            // Adjust offset for edges of pixels
-            chardata.try_emplace(codepoint, tex_w,tex_h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
+                int x0, y0, x1, y1, gw, gh;
+                stbtt_GetGlyphBitmapBox(&f, g, scale,scale, &x0,&y0,&x1,&y1);
+                gw = x1-x0;
+                gh = y1-y0;
+                font_max_width_px = std::max(font_max_width_px, (float)gw);
 
-            x = x + gw + 1;
-            if (y+gh+1 > bottom_y)
-               bottom_y = y+gh+1;
+                if (x + gw + 1 >= tex_w)
+                    y = bottom_y, x = 1; // advance to next row
+                if (y + gh + 1 >= tex_h) // check if it fits vertically AFTER potentially moving to next row
+                    throw std::runtime_error("Unable to initialise font: run out of texture pixel space.");
+                STBTT_assert(x+gw < tex_w);
+                STBTT_assert(y+gh < tex_h);
+                stbtt_MakeGlyphBitmap(&f, font_bitmap.RowPtr(y) + x, gw, gh, font_bitmap.pitch, scale, scale, g);
+
+                // Adjust offset for edges of pixels
+                chardata.try_emplace(codepoint, tex_w,tex_h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
+
+                x = x + gw + 1;
+                if (y+gh+1 > bottom_y)
+                    bottom_y = y+gh+1;
+            }else {
+                // Render atlas of charector SDF maps
+
+                int padding = 5;
+                int gw;
+                int gh;
+                int x0;
+                int y0;
+
+                unsigned char* psdf = stbtt_GetGlyphSDF(&f, scale, g, padding, 180, 180.0/padding, &gw, &gh, &x0, &y0);
+                if(psdf) {
+                    Image<unsigned char> sdf(psdf, gw, gh, gw);
+
+                    font_max_width_px = std::max(font_max_width_px, (float)gw);
+
+                    if (x + gw + 1 >= tex_w)
+                        y = bottom_y, x = 1; // advance to next row
+                    if (y + gh + 1 >= tex_h) // check if it fits vertically AFTER potentially moving to next row
+                        throw std::runtime_error("Unable to initialise font: run out of texture pixel space.");
+                    STBTT_assert(x+gw < tex_w);
+                    STBTT_assert(y+gh < tex_h);
+
+                    font_bitmap.SubImage(x, y, gw, gh).CopyFrom(sdf);
+
+                    // Adjust offset for edges of pixels
+                    chardata.try_emplace(codepoint, font_bitmap.w, font_bitmap.h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
+
+                    x = x + gw + 1;
+                    if (y+gh+1 > bottom_y)
+                        bottom_y = y+gh+1;
+
+
+                    std::cout << gw << ", " << gh << ", " << x0 << ", " << y0 << std::endl;
+                    std::cout << std::endl;
+                    stbtt_FreeSDF(psdf, nullptr);
+                }
+            }
         }
     }
 
@@ -214,10 +263,84 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
     }
 }
 
+void InplaceFlipY(Image<unsigned char>& img)
+{
+    using T = unsigned char;
+
+    T* row_top = img.RowPtr(0);
+    T* row_bot = img.RowPtr(img.h-1);
+
+    while(row_top < row_bot) {
+        T* u = row_top;
+        T* b = row_bot;
+        T* end = row_top + img.pitch;
+        while(u < end) {
+            std::swap(*u,*b);
+            ++u;
+            ++b;
+        }
+
+        row_top += img.pitch;
+        row_bot -= img.pitch;
+    }
+}
+
+void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std::string& atlas_json)
+{
+    font_bitmap = LoadImage(atlas_bitmap);
+
+    if(!font_bitmap.IsValid())  throw std::runtime_error("Problem loading font atlas");
+
+    picojson::value meta;
+    {
+        auto err = picojson::parse(meta, GetFileContents(atlas_json));
+        if(!err.empty()) throw std::runtime_error(err);
+    }
+
+    const auto glyphs = meta["glyphs"];
+    const auto atlas = meta["atlas"];
+    const auto metrics = meta["metrics"];
+
+    font_max_width_px = 0;
+    font_height_px = atlas.get_value("size",0.0);
+
+    for(size_t i=0; i < glyphs.size(); ++i) {
+        const auto glyph = glyphs[i];
+        const codepoint_t codepoint = glyph.get_value<int64_t>("unicode", 0);
+        if(codepoint > 0 && glyph.contains("planeBounds") && glyph.contains("atlasBounds")) {
+            const double adv       = glyph.get_value<double>("advance", 0.0);
+            const auto planeBounds = glyph["planeBounds"];
+            const auto atlasBounds = glyph["atlasBounds"];
+
+            const float pl = planeBounds.get_value("left",   0.0);
+            const float pb = planeBounds.get_value("bottom", 0.0);
+            const float al = atlasBounds.get_value("left",   0.0);
+            const float ab = (font_bitmap.h - 1.0) - atlasBounds.get_value("bottom", 0.0);
+            const float ar = atlasBounds.get_value("right",  0.0);
+            const float at = (font_bitmap.h - 1.0) - atlasBounds.get_value("top",    0.0);
+
+            const float gw = ar - al;
+            const float gh = at - ab;
+
+            font_max_width_px = std::max(font_max_width_px, (float)gw);
+
+            chardata.try_emplace(codepoint, font_bitmap.w, font_bitmap.h, al, ab, gw, gh, adv, pl -0.5f, pb -0.5f);
+
+        }
+    }
+
+}
+
 void GlFont::InitialiseGlTexture()
 {
     if(font_bitmap.IsValid()) {
-        mTex.Reinitialise(font_bitmap.w, font_bitmap.h, GL_ALPHA, true, 0, GL_ALPHA,GL_UNSIGNED_BYTE, font_bitmap.ptr);
+        if(font_bitmap.fmt.format == "GRAY8") {
+            // Special case where we use image as alpha-mask
+            // TODO: Don't hard-code this. Set as enum of atlas type...
+            mTex.Reinitialise(font_bitmap.w, font_bitmap.h, GL_ALPHA, true, 0, GL_ALPHA, GL_UNSIGNED_BYTE, font_bitmap.ptr);
+        }else{
+            mTex.Load(font_bitmap);
+        }
         font_bitmap.Deallocate();
     }
 }

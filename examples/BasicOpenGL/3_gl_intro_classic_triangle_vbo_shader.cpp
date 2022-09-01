@@ -1,9 +1,9 @@
 #include <pangolin/display/display.h>
 
 const char* vertex_shader = R"Shader(
-#version 120
-attribute vec3 a_position;
-varying vec2 v_pos;
+#version 150
+in  vec3 a_position;
+out vec2 v_pos;
 
 void main() {
     gl_Position = vec4(a_position, 1.0);
@@ -12,17 +12,19 @@ void main() {
 )Shader";
 
 const char* fragment_shader = R"Shader(
-#version 120
-varying vec2 v_pos;
+#version 150
+in  vec2 v_pos;
+out vec4 fragcolor;
 uniform float u_time;
 
 vec3 colorA = vec3(0.905,0.045,0.045);
 vec3 colorB = vec3(0.995,0.705,0.051);
 
+
 void main() {
     float pattern = sin(10*v_pos.y + u_time) * sin(10*v_pos.x + u_time) * 0.5 + 0.5;
     vec3 color = mix(colorA, colorB, pattern);
-    gl_FragColor = vec4(color, 1.0);
+    fragcolor = vec4(color, 1.0);
 }
 )Shader";
 

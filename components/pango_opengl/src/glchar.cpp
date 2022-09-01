@@ -36,13 +36,13 @@ GlChar::GlChar()
     // Uninitialised
 }
 
-GlChar::GlChar(int tw, int th, int x, int y, int w, int h, GLfloat advance, GLfloat ox, GLfloat oy)
+GlChar::GlChar(int tw, int th, GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat advance, GLfloat ox, GLfloat oy)
     : x_step(advance)
 {
-    const GLfloat u = (GLfloat)x / (GLfloat)tw;
-    const GLfloat v = (GLfloat)y / (GLfloat)th;
-    const GLfloat u2 = (GLfloat)(x + w) / (GLfloat)tw;
-    const GLfloat v2 = (GLfloat)(y + h) / (GLfloat)th;
+    const GLfloat u = x / (GLfloat)tw;
+    const GLfloat v = y / (GLfloat)th;
+    const GLfloat u2 = (x + w) / (GLfloat)tw;
+    const GLfloat v2 = (y + h) / (GLfloat)th;
 
     // Setup u,v tex coords
     vs[0] = XYUV(ox, oy,     u,v );

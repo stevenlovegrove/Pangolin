@@ -284,6 +284,28 @@ protected:
     size_t  m_num_verts;    
 };
 
+class PANGOLIN_EXPORT GlVertexArrayObject
+{
+public:
+    GlVertexArrayObject();
+    ~GlVertexArrayObject();
+
+    void Bind() const;
+
+    void Unbind() const;
+
+    void AddVertexAttrib(
+        GLuint attrib_location,
+        const GlBuffer& bo,
+        size_t offset_bytes = 0,
+        size_t stride_bytes = 0,
+        GLboolean normalized = GL_FALSE
+    );
+
+protected:
+    GLuint vao;
+};
+
 size_t GlFormatChannels(GLenum data_layout);
 
 size_t GlDataTypeBytes(GLenum type);

@@ -49,7 +49,7 @@ class PANGOLIN_EXPORT GlChar
 {
 public:
     GlChar();
-    GlChar(int tw, int th, int x, int y, int w, int h, GLfloat x_step, GLfloat ox, GLfloat oy);
+    GlChar(int tw, int th, GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat x_step, GLfloat ox, GLfloat oy);
     
     inline const XYUV& GetVert(size_t i) const {
         return vs[i];
