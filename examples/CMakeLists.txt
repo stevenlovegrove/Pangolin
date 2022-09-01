@@ -8,6 +8,7 @@ add_subdirectory(SimpleDisplayImage)
 add_subdirectory(SimplePlot)
 add_subdirectory(SimpleVideo)
 add_subdirectory(SimpleRecord)
+add_subdirectory(WidgetPanelExample)
 
 if(NOT EMSCRIPTEN)
     add_subdirectory(HelloPangolinOffscreen)
