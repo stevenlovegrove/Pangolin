@@ -62,12 +62,15 @@ inline void DrawWindow(GlText& text, GLfloat x, GLfloat y, GLfloat z = 0.0)
     GLint    view[4];
     glGetIntegerv(GL_VIEWPORT, view );
 
+    auto& d = DisplayBase();
+    d.Activate();
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
+    // Pixel continuous coords
+    ProjectionMatrixOrthographic(0.0, d.v.w, 0.0, d.v.h, -1.0, 1.0).Load();
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-
-    DisplayBase().ActivatePixelOrthographic();
+    glLoadIdentity();
 
     glTranslatef( std::floor(x), std::floor(y), z);
     text.Draw();
