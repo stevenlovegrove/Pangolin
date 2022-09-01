@@ -941,6 +941,40 @@ inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
 
 ////////////////////////////////////////////////////////////////////////////
 
+inline GlVertexArrayObject::GlVertexArrayObject()
+{
+    glGenVertexArrays(1, &vao);
+}
+
+inline GlVertexArrayObject::~GlVertexArrayObject()
+{
+    glDeleteVertexArrays(1, &vao);
+}
+
+inline void GlVertexArrayObject::Bind() const
+{
+    glBindVertexArray(vao);
+
+}
+
+inline void GlVertexArrayObject::Unbind() const
+{
+    glBindVertexArray(0);
+}
+
+inline void GlVertexArrayObject::AddVertexAttrib(GLuint attrib_location, const GlBuffer& bo, size_t offset_bytes, size_t stride_bytes, GLboolean normalized)
+{
+    Bind();
+    bo.Bind();
+    CheckGlDieOnError();
+    glVertexAttribPointer(attrib_location, bo.count_per_element, bo.datatype, normalized, stride_bytes, (void*)offset_bytes);
+    CheckGlDieOnError();
+    glEnableVertexAttribArray(attrib_location);
+
+}
+
+////////////////////////////////////////////////////////////////////////////
+
 inline TypedImage ReadFramebuffer(const Viewport& v, const std::string& pixel_format)
 {
     const PixelFormat fmt = PixelFormatFromString(pixel_format);
