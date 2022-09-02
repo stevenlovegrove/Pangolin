@@ -78,6 +78,122 @@ const vec2 light_dir = vec2(-sqrt(0.5), -sqrt(0.5));
 const vec3 light_dir3 = vec3(-sqrt(1.0/3.0));
 const float M_PI = 3.1415926535897932384626433832795;
 
+// From https://www.shadertoy.com/view/WlfXRN
+vec3 plasma(float t) {
+    const vec3 c0 = vec3(0.05873234392399702, 0.02333670892565664, 0.5433401826748754);
+    const vec3 c1 = vec3(2.176514634195958, 0.2383834171260182, 0.7539604599784036);
+    const vec3 c2 = vec3(-2.689460476458034, -7.455851135738909, 3.110799939717086);
+    const vec3 c3 = vec3(6.130348345893603, 42.3461881477227, -28.51885465332158);
+    const vec3 c4 = vec3(-11.10743619062271, -82.66631109428045, 60.13984767418263);
+    const vec3 c5 = vec3(10.02306557647065, 71.41361770095349, -54.07218655560067);
+    const vec3 c6 = vec3(-3.658713842777788, -22.93153465461149, 18.19190778539828);
+    return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+}
+vec3 viridis(float t) {
+    const vec3 c0 = vec3(0.2777273272234177, 0.005407344544966578, 0.3340998053353061);
+    const vec3 c1 = vec3(0.1050930431085774, 1.404613529898575, 1.384590162594685);
+    const vec3 c2 = vec3(-0.3308618287255563, 0.214847559468213, 0.09509516302823659);
+    const vec3 c3 = vec3(-4.634230498983486, -5.799100973351585, -19.33244095627987);
+    const vec3 c4 = vec3(6.228269936347081, 14.17993336680509, 56.69055260068105);
+    const vec3 c5 = vec3(4.776384997670288, -13.74514537774601, -65.35303263337234);
+    const vec3 c6 = vec3(-5.435455855934631, 4.645852612178535, 26.3124352495832);
+    return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+}
+vec3 magma(float t) {
+    const vec3 c0 = vec3(-0.002136485053939582, -0.000749655052795221, -0.005386127855323933);
+    const vec3 c1 = vec3(0.2516605407371642, 0.6775232436837668, 2.494026599312351);
+    const vec3 c2 = vec3(8.353717279216625, -3.577719514958484, 0.3144679030132573);
+    const vec3 c3 = vec3(-27.66873308576866, 14.26473078096533, -13.64921318813922);
+    const vec3 c4 = vec3(52.17613981234068, -27.94360607168351, 12.94416944238394);
+    const vec3 c5 = vec3(-50.76852536473588, 29.04658282127291, 4.23415299384598);
+    const vec3 c6 = vec3(18.65570506591883, -11.48977351997711, -5.601961508734096);
+    return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+}
+
+vec3 inferno(float t) {
+    const vec3 c0 = vec3(0.0002189403691192265, 0.001651004631001012, -0.01948089843709184);
+    const vec3 c1 = vec3(0.1065134194856116, 0.5639564367884091, 3.932712388889277);
+    const vec3 c2 = vec3(11.60249308247187, -3.972853965665698, -15.9423941062914);
+    const vec3 c3 = vec3(-41.70399613139459, 17.43639888205313, 44.35414519872813);
+    const vec3 c4 = vec3(77.162935699427, -33.40235894210092, -81.80730925738993);
+    const vec3 c5 = vec3(-71.31942824499214, 32.62606426397723, 73.20951985803202);
+    const vec3 c6 = vec3(25.13112622477341, -12.24266895238567, -23.07032500287172);
+    return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+}
+
+// https://www.shadertoy.com/view/4dXXDX
+// if edge0 < x <= edge1, return 1.0, otherwise return 0
+float segment(float edge0, float edge1, float x)
+{
+    return step(edge0,x) * (1.0-step(edge1,x));
+}
+vec3 gray(float t)
+{
+    return vec3(t);
+}
+vec3 hot(float t)
+{
+    return vec3(smoothstep(0.00,0.33,t),
+                smoothstep(0.33,0.66,t),
+                smoothstep(0.66,1.00,t));
+}
+vec3 cool(float t)
+{
+    return mix( vec3(0.0,1.0,1.0), vec3(1.0,0.0,1.0), t);
+}
+vec3 autumn(float t)
+{
+    return mix( vec3(1.0,0.0,0.0), vec3(1.0,1.0,0.0), t);
+}
+vec3 winter(float t)
+{
+    return mix( vec3(0.0,0.0,1.0), vec3(0.0,1.0,0.5), sqrt(t));
+}
+vec3 spring(float t)
+{
+    return mix( vec3(1.0,0.0,1.0), vec3(1.0,1.0,0.0), t);
+}
+vec3 summer(float t)
+{
+    return mix( vec3(0.0,0.5,0.4), vec3(1.0,1.0,0.4), t);
+}
+vec3 ice(float t)
+{
+   return vec3(t, t, 1.0);
+}
+vec3 fire(float t)
+{
+    return mix( mix(vec3(1,1,1), vec3(1,1,0), t),
+                mix(vec3(1,1,0), vec3(1,0,0), t*t), t);
+}
+vec3 ice_and_fire(float t)
+{
+    return segment(0.0,0.5,t) * ice(2.0*(t-0.0)) +
+           segment(0.5,1.0,t) * fire(2.0*(t-0.5));
+}
+vec3 reds(float t)
+{
+    return mix(vec3(1,1,1), vec3(1,0,0), t);
+}
+vec3 greens(float t)
+{
+    return mix(vec3(1,1,1), vec3(0,1,0), t);
+}
+vec3 blues(float t)
+{
+    return mix(vec3(1,1,1), vec3(0,0,1), t);
+}
+// By Morgan McGuire
+vec3 wheel(float t)
+{
+    return clamp(abs(fract(t + vec3(1.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0) -1.0, 0.0, 1.0);
+}
+// By Morgan McGuire
+vec3 stripes(float t)
+{
+    return vec3(mod(floor(t * 64.0), 2.0) * 0.2 + 0.8);
+}
+
 // x in interval [0, 2]
 vec4 mix3(vec4 a, vec4 b, vec4 c, float x )
 {
@@ -251,31 +367,46 @@ vec4 eg3() {
 }
 
 vec4 eg4() {
-    float half_height = 25.0;
+    float half_height = 30.0;
+    float border = 2;
+    float half_height_slider = half_height - border;
+
     float padding = 15.0;
-    float rad = half_height;
     float half_width = 200.0;
+    float half_width_slider = 195.0;
     float val_pix = u_val*2.0*half_width;
     float frac_y = mod(v_pos.y, 2*(padding+half_height) );
     vec2 p = vec2(v_pos.x, frac_y );
-    vec2 xy = p - vec2(padding);
+    float pos_along_slider = clamp((p.x-padding) / val_pix, 0.0, 1.0);
 
-    float dist_c1 = length(xy - vec2(val_pix, half_height)) - rad;
-    float dist_box = sdf_rounded_rect(p, vec2(padding+half_width, padding+half_height), vec2(half_width, half_height), rad);
-    float dist = min(dist_c1, dist_box);
+    float dist_box   = sdf_rounded_rect(p, vec2(padding+half_width, padding+half_height), vec2(half_width, half_height), half_height);
+    float dist_slide = sdf_rounded_rect(p, vec2(padding+val_pix/2.0, padding+half_height), vec2(val_pix/2.0-border, half_height_slider), half_height_slider);
 
-    vec2 dsdf = vec2(dFdx(dist_box), dFdy(dist_box));
-    dsdf /= length(dsdf);
+    vec2 dsdf = normalize(vec2(dFdx(dist_box), dFdy(dist_box)));
+    vec2 dsdf_slide = normalize(vec2(dFdx(dist_slide), dFdy(dist_slide)));
+    if(u_val > 0.5) dsdf_slide*= -1;
 
+    float a = smoothstep( -border, 0.0, dist_box );
+    float b = 1.0 - smoothstep( 2.0, 4.0, dist_box );
 
-    float a = smoothstep( -1.0, 0.0, dist_box );
-    float b = 1.0 - smoothstep( 5.0, 6.0, dist_box );
-//    float fill = (0.5 + xy.x / (8.0*half_width));
-    float fill = 0.5;
-    float m = (dist_c1 < 0 || (dist_box < 0 && xy.x < val_pix)) ? fill : a*b;
+    float d = smoothstep( -5, 0.0, dist_slide );
+    float c = 1.0 - smoothstep( 0.0, 2.0, dist_slide );
 
-    vec3 v = mix( vec3(0.9), vec3(0.8), m );
+    vec3 color_panel = vec3(0.8);
+    vec3 color_boss = color_panel + dot(dsdf,light_dir) * vec3(0.2, 0.15, 0.20);
+    vec3 color_bg = mix( color_panel, color_boss, a*b );
 
+//    // button-y style
+    vec3 color_button = vec3(0.85, 0.85, 0.85);
+    vec3 color_edge = color_panel - dot(dsdf_slide,light_dir) * vec3(0.2, 0.15, 0.20);
+
+    // flat style
+//    vec3 color_button = vec3(1.0, 0.70, 0.70);
+//    vec3 color_button = vec3(0.8) + 0.2*spring(pos_along_slider);
+//    vec3 color_edge = color_button - vec3(0.1);
+
+    vec3 color_fg = mix( color_button, color_edge, d );
+    vec3 v = mix( color_bg, color_fg, c);
     return vec4(v,1.0);
 }
 
