@@ -250,8 +250,37 @@ vec4 eg3() {
     return vec4(v,1.0);
 }
 
+vec4 eg4() {
+    float half_height = 25.0;
+    float padding = 15.0;
+    float rad = half_height;
+    float half_width = 200.0;
+    float val_pix = u_val*2.0*half_width;
+    float frac_y = mod(v_pos.y, 2*(padding+half_height) );
+    vec2 p = vec2(v_pos.x, frac_y );
+    vec2 xy = p - vec2(padding);
+
+    float dist_c1 = length(xy - vec2(val_pix, half_height)) - rad;
+    float dist_box = sdf_rounded_rect(p, vec2(padding+half_width, padding+half_height), vec2(half_width, half_height), rad);
+    float dist = min(dist_c1, dist_box);
+
+    vec2 dsdf = vec2(dFdx(dist_box), dFdy(dist_box));
+    dsdf /= length(dsdf);
+
+
+    float a = smoothstep( -1.0, 0.0, dist_box );
+    float b = 1.0 - smoothstep( 5.0, 6.0, dist_box );
+//    float fill = (0.5 + xy.x / (8.0*half_width));
+    float fill = 0.5;
+    float m = (dist_c1 < 0 || (dist_box < 0 && xy.x < val_pix)) ? fill : a*b;
+
+    vec3 v = mix( vec3(0.9), vec3(0.8), m );
+
+    return vec4(v,1.0);
+}
+
 void main() {
-    FragColor = eg3();
+    FragColor = eg4();
 }
 )Shader";
 
