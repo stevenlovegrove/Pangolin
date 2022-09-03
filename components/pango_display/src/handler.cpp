@@ -34,6 +34,10 @@
 namespace pangolin
 {
 
+namespace {
+    constexpr float sentinal = std::numeric_limits<float>::quiet_NaN();
+}
+
 void Handler::Keyboard(View& d, unsigned char key, int x, int y, bool pressed)
 {
     View* child = d.FindChild(x,y);
@@ -114,7 +118,13 @@ void HandlerScroll::Special(View& d, InputSpecial inType, float x, float y, floa
 }
 
 HandlerBase3D::HandlerBase3D(OpenGlRenderState& cam_state, AxisDirection enforce_up, float trans_scale, float zoom_fraction)
-    : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), zf(zoom_fraction), cameraspec(CameraSpecOpenGl), last_z(0.8)
+    : cam_state(&cam_state), enforce_up(enforce_up), tf(trans_scale), zf(zoom_fraction),
+      cameraspec(CameraSpecOpenGl), last_z(0.8), last_pos{0.0,0.0}, rot_center{0.0,0.0,0.0},
+      p{sentinal,sentinal,sentinal},
+      Pw{sentinal,sentinal,sentinal},
+      Pc{sentinal,sentinal,sentinal},
+      n{sentinal,sentinal,sentinal},
+      funcKeyState(0)
 {
     SetZero<3,1>(rot_center);
 }
