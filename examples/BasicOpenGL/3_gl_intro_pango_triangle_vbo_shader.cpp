@@ -370,6 +370,12 @@ float font_color(vec4 atlas_offset, vec2 pos )
     return opacity;
 }
 
+vec4 composite(vec4 top_layer, vec4 bottom_layer)
+{
+    float alpha = top_layer.a;
+    return alpha * top_layer + (1.0 - alpha) * bottom_layer;
+}
+
 vec4 slider(bool button)
 {
     float half_height = 30.0;
@@ -386,6 +392,9 @@ vec4 slider(bool button)
 
 //    vec2 light_dir = normalize(u_mouse_pos - v_pos);
 
+    float dist_panel = sdf_rounded_rect(v_pos, vec2(half_width+padding, 15*half_height), vec2(half_width+2*padding, 15*half_height), half_height);
+    float panel_opac = smoothstep(0.0, 1.0, -dist_panel);
+
     float dist_box   = sdf_rounded_rect(p, vec2(padding+half_width, padding+half_height), vec2(half_width, half_height), half_height);
     float dist_slide = sdf_rounded_rect(p, vec2(padding+val_pix/2.0, padding+half_height), vec2(val_pix/2.0-border, half_height_slider), half_height_slider);
 
@@ -401,7 +410,7 @@ vec4 slider(bool button)
 
     vec3 color_panel = vec3(0.8);
     vec3 color_boss = color_panel + dot(dsdf,light_dir) * vec3(0.2, 0.15, 0.20);
-    vec3 color_bg = mix( color_panel, color_boss, a*b );
+    vec4 color_bg = mix( vec4(color_panel,0.0), vec4(color_boss,1.0), a*b );
 
     vec3 color_button;
     vec3 color_edge;
@@ -412,12 +421,16 @@ vec4 slider(bool button)
         color_edge = color_panel - dot(dsdf_slide,light_dir) * vec3(0.2, 0.15, 0.20);
     }else{
         color_button = vec3(0.8) + 0.2*spring(pos_along_slider);
+        color_button = vec3(0.9, 0.7, 0.7);
         color_edge = color_button - vec3(0.1);
     }
 
     vec3 color_fg = mix( color_button, color_edge, d );
-    vec3 v = mix( color_bg, color_fg, c);
-    return vec4(v,1.0);
+    vec4 v = mix( color_bg, vec4(color_fg,1.0), c);
+
+    v = composite(v, vec4(vec3(0.8),panel_opac));
+
+    return v; //vec4(v,0.1);
 }
 
 vec4 font_render() {
@@ -425,14 +438,16 @@ vec4 font_render() {
     const float font_height = 32.0;
     vec4 font_offset = texelFetch(u_font_offsets, ivec2(u_char_id, 0), 0);
     vec2 screen_offset = texelFetch(u_font_offsets, ivec2(u_char_id, 1), 0).xy;
-    vec3 v = vec3(font_color(font_offset, v_pos - vec2(padding) - vec2(font_height/2.0) -screen_offset*font_height));
+    vec3 v = vec3(font_color(font_offset, v_pos/10.0 - vec2(padding) - vec2(font_height/2.0) -screen_offset*font_height));
 
     return vec4(v,1.0);
 }
 
 void main() {
-//    FragColor = slider(false);
-    FragColor = slider_very_flat();
+    FragColor = slider(false);
+//    FragColor = slider_very_flat();
+//    FragColor = slider_wave();
+//    FragColor = font_render();
 }
 )Shader";
 
@@ -529,8 +544,8 @@ void MainSliderExperiments()
     using namespace pangolin;
 
     pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "3.2 CORE"}});
-//    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "LEGACY"}});
-    CheckGlDieOnError();
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     HoverHandler handler;
     DisplayBase().SetHandler(&handler);
@@ -575,6 +590,7 @@ void MainSliderExperiments()
 
     while( !pangolin::ShouldQuit() )
     {
+        glClearColor(0.7, 0.7, 0.7, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if(true) {
