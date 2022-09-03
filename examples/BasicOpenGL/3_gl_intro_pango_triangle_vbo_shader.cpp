@@ -8,6 +8,9 @@
 #include <pangolin/gl/glsl.h>
 #include <pangolin/gl/glfont.h>
 
+#include <locale>
+#include <codecvt>
+
 const char* shader_text = R"Shader(
 @start vertex
 //#version 150 core
@@ -72,7 +75,11 @@ void main() {
 in vec2 v_pos;
 out vec4 FragColor;
 uniform sampler2D u_matcap;
+uniform sampler2D u_font_atlas;
+uniform sampler2D u_font_offsets;
 uniform float u_val;
+uniform int u_char_id;
+uniform vec2 u_mouse_pos;
 
 const vec2 light_dir = vec2(-sqrt(0.5), -sqrt(0.5));
 const vec3 light_dir3 = vec3(-sqrt(1.0/3.0));
@@ -268,64 +275,22 @@ vec3 matcap(vec3 normal)
     return texture(u_matcap, t).xyz;
 }
 
-vec4 eg1() {
-    float half_height = 20.0;
+vec4 slider_very_flat() {
+    float half_width = 200;
+    float half_height = 30.0;
     float padding = 24.0;
-    float rad = half_height * 0.5;
+    float rad = half_height * 0.8;
     vec2 p = vec2(v_pos.x, mod(v_pos.y, 2*(padding+half_height) ) );
 
-    float sdf = sdf_rounded_rect(p, vec2(padding+100.0, padding+half_height), vec2(100, half_height), rad);
+    float sdf = sdf_rounded_rect(p, vec2(padding+half_width, padding+half_height), vec2(half_width, half_height), rad);
     vec2 dsdf = vec2(dFdx(sdf), dFdy(sdf));
     dsdf /= length(dsdf);
 
     return mix3(
-            vec4(0.8,0.8,0.8,1.0),
+            vec4(0.85,0.85,0.85,1.0),
             vec4(vec3(0.5, 0.5, 0.5) + dot(dsdf,light_dir) * vec3(0.5, 0.0, 0.0), 1.0),
             vec4(0.9,0.9,0.9,1.0),
-            sdf);
-}
-
-vec4 eg2() {
-    float half_height = 25.0;
-    float padding = 15.0;
-    float rad = half_height * 0.3;
-    float width = 150.0;
-    vec2 p = vec2(v_pos.x, mod(v_pos.y, 2*(padding+half_height) ) );
-
-    float sdf = sdf_rounded_rect(p, vec2(padding+width, padding+half_height), vec2(width, half_height), rad);
-    float h = 0.0;
-    if(sdf < 0.0) {
-        h = rad;
-    }else if(sdf <= rad) {
-        float x = sdf / rad;
-        h = rad - rad * (1.0 - sqrt(1.0 - x*x));
-    }else if(sdf <= rad+rad/2.0) {
-        float x = -(sdf-rad/2.0) / rad;
-        h = rad * (1.0 - sqrt(1.0 - x*x));
-//    }else if(sdf <= rad+rad) {
-//        float x = (sdf-3.0*rad/2.0) / rad;
-//        h = rad * (1.0 - sqrt(1.0 - x*x));
-    }else{
-        h=rad;
-    }
-
-    h += 0.2*noise(p*8.0+vec2(20.4));
-
-//    }else if(sdf < rad) {
-//        float x = sdf / rad;
-//        h = rad * (1.0 - sqrt(1.0 - x*x));
-//    }else if(sdf < rad+2) {
-//        h = 0.0;
-//    }else{
-//        float x = -(sdf-(rad+2.0)) / rad;
-//        h = rad * sqrt(1.0 - x*x);
-//    }
-
-    vec3 n = vec3(dFdx(h), dFdy(h), 1.0);
-    vec3 norm = n / length(n);
-
-//    return vec4(vec3(0.5, 0.5, 0.5) + dot(norm,light_dir3) * vec3(0.5, 0.0, 0.0), 1.0);
-    return vec4(matcap(norm), 1.0);
+            sdf/2.0);
 }
 
 vec2 wave(float x, float center, float rad)
@@ -336,7 +301,7 @@ vec2 wave(float x, float center, float rad)
     return vec2(y, dy_dx);
 }
 
-vec4 eg3() {
+vec4 slider_wave() {
     float half_height = 25.0;
     float padding = 15.0;
     float rad = 50.0;
@@ -366,7 +331,47 @@ vec4 eg3() {
     return vec4(v,1.0);
 }
 
-vec4 eg4() {
+
+float median(float r, float g, float b) {
+    return max(min(r, g), min(max(r, g), b));
+}
+
+float screenPxRange(vec2 tex_coord) {
+    const float pxRange = 2.0;
+    vec2 unitRange = vec2(pxRange)/vec2(textureSize(u_font_atlas, 0));
+    vec2 screenTexSize = vec2(1.0)/fwidth(tex_coord);
+    return max(0.5*dot(unitRange, screenTexSize), 1.0);
+}
+
+vec2 clamp2(vec2 v, vec2 low, vec2 high)
+{
+    return vec2(
+        clamp(v.x, low.x, high.x),
+        clamp(v.y, low.y, high.y)
+    );
+}
+
+float font_color(vec4 atlas_offset, vec2 pos )
+{
+    float atlas_dim = textureSize(u_font_atlas, 0).x;
+
+    vec2 p = vec2(1,-1) * clamp2(
+        pos/atlas_dim,
+        vec2(0.0, 0.0),
+        vec2(atlas_offset.z, -atlas_offset.w)
+    );
+
+    vec2 uv = atlas_offset.xy + p;
+    vec2 tex = vec2(uv.x, uv.y);
+    vec3 msd = texture(u_font_atlas, tex).xyz;
+    float sd = median(msd.r, msd.g, msd.b);
+    float screenPxDistance = screenPxRange(tex)*(sd - 0.5);
+    float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
+    return opacity;
+}
+
+vec4 slider(bool button)
+{
     float half_height = 30.0;
     float border = 2;
     float half_height_slider = half_height - border;
@@ -379,12 +384,14 @@ vec4 eg4() {
     vec2 p = vec2(v_pos.x, frac_y );
     float pos_along_slider = clamp((p.x-padding) / val_pix, 0.0, 1.0);
 
+//    vec2 light_dir = normalize(u_mouse_pos - v_pos);
+
     float dist_box   = sdf_rounded_rect(p, vec2(padding+half_width, padding+half_height), vec2(half_width, half_height), half_height);
     float dist_slide = sdf_rounded_rect(p, vec2(padding+val_pix/2.0, padding+half_height), vec2(val_pix/2.0-border, half_height_slider), half_height_slider);
 
     vec2 dsdf = normalize(vec2(dFdx(dist_box), dFdy(dist_box)));
     vec2 dsdf_slide = normalize(vec2(dFdx(dist_slide), dFdy(dist_slide)));
-    if(u_val > 0.5) dsdf_slide*= -1;
+    if(u_char_id % 2 == 0) dsdf_slide*= -1;
 
     float a = smoothstep( -border, 0.0, dist_box );
     float b = 1.0 - smoothstep( 2.0, 4.0, dist_box );
@@ -396,22 +403,36 @@ vec4 eg4() {
     vec3 color_boss = color_panel + dot(dsdf,light_dir) * vec3(0.2, 0.15, 0.20);
     vec3 color_bg = mix( color_panel, color_boss, a*b );
 
-//    // button-y style
-    vec3 color_button = vec3(0.85, 0.85, 0.85);
-    vec3 color_edge = color_panel - dot(dsdf_slide,light_dir) * vec3(0.2, 0.15, 0.20);
+    vec3 color_button;
+    vec3 color_edge;
 
-    // flat style
-//    vec3 color_button = vec3(1.0, 0.70, 0.70);
-//    vec3 color_button = vec3(0.8) + 0.2*spring(pos_along_slider);
-//    vec3 color_edge = color_button - vec3(0.1);
+    if(button) {
+        // button-y style
+        color_button = vec3(0.85, 0.85, 0.85);
+        color_edge = color_panel - dot(dsdf_slide,light_dir) * vec3(0.2, 0.15, 0.20);
+    }else{
+        color_button = vec3(0.8) + 0.2*spring(pos_along_slider);
+        color_edge = color_button - vec3(0.1);
+    }
 
     vec3 color_fg = mix( color_button, color_edge, d );
     vec3 v = mix( color_bg, color_fg, c);
     return vec4(v,1.0);
 }
 
+vec4 font_render() {
+    const float padding = 15.0;
+    const float font_height = 32.0;
+    vec4 font_offset = texelFetch(u_font_offsets, ivec2(u_char_id, 0), 0);
+    vec2 screen_offset = texelFetch(u_font_offsets, ivec2(u_char_id, 1), 0).xy;
+    vec3 v = vec3(font_color(font_offset, v_pos - vec2(padding) - vec2(font_height/2.0) -screen_offset*font_height));
+
+    return vec4(v,1.0);
+}
+
 void main() {
-    FragColor = eg4();
+//    FragColor = slider(false);
+    FragColor = slider_very_flat();
 }
 )Shader";
 
@@ -429,16 +450,23 @@ struct HoverHandler : public pangolin::Handler
         this->y = y;
     }
 
+    void Keyboard(pangolin::View&, unsigned char key, int x, int y, bool pressed) override
+    {
+        if(pressed) last_codepoint = key;
+    }
+
+
+    uint32_t last_codepoint;
     int x,y;
 
 };
 
-void sample()
+void MainRenderTextWithNewAtlas()
 {
     using namespace pangolin;
 
-    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "3.2 CORE"}});
-//    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "LEGACY"}});
+//    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "3.2 CORE"}});
+    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "LEGACY"}});
     CheckGlDieOnError();
 
     pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json");
@@ -477,7 +505,26 @@ void sample()
     }
 }
 
-void sample2()
+pangolin::ManagedImage<Eigen::Vector4f> MakeFontLookupImage(pangolin::GlFont& font)
+{
+    pangolin::ManagedImage<Eigen::Vector4f> img(font.chardata.size(), 2);
+
+    for(const auto& cp_char : font.chardata) {
+        img(cp_char.second.AtlasIndex(), 0) = {
+            cp_char.second.GetVert(0).tu,
+            cp_char.second.GetVert(0).tv,
+            cp_char.second.GetVert(2).tu - cp_char.second.GetVert(0).tu, // w
+            cp_char.second.GetVert(2).tv - cp_char.second.GetVert(0).tv  // h
+        };
+        img(cp_char.second.AtlasIndex(), 1) = {
+            cp_char.second.GetVert(0).x, cp_char.second.GetVert(0).y, 0.0, 0.0
+        };
+    }
+
+    return img;
+}
+
+void MainSliderExperiments()
 {
     using namespace pangolin;
 
@@ -499,8 +546,14 @@ void sample2()
         }
     );
 
-//    GlTexture font_map(LoadImage("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/zcool/站酷仓耳渔阳体-W02.ttf_map.png"));
-//    CheckGlDieOnError();
+    pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json");
+    font.InitialiseGlTexture();
+    GlTexture font_offsets;
+    auto img = MakeFontLookupImage(font);
+    {
+        font_offsets.Reinitialise(img.w, img.h, GL_RGBA32F, false, 0, GL_RGBA, GL_FLOAT, img.ptr);
+    }
+
 
     GlTexture matcap;
     matcap.LoadFromFile("/Users/stevenlovegrove/Downloads/matcap1.png");
@@ -520,9 +573,6 @@ void sample2()
 
     auto T_cm = ProjectionMatrixOrthographic(-0.5, v.w-0.5, -0.5, v.h-0.5, -1.0, 1.0);
 
-    float dx = 0.0;
-    float time = 0.0;
-
     while( !pangolin::ShouldQuit() )
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -532,12 +582,20 @@ void sample2()
 
             prog.SetUniform("u_T_cm", T_cm);
             prog.SetUniform("u_val", std::clamp((handler.x - 15.0f)/400.0f, 0.0f, 1.0f ) );
-//            prog.SetUniform("u_val", time);
-//            time = fmod(time+0.001, 1.0);
+            prog.SetUniform("u_font_atlas", 1);
+            prog.SetUniform("u_font_offsets", 2);
+            prog.SetUniform("u_mouse_pos", (float)handler.x, (float)handler.y);
+
+            auto& co = font.chardata[handler.last_codepoint];
+            prog.SetUniform("u_char_id", (int)co.AtlasIndex());
 
             vao.Bind();
             glActiveTexture(GL_TEXTURE0);
             matcap.Bind();
+            glActiveTexture(GL_TEXTURE1);
+            font.mTex.Bind();
+            glActiveTexture(GL_TEXTURE2);
+            font_offsets.Bind();
             glDrawArrays(GL_TRIANGLE_STRIP, 0, vbo.num_elements);
             matcap.Unbind();
             prog.Unbind();
@@ -550,7 +608,7 @@ void sample2()
 
 int main( int /*argc*/, char** /*argv*/ )
 {
-//    test();
-    sample2();
+    MainSliderExperiments();
+//    MainRenderTextWithNewAtlas();
     return 0;
 }

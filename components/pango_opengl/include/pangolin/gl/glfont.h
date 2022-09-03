@@ -58,7 +58,7 @@ public:
         return font_max_width_px;
     }
 
-protected:
+//protected:
     void InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h);
     void InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std::string& atlas_json);
 

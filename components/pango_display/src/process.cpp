@@ -63,11 +63,15 @@ void Keyboard(unsigned char key, int x, int y, bool pressed, KeyModifierBitmask 
             hook->second(key);
         } else if(context->activeDisplay && context->activeDisplay->handler) {
             context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,true);
+        }else{
+            context->base.handler->Keyboard(context->base, key,x,y,true);
         }
     }else{
         if(context->activeDisplay && context->activeDisplay->handler)
         {
             context->activeDisplay->handler->Keyboard(*(context->activeDisplay),key,x,y,false);
+        }else{
+            context->base.handler->Keyboard(context->base, key,x,y,false);
         }
     }
 }

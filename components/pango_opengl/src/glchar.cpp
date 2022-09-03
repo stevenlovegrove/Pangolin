@@ -36,8 +36,8 @@ GlChar::GlChar()
     // Uninitialised
 }
 
-GlChar::GlChar(int tw, int th, GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat advance, GLfloat ox, GLfloat oy)
-    : x_step(advance)
+GlChar::GlChar(size_t atlas_index, int tw, int th, GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat advance, GLfloat ox, GLfloat oy)
+    : x_step(advance), atlas_index(atlas_index)
 {
     const GLfloat u = x / (GLfloat)tw;
     const GLfloat v = y / (GLfloat)th;

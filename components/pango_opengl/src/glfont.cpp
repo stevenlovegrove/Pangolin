@@ -206,7 +206,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                 stbtt_MakeGlyphBitmap(&f, font_bitmap.RowPtr(y) + x, gw, gh, font_bitmap.pitch, scale, scale, g);
 
                 // Adjust offset for edges of pixels
-                chardata.try_emplace(codepoint, tex_w,tex_h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
+                chardata.try_emplace(codepoint, chardata.size(), tex_w,tex_h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
 
                 x = x + gw + 1;
                 if (y+gh+1 > bottom_y)
@@ -236,7 +236,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                     font_bitmap.SubImage(x, y, gw, gh).CopyFrom(sdf);
 
                     // Adjust offset for edges of pixels
-                    chardata.try_emplace(codepoint, font_bitmap.w, font_bitmap.h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
+                    chardata.try_emplace(codepoint, chardata.size(), font_bitmap.w, font_bitmap.h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
 
                     x = x + gw + 1;
                     if (y+gh+1 > bottom_y)
@@ -324,11 +324,9 @@ void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std:
 
             font_max_width_px = std::max(font_max_width_px, (float)gw);
 
-            chardata.try_emplace(codepoint, font_bitmap.w, font_bitmap.h, al, ab, gw, gh, adv, pl -0.5f, pb -0.5f);
-
+            chardata.try_emplace(codepoint, chardata.size(), font_bitmap.w, font_bitmap.h, al, ab, gw, gh, adv, pl -0.5f, pb -0.5f);
         }
     }
-
 }
 
 void GlFont::InitialiseGlTexture()

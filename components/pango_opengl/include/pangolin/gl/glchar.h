@@ -49,7 +49,7 @@ class PANGOLIN_EXPORT GlChar
 {
 public:
     GlChar();
-    GlChar(int tw, int th, GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat x_step, GLfloat ox, GLfloat oy);
+    GlChar(size_t atlas_index, int tw, int th, GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat x_step, GLfloat ox, GLfloat oy);
     
     inline const XYUV& GetVert(size_t i) const {
         return vs[i];
@@ -67,9 +67,14 @@ public:
         return y_max;
     }
 
+    inline size_t AtlasIndex() const {
+        return atlas_index;
+    }
+
     void Draw() const;
         
 protected:
+    size_t atlas_index;
     XYUV vs[4];
     GLfloat x_step;
     GLfloat y_min, y_max;

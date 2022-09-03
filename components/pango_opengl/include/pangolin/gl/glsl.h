@@ -353,6 +353,18 @@ inline bool IsLinkSuccessPrintLog(GLhandleARB prog)
     return true;
 }
 
+inline std::string AddLineNumbers(const std::string& code)
+{
+    std::istringstream f(code);
+    std::ostringstream out;
+    std::string line;
+    size_t line_num = 0;
+    while (std::getline(f, line)) {
+        out << ++line_num << ": " << line << std::endl;
+    }
+    return out.str();
+}
+
 inline bool IsCompileSuccessPrintLog(GLhandleARB shader, const std::string& name_for_errors, const std::string& source_code = {})
 {
     GLint status;
@@ -370,7 +382,7 @@ inline bool IsCompileSuccessPrintLog(GLhandleARB shader, const std::string& name
         }
         if(!source_code.empty())
         {
-            pango_print_error("In source code:\n%s\n",source_code.c_str());
+            pango_print_error("In source code:\n%s\n", AddLineNumbers(source_code).c_str());
         }
         return false;
     }
