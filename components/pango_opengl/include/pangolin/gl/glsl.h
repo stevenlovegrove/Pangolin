@@ -532,6 +532,7 @@ inline void GlSlProgram::ClearShaders()
         glDeleteShader(shaders[i]);
     }
     shaders.clear();
+    linked = false;
 }
 
 inline bool GlSlProgram::AddShaderFile(const ShaderFileOrCode& shader_file)
