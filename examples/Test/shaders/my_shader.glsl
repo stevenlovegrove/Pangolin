@@ -22,6 +22,7 @@ out vec4 FragColor;
 uniform float u_val;
 uniform vec2 u_mouse_pos;
 uniform int u_char_id;
+uniform usampler2D u_text;
 
 const vec2 light_dir = vec2(-sqrt(0.5), -sqrt(0.5));
 const float M_PI = 3.1415926535897932384626433832795;
@@ -72,7 +73,7 @@ vec4 slider(bool button)
     float half_height = 25.0;
 
     // Style params
-    float slider_outline_border = 3;
+    float slider_outline_border = 2;
     float boss_border = 1;
     float boss_radius = 25;
 
@@ -110,15 +111,25 @@ vec4 slider(bool button)
     }
 
     // Add text
-    float font_opacity = font_color(u_char_id, 1.5*p - vec2(100.0, padding + half_height + 10 ));
-    v = composite(vec4(vec3(0.0),font_opacity), v);
+    vec2 font_pos   = 1.5*p - vec2(50.0, padding + half_height + 10 );
+    int font_i = int(font_pos.x / 20.0);
+    font_pos.x = font_pos.x >= 0.0 ? mod(font_pos.x, 20.0) : 0.0;
+
+    if(0.0 < font_pos.x && 0 <= font_i && font_i < 10) {
+        uint char_id = texelFetch(u_text, ivec2(font_i, 0), 0).r;
+        if(0u < char_id) {
+            float font_opacity = font_color(int(char_id), font_pos);
+            v = composite(vec4(vec3(0.0),font_opacity), v);
+        }
+    }
+
     return v;
 }
 
 vec4 font_render() {
     const float padding = 15.0;
-    float opacity = font_color(u_char_id, v_pos/1.0 - vec2(padding));
-    return vec4(1.0,1.0,1.0,opacity);
+    float opacity = font_color(u_char_id, 1.5*v_pos - vec2(10,padding+25+10));
+    return vec4(vec3(0.0),opacity);
 }
 
 void main() {

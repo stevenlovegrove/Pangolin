@@ -9,55 +9,10 @@
 #include <pangolin/gl/glfont.h>
 #include "notifier.h"
 #include "pangolin/var/varextra.h"
+#include "backtrace.h"
 
 #include <locale>
 #include <codecvt>
-
-const char* shader_text = R"Shader(
-@start vertex
-//#version 150 core
-
-attribute vec2 a_position;
-attribute vec2 a_texcoord;
-uniform vec2 u_scale;
-uniform vec2 u_offset;
-varying vec2 v_texcoord;
-void main() {
-    gl_Position = vec4(u_scale * (a_position + u_offset) * 2.0 - 1.0, 0.0, 1.0);
-    v_texcoord = a_texcoord;
-}
-
-@start fragment
-//#version 150 core
-
-varying vec2 v_texcoord;
-uniform sampler2D u_texture;
-uniform vec4 u_color_fg;
-uniform vec4 u_color_bg;
-
-const float pxRange = 2.0;
-
-float median(float r, float g, float b) {
-    return max(min(r, g), min(max(r, g), b));
-}
-
-float screenPxRange() {
-//    vec2 unitRange = vec2(pxRange)/vec2(textureSize(u_texture, 0));
-    vec2 unitRange = vec2(pxRange)/vec2(514,514);
-    vec2 screenTexSize = vec2(1.0)/fwidth(v_texcoord);
-    return max(0.5*dot(unitRange, screenTexSize), 1.0);
-}
-
-void main() {
-  vec4 sample = texture2D(u_texture, v_texcoord);
-  vec3 msd = sample.xyz;
-  float sd = median(msd.r, msd.g, msd.b);
-  float screenPxDistance = screenPxRange()*(sd - 0.5);
-  float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
-
-  gl_FragColor = mix(u_color_bg, u_color_fg, opacity);
-}
-)Shader";
 
 struct HoverHandler : public pangolin::Handler
 {
@@ -84,51 +39,7 @@ struct HoverHandler : public pangolin::Handler
 
 };
 
-void MainRenderTextWithNewAtlas()
-{
-    using namespace pangolin;
-
-    //    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "3.2 CORE"}});
-    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "LEGACY"}});
-    CheckGlDieOnError();
-
-    pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json");
-
-    CheckGlDieOnError();
-
-    pangolin::GlSlProgram prog_text;
-    prog_text.AddShader( pangolin::GlSlAnnotatedShader, shader_text );
-    prog_text.BindPangolinDefaultAttribLocationsAndLink();
-
-    float scale = 1.0;
-    float dx = 0.0;
-
-    RegisterKeyPressCallback('=', [&](){scale *= 1.1;});
-    RegisterKeyPressCallback('-', [&](){scale /= 1.1;});
-
-    while( !pangolin::ShouldQuit() )
-    {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        dx += 0.01;
-
-        {
-            auto& v = DisplayBase().v;
-
-            prog_text.Bind();
-            prog_text.SetUniform("u_scale",  scale / v.w, scale / v.h);
-            prog_text.SetUniform("u_color_fg", Colour::White() );
-            prog_text.SetUniform("u_color_bg", Colour::Black().WithAlpha(0.0) );
-            prog_text.SetUniform("u_offset", 10.0f + dx, 10.0f );
-            font.Text("Test").DrawGlSl();
-            prog_text.Unbind();
-        }
-
-        pangolin::FinishFrame();
-    }
-}
-
-pangolin::ManagedImage<Eigen::Vector4f> MakeFontLookupImage(pangolin::GlFont& font)
+pangolin::ManagedImage<Eigen::Vector4f> MakeFontLookupImage(const pangolin::GlFont& font)
 {
     pangolin::ManagedImage<Eigen::Vector4f> img(font.chardata.size(), 2);
 
@@ -147,8 +58,36 @@ pangolin::ManagedImage<Eigen::Vector4f> MakeFontLookupImage(pangolin::GlFont& fo
     return img;
 }
 
+pangolin::ManagedImage<uint16_t> MakeFontIndexImage(pangolin::GlFont& font, const std::string& utf8)
+{
+    const std::u32string utf32 = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(utf8);
+
+    pangolin::ManagedImage<uint16_t> img(utf32.size(), 1);
+
+    for(size_t i=0; i < utf32.size(); ++i) {
+        const auto& ch = font.chardata[utf32[i]];
+        img(i,0) = ch.AtlasIndex();
+    }
+
+    return img;
+}
+
+template<typename T>
+pangolin::GlTexture TextureFromImage(const pangolin::Image<T>& img)
+{
+    pangolin::GlTexture tex;
+    using Fmt = pangolin::GlFormatTraits<T>;
+    CheckGlDieOnError();
+    tex.Reinitialise(img.w, img.h, Fmt::glinternalformat, false, 0, Fmt::glformat, Fmt::gltype, img.ptr);
+    CheckGlDieOnError();
+    return tex;
+}
+
 void MainSliderExperiments()
 {
+//    PrintBacktrace();
+//    exit(0);
+
     using namespace pangolin;
 
     pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "3.2 CORE"}});
@@ -171,11 +110,11 @@ void MainSliderExperiments()
 
     pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json");
     font.InitialiseGlTexture();
-    GlTexture font_offsets;
-    auto img = MakeFontLookupImage(font);
-    {
-        font_offsets.Reinitialise(img.w, img.h, GL_RGBA32F, false, 0, GL_RGBA, GL_FLOAT, img.ptr);
-    }
+    std::cerr << "1" << std::endl;
+    GlTexture font_offsets = TextureFromImage(MakeFontLookupImage(font));
+    std::cerr << "2" << std::endl;
+    GlTexture text = TextureFromImage(MakeFontIndexImage(font, "Hello"));
+    std::cerr << "3" << std::endl;
 
 
 //    GlTexture matcap;
@@ -226,6 +165,7 @@ void MainSliderExperiments()
             prog.SetUniform("u_val", std::clamp((handler.x - 15.0f)/400.0f, 0.0f, 1.0f ) );
             prog.SetUniform("u_font_atlas", 0);
             prog.SetUniform("u_font_offsets", 1);
+            prog.SetUniform("u_text", 2);
             prog.SetUniform("u_mouse_pos", (float)handler.x, (float)handler.y);
 
             auto& co = font.chardata[handler.last_codepoint];
@@ -236,6 +176,8 @@ void MainSliderExperiments()
             font.mTex.Bind();
             glActiveTexture(GL_TEXTURE1);
             font_offsets.Bind();
+            glActiveTexture(GL_TEXTURE2);
+            text.Bind();
             glDrawArrays(GL_TRIANGLE_STRIP, 0, vbo.num_elements);
             prog.Unbind();
             vao.Unbind();
