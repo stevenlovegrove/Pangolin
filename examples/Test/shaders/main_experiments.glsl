@@ -78,9 +78,22 @@ vec4 slider(bool button)
     float boss_radius = 25;
 
     vec3 color_panel = vec3(0.8);
+    vec3 color_boss_base = color_panel;
     vec3 color_boss_diff = vec3(0.2, 0.15, 0.20);
     vec3 color_slider = vec3(0.9, 0.7, 0.7);
     vec3 color_slider_outline = color_slider - vec3(0.1);
+
+//    // Style params
+//    float half_height = 35.0;
+//    float boss_border = 3;
+//    float boss_radius = 35;
+//    float slider_outline_border = 4;
+
+//    vec3 color_panel = vec3(0.95);
+//    vec3 color_boss_base = vec3(0.0);
+//    vec3 color_boss_diff = vec3(0, 0, 0);
+//    vec3 color_slider = vec3(0.7, 0.7, 0.7);
+//    vec3 color_slider_outline = vec3(0.95);
 
     // maths
     float val_pix = u_val*2.0*half_width;
@@ -100,7 +113,7 @@ vec4 slider(bool button)
     vec4 v = color_sdf(panel_sdf, color_panel);
 
     if(pressed) box_grad*= -1;
-    vec3 color_boss = color_panel + dot(box_grad,light_dir) * color_boss_diff;
+    vec3 color_boss = color_boss_base + dot(box_grad,light_dir) * color_boss_diff;
 
     // Add indented (embossed) area for slider / button
     v = composite( color_sdf(box_sdf, color_panel, color_boss, boss_border ), v);
@@ -113,9 +126,9 @@ vec4 slider(bool button)
     // Add text
     vec2 font_pos   = 1.5*p - vec2(50.0, padding + half_height + 10 );
     int font_i = int(font_pos.x / 20.0);
-    font_pos.x = font_pos.x >= 0.0 ? mod(font_pos.x, 20.0) : 0.0;
+    font_pos.x = font_pos.x >= 0.0 ? mod(font_pos.x, 20.0) : -1;
 
-    if(0.0 < font_pos.x && 0 <= font_i && font_i < 10) {
+    if(0.0 <= font_pos.x && 0 <= font_i && font_i < 10) {
         uint char_id = texelFetch(u_text, ivec2(font_i, 0), 0).r;
         if(0u < char_id) {
             float font_opacity = font_color(int(char_id), font_pos);
