@@ -860,6 +860,16 @@ inline void GlBuffer::Resize(GLuint new_num_elements)
     num_elements = new_num_elements;
 }
 
+template<typename Scalar>
+GlBuffer::GlBuffer(GlBufferType buffer_type, const std::vector<Scalar>& data, GLenum gluse)
+    : GlBufferData(buffer_type, data, gluse)
+{
+    datatype = pangolin::GlFormatTraits<Scalar>::gltype;
+    num_elements = data.size();
+    count_per_element = 1;
+}
+
+
 #ifdef USE_EIGEN
     template<typename Scalar, int R, int C>
     GlBuffer::GlBuffer(GlBufferType buffer_type, const std::vector<Eigen::Matrix<Scalar, R,C>>& data, GLenum gluse)

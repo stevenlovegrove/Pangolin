@@ -246,6 +246,9 @@ struct PANGOLIN_EXPORT GlBuffer : public GlBufferData
     void Reinitialise(GlBuffer const& other );
     void Resize(GLuint num_elements);
 
+    template<typename Scalar>
+    GlBuffer(GlBufferType buffer_type, const std::vector<Scalar>& data, GLenum gluse = GL_STATIC_DRAW);
+
 #ifdef USE_EIGEN
     template<typename Scalar, int R, int C>
     GlBuffer(GlBufferType buffer_type, const std::vector<Eigen::Matrix<Scalar, R,C>>& data, GLenum gluse = GL_STATIC_DRAW);
