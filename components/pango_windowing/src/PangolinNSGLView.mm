@@ -72,6 +72,22 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
 
 @implementation PangolinNSGLView
 
+- (void)updateTrackingAreas {
+  [self initTrackingArea];
+}
+
+- (void) initTrackingArea {
+  NSTrackingAreaOptions options = (NSTrackingActiveAlways | NSTrackingInVisibleRect |
+                                   NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved);
+
+  NSTrackingArea *area = [[NSTrackingArea alloc] initWithRect:[self bounds]
+                                                      options:options
+                                                        owner:self
+                                                     userInfo:nil];
+  [self addTrackingArea:area];
+  [area release];
+}
+
 -(id)initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat *)format
 {
     self = [super initWithFrame:frameRect pixelFormat:format];
@@ -146,7 +162,6 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
              (unsigned char)mapKeymap(osx_key), true}
         ));
     }
-    unsigned int flags = [event modifierFlags] & NSDeviceIndependentModifierFlagsMask;
 }
 
 -(void)keyUp:(NSEvent *)event
