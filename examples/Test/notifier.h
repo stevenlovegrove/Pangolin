@@ -9,7 +9,9 @@ struct FileNotifier
     FileNotifier(const std::vector<std::string>& paths, const std::function<void()> user_func)
         : user_func(user_func), paths(paths)
     {
-        mon_thread = std::thread([this](){ monitor_thread(); });
+        if(!paths.empty()) {
+            mon_thread = std::thread([this](){ monitor_thread(); });
+        }
     }
 
     FileNotifier(const std::function<void()> user_func)
@@ -25,6 +27,10 @@ struct FileNotifier
             // stopping the monitor will cause it to get
             // restarted with new paths
             active_monitor->stop();
+        }
+
+        if(!mon_thread.joinable()) {
+            mon_thread = std::thread([this](){ monitor_thread(); });
         }
     }
 
