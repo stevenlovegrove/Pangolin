@@ -86,12 +86,14 @@ struct WidgetPanel : public View ,public Handler
         prog_widget.SetUniform("u_height", widget_height );
         prog_widget.SetUniform("u_padding", widget_padding );
         prog_widget.SetUniform("u_num_widgets", (int)widgets.size() );
+        prog_widget.SetUniform("u_selected_index",  hover_widget);
+
 
         prog_widget.SetUniform("slider_outline_border", 2.0f);
         prog_widget.SetUniform("boss_border", 1.0f);
         prog_widget.SetUniform("boss_radius_factor", 1.0f);
 
-        prog_widget.SetUniform("color_panel",          0.9f, 0.9f, 0.9f);
+        prog_widget.SetUniform("color_panel",          0.85f, 0.85f, 0.85f);
         prog_widget.SetUniform("color_boss_base",      0.8f, 0.8f, 0.8f);
         prog_widget.SetUniform("color_boss_diff",      0.2f, 0.15f, 0.20f);
         prog_widget.SetUniform("color_slider",         0.9f, 0.7f, 0.7f);
@@ -100,7 +102,7 @@ struct WidgetPanel : public View ,public Handler
         std::vector<Eigen::Vector4f> host_vbo;
         for(int i=0; i < widgets.size(); ++i) {
             const auto& w = widgets[i];
-            host_vbo.emplace_back(0.0, i*widget_height, w.value_percent, uint(w.widget_type) );
+            host_vbo.emplace_back(0.0, i, w.value_percent, uint(w.widget_type) );
         }
 
         vbo_widgets = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo );
@@ -130,7 +132,8 @@ struct WidgetPanel : public View ,public Handler
                     adv += font_scale * ((kit != font->kern_table.end()) ? kit->second : font->font_max_width_px);
                 }
                 if(utf32[c] != ' ') {
-                    host_vbo_pos.emplace_back(adv, (i+0.35)*widget_height + 3.0*(w.widget_type == WidgetType::button && w.value_percent > 0.5), 0.0 );
+//                    host_vbo_pos.emplace_back(adv, (i+0.35)*widget_height + 3.0*(w.widget_type == WidgetType::button && w.value_percent > 0.5), 0.0 ); // 'pressing'
+                    host_vbo_pos.emplace_back(adv, (i+0.35)*widget_height, 0.0 );
                     host_vbo_index.emplace_back(index16[c]);
                 }
             }
@@ -198,6 +201,10 @@ struct WidgetPanel : public View ,public Handler
 
     void PassiveMouseMotion(View&, int x, int y, int button_state) override
     {
+        auto w = WidgetXY(x,y);
+        hover_widget = w.first;
+        UpdateWidgetVBO();
+        UpdateCharsVBO();
     }
 
     void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state) override
@@ -254,6 +261,7 @@ struct WidgetPanel : public View ,public Handler
     float scroll_offset;
 
     int selected_widget;
+    int hover_widget;
     std::vector<WidgetParams> widgets;
 };
 
