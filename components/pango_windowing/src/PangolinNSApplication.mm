@@ -57,8 +57,10 @@
                 untilDate:nil
                 inMode:NSDefaultRunLoopMode
                 dequeue:YES];
-        [NSApp sendEvent:event];
-        [NSApp updateWindows];
+        if(event != nil) {
+          [NSApp sendEvent:event];
+          [NSApp updateWindows];
+        }
     }while(event != nil);
 }
 
