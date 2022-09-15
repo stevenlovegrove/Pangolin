@@ -27,10 +27,17 @@ T GetOrDefault(TIFF* tif, uint32_t tag, T default_val)
 }
 #endif
 
+void DummyTiffOpenHandler(const char* module, const char* fmt, va_list ap)
+{
+    // TODO: Should probably send these somewhere...
+}
+
 TypedImage LoadTiff(
     const std::string& filename
 ) {
 #ifdef HAVE_LIBTIFF
+    TIFFSetWarningHandler(DummyTiffOpenHandler);
+
     TIFF* tif = TIFFOpen(filename.c_str(),"r");
     if (!tif) {
         throw std::runtime_error("libtiff failed to open " + filename);
