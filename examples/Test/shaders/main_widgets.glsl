@@ -87,18 +87,47 @@ uniform vec3 color_slider_outline;
 const vec2 light_dir = vec2(-sqrt(0.5), -sqrt(0.5));
 const float M_PI = 3.1415926535897932384626433832795;
 
+float padding = u_padding;
+float half_width = u_width/2.0 - padding;
+float half_height = u_height/2.0 - padding;
+float boss_radius = half_height * boss_radius_factor;
+
+vec4 widget_panel(vec2 v_win)
+{
+    vec3 color_panel_border = vec3(0.9);
+    float border_panel = 3;
+
+    float panel_sdf = sdf_rounded_rect(v_win, vec2(half_width+padding, u_num_widgets*(half_height+padding)), vec2(half_width+padding, u_num_widgets*(half_height+padding)), boss_radius);
+    return color_sdf(panel_sdf, color_panel, color_panel_border, border_panel);
+}
+
+vec4 widget_seperator()
+{
+    float line_sdf  = sdf_line_segment(v_pos, vec2(2*padding,2.2*half_height), vec2(u_width-2*padding, 2.2*half_height));
+    vec4 v = widget_panel(v_win);
+    v = composite( color_sdf(line_sdf-1, vec3(0.7)), v);
+    return v;
+}
+
 vec4 widget()
 {
     // widget_type:
     // 0: Label
     // 1: Textbox
     // 2: button
-    // 3: slider
+    // 3: checkbox
+    // 4: slider
+    // 5: seperator
 
-    bool is_button   = widget_type==2u;
-    bool is_slider   = widget_type==3u;
+    bool is_textbox   = widget_type==1u;
+    bool is_button    = widget_type==2u || widget_type==3u;
+    bool is_slider    = widget_type==4u;
+    bool is_seperator = widget_type==5u;
+
     bool is_toggled  = val > 0.5;
     bool is_active_widget = selected_index == widget_index;
+
+    if(is_seperator) return widget_seperator();
 
     // dimensions
     float padding = u_padding;
@@ -108,7 +137,6 @@ vec4 widget()
 
     // maths
     float val_pix = val*2.0*half_width;
-    float pos_along_slider = clamp((v_pos.x-padding) / val_pix, 0.0, 1.0);
 
     float slider_center = padding+val_pix/2.0;
     float slider_width  = val_pix/2.0;
@@ -129,16 +157,14 @@ vec4 widget()
         inside_radius -= 4;
     }
 
-    int panel_n = u_num_widgets;
-    float panel_sdf = sdf_rounded_rect(v_win, vec2(half_width+padding, panel_n*(half_height+padding)), vec2(half_width+padding, panel_n*(half_height+padding)), boss_radius);
     float box_sdf   = sdf_rounded_rect(v_pos, vec2(padding+half_width, padding+half_height), vec2(half_width, half_height), boss_radius);
     vec2  box_grad = normalize(vec2(dFdx(box_sdf), dFdy(box_sdf)) + vec2(0.0001, 0.0001)); // (eps to avoid bad normalization)
     float slide_sdf = sdf_rounded_rect(v_pos, vec2(slider_center, padding+half_height), vec2(slider_width, inside_height), inside_radius);
 
     // Panel
-    vec4 v = color_sdf(panel_sdf, color_panel);
+    vec4 v = widget_panel(v_win);
 
-    if(is_button || is_slider) {
+    if(is_button || is_slider || is_textbox) {
         vec3 color_boss = color_boss_base - /*dot(box_grad,light_dir) **/ color_boss_diff;
         float border = boss_border;
         if(is_active_widget) {
@@ -146,14 +172,28 @@ vec4 widget()
             border += 1;
         }
 
-        // Add indented (embossed) area for slider / button
-        v = composite( color_sdf(box_sdf, color_panel, color_boss, border ), v);
+        if(is_textbox) {
+            v = composite( color_sdf(box_sdf, vec3(0.9), color_boss, border ), v);
+        }else{
+            // Add indented (embossed) area for slider / button
+            v = composite( color_sdf(box_sdf, color_panel, color_boss, border ), v);
+        }
     }
 
-//    if(is_slider)
-    {
+    if(is_button || is_slider) {
         // Add Slider with outline
         v = composite( color_sdf(slide_sdf+boss_border, color_inside, color_inside_outline, border_inside ), v);
+    }
+
+    // WIP: markings
+    if(is_slider) {
+        float val_here = 10 * (v_pos.x-padding) / (2.0*(u_width/2.0 - padding));
+        float val_closest = round(val_here);
+        float msdf = mod(abs(val_closest-val_here),1.0);
+        float alpha = 1.0 - smoothstep(0.0, 1.0, box_sdf);
+        vec4 c = color_sdf(msdf*20, color_inside_outline);
+        c.a *= alpha;
+        v = composite( c, v);
     }
 
     return v;

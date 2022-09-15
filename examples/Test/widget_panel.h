@@ -20,7 +20,9 @@ struct WidgetPanel : public View ,public Handler
         label = 0,
         textbox,
         button,
-        slider
+        checkbox,
+        slider,
+        seperator
     };
 
     struct WidgetParams
@@ -49,15 +51,21 @@ struct WidgetPanel : public View ,public Handler
         const std::string shader_widget = shader_dir + "main_widgets.glsl";
         const std::string shader_text = shader_dir + "main_text.glsl";
 
-        widgets.emplace_back(WidgetParams{"Button", 0.0f, WidgetType::button});
-        widgets.emplace_back(WidgetParams{"Button2", 1.0f, WidgetType::button});
+        widgets.emplace_back(WidgetParams{"Section One", 1.0f, WidgetType::seperator});
+        widgets.emplace_back(WidgetParams{"Button", 0.0f, WidgetType::checkbox});
+        widgets.emplace_back(WidgetParams{"Button2", 1.0f, WidgetType::checkbox});
         widgets.emplace_back(WidgetParams{"Some Label", 1.0f, WidgetType::label});
         widgets.emplace_back(WidgetParams{"Some TextBox", 1.0f, WidgetType::textbox});
 
+        // https://stackoverflow.com/a/45332730 <- to get exp and mantissa for custom rendering...
+//        widgets.emplace_back(WidgetParams{"10^8", 1.0f, WidgetType::textbox});
+
+        widgets.emplace_back(WidgetParams{"Section Two", 1.0f, WidgetType::seperator});
         for(int i=0; i < 5; ++i) {
             widgets.emplace_back(WidgetParams{"Widget" + std::to_string(i), i * 0.1f, WidgetType::slider});
         }
-        widgets.emplace_back(WidgetParams{"-------------------", 1.0f, WidgetType::label});// spacer
+        widgets.emplace_back(WidgetParams{"Section Three", 1.0f, WidgetType::seperator});
+
         for(int i=5; i < 10; ++i) {
             widgets.emplace_back(WidgetParams{"Widget" + std::to_string(i), i * 0.1f, WidgetType::slider});
         }
@@ -190,6 +198,13 @@ struct WidgetPanel : public View ,public Handler
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state) override
     {
         auto w = WidgetXY(x,y);
+        if(selected_widget >= 0 && !pressed) {
+            // de-springify
+            float& x = widgets[selected_widget].value_percent;
+            x = (std::round(x*10.0f)/10.0);
+            UpdateWidgetVBO();
+            UpdateCharsVBO();
+        }
         selected_widget = pressed ? w.first : -1;
         SetValue(x,y);
     }
@@ -202,7 +217,7 @@ struct WidgetPanel : public View ,public Handler
     void PassiveMouseMotion(View&, int x, int y, int button_state) override
     {
         auto w = WidgetXY(x,y);
-        hover_widget = w.first;
+        hover_widget = (0 <= w.second.x() && w.second.x() < widget_width) ? w.first : -1;
         UpdateWidgetVBO();
         UpdateCharsVBO();
     }
@@ -220,7 +235,22 @@ struct WidgetPanel : public View ,public Handler
         if(w.first == selected_widget && 0 <= w.first && w.first < widgets.size()) {
             const float x = std::clamp( (w.second.x() - widget_padding) / (widget_width - 2*widget_padding), 0.0f, 1.0f);
             WidgetParams& wp = widgets[w.first];
-            wp.value_percent = x;
+            if(wp.widget_type==WidgetType::checkbox) {
+                wp.value_percent = 1.0 - wp.value_percent;
+            }else{
+                // continuous version
+                // wp.value_percent = x;
+
+                // discrete version
+                // wp.value_percent = (std::round(x*10.0f)/10.0);
+
+                // springy discrete version
+                const float d = (std::round(x*10.0f)/10.0);
+                float diff = x - d;
+                wp.value_percent = d + diff*0.2;
+
+            }
+
             UpdateWidgetVBO();
             UpdateCharsVBO();
         }
