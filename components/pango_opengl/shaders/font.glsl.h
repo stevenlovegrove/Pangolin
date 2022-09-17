@@ -1,8 +1,4 @@
-uniform sampler2D u_font_atlas;
-
 #include "font_offset_table.glsl.h"
-
-const float font_height = 32.0;
 
 float screenPxRange(vec2 tex_coord) {
     const float pxRange = 2.0;
