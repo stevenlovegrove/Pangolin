@@ -1,6 +1,7 @@
 #include <pangolin/display/image_view.h>
 #include <pangolin/image/image_utils.h>
 #include <pangolin/image/image_convert.h>
+#include <pangolin/gl/glsl_utilities.h>
 
 namespace pangolin
 {

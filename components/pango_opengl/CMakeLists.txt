@@ -1,8 +1,11 @@
 get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
-file(GLOB BINARY_FILES_TO_EMBED "${CMAKE_CURRENT_LIST_DIR}/src/fonts/*.ttf")
 include(EmbedBinaryFiles)
+include(EmbedShaderFiles)
+file(GLOB BINARY_FILES_TO_EMBED "${CMAKE_CURRENT_LIST_DIR}/src/fonts/*.ttf")
+file(GLOB_RECURSE SHADER_FILES_TO_EMBED "${CMAKE_CURRENT_LIST_DIR}/shaders/*.glsl*")
 embed_binary_files_rule(fonts.cpp ${BINARY_FILES_TO_EMBED})
+embed_shader_files_rule(shaders.cpp "${SHADER_FILES_TO_EMBED}")
 
 target_sources( ${COMPONENT}
 PRIVATE
@@ -16,6 +19,7 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/opengl_render_state.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/stb_truetype.h
     ${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/shaders.cpp
 )
 
 find_package (Eigen3 REQUIRED QUIET)
