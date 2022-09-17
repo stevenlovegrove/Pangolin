@@ -225,6 +225,9 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
 
 ImageFileType FileType(const std::string& filename)
 {
+    // file extension incase we need that as a hint
+    const std::string ext = FileLowercaseExtention(filename);
+
     // Check magic number of file...
     std::ifstream f(filename.c_str(), std::ios::binary );
     if(f.is_open()) {
@@ -234,13 +237,17 @@ ImageFileType FileType(const std::string& filename)
         if(f.good()) {
             ImageFileType magic_type = FileTypeMagic(magic, magic_bytes);
             if(magic_type != ImageFileTypeUnknown) {
+                if(magic_type == ImageFileTypeTiff && ext == ".arw") {
+                    // Special case where we use the extension as well as magic string
+                    magic_type = ImageFileTypeArw;
+                }
+
                 return magic_type;
             }
         }
     }
 
     // Fallback on using extension...
-    const std::string ext = FileLowercaseExtention(filename);
     return FileTypeExtension(ext);
 }
 
