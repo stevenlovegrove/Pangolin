@@ -51,7 +51,11 @@ struct WidgetPanel : public View ,public Handler
         font = std::make_unique<pangolin::GlFont >(
             "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png",
             "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json"
-        );
+            );
+//        font = std::make_unique<pangolin::GlFont >(
+//            "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/anon-bottom/AnonymousPro.ttf_map.png",
+//            "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/anon-bottom/AnonymousPro.ttf_map.json"
+//            );
         font->InitialiseGlTexture();
         font_offsets = TextureFromImage(MakeFontLookupImage(*font));
 
@@ -60,7 +64,7 @@ struct WidgetPanel : public View ,public Handler
         const std::string shader_text = shader_dir + "main_text.glsl";
 
         widgets.emplace_back(WidgetParams{"Section One", 1.0f, 0, WidgetType::seperator});
-        widgets.emplace_back(WidgetParams{"Button", 0.0f, 0, WidgetType::checkbox});
+        widgets.emplace_back(WidgetParams{"Button Thingy", 0.0f, 0, WidgetType::checkbox});
         widgets.emplace_back(WidgetParams{"Button2", 1.0f, 0, WidgetType::checkbox});
         widgets.emplace_back(WidgetParams{"Some Label", 1.0f, 0, WidgetType::label});
         widgets.emplace_back(WidgetParams{"Some TextBox", 1.0f, 0, WidgetType::textbox});

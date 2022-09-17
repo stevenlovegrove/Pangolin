@@ -24,8 +24,6 @@ out vec2 v_pos;
 out vec2 v_win;
 flat out uint char_id;
 
-const bool flip_y = true;
-
 uniform float u_scale;
 
 void main() {
@@ -48,7 +46,6 @@ void main() {
     for(uint i=0u; i < 4u;  ++i) {
         v_win = pos[0].xy + corners[i];
         v_pos = corners[i];
-        if(flip_y) v_pos.y = h - v_pos.y;
         gl_Position = u_T_cm * vec4(v_win, pos[0].z, 1.0);
         EmitVertex();
     }
@@ -68,7 +65,7 @@ out vec4 FragColor;
 uniform float u_scale;
 
 void main() {
-    vec2 pos = v_pos / u_scale - vec2(0,8);
+    vec2 pos = v_pos / u_scale;
     float sdf = sdf_font(int(char_id), pos);
     float opacity = clamp( sdf + 0.5, 0.0, 1.0);
     FragColor = vec4( vec3(0.0), opacity );

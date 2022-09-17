@@ -35,7 +35,7 @@ uniform vec4 u_color_bg;
 
 const float pxRange = 2.0;
 
-const bool is_msdf = false;
+const bool is_msdf = true;
 const bool is_alpha = false;
 
 float median(float r, float g, float b) {
@@ -493,8 +493,9 @@ void MainRenderTextWithNewAtlas()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-//    pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json");
-    pangolin::GlFont font("/Users/stevenlovegrove/code/Pangolin/components/pango_opengl/src/fonts/AnonymousPro.ttf", 32);
+    pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json");
+//    pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/anon-bottom/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/anon-bottom/AnonymousPro.ttf_map.json");
+//    pangolin::GlFont font("/Users/stevenlovegrove/code/Pangolin/components/pango_opengl/src/fonts/AnonymousPro.ttf", 32);
 //    pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/anon_min/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/anon_min/AnonymousPro.ttf_map.json");
 
     CheckGlDieOnError();
@@ -527,108 +528,6 @@ void MainRenderTextWithNewAtlas()
             prog_text.Unbind();
         }
 
-        pangolin::FinishFrame();
-    }
-}
-
-pangolin::ManagedImage<Eigen::Vector4f> MakeFontLookupImage(pangolin::GlFont& font)
-{
-    pangolin::ManagedImage<Eigen::Vector4f> img(font.chardata.size(), 2);
-
-    for(const auto& cp_char : font.chardata) {
-        img(cp_char.second.AtlasIndex(), 0) = {
-            cp_char.second.GetVert(0).tu,
-            cp_char.second.GetVert(0).tv,
-            cp_char.second.GetVert(2).tu - cp_char.second.GetVert(0).tu, // w
-            cp_char.second.GetVert(2).tv - cp_char.second.GetVert(0).tv  // h
-        };
-        img(cp_char.second.AtlasIndex(), 1) = {
-            cp_char.second.GetVert(0).x, cp_char.second.GetVert(0).y, 0.0, 0.0
-        };
-    }
-
-    return img;
-}
-
-void MainSliderExperiments()
-{
-    using namespace pangolin;
-
-    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "3.2 CORE"}});
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    HoverHandler handler;
-    DisplayBase().SetHandler(&handler);
-
-    auto& v = DisplayBase().v;
-
-    pangolin::GlBuffer vbo(pangolin::GlArrayBuffer,
-        std::vector<Eigen::Vector3f>{
-           { 0.0f, 0.0f, 0.0f},
-           { v.w/2.0,  0.0f, 0.0f },
-           { 0.0f, v.h, 0.0f },
-           { v.w/2.0,  v.h, 0.0f }
-        }
-    );
-
-    pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json");
-    font.InitialiseGlTexture();
-    GlTexture font_offsets;
-    auto img = MakeFontLookupImage(font);
-    {
-        font_offsets.Reinitialise(img.w, img.h, GL_RGBA32F, false, 0, GL_RGBA, GL_FLOAT, img.ptr);
-    }
-
-
-    GlTexture matcap;
-    matcap.LoadFromFile("/Users/stevenlovegrove/Downloads/matcap1.png");
-//    matcap.LoadFromFile("/Users/stevenlovegrove/Downloads/matcap3.jpg");
-//    matcap.LoadFromFile("/Users/stevenlovegrove/Downloads/matcap_normal.jpg");
-
-
-    pangolin::GlSlProgram prog;
-    prog.AddShader( pangolin::GlSlAnnotatedShader, my_shader );
-    prog.BindPangolinDefaultAttribLocationsAndLink();
-
-    GlVertexArrayObject vao;
-    vao.AddVertexAttrib(pangolin::DEFAULT_LOCATION_POSITION, vbo);
-    vao.Unbind();
-
-    DisplayBase().Activate();
-
-    auto T_cm = ProjectionMatrixOrthographic(-0.5, v.w-0.5, -0.5, v.h-0.5, -1.0, 1.0);
-
-    while( !pangolin::ShouldQuit() )
-    {
-        glClearColor(0.7, 0.7, 0.7, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        if(true) {
-            prog.Bind();
-
-            prog.SetUniform("u_T_cm", T_cm);
-            prog.SetUniform("u_val", std::clamp((handler.x - 15.0f)/400.0f, 0.0f, 1.0f ) );
-            prog.SetUniform("u_font_atlas", 1);
-            prog.SetUniform("u_font_offsets", 2);
-            prog.SetUniform("u_mouse_pos", (float)handler.x, (float)handler.y);
-
-            auto& co = font.chardata[handler.last_codepoint];
-            prog.SetUniform("u_char_id", (int)co.AtlasIndex());
-
-            vao.Bind();
-            glActiveTexture(GL_TEXTURE0);
-            matcap.Bind();
-            glActiveTexture(GL_TEXTURE1);
-            font.mTex.Bind();
-            glActiveTexture(GL_TEXTURE2);
-            font_offsets.Bind();
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, vbo.num_elements);
-            matcap.Unbind();
-            prog.Unbind();
-        }
-
-//        exit(0);
         pangolin::FinishFrame();
     }
 }
