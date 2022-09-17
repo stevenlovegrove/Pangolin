@@ -38,6 +38,13 @@ namespace pangolin {
 class PANGOLIN_EXPORT GlFont
 {
 public:
+    enum class FontBitmapType
+    {
+        Alpha,
+        SDF,
+        MSDF
+    };
+
     // Load GL Font data. Delay uploading as texture until first use.
     GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w=1024, int tex_h=1024);
     GlFont(const std::string& filename, float pixel_height, int tex_w=1024, int tex_h=1024);
@@ -69,6 +76,7 @@ public:
     float font_height_px;
     float font_max_width_px;
 
+    FontBitmapType bitmap_type;
     TypedImage font_bitmap;
     GlTexture mTex;
 

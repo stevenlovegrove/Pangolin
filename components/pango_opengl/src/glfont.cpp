@@ -56,6 +56,8 @@
 namespace pangolin
 {
 
+const bool use_alpha_font = false;
+
 // Hacked version of stbtt_FindGlyphIndex to extract valid codepoints in font
 // Good reference for file format here https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6cmap.html
 std::vector<std::pair<uint32_t,uint32_t>> GetCodepointRanges(const stbtt_fontinfo *info)
@@ -164,6 +166,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
 {
     font_height_px = pixel_height;
     font_max_width_px = 0;
+    bitmap_type = use_alpha_font ? FontBitmapType::Alpha : FontBitmapType::SDF;
 
     font_bitmap.Reinitialise(tex_w,tex_h,PixelFormatFromString("GRAY8"));
     const int offset = 0;
@@ -188,7 +191,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
             int advance, lsb;
             stbtt_GetGlyphHMetrics(&f, g, &advance, &lsb);
 
-            if(true) {
+            if(use_alpha_font) {
                 // Render atlas of charector alpha maps
 
                 int x0, y0, x1, y1, gw, gh;
@@ -206,7 +209,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                 stbtt_MakeGlyphBitmap(&f, font_bitmap.RowPtr(y) + x, gw, gh, font_bitmap.pitch, scale, scale, g);
 
                 // Adjust offset for edges of pixels
-                chardata.try_emplace(codepoint, chardata.size(), tex_w,tex_h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
+                chardata.try_emplace(codepoint, chardata.size(), tex_w,tex_h, x, y, gw, gh, scale*advance, x0, -y0);
 
                 x = x + gw + 1;
                 if (y+gh+1 > bottom_y)
@@ -220,7 +223,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                 int x0;
                 int y0;
 
-                unsigned char* psdf = stbtt_GetGlyphSDF(&f, scale, g, padding, 180, 180.0/padding, &gw, &gh, &x0, &y0);
+                unsigned char* psdf = stbtt_GetGlyphSDF(&f, scale, g, padding, 128, 128.0/padding, &gw, &gh, &x0, &y0);
                 if(psdf) {
                     Image<unsigned char> sdf(psdf, gw, gh, gw);
 
@@ -236,16 +239,16 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                     font_bitmap.SubImage(x, y, gw, gh).CopyFrom(sdf);
 
                     // Adjust offset for edges of pixels
-                    chardata.try_emplace(codepoint, chardata.size(), font_bitmap.w, font_bitmap.h, x, y, gw, gh, scale*advance, x0 -0.5f, -y0 -0.5f);
+                    chardata.try_emplace(codepoint, chardata.size(), font_bitmap.w, font_bitmap.h, x, y, gw, gh, padding/3.0 + scale*advance, x0, -y0);
+
+                    font_max_width_px = std::max(font_max_width_px, (float)gw);
 
                     x = x + gw + 1;
                     if (y+gh+1 > bottom_y)
                         bottom_y = y+gh+1;
 
-
-                    std::cout << gw << ", " << gh << ", " << x0 << ", " << y0 << std::endl;
-                    std::cout << std::endl;
                     stbtt_FreeSDF(psdf, nullptr);
+
                 }
             }
         }
@@ -256,32 +259,11 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
         for(uint32_t cp1=r1.first; cp1 < r1.second; ++cp1) {
             for(const auto& r2 : ranges) {
                 for(uint32_t cp2=r2.first; cp2 < r2.second; ++cp2) {
-                    kern_table[codepointpair_t(cp1,cp2)] = scale * stbtt_GetCodepointKernAdvance(&f,cp1,cp2);
+                    const int advance = stbtt_GetCodepointKernAdvance(&f,cp1,cp2);
+                    if(advance) kern_table[codepointpair_t(cp1,cp2)] = scale * advance;
                 }
             }
         }
-    }
-}
-
-void InplaceFlipY(Image<unsigned char>& img)
-{
-    using T = unsigned char;
-
-    T* row_top = img.RowPtr(0);
-    T* row_bot = img.RowPtr(img.h-1);
-
-    while(row_top < row_bot) {
-        T* u = row_top;
-        T* b = row_bot;
-        T* end = row_top + img.pitch;
-        while(u < end) {
-            std::swap(*u,*b);
-            ++u;
-            ++b;
-        }
-
-        row_top += img.pitch;
-        row_bot -= img.pitch;
     }
 }
 
@@ -297,9 +279,18 @@ void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std:
         if(!err.empty()) throw std::runtime_error(err);
     }
 
-    const auto glyphs = meta["glyphs"];
     const auto atlas = meta["atlas"];
+    const auto glyphs = meta["glyphs"];
     const auto metrics = meta["metrics"];
+
+    const std::string header_font_type = atlas.get_value<std::string>("type", "msdf");
+    if(header_font_type == "msdf") {
+        bitmap_type = FontBitmapType::MSDF;
+    }else if(header_font_type == "sdf") {
+        bitmap_type = FontBitmapType::SDF;
+    }else{
+        throw std::runtime_error("Unsupported type");
+    }
 
     font_max_width_px = 0;
     font_height_px = atlas.get_value("size",0.0);
@@ -308,23 +299,25 @@ void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std:
         const auto glyph = glyphs[i];
         const codepoint_t codepoint = glyph.get_value<int64_t>("unicode", 0);
         if(codepoint > 0 && glyph.contains("planeBounds") && glyph.contains("atlasBounds")) {
-            const double adv       = glyph.get_value<double>("advance", 0.0);
+            const double adv       = font_height_px * glyph.get_value<double>("advance", 1.0);
             const auto planeBounds = glyph["planeBounds"];
             const auto atlasBounds = glyph["atlasBounds"];
 
-            const float pl = planeBounds.get_value("left",   0.0);
-            const float pb = planeBounds.get_value("bottom", 0.0);
-            const float al = atlasBounds.get_value("left",   0.0);
-            const float ab = (font_bitmap.h - 1.0) - atlasBounds.get_value("bottom", 0.0);
-            const float ar = atlasBounds.get_value("right",  0.0);
-            const float at = (font_bitmap.h - 1.0) - atlasBounds.get_value("top",    0.0);
+            // Top should be smaller value because top-left is (0,0)
+            const float x  = atlasBounds.get_value("left",    0.0);
+            const float x2 = atlasBounds.get_value("right",   0.0);
+            const float y  =  atlasBounds.get_value("top",    0.0);
+            const float y2 =  atlasBounds.get_value("bottom", 0.0);
 
-            const float gw = ar - al;
-            const float gh = at - ab;
+            const float gw = x2 - x;
+            const float gh = y2 - y;
+
+            const float pl = font_height_px * planeBounds.get_value("left", 0.0);
+            const float pt = font_height_px * planeBounds.get_value("top",  0.0);
 
             font_max_width_px = std::max(font_max_width_px, (float)gw);
 
-            chardata.try_emplace(codepoint, chardata.size(), font_bitmap.w, font_bitmap.h, al, ab, gw, gh, adv, pl -0.5f, pb -0.5f);
+            chardata.try_emplace(codepoint, chardata.size(), font_bitmap.w, font_bitmap.h, x, y, gw, gh, adv, pl, -pt);
         }
     }
 }
@@ -332,9 +325,7 @@ void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std:
 void GlFont::InitialiseGlTexture()
 {
     if(font_bitmap.IsValid()) {
-        if(font_bitmap.fmt.format == "GRAY8") {
-            // Special case where we use image as alpha-mask
-            // TODO: Don't hard-code this. Set as enum of atlas type...
+        if(use_alpha_font) {
             mTex.Reinitialise(font_bitmap.w, font_bitmap.h, GL_ALPHA, true, 0, GL_ALPHA, GL_UNSIGNED_BYTE, font_bitmap.ptr);
         }else{
             mTex.Load(font_bitmap);
@@ -369,15 +360,15 @@ GlText GlFont::Text(const std::string& utf8 )
         if(it != chardata.end()) {
             const GlChar& ch = it->second;
 
-            // Kerning
+            // Kerning (is adjustment to default to step, not replacement)
             if(last_c) {
                 codepointpair_t key(last_c, c);
                 const auto kit = kern_table.find(key);
-                const GLfloat kern = (kit != kern_table.end()) ? kit->second : font_max_width_px;
+                const GLfloat kern = (kit != kern_table.end()) ? kit->second : 0;
                 ret.AddSpace(kern);
             }
 
-            ret.Add(' ', ch);
+            ret.Add(ch);
             last_c = c;
         }else{
             // codepoint doesn't exists in font

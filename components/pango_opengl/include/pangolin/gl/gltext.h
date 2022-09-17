@@ -47,7 +47,7 @@ public:
     void AddSpace(GLfloat s);
 
     // Add specified charector to this string.
-    void Add(unsigned char c, const GlChar& glc);
+    void Add(const GlChar& glc);
 
     // Clear text
     void Clear();

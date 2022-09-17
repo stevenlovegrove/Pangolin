@@ -35,6 +35,9 @@ uniform vec4 u_color_bg;
 
 const float pxRange = 2.0;
 
+const bool is_msdf = false;
+const bool is_alpha = false;
+
 float median(float r, float g, float b) {
     return max(min(r, g), min(max(r, g), b));
 }
@@ -48,12 +51,16 @@ float screenPxRange() {
 
 void main() {
   vec4 sample = texture2D(u_texture, v_texcoord);
-  vec3 msd = sample.xyz;
-  float sd = median(msd.r, msd.g, msd.b);
-  float screenPxDistance = screenPxRange()*(sd - 0.5);
-  float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
+  if(is_alpha) {
+      gl_FragColor = vec4(vec3(sample.a), 1.0);
+  }else{
+      vec3 msd = sample.xyz;
+      float sd = is_msdf ? median(msd.r, msd.g, msd.b) : msd.r;
+      float screenPxDistance = screenPxRange()*(sd - 0.5);
+      float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
+      gl_FragColor = mix(u_color_bg, u_color_fg, opacity);
+  }
 
-  gl_FragColor = mix(u_color_bg, u_color_fg, opacity);
 }
 )Shader";
 
@@ -483,8 +490,12 @@ void MainRenderTextWithNewAtlas()
 //    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "3.2 CORE"}});
     pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 500, 500, {{PARAM_GL_PROFILE, "LEGACY"}});
     CheckGlDieOnError();
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json");
+//    pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json");
+    pangolin::GlFont font("/Users/stevenlovegrove/code/Pangolin/components/pango_opengl/src/fonts/AnonymousPro.ttf", 32);
+//    pangolin::GlFont font("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/anon_min/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/anon_min/AnonymousPro.ttf_map.json");
 
     CheckGlDieOnError();
 
@@ -511,8 +522,8 @@ void MainRenderTextWithNewAtlas()
             prog_text.SetUniform("u_scale",  scale / v.w, scale / v.h);
             prog_text.SetUniform("u_color_fg", Colour::White() );
             prog_text.SetUniform("u_color_bg", Colour::Black().WithAlpha(0.0) );
-            prog_text.SetUniform("u_offset", 10.0f + dx, 10.0f );
-            font.Text("Test").DrawGlSl();
+            prog_text.SetUniform("u_offset", 10.0f /*+ dx*/, 10.0f );
+            font.Text("Testing, 1, 2, 3...").DrawGlSl();
             prog_text.Unbind();
         }
 
@@ -624,7 +635,7 @@ void MainSliderExperiments()
 
 int main( int /*argc*/, char** /*argv*/ )
 {
-    MainSliderExperiments();
-//    MainRenderTextWithNewAtlas();
+//    MainSliderExperiments();
+    MainRenderTextWithNewAtlas();
     return 0;
 }
