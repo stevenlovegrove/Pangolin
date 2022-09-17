@@ -48,6 +48,9 @@ GlChar::GlChar(size_t atlas_index, int tw, int th, GLfloat x, GLfloat y, GLfloat
     const GLfloat u2 = u + w / (GLfloat)tw;
     const GLfloat v2 = v + h / (GLfloat)th;
 
+    // 0, 3
+    // 1, 2
+
     // Setup u,v tex coords
     vs[0] = XYUV(ox,   oy,   u,  v );
     vs[1] = XYUV(ox,   oy-h, u,  v2 );

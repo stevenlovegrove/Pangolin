@@ -1,5 +1,6 @@
 uniform sampler2D u_font_atlas;
-uniform sampler2D u_font_offsets;
+
+#include "font_offset_table.glsl.h"
 
 const float font_height = 32.0;
 

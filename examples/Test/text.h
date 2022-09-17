@@ -16,21 +16,18 @@ inline pangolin::ManagedImage<Eigen::Vector4f> MakeFontLookupImage(const pangoli
 
     for(const auto& cp_char : font.chardata) {
         // font offset
-//        img(cp_char.second.AtlasIndex(), 0) = {
-//            cp_char.second.GetVert(0).tu,
-//            1.0 - cp_char.second.GetVert(0).tv,
-//            cp_char.second.GetVert(2).tu - cp_char.second.GetVert(0).tu, // w
-//            cp_char.second.GetVert(0).tv - cp_char.second.GetVert(2).tv  // h
-//        };
         img(cp_char.second.AtlasIndex(), 0) = {
             cp_char.second.GetVert(0).tu,
             cp_char.second.GetVert(0).tv,
             cp_char.second.GetVert(2).tu - cp_char.second.GetVert(0).tu, // w
-            cp_char.second.GetVert(2).tv - cp_char.second.GetVert(0).tv // h
+            cp_char.second.GetVert(2).tv - cp_char.second.GetVert(0).tv  // h
         };
         // screen offset
         img(cp_char.second.AtlasIndex(), 1) = {
-            cp_char.second.GetVert(0).x, -cp_char.second.GetVert(0).y, 0.0, 0.0
+            cp_char.second.GetVert(0).x,
+            -cp_char.second.GetVert(0).y,
+            cp_char.second.GetVert(2).x - cp_char.second.GetVert(0).x, // w
+            cp_char.second.GetVert(0).y - cp_char.second.GetVert(2).y  // h
         };
     }
 

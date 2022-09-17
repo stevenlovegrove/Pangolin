@@ -152,8 +152,8 @@ struct WidgetPanel : public View ,public Handler
                     adv += font_scale * ((kit != font->kern_table.end()) ? kit->second : font->font_max_width_px);
                 }
                 if(utf32[c] != ' ') {
-//                    host_vbo_pos.emplace_back(adv, (i+0.35)*widget_height + 3.0*(w.widget_type == WidgetType::button && w.value_percent > 0.5), 0.0 ); // 'pressing'
-                    host_vbo_pos.emplace_back(adv, (i+0.35)*widget_height, 0.0 );
+                    // y-position is roughly center with fudge factor since text is balanced low.
+                    host_vbo_pos.emplace_back(adv, (i+0.5)*widget_height + 0.3*font_scale*32.0, 0.0 );
                     host_vbo_index.emplace_back(index16[c]);
                 }
             }

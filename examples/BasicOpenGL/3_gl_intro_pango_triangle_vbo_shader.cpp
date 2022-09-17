@@ -524,7 +524,7 @@ void MainRenderTextWithNewAtlas()
             prog_text.SetUniform("u_color_fg", Colour::White() );
             prog_text.SetUniform("u_color_bg", Colour::Black().WithAlpha(0.0) );
             prog_text.SetUniform("u_offset", 10.0f /*+ dx*/, 10.0f );
-            font.Text("Testing, 1, 2, 3...").DrawGlSl();
+            font.Text("Testing, 1, 2, 3... Thingy").DrawGlSl();
             prog_text.Unbind();
         }
 
