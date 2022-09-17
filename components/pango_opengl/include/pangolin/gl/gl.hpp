@@ -225,7 +225,20 @@ inline void GlTexture::Upload(
 inline void GlTexture::Load(const TypedImage& image, bool sampling_linear)
 {
     GlPixFormat fmt(image.fmt);
-    Reinitialise((GLint)image.w, (GLint)image.h, GL_RGBA32F, sampling_linear, 0, fmt.glformat, fmt.gltype, image.ptr );
+    Reinitialise((GLint)image.w, (GLint)image.h, fmt.scalable_internal_format, sampling_linear, 0, fmt.glformat, fmt.gltype, image.ptr );
+}
+
+template<typename T>
+void GlTexture::Load(const Image<T>& image, bool sampling_linear)
+{
+    using GlFmt = GlFormatTraits<T>;
+
+    Reinitialise(
+        (GLint)image.w, (GLint)image.h,
+        GlFmt::glinternalformat,
+        sampling_linear, 0,
+        GlFmt::glformat, GlFmt::gltype,
+        image.ptr);
 }
 
 inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_linear)
@@ -511,16 +524,16 @@ inline void GlRenderBuffer::Reinitialise(GLint width, GLint height, GLint intern
 
     this->width = width;
     this->height = height;
-    glGenRenderbuffersEXT(1, &rbid);
-    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, rbid);
-    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, internal_format, width, height);
-    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
+    glGenRenderbuffers(1, &rbid);
+    glBindRenderbuffer(GL_RENDERBUFFER_EXT, rbid);
+    glRenderbufferStorage(GL_RENDERBUFFER_EXT, internal_format, width, height);
+    glBindRenderbuffer(GL_RENDERBUFFER_EXT, 0);
 }
 
 inline GlRenderBuffer::~GlRenderBuffer()
 {
     if( width!=0 ) {
-        glDeleteRenderbuffersEXT(1, &rbid);
+        glDeleteRenderbuffers(1, &rbid);
     }
 }
 #else
@@ -569,14 +582,14 @@ inline GlFramebuffer::GlFramebuffer()
 inline GlFramebuffer::~GlFramebuffer()
 {
     if(fbid) {
-        glDeleteFramebuffersEXT(1, &fbid);
+        glDeleteFramebuffers(1, &fbid);
     }
 }
 
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour)
     : attachments(0)
 {
-    glGenFramebuffersEXT(1, &fbid);
+    glGenFramebuffers(1, &fbid);
     AttachColour(colour);
     CheckGlDieOnError();
 }
@@ -584,7 +597,7 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour)
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
     : attachments(0)
 {
-    glGenFramebuffersEXT(1, &fbid);
+    glGenFramebuffers(1, &fbid);
     AttachColour(colour);
     AttachDepth(depth);
     CheckGlDieOnError();
@@ -593,7 +606,7 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth)
     : attachments(0)
 {
-    glGenFramebuffersEXT(1, &fbid);
+    glGenFramebuffers(1, &fbid);
     AttachColour(colour0);
     AttachColour(colour1);
     AttachDepth(depth);
@@ -603,7 +616,7 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRe
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlRenderBuffer& depth)
     : attachments(0)
 {
-    glGenFramebuffersEXT(1, &fbid);
+    glGenFramebuffers(1, &fbid);
     AttachColour(colour0);
     AttachColour(colour1);
     AttachColour(colour2);
@@ -614,7 +627,7 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTe
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlTexture& colour3, GlRenderBuffer& depth)
     : attachments(0)
 {
-    glGenFramebuffersEXT(1, &fbid);
+    glGenFramebuffers(1, &fbid);
     AttachColour(colour0);
     AttachColour(colour1);
     AttachColour(colour2);
@@ -625,22 +638,22 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTe
 
 inline void GlFramebuffer::Bind() const
 {
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fbid);
     glDrawBuffers( attachments, attachment_buffers );
 }
 
 inline void GlFramebuffer::Reinitialise()
 {
     if(fbid) {
-        glDeleteFramebuffersEXT(1, &fbid);
+        glDeleteFramebuffers(1, &fbid);
     }
-    glGenFramebuffersEXT(1, &fbid);
+    glGenFramebuffers(1, &fbid);
 }
 
 inline void GlFramebuffer::Unbind() const
 {
     glDrawBuffers( 1, attachment_buffers );
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
 }
 
 inline GLenum GlFramebuffer::AttachColour(GlTexture& tex )
@@ -648,9 +661,9 @@ inline GLenum GlFramebuffer::AttachColour(GlTexture& tex )
     if(!fbid) Reinitialise();
 
     const GLenum color_attachment = GL_COLOR_ATTACHMENT0_EXT + attachments;
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, color_attachment, GL_TEXTURE_2D, tex.tid, 0);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fbid);
+    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, color_attachment, GL_TEXTURE_2D, tex.tid, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
     attachments++;
     CheckGlDieOnError();
     return color_attachment;
@@ -660,15 +673,15 @@ inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
 {
     if(!fbid) Reinitialise();
 
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fbid);
 #if !defined(HAVE_GLES)
-    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rb.rbid);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rb.rbid);
 #elif defined(HAVE_GLES_2)
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, rb.rbid, 0);
 #else
     throw std::exception();
 #endif
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
     CheckGlDieOnError();
 }
 

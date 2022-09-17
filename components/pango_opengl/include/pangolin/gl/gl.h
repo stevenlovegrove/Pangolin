@@ -92,6 +92,9 @@ public:
 
     void Load(const TypedImage& image, bool sampling_linear = true);
 
+    template<typename T>
+    void Load(const Image<T>& image, bool sampling_linear = true);
+
     void LoadFromFile(const std::string& filename, bool sampling_linear = true);
 
     void Download(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT) const;
