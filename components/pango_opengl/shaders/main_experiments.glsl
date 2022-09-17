@@ -12,10 +12,10 @@ void main() {
 
 @start fragment
 #version 150 core
-#include "utils.glsl"
-#include "colormaps.glsl"
-#include "sdf.glsl"
-#include "font.glsl"
+#include "utils.glsl.h"
+#include "colormaps.glsl.h"
+#include "sdf.glsl.h"
+#include "font.glsl.h"
 
 in vec2 v_pos;
 out vec4 FragColor;

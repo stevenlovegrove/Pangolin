@@ -21,6 +21,7 @@ uniform int u_selected_index;
 in vec4 pos[];
 out vec2 v_pos;
 out vec2 v_win;
+flat out float divisions;
 flat out float val;
 flat out int  selected_index;
 flat out int  widget_index;
@@ -29,7 +30,9 @@ flat out uint  widget_type;
 
 void output_widget()
 {
-    val = pos[0].z;
+    divisions = floor(pos[0].z);
+    val = 2.0*(pos[0].z - divisions);
+
     widget_type = uint(pos[0].w);
     selected_index = u_selected_index;
     widget_index = int(pos[0].y);
@@ -55,12 +58,13 @@ void main() {
 
 @start fragment
 #version 150 core
-#include "utils.glsl"
-#include "colormaps.glsl"
-#include "sdf.glsl"
+#include "utils.glsl.h"
+#include "colormaps.glsl.h"
+#include "sdf.glsl.h"
 
 in vec2 v_pos;
 in vec2 v_win;
+flat in float  divisions;
 flat in float val;
 flat in uint  widget_type;
 flat in int  selected_index;
@@ -187,11 +191,12 @@ vec4 widget()
 
     // WIP: markings
     if(is_slider) {
-        float val_here = 10 * (v_pos.x-padding) / (2.0*(u_width/2.0 - padding));
+        float val_here = divisions * (v_pos.x-padding) / (2.0*(u_width/2.0 - padding));
         float val_closest = round(val_here);
         float msdf = mod(abs(val_closest-val_here),1.0);
         float alpha = 1.0 - smoothstep(0.0, 1.0, box_sdf);
-        vec4 c = color_sdf(msdf*20, color_inside_outline);
+        float dist_scale = half_width / divisions;
+        vec4 c = color_sdf(dist_scale*msdf, color_inside_outline);
         c.a *= alpha;
         v = composite( c, v);
     }

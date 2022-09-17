@@ -6,8 +6,10 @@
 #include <pangolin/gl/glsl.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
+#include <string>
 
 #include "notifier.h"
+#include "pangolin/display/default_font.h"
 #include "text.h"
 
 namespace pangolin
@@ -29,6 +31,7 @@ struct WidgetPanel : public View ,public Handler
     {
         std::string text;
         float value_percent;
+        int divisions;
         WidgetType widget_type;
     };
 
@@ -43,31 +46,36 @@ struct WidgetPanel : public View ,public Handler
           selected_widget(-1)
     {
         this->SetHandler(this);
-        font = std::make_unique<pangolin::GlFont >("/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png", "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json");
+//        font = std::shared_ptr<GlFont>(&pangolin::default_font(), [](GlFont*){} );
+
+        font = std::make_unique<pangolin::GlFont >(
+            "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png",
+            "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json"
+        );
         font->InitialiseGlTexture();
         font_offsets = TextureFromImage(MakeFontLookupImage(*font));
 
-        const std::string shader_dir = pangolin::FindPath(GetExecutableDir(), "/Pangolin/examples/Test/shaders/");
+        const std::string shader_dir = "/components/pango_opengl/shaders/";
         const std::string shader_widget = shader_dir + "main_widgets.glsl";
         const std::string shader_text = shader_dir + "main_text.glsl";
 
-        widgets.emplace_back(WidgetParams{"Section One", 1.0f, WidgetType::seperator});
-        widgets.emplace_back(WidgetParams{"Button", 0.0f, WidgetType::checkbox});
-        widgets.emplace_back(WidgetParams{"Button2", 1.0f, WidgetType::checkbox});
-        widgets.emplace_back(WidgetParams{"Some Label", 1.0f, WidgetType::label});
-        widgets.emplace_back(WidgetParams{"Some TextBox", 1.0f, WidgetType::textbox});
+        widgets.emplace_back(WidgetParams{"Section One", 1.0f, 0, WidgetType::seperator});
+        widgets.emplace_back(WidgetParams{"Button", 0.0f, 0, WidgetType::checkbox});
+        widgets.emplace_back(WidgetParams{"Button2", 1.0f, 0, WidgetType::checkbox});
+        widgets.emplace_back(WidgetParams{"Some Label", 1.0f, 0, WidgetType::label});
+        widgets.emplace_back(WidgetParams{"Some TextBox", 1.0f, 0, WidgetType::textbox});
 
         // https://stackoverflow.com/a/45332730 <- to get exp and mantissa for custom rendering...
 //        widgets.emplace_back(WidgetParams{"10^8", 1.0f, WidgetType::textbox});
 
-        widgets.emplace_back(WidgetParams{"Section Two", 1.0f, WidgetType::seperator});
+        widgets.emplace_back(WidgetParams{"Section Two", 1.0f, 0, WidgetType::seperator});
         for(int i=0; i < 5; ++i) {
-            widgets.emplace_back(WidgetParams{"Widget" + std::to_string(i), i * 0.1f, WidgetType::slider});
+            widgets.emplace_back(WidgetParams{"Widget" + std::to_string(i), i * 0.1f, 0, WidgetType::slider});
         }
-        widgets.emplace_back(WidgetParams{"Section Three", 1.0f, WidgetType::seperator});
+        widgets.emplace_back(WidgetParams{"Section Three", 1.0f, 0, WidgetType::seperator});
 
         for(int i=5; i < 10; ++i) {
-            widgets.emplace_back(WidgetParams{"Widget" + std::to_string(i), i * 0.1f, WidgetType::slider});
+            widgets.emplace_back(WidgetParams{"Widget" + std::to_string(i), 1.0f/i, i, WidgetType::slider});
         }
 
         notifier.AddPaths({shader_widget, shader_text});
@@ -110,7 +118,7 @@ struct WidgetPanel : public View ,public Handler
         std::vector<Eigen::Vector4f> host_vbo;
         for(int i=0; i < widgets.size(); ++i) {
             const auto& w = widgets[i];
-            host_vbo.emplace_back(0.0, i, w.value_percent, uint(w.widget_type) );
+            host_vbo.emplace_back(0.0, i, w.divisions + w.value_percent/2.0, uint(w.widget_type) );
         }
 
         vbo_widgets = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo );
@@ -199,19 +207,23 @@ struct WidgetPanel : public View ,public Handler
     {
         auto w = WidgetXY(x,y);
         if(selected_widget >= 0 && !pressed) {
+            auto& sw = widgets[selected_widget];
             // de-springify
-            float& x = widgets[selected_widget].value_percent;
-            x = (std::round(x*10.0f)/10.0);
+            if(sw.divisions) {
+                sw.value_percent = (std::round(sw.value_percent*sw.divisions)/sw.divisions);
+            }
             UpdateWidgetVBO();
             UpdateCharsVBO();
+            selected_widget = -1;
+        }else if(pressed) {
+            selected_widget = w.first;
+            SetValue(x,y, true);
         }
-        selected_widget = pressed ? w.first : -1;
-        SetValue(x,y);
     }
 
     void MouseMotion(View&, int x, int y, int button_state) override
     {
-        SetValue(x,y);
+        SetValue(x,y, false);
     }
 
     void PassiveMouseMotion(View&, int x, int y, int button_state) override
@@ -229,26 +241,25 @@ struct WidgetPanel : public View ,public Handler
         }
     }
 
-    void SetValue(float x, float y)
+    void SetValue(float x, float y, bool drag_start)
     {
         auto w = WidgetXY(x,y);
         if(w.first == selected_widget && 0 <= w.first && w.first < widgets.size()) {
-            const float x = std::clamp( (w.second.x() - widget_padding) / (widget_width - 2*widget_padding), 0.0f, 1.0f);
             WidgetParams& wp = widgets[w.first];
             if(wp.widget_type==WidgetType::checkbox) {
-                wp.value_percent = 1.0 - wp.value_percent;
+                if(drag_start) wp.value_percent = 1.0 - wp.value_percent;
             }else{
-                // continuous version
-                // wp.value_percent = x;
+                const float val = std::clamp( (w.second.x() - widget_padding) / (widget_width - 2*widget_padding), 0.0f, 1.0f);
 
-                // discrete version
-                // wp.value_percent = (std::round(x*10.0f)/10.0);
-
-                // springy discrete version
-                const float d = (std::round(x*10.0f)/10.0);
-                float diff = x - d;
-                wp.value_percent = d + diff*0.2;
-
+                if( wp.divisions == 0) {
+                    // continuous version
+                    wp.value_percent = val;
+                }else{
+                    // springy discrete version
+                    const float d = (std::round(val*wp.divisions)/wp.divisions);
+                    float diff = val - d;
+                    wp.value_percent = d + diff*0.2;
+                }
             }
 
             UpdateWidgetVBO();
@@ -267,7 +278,7 @@ struct WidgetPanel : public View ,public Handler
 
     bool dirty;
 
-    std::unique_ptr<GlFont> font;
+    std::shared_ptr<GlFont> font;
     GlTexture font_offsets;
 
     OpenGlMatrix T_cm;

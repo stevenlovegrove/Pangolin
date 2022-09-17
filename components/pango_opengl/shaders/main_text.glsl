@@ -32,7 +32,7 @@ void main() {
     float w = u_scale * 32.0;
     float h = u_scale * 32.0;
 
-    float expand = 100.0;
+    float expand = 0.0;
 
 //    vec2 corners[4] = vec2[](
 //        vec2(0.0,0.0), vec2(w,0.0),
@@ -57,9 +57,9 @@ void main() {
 
 @start fragment
 #version 150 core
-#include "utils.glsl"
-#include "sdf.glsl"
-#include "font.glsl"
+#include "utils.glsl.h"
+#include "sdf.glsl.h"
+#include "font.glsl.h"
 
 in vec2  v_pos;
 flat in uint   char_id;
