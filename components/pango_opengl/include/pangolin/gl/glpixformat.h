@@ -42,7 +42,8 @@ struct GlPixFormat
     GlPixFormat(const PixelFormat& fmt)
     {
         switch( fmt.channels) {
-        case 1: glformat = GL_LUMINANCE; break;
+        case 1: glformat = GL_RED; break;
+        case 2: glformat = GL_RG; break;
         case 3: glformat = fmt.format.substr(0, 3) == "BGR"? GL_BGR  : GL_RGB;  break;
         case 4: glformat = fmt.format.substr(0, 4) == "BGRA"? GL_BGRA : GL_RGBA; break;
         default: throw std::runtime_error("Unable to form OpenGL format from video format: '" + fmt.format + "'.");
@@ -60,34 +61,53 @@ struct GlPixFormat
         default: throw std::runtime_error("Unknown OpenGL data type for video format: '" + fmt.format + "'.");
         }
 
-        if(glformat == GL_LUMINANCE) {
+        if(glformat == GL_RED) {
             if(gltype == GL_UNSIGNED_BYTE) {
-                scalable_internal_format = GL_LUMINANCE8;
+                scalable_internal_format = GL_R8;
             }else if(gltype == GL_UNSIGNED_SHORT){
-                if(fmt.channel_bits[0] == 12) {
-                    scalable_internal_format = GL_LUMINANCE12;
-                }
-                else if(fmt.channel_bits[0] == 10) {
-                    scalable_internal_format = GL_LUMINANCE12; // there is no GL_LUMINANCE10
-                } else {
-                    scalable_internal_format = GL_LUMINANCE16;
-                }
+                scalable_internal_format = GL_R16;
+            }else if(gltype == GL_UNSIGNED_INT){
+                scalable_internal_format = GL_R32UI;
+            }else if(gltype == GL_FLOAT){
+                scalable_internal_format = GL_R32F;
             }else{
-                scalable_internal_format = GL_LUMINANCE32F_ARB;
+                scalable_internal_format = GL_RED;
             }
-        }else{
+        }else if(glformat == GL_RG) {
+            if(gltype == GL_UNSIGNED_BYTE) {
+                scalable_internal_format = GL_RG8;
+            }else if(gltype == GL_UNSIGNED_SHORT){
+                scalable_internal_format = GL_RG16;
+            }else if(gltype == GL_UNSIGNED_INT){
+                scalable_internal_format = GL_RG32UI;
+            }else if(gltype == GL_FLOAT){
+                scalable_internal_format = GL_RG32F;
+            }else{
+                scalable_internal_format = GL_RG;
+            }
+        }else if(glformat == GL_RGB || glformat == GL_BGR) {
+            if(gltype == GL_UNSIGNED_BYTE) {
+                scalable_internal_format = GL_RGB8;
+            }else if(gltype == GL_UNSIGNED_SHORT){
+                scalable_internal_format = GL_RGB16;
+            }else if(gltype == GL_UNSIGNED_INT){
+                scalable_internal_format = GL_RGB32UI;
+            }else if(gltype == GL_FLOAT){
+                scalable_internal_format = GL_RGB32F;
+            }else{
+                scalable_internal_format = GL_RGB;
+            }
+        }else if(glformat == GL_RGBA || glformat == GL_BGRA) {
             if(gltype == GL_UNSIGNED_BYTE) {
                 scalable_internal_format = GL_RGBA8;
-            }else if(gltype == GL_UNSIGNED_SHORT) {
-                if(fmt.channel_bits[0] == 10) {
-                    scalable_internal_format = GL_RGB10;
-                } else if(fmt.channel_bits[0] == 12) {
-                    scalable_internal_format = GL_RGB12;
-                } else {
-                    scalable_internal_format = GL_RGBA16;
-                }
-            }else{
+            }else if(gltype == GL_UNSIGNED_SHORT){
+                scalable_internal_format = GL_RGBA16;
+            }else if(gltype == GL_UNSIGNED_INT){
+                scalable_internal_format = GL_RGBA32UI;
+            }else if(gltype == GL_FLOAT){
                 scalable_internal_format = GL_RGBA32F;
+            }else{
+                scalable_internal_format = GL_RGBA;
             }
         }
     }
