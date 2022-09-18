@@ -9,13 +9,12 @@
 #include <string>
 
 #include "notifier.h"
-#include "pangolin/display/default_font.h"
 #include "text.h"
 
 namespace pangolin
 {
 
-struct WidgetPanel : public View ,public Handler
+struct WidgetPanel : public View, public Handler
 {
     enum class WidgetType
     {
@@ -37,8 +36,7 @@ struct WidgetPanel : public View ,public Handler
 
 
     WidgetPanel()
-        : notifier([this](){dirty=true;}),
-          widget_width(400.0),
+        : widget_width(400.0),
           widget_height(70.0),
           widget_padding(10.0),
           font_scale(0.7),
@@ -46,7 +44,6 @@ struct WidgetPanel : public View ,public Handler
           selected_widget(-1)
     {
         this->SetHandler(this);
-//        font = std::shared_ptr<GlFont>(&pangolin::default_font(), [](GlFont*){} );
 
         font = std::make_unique<pangolin::GlFont >(
             "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png",
@@ -78,7 +75,6 @@ struct WidgetPanel : public View ,public Handler
             widgets.emplace_back(WidgetParams{"Widget" + std::to_string(i), 1.0f/i, i, WidgetType::slider});
         }
 
-        notifier.AddPaths({shader_widget, shader_text});
         CheckGlDieOnError();
 
         prog_widget.AddShaderFromFile(pangolin::GlSlAnnotatedShader, shader_widget, {}, {shader_dir});
@@ -311,7 +307,6 @@ struct WidgetPanel : public View ,public Handler
     GlVertexArrayObject vao_chars;
 
     bool reload_shader = false;
-    FileNotifier notifier;
 
     float widget_width;
     float widget_height;
