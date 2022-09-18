@@ -40,7 +40,7 @@ class PANGOLIN_EXPORT GlFont
 public:
     enum class FontBitmapType
     {
-        Alpha,
+        Alpha = 0,
         SDF,
         MSDF
     };
@@ -75,8 +75,11 @@ public:
 
     float font_height_px;
     float font_max_width_px;
+    float default_advance_px;
 
     FontBitmapType bitmap_type;
+    std::array<float,2> bitmap_max_sdf_dist_uv;
+
     TypedImage font_bitmap;
     GlTexture mTex;
 

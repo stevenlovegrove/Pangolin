@@ -60,6 +60,8 @@ const bool use_alpha_font = false;
 
 // Hacked version of stbtt_FindGlyphIndex to extract valid codepoints in font
 // Good reference for file format here https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6cmap.html
+// Returns vector of codepoint ranges where pair represents the first valid codepoint in range, and one past the last.
+// I.e the range is exclusive of the last endpoint.
 std::vector<std::pair<uint32_t,uint32_t>> GetCodepointRanges(const stbtt_fontinfo *info)
 {
     std::vector<std::pair<uint32_t,uint32_t>> ranges;
@@ -183,11 +185,19 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
     int y = 1;
     int bottom_y = 1;
 
+    // Only relevant for SDF codepath
+    const float half_max_sdf_dist_pix = 5.0;
+    bitmap_max_sdf_dist_uv = {
+        2.0f * half_max_sdf_dist_pix / font_bitmap.w,
+        2.0f * half_max_sdf_dist_pix / font_bitmap.h,
+    };
+
     const auto ranges = GetCodepointRanges(&f);
 
     for(const auto& r : ranges) {
         for(uint32_t codepoint=r.first; codepoint < r.second; ++codepoint) {
-            int g = stbtt_FindGlyphIndex(&f, codepoint);
+            const int g = stbtt_FindGlyphIndex(&f, codepoint);
+
             int advance, lsb;
             stbtt_GetGlyphHMetrics(&f, g, &advance, &lsb);
 
@@ -216,14 +226,8 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                     bottom_y = y+gh+1;
             }else {
                 // Render atlas of charector SDF maps
-
-                int padding = 5;
-                int gw;
-                int gh;
-                int x0;
-                int y0;
-
-                unsigned char* psdf = stbtt_GetGlyphSDF(&f, scale, g, padding, 128, 128.0/padding, &gw, &gh, &x0, &y0);
+                int gw, gh, x0, y0;
+                unsigned char* psdf = stbtt_GetGlyphSDF(&f, scale, g, half_max_sdf_dist_pix, 128, 128.0/half_max_sdf_dist_pix, &gw, &gh, &x0, &y0);
                 if(psdf) {
                     Image<unsigned char> sdf(psdf, gw, gh, gw);
 
@@ -239,7 +243,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                     font_bitmap.SubImage(x, y, gw, gh).CopyFrom(sdf);
 
                     // Adjust offset for edges of pixels
-                    chardata.try_emplace(codepoint, chardata.size(), font_bitmap.w, font_bitmap.h, x, y, gw, gh, padding/3.0 + scale*advance, x0, -y0);
+                    chardata.try_emplace(codepoint, chardata.size(), font_bitmap.w, font_bitmap.h, x, y, gw, gh, scale*advance, x0, -y0);
 
                     font_max_width_px = std::max(font_max_width_px, (float)gw);
 
@@ -248,7 +252,10 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                         bottom_y = y+gh+1;
 
                     stbtt_FreeSDF(psdf, nullptr);
-
+                }else{
+                    if(codepoint == ' ') {
+                        default_advance_px = scale*advance;
+                    }
                 }
             }
         }
@@ -295,11 +302,22 @@ void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std:
     font_max_width_px = 0;
     font_height_px = atlas.get_value("size",0.0);
 
+    const float max_sdf_dist_pix = atlas.get_value("distanceRange",0.0);
+    bitmap_max_sdf_dist_uv = {
+        max_sdf_dist_pix / font_bitmap.w,
+        max_sdf_dist_pix / font_bitmap.h,
+    };
+
     for(size_t i=0; i < glyphs.size(); ++i) {
         const auto glyph = glyphs[i];
         const codepoint_t codepoint = glyph.get_value<int64_t>("unicode", 0);
+        const double adv = font_height_px * glyph.get_value<double>("advance", 1.0);
+        if(codepoint == ' ') {
+            default_advance_px = adv;
+        }
+
         if(codepoint > 0 && glyph.contains("planeBounds") && glyph.contains("atlasBounds")) {
-            const double adv       = font_height_px * glyph.get_value<double>("advance", 1.0);
+
             const auto planeBounds = glyph["planeBounds"];
             const auto atlasBounds = glyph["atlasBounds"];
 
@@ -360,7 +378,7 @@ GlText GlFont::Text(const std::string& utf8 )
         if(it != chardata.end()) {
             const GlChar& ch = it->second;
 
-            // Kerning (is adjustment to default to step, not replacement)
+            // Kerning (is adjustment to default step, not replacement)
             if(last_c) {
                 codepointpair_t key(last_c, c);
                 const auto kit = kern_table.find(key);
@@ -369,11 +387,13 @@ GlText GlFont::Text(const std::string& utf8 )
             }
 
             ret.Add(ch);
-            last_c = c;
         }else{
             // codepoint doesn't exists in font
+            ret.AddSpace(default_advance_px);
             // TODO: use some symbol such as '?'?
         }
+
+        last_c = c;
     }
 
     return ret;

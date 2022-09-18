@@ -52,10 +52,6 @@ struct WidgetPanel : public View ,public Handler
             "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png",
             "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json"
             );
-//        font = std::make_unique<pangolin::GlFont >(
-//            "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/anon-bottom/AnonymousPro.ttf_map.png",
-//            "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/anon-bottom/AnonymousPro.ttf_map.json"
-//            );
         font->InitialiseGlTexture();
         font_offsets = TextureFromImage(MakeFontLookupImage(*font));
 
@@ -135,7 +131,10 @@ struct WidgetPanel : public View ,public Handler
         prog_text.Bind();
         prog_text.SetUniform("u_font_atlas", 0);
         prog_text.SetUniform("u_font_offsets", 1);
+        prog_text.SetUniform("u_font_bitmap_type", static_cast<int>(font->bitmap_type) );
         prog_text.SetUniform("u_scale", font_scale);
+        prog_text.SetUniform("u_max_sdf_dist_uv", font->bitmap_max_sdf_dist_uv[0], font->bitmap_max_sdf_dist_uv[1] );
+        prog_text.SetUniform("u_color", 0.0f, 0.0f, 0.0f);
 
         std::vector<Eigen::Vector3f> host_vbo_pos;
         std::vector<uint16_t> host_vbo_index;
@@ -145,16 +144,32 @@ struct WidgetPanel : public View ,public Handler
             const std::u32string utf32 = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(utf8);
             const std::u16string index16 = to_index_string(*font, utf32);
             float adv = 2.5*widget_padding;
+            GlFont::codepoint_t last_char = 0;
+
+            // y-position is roughly center with fudge factor since text is balanced low.
+            const float y_pos = (i+0.5)*widget_height + 0.3*font_scale*font->font_height_px;
+
             for(int c=0; c < index16.size(); ++c) {
-                if(c > 0) {
-                    const auto key = GlFont::codepointpair_t(utf32[c-1],utf32[c]);
-                    const auto kit = font->kern_table.find(key);
-                    adv += font_scale * ((kit != font->kern_table.end()) ? kit->second : font->font_max_width_px);
-                }
-                if(utf32[c] != ' ') {
-                    // y-position is roughly center with fudge factor since text is balanced low.
-                    host_vbo_pos.emplace_back(adv, (i+0.5)*widget_height + 0.3*font_scale*32.0, 0.0 );
+                const GlFont::codepoint_t this_char = utf32[c];
+
+                if(!index16[c]) {
+                    // TODO: use some symbol such as '?' maybe
+                    adv += font_scale * font->default_advance_px;
+                    last_char = 0;
+                }else{
+                    auto ch = font->chardata[this_char];
+
+                    if(last_char) {
+                        const auto key = GlFont::codepointpair_t(last_char,this_char);
+                        const auto kit = font->kern_table.find(key);
+                        const float kern = (kit != font->kern_table.end()) ? kit->second : 0;
+                        adv += font_scale * kern;
+                    }
+
+                    host_vbo_pos.emplace_back(adv, y_pos, 0.0 );
                     host_vbo_index.emplace_back(index16[c]);
+                    adv += font_scale * ch.StepX();
+                    last_char = this_char;
                 }
             }
         }

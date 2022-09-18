@@ -66,19 +66,27 @@ uniform sampler2D u_font_atlas;
 in vec2  v_uv;
 out vec4 FragColor;
 
+uniform int  u_font_bitmap_type;
 uniform float u_scale;
+uniform vec2  u_max_sdf_dist_uv;
+uniform vec3  u_color;
 
-float screenPxRange(vec2 tex_coord) {
-    const float pxRange = 2.0;
-    vec2 unitRange = vec2(pxRange)/vec2(textureSize(u_font_atlas, 0));
-    vec2 screenTexSize = vec2(1.0)/fwidth(tex_coord);
-    return max(0.5*dot(unitRange, screenTexSize), 1.0);
+float SdfScaleFactor(vec2 tex_uv, vec2 unit_range) {
+    vec2 screenTexSize = vec2(1.0)/fwidth(tex_uv);
+    return max(0.5*dot(unit_range, screenTexSize), 1.0);
 }
 
 void main() {
-    vec3 msd = texture(u_font_atlas, v_uv).xyz;
-    float sd = median(msd.r, msd.g, msd.b);
-    float sdf = screenPxRange(v_uv)*(sd - 0.5);
-    float opacity = clamp( sdf + 0.5, 0.0, 1.0);
-    FragColor = vec4( vec3(0.0), opacity );
+    vec3 texel = texture(u_font_atlas, v_uv).xyz;
+    float opacity;
+
+    if(u_font_bitmap_type == 0) {
+        opacity = texel.r;
+    }else{
+        float sd = (u_font_bitmap_type == 1) ? texel.r: median(texel.r, texel.g, texel.b);
+        float sdf = SdfScaleFactor(v_uv, u_max_sdf_dist_uv)*(sd - 0.5);
+        opacity = clamp( sdf + 0.5, 0.0, 1.0);
+    }
+
+    FragColor = vec4( u_color, opacity );
 }

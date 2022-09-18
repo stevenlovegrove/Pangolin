@@ -34,12 +34,14 @@ inline pangolin::ManagedImage<Eigen::Vector4f> MakeFontLookupImage(const pangoli
     return img;
 }
 
-inline std::u16string to_index_string(pangolin::GlFont& font, const std::u32string& utf32)
+inline std::u16string to_index_string(const pangolin::GlFont& font, const std::u32string& utf32)
 {
-    std::u16string index16(utf32.size(), '?');
+    std::u16string index16(utf32.size(), '\0');
     for(size_t i=0; i < index16.size(); ++i) {
-        const auto& ch = font.chardata[utf32[i]];
-        index16[i] = ch.AtlasIndex();
+        const auto it = font.chardata.find(utf32[i]);
+        if(it != font.chardata.end()) {
+            index16[i] = it->second.AtlasIndex();
+        }
     }
     return index16;
 }
