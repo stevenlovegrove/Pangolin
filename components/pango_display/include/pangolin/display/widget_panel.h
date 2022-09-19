@@ -30,6 +30,7 @@ struct WidgetPanel : public View, public Handler
     struct WidgetParams
     {
         std::string text;
+        std::string value;
         float value_percent;
         int divisions;
         WidgetType widget_type;
@@ -118,6 +119,52 @@ struct WidgetPanel : public View, public Handler
         vao_widgets.Unbind();
     }
 
+    std::u32string toUtf32(const std::string& utf8)
+    {
+        return std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(utf8);
+    }
+
+    float TextWidthPix(const std::u32string& utf32){
+        float w = 0;
+        for(auto c: utf32) {
+            w += font_scale * font->chardata[c].StepX();
+        }
+        return w;
+    }
+
+    void AddTextToHostBuffer(
+        const std::u32string& utf32, float x, float y,
+        std::vector<Eigen::Vector3f>& host_vbo_pos,
+        std::vector<uint16_t>& host_vbo_index)
+    {
+        const std::u16string index16 = font->to_index_string(utf32);
+        GlFont::codepoint_t last_char = 0;
+
+        for(int c=0; c < index16.size(); ++c) {
+            const GlFont::codepoint_t this_char = utf32[c];
+
+            if(!index16[c]) {
+                // TODO: use some symbol such as '?' maybe
+                x += font_scale * font->default_advance_px;
+                last_char = 0;
+            }else{
+                auto ch = font->chardata[this_char];
+
+                if(last_char) {
+                    const auto key = GlFont::codepointpair_t(last_char,this_char);
+                    const auto kit = font->kern_table.find(key);
+                    const float kern = (kit != font->kern_table.end()) ? kit->second : 0;
+                    x += font_scale * kern;
+                }
+
+                host_vbo_pos.emplace_back(x, y, 0.0 );
+                host_vbo_index.emplace_back(index16[c]);
+                x += font_scale * ch.StepX();
+                last_char = this_char;
+            }
+        }
+    }
+
     void UpdateCharsVBO()
     {
         prog_text.Bind();
@@ -128,41 +175,24 @@ struct WidgetPanel : public View, public Handler
         prog_text.SetUniform("u_max_sdf_dist_uv", font->bitmap_max_sdf_dist_uv[0], font->bitmap_max_sdf_dist_uv[1] );
         prog_text.SetUniform("u_color", 0.0f, 0.0f, 0.0f);
 
+        const float text_pad = 2.5*widget_padding;
+
         std::vector<Eigen::Vector3f> host_vbo_pos;
         std::vector<uint16_t> host_vbo_index;
         for(int i=0; i < widgets.size(); ++i) {
             const auto& w = widgets[i];
-            const std::string utf8 = w.text;
-            const std::u32string utf32 = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(utf8);
-            const std::u16string index16 = font->to_index_string(utf32);
-            float adv = 2.5*widget_padding;
-            GlFont::codepoint_t last_char = 0;
 
             // y-position is roughly center with fudge factor since text is balanced low.
             const float y_pos = (i+0.5)*widget_height + 0.3*font_scale*font->font_height_px;
 
-            for(int c=0; c < index16.size(); ++c) {
-                const GlFont::codepoint_t this_char = utf32[c];
+            AddTextToHostBuffer(toUtf32(w.text), text_pad, y_pos, host_vbo_pos, host_vbo_index);
 
-                if(!index16[c]) {
-                    // TODO: use some symbol such as '?' maybe
-                    adv += font_scale * font->default_advance_px;
-                    last_char = 0;
-                }else{
-                    auto ch = font->chardata[this_char];
-
-                    if(last_char) {
-                        const auto key = GlFont::codepointpair_t(last_char,this_char);
-                        const auto kit = font->kern_table.find(key);
-                        const float kern = (kit != font->kern_table.end()) ? kit->second : 0;
-                        adv += font_scale * kern;
-                    }
-
-                    host_vbo_pos.emplace_back(adv, y_pos, 0.0 );
-                    host_vbo_index.emplace_back(index16[c]);
-                    adv += font_scale * ch.StepX();
-                    last_char = this_char;
-                }
+//            if(w.widget_type == WidgetType::slider)
+            if(!w.value.empty())
+            {
+                const auto utf32 = toUtf32(w.value);
+                const float width = TextWidthPix(utf32);
+                AddTextToHostBuffer(utf32, v.w - text_pad - width, y_pos, host_vbo_pos, host_vbo_index);
             }
         }
 
@@ -179,7 +209,7 @@ struct WidgetPanel : public View, public Handler
 
 //        if(Pushed(dirty))
         {
-//            UpdateWidgetParams();
+            UpdateWidgetParams();
             UpdateWidgetVBO();
             UpdateCharsVBO();
         }
@@ -187,12 +217,12 @@ struct WidgetPanel : public View, public Handler
         Activate();
         prog_widget.Bind();
         prog_widget.SetUniform("u_T_cm", T_cm);
-
         vao_widgets.Bind();
         glDrawArrays(GL_POINTS, 0, vbo_widgets.num_elements);
         prog_widget.Unbind();
         vao_widgets.Unbind();
 
+        glDisable(GL_DEPTH_TEST);
         prog_text.Bind();
         prog_text.SetUniform("u_T_cm", T_cm);
         vao_chars.Bind();
@@ -203,6 +233,7 @@ struct WidgetPanel : public View, public Handler
         glDrawArrays(GL_POINTS, 0, vbo_chars_index.num_elements);
         prog_text.Unbind();
         vao_chars.Unbind();
+        glEnable(GL_DEPTH_TEST);
     }
 
     void Resize(const Viewport& p) override
@@ -308,7 +339,7 @@ struct WidgetPanel : public View, public Handler
 
             if( !strcmp(var->TypeId(), typeid(bool).name()) ) {
                 widgets.push_back(WidgetParams{
-                    event.var->Meta().friendly, 1.0f, 0,
+                    event.var->Meta().friendly, "", 1.0f, 0,
                     var->Meta().flags & META_FLAG_TOGGLE ? WidgetType::checkbox : WidgetType::button
                 });
             } else if (!strcmp(var->TypeId(), typeid(double).name()) ||
@@ -330,14 +361,14 @@ struct WidgetPanel : public View, public Handler
                 const double range = r[1]-r[0];
                 const double steps = is_integral ? (range / var->Meta().increment) : 0.0;
                 widgets.push_back(WidgetParams{
-                    event.var->Meta().friendly,
+                    event.var->Meta().friendly, "",
                     1.0f, static_cast<int>(steps),
                     WidgetType::slider,
                     [var](const WidgetParams& p){ // read_params
                         Var<double> v(var);
                         auto& r = var->Meta().range;
                         const double range = r[1]-r[0];
-                        v = r[0] + range*p.value_percent;
+                        v = std::clamp(r[0] + range*p.value_percent, r[0], r[1]);
                     },
                     [var](WidgetParams& p){ // write params
                         // TODO: this is breaking the 'springyness' for integral sliders
@@ -345,13 +376,14 @@ struct WidgetPanel : public View, public Handler
                         Var<double> v(var);
                         auto& r = var->Meta().range;
                         const double range = r[1]-r[0];
-                        p.value_percent = (v-r[0]) / range;
+                        p.value_percent = std::clamp( (v-r[0]) / range, 0.0, 1.0);
+                        p.value = var->str->Get();
                     },
                 });
                 widgets.back().write_params(widgets.back());
             } else if (!strcmp(var->TypeId(), typeid(std::function<void(void)>).name() ) ) {
                 widgets.push_back(WidgetParams{
-                    event.var->Meta().friendly,
+                    event.var->Meta().friendly, "",
                     1.0f, 0, WidgetType::button,
                     [var](const WidgetParams& p){ // read_params
                         Var<std::function<void(void)>> v(var);
@@ -360,13 +392,13 @@ struct WidgetPanel : public View, public Handler
                 });
             }else if(var->str){
                 widgets.push_back(WidgetParams{
-                    event.var->Meta().friendly,
+                    event.var->Meta().friendly, "",
                     1.0f, 0, WidgetType::textbox,
                     [var](const WidgetParams& p){ // read_params
                     },
                     [var](WidgetParams& p){ // write params
                         Var<std::string> v(var);
-                        p.text = v.Get();
+                        p.value = v.Get();
                     },
                 });
             }

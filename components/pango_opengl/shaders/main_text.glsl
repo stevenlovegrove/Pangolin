@@ -54,7 +54,8 @@ void main() {
         EmitVertex();
     }
 
-    EndPrimitive();}
+    EndPrimitive();
+}
 
 @start fragment
 #version 150 core
