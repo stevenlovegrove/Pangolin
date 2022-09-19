@@ -1,15 +1,13 @@
 #include <pangolin/display/display.h>
 #include <pangolin/display/default_font.h>
 #include <pangolin/var/var.h>
-#include <pangolin/display/widgets.h>
+#include <pangolin/display/widget_panel.h>
 
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/gl/glvbo.h>
 #include <pangolin/gl/glsl.h>
 #include <pangolin/gl/glfont.h>
 #include <pangolin/var/varextra.h>
-
-#include "widget_panel.h"
 
 using namespace pangolin;
 
