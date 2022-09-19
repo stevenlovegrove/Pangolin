@@ -66,6 +66,11 @@ public:
     }
 
 //protected:
+    ManagedImage<Eigen::Vector4f> MakeFontLookupImage();
+    ManagedImage<uint16_t> MakeFontIndexImage(const std::string& utf8);
+    std::u16string to_index_string(const std::u32string& utf32);
+    std::u16string to_index_string(const std::string& utf8);
+
     void InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h);
     void InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std::string& atlas_json);
 

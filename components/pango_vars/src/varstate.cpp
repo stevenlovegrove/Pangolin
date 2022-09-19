@@ -55,6 +55,7 @@ bool VarState::Exists(const std::string& key) const
     return vars.find(key) != vars.end();
 }
 
+[[nodiscard("Return value manages connection lifetime through RAII")]]
 sigslot::connection VarState::RegisterForVarEvents( Event::Function callback_function, bool include_historic)
 {
     if(include_historic) {

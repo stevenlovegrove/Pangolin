@@ -115,6 +115,62 @@ std::vector<std::pair<uint32_t,uint32_t>> GetCodepointRanges(const stbtt_fontinf
     return ranges;
 }
 
+pangolin::ManagedImage<Eigen::Vector4f> GlFont::MakeFontLookupImage()
+{
+    pangolin::ManagedImage<Eigen::Vector4f> img(chardata.size(), 2);
+
+    for(const auto& cp_char : chardata) {
+        // font offset
+        img(cp_char.second.AtlasIndex(), 0) = {
+            cp_char.second.GetVert(0).tu,
+            cp_char.second.GetVert(0).tv,
+            cp_char.second.GetVert(2).tu - cp_char.second.GetVert(0).tu, // w
+            cp_char.second.GetVert(2).tv - cp_char.second.GetVert(0).tv  // h
+        };
+        // screen offset
+        img(cp_char.second.AtlasIndex(), 1) = {
+            cp_char.second.GetVert(0).x,
+            -cp_char.second.GetVert(0).y,
+            cp_char.second.GetVert(2).x - cp_char.second.GetVert(0).x, // w
+            cp_char.second.GetVert(0).y - cp_char.second.GetVert(2).y  // h
+        };
+    }
+
+    return img;
+}
+
+std::u16string GlFont::to_index_string(const std::u32string& utf32)
+{
+    std::u16string index16(utf32.size(), '\0');
+    for(size_t i=0; i < index16.size(); ++i) {
+        const auto it = chardata.find(utf32[i]);
+        if(it != chardata.end()) {
+            index16[i] = it->second.AtlasIndex();
+        }
+    }
+    return index16;
+}
+
+std::u16string GlFont::to_index_string(const std::string& utf8)
+{
+    const std::u32string utf32 = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(utf8);
+    return to_index_string(utf32);
+}
+
+pangolin::ManagedImage<uint16_t> GlFont::MakeFontIndexImage(const std::string& utf8)
+{
+    const std::u32string utf32 = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(utf8);
+
+    pangolin::ManagedImage<uint16_t> img(utf32.size(), 1);
+
+    for(size_t i=0; i < utf32.size(); ++i) {
+        const auto& ch = chardata[utf32[i]];
+        img(i,0) = ch.AtlasIndex();
+    }
+
+    return img;
+}
+
 std::string vformat(const char * format, va_list args)
 {
   std::string result;

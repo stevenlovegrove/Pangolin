@@ -7,9 +7,7 @@
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
 #include <string>
-
-#include "notifier.h"
-#include "text.h"
+#include <codecvt>
 
 namespace pangolin
 {
@@ -32,6 +30,8 @@ struct WidgetPanel : public View, public Handler
         float value_percent;
         int divisions;
         WidgetType widget_type;
+        std::function<void(const WidgetParams&)> read_params;
+        std::function<void(WidgetParams&)> write_params;
     };
 
 
@@ -50,30 +50,11 @@ struct WidgetPanel : public View, public Handler
             "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json"
             );
         font->InitialiseGlTexture();
-        font_offsets = TextureFromImage(MakeFontLookupImage(*font));
+        font_offsets.Load(font->MakeFontLookupImage());
 
         const std::string shader_dir = "/components/pango_opengl/shaders/";
         const std::string shader_widget = shader_dir + "main_widgets.glsl";
         const std::string shader_text = shader_dir + "main_text.glsl";
-
-        widgets.emplace_back(WidgetParams{"Section One", 1.0f, 0, WidgetType::seperator});
-        widgets.emplace_back(WidgetParams{"Button Thingy", 0.0f, 0, WidgetType::checkbox});
-        widgets.emplace_back(WidgetParams{"Button2", 1.0f, 0, WidgetType::checkbox});
-        widgets.emplace_back(WidgetParams{"Some Label", 1.0f, 0, WidgetType::label});
-        widgets.emplace_back(WidgetParams{"Some TextBox", 1.0f, 0, WidgetType::textbox});
-
-        // https://stackoverflow.com/a/45332730 <- to get exp and mantissa for custom rendering...
-//        widgets.emplace_back(WidgetParams{"10^8", 1.0f, WidgetType::textbox});
-
-        widgets.emplace_back(WidgetParams{"Section Two", 1.0f, 0, WidgetType::seperator});
-        for(int i=0; i < 5; ++i) {
-            widgets.emplace_back(WidgetParams{"Widget" + std::to_string(i), i * 0.1f, 0, WidgetType::slider});
-        }
-        widgets.emplace_back(WidgetParams{"Section Three", 1.0f, 0, WidgetType::seperator});
-
-        for(int i=5; i < 10; ++i) {
-            widgets.emplace_back(WidgetParams{"Widget" + std::to_string(i), 1.0f/i, i, WidgetType::slider});
-        }
 
         CheckGlDieOnError();
 
@@ -88,6 +69,22 @@ struct WidgetPanel : public View, public Handler
         prog_text.Link();
         UpdateCharsVBO();
         CheckGlDieOnError();
+
+        // Receive Pangolin var events
+        sigslot_lifetime = pangolin::VarState::I().RegisterForVarEvents(
+            [this](const pangolin::VarState::Event& event){
+                process_var_event(event);
+            }, true
+            );
+    }
+
+    void UpdateWidgetParams()
+    {
+        for(auto& wp : widgets) {
+            if(wp.write_params) {
+                wp.write_params(wp);
+            }
+        }
     }
 
     void UpdateWidgetVBO()
@@ -138,7 +135,7 @@ struct WidgetPanel : public View, public Handler
             const auto& w = widgets[i];
             const std::string utf8 = w.text;
             const std::u32string utf32 = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(utf8);
-            const std::u16string index16 = to_index_string(*font, utf32);
+            const std::u16string index16 = font->to_index_string(utf32);
             float adv = 2.5*widget_padding;
             GlFont::codepoint_t last_char = 0;
 
@@ -181,10 +178,10 @@ struct WidgetPanel : public View, public Handler
     {
         T_cm = ProjectionMatrixOrthographic(-0.5, v.w-0.5, v.h-0.5 - scroll_offset, -0.5 - scroll_offset, -1.0, 1.0);
 
-        if(Pushed(dirty)) {
-            prog_widget.ReloadShaderFiles();
+//        if(Pushed(dirty))
+        {
+//            UpdateWidgetParams();
             UpdateWidgetVBO();
-            prog_text.ReloadShaderFiles();
             UpdateCharsVBO();
         }
 
@@ -221,24 +218,25 @@ struct WidgetPanel : public View, public Handler
     void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state) override
     {
         auto w = WidgetXY(x,y);
-        if(selected_widget >= 0 && !pressed) {
+        if(selected_widget >= 0) {
             auto& sw = widgets[selected_widget];
-            // de-springify
-            if(sw.divisions) {
-                sw.value_percent = (std::round(sw.value_percent*sw.divisions)/sw.divisions);
+            SetValue(x,y, pressed, false);
+
+
+            if(!pressed) {
+
+
+                selected_widget = -1;
             }
-            UpdateWidgetVBO();
-            UpdateCharsVBO();
-            selected_widget = -1;
-        }else if(pressed) {
+        }else {
             selected_widget = w.first;
-            SetValue(x,y, true);
+            SetValue(x,y, pressed, false);
         }
     }
 
     void MouseMotion(View&, int x, int y, int button_state) override
     {
-        SetValue(x,y, false);
+        SetValue(x,y, true, true);
     }
 
     void PassiveMouseMotion(View&, int x, int y, int button_state) override
@@ -256,29 +254,41 @@ struct WidgetPanel : public View, public Handler
         }
     }
 
-    void SetValue(float x, float y, bool drag_start)
+    void SetValue(float x, float y, bool pressed, bool dragging)
     {
         auto w = WidgetXY(x,y);
         if(w.first == selected_widget && 0 <= w.first && w.first < widgets.size()) {
             WidgetParams& wp = widgets[w.first];
             if(wp.widget_type==WidgetType::checkbox) {
-                if(drag_start) wp.value_percent = 1.0 - wp.value_percent;
+                if(pressed && !dragging) wp.value_percent = 1.0 - wp.value_percent;
+            }else if(wp.widget_type==WidgetType::button) {
+                wp.value_percent = pressed ? 0.0 : 1.0;
             }else{
-                const float val = std::clamp( (w.second.x() - widget_padding) / (widget_width - 2*widget_padding), 0.0f, 1.0f);
+                if( pressed || dragging) {
+                    const float val = std::clamp( (w.second.x() - widget_padding) / (widget_width - 2*widget_padding), 0.0f, 1.0f);
 
-                if( wp.divisions == 0) {
-                    // continuous version
-                    wp.value_percent = val;
-                }else{
-                    // springy discrete version
-                    const float d = (std::round(val*wp.divisions)/wp.divisions);
-                    float diff = val - d;
-                    wp.value_percent = d + diff*0.2;
+                    if( wp.divisions == 0) {
+                        // continuous version
+                        wp.value_percent = val;
+                    }else{
+                        // springy discrete version
+                        const float d = (std::round(val*wp.divisions)/wp.divisions);
+                        float diff = val - d;
+                        wp.value_percent = d + diff*0.2;
+                    }
+                }else if(!pressed) {
+                    // de-springify
+                    if(wp.divisions) {
+                        wp.value_percent = (std::round(wp.value_percent*wp.divisions)/wp.divisions);
+                    }
                 }
             }
 
-            UpdateWidgetVBO();
-            UpdateCharsVBO();
+            if( wp.read_params) {
+                wp.read_params(wp);
+            }
+
+            dirty = true;
         }
     }
 
@@ -290,6 +300,80 @@ struct WidgetPanel : public View, public Handler
         return {i, p_widget};
     }
 
+    void process_var_event(const pangolin::VarState::Event& event)
+    {
+        using namespace pangolin;
+
+        if(event.action == VarState::Event::Action::Added) {
+            auto var = event.var;
+
+            if( !strcmp(var->TypeId(), typeid(bool).name()) ) {
+                widgets.push_back(WidgetParams{
+                    event.var->Meta().friendly, 1.0f, 0,
+                    var->Meta().flags & META_FLAG_TOGGLE ? WidgetType::checkbox : WidgetType::button
+                });
+            } else if (!strcmp(var->TypeId(), typeid(double).name()) ||
+                       !strcmp(var->TypeId(), typeid(float).name()) ||
+                       !strcmp(var->TypeId(), typeid(int8_t).name()) ||
+                       !strcmp(var->TypeId(), typeid(uint8_t).name()) ||
+                       !strcmp(var->TypeId(), typeid(int16_t).name()) ||
+                       !strcmp(var->TypeId(), typeid(uint16_t).name()) ||
+                       !strcmp(var->TypeId(), typeid(int32_t).name()) ||
+                       !strcmp(var->TypeId(), typeid(uint32_t).name()) ||
+                       !strcmp(var->TypeId(), typeid(int64_t).name()) ||
+                       !strcmp(var->TypeId(), typeid(uint64_t).name())
+                       )
+            {
+                auto& r = var->Meta().range;
+                const double range = r[1]-r[0];
+                const double steps = range / var->Meta().increment;
+                widgets.push_back(WidgetParams{
+                    event.var->Meta().friendly,
+                    1.0f, static_cast<int>(steps),
+                    WidgetType::slider,
+                    [var](const WidgetParams& p){ // read_params
+                        Var<double> v(var);
+                        auto& r = var->Meta().range;
+                        const double range = r[1]-r[0];
+                        v = r[0] + range*p.value_percent;
+                    },
+                    [var](WidgetParams& p){ // write params
+                        // TODO: this is breaking the 'springyness' for integral sliders
+                        // because reading from the int value is flooring the value_percent.
+                        Var<double> v(var);
+                        auto& r = var->Meta().range;
+                        const double range = r[1]-r[0];
+                        p.value_percent = (v-r[0]) / range;
+                    },
+                });
+                widgets.back().write_params(widgets.back());
+            } else if (!strcmp(var->TypeId(), typeid(std::function<void(void)>).name() ) ) {
+                widgets.push_back(WidgetParams{
+                    event.var->Meta().friendly,
+                    1.0f, 0, WidgetType::button,
+                    [var](const WidgetParams& p){ // read_params
+                        Var<std::function<void(void)>> v(var);
+                        if(p.value_percent > 0.5) v.Get()();
+                    }
+                });
+            }else if(var->str){
+                widgets.push_back(WidgetParams{
+                    event.var->Meta().friendly,
+                    1.0f, 0, WidgetType::textbox,
+                    [var](const WidgetParams& p){ // read_params
+                    },
+                    [var](WidgetParams& p){ // write params
+                        Var<std::string> v(var);
+                        p.text = v.Get();
+                    },
+                });
+            }
+
+            dirty = true;
+        }else if(event.action == pangolin::VarState::Event::Action::Removed){
+            // TODO: should remove the widget here
+        }
+    }
 
     bool dirty;
 
@@ -318,6 +402,8 @@ struct WidgetPanel : public View, public Handler
     int selected_widget;
     int hover_widget;
     std::vector<WidgetParams> widgets;
+
+    sigslot::connection sigslot_lifetime;
 };
 
 }
