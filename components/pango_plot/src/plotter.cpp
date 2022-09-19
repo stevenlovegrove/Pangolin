@@ -100,7 +100,7 @@ void Plotter::PlotSeries::CreatePlot(const std::string &x, const std::string &y,
     attribs.clear();
 
     this->colour = colour;
-    this->title  = default_font().Text(title.c_str());
+    this->title  = default_font()->Text(title.c_str());
     const std::set<int> ax = ConvertSequences(x);
     const std::set<int> ay = ConvertSequences(y);
     std::set<int> as;
@@ -630,7 +630,7 @@ void Plotter::Render()
             prog_text.SetUniform("u_color", ps.colour );
             prog_text.SetUniform("u_offset",
                 v.w-5-ps.title.Width() -(v.w/2.0f),
-                v.h-1.2*default_font().Height()*(++keyid) -(v.h/2.0f)
+                v.h-1.2*default_font()->Height()*(++keyid) -(v.h/2.0f)
             );
             ps.title.DrawGlSl();
         }
@@ -645,7 +645,7 @@ void Plotter::Render()
     for( int i=tx[0]; i<tx[1]; ++i ) {
         std::ostringstream oss;
         oss << i*tdelta[0]*tick[0].factor << tick[0].symbol;
-        GlText txt = default_font().Text(oss.str().c_str());
+        GlText txt = default_font()->Text(oss.str().c_str());
         float sx = v.w*((i)*tdelta[0]-rview.x.Mid())/w - txt.Width()/2.0f;
         prog_text.SetUniform("u_offset", sx, 15 -v.h/2.0f );
         txt.DrawGlSl();
@@ -654,7 +654,7 @@ void Plotter::Render()
     for( int i=ty[0]; i<ty[1]; ++i ) {
         std::ostringstream oss;
         oss << i*tdelta[1]*tick[1].factor << tick[1].symbol;
-        GlText txt = default_font().Text(oss.str().c_str());
+        GlText txt = default_font()->Text(oss.str().c_str());
         float sy = v.h*((i)*tdelta[1]-rview.y.Mid())/h - txt.Height()/2.0f;
         prog_text.SetUniform("u_offset", 15 -v.w/2.0f, sy );
         txt.DrawGlSl();

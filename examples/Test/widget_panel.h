@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pangolin/display/default_font.h>
 #include <pangolin/display/display.h>
 #include <pangolin/display/widgets.h>
 #include <pangolin/utils/file_utils.h>
@@ -14,6 +15,8 @@ namespace pangolin
 
 struct WidgetPanel : public View, public Handler
 {
+    static constexpr float sping_coeff = 0.2;
+
     enum class WidgetType
     {
         label = 0,
@@ -36,19 +39,15 @@ struct WidgetPanel : public View, public Handler
 
 
     WidgetPanel()
-        : widget_width(400.0),
-          widget_height(70.0),
+        : widget_height(70.0),
           widget_padding(10.0),
-          font_scale(0.7),
+          font_scale(1.5),
           scroll_offset(0.0),
           selected_widget(-1)
     {
         this->SetHandler(this);
 
-        font = std::make_unique<pangolin::GlFont >(
-            "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.png",
-            "/Users/stevenlovegrove/code/msdf-atlas-gen/fonts/AnonymousPro.ttf_map.json"
-            );
+        font = default_font();
         font->InitialiseGlTexture();
         font_offsets.Load(font->MakeFontLookupImage());
 
@@ -61,14 +60,14 @@ struct WidgetPanel : public View, public Handler
         prog_widget.AddShaderFromFile(pangolin::GlSlAnnotatedShader, shader_widget, {}, {shader_dir});
         glBindAttribLocation(prog_widget.ProgramId(), DEFAULT_LOCATION_POSITION, DEFAULT_NAME_POSITION);
         prog_widget.Link();
-        UpdateWidgetVBO();
         CheckGlDieOnError();
 
         prog_text.AddShaderFromFile(pangolin::GlSlAnnotatedShader, shader_text, {}, {shader_dir});
         glBindAttribLocation(prog_text.ProgramId(), DEFAULT_LOCATION_POSITION, DEFAULT_NAME_POSITION);
         prog_text.Link();
-        UpdateCharsVBO();
         CheckGlDieOnError();
+
+        dirty = true;
 
         // Receive Pangolin var events
         sigslot_lifetime = pangolin::VarState::I().RegisterForVarEvents(
@@ -91,7 +90,7 @@ struct WidgetPanel : public View, public Handler
     {
         prog_widget.Bind();
         prog_widget.SetUniform("u_val", std::clamp(0.5f, 0.0f, 1.0f ) );
-        prog_widget.SetUniform("u_width",  widget_width );
+        prog_widget.SetUniform("u_width",  (float)v.w );
         prog_widget.SetUniform("u_height", widget_height );
         prog_widget.SetUniform("u_padding", widget_padding );
         prog_widget.SetUniform("u_num_widgets", (int)widgets.size() );
@@ -242,7 +241,7 @@ struct WidgetPanel : public View, public Handler
     void PassiveMouseMotion(View&, int x, int y, int button_state) override
     {
         auto w = WidgetXY(x,y);
-        hover_widget = (0 <= w.second.x() && w.second.x() < widget_width) ? w.first : -1;
+        hover_widget = (0 <= w.second.x() && w.second.x() < v.w) ? w.first : -1;
         UpdateWidgetVBO();
         UpdateCharsVBO();
     }
@@ -265,7 +264,7 @@ struct WidgetPanel : public View, public Handler
                 wp.value_percent = pressed ? 0.0 : 1.0;
             }else{
                 if( pressed || dragging) {
-                    const float val = std::clamp( (w.second.x() - widget_padding) / (widget_width - 2*widget_padding), 0.0f, 1.0f);
+                    const float val = std::clamp( (w.second.x() - widget_padding) / (v.w - 2*widget_padding), 0.0f, 1.0f);
 
                     if( wp.divisions == 0) {
                         // continuous version
@@ -274,7 +273,7 @@ struct WidgetPanel : public View, public Handler
                         // springy discrete version
                         const float d = (std::round(val*wp.divisions)/wp.divisions);
                         float diff = val - d;
-                        wp.value_percent = d + diff*0.2;
+                        wp.value_percent = d + diff*sping_coeff;
                     }
                 }else if(!pressed) {
                     // de-springify
@@ -324,9 +323,12 @@ struct WidgetPanel : public View, public Handler
                        !strcmp(var->TypeId(), typeid(uint64_t).name())
                        )
             {
+                const bool is_integral = strcmp(var->TypeId(), typeid(double).name()) &&
+                                         strcmp(var->TypeId(), typeid(float).name());
+
                 auto& r = var->Meta().range;
                 const double range = r[1]-r[0];
-                const double steps = range / var->Meta().increment;
+                const double steps = is_integral ? (range / var->Meta().increment) : 0.0;
                 widgets.push_back(WidgetParams{
                     event.var->Meta().friendly,
                     1.0f, static_cast<int>(steps),
@@ -392,7 +394,6 @@ struct WidgetPanel : public View, public Handler
 
     bool reload_shader = false;
 
-    float widget_width;
     float widget_height;
     float widget_padding;
     float font_scale;

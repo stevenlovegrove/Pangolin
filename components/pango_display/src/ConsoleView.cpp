@@ -48,7 +48,7 @@ inline void glColour(const Colour& c)
 
 ConsoleView::ConsoleView(const std::shared_ptr<InterpreterInterface> &interpreter)
     : interpreter(interpreter),
-      font(default_font()),
+      font(*pangolin::default_font().get()),
       carat(0),
       hiding(false),
       bottom(1.0f),

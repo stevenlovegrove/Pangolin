@@ -87,17 +87,17 @@ inline void DrawWindow(GlText& text, GLfloat x, GLfloat y, GLfloat z = 0.0)
 
 static inline int cb_height()
 {
-    return (int)(default_font().Height() * 1.0);
+    return (int)(default_font()->Height() * 1.0);
 }
 
 static inline int tab_h()
 {
-    return (int)(default_font().Height() * 1.4);
+    return (int)(default_font()->Height() * 1.4);
 }
 
 static inline float x_width()
 {
-  return default_font().Text("x").Width();
+    return default_font()->Text("x").Width();
 }
 
 template<typename T>
@@ -309,7 +309,7 @@ Button::Button(string title, const std::shared_ptr<VarValueGeneric>& tv)
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
-    gltext = default_font().Text(title);
+    gltext = default_font()->Text(title);
 }
 
 void Button::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool pressed, int /*mouse_state*/)
@@ -330,7 +330,7 @@ void Button::Render()
     glRect(v);
     glColor4fv(colour_tx);
     if(gltext.Text() != var->Meta().friendly) {
-        gltext = default_font().Text(var->Meta().friendly);
+        gltext = default_font()->Text(var->Meta().friendly);
     }
     DrawWindow(gltext, raster[0],raster[1]-down);
     DrawShadowRect(v, down);
@@ -349,7 +349,7 @@ FunctionButton::FunctionButton(string title, const std::shared_ptr<VarValueGener
     left = 0.0; right = 1.0;
     hlock = LockLeft;
     vlock = LockBottom;
-    gltext = default_font().Text(title);
+    gltext = default_font()->Text(title);
 }
 
 void FunctionButton::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool pressed, int /*mouse_state*/)
@@ -370,7 +370,7 @@ void FunctionButton::Render()
     glRect(v);
     glColor4fv(colour_tx);
     if(gltext.Text() != var->Meta().friendly) {
-        gltext = default_font().Text(var->Meta().friendly);
+        gltext = default_font()->Text(var->Meta().friendly);
     }
     DrawWindow(gltext, raster[0],raster[1]-down);
     DrawShadowRect(v, down);
@@ -390,7 +390,7 @@ Checkbox::Checkbox(std::string title, const std::shared_ptr<VarValueGeneric> &tv
     hlock = LockLeft;
     vlock = LockBottom;
     handler = this;
-    gltext = default_font().Text(title);
+    gltext = default_font()->Text(title);
 }
 
 void Checkbox::Mouse(View&, MouseButton button, int /*x*/, int /*y*/, bool pressed, int /*mouse_state*/)
@@ -421,7 +421,7 @@ void Checkbox::Render()
     }
     glColor4fv(colour_tx);
     if(gltext.Text() != var->Meta().friendly) {
-        gltext = default_font().Text(var->Meta().friendly);
+        gltext = default_font()->Text(var->Meta().friendly);
     }
     DrawWindow(gltext, raster[0], raster[1]);
     DrawShadowRect(vcb, val);
@@ -449,7 +449,7 @@ Slider::Slider(std::string title, const std::shared_ptr<VarValueGeneric> &tv)
     vlock = LockBottom;
     handler = this;
     logscale = (int)tv->Meta().logscale;
-    gltext = default_font().Text(title);
+    gltext = default_font()->Text(title);
     is_integral_type = IsIntegral(tv->TypeId());
 }
 
@@ -570,14 +570,14 @@ void Slider::Render()
 
     glColor4fv(colour_tx);
     if(gltext.Text() != var->Meta().friendly) {
-        gltext = default_font().Text(var->Meta().friendly);
+        gltext = default_font()->Text(var->Meta().friendly);
     }
     DrawWindow(gltext, raster[0], raster[1]);
 
     std::ostringstream oss;
     oss << setprecision(4) << val;
     string str = oss.str();
-    GlText glval = default_font().Text(str);
+    GlText glval = default_font()->Text(str);
     const float l = glval.Width() + 2.0f;
     DrawWindow(glval,  v.l + v.w - l, raster[1] );
 }
@@ -593,7 +593,7 @@ TextInput::TextInput(std::string title, const std::shared_ptr<VarValueGeneric> &
     handler = this;
     sel[0] = -1;
     sel[1] = -1;
-    gltext = default_font().Text(title);
+    gltext = default_font()->Text(title);
 }
 
 void TextInput::Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed)
@@ -677,7 +677,7 @@ void TextInput::Mouse(View& /*view*/, MouseButton button, int x, int /*y*/, bool
             }else{
                 for( unsigned i=0; i<edit_visible.length(); ++i )
                 {
-                    const int tl = (int)(rl + default_font().Text(edit_visible.substr(0,i)).Width());
+                    const int tl = (int)(rl + default_font()->Text(edit_visible.substr(0,i)).Width());
                     if(x < tl+2)
                     {
                         ep = i;
@@ -717,7 +717,7 @@ void TextInput::MouseMotion(View&, int x, int /*y*/, int /*mouse_state*/)
         }else{
             for( unsigned i=0; i<edit.length(); ++i )
             {
-                const int tl = (int)(rl + default_font().Text(edit_visible.substr(0,i)).Width());
+                const int tl = (int)(rl + default_font()->Text(edit_visible.substr(0,i)).Width());
                 if(x < tl+2)
                 {
                     ep = i;
@@ -744,7 +744,7 @@ void TextInput::CalcVisibleEditPart()
 {
     edit_visible_part[0] =  0;
 
-    if(default_font().Text(edit).Width() > input_width)
+    if(default_font()->Text(edit).Width() > input_width)
     {
       if(sel[1] >= 0 )
       {
@@ -763,15 +763,15 @@ void TextInput::Render()
     if(can_edit) glRect(input_v);
 
     std::string edit_visible = edit.substr(edit_visible_part[0], edit_visible_part[1]);
-    gledit = default_font().Text(edit_visible);
+    gledit = default_font()->Text(edit_visible);
 
     const int sl = (int)gledit.Width() + horizontal_margin;
     const int rl = v.l + v.w - sl;
 
     if( do_edit && sel[0] >= 0)
     {
-        const int tl = (int)(rl + default_font().Text(edit_visible.substr(0,sel[0] - edit_visible_part[0])).Width());
-        const int tr = (int)(rl + default_font().Text(edit_visible.substr(0,sel[1] - edit_visible_part[0])).Width());
+        const int tl = (int)(rl + default_font()->Text(edit_visible.substr(0,sel[0] - edit_visible_part[0])).Width());
+        const int tr = (int)(rl + default_font()->Text(edit_visible.substr(0,sel[1] - edit_visible_part[0])).Width());
         glColor4fv(colour_dn);
         glRect(Viewport(tl,input_v.b,tr-tl,input_v.h));
 
