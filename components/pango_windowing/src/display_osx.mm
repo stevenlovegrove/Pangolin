@@ -80,7 +80,7 @@ OsxWindow::OsxWindow(
     ///////////////////////////////////////////////////////////////////////
     // Create Window
 
-    NSRect viewRect = NSMakeRect( 0.0, 0.0, width, height );
+    NSRect viewRect = NSMakeRect( 0.0, 0.0, USE_RETINA ? width/2 : width, USE_RETINA ? height/2 : height );
 
     _window = [[NSWindow alloc] initWithContentRect:viewRect styleMask:NSTitledWindowMask|NSMiniaturizableWindowMask|NSResizableWindowMask|NSClosableWindowMask backing:NSBackingStoreBuffered defer:YES];
     [_window setTitle:[NSString stringWithUTF8String:title.c_str()]];
