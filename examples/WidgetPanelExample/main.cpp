@@ -20,7 +20,7 @@ void MainWidgets()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     WidgetPanel panel;
-    panel.SetBounds(0.0, 1.0, 0.0, 0.2);
+    panel.SetBounds(0.0, 1.0, 0.0, 0.3);
 
     DisplayBase().AddDisplay(panel);
 

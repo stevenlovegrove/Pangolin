@@ -340,7 +340,15 @@ struct WidgetPanel : public View, public Handler
             if( !strcmp(var->TypeId(), typeid(bool).name()) ) {
                 widgets.push_back(WidgetParams{
                     event.var->Meta().friendly, "", 1.0f, 0,
-                    var->Meta().flags & META_FLAG_TOGGLE ? WidgetType::checkbox : WidgetType::button
+                    var->Meta().flags & META_FLAG_TOGGLE ? WidgetType::checkbox : WidgetType::button,
+                    [var](const WidgetParams& p){ // read_params
+                        Var<bool> v(var);
+                        v = p.value_percent > 0.5;
+                    },
+                    [var](WidgetParams& p){ // write params
+                        Var<bool> v(var);
+                        p.value_percent = v ? 1.0 : 0.0;
+                    },
                 });
             } else if (!strcmp(var->TypeId(), typeid(double).name()) ||
                        !strcmp(var->TypeId(), typeid(float).name()) ||
