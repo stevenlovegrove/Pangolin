@@ -613,7 +613,8 @@ PANGOLIN_REGISTER_FACTORY(WinWindow)
           return {{
               {"window_title","window","Title of application Window"},
               {"w","640","Requested window width"},
-              {"h","480","Requested window height"}
+              {"h","480","Requested window height"},
+              {PARAM_GL_PROFILE,"Ignored for now"},
           }};
       }
     std::unique_ptr<WindowInterface> Open(const Uri& uri) override {

@@ -525,6 +525,7 @@ PANGOLIN_REGISTER_FACTORY(X11Window)
               {"double_buffered","true","Whether the window should be double buffered"},
               {"sample_buffers","1",""},
               {"samples","1",""},
+              {PARAM_GL_PROFILE,"Ignored for now"},
           }};
       }
 
