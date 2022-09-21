@@ -153,7 +153,7 @@ public:
     inline Colour GetColourBin(int i) const
     {
         float hue = i * 0.5f * (3.0f - sqrt(5.0f));
-        hue -= (int)hue;
+        hue = hue - floor(hue);
         return Colour::Hsv(hue,sat,val,alpha);
     }
 
