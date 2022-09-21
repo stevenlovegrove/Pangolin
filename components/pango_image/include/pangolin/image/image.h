@@ -143,6 +143,24 @@ struct Image
         }
     }
 
+    // Provide an operation which is a function of the image co-ordinate (x,y)
+    template<typename UnaryOperation>
+    PANGO_HOST_DEVICE inline
+    void Generate(UnaryOperation unary_op)
+    {
+        PANGO_ASSERT(IsValid());
+
+        for(size_t y=0; y < h; ++y) {
+            T* el = RowPtr(y);
+            const T* el_end = el+w;
+            size_t x=0;
+            for( ; el != el_end; ++el) {
+                *el = unary_op(x,y);
+                ++x;
+            }
+        }
+    }
+
     PANGO_HOST_DEVICE inline
     void Fill(const T& val)
     {
