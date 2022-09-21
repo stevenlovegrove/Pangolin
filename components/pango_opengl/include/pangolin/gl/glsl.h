@@ -33,6 +33,7 @@
 #include <vector>
 #include <map>
 #include <cctype>
+#include <memory>
 
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/colour.h>

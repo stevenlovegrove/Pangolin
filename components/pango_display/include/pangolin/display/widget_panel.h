@@ -7,6 +7,7 @@
 #include <pangolin/gl/glsl.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
+#include <locale>
 #include <string>
 #include <codecvt>
 
