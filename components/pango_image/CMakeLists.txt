@@ -1,5 +1,8 @@
 get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
+find_package (Eigen3 REQUIRED QUIET)
+target_compile_definitions(${COMPONENT} PUBLIC HAVE_EIGEN)
+
 option(BUILD_PANGOLIN_LIBPNG "Build support for libpng image input" ON)
 if(BUILD_PANGOLIN_LIBPNG)
     find_package(PNG QUIET)
@@ -102,7 +105,7 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/image_io_tiff.cpp
 )
 
-target_link_libraries(${COMPONENT} PUBLIC pango_core)
+target_link_libraries(${COMPONENT} PUBLIC pango_core Eigen3::Eigen)
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
     $<INSTALL_INTERFACE:include>

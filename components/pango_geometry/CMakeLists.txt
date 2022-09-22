@@ -1,7 +1,6 @@
 get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 find_package (Eigen3 REQUIRED QUIET)
-message(STATUS "Found Eigen: '${EIGEN3_INCLUDE_DIRS}'")
 target_compile_definitions(${COMPONENT} PUBLIC HAVE_EIGEN)
 
 target_sources( ${COMPONENT}
