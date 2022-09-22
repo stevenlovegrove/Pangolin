@@ -35,6 +35,10 @@
 #include <limits>
 #include <cstring>
 
+#ifdef HAVE_EIGEN
+#include <Eigen/Geometry>
+#endif
+
 #ifdef PANGO_ENABLE_BOUNDS_CHECKS
 #   define PANGO_BOUNDS_ASSERT(...) PANGO_ENSURE(##__VA_ARGS__)
 #else
@@ -356,6 +360,22 @@ struct Image
         PANGO_ASSERT( (x+width) <= w && (y+height) <= h);
         return Image<T>( RowPtr(y)+x, width, height, pitch);
     }
+
+#ifdef HAVE_EIGEN
+    PANGO_HOST_DEVICE inline
+    const Image<const T> SubImage(const Eigen::AlignedBox2i& region) const
+    {
+        const auto dim = region.sizes();
+        return SubImage(region.min().x(), region.min().y(), dim.x(), dim.y());
+    }
+
+    PANGO_HOST_DEVICE inline
+    Image<T> SubImage(const Eigen::AlignedBox2i& region)
+    {
+        const auto dim = region.sizes();
+        return SubImage(region.min().x(), region.min().y(), dim.x(), dim.y());
+    }
+#endif
 
     PANGO_HOST_DEVICE inline
     const Image<T> Row(int y) const
