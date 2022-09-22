@@ -14,6 +14,9 @@
 namespace pangolin
 {
 
+extern const unsigned char AnonymousPro_ttf[];
+
+
 struct WidgetPanel : public View, public Handler
 {
     static constexpr float sping_coeff = 0.2;
@@ -48,8 +51,11 @@ struct WidgetPanel : public View, public Handler
           selected_widget(-1)
     {
         this->SetHandler(this);
-
-        font = default_font();
+#ifdef __APPLE__
+        font = std::make_shared<GlFont>("/System/Library/Fonts/Monaco.ttf", 18, 1024, 1024, false);
+#else
+        font = std::make_shared<GlFont>(AnonymousPro_ttf, 32, 1024, 1024, false);
+#endif
         font->InitialiseGlTexture();
         font_offsets.Load(font->MakeFontLookupImage());
 

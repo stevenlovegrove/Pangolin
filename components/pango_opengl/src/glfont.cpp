@@ -199,15 +199,15 @@ std::string format(const char * format, ...)
   return s;
 }
 
-GlFont::GlFont(const unsigned char* truetype_data, float pixel_height, int tex_w, int tex_h)
+GlFont::GlFont(const unsigned char* truetype_data, float pixel_height, int tex_w, int tex_h, bool use_alpha_font)
 {
-    InitialiseFont(truetype_data, pixel_height, tex_w, tex_h);
+    InitialiseFont(truetype_data, pixel_height, tex_w, tex_h, use_alpha_font);
 }
 
-GlFont::GlFont(const std::string& filename, float pixel_height, int tex_w, int tex_h)
+GlFont::GlFont(const std::string& filename, float pixel_height, int tex_w, int tex_h, bool use_alpha_font)
 {
     const std::string file_contents = GetFileContents(filename);
-    InitialiseFont(reinterpret_cast<const unsigned char*>(file_contents.data()), pixel_height, tex_w, tex_h);
+    InitialiseFont(reinterpret_cast<const unsigned char*>(file_contents.data()), pixel_height, tex_w, tex_h, use_alpha_font);
 }
 
 GlFont::GlFont(const std::string& atlas_filename, const std::string& json_filename)
@@ -220,8 +220,9 @@ GlFont::~GlFont()
 {
 }
 
-void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_height, int tex_w, int tex_h)
+void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_height, int tex_w, int tex_h, bool use_alpha_font)
 {
+    this->use_alpha_font = use_alpha_font;
     font_height_px = pixel_height;
     font_max_width_px = 0;
     bitmap_type = use_alpha_font ? FontBitmapType::Alpha : FontBitmapType::SDF;
@@ -332,6 +333,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
 
 void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std::string& atlas_json)
 {
+    use_alpha_font = false;
     font_bitmap = LoadImage(atlas_bitmap);
 
     if(!font_bitmap.IsValid())  throw std::runtime_error("Problem loading font atlas");

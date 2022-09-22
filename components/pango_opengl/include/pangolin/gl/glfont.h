@@ -46,8 +46,8 @@ public:
     };
 
     // Load GL Font data. Delay uploading as texture until first use.
-    GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w=1024, int tex_h=1024);
-    GlFont(const std::string& filename, float pixel_height, int tex_w=1024, int tex_h=1024);
+    GlFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w=1024, int tex_h=1024, bool use_alpha_font=true);
+    GlFont(const std::string& filename, float pixel_height, int tex_w=1024, int tex_h=1024, bool use_alpha_font=true);
     GlFont(const std::string& atlas_filename, const std::string& json_filename);
 
     virtual ~GlFont();
@@ -71,7 +71,7 @@ public:
     std::u16string to_index_string(const std::u32string& utf32);
     std::u16string to_index_string(const std::string& utf8);
 
-    void InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h);
+    void InitialiseFont(const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h, bool use_alpha_font);
     void InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std::string& atlas_json);
 
 
@@ -87,6 +87,7 @@ public:
 
     TypedImage font_bitmap;
     GlTexture mTex;
+    bool use_alpha_font;
 
     using codepoint_t = uint32_t;
     using codepointpair_t = std::pair<codepoint_t, codepoint_t>;
