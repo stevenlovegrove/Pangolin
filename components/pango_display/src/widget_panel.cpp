@@ -11,11 +11,10 @@
 
 #include <pangolin/display/widget_panel.h>
 
-namespace pangolin
-{
-
 extern const unsigned char AnonymousPro_ttf[];
 
+namespace pangolin
+{
 
 WidgetPanel::WidgetPanel()
     : widget_height(70.0),
@@ -25,11 +24,11 @@ WidgetPanel::WidgetPanel()
     selected_widget(-1)
 {
     this->SetHandler(this);
-#ifdef __APPLE__
-    font = std::make_shared<GlFont>("/System/Library/Fonts/Monaco.ttf", 18, 1024, 1024, false);
-#else
-    font = std::make_shared<GlFont>(AnonymousPro_ttf, 32, 1024, 1024, false);
-#endif
+//#ifdef __APPLE__
+//    font = std::make_shared<GlFont>("/System/Library/Fonts/Monaco.ttf", 18, 1024, 1024, false);
+//#else
+    font = std::make_shared<GlFont>(AnonymousPro_ttf, 28, 1024, 1024, false);
+//#endif
     font->InitialiseGlTexture();
     font_offsets.Load(font->MakeFontLookupImage());
 
