@@ -281,7 +281,7 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
         }
         const char* Description() const override
         {
-            return "Load an image collection as a video. Supports one or more synchronized streams.";
+            return "Load an image collection as a video. Supports one or more synchronized streams. Use images://[wildcard1,wildcard2,...] to specify multiple channels.";
         }
         ParamSet Params() const override
         {
