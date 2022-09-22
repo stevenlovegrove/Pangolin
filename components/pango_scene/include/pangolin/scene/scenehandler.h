@@ -68,7 +68,7 @@ struct SceneHandler : public Handler3D
             for(unsigned int name = 0; name < buf[0]; name++)
             {
                 const int pickId = (buf + 3)[name];
-                hit_map.emplace(std::pair(buf[1],
+                hit_map.emplace(std::pair<GLuint, SelectedObject>(buf[1],
                                           SelectedObject(pickId, InteractiveIndex::I().Find(pickId))));
             }
             buf += buf[0] + 3;
