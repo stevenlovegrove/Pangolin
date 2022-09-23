@@ -579,8 +579,8 @@ std::string GetExecutableDir() {
 #ifdef __linux__
 std::string GetExecutablePath() {
     char rawPathName[PATH_MAX];
-    realpath(PROC_SELF_EXE, rawPathName);
-    return  std::string(rawPathName);
+    char* ret = realpath(PROC_SELF_EXE, rawPathName);
+    return (ret == rawPathName) ? std::string(rawPathName) : std::string();
 }
 
 std::string GetExecutableDir() {

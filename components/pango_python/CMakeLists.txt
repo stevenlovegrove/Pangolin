@@ -71,6 +71,11 @@ if(BUILD_PANGOLIN_PYTHON AND Python_FOUND AND pybind11_FOUND)
         $<INSTALL_INTERFACE:include>
     )
 
+    # To prevent some visibility warnings.
+    # https://pybind11.readthedocs.io/en/stable/faq.html#someclass-declared-with-greater-visibility-than-the-type-of-its-field-someclass-member-wattributes
+    set_target_properties(pypangolin PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    set_target_properties(${COMPONENT} PROPERTIES CXX_VISIBILITY_PRESET hidden)
+
     # Create a target for generating a python wheel
     include(MakePythonWheel)
     MakeWheel( pypangolin
