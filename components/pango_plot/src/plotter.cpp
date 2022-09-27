@@ -629,8 +629,8 @@ void Plotter::Render()
         if(ps.used && ps.drawing_mode != pangolin::DrawingModeNone) {
             prog_text.SetUniform("u_color", ps.colour );
             prog_text.SetUniform("u_offset",
-                v.w-5-ps.title.Width() -(v.w/2.0f),
-                v.h-1.2*default_font()->Height()*(++keyid) -(v.h/2.0f)
+                v.w-5.0f-ps.title.Width() -(v.w/2.0f),
+                v.h-1.2f*default_font()->Height()*(++keyid) -(v.h/2.0f)
             );
             ps.title.DrawGlSl();
         }

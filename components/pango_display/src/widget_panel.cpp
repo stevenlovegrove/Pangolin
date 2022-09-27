@@ -19,16 +19,12 @@ namespace pangolin
 WidgetPanel::WidgetPanel()
     : widget_height(70.0),
     widget_padding(10.0),
-    font_scale(1.5),
+    font_scale(0.7),
     scroll_offset(0.0),
     selected_widget(-1)
 {
     this->SetHandler(this);
-//#ifdef __APPLE__
-//    font = std::make_shared<GlFont>("/System/Library/Fonts/Monaco.ttf", 18, 1024, 1024, false);
-//#else
-    font = std::make_shared<GlFont>(AnonymousPro_ttf, 28, 1024, 1024, false);
-//#endif
+    font = std::make_shared<GlFont>(AnonymousPro_ttf, 32, 1024, 1024, false);
     font->InitialiseGlTexture();
     font_offsets.Load(font->MakeFontLookupImage());
 
@@ -70,7 +66,6 @@ void WidgetPanel::UpdateWidgetParams()
 void WidgetPanel::UpdateWidgetVBO()
 {
     prog_widget.Bind();
-    prog_widget.SetUniform("u_val", std::clamp(0.5f, 0.0f, 1.0f ) );
     prog_widget.SetUniform("u_width",  (float)v.w );
     prog_widget.SetUniform("u_height", widget_height );
     prog_widget.SetUniform("u_padding", widget_padding );

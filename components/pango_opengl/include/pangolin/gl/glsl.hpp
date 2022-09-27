@@ -385,12 +385,16 @@ inline void GlSlProgram::Unbind()
 
 inline GLint GlSlProgram::GetAttributeHandle(const std::string& name)
 {
-    return glGetAttribLocation(prog, name.c_str());
+    GLint handle = glGetUniformLocation(prog, name.c_str());
+    if(handle == -1) std::cerr << "Attribute name doesn't exist for program (" << name << ")" << std::endl;
+    return handle;
 }
 
 inline GLint GlSlProgram::GetUniformHandle(const std::string& name)
 {
-    return glGetUniformLocation(prog, name.c_str());
+    GLint handle = glGetUniformLocation(prog, name.c_str());
+    if(handle == -1) std::cerr << "Uniform name doesn't exist for program (" << name << ")" << std::endl;
+    return handle;
 }
 
 inline void GlSlProgram::SetUniform(const std::string& name, int x)
@@ -431,6 +435,26 @@ inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2,
 inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2, float f3, float f4)
 {
     glUniform4f( GetUniformHandle(name), f1,f2,f3,f4);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, double f)
+{
+    glUniform1d( GetUniformHandle(name), f);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, double f1, double f2)
+{
+    glUniform2d( GetUniformHandle(name), f1,f2);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, double f1, double f2, double f3)
+{
+    glUniform3d( GetUniformHandle(name), f1,f2,f3);
+}
+
+inline void GlSlProgram::SetUniform(const std::string& name, double f1, double f2, double f3, double f4)
+{
+    glUniform4d( GetUniformHandle(name), f1,f2,f3,f4);
 }
 
 inline void GlSlProgram::SetUniform(const std::string& name, Colour c)

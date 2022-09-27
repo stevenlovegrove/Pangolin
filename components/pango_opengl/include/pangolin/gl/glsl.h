@@ -125,6 +125,11 @@ public:
     void SetUniform(const std::string& name, float f1, float f2, float f3);
     void SetUniform(const std::string& name, float f1, float f2, float f3, float f4);
 
+    void SetUniform(const std::string& name, double f);
+    void SetUniform(const std::string& name, double f1, double f2);
+    void SetUniform(const std::string& name, double f1, double f2, double f3);
+    void SetUniform(const std::string& name, double f1, double f2, double f3, double f4);
+
     void SetUniform(const std::string& name, Colour c);
 
     void SetUniform(const std::string& name, const OpenGlMatrix& m);

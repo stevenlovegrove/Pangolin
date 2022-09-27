@@ -264,11 +264,11 @@ inline void GlTexture::Download(TypedImage& image) const
     {
     case GL_LUMINANCE8:
         image.Reinitialise(width, height, PixelFormatFromString("GRAY8") );
-        Download(image.ptr, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+        Download(image.ptr, GL_RED, GL_UNSIGNED_BYTE);
         break;
     case GL_LUMINANCE16:
         image.Reinitialise(width, height, PixelFormatFromString("GRAY16LE") );
-        Download(image.ptr, GL_LUMINANCE, GL_UNSIGNED_SHORT);
+        Download(image.ptr, GL_RED, GL_UNSIGNED_SHORT);
         break;
     case GL_RGB8:
         image.Reinitialise(width, height, PixelFormatFromString("RGB24"));
@@ -286,7 +286,7 @@ inline void GlTexture::Download(TypedImage& image) const
     case GL_LUMINANCE32F_ARB:
     case GL_R32F:
         image.Reinitialise(width, height, PixelFormatFromString("GRAY32F"));
-        Download(image.ptr, GL_LUMINANCE, GL_FLOAT);
+        Download(image.ptr, GL_RED, GL_FLOAT);
         break;
     case GL_RGB16:
         image.Reinitialise(width, height, PixelFormatFromString("RGB48"));
