@@ -16,6 +16,11 @@ extern const unsigned char AnonymousPro_ttf[];
 namespace pangolin
 {
 
+namespace
+{
+constexpr GLint GLSL_LOCATION_CHAR_INDEX = DEFAULT_LOCATION_POSITION + 1;
+}
+
 WidgetPanel::WidgetPanel()
     : widget_height(70.0),
     widget_padding(10.0),
@@ -28,6 +33,17 @@ WidgetPanel::WidgetPanel()
     font->InitialiseGlTexture();
     font_offsets.Load(font->MakeFontLookupImage());
 
+    LoadShaders();
+
+    // Receive Pangolin var events
+    sigslot_lifetime = pangolin::VarState::I().RegisterForVarEvents(
+        [this](const pangolin::VarState::Event& event){
+            process_var_event(event);
+        }, true
+        );
+}
+void WidgetPanel::LoadShaders()
+{
     const std::string shader_dir = "/components/pango_opengl/shaders/";
     const std::string shader_widget = shader_dir + "main_widgets.glsl";
     const std::string shader_text = shader_dir + "main_text.glsl";
@@ -41,17 +57,11 @@ WidgetPanel::WidgetPanel()
 
     prog_text.AddShaderFromFile(pangolin::GlSlAnnotatedShader, shader_text, {}, {shader_dir});
     glBindAttribLocation(prog_text.ProgramId(), DEFAULT_LOCATION_POSITION, DEFAULT_NAME_POSITION);
+    glBindAttribLocation(prog_text.ProgramId(), GLSL_LOCATION_CHAR_INDEX, "a_char_index");
     prog_text.Link();
     CheckGlDieOnError();
 
     dirty = true;
-
-    // Receive Pangolin var events
-    sigslot_lifetime = pangolin::VarState::I().RegisterForVarEvents(
-        [this](const pangolin::VarState::Event& event){
-            process_var_event(event);
-        }, true
-        );
 }
 
 void WidgetPanel::UpdateWidgetParams()
@@ -174,7 +184,13 @@ void WidgetPanel::UpdateCharsVBO()
     vbo_chars_pos = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo_pos );
     vbo_chars_index = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo_index );
     vao_chars.AddVertexAttrib(pangolin::DEFAULT_LOCATION_POSITION, vbo_chars_pos);
-    vao_chars.AddVertexAttrib(1, vbo_chars_index);
+
+    vao_chars.Bind();
+    vbo_chars_index.Bind();
+    glVertexAttribIPointer(GLSL_LOCATION_CHAR_INDEX, 1, GL_UNSIGNED_SHORT, 0, nullptr );
+    glEnableVertexAttribArray(GLSL_LOCATION_CHAR_INDEX);
+
+//    vao_chars.AddVertexAttrib(GLSL_LOCATION_CHAR_INDEX, vbo_chars_index);
     vao_chars.Unbind();
 }
 

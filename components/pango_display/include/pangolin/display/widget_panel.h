@@ -42,6 +42,8 @@ struct WidgetPanel : public View, public Handler
 
     WidgetPanel();
 
+    void LoadShaders();
+
     void UpdateWidgetParams();
 
     void UpdateWidgetVBO();
