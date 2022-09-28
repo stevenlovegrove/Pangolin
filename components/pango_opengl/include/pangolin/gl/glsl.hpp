@@ -385,7 +385,7 @@ inline void GlSlProgram::Unbind()
 
 inline GLint GlSlProgram::GetAttributeHandle(const std::string& name)
 {
-    GLint handle = glGetUniformLocation(prog, name.c_str());
+    GLint handle = glGetAttribLocation(prog, name.c_str());
     if(handle == -1) std::cerr << "Attribute name doesn't exist for program (" << name << ")" << std::endl;
     return handle;
 }
