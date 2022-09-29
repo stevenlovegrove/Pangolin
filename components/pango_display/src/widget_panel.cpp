@@ -11,8 +11,6 @@
 
 #include <pangolin/display/widget_panel.h>
 
-extern const unsigned char AnonymousPro_ttf[];
-
 namespace pangolin
 {
 
@@ -29,7 +27,7 @@ WidgetPanel::WidgetPanel()
     selected_widget(-1)
 {
     this->SetHandler(this);
-    font = std::make_shared<GlFont>(AnonymousPro_ttf, 32, 1024, 1024, false);
+    font = build_builtin_font(32, 1024, 1024, false);
     font->InitialiseGlTexture();
     font_offsets.Load(font->MakeFontLookupImage());
 
