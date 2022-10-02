@@ -47,7 +47,7 @@ bool ImagesVideo::LoadFrame(size_t i)
             if(file_type == ImageFileTypeUnknown && unknowns_are_raw) {
                 // if raw_pitch is zero, assume image is packed.
                 const size_t pitch = raw_pitch ? raw_pitch : raw_fmt.bpp * raw_width / 8;
-                frame.push_back( LoadImage( filename, raw_fmt, raw_width, raw_height, pitch) );
+                frame.push_back( LoadImage( filename, raw_fmt, raw_width, raw_height, pitch, raw_offset, raw_planes) );
             }else{
                 frame.push_back( LoadImage( filename, file_type ) );
             }
@@ -157,12 +157,17 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path)
     // TODO: Queue frames in another thread.
 }
 
-ImagesVideo::ImagesVideo(const std::string& wildcard_path,
-                         const PixelFormat& raw_fmt,
-                         size_t raw_width, size_t raw_height, size_t raw_pitch
-)   : num_files(-1), num_channels(0), next_frame_id(0),
-      unknowns_are_raw(true), raw_fmt(raw_fmt),
-      raw_width(raw_width), raw_height(raw_height), raw_pitch(raw_pitch)
+ImagesVideo::ImagesVideo(
+    const std::string& wildcard_path,
+    const PixelFormat& raw_fmt,
+    size_t raw_width, size_t raw_height,
+    size_t raw_pitch, size_t raw_offset,
+    size_t raw_planes
+) : num_files(-1), num_channels(0), next_frame_id(0),
+    unknowns_are_raw(true), raw_fmt(raw_fmt),
+    raw_width(raw_width), raw_height(raw_height),
+    raw_planes(raw_planes), raw_pitch(raw_pitch),
+    raw_offset(raw_offset)
 {
     // Work out which files to sequence
     PopulateFilenames(wildcard_path);
@@ -281,14 +286,16 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
         }
         const char* Description() const override
         {
-            return "Load an image collection as a video. Supports one or more synchronized streams. Use images://[wildcard1,wildcard2,...] to specify multiple channels.";
+            return "Load an image collection as a video. Supports one or more synchronized streams. Use images://[wildcard1,wildcard2,...] to specify multiple channels. Wildcard can contain ? or * to match one or many charectors.";
         }
         ParamSet Params() const override
         {
             return {{
                 {"fmt","GRAY8","RAW files only. Pixel format, see pixel format help for all possible values"},
                 {"size","640x480","RAW files only. Image size, required if fmt is specified"},
-                {"pitch","0","RAW files only. Specify distance from the start of one row to the next in bytes. If not specified, assumed image is packed."}
+                {"pitch","0","RAW files only. Specify distance from the start of one row to the next in bytes. If not specified, assumed image is packed."},
+                {"offset","0","Offset from the start of the file in bytes where the image starts"},
+                {"planes","1","Number of channel planes (outer array channels) for raw image. fmt should be the format of an element in the individual plane."}
             }};
         }
         std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
@@ -302,7 +309,11 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
                 const PixelFormat fmt = PixelFormatFromString(sfmt);
                 const ImageDim dim = reader.Get<ImageDim>("size");
                 const size_t image_pitch = reader.Get<int>("pitch");
-                return std::unique_ptr<VideoInterface>( new ImagesVideo(path, fmt, dim.x, dim.y, image_pitch) );
+                const size_t image_offset = reader.Get<int>("offset");
+                const size_t image_planes = reader.Get<int>("planes");
+                return std::unique_ptr<VideoInterface>( new ImagesVideo(
+                    path, fmt, dim.x, dim.y, image_pitch, image_offset, image_planes
+                ));
             }else{
                 return std::unique_ptr<VideoInterface>( new ImagesVideo(path) );
             }
