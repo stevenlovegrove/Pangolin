@@ -333,6 +333,7 @@ void WidgetPanel::process_var_event(const pangolin::VarState::Event& event)
                                            [var](const WidgetParams& p){ // read_params
                                                Var<bool> v(var);
                                                v = p.value_percent > 0.5;
+                                               v.Meta().gui_changed = true;
                                            },
                                            [var](WidgetParams& p){ // write params
                                                Var<bool> v(var);
@@ -366,6 +367,7 @@ void WidgetPanel::process_var_event(const pangolin::VarState::Event& event)
                                                auto& r = var->Meta().range;
                                                const double range = r[1]-r[0];
                                                v = std::clamp(r[0] + range*p.value_percent, r[0], r[1]);
+                                               v.Meta().gui_changed = true;
                                            },
                                            [var](WidgetParams& p){ // write params
                                                // TODO: this is breaking the 'springyness' for integral sliders
