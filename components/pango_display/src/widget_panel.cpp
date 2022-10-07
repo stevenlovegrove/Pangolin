@@ -20,9 +20,9 @@ constexpr GLint GLSL_LOCATION_CHAR_INDEX = DEFAULT_LOCATION_POSITION + 1;
 }
 
 WidgetPanel::WidgetPanel()
-    : widget_height(70.0),
-    widget_padding(10.0),
-    font_scale(0.7),
+    : widget_height(50.0),
+    widget_padding(8.0),
+    font_scale(0.5),
     scroll_offset(0.0),
     selected_widget(-1)
 {
@@ -90,6 +90,7 @@ void WidgetPanel::UpdateWidgetVBO()
     prog_widget.SetUniform("color_boss_diff",      0.2f, 0.15f, 0.20f);
     prog_widget.SetUniform("color_slider",         0.9f, 0.7f, 0.7f);
     prog_widget.SetUniform("color_slider_outline", 0.8f, 0.6f, 0.6f);
+    prog_widget.Unbind();
 
     std::vector<Eigen::Vector4f> host_vbo;
     for(int i=0; i < widgets.size(); ++i) {
@@ -157,7 +158,7 @@ void WidgetPanel::UpdateCharsVBO()
     prog_text.SetUniform("u_scale", font_scale);
     prog_text.SetUniform("u_max_sdf_dist_uv", font->bitmap_max_sdf_dist_uv[0], font->bitmap_max_sdf_dist_uv[1] );
     prog_text.SetUniform("u_color", 0.0f, 0.0f, 0.0f);
-
+    prog_text.Unbind();
     const float text_pad = 2.5*widget_padding;
 
     std::vector<Eigen::Vector3f> host_vbo_pos;
@@ -189,6 +190,7 @@ void WidgetPanel::UpdateCharsVBO()
     glEnableVertexAttribArray(GLSL_LOCATION_CHAR_INDEX);
 
 //    vao_chars.AddVertexAttrib(GLSL_LOCATION_CHAR_INDEX, vbo_chars_index);
+    vbo_chars_index.Unbind();
     vao_chars.Unbind();
 }
 
@@ -210,6 +212,9 @@ void WidgetPanel::Render()
     glDrawArrays(GL_POINTS, 0, vbo_widgets.num_elements);
     prog_widget.Unbind();
     vao_widgets.Unbind();
+    glEnable(GL_BLEND);
+    glEnable(GL_TEXTURE_2D);
+
 
     glDisable(GL_DEPTH_TEST);
     prog_text.Bind();
@@ -222,7 +227,9 @@ void WidgetPanel::Render()
     glDrawArrays(GL_POINTS, 0, vbo_chars_index.num_elements);
     prog_text.Unbind();
     vao_chars.Unbind();
+    font->mTex.Unbind();
     glEnable(GL_DEPTH_TEST);
+    glActiveTexture(GL_TEXTURE0);
 }
 
 void WidgetPanel::Resize(const Viewport& p)
