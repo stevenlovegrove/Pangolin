@@ -79,7 +79,7 @@ int main( int argc, char** argv )
 
     // Define Projection and initial ModelView matrix
     pangolin::OpenGlRenderState s_cam(
-        pangolin::ProjectionMatrix(w, h, f, f, w/2.0, h/2.0, 0.2, 1000),
+        pangolin::ProjectionMatrix(w, h, f, f, w/2.0, h/2.0, 0.1, 1000),
         pangolin::ModelViewLookAt(1.0, 1.0, 1.0, 0.0, 0.0, 0.0, pangolin::AxisY)
     );
 
@@ -122,7 +122,12 @@ int main( int argc, char** argv )
                 const Eigen::Vector3f center = total_aabb.center();
                 const Eigen::Vector3f view = center + Eigen::Vector3f(1.2, 0.8,1.2) * std::max( (total_aabb.max() - center).norm(), (center - total_aabb.min()).norm());
                 const auto mvm = pangolin::ModelViewLookAt(view[0], view[1], view[2], center[0], center[1], center[2], pangolin::AxisY);
+                const double far = 100.0*(total_aabb.max() - total_aabb.min()).norm();
+                const double near = far / 1e6;
+                const auto proj = pangolin::ProjectionMatrix(w, h, f, f, w/2.0, h/2.0, near, far );
                 s_cam.SetModelViewMatrix(mvm);
+                s_cam.SetProjectionMatrix(proj);
+
                 auto renderable = std::make_shared<GlGeomRenderable>(pangolin::ToGlGeometry(geom), aabb);
                 renderables.push_back(renderable);
                 RenderNode::Edge edge = { spin_transform, { renderable, {} } };
@@ -263,6 +268,7 @@ int main( int argc, char** argv )
             if(show_y0) pangolin::glDraw_y0(10.0, 10);
             if(show_z0) pangolin::glDraw_z0(10.0, 10);
             if(show_axis) pangolin::glDrawAxis(10.0);
+            if(show_bounds) pangolin::glDrawAlignedBox(total_aabb);
 
             glDisable(GL_CULL_FACE);
         }
