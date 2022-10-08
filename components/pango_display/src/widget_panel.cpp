@@ -21,8 +21,8 @@ constexpr GLint GLSL_LOCATION_CHAR_INDEX = DEFAULT_LOCATION_POSITION + 1;
 
 WidgetPanel::WidgetPanel()
     : widget_height(50.0),
-    widget_padding(8.0),
-    font_scale(0.5),
+    widget_padding(5.0),
+    font_scale(0.6),
     scroll_offset(0.0),
     selected_widget(-1)
 {
@@ -184,12 +184,12 @@ void WidgetPanel::UpdateCharsVBO()
     vbo_chars_index = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo_index );
     vao_chars.AddVertexAttrib(pangolin::DEFAULT_LOCATION_POSITION, vbo_chars_pos);
 
+    // TODO: implement vao_chars.AddVertexAttrib(...) for integer types
     vao_chars.Bind();
     vbo_chars_index.Bind();
     glVertexAttribIPointer(GLSL_LOCATION_CHAR_INDEX, 1, GL_UNSIGNED_SHORT, 0, nullptr );
     glEnableVertexAttribArray(GLSL_LOCATION_CHAR_INDEX);
 
-//    vao_chars.AddVertexAttrib(GLSL_LOCATION_CHAR_INDEX, vbo_chars_index);
     vbo_chars_index.Unbind();
     vao_chars.Unbind();
 }
@@ -212,11 +212,10 @@ void WidgetPanel::Render()
     glDrawArrays(GL_POINTS, 0, vbo_widgets.num_elements);
     prog_widget.Unbind();
     vao_widgets.Unbind();
+
     glEnable(GL_BLEND);
-    glEnable(GL_TEXTURE_2D);
-
-
     glDisable(GL_DEPTH_TEST);
+
     prog_text.Bind();
     prog_text.SetUniform("u_T_cm", T_cm);
     vao_chars.Bind();
@@ -228,6 +227,7 @@ void WidgetPanel::Render()
     prog_text.Unbind();
     vao_chars.Unbind();
     font->mTex.Unbind();
+    
     glEnable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
 }
