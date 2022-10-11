@@ -19,10 +19,10 @@ namespace
 constexpr GLint GLSL_LOCATION_CHAR_INDEX = DEFAULT_LOCATION_POSITION + 1;
 }
 
-WidgetPanel::WidgetPanel()
-    : widget_height(50.0),
-    widget_padding(5.0),
-    font_scale(0.6),
+WidgetPanel::WidgetPanel(float scale)
+    : widget_height(scale * 50.0),
+    widget_padding(scale * 8.0),
+    font_scale(scale * 0.5),
     scroll_offset(0.0),
     selected_widget(-1)
 {

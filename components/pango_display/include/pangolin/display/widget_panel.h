@@ -40,7 +40,7 @@ struct WidgetPanel : public View, public Handler
     };
 
 
-    WidgetPanel();
+    WidgetPanel(float scale = 1.f);
 
     void LoadShaders();
 
