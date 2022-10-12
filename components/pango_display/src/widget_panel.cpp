@@ -243,20 +243,22 @@ void WidgetPanel::Keyboard(View&, unsigned char key, int x, int y, bool pressed)
 
 void WidgetPanel::Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state)
 {
-    auto w = WidgetXY(x,y);
-    if(selected_widget >= 0) {
-        auto& sw = widgets[selected_widget];
-        SetValue(x,y, pressed, false);
-
-
-        if(!pressed) {
-
-
-            selected_widget = -1;
+    if(button == MouseButtonLeft) {
+        auto w = WidgetXY(x,y);
+        if(selected_widget >= 0) {
+            auto& sw = widgets[selected_widget];
+            SetValue(x,y, pressed, false);
+            if(!pressed) {
+                selected_widget = -1;
+            }
+        }else {
+            selected_widget = w.first;
+            SetValue(x,y, pressed, false);
         }
-    }else {
-        selected_widget = w.first;
-        SetValue(x,y, pressed, false);
+    }else if(button == MouseWheelUp || button == MouseWheelDown) {
+        const float delta = (button == MouseWheelDown ? 1.0f : -1.0f) * 0.25f*widget_height;
+        const float offset_max = (widgets.size()-1.0f) * widget_height;
+        scroll_offset = std::clamp(scroll_offset + delta, -offset_max, 0.0f);
     }
 }
 
@@ -276,7 +278,9 @@ void WidgetPanel::PassiveMouseMotion(View&, int x, int y, int button_state)
 void WidgetPanel::Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
 {
     if(inType == InputSpecialScroll) {
-        scroll_offset = std::clamp(scroll_offset + p2, -(float)((widgets.size()-1)*widget_height), 0.0f);
+        const float delta = p2;
+        const float offset_max = (widgets.size()-1.0f) * widget_height;
+        scroll_offset = std::clamp(scroll_offset + delta, -offset_max, 0.0f);
     }
 }
 
