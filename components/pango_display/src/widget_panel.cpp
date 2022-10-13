@@ -353,6 +353,7 @@ void WidgetPanel::process_var_event(const pangolin::VarState::Event& event)
                                            });
         } else if (!strcmp(var->TypeId(), typeid(double).name()) ||
                    !strcmp(var->TypeId(), typeid(float).name()) ||
+                   !strcmp(var->TypeId(), typeid(size_t).name()) ||
                    !strcmp(var->TypeId(), typeid(int8_t).name()) ||
                    !strcmp(var->TypeId(), typeid(uint8_t).name()) ||
                    !strcmp(var->TypeId(), typeid(int16_t).name()) ||
