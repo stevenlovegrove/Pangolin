@@ -15,6 +15,18 @@ float sdf_rounded_rect(vec2 p, vec2 center, vec2 half_size, float rad) {
     return sdf_rect(p,center,half_size-vec2(rad)) - rad;
 }
 
+float sdf_rect_extent(vec2 p, vec2 corner1, vec2 corner2) {
+    vec2 center = (corner1 + corner2) / 2.0;
+    vec2 half_size = abs(corner2 - corner1) / 2.0;
+    return sdf_rect(p, center, half_size );
+}
+
+float sdf_rounded_rect_extent(vec2 p, vec2 corner1, vec2 corner2, float rad) {
+    vec2 center = (corner1 + corner2) / 2.0;
+    vec2 half_size = abs(corner2 - corner1) / 2.0;
+    return sdf_rect(p,center,half_size-vec2(rad)) - rad;
+}
+
 float sdf_line_segment(vec2 p, vec2 a, vec2 b) {
     vec2 ba = b - a;
     vec2 pa = p - a;
