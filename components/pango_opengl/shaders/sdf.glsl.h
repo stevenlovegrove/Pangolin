@@ -34,6 +34,26 @@ float sdf_line_segment(vec2 p, vec2 a, vec2 b) {
     return length(pa - h * ba);
 }
 
+float sdf_grid(vec2 p, vec2 spacing)
+{
+  vec2 half_space = spacing / 2.0;
+  vec2 dist2 = mod(p + half_space, spacing) - half_space;
+  return length(dist2);
+}
+
+float sdf_grid(vec2 p_in, vec2 spacing, vec2 origin, ivec2 grid_size)
+{
+  vec2 p = p_in - origin;
+  vec2 half_space = spacing / 2.0;
+  vec2 dist2 = mod(p + half_space, spacing) - half_space;
+  ivec2 n = ivec2( (p / spacing) - 0.5);
+  if( all(lessThanEqual(ivec2(0,0),n)) && all(lessThan(n,grid_size)) ) {
+    return length(dist2);
+  }else{
+    return 0.0/0.0;
+  }
+}
+
 float opacity(float sdf)
 {
     return clamp(-sdf + 0.5, 0.0, 1.0);
