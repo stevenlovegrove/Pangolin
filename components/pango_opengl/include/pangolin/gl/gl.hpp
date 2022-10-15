@@ -965,35 +965,85 @@ inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
 ////////////////////////////////////////////////////////////////////////////
 
 inline GlVertexArrayObject::GlVertexArrayObject()
+    : vao(0)
 {
-    glGenVertexArrays(1, &vao);
+    if(glGenVertexArrays)
+        glGenVertexArrays(1, &vao);
 }
 
 inline GlVertexArrayObject::~GlVertexArrayObject()
 {
-    glDeleteVertexArrays(1, &vao);
+    if(vao) glDeleteVertexArrays(1, &vao);
 }
 
 inline void GlVertexArrayObject::Bind() const
 {
-    glBindVertexArray(vao);
-
+    if(vao) {
+        glBindVertexArray(vao);
+    }else{
+        for(const auto& attr : attribs) {
+            EnableAttrib(attr);
+        }
+    }
 }
 
 inline void GlVertexArrayObject::Unbind() const
 {
-    glBindVertexArray(0);
+    if(vao) {
+        glBindVertexArray(0);
+    }else{
+        for(const auto& attr : attribs) {
+            DisableAttrib(attr);
+        }
+    }
+}
+
+inline bool isGlIntegralDatatype(GLenum datatype) {
+    switch (datatype) {
+    case GL_FLOAT:  [[fallthrough]];
+    case GL_DOUBLE: [[fallthrough]];
+    case GL_HALF_FLOAT:
+        return false;
+    default:
+        return true;
+    }
 }
 
 inline void GlVertexArrayObject::AddVertexAttrib(GLuint attrib_location, const GlBuffer& bo, size_t offset_bytes, size_t stride_bytes, GLboolean normalized)
 {
-    Bind();
-    bo.Bind();
-    CheckGlDieOnError();
-    glVertexAttribPointer(attrib_location, bo.count_per_element, bo.datatype, normalized, stride_bytes, (void*)offset_bytes);
-    CheckGlDieOnError();
-    glEnableVertexAttribArray(attrib_location);
+    if(vao) {
+        Bind();
+        bo.Bind();
+        CheckGlDieOnError();
+        if(isGlIntegralDatatype(bo.datatype)) {
+            glVertexAttribIPointer(attrib_location, bo.count_per_element, bo.datatype, stride_bytes, (void*)offset_bytes );
+        }else{
+            glVertexAttribPointer(attrib_location, bo.count_per_element, bo.datatype, normalized, stride_bytes, (void*)offset_bytes);
+        }
+        CheckGlDieOnError();
+        glEnableVertexAttribArray(attrib_location);
+    }else{
+        attribs.emplace_back(attrib_location, bo, offset_bytes, stride_bytes, normalized);
+    }
+}
 
+inline void GlVertexArrayObject::EnableAttrib(const Attrib& attr) const
+{
+    attr.bo.Bind();
+    if(glVertexAttribIPointer && isGlIntegralDatatype(attr.bo.datatype)) {
+        glVertexAttribIPointer(attr.attrib_location, attr.bo.count_per_element, attr.bo.datatype, attr.stride_bytes, (void*)attr.offset_bytes);
+    }else{
+        // This actually works on macos for integral types. Linux and go will have glVertexAttribIPointer
+        glVertexAttribPointer(attr.attrib_location, attr.bo.count_per_element, attr.bo.datatype, attr.normalized, attr.stride_bytes, (void*)attr.offset_bytes);
+    }
+
+    CheckGlDieOnError();
+    glEnableVertexAttribArray(attr.attrib_location);
+}
+
+inline void GlVertexArrayObject::DisableAttrib(const Attrib& attr) const
+{
+    glDisableVertexAttribArray(attr.attrib_location);
 }
 
 ////////////////////////////////////////////////////////////////////////////
