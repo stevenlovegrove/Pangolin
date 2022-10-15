@@ -197,7 +197,12 @@ void bind_var(pybind11::module& m){
       pybind11::arg("high") = 1.0, 
       pybind11::arg("logscale") = false, 
       pybind11::arg("toggle") = false,
-      pybind11::arg("read_only") = false);
+      pybind11::arg("read_only") = false)
+      .def_readwrite("low", &PyVarMeta::low)
+      .def_readwrite("high", &PyVarMeta::high)
+      .def_readwrite("logscale", &PyVarMeta::logscale)
+      .def_readwrite("toggle", &PyVarMeta::toggle)
+      .def_readwrite("read_only", &PyVarMeta::read_only);
 
   pybind11::class_<py_pangolin::var_t> varClass(m, "Var");
     varClass.def(pybind11::init<const std::string &>())

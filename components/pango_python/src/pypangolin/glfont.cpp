@@ -40,7 +40,7 @@ namespace py_pangolin {
       .def("Text", (pangolin::GlText (pangolin::GlFont::*)(const std::string&))&pangolin::GlFont::Text)
       .def("Height", &pangolin::GlFont::Height)
       .def("MaxWidth", &pangolin::GlFont::MaxWidth)
-      .def_static("DefaultFont", &pangolin::default_font);
+      .def_static("DefaultFont", &pangolin::default_font, pybind11::return_value_policy::reference);
   }
 
 
