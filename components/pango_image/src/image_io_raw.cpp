@@ -63,19 +63,19 @@ TypedImage ToNonPlanar(const TypedImage& planar, size_t planes)
 {
     if(planes == 3) {
         if(planar.fmt.format == "GRAY8") {
-            return ToNonPlanarT<uint8_t,Eigen::Vector<uint8_t,3>>(planar, PixelFormatFromString("RGB24"));
+            return ToNonPlanarT<uint8_t,Eigen::Matrix<uint8_t,3,1>>(planar, PixelFormatFromString("RGB24"));
         }else if(planar.fmt.format == "GRAY16LE") {
-            return ToNonPlanarT<uint8_t,Eigen::Vector<uint16_t,3>>(planar, PixelFormatFromString("RGB48"));
+            return ToNonPlanarT<uint8_t,Eigen::Matrix<uint16_t,3,1>>(planar, PixelFormatFromString("RGB48"));
         }else if(planar.fmt.format == "GRAY32F") {
-            return ToNonPlanarT<uint8_t,Eigen::Vector<float,3>>(planar, PixelFormatFromString("RGB96F"));
+            return ToNonPlanarT<uint8_t,Eigen::Matrix<float,3,1>>(planar, PixelFormatFromString("RGB96F"));
         }
     }else if(planes == 4) {
         if(planar.fmt.format == "GRAY8") {
-            return ToNonPlanarT<uint8_t,Eigen::Vector<uint8_t,4>>(planar, PixelFormatFromString("RGBA32"));
+            return ToNonPlanarT<uint8_t,Eigen::Matrix<uint8_t,4,1>>(planar, PixelFormatFromString("RGBA32"));
         }else if(planar.fmt.format == "GRAY16LE") {
-            return ToNonPlanarT<uint8_t,Eigen::Vector<uint16_t,4>>(planar, PixelFormatFromString("RGBA64"));
+            return ToNonPlanarT<uint8_t,Eigen::Matrix<uint16_t,4,1>>(planar, PixelFormatFromString("RGBA64"));
         }else if(planar.fmt.format == "GRAY32F") {
-            return ToNonPlanarT<uint8_t,Eigen::Vector<float,4>>(planar, PixelFormatFromString("RGBA128F"));
+            return ToNonPlanarT<uint8_t,Eigen::Matrix<float,4,1>>(planar, PixelFormatFromString("RGBA128F"));
         }
     }
 
