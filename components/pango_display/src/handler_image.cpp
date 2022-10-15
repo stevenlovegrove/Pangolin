@@ -198,7 +198,7 @@ void ImageViewHandler::glRenderOverlay()
         float xpix, ypix;
         ImageToScreen(v, selxy.x.max, selxy.y.max, xpix, ypix);
 
-        auto& font = pangolin::default_font();
+        auto& font = *pangolin::default_font().get();
 
         font.Text(
             "%.2f x %.2f",
@@ -213,7 +213,7 @@ void ImageViewHandler::glRenderOverlay()
     }
 
     if (!title.empty()) {
-        auto& font = pangolin::default_font();
+        auto& font = *pangolin::default_font().get();
         font.Text(title).DrawWindow(v.l + 8, v.t() - 4 - font.Height());
     }
 

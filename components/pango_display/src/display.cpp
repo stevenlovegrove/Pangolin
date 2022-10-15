@@ -47,10 +47,9 @@
 #include <pangolin/utils/type_convert.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/var/var.h>
+#include <pangolin/display/default_font.h>
 
 #include "pangolin_gl.h"
-
-extern const unsigned char AnonymousPro_ttf[];
 
 namespace pangolin
 {
@@ -148,7 +147,7 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
         const std::string font_filename = PathExpand(default_font);
         context->font = std::make_shared<GlFont>(font_filename, default_font_size);
     }else{
-        context->font = std::make_shared<GlFont>(AnonymousPro_ttf, default_font_size);
+        context->font = build_builtin_font(default_font_size);
     }
 
     context->MakeCurrent();
