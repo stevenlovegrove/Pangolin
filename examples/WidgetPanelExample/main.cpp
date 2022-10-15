@@ -15,7 +15,8 @@ void MainWidgets()
 {
     using namespace pangolin;
 
-    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 640, 480, {{PARAM_GL_PROFILE, "3.2 CORE"}});
+    // pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 640, 480, {{PARAM_GL_PROFILE, "3.2 CORE"}});
+    pangolin::CreateWindowAndBind("Pango GL Triangle With VBO and Shader", 640, 480);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

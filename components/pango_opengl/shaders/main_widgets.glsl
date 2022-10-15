@@ -1,5 +1,5 @@
 @start vertex
-#version 150 core
+// #version 150 core
 
 in vec4 a_position;
 out vec4 pos;
@@ -9,7 +9,7 @@ void main() {
 }
 
 @start geometry
-#version 150 core
+// #version 150 core
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
@@ -21,11 +21,11 @@ uniform int u_selected_index;
 in vec4 pos[];
 out vec2 v_pos;
 out vec2 v_win;
-flat out float divisions;
-flat out float val;
-flat out int  selected_index;
-flat out int  widget_index;
-flat out uint  widget_type;
+out float divisions;
+out float val;
+out int  selected_index;
+out int  widget_index;
+out int  widget_type;
 
 
 void output_widget()
@@ -42,7 +42,7 @@ void output_widget()
         vec2(0.0,u_height), vec2(u_width,u_height)
     );
 
-    for(uint i=0u; i < 4u;  ++i) {
+    for(int i=0u; i < 4;  ++i) {
         v_win = vec2(0.0, u_height*pos[0].y) + corners[i];
         v_pos = corners[i];
         gl_Position = u_T_cm * vec4(v_win, 0.0, 1.0);
@@ -57,19 +57,19 @@ void main() {
 }
 
 @start fragment
-#version 150 core
+// #version 150 core
 #include "utils.glsl.h"
-#include "colormaps.glsl.h"
+// #include "colormaps.glsl.h"
 #include "sdf.glsl.h"
 
-in vec2 v_pos;
-in vec2 v_win;
-flat in float  divisions;
-flat in float val;
-flat in uint  widget_type;
-flat in int  selected_index;
-flat in int  widget_index;
-out vec4 FragColor;
+varying vec2 v_pos;
+varying vec2 v_win;
+varying float  divisions;
+varying float val;
+varying int  widget_type;
+varying int  selected_index;
+varying int  widget_index;
+// out vec4 FragColor;
 
 // Dimensions
 uniform float u_width;
@@ -123,10 +123,10 @@ vec4 widget()
     // 4: slider
     // 5: seperator
 
-    bool is_textbox   = widget_type==1u;
-    bool is_button    = widget_type==2u || widget_type==3u;
-    bool is_slider    = widget_type==4u;
-    bool is_seperator = widget_type==5u;
+    bool is_textbox   = widget_type==1;
+    bool is_button    = widget_type==2 || widget_type==3;
+    bool is_slider    = widget_type==4;
+    bool is_seperator = widget_type==5;
 
     bool is_toggled  = val > 0.5;
     bool is_active_widget = selected_index == widget_index;
@@ -205,5 +205,5 @@ vec4 widget()
 }
 
 void main() {
-    FragColor = widget();
+    gl_FragColor = widget();
 }

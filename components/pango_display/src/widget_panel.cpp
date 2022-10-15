@@ -183,12 +183,7 @@ void WidgetPanel::UpdateCharsVBO()
     vbo_chars_pos = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo_pos );
     vbo_chars_index = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo_index );
     vao_chars.AddVertexAttrib(pangolin::DEFAULT_LOCATION_POSITION, vbo_chars_pos);
-
-    // TODO: implement vao_chars.AddVertexAttrib(...) for integer types
-    vao_chars.Bind();
-    vbo_chars_index.Bind();
-    glVertexAttribIPointer(GLSL_LOCATION_CHAR_INDEX, 1, GL_UNSIGNED_SHORT, 0, nullptr );
-    glEnableVertexAttribArray(GLSL_LOCATION_CHAR_INDEX);
+    vao_chars.AddVertexAttrib(GLSL_LOCATION_CHAR_INDEX, vbo_chars_index);
 
     vbo_chars_index.Unbind();
     vao_chars.Unbind();
