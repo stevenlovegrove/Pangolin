@@ -35,6 +35,7 @@
 #  endif
 #  include <Windows.h>
 #  include <Shlobj.h>
+#  include <Pathcch.h>
 #  ifdef UNICODE
 #    include <codecvt>
 #  endif
@@ -569,7 +570,7 @@ std::string GetExecutableDir() {
     std::string executablePath = GetExecutablePath();
     char* exePath = new char[executablePath.length()];
     strcpy(exePath, executablePath.c_str());
-    PathRemoveFileSpecA(exePath);
+    PathCchRemoveFileSpec(exePath, executablePath.length());
     std::string directory = std::string(exePath);
     delete[] exePath;
     return directory;
