@@ -23,6 +23,8 @@ if(BUILD_PANGOLIN_PYTHON AND Python_FOUND AND pybind11_FOUND)
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/display.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/gl.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/gl_draw.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/gltext.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/glfont.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/glsl.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/glvbo.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/handler.cpp
