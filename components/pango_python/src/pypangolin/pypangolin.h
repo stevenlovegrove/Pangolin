@@ -38,6 +38,8 @@
 #include "gl.hpp"
 #include "glsl.hpp"
 #include "gl_draw.hpp"
+#include "gltext.hpp"
+#include "glfont.hpp"
 #include "glvbo.hpp"
 #include "handler.hpp"
 #include "image.hpp"
@@ -76,6 +78,8 @@ inline void PopulateModule(pybind11::module& m)
     py_pangolin::bind_glsl(m);
     py_pangolin::bind_gl_draw(m);
     py_pangolin::bind_glvbo(m);
+    py_pangolin::bind_glfont(m);
+    py_pangolin::bind_gltext(m);
     py_pangolin::bind_widget(m);
     py_pangolin::bind_pixel_format(m);
     py_pangolin::bind_image<unsigned char>(m, "Image");
