@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
-#include <pangolin/context/shared.h>
+#include <pangolin/utils/shared.h>
 
 using namespace farm_ng;
 using namespace pangolin;
@@ -70,6 +70,18 @@ TEST_CASE("Conversions")
 
     Shared<Base> x1 = Shared<Base>::make();
     Shared<Base> x2 = Shared<Derived>::make();
+    Shared<Base> x3 = x1;
+    Shared<Base> x4 = std::unique_ptr<Base>(new Base());
+    Shared<Base> x5 = std::shared_ptr<Base>(new Base());
+    Shared<Base> x6 = std::unique_ptr<Derived>(new Derived());
+    Shared<Base> x7 = std::shared_ptr<Derived>(new Derived());
+
+    CHECK_THROWS( [](){
+        Shared<Base> x = std::unique_ptr<Derived>(nullptr);
+    }());
+    CHECK_THROWS( [](){
+        Shared<Base> x = std::shared_ptr<Derived>(nullptr);
+    }());
 
     
 

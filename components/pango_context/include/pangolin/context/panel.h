@@ -1,7 +1,6 @@
 #pragma once
 
-#include "common.h"
-#include "context.h"
+#include <pangolin/utils/shared.h>
 
 namespace pangolin
 {

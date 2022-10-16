@@ -5,9 +5,7 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/context.cpp
 )
 
-find_package(Sophus REQUIRED)
-
-target_link_libraries(${COMPONENT} PUBLIC pango_core pango_display pango_opengl pango_windowing pango_vars Sophus::sophus )
+target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl pango_windowing pango_vars )
 
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>

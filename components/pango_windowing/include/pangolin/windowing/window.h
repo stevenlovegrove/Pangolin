@@ -35,7 +35,9 @@
 #include <pangolin/utils/signal_slot.h>
 #include <pangolin/utils/true_false_toggle.h>
 #include <pangolin/utils/uri.h>
+#include <pangolin/utils/shared.h>
 #include <pangolin/windowing/handler_bitsets.h>
+
 
 namespace pangolin
 {
@@ -128,10 +130,13 @@ public:
     sigslot::signal<MouseMotionEvent> MouseMotionSignal;
     sigslot::signal<MouseMotionEvent> PassiveMouseMotionSignal;
     sigslot::signal<SpecialInputEvent> SpecialInputSignal;
-};
+    
+    struct Params
+    {
+        Uri uri;
+    };
 
-//! Open Window Interface from Uri specification
-PANGOLIN_EXPORT
-std::unique_ptr<WindowInterface> ConstructWindow(const Uri& uri);
+    Shared<WindowInterface> Create(const Params& params);
+};
 
 }

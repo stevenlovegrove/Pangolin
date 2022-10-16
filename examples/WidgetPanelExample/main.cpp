@@ -1,7 +1,8 @@
 #include <pangolin/context/panel_group.h>
 #include <pangolin/context/widget.h>
+#include <pangolin/context/context.h>
+#include <pangolin/windowing/window.h>
 #include <pangolin/var/var.h>
-
 
 using namespace pangolin;
 
@@ -16,11 +17,11 @@ void NewApi()
     } );
 
     auto widget_panel = +WidgetPanel::Create({});
-    // widget_panel += {
-    //     Seperator::Create({"Section One"}).value(),
-    //     Slider::Create({"Slider", .min=0.0, .max=100.0}).value(),
-    //     // VarListener("ui.")
-    // };
+    widget_panel += {
+        Seperator::Create({"Section One"}).value(),
+        Slider::Create({"Slider", .min=0.0, .max=100.0}).value(),
+        // VarListener("ui.")
+    };
 
     auto view_image = +MultiPanel::Create({});
     auto view_3d = +MultiPanel::Create({});

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common.h"
 #include "panel.h"
+#include "window.h"
 
 namespace pangolin
 {

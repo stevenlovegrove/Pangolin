@@ -3,6 +3,10 @@
 #include <memory>
 #include <farm_ng/core/logging/expected.h>
 
+#define FARM_ERROR_ONLY(cstr, ...) \
+      ::farm_ng::Error{.details = {FARM_ERROR_DETAIL(cstr, ##__VA_ARGS__)}}
+
+
 namespace pangolin
 {
 
@@ -12,6 +16,7 @@ template<class T>
 class Shared{
 public:
     using ExpectedT = farm_ng::Expected<Shared<T>>;
+    using BadExpectedAccess = tl::bad_expected_access<farm_ng::Error>;
 
     /// Construct from a possibly null shared_ptr
     /// The return value is an object containing either a non-null Shared object pointer,
@@ -20,7 +25,10 @@ public:
         if (!maybe_null){
             return FARM_ERROR("is null");
         }
-        return Shared<T>(std::move(maybe_null)); 
+        // For some reason, Expected seems to have trouble accepting an r-value
+        // Shared<T> with its deleted copy constructor.
+        Shared<T> temp(maybe_null);
+        return temp; 
     }
 
     /// Construct and also makes interior object T
@@ -74,14 +82,42 @@ public:
     Shared(const Shared<Derived>& other)
         : non_null_shared_( other.sharedPtr() )
     {
+        checkMaybeThrow();
     }
 
-private:
-    /// Private unchecked constructor. 
-    /// pre-condition: `p` is non-null
-    Shared(std::shared_ptr<T> const& p)
-        : non_null_shared_(p)
+    // Construct from shared_ptr
+    template<std::derived_from<T> Derived> 
+    Shared(const std::shared_ptr<Derived>& panic_if_null)
+        : non_null_shared_(panic_if_null)
     {
+        checkMaybeThrow();
+    }
+
+    // Take ownership from unique_ptr
+    template<std::derived_from<T> Derived> 
+    Shared(std::unique_ptr<Derived>&& panic_if_null)
+        : non_null_shared_(std::move(panic_if_null))
+    {
+        checkMaybeThrow();
+    }
+
+    // Not sure why this is needed when the generic one
+    // is defined above
+    Shared(const std::shared_ptr<T>& panic_if_null)
+        : non_null_shared_(panic_if_null)
+    {
+        checkMaybeThrow();
+    }
+
+    Shared(const Shared<T>&) = default;
+    Shared(Shared<T>&&) = delete;
+    Shared<T>& operator=(Shared<T>&&) = delete;
+private:
+    void checkMaybeThrow() const
+    {
+        if(!non_null_shared_) {
+            throw BadExpectedAccess(FARM_ERROR_ONLY());
+        }
     }
 
   // Class invariant:non_null_shared_ is guaranteed not to be null. 
