@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pangolin/utils/shared.h>
+#include <Eigen/Geometry>
 
 namespace pangolin
 {
@@ -9,13 +10,21 @@ namespace pangolin
 struct Widget;
 struct PanelGroup;
 
+
 ////////////////////////////////////////////////////////////////////
 /// Represents a client area in a window with layout handling
 ///
 struct Panel : std::enable_shared_from_this<Panel>
 {
+    struct Absolute {int pixels = 100;};
+    struct Parts {double ratio = 1.0; };
+    
+    using Dim = std::variant<Parts,Absolute>;
+    using Size = Eigen::Vector<Dim,2>;
+
     struct Params {
         std::string title = "";
+        Size size_hint = {Parts{1}, Parts{1}};
     };
 
     static ExpectShared<Panel> Create(Params p);
@@ -27,7 +36,7 @@ struct Panel : std::enable_shared_from_this<Panel>
 struct MultiPanel : public Panel
 {
     struct Params {
-        std::string title = "";
+        Panel::Params panel = {};
     };
 
     static ExpectShared<MultiPanel> Create(Params p);
@@ -39,7 +48,7 @@ struct MultiPanel : public Panel
 struct WidgetPanel : public Panel
 {
     struct Params {
-        std::string title = "";
+        Panel::Params panel = {};
         std::string var_subscription;
     };
 

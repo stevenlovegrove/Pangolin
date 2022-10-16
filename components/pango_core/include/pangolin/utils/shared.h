@@ -6,7 +6,6 @@
 #define FARM_ERROR_ONLY(cstr, ...) \
       ::farm_ng::Error{.details = {FARM_ERROR_DETAIL(cstr, ##__VA_ARGS__)}}
 
-
 namespace pangolin
 {
 
@@ -109,9 +108,23 @@ public:
         checkMaybeThrow();
     }
 
+    Shared(Shared<T>&& o) 
+        : non_null_shared_(o.non_null_shared_)
+    {
+        // We mustn't move the internal shared_ptr
+        // because that would break the invariant.
+    }
+    
+    Shared<T>& operator=(Shared<T>&& o) {
+        // We maintain the invariant since
+        // o.non_null_shared_ must also be valid
+        non_null_shared_ = o.non_null_shared_;
+        return *this;
+    }
+
     Shared(const Shared<T>&) = default;
-    Shared(Shared<T>&&) = delete;
-    Shared<T>& operator=(Shared<T>&&) = delete;
+    Shared<T>& operator=(const Shared<T>&) = default;
+
 private:
     void checkMaybeThrow() const
     {
@@ -145,7 +158,7 @@ Shared<T>& operator+(ExpectShared<T>& x)
 /// Unlike Expected::operator*() which will allow for UB,
 /// + will Panic if x is in the error state.
 template<class T>
-const Shared<T>& operator+(const ExpectShared<T>& x)
+const Shared<T>& operator!(const ExpectShared<T>& x)
 {
     return x.value();
 }

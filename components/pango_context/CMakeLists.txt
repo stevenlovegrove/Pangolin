@@ -2,7 +2,8 @@ get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 target_sources( ${COMPONENT}
 PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/src/context.cpp
+${CMAKE_CURRENT_LIST_DIR}/src/context.cpp
+${CMAKE_CURRENT_LIST_DIR}/src/widgets.cpp
 )
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl pango_windowing pango_vars )

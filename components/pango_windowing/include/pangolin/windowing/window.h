@@ -91,7 +91,7 @@ public:
     virtual ~GlContextInterface() {}
 };
 
-class PANGOLIN_EXPORT WindowInterface
+class PANGOLIN_EXPORT WindowInterface : std::enable_shared_from_this<WindowInterface>
 {
 public:
     virtual ~WindowInterface() {}
@@ -136,7 +136,7 @@ public:
         Uri uri;
     };
 
-    Shared<WindowInterface> Create(const Params& params);
+    static Shared<WindowInterface> Create(const Params& params);
 };
 
 }

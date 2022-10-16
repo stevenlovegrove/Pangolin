@@ -37,7 +37,7 @@ TEST_CASE("Simple checks")
 
     {
         // + is a checked dereference. Will throw.
-        auto value = +tryMakeShared<int>(4);  
+        auto value = !tryMakeShared<int>(4);  
         int t = *value + 17;
         CHECK(t == 21);
     }
@@ -59,7 +59,7 @@ TEST_CASE("Rethrow")
     }
 
     REQUIRE_THROWS( [](){
-        auto t = +makeSomething(73, false);
+        auto t = !makeSomething(73, false);
     }() );
 }
 

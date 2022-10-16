@@ -1,11 +1,14 @@
 #pragma once
 
-#include "window.h"
+#include <array>
 #include <pangolin/utils/shared.h>
+#include <pangolin/context/engine.h>
 
 namespace pangolin
 {
 
+struct WindowInterface;
+struct PanelGroup;
 
 ////////////////////////////////////////////////////////////////////
 /// Represents the pangolin context for one Window or Window-like
@@ -17,20 +20,20 @@ namespace pangolin
 ///
 struct Context : std::enable_shared_from_this<Context>
 {
-    enum class Profile {
-        gl_3_2_core,
-        // vulkan ...
-    };
+    using Window = WindowInterface;
 
     struct Params {
         std::string title = "Pangolin App";
-        Window::Size window_size = {1024, 768};
-        Profile profile = Profile::gl_3_2_core;
+        std::array<int,2> window_size = {1024, 768};
+        std::string window_engine = Engine::singleton()->defaults.window_engine;
+        Engine::Profile profile = Engine::singleton()->defaults.profile;
     };
 
     virtual Shared<Window> window() = 0;
+    
+    virtual void loop(std::function<bool(void)> loop_function) = 0;
 
-    virtual bool loop(std::function<bool(void)> loop_function) = 0;
+    virtual void setLayout(const Shared<PanelGroup>& layout) = 0;
 
     static ExpectShared<Context> Create(Params p);
 };
