@@ -28,11 +28,11 @@ struct Context : std::enable_shared_from_this<Context>
         Profile profile = Profile::gl_3_2_core;
     };
 
-    virtual std::shared_ptr<Window> window() = 0;
+    virtual Shared<Window> window() = 0;
 
     virtual bool loop(std::function<bool(void)> loop_function) = 0;
 
-    static std::shared_ptr<Context> Create(Params p);
+    static ExpectShared<Context> Create(Params p);
 };
 
 }

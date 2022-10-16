@@ -1,8 +1,9 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
-#include <pangolin/experimental/shared.h>
+#include <pangolin/context/shared.h>
 
 using namespace farm_ng;
+using namespace pangolin;
 
 struct ErrorTag {};
 
@@ -60,4 +61,16 @@ TEST_CASE("Rethrow")
     REQUIRE_THROWS( [](){
         auto t = +makeSomething(73, false);
     }() );
+}
+
+TEST_CASE("Conversions")
+{
+    struct Base {};
+    struct Derived : public Base{};
+
+    Shared<Base> x1 = Shared<Base>::make();
+    Shared<Base> x2 = Shared<Derived>::make();
+
+    
+
 }

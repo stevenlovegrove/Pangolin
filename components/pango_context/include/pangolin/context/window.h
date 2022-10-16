@@ -3,9 +3,6 @@
 namespace pangolin
 {
 
-// Forward declarations
-struct Panel;
-
 struct Window : std::enable_shared_from_this<Window>
 {
     using Size = Eigen::Vector2i;

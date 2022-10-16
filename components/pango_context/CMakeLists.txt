@@ -2,7 +2,7 @@ get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 target_sources( ${COMPONENT}
 PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/src/pangolin2.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/context.cpp
 )
 
 find_package(Sophus REQUIRED)

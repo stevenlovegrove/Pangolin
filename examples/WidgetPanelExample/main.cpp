@@ -1,5 +1,5 @@
-#include <pangolin/experimental/panel_group.h>
-#include <pangolin/experimental/widget.h>
+#include <pangolin/context/panel_group.h>
+#include <pangolin/context/widget.h>
 #include <pangolin/var/var.h>
 
 
@@ -9,26 +9,26 @@ void NewApi()
 {
     using namespace pangolin;
 
-    auto context = Context::Create({
+    auto context = +Context::Create({
         .title="Window Title",
         .window_size = {640, 480},
         .profile = Context::Profile::gl_3_2_core
     } );
 
-    auto widget_panel = WidgetPanel::Create({});
-    widget_panel += {
-        Seperator::Create({"Section One"}),
-        Slider::Create({"Slider", .min=0.0, .max=100.0}),
-        // VarListener("ui.")
-    };
+    auto widget_panel = +WidgetPanel::Create({});
+    // widget_panel += {
+    //     Seperator::Create({"Section One"}).value(),
+    //     Slider::Create({"Slider", .min=0.0, .max=100.0}).value(),
+    //     // VarListener("ui.")
+    // };
 
-    auto view_image = MultiPanel::Create({});
-    auto view_3d = MultiPanel::Create({});
-    auto view_image_2 = MultiPanel::Create({});
-    auto view_3d_2 = MultiPanel::Create({});
+    auto view_image = +MultiPanel::Create({});
+    auto view_3d = +MultiPanel::Create({});
+    auto view_image_2 = +MultiPanel::Create({});
+    auto view_3d_2 = +MultiPanel::Create({});
 
-    auto layer_2d_points = MultiPanel::Create({});
-    auto camera_view_1 =  MultiPanel::Create({});
+    auto layer_2d_points = +MultiPanel::Create({});
+    auto camera_view_1 = +MultiPanel::Create({});
 
     // auto projection_3d_cam1;
     // auto projection_image_cam1;

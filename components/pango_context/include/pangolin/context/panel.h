@@ -19,7 +19,7 @@ struct Panel : std::enable_shared_from_this<Panel>
         std::string title = "";
     };
 
-    static std::shared_ptr<Panel> Create(Params p);
+    static ExpectShared<Panel> Create(Params p);
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -31,7 +31,7 @@ struct MultiPanel : public Panel
         std::string title = "";
     };
 
-    static std::shared_ptr<MultiPanel> Create(Params p);
+    static ExpectShared<MultiPanel> Create(Params p);
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -44,9 +44,9 @@ struct WidgetPanel : public Panel
         std::string var_subscription;
     };
 
-    static std::shared_ptr<WidgetPanel> Create(Params p);
+    static ExpectShared<WidgetPanel> Create(Params p);
 
-    virtual WidgetPanel& add(shared_vector<Widget> widgets) = 0;
+    virtual void add(SharedVector<Widget> widgets) = 0;
 };
 
 }

@@ -19,7 +19,7 @@ struct Seperator : public Widget
         std::string label = "";
     };
 
-    static std::shared_ptr<Seperator> Create(Params p);
+    static ExpectShared<Seperator> Create(Params p);
 };
 
 struct Slider : public Widget
@@ -30,11 +30,11 @@ struct Slider : public Widget
         double max=1.0;
     };
 
-    static std::shared_ptr<Slider> Create(Params p);
+    static ExpectShared<Slider> Create(Params p);
 };
 
-template<Derived<WidgetPanel> T>
-void operator+=(const std::shared_ptr<T>& g1, const shared_vector<Widget>& g2)
+template<std::derived_from<WidgetPanel> T>
+void operator+=(const Shared<T>& g1, const SharedVector<Widget>& g2)
 {
 }
 
