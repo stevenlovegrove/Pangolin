@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 #include <Eigen/Core>
+#include <pangolin/experimental/shared.h>
 
 namespace pangolin
 {

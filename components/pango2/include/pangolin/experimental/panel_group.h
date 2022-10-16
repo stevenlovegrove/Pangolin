@@ -59,7 +59,8 @@ void operator<(const std::shared_ptr<Window>& w, const std::shared_ptr<PanelGrou
 
 PANGO_PANEL_OPERATOR(operator PANGO_COMMA, tabbed)
 PANGO_PANEL_OPERATOR(operator|, tabbed)
-PANGO_PANEL_OPERATOR(operator/, tabbed)
+PANGO_PANEL_OPERATOR(operator/, vertical)
+PANGO_PANEL_OPERATOR(operator^, stacked)
 #undef PANGO_PANEL_OPERATOR
 #undef PANGO_COMMA
 

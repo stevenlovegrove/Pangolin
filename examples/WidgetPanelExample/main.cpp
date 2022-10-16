@@ -2,6 +2,7 @@
 #include <pangolin/experimental/widget.h>
 #include <pangolin/var/var.h>
 
+
 using namespace pangolin;
 
 void NewApi()
@@ -25,8 +26,15 @@ void NewApi()
     auto view_3d = MultiPanel::Create({});
     auto view_image_2 = MultiPanel::Create({});
     auto view_3d_2 = MultiPanel::Create({});
+
+    auto layer_2d_points = MultiPanel::Create({});
+    auto camera_view_1 =  MultiPanel::Create({});
+
+    // auto projection_3d_cam1;
+    // auto projection_image_cam1;
+    // auto composite = projection_3d_cam1 ^ layer_2d_points ^ camera_view_1;
         
-    context->window() <  (widget_panel | ( (view_image |   view_3d) /
+    context->window() <  (widget_panel | ( ((view_image, view_3d_2) |   view_3d) /
                                            (view_image_2 | view_3d_2) ));
 
     // Var<double> v1("ui.v1");

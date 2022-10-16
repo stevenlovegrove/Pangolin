@@ -16,3 +16,9 @@ target_include_directories(${COMPONENT} PUBLIC
 install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
   DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
+
+if(BUILD_TESTS)
+    add_executable(test_shared ${CMAKE_CURRENT_LIST_DIR}/tests/test_shared.cpp)
+    target_link_libraries(test_shared PRIVATE Catch2::Catch2 ${COMPONENT})
+    catch_discover_tests(test_shared)
+endif()
