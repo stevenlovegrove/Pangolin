@@ -40,7 +40,7 @@ while (( "$#" )); do
       ;;
     -m|--package-manager)
       if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
-        MANAGERS=($2)
+        MANAGER=($2)
         shift 2
       else
         echo "Error: Argument for $1 is missing" >&2
@@ -92,15 +92,18 @@ case "$PARAMS" in
     ;;
 esac
 
-
 # Find an available package manager from the preferred list
-for m in ${MANAGERS[@]}
-do
-    if [ -x "$(command -v $m)" ]; then
-        MANAGER="$m"
-        break
-    fi
-done
+# if one has not already been selected manually.
+if [ -z "$MANAGER" ]
+then
+  for m in ${MANAGERS[@]}
+  do
+      if [ -x "$(command -v $m)" ]; then
+          MANAGER="$m"
+          break
+      fi
+  done
+fi
 
 # If no package manager is found, exit
 if [ -z "$MANAGER" ]
@@ -115,7 +118,7 @@ if [[ "$MANAGER" == "apt" ]]; then
     SUDO="sudo"
     PKGS_UPDATE="apt update"
     PKGS_OPTIONS+=(install --no-install-suggests --no-install-recommends)
-    if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
+    if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); SUDO=""; fi
     PKGS_REQUIRED+=(libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev)
     PKGS_REQUIRED+=(libc++-dev libglew-dev libeigen3-dev cmake g++ ninja-build)
     PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev)
@@ -131,12 +134,13 @@ elif [[ "$MANAGER" == "dnf" ]]; then
     PKGS_ALL+=(libdc1394-22-devel libraw1394-devel librealsense-devel openni-devel)
     if ((DRYRUN > 0));  then
         MANAGER="echo $MANAGER"
+        SUDO=""
     fi
 elif [[ "$MANAGER" == "port" ]]; then
     SUDO="sudo"
     PKGS_UPDATE="port sync -q"
+    if ((DRYRUN > 0));  then PKGS_OPTIONS+=(-y); SUDO=""; fi
     PKGS_OPTIONS+=(-N install -q)
-    if ((DRYRUN > 0));  then PKGS_OPTIONS+=(-y); fi
     PKGS_REQUIRED+=(glew eigen3-devel cmake +gui ninja)
     PKGS_RECOMMENDED+=(jpeg libpng openexr tiff ffmpeg-devel lz4 zstd py37-pybind11 catch2)
     PKGS_ALL+=(libdc1394 openni)
