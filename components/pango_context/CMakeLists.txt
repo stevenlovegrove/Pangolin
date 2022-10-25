@@ -6,12 +6,12 @@ set(component_file_basenames
   eigen_numeric_limits
   eigen_scalar_methods
   handler
-  gl_framebuffer_reader
   look_at
   min_max
   shared
-  widgets
   widget_panel
+  gl_framebuffer_reader
+  gl_render_panel
 )
 
 foreach(basename ${component_file_basenames})

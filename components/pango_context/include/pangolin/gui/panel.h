@@ -1,7 +1,8 @@
 #pragma once
 
 #include <pangolin/utils/shared.h>
-#include <Eigen/Geometry>
+#include <pangolin/maths/min_max.h>
+#include <Eigen/Core>
 
 namespace pangolin
 {
@@ -18,43 +19,20 @@ struct Panel : std::enable_shared_from_this<Panel>
 {
     struct Absolute {int pixels = 100;};
     struct Parts {double ratio = 1.0; };
+    struct RenderParams{
+        MinMax<Eigen::Vector2i> region;
+    };
 
     using Dim = std::variant<Parts,Absolute>;
     using Size = Eigen::Vector<Dim,2>;
+
+    virtual void renderIntoRegion(const RenderParams&) = 0;
 
     struct Params {
         std::string title = "";
         Size size_hint = {Parts{1}, Parts{1}};
     };
-
-    static Shared<Panel> Create(Params p);
-};
-
-////////////////////////////////////////////////////////////////////
-/// Supports displaying interactive 2D / 3D elements
-///
-struct MultiPanel : public Panel
-{
-    struct Params {
-        Panel::Params panel = {};
-    };
-
-    static Shared<MultiPanel> Create(Params p);
-};
-
-////////////////////////////////////////////////////////////////////
-/// Supports displaying a 2D twear-var style interface
-///
-struct WidgetPanel : public Panel
-{
-    struct Params {
-        Panel::Params panel = {};
-        std::string var_subscription;
-    };
-
-    static Shared<WidgetPanel> Create(Params p);
-
-    virtual void add(SharedVector<Widget> widgets) = 0;
+    static Shared<Panel> Create(Params);
 };
 
 }

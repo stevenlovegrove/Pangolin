@@ -1,22 +1,21 @@
-// Copyright (c) farm-ng, inc. All rights reserved.
-
 #pragma once
 
 #include <pangolin/render/framebuffer_reader.h>
 #include <pangolin/handler/handler.h>
 #include <sophus/sensor/camera_model.h>
 
-// TODO: Will be refactored into Pangolin at some point
 namespace pangolin {
 
 class Handler {
  public:
-  // Equivelent to ModelView matrix
+  // Equivelent to OpenGL ModelView matrix
   virtual sophus::Se3F64 const &worldFromCamera() const = 0;
 
-  virtual FramebufferReader const &framebufferReader() const = 0;
-
+  // Equivelent to OpenGL Projection matrix
   virtual sophus::CameraModel const &camera() const = 0;
+
+  // FramebufferReader for querying
+  virtual FramebufferReader const &framebufferReader() const = 0;
 
   struct Params {
     std::shared_ptr<FramebufferReader> framebuffer_reader;

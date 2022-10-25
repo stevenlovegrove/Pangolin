@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <pangolin/context/context.h>
-#include "panel.h"
+#include <pangolin/gui/panel.h>
 
 namespace pangolin
 {

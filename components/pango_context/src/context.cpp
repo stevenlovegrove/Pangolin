@@ -74,6 +74,20 @@ struct ContextImpl : public Context {
         layout_ = layout;
     }
 
+    void setLayout(const Shared<Panel>& panel) override
+    {
+        auto group = Shared<PanelGroup>::make();
+        group->vec = {panel};
+        setLayout(group);
+    }
+
+    Shared<PanelGroup> getLayout() const override
+    {
+        return layout_;
+    }
+
+
+
     struct TSum {
         int pixels = 0;
         double parts = 0.0;
