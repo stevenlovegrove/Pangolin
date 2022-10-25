@@ -175,11 +175,9 @@ endif()
 
 set(Pangolin_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-add_subdirectory(examples/WidgetPanelExample)
-
-# if(BUILD_EXAMPLES)
-#     add_subdirectory(examples)
-# endif()
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
 
 # if(BUILD_TOOLS)
 #     add_subdirectory(tools)

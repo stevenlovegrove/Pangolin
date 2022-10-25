@@ -30,12 +30,12 @@ struct Context : std::enable_shared_from_this<Context>
     };
 
     virtual Shared<Window> window() = 0;
-    
+
     virtual void loop(std::function<bool(void)> loop_function) = 0;
 
     virtual void setLayout(const Shared<PanelGroup>& layout) = 0;
 
-    static ExpectShared<Context> Create(Params p);
+    static Shared<Context> Create(Params p);
 };
 
 }

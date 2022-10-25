@@ -29,8 +29,11 @@
 
 #include <iostream>
 #include <sstream>
-
 #include <functional>
+#include <typeinfo>
+#include <type_traits>
+
+#include <pangolin/platform.h>
 #include <pangolin/compat/type_traits.h>
 
 namespace pangolin
@@ -81,7 +84,7 @@ struct Convert<bool,std::string> {
         bool target;
         std::istringstream iss(src);
         iss >> target;
-        
+
         if(iss.fail())
         {
             std::istringstream iss2(src);
@@ -89,7 +92,7 @@ struct Convert<bool,std::string> {
             if( iss2.fail())
                 throw BadInputException();
         }
-        
+
         return target;
     }
 };
@@ -104,10 +107,10 @@ struct Convert<T,std::string, typename pangolin::enable_if_c<
         T target;
         std::istringstream iss(src);
         iss >> target;
-        
+
         if(iss.fail())
             throw BadInputException();
-        
+
         return target;
     }
 };

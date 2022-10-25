@@ -1,10 +1,10 @@
-#include <pangolin/utils/variant_overload.h>
-#include <pangolin/context/factory.h>
-#include <pangolin/context/context.h>
-#include <pangolin/context/widget.h>
-#include <pangolin/context/panel_group.h>
-#include <pangolin/windowing/window.h>
 #include <fmt/format.h>
+
+#include <pangolin/context/context.h>
+#include <pangolin/context/factory.h>
+#include <pangolin/windowing/window.h>
+#include <pangolin/gui/panel_group.h>
+#include <pangolin/utils/variant_overload.h>
 
 namespace pangolin
 {
@@ -32,14 +32,14 @@ namespace debug
             case PanelGroup::Grouping::horizontal: fmt::print("|"); break;
             case PanelGroup::Grouping::vertical: fmt::print("/"); break;
             case PanelGroup::Grouping::tabbed: fmt::print(","); break;
-            case PanelGroup::Grouping::stacked: fmt::print("^"); break;        
+            case PanelGroup::Grouping::stacked: fmt::print("^"); break;
             default: break;
             }
             print(v[i]);
         }
         fmt::print(")");
     }
-}    
+}
 
 struct EngineImpl : public Engine
 {
@@ -55,14 +55,14 @@ struct ContextImpl : public Context {
     // TODO: Convert Window to use new factory idiom directly
     ContextImpl(const Context::Params& params)
         : window_(Window::Create({
-            .uri = ParseUri( 
+            .uri = ParseUri(
                 fmt::format("{}:[window_title={},w={},h={}]//",
                  params.window_engine, params.title,
                  params.window_size[0], params.window_size[1])
             )
         })),
         layout_(Shared<PanelGroup>::make())
-    { 
+    {
     }
 
     Shared<Window> window() override {
@@ -78,7 +78,7 @@ struct ContextImpl : public Context {
         int pixels = 0;
         double parts = 0.0;
     };
-    
+
     using TSum2 = Eigen::Vector<TSum,2>;
 
     TSum2 groupSum(const PanelGroup::Element& e)

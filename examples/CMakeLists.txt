@@ -1,16 +1,2 @@
-add_subdirectory(BasicOpenGL)
-
+# add_subdirectory(BasicOpenGL)
 add_subdirectory(HelloPangolin)
-add_subdirectory(HelloPangolinThreads)
-add_subdirectory(SimpleDisplay)
-add_subdirectory(SimpleMultiDisplay)
-add_subdirectory(SimpleDisplayImage)
-add_subdirectory(SimplePlot)
-add_subdirectory(SimpleVideo)
-add_subdirectory(SimpleRecord)
-add_subdirectory(WidgetPanelExample)
-
-if(NOT EMSCRIPTEN)
-    add_subdirectory(HelloPangolinOffscreen)
-    add_subdirectory(SimpleScene)
-endif()

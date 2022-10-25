@@ -27,12 +27,12 @@ public:
         // For some reason, Expected seems to have trouble accepting an r-value
         // Shared<T> with its deleted copy constructor.
         Shared<T> temp(maybe_null);
-        return temp; 
+        return temp;
     }
 
     /// Construct and also makes interior object T
     /// The return value is an object containing either a non-null Shared object pointer,
-    /// for the new object, or an farm_ng::Error object if memory allocation failst or 
+    /// for the new object, or an farm_ng::Error object if memory allocation failst or
     /// the constructor for the object throws
     template<class... Args>
     static ExpectedT tryMake(Args&&... args) noexcept {
@@ -48,14 +48,15 @@ public:
    /// Construct from a possibly null shared_ptr
    /// Panics if shared is null. See `tryFrom()` for alternate.
    static Shared from(std::shared_ptr<T> const& shared) noexcept {
-        return FARM_UNWRAP(tryFrom(shared)); 
+        return FARM_UNWRAP(tryFrom(shared));
     }
 
     /// Construct and also makes interior object T
     /// Panics if the constructor throws. See `tryFrom()` for alternate.
     template<class... Args>
     static Shared<T> make(Args&&... args) noexcept {
-        return FARM_UNWRAP(tryMake(std::forward<Args>(args)...));
+        auto maybe = tryMake(std::forward<Args>(args)...);
+        return FARM_UNWRAP(maybe);
     }
 
     /// Returns the interior object which is guarenteed to be available
@@ -63,7 +64,7 @@ public:
 
     /// Returns the interior object which is guarenteed to be available
     const T& operator*() const { return *non_null_shared_; }
-    
+
     /// Returns the interior object which is guarenteed to be available
     T* operator->() { return non_null_shared_.get(); }
 
@@ -77,7 +78,7 @@ public:
     }
 
     // Copy constructor from derived bases
-    template<std::derived_from<T> Derived> 
+    template<std::derived_from<T> Derived>
     Shared(const Shared<Derived>& other)
         : non_null_shared_( other.sharedPtr() )
     {
@@ -85,7 +86,7 @@ public:
     }
 
     // Construct from shared_ptr
-    template<std::derived_from<T> Derived> 
+    template<std::derived_from<T> Derived>
     Shared(const std::shared_ptr<Derived>& panic_if_null)
         : non_null_shared_(panic_if_null)
     {
@@ -93,7 +94,7 @@ public:
     }
 
     // Take ownership from unique_ptr
-    template<std::derived_from<T> Derived> 
+    template<std::derived_from<T> Derived>
     Shared(std::unique_ptr<Derived>&& panic_if_null)
         : non_null_shared_(std::move(panic_if_null))
     {
@@ -108,13 +109,13 @@ public:
         checkMaybeThrow();
     }
 
-    Shared(Shared<T>&& o) 
+    Shared(Shared<T>&& o)
         : non_null_shared_(o.non_null_shared_)
     {
         // We mustn't move the internal shared_ptr
         // because that would break the invariant.
     }
-    
+
     Shared<T>& operator=(Shared<T>&& o) {
         // We maintain the invariant since
         // o.non_null_shared_ must also be valid
@@ -133,7 +134,7 @@ private:
         }
     }
 
-  // Class invariant:non_null_shared_ is guaranteed not to be null. 
+  // Class invariant:non_null_shared_ is guaranteed not to be null.
   std::shared_ptr<T> non_null_shared_;
 };
 
@@ -158,7 +159,7 @@ Shared<T>& operator+(ExpectShared<T>& x)
 /// Unlike Expected::operator*() which will allow for UB,
 /// + will Panic if x is in the error state.
 template<class T>
-const Shared<T>& operator!(const ExpectShared<T>& x)
+const Shared<T>& operator+(const ExpectShared<T>& x)
 {
     return x.value();
 }

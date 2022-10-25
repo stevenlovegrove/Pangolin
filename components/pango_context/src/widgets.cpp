@@ -1,5 +1,5 @@
-#include <pangolin/context/widget.h>
 #include <pangolin/context/factory.h>
+#include <pangolin/gui/widget.h>
 
 namespace pangolin
 {
@@ -18,7 +18,7 @@ struct SliderImpl : public Slider {
 
 struct WidgetPanelImpl : public WidgetPanel {
     WidgetPanelImpl(const WidgetPanelImpl::Params& p) {}
-    
+
     void add(SharedVector<Widget> widgets) override {
 
     };
