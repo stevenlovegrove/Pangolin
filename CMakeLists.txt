@@ -87,8 +87,8 @@ endif()
 ## Testing setup
 
 option( BUILD_TESTS "Build Tests" OFF)
-find_package(Catch2 2 QUIET)
-if(Catch2_FOUND)
+find_package(Catch2 QUIET)
+if(TARGET Catch2::Catch2)
     include(CTest)
     include(Catch)
 else()
