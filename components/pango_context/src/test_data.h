@@ -2,14 +2,10 @@
 
 #pragma once
 
-#include <Eigen/Core>
+#include <pangolin/testing/eigen.h>
 
 #include <vector>
 
-#define EXPECT_MAT_EQ(A, B)  \
-  EXPECT_LT(                 \
-      (A - B).squaredNorm(), \
-      sophus::kEpsilon<decltype((A - B).squaredNorm())>);
 
 namespace pangolin {
 

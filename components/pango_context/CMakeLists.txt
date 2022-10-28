@@ -21,7 +21,7 @@ foreach(basename ${component_file_basenames})
 
   if(BUILD_TESTS)
       add_executable(${basename}_test ${CMAKE_CURRENT_LIST_DIR}/src/${basename}_test.cpp)
-      target_link_libraries(${basename}_test PRIVATE Catch2::Catch2 ${COMPONENT})
+      target_link_libraries(${basename}_test PRIVATE Catch2::Catch2WithMain ${COMPONENT})
       catch_discover_tests(${basename}_test)
   endif()
 endforeach()

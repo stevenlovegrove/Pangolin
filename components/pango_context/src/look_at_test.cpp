@@ -1,10 +1,9 @@
 // Copyright (c) farm-ng, inc. All rights reserved.
 
-#include "look_at.h"
+#include <pangolin/maths/camera_look_at.h>
+#include <pangolin/testing/eigen.h>
 
 #include "test_data.h"
-
-#include <gtest/gtest.h>
 
 using namespace Eigen;
 using namespace sophus;
@@ -29,12 +28,12 @@ void testForParams(
   // lookat point should be colinear with forward vector in camera frame
   const Eigen::Vector3<T> fwd_conv = conv_R_rdf.row(2);
   const T look_dot_fwd = fwd_conv.dot(lookat_in_cam.normalized());
-  EXPECT_GT(look_dot_fwd, 0.0);
-  EXPECT_LT(T(1.0) - std::abs(look_dot_fwd), sophus::kEpsilon<T>);
+  CHECK(look_dot_fwd > 0.0);
+  CHECK(T(1.0) - std::abs(look_dot_fwd) < sophus::kEpsilon<T>);
 
   // check right vector is orthogonal forward
   const Eigen::Vector3<T> right_conv = conv_R_rdf.row(0);
-  EXPECT_LT(std::abs(fwd_conv.dot(right_conv)), sophus::kEpsilon<T>);
+  CHECK(std::abs(fwd_conv.dot(right_conv)) < sophus::kEpsilon<T>);
 }
 
 void simpleTest() {
@@ -47,7 +46,7 @@ void simpleTest() {
       up_in_world,
       DeviceXyz::right_down_forward);
 
-  EXPECT_MAT_EQ(world_pose_cam.matrix(), Eigen::Matrix4d::Identity());
+  CHECK_EIGEN_APPROX(world_pose_cam.matrix(), Eigen::Matrix4d::Identity());
 }
 
 template <typename T>
@@ -73,7 +72,7 @@ void testForScalar() {
   }
 }
 
-TEST(lookat, forward) {
+TEST_CASE("lookat, forward") {
   simpleTest();
 
   // testForScalar<float>();
