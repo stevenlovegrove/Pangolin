@@ -25,7 +25,7 @@ void newApi()
         .window_size = {640, 480},
     } );
 
-    auto multi = RenderLayer::Create({});
+    auto multi = RenderPanel::Create({});
     context->setLayout(multi);
 
 

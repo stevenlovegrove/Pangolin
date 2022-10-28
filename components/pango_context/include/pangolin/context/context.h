@@ -23,6 +23,8 @@ struct Context : std::enable_shared_from_this<Context>
 {
     using Window = WindowInterface;
 
+    virtual ~Context() {}
+
     // Return the implementation window (onscreen or offscreen)
     // backing this context
     virtual Shared<Window> window() = 0;

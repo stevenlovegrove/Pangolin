@@ -47,16 +47,19 @@ public:
 
    /// Construct from a possibly null shared_ptr
    /// Panics if shared is null. See `tryFrom()` for alternate.
-   static Shared from(std::shared_ptr<T> const& shared) noexcept {
-        return FARM_UNWRAP(tryFrom(shared));
+   static Shared from(std::shared_ptr<T> const& shared) {
+        auto maybe = tryFrom(shared);
+        if(!maybe) throw BadExpectedAccess(FARM_ERROR_ONLY());
+        return maybe;
     }
 
     /// Construct and also makes interior object T
     /// Panics if the constructor throws. See `tryFrom()` for alternate.
     template<class... Args>
-    static Shared<T> make(Args&&... args) noexcept {
+    static Shared<T> make(Args&&... args) {
         auto maybe = tryMake(std::forward<Args>(args)...);
-        return FARM_UNWRAP(maybe);
+        if(!maybe) throw BadExpectedAccess(FARM_ERROR_ONLY());
+        return *maybe;
     }
 
     /// Returns the interior object which is guarenteed to be available

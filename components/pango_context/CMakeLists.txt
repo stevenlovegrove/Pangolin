@@ -12,6 +12,8 @@ set(component_file_basenames
   widget_panel
   gl_framebuffer_reader
   gl_render_panel
+  device_buffer
+  multi_dim
 )
 
 foreach(basename ${component_file_basenames})

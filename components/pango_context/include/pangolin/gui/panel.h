@@ -17,6 +17,8 @@ struct PanelGroup;
 ///
 struct Panel : std::enable_shared_from_this<Panel>
 {
+    virtual ~Panel() {}
+
     struct Absolute {int pixels = 100;};
     struct Parts {double ratio = 1.0; };
     struct RenderParams{
