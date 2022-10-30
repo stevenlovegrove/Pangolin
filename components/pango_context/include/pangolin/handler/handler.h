@@ -8,6 +8,8 @@ namespace pangolin {
 
 class Handler {
  public:
+  virtual ~Handler() {}
+
   // Equivelent to OpenGL ModelView matrix
   virtual sophus::Se3F64 const &worldFromCamera() const = 0;
 

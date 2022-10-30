@@ -1,19 +1,22 @@
 #pragma once
 
-#include "panel.h"
+#include "render_layer.h"
 
 namespace pangolin
 {
 
+// Forward declarations
+struct Widget;
+
 ////////////////////////////////////////////////////////////////////
 /// Supports displaying a 2D tweak-var style interface
 ///
-struct WidgetPanel : public Panel
+struct WidgetPanel : public RenderLayer
 {
     virtual void add(SharedVector<Widget> widgets) = 0;
 
     struct Params {
-        Panel::Params panel = {};
+        RenderLayer::Params panel = {};
         std::string var_subscription;
     };
     static Shared<WidgetPanel> Create(Params p);

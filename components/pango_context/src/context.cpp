@@ -3,7 +3,7 @@
 #include <pangolin/context/context.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/windowing/window.h>
-#include <pangolin/gui/panel_group.h>
+#include <pangolin/gui/render_layer_group.h>
 #include <pangolin/utils/variant_overload.h>
 
 namespace pangolin
@@ -11,17 +11,17 @@ namespace pangolin
 
 namespace debug
 {
-    void print(const Shared<Panel>& p) {
+    void print(const Shared<RenderLayer>& p) {
         fmt::print("x");
     }
 
-    void print(const PanelGroup::Element& p) {
+    void print(const RenderLayerGroup::Element& p) {
         std::visit([&](const auto& x){
             print(x);
         }, p);
     }
 
-    void print(const Shared<PanelGroup>& layout) {
+    void print(const Shared<RenderLayerGroup>& layout) {
         const auto& v = layout->vec;
         FARM_CHECK(v.size() > 0);
         fmt::print("(");
@@ -29,10 +29,10 @@ namespace debug
         for(size_t i=1; i < v.size(); ++i) {
             switch (layout->grouping)
             {
-            case PanelGroup::Grouping::horizontal: fmt::print("|"); break;
-            case PanelGroup::Grouping::vertical: fmt::print("/"); break;
-            case PanelGroup::Grouping::tabbed: fmt::print(","); break;
-            case PanelGroup::Grouping::stacked: fmt::print("^"); break;
+            case RenderLayerGroup::Grouping::horizontal: fmt::print("|"); break;
+            case RenderLayerGroup::Grouping::vertical: fmt::print("/"); break;
+            case RenderLayerGroup::Grouping::tabbed: fmt::print(","); break;
+            case RenderLayerGroup::Grouping::stacked: fmt::print("^"); break;
             default: break;
             }
             print(v[i]);
@@ -58,10 +58,10 @@ struct ContextImpl : public Context {
             .uri = ParseUri(
                 fmt::format("{}:[window_title={},w={},h={}]//",
                  params.window_engine, params.title,
-                 params.window_size[0], params.window_size[1])
+                 params.window_size.width, params.window_size.height)
             )
         })),
-        layout_(Shared<PanelGroup>::make())
+        layout_(Shared<RenderLayerGroup>::make())
     {
     }
 
@@ -69,19 +69,19 @@ struct ContextImpl : public Context {
         return window_;
     }
 
-    void setLayout(const Shared<PanelGroup>& layout) override
+    void setLayout(const Shared<RenderLayerGroup>& layout) override
     {
         layout_ = layout;
     }
 
-    void setLayout(const Shared<Panel>& panel) override
+    void setLayout(const Shared<RenderLayer>& panel) override
     {
-        auto group = Shared<PanelGroup>::make();
+        auto group = Shared<RenderLayerGroup>::make();
         group->vec = {panel};
         setLayout(group);
     }
 
-    Shared<PanelGroup> getLayout() const override
+    Shared<RenderLayerGroup> getLayout() const override
     {
         return layout_;
     }
@@ -95,13 +95,13 @@ struct ContextImpl : public Context {
 
     using TSum2 = Eigen::Vector<TSum,2>;
 
-    TSum2 groupSum(const PanelGroup::Element& e)
+    TSum2 groupSum(const RenderLayerGroup::Element& e)
     {
         TSum2 xy = std::visit(overload {
-            [](const Shared<PanelGroup>& x) -> TSum2{
+            [](const Shared<RenderLayerGroup>& x) -> TSum2{
                 return TSum2{};
             },
-            [](const Shared<Panel>& x) -> TSum2 {
+            [](const Shared<RenderLayer>& x) -> TSum2 {
                 //TODO need to be able to retrieve size_hint from x.
                 return TSum2{};
             },
@@ -132,7 +132,7 @@ struct ContextImpl : public Context {
     }
 
     Shared<Window> window_;
-    Shared<PanelGroup> layout_;
+    Shared<RenderLayerGroup> layout_;
 };
 
 PANGO_CREATE(Context) {

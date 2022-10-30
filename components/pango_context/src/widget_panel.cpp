@@ -4,8 +4,8 @@
 namespace pangolin
 {
 
-struct PanelImpl : public Panel {
-    PanelImpl(const Panel::Params& p) {}
+struct PanelImpl : public RenderLayer {
+    PanelImpl(const RenderLayer::Params& p) {}
     void renderIntoRegion(const RenderParams&){};
 };
 
@@ -26,7 +26,7 @@ struct WidgetPanelImpl : public WidgetPanel {
     };
 };
 
-PANGO_CREATE(Panel) {
+PANGO_CREATE(RenderLayer) {
     return Shared<PanelImpl>::make(p);
 }
 

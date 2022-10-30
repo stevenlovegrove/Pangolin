@@ -1,12 +1,12 @@
-#include <pangolin/gui/render_panel.h>
+#include <pangolin/gui/draw_layer.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/handler/handler.h>
 
 namespace pangolin
 {
 
-struct RenderPanelImpl : public RenderPanel {
-    RenderPanelImpl(const RenderPanelImpl::Params& p) {}
+struct DrawLayerImpl : public DrawLayer {
+    DrawLayerImpl(const DrawLayerImpl::Params& p) {}
 
     void renderIntoRegion(const RenderParams&) override {
 
@@ -37,8 +37,8 @@ struct RenderPanelImpl : public RenderPanel {
     std::shared_ptr<Handler> handler_;
 };
 
-PANGO_CREATE(RenderPanel) {
-    return Shared<RenderPanelImpl>::make(p);
+PANGO_CREATE(DrawLayer) {
+    return Shared<DrawLayerImpl>::make(p);
 }
 
 }

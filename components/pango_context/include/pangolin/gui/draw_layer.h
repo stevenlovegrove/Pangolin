@@ -1,7 +1,7 @@
 #pragma once
 
 #include <pangolin/maths/min_max.h>
-#include <pangolin/gui/panel.h>
+#include <pangolin/gui/render_layer.h>
 #include <pangolin/gui/renderable.h>
 #include <sophus/image/image.h>
 
@@ -15,7 +15,7 @@ struct Handler;
 //       Lets just have all panels contain a Render object,
 //       potentially a nullable one.
 //
-//       Scratch that - let's just rename Panel to be RenderLayer
+//       Scratch that - let's just rename RenderLayer to be RenderLayer
 //       the layout engine can already deal with stacks
 //
 //       Then we just need a kind of stack that supports a deferred
@@ -40,7 +40,7 @@ struct Handler;
 ////////////////////////////////////////////////////////////////////
 /// Supports displaying interactive 2D / 3D elements
 ///
-struct RenderPanel : public Panel
+struct DrawLayer : public RenderLayer
 {
     struct Lut {
         // Maps input pixel (u,v) to a direction vector (dx,dy,dz)
@@ -73,7 +73,7 @@ struct RenderPanel : public Panel
         const Eigen::Matrix4d& cam_from_world,
         double duration_seconds = 0.0) = 0;
 
-    // Specify a handler to feed user input into this RenderPanel
+    // Specify a handler to feed user input into this DrawLayer
     // to drive the tranforms and view options.
     virtual void setHandler(const std::shared_ptr<Handler>&) = 0;
 
@@ -98,9 +98,14 @@ struct RenderPanel : public Panel
     // }
 
     struct Params {
-        Panel::Params panel = {};
+        RenderLayer::Params panel = {};
+
+        std::shared_ptr<Handler> handler = nullptr;
+        Eigen::Matrix4d cam_from_world = Eigen::Matrix4d::Identity();
+        Eigen::Matrix4d intrinsic_k = Eigen::Matrix4d::Identity();
+        NonLinearMethod non_linear = {};
     };
-    static Shared<RenderPanel> Create(Params p);
+    static Shared<DrawLayer> Create(Params p);
 };
 
 }

@@ -3,13 +3,15 @@
 #include <array>
 #include <pangolin/utils/shared.h>
 #include <pangolin/context/engine.h>
+#include <pangolin/gui/render_layer_group.h>
+#include <sophus/image/image_size.h>
 
 namespace pangolin
 {
 
 struct WindowInterface;
-struct PanelGroup;
-struct Panel;
+struct RenderLayerGroup;
+struct RenderLayer;
 
 ////////////////////////////////////////////////////////////////////
 /// Represents the pangolin context for one Window or Window-like
@@ -22,6 +24,7 @@ struct Panel;
 struct Context : std::enable_shared_from_this<Context>
 {
     using Window = WindowInterface;
+    using ImageSize = sophus::ImageSize;
 
     virtual ~Context() {}
 
@@ -38,8 +41,11 @@ struct Context : std::enable_shared_from_this<Context>
     // symbol.
     virtual void loop(std::function<bool(void)> loop_function) = 0;
 
+    // Convenience method for looping without a user function
+    inline void loop() { loop([](){return true;})};
+
     // Specify the Panels which will make up the drawing canvas via
-    // a PanelGroup object - a nested tree of Panels with a layout
+    // a RenderLayerGroup object - a nested tree of Panels with a layout
     // specification at each node.
     //
     // If a layout is already set, it will be replaced by layout.
@@ -51,22 +57,23 @@ struct Context : std::enable_shared_from_this<Context>
     // the Context. Uers may safely hold onto unused PanelGroups
     // and restore them via setLayout to quickly reconfigure the
     // window.
-    virtual void setLayout(const Shared<PanelGroup>& layout) = 0;
+    virtual void setLayout(const Shared<RenderLayerGroup>& layout) = 0;
 
     // Convenience method to create a window with only one panel
-    virtual void setLayout(const Shared<Panel>& panel) = 0;
+    virtual void setLayout(const Shared<RenderLayer>& panel) = 0;
 
-    // Return the current PanelGroup layout - this may have been
+    // Return the current RenderLayerGroup layout - this may have been
     // customized at runtime by the end-user.
-    // TODO: provide a method to serialize PanelGroup for easily
+    // TODO: provide a method to serialize RenderLayerGroup for easily
     //       saving layouts
-    virtual Shared<PanelGroup> getLayout() const = 0;
+    virtual Shared<RenderLayerGroup> getLayout() const = 0;
 
     struct Params {
         std::string title = "Pangolin App";
-        std::array<int,2> window_size = {1024, 768};
+        ImageSize window_size = {1024, 768};
         std::string window_engine = Engine::singleton()->defaults.window_engine;
         Engine::Profile profile = Engine::singleton()->defaults.profile;
+        Shared<RenderLayerGroup> layout = {};
     };
     static Shared<Context> Create(Params p);
 };

@@ -7,17 +7,12 @@
 namespace pangolin
 {
 
-// Forward declarations
-struct Widget;
-struct PanelGroup;
-
-
 ////////////////////////////////////////////////////////////////////
 /// Represents a client area in a window with layout handling
 ///
-struct Panel : std::enable_shared_from_this<Panel>
+struct RenderLayer : std::enable_shared_from_this<RenderLayer>
 {
-    virtual ~Panel() {}
+    virtual ~RenderLayer() {}
 
     struct Absolute {int pixels = 100;};
     struct Parts {double ratio = 1.0; };
@@ -34,7 +29,7 @@ struct Panel : std::enable_shared_from_this<Panel>
         std::string title = "";
         Size size_hint = {Parts{1}, Parts{1}};
     };
-    static Shared<Panel> Create(Params);
+    static Shared<RenderLayer> Create(Params);
 };
 
 }

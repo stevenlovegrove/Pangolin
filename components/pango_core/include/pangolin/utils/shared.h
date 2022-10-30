@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <pangolin/utils/copy_shared.h>
 #include <farm_ng/core/logging/expected.h>
 
 #define FARM_ERROR_ONLY(cstr, ...) \

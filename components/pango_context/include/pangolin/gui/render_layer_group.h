@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <pangolin/context/context.h>
-#include <pangolin/gui/panel.h>
+#include <pangolin/gui/render_layer.h>
 
 namespace pangolin
 {
@@ -10,7 +10,7 @@ namespace pangolin
 ////////////////////////////////////////////////////////////////////
 /// Represents a (possibly nested) arrangement of Panels on screen
 ///
-struct PanelGroup
+struct RenderLayerGroup
 {
     enum class Grouping
     {
@@ -20,7 +20,7 @@ struct PanelGroup
         vertical    // panes share client area vertically
     };
 
-    using Element = std::variant<Shared<PanelGroup>, Shared<Panel>>;
+    using Element = std::variant<Shared<RenderLayerGroup>, Shared<RenderLayer>>;
     std::vector<Element> vec;
     Grouping grouping = Grouping::horizontal;
 };
@@ -29,7 +29,7 @@ struct PanelGroup
 // Define Convenience operators for building arrangements
 
 // TODO: not sure this is worth it.
-// void operator<(Shared<Context>& w, const Shared<PanelGroup>& g)
+// void operator<(Shared<Context>& w, const Shared<RenderLayerGroup>& g)
 // {
 //     w->setLayout(g);
 // }
@@ -38,8 +38,8 @@ struct PanelGroup
 
 namespace detail
 {
-Shared<PanelGroup> join( PanelGroup::Grouping op_type, const Shared<PanelGroup>& lhs, const Shared<PanelGroup>& rhs ) {
-    auto ret = Shared<PanelGroup>::make();
+Shared<RenderLayerGroup> join( RenderLayerGroup::Grouping op_type, const Shared<RenderLayerGroup>& lhs, const Shared<RenderLayerGroup>& rhs ) {
+    auto ret = Shared<RenderLayerGroup>::make();
     ret->grouping = op_type;
     if(op_type == lhs->grouping && op_type == rhs->grouping ) {
         ret->vec = lhs->vec;
@@ -50,9 +50,9 @@ Shared<PanelGroup> join( PanelGroup::Grouping op_type, const Shared<PanelGroup>&
     }
     return ret;
 }
-template<std::derived_from<Panel> T>
-Shared<PanelGroup> join( PanelGroup::Grouping op_type, const Shared<PanelGroup>& lhs, const Shared<T>& rhs ) {
-    auto ret = Shared<PanelGroup>::make();
+template<std::derived_from<RenderLayer> T>
+Shared<RenderLayerGroup> join( RenderLayerGroup::Grouping op_type, const Shared<RenderLayerGroup>& lhs, const Shared<T>& rhs ) {
+    auto ret = Shared<RenderLayerGroup>::make();
     ret->grouping = op_type;
     if(op_type == lhs->grouping ) {
         ret->vec = lhs->vec;
@@ -62,9 +62,9 @@ Shared<PanelGroup> join( PanelGroup::Grouping op_type, const Shared<PanelGroup>&
     ret->vec.push_back(rhs);
     return ret;
 }
-template<std::derived_from<Panel> T>
-Shared<PanelGroup> join( PanelGroup::Grouping op_type, const Shared<T>& lhs, const Shared<PanelGroup>& rhs ) {
-    auto ret = Shared<PanelGroup>::make();
+template<std::derived_from<RenderLayer> T>
+Shared<RenderLayerGroup> join( RenderLayerGroup::Grouping op_type, const Shared<T>& lhs, const Shared<RenderLayerGroup>& rhs ) {
+    auto ret = Shared<RenderLayerGroup>::make();
     ret->grouping = op_type;
     ret->vec.push_back(lhs);
     if(op_type == rhs->grouping) {
@@ -74,9 +74,9 @@ Shared<PanelGroup> join( PanelGroup::Grouping op_type, const Shared<T>& lhs, con
     }
     return ret;
 }
-template<std::derived_from<Panel> LHS, std::derived_from<Panel> RHS>
-Shared<PanelGroup> join( PanelGroup::Grouping op_type, const Shared<LHS>& lhs, const Shared<RHS>& rhs ) {
-    auto ret = Shared<PanelGroup>::make();
+template<std::derived_from<RenderLayer> LHS, std::derived_from<RenderLayer> RHS>
+Shared<RenderLayerGroup> join( RenderLayerGroup::Grouping op_type, const Shared<LHS>& lhs, const Shared<RHS>& rhs ) {
+    auto ret = Shared<RenderLayerGroup>::make();
     ret->grouping = op_type;
     ret->vec.push_back(lhs);
     ret->vec.push_back(rhs);
@@ -85,26 +85,26 @@ Shared<PanelGroup> join( PanelGroup::Grouping op_type, const Shared<LHS>& lhs, c
 }
 
 #define PANGO_PANEL_OPERATOR(op, op_type) \
-    Shared<PanelGroup> op(const Shared<PanelGroup>& lhs, const Shared<PanelGroup>& rhs) { \
+    Shared<RenderLayerGroup> op(const Shared<RenderLayerGroup>& lhs, const Shared<RenderLayerGroup>& rhs) { \
         return detail::join(op_type, lhs, rhs); \
     } \
-    template<std::derived_from<Panel> T> \
-    Shared<PanelGroup> op(const Shared<PanelGroup>& lhs, const Shared<T>& rhs) { \
+    template<std::derived_from<RenderLayer> T> \
+    Shared<RenderLayerGroup> op(const Shared<RenderLayerGroup>& lhs, const Shared<T>& rhs) { \
         return detail::join(op_type, lhs, rhs); \
     } \
-    template<std::derived_from<Panel> T> \
-    Shared<PanelGroup> op(const Shared<T>& lhs, const Shared<PanelGroup>& rhs) { \
+    template<std::derived_from<RenderLayer> T> \
+    Shared<RenderLayerGroup> op(const Shared<T>& lhs, const Shared<RenderLayerGroup>& rhs) { \
         return detail::join(op_type, lhs, rhs); \
     } \
-    template<std::derived_from<Panel> T1, std::derived_from<Panel> T2> \
-    Shared<PanelGroup> op(Shared<T1>& lhs, Shared<T2>& rhs)  { \
+    template<std::derived_from<RenderLayer> T1, std::derived_from<RenderLayer> T2> \
+    Shared<RenderLayerGroup> op(Shared<T1>& lhs, Shared<T2>& rhs)  { \
         return detail::join(op_type, lhs, rhs); \
     }
 
-PANGO_PANEL_OPERATOR(operator PANGO_COMMA, PanelGroup::Grouping::tabbed)
-PANGO_PANEL_OPERATOR(operator|, PanelGroup::Grouping::horizontal)
-PANGO_PANEL_OPERATOR(operator/, PanelGroup::Grouping::vertical)
-PANGO_PANEL_OPERATOR(operator^, PanelGroup::Grouping::stacked)
+PANGO_PANEL_OPERATOR(operator PANGO_COMMA, RenderLayerGroup::Grouping::tabbed)
+PANGO_PANEL_OPERATOR(operator|, RenderLayerGroup::Grouping::horizontal)
+PANGO_PANEL_OPERATOR(operator/, RenderLayerGroup::Grouping::vertical)
+PANGO_PANEL_OPERATOR(operator^, RenderLayerGroup::Grouping::stacked)
 #undef PANGO_PANEL_OPERATOR
 #undef PANGO_COMMA
 

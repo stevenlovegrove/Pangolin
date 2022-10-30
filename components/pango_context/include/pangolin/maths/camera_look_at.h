@@ -18,7 +18,7 @@ namespace pangolin {
 // * Forward direction and `up` are co-linear
 // In these cases, method respects conditions that are possible
 // and chooses arbitrarily from underspecified dimensions.
-template <typename TScalar>
+template <typename TScalar=double>
 sophus::Se3<TScalar> worldLookatFromCamera(
     Eigen::Vector3<TScalar> const& camera_center_in_world,
     Eigen::Vector3<TScalar> const& interest_point_in_world,
@@ -66,7 +66,7 @@ sophus::Se3<TScalar> worldLookatFromCamera(
 }
 
 // Convenience version of above, using AxisDirection enum to specify Up vector
-template <typename TScalar>
+template <typename TScalar=double>
 sophus::Se3<TScalar> worldLookatFromCamera(
     Eigen::Vector3<TScalar> const& camera_center_in_world,
     Eigen::Vector3<TScalar> const& interest_point_in_world,
@@ -75,7 +75,7 @@ sophus::Se3<TScalar> worldLookatFromCamera(
   return worldLookatFromCamera<TScalar>(
       camera_center_in_world,
       interest_point_in_world,
-      axisDirection<TScalar>(updir_world),
+      axisDirection<TScalar,3>(updir_world),
       xyz_convention);
 }
 

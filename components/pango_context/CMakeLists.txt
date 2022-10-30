@@ -11,7 +11,7 @@ set(component_file_basenames
   shared
   widget_panel
   gl_framebuffer_reader
-  gl_render_panel
+  gl_draw_layer
   gl_device_buffer
   multi_dim
 )
