@@ -80,6 +80,14 @@ public:
         return non_null_shared_;
     }
 
+    // Default constructable only if T is
+    Shared()
+    requires (std::is_default_constructible<T>::value)
+        : non_null_shared_(std::make_shared<T>())
+    {
+        checkMaybeThrow();
+    }
+
     // Copy constructor from derived bases
     template<std::derived_from<T> Derived>
     Shared(const Shared<Derived>& other)

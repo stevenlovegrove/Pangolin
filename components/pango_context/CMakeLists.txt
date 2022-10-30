@@ -12,7 +12,7 @@ set(component_file_basenames
   widget_panel
   gl_framebuffer_reader
   gl_render_panel
-  device_buffer
+  gl_device_buffer
   multi_dim
 )
 

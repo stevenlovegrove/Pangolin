@@ -5,6 +5,7 @@
 
 #include <sophus/image/runtime_image.h>
 #include <pangolin/maths/conventions.h>
+#include <pangolin/render/device_buffer.h>
 
 namespace pangolin
 {
@@ -19,7 +20,7 @@ struct RenderableImage
 
     // Image to render. Not all types will
     // be supported by the implementation.
-    sophus::AnyImage<> image;
+    Shared<DeviceBuffer> image;
 
     // How should fractional pixel coordinates be
     // rendered (when magnified)
@@ -55,26 +56,20 @@ struct RenderablePts
         triangle_strip
     };
 
-    using vecid = std::vector<uint32_t>;
-    using vec1 = std::vector<float>;
-    using vec2 = std::vector<Eigen::Vector2f>;
-    using vec3 = std::vector<Eigen::Vector3f>;
-    using vec4 = std::vector<Eigen::Vector4f>;
-
     // Vertex data to render
-    std::variant<vec2,vec3,vec4> vertices;
+    Shared<DeviceBuffer> vertices;
 
     // If provided, use as index buffer
-    std::variant<std::monostate,vecid> indices;
+    Shared<DeviceBuffer> indices;
 
     // If provided, use per-vertex colors
-    std::variant<std::monostate,vec3,vec4> colors;
+    Shared<DeviceBuffer> colors;
 
     // If provided, use per-vertex normals
-    std::variant<std::monostate,vec3> normals;
+    Shared<DeviceBuffer> normals;
 
     // If provided, use per_vertex radius for oriented disks
-    std::variant<std::monostate,vec1> radius;
+    Shared<DeviceBuffer> radius;
 
     // Geometric element to interpret vertices as
     Type point_type = Type::points;
@@ -84,11 +79,11 @@ struct RenderablePts
     //  and modelview style matrices)
     Eigen::Matrix4d world_from_renderable;
 
-    // Color to use if colors variant not provided
+    // Color to use if colors buffer is empty
     Eigen::Vector4f default_color = {1.0f, 1.0f, 1.0f, 1.0f};
 
     // Element size to use for points/circles/squares if
-    // radius variant is not provided. points are in pixel
+    // radius buffer is empty. points are in pixel
     // units. Other elements are world units.
     float default_radius = 1.0;
 };

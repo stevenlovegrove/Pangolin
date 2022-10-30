@@ -5,20 +5,20 @@
 using namespace pangolin;
 
 template<typename T>
-using Image = MultiDimArray<T,Dynamic,Dynamic>;
+using Image = MultiDimArray<T,kDynamic,kDynamic>;
 
 
 TEST_CASE("multi_dim, static") {
     {
-        MultiDimArray<int,3,2,2> m;
+        using Arr = MultiDimArray<int,3,2,2>;
+        Arr m;
         static_assert(MultiDimArray<int,3,2,2>::kPackIntoStruct == true);
-
-        // static_assert(m.data.size() == 3*2*2);
-        CHECK(m.data.size() == 3*2*2);
+        static_assert(m.data.size() == 3*2*2);
     }
     {
-        MultiDimArray<int,3,2,2> m;
-
+        using Arr = MultiDimArray<int,3,2,6>;
+        Arr m;
+        static_assert(Arr::kPackIntoStruct == false);
     }
 
     // println("{}", static_volume.data.size());

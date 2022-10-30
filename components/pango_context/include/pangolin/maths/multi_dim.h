@@ -6,7 +6,7 @@ namespace pangolin
 {
 
 constexpr int kDynamic = -1;
-constexpr int kMaxMultiDimSizeBytes = 64;
+constexpr int kMaxMultiDimSizeBytes = 128;
 
 template<int ...kSizes>
 struct MultiDim;
@@ -79,7 +79,7 @@ struct MaybeStaticStorage<T,kStaticSize,true>
         assert(kStaticSize == size);
     }
 
-    int size() const {
+    constexpr int size() const {
         return data.size();
     }
 
@@ -89,15 +89,54 @@ struct MaybeStaticStorage<T,kStaticSize,true>
 template<int ...kSizes>
 struct MultiDimAccessDims{};
 
+template<class... Xs>
+struct AllAre;
+
+template<class T, class X, class... Xs>
+requires (std::is_same<T,X>::value)
+struct AllAre<T,X,Xs...> : AllAre<T,Xs...> {};
+
+template<class T>
+struct AllAre<T> : std::true_type {};
+
+template<class T, int N>
+T arrayProduct(const std::array<T,N>& arr)
+{
+    T sum = static_cast<T>(0);
+    for(T v : arr) {
+        sum += v;
+    }
+    return sum;
+}
+
+
 template<class T, int ...kSizes>
 struct MultiDimArray
 {
     using Dim = MultiDim<kSizes...>;
+    using DynamicSize = typename Dim::DynamicSize;
+    using Index = typename Dim::Index;
     static constexpr bool kPackIntoStruct =
         Dim::kDynamicDim==0 && (sizeof(T)* Dim::kFixedVolume <= kMaxMultiDimSizeBytes);
     using Storage = MaybeStaticStorage<T, Dim::kFixedVolume, kPackIntoStruct>;
 
-    typename Dim::DynamicSize dynamic_dim_sizes;
+    MultiDimArray()
+    {
+        static_assert(Dim::kDynamicDim == 0);
+    }
+
+    MultiDimArray(const DynamicSize& dynamic_sizes)
+    : dynamic_dim_sizes(dynamic_sizes),
+      data(Dim::kFixedVolume * arrayProduct(dynamic_sizes))
+    {
+    }
+
+    T& operator()(const Index& idx)
+    {
+        // ...
+    }
+
+    DynamicSize dynamic_dim_sizes;
     Storage data;
 };
 

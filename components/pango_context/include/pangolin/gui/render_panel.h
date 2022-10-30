@@ -46,16 +46,16 @@ struct RenderPanel : public Panel
         // Maps input pixel (u,v) to a direction vector (dx,dy,dz)
         // in camera frame. We use a vector ray for simplicity and
         // speed
-        std::optional<sophus::Image<Eigen::Vector3f>> unproject;
+        Shared<DeviceBuffer> unproject;
 
         // Maps ray angle (theta,phi) to pixel (u,v).
         // We use an angular map representation here despite its
         // tradeoffs to keep the input space bounded and to support
         // fisheye distortions
-        std::optional<sophus::Image<Eigen::Vector2f>> project;
+        Shared<DeviceBuffer> project;
 
         // Represents a per-pixel scale factor
-        std::optional<sophus::Image<float>> vignette;
+        Shared<DeviceBuffer> vignette;
     };
     using NonLinearMethod = std::variant<std::monostate,Lut>;
 
