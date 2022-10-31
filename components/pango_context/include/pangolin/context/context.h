@@ -42,7 +42,7 @@ struct Context : std::enable_shared_from_this<Context>
     virtual void loop(std::function<bool(void)> loop_function) = 0;
 
     // Convenience method for looping without a user function
-    inline void loop() { loop([](){return true;})};
+    inline void loop() { loop([](){return true;}); }
 
     // Specify the Panels which will make up the drawing canvas via
     // a RenderLayerGroup object - a nested tree of Panels with a layout
@@ -57,7 +57,7 @@ struct Context : std::enable_shared_from_this<Context>
     // the Context. Uers may safely hold onto unused PanelGroups
     // and restore them via setLayout to quickly reconfigure the
     // window.
-    virtual void setLayout(const Shared<RenderLayerGroup>& layout) = 0;
+    virtual void setLayout(const RenderLayerGroup& layout) = 0;
 
     // Convenience method to create a window with only one panel
     virtual void setLayout(const Shared<RenderLayer>& panel) = 0;
@@ -66,7 +66,7 @@ struct Context : std::enable_shared_from_this<Context>
     // customized at runtime by the end-user.
     // TODO: provide a method to serialize RenderLayerGroup for easily
     //       saving layouts
-    virtual Shared<RenderLayerGroup> getLayout() const = 0;
+    virtual RenderLayerGroup getLayout() const = 0;
 
     struct Params {
         std::string title = "Pangolin App";

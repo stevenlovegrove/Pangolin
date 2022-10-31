@@ -5,8 +5,18 @@ namespace pangolin
 {
 
 struct PanelImpl : public RenderLayer {
-    PanelImpl(const RenderLayer::Params& p) {}
-    void renderIntoRegion(const RenderParams&){};
+    PanelImpl(const RenderLayer::Params& p)
+        : size_hint_(p.size_hint)
+    {}
+
+    void renderIntoRegion(const RenderParams&) override
+    {
+    };
+
+    Size sizeHint() const override {
+        return size_hint_;
+    }
+    Size size_hint_;
 };
 
 struct SeperatorImpl : public Seperator {
@@ -26,20 +36,20 @@ struct WidgetPanelImpl : public WidgetPanel {
     };
 };
 
-PANGO_CREATE(RenderLayer) {
-    return Shared<PanelImpl>::make(p);
-}
+// PANGO_CREATE(RenderLayer) {
+//     return Shared<PanelImpl>::make(p);
+// }
 
-PANGO_CREATE(Seperator) {
-    return Shared<SeperatorImpl>::make(p);
-}
+// PANGO_CREATE(Seperator) {
+//     return Shared<SeperatorImpl>::make(p);
+// }
 
-PANGO_CREATE(Slider) {
-    return Shared<SliderImpl>::make(p);
-}
+// PANGO_CREATE(Slider) {
+//     return Shared<SliderImpl>::make(p);
+// }
 
-PANGO_CREATE(WidgetPanel) {
-    return Shared<WidgetPanelImpl>::make(p);
-}
+// PANGO_CREATE(WidgetPanel) {
+//     return Shared<WidgetPanelImpl>::make(p);
+// }
 
 }

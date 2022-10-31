@@ -98,8 +98,8 @@ struct DrawLayer : public RenderLayer
     // }
 
     struct Params {
-        RenderLayer::Params panel = {};
-
+        std::string title = "";
+        Size size_hint = {Parts{1}, Parts{1}};
         std::shared_ptr<Handler> handler = nullptr;
         Eigen::Matrix4d cam_from_world = Eigen::Matrix4d::Identity();
         Eigen::Matrix4d intrinsic_k = Eigen::Matrix4d::Identity();

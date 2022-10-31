@@ -25,15 +25,18 @@ void newApi()
         .window_size = camera.imageSize(),
     } );
 
-    context->setLayout(DrawLayer::Create({
-        .handler = Handler::Create({
-            .camera = copyShared(camera),
-            .world_from_camera = copyShared(worldLookatFromCamera(
-                {0,0,10}, {0,10,0}
-            ))
-        }),
-        // .objects = Object::Create(Pangolin)
-    }));
+    auto l1 = DrawLayer::Create({});
+    auto l2 = DrawLayer::Create({});
+    auto l3 = DrawLayer::Create({});
+    auto l4 = DrawLayer::Create({});
+    auto l5 = DrawLayer::Create({});
+
+    auto l6 = DrawLayer::Create({.size_hint = {
+        RenderLayer::Absolute{300}, RenderLayer::Parts{1}
+    }});
+
+    auto layer = l6 | ((l1 | l2)/ (l3 | l4)) | l5;
+    context->setLayout(layer);
 
     context->loop();
 }

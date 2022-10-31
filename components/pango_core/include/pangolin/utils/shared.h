@@ -75,6 +75,12 @@ public:
     /// Returns the interior object which is guarenteed to be available
     const T* operator->() const { return non_null_shared_.get(); }
 
+    // Implicit conversion to a nullable std::shared_ptr okay
+    operator std::shared_ptr<T>() const
+    {
+        return sharedPtr();
+    }
+
     // Return a nullable shared_ptr<T> from this Shared<T> object
     std::shared_ptr<T> sharedPtr() const
     {

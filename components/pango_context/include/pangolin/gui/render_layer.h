@@ -25,6 +25,8 @@ struct RenderLayer : std::enable_shared_from_this<RenderLayer>
 
     virtual void renderIntoRegion(const RenderParams&) = 0;
 
+    virtual Size sizeHint() const = 0;
+
     struct Params {
         std::string title = "";
         Size size_hint = {Parts{1}, Parts{1}};

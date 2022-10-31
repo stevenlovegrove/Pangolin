@@ -11,23 +11,14 @@ namespace pangolin
 
 namespace debug
 {
-    void print(const Shared<RenderLayer>& p) {
-        fmt::print("x");
-    }
-
-    void print(const RenderLayerGroup::Element& p) {
-        std::visit([&](const auto& x){
-            print(x);
-        }, p);
-    }
-
-    void print(const Shared<RenderLayerGroup>& layout) {
-        const auto& v = layout->vec;
+    void print(const RenderLayerGroup& layout) {
+        const auto& v = layout.children;
         FARM_CHECK(v.size() > 0);
+        if(layout.layer) fmt::print("x");
         fmt::print("(");
         print(v[0]);
         for(size_t i=1; i < v.size(); ++i) {
-            switch (layout->grouping)
+            switch (layout.grouping)
             {
             case RenderLayerGroup::Grouping::horizontal: fmt::print("|"); break;
             case RenderLayerGroup::Grouping::vertical: fmt::print("/"); break;
@@ -61,58 +52,42 @@ struct ContextImpl : public Context {
                  params.window_size.width, params.window_size.height)
             )
         })),
-        layout_(Shared<RenderLayerGroup>::make())
+        size_(params.window_size)
     {
+        window()->ResizeSignal.connect([this](const WindowResizeEvent& e){
+            size_.width = e.width;
+            size_.height = e.height;
+        });
     }
 
     Shared<Window> window() override {
         return window_;
     }
 
-    void setLayout(const Shared<RenderLayerGroup>& layout) override
+    void setLayout(const RenderLayerGroup& layout) override
     {
         layout_ = layout;
     }
 
     void setLayout(const Shared<RenderLayer>& panel) override
     {
-        auto group = Shared<RenderLayerGroup>::make();
-        group->vec = {panel};
-        setLayout(group);
+        setLayout(RenderLayerGroup(panel));
     }
 
-    Shared<RenderLayerGroup> getLayout() const override
+    RenderLayerGroup getLayout() const override
     {
         return layout_;
     }
 
-
-
-    struct TSum {
-        int pixels = 0;
-        double parts = 0.0;
-    };
-
-    using TSum2 = Eigen::Vector<TSum,2>;
-
-    TSum2 groupSum(const RenderLayerGroup::Element& e)
-    {
-        TSum2 xy = std::visit(overload {
-            [](const Shared<RenderLayerGroup>& x) -> TSum2{
-                return TSum2{};
-            },
-            [](const Shared<RenderLayer>& x) -> TSum2 {
-                //TODO need to be able to retrieve size_hint from x.
-                return TSum2{};
-            },
-        }, e);
-
-        return xy;
-    }
-
     void drawPanels()
     {
-        //  xy_sum;
+        MinMax<Eigen::Vector2i> region;
+        region.extend({0,0});
+        region.extend({size_.width, size_.height});
+
+        renderIntoRegion({
+            .region = region
+        }, getLayout());
     }
 
     void loop(std::function<bool(void)> loop_function) override {
@@ -131,8 +106,9 @@ struct ContextImpl : public Context {
         }
     }
 
+    ImageSize size_;
     Shared<Window> window_;
-    Shared<RenderLayerGroup> layout_;
+    RenderLayerGroup layout_;
 };
 
 PANGO_CREATE(Context) {

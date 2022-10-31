@@ -44,7 +44,7 @@ class MinMax {
   }
 
   // Only applicable if minmax object is valid()
-  auto range() requires Differencable<TPixel> { return max() - min(); }
+  auto range() const requires Differencable<TPixel> { return max() - min(); }
 
   MinMax<TPixel>& extend(MinMax const& o) {
     min_max[0] = pangolin::min(min(), o.min());
@@ -63,9 +63,9 @@ class MinMax {
     return MinMax<To>(pangolin::cast<To>(min()), pangolin::cast<To>(max()));
   }
 
-  bool valid() const {
-    return min_max[0] != MultiDimLimits<TPixel>::max() &&
-           min_max[1] != MultiDimLimits<TPixel>::lowest();
+  bool empty() const {
+    return min_max[0] == MultiDimLimits<TPixel>::max() ||
+           min_max[1] == MultiDimLimits<TPixel>::lowest();
   }
 
  private:
