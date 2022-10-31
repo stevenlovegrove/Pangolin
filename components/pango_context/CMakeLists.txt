@@ -9,7 +9,7 @@ set(component_file_basenames
   look_at
   min_max
   shared
-  widget_panel
+  gl_widget_layer
   gl_framebuffer_reader
   gl_draw_layer
   gl_device_buffer

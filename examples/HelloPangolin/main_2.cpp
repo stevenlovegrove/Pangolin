@@ -13,7 +13,7 @@ void newApi()
         .window_size = {640, 480},
     } );
 
-    Shared<WidgetPanel> widget_panel = WidgetPanel::Create({});
+    Shared<WidgetLayer> widget_panel = WidgetLayer::Create({});
     widget_panel += {
         Seperator::Create({"Section One"}),
         Slider::Create({"Slider", .min=0.0, .max=100.0}),

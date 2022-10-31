@@ -258,4 +258,25 @@ void renderIntoRegion(
     renderIntoRegionImpl(p, group);
 }
 
+inline std::ostream& operator<<(std::ostream& s, const RenderLayerGroup& layout) {
+    const auto& v = layout.children;
+    FARM_CHECK(v.size() > 0);
+    if(layout.layer) s << "x";
+    s << "(";
+    s << v[0];
+    for(size_t i=1; i < v.size(); ++i) {
+        switch (layout.grouping)
+        {
+        case RenderLayerGroup::Grouping::horizontal: s << "|"; break;
+        case RenderLayerGroup::Grouping::vertical:   s << "/"; break;
+        case RenderLayerGroup::Grouping::tabbed:     s << ","; break;
+        case RenderLayerGroup::Grouping::stacked:    s << "^"; break;
+        default: break;
+        }
+        s << v[i];
+    }
+    s << ")";
+    return s;
+}
+
 }

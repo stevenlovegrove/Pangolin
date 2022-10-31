@@ -1,5 +1,7 @@
 #pragma once
 
+#include <pangolin/gui/widget_layer.h>
+
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glsl.h>
 #include <pangolin/gl/glfont.h>
@@ -12,8 +14,19 @@
 namespace pangolin
 {
 
-struct WidgetPanel
+struct GlWidgetLayer : WidgetLayer
 {
+    GlWidgetLayer(const WidgetLayer::Params& p);
+
+    void renderIntoRegion(const RenderParams&) override;
+
+    Size sizeHint() const override;
+
+    Size size_hint_;
+
+
+    ///////////
+
     static constexpr float sping_coeff = 0.2;
 
     enum class WidgetType
@@ -38,13 +51,13 @@ struct WidgetPanel
     };
 
 
-    WidgetPanel(float scale = 1.f);
+    // WidgetLayer(float scale = 1.f);
 
     void LoadShaders();
 
     void UpdateWidgetParams();
 
-    void UpdateWidgetVBO();
+    void UpdateWidgetVBO(float width);
 
     std::u32string toUtf32(const std::string& utf8);
 
@@ -55,7 +68,7 @@ struct WidgetPanel
         std::vector<Eigen::Vector3f>& host_vbo_pos,
         std::vector<uint16_t>& host_vbo_index);
 
-    void UpdateCharsVBO();
+    void UpdateCharsVBO(float width);
 
     // void Render() override;
 

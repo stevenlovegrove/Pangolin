@@ -5,32 +5,10 @@
 #include <pangolin/windowing/window.h>
 #include <pangolin/gui/render_layer_group.h>
 #include <pangolin/utils/variant_overload.h>
+#include <pangolin/gl/glplatform.h>
 
 namespace pangolin
 {
-
-namespace debug
-{
-    void print(const RenderLayerGroup& layout) {
-        const auto& v = layout.children;
-        FARM_CHECK(v.size() > 0);
-        if(layout.layer) fmt::print("x");
-        fmt::print("(");
-        print(v[0]);
-        for(size_t i=1; i < v.size(); ++i) {
-            switch (layout.grouping)
-            {
-            case RenderLayerGroup::Grouping::horizontal: fmt::print("|"); break;
-            case RenderLayerGroup::Grouping::vertical: fmt::print("/"); break;
-            case RenderLayerGroup::Grouping::tabbed: fmt::print(","); break;
-            case RenderLayerGroup::Grouping::stacked: fmt::print("^"); break;
-            default: break;
-            }
-            print(v[i]);
-        }
-        fmt::print(")");
-    }
-}
 
 struct EngineImpl : public Engine
 {
@@ -47,9 +25,9 @@ struct ContextImpl : public Context {
     ContextImpl(const Context::Params& params)
         : window_(Window::Create({
             .uri = ParseUri(
-                fmt::format("{}:[window_title={},w={},h={}]//",
+                fmt::format("{}:[window_title={},w={},h={},GL_PROFILE={}]//",
                  params.window_engine, params.title,
-                 params.window_size.width, params.window_size.height)
+                 params.window_size.width, params.window_size.height, "3.2 CORE")
             )
         })),
         size_(params.window_size)
@@ -58,6 +36,9 @@ struct ContextImpl : public Context {
             size_.width = e.width;
             size_.height = e.height;
         });
+        window()->MakeCurrent();
+        glewInit();
+        window()->ProcessEvents();
     }
 
     Shared<Window> window() override {
@@ -96,8 +77,6 @@ struct ContextImpl : public Context {
         auto close_connection = window()->CloseSignal.connect(
             [&](){ should_run = false; }
         );
-
-        window()->MakeCurrent();
 
         while(should_run && loop_function()) {
             drawPanels();

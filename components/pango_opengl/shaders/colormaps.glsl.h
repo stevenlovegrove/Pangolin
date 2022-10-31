@@ -114,30 +114,30 @@ vec3 stripes(float t)
     return vec3(mod(floor(t * 64.0), 2.0) * 0.2 + 0.8);
 }
 
-// vec3 Hsv(float hue, float sat, float val)
-// {
-//     float h = 6.0 * hue;
-//     int i = int(floor(h));
-//     float f = (i%2 == 0) ? 1-(h-i) : h-i;
-//     float m = val * (1-sat);
-//     float n = val * (1-sat*f);
+vec3 Hsv(float hue, float sat, float val)
+{
+    float h = 6.0 * hue;
+    int i = int(floor(h));
+    float f = (i%2 == 0) ? 1-(h-i) : h-i;
+    float m = val * (1-sat);
+    float n = val * (1-sat*f);
 
-//     switch(i)
-//     {
-//     case 0: return vec3(val,n,m);
-//     case 1: return vec3(n,val,m);
-//     case 2: return vec3(m,val,n);
-//     case 3: return vec3(m,n,val);
-//     case 4: return vec3(n,m,val);
-//     case 5: return vec3(val,m,n);
-//     default:
-//         return vec3(0.0,0.0,0.0);
-//     }
-// }
+    switch(i)
+    {
+    case 0: return vec3(val,n,m);
+    case 1: return vec3(n,val,m);
+    case 2: return vec3(m,val,n);
+    case 3: return vec3(m,n,val);
+    case 4: return vec3(n,m,val);
+    case 5: return vec3(val,m,n);
+    default:
+        return vec3(0.0,0.0,0.0);
+    }
+}
 
-// vec3 GetColourBin(int i, float sat, float val)
-// {
-//     float hue = i * 0.5 * (3.0 - sqrt(5.0));
-//     hue = hue - floor(hue);
-//     return Hsv(hue,sat,val);
-// }
+vec3 GetColourBin(int i, float sat, float val)
+{
+    float hue = i * 0.5 * (3.0 - sqrt(5.0));
+    hue = hue - floor(hue);
+    return Hsv(hue,sat,val);
+}
