@@ -159,8 +159,8 @@ void computeLayoutConstraints(const RenderLayerGroup& group) {
     if(group.layer) {
         for(int i=0; i < 2; ++i) {
             std::visit(overload {
-                [&](RenderLayer::Parts part)  {  total.parts[i] = max(total.parts[i], part.ratio); },
-                [&](RenderLayer::Absolute ab) {  total.min_pix[i] = max(total.min_pix[i], ab.pixels); },
+                [&](Parts part)  {  total.parts[i] = max(total.parts[i], part.ratio); },
+                [&](Pixels ab) {  total.min_pix[i] = max(total.min_pix[i], ab.pixels); },
             }, group.layer->sizeHint()[i]);
         }
     }

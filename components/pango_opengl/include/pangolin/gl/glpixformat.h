@@ -41,24 +41,24 @@ struct GlPixFormat
 
     GlPixFormat(const PixelFormat& fmt)
     {
-        switch( fmt.channels) {
+        switch( fmt.num_channels) {
         case 1: glformat = GL_RED; break;
         case 2: glformat = GL_RG; break;
-        case 3: glformat = fmt.format.substr(0, 3) == "BGR"? GL_BGR  : GL_RGB;  break;
-        case 4: glformat = fmt.format.substr(0, 4) == "BGRA"? GL_BGRA : GL_RGBA; break;
-        default: throw std::runtime_error("Unable to form OpenGL format from video format: '" + fmt.format + "'.");
+        case 3: glformat = GL_RGB;  break;
+        case 4: glformat = GL_RGBA; break;
+        default: throw std::runtime_error("Unable to form OpenGL format from video format: '" + std::string(ToString(fmt)) + "'.");
         }
 
-        const bool is_integral = fmt.format.find('F') == std::string::npos;
+        const bool is_integral = fmt.number_type == sophus::NumberType::fixed_point;
 
-        switch (fmt.channel_bits[0]) {
-        case 8: gltype = GL_UNSIGNED_BYTE; break;
-        case 10: gltype = GL_UNSIGNED_SHORT; break;
-        case 12: gltype = GL_UNSIGNED_SHORT; break;
-        case 16: gltype = GL_UNSIGNED_SHORT; break;
-        case 32: gltype = (is_integral ? GL_UNSIGNED_INT : GL_FLOAT); break;
-        case 64: gltype = (is_integral ? GL_UNSIGNED_INT64_NV : GL_DOUBLE); break;
-        default: throw std::runtime_error("Unknown OpenGL data type for video format: '" + fmt.format + "'.");
+        switch (fmt.num_bytes_per_pixel_channel) {
+        case 1: gltype = GL_UNSIGNED_BYTE; break;
+        // case 10: gltype = GL_UNSIGNED_SHORT; break;
+        // case 12: gltype = GL_UNSIGNED_SHORT; break;
+        case 2: gltype = GL_UNSIGNED_SHORT; break;
+        case 4: gltype = (is_integral ? GL_UNSIGNED_INT : GL_FLOAT); break;
+        case 8: gltype = (is_integral ? GL_UNSIGNED_INT64_NV : GL_DOUBLE); break;
+        default: throw std::runtime_error("Unknown OpenGL data type for video format: '" + std::string(ToString(fmt)) + "'.");
         }
 
         if(glformat == GL_RED) {

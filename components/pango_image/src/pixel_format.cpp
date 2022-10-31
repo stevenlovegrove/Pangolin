@@ -27,61 +27,61 @@
 
 #include <pangolin/image/pixel_format.h>
 
-#include <vector>
 #include <stdexcept>
+
 
 namespace pangolin
 {
 
-// Not to exceed 8 byte Format code.
-const PixelFormat SupportedPixelFormats[] =
+const std::unordered_map<const char*, RuntimePixelType>& KnownPixelTypes()
 {
-    {"GRAY8", 1, {8}, 8, 8, false},
-    {"GRAY10", 1, {10}, 10, 10, false},
-    {"GRAY12", 1, {12}, 12, 12, false},
-    {"GRAY16LE", 1, {16}, 16, 16, false},
-    {"GRAY32", 1, {32}, 32, 32, false},
-    {"Y400A", 2, {8,8}, 16, 8, false},
-    {"RGB24", 3, {8,8,8}, 24, 8, false},
-    {"BGR24", 3, {8,8,8}, 24, 8, false},
-    {"RGB48", 3, {16,16,16}, 48, 16, false},
-    {"BGR48", 3, {16,16,16}, 48, 16, false},
-    {"YUYV422", 3, {4,2,2}, 16, 8, false},
-    {"UYVY422", 3, {4,2,2}, 16, 8, false},
-    {"RGBA32",  4, {8,8,8,8}, 32, 8, false},
-    {"BGRA32",  4, {8,8,8,8}, 32, 8, false},
-    {"RGBA64",  4, {16,16,16,16}, 64, 16, false},
-    {"BGRA64",  4, {16,16,16,16}, 64, 16, false},
-    {"GRAY32F", 1, {32}, 32, 32, false},
-    {"GRAY64F", 1, {64}, 64, 64, false},
-    {"RGB48F",  3, {16,16,16}, 48, 16, false},
-    {"BGR48F",  3, {16,16,16}, 48, 16, false},
-    {"RGBA64F",  4, {16,16,16,16}, 64, 16, false},
-    {"BGRA64F",  4, {16,16,16,16}, 64, 16, false},
-    {"RGB96F",  3, {32,32,32}, 96, 32, false},
-    {"BGR96F",  3, {32,32,32}, 96, 32, false},
-    {"RGBA128F",  4, {32,32,32,32}, 128, 32, false},
-    {"ABGR128F",  4, {32,32,32,32}, 128, 32, false},
-    {"",0,{0,0,0,0},0,0,0}
-};
+    using namespace sophus;
+    static std::unordered_map<const char*, RuntimePixelType> table = {
+        {"GRAY8",    {NumberType::fixed_point, 1, 1}},
+        {"GRAY10",   {NumberType::fixed_point, 1, 1}},
+        {"GRAY12",   {NumberType::fixed_point, 1, 1}},
+        {"GRAY16LE", {NumberType::fixed_point, 1, 1}},
+        {"GRAY32",   {NumberType::fixed_point, 1, 1}},
+        // {"Y400A",    {NumberType::fixed_point, ?, ?}},
+        {"RGB24",    {NumberType::fixed_point, 3, 1}},
+        {"BGR24",    {NumberType::fixed_point, 3, 1}},
+        {"RGB48",    {NumberType::fixed_point, 3, 2}},
+        {"BGR48",    {NumberType::fixed_point, 3, 2}},
+        {"YUYV422",  {NumberType::fixed_point, 4, 2}},
+        {"UYVY422",  {NumberType::fixed_point, 4, 2}},
+        {"RGBA32",   {NumberType::fixed_point, 4, 1}},
+        {"BGRA32",   {NumberType::fixed_point, 4, 1}},
+        {"RGBA64",   {NumberType::fixed_point, 4, 2}},
+        {"BGRA64",   {NumberType::fixed_point, 4, 2}},
+        {"GRAY32F",  {NumberType::floating_point, 1, 4}},
+        {"GRAY64F",  {NumberType::floating_point, 1, 8}},
+        {"RGB48F",   {NumberType::floating_point, 3, 2}},
+        {"BGR48F",   {NumberType::floating_point, 3, 2}},
+        {"RGBA64F",  {NumberType::floating_point, 4, 2}},
+        {"BGRA64F",  {NumberType::floating_point, 4, 2}},
+        {"RGB96F",   {NumberType::floating_point, 3, 4}},
+        {"BGR96F",   {NumberType::floating_point, 3, 4}},
+        {"RGBA128F", {NumberType::floating_point, 4, 4}},
+        {"ABGR128F", {NumberType::floating_point, 4, 4}},
+    };
 
-PixelFormat PixelFormatFromString(const std::string& format)
+    return table;
+}
+
+RuntimePixelType PixelFormatFromString(const char* format)
 {
-    for(int i=0; !SupportedPixelFormats[i].format.empty(); ++i)
-        if(!format.compare(SupportedPixelFormats[i].format))
-            return SupportedPixelFormats[i];
+    const auto& m = KnownPixelTypes();
+    auto it = m.find(format);
+    if( it != m.end() ) return it->second;
     throw std::runtime_error( std::string("Unknown Format: ") + format);
 }
 
-std::vector<PixelFormat> GetSupportedPixelFormats()
+const char* ToString(const RuntimePixelType& fmt)
 {
-    std::vector<PixelFormat> result;
-    const PixelFormat* pixelFormat = SupportedPixelFormats;
-    while( pixelFormat->format.length() > 0 ){
-        result.push_back( *pixelFormat );
-        pixelFormat++;
+    for(auto& [key, val] : KnownPixelTypes()) {
+        if(val == fmt) return key;
     }
-    return result;
+    throw std::runtime_error( std::string("Unknown Format"));
 }
 
 }

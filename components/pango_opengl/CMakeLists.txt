@@ -14,7 +14,7 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/glfont.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/gltext.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/glpangoglu.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/gltexturecache.cpp
+    # ${CMAKE_CURRENT_LIST_DIR}/src/gltexturecache.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/viewport.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/opengl_render_state.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/stb_truetype.h

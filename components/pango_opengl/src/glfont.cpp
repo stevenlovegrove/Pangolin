@@ -56,8 +56,6 @@
 namespace pangolin
 {
 
-const bool use_alpha_font = false;
-
 // Hacked version of stbtt_FindGlyphIndex to extract valid codepoints in font
 // Good reference for file format here https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6cmap.html
 // Returns vector of codepoint ranges where pair represents the first valid codepoint in range, and one past the last.
@@ -115,20 +113,20 @@ std::vector<std::pair<uint32_t,uint32_t>> GetCodepointRanges(const stbtt_fontinf
     return ranges;
 }
 
-pangolin::ManagedImage<Eigen::Vector4f> GlFont::MakeFontLookupImage()
+sophus::Image<Eigen::Vector4f> GlFont::MakeFontLookupImage()
 {
-    pangolin::ManagedImage<Eigen::Vector4f> img(chardata.size(), 2);
+    sophus::MutImage<Eigen::Vector4f> img(sophus::ImageSize(chardata.size(), 2));
 
     for(const auto& cp_char : chardata) {
         // font offset
-        img(cp_char.second.AtlasIndex(), 0) = {
+        img.uncheckedMut(cp_char.second.AtlasIndex(), 0) = {
             cp_char.second.GetVert(0).tu,
             cp_char.second.GetVert(0).tv,
             cp_char.second.GetVert(2).tu - cp_char.second.GetVert(0).tu, // w
             cp_char.second.GetVert(2).tv - cp_char.second.GetVert(0).tv  // h
         };
         // screen offset
-        img(cp_char.second.AtlasIndex(), 1) = {
+        img.uncheckedMut(cp_char.second.AtlasIndex(), 1) = {
             cp_char.second.GetVert(0).x,
             -cp_char.second.GetVert(0).y,
             cp_char.second.GetVert(2).x - cp_char.second.GetVert(0).x, // w
@@ -157,15 +155,15 @@ std::u16string GlFont::to_index_string(const std::string& utf8)
     return to_index_string(utf32);
 }
 
-pangolin::ManagedImage<uint16_t> GlFont::MakeFontIndexImage(const std::string& utf8)
+sophus::Image<uint16_t> GlFont::MakeFontIndexImage(const std::string& utf8)
 {
     const std::u32string utf32 = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(utf8);
 
-    pangolin::ManagedImage<uint16_t> img(utf32.size(), 1);
+    sophus::MutImage<uint16_t> img(sophus::ImageSize(utf32.size(), 1));
 
     for(size_t i=0; i < utf32.size(); ++i) {
         const auto& ch = chardata[utf32[i]];
-        img(i,0) = ch.AtlasIndex();
+        img.uncheckedMut(i,0) = ch.AtlasIndex();
     }
 
     return img;
@@ -227,7 +225,8 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
     font_max_width_px = 0;
     bitmap_type = use_alpha_font ? FontBitmapType::Alpha : FontBitmapType::SDF;
 
-    font_bitmap.Reinitialise(tex_w,tex_h,PixelFormatFromString("GRAY8"));
+    sophus::MutImage<uint8_t> font_write(sophus::ImageSize(tex_w,tex_h));
+
     const int offset = 0;
 
     stbtt_fontinfo f;
@@ -237,7 +236,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
 
     float scale = stbtt_ScaleForPixelHeight(&f, pixel_height);
 
-    font_bitmap.Memset(0);
+    font_write.fill(0);
     int x = 1;
     int y = 1;
     int bottom_y = 1;
@@ -245,8 +244,8 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
     // Only relevant for SDF codepath
     const float half_max_sdf_dist_pix = 5.0;
     bitmap_max_sdf_dist_uv = {
-        2.0f * half_max_sdf_dist_pix / font_bitmap.w,
-        2.0f * half_max_sdf_dist_pix / font_bitmap.h,
+        2.0f * half_max_sdf_dist_pix / font_write.width(),
+        2.0f * half_max_sdf_dist_pix / font_write.height(),
     };
 
     const auto ranges = GetCodepointRanges(&f);
@@ -273,7 +272,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                     throw std::runtime_error("Unable to initialise font: run out of texture pixel space.");
                 STBTT_assert(x+gw < tex_w);
                 STBTT_assert(y+gh < tex_h);
-                stbtt_MakeGlyphBitmap(&f, font_bitmap.RowPtr(y) + x, gw, gh, font_bitmap.pitch, scale, scale, g);
+                stbtt_MakeGlyphBitmap(&f, font_write.rowPtrMut(y) + x, gw, gh, font_write.pitchBytes(), scale, scale, g);
 
                 // Adjust offset for edges of pixels
                 chardata.try_emplace(codepoint, chardata.size(), tex_w,tex_h, x, y, gw, gh, scale*advance, x0, -y0);
@@ -286,7 +285,7 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                 int gw, gh, x0, y0;
                 unsigned char* psdf = stbtt_GetGlyphSDF(&f, scale, g, half_max_sdf_dist_pix, 128, 128.0/half_max_sdf_dist_pix, &gw, &gh, &x0, &y0);
                 if(psdf) {
-                    Image<unsigned char> sdf(psdf, gw, gh, gw);
+                    sophus::ImageView<unsigned char> sdf(sophus::ImageSize(gw, gh), psdf);
 
                     font_max_width_px = std::max(font_max_width_px, (float)gw);
 
@@ -297,10 +296,12 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
                     STBTT_assert(x+gw < tex_w);
                     STBTT_assert(y+gh < tex_h);
 
-                    font_bitmap.SubImage(x, y, gw, gh).CopyFrom(sdf);
+                    font_write.mutSubview({x, y}, {gw, gh}).copyDataFrom(sdf);
 
                     // Adjust offset for edges of pixels
-                    chardata.try_emplace(codepoint, chardata.size(), font_bitmap.w, font_bitmap.h, x, y, gw, gh, scale*advance, x0, -y0);
+                    chardata.try_emplace(codepoint, chardata.size(),
+                        font_write.width(), font_write.height(),
+                        x, y, gw, gh, scale*advance, x0, -y0);
 
                     font_max_width_px = std::max(font_max_width_px, (float)gw);
 
@@ -329,6 +330,8 @@ void GlFont::InitialiseFont(const unsigned char* truetype_data, float pixel_heig
             }
         }
     }
+
+    font_bitmap = std::move(font_write);
 }
 
 void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std::string& atlas_json)
@@ -336,7 +339,7 @@ void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std:
     use_alpha_font = false;
     font_bitmap = LoadImage(atlas_bitmap);
 
-    if(!font_bitmap.IsValid())  throw std::runtime_error("Problem loading font atlas");
+    if(font_bitmap.isEmpty())  throw std::runtime_error("Problem loading font atlas");
 
     picojson::value meta;
     {
@@ -362,8 +365,8 @@ void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std:
 
     const float max_sdf_dist_pix = atlas.get_value("distanceRange",0.0);
     bitmap_max_sdf_dist_uv = {
-        max_sdf_dist_pix / font_bitmap.w,
-        max_sdf_dist_pix / font_bitmap.h,
+        max_sdf_dist_pix / font_bitmap.width(),
+        max_sdf_dist_pix / font_bitmap.height(),
     };
 
     for(size_t i=0; i < glyphs.size(); ++i) {
@@ -393,20 +396,20 @@ void GlFont::InitialiseFontFromAtlas(const std::string& atlas_bitmap, const std:
 
             font_max_width_px = std::max(font_max_width_px, (float)gw);
 
-            chardata.try_emplace(codepoint, chardata.size(), font_bitmap.w, font_bitmap.h, x, y, gw, gh, adv, pl, -pt);
+            chardata.try_emplace(codepoint, chardata.size(), font_bitmap.width(), font_bitmap.height(), x, y, gw, gh, adv, pl, -pt);
         }
     }
 }
 
 void GlFont::InitialiseGlTexture()
 {
-    if(font_bitmap.IsValid()) {
+    if(!font_bitmap.isEmpty()) {
         if(use_alpha_font) {
-            mTex.Reinitialise(font_bitmap.w, font_bitmap.h, GL_ALPHA, true, 0, GL_ALPHA, GL_UNSIGNED_BYTE, font_bitmap.ptr);
+            mTex.Reinitialise(font_bitmap.width(), font_bitmap.height(), GL_ALPHA, true, 0, GL_ALPHA, GL_UNSIGNED_BYTE, font_bitmap.rawPtr());
         }else{
             mTex.Load(font_bitmap);
         }
-        font_bitmap.Deallocate();
+        font_bitmap = IntensityImage();
     }
 }
 

@@ -1,5 +1,5 @@
 #include <fstream>
-#include <pangolin/image/typed_image.h>
+#include <pangolin/image/runtime_image.h>
 
 namespace pangolin {
 
@@ -9,7 +9,7 @@ struct BitmapHeader
   uint16_t magic;
   uint32_t filesize_bytes;
   uint32_t reserved;
-  uint32_t offset_bytes;  
+  uint32_t offset_bytes;
 };
 struct BitmapInfoHeader
 {
@@ -32,7 +32,7 @@ static_assert(sizeof(BitmapInfoHeader) == 40, "Unexpected padding on struct");
 
 
 // https://en.wikipedia.org/wiki/BMP_file_format
-TypedImage LoadBmp(std::istream& in)
+IntensityImage LoadBmp(std::istream& in)
 {
   constexpr uint16_t expected_magic = 'B' | 'M' << 8;
 
@@ -43,7 +43,7 @@ TypedImage LoadBmp(std::istream& in)
   memset((char*)&bmp_info_header, 0, sizeof(bmp_info_header));
 
   in.read((char*)&bmp_file_header, sizeof(bmp_file_header));
-  if(!in.good() || bmp_file_header.magic != expected_magic) 
+  if(!in.good() || bmp_file_header.magic != expected_magic)
     throw std::runtime_error("LoadBmp: invalid magic header");
 
   in.read((char*)&bmp_info_header, sizeof(bmp_info_header));
@@ -62,14 +62,15 @@ TypedImage LoadBmp(std::istream& in)
   if( w == 0 || h == 0)
     throw std::runtime_error("LoadBmp: Invalid Bitmap size");
 
-  TypedImage img(w, h, fmt);
+  sophus::MutImage3U8 img(sophus::ImageSize(w, h));
+  const int num_channels = 3;
 
   for (int y = ( (int)h - 1); y != -1; y--)
   {
-    char* p_pix = (char*)img.RowPtr(y);
-    in.read(p_pix, w * fmt.channels);
-    
-    if(!in.good()) 
+    char* p_pix = (char*)img.rowPtrMut(y);
+    in.read(p_pix, w * num_channels);
+
+    if(!in.good())
       throw std::runtime_error("LoadBmp: Unexpected end of stream.");
 
     // Convert from BGR to RGB
@@ -77,7 +78,7 @@ TypedImage LoadBmp(std::istream& in)
     {
       // BGR -> RGB
       std::swap(p_pix[0], p_pix[2]);
-      p_pix += fmt.channels;
+      p_pix += num_channels;
     }
 
     in.ignore(padding_bytes);
@@ -86,7 +87,7 @@ TypedImage LoadBmp(std::istream& in)
   return img;
 }
 
-void SaveBmp(const Image<unsigned char>& /*image*/, const pangolin::PixelFormat& /*fmt*/, std::ostream& /*out*/, bool /*top_line_first*/)
+void SaveBmp(const IntensityImage& /*image*/, std::ostream& /*out*/, bool /*top_line_first*/)
 {
   throw std::runtime_error("SaveBMP: Not implemented");
 }

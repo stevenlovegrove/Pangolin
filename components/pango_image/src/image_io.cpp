@@ -32,51 +32,51 @@
 namespace pangolin {
 
 // PNG
-TypedImage LoadPng(std::istream& in);
-void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first, int zlib_compression_level );
+IntensityImage LoadPng(std::istream& in);
+void SavePng(const IntensityImage& image, std::ostream& out, bool top_line_first, int zlib_compression_level );
 
 // JPG
-TypedImage LoadJpg(std::istream& in);
-void SaveJpg(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, float quality);
+IntensityImage LoadJpg(std::istream& in);
+void SaveJpg(const IntensityImage& image, std::ostream& out, float quality);
 
 // PPM
-TypedImage LoadPpm(std::istream& in);
-void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first);
+IntensityImage LoadPpm(std::istream& in);
+void SavePpm(const IntensityImage& image, std::ostream& out, bool top_line_first);
 
 // TGA
-TypedImage LoadTga(std::istream& in);
+IntensityImage LoadTga(std::istream& in);
 
 // Pango
-TypedImage LoadPango(const std::string& filename);
-void SavePango(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
+IntensityImage LoadPango(const std::string& filename);
+void SavePango(const IntensityImage& image, const std::string& filename, bool top_line_first);
 
 // EXR
-TypedImage LoadExr(std::istream& source);
-void SaveExr(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first);
+IntensityImage LoadExr(std::istream& source);
+void SaveExr(const IntensityImage& image, const std::string& filename, bool top_line_first);
 
 // BMP
-TypedImage LoadBmp(std::istream& source);
-void SaveBmp(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first);
+IntensityImage LoadBmp(std::istream& source);
+void SaveBmp(const IntensityImage& image, std::ostream& out, bool top_line_first);
 
 // ZSTD (https://github.com/facebook/zstd)
-TypedImage LoadZstd(std::istream& in);
-void SaveZstd(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, int compression_level);
+IntensityImage LoadZstd(std::istream& in);
+void SaveZstd(const IntensityImage& image, std::ostream& out, int compression_level);
 
 // https://github.com/lz4/lz4
-TypedImage LoadLz4(std::istream& in);
-void SaveLz4(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, int compression_level);
+IntensityImage LoadLz4(std::istream& in);
+void SaveLz4(const IntensityImage& image, std::ostream& out, int compression_level);
 
 // packed 12 bit image (obtained from unpacked 16bit)
-TypedImage LoadPacked12bit(std::istream& in);
-void SavePacked12bit(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out);
+IntensityImage LoadPacked12bit(std::istream& in);
+void SavePacked12bit(const IntensityImage& image, std::ostream& out);
 
 // LibRaw raw camera files
-TypedImage LoadLibRaw(const std::string& filename);
+IntensityImage LoadLibRaw(const std::string& filename);
 
 // TIFF
-TypedImage LoadTiff(const std::string& filename);
+IntensityImage LoadTiff(const std::string& filename);
 
-TypedImage LoadImage(std::istream& in, ImageFileType file_type)
+IntensityImage LoadImage(std::istream& in, ImageFileType file_type)
 {
     switch (file_type) {
     case ImageFileTypePng:
@@ -102,7 +102,7 @@ TypedImage LoadImage(std::istream& in, ImageFileType file_type)
     }
 }
 
-TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
+IntensityImage LoadImage(const std::string& filename, ImageFileType file_type)
 {
     switch (file_type) {
     case ImageFileTypePng:
@@ -129,37 +129,37 @@ TypedImage LoadImage(const std::string& filename, ImageFileType file_type)
     }
 }
 
-TypedImage LoadImage(const std::string& filename)
+IntensityImage LoadImage(const std::string& filename)
 {
     ImageFileType file_type = FileType(filename);
     return LoadImage( filename, file_type );
 }
 
-void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, ImageFileType file_type, bool top_line_first, float quality)
+void SaveImage(const IntensityImage& image, std::ostream& out, ImageFileType file_type, bool top_line_first, float quality)
 {
     switch (file_type) {
     case ImageFileTypePng:
         // map quality [0..100] to PNG compression levels [0..9]
-        return SavePng(image, fmt, out, top_line_first, int(quality*0.09));
+        return SavePng(image, out, top_line_first, int(quality*0.09));
     case ImageFileTypeJpg:
-        return SaveJpg(image, fmt, out, quality);
+        return SaveJpg(image, out, quality);
     case ImageFileTypePpm:
-        return SavePpm(image, fmt, out, top_line_first);
+        return SavePpm(image, out, top_line_first);
     case ImageFileTypeZstd:
-        return SaveZstd(image, fmt, out, (int)quality);
+        return SaveZstd(image, out, (int)quality);
     case ImageFileTypeLz4:
-        return SaveLz4(image, fmt, out, (int)quality);
+        return SaveLz4(image, out, (int)quality);
     case ImageFileTypeP12b:
-        return SavePacked12bit(image, fmt, out);
+        return SavePacked12bit(image, out);
     case ImageFileTypeBmp:
-        return SaveBmp(image, fmt, out, top_line_first);
+        return SaveBmp(image, out, top_line_first);
     default:
         throw std::runtime_error("Unable to save image file-type through std::istream");
     }
 }
 
 
-void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, ImageFileType file_type, bool top_line_first, float quality)
+void SaveImage(const IntensityImage& image, const std::string& filename, ImageFileType file_type, bool top_line_first, float quality)
 {
     switch (file_type) {
     case ImageFileTypePng:
@@ -171,27 +171,22 @@ void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& f
     case ImageFileTypeBmp:
     {
         std::ofstream ofs(filename, std::ios_base::binary);
-        return SaveImage(image, fmt, ofs, file_type, top_line_first, quality);
+        return SaveImage(image, ofs, file_type, top_line_first, quality);
     }
     case ImageFileTypeExr:
-        return SaveExr(image, fmt, filename, top_line_first);
+        return SaveExr(image, filename, top_line_first);
     case ImageFileTypePango:
-        return SavePango(image, fmt, filename, top_line_first);
+        return SavePango(image, filename, top_line_first);
     default:
         throw std::runtime_error("Unsupported image file type, '" + filename + "'");
     }
 }
 
-void SaveImage(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first, float quality)
+void SaveImage(const IntensityImage& image, const std::string& filename, bool top_line_first, float quality)
 {
     const std::string ext = FileLowercaseExtention(filename);
     const ImageFileType file_type = FileTypeExtension(ext);
-    SaveImage(image, fmt, filename,file_type, top_line_first, quality);
-}
-
-void SaveImage(const TypedImage& image, const std::string& filename, bool top_line_first, float quality)
-{
-    SaveImage(image, image.fmt, filename, top_line_first, quality);
+    SaveImage(image, filename,file_type, top_line_first, quality);
 }
 
 }

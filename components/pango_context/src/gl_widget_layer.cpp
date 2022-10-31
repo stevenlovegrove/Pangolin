@@ -209,10 +209,9 @@ void GlWidgetLayer::renderIntoRegion(const RenderParams& p)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     setGlViewport(p.region);
-    // setGlScissor(p.region);
-    glClearColor(1.0,0.0,0.0,1.0);
+    setGlScissor(p.region);
+    glClearColor(0.0,0.0,0.0,1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // return;
 
     auto size = p.region.range();
 

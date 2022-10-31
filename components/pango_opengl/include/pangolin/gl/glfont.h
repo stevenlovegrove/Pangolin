@@ -66,8 +66,8 @@ public:
     }
 
 //protected:
-    ManagedImage<Eigen::Vector4f> MakeFontLookupImage();
-    ManagedImage<uint16_t> MakeFontIndexImage(const std::string& utf8);
+    sophus::Image<Eigen::Vector4f> MakeFontLookupImage();
+    sophus::Image<uint16_t> MakeFontIndexImage(const std::string& utf8);
     std::u16string to_index_string(const std::u32string& utf32);
     std::u16string to_index_string(const std::string& utf8);
 
@@ -85,7 +85,7 @@ public:
     FontBitmapType bitmap_type;
     std::array<float,2> bitmap_max_sdf_dist_uv;
 
-    TypedImage font_bitmap;
+    IntensityImage font_bitmap;
     GlTexture mTex;
     bool use_alpha_font;
 

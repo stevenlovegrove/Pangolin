@@ -1,7 +1,7 @@
 #include <pangolin/platform.h>
 
 #include <fstream>
-#include <pangolin/image/typed_image.h>
+#include <pangolin/image/runtime_image.h>
 
 #ifdef HAVE_OPENEXR
 #include <ImfChannelList.h>
@@ -115,7 +115,7 @@ PixelFormat GetPixelFormat(const Imf::Header& header)
 
 #endif //HAVE_OPENEXR
 
-TypedImage LoadExr(std::istream& source)
+IntensityImage LoadExr(std::istream& source)
 {
 #ifdef HAVE_OPENEXR
     StdIStream istream(source);
@@ -175,7 +175,7 @@ TypedImage LoadExr(std::istream& source)
 #endif //HAVE_OPENEXR
 }
 
-void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& fmt, const std::string& filename, bool top_line_first)
+void SaveExr(const IntensityImage& image_in, const std::string& filename, bool top_line_first)
 {
 #ifdef HAVE_OPENEXR
     ManagedImage<unsigned char> flip_image;
@@ -221,7 +221,6 @@ void SaveExr(const Image<unsigned char>& image_in, const pangolin::PixelFormat& 
 
 #else
     PANGOLIN_UNUSED(image_in);
-    PANGOLIN_UNUSED(fmt);
     PANGOLIN_UNUSED(filename);
     PANGOLIN_UNUSED(top_line_first);
     throw std::runtime_error("EXR Support not enabled. Please rebuild Pangolin.");

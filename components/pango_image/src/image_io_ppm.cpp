@@ -1,5 +1,5 @@
 #include <fstream>
-#include <pangolin/image/typed_image.h>
+#include <pangolin/image/runtime_image.h>
 
 namespace pangolin {
 
@@ -26,7 +26,7 @@ void PpmConsumeWhitespaceAndComments(std::istream& in)
     while( in.peek() == '#' )  in.ignore(4096, '\n');
 }
 
-TypedImage LoadPpm(std::istream& in)
+IntensityImage LoadPpm(std::istream& in)
 {
     // Parse header
     std::string ppm_type = "";
@@ -44,11 +44,11 @@ TypedImage LoadPpm(std::istream& in)
     in.ignore(1,'\n');
 
     if(!in.fail() && w > 0 && h > 0) {
-        TypedImage img(w, h, PpmFormat(ppm_type, num_colors) );
+        IntensityImage img( sophus::ImageSize(w, h), PpmFormat(ppm_type, num_colors) );
 
         // Read in data
-        for(size_t r=0; r<img.h; ++r) {
-            in.read( (char*)img.ptr + r*img.pitch, img.pitch );
+        for(size_t r=0; r<img.height(); ++r) {
+            in.read( (char*)img.rawRowPtr(r), img.pitchBytes() );
         }
         if(!in.fail()) {
             return img;
@@ -58,21 +58,24 @@ TypedImage LoadPpm(std::istream& in)
     throw std::runtime_error("Unable to load PPM file.");
 }
 
-void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& out, bool top_line_first)
+void SavePpm(const IntensityImage& image, std::ostream& out, bool top_line_first)
 {
+    using namespace sophus;
+
     // Setup header variables
     std::string ppm_type = "";
-    int num_colors = 0;
-    int w = (int)image.w;
-    int h = (int)image.h;
+    const int w = (int)image.width();
+    const int h = (int)image.height();
 
-    if(fmt.format == "GRAY8") {
+    int num_colors = 0;
+
+    if(image.pixelType().is<uint8_t>()) {
         ppm_type = "P5";
         num_colors = 255;
-    }else if(fmt.format == "GRAY16LE") {
+    }else if(image.pixelType().is<uint16_t>()) {
         ppm_type = "P5";
         num_colors = 65535;
-    }else if(fmt.format == "RGB24") {
+    }else if(image.pixelType().is<Pixel3U8>()) {
         ppm_type = "P6";
         num_colors = 255;
     }else{
@@ -91,12 +94,12 @@ void SavePpm(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
 
     // Write out data
     if(top_line_first) {
-        for(size_t r=0; r<image.h; ++r) {
-            out.write( (char*)image.ptr + r*image.pitch, image.pitch );
+        for(size_t r=0; r < h; ++r) {
+            out.write( (char*)image.rawRowPtr(r), image.pitchBytes() );
         }
     }else{
-        for(size_t r=0; r<image.h; ++r) {
-            out.write( (char*)image.ptr + (image.h-1-r)*image.pitch, image.pitch );
+        for(size_t r=0; r < h; ++r) {
+            out.write( (char*)image.rawRowPtr(h-1-r), image.pitchBytes() );
         }
     }
 }

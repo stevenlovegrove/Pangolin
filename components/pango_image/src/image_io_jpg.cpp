@@ -1,10 +1,11 @@
 #include <algorithm>
 #include <fstream>
+#include <vector>
 
 
 #include <pangolin/platform.h>
 
-#include <pangolin/image/typed_image.h>
+#include <pangolin/image/runtime_image.h>
 
 #ifdef HAVE_JPEG
 #  include <jpeglib.h>
@@ -14,6 +15,7 @@
 #  endif
 #endif // HAVE_JPEG
 
+using namespace sophus;
 
 // Inspired by https://cs.stanford.edu/~acoates/jpegAndIOS.txt
 
@@ -158,9 +160,9 @@ void pango_jpeg_set_dest_mgr(j_compress_ptr cinfo, std::ostream& os) {
 
 #endif // HAVE_JPEG
 
-TypedImage LoadJpg(std::istream& is) {
+IntensityImage LoadJpg(std::istream& is) {
 #ifdef HAVE_JPEG
-    TypedImage image;
+    sophus::IntensityImage<> image;
 
     struct jpeg_decompress_struct cinfo;
     struct jpeg_error_mgr jerr;
@@ -181,12 +183,12 @@ TypedImage LoadJpg(std::istream& is) {
         jpeg_start_decompress(&cinfo);
         // resize storage if necessary
         PixelFormat fmt = PixelFormatFromString(cinfo.output_components == 3 ? "RGB24" : "GRAY8");
-        image.Reinitialise(cinfo.output_width, cinfo.output_height, fmt);
+        image = sophus::IntensityImage<>(ImageSize(cinfo.output_width, cinfo.output_height), fmt);
         JSAMPARRAY imageBuffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE,
                                                             cinfo.output_width*cinfo.output_components, 1);
         for (size_t y = 0; y < cinfo.output_height; y++) {
             jpeg_read_scanlines(&cinfo, imageBuffer, 1);
-            uint8_t* dstRow = (uint8_t*)image.RowPtr(y);
+            uint8_t* dstRow = const_cast<uint8_t*>(image.rawRowPtr(y));
             memcpy(dstRow, imageBuffer[0], cinfo.output_width*cinfo.output_components);
         }
         jpeg_finish_decompress(&cinfo);
@@ -257,22 +259,22 @@ std::vector<std::streampos> GetMJpegOffsets(std::ifstream& is) {
     return offsets;
 }
 
-TypedImage LoadJpg(const std::string& filename) {
+IntensityImage LoadJpg(const std::string& filename) {
     std::ifstream f(filename);
     return LoadJpg(f);
 }
 
-void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostream& os, float quality) {
+void SaveJpg(const IntensityImage& img, std::ostream& os, float quality) {
 #ifdef HAVE_JPEG
     const int iquality = (int)std::max(std::min(quality, 100.0f),0.0f);
 
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr       jerr;
 
-    if (fmt.channels != 1 && fmt.channels != 3) {
+    if (img.numChannels() != 1 && img.numChannels() != 3) {
         throw std::runtime_error("Unsupported number of image channels.");
     }
-    if (fmt.bpp != 8 &&  fmt.bpp != 24) {
+    if (img.numBytesPerPixelChannel() != 1) {
         throw std::runtime_error("Unsupported image depth.");
     }
 
@@ -281,10 +283,10 @@ void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostre
     jpeg_create_compress(&cinfo);
     pango_jpeg_set_dest_mgr(&cinfo, os);
 
-    cinfo.image_width      = (JDIMENSION)img.w;
-    cinfo.image_height     = (JDIMENSION)img.h;
-    cinfo.input_components = fmt.channels;
-    if (fmt.channels == 3) {
+    cinfo.image_width      = (JDIMENSION)img.width();
+    cinfo.image_height     = (JDIMENSION)img.height();
+    cinfo.input_components = img.numChannels();
+    if (img.numChannels() == 3) {
         cinfo.in_color_space   = JCS_RGB;
     } else {
         cinfo.in_color_space   = JCS_GRAYSCALE;
@@ -296,7 +298,7 @@ void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostre
 
     JSAMPROW row;
     while (cinfo.next_scanline < cinfo.image_height) {
-        row = (JSAMPROW)((char*)img.RowPtr(cinfo.next_scanline));
+        row = (JSAMPROW)((char*)img.rawRowPtr(cinfo.next_scanline));
         jpeg_write_scanlines(&cinfo, &row, 1);
     }
 
@@ -311,9 +313,9 @@ void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, std::ostre
 #endif // HAVE_JPEG
 }
 
-void SaveJpg(const Image<unsigned char>& img, const PixelFormat& fmt, const std::string& filename, float quality) {
+void SaveJpg(const IntensityImage& img, const std::string& filename, float quality) {
     std::ofstream f(filename);
-    SaveJpg(img, fmt, f, quality);
+    SaveJpg(img, f, quality);
 }
 
 }

@@ -7,6 +7,9 @@
 namespace pangolin
 {
 
+struct Pixels {int pixels = 100;};
+struct Parts {double ratio = 1.0; };
+
 ////////////////////////////////////////////////////////////////////
 /// Represents a client area in a window with layout handling
 ///
@@ -14,13 +17,11 @@ struct RenderLayer : std::enable_shared_from_this<RenderLayer>
 {
     virtual ~RenderLayer() {}
 
-    struct Absolute {int pixels = 100;};
-    struct Parts {double ratio = 1.0; };
     struct RenderParams{
         MinMax<Eigen::Vector2i> region;
     };
 
-    using Dim = std::variant<Parts,Absolute>;
+    using Dim = std::variant<Parts,Pixels>;
     using Size = Eigen::Vector<Dim,2>;
 
     virtual void renderIntoRegion(const RenderParams&) = 0;

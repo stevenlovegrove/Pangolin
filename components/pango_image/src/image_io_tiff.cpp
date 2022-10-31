@@ -1,5 +1,5 @@
 #include <cassert>
-#include <pangolin/image/typed_image.h>
+#include <pangolin/image/runtime_image.h>
 
 #ifdef HAVE_LIBTIFF
 #  include <tiffio.h>
@@ -32,7 +32,7 @@ void DummyTiffOpenHandler(const char* module, const char* fmt, va_list ap)
     // TODO: Should probably send these somewhere...
 }
 
-TypedImage LoadTiff(
+IntensityImage LoadTiff(
     const std::string& filename
 ) {
 #ifdef HAVE_LIBTIFF
@@ -64,13 +64,13 @@ TypedImage LoadTiff(
     default: throw std::runtime_error("TIFF support is currently limited. Consider contributing to image_io_tiff.cpp.");
     }
 
-    TypedImage image(width, height, PixelFormatFromString(sfmt));
+    IntensityImage image(sophus::ImageSize(width, height), PixelFormatFromString(sfmt.c_str()));
     const tsize_t scanlength_bytes = TIFFScanlineSize(tif);
-    if(scanlength_bytes != tsize_t(image.pitch))
+    if(scanlength_bytes != tsize_t(image.pitchBytes()))
         throw std::runtime_error("TIFF: unexpected scanline length");
 
     for (size_t row = 0; row < height; ++row) {
-        TIFFReadScanline(tif, image.RowPtr(row), row);
+        TIFFReadScanline(tif, const_cast<uint8_t*>(image.rawRowPtr(row)), row);
     }
 
     TIFFClose(tif);
@@ -83,4 +83,3 @@ TypedImage LoadTiff(
 }
 
 }
-

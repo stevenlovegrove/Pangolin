@@ -20,7 +20,8 @@ struct RenderableImage
 
     // Image to render. Not all types will
     // be supported by the implementation.
-    Shared<DeviceBuffer> image;
+    Shared<DeviceBuffer> image =
+        DeviceBuffer::Create({DeviceBuffer::Kind::Texture});
 
     // How should fractional pixel coordinates be
     // rendered (when magnified)

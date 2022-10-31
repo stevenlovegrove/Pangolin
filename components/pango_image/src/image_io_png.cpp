@@ -71,7 +71,7 @@ void pango_png_stream_write_flush(png_structp pngPtr)
 #endif // HAVE_PNG
 
 
-TypedImage LoadPng(std::istream& source)
+IntensityImage LoadPng(std::istream& source)
 {
 #ifdef HAVE_PNG
     //so First, we validate our stream with the validate function I just mentioned
@@ -126,11 +126,12 @@ TypedImage LoadPng(std::istream& source)
     const size_t h = png_get_image_height(png_ptr,info_ptr);
     const size_t pitch = png_get_rowbytes(png_ptr, info_ptr);
 
-    TypedImage img(w, h, PngFormat(png_ptr, info_ptr), pitch);
+    auto shape = sophus::ImageShape::makeFromSizeAndPitch<uint8_t>(sophus::ImageSize(w,h), pitch);
+    IntensityImage img( shape, PngFormat(png_ptr, info_ptr));
 
     png_bytepp rows = png_get_rows(png_ptr, info_ptr);
     for( unsigned int r = 0; r < h; r++) {
-        memcpy( img.ptr + pitch*r, rows[r], pitch );
+        memcpy( const_cast<uint8_t*>(img.rawRowPtr(r)), rows[r], pitch );
     }
     png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 
@@ -141,22 +142,15 @@ TypedImage LoadPng(std::istream& source)
 #endif // HAVE_PNG
 }
 
-TypedImage LoadPng(const std::string& filename)
+IntensityImage LoadPng(const std::string& filename)
 {
     std::ifstream f(filename);
     return LoadPng(f);
 }
 
-void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, std::ostream& stream, bool top_line_first, int zlib_compression_level)
+void SavePng(const IntensityImage& image, std::ostream& stream, bool top_line_first, int zlib_compression_level)
 {
 #ifdef HAVE_PNG
-    // Check image has supported bit depth
-    for(unsigned int i=1; i < fmt.channels; ++i) {
-        if( fmt.channel_bits[i] != fmt.channel_bits[0] ) {
-            throw std::runtime_error("PNG Saving only supported for images where each channel has the same bit depth.");
-        }
-    }
-
     png_structp png_ptr;
     png_infop info_ptr;
 
@@ -184,10 +178,10 @@ void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
 
     png_set_write_fn(png_ptr,(png_voidp)&stream, pango_png_stream_write, pango_png_stream_write_flush);
 
-    const int bit_depth = fmt.channel_bits[0];
+    const int bit_depth = image.numBytesPerPixelChannel() * 8;
 
     int colour_type;
-    switch (fmt.channels) {
+    switch (image.numChannels()) {
     case 1: colour_type = PNG_COLOR_TYPE_GRAY; break;
     case 2: colour_type = PNG_COLOR_TYPE_GRAY_ALPHA; break;
     case 3: colour_type = PNG_COLOR_TYPE_RGB; break;
@@ -198,19 +192,19 @@ void SavePng(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
 
     // Write header
     png_set_IHDR(
-        png_ptr, info_ptr, (png_uint_32)image.w, (png_uint_32)image.h, bit_depth, colour_type,
+        png_ptr, info_ptr, (png_uint_32)image.width(), (png_uint_32)image.height(), bit_depth, colour_type,
         PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT
     );
 
     // Setup rows to write:
-    std::vector<png_bytep> rows(image.h);
+    std::vector<png_bytep> rows(image.height());
     if(top_line_first) {
-        for (unsigned int y = 0; y< image.h; y++) {
-            rows[y] = image.ptr + y*image.pitch;
+        for (unsigned int y = 0; y< image.height(); y++) {
+            rows[y] = const_cast<uint8_t*>(image.rawRowPtr(y));
         }
     }else{
-        for (unsigned int y = 0; y< image.h; y++) {
-            rows[y] = image.ptr + (image.h-1-y)*image.pitch;
+        for (unsigned int y = 0; y< image.height(); y++) {
+            rows[y] = const_cast<uint8_t*>(image.rawRowPtr(image.height()-1-y));
         }
     }
     png_set_rows(png_ptr,info_ptr, &rows[0]);

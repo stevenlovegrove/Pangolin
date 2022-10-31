@@ -26,7 +26,7 @@ PixelFormat TgaFormat(int depth, int color_type, int color_map)
     throw std::runtime_error("Unsupported TGA format");
 }
 
-TypedImage LoadTga(std::istream& in)
+IntensityImage LoadTga(std::istream& in)
 {
     unsigned char type[4];
     unsigned char info[6];
@@ -39,11 +39,11 @@ TypedImage LoadTga(std::istream& in)
     const int height = info[2] + (info[3] * 256);
 
     if(in.good()) {
-        TypedImage img(width, height, TgaFormat(info[4], type[2], type[1]) );
+        IntensityImage img( sophus::ImageSize(width, height), TgaFormat(info[4], type[2], type[1]) );
 
         //read in image data
-        const size_t data_size = img.h * img.pitch;
-        in.read((char*)img.ptr, sizeof(char)*data_size);
+        const size_t data_size = img.sizeBytes();
+        in.read((char*)img.rawPtr(), data_size);
         return img;
     }
 

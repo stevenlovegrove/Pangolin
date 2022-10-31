@@ -28,42 +28,25 @@
 #pragma once
 
 #include <pangolin/platform.h>
+#include <sophus/image/runtime_image.h>
+
 #include <string>
-#include <vector>
+#include <unordered_map>
 
 namespace pangolin
 {
-
-struct PANGOLIN_EXPORT PixelFormat
-{
-    // Previously, VideoInterface::PixFormat returned a string.
-    // For compatibility, make this string convertable
-    inline operator std::string() const { return format; }
-
-    std::string  format;
-    unsigned int channels;
-    unsigned int channel_bits[4]; //Of the data type
-    unsigned int bpp; //Of the data type
-    unsigned int channel_bit_depth; //Of the data
-    bool planar;
-};
-
+using RuntimePixelType = sophus::RuntimePixelType;
+using PixelFormat = sophus::RuntimePixelType;
 
 //! Return Pixel Format properties given string specification in
-//! FFMPEG notation.
+//! FFMPEG notation. E.g. GRAY8, RGB24, ...
 PANGOLIN_EXPORT
-PixelFormat PixelFormatFromString(const std::string& format);
+RuntimePixelType PixelFormatFromString(const char* format);
 
-std::vector<PixelFormat> GetSupportedPixelFormats();
+PANGOLIN_EXPORT
+const char* ToString(const RuntimePixelType& fmt);
 
-////////////////////////////////////////////////////////////////////
-/// Deprecated aliases for above
-
-PANGOLIN_DEPRECATED("Use PixelFormat instead")
-typedef PixelFormat VideoPixelFormat;
-PANGOLIN_DEPRECATED("Use PixelFormatFromString instead")
-inline PixelFormat VideoFormatFromString(const std::string& format) {
-    return PixelFormatFromString(format);
-}
+PANGOLIN_EXPORT
+const std::unordered_map<const char*, RuntimePixelType>& KnownPixelTypes();
 
 }

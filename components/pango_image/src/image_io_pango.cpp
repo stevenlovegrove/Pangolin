@@ -1,6 +1,6 @@
 #include <pangolin/platform.h>
 
-#include <pangolin/image/typed_image.h>
+#include <pangolin/image/runtime_image.h>
 
 #ifdef BUILD_PANGOLIN_VIDEO
 #  include <pangolin/video/drivers/pango.h>
@@ -9,7 +9,7 @@
 
 namespace pangolin {
 
-TypedImage LoadPango(const std::string& uri)
+IntensityImage LoadPango(const std::string& uri)
 {
     PANGOLIN_UNUSED(uri);
 
@@ -43,10 +43,9 @@ TypedImage LoadPango(const std::string& uri)
 #endif
 }
 
-void SavePango(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt, const std::string& uri, bool /*top_line_first*/)
+void SavePango(const IntensityImage& image, const std::string& uri, bool /*top_line_first*/)
 {
     PANGOLIN_UNUSED(image);
-    PANGOLIN_UNUSED(fmt);
     PANGOLIN_UNUSED(uri);
 
 #ifdef BUILD_PANGOLIN_VIDEO

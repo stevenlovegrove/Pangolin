@@ -29,6 +29,7 @@
 
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glpixformat.h>
+#include <pangolin/gl/gl_type_info.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/utils/type_convert.h>
 #include <algorithm>
@@ -116,7 +117,7 @@ inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bo
     Reinitialise(width,height,internal_format,sampling_linear,border,glformat,gltype,data);
 }
 
-inline GlTexture::GlTexture(const TypedImage& img, bool sampling_linear)
+inline GlTexture::GlTexture(const IntensityImage& img, bool sampling_linear)
 {
     this->Load(img, sampling_linear);
 }
@@ -133,7 +134,7 @@ inline GlTexture& GlTexture::operator=(GlTexture&& tex)
         tid = tex.tid;
         width = tex.width;
         height = tex.height;
-        
+
         tex.internal_format = 0;
         tex.tid = 0;
     }
@@ -171,7 +172,7 @@ inline void GlTexture::Unbind() const
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-inline void GlTexture::Reinitialise(GLsizei w, GLsizei h, GLint int_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, GLvoid* data )
+inline void GlTexture::Reinitialise(GLsizei w, GLsizei h, GLint int_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, const GLvoid* data )
 {
     if(tid!=0) {
         glDeleteTextures(1,&tid);
@@ -222,28 +223,30 @@ inline void GlTexture::Upload(
     CheckGlDieOnError();
 }
 
-inline void GlTexture::Load(const TypedImage& image, bool sampling_linear)
+inline void GlTexture::Load(const IntensityImage& image, bool sampling_linear)
 {
-    GlPixFormat fmt(image.fmt);
-    Reinitialise((GLint)image.w, (GLint)image.h, fmt.scalable_internal_format, sampling_linear, 0, fmt.glformat, fmt.gltype, image.ptr );
+    auto glfmt = glTypeInfo(image.pixelType());
+    Reinitialise((GLint)image.width(), (GLint)image.height(),
+     glfmt.gl_sized_format, sampling_linear, 0, glfmt.gl_base_format,
+     glfmt.gl_type, image.rawPtr() );
 }
 
 template<typename T>
-void GlTexture::Load(const Image<T>& image, bool sampling_linear)
+void GlTexture::Load(const sophus::ImageView<T>& image, bool sampling_linear)
 {
     using GlFmt = GlFormatTraits<T>;
 
     Reinitialise(
-        (GLint)image.w, (GLint)image.h,
+        (GLint)image.width(), (GLint)image.height(),
         GlFmt::glinternalformat,
         sampling_linear, 0,
         GlFmt::glformat, GlFmt::gltype,
-        image.ptr);
+        image.ptr());
 }
 
 inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_linear)
 {
-    TypedImage image = LoadImage(filename);
+    IntensityImage image = LoadImage(filename);
     Load(image, sampling_linear);
 }
 
@@ -258,73 +261,76 @@ inline void GlTexture::Download(void* image, GLenum data_layout, GLenum data_typ
     Unbind();
 }
 
-inline void GlTexture::Download(TypedImage& image) const
+inline void GlTexture::Download(IntensityImage& image) const
 {
+    auto size = sophus::ImageSize(width, height);
+    uint8_t* unsafe_ptr = const_cast<uint8_t*>(image.rawPtr());
+
     switch (internal_format)
     {
     case GL_LUMINANCE8:
-        image.Reinitialise(width, height, PixelFormatFromString("GRAY8") );
-        Download(image.ptr, GL_RED, GL_UNSIGNED_BYTE);
+        image = IntensityImage(size, PixelFormatFromString("GRAY8") );
+        Download(unsafe_ptr, GL_RED, GL_UNSIGNED_BYTE);
         break;
     case GL_LUMINANCE16:
-        image.Reinitialise(width, height, PixelFormatFromString("GRAY16LE") );
-        Download(image.ptr, GL_RED, GL_UNSIGNED_SHORT);
+        image = IntensityImage(size, PixelFormatFromString("GRAY16LE") );
+        Download(unsafe_ptr, GL_RED, GL_UNSIGNED_SHORT);
         break;
     case GL_RGB8:
-        image.Reinitialise(width, height, PixelFormatFromString("RGB24"));
-        Download(image.ptr, GL_RGB, GL_UNSIGNED_BYTE);
+        image = IntensityImage(size, PixelFormatFromString("RGB24"));
+        Download(unsafe_ptr, GL_RGB, GL_UNSIGNED_BYTE);
         break;
     case GL_RGBA8:
-        image.Reinitialise(width, height, PixelFormatFromString("RGBA32"));
-        Download(image.ptr, GL_RGBA, GL_UNSIGNED_BYTE);
+        image = IntensityImage(size, PixelFormatFromString("RGBA32"));
+        Download(unsafe_ptr, GL_RGBA, GL_UNSIGNED_BYTE);
         break;
     case GL_RED_INTEGER:
-        image.Reinitialise(width, height, PixelFormatFromString("GRAY32") );
-        Download(image.ptr, GL_RED, GL_UNSIGNED_INT);
+        image = IntensityImage(size, PixelFormatFromString("GRAY32") );
+        Download(unsafe_ptr, GL_RED, GL_UNSIGNED_INT);
         break;
     case GL_LUMINANCE:
     case GL_LUMINANCE32F_ARB:
     case GL_R32F:
-        image.Reinitialise(width, height, PixelFormatFromString("GRAY32F"));
-        Download(image.ptr, GL_RED, GL_FLOAT);
+        image = IntensityImage(size, PixelFormatFromString("GRAY32F"));
+        Download(unsafe_ptr, GL_RED, GL_FLOAT);
         break;
     case GL_RGB16:
-        image.Reinitialise(width, height, PixelFormatFromString("RGB48"));
-        Download(image.ptr, GL_RGB, GL_UNSIGNED_SHORT);
+        image = IntensityImage(size, PixelFormatFromString("RGB48"));
+        Download(unsafe_ptr, GL_RGB, GL_UNSIGNED_SHORT);
         break;
     case GL_RGBA16:
-        image.Reinitialise(width, height, PixelFormatFromString("RGBA64"));
-        Download(image.ptr, GL_RGBA, GL_UNSIGNED_SHORT);
+        image = IntensityImage(size, PixelFormatFromString("RGBA64"));
+        Download(unsafe_ptr, GL_RGBA, GL_UNSIGNED_SHORT);
         break;
     case GL_RGB16F:
-        image.Reinitialise(width, height, PixelFormatFromString("RGB48F"));
-        Download(image.ptr, GL_RGB, GL_HALF_FLOAT);
+        image = IntensityImage(size, PixelFormatFromString("RGB48F"));
+        Download(unsafe_ptr, GL_RGB, GL_HALF_FLOAT);
         break;
     case GL_RGBA16F:
-        image.Reinitialise(width, height, PixelFormatFromString("RGBA64F"));
-        Download(image.ptr, GL_RGBA, GL_HALF_FLOAT);
+        image = IntensityImage(size, PixelFormatFromString("RGBA64F"));
+        Download(unsafe_ptr, GL_RGBA, GL_HALF_FLOAT);
         break;
     case GL_RGB:
     case GL_RGB32F:
-        image.Reinitialise(width, height, PixelFormatFromString("RGB96F"));
-        Download(image.ptr, GL_RGB, GL_FLOAT);
+        image = IntensityImage(size, PixelFormatFromString("RGB96F"));
+        Download(unsafe_ptr, GL_RGB, GL_FLOAT);
         break;
     case GL_RGBA:
     case GL_RGBA32F:
-        image.Reinitialise(width, height, PixelFormatFromString("RGBA128F"));
-        Download(image.ptr, GL_RGBA, GL_FLOAT);
+        image = IntensityImage(size, PixelFormatFromString("RGBA128F"));
+        Download(unsafe_ptr, GL_RGBA, GL_FLOAT);
         break;
     case GL_DEPTH_COMPONENT16:
-        image.Reinitialise(width, height, PixelFormatFromString("GRAY16LE"));
-        Download(image.ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
+        image = IntensityImage(size, PixelFormatFromString("GRAY16LE"));
+        Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
         break;
     case GL_DEPTH_COMPONENT24:
-        image.Reinitialise(width, height, PixelFormatFromString("GRAY32"));
-        Download(image.ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
+        image = IntensityImage(size, PixelFormatFromString("GRAY32"));
+        Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
         break;
     case GL_DEPTH_COMPONENT32F:
-        image.Reinitialise(width, height, PixelFormatFromString("GRAY32F"));
-        Download(image.ptr, GL_DEPTH_COMPONENT, GL_FLOAT);
+        image = IntensityImage(size, PixelFormatFromString("GRAY32F"));
+        Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_FLOAT);
         break;
     default:
         throw std::runtime_error(
@@ -356,7 +362,7 @@ inline void GlTexture::CopyFrom(const GlTexture& tex)
 
 inline void GlTexture::Save(const std::string& filename, bool top_line_first)
 {
-    TypedImage image;
+    IntensityImage image;
     Download(image);
     pangolin::SaveImage(image, filename, top_line_first);
 }
@@ -1048,15 +1054,15 @@ inline void GlVertexArrayObject::DisableAttrib(const Attrib& attr) const
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline TypedImage ReadFramebuffer(const Viewport& v, const std::string& pixel_format)
+inline IntensityImage ReadFramebuffer(const Viewport& v, const char* pixel_format)
 {
     const PixelFormat fmt = PixelFormatFromString(pixel_format);
     const GlPixFormat glfmt(fmt);
 
-    TypedImage buffer(v.w, v.h, fmt );
+    IntensityImage buffer(sophus::ImageSize(v.w, v.h), fmt );
     glReadBuffer(GL_BACK);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glReadPixels(v.l, v.b, v.w, v.h, glfmt.glformat, glfmt.gltype, buffer.ptr );
+    glReadPixels(v.l, v.b, v.w, v.h, glfmt.glformat, glfmt.gltype, const_cast<uint8_t*>(buffer.rawPtr()) );
     return buffer;
 }
 

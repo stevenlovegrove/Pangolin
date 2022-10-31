@@ -1,5 +1,5 @@
 #include <fstream>
-#include <pangolin/image/typed_image.h>
+#include <pangolin/image/runtime_image.h>
 
 #ifdef HAVE_LIBRAW
 #  include <libraw/libraw.h>
@@ -7,7 +7,7 @@
 
 namespace pangolin {
 
-TypedImage LoadLibRaw(
+IntensityImage LoadLibRaw(
     const std::string& filename
 ) {
 #ifdef HAVE_LIBRAW

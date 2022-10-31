@@ -6,6 +6,8 @@
 
 #include "glutils.h"
 
+#include <unordered_map>
+
 namespace pangolin
 {
 
@@ -30,6 +32,17 @@ struct DrawLayerImpl : public DrawLayer {
     Size sizeHint() const override {
         return size_hint_;
     }
+
+    Renderable& get(const std::string& group_key, size_t object_key) override
+    {
+        return renderable;
+    }
+
+    void erase(const std::string& group_key, size_t object_key) override
+    {
+
+    }
+
 
     void setProjection(
         const Eigen::Matrix4d& intrinsic_k,
@@ -58,6 +71,13 @@ struct DrawLayerImpl : public DrawLayer {
 
     Eigen::Matrix4d intrinsic_k;
     Eigen::Matrix4d cam_from_world;
+
+    using GroupKey = std::string;
+    // using ObjectKey = size_t;
+    // uisng Key = std::pair<GroupKey,ObjectKey>;
+
+    // std::unordered_map<GroupKey,Renderable> renderables;
+    Renderable renderable;
 };
 
 PANGO_CREATE(DrawLayer) {

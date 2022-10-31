@@ -1,6 +1,6 @@
 #include <pangolin/render/device_buffer.h>
 #include <pangolin/context/factory.h>
-#include "gl_type_info.h"
+#include <pangolin/gl/gl_type_info.h>
 
 #include <deque>
 #include <mutex>

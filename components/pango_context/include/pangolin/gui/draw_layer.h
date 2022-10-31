@@ -10,15 +10,7 @@ namespace pangolin
 
 struct Handler;
 
-// TODO: This stuff is great for framebuffer rendering etc too.
-//       This should be an object independent of the GUI.
-//       Lets just have all panels contain a Render object,
-//       potentially a nullable one.
-//
-//       Scratch that - let's just rename RenderLayer to be RenderLayer
-//       the layout engine can already deal with stacks
-//
-//       Then we just need a kind of stack that supports a deferred
+// TODO: We just need a kind of stack that supports a deferred
 //       render stage, with pipelining? Need a renderable which
 //       can take a gpu resource directly.
 
@@ -33,9 +25,6 @@ struct Handler;
 //       How can a user partially update something? If everthing was
 //       nullable once uplaoded, the implementation could check if
 //       things get set.
-
-// TODO: Would a command queue style system be more sensible, where a
-//       user specifies what to update?
 
 ////////////////////////////////////////////////////////////////////
 /// Supports displaying interactive 2D / 3D elements
@@ -81,21 +70,21 @@ struct DrawLayer : public RenderLayer
     // can constrain viewing parameters to relevant content.
     virtual MinMax<Eigen::Vector3d> getSceneBoundsInWorld() const = 0;
 
-    // // get (and create if it doesn't exit) a renderable container to fill or update.
-    // // (group_key,object_key) form a key pair which can be used for removing or updating later.
-    // // Elements in a group can be enabled / disabled collectively
-    // virtual Renderable& getRenderableVariant(const std::string& group_key, size_t object_key = 0) = 0;
+    // get (and create if it doesn't exit) a renderable container to fill or update.
+    // (group_key,object_key) form a key pair which can be used for removing or updating later.
+    // Elements in a group can be enabled / disabled collectively
+    virtual Renderable& get(const std::string& group_key, size_t object_key = 0) = 0;
 
-    // // Remove the Renderable from the panel, deallocating any host and graphics memory
-    // // that it may have been using.
-    // virtual void removeRenderable(const std::string& group_key, size_t object_key = 0) = 0;
+    // Remove the Renderable from the panel, deallocating any host and graphics memory
+    // that it may have been using.
+    virtual void erase(const std::string& group_key, size_t object_key = 0) = 0;
 
-    // // Convenience template. Will throw if type is incorrect
-    // template<typename TRenderable>
-    // TRenderable& getRenderable(const std::string& group_key, size_t object_key = 0)
-    // {
-    //     return std::get<TRenderable>(getRenderableVariant(group_key, object_key));
-    // }
+    // Convenience template. Will throw if type is incorrect
+    template<typename TRenderable>
+    TRenderable& getT(const std::string& group_key, size_t object_key = 0)
+    {
+        return std::get<TRenderable>(get(group_key, object_key));
+    }
 
     struct Params {
         std::string title = "";
