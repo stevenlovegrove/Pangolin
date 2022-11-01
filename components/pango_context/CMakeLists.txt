@@ -13,6 +13,7 @@ set(component_file_basenames
   gl_framebuffer_reader
   gl_draw_layer
   gl_device_buffer
+  renderable
   multi_dim
 )
 

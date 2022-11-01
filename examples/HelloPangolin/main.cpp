@@ -7,6 +7,7 @@
 #include <sophus/image/image.h>
 #include <sophus/sensor/camera_model.h>
 #include <pangolin/var/var.h>
+#include <pangolin/image/image_io.h>
 
 using namespace pangolin;
 using namespace sophus;
@@ -18,15 +19,21 @@ void newApi()
         .window_size = {1024,600},
     } );
 
-    auto t1 = DrawLayer::Create({});
-    auto t2 = DrawLayer::Create({});
-    auto t3 = DrawLayer::Create({});
-    auto t4 = DrawLayer::Create({});
+    auto video_feed = RenderableImage::Create({
+        .image=LoadImage("/Users/stevenlovegrove/Desktop/headshots/1.png")
+    });
+
+    auto t1 = DrawLayer::Create({.title="Important Thing2", .objects={video_feed}});
+    auto t2 = DrawLayer::Create({.title="Important Thing2"});
+    auto t3 = DrawLayer::Create({.title="Important Thing3"});
+    auto t4 = DrawLayer::Create({.title="Important Thing4"});
     auto panel = WidgetLayer::Create({
         .size_hint = {Pixels{300}, Parts{1}}
     });
 
-    context->setLayout(panel | ((t1|t2) / (t3|t4)) );
+    context->setLayout(panel | ((t1|t2) / ((t3|t1)|t4)) );
+
+
 
     Var<float> test1("ui.slider1", 20.0, 0.0, 50.0);
     Var<int> test2("ui.slider2", 3, 0, 15);

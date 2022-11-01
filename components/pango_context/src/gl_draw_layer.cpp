@@ -15,7 +15,12 @@ struct DrawLayerImpl : public DrawLayer {
     Eigen::Array3f debug_random_color;
 
     DrawLayerImpl(const DrawLayerImpl::Params& p)
-        : size_hint_(p.size_hint)
+        : size_hint_(p.size_hint),
+        handler_(p.handler),
+        cam_from_world_(p.cam_from_world),
+        intrinsic_k_(p.intrinsic_k),
+        non_linear_(p.non_linear),
+        objects_(p.objects)
     {
         debug_random_color = (Eigen::Array3f::Random() + 1.0f) / 2.0;
 
@@ -32,17 +37,6 @@ struct DrawLayerImpl : public DrawLayer {
     Size sizeHint() const override {
         return size_hint_;
     }
-
-    Renderable& get(const std::string& group_key, size_t object_key) override
-    {
-        return renderable;
-    }
-
-    void erase(const std::string& group_key, size_t object_key) override
-    {
-
-    }
-
 
     void setProjection(
         const Eigen::Matrix4d& intrinsic_k,
@@ -65,19 +59,27 @@ struct DrawLayerImpl : public DrawLayer {
         return bounds_;
     }
 
+    void add(const Shared<Renderable>& r) override {
+        objects_.push_back(r);
+    }
+
+    void remove(const Shared<Renderable>& r) override {
+        throw std::runtime_error("Not implemented yet...");
+    }
+
+    void clear() override {
+        objects_.clear();
+    }
+
     MinMax<Eigen::Vector3d> bounds_;
     std::shared_ptr<Handler> handler_;
     Size size_hint_;
 
-    Eigen::Matrix4d intrinsic_k;
-    Eigen::Matrix4d cam_from_world;
+    Eigen::Matrix4d intrinsic_k_;
+    Eigen::Matrix4d cam_from_world_;
+    NonLinearMethod non_linear_;
 
-    using GroupKey = std::string;
-    // using ObjectKey = size_t;
-    // uisng Key = std::pair<GroupKey,ObjectKey>;
-
-    // std::unordered_map<GroupKey,Renderable> renderables;
-    Renderable renderable;
+    std::vector<Shared<Renderable>> objects_;
 };
 
 PANGO_CREATE(DrawLayer) {

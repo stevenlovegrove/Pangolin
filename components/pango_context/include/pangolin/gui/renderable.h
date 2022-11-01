@@ -10,7 +10,11 @@
 namespace pangolin
 {
 
-struct RenderableImage
+struct Renderable
+{
+};
+
+struct RenderableImage : public Renderable
 {
     enum class Interpolation
     {
@@ -20,8 +24,7 @@ struct RenderableImage
 
     // Image to render. Not all types will
     // be supported by the implementation.
-    Shared<DeviceBuffer> image =
-        DeviceBuffer::Create({DeviceBuffer::Kind::Texture});
+    Shared<DeviceTexture> image = DeviceTexture::Create();
 
     // How should fractional pixel coordinates be
     // rendered (when magnified)
@@ -39,9 +42,14 @@ struct RenderableImage
     // be (-0.5,-0.5) in pixel centered integral
     // coordinate convention.
     std::optional<Eigen::Matrix4d> world_from_image;
+
+    struct Params {
+        sophus::IntensityImage<> image = {};
+    };
+    static Shared<RenderableImage> Create(Params p);
 };
 
-struct RenderablePts
+struct RenderablePts : public Renderable
 {
     enum class Type
     {
@@ -58,19 +66,29 @@ struct RenderablePts
     };
 
     // Vertex data to render
-    Shared<DeviceBuffer> vertices;
+    Shared<DeviceBuffer> vertices = DeviceBuffer::Create({
+        .kind=DeviceBuffer::Kind::VertexAttributes
+    });
 
     // If provided, use as index buffer
-    Shared<DeviceBuffer> indices;
+    Shared<DeviceBuffer> indices = DeviceBuffer::Create({
+        .kind=DeviceBuffer::Kind::VertexIndices
+    });
 
     // If provided, use per-vertex colors
-    Shared<DeviceBuffer> colors;
+    Shared<DeviceBuffer> colors = DeviceBuffer::Create({
+        .kind=DeviceBuffer::Kind::VertexAttributes
+    });
 
     // If provided, use per-vertex normals
-    Shared<DeviceBuffer> normals;
+    Shared<DeviceBuffer> normals = DeviceBuffer::Create({
+        .kind=DeviceBuffer::Kind::VertexAttributes
+    });
 
     // If provided, use per_vertex radius for oriented disks
-    Shared<DeviceBuffer> radius;
+    Shared<DeviceBuffer> radius = DeviceBuffer::Create({
+        .kind=DeviceBuffer::Kind::VertexAttributes
+    });
 
     // Geometric element to interpret vertices as
     Type point_type = Type::points;
@@ -87,8 +105,9 @@ struct RenderablePts
     // radius buffer is empty. points are in pixel
     // units. Other elements are world units.
     float default_radius = 1.0;
-};
 
-using Renderable = std::variant<RenderableImage,RenderablePts>;
+    struct Params {};
+    static Shared<RenderablePts> Create(Params p = {});
+};
 
 }

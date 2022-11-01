@@ -72,21 +72,11 @@ struct DrawLayer : public RenderLayer
     // can constrain viewing parameters to relevant content.
     virtual MinMax<Eigen::Vector3d> getSceneBoundsInWorld() const = 0;
 
-    // get (and create if it doesn't exit) a renderable container to fill or update.
-    // (group_key,object_key) form a key pair which can be used for removing or updating later.
-    // Elements in a group can be enabled / disabled collectively
-    virtual Renderable& get(const std::string& group_key, size_t object_key = 0) = 0;
+    virtual void add(const Shared<Renderable>& r) = 0;
 
-    // Remove the Renderable from the panel, deallocating any host and graphics memory
-    // that it may have been using.
-    virtual void erase(const std::string& group_key, size_t object_key = 0) = 0;
+    virtual void remove(const Shared<Renderable>& r) = 0;
 
-    // Convenience template. Will throw if type is incorrect
-    template<typename TRenderable>
-    TRenderable& getT(const std::string& group_key, size_t object_key = 0)
-    {
-        return std::get<TRenderable>(get(group_key, object_key));
-    }
+    virtual void clear() = 0;
 
     struct Params {
         std::string title = "";
@@ -95,6 +85,7 @@ struct DrawLayer : public RenderLayer
         Eigen::Matrix4d cam_from_world = Eigen::Matrix4d::Identity();
         Eigen::Matrix4d intrinsic_k = Eigen::Matrix4d::Identity();
         NonLinearMethod non_linear = {};
+        std::vector<Shared<Renderable>> objects = {};
     };
     static Shared<DrawLayer> Create(Params p);
 };

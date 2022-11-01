@@ -28,12 +28,18 @@ std::array<size_t,kN> headAndZeros(
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// Subclass for textures
 
-struct DeviceBufferGl : public DeviceBuffer
+struct DeviceGlTexture : public DeviceTexture
 {
-    DeviceBufferGl()
-        : gl_id_(0)
+    DeviceGlTexture(GLenum gl_target)
+        : gl_target_(gl_target)
     {
+    }
+
+    ~DeviceGlTexture()
+    {
+        free();
     }
 
     void update(const Update& update) override
@@ -59,30 +65,6 @@ struct DeviceBufferGl : public DeviceBuffer
             }
             applyUpdateNow(u);
         }
-    }
-
-    virtual void applyUpdateNow(DeviceBuffer::Update& u) = 0;
-
-protected:
-    std::mutex buffer_mutex_;
-    std::deque<DeviceBuffer::Update> updates_;
-    RuntimePixelType data_type_;
-    GLuint gl_id_;
-};
-
-///////////////////////////////////////////////////////////////////////////
-// Subclass for textures
-
-struct DeviceBufferGlTexture : public DeviceBufferGl
-{
-    DeviceBufferGlTexture(GLenum gl_target)
-        : gl_target_(gl_target)
-    {
-    }
-
-    ~DeviceBufferGlTexture()
-    {
-        free();
     }
 
     void free()
@@ -132,19 +114,24 @@ struct DeviceBufferGlTexture : public DeviceBufferGl
     }
 
     GLenum gl_target_;
+        std::mutex buffer_mutex_;
+    std::deque<DeviceBuffer::Update> updates_;
+    RuntimePixelType data_type_;
+    GLuint gl_id_;
+
 };
 
 ///////////////////////////////////////////////////////////////////////////
 // Subclass for buffer objects
 
-struct DeviceBufferGlBufferObject : public DeviceBufferGl
+struct DeviceGlBuffer : public DeviceBuffer
 {
-    DeviceBufferGlBufferObject(GLenum buffer_type, GLenum gluse)
+    DeviceGlBuffer(GLenum buffer_type, GLenum gluse)
         : buffer_type_(buffer_type), gluse_(gluse)
     {
     }
 
-    ~DeviceBufferGlBufferObject()
+    ~DeviceGlBuffer()
     {
         free();
     }
@@ -152,6 +139,31 @@ struct DeviceBufferGlBufferObject : public DeviceBufferGl
     void free()
     {
         if(gl_id_ != 0) glDeleteBuffers(1, &gl_id_);
+    }
+
+    void update(const Update& update) override
+    {
+        std::lock_guard<std::mutex> guard(buffer_mutex_);
+        updates_.push_back(update);
+    }
+
+    bool empty() override
+    {
+        return gl_id_ == 0;
+    }
+
+    void sync() override
+    {
+        while(true) {
+            DeviceBuffer::Update u;
+            {
+                std::lock_guard<std::mutex> guard(buffer_mutex_);
+                if(updates_.empty()) return;
+                u = updates_.front();
+                updates_.pop_front();
+            }
+            applyUpdateNow(u);
+        }
     }
 
     void applyUpdateNow(DeviceBuffer::Update& u)
@@ -174,25 +186,32 @@ struct DeviceBufferGlBufferObject : public DeviceBufferGl
 
     GLenum buffer_type_;
     GLenum gluse_;
+    std::mutex buffer_mutex_;
+    std::deque<DeviceBuffer::Update> updates_;
+    RuntimePixelType data_type_;
+    GLuint gl_id_;
+
 };
 
 PANGO_CREATE(DeviceBuffer) {
     const GLenum bo_use = GL_DYNAMIC_DRAW;
-    const GLenum tex_target = GL_TEXTURE_2D;
 
     switch(p.kind) {
-        case DeviceBuffer::Kind::Texture:
-            return Shared<DeviceBufferGlTexture>::make(tex_target);
-        case DeviceBuffer::Kind::VertexIndices:
-            return Shared<DeviceBufferGlBufferObject>::make(
-                GL_ELEMENT_ARRAY_BUFFER, bo_use
-            );
-        case DeviceBuffer::Kind::VertexAttributes:
-            return Shared<DeviceBufferGlBufferObject>::make(
-                GL_ARRAY_BUFFER, bo_use
-            );
+    case DeviceBuffer::Kind::VertexIndices:
+        return Shared<DeviceGlBuffer>::make(
+            GL_ELEMENT_ARRAY_BUFFER, bo_use
+        );
+    case DeviceBuffer::Kind::VertexAttributes:
+        return Shared<DeviceGlBuffer>::make(
+            GL_ARRAY_BUFFER, bo_use
+        );
     };
     FARM_FATAL("unreachable");
+}
+
+PANGO_CREATE(DeviceTexture) {
+    const GLenum tex_target = GL_TEXTURE_2D;
+    return Shared<DeviceGlTexture>::make(tex_target);
 }
 
 }

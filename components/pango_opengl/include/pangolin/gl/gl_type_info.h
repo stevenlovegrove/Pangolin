@@ -38,7 +38,7 @@ struct GlFormatInfo
     GLint gl_type;
 };
 
-inline GlFormatInfo glTypeInfo(const RuntimePixelType& pixel_type)
+inline GlFormatInfo glTypeInfo(const sophus::RuntimePixelType& pixel_type)
 {
     constexpr static GLint type_table[] = {
         0,       // unspecified

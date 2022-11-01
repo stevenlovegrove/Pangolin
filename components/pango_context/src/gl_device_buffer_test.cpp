@@ -4,5 +4,6 @@
 using namespace pangolin;
 
 TEST_CASE("smoke"){
-    auto tex = DeviceBuffer::Create({DeviceBuffer::Kind::Texture});
+    auto bo = DeviceBuffer::Create({DeviceBuffer::Kind::VertexAttributes});
+    auto tex = DeviceTexture::Create();
 }

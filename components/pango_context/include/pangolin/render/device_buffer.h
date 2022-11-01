@@ -4,25 +4,15 @@
 namespace pangolin
 {
 
-using RuntimePixelType = sophus::RuntimePixelType;
-
-struct DeviceBuffer : std::enable_shared_from_this<DeviceBuffer>
+struct DeviceMemory : std::enable_shared_from_this<DeviceMemory>
 {
     // For now, just channels x width x height
     static constexpr size_t kMaxDims = 3;
 
-    enum class Kind
-    {
-        Texture,
-        VertexIndices,
-        VertexAttributes,
-        // ... add more
-    };
-
     struct Update
     {
         // Source and destination types must be the same
-        RuntimePixelType data_type;
+        sophus::RuntimePixelType data_type;
 
         std::shared_ptr<const uint8_t> src_data;
         std::array<size_t,kMaxDims> src_sizes = {};
@@ -71,7 +61,7 @@ struct DeviceBuffer : std::enable_shared_from_this<DeviceBuffer>
 
         // Call into implementation with type erasure
         update({
-            .data_type = RuntimePixelType::fromTemplate<T>(),
+            .data_type = sophus::RuntimePixelType::fromTemplate<T>(),
             .src_data = std::shared_ptr<const uint8_t>(svec, static_cast<const uint8_t*>(svec.data())),
             .src_pitches_bytes = {sizeof(T)},
             .src_sizes = {length},
@@ -82,29 +72,45 @@ struct DeviceBuffer : std::enable_shared_from_this<DeviceBuffer>
     // Use image's shared ownership semantics to provide a ref-counted pointer
     // Buffer update occurs asynchronously according to policy.
     // Returns immediately.
-    void give(const sophus::RuntimeImage<>& image, GiveParams p)
+    void give(const sophus::IntensityImage<>& image, GiveParams p)
     {
-        FARM_UNIMPLEMENTED("fix image.ptr() issue");
-        // update({
-        //     .data_type = image.pixelType(),
-        //     .src_data = image.ptr(),
-        //     .src_pitches_bytes = {(size_t)image.pixelType().num_channels, image.shape().pitchBytes()},
-        //     .src_sizes = { (size_t)image.shape().width(), (size_t)image.shape().height()},
-        //     .dest_pos = p.dest_pos
+        // Wrapper for passing type-erased owernership from image
+        std::shared_ptr<uint8_t const> data(
+            std::make_shared<sophus::IntensityImage<>>(image),
+            image.rawPtr()
+        );
 
-        // });
+        update({
+            .data_type = image.pixelType(),
+            .src_data = data,
+            .src_pitches_bytes = {(size_t)image.pixelType().num_channels, image.shape().pitchBytes()},
+            .src_sizes = { (size_t)image.shape().width(), (size_t)image.shape().height()},
+            .dest_pos = p.dest_pos
+        });
     }
 
-    /////////////////////////////////////////////////////////
-    // Factory
+    virtual ~DeviceMemory() {}
+};
+
+struct DeviceTexture : public DeviceMemory
+{
+    struct Params {};
+    static Shared<DeviceTexture> Create(Params p = {});
+};
+
+struct DeviceBuffer : public DeviceMemory
+{
+    enum class Kind
+    {
+        VertexIndices,
+        VertexAttributes,
+        // ... add more
+    };
 
     struct Params {
         Kind kind;
     };
     static Shared<DeviceBuffer> Create(Params p);
-
-    virtual ~DeviceBuffer() {}
 };
-
 
 }

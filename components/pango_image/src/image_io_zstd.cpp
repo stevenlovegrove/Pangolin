@@ -25,10 +25,12 @@ void SaveZstd(const IntensityImage& image, std::ostream& out, int compression_le
     // Write out header, uncompressed
     zstd_image_header header;
     memcpy(header.magic,"ZSTD",4);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#if (defined(__GNUC__) && !defined(__clang__))
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wstringop-truncation"
+#  pragma GCC diagnostic pop
+#endif
     strncpy(header.fmt, ToString(image.pixelType()), sizeof(header.fmt));
-#pragma GCC diagnostic pop
     header.w = image.width();
     header.h = image.height();
     out.write((char*)&header, sizeof(header));
