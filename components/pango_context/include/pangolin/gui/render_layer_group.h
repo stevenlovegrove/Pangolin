@@ -64,7 +64,7 @@ RenderLayerGroup join( RenderLayerGroup::Grouping op_type, const RenderLayerGrou
     }
     return ret;
 }
-template<std::derived_from<RenderLayer> T>
+template<DerivedFrom<RenderLayer> T>
 RenderLayerGroup join( RenderLayerGroup::Grouping op_type, const RenderLayerGroup& lhs, const Shared<T>& rhs ) {
     RenderLayerGroup ret;
     ret.grouping = op_type;
@@ -76,7 +76,7 @@ RenderLayerGroup join( RenderLayerGroup::Grouping op_type, const RenderLayerGrou
     ret.children.push_back(RenderLayerGroup(rhs));
     return ret;
 }
-template<std::derived_from<RenderLayer> T>
+template<DerivedFrom<RenderLayer> T>
 RenderLayerGroup join( RenderLayerGroup::Grouping op_type, const Shared<T>& lhs, const RenderLayerGroup& rhs ) {
     RenderLayerGroup ret;
     ret.grouping = op_type;
@@ -88,7 +88,7 @@ RenderLayerGroup join( RenderLayerGroup::Grouping op_type, const Shared<T>& lhs,
     }
     return ret;
 }
-template<std::derived_from<RenderLayer> LHS, std::derived_from<RenderLayer> RHS>
+template<DerivedFrom<RenderLayer> LHS, DerivedFrom<RenderLayer> RHS>
 RenderLayerGroup join( RenderLayerGroup::Grouping op_type, const Shared<LHS>& lhs, const Shared<RHS>& rhs ) {
     RenderLayerGroup ret;
     ret.grouping = op_type;
@@ -102,15 +102,15 @@ RenderLayerGroup join( RenderLayerGroup::Grouping op_type, const Shared<LHS>& lh
     RenderLayerGroup op(const RenderLayerGroup& lhs, const RenderLayerGroup& rhs) { \
         return detail::join(op_type, lhs, rhs); \
     } \
-    template<std::derived_from<RenderLayer> T> \
+    template<DerivedFrom<RenderLayer> T> \
     RenderLayerGroup op(const RenderLayerGroup& lhs, const Shared<T>& rhs) { \
         return detail::join(op_type, lhs, rhs); \
     } \
-    template<std::derived_from<RenderLayer> T> \
+    template<DerivedFrom<RenderLayer> T> \
     RenderLayerGroup op(const Shared<T>& lhs, const RenderLayerGroup& rhs) { \
         return detail::join(op_type, lhs, rhs); \
     } \
-    template<std::derived_from<RenderLayer> T1, std::derived_from<RenderLayer> T2> \
+    template<DerivedFrom<RenderLayer> T1, DerivedFrom<RenderLayer> T2> \
     RenderLayerGroup op(Shared<T1>& lhs, Shared<T2>& rhs)  { \
         return detail::join(op_type, lhs, rhs); \
     }

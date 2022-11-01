@@ -1,14 +1,16 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 project("Pangolin")
 set(PANGOLIN_VERSION_MAJOR 0)
 set(PANGOLIN_VERSION_MINOR 8)
 set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
-# if(NOT CMAKE_CXX_STANDARD)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# endif()
+
+find_package(Eigen3 3.4.0 REQUIRED)
+find_package(farm_ng_core 0.1.0 REQUIRED)
+find_package(Sophus REQUIRED)
+
+
 
 # Prevent in source builds
 if(EXISTS "${PROJECT_BINARY_DIR}/CMakeLists.txt")
@@ -31,6 +33,20 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${CMAKE_BUILD_TYPE}' as none was specified.")
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
+
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+      message(warning "!!!!!!!!!!!!!!000")
+
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    message(warning "!!!!!!!!!!!!!!1111")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function")
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    message(warning "!!!!!!!!!!!!!2222")
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=gnu++17 -fconcepts -Werror -Wall -Wextra -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-function -Wno-maybe-uninitialized -Wno-sign-compare -Wno-reorder -Wno-missing-field-initializers")
+
+  endif()
 
 if(_WIN_)
     option( BUILD_SHARED_LIBS    "Build Shared Library" OFF)

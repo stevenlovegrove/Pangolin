@@ -192,6 +192,7 @@ PANGO_CREATE(DeviceBuffer) {
                 GL_ARRAY_BUFFER, bo_use
             );
     };
+    FARM_FATAL("unreachable");
 }
 
 }

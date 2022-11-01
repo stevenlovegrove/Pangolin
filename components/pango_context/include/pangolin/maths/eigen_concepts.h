@@ -4,25 +4,28 @@
 
 #include <Eigen/Core>
 
-#include <concepts>
 
 namespace pangolin {
+
+template<class T, class U>
+concept DerivedFrom = std::is_base_of<U, T>::value;
+
 
 // These concept let us match Eigen's CRTP pattern and capture the true Derived
 // type safely
 
 template <typename Derived>
-concept EigenType = std::derived_from<Derived, Eigen::EigenBase<Derived>>;
+concept EigenType = DerivedFrom<Derived, Eigen::EigenBase<Derived>>;
 
 template <typename Derived>
-concept EigenDenseType = std::derived_from<Derived, Eigen::DenseBase<Derived>>;
+concept EigenDenseType = DerivedFrom<Derived, Eigen::DenseBase<Derived>>;
 
 template <typename Derived>
 concept EigenMatrixType =
-    std::derived_from<Derived, Eigen::MatrixBase<Derived>>;
+    DerivedFrom<Derived, Eigen::MatrixBase<Derived>>;
 
 template <typename Derived>
-concept EigenArrayType = std::derived_from<Derived, Eigen::ArrayBase<Derived>>;
+concept EigenArrayType = DerivedFrom<Derived, Eigen::ArrayBase<Derived>>;
 
 template <typename T1, typename T2>
 concept EigenSameDim = requires(T1, T2) {

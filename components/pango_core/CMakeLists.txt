@@ -35,7 +35,7 @@ if (UNIX)
 endif()
 
 
-target_compile_features(${COMPONENT} PUBLIC cxx_decltype_auto )
+#target_compile_features(${COMPONENT} PUBLIC cxx_decltype_auto )
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
     $<INSTALL_INTERFACE:include>

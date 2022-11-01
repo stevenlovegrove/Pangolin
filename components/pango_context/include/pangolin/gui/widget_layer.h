@@ -61,7 +61,7 @@ struct WidgetLayer : public RenderLayer
 //     static Shared<Slider> Create(Params p);
 // };
 
-// template<std::derived_from<WidgetLayer> T>
+// template<DerivedFrom<WidgetLayer> T>
 // void operator+=(const Shared<T>& g1, const SharedVector<Widget>& g2)
 // {
 // }

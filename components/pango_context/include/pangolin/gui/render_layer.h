@@ -4,6 +4,9 @@
 #include <pangolin/maths/min_max.h>
 #include <Eigen/Core>
 
+#include <variant>
+
+
 namespace pangolin
 {
 

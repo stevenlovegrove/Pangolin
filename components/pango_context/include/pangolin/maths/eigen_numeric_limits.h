@@ -6,7 +6,6 @@
 
 #include <Eigen/Core>
 
-#include <concepts>
 #include <limits>
 
 namespace pangolin {

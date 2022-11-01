@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include <memory>
+
 namespace pangolin
 {
 
@@ -76,7 +78,7 @@ struct MaybeStaticStorage<T,kStaticSize,true>
     MaybeStaticStorage& operator=(MaybeStaticStorage&&) = default;
 
     MaybeStaticStorage(int size) {
-        assert(kStaticSize == size);
+        //assert(kStaticSize == size);
     }
 
     constexpr int size() const {

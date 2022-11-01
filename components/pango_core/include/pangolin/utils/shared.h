@@ -10,6 +10,9 @@
 namespace pangolin
 {
 
+    template<class T, class U>
+concept DerivedFrom = std::is_base_of<U, T>::value;
+
 // Represents a Non-nullable pointer with shared ownership
 // Is essentially an adapter between std::shared_ptr and farm_ng::Expected
 template<class T>
@@ -96,7 +99,7 @@ public:
     }
 
     // Copy constructor from derived bases
-    template<std::derived_from<T> Derived>
+    template<DerivedFrom<T> Derived>
     Shared(const Shared<Derived>& other)
         : non_null_shared_( other.sharedPtr() )
     {
@@ -104,7 +107,7 @@ public:
     }
 
     // Construct from shared_ptr
-    template<std::derived_from<T> Derived>
+    template<DerivedFrom<T> Derived>
     Shared(const std::shared_ptr<Derived>& panic_if_null)
         : non_null_shared_(panic_if_null)
     {
@@ -112,7 +115,7 @@ public:
     }
 
     // Take ownership from unique_ptr
-    template<std::derived_from<T> Derived>
+    template<DerivedFrom<T> Derived>
     Shared(std::unique_ptr<Derived>&& panic_if_null)
         : non_null_shared_(std::move(panic_if_null))
     {

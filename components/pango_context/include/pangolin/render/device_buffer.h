@@ -84,13 +84,15 @@ struct DeviceBuffer : std::enable_shared_from_this<DeviceBuffer>
     // Returns immediately.
     void give(const sophus::RuntimeImage<>& image, GiveParams p)
     {
-        update({
-            .data_type = image.pixelType(),
-            .src_data = image.ptr(),
-            .src_pitches_bytes = {(size_t)image.pixelType().num_channels, image.shape().pitchBytes()},
-            .src_sizes = { (size_t)image.shape().width(), (size_t)image.shape().height()},
-            .dest_pos = p.dest_pos
-        });
+        FARM_UNIMPLEMENTED("fix image.ptr() issue");
+        // update({
+        //     .data_type = image.pixelType(),
+        //     .src_data = image.ptr(),
+        //     .src_pitches_bytes = {(size_t)image.pixelType().num_channels, image.shape().pitchBytes()},
+        //     .src_sizes = { (size_t)image.shape().width(), (size_t)image.shape().height()},
+        //     .dest_pos = p.dest_pos
+
+        // });
     }
 
     /////////////////////////////////////////////////////////

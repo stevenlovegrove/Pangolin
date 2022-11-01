@@ -5,6 +5,8 @@
 #include <pangolin/gui/renderable.h>
 #include <sophus/image/image.h>
 
+#include <variant>
+
 namespace pangolin
 {
 
