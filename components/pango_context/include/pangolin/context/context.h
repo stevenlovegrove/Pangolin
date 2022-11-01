@@ -9,7 +9,7 @@
 namespace pangolin
 {
 
-struct WindowInterface;
+class WindowInterface;
 struct RenderLayerGroup;
 struct RenderLayer;
 

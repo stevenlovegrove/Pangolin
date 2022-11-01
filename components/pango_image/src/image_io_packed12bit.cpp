@@ -26,7 +26,7 @@ void SavePacked12bit(const IntensityImage& image, std::ostream& out)
   const size_t dest_size = image.height()*dest_pitch;
   std::unique_ptr<uint8_t[]> output_buffer(new uint8_t[dest_size]);
 
-    for(size_t r=0; r<image.height(); ++r) {
+    for(int r=0; r < image.height(); ++r) {
         uint8_t* pout = output_buffer.get() + r*dest_pitch;
         uint16_t* pin = (uint16_t*)(image.rawRowPtr(r));
         const uint16_t* pin_end = (uint16_t*)(image.rawRowPtr(r+1));
@@ -70,7 +70,7 @@ IntensityImage LoadPacked12bit(std::istream& in)
 
     in.read((char*)input_buffer.get(), input_size);
 
-    for(size_t r=0; r<img.height(); ++r) {
+    for(int r=0; r<img.height(); ++r) {
         uint16_t* pout = (uint16_t*)(img.rawRowPtr(r));
         uint8_t* pin = input_buffer.get() + r*input_pitch;
         const uint8_t* pin_end = input_buffer.get() + (r+1)*input_pitch;

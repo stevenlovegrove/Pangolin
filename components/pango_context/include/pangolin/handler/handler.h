@@ -6,7 +6,7 @@
 
 namespace pangolin {
 
-class Handler {
+struct Handler {
  public:
   virtual ~Handler() {}
 

@@ -6,9 +6,6 @@ target_compile_definitions(${COMPONENT} PUBLIC HAVE_EIGEN)
 find_package(Sophus REQUIRED)
 target_link_libraries(${COMPONENT} PUBLIC Sophus::sophus_image)
 
-message(warning "333?????!!!!!!!!!!!!!!${CMAKE_CXX_FLAGS}")
-
-
 option(BUILD_PANGOLIN_LIBPNG "Build support for libpng image input" ON)
 if(BUILD_PANGOLIN_LIBPNG)
     find_package(PNG QUIET)
@@ -119,4 +116,3 @@ target_include_directories(${COMPONENT} PUBLIC
 install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
   DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
-message(warning "44?????!!!!!!!!!!!!!!${CMAKE_CXX_FLAGS}")

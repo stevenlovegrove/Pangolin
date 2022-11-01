@@ -19,7 +19,7 @@ IntensityImage LoadImageNonPlanar(
     // Read from file, row at a time.
     std::ifstream bFile( filename.c_str(), std::ios::in | std::ios::binary );
     bFile.seekg(offset);
-    for(size_t r=0; r<img.height(); ++r) {
+    for(int r=0; r < img.height(); ++r) {
         bFile.read( (char*)img.rawRowPtr(r), img.pitchBytes() );
         if(bFile.fail()) {
             pango_print_warn("Unable to read raw image file to completion.");

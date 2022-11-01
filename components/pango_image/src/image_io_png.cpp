@@ -199,11 +199,11 @@ void SavePng(const IntensityImage& image, std::ostream& stream, bool top_line_fi
     // Setup rows to write:
     std::vector<png_bytep> rows(image.height());
     if(top_line_first) {
-        for (unsigned int y = 0; y< image.height(); y++) {
+        for (int y = 0; y< image.height(); y++) {
             rows[y] = const_cast<uint8_t*>(image.rawRowPtr(y));
         }
     }else{
-        for (unsigned int y = 0; y< image.height(); y++) {
+        for (int y = 0; y< image.height(); y++) {
             rows[y] = const_cast<uint8_t*>(image.rawRowPtr(image.height()-1-y));
         }
     }

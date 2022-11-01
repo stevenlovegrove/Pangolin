@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <pangolin/utils/copy_shared.h>
+#include <pangolin/utils/concept_utils.h>
 #include <farm_ng/core/logging/expected.h>
 
 #define FARM_ERROR_ONLY(cstr, ...) \
@@ -9,9 +10,6 @@
 
 namespace pangolin
 {
-
-    template<class T, class U>
-concept DerivedFrom = std::is_base_of<U, T>::value;
 
 // Represents a Non-nullable pointer with shared ownership
 // Is essentially an adapter between std::shared_ptr and farm_ng::Expected

@@ -71,12 +71,12 @@ struct DrawLayerImpl : public DrawLayer {
         objects_.clear();
     }
 
+    Size size_hint_;
     MinMax<Eigen::Vector3d> bounds_;
     std::shared_ptr<Handler> handler_;
-    Size size_hint_;
 
-    Eigen::Matrix4d intrinsic_k_;
     Eigen::Matrix4d cam_from_world_;
+    Eigen::Matrix4d intrinsic_k_;
     NonLinearMethod non_linear_;
 
     std::vector<Shared<Renderable>> objects_;

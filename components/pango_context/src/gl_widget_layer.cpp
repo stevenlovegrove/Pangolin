@@ -105,7 +105,7 @@ void GlWidgetLayer::UpdateWidgetVBO(float width)
     prog_widget.Unbind();
 
     std::vector<Eigen::Vector4f> host_vbo;
-    for(int i=0; i < widgets.size(); ++i) {
+    for(size_t i=0; i < widgets.size(); ++i) {
         const auto& w = widgets[i];
         host_vbo.emplace_back(0.0, i, w.divisions + w.value_percent/2.0, uint(w.widget_type) );
     }
@@ -136,7 +136,7 @@ void GlWidgetLayer::AddTextToHostBuffer(
     const std::u16string index16 = font->to_index_string(utf32);
     GlFont::codepoint_t last_char = 0;
 
-    for(int c=0; c < index16.size(); ++c) {
+    for(size_t c=0; c < index16.size(); ++c) {
         const GlFont::codepoint_t this_char = utf32[c];
 
         if(!index16[c]) {
@@ -175,7 +175,7 @@ void GlWidgetLayer::UpdateCharsVBO(float widget_width)
 
     std::vector<Eigen::Vector3f> host_vbo_pos;
     std::vector<uint16_t> host_vbo_index;
-    for(int i=0; i < widgets.size(); ++i) {
+    for(size_t i=0; i < widgets.size(); ++i) {
         const auto& w = widgets[i];
 
         // y-position is roughly center with fudge factor since text is balanced low.

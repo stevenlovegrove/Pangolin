@@ -23,14 +23,15 @@ Shared<Engine> Engine::singleton()
 struct ContextImpl : public Context {
     // TODO: Convert Window to use new factory idiom directly
     ContextImpl(const Context::Params& params)
-        : window_(Window::Create({
+        : size_(params.window_size),
+        window_(Window::Create({
             .uri = ParseUri(
                 fmt::format("{}:[window_title={},w={},h={},GL_PROFILE={}]//",
                  params.window_engine, params.title,
                  params.window_size.width, params.window_size.height, "3.2 CORE")
             )
-        })),
-        size_(params.window_size)
+        }))
+
     {
         window()->ResizeSignal.connect([this](const WindowResizeEvent& e){
             size_.width = e.width;

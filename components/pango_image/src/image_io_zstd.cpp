@@ -51,7 +51,7 @@ void SaveZstd(const IntensityImage& image, std::ostream& out, int compression_le
 
     const size_t row_size_bytes = image.numChannels() * image.numBytesPerPixelChannel() * image.width();
 
-    for(size_t y=0; y < image.height(); ++y) {
+    for(int y=0; y < image.height(); ++y) {
         ZSTD_inBuffer input = { image.rawRowPtr(y), row_size_bytes, 0 };
 
         while (input.pos < input.size) {

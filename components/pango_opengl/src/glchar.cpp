@@ -38,7 +38,7 @@ GlChar::GlChar()
 
 // x and y are in 'discrete' coords, where (0,0) is center of top-left pixel.
 GlChar::GlChar(size_t atlas_index, int tw, int th, GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat advance, GLfloat ox, GLfloat oy)
-    : x_step(advance), atlas_index(atlas_index)
+    : atlas_index(atlas_index), x_step(advance)
 {
     // Convert to u,v tex coords \in [0,1]
     // u,v point to the top-left corner of top-left pixel

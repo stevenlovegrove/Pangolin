@@ -47,7 +47,7 @@ IntensityImage LoadPpm(std::istream& in)
         IntensityImage img( sophus::ImageSize(w, h), PpmFormat(ppm_type, num_colors) );
 
         // Read in data
-        for(size_t r=0; r<img.height(); ++r) {
+        for(int r=0; r<img.height(); ++r) {
             in.read( (char*)img.rawRowPtr(r), img.pitchBytes() );
         }
         if(!in.fail()) {
@@ -94,11 +94,11 @@ void SavePpm(const IntensityImage& image, std::ostream& out, bool top_line_first
 
     // Write out data
     if(top_line_first) {
-        for(size_t r=0; r < h; ++r) {
+        for(int r=0; r < h; ++r) {
             out.write( (char*)image.rawRowPtr(r), image.pitchBytes() );
         }
     }else{
-        for(size_t r=0; r < h; ++r) {
+        for(int r=0; r < h; ++r) {
             out.write( (char*)image.rawRowPtr(h-1-r), image.pitchBytes() );
         }
     }
