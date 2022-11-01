@@ -15,9 +15,8 @@ struct DeviceMemory : std::enable_shared_from_this<DeviceMemory>
         sophus::RuntimePixelType data_type;
 
         std::shared_ptr<const uint8_t> src_data;
-        std::array<size_t,kMaxDims> src_sizes = {};
         std::array<size_t,kMaxDims> src_pitches_bytes = {};
-
+        std::array<size_t,kMaxDims> src_sizes = {};
         std::array<size_t,kMaxDims> dest_pos = {};
         std::array<size_t,kMaxDims> dest_sizes = {};
     };
