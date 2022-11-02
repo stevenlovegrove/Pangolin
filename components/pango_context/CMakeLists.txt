@@ -3,10 +3,9 @@ get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 set(component_file_basenames
   context
   conventions
-  eigen_numeric_limits
-  eigen_scalar_methods
   handler
   look_at
+  projection
   min_max
   shared
   gl_widget_layer

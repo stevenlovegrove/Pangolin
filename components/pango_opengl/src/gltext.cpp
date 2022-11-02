@@ -105,15 +105,7 @@ void GlText::DrawGlSl() const
 
 void SetWindowOrthographicContinuous()
 {
-    // We'll set an arbitrary viewport with known dimensions
-    // >= window dimensions so we can draw in pixel units.
-    GLint dims[2];
-    glGetIntegerv(GL_MAX_VIEWPORT_DIMS,dims);
-    glViewport(0,0,dims[0], dims[1]);
-
-    glMatrixMode(GL_PROJECTION);
-    ProjectionMatrixOrthographic(0.0, dims[0], 0.0, dims[1], -1.0, 1.0).Load();
-    glMatrixMode(GL_MODELVIEW);
+    PANGO_UNIMPLEMENTED();
 }
 
 void GlText::Draw() const

@@ -37,8 +37,8 @@
 
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/colour.h>
-#include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/gl/uniform.h>
 
 #ifdef HAVE_GLES
     #define GLhandleARB GLuint
@@ -114,41 +114,12 @@ public:
     GLint GetAttributeHandle(const std::string& name);
     GLint GetUniformHandle(const std::string& name);
 
-    // Before setting uniforms, be sure to Bind() the GlSl program first.
-    void SetUniform(const std::string& name, int x);
-    void SetUniform(const std::string& name, int x1, int x2);
-    void SetUniform(const std::string& name, int x1, int x2, int x3);
-    void SetUniform(const std::string& name, int x1, int x2, int x3, int x4);
-
-    void SetUniform(const std::string& name, float f);
-    void SetUniform(const std::string& name, float f1, float f2);
-    void SetUniform(const std::string& name, float f1, float f2, float f3);
-    void SetUniform(const std::string& name, float f1, float f2, float f3, float f4);
-
-    void SetUniform(const std::string& name, double f);
-    void SetUniform(const std::string& name, double f1, double f2);
-    void SetUniform(const std::string& name, double f1, double f2, double f3);
-    void SetUniform(const std::string& name, double f1, double f2, double f3, double f4);
-
-    void SetUniform(const std::string& name, Colour c);
-
-    void SetUniform(const std::string& name, const OpenGlMatrix& m);
-
-#ifdef USE_EIGEN
-    void SetUniform(const std::string& name, const Eigen::Vector2f& v);
-    void SetUniform(const std::string& name, const Eigen::Vector3f& v);
-    void SetUniform(const std::string& name, const Eigen::Vector4f& v);
-    void SetUniform(const std::string& name, const Eigen::Matrix2f& m);
-    void SetUniform(const std::string& name, const Eigen::Matrix3f& m);
-    void SetUniform(const std::string& name, const Eigen::Matrix4f& m);
-
-    void SetUniform(const std::string& name, const Eigen::Vector2d& v);
-    void SetUniform(const std::string& name, const Eigen::Vector3d& v);
-    void SetUniform(const std::string& name, const Eigen::Vector4d& v);
-    void SetUniform(const std::string& name, const Eigen::Matrix2d& m);
-    void SetUniform(const std::string& name, const Eigen::Matrix3d& m);
-    void SetUniform(const std::string& name, const Eigen::Matrix4d& m);
-#endif
+    template<typename... TArgs>
+    void SetUniform(const std::string& name, TArgs&&... args)
+    {
+        const GLint handle = GetUniformHandle(name);
+        glUniform(handle, args...);
+    }
 
 #if GL_VERSION_4_3
     GLint GetProgramResourceIndex(const std::string& name);

@@ -95,7 +95,7 @@ struct GlWidgetLayer : WidgetLayer
     std::shared_ptr<GlFont> font;
     GlTexture font_offsets;
 
-    OpenGlMatrix T_cm;
+    Eigen::Matrix<float,4,4> T_cm;
     pangolin::GlSlProgram prog_widget;
     pangolin::GlSlProgram prog_text;
     pangolin::GlBuffer vbo_widgets;

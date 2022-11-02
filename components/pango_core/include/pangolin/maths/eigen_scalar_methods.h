@@ -65,7 +65,7 @@ class Cast<TT> {
  public:
   template <typename To>
   static auto impl(TT const& v) {
-    return v.template cast<To>();
+    return v.template cast<typename To::Scalar>();
   }
 };
 

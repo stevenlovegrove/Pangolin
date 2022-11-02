@@ -27,7 +27,6 @@
 
 #include <algorithm>
 #include <pangolin/gl/viewport.h>
-#include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/utils/simple_math.h>
 
 namespace pangolin {
@@ -63,11 +62,7 @@ bool Viewport::Contains(int x, int y) const
 
 void Viewport::ActivatePixelOrthographic() const
 {
-    Activate();
-    glMatrixMode(GL_PROJECTION);
-    ProjectionMatrixOrthographic(-0.5, w-0.5, -0.5, h-0.5, -1.0, 1.0).Load();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    PANGO_UNIMPLEMENTED();
 }
 
 void Viewport::ActivateIdentity() const

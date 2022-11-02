@@ -3,16 +3,24 @@
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/maths/eigen_concepts.h>
 
-
 namespace pangolin
 {
 
+// Scalar declarations
+template<typename T> void glUniform(GLint location, T val);
+template<typename T> void glUniform(GLint location, T a, T b);
+template<typename T> void glUniform(GLint location, T a, T b, T c);
+template<typename T> void glUniform(GLint location, T a, T b, T c, T d);
+
+// Vector / Matrix declarations
 template<typename T, int R, int C=1>
 void glUniformArray(GLint location, const T* val);
 
+
+// Specializations...
 #define PANGO_DEF_UNIFORM_ARR(type, postfix, R, C) \
     template<> \
-    void glUniformArray<type,R,C>(GLint location, const type* val) { \
+    inline void glUniformArray<type,R,C>(GLint location, const type* val) { \
         glUniform##postfix(location, 1, val); \
     }
 PANGO_DEF_UNIFORM_ARR(GLfloat, 1fv,  1, 1)
@@ -31,7 +39,7 @@ PANGO_DEF_UNIFORM_ARR(GLuint,  4uiv, 4, 1)
 
 #define PANGO_DEF_UNIFORM_MAT_ARR(type, postfix, R, C) \
     template<> \
-    void glUniformArray<type,R,C>(GLint location, const type* val) { \
+    inline void glUniformArray<type,R,C>(GLint location, const type* val) { \
         glUniformMatrix##postfix(location, 1, false, val); \
     }
 PANGO_DEF_UNIFORM_MAT_ARR(GLfloat, 2fv,  2, 2)
@@ -43,13 +51,40 @@ PANGO_DEF_UNIFORM_MAT_ARR(GLfloat, 3x4fv, 3, 4)
 PANGO_DEF_UNIFORM_MAT_ARR(GLfloat, 4x3fv, 4, 3)
 #undef PANGO_DEF_UNIFORM_MAT_ARR
 
-template<typename T>
-void glUniform(GLint location, const T& val);
+#define PANGO_DEF_UNIFORM_SCALAR(type, postfix) \
+    template<> \
+    inline void glUniform<type>(GLint location, type val) { \
+        glUniform1##postfix( location, val); \
+    }
+PANGO_DEF_UNIFORM_SCALAR(GLint, i)
+PANGO_DEF_UNIFORM_SCALAR(GLuint, ui)
+PANGO_DEF_UNIFORM_SCALAR(GLfloat, f)
+#undef PANGO_DEF_UNIFORM_SCALAR
 
 #define PANGO_DEF_UNIFORM_SCALAR(type, postfix) \
     template<> \
-    void glUniform<type>(GLint location, const type& val) { \
-        glUniform1##postfix( location, val); \
+    inline void glUniform<type>(GLint location, type a, type b) { \
+        glUniform2##postfix( location, a, b); \
+    }
+PANGO_DEF_UNIFORM_SCALAR(GLint, i)
+PANGO_DEF_UNIFORM_SCALAR(GLuint, ui)
+PANGO_DEF_UNIFORM_SCALAR(GLfloat, f)
+#undef PANGO_DEF_UNIFORM_SCALAR
+
+#define PANGO_DEF_UNIFORM_SCALAR(type, postfix) \
+    template<> \
+    inline void glUniform<type>(GLint location, type a, type b, type c) { \
+        glUniform3##postfix( location, a, b, c); \
+    }
+PANGO_DEF_UNIFORM_SCALAR(GLint, i)
+PANGO_DEF_UNIFORM_SCALAR(GLuint, ui)
+PANGO_DEF_UNIFORM_SCALAR(GLfloat, f)
+#undef PANGO_DEF_UNIFORM_SCALAR
+
+#define PANGO_DEF_UNIFORM_SCALAR(type, postfix) \
+    template<> \
+    inline void glUniform<type>(GLint location, type a, type b, type c, type d) { \
+        glUniform4##postfix( location, a, b, c, d); \
     }
 PANGO_DEF_UNIFORM_SCALAR(GLint, i)
 PANGO_DEF_UNIFORM_SCALAR(GLuint, ui)

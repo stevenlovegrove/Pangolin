@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pangolin/utils/fmt.h>
+#include <fmt/format.h>
 
 // Inspired heavily by farm_ng core logging
 // macros: https://github.com/PANGO-ng/PANGO-ng-core
@@ -45,8 +46,12 @@ struct Log
     template<typename... Args>
     void log(Kind kind, const char *sFile, const int nLine, Args... args)
     {
-        const std::string arg_string = fmt::format(std::forward<Args>(args)...);
-        logImpl(kind, sFile, nLine, arg_string);
+        if constexpr( sizeof...(args) > 0) {
+          const std::string arg_string = fmt::format(std::forward<Args>(args)...);
+          logImpl(kind, sFile, nLine, arg_string);
+        }else{
+          logImpl(kind, sFile, nLine, "");
+        }
     }
 };
 

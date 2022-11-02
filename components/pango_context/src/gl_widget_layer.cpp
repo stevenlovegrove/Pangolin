@@ -6,6 +6,10 @@
 #include <locale>
 #include <string>
 #include <codecvt>
+
+#include <pangolin/maths/projection.h>
+#include <pangolin/maths/eigen_scalar_methods.h>
+
 #include "glutils.h"
 
 #include "gl_widget_layer.h"
@@ -213,9 +217,17 @@ void GlWidgetLayer::renderIntoRegion(const RenderParams& p)
     glClearColor(0.0,0.0,0.0,1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    auto size = p.region.range();
+    const auto size = p.region.range();
 
-    T_cm = ProjectionMatrixOrthographic(-0.5, size[0]-0.5, size[1]-0.5 - scroll_offset, -0.5 - scroll_offset, -1.0, 1.0);
+    const auto region = p.region
+        .translated(-p.region.min())
+        .cast<Eigen::Vector2d>()
+        .translated({-0.5, -(0.5 + scroll_offset) });
+
+    T_cm = projectionClipFromOrtho(
+        region, {-1.0, 0.0}, ImageXy::right_up,
+        ImageIndexing::pixel_centered
+        ).cast<float>();
 
     // TODO: try to do this less. It's expensive
     {

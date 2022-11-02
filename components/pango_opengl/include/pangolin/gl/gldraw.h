@@ -29,7 +29,6 @@
 
 #include <pangolin/gl/glinclude.h>
 #include <pangolin/gl/glformattraits.h>
-#include <pangolin/gl/opengl_render_state.h>
 
 #include <vector>
 #include <math.h>
@@ -172,17 +171,17 @@ inline void glDrawCirclePerimeter( float x, float y, float rad )
 }
 
 inline void glDrawCircle( GLfloat x, GLfloat y, GLfloat rad )
-{    
+{
     const int N = 50;
     GLfloat verts[N*2];
-    
+
     // Draw vertices anticlockwise for front face
     const float TAU_DIV_N = 2*(float)M_PI/N;
     for(int i = 0; i < N*2; i+=2) {
         verts[i] =   x + rad * cos(-i*TAU_DIV_N);
         verts[i+1] = y + rad * sin(-i*TAU_DIV_N);
     }
-    
+
     // Render filled shape and outline (to make it look smooth)
     glVertexPointer(2, GL_FLOAT, 0, verts);
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -195,7 +194,7 @@ inline void glDrawColouredCube(GLfloat axis_min=-0.5f, GLfloat axis_max = +0.5f)
 {
     const GLfloat l = axis_min;
     const GLfloat h = axis_max;
-    
+
     const GLfloat verts[] = {
         l,l,h,  h,l,h,  l,h,h,  h,h,h,  // FRONT
         l,l,l,  l,h,l,  h,l,l,  h,h,l,  // BACK
@@ -204,22 +203,22 @@ inline void glDrawColouredCube(GLfloat axis_min=-0.5f, GLfloat axis_max = +0.5f)
         l,h,h,  h,h,h,  l,h,l,  h,h,l,  // TOP
         l,l,h,  l,l,l,  h,l,h,  h,l,l   // BOTTOM
     };
-    
+
     glVertexPointer(3, GL_FLOAT, 0, verts);
     glEnableClientState(GL_VERTEX_ARRAY);
-    
+
     glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
-    
+
     glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
     glDrawArrays(GL_TRIANGLE_STRIP, 8, 4);
     glDrawArrays(GL_TRIANGLE_STRIP, 12, 4);
-    
+
     glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
     glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
     glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
-    
+
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
@@ -273,15 +272,15 @@ inline void glDrawTexture(GLenum target, GLuint texid)
 {
     glBindTexture(target, texid);
     glEnable(target);
-    
+
     const GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
     glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-    glEnableClientState(GL_VERTEX_ARRAY);   
+    glEnableClientState(GL_VERTEX_ARRAY);
 
     const GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
     glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-         
+
     glColor4f(1,1,1,1);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
@@ -295,15 +294,15 @@ inline void glDrawTextureFlipY(GLenum target, GLuint texid)
 {
     glBindTexture(target, texid);
     glEnable(target);
-    
+
     const GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
     glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-    glEnableClientState(GL_VERTEX_ARRAY);   
+    glEnableClientState(GL_VERTEX_ARRAY);
 
     const GLfloat sq_tex[]  = { 0,1,  1,1,  1,0,  0,0  };
     glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-         
+
     glColor4f(1,1,1,1);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
@@ -411,13 +410,6 @@ inline void glSetFrameOfReference( const Eigen::Matrix4d& T_wf )
     const Eigen::Matrix4f fT_wf = T_wf.cast<GLfloat>();
     glMultMatrixf( fT_wf.data() );
 #endif
-}
-
-inline void glSetFrameOfReference( const pangolin::OpenGlMatrix& T_wf )
-{
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glMultMatrixd( T_wf.m );
 }
 
 inline void glUnsetFrameOfReference()

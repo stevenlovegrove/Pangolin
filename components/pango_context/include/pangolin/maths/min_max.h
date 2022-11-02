@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "eigen_numeric_limits.h"
-#include "eigen_scalar_methods.h"
+#include <pangolin/maths/eigen_numeric_limits.h>
+#include <pangolin/maths/eigen_scalar_methods.h>
 
 #include <sophus/image/image_view.h>
 
@@ -56,6 +56,10 @@ class MinMax {
     min_max[0] = pangolin::min(min(), p);
     min_max[1] = pangolin::max(max(), p);
     return *this;
+  }
+
+  MinMax<TPixel> translated(TPixel const& p) const {
+    return { min_max[0] + p, min_max[1] + p };
   }
 
   template <typename To>

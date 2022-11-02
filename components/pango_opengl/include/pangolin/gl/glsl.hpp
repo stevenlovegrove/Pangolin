@@ -385,143 +385,20 @@ inline void GlSlProgram::Unbind()
 inline GLint GlSlProgram::GetAttributeHandle(const std::string& name)
 {
     GLint handle = glGetAttribLocation(prog, name.c_str());
-    if(handle == -1) std::cerr << "Attribute name doesn't exist for program (" << name << ")" << std::endl;
+    if(handle == -1) {
+        PANGO_WARN("Attribute '{}' doesn't exist for program.", name);
+    }
     return handle;
 }
 
 inline GLint GlSlProgram::GetUniformHandle(const std::string& name)
 {
     GLint handle = glGetUniformLocation(prog, name.c_str());
-    if(handle == -1) std::cerr << "Uniform name doesn't exist for program (" << name << ")" << std::endl;
+    if(handle == -1) {
+        PANGO_WARN("Uniform '{}' doesn't exist for program.", name);
+    }
     return handle;
 }
-
-inline void GlSlProgram::SetUniform(const std::string& name, int x)
-{
-    glUniform1i( GetUniformHandle(name), x);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, int x1, int x2)
-{
-    glUniform2i( GetUniformHandle(name), x1, x2);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, int x1, int x2, int x3)
-{
-    glUniform3i( GetUniformHandle(name), x1, x2, x3);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, int x1, int x2, int x3, int x4)
-{
-    glUniform4i( GetUniformHandle(name), x1, x2, x3, x4);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, float f)
-{
-    glUniform1f( GetUniformHandle(name), f);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2)
-{
-    glUniform2f( GetUniformHandle(name), f1,f2);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2, float f3)
-{
-    glUniform3f( GetUniformHandle(name), f1,f2,f3);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, float f1, float f2, float f3, float f4)
-{
-    glUniform4f( GetUniformHandle(name), f1,f2,f3,f4);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, double f)
-{
-    glUniform1d( GetUniformHandle(name), f);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, double f1, double f2)
-{
-    glUniform2d( GetUniformHandle(name), f1,f2);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, double f1, double f2, double f3)
-{
-    glUniform3d( GetUniformHandle(name), f1,f2,f3);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, double f1, double f2, double f3, double f4)
-{
-    glUniform4d( GetUniformHandle(name), f1,f2,f3,f4);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, Colour c)
-{
-    glUniform4f( GetUniformHandle(name), c.r, c.g, c.b, c.a);
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, const OpenGlMatrix& mat)
-{
-    // glUniformMatrix4dv seems to be crashing...
-    float m[16];
-    for (int i = 0; i < 16; ++i) {
-        m[i] = (float)mat.m[i];
-    }
-    glUniformMatrix4fv( GetUniformHandle(name), 1, GL_FALSE, m);
-}
-
-#ifdef HAVE_EIGEN
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector2f& v)
-{
-    glUniform2f( GetUniformHandle(name), v[0], v[1]);
-}
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector3f& v)
-{
-    glUniform3f( GetUniformHandle(name), v[0], v[1], v[2]);
-}
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector4f& v)
-{
-    glUniform4f( GetUniformHandle(name), v[0], v[1], v[2], v[3]);
-}
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix2f& m)
-{
-    glUniformMatrix2fv( GetUniformHandle(name), 1, GL_FALSE, m.data());
-}
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix3f& m)
-{
-    glUniformMatrix3fv( GetUniformHandle(name), 1, GL_FALSE, m.data());
-}
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix4f& m)
-{
-    glUniformMatrix4fv( GetUniformHandle(name), 1, GL_FALSE, m.data());
-}
-
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector2d& v)
-{
-    glUniform2d( GetUniformHandle(name), v[0], v[1]);
-}
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector3d& v)
-{
-    glUniform3d( GetUniformHandle(name), v[0], v[1], v[2]);
-}
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Vector4d& v)
-{
-    glUniform4d( GetUniformHandle(name), v[0], v[1], v[2], v[3]);
-}
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix2d& m)
-{
-    glUniformMatrix2dv( GetUniformHandle(name), 1, GL_FALSE, m.data());
-}
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix3d& m)
-{
-    glUniformMatrix3dv( GetUniformHandle(name), 1, GL_FALSE, m.data());
-}
-inline void GlSlProgram::SetUniform(const std::string& name, const Eigen::Matrix4d& m)
-{
-    glUniformMatrix4dv( GetUniformHandle(name), 1, GL_FALSE, m.data());
-}
-#endif
 
 inline void GlSlProgram::BindPangolinDefaultAttribLocationsAndLink()
 {
