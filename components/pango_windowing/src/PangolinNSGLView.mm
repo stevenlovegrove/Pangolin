@@ -1,5 +1,5 @@
 #include <pangolin/platform.h>
-#include <pangolin/gl/glinclude.h>
+#include <pangolin/gl/glplatform.h>
 #include <pangolin/windowing/PangolinNSGLView.h>
 #include <pangolin/windowing/handler_enums.h>
 

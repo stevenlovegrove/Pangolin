@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <pangolin/gl/glinclude.h>
+#include <pangolin/gl/glplatform.h>
 #include <stack>
 
 namespace pangolin
@@ -95,15 +95,15 @@ public:
         if (m_CullFaceCalled) {
             ::glCullFace(m_OriginalCullFace);
         }
-        
+
         if(m_PointSizeCalled) {
             ::glPointSize(m_OriginalPointSize);
         }
-        
+
         if(m_LineWidthCalled) {
             ::glLineWidth(m_OriginalLineWidth);
-        }        
-        
+        }
+
         if (m_ColorMaskCalled) {
             ::glColorMask(m_OriginalColorMask[0], m_OriginalColorMask[1], m_OriginalColorMask[2], m_OriginalColorMask[3]);
         }
@@ -157,7 +157,7 @@ public:
         }
         ::glShadeModel(mode);
     }
-    
+
     bool m_CullFaceCalled;
     GLint m_OriginalCullFace;
     void glCullFace(GLenum mode)
@@ -166,9 +166,9 @@ public:
             m_ShadeModelCalled = true;
             glGetIntegerv(GL_CULL_FACE_MODE, &m_OriginalCullFace);
         }
-        ::glCullFace(mode);        
+        ::glCullFace(mode);
     }
-    
+
     bool m_PointSizeCalled;
     GLfloat m_OriginalPointSize;
     void glPointSize(GLfloat size)
@@ -179,7 +179,7 @@ public:
         }
         ::glPointSize(size);
     }
-    
+
     bool m_LineWidthCalled;
     GLfloat m_OriginalLineWidth;
     void glLineWidth(GLfloat width)
@@ -189,7 +189,7 @@ public:
             glGetFloatv(GL_LINE_WIDTH, &m_OriginalLineWidth);
         }
         ::glLineWidth(width);
-        
+
     }
 
     bool m_ColorMaskCalled;

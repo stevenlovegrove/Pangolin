@@ -30,7 +30,7 @@
 
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
-#include <pangolin/gl/glinclude.h>
+#include <pangolin/gl/glplatform.h>
 #include <pangolin/windowing/OsxWindow.h>
 #include <pangolin/windowing/PangolinNSGLView.h>
 #include <pangolin/windowing/PangolinNSApplication.h>

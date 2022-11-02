@@ -28,7 +28,7 @@
 #pragma once
 
 #include <pangolin/gl/viewport.h>
-#include <pangolin/gl/glinclude.h>
+#include <pangolin/gl/glplatform.h>
 #include <pangolin/image/image_io.h>
 
 #if defined(HAVE_EIGEN) && !defined(__CUDACC__) //prevent including Eigen in cuda files

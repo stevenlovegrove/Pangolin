@@ -71,3 +71,6 @@
     } \
     return true; \
   }()
+
+#define PANGO_GL_CHECK() \
+    PANGO_GL({})

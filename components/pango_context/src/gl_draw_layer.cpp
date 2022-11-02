@@ -24,11 +24,11 @@ namespace pangolin
 
 
 
-// struct RenderableImageProgram
-// {
-//     GlSlProgram prog;
-//     const GlUniform<Eigen::Vector4f> param = {"test"};
-// };
+struct RenderableImageProgram
+{
+    GlSlProgram prog;
+    const GlUniform<Eigen::Vector4f> param = {"test"};
+};
 
 // void test()
 // {

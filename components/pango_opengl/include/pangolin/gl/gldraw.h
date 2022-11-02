@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <pangolin/gl/glinclude.h>
+#include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/glformattraits.h>
 
 #include <vector>

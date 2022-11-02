@@ -76,7 +76,7 @@ void renderToImage(
     using TPix = typename decltype(image)::PixelType;
     using Fmt = GlFormatTraits<TPix>;
     channels[ch].Download(image.ptrMut(), Fmt::glformat, Fmt::gltype);
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
   });
 }
 

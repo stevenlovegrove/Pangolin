@@ -200,7 +200,7 @@ inline void GlTexture::Reinitialise(GLsizei w, GLsizei h, GLint int_format, bool
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 }
 
 inline void GlTexture::Upload(
@@ -209,7 +209,7 @@ inline void GlTexture::Upload(
 ) {
     Bind();
     glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_format,data_type,data);
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 }
 
 inline void GlTexture::Upload(
@@ -220,7 +220,7 @@ inline void GlTexture::Upload(
 {
     Bind();
     glTexSubImage2D(GL_TEXTURE_2D,0,tex_x_offset,tex_y_offset,data_w,data_h,data_format,data_type,data);
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 }
 
 inline void GlTexture::Load(const IntensityImage& image, bool sampling_linear)
@@ -354,7 +354,7 @@ inline void GlTexture::CopyFrom(const GlTexture& tex)
     glCopyImageSubDataNV(tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0,
                        tid, GL_TEXTURE_2D, 0, 0, 0, 0,
                        width, height, 1);
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 #else
     throw std::runtime_error("glCopyImageSubDataNV not implemented on this platform.");
 #endif
@@ -597,7 +597,7 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour)
 {
     glGenFramebuffers(1, &fbid);
     AttachColour(colour);
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 }
 
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
@@ -606,7 +606,7 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
     glGenFramebuffers(1, &fbid);
     AttachColour(colour);
     AttachDepth(depth);
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 }
 
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth)
@@ -616,7 +616,7 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRe
     AttachColour(colour0);
     AttachColour(colour1);
     AttachDepth(depth);
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 }
 
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlRenderBuffer& depth)
@@ -627,7 +627,7 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTe
     AttachColour(colour1);
     AttachColour(colour2);
     AttachDepth(depth);
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 }
 
 inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlTexture& colour3, GlRenderBuffer& depth)
@@ -639,7 +639,7 @@ inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTe
     AttachColour(colour2);
     AttachColour(colour3);
     AttachDepth(depth);
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 }
 
 inline void GlFramebuffer::Bind() const
@@ -671,7 +671,7 @@ inline GLenum GlFramebuffer::AttachColour(GlTexture& tex )
     glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, color_attachment, GL_TEXTURE_2D, tex.tid, 0);
     glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
     attachments++;
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
     return color_attachment;
 }
 
@@ -688,7 +688,7 @@ inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
     throw std::exception();
 #endif
     glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1020,13 +1020,13 @@ inline void GlVertexArrayObject::AddVertexAttrib(GLuint attrib_location, const G
     if(vao) {
         Bind();
         bo.Bind();
-        CheckGlDieOnError();
+        PANGO_GL_CHECK();
         if(isGlIntegralDatatype(bo.datatype)) {
             glVertexAttribIPointer(attrib_location, bo.count_per_element, bo.datatype, stride_bytes, (void*)offset_bytes );
         }else{
             glVertexAttribPointer(attrib_location, bo.count_per_element, bo.datatype, normalized, stride_bytes, (void*)offset_bytes);
         }
-        CheckGlDieOnError();
+        PANGO_GL_CHECK();
         glEnableVertexAttribArray(attrib_location);
     }else{
         attribs.emplace_back(attrib_location, bo, offset_bytes, stride_bytes, normalized);
@@ -1043,7 +1043,7 @@ inline void GlVertexArrayObject::EnableAttrib(const Attrib& attr) const
         glVertexAttribPointer(attr.attrib_location, attr.bo.count_per_element, attr.bo.datatype, attr.normalized, attr.stride_bytes, (void*)attr.offset_bytes);
     }
 
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
     glEnableVertexAttribArray(attr.attrib_location);
 }
 

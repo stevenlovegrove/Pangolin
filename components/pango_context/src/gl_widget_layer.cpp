@@ -62,18 +62,18 @@ void GlWidgetLayer::LoadShaders()
     const std::string shader_widget = shader_dir + "main_widgets.glsl";
     const std::string shader_text = shader_dir + "main_text.glsl";
 
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 
     prog_widget.AddShaderFromFile(pangolin::GlSlAnnotatedShader, shader_widget, {}, {shader_dir});
     glBindAttribLocation(prog_widget.ProgramId(), DEFAULT_LOCATION_POSITION, DEFAULT_NAME_POSITION);
     prog_widget.Link();
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 
     prog_text.AddShaderFromFile(pangolin::GlSlAnnotatedShader, shader_text, {}, {shader_dir});
     glBindAttribLocation(prog_text.ProgramId(), DEFAULT_LOCATION_POSITION, DEFAULT_NAME_POSITION);
     glBindAttribLocation(prog_text.ProgramId(), GLSL_LOCATION_CHAR_INDEX, "a_char_index");
     prog_text.Link();
-    CheckGlDieOnError();
+    PANGO_GL_CHECK();
 
     dirty = true;
 }
