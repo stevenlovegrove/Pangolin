@@ -30,7 +30,7 @@
 // Include portable printf-style format macros
 #define __STDC_FORMAT_MACROS
 
-#define PANGOLIN_UNUSED(x) 
+#define PANGOLIN_UNUSED(x)
 
 #ifdef __GNUC__
 #  define PANGOLIN_DEPRECATED(x) __attribute__((deprecated(x)))
@@ -63,4 +63,4 @@
 #endif
 
 #include <pangolin/utils/assert.h>
-#include <pangolin/utils/log.h>
+#include <pangolin/utils/logging.h>

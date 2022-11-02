@@ -22,16 +22,21 @@ void newApi()
     auto video_feed = RenderableImage::Create({
         .image=LoadImage("/Users/stevenlovegrove/Desktop/headshots/1.png")
     });
+    video_feed->image->sync();
 
-    auto t1 = DrawLayer::Create({.title="Important Thing2", .objects={video_feed}});
-    auto t2 = DrawLayer::Create({.title="Important Thing2"});
-    auto t3 = DrawLayer::Create({.title="Important Thing3"});
-    auto t4 = DrawLayer::Create({.title="Important Thing4"});
+    auto image_layer = DrawLayer::Create({.title="Important Thing2", .objects={video_feed}});
+
+    auto cam_view =
+        image_layer ^
+        DrawLayer::Create({.objects={video_feed}});
+
+    auto plot = DrawLayer::Create({.title="plot", .objects={video_feed}});
+
     auto panel = WidgetLayer::Create({
         .size_hint = {Pixels{300}, Parts{1}}
     });
 
-    context->setLayout(panel | ((t1|t2) / ((t3|t1)|t4)) );
+    context->setLayout(panel |  (cam_view / plot ));
 
 
 

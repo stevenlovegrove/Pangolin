@@ -157,8 +157,8 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
     {
         const int osx_key = [str characterAtIndex:i];
         osx_window->KeyboardSignal(pangolin::KeyboardEvent(
-            {(float)location.x, (float)location.y,
-             GetKeyModifierBitmask(event),
+            {{(float)location.x, (float)location.y,
+             GetKeyModifierBitmask(event)},
              (unsigned char)mapKeymap(osx_key), true}
         ));
     }
@@ -173,8 +173,8 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
     {
         const int osx_key = [str characterAtIndex:i];
         osx_window->KeyboardSignal(pangolin::KeyboardEvent(
-            {(float)location.x, (float)location.y,
-             GetKeyModifierBitmask(event),
+            {{(float)location.x, (float)location.y,
+             GetKeyModifierBitmask(event)},
              (unsigned char)mapKeymap(osx_key), false}
         ));
     }
@@ -189,8 +189,8 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
     const int button = (int)[event buttonNumber];
     const NSPoint location = [self _Location: event];
     osx_window->MouseSignal(pangolin::MouseEvent({
-        (float)location.x, (float)location.y,
-        GetKeyModifierBitmask(event),
+        {(float)location.x, (float)location.y,
+        GetKeyModifierBitmask(event)},
         mapMouseButton(button), true
     }));
 }
@@ -200,8 +200,8 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
     const int button = (int)[event buttonNumber];
     const NSPoint location = [self _Location: event];
     osx_window->MouseSignal(pangolin::MouseEvent({
-        (float)location.x, (float)location.y,
-        GetKeyModifierBitmask(event),
+        {(float)location.x, (float)location.y,
+        GetKeyModifierBitmask(event)},
         mapMouseButton(button), false
     }));
 }
@@ -263,7 +263,7 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
 - (void)mouseMoved: (NSEvent *)event
 {
     const NSPoint location = [self _Location: event];
-    osx_window->PassiveMouseMotionSignal(pangolin::MouseMotionEvent({(float)location.x, (float)location.y}));
+    osx_window->PassiveMouseMotionSignal(pangolin::MouseMotionEvent({{(float)location.x, (float)location.y, {}} }));
 }
 
 - (void)scrollWheel:(NSEvent *)event
@@ -279,8 +279,8 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
 
     if(dx != 0.0f || dy != 0.0f) {
         osx_window->SpecialInputSignal(pangolin::SpecialInputEvent({
-            (float)location.x, (float)location.y,
-            GetKeyModifierBitmask(event),
+            {(float)location.x, (float)location.y,
+            GetKeyModifierBitmask(event)},
             pangolin::InputSpecialScroll,
             {dx, dy, 0.0f, 0.0f}
         }));
@@ -293,8 +293,8 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
     const float dm = event.magnification;
     if(dm != 0.0f) {
         osx_window->SpecialInputSignal(pangolin::SpecialInputEvent({
-            (float)location.x, (float)location.y,
-            GetKeyModifierBitmask(event),
+            {(float)location.x, (float)location.y,
+            GetKeyModifierBitmask(event)},
             pangolin::InputSpecialZoom,
             {dm, 0.0f, 0.0f, 0.0f}
         }));
@@ -307,8 +307,8 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
     const float dr = event.rotation;
     if(dr != 0.0f) {
         osx_window->SpecialInputSignal(pangolin::SpecialInputEvent({
-            (float)location.x, (float)location.y,
-            GetKeyModifierBitmask(event),
+            {(float)location.x, (float)location.y,
+            GetKeyModifierBitmask(event)},
             pangolin::InputSpecialRotate,
             {dr, 0.0f, 0.0f, 0.0f}
         }));

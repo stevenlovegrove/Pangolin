@@ -118,7 +118,7 @@ void VarState::LoadFromJsonStream(std::istream& is)
             }
         }
     }else{
-        pango_print_error("%s\n", err.c_str());
+        PANGO_ERROR("{}\n", err.c_str());
     }
 }
 
@@ -213,7 +213,7 @@ void VarState::LoadFromFile(const std::string& filename, FileKind kind)
             break;
         }
     }else{
-        pango_print_error("Unable to open file %s\n", filename.c_str());
+        PANGO_ERROR("Unable to open file {}\n", filename.c_str());
     }
 }
 
@@ -228,7 +228,7 @@ void VarState::SaveToFile(const std::string& filename, FileKind kind)
         }
 
     }else{
-        pango_print_error("Unable to serialise to %s\n", filename.c_str());
+        PANGO_ERROR("Unable to serialise to {}\n", filename.c_str());
     }
 }
 

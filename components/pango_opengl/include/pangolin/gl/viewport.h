@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <pangolin/gl/glinclude.h>
+#include <pangolin/gl/glplatform.h>
 
 namespace pangolin
 {
@@ -37,7 +37,7 @@ struct PANGOLIN_EXPORT Viewport
 {
     Viewport() : l(0),b(0),w(0),h(0) {}
     Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h) {}
-    
+
     void Activate() const;
     void ActivateIdentity() const;
     void ActivatePixelOrthographic() const;
@@ -46,13 +46,13 @@ struct PANGOLIN_EXPORT Viewport
     void ActivateAndScissor() const;
 
     bool Contains(int x, int y) const;
-    
+
     Viewport Inset(int i) const;
     Viewport Inset(int horiz, int vert) const;
     Viewport Intersect(const Viewport& vp) const;
 
     static void DisableScissor();
-    
+
     GLint r() const { return l+w;}
     GLint t() const { return b+h;}
     GLfloat aspect() const { return (GLfloat)w / (GLfloat)h; }

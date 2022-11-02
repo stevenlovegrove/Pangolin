@@ -19,6 +19,7 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/avx_math.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/uri.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/param_set.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/logging.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/factory/factory_registry.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/factory/factory_help.cpp
 )

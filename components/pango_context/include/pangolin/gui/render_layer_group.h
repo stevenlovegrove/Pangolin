@@ -111,7 +111,7 @@ RenderLayerGroup join( RenderLayerGroup::Grouping op_type, const Shared<LHS>& lh
         return detail::join(op_type, lhs, rhs); \
     } \
     template<DerivedFrom<RenderLayer> T1, DerivedFrom<RenderLayer> T2> \
-    RenderLayerGroup op(Shared<T1>& lhs, Shared<T2>& rhs)  { \
+    RenderLayerGroup op(const Shared<T1>& lhs, const Shared<T2>& rhs)  { \
         return detail::join(op_type, lhs, rhs); \
     }
 

@@ -88,6 +88,18 @@ public:
         return non_null_shared_;
     }
 
+    // Return a nullable shared_ptr<T> from this Shared<T> object
+    const T* ptr() const
+    {
+        return sharedPtr().get();
+    }
+
+    // Return a nullable shared_ptr<T> from this Shared<T> object
+    T* ptr()
+    {
+        return sharedPtr().get();
+    }
+
     // Default constructable only if T is
     Shared()
     requires (std::is_default_constructible<T>::value)

@@ -22,7 +22,7 @@ IntensityImage LoadImageNonPlanar(
     for(int r=0; r < img.height(); ++r) {
         bFile.read( (char*)img.rawRowPtr(r), img.pitchBytes() );
         if(bFile.fail()) {
-            pango_print_warn("Unable to read raw image file to completion.");
+            PANGO_WARN("Unable to read raw image file to completion.");
             break;
         }
     }

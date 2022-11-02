@@ -1,8 +1,8 @@
 #include <pangolin/gui/draw_layer.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/handler/handler.h>
-#include <pangolin/gl/glplatform.h>
-#include <Eigen/Core>
+#include <pangolin/gl/glsl.h>
+#include <pangolin/render/gl/uniform.h>
 
 #include "glutils.h"
 
@@ -10,6 +10,53 @@
 
 namespace pangolin
 {
+
+
+
+// #PANGO_GL_DO_WARN(FUNC) \
+//     do {
+//         FUNC;
+//         if(GLenum err = glGetError() != GL_NO_ERROR) {
+
+//         }
+//     }while(false);
+
+
+
+
+struct RenderableImageProgram
+{
+    GlSlProgram prog;
+    const GlUniform<Eigen::Vector4f> param = {"test"};
+};
+
+void test()
+{
+    glUniform<int>(0, 10);
+    RenderableImageProgram test;
+    PANGO_GL(test.prog.Link());
+
+    int t1 = 9;
+    int t2[3];
+    glUniformArray<int,1>(0, &t1);
+    glUniformArray<int,3>(0, t2);
+
+    glUniform<int>(0, 0);
+    glUniform<float>(0, 1.0f);
+    glUniform<Eigen::Vector2f>(0, {1.0f, 2.0f});
+
+    // auto block = GlSlUniformBlock(
+    //     Named<float>("test"),
+    //     Named<int>("foo")
+    // );
+
+    // using  SomeBlockType = GlSlUniformBlock<
+    //     Named<float,"test">,
+    //     Named<int,"foo">
+    // >;
+
+    // SomeBlockType block;
+}
 
 struct DrawLayerImpl : public DrawLayer {
     Eigen::Array3f debug_random_color;
@@ -23,7 +70,7 @@ struct DrawLayerImpl : public DrawLayer {
         objects_(p.objects)
     {
         debug_random_color = (Eigen::Array3f::Random() + 1.0f) / 2.0;
-
+        test();
     }
 
     void renderIntoRegion(const RenderParams& p) override {
@@ -32,6 +79,13 @@ struct DrawLayerImpl : public DrawLayer {
         setGlScissor(p.region);
         glClearColor(debug_random_color[0], debug_random_color[2], debug_random_color[2], 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        test();
+
+        for(auto& obj : objects_) {
+            if(auto* im = dynamic_cast<RenderableImage*>(obj.ptr())) {
+            }
+        }
     }
 
     Size sizeHint() const override {

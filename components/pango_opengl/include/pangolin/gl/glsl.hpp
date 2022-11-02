@@ -18,15 +18,14 @@ inline bool IsLinkSuccessPrintLog(GLhandleARB prog)
     GLint status;
     glGetProgramiv(prog, GL_LINK_STATUS, &status);
     if(status != GL_TRUE) {
-        pango_print_error("GLSL Program link failed: ");
         const int PROGRAM_LOG_MAX_LEN = 10240;
         char infolog[PROGRAM_LOG_MAX_LEN];
-        GLsizei len;
+        GLsizei len=0;
         glGetProgramInfoLog(prog, PROGRAM_LOG_MAX_LEN, &len, infolog);
         if(len) {
-            pango_print_error("%s\n",infolog);
+            PANGO_ERROR("GLSL Program link failed: {}", infolog);
         }else{
-            pango_print_error("No details provided.\n");
+            PANGO_ERROR("GLSL Program link failed: No details provided.");
         }
         return false;
     }
@@ -50,19 +49,19 @@ inline bool IsCompileSuccessPrintLog(GLhandleARB shader, const std::string& name
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if(status != GL_TRUE) {
-        pango_print_error("GLSL Shader compilation failed: ");
+        PANGO_ERROR("GLSL Shader compilation failed: ");
         const int SHADER_LOG_MAX_LEN = 10240;
         char infolog[SHADER_LOG_MAX_LEN];
         GLsizei len;
         glGetShaderInfoLog(shader, SHADER_LOG_MAX_LEN, &len, infolog);
         if(len) {
-            pango_print_error("%s:\n%s\n",name_for_errors.c_str(), infolog);
+            PANGO_ERROR("{}:\n{}\n", name_for_errors.c_str(), infolog);
         }else{
-            pango_print_error("%s:\nNo details provided.\n",name_for_errors.c_str());
+            PANGO_ERROR("{}:\nNo details provided.\n",name_for_errors.c_str());
         }
         if(!source_code.empty())
         {
-            pango_print_error("In source code:\n%s\n", AddLineNumbers(source_code).c_str());
+            PANGO_ERROR("In source code:\n{}\n", AddLineNumbers(source_code).c_str());
         }
         return false;
     }
@@ -210,7 +209,7 @@ inline void GlSlProgram::PreprocessGLSL(
             std::string token(line+token_start, line+token_end);
             std::map<std::string,std::string>::const_iterator it = program_defines.find(token);
             if( it == program_defines.end() ) {
-                pango_print_warn("Expected define missing (defaulting to 0): '%s'\n%s\n", token.c_str(), line + token_end );
+                PANGO_WARN("Expected define missing (defaulting to 0): '%s'\n%s\n", token.c_str(), line + token_end );
                 output << "#define " << token << " 0" << std::endl;
             }else{
                 output << "#define " << token << " " << it->second << std::endl;

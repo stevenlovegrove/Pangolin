@@ -27,12 +27,12 @@ std::shared_ptr<GlFont> build_builtin_font(float pixel_height, int tex_w, int te
 }
 
 GlWidgetLayer::GlWidgetLayer(const WidgetLayer::Params& p)
-    : widget_height(p.scale * p.widget_height_pix),
+    : size_hint_(p.size_hint),
+    widget_height(p.scale * p.widget_height_pix),
     widget_padding(p.scale * p.widget_padding_pix),
     font_scale(p.scale * 0.5),
     scroll_offset(0.0),
-    selected_widget(-1),
-    size_hint_(p.size_hint)
+    selected_widget(-1)
 {
     font = build_builtin_font(32, 1024, 1024, false);
     font->InitialiseGlTexture();
@@ -404,7 +404,7 @@ void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
                 [var](const WidgetParams& p){ // read_params
                     Var<std::function<void(void)>> v(var);
                     if(p.value_percent > 0.5) v.Get()();
-                }
+                },{}
             });
         }else if(var->str){
             widgets.push_back(WidgetParams{

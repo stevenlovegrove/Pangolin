@@ -12,6 +12,7 @@ namespace pangolin
 
 struct Renderable
 {
+    virtual ~Renderable() {}
 };
 
 struct RenderableImage : public Renderable

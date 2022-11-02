@@ -33,14 +33,5 @@
 #include <pangolin/gl/compat/gl_es_compat.h>
 #endif
 
-#define CheckGlDieOnError() pangolin::_CheckGlDieOnError( __FILE__, __LINE__ );
-namespace pangolin {
-inline void _CheckGlDieOnError( const char *sFile, const int nLine )
-{
-    const GLenum glError = glGetError();
-    if( glError != GL_NO_ERROR ) {
-        pango_print_error( "OpenGL Error: %s (%d)\n", glErrorString(glError), glError );
-        pango_print_error("In: %s, line %d\n", sFile, nLine);
-    }
-}
-}
+#define CheckGlDieOnError() \
+    PANGO_GL({})
