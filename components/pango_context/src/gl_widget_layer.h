@@ -3,7 +3,7 @@
 #include <pangolin/gui/widget_layer.h>
 
 #include <pangolin/gl/gl.h>
-#include <pangolin/gl/glsl.h>
+#include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/glfont.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>

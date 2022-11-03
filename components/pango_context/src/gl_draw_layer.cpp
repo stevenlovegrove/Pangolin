@@ -1,8 +1,10 @@
 #include <pangolin/gui/draw_layer.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/handler/handler.h>
-#include <pangolin/gl/glsl.h>
+#include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
+#include <pangolin/gl/gl.h>
+#include <pangolin/gl/glvao.h>
 
 #include "glutils.h"
 
@@ -11,52 +13,23 @@
 namespace pangolin
 {
 
-
-
-// #PANGO_GL_DO_WARN(FUNC) \
-//     do {
-//         FUNC;
-//         if(GLenum err = glGetError() != GL_NO_ERROR) {
-
-//         }
-//     }while(false);
-
-
-
-
-struct RenderableImageProgram
+struct DrawnImageProgram
 {
-    GlSlProgram prog;
-    const GlUniform<Eigen::Vector4f> param = {"test"};
+    void draw(const DrawnImage& drawn_image)
+    {
+        PANGO_GL(glActiveTexture(GL_TEXTURE0));
+        auto bind_im = drawn_image.image->bind();
+        auto bind_prog = prog->bind();
+        auto bind_vao = vao.bind();
+        PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    }
+private:
+    const Shared<GlSlProgram> prog = GlSlProgram::Create({
+        .sources = {{ .origin="/components/pango_opengl/shaders/main_image.glsl" }}
+    });
+    GlVertexArrayObject vao = {};
+    const GlUniform<int> texture_unit = {"image", 0};
 };
-
-// void test()
-// {
-//     glUniform<int>(0, 10);
-//     RenderableImageProgram test;
-//     PANGO_GL(test.prog.Link());
-
-//     int t1 = 9;
-//     int t2[3];
-//     glUniformArray<int,1>(0, &t1);
-//     glUniformArray<int,3>(0, t2);
-
-//     glUniform<int>(0, 0);
-//     glUniform<float>(0, 1.0f);
-//     glUniform<Eigen::Vector2f>(0, {1.0f, 2.0f});
-
-//     // auto block = GlSlUniformBlock(
-//     //     Named<float>("test"),
-//     //     Named<int>("foo")
-//     // );
-
-//     // using  SomeBlockType = GlSlUniformBlock<
-//     //     Named<float,"test">,
-//     //     Named<int,"foo">
-//     // >;
-
-//     // SomeBlockType block;
-// }
 
 struct DrawLayerImpl : public DrawLayer {
     Eigen::Array3f debug_random_color;
@@ -79,10 +52,15 @@ struct DrawLayerImpl : public DrawLayer {
         glClearColor(debug_random_color[0], debug_random_color[2], debug_random_color[2], 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // for(auto& obj : objects_) {
-        //     if(auto* im = dynamic_cast<RenderableImage*>(obj.ptr())) {
-        //     }
-        // }
+        for(auto& obj : objects_) {
+            if(DrawnImage* im = dynamic_cast<DrawnImage*>(obj.ptr())) {
+                render_image.draw(*im);
+            }
+        }
+    }
+
+    bool handleEvent(const Event&) override {
+        return false;
     }
 
     Size sizeHint() const override {
@@ -110,11 +88,11 @@ struct DrawLayerImpl : public DrawLayer {
         return bounds_;
     }
 
-    void add(const Shared<Renderable>& r) override {
+    void add(const Shared<Drawable>& r) override {
         objects_.push_back(r);
     }
 
-    void remove(const Shared<Renderable>& r) override {
+    void remove(const Shared<Drawable>& r) override {
         throw std::runtime_error("Not implemented yet...");
     }
 
@@ -130,7 +108,8 @@ struct DrawLayerImpl : public DrawLayer {
     Eigen::Matrix4d intrinsic_k_;
     NonLinearMethod non_linear_;
 
-    std::vector<Shared<Renderable>> objects_;
+    std::vector<Shared<Drawable>> objects_;
+    DrawnImageProgram render_image;
 };
 
 PANGO_CREATE(DrawLayer) {

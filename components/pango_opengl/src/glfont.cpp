@@ -36,7 +36,7 @@
 #include <pangolin/utils/picojson.h>
 
 #if !defined(HAVE_GLES) || defined(HAVE_GLES_2)
-#include <pangolin/gl/glsl.h>
+#include <pangolin/gl/glsl_program.h>
 #endif
 
 #define STB_TRUETYPE_IMPLEMENTATION

@@ -1,6 +1,6 @@
 #include <pangolin/context/factory.h>
 #include <pangolin/utils/file_utils.h>
-#include <pangolin/gl/glsl.h>
+#include <pangolin/gl/glsl_program.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
 #include <locale>

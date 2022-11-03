@@ -1,19 +1,19 @@
 #include <pangolin/context/factory.h>
-#include <pangolin/gui/renderable.h>
+#include <pangolin/gui/drawable.h>
 
 namespace pangolin
 {
 
 // Right now, we have no specialization. Just instantiate the class itself
-PANGO_CREATE(RenderableImage) {
-    auto r = Shared<RenderableImage>::make();
+PANGO_CREATE(DrawnImage) {
+    auto r = Shared<DrawnImage>::make();
     r->image->give(p.image, {});
     return r;
 }
 
 // Right now, we have no specialization. Just instantiate the class itself
-PANGO_CREATE(RenderablePts) {
-    return Shared<RenderablePts>::make();
+PANGO_CREATE(DrawnPrimitives) {
+    return Shared<DrawnPrimitives>::make();
 }
 
 }

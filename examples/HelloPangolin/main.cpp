@@ -1,5 +1,5 @@
 #include <pangolin/context/context.h>
-#include <pangolin/gui/render_layer_group.h>
+#include <pangolin/gui/layer_group.h>
 #include <pangolin/gui/draw_layer.h>
 #include <pangolin/gui/widget_layer.h>
 #include <pangolin/handler/handler.h>
@@ -8,6 +8,7 @@
 #include <sophus/sensor/camera_model.h>
 #include <pangolin/var/var.h>
 #include <pangolin/image/image_io.h>
+#include <pangolin/gl/glsl_program.h>
 
 using namespace pangolin;
 using namespace sophus;
@@ -19,26 +20,17 @@ void newApi()
         .window_size = {1024,600},
     } );
 
-    auto video_feed = RenderableImage::Create({
-        .image=LoadImage("/Users/stevenlovegrove/Desktop/headshots/1.png")
+    auto image_layer = DrawLayer::Create({
+        .objects = { DrawnImage::Create({ .image=LoadImage("/Users/stevenlovegrove/Desktop/headshots/1.png") })}
     });
-    video_feed->image->sync();
+    auto cam_layer = DrawLayer::Create({});
+    auto cam3d_layer = DrawLayer::Create({});
 
-    auto image_layer = DrawLayer::Create({.title="Important Thing2", .objects={video_feed}});
+    // auto panel = WidgetLayer::Create({
+    //     .size_hint = {Pixels{300}, Parts{1}}
+    // });
 
-    auto cam_view =
-        image_layer ^
-        DrawLayer::Create({.objects={video_feed}});
-
-    auto plot = DrawLayer::Create({.title="plot", .objects={video_feed}});
-
-    auto panel = WidgetLayer::Create({
-        .size_hint = {Pixels{300}, Parts{1}}
-    });
-
-    context->setLayout(panel |  (cam_view / plot ));
-
-
+    context->setLayout(/* panel | */  ((image_layer|cam3d_layer) / cam_layer));
 
     Var<float> test1("ui.slider1", 20.0, 0.0, 50.0);
     Var<int> test2("ui.slider2", 3, 0, 15);

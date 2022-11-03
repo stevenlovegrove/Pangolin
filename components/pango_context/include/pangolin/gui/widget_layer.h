@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render_layer.h"
+#include <pangolin/gui/layer.h>
 
 namespace pangolin
 {
@@ -11,7 +11,7 @@ struct Widget;
 ////////////////////////////////////////////////////////////////////
 /// Supports displaying a 2D tweak-var style interface
 ///
-struct WidgetLayer : public RenderLayer
+struct WidgetLayer : public Layer
 {
     // virtual void add(SharedVector<Widget> widgets) = 0;
 

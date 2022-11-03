@@ -2,6 +2,7 @@
 
 #include <pangolin/render/framebuffer_reader.h>
 #include <pangolin/handler/handler.h>
+#include <pangolin/handler/interactive.h>
 #include <sophus/sensor/camera_model.h>
 
 namespace pangolin {

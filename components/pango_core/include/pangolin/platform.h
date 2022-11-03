@@ -62,5 +62,4 @@
 #  endif
 #endif
 
-#include <pangolin/utils/assert.h>
 #include <pangolin/utils/logging.h>

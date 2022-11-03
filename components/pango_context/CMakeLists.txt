@@ -8,11 +8,11 @@ set(component_file_basenames
   projection
   min_max
   shared
-  gl_widget_layer
+  # gl_widget_layer
   gl_framebuffer_reader
   gl_draw_layer
   gl_device_buffer
-  renderable
+  drawable
   multi_dim
 )
 

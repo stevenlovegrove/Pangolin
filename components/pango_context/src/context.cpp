@@ -3,7 +3,7 @@
 #include <pangolin/context/context.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/windowing/window.h>
-#include <pangolin/gui/render_layer_group.h>
+#include <pangolin/gui/layer_group.h>
 #include <pangolin/utils/variant_overload.h>
 #include <pangolin/gl/glplatform.h>
 
@@ -46,17 +46,17 @@ struct ContextImpl : public Context {
         return window_;
     }
 
-    void setLayout(const RenderLayerGroup& layout) override
+    void setLayout(const LayerGroup& layout) override
     {
         layout_ = layout;
     }
 
-    void setLayout(const Shared<RenderLayer>& panel) override
+    void setLayout(const Shared<Layer>& panel) override
     {
-        setLayout(RenderLayerGroup(panel));
+        setLayout(LayerGroup(panel));
     }
 
-    RenderLayerGroup getLayout() const override
+    LayerGroup getLayout() const override
     {
         return layout_;
     }
@@ -88,7 +88,7 @@ struct ContextImpl : public Context {
 
     ImageSize size_;
     Shared<Window> window_;
-    RenderLayerGroup layout_;
+    LayerGroup layout_;
 };
 
 PANGO_CREATE(Context) {

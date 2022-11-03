@@ -112,18 +112,20 @@ template<typename T>
 class GlUniform {
 public:
     GlUniform(const char* name, const T default_value = {})
-        : name_(name), current_value_(default_value), handle_(kHandleInvalid)
+        : name_(name),
+        default_value_(default_value),
+        current_value_(default_value),
+        handle_(kHandleInvalid)
     {
     }
 
-    void operator=(const T& new_value) {
+    void operator=(const T& new_value) const {
         if(handle_ == kHandleInvalid) {
             GLint bound_prog_id;
-            glGetIntegerv(GL_CURRENT_PROGRAM, &bound_prog_id);
+            PANGO_GL(glGetIntegerv(GL_CURRENT_PROGRAM, &bound_prog_id));
+            PANGO_CHECK(bound_prog_id != 0, "This method can only be called with the corresponding program already bound.");
             handle_ = glGetUniformLocation(bound_prog_id, name_);
-            if(GLenum err = glGetError() != GL_NO_ERROR) {
-
-            }
+            PANGO_CHECK(handle_ != -1, "Name doesn't correspond to a used uniform (may have been optimized out.");
         }
 
         if(new_value != current_value_) {
@@ -140,8 +142,9 @@ private:
     static constexpr int kHandleInvalid = -1;
 
     const char* name_;
-    T current_value_;
-    int handle_;
+    T default_value_;
+    mutable T current_value_;
+    mutable int handle_;
 };
 
 }

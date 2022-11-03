@@ -7,16 +7,30 @@ file(GLOB_RECURSE SHADER_FILES_TO_EMBED "${CMAKE_CURRENT_LIST_DIR}/shaders/*.gls
 embed_binary_files_rule(fonts.cpp ${BINARY_FILES_TO_EMBED})
 embed_shader_files_rule(shaders.cpp "${SHADER_FILES_TO_EMBED}")
 
+set(component_file_basenames
+    glsl_program
+    glsl_preprocessor
+)
+
+foreach(basename ${component_file_basenames})
+  target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/${basename}.cpp )
+  if(BUILD_TESTS)
+      add_executable(${basename}_test ${CMAKE_CURRENT_LIST_DIR}/src/${basename}_test.cpp)
+      target_link_libraries(${basename}_test PRIVATE Catch2::Catch2WithMain ${COMPONENT})
+      catch_discover_tests(${basename}_test)
+  endif()
+endforeach()
+
+# TODO move more of these into above as they mature and get tests...
 target_sources( ${COMPONENT}
 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/glchar.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/gldraw.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/glfont.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/gltext.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/glvao.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/glpangoglu.cpp
-    # ${CMAKE_CURRENT_LIST_DIR}/src/gltexturecache.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/viewport.cpp
-    # ${CMAKE_CURRENT_LIST_DIR}/src/opengl_render_state.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/stb_truetype.h
     ${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/shaders.cpp

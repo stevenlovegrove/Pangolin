@@ -1,4 +1,5 @@
 #include <pangolin/utils/shared.h>
+#include <pangolin/gl/scoped_bind.h>
 #include <sophus/image/runtime_image.h>
 
 namespace pangolin
@@ -47,7 +48,7 @@ struct DeviceMemory : std::enable_shared_from_this<DeviceMemory>
     // Buffer update occurs asynchronously according to policy.
     // Returns immediately.
     template<typename T>
-    void give(std::vector<T>&& vec, GiveParams p, int length = 0, int start = 0)
+    void give(std::vector<T>&& vec, GiveParams p, size_t length = 0, size_t start = 0)
     {
         // Default to entire vector
         if(length==0) length = vec.size() - start;
@@ -61,7 +62,7 @@ struct DeviceMemory : std::enable_shared_from_this<DeviceMemory>
         // Call into implementation with type erasure
         update({
             .data_type = sophus::RuntimePixelType::fromTemplate<T>(),
-            .src_data = std::shared_ptr<const uint8_t>(svec, static_cast<const uint8_t*>(svec.data())),
+            .src_data = std::shared_ptr<const uint8_t>(svec, reinterpret_cast<const uint8_t*>(svec->data())),
             .src_pitches_bytes = {sizeof(T)},
             .src_sizes = {length},
             .dest_pos = p.dest_pos
@@ -93,6 +94,8 @@ struct DeviceMemory : std::enable_shared_from_this<DeviceMemory>
 
 struct DeviceTexture : public DeviceMemory
 {
+    virtual ScopedBind<DeviceTexture> bind() const = 0;
+
     struct Params {};
     static Shared<DeviceTexture> Create(Params p = {});
 };
@@ -106,10 +109,21 @@ struct DeviceBuffer : public DeviceMemory
         // ... add more
     };
 
+    virtual ScopedBind<DeviceBuffer> bind() const = 0;
+
     struct Params {
         Kind kind;
     };
     static Shared<DeviceBuffer> Create(Params p);
+
+    template<typename T>
+    static Shared<DeviceBuffer> Create(const std::vector<T>& x, Params p)
+    {
+        auto b = DeviceBuffer::Create(p);
+        std::vector<T> copy = x;
+        b->give<T>(std::move(copy), {});
+        return b;
+    }
 };
 
 }

@@ -291,53 +291,6 @@ protected:
     size_t  m_num_verts;
 };
 
-class PANGOLIN_EXPORT GlVertexArrayObject
-{
-public:
-    GlVertexArrayObject();
-    ~GlVertexArrayObject();
-
-    void Bind() const;
-
-    void Unbind() const;
-
-    // TODO: this only works (on Linux) for floating point types
-    //       Add switch to use glVertexAttribIPointer when appropriate.
-    void AddVertexAttrib(
-        GLuint attrib_location,
-        const GlBuffer& bo,
-        size_t offset_bytes = 0,
-        size_t stride_bytes = 0,
-        GLboolean normalized = GL_FALSE
-    );
-
-protected:
-    GLuint vao;
-
-
-    // we'll only use this on platforms that don't support VAO's
-    // in order to mimic it's functionality
-    struct Attrib
-    {
-        Attrib(GLuint attrib_location, const GlBuffer& bo, size_t offset_bytes, size_t stride_bytes, GLboolean normalized)
-        : attrib_location(attrib_location), bo(bo), offset_bytes(offset_bytes),
-          stride_bytes(stride_bytes), normalized(normalized)
-        {}
-
-        GLuint attrib_location;
-        const GlBuffer& bo;
-        size_t offset_bytes;
-        size_t stride_bytes;
-        GLboolean normalized;
-    };
-
-    void EnableAttrib(const Attrib& attr) const;
-
-    void DisableAttrib(const Attrib& attr) const;
-
-    std::vector<Attrib> attribs;
-};
-
 size_t GlFormatChannels(GLenum data_layout);
 
 size_t GlDataTypeBytes(GLenum type);

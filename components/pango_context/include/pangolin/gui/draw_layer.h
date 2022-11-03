@@ -1,8 +1,11 @@
 #pragma once
 
 #include <pangolin/maths/min_max.h>
-#include <pangolin/gui/render_layer.h>
-#include <pangolin/gui/renderable.h>
+#include <pangolin/gui/layer.h>
+#include <pangolin/gui/drawable.h>
+#include <pangolin/handler/handler.h>
+#include <pangolin/handler/interactive.h>
+
 #include <sophus/image/image.h>
 
 #include <variant>
@@ -12,26 +15,10 @@ namespace pangolin
 
 struct Handler;
 
-// TODO: We just need a kind of stack that supports a deferred
-//       render stage, with pipelining? Need a renderable which
-//       can take a gpu resource directly.
-
-// TODO: Have a texture cache which lets you pass images into methods
-//       that would take textures - it uploads if needed, or uses whats
-//       in the cache. A weak ptr lets the texture get deallocated when
-//       the corresponding host image is deleted. Would need a way to
-//       get around it being too smart...
-
-// TODO: How is the implementation meant to know when a user
-//       updates a renderable and it needs to get re-uploaded?
-//       How can a user partially update something? If everthing was
-//       nullable once uplaoded, the implementation could check if
-//       things get set.
-
 ////////////////////////////////////////////////////////////////////
 /// Supports displaying interactive 2D / 3D elements
 ///
-struct DrawLayer : public RenderLayer
+struct DrawLayer : public Layer, Interactive
 {
     struct Lut {
         // Maps input pixel (u,v) to a direction vector (dx,dy,dz)
@@ -72,20 +59,20 @@ struct DrawLayer : public RenderLayer
     // can constrain viewing parameters to relevant content.
     virtual MinMax<Eigen::Vector3d> getSceneBoundsInWorld() const = 0;
 
-    virtual void add(const Shared<Renderable>& r) = 0;
+    virtual void add(const Shared<Drawable>& r) = 0;
 
-    virtual void remove(const Shared<Renderable>& r) = 0;
+    virtual void remove(const Shared<Drawable>& r) = 0;
 
     virtual void clear() = 0;
 
     struct Params {
         std::string title = "";
         Size size_hint = {Parts{1}, Parts{1}};
-        std::shared_ptr<Handler> handler = nullptr;
+        std::shared_ptr<Handler> handler = Handler::Create({});
         Eigen::Matrix4d cam_from_world = Eigen::Matrix4d::Identity();
         Eigen::Matrix4d intrinsic_k = Eigen::Matrix4d::Identity();
         NonLinearMethod non_linear = {};
-        std::vector<Shared<Renderable>> objects = {};
+        std::vector<Shared<Drawable>> objects = {};
     };
     static Shared<DrawLayer> Create(Params p);
 };

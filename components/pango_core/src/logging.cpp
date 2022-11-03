@@ -60,7 +60,7 @@ struct LoggingImpl : public Log
         unique_only_ = unique_only;
     }
 
-    void logImpl(Kind level, const char *sFile, const int nLine, const std::string& description) override
+    void logImpl(Kind level, const char *sFile, const char* sFunction, const int nLine, const char* assertion_statement, const std::string& description) override
     {
         // This could hurt performance if we're really spamming log output, but it
         // will ensure that lines aren't intermingled between threads and that we don't corrupt
@@ -76,9 +76,9 @@ struct LoggingImpl : public Log
             const fmt::color level_color = sLogKindColorTable[static_cast<int>(level)];
 
             println( "[{} {}]\n{}",
-                fmt::format(fmt::emphasis::bold | fg(level_color), level_text),
-                fmt::format(fg(level_color), "{}:{}", sFile, nLine),
-                fmt::format(fg(level_color), "> {}", description)
+                fmt::format(fmt::emphasis::bold  | fg(level_color), level_text),
+                fmt::format(fmt::emphasis::faint | fg(level_color), "{}:{}", sFile, nLine),
+                fmt::format(fg(level_color), ">{} {}", assertion_statement, description)
             );
         }else{
             ++num_ignored_[level];

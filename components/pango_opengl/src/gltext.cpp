@@ -26,10 +26,21 @@
  */
 
 #include <pangolin/gl/gltext.h>
-#include <pangolin/gl/glsl.h>
+#include <pangolin/gl/glsl_program.h>
 
 namespace pangolin
 {
+
+// Here just temporarily
+const GLuint DEFAULT_LOCATION_POSITION = 0;
+const GLuint DEFAULT_LOCATION_COLOUR   = 1;
+const GLuint DEFAULT_LOCATION_NORMAL   = 2;
+const GLuint DEFAULT_LOCATION_TEXCOORD = 3;
+
+const char DEFAULT_NAME_POSITION[] = "a_position";
+const char DEFAULT_NAME_COLOUR[]   = "a_color";
+const char DEFAULT_NAME_NORMAL[]   = "a_normal";
+const char DEFAULT_NAME_TEXCOORD[] = "a_texcoord";
 
 GlText::GlText()
     : tex(NULL), width(0),

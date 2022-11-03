@@ -116,6 +116,7 @@ IntensityImage LoadImage(const std::string& filename, ImageFileType file_type)
     case ImageFileTypeBmp:
     {
         std::ifstream ifs(filename, std::ios_base::in|std::ios_base::binary);
+        PANGO_THROW_IF(!ifs.good());
         return LoadImage(ifs, file_type);
     }
     case ImageFileTypePango:

@@ -3,15 +3,15 @@
 #include <array>
 #include <pangolin/utils/shared.h>
 #include <pangolin/context/engine.h>
-#include <pangolin/gui/render_layer_group.h>
+#include <pangolin/gui/layer_group.h>
 #include <sophus/image/image_size.h>
 
 namespace pangolin
 {
 
 class WindowInterface;
-struct RenderLayerGroup;
-struct RenderLayer;
+struct LayerGroup;
+struct Layer;
 
 ////////////////////////////////////////////////////////////////////
 /// Represents the pangolin context for one Window or Window-like
@@ -45,7 +45,7 @@ struct Context : std::enable_shared_from_this<Context>
     inline void loop() { loop([](){return true;}); }
 
     // Specify the Panels which will make up the drawing canvas via
-    // a RenderLayerGroup object - a nested tree of Panels with a layout
+    // a LayerGroup object - a nested tree of Panels with a layout
     // specification at each node.
     //
     // If a layout is already set, it will be replaced by layout.
@@ -57,23 +57,23 @@ struct Context : std::enable_shared_from_this<Context>
     // the Context. Uers may safely hold onto unused PanelGroups
     // and restore them via setLayout to quickly reconfigure the
     // window.
-    virtual void setLayout(const RenderLayerGroup& layout) = 0;
+    virtual void setLayout(const LayerGroup& layout) = 0;
 
     // Convenience method to create a window with only one panel
-    virtual void setLayout(const Shared<RenderLayer>& panel) = 0;
+    virtual void setLayout(const Shared<Layer>& panel) = 0;
 
-    // Return the current RenderLayerGroup layout - this may have been
+    // Return the current LayerGroup layout - this may have been
     // customized at runtime by the end-user.
-    // TODO: provide a method to serialize RenderLayerGroup for easily
+    // TODO: provide a method to serialize LayerGroup for easily
     //       saving layouts
-    virtual RenderLayerGroup getLayout() const = 0;
+    virtual LayerGroup getLayout() const = 0;
 
     struct Params {
         std::string title = "Pangolin App";
         ImageSize window_size = {1024, 768};
         std::string window_engine = Engine::singleton()->defaults.window_engine;
         Engine::Profile profile = Engine::singleton()->defaults.profile;
-        Shared<RenderLayerGroup> layout = {};
+        Shared<LayerGroup> layout = {};
     };
     static Shared<Context> Create(Params p);
 };

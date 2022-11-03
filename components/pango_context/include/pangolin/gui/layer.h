@@ -16,17 +16,16 @@ struct Parts {double ratio = 1.0; };
 ////////////////////////////////////////////////////////////////////
 /// Represents a client area in a window with layout handling
 ///
-struct RenderLayer : std::enable_shared_from_this<RenderLayer>
+struct Layer
 {
-    virtual ~RenderLayer() {}
-
-    struct RenderParams{
-        MinMax<Eigen::Vector2i> region;
-    };
+    virtual ~Layer() {}
 
     using Dim = std::variant<Parts,Pixels>;
     using Size = Eigen::Vector<Dim,2>;
 
+    struct RenderParams{
+        MinMax<Eigen::Vector2i> region;
+    };
     virtual void renderIntoRegion(const RenderParams&) = 0;
 
     virtual Size sizeHint() const = 0;
@@ -35,7 +34,7 @@ struct RenderLayer : std::enable_shared_from_this<RenderLayer>
         std::string title = "";
         Size size_hint = {Parts{1}, Parts{1}};
     };
-    static Shared<RenderLayer> Create(Params);
+    static Shared<Layer> Create(Params);
 };
 
 }

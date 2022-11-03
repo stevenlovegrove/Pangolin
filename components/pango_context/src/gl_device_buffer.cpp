@@ -42,10 +42,26 @@ struct DeviceGlTexture : public DeviceTexture
         free();
     }
 
+    ScopedBind<DeviceTexture> bind() const override
+    {
+        return {
+            [t=this->gl_target_, id = this->gl_id_](){
+                PANGO_GL(glBindTexture(t, id));
+            },
+            [t=this->gl_target_](){
+                PANGO_GL(glBindTexture(t, 0));
+            },
+        };
+    }
+
     void update(const Update& update) override
     {
-        std::lock_guard<std::mutex> guard(buffer_mutex_);
+        std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
         updates_.push_back(update);
+
+        // for now, just sync immediately
+        // TODO: implement the actual async upload
+        sync();
     }
 
     bool empty() override
@@ -58,7 +74,7 @@ struct DeviceGlTexture : public DeviceTexture
         while(true) {
             DeviceBuffer::Update u;
             {
-                std::lock_guard<std::mutex> guard(buffer_mutex_);
+                std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
                 if(updates_.empty()) return;
                 u = updates_.front();
                 updates_.pop_front();
@@ -69,7 +85,7 @@ struct DeviceGlTexture : public DeviceTexture
 
     void free()
     {
-        if(gl_id_) glDeleteTextures(1, &gl_id_);
+        if(gl_id_) PANGO_GL(glDeleteTextures(1, &gl_id_));
     }
 
     void applyUpdateNow(DeviceBuffer::Update& u)
@@ -90,31 +106,43 @@ struct DeviceGlTexture : public DeviceTexture
             data_type_ = u.data_type;
 
             free();
-            glGenTextures(1, &gl_id_);
-            glBindTexture(gl_target_, gl_id_);
-            glTexImage2D(
+            PANGO_GL(glGenTextures(1, &gl_id_));
+            PANGO_GL(glBindTexture(gl_target_, gl_id_));
+            PANGO_GL(glTexImage2D(
                 gl_target_, mip_level,
                 gl_fmt.gl_sized_format,
                 size[0], size[1], border,
                 gl_fmt.gl_base_format,
                 gl_fmt.gl_type, nullptr
-            );
+            ));
+
+            // TODO: set these from creation params
+            if(true) {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            }else{
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            }
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         }
 
         // Upload data
-        glBindTexture(gl_target_, gl_id_);
-        glTexSubImage2D(
+        PANGO_GL(glBindTexture(gl_target_, gl_id_));
+        PANGO_GL(glTexSubImage2D(
             GL_TEXTURE_2D, mip_level,
             u.dest_pos[0], u.dest_pos[1],
             src_size[0], src_size[1],
             gl_fmt.gl_base_format,
             gl_fmt.gl_type,
             u.src_data.get()
-        );
+        ));
     }
 
     GLenum gl_target_;
-        std::mutex buffer_mutex_;
+    std::recursive_mutex buffer_mutex_;
     std::deque<DeviceBuffer::Update> updates_;
     RuntimePixelType data_type_;
     GLuint gl_id_;
@@ -139,6 +167,14 @@ struct DeviceGlBuffer : public DeviceBuffer
     void free()
     {
         if(gl_id_ != 0) glDeleteBuffers(1, &gl_id_);
+    }
+
+    ScopedBind<DeviceBuffer> bind() const override
+    {
+        return {
+            [t=this->buffer_type_, id = this->gl_id_](){glBindBuffer(t, id);},
+            [t=this->buffer_type_](){glBindBuffer(t, 0);},
+        };
     }
 
     void update(const Update& update) override
@@ -213,5 +249,12 @@ PANGO_CREATE(DeviceTexture) {
     const GLenum tex_target = GL_TEXTURE_2D;
     return Shared<DeviceGlTexture>::make(tex_target);
 }
+
+template<>
+thread_local ScopedBind<DeviceTexture>* ScopedBind<DeviceTexture>::current = nullptr;
+
+template<>
+thread_local ScopedBind<DeviceBuffer>* ScopedBind<DeviceBuffer>::current = nullptr;
+
 
 }

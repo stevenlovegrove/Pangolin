@@ -10,12 +10,12 @@
 namespace pangolin
 {
 
-struct Renderable
+struct Drawable
 {
-    virtual ~Renderable() {}
+    virtual ~Drawable() {}
 };
 
-struct RenderableImage : public Renderable
+struct DrawnImage : public Drawable
 {
     enum class Interpolation
     {
@@ -47,10 +47,10 @@ struct RenderableImage : public Renderable
     struct Params {
         sophus::IntensityImage<> image = {};
     };
-    static Shared<RenderableImage> Create(Params p);
+    static Shared<DrawnImage> Create(Params p);
 };
 
-struct RenderablePts : public Renderable
+struct DrawnPrimitives : public Drawable
 {
     enum class Type
     {
@@ -97,7 +97,7 @@ struct RenderablePts : public Renderable
     // Transform to apply to points during render
     // (they will be further transformed by the camera
     //  and modelview style matrices)
-    Eigen::Matrix4d world_from_renderable;
+    Eigen::Matrix4d world_from_drawable;
 
     // Color to use if colors buffer is empty
     Eigen::Vector4f default_color = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -108,7 +108,7 @@ struct RenderablePts : public Renderable
     float default_radius = 1.0;
 
     struct Params {};
-    static Shared<RenderablePts> Create(Params p = {});
+    static Shared<DrawnPrimitives> Create(Params p = {});
 };
 
 }

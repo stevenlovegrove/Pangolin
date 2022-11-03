@@ -69,12 +69,13 @@ IntensityImage LoadLz4(std::istream& in)
 
     in.read(input_buffer.get(), header.compressed_size);
     const int decompressed_size = LZ4_decompress_safe(input_buffer.get(), (char*)const_cast<uint8_t*>(img.rawPtr()), header.compressed_size, img.sizeBytes());
-    if (decompressed_size < 0)
-        throw std::runtime_error(FormatString("A negative result from LZ4_decompress_safe indicates a failure trying to decompress the data.  See exit code (%) for value returned.", decompressed_size));
-    if (decompressed_size == 0)
-        throw std::runtime_error("I'm not sure this function can ever return 0.  Documentation in lz4.h doesn't indicate so.");
-    if (decompressed_size != (int)img.sizeBytes())
-        throw std::runtime_error(FormatString("decompressed size % is not equal to predicted size %", decompressed_size, img.sizeBytes()));
+
+    PANGO_THROW_IF(decompressed_size < 0,
+        "LZ4_decompress_safe exited with code ({}).", decompressed_size);
+    PANGO_THROW_IF(decompressed_size == 0,
+        "Documentation in lz4.h says this should neve happen.");
+    PANGO_THROW_IF(decompressed_size != (int)img.sizeBytes(),
+        "decompressed size {} is not equal to predicted size {}", decompressed_size, img.sizeBytes());
 
     return img;
 #else

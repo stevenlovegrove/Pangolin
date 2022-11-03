@@ -45,9 +45,7 @@ void SaveZstd(const IntensityImage& image, std::ostream& out, int compression_le
     }
 
     size_t const initResult = ZSTD_initCStream(cstream, compression_level);
-    if (ZSTD_isError(initResult)) {
-        throw std::runtime_error(FormatString("ZSTD_initCStream() error : %", ZSTD_getErrorName(initResult)));
-    }
+    PANGO_THROW_IF(ZSTD_isError(initResult), "ZSTD_initCStream() error : {}", ZSTD_getErrorName(initResult));
 
     const size_t row_size_bytes = image.numChannels() * image.numBytesPerPixelChannel() * image.width();
 
@@ -57,9 +55,7 @@ void SaveZstd(const IntensityImage& image, std::ostream& out, int compression_le
         while (input.pos < input.size) {
             ZSTD_outBuffer output = { output_buffer.get(), output_buffer_size, 0 };
             size_t left_to_read = ZSTD_compressStream(cstream, &output , &input);
-            if (ZSTD_isError(left_to_read)) {
-                throw std::runtime_error(FormatString("ZSTD_compressStream() error : %", ZSTD_getErrorName(left_to_read)));
-            }
+            PANGO_THROW_IF(ZSTD_isError(left_to_read), "ZSTD_compressStream() error : %", ZSTD_getErrorName(left_to_read));
             out.write(output_buffer.get(), output.pos);
         }
     }
@@ -99,9 +95,7 @@ IntensityImage LoadZstd(std::istream& in)
     }
 
     size_t read_size_hint = ZSTD_initDStream(dstream);
-    if (ZSTD_isError(read_size_hint)) {
-        throw std::runtime_error(FormatString("ZSTD_initDStream() error : % \n", ZSTD_getErrorName(read_size_hint)));
-    }
+    PANGO_THROW_IF(ZSTD_isError(read_size_hint), "ZSTD_initDStream() error : % \n", ZSTD_getErrorName(read_size_hint));
 
     // Image represents our fixed buffer.
     ZSTD_outBuffer output = { const_cast<uint8_t*>(img.rawPtr()), img.sizeBytes(), 0 };
@@ -112,9 +106,7 @@ IntensityImage LoadZstd(std::istream& in)
         ZSTD_inBuffer input = { input_buffer.get(), read_size_hint, 0 };
         while (input.pos < input.size) {
             read_size_hint = ZSTD_decompressStream(dstream, &output , &input);
-            if (ZSTD_isError(read_size_hint)) {
-                throw std::runtime_error(FormatString("ZSTD_decompressStream() error : %", ZSTD_getErrorName(read_size_hint)));
-            }
+            PANGO_THROW_IF(ZSTD_isError(read_size_hint), "ZSTD_decompressStream() error : %", ZSTD_getErrorName(read_size_hint));
         }
     }
 
