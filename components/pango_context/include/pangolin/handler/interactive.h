@@ -1,15 +1,19 @@
 #pragma once
 
+#include <optional>
+#include <Eigen/Core>
 #include <pangolin/utils/flag_set.h>
 #include <pangolin/maths/conventions.h>
-#include <pangolin/gui/layer.h>
+#include <pangolin/maths/min_max.h>
 
 namespace pangolin
 {
 
+struct Context;
+
 struct WindowPosition
 {
-  const MinMax<Eigen::Array2d>& region() const
+  const MinMax<Eigen::Array2i>& region() const
   {
     return region_;
   }
@@ -21,15 +25,15 @@ struct WindowPosition
 
   Eigen::Array2d posInRegion() const
   {
-    return pos_window_ - region_.min();
+    return pos_window_ - region_.min().cast<double>();
   }
 
   Eigen::Array2d posInRegionNorm() const
   {
-    return (pos_window_ - region_.min()) / region_.range();
+    return (pos_window_ - region_.min().cast<double>()) / region_.range().cast<double>();
   }
 
-  MinMax<Eigen::Array2d> region_;
+  MinMax<Eigen::Array2i> region_;
   Eigen::Array2d pos_window_;
 };
 
@@ -68,7 +72,7 @@ struct Interactive {
       std::variant<PointerEvent,ScrollEvent> detail;
     };
 
-    virtual bool handleEvent(const Event&) = 0;
+    virtual bool handleEvent(const Context&, const Event&) = 0;
 };
 
 }

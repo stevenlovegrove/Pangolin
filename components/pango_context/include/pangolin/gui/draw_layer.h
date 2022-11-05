@@ -4,21 +4,18 @@
 #include <pangolin/gui/layer.h>
 #include <pangolin/gui/drawable.h>
 #include <pangolin/handler/handler.h>
-#include <pangolin/handler/interactive.h>
-
-#include <sophus/image/image.h>
+#include <sophus/sensor/camera_model.h>
+#include <sophus/lie/se3.h>
 
 #include <variant>
 
 namespace pangolin
 {
 
-struct Handler;
-
 ////////////////////////////////////////////////////////////////////
 /// Supports displaying interactive 2D / 3D elements
 ///
-struct DrawLayer : public Layer, Interactive
+struct DrawLayer : public Layer
 {
     struct Lut {
         // Maps input pixel (u,v) to a direction vector (dx,dy,dz)
@@ -37,20 +34,6 @@ struct DrawLayer : public Layer, Interactive
     };
     using NonLinearMethod = std::variant<std::monostate,Lut>;
 
-    // Specify how objects are projected into the virtual camera,
-    // or ray-traced from it (in which case intrinsic_k will be
-    // inverted).
-    virtual void setProjection(
-        const Eigen::Matrix4d& intrinsic_k,
-        const NonLinearMethod non_linear = {},
-        double duration_seconds = 0.0) = 0;
-
-    // Specify the tranform which takes scene objects from
-    // a common 'world' frame into the viewing camera frame.
-    virtual void setCamFromWorld(
-        const Eigen::Matrix4d& cam_from_world,
-        double duration_seconds = 0.0) = 0;
-
     // Specify a handler to feed user input into this DrawLayer
     // to drive the tranforms and view options.
     virtual void setHandler(const std::shared_ptr<Handler>&) = 0;
@@ -66,12 +49,14 @@ struct DrawLayer : public Layer, Interactive
     virtual void clear() = 0;
 
     struct Params {
-        std::string title = "";
+        std::string name = "";
         Size size_hint = {Parts{1}, Parts{1}};
+        MinMax<double> near_far = {0.1, 100.0};
+
+        Shared<sophus::CameraModel> camera = Shared<sophus::CameraModel>::make();
+        Shared<sophus::Se3F64> world_from_camera = Shared<sophus::Se3F64>::make();
         std::shared_ptr<Handler> handler = Handler::Create({});
-        Eigen::Matrix4d cam_from_world = Eigen::Matrix4d::Identity();
-        Eigen::Matrix4d intrinsic_k = Eigen::Matrix4d::Identity();
-        NonLinearMethod non_linear = {};
+
         std::vector<Shared<Drawable>> objects = {};
     };
     static Shared<DrawLayer> Create(Params p);

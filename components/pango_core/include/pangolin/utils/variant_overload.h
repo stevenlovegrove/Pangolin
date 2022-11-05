@@ -10,7 +10,7 @@ namespace pangolin
 
     // e.g.
     // std::variant<int,float,std::string,std::tuple<int,int>> v;
-    // std::visit(overloaded {
+    // std::visit(overload {
     //         [](int arg) { },
     //         [](const std::string& arg) { }
     //         [](auto arg) { ... everything else... },

@@ -9,9 +9,10 @@ set(component_file_basenames
   min_max
   shared
   # gl_widget_layer
-  gl_framebuffer_reader
+  depth_sampler
   gl_draw_layer
   gl_device_buffer
+  layer_group
   drawable
   multi_dim
 )

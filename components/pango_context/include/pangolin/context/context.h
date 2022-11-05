@@ -5,12 +5,14 @@
 #include <pangolin/context/engine.h>
 #include <pangolin/gui/layer_group.h>
 #include <sophus/image/image_size.h>
+#include <pangolin/maths/conventions.h>
+#include <pangolin/maths/min_max.h>
+#include <sophus/image/runtime_image.h>
 
 namespace pangolin
 {
 
 class WindowInterface;
-struct LayerGroup;
 struct Layer;
 
 ////////////////////////////////////////////////////////////////////
@@ -25,6 +27,9 @@ struct Context : std::enable_shared_from_this<Context>
 {
     using Window = WindowInterface;
     using ImageSize = sophus::ImageSize;
+    enum class Attachment {
+        depth, color, //...
+    };
 
     virtual ~Context() {}
 
@@ -44,6 +49,12 @@ struct Context : std::enable_shared_from_this<Context>
     // Convenience method for looping without a user function
     inline void loop() { loop([](){return true;}); }
 
+    // Return the current LayerGroup layout - this may have been
+    // customized at runtime by the end-user.
+    // TODO: provide a method to serialize LayerGroup for easily
+    //       saving layouts
+    virtual LayerGroup layout() const = 0;
+
     // Specify the Panels which will make up the drawing canvas via
     // a LayerGroup object - a nested tree of Panels with a layout
     // specification at each node.
@@ -62,11 +73,27 @@ struct Context : std::enable_shared_from_this<Context>
     // Convenience method to create a window with only one panel
     virtual void setLayout(const Shared<Layer>& panel) = 0;
 
-    // Return the current LayerGroup layout - this may have been
-    // customized at runtime by the end-user.
-    // TODO: provide a method to serialize LayerGroup for easily
-    //       saving layouts
-    virtual LayerGroup getLayout() const = 0;
+    // Return size of the internal (renderable area) of the window
+    // in pixels. This is the window size, not the current viewport size
+    virtual ImageSize size() const = 0;
+
+    // Set the viewport region describing the destination and coordinate
+    // system for future render operations.
+    // region is specified in pixel units of the window/buffer managed by
+    // the context, with origin respecting the window_convention parameter.
+    virtual void setViewport(
+        const MinMax<Eigen::Array2i>& region,
+        ImageXy window_convention = Conventions::global().image_xy
+    ) const = 0;
+
+    // Read from the graphics device the specified buffer associated with this
+    // context. For example, you can use this to read back an image to save,
+    // or to query the rendered depth for user interaction.
+    virtual sophus::IntensityImage<> read(
+        MinMax<Eigen::Array2i> region = {}, // empty region will return full buffer
+        Attachment attachment = Attachment::color,
+        ImageXy image_axis_convention = Conventions::global().image_xy
+    ) const = 0;
 
     struct Params {
         std::string title = "Pangolin App";

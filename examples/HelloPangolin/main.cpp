@@ -20,11 +20,19 @@ void newApi()
         .window_size = {1024,600},
     } );
 
+    auto test_image = LoadImage("/Users/stevenlovegrove/Desktop/headshots/1.png");
+    auto cam = Shared<CameraModel>::make(createDefaultPinholeModel(test_image.imageSize()));
     auto image_layer = DrawLayer::Create({
-        .objects = { DrawnImage::Create({ .image=LoadImage("/Users/stevenlovegrove/Desktop/headshots/1.png") })}
+        .name="image_layer",
+        .camera = cam,
+        .objects = { DrawnImage::Create({ .image=test_image })}
     });
-    auto cam_layer = DrawLayer::Create({});
-    auto cam3d_layer = DrawLayer::Create({});
+    auto cam_layer = DrawLayer::Create({
+        .name="cam_layer",
+    });
+    auto cam3d_layer = DrawLayer::Create({
+        .name="cam3d_layer"
+    });
 
     // auto panel = WidgetLayer::Create({
     //     .size_hint = {Pixels{300}, Parts{1}}
