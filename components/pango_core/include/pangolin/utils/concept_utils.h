@@ -5,7 +5,7 @@
 namespace pangolin
 {
 
-template<class T, class U>
-concept DerivedFrom = std::is_base_of<U, T>::value;
+template<class Derived, class Base>
+concept DerivedFrom = std::is_base_of_v<Base, Derived>;
 
 }

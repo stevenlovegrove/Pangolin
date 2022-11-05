@@ -9,7 +9,6 @@
 #include <pangolin/var/var.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/gl/glsl_program.h>
-#include <pangolin/utils/http_request.h>
 
 using namespace pangolin;
 using namespace sophus;
@@ -21,25 +20,24 @@ void newApi()
         .window_size = {1024,600},
     } );
 
-    auto test_image = LoadImage("/Users/stevenlovegrove/Desktop/headshots/1.png");
-    auto cam = Shared<CameraModel>::make(createDefaultPinholeModel(test_image.imageSize()));
-    auto image_layer = DrawLayer::Create({
-        .name="image_layer",
-        .camera = cam,
-        .objects = { DrawnImage::Create({ .image=test_image })}
-    });
-    auto cam_layer = DrawLayer::Create({
-        .name="cam_layer",
-    });
-    auto cam3d_layer = DrawLayer::Create({
-        .name="cam3d_layer"
-    });
+    auto im1 = LoadImage("/Users/stevenlovegrove/Desktop/headshots/1.png");
+    auto im2 = LoadImage("/Users/stevenlovegrove/Desktop/headshots/2.png");
 
     auto panel = WidgetLayer::Create({
         .size_hint = {Pixels{300}, Parts{1}}
     });
+    context->setLayout(panel |  (im1 / im2));
 
-    context->setLayout(panel |  ((image_layer|cam3d_layer) / cam_layer));
+    // auto image_layer = DrawLayer::Create({
+    //     .objects = { DrawnImage::Create({im1})}
+    // });
+    // auto cam_layer = DrawLayer::Create({});
+    // auto cam3d_layer = DrawLayer::Create({});
+
+
+    // context->setLayout(panel |  ((image_layer|cam3d_layer) / cam_layer));
+
+
 
     Var<float> test1("ui.slider1", 20.0, 0.0, 50.0);
     Var<int> test2("ui.slider2", 3, 0, 15);

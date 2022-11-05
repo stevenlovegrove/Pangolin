@@ -1,9 +1,10 @@
 #pragma once
 
 #include <algorithm>
-#include <pangolin/gui/layer.h>
+#include <pangolin/gui/draw_layer.h>
 #include <pangolin/utils/variant_overload.h>
 #include <pangolin/maths/eigen_scalar_methods.h>
+#include <pangolin/utils/logging.h>
 
 namespace pangolin
 {
@@ -42,76 +43,71 @@ struct LayerGroup
 ////////////////////////////////////////////////////////////////////
 // Define Convenience operators for building arrangements
 
-// TODO: not sure this is worth it.
-// void operator<(Shared<Context>& w, const Shared<LayerGroup>& g)
-// {
-//     w->setLayout(g);
-// }
+// Trivial implementation of IntoLayerGroup for the group itself
+// Overload this for other types which can be automatically placed into a LayerGroup
+inline LayerGroup IntoLayerGroup(const LayerGroup& group) {
+    return group;
+}
+
+// A layer is trivially wrapped into a LayerGroup
+inline LayerGroup IntoLayerGroup(const Shared<Layer>& layer) {
+    return {layer};
+}
+
+// Build a DrawLayer for Drawables specified directly.
+// All defaults will be used for the DrawLayer
+inline LayerGroup IntoLayerGroup(const Shared<Drawable>& drawable) {
+    return IntoLayerGroup(
+        DrawLayer::Create({
+            .objects = {drawable}
+        })
+    );
+}
+
+// Allow images to be specified directly for convenience
+inline LayerGroup IntoLayerGroup(const sophus::IntensityImage<>& image) {
+    return IntoLayerGroup(
+        DrawnImage::Create({image})
+    );
+}
+
+// Specialize
+template<typename T>
+concept Layoutable = requires (T x) {
+        {IntoLayerGroup(x)} -> std::same_as<LayerGroup>;
+        };
 
 namespace detail
 {
 inline LayerGroup join( LayerGroup::Grouping op_type, const LayerGroup& lhs, const LayerGroup& rhs ) {
+    PANGO_ASSERT(lhs.children.size() > 0 || lhs.layer);
+    PANGO_ASSERT(rhs.children.size() > 0 || rhs.layer);
+
     LayerGroup ret;
     ret.grouping = op_type;
 
-    if(op_type == lhs.grouping && op_type == rhs.grouping ) {
-        ret.children = lhs.children;
-        ret.children.insert(ret.children.end(), rhs.children.begin(), rhs.children.end());
-    }else{
-        ret.children.push_back(lhs);
-        ret.children.push_back(rhs);
-    }
-    return ret;
-}
-template<DerivedFrom<Layer> T>
-LayerGroup join( LayerGroup::Grouping op_type, const LayerGroup& lhs, const Shared<T>& rhs ) {
-    LayerGroup ret;
-    ret.grouping = op_type;
-    if(op_type == lhs.grouping ) {
+    if( op_type == lhs.grouping && !lhs.layer) {
+        // We can merge hierarchy
         ret.children = lhs.children;
     }else{
         ret.children.push_back(lhs);
     }
-    ret.children.push_back(LayerGroup(rhs));
-    return ret;
-}
-template<DerivedFrom<Layer> T>
-LayerGroup join( LayerGroup::Grouping op_type, const Shared<T>& lhs, const LayerGroup& rhs ) {
-    LayerGroup ret;
-    ret.grouping = op_type;
-    ret.children.push_back(LayerGroup(lhs));
-    if(op_type == rhs.grouping) {
+
+    if( op_type == rhs.grouping && !rhs.layer) {
+        // We can merge hierarchy
         ret.children.insert(ret.children.end(), rhs.children.begin(), rhs.children.end());
     }else{
         ret.children.push_back(rhs);
     }
-    return ret;
-}
-template<DerivedFrom<Layer> LHS, DerivedFrom<Layer> RHS>
-LayerGroup join( LayerGroup::Grouping op_type, const Shared<LHS>& lhs, const Shared<RHS>& rhs ) {
-    LayerGroup ret;
-    ret.grouping = op_type;
-    ret.children.push_back(LayerGroup(lhs));
-    ret.children.push_back(LayerGroup(rhs));
+
     return ret;
 }
 }
 
 #define PANGO_PANEL_OPERATOR(op, op_type) \
-    inline LayerGroup op(const LayerGroup& lhs, const LayerGroup& rhs) { \
-        return detail::join(op_type, lhs, rhs); \
-    } \
-    template<DerivedFrom<Layer> T> \
-    LayerGroup op(const LayerGroup& lhs, const Shared<T>& rhs) { \
-        return detail::join(op_type, lhs, rhs); \
-    } \
-    template<DerivedFrom<Layer> T> \
-    LayerGroup op(const Shared<T>& lhs, const LayerGroup& rhs) { \
-        return detail::join(op_type, lhs, rhs); \
-    } \
-    template<DerivedFrom<Layer> T1, DerivedFrom<Layer> T2> \
-    LayerGroup op(const Shared<T1>& lhs, const Shared<T2>& rhs)  { \
-        return detail::join(op_type, lhs, rhs); \
+    template<Layoutable LHS, Layoutable RHS> \
+    LayerGroup op(const LHS& lhs, const RHS& rhs) { \
+        return detail::join(op_type, IntoLayerGroup(lhs), IntoLayerGroup(rhs)); \
     }
 
 #define PANGO_COMMA ,
