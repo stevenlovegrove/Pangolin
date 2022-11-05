@@ -52,4 +52,22 @@ protected:
     }
 };
 
+class StreambufMemoryWrapper : public std::basic_streambuf<char> {
+public:
+  StreambufMemoryWrapper(const uint8_t *p, size_t l) {
+    setg((char*)p, (char*)p, (char*)p + l);
+  }
+};
+
+class IStreamMemoryWrapper : public std::istream {
+public:
+  IStreamMemoryWrapper(const uint8_t *p, size_t l) :
+    std::istream(&_buffer),
+    _buffer(p, l) {
+    rdbuf(&_buffer);
+  }
+private:
+  StreambufMemoryWrapper _buffer;
+};
+
 }

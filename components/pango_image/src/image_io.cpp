@@ -26,8 +26,11 @@
  */
 
 #include <pangolin/image/image_io.h>
-
+#include <pangolin/utils/string.h>
+#include <pangolin/utils/memstreambuf.h>
 #include <fstream>
+
+#include <pangolin/utils/httplib.h>
 
 namespace pangolin {
 
@@ -130,10 +133,50 @@ IntensityImage LoadImage(const std::string& filename, ImageFileType file_type)
     }
 }
 
+struct Uri
+{
+    std::string server;
+    std::string path;
+};
+
+Uri splitUri(const std::string& uri) {
+    const size_t scheme_end = uri.find("://");
+    PANGO_THROW_IF(scheme_end == uri.npos);
+
+    const size_t first_slash = uri.find('/', scheme_end+3);
+    if(first_slash == uri.npos) {
+        return {uri, "/"};
+    }else{
+        return {uri.substr(0, first_slash), uri.substr(first_slash)};
+    }
+}
+
+IntensityImage LoadHttpImage(const std::string& uri)
+{
+    auto split = splitUri(uri);
+
+    httplib::Client cli(split.server);
+    auto res = cli.Get(split.path);
+
+    if(res->status == 200) {
+        const ImageFileType filetype = FileTypeMagic((uint8_t*)res->body.data(), res->body.size());
+        IStreamMemoryWrapper s((uint8_t*)res->body.data(), res->body.size());
+        auto img = LoadImage(s, filetype);
+        return img;
+    }else{
+        PANGO_WARN("GET Request failed. {}. {} bytes in body", httplib::detail::status_message(res->status), res->body.size() );
+        return IntensityImage();
+    }
+}
+
 IntensityImage LoadImage(const std::string& filename)
 {
-    ImageFileType file_type = FileType(filename);
-    return LoadImage( filename, file_type );
+    if(startsWith(filename, "http")) {
+        return LoadHttpImage(filename);
+    }else{
+        ImageFileType file_type = FileType(filename);
+        return LoadImage( filename, file_type );
+    }
 }
 
 void SaveImage(const IntensityImage& image, std::ostream& out, ImageFileType file_type, bool top_line_first, float quality)

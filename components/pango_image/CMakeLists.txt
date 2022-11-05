@@ -89,6 +89,19 @@ if(BUILD_PANGOLIN_LIBRAW)
     endif()
 endif()
 
+option(BUILD_PANGOLIN_HTTP_SSL "Build support for https (with OpenSSL)" ON)
+if(BUILD_PANGOLIN_HTTP_SSL)
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        set(OPENSSL_ROOT_DIR "/opt/homebrew/opt/openssl@3")
+    endif()
+    find_package(OpenSSL COMPONENTS SSL QUIET)
+    if(OPENSSL_FOUND)
+        target_compile_definitions(${COMPONENT} PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
+        target_link_libraries(${COMPONENT} PRIVATE OpenSSL::SSL)
+        message(STATUS "OpenSSL Found and Enabled for HTTPS image loading.")
+    endif()
+endif()
+
 target_sources( ${COMPONENT}
 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/pixel_format.cpp
