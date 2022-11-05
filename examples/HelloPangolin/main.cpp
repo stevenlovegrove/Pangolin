@@ -9,6 +9,7 @@
 #include <pangolin/var/var.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/gl/glsl_program.h>
+#include <pangolin/utils/http_request.h>
 
 using namespace pangolin;
 using namespace sophus;
@@ -34,11 +35,11 @@ void newApi()
         .name="cam3d_layer"
     });
 
-    // auto panel = WidgetLayer::Create({
-    //     .size_hint = {Pixels{300}, Parts{1}}
-    // });
+    auto panel = WidgetLayer::Create({
+        .size_hint = {Pixels{300}, Parts{1}}
+    });
 
-    context->setLayout(/* panel | */  ((image_layer|cam3d_layer) / cam_layer));
+    context->setLayout(panel |  ((image_layer|cam3d_layer) / cam_layer));
 
     Var<float> test1("ui.slider1", 20.0, 0.0, 50.0);
     Var<int> test2("ui.slider2", 3, 0, 15);

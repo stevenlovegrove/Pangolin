@@ -7,6 +7,8 @@
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glvao.h>
 #include <pangolin/utils/variant_overload.h>
+#include <pangolin/maths/camera_look_at.h>
+#include <pangolin/maths/projection.h>
 
 #include "glutils.h"
 
@@ -15,14 +17,62 @@
 namespace pangolin
 {
 
+struct DrawnPrimitivesProgram
+{
+    void draw(const DrawnPrimitives& drawn_image)
+    {
+        // auto bind_im = drawn_image.image->bind();
+        auto bind_prog = prog->bind();
+        auto bind_vao = vao.bind();
+
+    }
+
+private:
+    const Shared<GlSlProgram> prog = GlSlProgram::Create({
+        .sources = {{ .origin="/components/pango_opengl/shaders/main_primitives_points.glsl" }}
+    });
+    GlVertexArrayObject vao = {};
+    const GlUniform<Eigen::Matrix4f> K_intrinsics = {"K_intrinsics"};
+    const GlUniform<Eigen::Matrix4f> T_world_image = {"T_world_image"};
+    const GlUniform<Eigen::Vector2f> image_size = {"image_size"};
+
+};
+
 struct DrawnImageProgram
 {
+    DrawnImageProgram()
+    {
+    }
+
     void draw(const DrawnImage& drawn_image)
     {
+        // PANGO_GL(glEnable(GL_DEPTH_TEST));
         PANGO_GL(glActiveTexture(GL_TEXTURE0));
         auto bind_im = drawn_image.image->bind();
         auto bind_prog = prog->bind();
         auto bind_vao = vao.bind();
+
+        // image_size = Eigen::Vector2f(
+        //     1.0f, 1.0f
+        //     // drawn_image.image->imageSize().width,
+        //     // drawn_image.image->imageSize().height
+        // );
+        // K_intrinsics = Eigen::Matrix4f::Identity();
+        // projectionClipFromCamera(
+        //     drawn_image.image->imageSize(),
+        //     1.0, {0.0,0.0}, {0.1, 100.0}
+        // ).cast<float>();
+
+        // println("K:\n{}\n", K_intrinsics.getValue());
+
+        // T_world_image = worldLookatFromCamera<float>(
+        //     {0.0, 0.0, -1.0},
+        //     {0.0, 0.0, 0.0},
+        //     {0.0, -1.0, 0.0}
+        // ).matrix();
+        // sophus::Se3d T;
+        // T.tran
+
         PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     }
 private:
@@ -30,7 +80,10 @@ private:
         .sources = {{ .origin="/components/pango_opengl/shaders/main_image.glsl" }}
     });
     GlVertexArrayObject vao = {};
-    const GlUniform<int> texture_unit = {"image", 0};
+    const GlUniform<int> texture_unit = {"image"};
+    const GlUniform<Eigen::Matrix4f> K_intrinsics = {"K_intrinsics"};
+    const GlUniform<Eigen::Matrix4f> T_world_image = {"T_world_image"};
+    const GlUniform<Eigen::Vector2f> image_size = {"image_size"};
 };
 
 struct DrawLayerImpl : public DrawLayer {

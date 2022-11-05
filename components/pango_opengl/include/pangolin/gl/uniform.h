@@ -2,6 +2,7 @@
 
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/maths/eigen_concepts.h>
+#include <pangolin/maths/eigen_scalar_methods.h>
 
 namespace pangolin
 {
@@ -119,19 +120,33 @@ public:
     {
     }
 
-    void operator=(const T& new_value) const {
-        if(handle_ == kHandleInvalid) {
+    void setDefault() const {
+        setValue(default_value_);
+    }
+
+    void setValue(const T& new_value) const {
+        const bool needs_init = handle_ == kHandleInvalid;
+
+        if(needs_init) {
             GLint bound_prog_id;
             PANGO_GL(glGetIntegerv(GL_CURRENT_PROGRAM, &bound_prog_id));
             PANGO_CHECK(bound_prog_id != 0, "This method can only be called with the corresponding program already bound.");
             handle_ = glGetUniformLocation(bound_prog_id, name_);
-            PANGO_CHECK(handle_ != -1, "Name doesn't correspond to a used uniform (may have been optimized out.");
+            PANGO_CHECK(handle_ != -1, "Name '{}' doesn't correspond to a used uniform (may have been optimized out).", name_);
         }
 
-        if(new_value != current_value_) {
+        if(needs_init || anyTrue(new_value != current_value_) ) {
             glUniform<T>(handle_, new_value);
             current_value_ = new_value;
         }
+    }
+
+    const T& getValue() const {
+        return current_value_;
+    }
+
+    void operator=(const T& new_value) const {
+        setValue(new_value);
     }
 
     GLint handle() const {

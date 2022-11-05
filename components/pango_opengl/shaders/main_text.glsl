@@ -1,8 +1,8 @@
 @start vertex
-#version 150 core
+#version 330
 
-in vec3 a_position;
-in uint a_char_index;
+layout(location = 0) in vec3 a_position;
+layout(location = 1) in uint a_char_index;
 out vec3 pos;
 out uint index;
 
@@ -12,7 +12,7 @@ void main() {
 }
 
 @start geometry
-#version 150 core
+#version 330
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 

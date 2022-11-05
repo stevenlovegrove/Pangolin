@@ -13,10 +13,8 @@ struct Widget;
 ///
 struct WidgetLayer : public Layer
 {
-    // virtual void add(SharedVector<Widget> widgets) = 0;
-
     struct Params {
-        std::string title = "";
+        std::string name = "";
         Size size_hint = {Parts{1}, Parts{1}};
 
         // Font to use for widget text. Empty will use the

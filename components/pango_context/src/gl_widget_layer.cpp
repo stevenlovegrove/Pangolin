@@ -1,3 +1,4 @@
+#include <pangolin/context/context.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/gl/glsl_program.h>
@@ -16,14 +17,8 @@
 
 extern const unsigned char AnonymousPro_ttf[];
 
-
 namespace pangolin
 {
-namespace
-{
-constexpr GLint GLSL_LOCATION_CHAR_INDEX = DEFAULT_LOCATION_POSITION + 1;
-}
-
 
 std::shared_ptr<GlFont> build_builtin_font(float pixel_height, int tex_w, int tex_h, bool use_alpha_font)
 {
@@ -32,6 +27,7 @@ std::shared_ptr<GlFont> build_builtin_font(float pixel_height, int tex_w, int te
 
 GlWidgetLayer::GlWidgetLayer(const WidgetLayer::Params& p)
     : size_hint_(p.size_hint),
+    name_(p.name),
     widget_height(p.scale * p.widget_height_pix),
     widget_padding(p.scale * p.widget_padding_pix),
     font_scale(p.scale * 0.5),
@@ -52,29 +48,17 @@ GlWidgetLayer::GlWidgetLayer(const WidgetLayer::Params& p)
         );
 }
 
+std::string GlWidgetLayer::name() const
+{
+    return name_;
+}
+
 WidgetLayer::Size GlWidgetLayer::sizeHint() const {
     return size_hint_;
 }
 
 void GlWidgetLayer::LoadShaders()
 {
-    const std::string shader_dir = "/components/pango_opengl/shaders/";
-    const std::string shader_widget = shader_dir + "main_widgets.glsl";
-    const std::string shader_text = shader_dir + "main_text.glsl";
-
-    PANGO_GL_CHECK();
-
-    prog_widget.AddShaderFromFile(pangolin::GlSlAnnotatedShader, shader_widget, {}, {shader_dir});
-    glBindAttribLocation(prog_widget.ProgramId(), DEFAULT_LOCATION_POSITION, DEFAULT_NAME_POSITION);
-    prog_widget.Link();
-    PANGO_GL_CHECK();
-
-    prog_text.AddShaderFromFile(pangolin::GlSlAnnotatedShader, shader_text, {}, {shader_dir});
-    glBindAttribLocation(prog_text.ProgramId(), DEFAULT_LOCATION_POSITION, DEFAULT_NAME_POSITION);
-    glBindAttribLocation(prog_text.ProgramId(), GLSL_LOCATION_CHAR_INDEX, "a_char_index");
-    prog_text.Link();
-    PANGO_GL_CHECK();
-
     dirty = true;
 }
 
@@ -89,34 +73,23 @@ void GlWidgetLayer::UpdateWidgetParams()
 
 void GlWidgetLayer::UpdateWidgetVBO(float width)
 {
-    prog_widget.Bind();
-    prog_widget.SetUniform("u_width",  width );
-    prog_widget.SetUniform("u_height", widget_height );
-    prog_widget.SetUniform("u_padding", widget_padding );
-    prog_widget.SetUniform("u_num_widgets", (int)widgets.size() );
-    prog_widget.SetUniform("u_selected_index",  hover_widget);
+    {
+        auto bind_prog = widget_program.prog->bind();
+        widget_program.width =  width;
+        widget_program.height = widget_height;
+        widget_program.padding = widget_padding;
+        widget_program.num_widgets = (int)widgets.size();
+        widget_program.selected_index = hover_widget;
+    }
 
-
-    prog_widget.SetUniform("slider_outline_border", 2.0f);
-    prog_widget.SetUniform("boss_border", 1.0f);
-    prog_widget.SetUniform("boss_radius_factor", 1.0f);
-
-    prog_widget.SetUniform("color_panel",          0.85f, 0.85f, 0.85f);
-    prog_widget.SetUniform("color_boss_base",      0.8f, 0.8f, 0.8f);
-    prog_widget.SetUniform("color_boss_diff",      0.2f, 0.15f, 0.20f);
-    prog_widget.SetUniform("color_slider",         0.9f, 0.7f, 0.7f);
-    prog_widget.SetUniform("color_slider_outline", 0.8f, 0.6f, 0.6f);
-    prog_widget.Unbind();
 
     std::vector<Eigen::Vector4f> host_vbo;
     for(size_t i=0; i < widgets.size(); ++i) {
         const auto& w = widgets[i];
         host_vbo.emplace_back(0.0, i, w.divisions + w.value_percent/2.0, uint(w.widget_type) );
     }
-
-    vbo_widgets = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo );
-    vao_widgets.AddVertexAttrib(pangolin::DEFAULT_LOCATION_POSITION, vbo_widgets);
-    vao_widgets.Unbind();
+    widget_program.vbo = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo );
+    widget_program.vao.addVertexAttrib(0, widget_program.vbo);
 }
 
 std::u32string GlWidgetLayer::toUtf32(const std::string& utf8)
@@ -133,7 +106,7 @@ float GlWidgetLayer::TextWidthPix(const std::u32string& utf32){
 }
 
 void GlWidgetLayer::AddTextToHostBuffer(
-    const std::u32string& utf32, float x, float y,
+    const std::u32string& utf32, Eigen::Array2d p,
     std::vector<Eigen::Vector3f>& host_vbo_pos,
     std::vector<uint16_t>& host_vbo_index)
 {
@@ -145,7 +118,7 @@ void GlWidgetLayer::AddTextToHostBuffer(
 
         if(!index16[c]) {
             // TODO: use some symbol such as '?' maybe
-            x += font_scale * font->default_advance_px;
+            p.x() += font_scale * font->default_advance_px;
             last_char = 0;
         }else{
             auto ch = font->chardata[this_char];
@@ -154,12 +127,12 @@ void GlWidgetLayer::AddTextToHostBuffer(
                 const auto key = GlFont::codepointpair_t(last_char,this_char);
                 const auto kit = font->kern_table.find(key);
                 const float kern = (kit != font->kern_table.end()) ? kit->second : 0;
-                x += font_scale * kern;
+                p.x() += font_scale * kern;
             }
 
-            host_vbo_pos.emplace_back(x, y, 0.0 );
+            host_vbo_pos.emplace_back(p.x(), p.y(), 0.0 );
             host_vbo_index.emplace_back(index16[c]);
-            x += font_scale * ch.StepX();
+            p.x() += font_scale * ch.StepX();
             last_char = this_char;
         }
     }
@@ -167,14 +140,14 @@ void GlWidgetLayer::AddTextToHostBuffer(
 
 void GlWidgetLayer::UpdateCharsVBO(float widget_width)
 {
-    prog_text.Bind();
-    prog_text.SetUniform("u_font_atlas", 0);
-    prog_text.SetUniform("u_font_offsets", 1);
-    prog_text.SetUniform("u_font_bitmap_type", static_cast<int>(font->bitmap_type) );
-    prog_text.SetUniform("u_scale", font_scale);
-    prog_text.SetUniform("u_max_sdf_dist_uv", font->bitmap_max_sdf_dist_uv[0], font->bitmap_max_sdf_dist_uv[1] );
-    prog_text.SetUniform("u_color", 0.0f, 0.0f, 0.0f);
-    prog_text.Unbind();
+    // set uniforms
+    {
+        auto bind_prog = text_program.prog->bind();
+        text_program.font_bitmap_type = static_cast<int>(font->bitmap_type);
+        text_program.scale = font_scale;
+        text_program.max_sdf_dist_uv = {font->bitmap_max_sdf_dist_uv[0], font->bitmap_max_sdf_dist_uv[1]};
+    }
+
     const float text_pad = 2.5*widget_padding;
 
     std::vector<Eigen::Vector3f> host_vbo_pos;
@@ -185,35 +158,32 @@ void GlWidgetLayer::UpdateCharsVBO(float widget_width)
         // y-position is roughly center with fudge factor since text is balanced low.
         const float y_pos = (i+0.5)*widget_height + 0.3*font_scale*font->font_height_px;
 
-        AddTextToHostBuffer(toUtf32(w.text), text_pad, y_pos, host_vbo_pos, host_vbo_index);
+        AddTextToHostBuffer(toUtf32(w.text), {text_pad, y_pos}, host_vbo_pos, host_vbo_index);
 
         //            if(w.widget_type == WidgetType::slider)
         if(!w.value.empty())
         {
             const auto utf32 = toUtf32(w.value);
             const float width = TextWidthPix(utf32);
-            AddTextToHostBuffer(utf32, widget_width - text_pad - width, y_pos, host_vbo_pos, host_vbo_index);
+            AddTextToHostBuffer(utf32, {widget_width - text_pad - width, y_pos}, host_vbo_pos, host_vbo_index);
         }
     }
 
-    vbo_chars_pos = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo_pos );
-    vbo_chars_index = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo_index );
-    vao_chars.AddVertexAttrib(pangolin::DEFAULT_LOCATION_POSITION, vbo_chars_pos);
-    vao_chars.AddVertexAttrib(GLSL_LOCATION_CHAR_INDEX, vbo_chars_index);
-
-    vbo_chars_index.Unbind();
-    vao_chars.Unbind();
+    text_program.vbo_pos = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo_pos );
+    text_program.vbo_index = pangolin::GlBuffer( pangolin::GlArrayBuffer, host_vbo_index );
+    text_program.vao.addVertexAttrib(0, text_program.vbo_pos);
+    text_program.vao.addVertexAttrib(1, text_program.vbo_index);
+    text_program.vbo_index.Unbind();
 }
 
-void GlWidgetLayer::renderIntoRegion(const RenderParams& p)
+void GlWidgetLayer::renderIntoRegion(const Context& context, const RenderParams& p)
 {
-    // ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
+    ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
     ScopedGlDisable dis_depth(GL_DEPTH_TEST);
     glEnable(GL_BLEND); // Assume this is okay to keep
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    setGlViewport(p.region);
-    setGlScissor(p.region);
+    context.setViewport(p.region);
     glClearColor(0.0,0.0,0.0,1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -225,7 +195,7 @@ void GlWidgetLayer::renderIntoRegion(const RenderParams& p)
         .translated({-0.5, -(0.5 + scroll_offset) });
 
     T_cm = projectionClipFromOrtho(
-        region, {-1.0, 0.0}, ImageXy::right_up,
+        region, {-1.0, 1.0}, ImageXy::right_up,
         ImageIndexing::pixel_centered
         ).cast<float>();
 
@@ -236,26 +206,73 @@ void GlWidgetLayer::renderIntoRegion(const RenderParams& p)
         UpdateCharsVBO(size[0]);
     }
 
-    prog_widget.Bind();
-    prog_widget.SetUniform("u_T_cm", T_cm);
-    vao_widgets.Bind();
-    glDrawArrays(GL_POINTS, 0, vbo_widgets.num_elements);
-    prog_widget.Unbind();
-    vao_widgets.Unbind();
+    {
+        auto bind_prog = widget_program.prog->bind();
+        auto bind_vao = widget_program.vao.bind();
+        widget_program.T_cm =  T_cm;
+        glDrawArrays(GL_POINTS, 0, widget_program.vbo.num_elements);
+    }
 
-    prog_text.Bind();
-    prog_text.SetUniform("u_T_cm", T_cm);
-    vao_chars.Bind();
-    glActiveTexture(GL_TEXTURE0);
-    font->mTex.Bind();
-    glActiveTexture(GL_TEXTURE1);
-    font_offsets.Bind();
-    glDrawArrays(GL_POINTS, 0, vbo_chars_index.num_elements);
-    prog_text.Unbind();
-    vao_chars.Unbind();
-    font->mTex.Unbind();
+    {
+        auto bind_prog = text_program.prog->bind();
+        auto bind_vao = text_program.vao.bind();
+        text_program.T_cm =  T_cm;
+
+        glActiveTexture(GL_TEXTURE0);
+        font->mTex.Bind();
+        glActiveTexture(GL_TEXTURE1);
+        font_offsets.Bind();
+        glDrawArrays(GL_POINTS, 0, text_program.vbo_index.num_elements);
+        font->mTex.Unbind();
+    }
 
     glActiveTexture(GL_TEXTURE0);
+}
+
+bool GlWidgetLayer::handleEvent(const Context&, const Event& event) {
+    const auto region = event.pointer_pos.region();
+    const Eigen::Array2d p_window = event.pointer_pos.posInWindow();
+
+    std::visit(overload {
+    [&](const Interactive::PointerEvent& arg) {
+        bool pressed = arg.action == PointerAction::down;
+        auto w = WidgetXY(p_window, region);
+
+        switch(arg.action) {
+            case PointerAction::down:
+            case PointerAction::click_up:
+            {
+                if(selected_widget >= 0) {
+                    auto& sw = widgets[selected_widget];
+                    SetValue(p_window, region, pressed, false);
+                    if(!pressed) {
+                        selected_widget = -1;
+                    }
+                }else {
+                    selected_widget = w.first;
+                    SetValue(p_window, region, pressed, false);
+                }
+                break;
+            }
+            case PointerAction::drag:
+            {
+                SetValue(p_window, region, pressed, true);
+                break;
+            }
+            default:
+                break;
+        }
+
+    },
+    [&](const Interactive::ScrollEvent& arg) {
+        const float delta = arg.pan.y();
+        const float offset_max = (widgets.size()-1.0f) * widget_height;
+        scroll_offset = std::clamp(scroll_offset + delta, -offset_max, 0.0f);
+    },
+    [](auto&&  arg) { PANGO_UNREACHABLE(); },
+    }, event.detail);
+
+    return true;
 }
 
 // void GlWidgetLayer::Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state)
@@ -301,51 +318,51 @@ void GlWidgetLayer::renderIntoRegion(const RenderParams& p)
 //     }
 // }
 
-// void GlWidgetLayer::SetValue(float x, float y, bool pressed, bool dragging)
-// {
-//     auto w = WidgetXY(x,y);
-//     if(w.first == selected_widget && 0 <= w.first && w.first < widgets.size()) {
-//         WidgetParams& wp = widgets[w.first];
-//         if(wp.widget_type==WidgetType::checkbox) {
-//             if(pressed && !dragging) wp.value_percent = 1.0 - wp.value_percent;
-//         }else if(wp.widget_type==WidgetType::button) {
-//             wp.value_percent = pressed ? 0.0 : 1.0;
-//         }else{
-//             if( pressed || dragging) {
-//                 const float val = std::clamp( (w.second.x() - widget_padding) / (v.w - 2*widget_padding), 0.0f, 1.0f);
+void GlWidgetLayer::SetValue(const Eigen::Array2d& p, const MinMax<Eigen::Array2i>& region, bool pressed, bool dragging)
+{
+    auto w = WidgetXY(p, region);
+    if(w.first == selected_widget && 0 <= w.first && w.first < (int)widgets.size()) {
+        WidgetParams& wp = widgets[w.first];
+        if(wp.widget_type==WidgetType::checkbox) {
+            if(pressed && !dragging) wp.value_percent = 1.0 - wp.value_percent;
+        }else if(wp.widget_type==WidgetType::button) {
+            wp.value_percent = pressed ? 0.0 : 1.0;
+        }else{
+            if( pressed || dragging) {
+                const float val = std::clamp( (w.second.x() - widget_padding) / (region.range().x() - 2*widget_padding), 0.0f, 1.0f);
 
-//                 if( wp.divisions == 0) {
-//                     // continuous version
-//                     wp.value_percent = val;
-//                 }else{
-//                     // springy discrete version
-//                     const float d = (std::round(val*wp.divisions)/wp.divisions);
-//                     float diff = val - d;
-//                     wp.value_percent = d + diff*sping_coeff;
-//                 }
-//             }else if(!pressed) {
-//                 // de-springify
-//                 if(wp.divisions) {
-//                     wp.value_percent = (std::round(wp.value_percent*wp.divisions)/wp.divisions);
-//                 }
-//             }
-//         }
+                if( wp.divisions == 0) {
+                    // continuous version
+                    wp.value_percent = val;
+                }else{
+                    // springy discrete version
+                    const float d = (std::round(val*wp.divisions)/wp.divisions);
+                    float diff = val - d;
+                    wp.value_percent = d + diff*sping_coeff;
+                }
+            }else if(!pressed) {
+                // de-springify
+                if(wp.divisions) {
+                    wp.value_percent = (std::round(wp.value_percent*wp.divisions)/wp.divisions);
+                }
+            }
+        }
 
-//         if( wp.read_params) {
-//             wp.read_params(wp);
-//         }
+        if( wp.read_params) {
+            wp.read_params(wp);
+        }
 
-//         dirty = true;
-//     }
-// }
+        dirty = true;
+    }
+}
 
-// std::pair<int,Eigen::Vector2f> GlWidgetLayer::WidgetXY(float x, float y)
-// {
-//     const Eigen::Vector2f p_view(x - v.l, v.h - (y - v.b) - scroll_offset);
-//     const int i = std::floor(p_view[1] / widget_height);
-//     const Eigen::Vector2f p_widget(p_view[0], std::fmod(p_view[1], widget_height));
-//     return {i, p_widget};
-// }
+std::pair<int,Eigen::Vector2f> GlWidgetLayer::WidgetXY(const Eigen::Array2d& p, const MinMax<Eigen::Array2i>& region)
+{
+    const Eigen::Vector2f p_view(p.x() - region.min().x(), p.y() - region.min().y() - scroll_offset);
+    const int i = std::floor(p_view[1] / widget_height);
+    const Eigen::Vector2f p_widget(p_view[0], std::fmod(p_view[1], widget_height));
+    return {i, p_widget};
+}
 
 void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
 {

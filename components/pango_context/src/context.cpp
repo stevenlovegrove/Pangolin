@@ -113,26 +113,51 @@ struct ContextImpl : public Context {
     }
 
     void mouseEvent(MouseEvent e) {
+        if(e.button == MouseWheelUp || e.button == MouseWheelDown) {
+            const float delta = (e.button == MouseWheelDown ? 1.0f : -1.0f);
+            Interactive::Event layer_event = {
+                .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .detail = Interactive::ScrollEvent {
+                    .pan = Eigen::Array2d(0.0, delta)
+                }
+            };
+            dispatchLayerEvent(layer_event);
+        }else{
+            Interactive::Event layer_event = {
+                .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .detail = Interactive::PointerEvent {
+                    .action = e.pressed ? PointerAction::down : PointerAction::click_up,
+                    // .button = e.button
+                }
+            };
+            dispatchLayerEvent(layer_event);
+        }
+    }
+
+    void mouseMotionEvent(MouseMotionEvent e) {
         Interactive::Event layer_event = {
             .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
             .detail = Interactive::PointerEvent {
-                .action = e.pressed ? PointerAction::down : PointerAction::click_up,
+                .action = PointerAction::drag,
                 // .button = e.button
             }
         };
         dispatchLayerEvent(layer_event);
     }
 
-    void mouseMotionEvent(MouseMotionEvent e) {
-
-    }
-
     void specialInputEvent(SpecialInputEvent e) {
-
+        if( e.inType == InputSpecialScroll) {
+            Interactive::Event layer_event = {
+                .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .detail = Interactive::ScrollEvent {
+                    .pan = {e.p[0], e.p[1]}
+                }
+            };
+            dispatchLayerEvent(layer_event);
+        }
     }
 
     void keyboardEvent(KeyboardEvent e) {
-
     }
 
     void dispatchLayerEvent(const Interactive::Event& src) {

@@ -31,8 +31,6 @@ class HandlerImpl : public Handler {
 
     std::visit(overload {
     [&](const Interactive::PointerEvent& arg) {
-        PANGO_INFO("PointerEvent");
-
         if (arg.action == PointerAction::down) {
           std::optional<DepthSampler::Sample> maybe_depth_sample;
           if(depth_sampler_) {
@@ -54,7 +52,6 @@ class HandlerImpl : public Handler {
         }
     },
     [](const Interactive::ScrollEvent& arg) {
-      PANGO_INFO("ScrollEvent");
     },
     [](auto&&  arg) { PANGO_UNREACHABLE(); },
     }, event.detail);

@@ -4,9 +4,11 @@
 
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glsl_program.h>
+#include <pangolin/gl/glvao.h>
 #include <pangolin/gl/glfont.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
+#include <pangolin/gl/uniform.h>
 #include <locale>
 #include <string>
 #include <codecvt>
@@ -18,12 +20,13 @@ struct GlWidgetLayer : WidgetLayer
 {
     GlWidgetLayer(const WidgetLayer::Params& p);
 
-    void renderIntoRegion(const RenderParams&) override;
+    std::string name() const override;
 
     Size sizeHint() const override;
 
-    Size size_hint_;
+    void renderIntoRegion(const Context&, const RenderParams&) override;
 
+    bool handleEvent(const Context&, const Event&) override;
 
     ///////////
 
@@ -50,9 +53,6 @@ struct GlWidgetLayer : WidgetLayer
         std::function<void(WidgetParams&)> write_params;
     };
 
-
-    // WidgetLayer(float scale = 1.f);
-
     void LoadShaders();
 
     void UpdateWidgetParams();
@@ -64,31 +64,21 @@ struct GlWidgetLayer : WidgetLayer
     float TextWidthPix(const std::u32string& utf32);
 
     void AddTextToHostBuffer(
-        const std::u32string& utf32, float x, float y,
+        const std::u32string& utf32, Eigen::Array2d p,
         std::vector<Eigen::Vector3f>& host_vbo_pos,
         std::vector<uint16_t>& host_vbo_index);
 
     void UpdateCharsVBO(float width);
 
-    // void Render() override;
+    void SetValue(const Eigen::Array2d& p, const MinMax<Eigen::Array2i>& region, bool pressed, bool dragging);
 
-    // void Resize(const Viewport& p) override;
-
-    // void Keyboard(View&, unsigned char key, int x, int y, bool pressed) override;
-
-    // void Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state) override;
-
-    // void MouseMotion(View&, int x, int y, int button_state) override;
-
-    // void PassiveMouseMotion(View&, int x, int y, int button_state) override;
-
-    // void Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state) override;
-
-    void SetValue(float x, float y, bool pressed, bool dragging);
-
-    std::pair<int,Eigen::Vector2f> WidgetXY(float x, float y);
+    std::pair<int,Eigen::Vector2f> WidgetXY(const Eigen::Array2d& p, const MinMax<Eigen::Array2i>& region);
 
     void process_var_event(const pangolin::VarState::Event& event);
+
+    Size size_hint_;
+
+    std::string name_;
 
     bool dirty;
 
@@ -96,14 +86,77 @@ struct GlWidgetLayer : WidgetLayer
     GlTexture font_offsets;
 
     Eigen::Matrix<float,4,4> T_cm;
-    pangolin::GlSlProgram prog_widget;
-    pangolin::GlSlProgram prog_text;
-    pangolin::GlBuffer vbo_widgets;
-    GlVertexArrayObject vao_widgets;
 
-    pangolin::GlBuffer vbo_chars_pos;
-    pangolin::GlBuffer vbo_chars_index;
-    GlVertexArrayObject vao_chars;
+    struct WidgetProgram {
+        WidgetProgram() {
+            // Set constant uniforms that wont change
+            auto bind_prog = prog->bind();
+
+            slider_outline_border = 2.0f;
+            boss_border = 1.0f;
+            boss_radius_factor = 1.0f;
+
+            color_panel          = { 0.85f, 0.85f, 0.85f };
+            color_boss_base      = { 0.8f, 0.8f, 0.8f };
+            color_boss_diff      = { 0.2f, 0.15f, 0.20f };
+            color_slider         = { 0.9f, 0.7f, 0.7f };
+            color_slider_outline = { 0.8f, 0.6f, 0.6f };
+        }
+
+        const Shared<GlSlProgram> prog = GlSlProgram::Create({
+            .sources = {{ .origin="/components/pango_opengl/shaders/main_widgets.glsl" }}
+        });
+        GlUniform<float> width = {"u_width"};
+        GlUniform<float> height = {"u_height"};
+        GlUniform<float> padding = {"u_padding"};
+        GlUniform<int> num_widgets = {"u_num_widgets"};
+        GlUniform<int> selected_index = {"u_selected_index"};
+
+        GlUniform<float> slider_outline_border = {"slider_outline_border"};
+        GlUniform<float> boss_border = {"boss_border"};
+        GlUniform<float> boss_radius_factor = {"boss_radius_factor"};
+
+        GlUniform<Eigen::Array3f> color_panel = {"color_panel"};
+        GlUniform<Eigen::Array3f> color_boss_base = {"color_boss_base"};
+        GlUniform<Eigen::Array3f> color_boss_diff = {"color_boss_diff"};
+        GlUniform<Eigen::Array3f> color_slider = {"color_slider"};
+        GlUniform<Eigen::Array3f> color_slider_outline = {"color_slider_outline"};
+
+        GlUniform<Eigen::Matrix4f> T_cm = {"u_T_cm"};
+
+        pangolin::GlBuffer vbo;
+        GlVertexArrayObject vao = {};
+    };
+
+    struct TextProgram {
+        TextProgram() {
+            auto prog_bind = prog->bind();
+            font_atlas = (int)0;
+            font_offsets = 1;
+            color = {0.0f, 0.0f, 0.0f};
+        }
+
+        const Shared<GlSlProgram> prog = GlSlProgram::Create({
+            .sources = {{ .origin="/components/pango_opengl/shaders/main_text.glsl" }}
+        });
+        GlUniform<int> font_atlas = {"u_font_atlas"};
+        GlUniform<int> font_offsets = {"u_font_offsets"};
+        GlUniform<Eigen::Array3f> color = {"u_color"};
+
+        GlUniform<int> font_bitmap_type = {"u_font_bitmap_type"};
+        GlUniform<float> scale = {"u_scale"};
+        GlUniform<Eigen::Array2f> max_sdf_dist_uv = {"u_max_sdf_dist_uv"};
+
+        GlUniform<Eigen::Matrix4f> T_cm = {"u_T_cm"};
+
+        pangolin::GlBuffer  vbo_pos;
+        pangolin::GlBuffer  vbo_index;
+        GlVertexArrayObject vao;
+
+    };
+
+    WidgetProgram widget_program;
+    TextProgram text_program;
 
     bool reload_shader = false;
 

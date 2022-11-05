@@ -95,6 +95,7 @@ struct DeviceMemory : std::enable_shared_from_this<DeviceMemory>
 struct DeviceTexture : public DeviceMemory
 {
     virtual ScopedBind<DeviceTexture> bind() const = 0;
+    virtual sophus::ImageSize imageSize() const = 0;
 
     struct Params {};
     static Shared<DeviceTexture> Create(Params p = {});

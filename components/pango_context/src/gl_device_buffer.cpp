@@ -54,6 +54,11 @@ struct DeviceGlTexture : public DeviceTexture
         };
     }
 
+    sophus::ImageSize imageSize() const override
+    {
+        return image_size_;
+    }
+
     void update(const Update& update) override
     {
         std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
@@ -104,6 +109,7 @@ struct DeviceGlTexture : public DeviceTexture
                 throw std::invalid_argument("Image area cannot be 0");
 
             data_type_ = u.data_type;
+            image_size_ = {(int)size[0], (int)size[1]};
 
             free();
             PANGO_GL(glGenTextures(1, &gl_id_));
@@ -141,11 +147,12 @@ struct DeviceGlTexture : public DeviceTexture
         ));
     }
 
-    GLenum gl_target_;
+    GLenum gl_target_ = 0;
     std::recursive_mutex buffer_mutex_;
     std::deque<DeviceBuffer::Update> updates_;
     RuntimePixelType data_type_;
-    GLuint gl_id_;
+    ImageSize image_size_ = {};
+    GLuint gl_id_ = 0;
 
 };
 
