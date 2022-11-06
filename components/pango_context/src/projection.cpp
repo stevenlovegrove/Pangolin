@@ -11,11 +11,11 @@ Eigen::Matrix<double,4,4> projectionClipFromImplRdf(
     Eigen::Matrix<double,4,4> m = Eigen::Matrix<double,4,4>::Zero();
     m(0,0) = 2 * zNear / (R-L);
     m(1,1) = 2 * zNear / (T-B);
-    m(2,0) = (R+L)/(L-R);
-    m(2,1) = (T+B)/(B-T);
+    m(0,2) = (R+L)/(L-R);
+    m(1,2) = (T+B)/(B-T);
     m(2,2) = (zFar +zNear) / (zFar - zNear);
-    m(2,3) = 1.0;
-    m(3,2) =  (2*zFar*zNear)/(zNear - zFar);
+    m(3,2) = 1.0;
+    m(2,3) =  (2*zFar*zNear)/(zNear - zFar);
     return m;
 }
 
@@ -26,17 +26,17 @@ Eigen::Matrix<double,4,4> projectionClipFromImplRub(
     Eigen::Matrix<double,4,4> m = Eigen::Matrix<double,4,4>::Zero();
     m(0,0) = 2 * zNear / (R-L);
     m(1,1) = 2 * zNear / (T-B);
-    m(2,0) = (R+L)/(R-L);
-    m(2,1) = (T+B)/(T-B);
+    m(0,2) = (R+L)/(R-L);
+    m(1,2) = (T+B)/(T-B);
     m(2,2) = -(zFar +zNear) / (zFar - zNear);
-    m(2,3) = -1.0;
-    m(3,2) =  -(2*zFar*zNear)/(zFar-zNear);
+    m(3,2) = -1.0;
+    m(2,3) =  -(2*zFar*zNear)/(zFar-zNear);
     return m;
 }
 
 Eigen::Matrix<double,4,4> projectionClipFromCamera(
     sophus::ImageSize size,
-    double focal_distance_pixels,
+    Eigen::Vector2d focal_distance_pixels,
     Eigen::Vector2d principle_point,
     MinMax<double> near_far_in_world_units,
     DeviceXyz coord_convention,
@@ -48,12 +48,12 @@ Eigen::Matrix<double,4,4> projectionClipFromCamera(
         PANGO_FATAL();
     }
 
-    const double u0 = principle_point[0];
-    const double v0 = principle_point[1];
+    const double u0 = principle_point.x();
+    const double v0 = principle_point.y();
     const double zNear = near_far_in_world_units.min();
     const double zFar = near_far_in_world_units.max();
-    const double fu = focal_distance_pixels;
-    const double fv = focal_distance_pixels;
+    const double fu = focal_distance_pixels.x();
+    const double fv = focal_distance_pixels.y();
     const double w = size.width;
     const double h = size.height;
 

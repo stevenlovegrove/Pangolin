@@ -4,6 +4,7 @@
 
 #include <farm_ng/core/enum/enum.h>
 #include <sophus/linalg/rotation_matrix.h>
+#include <pangolin/utils/logging.h>
 
 namespace pangolin {
 
@@ -103,7 +104,7 @@ Eigen::Matrix<TScalar, 3, 3> toConventionFromRdf(DeviceXyz to) {
            AxisDirection2::negative_y,
            AxisDirection2::negative_z});
     default:
-      FARM_FATAL();
+      PANGO_FATAL();
   }
 }
 
@@ -122,7 +123,7 @@ struct Conventions {
   ImageXy image_xy = ImageXy::right_down;
   ImageIndexing image_indexing = ImageIndexing::pixel_centered;
   DistanceUnits units = DistanceUnits::meters;
-  AxisDirection2 up_direction_world = AxisDirection2::positive_y;
+  AxisDirection2 up_direction_world = AxisDirection2::negative_y;
 };
 
 }  // namespace pangolin

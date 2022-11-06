@@ -13,6 +13,7 @@ set(component_file_basenames
   gl_draw_layer
   gl_device_buffer
   gl_device_texture
+  gl_vao
   layer_group
   drawable
   multi_dim

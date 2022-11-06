@@ -53,7 +53,7 @@ template <typename T>
 void testForEachConvention(DeviceXyz Convention) {
   auto test_vec3 = testMats<T, 3, 1>(testVecs(), 100);
 
-  for (int i = 0; i < test_vec3.size() - 3; ++i) {
+  for (size_t i = 0; i < test_vec3.size() - 3; ++i) {
     testForParams(
         // Vector3<T>(5.0, 4.0, 1.0),
         // Vector3<T>(1.0,2.0,3.0),

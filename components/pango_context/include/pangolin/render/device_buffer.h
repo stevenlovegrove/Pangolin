@@ -1,3 +1,5 @@
+#pragma once
+
 #include <pangolin/utils/shared.h>
 #include <pangolin/gl/scoped_bind.h>
 #include <sophus/image/runtime_image.h>
@@ -20,7 +22,10 @@ struct DeviceBuffer
 
     // Returns true if this object is uninitialized and contains
     // no data or typed information
-    virtual bool empty() = 0;
+    virtual bool empty() const = 0;
+
+    virtual sophus::RuntimePixelType dataType() const = 0;
+    virtual size_t numElements() const = 0;
 
     struct Data {
         std::shared_ptr<void> data;

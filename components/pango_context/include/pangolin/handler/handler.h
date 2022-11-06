@@ -15,7 +15,7 @@ struct Handler {
 
   virtual bool handleEvent(
     DrawLayer& layer,
-    sophus::Se3F64& world_from_camera,
+    sophus::Se3F64& camera_from_world_,
     sophus::CameraModel& camera,
     MinMax<double>& near_far,
     const Context& context,

@@ -60,12 +60,14 @@
 #define PANGO_THROW(...) \
   do { \
     Log::instance().logAndThrow(Log::Kind::Debug, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__); \
+    ::std::abort(); \
   }while(false)
 
 // May be disabled for optimisation. Abort if not true
 #define PANGO_THROW_IF(expr, ...) \
   if(expr) { \
     Log::instance().logAndThrow(Log::Kind::Debug, __FILE__, PANGO_FUNCTION, __LINE__, #expr, ##__VA_ARGS__); \
+    ::std::abort(); \
   }
 
 /// Print formatted error message and then panic.

@@ -2,15 +2,16 @@
 #include <pangolin/context/context.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/handler/handler.h>
+#include <pangolin/render/gl_vao.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
 #include <pangolin/gl/gl.h>
-#include <pangolin/gl/glvao.h>
 #include <pangolin/utils/variant_overload.h>
 #include <pangolin/maths/camera_look_at.h>
 #include <pangolin/maths/projection.h>
+#include <pangolin/var/var.h>
 
-#include "glutils.h"
+#include "gl_utils.h"
 
 #include <unordered_map>
 
@@ -19,12 +20,53 @@ namespace pangolin
 
 struct DrawnPrimitivesProgram
 {
-    void draw(const DrawnPrimitives& drawn_image)
-    {
-        // auto bind_im = drawn_image.image->bind();
+    void draw(
+        const DrawnPrimitives& drawn_image,
+        const sophus::CameraModel& camera,
+        const sophus::Se3F64& cam_from_world,
+        MinMax<double> near_far
+    ) {
         auto bind_prog = prog->bind();
-        auto bind_vao = vao.bind();
+        u_cam_from_world = cam_from_world.cast<float>().matrix();
+        if(camera.distortionType() != sophus::CameraDistortionType::pinhole) {
+            PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
+        }
 
+        u_intrinsics = projectionClipFromCamera(
+            camera.imageSize(), camera.focalLength(),
+            camera.principalPoint(), near_far
+        ).cast<float>();
+
+        pangolin::GlBuffer vbo(pangolin::GlArrayBuffer,
+            std::vector<Eigen::Vector3f>{
+            {-0.5f, -0.5f, 0.0f},
+            { 0.5f, -0.5f, 0.0f },
+            { 0.0f,  0.5f, 0.0f }
+            }
+        );
+        vao.addVertexAttrib(0, vbo);
+        auto bind_vao = vao.bind();
+        PANGO_GL(glDrawArrays(GL_TRIANGLES, 0, 3));
+
+
+        // if(!drawn_image.vertices->empty()) {
+        //     auto bind_prog = prog->bind();
+
+        //     K_intrinsics = projectionClipFromCamera(
+        //         {640,480}, 300.0, {320.0f,240.0f}, {0.1, 100.0}
+        //     ).cast<float>();
+
+        //     T_world_image = worldLookatFromCamera<float>(
+        //         {0.0, 0.0, 5.0},
+        //         {0.0, 0.0, 0.0},
+        //         {0.0, -1.0, 0.0}
+        //     ).matrix();
+
+        //     vao.addVertexAttrib(0, *drawn_image.vertices);
+        //     auto bind_vao = vao.bind();
+        //     PANGO_GL(glPointSize(5.0f));
+        //     PANGO_GL(glDrawArrays(GL_POINTS, 0, drawn_image.vertices->numElements()));
+        // }
     }
 
 private:
@@ -32,10 +74,8 @@ private:
         .sources = {{ .origin="/components/pango_opengl/shaders/main_primitives_points.glsl" }}
     });
     GlVertexArrayObject vao = {};
-    const GlUniform<Eigen::Matrix4f> K_intrinsics = {"K_intrinsics"};
-    const GlUniform<Eigen::Matrix4f> T_world_image = {"T_world_image"};
-    const GlUniform<Eigen::Vector2f> image_size = {"image_size"};
-
+    const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
+    const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
 };
 
 struct DrawnImageProgram
@@ -94,7 +134,7 @@ struct DrawLayerImpl : public DrawLayer {
         size_hint_(p.size_hint),
         near_far_(p.near_far),
         camera_(p.camera),
-        world_from_camera_(p.world_from_camera),
+        camera_from_world_(p.camera_from_world),
         handler_(p.handler),
         cam_from_world_(Eigen::Matrix4d::Identity()),
         intrinsic_k_(Eigen::Matrix4d::Identity()),
@@ -117,14 +157,16 @@ struct DrawLayerImpl : public DrawLayer {
 
         for(auto& obj : objects_) {
             if(DrawnImage* im = dynamic_cast<DrawnImage*>(obj.ptr())) {
-                render_image.draw(*im);
+                render_image_.draw(*im);
+            }else if(DrawnPrimitives* prim = dynamic_cast<DrawnPrimitives*>(obj.ptr())) {
+                render_primitives_.draw(*prim, *camera_, *camera_from_world_, near_far_);
             }
         }
     }
 
     bool handleEvent(const Context& context, const Event& event) override {
         if(handler_) {
-            handler_->handleEvent( *this, *world_from_camera_, *camera_, near_far_, context, event );
+            handler_->handleEvent( *this, *camera_from_world_, *camera_, near_far_, context, event );
             return true;
         }
         return false;
@@ -161,7 +203,7 @@ struct DrawLayerImpl : public DrawLayer {
 
     // Used for handling and higher-level logic
     Shared<sophus::CameraModel> camera_;
-    Shared<sophus::Se3F64> world_from_camera_;
+    Shared<sophus::Se3F64> camera_from_world_;
     std::shared_ptr<Handler> handler_;
 
     // Actually used for rendering
@@ -170,7 +212,8 @@ struct DrawLayerImpl : public DrawLayer {
     NonLinearMethod non_linear_;
 
     std::vector<Shared<Drawable>> objects_;
-    DrawnImageProgram render_image;
+    DrawnImageProgram render_image_;
+    DrawnPrimitivesProgram render_primitives_;
 };
 
 PANGO_CREATE(DrawLayer) {

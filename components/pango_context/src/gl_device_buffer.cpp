@@ -53,21 +53,32 @@ struct DeviceGlBuffer : public DeviceBuffer
     }
 
     void update(const Data& data) override {
-        std::lock_guard<std::mutex> guard(buffer_mutex_);
+        std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
         updates_.push_back(data);
+        sync();
     }
 
-    bool empty() override
+    bool empty() const override
     {
         return gl_id_ == 0;
     }
+
+    sophus::RuntimePixelType dataType() const override
+    {
+        return data_type_;
+    }
+
+    size_t numElements() const override {
+        return num_elements_;
+    }
+
 
     void sync()
     {
         while(true) {
             Data u;
             {
-                std::lock_guard<std::mutex> guard(buffer_mutex_);
+                std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
                 if(updates_.empty()) return;
                 u = updates_.front();
                 updates_.pop_front();
@@ -112,7 +123,7 @@ struct DeviceGlBuffer : public DeviceBuffer
 
     GLenum buffer_type_;
     GLenum gluse_;
-    std::mutex buffer_mutex_;
+    std::recursive_mutex buffer_mutex_;
     std::deque<Data> updates_;
     RuntimePixelType data_type_;
     size_t num_elements_;
@@ -137,7 +148,11 @@ PANGO_CREATE(DeviceBuffer) {
 }
 
 template<>
-thread_local ScopedBind<DeviceBuffer>* ScopedBind<DeviceBuffer>::current = nullptr;
+ScopedBind<DeviceBuffer>::pScopedBind& ScopedBind<DeviceBuffer>::getLocalActiveScopePtr()
+{
+    static thread_local pScopedBind x = nullptr;
+    return x;
+}
 
 
 }

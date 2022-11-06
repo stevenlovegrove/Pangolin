@@ -28,7 +28,6 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/gldraw.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/glfont.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/gltext.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/glvao.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/glpangoglu.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/viewport.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/stb_truetype.h

@@ -11,7 +11,7 @@
 #include <pangolin/maths/projection.h>
 #include <pangolin/maths/eigen_scalar_methods.h>
 
-#include "glutils.h"
+#include "gl_utils.h"
 
 #include "gl_widget_layer.h"
 

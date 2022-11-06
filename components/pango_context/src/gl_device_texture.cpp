@@ -63,7 +63,7 @@ struct DeviceGlTexture : public DeviceTexture
         sync();
     }
 
-    bool empty() override
+    bool empty() const override
     {
         return gl_id_ == 0;
     }
@@ -155,6 +155,10 @@ PANGO_CREATE(DeviceTexture) {
 }
 
 template<>
-thread_local ScopedBind<DeviceTexture>* ScopedBind<DeviceTexture>::current = nullptr;
+ScopedBind<DeviceTexture>::pScopedBind& ScopedBind<DeviceTexture>::getLocalActiveScopePtr()
+{
+    static thread_local pScopedBind x = nullptr;
+    return x;
+}
 
 }

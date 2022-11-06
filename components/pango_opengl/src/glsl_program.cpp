@@ -17,7 +17,11 @@ namespace pangolin
 {
 
 template<>
-thread_local ScopedBind<GlSlProgram>* ScopedBind<GlSlProgram>::current = nullptr;
+ScopedBind<GlSlProgram>::pScopedBind& ScopedBind<GlSlProgram>::getLocalActiveScopePtr()
+{
+    static thread_local pScopedBind x = nullptr;
+    return x;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Utilities

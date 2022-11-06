@@ -9,7 +9,7 @@ namespace pangolin
 
 Eigen::Matrix<double,4,4> projectionClipFromCamera(
     sophus::ImageSize size,
-    double focal_distance_pixels,
+    Eigen::Vector2d focal_distance_pixels,
     Eigen::Vector2d principle_point,
     MinMax<double> near_far_in_world_units,
     DeviceXyz coord_convention = Conventions::global().device_xyz,

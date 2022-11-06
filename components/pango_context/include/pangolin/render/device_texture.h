@@ -22,7 +22,7 @@ struct DeviceTexture
 
     // Returns true if this object is uninitialized and contains
     // no data or typed information
-    virtual bool empty() = 0;
+    virtual bool empty() const = 0;
 
     struct Params {};
     static Shared<DeviceTexture> Create(Params p = {});

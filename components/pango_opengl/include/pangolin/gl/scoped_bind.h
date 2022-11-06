@@ -18,8 +18,9 @@ struct [[nodiscard]] ScopedBind
     ScopedBind(
         const std::function<void()>& bind_func,
         const std::function<void()>& unbind_func
-    ): bind_func_(bind_func), unbind_func_(unbind_func), parent_(current)
+    ): bind_func_(bind_func), unbind_func_(unbind_func), parent_(getLocalActiveScopePtr())
     {
+        getLocalActiveScopePtr() = this;
         bind_func();
     }
 
@@ -27,14 +28,18 @@ struct [[nodiscard]] ScopedBind
     {
         if(parent_) {
             parent_->bind_func_();
+            getLocalActiveScopePtr() = parent_;
         }else{
             unbind_func_();
+            getLocalActiveScopePtr() = nullptr;
         }
     }
 
 private:
-    // thread local so no race conditions
-    static thread_local ScopedBind* current;
+    using pScopedBind = ScopedBind*;
+
+    // thread local singleton inside so no race conditions
+    static pScopedBind& getLocalActiveScopePtr();
 
     std::function<void()> bind_func_;
     std::function<void()> unbind_func_;

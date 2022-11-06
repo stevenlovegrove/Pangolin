@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pangolin/maths/camera_look_at.h>
 #include <pangolin/maths/min_max.h>
 #include <pangolin/gui/layer.h>
 #include <pangolin/gui/drawable.h>
@@ -52,9 +53,13 @@ struct DrawLayer : public Layer
         std::string name = "";
         Size size_hint = {Parts{1}, Parts{1}};
         MinMax<double> near_far = {0.1, 100.0};
+        Shared<sophus::CameraModel> camera = Shared<sophus::CameraModel>::make(
+            sophus::createDefaultPinholeModel({100,100})
+        );
+        Shared<sophus::Se3F64> camera_from_world = Shared<sophus::Se3F64>::make(
+            cameraLookatFromWorld( {1.0, 1.0, -5.0}, {0.0, 0.0, 0.0} )
+        );
 
-        Shared<sophus::CameraModel> camera = Shared<sophus::CameraModel>::make();
-        Shared<sophus::Se3F64> world_from_camera = Shared<sophus::Se3F64>::make();
         std::shared_ptr<Handler> handler = Handler::Create({});
 
         std::vector<Shared<Drawable>> objects = {};

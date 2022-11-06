@@ -32,11 +32,11 @@ sophus::Se3<TScalar> worldLookatFromCamera(
     if (forward_world.squaredNorm() < sophus::kEpsilon<TScalar>) {
       // camera and interest point are coincident
       // TODO: choose any orientation
-      FARM_FATAL();
+      PANGO_FATAL();
     } else {
       // forward and updir are colinear but distinct
       // TODO: choose any orientation about the forward vector
-      FARM_FATAL();
+      PANGO_FATAL();
     }
   }
 
@@ -77,6 +77,20 @@ sophus::Se3<TScalar> worldLookatFromCamera(
       interest_point_in_world,
       axisDirection<TScalar,3>(updir_world),
       xyz_convention);
+}
+
+// Convenience version of above, using AxisDirection enum to specify Up vector
+template <typename TScalar=double>
+sophus::Se3<TScalar> cameraLookatFromWorld(
+    Eigen::Vector3<TScalar> const& camera_center_in_world,
+    Eigen::Vector3<TScalar> const& interest_point_in_world,
+    const AxisDirection2 updir_world = Conventions::global().up_direction_world,
+    const DeviceXyz xyz_convention = Conventions::global().device_xyz) {
+  return worldLookatFromCamera<TScalar>(
+      camera_center_in_world,
+      interest_point_in_world,
+      axisDirection<TScalar,3>(updir_world),
+      xyz_convention).inverse();
 }
 
 }  // namespace pangolin

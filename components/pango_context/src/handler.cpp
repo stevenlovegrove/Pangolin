@@ -15,7 +15,7 @@ class HandlerImpl : public Handler {
 
   bool handleEvent(
     DrawLayer& layer,
-    sophus::Se3F64& world_from_camera,
+    sophus::Se3F64& camera_from_world_,
     sophus::CameraModel& camera,
     MinMax<double>& near_far,
     const Context& context,
@@ -41,7 +41,7 @@ class HandlerImpl : public Handler {
               PANGO_CHECK(maybe_depth_sample->depth_kind == DepthSampler::DepthKind::zaxis);
               double const zdepth_cam = maybe_depth_sample->min_max.min();
               const Eigen::Vector3d p_cam = camera.camUnproj(pix_img, zdepth_cam);
-              const Eigen::Vector3d p_world = world_from_camera * p_cam;
+              const Eigen::Vector3d p_world = camera_from_world_.inverse() * p_cam;
               fmt::print(
                   "img: {}, zdepth_cam: {}, cam: {}, world: {}\n",
                   pix_img.transpose(),
