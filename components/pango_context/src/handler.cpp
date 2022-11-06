@@ -1,13 +1,16 @@
-#include <fmt/format.h>
+#include <pangolin/utils/fmt.h>
 #include <pangolin/handler/handler.h>
 #include <pangolin/utils/variant_overload.h>
 #include <pangolin/utils/logging.h>
-
 
 namespace pangolin {
 
 class HandlerImpl : public Handler {
  public:
+  enum class ViewMode {
+    freeview
+  };
+
   HandlerImpl(const Handler::Params& p)
       : depth_sampler_(p.depth_sampler)
   {
@@ -15,7 +18,7 @@ class HandlerImpl : public Handler {
 
   bool handleEvent(
     DrawLayer& layer,
-    sophus::Se3F64& camera_from_world_,
+    sophus::Se3F64& camera_from_world,
     sophus::CameraModel& camera,
     MinMax<double>& near_far,
     const Context& context,
@@ -25,33 +28,37 @@ class HandlerImpl : public Handler {
     const auto region = event.pointer_pos.region();
     const Eigen::Array2d p_window = event.pointer_pos.posInWindow();
     const Eigen::Array2d pix_img = event.pointer_pos.posInRegionNorm() * Eigen::Array2d(
-        camera.imageSize().width,
-        camera.imageSize().height
-        );
+        camera.imageSize().width, camera.imageSize().height
+        ) - Eigen::Array2d(0.5,0.5);
+    std::optional<DepthSampler::Sample> maybe_depth_sample;
+    std::optional<Eigen::Vector3d> maybe_p_cam;
+    std::optional<Eigen::Vector3d> maybe_p_world;
+    std::optional<double> maybe_zdepth_cam;
+    if(depth_sampler_) {
+        maybe_depth_sample = depth_sampler_->sampleDepth(p_window.cast<int>(), 2, near_far, &context);
+        if(maybe_depth_sample) {
+            PANGO_CHECK(maybe_depth_sample->depth_kind == DepthSampler::DepthKind::zaxis);
+            maybe_zdepth_cam = maybe_depth_sample->min_max.min();
+            maybe_p_cam = camera.camUnproj(pix_img, *maybe_zdepth_cam);
+            maybe_p_world = camera_from_world.inverse() * (*maybe_p_cam);
+        }
+    }
 
     std::visit(overload {
     [&](const Interactive::PointerEvent& arg) {
         if (arg.action == PointerAction::down) {
-          std::optional<DepthSampler::Sample> maybe_depth_sample;
-          if(depth_sampler_) {
-            maybe_depth_sample = depth_sampler_->sampleDepth(p_window.cast<int>(), 5, near_far, &context);
-          }
-
-          if (maybe_depth_sample) {
-              PANGO_CHECK(maybe_depth_sample->depth_kind == DepthSampler::DepthKind::zaxis);
-              double const zdepth_cam = maybe_depth_sample->min_max.min();
-              const Eigen::Vector3d p_cam = camera.camUnproj(pix_img, zdepth_cam);
-              const Eigen::Vector3d p_world = camera_from_world_.inverse() * p_cam;
-              fmt::print(
-                  "img: {}, zdepth_cam: {}, cam: {}, world: {}\n",
-                  pix_img.transpose(),
-                  zdepth_cam,
-                  p_cam.transpose(),
-                  p_world.transpose());
-          }
+            fmt::print( "img: {}, zdepth_cam: {}, cam: {}, world: {}\n",
+                pix_img.transpose(),
+                maybe_zdepth_cam,
+                maybe_p_cam,
+                maybe_p_world
+            );
         }
     },
-    [](const Interactive::ScrollEvent& arg) {
+    [&](const Interactive::ScrollEvent& arg) {
+        Eigen::Vector3d x = {arg.pan[1], -arg.pan[0], 0.0};
+        auto pan = sophus::SE3d(sophus::SO3d::exp(x / 500.0), Eigen::Vector3d::Zero());
+        camera_from_world = pan * camera_from_world;
     },
     [](auto&&  arg) { PANGO_UNREACHABLE(); },
     }, event.detail);
@@ -60,6 +67,7 @@ class HandlerImpl : public Handler {
   }
 
   std::shared_ptr<DepthSampler> depth_sampler_;
+  ViewMode viewmode_ = ViewMode::freeview;
 };
 
 std::unique_ptr<Handler> Handler::Create(Params const& p) {

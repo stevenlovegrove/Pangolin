@@ -20,9 +20,9 @@ void newApi()
         .window_size = {1024,600},
     } );
 
-    // auto im1 = LoadImage("https://www.wwf.org.uk/sites/default/files/styles/gallery_image/public/2019-09/pangolin_with_tongue_out.jpg?h=82f92a78&itok=tER1Azzc");
-    // auto im2 = LoadImage("https://avatars.githubusercontent.com/u/55272417?u=394e4c9779a714a3e7e5efa1a81618f8cc6893d9&v=4");
-    // auto imtall = LoadImage("https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Space_Needle_2011-07-04.jpg/500px-Space_Needle_2011-07-04.jpg");
+    auto im1 = LoadImage("https://www.wwf.org.uk/sites/default/files/styles/gallery_image/public/2019-09/pangolin_with_tongue_out.jpg?h=82f92a78&itok=tER1Azzc");
+    auto im2 = LoadImage("https://avatars.githubusercontent.com/u/55272417?u=394e4c9779a714a3e7e5efa1a81618f8cc6893d9&v=4");
+    auto imtall = LoadImage("https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Space_Needle_2011-07-04.jpg/500px-Space_Needle_2011-07-04.jpg");
 
     auto panel = WidgetLayer::Create({
         .size_hint = {Pixels{300}, Parts{1}}
@@ -37,7 +37,7 @@ void newApi()
         {0.0f, 1.0f, 0.0f}
     });
 
-    context->setLayout(panel | primitives);
+    context->setLayout(panel | ((im1 | im2) / primitives) | imtall);
 
     Var<float> test1("ui.slider1", 20.0, 0.0, 50.0);
     Var<int> test2("ui.slider2", 3, 0, 15);
