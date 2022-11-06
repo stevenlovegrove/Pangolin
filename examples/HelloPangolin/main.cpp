@@ -27,7 +27,17 @@ void newApi()
     auto panel = WidgetLayer::Create({
         .size_hint = {Pixels{300}, Parts{1}}
     });
-    context->setLayout(panel |  (im1 / im2) | imtall);
+
+    auto primitives = DrawnPrimitives::Create();
+
+    primitives->vertices->update(std::vector<Eigen::Vector3f>{
+        {0.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f}
+    });
+
+    context->setLayout(panel |  (im1 / im2) | imtall | primitives);
 
     Var<float> test1("ui.slider1", 20.0, 0.0, 50.0);
     Var<int> test2("ui.slider2", 3, 0, 15);

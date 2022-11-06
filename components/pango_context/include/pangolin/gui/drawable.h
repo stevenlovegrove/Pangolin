@@ -6,6 +6,7 @@
 #include <sophus/image/runtime_image.h>
 #include <pangolin/maths/conventions.h>
 #include <pangolin/render/device_buffer.h>
+#include <pangolin/render/device_texture.h>
 
 namespace pangolin
 {

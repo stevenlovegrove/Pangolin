@@ -12,6 +12,7 @@ set(component_file_basenames
   depth_sampler
   gl_draw_layer
   gl_device_buffer
+  gl_device_texture
   layer_group
   drawable
   multi_dim
