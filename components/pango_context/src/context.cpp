@@ -90,6 +90,8 @@ struct ContextImpl : public Context {
         window()->ResizeSignal.connect([this](const WindowResizeEvent& e){
             size_.width = e.width;
             size_.height = e.height;
+            drawPanels();
+            window()->SwapBuffers();
         });
         window()->MouseSignal.connect(&ContextImpl::mouseEvent, this);
         window()->MouseMotionSignal.connect(&ContextImpl::mouseMotionEvent, this);
