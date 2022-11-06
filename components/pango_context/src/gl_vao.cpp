@@ -59,6 +59,7 @@ void GlVertexArrayObject::addVertexAttrib(
         PANGO_GL(glVertexAttribPointer(attrib_location, bo.count_per_element, bo.datatype, normalized, stride_bytes, (void*)offset_bytes));
     // }
     PANGO_GL(glEnableVertexAttribArray(attrib_location));
+    bo.Unbind();
 }
 
 void GlVertexArrayObject::addVertexAttrib(

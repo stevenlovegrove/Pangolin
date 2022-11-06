@@ -30,7 +30,8 @@ std::array<size_t,kN> headAndZeros(
 struct DeviceGlBuffer : public DeviceBuffer
 {
     DeviceGlBuffer(GLenum buffer_type, GLenum gluse)
-        : buffer_type_(buffer_type), gluse_(gluse)
+        : buffer_type_(buffer_type), gluse_(gluse),
+          num_elements_(0), gl_id_(0)
     {
     }
 
@@ -46,6 +47,8 @@ struct DeviceGlBuffer : public DeviceBuffer
 
     ScopedBind<DeviceBuffer> bind() const override
     {
+        PANGO_CHECK(!empty(), "Attempting to bind uninitialized DeviceBuffer");
+
         return {
             [t=this->buffer_type_, id = this->gl_id_](){glBindBuffer(t, id);},
             [t=this->buffer_type_](){glBindBuffer(t, 0);},
@@ -87,28 +90,32 @@ struct DeviceGlBuffer : public DeviceBuffer
         }
     }
 
-    void applyUpdateNow(Data& u)
+    void applyUpdateNow(const Data& u)
     {
+        PANGO_CHECK(u.data);
+        PANGO_CHECK(u.num_elements);
+
         const GlFormatInfo gl_fmt = glTypeInfo(u.data_type);
 
         if(gl_id_ == 0 /* || incompatible...  */) {
             data_type_ = u.data_type;
             num_elements_ = u.dest_element + u.num_elements;
 
-            free();
             glGenBuffers(1, &gl_id_);
             glBindBuffer(buffer_type_, gl_id_);
             glBufferData(buffer_type_, sizeBytes(), nullptr, gluse_);
         }else{
             PANGO_CHECK(u.data_type == data_type_, "Attempting to upload {} format for {} texture.", u.data_type, data_type_);
             PANGO_CHECK(u.dest_element + u.num_elements <= num_elements_ );
+            glBindBuffer(buffer_type_, gl_id_);
         }
 
-        glBindBuffer(buffer_type_, gl_id_);
         glBufferSubData(
             buffer_type_, elementSizeBytes() * u.dest_element,
             elementSizeBytes() * u.num_elements, u.data.get()
         );
+
+        glBindBuffer(buffer_type_, 0);
     }
 
     size_t elementSizeBytes() const
@@ -121,12 +128,12 @@ struct DeviceGlBuffer : public DeviceBuffer
         return num_elements_ * elementSizeBytes();
     }
 
-    GLenum buffer_type_;
-    GLenum gluse_;
+    GLenum buffer_type_ = 0;
+    GLenum gluse_ = 0;
     std::recursive_mutex buffer_mutex_;
     std::deque<Data> updates_;
     RuntimePixelType data_type_;
-    size_t num_elements_;
+    size_t num_elements_ ;
     GLuint gl_id_;
 
 };

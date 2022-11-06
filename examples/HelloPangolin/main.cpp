@@ -13,6 +13,17 @@
 using namespace pangolin;
 using namespace sophus;
 
+// Pangolin 2 Goals
+// * "Matplotlib for real-time computer vision"
+// * Enable simpler visual debugging and advanced visualization
+// * Minimize boilerplate and maximize readability
+// * Minimize GUI investment cost for rapid iteration
+// * Graphics backed agnostic API
+// * Sensible defaults for everything, so a user who doesn't care can get going immediately.
+// * Strict treatment of axis and image coordinate conventions for precise rendering
+// * Support 'getting to metal' for people who need tight control over graphics library or
+//   specific interop with it (such as CUDA)
+
 void newApi()
 {
     auto context = Context::Create({
@@ -29,13 +40,12 @@ void newApi()
     });
 
     auto primitives = DrawnPrimitives::Create();
-
-    primitives->vertices->update(std::vector<Eigen::Vector3f>{
-        {0.0f, 0.0f, 0.0f},
-        {1.0f, 0.0f, 0.0f},
-        {1.0f, 1.0f, 0.0f},
-        {0.0f, 1.0f, 0.0f}
-    });
+    std::vector<Eigen::Vector3f> vec{
+        {-0.5f, -0.5f, 0.0f},
+        { 0.5f, -0.5f, 0.0f },
+        { 0.0f,  0.5f, 0.0f }
+    };
+    primitives->vertices->update(vec);
 
     context->setLayout(panel | ((im1 | im2) / primitives) | imtall);
 

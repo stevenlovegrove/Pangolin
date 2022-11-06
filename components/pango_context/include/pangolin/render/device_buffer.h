@@ -30,28 +30,34 @@ struct DeviceBuffer
     struct Data {
         std::shared_ptr<void> data;
         sophus::RuntimePixelType data_type;
-        size_t num_elements;
+        size_t num_elements = 0;
         size_t dest_element = 0;
     };
     virtual void update(const Data& data) = 0;
 
     template<typename T>
     void update(const std::vector<T>& data, size_t dest_element = 0) {
+        // Copy
+        auto shared_data = std::make_shared<std::vector<T>>(data);
+
         update({
-            .data = std::make_shared<std::vector<T>>(data),
+            .data = std::shared_ptr<void>(shared_data, shared_data->data()),
             .data_type = sophus::RuntimePixelType::fromTemplate<T>(),
-            .num_elements = data.size(),
-            .dest_element = dest_element
+            .num_elements = shared_data->size(),
+            .dest_element = dest_element,
         });
     }
 
     template<typename T>
     void update(std::vector<T>&& data, size_t dest_element = 0) {
+        // Move
+        auto shared_data = std::make_shared<std::vector<T>>(std::move(data));
+
         update({
-            .data = std::make_shared<std::vector<T>>(std::move(data)),
+            .data = std::shared_ptr<void>(shared_data, shared_data->data()),
             .data_type = sophus::RuntimePixelType::fromTemplate<T>(),
-            .num_elements = data.size(),
-            .dest_element = dest_element
+            .num_elements = shared_data->size(),
+            .dest_element = dest_element,
         });
     }
 
@@ -62,12 +68,14 @@ struct DeviceBuffer
     static Shared<DeviceBuffer> Create(std::vector<T>& vec, Params p) {
         auto buffer = DeviceBuffer::Create(p);
         buffer->update(vec);
+        return buffer;
     }
 
     template<typename T>
     static Shared<DeviceBuffer> Create(std::vector<T>&& vec, Params p) {
         auto buffer = DeviceBuffer::Create(p);
         buffer->update(std::move(vec));
+        return buffer;
     }
 };
 

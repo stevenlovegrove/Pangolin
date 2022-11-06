@@ -26,47 +26,20 @@ struct DrawnPrimitivesProgram
         const sophus::Se3F64& cam_from_world,
         MinMax<double> near_far
     ) {
-        auto bind_prog = prog->bind();
-        u_cam_from_world = cam_from_world.cast<float>().matrix();
-        if(camera.distortionType() != sophus::CameraDistortionType::pinhole) {
-            PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
-        }
-
-        u_intrinsics = projectionClipFromCamera(
-            camera.imageSize(), camera.focalLength(),
-            camera.principalPoint(), near_far
-        ).cast<float>();
-
-        pangolin::GlBuffer vbo(pangolin::GlArrayBuffer,
-            std::vector<Eigen::Vector3f>{
-            {-0.5f, -0.5f, 0.0f},
-            { 0.5f, -0.5f, 0.0f },
-            { 0.0f,  0.5f, 0.0f }
+        if(!drawn_image.vertices->empty()) {
+            auto bind_prog = prog->bind();
+            auto bind_vao = vao.bind();
+            if(camera.distortionType() != sophus::CameraDistortionType::pinhole) {
+                PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
             }
-        );
-        vao.addVertexAttrib(0, vbo);
-        auto bind_vao = vao.bind();
-        PANGO_GL(glDrawArrays(GL_TRIANGLES, 0, 3));
-
-
-        // if(!drawn_image.vertices->empty()) {
-        //     auto bind_prog = prog->bind();
-
-        //     K_intrinsics = projectionClipFromCamera(
-        //         {640,480}, 300.0, {320.0f,240.0f}, {0.1, 100.0}
-        //     ).cast<float>();
-
-        //     T_world_image = worldLookatFromCamera<float>(
-        //         {0.0, 0.0, 5.0},
-        //         {0.0, 0.0, 0.0},
-        //         {0.0, -1.0, 0.0}
-        //     ).matrix();
-
-        //     vao.addVertexAttrib(0, *drawn_image.vertices);
-        //     auto bind_vao = vao.bind();
-        //     PANGO_GL(glPointSize(5.0f));
-        //     PANGO_GL(glDrawArrays(GL_POINTS, 0, drawn_image.vertices->numElements()));
-        // }
+            u_intrinsics = projectionClipFromCamera(
+                camera.imageSize(), camera.focalLength(),
+                camera.principalPoint(), near_far
+            ).cast<float>();
+            u_cam_from_world = cam_from_world.cast<float>().matrix();
+            vao.addVertexAttrib(0, *drawn_image.vertices);
+            PANGO_GL(glDrawArrays(GL_TRIANGLES, 0, 3));
+        }
     }
 
 private:
