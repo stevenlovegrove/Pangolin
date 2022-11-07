@@ -63,6 +63,7 @@ struct DrawnPrimitives : public Drawable
         // lines and triangles
         lines,
         line_strip,
+        line_loop,
         triangles,
         triangle_strip
     };
@@ -101,12 +102,12 @@ struct DrawnPrimitives : public Drawable
     Eigen::Matrix4d world_from_drawable;
 
     // Color to use if colors buffer is empty
-    Eigen::Vector4f default_color = {1.0f, 1.0f, 1.0f, 1.0f};
+    Eigen::Vector4d default_color = {1.0f, 1.0f, 1.0f, 1.0f};
 
     // Element size to use for points/circles/squares if
     // radius buffer is empty. points are in pixel
     // units. Other elements are world units.
-    float default_radius = 1.0;
+    double default_radius = 1.0;
 
     struct Params {};
     static Shared<DrawnPrimitives> Create(Params p = {});

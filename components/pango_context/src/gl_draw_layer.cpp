@@ -18,15 +18,26 @@
 namespace pangolin
 {
 
+constexpr GLenum toGlEnum (DrawnPrimitives::Type type) {
+    switch(type) {
+        case DrawnPrimitives::Type::points: return GL_POINTS;
+        case DrawnPrimitives::Type::line_strip: return GL_LINE_STRIP;
+        case DrawnPrimitives::Type::line_loop: return GL_LINE_LOOP;
+        case DrawnPrimitives::Type::triangles: return GL_TRIANGLES;
+        case DrawnPrimitives::Type::triangle_strip: return GL_TRIANGLE_STRIP;
+        default: return 0;
+    }
+}
+
 struct DrawnPrimitivesProgram
 {
     void draw(
-        const DrawnPrimitives& drawn_image,
+        const DrawnPrimitives& primitives,
         const sophus::CameraModel& camera,
         const sophus::Se3F64& cam_from_world,
         MinMax<double> near_far
     ) {
-        if(!drawn_image.vertices->empty()) {
+        if(!primitives.vertices->empty()) {
             auto bind_prog = prog->bind();
             auto bind_vao = vao.bind();
             if(camera.distortionType() != sophus::CameraDistortionType::pinhole) {
@@ -36,9 +47,11 @@ struct DrawnPrimitivesProgram
                 camera.imageSize(), camera.focalLength(),
                 camera.principalPoint(), near_far
             ).cast<float>();
-            u_cam_from_world = cam_from_world.cast<float>().matrix();
-            vao.addVertexAttrib(0, *drawn_image.vertices);
-            PANGO_GL(glDrawArrays(GL_TRIANGLES, 0, 3));
+            u_cam_from_world = (cam_from_world.matrix() * primitives.world_from_drawable).cast<float>();
+            u_color = primitives.default_color.cast<float>();
+            vao.addVertexAttrib(0, *primitives.vertices);
+            PANGO_GL(glPointSize(primitives.default_radius*2.0f));
+            PANGO_GL(glDrawArrays(toGlEnum(primitives.point_type), 0, primitives.vertices->numElements()));
         }
     }
 
@@ -49,6 +62,7 @@ private:
     GlVertexArrayObject vao = {};
     const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
     const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
+    const GlUniform<Eigen::Vector4f> u_color = {"color"};
 };
 
 struct DrawnImageProgram
@@ -59,7 +73,9 @@ struct DrawnImageProgram
         const sophus::Se3F64& cam_from_world,
         MinMax<double> near_far
     ) {
-        // PANGO_GL(glEnable(GL_DEPTH_TEST));
+        // ensure we're synced
+        drawn_image.image->sync();
+
         PANGO_GL(glActiveTexture(GL_TEXTURE0));
         auto bind_im = drawn_image.image->bind();
         auto bind_prog = prog->bind();

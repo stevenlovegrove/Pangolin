@@ -116,7 +116,6 @@ struct ContextImpl : public Context {
                  params.window_size.width, params.window_size.height, "3.2 CORE")
             )
         }))
-
     {
         window()->ResizeSignal.connect([this](const WindowResizeEvent& e){
             size_.width = e.width;
@@ -132,8 +131,17 @@ struct ContextImpl : public Context {
         window()->KeyboardSignal.connect(&ContextImpl::keyboardEvent, this);
 
         window()->MakeCurrent();
-        glewInit();
         window()->ProcessEvents();
+        glInit();
+    }
+
+    void glInit()
+    {
+        // All functions will maintain these as an invariant on return.
+        glewInit();
+        glEnable(GL_DEPTH_TEST);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable( GL_BLEND );
     }
 
     void setViewport(
@@ -226,11 +234,6 @@ struct ContextImpl : public Context {
     void setLayout(const LayerGroup& layout) override
     {
         layout_ = layout;
-    }
-
-    void setLayout(const Shared<Layer>& panel) override
-    {
-        setLayout(LayerGroup(panel));
     }
 
     LayerGroup layout() const override

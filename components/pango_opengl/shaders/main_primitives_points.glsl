@@ -13,12 +13,9 @@ void main() {
 @start fragment
 #version 330 core
 
-uniform float u_time;
+uniform vec4 color;
 out vec4 FragColor;
 
-vec3 colorA = vec3(0.905,0.045,0.045);
-vec3 colorB = vec3(0.995,0.705,0.051);
-
 void main() {
-    FragColor = vec4(colorA, 1.0);
+    FragColor = vec4(color);
 }

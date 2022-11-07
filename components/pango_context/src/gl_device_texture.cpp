@@ -58,8 +58,7 @@ struct DeviceGlTexture : public DeviceTexture
         std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
         updates_.push_back(Update{image, destination});
 
-        // for now, just sync immediately
-        // TODO: implement the actual async upload
+        // TODO: we'll service this queue in another thread eventually...
         sync();
     }
 
@@ -68,7 +67,7 @@ struct DeviceGlTexture : public DeviceTexture
         return gl_id_ == 0;
     }
 
-    void sync()
+    void sync() const override
     {
         while(true) {
             Update u;
@@ -82,12 +81,12 @@ struct DeviceGlTexture : public DeviceTexture
         }
     }
 
-    void free()
+    void free() const
     {
         if(gl_id_) PANGO_GL(glDeleteTextures(1, &gl_id_));
     }
 
-    void applyUpdateNow(Update& u)
+    void applyUpdateNow(Update& u) const
     {
         constexpr GLint mip_level = 0;
         constexpr GLint border = 0;
@@ -141,11 +140,11 @@ struct DeviceGlTexture : public DeviceTexture
     }
 
     GLenum gl_target_ = 0;
-    std::recursive_mutex buffer_mutex_;
-    std::deque<Update> updates_;
-    RuntimePixelType data_type_;
-    ImageSize image_size_ = {};
-    GLuint gl_id_ = 0;
+    mutable std::recursive_mutex buffer_mutex_;
+    mutable std::deque<Update> updates_;
+    mutable RuntimePixelType data_type_;
+    mutable ImageSize image_size_ = {};
+    mutable GLuint gl_id_ = 0;
 
 };
 

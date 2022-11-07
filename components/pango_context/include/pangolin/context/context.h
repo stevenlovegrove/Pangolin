@@ -70,8 +70,11 @@ struct Context : std::enable_shared_from_this<Context>
     // window.
     virtual void setLayout(const LayerGroup& layout) = 0;
 
-    // Convenience method to create a window with only one panel
-    virtual void setLayout(const Shared<Layer>& panel) = 0;
+    // Convenience method to accept anything convertable to a LayourGroup
+    template<Layoutable T>
+    void setLayout(const T& object) {
+        setLayout(IntoLayerGroup(object));
+    }
 
     // Return size of the internal (renderable area) of the window
     // in pixels. This is the window size, not the current viewport size
@@ -100,7 +103,6 @@ struct Context : std::enable_shared_from_this<Context>
         ImageSize window_size = {1024, 768};
         std::string window_engine = Engine::singleton()->defaults.window_engine;
         Engine::Profile profile = Engine::singleton()->defaults.profile;
-        Shared<LayerGroup> layout = {};
     };
     static Shared<Context> Create(Params p);
 };

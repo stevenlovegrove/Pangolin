@@ -20,6 +20,8 @@ struct DeviceTexture
         const Eigen::Array2i& destination = {0,0}
         ) = 0;
 
+    virtual void sync() const = 0;
+
     // Returns true if this object is uninitialized and contains
     // no data or typed information
     virtual bool empty() const = 0;
