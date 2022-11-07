@@ -6,6 +6,29 @@
 /*
   == Pangolin-by-example ==
 
+  Here we add some widgets to a 'WidgetLayer' that let us modify the simple
+  rendered triangle graphic.
+
+  For the WidgetLayer, we specify a .size_hint. Any layer can take these hints
+  and they default to {Parts{1},Parts{1}}. They consist of a horizontal and
+  vertical specification for the layers size as either a ratio in parts compared
+  to other widgets, or in absolute pixel units. For example, for three widgets
+  layed out horizontally, (X | Y | Z), if X a had a horizontal hint of Parts{1},
+  Y of Parts{1} and Z of Parts{2}, then Z would have twice the width of either X
+  or Y, and X and Y would have the same width.
+
+  Here we also introduce pangolin::Vars. These are named and typed global
+  variables which also contain some meta information about their ranges and use.
+  Though they should be used sparingly, globals can have their place for
+  exposing debug or prototype info through to a user quickly. pangolin::Vars do
+  just that, and connect automatically to the WidgetLayer through the "ui."
+  subscription prefix to allow us to tweak the render parameters.
+
+  Finally, you can also see that we can specify a user-function to the loop
+  context->loop() method which will be called after every frame. This callback
+  occurs in the same main thread shared witht the context, so try not to do too
+  much here or the GUI will slow down and become unresponsive. Here we use the
+  callback to update the render parameters from the widgets.
 */
 
 using namespace pangolin;

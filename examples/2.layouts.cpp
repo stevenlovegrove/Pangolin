@@ -20,7 +20,7 @@
    * Creates a window with a default size and title
    * Loads two images from the internet
    * Creates a 'DrawnPrimitive' - an object that holds vertex data - and
-     we will it with 3 vertices to form a triangle
+     we will fill it with 3 vertices to form a triangle
    * Adds the two images and DrawnPrimitive to the window in a simple layout
 
    Note:
@@ -33,6 +33,10 @@
      for easy parameter defaulting and by-name argument referencing. This lets
      us provide sensible defaults for nearly everything, but still allows for
      fine grain control when needed.
+   * The host vertex array here as an r-value is *moved* into an update queue
+     which can transfer the data to the graphics device asynchronously. Call
+     sync() to guarentee the data is ready (Pangolin will do that for you with
+     the default renderer).
 
 */
 
