@@ -52,16 +52,15 @@ struct DrawLayer : public Layer
     struct Params {
         std::string name = "";
         Size size_hint = {Parts{1}, Parts{1}};
-        MinMax<double> near_far = {0.1, 100.0};
-        Shared<sophus::CameraModel> camera = Shared<sophus::CameraModel>::make(
-            sophus::createDefaultPinholeModel({100,100})
-        );
-        Shared<sophus::Se3F64> camera_from_world = Shared<sophus::Se3F64>::make(
-            cameraLookatFromWorld( {0.0, 0.0, -5.0}, {0.0, 0.0, 0.0} )
-        );
 
+        // Leave these all as default for smart initialization
+        MinMax<double> near_far = {};
+        std::shared_ptr<sophus::CameraModel> camera = nullptr;
+        std::shared_ptr<sophus::Se3F64> camera_from_world = nullptr;
+        MinMax<Eigen::Vector3d> camera_limits_in_world = {};
         std::shared_ptr<Handler> handler = Handler::Create({});
 
+        // Objects to draw
         std::vector<Shared<Drawable>> objects = {};
     };
     static Shared<DrawLayer> Create(Params p);

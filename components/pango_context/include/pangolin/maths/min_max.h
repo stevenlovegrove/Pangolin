@@ -36,7 +36,7 @@ class MinMax {
   TPixel const& max() const { return min_max[1]; }
 
   TPixel clamp(TPixel const& x) const {
-    return max(min(x, min_max[1]), min_max[0]);
+    return pangolin::max(pangolin::min(x, min_max[1]), min_max[0]);
   }
 
   bool contains(TPixel const& x) const {

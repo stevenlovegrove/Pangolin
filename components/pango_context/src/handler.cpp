@@ -111,6 +111,7 @@ class HandlerImpl : public Handler {
     sophus::Se3F64& camera_from_world,
     sophus::CameraModel& camera,
     MinMax<double>& near_far,
+    MinMax<Eigen::Vector3d>& camera_limits_in_world,
     const Context& context,
     const Interactive::Event& event
   ) override {
@@ -150,7 +151,7 @@ class HandlerImpl : public Handler {
         // fmt::print("img: {}, zdepth_cam: {}\n", pix_img.transpose(), zdepth_cam );
     },
     [&](const Interactive::ScrollEvent& arg) {
-        double zoom_input = std::clamp(arg.pan[1]/200.0, -1.0, 1.0);
+        double zoom_input = std::clamp(-arg.pan[1]/200.0, -1.0, 1.0);
         camera_from_world = zoomTowards(camera_from_world, p_cam, near_far, zoom_input);
         // rot_center_in_world = p_world;
         //   camera_from_world = rotateAbout(
@@ -159,6 +160,13 @@ class HandlerImpl : public Handler {
     },
     [](auto&&  arg) { PANGO_UNREACHABLE(); },
     }, event.detail);
+
+    // Clamp translation to valid bounds in world coordinates
+    if(!camera_limits_in_world.empty()) {
+      auto world_from_cam = camera_from_world.inverse();
+      world_from_cam.translation() = camera_limits_in_world.clamp(world_from_cam.translation());
+      camera_from_world = world_from_cam.inverse();
+    }
 
     return true;
   }

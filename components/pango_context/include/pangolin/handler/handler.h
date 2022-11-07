@@ -18,6 +18,7 @@ struct Handler {
     sophus::Se3F64& camera_from_world_,
     sophus::CameraModel& camera,
     MinMax<double>& near_far,
+    MinMax<Eigen::Vector3d>& camera_limits_in_world,
     const Context& context,
     const Interactive::Event& event
   ) = 0;

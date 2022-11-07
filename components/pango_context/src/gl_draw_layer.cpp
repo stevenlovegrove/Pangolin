@@ -53,17 +53,24 @@ private:
 
 struct DrawnImageProgram
 {
-    DrawnImageProgram()
-    {
-    }
-
-    void draw(const DrawnImage& drawn_image)
-    {
+    void draw(
+        const DrawnImage& drawn_image,
+        const sophus::CameraModel& camera,
+        const sophus::Se3F64& cam_from_world,
+        MinMax<double> near_far
+    ) {
         // PANGO_GL(glEnable(GL_DEPTH_TEST));
         PANGO_GL(glActiveTexture(GL_TEXTURE0));
         auto bind_im = drawn_image.image->bind();
         auto bind_prog = prog->bind();
         auto bind_vao = vao.bind();
+
+        u_image_size = Eigen::Vector2f(camera.imageSize().width, camera.imageSize().height);
+        u_intrinsics = projectionClipFromCamera(
+            camera.imageSize(), camera.focalLength(),
+            camera.principalPoint(), near_far
+        ).cast<float>();
+        u_cam_from_world = cam_from_world.cast<float>().matrix();
 
         PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     }
@@ -73,9 +80,9 @@ private:
     });
     GlVertexArrayObject vao = {};
     const GlUniform<int> texture_unit = {"image"};
-    const GlUniform<Eigen::Matrix4f> K_intrinsics = {"K_intrinsics"};
-    const GlUniform<Eigen::Matrix4f> T_world_image = {"T_world_image"};
-    const GlUniform<Eigen::Vector2f> image_size = {"image_size"};
+    const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
+    const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
+    const GlUniform<Eigen::Vector2f> u_image_size = {"image_size"};
 };
 
 struct DrawLayerImpl : public DrawLayer {
@@ -87,6 +94,7 @@ struct DrawLayerImpl : public DrawLayer {
         near_far_(p.near_far),
         camera_(p.camera),
         camera_from_world_(p.camera_from_world),
+        camera_limits_in_world_(p.camera_limits_in_world),
         handler_(p.handler),
         cam_from_world_(Eigen::Matrix4d::Identity()),
         intrinsic_k_(Eigen::Matrix4d::Identity()),
@@ -101,6 +109,57 @@ struct DrawLayerImpl : public DrawLayer {
         return name_;
     }
 
+    void setDefaultImageParams(const DrawnImage& im)
+    {
+        const auto imsize = im.image->imageSize();
+        const double start_dist = std::max(imsize.width, imsize.height) / 2.0;
+
+        if(!camera_) {
+            camera_ = Shared<sophus::CameraModel>::make(
+                sophus::createDefaultPinholeModel(imsize)
+            );
+        }
+
+        if(!camera_from_world_) {
+            camera_from_world_ = Shared<sophus::Se3F64>::make(
+                cameraLookatFromWorld(
+                    {imsize.width/2.0, imsize.height/2.0, -start_dist},
+                    {imsize.width/2.0, imsize.height/2.0, 0.0} )
+            );
+        }
+
+        if(near_far_.empty()) {
+            near_far_ = MinMax<double>(0.1, 100.0*start_dist);
+        }
+
+        if(camera_limits_in_world_.empty()) {
+            camera_limits_in_world_ = {
+                {0.0, 0.0, -start_dist},
+                {imsize.width, imsize.height, -0.2},
+            };
+        }
+    }
+
+    void setDefaultPrimitivesParams(const DrawnPrimitives& prim)
+    {
+        // TODO: based these off of the data in prim
+        if(!camera_) {
+            camera_ = Shared<sophus::CameraModel>::make(
+                sophus::createDefaultPinholeModel({100,100})
+            );
+        }
+
+        if(!camera_from_world_) {
+            camera_from_world_ = Shared<sophus::Se3F64>::make(
+                cameraLookatFromWorld( {0.0, 0.0, -5.0}, {0.0, 0.0, 0.0} )
+            );
+        }
+
+        if(near_far_.empty()) {
+            near_far_ = MinMax<double>(0.1, 1000.0);
+        }
+    }
+
     void renderIntoRegion(const Context& c, const RenderParams& p) override {
         ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
         c.setViewport(p.region);
@@ -109,16 +168,23 @@ struct DrawLayerImpl : public DrawLayer {
 
         for(auto& obj : objects_) {
             if(DrawnImage* im = dynamic_cast<DrawnImage*>(obj.ptr())) {
-                render_image_.draw(*im);
+                if(!camera_ || !camera_from_world_) setDefaultImageParams(*im);
+                PANGO_ENSURE(camera_ && camera_from_world_);
+                render_image_.draw(*im, *camera_, *camera_from_world_, near_far_);
             }else if(DrawnPrimitives* prim = dynamic_cast<DrawnPrimitives*>(obj.ptr())) {
+                if(!camera_ || !camera_from_world_) setDefaultPrimitivesParams(*prim);
+                PANGO_ENSURE(camera_ && camera_from_world_);
                 render_primitives_.draw(*prim, *camera_, *camera_from_world_, near_far_);
             }
         }
     }
 
     bool handleEvent(const Context& context, const Event& event) override {
-        if(handler_) {
-            handler_->handleEvent( *this, *camera_from_world_, *camera_, near_far_, context, event );
+        if(handler_ && camera_from_world_ && camera_) {
+            handler_->handleEvent(
+                *this, *camera_from_world_, *camera_, near_far_,
+                camera_limits_in_world_,context, event
+            );
             return true;
         }
         return false;
@@ -154,8 +220,9 @@ struct DrawLayerImpl : public DrawLayer {
     MinMax<Eigen::Vector3d> bounds_;
 
     // Used for handling and higher-level logic
-    Shared<sophus::CameraModel> camera_;
-    Shared<sophus::Se3F64> camera_from_world_;
+    std::shared_ptr<sophus::CameraModel> camera_;
+    std::shared_ptr<sophus::Se3F64> camera_from_world_;
+    MinMax<Eigen::Vector3d> camera_limits_in_world_ = {};
     std::shared_ptr<Handler> handler_;
 
     // Actually used for rendering
