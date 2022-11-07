@@ -94,7 +94,7 @@ struct DrawnPrimitives : public Drawable
     });
 
     // Geometric element to interpret vertices as
-    Type point_type = Type::points;
+    Type element_type;
 
     // Transform to apply to points during render
     // (they will be further transformed by the camera
@@ -102,15 +102,20 @@ struct DrawnPrimitives : public Drawable
     Eigen::Matrix4d world_from_drawable;
 
     // Color to use if colors buffer is empty
-    Eigen::Vector4d default_color = {1.0f, 1.0f, 1.0f, 1.0f};
+    Eigen::Vector4d default_color;
 
     // Element size to use for points/circles/squares if
     // radius buffer is empty. points are in pixel
     // units. Other elements are world units.
-    double default_radius = 1.0;
+    double default_radius;
 
-    struct Params {};
-    static Shared<DrawnPrimitives> Create(Params p = {});
+    struct Params {
+        Type element_type = Type::points;
+        Eigen::Matrix4d world_from_drawable = Eigen::Matrix4d::Identity();
+        Eigen::Vector4d default_color = {1.0f, 1.0f, 1.0f, 1.0f};
+        double default_radius = 1.0;
+    };
+    static Shared<DrawnPrimitives> Create(Params p);
 };
 
 }

@@ -51,7 +51,7 @@ struct DrawnPrimitivesProgram
             u_color = primitives.default_color.cast<float>();
             vao.addVertexAttrib(0, *primitives.vertices);
             PANGO_GL(glPointSize(primitives.default_radius*2.0f));
-            PANGO_GL(glDrawArrays(toGlEnum(primitives.point_type), 0, primitives.vertices->numElements()));
+            PANGO_GL(glDrawArrays(toGlEnum(primitives.element_type), 0, primitives.vertices->numElements()));
         }
     }
 

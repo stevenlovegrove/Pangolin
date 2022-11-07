@@ -45,7 +45,7 @@ int main( int /*argc*/, char** /*argv*/ )
         .size_hint={Pixels{180}, Parts{1}}
     });
 
-    auto primitives = DrawnPrimitives::Create();
+    auto primitives = DrawnPrimitives::Create({});
 
     primitives->vertices->update(
         std::vector<Eigen::Vector3f>{
@@ -67,7 +67,7 @@ int main( int /*argc*/, char** /*argv*/ )
         primitives->default_color
             = Eigen::Vector4d(color_red, color_green, color_blue, 1.0);
 
-        primitives->point_type = filled ?
+        primitives->element_type = filled ?
              DrawnPrimitives::Type::triangles :
              DrawnPrimitives::Type::line_loop;
 

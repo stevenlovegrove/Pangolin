@@ -56,7 +56,10 @@ int main( int /*argc*/, char** /*argv*/ )
     auto im2 = LoadImage(image_url_2);
 
     // Create an object to render a triangle
-    auto primitives = DrawnPrimitives::Create();
+    auto primitives = DrawnPrimitives::Create({
+      .element_type=DrawnPrimitives::Type::triangles,
+      .default_color={1.0f, 0.0f, 0.0f, 1.0f} });
+
     primitives->vertices->update(
         std::vector<Eigen::Vector3f>{
             {-1.0f, -1.0f, 0.0f},
