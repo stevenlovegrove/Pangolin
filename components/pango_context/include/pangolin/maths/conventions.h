@@ -70,6 +70,19 @@ Eigen::Matrix<TScalar, Dim, 1> axisDirection(AxisDirection2 dir) {
   return scale * Eigen::Matrix<TScalar, Dim, Dim>::Identity().col(axis);
 }
 
+template <typename TScalar>
+Eigen::Vector3<TScalar> upDirectionInCamera(DeviceXyz axis_convention) {
+  const static Eigen::Vector3<TScalar> up_dirs[3] = {
+    {0.0, -1.0, 0.0},
+    {0.0, 0.0, 1.0},
+    {0.0, 1.0, 0.0}
+  };
+
+  const size_t index = static_cast<size_t>(axis_convention);
+  PANGO_ENSURE(index < 3);
+  return up_dirs[index];
+}
+
 // Creates a matrix which transforms vectors defined
 // in an RDF (x=right,y=down,z=forward) frame into one
 // where those now point in the `to_rdf_axis_dirs` dirs

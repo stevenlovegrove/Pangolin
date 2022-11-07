@@ -47,9 +47,11 @@ void renderIntoRegion(
     renderIntoRegionImpl(context, p, group);
 }
 
-// Pre-condition: layer positions have been computed
-// by a previous call to render
-void giveEventToLayers(
+// Find layer to receive event based on pointer location
+// Return the layer which processed the event.
+//
+// Pre-condition: layer positions have been computed by a previous call to render
+std::shared_ptr<Layer> giveEventToLayers(
     const Context& context,
     Interactive::Event event,
     const LayerGroup& group
@@ -64,14 +66,43 @@ void giveEventToLayers(
 
         if(group.layer && group.layer->handleEvent(context, event)) {
             // event handled, stop dfs
-            return;
+            return group.layer;
         }
 
         // see if child nodes want it
         for(const auto& child : group.children) {
-            giveEventToLayers(context, event, child);
+            auto layer = giveEventToLayers(context, event, child);
+            if(layer) return layer;
         }
     }
+    return nullptr;
+}
+
+// This is kinda dumb - we look through all nodes even though
+// we know the active_layer already. We do this just so we can
+// find the cached region so we can send it through
+bool giveEventToActiveLayer(
+    const Context& context,
+    Interactive::Event event,
+    const LayerGroup& group,
+    const std::shared_ptr<Layer>& active_layer
+) {
+    PANGO_ENSURE(active_layer);
+
+    const auto r = group.cached_.region;
+    event.pointer_pos.region_ = r;
+
+    if(group.layer == active_layer) {
+        group.layer->handleEvent(context, event);
+    }
+
+    // see if child nodes want it
+    for(const auto& child : group.children) {
+        const bool found = giveEventToActiveLayer(context, event, child, active_layer);
+        if(found) return true;
+    }
+
+    return false;
 }
 
 struct ContextImpl : public Context {
@@ -90,8 +121,10 @@ struct ContextImpl : public Context {
         window()->ResizeSignal.connect([this](const WindowResizeEvent& e){
             size_.width = e.width;
             size_.height = e.height;
-            drawPanels();
-            window()->SwapBuffers();
+            // commenting these in will trigger render during
+            // resize, but there can be artifacts
+            // window()->SwapBuffers();
+            // drawPanels();
         });
         window()->MouseSignal.connect(&ContextImpl::mouseEvent, this);
         window()->MouseMotionSignal.connect(&ContextImpl::mouseMotionEvent, this);
@@ -132,7 +165,7 @@ struct ContextImpl : public Context {
                     // .button = e.button
                 }
             };
-            dispatchLayerEvent(layer_event);
+            dispatchLayerEvent(layer_event, e.pressed ? ActiveLayerAction::capture: ActiveLayerAction::release);
         }
     }
 
@@ -162,8 +195,28 @@ struct ContextImpl : public Context {
     void keyboardEvent(KeyboardEvent e) {
     }
 
-    void dispatchLayerEvent(const Interactive::Event& src) {
-        giveEventToLayers(*this, src, layout_);
+    enum class ActiveLayerAction
+    {
+        ignore,
+        capture,
+        release
+    };
+
+    void dispatchLayerEvent(
+        const Interactive::Event& src,
+        ActiveLayerAction active_layer_action = ActiveLayerAction::ignore
+    ) {
+        if(active_layer_) {
+            giveEventToActiveLayer(*this, src, layout_, active_layer_);
+            if(active_layer_action == ActiveLayerAction::release) {
+                active_layer_ = nullptr;
+            }
+        }else{
+            auto layer = giveEventToLayers(*this, src, layout_);
+            if(active_layer_action == ActiveLayerAction::capture) {
+                active_layer_ = layer;
+            }
+        }
     }
 
     Shared<Window> window() override {
@@ -269,6 +322,7 @@ private:
     ImageSize size_;
     Shared<Window> window_;
     LayerGroup layout_;
+    std::shared_ptr<Layer> active_layer_;
 };
 
 PANGO_CREATE(Context) {

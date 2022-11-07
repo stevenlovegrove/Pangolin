@@ -57,7 +57,7 @@ struct DrawLayer : public Layer
             sophus::createDefaultPinholeModel({100,100})
         );
         Shared<sophus::Se3F64> camera_from_world = Shared<sophus::Se3F64>::make(
-            cameraLookatFromWorld( {1.0, 1.0, -5.0}, {0.0, 0.0, 0.0} )
+            cameraLookatFromWorld( {0.0, 0.0, -5.0}, {0.0, 0.0, 0.0} )
         );
 
         std::shared_ptr<Handler> handler = Handler::Create({});

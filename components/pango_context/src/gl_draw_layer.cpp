@@ -65,27 +65,6 @@ struct DrawnImageProgram
         auto bind_prog = prog->bind();
         auto bind_vao = vao.bind();
 
-        // image_size = Eigen::Vector2f(
-        //     1.0f, 1.0f
-        //     // drawn_image.image->imageSize().width,
-        //     // drawn_image.image->imageSize().height
-        // );
-        // K_intrinsics = Eigen::Matrix4f::Identity();
-        // projectionClipFromCamera(
-        //     drawn_image.image->imageSize(),
-        //     1.0, {0.0,0.0}, {0.1, 100.0}
-        // ).cast<float>();
-
-        // println("K:\n{}\n", K_intrinsics.getValue());
-
-        // T_world_image = worldLookatFromCamera<float>(
-        //     {0.0, 0.0, -1.0},
-        //     {0.0, 0.0, 0.0},
-        //     {0.0, -1.0, 0.0}
-        // ).matrix();
-        // sophus::Se3d T;
-        // T.tran
-
         PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     }
 private:
