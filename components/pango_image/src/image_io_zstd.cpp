@@ -19,7 +19,7 @@ struct zstd_image_header
 };
 #pragma pack(pop)
 
-void SaveZstd(const IntensityImage& image, std::ostream& out, int compression_level)
+void SaveZstd(const IntensityImage<>& image, std::ostream& out, int compression_level)
 {
 #ifdef HAVE_ZSTD
     // Write out header, uncompressed
@@ -77,14 +77,14 @@ void SaveZstd(const IntensityImage& image, std::ostream& out, int compression_le
 #endif // HAVE_ZSTD
 }
 
-IntensityImage LoadZstd(std::istream& in)
+IntensityImage<> LoadZstd(std::istream& in)
 {
 #ifdef HAVE_ZSTD
     // Read in header, uncompressed
     zstd_image_header header;
     in.read( (char*)&header, sizeof(header));
 
-    IntensityImage img(sophus::ImageSize(header.w, header.h), PixelFormatFromString(header.fmt));
+    IntensityImage<> img(ImageSize(header.w, header.h), PixelFormatFromString(header.fmt));
 
     const size_t input_buffer_size = ZSTD_DStreamInSize();
     std::unique_ptr<char[]> input_buffer(new char[input_buffer_size]);

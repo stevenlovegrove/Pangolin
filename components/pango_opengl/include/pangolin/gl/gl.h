@@ -58,7 +58,7 @@ public:
     GlTexture(GLint width, GLint height, GLint internal_format = GL_RGBA8, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL  );
 
     // Construct this texture from a CPU image
-    GlTexture(const IntensityImage& img, bool sampling_linear=true);
+    GlTexture(const IntensityImage<>& img, bool sampling_linear=true);
 
     //! Move Constructor / asignment
     GlTexture(GlTexture&& tex);
@@ -91,7 +91,7 @@ public:
         GLenum data_format, GLenum data_type
     );
 
-    void Load(const IntensityImage& image, bool sampling_linear = true);
+    void Load(const IntensityImage<>& image, bool sampling_linear = true);
 
     template<typename T>
     void Load(const sophus::ImageView<T>& image, bool sampling_linear = true);
@@ -100,7 +100,7 @@ public:
 
     void Download(void* image, GLenum data_layout = GL_LUMINANCE, GLenum data_type = GL_FLOAT) const;
 
-    void Download(IntensityImage& image) const;
+    void Download(IntensityImage<>& image) const;
 
     void CopyFrom(const GlTexture& tex);
 
@@ -295,7 +295,7 @@ size_t GlFormatChannels(GLenum data_layout);
 
 size_t GlDataTypeBytes(GLenum type);
 
-IntensityImage ReadFramebuffer(const Viewport& v, const char* pixel_format = "RGBA32");
+IntensityImage<> ReadFramebuffer(const Viewport& v, const char* pixel_format = "RGBA32");
 
 }
 

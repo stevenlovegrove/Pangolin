@@ -1,11 +1,14 @@
 #pragma once
 
+#include <pangolin/image/image.h>
 #include <pangolin/image/pixel_format.h>
+#include <sophus/image/runtime_image.h>
 
 namespace pangolin
 {
 
-using IntensityImage = sophus::IntensityImage<>;
+template<template <typename> class TAllocator = Eigen::aligned_allocator>
+using IntensityImage = sophus::IntensityImage<TAllocator>;
 
 
 }

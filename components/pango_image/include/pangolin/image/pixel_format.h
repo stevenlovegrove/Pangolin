@@ -36,7 +36,6 @@
 namespace pangolin
 {
 using RuntimePixelType = sophus::RuntimePixelType;
-using PixelFormat = sophus::RuntimePixelType;
 
 //! Return Pixel Format properties given string specification in
 //! FFMPEG notation. E.g. GRAY8, RGB24, ...

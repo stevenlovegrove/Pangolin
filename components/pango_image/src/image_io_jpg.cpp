@@ -160,7 +160,7 @@ void pango_jpeg_set_dest_mgr(j_compress_ptr cinfo, std::ostream& os) {
 
 #endif // HAVE_JPEG
 
-IntensityImage LoadJpg(std::istream& is) {
+IntensityImage<> LoadJpg(std::istream& is) {
 #ifdef HAVE_JPEG
     sophus::IntensityImage<> image;
 
@@ -182,7 +182,7 @@ IntensityImage LoadJpg(std::istream& is) {
     } else {
         jpeg_start_decompress(&cinfo);
         // resize storage if necessary
-        PixelFormat fmt = PixelFormatFromString(cinfo.output_components == 3 ? "RGB24" : "GRAY8");
+        RuntimePixelType fmt = PixelFormatFromString(cinfo.output_components == 3 ? "RGB24" : "GRAY8");
         image = sophus::IntensityImage<>(ImageSize(cinfo.output_width, cinfo.output_height), fmt);
         JSAMPARRAY imageBuffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE,
                                                             cinfo.output_width*cinfo.output_components, 1);
@@ -259,12 +259,12 @@ std::vector<std::streampos> GetMJpegOffsets(std::ifstream& is) {
     return offsets;
 }
 
-IntensityImage LoadJpg(const std::string& filename) {
+IntensityImage<> LoadJpg(const std::string& filename) {
     std::ifstream f(filename);
     return LoadJpg(f);
 }
 
-void SaveJpg(const IntensityImage& img, std::ostream& os, float quality) {
+void SaveJpg(const IntensityImage<>& img, std::ostream& os, float quality) {
 #ifdef HAVE_JPEG
     const int iquality = (int)std::max(std::min(quality, 100.0f),0.0f);
 
@@ -313,7 +313,7 @@ void SaveJpg(const IntensityImage& img, std::ostream& os, float quality) {
 #endif // HAVE_JPEG
 }
 
-void SaveJpg(const IntensityImage& img, const std::string& filename, float quality) {
+void SaveJpg(const IntensityImage<>& img, const std::string& filename, float quality) {
     std::ofstream f(filename);
     SaveJpg(img, f, quality);
 }

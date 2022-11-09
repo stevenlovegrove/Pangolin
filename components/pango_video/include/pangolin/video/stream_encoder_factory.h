@@ -14,9 +14,9 @@ class StreamEncoderFactory
 public:
     static StreamEncoderFactory& I();
 
-    ImageEncoderFunc GetEncoder(const std::string& encoder_spec, const PixelFormat& fmt);
+    ImageEncoderFunc GetEncoder(const std::string& encoder_spec, const RuntimePixelType& fmt);
 
-    ImageDecoderFunc GetDecoder(const std::string& encoder_spec, const PixelFormat& fmt);
+    ImageDecoderFunc GetDecoder(const std::string& encoder_spec, const RuntimePixelType& fmt);
 };
 
 }

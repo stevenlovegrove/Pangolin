@@ -5,16 +5,16 @@ using namespace sophus;
 
 namespace pangolin {
 
-IntensityImage LoadImageNonPlanar(
+IntensityImage<> LoadImageNonPlanar(
     const std::string& filename,
-    const PixelFormat& raw_fmt, size_t raw_width, size_t raw_height,
+    const RuntimePixelType& raw_fmt, size_t raw_width, size_t raw_height,
     size_t raw_pitch, size_t offset
 ) {
     ImageShape shape = ImageShape::makeFromSizeAndPitch<uint8_t>(
         ImageSize(raw_width, raw_height),
         raw_pitch
     );
-    IntensityImage img( shape, raw_fmt);
+    IntensityImage<> img( shape, raw_fmt);
 
     // Read from file, row at a time.
     std::ifstream bFile( filename.c_str(), std::ios::in | std::ios::binary );
@@ -88,9 +88,9 @@ IntensityImage LoadImageNonPlanar(
 //     throw std::runtime_error("Unable to convert planar image of type " + planar.fmt.format);
 // }
 
-IntensityImage LoadImage(
+IntensityImage<> LoadImage(
     const std::string& filename,
-    const PixelFormat& raw_plane_fmt, size_t raw_width, size_t raw_height,
+    const RuntimePixelType& raw_plane_fmt, size_t raw_width, size_t raw_height,
     size_t raw_pitch, size_t offset, size_t image_planes
 ) {
     image_planes = std::max<size_t>(1,image_planes);

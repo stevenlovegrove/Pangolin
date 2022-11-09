@@ -12,7 +12,7 @@ namespace pangolin {
 
 #ifdef HAVE_PNG
 
-PixelFormat PngFormat(png_structp png_ptr, png_infop info_ptr )
+RuntimePixelType PngFormat(png_structp png_ptr, png_infop info_ptr )
 {
     const png_byte colour = png_get_color_type(png_ptr, info_ptr);
     const png_byte depth  = png_get_bit_depth(png_ptr, info_ptr);
@@ -71,7 +71,7 @@ void pango_png_stream_write_flush(png_structp pngPtr)
 #endif // HAVE_PNG
 
 
-IntensityImage LoadPng(std::istream& source)
+IntensityImage<> LoadPng(std::istream& source)
 {
 #ifdef HAVE_PNG
     //so First, we validate our stream with the validate function I just mentioned
@@ -127,7 +127,7 @@ IntensityImage LoadPng(std::istream& source)
     const size_t pitch = png_get_rowbytes(png_ptr, info_ptr);
 
     auto shape = sophus::ImageShape::makeFromSizeAndPitch<uint8_t>(sophus::ImageSize(w,h), pitch);
-    IntensityImage img( shape, PngFormat(png_ptr, info_ptr));
+    IntensityImage<> img( shape, PngFormat(png_ptr, info_ptr));
 
     png_bytepp rows = png_get_rows(png_ptr, info_ptr);
     for( unsigned int r = 0; r < h; r++) {
@@ -142,13 +142,13 @@ IntensityImage LoadPng(std::istream& source)
 #endif // HAVE_PNG
 }
 
-IntensityImage LoadPng(const std::string& filename)
+IntensityImage<> LoadPng(const std::string& filename)
 {
     std::ifstream f(filename);
     return LoadPng(f);
 }
 
-void SavePng(const IntensityImage& image, std::ostream& stream, bool top_line_first, int zlib_compression_level)
+void SavePng(const IntensityImage<>& image, std::ostream& stream, bool top_line_first, int zlib_compression_level)
 {
 #ifdef HAVE_PNG
     png_structp png_ptr;

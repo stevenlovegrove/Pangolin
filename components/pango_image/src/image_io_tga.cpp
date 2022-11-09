@@ -4,7 +4,7 @@
 
 namespace pangolin {
 
-PixelFormat TgaFormat(int depth, int color_type, int color_map)
+RuntimePixelType TgaFormat(int depth, int color_type, int color_map)
 {
     if(color_map == 0) {
         if(color_type == 2) {
@@ -26,7 +26,7 @@ PixelFormat TgaFormat(int depth, int color_type, int color_map)
     throw std::runtime_error("Unsupported TGA format");
 }
 
-IntensityImage LoadTga(std::istream& in)
+IntensityImage<> LoadTga(std::istream& in)
 {
     unsigned char type[4];
     unsigned char info[6];
@@ -39,7 +39,7 @@ IntensityImage LoadTga(std::istream& in)
     const int height = info[2] + (info[3] * 256);
 
     if(in.good()) {
-        IntensityImage img( sophus::ImageSize(width, height), TgaFormat(info[4], type[2], type[1]) );
+        IntensityImage<> img( sophus::ImageSize(width, height), TgaFormat(info[4], type[2], type[1]) );
 
         //read in image data
         const size_t data_size = img.sizeBytes();

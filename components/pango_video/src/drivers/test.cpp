@@ -41,7 +41,7 @@ void setRandomData(unsigned char * arr, size_t size){
 
 TestVideo::TestVideo(size_t w, size_t h, size_t n, const std::string& pix_fmt)
 {
-    const PixelFormat pfmt = PixelFormatFromString(pix_fmt.c_str());
+    const RuntimePixelType pfmt = PixelFormatFromString(pix_fmt.c_str());
     const sophus::ImageShape shape =
         sophus::ImageShape::makeFromSizeAndPitchUnchecked(
             sophus::ImageSize(w,h), w * pfmt.bytesPerPixel()

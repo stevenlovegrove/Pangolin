@@ -39,7 +39,7 @@ struct GlPixFormat
 {
     GlPixFormat() {}
 
-    GlPixFormat(const PixelFormat& fmt)
+    GlPixFormat(const RuntimePixelType& fmt)
     {
         switch( fmt.num_channels) {
         case 1: glformat = GL_RED; break;

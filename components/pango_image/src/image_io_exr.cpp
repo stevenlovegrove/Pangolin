@@ -115,7 +115,7 @@ PixelFormat GetPixelFormat(const Imf::Header& header)
 
 #endif //HAVE_OPENEXR
 
-IntensityImage LoadExr(std::istream& source)
+IntensityImage<> LoadExr(std::istream& source)
 {
 #ifdef HAVE_OPENEXR
     StdIStream istream(source);
@@ -175,7 +175,7 @@ IntensityImage LoadExr(std::istream& source)
 #endif //HAVE_OPENEXR
 }
 
-void SaveExr(const IntensityImage& image_in, const std::string& filename, bool top_line_first)
+void SaveExr(const IntensityImage<>& image_in, const std::string& filename, bool top_line_first)
 {
 #ifdef HAVE_OPENEXR
     ManagedImage<unsigned char> flip_image;

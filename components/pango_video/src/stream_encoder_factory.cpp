@@ -38,7 +38,7 @@ inline EncoderDetails EncoderDetailsFromString(const std::string& encoder_spec)
     return { encoder_name, NameToImageFileType(encoder_name), quality};
 }
 
-ImageEncoderFunc StreamEncoderFactory::GetEncoder(const std::string& encoder_spec, const PixelFormat& fmt)
+ImageEncoderFunc StreamEncoderFactory::GetEncoder(const std::string& encoder_spec, const RuntimePixelType& fmt)
 {
     const EncoderDetails encdet = EncoderDetailsFromString(encoder_spec);
     if(encdet.file_type == ImageFileTypeUnknown)
@@ -50,7 +50,7 @@ ImageEncoderFunc StreamEncoderFactory::GetEncoder(const std::string& encoder_spe
     };
 }
 
-ImageDecoderFunc StreamEncoderFactory::GetDecoder(const std::string& encoder_spec, const PixelFormat& /* fmt */)
+ImageDecoderFunc StreamEncoderFactory::GetDecoder(const std::string& encoder_spec, const RuntimePixelType& /* fmt */)
 {
     const EncoderDetails encdet = EncoderDetailsFromString(encoder_spec);
     PANGO_ENSURE(encdet.file_type != ImageFileTypeUnknown);

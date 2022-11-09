@@ -7,7 +7,7 @@
 
 namespace pangolin {
 
-IntensityImage LoadLibRaw(
+IntensityImage<> LoadLibRaw(
     const std::string& filename
 ) {
 #ifdef HAVE_LIBRAW

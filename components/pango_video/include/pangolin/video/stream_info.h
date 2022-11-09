@@ -35,7 +35,7 @@ namespace pangolin {
 class PANGOLIN_EXPORT StreamInfo
 {
 public:
-    inline StreamInfo(PixelFormat fmt, const sophus::ImageShape shape, size_t offset_bytes )
+    inline StreamInfo(RuntimePixelType fmt, const sophus::ImageShape shape, size_t offset_bytes )
         : fmt_(fmt), shape_(shape), offset_bytes_(offset_bytes) {}
 
     inline sophus::ImageShape shape() const
@@ -43,7 +43,7 @@ public:
         return shape_;
     }
 
-    inline PixelFormat format() const
+    inline RuntimePixelType format() const
     {
         return fmt_;
     }
@@ -59,7 +59,7 @@ public:
     }
 
 protected:
-    PixelFormat fmt_;
+    RuntimePixelType fmt_;
     sophus::ImageShape shape_;
     size_t offset_bytes_;
 };

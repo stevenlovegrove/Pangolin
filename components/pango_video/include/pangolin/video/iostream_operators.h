@@ -100,7 +100,7 @@ inline std::istream& operator>> (std::istream &is, ImageRoi &roi)
     return is;
 }
 
-inline std::istream& operator>> (std::istream &is, PixelFormat& fmt)
+inline std::istream& operator>> (std::istream &is, RuntimePixelType& fmt)
 {
     std::string sfmt;
     is >> sfmt;

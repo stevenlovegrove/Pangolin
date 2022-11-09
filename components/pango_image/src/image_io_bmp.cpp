@@ -32,7 +32,7 @@ static_assert(sizeof(BitmapInfoHeader) == 40, "Unexpected padding on struct");
 
 
 // https://en.wikipedia.org/wiki/BMP_file_format
-IntensityImage LoadBmp(std::istream& in)
+IntensityImage<> LoadBmp(std::istream& in)
 {
   constexpr uint16_t expected_magic = 'B' | 'M' << 8;
 
@@ -52,8 +52,6 @@ IntensityImage LoadBmp(std::istream& in)
 
   if(bmp_info_header.bits_per_pixel != 24 )
     throw std::runtime_error("LoadBmp: unexpected format");
-
-  const PixelFormat fmt = PixelFormatFromString("RGB24");
 
   const size_t w = bmp_info_header.width;
   const size_t h = bmp_info_header.height;
@@ -87,7 +85,7 @@ IntensityImage LoadBmp(std::istream& in)
   return img;
 }
 
-void SaveBmp(const IntensityImage& /*image*/, std::ostream& /*out*/, bool /*top_line_first*/)
+void SaveBmp(const IntensityImage<>& /*image*/, std::ostream& /*out*/, bool /*top_line_first*/)
 {
   throw std::runtime_error("SaveBMP: Not implemented");
 }

@@ -9,7 +9,7 @@
 
 namespace pangolin {
 
-IntensityImage LoadPango(const std::string& uri)
+IntensityImage<> LoadPango(const std::string& uri)
 {
     PANGOLIN_UNUSED(uri);
 
@@ -43,7 +43,7 @@ IntensityImage LoadPango(const std::string& uri)
 #endif
 }
 
-void SavePango(const IntensityImage& image, const std::string& uri, bool /*top_line_first*/)
+void SavePango(const IntensityImage<>& image, const std::string& uri, bool /*top_line_first*/)
 {
     PANGOLIN_UNUSED(image);
     PANGOLIN_UNUSED(uri);

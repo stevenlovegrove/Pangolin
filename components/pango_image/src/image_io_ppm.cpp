@@ -3,7 +3,7 @@
 
 namespace pangolin {
 
-PixelFormat PpmFormat(const std::string& strType, int num_colours)
+RuntimePixelType PpmFormat(const std::string& strType, int num_colours)
 {
     if(strType == "P5") {
         if(num_colours < 256) {
@@ -26,7 +26,7 @@ void PpmConsumeWhitespaceAndComments(std::istream& in)
     while( in.peek() == '#' )  in.ignore(4096, '\n');
 }
 
-IntensityImage LoadPpm(std::istream& in)
+IntensityImage<> LoadPpm(std::istream& in)
 {
     // Parse header
     std::string ppm_type = "";
@@ -44,7 +44,7 @@ IntensityImage LoadPpm(std::istream& in)
     in.ignore(1,'\n');
 
     if(!in.fail() && w > 0 && h > 0) {
-        IntensityImage img( sophus::ImageSize(w, h), PpmFormat(ppm_type, num_colors) );
+        IntensityImage<> img( sophus::ImageSize(w, h), PpmFormat(ppm_type, num_colors) );
 
         // Read in data
         for(int r=0; r<img.height(); ++r) {
@@ -58,7 +58,7 @@ IntensityImage LoadPpm(std::istream& in)
     throw std::runtime_error("Unable to load PPM file.");
 }
 
-void SavePpm(const IntensityImage& image, std::ostream& out, bool top_line_first)
+void SavePpm(const IntensityImage<>& image, std::ostream& out, bool top_line_first)
 {
     using namespace sophus;
 

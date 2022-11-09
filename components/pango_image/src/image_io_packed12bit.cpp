@@ -15,7 +15,7 @@ struct packed12bit_image_header
 };
 #pragma pack(pop)
 
-void SavePacked12bit(const IntensityImage& image, std::ostream& out)
+void SavePacked12bit(const IntensityImage<>& image, std::ostream& out)
 {
 
   if (image.numBytesPerPixelChannel() != 2) {
@@ -52,13 +52,13 @@ void SavePacked12bit(const IntensityImage& image, std::ostream& out)
 
 }
 
-IntensityImage LoadPacked12bit(std::istream& in)
+IntensityImage<> LoadPacked12bit(std::istream& in)
 {
     // Read in header, uncompressed
     packed12bit_image_header header;
     in.read((char*)&header, sizeof(header));
 
-    IntensityImage img(sophus::ImageSize(header.w, header.h), PixelFormatFromString(header.fmt));
+    IntensityImage<> img(sophus::ImageSize(header.w, header.h), PixelFormatFromString(header.fmt));
 
   if (img.numBytesPerPixelChannel() != 2) {
     throw std::runtime_error("packed12bit currently only supported with 16bit input image");

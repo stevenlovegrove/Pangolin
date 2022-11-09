@@ -71,9 +71,9 @@ public:
 
     bool IsPipe() const override;
 
-    void AddStream(const PixelFormat& pf, sophus::ImageShape shape);
+    void AddStream(const RuntimePixelType& pf, sophus::ImageShape shape);
 
-    void AddStream(const PixelFormat& pf, sophus::ImageSize size);
+    void AddStream(const RuntimePixelType& pf, sophus::ImageSize size);
 
     void SetStreams(const std::string& uri = "", const picojson::value& properties = picojson::value() );
 

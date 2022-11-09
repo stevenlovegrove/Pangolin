@@ -32,7 +32,7 @@ void DummyTiffOpenHandler(const char* module, const char* fmt, va_list ap)
     // TODO: Should probably send these somewhere...
 }
 
-IntensityImage LoadTiff(
+IntensityImage<> LoadTiff(
     const std::string& filename
 ) {
 #ifdef HAVE_LIBTIFF
@@ -64,7 +64,7 @@ IntensityImage LoadTiff(
     default: throw std::runtime_error("TIFF support is currently limited. Consider contributing to image_io_tiff.cpp.");
     }
 
-    IntensityImage image(sophus::ImageSize(width, height), PixelFormatFromString(sfmt.c_str()));
+    IntensityImage<> image(sophus::ImageSize(width, height), PixelFormatFromString(sfmt.c_str()));
     const tsize_t scanlength_bytes = TIFFScanlineSize(tif);
     if(scanlength_bytes != tsize_t(image.pitchBytes()))
         throw std::runtime_error("TIFF: unexpected scanline length");

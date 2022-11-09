@@ -19,7 +19,7 @@ struct lz4_image_header
 };
 #pragma pack(pop)
 
-void SaveLz4(const IntensityImage& image, std::ostream& out, int compression_level)
+void SaveLz4(const IntensityImage<>& image, std::ostream& out, int compression_level)
 {
 #ifdef HAVE_LZ4
     const int64_t src_size = image.sizeBytes();
@@ -57,14 +57,14 @@ void SaveLz4(const IntensityImage& image, std::ostream& out, int compression_lev
 #endif // HAVE_LZ4
 }
 
-IntensityImage LoadLz4(std::istream& in)
+IntensityImage<> LoadLz4(std::istream& in)
 {
 #ifdef HAVE_LZ4
     // Read in header, uncompressed
     lz4_image_header header;
     in.read( (char*)&header, sizeof(header));
 
-    IntensityImage img(sophus::ImageSize(header.w, header.h), PixelFormatFromString(header.fmt));
+    IntensityImage<> img(ImageSize(header.w, header.h), PixelFormatFromString(header.fmt));
     std::unique_ptr<char[]> input_buffer(new char[header.compressed_size]);
 
     in.read(input_buffer.get(), header.compressed_size);
