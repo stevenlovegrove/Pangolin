@@ -7,7 +7,9 @@ namespace pangolin
 // Right now, we have no specialization. Just instantiate the class itself
 PANGO_CREATE(DrawnImage) {
     auto r = Shared<DrawnImage>::make();
-    r->image->update(p.image);
+    if(!p.image.isEmpty()) {
+        r->image->update(p.image);
+    }
     return r;
 }
 

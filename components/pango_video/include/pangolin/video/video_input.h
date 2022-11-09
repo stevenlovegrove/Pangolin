@@ -70,18 +70,8 @@ struct PANGOLIN_EXPORT VideoInput
     void Close();
 
     // experimental - not stable
-    bool Grab( unsigned char* buffer, std::vector<Image<unsigned char> >& images, bool wait = true, bool newest = false);
+    bool Grab( unsigned char* buffer, std::vector<sophus::ImageView<uint8_t> >& images, bool wait = true, bool newest = false);
 
-    // Return details of first stream
-    unsigned int Width() const {
-        return (unsigned int)Streams()[0].Width();
-    }
-    unsigned int Height() const {
-        return (unsigned int)Streams()[0].Height();
-    }
-    PixelFormat PixFormat() const {
-        return Streams()[0].PixFormat();
-    }
     const Uri& VideoUri() const {
         return uri_input;
     }

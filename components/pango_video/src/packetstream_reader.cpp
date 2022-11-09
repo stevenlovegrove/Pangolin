@@ -284,7 +284,7 @@ Packet PacketStreamReader::NextFrame()
             SkipSync();
             break;
         default: //or anything else
-            pango_print_warn("Unexpected packet type: \"%s\". Resyncing()\n", tagName(t).c_str());
+            PANGO_WARN("Unexpected packet type: \"{}\". Resyncing()\n", tagName(t).c_str());
             ReSync();
             break;
         }
@@ -311,7 +311,7 @@ void PacketStreamReader::RebuildIndex()
     lock_guard<decltype(_mutex)> lg(_mutex);
 
     if(_stream.seekable()) {
-        pango_print_warn("Index for '%s' bad / outdated. Rebuilding.\n", _filename.c_str());
+        PANGO_WARN("Index for '{}' bad / outdated. Rebuilding.\n", _filename.c_str());
 
         // Save current position
         std::streampos pos = _stream.tellg();
@@ -354,7 +354,7 @@ void PacketStreamReader::AppendIndex()
         // Open file again for append
         std::ofstream of(_filename, std::ios::app | std::ios::binary);
         if(of.is_open()) {
-            pango_print_warn("Appending new index to '%s'.\n", _filename.c_str());
+            PANGO_WARN("Appending new index to '{}'.\n", _filename.c_str());
             uint64_t indexpos = (uint64_t)of.tellp();
             writeTag(of, TAG_PANGO_STATS);
             SourceStats(_sources).serialize(std::ostream_iterator<char>(of), false);

@@ -39,16 +39,20 @@ void setRandomData(unsigned char * arr, size_t size){
   }
 }
 
-TestVideo::TestVideo(size_t w, size_t h, size_t n, std::string pix_fmt)
+TestVideo::TestVideo(size_t w, size_t h, size_t n, const std::string& pix_fmt)
 {
-    const PixelFormat pfmt = PixelFormatFromString(pix_fmt);
+    const PixelFormat pfmt = PixelFormatFromString(pix_fmt.c_str());
+    const sophus::ImageShape shape =
+        sophus::ImageShape::makeFromSizeAndPitchUnchecked(
+            sophus::ImageSize(w,h), w * pfmt.bytesPerPixel()
+        );
 
     size_bytes = 0;
 
     for(size_t c=0; c < n; ++c) {
-        const StreamInfo stream_info(pfmt, w, h, (w*pfmt.bpp)/8, 0);
+        const StreamInfo stream_info(pfmt, shape, size_bytes);
         streams.push_back(stream_info);
-        size_bytes += w*h*(pfmt.bpp)/8;
+        size_bytes += shape.sizeBytes();
     }
 }
 

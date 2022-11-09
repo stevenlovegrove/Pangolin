@@ -40,7 +40,7 @@ void SaveLz4(const IntensityImage& image, std::ostream& out, int compression_lev
 
     lz4_image_header header;
     memcpy(header.magic,"LZ4",3);
-    strncpy(header.fmt, ToString(image.pixelType()), sizeof(header.fmt));
+    strncpy(header.fmt, ToString(image.pixelType()).c_str(), sizeof(header.fmt));
     header.w = image.width();
     header.h = image.height();
     header.compressed_size = compressed_data_size;

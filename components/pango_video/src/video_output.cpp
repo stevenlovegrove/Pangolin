@@ -86,14 +86,14 @@ bool VideoOutput::IsPipe() const
     return recorder->IsPipe();
 }
 
-void VideoOutput::AddStream(const PixelFormat& pf, size_t w, size_t h, size_t pitch)
+void VideoOutput::AddStream(const PixelFormat& pf, sophus::ImageShape shape)
 {
-    streams.emplace_back(pf, w, h, pitch, nullptr);
+    streams.emplace_back(pf, shape, 0);
 }
 
-void VideoOutput::AddStream(const PixelFormat& pf, size_t w, size_t h)
+void VideoOutput::AddStream(const PixelFormat& pf, sophus::ImageSize size)
 {
-    AddStream(pf, w, h, w * pf.bpp / 8);
+    AddStream(pf, sophus::ImageShape::makeFromSizeAndPitchUnchecked(size, size.width * pf.bytesPerPixel()) );
 }
 
 void VideoOutput::SetStreams(const std::string& uri, const picojson::value& properties)
@@ -101,12 +101,9 @@ void VideoOutput::SetStreams(const std::string& uri, const picojson::value& prop
     size_t offset = 0;
     for(size_t i = 0; i < streams.size(); i++)
     {
-        streams[i] = StreamInfo(streams[i].PixFormat(),
-                                streams[i].Width(),
-                                streams[i].Height(),
-                                streams[i].Pitch(),
-                                (unsigned char*)offset);
-        offset += streams[i].SizeBytes();
+        // Correct the offset for each stream
+        streams[i] = StreamInfo(streams[i].format(), streams[i].shape(), offset);
+        offset += streams[i].shape().sizeBytes();
     }
     SetStreams(streams, uri, properties);
 }
@@ -115,13 +112,13 @@ size_t VideoOutput::SizeBytes(void) const
 {
     size_t total = 0;
     for(const StreamInfo& si : recorder->Streams())
-        total += si.SizeBytes();
+        total += si.shape().sizeBytes();
     return total;
 }
 
-std::vector<Image<unsigned char>> VideoOutput::GetOutputImages(unsigned char* buffer) const
+std::vector<sophus::ImageView<uint8_t>> VideoOutput::GetOutputImages(uint8_t* buffer) const
 {
-    std::vector<Image<unsigned char>> images;
+    std::vector<sophus::ImageView<uint8_t>> images;
     for(size_t s = 0; s < recorder->Streams().size(); ++s)
     {
         images.push_back(recorder->Streams()[s].StreamImage(buffer));
@@ -129,7 +126,7 @@ std::vector<Image<unsigned char>> VideoOutput::GetOutputImages(unsigned char* bu
     return images;
 }
 
-std::vector<Image<unsigned char>> VideoOutput::GetOutputImages(std::vector<unsigned char>& buffer) const
+std::vector<sophus::ImageView<uint8_t>> VideoOutput::GetOutputImages(std::vector<uint8_t>& buffer) const
 {
     buffer.resize(SizeBytes());
     return GetOutputImages(buffer.data());

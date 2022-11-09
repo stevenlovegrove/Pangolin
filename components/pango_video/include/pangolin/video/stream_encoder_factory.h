@@ -6,8 +6,8 @@
 
 namespace pangolin {
 
-using ImageEncoderFunc = std::function<void(std::ostream&, const Image<unsigned char>&)>;
-using ImageDecoderFunc = std::function<TypedImage(std::istream&)>;
+using ImageEncoderFunc = std::function<void(std::ostream&, const sophus::IntensityImage<>&)>;
+using ImageDecoderFunc = std::function<sophus::IntensityImage<>(std::istream&)>;
 
 class StreamEncoderFactory
 {

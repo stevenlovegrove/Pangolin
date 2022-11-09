@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2013 Steven Lovegrove
+ * Copyright (c) 2011 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,39 +27,41 @@
 
 #pragma once
 
-#include <pangolin/video/video_interface.h>
+#include <pangolin/image/image.h>
+#include <pangolin/image/pixel_format.h>
 
-namespace pangolin
-{
+namespace pangolin {
 
-// Video class that outputs test video signal.
-class PANGOLIN_EXPORT TestVideo : public VideoInterface
+class PANGOLIN_EXPORT StreamInfo
 {
 public:
-    TestVideo(size_t w, size_t h, size_t n, std::string pix_fmt);
-    ~TestVideo();
-    
-    //! Implement VideoInput::Start()
-    void Start() override;
-    
-    //! Implement VideoInput::Stop()
-    void Stop() override;
+    inline StreamInfo(PixelFormat fmt, const sophus::ImageShape shape, size_t offset_bytes )
+        : fmt_(fmt), shape_(shape), offset_bytes_(offset_bytes) {}
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const override;
+    inline sophus::ImageShape shape() const
+    {
+        return shape_;
+    }
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const override;
-    
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true ) override;
-    
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true ) override;
-    
+    inline PixelFormat format() const
+    {
+        return fmt_;
+    }
+
+    inline size_t offsetBytes() const
+    {
+        return offset_bytes_;
+    }
+
+    //! Return Image wrapper around raw base pointer
+    inline sophus::ImageView<uint8_t> StreamImage(const uint8_t* base_ptr) const {
+        return { shape_, base_ptr + offset_bytes_ };
+    }
+
 protected:
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
+    PixelFormat fmt_;
+    sophus::ImageShape shape_;
+    size_t offset_bytes_;
 };
 
 }

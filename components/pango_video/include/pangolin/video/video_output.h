@@ -58,7 +58,7 @@ public:
     VideoOutput(VideoOutput&& other) = default;
     VideoOutput(const std::string& uri);
     ~VideoOutput();
-    
+
     bool IsOpen() const;
     void Open(const std::string& uri);
     void Close();
@@ -67,21 +67,21 @@ public:
 
     void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri = "", const picojson::value& properties = picojson::value() ) override;
 
-    int WriteStreams(const unsigned char* data, const picojson::value& frame_properties = picojson::value() ) override;
+    int WriteStreams(const uint8_t* data, const picojson::value& frame_properties = picojson::value() ) override;
 
     bool IsPipe() const override;
 
-    void AddStream(const PixelFormat& pf, size_t w,size_t h,size_t pitch);
+    void AddStream(const PixelFormat& pf, sophus::ImageShape shape);
 
-    void AddStream(const PixelFormat& pf, size_t w,size_t h);
+    void AddStream(const PixelFormat& pf, sophus::ImageSize size);
 
     void SetStreams(const std::string& uri = "", const picojson::value& properties = picojson::value() );
 
     size_t SizeBytes(void) const ;
 
-    std::vector<Image<unsigned char>> GetOutputImages(unsigned char* buffer) const ;
+    std::vector<sophus::ImageView<uint8_t>> GetOutputImages(uint8_t* buffer) const ;
 
-    std::vector<Image<unsigned char>> GetOutputImages(std::vector<unsigned char>& buffer) const ;
+    std::vector<sophus::ImageView<uint8_t>> GetOutputImages(std::vector<uint8_t>& buffer) const ;
 
 
 protected:

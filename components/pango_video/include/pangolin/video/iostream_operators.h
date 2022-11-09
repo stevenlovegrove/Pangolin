@@ -104,28 +104,7 @@ inline std::istream& operator>> (std::istream &is, PixelFormat& fmt)
 {
     std::string sfmt;
     is >> sfmt;
-    fmt = PixelFormatFromString(sfmt);
-    return is;
-}
-
-inline std::istream& operator>> (std::istream &is, Image<unsigned char>& img)
-{
-    size_t offset;
-    is >> offset; is.get();
-    img.ptr = (unsigned char*)(offset);
-    is >> img.w; is.get();
-    is >> img.h; is.get();
-    is >> img.pitch;
-    return is;
-}
-
-inline std::istream& operator>> (std::istream &is, StreamInfo &stream)
-{
-    PixelFormat fmt;
-    Image<unsigned char> img_offset;
-    is >> img_offset; is.get();
-    is >> fmt;
-    stream = StreamInfo(fmt, img_offset);
+    fmt = PixelFormatFromString(sfmt.c_str());
     return is;
 }
 

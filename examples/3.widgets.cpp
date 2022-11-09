@@ -74,6 +74,8 @@ int main( int /*argc*/, char** /*argv*/ )
         primitives->world_from_drawable = sophus::SE3d(
             sophus::SO3d::rotZ(angle_theta),
             Eigen::Vector3d::Zero()).matrix();
+
+        // We return true to indicate that we should keep running
         return true;
     });
 

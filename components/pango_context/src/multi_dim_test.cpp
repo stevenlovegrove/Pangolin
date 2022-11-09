@@ -4,10 +4,6 @@
 
 using namespace pangolin;
 
-template<typename T>
-using Image = MultiDimArray<T,kDynamic,kDynamic>;
-
-
 TEST_CASE("multi_dim, static") {
     {
         using Arr = MultiDimArray<int,3,2,2>;

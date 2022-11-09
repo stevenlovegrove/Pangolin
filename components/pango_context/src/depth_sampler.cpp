@@ -36,7 +36,7 @@ public:
       .depth_kind = DepthKind::zaxis
     };
 
-    visit(overload{
+    visitImage(overload{
      [&](const Image<float>& image){
         image.visit([&](float gl_z){
           float real_z = realDepthFromGl(gl_z, near_far.min(), near_far.max());

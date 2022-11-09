@@ -1,7 +1,7 @@
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
- * Copyright (c) 2011-2013 Steven Lovegrove
+ * Copyright (c) 2013 Steven Lovegrove
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,26 +27,39 @@
 
 #pragma once
 
-#include <pangolin/platform.h>
-#include <sophus/image/runtime_image.h>
-
-#include <string>
-#include <unordered_map>
+#include <pangolin/video/video_interface.h>
 
 namespace pangolin
 {
-using RuntimePixelType = sophus::RuntimePixelType;
-using PixelFormat = sophus::RuntimePixelType;
 
-//! Return Pixel Format properties given string specification in
-//! FFMPEG notation. E.g. GRAY8, RGB24, ...
-PANGOLIN_EXPORT
-RuntimePixelType PixelFormatFromString(const std::string& format);
+// Video class that outputs test video signal.
+class PANGOLIN_EXPORT TestVideo : public VideoInterface
+{
+public:
+    TestVideo(size_t w, size_t h, size_t n, const std::string& pix_fmt);
+    ~TestVideo();
 
-PANGOLIN_EXPORT
-std::string ToString(const RuntimePixelType& fmt);
+    //! Implement VideoInput::Start()
+    void Start() override;
 
-PANGOLIN_EXPORT
-const std::unordered_map<std::string, RuntimePixelType>& KnownPixelTypes();
+    //! Implement VideoInput::Stop()
+    void Stop() override;
+
+    //! Implement VideoInput::SizeBytes()
+    size_t SizeBytes() const override;
+
+    //! Implement VideoInput::Streams()
+    const std::vector<StreamInfo>& Streams() const override;
+
+    //! Implement VideoInput::GrabNext()
+    bool GrabNext( unsigned char* image, bool wait = true ) override;
+
+    //! Implement VideoInput::GrabNewest()
+    bool GrabNewest( unsigned char* image, bool wait = true ) override;
+
+protected:
+    std::vector<StreamInfo> streams;
+    size_t size_bytes;
+};
 
 }

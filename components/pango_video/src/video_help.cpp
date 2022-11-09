@@ -13,11 +13,7 @@ void PrintPixelFormats(std::ostream& out, bool color)
     const std::string c_alias  = color ? "\033[32m" : "";
 
    out << "Supported pixel format codes (and their respective bits-per-pixel):" << std::endl;
-   std::vector<pangolin::PixelFormat> pixelFormats = pangolin::GetSupportedPixelFormats();
-   for(const auto& format: pixelFormats ){
-       out << c_alias << format.format << c_normal << " (" << format.bpp << "), ";
-   }
-   out << std::endl;
+   PANGO_UNIMPLEMENTED();
 }
 
 void VideoHelp( std::ostream& out, const std::string& scheme_filter, HelpVerbosity verbosity)

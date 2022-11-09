@@ -39,7 +39,7 @@
 #define PANGO_EXPOSURE_US            "exposure_us"
 #define PANGO_GAMMA                  "gamma"
 // analog gain is in linear scale and not dB
-#define PANGO_ANALOG_GAIN            "analog_gain" 
+#define PANGO_ANALOG_GAIN            "analog_gain"
 #define PANGO_ANALOG_BLACK_LEVEL     "analog_black_level"
 #define PANGO_SENSOR_TEMPERATURE_C   "sensor_temperature_C"
 #define PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US "estimated_center_capture_time_us"
@@ -48,6 +48,15 @@
 #define PANGO_HAS_LINE0_METADATA     "line0_metadata"
 
 namespace pangolin {
+
+// temp utility for temp API
+template<typename T>
+std::optional<T> optGet(const std::optional<std::vector<T>>& v, size_t index) {
+    if(v && v->size() > index) {
+        return (*v)[index];
+    }
+    return std::nullopt;
+}
 
 //! Interface to video capture sources
 struct PANGOLIN_EXPORT VideoInterface
@@ -66,15 +75,36 @@ struct PANGOLIN_EXPORT VideoInterface
     //! Stop Video device
     virtual void Stop() = 0;
 
-    //! Copy the next frame from the camera to image.
-    //! Optionally wait for a frame if one isn't ready
-    //! Returns true iff image was copied
-    virtual bool GrabNext( unsigned char* image, bool wait = true ) = 0;
 
-    //! Copy the newest frame from the camera to image
-    //! discarding all older frames.
-    //! Optionally wait for a frame if one isn't ready
-    //! Returns true iff image was copied
+    // TODO: temporary typesafe API. Will move to async model.
+    inline std::optional<std::vector<sophus::IntensityImage<>>> GrabImages() {
+        using namespace sophus;
+
+        // allocating each frame, ughhh.
+        std::unique_ptr<uint8_t[]> buffer(new uint8_t[SizeBytes()]);
+        if(GrabNext(buffer.get())) {
+            std::vector<IntensityImage<>> res;
+            // Allocation into seperate images too, ughhhhhh
+            for(const auto& s : Streams()) {
+                res.emplace_back(ImageSize(s.shape().imageSize()),s.format());
+                auto& dst_image = res.back();
+                sophus::details::pitchedCopy(
+                    const_cast<uint8_t*>(dst_image.rawPtr()),
+                    dst_image.shape().pitchBytes(),
+                    buffer.get() + s.offsetBytes(),
+                    s.shape().pitchBytes(),
+                    dst_image.imageSize(),
+                    s.format().bytesPerPixel()
+                );
+            }
+            return res;
+        }
+        return std::nullopt;
+    }
+
+
+    // horrible API to be replaced
+    virtual bool GrabNext( unsigned char* image, bool wait = true ) = 0;
     virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
 };
 
