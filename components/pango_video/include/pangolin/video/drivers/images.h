@@ -43,7 +43,7 @@ public:
     ImagesVideo(const std::string& wildcard_path);
 
     ImagesVideo(
-        const std::string& wildcard_path, const PixelFormat& raw_fmt,
+        const std::string& wildcard_path, const RuntimePixelType& raw_fmt,
         size_t raw_width, size_t raw_height, size_t raw_pitch,
         size_t raw_offset, size_t raw_planes
     );
@@ -58,17 +58,17 @@ public:
 
     ///////////////////////////////////
     // Implement VideoInterface
-    
+
     void Start() override;
-    
+
     void Stop() override;
 
     size_t SizeBytes() const override;
 
     const std::vector<StreamInfo>& Streams() const override;
-    
+
     bool GrabNext( unsigned char* image, bool wait = true ) override;
-    
+
     bool GrabNewest( unsigned char* image, bool wait = true ) override;
 
     ///////////////////////////////////
@@ -86,14 +86,14 @@ public:
     const picojson::value& DeviceProperties() const override;
 
     const picojson::value& FrameProperties() const override;
-    
+
 protected:
-    typedef std::vector<TypedImage> Frame;
-    
+    typedef std::vector<IntensityImage<>> Frame;
+
     const std::string& Filename(size_t frameNum, size_t channelNum) {
         return filenames[channelNum][frameNum];
     }
-    
+
     void PopulateFilenames(const std::string& wildcard_path);
 
     void PopulateFilenamesFromJson(const std::string& filename);
@@ -101,10 +101,10 @@ protected:
     bool LoadFrame(size_t i);
 
     void ConfigureStreamSizes();
-    
+
     std::vector<StreamInfo> streams;
     size_t size_bytes;
-    
+
     size_t num_files;
     size_t num_channels;
     size_t next_frame_id;
@@ -112,7 +112,7 @@ protected:
     std::vector<Frame> loaded;
 
     bool unknowns_are_raw;
-    PixelFormat raw_fmt;
+    RuntimePixelType raw_fmt;
     size_t raw_width;
     size_t raw_height;
     size_t raw_planes;

@@ -108,4 +108,20 @@ inline std::istream& operator>> (std::istream &is, RuntimePixelType& fmt)
     return is;
 }
 
+inline std::istream& operator>> (std::istream &is, StreamInfo &stream)
+{
+    RuntimePixelType fmt;
+    ImageSize size(0,0);
+    size_t pitch = 0;
+    size_t offset = 0;
+
+    is >> offset; is.get();
+    is >> size.width; is.get();
+    is >> size.height; is.get();
+    is >> pitch;
+    is >> fmt;
+    stream = StreamInfo(fmt, ImageShape(size,pitch), offset);
+    return is;
+}
+
 }

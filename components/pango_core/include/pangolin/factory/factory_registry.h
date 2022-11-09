@@ -97,7 +97,8 @@ public:
         });
 
         if(candidates.size() == 0) {
-            throw NoMatchingSchemeException( uri);
+            PANGO_ERROR("No matching Scheme for URI: '{}'", uri.full_uri);
+            throw NoMatchingSchemeException(uri);
         }
 
         // Order candidates by precedence.

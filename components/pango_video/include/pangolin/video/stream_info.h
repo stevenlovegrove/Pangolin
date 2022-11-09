@@ -35,6 +35,8 @@ namespace pangolin {
 class PANGOLIN_EXPORT StreamInfo
 {
 public:
+    inline StreamInfo(): shape_(0,0,0), offset_bytes_(0) {}
+
     inline StreamInfo(RuntimePixelType fmt, const sophus::ImageShape shape, size_t offset_bytes )
         : fmt_(fmt), shape_(shape), offset_bytes_(offset_bytes) {}
 

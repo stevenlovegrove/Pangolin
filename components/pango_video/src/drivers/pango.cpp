@@ -100,19 +100,21 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
         }else{
             for(size_t s=0; s < _streams.size(); ++s) {
                 StreamInfo& si = _streams[s];
-                pangolin::Image<unsigned char> dst = si.StreamImage(image);
+                auto dst = MutImageView<uint8_t>::unsafeConstCast(si.StreamImage(image));
 
                 if(stream_decoder[s]) {
-                    pangolin::TypedImage img = stream_decoder[s](fi.Stream());
-                    PANGO_ENSURE(img.IsValid());
+                    IntensityImage<> img = stream_decoder[s](fi.Stream());
+                    PANGO_ENSURE(!img.isEmpty());
 
                     // TODO: We can avoid this copy by decoding directly into img
-                    for(size_t row =0; row < dst.h; ++row) {
-                        std::memcpy(dst.RowPtr(row), img.RowPtr(row), si.RowBytes());
+                    const size_t row_bytes = si.shape().width() * si.format().bytesPerPixel();
+                    for(int row =0; row < dst.height(); ++row) {
+                        std::memcpy(dst.rowPtrMut(row), img.rawRowPtr(row), row_bytes);
                     }
                 }else{
-                    for(size_t row =0; row < dst.h; ++row) {
-                        fi.Stream().read((char*)dst.RowPtr(row), si.RowBytes());
+                    const size_t row_bytes = si.shape().width() * si.format().bytesPerPixel();
+                    for(int row =0; row < dst.height(); ++row) {
+                        fi.Stream().read((char*)dst.rowPtr(row), row_bytes);
                     }
                 }
             }
@@ -194,26 +196,23 @@ void PangoVideo::SetupStreams(const PacketStreamSource& src)
         if(json_stream.contains("decoded")) {
             const std::string compressed_encoding = encoding;
             encoding = json_stream["decoded"].get<std::string>();
-            const PixelFormat decoded_fmt = PixelFormatFromString(encoding);
+            const RuntimePixelType decoded_fmt = PixelFormatFromString(encoding);
             stream_decoder.push_back(StreamEncoderFactory::I().GetDecoder(compressed_encoding, decoded_fmt));
         }else{
             stream_decoder.push_back(nullptr);
         }
 
-        PixelFormat fmt = PixelFormatFromString(encoding);
+        RuntimePixelType fmt = PixelFormatFromString(encoding);
 
-        fmt.channel_bit_depth = json_stream.get_value<int64_t>("channel_bit_depth", 0);
-
-        StreamInfo si(
-                fmt,
-                json_stream["width"].get<int64_t>(),
-                json_stream["height"].get<int64_t>(),
-                json_stream["pitch"].get<int64_t>(),
-                reinterpret_cast<unsigned char*>(json_stream["offset"].get<int64_t>())
-                        );
+        StreamInfo si( fmt, ImageShape(
+            json_stream["width"].get<int64_t>(),
+            json_stream["height"].get<int64_t>(),
+            json_stream["pitch"].get<int64_t>() ),
+            static_cast<size_t>(json_stream["offset"].get<int64_t>()
+        ));
 
         if(!_fixed_size) {
-            _size_bytes += si.SizeBytes();
+            _size_bytes += si.shape().sizeBytes();
         }
 
         _streams.push_back(si);

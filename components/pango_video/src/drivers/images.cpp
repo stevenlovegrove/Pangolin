@@ -46,7 +46,7 @@ bool ImagesVideo::LoadFrame(size_t i)
 
             if(file_type == ImageFileTypeUnknown && unknowns_are_raw) {
                 // if raw_pitch is zero, assume image is packed.
-                const size_t pitch = raw_pitch ? raw_pitch : raw_fmt.bpp * raw_width / 8;
+                const size_t pitch = raw_pitch ? raw_pitch : raw_fmt.bytesPerPixel() * raw_width;
                 frame.push_back( LoadImage( filename, raw_fmt, raw_width, raw_height, pitch, raw_offset, raw_planes) );
             }else{
                 frame.push_back( LoadImage( filename, file_type ) );
@@ -135,10 +135,10 @@ void ImagesVideo::ConfigureStreamSizes()
 {
     size_bytes = 0;
     for(size_t c=0; c < num_channels; ++c) {
-        const TypedImage& img = loaded[0][c];
-        const StreamInfo stream_info(img.fmt, img.w, img.h, img.pitch, (unsigned char*)(size_bytes));
+        const IntensityImage<>& img = loaded[0][c];
+        const StreamInfo stream_info(img.pixelType(), img.shape(), size_bytes);
         streams.push_back(stream_info);
-        size_bytes += img.h*img.pitch;
+        size_bytes += img.height() * img.pitchBytes();
     }
 }
 
@@ -159,7 +159,7 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path)
 
 ImagesVideo::ImagesVideo(
     const std::string& wildcard_path,
-    const PixelFormat& raw_fmt,
+    const RuntimePixelType& raw_fmt,
     size_t raw_width, size_t raw_height,
     size_t raw_pitch, size_t raw_offset,
     size_t raw_planes
@@ -219,13 +219,12 @@ bool ImagesVideo::GrabNext( unsigned char* image, bool /*wait*/ )
         }
 
         for(size_t c=0; c < num_channels; ++c){
-            TypedImage& img = frame[c];
-            if(!img.ptr || img.w != streams[c].Width() || img.h != streams[c].Height() ) {
+            IntensityImage<>& img = frame[c];
+            if(img.isEmpty() || img.shape() != streams[c].shape() ) {
                 return false;
             }
             const StreamInfo& si = streams[c];
-            std::memcpy(image + (size_t)si.Offset(), img.ptr, si.SizeBytes());
-            img.Deallocate();
+            std::memcpy(image + si.offsetBytes(), img.rawPtr(), si.shape().sizeBytes());
         }
         frame.clear();
 
@@ -306,7 +305,7 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
 
             if(raw) {
                 const std::string sfmt = reader.Get<std::string>("fmt");
-                const PixelFormat fmt = PixelFormatFromString(sfmt);
+                const RuntimePixelType fmt = PixelFormatFromString(sfmt);
                 const ImageDim dim = reader.Get<ImageDim>("size");
                 const size_t image_pitch = reader.Get<int>("pitch");
                 const size_t image_offset = reader.Get<int>("offset");

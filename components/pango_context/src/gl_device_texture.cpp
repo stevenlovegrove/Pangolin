@@ -128,6 +128,11 @@ struct DeviceGlTexture : public DeviceTexture
         }
 
         // Upload data
+        const size_t stride = u.image.pitchBytes() / data_type.bytesPerPixel();
+        PANGO_CHECK(stride * data_type.bytesPerPixel() == u.image.pitchBytes(),
+            "Image pitch is not a multiple of the pixel size (which OpenGL requires).");
+        PANGO_GL(glPixelStorei(GL_UNPACK_ROW_LENGTH, stride));
+        PANGO_GL(glPixelStorei( GL_UNPACK_ALIGNMENT, 1));
         PANGO_GL(glBindTexture(gl_target_, gl_id_));
         PANGO_GL(glTexSubImage2D(
             GL_TEXTURE_2D, mip_level,
@@ -137,6 +142,9 @@ struct DeviceGlTexture : public DeviceTexture
             gl_fmt.gl_type,
             u.image.rawPtr()
         ));
+        // return to default.
+        PANGO_GL(glPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
+        // (we'll leave GL_UNPACK_ALIGNMENT since thats the only sane default).
     }
 
     GLenum gl_target_ = 0;

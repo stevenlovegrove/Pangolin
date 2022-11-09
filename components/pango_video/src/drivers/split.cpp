@@ -42,8 +42,8 @@ SplitVideo::SplitVideo(std::unique_ptr<VideoInterface> &src_, const std::vector<
 
     // Warn if stream over-runs input stream
     for(unsigned int i=0; i < streams.size(); ++i) {
-        if(src->SizeBytes() < (size_t)streams[i].Offset() + streams[i].SizeBytes() ) {
-            pango_print_warn("VideoSplitter: stream extends past end of input.\n");
+        if(src->SizeBytes() < (size_t)streams[i].offsetBytes() + streams[i].shape().sizeBytes() ) {
+            PANGO_WARN("VideoSplitter: stream extends past end of input.\n");
             break;
         }
     }
@@ -130,8 +130,8 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
                     if(roi.w == 0 || roi.h == 0) {
                         throw VideoException("split: empty ROI.");
                     }
-                    const size_t start1 = roi.y * st1.Pitch() + st1.PixFormat().bpp * roi.x / 8;
-                    streams.push_back( StreamInfo( st1.PixFormat(), roi.w, roi.h, st1.Pitch(), reinterpret_cast<unsigned char*>(start1) ) );
+                    const size_t start1 = roi.y * st1.shape().pitchBytes() + st1.format().bytesPerPixel() * roi.x;
+                    streams.push_back( StreamInfo( st1.format(), ImageShape(roi.w, roi.h, st1.shape().pitchBytes()), start1 ) );
                 }else if(uri.Contains(key_mem)) {
                     const StreamInfo& info = param_reader.Get(key_mem, subvid->Streams()[0]); //uri.Get<StreamInfo>(key_mem, subvid->Streams()[0] );
                     streams.push_back(info);
@@ -149,8 +149,8 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
             // Default split if no arguments
             if(streams.size() == 0) {
                 const StreamInfo& st1 = subvid->Streams()[0];
-                const size_t subw = st1.Width();
-                const size_t subh = st1.Height();
+                const size_t subw = st1.shape().width();
+                const size_t subh = st1.shape().height();
 
                 ImageRoi roi1, roi2;
 
@@ -164,10 +164,10 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
                     roi2 = ImageRoi(0,subh/2, subw, subh/2 );
                 }
 
-                const size_t start1 = roi1.y * st1.Pitch() + st1.PixFormat().bpp * roi1.x / 8;
-                const size_t start2 = roi2.y * st1.Pitch() + st1.PixFormat().bpp * roi2.x / 8;
-                streams.push_back( StreamInfo( st1.PixFormat(), roi1.w, roi1.h, st1.Pitch(), (unsigned char*)(start1) ) );
-                streams.push_back( StreamInfo( st1.PixFormat(), roi2.w, roi2.h, st1.Pitch(), (unsigned char*)(start2) ) );
+                const size_t start1 = roi1.y * st1.shape().pitchBytes() + st1.format().bytesPerPixel() * roi1.x;
+                const size_t start2 = roi2.y * st1.shape().pitchBytes() + st1.format().bytesPerPixel() * roi2.x;
+                streams.push_back( StreamInfo( st1.format(), ImageShape(roi1.w, roi1.h, st1.shape().pitchBytes()), start1 ) );
+                streams.push_back( StreamInfo( st1.format(), ImageShape(roi2.w, roi2.h, st1.shape().pitchBytes()), start2 ) );
             }
 
             return std::unique_ptr<VideoInterface>( new SplitVideo(subvid,streams) );
