@@ -28,6 +28,7 @@ struct LayerGroup
     Grouping grouping = Grouping::horizontal;
     std::vector<LayerGroup> children = {};
     std::shared_ptr<Layer> layer = nullptr;
+    size_t selected_tab = 0;
 
     struct LayoutInfo
     {

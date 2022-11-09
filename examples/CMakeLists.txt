@@ -7,6 +7,8 @@ set(examples
     2.layouts
     3.widgets
     4.video
+    5.video-seek
+    6.overlay
 )
 
 foreach(example IN LISTS examples)

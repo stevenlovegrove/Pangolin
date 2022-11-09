@@ -102,6 +102,11 @@ struct PANGOLIN_EXPORT VideoInterface
         return std::nullopt;
     }
 
+    template<typename T>
+    T* as() {
+        return dynamic_cast<T*>(this);
+    }
+
 
     // horrible API to be replaced
     virtual bool GrabNext( unsigned char* image, bool wait = true ) = 0;

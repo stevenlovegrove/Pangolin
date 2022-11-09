@@ -149,8 +149,8 @@ std::optional<Directive> getDirective(const std::string& line)
             return Directive { .kind = Directive::Kind::include, .tokens = tokens };
         }else if( dstr == "expect") {
             return Directive { .kind = Directive::Kind::expect, .tokens = tokens };
-        }else if( dstr == "version") {
-            // The GlSl compiler will use this - we can ignore it.
+        }else if( dstr == "version" || dstr == "define") {
+            // The GlSl compiler will use these - we can ignore them.
             return std::nullopt;
         }else{
             PANGO_WARN("Unknown directive in GLSL line: {}", line);
@@ -239,8 +239,19 @@ void populateCodeFromFile(
     const GlSlProgram::PathList &search_path,
     const std::filesystem::path &current_path
 ) {
-    // Don't replace if already loaded.
-    if(!source.glsl_code.empty()) PANGO_INFO("Reloading shader source '{}'", source.origin);
+    //
+    PANGO_ENSURE(!source.origin.empty() || !source.glsl_code.empty(),
+        "Need at least one of origin or glsl_code to be specified");
+
+    if(!source.origin.empty()) {
+        if (!source.glsl_code.empty()) {
+            PANGO_INFO("Reloading shader source '{}'", source.origin);
+        }
+    }else{
+        // glsl_code is populated already
+        PANGO_ASSERT(!source.glsl_code.empty());
+        return;
+    }
 
     auto maybe_file = findInPath(source.origin, search_path, current_path, builtInOrRealPathExists);
     PANGO_THROW_IF(!maybe_file, "Cannot find root sourcefile {} on search path.\nCurrent Directory: {}\nSearch Path: {}.", source.origin, current_path, search_path);

@@ -5,6 +5,7 @@
 #include <pangolin/windowing/window.h>
 #include <pangolin/gui/layer_group.h>
 #include <pangolin/utils/variant_overload.h>
+#include <pangolin/utils/reverse_iterable.h>
 #include <pangolin/handler/interactive.h>
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/gl_type_info.h>
@@ -32,8 +33,18 @@ void renderIntoRegionImpl(
             .region = group.cached_.region
         });
     }
-    for(const auto& child : group.children) {
-        renderIntoRegionImpl(context, p, child);
+    if(group.grouping == LayerGroup::Grouping::stacked) {
+        // Back-to-front for blending / overlays
+        for(const auto& child : reverse(group.children)) {
+            renderIntoRegionImpl(context, p, child);
+        }
+    }else if(group.grouping == LayerGroup::Grouping::tabbed) {
+        PANGO_ENSURE(group.selected_tab < group.children.size());
+        renderIntoRegionImpl(context, p, group.children[group.selected_tab]);
+    }else{
+        for(const auto& child : group.children) {
+            renderIntoRegionImpl(context, p, child);
+        }
     }
 }
 
