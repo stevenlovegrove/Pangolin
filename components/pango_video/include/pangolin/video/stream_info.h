@@ -28,6 +28,7 @@
 #pragma once
 
 #include <pangolin/image/image.h>
+#include <pangolin/image/runtime_image.h>
 #include <pangolin/image/pixel_format.h>
 
 namespace pangolin {
@@ -55,9 +56,26 @@ public:
         return offset_bytes_;
     }
 
+    inline size_t rowBytes() const
+    {
+        return format().bytesPerPixel() * shape().width();
+    }
+
     //! Return Image wrapper around raw base pointer
     inline sophus::ImageView<uint8_t> StreamImage(const uint8_t* base_ptr) const {
         return { shape_, base_ptr + offset_bytes_ };
+    }
+
+    inline IntensityImage<> copyToRuntimeImage(const uint8_t* base_ptr) const {
+        PANGO_DEBUG("Unneeded image copy happening...");
+        IntensityImage<> runtime(shape_, fmt_);
+        sophus::details::pitchedCopy(
+            const_cast<uint8_t*>(runtime.rawPtr()),
+            runtime.shape().pitchBytes(),
+            base_ptr, shape_.pitchBytes(), shape_.imageSize(),
+            fmt_.bytesPerPixel()
+        );
+        return runtime;
     }
 
 protected:

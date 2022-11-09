@@ -20,16 +20,14 @@ void main()
 
 @start fragment
 #version 150 core
+
 in vec2 v_tex;
+
 uniform sampler2D image;
-// uniform bool gray_only;
+uniform mat4 color_transform;
 
 out vec4 color;
 void main()
 {
-//   if(gray_only) {
-    // color=vec4(vec3(texture(image, v_tex).r), 1.0);
-//   }else{
-    color=texture(image, v_tex);
-//   }
+    color = color_transform * texture(image, v_tex);
 }

@@ -9,14 +9,18 @@
 using namespace pangolin;
 using namespace sophus;
 
-int main( int /*argc*/, char** /*argv*/ )
+int main( int argc, char** argv )
 {
+    PANGO_ENSURE(argc == 2, "Please provide one argument - the URL to a video.");
+    const std::string video_url = argv[1];
+
     auto context = Context::Create({
         .title="Pangolin Video",
         .window_size = {640,480},
     } );
 
-    auto video_input = OpenVideo("test:[size=640x480]//");
+    auto video_input = OpenVideo(video_url);
+
     auto video_view = DrawnImage::Create({});
 
     context->setLayout( video_view );

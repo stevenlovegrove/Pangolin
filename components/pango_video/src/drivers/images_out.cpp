@@ -80,10 +80,10 @@ int ImagesVideoOutput::WriteStreams(const unsigned char* data, const picojson::v
     // Write each stream image to file.
     for(size_t s=0; s < streams.size(); ++s) {
         const pangolin::StreamInfo& si = streams[s];
-        const std::string filename = pangolin::FormatString("image_%%%_%.%",std::setfill('0'),std::setw(10),image_index, s, image_file_extension);
+        const std::string filename = fmt::format("image_{:010}_{}.{}", image_index, s, image_file_extension);
         json_filenames.push_back(filename);
-        const Image<unsigned char> img = si.StreamImage(data);
-        pangolin::SaveImage(img, si.PixFormat(), image_folder + filename);
+
+        pangolin::SaveImage( si.copyToRuntimeImage(data), image_folder + filename );
     }
 
     // Add frame_properties to json file.

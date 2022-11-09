@@ -88,14 +88,13 @@ bool PangoVideoOutput::IsPipe() const
 
 void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::string& uri, const picojson::value& properties)
 {
-    std::set<unsigned char*> unique_ptrs;
+    std::set<size_t> unique_offsets;
     for (size_t i = 0; i < st.size(); ++i)
     {
-    unique_ptrs.insert(st[i].Offset());
+        unique_offsets.insert(st[i].offsetBytes());
     }
 
-    if (unique_ptrs.size() < st.size())
-    throw std::invalid_argument("Each image must have unique offset into buffer.");
+    PANGO_THROW_IF(unique_offsets.size() < st.size(), "Each image must have unique offset into buffer.");
 
     if (packetstreamsrcid == -1)
     {
@@ -115,25 +114,24 @@ void PangoVideoOutput::SetStreams(const std::vector<StreamInfo>& st, const std::
         for (unsigned int i = 0; i < streams.size(); ++i)
         {
             StreamInfo& si = streams[i];
-            total_frame_size = std::max(total_frame_size, (size_t) si.Offset() + si.SizeBytes());
+            total_frame_size = std::max(total_frame_size, si.offsetBytes() + si.shape().sizeBytes());
 
             picojson::value& json_stream = json_streams.push_back();
 
-            std::string encoder_name = si.PixFormat().format;
+            std::string encoder_name = ToString(si.format());
             if(stream_encoder_uris.find(i) != stream_encoder_uris.end() && !stream_encoder_uris[i].empty() ) {
                 // instantiate encoder and write it's name to the stream properties
-                json_stream["decoded"] = si.PixFormat().format;
+                json_stream["decoded"] = encoder_name;
                 encoder_name = stream_encoder_uris[i];
-                stream_encoders[i] = StreamEncoderFactory::I().GetEncoder(encoder_name, si.PixFormat());
+                stream_encoders[i] = StreamEncoderFactory::I().GetEncoder(encoder_name, si.format());
                 fixed_size = false;
             }
 
-            json_stream["channel_bit_depth"] = si.PixFormat().channel_bit_depth;
             json_stream["encoding"] = encoder_name;
-            json_stream["width"] = si.Width();
-            json_stream["height"] = si.Height();
-            json_stream["pitch"] = si.Pitch();
-            json_stream["offset"] = (size_t) si.Offset();
+            json_stream["width"] = si.shape().width();
+            json_stream["height"] = si.shape().height();
+            json_stream["pitch"] = si.shape().pitchBytes();
+            json_stream["offset"] = si.offsetBytes();
         }
 
         PacketStreamSource pss;
@@ -209,7 +207,7 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
         // Create buffers for compressed data: the first will be reused for all the data later
         encoded_stream_data.emplace_back(total_frame_size);
         for(size_t i=1; i < streams.size(); ++i) {
-            encoded_stream_data.emplace_back(streams[i].SizeBytes());
+            encoded_stream_data.emplace_back(streams[i].shape().sizeBytes());
         }
 
         // lambda encodes frame data i to encoded_stream_data[i]
@@ -218,17 +216,17 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
             std::ostream encode_stream(&encoded_stream_data[i]);
 
             const StreamInfo& si = streams[i];
-            const Image<unsigned char> stream_image = si.StreamImage(data);
 
             if(stream_encoders[i]) {
                 // Encode to buffer
-                stream_encoders[i](encode_stream, stream_image);
+                stream_encoders[i](encode_stream, si.copyToRuntimeImage(data));
             }else{
-                if(stream_image.IsContiguous()) {
-                    encode_stream.write((char*)stream_image.ptr, streams[i].SizeBytes());
+                const ImageView<uint8_t> stream_image = si.StreamImage(data);
+                if(stream_image.isContiguous()) {
+                    encode_stream.write((char*)stream_image.ptr(), streams[i].shape().sizeBytes());
                 }else{
-                    for(size_t row=0; row < stream_image.h; ++row) {
-                        encode_stream.write((char*)stream_image.RowPtr(row), si.RowBytes());
+                    for(int row=0; row < stream_image.height(); ++row) {
+                        encode_stream.write((char*)stream_image.rowPtr(row), si.rowBytes());
                     }
                 }
             }
@@ -303,7 +301,7 @@ PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
             std::map<size_t, std::string> stream_encoder_uris;
             for(size_t i=0; i<100; ++i)
             {
-                const std::string encoder_key = pangolin::FormatString("encoder%",i+1);
+                const std::string encoder_key = fmt::format("encoder{}", i+1);
                 stream_encoder_uris[i] = reader.Get<std::string>(encoder_key, default_encoder);
             }
 

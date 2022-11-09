@@ -16,11 +16,11 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/video_help.cpp
     ${DRIVER_DIR}/test.cpp
     ${DRIVER_DIR}/images.cpp
-    # ${DRIVER_DIR}/images_out.cpp
+    ${DRIVER_DIR}/images_out.cpp
     ${DRIVER_DIR}/split.cpp
     # ${DRIVER_DIR}/truncate.cpp
     ${DRIVER_DIR}/pango.cpp
-    # ${DRIVER_DIR}/pango_video_output.cpp
+    ${DRIVER_DIR}/pango_video_output.cpp
     # ${DRIVER_DIR}/debayer.cpp
     # ${DRIVER_DIR}/shift.cpp
     # ${DRIVER_DIR}/transform.cpp
@@ -36,15 +36,15 @@ PRIVATE
 PangolinRegisterFactory(
     VideoInterface
     TestVideo ImagesVideo SplitVideo PangoVideo
-    #  TruncateVideo
+    # TruncateVideo
     # DebayerVideo ShiftVideo TransformVideo UnpackVideo PackVideo
     # JoinVideo MergeVideo JsonVideo MjpegVideo
 )
 
 PangolinRegisterFactory(
     VideoOutputInterface
-    # ImagesVideoOutput
-    # PangoVideoOutput
+    ImagesVideoOutput
+    PangoVideoOutput
 )
 
 

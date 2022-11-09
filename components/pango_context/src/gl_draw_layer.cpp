@@ -88,6 +88,13 @@ struct DrawnImageProgram
         ).cast<float>();
         u_cam_from_world = cam_from_world.cast<float>().matrix();
 
+        // TODO: load from DrawnImage param if specified.
+        if(drawn_image.image->pixelType().num_channels == 1) {
+            u_color_transform = (Eigen::Matrix4f() << 1,0,0,0,  1,0,0,0,  1,0,0,0, 0,0,0,1).finished();
+        }else{
+            u_color_transform = Eigen::Matrix4f::Identity();
+        }
+
         PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     }
 private:
@@ -99,6 +106,7 @@ private:
     const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
     const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
     const GlUniform<Eigen::Vector2f> u_image_size = {"image_size"};
+    const GlUniform<Eigen::Matrix4f> u_color_transform = {"color_transform"};
 };
 
 struct DrawLayerImpl : public DrawLayer {

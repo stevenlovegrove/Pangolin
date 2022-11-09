@@ -6,7 +6,7 @@ set(examples
     1.hello
     2.layouts
     3.widgets
-    10.video
+    4.video
 )
 
 foreach(example IN LISTS examples)

@@ -107,14 +107,12 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
                     PANGO_ENSURE(!img.isEmpty());
 
                     // TODO: We can avoid this copy by decoding directly into img
-                    const size_t row_bytes = si.shape().width() * si.format().bytesPerPixel();
                     for(int row =0; row < dst.height(); ++row) {
-                        std::memcpy(dst.rowPtrMut(row), img.rawRowPtr(row), row_bytes);
+                        std::memcpy(dst.rowPtrMut(row), img.rawRowPtr(row), si.rowBytes());
                     }
                 }else{
-                    const size_t row_bytes = si.shape().width() * si.format().bytesPerPixel();
                     for(int row =0; row < dst.height(); ++row) {
-                        fi.Stream().read((char*)dst.rowPtr(row), row_bytes);
+                        fi.Stream().read((char*)dst.rowPtr(row), si.rowBytes());
                     }
                 }
             }
