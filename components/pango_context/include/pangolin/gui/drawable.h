@@ -118,4 +118,26 @@ struct DrawnPrimitives : public Drawable
     static Shared<DrawnPrimitives> Create(Params p);
 };
 
+// TODO:name?
+struct DrawnSolids : public Drawable
+{
+    enum class Type
+    {
+        sphere
+    };
+
+    // Transform to apply to points during render
+    // (they will be further transformed by the camera
+    //  and modelview style matrices)
+    Eigen::Matrix4d world_from_drawable;
+
+    Type object_type;
+
+    struct Params {
+        Type object_type = Type::sphere;
+        Eigen::Matrix4d world_from_drawable = Eigen::Matrix4d::Identity();
+    };
+    static Shared<DrawnSolids> Create(Params p);
+};
+
 }

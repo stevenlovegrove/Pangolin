@@ -9,6 +9,7 @@ set(examples
     4.video
     5.video-seek
     6.overlay
+    7.solids
 )
 
 foreach(example IN LISTS examples)

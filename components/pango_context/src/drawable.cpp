@@ -23,4 +23,12 @@ PANGO_CREATE(DrawnPrimitives) {
     return r;
 }
 
+
+// Right now, we have no specialization. Just instantiate the class itself
+PANGO_CREATE(DrawnSolids) {
+    auto r = Shared<DrawnSolids>::make();
+    r->world_from_drawable = p.world_from_drawable;
+    return r;
+}
+
 }

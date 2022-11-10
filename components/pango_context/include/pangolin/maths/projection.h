@@ -7,7 +7,17 @@
 namespace pangolin
 {
 
-Eigen::Matrix<double,4,4> projectionClipFromCamera(
+Eigen::Matrix3d projectionImageFromCamera(
+    Eigen::Vector2d focal_distance_pixels,
+    Eigen::Vector2d principle_point
+);
+
+Eigen::Matrix3d invProjectionCameraFromImage(
+    Eigen::Vector2d focal_distance_pixels,
+    Eigen::Vector2d principle_point
+);
+
+Eigen::Matrix4d projectionClipFromCamera(
     sophus::ImageSize size,
     Eigen::Vector2d focal_distance_pixels,
     Eigen::Vector2d principle_point,
@@ -17,7 +27,7 @@ Eigen::Matrix<double,4,4> projectionClipFromCamera(
     ImageIndexing image_indexing = Conventions::global().image_indexing
 );
 
-Eigen::Matrix<double,4,4> projectionClipFromOrtho(
+Eigen::Matrix4d projectionClipFromOrtho(
     MinMax<Eigen::Vector2d> extent,
     MinMax<double> near_far_in_world_units,
     ImageXy image_convention = Conventions::global().image_xy,

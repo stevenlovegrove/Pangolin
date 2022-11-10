@@ -4,6 +4,26 @@
 namespace pangolin
 {
 
+Eigen::Matrix3d projectionImageFromCamera(
+    Eigen::Vector2d focal_distance_pixels,
+    Eigen::Vector2d principle_point
+){
+    return (Eigen::Matrix3d() <<
+        focal_distance_pixels[0], 0.0, principle_point[0],
+        0.0, focal_distance_pixels[1], principle_point[1],
+        0.0, 0.0, 1.0).finished();
+}
+
+Eigen::Matrix3d invProjectionCameraFromImage(
+    Eigen::Vector2d focal_distance_pixels,
+    Eigen::Vector2d principle_point
+){
+    return (Eigen::Matrix3d() <<
+        1.0 / focal_distance_pixels[0], 0.0, -principle_point[0] / focal_distance_pixels[0],
+        0.0, 1.0 / focal_distance_pixels[1], -principle_point[1] / focal_distance_pixels[1],
+        0.0, 0.0, 1.0).finished();
+}
+
 Eigen::Matrix<double,4,4> projectionClipFromImplRdf(
     double L, double R, double T, double B,
     double zNear, double zFar

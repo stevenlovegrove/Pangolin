@@ -21,7 +21,7 @@ sophus::SE3d orientPointToPoint(
 {
   const Eigen::Vector3d from = down_state.p_cam.normalized();
   const Eigen::Vector3d to = state.p_cam.normalized();
-  const sophus::SO3d to_R_from = sophus::SO3d::rotThroughPoints(from, to);
+  const sophus::SO3d to_R_from = sophus::rotThroughPoints(from, to);
   return sophus::SE3d(to_R_from, Eigen::Vector3d::Zero()) * down_state.cam_T_world;
 }
 
@@ -50,7 +50,7 @@ sophus::SE3d fixUpDirIfNeeded(
     const Eigen::Vector3d up_in_cam = cam_T_world * (*up_in_world);
     const Eigen::Vector3d convention_up = upDirectionInCamera<double>(axis_convention);
     if( (up_in_cam - convention_up).squaredNorm() > sophus::kEpsilon<double> ) {
-      const sophus::SO3d up_R_conv = sophus::SO3d::rotThroughPoints(convention_up, up_in_cam);
+      const sophus::SO3d up_R_conv = sophus::rotThroughPoints(convention_up, up_in_cam);
       return sophus::SE3d(up_R_conv,Eigen::Vector3d::Zero()) * cam_T_world;
     }
   }

@@ -109,6 +109,36 @@ private:
     const GlUniform<Eigen::Matrix4f> u_color_transform = {"color_transform"};
 };
 
+struct DrawnSolidsProgram
+{
+    void draw(
+        const DrawnSolids& primitives,
+        const sophus::CameraModel& camera,
+        const sophus::Se3F64& cam_from_world,
+        MinMax<double> near_far
+    ){
+        auto bind_prog = prog->bind();
+        auto bind_vao = vao.bind();
+
+        u_image_size = Eigen::Vector2f(camera.imageSize().width, camera.imageSize().height);
+        u_kinv = invProjectionCameraFromImage(camera.focalLength(), camera.principalPoint()).cast<float>();
+        u_world_from_cam = cam_from_world.inverse().cast<float>().matrix();
+        u_znear_zfar = Eigen::Vector2f(near_far.min(), near_far.max());
+
+        PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    }
+
+private:
+    const Shared<GlSlProgram> prog = GlSlProgram::Create({
+        .sources = {{ .origin="/components/pango_opengl/shaders/main_solids.glsl" }}
+    });
+    GlVertexArrayObject vao = {};
+    const GlUniform<Eigen::Matrix3f> u_kinv = {"kinv"};
+    const GlUniform<Eigen::Matrix4f> u_world_from_cam = {"world_from_cam"};
+    const GlUniform<Eigen::Vector2f> u_image_size = {"image_size"};
+    const GlUniform<Eigen::Vector2f> u_znear_zfar = {"znear_zfar"};
+};
+
 struct DrawLayerImpl : public DrawLayer {
     Eigen::Array3f debug_random_color;
 
@@ -187,7 +217,7 @@ struct DrawLayerImpl : public DrawLayer {
     void renderIntoRegion(const Context& c, const RenderParams& p) override {
         ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
         c.setViewport(p.region);
-        glClearColor(debug_random_color[0], debug_random_color[2], debug_random_color[2], 1.0f);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         for(auto& obj : objects_) {
@@ -199,6 +229,10 @@ struct DrawLayerImpl : public DrawLayer {
                 if(!camera_ || !camera_from_world_) setDefaultPrimitivesParams(*prim);
                 PANGO_ENSURE(camera_ && camera_from_world_);
                 render_primitives_.draw(*prim, *camera_, *camera_from_world_, near_far_);
+            }else if(DrawnSolids* solids = dynamic_cast<DrawnSolids*>(obj.ptr())) {
+                if(!camera_ || !camera_from_world_) setDefaultPrimitivesParams(*prim);
+                PANGO_ENSURE(camera_ && camera_from_world_);
+                render_solids_.draw(*solids, *camera_, *camera_from_world_, near_far_);
             }
         }
     }
@@ -257,6 +291,7 @@ struct DrawLayerImpl : public DrawLayer {
     std::vector<Shared<Drawable>> objects_;
     DrawnImageProgram render_image_;
     DrawnPrimitivesProgram render_primitives_;
+    DrawnSolidsProgram render_solids_;
 };
 
 PANGO_CREATE(DrawLayer) {
