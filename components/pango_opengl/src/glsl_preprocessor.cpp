@@ -287,8 +287,8 @@ splitAnnotatedShaders(const GlSlProgram::Source& source)
     auto finish_block = [&](ShaderType new_type){
         GlSlProgram::Source new_src = {
             .shader_type = current_type,
-            .glsl_code = output.str(),
             .origin = source.origin,
+            .glsl_code = output.str(),
             .origin_line = current_start_line_num
         };
         if(current_type != ShaderType::Annotated && new_src.glsl_code.size() > 0) {

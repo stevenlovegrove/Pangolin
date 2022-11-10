@@ -1,10 +1,13 @@
 #pragma once
 
-#include <optional>
 #include <Eigen/Core>
 #include <pangolin/utils/flag_set.h>
 #include <pangolin/maths/conventions.h>
 #include <pangolin/maths/min_max.h>
+
+#include <optional>
+#include <variant>
+
 
 namespace pangolin
 {

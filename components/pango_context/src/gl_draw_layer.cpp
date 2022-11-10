@@ -189,7 +189,7 @@ struct DrawLayerImpl : public DrawLayer {
         if(camera_limits_in_world_.empty()) {
             camera_limits_in_world_ = {
                 {0.0, 0.0, -start_dist},
-                {imsize.width, imsize.height, -0.2},
+                {double(imsize.width), double(imsize.height), -0.2},
             };
         }
     }
