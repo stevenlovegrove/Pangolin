@@ -53,6 +53,8 @@
 
 #define MAX_TEXT_LENGTH 500
 
+extern const unsigned char AnonymousPro_ttf[];
+
 namespace pangolin
 {
 
@@ -458,6 +460,11 @@ GlText GlFont::Text(const std::string& utf8 )
     }
 
     return ret;
+}
+
+std::shared_ptr<GlFont> build_builtin_font(float pixel_height, int tex_w, int tex_h, bool use_alpha_font)
+{
+    return std::make_shared<GlFont>(AnonymousPro_ttf, pixel_height, tex_w, tex_h, use_alpha_font);
 }
 
 }

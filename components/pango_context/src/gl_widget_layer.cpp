@@ -15,15 +15,8 @@
 
 #include "gl_widget_layer.h"
 
-extern const unsigned char AnonymousPro_ttf[];
-
 namespace pangolin
 {
-
-std::shared_ptr<GlFont> build_builtin_font(float pixel_height, int tex_w, int tex_h, bool use_alpha_font)
-{
-    return std::make_shared<GlFont>(AnonymousPro_ttf, pixel_height, tex_w, tex_h, use_alpha_font);
-}
 
 GlWidgetLayer::GlWidgetLayer(const WidgetLayer::Params& p)
     : size_hint_(p.size_hint),

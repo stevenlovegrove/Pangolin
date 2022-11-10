@@ -96,4 +96,6 @@ public:
     std::map<codepointpair_t, GLfloat> kern_table;
 };
 
+std::shared_ptr<GlFont> build_builtin_font(float pixel_height, int tex_w = 1024, int tex_h = 1024, bool use_alpha_font = true);
+
 }
