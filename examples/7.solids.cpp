@@ -17,7 +17,7 @@ int main( int argc, char** argv )
 {
     auto context = Context::Create({
         .title="Pangolin Solid Raycast Geometry",
-        .window_size = {640,480},
+        .window_size = {2*640,2*480},
     } );
 
     auto scene = DrawLayer::Create({
