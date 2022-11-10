@@ -72,19 +72,10 @@ inline LayerGroup IntoLayerGroup(const sophus::IntensityImage<>& image) {
     );
 }
 
-
-namespace detail {
-    template< class T, class U >
-    concept SameHelper = std::is_same_v<T, U>;
-}
-
-template< class T, class U >
-concept same_as = detail::SameHelper<T, U> && detail::SameHelper<U, T>;
-
 // Specialize
 template<typename T>
 concept Layoutable = requires (T x) {
-        {IntoLayerGroup(x)} -> same_as<LayerGroup>;
+        {IntoLayerGroup(x)} -> SameAs<LayerGroup>;
         };
 
 namespace detail

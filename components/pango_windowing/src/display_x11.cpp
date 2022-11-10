@@ -31,7 +31,6 @@
 
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
-//#include <pangolin/gl/glinclude.h>
 #include <pangolin/windowing/X11Window.h>
 
 #include <mutex>
@@ -146,7 +145,7 @@ bool isExtensionSupported(const char *extList, const char *extension)
 
     // If minimum requested isn't available, return the best that is.
     if(chosen_fbc_id < 0) {
-        //pango_print_warn("Framebuffer with requested attributes not available. Using available framebuffer. You may see visual artifacts.");
+        PANGO_WARN("Framebuffer with requested attributes not available. Using available framebuffer. You may see visual artifacts.");
         chosen_fbc_id = best_fbc;
     }
 
@@ -161,7 +160,7 @@ static int ctxErrorHandler( ::Display * /*dpy*/, ::XErrorEvent * ev )
     const int buffer_size = 10240;
     char buffer[buffer_size];
     XGetErrorText(ev->display, ev->error_code, buffer, buffer_size );
-  //  pango_print_error("X11 Error: %s\n", buffer);
+    PANGO_ERROR("X11 Error: {}\n", buffer);
     ctxErrorOccurred = true;
     return 0;
 }
@@ -228,7 +227,7 @@ GLXContext CreateGlContext(::Display *display, ::GLXFBConfig chosenFbc, GLXConte
 
     // Verifying that context is a direct context
     if ( ! glXIsDirect ( display, new_ctx ) ) {
-      //  pango_print_warn("Pangolin X11: Indirect GLX rendering context obtained\n");
+       PANGO_WARN("Pangolin X11: Indirect GLX rendering context obtained\n");
     }
 
     return new_ctx;
@@ -530,7 +529,7 @@ PANGOLIN_REGISTER_FACTORY(X11Window)
       }
 
       std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
-          
+
       const std::string window_title = uri.Get<std::string>("window_title", "window");
       const int w = uri.Get<int>("w", 640);
       const int h = uri.Get<int>("h", 480);
@@ -546,4 +545,3 @@ PANGOLIN_REGISTER_FACTORY(X11Window)
 }
 
 }
-
