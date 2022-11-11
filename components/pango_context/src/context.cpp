@@ -265,6 +265,9 @@ struct ContextImpl : public Context {
 
     void drawPanels()
     {
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         MinMax<Eigen::Array2i> region;
         region.extend({0,0});
         region.extend({size_.width, size_.height});
@@ -295,7 +298,7 @@ struct ContextImpl : public Context {
     ) const override {
         using namespace sophus;
         const auto gl_bounds = regionGlFromConvention(bounds, image_axis_convention);
-        const auto imsize = bounds.range() + Eigen::Array2i(1,1);
+        const Eigen::Array2i imsize = bounds.range() + Eigen::Array2i(1,1);
         const bool is_depth = attachment == Attachment::depth;
 
         const RuntimePixelType pixel_type =  is_depth ?

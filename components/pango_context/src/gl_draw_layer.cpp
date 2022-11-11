@@ -83,9 +83,10 @@ struct DrawnImageProgram
         auto bind_vao = vao.bind();
 
         u_image_size = Eigen::Vector2f(camera.imageSize().width, camera.imageSize().height);
+        // TODO: put in ortho matrix. this is a matrix for GL image convention.
         u_intrinsics = projectionClipFromCamera(
             camera.imageSize(), camera.focalLength(),
-            camera.principalPoint(), near_far
+            camera.principalPoint() + Eigen::Vector2d(0.5,0.5), near_far
         ).cast<float>();
         u_cam_from_world = cam_from_world.cast<float>().matrix();
 
@@ -222,8 +223,8 @@ struct DrawLayerImpl : public DrawLayer {
     void renderIntoRegion(const Context& c, const RenderParams& p) override {
         ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
         c.setViewport(p.region);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glClear(GL_DEPTH_BUFFER_BIT);
 
         for(auto& obj : objects_) {
             if(DrawnImage* im = dynamic_cast<DrawnImage*>(obj.ptr())) {

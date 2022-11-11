@@ -113,7 +113,7 @@ struct DeviceGlTexture : public DeviceTexture
             ));
 
             // TODO: set these from creation params
-            if(true) {
+            if(false) {
                 PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
                 PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
             }else{
