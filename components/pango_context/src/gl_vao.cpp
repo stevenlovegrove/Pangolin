@@ -53,11 +53,16 @@ void GlVertexArrayObject::addVertexAttrib(
     auto vao_bind = bind();
     bo.Bind();
 
-    // if(PANGO_GL(isGlIntegralDatatype(bo.datatype))) {
-    //     PANGO_GL(glVertexAttribIPointer(attrib_location, bo.count_per_element, bo.datatype, stride_bytes, (void*)offset_bytes ));
-    // }else{
+#ifdef __APPLE__
+    PANGO_GL(glVertexAttribPointer(attrib_location, bo.count_per_element, bo.datatype, normalized, stride_bytes, (void*)offset_bytes));
+#else
+    if(PANGO_GL(isGlIntegralDatatype(bo.datatype))) {
+        PANGO_GL(glVertexAttribIPointer(attrib_location, bo.count_per_element, bo.datatype, stride_bytes, (void*)offset_bytes ));
+    }else{
         PANGO_GL(glVertexAttribPointer(attrib_location, bo.count_per_element, bo.datatype, normalized, stride_bytes, (void*)offset_bytes));
-    // }
+    }
+#endif
+
     PANGO_GL(glEnableVertexAttribArray(attrib_location));
     bo.Unbind();
 }
