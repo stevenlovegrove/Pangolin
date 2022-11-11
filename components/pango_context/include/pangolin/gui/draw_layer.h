@@ -38,6 +38,15 @@ struct DrawLayer : public Layer
     // Specify a handler to feed user input into this DrawLayer
     // to drive the tranforms and view options.
     virtual void setHandler(const std::shared_ptr<Handler>&) = 0;
+    virtual std::shared_ptr<Handler> getHandler() const = 0;
+
+    // Set the camera to use for rendering
+    virtual void setCamera(std::shared_ptr<sophus::CameraModel>&) = 0;
+    virtual std::shared_ptr<sophus::CameraModel> getCamera() const = 0;
+
+    // Set the view transform to use for rendering
+    virtual void setCameraPoseFromWorld( std::shared_ptr<sophus::Se3F64>&) = 0;
+    virtual std::shared_ptr<sophus::Se3F64> getCameraPoseFromWorld() const = 0;
 
     // This method is the main way in which a handler object
     // can constrain viewing parameters to relevant content.

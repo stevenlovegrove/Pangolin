@@ -25,10 +25,30 @@ struct LayerGroup
     LayerGroup() = default;
     LayerGroup(Shared<Layer> layer) : layer(layer){}
 
+    // return true if this layer and its children should be rendered
+    inline bool isShown() const {return show_;}
+
+    // show or hide this whole layer
+    inline void show(bool visible=true) {
+        show_ = visible;
+    }
+
+    // show or hide a layer in this LayerGroup tree
+    inline void show(std::shared_ptr<Layer>& layer_to_show, bool visible=true) {
+        if(layer == layer_to_show) {
+            show(visible);
+        }else{
+            for(auto& lg : children) {
+                lg.show(layer_to_show, visible);
+            }
+        }
+    }
+
     Grouping grouping = Grouping::horizontal;
     std::vector<LayerGroup> children = {};
     std::shared_ptr<Layer> layer = nullptr;
     size_t selected_tab = 0;
+    bool show_ = true;
 
     struct LayoutInfo
     {

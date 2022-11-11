@@ -256,6 +256,26 @@ struct DrawLayerImpl : public DrawLayer {
         handler_ = handler;
     }
 
+    void setCamera(std::shared_ptr<sophus::CameraModel>& camera) override {
+        camera_ = camera;
+    }
+
+    void setCameraPoseFromWorld( std::shared_ptr<sophus::Se3F64>& camera_from_world) override {
+        camera_from_world_ = camera_from_world;
+    }
+
+    std::shared_ptr<Handler> getHandler() const override {
+        return handler_;
+    }
+    std::shared_ptr<sophus::CameraModel> getCamera() const override {
+        return camera_;
+    }
+    std::shared_ptr<sophus::Se3F64> getCameraPoseFromWorld() const override {
+        return camera_from_world_;
+    }
+
+
+
     MinMax<Eigen::Vector3d> getSceneBoundsInWorld() const override {
         return bounds_;
     }

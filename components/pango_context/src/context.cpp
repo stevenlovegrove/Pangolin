@@ -247,7 +247,12 @@ struct ContextImpl : public Context {
         layout_ = layout;
     }
 
-    LayerGroup layout() const override
+    const LayerGroup& layout() const override
+    {
+        return layout_;
+    }
+
+    LayerGroup& layout() override
     {
         return layout_;
     }

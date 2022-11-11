@@ -53,9 +53,10 @@ struct Context : std::enable_shared_from_this<Context>
     // customized at runtime by the end-user.
     // TODO: provide a method to serialize LayerGroup for easily
     //       saving layouts
-    virtual LayerGroup layout() const = 0;
+    virtual const LayerGroup& layout() const = 0;
+    virtual LayerGroup& layout() = 0;
 
-    // Specify the Panels which will make up the drawing canvas via
+    // Specify the Layers which will make up the drawing canvas via
     // a LayerGroup object - a nested tree of Panels with a layout
     // specification at each node.
     //
@@ -64,8 +65,8 @@ struct Context : std::enable_shared_from_this<Context>
     // runtime, it's changes can be seen through the getLayout()
     // method.
     //
-    // Once detached, Panels will not automatically interact with
-    // the Context. Uers may safely hold onto unused PanelGroups
+    // Once detached, Layers will not automatically interact with
+    // the Context. Users may safely hold onto unused PanelGroups
     // and restore them via setLayout to quickly reconfigure the
     // window.
     virtual void setLayout(const LayerGroup& layout) = 0;
