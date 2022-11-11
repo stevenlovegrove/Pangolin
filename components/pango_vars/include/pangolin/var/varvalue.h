@@ -72,6 +72,11 @@ public:
         return meta;
     }
 
+    const VarMeta& Meta() const
+    {
+        return meta;
+    }
+
     const VarT& Get() const
     {
         return value;

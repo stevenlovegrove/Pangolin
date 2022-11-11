@@ -147,6 +147,11 @@ public:
         return var->Meta();
     }
 
+    const VarMeta& Meta() const
+    {
+        return var->Meta();
+    }
+
     bool GuiChanged()
     {
         return Meta().gui_changed && !(Meta().gui_changed = false);

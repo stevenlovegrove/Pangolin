@@ -175,32 +175,30 @@ inline void GlTexture::Unbind() const
 inline void GlTexture::Reinitialise(GLsizei w, GLsizei h, GLint int_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, const GLvoid* data )
 {
     if(tid!=0) {
-        glDeleteTextures(1,&tid);
+        PANGO_GL(glDeleteTextures(1,&tid));
     }
 
     internal_format = int_format;
     width = w;
     height = h;
 
-    glGenTextures(1,&tid);
+    PANGO_GL(glGenTextures(1,&tid));
     Bind();
 
     // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
     // for call to succeed.
-    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, border, glformat, gltype, data);
+    PANGO_GL(glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, border, glformat, gltype, data));
 
     if(sampling_linear) {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     }else{
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+        PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
     }
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    PANGO_GL_CHECK();
+    PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 }
 
 inline void GlTexture::Upload(

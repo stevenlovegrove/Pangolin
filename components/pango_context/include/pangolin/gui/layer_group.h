@@ -1,10 +1,12 @@
 #pragma once
 
 #include <algorithm>
+#include <pangolin/gui/widget_layer.h>
 #include <pangolin/gui/draw_layer.h>
 #include <pangolin/utils/variant_overload.h>
 #include <pangolin/maths/eigen_scalar_methods.h>
 #include <pangolin/utils/logging.h>
+#include <pangolin/var/var.h>
 
 namespace pangolin
 {
@@ -90,6 +92,16 @@ inline LayerGroup IntoLayerGroup(const sophus::IntensityImage<>& image) {
     return IntoLayerGroup(
         DrawnImage::Create({image})
     );
+}
+
+// Allow Vars to be specified directly for convenience
+template<typename T>
+inline LayerGroup IntoLayerGroup(const Var<T>& var) {
+    // TODO: not obvious what size we should pick...
+    return IntoLayerGroup(WidgetLayer::Create({
+        .name=var.Meta().full_name,
+        .size_hint={Parts{1},Pixels{50}}
+    }));
 }
 
 // Specialize

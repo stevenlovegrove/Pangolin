@@ -1,6 +1,8 @@
 #include <pangolin/context/context.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/string.h>
+
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
@@ -361,6 +363,9 @@ void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
 {
     using namespace pangolin;
 
+    // ignore ones we're not subscibed to.
+    if(!startsWith(event.var->Meta().full_name, name())) return;
+
     if(event.action == VarState::Event::Action::Added) {
         auto var = event.var;
 
@@ -443,7 +448,7 @@ void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
 
         dirty = true;
     }else if(event.action == pangolin::VarState::Event::Action::Removed){
-        // TODO: should remove the widget here
+        PANGO_UNIMPLEMENTED();
     }
 }
 

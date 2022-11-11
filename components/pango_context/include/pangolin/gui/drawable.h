@@ -112,7 +112,7 @@ struct DrawnPrimitives : public Drawable
     struct Params {
         Type element_type = Type::points;
         Eigen::Matrix4d world_from_drawable = Eigen::Matrix4d::Identity();
-        Eigen::Vector4d default_color = {1.0f, 1.0f, 1.0f, 1.0f};
+        Eigen::Vector4d default_color = {1.0f, 0.0f, 0.0f, 1.0f};
         double default_radius = 1.0;
     };
     static Shared<DrawnPrimitives> Create(Params p);

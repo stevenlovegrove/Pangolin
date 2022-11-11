@@ -21,6 +21,7 @@ namespace pangolin
 constexpr GLenum toGlEnum (DrawnPrimitives::Type type) {
     switch(type) {
         case DrawnPrimitives::Type::points: return GL_POINTS;
+        case DrawnPrimitives::Type::lines: return GL_LINES;
         case DrawnPrimitives::Type::line_strip: return GL_LINE_STRIP;
         case DrawnPrimitives::Type::line_loop: return GL_LINE_LOOP;
         case DrawnPrimitives::Type::triangles: return GL_TRIANGLES;
@@ -163,8 +164,10 @@ struct DrawLayerImpl : public DrawLayer {
         return name_;
     }
 
-    void setDefaultImageParams(const DrawnImage& im)
+    bool setDefaultImageParams(const DrawnImage& im)
     {
+        if(im.image->empty()) return false;
+
         const auto imsize = im.image->imageSize();
         const double start_dist = std::max(imsize.width, imsize.height) / 2.0;
 
@@ -192,6 +195,8 @@ struct DrawLayerImpl : public DrawLayer {
                 {double(imsize.width), double(imsize.height), -0.2},
             };
         }
+
+        return true;
     }
 
     void setDefaultPrimitivesParams(const DrawnPrimitives& prim)
@@ -222,7 +227,7 @@ struct DrawLayerImpl : public DrawLayer {
 
         for(auto& obj : objects_) {
             if(DrawnImage* im = dynamic_cast<DrawnImage*>(obj.ptr())) {
-                if(!camera_ || !camera_from_world_) setDefaultImageParams(*im);
+                if( (!camera_ || !camera_from_world_) && !setDefaultImageParams(*im)) continue;
                 PANGO_ENSURE(camera_ && camera_from_world_);
                 render_image_.draw(*im, *camera_, *camera_from_world_, near_far_);
             }else if(DrawnPrimitives* prim = dynamic_cast<DrawnPrimitives*>(obj.ptr())) {
