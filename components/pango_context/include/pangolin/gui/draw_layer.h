@@ -63,9 +63,9 @@ struct DrawLayer : public Layer
         Size size_hint = {Parts{1}, Parts{1}};
 
         // Leave these all as default for smart initialization
-        MinMax<double> near_far = {};
         std::shared_ptr<sophus::CameraModel> camera = nullptr;
         std::shared_ptr<sophus::Se3F64> camera_from_world = nullptr;
+        MinMax<double> near_far = {};
         MinMax<Eigen::Vector3d> camera_limits_in_world = {};
         std::shared_ptr<Handler> handler = Handler::Create({});
 
