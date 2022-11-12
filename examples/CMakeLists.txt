@@ -11,6 +11,7 @@ set(examples
     6.overlay
     7.solids
     8.pixel-perfect
+    9.flex
 )
 
 foreach(example IN LISTS examples)

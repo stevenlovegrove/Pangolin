@@ -18,10 +18,12 @@ struct LayerGroup
 {
     enum class Grouping
     {
-        stacked,    // panes blended over one another
-        tabbed,     // one pane shown at a time, with user selecting current
-        horizontal, // panes share client area horizontally
-        vertical    // panes share client area vertically
+        stacked,    // layers blended over one another
+        tabbed,     // one layer shown at a time, with user selecting current
+        horizontal, // layers share client area horizontally
+        vertical,   // layers share client area vertically
+        flex        // layers are arranged in a dynamic group which fills the
+                    // available space. Requires common aspect for each layer.
     };
 
     LayerGroup() = default;
@@ -51,12 +53,12 @@ struct LayerGroup
     std::shared_ptr<Layer> layer = nullptr;
     size_t selected_tab = 0;
     bool show_ = true;
+    double width_over_height = 1.0;
 
     struct LayoutInfo
     {
         Eigen::Array2i min_pix = {0,0};
         Eigen::Array2d parts = {0.0f, 0.0f};
-        double width_over_height = 0.0;
         MinMax<Eigen::Array2i> region;
     };
 
@@ -66,21 +68,21 @@ struct LayerGroup
 ////////////////////////////////////////////////////////////////////
 // Define Convenience operators for building arrangements
 
-// Trivial implementation of IntoLayerGroup for the group itself
+// Trivial implementation of intoLayerGroup for the group itself
 // Overload this for other types which can be automatically placed into a LayerGroup
-inline LayerGroup IntoLayerGroup(const LayerGroup& group) {
+inline LayerGroup intoLayerGroup(const LayerGroup& group) {
     return group;
 }
 
 // A layer is trivially wrapped into a LayerGroup
-inline LayerGroup IntoLayerGroup(const Shared<Layer>& layer) {
+inline LayerGroup intoLayerGroup(const Shared<Layer>& layer) {
     return {layer};
 }
 
 // Build a DrawLayer for Drawables specified directly.
 // All defaults will be used for the DrawLayer
-inline LayerGroup IntoLayerGroup(const Shared<Drawable>& drawable) {
-    return IntoLayerGroup(
+inline LayerGroup intoLayerGroup(const Shared<Drawable>& drawable) {
+    return intoLayerGroup(
         DrawLayer::Create({
             .objects = {drawable}
         })
@@ -88,17 +90,19 @@ inline LayerGroup IntoLayerGroup(const Shared<Drawable>& drawable) {
 }
 
 // Allow images to be specified directly for convenience
-inline LayerGroup IntoLayerGroup(const sophus::IntensityImage<>& image) {
-    return IntoLayerGroup(
+inline LayerGroup intoLayerGroup(const sophus::IntensityImage<>& image) {
+    auto layer = intoLayerGroup(
         DrawnImage::Create({image})
     );
+    layer.width_over_height = double(image.width()) / image.height();
+    return layer;
 }
 
 // Allow Vars to be specified directly for convenience
 template<typename T>
-inline LayerGroup IntoLayerGroup(const Var<T>& var) {
+inline LayerGroup intoLayerGroup(const Var<T>& var) {
     // TODO: not obvious what size we should pick...
-    return IntoLayerGroup(WidgetLayer::Create({
+    return intoLayerGroup(WidgetLayer::Create({
         .name=var.Meta().full_name,
         .size_hint={Parts{1},Pixels{50}}
     }));
@@ -107,7 +111,7 @@ inline LayerGroup IntoLayerGroup(const Var<T>& var) {
 // Specialize
 template<typename T>
 concept Layoutable = requires (T x) {
-        {IntoLayerGroup(x)} -> SameAs<LayerGroup>;
+        {intoLayerGroup(x)} -> SameAs<LayerGroup>;
         };
 
 namespace detail
@@ -140,7 +144,7 @@ inline LayerGroup join( LayerGroup::Grouping op_type, const LayerGroup& lhs, con
 #define PANGO_PANEL_OPERATOR(op, op_type) \
     template<Layoutable LHS, Layoutable RHS> \
     LayerGroup op(const LHS& lhs, const RHS& rhs) { \
-        return detail::join(op_type, IntoLayerGroup(lhs), IntoLayerGroup(rhs)); \
+        return detail::join(op_type, intoLayerGroup(lhs), intoLayerGroup(rhs)); \
     }
 
 #define PANGO_COMMA ,
@@ -150,6 +154,18 @@ PANGO_PANEL_OPERATOR(operator/, LayerGroup::Grouping::vertical)
 PANGO_PANEL_OPERATOR(operator^, LayerGroup::Grouping::stacked)
 #undef PANGO_PANEL_OPERATOR
 #undef PANGO_COMMA
+
+template<typename T>
+LayerGroup flex(T head)
+{
+    return intoLayerGroup(head);
+}
+
+template<typename T, typename ...TArgs>
+LayerGroup flex(T head, TArgs... args)
+{
+    return detail::join(LayerGroup::Grouping::flex, intoLayerGroup(head), flex(std::forward<TArgs>(args)...));
+}
 
 void computeLayoutConstraints(const LayerGroup& group);
 void computeLayoutRegion(const LayerGroup& group, const MinMax<Eigen::Array2i>& region);

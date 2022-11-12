@@ -3,6 +3,66 @@
 namespace pangolin
 {
 
+struct FlexArrangement
+{
+    constexpr static double row_height = 1.0;
+    double row_width = 0.0;
+    double width_sum = 0.0;
+    size_t num_rows = 0.0;
+    double lowest_col_margin = std::numeric_limits<double>::max();
+
+    double elementArea() const {
+        return width_sum * row_height;
+    }
+
+    double flexArea() const {
+        return row_width * num_rows * row_height;
+    }
+
+    double flexAspect() const {
+        return row_width / double(num_rows * row_height);
+    }
+
+    double efficiency(double target_aspect) const {
+        const double flex_aspect = flexAspect();
+        const double aspect_efficiency = target_aspect >= flex_aspect ?
+            flex_aspect / target_aspect :
+            target_aspect / flex_aspect;
+        const double fill_efficiency = elementArea() / flexArea();
+        return aspect_efficiency * fill_efficiency;
+    }
+};
+
+std::optional<FlexArrangement> getFlexRows(const std::vector<double>& el_width, double row_width)
+{
+    FlexArrangement flex = {
+        .row_width = row_width,
+        .num_rows = 1,
+    };
+
+    double row_total = 0.0;
+
+    for(size_t i=0; i < el_width.size(); ++i) {
+        const double w = el_width[i];
+        flex.width_sum += w;
+
+        if(w > row_width) return getFlexRows(el_width, w);
+
+        const double width_with_el = row_total + w;
+        if(width_with_el <= row_width) {
+            // add to row
+            row_total = width_with_el;
+        }else{
+            // start new row
+            flex.lowest_col_margin = std::min(flex.lowest_col_margin, width_with_el - row_width);
+            ++flex.num_rows;
+            row_total = w;
+        }
+    }
+    return flex;
+}
+
+
 void computeLayoutConstraints(const LayerGroup& group) {
     LayerGroup::LayoutInfo total = {};
 
@@ -31,6 +91,14 @@ void computeLayoutConstraints(const LayerGroup& group) {
                 total.parts[1] += x_info.parts[1];
                 total.min_pix[0] = max(total.min_pix[0], x_info.min_pix[0]);
                 total.parts[0] = max(total.parts[0], x_info.parts[0]);
+                break;
+            case LayerGroup::Grouping::flex:
+                // flex layout is pretty heuristic-ey
+                double part_area = x_info.parts[0] * x_info.parts[1];
+                double part_w = group.width_over_height * part_area;
+                double part_h = part_area / part_w;
+                total.parts[0] += part_w;
+                total.parts[1] += part_h;
                 break;
         }
     }
@@ -111,6 +179,71 @@ void computeLayoutRegion(const LayerGroup& group, const MinMax<Eigen::Array2i>& 
             }
             // TODO: we'll have a couple of pixels left from rounding down
             break;
+        }
+        case LayerGroup::Grouping::flex:
+        {
+            // everything here is in normalized units where h=1 and w = aspect
+
+            const auto region_size = region.range();
+            const double target_aspect = double(region_size[0]) / region_size[1];
+
+            // children widths if they were to maintain aspect and have same
+            // unit height
+            std::vector<double> ws;
+            double total_width = 0.0;
+
+            for(const auto& child : group.children) {
+                const double w = child.width_over_height;
+                ws.push_back(w);
+                total_width += w;
+            }
+
+            double col_break = sqrt(target_aspect * (total_width * 1.0));
+            std::optional<FlexArrangement> best;
+            double best_eff = 0.0;
+
+            // try just a few
+            for(int i=0; i < 4; ++i) {
+                auto maybe_flex = getFlexRows(ws, col_break);
+                if(maybe_flex) {
+                    const double eff = maybe_flex->efficiency(target_aspect);
+                    if(eff > best_eff) {
+                        best_eff = eff;
+                        best = maybe_flex;
+                    }
+
+                    // increment col_break to next one that will make a differenec
+                    if(maybe_flex->lowest_col_margin < col_break) {
+                        col_break += maybe_flex->lowest_col_margin;
+                    }else{
+                        break;
+                    }
+                }
+            }
+
+            PANGO_ENSURE(best);
+            const double flex_aspect = best->flexAspect();
+            const double unit_size_pix = flex_aspect > target_aspect ?
+                region.range().x() / best->row_width :
+                region.range().y() / best->num_rows;
+            const int row_height_pix = int(unit_size_pix);
+
+            int x = region.min()[0];
+            int y = region.min()[1];
+            for(const auto& child : group.children) {
+                const int h = row_height_pix;
+                const int w = int(unit_size_pix * child.width_over_height);
+                if( (x+w) > region.max()[0]) {
+                    x = region.min()[0];
+                    y += h;
+                }
+                const MinMax<Eigen::Array2i> child_region(
+                    Eigen::Array2i(x, y),
+                    Eigen::Array2i(x+w-1, y+h-1)
+                );
+                computeLayoutRegion(child, child_region);
+                x += w;
+            }
         }
     }
 }
