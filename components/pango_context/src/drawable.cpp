@@ -17,9 +17,10 @@ PANGO_CREATE(DrawnImage) {
 PANGO_CREATE(DrawnPrimitives) {
     auto r = Shared<DrawnPrimitives>::make();
     r->element_type = p.element_type;
+    r->world_from_drawable = p.world_from_drawable;
     r->default_color = p.default_color;
     r->default_radius = p.default_radius;
-    r->world_from_drawable = p.world_from_drawable;
+    r->enable_visibility_testing = p.enable_visibility_testing;
     return r;
 }
 

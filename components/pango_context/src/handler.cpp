@@ -76,14 +76,40 @@ sophus::SE3d rotateAbout(
   return point_T_cam.inverse() * rot * point_T_cam * cam_T_world;
 }
 
-sophus::SE3d zoomTowards(
-    const sophus::SE3d& cam_T_world,
+void zoomTowards(
+    sophus::CameraModel& camera,
+    sophus::SE3d& cam_from_world,
+    MinMax<Eigen::Vector3d>& camera_limits_in_world,
     const Eigen::Vector3d& point_in_cam,
     const MinMax<double>& near_far,
     const double zoom_input
 ) {
-  const Eigen::Vector3d vec = zoom_input * point_in_cam;
-  return sophus::SE3d(sophus::SO3d(), vec) * cam_T_world;
+  using namespace sophus;
+  if(camera.isOrtho()) {
+    OrthographicModel& ortho = std::get<OrthographicModel>(camera.modelVariant());
+    static_assert(OrthographicModel::kNumParams == 4);
+    const double factor = 1.0 + zoom_input;
+    auto ortho_params = ortho.params();
+    double scale = ortho_params[0] * factor;
+    if(scale > 1.0) scale = 1.0;
+    ortho_params[0] = scale;
+    ortho_params[1] = scale;
+    ortho.setParams(ortho_params);
+
+    if(!camera_limits_in_world.empty()) {
+      // Update so we stay in original camera image size
+      const Eigen::Vector2d orig(ortho.imageSize().width, ortho.imageSize().height);
+      const Eigen::Vector2d diff = (orig - scale*orig);
+      const double offset = (scale - 1.0)/2.0;
+
+      camera_limits_in_world = MinMax<Eigen::Vector3d>(
+        {offset, offset, 0.0}, {offset+diff[0], offset+diff[1], 0.0}
+      );
+    }
+  }else{
+    const Eigen::Vector3d vec = zoom_input * point_in_cam;
+    cam_from_world = sophus::SE3d(sophus::SO3d(), vec) * cam_from_world;
+  }
 }
 
 
@@ -131,6 +157,7 @@ class HandlerImpl : public Handler {
         PANGO_CHECK(maybe_depth_sample->depth_kind == DepthSampler::DepthKind::zaxis);
         if(maybe_depth_sample->min_max.min() < near_far.max() * 0.99) {
           zdepth_cam = maybe_depth_sample->min_max.min();
+          last_zcam_ = zdepth_cam;
         }
       }
     }
@@ -148,11 +175,10 @@ class HandlerImpl : public Handler {
           // camera_from_world = orientPointToPoint(*down_state, state);
           camera_from_world = translatePointToPoint(*down_state, state);
         }
-        // fmt::print("img: {}, zdepth_cam: {}\n", pix_img.transpose(), zdepth_cam );
     },
     [&](const Interactive::ScrollEvent& arg) {
         double zoom_input = std::clamp(-arg.pan[1]/200.0, -1.0, 1.0);
-        camera_from_world = zoomTowards(camera_from_world, p_cam, near_far, zoom_input);
+        zoomTowards(camera, camera_from_world, camera_limits_in_world, p_cam, near_far, zoom_input);
         // rot_center_in_world = p_world;
         //   camera_from_world = rotateAbout(
         //     camera_from_world, *rot_center_in_world,  Eigen::Vector3d(0,-1,0),

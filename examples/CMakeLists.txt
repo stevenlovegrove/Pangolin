@@ -10,6 +10,7 @@ set(examples
     5.video-seek
     6.overlay
     7.solids
+    8.pixel-perfect
 )
 
 foreach(example IN LISTS examples)

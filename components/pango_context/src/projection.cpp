@@ -116,12 +116,12 @@ Eigen::Matrix<double,4,4> projectionClipFromOrtho(
     ImageXy image_convention,
     ImageIndexing image_indexing
 ) {
-    auto m = Eigen::Matrix<double,4,4>::Zero().eval();
+    Eigen::Matrix4d m = Eigen::Matrix4d::Zero();
 
     double l = extent.min().x();
     double r = extent.max().x();
-    double b = extent.min().y(); // assuming 0 is bottom
-    double t = extent.max().y(); // assuming 0 is bottom
+    double b = extent.max().y(); // assuming 0 is top
+    double t = extent.min().y(); // assuming 0 is top
     const double n = near_far_in_world_units.min();
     const double f = near_far_in_world_units.max();
 
@@ -134,7 +134,7 @@ Eigen::Matrix<double,4,4> projectionClipFromOrtho(
         l -= 0.5; r -= 0.5;
         b -= 0.5; t -= 0.5;
     }else if(image_indexing != ImageIndexing::pixel_continuous) {
-        PANGO_UNIMPLEMENTED();
+        // nothing to do.
     }
 
     m(0, 0) = 2.0 / (r-l);

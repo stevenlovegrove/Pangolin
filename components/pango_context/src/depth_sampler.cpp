@@ -40,7 +40,7 @@ public:
      [&](const Image<float>& image){
         image.visit([&](float gl_z){
           float real_z = realDepthFromGl(gl_z, near_far.min(), near_far.max());
-          if(std::isfinite(real_z)) {
+          if(near_far.min() < real_z && real_z < near_far.max()) {
             sample.min_max.extend(real_z);
           }
         });

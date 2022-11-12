@@ -190,7 +190,7 @@ void GlWidgetLayer::renderIntoRegion(const Context& context, const RenderParams&
         .translated({-0.5, -(0.5 + scroll_offset) });
 
     T_cm = projectionClipFromOrtho(
-        region, {-1.0, 1.0}, ImageXy::right_up,
+        region, {-1.0, 1.0}, ImageXy::right_down,
         ImageIndexing::pixel_centered
         ).cast<float>();
 

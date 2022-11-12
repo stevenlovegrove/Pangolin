@@ -30,6 +30,66 @@ constexpr GLenum toGlEnum (DrawnPrimitives::Type type) {
     }
 }
 
+Eigen::Matrix4d linearClipFromCamera(const sophus::CameraModel& camera, MinMax<double> near_far)
+{
+    using namespace sophus;
+
+    Eigen::Matrix4d proj = Eigen::Matrix4d::Identity();
+
+    std::visit(overload{
+        [&](const Z1ProjCameraModel& cam){
+            if(cam.distortionType() != sophus::Z1ProjDistortionType::pinhole) {
+                PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
+            }
+            proj = projectionClipFromCamera(
+                cam.imageSize(), cam.focalLength(),
+                cam.principalPoint(), near_far
+            );
+        },
+        [&](const OrthographicModel& cam){
+            const MinMax<Eigen::Vector2d> extent(
+                Eigen::Vector2d(cam.left(), cam.top()),
+                Eigen::Vector2d(cam.right(), cam.bottom())
+            );
+            proj = projectionClipFromOrtho(
+                extent, near_far,
+                ImageXy::right_down,
+                // already specified correctly in OrthographicModel's coords
+                ImageIndexing::pixel_continuous
+            );
+        },
+        [](const auto&){
+            PANGO_UNIMPLEMENTED();
+        }
+    }, camera.modelVariant());
+
+    return proj;
+}
+
+Eigen::Matrix3d linearCameraFromImage(const sophus::CameraModel& camera)
+{
+    using namespace sophus;
+
+    Eigen::Matrix3d unproj = Eigen::Matrix3d::Identity();
+
+    std::visit(overload{
+        [&](const Z1ProjCameraModel& cam){
+            if(cam.distortionType() != sophus::Z1ProjDistortionType::pinhole) {
+                PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
+            }
+            unproj = invProjectionCameraFromImage(cam.focalLength(), cam.principalPoint());
+        },
+        [&](const OrthographicModel& cam){
+            PANGO_UNIMPLEMENTED();
+        },
+        [](const auto&){
+            PANGO_UNIMPLEMENTED();
+        }
+    }, camera.modelVariant());
+
+    return unproj;
+}
+
 struct DrawnPrimitivesProgram
 {
     void draw(
@@ -41,13 +101,10 @@ struct DrawnPrimitivesProgram
         if(!primitives.vertices->empty()) {
             auto bind_prog = prog->bind();
             auto bind_vao = vao.bind();
-            if(camera.distortionType() != sophus::CameraDistortionType::pinhole) {
-                PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
-            }
-            u_intrinsics = projectionClipFromCamera(
-                camera.imageSize(), camera.focalLength(),
-                camera.principalPoint(), near_far
-            ).cast<float>();
+            auto enable_depth = (primitives.enable_visibility_testing) ?
+                ScopedGlDisable::noOp() : ScopedGlDisable(GL_DEPTH_TEST);
+
+            u_intrinsics = linearClipFromCamera(camera, near_far).cast<float>();
             u_cam_from_world = (cam_from_world.matrix() * primitives.world_from_drawable).cast<float>();
             u_color = primitives.default_color.cast<float>();
             vao.addVertexAttrib(0, *primitives.vertices);
@@ -68,6 +125,12 @@ private:
 
 struct DrawnImageProgram
 {
+    // This program renders an image on the z=0 plane in a discrete pixel
+    // convention such that x=0,y=0 is the center of the top-left pixel.
+    // As such the vertex extremes for the texture map from (-0.5,-0.5) to
+    // (w-0.5,h-0.5).
+    // TODO: Add a flag to take convention as configuration.
+
     void draw(
         const DrawnImage& drawn_image,
         const sophus::CameraModel& camera,
@@ -83,11 +146,7 @@ struct DrawnImageProgram
         auto bind_vao = vao.bind();
 
         u_image_size = Eigen::Vector2f(camera.imageSize().width, camera.imageSize().height);
-        // TODO: put in ortho matrix. this is a matrix for GL image convention.
-        u_intrinsics = projectionClipFromCamera(
-            camera.imageSize(), camera.focalLength(),
-            camera.principalPoint() + Eigen::Vector2d(0.5,0.5), near_far
-        ).cast<float>();
+        u_intrinsics = linearClipFromCamera(camera, near_far).cast<float>();
         u_cam_from_world = cam_from_world.cast<float>().matrix();
 
         // TODO: load from DrawnImage param if specified.
@@ -123,7 +182,7 @@ struct DrawnSolidsProgram
         auto bind_vao = vao.bind();
 
         u_image_size = Eigen::Vector2f(camera.imageSize().width, camera.imageSize().height);
-        u_kinv = invProjectionCameraFromImage(camera.focalLength(), camera.principalPoint()).cast<float>();
+        u_kinv = linearCameraFromImage(camera).cast<float>();
         u_world_from_cam = cam_from_world.inverse().cast<float>().matrix();
         u_znear_zfar = Eigen::Vector2f(near_far.min(), near_far.max());
 
@@ -170,30 +229,24 @@ struct DrawLayerImpl : public DrawLayer {
         if(im.image->empty()) return false;
 
         const auto imsize = im.image->imageSize();
-        const double start_dist = std::max(imsize.width, imsize.height) / 2.0;
 
         if(!camera_) {
-            camera_ = Shared<sophus::CameraModel>::make(
-                sophus::createDefaultPinholeModel(imsize)
-            );
+            auto ortho = sophus::OrthographicModel(imsize, {1.0,1.0}, {0.0,0.0} );
+            camera_ = Shared<sophus::CameraModel>::make(ortho);
         }
 
         if(!camera_from_world_) {
-            camera_from_world_ = Shared<sophus::Se3F64>::make(
-                cameraLookatFromWorld(
-                    {imsize.width/2.0, imsize.height/2.0, -start_dist},
-                    {imsize.width/2.0, imsize.height/2.0, 0.0} )
-            );
+            camera_from_world_ = Shared<sophus::Se3F64>::make();
         }
 
         if(near_far_.empty()) {
-            near_far_ = MinMax<double>(0.1, 100.0*start_dist);
+            near_far_ = MinMax<double>(-1.0, 1.0);
         }
 
         if(camera_limits_in_world_.empty()) {
             camera_limits_in_world_ = {
-                {0.0, 0.0, -start_dist},
-                {double(imsize.width), double(imsize.height), -0.2},
+                {0.0, 0.0, 0.0},
+                {0.0, 0.0, 0.0},
             };
         }
 
@@ -223,8 +276,6 @@ struct DrawLayerImpl : public DrawLayer {
     void renderIntoRegion(const Context& c, const RenderParams& p) override {
         ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
         c.setViewport(p.region);
-
-        glClear(GL_DEPTH_BUFFER_BIT);
 
         for(auto& obj : objects_) {
             if(DrawnImage* im = dynamic_cast<DrawnImage*>(obj.ptr())) {

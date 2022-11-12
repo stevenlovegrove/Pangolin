@@ -10,8 +10,9 @@ namespace pangolin
 // of current state.
 struct [[nodiscard]] ScopedGlEnable
 {
-    ScopedGlEnable(GLenum cap) : cap_(cap) { glEnable(cap_); }
-    ~ScopedGlEnable() { glDisable(cap_); }
+    static ScopedGlEnable noOp() {return ScopedGlEnable(0);}
+    ScopedGlEnable(GLenum cap) : cap_(cap) { if(cap_) glEnable(cap_); }
+    ~ScopedGlEnable() { if(cap_) glDisable(cap_); }
     GLenum cap_;
 };
 
@@ -19,8 +20,9 @@ struct [[nodiscard]] ScopedGlEnable
 // of current state.
 struct [[nodiscard]] ScopedGlDisable
 {
-    ScopedGlDisable(GLenum cap) : cap_(cap) { glDisable(cap_); }
-    ~ScopedGlDisable() { glEnable(cap_); }
+    static ScopedGlDisable noOp() {return ScopedGlDisable(0);}
+    ScopedGlDisable(GLenum cap) : cap_(cap) { if(cap_) glDisable(cap_); }
+    ~ScopedGlDisable() { if(cap_) glEnable(cap_); }
     GLenum cap_;
 };
 
