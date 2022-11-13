@@ -85,25 +85,25 @@ void zoomTowards(
     const double zoom_input
 ) {
   using namespace sophus;
-  if(camera.isOrtho()) {
+  if(camera.distortionType() == CameraDistortionType::orthographic) {
     OrthographicModel& ortho = std::get<OrthographicModel>(camera.modelVariant());
     static_assert(OrthographicModel::kNumParams == 4);
-    const double factor = 1.0 + zoom_input;
-    auto ortho_params = ortho.params();
-    double scale = ortho_params[0] * factor;
-    if(scale > 1.0) scale = 1.0;
-    ortho_params[0] = scale;
-    ortho_params[1] = scale;
-    ortho.setParams(ortho_params);
+    double factor = 1.0 - zoom_input;
+    if(ortho.params()[0] * factor < 1.0) factor = 1.0;
+    auto scale_param = ortho.params().head<2>();
+    scale_param *= factor;
+
+    // adjust translation so that point in camera coordinates stays under cursor.
+    const Eigen::Vector2d xy = point_in_cam.head<2>() * (1.0/factor - 1.0);
+    cam_from_world = sophus::SE3d(sophus::SO3d(), Eigen::Vector3d(xy[0], xy[1], 0.0)) * cam_from_world;
 
     if(!camera_limits_in_world.empty()) {
-      // Update so we stay in original camera image size
       const Eigen::Vector2d orig(ortho.imageSize().width, ortho.imageSize().height);
-      const Eigen::Vector2d diff = (orig - scale*orig);
-      const double offset = (scale - 1.0)/2.0;
+      const Eigen::Vector2d diff = orig.array() - orig.array()/scale_param.array();
+      const Eigen::Vector3d offset = -(ortho.camUnproj(Eigen::Vector2d(-0.5,-0.5), 0.0) + Eigen::Vector3d(0.5,0.5,0.0));
 
       camera_limits_in_world = MinMax<Eigen::Vector3d>(
-        {offset, offset, 0.0}, {offset+diff[0], offset+diff[1], 0.0}
+        offset, {offset[0]+diff[0], offset[1]+diff[1], offset[2]}
       );
     }
   }else{
@@ -171,7 +171,10 @@ class HandlerImpl : public Handler {
         if (arg.action == PointerAction::down) {
           down_state = state;
         }else if(arg.action == PointerAction::drag) {
-          PANGO_ASSERT(down_state);
+          if(!down_state) {
+            PANGO_WARN("Unexpected");
+            return;
+          }
           // camera_from_world = orientPointToPoint(*down_state, state);
           camera_from_world = translatePointToPoint(*down_state, state);
         }

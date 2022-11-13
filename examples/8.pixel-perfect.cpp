@@ -26,7 +26,7 @@ int main( int argc, char** argv )
     const int h = 5;
     const int win_scale = 100;
     auto context = Context::Create({
-        .title="Pangolin Video",
+        .title="Pixel-perfect overlay",
         .window_size = {win_scale*w, win_scale*h},
     } );
 

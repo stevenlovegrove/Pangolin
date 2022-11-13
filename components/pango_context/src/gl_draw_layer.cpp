@@ -10,10 +10,13 @@
 #include <pangolin/maths/camera_look_at.h>
 #include <pangolin/maths/projection.h>
 #include <pangolin/var/var.h>
+#include <sophus/sensor/orthographic.h>
 
 #include "gl_utils.h"
 
 #include <unordered_map>
+
+using namespace sophus;
 
 namespace pangolin
 {
@@ -34,60 +37,33 @@ Eigen::Matrix4d linearClipFromCamera(const sophus::CameraModel& camera, MinMax<d
 {
     using namespace sophus;
 
-    Eigen::Matrix4d proj = Eigen::Matrix4d::Identity();
-
-    std::visit(overload{
-        [&](const Z1ProjCameraModel& cam){
-            if(cam.distortionType() != sophus::Z1ProjDistortionType::pinhole) {
-                PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
-            }
-            proj = projectionClipFromCamera(
-                cam.imageSize(), cam.focalLength(),
-                cam.principalPoint(), near_far
-            );
-        },
+    return std::visit(overload{
         [&](const OrthographicModel& cam){
-            const MinMax<Eigen::Vector2d> extent(
-                Eigen::Vector2d(cam.left(), cam.top()),
-                Eigen::Vector2d(cam.right(), cam.bottom())
-            );
-            proj = projectionClipFromOrtho(
+            const auto bb = boundingBoxFromOrthoCam(cam);
+            const MinMax<Eigen::Vector2d> extent(bb.min(),bb.max());
+
+            return projectionClipFromOrtho(
                 extent, near_far,
                 ImageXy::right_down,
                 // already specified correctly in OrthographicModel's coords
                 ImageIndexing::pixel_continuous
             );
         },
-        [](const auto&){
-            PANGO_UNIMPLEMENTED();
+        [&](const auto& cam){
+            if(camera.distortionType() != sophus::CameraDistortionType::pinhole) {
+                PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
+            }
+            return projectionClipFromCamera(
+                cam.imageSize(), cam.focalLength(),
+                cam.principalPoint(), near_far
+            );
         }
     }, camera.modelVariant());
-
-    return proj;
 }
 
 Eigen::Matrix3d linearCameraFromImage(const sophus::CameraModel& camera)
 {
-    using namespace sophus;
-
-    Eigen::Matrix3d unproj = Eigen::Matrix3d::Identity();
-
-    std::visit(overload{
-        [&](const Z1ProjCameraModel& cam){
-            if(cam.distortionType() != sophus::Z1ProjDistortionType::pinhole) {
-                PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
-            }
-            unproj = invProjectionCameraFromImage(cam.focalLength(), cam.principalPoint());
-        },
-        [&](const OrthographicModel& cam){
-            PANGO_UNIMPLEMENTED();
-        },
-        [](const auto&){
-            PANGO_UNIMPLEMENTED();
-        }
-    }, camera.modelVariant());
-
-    return unproj;
+    return invProjectionCameraFromImage(camera.focalLength(), camera.principalPoint());
 }
 
 struct DrawnPrimitivesProgram
@@ -231,12 +207,12 @@ struct DrawLayerImpl : public DrawLayer {
         const auto imsize = im.image->imageSize();
 
         if(!camera_) {
-            auto ortho = sophus::OrthographicModel(imsize, {1.0,1.0}, {0.0,0.0} );
-            camera_ = Shared<sophus::CameraModel>::make(ortho);
+            auto ortho = CameraModel(imsize, CameraDistortionType::orthographic, Eigen::Vector4d{1.0,1.0, 0.0,0.0} );
+            camera_ = Shared<CameraModel>::make(ortho);
         }
 
         if(!camera_from_world_) {
-            camera_from_world_ = Shared<sophus::Se3F64>::make();
+            camera_from_world_ = Shared<Se3F64>::make();
         }
 
         if(near_far_.empty()) {

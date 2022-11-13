@@ -40,6 +40,18 @@ int main( int argc, char** argv )
         testImage(w-1, h),
         testImage(w+3, h),
         testImage(w+2, h),
+        testImage(w-1, h),
+        testImage(w+3, h),
+        testImage(w+2, h),
+        testImage(w-1, h),
+        testImage(w+3, h),
+        testImage(w+2, h),
+        testImage(w-1, h),
+        testImage(w+3, h),
+        testImage(w+2, h),
+        testImage(w-1, h),
+        testImage(w+3, h),
+        testImage(w+2, h),
         testImage(w, h)
     );
 
