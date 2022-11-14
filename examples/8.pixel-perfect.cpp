@@ -44,7 +44,7 @@ int main( int argc, char** argv )
     cross_top_left->vertices->update(std::vector<Eigen::Vector3f>{
         {-0.5f, -0.5f, 0.0f}, {+0.5f, +0.5f, 0.0f},
         {-0.5f, +0.5f, 0.0f}, {+0.5f, -0.5f, 0.0f}
-    });
+    }, {});
 
     // draw a black cross centered at (w-1,h-1), which should be the center of
     // the bottom-right pixel of the image. The color of the pixel should be
@@ -57,7 +57,7 @@ int main( int argc, char** argv )
     cross_bottom_right->vertices->update(std::vector<Eigen::Vector3f>{
         {w-1.0f-0.5f, h-1.0f-0.5f, 0.0f}, {w-1.0f+0.5f, h-1.0f+0.5f, 0.0f},
         {w-1.0f-0.5f, h-1.0f+0.5f, 0.0f}, {w-1.0f+0.5f, h-1.0f-0.5f, 0.0f}
-    });
+    }, {});
 
     // Place the elements in one DrawnLayer object which will share the same
     // camera matrices. The object will 'guess' an orthographic projection

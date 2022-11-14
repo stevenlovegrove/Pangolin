@@ -52,7 +52,7 @@ int main( int /*argc*/, char** /*argv*/ )
             {-2.0f, -2.0f, 0.0f},
             { 2.0f, -2.0f, 0.0f },
             { 0.0f,  2.0f, 0.0f }
-        });
+        }, {});
 
     // TODO: Pangolin Vars will probably get modernized soon...
     Var<double> angle_theta("ui.theta", 0.0, -sophus::kPi<double>, +sophus::kPi<double>);

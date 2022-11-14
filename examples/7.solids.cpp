@@ -23,26 +23,24 @@ int main( int argc, char** argv )
     auto scene = DrawLayer::Create({
         .camera_from_world = std::make_shared<sophus::Se3F64>(
             cameraLookatFromWorld({0.0,0.0,1.0}, {10.0,0.0,0.0}, AxisDirection2::positive_z)
-        )
+        ),
+        .near_far = {0.01, 1000.0}
     });
     auto solids = DrawnSolids::Create({});
     auto prims = DrawnPrimitives::Create({
-        .element_type = DrawnPrimitives::Type::axes
+        .element_type = DrawnPrimitives::Type::axes,
+        .default_radius = 0.1
     });
 
     static_assert(sizeof(sophus::SE3f) == 32);
-    auto T_vert_draw = std::make_shared<std::vector<sophus::SE3f>>();
-    T_vert_draw->push_back(sophus::SE3f());
+    std::vector<sophus::SE3f> T_vert_draw;
+    T_vert_draw.emplace_back();
 
     for(int i=0; i < 100; ++i) {
         const sophus::SE3f delta(sophus::SO3f::rotX(0.1)*sophus::SO3f::rotY(0.05), Eigen::Vector3f(0.1, 0.2f, 0.0f));
-        T_vert_draw->push_back( T_vert_draw->back() * delta );
+        T_vert_draw.push_back( T_vert_draw.back() * delta );
     }
-    prims->vertices->update({
-        .data = std::shared_ptr<void>(T_vert_draw, T_vert_draw->data()),
-        .data_type = {NumberType::floating_point, 8, 4},
-        .num_elements = T_vert_draw->size()
-    });
+    prims->vertices->update(T_vert_draw, {});
 
     scene->add(solids, prims);
 

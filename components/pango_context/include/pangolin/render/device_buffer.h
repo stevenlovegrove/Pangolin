@@ -3,6 +3,7 @@
 #include <pangolin/utils/shared.h>
 #include <pangolin/gl/scoped_bind.h>
 #include <sophus/image/runtime_image.h>
+#include <pangolin/render/extra_pixel_traits.h>
 
 namespace pangolin
 {
@@ -27,37 +28,32 @@ struct DeviceBuffer
     virtual sophus::RuntimePixelType dataType() const = 0;
     virtual size_t numElements() const = 0;
 
+    struct UpdateParams {
+        size_t dest_element = 0;
+        size_t num_reserve_elements = 0;
+    };
+
     struct Data {
         std::shared_ptr<void> data;
         sophus::RuntimePixelType data_type;
         size_t num_elements = 0;
-        size_t dest_element = 0;
+        UpdateParams params = {};
     };
     virtual void update(const Data& data) = 0;
 
-    template<typename T>
-    void update(const std::vector<T>& data, size_t dest_element = 0) {
-        // Copy
-        auto shared_data = std::make_shared<std::vector<T>>(data);
+    // Use with any contiguous, movable or copyable container with a
+    // data() and size() method.
+    template<typename Container>
+    void update(Container&& data, UpdateParams params) {
+        using C = std::remove_cvref_t<Container>;
+        using T = std::remove_pointer_t<decltype(data.data())>;
+        auto shared_data = std::make_shared<C>(std::forward<Container>(data));
 
         update({
             .data = std::shared_ptr<void>(shared_data, shared_data->data()),
             .data_type = sophus::RuntimePixelType::fromTemplate<T>(),
             .num_elements = shared_data->size(),
-            .dest_element = dest_element,
-        });
-    }
-
-    template<typename T>
-    void update(std::vector<T>&& data, size_t dest_element = 0) {
-        // Move
-        auto shared_data = std::make_shared<std::vector<T>>(std::move(data));
-
-        update({
-            .data = std::shared_ptr<void>(shared_data, shared_data->data()),
-            .data_type = sophus::RuntimePixelType::fromTemplate<T>(),
-            .num_elements = shared_data->size(),
-            .dest_element = dest_element,
+            .params = params,
         });
     }
 

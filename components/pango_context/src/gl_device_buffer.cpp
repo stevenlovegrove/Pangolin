@@ -31,7 +31,7 @@ struct DeviceGlBuffer : public DeviceBuffer
 {
     DeviceGlBuffer(GLenum buffer_type, GLenum gluse)
         : buffer_type_(buffer_type), gluse_(gluse),
-          num_elements_(0), gl_id_(0)
+          num_elements_(0), num_elements_capacity_(0), gl_id_(0)
     {
     }
 
@@ -97,19 +97,24 @@ struct DeviceGlBuffer : public DeviceBuffer
 
         if(gl_id_ == 0 /* || incompatible...  */) {
             data_type_ = u.data_type;
-            num_elements_ = u.dest_element + u.num_elements;
+            num_elements_ = u.params.dest_element + u.num_elements;
+            num_elements_capacity_ = std::max(num_elements_, u.params.num_reserve_elements);
 
+            const size_t capacity_bytes = num_elements_capacity_ * elementSizeBytes();
             glGenBuffers(1, &gl_id_);
             glBindBuffer(buffer_type_, gl_id_);
-            glBufferData(buffer_type_, sizeBytes(), nullptr, gluse_);
+            glBufferData(buffer_type_, capacity_bytes, nullptr, gluse_);
         }else{
+            const size_t needed_size = u.params.dest_element + u.num_elements;
             PANGO_CHECK(u.data_type == data_type_, "Attempting to upload {} format for {} texture.", u.data_type, data_type_);
-            PANGO_CHECK(u.dest_element + u.num_elements <= num_elements_ );
+            PANGO_CHECK(needed_size <= num_elements_capacity_ );
+            // Grow if within capacity if needed.
+            num_elements_ = std::max(num_elements_, needed_size);
             glBindBuffer(buffer_type_, gl_id_);
         }
 
         glBufferSubData(
-            buffer_type_, elementSizeBytes() * u.dest_element,
+            buffer_type_, elementSizeBytes() * u.params.dest_element,
             elementSizeBytes() * u.num_elements, u.data.get()
         );
 
@@ -131,7 +136,8 @@ struct DeviceGlBuffer : public DeviceBuffer
     mutable std::recursive_mutex buffer_mutex_;
     mutable std::deque<Data> updates_;
     mutable RuntimePixelType data_type_;
-    mutable size_t num_elements_ ;
+    mutable size_t num_elements_;
+    mutable size_t num_elements_capacity_;
     mutable GLuint gl_id_;
 
 };

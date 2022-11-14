@@ -20,31 +20,39 @@ layout (line_strip, max_vertices = 5) out;
 
 in vec4 center_world[];
 in vec4 quaternion[];
+out vec4 vert_color;
 
 uniform mat4 proj;
+uniform vec4 color;
+uniform float length;
 
 void main() {
     mat3 R = mat3FromQuaternion(quaternion[0]);
     vec4 center = proj * vec4(center_world[0].xyz, 1.0);
 
-    gl_Position = proj * vec4(center_world[0].xyz + R[0], 1.0);
+    vert_color = vec4(1.0, 0.0, 0.0, 1.0);
+    gl_Position = proj * vec4(center_world[0].xyz + length*R[0], 1.0);
     EmitVertex();
+    vert_color = color;
     gl_Position = center;
     EmitVertex();
-    gl_Position = proj * vec4(center_world[0].xyz + R[1], 1.0);
+    vert_color = vec4(0.0, 1.0, 0.0, 1.0);
+    gl_Position = proj * vec4(center_world[0].xyz + length*R[1], 1.0);
     EmitVertex();
+    vert_color = color;
     gl_Position = center;
     EmitVertex();
-    gl_Position = proj * vec4(center_world[0].xyz + R[2], 1.0);
+    vert_color = vec4(0.0, 0.0, 1.0, 1.0);
+    gl_Position = proj * vec4(center_world[0].xyz + length*R[2], 1.0);
     EmitVertex();
 }
 
 @start fragment
 #version 330 core
 
-uniform vec4 color;
+in vec4 vert_color;
 out vec4 FragColor;
 
 void main() {
-    FragColor = vec4(color);
+    FragColor = vec4(vert_color);
 }

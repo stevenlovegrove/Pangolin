@@ -212,6 +212,13 @@ struct ContextImpl : public Context {
     }
 
     void keyboardEvent(KeyboardEvent e) {
+        if(e.key == 27) { // escape
+            should_run = false;
+        }else if(e.key == 9) {  // tab
+            window_->ShowFullscreen(TrueFalseToggle::Toggle);
+        }else{
+            PANGO_INFO("Unprocessed keypress, {}", int(e.key) );
+        }
     }
 
     enum class ActiveLayerAction
@@ -278,7 +285,7 @@ struct ContextImpl : public Context {
     }
 
     void loop(std::function<bool(void)> loop_function) override {
-        bool should_run = true;
+        should_run = true;
 
         auto close_connection = window()->CloseSignal.connect(
             [&](){ should_run = false; }
@@ -345,6 +352,7 @@ private:
     Shared<Window> window_;
     LayerGroup layout_;
     std::shared_ptr<Layer> active_layer_;
+    std::atomic<bool> should_run;
 };
 
 PANGO_CREATE(Context) {

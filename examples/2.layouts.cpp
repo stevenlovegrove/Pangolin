@@ -65,7 +65,7 @@ int main( int /*argc*/, char** /*argv*/ )
             {-1.0f, -1.0f, 0.0f},
             { 1.0f, -1.0f, 0.0f },
             { 0.0f,  1.0f, 0.0f }
-        });
+        }, {});
 
     // Add the images and the triangle to the window.
     // Pangolin automatically adds some appropriate 'Layers' to
