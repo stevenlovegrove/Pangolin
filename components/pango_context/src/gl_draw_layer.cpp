@@ -6,13 +6,13 @@
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
 #include <pangolin/gl/gl.h>
-#include <pangolin/utils/variant_overload.h>
-#include <pangolin/maths/camera_look_at.h>
-#include <pangolin/maths/projection.h>
 #include <pangolin/var/var.h>
-#include <sophus/sensor/orthographic.h>
 
+#include "camera_utils.h"
 #include "gl_utils.h"
+#include "gl_drawn_image.h"
+#include "gl_drawn_primitives.h"
+#include "gl_drawn_solids.h"
 
 #include <unordered_map>
 
@@ -20,161 +20,6 @@ using namespace sophus;
 
 namespace pangolin
 {
-
-constexpr GLenum toGlEnum (DrawnPrimitives::Type type) {
-    switch(type) {
-        case DrawnPrimitives::Type::points: return GL_POINTS;
-        case DrawnPrimitives::Type::lines: return GL_LINES;
-        case DrawnPrimitives::Type::line_strip: return GL_LINE_STRIP;
-        case DrawnPrimitives::Type::line_loop: return GL_LINE_LOOP;
-        case DrawnPrimitives::Type::triangles: return GL_TRIANGLES;
-        case DrawnPrimitives::Type::triangle_strip: return GL_TRIANGLE_STRIP;
-        default: return 0;
-    }
-}
-
-Eigen::Matrix4d linearClipFromCamera(const sophus::CameraModel& camera, MinMax<double> near_far)
-{
-    using namespace sophus;
-
-    return std::visit(overload{
-        [&](const OrthographicModel& cam){
-            const auto bb = boundingBoxFromOrthoCam(cam);
-            const MinMax<Eigen::Vector2d> extent(bb.min(),bb.max());
-
-            return projectionClipFromOrtho(
-                extent, near_far,
-                ImageXy::right_down,
-                // already specified correctly in OrthographicModel's coords
-                ImageIndexing::pixel_continuous
-            );
-        },
-        [&](const auto& cam){
-            if(camera.distortionType() != sophus::CameraDistortionType::pinhole) {
-                PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
-            }
-            return projectionClipFromCamera(
-                cam.imageSize(), cam.focalLength(),
-                cam.principalPoint(), near_far
-            );
-        }
-    }, camera.modelVariant());
-}
-
-Eigen::Matrix3d linearCameraFromImage(const sophus::CameraModel& camera)
-{
-    return invProjectionCameraFromImage(camera.focalLength(), camera.principalPoint());
-}
-
-struct DrawnPrimitivesProgram
-{
-    void draw(
-        const DrawnPrimitives& primitives,
-        const sophus::CameraModel& camera,
-        const sophus::Se3F64& cam_from_world,
-        MinMax<double> near_far
-    ) {
-        if(!primitives.vertices->empty()) {
-            auto bind_prog = prog->bind();
-            auto bind_vao = vao.bind();
-            auto enable_depth = (primitives.enable_visibility_testing) ?
-                ScopedGlDisable::noOp() : ScopedGlDisable(GL_DEPTH_TEST);
-
-            u_intrinsics = linearClipFromCamera(camera, near_far).cast<float>();
-            u_cam_from_world = (cam_from_world.matrix() * primitives.world_from_drawable).cast<float>();
-            u_color = primitives.default_color.cast<float>();
-            vao.addVertexAttrib(0, *primitives.vertices);
-            PANGO_GL(glPointSize(primitives.default_radius*2.0f));
-            PANGO_GL(glDrawArrays(toGlEnum(primitives.element_type), 0, primitives.vertices->numElements()));
-        }
-    }
-
-private:
-    const Shared<GlSlProgram> prog = GlSlProgram::Create({
-        .sources = {{ .origin="/components/pango_opengl/shaders/main_primitives_points.glsl" }}
-    });
-    GlVertexArrayObject vao = {};
-    const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
-    const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
-    const GlUniform<Eigen::Vector4f> u_color = {"color"};
-};
-
-struct DrawnImageProgram
-{
-    // This program renders an image on the z=0 plane in a discrete pixel
-    // convention such that x=0,y=0 is the center of the top-left pixel.
-    // As such the vertex extremes for the texture map from (-0.5,-0.5) to
-    // (w-0.5,h-0.5).
-    // TODO: Add a flag to take convention as configuration.
-
-    void draw(
-        const DrawnImage& drawn_image,
-        const sophus::CameraModel& camera,
-        const sophus::Se3F64& cam_from_world,
-        MinMax<double> near_far
-    ) {
-        // ensure we're synced
-        drawn_image.image->sync();
-
-        PANGO_GL(glActiveTexture(GL_TEXTURE0));
-        auto bind_im = drawn_image.image->bind();
-        auto bind_prog = prog->bind();
-        auto bind_vao = vao.bind();
-
-        u_image_size = Eigen::Vector2f(camera.imageSize().width, camera.imageSize().height);
-        u_intrinsics = linearClipFromCamera(camera, near_far).cast<float>();
-        u_cam_from_world = cam_from_world.cast<float>().matrix();
-
-        // TODO: load from DrawnImage param if specified.
-        if(drawn_image.image->pixelType().num_channels == 1) {
-            u_color_transform = (Eigen::Matrix4f() << 1,0,0,0,  1,0,0,0,  1,0,0,0, 0,0,0,1).finished();
-        }else{
-            u_color_transform = Eigen::Matrix4f::Identity();
-        }
-
-        PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-    }
-private:
-    const Shared<GlSlProgram> prog = GlSlProgram::Create({
-        .sources = {{ .origin="/components/pango_opengl/shaders/main_image.glsl" }}
-    });
-    GlVertexArrayObject vao = {};
-    const GlUniform<int> texture_unit = {"image"};
-    const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
-    const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
-    const GlUniform<Eigen::Vector2f> u_image_size = {"image_size"};
-    const GlUniform<Eigen::Matrix4f> u_color_transform = {"color_transform"};
-};
-
-struct DrawnSolidsProgram
-{
-    void draw(
-        const DrawnSolids& primitives,
-        const sophus::CameraModel& camera,
-        const sophus::Se3F64& cam_from_world,
-        MinMax<double> near_far
-    ){
-        auto bind_prog = prog->bind();
-        auto bind_vao = vao.bind();
-
-        u_image_size = Eigen::Vector2f(camera.imageSize().width, camera.imageSize().height);
-        u_kinv = linearCameraFromImage(camera).cast<float>();
-        u_world_from_cam = cam_from_world.inverse().cast<float>().matrix();
-        u_znear_zfar = Eigen::Vector2f(near_far.min(), near_far.max());
-
-        PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-    }
-
-private:
-    const Shared<GlSlProgram> prog = GlSlProgram::Create({
-        .sources = {{ .origin="/components/pango_opengl/shaders/main_solids.glsl" }}
-    });
-    GlVertexArrayObject vao = {};
-    const GlUniform<Eigen::Matrix3f> u_kinv = {"kinv"};
-    const GlUniform<Eigen::Matrix4f> u_world_from_cam = {"world_from_cam"};
-    const GlUniform<Eigen::Vector2f> u_image_size = {"image_size"};
-    const GlUniform<Eigen::Vector2f> u_znear_zfar = {"znear_zfar"};
-};
 
 struct DrawLayerImpl : public DrawLayer {
     Eigen::Array3f debug_random_color;
@@ -202,7 +47,7 @@ struct DrawLayerImpl : public DrawLayer {
 
     bool setDefaultImageParams(const DrawnImage& im)
     {
-        if(im.image->empty()) return false;
+        if(im.image->imageSize().isEmpty()) return false;
 
         const auto imsize = im.image->imageSize();
 
@@ -229,7 +74,7 @@ struct DrawLayerImpl : public DrawLayer {
         return true;
     }
 
-    void setDefaultPrimitivesParams(const DrawnPrimitives& prim)
+    void setDefaultPrimitivesParams(const DrawnPrimitives& /* prim */)
     {
         // TODO: based these off of the data in prim
         if(!camera_) {

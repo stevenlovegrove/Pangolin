@@ -58,6 +58,14 @@ struct DrawLayer : public Layer
 
     virtual void clear() = 0;
 
+    // Convenience method to add several drawables together
+    // We take two concrete types to differentiate from virtual add above
+    template<typename T1, typename T2, typename ...Ts>
+    void add(const T1& t1, const T2& t2, const Ts&... ts) {
+        add(t1); add(t2);
+        (add(ts), ...);
+    }
+
     struct Params {
         std::string name = "";
         Size size_hint = {Parts{1}, Parts{1}};

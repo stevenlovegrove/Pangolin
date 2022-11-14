@@ -58,7 +58,7 @@ struct DeviceGlBuffer : public DeviceBuffer
     void update(const Data& data) override {
         std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
         updates_.push_back(data);
-        sync();
+        // sync();
     }
 
     bool empty() const override
@@ -76,7 +76,7 @@ struct DeviceGlBuffer : public DeviceBuffer
     }
 
 
-    void sync()
+    void sync() const override
     {
         while(true) {
             Data u;
@@ -90,12 +90,10 @@ struct DeviceGlBuffer : public DeviceBuffer
         }
     }
 
-    void applyUpdateNow(const Data& u)
+    void applyUpdateNow(const Data& u) const
     {
         PANGO_CHECK(u.data);
         PANGO_CHECK(u.num_elements);
-
-        const GlFormatInfo gl_fmt = glTypeInfo(u.data_type);
 
         if(gl_id_ == 0 /* || incompatible...  */) {
             data_type_ = u.data_type;
@@ -130,11 +128,11 @@ struct DeviceGlBuffer : public DeviceBuffer
 
     GLenum buffer_type_ = 0;
     GLenum gluse_ = 0;
-    std::recursive_mutex buffer_mutex_;
-    std::deque<Data> updates_;
-    RuntimePixelType data_type_;
-    size_t num_elements_ ;
-    GLuint gl_id_;
+    mutable std::recursive_mutex buffer_mutex_;
+    mutable std::deque<Data> updates_;
+    mutable RuntimePixelType data_type_;
+    mutable size_t num_elements_ ;
+    mutable GLuint gl_id_;
 
 };
 

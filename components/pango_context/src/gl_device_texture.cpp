@@ -58,8 +58,15 @@ struct DeviceGlTexture : public DeviceTexture
         std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
         updates_.push_back(Update{image, destination});
 
+        if (image_size_.isEmpty()) {
+            data_type_ = image.pixelType();
+            image_size_ = image.imageSize();
+        }else{
+            // TODO: Check compatibility
+        }
+
         // TODO: we'll service this queue in another thread eventually...
-        sync();
+        // sync();
     }
 
     bool empty() const override

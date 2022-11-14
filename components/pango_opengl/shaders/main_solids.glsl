@@ -97,8 +97,9 @@ void main()
   vec3 c_w = world_from_cam[3].xyz;
 
   vec2 pixel = getCameraPixelCoord(image_size, v_tex);
-  vec3 dir_c = normalize(unproj(kinv, pixel));
-  vec3 dir_w = w_R_c * dir_c;
+  vec3 dir_c = unproj(kinv, pixel);
+  float dir_c_len = length(dir_c);
+  vec3 dir_w = w_R_c * dir_c / dir_c_len;
 
   vec4 albedo = color_sky;
   vec4 depth_normal = vec4(znear_zfar.y, 0, 0, 0);
@@ -120,6 +121,8 @@ void main()
   updateDepthNormal(albedo, depth_normal, albedo_sp1, depth_normal_sp1);
   updateDepthNormal(albedo, depth_normal, albedo_sp2, depth_normal_sp2);
 
+  // set the end color and depth. We have to convert from radial depth to
+  // z-depth through division with dir_c_len
   color = material(albedo, depth_normal);
-  gl_FragDepth = fragDepthFromSceneDepth(depth_normal.x, znear_zfar.x, znear_zfar.y);
+  gl_FragDepth = fragDepthFromSceneDepth(depth_normal.x/dir_c_len, znear_zfar.x, znear_zfar.y);
 }

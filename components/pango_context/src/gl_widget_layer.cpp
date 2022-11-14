@@ -179,7 +179,7 @@ void GlWidgetLayer::renderIntoRegion(const Context& context, const RenderParams&
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     context.setViewport(p.region);
-    glClearColor(0.0,0.0,0.0,1.0);
+    glClearColor(0.85f, 0.85f, 0.85f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     const auto size = p.region.range();

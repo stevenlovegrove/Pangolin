@@ -61,6 +61,8 @@ struct DeviceBuffer
         });
     }
 
+    virtual void sync() const = 0;
+
     struct Params { Kind kind; };
     static Shared<DeviceBuffer> Create(Params p);
 

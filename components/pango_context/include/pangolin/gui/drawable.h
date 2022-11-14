@@ -60,6 +60,7 @@ struct DrawnPrimitives : public Drawable
         // Sized in world coordinates and oriented
         circles,
         squares,
+        axes,
         // lines and triangles
         lines,
         line_strip,
