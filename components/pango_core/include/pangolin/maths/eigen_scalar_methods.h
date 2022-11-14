@@ -5,9 +5,11 @@
 #include "eigen_concepts.h"
 
 #include <Eigen/Core>
+#include <sophus/lie/se3.h>
 
 #include <algorithm>
 #include <utility>
+#include <vector>
 
 namespace pangolin {
 
@@ -66,6 +68,39 @@ class Cast<TT> {
   template <typename To>
   static auto impl(TT const& v) {
     return v.template cast<typename To::Scalar>();
+  }
+};
+
+template <typename TT>
+class Cast<sophus::So3<TT>> {
+ public:
+  template <typename To>
+  static auto impl(sophus::So3<TT> const& v) {
+    return v.template cast<typename To::Scalar>();
+  }
+};
+
+template <typename TT>
+class Cast<sophus::Se3<TT>> {
+ public:
+  template <typename To>
+  static auto impl(sophus::Se3<TT> const& v) {
+    return v.template cast<typename To::Scalar>();
+  }
+};
+
+template <typename TT>
+class Cast<std::vector<TT>> {
+ public:
+  template <typename To>
+  static auto impl(std::vector<TT> const& v) {
+    using ToEl = std::remove_cvref_t<std::remove_pointer_t<decltype(std::declval<To>().data())>>;
+    std::vector<ToEl> r;
+    r.reserve(v.size());
+    for(const auto& el : v) {
+      r.push_back( Cast<TT>::template impl<ToEl>(el) );
+    }
+    return r;
   }
 };
 
