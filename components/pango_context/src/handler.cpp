@@ -89,7 +89,7 @@ void zoomTowards(
     OrthographicModel& ortho = std::get<OrthographicModel>(camera.modelVariant());
     static_assert(OrthographicModel::kNumParams == 4);
     double factor = 1.0 - zoom_input;
-    if(ortho.params()[0] * factor < 1.0) factor = 1.0;
+    if(ortho.params()[0] * factor < 1.0) factor = 1.0 / ortho.params()[0];
     auto scale_param = ortho.params().head<2>();
     scale_param *= factor;
 
