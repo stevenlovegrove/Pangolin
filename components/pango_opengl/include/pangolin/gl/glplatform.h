@@ -63,7 +63,8 @@
 #define PANGO_GL(FUNC) \
   [&](){ \
     FUNC; \
-    if(GLenum gl_error = glGetError() != GL_NO_ERROR) { \
+    GLenum gl_error = glGetError(); \
+    if( gl_error != GL_NO_ERROR) { \
         Log::instance().log(Log::Kind::Error, __FILE__, PANGO_FUNCTION, __LINE__, \
         "", "GL Error ({}): {}", gl_error, glErrorString(gl_error) ); \
         return false; \
