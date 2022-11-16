@@ -166,6 +166,24 @@ struct ContextImpl : public Context {
         glScissor( pos.x(), pos.y(), size.x(), size.y() );
     }
 
+    static std::optional<PointerButton>
+    toInteractiveButton(int window_button)
+    {
+        switch(window_button) {
+            case 0: return PointerButton::primary;
+            case 1: return PointerButton::tertiary;
+            case 2: return PointerButton::secondary;
+            case 3: // scroll up
+            case 4: // scroll down
+                return std::nullopt;
+            case 5: return PointerButton::back;
+            case 6: return PointerButton::forward;
+            default:
+                PANGO_WARN("Unexpected input button, {}.", window_button);
+                return std::nullopt;
+        }
+    }
+
     void mouseEvent(MouseEvent e) {
         if(e.button == MouseWheelUp || e.button == MouseWheelDown) {
             const float delta = (e.button == MouseWheelDown ? 1.0f : -1.0f);
@@ -177,11 +195,18 @@ struct ContextImpl : public Context {
             };
             dispatchLayerEvent(layer_event);
         }else{
+            auto maybe_button = toInteractiveButton(e.button);
+            if(!maybe_button) return;
+
+            button_active_.set(*maybe_button, e.pressed);
+
             Interactive::Event layer_event = {
                 .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
                 .detail = Interactive::PointerEvent {
                     .action = e.pressed ? PointerAction::down : PointerAction::click_up,
-                    // .button = e.button
+                    .button = *maybe_button,
+                    .button_active = button_active_,
+                    .modifier_active = modifier_active_,
                 }
             };
             dispatchLayerEvent(layer_event, e.pressed ? ActiveLayerAction::capture: ActiveLayerAction::release);
@@ -193,7 +218,8 @@ struct ContextImpl : public Context {
             .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
             .detail = Interactive::PointerEvent {
                 .action = PointerAction::drag,
-                // .button = e.button
+                .button_active = button_active_,
+                .modifier_active = modifier_active_,
             }
         };
         dispatchLayerEvent(layer_event);
@@ -208,7 +234,16 @@ struct ContextImpl : public Context {
                 }
             };
             dispatchLayerEvent(layer_event);
+        }else if( e.inType == InputSpecialZoom) {
+            Interactive::Event layer_event = {
+                .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .detail = Interactive::ScrollEvent {
+                    .zoom = e.p[0]
+                }
+            };
+            dispatchLayerEvent(layer_event);
         }
+
     }
 
     void keyboardEvent(KeyboardEvent e) {
@@ -353,6 +388,9 @@ private:
     LayerGroup layout_;
     std::shared_ptr<Layer> active_layer_;
     std::atomic<bool> should_run;
+
+    Interactive::PointerButtonStatus button_active_ = {};
+    Interactive::ModifierKeyStatus modifier_active_ = {};
 };
 
 PANGO_CREATE(Context) {

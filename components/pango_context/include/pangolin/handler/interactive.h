@@ -58,16 +58,19 @@ struct Interactive {
     using ModifierKeyStatus = flag_set<ModifierKey>;
 
     struct PointerEvent {
+        // Event and if applicable button that triggered event
         PointerAction action;
         std::optional<PointerButton> button;
-        PointerButtonStatus pointer_pressed;
-        ModifierKeyStatus modifier_held;
+
+        // Current state of input devices
+        PointerButtonStatus button_active;
+        ModifierKeyStatus modifier_active;
     };
 
     struct ScrollEvent {
-        Eigen::Vector2d pan;
-        Eigen::Vector2d tilt;
-        double zoom;
+        Eigen::Vector2d pan = {0.0,0.0};
+        Eigen::Vector2d tilt = {0.0,0.0};
+        double zoom = 0;
     };
 
     struct Event {

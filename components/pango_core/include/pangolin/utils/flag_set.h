@@ -99,6 +99,10 @@ public:
 
     bool operator==(const flag_set& o) const { return flags == o.flags; }
 
+    bool operator==(const T& v) const {
+        return *this == flag_set<T>(v);
+    }
+
     std::size_t size() const { return flags.size(); }
 
     std::size_t count() const { return flags.count(); }

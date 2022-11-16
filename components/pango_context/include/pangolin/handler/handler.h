@@ -25,6 +25,7 @@ struct Handler {
 
   struct Params {
     std::shared_ptr<DepthSampler> depth_sampler = DepthSampler::Create({});
+    Eigen::Vector3d up_in_world = {0.0, 0.0, 1.0};
   };
   static std::unique_ptr<Handler> Create(Params const &);
 };

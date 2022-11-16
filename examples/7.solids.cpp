@@ -13,6 +13,28 @@
 using namespace pangolin;
 using namespace sophus;
 
+void translate(std::vector<sophus::SE3f>& T_obj_world, const Eigen::Vector3f& dir, int steps)
+{
+    PANGO_ENSURE(T_obj_world.size() > 0);
+    const SE3f T_new_old(SO3f(), dir / float(steps));
+
+    for(int i=0; i < steps; ++i) {
+        const auto& T_last_world = T_obj_world.back();
+        T_obj_world.push_back( T_new_old * T_last_world);
+    }
+}
+
+void rotate(std::vector<sophus::SE3f>& T_obj_world, const Eigen::Vector3f& axis_angle, int steps)
+{
+    PANGO_ENSURE(T_obj_world.size() > 0);
+    const SE3f T_new_old(SO3f::exp(axis_angle / float(steps)), Eigen::Vector3f::Zero());
+
+    for(int i=0; i < steps; ++i) {
+        const auto& T_last_world = T_obj_world.back();
+        T_obj_world.push_back( T_new_old * T_last_world);
+    }
+}
+
 int main( int argc, char** argv )
 {
     auto context = Context::Create({
@@ -35,6 +57,7 @@ int main( int argc, char** argv )
     static_assert(sizeof(sophus::SE3f) == 32);
     std::vector<sophus::SE3f> T_vert_draw;
     T_vert_draw.emplace_back();
+    translate(T_vert_draw, {0.0f, -1.0, 0.0}, 10); // up 1m
 
     for(int i=0; i < 100; ++i) {
         const sophus::SE3f delta(sophus::SO3f::rotX(0.1)*sophus::SO3f::rotY(0.05), Eigen::Vector3f(0.1, 0.2f, 0.0f));

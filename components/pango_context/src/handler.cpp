@@ -13,15 +13,72 @@ struct PointState {
   double z_depth_cam;
 };
 
+// Return the projection of ``point_in_foo`` onto the plane
+// through the origin which is perpendicular to ``axis_in_foo``
+Eigen::Vector3d componentPerpendicularToAxis(
+  const Eigen::Vector3d& unit_axis_in_foo,
+  const Eigen::Vector3d& point_in_foo
+) {
+  const double projection = unit_axis_in_foo.dot(point_in_foo);
+  const Eigen::Vector3d point_on_axis = projection * unit_axis_in_foo;
+  const Eigen::Vector3d perp = point_in_foo - point_on_axis;
+  // std::cout << unit_axis_in_foo.dot(perp) << std::endl;
+  return perp;
+}
+
+// UNTESTED
+sophus::SO3d alignUpDir(
+  const Eigen::Vector3d& unit_axis_in_cam,
+  const Eigen::Vector3d& unit_up_in_cam,
+  DeviceXyz axis_convention
+) {
+  // this is the vector we will be attempting to reorient to unit_up_in_cam
+  const Eigen::Vector3d unit_camup_in_cam = upDirectionInCamera<double>(axis_convention);
+
+  // we want axis, up and convention to all be in plane by rotating through axis.
+  // Generate vectors a and b which represent rotation orthogonal to axis
+  const Eigen::Vector3d a = componentPerpendicularToAxis(unit_axis_in_cam, unit_camup_in_cam).normalized();
+  const Eigen::Vector3d b = componentPerpendicularToAxis(unit_axis_in_cam, unit_up_in_cam).normalized();
+
+  // std::cout << "=======" << std::endl;
+  // const Eigen::Vector3d axis_check = a.cross(b).normalized();
+  // std::cout << unit_axis_in_cam.transpose() << std::endl;
+  // std::cout << axis_check.transpose() << std::endl;
+
+  // TODO: if either a or b are colinear with up, we probably have a problem.
+  const sophus::SO3d b_R_a = sophus::rotThroughPoints(a, b);
+  return b_R_a;
+}
+
 // Rotate camera such that the direction under the cursor at
 // ``down_state`` is once more under the cursor with ``state``
 sophus::SE3d orientPointToPoint(
   const PointState& down_state,
-  const PointState& state)
-{
-  const Eigen::Vector3d from = down_state.p_cam.normalized();
-  const Eigen::Vector3d to = state.p_cam.normalized();
-  const sophus::SO3d to_R_from = sophus::rotThroughPoints(from, to);
+  const PointState& state,
+  const std::optional<Eigen::Vector3d>& unit_up_in_world,
+  const DeviceXyz axis_convention
+) {
+  const Eigen::Vector3d unit_x_from = down_state.p_cam.normalized();
+  const Eigen::Vector3d unit_x_to = state.p_cam.normalized();
+
+  // pointed frame has target aligned under mouse, but may introduce in-plane rotation
+  const sophus::SO3d pointed_R_from = sophus::rotThroughPoints(unit_x_from, unit_x_to);
+
+  sophus::SO3d to_R_from;
+
+  // if(unit_up_in_world)
+  if(true)
+  {
+    const sophus::SO3d to_R_pointed = alignUpDir(
+      pointed_R_from * unit_x_from,
+      pointed_R_from * down_state.cam_T_world.so3() * (*unit_up_in_world),
+      axis_convention
+    );
+    to_R_from  = to_R_pointed * pointed_R_from;
+  }else{
+    to_R_from = pointed_R_from;
+  }
+
   return sophus::SE3d(to_R_from, Eigen::Vector3d::Zero()) * down_state.cam_T_world;
 }
 
@@ -39,22 +96,16 @@ sophus::SE3d translatePointToPoint(
   return sophus::SE3d(sophus::SO3d(), to_in_from) * down_state.cam_T_world;
 }
 
-
-// UNTESTED
-sophus::SE3d fixUpDirIfNeeded(
-  const sophus::SE3d& cam_T_world,
-  const std::optional<Eigen::Vector3d>& up_in_world,
-  DeviceXyz axis_convention
+sophus::SE3d rotateAroundAxis(
+  const sophus::Ray3<double>& axis,
+  double angle_rad
 ) {
-  if(up_in_world) {
-    const Eigen::Vector3d up_in_cam = cam_T_world * (*up_in_world);
-    const Eigen::Vector3d convention_up = upDirectionInCamera<double>(axis_convention);
-    if( (up_in_cam - convention_up).squaredNorm() > sophus::kEpsilon<double> ) {
-      const sophus::SO3d up_R_conv = sophus::rotThroughPoints(convention_up, up_in_cam);
-      return sophus::SE3d(up_R_conv,Eigen::Vector3d::Zero()) * cam_T_world;
-    }
-  }
-  return cam_T_world;
+  sophus::SE3d point_T_cam(sophus::SO3d(), -axis.origin());
+  sophus::SE3d point_R_point(
+    sophus::SO3d::exp(axis.direction().vector()*angle_rad),
+    Eigen::Vector3d::Zero()
+  );
+  return point_T_cam.inverse() * point_R_point * point_T_cam;
 }
 
 // NOT FULLY IMPLEMENTED
@@ -62,7 +113,7 @@ sophus::SE3d rotateAbout(
   const sophus::SE3d& cam_T_world,
   const Eigen::Vector3d& point_in_world,
   const std::optional<Eigen::Vector3d>& up_dir_in_world,
-  const Eigen::Vector3d& rotation_vector,
+  const Eigen::Vector3d& rotation_amount,
   DeviceXyz axis_convention
 ) {
   // const Eigen::Vector3d axis_up_world = up_dir_in_world ? *up_dir_in_world : (cam_T_world.inverse() * upDirectionInCamera<double>(axis_convention));
@@ -71,9 +122,25 @@ sophus::SE3d rotateAbout(
 
   // const sophus::SE3d fixed_T_world = fixUpDirIfNeeded(cam_T_world, up_dir_in_world, axis_convention);
 
-  sophus::SE3d rot(sophus::SO3d::exp(rotation_vector), Eigen::Vector3d::Zero());
-  sophus::SE3d point_T_cam(sophus::SO3d(), -(cam_T_world * point_in_world));
-  return point_T_cam.inverse() * rot * point_T_cam * cam_T_world;
+  Eigen::Vector3d up_dir_in_cam = cam_T_world.so3() * (*up_dir_in_world);
+  Eigen::Vector3d point_in_cam = cam_T_world * point_in_world;
+  sophus::SE3d rotx_T_world = rotateAroundAxis(
+    sophus::Ray3<double>(point_in_cam, sophus::UnitVector3<double>::fromUnitVector(up_dir_in_cam)),
+    rotation_amount.y()
+  ) * cam_T_world;
+
+  // up vector in camera frame is different after first rotation
+  up_dir_in_cam = rotx_T_world.so3() * (*up_dir_in_world);
+  point_in_cam = cam_T_world * point_in_world;
+  Eigen::Vector3d right_dir_in_cam(1.0,0.0,0.0);
+  return rotateAroundAxis(
+    sophus::Ray3<double>(point_in_cam, sophus::UnitVector3<double>::fromUnitVector(right_dir_in_cam)),
+    rotation_amount.x()
+  ) * rotx_T_world;
+
+  // sophus::SE3d rot(sophus::SO3d::exp(rotation_amount), Eigen::Vector3d::Zero());
+  // sophus::SE3d point_T_cam(sophus::SO3d(), -(cam_T_world * point_in_world));
+  // return point_T_cam.inverse() * rot * point_T_cam * cam_T_world;
 }
 
 void zoomTowards(
@@ -113,8 +180,6 @@ void zoomTowards(
 }
 
 
-
-
 class HandlerImpl : public Handler {
  public:
   enum class ViewMode {
@@ -128,7 +193,7 @@ class HandlerImpl : public Handler {
   };
 
   HandlerImpl(const Handler::Params& p)
-      : depth_sampler_(p.depth_sampler)
+      : depth_sampler_(p.depth_sampler), up_in_world_(p.up_in_world)
   {
   }
 
@@ -169,23 +234,32 @@ class HandlerImpl : public Handler {
     std::visit(overload {
     [&](const Interactive::PointerEvent& arg) {
         if (arg.action == PointerAction::down) {
-          down_state = state;
+          down_state_ = state;
         }else if(arg.action == PointerAction::drag) {
-          if(!down_state) {
+          if(!down_state_) {
             PANGO_WARN("Unexpected");
             return;
           }
-          // camera_from_world = orientPointToPoint(*down_state, state);
-          camera_from_world = translatePointToPoint(*down_state, state);
+          if(arg.button_active == PointerButton::primary) {
+            camera_from_world = translatePointToPoint(*down_state_, state);
+          // }else if(arg.button_active == PointerButton::secondary) {
+          //   camera_from_world = orientPointToPoint(*down_state_, state, up_in_world_, axis_convention_);
+          // }else if(arg.button_active == (PointerButton::primary | PointerButton::secondary) ) {
+          //   // ... in plane rotation
+          }
         }
     },
     [&](const Interactive::ScrollEvent& arg) {
-        double zoom_input = std::clamp(-arg.pan[1]/200.0, -1.0, 1.0);
+        // double zoom_input = std::clamp(-arg.pan[1]/200.0, -1.0, 1.0);
+        // zoomTowards(camera, camera_from_world, camera_limits_in_world, p_cam, near_far, zoom_input);
+
+        rot_center_in_world_ = p_world;
+        camera_from_world = rotateAbout(
+          camera_from_world, *rot_center_in_world_,  up_in_world_,
+          Eigen::Vector3d(arg.pan[1], arg.pan[0], 0.0)/200.0, DeviceXyz::right_down_forward );
+
+        double zoom_input = std::clamp(-arg.zoom/1.0, -1.0, 1.0);
         zoomTowards(camera, camera_from_world, camera_limits_in_world, p_cam, near_far, zoom_input);
-        // rot_center_in_world = p_world;
-        //   camera_from_world = rotateAbout(
-        //     camera_from_world, *rot_center_in_world,  Eigen::Vector3d(0,-1,0),
-        //     Eigen::Vector3d(arg.pan[1], arg.pan[0], 0.0)/200.0, DeviceXyz::right_down_forward );
     },
     [](auto&&  arg) { PANGO_UNREACHABLE(); },
     }, event.detail);
@@ -206,20 +280,23 @@ class HandlerImpl : public Handler {
   std::shared_ptr<DepthSampler> depth_sampler_;
 
   // State of viewpoint and pointer direction during button press
-  std::optional<PointState> down_state;
+  std::optional<PointState> down_state_;
 
   // Point to rotate about
-  std::optional<Eigen::Vector3d> rot_center_in_world;
+  std::optional<Eigen::Vector3d> rot_center_in_world_;
 
   // Mode of interpretting input
   ViewMode viewmode_ = ViewMode::freeview;
 
   // Optionally constrain view direction such that cameras left-to-right
   // axis is perpendicular to ``up_in_world``
-  std::optional<Eigen::Vector3d> up_in_world;
+  std::optional<Eigen::Vector3d> up_in_world_;
+
+  DeviceXyz axis_convention_ = DeviceXyz::right_down_forward;
+
 
   // Specify how the center of rotation is updated
-  CenterUpdate rot_center_polixy;
+  CenterUpdate rot_center_polixy_;
 };
 
 std::unique_ptr<Handler> Handler::Create(Params const& p) {
