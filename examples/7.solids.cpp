@@ -13,30 +13,44 @@
 using namespace pangolin;
 using namespace sophus;
 
-void translate(std::vector<sophus::SE3f>& T_obj_world, const Eigen::Vector3f& dir, int steps)
+inline void translate(std::vector<sophus::SE3f>& T_world_obj, const Eigen::Vector3f& dir_last, int steps)
 {
-    PANGO_ENSURE(T_obj_world.size() > 0);
-    const SE3f T_new_old(SO3f(), dir / float(steps));
+    PANGO_ENSURE(T_world_obj.size() > 0);
+    const SE3f T_last_new(SO3f(), dir_last / float(steps));
 
     for(int i=0; i < steps; ++i) {
-        const auto& T_last_world = T_obj_world.back();
-        T_obj_world.push_back( T_new_old * T_last_world);
+        const auto& T_world_last = T_world_obj.back();
+        T_world_obj.push_back( T_world_last * T_last_new);
     }
 }
 
-void rotate(std::vector<sophus::SE3f>& T_obj_world, const Eigen::Vector3f& axis_angle, int steps)
+inline void rotate(std::vector<sophus::SE3f>& T_world_obj, const Eigen::Vector3f& axis_angle, int steps)
 {
-    PANGO_ENSURE(T_obj_world.size() > 0);
-    const SE3f T_new_old(SO3f::exp(axis_angle / float(steps)), Eigen::Vector3f::Zero());
+    PANGO_ENSURE(T_world_obj.size() > 0);
+    const SE3f T_last_new(SO3f::exp(axis_angle/steps), Eigen::Vector3f::Zero());
 
     for(int i=0; i < steps; ++i) {
-        const auto& T_last_world = T_obj_world.back();
-        T_obj_world.push_back( T_new_old * T_last_world);
+        const auto& T_world_last = T_world_obj.back();
+        T_world_obj.push_back( T_world_last * T_last_new);
     }
 }
 
 int main( int argc, char** argv )
 {
+    if(false)
+    {
+        Eigen::Vector3d a_w(1,2,3);
+        sophus::SO3d R_wa = sophus::SO3d::rotZ(0.3)*sophus::SO3d::rotX(0.3);
+
+        sophus::SE3d T_wa( R_wa, a_w);
+        std::cout << a_w.transpose() << std::endl;
+        std::cout << T_wa.translation().transpose() << std::endl;
+
+        Eigen::Vector3d a_a = T_wa.inverse() * a_w;
+        std::cout << a_a.transpose() << std::endl;
+        return 0;
+    }
+
     auto context = Context::Create({
         .title="Pangolin Solid Raycast Geometry",
         .window_size = {2*640,2*480},
@@ -55,15 +69,23 @@ int main( int argc, char** argv )
     });
 
     static_assert(sizeof(sophus::SE3f) == 32);
-    std::vector<sophus::SE3f> T_vert_draw;
-    T_vert_draw.emplace_back();
-    translate(T_vert_draw, {0.0f, -1.0, 0.0}, 10); // up 1m
+    std::vector<sophus::SE3f> T_world_axis;
+    T_world_axis.emplace_back();
+    // up 1m
+    translate(T_world_axis, {0.0f, 0.0, 1.0}, 10);
+    // along x-axis 1m
+    translate(T_world_axis, {1.0f, 0.0, 0.0}, 10);
+    // rotate 90 degrees clockwise around z axis
+    rotate(T_world_axis, {0.0, 0.0, -M_PI/2.0}, 10);
+    // along x-axis 1m
+    translate(T_world_axis, {1.0f, 0.0, 0.0}, 10);
 
+    // Spiral
     for(int i=0; i < 100; ++i) {
         const sophus::SE3f delta(sophus::SO3f::rotX(0.1)*sophus::SO3f::rotY(0.05), Eigen::Vector3f(0.1, 0.2f, 0.0f));
-        T_vert_draw.push_back( T_vert_draw.back() * delta );
+        T_world_axis.push_back( T_world_axis.back() * delta );
     }
-    prims->vertices->update(T_vert_draw, {});
+    prims->vertices->update(T_world_axis, {});
 
     scene->add(solids, prims);
 

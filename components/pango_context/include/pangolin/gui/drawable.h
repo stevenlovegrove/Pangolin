@@ -56,11 +56,12 @@ struct DrawnPrimitives : public Drawable
     enum class Type
     {
         // Sized in image pixels
-        points,
+        points,   // populate vertices, [indices,colors,radius]
         // Sized in world coordinates and oriented
-        circles,
-        squares,
-        axes,
+        circles,  // populate vertices, [indices,colors,radius]
+        squares,  // populate vertices, [indices,colors,radius]
+        axes,     // populate vertices with axes_T_world sophus::SE3f elements
+                  // [indices,colors,radius]
         // lines and triangles
         lines,
         line_strip,

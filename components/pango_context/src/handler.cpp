@@ -185,9 +185,9 @@ class HandlerImpl : public Handler {
   enum class ViewMode {
     freeview
   };
-  enum class CenterUpdate {
-    with_click,        // Center of rotation is updated with every mouse-down event
-    with_double_click, // Center of rotation is updated with every double-click to form
+  enum class CursorUpdate {
+    with_click,        // Cursor of rotation is updated with every mouse-down event
+    with_double_click, // Cursor of rotation is updated with every double-click to form
                        // a kind of 3D cursor
     fixed,             // e.g. programmatic object-oriented navigation
   };
@@ -253,13 +253,21 @@ class HandlerImpl : public Handler {
         // double zoom_input = std::clamp(-arg.pan[1]/200.0, -1.0, 1.0);
         // zoomTowards(camera, camera_from_world, camera_limits_in_world, p_cam, near_far, zoom_input);
 
-        rot_center_in_world_ = p_world;
+        // Don't allow the center of rotation change without a small delay
+        // from scrolling - otherwise it is very easy to accidentally rotate
+        // around a point that suddenly comes under the cursor.
+        auto now = std::chrono::system_clock::now();
+        if(now - last_cursor_update_ > cursor_update_wait_) {
+          cursor_in_world_ = p_world;
+        }
+        last_cursor_update_ = now;
+
         camera_from_world = rotateAbout(
-          camera_from_world, *rot_center_in_world_,  up_in_world_,
+          camera_from_world, cursor_in_world_,  up_in_world_,
           Eigen::Vector3d(arg.pan[1], arg.pan[0], 0.0)/200.0, DeviceXyz::right_down_forward );
 
         double zoom_input = std::clamp(-arg.zoom/1.0, -1.0, 1.0);
-        zoomTowards(camera, camera_from_world, camera_limits_in_world, p_cam, near_far, zoom_input);
+        zoomTowards(camera, camera_from_world, camera_limits_in_world, camera_from_world * cursor_in_world_, near_far, zoom_input);
     },
     [](auto&&  arg) { PANGO_UNREACHABLE(); },
     }, event.detail);
@@ -282,8 +290,13 @@ class HandlerImpl : public Handler {
   // State of viewpoint and pointer direction during button press
   std::optional<PointState> down_state_;
 
-  // Point to rotate about
-  std::optional<Eigen::Vector3d> rot_center_in_world_;
+  // center for various zoom / rotate operations
+  Eigen::Vector3d cursor_in_world_ = {0.0, 0.0, 0.0};
+
+  // Specify how the center of rotation is updated
+  // CursorUpdate cursor_center_polixy_;
+  std::chrono::system_clock::time_point last_cursor_update_;
+  std::chrono::system_clock::duration cursor_update_wait_ = std::chrono::milliseconds(200);
 
   // Mode of interpretting input
   ViewMode viewmode_ = ViewMode::freeview;
@@ -295,8 +308,6 @@ class HandlerImpl : public Handler {
   DeviceXyz axis_convention_ = DeviceXyz::right_down_forward;
 
 
-  // Specify how the center of rotation is updated
-  CenterUpdate rot_center_polixy_;
 };
 
 std::unique_ptr<Handler> Handler::Create(Params const& p) {

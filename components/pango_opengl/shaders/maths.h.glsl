@@ -119,18 +119,3 @@ mat3 affineScale(float s)
 {
     return affineScale(vec2(s,s));
 }
-
-mat4 poseInverse(mat4 T_ba)
-{
-    mat3 R_ab = transpose(mat3(T_ba));
-    vec3 a_b = T_ba[3].xyz;
-    vec3 b_a =  -R_ab * a_b;
-
-    mat4 T_ab = mat4(
-        vec4(R_ab[0], 0.0), // col 0
-        vec4(R_ab[1], 0.0), // col 1
-        vec4(R_ab[2], 0.0), // col 2
-        vec4(b_a, 1.0)      // col 3
-    );
-    return T_ab;
-}

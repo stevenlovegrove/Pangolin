@@ -24,7 +24,7 @@ struct DrawnSolidsProgram
 
 private:
     const Shared<GlSlProgram> prog = GlSlProgram::Create({
-        .sources = {{ .origin="/components/pango_opengl/shaders/main_solids.glsl" }}
+        .sources = {{ .origin="/components/pango_opengl/shaders/main_plane.glsl" }}
     });
     GlVertexArrayObject vao = {};
     const GlUniform<Eigen::Matrix3f> u_kinv = {"kinv"};
