@@ -74,7 +74,6 @@ struct DrawLayer : public Layer
         std::shared_ptr<sophus::CameraModel> camera = nullptr;
         std::shared_ptr<sophus::Se3F64> camera_from_world = nullptr;
         MinMax<double> near_far = {};
-        MinMax<Eigen::Vector3d> camera_limits_in_world = {};
         std::shared_ptr<Handler> handler = Handler::Create({});
 
         // Objects to draw

@@ -166,6 +166,7 @@ struct ContextImpl : public Context {
         glScissor( pos.x(), pos.y(), size.x(), size.y() );
     }
 
+    // TODO: push these enums up into window interface to avoid conversion
     static std::optional<PointerButton>
     toInteractiveButton(int window_button)
     {
@@ -184,11 +185,28 @@ struct ContextImpl : public Context {
         }
     }
 
+    // TODO: push these enums up into window interface to avoid conversion
+    static Interactive::ModifierKeyStatus
+    toInteractiveModifierKey(KeyModifierBitmask mod)
+    {
+        Interactive::ModifierKeyStatus inkey;
+        if(mod & KeyModifierShift) inkey.set(ModifierKey::shift);
+        if(mod & KeyModifierCtrl) inkey.set(ModifierKey::ctrl);
+        if(mod & KeyModifierAlt) inkey.set(ModifierKey::alt_option);
+        if(mod & KeyModifierCmd) inkey.set(ModifierKey::win_cmd_meta);
+        if(mod & KeyModifierFnc) inkey.set(ModifierKey::fn);
+        return inkey;
+    }
+
+
     void mouseEvent(MouseEvent e) {
+        modifier_active_ = toInteractiveModifierKey(e.key_modifiers);
+
         if(e.button == MouseWheelUp || e.button == MouseWheelDown) {
             const float delta = (e.button == MouseWheelDown ? 1.0f : -1.0f);
             Interactive::Event layer_event = {
                 .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .modifier_active = modifier_active_,
                 .detail = Interactive::ScrollEvent {
                     .pan = Eigen::Array2d(0.0, delta)
                 }
@@ -202,11 +220,11 @@ struct ContextImpl : public Context {
 
             Interactive::Event layer_event = {
                 .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .modifier_active = modifier_active_,
                 .detail = Interactive::PointerEvent {
                     .action = e.pressed ? PointerAction::down : PointerAction::click_up,
                     .button = *maybe_button,
                     .button_active = button_active_,
-                    .modifier_active = modifier_active_,
                 }
             };
             dispatchLayerEvent(layer_event, e.pressed ? ActiveLayerAction::capture: ActiveLayerAction::release);
@@ -214,21 +232,26 @@ struct ContextImpl : public Context {
     }
 
     void mouseMotionEvent(MouseMotionEvent e) {
+        modifier_active_ = toInteractiveModifierKey(e.key_modifiers);
+
         Interactive::Event layer_event = {
             .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+            .modifier_active = modifier_active_,
             .detail = Interactive::PointerEvent {
                 .action = PointerAction::drag,
                 .button_active = button_active_,
-                .modifier_active = modifier_active_,
             }
         };
         dispatchLayerEvent(layer_event);
     }
 
     void specialInputEvent(SpecialInputEvent e) {
+        modifier_active_ = toInteractiveModifierKey(e.key_modifiers);
+
         if( e.inType == InputSpecialScroll) {
             Interactive::Event layer_event = {
                 .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .modifier_active = modifier_active_,
                 .detail = Interactive::ScrollEvent {
                     .pan = {e.p[0], e.p[1]}
                 }
@@ -237,6 +260,7 @@ struct ContextImpl : public Context {
         }else if( e.inType == InputSpecialZoom) {
             Interactive::Event layer_event = {
                 .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .modifier_active = modifier_active_,
                 .detail = Interactive::ScrollEvent {
                     .zoom = e.p[0]
                 }
@@ -247,6 +271,8 @@ struct ContextImpl : public Context {
     }
 
     void keyboardEvent(KeyboardEvent e) {
+        modifier_active_ = toInteractiveModifierKey(e.key_modifiers);
+
         if(e.key == 27) { // escape
             should_run = false;
         }else if(e.key == 9) {  // tab

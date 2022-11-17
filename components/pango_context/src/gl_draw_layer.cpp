@@ -30,7 +30,6 @@ struct DrawLayerImpl : public DrawLayer {
         near_far_(p.near_far),
         camera_(p.camera),
         camera_from_world_(p.camera_from_world),
-        camera_limits_in_world_(p.camera_limits_in_world),
         handler_(p.handler),
         cam_from_world_(Eigen::Matrix4d::Identity()),
         intrinsic_k_(Eigen::Matrix4d::Identity()),
@@ -64,11 +63,12 @@ struct DrawLayerImpl : public DrawLayer {
             near_far_ = MinMax<double>(-1.0, 1.0);
         }
 
-        if(camera_limits_in_world_.empty()) {
-            camera_limits_in_world_ = {
+        if(handler_ && handler_->getCameraLimits().empty()) {
+            handler_->setCameraLimits({
                 {0.0, 0.0, 0.0},
                 {0.0, 0.0, 0.0},
-            };
+            });
+            handler_->setCameraRotationLock(true);
         }
 
         return true;
@@ -118,8 +118,9 @@ struct DrawLayerImpl : public DrawLayer {
     bool handleEvent(const Context& context, const Event& event) override {
         if(handler_ && camera_from_world_ && camera_) {
             handler_->handleEvent(
-                *this, *camera_from_world_, *camera_, near_far_,
-                camera_limits_in_world_,context, event
+                *this, *camera_from_world_,
+                *camera_, near_far_,
+                context, event
             );
             return true;
         }
@@ -178,7 +179,6 @@ struct DrawLayerImpl : public DrawLayer {
     // Used for handling and higher-level logic
     std::shared_ptr<sophus::CameraModel> camera_;
     std::shared_ptr<sophus::Se3F64> camera_from_world_;
-    MinMax<Eigen::Vector3d> camera_limits_in_world_ = {};
     std::shared_ptr<Handler> handler_;
 
     // Actually used for rendering

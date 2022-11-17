@@ -64,7 +64,6 @@ struct Interactive {
 
         // Current state of input devices
         PointerButtonStatus button_active;
-        ModifierKeyStatus modifier_active;
     };
 
     struct ScrollEvent {
@@ -75,6 +74,7 @@ struct Interactive {
 
     struct Event {
       WindowPosition pointer_pos;
+      ModifierKeyStatus modifier_active;
       std::variant<PointerEvent,ScrollEvent> detail;
     };
 

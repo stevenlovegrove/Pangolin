@@ -6,13 +6,6 @@
 
 namespace pangolin {
 
-struct PointState {
-  Eigen::Vector2d p_img;
-  Eigen::Vector3d p_cam;
-  sophus::Se3F64 cam_T_world;
-  double z_depth_cam;
-};
-
 // Return the projection of ``point_in_foo`` onto the plane
 // through the origin which is perpendicular to ``axis_in_foo``
 Eigen::Vector3d componentPerpendicularToAxis(
@@ -53,8 +46,8 @@ sophus::SO3d alignUpDir(
 // Rotate camera such that the direction under the cursor at
 // ``down_state`` is once more under the cursor with ``state``
 sophus::SE3d orientPointToPoint(
-  const PointState& down_state,
-  const PointState& state,
+  const Handler::Pointer& down_state,
+  const Handler::Pointer& state,
   const std::optional<Eigen::Vector3d>& unit_up_in_world,
   const DeviceXyz axis_convention
 ) {
@@ -86,8 +79,8 @@ sophus::SE3d orientPointToPoint(
 // ``down_state`` is once more under the cursor with ``state`` and
 // having the same z_depth
 sophus::SE3d translatePointToPoint(
-  const PointState& down_state,
-  const PointState& state)
+  const Handler::Pointer& down_state,
+  const Handler::Pointer& state)
 {
   const Eigen::Vector3d from = down_state.p_cam;
   const Eigen::Vector3d to = from.z() * state.p_cam / state.p_cam.z();
@@ -193,7 +186,10 @@ class HandlerImpl : public Handler {
   };
 
   HandlerImpl(const Handler::Params& p)
-      : depth_sampler_(p.depth_sampler), up_in_world_(p.up_in_world)
+      : depth_sampler_(p.depth_sampler),
+        camera_limits_in_world_(p.camera_limits_in_world),
+        camera_rotation_lock_(p.camera_rotation_lock),
+        up_in_world_(p.up_in_world)
   {
   }
 
@@ -202,7 +198,6 @@ class HandlerImpl : public Handler {
     sophus::Se3F64& camera_from_world,
     sophus::CameraModel& camera,
     MinMax<double>& near_far,
-    MinMax<Eigen::Vector3d>& camera_limits_in_world,
     const Context& context,
     const Interactive::Event& event
   ) override {
@@ -229,12 +224,13 @@ class HandlerImpl : public Handler {
 
     const Eigen::Vector3d p_cam = camera.camUnproj(pix_img, zdepth_cam);
     const Eigen::Vector3d p_world = camera_from_world.inverse() * p_cam;
-    const PointState state = {pix_img, p_cam, camera_from_world, zdepth_cam};
+    const Pointer state = {pix_img, p_cam, camera_from_world, zdepth_cam};
 
     std::visit(overload {
     [&](const Interactive::PointerEvent& arg) {
         if (arg.action == PointerAction::down) {
           down_state_ = state;
+          InputSignal(Event3D{event, state});
         }else if(arg.action == PointerAction::drag) {
           if(!down_state_) {
             PANGO_WARN("Unexpected");
@@ -251,7 +247,7 @@ class HandlerImpl : public Handler {
     },
     [&](const Interactive::ScrollEvent& arg) {
         // double zoom_input = std::clamp(-arg.pan[1]/200.0, -1.0, 1.0);
-        // zoomTowards(camera, camera_from_world, camera_limits_in_world, p_cam, near_far, zoom_input);
+        // zoomTowards(camera, camera_from_world, camera_limits_in_world_, p_cam, near_far, zoom_input);
 
         // Don't allow the center of rotation change without a small delay
         // from scrolling - otherwise it is very easy to accidentally rotate
@@ -262,25 +258,49 @@ class HandlerImpl : public Handler {
         }
         last_cursor_update_ = now;
 
-        camera_from_world = rotateAbout(
-          camera_from_world, cursor_in_world_,  up_in_world_,
-          Eigen::Vector3d(arg.pan[1], arg.pan[0], 0.0)/200.0, DeviceXyz::right_down_forward );
+        if(!camera_rotation_lock_) {
+          camera_from_world = rotateAbout(
+            camera_from_world, cursor_in_world_,  up_in_world_,
+            Eigen::Vector3d(arg.pan[1], arg.pan[0], 0.0)/200.0, DeviceXyz::right_down_forward );
+        }else{
+          const Eigen::Vector2d pan = Eigen::Vector2d(arg.pan[0], arg.pan[1]).array() / camera.focalLength().array();
+          camera_from_world = sophus::SE3d(
+            sophus::SO3d(), Eigen::Vector3d(pan.x(), pan.y(), 0.0)
+          ) * camera_from_world;
+        }
 
         double zoom_input = std::clamp(-arg.zoom/1.0, -1.0, 1.0);
-        zoomTowards(camera, camera_from_world, camera_limits_in_world, camera_from_world * cursor_in_world_, near_far, zoom_input);
+        zoomTowards(camera, camera_from_world, camera_limits_in_world_, camera_from_world * cursor_in_world_, near_far, zoom_input);
     },
     [](auto&&  arg) { PANGO_UNREACHABLE(); },
     }, event.detail);
 
     // Clamp translation to valid bounds in world coordinates
-    if(!camera_limits_in_world.empty()) {
+    if(!camera_limits_in_world_.empty()) {
       auto world_from_cam = camera_from_world.inverse();
-      world_from_cam.translation() = camera_limits_in_world.clamp(world_from_cam.translation());
+      world_from_cam.translation() = camera_limits_in_world_.clamp(world_from_cam.translation());
       camera_from_world = world_from_cam.inverse();
     }
 
     return true;
   }
+
+  MinMax<Eigen::Vector3d> getCameraLimits() const override {
+    return camera_limits_in_world_;
+  }
+
+  void setCameraLimits(const MinMax<Eigen::Vector3d>& limits_in_world) override {
+    camera_limits_in_world_ = limits_in_world;
+  }
+
+  bool getCameraRotationLock() const override {
+    return camera_rotation_lock_;
+  }
+
+  void setCameraRotationLock(bool enable) override {
+    camera_rotation_lock_ = enable;
+  }
+
 
   double last_zcam_ = 1.0;
 
@@ -288,7 +308,7 @@ class HandlerImpl : public Handler {
   std::shared_ptr<DepthSampler> depth_sampler_;
 
   // State of viewpoint and pointer direction during button press
-  std::optional<PointState> down_state_;
+  std::optional<Pointer> down_state_;
 
   // center for various zoom / rotate operations
   Eigen::Vector3d cursor_in_world_ = {0.0, 0.0, 0.0};
@@ -300,6 +320,8 @@ class HandlerImpl : public Handler {
 
   // Mode of interpretting input
   ViewMode viewmode_ = ViewMode::freeview;
+  MinMax<Eigen::Vector3d> camera_limits_in_world_;
+  bool camera_rotation_lock_;
 
   // Optionally constrain view direction such that cameras left-to-right
   // axis is perpendicular to ``up_in_world``
