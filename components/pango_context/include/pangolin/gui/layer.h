@@ -44,6 +44,12 @@ struct Layer : public Interactive
         Size size_hint = {Parts{1}, Parts{1}};
     };
     static Shared<Layer> Create(Params);
+
+    // Special convenience layers for clearing color-buffer, depth-buffer, or
+    // both
+    static Shared<Layer> ClearColor();
+    static Shared<Layer> ClearZ();
+    static Shared<Layer> Clear();
 };
 
 }

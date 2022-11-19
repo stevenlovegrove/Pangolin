@@ -78,6 +78,7 @@ struct DrawLayer : public Layer
 
         // Objects to draw
         std::vector<Shared<Drawable>> objects = {};
+        std::vector<Shared<Drawable>> background = {};
     };
     static Shared<DrawLayer> Create(Params p);
 };

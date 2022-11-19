@@ -29,14 +29,27 @@ void main()
 @start fragment
 #version 150 core
 
+#include "colormaps.glsl.h"
+
 in vec2 v_tex;
 
 uniform sampler2D image;
 uniform mat4 color_transform;
+uniform uint colormap_index;
 
 out vec4 color;
+
 void main()
 {
   // lookup linearly interpolated
   color = color_transform * texture(image, v_tex);
+
+  switch(colormap_index) {
+    case 0: return;
+    case 1: color.xyz = plasma(clamp(color.x,0.0,1.0)); return;
+    case 2: color.xyz = viridis(clamp(color.x,0.0,1.0)); return;
+    case 3: color.xyz = magma(clamp(color.x,0.0,1.0)); return;
+    case 4: color.xyz = inferno(clamp(color.x,0.0,1.0)); return;
+    case 5: color.xyz = turbo(clamp(color.x,0.0,1.0)); return;
+  }
 }

@@ -278,7 +278,16 @@ struct ContextImpl : public Context {
         }else if(e.key == 9) {  // tab
             window_->ShowFullscreen(TrueFalseToggle::Toggle);
         }else{
-            PANGO_INFO("Unprocessed keypress, {}", int(e.key) );
+            Interactive::Event layer_event = {
+                .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .modifier_active = modifier_active_,
+                .detail = Interactive::KeyboardEvent {
+                    .key = e.key,
+                    .pressed = e.pressed
+                }
+            };
+            dispatchLayerEvent(layer_event);
+            // PANGO_INFO("Unprocessed keypress, {}", int(e.key) );
         }
     }
 

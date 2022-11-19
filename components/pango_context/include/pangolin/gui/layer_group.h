@@ -92,7 +92,7 @@ inline LayerGroup intoLayerGroup(const Shared<Drawable>& drawable) {
 // Allow images to be specified directly for convenience
 inline LayerGroup intoLayerGroup(const sophus::IntensityImage<>& image) {
     auto layer = intoLayerGroup(
-        DrawnImage::Create({image})
+        DrawnImage::Create({.image=image})
     );
     layer.width_over_height = double(image.width()) / image.height();
     return layer;

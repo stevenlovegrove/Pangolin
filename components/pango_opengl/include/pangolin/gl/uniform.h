@@ -109,6 +109,13 @@ void glUniform(GLint location, const T& val)
     detail::glUniformImpl<T,T::RowsAtCompileTime,T::ColsAtCompileTime>(location, val);
 }
 
+template<EnumType T>
+void glUniform(GLint location, T val)
+{
+    using U = std::underlying_type_t<T>;
+    glUniform(location, static_cast<U>(val));
+}
+
 template<typename T>
 class GlUniform {
 public:

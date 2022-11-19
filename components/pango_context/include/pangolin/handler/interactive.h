@@ -72,10 +72,15 @@ struct Interactive {
         double zoom = 0;
     };
 
+    struct KeyboardEvent {
+        unsigned char key;
+        bool pressed;
+    };
+
     struct Event {
       WindowPosition pointer_pos;
       ModifierKeyStatus modifier_active;
-      std::variant<PointerEvent,ScrollEvent> detail;
+      std::variant<PointerEvent,ScrollEvent,KeyboardEvent> detail;
     };
 
     virtual bool handleEvent(const Context&, const Event&) = 0;

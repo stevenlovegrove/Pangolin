@@ -22,6 +22,22 @@ using EigenConcreteType =
     std::remove_reference_t<decltype(std::declval<TT>().eval())>;
 
 template <class TScalar>
+class Square {
+ public:
+  static TScalar impl(TScalar const& v) {
+    return v * v;
+  }
+};
+
+template <EigenDenseType TT>
+class Square<TT> {
+ public:
+  static auto impl(TT const& v) -> typename TT::Scalar {
+    return v.squaredNorm();
+  }
+};
+
+template <class TScalar>
 class Min {
  public:
   static TScalar impl(TScalar const& lhs, TScalar const& rhs) {
@@ -60,6 +76,10 @@ class Cast {
   static To impl(TScalar const& s) {
     return static_cast<To>(s);
   }
+  template <typename To>
+  static To implScalar(TScalar const& s) {
+    return static_cast<To>(s);
+  }
 };
 
 template <EigenType TT>
@@ -67,7 +87,11 @@ class Cast<TT> {
  public:
   template <typename To>
   static auto impl(TT const& v) {
-    return v.template cast<typename To::Scalar>();
+    return v.template cast<typename To::Scalar>().eval();
+  }
+  template <typename To>
+  static auto implScalar(TT const& v) {
+    return v.template cast<To>().eval();
   }
 };
 
@@ -78,6 +102,10 @@ class Cast<sophus::So3<TT>> {
   static auto impl(sophus::So3<TT> const& v) {
     return v.template cast<typename To::Scalar>();
   }
+  template <typename To>
+  static auto implScalar(sophus::So3<TT> const& v) {
+    return v.template cast<To>();
+  }
 };
 
 template <typename TT>
@@ -86,6 +114,10 @@ class Cast<sophus::Se3<TT>> {
   template <typename To>
   static auto impl(sophus::Se3<TT> const& v) {
     return v.template cast<typename To::Scalar>();
+  }
+  template <typename To>
+  static auto implScalar(sophus::Se3<TT> const& v) {
+    return v.template cast<To>();
   }
 };
 
@@ -102,6 +134,28 @@ class Cast<std::vector<TT>> {
     }
     return r;
   }
+  template <typename To>
+  static auto implScalar(std::vector<TT> const& v) {
+    using ToEl = decltype(Cast<TT>::template implScalar<To>(v[0]));
+    std::vector<ToEl> r;
+    r.reserve(v.size());
+    for(const auto& el : v) {
+      r.push_back( Cast<TT>::template impl<ToEl>(el) );
+    }
+    return r;
+  }
+};
+
+template <class TScalar>
+class Zero {
+ public:
+  static TScalar impl() { return static_cast<TScalar>(0); }
+};
+
+template <EigenType TT>
+class Zero<TT> {
+ public:
+  static auto impl() { return TT::Zero().eval(); }
 };
 
 template <class TScalar>
@@ -194,9 +248,19 @@ class Reduce<TT> {
 
 }  // namespace details
 
+template <class TT>
+auto zero() {
+  return details::Zero<TT>::impl();
+}
+
 template <class To, class TT>
 auto cast(const TT& p) {
   return details::Cast<TT>::template impl<To>(p);
+}
+
+template <Arithmetic To, class TT>
+auto cast(const TT& p) {
+  return details::Cast<TT>::template implScalar<To>(p);
 }
 
 template <class TT>
@@ -217,6 +281,11 @@ bool anyTrue(const TT& p) {
 template <class TT>
 bool isFinite(const TT& p) {
   return details::IsFinite<TT>::impl(p);
+}
+
+template <class TT>
+auto square(const TT& v) {
+  return details::Square<TT>::impl(v);
 }
 
 template <class TT>

@@ -272,6 +272,9 @@ class HandlerImpl : public Handler {
         double zoom_input = std::clamp(-arg.zoom/1.0, -1.0, 1.0);
         zoomTowards(camera, camera_from_world, camera_limits_in_world_, camera_from_world * cursor_in_world_, near_far, zoom_input);
     },
+    [&](const Interactive::KeyboardEvent& arg) {
+      // do nothing for now
+    },
     [](auto&&  arg) { PANGO_UNREACHABLE(); },
     }, event.detail);
 

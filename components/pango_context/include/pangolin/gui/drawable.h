@@ -7,6 +7,7 @@
 #include <pangolin/maths/conventions.h>
 #include <pangolin/render/device_buffer.h>
 #include <pangolin/render/device_texture.h>
+#include <pangolin/render/colormap.h>
 
 namespace pangolin
 {
@@ -36,6 +37,11 @@ struct DrawnImage : public Drawable
     // space to the rendered output intensity
     std::optional<Eigen::MatrixXd> color_transform;
 
+    // if a palatte beside `none` is specified, the first (red) channel
+    // is used as input to the non-linear map. Colormapping occurs after
+    // the linear color_transform above.
+    Palette colormap = Palette::none;
+
     // The 'image' frame is such that the pixels
     // lie on the z=0 plane, with the image x and y
     // axis corresponding to the world co-ordinates
@@ -47,6 +53,9 @@ struct DrawnImage : public Drawable
 
     struct Params {
         sophus::IntensityImage<> image = {};
+        Palette colormap = Palette::none;
+        Interpolation interpolation = Interpolation::nearest;
+        std::optional<Eigen::MatrixXd> color_transform;
     };
     static Shared<DrawnImage> Create(Params p);
 };

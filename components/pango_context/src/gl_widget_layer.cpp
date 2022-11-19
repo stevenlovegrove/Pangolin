@@ -264,54 +264,27 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event) {
         const float offset_max = (widgets.size()-1.0f) * widget_height;
         scroll_offset = std::clamp(scroll_offset + delta, -offset_max, 0.0f);
     },
+    [&](const Interactive::KeyboardEvent& arg) {
+        auto w = WidgetXY(p_window, region);
+        if(0 <= w.first && w.first < (int)widgets.size()) {
+            WidgetParams& wp = widgets[w.first];
+            const double delta_mag = wp.divisions ? 1.0/wp.divisions : 0.01;
+            const double delta = (arg.key == 228) ? -delta_mag : (arg.key == 230 ? +delta_mag : 0.0);
+            if(delta == 0.0 || !arg.pressed) return;
+            if(wp.widget_type == WidgetType::slider) {
+                wp.value_percent = std::clamp(wp.value_percent + delta, 0.0, 1.0);
+                if( wp.read_params) wp.read_params(wp);
+                dirty = true;
+            }
+        }
+
+        // PANGO_INFO("key: {}", (int)arg.key);
+    },
     [](auto&&  arg) { PANGO_UNREACHABLE(); },
     }, event.detail);
 
     return true;
 }
-
-// void GlWidgetLayer::Mouse(View&, MouseButton button, int x, int y, bool pressed, int button_state)
-// {
-//     if(button == MouseButtonLeft) {
-//         auto w = WidgetXY(x,y);
-//         if(selected_widget >= 0) {
-//             auto& sw = widgets[selected_widget];
-//             SetValue(x,y, pressed, false);
-//             if(!pressed) {
-//                 selected_widget = -1;
-//             }
-//         }else {
-//             selected_widget = w.first;
-//             SetValue(x,y, pressed, false);
-//         }
-//     }else if(button == MouseWheelUp || button == MouseWheelDown) {
-//         const float delta = (button == MouseWheelDown ? 1.0f : -1.0f) * 0.25f*widget_height;
-//         const float offset_max = (widgets.size()-1.0f) * widget_height;
-//         scroll_offset = std::clamp(scroll_offset + delta, -offset_max, 0.0f);
-//     }
-// }
-
-// void GlWidgetLayer::MouseMotion(View&, int x, int y, int button_state)
-// {
-//     SetValue(x,y, true, true);
-// }
-
-// void GlWidgetLayer::PassiveMouseMotion(View&, int x, int y, int button_state)
-// {
-//     auto w = WidgetXY(x,y);
-//     hover_widget = (0 <= w.second.x() && w.second.x() < v.w) ? w.first : -1;
-//     UpdateWidgetVBO();
-//     UpdateCharsVBO();
-// }
-
-// void GlWidgetLayer::Special(View&, InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, int button_state)
-// {
-//     if(inType == InputSpecialScroll) {
-//         const float delta = p2;
-//         const float offset_max = (widgets.size()-1.0f) * widget_height;
-//         scroll_offset = std::clamp(scroll_offset + delta, -offset_max, 0.0f);
-//     }
-// }
 
 void GlWidgetLayer::SetValue(const Eigen::Array2d& p, const MinMax<Eigen::Array2i>& region, bool pressed, bool dragging)
 {
@@ -401,27 +374,32 @@ void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
 
             auto& r = var->Meta().range;
             const double range = r[1]-r[0];
-            const double steps = is_integral ? (range / var->Meta().increment) : 0.0;
+            const double steps = is_integral ? range : (range / var->Meta().increment);
             widgets.push_back(WidgetParams{
                                            event.var->Meta().friendly, "",
                                            1.0f, static_cast<int>(steps),
                                            WidgetType::slider,
-                                           [var](const WidgetParams& p){ // read_params
-                                               Var<double> v(var);
-                                               auto& r = var->Meta().range;
-                                               const double range = r[1]-r[0];
-                                               v = std::clamp(r[0] + range*p.value_percent, r[0], r[1]);
-                                               v.Meta().gui_changed = true;
+                                           [var,is_integral](const WidgetParams& p){ // read_params
+                                                Var<double> v(var);
+                                                auto& r = var->Meta().range;
+                                                const double range = r[1]-r[0];
+                                                const double val = std::clamp(r[0] + range*p.value_percent, r[0], r[1]);
+                                                v = is_integral ? std::round(val) : val;
+                                                v.Meta().gui_changed = true;
                                            },
-                                           [var](WidgetParams& p){ // write params
-                                               // TODO: this is breaking the 'springyness' for integral sliders
-                                               // because reading from the int value is flooring the value_percent.
-                                               Var<double> v(var);
-                                               auto& r = var->Meta().range;
-                                               const double range = r[1]-r[0];
-                                               p.value_percent = std::clamp( (v-r[0]) / range, 0.0, 1.0);
-                                               p.value = var->str->Get();
-                                               },
+                                           [var,is_integral](WidgetParams& p){ // write params
+                                                // TODO: this is breaking the 'springyness' for integral sliders
+                                                // because reading from the int value is flooring the value_percent.
+                                                Var<double> v(var);
+                                                const double val = v.Get();
+                                                auto& r = var->Meta().range;
+                                                const double range = r[1]-r[0];
+                                                const double from_percent_val = std::clamp(r[0] + range*p.value_percent, r[0], r[1]);
+                                                if(!is_integral || std::round(from_percent_val) != std::round(val)) {
+                                                    p.value_percent = std::clamp( (val-r[0]) / range, 0.0, 1.0);
+                                                }
+                                                p.value = var->str->Get();
+                                            },
                                            });
             widgets.back().write_params(widgets.back());
         } else if (!strcmp(var->TypeId(), typeid(std::function<void(void)>).name() ) ) {

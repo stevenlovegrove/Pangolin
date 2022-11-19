@@ -22,8 +22,6 @@ namespace pangolin
 {
 
 struct DrawLayerImpl : public DrawLayer {
-    Eigen::Array3f debug_random_color;
-
     DrawLayerImpl(const DrawLayerImpl::Params& p)
         : name_(p.name),
         size_hint_(p.size_hint),
@@ -34,9 +32,9 @@ struct DrawLayerImpl : public DrawLayer {
         cam_from_world_(Eigen::Matrix4d::Identity()),
         intrinsic_k_(Eigen::Matrix4d::Identity()),
         non_linear_(),
-        objects_(p.objects)
+        objects_(p.objects),
+        background_(p.background)
     {
-        debug_random_color = (Eigen::Array3f::Random() + 1.0f) / 2.0;
     }
 
     std::string name() const override
@@ -94,25 +92,41 @@ struct DrawLayerImpl : public DrawLayer {
         }
     }
 
-    void renderIntoRegion(const Context& c, const RenderParams& p) override {
-        ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
-        c.setViewport(p.region);
-
-        for(auto& obj : objects_) {
-            if(DrawnImage* im = dynamic_cast<DrawnImage*>(obj.ptr())) {
-                if( (!camera_ || !camera_from_world_) && !setDefaultImageParams(*im)) continue;
-                PANGO_ENSURE(camera_ && camera_from_world_);
-                render_image_.draw(*im, *camera_, *camera_from_world_, near_far_);
-            }else if(DrawnPrimitives* prim = dynamic_cast<DrawnPrimitives*>(obj.ptr())) {
+    void renderObjectsIntoRegion(
+        const std::vector<Shared<Drawable>>& objects,
+        bool background
+    ) {
+        for(auto& obj : objects) {
+            if(const DrawnImage* im = dynamic_cast<const DrawnImage*>(obj.ptr())) {
+                if(background) {
+                    const auto imsize = im->image->imageSize();
+                    if(imsize.isEmpty()) continue;
+                    auto ortho = CameraModel(imsize, CameraDistortionType::orthographic, Eigen::Vector4d{1.0,1.0, 0.0,0.0} );
+                    render_image_.draw(*im, ortho, sophus::SE3d(), {-1.0f, 1.0f});
+                }else{
+                    if( (!camera_ || !camera_from_world_) && !setDefaultImageParams(*im)) continue;
+                    PANGO_ENSURE(camera_ && camera_from_world_);
+                    render_image_.draw(*im, *camera_, *camera_from_world_, near_far_);
+                }
+            }else if(const DrawnPrimitives* prim = dynamic_cast<const DrawnPrimitives*>(obj.ptr())) {
                 if(!camera_ || !camera_from_world_) setDefaultPrimitivesParams(*prim);
                 PANGO_ENSURE(camera_ && camera_from_world_);
                 render_primitives_.draw(*prim, *camera_, *camera_from_world_, near_far_);
-            }else if(DrawnSolids* solids = dynamic_cast<DrawnSolids*>(obj.ptr())) {
+            }else if(const DrawnSolids* solids = dynamic_cast<const DrawnSolids*>(obj.ptr())) {
                 if(!camera_ || !camera_from_world_) setDefaultPrimitivesParams(*prim);
                 PANGO_ENSURE(camera_ && camera_from_world_);
                 render_solids_.draw(*solids, *camera_, *camera_from_world_, near_far_);
             }
         }
+    }
+
+    void renderIntoRegion(const Context& context, const RenderParams& params) override {
+        ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
+        context.setViewport(params.region);
+
+        renderObjectsIntoRegion(background_, true);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        renderObjectsIntoRegion(objects_, false);
     }
 
     bool handleEvent(const Context& context, const Event& event) override {
@@ -187,6 +201,7 @@ struct DrawLayerImpl : public DrawLayer {
     NonLinearMethod non_linear_;
 
     std::vector<Shared<Drawable>> objects_;
+    std::vector<Shared<Drawable>> background_;
     DrawnImageProgram render_image_;
     DrawnPrimitivesProgram render_primitives_;
     DrawnSolidsProgram render_solids_;
@@ -194,6 +209,47 @@ struct DrawLayerImpl : public DrawLayer {
 
 PANGO_CREATE(DrawLayer) {
     return Shared<DrawLayerImpl>::make(p);
+}
+
+struct ClearLayerImpl : public Layer {
+    enum class Action {
+        clear_depth,
+        clear_color,
+        clear_both
+    };
+
+    ClearLayerImpl(GLbitfield clear_mask)
+    : clear_mask_(clear_mask)
+    {
+    }
+
+    std::string name() const override { return "-"; }
+    Size sizeHint() const override { return {Parts{0}, Parts{0}}; }
+
+    void renderIntoRegion(const Context&, const RenderParams&) override {
+        glClear(clear_mask_);
+    }
+
+    GLbitfield clear_mask_;
+};
+
+
+Shared<Layer> Layer::ClearZ()
+{
+    static auto instance = Shared<ClearLayerImpl>::make(GL_DEPTH_BUFFER_BIT);
+    return instance;
+}
+
+Shared<Layer> Layer::ClearColor()
+{
+    static auto instance = Shared<ClearLayerImpl>::make(GL_COLOR_BUFFER_BIT);
+    return instance;
+}
+
+Shared<Layer> Layer::Clear()
+{
+    static auto instance = Shared<ClearLayerImpl>::make(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    return instance;
 }
 
 }
