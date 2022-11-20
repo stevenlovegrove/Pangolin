@@ -366,6 +366,12 @@ struct ContextImpl : public Context {
             window()->SwapBuffers();
             window()->ProcessEvents();
         }
+
+        should_run = false;
+    }
+
+    bool isRunning() const override {
+        return should_run;
     }
 
     sophus::IntensityImage<> read(
@@ -422,7 +428,7 @@ private:
     Shared<Window> window_;
     LayerGroup layout_;
     std::shared_ptr<Layer> active_layer_;
-    std::atomic<bool> should_run;
+    volatile std::atomic<bool> should_run;
 
     Interactive::PointerButtonStatus button_active_ = {};
     Interactive::ModifierKeyStatus modifier_active_ = {};

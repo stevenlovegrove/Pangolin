@@ -49,6 +49,10 @@ struct Context : std::enable_shared_from_this<Context>
     // Convenience method for looping without a user function
     inline void loop() { loop([](){return true;}); }
 
+    // Returns true if the context is engaged in its loop function and has
+    // not been asked to exit.
+    virtual bool isRunning() const = 0;
+
     // Return the current LayerGroup layout - this may have been
     // customized at runtime by the end-user.
     // TODO: provide a method to serialize LayerGroup for easily
