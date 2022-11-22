@@ -45,7 +45,7 @@ struct DrawLayerImpl : public DrawLayer {
         }
     }
 
-    Shared<ViewParams> getViewParams() const override {
+    Shared<ViewParams> viewParams() const override {
         return view_params_;
     }
 
@@ -57,7 +57,7 @@ struct DrawLayerImpl : public DrawLayer {
         }
     }
 
-    Shared<ViewConstraints> getViewConstraints() const override {
+    Shared<ViewConstraints> viewConstraints() const override {
         return view_constraints_;
     }
 

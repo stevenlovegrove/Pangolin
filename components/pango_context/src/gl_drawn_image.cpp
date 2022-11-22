@@ -10,11 +10,6 @@
 namespace pangolin
 {
 
-inline Eigen::Vector2i toEigen(ImageSize size)
-{
-    return {size.width, size.height};
-}
-
 struct GlDrawnImage : public DrawnImage
 {
     // This program renders an image on the z=0 plane in a discrete pixel

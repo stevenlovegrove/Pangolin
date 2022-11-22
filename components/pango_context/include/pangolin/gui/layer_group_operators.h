@@ -26,6 +26,11 @@ static LayerGroup toGroup(const Shared<L>& layer) {
     return {layer};
 }};
 
+template<DerivedFrom<Layer> L> struct LayerTraits<std::shared_ptr<L>> {
+static LayerGroup toGroup(const std::shared_ptr<L>& layer) {
+    return {layer};
+}};
+
 ////////////////////////////////////////////////////////////////////
 
 // Concept to accept types where the LayerTraits specialization has been defined
@@ -84,7 +89,10 @@ PANGO_PANEL_OPERATOR(operator^, LayerGroup::Grouping::stacked)
 template<typename T>
 LayerGroup flex(T head)
 {
-    return LayerTraits<T>::toGroup(head);
+    LayerGroup g;
+    g.grouping = LayerGroup::Grouping::flex;
+    g.children.push_back(LayerTraits<T>::toGroup(head));
+    return g;
 }
 
 template<typename T, typename ...TArgs>

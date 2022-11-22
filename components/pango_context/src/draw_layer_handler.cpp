@@ -1,9 +1,11 @@
 #include <pangolin/utils/fmt.h>
 #include <pangolin/utils/variant_overload.h>
 #include <pangolin/utils/logging.h>
+
 #include <sophus/geometry/ray.h>
 
 #include "draw_layer_handler.h"
+#include "camera_utils.h"
 
 namespace pangolin {
 
@@ -12,8 +14,12 @@ struct PointerState {
     Eigen::Vector2d p_img;
     Eigen::Vector3d p_cam;
     sophus::Se3F64 cam_T_world;
+    sophus::CameraModel camera;
     double z_depth_cam;
 };
+
+///////////////////////////////////////////////////////////////////////////
+// Util maths
 
 // Return the projection of ``point_in_foo`` onto the plane
 // through the origin which is perpendicular to ``axis_in_foo``
@@ -28,7 +34,20 @@ Eigen::Vector3d componentPerpendicularToAxis(
   return perp;
 }
 
-// UNTESTED
+// Return a transform which represents a rotation by angle_rad around axis.
+sophus::SE3d rotateAroundAxis(
+  const sophus::Ray3<double>& axis,
+  double angle_rad
+) {
+  sophus::SE3d point_T_cam(sophus::SO3d(), -axis.origin());
+  sophus::SE3d point_R_point(
+    sophus::SO3d::exp(axis.direction().vector()*angle_rad),
+    Eigen::Vector3d::Zero()
+  );
+  return point_T_cam.inverse() * point_R_point * point_T_cam;
+}
+
+// NOT WELL TESTED (probably broken)
 sophus::SO3d alignUpDir(
   const Eigen::Vector3d& unit_axis_in_cam,
   const Eigen::Vector3d& unit_up_in_cam,
@@ -52,9 +71,14 @@ sophus::SO3d alignUpDir(
   return b_R_a;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Camera motion (modifying cam_T_world)
+
+// NOT WELL TESTED
 // Rotate camera such that the direction under the cursor at
 // ``down_state`` is once more under the cursor with ``state``
-sophus::SE3d orientPointToPoint(
+void cameraOrientPointToPoint(
+  sophus::SE3d& cam_T_world,
   const PointerState& down_state,
   const PointerState& state,
   const std::optional<Eigen::Vector3d>& unit_up_in_world,
@@ -68,8 +92,7 @@ sophus::SE3d orientPointToPoint(
 
   sophus::SO3d to_R_from;
 
-  // if(unit_up_in_world)
-  if(true)
+  if(unit_up_in_world)
   {
     const sophus::SO3d to_R_pointed = alignUpDir(
       pointed_R_from * unit_x_from,
@@ -81,13 +104,14 @@ sophus::SE3d orientPointToPoint(
     to_R_from = pointed_R_from;
   }
 
-  return sophus::SE3d(to_R_from, Eigen::Vector3d::Zero()) * down_state.cam_T_world;
+  cam_T_world = sophus::SE3d(to_R_from, Eigen::Vector3d::Zero()) * down_state.cam_T_world;
 }
 
 // Translate camera such that the point in 3D under the cursor at
 // ``down_state`` is once more under the cursor with ``state`` and
 // having the same z_depth
-sophus::SE3d translatePointToPoint(
+void cameraTranslatePointToPoint(
+  sophus::SE3d& cam_T_world,
   const PointerState& down_state,
   const PointerState& state)
 {
@@ -95,27 +119,14 @@ sophus::SE3d translatePointToPoint(
   const Eigen::Vector3d to = from.z() * state.p_cam / state.p_cam.z();
   const Eigen::Vector3d to_in_from = to - from;
   // TODO: I would have expected to need from_in_to here, but this works.
-  return sophus::SE3d(sophus::SO3d(), to_in_from) * down_state.cam_T_world;
-}
-
-// Return a transform which represents a rotation by angle_rad around axis.
-sophus::SE3d rotateAroundAxis(
-  const sophus::Ray3<double>& axis,
-  double angle_rad
-) {
-  sophus::SE3d point_T_cam(sophus::SO3d(), -axis.origin());
-  sophus::SE3d point_R_point(
-    sophus::SO3d::exp(axis.direction().vector()*angle_rad),
-    Eigen::Vector3d::Zero()
-  );
-  return point_T_cam.inverse() * point_R_point * point_T_cam;
+  cam_T_world = sophus::SE3d(sophus::SO3d(), to_in_from) * down_state.cam_T_world;
 }
 
 // Rotate about point_in_world maintaining up_dir_in_world relative to camera,
 // such that point_in_world, camera_center and up_dir_in_world lie in a common
 // plane.
-sophus::SE3d rotateAbout(
-  const sophus::SE3d& cam_T_world,
+void cameraRotateAbout(
+  sophus::SE3d& cam_T_world,
   const Eigen::Vector3d& point_in_world,
   const std::optional<Eigen::Vector3d>& up_dir_in_world,
   const Eigen::Vector3d& rotation_amount,
@@ -132,52 +143,80 @@ sophus::SE3d rotateAbout(
   up_dir_in_cam = rotx_T_world.so3() * (*up_dir_in_world);
   point_in_cam = cam_T_world * point_in_world;
   Eigen::Vector3d right_dir_in_cam(1.0,0.0,0.0);
-  return rotateAroundAxis(
+  cam_T_world = rotateAroundAxis(
     sophus::Ray3<double>(point_in_cam, sophus::UnitVector3<double>::fromUnitVector(right_dir_in_cam)),
     rotation_amount.x()
   ) * rotx_T_world;
 }
 
-void zoomTowards(
-    sophus::CameraModel& camera,
+void cameraMoveTowardsPoint(
+    const sophus::CameraModel& camera,
     sophus::SE3d& cam_from_world,
     MinMax<Eigen::Vector3d>& camera_limits_in_world,
     const Eigen::Vector3d& point_in_cam,
     const MinMax<double>& near_far,
     const double zoom_input
 ) {
-  using namespace sophus;
-  if(camera.distortionType() == CameraDistortionType::orthographic) {
-    double factor = 1.0 - zoom_input;
-    // if(ortho.params()[0] * factor < 1.0) factor = 1.0 / ortho.params()[0];
-
-    Eigen::Vector2d ff = camera.focalLength();
-    Eigen::Vector2d pp = camera.principalPoint();
-    ff *= factor;
-
-    // Adjust focal length to match requested zoom.
-    // Adjust translation so that point in camera coordinates stays under cursor.
-    const Eigen::Vector2d pix1 = camera.camProj(point_in_cam);
-    camera.setFocalLength(ff);
-    const Eigen::Vector2d pix2 = camera.camProj(point_in_cam);
-    pp += pix1 - pix2;
-    camera.setPrincipalPoint(pp);
-
-    // if(!camera_limits_in_world.empty()) {
-    //   const Eigen::Vector2d orig(ortho.imageSize().width, ortho.imageSize().height);
-    //   const Eigen::Vector2d diff = orig.array() - orig.array()/scale_param.array();
-    //   const Eigen::Vector3d offset = -(ortho.camUnproj(Eigen::Vector2d(-0.5,-0.5), 0.0) + Eigen::Vector3d(0.5,0.5,0.0));
-
-    //   camera_limits_in_world = MinMax<Eigen::Vector3d>(
-    //     offset, {offset[0]+diff[0], offset[1]+diff[1], offset[2]}
-    //   );
-    // }
-  }else{
-    const Eigen::Vector3d vec = zoom_input * point_in_cam;
-    cam_from_world = sophus::SE3d(sophus::SO3d(), vec) * cam_from_world;
-  }
+  const Eigen::Vector3d vec = zoom_input * point_in_cam;
+  cam_from_world = sophus::SE3d(sophus::SO3d(), vec) * cam_from_world;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Image plane motion (modifying CameraModel)
+
+// Translate camera such that the point in 3D under the cursor at
+// ``down_state`` is once more under the cursor with ``state`` and
+// having the same z_depth
+void imagePointToPoint(
+  sophus::CameraModel& camera,
+  const PointerState& down_state,
+  const PointerState& state)
+{
+  camera = down_state.camera;
+  camera.setPrincipalPoint(down_state.camera.principalPoint() + state.p_img - down_state.p_img);
+}
+
+void imageZoom(
+    sophus::CameraModel& camera,
+    const sophus::SE3d& cam_from_world,
+    const MinMax<Eigen::Vector3d>& camera_limits_in_world,
+    const Eigen::Vector3d& point_in_cam,
+    const MinMax<double>& near_far,
+    const double zoom_input
+) {
+  using namespace sophus;
+  double factor = 1.0 - zoom_input;
+  // if(ortho.params()[0] * factor < 1.0) factor = 1.0 / ortho.params()[0];
+
+  Eigen::Vector2d ff = camera.focalLength();
+  Eigen::Vector2d pp = camera.principalPoint();
+  ff *= factor;
+
+  // Adjust focal length to match requested zoom.
+  // Adjust translation so that point in camera coordinates stays under cursor.
+  const Eigen::Vector2d pix1 = camera.camProj(point_in_cam);
+  camera.setFocalLength(ff);
+  const Eigen::Vector2d pix2 = camera.camProj(point_in_cam);
+  pp += pix1 - pix2;
+  camera.setPrincipalPoint(pp);
+
+  // if(!camera_limits_in_world.empty()) {
+  //   const Eigen::Vector2d orig(ortho.imageSize().width, ortho.imageSize().height);
+  //   const Eigen::Vector2d diff = orig.array() - orig.array()/scale_param.array();
+  //   const Eigen::Vector3d offset = -(ortho.camUnproj(Eigen::Vector2d(-0.5,-0.5), 0.0) + Eigen::Vector3d(0.5,0.5,0.0));
+
+  //   camera_limits_in_world = MinMax<Eigen::Vector3d>(
+  //     offset, {offset[0]+diff[0], offset[1]+diff[1], offset[2]}
+  //   );
+  // }
+}
+
+void imagePan( sophus::CameraModel& camera, const Eigen::Array2d& pan, const Eigen::Array2i& viewport ) {
+    Eigen::Array2d pixscale = toEigen(camera.imageSize()).cast<double>() / viewport.cast<double>();
+    const Eigen::Array2d pp = camera.principalPoint();
+    const Eigen::Array2d ff = camera.focalLength();
+    camera.setPrincipalPoint(pp + ff*pixscale*pan);
+}
 
 class HandlerImpl : public DrawLayerHandler {
  public:
@@ -202,8 +241,8 @@ class HandlerImpl : public DrawLayerHandler {
     const Interactive::Event& event,
     DrawLayer& layer
   ) override {
-    auto& view = *layer.getViewParams();
-    auto& constraints = *layer.getViewConstraints();
+    auto& view = *layer.viewParams();
+    auto& constraints = *layer.viewConstraints();
 
     const auto region = event.pointer_pos.region();
     const Eigen::Array2d p_window = event.pointer_pos.posInWindow();
@@ -227,7 +266,7 @@ class HandlerImpl : public DrawLayerHandler {
 
     const Eigen::Vector3d p_cam = view.camera.camUnproj(pix_img, zdepth_cam);
     const Eigen::Vector3d p_world = view.camera_from_world.inverse() * p_cam;
-    const PointerState state = {pix_img, p_cam, view.camera_from_world, zdepth_cam};
+    const PointerState state = {pix_img, p_cam, view.camera_from_world, view.camera, zdepth_cam};
 
     std::visit(overload {
     [&](const Interactive::PointerEvent& arg) {
@@ -239,45 +278,53 @@ class HandlerImpl : public DrawLayerHandler {
             return;
           }
           if(arg.button_active == PointerButton::primary) {
-            view.camera_from_world = translatePointToPoint(*down_state_, state);
-          // }else if(arg.button_active == PointerButton::secondary) {
-          //   camera_from_world = orientPointToPoint(*down_state_, state, up_in_world_, axis_convention_);
-          // }else if(arg.button_active == (PointerButton::primary | PointerButton::secondary) ) {
-          //   // ... in plane rotation
+
+            if(constraints.image_plane_navigation || (view.camera.distortionType() == sophus::CameraDistortionType::orthographic) ) {
+              imagePointToPoint(view.camera, *down_state_, state);
+            }else{
+              cameraTranslatePointToPoint(view.camera_from_world, *down_state_, state);
+            }
           }
         }
     },
     [&](const Interactive::ScrollEvent& arg) {
+        cursor_in_world_ = p_world;
+        const double zoom_input = std::clamp(-arg.zoom/1.0, -1.0, 1.0);
+
         // double zoom_input = std::clamp(-arg.pan[1]/200.0, -1.0, 1.0);
         // zoomTowards(camera, camera_from_world, camera_limits_in_world_, p_cam, near_far, zoom_input);
 
-        // Don't allow the center of rotation change without a small delay
-        // from scrolling - otherwise it is very easy to accidentally rotate
-        // around a point that suddenly comes under the cursor.
-        auto now = std::chrono::system_clock::now();
-        if(now - last_cursor_update_ > cursor_update_wait_) {
-          cursor_in_world_ = p_world;
-        }
-        last_cursor_update_ = now;
-
-        if(constraints.image_plane_navigation) {
+        if(constraints.image_plane_navigation || (view.camera.distortionType() == sophus::CameraDistortionType::orthographic) ) {
           const Eigen::Vector2d pan = Eigen::Vector2d(arg.pan[0], arg.pan[1]).array() / view.camera.focalLength().array();
-          view.camera_from_world = sophus::SE3d(
-            sophus::SO3d(), Eigen::Vector3d(pan.x(), pan.y(), 0.0)
-          ) * view.camera_from_world;
+          imagePan(view.camera, pan, region.range());
+
+          imageZoom(
+            view.camera, view.camera_from_world,
+            constraints.bounds_in_world,
+            view.camera_from_world * cursor_in_world_,
+            view.near_far, zoom_input
+          );
         }else{
-          view.camera_from_world = rotateAbout(
-            view.camera_from_world, cursor_in_world_,  up_in_world_,
+          // Don't allow the center of rotation change without a small delay
+          // from scrolling - otherwise it is very easy to accidentally rotate
+          // around a point that suddenly comes under the cursor.
+          auto now = std::chrono::system_clock::now();
+          if(now - last_cursor_update_ > cursor_update_wait_) {
+            cursor_in_world_ = p_world;
+          }
+          last_cursor_update_ = now;
+
+          cameraRotateAbout( view.camera_from_world, cursor_in_world_,  up_in_world_,
             Eigen::Vector3d(arg.pan[1], arg.pan[0], 0.0)/200.0, DeviceXyz::right_down_forward );
+
+          cameraMoveTowardsPoint(
+            view.camera, view.camera_from_world,
+            constraints.bounds_in_world,
+            view.camera_from_world * cursor_in_world_,
+            view.near_far, zoom_input
+          );
         }
 
-        double zoom_input = std::clamp(-arg.zoom/1.0, -1.0, 1.0);
-        zoomTowards(
-          view.camera, view.camera_from_world,
-          constraints.bounds_in_world,
-          view.camera_from_world * cursor_in_world_,
-          view.near_far, zoom_input
-        );
     },
     [&](const Interactive::KeyboardEvent& arg) {
       // do nothing for now

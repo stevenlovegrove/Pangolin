@@ -8,6 +8,11 @@
 namespace pangolin
 {
 
+inline Eigen::Array2i toEigen(const sophus::ImageSize size)
+{
+    return {size.width, size.height};
+}
+
 inline Eigen::Matrix4d linearClipFromCamera(const sophus::CameraModel& camera, MinMax<double> near_far)
 {
     using namespace sophus;

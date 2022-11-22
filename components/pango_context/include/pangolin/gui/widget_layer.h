@@ -32,14 +32,13 @@ struct WidgetLayer : public Layer
     static Shared<WidgetLayer> Create(Params p);
 };
 
-
-// Helper for adding pangolin vars directly to layouts
 template<typename T>
-inline LayerGroup intoLayerGroup(const Var<T>& var) {
-    // TODO: not obvious what size we should pick...
-    return intoLayerGroup(WidgetLayer::Create({
-        .name=var.Meta().full_name, .size_hint={Parts{1},Pixels{50}}
-    }));
-}
+struct LayerTraits<Var<T>> {
+    static LayerGroup toGroup(const Var<T>& var) {
+        return LayerGroup(WidgetLayer::Create({
+            .name=var.Meta().full_name, .size_hint={Parts{1},Pixels{50}}
+        }));
+    }
+};
 
 }

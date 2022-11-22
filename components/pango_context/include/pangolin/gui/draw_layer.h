@@ -42,10 +42,10 @@ struct DrawLayer : public Layer
     // intrinsic and extrinsic (sensor+lens and position) properties for
     // rendering. ViewParams can be shared across DrawLayer instances.
     virtual void setViewParams(std::shared_ptr<ViewParams>&) = 0;
-    virtual Shared<ViewParams> getViewParams() const = 0;
+    virtual Shared<ViewParams> viewParams() const = 0;
 
     virtual void setViewConstraints(std::shared_ptr<ViewConstraints>&) = 0;
-    virtual Shared<ViewConstraints> getViewConstraints() const = 0;
+    virtual Shared<ViewConstraints> viewConstraints() const = 0;
 
     // Add, remove or clear Drawables from this layer
     virtual void add(const Shared<Drawable>& r) = 0;

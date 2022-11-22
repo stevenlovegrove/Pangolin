@@ -221,7 +221,8 @@ void computeLayoutRegion(const LayerGroup& group, const MinMax<Eigen::Array2i>& 
                 }
             }
 
-            PANGO_ENSURE(best);
+            PANGO_ENSURE(best, "Problem packing for flex layout.");
+
             const double flex_aspect = best->flexAspect();
             const double unit_size_pix = flex_aspect > target_aspect ?
                 region.range().x() / best->row_width :
