@@ -32,36 +32,14 @@ struct WidgetLayer : public Layer
     static Shared<WidgetLayer> Create(Params p);
 };
 
-// ////////////////////////////////////////////////////////////////////
-// /// Represents a simple user interface element
-// ///
-// struct Widget : std::enable_shared_from_this<Widget>
-// {
-// };
 
-// struct Seperator : public Widget
-// {
-//     struct Params {
-//         std::string label = "";
-//     };
-
-//     static Shared<Seperator> Create(Params p);
-// };
-
-// struct Slider : public Widget
-// {
-//     struct Params {
-//         std::string label = "";
-//         double min=0.0;
-//         double max=1.0;
-//     };
-
-//     static Shared<Slider> Create(Params p);
-// };
-
-// template<DerivedFrom<WidgetLayer> T>
-// void operator+=(const Shared<T>& g1, const SharedVector<Widget>& g2)
-// {
-// }
+// Helper for adding pangolin vars directly to layouts
+template<typename T>
+inline LayerGroup intoLayerGroup(const Var<T>& var) {
+    // TODO: not obvious what size we should pick...
+    return intoLayerGroup(WidgetLayer::Create({
+        .name=var.Meta().full_name, .size_hint={Parts{1},Pixels{50}}
+    }));
+}
 
 }

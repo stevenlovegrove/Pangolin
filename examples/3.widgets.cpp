@@ -1,5 +1,5 @@
 #include <pangolin/context/context.h>
-#include <pangolin/gui/widget_layer.h>
+#include <pangolin/gui/all_layers.h>
 #include <pangolin/var/var.h>
 #include <sophus/lie/so3.h>
 
@@ -71,7 +71,7 @@ int main( int /*argc*/, char** /*argv*/ )
              DrawnPrimitives::Type::triangles :
              DrawnPrimitives::Type::line_loop;
 
-        primitives->world_from_drawable = sophus::SE3d(
+        primitives->parent_from_drawable = sophus::SE3d(
             sophus::SO3d::rotZ(angle_theta),
             Eigen::Vector3d::Zero()).matrix();
 

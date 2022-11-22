@@ -1,5 +1,5 @@
 #include <pangolin/context/context.h>
-#include <pangolin/gui/widget_layer.h>
+#include <pangolin/gui/all_layers.h>
 
 /*
   == Pangolin-by-example ==

@@ -44,7 +44,8 @@ class MinMax {
   }
 
   // Only applicable if minmax object is valid()
-  auto range() const requires Differencable<TPixel> { return max() - min(); }
+  auto range() const requires Differencable<TPixel> { return eval(max() - min()); }
+  auto mid() const { return eval(min() + range() / 2); }
 
   MinMax<TPixel>& extend(MinMax const& o) {
     min_max[0] = pangolin::min(min(), o.min());
@@ -72,11 +73,31 @@ class MinMax {
            min_max[1] == MultiDimLimits<TPixel>::lowest();
   }
 
+  static MinMax<TPixel> open() {
+    MinMax<TPixel> mm;
+    mm.min_max = {
+      MultiDimLimits<TPixel>::min(),
+      MultiDimLimits<TPixel>::max()
+    };
+    return mm;
+  }
+
+  static MinMax<TPixel> closed() {
+    MinMax<TPixel> mm;
+    mm.min_max = {
+      MultiDimLimits<TPixel>::max(),
+      MultiDimLimits<TPixel>::min()
+    };
+    return mm;
+  }
+
  private:
   // invariant that min_max[0] <= min_max[1]
   // or min_max is as below when uninitialized
   std::array<TPixel, 2> min_max = {
-      MultiDimLimits<TPixel>::max(), MultiDimLimits<TPixel>::lowest()};
+      MultiDimLimits<TPixel>::max(),
+      MultiDimLimits<TPixel>::min()
+  };
 };
 
 namespace details {

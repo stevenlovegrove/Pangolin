@@ -2,9 +2,7 @@
 
 #include <pangolin/maths/camera_look_at.h>
 #include <pangolin/maths/min_max.h>
-#include <pangolin/gui/layer.h>
-#include <pangolin/gui/drawable.h>
-#include <pangolin/handler/handler.h>
+#include <pangolin/gui/layer_group.h>
 #include <sophus/sensor/camera_model.h>
 #include <sophus/lie/se3.h>
 
@@ -18,48 +16,43 @@ namespace pangolin
 ///
 struct DrawLayer : public Layer
 {
-    struct Lut {
-        // Maps input pixel (u,v) to a direction vector (dx,dy,dz)
-        // in camera frame. We use a vector ray for simplicity and
-        // speed
-        Shared<DeviceBuffer> unproject;
-
-        // Maps ray angle (theta,phi) to pixel (u,v).
-        // We use an angular map representation here despite its
-        // tradeoffs to keep the input space bounded and to support
-        // fisheye distortions
-        Shared<DeviceBuffer> project;
-
-        // Represents a per-pixel scale factor
-        Shared<DeviceBuffer> vignette;
+    struct ViewParams {
+        sophus::CameraModel camera;
+        sophus::Se3F64 camera_from_world;
+        MinMax<double> near_far = {1e-3, 1e6};
     };
-    using NonLinearMethod = std::variant<std::monostate,Lut>;
+    struct ViewConstraints {
+        bool image_plane_navigation = false;
+        MinMax<Eigen::Vector3d> bounds_in_world = {};
+    };
+    struct Drawable {
+        virtual ~Drawable() {}
+        virtual void draw(const ViewParams&, const Eigen::Vector2i& viewport_dim) = 0;
+        virtual MinMax<Eigen::Vector3d> boundsInParent() const = 0;
+        Eigen::Matrix4d parent_from_drawable = Eigen::Matrix4d::Identity();
+    };
+    enum class AspectPolicy {
+        stretch,
+        crop,
+        overdraw,
+        mask
+    };
 
-    // Specify a handler to feed user input into this DrawLayer
-    // to drive the tranforms and view options.
-    virtual void setHandler(const std::shared_ptr<Handler>&) = 0;
-    virtual std::shared_ptr<Handler> getHandler() const = 0;
+    // Set or retrieve the shared ViewParams object for specifying the
+    // intrinsic and extrinsic (sensor+lens and position) properties for
+    // rendering. ViewParams can be shared across DrawLayer instances.
+    virtual void setViewParams(std::shared_ptr<ViewParams>&) = 0;
+    virtual Shared<ViewParams> getViewParams() const = 0;
 
-    // Set the camera to use for rendering
-    virtual void setCamera(std::shared_ptr<sophus::CameraModel>&) = 0;
-    virtual std::shared_ptr<sophus::CameraModel> getCamera() const = 0;
+    virtual void setViewConstraints(std::shared_ptr<ViewConstraints>&) = 0;
+    virtual Shared<ViewConstraints> getViewConstraints() const = 0;
 
-    // Set the view transform to use for rendering
-    virtual void setCameraPoseFromWorld( std::shared_ptr<sophus::Se3F64>&) = 0;
-    virtual std::shared_ptr<sophus::Se3F64> getCameraPoseFromWorld() const = 0;
-
-    // This method is the main way in which a handler object
-    // can constrain viewing parameters to relevant content.
-    virtual MinMax<Eigen::Vector3d> getSceneBoundsInWorld() const = 0;
-
+    // Add, remove or clear Drawables from this layer
     virtual void add(const Shared<Drawable>& r) = 0;
-
     virtual void remove(const Shared<Drawable>& r) = 0;
-
     virtual void clear() = 0;
 
     // Convenience method to add several drawables together
-    // We take two concrete types to differentiate from virtual add above
     template<typename T1, typename T2, typename ...Ts>
     void add(const T1& t1, const T2& t2, const Ts&... ts) {
         add(t1); add(t2);
@@ -69,18 +62,25 @@ struct DrawLayer : public Layer
     struct Params {
         std::string name = "";
         Size size_hint = {Parts{1}, Parts{1}};
+        AspectPolicy aspect_policy = AspectPolicy::mask;
 
-        // Leave these all as default for smart initialization
-        std::shared_ptr<sophus::CameraModel> camera = nullptr;
-        std::shared_ptr<sophus::Se3F64> camera_from_world = nullptr;
-        MinMax<double> near_far = {};
-        std::shared_ptr<Handler> handler = Handler::Create({});
+        // Leave as nullptr for smart initialization.
+        ViewParams view_params = {};
+        ViewConstraints view_constraints = {};
 
         // Objects to draw
         std::vector<Shared<Drawable>> objects = {};
-        std::vector<Shared<Drawable>> background = {};
+        std::vector<Shared<Drawable>> objects_in_camera = {};
     };
     static Shared<DrawLayer> Create(Params p);
+};
+
+// Helper for adding Drawables directly into layouts
+template<DerivedFrom<DrawLayer::Drawable> T>
+struct LayerTraits<Shared<T>> {
+    static LayerGroup toGroup(const Shared<T>& drawable) {
+        return LayerTraits<Shared<Layer>>::toGroup( DrawLayer::Create({ .objects = {drawable} }));
+    }
 };
 
 }

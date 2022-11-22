@@ -1,12 +1,11 @@
 #pragma once
 
 #include <algorithm>
-#include <pangolin/gui/widget_layer.h>
-#include <pangolin/gui/draw_layer.h>
-#include <pangolin/utils/variant_overload.h>
-#include <pangolin/maths/eigen_scalar_methods.h>
+#include <vector>
+
+#include <Eigen/Core>
 #include <pangolin/utils/logging.h>
-#include <pangolin/var/var.h>
+#include <pangolin/gui/layer.h>
 
 namespace pangolin
 {
@@ -65,111 +64,6 @@ struct LayerGroup
     mutable LayoutInfo cached_;
 };
 
-////////////////////////////////////////////////////////////////////
-// Define Convenience operators for building arrangements
-
-// Trivial implementation of intoLayerGroup for the group itself
-// Overload this for other types which can be automatically placed into a LayerGroup
-inline LayerGroup intoLayerGroup(const LayerGroup& group) {
-    return group;
 }
 
-// A layer is trivially wrapped into a LayerGroup
-inline LayerGroup intoLayerGroup(const Shared<Layer>& layer) {
-    return {layer};
-}
-
-// Build a DrawLayer for Drawables specified directly.
-// All defaults will be used for the DrawLayer
-inline LayerGroup intoLayerGroup(const Shared<Drawable>& drawable) {
-    return intoLayerGroup(
-        DrawLayer::Create({
-            .objects = {drawable}
-        })
-    );
-}
-
-// Allow images to be specified directly for convenience
-inline LayerGroup intoLayerGroup(const sophus::IntensityImage<>& image) {
-    auto layer = intoLayerGroup(
-        DrawnImage::Create({.image=image})
-    );
-    layer.width_over_height = double(image.width()) / image.height();
-    return layer;
-}
-
-// Allow Vars to be specified directly for convenience
-template<typename T>
-inline LayerGroup intoLayerGroup(const Var<T>& var) {
-    // TODO: not obvious what size we should pick...
-    return intoLayerGroup(WidgetLayer::Create({
-        .name=var.Meta().full_name,
-        .size_hint={Parts{1},Pixels{50}}
-    }));
-}
-
-// Specialize
-template<typename T>
-concept Layoutable = requires (T x) {
-        {intoLayerGroup(x)} -> SameAs<LayerGroup>;
-        };
-
-namespace detail
-{
-inline LayerGroup join( LayerGroup::Grouping op_type, const LayerGroup& lhs, const LayerGroup& rhs ) {
-    PANGO_ASSERT(lhs.children.size() > 0 || lhs.layer);
-    PANGO_ASSERT(rhs.children.size() > 0 || rhs.layer);
-
-    LayerGroup ret;
-    ret.grouping = op_type;
-
-    if( op_type == lhs.grouping && !lhs.layer) {
-        // We can merge hierarchy
-        ret.children = lhs.children;
-    }else{
-        ret.children.push_back(lhs);
-    }
-
-    if( op_type == rhs.grouping && !rhs.layer) {
-        // We can merge hierarchy
-        ret.children.insert(ret.children.end(), rhs.children.begin(), rhs.children.end());
-    }else{
-        ret.children.push_back(rhs);
-    }
-
-    return ret;
-}
-}
-
-#define PANGO_PANEL_OPERATOR(op, op_type) \
-    template<Layoutable LHS, Layoutable RHS> \
-    LayerGroup op(const LHS& lhs, const RHS& rhs) { \
-        return detail::join(op_type, intoLayerGroup(lhs), intoLayerGroup(rhs)); \
-    }
-
-#define PANGO_COMMA ,
-PANGO_PANEL_OPERATOR(operator PANGO_COMMA, LayerGroup::Grouping::tabbed)
-PANGO_PANEL_OPERATOR(operator|, LayerGroup::Grouping::horizontal)
-PANGO_PANEL_OPERATOR(operator/, LayerGroup::Grouping::vertical)
-PANGO_PANEL_OPERATOR(operator^, LayerGroup::Grouping::stacked)
-#undef PANGO_PANEL_OPERATOR
-#undef PANGO_COMMA
-
-template<typename T>
-LayerGroup flex(T head)
-{
-    return intoLayerGroup(head);
-}
-
-template<typename T, typename ...TArgs>
-LayerGroup flex(T head, TArgs... args)
-{
-    return detail::join(LayerGroup::Grouping::flex, intoLayerGroup(head), flex(std::forward<TArgs>(args)...));
-}
-
-void computeLayoutConstraints(const LayerGroup& group);
-void computeLayoutRegion(const LayerGroup& group, const MinMax<Eigen::Array2i>& region);
-
-std::ostream& operator<<(std::ostream& s, const LayerGroup& layout);
-
-}
+#include <pangolin/gui/layer_group_operators.h>

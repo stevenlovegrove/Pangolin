@@ -3,7 +3,7 @@ get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 set(component_file_basenames
   context
   conventions
-  handler
+  draw_layer_handler
   look_at
   projection
   min_max
@@ -14,8 +14,11 @@ set(component_file_basenames
   gl_device_buffer
   gl_device_texture
   gl_vao
+  gl_drawn_image
+  gl_drawn_primitives
+  gl_drawn_solids
+  gl_drawn_checker
   layer_group
-  drawable
   multi_dim
 )
 

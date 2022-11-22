@@ -6,7 +6,7 @@
 #include <pangolin/gui/layer_group.h>
 #include <pangolin/utils/variant_overload.h>
 #include <pangolin/utils/reverse_iterable.h>
-#include <pangolin/handler/interactive.h>
+#include <pangolin/gui/interactive.h>
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/gl_type_info.h>
 

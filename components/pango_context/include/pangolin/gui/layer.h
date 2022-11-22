@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pangolin/handler/interactive.h>
+#include <pangolin/gui/interactive.h>
 #include <pangolin/utils/shared.h>
 #include <pangolin/maths/min_max.h>
 #include <Eigen/Core>

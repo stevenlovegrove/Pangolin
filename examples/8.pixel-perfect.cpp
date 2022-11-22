@@ -1,5 +1,6 @@
+#include <pangolin/gui/drawn_primitives.h>
+#include <pangolin/gui/drawn_image.h>
 #include <pangolin/context/context.h>
-#include <pangolin/gui/widget_layer.h>
 
 /*
   == Pangolin-by-example ==
@@ -64,7 +65,7 @@ int main( int argc, char** argv )
     // across the image is what we intended since it is listed first in the
     // .objects list.
     auto layer = DrawLayer::Create({
-        .objects = { DrawnImage::Create({.image=image}), cross_top_left, cross_bottom_right }
+        .objects_in_camera = { DrawnImage::Create({.image=image}), cross_top_left, cross_bottom_right },
     });
 
     context->setLayout( layer );

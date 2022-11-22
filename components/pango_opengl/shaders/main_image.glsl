@@ -19,11 +19,11 @@ void main()
   // indexing
   vec2 v_img = v_tex * image_size - vec2(0.5);
 
-  // The canonical texture coordinates are mapped to the z=0 plane
+  // The canonical texture coordinates are mapped to the z=1 plane
   // with pixel units. They will span (-0.5,0.5) - (w-0.5, h-0.5)
   // such that integral pixel lookups will fall on the center of pixel
   // samples in the texture
-  gl_Position = proj * cam_from_world * vec4(v_img, 0.0, 1.0);
+  gl_Position = proj * cam_from_world * vec4(v_img, 1.0, 1.0);
 }
 
 @start fragment
@@ -41,6 +41,7 @@ out vec4 color;
 
 void main()
 {
+
   // lookup linearly interpolated
   color = color_transform * texture(image, v_tex);
 

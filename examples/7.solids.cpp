@@ -1,9 +1,5 @@
 #include <pangolin/context/context.h>
-#include <pangolin/gui/widget_layer.h>
-#include <pangolin/video/video.h>
-#include <pangolin/var/var.h>
-#include <pangolin/gl/glsl_program.h>
-#include <pangolin/render/gl_vao.h>
+#include <pangolin/gui/all_layers.h>
 #include <pangolin/maths/camera_look_at.h>
 /*
   == Pangolin-by-example ==
@@ -57,10 +53,12 @@ int main( int argc, char** argv )
     } );
 
     auto scene = DrawLayer::Create({
-        .camera_from_world = std::make_shared<sophus::Se3F64>(
-            cameraLookatFromWorld({0.0,0.0,1.0}, {10.0,0.0,0.0}, AxisDirection2::positive_z)
-        ),
-        .near_far = {0.01, 1000.0}
+        .view_params = {
+            .camera_from_world = cameraLookatFromWorld(
+                {0.0,0.0,1.0}, {10.0,0.0,0.0}, AxisDirection2::positive_z
+            ),
+            .near_far = {0.01, 1000.0}
+        }
     });
     auto solids = DrawnSolids::Create({});
     auto prims = DrawnPrimitives::Create({

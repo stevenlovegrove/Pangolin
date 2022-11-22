@@ -1,9 +1,21 @@
-#pragma once
+#include <pangolin/gui/drawn_image.h>
+
+#include <pangolin/context/factory.h>
+#include <pangolin/render/gl_vao.h>
+#include <pangolin/gl/glsl_program.h>
+#include <pangolin/gl/uniform.h>
+
+#include "camera_utils.h"
 
 namespace pangolin
 {
 
-struct DrawnImageProgram
+inline Eigen::Vector2i toEigen(ImageSize size)
+{
+    return {size.width, size.height};
+}
+
+struct GlDrawnImage : public DrawnImage
 {
     // This program renders an image on the z=0 plane in a discrete pixel
     // convention such that x=0,y=0 is the center of the top-left pixel.
@@ -11,34 +23,36 @@ struct DrawnImageProgram
     // (w-0.5,h-0.5).
     // TODO: Add a flag to take convention as configuration.
 
-    void draw(
-        const DrawnImage& drawn_image,
-        const sophus::CameraModel& camera,
-        const sophus::Se3F64& cam_from_world,
-        MinMax<double> near_far
-    ) {
+    void draw( const DrawLayer::ViewParams& view, const Eigen::Vector2i& /* viewport_dim */ ) override {
         // ensure we're synced
-        drawn_image.image->sync();
+        image->sync();
 
         PANGO_GL(glActiveTexture(GL_TEXTURE0));
-        auto bind_im = drawn_image.image->bind();
+        auto bind_im = image->bind();
         auto bind_prog = prog->bind();
         auto bind_vao = vao.bind();
 
-        u_image_size = Eigen::Vector2f(camera.imageSize().width, camera.imageSize().height);
-        u_intrinsics = linearClipFromCamera(camera, near_far).cast<float>();
-        u_cam_from_world = cam_from_world.cast<float>().matrix();
+        u_image_size = toEigen(image->imageSize()).cast<float>();
+        u_intrinsics = linearClipFromCamera(view.camera, view.near_far).cast<float>();
+        u_cam_from_world = view.camera_from_world.cast<float>().matrix();
 
         // TODO: load from DrawnImage param if specified.
-        if(drawn_image.image->pixelType().num_channels == 1 && u_colormap_index.getValue() == Palette::none) {
+        if(image->pixelType().num_channels == 1 && u_colormap_index.getValue() == Palette::none) {
             u_color_transform = (Eigen::Matrix4f() << 1,0,0,0,  1,0,0,0,  1,0,0,0, 0,0,0,1).finished();
         }else{
             u_color_transform = Eigen::Matrix4f::Identity();
         }
 
-        u_colormap_index = drawn_image.colormap;
+        u_colormap_index = colormap;
 
         PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    }
+
+    MinMax<Eigen::Vector3d> boundsInParent() const override {
+        return {
+            Eigen::Vector3d(-0.5, -0.5, 1.0),
+            Eigen::Vector3d( image->imageSize().width - 0.5, image->imageSize().height - 0.5, 1.0)
+        };
     }
 private:
     const Shared<GlSlProgram> prog = GlSlProgram::Create({
@@ -52,5 +66,16 @@ private:
     const GlUniform<Eigen::Matrix4f> u_color_transform = {"color_transform"};
     const GlUniform<Palette> u_colormap_index = {"colormap_index"};
 };
+
+PANGO_CREATE(DrawnImage) {
+    auto r = Shared<GlDrawnImage>::make();
+    r->colormap = p.colormap;
+    r->interpolation = p.interpolation;
+    r->color_transform = p.color_transform;
+    if(!p.image.isEmpty()) {
+        r->image->update(p.image);
+    }
+    return r;
+}
 
 }
