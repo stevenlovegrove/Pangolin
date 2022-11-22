@@ -98,6 +98,7 @@ sophus::SE3d translatePointToPoint(
   return sophus::SE3d(sophus::SO3d(), to_in_from) * down_state.cam_T_world;
 }
 
+// Return a transform which represents a rotation by angle_rad around axis.
 sophus::SE3d rotateAroundAxis(
   const sophus::Ray3<double>& axis,
   double angle_rad
@@ -110,7 +111,9 @@ sophus::SE3d rotateAroundAxis(
   return point_T_cam.inverse() * point_R_point * point_T_cam;
 }
 
-// NOT FULLY IMPLEMENTED
+// Rotate about point_in_world maintaining up_dir_in_world relative to camera,
+// such that point_in_world, camera_center and up_dir_in_world lie in a common
+// plane.
 sophus::SE3d rotateAbout(
   const sophus::SE3d& cam_T_world,
   const Eigen::Vector3d& point_in_world,
@@ -118,12 +121,6 @@ sophus::SE3d rotateAbout(
   const Eigen::Vector3d& rotation_amount,
   DeviceXyz axis_convention
 ) {
-  // const Eigen::Vector3d axis_up_world = up_dir_in_world ? *up_dir_in_world : (cam_T_world.inverse() * upDirectionInCamera<double>(axis_convention));
-  // const Eigen::Vector3d axis_fwd_world = (cam_T_world.inverse().translation() - point_in_world).normalized();
-  // const Eigen::Vector3d axis_right_world = (axis1_world.cross(axis2_world)).normalized();
-
-  // const sophus::SE3d fixed_T_world = fixUpDirIfNeeded(cam_T_world, up_dir_in_world, axis_convention);
-
   Eigen::Vector3d up_dir_in_cam = cam_T_world.so3() * (*up_dir_in_world);
   Eigen::Vector3d point_in_cam = cam_T_world * point_in_world;
   sophus::SE3d rotx_T_world = rotateAroundAxis(
@@ -139,10 +136,6 @@ sophus::SE3d rotateAbout(
     sophus::Ray3<double>(point_in_cam, sophus::UnitVector3<double>::fromUnitVector(right_dir_in_cam)),
     rotation_amount.x()
   ) * rotx_T_world;
-
-  // sophus::SE3d rot(sophus::SO3d::exp(rotation_amount), Eigen::Vector3d::Zero());
-  // sophus::SE3d point_T_cam(sophus::SO3d(), -(cam_T_world * point_in_world));
-  // return point_T_cam.inverse() * rot * point_T_cam * cam_T_world;
 }
 
 void zoomTowards(
@@ -155,26 +148,30 @@ void zoomTowards(
 ) {
   using namespace sophus;
   if(camera.distortionType() == CameraDistortionType::orthographic) {
-    OrthographicModel& ortho = std::get<OrthographicModel>(camera.modelVariant());
-    static_assert(OrthographicModel::kNumParams == 4);
     double factor = 1.0 - zoom_input;
-    if(ortho.params()[0] * factor < 1.0) factor = 1.0 / ortho.params()[0];
-    auto scale_param = ortho.params().head<2>();
-    scale_param *= factor;
+    // if(ortho.params()[0] * factor < 1.0) factor = 1.0 / ortho.params()[0];
 
-    // adjust translation so that point in camera coordinates stays under cursor.
-    const Eigen::Vector2d xy = point_in_cam.head<2>() * (1.0/factor - 1.0);
-    cam_from_world = sophus::SE3d(sophus::SO3d(), Eigen::Vector3d(xy[0], xy[1], 0.0)) * cam_from_world;
+    Eigen::Vector2d ff = camera.focalLength();
+    Eigen::Vector2d pp = camera.principalPoint();
+    ff *= factor;
 
-    if(!camera_limits_in_world.empty()) {
-      const Eigen::Vector2d orig(ortho.imageSize().width, ortho.imageSize().height);
-      const Eigen::Vector2d diff = orig.array() - orig.array()/scale_param.array();
-      const Eigen::Vector3d offset = -(ortho.camUnproj(Eigen::Vector2d(-0.5,-0.5), 0.0) + Eigen::Vector3d(0.5,0.5,0.0));
+    // Adjust focal length to match requested zoom.
+    // Adjust translation so that point in camera coordinates stays under cursor.
+    const Eigen::Vector2d pix1 = camera.camProj(point_in_cam);
+    camera.setFocalLength(ff);
+    const Eigen::Vector2d pix2 = camera.camProj(point_in_cam);
+    pp += pix1 - pix2;
+    camera.setPrincipalPoint(pp);
 
-      camera_limits_in_world = MinMax<Eigen::Vector3d>(
-        offset, {offset[0]+diff[0], offset[1]+diff[1], offset[2]}
-      );
-    }
+    // if(!camera_limits_in_world.empty()) {
+    //   const Eigen::Vector2d orig(ortho.imageSize().width, ortho.imageSize().height);
+    //   const Eigen::Vector2d diff = orig.array() - orig.array()/scale_param.array();
+    //   const Eigen::Vector3d offset = -(ortho.camUnproj(Eigen::Vector2d(-0.5,-0.5), 0.0) + Eigen::Vector3d(0.5,0.5,0.0));
+
+    //   camera_limits_in_world = MinMax<Eigen::Vector3d>(
+    //     offset, {offset[0]+diff[0], offset[1]+diff[1], offset[2]}
+    //   );
+    // }
   }else{
     const Eigen::Vector3d vec = zoom_input * point_in_cam;
     cam_from_world = sophus::SE3d(sophus::SO3d(), vec) * cam_from_world;
