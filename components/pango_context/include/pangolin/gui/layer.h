@@ -34,6 +34,8 @@ struct Layer : public Interactive
 
     virtual Size sizeHint() const = 0;
 
+    virtual double aspectHint() const {return 0;};
+
     virtual void renderIntoRegion(const Context&, const RenderParams&) = 0;
 
     // By default, we ignore all input events

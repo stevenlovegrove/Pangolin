@@ -14,31 +14,46 @@ namespace pangolin
 // LayerTraits is a utility that can be specialized for different types to
 // support direct addition to context layout using the layout operators
 template<typename T>
-struct LayerTraits;
+struct LayerConversionTraits;
 
-template<> struct LayerTraits<LayerGroup> {
-static LayerGroup toGroup(const LayerGroup& group) {
-    return group;
+template<DerivedFrom<Layer> L>
+struct LayerConversionTraits<Shared<L>> {
+static Shared<Layer> makeLayer(const Shared<L>& layer) {
+    return layer;
 }};
 
-template<DerivedFrom<Layer> L> struct LayerTraits<Shared<L>> {
-static LayerGroup toGroup(const Shared<L>& layer) {
-    return {layer};
-}};
-
-template<DerivedFrom<Layer> L> struct LayerTraits<std::shared_ptr<L>> {
-static LayerGroup toGroup(const std::shared_ptr<L>& layer) {
-    return {layer};
+template<DerivedFrom<Layer> L>
+struct LayerConversionTraits<std::shared_ptr<L>> {
+static Shared<Layer> makeLayer(const std::shared_ptr<L>& layer) {
+    return layer;
 }};
 
 ////////////////////////////////////////////////////////////////////
 
 // Concept to accept types where the LayerTraits specialization has been defined
 template<typename T>
-concept Layoutable = requires (T x) {
-        {LayerTraits<T>::toGroup(x)} -> SameAs<LayerGroup>;
-        };
+concept LayerConvertable = requires (T x) {
+    {LayerConversionTraits<T>::makeLayer(x)} -> SameAs<Shared<Layer>>;
+};
 
+template<typename T>
+concept LayerGroupConvertable =
+    LayerConvertable<T> || std::same_as<std::remove_cvref_t<T>, LayerGroup>;
+
+template<LayerConvertable T>
+Shared<Layer> makeLayer(const T& v) {
+    return LayerConversionTraits<T>::makeLayer(v);
+}
+
+template<LayerGroupConvertable T>
+LayerGroup makeLayerGroup(const T& v) {
+    using BaseT = std::remove_cvref_t<T>;
+    if constexpr(std::same_as<BaseT, LayerGroup>) {
+        return v;
+    }else{
+        return LayerGroup(makeLayer(v));
+    }
+}
 
 namespace detail {
 // Implementation of how layergroups are composed (and simplified)
@@ -71,11 +86,11 @@ inline LayerGroup join( LayerGroup::Grouping op_type, const LayerGroup& lhs, con
 // Define syntactic sugar for composing layergroups to make layouts
 
 #define PANGO_PANEL_OPERATOR(op, op_type) \
-    template<Layoutable LHS, Layoutable RHS> \
+    template<LayerGroupConvertable LHS, LayerGroupConvertable RHS> \
     LayerGroup op(const LHS& lhs, const RHS& rhs) { \
         return detail::join( op_type, \
-            LayerTraits<LHS>::toGroup(lhs), \
-            LayerTraits<RHS>::toGroup(rhs)); \
+            makeLayerGroup(lhs), \
+            makeLayerGroup(rhs)); \
     }
 
 #define PANGO_COMMA ,
@@ -91,7 +106,7 @@ LayerGroup flex(T head)
 {
     LayerGroup g;
     g.grouping = LayerGroup::Grouping::flex;
-    g.children.push_back(LayerTraits<T>::toGroup(head));
+    g.children.push_back(makeLayerGroup(head));
     return g;
 }
 
@@ -100,7 +115,7 @@ LayerGroup flex(T head, TArgs... args)
 {
     return detail::join(
         LayerGroup::Grouping::flex,
-        LayerTraits<T>::toGroup(head),
+        makeLayerGroup(head),
         flex(std::forward<TArgs>(args)...)
     );
 }

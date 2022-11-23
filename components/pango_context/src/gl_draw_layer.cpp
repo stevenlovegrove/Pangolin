@@ -230,6 +230,19 @@ struct DrawLayerImpl : public DrawLayer {
         return size_hint_;
     }
 
+    double aspectHint() const override {
+        MinMax<Eigen::Vector3d> cam_bounds;
+        for(const auto& obj : objects_in_camera_) {
+            cam_bounds.extend(obj->boundsInParent());
+        }
+        if(!cam_bounds.empty()) {
+            Eigen::Vector2d dim = cam_bounds.range().head<2>();
+            return dim.x() / dim.y();
+        }
+        return 0.0;
+    };
+
+
     void add(const Shared<Drawable>& r) override {
         objects_.push_back(r);
     }

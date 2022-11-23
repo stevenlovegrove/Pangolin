@@ -76,9 +76,9 @@ struct Context : std::enable_shared_from_this<Context>
     virtual void setLayout(const LayerGroup& layout) = 0;
 
     // Convenience method to accept anything convertable to a LayourGroup
-    template<Layoutable T>
+    template<LayerGroupConvertable T>
     void setLayout(const T& object) {
-        setLayout(LayerTraits<T>::toGroup(object));
+        setLayout(makeLayerGroup(object));
     }
 
     // Return size of the internal (renderable area) of the window

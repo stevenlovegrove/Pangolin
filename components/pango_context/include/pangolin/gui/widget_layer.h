@@ -33,11 +33,11 @@ struct WidgetLayer : public Layer
 };
 
 template<typename T>
-struct LayerTraits<Var<T>> {
-    static LayerGroup toGroup(const Var<T>& var) {
-        return LayerGroup(WidgetLayer::Create({
+struct LayerConversionTraits<Var<T>> {
+    static Shared<Layer> makeLayer(const Var<T>& var) {
+        return WidgetLayer::Create({
             .name=var.Meta().full_name, .size_hint={Parts{1},Pixels{50}}
-        }));
+        });
     }
 };
 

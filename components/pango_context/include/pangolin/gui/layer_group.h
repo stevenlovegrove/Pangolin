@@ -32,12 +32,12 @@ struct LayerGroup
     std::vector<LayerGroup> children = {};
     std::shared_ptr<Layer> layer = nullptr;
     size_t selected_tab = 0;
-    double width_over_height = 1.0;
 
     struct LayoutInfo
     {
         Eigen::Array2i min_pix = {0,0};
         Eigen::Array2d parts = {0.0f, 0.0f};
+        double aspect_hint = 0.0;
         MinMax<Eigen::Array2i> region;
     };
 

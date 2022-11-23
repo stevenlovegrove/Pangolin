@@ -46,11 +46,11 @@ struct DrawnImage : public DrawLayer::Drawable
 
 ////////////////////////////////////////////////////////////////////
 
-template<typename T> concept ConvertableToImage = requires (T x) {
+template<typename T> concept ImageConvertable = requires (T x) {
     {sophus::IntensityImage<>(x)} -> SameAs<sophus::IntensityImage<>>;
 };
 
-template<ConvertableToImage T>
+template<ImageConvertable T>
 sophus::CameraModel defaultOrthoCameraForImage(const T& image) {
     return sophus::CameraModel( image.imageSize(),
         sophus::CameraDistortionType::orthographic,
@@ -59,31 +59,25 @@ sophus::CameraModel defaultOrthoCameraForImage(const T& image) {
 }
 
 // Helper for adding images (runtime and statically typed) directly to layouts
-template<ConvertableToImage T> struct LayerTraits<T> {
-static LayerGroup toGroup(const T& image) {
-    auto draw_layer = DrawLayer::Create({
+template<ImageConvertable T>
+struct LayerConversionTraits<T> {
+static Shared<Layer> makeLayer(const T& image) {
+    return DrawLayer::Create({
         .objects_in_camera = {
             DrawnChecker::Create({}),
             DrawnImage::Create({.image=image})
         }
     });
-    auto group = LayerTraits<Shared<DrawLayer>>::toGroup(draw_layer);
-    group.width_over_height = image.imageSize().height > 0 ?
-        double(image.imageSize().width) / double(image.imageSize().height) : 1.0;
-    return group;
 }};
 
 // Specialization of draw_layer.h's trait for DrawnImage so it defaults to
 // add to .objects_in_camera instead of .objects
 template<>
-struct LayerTraits<Shared<DrawnImage>> {
-    static LayerGroup toGroup(const Shared<DrawnImage>& drawable) {
-        auto group = LayerTraits<Shared<Layer>>::toGroup( DrawLayer::Create({
+struct LayerConversionTraits<Shared<DrawnImage>> {
+    static Shared<Layer> makeLayer(const Shared<DrawnImage>& drawable) {
+        return DrawLayer::Create({
              .objects_in_camera = {DrawnChecker::Create({}), drawable}
-        }));
-        const auto imsize = drawable->image->imageSize();
-        group.width_over_height = imsize.height > 0 ? double(imsize.width) / double(imsize.height) : 1.0;
-        return group;
+        });
     }
 };
 

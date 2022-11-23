@@ -66,6 +66,9 @@ std::optional<FlexArrangement> getFlexRows(const std::vector<double>& el_width, 
 void computeLayoutConstraints(const LayerGroup& group) {
     LayerGroup::LayoutInfo total = {};
 
+    double aspect_sum = 0.0;
+    int aspect_n = 0;
+
     // 1st pass, bottom up
     for(const auto& child : group.children) {
         // ask child to compute its layout size and cache
@@ -79,32 +82,68 @@ void computeLayoutConstraints(const LayerGroup& group) {
             case LayerGroup::Grouping::tabbed:
                 total.min_pix = max(total.min_pix, x_info.min_pix);
                 total.parts = max(total.parts, x_info.parts);
+                if(x_info.aspect_hint) {
+                    aspect_sum += x_info.aspect_hint;
+                    ++aspect_n;
+                }
                 break;
             case LayerGroup::Grouping::horizontal:
                 total.min_pix[0] += x_info.min_pix[0];
                 total.parts[0] += x_info.parts[0];
                 total.min_pix[1] = max(total.min_pix[1], x_info.min_pix[1]);
                 total.parts[1] = max(total.parts[1], x_info.parts[1]);
+                if(x_info.aspect_hint) {
+                    aspect_sum += x_info.aspect_hint;
+                    ++aspect_n;
+                }
                 break;
             case LayerGroup::Grouping::vertical:
                 total.min_pix[1] += x_info.min_pix[1];
                 total.parts[1] += x_info.parts[1];
                 total.min_pix[0] = max(total.min_pix[0], x_info.min_pix[0]);
                 total.parts[0] = max(total.parts[0], x_info.parts[0]);
+                if(x_info.aspect_hint) {
+                    aspect_sum += 1.0 / x_info.aspect_hint;
+                    ++aspect_n;
+                }
                 break;
             case LayerGroup::Grouping::flex:
                 // flex layout is pretty heuristic-ey
                 double part_area = x_info.parts[0] * x_info.parts[1];
-                double part_w = group.width_over_height * part_area;
+                double part_w = x_info.aspect_hint * part_area;
                 double part_h = part_area / part_w;
                 total.parts[0] += part_w;
                 total.parts[1] += part_h;
+                if(x_info.aspect_hint) {
+                    aspect_sum += x_info.aspect_hint;
+                    ++aspect_n;
+                }
                 break;
         }
     }
 
+    switch(group.grouping) {
+        case LayerGroup::Grouping::stacked:
+        case LayerGroup::Grouping::tabbed:
+        case LayerGroup::Grouping::flex:
+            // Use average aspect
+            total.aspect_hint = aspect_n ? aspect_sum / aspect_n : 0.0;
+            break;
+        case LayerGroup::Grouping::horizontal:
+            // Use sum
+            total.aspect_hint = aspect_sum;
+            break;
+        case LayerGroup::Grouping::vertical:
+            // Use sum of inverse, inversed.
+            total.aspect_hint = aspect_sum ? 1.0 / aspect_sum : 0.0;
+            break;
+    }
+
     // Finally, apply any constraints from the group layer, if it exists
     if(group.layer) {
+        const double aspect_hint = group.layer->aspectHint();
+        if(aspect_hint) total.aspect_hint = aspect_hint;
+
         for(int i=0; i < 2; ++i) {
             std::visit(overload {
                 [&](Parts part)  {  total.parts[i] = max(total.parts[i], part.ratio); },
@@ -193,7 +232,8 @@ void computeLayoutRegion(const LayerGroup& group, const MinMax<Eigen::Array2i>& 
             double total_width = 0.0;
 
             for(const auto& child : group.children) {
-                const double w = child.width_over_height;
+                const double aspect = child.cached_.aspect_hint ? child.cached_.aspect_hint : 1.0;
+                const double w = aspect;
                 ws.push_back(w);
                 total_width += w;
             }
@@ -232,8 +272,9 @@ void computeLayoutRegion(const LayerGroup& group, const MinMax<Eigen::Array2i>& 
             int x = region.min()[0];
             int y = region.min()[1];
             for(const auto& child : group.children) {
+                const double aspect = child.cached_.aspect_hint ? child.cached_.aspect_hint : 1.0;
                 const int h = row_height_pix;
-                const int w = int(unit_size_pix * child.width_over_height);
+                const int w = int(unit_size_pix * aspect);
                 if( (x+w) > region.max()[0]) {
                     x = region.min()[0];
                     y += h;

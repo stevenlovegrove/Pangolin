@@ -77,9 +77,9 @@ struct DrawLayer : public Layer
 
 // Helper for adding Drawables directly into layouts
 template<DerivedFrom<DrawLayer::Drawable> T>
-struct LayerTraits<Shared<T>> {
-    static LayerGroup toGroup(const Shared<T>& drawable) {
-        return LayerTraits<Shared<Layer>>::toGroup( DrawLayer::Create({ .objects = {drawable} }));
+struct LayerConversionTraits<Shared<T>> {
+    static Shared<Layer> makeLayer(const Shared<T>& drawable) {
+        return DrawLayer::Create({ .objects = {drawable} });
     }
 };
 
