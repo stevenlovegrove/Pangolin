@@ -58,10 +58,16 @@ sophus::CameraModel defaultOrthoCameraForImage(const T& image) {
     );
 }
 
+template<ImageConvertable T>
+struct DrawableConversionTraits<T> {
+static Shared<DrawLayer::Drawable> makeDrawable(const T& image) {
+    return DrawnImage::Create({.image=image});
+}};
+
 // Helper for adding images (runtime and statically typed) directly to layouts
 template<ImageConvertable T>
 struct LayerConversionTraits<T> {
-static Shared<Layer> makeLayer(const T& image) {
+static Shared<DrawLayer> makeLayer(const T& image) {
     return DrawLayer::Create({
         .objects_in_camera = {
             DrawnChecker::Create({}),

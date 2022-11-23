@@ -5,7 +5,6 @@
 #include <sophus/image/runtime_image.h>
 #include <pangolin/utils/variant_overload.h>
 #include <pangolin/maths/eigen_scalar_methods.h>
-#include <pangolin/var/var.h>
 
 namespace pangolin
 {
@@ -33,7 +32,7 @@ static Shared<Layer> makeLayer(const std::shared_ptr<L>& layer) {
 // Concept to accept types where the LayerTraits specialization has been defined
 template<typename T>
 concept LayerConvertable = requires (T x) {
-    {LayerConversionTraits<T>::makeLayer(x)} -> SameAs<Shared<Layer>>;
+    {Shared<Layer>(LayerConversionTraits<T>::makeLayer(x))} -> SameAs<Shared<Layer>>;
 };
 
 template<typename T>
@@ -41,7 +40,7 @@ concept LayerGroupConvertable =
     LayerConvertable<T> || std::same_as<std::remove_cvref_t<T>, LayerGroup>;
 
 template<LayerConvertable T>
-Shared<Layer> makeLayer(const T& v) {
+auto makeLayer(const T& v) {
     return LayerConversionTraits<T>::makeLayer(v);
 }
 
@@ -51,7 +50,7 @@ LayerGroup makeLayerGroup(const T& v) {
     if constexpr(std::same_as<BaseT, LayerGroup>) {
         return v;
     }else{
-        return LayerGroup(makeLayer(v));
+        return LayerGroup(Shared<Layer>(makeLayer(v)));
     }
 }
 

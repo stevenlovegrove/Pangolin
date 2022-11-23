@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pangolin/gui/layer.h>
+#include <pangolin/var/var.h>
 
 namespace pangolin
 {
