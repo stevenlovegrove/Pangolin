@@ -59,6 +59,13 @@ FARM_ENUM(
      kilometers,
      other)
 );
+
+FARM_ENUM(
+  GraphicsProjection,
+  (perspective,
+   orthographic)
+);
+
 // clang-format on
 
 template <typename TScalar, int Dim>

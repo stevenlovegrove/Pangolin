@@ -25,14 +25,14 @@ constexpr GLenum toGlEnum (DrawnPrimitives::Type type) {
 
 struct GlDrawnPrimitives : public DrawnPrimitives
 {
-    void draw( const DrawLayer::ViewParams& view, const Eigen::Vector2i& /* viewport_dim */ ) override {
+    void draw( const DrawLayer::ViewParams& params) override {
 
         switch(element_type) {
             case DrawnPrimitives::Type::axes:
-                drawAxes(view);
+                drawAxes(params);
                 break;
             default:
-                drawPointsLinesTriangles(view);
+                drawPointsLinesTriangles(params);
                 break;
         }
     }
@@ -41,16 +41,14 @@ struct GlDrawnPrimitives : public DrawnPrimitives
         return MinMax<Eigen::Vector3d>();
     }
 
-    void drawAxes( const DrawLayer::ViewParams& view ){
+    void drawAxes( const DrawLayer::ViewParams& params ){
         vertices->sync();
         if(!vertices->empty()) {
             auto bind_prog = prog_axes->bind();
             auto bind_vao = vao.bind();
-            auto enable_depth = (enable_visibility_testing) ?
-                ScopedGlDisable::noOp() : ScopedGlDisable(GL_DEPTH_TEST);
 
-            u_intrinsics = linearClipFromCamera(view.camera, view.near_far).cast<float>();
-            u_cam_from_world = (view.camera_from_world.matrix() * parent_from_drawable).cast<float>();
+            u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
+            u_cam_from_world = (params.camera_from_world.matrix() * parent_from_drawable).cast<float>();
             u_color = default_color.cast<float>();
             u_length = default_radius;
 
@@ -68,16 +66,14 @@ struct GlDrawnPrimitives : public DrawnPrimitives
         }
     }
 
-    void drawPointsLinesTriangles( const DrawLayer::ViewParams& view ) {
+    void drawPointsLinesTriangles( const DrawLayer::ViewParams& params ) {
         vertices->sync();
         if(!vertices->empty()) {
             auto bind_prog = prog->bind();
             auto bind_vao = vao.bind();
-            auto enable_depth = (enable_visibility_testing) ?
-                ScopedGlDisable::noOp() : ScopedGlDisable(GL_DEPTH_TEST);
 
-            u_intrinsics = linearClipFromCamera(view.camera, view.near_far).cast<float>();
-            u_cam_from_world = (view.camera_from_world.matrix() * parent_from_drawable).cast<float>();
+            u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
+            u_cam_from_world = (params.camera_from_world.matrix() * parent_from_drawable).cast<float>();
             u_color = default_color.cast<float>();
             vao.addVertexAttrib(0, *vertices);
             PANGO_GL(glPointSize(default_radius*2.0f));
@@ -105,7 +101,6 @@ PANGO_CREATE(DrawnPrimitives) {
     r->parent_from_drawable = p.parent_from_drawable;
     r->default_color = p.default_color;
     r->default_radius = p.default_radius;
-    r->enable_visibility_testing = p.enable_visibility_testing;
     return r;
 }
 

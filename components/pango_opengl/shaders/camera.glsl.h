@@ -31,6 +31,14 @@ vec2 getCameraPixelCoord(vec2 output_image_dim, vec2 viewport_xy, vec2 viewport_
   return cam;
 }
 
+vec3 proj(vec4 p) {
+  return p.xyz / p.w;
+}
+
+vec3 normToOneZ(vec3 p) {
+  return p.xyz / p.z;
+}
+
 // Project the image coordinate `uv` to a 3D point in camera space
 vec3 unproj(mat3 Kinv, vec2 uv) {
     return Kinv * vec3(uv, 1.0);

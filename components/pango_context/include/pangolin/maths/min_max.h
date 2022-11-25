@@ -108,12 +108,27 @@ class Cast<MinMax<TScalar>> {
   static MinMax<To> impl(MinMax<TScalar> const& v) {
     return v.template cast<To>();
   }
+  template <typename To>
+  static auto implScalar(MinMax<TScalar> const& v) {
+    using ElT = decltype(cast<To>(std::declval<TScalar>()));
+    return v.template cast<ElT>();
+  }
 };
 }  // namespace details
 
 template <typename T>
 bool operator==(MinMax<T> const& lhs, MinMax<T> const& rhs) {
   return lhs.min() == rhs.min() && lhs.max() == rhs.max();
+}
+
+template<typename T>
+auto relative(T p, MinMax<T> region ) {
+  return (p - region.min()).eval();
+}
+
+template<typename T>
+auto normalized(T p, MinMax<T> region ) {
+  return (cast<double>(p - region.min()) / cast<double>(region.range())).eval();
 }
 
 template <typename Tpixel>

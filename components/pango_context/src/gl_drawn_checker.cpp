@@ -5,6 +5,7 @@
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
 
+#include "gl_utils.h"
 #include "camera_utils.h"
 
 namespace pangolin
@@ -20,11 +21,11 @@ struct GlDrawnChecker : public DrawnChecker
         u_checksize = p.check_size_pixels;
     }
 
-    void draw( const DrawLayer::ViewParams& view, const Eigen::Vector2i& viewport_dim ) override {
+    void draw( const DrawLayer::ViewParams& params) override {
         auto bind_prog = prog->bind();
         auto bind_vao = vao.bind();
-
-        u_viewport_size = viewport_dim.cast<float>();
+        auto disable_depth = ScopedGlDisable(GL_DEPTH_TEST);
+        u_viewport_size = params.viewport.range().cast<float>();
         PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     }
 

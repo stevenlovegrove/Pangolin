@@ -225,8 +225,8 @@ void GlWidgetLayer::renderIntoRegion(const Context& context, const RenderParams&
 }
 
 bool GlWidgetLayer::handleEvent(const Context&, const Event& event) {
-    const auto region = event.pointer_pos.region();
-    const Eigen::Array2d p_window = event.pointer_pos.posInWindow();
+    const auto region = event.pointer_pos.region;
+    const Eigen::Array2d p_window = event.pointer_pos.pos_window;
 
     std::visit(overload {
     [&](const Interactive::PointerEvent& arg) {

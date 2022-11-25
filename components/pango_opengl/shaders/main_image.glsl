@@ -23,7 +23,7 @@ void main()
   // with pixel units. They will span (-0.5,0.5) - (w-0.5, h-0.5)
   // such that integral pixel lookups will fall on the center of pixel
   // samples in the texture
-  gl_Position = proj * cam_from_world * vec4(v_img, 1.0, 1.0);
+  gl_Position = proj * cam_from_world * vec4(v_img, 0.0, 1.0);
 }
 
 @start fragment

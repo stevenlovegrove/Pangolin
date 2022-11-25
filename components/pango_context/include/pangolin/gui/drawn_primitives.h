@@ -67,14 +67,10 @@ struct DrawnPrimitives : public DrawLayer::Drawable
     // points are in pixel units. Other elements are world units.
     double default_radius;
 
-    // Should we do tests against a depth buffer?
-    bool enable_visibility_testing;
-
     struct Params {
         Type element_type = Type::points;
         Eigen::Vector4d default_color = {1.0f, 0.0f, 0.0f, 1.0f};
         double default_radius = 1.0;
-        bool enable_visibility_testing = true;
         Eigen::Matrix4d parent_from_drawable = Eigen::Matrix4d::Identity();
     };
     static Shared<DrawnPrimitives> Create(Params p);

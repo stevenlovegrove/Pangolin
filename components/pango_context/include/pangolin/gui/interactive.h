@@ -16,28 +16,8 @@ struct Context;
 
 struct WindowPosition
 {
-  const MinMax<Eigen::Array2i>& region() const
-  {
-    return region_;
-  }
-
-  Eigen::Array2d posInWindow() const
-  {
-    return pos_window_;
-  }
-
-  Eigen::Array2d posInRegion() const
-  {
-    return pos_window_ - region_.min().cast<double>();
-  }
-
-  Eigen::Array2d posInRegionNorm() const
-  {
-    return (pos_window_ - region_.min().cast<double>()) / region_.range().cast<double>();
-  }
-
-  MinMax<Eigen::Array2i> region_;
-  Eigen::Array2d pos_window_;
+  MinMax<Eigen::Array2i> region;
+  Eigen::Array2d pos_window;
 };
 
 enum class PointerAction {

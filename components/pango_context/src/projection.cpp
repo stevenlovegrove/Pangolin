@@ -4,6 +4,87 @@
 namespace pangolin
 {
 
+Eigen::Matrix4d transformImageFromCamera4x4(
+    const Eigen::Matrix3d& K_intrinsics
+) {
+    Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
+    ret.topLeftCorner<3,3>() = K_intrinsics;
+    return ret;
+}
+
+Eigen::Matrix4d transformProjectionFromImage(
+    MinMax<double> near_far_in_world_units,
+    GraphicsProjection projection
+) {
+    const double near = near_far_in_world_units.min();
+    const double far = near_far_in_world_units.max();
+
+    PANGO_ENSURE(projection == GraphicsProjection::orthographic ||
+        std::signbit(near) == std::signbit(far),
+        "near and far planes must have the same sign for perspective projection");
+
+    Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
+    const bool nofar = (far == std::numeric_limits<double>::infinity());
+    const double sign = std::signbit(near) ? -1.0 : +1.0;
+
+    if(projection == GraphicsProjection::perspective) {
+        ret(2,2) = nofar ? sign : (far + near) / (far - near);
+        ret(2,3) = nofar ? -sign * 2.0 * near : 2.0 * far * near / (near - far);
+        ret(3,3) = 0.0;
+        ret(3,2) = 1.0;
+    }else if(projection == GraphicsProjection::orthographic) {
+        PANGO_ENSURE(!nofar, "Orthographic projection requires finite far plane");
+        ret(2,2) = 2.0 / (far - near);
+        ret(2,3) = -(far + near) / (far - near);
+    }else{
+        PANGO_UNIMPLEMENTED();
+    }
+
+    return ret;
+}
+
+Eigen::Matrix4d transformClipFromProjection(
+    sophus::ImageSize size,
+    ImageXy image_convention,
+    ImageIndexing image_indexing
+) {
+    Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
+
+    if(image_indexing == ImageIndexing::normalized_minus_one_one) {
+        // Already in the right convention. Can ignore width & height.
+        return ret;
+    }else if(image_indexing == ImageIndexing::normalized_minus_one_one) {
+        PANGO_UNIMPLEMENTED();
+        return Eigen::Matrix4d::Identity();
+    }else{
+        const bool cont = image_indexing == ImageIndexing::pixel_continuous;
+        ret(0,0) = 2.0 / size.width;
+        ret(1,1) = 2.0 / size.height;
+        ret(0,3) = cont ? -1.0 : 1.0 / double(size.width) - 1.0;
+        ret(1,3) = cont ? -1.0 : 1.0 / double(size.height) - 1.0;
+
+        if(image_convention == ImageXy::right_up) {
+            return ret;
+        }else{
+            Eigen::Matrix4d flip_y = Eigen::Matrix4d::Identity();
+            flip_y(1,1) = -1;
+            return flip_y * ret;
+        }
+    }
+}
+
+Eigen::Matrix3d transformWindowFromClip(MinMax<Eigen::Array2i> viewport)
+{
+    // TODO: fixup for 0.5 ofsets (for discrete coords)
+    const Eigen::Array2d scale = cast<double>(viewport.range()) / 2.0;
+    const Eigen::Array2d offset = cast<double>(viewport.min()) + cast<double>(viewport.range()) / 2.0;
+    Eigen::Matrix3d ret = Eigen::Matrix3d::Identity();
+    ret(0,0) = scale[0];
+    ret(1,1) = -scale[1];
+    ret.topRightCorner<2,1>() = offset;
+    return ret;
+}
+
 Eigen::Matrix3d projectionImageFromCamera(
     Eigen::Vector2d focal_distance_pixels,
     Eigen::Vector2d principle_point

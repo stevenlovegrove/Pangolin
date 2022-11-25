@@ -6,6 +6,7 @@
 #include <pangolin/gl/uniform.h>
 
 #include "camera_utils.h"
+#include "gl_utils.h"
 
 namespace pangolin
 {
@@ -18,7 +19,7 @@ struct GlDrawnImage : public DrawnImage
     // (w-0.5,h-0.5).
     // TODO: Add a flag to take convention as configuration.
 
-    void draw( const DrawLayer::ViewParams& view, const Eigen::Vector2i& /* viewport_dim */ ) override {
+    void draw( const DrawLayer::ViewParams& params ) override {
         // ensure we're synced
         image->sync();
 
@@ -26,10 +27,11 @@ struct GlDrawnImage : public DrawnImage
         auto bind_im = image->bind();
         auto bind_prog = prog->bind();
         auto bind_vao = vao.bind();
+        auto disable_depth = ScopedGlDisable(GL_DEPTH_TEST);
 
         u_image_size = toEigen(image->imageSize()).cast<float>();
-        u_intrinsics = linearClipFromCamera(view.camera, view.near_far).cast<float>();
-        u_cam_from_world = view.camera_from_world.cast<float>().matrix();
+        u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
+        u_cam_from_world = params.camera_from_world.cast<float>().matrix();
 
         // TODO: load from DrawnImage param if specified.
         if(image->pixelType().num_channels == 1 && u_colormap_index.getValue() == Palette::none) {

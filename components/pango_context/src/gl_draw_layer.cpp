@@ -21,15 +21,21 @@ struct DrawLayerImpl : public DrawLayer {
         : name_(p.name),
         size_hint_(p.size_hint),
         aspect_policy_(p.aspect_policy),
-        // cam_from_world_(Eigen::Matrix4d::Identity()),
-        // intrinsic_k_(Eigen::Matrix4d::Identity()),
-        // non_linear_(),
         handler_(DrawLayerHandler::Create({})),
-        objects_(p.objects),
-        objects_in_camera_(p.objects_in_camera)
+        in_scene_(p.in_scene),
+        in_pixels_(p.in_pixels)
     {
-        *view_params_ = p.view_params;
-        *view_constraints_ = p.view_constraints;
+        render_state_.near_far = p.near_far;
+
+        if(p.camera) {
+            render_state_.camera = *p.camera;
+        }
+
+        if(p.camera_from_world) {
+            render_state_.camera_from_world = *p.camera_from_world;
+        }else{
+            render_state_.camera_from_world = cameraLookatFromWorld( {0.0, 0.0, -5.0}, {0.0, 0.0, 0.0} );
+        }
     }
 
     std::string name() const override
@@ -37,193 +43,188 @@ struct DrawLayerImpl : public DrawLayer {
         return name_;
     }
 
-    void setViewParams(std::shared_ptr<ViewParams>& view_params) override {
-        if(view_params) {
-            view_params_ = view_params;
-        }else{
-            PANGO_UNIMPLEMENTED("Reset to defaults");
-        }
+    const RenderState& renderState() const override {
+        return render_state_;
     }
 
-    Shared<ViewParams> viewParams() const override {
-        return view_params_;
+    void setCamera(const sophus::CameraModel& camera) override {
+        render_state_.camera = camera;
     }
 
-    void setViewConstraints(std::shared_ptr<ViewConstraints>& view_constraints) override {
-        if(view_constraints) {
-            view_constraints_ = view_constraints;
-        }else{
-            PANGO_UNIMPLEMENTED("Reset to defaults");
-        }
+    void setCameraFromWorld(const sophus::Se3F64& cam_from_world) override {
+        render_state_.camera_from_world = cam_from_world;
     }
 
-    Shared<ViewConstraints> viewConstraints() const override {
-        return view_constraints_;
+    void setClipViewTransform(sophus::Sim2<double>& clip_view_transform) override {
+        render_state_.clip_view_transform = clip_view_transform;
     }
 
-    void setupDefaultCameraParams() {
-        if( objects_.empty() ) {
-            MinMax<Eigen::Vector3d> bounds_in_cam;
-            for(const auto& obj : objects_in_camera_) {
-                bounds_in_cam.extend(obj->boundsInParent());
-            }
-            // can use orthographic camera in this case
-            if(bounds_in_cam.min().z() == 1.0 &&  bounds_in_cam.max().z() == 1.0)  {
-                const Eigen::Vector2i dim = bounds_in_cam.range().head<2>().cast<int>();
-                view_params_->camera = sophus::CameraModel(
-                        ImageSize(dim.x(), dim.y()),
-                        sophus::CameraDistortionType::orthographic,
-                        Eigen::Vector4d{1.0,1.0, 0.0,0.0}
-                    );
-                view_params_->near_far = {-2.0, 2.0};
-            }
-        }else{
-            view_params_->camera =
-                sophus::createDefaultPinholeModel({640,480});
-        }
-
+    void setNearFarPlanes(const MinMax<double>& near_far) override {
+        render_state_.near_far = near_far;
     }
 
-    void setupDefaultModelViewParams() {
-        if( !objects_.empty() ) {
-            // TODO: figure out something better
-            view_params_->camera_from_world = cameraLookatFromWorld( {0.0, 0.0, -5.0}, {0.0, 0.0, 0.0} );
-        }
-    }
-
-
-    // bool setDefaultImageParams(const DrawnImage& im)
+    // // Shrinks viewport such that aspect matches the provided camera dimensions.
+    // // Will leave padding on in dimension unrendered.
+    // static MinMax<Eigen::Array2i>
+    // viewportFromCameraAspect(double cam_aspect, MinMax<Eigen::Array2i> region)
     // {
-    //     if(im.image->imageSize().isEmpty()) return false;
-
-    //     const auto imsize = im.image->imageSize();
-
-    //     if(!camera_) {
-    //         auto ortho = CameraModel(imsize, CameraDistortionType::orthographic, Eigen::Vector4d{1.0,1.0, 0.0,0.0} );
-    //         camera_ = Shared<CameraModel>::make(ortho);
+    //     const Eigen::Array2i region_size = region.range();
+    //     const double region_aspect = double(region_size.x()) / double(region_size.y());
+    //     if(region_aspect > cam_aspect) {
+    //         // keep height, change width
+    //         const int new_width = int(cam_aspect * region_size.y());
+    //         const int new_left = region.min().x() + int((region_size.x() - new_width) / 2.0);
+    //         return {
+    //             {new_left, region.min().y()},
+    //             {new_left+new_width, region.max().y()}
+    //         };
+    //     }else{
+    //         // keep width, change height
+    //         const int new_height = int(region_size.x() / cam_aspect);
+    //         const int new_bottom = region.min().y() + int((region_size.y() - new_height) / 2.0);
+    //         return {
+    //             {region.min().x(), new_bottom},
+    //             {region.max().x(), new_bottom+new_height }
+    //         };
     //     }
-
-    //     if(!camera_from_world_) {
-    //         camera_from_world_ = Shared<Se3F64>::make();
-    //     }
-
-    //     if(near_far_.empty()) {
-    //         near_far_ = MinMax<double>(-1.0, 1.0);
-    //     }
-
-    //     if(handler_ && handler_->getCameraLimits().empty()) {
-    //         handler_->setCameraLimits({
-    //             {0.0, 0.0, 0.0},
-    //             {0.0, 0.0, 0.0},
-    //         });
-    //         handler_->setCameraRotationLock(true);
-    //     }
-
-    //     return true;
     // }
 
-    // Shrinks viewport such that aspect matches the provided camera dimensions.
-    // Will leave padding on in dimension unrendered.
-    static MinMax<Eigen::Array2i>
-    viewportFromCamera(const ImageSize& camera_dim, MinMax<Eigen::Array2i> region)
+    std::optional<Eigen::Array2i> tryGetDrawableBaseImageSize() const
     {
-        const Eigen::Array2i region_size = region.range();
-        const double cam_aspect = double(camera_dim.width) / double(camera_dim.height);
-        const double region_aspect = double(region_size.x()) / double(region_size.y());
-        if(region_aspect > cam_aspect) {
-            // keep height, change width
-            const int new_width = int(cam_aspect * region_size.y());
-            const int new_left = region.min().x() + int((region_size.x() - new_width) / 2.0);
-            return {
-                {new_left, region.min().y()},
-                {new_left+new_width, region.max().y()}
-            };
-        }else{
-            // keep width, change height
-            const int new_height = int(region_size.x() / cam_aspect);
-            const int new_bottom = region.min().y() + int((region_size.y() - new_height) / 2.0);
-            return {
-                {region.min().x(), new_bottom},
-                {region.max().x(), new_bottom+new_height }
-            };
+        MinMax<Eigen::Vector3d> pixel_bounds;
+        for(const auto& obj : in_pixels_) {
+            pixel_bounds.extend(obj->boundsInParent());
+        }
+        const Eigen::Array2i dim = pixel_bounds.range().head<2>().cast<int>();
+        if(0 < dim[0] && 0 < dim[1]) return dim;
+        return std::nullopt;
+    }
+
+    void ensureCameraInitialized() {
+        if(render_state_.camera.isEmpty()) {
+            sophus::ImageSize size = {640, 480};
+            if(auto maybe_dim = tryGetDrawableBaseImageSize()) {
+                size = toImageSize(*maybe_dim);
+            }
+            render_state_.camera = sophus::createDefaultPinholeModel(size);
+            // render_state_.near_far = {0.1, std::numeric_limits<double>::infinity()};
         }
     }
 
-    CameraModel cameraFromViewport(MinMax<Eigen::Array2i> region, const CameraModel& camera)
+    struct RenderData
     {
-        const CameraDistortionType orig_distortion_type = camera.distortionType();
-        const Eigen::VectorXd orig_params = camera.params();
-        const ImageSize orig_camera_dim = camera.imageSize();
-        const Eigen::Vector2d orig_pp = camera.principalPoint();
+        Eigen::Array2d clip_aspect_scale = {1.0, 1.0};
+        Eigen::Matrix4d clip_view = Eigen::Matrix4d::Identity();
+        Eigen::Matrix4d clip_aspect = Eigen::Matrix4d::Identity();
+        ViewParams pixel_params;
+        ViewParams scene_params;
+    };
 
-        const Eigen::Array2i region_size = region.range();
-        const double cam_aspect = double(orig_camera_dim.width) / double(orig_camera_dim.height);
-        const double region_aspect = double(region_size.x()) / double(region_size.y());
-        if(cam_aspect > region_aspect) {
-            // need to increase camera height and y-principle point
-            const int new_cam_height = int(orig_camera_dim.width / region_aspect);
-            Eigen::Vector2d new_pp = orig_pp + Eigen::Vector2d(0.0, (new_cam_height - orig_camera_dim.height) / 2.0);
-            CameraModel new_cam({orig_camera_dim.width, new_cam_height}, orig_distortion_type, orig_params);
-            new_cam.setPrincipalPoint(new_pp);
-            return new_cam;
+    static Eigen::Matrix4d sim2To4x4(Sim2<double> sim2)
+    {
+        const Eigen::Matrix3d m3 = sim2.matrix();
+        Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
+        ret.topLeftCorner<2,2>() = m3.topLeftCorner<2,2>();
+        ret.topRightCorner<2,1>() = m3.topRightCorner<2,1>();
+        return ret;
+    }
+
+    static RenderData computeRenderData(
+        const RenderState& render_state,
+        AspectPolicy aspect_policy,
+        MinMax<Eigen::Array2i> viewport
+    ) {
+        RenderData state;
+        state.clip_view = sim2To4x4(render_state.clip_view_transform);
+        state.clip_aspect_scale =
+            axisScale(viewport.range(), toEigen(render_state.camera.imageSize()));
+
+        if(aspect_policy == AspectPolicy::crop) {
+            PANGO_UNIMPLEMENTED();
         }else{
-            // need to increase camera width and x-principle point
-            const int new_cam_width = int(region_aspect * orig_camera_dim.height);
-            Eigen::Vector2d new_pp = orig_pp + Eigen::Vector2d((new_cam_width - orig_camera_dim.width) / 2.0, 0.0);
-            CameraModel new_cam({new_cam_width, orig_camera_dim.height}, orig_distortion_type, orig_params);
-            new_cam.setPrincipalPoint(new_pp);
-            return new_cam;
+            // We'll modify clip coords to fix aspect (extending field of view)
+            state.clip_aspect = Eigen::Vector4d(
+                    state.clip_aspect_scale.x(),
+                    state.clip_aspect_scale.y(),
+                    1.0, 1.0
+                ).asDiagonal();
         }
+
+        state.pixel_params = {
+            .viewport = viewport,
+            .camera_dim = render_state.camera.imageSize(),
+            .near_far = {-2.0, 2.0},
+            .camera_from_world = Eigen::Matrix4d::Identity(),
+            .image_from_camera = Eigen::Matrix4d::Identity(),
+            .clip_from_image = state.clip_view * state.clip_aspect *
+                transformClipFromProjection(render_state.camera.imageSize()) *
+                transformProjectionFromImage({-2.0,2.0}, GraphicsProjection::orthographic)
+        };
+
+        state.scene_params = {
+            .viewport = viewport,
+            .camera_dim = render_state.camera.imageSize(),
+            .near_far = render_state.near_far,
+            .camera_from_world = render_state.camera_from_world.matrix(),
+            .image_from_camera = transformImageFromCamera4x4(render_state.camera),
+            .clip_from_image = state.clip_view * state.clip_aspect *
+                transformClipFromProjection(render_state.camera.imageSize()) *
+                transformProjectionFromImage(render_state.near_far,
+                    render_state.camera.distortionType() == sophus::CameraDistortionType::orthographic ?
+                        GraphicsProjection::orthographic : GraphicsProjection::perspective
+                )
+        };
+        return state;
     }
 
     void renderIntoRegion(const Context& context, const RenderParams& params) override {
-        // Try to initialize view params automatically if none are provided.
-        if(view_params_->camera.imageSize().width == 0) {
-            setupDefaultCameraParams();
-        }
-        if( (view_params_->camera_from_world.params() - SE3d().params()).norm() < sophus::kEpsilon<double> ) {
-            setupDefaultModelViewParams();
-        }
+        ensureCameraInitialized();
 
-        aspect_viewport_ = viewportFromCamera(view_params_->camera.imageSize(), params.region);
-
-        // defaults for this render
-        MinMax<Eigen::Array2i> viewport = (aspect_policy_ == AspectPolicy::crop) ?
-            aspect_viewport_ : params.region;
-
-        ViewParams view_params = *view_params_;
-        if(aspect_policy_ == AspectPolicy::mask) {
-            view_params.camera = cameraFromViewport(params.region, view_params.camera);
-        }
+        render_data_ = computeRenderData( render_state_, aspect_policy_, params.region );
 
         ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
-        context.setViewport(viewport);
-        const Eigen::Vector2i viewport_dim = viewport.range();
 
-        // Render camera frame objects
-        for(auto& obj : objects_in_camera_) {
-            ViewParams cam_view_params = view_params;
-            cam_view_params.camera_from_world = SE3d();
-            obj->draw(cam_view_params, viewport_dim);
+        ////////////////////////////////////////////////////////////////////////
+        if(in_pixels_.size()) {
+            context.setViewport(render_data_.pixel_params.viewport);
+            for(auto& obj : in_pixels_) {
+                obj->draw(render_data_.pixel_params);
+            }
+
+            if(in_scene_.size()) {
+                // We'll clear depth buffer for use for in_scene_ Drawables
+                glClear(GL_DEPTH_BUFFER_BIT);
+            }
         }
 
-        // bit of a hack, but we'll assume camera frame stuff above is mostly 2d
-        // drawing which we'll use as a background for 3d drawing.
-        if(objects_in_camera_.size()) {
-            glClear(GL_DEPTH_BUFFER_BIT);
-        }
-
-        // Render 3D scene
-        for(auto& obj : objects_) {
-            obj->draw(view_params, viewport_dim);
+        if(in_scene_.size()) {
+            context.setViewport(render_data_.scene_params.viewport);
+            for(auto& obj : in_scene_) {
+                obj->draw(render_data_.scene_params);
+            }
         }
     }
 
     bool handleEvent(const Context& context, const Event& event) override {
-        Event viewport_event = event;
-        // This is the aspect maintained region
-        viewport_event.pointer_pos.region_ = aspect_viewport_;
-        return handler_->handleEvent( context, viewport_event, *this);
+        Eigen::Matrix3d clip_from_window = transformWindowFromClip(event.pointer_pos.region).inverse();
+        Eigen::Matrix3d pixel_from_window;
+        // TODO: implement this...
+        //  = (
+        //     transformWindowFromClip(event.pointer_pos.region) *
+        //     render_data_.clip_view *
+        //     render_data_.clip_aspect *
+        //     transformClipFromProjection(render_state_.camera.imageSize())
+        // ).inverse();
+
+        handler_->setViewMode( in_pixels_.size() ? DrawLayerHandler::ViewMode::image_plane : DrawLayerHandler::ViewMode::freeview);
+
+        return handler_->handleEvent(
+            context, event,
+            clip_from_window,
+            pixel_from_window,
+            render_data_.clip_aspect_scale,
+            *this, render_state_
+        );
     }
 
     Size sizeHint() const override {
@@ -232,7 +233,7 @@ struct DrawLayerImpl : public DrawLayer {
 
     double aspectHint() const override {
         MinMax<Eigen::Vector3d> cam_bounds;
-        for(const auto& obj : objects_in_camera_) {
+        for(const auto& obj : in_pixels_) {
             cam_bounds.extend(obj->boundsInParent());
         }
         if(!cam_bounds.empty()) {
@@ -242,36 +243,54 @@ struct DrawLayerImpl : public DrawLayer {
         return 0.0;
     };
 
+    void add(const Shared<Drawable>& r, In domain, const std::string& name ) override {
+        auto it = named_drawables_.find(name);
+        if(!name.empty() && it != named_drawables_.end()) {
+            // Name already exists so we'll remove the drawable it refers to. We
+            // wont erase from map because we're just about to add to it again.
+            remove(it->second);
+        }
 
-    void add(const Shared<Drawable>& r) override {
-        objects_.push_back(r);
+        switch(domain) {
+        case In::scene:   in_scene_.push_back(r); break;
+        case In::pixels: in_pixels_.push_back(r); break;
+        default: PANGO_UNREACHABLE();
+        }
+
+        if(!name.empty()) {
+            // add / replace named drawable.
+            named_drawables_.emplace(name, r);
+        }
+    }
+
+    std::shared_ptr<Drawable> get(const std::string& name) const override {
+        auto it = named_drawables_.find(name);
+        if( it != named_drawables_.end() ) {
+            return it->second;
+        }
+        return nullptr;
     }
 
     void remove(const Shared<Drawable>& r) override {
-        throw std::runtime_error("Not implemented yet...");
+
     }
 
-    void clear() override {
-        objects_.clear();
+    void clear(std::optional<In> domain = std::nullopt) override {
+
     }
 
     std::string name_;
     Size size_hint_;
     AspectPolicy aspect_policy_;
 
-    Shared<ViewParams> view_params_;
-    Shared<ViewConstraints> view_constraints_;
+    RenderState render_state_;
+    RenderData render_data_;
+
     Shared<DrawLayerHandler> handler_;
 
-    // // Actually used for rendering
-    // Eigen::Matrix4d cam_from_world_;
-    // Eigen::Matrix4d intrinsic_k_;
-    // NonLinearMethod non_linear_;
-
-    std::vector<Shared<Drawable>> objects_;
-    std::vector<Shared<Drawable>> objects_in_camera_;
-
-    mutable MinMax<Eigen::Array2i> aspect_viewport_;
+    std::vector<Shared<Drawable>> in_scene_;
+    std::vector<Shared<Drawable>> in_pixels_;
+    std::map<std::string, Shared<Drawable>> named_drawables_;
 };
 
 PANGO_CREATE(DrawLayer) {

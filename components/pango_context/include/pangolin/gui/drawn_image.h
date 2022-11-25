@@ -69,7 +69,7 @@ template<ImageConvertable T>
 struct LayerConversionTraits<T> {
 static Shared<DrawLayer> makeLayer(const T& image) {
     return DrawLayer::Create({
-        .objects_in_camera = {
+        .in_pixels = {
             DrawnChecker::Create({}),
             DrawnImage::Create({.image=image})
         }
@@ -77,12 +77,12 @@ static Shared<DrawLayer> makeLayer(const T& image) {
 }};
 
 // Specialization of draw_layer.h's trait for DrawnImage so it defaults to
-// add to .objects_in_camera instead of .objects
+// add to .in_pixels instead of .in_scene
 template<>
 struct LayerConversionTraits<Shared<DrawnImage>> {
     static Shared<Layer> makeLayer(const Shared<DrawnImage>& drawable) {
         return DrawLayer::Create({
-             .objects_in_camera = {DrawnChecker::Create({}), drawable}
+             .in_pixels = {DrawnChecker::Create({}), drawable}
         });
     }
 };

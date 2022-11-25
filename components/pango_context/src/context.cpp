@@ -69,11 +69,11 @@ std::shared_ptr<Layer> giveEventToLayers(
 ) {
     const auto r = group.cached_.region;
     const Eigen::Vector2i winpos =
-        event.pointer_pos.posInWindow().cast<int>();
+        event.pointer_pos.pos_window.cast<int>();
 
     if(r.contains(winpos))
     {
-        event.pointer_pos.region_ = r;
+        event.pointer_pos.region = r;
 
         if(group.layer && group.layer->handleEvent(context, event)) {
             // event handled, stop dfs
@@ -101,7 +101,7 @@ bool giveEventToActiveLayer(
     PANGO_ENSURE(active_layer);
 
     const auto r = group.cached_.region;
-    event.pointer_pos.region_ = r;
+    event.pointer_pos.region = r;
 
     if(group.layer == active_layer) {
         group.layer->handleEvent(context, event);
@@ -205,7 +205,7 @@ struct ContextImpl : public Context {
         if(e.button == MouseWheelUp || e.button == MouseWheelDown) {
             const float delta = (e.button == MouseWheelDown ? 1.0f : -1.0f);
             Interactive::Event layer_event = {
-                .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .pointer_pos = WindowPosition {.pos_window = {e.x,e.y}},
                 .modifier_active = modifier_active_,
                 .detail = Interactive::ScrollEvent {
                     .pan = Eigen::Array2d(0.0, delta)
@@ -219,7 +219,7 @@ struct ContextImpl : public Context {
             button_active_.set(*maybe_button, e.pressed);
 
             Interactive::Event layer_event = {
-                .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .pointer_pos = WindowPosition {.pos_window = {e.x,e.y}},
                 .modifier_active = modifier_active_,
                 .detail = Interactive::PointerEvent {
                     .action = e.pressed ? PointerAction::down : PointerAction::click_up,
@@ -235,7 +235,7 @@ struct ContextImpl : public Context {
         modifier_active_ = toInteractiveModifierKey(e.key_modifiers);
 
         Interactive::Event layer_event = {
-            .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+            .pointer_pos = WindowPosition {.pos_window = {e.x,e.y}},
             .modifier_active = modifier_active_,
             .detail = Interactive::PointerEvent {
                 .action = PointerAction::drag,
@@ -250,7 +250,7 @@ struct ContextImpl : public Context {
 
         if( e.inType == InputSpecialScroll) {
             Interactive::Event layer_event = {
-                .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .pointer_pos = WindowPosition {.pos_window = {e.x,e.y}},
                 .modifier_active = modifier_active_,
                 .detail = Interactive::ScrollEvent {
                     .pan = {e.p[0], e.p[1]}
@@ -259,7 +259,7 @@ struct ContextImpl : public Context {
             dispatchLayerEvent(layer_event);
         }else if( e.inType == InputSpecialZoom) {
             Interactive::Event layer_event = {
-                .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .pointer_pos = WindowPosition {.pos_window = {e.x,e.y}},
                 .modifier_active = modifier_active_,
                 .detail = Interactive::ScrollEvent {
                     .zoom = e.p[0]
@@ -279,7 +279,7 @@ struct ContextImpl : public Context {
             window_->ShowFullscreen(TrueFalseToggle::Toggle);
         }else{
             Interactive::Event layer_event = {
-                .pointer_pos = WindowPosition {.pos_window_ = {e.x,e.y}},
+                .pointer_pos = WindowPosition {.pos_window = {e.x,e.y}},
                 .modifier_active = modifier_active_,
                 .detail = Interactive::KeyboardEvent {
                     .key = e.key,

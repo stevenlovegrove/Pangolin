@@ -10,16 +10,30 @@
 using namespace pangolin;
 using namespace sophus;
 
-sophus::Image<float> testImage(int w, int h)
+// Custom type
+struct Cross
 {
-    sophus::MutImage<float> img(ImageSize(8,5));
-    for(int y=0; y < h; ++y) {
-        for(int x=0; x < w; ++x) {
-            img.checkedMut(x,y) = float(y*w + x) / float(w*h);
-        }
-    }
-    return std::move(img);
-}
+    Eigen::Vector3d pos = {0.0, 0.0, 0.0};
+    Eigen::Vector4d color = {1.0, 0.0, 0.0, 1.0};
+    double radius = 1.0;
+};
+
+// Implement traits so that Pangolin knows how to render the type.
+template<>
+struct DrawableConversionTraits<Cross> {
+static Shared<DrawLayer::Drawable> makeDrawable(const Cross& x) {
+    auto prims = DrawnPrimitives::Create({
+        .element_type=DrawnPrimitives::Type::lines,
+        .default_color = x.color
+    });
+    prims->vertices->update(std::vector<Eigen::Vector3f>{
+        x.pos.cast<float>() + Eigen::Vector3f{-0.5f, -0.5f, 0.0f},
+        x.pos.cast<float>() + Eigen::Vector3f{+0.5f, +0.5f, 0.0f},
+        x.pos.cast<float>() + Eigen::Vector3f{-0.5f, +0.5f, 0.0f},
+        x.pos.cast<float>() + Eigen::Vector3f{+0.5f, -0.5f, 0.0f}
+    }, {});
+    return prims;
+}};
 
 int main( int argc, char** argv )
 {
@@ -33,42 +47,29 @@ int main( int argc, char** argv )
 
     // Draw a very low resolution image so that we can visually ensure we are
     // not missing any half pixels etc
-    auto image = testImage(w, h);
-
-    // draw a red cross centered at (0,0), which should be the center of the
-    // top-left pixel of the image. The color of the pixel should be black
-    auto cross_top_left = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::lines,
-        .enable_visibility_testing = false,
-        .default_color = {1.0, 0.0, 0.0, 1.0}
-    });
-    cross_top_left->vertices->update(std::vector<Eigen::Vector3f>{
-        {-0.5f, -0.5f, 0.0f}, {+0.5f, +0.5f, 0.0f},
-        {-0.5f, +0.5f, 0.0f}, {+0.5f, -0.5f, 0.0f}
-    }, {});
-
-    // draw a black cross centered at (w-1,h-1), which should be the center of
-    // the bottom-right pixel of the image. The color of the pixel should be
-    // white
-    auto cross_bottom_right = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::lines,
-        .enable_visibility_testing = false,
-        .default_color = {0.0, 0.0, 0.0, 1.0}
-    });
-    cross_bottom_right->vertices->update(std::vector<Eigen::Vector3f>{
-        {w-1.0f-0.5f, h-1.0f-0.5f, 0.0f}, {w-1.0f+0.5f, h-1.0f+0.5f, 0.0f},
-        {w-1.0f-0.5f, h-1.0f+0.5f, 0.0f}, {w-1.0f+0.5f, h-1.0f-0.5f, 0.0f}
-    }, {});
-
-    // Place the elements in one DrawnLayer object which will share the same
-    // camera matrices. The object will 'guess' an orthographic projection
-    // across the image is what we intended since it is listed first in the
-    // .objects list.
-    auto layer = DrawLayer::Create({
-        .objects_in_camera = { DrawnImage::Create({.image=image}), cross_top_left, cross_bottom_right },
+    auto image = sophus::Image<float>::makeGenerative({w,h}, [](int x, int y){
+        return float(y*w + x) / float(w*h);
     });
 
+    auto layer = makeLayer(image);
+    layer->addInPixels(
+        Cross{.pos={0.0, 0.0, 0.0}},
+        Cross{.pos={float(w-1), float(h-1), 0.0}}
+    );
     context->setLayout( layer );
+
+    // markers: points, circles, stars, triangles, ...
+    //          position, size, color
+    // x,y,z,r,  r,g,b,a,  type
+
+
+    // kernels: guassians, ramps
+    //          position, spread, density
+    // arrows:  rays, line segments, infinite lines
+    //          start, end, direction, width
+    // objects: frame of reference, camera, waypoint, mesh, plane, disk, cylinder, ellipsoid
+    //          position, orientation, size
+
 
     context->loop();
     return 0;

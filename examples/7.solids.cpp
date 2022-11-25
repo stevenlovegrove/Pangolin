@@ -33,32 +33,16 @@ inline void rotate(std::vector<sophus::SE3f>& T_world_obj, const Eigen::Vector3f
 
 int main( int argc, char** argv )
 {
-    if(false)
-    {
-        Eigen::Vector3d a_w(1,2,3);
-        sophus::SO3d R_wa = sophus::SO3d::rotZ(0.3)*sophus::SO3d::rotX(0.3);
-
-        sophus::SE3d T_wa( R_wa, a_w);
-        std::cout << a_w.transpose() << std::endl;
-        std::cout << T_wa.translation().transpose() << std::endl;
-
-        Eigen::Vector3d a_a = T_wa.inverse() * a_w;
-        std::cout << a_a.transpose() << std::endl;
-        return 0;
-    }
-
     auto context = Context::Create({
         .title="Pangolin Solid Raycast Geometry",
         .window_size = {2*640,2*480},
     } );
 
     auto scene = DrawLayer::Create({
-        .view_params = {
-            .camera_from_world = cameraLookatFromWorld(
-                {0.0,0.0,1.0}, {10.0,0.0,0.0}, AxisDirection2::positive_z
-            ),
-            .near_far = {0.01, 1000.0}
-        }
+        .camera_from_world = cameraLookatFromWorld(
+            {0.0,0.0,1.0}, {10.0,0.0,0.0}, AxisDirection2::positive_z
+        ),
+        .near_far = {0.01, 1000.0}
     });
     auto solids = DrawnSolids::Create({});
     auto prims = DrawnPrimitives::Create({
@@ -85,7 +69,7 @@ int main( int argc, char** argv )
     }
     prims->vertices->update(T_world_axis, {});
 
-    scene->add(solids, prims);
+    scene->addInScene(solids, prims);
 
     context->setLayout( scene);
 
