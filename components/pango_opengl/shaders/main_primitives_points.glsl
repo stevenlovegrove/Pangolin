@@ -5,8 +5,6 @@ uniform mat4 proj;
 uniform mat4 cam_from_world;
 
 void main() {
-    // vec4 p_cam = cam_from_world * vec4(a_position, 1.0);
-    // gl_Position = proj * p_cam;
     gl_Position = proj * cam_from_world * vec4(a_position, 1.0);
 }
 

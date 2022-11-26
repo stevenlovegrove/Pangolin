@@ -19,9 +19,7 @@ struct DrawnPrimitives : public DrawLayer::Drawable
     {
         // Sized in image pixels
         points,   // populate vertices, [indices,colors,radius]
-        // Sized in world coordinates and oriented
-        circles,  // populate vertices, [indices,colors,radius]
-        squares,  // populate vertices, [indices,colors,radius]
+        shapes,
         axes,     // populate vertices with axes_T_world sophus::SE3f elements
                   // [indices,colors,radius]
         // lines and triangles
@@ -30,6 +28,32 @@ struct DrawnPrimitives : public DrawLayer::Drawable
         line_loop,
         triangles,
         triangle_strip
+    };
+
+    enum class Shape
+    {
+        filled_circle = 0,
+        filled_box,
+        filled_rhombus,
+        filled_equilateraltriangle,
+        filled_pentagon,
+        filled_hexagon,
+        filled_hexagram,
+        filled_star,
+        filled_heart,
+        filled_roundedx,
+        filled_blobbycross,
+        hollow_circle,
+        hollow_box,
+        hollow_rhombus,
+        hollow_equilateraltriangle,
+        hollow_pentagon,
+        hollow_hexagon,
+        hollow_hexagram,
+        hollow_star,
+        hollow_heart,
+        hollow_roundedx,
+        hollow_blobbycross
     };
 
     // Vertex data to render
@@ -57,6 +81,11 @@ struct DrawnPrimitives : public DrawLayer::Drawable
         .kind=DeviceBuffer::Kind::VertexAttributes
     });
 
+    // If provided, use per_vertex integral shape
+    Shared<DeviceBuffer> shapes = DeviceBuffer::Create({
+        .kind=DeviceBuffer::Kind::VertexAttributes
+    });
+
     // Geometric element to interpret vertices as
     Type element_type;
 
@@ -65,12 +94,12 @@ struct DrawnPrimitives : public DrawLayer::Drawable
 
     // Element size to use for points/circles/squares if radius buffer is empty.
     // points are in pixel units. Other elements are world units.
-    double default_radius;
+    double default_size;
 
     struct Params {
         Type element_type = Type::points;
         Eigen::Vector4d default_color = {1.0f, 0.0f, 0.0f, 1.0f};
-        double default_radius = 1.0;
+        double default_size = 1.0;
         Eigen::Matrix4d parent_from_drawable = Eigen::Matrix4d::Identity();
     };
     static Shared<DrawnPrimitives> Create(Params p);

@@ -47,7 +47,7 @@ int main( int argc, char** argv )
     auto solids = DrawnSolids::Create({});
     auto prims = DrawnPrimitives::Create({
         .element_type = DrawnPrimitives::Type::axes,
-        .default_radius = 0.1
+        .default_size = 0.1
     });
 
     static_assert(sizeof(sophus::SE3f) == 32);

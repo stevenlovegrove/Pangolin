@@ -22,13 +22,13 @@ out vec4 vert_color;
 
 uniform mat4 proj;
 uniform vec4 color;
-uniform float length;
+uniform float size;
 
 void main() {
     mat4 points_axes = mat4(
-        vec4(length, 0.0, 0.0, 1.0), // x column vec
-        vec4(0.0, length, 0.0, 1.0), // y column vec
-        vec4(0.0, 0.0, length, 1.0), // z column vec
+        vec4(size, 0.0, 0.0, 1.0), // x column vec
+        vec4(0.0, size, 0.0, 1.0), // y column vec
+        vec4(0.0, 0.0, size, 1.0), // z column vec
         vec4(0.0, 0.0, 0.0, 1.0)     // center vec
     );
 

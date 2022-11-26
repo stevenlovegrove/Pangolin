@@ -31,6 +31,9 @@ struct GlDrawnPrimitives : public DrawnPrimitives
             case DrawnPrimitives::Type::axes:
                 drawAxes(params);
                 break;
+            case DrawnPrimitives::Type::shapes:
+                drawShapes(params);
+                break;
             default:
                 drawPointsLinesTriangles(params);
                 break;
@@ -50,7 +53,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives
             u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
             u_cam_from_world = (params.camera_from_world.matrix() * parent_from_drawable).cast<float>();
             u_color = default_color.cast<float>();
-            u_length = default_radius;
+            u_size = default_size;
 
             auto bind_bo = vertices->bind();
             PANGO_ENSURE(vertices->dataType().is<sophus::Se3<float>>() );
@@ -66,6 +69,25 @@ struct GlDrawnPrimitives : public DrawnPrimitives
         }
     }
 
+    void drawShapes( const DrawLayer::ViewParams& params ) {
+        vertices->sync();
+        colors->sync();
+        shapes->sync();
+
+        if(!vertices->empty()) {
+            auto bind_prog = prog_shapes->bind();
+            auto bind_vao = vao.bind();
+
+            u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
+            u_cam_from_world = (params.camera_from_world.matrix() * parent_from_drawable).cast<float>();
+            u_size = default_size;
+            vao.addVertexAttrib(0, *vertices);
+            vao.addVertexAttrib(1, *colors);
+            vao.addVertexAttrib(2, *shapes);
+            PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->numElements()));
+        }
+    }
+
     void drawPointsLinesTriangles( const DrawLayer::ViewParams& params ) {
         vertices->sync();
         if(!vertices->empty()) {
@@ -76,7 +98,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives
             u_cam_from_world = (params.camera_from_world.matrix() * parent_from_drawable).cast<float>();
             u_color = default_color.cast<float>();
             vao.addVertexAttrib(0, *vertices);
-            PANGO_GL(glPointSize(default_radius*2.0f));
+            PANGO_GL(glPointSize(default_size));
             PANGO_GL(glDrawArrays(toGlEnum(element_type), 0, vertices->numElements()));
         }
     }
@@ -88,11 +110,14 @@ private:
     const Shared<GlSlProgram> prog_axes = GlSlProgram::Create({
         .sources = {{ .origin="/components/pango_opengl/shaders/main_axes.glsl" }}
     });
+    const Shared<GlSlProgram> prog_shapes = GlSlProgram::Create({
+        .sources = {{ .origin="/components/pango_opengl/shaders/main_shapes.glsl" }}
+    });
     GlVertexArrayObject vao = {};
     const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
     const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
     const GlUniform<Eigen::Vector4f> u_color = {"color"};
-    const GlUniform<float> u_length = {"length"};
+    const GlUniform<float> u_size = {"size"};
 };
 
 PANGO_CREATE(DrawnPrimitives) {
@@ -100,7 +125,7 @@ PANGO_CREATE(DrawnPrimitives) {
     r->element_type = p.element_type;
     r->parent_from_drawable = p.parent_from_drawable;
     r->default_color = p.default_color;
-    r->default_radius = p.default_radius;
+    r->default_size = p.default_size;
     return r;
 }
 
