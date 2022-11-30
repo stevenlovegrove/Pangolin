@@ -126,7 +126,7 @@ class Cast<std::vector<TT>> {
  public:
   template <typename To>
   static auto impl(std::vector<TT> const& v) {
-    using ToEl = std::decay_t<decltype(std::declval<To>().data())>;
+    using ToEl = std::decay_t<decltype(*std::declval<To>().data())>;
     std::vector<ToEl> r;
     r.reserve(v.size());
     for(const auto& el : v) {

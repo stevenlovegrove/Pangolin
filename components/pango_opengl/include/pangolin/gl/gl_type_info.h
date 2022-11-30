@@ -72,7 +72,7 @@ inline GlFormatInfo glTypeInfo(const sophus::RuntimePixelType& pixel_type)
         };
     }
 
-    PANGO_THROW("Unsupported image type");
+    PANGO_THROW("Unsupported GL image type, {}", pixel_type);
 }
 
 }
