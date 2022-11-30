@@ -106,6 +106,9 @@ struct DrawLayerImpl : public DrawLayer {
                 sophus::ImageSize size = toImageSize(*maybe_dim);
                 render_state_.camera = sophus::createDefaultPinholeModel(size);
                 return true;
+            }else if(in_scene_.size()) {
+                render_state_.camera = sophus::createDefaultPinholeModel({640, 480});
+                return true;
             }
             return false;
         }
