@@ -100,15 +100,16 @@ struct DrawLayerImpl : public DrawLayer {
         return std::nullopt;
     }
 
-    void ensureCameraInitialized() {
+    bool tryInitializeEmptyCamera() {
         if(render_state_.camera.isEmpty()) {
-            sophus::ImageSize size = {640, 480};
             if(auto maybe_dim = tryGetDrawableBaseImageSize()) {
-                size = toImageSize(*maybe_dim);
+                sophus::ImageSize size = toImageSize(*maybe_dim);
+                render_state_.camera = sophus::createDefaultPinholeModel(size);
+                return true;
             }
-            render_state_.camera = sophus::createDefaultPinholeModel(size);
-            // render_state_.near_far = {0.1, std::numeric_limits<double>::infinity()};
+            return false;
         }
+        return true;
     }
 
     struct RenderData
@@ -178,7 +179,9 @@ struct DrawLayerImpl : public DrawLayer {
     }
 
     void renderIntoRegion(const Context& context, const RenderParams& params) override {
-        ensureCameraInitialized();
+        if(!tryInitializeEmptyCamera()) {
+            return;
+        }
 
         render_data_ = computeRenderData( render_state_, aspect_policy_, params.region );
 
