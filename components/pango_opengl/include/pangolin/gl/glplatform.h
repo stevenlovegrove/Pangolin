@@ -65,8 +65,8 @@
     FUNC; \
     GLenum gl_error = glGetError(); \
     if( gl_error != GL_NO_ERROR) { \
-        Log::instance().log(Log::Kind::Error, __FILE__, PANGO_FUNCTION, __LINE__, \
-        "", "GL Error ({}): {}", gl_error, glErrorString(gl_error) ); \
+        pangolin::Log::instance().log(pangolin::Log::Kind::Error, __FILE__, PANGO_FUNCTION, __LINE__, \
+        "", "GL Error ({}): {}", gl_error, pangolin::glErrorString(gl_error) ); \
         return false; \
     } \
     return true; \
