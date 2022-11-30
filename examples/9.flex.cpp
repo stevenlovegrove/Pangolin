@@ -21,7 +21,7 @@ sophus::Image<sophus::Pixel3F32> testImage(int w, int h)
         const sophus::Pixel3F32 r(dist(e2),dist(e2),dist(e2));
         return (mean + r / 10.0);
     });
-    return std::move(img);
+    return img;
 }
 
 int main( int argc, char** argv )

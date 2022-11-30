@@ -7,8 +7,9 @@
 
 */
 
-using namespace pangolin;
 using namespace sophus;
+
+ namespace pangolin{
 
 // Custom type
 struct Cross
@@ -33,7 +34,7 @@ static Shared<DrawLayer::Drawable> makeDrawable(const Cross& x) {
         x.pos.cast<float>() + Eigen::Vector3f{+0.5f, -0.5f, 0.0f}
     }, {});
     return prims;
-}};
+}};}
 
 int main( int argc, char** argv )
 {

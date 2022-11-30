@@ -54,7 +54,7 @@ int main( int /*argc*/, char** /*argv*/ )
 
     for(int i=0; i < N; ++i) {
       auto c = wheel.GetColourBin(i);
-      points.push_back({double(i), 0.0, 0.0});
+      points.push_back({float(i), 0.0, 0.0});
       colors.push_back({c.r, c.g, c.b, 1.0});
       shapes.push_back(i);
     }

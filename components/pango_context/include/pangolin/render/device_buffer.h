@@ -45,8 +45,8 @@ struct DeviceBuffer
     // data() and size() method.
     template<typename Container>
     void update(Container&& data, UpdateParams params) {
-        using C = std::remove_cvref_t<Container>;
-        using T = std::remove_cvref_t<std::remove_pointer_t<decltype(data.data())>>;
+        using C = std::decay_t<Container>;
+        using T = std::decay_t<decltype(data.data())>;
         auto shared_data = std::make_shared<C>(std::forward<Container>(data));
 
         update({

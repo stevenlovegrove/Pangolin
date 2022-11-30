@@ -29,6 +29,15 @@ static Shared<Layer> makeLayer(const std::shared_ptr<L>& layer) {
 
 ////////////////////////////////////////////////////////////////////
 
+
+namespace detail {
+    template< class T, class U >
+    concept SameHelper = std::is_same_v<T, U>;
+}
+ 
+template< class T, class U >
+concept same_as = detail::SameHelper<T, U> && detail::SameHelper<U, T>;
+
 // Concept to accept types where the LayerTraits specialization has been defined
 template<typename T>
 concept LayerConvertable = requires (T x) {
@@ -37,7 +46,7 @@ concept LayerConvertable = requires (T x) {
 
 template<typename T>
 concept LayerGroupConvertable =
-    LayerConvertable<T> || std::same_as<std::remove_cvref_t<T>, LayerGroup>;
+    LayerConvertable<T> || same_as<std::decay_t<T>, LayerGroup>;
 
 template<LayerConvertable T>
 auto makeLayer(const T& v) {
@@ -46,8 +55,8 @@ auto makeLayer(const T& v) {
 
 template<LayerGroupConvertable T>
 LayerGroup makeLayerGroup(const T& v) {
-    using BaseT = std::remove_cvref_t<T>;
-    if constexpr(std::same_as<BaseT, LayerGroup>) {
+    using BaseT = std::decay_t<T>;
+    if constexpr(same_as<BaseT, LayerGroup>) {
         return v;
     }else{
         return LayerGroup(Shared<Layer>(makeLayer(v)));
