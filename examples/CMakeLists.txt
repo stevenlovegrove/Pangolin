@@ -12,6 +12,7 @@ set(examples
     7.solids
     8.pixel-perfect
     9.flex
+    10.test
 )
 
 foreach(example IN LISTS examples)
