@@ -39,7 +39,7 @@ struct DrawnImage : public DrawLayer::Drawable
         sophus::IntensityImage<> image = {};
         Palette colormap = Palette::none;
         Interpolation interpolation = Interpolation::nearest;
-        std::optional<Eigen::MatrixXd> color_transform;
+        std::optional<Eigen::MatrixXd> color_transform = std::nullopt;
     };
     static Shared<DrawnImage> Create(Params p);
 };

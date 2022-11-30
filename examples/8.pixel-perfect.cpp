@@ -8,6 +8,7 @@
 */
 
 using namespace sophus;
+using namespace pangolin;
 
  namespace pangolin{
 

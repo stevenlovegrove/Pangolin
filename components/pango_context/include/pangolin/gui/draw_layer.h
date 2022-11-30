@@ -84,8 +84,8 @@ struct DrawLayer : public Layer
         Size size_hint = {Parts{1}, Parts{1}};
         AspectPolicy aspect_policy = AspectPolicy::mask;
 
-        std::optional<sophus::CameraModel> camera;
-        std::optional<sophus::Se3F64> camera_from_world;
+        std::optional<sophus::CameraModel> camera = std::nullopt;
+        std::optional<sophus::Se3F64> camera_from_world = std::nullopt;
         MinMax<double> near_far = {1e-3, 1e6};
 
         // Objects to draw through modelview transform
