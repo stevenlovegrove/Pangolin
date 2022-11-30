@@ -7,10 +7,6 @@
 
 */
 
-using namespace sophus;
-
- namespace pangolin{
-
 // Custom type
 struct Cross
 {
@@ -19,6 +15,7 @@ struct Cross
     double radius = 1.0;
 };
 
+namespace pangolin {
 // Implement traits so that Pangolin knows how to render the type.
 template<>
 struct DrawableConversionTraits<Cross> {
@@ -34,10 +31,14 @@ static Shared<DrawLayer::Drawable> makeDrawable(const Cross& x) {
         x.pos.cast<float>() + Eigen::Vector3f{+0.5f, -0.5f, 0.0f}
     }, {});
     return prims;
-}};}
+}};
+}
 
 int main( int argc, char** argv )
 {
+    using namespace sophus;
+    using namespace pangolin;
+
     const int w = 8;
     const int h = 5;
     const int win_scale = 100;
@@ -58,20 +59,6 @@ int main( int argc, char** argv )
         Cross{.pos={float(w-1), float(h-1), 0.0}}
     );
     context->setLayout( layer );
-
-    // markers: points, circles, stars, triangles, ...
-    //          position, size, color
-    // x,y,z,r,  r,g,b,a,  type
-
-
-    // kernels: guassians, ramps
-    //          position, spread, density
-    // arrows:  rays, line segments, infinite lines
-    //          start, end, direction, width
-    // objects: frame of reference, camera, waypoint, mesh, plane, disk, cylinder, ellipsoid
-    //          position, orientation, size
-
-
     context->loop();
     return 0;
 }
