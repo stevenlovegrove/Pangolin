@@ -1,5 +1,5 @@
 @start vertex
-#version 150 core
+#version 330 core
 
 in vec3 a_position;
 out vec2 v_pos;
@@ -11,7 +11,7 @@ void main() {
 }
 
 @start fragment
-#version 150 core
+#version 330 core
 #include "utils.glsl.h"
 #include "colormaps.glsl.h"
 #include "sdf.glsl.h"

@@ -1,5 +1,5 @@
 @start vertex
-#version 150 core
+#version 330 core
 
 uniform mat4 proj;
 uniform mat4 cam_from_world;
@@ -27,7 +27,7 @@ void main()
 }
 
 @start fragment
-#version 150 core
+#version 330 core
 
 #include "colormaps.glsl.h"
 
@@ -46,11 +46,11 @@ void main()
   color = color_transform * texture(image, v_tex);
 
   switch(colormap_index) {
-    case 0: return;
-    case 1: color.xyz = plasma(clamp(color.x,0.0,1.0)); return;
-    case 2: color.xyz = viridis(clamp(color.x,0.0,1.0)); return;
-    case 3: color.xyz = magma(clamp(color.x,0.0,1.0)); return;
-    case 4: color.xyz = inferno(clamp(color.x,0.0,1.0)); return;
-    case 5: color.xyz = turbo(clamp(color.x,0.0,1.0)); return;
+    case 0u: return;
+    case 1u: color.xyz = plasma(clamp(color.x,0.0,1.0)); return;
+    case 2u: color.xyz = viridis(clamp(color.x,0.0,1.0)); return;
+    case 3u: color.xyz = magma(clamp(color.x,0.0,1.0)); return;
+    case 4u: color.xyz = inferno(clamp(color.x,0.0,1.0)); return;
+    case 5u: color.xyz = turbo(clamp(color.x,0.0,1.0)); return;
   }
 }

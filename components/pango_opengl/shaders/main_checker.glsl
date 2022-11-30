@@ -1,5 +1,5 @@
 @start vertex
-#version 150 core
+#version 330 core
 
 uniform vec2 viewport_size;
 
@@ -19,7 +19,7 @@ void main()
 }
 
 @start fragment
-#version 150 core
+#version 330 core
 
 in vec2 pix;
 

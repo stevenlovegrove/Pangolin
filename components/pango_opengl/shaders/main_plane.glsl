@@ -1,5 +1,5 @@
 @start vertex
-#version 150 core
+#version 330 core
 
 out vec2 v_clip_pos;
 
@@ -15,7 +15,7 @@ void main()
 }
 
 @start fragment
-#version 150 core
+#version 330 core
 
 #include </components/pango_opengl/shaders/utils.glsl.h>
 #include </components/pango_opengl/shaders/camera.glsl.h>
