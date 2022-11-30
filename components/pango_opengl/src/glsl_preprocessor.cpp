@@ -132,6 +132,11 @@ std::optional<std::vector<std::string>> maybeTokenized(const std::string& line, 
 {
     const size_t hash = line.find(escape_char);
     if( hash != std::string::npos ) {
+        for(size_t i=0; i < hash; ++i) {
+            // only tokenize if escape_car is first non-whitespace charector.
+            if(!std::isspace(line[hash])) return std::nullopt;
+        }
+
         std::istringstream iss(std::string(line.begin() + hash+1, line.end()));
         return tokenize(iss);
     }
