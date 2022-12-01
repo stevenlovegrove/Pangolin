@@ -133,14 +133,16 @@ public:
     {
     }
 
+    GlUniform(const GlUniform&) = default;
+
     void setValue(const T& new_value) const {
         const bool needs_init = handle_ == kHandleInvalid;
 
         if(needs_init) {
-            GLint bound_prog_id;
+            GLint bound_prog_id=0;
             PANGO_GL(glGetIntegerv(GL_CURRENT_PROGRAM, &bound_prog_id));
             PANGO_CHECK(bound_prog_id != 0, "This method can only be called with the corresponding program already bound.");
-            handle_ = glGetUniformLocation(bound_prog_id, name_);
+            handle_ = glGetUniformLocation(bound_prog_id, name_.c_str());
             PANGO_CHECK(handle_ != -1, "Name '{}' doesn't correspond to a used uniform (may have been optimized out).", name_);
         }
 
@@ -165,7 +167,7 @@ public:
 private:
     static constexpr int kHandleInvalid = -1;
 
-    const char* name_;
+    std::string name_;
     mutable T current_value_;
     mutable int handle_;
 };
