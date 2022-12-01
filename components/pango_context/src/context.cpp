@@ -200,12 +200,10 @@ struct ContextImpl : public Context {
 
 
     void mouseEvent(MouseEvent e) {
-        PANGO_INFO("mouse event; button: {}", e.button);
         modifier_active_ = toInteractiveModifierKey(e.key_modifiers);
 
         if(e.button == MouseWheelUp || e.button == MouseWheelDown) {
-            const float delta = (e.button == MouseWheelDown ? 1.0f : -1.0f);
-            PANGO_INFO("wheel delta: {}", delta);
+            const float delta = (e.button == MouseWheelDown ? -1.0f : 1.0f);
             Interactive::Event layer_event = {
                 .pointer_pos = WindowPosition {.pos_window = {e.x,e.y}},
                 .modifier_active = modifier_active_,
