@@ -92,6 +92,13 @@ PANGO_DEF_UNIFORM_SCALAR(GLuint, ui)
 PANGO_DEF_UNIFORM_SCALAR(GLfloat, f)
 #undef PANGO_DEF_UNIFORM_SCALAR
 
+// Specialization for bool, which we must set via the integer method.
+template<>
+inline void glUniform<bool>(GLint location, bool val) {
+    glUniform1i( location, static_cast<GLint>(val));
+}
+
+
 namespace detail {
 template<typename T>
 void glUniformImpl(GLint location, const T& val);
@@ -119,16 +126,11 @@ void glUniform(GLint location, T val)
 template<typename T>
 class GlUniform {
 public:
-    GlUniform(const char* name, const T default_value = {})
+    GlUniform(const char* name)
         : name_(name),
-        default_value_(default_value),
-        current_value_(default_value),
+        current_value_(T{}),
         handle_(kHandleInvalid)
     {
-    }
-
-    void setDefault() const {
-        setValue(default_value_);
     }
 
     void setValue(const T& new_value) const {
@@ -164,7 +166,6 @@ private:
     static constexpr int kHandleInvalid = -1;
 
     const char* name_;
-    T default_value_;
     mutable T current_value_;
     mutable int handle_;
 };
