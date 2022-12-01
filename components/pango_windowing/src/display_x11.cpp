@@ -398,7 +398,7 @@ void X11Window::ProcessEvents()
             MouseSignal(MouseEvent{
                (float)ev.xbutton.x, (float)ev.xbutton.y,
                GetEventFlagsFromXState(ev.xkey.state),
-               button, ev.xbutton.type == ButtonPress
+               1<<button, ev.xbutton.type == ButtonPress
            });
            break;
         }

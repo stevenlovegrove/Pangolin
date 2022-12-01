@@ -285,17 +285,29 @@ class HandlerImpl : public DrawLayerHandler {
     [&](const Interactive::PointerEvent& arg) {
         if (arg.action == PointerAction::down) {
           down_state_ = state;
+          cursor_in_world_ = p_world;
         }else if(arg.action == PointerAction::drag) {
           if(!down_state_) {
             PANGO_WARN("Unexpected");
             return;
           }
           if(arg.button_active == PointerButton::primary) {
-
             if(view_mode_ == ViewMode::image_plane) {
               imagePointToPoint(info);
             }else{
               cameraTranslatePointToPoint(info);
+            }
+          }else if(arg.button_active == PointerButton::secondary) {
+            if(view_mode_ == ViewMode::image_plane) {
+              // imagePointToPoint(info);
+            }else{
+              PANGO_ENSURE(down_state_);
+              const Eigen::Vector2d p1 = down_state_->p_clip.array() * Eigen::Array2d(1.0,-1.0) / clip_aspect_scale;
+              const Eigen::Vector2d p2 = state.p_clip.array() * Eigen::Array2d(1.0,-1.0) / clip_aspect_scale;
+              const Eigen::Vector2d diff = p2-p1;
+              const Eigen::Vector3d rotation_amount(diff.y(), diff.x(),0.0);
+              cameraRotateAbout(info, rotation_amount);
+              down_state_ = state;
             }
           }
         }

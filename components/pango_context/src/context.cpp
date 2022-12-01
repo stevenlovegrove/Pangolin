@@ -171,14 +171,14 @@ struct ContextImpl : public Context {
     toInteractiveButton(int window_button)
     {
         switch(window_button) {
-            case 0: return PointerButton::primary;
-            case 1: return PointerButton::tertiary;
-            case 2: return PointerButton::secondary;
-            case 3: // scroll up
-            case 4: // scroll down
+            case MouseButton::MouseButtonLeft: return PointerButton::primary;
+            case MouseButton::MouseButtonMiddle: return PointerButton::tertiary;
+            case MouseButton::MouseButtonRight: return PointerButton::secondary;
+            case MouseButton::MouseWheelUp: // scroll up
+            case MouseButton::MouseWheelDown: // scroll down
                 return std::nullopt;
-            case 5: return PointerButton::back;
-            case 6: return PointerButton::forward;
+            // case 5: return PointerButton::back;
+            // case 6: return PointerButton::forward;
             default:
                 PANGO_WARN("Unexpected input button, {}.", window_button);
                 return std::nullopt;
@@ -200,15 +200,18 @@ struct ContextImpl : public Context {
 
 
     void mouseEvent(MouseEvent e) {
+        PANGO_INFO("mouse event; button: {}", e.button);
         modifier_active_ = toInteractiveModifierKey(e.key_modifiers);
 
         if(e.button == MouseWheelUp || e.button == MouseWheelDown) {
             const float delta = (e.button == MouseWheelDown ? 1.0f : -1.0f);
+            PANGO_INFO("wheel delta: {}", delta);
             Interactive::Event layer_event = {
                 .pointer_pos = WindowPosition {.pos_window = {e.x,e.y}},
                 .modifier_active = modifier_active_,
                 .detail = Interactive::ScrollEvent {
-                    .pan = Eigen::Array2d(0.0, delta)
+                    // .pan = Eigen::Array2d(0.0, delta)
+                    .zoom = delta/100.0
                 }
             };
             dispatchLayerEvent(layer_event);
