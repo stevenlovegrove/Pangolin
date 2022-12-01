@@ -68,16 +68,16 @@ vec4 color_sdf(float sdf, vec4 color_inside) {
 uint kNumShapes=11u;
 float sdForShape(vec2 p, float r, uint shape) {
     switch(shape) {
-    case 0: return sdCircle(p, 0.8*r);
-    case 1: return sdBox(p, 0.7*vec2(r,r));
-    case 2: return sdRhombus(p, 0.9*vec2(r,r));
-    case 3: return sdEquilateralTriangle(1.2*p/r+vec2(0.0,0.2));
-    case 4: return sdPentagon(p, 0.75*r);
-    case 5: return sdHexagon(p, 0.75*r);
-    case 6: return sdHexagram(p, 0.45*r);
-    case 7: return sdStar5(p, 0.9*r, 0.5);
-    case 8: return 1.4*sdHeart(p/r/1.4+vec2(0.0,0.6));
-    case 9: return sdRoundedX(p, 1.1*r, r/4.0);
+    case 0u: return sdCircle(p, 0.8*r);
+    case 1u: return sdBox(p, 0.7*vec2(r,r));
+    case 2u: return sdRhombus(p, 0.9*vec2(r,r));
+    case 3u: return sdEquilateralTriangle(1.2*p/r+vec2(0.0,0.2));
+    case 4u: return sdPentagon(p, 0.75*r);
+    case 5u: return sdHexagon(p, 0.75*r);
+    case 6u: return sdHexagram(p, 0.45*r);
+    case 7u: return sdStar5(p, 0.9*r, 0.5);
+    case 8u: return 1.4*sdHeart(p/r/1.4+vec2(0.0,0.6));
+    case 9u: return sdRoundedX(p, 1.1*r, r/4.0);
     default: return sdBlobbyCross(1.7*p/r, 1.0) - 0.5;
     }
 }

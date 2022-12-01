@@ -56,7 +56,7 @@ void GlVertexArrayObject::addVertexAttrib(
 #ifdef __APPLE__
     PANGO_GL(glVertexAttribPointer(attrib_location, bo.count_per_element, bo.datatype, normalized, stride_bytes, (void*)offset_bytes));
 #else
-    if(PANGO_GL(isGlIntegralDatatype(bo.datatype))) {
+    if(isGlIntegralDatatype(bo.datatype)) {
         PANGO_GL(glVertexAttribIPointer(attrib_location, bo.count_per_element, bo.datatype, stride_bytes, (void*)offset_bytes ));
     }else{
         PANGO_GL(glVertexAttribPointer(attrib_location, bo.count_per_element, bo.datatype, normalized, stride_bytes, (void*)offset_bytes));
@@ -80,14 +80,14 @@ void GlVertexArrayObject::addVertexAttrib(
     const sophus::RuntimePixelType data_type = bo.dataType();
     const GlFormatInfo gl_fmt = glTypeInfo(data_type);
 
-    // if(PANGO_GL(isGlIntegralDatatype(bo.datatype))) {
-    //     PANGO_GL(glVertexAttribIPointer(attrib_location, bo.count_per_element, bo.datatype, stride_bytes, (void*)offset_bytes ));
-    // }else{
+    if(isGlIntegralDatatype(gl_fmt.gl_type)) {
+        PANGO_GL(glVertexAttribIPointer(attrib_location, data_type.num_channels, gl_fmt.gl_type, stride_bytes, (void*)offset_bytes ));
+    }else{
         PANGO_GL(glVertexAttribPointer(
             attrib_location, data_type.num_channels,
             gl_fmt.gl_type, normalized, stride_bytes, (void*)offset_bytes)
         );
-    // }
+     }
     PANGO_GL(glEnableVertexAttribArray(attrib_location));
 }
 
