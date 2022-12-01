@@ -15,65 +15,65 @@
 // macros: https://github.com/PANGO-ng/PANGO-ng-core
 
 #define PANGO_UNIMPLEMENTED(...) \
-  Log::instance().log(Log::Kind::Unimplemented, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__);
+  pangolin::Log::instance().log(pangolin::Log::Kind::Unimplemented, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__);
 
 #define PANGO_DEBUG(...) \
-  Log::instance().log(Log::Kind::Debug, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__);
+  pangolin::Log::instance().log(pangolin::Log::Kind::Debug, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__);
 
 #define PANGO_INFO(...) \
-  Log::instance().log(Log::Kind::Info, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__);
+  pangolin::Log::instance().log(pangolin::Log::Kind::Info, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__);
 
 #define PANGO_WARN(...) \
-  Log::instance().log(Log::Kind::Warn, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__);
+  pangolin::Log::instance().log(pangolin::Log::Kind::Warn, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__);
 
 #define PANGO_ERROR(...) \
-  Log::instance().log(Log::Kind::Error, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__);
+  pangolin::Log::instance().log(pangolin::Log::Kind::Error, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__);
 
 /// Print formatted error message and then panic.
 #define PANGO_FATAL(...) \
   do { \
-    Log::instance().log(Log::Kind::Fatal, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__); \
+    pangolin::Log::instance().log(pangolin::Log::Kind::Fatal, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__); \
     ::std::abort(); \
   }while(false)
 
 // Always check. Report but continue.
 #define PANGO_CHECK(expr, ...) \
   if(!(expr)) { \
-    Log::instance().log(Log::Kind::Error, __FILE__, PANGO_FUNCTION, __LINE__, #expr, ##__VA_ARGS__); \
+    pangolin::Log::instance().log(pangolin::Log::Kind::Error, __FILE__, PANGO_FUNCTION, __LINE__, #expr, ##__VA_ARGS__); \
   }
 
 // Always check, even in debug. Abort if not true.
 #define PANGO_ENSURE(expr, ...) \
   if(!(expr)) { \
-    Log::instance().log(Log::Kind::Fatal, __FILE__, PANGO_FUNCTION, __LINE__, #expr, ##__VA_ARGS__); \
+    pangolin::Log::instance().log(pangolin::Log::Kind::Fatal, __FILE__, PANGO_FUNCTION, __LINE__, #expr, ##__VA_ARGS__); \
     ::std::abort(); \
   }
 
 // May be disabled for optimisation. Abort if not true
 #define PANGO_ASSERT(expr, ...) \
   if(!(expr)) { \
-    Log::instance().log(Log::Kind::Fatal, __FILE__, PANGO_FUNCTION, __LINE__, #expr, ##__VA_ARGS__); \
+    pangolin::Log::instance().log(pangolin::Log::Kind::Fatal, __FILE__, PANGO_FUNCTION, __LINE__, #expr, ##__VA_ARGS__); \
     ::std::abort(); \
   }
 
 // May be disabled for optimisation. Abort if not true
 #define PANGO_THROW(...) \
   do { \
-    Log::instance().logAndThrow(Log::Kind::Debug, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__); \
+    pangolin::Log::instance().logAndThrow(pangolin::Log::Kind::Debug, __FILE__, PANGO_FUNCTION, __LINE__, "", ##__VA_ARGS__); \
     ::std::abort(); \
   }while(false)
 
 // May be disabled for optimisation. Abort if not true
 #define PANGO_THROW_IF(expr, ...) \
   if(expr) { \
-    Log::instance().logAndThrow(Log::Kind::Debug, __FILE__, PANGO_FUNCTION, __LINE__, #expr, ##__VA_ARGS__); \
+    pangolin::Log::instance().logAndThrow(pangolin::Log::Kind::Debug, __FILE__, PANGO_FUNCTION, __LINE__, #expr, ##__VA_ARGS__); \
     ::std::abort(); \
   }
 
 /// Print formatted error message and then panic.
 #define PANGO_UNREACHABLE() \
   do { \
-    Log::instance().log(Log::Kind::Fatal, __FILE__, PANGO_FUNCTION, __LINE__, "", "We've reached code we thought was unreachable."); \
+    pangolin::Log::instance().log(pangolin::Log::Kind::Fatal, __FILE__, PANGO_FUNCTION, __LINE__, "", "We've reached code we thought was unreachable."); \
     ::std::abort(); \
   }while(false)
 
