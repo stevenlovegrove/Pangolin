@@ -15,6 +15,10 @@ struct [[nodiscard]] ScopedBind
     // Not copyable
     ScopedBind(const ScopedBind&) = delete;
 
+    // but moveable
+    ScopedBind(ScopedBind&&) = default;
+    ScopedBind& operator=(ScopedBind&&) = default;
+
     ScopedBind(
         const std::function<void()>& bind_func,
         const std::function<void()>& unbind_func

@@ -86,6 +86,10 @@ struct DrawnPrimitives : public DrawLayer::Drawable
         .kind=DeviceBuffer::Kind::VertexAttributes
     });
 
+    // If this and normals are provided, will use material_image as
+    // a 'matcap' texture, providing a lookup from normal to color.
+    Shared<DeviceTexture> material_image = DeviceTexture::Create({});
+
     // Geometric element to interpret vertices as
     Type element_type;
 

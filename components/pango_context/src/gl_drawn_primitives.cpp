@@ -102,14 +102,19 @@ struct GlDrawnPrimitives : public DrawnPrimitives
     void drawPointsLinesTriangles( const DrawLayer::ViewParams& params ) {
         constexpr int location_vertex = 0;
         constexpr int location_colors = 1;
+        constexpr int location_normals = 2;
 
         indices->sync();
         vertices->sync();
         colors->sync();
+        normals->sync();
+        material_image->sync();
 
         if(!prog) {
             GlSlProgram::Defines defines;
             defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
+            defines["VERTEX_NORMALS"] = std::to_string(!normals->empty());
+            defines["USE_MATCAP"] = std::to_string(!material_image->empty());
 
             prog = GlSlProgram::Create({
                 .sources = {{ .origin="/components/pango_opengl/shaders/main_primitives_points.glsl" }},
@@ -129,6 +134,13 @@ struct GlDrawnPrimitives : public DrawnPrimitives
                 vao.addVertexAttrib(location_colors, *colors);
             }else{
                 u_color = default_color.cast<float>();
+            }
+            if(!normals->empty()) {
+                vao.addVertexAttrib(location_normals, *normals);
+            }
+            std::optional<ScopedBind<DeviceTexture>> bind_matcap;
+            if(!material_image->empty()) {
+                bind_matcap = material_image->bind();
             }
 
             PANGO_GL(glPointSize(default_size));
