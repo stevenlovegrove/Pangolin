@@ -277,12 +277,30 @@ struct DrawLayerImpl : public DrawLayer {
         return nullptr;
     }
 
-    void remove(const Shared<Drawable>& r) override {
+    bool remove(const std::shared_ptr<Drawable>& r) override {
+        bool anything_erased = false;
+        // auto scene_end = std::remove(in_scene_.begin(), in_scene_.end(), r);
+        // anything_erased |= scene_end != in_scene_.end();
+        // in_scene_.erase(scene_end, in_scene.end());
 
+        // auto pixels_end = std::remove(in_pixels_.begin(), in_pixels_.end(), r);
+        // anything_erased |= pixels_end != in_pixels_.end();
+        // in_pixels_.erase(pixels_end, in_pixels_.end());
+
+        return anything_erased;
     }
 
     void clear(std::optional<In> domain = std::nullopt) override {
-
+        if(domain) {
+            if(*domain == In::pixels) {
+                in_pixels_.clear();
+            }else if(*domain == In::scene) {
+                in_scene_.clear();
+            }
+        }else{
+            in_pixels_.clear();
+            in_scene_.clear();
+        }
     }
 
     std::string name_;
