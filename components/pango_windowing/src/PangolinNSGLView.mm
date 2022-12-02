@@ -19,8 +19,17 @@
 inline
 int mapMouseButton(int osx_button )
 {
-    const int map[] = {0, 2, 1, 3, 4, 5, 6, 7, 8, 9, 10};
-    return map[osx_button];
+    if(0 <= osx_button && osx_button < 3) {
+        const int map[] = {
+            pangolin::MouseButton::MouseButtonLeft,
+            pangolin::MouseButton::MouseButtonRight,
+            pangolin::MouseButton::MouseButtonMiddle,
+        };
+        return map[osx_button];
+    }else{
+        PANGO_WARN("Unexpected button id {}", osx_button);
+        return pangolin::MouseButton::MouseButtonLeft;
+    }
 }
 
 inline
