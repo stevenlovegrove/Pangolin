@@ -26,7 +26,6 @@ constexpr GLenum toGlEnum (DrawnPrimitives::Type type) {
 struct GlDrawnPrimitives : public DrawnPrimitives
 {
     void draw( const DrawLayer::ViewParams& params) override {
-
         switch(element_type) {
             case DrawnPrimitives::Type::axes:
                 drawAxes(params);
@@ -45,9 +44,15 @@ struct GlDrawnPrimitives : public DrawnPrimitives
     }
 
     void drawAxes( const DrawLayer::ViewParams& params ){
+        if(!prog) {
+            prog = GlSlProgram::Create({
+                .sources = {{ .origin="/components/pango_opengl/shaders/main_axes.glsl" }}
+            });
+        }
+
         vertices->sync();
         if(!vertices->empty()) {
-            auto bind_prog = prog_axes->bind();
+            auto bind_prog = prog->bind();
             auto bind_vao = vao.bind();
 
             u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
@@ -70,12 +75,18 @@ struct GlDrawnPrimitives : public DrawnPrimitives
     }
 
     void drawShapes( const DrawLayer::ViewParams& params ) {
+        if(!prog) {
+            prog = GlSlProgram::Create({
+                .sources = {{ .origin="/components/pango_opengl/shaders/main_shapes.glsl" }}
+            });
+        }
+
         vertices->sync();
         colors->sync();
         shapes->sync();
 
         if(!vertices->empty()) {
-            auto bind_prog = prog_shapes->bind();
+            auto bind_prog = prog->bind();
             auto bind_vao = vao.bind();
 
             u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
@@ -89,30 +100,53 @@ struct GlDrawnPrimitives : public DrawnPrimitives
     }
 
     void drawPointsLinesTriangles( const DrawLayer::ViewParams& params ) {
+        constexpr int location_vertex = 0;
+        constexpr int location_colors = 1;
+
+        indices->sync();
         vertices->sync();
+        colors->sync();
+
+        if(!prog) {
+            GlSlProgram::Defines defines;
+            defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
+
+            prog = GlSlProgram::Create({
+                .sources = {{ .origin="/components/pango_opengl/shaders/main_primitives_points.glsl" }},
+                .program_defines = defines
+            });
+        }
+
+
         if(!vertices->empty()) {
             auto bind_prog = prog->bind();
             auto bind_vao = vao.bind();
 
             u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
             u_cam_from_world = (params.camera_from_world.matrix() * parent_from_drawable).cast<float>();
-            u_color = default_color.cast<float>();
-            vao.addVertexAttrib(0, *vertices);
+            vao.addVertexAttrib(location_vertex, *vertices);
+            if(!colors->empty()) {
+                vao.addVertexAttrib(location_colors, *colors);
+            }else{
+                u_color = default_color.cast<float>();
+            }
+
             PANGO_GL(glPointSize(default_size));
-            PANGO_GL(glDrawArrays(toGlEnum(element_type), 0, vertices->numElements()));
+
+            if(indices->empty()) {
+                PANGO_GL(glDrawArrays(toGlEnum(element_type), 0, vertices->numElements()));
+            }else{
+                const GlFormatInfo gl_fmt = glTypeInfo(indices->dataType());
+                auto bind_ibo = indices->bind();
+                PANGO_GL(glDrawElements(toGlEnum(element_type), indices->numElements(), gl_fmt.gl_type, 0));
+            }
+
         }
     }
 
 private:
-    const Shared<GlSlProgram> prog = GlSlProgram::Create({
-        .sources = {{ .origin="/components/pango_opengl/shaders/main_primitives_points.glsl" }}
-    });
-    const Shared<GlSlProgram> prog_axes = GlSlProgram::Create({
-        .sources = {{ .origin="/components/pango_opengl/shaders/main_axes.glsl" }}
-    });
-    const Shared<GlSlProgram> prog_shapes = GlSlProgram::Create({
-        .sources = {{ .origin="/components/pango_opengl/shaders/main_shapes.glsl" }}
-    });
+    std::shared_ptr<GlSlProgram> prog;
+
     GlVertexArrayObject vao = {};
     const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
     const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
