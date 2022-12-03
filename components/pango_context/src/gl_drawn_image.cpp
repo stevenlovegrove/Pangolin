@@ -33,8 +33,9 @@ struct GlDrawnImage : public DrawnImage
         u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
         u_cam_from_world = params.camera_from_world.cast<float>().matrix();
 
-        // TODO: load from DrawnImage param if specified.
-        if(image->pixelType().num_channels == 1 && u_colormap_index.getValue() == Palette::none) {
+        if(color_transform) {
+            u_color_transform = color_transform->cast<float>();
+        }else if(image->pixelType().num_channels == 1 && u_colormap_index.getValue() == Palette::none) {
             u_color_transform = (Eigen::Matrix4f() << 1,0,0,0,  1,0,0,0,  1,0,0,0, 0,0,0,1).finished();
         }else{
             u_color_transform = Eigen::Matrix4f::Identity();
