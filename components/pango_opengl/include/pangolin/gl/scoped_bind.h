@@ -16,8 +16,17 @@ struct [[nodiscard]] ScopedBind
     ScopedBind(const ScopedBind&) = delete;
 
     // but moveable
-    ScopedBind(ScopedBind&&) = default;
-    ScopedBind& operator=(ScopedBind&&) = default;
+    ScopedBind(ScopedBind&& o) {
+        *this = std::move(o);
+    }
+    ScopedBind& operator=(ScopedBind&& o) {
+        parent_ = o.parent_;
+        bind_func_ = o.bind_func_;
+        unbind_func_ = o.unbind_func_;
+        o.unbind_func_ = std::nullopt;
+        o.parent_ = nullptr;
+        return *this;
+    }
 
     ScopedBind(
         const std::function<void()>& bind_func,
@@ -33,8 +42,8 @@ struct [[nodiscard]] ScopedBind
         if(parent_) {
             parent_->bind_func_();
             getLocalActiveScopePtr() = parent_;
-        }else{
-            unbind_func_();
+        }else if(unbind_func_){
+            (*unbind_func_)();
             getLocalActiveScopePtr() = nullptr;
         }
     }
@@ -46,7 +55,7 @@ private:
     static pScopedBind& getLocalActiveScopePtr();
 
     std::function<void()> bind_func_;
-    std::function<void()> unbind_func_;
+    std::optional<std::function<void()>> unbind_func_;
     ScopedBind* parent_;
 };
 

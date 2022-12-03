@@ -20,8 +20,7 @@ struct DrawableConversionTraits;
 ///
 struct DrawLayer : public Layer
 {
-    struct RenderState
-    {
+    struct RenderState {
         sophus::CameraModel camera;
         sophus::SE3d camera_from_world;
         sophus::Sim2<double> clip_view_transform;

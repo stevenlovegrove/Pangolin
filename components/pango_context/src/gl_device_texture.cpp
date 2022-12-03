@@ -90,7 +90,10 @@ struct DeviceGlTexture : public DeviceTexture
 
     void free() const
     {
-        if(gl_id_) PANGO_GL(glDeleteTextures(1, &gl_id_));
+        if(gl_id_) {
+            PANGO_GL(glDeleteTextures(1, &gl_id_));
+            gl_id_ = 0;
+        }
     }
 
     void applyUpdateNow(Update& u) const

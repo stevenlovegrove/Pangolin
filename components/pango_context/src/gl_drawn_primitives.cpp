@@ -103,18 +103,23 @@ struct GlDrawnPrimitives : public DrawnPrimitives
         constexpr int location_vertex = 0;
         constexpr int location_colors = 1;
         constexpr int location_normals = 2;
+        constexpr int location_uvs = 3;
 
         indices->sync();
         vertices->sync();
         colors->sync();
         normals->sync();
+        uvs->sync();
         material_image->sync();
+        geometry_texture->sync();
 
         if(!prog) {
             GlSlProgram::Defines defines;
             defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
             defines["VERTEX_NORMALS"] = std::to_string(!normals->empty());
+            defines["VERTEX_UVS"] = std::to_string(!uvs->empty());
             defines["USE_MATCAP"] = std::to_string(!material_image->empty());
+            defines["USE_TEXTURE"] = std::to_string(!geometry_texture->empty());
 
             prog = GlSlProgram::Create({
                 .sources = {{ .origin="/components/pango_opengl/shaders/main_primitives_points.glsl" }},
@@ -122,25 +127,34 @@ struct GlDrawnPrimitives : public DrawnPrimitives
             });
         }
 
-
         if(!vertices->empty()) {
             auto bind_prog = prog->bind();
             auto bind_vao = vao.bind();
 
             u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
             u_cam_from_world = (params.camera_from_world.matrix() * parent_from_drawable).cast<float>();
+
             vao.addVertexAttrib(location_vertex, *vertices);
             if(!colors->empty()) {
                 vao.addVertexAttrib(location_colors, *colors);
-            }else{
+            }else if(geometry_texture->empty()){
                 u_color = default_color.cast<float>();
             }
             if(!normals->empty()) {
                 vao.addVertexAttrib(location_normals, *normals);
             }
+            if(!uvs->empty()) {
+                vao.addVertexAttrib(location_uvs, *uvs);
+            }
             std::optional<ScopedBind<DeviceTexture>> bind_matcap;
             if(!material_image->empty()) {
+                PANGO_GL(glActiveTexture(GL_TEXTURE0));
                 bind_matcap = material_image->bind();
+            }
+            std::optional<ScopedBind<DeviceTexture>> bind_texture;
+            if(!geometry_texture->empty()) {
+                PANGO_GL(glActiveTexture(GL_TEXTURE0));
+                bind_texture = geometry_texture->bind();
             }
 
             PANGO_GL(glPointSize(default_size));

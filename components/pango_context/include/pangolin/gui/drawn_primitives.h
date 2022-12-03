@@ -76,6 +76,11 @@ struct DrawnPrimitives : public DrawLayer::Drawable
         .kind=DeviceBuffer::Kind::VertexAttributes
     });
 
+    // If provided, use per-vertex normals
+    Shared<DeviceBuffer> uvs = DeviceBuffer::Create({
+        .kind=DeviceBuffer::Kind::VertexAttributes
+    });
+
     // If provided, use per_vertex radius for oriented disks
     Shared<DeviceBuffer> radius = DeviceBuffer::Create({
         .kind=DeviceBuffer::Kind::VertexAttributes
@@ -89,6 +94,9 @@ struct DrawnPrimitives : public DrawLayer::Drawable
     // If this and normals are provided, will use material_image as
     // a 'matcap' texture, providing a lookup from normal to color.
     Shared<DeviceTexture> material_image = DeviceTexture::Create({});
+
+    // Texture to use if uv's are specified for triangle primitives
+    Shared<DeviceTexture> geometry_texture = DeviceTexture::Create({});
 
     // Geometric element to interpret vertices as
     Type element_type;
