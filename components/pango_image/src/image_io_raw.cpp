@@ -1,5 +1,6 @@
 #include <fstream>
 #include <pangolin/image/runtime_image.h>
+#include <pangolin/utils/variant_overload.h>
 
 using namespace sophus;
 
@@ -29,64 +30,69 @@ IntensityImage<> LoadImageNonPlanar(
     return img;
 }
 
-// template<typename Tin, typename Tout>
-// TypedImage ToNonPlanarT(const TypedImage& planar_image, const PixelFormat& new_fmt)
-// {
-//     const size_t planes = new_fmt.channels;
+template<typename Tin, typename Tout>
+IntensityImage<> ToNonPlanarT(const IntensityImage<>& planar_image)
+{
+    RuntimePixelType new_fmt = RuntimePixelType::fromTemplate<Tout>();
+    const size_t planes = new_fmt.num_channels;
 
-//     PANGO_ENSURE(planar_image.h % planes == 0);
-//     PANGO_ENSURE(sizeof(Tin)*planes == sizeof(Tout));
-//     PANGO_ENSURE(sizeof(Tout) == new_fmt.bpp / 8);
-//     PANGO_ENSURE(new_fmt.planar == false);
+    PANGO_ENSURE(planar_image.height() % planes == 0);
+    PANGO_ENSURE(sizeof(Tin)*planes == sizeof(Tout));
+    PANGO_ENSURE(sizeof(Tout) == new_fmt.bytesPerPixel());
 
-//     TypedImage image(planar_image.w, planar_image.h / planes, new_fmt);
+    Image<Tin> in = planar_image.image<Tin>();
+    MutImage<Tout> out( {planar_image.width(), planar_image.height() / int(planes)} );
 
-//     Image<Tin> in = planar_image.UnsafeReinterpret<Tin>();
-//     Image<Tout> out = image.UnsafeReinterpret<Tout>();
+    for(size_t c=0; c < planes; ++c) {
+        ImageView<Tin> in_plane = in.subview( {0, out.height()*c}, out.imageSize() );
 
-//     for(size_t c=0; c < planes; ++c) {
-//         Image<Tin> in_plane = in.SubImage(0, out.h*c, out.w, out.h);
+        for(int y=0; y < in_plane.height(); ++y)
+        {
+            Tin* p_out = (Tin*)out.rowPtr(y) + c;
+            const Tin* p_in  = in_plane.rowPtr(y);
+            const Tin* p_end  = p_in + in_plane.width();
 
-//         for(size_t y=0; y < image.h; ++y)
-//         {
-//             Tin* p_out = (Tin*)out.RowPtr(y) + c;
-//             Tin* p_in  = in_plane.RowPtr(y);
-//             Tin* p_end  = p_in + in_plane.w;
+            while(p_in != p_end) {
+                *p_out = *p_in;
 
-//             while(p_in != p_end) {
-//                 *p_out = *p_in;
+                ++p_in;
+                p_out += planes;
+            }
+        }
+    }
 
-//                 ++p_in;
-//                 p_out += planes;
-//             }
-//         }
-//     }
+    return out;
+}
 
-//     return image;
-// }
+IntensityImage<> ToNonPlanar(const IntensityImage<>& planar, size_t planes)
+{
+    IntensityImage<> ret;
 
-// TypedImage ToNonPlanar(const TypedImage& planar, size_t planes)
-// {
-//     if(planes == 3) {
-//         if(planar.fmt.format == "GRAY8") {
-//             return ToNonPlanarT<uint8_t,Eigen::Matrix<uint8_t,3,1>>(planar, PixelFormatFromString("RGB24"));
-//         }else if(planar.fmt.format == "GRAY16LE") {
-//             return ToNonPlanarT<uint8_t,Eigen::Matrix<uint16_t,3,1>>(planar, PixelFormatFromString("RGB48"));
-//         }else if(planar.fmt.format == "GRAY32F") {
-//             return ToNonPlanarT<uint8_t,Eigen::Matrix<float,3,1>>(planar, PixelFormatFromString("RGB96F"));
-//         }
-//     }else if(planes == 4) {
-//         if(planar.fmt.format == "GRAY8") {
-//             return ToNonPlanarT<uint8_t,Eigen::Matrix<uint8_t,4,1>>(planar, PixelFormatFromString("RGBA32"));
-//         }else if(planar.fmt.format == "GRAY16LE") {
-//             return ToNonPlanarT<uint8_t,Eigen::Matrix<uint16_t,4,1>>(planar, PixelFormatFromString("RGBA64"));
-//         }else if(planar.fmt.format == "GRAY32F") {
-//             return ToNonPlanarT<uint8_t,Eigen::Matrix<float,4,1>>(planar, PixelFormatFromString("RGBA128F"));
-//         }
-//     }
+    if(planes == 3) {
+        visitImage(overload{
+            [&](const Image<uint8_t>& image){ ret = ToNonPlanarT<uint8_t, Pixel3U8>(image); },
+            [&](const Image<uint16_t>& image){ ret = ToNonPlanarT<uint16_t, Pixel3U16>(image); },
+            [&](const Image<float>& image){ ret = ToNonPlanarT<float, Pixel3<float>>(image); },
+            [&](const auto&){
+                PANGO_THROW("Unable to convert planar image of type {}", planar.pixelType() );
+            },
+        }, planar);
+    }else if(planes == 4) {
+        visitImage(overload{
+            [&](const Image<uint8_t>& image){ ret = ToNonPlanarT<uint8_t, Pixel4U8>(image); },
+            [&](const Image<uint16_t>& image){ ret = ToNonPlanarT<uint16_t, Pixel4U16>(image); },
+            [&](const Image<float>& image){ ret = ToNonPlanarT<float, Pixel4<float>>(image); },
+            [&](const auto&){
+                PANGO_THROW("Unable to convert planar image of type {}", planar.pixelType() );
+            },
+        }, planar);
+    }else{
+        PANGO_THROW("Unsupported number of image planes to output {}", planes );
+    }
 
-//     throw std::runtime_error("Unable to convert planar image of type " + planar.fmt.format);
-// }
+
+    return ret;
+}
 
 IntensityImage<> LoadImage(
     const std::string& filename,
@@ -96,13 +102,9 @@ IntensityImage<> LoadImage(
     image_planes = std::max<size_t>(1,image_planes);
 
     if(image_planes > 1) {
-        throw std::runtime_error("Comment this code back in...");
-        // // Load as large image
-        // TypedImage planar = LoadImageNonPlanar(filename, raw_plane_fmt, raw_width, raw_height*image_planes, raw_pitch, offset);
-        // planar.fmt.planar = true;
-
-        // // Convert into non-planar image
-        // return ToNonPlanar(planar, image_planes);
+        // Load as large image
+        IntensityImage<> planar = LoadImageNonPlanar(filename, raw_plane_fmt, raw_width, raw_height*image_planes, raw_pitch, offset);
+        return ToNonPlanar(planar, image_planes);
     }else{
         return LoadImageNonPlanar(filename, raw_plane_fmt, raw_width, raw_height, raw_pitch, offset);
     }

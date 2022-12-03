@@ -23,7 +23,7 @@ PRIVATE
     ${DRIVER_DIR}/pango_video_output.cpp
     # ${DRIVER_DIR}/debayer.cpp
     # ${DRIVER_DIR}/shift.cpp
-    # ${DRIVER_DIR}/transform.cpp
+    ${DRIVER_DIR}/transform.cpp
     # ${DRIVER_DIR}/unpack.cpp
     # ${DRIVER_DIR}/pack.cpp
     # ${DRIVER_DIR}/join.cpp
@@ -35,9 +35,9 @@ PRIVATE
 
 PangolinRegisterFactory(
     VideoInterface
-    TestVideo ImagesVideo SplitVideo PangoVideo
+    TestVideo ImagesVideo SplitVideo PangoVideo TransformVideo
     # TruncateVideo
-    # DebayerVideo ShiftVideo TransformVideo UnpackVideo PackVideo
+    # DebayerVideo ShiftVideo  UnpackVideo PackVideo
     # JoinVideo MergeVideo JsonVideo MjpegVideo
 )
 

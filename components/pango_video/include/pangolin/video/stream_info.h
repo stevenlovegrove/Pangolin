@@ -66,6 +66,10 @@ public:
         return { shape_, base_ptr + offset_bytes_ };
     }
 
+    inline sophus::MutImageView<uint8_t> StreamImage(uint8_t* base_ptr) const {
+        return { shape_, base_ptr + offset_bytes_ };
+    }
+
     inline IntensityImage<> copyToRuntimeImage(const uint8_t* base_ptr) const {
         PANGO_DEBUG("Unneeded image copy happening...");
         IntensityImage<> runtime(shape_, fmt_);
