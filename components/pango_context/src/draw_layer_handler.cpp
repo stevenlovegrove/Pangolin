@@ -313,13 +313,10 @@ class HandlerImpl : public DrawLayerHandler {
         }
     },
     [&](const Interactive::ScrollEvent& arg) {
-        cursor_in_world_ = p_world;
         const double zoom_input = std::clamp(-arg.zoom/1.0, -1.0, 1.0);
 
-        // double zoom_input = std::clamp(-arg.pan[1]/200.0, -1.0, 1.0);
-        // zoomTowards(camera, camera_from_world, camera_limits_in_world_, p_cam, near_far, zoom_input);
-
         if(view_mode_ == ViewMode::image_plane) {
+          cursor_in_world_ = p_world;
           const Eigen::Vector2d pan = Eigen::Vector2d(arg.pan[0], arg.pan[1]).array() / 200.0;
           imagePan(info, pan);
           imageZoom(info, zoom_input);
@@ -328,7 +325,8 @@ class HandlerImpl : public DrawLayerHandler {
           // from scrolling - otherwise it is very easy to accidentally rotate
           // around a point that suddenly comes under the cursor.
           auto now = std::chrono::system_clock::now();
-          if(now - last_cursor_update_ > cursor_update_wait_) {
+          auto diff = now - last_cursor_update_;
+          if(diff > cursor_update_wait_) {
             cursor_in_world_ = p_world;
           }
           last_cursor_update_ = now;
