@@ -20,6 +20,13 @@ struct GlDrawnSolids : public DrawnSolids
         u_world_from_cam = params.camera_from_world.inverse().cast<float>().matrix();
         u_znear_zfar = Eigen::Vector2f(params.near_far.min(), params.near_far.max());
 
+        std::optional<ScopedBind<DeviceTexture>> bind_unprojmap;
+        if(params.unproject_map && !params.unproject_map->empty()) {
+            PANGO_GL(glActiveTexture(GL_TEXTURE0));
+            bind_unprojmap = params.unproject_map->bind();
+            u_use_unproject_map = true;
+        }
+
         PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     }
 
@@ -35,6 +42,7 @@ private:
     const GlUniform<Eigen::Matrix4f> u_cam_from_clip = {"camera_from_clip"};
     const GlUniform<Eigen::Matrix4f> u_world_from_cam = {"world_from_cam"};
     const GlUniform<Eigen::Vector2f> u_znear_zfar = {"znear_zfar"};
+    const GlUniform<bool> u_use_unproject_map = {"use_unproject_map"};
 };
 
 PANGO_CREATE(DrawnSolids) {

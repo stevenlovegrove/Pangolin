@@ -15,6 +15,8 @@ namespace pangolin
 template<typename T>
 struct DrawableConversionTraits;
 
+struct DeviceTexture;
+
 ////////////////////////////////////////////////////////////////////
 /// Supports displaying interactive 2D / 3D elements
 ///
@@ -34,6 +36,7 @@ struct DrawLayer : public Layer
         Eigen::Matrix4d camera_from_world;
         Eigen::Matrix4d image_from_camera;
         Eigen::Matrix4d clip_from_image;
+        std::shared_ptr<DeviceTexture> unproject_map;
     };
 
     struct Drawable {

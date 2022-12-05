@@ -2,6 +2,7 @@
 #include <pangolin/context/context.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/render/projection_lut.h>
+#include <pangolin/render/device_texture.h>
 #include <pangolin/gl/gl.h>
 #include <pangolin/var/var.h>
 
@@ -122,6 +123,7 @@ struct DrawLayerImpl : public DrawLayer {
         Eigen::Matrix4d clip_aspect = Eigen::Matrix4d::Identity();
         ViewParams pixel_params;
         ViewParams scene_params;
+        Shared<DeviceTexture> unproject_map = DeviceTexture::Create({});
     };
 
     static Eigen::Matrix4d sim2To4x4(Sim2<double> sim2)
@@ -133,12 +135,12 @@ struct DrawLayerImpl : public DrawLayer {
         return ret;
     }
 
-    static RenderData computeRenderData(
+    static void updateRenderData(
+        RenderData& state,
         const RenderState& render_state,
         AspectPolicy aspect_policy,
         MinMax<Eigen::Array2i> viewport
     ) {
-        RenderData state;
         state.clip_view = sim2To4x4(render_state.clip_view_transform);
         state.clip_aspect_scale =
             axisScale(viewport.range(), toEigen(render_state.camera.imageSize()));
@@ -152,6 +154,18 @@ struct DrawLayerImpl : public DrawLayer {
                     state.clip_aspect_scale.y(),
                     1.0, 1.0
                 ).asDiagonal();
+        }
+
+        if(state.unproject_map->empty() && render_state.camera.distortionType() != CameraDistortionType::pinhole ) {
+            std::visit([&](const auto& camera){
+                auto unprojmap = Image<Pixel3<float>>::makeGenerative(render_state.camera.imageSize(), [&](int x, int y){
+                    auto p_img = Eigen::Vector2d(x,y);
+                    auto p_cam = camera.camUnproj(p_img, 1.0);
+                    return p_cam.template cast<float>().eval();
+                });
+                state.unproject_map->update(unprojmap);
+            }, render_state.camera.modelVariant());
+            state.unproject_map->sync();
         }
 
         state.pixel_params = {
@@ -178,7 +192,10 @@ struct DrawLayerImpl : public DrawLayer {
                         GraphicsProjection::orthographic : GraphicsProjection::perspective
                 )
         };
-        return state;
+
+        if(!state.unproject_map->empty()) {
+            state.scene_params.unproject_map = state.unproject_map;
+        }
     }
 
     void renderIntoRegion(const Context& context, const RenderParams& params) override {
@@ -186,7 +203,7 @@ struct DrawLayerImpl : public DrawLayer {
             return;
         }
 
-        render_data_ = computeRenderData( render_state_, aspect_policy_, params.region );
+        updateRenderData( render_data_, render_state_, aspect_policy_, params.region );
 
         ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
 
