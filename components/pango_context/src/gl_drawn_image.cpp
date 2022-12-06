@@ -19,7 +19,7 @@ struct GlDrawnImage : public DrawnImage
     // (w-0.5,h-0.5).
     // TODO: Add a flag to take convention as configuration.
 
-    void draw( const DrawLayer::ViewParams& params ) override {
+    void draw( const ViewParams& params ) override {
         // ensure we're synced
         image->sync();
 

@@ -23,7 +23,7 @@ struct Shape
 // Implement traits so that Pangolin knows how to render the type.
 template<>
 struct DrawableConversionTraits<Shape> {
-static Shared<DrawLayer::Drawable> makeDrawable(const Shape& x) {
+static Shared<Drawable> makeDrawable(const Shape& x) {
     auto prims = DrawnPrimitives::Create({
         .element_type=DrawnPrimitives::Type::shapes,
         .default_size = x.size,
@@ -37,7 +37,7 @@ static Shared<DrawLayer::Drawable> makeDrawable(const Shape& x) {
 // Implement traits so that Pangolin knows how to render the type.
 template<typename T>
 struct DrawableConversionTraits<sophus::Se3<T>> {
-static Shared<DrawLayer::Drawable> makeDrawable(const sophus::Se3<T>& x) {
+static Shared<Drawable> makeDrawable(const sophus::Se3<T>& x) {
     auto prims = DrawnPrimitives::Create({
         .element_type=DrawnPrimitives::Type::axes,
     });

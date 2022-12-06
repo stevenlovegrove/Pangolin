@@ -13,7 +13,7 @@ namespace pangolin
 // image x and y axis corresponding to the world co-ordinates in -continuous-
 // convention. i.e. the the x=0,y=0,z=0 frame point would be (-0.5,-0.5) in
 // pixel centered integral coordinate convention.
-struct DrawnImage : public DrawLayer::Drawable
+struct DrawnImage : public Drawable
 {
     enum class Interpolation {
         nearest,
@@ -60,7 +60,7 @@ sophus::CameraModel defaultOrthoCameraForImage(const T& image) {
 
 template<ImageConvertable T>
 struct DrawableConversionTraits<T> {
-static Shared<DrawLayer::Drawable> makeDrawable(const T& image) {
+static Shared<Drawable> makeDrawable(const T& image) {
     return DrawnImage::Create({.image=image});
 }};
 

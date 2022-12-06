@@ -1,4 +1,5 @@
 #include <pangolin/gui/draw_layer.h>
+#include <pangolin/gui/draw_layer_handler.h>
 #include <pangolin/context/context.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/render/projection_lut.h>
@@ -8,7 +9,6 @@
 
 #include "camera_utils.h"
 #include "gl_utils.h"
-#include "draw_layer_handler.h"
 
 #include <unordered_map>
 
@@ -22,7 +22,7 @@ struct DrawLayerImpl : public DrawLayer {
         : name_(p.name),
         size_hint_(p.size_hint),
         aspect_policy_(p.aspect_policy),
-        handler_(DrawLayerHandler::Create({})),
+        handler_(p.handler),
         in_scene_(p.in_scene),
         in_pixels_(p.in_pixels)
     {
@@ -44,7 +44,7 @@ struct DrawLayerImpl : public DrawLayer {
         return name_;
     }
 
-    const RenderState& renderState() const override {
+    const DrawLayerRenderState& renderState() const override {
         return render_state_;
     }
 
@@ -121,8 +121,8 @@ struct DrawLayerImpl : public DrawLayer {
         Eigen::Array2d clip_aspect_scale = {1.0, 1.0};
         Eigen::Matrix4d clip_view = Eigen::Matrix4d::Identity();
         Eigen::Matrix4d clip_aspect = Eigen::Matrix4d::Identity();
-        ViewParams pixel_params;
-        ViewParams scene_params;
+        Drawable::ViewParams pixel_params;
+        Drawable::ViewParams scene_params;
         Shared<DeviceTexture> unproject_map = DeviceTexture::Create({});
     };
 
@@ -137,7 +137,7 @@ struct DrawLayerImpl : public DrawLayer {
 
     static void updateRenderData(
         RenderData& state,
-        const RenderState& render_state,
+        const DrawLayerRenderState& render_state,
         AspectPolicy aspect_policy,
         MinMax<Eigen::Array2i> viewport
     ) {
@@ -328,7 +328,7 @@ struct DrawLayerImpl : public DrawLayer {
     Size size_hint_;
     AspectPolicy aspect_policy_;
 
-    RenderState render_state_;
+    DrawLayerRenderState render_state_;
     RenderData render_data_;
 
     Shared<DrawLayerHandler> handler_;

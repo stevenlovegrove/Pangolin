@@ -12,7 +12,7 @@ namespace pangolin
 
 struct GlDrawnSolids : public DrawnSolids
 {
-    void draw( const DrawLayer::ViewParams& params) override {
+    void draw( const ViewParams& params) override {
         auto bind_prog = prog->bind();
         auto bind_vao = vao.bind();
 

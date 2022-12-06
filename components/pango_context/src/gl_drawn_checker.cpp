@@ -21,7 +21,7 @@ struct GlDrawnChecker : public DrawnChecker
         u_checksize = p.check_size_pixels;
     }
 
-    void draw( const DrawLayer::ViewParams& params) override {
+    void draw( const ViewParams& params) override {
         auto bind_prog = prog->bind();
         auto bind_vao = vao.bind();
         auto disable_depth = ScopedGlDisable(GL_DEPTH_TEST);

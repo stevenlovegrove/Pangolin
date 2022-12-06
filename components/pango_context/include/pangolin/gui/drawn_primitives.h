@@ -13,7 +13,7 @@
 namespace pangolin
 {
 
-struct DrawnPrimitives : public DrawLayer::Drawable
+struct DrawnPrimitives : public Drawable
 {
     enum class Type
     {

@@ -4,7 +4,8 @@
 
 #include <sophus/geometry/ray.h>
 
-#include "draw_layer_handler.h"
+#include <pangolin/gui/draw_layer_handler.h>
+#include <pangolin/gui/draw_layer.h>
 #include "camera_utils.h"
 
 namespace pangolin {
@@ -22,7 +23,7 @@ struct PointerState {
 struct MouseUpdateArgs
 {
   // Potentially updated by function
-  DrawLayer::RenderState& render_state;
+  DrawLayerRenderState& render_state;
   MinMax<Eigen::Vector3d>& camera_limits_in_world;
   Eigen::Vector3d point_in_world;
   // Information
@@ -233,7 +234,7 @@ class HandlerImpl : public DrawLayerHandler {
     Eigen::Matrix3d pixel_from_window,
     Eigen::Array2d clip_aspect_scale,
     DrawLayer& layer,
-    DrawLayer::RenderState& render_state
+    DrawLayerRenderState& render_state
   ) override {
     using namespace sophus;
 

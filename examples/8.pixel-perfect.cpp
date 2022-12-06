@@ -19,7 +19,7 @@ namespace pangolin {
 // Implement traits so that Pangolin knows how to render the type.
 template<>
 struct DrawableConversionTraits<Cross> {
-static Shared<DrawLayer::Drawable> makeDrawable(const Cross& x) {
+static Shared<Drawable> makeDrawable(const Cross& x) {
     auto prims = DrawnPrimitives::Create({
         .element_type=DrawnPrimitives::Type::lines,
         .default_color = x.color

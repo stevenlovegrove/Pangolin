@@ -3,6 +3,8 @@
 #include <pangolin/maths/camera_look_at.h>
 #include <pangolin/maths/min_max.h>
 #include <pangolin/gui/layer_group.h>
+#include <pangolin/gui/draw_layer_handler.h>
+#include <pangolin/gui/drawable.h>
 #include <sophus/sensor/camera_model.h>
 #include <sophus/lie/se3.h>
 #include <sophus/lie/sim2.h>
@@ -17,35 +19,18 @@ struct DrawableConversionTraits;
 
 struct DeviceTexture;
 
+struct DrawLayerRenderState {
+    sophus::CameraModel camera;
+    sophus::SE3d camera_from_world;
+    sophus::Sim2<double> clip_view_transform;
+    MinMax<double> near_far;
+};
+
 ////////////////////////////////////////////////////////////////////
 /// Supports displaying interactive 2D / 3D elements
 ///
 struct DrawLayer : public Layer
 {
-    struct RenderState {
-        sophus::CameraModel camera;
-        sophus::SE3d camera_from_world;
-        sophus::Sim2<double> clip_view_transform;
-        MinMax<double> near_far;
-    };
-
-    struct ViewParams {
-        MinMax<Eigen::Array2i> viewport;
-        sophus::ImageSize camera_dim;
-        MinMax<double> near_far;
-        Eigen::Matrix4d camera_from_world;
-        Eigen::Matrix4d image_from_camera;
-        Eigen::Matrix4d clip_from_image;
-        std::shared_ptr<DeviceTexture> unproject_map;
-    };
-
-    struct Drawable {
-        virtual ~Drawable() {}
-        virtual void draw(const ViewParams&) = 0;
-        virtual MinMax<Eigen::Vector3d> boundsInParent() const = 0;
-        Eigen::Matrix4d parent_from_drawable = Eigen::Matrix4d::Identity();
-    };
-
     enum In {
         scene,
         pixels
@@ -58,7 +43,7 @@ struct DrawLayer : public Layer
         mask
     };
 
-    virtual const RenderState& renderState() const = 0;
+    virtual const DrawLayerRenderState& renderState() const = 0;
     virtual void setCamera(const sophus::CameraModel&) = 0;
     virtual void setCameraFromWorld(const sophus::Se3<double>&) = 0;
     virtual void setClipViewTransform(sophus::Sim2<double>&) = 0;
@@ -90,6 +75,7 @@ struct DrawLayer : public Layer
         std::string name = "";
         Size size_hint = {Parts{1}, Parts{1}};
         AspectPolicy aspect_policy = AspectPolicy::mask;
+        Shared<DrawLayerHandler> handler = DrawLayerHandler::Create({});
 
         std::optional<sophus::CameraModel> camera = std::nullopt;
         std::optional<sophus::Se3F64> camera_from_world = std::nullopt;
@@ -108,25 +94,25 @@ struct DrawLayer : public Layer
 ////////////////////////////////////////////////////////////////////////
 // Traits for extending what types can be converted to drawables
 
-template<DerivedFrom<DrawLayer::Drawable> L>
+template<DerivedFrom<Drawable> L>
 struct DrawableConversionTraits<Shared<L>> {
-static Shared<DrawLayer::Drawable> makeDrawable(const Shared<L>& x) {
+static Shared<Drawable> makeDrawable(const Shared<L>& x) {
     return x;
 }};
 
-template<DerivedFrom<DrawLayer::Drawable> L>
+template<DerivedFrom<Drawable> L>
 struct DrawableConversionTraits<std::shared_ptr<L>> {
-static Shared<DrawLayer::Drawable> makeDrawable(const std::shared_ptr<L>& x) {
+static Shared<Drawable> makeDrawable(const std::shared_ptr<L>& x) {
     return x;
 }};
 
 template<typename T>
 concept DrawableConvertable = requires (T x) {
-    {DrawableConversionTraits<T>::makeDrawable(x)} -> SameAs<Shared<DrawLayer::Drawable>>;
+    {DrawableConversionTraits<T>::makeDrawable(x)} -> SameAs<Shared<Drawable>>;
 };
 
 template<DrawableConvertable T>
-Shared<DrawLayer::Drawable> makeDrawable(const T& v) {
+Shared<Drawable> makeDrawable(const T& v) {
     return DrawableConversionTraits<T>::makeDrawable(v);
 }
 
@@ -134,7 +120,7 @@ Shared<DrawLayer::Drawable> makeDrawable(const T& v) {
 // Direct conversion of anything drawable to a layer
 
 // Helper for adding Drawables directly into layouts
-template<DerivedFrom<DrawLayer::Drawable> T>
+template<DerivedFrom<Drawable> T>
 struct LayerConversionTraits<Shared<T>> {
     static Shared<Layer> makeLayer(const Shared<T>& drawable) {
         return DrawLayer::Create({ .in_scene = {makeDrawable(drawable)} });

@@ -2,11 +2,13 @@
 
 #include <pangolin/render/depth_sampler.h>
 #include <pangolin/gui/interactive.h>
-#include <pangolin/gui/draw_layer.h>
 #include <pangolin/utils/signal_slot.h>
 #include <sophus/sensor/camera_model.h>
 
 namespace pangolin {
+
+struct DrawLayer;
+struct DrawLayerRenderState;
 
 struct DrawLayerHandler {
  public:
@@ -32,7 +34,7 @@ struct DrawLayerHandler {
     Eigen::Matrix3d pixel_from_window,
     Eigen::Array2d clip_aspect_scale,
     DrawLayer& layer,
-    DrawLayer::RenderState& render_state
+    DrawLayerRenderState& render_state
   ) = 0;
 
   virtual void setViewMode(ViewMode view_mode) = 0;

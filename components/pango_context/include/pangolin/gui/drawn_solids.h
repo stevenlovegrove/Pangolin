@@ -13,7 +13,7 @@
 namespace pangolin
 {
 
-struct DrawnSolids : public DrawLayer::Drawable
+struct DrawnSolids : public Drawable
 {
     enum class Type {
         checkerboard

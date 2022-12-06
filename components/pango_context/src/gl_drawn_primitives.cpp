@@ -25,7 +25,7 @@ constexpr GLenum toGlEnum (DrawnPrimitives::Type type) {
 
 struct GlDrawnPrimitives : public DrawnPrimitives
 {
-    void draw( const DrawLayer::ViewParams& params) override {
+    void draw( const ViewParams& params) override {
         switch(element_type) {
             case DrawnPrimitives::Type::axes:
                 drawAxes(params);
@@ -43,7 +43,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives
         return MinMax<Eigen::Vector3d>();
     }
 
-    void drawAxes( const DrawLayer::ViewParams& params ){
+    void drawAxes( const ViewParams& params ){
         if(!prog) {
             prog = GlSlProgram::Create({
                 .sources = {{ .origin="/components/pango_opengl/shaders/main_axes.glsl" }}
@@ -74,7 +74,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives
         }
     }
 
-    void drawShapes( const DrawLayer::ViewParams& params ) {
+    void drawShapes( const ViewParams& params ) {
         if(!prog) {
             prog = GlSlProgram::Create({
                 .sources = {{ .origin="/components/pango_opengl/shaders/main_shapes.glsl" }}
@@ -99,7 +99,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives
         }
     }
 
-    void drawPointsLinesTriangles( const DrawLayer::ViewParams& params ) {
+    void drawPointsLinesTriangles( const ViewParams& params ) {
         constexpr int location_vertex = 0;
         constexpr int location_colors = 1;
         constexpr int location_normals = 2;
