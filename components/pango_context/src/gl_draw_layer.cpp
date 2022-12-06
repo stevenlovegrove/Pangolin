@@ -210,8 +210,10 @@ struct DrawLayerImpl : public DrawLayer {
         ////////////////////////////////////////////////////////////////////////
         if(in_pixels_.size()) {
             context.setViewport(render_data_.pixel_params.viewport);
+            auto child_params = render_data_.pixel_params;
             for(auto& obj : in_pixels_) {
-                obj->draw(render_data_.pixel_params);
+                child_params.camera_from_world = render_data_.pixel_params.camera_from_world * obj->parent_from_drawable;
+                obj->draw(child_params);
             }
 
             if(in_scene_.size()) {
@@ -222,8 +224,10 @@ struct DrawLayerImpl : public DrawLayer {
 
         if(in_scene_.size()) {
             context.setViewport(render_data_.scene_params.viewport);
+            auto child_params = render_data_.scene_params;
             for(auto& obj : in_scene_) {
-                obj->draw(render_data_.scene_params);
+                child_params.camera_from_world = render_data_.scene_params.camera_from_world * obj->parent_from_drawable;
+                obj->draw(child_params);
             }
         }
     }

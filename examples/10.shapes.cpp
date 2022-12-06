@@ -6,41 +6,14 @@
 
 using namespace pangolin;
 
-struct Shapes {
-  std::vector<DrawnPrimitives::Shape> shapes;
-  std::vector<Eigen::Vector2f> pos2d;
-  std::vector<Eigen::Vector3f> pos3d;
-  std::vector<Eigen::Vector3f> colors;
-  std::vector<Eigen::Vector4f> colorsalpha;
-
-  DrawnPrimitives::Shape shape = DrawnPrimitives::Shape::hollow_circle;
-  Eigen::Vector4f color = {1.0,1.0,1.0,1.0};
-  float size = 10.0;
-
-  struct Params {
-    Eigen::Vector4f color;
-    float size;
-  };
-  static Shapes circle(Eigen::Vector2f pos, float size, Eigen::Vector4f color) {
-    return { .shapes = {DrawnPrimitives::Shape::filled_circle},
-             .pos2d = {pos} };
-  }
-};
-
+// Demonstrate use of the 'shapes' primitives for rendering anti-alised markers.
+// TODO: We'll add some convenience methods for using these more easily.
 int main( int /*argc*/, char** /*argv*/ )
 {
     auto context = Context::Create({
         .title="Pangolin Shapes",
         .window_size = {1024,600},
     } );
-
-    // auto scene = DrawLayer::Create({
-    //   .camera=sophus::createDefaultOrthoModel({640,480})
-    // });
-
-    // scene->addInPixels(
-    //   Shapes({.pos={{0,0,0}, {640,480,0}}, .color})
-    // );
 
     auto primitives = DrawnPrimitives::Create({
       .element_type=DrawnPrimitives::Type::shapes

@@ -12,7 +12,8 @@ set(examples
     7.solids
     8.pixel-perfect
     9.flex
-    10.test
+    10.shapes
+    11.scene-group
 )
 
 foreach(example IN LISTS examples)
