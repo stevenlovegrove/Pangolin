@@ -222,6 +222,10 @@ class HandlerImpl : public DrawLayerHandler {
   {
   }
 
+  ViewMode viewMode() override {
+    return view_mode_;
+  }
+
   void setViewMode(ViewMode view_mode) override {
     view_mode_ = view_mode;
   }

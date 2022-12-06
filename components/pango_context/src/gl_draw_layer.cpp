@@ -243,7 +243,9 @@ struct DrawLayerImpl : public DrawLayer {
         //     transformClipFromProjection(render_state_.camera.imageSize())
         // ).inverse();
 
-        handler_->setViewMode( in_pixels_.size() ? DrawLayerHandler::ViewMode::image_plane : DrawLayerHandler::ViewMode::freeview);
+        if(handler_->viewMode() == DrawLayerHandler::ViewMode::best_guess) {
+            handler_->setViewMode( in_pixels_.size() ? DrawLayerHandler::ViewMode::image_plane : DrawLayerHandler::ViewMode::freeview);
+        }
 
         return handler_->handleEvent(
             context, event,

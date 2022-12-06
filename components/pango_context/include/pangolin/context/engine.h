@@ -1,5 +1,8 @@
 #pragma once
 
+#include <pangolin/utils/shared.h>
+#include <string>
+
 namespace pangolin
 {
 

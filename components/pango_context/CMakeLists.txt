@@ -8,8 +8,9 @@ set(component_file_basenames
   projection
   min_max
   shared
-  gl_widget_layer
   depth_sampler
+  depth_sampler_image
+  gl_widget_layer
   gl_draw_layer
   gl_device_buffer
   gl_device_texture

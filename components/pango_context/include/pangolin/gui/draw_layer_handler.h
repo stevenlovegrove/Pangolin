@@ -14,7 +14,8 @@ struct DrawLayerHandler {
  public:
   enum class ViewMode {
     freeview,
-    image_plane
+    image_plane,
+    best_guess
   };
 
   // enum class CursorUpdate {
@@ -37,13 +38,14 @@ struct DrawLayerHandler {
     DrawLayerRenderState& render_state
   ) = 0;
 
+  virtual ViewMode viewMode() = 0;
   virtual void setViewMode(ViewMode view_mode) = 0;
 
   struct Params {
-    std::shared_ptr<DepthSampler> depth_sampler = DepthSampler::Create({});
+    Shared<DepthSampler> depth_sampler = DepthSampler::Create({});
     Eigen::Vector3d up_in_world = {0.0, 0.0, 1.0};
     MinMax<Eigen::Vector3d> camera_limits_in_world = {};
-    ViewMode view_mode = ViewMode::freeview;
+    ViewMode view_mode = ViewMode::best_guess;
   };
   static std::unique_ptr<DrawLayerHandler> Create(Params const &);
 };
