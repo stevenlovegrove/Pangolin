@@ -273,9 +273,9 @@ struct DrawLayerImpl : public DrawLayer {
     };
 
     void add(const Shared<Drawable>& r, In domain, const std::string& name ) override {
-        if (!name.empty()) {
-            // // has a name, remove old Drawables with that name
-            remove(r);
+    	if (!name.empty()) {
+            // has a name, remove old Drawables with that name
+            remove(name);
         }
         switch(domain) {
             case In::scene:  {
@@ -309,6 +309,14 @@ struct DrawLayerImpl : public DrawLayer {
         anything_erased |= scene_collection_.remove(r);
 
         return anything_erased;
+    }
+
+    bool remove(const std::string& name) override {
+        auto maybe_shared  = get(name);
+        if (maybe_shared == nullptr) {
+            return false;
+        }
+        return remove(maybe_shared);
     }
 
     void clear(std::optional<In> domain = std::nullopt) override {

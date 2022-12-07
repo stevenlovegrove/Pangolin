@@ -42,22 +42,23 @@ int main( int argc, char** argv )
     });
     auto checker_plane = DrawnSolids::Create({});
 
+    std::string unique_name = "foo";
+
 
     Var<std::function<void(void)>> ui_delete("ui.delete", [&](){
-        FARM_PRINTLN("pressed");
-        scene->remove("foo");
+        scene->remove(unique_name);
     });
 
 
     Var<std::function<void(void)>> ui_add_plane("ui.add_plane", [&](){
-        scene->addNamedInScene("foo", checker_plane);
+        scene->addNamedInScene(unique_name, checker_plane);
     });
 
     Var<std::function<void(void)>> ui_add_axis("ui.add_axis", [&](){
-        scene->addNamedInScene("foo", makeDrawable(sophus::SE3f::transX(1)));
+        scene->addNamedInScene(unique_name, makeDrawable(sophus::SE3f::transX(1)));
     });
 
-    scene->addNamedInScene("foo", checker_plane);
+    scene->addNamedInScene(unique_name, checker_plane);
 
     context->setLayout(widgets | scene);
 
