@@ -56,7 +56,11 @@ struct DrawLayer : public Layer
 
     // convenience method to remove by name
     inline bool remove(const std::string& name) {
-        return remove(get(name));
+        auto maybe_shared  = get(name);
+        if (maybe_shared == nullptr) {
+            return false;
+        }
+        return remove(maybe_shared);
     }
 
     // Convenience method to add several drawables together
@@ -64,6 +68,17 @@ struct DrawLayer : public Layer
     void addInScene(const Ts&... ts) {
         (add(DrawableConversionTraits<Ts>::makeDrawable(ts), In::scene), ...);
     }
+
+    template<typename T>
+    void addNamedInScene(const std::string& name, const T& r) {
+        add(DrawableConversionTraits<T>::makeDrawable(r), In::scene, name);
+    }
+
+    template<typename T>
+    void addNamedInPixels(const std::string& name, const T& r) {
+        add(DrawableConversionTraits<T>::makeDrawable(r), In::pixels, name);
+    }
+
 
     // Convenience method to add several drawables together
     template<typename ...Ts>

@@ -58,7 +58,7 @@ int main( int argc, char** argv )
         ),
         .near_far = {0.01, 1000.0}
     });
-    auto solids = DrawnSolids::Create({});
+    auto checker_plane = DrawnSolids::Create({});
     auto prims = DrawnPrimitives::Create({
         .element_type = DrawnPrimitives::Type::axes,
         .default_size = 0.1
@@ -83,7 +83,7 @@ int main( int argc, char** argv )
     }
     prims->vertices->update(T_world_axis, {});
 
-    scene->addInScene(solids, prims);
+    scene->addInScene(checker_plane, prims);
 
     context->setLayout( scene);
 

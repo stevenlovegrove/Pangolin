@@ -14,6 +14,7 @@ set(examples
     9.flex
     10.shapes
     11.scene-group
+    12.named_drawables
 )
 
 foreach(example IN LISTS examples)
