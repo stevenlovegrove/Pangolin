@@ -157,6 +157,10 @@ public:
     Shared(const Shared<T>&) = default;
     Shared<T>& operator=(const Shared<T>&) = default;
 
+    bool operator==(const Shared<T>& rhs ) const noexcept {
+        return this->non_null_shared_ == rhs.non_null_shared_;
+    }
+
 private:
     void checkMaybeThrow() const
     {

@@ -23,8 +23,8 @@ struct DrawLayerImpl : public DrawLayer {
         size_hint_(p.size_hint),
         aspect_policy_(p.aspect_policy),
         handler_(p.handler),
-        in_scene_(p.in_scene),
-        in_pixels_(p.in_pixels)
+        scene_collection_({.drawables = p.in_scene}),
+        pixels_collection_({.drawables = p.in_pixels})
     {
         render_state_.near_far = p.near_far;
 
@@ -93,7 +93,7 @@ struct DrawLayerImpl : public DrawLayer {
     std::optional<Eigen::Array2i> tryGetDrawableBaseImageSize() const
     {
         MinMax<Eigen::Vector3d> pixel_bounds;
-        for(const auto& obj : in_pixels_) {
+        for(const auto& obj : pixels_collection_.drawables) {
             pixel_bounds.extend(obj->boundsInParent());
         }
         const Eigen::Array2i dim = pixel_bounds.range().head<2>().cast<int>();
@@ -107,7 +107,7 @@ struct DrawLayerImpl : public DrawLayer {
                 sophus::ImageSize size = toImageSize(*maybe_dim);
                 render_state_.camera = sophus::createDefaultPinholeModel(size);
                 return true;
-            }else if(in_scene_.size()) {
+            }else if(scene_collection_.drawables.size()) {
                 render_state_.camera = sophus::createDefaultPinholeModel({640, 480});
                 return true;
             }
@@ -208,24 +208,24 @@ struct DrawLayerImpl : public DrawLayer {
         ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
 
         ////////////////////////////////////////////////////////////////////////
-        if(in_pixels_.size()) {
+        if(pixels_collection_.drawables.size()) {
             context.setViewport(render_data_.pixel_params.viewport);
             auto child_params = render_data_.pixel_params;
-            for(auto& obj : in_pixels_) {
+            for(auto& obj : pixels_collection_.drawables) {
                 child_params.camera_from_world = render_data_.pixel_params.camera_from_world * obj->parent_from_drawable;
                 obj->draw(child_params);
             }
 
-            if(in_scene_.size()) {
+            if(pixels_collection_.drawables.size()) {
                 // We'll clear depth buffer for use for in_scene_ Drawables
                 glClear(GL_DEPTH_BUFFER_BIT);
             }
         }
 
-        if(in_scene_.size()) {
+        if(scene_collection_.drawables.size()) {
             context.setViewport(render_data_.scene_params.viewport);
             auto child_params = render_data_.scene_params;
-            for(auto& obj : in_scene_) {
+            for(auto& obj : scene_collection_.drawables) {
                 child_params.camera_from_world = render_data_.scene_params.camera_from_world * obj->parent_from_drawable;
                 obj->draw(child_params);
             }
@@ -244,7 +244,7 @@ struct DrawLayerImpl : public DrawLayer {
         // ).inverse();
 
         if(handler_->viewMode() == DrawLayerHandler::ViewMode::best_guess) {
-            handler_->setViewMode( in_pixels_.size() ? DrawLayerHandler::ViewMode::image_plane : DrawLayerHandler::ViewMode::freeview);
+            handler_->setViewMode( pixels_collection_.drawables.size() ? DrawLayerHandler::ViewMode::image_plane : DrawLayerHandler::ViewMode::freeview);
         }
 
         return handler_->handleEvent(
@@ -262,7 +262,7 @@ struct DrawLayerImpl : public DrawLayer {
 
     double aspectHint() const override {
         MinMax<Eigen::Vector3d> cam_bounds;
-        for(const auto& obj : in_pixels_) {
+        for(const auto& obj : pixels_collection_.drawables) {
             cam_bounds.extend(obj->boundsInParent());
         }
         if(!cam_bounds.empty()) {
@@ -273,42 +273,40 @@ struct DrawLayerImpl : public DrawLayer {
     };
 
     void add(const Shared<Drawable>& r, In domain, const std::string& name ) override {
-        auto it = named_drawables_.find(name);
-        if(!name.empty() && it != named_drawables_.end()) {
-            // Name already exists so we'll remove the drawable it refers to. We
-            // wont erase from map because we're just about to add to it again.
-            remove(it->second);
+        if (!name.empty()) {
+            // // has a name, remove old Drawables with that name
+            remove(r);
         }
-
         switch(domain) {
-        case In::scene:   in_scene_.push_back(r); break;
-        case In::pixels: in_pixels_.push_back(r); break;
-        default: PANGO_UNREACHABLE();
-        }
-
-        if(!name.empty()) {
-            // add / replace named drawable.
-            named_drawables_.emplace(name, r);
+            case In::scene:  {
+                this->scene_collection_.drawables.push_back(r); 
+                if (!name.empty()) {
+                    this->scene_collection_.named_drawables.insert({name, r});
+                }
+            }break;
+            case In::pixels:{ 
+                this->pixels_collection_.drawables.push_back(r);
+                if (!name.empty()) {
+                    this->pixels_collection_.named_drawables.insert({name, r});
+                }
+            } break;
         }
     }
 
     std::shared_ptr<Drawable> get(const std::string& name) const override {
-        auto it = named_drawables_.find(name);
-        if( it != named_drawables_.end() ) {
-            return it->second;
+        for (auto & map: {scene_collection_.named_drawables, pixels_collection_.named_drawables}){
+            auto it = map.find(name);
+            if( it != map.end() ) {
+                return it->second;
+            }
         }
         return nullptr;
     }
 
-    bool remove(const std::shared_ptr<Drawable>& r) override {
+    bool remove(const Shared<Drawable>& r) override {
         bool anything_erased = false;
-        // auto scene_end = std::remove(in_scene_.begin(), in_scene_.end(), r);
-        // anything_erased |= scene_end != in_scene_.end();
-        // in_scene_.erase(scene_end, in_scene.end());
-
-        // auto pixels_end = std::remove(in_pixels_.begin(), in_pixels_.end(), r);
-        // anything_erased |= pixels_end != in_pixels_.end();
-        // in_pixels_.erase(pixels_end, in_pixels_.end());
+        anything_erased |= pixels_collection_.remove(r);
+        anything_erased |= scene_collection_.remove(r);
 
         return anything_erased;
     }
@@ -316,15 +314,47 @@ struct DrawLayerImpl : public DrawLayer {
     void clear(std::optional<In> domain = std::nullopt) override {
         if(domain) {
             if(*domain == In::pixels) {
-                in_pixels_.clear();
+                pixels_collection_.clear();
             }else if(*domain == In::scene) {
-                in_scene_.clear();
+                scene_collection_.clear();
             }
         }else{
-            in_pixels_.clear();
-            in_scene_.clear();
+            pixels_collection_.clear();
+            scene_collection_.clear();
         }
     }
+
+    struct DrawableCollection {
+        std::vector<Shared<Drawable>> drawables;
+        std::map<std::string, Shared<Drawable>> named_drawables;
+
+        void clear() {
+            drawables.clear();
+            named_drawables.clear();
+        }
+
+        bool remove(const Shared<Drawable>& r) noexcept {
+            bool anything_erased = false;
+            
+            {
+                auto end = std::remove(drawables.begin(), drawables.end(), r);
+                anything_erased |= end != drawables.end();
+                drawables.erase(end, drawables.end());
+            }
+            {
+                std::string key;
+                for (const auto&e : named_drawables) {
+                    if (e.second == r) {
+                        key = e.first;
+                    }
+                }
+                named_drawables.erase(key);
+            }
+
+            
+            return anything_erased;
+        }
+    };
 
     std::string name_;
     Size size_hint_;
@@ -335,9 +365,8 @@ struct DrawLayerImpl : public DrawLayer {
 
     Shared<DrawLayerHandler> handler_;
 
-    std::vector<Shared<Drawable>> in_scene_;
-    std::vector<Shared<Drawable>> in_pixels_;
-    std::map<std::string, Shared<Drawable>> named_drawables_;
+    DrawableCollection scene_collection_;
+    DrawableCollection pixels_collection_;
 };
 
 PANGO_CREATE(DrawLayer) {

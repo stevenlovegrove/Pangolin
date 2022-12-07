@@ -51,7 +51,7 @@ struct DrawLayer : public Layer
 
     virtual void add(const Shared<Drawable>& r, In domain, const std::string& name = "") = 0;
     virtual std::shared_ptr<Drawable> get(const std::string& name) const = 0;
-    virtual bool remove(const std::shared_ptr<Drawable>& r) = 0;
+    virtual bool remove(const Shared<Drawable>& r) = 0;
     virtual void clear(std::optional<In> domain = std::nullopt) = 0;
 
     // convenience method to remove by name
