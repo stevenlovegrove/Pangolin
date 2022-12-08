@@ -20,9 +20,11 @@ struct DepthSamplerImageImpl : public DepthSamplerImage {
     }
 
     std::optional<Sample> sampleDepth(
-        const Eigen::Array2i& pix, int patch_rad,
+        const SampleLocation& location, int patch_rad,
         MinMax<double> near_far, const Context* default_context
     ) override {
+        const Eigen::Array2i pix = location.pos_camera_pixel.cast<int>();
+
         if(!depth_image_.isEmpty()) {
             if(depth_image_.imageSize().contains(pix, patch_rad)) {
                 Sample sample{

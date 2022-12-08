@@ -17,14 +17,15 @@ public:
   }
 
   std::optional<Sample> sampleDepth(
-    const Eigen::Array2i& pix_center, int patch_rad,
+    const SampleLocation& location, int patch_rad,
     MinMax<double> near_far, const Context* default_context
   ) override {
     using namespace sophus;
 
+    const Eigen::Array2i pix = location.pos_window.cast<int>();
     MinMax<Eigen::Array2i> region = {
-      pix_center - Eigen::Array2i(patch_rad, patch_rad),
-      pix_center + Eigen::Array2i(patch_rad, patch_rad)
+      pix - Eigen::Array2i(patch_rad, patch_rad),
+      pix + Eigen::Array2i(patch_rad, patch_rad)
     };
 
     const Context* context = context_ ? context_.get() : default_context;

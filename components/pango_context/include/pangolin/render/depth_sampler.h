@@ -20,8 +20,13 @@ class DepthSampler {
     DepthKind depth_kind;
   };
 
+  struct SampleLocation {
+    Eigen::Array2d pos_camera_pixel;
+    Eigen::Array2d pos_window;
+  };
+
   virtual std::optional<Sample> sampleDepth(
-    const Eigen::Array2i& pix, int patch_rad,
+    const SampleLocation& pix, int patch_rad,
     MinMax<double> near_far, const Context* default_context
   ) = 0;
 

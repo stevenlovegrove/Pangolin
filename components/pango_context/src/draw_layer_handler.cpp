@@ -256,8 +256,12 @@ class HandlerImpl : public DrawLayerHandler {
     double zdepth_cam = last_zcam_;
 
     if(depth_sampler_) {
+      DepthSampler::SampleLocation location = {
+        .pos_camera_pixel = p_img,
+        .pos_window = p_window
+      };
       std::optional<DepthSampler::Sample> maybe_depth_sample =
-        depth_sampler_->sampleDepth(p_window.cast<int>(), 5, near_far, &context);
+        depth_sampler_->sampleDepth(location, 5, near_far, &context);
       if(maybe_depth_sample) {
         PANGO_CHECK(maybe_depth_sample->depth_kind == DepthSampler::DepthKind::zaxis);
         if(maybe_depth_sample->min_max.min() < near_far.max() * 0.99) {
