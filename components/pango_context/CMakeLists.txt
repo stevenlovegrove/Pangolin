@@ -10,6 +10,7 @@ set(component_file_basenames
   shared
   depth_sampler
   depth_sampler_image
+  make_drawable
   gl_widget_layer
   gl_draw_layer
   gl_device_buffer

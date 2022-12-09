@@ -2,6 +2,8 @@
 #include <pangolin/gui/all_layers.h>
 #include <pangolin/maths/camera_look_at.h>
 #include <pangolin/gui/drawn_group.h>
+#include <pangolin/gui/make_drawable.h>
+
 /*
   == Pangolin-by-example ==
 
@@ -10,41 +12,7 @@
 using namespace pangolin;
 using namespace sophus;
 
-namespace pangolin{
 
-struct Shape
-{
-    Eigen::Vector3d pos = {0.0, 0.0, 0.0};
-    Eigen::Vector4d color = {1.0, 0.3, 0.5, 1.0};
-    double size = 1.0;
-    DrawnPrimitives::Shape type = DrawnPrimitives::Shape::hollow_star;
-};
-
-// Implement traits so that Pangolin knows how to render the type.
-template<>
-struct DrawableConversionTraits<Shape> {
-static Shared<Drawable> makeDrawable(const Shape& x) {
-    auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::shapes,
-        .default_size = x.size,
-    });
-    prims->vertices->update(std::vector<Eigen::Vector3f>{ x.pos.cast<float>() }, {});
-    prims->shapes->update(std::vector<uint16_t>{ static_cast<uint16_t>(x.type) }, {});
-    prims->colors->update(std::vector<Eigen::Vector4f>{ x.color.cast<float>() }, {});
-    return prims;
-}};
-
-// Implement traits so that Pangolin knows how to render the type.
-template<typename T>
-struct DrawableConversionTraits<sophus::Se3<T>> {
-static Shared<Drawable> makeDrawable(const sophus::Se3<T>& x) {
-    auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::axes,
-    });
-    prims->vertices->update(std::vector<sophus::Se3<T>>{x}, {});
-    return prims;
-}};
-}
 
 int main( int argc, char** argv )
 {
