@@ -3,7 +3,7 @@
 
 namespace pangolin{
 
-Shared<Drawable> DrawableConversionTraits<Shape>::makeDrawable(const Shape& x) {
+Shared<Drawable> DrawableConversionTraits<Draw::Shape>::makeDrawable(const Draw::Shape& x) {
     auto prims = DrawnPrimitives::Create({
         .element_type=DrawnPrimitives::Type::shapes,
         .default_size = x.size,

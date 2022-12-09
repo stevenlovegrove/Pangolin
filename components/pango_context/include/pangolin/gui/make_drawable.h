@@ -2,9 +2,11 @@
 
 #include <pangolin/gui/draw_layer.h>
 #include <pangolin/gui/drawn_primitives.h>
+#include <pangolin/gl/color.h>
 
 namespace pangolin{
 
+namespace Draw{
 struct Shape
 {
     Eigen::Vector3d pos = {0.0, 0.0, 0.0};
@@ -13,9 +15,22 @@ struct Shape
     DrawnPrimitives::Shape type = DrawnPrimitives::Shape::hollow_star;
 };
 
+struct Cube {
+
+  float size = 1.f;
+  std::array<Color, 6> colors = {
+      Color::red(),
+      Color::red(),
+      Color::green(),
+      Color::green(),
+      Color::blue(),
+      Color::blue()};
+};
+}
+
 template<>
-struct DrawableConversionTraits<Shape> {
-static Shared<Drawable> makeDrawable(const Shape& x);
+struct DrawableConversionTraits<Draw::Shape> {
+static Shared<Drawable> makeDrawable(const Draw::Shape& x);
 };
 
 template<>

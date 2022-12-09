@@ -28,9 +28,9 @@ int main( int argc, char** argv )
     // objects to draw
     auto checker_plane = DrawnSolids::Create({});
     auto axis = makeDrawable(sophus::SE3f());
-    auto star = makeDrawable(Shape{ .type=DrawnPrimitives::Shape::hollow_star });
-    auto heart = makeDrawable(Shape{.type=DrawnPrimitives::Shape::hollow_heart});
-    auto square = makeDrawable(Shape{.type=DrawnPrimitives::Shape::hollow_box});
+    auto star = makeDrawable(Draw::Shape{ .type=DrawnPrimitives::Shape::hollow_star });
+    auto heart = makeDrawable(Draw::Shape{.type=DrawnPrimitives::Shape::hollow_heart});
+    auto square = makeDrawable(Draw::Shape{.type=DrawnPrimitives::Shape::hollow_box});
 
     // group some objects
     auto group1 = DrawnGroup::Create({

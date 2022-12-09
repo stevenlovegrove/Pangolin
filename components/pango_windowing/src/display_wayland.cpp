@@ -1,6 +1,6 @@
 #include <pangolin/platform.h>
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/gl/colour.h>
+#include <pangolin/gl/color.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/windowing/window.h>
 
@@ -53,7 +53,7 @@ struct ButtonSurface {
     EGLDisplay egl_display;
     const int32_t x, y;
     const uint width, height;
-    pangolin::Colour colour;
+    pangolin::Color colour;
 
     enum type {
         CLOSE = 100,
@@ -63,7 +63,7 @@ struct ButtonSurface {
     ButtonSurface(wl_compositor* compositor, wl_subcompositor* subcompositor,
                   wl_surface* source, EGLDisplay egl_display, EGLConfig config,
                   int32_t x, int32_t y, uint width, uint height,
-                  type fnct, pangolin::Colour colour
+                  type fnct, pangolin::Color colour
                   ) :
         egl_display(egl_display),
         x(x), y(y),
@@ -134,7 +134,7 @@ struct DecorationSurface {
     EGLSurface egl_surface;
     EGLContext egl_context;
     EGLDisplay egl_display;
-    pangolin::Colour colour;
+    pangolin::Color colour;
     uint border_size;
     uint title_bar_size;
 
@@ -143,7 +143,7 @@ struct DecorationSurface {
     DecorationSurface(wl_compositor* compositor, wl_subcompositor* subcompositor,
                       wl_surface* source, EGLDisplay egl_display, EGLConfig config,
                       const uint _border_size, const uint _title_bar_size,
-                      enum xdg_toplevel_resize_edge type, pangolin::Colour _colour
+                      enum xdg_toplevel_resize_edge type, pangolin::Color _colour
                       ) :
         egl_display(egl_display),
         colour(_colour),
@@ -228,7 +228,7 @@ struct DecorationSurface {
 struct Decoration {
     Decoration(const uint border_size,
                const uint title_size,
-               const pangolin::Colour colour,
+               const pangolin::Color colour,
                wl_compositor* compositor,
                wl_subcompositor* subcompositor,
                wl_surface* surface,
@@ -267,8 +267,8 @@ struct Decoration {
 
         // buttons
         buttons.reserve(2);
-        buttons.emplace_back(compositor, subcompositor, decorations[0].surface, egl_display, config, 5, 1, button_width, button_height,  ButtonSurface::type::CLOSE, pangolin::Colour(0, 110/255.0, 182/255.0));
-        buttons.emplace_back(compositor, subcompositor, decorations[0].surface, egl_display, config, 10+button_width, 1, button_width, button_height,  ButtonSurface::type::MAXIMISE, pangolin::Colour(1.0, 204/255.0f, 0));
+        buttons.emplace_back(compositor, subcompositor, decorations[0].surface, egl_display, config, 5, 1, button_width, button_height,  ButtonSurface::type::CLOSE, pangolin::Color(0, 110/255.0, 182/255.0));
+        buttons.emplace_back(compositor, subcompositor, decorations[0].surface, egl_display, config, 10+button_width, 1, button_width, button_height,  ButtonSurface::type::MAXIMISE, pangolin::Color(1.0, 204/255.0f, 0));
     }
 
     void destroy() {
@@ -324,7 +324,7 @@ struct Decoration {
 
     const uint border_size;
     const uint title_size;
-    const pangolin::Colour colour;
+    const pangolin::Color colour;
     EGLDisplay egl_display;
     wl_compositor* compositor;
     wl_subcompositor* subcompositor;
@@ -940,7 +940,7 @@ WaylandWindow::WaylandWindow(const int w, const int h,
     xdg_toplevel_set_app_id(xshell_toplevel, title.c_str());
 
     // construct window decoration
-    const pangolin::Colour grey(0.5f, 0.5f, 0.5f);
+    const pangolin::Color grey(0.5f, 0.5f, 0.5f);
     decoration = std::unique_ptr<Decoration>(new Decoration(5, 20, grey, display->wcompositor, display->wsubcompositor, wsurface, display->egl_display, display->egl_configs[0]));
     decoration->create();
     decoration->resize(width, height);
