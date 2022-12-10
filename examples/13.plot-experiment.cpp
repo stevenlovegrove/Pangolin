@@ -61,8 +61,8 @@ int main( int /*argc*/, char** /*argv*/ )
 
     auto layer = DrawLayer::Create({
         .aspect_policy = AspectPolicy::stretch,
-        .image_indexing = ImageIndexing::normalized_zero_one,
         .image_convention = ImageXy::right_up,
+        .image_indexing = ImageIndexing::normalized_zero_one,
         .handler = DrawLayerHandler::Create({.view_mode = ViewMode::image_plane}),
         .camera = plot_camera(Eigen::AlignedBox2d{
             Eigen::Vector2d(0.0, -1.0),
