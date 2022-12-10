@@ -19,9 +19,7 @@ Shared<Drawable> DrawableConversionTraits<Draw::Cube>::makeDrawable(const Draw::
         .element_type=DrawnPrimitives::Type::triangles,
     });
 
-    prims->
-
-     std::vector<Eigen::Vector3f> vertices;
+  std::vector<Eigen::Vector3f> vertices;
   std::vector<Color> colors;
   float s = 0.5f * cube.size;
   Eigen::Vector3f ppp(+s, +s, +s);
