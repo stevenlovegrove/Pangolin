@@ -1,6 +1,8 @@
 #include <pangolin/context/context.h>
 #include <pangolin/gui/all_layers.h>
 #include <pangolin/maths/camera_look_at.h>
+#include <pangolin/gui/make_drawable.h>
+
 /*
   == Pangolin-by-example ==
 
@@ -8,17 +10,6 @@
 
 using namespace pangolin;
 using namespace sophus;
-
-
-template<typename T>
-struct DrawableConversionTraits<sophus::Se3<T>> {
-static Shared<Drawable> makeDrawable(const sophus::Se3<T>& x) {
-    auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::axes,
-    });
-    prims->vertices->update(std::vector<sophus::Se3<T>>{x}, {});
-    return prims;
-}};
 
 
 int main( int argc, char** argv )
@@ -56,6 +47,10 @@ int main( int argc, char** argv )
 
     Var<std::function<void(void)>> ui_add_axis("ui.add_axis", [&](){
         scene->addNamedInScene(unique_name, makeDrawable(sophus::SE3f::transX(1)));
+    });
+
+    Var<std::function<void(void)>> ui_add_cube("ui.add_cube", [&](){
+        scene->addNamedInScene(unique_name, makeDrawable(pangolin::Draw::Cube{}));
     });
 
     scene->addNamedInScene(unique_name, checker_plane);

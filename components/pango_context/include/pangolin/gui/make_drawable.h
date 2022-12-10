@@ -33,6 +33,13 @@ struct DrawableConversionTraits<Draw::Shape> {
 static Shared<Drawable> makeDrawable(const Draw::Shape& x);
 };
 
+
+template<>
+struct DrawableConversionTraits<Draw::Cube> {
+static Shared<Drawable> makeDrawable(const Draw::Cube& x);
+};
+
+
 template<>
 struct DrawableConversionTraits<sophus::Se3F32> {
 static Shared<Drawable> makeDrawable(const sophus::Se3F32& x);
