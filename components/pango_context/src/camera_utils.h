@@ -46,39 +46,23 @@ inline Eigen::Matrix3d camera_from_image(const Eigen::Matrix4d& image_from_camer
 inline Eigen::Matrix4d transformImageFromCamera4x4(
     const sophus::CameraModel& cam
 ) {
-    // This is the non-projective bit which is the same for
-    // perspective and orthographic cameras.
-    return transformImageFromCamera4x4( projectionImageFromCamera(
-        cam.focalLength(), cam.principalPoint()
-    ));
-}
+    auto focal_distance_pixels = cam.focalLength().eval();
+    auto principle_point = cam.principalPoint().eval();
 
-inline Eigen::Matrix4d linearClipFromCamera(const sophus::CameraModel& camera, MinMax<double> near_far)
-{
-    using namespace sophus;
+    if(cam.distortionType() == sophus::CameraDistortionType::orthographic) {
+        return (Eigen::Matrix4d() <<
+            focal_distance_pixels[0], 0.0, 0.0, principle_point[0],
+            0.0, focal_distance_pixels[1], 0.0, principle_point[1],
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0).finished();
+    }else{
+        return (Eigen::Matrix4d() <<
+            focal_distance_pixels[0], 0.0, principle_point[0], 0.0,
+            0.0, focal_distance_pixels[1], principle_point[1], 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0).finished();
+    }
 
-    return std::visit(overload{
-        [&](const OrthographicModel& cam){
-            const auto bb = boundingBoxFromOrthoCam(cam);
-            const MinMax<Eigen::Vector2d> extent(bb.min(),bb.max());
-
-            return projectionClipFromOrtho(
-                extent, near_far,
-                ImageXy::right_down,
-                // already specified correctly in OrthographicModel's coords
-                ImageIndexing::pixel_continuous
-            );
-        },
-        [&](const auto& cam){
-            if(camera.distortionType() != sophus::CameraDistortionType::pinhole) {
-                PANGO_WARN("Ignoring distortion component of camera for OpenGL rendering for now.");
-            }
-            return projectionClipFromCamera(
-                cam.imageSize(), cam.focalLength(),
-                cam.principalPoint(), near_far
-            );
-        }
-    }, camera.modelVariant());
 }
 
 inline Eigen::Matrix3d linearCameraFromImage(const sophus::CameraModel& camera)

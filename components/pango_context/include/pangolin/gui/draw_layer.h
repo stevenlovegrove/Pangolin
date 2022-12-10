@@ -19,11 +19,21 @@ struct DrawableConversionTraits;
 
 struct DeviceTexture;
 
+enum AspectPolicy {
+    stretch, // bounds stretch to viewport edges
+    crop,    // viewport is cropped to maintain bounds aspect
+    overdraw // View matrices extended to maintain aspect but fill viewport.
+};
+
 struct DrawLayerRenderState {
     sophus::CameraModel camera;
     sophus::SE3d camera_from_world;
     sophus::Sim2<double> clip_view_transform;
     MinMax<double> near_far;
+
+    AspectPolicy aspect_policy;
+    ImageXy image_convention;
+    ImageIndexing image_indexing;
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -34,13 +44,6 @@ struct DrawLayer : public Layer
     enum In {
         scene,
         pixels
-    };
-
-    enum AspectPolicy {
-        stretch,
-        crop,
-        overdraw,
-        mask
     };
 
     virtual const DrawLayerRenderState& renderState() const = 0;
@@ -81,7 +84,10 @@ struct DrawLayer : public Layer
     struct Params {
         std::string name = "";
         Size size_hint = {Parts{1}, Parts{1}};
-        AspectPolicy aspect_policy = AspectPolicy::mask;
+        AspectPolicy aspect_policy = AspectPolicy::overdraw;
+        ImageXy image_convention = Conventions::global().image_xy;
+        ImageIndexing image_indexing = Conventions::global().image_indexing;
+
         Shared<DrawLayerHandler> handler = DrawLayerHandler::Create({});
 
         std::optional<sophus::CameraModel> camera = std::nullopt;

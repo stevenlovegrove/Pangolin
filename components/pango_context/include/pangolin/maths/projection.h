@@ -22,14 +22,6 @@ Eigen::Matrix3d invProjectionCameraFromImage(
     Eigen::Vector2d principle_point
 );
 
-// Returns the computer vision intrinsics matrix K inserted into the top-left of
-// a 4x4 Identity matrix for use within the homogeneous graphics pipeline. This
-// matrix transforms homogeneous points in R^4 with respect to the camera
-// coordinate system into homogeneous points in image space.
-Eigen::Matrix4d transformImageFromCamera4x4(
-    const Eigen::Matrix3d& K_intrinsics
-);
-
 // Returns a 4x4 matrix which acts to transform a homegenous 4-point such that
 // it is ready for graphics hardware w division and with remapped NDC depth.
 // Notably, this matrix does not map x,y into clip coordinates. It is

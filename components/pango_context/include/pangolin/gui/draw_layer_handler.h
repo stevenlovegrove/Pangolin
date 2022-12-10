@@ -10,13 +10,14 @@ namespace pangolin {
 struct DrawLayer;
 struct DrawLayerRenderState;
 
+enum class ViewMode {
+  freeview,
+  image_plane,
+  best_guess
+};
+
 struct DrawLayerHandler {
  public:
-  enum class ViewMode {
-    freeview,
-    image_plane,
-    best_guess
-  };
 
   // enum class CursorUpdate {
   //   with_click,        // Cursor of rotation is updated with every mouse-down event

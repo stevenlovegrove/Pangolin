@@ -21,11 +21,14 @@ struct DrawLayerImpl : public DrawLayer {
     DrawLayerImpl(const DrawLayerImpl::Params& p)
         : name_(p.name),
         size_hint_(p.size_hint),
-        aspect_policy_(p.aspect_policy),
         handler_(p.handler),
         scene_collection_({.drawables = p.in_scene}),
         pixels_collection_({.drawables = p.in_pixels})
     {
+        render_state_.aspect_policy = p.aspect_policy;
+        render_state_.image_convention = p.image_convention;
+        render_state_.image_indexing = p.image_indexing;
+
         render_state_.near_far = p.near_far;
 
         if(p.camera) {
@@ -138,22 +141,27 @@ struct DrawLayerImpl : public DrawLayer {
     static void updateRenderData(
         RenderData& state,
         const DrawLayerRenderState& render_state,
-        AspectPolicy aspect_policy,
         MinMax<Eigen::Array2i> viewport
     ) {
         state.clip_view = sim2To4x4(render_state.clip_view_transform);
         state.clip_aspect_scale =
             axisScale(viewport.range(), toEigen(render_state.camera.imageSize()));
 
-        if(aspect_policy == AspectPolicy::crop) {
-            PANGO_UNIMPLEMENTED();
-        }else{
-            // We'll modify clip coords to fix aspect (extending field of view)
-            state.clip_aspect = Eigen::Vector4d(
+        switch(render_state.aspect_policy) {
+            case AspectPolicy::stretch:
+                // Nothing to do
+                break;
+            case AspectPolicy::crop:
+                PANGO_UNIMPLEMENTED();
+                break;
+            case AspectPolicy::overdraw:
+                // We'll modify clip coords to fix aspect (extending field of view)
+                state.clip_aspect = Eigen::Vector4d(
                     state.clip_aspect_scale.x(),
                     state.clip_aspect_scale.y(),
                     1.0, 1.0
                 ).asDiagonal();
+                break;
         }
 
         if(state.unproject_map->empty() && render_state.camera.distortionType() != CameraDistortionType::pinhole ) {
@@ -168,14 +176,21 @@ struct DrawLayerImpl : public DrawLayer {
             state.unproject_map->sync();
         }
 
+        const GraphicsProjection proj_type = render_state.camera.distortionType() == sophus::CameraDistortionType::orthographic ?
+            GraphicsProjection::orthographic : GraphicsProjection::perspective;
+
+        const auto clip_from_projection = transformClipFromProjection(
+                    render_state.camera.imageSize(),
+                    render_state.image_convention,
+                    render_state.image_indexing);
+
         state.pixel_params = {
             .viewport = viewport,
             .camera_dim = render_state.camera.imageSize(),
             .near_far = {-2.0, 2.0},
             .camera_from_world = Eigen::Matrix4d::Identity(),
             .image_from_camera = Eigen::Matrix4d::Identity(),
-            .clip_from_image = state.clip_view * state.clip_aspect *
-                transformClipFromProjection(render_state.camera.imageSize()) *
+            .clip_from_image = state.clip_view * state.clip_aspect * clip_from_projection *
                 transformProjectionFromImage({-2.0,2.0}, GraphicsProjection::orthographic)
         };
 
@@ -185,12 +200,8 @@ struct DrawLayerImpl : public DrawLayer {
             .near_far = render_state.near_far,
             .camera_from_world = render_state.camera_from_world.matrix(),
             .image_from_camera = transformImageFromCamera4x4(render_state.camera),
-            .clip_from_image = state.clip_view * state.clip_aspect *
-                transformClipFromProjection(render_state.camera.imageSize()) *
-                transformProjectionFromImage(render_state.near_far,
-                    render_state.camera.distortionType() == sophus::CameraDistortionType::orthographic ?
-                        GraphicsProjection::orthographic : GraphicsProjection::perspective
-                )
+            .clip_from_image = state.clip_view * state.clip_aspect * clip_from_projection *
+                transformProjectionFromImage(render_state.near_far, proj_type)
         };
 
         if(!state.unproject_map->empty()) {
@@ -203,7 +214,7 @@ struct DrawLayerImpl : public DrawLayer {
             return;
         }
 
-        updateRenderData( render_data_, render_state_, aspect_policy_, params.region );
+        updateRenderData( render_data_, render_state_, params.region );
 
         ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
 
@@ -216,7 +227,7 @@ struct DrawLayerImpl : public DrawLayer {
                 obj->draw(child_params);
             }
 
-            if(pixels_collection_.drawables.size()) {
+            if(scene_collection_.drawables.size()) {
                 // We'll clear depth buffer for use for in_scene_ Drawables
                 glClear(GL_DEPTH_BUFFER_BIT);
             }
@@ -243,8 +254,8 @@ struct DrawLayerImpl : public DrawLayer {
         //     transformClipFromProjection(render_state_.camera.imageSize())
         // ).inverse();
 
-        if(handler_->viewMode() == DrawLayerHandler::ViewMode::best_guess) {
-            handler_->setViewMode( pixels_collection_.drawables.size() ? DrawLayerHandler::ViewMode::image_plane : DrawLayerHandler::ViewMode::freeview);
+        if(handler_->viewMode() == ViewMode::best_guess) {
+            handler_->setViewMode( pixels_collection_.drawables.size() ? ViewMode::image_plane : ViewMode::freeview);
         }
 
         return handler_->handleEvent(
@@ -279,12 +290,12 @@ struct DrawLayerImpl : public DrawLayer {
         }
         switch(domain) {
             case In::scene:  {
-                this->scene_collection_.drawables.push_back(r); 
+                this->scene_collection_.drawables.push_back(r);
                 if (!name.empty()) {
                     this->scene_collection_.named_drawables.insert({name, r});
                 }
             }break;
-            case In::pixels:{ 
+            case In::pixels:{
                 this->pixels_collection_.drawables.push_back(r);
                 if (!name.empty()) {
                     this->pixels_collection_.named_drawables.insert({name, r});
@@ -343,7 +354,7 @@ struct DrawLayerImpl : public DrawLayer {
 
         bool remove(const Shared<Drawable>& r) noexcept {
             bool anything_erased = false;
-            
+
             {
                 auto end = std::remove(drawables.begin(), drawables.end(), r);
                 anything_erased |= end != drawables.end();
@@ -359,14 +370,13 @@ struct DrawLayerImpl : public DrawLayer {
                 named_drawables.erase(key);
             }
 
-            
+
             return anything_erased;
         }
     };
 
     std::string name_;
     Size size_hint_;
-    AspectPolicy aspect_policy_;
 
     DrawLayerRenderState render_state_;
     RenderData render_data_;
