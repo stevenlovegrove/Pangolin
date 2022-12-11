@@ -162,7 +162,9 @@ struct GlDrawnPrimitives : public DrawnPrimitives
             if(indices->empty()) {
                 PANGO_GL(glDrawArrays(toGlEnum(element_type), 0, vertices->numElements()));
             }else{
-                const GlFormatInfo gl_fmt = glTypeInfo(indices->dataType());
+                const auto maybe_gl_fmt = glTypeInfo(indices->dataType());
+                const GlFormatInfo gl_fmt = FARM_UNWRAP(maybe_gl_fmt);
+
                 auto bind_ibo = indices->bind();
                 PANGO_GL(glDrawElements(toGlEnum(element_type), indices->numElements(), gl_fmt.gl_type, 0));
             }

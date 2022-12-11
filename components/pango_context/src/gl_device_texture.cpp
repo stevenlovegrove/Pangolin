@@ -100,9 +100,10 @@ struct DeviceGlTexture : public DeviceTexture
     {
         constexpr GLint mip_level = 0;
         constexpr GLint border = 0;
-
-        const RuntimePixelType data_type = u.image.pixelType();
-        const GlFormatInfo gl_fmt = glTypeInfo(data_type);
+       
+        auto data_type = u.image.pixelType();
+        auto maybe_type = glTypeInfo(data_type);
+        const GlFormatInfo gl_fmt = FARM_UNWRAP(maybe_type);
 
         // Create memory for resource if needed
         if(gl_id_ == 0 /* || incompatible...  */) {

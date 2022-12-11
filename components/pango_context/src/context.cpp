@@ -390,7 +390,8 @@ struct ContextImpl : public Context {
             RuntimePixelType::fromTemplate<float>() :
             RuntimePixelType::fromTemplate<sophus::Pixel3U8>();
 
-        const GlFormatInfo gl_pixel_type = glTypeInfo(pixel_type);
+        const auto maybe_gl_pixel_type = glTypeInfo(pixel_type);
+        const GlFormatInfo gl_pixel_type = FARM_UNWRAP(maybe_gl_pixel_type);
 
         sophus::IntensityImage<> image(ImageSize(imsize[0], imsize[1]), pixel_type);
 

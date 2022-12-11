@@ -46,11 +46,11 @@ int main( int argc, char** argv )
     });
 
     Var<std::function<void(void)>> ui_add_axis("ui.add_axis", [&](){
-        scene->addNamedInScene(unique_name, makeDrawable(sophus::SE3f::transX(1)));
+        scene->addNamedInScene(unique_name, sophus::SE3f::transX(1));
     });
 
     Var<std::function<void(void)>> ui_add_cube("ui.add_cube", [&](){
-        scene->addNamedInScene(unique_name, makeDrawable(pangolin::Draw::Cube{}));
+        scene->addNamedInScene(unique_name, pangolin::Draw::Cube{});
     });
 
     scene->addNamedInScene(unique_name, checker_plane);

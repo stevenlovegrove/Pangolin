@@ -2,6 +2,8 @@
 
 #include <pangolin/gl/glplatform.h>
 #include <sophus/image/runtime_image.h>
+#include "farm_ng/core/logging/expected.h"
+
 
 namespace pangolin
 {
@@ -38,7 +40,7 @@ struct GlFormatInfo
     GLint gl_type;
 };
 
-inline GlFormatInfo glTypeInfo(const sophus::RuntimePixelType& pixel_type)
+inline farm_ng::Expected<GlFormatInfo> glTypeInfo(const sophus::RuntimePixelType& pixel_type)
 {
     constexpr static GLint type_table[] = {
         0,       // unspecified
@@ -65,14 +67,14 @@ inline GlFormatInfo glTypeInfo(const sophus::RuntimePixelType& pixel_type)
     if( between(pixel_type.num_channels, 1, 4) && isOneOf(nbytes, {1,2,4}) ) {
         const int cidx = pixel_type.num_channels - 1;
         const int fidx = (nbytes == 4 && bfixed) ? 3 : nbytes;
-        return {
+        return GlFormatInfo({
             .gl_sized_format = format_table[fidx][cidx],
             .gl_base_format = format_table[0][cidx],
             .gl_type = type_table[fidx]
-        };
+        });
     }
 
-    PANGO_THROW("Unsupported GL image type, {}", pixel_type);
+    return FARM_ERROR("Unsupported GL image type, {}", pixel_type);
 }
 
 }

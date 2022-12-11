@@ -78,7 +78,9 @@ void GlVertexArrayObject::addVertexAttrib(
     auto bind_buf = bo.bind();
 
     const sophus::RuntimePixelType data_type = bo.dataType();
-    const GlFormatInfo gl_fmt = glTypeInfo(data_type);
+    auto maybe_gl_fmt = glTypeInfo(data_type);
+    const GlFormatInfo gl_fmt = FARM_UNWRAP(maybe_gl_fmt);
+
 
     if(isGlIntegralDatatype(gl_fmt.gl_type)) {
         PANGO_GL(glVertexAttribIPointer(attrib_location, data_type.num_channels, gl_fmt.gl_type, stride_bytes, (void*)offset_bytes ));
