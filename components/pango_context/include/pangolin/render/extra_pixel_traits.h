@@ -1,6 +1,8 @@
 #pragma once
 
 #include <sophus/lie/se3.h>
+#include <pangolin/gl/color.h>
+
 
 // Specialization of sophus::ImageTraits for types we might like to consider
 // in pixel or vertex-like buffers
@@ -25,6 +27,13 @@ struct ImageTraits<Se3<TT>> {
   static int const kNumChannels = 8;
   using TPixel = Se3<TT>;
   using ChannelT = TT;
+};
+
+template <>
+struct ImageTraits<pangolin::Color> {
+  static int const kNumChannels = 4;
+  using TPixel = pangolin::Color;
+  using ChannelT = float;
 };
 
 }

@@ -122,8 +122,8 @@ Shared<Drawable> DrawableConversionTraits<Draw::Cube>::makeDrawable(const Draw::
   colors.push_back(cube.colors[5]);
   colors.push_back(cube.colors[5]);
 
-    prims->vertices->update( vertices, {});
-    prims->colors->update(colors, {});
+  prims->vertices->update( vertices, {});
+  prims->colors->update(colors, {});
 
   return prims;
 }
