@@ -54,7 +54,7 @@ int main( int argc, char** argv )
     });
 
     auto layer = makeLayer(image);
-    layer->addInPixels(
+    layer->bulkAddInPixels(
         Cross{.pos={0.0, 0.0, 0.0}},
         Cross{.pos={float(w-1), float(h-1), 0.0}}
     );

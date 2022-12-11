@@ -56,7 +56,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives
             auto bind_vao = vao.bind();
 
             u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
-            u_cam_from_world = (params.camera_from_world.matrix() * parent_from_drawable).cast<float>();
+            u_cam_from_world = (params.camera_from_world.matrix() * pose.parentFromDrawableMatrix()).cast<float>();
             u_color = default_color.cast<float>();
             u_size = default_size;
 
@@ -90,7 +90,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives
             auto bind_vao = vao.bind();
 
             u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
-            u_cam_from_world = (params.camera_from_world.matrix() * parent_from_drawable).cast<float>();
+            u_cam_from_world = (params.camera_from_world.matrix() * pose.parentFromDrawableMatrix()).cast<float>();
             u_size = default_size;
             vao.addVertexAttrib(0, *vertices);
             vao.addVertexAttrib(1, *colors);
@@ -132,7 +132,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives
             auto bind_vao = vao.bind();
 
             u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
-            u_cam_from_world = (params.camera_from_world.matrix() * parent_from_drawable).cast<float>();
+            u_cam_from_world = (params.camera_from_world.matrix() * pose.parentFromDrawableMatrix()).cast<float>();
 
             vao.addVertexAttrib(location_vertex, *vertices);
             if(!colors->empty()) {
@@ -185,7 +185,6 @@ private:
 PANGO_CREATE(DrawnPrimitives) {
     auto r = Shared<GlDrawnPrimitives>::make();
     r->element_type = p.element_type;
-    r->parent_from_drawable = p.parent_from_drawable;
     r->default_color = p.default_color;
     r->default_size = p.default_size;
     return r;

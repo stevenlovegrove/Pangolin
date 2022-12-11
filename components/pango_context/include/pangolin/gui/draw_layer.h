@@ -60,19 +60,49 @@ struct DrawLayer : public Layer
 
     // Convenience method to add several drawables together
     template<typename ...Ts>
-    void addInScene(const Ts&... ts) {
+    void bulkAddInScene(const Ts&... ts) {
         (add(DrawableConversionTraits<Ts>::makeDrawable(ts), In::scene), ...);
+    }
+
+    template<typename T>
+    auto addInScene(const T& t) {
+        auto d = DrawableConversionTraits<T>::makeDrawable(t);
+        add(d, In::scene);
+        return d;
+    }
+
+    template<typename T>
+    auto addNamedInScene(const std::string& name, const T& r) {
+        auto d = DrawableConversionTraits<T>::makeDrawable(r);
+        add(d, In::scene, name);
+        return d;
+    }
+
+    template<typename T>
+    auto addInSceneAt(const T& t, const sophus::Se3F64& parent_from_drawable) {
+        auto d = DrawableConversionTraits<T>::makeDrawable(t);
+        d->pose.parent_from_drawable = parent_from_drawable;
+        add(d, In::scene);
+        return d;
+    }
+
+    template<typename T>
+    auto addNamedInSceneAt(const std::string& name, const T& r, const sophus::Se3F64& parent_from_drawable) {
+        auto d = DrawableConversionTraits<T>::makeDrawable(r);
+        d->pose.parent_from_drawable = parent_from_drawable;
+        add(d, In::scene, name);
+        return d;
     }
 
     // Convenience method to add several drawables together
     template<typename ...Ts>
-    void addInPixels(const Ts&... ts) {
+    void bulkAddInPixels(const Ts&... ts) {
         (add(DrawableConversionTraits<Ts>::makeDrawable(ts), In::pixels), ...);
     }
 
     template<typename T>
-    void addNamedInScene(const std::string& name, const T& r) {
-        add(DrawableConversionTraits<T>::makeDrawable(r), In::scene, name);
+    void addInPixels(const T& t) {
+        add(DrawableConversionTraits<T>::makeDrawable(t), In::pixels);
     }
 
     template<typename T>

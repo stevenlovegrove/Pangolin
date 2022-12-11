@@ -112,7 +112,6 @@ struct DrawnPrimitives : public Drawable
         Type element_type = Type::points;
         Eigen::Vector4d default_color = {1.0f, 0.0f, 0.0f, 1.0f};
         double default_size = 1.0;
-        Eigen::Matrix4d parent_from_drawable = Eigen::Matrix4d::Identity();
     };
     static Shared<DrawnPrimitives> Create(Params p);
 };

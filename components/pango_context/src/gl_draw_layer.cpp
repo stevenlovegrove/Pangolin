@@ -223,7 +223,7 @@ struct DrawLayerImpl : public DrawLayer {
             context.setViewport(render_data_.pixel_params.viewport);
             auto child_params = render_data_.pixel_params;
             for(auto& obj : pixels_collection_.drawables) {
-                child_params.camera_from_world = render_data_.pixel_params.camera_from_world * obj->parent_from_drawable;
+                child_params.camera_from_world = render_data_.pixel_params.camera_from_world * obj->pose.parentFromDrawableMatrix();
                 obj->draw(child_params);
             }
 
@@ -237,7 +237,7 @@ struct DrawLayerImpl : public DrawLayer {
             context.setViewport(render_data_.scene_params.viewport);
             auto child_params = render_data_.scene_params;
             for(auto& obj : scene_collection_.drawables) {
-                child_params.camera_from_world = render_data_.scene_params.camera_from_world * obj->parent_from_drawable;
+                child_params.camera_from_world = render_data_.scene_params.camera_from_world * obj->pose.parentFromDrawableMatrix();
                 obj->draw(child_params);
             }
         }

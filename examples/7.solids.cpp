@@ -69,7 +69,7 @@ int main( int argc, char** argv )
     }
     prims->vertices->update(T_world_axis, {});
 
-    scene->addInScene(checker_plane, prims);
+    scene->bulkAddInScene(checker_plane, prims);
 
     context->setLayout( scene);
 

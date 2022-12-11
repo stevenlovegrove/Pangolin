@@ -23,7 +23,6 @@ struct DrawnSolids : public Drawable
 
     struct Params {
         Type object_type = Type::checkerboard;
-        Eigen::Matrix4d parent_from_drawable = Eigen::Matrix4d::Identity();
     };
     static Shared<DrawnSolids> Create(Params p);
 };

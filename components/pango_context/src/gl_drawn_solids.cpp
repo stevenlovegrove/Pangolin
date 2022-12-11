@@ -47,7 +47,6 @@ private:
 
 PANGO_CREATE(DrawnSolids) {
     auto r = Shared<GlDrawnSolids>::make();
-    r->parent_from_drawable = p.parent_from_drawable;
     return r;
 }
 

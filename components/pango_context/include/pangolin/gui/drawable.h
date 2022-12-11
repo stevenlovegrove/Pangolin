@@ -16,11 +16,22 @@ struct ViewParams {
     std::shared_ptr<DeviceTexture> unproject_map;
 };
 
+struct DrawablePose {
+
+    Eigen::Matrix4d parentFromDrawableMatrix() {
+        return parent_from_drawable.matrix();
+    }
+
+    // Add Eigen::Matrix4d representation augmentations (e.g. drawable_scales), 
+    // and/or alternatives (Sim3, Aff3, etc.) here when needed. 
+    sophus::Se3F64 parent_from_drawable;
+};
+
 struct Drawable {
     virtual ~Drawable() {}
     virtual void draw(const ViewParams&) = 0;
     virtual MinMax<Eigen::Vector3d> boundsInParent() const = 0;
-    Eigen::Matrix4d parent_from_drawable = Eigen::Matrix4d::Identity();
+    DrawablePose pose;
 };
 
 

@@ -50,7 +50,7 @@ int main( int argc, char** argv )
     });
 
     Var<std::function<void(void)>> ui_add_cube("ui.add_cube", [&](){
-        scene->addNamedInScene(unique_name, pangolin::Draw::Cube{});
+        scene->addNamedInSceneAt(unique_name, pangolin::Draw::Cube{}, sophus::SE3d::trans(5.0, 0.0, 1.0));
     });
 
     scene->addNamedInScene(unique_name, checker_plane);

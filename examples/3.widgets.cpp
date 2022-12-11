@@ -71,9 +71,9 @@ int main( int /*argc*/, char** /*argv*/ )
              DrawnPrimitives::Type::triangles :
              DrawnPrimitives::Type::line_loop;
 
-        primitives->parent_from_drawable = sophus::SE3d(
+        primitives->pose.parent_from_drawable = sophus::SE3d(
             sophus::SO3d::rotZ(angle_theta),
-            Eigen::Vector3d::Zero()).matrix();
+            Eigen::Vector3d::Zero());
 
         // We return true to indicate that we should keep running
         return true;

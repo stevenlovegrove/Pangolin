@@ -13,7 +13,7 @@ void draw(const ViewParams& params) override {
     ViewParams child_params = params;
 
     for(auto& child : children) {
-        child_params.camera_from_world = params.camera_from_world * child->parent_from_drawable;
+        child_params.camera_from_world = params.camera_from_world * child->pose.parentFromDrawableMatrix();
         child->draw(child_params);
     }
 }
@@ -28,12 +28,10 @@ MinMax<Eigen::Vector3d> boundsInParent() const override {
 }
 struct Params {
     std::vector<Shared<Drawable>> children;
-    Eigen::Matrix4d parent_from_drawable;
 };
 static Shared<DrawnGroup> Create(const Params& p) {
     auto ret = Shared<DrawnGroup>::make();
     ret->children = p.children;
-    ret->parent_from_drawable = p.parent_from_drawable;
     return ret;
 }
 
