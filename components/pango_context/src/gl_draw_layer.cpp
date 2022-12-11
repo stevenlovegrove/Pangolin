@@ -124,8 +124,8 @@ struct DrawLayerImpl : public DrawLayer {
         Eigen::Array2d clip_aspect_scale = {1.0, 1.0};
         Eigen::Matrix4d clip_view = Eigen::Matrix4d::Identity();
         Eigen::Matrix4d clip_aspect = Eigen::Matrix4d::Identity();
-        Drawable::ViewParams pixel_params;
-        Drawable::ViewParams scene_params;
+        ViewParams pixel_params;
+        ViewParams scene_params;
         Shared<DeviceTexture> unproject_map = DeviceTexture::Create({});
     };
 
