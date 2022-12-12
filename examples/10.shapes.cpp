@@ -16,7 +16,8 @@ int main( int /*argc*/, char** /*argv*/ )
     } );
 
     auto primitives = DrawnPrimitives::Create({
-      .element_type=DrawnPrimitives::Type::shapes
+      .element_type=DrawnPrimitives::Type::shapes,
+      .default_size = 10.0
     });
 
     std::vector<Eigen::Vector3f> points;

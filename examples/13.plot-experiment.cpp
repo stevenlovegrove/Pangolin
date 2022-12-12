@@ -1,4 +1,5 @@
 #include <pangolin/context/context.h>
+#include <pangolin/gl/color.h>
 #include <pangolin/gui/all_layers.h>
 #include <sophus/sensor/orthographic.h>
 
@@ -45,15 +46,16 @@ int main( int /*argc*/, char** /*argv*/ )
 
     // Create point markers
     std::vector<uint16_t> plot_shape;
-    std::vector<Eigen::Vector4f> plot_color;
+    std::vector<Color> plot_color;
+    ColorWheel wheel;
     for(auto& x : plot_data) {
-        plot_shape.push_back(10);
-        plot_color.emplace_back(0.2, 0.6, 0.5, 1.0);
+        plot_shape.push_back(wheel.GetCurrentIndex()%21);
+        plot_color.push_back(wheel.GetUniqueColor());
     }
 
     auto markers = DrawnPrimitives::Create({
         .element_type = DrawnPrimitives::Type::shapes,
-        .default_size = 0.1,
+        .default_size = 15, //pixels
     });
     markers->vertices->update(plot_data, {});
     markers->shapes->update(plot_shape, {});

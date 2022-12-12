@@ -562,19 +562,24 @@ static_assert(sizeof(Color) == 4 * sizeof(float));
 class ColorWheel
 {
 public:
+    /// Use Golden ratio (/angle) to pick well spaced colours.
+    inline static Color GoldenColor(int index, float saturation = 0.5f, float value = 1.0f, float alpha = 1.0)
+    {
+        float hue = index * 0.5f * (3.0f - sqrt(5.0f));
+        hue = hue - floor(hue);
+        return Color::Hsv(hue,saturation,value,alpha);
+    }
+
     /// Construct ColourWheel with Saturation, Value and Alpha constant.
     inline ColorWheel(float saturation = 0.5f, float value = 1.0f, float a = 1.0f)
         : unique_colors(0), sat(saturation), val(value), a(a)
     {
-
     }
 
     /// Use Golden ratio (/angle) to pick well spaced colours.
     inline Color GetColorBin(int i) const
     {
-        float hue = i * 0.5f * (3.0f - sqrt(5.0f));
-        hue = hue - floor(hue);
-        return Color::Hsv(hue,sat,val,a);
+        return GoldenColor(i, sat, val, a);
     }
 
     /// Return next unique colour from ColourWheel.
@@ -586,6 +591,10 @@ public:
     /// Reset colour wheel counter to initial state
     inline void Reset() {
       unique_colors = 0;
+    }
+
+    inline int GetCurrentIndex() const {
+      return unique_colors;
     }
 
 protected:

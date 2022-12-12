@@ -29,7 +29,9 @@ out vec4 color;
 
 uniform mat4 proj;
 uniform mat4 cam_from_world;
+uniform bool use_clip_size_units;
 uniform float size;
+uniform vec2 size_clip;
 
 vec2 corners[4] = vec2[](
     vec2(-1.0,-1.0), vec2(+1.0,-1.0),
@@ -37,12 +39,18 @@ vec2 corners[4] = vec2[](
 );
 
 void main() {
+    vec4 center_cam = cam_from_world * vec4(v_position[0], 1.0);
+    vec4 center_clip = proj * center_cam;
+
     for(uint i=0u; i < 4u;  ++i) {
         color = v_color[0];
         type = v_type[0];
         uv = corners[i] * vec2(1.0,-1.0);
-        vec4 center_cam = cam_from_world * vec4(v_position[0], 1.0);
-        gl_Position = proj * (center_cam + vec4(0.5*size * corners[i],0.0, 0.0) );
+        if(use_clip_size_units) {
+            gl_Position = center_clip + vec4(center_clip.w * size_clip * corners[i], 0.0, 0.0);
+        }else{
+            gl_Position = proj * (center_cam + vec4(0.5*size * corners[i],0.0, 0.0) );
+        }
         EmitVertex();
     }
 

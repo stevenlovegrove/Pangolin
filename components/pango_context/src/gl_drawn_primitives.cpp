@@ -91,7 +91,15 @@ struct GlDrawnPrimitives : public DrawnPrimitives
 
             u_intrinsics = (params.clip_from_image * params.image_from_camera).cast<float>();
             u_cam_from_world = (params.camera_from_world.matrix() * pose.parentFromDrawableMatrix()).cast<float>();
-            u_size = default_size;
+            if(false) {
+                u_use_clip_size_units = false;
+                u_size = default_size;
+            }else{
+                u_use_clip_size_units = true;
+                Eigen::Array2f size_pix = Eigen::Vector2f(default_size, default_size);
+                u_size_clip = 2.0 * size_pix / params.viewport.range().cast<float>();
+            }
+
             vao.addVertexAttrib(0, *vertices);
             vao.addVertexAttrib(1, *colors);
             vao.addVertexAttrib(2, *shapes);
@@ -179,7 +187,9 @@ private:
     const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
     const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
     const GlUniform<Eigen::Vector4f> u_color = {"color"};
+    const GlUniform<bool> u_use_clip_size_units = {"use_clip_size_units"};
     const GlUniform<float> u_size = {"size"};
+    const GlUniform<Eigen::Vector2f> u_size_clip = {"size_clip"};
 };
 
 PANGO_CREATE(DrawnPrimitives) {
