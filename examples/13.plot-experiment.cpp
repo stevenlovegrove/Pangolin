@@ -2,6 +2,7 @@
 #include <pangolin/gl/color.h>
 #include <pangolin/gui/all_layers.h>
 #include <sophus/sensor/orthographic.h>
+#include <pangolin/gui/drawn_plot_background.h>
 
 using namespace pangolin;
 
@@ -40,26 +41,33 @@ int main( int /*argc*/, char** /*argv*/ )
 
     // Create a drawable with line series
     auto graph_xy = DrawnPrimitives::Create({
-        .element_type = DrawnPrimitives::Type::line_strip
+        .element_type = DrawnPrimitives::Type::line_strip,
+        .default_size = 1.5
     });
     graph_xy->vertices->update(plot_data, {});
 
-    // Create point markers
-    std::vector<uint16_t> plot_shape;
-    std::vector<Color> plot_color;
-    ColorWheel wheel;
-    for(auto& x : plot_data) {
-        plot_shape.push_back(wheel.GetCurrentIndex()%21);
-        plot_color.push_back(wheel.GetUniqueColor());
+    if(0) {
+        // Create point markers
+        std::vector<uint16_t> plot_shape;
+        std::vector<Color> plot_color;
+        ColorWheel wheel;
+        for(auto& x : plot_data) {
+            plot_shape.push_back(wheel.GetCurrentIndex()%21);
+            plot_color.push_back(wheel.GetUniqueColor());
+        }
+
+        auto markers = DrawnPrimitives::Create({
+            .element_type = DrawnPrimitives::Type::shapes,
+            .default_size = 15, //pixels
+        });
+        markers->vertices->update(plot_data, {});
+        markers->shapes->update(plot_shape, {});
+        markers->colors->update(plot_color, {});
     }
 
-    auto markers = DrawnPrimitives::Create({
-        .element_type = DrawnPrimitives::Type::shapes,
-        .default_size = 15, //pixels
+    auto bg = DrawnPlotBackground::Create({
+        .color_background = Eigen::Vector4f(0.97, 0.98, 1.0, 1.0)
     });
-    markers->vertices->update(plot_data, {});
-    markers->shapes->update(plot_shape, {});
-    markers->colors->update(plot_color, {});
 
     auto layer = DrawLayer::Create({
         .aspect_policy = AspectPolicy::stretch,
@@ -67,10 +75,10 @@ int main( int /*argc*/, char** /*argv*/ )
         .image_indexing = ImageIndexing::normalized_zero_one,
         .handler = DrawLayerHandler::Create({.view_mode = ViewMode::image_plane}),
         .camera = plot_camera(Eigen::AlignedBox2d{
-            Eigen::Vector2d(0.0, -1.0),
-            Eigen::Vector2d(10.0, 1.0)
+            Eigen::Vector2d(-1.0, -1.1),
+            Eigen::Vector2d(11.0, 1.1)
         }),
-        .in_scene = {graph_xy, markers}
+        .in_scene = {bg, graph_xy/* , markers */}
     });
 
     context->setLayout(layer);

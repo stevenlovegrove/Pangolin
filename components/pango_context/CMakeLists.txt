@@ -20,6 +20,7 @@ set(component_file_basenames
   gl_drawn_primitives
   gl_drawn_solids
   gl_drawn_checker
+  gl_drawn_plot_background
   layer_group
   multi_dim
 )

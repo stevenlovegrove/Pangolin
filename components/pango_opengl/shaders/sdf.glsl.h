@@ -69,7 +69,25 @@ vec4 color_sdf(float sdf, vec4 color_inside)
     return vec4(color_inside.xyz, color_inside.w * smoothstep(-0.5, 0.5, -sdf));
 }
 
+float transition(float a, float b, float point, float x)
+{
+    float s = smoothstep(point-0.5, point+0.5, x);
+    return (1.0-s)*a + s*b;
+}
+
+vec2 transition(vec2 a, vec2 b, float point, float x)
+{
+    float s = smoothstep(point-0.5, point+0.5, x);
+    return (1.0-s)*a + s*b;
+}
+
 vec3 transition(vec3 a, vec3 b, float point, float x)
+{
+    float s = smoothstep(point-0.5, point+0.5, x);
+    return (1.0-s)*a + s*b;
+}
+
+vec4 transition(vec4 a, vec4 b, float point, float x)
 {
     float s = smoothstep(point-0.5, point+0.5, x);
     return (1.0-s)*a + s*b;
