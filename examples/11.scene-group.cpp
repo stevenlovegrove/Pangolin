@@ -26,7 +26,7 @@ int main( int argc, char** argv )
     });
 
     // objects to draw
-    auto checker_plane = DrawnSolids::Create({});
+    auto checker_plane = makeDrawable(Draw::CheckerPlane{});
     auto axis = makeDrawable(sophus::SE3f());
     auto star = makeDrawable(Draw::Shape{ .type=DrawnPrimitives::Shape::hollow_star });
     auto heart = makeDrawable(Draw::Shape{.type=DrawnPrimitives::Shape::hollow_heart});

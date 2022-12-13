@@ -31,8 +31,6 @@ int main( int argc, char** argv )
         ),
         .near_far = {0.01, 1000.0}
     });
-    auto checker_plane = DrawnSolids::Create({});
-
     std::string unique_name = "foo";
 
 
@@ -42,7 +40,7 @@ int main( int argc, char** argv )
 
 
     Var<std::function<void(void)>> ui_add_plane("ui.add_plane", [&](){
-        scene->addNamedInScene(unique_name, checker_plane);
+        scene->addNamedInScene(unique_name, Draw::CheckerPlane{});
     });
 
     Var<std::function<void(void)>> ui_add_axis("ui.add_axis", [&](){
@@ -53,7 +51,7 @@ int main( int argc, char** argv )
         scene->addNamedInSceneAt(unique_name, pangolin::Draw::Cube{}, sophus::SE3d::trans(5.0, 0.0, 1.0));
     });
 
-    scene->addNamedInScene(unique_name, checker_plane);
+    scene->addNamedInScene(unique_name, Draw::CheckerPlane{});
 
     context->setLayout(widgets | scene);
 

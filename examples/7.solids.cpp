@@ -1,6 +1,8 @@
 #include <pangolin/context/context.h>
 #include <pangolin/gui/all_layers.h>
 #include <pangolin/maths/camera_look_at.h>
+#include <pangolin/gui/make_drawable.h>
+
 /*
   == Pangolin-by-example ==
 
@@ -45,31 +47,28 @@ int main( int argc, char** argv )
         .near_far = {0.01, 1000.0}
     });
     auto checker_plane = DrawnSolids::Create({});
-    auto prims = DrawnPrimitives::Create({
-        .element_type = DrawnPrimitives::Type::axes,
-        .default_size = 0.1
-    });
 
     static_assert(sizeof(sophus::SE3f) == 32);
-    std::vector<sophus::SE3f> T_world_axis;
-    T_world_axis.emplace_back();
+    std::vector<sophus::SE3f> parent_from_axis_poses;
+    parent_from_axis_poses.emplace_back();
     // up 1m
-    translate(T_world_axis, {0.0f, 0.0, 1.0}, 10);
+    translate(parent_from_axis_poses, {0.0f, 0.0, 1.0}, 10);
     // along x-axis 1m
-    translate(T_world_axis, {1.0f, 0.0, 0.0}, 10);
+    translate(parent_from_axis_poses, {1.0f, 0.0, 0.0}, 10);
     // rotate 90 degrees clockwise around z axis
-    rotate(T_world_axis, {0.0, 0.0, -M_PI/2.0}, 10);
+    rotate(parent_from_axis_poses, {0.0, 0.0, -M_PI/2.0}, 10);
     // along x-axis 1m
-    translate(T_world_axis, {1.0f, 0.0, 0.0}, 10);
+    translate(parent_from_axis_poses, {1.0f, 0.0, 0.0}, 10);
 
     // Spiral
     for(int i=0; i < 100; ++i) {
         const sophus::SE3f delta(sophus::SO3f::rotX(0.1)*sophus::SO3f::rotY(0.05), Eigen::Vector3f(0.1, 0.2f, 0.0f));
-        T_world_axis.push_back( T_world_axis.back() * delta );
+        parent_from_axis_poses.push_back( parent_from_axis_poses.back() * delta );
     }
-    prims->vertices->update(T_world_axis, {});
 
-    scene->bulkAddInScene(checker_plane, prims);
+    sophus::SE3d scene_from_parent = sophus::Se3F64::transZ(0.2);
+    scene->addInScene(checker_plane);
+    scene->addInSceneAt(Draw::Axes{.drawable_from_axis_poses = parent_from_axis_poses}, scene_from_parent);
 
     context->setLayout( scene);
 

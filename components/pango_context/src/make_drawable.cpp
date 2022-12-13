@@ -1,5 +1,6 @@
 
 #include <pangolin/gui/make_drawable.h>
+#include <pangolin/gui/drawn_solids.h>
 
 namespace pangolin{
 
@@ -128,11 +129,108 @@ Shared<Drawable> DrawableConversionTraits<Draw::Cube>::makeDrawable(const Draw::
   return prims;
 }
 
-Shared<Drawable> DrawableConversionTraits<sophus::Se3F32>::makeDrawable(const sophus::Se3F32& x) {
+Shared<Drawable> DrawableConversionTraits<Draw::Icosphere>::makeDrawable(const Draw::Icosphere& sphere){
+    auto prims = DrawnPrimitives::Create({
+        .element_type=DrawnPrimitives::Type::triangles,
+    });
+ using FaceT = Eigen::Matrix<uint32_t, 3, 1>;
+  std::vector<FaceT> faces;
+
+  // http://www.songho.ca/opengl/gl_sphere.html#icosphere
+  static float constexpr kHAngle = M_PI / 180 * 72;
+  float const k_v_angle = std::atan(1.0f / 2);
+
+  float h_angle1 = -M_PI / 2 - kHAngle / 2;  // start from -126 deg at 1st row
+  float h_angle2 = -M_PI / 2;                // start from -90 deg at 2nd row
+
+  std::vector<Eigen::Vector3f> vertices;
+
+  vertices.push_back({0, 0, sphere.radius});
+
+  for (int i = 0; i < 5; ++i) {
+    float z = sphere.radius * std::sin(k_v_angle);
+    float xy = sphere.radius * std::cos(k_v_angle);
+
+    vertices.push_back(
+        Eigen::Vector3f(xy * std::cos(h_angle1), xy * std::sin(h_angle1), z));
+
+    vertices.push_back(
+        Eigen::Vector3f(xy * std::cos(h_angle2), xy * std::sin(h_angle2), -z));
+
+    h_angle1 += kHAngle;
+    h_angle2 += kHAngle;
+  }
+
+  vertices.push_back({0, 0, -sphere.radius});
+
+  faces.push_back(FaceT(0, 1, 3));
+  faces.push_back(FaceT(0, 3, 5));
+  faces.push_back(FaceT(0, 5, 7));
+  faces.push_back(FaceT(0, 7, 9));
+  faces.push_back(FaceT(0, 9, 1));
+
+  faces.push_back(FaceT(11, 4, 2));
+  faces.push_back(FaceT(11, 6, 4));
+  faces.push_back(FaceT(11, 8, 6));
+  faces.push_back(FaceT(11, 10, 8));
+  faces.push_back(FaceT(11, 2, 10));
+
+  faces.push_back(FaceT(1, 2, 3));
+  faces.push_back(FaceT(2, 4, 3));
+  faces.push_back(FaceT(3, 4, 5));
+  faces.push_back(FaceT(4, 6, 5));
+  faces.push_back(FaceT(5, 6, 7));
+  faces.push_back(FaceT(6, 8, 7));
+  faces.push_back(FaceT(7, 8, 9));
+  faces.push_back(FaceT(8, 10, 9));
+  faces.push_back(FaceT(9, 10, 1));
+  faces.push_back(FaceT(10, 2, 1));
+
+  for (size_t i = 0; i < sphere.num_subdivisions; ++i) {
+    std::vector<FaceT> source_faces = faces;
+    faces.clear();
+    for (FaceT const& t : source_faces) {
+      Eigen::Vector3f p0_p1 =
+          (vertices[t.x()] + vertices[t.y()]).normalized() * sphere.radius;
+      int p0_p1_id = vertices.size();
+      vertices.push_back(p0_p1);
+
+      Eigen::Vector3f p0_p2 =
+          (vertices[t.x()] + vertices[t.z()]).normalized() * sphere.radius;
+      int p0_p2_id = vertices.size();
+      vertices.push_back(p0_p2);
+
+      Eigen::Vector3f p1_p2 =
+          (vertices[t.y()] + vertices[t.z()]).normalized() * sphere.radius;
+      int p1_p2_id = vertices.size();
+      vertices.push_back(p1_p2);
+
+      faces.push_back(FaceT(t.x(), p0_p1_id, p0_p2_id));
+      faces.push_back(FaceT(t.y(), p1_p2_id, p0_p1_id));
+      faces.push_back(FaceT(t.z(), p0_p2_id, p1_p2_id));
+      faces.push_back(FaceT(p0_p1_id, p1_p2_id, p0_p2_id));
+    }
+  }
+
+  prims->vertices->update( vertices, {});
+  prims->indices->update(faces, {});
+ 
+  return prims;
+}
+
+Shared<Drawable> DrawableConversionTraits<Draw::CheckerPlane>::makeDrawable(const Draw::CheckerPlane& ) {
+    auto board = DrawnSolids::Create({
+        .object_type=DrawnSolids::Type::checkerboard,
+    });
+    return board;
+}
+
+Shared<Drawable> DrawableConversionTraits<Draw::Axes>::makeDrawable(const Draw::Axes& axes) {
     auto prims = DrawnPrimitives::Create({
         .element_type=DrawnPrimitives::Type::axes,
     });
-    prims->vertices->update(std::vector<sophus::Se3<float>>{x}, {});
+    prims->vertices->update(axes.drawable_from_axis_poses, {});
+    prims->default_size = axes.scale;
     return prims;
 }
 }
