@@ -38,7 +38,7 @@ public:
     };
 
     visitImage(overload{
-     [&](const Image<float>& image){
+     [&](const ImageView<float>& image){
         image.visit([&](float gl_z){
           float real_z = realDepthFromGl(gl_z, near_far.min(), near_far.max());
           if(near_far.min() < real_z && real_z < near_far.max()) {
