@@ -1,6 +1,10 @@
 name: Build
 
-on: [push]
+push:
+    branches: [ 
+      master, pango 
+    ]
+pull_request:
 
 env:
   BUILD_TYPE: Release
@@ -20,11 +24,11 @@ jobs:
         - os: ubuntu-20.04
           package_manager: "apt"
 
-        - os: macos-11.0
-          package_manager: "brew"
+        # - os: macos-11.0
+        #   package_manager: "brew"
 
-        - os: windows-2019
-          package_manager: "vcpkg"
+        # - os: windows-2019
+        #   package_manager: "vcpkg"
 
     steps:
     - name: Checkout Pangolin
@@ -32,27 +36,27 @@ jobs:
       with:
         submodules: true
 
-    - name: "(vcpkg only) Setup cache key"
-      if: ${{ matrix.package_manager == 'vcpkg' }}
-      run: |
-        export PACKAGES=$($GITHUB_WORKSPACE/scripts/install_prerequisites.sh -l -m ${{matrix.package_manager}} all)
-        echo "PACKAGES=$PACKAGES" >> $GITHUB_ENV
+    # - name: "(vcpkg only) Setup cache key"
+    #   if: ${{ matrix.package_manager == 'vcpkg' }}
+    #   run: |
+    #     export PACKAGES=$($GITHUB_WORKSPACE/scripts/install_prerequisites.sh -l -m ${{matrix.package_manager}} all)
+    #     echo "PACKAGES=$PACKAGES" >> $GITHUB_ENV
 
-    - name: "(vcpkg only) Restore any cached ports"
-      uses: lukka/run-vcpkg@v6
-      if: ${{ matrix.package_manager == 'vcpkg' }}
-      with:
-        setupOnly: true
-        vcpkgDirectory: '${{github.workspace}}/scripts/vcpkg'
-        appendedCacheKey: '${{env.PACKAGES}}'
-        vcpkgTriplet: x64-windows
+    # - name: "(vcpkg only) Restore any cached ports"
+    #   uses: lukka/run-vcpkg@v6
+    #   if: ${{ matrix.package_manager == 'vcpkg' }}
+    #   with:
+    #     setupOnly: true
+    #     vcpkgDirectory: '${{github.workspace}}/scripts/vcpkg'
+    #     appendedCacheKey: '${{env.PACKAGES}}'
+    #     vcpkgTriplet: x64-windows
 
-    - name: "(vcpkg only) Setup CMake Toolchain file"
-      if: ${{ matrix.package_manager == 'vcpkg' }}
-      run: |
-        export TOOLCHAIN_FILE="${{github.workspace}}/scripts/vcpkg/scripts/buildsystems/vcpkg.cmake"
-        echo "${{github.workspace}}/scripts/vcpkg" >> $GITHUB_PATH
-        echo "TOOLCHAIN_FILE=$TOOLCHAIN_FILE" >> $GITHUB_ENV
+    # - name: "(vcpkg only) Setup CMake Toolchain file"
+    #   if: ${{ matrix.package_manager == 'vcpkg' }}
+    #   run: |
+    #     export TOOLCHAIN_FILE="${{github.workspace}}/scripts/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    #     echo "${{github.workspace}}/scripts/vcpkg" >> $GITHUB_PATH
+    #     echo "TOOLCHAIN_FILE=$TOOLCHAIN_FILE" >> $GITHUB_ENV
 
     - name: Install Dependencies
       run: |
@@ -71,54 +75,54 @@ jobs:
       working-directory: ${{runner.workspace}}/Pangolin/build
       run: ctest
 
-  emscripten:
-    runs-on: ubuntu-20.04
+  # emscripten:
+  #   runs-on: ubuntu-20.04
 
-    steps:
-    - name: Checkout Pangolin
-      uses: actions/checkout@v2
-      with:
-        path: pangolin
+  #   steps:
+  #   - name: Checkout Pangolin
+  #     uses: actions/checkout@v2
+  #     with:
+  #       path: pangolin
 
-    - name: Checkout Eigen
-      uses: actions/checkout@v2
-      with:
-        path: eigen
-        repository: 'libigl/eigen'
+  #   - name: Checkout Eigen
+  #     uses: actions/checkout@v2
+  #     with:
+  #       path: eigen
+  #       repository: 'libigl/eigen'
 
-    - name: Create Build Directories
-      run: |
-        cmake -E make_directory ${{runner.workspace}}/eigen-build
-        cmake -E make_directory ${{runner.workspace}}/pangolin-build
+  #   - name: Create Build Directories
+  #     run: |
+  #       cmake -E make_directory ${{runner.workspace}}/eigen-build
+  #       cmake -E make_directory ${{runner.workspace}}/pangolin-build
 
-    - name: Start Emscripten Docker
-      run: docker run -dit --name emscripten -v ${{runner.workspace}}:/src emscripten/emsdk:latest bash
+  #   - name: Start Emscripten Docker
+  #     run: docker run -dit --name emscripten -v ${{runner.workspace}}:/src emscripten/emsdk:latest bash
 
-    - name: Configure Eigen
-      run: docker exec -t -w /src/eigen-build emscripten cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE /src/Pangolin/eigen
+  #   - name: Configure Eigen
+  #     run: docker exec -t -w /src/eigen-build emscripten cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE /src/Pangolin/eigen
 
-    - name: Configure Pangolin
-      run: docker exec -t -w /src/pangolin-build emscripten emcmake cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DEigen3_DIR=/src/eigen-build /src/Pangolin/pangolin
+  #   - name: Configure Pangolin
+  #     run: docker exec -t -w /src/pangolin-build emscripten emcmake cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DEigen3_DIR=/src/eigen-build /src/Pangolin/pangolin
 
-    - name: Build Pangolin
-      run: docker exec -t -w /src/pangolin-build emscripten cmake --build .
+  #   - name: Build Pangolin
+  #     run: docker exec -t -w /src/pangolin-build emscripten cmake --build .
 
-    - name: Copy Examples to www folder
-      run: |
-        mkdir -p ${{runner.workspace}}/www/emscripten
-        rsync -zarvm --include="*/" --include="*.html" --include="*.js" --include="*.wasm" --exclude="*" ${{runner.workspace}}/pangolin-build/examples ${{runner.workspace}}/www/emscripten
+  #   - name: Copy Examples to www folder
+  #     run: |
+  #       mkdir -p ${{runner.workspace}}/www/emscripten
+  #       rsync -zarvm --include="*/" --include="*.html" --include="*.js" --include="*.wasm" --exclude="*" ${{runner.workspace}}/pangolin-build/examples ${{runner.workspace}}/www/emscripten
 
-    - name: Copy README to www folder
-      run: |
-        cp "${{github.workspace}}/pangolin/README.md" "${{runner.workspace}}/www/index.md"
+  #   - name: Copy README to www folder
+  #     run: |
+  #       cp "${{github.workspace}}/pangolin/README.md" "${{runner.workspace}}/www/index.md"
 
-    - name: Deploy Examples to GitHub Pages (for pushes to master)
-      if: success() && (github.ref == 'refs/heads/master')
-      uses: crazy-max/ghaction-github-pages@v2.2.0
-      with:
-        target_branch: gh-pages
-        keep_history: true
-        # build_dir path relative to ${{runner.workspace}}/Pangolin
-        build_dir: ../www
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #   - name: Deploy Examples to GitHub Pages (for pushes to master)
+  #     if: success() && (github.ref == 'refs/heads/master')
+  #     uses: crazy-max/ghaction-github-pages@v2.2.0
+  #     with:
+  #       target_branch: gh-pages
+  #       keep_history: true
+  #       # build_dir path relative to ${{runner.workspace}}/Pangolin
+  #       build_dir: ../www
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
