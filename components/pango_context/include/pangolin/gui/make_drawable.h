@@ -38,8 +38,8 @@ struct CheckerPlane {
 };
 
 struct Axis {
-  float scale;
-  float line_width;
+  float scale = 0.1f;
+  float line_width = 1.5;
 };
 
 struct Axes {
@@ -96,14 +96,6 @@ static Shared<Drawable> makeDrawable(const Draw::Axes& x);
 };
 // Draw::Axes convenient methods
 
-// Single axis at the identity.
-//
-// Example: scene->addToSceneAt(Draw::Axis{.size - 0.5}, sophus::SE3d{...});
-template<>
-struct DrawableConversionTraits<Draw::Axis> {
-static Shared<Drawable> makeDrawable(const Draw::Axis& x);
-};
-
 template<>
 struct DrawableConversionTraits<sophus::Se3F32> {
 static Shared<Drawable> makeDrawable(const sophus::Se3F32& x) {
@@ -117,6 +109,20 @@ template<typename T>
 struct DrawableConversionTraits<sophus::Se3<T>> {
 static Shared<Drawable> makeDrawable(const sophus::Se3<T>& x) {
     return makeDrawable(x.template cast<float>());
+}
+};
+
+// Single axis at the identity.
+//
+// Example: scene->addToSceneAt(Draw::Axis{.size - 0.5}, sophus::SE3d{...});
+template<>
+struct DrawableConversionTraits<Draw::Axis> {
+static Shared<Drawable> makeDrawable(const Draw::Axis& x) {
+    Draw::Axes axes;
+    axes.line_width = x.line_width;
+    axes.scale = x.scale;
+    axes.drawable_from_axis_poses.push_back(sophus::SE3f{});
+    return DrawableConversionTraits<Draw::Axes>::makeDrawable(axes);
 }
 };
 

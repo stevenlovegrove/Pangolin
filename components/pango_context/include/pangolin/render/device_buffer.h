@@ -39,22 +39,31 @@ struct DeviceBuffer
         size_t num_elements = 0;
         UpdateParams params = {};
     };
-    virtual void update(const Data& data) = 0;
+    
+    /// Preconditions (panics if violated):
+    ///
+    ///   - u.data must not be null
+    ///   - u.num_elements must be >= 1.
+    virtual void pushToUpdateQueue(const Data& u) = 0;
 
     // Use with any contiguous, movable or copyable container with a
     // data() and size() method.
     template<typename Container>
-    void update(Container&& data, UpdateParams params) {
+    bool update(Container&& data, UpdateParams params) {
         using C = std::decay_t<Container>;
         using T = std::decay_t<decltype(*data.data())>;
         auto shared_data = std::make_shared<C>(std::forward<Container>(data));
-
-        update({
-            .data = std::shared_ptr<void>(shared_data, shared_data->data()),
-            .data_type = sophus::RuntimePixelType::fromTemplate<T>(),
-            .num_elements = shared_data->size(),
-            .params = params,
+        auto shared_void = std::shared_ptr<void>(shared_data, shared_data->data());
+        if (shared_void == nullptr) {
+          return false;
+        }
+        pushToUpdateQueue({
+                .data = shared_void,
+                .data_type = sophus::RuntimePixelType::fromTemplate<T>(),
+                .num_elements = shared_data->size(),
+                .params = params,
         });
+        return true;
     }
 
     virtual void sync() const = 0;

@@ -93,6 +93,7 @@ public:
         : Var(value, VarMeta(name, 0., 0.,0., flags))
     {
     }
+     
 
     Var(const std::string& name, const T& value, bool toggle)
         : Var(value, VarMeta(name, 0., 0.,0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE))
@@ -166,6 +167,10 @@ public:
     // N.B. mutable because it is a cached value and Get() is advertised as const.
     mutable std::shared_ptr<VarValueT<T>> var;
 };
+
+inline Var<bool> Button(const std::string& name){
+    return Var(true, VarMeta(name, 0., 0.,0., META_FLAG_TOGGLE) );
+}
 
 template<typename T>
 inline std::ostream& operator<<(std::ostream& s, Var<T>& rhs)

@@ -55,9 +55,12 @@ struct DeviceGlBuffer : public DeviceBuffer
         };
     }
 
-    void update(const Data& data) override {
+    void pushToUpdateQueue(const Data& u) override {
+        FARM_CHECK(u.data);
+        FARM_CHECK_GE(u.num_elements, 0);
+
         std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
-        updates_.push_back(data);
+        updates_.push_back(u);
         // sync();
     }
 
@@ -92,8 +95,11 @@ struct DeviceGlBuffer : public DeviceBuffer
 
     void applyUpdateNow(const Data& u) const
     {
-        PANGO_CHECK(u.data);
-        PANGO_CHECK(u.num_elements);
+   FARM_CHECK(u.data);
+                        FARM_CHECK_GE(u.num_elements, 0);        
+                        if (u.num_elements == 0) {
+            return;
+        }
 
         if(gl_id_ == 0 /* || incompatible...  */) {
             data_type_ = u.data_type;
