@@ -2,9 +2,12 @@ name: Build
 
 push:
     branches: [ 
-      master, pango 
+      master, pango2
     ]
 pull_request:
+    branches: [ 
+      master, pango2
+    ]
 
 env:
   BUILD_TYPE: Release
