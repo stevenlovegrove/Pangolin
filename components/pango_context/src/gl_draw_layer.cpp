@@ -280,7 +280,10 @@ struct DrawLayerImpl : public DrawLayer {
             Eigen::Vector2d dim = cam_bounds.range().head<2>();
             return dim.x() / dim.y();
         }
-        return 0.0;
+        if(render_state_.camera.imageSize().width && render_state_.camera.imageSize().height) {
+            return (double)render_state_.camera.imageSize().width / (double)render_state_.camera.imageSize().height;
+        }
+        return 1.0;
     };
 
     void add(const Shared<Drawable>& r, In domain, const std::string& name ) override {
