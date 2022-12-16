@@ -169,8 +169,13 @@ public:
 };
 
 inline Var<bool> Button(const std::string& name){
-    return Var(true, VarMeta(name, 0., 0.,0., META_FLAG_TOGGLE) );
+    return Var(true, VarMeta(name, 0., 0.,0., META_FLAG_NONE));
 }
+
+inline Var<bool> Checkbox(const std::string& name, bool val){
+    return Var(val, VarMeta(name, 0., 0.,0., META_FLAG_TOGGLE));
+}
+
 
 template<typename T>
 inline std::ostream& operator<<(std::ostream& s, Var<T>& rhs)
