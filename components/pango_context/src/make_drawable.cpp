@@ -4,7 +4,7 @@
 
 namespace pangolin{
 
-Shared<Drawable> DrawableConversionTraits<Draw::Shape>::makeDrawable(const Draw::Shape& x) {
+Shared<Drawable> DrawableConversionTraits<draw::Shape>::makeDrawable(const draw::Shape& x) {
     auto prims = DrawnPrimitives::Create({
         .element_type=DrawnPrimitives::Type::shapes,
         .default_size = x.size,
@@ -15,7 +15,7 @@ Shared<Drawable> DrawableConversionTraits<Draw::Shape>::makeDrawable(const Draw:
     return prims;
 }
 
-Shared<Drawable> DrawableConversionTraits<Draw::Cube>::makeDrawable(const Draw::Cube& cube) {
+Shared<Drawable> DrawableConversionTraits<draw::Cube>::makeDrawable(const draw::Cube& cube) {
  auto prims = DrawnPrimitives::Create({
         .element_type=DrawnPrimitives::Type::triangles,
     });
@@ -129,7 +129,7 @@ Shared<Drawable> DrawableConversionTraits<Draw::Cube>::makeDrawable(const Draw::
   return prims;
 }
 
-Shared<Drawable> DrawableConversionTraits<Draw::Icosphere>::makeDrawable(const Draw::Icosphere& sphere){
+Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(const draw::Icosphere& sphere){
     auto prims = DrawnPrimitives::Create({
         .element_type=DrawnPrimitives::Type::triangles,
     });
@@ -218,19 +218,103 @@ Shared<Drawable> DrawableConversionTraits<Draw::Icosphere>::makeDrawable(const D
   return prims;
 }
 
-Shared<Drawable> DrawableConversionTraits<Draw::CheckerPlane>::makeDrawable(const Draw::CheckerPlane& ) {
+Shared<Drawable> DrawableConversionTraits<draw::CheckerPlane>::makeDrawable(const draw::CheckerPlane& ) {
     auto board = DrawnSolids::Create({
         .object_type=DrawnSolids::Type::checkerboard,
     });
     return board;
 }
 
-Shared<Drawable> DrawableConversionTraits<Draw::Axes>::makeDrawable(const Draw::Axes& axes) {
+Shared<Drawable> DrawableConversionTraits<draw::Axes>::makeDrawable(const draw::Axes& axes) {
     auto prims = DrawnPrimitives::Create({
         .element_type=DrawnPrimitives::Type::axes,
     });
     prims->vertices->update(axes.drawable_from_axis_poses, {});
     prims->default_size = axes.scale;
     return prims;
+}
+
+Shared<Drawable> DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
+    const std::vector<draw::Line3>& lines) {
+    std::vector<Eigen::Vector3f> vertices;
+    std::vector<Color> colors;
+
+    auto prims = DrawnPrimitives::Create({
+        .element_type=DrawnPrimitives::Type::lines,
+    });
+
+    for (draw::Line3 const& line : lines) {
+        vertices.push_back(line.p0);
+        vertices.push_back(line.p1);
+        colors.push_back(line.color);
+        colors.push_back(line.color);
+    }
+    prims->vertices->update(vertices, {});
+    prims->colors->update(colors, {});
+
+    return prims;
+}
+
+Shared<Drawable> DrawableConversionTraits<draw::CameraFrustum>::makeDrawable(
+    const draw::CameraFrustum& frustum) {
+  std::vector<draw::Line3> lines;
+
+  Eigen::Vector2d left(
+      -0.5, 0.5 * frustum.camera.imageSize().height - 0.25);
+  Eigen::Vector2d right(
+      frustum.camera.imageSize().width - 0.5,
+      0.5 * frustum.camera.imageSize().height - 0.25);
+  Eigen::Vector2d top(
+      0.5 * frustum.camera.imageSize().width - 0.25, -0.5);
+  Eigen::Vector2d bottom(
+      0.5 * frustum.camera.imageSize().width - 0.25,
+      frustum.camera.imageSize().height - 0.5);
+
+  Eigen::Vector3d top_near =
+      frustum.near * frustum.camera.camUnproj(top, 1.0);
+  Eigen::Vector3d top_far =
+      frustum.far * frustum.camera.camUnproj(top, 1.0);
+
+  Eigen::Vector3d right_near =
+      frustum.near * frustum.camera.camUnproj(right, 1.0);
+  Eigen::Vector3d right_far =
+      frustum.far * frustum.camera.camUnproj(right, 1.0);
+
+  Eigen::Vector3d left_near =
+      frustum.near * frustum.camera.camUnproj(left, 1.0);
+  Eigen::Vector3d left_far =
+      frustum.far * frustum.camera.camUnproj(left, 1.0);
+
+  Eigen::Vector3d bottom_near =
+      frustum.near * frustum.camera.camUnproj(bottom, 1.0);
+  Eigen::Vector3d bottom_far =
+      frustum.far * frustum.camera.camUnproj(bottom, 1.0);
+
+  Eigen::Vector3d top_right_near = 0.5 * top_near + 0.5 * right_near;
+  Eigen::Vector3d top_left_near = 0.5 * top_near + 0.5 * left_near;
+  Eigen::Vector3d bottom_right_near = 0.5 * bottom_near + 0.5 * right_near;
+  Eigen::Vector3d bottom_left_near = 0.5 * bottom_near + 0.5 * left_near;
+
+  Eigen::Vector3d top_right_far = 0.5 * top_far + 0.5 * right_far;
+  Eigen::Vector3d top_left_far = 0.5 * top_far + 0.5 * left_far;
+  Eigen::Vector3d bottom_right_far = 0.5 * bottom_far + 0.5 * right_far;
+  Eigen::Vector3d bottom_left_far = 0.5 * bottom_far + 0.5 * left_far;
+
+  lines.emplace_back(top_right_near, top_right_far, frustum.color);
+  lines.emplace_back(top_left_near, top_left_far, frustum.color);
+  lines.emplace_back(bottom_right_near, bottom_right_far, frustum.color);
+  lines.emplace_back(bottom_left_near, bottom_left_far, frustum.color);
+
+  lines.emplace_back(top_left_near, top_right_near, frustum.color);
+  lines.emplace_back(top_right_near, bottom_right_near, frustum.color);
+  lines.emplace_back(bottom_right_near, bottom_left_near, frustum.color);
+  lines.emplace_back(bottom_left_near, top_left_near, frustum.color);
+
+  lines.emplace_back(top_left_far, top_right_far, frustum.color);
+  lines.emplace_back(top_right_far, bottom_right_far, frustum.color);
+  lines.emplace_back(bottom_right_far, bottom_left_far, frustum.color);
+  lines.emplace_back(bottom_left_far, top_left_far, frustum.color);
+
+  return DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(lines);
 }
 }

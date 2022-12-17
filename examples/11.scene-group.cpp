@@ -26,11 +26,11 @@ int main( int argc, char** argv )
     });
 
     // objects to draw
-    auto checker_plane = makeDrawable(Draw::CheckerPlane{});
+    auto checker_plane = makeDrawable(draw::CheckerPlane{});
     auto axis = makeDrawable(sophus::SE3f());
-    auto star = makeDrawable(Draw::Shape{ .type=DrawnPrimitives::Shape::hollow_star });
-    auto heart = makeDrawable(Draw::Shape{.type=DrawnPrimitives::Shape::hollow_heart});
-    auto square = makeDrawable(Draw::Shape{.type=DrawnPrimitives::Shape::hollow_box});
+    auto star = makeDrawable(draw::Shape{ .type=DrawnPrimitives::Shape::hollow_star });
+    auto heart = makeDrawable(draw::Shape{.type=DrawnPrimitives::Shape::hollow_heart});
+    auto square = makeDrawable(draw::Shape{.type=DrawnPrimitives::Shape::hollow_box});
 
     // Set the position of the star within its group
     star->pose.parent_from_drawable = sophus::SE3d::trans(1.0, 0.0, 1.0);

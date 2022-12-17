@@ -40,7 +40,7 @@ int main( int argc, char** argv )
 
 
     Var<std::function<void(void)>> ui_add_plane("ui.add_plane", [&](){
-        scene->addNamedInScene(unique_name, Draw::CheckerPlane{});
+        scene->addNamedInScene(unique_name, draw::CheckerPlane{});
     });
 
     Var<std::function<void(void)>> ui_add_axis("ui.add_axis", [&](){
@@ -48,10 +48,19 @@ int main( int argc, char** argv )
     });
 
     Var<std::function<void(void)>> ui_add_cube("ui.add_cube", [&](){
-        scene->addNamedInSceneAt(unique_name, pangolin::Draw::Cube{}, sophus::SE3d::trans(5.0, 0.0, 1.0));
+        scene->addNamedInSceneAt(unique_name, pangolin::draw::Cube{}, sophus::SE3d::trans(5.0, 0.0, 1.0));
     });
 
-    scene->addNamedInScene(unique_name, Draw::CheckerPlane{});
+    Var<std::function<void(void)>> ui_add_camera("ui.add_camera", [&](){
+        scene->addNamedInSceneAt(
+            unique_name, 
+            pangolin::draw::CameraFrustum{.camera 
+                = sophus::CameraModel::createDefaultPinholeModel(
+                    sophus::ImageSize(640, 480))}, 
+            sophus::SE3d::trans(5.0, 0.0, 1.0));
+    });
+
+    scene->addNamedInScene(unique_name, draw::CheckerPlane{});
 
     context->setLayout(widgets | scene);
 

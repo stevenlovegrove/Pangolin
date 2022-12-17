@@ -68,7 +68,7 @@ int main( int argc, char** argv )
 
     sophus::SE3d scene_from_parent = sophus::Se3F64::transZ(0.2);
     scene->addInScene(checker_plane);
-    scene->addInSceneAt(Draw::Axes{.drawable_from_axis_poses = parent_from_axis_poses}, scene_from_parent);
+    scene->addInSceneAt(draw::Axes{.drawable_from_axis_poses = parent_from_axis_poses}, scene_from_parent);
 
     context->setLayout( scene);
 
