@@ -3,6 +3,7 @@
 #include <pangolin/maths/camera_look_at.h>
 #include <pangolin/maths/min_max.h>
 #include <pangolin/gui/layer_group.h>
+#include <pangolin/gui/drawn_checker.h>
 #include <pangolin/gui/draw_layer_handler.h>
 #include <pangolin/gui/drawable.h>
 #include <sophus/sensor/camera_model.h>
@@ -51,12 +52,15 @@ struct DrawLayer : public Layer
     virtual void setCameraFromWorld(const sophus::Se3<double>&) = 0;
     virtual void setClipViewTransform(sophus::Sim2<double>&) = 0;
     virtual void setNearFarPlanes(const MinMax<double>&) = 0;
-
-    virtual void add(const Shared<Drawable>& r, In domain, const std::string& name = "") = 0;
+    virtual void add(const Shared<Drawable>& r, 
+                     In domain, 
+                     const std::string& name = "") = 0;
     virtual std::shared_ptr<Drawable> get(const std::string& name) const = 0;
     virtual bool remove(const Shared<Drawable>& r) = 0;
     virtual bool remove(const std::string& name) = 0;
     virtual void clear(std::optional<In> domain = std::nullopt) = 0;
+    virtual void updateBackgroundImage(const sophus::IntensityImage<>& image) = 0;
+
 
     // Convenience method to add several drawables together
     template<typename ...Ts>
@@ -87,7 +91,8 @@ struct DrawLayer : public Layer
     }
 
     template<typename T>
-    auto addNamedInSceneAt(const std::string& name, const T& r, const sophus::Se3F64& parent_from_drawable) {
+    auto addNamedInSceneAt(const std::string& name, const T& r, 
+                           const sophus::Se3F64& parent_from_drawable) {
         auto d = DrawableConversionTraits<T>::makeDrawable(r);
         d->pose.parent_from_drawable = parent_from_drawable;
         add(d, In::scene, name);
@@ -109,7 +114,6 @@ struct DrawLayer : public Layer
     void addNamedInPixels(const std::string& name, const T& r) {
         add(DrawableConversionTraits<T>::makeDrawable(r), In::pixels, name);
     }
-
 
     struct Params {
         std::string name = "";

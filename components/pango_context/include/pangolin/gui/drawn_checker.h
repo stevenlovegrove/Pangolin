@@ -4,8 +4,7 @@
 #include <pangolin/maths/conventions.h>
 #include <pangolin/render/device_texture.h>
 #include <pangolin/render/colormap.h>
-
-#include <pangolin/gui/draw_layer.h>
+#include <pangolin/gui/drawable.h>
 
 namespace pangolin
 {

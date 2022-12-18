@@ -6,6 +6,8 @@
 #include <pangolin/render/device_texture.h>
 #include <pangolin/gl/gl.h>
 #include <pangolin/var/var.h>
+#include <pangolin/gui/drawn_image.h>
+
 
 #include "camera_utils.h"
 #include "gl_utils.h"
@@ -377,6 +379,14 @@ struct DrawLayerImpl : public DrawLayer {
             return anything_erased;
         }
     };
+
+    void updateBackgroundImage(const sophus::IntensityImage<>& image) {
+        const sophus::CameraModel& camera 
+            = defaultOrthoCameraForImage(image);
+        this->setCamera(camera);
+        this->addNamedInPixels("---unique-background-image---", image);
+    }
+
 
     std::string name_;
     Size size_hint_;

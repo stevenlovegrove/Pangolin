@@ -68,21 +68,71 @@ struct Axes {
   float line_width = 1.5;
 };
 
+
+
+template<class T>
+struct Points3 {
+  std::vector<Eigen::Vector<T,3>> points;
+  Color color;
+  float size = 1.5f;
+};
+
+using Points3f = Points3<float>;
+using Points3d = Points3<double>;
+
+struct Line2 {
+ Line2() {}
+  Line2(
+      Eigen::Vector2f p0,
+      Eigen::Vector2f p1,
+      Color color = Color::white())
+      : a(p0), b(p1), color(color) {}
+  Line2(
+      Eigen::Vector2d p0,
+      Eigen::Vector2d p1,
+      Color color = Color::white())
+      : a(p0.cast<float>()), b(p1.cast<float>()), color(color) {}
+
+  Eigen::Vector3f toXy0A() const {
+    return Eigen::Vector3f(a.x(), a.y(), 0.f);
+  }
+
+    Eigen::Vector3f toXy0B() const {
+    return Eigen::Vector3f(b.x(), b.y(), 0.f);
+  }
+
+  Eigen::Vector2f a = Eigen::Vector2f::Zero();
+  Eigen::Vector2f b = Eigen::Vector2f::Zero();
+  Color color = Color::white();
+};
+
 struct Line3 {
- Line3() {}
+  Line3() {}
+
+  Line3(
+      Eigen::Vector3f p0,
+      Eigen::Vector3f p1)
+      : a(p0), b(p1)  {}
   Line3(
       Eigen::Vector3f p0,
       Eigen::Vector3f p1,
-      Color color = Color::white())
-      : p0(p0), p1(p1), color(color) {}
+       Color color)
+      : Line3(p0,p1) {
+    this-> color = color;
+  }
+
+  Line3(
+      Eigen::Vector3d p0,
+      Eigen::Vector3d p1)
+      : Line3(p0.cast<float>().eval(), p1.cast<float>().eval()) {}
   Line3(
       Eigen::Vector3d p0,
       Eigen::Vector3d p1,
-      Color color = Color::white())
-      : p0(p0.cast<float>()), p1(p1.cast<float>()), color(color) {}
+      Color color)
+      : Line3(p0.cast<float>().eval(), p1.cast<float>().eval(), color) {}
 
-  Eigen::Vector3f p0 = Eigen::Vector3f::Zero();
-  Eigen::Vector3f p1 = Eigen::Vector3f::Zero();
+  Eigen::Vector3f a = Eigen::Vector3f::Zero();
+  Eigen::Vector3f b = Eigen::Vector3f::Zero();
   Color color = Color::white();
 };
 
@@ -94,8 +144,6 @@ struct CameraFrustum {
 };
 
 }
-
-
 
 template<>
 struct DrawableConversionTraits<draw::Shape> {
@@ -155,8 +203,24 @@ static Shared<Drawable> makeDrawable(const draw::Axis& x) {
 };
 
 template<>
+struct DrawableConversionTraits<draw::Points3f> {
+static Shared<Drawable> makeDrawable(const draw::Points3f& x);
+};
+
+template<>
+struct DrawableConversionTraits<draw::Points3d> {
+static Shared<Drawable> makeDrawable(const draw::Points3d& x);
+};
+
+
+template<>
 struct DrawableConversionTraits<std::vector<draw::Line3>> {
 static Shared<Drawable> makeDrawable(const std::vector<draw::Line3>& x);
+};
+
+template<>
+struct DrawableConversionTraits<std::vector<draw::Line2>> {
+static Shared<Drawable> makeDrawable(const std::vector<draw::Line2>& x);
 };
 
 

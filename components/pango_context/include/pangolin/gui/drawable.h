@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <pangolin/render/device_texture.h>
+#include <pangolin/maths/min_max.h>
 
 namespace pangolin
 {

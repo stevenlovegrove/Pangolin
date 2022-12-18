@@ -234,6 +234,38 @@ Shared<Drawable> DrawableConversionTraits<draw::Axes>::makeDrawable(const draw::
     return prims;
 }
 
+Shared<Drawable> DrawableConversionTraits<draw::Points3f>::makeDrawable(
+    const draw::Points3f& points) {
+    std::vector<Color> colors(points.points.size(), points.color);
+
+    auto prims = DrawnPrimitives::Create({
+        .element_type=DrawnPrimitives::Type::points,
+    });
+
+    prims->vertices->update(points.points, {});
+    prims->colors->update(colors, {});
+    return prims;
+}
+
+Shared<Drawable> DrawableConversionTraits<draw::Points3d>::makeDrawable(
+    const draw::Points3d& points) {
+    std::vector<Color> colors;
+        std::vector<Eigen::Vector3f> vertices;
+
+
+    auto prims = DrawnPrimitives::Create({
+        .element_type=DrawnPrimitives::Type::points,
+    });
+
+    for (auto const& p : points.points) {
+        vertices.push_back(p.cast<float>());
+        colors.push_back(points.color);
+    }
+    prims->vertices->update(vertices, {});
+    prims->colors->update(colors, {});
+    return prims;
+}
+
 Shared<Drawable> DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
     const std::vector<draw::Line3>& lines) {
     std::vector<Eigen::Vector3f> vertices;
@@ -244,8 +276,8 @@ Shared<Drawable> DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawabl
     });
 
     for (draw::Line3 const& line : lines) {
-        vertices.push_back(line.p0);
-        vertices.push_back(line.p1);
+        vertices.push_back(line.a);
+        vertices.push_back(line.b);
         colors.push_back(line.color);
         colors.push_back(line.color);
     }
@@ -254,6 +286,27 @@ Shared<Drawable> DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawabl
 
     return prims;
 }
+
+Shared<Drawable> DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
+    const std::vector<draw::Line2>& lines) {
+    std::vector<Eigen::Vector3f> vertices;
+    std::vector<Color> colors;
+
+    auto prims = DrawnPrimitives::Create({
+        .element_type=DrawnPrimitives::Type::lines,
+    });
+
+    for (draw::Line2 const& line : lines) {
+        vertices.push_back(line.toXy0A());
+        vertices.push_back(line.toXy0B());
+        colors.push_back(line.color);
+        colors.push_back(line.color);
+    }
+    prims->vertices->update(vertices, {});
+    prims->colors->update(colors, {});
+    return prims;
+}
+
 
 Shared<Drawable> DrawableConversionTraits<draw::CameraFrustum>::makeDrawable(
     const draw::CameraFrustum& frustum) {
