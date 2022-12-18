@@ -153,14 +153,14 @@ void GlWidgetLayer::UpdateCharsVBO(float widget_width)
         // y-position is roughly center with fudge factor since text is balanced low.
         const float y_pos = (i+0.5)*widget_height + 0.3*font_scale*font->font_height_px;
 
-        AddTextToHostBuffer(toUtf32(w.text), {text_pad, y_pos}, host_vbo_pos, host_vbo_index);
+        AddTextToHostBuffer(toUtf32(w.text), {text_pad, y_pos-0.175*font->font_height_px}, host_vbo_pos, host_vbo_index);
 
         //            if(w.widget_type == WidgetType::slider)
         if(!w.value.empty())
         {
             const auto utf32 = toUtf32(w.value);
             const float width = TextWidthPix(utf32);
-            AddTextToHostBuffer(utf32, {widget_width - text_pad - width, y_pos}, host_vbo_pos, host_vbo_index);
+            AddTextToHostBuffer(utf32, {widget_width - text_pad - width, y_pos+0.175*font->font_height_px}, host_vbo_pos, host_vbo_index);
         }
     }
 
