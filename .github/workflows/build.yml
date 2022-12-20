@@ -1,0 +1,218 @@
+name: Build
+
+on: [push, pull_request]
+
+env:
+  BUILD_TYPE: Release
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: ubuntu-20.04
+          package_manager: "apt"
+
+        - os: macos-11.0
+          package_manager: "brew"
+
+        # - os: windows-2019
+        #   package_manager: "vcpkg"
+
+    steps:
+    - name: Checkout Eigen
+      uses: actions/checkout@v2
+      with:
+        path: ${{runner.workspace}}/Pangolin/eigen
+        repository: 'eigen-mirror/eigen'
+        ref: e7248b26a1ed53fa030c5c459f7ea095dfd276ac
+
+    - name: Checkout expected
+      uses: actions/checkout@v2
+      with:
+        path: ${{runner.workspace}}/Pangolin/expected
+        repository: 'TartanLlama/expected'
+        ref: b74fecd4448a1a5549402d17ddc51e39faa5020c
+
+    - name: Checkout fmt
+      uses: actions/checkout@v2
+      with:
+        path: ${{runner.workspace}}/Pangolin/fmt
+        repository: 'fmtlib/fmt'
+        ref: 8.1.1
+
+    - name: Checkout farm-ng-cmake
+      uses: actions/checkout@v2
+      with:
+        path: ${{runner.workspace}}/Pangolin/farm_ng_cmake
+        repository: 'farm-ng/farm-ng-cmake'
+        ref: 6e8cbd78b74cc2e6db078fbcef4348229b8a0cf2
+
+    - name: Checkout farm-ng-core
+      uses: actions/checkout@v2
+      with:
+        path: ${{runner.workspace}}/Pangolin/farm_ng_core
+        repository: 'farm-ng/farm-ng-core'
+        ref: 441262f92adadd533228957b01689a7a4e6644af
+
+    - name: Checkout Sophus
+      uses: actions/checkout@v2
+      with:
+        path: ${{runner.workspace}}/Pangolin/Sophus
+        repository: 'strasdat/Sophus'
+        ref: 735a2b6d492ceada4d5f744f0f302baae5c17644
+
+    - name: Checkout Pangolin
+      uses: actions/checkout@v2
+      with:
+        path: ${{runner.workspace}}/Pangolin/Pangolin
+
+    - name: List CI files
+      run: |
+        find ${{runner.workspace}} -not -path '*/.*'
+
+    - name: Install Dependencies
+      run: |
+        echo "Using ${{matrix.package_manager}} as package manager."
+        echo "vcpkg location: $(which vcpkg)"
+        echo "CMake toolchain file: $TOOLCHAIN_FILE"
+        ${{runner.workspace}}/Pangolin/Pangolin/scripts/install_prerequisites.sh -v -u -m ${{matrix.package_manager}} required
+
+    - name: Build Dependencies
+      run: |
+        set -x
+
+        cmakeconf() {
+          cmake \
+            -S ${{runner.workspace}}/Pangolin/$1 \
+            -B ${{runner.workspace}}/Pangolin/$1/build \
+            -DFARM_NG_BUILD_TESTS=off \
+            -DBUILD_FARM_NG_PROTOS=OFF \
+            -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+            -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" \
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/Pangolin/usr \
+            -DCMAKE_MODULE_PATH=${{runner.workspace}}/Pangolin/usr/share/cmake \
+            ${@:2}
+        }
+        cmakeconfbuild() {
+          cmakeconf "$@"
+          cmake --build ${{runner.workspace}}/Pangolin/$1/build --config $BUILD_TYPE
+        }
+        cmakeconfbuildinstall() {
+          cmakeconfbuild "$@"
+          cmake --build ${{runner.workspace}}/Pangolin/$1/build -- install
+        }
+
+        cmakeconfbuildinstall eigen
+        cmakeconfbuildinstall fmt -DFMT_TEST=off -DBUILD_SHARED_LIBS=on
+        cmakeconfbuildinstall expected -DEXPECTED_BUILD_TESTS=off
+        cmakeconfbuildinstall farm_ng_cmake
+        cmakeconfbuildinstall farm_ng_core
+        cmakeconfbuild Sophus -DBUILD_SOPHUS_TESTS=OFF
+
+    - name: Configure Pangolin
+      run: |
+        cmake \
+        -S ${{runner.workspace}}/Pangolin/Pangolin \
+          -B ${{runner.workspace}}/Pangolin/Pangolin/build \
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/Pangolin/usr \
+          -DCMAKE_MODULE_PATH=${{runner.workspace}}/Pangolin/usr/share/cmake \
+          -DSophus_DIR=${{runner.workspace}}/Pangolin/Sophus/build \
+          -Dfarm_ng_core_DIR=${{runner.workspace}}/Pangolin/farm_ng_core/build \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+          -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"
+
+    - name: Build Pangolin
+      run: cmake --build ${{runner.workspace}}/Pangolin/Pangolin/build --config $BUILD_TYPE
+
+    # - name: "(vcpkg only) Setup cache key"
+    #   if: ${{ matrix.package_manager == 'vcpkg' }}
+    #   run: |
+    #     export PACKAGES=$($GITHUB_WORKSPACE/scripts/install_prerequisites.sh -l -m ${{matrix.package_manager}} all)
+    #     echo "PACKAGES=$PACKAGES" >> $GITHUB_ENV
+
+    # - name: "(vcpkg only) Restore any cached ports"
+    #   uses: lukka/run-vcpkg@v6
+    #   if: ${{ matrix.package_manager == 'vcpkg' }}
+    #   with:
+    #     setupOnly: true
+    #     vcpkgDirectory: '${{github.workspace}}/scripts/vcpkg'
+    #     appendedCacheKey: '${{env.PACKAGES}}'
+    #     vcpkgTriplet: x64-windows
+
+    # - name: "(vcpkg only) Setup CMake Toolchain file"
+    #   if: ${{ matrix.package_manager == 'vcpkg' }}
+    #   run: |
+    #     export TOOLCHAIN_FILE="${{github.workspace}}/scripts/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    #     echo "${{github.workspace}}/scripts/vcpkg" >> $GITHUB_PATH
+    #     echo "TOOLCHAIN_FILE=$TOOLCHAIN_FILE" >> $GITHUB_ENV
+
+    # - name: Configure CMake
+    #   run: |
+    #     cmake -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" -DBUILD_TESTS=ON
+
+    # - name: Build
+    #   run: cmake --build build --config $BUILD_TYPE
+
+    - name: Run all tests
+      working-directory: ${{runner.workspace}}/Pangolin/Pangolin/build
+      run: ctest
+
+  # emscripten:
+  #   runs-on: ubuntu-20.04
+
+  #   steps:
+  #   - name: Checkout Pangolin
+  #     uses: actions/checkout@v2
+  #     with:
+  #       path: pangolin
+
+  #   - name: Checkout Eigen
+  #     uses: actions/checkout@v2
+  #     with:
+  #       path: eigen
+  #       repository: 'libigl/eigen'
+
+  #   - name: Create Build Directories
+  #     run: |
+  #       cmake -E make_directory ${{runner.workspace}}/eigen-build
+  #       cmake -E make_directory ${{runner.workspace}}/pangolin-build
+
+  #   - name: Start Emscripten Docker
+  #     run: docker run -dit --name emscripten -v ${{runner.workspace}}:/src emscripten/emsdk:latest bash
+
+  #   - name: Configure Eigen
+  #     run: docker exec -t -w /src/eigen-build emscripten cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE /src/Pangolin/eigen
+
+  #   - name: Configure Pangolin
+  #     run: docker exec -t -w /src/pangolin-build emscripten emcmake cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DEigen3_DIR=/src/eigen-build /src/Pangolin/pangolin
+
+  #   - name: Build Pangolin
+  #     run: docker exec -t -w /src/pangolin-build emscripten cmake --build .
+
+  #   - name: Copy Examples to www folder
+  #     run: |
+  #       mkdir -p ${{runner.workspace}}/www/emscripten
+  #       rsync -zarvm --include="*/" --include="*.html" --include="*.js" --include="*.wasm" --exclude="*" ${{runner.workspace}}/pangolin-build/examples ${{runner.workspace}}/www/emscripten
+
+  #   - name: Copy README to www folder
+  #     run: |
+  #       cp "${{github.workspace}}/pangolin/README.md" "${{runner.workspace}}/www/index.md"
+
+  #   - name: Deploy Examples to GitHub Pages (for pushes to master)
+  #     if: success() && (github.ref == 'refs/heads/master')
+  #     uses: crazy-max/ghaction-github-pages@v2.2.0
+  #     with:
+  #       target_branch: gh-pages
+  #       keep_history: true
+  #       # build_dir path relative to ${{runner.workspace}}/Pangolin
+  #       build_dir: ../www
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

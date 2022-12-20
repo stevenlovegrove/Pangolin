@@ -1,5 +1,4 @@
-#include <EGL/egl.h>
-#include <linux/input.h>
+
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/gl/color.h>
 #include <pangolin/gl/gldraw.h>
@@ -8,15 +7,30 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <xkbcommon/xkbcommon.h>
 
 #include <cstdlib>
 #include <mutex>
+
+// clang-format(off)
+#include <EGL/egl.h>
+#include <linux/input.h>
+#include <xkbcommon/xkbcommon.h>
 
 #include <wayland-client.h>
 #include <wayland-cursor.h>
 #include <wayland-egl.h>
 #include <xdg-shell-client-protocol.h>
+// Try to fix horrible X defines that show up...
+#ifdef Success
+#undef Success
+#endif
+#ifdef True
+#undef True
+#endif
+#ifdef False
+#undef False
+#endif
+// clang-format(on)
 
 #define WAYLAND_VERSION_GE(MAJ, MIN)                                           \
   WAYLAND_VERSION_MAJOR >= MAJ &&WAYLAND_VERSION_MINOR >= MIN
