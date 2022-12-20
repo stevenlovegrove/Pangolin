@@ -43,6 +43,10 @@ class MinMax {
     return allTrue(eval(min() <= x)) && allTrue(eval(x <= max()));
   }
 
+  auto fractionalPosition(Eigen::Array2d const& x) const {
+    return eval((x - pangolin::cast<double>(min())) / pangolin::cast<double>(range()));
+  }
+
   // Only applicable if minmax object is valid()
   auto range() const requires Differencable<TPixel> { return eval(max() - min()); }
   auto mid() const { return eval(min() + range() / 2); }

@@ -60,7 +60,7 @@ public:
     template<class... Args>
     static Shared<T> make(Args&&... args) {
         auto maybe = tryMake(std::forward<Args>(args)...);
-        if(!maybe) throw BadExpectedAccess(FARM_ERROR_ONLY());
+        if(!maybe) throw BadExpectedAccess(maybe.error());
         return *maybe;
     }
 

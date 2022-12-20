@@ -10,7 +10,10 @@ namespace pangolin
 // Summary of intermediate coordinate frames we may refer to, showing how points
 // transform from world coordinates through the rendering pipeline
 //
-// Window <- NDC <- Clip <- ImageZBuffer <- ImageDepth <- Camera <- World
+// Window <- NDC <- Clip <- Projection (u,v,zbuffer) <- Image (u,v,depth) <- Camera (x,y,z) <- World
+
+// Window: Pixel coordinates relative to the application window
+// NDC: Normalized Device Coordinates (x,y,z) \in R^3. (x,y,z) \in [-1, 1]
 
 Eigen::Matrix3d projectionImageFromCamera(
     Eigen::Vector2d focal_distance_pixels,

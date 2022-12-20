@@ -16,6 +16,12 @@ enum class ViewMode {
   best_guess
 };
 
+struct SelectionEvent {
+    Interactive::Event trigger_event;
+    MinMax<Eigen::Array2d> in_pixel_selection;
+    bool in_progress;
+};
+
 struct DrawLayerHandler {
  public:
 
@@ -32,8 +38,8 @@ struct DrawLayerHandler {
   virtual bool handleEvent(
     const Context& context,
     const Interactive::Event& event,
-    Eigen::Matrix3d clip_from_window,
-    Eigen::Matrix3d pixel_from_window,
+    const Eigen::Array2d& pos_clip,
+    const Eigen::Array2d& pos_img,
     Eigen::Array2d clip_aspect_scale,
     DrawLayer& layer,
     DrawLayerRenderState& render_state
@@ -42,13 +48,15 @@ struct DrawLayerHandler {
   virtual ViewMode viewMode() = 0;
   virtual void setViewMode(ViewMode view_mode) = 0;
 
+  sigslot::signal<SelectionEvent> selection_signal;
+
   struct Params {
     Shared<DepthSampler> depth_sampler = DepthSampler::Create({});
     Eigen::Vector3d up_in_world = {0.0, 0.0, 1.0};
     MinMax<Eigen::Vector3d> camera_limits_in_world = {};
     ViewMode view_mode = ViewMode::best_guess;
   };
-  static std::unique_ptr<DrawLayerHandler> Create(Params const &);
+  static Shared<DrawLayerHandler> Create(Params const &);
 };
 
 }  // namespace pangolin

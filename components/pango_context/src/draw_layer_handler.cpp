@@ -234,8 +234,8 @@ class HandlerImpl : public DrawLayerHandler {
   bool handleEvent(
     const Context& context,
     const Interactive::Event& event,
-    Eigen::Matrix3d clip_from_window,
-    Eigen::Matrix3d pixel_from_window,
+    const Eigen::Array2d& p_clip,
+    const Eigen::Array2d& p_img,
     Eigen::Array2d clip_aspect_scale,
     DrawLayer& layer,
     DrawLayerRenderState& render_state
@@ -249,16 +249,12 @@ class HandlerImpl : public DrawLayerHandler {
 
     auto camera_limits_in_world = MinMax<Eigen::Vector3d>::open();
 
-    const Eigen::Array2d p_window = event.pointer_pos.pos_window;
-    const Eigen::Array2d p_clip = sophus::proj(clip_from_window * sophus::unproj(p_window.matrix()));
-    const Eigen::Array2d p_img = ((p_clip * Eigen::Array2d(1.0,-1.0) / clip_aspect_scale / 2.0) + 0.5) * toEigen(camera.imageSize()).cast<double>();
-
     double zdepth_cam = last_zcam_;
 
     if(depth_sampler_) {
       DepthSampler::SampleLocation location = {
         .pos_camera_pixel = p_img,
-        .pos_window = p_window
+        .pos_window = event.pointer_pos.pos_window
       };
       std::optional<DepthSampler::Sample> maybe_depth_sample =
         depth_sampler_->sampleDepth(location, 5, near_far, &context);
@@ -300,7 +296,7 @@ class HandlerImpl : public DrawLayerHandler {
             PANGO_WARN("Unexpected");
             return;
           }
-          if(arg.button_active == PointerButton::primary) {
+          if(arg.button_active == PointerButton::primary && !(event.modifier_active & ModifierKey::shift)) {
             if(view_mode_ == ViewMode::image_plane) {
               imagePointToPoint(info);
             }else{
@@ -319,6 +315,20 @@ class HandlerImpl : public DrawLayerHandler {
               down_state_ = state;
             }
           }
+        }
+
+        // When holding shift, selection is made
+        if(event.modifier_active & ModifierKey::shift) {
+          auto selection = MinMax<Eigen::Array2d>(p_img);
+          if(down_state_) {
+            selection.extend(down_state_->p_img);
+          }
+
+          selection_signal(SelectionEvent{
+            .trigger_event = event,
+            .in_pixel_selection = selection,
+            .in_progress = arg.action == PointerAction::down || arg.action == PointerAction::drag
+          });
         }
     },
     [&](const Interactive::ScrollEvent& arg) {
@@ -382,8 +392,8 @@ class HandlerImpl : public DrawLayerHandler {
   ViewMode view_mode_;
 };
 
-std::unique_ptr<DrawLayerHandler> DrawLayerHandler::Create(Params const& p) {
-  return std::make_unique<HandlerImpl>(p);
+Shared<DrawLayerHandler> DrawLayerHandler::Create(Params const& p) {
+  return Shared<HandlerImpl>::make(p);
 }
 
 }  // namespace pangolin

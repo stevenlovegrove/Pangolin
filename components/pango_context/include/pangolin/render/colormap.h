@@ -12,7 +12,8 @@ enum class Palette : unsigned int
     viridis,
     magma,
     inferno,
-    turbo
+    turbo,
+    coolwarm
 };
 
 template<Palette kPalette>
@@ -102,6 +103,20 @@ struct Colormap<Palette::turbo> {
         const static Eigen::Vector3f c4(-334.8351565777451, -69.31749712757485, 288.5858850615712);
         const static Eigen::Vector3f c5(218.7637218434795, 67.52150567819112, -305.2045772184957);
         const static Eigen::Vector3f c6(-52.88903478218835, -21.54527364654712, 110.5174647748972);
+        return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+    }
+};
+
+template<>
+struct Colormap<Palette::coolwarm> {
+    static Eigen::Vector3f color(float t) {
+        const static Eigen::Vector3f c0(0.227376,0.286898,0.752999);
+        const static Eigen::Vector3f c1(1.204846,2.314886,1.563499);
+        const static Eigen::Vector3f c2(0.102341,-7.369214,-1.860252);
+        const static Eigen::Vector3f c3(2.218624,32.578457,-1.643751);
+        const static Eigen::Vector3f c4(-5.076863,-75.374676,-3.704589);
+        const static Eigen::Vector3f c5(1.336276,73.453060,9.595678);
+        const static Eigen::Vector3f c6(0.694723,-25.863102,-4.558659);
         return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
     }
 };

@@ -176,6 +176,9 @@ struct DrawLayerImpl : public DrawLayer {
                 state.unproject_map->update(unprojmap);
             }, render_state.camera.modelVariant());
             state.unproject_map->sync();
+            PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+            PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+
         }
 
         const GraphicsProjection proj_type = render_state.camera.distortionType() == sophus::CameraDistortionType::orthographic ?
@@ -246,24 +249,19 @@ struct DrawLayerImpl : public DrawLayer {
     }
 
     bool handleEvent(const Context& context, const Event& event) override {
-        Eigen::Matrix3d clip_from_window = transformWindowFromClip(event.pointer_pos.region).inverse();
-        Eigen::Matrix3d pixel_from_window;
-        // TODO: implement this...
-        //  = (
-        //     transformWindowFromClip(event.pointer_pos.region) *
-        //     render_data_.clip_view *
-        //     render_data_.clip_aspect *
-        //     transformClipFromProjection(render_state_.camera.imageSize())
-        // ).inverse();
+        Eigen::Matrix4d clip_from_proj = render_data_.clip_view * render_data_.clip_aspect * transformClipFromProjection(render_state_.camera.imageSize());
+
+        const Eigen::Array2d pos_zero_one = event.pointer_pos.region.fractionalPosition(event.pointer_pos.pos_window.cast<double>());
+        const Eigen::Array2d pos_clip = (pos_zero_one * 2.0 - Eigen::Array2d(1.0,1.0)) * Eigen::Array2d(1.0,-1.0);
+        const Eigen::Array2d pos_img = (clip_from_proj.inverse() * Eigen::Vector4d(pos_clip.x(), pos_clip.y(), -1.0, 1.0)).head<2>();
 
         if(handler_->viewMode() == ViewMode::best_guess) {
             handler_->setViewMode( pixels_collection_.drawables.size() ? ViewMode::image_plane : ViewMode::freeview);
         }
 
+        Eigen::Matrix3d clip_from_window, pixel_from_window;
         return handler_->handleEvent(
-            context, event,
-            clip_from_window,
-            pixel_from_window,
+            context, event, pos_clip, pos_img,
             render_data_.clip_aspect_scale,
             *this, render_state_
         );

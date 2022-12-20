@@ -57,6 +57,19 @@ vec3 turbo(float t) {
     return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
 }
 
+// https://www.shadertoy.com/view/Nd3fR2
+// makes coolwarm colormap with polynimal 6
+vec3 coolwarm(float t) {
+    const vec3 c0 = vec3(0.227376,0.286898,0.752999);
+    const vec3 c1 = vec3(1.204846,2.314886,1.563499);
+    const vec3 c2 = vec3(0.102341,-7.369214,-1.860252);
+    const vec3 c3 = vec3(2.218624,32.578457,-1.643751);
+    const vec3 c4 = vec3(-5.076863,-75.374676,-3.704589);
+    const vec3 c5 = vec3(1.336276,73.453060,9.595678);
+    const vec3 c6 = vec3(0.694723,-25.863102,-4.558659);
+    return c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6)))));
+}
+
 // https://www.shadertoy.com/view/4dXXDX
 // if edge0 < x <= edge1, return 1.0, otherwise return 0
 float colormap_segment(float edge0, float edge1, float x)

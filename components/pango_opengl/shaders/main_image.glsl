@@ -52,5 +52,6 @@ void main()
     case 3u: color.xyz = magma(clamp(color.x,0.0,1.0)); return;
     case 4u: color.xyz = inferno(clamp(color.x,0.0,1.0)); return;
     case 5u: color.xyz = turbo(clamp(color.x,0.0,1.0)); return;
+    case 6u: color.xyz = coolwarm(clamp(color.x,0.0,1.0)); return;
   }
 }
