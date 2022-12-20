@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include <sophus/lie/se3.h>
+#include "eigen_concepts.h"
 
 #include <Eigen/Core>
+#include <sophus/lie/se3.h>
+
 #include <algorithm>
 #include <utility>
 #include <vector>
-
-#include "eigen_concepts.h"
 
 namespace pangolin
 {

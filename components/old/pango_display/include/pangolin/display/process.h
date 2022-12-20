@@ -37,23 +37,28 @@ namespace pangolin
 /// doesn't own the OpenGL Context. You can probably ignore these.
 namespace process
 {
-  PANGOLIN_EXPORT
-  void Resize(int width, int height);
+PANGOLIN_EXPORT
+void Resize(int width, int height);
 
-  PANGOLIN_EXPORT
-  void Keyboard(unsigned char key, int x, int y, bool pressed, KeyModifierBitmask key_modifiers);
+PANGOLIN_EXPORT
+void Keyboard(
+    unsigned char key, int x, int y, bool pressed,
+    KeyModifierBitmask key_modifiers);
 
-  PANGOLIN_EXPORT
-  void Mouse(int button, bool pressed, int x, int y, KeyModifierBitmask key_modifiers);
+PANGOLIN_EXPORT
+void Mouse(
+    int button, bool pressed, int x, int y, KeyModifierBitmask key_modifiers);
 
-  PANGOLIN_EXPORT
-  void MouseMotion( int x, int y, KeyModifierBitmask key_modifiers);
+PANGOLIN_EXPORT
+void MouseMotion(int x, int y, KeyModifierBitmask key_modifiers);
 
-  PANGOLIN_EXPORT
-  void PassiveMouseMotion(int x, int y, KeyModifierBitmask key_modifiers);
+PANGOLIN_EXPORT
+void PassiveMouseMotion(int x, int y, KeyModifierBitmask key_modifiers);
 
-  PANGOLIN_EXPORT
-  void SpecialInput(InputSpecial inType, float x, float y, float p1, float p2, float p3, float p4, KeyModifierBitmask key_modifiers);
-}
+PANGOLIN_EXPORT
+void SpecialInput(
+    InputSpecial inType, float x, float y, float p1, float p2, float p3,
+    float p4, KeyModifierBitmask key_modifiers);
+}  // namespace process
 
-}
+}  // namespace pangolin

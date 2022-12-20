@@ -29,6 +29,7 @@
 
 #include <functional>
 #include <ostream>
+#include <sstream>
 
 namespace pangolin
 {

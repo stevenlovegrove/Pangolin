@@ -1,5 +1,7 @@
 #include "gl_widget_layer.h"
 
+#include "gl_utils.h"
+
 #include <pangolin/context/context.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/gl/glsl_program.h>
@@ -13,8 +15,6 @@
 #include <codecvt>
 #include <locale>
 #include <string>
-
-#include "gl_utils.h"
 
 namespace pangolin
 {

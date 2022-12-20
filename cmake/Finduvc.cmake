@@ -7,7 +7,7 @@
 FIND_PATH(
   uvc_INCLUDE_DIRS
   NAMES libuvc/libuvc.h
-  PATHS 
+  PATHS
     ${CMAKE_SOURCE_DIR}/..
     /usr/include/
     /usr/local/include
@@ -22,7 +22,7 @@ FIND_LIBRARY(
     /usr/lib
     /usr/local/lib
     /opt/local/lib
-) 
+)
 
 IF (uvc_INCLUDE_DIRS AND uvc_LIBRARIES)
    SET(uvc_FOUND TRUE)

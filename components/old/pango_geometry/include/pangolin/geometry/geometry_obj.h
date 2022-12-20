@@ -27,7 +27,8 @@
 
 #include <pangolin/geometry/geometry.h>
 
-namespace pangolin {
+namespace pangolin
+{
 
 pangolin::Geometry LoadGeometryObj(const std::string& filename);
 

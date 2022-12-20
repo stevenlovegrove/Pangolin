@@ -8,14 +8,14 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <wayland-client.h>
-#include <wayland-cursor.h>
-#include <wayland-egl.h>
-#include <xdg-shell-client-protocol.h>
 #include <xkbcommon/xkbcommon.h>
 
 #include <cstdlib>
 #include <mutex>
+#include <wayland-client.h>
+#include <wayland-cursor.h>
+#include <wayland-egl.h>
+#include <xdg-shell-client-protocol.h>
 
 #define WAYLAND_VERSION_GE(MAJ, MIN)                                           \
   WAYLAND_VERSION_MAJOR >= MAJ &&WAYLAND_VERSION_MINOR >= MIN

@@ -1,10 +1,10 @@
 
+#include <Eigen/Core>
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/glsl_preprocessor.h>
 #include <pangolin/gl/uniform.h>
 #include <pangolin/utils/string.h>
 
-#include <Eigen/Core>
 #include <algorithm>
 #include <cctype>
 #include <filesystem>

@@ -1,3 +1,6 @@
+#include "camera_utils.h"
+#include "gl_utils.h"
+
 #include <pangolin/context/context.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/gl/gl.h>
@@ -9,9 +12,6 @@
 #include <pangolin/var/var.h>
 
 #include <unordered_map>
-
-#include "camera_utils.h"
-#include "gl_utils.h"
 
 using namespace sophus;
 

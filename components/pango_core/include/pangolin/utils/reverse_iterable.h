@@ -10,14 +10,15 @@ template <typename From, typename To>
 concept ConvertableTo = std::is_convertible_v<From, To>;
 
 template <typename T>
-concept Range = requires(T range) {
-                  {
-                    std::begin(range)
-                    } -> ConvertableTo<IteratorType<T>>;
-                  {
-                    std::end(range)
-                    } -> ConvertableTo<IteratorType<T>>;
-                };
+concept Range = requires(T range)
+{
+  {
+    std::begin(range)
+    } -> ConvertableTo<IteratorType<T>>;
+  {
+    std::end(range)
+    } -> ConvertableTo<IteratorType<T>>;
+};
 
 // https://stackoverflow.com/a/66053335
 

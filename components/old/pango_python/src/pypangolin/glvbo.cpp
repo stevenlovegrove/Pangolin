@@ -26,23 +26,50 @@
  */
 
 #include "glvbo.hpp"
+
 #include <pangolin/gl/glvbo.h>
 
-namespace py_pangolin {
+namespace py_pangolin
+{
 
-  void bind_glvbo(pybind11::module &m){
+void bind_glvbo(pybind11::module &m)
+{
+  m.def(
+      "MakeTriangleStripIboForVbo",
+      (pangolin::GlBuffer(*)(int, int)) & pangolin::MakeTriangleStripIboForVbo,
+      pybind11::arg("w"), pybind11::arg("h"),
+      pybind11::return_value_policy::move);
 
-    m.def("MakeTriangleStripIboForVbo", (pangolin::GlBuffer (*)(int, int))&pangolin::MakeTriangleStripIboForVbo, pybind11::arg("w"), pybind11::arg("h"), pybind11::return_value_policy::move);
+  m.def(
+      "RenderVbo",
+      (void (*)(pangolin::GlBuffer &, GLenum)) & pangolin::RenderVbo,
+      pybind11::arg("vbo"), pybind11::arg("mode") = GL_POINTS);
+  m.def(
+      "RenderVbo",
+      (void (*)(pangolin::GlBuffer &, const GLuint, GLenum)) &
+          pangolin::RenderVbo,
+      pybind11::arg("vbo"), pybind11::arg("count"),
+      pybind11::arg("mode") = GL_POINTS);
+  m.def(
+      "RenderVboCbo", &pangolin::RenderVboCbo, pybind11::arg("vbo"),
+      pybind11::arg("cbo"), pybind11::arg("draw_color") = true,
+      pybind11::arg("mode") = GL_POINTS);
+  m.def(
+      "RenderVboIbo", &pangolin::RenderVboIbo, pybind11::arg("vbo"),
+      pybind11::arg("ibo"), pybind11::arg("draw_mesh") = true);
+  m.def(
+      "RenderVboIboCbo", &pangolin::RenderVboIboCbo, pybind11::arg("vbo"),
+      pybind11::arg("ibo"), pybind11::arg("cbo"),
+      pybind11::arg("draw_mesh") = true, pybind11::arg("draw_color") = true);
+  m.def(
+      "RenderVboIboNbo", &pangolin::RenderVboIboNbo, pybind11::arg("vbo"),
+      pybind11::arg("ibo"), pybind11::arg("nbo"),
+      pybind11::arg("draw_mesh") = true, pybind11::arg("draw_normals") = true);
+  m.def(
+      "RenderVboIboCboNbo", &pangolin::RenderVboIboCboNbo, pybind11::arg("vbo"),
+      pybind11::arg("ibo"), pybind11::arg("cbo"), pybind11::arg("nbo"),
+      pybind11::arg("draw_mesh") = true, pybind11::arg("draw_color") = true,
+      pybind11::arg("draw_normals") = true);
+}
 
-    m.def("RenderVbo", (void(*)(pangolin::GlBuffer&, GLenum))&pangolin::RenderVbo, pybind11::arg("vbo"), pybind11::arg("mode")=GL_POINTS);
-    m.def("RenderVbo", (void(*)(pangolin::GlBuffer&, const GLuint, GLenum))&pangolin::RenderVbo, pybind11::arg("vbo"), pybind11::arg("count"), pybind11::arg("mode")=GL_POINTS);
-    m.def("RenderVboCbo", &pangolin::RenderVboCbo, pybind11::arg("vbo"), pybind11::arg("cbo"), pybind11::arg("draw_color")=true, pybind11::arg("mode")=GL_POINTS);
-    m.def("RenderVboIbo", &pangolin::RenderVboIbo, pybind11::arg("vbo"), pybind11::arg("ibo"), pybind11::arg("draw_mesh")=true);
-    m.def("RenderVboIboCbo", &pangolin::RenderVboIboCbo, pybind11::arg("vbo"), pybind11::arg("ibo"), pybind11::arg("cbo"), pybind11::arg("draw_mesh")=true, pybind11::arg("draw_color")=true);
-    m.def("RenderVboIboNbo", &pangolin::RenderVboIboNbo, pybind11::arg("vbo"), pybind11::arg("ibo"), pybind11::arg("nbo"), pybind11::arg("draw_mesh")=true, pybind11::arg("draw_normals")=true);
-    m.def("RenderVboIboCboNbo", &pangolin::RenderVboIboCboNbo, pybind11::arg("vbo"), pybind11::arg("ibo"), pybind11::arg("cbo"), pybind11::arg("nbo"), pybind11::arg("draw_mesh")=true, pybind11::arg("draw_color")=true, pybind11::arg("draw_normals")=true);
-
-  }
-
-
-}  // py_pangolin
+}  // namespace py_pangolin

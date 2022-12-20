@@ -24,11 +24,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
+#include <pangolin/factory/factory_registry.h>
 #include <pangolin/python/pyinterpreter.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/var/varextra.h>
-#include <pangolin/factory/factory_registry.h>
-
 #include <pybind11/embed.h>
 namespace py = pybind11;
 
@@ -37,181 +36,175 @@ namespace py = pybind11;
 namespace pangolin
 {
 
-void  PyInterpreter::NewVarCallback(const pangolin::VarState::Event& e)
+void PyInterpreter::NewVarCallback(const pangolin::VarState::Event& e)
 {
-    if(e.action == VarState::Event::Action::Added) {
-        const std::string name = e.var->Meta().full_name;
-        const size_t dot = name.find_first_of('.');
-        if(dot != std::string::npos) {
-            const std::string base_prefix = name.substr(0,dot);
-            if( base_prefixes.find(base_prefix) == base_prefixes.end() ) {
-                base_prefixes.insert(base_prefix);
-                std::string cmd =
-                    base_prefix + std::string(" = pypangolin.Var('") +
-                    base_prefix + std::string("')\n");
-                PyRun_SimpleString(cmd.c_str());
-            }
-        }
+  if (e.action == VarState::Event::Action::Added) {
+    const std::string name = e.var->Meta().full_name;
+    const size_t dot = name.find_first_of('.');
+    if (dot != std::string::npos) {
+      const std::string base_prefix = name.substr(0, dot);
+      if (base_prefixes.find(base_prefix) == base_prefixes.end()) {
+        base_prefixes.insert(base_prefix);
+        std::string cmd = base_prefix + std::string(" = pypangolin.Var('") +
+                          base_prefix + std::string("')\n");
+        PyRun_SimpleString(cmd.c_str());
+      }
     }
+  }
 }
 
 PyInterpreter::PyInterpreter()
 {
-    using namespace py_pangolin;
-    auto pypangolin = py::module_::import("pypangolin");
-    
-    auto sys = py::module_::import("sys");
-    if(sys) {
-        // TODO: What is the lifetime of PyPangoIO?
-        PyPangoIO* wrap_stdout = new PyPangoIO(line_queue, ConsoleLineTypeStdout);
-        PyPangoIO* wrap_stderr = new PyPangoIO(line_queue, ConsoleLineTypeStderr);
-        sys.add_object("stdout", py::cast(wrap_stdout), true);
-        sys.add_object("stderr", py::cast(wrap_stderr), true);
-     } else {
-         pango_print_error("Couldn't import module sys.\n");
-     }
+  using namespace py_pangolin;
+  auto pypangolin = py::module_::import("pypangolin");
 
-     // Attempt to setup readline completion
-    py::exec(
-         "import pypangolin\n"
-         "try:\n"
-         "   import readline\n"
-         "except ImportError:\n"
-         "   import pyreadline as readline\n"
-         "\n"
-         "import rlcompleter\n"
-         "pypangolin.completer = rlcompleter.Completer()\n"
-     );
-     CheckPrintClearError();
+  auto sys = py::module_::import("sys");
+  if (sys) {
+    // TODO: What is the lifetime of PyPangoIO?
+    PyPangoIO* wrap_stdout = new PyPangoIO(line_queue, ConsoleLineTypeStdout);
+    PyPangoIO* wrap_stderr = new PyPangoIO(line_queue, ConsoleLineTypeStderr);
+    sys.add_object("stdout", py::cast(wrap_stdout), true);
+    sys.add_object("stderr", py::cast(wrap_stderr), true);
+  } else {
+    pango_print_error("Couldn't import module sys.\n");
+  }
 
-     // Get reference to rlcompleter.Completer() for tab-completion
-     pycompleter = pypangolin.attr("completer");
-     pycomplete  = pycompleter.attr("complete");
+  // Attempt to setup readline completion
+  py::exec(
+      "import pypangolin\n"
+      "try:\n"
+      "   import readline\n"
+      "except ImportError:\n"
+      "   import pyreadline as readline\n"
+      "\n"
+      "import rlcompleter\n"
+      "pypangolin.completer = rlcompleter.Completer()\n");
+  CheckPrintClearError();
 
-     // Register for notifications on var additions
-     var_added_connection = VarState::I().RegisterForVarEvents(
-         std::bind(&PyInterpreter::NewVarCallback,this,std::placeholders::_1),
-         true
-     );
+  // Get reference to rlcompleter.Completer() for tab-completion
+  pycompleter = pypangolin.attr("completer");
+  pycomplete = pycompleter.attr("complete");
 
-     CheckPrintClearError();
+  // Register for notifications on var additions
+  var_added_connection = VarState::I().RegisterForVarEvents(
+      std::bind(&PyInterpreter::NewVarCallback, this, std::placeholders::_1),
+      true);
 
-     // TODO: For some reason the completion will crash when the command contains '.'
-     // unless we have executed anything that returns a value...
-     // We probably have a PyRef issue, maybe?
-     py::eval<py::eval_single_statement>("import sys");
-     py::eval<py::eval_single_statement>("sys.version");
+  CheckPrintClearError();
+
+  // TODO: For some reason the completion will crash when the command contains
+  // '.' unless we have executed anything that returns a value... We probably
+  // have a PyRef issue, maybe?
+  py::eval<py::eval_single_statement>("import sys");
+  py::eval<py::eval_single_statement>("sys.version");
 }
 
-PyInterpreter::~PyInterpreter()
-{
-}
+PyInterpreter::~PyInterpreter() {}
 
 std::string PyInterpreter::ToString(const py::object& py)
 {
-    auto pystr = py::repr(py);
-    return std::string(PyUnicode_AsUTF8(pystr.ptr()));
+  auto pystr = py::repr(py);
+  return std::string(PyUnicode_AsUTF8(pystr.ptr()));
 }
 
 void PyInterpreter::CheckPrintClearError()
 {
-    if(PyErr_Occurred()) {
-        PyErr_Print();
-        PyErr_Clear();
-    }
+  if (PyErr_Occurred()) {
+    PyErr_Print();
+    PyErr_Clear();
+  }
 }
 
 py::object PyInterpreter::EvalExec(const std::string& cmd)
 {
-    py::object ret = py::none();
+  py::object ret = py::none();
 
-    if(!cmd.empty()) {
-        try {
-            ret = py::eval(cmd);
-        }  catch (const pybind11::error_already_set& e) {
-            line_queue.push(
-                InterpreterLine(e.what(), ConsoleLineTypeStderr)
-            );
-        }
-        CheckPrintClearError();
+  if (!cmd.empty()) {
+    try {
+      ret = py::eval(cmd);
+    } catch (const pybind11::error_already_set& e) {
+      line_queue.push(InterpreterLine(e.what(), ConsoleLineTypeStderr));
     }
+    CheckPrintClearError();
+  }
 
-    return ret;
+  return ret;
 }
 
-std::vector<std::string> PyInterpreter::Complete(const std::string& cmd, int max_options)
+std::vector<std::string> PyInterpreter::Complete(
+    const std::string& cmd, int max_options)
 {
-    // TODO: When there is exactly 1 completion and it is smaller than our current string, we must invoke again with the prefix removed.
+  // TODO: When there is exactly 1 completion and it is smaller than our current
+  // string, we must invoke again with the prefix removed.
 
-    std::vector<std::string> ret;
-    PyErr_Clear();
+  std::vector<std::string> ret;
+  PyErr_Clear();
 
-    if(pycomplete) {
-        for(int i=0; i < max_options; ++i) {
-            auto args = PyTuple_Pack( 2, PyUnicode_FromString(cmd.c_str()), PyLong_FromSize_t(i) );
-            auto result = PyObject_CallObject(pycomplete.ptr(), args);
+  if (pycomplete) {
+    for (int i = 0; i < max_options; ++i) {
+      auto args = PyTuple_Pack(
+          2, PyUnicode_FromString(cmd.c_str()), PyLong_FromSize_t(i));
+      auto result = PyObject_CallObject(pycomplete.ptr(), args);
 
-            if (result && PyUnicode_Check(result)) {
-                std::string res_str(PyUnicode_AsUTF8(result));
-                ret.push_back( res_str );
-                Py_DecRef(args);
-                Py_DecRef(result);
-            }else{
-                Py_DecRef(args);
-                Py_DecRef(result);
-                break;
-            }
-        }
+      if (result && PyUnicode_Check(result)) {
+        std::string res_str(PyUnicode_AsUTF8(result));
+        ret.push_back(res_str);
+        Py_DecRef(args);
+        Py_DecRef(result);
+      } else {
+        Py_DecRef(args);
+        Py_DecRef(result);
+        break;
+      }
     }
+  }
 
-    return ret;
+  return ret;
 }
 
 void PyInterpreter::PushCommand(const std::string& cmd)
 {
-    if(!cmd.empty()) {
-        try {
-            py::eval<py::eval_single_statement>(cmd);
-        }  catch (const pybind11::error_already_set& e) {
-            line_queue.push(
-                InterpreterLine(e.what(), ConsoleLineTypeStderr)
-            );
-        }
+  if (!cmd.empty()) {
+    try {
+      py::eval<py::eval_single_statement>(cmd);
+    } catch (const pybind11::error_already_set& e) {
+      line_queue.push(InterpreterLine(e.what(), ConsoleLineTypeStderr));
     }
+  }
 }
 
 bool PyInterpreter::PullLine(InterpreterLine& line)
 {
-    if(line_queue.size()) {
-        line = line_queue.front();
-        line_queue.pop();
-        return true;
-    }else{
-        return false;
-    }
+  if (line_queue.size()) {
+    line = line_queue.front();
+    line_queue.pop();
+    return true;
+  } else {
+    return false;
+  }
 }
 
 PANGOLIN_REGISTER_FACTORY_WITH_STATIC_INITIALIZER(PyInterpreter)
 {
-    struct PyInterpreterFactory final : public TypedFactoryInterface<InterpreterInterface> {
-        std::map<std::string,Precedence> Schemes() const override
-        {
-            return {{"python",10}};
-        }
-        const char* Description() const override
-        {
-            return "Python line interpreter.";
-        }
-        ParamSet Params() const override
-        {
-            return {{}};
-        }
-        std::unique_ptr<InterpreterInterface> Open(const Uri& /*uri*/) override {
-            return std::unique_ptr<InterpreterInterface>(new PyInterpreter());
-        }
-    };
+  struct PyInterpreterFactory final
+      : public TypedFactoryInterface<InterpreterInterface> {
+    std::map<std::string, Precedence> Schemes() const override
+    {
+      return {{"python", 10}};
+    }
+    const char* Description() const override
+    {
+      return "Python line interpreter.";
+    }
+    ParamSet Params() const override { return {{}}; }
+    std::unique_ptr<InterpreterInterface> Open(const Uri& /*uri*/) override
+    {
+      return std::unique_ptr<InterpreterInterface>(new PyInterpreter());
+    }
+  };
 
-    return FactoryRegistry::I()->RegisterFactory<InterpreterInterface>(std::make_shared<PyInterpreterFactory>());
+  return FactoryRegistry::I()->RegisterFactory<InterpreterInterface>(
+      std::make_shared<PyInterpreterFactory>());
 }
 
-}
+}  // namespace pangolin

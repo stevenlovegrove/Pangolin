@@ -31,10 +31,10 @@
 #include <sstream>
 
 // Cg includes
+#include "gl.h"
+
 #include <Cg/cg.h>
 #include <Cg/cgGL.h>
-
-#include "gl.h"
 
 #ifdef HAVE_TOON
 #include <TooN/TooN.h>

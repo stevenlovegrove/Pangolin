@@ -114,8 +114,7 @@ template <typename T>
 void glUniformImpl(GLint location, const T& val);
 
 template <class T, size_t R, size_t C>
-  requires(EigenWithDim<R, C, T>)
-void glUniformImpl(GLint location, const T& mat)
+requires(EigenWithDim<R, C, T>) void glUniformImpl(GLint location, const T& mat)
 {
   glUniformArray<typename T::Scalar, R, C>(location, mat.data());
 }

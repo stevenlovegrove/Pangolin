@@ -26,117 +26,118 @@
  */
 
 #include <pangolin/geometry/glgeometry.h>
-
 #include <pangolin/gl/glformattraits.h>
 
-namespace pangolin {
-
-GlGeometry::Element ToGlGeometryElement(const Geometry::Element& el, GlBufferType buffertype)
+namespace pangolin
 {
-    GlGeometry::Element glel(buffertype, el.SizeBytes(), GL_STATIC_DRAW, el.ptr );
-    for(const auto& attrib_variant : el.attributes) {
-        visit([&](auto&& attrib){
-            using T = std::decay_t<decltype(attrib)>;
-            auto& glattrib = glel.attributes[attrib_variant.first];
-            glattrib.gltype = GlFormatTraits<typename T::PixelType>::gltype;
-            glattrib.count_per_element = attrib.w;
-            glattrib.num_elements = attrib.h;
-            glattrib.offset = (uint8_t*)attrib.ptr - el.ptr;
-            glattrib.stride_bytes = attrib.pitch;
-        }, attrib_variant.second);
-    }
-    return glel;
+
+GlGeometry::Element ToGlGeometryElement(
+    const Geometry::Element& el, GlBufferType buffertype)
+{
+  GlGeometry::Element glel(buffertype, el.SizeBytes(), GL_STATIC_DRAW, el.ptr);
+  for (const auto& attrib_variant : el.attributes) {
+    visit(
+        [&](auto&& attrib) {
+          using T = std::decay_t<decltype(attrib)>;
+          auto& glattrib = glel.attributes[attrib_variant.first];
+          glattrib.gltype = GlFormatTraits<typename T::PixelType>::gltype;
+          glattrib.count_per_element = attrib.w;
+          glattrib.num_elements = attrib.h;
+          glattrib.offset = (uint8_t*)attrib.ptr - el.ptr;
+          glattrib.stride_bytes = attrib.pitch;
+        },
+        attrib_variant.second);
+  }
+  return glel;
 }
 
 GlGeometry ToGlGeometry(const Geometry& geom)
 {
-    GlGeometry gl;
-    for(const auto& b : geom.buffers)
-        gl.buffers[b.first] = ToGlGeometryElement(b.second, GlArrayBuffer);
+  GlGeometry gl;
+  for (const auto& b : geom.buffers)
+    gl.buffers[b.first] = ToGlGeometryElement(b.second, GlArrayBuffer);
 
-    for(const auto& b : geom.objects)
-        gl.objects.emplace(b.first, ToGlGeometryElement(b.second, GlElementArrayBuffer));
+  for (const auto& b : geom.objects)
+    gl.objects.emplace(
+        b.first, ToGlGeometryElement(b.second, GlElementArrayBuffer));
 
-    for(const auto& tex : geom.textures) {
-        auto& gltex = gl.textures[tex.first];
-        gltex.Load(tex.second);
-    }
-    return gl;
+  for (const auto& tex : geom.textures) {
+    auto& gltex = gl.textures[tex.first];
+    gltex.Load(tex.second);
+  }
+  return gl;
 }
 
 void BindGlElement(GlSlProgram& prog, const GlGeometry::Element& el)
 {
-    el.Bind();
-    for(auto& a : el.attributes) {
-        const GLint attrib_handle = prog.GetAttributeHandle(a.first);
-        const GlGeometry::Element::Attribute& attr = a.second;
-        if(attrib_handle >= 0) {
-            glEnableVertexAttribArray(attrib_handle);
-            glVertexAttribPointer(
-                attrib_handle, attr.count_per_element, attr.gltype, GL_TRUE,
-                attr.stride_bytes,
-                reinterpret_cast<uint8_t*>(attr.offset)
-            );
-        }
+  el.Bind();
+  for (auto& a : el.attributes) {
+    const GLint attrib_handle = prog.GetAttributeHandle(a.first);
+    const GlGeometry::Element::Attribute& attr = a.second;
+    if (attrib_handle >= 0) {
+      glEnableVertexAttribArray(attrib_handle);
+      glVertexAttribPointer(
+          attrib_handle, attr.count_per_element, attr.gltype, GL_TRUE,
+          attr.stride_bytes, reinterpret_cast<uint8_t*>(attr.offset));
     }
+  }
 }
 
 void UnbindGlElements(GlSlProgram& prog, const GlGeometry::Element& el)
 {
-    for(auto& a : el.attributes) {
-        const GLint attrib_handle = prog.GetAttributeHandle(a.first);
-        if(attrib_handle >= 0) {
-            glDisableVertexAttribArray(attrib_handle);
-        }
+  for (auto& a : el.attributes) {
+    const GLint attrib_handle = prog.GetAttributeHandle(a.first);
+    if (attrib_handle >= 0) {
+      glDisableVertexAttribArray(attrib_handle);
     }
-    el.Unbind();
+  }
+  el.Unbind();
 }
 
 void GlDraw(GlSlProgram& prog, const GlGeometry& geom, const GlTexture* matcap)
 {
-    // Bind textures
-    int num_tex_bound = 0;
-    for(auto& tex : geom.textures) {
-        glActiveTexture(GL_TEXTURE0 + num_tex_bound);
-        tex.second.Bind();
-        prog.SetUniform(tex.first, (int)num_tex_bound);
-        ++num_tex_bound;
-    }
+  // Bind textures
+  int num_tex_bound = 0;
+  for (auto& tex : geom.textures) {
+    glActiveTexture(GL_TEXTURE0 + num_tex_bound);
+    tex.second.Bind();
+    prog.SetUniform(tex.first, (int)num_tex_bound);
+    ++num_tex_bound;
+  }
 
-    if(matcap) {
-        glActiveTexture(GL_TEXTURE0 + num_tex_bound);
-        matcap->Bind();
-        prog.SetUniform("matcap", (int)num_tex_bound);
-        ++num_tex_bound;
-    }
+  if (matcap) {
+    glActiveTexture(GL_TEXTURE0 + num_tex_bound);
+    matcap->Bind();
+    prog.SetUniform("matcap", (int)num_tex_bound);
+    ++num_tex_bound;
+  }
 
-    // Bind all attribute buffers
-    for(auto& buffer : geom.buffers) {
-        BindGlElement(prog, buffer.second);
-    }
+  // Bind all attribute buffers
+  for (auto& buffer : geom.buffers) {
+    BindGlElement(prog, buffer.second);
+  }
 
-    // Draw all geometry
-    for(auto& buffer : geom.objects) {
-        auto it_indices = buffer.second.attributes.find("vertex_indices");
-        if(it_indices != buffer.second.attributes.end()) {
-            buffer.second.Bind();
-            auto& attrib = it_indices->second;
-            glDrawElements(
-               GL_TRIANGLES, attrib.count_per_element * attrib.num_elements,
-               attrib.gltype, reinterpret_cast<uint8_t*>(attrib.offset)
-            );
-            buffer.second.Unbind();
-        }
+  // Draw all geometry
+  for (auto& buffer : geom.objects) {
+    auto it_indices = buffer.second.attributes.find("vertex_indices");
+    if (it_indices != buffer.second.attributes.end()) {
+      buffer.second.Bind();
+      auto& attrib = it_indices->second;
+      glDrawElements(
+          GL_TRIANGLES, attrib.count_per_element * attrib.num_elements,
+          attrib.gltype, reinterpret_cast<uint8_t*>(attrib.offset));
+      buffer.second.Unbind();
     }
+  }
 
-    // Unbind attribute buffers
-    for(auto& buffer : geom.buffers) {
-        UnbindGlElements(prog, buffer.second);
-    }
+  // Unbind attribute buffers
+  for (auto& buffer : geom.buffers) {
+    UnbindGlElements(prog, buffer.second);
+  }
 
-    // Unbind textures
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
+  // Unbind textures
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glActiveTexture(GL_TEXTURE0);
 }
 
-}
+}  // namespace pangolin

@@ -26,9 +26,10 @@
  */
 
 #include "image.hpp"
+
 #include <pangolin/image/image.h>
 
-namespace py_pangolin {
-  
-}  // py_pangolin
+namespace py_pangolin
+{
 
+}  // namespace py_pangolin

@@ -487,14 +487,14 @@ struct s_mt : sigslot::observer {
         // in multithreaded contexts.
         this->disconnect_all();
     }
-    
+
     void f(int i) { sum += i; }
 };
 
 int main() {
     sum = 0;
     signal<int> sig;
-    
+
     {
         // Lifetime of object instance p is tracked
         s p;
@@ -503,7 +503,7 @@ int main() {
         sig.connect(&s_mt::f, &pm);
         sig(1);     // sum == 2
     }
-    
+
     // The slots got disconnected at instance destruction
     sig(1);         // sum == 2
 }

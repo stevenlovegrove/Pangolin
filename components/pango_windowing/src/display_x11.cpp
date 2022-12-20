@@ -28,7 +28,6 @@
 // Code based on public domain sample at
 // https://www.opengl.org/wiki/Tutorial:_OpenGL_3.0_Context_Creation_%28GLX%29
 
-#include <GL/glx.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/windowing/X11Window.h>
@@ -39,6 +38,13 @@
 
 #include <mutex>
 #include <stdexcept>
+
+// clang-format(off)
+#include <GL/glx.h>
+#ifdef Success
+#undef Success
+#endif
+// clang-format(on)
 
 namespace pangolin
 {

@@ -12,7 +12,10 @@ namespace pangolin
 namespace
 {
 template <typename T>
-concept Differencable = requires(T a, T b) { b - a; };
+concept Differencable = requires(T a, T b)
+{
+  b - a;
+};
 }  // namespace
 
 // This works a lot like Eigens::AlignedBox, but supports
@@ -52,8 +55,7 @@ class MinMax
   }
 
   // Only applicable if minmax object is valid()
-  auto range() const
-    requires Differencable<TPixel>
+  auto range() const requires Differencable<TPixel>
   {
     return eval(max() - min());
   }

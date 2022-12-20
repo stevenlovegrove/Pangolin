@@ -1,9 +1,8 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <pangolin/maths/min_max.h>
 #include <pangolin/render/device_texture.h>
-
-#include <Eigen/Core>
 
 namespace pangolin
 {

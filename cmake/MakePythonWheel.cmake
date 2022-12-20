@@ -100,5 +100,3 @@ print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Ext
         message(STATUS "Selected Python: '${Python_EXECUTABLE}'. cmake --build . -t ${python_module}_pip_install to use ${python_module} module.")
     endif()
 endfunction()
-
-

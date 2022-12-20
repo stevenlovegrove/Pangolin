@@ -27,9 +27,10 @@
 
 #pragma once
 
-#include <pybind11/embed.h>
-#include <pangolin/var/varextra.h>
 #include <pangolin/console/InterpreterInterface.h>
+#include <pangolin/var/varextra.h>
+#include <pybind11/embed.h>
+
 #include <queue>
 #include <set>
 #include <thread>
@@ -39,34 +40,33 @@ namespace pangolin
 
 class PyInterpreter : public InterpreterInterface
 {
-public:
-    PyInterpreter();
+  public:
+  PyInterpreter();
 
-    ~PyInterpreter() override;
+  ~PyInterpreter() override;
 
-    void PushCommand(const std::string &cmd) override;
+  void PushCommand(const std::string& cmd) override;
 
-    bool PullLine(InterpreterLine& line) override;
+  bool PullLine(InterpreterLine& line) override;
 
-    std::vector<std::string> Complete(
-        const std::string& cmd, int max_options
-    ) override;
+  std::vector<std::string> Complete(
+      const std::string& cmd, int max_options) override;
 
-private:
-    void  NewVarCallback(const pangolin::VarState::Event& e);
+  private:
+  void NewVarCallback(const pangolin::VarState::Event& e);
 
-    pybind11::scoped_interpreter guard;
+  pybind11::scoped_interpreter guard;
 
-    pybind11::object pycompleter;
-    pybind11::object pycomplete;
+  pybind11::object pycompleter;
+  pybind11::object pycomplete;
 
-    std::string ToString(const pybind11::object& py);
-    pybind11::object EvalExec(const std::string& cmd);
-    void CheckPrintClearError();
+  std::string ToString(const pybind11::object& py);
+  pybind11::object EvalExec(const std::string& cmd);
+  void CheckPrintClearError();
 
-    std::queue<InterpreterLine> line_queue;
-    std::set<std::string> base_prefixes;
-    sigslot::scoped_connection var_added_connection;
+  std::queue<InterpreterLine> line_queue;
+  std::set<std::string> base_prefixes;
+  sigslot::scoped_connection var_added_connection;
 };
 
-}
+}  // namespace pangolin

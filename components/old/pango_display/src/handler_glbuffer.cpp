@@ -25,21 +25,26 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/handler/handler_glbuffer.h>
 #include <pangolin/display/view.h>
+#include <pangolin/handler/handler_glbuffer.h>
 
-namespace pangolin {
+namespace pangolin
+{
 
-Handler3DFramebuffer::Handler3DFramebuffer(GlFramebuffer& fb, pangolin::OpenGlRenderState& cam_state, pangolin::AxisDirection enforce_up, float trans_scale)
-    : pangolin::HandlerBase3D(cam_state,enforce_up, trans_scale), fb(fb)
+Handler3DFramebuffer::Handler3DFramebuffer(
+    GlFramebuffer& fb, pangolin::OpenGlRenderState& cam_state,
+    pangolin::AxisDirection enforce_up, float trans_scale) :
+    pangolin::HandlerBase3D(cam_state, enforce_up, trans_scale), fb(fb)
 {
 }
 
-void Handler3DFramebuffer::GetPosNormal(pangolin::View& view, int x, int y, GLprecision p[3], GLprecision Pw[3], GLprecision Pc[3], GLprecision n[3], GLprecision default_z)
+void Handler3DFramebuffer::GetPosNormal(
+    pangolin::View& view, int x, int y, GLprecision p[3], GLprecision Pw[3],
+    GLprecision Pc[3], GLprecision n[3], GLprecision default_z)
 {
-    fb.Bind();
-    HandlerBase3D::GetPosNormal(view,x,y,p,Pw,Pc,n,default_z);
-    fb.Unbind();
+  fb.Bind();
+  HandlerBase3D::GetPosNormal(view, x, y, p, Pw, Pc, n, default_z);
+  fb.Unbind();
 }
 
-}
+}  // namespace pangolin

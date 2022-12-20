@@ -34,10 +34,10 @@ namespace pangolin
 
 class PANGOLIN_EXPORT UserApp
 {
-public:
-    virtual ~UserApp() {}
-    virtual void Init() {}
-    virtual void Render() = 0;
+  public:
+  virtual ~UserApp() {}
+  virtual void Init() {}
+  virtual void Render() = 0;
 };
 
-}
+}  // namespace pangolin

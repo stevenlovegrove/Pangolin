@@ -28,11 +28,12 @@
 #ifndef PANGOLIN_GEOMETRY_H
 #define PANGOLIN_GEOMETRY_H
 
+#include <pangolin/image/typed_image.h>
+
 #include <map>
 #include <unordered_map>
-#include <vector>
 #include <variant>
-#include <pangolin/image/typed_image.h>
+#include <vector>
 
 #ifdef HAVE_EIGEN
 #include <Eigen/Geometry>
@@ -41,28 +42,29 @@
 namespace pangolin
 {
 
-struct Geometry
-{
-    struct Element : public ManagedImage<uint8_t> {
-        Element() = default;
-        Element(Element&&) = default;
-        Element& operator=(Element&&) = default;
+struct Geometry {
+  struct Element : public ManagedImage<uint8_t> {
+    Element() = default;
+    Element(Element&&) = default;
+    Element& operator=(Element&&) = default;
 
-        Element(size_t stride_bytes, size_t num_elements)
-            : ManagedImage<uint8_t>(stride_bytes, num_elements)
-        {}
+    Element(size_t stride_bytes, size_t num_elements) :
+        ManagedImage<uint8_t>(stride_bytes, num_elements)
+    {
+    }
 
-        using Attribute = std::variant<Image<float>,Image<uint32_t>,Image<uint16_t>,Image<uint8_t>>;
-        // "vertex", "rgb", "normal", "uv", "tris", "quads", ...
-        std::map<std::string, Attribute> attributes;
-    };
+    using Attribute = std::variant<
+        Image<float>, Image<uint32_t>, Image<uint16_t>, Image<uint8_t>>;
+    // "vertex", "rgb", "normal", "uv", "tris", "quads", ...
+    std::map<std::string, Attribute> attributes;
+  };
 
-    // Store vertices and attributes
-    std::map<std::string, Element> buffers;
-    // Stores index buffers for each sub-object
-    std::multimap<std::string, Element> objects;
-    // Stores pixmaps
-    std::map<std::string, TypedImage> textures;
+  // Store vertices and attributes
+  std::map<std::string, Element> buffers;
+  // Stores index buffers for each sub-object
+  std::multimap<std::string, Element> objects;
+  // Stores pixmaps
+  std::map<std::string, TypedImage> textures;
 };
 
 pangolin::Geometry LoadGeometry(const std::string& filename);
@@ -70,24 +72,24 @@ pangolin::Geometry LoadGeometry(const std::string& filename);
 #ifdef HAVE_EIGEN
 inline Eigen::AlignedBox3f GetAxisAlignedBox(const Geometry& geom)
 {
-    Eigen::AlignedBox3f box;
-    box.setEmpty();
+  Eigen::AlignedBox3f box;
+  box.setEmpty();
 
-    for(const auto& b : geom.buffers) {
-        const auto& it_vert = b.second.attributes.find("vertex");
-        if(it_vert != b.second.attributes.end()) {
-            const Image<float>& vs = std::get<Image<float>>(it_vert->second);
-            for(size_t i=0; i < vs.h; ++i) {
-                const Eigen::Map<const Eigen::Vector3f> v(vs.RowPtr(i));
-                box.extend(v);
-            }
-        }
+  for (const auto& b : geom.buffers) {
+    const auto& it_vert = b.second.attributes.find("vertex");
+    if (it_vert != b.second.attributes.end()) {
+      const Image<float>& vs = std::get<Image<float>>(it_vert->second);
+      for (size_t i = 0; i < vs.h; ++i) {
+        const Eigen::Map<const Eigen::Vector3f> v(vs.RowPtr(i));
+        box.extend(v);
+      }
     }
+  }
 
-    return box;
+  return box;
 }
 #endif
 
-}
+}  // namespace pangolin
 
-#endif // PANGOLIN_GEOMETRY_H
+#endif  // PANGOLIN_GEOMETRY_H

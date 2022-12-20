@@ -1,7 +1,6 @@
+#include <librealsense/rs.hpp>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/drivers/realsense.h>
-
-#include <librealsense/rs.hpp>
 
 namespace pangolin
 {

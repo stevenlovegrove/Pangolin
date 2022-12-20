@@ -26,95 +26,74 @@
  */
 
 #include "window.hpp"
+
 #include <pangolin/windowing/window.h>
+
 #include <functional>
 
-namespace py_pangolin {
+namespace py_pangolin
+{
 
-  class PyWindowInterface: public pangolin::WindowInterface{
-    public:
-    using pangolin::WindowInterface::WindowInterface;
+class PyWindowInterface : public pangolin::WindowInterface
+{
+  public:
+  using pangolin::WindowInterface::WindowInterface;
 
-    void ShowFullscreen(const pangolin::TrueFalseToggle on_off) override {
-      PYBIND11_OVERLOAD_PURE(
-                             void,
-                             pangolin::WindowInterface,
-                             ShowFullscreen,
-                             on_off);
-    }
+  void ShowFullscreen(const pangolin::TrueFalseToggle on_off) override
+  {
+    PYBIND11_OVERLOAD_PURE(
+        void, pangolin::WindowInterface, ShowFullscreen, on_off);
+  }
 
-    void Move(int x, int y) override {
-      PYBIND11_OVERLOAD_PURE(
-                             void,
-                             pangolin::WindowInterface,
-                             Move,
-                             x,
-                             y);
-    }
+  void Move(int x, int y) override
+  {
+    PYBIND11_OVERLOAD_PURE(void, pangolin::WindowInterface, Move, x, y);
+  }
 
-    void Resize(unsigned int w, unsigned int h) override {
-      PYBIND11_OVERLOAD_PURE(
-                             void,
-                             pangolin::WindowInterface,
-                             Resize,
-                             w,
-                             h);
-    }
+  void Resize(unsigned int w, unsigned int h) override
+  {
+    PYBIND11_OVERLOAD_PURE(void, pangolin::WindowInterface, Resize, w, h);
+  }
 
-    void MakeCurrent() override {
-      PYBIND11_OVERLOAD_PURE(
-                             void,
-                             pangolin::WindowInterface,
-                             MakeCurrent);
-    }
+  void MakeCurrent() override
+  {
+    PYBIND11_OVERLOAD_PURE(void, pangolin::WindowInterface, MakeCurrent);
+  }
 
-    void RemoveCurrent() override {
-      PYBIND11_OVERLOAD_PURE(
-                             void,
-                             pangolin::WindowInterface,
-                             RemoveCurrent);
-    }
+  void RemoveCurrent() override
+  {
+    PYBIND11_OVERLOAD_PURE(void, pangolin::WindowInterface, RemoveCurrent);
+  }
 
-    void ProcessEvents() override {
-      PYBIND11_OVERLOAD_PURE(
-                             void,
-                             pangolin::WindowInterface,
-                             ProcessEvents);
-    }
+  void ProcessEvents() override
+  {
+    PYBIND11_OVERLOAD_PURE(void, pangolin::WindowInterface, ProcessEvents);
+  }
 
+  void SwapBuffers() override
+  {
+    PYBIND11_OVERLOAD_PURE(void, pangolin::WindowInterface, SwapBuffers);
+  }
 
-    void SwapBuffers() override {
-      PYBIND11_OVERLOAD_PURE(
-                             void,
-                             pangolin::WindowInterface,
-                             SwapBuffers);
-    }
+  void SetOnRender(std::function<void()> on_render)
+  {
+    PYBIND11_OVERLOAD_PURE(
+        void, pangolin::WindowInterface, SetOnRender, on_render);
+  }
 
-    void SetOnRender(std::function<void ()> on_render) {
-      PYBIND11_OVERLOAD_PURE(
-                             void,
-                             pangolin::WindowInterface,
-                             SetOnRender,
-                             on_render);
-    }
+  void Run() { PYBIND11_OVERLOAD_PURE(void, pangolin::WindowInterface, Run); }
+};
 
-    void Run() {
-      PYBIND11_OVERLOAD_PURE(
-                             void,
-                             pangolin::WindowInterface,
-                             Run);
-    }
-  };
-  
-  void bind_window(pybind11::module &m) {
-    pybind11::class_<pangolin::WindowInterface, PyWindowInterface > windows_interface(m, "WindowsInterface");
-    windows_interface
-      .def(pybind11::init<>())
+void bind_window(pybind11::module &m)
+{
+  pybind11::class_<pangolin::WindowInterface, PyWindowInterface>
+      windows_interface(m, "WindowsInterface");
+  windows_interface.def(pybind11::init<>())
       .def("ShowFullscreen", &pangolin::WindowInterface::ShowFullscreen)
       .def("Move", &pangolin::WindowInterface::Move)
       .def("Resize", &pangolin::WindowInterface::Resize)
       .def("MakeCurrent", &pangolin::WindowInterface::MakeCurrent)
       .def("ProcessEvents", &pangolin::WindowInterface::ProcessEvents)
       .def("SwapBuffers", &pangolin::WindowInterface::SwapBuffers);
-  }
 }
+}  // namespace py_pangolin

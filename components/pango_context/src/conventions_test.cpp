@@ -1,9 +1,9 @@
 // Copyright (c) farm-ng, inc. All rights reserved.
 
+#include "test_data.h"
+
 #include <pangolin/maths/conventions.h>
 #include <pangolin/testing/eigen.h>
-
-#include "test_data.h"
 
 using namespace Eigen;
 using namespace sophus;

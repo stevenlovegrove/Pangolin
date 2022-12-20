@@ -27,11 +27,11 @@
 
 #pragma once
 
-#include <pangolin/image/image_utils.h>
 #include <pangolin/display/view.h>
-#include <pangolin/handler/handler.h>
-#include <pangolin/gl/viewport.h>
 #include <pangolin/gl/gl.h>
+#include <pangolin/gl/viewport.h>
+#include <pangolin/handler/handler.h>
+#include <pangolin/image/image_utils.h>
 #include <pangolin/utils/range.h>
 
 #include <functional>
@@ -41,126 +41,135 @@ namespace pangolin
 
 class PANGOLIN_EXPORT ImageViewHandler : public Handler
 {
-public:
-    struct EventData {
-        EventData(View& v, ImageViewHandler& h) : view(v), handler(h) {}
-        View& view;
-        ImageViewHandler& handler;
-    };
+  public:
+  struct EventData {
+    EventData(View& v, ImageViewHandler& h) : view(v), handler(h) {}
+    View& view;
+    ImageViewHandler& handler;
+  };
 
-    struct OnSelectionEventData : public EventData {
-        OnSelectionEventData(View& v, ImageViewHandler& h, bool dragging)
-            : EventData(v,h), dragging(dragging) {}
-        bool dragging;
-    };
+  struct OnSelectionEventData : public EventData {
+    OnSelectionEventData(View& v, ImageViewHandler& h, bool dragging) :
+        EventData(v, h), dragging(dragging)
+    {
+    }
+    bool dragging;
+  };
 
-    typedef std::function<void(OnSelectionEventData)> OnSelectionCallbackFn;
+  typedef std::function<void(OnSelectionEventData)> OnSelectionCallbackFn;
 
-    // Default constructor: User must call SetDimensions() once image dimensions are known.
-    // Default range is [0,1] in x and y.
-    ImageViewHandler(const std::string & title = "");
+  // Default constructor: User must call SetDimensions() once image dimensions
+  // are known. Default range is [0,1] in x and y.
+  ImageViewHandler(const std::string& title = "");
 
-    // View ranges store extremes of image (boundary of pixels)
-    // in 'discrete' coords, where 0,0 is center of top-left pixel.
-    ImageViewHandler(size_t w, size_t h);
+  // View ranges store extremes of image (boundary of pixels)
+  // in 'discrete' coords, where 0,0 is center of top-left pixel.
+  ImageViewHandler(size_t w, size_t h);
 
-    void SetDimensions(size_t w, size_t h);
+  void SetDimensions(size_t w, size_t h);
 
-    void UpdateView();
+  void UpdateView();
 
-    void glSetViewOrtho();
+  void glSetViewOrtho();
 
-    void glRenderTexture(pangolin::GlTexture& tex);
-    void glRenderTexture(GLuint tex, GLint width, GLint height);
-    void glRenderTexture(GLuint tex, GLint width, GLint height, XYRangef tex_region);
+  void glRenderTexture(pangolin::GlTexture& tex);
+  void glRenderTexture(GLuint tex, GLint width, GLint height);
+  void glRenderTexture(
+      GLuint tex, GLint width, GLint height, XYRangef tex_region);
 
+  void glRenderOverlay();
 
-    void glRenderOverlay();
+  void ScreenToImage(
+      Viewport& v, float xpix, float ypix, float& ximg, float& yimg);
 
-    void ScreenToImage(Viewport& v, float xpix, float ypix, float& ximg, float& yimg);
+  void ImageToScreen(
+      Viewport& v, float ximg, float yimg, float& xpix, float& ypix);
 
-    void ImageToScreen(Viewport& v, float ximg, float yimg, float& xpix, float& ypix);
+  bool UseNN() const;
 
-    bool UseNN() const;
+  bool& UseNN();
 
-    bool& UseNN();
+  bool& FlipTextureX();
 
-    bool& FlipTextureX();
+  bool& FlipTextureY();
 
-    bool& FlipTextureY();
+  pangolin::XYRangef& GetViewToRender();
 
-    pangolin::XYRangef& GetViewToRender();
+  float GetViewScale();
 
-    float GetViewScale();
+  pangolin::XYRangef& GetView();
 
-    pangolin::XYRangef& GetView();
+  pangolin::XYRangef& GetDefaultView();
 
-    pangolin::XYRangef& GetDefaultView();
+  pangolin::XYRangef& GetSelection();
 
-    pangolin::XYRangef& GetSelection();
+  void GetHover(float& x, float& y);
 
-    void GetHover(float& x, float& y);
+  void SetView(const pangolin::XYRangef& range);
 
-    void SetView(const pangolin::XYRangef& range);
+  void SetViewSmooth(const pangolin::XYRangef& range);
 
-    void SetViewSmooth(const pangolin::XYRangef& range);
+  void ScrollView(float x, float y);
 
-    void ScrollView(float x, float y);
+  void ScrollViewSmooth(float x, float y);
 
-    void ScrollViewSmooth(float x, float y);
+  void ScaleView(float x, float y, float cx, float cy);
 
-    void ScaleView(float x, float y, float cx, float cy);
+  void ScaleViewSmooth(float x, float y, float cx, float cy);
 
-    void ScaleViewSmooth(float x, float y, float cx, float cy);
+  void ResetView();
 
-    void ResetView();
+  ///////////////////////////////////////////////////////
+  /// pangolin::Handler
+  ///////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////
-    /// pangolin::Handler
-    ///////////////////////////////////////////////////////
+  void Keyboard(
+      View&, unsigned char key, int /*x*/, int /*y*/, bool pressed) override;
 
-    void Keyboard(View&, unsigned char key, int /*x*/, int /*y*/, bool pressed) override;
+  void Mouse(
+      View& view, pangolin::MouseButton button, int x, int y, bool pressed,
+      int button_state) override;
 
-    void Mouse(View& view, pangolin::MouseButton button, int x, int y, bool pressed, int button_state) override;
+  void MouseMotion(View& view, int x, int y, int button_state) override;
 
-    void MouseMotion(View& view, int x, int y, int button_state) override;
+  void PassiveMouseMotion(
+      View&, int /*x*/, int /*y*/, int /*button_state*/) override;
 
-    void PassiveMouseMotion(View&, int /*x*/, int /*y*/, int /*button_state*/) override;
+  void Special(
+      View& view, pangolin::InputSpecial inType, float x, float y, float p1,
+      float p2, float /*p3*/, float /*p4*/, int /*button_state*/) override;
 
-    void Special(View& view, pangolin::InputSpecial inType, float x, float y, float p1, float p2, float /*p3*/, float /*p4*/, int /*button_state*/) override;
+  ///////////////////////////////////////////////////////
+  /// Callbacks
+  ///////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////
-    /// Callbacks
-    ///////////////////////////////////////////////////////
+  OnSelectionCallbackFn OnSelectionCallback;
 
-    OnSelectionCallbackFn OnSelectionCallback;
+  protected:
+  void FixSelection(XYRangef& sel);
 
-protected:
-    void FixSelection(XYRangef& sel);
+  void AdjustScale();
 
-    void AdjustScale();
+  void AdjustTranslation();
 
-    void AdjustTranslation();
+  static ImageViewHandler* to_link;
+  static float animate_factor;
 
-    static ImageViewHandler* to_link;
-    static float animate_factor;
+  ImageViewHandler* linked_view_handler;
 
-    ImageViewHandler* linked_view_handler;
+  pangolin::XYRangef rview_default;
+  pangolin::XYRangef rview_max;
+  pangolin::XYRangef rview;
+  pangolin::XYRangef target;
+  pangolin::XYRangef selection;
 
-    pangolin::XYRangef rview_default;
-    pangolin::XYRangef rview_max;
-    pangolin::XYRangef rview;
-    pangolin::XYRangef target;
-    pangolin::XYRangef selection;
+  float hover_img[2];
+  int last_mouse_pos[2];
 
-    float hover_img[2];
-    int last_mouse_pos[2];
-
-    bool use_nn;
-    bool flipTextureX;
-    bool flipTextureY;
-    std::string title;
-
+  bool use_nn;
+  bool flipTextureX;
+  bool flipTextureY;
+  std::string title;
 };
 
-}
+}  // namespace pangolin

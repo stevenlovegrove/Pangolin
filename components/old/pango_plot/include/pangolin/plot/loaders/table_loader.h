@@ -1,12 +1,13 @@
 #include <pangolin/platform.h>
-#include <vector>
+
 #include <string>
+#include <vector>
 
-namespace pangolin {
-
-struct TableLoaderInterface
+namespace pangolin
 {
-    virtual bool ReadRow(std::vector<std::string>& row) = 0;
+
+struct TableLoaderInterface {
+  virtual bool ReadRow(std::vector<std::string>& row) = 0;
 };
 
-}
+}  // namespace pangolin

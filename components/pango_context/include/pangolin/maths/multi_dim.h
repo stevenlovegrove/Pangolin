@@ -92,8 +92,8 @@ template <class... Xs>
 struct AllAre;
 
 template <class T, class X, class... Xs>
-  requires(std::is_same<T, X>::value)
-struct AllAre<T, X, Xs...> : AllAre<T, Xs...> {
+requires(std::is_same<T, X>::value) struct AllAre<T, X, Xs...>
+    : AllAre<T, Xs...> {
 };
 
 template <class T>

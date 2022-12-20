@@ -1,10 +1,10 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <pangolin/gui/interactive.h>
 #include <pangolin/maths/min_max.h>
 #include <pangolin/utils/shared.h>
 
-#include <Eigen/Core>
 #include <variant>
 
 namespace pangolin

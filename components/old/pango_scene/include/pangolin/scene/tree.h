@@ -1,39 +1,40 @@
 #pragma once
 
-#include <map>
 #include <pangolin/gl/opengl_render_state.h>
 
-namespace pangolin {
+#include <map>
 
-template<typename T, typename TEdge>
-struct TreeNode
+namespace pangolin
 {
-    struct Edge
-    {
-        TEdge parent_child;
-        TreeNode node;
-    };
 
-    T item;
-    std::vector<Edge> edges;
+template <typename T, typename TEdge>
+struct TreeNode {
+  struct Edge {
+    TEdge parent_child;
+    TreeNode node;
+  };
+
+  T item;
+  std::vector<Edge> edges;
 };
 
-template<typename T, typename TEdge>
-using NodeFunction = std::function<void(TreeNode<T,TEdge>&,const TEdge&)>;
+template <typename T, typename TEdge>
+using NodeFunction = std::function<void(TreeNode<T, TEdge>&, const TEdge&)>;
 
-//template<typename T, typename TEdge>
-//void VisitDepthFirst(TreeNode<T,TEdge>& node, const NodeFunction<T,TEdge>& func, const TEdge& T_root_node = TEdge())
+// template<typename T, typename TEdge>
+// void VisitDepthFirst(TreeNode<T,TEdge>& node, const NodeFunction<T,TEdge>&
+// func, const TEdge& T_root_node = TEdge())
 //{
-//    func(node, T_root_node);
-//    for(auto& e : node.edges) {
-//        const TEdge T_root_child = T_root_node * e.parent_child;
-//        VisitDepthFirst(e.node, func, T_root_child);
-//    }
-//}
+//     func(node, T_root_node);
+//     for(auto& e : node.edges) {
+//         const TEdge T_root_child = T_root_node * e.parent_child;
+//         VisitDepthFirst(e.node, func, T_root_child);
+//     }
+// }
 
-//void Eg()
+// void Eg()
 //{
-//    using RenderNode = TreeNode<std::shared_ptr<Renderable>,OpenGlMatrix>;
+//     using RenderNode = TreeNode<std::shared_ptr<Renderable>,OpenGlMatrix>;
 
 //    RenderNode root;
 //    VisitDepthFirst<std::shared_ptr<Renderable>,OpenGlMatrix>(
@@ -45,5 +46,4 @@ using NodeFunction = std::function<void(TreeNode<T,TEdge>&,const TEdge&)>;
 
 //}
 
-
-}
+}  // namespace pangolin

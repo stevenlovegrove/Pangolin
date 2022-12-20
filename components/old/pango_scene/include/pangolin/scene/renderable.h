@@ -27,53 +27,55 @@
 
 #pragma once
 
-#include <memory>
-#include <map>
-#include <random>
-
 #include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/scene/interactive.h>
 
-namespace pangolin {
+#include <map>
+#include <memory>
+#include <random>
+
+namespace pangolin
+{
 
 class Renderable
 {
-public:
-    using guid_t = GLuint;
+  public:
+  using guid_t = GLuint;
 
-    static guid_t UniqueGuid();
+  static guid_t UniqueGuid();
 
-    Renderable(const std::weak_ptr<Renderable>& parent = std::weak_ptr<Renderable>());
+  Renderable(
+      const std::weak_ptr<Renderable>& parent = std::weak_ptr<Renderable>());
 
-    virtual ~Renderable();
+  virtual ~Renderable();
 
-    // Default implementation simply renders children.
-    virtual void Render(const RenderParams& params = RenderParams());
+  // Default implementation simply renders children.
+  virtual void Render(const RenderParams& params = RenderParams());
 
-    void RenderChildren(const RenderParams& params);
+  void RenderChildren(const RenderParams& params);
 
-    std::shared_ptr<Renderable> FindChild(guid_t guid);
+  std::shared_ptr<Renderable> FindChild(guid_t guid);
 
-    Renderable& Add(const std::shared_ptr<Renderable>& child);
+  Renderable& Add(const std::shared_ptr<Renderable>& child);
 
-    void Remove(const std::shared_ptr<Renderable>& child)
-    {
-        if(child) {
-            children.erase(child->guid);
-        }
+  void Remove(const std::shared_ptr<Renderable>& child)
+  {
+    if (child) {
+      children.erase(child->guid);
     }
+  }
 
-    // Renderable properties
-    const guid_t guid;
-    std::weak_ptr<Renderable> parent;
-    pangolin::OpenGlMatrix T_pc;
-    bool should_show;
+  // Renderable properties
+  const guid_t guid;
+  std::weak_ptr<Renderable> parent;
+  pangolin::OpenGlMatrix T_pc;
+  bool should_show;
 
-    // Children
-    std::map<guid_t, std::shared_ptr<Renderable>> children;
+  // Children
+  std::map<guid_t, std::shared_ptr<Renderable>> children;
 
-    // Manipulator (handler, thing)
-    std::shared_ptr<Manipulator> manipulator;
+  // Manipulator (handler, thing)
+  std::shared_ptr<Manipulator> manipulator;
 };
 
-}
+}  // namespace pangolin

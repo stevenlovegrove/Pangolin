@@ -27,15 +27,22 @@
 
 #pragma once
 
-#include <GL/glx.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <pangolin/platform.h>
 #include <pangolin/windowing/window.h>
 
 #include <memory>
 #include <stdexcept>
 #include <string>
+
+// clang-format(off)
+#include <GL/glx.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#ifdef Success
+#undef Success
+#endif
+// clang-format(on)
+
 
 namespace pangolin
 {

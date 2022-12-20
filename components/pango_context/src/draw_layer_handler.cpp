@@ -1,11 +1,11 @@
+#include "camera_utils.h"
+
 #include <pangolin/gui/draw_layer.h>
 #include <pangolin/gui/draw_layer_handler.h>
 #include <pangolin/utils/fmt.h>
 #include <pangolin/utils/logging.h>
 #include <pangolin/utils/variant_overload.h>
 #include <sophus/geometry/ray.h>
-
-#include "camera_utils.h"
 
 namespace pangolin
 {

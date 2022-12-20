@@ -2,31 +2,31 @@
 C++ Header File for Natural Comparison and Natural Sort
 
 
-##### Calling Methods 
+##### Calling Methods
 
 *  __For Natural Sorting__
 
 		void SI::natural::sort(Container<String>);
-		
+
 		void SI::natural::sort(IteratorBegin<String>,IteratorEnd<String>);
-		
+
 		void SI::natural::sort<String,CArraySize>(CArray<String>);
-		
-	
+
+
 *  __For Natural Comparision__
 
 		bool SI::natural::compare<String>(String lhs,String rhs);
 		bool SI::natural::compare<String>(char *const lhs,char *const rhs);
-	
+
 	Here we can have
-			
+
 			std::vector<std::string> 	as Container<String>
 			String 					as std::string
 			CArray<String>			as std::string[CArraySize]
-		
-	
-	
-		
+
+
+
+
 
 #####  Example
 
@@ -56,6 +56,3 @@ C++ Header File for Natural Comparison and Natural Sort
 		Hello 25
 		Hello 34
 		Hello 100
-
-
-

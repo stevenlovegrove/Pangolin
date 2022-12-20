@@ -1,6 +1,5 @@
-#include <sophus/common/common.h>
-
 #include <catch2/catch_test_macros.hpp>
+#include <sophus/common/common.h>
 
 #define CHECK_EIGEN_APPROX(A, B)                                               \
   CHECK(                                                                       \

@@ -1,6 +1,7 @@
 #pragma once
 
-namespace pangolin {
+namespace pangolin
+{
 
 const std::string default_model_shader = R"Shader(
 /////////////////////////////////////////
@@ -131,4 +132,4 @@ void main() {
 }
 )Shader";
 
-}
+}  // namespace pangolin

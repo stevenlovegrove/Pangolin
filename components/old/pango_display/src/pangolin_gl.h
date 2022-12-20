@@ -27,15 +27,14 @@
 
 #pragma once
 
+#include <pangolin/display/user_app.h>
+#include <pangolin/display/view.h>
 #include <pangolin/platform.h>
 #include <pangolin/windowing/window.h>
 
-#include <pangolin/display/view.h>
-#include <pangolin/display/user_app.h>
 #include <functional>
-#include <memory>
-
 #include <map>
+#include <memory>
 #include <queue>
 
 namespace pangolin
@@ -45,58 +44,58 @@ namespace pangolin
 class ConsoleView;
 class GlFont;
 
-typedef std::map<const std::string,View*> ViewMap;
-typedef std::map<int,std::function<void(int)> > KeyhookMap;
+typedef std::map<const std::string, View*> ViewMap;
+typedef std::map<int, std::function<void(int)> > KeyhookMap;
 
-struct PANGOLIN_EXPORT PangolinGl
-{
-    PangolinGl();
-    ~PangolinGl();
+struct PANGOLIN_EXPORT PangolinGl {
+  PangolinGl();
+  ~PangolinGl();
 
-    void Run();
+  void Run();
 
-    void MakeCurrent();
-    void FinishFrame();
+  void MakeCurrent();
+  void FinishFrame();
 
-    void RenderViews();
-    void PostRender();
+  void RenderViews();
+  void PostRender();
 
-    void SetOnRender(std::function<void()> on_render);
+  void SetOnRender(std::function<void()> on_render);
 
-    // Callback for render loop
-    std::function<void()> on_render;
+  // Callback for render loop
+  std::function<void()> on_render;
 
-    // Base container for displays
-    View base;
-    
-    // Named views which are managed by pangolin (i.e. created / deleted by pangolin)
-    ViewMap named_managed_views;
+  // Base container for displays
+  View base;
 
-    // Optional user app
-    UserApp* user_app;
-    
-    // Global keypress hooks
-    KeyhookMap keypress_hooks;
-    
-    // State relating to interactivity
-    bool quit;
-    int mouse_state;
-    View* activeDisplay;
-    
-    std::queue<std::pair<std::string,Viewport> > screen_capture;
-    
-    std::shared_ptr<WindowInterface> window;
-    std::shared_ptr<GlFont> font;
+  // Named views which are managed by pangolin (i.e. created / deleted by
+  // pangolin)
+  ViewMap named_managed_views;
 
-    std::unique_ptr<ConsoleView> console_view;
+  // Optional user app
+  UserApp* user_app;
+
+  // Global keypress hooks
+  KeyhookMap keypress_hooks;
+
+  // State relating to interactivity
+  bool quit;
+  int mouse_state;
+  View* activeDisplay;
+
+  std::queue<std::pair<std::string, Viewport> > screen_capture;
+
+  std::shared_ptr<WindowInterface> window;
+  std::shared_ptr<GlFont> font;
+
+  std::unique_ptr<ConsoleView> console_view;
 };
 
 PangolinGl* GetCurrentContext();
 void SetCurrentContext(PangolinGl* context);
-void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext);
+void RegisterNewContext(
+    const std::string& name, std::shared_ptr<PangolinGl> newcontext);
 void DeleteContext(const std::string& name);
-PangolinGl *FindContext(const std::string& name);
+PangolinGl* FindContext(const std::string& name);
 void SetCurrentContext(PangolinGl* newcontext);
 
-}
-
+}  // namespace pangolin

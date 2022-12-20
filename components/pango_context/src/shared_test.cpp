@@ -1,7 +1,6 @@
 #define CATCH_CONFIG_MAIN
-#include <pangolin/utils/shared.h>
-
 #include <catch2/catch_test_macros.hpp>
+#include <pangolin/utils/shared.h>
 
 using namespace farm_ng;
 using namespace pangolin;

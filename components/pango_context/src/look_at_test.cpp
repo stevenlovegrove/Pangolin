@@ -1,9 +1,9 @@
 // Copyright (c) farm-ng, inc. All rights reserved.
 
+#include "test_data.h"
+
 #include <pangolin/maths/camera_look_at.h>
 #include <pangolin/testing/eigen.h>
-
-#include "test_data.h"
 
 using namespace Eigen;
 using namespace sophus;

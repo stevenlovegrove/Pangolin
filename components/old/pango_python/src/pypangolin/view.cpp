@@ -26,23 +26,44 @@
  */
 
 #include "view.hpp"
+
 #include <pangolin/display/view.h>
 #include <pangolin/gl/opengl_render_state.h>
 #include <pangolin/handler/handler.h>
 #include <pybind11/functional.h>
 
-namespace py_pangolin {
+namespace py_pangolin
+{
 
-    void bind_view(pybind11::module &m) {
-    pybind11::class_<pangolin::View>(m, "View")
+void bind_view(pybind11::module &m)
+{
+  pybind11::class_<pangolin::View>(m, "View")
       .def(pybind11::init<double>(), pybind11::arg("aspect") = 0.0)
-      .def("Activate", (void(pangolin::View::*)() const)&pangolin::View::Activate)
-      .def("Activate", (void(pangolin::View::*)(const pangolin::OpenGlRenderState&) const)&pangolin::View::Activate)
-      .def("ActivateAndScissor", (void(pangolin::View::*)() const)&pangolin::View::ActivateAndScissor)
-      .def("ActivateScissorAndClear", (void(pangolin::View::*)() const)&pangolin::View::ActivateScissorAndClear)
-      .def("ActivateAndScissor", (void(pangolin::View::*)(const pangolin::OpenGlRenderState&) const)&pangolin::View::ActivateAndScissor)
-      .def("ActivateScissorAndClear", (void(pangolin::View::*)(const pangolin::OpenGlRenderState&) const)&pangolin::View::ActivateScissorAndClear)
-      .def("ActivatePixelOrthographic", &pangolin::View::ActivatePixelOrthographic)
+      .def(
+          "Activate",
+          (void(pangolin::View::*)() const) & pangolin::View::Activate)
+      .def(
+          "Activate",
+          (void(pangolin::View::*)(const pangolin::OpenGlRenderState &) const) &
+              pangolin::View::Activate)
+      .def(
+          "ActivateAndScissor", (void(pangolin::View::*)() const) &
+                                    pangolin::View::ActivateAndScissor)
+      .def(
+          "ActivateScissorAndClear",
+          (void(pangolin::View::*)() const) &
+              pangolin::View::ActivateScissorAndClear)
+      .def(
+          "ActivateAndScissor",
+          (void(pangolin::View::*)(const pangolin::OpenGlRenderState &) const) &
+              pangolin::View::ActivateAndScissor)
+      .def(
+          "ActivateScissorAndClear",
+          (void(pangolin::View::*)(const pangolin::OpenGlRenderState &) const) &
+              pangolin::View::ActivateScissorAndClear)
+      .def(
+          "ActivatePixelOrthographic",
+          &pangolin::View::ActivatePixelOrthographic)
       .def("ActivateIdentity", &pangolin::View::ActivateIdentity)
       .def("GetClosestDepth", &pangolin::View::GetClosestDepth)
       .def("GetCamCoordinates", &pangolin::View::GetCamCoordinates)
@@ -51,34 +72,72 @@ namespace py_pangolin {
       .def("ResizeChildren", &pangolin::View::ResizeChildren)
       .def("Render", &pangolin::View::Render)
       .def("RenderChildren", &pangolin::View::RenderChildren)
-      .def("SetFocus", &pangolin::View::SetFocus, pybind11::return_value_policy::reference)
+      .def(
+          "SetFocus", &pangolin::View::SetFocus,
+          pybind11::return_value_policy::reference)
       .def("HasFocus", &pangolin::View::HasFocus)
-      .def("SetBounds", (pangolin::View& (pangolin::View::*)(pangolin::Attach, pangolin::Attach, pangolin::Attach, pangolin::Attach))&pangolin::View::SetBounds, pybind11::return_value_policy::reference)
-      .def("SetBounds", (pangolin::View& (pangolin::View::*)(pangolin::Attach, pangolin::Attach, pangolin::Attach, pangolin::Attach, bool))&pangolin::View::SetBounds, pybind11::return_value_policy::reference)
-      .def("SetBounds", (pangolin::View& (pangolin::View::*)(pangolin::Attach, pangolin::Attach, pangolin::Attach, pangolin::Attach, double))&pangolin::View::SetBounds, pybind11::return_value_policy::reference)
-      .def("SetHandler", &pangolin::View::SetHandler, pybind11::return_value_policy::reference)
-      .def("SetDrawFunction", &pangolin::View::SetDrawFunction, pybind11::return_value_policy::reference)
-      .def("SetAspect", &pangolin::View::SetAspect, pybind11::return_value_policy::reference)
-      .def("SetLock", &pangolin::View::SetLock, pybind11::return_value_policy::reference)
-      .def("SetLayout", &pangolin::View::SetLayout, pybind11::return_value_policy::reference)
-      .def("AddDisplay", &pangolin::View::AddDisplay, pybind11::return_value_policy::reference)
-      .def("Show", &pangolin::View::Show, pybind11::arg("show") = true, pybind11::return_value_policy::reference)
+      .def(
+          "SetBounds",
+          (pangolin::View &
+           (pangolin::View::
+                *)(pangolin::Attach, pangolin::Attach, pangolin::Attach, pangolin::Attach)) &
+              pangolin::View::SetBounds,
+          pybind11::return_value_policy::reference)
+      .def(
+          "SetBounds",
+          (pangolin::View &
+           (pangolin::View::
+                *)(pangolin::Attach, pangolin::Attach, pangolin::Attach, pangolin::Attach, bool)) &
+              pangolin::View::SetBounds,
+          pybind11::return_value_policy::reference)
+      .def(
+          "SetBounds",
+          (pangolin::View &
+           (pangolin::View::
+                *)(pangolin::Attach, pangolin::Attach, pangolin::Attach, pangolin::Attach, double)) &
+              pangolin::View::SetBounds,
+          pybind11::return_value_policy::reference)
+      .def(
+          "SetHandler", &pangolin::View::SetHandler,
+          pybind11::return_value_policy::reference)
+      .def(
+          "SetDrawFunction", &pangolin::View::SetDrawFunction,
+          pybind11::return_value_policy::reference)
+      .def(
+          "SetAspect", &pangolin::View::SetAspect,
+          pybind11::return_value_policy::reference)
+      .def(
+          "SetLock", &pangolin::View::SetLock,
+          pybind11::return_value_policy::reference)
+      .def(
+          "SetLayout", &pangolin::View::SetLayout,
+          pybind11::return_value_policy::reference)
+      .def(
+          "AddDisplay", &pangolin::View::AddDisplay,
+          pybind11::return_value_policy::reference)
+      .def(
+          "Show", &pangolin::View::Show, pybind11::arg("show") = true,
+          pybind11::return_value_policy::reference)
       .def("ToggleShow", &pangolin::View::ToggleShow)
       .def("IsShown", &pangolin::View::IsShown)
       .def("GetBounds", &pangolin::View::GetBounds)
       .def("NumChildren", &pangolin::View::NumChildren)
-      .def("GetChild", [] (pangolin::View &v, size_t i) -> pangolin::View& { return v[i];}, pybind11::return_value_policy::reference)
-      .def("VisibleChild", &pangolin::View::VisibleChild, pybind11::return_value_policy::reference)
+      .def(
+          "GetChild",
+          [](pangolin::View &v, size_t i) -> pangolin::View & { return v[i]; },
+          pybind11::return_value_policy::reference)
+      .def(
+          "VisibleChild", &pangolin::View::VisibleChild,
+          pybind11::return_value_policy::reference)
       .def("FindChild", &pangolin::View::FindChild)
       .def("NumVisibleChildren", &pangolin::View::NumVisibleChildren);
 
-    pybind11::enum_<pangolin::Layout>(m, "Layout")
-        .value("Overlay", pangolin::LayoutOverlay)
-        .value("Vertical", pangolin::LayoutVertical)
-        .value("Horizontal", pangolin::LayoutHorizontal)
-        .value("Equal", pangolin::LayoutEqual)
-        .value("EqualVertical", pangolin::LayoutEqualVertical)
-        .value("EqualHorizontal", pangolin::LayoutEqualHorizontal);
-
-  }
-}  // py_pangolin
+  pybind11::enum_<pangolin::Layout>(m, "Layout")
+      .value("Overlay", pangolin::LayoutOverlay)
+      .value("Vertical", pangolin::LayoutVertical)
+      .value("Horizontal", pangolin::LayoutHorizontal)
+      .value("Equal", pangolin::LayoutEqual)
+      .value("EqualVertical", pangolin::LayoutEqualVertical)
+      .value("EqualHorizontal", pangolin::LayoutEqualHorizontal);
+}
+}  // namespace py_pangolin

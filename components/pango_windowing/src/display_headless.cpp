@@ -1,6 +1,12 @@
-#include <EGL/egl.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/windowing/window.h>
+
+// clang-format(off)
+#include <EGL/egl.h>
+#ifdef Success
+#undef Success
+#endif
+// clang-format(on)
 
 namespace pangolin
 {

@@ -158,11 +158,12 @@ struct DrawableConversionTraits<std::shared_ptr<L>> {
 };
 
 template <typename T>
-concept DrawableConvertable = requires(T x) {
-                                {
-                                  DrawableConversionTraits<T>::makeDrawable(x)
-                                  } -> SameAs<Shared<Drawable>>;
-                              };
+concept DrawableConvertable = requires(T x)
+{
+  {
+    DrawableConversionTraits<T>::makeDrawable(x)
+    } -> SameAs<Shared<Drawable>>;
+};
 
 template <DrawableConvertable T>
 Shared<Drawable> makeDrawable(const T& v)

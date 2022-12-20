@@ -1,9 +1,9 @@
 #pragma once
 
+#include "farm_ng/core/logging/expected.h"
+
 #include <pangolin/gl/glplatform.h>
 #include <sophus/image/runtime_image.h>
-
-#include "farm_ng/core/logging/expected.h"
 
 namespace pangolin
 {

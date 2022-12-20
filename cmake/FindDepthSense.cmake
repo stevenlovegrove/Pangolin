@@ -40,4 +40,3 @@ ELSE()
       MESSAGE(FATAL_ERROR "Could not find DepthSense")
    ENDIF()
 ENDIF()
-

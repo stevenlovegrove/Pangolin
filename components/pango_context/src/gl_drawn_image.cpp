@@ -1,11 +1,11 @@
+#include "camera_utils.h"
+#include "gl_utils.h"
+
 #include <pangolin/context/factory.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
 #include <pangolin/gui/drawn_image.h>
 #include <pangolin/render/gl_vao.h>
-
-#include "camera_utils.h"
-#include "gl_utils.h"
 
 namespace pangolin
 {

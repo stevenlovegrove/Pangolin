@@ -18,7 +18,7 @@ if(ANDROID AND NOT TARGET apk)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH_ROOT}/libs/${ANDROID_NDK_ABI_NAME})
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH_ROOT}/libs/${ANDROID_NDK_ABI_NAME})
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH_ROOT}/bin/${ANDROID_NDK_ABI_NAME})
-    
+
     macro( create_android_manifest_xml filename prog_name package_name activity_name)
         file( WRITE ${filename}
 "<?xml version=\"1.0\" encoding=\"utf-8\"?>
@@ -57,8 +57,8 @@ if(ANDROID AND NOT TARGET apk)
         </activity>
     </application>
 
-</manifest> 
-<!-- END_INCLUDE(manifest) -->" )        
+</manifest>
+<!-- END_INCLUDE(manifest) -->" )
     endmacro()
 
     macro( create_bootstrap_library prog_name package_name)
@@ -118,8 +118,8 @@ void ANativeActivity_onCreate(ANativeActivity * app, void * ud, size_t udsize) {
         # Pick first platform from this list.
         string(REGEX MATCH "^[^\n]+" android_target "${android_target_list}" )
         message(STATUS "Android Target: ${android_target}")
-        
-        if( NOT "${android_target}" STREQUAL "" )        
+
+        if( NOT "${android_target}" STREQUAL "" )
             # Generate ant build scripts for making APK
             execute_process(
                 COMMAND android update project --name ${android_project_name} --path . --target ${android_target} --subprojects
@@ -181,7 +181,7 @@ void ANativeActivity_onCreate(ANativeActivity * app, void * ud, size_t udsize) {
         add_dependencies(run ${prog_name}-run)
 
         # Flag to package dependent libs
-        set_property(TARGET ${prog_name} APPEND PROPERTY MAKE_APK 1 )        
+        set_property(TARGET ${prog_name} APPEND PROPERTY MAKE_APK 1 )
 
         # Clear shared library loading header
         file( WRITE "${CMAKE_CURRENT_BINARY_DIR}/${prog_name}_shared_load.h" "")

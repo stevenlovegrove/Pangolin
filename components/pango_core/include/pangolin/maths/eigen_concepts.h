@@ -2,9 +2,8 @@
 
 #pragma once
 
-#include <pangolin/utils/concept_utils.h>
-
 #include <Eigen/Core>
+#include <pangolin/utils/concept_utils.h>
 
 namespace pangolin
 {
@@ -25,27 +24,29 @@ template <typename Derived>
 concept EigenArrayType = DerivedFrom<Derived, Eigen::ArrayBase<Derived>>;
 
 template <typename T1, typename T2>
-concept EigenSameDim = requires(T1, T2) {
-                         EigenDenseType<T1>&& EigenDenseType<T2> &&
-                             (T1::RowsAtCompileTime == Eigen::Dynamic ||
-                              T1::RowsAtCompileTime == T2::RowsAtCompileTime) &&
-                             (T1::ColsAtCompileTime == Eigen::Dynamic ||
-                              T1::ColsAtCompileTime == T2::ColsAtCompileTime);
-                       };
+concept EigenSameDim = requires(T1, T2)
+{
+  EigenDenseType<T1>&& EigenDenseType<T2> &&
+      (T1::RowsAtCompileTime == Eigen::Dynamic ||
+       T1::RowsAtCompileTime == T2::RowsAtCompileTime) &&
+      (T1::ColsAtCompileTime == Eigen::Dynamic ||
+       T1::ColsAtCompileTime == T2::ColsAtCompileTime);
+};
 
 template <int Rows, int Cols, typename T>
-concept EigenWithDim = requires(T) {
-                         EigenDenseType<T>&& T::RowsAtCompileTime ==
-                             Rows&& T::ColsAtCompileTime == Cols;
-                       };
+concept EigenWithDim = requires(T)
+{
+  EigenDenseType<T>&& T::RowsAtCompileTime == Rows&& T::ColsAtCompileTime ==
+      Cols;
+};
 
 template <int Rows, int Cols, typename T>
-concept EigenWithDimOrDynamic = requires(T) {
-                                  EigenDenseType<T> &&
-                                      (T::RowsAtCompileTime == Eigen::Dynamic ||
-                                       T::RowsAtCompileTime == Rows) &&
-                                      (T::ColsAtCompileTime == Eigen::Dynamic ||
-                                       T::ColsAtCompileTime == Cols);
-                                };
+concept EigenWithDimOrDynamic = requires(T)
+{
+  EigenDenseType<T> &&
+      (T::RowsAtCompileTime == Eigen::Dynamic ||
+       T::RowsAtCompileTime == Rows) &&
+      (T::ColsAtCompileTime == Eigen::Dynamic || T::ColsAtCompileTime == Cols);
+};
 
 }  // namespace pangolin

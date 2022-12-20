@@ -1,7 +1,6 @@
+#include <catch2/catch_test_macros.hpp>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
-
-#include <catch2/catch_test_macros.hpp>
 
 using namespace pangolin;
 

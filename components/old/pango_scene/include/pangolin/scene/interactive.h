@@ -30,40 +30,32 @@
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/opengl_render_state.h>
 
-namespace pangolin {
-
-
-struct Interactive
+namespace pangolin
 {
-    static __thread GLuint current_id;
 
-    virtual ~Interactive() {}
+struct Interactive {
+  static __thread GLuint current_id;
 
-    virtual bool Mouse(
-        int button,
-        const GLprecision win[3], const GLprecision obj[3], const GLprecision normal[3],
-        bool pressed, int button_state, int pickId
-    )  = 0;
+  virtual ~Interactive() {}
 
-    virtual bool MouseMotion(
-        const GLprecision win[3], const GLprecision obj[3], const GLprecision normal[3],
-        int button_state, int pickId
-    ) = 0;
+  virtual bool Mouse(
+      int button, const GLprecision win[3], const GLprecision obj[3],
+      const GLprecision normal[3], bool pressed, int button_state,
+      int pickId) = 0;
+
+  virtual bool MouseMotion(
+      const GLprecision win[3], const GLprecision obj[3],
+      const GLprecision normal[3], int button_state, int pickId) = 0;
 };
 
-struct RenderParams
-{
-    RenderParams()
-      : render_mode(GL_RENDER)
-    {
-    }
+struct RenderParams {
+  RenderParams() : render_mode(GL_RENDER) {}
 
-    GLint render_mode;
+  GLint render_mode;
 };
 
-struct Manipulator : public Interactive
-{
-    virtual void Render(const RenderParams& params) = 0;
+struct Manipulator : public Interactive {
+  virtual void Render(const RenderParams& params) = 0;
 };
 
-}
+}  // namespace pangolin

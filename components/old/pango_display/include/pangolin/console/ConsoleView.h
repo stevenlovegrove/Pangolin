@@ -27,82 +27,80 @@
 
 #pragma once
 
-#include <deque>
-
-#include <pangolin/gl/glfont.h>
-#include <pangolin/gl/colour.h>
-#include <pangolin/var/var.h>
-#include <pangolin/display/view.h>
-#include <pangolin/handler/handler.h>
-
 #include <pangolin/console/InterpreterInterface.h>
+#include <pangolin/display/view.h>
+#include <pangolin/gl/colour.h>
+#include <pangolin/gl/glfont.h>
+#include <pangolin/handler/handler.h>
+#include <pangolin/var/var.h>
+
+#include <deque>
 
 namespace pangolin
 {
 
 class ConsoleView : public pangolin::View, pangolin::Handler
 {
-public:
-    struct Line
+  public:
+  struct Line {
+    Line() : linetype(ConsoleLineTypeCmd) {}
+
+    Line(
+        const GlText& text, InterpreterLineType linetype = ConsoleLineTypeCmd) :
+        text(text), linetype(linetype)
     {
-        Line()
-            : linetype(ConsoleLineTypeCmd)
-        {
-        }
+    }
 
-        Line(const GlText& text, InterpreterLineType linetype = ConsoleLineTypeCmd )
-            : text(text), linetype(linetype)
-        {
-        }
+    GlText text;
+    InterpreterLineType linetype;
+  };
 
-        GlText text;
-        InterpreterLineType linetype;
-    };
+  // Construct with interpreter (and take ownership)
+  ConsoleView(const std::shared_ptr<InterpreterInterface>& interpreter);
 
+  ~ConsoleView();
 
-    // Construct with interpreter (and take ownership)
-    ConsoleView(const std::shared_ptr<InterpreterInterface>& interpreter);
+  View& ShowWithoutAnimation(bool show = true);
 
-    ~ConsoleView();
+  // Replace implementation in View to account for hiding animation
+  View& Show(bool show = true);
 
-    View& ShowWithoutAnimation(bool show=true);
+  // Replace implementation in View to account for hiding animation
+  void ToggleShow();
 
-    // Replace implementation in View to account for hiding animation
-    View& Show(bool show=true);
+  // Replace implementation in View to account for hiding animation
+  bool IsShown() const;
 
-    // Replace implementation in View to account for hiding animation
-    void ToggleShow();
+  void Render() override;
 
-    // Replace implementation in View to account for hiding animation
-    bool IsShown() const;
+  void Keyboard(View&, unsigned char key, int x, int y, bool pressed) override;
 
-    void Render() override;
+  private:
+  void DrawLine(const ConsoleView::Line& l, int carat);
 
-    void Keyboard(View&, unsigned char key, int x, int y, bool pressed) override;
+  void ProcessOutputLines();
 
-private:
-    void DrawLine(const ConsoleView::Line& l, int carat);
+  void AddLine(
+      const std::string& text,
+      InterpreterLineType linetype = ConsoleLineTypeCmd);
 
-    void ProcessOutputLines();
+  Line* GetLine(
+      int id, InterpreterLineType line_type, const std::string& prefix = "");
 
-    void AddLine(const std::string& text, InterpreterLineType linetype = ConsoleLineTypeCmd);
+  std::shared_ptr<InterpreterInterface> interpreter;
 
-    Line* GetLine(int id, InterpreterLineType line_type, const std::string& prefix = "");
+  GlFont& font;
 
-    std::shared_ptr<InterpreterInterface> interpreter;
+  int carat;
+  Line current_line;
+  std::deque<Line> line_buffer;
 
-    GlFont& font;
+  bool hiding;
+  GLfloat bottom;
 
-    int carat;
-    Line current_line;
-    std::deque<Line> line_buffer;
-
-    bool hiding;
-    GLfloat bottom;
-
-    Colour background_colour;
-    std::map<InterpreterLineType,pangolin::Colour> line_colours;
-    float animation_speed;
+  Colour background_colour;
+  std::map<InterpreterLineType, pangolin::Colour> line_colours;
+  float animation_speed;
 };
 
-}
+}  // namespace pangolin

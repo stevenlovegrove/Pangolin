@@ -1,6 +1,6 @@
+#include <catch2/catch_test_macros.hpp>
 #include <pangolin/factory/factory_registry.h>
 
-#include <catch2/catch_test_macros.hpp>
 #include <functional>
 #include <limits>
 #include <string>

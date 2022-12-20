@@ -65,6 +65,7 @@
 #endif  // _WIN_
 
 #include <NaturalSort/natural_sort.hpp>
+
 #include <algorithm>
 #include <fstream>
 #include <list>

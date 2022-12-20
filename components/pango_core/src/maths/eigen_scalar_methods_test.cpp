@@ -1,9 +1,9 @@
 // Copyright (c) farm-ng, inc. All rights reserved.
 
+#include "test_data.h"
+
 #include <pangolin/maths/eigen_scalar_methods.h>
 #include <pangolin/testing/eigen.h>
-
-#include "test_data.h"
 
 namespace pangolin
 {

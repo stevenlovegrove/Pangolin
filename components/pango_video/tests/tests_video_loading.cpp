@@ -1,7 +1,6 @@
+#include <catch2/catch_test_macros.hpp>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/video.h>
-
-#include <catch2/catch_test_macros.hpp>
 
 using namespace pangolin;
 

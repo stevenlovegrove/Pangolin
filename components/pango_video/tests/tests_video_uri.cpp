@@ -1,9 +1,9 @@
+#include <catch2/catch_test_macros.hpp>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/video/video.h>
 #include <pangolin/video/video_exception.h>
 
-#include <catch2/catch_test_macros.hpp>
 #include <functional>
 #include <limits>
 #include <string>

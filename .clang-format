@@ -11,3 +11,14 @@ IndentWidth: '2'
 KeepEmptyLinesAtTheStartOfBlocks: 'false'
 MaxEmptyLinesToKeep: '1'
 SortIncludes: 'true'
+IncludeBlocks: Regroup
+IncludeCategories:
+  # first-party libraries
+  - Regex:           '\"([A-Za-z0-9.\/-_])+\"'
+    Priority:        1
+  # standard libraries
+  - Regex:           '<([A-Za-z0-_])+>'
+    Priority:        3
+  # third-party libraries
+  - Regex:           '<([A-Za-z0-9.\/-_])+>'
+    Priority:        2

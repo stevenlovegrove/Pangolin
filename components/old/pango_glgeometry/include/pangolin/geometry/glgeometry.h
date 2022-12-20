@@ -31,57 +31,62 @@
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glsl.h>
 
-namespace pangolin {
-
-struct GlGeometry
+namespace pangolin
 {
-    GlGeometry() = default;
-    GlGeometry(GlGeometry&&) = default;
-    GlGeometry& operator=(GlGeometry&&) = default;
 
-    struct Element : public GlBufferData
+struct GlGeometry {
+  GlGeometry() = default;
+  GlGeometry(GlGeometry&&) = default;
+  GlGeometry& operator=(GlGeometry&&) = default;
+
+  struct Element : public GlBufferData {
+    Element() = default;
+    Element(Element&&) = default;
+    Element& operator=(Element&&) = default;
+
+    Element(
+        GlBufferType buffer_type, size_t size_bytes, GLenum gluse,
+        uint8_t* data) :
+        GlBufferData(buffer_type, size_bytes, gluse, data)
     {
-        Element() = default;
-        Element(Element&&) = default;
-        Element& operator=(Element&&) = default;
-
-        Element(GlBufferType buffer_type, size_t size_bytes, GLenum gluse, uint8_t* data)
-            : GlBufferData(buffer_type, size_bytes, gluse, data)
-        {}
-
-        inline bool HasAttribute(const std::string& name) const {
-            return attributes.find(name) != attributes.end();
-        }
-
-        struct Attribute {
-            // Stuff needed by glVertexAttribPointer
-            GLenum gltype;
-            size_t count_per_element;
-            size_t num_elements;
-            size_t offset;
-            size_t stride_bytes;
-        };
-        std::map<std::string, Attribute> attributes;
-    };
+    }
 
     inline bool HasAttribute(const std::string& name) const
     {
-        for(const auto& b : buffers) if(b.second.HasAttribute(name)) return true;
-        return false;
+      return attributes.find(name) != attributes.end();
     }
 
-    // Store vertices and attributes
-    std::map<std::string, Element> buffers;
-    // Stores index buffers for each sub-object
-    std::multimap<std::string, Element> objects;
-    // Stores pixmaps
-    std::map<std::string, GlTexture> textures;
+    struct Attribute {
+      // Stuff needed by glVertexAttribPointer
+      GLenum gltype;
+      size_t count_per_element;
+      size_t num_elements;
+      size_t offset;
+      size_t stride_bytes;
+    };
+    std::map<std::string, Attribute> attributes;
+  };
+
+  inline bool HasAttribute(const std::string& name) const
+  {
+    for (const auto& b : buffers)
+      if (b.second.HasAttribute(name)) return true;
+    return false;
+  }
+
+  // Store vertices and attributes
+  std::map<std::string, Element> buffers;
+  // Stores index buffers for each sub-object
+  std::multimap<std::string, Element> objects;
+  // Stores pixmaps
+  std::map<std::string, GlTexture> textures;
 };
 
-GlGeometry::Element ToGlGeometry(const Geometry::Element& el, GlBufferType buffertype);
+GlGeometry::Element ToGlGeometry(
+    const Geometry::Element& el, GlBufferType buffertype);
 
 GlGeometry ToGlGeometry(const Geometry& geom);
 
-void GlDraw(GlSlProgram& prog, const GlGeometry& geom, const GlTexture *matcap);
+void GlDraw(GlSlProgram& prog, const GlGeometry& geom, const GlTexture* matcap);
 
-}
+}  // namespace pangolin

@@ -26,69 +26,73 @@
  */
 
 #include "pangolin_gl.h"
-#include <pangolin/display/display.h>
+
 #include <pangolin/console/ConsoleView.h>
+#include <pangolin/display/display.h>
 
 namespace pangolin
 {
 
-PangolinGl::PangolinGl()
-    : user_app(0), quit(false), mouse_state(0),activeDisplay(0)
+PangolinGl::PangolinGl() :
+    user_app(0), quit(false), mouse_state(0), activeDisplay(0)
 {
 }
 
 PangolinGl::~PangolinGl()
 {
-    // Free displays owned by named_managed_views
-    for(ViewMap::iterator iv = named_managed_views.begin(); iv != named_managed_views.end(); ++iv) {
-        delete iv->second;
-    }
-    named_managed_views.clear();
+  // Free displays owned by named_managed_views
+  for (ViewMap::iterator iv = named_managed_views.begin();
+       iv != named_managed_views.end(); ++iv) {
+    delete iv->second;
+  }
+  named_managed_views.clear();
 }
 
 void PangolinGl::MakeCurrent()
 {
-    SetCurrentContext(this);
-    if(window) {
-        window->MakeCurrent();
-    }
+  SetCurrentContext(this);
+  if (window) {
+    window->MakeCurrent();
+  }
 }
 
 void PangolinGl::RenderViews()
 {
-    Viewport::DisableScissor();
-    base.Render();
+  Viewport::DisableScissor();
+  base.Render();
 }
 
 void PangolinGl::FinishFrame()
 {
-    RenderViews();
+  RenderViews();
 
-    while(screen_capture.size()) {
-        std::pair<std::string,Viewport> fv = screen_capture.front();
-        screen_capture.pop();
-        SaveWindowNow(fv.first, fv.second);
+  while (screen_capture.size()) {
+    std::pair<std::string, Viewport> fv = screen_capture.front();
+    screen_capture.pop();
+    SaveWindowNow(fv.first, fv.second);
+  }
+
+  if (window) {
+    window->SwapBuffers();
+    window->ProcessEvents();
+  }
+
+  Viewport::DisableScissor();
+}
+
+void PangolinGl::SetOnRender(std::function<void()> on_render)
+{
+  this->on_render = on_render;
+}
+
+void PangolinGl::Run()
+{
+  while (!quit) {
+    if (on_render) {
+      on_render();
     }
-
-    if(window) {
-        window->SwapBuffers();
-        window->ProcessEvents();
-    }
-
-    Viewport::DisableScissor();
+    FinishFrame();
+  }
 }
 
-void PangolinGl::SetOnRender(std::function<void ()> on_render) {
-    this->on_render = on_render;
-}
-
-void PangolinGl::Run() {
-    while (!quit) {
-        if (on_render) {
-            on_render();
-        }
-        FinishFrame();
-    }
-}
-
-}
+}  // namespace pangolin

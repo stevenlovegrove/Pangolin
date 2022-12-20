@@ -29,9 +29,9 @@
 
 #include <pybind11/pybind11.h>
 
-namespace py_pangolin {
-  
-  void bind_gl_draw(pybind11::module &m);
+namespace py_pangolin
+{
 
-}  // py_pangolin
+void bind_gl_draw(pybind11::module &m);
 
+}  // namespace py_pangolin

@@ -31,17 +31,13 @@ namespace pangolin
 {
 
 PANGOLIN_DEPRECATED("Use ShowFullscreen(...) instead")
-inline void ToggleFullscreen() {
-    ShowFullscreen(TrueFalseToggle::Toggle);
-}
+inline void ToggleFullscreen() { ShowFullscreen(TrueFalseToggle::Toggle); }
 PANGOLIN_DEPRECATED("Use ShowFullscreen(...) instead")
-inline void SetFullscreen(bool fullscreen = true) {
-    ShowFullscreen( (TrueFalseToggle)fullscreen);
+inline void SetFullscreen(bool fullscreen = true)
+{
+  ShowFullscreen((TrueFalseToggle)fullscreen);
 }
 PANGOLIN_DEPRECATED("Use ShowConsole(...) instead")
-inline void ToggleConsole()
-{
-    ShowConsole(TrueFalseToggle::Toggle);
-}
+inline void ToggleConsole() { ShowConsole(TrueFalseToggle::Toggle); }
 
-}
+}  // namespace pangolin

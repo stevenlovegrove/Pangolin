@@ -99,9 +99,8 @@ class Shared
   T* ptr() { return sharedPtr().get(); }
 
   // Default constructable only if T is
-  Shared()
-    requires(std::is_default_constructible<T>::value)
-      : non_null_shared_(std::make_shared<T>())
+  Shared() requires(std::is_default_constructible<T>::value) :
+      non_null_shared_(std::make_shared<T>())
   {
     checkMaybeThrow();
   }

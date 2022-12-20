@@ -29,8 +29,9 @@
 
 #include <pybind11/pybind11.h>
 
-namespace py_pangolin {
+namespace py_pangolin
+{
 
-  void bind_glvbo(pybind11::module &m);
+void bind_glvbo(pybind11::module &m);
 
-}  // py_pangolin
+}  // namespace py_pangolin

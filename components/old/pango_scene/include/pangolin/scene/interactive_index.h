@@ -27,89 +27,73 @@
 
 #pragma once
 
-#include <map>
-
 #include <pangolin/scene/interactive.h>
 
-namespace pangolin {
+#include <map>
+
+namespace pangolin
+{
 
 class InteractiveIndex
 {
-public:
-    class Token
-    {
+  public:
+  class Token
+  {
     public:
-        friend class InteractiveIndex;
+    friend class InteractiveIndex;
 
-        Token()
-            : id(0)
-        {
-        }
+    Token() : id(0) {}
 
-        Token(Token&& o)
-            : id(o.id)
-        {
-            o.id = 0;
-        }
+    Token(Token&& o) : id(o.id) { o.id = 0; }
 
-        GLint Id() const
-        {
-            return id;
-        }
+    GLint Id() const { return id; }
 
-        ~Token()
-        {
-            if(id) {
-                InteractiveIndex::I().Unstore(*this);
-            }
-        }
+    ~Token()
+    {
+      if (id) {
+        InteractiveIndex::I().Unstore(*this);
+      }
+    }
 
     private:
-        Token(GLint id)
-            : id(id)
-        {
-        }
+    Token(GLint id) : id(id) {}
 
+    GLint id;
+  };
 
-        GLint id;
-    };
+  static InteractiveIndex& I()
+  {
+    static InteractiveIndex instance;
+    return instance;
+  }
 
-    static InteractiveIndex& I()
-    {
-        static InteractiveIndex instance;
-        return instance;
+  Interactive* Find(GLuint id)
+  {
+    auto kv = index.find(id);
+    if (kv != index.end()) {
+      return kv->second;
     }
+    return nullptr;
+  }
 
-    Interactive* Find(GLuint id)
-    {
-        auto kv = index.find(id);
-        if(kv != index.end()) {
-            return kv->second;
-        }
-        return nullptr;
-    }
+  Token Store(Interactive* r)
+  {
+    index[next_id] = r;
+    return Token(next_id++);
+  }
 
-    Token Store(Interactive* r)
-    {
-        index[next_id] = r;
-        return Token(next_id++);
-    }
+  void Unstore(Token& t)
+  {
+    index.erase(t.id);
+    t.id = 0;
+  }
 
-    void Unstore(Token& t)
-    {
-        index.erase(t.id);
-        t.id = 0;
-    }
+  private:
+  // Private constructor.
+  InteractiveIndex() : next_id(1) {}
 
-private:
-    // Private constructor.
-    InteractiveIndex()
-        : next_id(1)
-    {
-    }
-
-    GLint next_id;
-    std::map<GLint, Interactive*> index;
+  GLint next_id;
+  std::map<GLint, Interactive*> index;
 };
 
-}
+}  // namespace pangolin

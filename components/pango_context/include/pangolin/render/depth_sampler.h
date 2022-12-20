@@ -1,11 +1,11 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <farm_ng/core/logging/expected.h>
 #include <pangolin/maths/min_max.h>
 #include <pangolin/utils/shared.h>
 #include <sophus/image/image.h>
 
-#include <Eigen/Core>
 #include <optional>
 
 namespace pangolin

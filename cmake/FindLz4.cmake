@@ -1,7 +1,7 @@
 
 find_path(Lz4_INCLUDE_DIRS
     NAMES lz4frame.h
-    PATHS 
+    PATHS
         /opt/local/include
         /usr/local/include
         /usr/include
@@ -9,7 +9,7 @@ find_path(Lz4_INCLUDE_DIRS
 
 find_library(Lz4_LIBRARIES
     NAMES lz4
-    PATHS 
+    PATHS
         /usr/local/lib
         /opt/local/lib
         /user/local/lib

@@ -45,11 +45,12 @@ struct DrawnImage : public Drawable {
 ////////////////////////////////////////////////////////////////////
 
 template <typename T>
-concept ImageConvertable = requires(T x) {
-                             {
-                               sophus::IntensityImage<>(x)
-                               } -> SameAs<sophus::IntensityImage<>>;
-                           };
+concept ImageConvertable = requires(T x)
+{
+  {
+    sophus::IntensityImage<>(x)
+    } -> SameAs<sophus::IntensityImage<>>;
+};
 
 template <ImageConvertable T>
 sophus::CameraModel defaultOrthoCameraForImage(const T& image)

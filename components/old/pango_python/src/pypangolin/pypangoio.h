@@ -27,12 +27,12 @@
 
 #pragma once
 
+#include <pangolin/console/InterpreterInterface.h>
+#include <pangolin/var/var.h>
 #include <pybind11/embed.h>
+
 #include <iomanip>
 #include <queue>
-
-#include <pangolin/var/var.h>
-#include <pangolin/console/InterpreterInterface.h>
 
 namespace py_pangolin
 {
@@ -42,18 +42,16 @@ using namespace pangolin;
 void bind_pango_write_object(pybind11::module& m);
 
 struct PyPangoIO {
-    PyPangoIO(std::queue<InterpreterLine>& line_queue, InterpreterLineType line_type);
+  PyPangoIO(
+      std::queue<InterpreterLine>& line_queue, InterpreterLineType line_type);
 
-    void write(const std::string& text);
+  void write(const std::string& text);
 
-    void flush();
+  void flush();
 
-    std::string buffer;
-    std::queue<InterpreterLine>& line_queue;
-    InterpreterLineType line_type;
+  std::string buffer;
+  std::queue<InterpreterLine>& line_queue;
+  InterpreterLineType line_type;
 };
 
-
-
-
-}
+}  // namespace py_pangolin

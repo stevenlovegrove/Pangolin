@@ -1,7 +1,6 @@
+#include <catch2/catch_test_macros.hpp>
 #include <pangolin/gui/make_drawable.h>
 #include <pangolin/utils/fmt.h>
-
-#include <catch2/catch_test_macros.hpp>
 
 using namespace pangolin;
 

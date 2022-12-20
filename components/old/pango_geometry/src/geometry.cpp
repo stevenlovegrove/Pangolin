@@ -26,25 +26,26 @@
  */
 
 #include <pangolin/geometry/geometry.h>
-#include <pangolin/geometry/geometry_ply.h>
 #include <pangolin/geometry/geometry_obj.h>
+#include <pangolin/geometry/geometry_ply.h>
 #include <pangolin/utils/file_extension.h>
 #include <pangolin/utils/file_utils.h>
 
-namespace pangolin {
+namespace pangolin
+{
 
 // TODO: Replace this with proper factory registry
 pangolin::Geometry LoadGeometry(const std::string& filename)
 {
-    const std::string expanded_filename = PathExpand(filename);
-    const ImageFileType ft = FileType(expanded_filename);
-    if(ft == ImageFileTypePly) {
-        return LoadGeometryPly(expanded_filename);
-    }else if(ft == ImageFileTypeObj) {
-        return LoadGeometryObj(expanded_filename);
-    }else{
-        throw std::runtime_error("Unsupported geometry file type.");
-    }
+  const std::string expanded_filename = PathExpand(filename);
+  const ImageFileType ft = FileType(expanded_filename);
+  if (ft == ImageFileTypePly) {
+    return LoadGeometryPly(expanded_filename);
+  } else if (ft == ImageFileTypeObj) {
+    return LoadGeometryObj(expanded_filename);
+  } else {
+    throw std::runtime_error("Unsupported geometry file type.");
+  }
 }
 
-}
+}  // namespace pangolin

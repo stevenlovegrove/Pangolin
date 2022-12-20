@@ -2,10 +2,11 @@
 
 #pragma once
 
-#include <Eigen/Core>
-#include <limits>
-
 #include "eigen_concepts.h"
+
+#include <Eigen/Core>
+
+#include <limits>
 
 namespace pangolin
 {

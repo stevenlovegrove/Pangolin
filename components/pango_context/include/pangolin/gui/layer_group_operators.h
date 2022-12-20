@@ -40,12 +40,12 @@ concept same_as = detail::SameHelper<T, U> && detail::SameHelper<U, T>;
 
 // Concept to accept types where the LayerTraits specialization has been defined
 template <typename T>
-concept LayerConvertable =
-    requires(T x) {
-      {
-        Shared<Layer>(LayerConversionTraits<T>::makeLayer(x))
-        } -> SameAs<Shared<Layer>>;
-    };
+concept LayerConvertable = requires(T x)
+{
+  {
+    Shared<Layer>(LayerConversionTraits<T>::makeLayer(x))
+    } -> SameAs<Shared<Layer>>;
+};
 
 template <typename T>
 concept LayerGroupConvertable =
