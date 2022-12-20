@@ -7,6 +7,9 @@
 #include <lz4.h>
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+
 namespace pangolin
 {
 
@@ -100,3 +103,5 @@ IntensityImage<> LoadLz4(std::istream& in)
 }
 
 }  // namespace pangolin
+
+#pragma GCC diagnostic pop

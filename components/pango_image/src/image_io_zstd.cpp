@@ -8,6 +8,9 @@
 #include <zstd.h>
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+
 namespace pangolin
 {
 
@@ -132,3 +135,5 @@ IntensityImage<> LoadZstd(std::istream& in)
 }
 
 }  // namespace pangolin
+
+#pragma GCC diagnostic pop
