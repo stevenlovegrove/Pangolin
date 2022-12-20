@@ -143,7 +143,13 @@ For CI, Pangolin uses [Github Actions](https://github.com/stevenlovegrove/Pangol
 
 To contribute to Pangolin, I would appreciate pull requests against the master branch. If you raise an issue, please include your environment (compiler, operating system, etc).
 
-
+I'd appreciate it if you could run `clang-format -i -style=file` before a PR. You can automate this with each commit by installing a hook to run clang-format automatically. I'd recommend `pre-commit` which is easy to setup:
+```
+$ [apt/brew/etc] install clang-format pre-commit
+$ cd Pangolin
+$ pre-commit install
+$ git commit -am"Some awesome changes!"
+```
 
 ## Extensibility & Factories
 
