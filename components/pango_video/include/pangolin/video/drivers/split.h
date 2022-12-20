@@ -27,39 +27,41 @@
 
 #pragma once
 
-#include <vector>
 #include <pangolin/video/video_interface.h>
+
+#include <vector>
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT SplitVideo
-    : public VideoInterface, public VideoFilterInterface
+class PANGOLIN_EXPORT SplitVideo : public VideoInterface,
+                                   public VideoFilterInterface
 {
-public:
-    SplitVideo(std::unique_ptr<VideoInterface>& videoin, const std::vector<StreamInfo>& streams);
+  public:
+  SplitVideo(
+      std::unique_ptr<VideoInterface>& videoin,
+      const std::vector<StreamInfo>& streams);
 
-    ~SplitVideo();
-    
-    size_t SizeBytes() const;
-    
-    const std::vector<StreamInfo>& Streams() const;
-    
-    void Start();
-    
-    void Stop();
-    
-    bool GrabNext( unsigned char* image, bool wait = true );
-    
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  ~SplitVideo();
 
-    std::vector<VideoInterface*>& InputStreams();
-    
-protected:
-    std::unique_ptr<VideoInterface> src;
-    std::vector<VideoInterface*> videoin;
-    std::vector<StreamInfo> streams;
+  size_t SizeBytes() const;
+
+  const std::vector<StreamInfo>& Streams() const;
+
+  void Start();
+
+  void Stop();
+
+  bool GrabNext(unsigned char* image, bool wait = true);
+
+  bool GrabNewest(unsigned char* image, bool wait = true);
+
+  std::vector<VideoInterface*>& InputStreams();
+
+  protected:
+  std::unique_ptr<VideoInterface> src;
+  std::vector<VideoInterface*> videoin;
+  std::vector<StreamInfo> streams;
 };
 
-
-}
+}  // namespace pangolin

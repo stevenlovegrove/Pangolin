@@ -33,8 +33,8 @@
 namespace pangolin
 {
 
-using MouseButtonBitmask = bitmask<MouseButton,true>;
+using MouseButtonBitmask = bitmask<MouseButton, true>;
 
-using KeyModifierBitmask = bitmask<KeyModifier,true>;
+using KeyModifierBitmask = bitmask<KeyModifier, true>;
 
-}
+}  // namespace pangolin

@@ -32,59 +32,64 @@
 namespace pangolin
 {
 
-enum class TransformOptions
-{
-    None, FlipX, FlipY, FlipXY,
-    Transpose, RotateCW, RotateCCW,
+enum class TransformOptions {
+  None,
+  FlipX,
+  FlipY,
+  FlipXY,
+  Transpose,
+  RotateCW,
+  RotateCCW,
 };
 
 // Video class that transforms its video input using the specified method.
-class PANGOLIN_EXPORT TransformVideo :
-    public VideoInterface,
-    public VideoFilterInterface,
-    public BufferAwareVideoInterface
+class PANGOLIN_EXPORT TransformVideo : public VideoInterface,
+                                       public VideoFilterInterface,
+                                       public BufferAwareVideoInterface
 {
-public:
-    TransformVideo(std::unique_ptr<VideoInterface>& videoin, const std::vector<TransformOptions>& flips);
-    ~TransformVideo();
+  public:
+  TransformVideo(
+      std::unique_ptr<VideoInterface>& videoin,
+      const std::vector<TransformOptions>& flips);
+  ~TransformVideo();
 
-    //! Implement VideoInput::Start()
-    void Start();
+  //! Implement VideoInput::Start()
+  void Start();
 
-    //! Implement VideoInput::Stop()
-    void Stop();
+  //! Implement VideoInput::Stop()
+  void Stop();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const;
 
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    //! Implement VideoFilterInterface method
-    std::vector<VideoInterface*>& InputStreams();
+  //! Implement VideoFilterInterface method
+  std::vector<VideoInterface*>& InputStreams();
 
-    uint32_t AvailableFrames() const;
+  uint32_t AvailableFrames() const;
 
-    bool DropNFrames(uint32_t n);
+  bool DropNFrames(uint32_t n);
 
-protected:
-    void Process(unsigned char* image, const unsigned char* buffer);
+  protected:
+  void Process(unsigned char* image, const unsigned char* buffer);
 
-    std::unique_ptr<VideoInterface> videoin;
-    std::vector<VideoInterface*> inputs;
-    std::vector<StreamInfo> streams;
-    std::vector<TransformOptions> flips;
-    size_t size_bytes;
-    unsigned char* buffer;
+  std::unique_ptr<VideoInterface> videoin;
+  std::vector<VideoInterface*> inputs;
+  std::vector<StreamInfo> streams;
+  std::vector<TransformOptions> flips;
+  size_t size_bytes;
+  unsigned char* buffer;
 
-    picojson::value device_properties;
-    picojson::value frame_properties;
+  picojson::value device_properties;
+  picojson::value frame_properties;
 };
 
-}
+}  // namespace pangolin

@@ -5,7 +5,8 @@ namespace pangolin
 
 // Scales a depth value `real_depth`, in world units, to the range [0, 1]
 // Derived from https://stackoverflow.com/questions/6652253
-float glDepthFromReal(float real_depth, float znear, float zfar) {
+float glDepthFromReal(float real_depth, float znear, float zfar)
+{
   float const A = -2.0 * znear * zfar;
   float const B = zfar - znear;
   float const C = zfar + znear;
@@ -19,7 +20,8 @@ float glDepthFromReal(float real_depth, float znear, float zfar) {
   return z_b;
 }
 
-float realDepthFromGl(float gl_depth, float znear, float zfar) {
+float realDepthFromGl(float gl_depth, float znear, float zfar)
+{
   // Scale to normalized device coordinates, [-1, 1]
   float const A = -2.0 * znear * zfar;
   float const B = zfar - znear;
@@ -34,4 +36,4 @@ float realDepthFromGl(float gl_depth, float znear, float zfar) {
   return real_depth;
 }
 
-}
+}  // namespace pangolin

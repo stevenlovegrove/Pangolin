@@ -35,31 +35,31 @@ namespace pangolin
 // Video class that outputs test video signal.
 class PANGOLIN_EXPORT TestVideo : public VideoInterface
 {
-public:
-    TestVideo(size_t w, size_t h, size_t n, const std::string& pix_fmt);
-    ~TestVideo();
+  public:
+  TestVideo(size_t w, size_t h, size_t n, const std::string& pix_fmt);
+  ~TestVideo();
 
-    //! Implement VideoInput::Start()
-    void Start() override;
+  //! Implement VideoInput::Start()
+  void Start() override;
 
-    //! Implement VideoInput::Stop()
-    void Stop() override;
+  //! Implement VideoInput::Stop()
+  void Stop() override;
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const override;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const override;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const override;
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const override;
 
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true ) override;
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true) override;
 
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true ) override;
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true) override;
 
-protected:
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
+  protected:
+  std::vector<StreamInfo> streams;
+  size_t size_bytes;
 };
 
-}
+}  // namespace pangolin

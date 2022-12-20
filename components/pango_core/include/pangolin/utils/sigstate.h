@@ -27,49 +27,50 @@
 
 #pragma once
 
-#include <map>
-#include <vector>
 #include <pangolin/platform.h>
 #include <pangolin/utils/file_utils.h>
+
 #include <csignal>
+#include <map>
+#include <vector>
 
 #ifndef SIGPIPE
-#  define SIGPIPE 13
-#endif // !SIGPIPE
+#define SIGPIPE 13
+#endif  // !SIGPIPE
 
 namespace pangolin
 {
 
 typedef void (*SigCallbackFn)(int);
 
-struct PANGOLIN_EXPORT SigCallback
-{
-    SigCallback(const int & sig, SigCallbackFn fn, void* data)
-     : sig(sig), fn(fn), data(data), value(false)
-    {
-        std::signal(sig, fn);
-    }
+struct PANGOLIN_EXPORT SigCallback {
+  SigCallback(const int& sig, SigCallbackFn fn, void* data) :
+      sig(sig), fn(fn), data(data), value(false)
+  {
+    std::signal(sig, fn);
+  }
 
-    int sig;
-    SigCallbackFn fn;
-    void * data;
-    volatile sig_atomic_t value;
+  int sig;
+  SigCallbackFn fn;
+  void* data;
+  volatile sig_atomic_t value;
 };
 
 class PANGOLIN_EXPORT SigState
 {
-public:
-    static SigState& I();
+  public:
+  static SigState& I();
 
-    SigState();
-    ~SigState();
+  SigState();
+  ~SigState();
 
-    void Clear();
+  void Clear();
 
-    std::map<int, SigCallback> sig_callbacks;
+  std::map<int, SigCallback> sig_callbacks;
 };
 
 PANGOLIN_EXPORT
-void RegisterNewSigCallback(SigCallbackFn callback, void* data, const int signal);
+void RegisterNewSigCallback(
+    SigCallbackFn callback, void* data, const int signal);
 
-}
+}  // namespace pangolin

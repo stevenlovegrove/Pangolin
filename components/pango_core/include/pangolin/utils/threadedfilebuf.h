@@ -27,14 +27,14 @@
 
 #pragma once
 
-#include <iostream>
-#include <streambuf>
-#include <fstream>
-
 #include <pangolin/platform.h>
-#include <thread>
-#include <mutex>
+
 #include <condition_variable>
+#include <fstream>
+#include <iostream>
+#include <mutex>
+#include <streambuf>
+#include <thread>
 
 #ifdef _LINUX_
 // On linux, using posix file i/o to allow sync writes.
@@ -46,52 +46,52 @@ namespace pangolin
 
 class PANGOLIN_EXPORT threadedfilebuf : public std::streambuf
 {
-public:
-    ~threadedfilebuf();
-    threadedfilebuf();
-    threadedfilebuf(const std::string& filename, size_t buffer_size_bytes);
-    
-    void open(const std::string& filename, size_t buffer_size_bytes);
-    void close();
-    void force_close();
-    
-    void operator()();
-    
-protected:
-    void soft_close();
+  public:
+  ~threadedfilebuf();
+  threadedfilebuf();
+  threadedfilebuf(const std::string& filename, size_t buffer_size_bytes);
 
-    //! Override streambuf::xsputn for asynchronous write
-    std::streamsize xsputn(const char * s, std::streamsize n) override;
+  void open(const std::string& filename, size_t buffer_size_bytes);
+  void close();
+  void force_close();
 
-    //! Override streambuf::overflow for asynchronous write
-    int overflow(int c) override;
+  void operator()();
 
-    std::streampos seekoff(
-        std::streamoff off, std::ios_base::seekdir way,
-        std::ios_base::openmode which = std::ios_base::in | std::ios_base::out
-    ) override;
-    
+  protected:
+  void soft_close();
+
+  //! Override streambuf::xsputn for asynchronous write
+  std::streamsize xsputn(const char* s, std::streamsize n) override;
+
+  //! Override streambuf::overflow for asynchronous write
+  int overflow(int c) override;
+
+  std::streampos seekoff(
+      std::streamoff off, std::ios_base::seekdir way,
+      std::ios_base::openmode which = std::ios_base::in |
+                                      std::ios_base::out) override;
+
 #ifdef USE_POSIX_FILE_IO
-    int filenum = -1;
+  int filenum = -1;
 #else
-    std::filebuf file;
+  std::filebuf file;
 #endif
 
-    char* mem_buffer;
-    std::streamsize mem_size;
-    std::streamsize mem_max_size;
-    std::streamsize mem_start;
-    std::streamsize mem_end;
+  char* mem_buffer;
+  std::streamsize mem_size;
+  std::streamsize mem_max_size;
+  std::streamsize mem_start;
+  std::streamsize mem_end;
 
-    std::streampos input_pos;
-    
-    std::mutex update_mutex;
-    std::condition_variable cond_queued;
-    std::condition_variable cond_dequeued;
-    std::thread write_thread;
+  std::streampos input_pos;
 
-    bool should_run;
-    bool is_pipe;
+  std::mutex update_mutex;
+  std::condition_variable cond_queued;
+  std::condition_variable cond_dequeued;
+  std::thread write_thread;
+
+  bool should_run;
+  bool is_pipe;
 };
 
-}
+}  // namespace pangolin

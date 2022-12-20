@@ -25,14 +25,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/var/varextra.h>
-#include <pangolin/var/varstate.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/picojson.h>
 #include <pangolin/utils/transform.h>
+#include <pangolin/var/varextra.h>
+#include <pangolin/var/varstate.h>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 using namespace std;
 
@@ -41,17 +41,17 @@ namespace pangolin
 
 void ParseVarsFile(const string& filename)
 {
-    VarState::I().LoadFromFile(filename, VarState::FileKind::config);
+  VarState::I().LoadFromFile(filename, VarState::FileKind::config);
 }
 
-void LoadJsonFile(const std::string& filename, const string &prefix)
+void LoadJsonFile(const std::string& filename, const string& prefix)
 {
-    VarState::I().LoadFromFile(filename, VarState::FileKind::json);
+  VarState::I().LoadFromFile(filename, VarState::FileKind::json);
 }
 
-void SaveJsonFile(const std::string& filename, const string &prefix)
+void SaveJsonFile(const std::string& filename, const string& prefix)
 {
-    VarState::I().SaveToFile(filename, VarState::FileKind::json);
+  VarState::I().SaveToFile(filename, VarState::FileKind::json);
 }
 
-}
+}  // namespace pangolin

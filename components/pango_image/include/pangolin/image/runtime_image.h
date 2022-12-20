@@ -7,8 +7,7 @@
 namespace pangolin
 {
 
-template<template <typename> class TAllocator = Eigen::aligned_allocator>
+template <template <typename> class TAllocator = Eigen::aligned_allocator>
 using IntensityImage = sophus::IntensityImage<TAllocator>;
-
 
 }

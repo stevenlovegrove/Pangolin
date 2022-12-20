@@ -27,61 +27,54 @@
 
 #pragma once
 
-#include <pangolin/var/varvaluegeneric.h>
 #include <pangolin/compat/type_traits.h>
 #include <pangolin/utils/type_convert.h>
+#include <pangolin/var/varvaluegeneric.h>
 
 namespace pangolin
 {
 
-template<typename T, typename S>
+template <typename T, typename S>
 class VarWrapper : public VarValueT<T>
 {
-public:
-    typedef typename std::remove_reference<S>::type VarS;
+  public:
+  typedef typename std::remove_reference<S>::type VarS;
 
-    VarWrapper(const std::shared_ptr<VarValueT<S>>& src)
-        : src(src)
-    {
-        this->str = src->str;
-    }
+  VarWrapper(const std::shared_ptr<VarValueT<S>>& src) : src(src)
+  {
+    this->str = src->str;
+  }
 
-    const char* TypeId() const
-    {
-        return typeid(T).name();
-    }
+  const char* TypeId() const { return typeid(T).name(); }
 
-    void Reset()
-    {
-        src->Reset();
+  void Reset()
+  {
+    src->Reset();
 
-        // If reset throws, it will go up to the user, since there is nothing
-        // more we can do
-        cache = Convert<T,VarS>::Do(src->Get());
-    }
+    // If reset throws, it will go up to the user, since there is nothing
+    // more we can do
+    cache = Convert<T, VarS>::Do(src->Get());
+  }
 
-    VarMeta& Meta()
-    {
-        return src->Meta();
-    }
+  VarMeta& Meta() { return src->Meta(); }
 
-    const T& Get() const
-    {
-        // This might throw, but we can't reset because this is a const method
-        cache = Convert<T,VarS>::Do(src->Get());
-        return cache;
-    }
+  const T& Get() const
+  {
+    // This might throw, but we can't reset because this is a const method
+    cache = Convert<T, VarS>::Do(src->Get());
+    return cache;
+  }
 
-    void Set(const T& val)
-    {
-        cache = val;
-        // This might throw - needs to be dealt with by user
-        src->Set( Convert<VarS, T>::Do(val) );
-    }
+  void Set(const T& val)
+  {
+    cache = val;
+    // This might throw - needs to be dealt with by user
+    src->Set(Convert<VarS, T>::Do(val));
+  }
 
-protected:
-    mutable T cache;
-    std::shared_ptr<VarValueT<S>> src;
+  protected:
+  mutable T cache;
+  std::shared_ptr<VarValueT<S>> src;
 };
 
-}
+}  // namespace pangolin

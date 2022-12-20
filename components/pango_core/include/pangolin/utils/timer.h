@@ -27,10 +27,10 @@
 
 #pragma once
 
+#include <pangolin/platform.h>
+
 #include <chrono>
 #include <thread>
-
-#include <pangolin/platform.h>
 
 namespace pangolin
 {
@@ -40,83 +40,69 @@ namespace pangolin
 
 using baseclock = std::chrono::steady_clock;
 using basetime = baseclock::time_point;
-static_assert(baseclock::is_steady, "baseclock must be steady to be robust against system time settings");
+static_assert(
+    baseclock::is_steady,
+    "baseclock must be steady to be robust against system time settings");
 
-inline basetime TimeNow()
-{
-    return baseclock::now();
-}
+inline basetime TimeNow() { return baseclock::now(); }
 
 inline double Time_s(basetime t)
 {
-    using namespace std::chrono;
-    return (double)duration_cast<seconds>( t.time_since_epoch() ).count();
+  using namespace std::chrono;
+  return (double)duration_cast<seconds>(t.time_since_epoch()).count();
 }
 
 inline int64_t Time_us(basetime t)
 {
-    using namespace std::chrono;
-    return duration_cast<microseconds>( t.time_since_epoch() ).count();
+  using namespace std::chrono;
+  return duration_cast<microseconds>(t.time_since_epoch()).count();
 }
 
 inline double TimeDiff_s(basetime start, basetime end)
 {
-    const baseclock::duration d = end - start;
-    return Time_s( basetime() + d);
+  const baseclock::duration d = end - start;
+  return Time_s(basetime() + d);
 }
 
 inline int64_t TimeDiff_us(basetime start, basetime end)
 {
-    const baseclock::duration d = end - start;
-    return Time_us( basetime() + d);
+  const baseclock::duration d = end - start;
+  return Time_us(basetime() + d);
 }
 
 inline basetime TimeAdd(basetime t1, basetime t2)
 {
-
-    return t1 + t2.time_since_epoch();
+  return t1 + t2.time_since_epoch();
 }
 
-inline double TimeNow_s()
-{
-    return Time_s(TimeNow());
-}
+inline double TimeNow_s() { return Time_s(TimeNow()); }
 
-inline int64_t TimeNow_us()
-{
-    return Time_us(TimeNow());
-}
+inline int64_t TimeNow_us() { return Time_us(TimeNow()); }
 
 inline basetime WaitUntil(basetime t)
 {
-    std::this_thread::sleep_until(t);
-    return TimeNow();
+  std::this_thread::sleep_until(t);
+  return TimeNow();
 }
 
-struct Timer
-{
-    Timer() {
-        Reset();
-    }
-    
-    void Reset()
-    {
-        start = TimeNow();
-    }
-    
-    double Elapsed_s()
-    {
-        basetime currtime = TimeNow();
-        return TimeDiff_s(start,currtime);
-    }
+struct Timer {
+  Timer() { Reset(); }
 
-    double Elapsed_us()
-    {
-        basetime currtime = TimeNow();
-        return (double)TimeDiff_us(start,currtime);
-    }
-    
-    basetime start;
+  void Reset() { start = TimeNow(); }
+
+  double Elapsed_s()
+  {
+    basetime currtime = TimeNow();
+    return TimeDiff_s(start, currtime);
+  }
+
+  double Elapsed_us()
+  {
+    basetime currtime = TimeNow();
+    return (double)TimeDiff_us(start, currtime);
+  }
+
+  basetime start;
 };
 
-}
+}  // namespace pangolin

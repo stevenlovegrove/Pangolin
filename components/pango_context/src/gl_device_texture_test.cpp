@@ -3,6 +3,4 @@
 
 using namespace pangolin;
 
-TEST_CASE("smoke"){
-    auto tex = DeviceTexture::Create();
-}
+TEST_CASE("smoke") { auto tex = DeviceTexture::Create(); }

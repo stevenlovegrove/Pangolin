@@ -27,83 +27,82 @@
 
 #pragma once
 
-#include <pangolin/platform.h>
-#include <pangolin/windowing/window.h>
-#include <stdexcept>
-#include <memory>
-#include <string>
+#include <GL/glx.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <GL/glx.h>
+#include <pangolin/platform.h>
+#include <pangolin/windowing/window.h>
+
+#include <memory>
+#include <stdexcept>
+#include <string>
 
 namespace pangolin
 {
 
-struct X11Display
-{
-    X11Display(const char* name = 0) {
-        XInitThreads();
-        display = XOpenDisplay(name);
-        if (!display) {
-            throw std::runtime_error("Pangolin X11: Failed to open X display");
-        }
+struct X11Display {
+  X11Display(const char* name = 0)
+  {
+    XInitThreads();
+    display = XOpenDisplay(name);
+    if (!display) {
+      throw std::runtime_error("Pangolin X11: Failed to open X display");
     }
+  }
 
-    ~X11Display() {
-        XCloseDisplay(display);
-    }
+  ~X11Display() { XCloseDisplay(display); }
 
-    // Owns the display
-    ::Display* display;
+  // Owns the display
+  ::Display* display;
 };
 
-struct X11GlContext : public GlContextInterface
-{
-    X11GlContext(std::shared_ptr<X11Display> &d, ::GLXFBConfig chosenFbc, std::shared_ptr<X11GlContext> shared_context = std::shared_ptr<X11GlContext>() );
-    ~X11GlContext();
+struct X11GlContext : public GlContextInterface {
+  X11GlContext(
+      std::shared_ptr<X11Display>& d, ::GLXFBConfig chosenFbc,
+      std::shared_ptr<X11GlContext> shared_context =
+          std::shared_ptr<X11GlContext>());
+  ~X11GlContext();
 
-    std::shared_ptr<X11Display> display;
+  std::shared_ptr<X11Display> display;
 
-    std::shared_ptr<X11GlContext> shared_context;
+  std::shared_ptr<X11GlContext> shared_context;
 
-    // Owns the OpenGl Context
-    ::GLXContext glcontext;
+  // Owns the OpenGl Context
+  ::GLXContext glcontext;
 };
 
-struct X11Window : public WindowInterface
-{
-    X11Window(
-        const std::string& title, int width, int height,
-        std::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc
-    );
+struct X11Window : public WindowInterface {
+  X11Window(
+      const std::string& title, int width, int height,
+      std::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc);
 
-    ~X11Window();
+  ~X11Window();
 
-    void ShowFullscreen(const TrueFalseToggle on_off) override;
+  void ShowFullscreen(const TrueFalseToggle on_off) override;
 
-    void Move(int x, int y) override;
+  void Move(int x, int y) override;
 
-    void Resize(unsigned int w, unsigned int h) override;
+  void Resize(unsigned int w, unsigned int h) override;
 
-    void MakeCurrent(GLXContext ctx);
+  void MakeCurrent(GLXContext ctx);
 
-    void MakeCurrent() override;
+  void MakeCurrent() override;
 
-    void RemoveCurrent() override;
+  void RemoveCurrent() override;
 
-    void SwapBuffers() override;
+  void SwapBuffers() override;
 
-    void ProcessEvents() override;
+  void ProcessEvents() override;
 
-    // References the X11 display and context.
-    std::shared_ptr<X11Display> display;
-    std::shared_ptr<X11GlContext> glcontext;
+  // References the X11 display and context.
+  std::shared_ptr<X11Display> display;
+  std::shared_ptr<X11GlContext> glcontext;
 
-    // Owns the X11 Window and Colourmap
-    ::Window win;
-    ::Colormap cmap;
+  // Owns the X11 Window and Colourmap
+  ::Window win;
+  ::Colormap cmap;
 
-    Atom delete_message;
+  Atom delete_message;
 };
 
-}
+}  // namespace pangolin

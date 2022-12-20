@@ -3,6 +3,7 @@
 
 using namespace pangolin;
 
-TEST_CASE("smoke"){
-    auto bo = DeviceBuffer::Create({DeviceBuffer::Kind::VertexAttributes});
+TEST_CASE("smoke")
+{
+  auto bo = DeviceBuffer::Create({DeviceBuffer::Kind::VertexAttributes});
 }

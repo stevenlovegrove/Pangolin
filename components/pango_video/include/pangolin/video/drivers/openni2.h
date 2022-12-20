@@ -28,118 +28,124 @@
 
 #pragma once
 
-#include <pangolin/video/video_interface.h>
-#include <pangolin/video/drivers/openni_common.h>
-
 #include <OpenNI.h>
+#include <pangolin/video/drivers/openni_common.h>
+#include <pangolin/video/video_interface.h>
 
 namespace pangolin
 {
 const int MAX_OPENNI2_STREAMS = 2 * ONI_MAX_SENSORS;
 
 //! Interface to video capture sources
-struct OpenNi2Video : public VideoInterface, public VideoPropertiesInterface, public VideoPlaybackInterface
-{
-public:
+struct OpenNi2Video : public VideoInterface,
+                      public VideoPropertiesInterface,
+                      public VideoPlaybackInterface {
+  public:
+  // Open all RGB and Depth streams from all devices
+  OpenNi2Video(
+      ImageDim dim = ImageDim(640, 480), ImageRoi roi = ImageRoi(0, 0, 0, 0),
+      int fps = 30);
 
-    // Open all RGB and Depth streams from all devices
-    OpenNi2Video(ImageDim dim=ImageDim(640,480), ImageRoi roi=ImageRoi(0,0,0,0), int fps=30);
+  // Open streams specified
+  OpenNi2Video(std::vector<OpenNiStreamMode>& stream_modes);
 
-    // Open streams specified
-    OpenNi2Video(std::vector<OpenNiStreamMode>& stream_modes);
+  // Open openni file
+  OpenNi2Video(const std::string& filename);
 
-    // Open openni file
-    OpenNi2Video(const std::string& filename);
+  // Open openni file with certain params
+  OpenNi2Video(
+      const std::string& filename, std::vector<OpenNiStreamMode>& stream_modes);
 
-    // Open openni file with certain params
-    OpenNi2Video(const std::string& filename, std::vector<OpenNiStreamMode>& stream_modes);
-    
-    void UpdateProperties();
+  void UpdateProperties();
 
-    void SetMirroring(bool enable);
-    void SetAutoExposure(bool enable);
-    void SetAutoWhiteBalance(bool enable);
-    void SetDepthCloseRange(bool enable);
-    void SetDepthHoleFilter(bool enable);
-    void SetDepthColorSyncEnabled(bool enable);
-    void SetFastCrop(bool enable);
-    void SetRegisterDepthToImage(bool enable);
-    void SetPlaybackSpeed(float speed);
-    void SetPlaybackRepeat(bool enabled);
+  void SetMirroring(bool enable);
+  void SetAutoExposure(bool enable);
+  void SetAutoWhiteBalance(bool enable);
+  void SetDepthCloseRange(bool enable);
+  void SetDepthHoleFilter(bool enable);
+  void SetDepthColorSyncEnabled(bool enable);
+  void SetFastCrop(bool enable);
+  void SetRegisterDepthToImage(bool enable);
+  void SetPlaybackSpeed(float speed);
+  void SetPlaybackRepeat(bool enabled);
 
-    ~OpenNi2Video();
+  ~OpenNi2Video();
 
-    //! Implement VideoInput::Start()
-    void Start() override;
+  //! Implement VideoInput::Start()
+  void Start() override;
 
-    //! Implement VideoInput::Stop()
-    void Stop() override;
+  //! Implement VideoInput::Stop()
+  void Stop() override;
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const override;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const override;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const override;
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const override;
 
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true ) override;
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true) override;
 
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true ) override;
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true) override;
 
-    //! Implement VideoPropertiesInterface::Properties()
-    const picojson::value& DeviceProperties() const  override{
-        return device_properties;
-    }
+  //! Implement VideoPropertiesInterface::Properties()
+  const picojson::value& DeviceProperties() const override
+  {
+    return device_properties;
+  }
 
-    //! Implement VideoPropertiesInterface::Properties()
-    const picojson::value& FrameProperties() const  override{
-        return frame_properties;
-    }
+  //! Implement VideoPropertiesInterface::Properties()
+  const picojson::value& FrameProperties() const override
+  {
+    return frame_properties;
+  }
 
-    //! Implement VideoPlaybackInterface::GetCurrentFrameId
-    size_t GetCurrentFrameId() const override;
+  //! Implement VideoPlaybackInterface::GetCurrentFrameId
+  size_t GetCurrentFrameId() const override;
 
-    //! Implement VideoPlaybackInterface::GetTotalFrames
-    size_t GetTotalFrames() const override;
+  //! Implement VideoPlaybackInterface::GetTotalFrames
+  size_t GetTotalFrames() const override;
 
-    //! Implement VideoPlaybackInterface::Seek
-    size_t Seek(size_t frameid) override;
+  //! Implement VideoPlaybackInterface::Seek
+  size_t Seek(size_t frameid) override;
 
-    openni::VideoStream* GetVideoStream(int stream);
+  openni::VideoStream* GetVideoStream(int stream);
 
-protected:
-    void InitialiseOpenNI();
-    int AddDevice(const std::string& device_uri);
-    void AddStream(const OpenNiStreamMode& mode);
-    void SetupStreamModes();
-    void PrintOpenNI2Modes(openni::SensorType sensorType);
-    openni::VideoMode FindOpenNI2Mode(openni::Device &device, openni::SensorType sensorType, int width, int height, int fps, openni::PixelFormat fmt );
+  protected:
+  void InitialiseOpenNI();
+  int AddDevice(const std::string& device_uri);
+  void AddStream(const OpenNiStreamMode& mode);
+  void SetupStreamModes();
+  void PrintOpenNI2Modes(openni::SensorType sensorType);
+  openni::VideoMode FindOpenNI2Mode(
+      openni::Device& device, openni::SensorType sensorType, int width,
+      int height, int fps, openni::PixelFormat fmt);
 
-    size_t numDevices;
-    size_t numStreams;
+  size_t numDevices;
+  size_t numStreams;
 
-    openni::Device devices[ONI_MAX_SENSORS];
-    OpenNiStreamMode sensor_type[ONI_MAX_SENSORS];
+  openni::Device devices[ONI_MAX_SENSORS];
+  OpenNiStreamMode sensor_type[ONI_MAX_SENSORS];
 
-    openni::VideoStream video_stream[ONI_MAX_SENSORS];
-    openni::VideoFrameRef video_frame[ONI_MAX_SENSORS];
+  openni::VideoStream video_stream[ONI_MAX_SENSORS];
+  openni::VideoFrameRef video_frame[ONI_MAX_SENSORS];
 
-    std::vector<StreamInfo> streams;
-    size_t sizeBytes;
+  std::vector<StreamInfo> streams;
+  size_t sizeBytes;
 
-    picojson::value device_properties;
-    picojson::value frame_properties;
-    picojson::value* streams_properties;
+  picojson::value device_properties;
+  picojson::value frame_properties;
+  picojson::value* streams_properties;
 
-    bool use_depth;
-    bool use_ir;
-    bool use_rgb;
-    bool depth_to_color;
-    bool use_ir_and_rgb;
+  bool use_depth;
+  bool use_ir;
+  bool use_rgb;
+  bool depth_to_color;
+  bool use_ir_and_rgb;
 
-    size_t current_frame_index;
-    size_t total_frames;
+  size_t current_frame_index;
+  size_t total_frames;
 };
 
-}
+}  // namespace pangolin

@@ -27,14 +27,15 @@
 
 #pragma once
 
+#include <assert.h>
 #include <pangolin/gl/gl.h>
-#include <pangolin/gl/glpixformat.h>
 #include <pangolin/gl/gl_type_info.h>
+#include <pangolin/gl/glpixformat.h>
 #include <pangolin/image/image_io.h>
 #include <pangolin/utils/type_convert.h>
+
 #include <algorithm>
 #include <stdexcept>
-#include <assert.h>
 
 namespace pangolin
 {
@@ -46,941 +47,941 @@ namespace pangolin
 #ifndef HAVE_GLES
 const int MAX_ATTACHMENTS = 8;
 const static GLuint attachment_buffers[] = {
-    GL_COLOR_ATTACHMENT0_EXT,
-    GL_COLOR_ATTACHMENT1_EXT,
-    GL_COLOR_ATTACHMENT2_EXT,
-    GL_COLOR_ATTACHMENT3_EXT,
-    GL_COLOR_ATTACHMENT4_EXT,
-    GL_COLOR_ATTACHMENT5_EXT,
-    GL_COLOR_ATTACHMENT6_EXT,
-    GL_COLOR_ATTACHMENT7_EXT
-};
-#else // HAVE_GLES
+    GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT,
+    GL_COLOR_ATTACHMENT2_EXT, GL_COLOR_ATTACHMENT3_EXT,
+    GL_COLOR_ATTACHMENT4_EXT, GL_COLOR_ATTACHMENT5_EXT,
+    GL_COLOR_ATTACHMENT6_EXT, GL_COLOR_ATTACHMENT7_EXT};
+#else   // HAVE_GLES
 const int MAX_ATTACHMENTS = 1;
-const static GLuint attachment_buffers[] = {
-    GL_COLOR_ATTACHMENT0_EXT
-};
-#endif // HAVE_GLES
+const static GLuint attachment_buffers[] = {GL_COLOR_ATTACHMENT0_EXT};
+#endif  // HAVE_GLES
 
 const static size_t datatype_bytes[] = {
-    1, //  #define GL_BYTE 0x1400
-    1, //  #define GL_UNSIGNED_BYTE 0x1401
-    2, //  #define GL_SHORT 0x1402
-    2, //  #define GL_UNSIGNED_SHORT 0x1403
-    4, //  #define GL_INT 0x1404
-    4, //  #define GL_UNSIGNED_INT 0x1405
-    4, //  #define GL_FLOAT 0x1406
-    2, //  #define GL_2_BYTES 0x1407
-    3, //  #define GL_3_BYTES 0x1408
-    4, //  #define GL_4_BYTES 0x1409
-    8  //  #define GL_DOUBLE 0x140A
+    1,  //  #define GL_BYTE 0x1400
+    1,  //  #define GL_UNSIGNED_BYTE 0x1401
+    2,  //  #define GL_SHORT 0x1402
+    2,  //  #define GL_UNSIGNED_SHORT 0x1403
+    4,  //  #define GL_INT 0x1404
+    4,  //  #define GL_UNSIGNED_INT 0x1405
+    4,  //  #define GL_FLOAT 0x1406
+    2,  //  #define GL_2_BYTES 0x1407
+    3,  //  #define GL_3_BYTES 0x1408
+    4,  //  #define GL_4_BYTES 0x1409
+    8   //  #define GL_DOUBLE 0x140A
 };
 
 const static size_t format_channels[] = {
-    1, //  #define GL_RED 0x1903
-    1, //  #define GL_GREEN 0x1904
-    1, //  #define GL_BLUE 0x1905
-    1, //  #define GL_ALPHA 0x1906
-    3, //  #define GL_RGB 0x1907
-    4, //  #define GL_RGBA 0x1908
-    1, //  #define GL_LUMINANCE 0x1909
-    2  //  #define GL_LUMINANCE_ALPHA 0x190A
+    1,  //  #define GL_RED 0x1903
+    1,  //  #define GL_GREEN 0x1904
+    1,  //  #define GL_BLUE 0x1905
+    1,  //  #define GL_ALPHA 0x1906
+    3,  //  #define GL_RGB 0x1907
+    4,  //  #define GL_RGBA 0x1908
+    1,  //  #define GL_LUMINANCE 0x1909
+    2   //  #define GL_LUMINANCE_ALPHA 0x190A
 };
 
 inline size_t GlDataTypeBytes(GLenum type)
 {
-    return datatype_bytes[type - GL_BYTE];
+  return datatype_bytes[type - GL_BYTE];
 }
 
 inline size_t GlFormatChannels(GLenum data_layout)
 {
-    if (data_layout == GL_BGR) return 3;
-    if (data_layout == GL_BGRA) return 4;
-    return format_channels[data_layout - GL_RED];
+  if (data_layout == GL_BGR) return 3;
+  if (data_layout == GL_BGRA) return 4;
+  return format_channels[data_layout - GL_RED];
 }
 
-//template<typename T>
-//struct GlDataTypeTrait {};
-//template<> struct GlDataTypeTrait<float>{ static const GLenum type = GL_FLOAT; };
-//template<> struct GlDataTypeTrait<int>{ static const GLenum type = GL_INT; };
-//template<> struct GlDataTypeTrait<unsigned char>{ static const GLenum type = GL_UNSIGNED_BYTE; };
+// template<typename T>
+// struct GlDataTypeTrait {};
+// template<> struct GlDataTypeTrait<float>{ static const GLenum type =
+// GL_FLOAT; }; template<> struct GlDataTypeTrait<int>{ static const GLenum type
+// = GL_INT; }; template<> struct GlDataTypeTrait<unsigned char>{ static const
+// GLenum type = GL_UNSIGNED_BYTE; };
 
-inline GlTexture::GlTexture()
-    : internal_format(0), tid(0), width(0), height(0)
+inline GlTexture::GlTexture() : internal_format(0), tid(0), width(0), height(0)
 {
-    // Not a texture constructor
+  // Not a texture constructor
 }
 
-inline GlTexture::GlTexture(GLint width, GLint height, GLint internal_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, GLvoid* data )
-    : internal_format(0), tid(0)
+inline GlTexture::GlTexture(
+    GLint width, GLint height, GLint internal_format, bool sampling_linear,
+    int border, GLenum glformat, GLenum gltype, GLvoid* data) :
+    internal_format(0), tid(0)
 {
-    Reinitialise(width,height,internal_format,sampling_linear,border,glformat,gltype,data);
+  Reinitialise(
+      width, height, internal_format, sampling_linear, border, glformat, gltype,
+      data);
 }
 
 inline GlTexture::GlTexture(const IntensityImage<>& img, bool sampling_linear)
 {
-    this->Load(img, sampling_linear);
+  this->Load(img, sampling_linear);
 }
 
-inline GlTexture::GlTexture(GlTexture&& tex)
-{
-    *this = std::move(tex);
-}
+inline GlTexture::GlTexture(GlTexture&& tex) { *this = std::move(tex); }
 
 inline GlTexture& GlTexture::operator=(GlTexture&& tex)
 {
-    if (&tex != this) {
-        internal_format = tex.internal_format;
-        tid = tex.tid;
-        width = tex.width;
-        height = tex.height;
+  if (&tex != this) {
+    internal_format = tex.internal_format;
+    tid = tex.tid;
+    width = tex.width;
+    height = tex.height;
 
-        tex.internal_format = 0;
-        tex.tid = 0;
-    }
-    return *this;
+    tex.internal_format = 0;
+    tex.tid = 0;
+  }
+  return *this;
 }
 
-inline bool GlTexture::IsValid() const
-{
-    return tid != 0;
-}
+inline bool GlTexture::IsValid() const { return tid != 0; }
 
 inline void GlTexture::Delete()
 {
-    if(internal_format!=0 ) {
-        glDeleteTextures(1,&tid);
-        internal_format = 0;
-        tid = 0;
-        width = 0;
-        height = 0;
-    }
+  if (internal_format != 0) {
+    glDeleteTextures(1, &tid);
+    internal_format = 0;
+    tid = 0;
+    width = 0;
+    height = 0;
+  }
 }
 
-inline GlTexture::~GlTexture()
+inline GlTexture::~GlTexture() { Delete(); }
+
+inline void GlTexture::Bind() const { glBindTexture(GL_TEXTURE_2D, tid); }
+
+inline void GlTexture::Unbind() const { glBindTexture(GL_TEXTURE_2D, 0); }
+
+inline void GlTexture::Reinitialise(
+    GLsizei w, GLsizei h, GLint int_format, bool sampling_linear, int border,
+    GLenum glformat, GLenum gltype, const GLvoid* data)
 {
-    Delete();
-}
+  if (tid != 0) {
+    PANGO_GL(glDeleteTextures(1, &tid));
+  }
 
-inline void GlTexture::Bind() const
-{
-    glBindTexture(GL_TEXTURE_2D, tid);
-}
+  internal_format = int_format;
+  width = w;
+  height = h;
 
-inline void GlTexture::Unbind() const
-{
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
+  PANGO_GL(glGenTextures(1, &tid));
+  Bind();
 
-inline void GlTexture::Reinitialise(GLsizei w, GLsizei h, GLint int_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, const GLvoid* data )
-{
-    if(tid!=0) {
-        PANGO_GL(glDeleteTextures(1,&tid));
-    }
+  // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some
+  // values are required for call to succeed.
+  PANGO_GL(glTexImage2D(
+      GL_TEXTURE_2D, 0, internal_format, width, height, border, glformat,
+      gltype, data));
 
-    internal_format = int_format;
-    width = w;
-    height = h;
+  if (sampling_linear) {
+    PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+  } else {
+    PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+    PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+  }
 
-    PANGO_GL(glGenTextures(1,&tid));
-    Bind();
-
-    // GL_LUMINANCE and GL_FLOAT don't seem to actually affect buffer, but some values are required
-    // for call to succeed.
-    PANGO_GL(glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, border, glformat, gltype, data));
-
-    if(sampling_linear) {
-        PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-    }else{
-        PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-        PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-    }
-
-    PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-    PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+  PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+  PANGO_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 }
 
 inline void GlTexture::Upload(
-    const void* data,
-    GLenum data_format, GLenum data_type
-) {
-    Bind();
-    glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,data_format,data_type,data);
-    PANGO_GL_CHECK();
+    const void* data, GLenum data_format, GLenum data_type)
+{
+  Bind();
+  glTexSubImage2D(
+      GL_TEXTURE_2D, 0, 0, 0, width, height, data_format, data_type, data);
+  PANGO_GL_CHECK();
 }
 
 inline void GlTexture::Upload(
-    const void* data,
-    GLsizei tex_x_offset, GLsizei tex_y_offset,
-    GLsizei data_w, GLsizei data_h,
-    GLenum data_format, GLenum data_type )
+    const void* data, GLsizei tex_x_offset, GLsizei tex_y_offset,
+    GLsizei data_w, GLsizei data_h, GLenum data_format, GLenum data_type)
 {
-    Bind();
-    glTexSubImage2D(GL_TEXTURE_2D,0,tex_x_offset,tex_y_offset,data_w,data_h,data_format,data_type,data);
-    PANGO_GL_CHECK();
+  Bind();
+  glTexSubImage2D(
+      GL_TEXTURE_2D, 0, tex_x_offset, tex_y_offset, data_w, data_h, data_format,
+      data_type, data);
+  PANGO_GL_CHECK();
 }
 
 inline void GlTexture::Load(const IntensityImage<>& image, bool sampling_linear)
 {
-    auto maybe_glfmt = glTypeInfo(image.pixelType());
-    auto glfmt = FARM_UNWRAP(maybe_glfmt);
-    
-    Reinitialise((GLint)image.width(), (GLint)image.height(),
-     glfmt.gl_sized_format, sampling_linear, 0, glfmt.gl_base_format,
-     glfmt.gl_type, image.rawPtr() );
+  auto maybe_glfmt = glTypeInfo(image.pixelType());
+  auto glfmt = FARM_UNWRAP(maybe_glfmt);
+
+  Reinitialise(
+      (GLint)image.width(), (GLint)image.height(), glfmt.gl_sized_format,
+      sampling_linear, 0, glfmt.gl_base_format, glfmt.gl_type, image.rawPtr());
 }
 
-template<typename T>
+template <typename T>
 void GlTexture::Load(const sophus::ImageView<T>& image, bool sampling_linear)
 {
-    using GlFmt = GlFormatTraits<T>;
+  using GlFmt = GlFormatTraits<T>;
 
-    Reinitialise(
-        (GLint)image.width(), (GLint)image.height(),
-        GlFmt::glinternalformat,
-        sampling_linear, 0,
-        GlFmt::glformat, GlFmt::gltype,
-        image.ptr());
+  Reinitialise(
+      (GLint)image.width(), (GLint)image.height(), GlFmt::glinternalformat,
+      sampling_linear, 0, GlFmt::glformat, GlFmt::gltype, image.ptr());
 }
 
-inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_linear)
+inline void GlTexture::LoadFromFile(
+    const std::string& filename, bool sampling_linear)
 {
-    IntensityImage<> image = LoadImage(filename);
-    Load(image, sampling_linear);
+  IntensityImage<> image = LoadImage(filename);
+  Load(image, sampling_linear);
 }
 
-inline void GlTexture::Download(void* image, GLenum data_layout, GLenum data_type) const
+inline void GlTexture::Download(
+    void* image, GLenum data_layout, GLenum data_type) const
 {
-    Bind();
+  Bind();
 #ifndef HAVE_GLES
-    glGetTexImage(GL_TEXTURE_2D, 0, data_layout, data_type, image);
+  glGetTexImage(GL_TEXTURE_2D, 0, data_layout, data_type, image);
 #else
-    throw std::runtime_error("glGetTexImage not implemented on this platform.");
-#endif // HAVE_GLES
-    Unbind();
+  throw std::runtime_error("glGetTexImage not implemented on this platform.");
+#endif  // HAVE_GLES
+  Unbind();
 }
 
 inline void GlTexture::Download(IntensityImage<>& image) const
 {
-    auto size = sophus::ImageSize(width, height);
-    uint8_t* unsafe_ptr = const_cast<uint8_t*>(image.rawPtr());
+  auto size = sophus::ImageSize(width, height);
+  uint8_t* unsafe_ptr = const_cast<uint8_t*>(image.rawPtr());
 
-    switch (internal_format)
-    {
+  switch (internal_format) {
     case GL_LUMINANCE8:
-        image = IntensityImage<>(size, PixelFormatFromString("GRAY8") );
-        Download(unsafe_ptr, GL_RED, GL_UNSIGNED_BYTE);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("GRAY8"));
+      Download(unsafe_ptr, GL_RED, GL_UNSIGNED_BYTE);
+      break;
     case GL_LUMINANCE16:
-        image = IntensityImage<>(size, PixelFormatFromString("GRAY16LE") );
-        Download(unsafe_ptr, GL_RED, GL_UNSIGNED_SHORT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("GRAY16LE"));
+      Download(unsafe_ptr, GL_RED, GL_UNSIGNED_SHORT);
+      break;
     case GL_RGB8:
-        image = IntensityImage<>(size, PixelFormatFromString("RGB24"));
-        Download(unsafe_ptr, GL_RGB, GL_UNSIGNED_BYTE);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("RGB24"));
+      Download(unsafe_ptr, GL_RGB, GL_UNSIGNED_BYTE);
+      break;
     case GL_RGBA8:
-        image = IntensityImage<>(size, PixelFormatFromString("RGBA32"));
-        Download(unsafe_ptr, GL_RGBA, GL_UNSIGNED_BYTE);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("RGBA32"));
+      Download(unsafe_ptr, GL_RGBA, GL_UNSIGNED_BYTE);
+      break;
     case GL_RED_INTEGER:
-        image = IntensityImage<>(size, PixelFormatFromString("GRAY32") );
-        Download(unsafe_ptr, GL_RED, GL_UNSIGNED_INT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("GRAY32"));
+      Download(unsafe_ptr, GL_RED, GL_UNSIGNED_INT);
+      break;
     case GL_LUMINANCE:
     case GL_LUMINANCE32F_ARB:
     case GL_R32F:
-        image = IntensityImage<>(size, PixelFormatFromString("GRAY32F"));
-        Download(unsafe_ptr, GL_RED, GL_FLOAT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("GRAY32F"));
+      Download(unsafe_ptr, GL_RED, GL_FLOAT);
+      break;
     case GL_RGB16:
-        image = IntensityImage<>(size, PixelFormatFromString("RGB48"));
-        Download(unsafe_ptr, GL_RGB, GL_UNSIGNED_SHORT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("RGB48"));
+      Download(unsafe_ptr, GL_RGB, GL_UNSIGNED_SHORT);
+      break;
     case GL_RGBA16:
-        image = IntensityImage<>(size, PixelFormatFromString("RGBA64"));
-        Download(unsafe_ptr, GL_RGBA, GL_UNSIGNED_SHORT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("RGBA64"));
+      Download(unsafe_ptr, GL_RGBA, GL_UNSIGNED_SHORT);
+      break;
     case GL_RGB16F:
-        image = IntensityImage<>(size, PixelFormatFromString("RGB48F"));
-        Download(unsafe_ptr, GL_RGB, GL_HALF_FLOAT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("RGB48F"));
+      Download(unsafe_ptr, GL_RGB, GL_HALF_FLOAT);
+      break;
     case GL_RGBA16F:
-        image = IntensityImage<>(size, PixelFormatFromString("RGBA64F"));
-        Download(unsafe_ptr, GL_RGBA, GL_HALF_FLOAT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("RGBA64F"));
+      Download(unsafe_ptr, GL_RGBA, GL_HALF_FLOAT);
+      break;
     case GL_RGB:
     case GL_RGB32F:
-        image = IntensityImage<>(size, PixelFormatFromString("RGB96F"));
-        Download(unsafe_ptr, GL_RGB, GL_FLOAT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("RGB96F"));
+      Download(unsafe_ptr, GL_RGB, GL_FLOAT);
+      break;
     case GL_RGBA:
     case GL_RGBA32F:
-        image = IntensityImage<>(size, PixelFormatFromString("RGBA128F"));
-        Download(unsafe_ptr, GL_RGBA, GL_FLOAT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("RGBA128F"));
+      Download(unsafe_ptr, GL_RGBA, GL_FLOAT);
+      break;
     case GL_DEPTH_COMPONENT16:
-        image = IntensityImage<>(size, PixelFormatFromString("GRAY16LE"));
-        Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("GRAY16LE"));
+      Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
+      break;
     case GL_DEPTH_COMPONENT24:
-        image = IntensityImage<>(size, PixelFormatFromString("GRAY32"));
-        Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("GRAY32"));
+      Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
+      break;
     case GL_DEPTH_COMPONENT32F:
-        image = IntensityImage<>(size, PixelFormatFromString("GRAY32F"));
-        Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_FLOAT);
-        break;
+      image = IntensityImage<>(size, PixelFormatFromString("GRAY32F"));
+      Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_FLOAT);
+      break;
     default:
-        throw std::runtime_error(
-            "GlTexture::Download - Unknown internal format (" +
-            pangolin::Convert<std::string,GLint>::Do(internal_format) +
-            ")"
-        );
-    }
-
+      throw std::runtime_error(
+          "GlTexture::Download - Unknown internal format (" +
+          pangolin::Convert<std::string, GLint>::Do(internal_format) + ")");
+  }
 }
 
 inline void GlTexture::CopyFrom(const GlTexture& tex)
 {
 #ifndef HAVE_GLES
-    if(!tid || width != tex.width || height != tex.height ||
-       internal_format != tex.internal_format)
-    {
-        Reinitialise(tex.width, tex.height, tex.internal_format, true);
-    }
+  if (!tid || width != tex.width || height != tex.height ||
+      internal_format != tex.internal_format) {
+    Reinitialise(tex.width, tex.height, tex.internal_format, true);
+  }
 
-    glCopyImageSubDataNV(tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0,
-                       tid, GL_TEXTURE_2D, 0, 0, 0, 0,
-                       width, height, 1);
-    PANGO_GL_CHECK();
+  glCopyImageSubDataNV(
+      tex.tid, GL_TEXTURE_2D, 0, 0, 0, 0, tid, GL_TEXTURE_2D, 0, 0, 0, 0, width,
+      height, 1);
+  PANGO_GL_CHECK();
 #else
-    throw std::runtime_error("glCopyImageSubDataNV not implemented on this platform.");
+  throw std::runtime_error(
+      "glCopyImageSubDataNV not implemented on this platform.");
 #endif
 }
 
 inline void GlTexture::Save(const std::string& filename, bool top_line_first)
 {
-    IntensityImage<> image;
-    Download(image);
-    pangolin::SaveImage(image, filename, top_line_first);
+  IntensityImage<> image;
+  Download(image);
+  pangolin::SaveImage(image, filename, top_line_first);
 }
 
 inline void GlTexture::SetLinear()
 {
-    Bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    Unbind();
+  Bind();
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  Unbind();
 }
 
 inline void GlTexture::SetNearestNeighbour()
 {
-    Bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    Unbind();
+  Bind();
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  Unbind();
 }
 
 inline void GlTexture::RenderToViewport(const bool flip) const
 {
-    if(flip) {
-        RenderToViewportFlipY();
-    }else{
-        RenderToViewport();
-    }
+  if (flip) {
+    RenderToViewportFlipY();
+  } else {
+    RenderToViewport();
+  }
 }
 
 inline void GlTexture::RenderToViewport() const
 {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
 
-    GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
-    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-    glEnableClientState(GL_VERTEX_ARRAY);
+  GLfloat sq_vert[] = {-1, -1, 1, -1, 1, 1, -1, 1};
+  glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+  glEnableClientState(GL_VERTEX_ARRAY);
 
-    GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
-    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+  GLfloat sq_tex[] = {0, 0, 1, 0, 1, 1, 0, 1};
+  glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 #ifndef HAVE_GLES
-    glEnable(GL_TEXTURE_2D);
+  glEnable(GL_TEXTURE_2D);
 #endif
-    Bind();
+  Bind();
 
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 #ifndef HAVE_GLES
-    glDisable(GL_TEXTURE_2D);
+  glDisable(GL_TEXTURE_2D);
 #endif
 }
 
-inline void GlTexture::RenderToViewport(Viewport tex_vp, bool flipx, bool flipy) const
+inline void GlTexture::RenderToViewport(
+    Viewport tex_vp, bool flipx, bool flipy) const
 {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
 
-    GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
-    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-    glEnableClientState(GL_VERTEX_ARRAY);
+  GLfloat sq_vert[] = {-1, -1, 1, -1, 1, 1, -1, 1};
+  glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+  glEnableClientState(GL_VERTEX_ARRAY);
 
-    GLfloat l = tex_vp.l / (float)(width);
-    GLfloat b = tex_vp.b / (float)(height);
-    GLfloat r = (tex_vp.l+tex_vp.w) / (float)(width);
-    GLfloat t = (tex_vp.b+tex_vp.h) / (float)(height);
+  GLfloat l = tex_vp.l / (float)(width);
+  GLfloat b = tex_vp.b / (float)(height);
+  GLfloat r = (tex_vp.l + tex_vp.w) / (float)(width);
+  GLfloat t = (tex_vp.b + tex_vp.h) / (float)(height);
 
-    if(flipx) std::swap(l,r);
-    if(flipy) std::swap(b,t);
+  if (flipx) std::swap(l, r);
+  if (flipy) std::swap(b, t);
 
-    GLfloat sq_tex[]  = { l,b,  r,b,  r,t,  l,t };
-    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+  GLfloat sq_tex[] = {l, b, r, b, r, t, l, t};
+  glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glEnable(GL_TEXTURE_2D);
-    Bind();
+  glEnable(GL_TEXTURE_2D);
+  Bind();
 
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glDisable(GL_TEXTURE_2D);
+  glDisable(GL_TEXTURE_2D);
 }
 
 inline void GlTexture::RenderToViewportFlipY() const
 {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
 
-    GLfloat sq_vert[] = { -1,-1,  1,-1,  1, 1,  -1, 1 };
-    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-    glEnableClientState(GL_VERTEX_ARRAY);
+  GLfloat sq_vert[] = {-1, -1, 1, -1, 1, 1, -1, 1};
+  glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+  glEnableClientState(GL_VERTEX_ARRAY);
 
-    GLfloat sq_tex[]  = { 0,1,  1,1,  1,0,  0,0  };
-    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+  GLfloat sq_tex[] = {0, 1, 1, 1, 1, 0, 0, 0};
+  glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glEnable(GL_TEXTURE_2D);
-    Bind();
+  glEnable(GL_TEXTURE_2D);
+  Bind();
 
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glDisable(GL_TEXTURE_2D);
+  glDisable(GL_TEXTURE_2D);
 }
 
 inline void GlTexture::RenderToViewportFlipXFlipY() const
 {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
 
-    GLfloat sq_vert[] = { 1,1,  -1,1,  -1,-1,  1,-1 };
-    glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-    glEnableClientState(GL_VERTEX_ARRAY);
+  GLfloat sq_vert[] = {1, 1, -1, 1, -1, -1, 1, -1};
+  glVertexPointer(2, GL_FLOAT, 0, sq_vert);
+  glEnableClientState(GL_VERTEX_ARRAY);
 
-    GLfloat sq_tex[]  = { 0,0,  1,0,  1,1,  0,1  };
-    glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+  GLfloat sq_tex[] = {0, 0, 1, 0, 1, 1, 0, 1};
+  glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glEnable(GL_TEXTURE_2D);
-    Bind();
+  glEnable(GL_TEXTURE_2D);
+  Bind();
 
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glDisable(GL_TEXTURE_2D);
+  glDisable(GL_TEXTURE_2D);
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline GlRenderBuffer::GlRenderBuffer()
-    : width(0), height(0), rbid(0)
-{
-}
+inline GlRenderBuffer::GlRenderBuffer() : width(0), height(0), rbid(0) {}
 
-inline GlRenderBuffer::GlRenderBuffer(GLint width, GLint height, GLint internal_format )
-    : width(0), height(0), rbid(0)
+inline GlRenderBuffer::GlRenderBuffer(
+    GLint width, GLint height, GLint internal_format) :
+    width(0), height(0), rbid(0)
 {
-    Reinitialise(width,height,internal_format);
+  Reinitialise(width, height, internal_format);
 }
 
 #ifndef HAVE_GLES
-inline void GlRenderBuffer::Reinitialise(GLint width, GLint height, GLint internal_format)
+inline void GlRenderBuffer::Reinitialise(
+    GLint width, GLint height, GLint internal_format)
 {
-    if( this->width != 0 ) {
-        glDeleteRenderbuffersEXT(1, &rbid);
-    }
+  if (this->width != 0) {
+    glDeleteRenderbuffersEXT(1, &rbid);
+  }
 
-    this->width = width;
-    this->height = height;
-    glGenRenderbuffers(1, &rbid);
-    glBindRenderbuffer(GL_RENDERBUFFER_EXT, rbid);
-    glRenderbufferStorage(GL_RENDERBUFFER_EXT, internal_format, width, height);
-    glBindRenderbuffer(GL_RENDERBUFFER_EXT, 0);
+  this->width = width;
+  this->height = height;
+  glGenRenderbuffers(1, &rbid);
+  glBindRenderbuffer(GL_RENDERBUFFER_EXT, rbid);
+  glRenderbufferStorage(GL_RENDERBUFFER_EXT, internal_format, width, height);
+  glBindRenderbuffer(GL_RENDERBUFFER_EXT, 0);
 }
 
 inline GlRenderBuffer::~GlRenderBuffer()
 {
-    if( width!=0 ) {
-        glDeleteRenderbuffers(1, &rbid);
-    }
+  if (width != 0) {
+    glDeleteRenderbuffers(1, &rbid);
+  }
 }
 #else
-inline void GlRenderBuffer::Reinitialise(GLint width, GLint height, GLint internal_format)
+inline void GlRenderBuffer::Reinitialise(
+    GLint width, GLint height, GLint internal_format)
 {
-    if( width!=0 ) {
-        glDeleteTextures(1, &rbid);
-    }
+  if (width != 0) {
+    glDeleteTextures(1, &rbid);
+  }
 
-    // Use a texture instead...
-    glGenTextures(1, &rbid);
-    glBindTexture(GL_TEXTURE_2D, rbid);
+  // Use a texture instead...
+  glGenTextures(1, &rbid);
+  glBindTexture(GL_TEXTURE_2D, rbid);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, internal_format,
-            width, height,
-            0, internal_format, GL_UNSIGNED_SHORT, NULL);
+  glTexImage2D(
+      GL_TEXTURE_2D, 0, internal_format, width, height, 0, internal_format,
+      GL_UNSIGNED_SHORT, NULL);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
 inline GlRenderBuffer::~GlRenderBuffer()
 {
-    // We have no GL context whilst exiting.
-    if( width!=0 ) {
-        glDeleteTextures(1, &rbid);
-    }
+  // We have no GL context whilst exiting.
+  if (width != 0) {
+    glDeleteTextures(1, &rbid);
+  }
 }
-#endif // HAVE_GLES
+#endif  // HAVE_GLES
 
-inline GlRenderBuffer::GlRenderBuffer(GlRenderBuffer&& tex)
-    : width(tex.width), height(tex.height), rbid(tex.rbid)
+inline GlRenderBuffer::GlRenderBuffer(GlRenderBuffer&& tex) :
+    width(tex.width), height(tex.height), rbid(tex.rbid)
 {
-    tex.rbid = tex.width = tex.height = 0;
+  tex.rbid = tex.width = tex.height = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline GlFramebuffer::GlFramebuffer()
-    : fbid(0), attachments(0)
-{
-}
+inline GlFramebuffer::GlFramebuffer() : fbid(0), attachments(0) {}
 
 inline GlFramebuffer::~GlFramebuffer()
 {
-    if(fbid) {
-        glDeleteFramebuffers(1, &fbid);
-    }
+  if (fbid) {
+    glDeleteFramebuffers(1, &fbid);
+  }
 }
 
-inline GlFramebuffer::GlFramebuffer(GlTexture& colour)
-    : attachments(0)
+inline GlFramebuffer::GlFramebuffer(GlTexture& colour) : attachments(0)
 {
-    glGenFramebuffers(1, &fbid);
-    AttachColour(colour);
-    PANGO_GL_CHECK();
+  glGenFramebuffers(1, &fbid);
+  AttachColour(colour);
+  PANGO_GL_CHECK();
 }
 
-inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth)
-    : attachments(0)
+inline GlFramebuffer::GlFramebuffer(GlTexture& colour, GlRenderBuffer& depth) :
+    attachments(0)
 {
-    glGenFramebuffers(1, &fbid);
-    AttachColour(colour);
-    AttachDepth(depth);
-    PANGO_GL_CHECK();
+  glGenFramebuffers(1, &fbid);
+  AttachColour(colour);
+  AttachDepth(depth);
+  PANGO_GL_CHECK();
 }
 
-inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth)
-    : attachments(0)
+inline GlFramebuffer::GlFramebuffer(
+    GlTexture& colour0, GlTexture& colour1, GlRenderBuffer& depth) :
+    attachments(0)
 {
-    glGenFramebuffers(1, &fbid);
-    AttachColour(colour0);
-    AttachColour(colour1);
-    AttachDepth(depth);
-    PANGO_GL_CHECK();
+  glGenFramebuffers(1, &fbid);
+  AttachColour(colour0);
+  AttachColour(colour1);
+  AttachDepth(depth);
+  PANGO_GL_CHECK();
 }
 
-inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlRenderBuffer& depth)
-    : attachments(0)
+inline GlFramebuffer::GlFramebuffer(
+    GlTexture& colour0, GlTexture& colour1, GlTexture& colour2,
+    GlRenderBuffer& depth) :
+    attachments(0)
 {
-    glGenFramebuffers(1, &fbid);
-    AttachColour(colour0);
-    AttachColour(colour1);
-    AttachColour(colour2);
-    AttachDepth(depth);
-    PANGO_GL_CHECK();
+  glGenFramebuffers(1, &fbid);
+  AttachColour(colour0);
+  AttachColour(colour1);
+  AttachColour(colour2);
+  AttachDepth(depth);
+  PANGO_GL_CHECK();
 }
 
-inline GlFramebuffer::GlFramebuffer(GlTexture& colour0, GlTexture& colour1, GlTexture& colour2, GlTexture& colour3, GlRenderBuffer& depth)
-    : attachments(0)
+inline GlFramebuffer::GlFramebuffer(
+    GlTexture& colour0, GlTexture& colour1, GlTexture& colour2,
+    GlTexture& colour3, GlRenderBuffer& depth) :
+    attachments(0)
 {
-    glGenFramebuffers(1, &fbid);
-    AttachColour(colour0);
-    AttachColour(colour1);
-    AttachColour(colour2);
-    AttachColour(colour3);
-    AttachDepth(depth);
-    PANGO_GL_CHECK();
+  glGenFramebuffers(1, &fbid);
+  AttachColour(colour0);
+  AttachColour(colour1);
+  AttachColour(colour2);
+  AttachColour(colour3);
+  AttachDepth(depth);
+  PANGO_GL_CHECK();
 }
 
 inline void GlFramebuffer::Bind() const
 {
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fbid);
-    glDrawBuffers( attachments, attachment_buffers );
+  glBindFramebuffer(GL_FRAMEBUFFER_EXT, fbid);
+  glDrawBuffers(attachments, attachment_buffers);
 }
 
 inline void GlFramebuffer::Reinitialise()
 {
-    if(fbid) {
-        glDeleteFramebuffers(1, &fbid);
-    }
-    glGenFramebuffers(1, &fbid);
+  if (fbid) {
+    glDeleteFramebuffers(1, &fbid);
+  }
+  glGenFramebuffers(1, &fbid);
 }
 
 inline void GlFramebuffer::Unbind() const
 {
-    glDrawBuffers( 1, attachment_buffers );
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
+  glDrawBuffers(1, attachment_buffers);
+  glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
 }
 
-inline GLenum GlFramebuffer::AttachColour(GlTexture& tex )
+inline GLenum GlFramebuffer::AttachColour(GlTexture& tex)
 {
-    if(!fbid) Reinitialise();
+  if (!fbid) Reinitialise();
 
-    const GLenum color_attachment = GL_COLOR_ATTACHMENT0_EXT + attachments;
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fbid);
-    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, color_attachment, GL_TEXTURE_2D, tex.tid, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
-    attachments++;
-    PANGO_GL_CHECK();
-    return color_attachment;
+  const GLenum color_attachment = GL_COLOR_ATTACHMENT0_EXT + attachments;
+  glBindFramebuffer(GL_FRAMEBUFFER_EXT, fbid);
+  glFramebufferTexture2D(
+      GL_FRAMEBUFFER_EXT, color_attachment, GL_TEXTURE_2D, tex.tid, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
+  attachments++;
+  PANGO_GL_CHECK();
+  return color_attachment;
 }
 
-inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
+inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb)
 {
-    if(!fbid) Reinitialise();
+  if (!fbid) Reinitialise();
 
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, fbid);
+  glBindFramebuffer(GL_FRAMEBUFFER_EXT, fbid);
 #if !defined(HAVE_GLES)
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rb.rbid);
+  glFramebufferRenderbuffer(
+      GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT,
+      rb.rbid);
 #elif defined(HAVE_GLES_2)
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, rb.rbid, 0);
+  glFramebufferTexture2DEXT(
+      GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, rb.rbid, 0);
 #else
-    throw std::exception();
+  throw std::exception();
 #endif
-    glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
-    PANGO_GL_CHECK();
+  glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
+  PANGO_GL_CHECK();
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline GlBufferData::GlBufferData()
-    : bo(0)
+inline GlBufferData::GlBufferData() : bo(0) {}
+
+inline GlBufferData::GlBufferData(
+    GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse,
+    const void* data) :
+    bo(0)
 {
+  Reinitialise(buffer_type, size_bytes, gluse, data);
 }
 
-inline GlBufferData::GlBufferData(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse, const void* data )
-    : bo(0)
+template <typename T>
+GlBufferData::GlBufferData(
+    GlBufferType buffer_type, const std::vector<T>& data, GLenum gluse) :
+    bo(0)
 {
-    Reinitialise(buffer_type, size_bytes, gluse, data );
-}
-
-template<typename T>
-GlBufferData::GlBufferData(GlBufferType buffer_type, const std::vector<T>& data, GLenum gluse)
-    : bo(0)
-{
-    Reinitialise(buffer_type, data.size()*sizeof(T), gluse, &data[0]);
+  Reinitialise(buffer_type, data.size() * sizeof(T), gluse, &data[0]);
 }
 
 //! Move Constructor
-inline GlBufferData::GlBufferData(GlBufferData&& tex)
-    : bo(0)
+inline GlBufferData::GlBufferData(GlBufferData&& tex) : bo(0)
 {
-    *this = std::move(tex);
+  *this = std::move(tex);
 }
 
 inline GlBufferData& GlBufferData::operator=(GlBufferData&& tex)
 {
-    Free();
-    this->bo = tex.bo;
-    this->buffer_type = tex.buffer_type;
-    this->gluse = tex.gluse;
-    this->size_bytes = tex.size_bytes;
-    tex.bo = 0;
-    return *this;
+  Free();
+  this->bo = tex.bo;
+  this->buffer_type = tex.buffer_type;
+  this->gluse = tex.gluse;
+  this->size_bytes = tex.size_bytes;
+  tex.bo = 0;
+  return *this;
 }
 
-inline GlBufferData::~GlBufferData()
-{
-    Free();
-}
+inline GlBufferData::~GlBufferData() { Free(); }
 
 inline void GlBufferData::Free()
 {
-    if(bo!=0) {
-        glDeleteBuffers(1, &bo);
-    }
+  if (bo != 0) {
+    glDeleteBuffers(1, &bo);
+  }
 }
 
-inline bool GlBufferData::IsValid() const
+inline bool GlBufferData::IsValid() const { return bo != 0; }
+
+inline GLsizeiptr GlBufferData::SizeBytes() const { return size_bytes; }
+
+inline void GlBufferData::Reinitialise(
+    GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse,
+    const void* data)
 {
-    return bo != 0;
+  if (!bo) {
+    glGenBuffers(1, &bo);
+  }
+
+  this->buffer_type = buffer_type;
+  this->gluse = gluse;
+  this->size_bytes = size_bytes;
+
+  Bind();
+  glBufferData(buffer_type, size_bytes, data, gluse);
+  Unbind();
 }
 
-inline GLsizeiptr GlBufferData::SizeBytes() const
+inline void GlBufferData::Bind() const { glBindBuffer(buffer_type, bo); }
+
+inline void GlBufferData::Unbind() const { glBindBuffer(buffer_type, 0); }
+
+inline void GlBufferData::Upload(
+    const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
 {
-    return size_bytes;
+  if (offset + size_bytes > this->size_bytes) {
+    throw std::runtime_error("GlBufferData: Trying to upload past capacity.");
+  }
+
+  Bind();
+  glBufferSubData(buffer_type, offset, size_bytes, data);
+  Unbind();
 }
 
-inline void GlBufferData::Reinitialise(GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse, const void* data )
+inline void GlBufferData::Download(
+    GLvoid* data, GLsizeiptr size_bytes, GLintptr offset) const
 {
-    if(!bo) {
-        glGenBuffers(1, &bo);
-    }
-
-    this->buffer_type = buffer_type;
-    this->gluse = gluse;
-    this->size_bytes = size_bytes;
-
-    Bind();
-    glBufferData(buffer_type, size_bytes, data, gluse);
-    Unbind();
+  Bind();
+  glGetBufferSubData(buffer_type, offset, size_bytes, data);
+  Unbind();
 }
 
-inline void GlBufferData::Bind() const
-{
-    glBindBuffer(buffer_type, bo);
-}
-
-inline void GlBufferData::Unbind() const
-{
-    glBindBuffer(buffer_type, 0);
-}
-
-inline void GlBufferData::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
-{
-    if(offset + size_bytes > this->size_bytes) {
-        throw std::runtime_error("GlBufferData: Trying to upload past capacity.");
-    }
-
-    Bind();
-    glBufferSubData(buffer_type,offset,size_bytes,data);
-    Unbind();
-}
-
-inline void GlBufferData::Download(GLvoid* data, GLsizeiptr size_bytes, GLintptr offset) const
-{
-    Bind();
-    glGetBufferSubData(buffer_type, offset, size_bytes, data);
-    Unbind();
-}
-
-template<typename T>
+template <typename T>
 inline void GlBufferData::Upload(const std::vector<T>& data, GLintptr offset)
 {
-    const size_t total_bytes = data.size() * sizeof(T);
-    assert(offset + total_bytes <= size_bytes);
-    Upload(&data[0], total_bytes, offset);
+  const size_t total_bytes = data.size() * sizeof(T);
+  assert(offset + total_bytes <= size_bytes);
+  Upload(&data[0], total_bytes, offset);
 }
 
 #ifdef USE_EIGEN
-template<typename Derived>
-inline void GlBufferData::Upload(const Eigen::DenseBase<Derived>& data, GLintptr offset)
+template <typename Derived>
+inline void GlBufferData::Upload(
+    const Eigen::DenseBase<Derived>& data, GLintptr offset)
 {
-    const size_t num_elements = data.outerSize();
-    const size_t matrix_bytes = data.outerStride() * num_elements;
-    assert(offset + matrix_bytes <= size_bytes);
-    Upload(data.data(), matrix_bytes, offset);
+  const size_t num_elements = data.outerSize();
+  const size_t matrix_bytes = data.outerStride() * num_elements;
+  assert(offset + matrix_bytes <= size_bytes);
+  Upload(data.data(), matrix_bytes, offset);
 }
 #endif
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline GlBuffer::GlBuffer()
-    : GlBufferData(), datatype(0), num_elements(0), count_per_element(0)
+inline GlBuffer::GlBuffer() :
+    GlBufferData(), datatype(0), num_elements(0), count_per_element(0)
 {
 }
 
-inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
-    : GlBufferData(buffer_type, GLuint(num_elements * count_per_element * GlDataTypeBytes(datatype)), gluse),
-      datatype(datatype), num_elements(num_elements), count_per_element(count_per_element)
+inline GlBuffer::GlBuffer(
+    GlBufferType buffer_type, GLuint num_elements, GLenum datatype,
+    GLuint count_per_element, GLenum gluse) :
+    GlBufferData(
+        buffer_type,
+        GLuint(num_elements * count_per_element * GlDataTypeBytes(datatype)),
+        gluse),
+    datatype(datatype),
+    num_elements(num_elements),
+    count_per_element(count_per_element)
 {
 }
 
-
-inline GlBuffer::GlBuffer(GlBuffer&& o)
-    : GlBufferData()
+inline GlBuffer::GlBuffer(GlBuffer&& o) : GlBufferData()
 {
-    *this = std::move(o);
+  *this = std::move(o);
 }
 
 inline GlBuffer& GlBuffer::operator=(GlBuffer&& o)
 {
-    datatype = o.datatype;
-    num_elements = o.num_elements;
-    count_per_element = o.count_per_element;
-    GlBufferData::operator =(std::move(o));
-    return *this;
+  datatype = o.datatype;
+  num_elements = o.num_elements;
+  count_per_element = o.count_per_element;
+  GlBufferData::operator=(std::move(o));
+  return *this;
 }
 
-inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse, const void *data )
+inline void GlBuffer::Reinitialise(
+    GlBufferType buffer_type, GLuint num_elements, GLenum datatype,
+    GLuint count_per_element, GLenum gluse, const void* data)
 {
-    this->datatype = datatype;
-    this->num_elements = num_elements;
-    this->count_per_element = count_per_element;
-    const GLuint size_bytes = GLuint(num_elements * count_per_element * GlDataTypeBytes(datatype));
-    GlBufferData::Reinitialise(buffer_type, size_bytes, gluse, data);
+  this->datatype = datatype;
+  this->num_elements = num_elements;
+  this->count_per_element = count_per_element;
+  const GLuint size_bytes =
+      GLuint(num_elements * count_per_element * GlDataTypeBytes(datatype));
+  GlBufferData::Reinitialise(buffer_type, size_bytes, gluse, data);
 }
 
-inline void GlBuffer::Reinitialise(GlBuffer const& other )
+inline void GlBuffer::Reinitialise(GlBuffer const& other)
 {
-    Reinitialise(other.buffer_type, other.num_elements, other.datatype, other.count_per_element, other.gluse);
+  Reinitialise(
+      other.buffer_type, other.num_elements, other.datatype,
+      other.count_per_element, other.gluse);
 }
 
 inline void GlBuffer::Resize(GLuint new_num_elements)
 {
-    if(bo!=0 && num_elements > 0) {
+  if (bo != 0 && num_elements > 0) {
 #ifndef HAVE_GLES
-        // Backup current data, reinit memory, restore old data
-        const size_t backup_elements = std::min(new_num_elements,num_elements);
-        const size_t backup_size_bytes = backup_elements*GlDataTypeBytes(datatype)*count_per_element;
-        unsigned char* backup = new unsigned char[backup_size_bytes];
-        Bind();
-        glGetBufferSubData(buffer_type, 0, backup_size_bytes, backup);
-        glBufferData(buffer_type, new_num_elements*GlDataTypeBytes(datatype)*count_per_element, 0, gluse);
-        glBufferSubData(buffer_type, 0, backup_size_bytes, backup);
-        Unbind();
-        delete[] backup;
+    // Backup current data, reinit memory, restore old data
+    const size_t backup_elements = std::min(new_num_elements, num_elements);
+    const size_t backup_size_bytes =
+        backup_elements * GlDataTypeBytes(datatype) * count_per_element;
+    unsigned char* backup = new unsigned char[backup_size_bytes];
+    Bind();
+    glGetBufferSubData(buffer_type, 0, backup_size_bytes, backup);
+    glBufferData(
+        buffer_type,
+        new_num_elements * GlDataTypeBytes(datatype) * count_per_element, 0,
+        gluse);
+    glBufferSubData(buffer_type, 0, backup_size_bytes, backup);
+    Unbind();
+    delete[] backup;
 #else
-        throw std::exception();
+    throw std::exception();
 #endif
-    }else{
-        Reinitialise(buffer_type, new_num_elements, datatype, count_per_element, gluse);
-    }
-    num_elements = new_num_elements;
+  } else {
+    Reinitialise(
+        buffer_type, new_num_elements, datatype, count_per_element, gluse);
+  }
+  num_elements = new_num_elements;
 }
 
-template<typename Scalar>
-GlBuffer::GlBuffer(GlBufferType buffer_type, const std::vector<Scalar>& data, GLenum gluse)
-    : GlBufferData(buffer_type, data, gluse)
+template <typename Scalar>
+GlBuffer::GlBuffer(
+    GlBufferType buffer_type, const std::vector<Scalar>& data, GLenum gluse) :
+    GlBufferData(buffer_type, data, gluse)
 {
-    datatype = pangolin::GlFormatTraits<Scalar>::gltype;
-    num_elements = data.size();
-    count_per_element = 1;
+  datatype = pangolin::GlFormatTraits<Scalar>::gltype;
+  num_elements = data.size();
+  count_per_element = 1;
 }
-
 
 #ifdef USE_EIGEN
-    template<typename Scalar, int R, int C>
-    GlBuffer::GlBuffer(GlBufferType buffer_type, const std::vector<Eigen::Matrix<Scalar, R,C>>& data, GLenum gluse)
-        : GlBufferData(buffer_type, data, gluse)
-    {
-        typedef typename Eigen::Matrix<Scalar, R,C> Element;
-        static_assert( Element::SizeAtCompileTime != Eigen::Dynamic, "No Dynamically sized elements.");
-        static_assert( Element::SizeAtCompileTime * sizeof(Scalar) == sizeof(Element), "No padded elements.");
+template <typename Scalar, int R, int C>
+GlBuffer::GlBuffer(
+    GlBufferType buffer_type,
+    const std::vector<Eigen::Matrix<Scalar, R, C>>& data, GLenum gluse) :
+    GlBufferData(buffer_type, data, gluse)
+{
+  typedef typename Eigen::Matrix<Scalar, R, C> Element;
+  static_assert(
+      Element::SizeAtCompileTime != Eigen::Dynamic,
+      "No Dynamically sized elements.");
+  static_assert(
+      Element::SizeAtCompileTime * sizeof(Scalar) == sizeof(Element),
+      "No padded elements.");
 
-        datatype = pangolin::GlFormatTraits<Scalar>::gltype;
-        num_elements = data.size();
-        count_per_element = Element::SizeAtCompileTime;
-    }
+  datatype = pangolin::GlFormatTraits<Scalar>::gltype;
+  num_elements = data.size();
+  count_per_element = Element::SizeAtCompileTime;
+}
 #endif
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline GlSizeableBuffer::GlSizeableBuffer(GlBufferType buffer_type, GLuint initial_num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
-    : GlBuffer(buffer_type, initial_num_elements, datatype, count_per_element, gluse), m_num_verts(0)
+inline GlSizeableBuffer::GlSizeableBuffer(
+    GlBufferType buffer_type, GLuint initial_num_elements, GLenum datatype,
+    GLuint count_per_element, GLenum gluse) :
+    GlBuffer(
+        buffer_type, initial_num_elements, datatype, count_per_element, gluse),
+    m_num_verts(0)
 {
-
 }
 
-inline void GlSizeableBuffer::Clear()
-{
-    m_num_verts = 0;
-}
+inline void GlSizeableBuffer::Clear() { m_num_verts = 0; }
 
 #ifdef USE_EIGEN
-template<typename Derived> inline
-void GlSizeableBuffer::Add(const Eigen::DenseBase<Derived>& vec)
+template <typename Derived>
+inline void GlSizeableBuffer::Add(const Eigen::DenseBase<Derived>& vec)
 {
-    typedef typename Eigen::DenseBase<Derived>::Scalar Scalar;
-    assert(vec.rows()==GlBuffer::count_per_element);
-    CheckResize(m_num_verts + 1);
-    // TODO: taking address of first element is really dodgey. Need to work out
-    // when this is okay!
-    Upload(&vec(0,0), sizeof(Scalar)*vec.rows()*vec.cols(), sizeof(Scalar)*vec.rows()*m_num_verts);
-    m_num_verts += vec.cols();
+  typedef typename Eigen::DenseBase<Derived>::Scalar Scalar;
+  assert(vec.rows() == GlBuffer::count_per_element);
+  CheckResize(m_num_verts + 1);
+  // TODO: taking address of first element is really dodgey. Need to work out
+  // when this is okay!
+  Upload(
+      &vec(0, 0), sizeof(Scalar) * vec.rows() * vec.cols(),
+      sizeof(Scalar) * vec.rows() * m_num_verts);
+  m_num_verts += vec.cols();
 }
 
-template<typename Derived> inline
-void GlSizeableBuffer::Update(const Eigen::DenseBase<Derived>& vec, size_t position )
+template <typename Derived>
+inline void GlSizeableBuffer::Update(
+    const Eigen::DenseBase<Derived>& vec, size_t position)
 {
-    typedef typename Eigen::DenseBase<Derived>::Scalar Scalar;
-    assert(vec.rows()==GlBuffer::count_per_element);
-    CheckResize(position + vec.cols() );
-    // TODO: taking address of first element is really dodgey. Need to work out
-    // when this is okay!
-    Upload(&vec(0,0), sizeof(Scalar)*vec.rows()*vec.cols(), sizeof(Scalar)*vec.rows()*position );
-    m_num_verts = std::max(position+vec.cols(), m_num_verts);
+  typedef typename Eigen::DenseBase<Derived>::Scalar Scalar;
+  assert(vec.rows() == GlBuffer::count_per_element);
+  CheckResize(position + vec.cols());
+  // TODO: taking address of first element is really dodgey. Need to work out
+  // when this is okay!
+  Upload(
+      &vec(0, 0), sizeof(Scalar) * vec.rows() * vec.cols(),
+      sizeof(Scalar) * vec.rows() * position);
+  m_num_verts = std::max(position + vec.cols(), m_num_verts);
 }
 #endif
 
-inline size_t GlSizeableBuffer::start() const {
-    return 0;
-}
+inline size_t GlSizeableBuffer::start() const { return 0; }
 
-inline size_t GlSizeableBuffer::size() const {
-    return m_num_verts;
-}
+inline size_t GlSizeableBuffer::size() const { return m_num_verts; }
 
 inline void GlSizeableBuffer::CheckResize(size_t num_verts)
 {
-    if( num_verts > GlBuffer::num_elements) {
-        const size_t new_size = NextSize(num_verts);
-        GlBuffer::Resize((GLuint)new_size);
-    }
+  if (num_verts > GlBuffer::num_elements) {
+    const size_t new_size = NextSize(num_verts);
+    GlBuffer::Resize((GLuint)new_size);
+  }
 }
 
 inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
 {
-    size_t new_size = std::max(GlBuffer::num_elements, 1u);
-    while(new_size < min_size) {
-        new_size *= 2;
-    }
-    return new_size;
+  size_t new_size = std::max(GlBuffer::num_elements, 1u);
+  while (new_size < min_size) {
+    new_size *= 2;
+  }
+  return new_size;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline IntensityImage<> ReadFramebuffer(const Viewport& v, const char* pixel_format)
+inline IntensityImage<> ReadFramebuffer(
+    const Viewport& v, const char* pixel_format)
 {
-    const RuntimePixelType fmt = PixelFormatFromString(pixel_format);
-    const GlPixFormat glfmt(fmt);
+  const RuntimePixelType fmt = PixelFormatFromString(pixel_format);
+  const GlPixFormat glfmt(fmt);
 
-    IntensityImage<> buffer(sophus::ImageSize(v.w, v.h), fmt );
-    glReadBuffer(GL_BACK);
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glReadPixels(v.l, v.b, v.w, v.h, glfmt.glformat, glfmt.gltype, const_cast<uint8_t*>(buffer.rawPtr()) );
-    return buffer;
+  IntensityImage<> buffer(sophus::ImageSize(v.w, v.h), fmt);
+  glReadBuffer(GL_BACK);
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
+  glReadPixels(
+      v.l, v.b, v.w, v.h, glfmt.glformat, glfmt.gltype,
+      const_cast<uint8_t*>(buffer.rawPtr()));
+  return buffer;
 }
 
-}
+}  // namespace pangolin

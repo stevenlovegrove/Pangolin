@@ -28,56 +28,49 @@
 #pragma once
 
 #include <pangolin/gl/glplatform.h>
+
 #include <map>
 
-namespace pangolin {
-
-struct PANGOLIN_EXPORT XYUV
+namespace pangolin
 {
-    XYUV() {}
-    XYUV(GLfloat x, GLfloat y, GLfloat tu, GLfloat tv)
-        : x(x), y(y), tu(tu), tv(tv) {}
 
-    XYUV operator+(float dx) const {
-        return XYUV(x+dx,y,tu,tv);
-    }
-    
-    GLfloat x, y, tu, tv;
+struct PANGOLIN_EXPORT XYUV {
+  XYUV() {}
+  XYUV(GLfloat x, GLfloat y, GLfloat tu, GLfloat tv) :
+      x(x), y(y), tu(tu), tv(tv)
+  {
+  }
+
+  XYUV operator+(float dx) const { return XYUV(x + dx, y, tu, tv); }
+
+  GLfloat x, y, tu, tv;
 };
 
 class PANGOLIN_EXPORT GlChar
 {
-public:
-    GlChar();
-    GlChar(size_t atlas_index, int tw, int th, GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat x_step, GLfloat ox, GLfloat oy);
-    
-    inline const XYUV& GetVert(size_t i) const {
-        return vs[i];
-    }    
-    
-    inline GLfloat StepX() const {
-        return x_step;
-    }
+  public:
+  GlChar();
+  GlChar(
+      size_t atlas_index, int tw, int th, GLfloat x, GLfloat y, GLfloat w,
+      GLfloat h, GLfloat x_step, GLfloat ox, GLfloat oy);
 
-    inline GLfloat YMin() const {
-        return y_min;
-    }
+  inline const XYUV& GetVert(size_t i) const { return vs[i]; }
 
-    inline GLfloat YMax() const {
-        return y_max;
-    }
+  inline GLfloat StepX() const { return x_step; }
 
-    inline size_t AtlasIndex() const {
-        return atlas_index;
-    }
+  inline GLfloat YMin() const { return y_min; }
 
-    void Draw() const;
-        
-protected:
-    size_t atlas_index;
-    XYUV vs[4];
-    GLfloat x_step;
-    GLfloat y_min, y_max;
+  inline GLfloat YMax() const { return y_max; }
+
+  inline size_t AtlasIndex() const { return atlas_index; }
+
+  void Draw() const;
+
+  protected:
+  size_t atlas_index;
+  XYUV vs[4];
+  GLfloat x_step;
+  GLfloat y_min, y_max;
 };
 
-}
+}  // namespace pangolin

@@ -25,110 +25,97 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <pangolin/utils/file_utils.h>
+#include <pangolin/video/drivers/pango_video_output.h>
 #include <pangolin/video/video.h>
 #include <pangolin/video/video_output.h>
 
-#include <pangolin/video/drivers/pango_video_output.h>
-
-#include <pangolin/utils/file_utils.h>
-
 namespace pangolin
 {
-VideoOutput::VideoOutput()
-{
-}
+VideoOutput::VideoOutput() {}
 
-VideoOutput::VideoOutput(const std::string& uri)
-{
-    Open(uri);
-}
+VideoOutput::VideoOutput(const std::string& uri) { Open(uri); }
 
-VideoOutput::~VideoOutput()
-{
-}
+VideoOutput::~VideoOutput() {}
 
-bool VideoOutput::IsOpen() const
-{
-    return recorder.get() != nullptr;
-}
+bool VideoOutput::IsOpen() const { return recorder.get() != nullptr; }
 
 void VideoOutput::Open(const std::string& str_uri)
 {
-    Close();
-    uri = ParseUri(str_uri);
-    recorder = OpenVideoOutput(uri);
+  Close();
+  uri = ParseUri(str_uri);
+  recorder = OpenVideoOutput(uri);
 }
 
-void VideoOutput::Close()
-{
-    recorder.reset();
-}
+void VideoOutput::Close() { recorder.reset(); }
 
 const std::vector<StreamInfo>& VideoOutput::Streams() const
 {
-    return recorder->Streams();
+  return recorder->Streams();
 }
 
-void VideoOutput::SetStreams(const std::vector<StreamInfo>& streams,
-                             const std::string& uri,
-                             const picojson::value& properties)
+void VideoOutput::SetStreams(
+    const std::vector<StreamInfo>& streams, const std::string& uri,
+    const picojson::value& properties)
 {
-    recorder->SetStreams(streams, uri, properties);
+  recorder->SetStreams(streams, uri, properties);
 }
 
-int VideoOutput::WriteStreams(const unsigned char* data, const picojson::value& frame_properties)
+int VideoOutput::WriteStreams(
+    const unsigned char* data, const picojson::value& frame_properties)
 {
-    return recorder->WriteStreams(data, frame_properties);
+  return recorder->WriteStreams(data, frame_properties);
 }
 
-bool VideoOutput::IsPipe() const
-{
-    return recorder->IsPipe();
-}
+bool VideoOutput::IsPipe() const { return recorder->IsPipe(); }
 
-void VideoOutput::AddStream(const RuntimePixelType& pf, sophus::ImageShape shape)
+void VideoOutput::AddStream(
+    const RuntimePixelType& pf, sophus::ImageShape shape)
 {
-    streams.emplace_back(pf, shape, 0);
+  streams.emplace_back(pf, shape, 0);
 }
 
 void VideoOutput::AddStream(const RuntimePixelType& pf, sophus::ImageSize size)
 {
-    AddStream(pf, sophus::ImageShape::makeFromSizeAndPitchUnchecked(size, size.width * pf.bytesPerPixel()) );
+  AddStream(
+      pf, sophus::ImageShape::makeFromSizeAndPitchUnchecked(
+              size, size.width * pf.bytesPerPixel()));
 }
 
-void VideoOutput::SetStreams(const std::string& uri, const picojson::value& properties)
+void VideoOutput::SetStreams(
+    const std::string& uri, const picojson::value& properties)
 {
-    size_t offset = 0;
-    for(size_t i = 0; i < streams.size(); i++)
-    {
-        // Correct the offset for each stream
-        streams[i] = StreamInfo(streams[i].format(), streams[i].shape(), offset);
-        offset += streams[i].shape().sizeBytes();
-    }
-    SetStreams(streams, uri, properties);
+  size_t offset = 0;
+  for (size_t i = 0; i < streams.size(); i++) {
+    // Correct the offset for each stream
+    streams[i] = StreamInfo(streams[i].format(), streams[i].shape(), offset);
+    offset += streams[i].shape().sizeBytes();
+  }
+  SetStreams(streams, uri, properties);
 }
 
 size_t VideoOutput::SizeBytes(void) const
 {
-    size_t total = 0;
-    for(const StreamInfo& si : recorder->Streams())
-        total += si.shape().sizeBytes();
-    return total;
+  size_t total = 0;
+  for (const StreamInfo& si : recorder->Streams())
+    total += si.shape().sizeBytes();
+  return total;
 }
 
-std::vector<sophus::ImageView<uint8_t>> VideoOutput::GetOutputImages(uint8_t* buffer) const
+std::vector<sophus::ImageView<uint8_t>> VideoOutput::GetOutputImages(
+    uint8_t* buffer) const
 {
-    std::vector<sophus::ImageView<uint8_t>> images;
-    for(size_t s = 0; s < recorder->Streams().size(); ++s)
-    {
-        images.push_back(recorder->Streams()[s].StreamImage(buffer));
-    }
-    return images;
+  std::vector<sophus::ImageView<uint8_t>> images;
+  for (size_t s = 0; s < recorder->Streams().size(); ++s) {
+    images.push_back(recorder->Streams()[s].StreamImage(buffer));
+  }
+  return images;
 }
 
-std::vector<sophus::ImageView<uint8_t>> VideoOutput::GetOutputImages(std::vector<uint8_t>& buffer) const
+std::vector<sophus::ImageView<uint8_t>> VideoOutput::GetOutputImages(
+    std::vector<uint8_t>& buffer) const
 {
-    buffer.resize(SizeBytes());
-    return GetOutputImages(buffer.data());
+  buffer.resize(SizeBytes());
+  return GetOutputImages(buffer.data());
 }
-}
+}  // namespace pangolin

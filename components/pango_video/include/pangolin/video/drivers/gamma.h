@@ -29,57 +29,59 @@
 
 #include <pangolin/pangolin.h>
 #include <pangolin/video/video.h>
+
 #include <set>
 
 namespace pangolin
 {
 
 // Video class that applies gamma to its video input
-class PANGOLIN_EXPORT GammaVideo :
-    public VideoInterface,
-    public VideoFilterInterface,
-    public BufferAwareVideoInterface
+class PANGOLIN_EXPORT GammaVideo : public VideoInterface,
+                                   public VideoFilterInterface,
+                                   public BufferAwareVideoInterface
 {
-public:
-    GammaVideo(std::unique_ptr<VideoInterface>& videoin, const std::map<size_t, float> &stream_gammas);
-    ~GammaVideo();
+  public:
+  GammaVideo(
+      std::unique_ptr<VideoInterface>& videoin,
+      const std::map<size_t, float>& stream_gammas);
+  ~GammaVideo();
 
-    //! Implement VideoInput::Start()
-    void Start();
+  //! Implement VideoInput::Start()
+  void Start();
 
-    //! Implement VideoInput::Stop()
-    void Stop();
+  //! Implement VideoInput::Stop()
+  void Stop();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const;
 
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( uint8_t* image, bool wait = true );
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(uint8_t* image, bool wait = true);
 
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( uint8_t* image, bool wait = true );
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(uint8_t* image, bool wait = true);
 
-    //! Implement VideoFilterInterface method
-    std::vector<VideoInterface*>& InputStreams();
+  //! Implement VideoFilterInterface method
+  std::vector<VideoInterface*>& InputStreams();
 
-    uint32_t AvailableFrames() const;
+  uint32_t AvailableFrames() const;
 
-    bool DropNFrames(uint32_t n);
+  bool DropNFrames(uint32_t n);
 
-protected:
-    void Process(uint8_t* image, const uint8_t* buffer);
+  protected:
+  void Process(uint8_t* image, const uint8_t* buffer);
 
-    std::unique_ptr<VideoInterface> src;
-    std::vector<VideoInterface*> videoin;
+  std::unique_ptr<VideoInterface> src;
+  std::vector<VideoInterface*> videoin;
 
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
-    std::unique_ptr<uint8_t[]> buffer;
-    const std::map<size_t, float> stream_gammas;
-    std::set<std::string> formats_supported;
+  std::vector<StreamInfo> streams;
+  size_t size_bytes;
+  std::unique_ptr<uint8_t[]> buffer;
+  const std::map<size_t, float> stream_gammas;
+  std::set<std::string> formats_supported;
 };
 
-}
+}  // namespace pangolin

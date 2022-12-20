@@ -1,6 +1,5 @@
-#include <pangolin/utils/posix/semaphore.h>
-
 #include <fcntl.h>
+#include <pangolin/utils/posix/semaphore.h>
 #include <semaphore.h>
 #include <sys/stat.h>
 
@@ -15,11 +14,9 @@ namespace pangolin
 // semaphores.
 class PosixSemaphore : public SemaphoreInterface
 {
-public:
-  PosixSemaphore(sem_t *semaphore, bool ownership, const string& name) :
-    _semaphore(semaphore),
-    _ownership(ownership),
-    _name(name)
+  public:
+  PosixSemaphore(sem_t *semaphore, bool ownership, const string &name) :
+      _semaphore(semaphore), _ownership(ownership), _name(name)
   {
   }
 
@@ -38,27 +35,23 @@ public:
     return err == 0;
   }
 
-  void acquire() override
-  {
-    sem_wait(_semaphore);
-  }
+  void acquire() override { sem_wait(_semaphore); }
 
-  void release() override
-  {
-    sem_post(_semaphore);
-  }
+  void release() override { sem_post(_semaphore); }
 
-private:
+  private:
   sem_t *_semaphore;
   bool _ownership;
   string _name;
 };
 
-std::shared_ptr<SemaphoreInterface> create_named_semaphore(const string& name, unsigned int value)
+std::shared_ptr<SemaphoreInterface> create_named_semaphore(
+    const string &name, unsigned int value)
 {
   std::shared_ptr<SemaphoreInterface> ptr;
-  sem_t *semaphore = sem_open(name.c_str(), O_CREAT | O_EXCL,
-    S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP, value);
+  sem_t *semaphore = sem_open(
+      name.c_str(), O_CREAT | O_EXCL, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP,
+      value);
   if (NULL == semaphore) {
     return ptr;
   }
@@ -67,7 +60,7 @@ std::shared_ptr<SemaphoreInterface> create_named_semaphore(const string& name, u
   return ptr;
 }
 
-std::shared_ptr<SemaphoreInterface> open_named_semaphore(const string& name)
+std::shared_ptr<SemaphoreInterface> open_named_semaphore(const string &name)
 {
   std::shared_ptr<SemaphoreInterface> ptr;
   sem_t *semaphore = sem_open(name.c_str(), 0);
@@ -80,4 +73,4 @@ std::shared_ptr<SemaphoreInterface> open_named_semaphore(const string& name)
   return ptr;
 }
 
-}
+}  // namespace pangolin

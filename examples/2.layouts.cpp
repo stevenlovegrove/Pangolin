@@ -43,35 +43,37 @@
 
 using namespace pangolin;
 
-const char* image_url_1 = "https://www.wwf.org.uk/sites/default/files/styles/gallery_image/public/2019-09/pangolin_with_tongue_out.jpg";
-const char* image_url_2 = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Space_Needle_2011-07-04.jpg/500px-Space_Needle_2011-07-04.jpg";
+const char* image_url_1 =
+    "https://www.wwf.org.uk/sites/default/files/styles/gallery_image/public/"
+    "2019-09/pangolin_with_tongue_out.jpg";
+const char* image_url_2 =
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/"
+    "Space_Needle_2011-07-04.jpg/500px-Space_Needle_2011-07-04.jpg";
 
-int main( int /*argc*/, char** /*argv*/ )
+int main(int /*argc*/, char** /*argv*/)
 {
-    auto context = Context::Create({
-        .title="Pangolin Layouts",
-        .window_size = {1024,600},
-    } );
+  auto context = Context::Create({
+      .title = "Pangolin Layouts",
+      .window_size = {1024, 600},
+  });
 
-    auto im1 = LoadImage(image_url_1);
-    auto im2 = LoadImage(image_url_2);
+  auto im1 = LoadImage(image_url_1);
+  auto im2 = LoadImage(image_url_2);
 
-    // Create an object to render a triangle
-    auto primitives = DrawnPrimitives::Create({
-      .element_type=DrawnPrimitives::Type::triangles,
-      .default_color={1.0f, 0.0f, 0.0f, 1.0f} });
+  // Create an object to render a triangle
+  auto primitives = DrawnPrimitives::Create(
+      {.element_type = DrawnPrimitives::Type::triangles,
+       .default_color = {1.0f, 0.0f, 0.0f, 1.0f}});
 
-    primitives->vertices->update(
-        std::vector<Eigen::Vector3f>{
-            {-1.0f, -1.0f, 0.0f},
-            { 1.0f, -1.0f, 0.0f },
-            { 0.0f,  1.0f, 0.0f }
-        }, {});
+  primitives->vertices->update(
+      std::vector<Eigen::Vector3f>{
+          {-1.0f, -1.0f, 0.0f}, {1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+      {});
 
-    // Add the images and the triangle to the window.
-    // Pangolin automatically adds some appropriate 'Layers' to
-    // enable interaction with these elements.
-    context->setLayout( (im1 / primitives) | im2 );
-    context->loop();
-    return 0;
+  // Add the images and the triangle to the window.
+  // Pangolin automatically adds some appropriate 'Layers' to
+  // enable interaction with these elements.
+  context->setLayout((im1 / primitives) | im2);
+  context->loop();
+  return 0;
 }

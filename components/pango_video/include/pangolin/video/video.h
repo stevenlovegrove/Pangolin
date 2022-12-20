@@ -35,7 +35,8 @@
 namespace pangolin
 {
 
-//! Open Video Interface from string specification (as described in this files header)
+//! Open Video Interface from string specification (as described in this files
+//! header)
 PANGOLIN_EXPORT
 std::unique_ptr<VideoInterface> OpenVideo(const std::string& uri);
 
@@ -43,127 +44,130 @@ std::unique_ptr<VideoInterface> OpenVideo(const std::string& uri);
 PANGOLIN_EXPORT
 std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri);
 
-//! Open VideoOutput Interface from string specification (as described in this files header)
+//! Open VideoOutput Interface from string specification (as described in this
+//! files header)
 PANGOLIN_EXPORT
-std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const std::string& str_uri);
+std::unique_ptr<VideoOutputInterface> OpenVideoOutput(
+    const std::string& str_uri);
 
 //! Open VideoOutput Interface from Uri specification
 PANGOLIN_EXPORT
 std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri);
 
-//! Create vector of matching interfaces either through direct cast or filter interface.
-template<typename T>
-std::vector<T*> FindMatchingVideoInterfaces( VideoInterface& video )
+//! Create vector of matching interfaces either through direct cast or filter
+//! interface.
+template <typename T>
+std::vector<T*> FindMatchingVideoInterfaces(VideoInterface& video)
 {
-    std::vector<T*> matches;
+  std::vector<T*> matches;
 
-    T* vid = dynamic_cast<T*>(&video);
-    if(vid) {
-        matches.push_back(vid);
-    }
+  T* vid = dynamic_cast<T*>(&video);
+  if (vid) {
+    matches.push_back(vid);
+  }
 
-    VideoFilterInterface* vidf = dynamic_cast<VideoFilterInterface*>(&video);
-    if(vidf) {
-        std::vector<T*> fmatches = vidf->FindMatchingStreams<T>();
-        matches.insert(matches.begin(), fmatches.begin(), fmatches.end());
-    }
+  VideoFilterInterface* vidf = dynamic_cast<VideoFilterInterface*>(&video);
+  if (vidf) {
+    std::vector<T*> fmatches = vidf->FindMatchingStreams<T>();
+    matches.insert(matches.begin(), fmatches.begin(), fmatches.end());
+  }
 
-    return matches;
+  return matches;
 }
 
-template<typename T>
-T* FindFirstMatchingVideoInterface( VideoInterface& video )
+template <typename T>
+T* FindFirstMatchingVideoInterface(VideoInterface& video)
 {
-    T* vid = dynamic_cast<T*>(&video);
-    if(vid) {
-        return vid;
-    }
+  T* vid = dynamic_cast<T*>(&video);
+  if (vid) {
+    return vid;
+  }
 
-    VideoFilterInterface* vidf = dynamic_cast<VideoFilterInterface*>(&video);
-    if(vidf) {
-        std::vector<T*> fmatches = vidf->FindMatchingStreams<T>();
-        if(fmatches.size()) {
-            return fmatches[0];
+  VideoFilterInterface* vidf = dynamic_cast<VideoFilterInterface*>(&video);
+  if (vidf) {
+    std::vector<T*> fmatches = vidf->FindMatchingStreams<T>();
+    if (fmatches.size()) {
+      return fmatches[0];
+    }
+  }
+
+  return 0;
+}
+
+inline picojson::value GetVideoFrameProperties(VideoInterface* video)
+{
+  VideoPropertiesInterface* pi = dynamic_cast<VideoPropertiesInterface*>(video);
+  VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
+
+  if (pi) {
+    return pi->FrameProperties();
+  } else if (fi) {
+    if (fi->InputStreams().size() == 1) {
+      return GetVideoFrameProperties(fi->InputStreams()[0]);
+    } else if (fi->InputStreams().size() > 0) {
+      picojson::value streams;
+
+      for (size_t i = 0; i < fi->InputStreams().size(); ++i) {
+        const picojson::value dev_props =
+            GetVideoFrameProperties(fi->InputStreams()[i]);
+        if (dev_props.contains("streams")) {
+          const picojson::value& dev_streams = dev_props["streams"];
+          for (size_t j = 0; j < dev_streams.size(); ++j) {
+            streams.push_back(dev_streams[j]);
+          }
+        } else {
+          streams.push_back(dev_props);
         }
-    }
+      }
 
-    return 0;
+      if (streams.size() > 1) {
+        picojson::value json = streams[0];
+        json["streams"] = streams;
+        return json;
+      } else {
+        return streams[0];
+      }
+    }
+  }
+  return picojson::value();
 }
 
-inline
-picojson::value GetVideoFrameProperties(VideoInterface* video)
+inline picojson::value GetVideoDeviceProperties(VideoInterface* video)
 {
-    VideoPropertiesInterface* pi = dynamic_cast<VideoPropertiesInterface*>(video);
-    VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
+  VideoPropertiesInterface* pi = dynamic_cast<VideoPropertiesInterface*>(video);
+  VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
 
-    if(pi) {
-        return pi->FrameProperties();
-    }else if(fi){
-        if(fi->InputStreams().size() == 1) {
-            return GetVideoFrameProperties(fi->InputStreams()[0]);
-        }else if(fi->InputStreams().size() > 0){
-            picojson::value streams;
+  if (pi) {
+    return pi->DeviceProperties();
+  } else if (fi) {
+    if (fi->InputStreams().size() == 1) {
+      return GetVideoDeviceProperties(fi->InputStreams()[0]);
+    } else if (fi->InputStreams().size() > 0) {
+      picojson::value streams;
 
-            for(size_t i=0; i< fi->InputStreams().size(); ++i) {
-                const picojson::value dev_props = GetVideoFrameProperties(fi->InputStreams()[i]);
-                if(dev_props.contains("streams")) {
-                    const picojson::value& dev_streams = dev_props["streams"];
-                    for(size_t j=0; j < dev_streams.size(); ++j) {
-                        streams.push_back(dev_streams[j]);
-                    }
-                }else{
-                    streams.push_back(dev_props);
-                }
-            }
-
-            if(streams.size() > 1) {
-                picojson::value json = streams[0];
-                json["streams"] = streams;
-                return json;
-            }else{
-                return streams[0];
-            }
+      for (size_t i = 0; i < fi->InputStreams().size(); ++i) {
+        const picojson::value dev_props =
+            GetVideoDeviceProperties(fi->InputStreams()[i]);
+        if (dev_props.contains("streams")) {
+          const picojson::value& dev_streams = dev_props["streams"];
+          for (size_t j = 0; j < dev_streams.size(); ++j) {
+            streams.push_back(dev_streams[j]);
+          }
+        } else {
+          streams.push_back(dev_props);
         }
+      }
+
+      if (streams.size() > 1) {
+        picojson::value json = streams[0];
+        json["streams"] = streams;
+        return json;
+      } else {
+        return streams[0];
+      }
     }
-    return picojson::value();
+  }
+  return picojson::value();
 }
 
-inline
-picojson::value GetVideoDeviceProperties(VideoInterface* video)
-{
-    VideoPropertiesInterface* pi = dynamic_cast<VideoPropertiesInterface*>(video);
-    VideoFilterInterface* fi = dynamic_cast<VideoFilterInterface*>(video);
-
-    if(pi) {
-        return pi->DeviceProperties();
-    }else if(fi){
-        if(fi->InputStreams().size() == 1) {
-            return GetVideoDeviceProperties(fi->InputStreams()[0]);
-        }else if(fi->InputStreams().size() > 0){
-            picojson::value streams;
-
-            for(size_t i=0; i< fi->InputStreams().size(); ++i) {
-                const picojson::value dev_props = GetVideoDeviceProperties(fi->InputStreams()[i]);
-                if(dev_props.contains("streams")) {
-                    const picojson::value& dev_streams = dev_props["streams"];
-                    for(size_t j=0; j < dev_streams.size(); ++j) {
-                        streams.push_back(dev_streams[j]);
-                    }
-                }else{
-                    streams.push_back(dev_props);
-                }
-            }
-
-            if(streams.size() > 1) {
-                picojson::value json = streams[0];
-                json["streams"] = streams;
-                return json;
-            }else{
-                return streams[0];
-            }
-        }
-    }
-    return picojson::value();
-}
-
-}
+}  // namespace pangolin

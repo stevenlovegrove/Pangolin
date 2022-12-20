@@ -29,77 +29,71 @@
 #include <pangolin/utils/uri.h>
 
 #include <stdexcept>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace pangolin
 {
 
 Uri ParseUri(const std::string &str_uri)
 {
-    Uri uri;
-    uri.full_uri = str_uri;
+  Uri uri;
+  uri.full_uri = str_uri;
 
-    // Find Scheme delimiter
-    size_t npos = 0;
-    const size_t ns = str_uri.find(':', npos);
-    if( ns != std::string::npos )
-    {
-        uri.scheme = str_uri.substr(0,ns);
-        npos = ns+1;
-    }else{
-        uri.scheme = "file";
-        uri.url = str_uri;
-        return uri;
-    }
-
-    // Find Options delimiters
-    if( str_uri.size() > npos && str_uri[npos] == '[' )
-    {
-        const size_t nob = npos;
-        const size_t ncb = str_uri.find(']', nob+1);
-        if(ncb != std::string::npos)
-        {
-            const std::string queries = str_uri.substr(nob+1, ncb - (ns+2) );
-            std::vector<std::string> params;
-            Split(queries, ',', params);
-            for(size_t i=0; i< params.size(); ++i)
-            {
-                std::vector<std::string> args;
-                Split(params[i], '=', args );
-                std::string key = Trim(args[0]);
-                std::string val = args.size() > 1 ? Trim(args[1]) : "";
-                uri.Set(key,val);
-            }
-        }else{
-            throw std::runtime_error("Unable to parse URI: '" + str_uri + "'");
-        }
-        npos = ncb + 1;
-    }
-
-    // Find url delimiter
-    size_t nurl = str_uri.find("//", npos);
-    if(nurl != std::string::npos)
-    {
-        uri.url = str_uri.substr(nurl+2);
-    }
-
+  // Find Scheme delimiter
+  size_t npos = 0;
+  const size_t ns = str_uri.find(':', npos);
+  if (ns != std::string::npos) {
+    uri.scheme = str_uri.substr(0, ns);
+    npos = ns + 1;
+  } else {
+    uri.scheme = "file";
+    uri.url = str_uri;
     return uri;
-}
+  }
 
-std::ostream& operator<< (std::ostream &out, Uri &uri)
-{
-    out << "scheme: " << uri.scheme << std::endl;
-    out << "url:    " << uri.url << std::endl;
-    out << "params:" << std::endl;
-
-    for( Uri::ParamMap::const_iterator ip = uri.params.begin();
-         ip != uri.params.end(); ++ip)
-    {
-        out << "\t" << ip->first << " = " << ip->second << std::endl;
+  // Find Options delimiters
+  if (str_uri.size() > npos && str_uri[npos] == '[') {
+    const size_t nob = npos;
+    const size_t ncb = str_uri.find(']', nob + 1);
+    if (ncb != std::string::npos) {
+      const std::string queries = str_uri.substr(nob + 1, ncb - (ns + 2));
+      std::vector<std::string> params;
+      Split(queries, ',', params);
+      for (size_t i = 0; i < params.size(); ++i) {
+        std::vector<std::string> args;
+        Split(params[i], '=', args);
+        std::string key = Trim(args[0]);
+        std::string val = args.size() > 1 ? Trim(args[1]) : "";
+        uri.Set(key, val);
+      }
+    } else {
+      throw std::runtime_error("Unable to parse URI: '" + str_uri + "'");
     }
+    npos = ncb + 1;
+  }
 
-    return out;
+  // Find url delimiter
+  size_t nurl = str_uri.find("//", npos);
+  if (nurl != std::string::npos) {
+    uri.url = str_uri.substr(nurl + 2);
+  }
+
+  return uri;
 }
 
-} // pangolin
+std::ostream &operator<<(std::ostream &out, Uri &uri)
+{
+  out << "scheme: " << uri.scheme << std::endl;
+  out << "url:    " << uri.url << std::endl;
+  out << "params:" << std::endl;
+
+  for (Uri::ParamMap::const_iterator ip = uri.params.begin();
+       ip != uri.params.end(); ++ip) {
+    out << "\t" << ip->first << " = " << ip->second << std::endl;
+  }
+
+  return out;
+}
+
+}  // namespace pangolin

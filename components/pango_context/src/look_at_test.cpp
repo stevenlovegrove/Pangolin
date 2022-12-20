@@ -8,14 +8,14 @@
 using namespace Eigen;
 using namespace sophus;
 
-namespace pangolin {
+namespace pangolin
+{
 
 template <typename T>
 void testForParams(
-    Vector3<T> const& lookat_in_world,
-    Vector3<T> const& camera_in_world,
-    Vector3<T> const& up_in_world,
-    DeviceXyz convention) {
+    Vector3<T> const& lookat_in_world, Vector3<T> const& camera_in_world,
+    Vector3<T> const& up_in_world, DeviceXyz convention)
+{
   Se3<T> const world_pose_cam = worldLookatFromCamera(
       camera_in_world, lookat_in_world, up_in_world, convention);
   Se3<T> const cam_pose_world = world_pose_cam.inverse();
@@ -36,21 +36,21 @@ void testForParams(
   CHECK(std::abs(fwd_conv.dot(right_conv)) < sophus::kEpsilon<T>);
 }
 
-void simpleTest() {
+void simpleTest()
+{
   Vector3<double> const lookat_in_world(0.0, 0.0, 1.0);
   Vector3<double> const camera_in_world(0.0, 0.0, 0.0);
   Vector3<double> const up_in_world(0.0, -1.0, 0.0);
   const Se3F64 world_pose_cam = worldLookatFromCamera(
-      camera_in_world,
-      lookat_in_world,
-      up_in_world,
+      camera_in_world, lookat_in_world, up_in_world,
       DeviceXyz::right_down_forward);
 
   CHECK_EIGEN_APPROX(world_pose_cam.matrix(), Eigen::Matrix4d::Identity());
 }
 
 template <typename T>
-void testForEachConvention(DeviceXyz Convention) {
+void testForEachConvention(DeviceXyz Convention)
+{
   auto test_vec3 = testMats<T, 3, 1>(testVecs(), 100);
 
   for (size_t i = 0; i < test_vec3.size() - 3; ++i) {
@@ -58,21 +58,21 @@ void testForEachConvention(DeviceXyz Convention) {
         // Vector3<T>(5.0, 4.0, 1.0),
         // Vector3<T>(1.0,2.0,3.0),
         // Vector3<T>(0.0, 1.0, 0.0),
-        test_vec3[i + 0],
-        test_vec3[i + 1],
-        test_vec3[i + 2],
+        test_vec3[i + 0], test_vec3[i + 1], test_vec3[i + 2],
         DeviceXyz::right_down_forward);
   }
 }
 
 template <typename T>
-void testForScalar() {
+void testForScalar()
+{
   for (DeviceXyz c : getAll(DeviceXyz())) {
     testForEachConvention<T>(c);
   }
 }
 
-TEST_CASE("lookat, forward") {
+TEST_CASE("lookat, forward")
+{
   simpleTest();
 
   // testForScalar<float>();

@@ -33,98 +33,101 @@ namespace pangolin
 {
 
 struct WbGains {
-    WbGains():r(1.0f), g(1.0f), b(1.0f){}
-    WbGains(float r_in, float g_in, float b_in):r(r_in), g(g_in), b(b_in){
-        PANGO_ASSERT(r_in >= 0.0f && r_in <= 1.0f &&
-                     g_in >= 0.0f && g_in <= 1.0f &&
-                     b_in >= 0.0f && b_in <= 1.0f ,
-                     "[Debayer] White balance gains must be between 0.0 and 1.0");
-    }
-    float r;
-    float g;
-    float b;
+  WbGains() : r(1.0f), g(1.0f), b(1.0f) {}
+  WbGains(float r_in, float g_in, float b_in) : r(r_in), g(g_in), b(b_in)
+  {
+    PANGO_ASSERT(
+        r_in >= 0.0f && r_in <= 1.0f && g_in >= 0.0f && g_in <= 1.0f &&
+            b_in >= 0.0f && b_in <= 1.0f,
+        "[Debayer] White balance gains must be between 0.0 and 1.0");
+  }
+  float r;
+  float g;
+  float b;
 };
 
 // Enum to match libdc1394's dc1394_bayer_method_t
 typedef enum {
-    BAYER_METHOD_NEAREST = 0,
-    BAYER_METHOD_SIMPLE,
-    BAYER_METHOD_BILINEAR,
-    BAYER_METHOD_HQLINEAR,
-    BAYER_METHOD_DOWNSAMPLE_,
-    BAYER_METHOD_EDGESENSE,
-    BAYER_METHOD_VNG,
-    BAYER_METHOD_AHD,
+  BAYER_METHOD_NEAREST = 0,
+  BAYER_METHOD_SIMPLE,
+  BAYER_METHOD_BILINEAR,
+  BAYER_METHOD_HQLINEAR,
+  BAYER_METHOD_DOWNSAMPLE_,
+  BAYER_METHOD_EDGESENSE,
+  BAYER_METHOD_VNG,
+  BAYER_METHOD_AHD,
 
-    // Pangolin custom defines
-    BAYER_METHOD_NONE = 512,
-    BAYER_METHOD_DOWNSAMPLE,
-    BAYER_METHOD_DOWNSAMPLE_MONO
+  // Pangolin custom defines
+  BAYER_METHOD_NONE = 512,
+  BAYER_METHOD_DOWNSAMPLE,
+  BAYER_METHOD_DOWNSAMPLE_MONO
 } bayer_method_t;
 
 // Enum to match libdc1394's dc1394_color_filter_t
 typedef enum {
-    DC1394_COLOR_FILTER_RGGB = 512,
-    DC1394_COLOR_FILTER_GBRG,
-    DC1394_COLOR_FILTER_GRBG,
-    DC1394_COLOR_FILTER_BGGR
+  DC1394_COLOR_FILTER_RGGB = 512,
+  DC1394_COLOR_FILTER_GBRG,
+  DC1394_COLOR_FILTER_GRBG,
+  DC1394_COLOR_FILTER_BGGR
 } color_filter_t;
 
 // Video class that debayers its video input using the given method.
-class PANGOLIN_EXPORT DebayerVideo :
-        public VideoInterface,
-        public VideoFilterInterface,
-        public BufferAwareVideoInterface
+class PANGOLIN_EXPORT DebayerVideo : public VideoInterface,
+                                     public VideoFilterInterface,
+                                     public BufferAwareVideoInterface
 {
-public:
-    DebayerVideo(std::unique_ptr<VideoInterface>& videoin, const std::vector<bayer_method_t> &method, color_filter_t tile, const WbGains& input_wb_gains);
-    ~DebayerVideo();
+  public:
+  DebayerVideo(
+      std::unique_ptr<VideoInterface>& videoin,
+      const std::vector<bayer_method_t>& method, color_filter_t tile,
+      const WbGains& input_wb_gains);
+  ~DebayerVideo();
 
-    //! Implement VideoInput::Start()
-    void Start();
+  //! Implement VideoInput::Start()
+  void Start();
 
-    //! Implement VideoInput::Stop()
-    void Stop();
+  //! Implement VideoInput::Stop()
+  void Stop();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const;
 
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    std::vector<VideoInterface*>& InputStreams();
+  std::vector<VideoInterface*>& InputStreams();
 
-    static color_filter_t ColorFilterFromString(std::string str);
+  static color_filter_t ColorFilterFromString(std::string str);
 
-    static bayer_method_t BayerMethodFromString(std::string str);
+  static bayer_method_t BayerMethodFromString(std::string str);
 
-    uint32_t AvailableFrames() const;
+  uint32_t AvailableFrames() const;
 
-    bool DropNFrames(uint32_t n);
+  bool DropNFrames(uint32_t n);
 
-protected:
-    void ProcessStreams(unsigned char* out, const unsigned char* in);
+  protected:
+  void ProcessStreams(unsigned char* out, const unsigned char* in);
 
-    std::unique_ptr<VideoInterface> src;
-    std::vector<VideoInterface*> videoin;
-    std::vector<StreamInfo> streams;
+  std::unique_ptr<VideoInterface> src;
+  std::vector<VideoInterface*> videoin;
+  std::vector<StreamInfo> streams;
 
-    size_t size_bytes;
-    std::unique_ptr<unsigned char[]> buffer;
+  size_t size_bytes;
+  std::unique_ptr<unsigned char[]> buffer;
 
-    std::vector<bayer_method_t> methods;
-    color_filter_t tile;
+  std::vector<bayer_method_t> methods;
+  color_filter_t tile;
 
-    WbGains wb_gains;
+  WbGains wb_gains;
 
-    picojson::value device_properties;
-    picojson::value frame_properties;
+  picojson::value device_properties;
+  picojson::value frame_properties;
 };
 
-}
+}  // namespace pangolin

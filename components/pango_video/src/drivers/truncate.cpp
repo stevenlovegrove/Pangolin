@@ -25,103 +25,100 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/truncate.h>
 #include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/drivers/truncate.h>
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/video/video.h>
 
 namespace pangolin
 {
 
-TruncateVideo::TruncateVideo(std::unique_ptr<VideoInterface> &src_, size_t begin, size_t end)
-    : src(std::move(src_)), streams(src->Streams()), begin(begin), end(end), next_frame_to_grab(0)
+TruncateVideo::TruncateVideo(
+    std::unique_ptr<VideoInterface>& src_, size_t begin, size_t end) :
+    src(std::move(src_)),
+    streams(src->Streams()),
+    begin(begin),
+    end(end),
+    next_frame_to_grab(0)
 {
-    videoin.push_back(src.get());
+  videoin.push_back(src.get());
 
-    if(VideoPlaybackInterface* v = GetVideoPlaybackInterface()){
-        // Guard against the obscure case of nested TruncateVideo filters
-        if( !pangolin::FindFirstMatchingVideoInterface<TruncateVideo>(*src) ) {
-            next_frame_to_grab = v->Seek(begin);
-        }
+  if (VideoPlaybackInterface* v = GetVideoPlaybackInterface()) {
+    // Guard against the obscure case of nested TruncateVideo filters
+    if (!pangolin::FindFirstMatchingVideoInterface<TruncateVideo>(*src)) {
+      next_frame_to_grab = v->Seek(begin);
     }
+  }
 }
 
-TruncateVideo::~TruncateVideo()
-{
-}
+TruncateVideo::~TruncateVideo() {}
 
-size_t TruncateVideo::SizeBytes() const
-{
-    return videoin[0]->SizeBytes();
-}
+size_t TruncateVideo::SizeBytes() const { return videoin[0]->SizeBytes(); }
 
 const std::vector<StreamInfo>& TruncateVideo::Streams() const
 {
-    return streams;
+  return streams;
 }
 
-void TruncateVideo::Start()
+void TruncateVideo::Start() { videoin[0]->Start(); }
+
+void TruncateVideo::Stop() { videoin[0]->Stop(); }
+
+bool TruncateVideo::GrabNext(unsigned char* image, bool wait)
 {
-    videoin[0]->Start();
+  if (next_frame_to_grab < end) {
+    bool grab_success = videoin[0]->GrabNext(image, wait);
+    return grab_success && (next_frame_to_grab++) >= begin;
+  }
+  return false;
 }
 
-void TruncateVideo::Stop()
+bool TruncateVideo::GrabNewest(unsigned char* image, bool wait)
 {
-    videoin[0]->Stop();
+  return videoin[0]->GrabNewest(image, wait);
 }
 
-bool TruncateVideo::GrabNext( unsigned char* image, bool wait )
-{
-    if(next_frame_to_grab < end) {
-        bool grab_success = videoin[0]->GrabNext(image, wait);
-        return grab_success && (next_frame_to_grab++) >= begin;
-    }
-    return false;
-}
-
-bool TruncateVideo::GrabNewest( unsigned char* image, bool wait )
-{
-    return videoin[0]->GrabNewest(image, wait);
-}
-
-std::vector<VideoInterface*>& TruncateVideo::InputStreams()
-{
-    return videoin;
-}
+std::vector<VideoInterface*>& TruncateVideo::InputStreams() { return videoin; }
 
 PANGOLIN_REGISTER_FACTORY(TruncateVideo)
 {
-    struct TruncateVideoFactory : public TypedFactoryInterface<VideoInterface> {
-        std::map<std::string,Precedence> Schemes() const override
-        {
-            return {{"truncate",10}};
-        }
-        const char* Description() const override
-        {
-            return "Truncates the length of a video stream with begin and end markers";
-        }
-        ParamSet Params() const override
-        {
-            return {{
-                    {"begin","0","Beginning of the stream"},
-                    {"end","size_t::max*","Dynamically set to the max of size_t"},
-                }};
-        }
-        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
-            if(subvid->Streams().size() == 0) {
-                throw VideoException("VideoTruncater input must have at least one stream");
-            }
+  struct TruncateVideoFactory : public TypedFactoryInterface<VideoInterface> {
+    std::map<std::string, Precedence> Schemes() const override
+    {
+      return {{"truncate", 10}};
+    }
+    const char* Description() const override
+    {
+      return "Truncates the length of a video stream with begin and end "
+             "markers";
+    }
+    ParamSet Params() const override
+    {
+      return {{
+          {"begin", "0", "Beginning of the stream"},
+          {"end", "size_t::max*", "Dynamically set to the max of size_t"},
+      }};
+    }
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    {
+      std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+      if (subvid->Streams().size() == 0) {
+        throw VideoException(
+            "VideoTruncater input must have at least one stream");
+      }
 
-            ParamReader reader(Params(),uri);
-            const size_t start = reader.Get<size_t>("begin");
-            const size_t end = reader.Get<size_t>("end", std::numeric_limits<size_t>::max());
+      ParamReader reader(Params(), uri);
+      const size_t start = reader.Get<size_t>("begin");
+      const size_t end =
+          reader.Get<size_t>("end", std::numeric_limits<size_t>::max());
 
-            return std::unique_ptr<VideoInterface>( new TruncateVideo(subvid,start,end) );
-        }
-    };
+      return std::unique_ptr<VideoInterface>(
+          new TruncateVideo(subvid, start, end));
+    }
+  };
 
-    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<TruncateVideoFactory>());
+  return FactoryRegistry::I()->RegisterFactory<VideoInterface>(
+      std::make_shared<TruncateVideoFactory>());
 }
 
-}
+}  // namespace pangolin

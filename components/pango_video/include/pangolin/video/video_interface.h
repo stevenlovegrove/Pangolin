@@ -33,122 +33,116 @@
 #include <memory>
 #include <vector>
 
-#define PANGO_HAS_TIMING_DATA        "has_timing_data"
+#define PANGO_HAS_TIMING_DATA "has_timing_data"
 #define PANGO_HOST_RECEPTION_TIME_US "host_reception_time_us"
-#define PANGO_CAPTURE_TIME_US        "capture_time_us"
-#define PANGO_EXPOSURE_US            "exposure_us"
-#define PANGO_GAMMA                  "gamma"
+#define PANGO_CAPTURE_TIME_US "capture_time_us"
+#define PANGO_EXPOSURE_US "exposure_us"
+#define PANGO_GAMMA "gamma"
 // analog gain is in linear scale and not dB
-#define PANGO_ANALOG_GAIN            "analog_gain"
-#define PANGO_ANALOG_BLACK_LEVEL     "analog_black_level"
-#define PANGO_SENSOR_TEMPERATURE_C   "sensor_temperature_C"
-#define PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US "estimated_center_capture_time_us"
-#define PANGO_JOIN_OFFSET_US         "join_offset_us"
-#define PANGO_FRAME_COUNTER          "frame_counter"
-#define PANGO_HAS_LINE0_METADATA     "line0_metadata"
+#define PANGO_ANALOG_GAIN "analog_gain"
+#define PANGO_ANALOG_BLACK_LEVEL "analog_black_level"
+#define PANGO_SENSOR_TEMPERATURE_C "sensor_temperature_C"
+#define PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US                                 \
+  "estimated_center_capture_time_us"
+#define PANGO_JOIN_OFFSET_US "join_offset_us"
+#define PANGO_FRAME_COUNTER "frame_counter"
+#define PANGO_HAS_LINE0_METADATA "line0_metadata"
 
-namespace pangolin {
+namespace pangolin
+{
 
 // temp utility for temp API
-template<typename T>
-std::optional<T> optGet(const std::optional<std::vector<T>>& v, size_t index) {
-    if(v && v->size() > index) {
-        return (*v)[index];
-    }
-    return std::nullopt;
+template <typename T>
+std::optional<T> optGet(const std::optional<std::vector<T>>& v, size_t index)
+{
+  if (v && v->size() > index) {
+    return (*v)[index];
+  }
+  return std::nullopt;
 }
 
 //! Interface to video capture sources
-struct PANGOLIN_EXPORT VideoInterface
-{
-    virtual ~VideoInterface() {}
+struct PANGOLIN_EXPORT VideoInterface {
+  virtual ~VideoInterface() {}
 
-    //! Required buffer size to store all frames
-    virtual size_t SizeBytes() const = 0;
+  //! Required buffer size to store all frames
+  virtual size_t SizeBytes() const = 0;
 
-    //! Get format and dimensions of all video streams
-    virtual const std::vector<StreamInfo>& Streams() const = 0;
+  //! Get format and dimensions of all video streams
+  virtual const std::vector<StreamInfo>& Streams() const = 0;
 
-    //! Start Video device
-    virtual void Start() = 0;
+  //! Start Video device
+  virtual void Start() = 0;
 
-    //! Stop Video device
-    virtual void Stop() = 0;
+  //! Stop Video device
+  virtual void Stop() = 0;
 
+  // TODO: temporary typesafe API. Will move to async model.
+  inline std::optional<std::vector<sophus::IntensityImage<>>> GrabImages()
+  {
+    using namespace sophus;
 
-    // TODO: temporary typesafe API. Will move to async model.
-    inline std::optional<std::vector<sophus::IntensityImage<>>> GrabImages() {
-        using namespace sophus;
-
-        // allocating each frame, ughhh.
-        std::unique_ptr<uint8_t[]> buffer(new uint8_t[SizeBytes()]);
-        if(GrabNext(buffer.get())) {
-            std::vector<IntensityImage<>> res;
-            // Allocation into seperate images too, ughhhhhh
-            for(const auto& s : Streams()) {
-                res.emplace_back(ImageSize(s.shape().imageSize()),s.format());
-                auto& dst_image = res.back();
-                sophus::details::pitchedCopy(
-                    const_cast<uint8_t*>(dst_image.rawPtr()),
-                    dst_image.shape().pitchBytes(),
-                    buffer.get() + s.offsetBytes(),
-                    s.shape().pitchBytes(),
-                    dst_image.imageSize(),
-                    s.format().bytesPerPixel()
-                );
-            }
-            return res;
-        }
-        return std::nullopt;
+    // allocating each frame, ughhh.
+    std::unique_ptr<uint8_t[]> buffer(new uint8_t[SizeBytes()]);
+    if (GrabNext(buffer.get())) {
+      std::vector<IntensityImage<>> res;
+      // Allocation into seperate images too, ughhhhhh
+      for (const auto& s : Streams()) {
+        res.emplace_back(ImageSize(s.shape().imageSize()), s.format());
+        auto& dst_image = res.back();
+        sophus::details::pitchedCopy(
+            const_cast<uint8_t*>(dst_image.rawPtr()),
+            dst_image.shape().pitchBytes(), buffer.get() + s.offsetBytes(),
+            s.shape().pitchBytes(), dst_image.imageSize(),
+            s.format().bytesPerPixel());
+      }
+      return res;
     }
+    return std::nullopt;
+  }
 
-    template<typename T>
-    T* as() {
-        return dynamic_cast<T*>(this);
-    }
+  template <typename T>
+  T* as()
+  {
+    return dynamic_cast<T*>(this);
+  }
 
-
-    // horrible API to be replaced
-    virtual bool GrabNext( unsigned char* image, bool wait = true ) = 0;
-    virtual bool GrabNewest( unsigned char* image, bool wait = true ) = 0;
+  // horrible API to be replaced
+  virtual bool GrabNext(unsigned char* image, bool wait = true) = 0;
+  virtual bool GrabNewest(unsigned char* image, bool wait = true) = 0;
 };
 
 //! Interface to GENICAM video capture sources
-struct PANGOLIN_EXPORT GenicamVideoInterface
-{
-    virtual ~GenicamVideoInterface() {}
+struct PANGOLIN_EXPORT GenicamVideoInterface {
+  virtual ~GenicamVideoInterface() {}
 
-    virtual bool GetParameter(const std::string& name, std::string& result) = 0;
+  virtual bool GetParameter(const std::string& name, std::string& result) = 0;
 
-    virtual bool SetParameter(const std::string& name, const std::string& value) = 0;
+  virtual bool SetParameter(
+      const std::string& name, const std::string& value) = 0;
 
-    virtual size_t CameraCount() const
-    {
-        return 1;
-    }
+  virtual size_t CameraCount() const { return 1; }
 };
 
-struct PANGOLIN_EXPORT BufferAwareVideoInterface
-{
-    virtual ~BufferAwareVideoInterface() {}
+struct PANGOLIN_EXPORT BufferAwareVideoInterface {
+  virtual ~BufferAwareVideoInterface() {}
 
-    //! Returns number of available frames
-    virtual uint32_t AvailableFrames() const = 0;
+  //! Returns number of available frames
+  virtual uint32_t AvailableFrames() const = 0;
 
-    //! Drops N frames in the queue starting from the oldest
-    //! returns false if less than n frames arae available
-    virtual bool DropNFrames(uint32_t n) = 0;
+  //! Drops N frames in the queue starting from the oldest
+  //! returns false if less than n frames arae available
+  virtual bool DropNFrames(uint32_t n) = 0;
 };
 
-struct PANGOLIN_EXPORT VideoPropertiesInterface
-{
-    virtual ~VideoPropertiesInterface() {}
+struct PANGOLIN_EXPORT VideoPropertiesInterface {
+  virtual ~VideoPropertiesInterface() {}
 
-    //! Access JSON properties of device
-    virtual const picojson::value& DeviceProperties() const = 0;
+  //! Access JSON properties of device
+  virtual const picojson::value& DeviceProperties() const = 0;
 
-    //! Access JSON properties of most recently captured frame
-    virtual const picojson::value& FrameProperties() const = 0;
+  //! Access JSON properties of most recently captured frame
+  virtual const picojson::value& FrameProperties() const = 0;
 };
 
 enum UvcRequestCode {
@@ -163,57 +157,60 @@ enum UvcRequestCode {
   UVC_GET_DEF = 0x87
 };
 
-struct PANGOLIN_EXPORT VideoFilterInterface
-{
-    virtual ~VideoFilterInterface() {}
+struct PANGOLIN_EXPORT VideoFilterInterface {
+  virtual ~VideoFilterInterface() {}
 
-    template<typename T>
-    std::vector<T*> FindMatchingStreams()
-    {
-        std::vector<T*> matches;
-        std::vector<VideoInterface*> children = InputStreams();
-        for(size_t c=0; c < children.size(); ++c) {
-            T* concrete_video = dynamic_cast<T*>(children[c]);
-            if(concrete_video) {
-                matches.push_back(concrete_video);
-            }else{
-                VideoFilterInterface* filter_video = dynamic_cast<VideoFilterInterface*>(children[c]);
-                if(filter_video) {
-                    std::vector<T*> child_matches = filter_video->FindMatchingStreams<T>();
-                    matches.insert(matches.end(), child_matches.begin(), child_matches.end());
-                }
-            }
+  template <typename T>
+  std::vector<T*> FindMatchingStreams()
+  {
+    std::vector<T*> matches;
+    std::vector<VideoInterface*> children = InputStreams();
+    for (size_t c = 0; c < children.size(); ++c) {
+      T* concrete_video = dynamic_cast<T*>(children[c]);
+      if (concrete_video) {
+        matches.push_back(concrete_video);
+      } else {
+        VideoFilterInterface* filter_video =
+            dynamic_cast<VideoFilterInterface*>(children[c]);
+        if (filter_video) {
+          std::vector<T*> child_matches =
+              filter_video->FindMatchingStreams<T>();
+          matches.insert(
+              matches.end(), child_matches.begin(), child_matches.end());
         }
-        return matches;
+      }
     }
+    return matches;
+  }
 
-    virtual std::vector<VideoInterface*>& InputStreams() = 0;
+  virtual std::vector<VideoInterface*>& InputStreams() = 0;
 };
 
-struct PANGOLIN_EXPORT VideoUvcInterface
-{
-    virtual ~VideoUvcInterface() {}
-    virtual int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code) = 0;
-    virtual bool GetExposure(int& exp_us) = 0;
-    virtual bool SetExposure(int exp_us) = 0;
-    virtual bool GetGain(float& gain) = 0;
-    virtual bool SetGain(float gain) = 0;
+struct PANGOLIN_EXPORT VideoUvcInterface {
+  virtual ~VideoUvcInterface() {}
+  virtual int IoCtrl(
+      uint8_t unit, uint8_t ctrl, unsigned char* data, int len,
+      UvcRequestCode req_code) = 0;
+  virtual bool GetExposure(int& exp_us) = 0;
+  virtual bool SetExposure(int exp_us) = 0;
+  virtual bool GetGain(float& gain) = 0;
+  virtual bool SetGain(float gain) = 0;
 };
 
-struct PANGOLIN_EXPORT VideoPlaybackInterface
-{
-    virtual ~VideoPlaybackInterface() {}
+struct PANGOLIN_EXPORT VideoPlaybackInterface {
+  virtual ~VideoPlaybackInterface() {}
 
-    /// Return monotonic id of current frame
-    /// The 'current frame' is the frame returned from the last successful call to Grab
-    virtual size_t GetCurrentFrameId() const = 0;
+  /// Return monotonic id of current frame
+  /// The 'current frame' is the frame returned from the last successful call to
+  /// Grab
+  virtual size_t GetCurrentFrameId() const = 0;
 
-    /// Return total number of frames to be captured from device,
-    /// or 0 if unknown.
-    virtual size_t GetTotalFrames() const = 0;
+  /// Return total number of frames to be captured from device,
+  /// or 0 if unknown.
+  virtual size_t GetTotalFrames() const = 0;
 
-    /// Return frameid on success, or next frame on failure
-    virtual size_t Seek(size_t frameid) = 0;
+  /// Return frameid on success, or next frame on failure
+  virtual size_t Seek(size_t frameid) = 0;
 };
 
-}
+}  // namespace pangolin

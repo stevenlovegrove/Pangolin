@@ -30,48 +30,49 @@
 namespace pangolin
 {
 
-GlChar::GlChar()
-    : x_step(0.0f)
+GlChar::GlChar() : x_step(0.0f)
 {
-    // Uninitialised
+  // Uninitialised
 }
 
 // x and y are in 'discrete' coords, where (0,0) is center of top-left pixel.
-GlChar::GlChar(size_t atlas_index, int tw, int th, GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat advance, GLfloat ox, GLfloat oy)
-    : atlas_index(atlas_index), x_step(advance)
+GlChar::GlChar(
+    size_t atlas_index, int tw, int th, GLfloat x, GLfloat y, GLfloat w,
+    GLfloat h, GLfloat advance, GLfloat ox, GLfloat oy) :
+    atlas_index(atlas_index), x_step(advance)
 {
-    // Convert to u,v tex coords \in [0,1]
-    // u,v point to the top-left corner of top-left pixel
-    // (hence why we don't have the +0.5 converstion)
-    const GLfloat u = x / (GLfloat)tw;
-    const GLfloat v = y / (GLfloat)th;
-    const GLfloat u2 = u + w / (GLfloat)tw;
-    const GLfloat v2 = v + h / (GLfloat)th;
+  // Convert to u,v tex coords \in [0,1]
+  // u,v point to the top-left corner of top-left pixel
+  // (hence why we don't have the +0.5 converstion)
+  const GLfloat u = x / (GLfloat)tw;
+  const GLfloat v = y / (GLfloat)th;
+  const GLfloat u2 = u + w / (GLfloat)tw;
+  const GLfloat v2 = v + h / (GLfloat)th;
 
-    // 0, 3
-    // 1, 2
+  // 0, 3
+  // 1, 2
 
-    // Setup u,v tex coords
-    vs[0] = XYUV(ox,   oy,   u,  v );
-    vs[1] = XYUV(ox,   oy-h, u,  v2 );
-    vs[2] = XYUV(w+ox, oy-h, u2, v2 );
-    vs[3] = XYUV(w+ox, oy,   u2, v );
+  // Setup u,v tex coords
+  vs[0] = XYUV(ox, oy, u, v);
+  vs[1] = XYUV(ox, oy - h, u, v2);
+  vs[2] = XYUV(w + ox, oy - h, u2, v2);
+  vs[3] = XYUV(w + ox, oy, u2, v);
 
-    y_min = oy-h;
-    y_max = oy;
+  y_min = oy - h;
+  y_max = oy;
 }
 
 void GlChar::Draw() const
 {
-    glVertexPointer(2, GL_FLOAT, sizeof(XYUV), &vs[0].x);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glTexCoordPointer(2, GL_FLOAT, sizeof(XYUV), &vs[0].tu);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glEnable(GL_TEXTURE_2D);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glDisable(GL_TEXTURE_2D);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  glVertexPointer(2, GL_FLOAT, sizeof(XYUV), &vs[0].x);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glTexCoordPointer(2, GL_FLOAT, sizeof(XYUV), &vs[0].tu);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+  glEnable(GL_TEXTURE_2D);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  glDisable(GL_TEXTURE_2D);
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
-}
+}  // namespace pangolin

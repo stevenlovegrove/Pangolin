@@ -27,22 +27,22 @@
 
 #pragma once
 
-#include <string>
 #include <pangolin/platform.h>
 #include <pangolin/utils/params.h>
+
+#include <string>
 
 namespace pangolin
 {
 
-struct PANGOLIN_EXPORT Uri : public Params
-{
-    std::string scheme;
-    std::string url;
-    std::string full_uri;
+struct PANGOLIN_EXPORT Uri : public Params {
+  std::string scheme;
+  std::string url;
+  std::string full_uri;
 };
 
 //! Parse string as Video URI
 PANGOLIN_EXPORT
 Uri ParseUri(const std::string& str_uri);
 
-}
+}  // namespace pangolin

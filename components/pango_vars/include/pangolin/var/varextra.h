@@ -29,6 +29,7 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/var/var.h>
+
 #include <vector>
 
 namespace pangolin
@@ -38,55 +39,54 @@ PANGOLIN_EXPORT
 void ParseVarsFile(const std::string& filename);
 
 PANGOLIN_EXPORT
-void LoadJsonFile(const std::string& filename, const std::string& prefix="");
+void LoadJsonFile(const std::string& filename, const std::string& prefix = "");
 
 PANGOLIN_EXPORT
-void SaveJsonFile(const std::string& filename, const std::string& prefix="");
+void SaveJsonFile(const std::string& filename, const std::string& prefix = "");
 
-template<typename T>
-struct SetVarFunctor
-{
-    SetVarFunctor(const std::string& name, T val) : varName(name), setVal(val) {}
-    void operator()() { Var<T>(varName).Ref()->Set(setVal); }
-    std::string varName;
-    T setVal;
+template <typename T>
+struct SetVarFunctor {
+  SetVarFunctor(const std::string& name, T val) : varName(name), setVal(val) {}
+  void operator()() { Var<T>(varName).Ref()->Set(setVal); }
+  std::string varName;
+  T setVal;
 };
 
-struct ToggleVarFunctor
-{
-    ToggleVarFunctor(const std::string& name) : varName(name) {}
-    void operator()() { Var<bool> val(varName,false); val = !val; }
-    std::string varName;
+struct ToggleVarFunctor {
+  ToggleVarFunctor(const std::string& name) : varName(name) {}
+  void operator()()
+  {
+    Var<bool> val(varName, false);
+    val = !val;
+  }
+  std::string varName;
 };
 
-inline bool Pushed(bool& button)
-{
-    return button && !(button = false);
-}
+inline bool Pushed(bool& button) { return button && !(button = false); }
 
 inline bool Pushed(Var<bool>& button)
 {
-    return (bool)button && !(button = false);
+  return (bool)button && !(button = false);
 }
 
 // Just forward to the static method
 // The benefit here is that we can get type inference
-template<typename T, typename... Ts>
+template <typename T, typename... Ts>
 T& AttachVar(const std::string& name, T& var, Ts... ts)
 {
-    return Var<T>::Attach(name, var, ts...);
+  return Var<T>::Attach(name, var, ts...);
 }
 
 inline void DetachVarByName(const std::string& name)
 {
-    VarState::I().Remove(name);
+  VarState::I().Remove(name);
 }
 
-template<typename T>
+template <typename T>
 void DetachVar(const T& value)
 {
-    auto var = VarState::I().GetByReference<T>(value);
-    if(var) DetachVarByName(var->Meta().full_name);
+  auto var = VarState::I().GetByReference<T>(value);
+  if (var) DetachVarByName(var->Meta().full_name);
 }
 
-}
+}  // namespace pangolin

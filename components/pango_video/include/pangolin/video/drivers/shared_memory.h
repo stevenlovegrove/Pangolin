@@ -1,8 +1,8 @@
 #pragma once
 
-#include <pangolin/video/video_interface.h>
 #include <pangolin/utils/posix/condition_variable.h>
 #include <pangolin/utils/posix/shared_memory_buffer.h>
+#include <pangolin/video/video_interface.h>
 
 #include <memory>
 #include <vector>
@@ -12,20 +12,21 @@ namespace pangolin
 
 class SharedMemoryVideo : public VideoInterface
 {
-public:
-  SharedMemoryVideo(size_t w, size_t h, std::string pix_fmt,
-    const std::shared_ptr<SharedMemoryBufferInterface>& shared_memory,
-    const std::shared_ptr<ConditionVariableInterface>& buffer_full);
+  public:
+  SharedMemoryVideo(
+      size_t w, size_t h, std::string pix_fmt,
+      const std::shared_ptr<SharedMemoryBufferInterface>& shared_memory,
+      const std::shared_ptr<ConditionVariableInterface>& buffer_full);
   ~SharedMemoryVideo();
 
   size_t SizeBytes() const;
   const std::vector<StreamInfo>& Streams() const;
   void Start();
   void Stop();
-  bool GrabNext(unsigned char *image, bool wait);
-  bool GrabNewest(unsigned char *image, bool wait);
+  bool GrabNext(unsigned char* image, bool wait);
+  bool GrabNewest(unsigned char* image, bool wait);
 
-private:
+  private:
   PixelFormat _fmt;
   size_t _frame_size;
   std::vector<StreamInfo> _streams;
@@ -33,4 +34,4 @@ private:
   std::shared_ptr<ConditionVariableInterface> _buffer_full;
 };
 
-}
+}  // namespace pangolin

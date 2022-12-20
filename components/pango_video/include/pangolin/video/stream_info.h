@@ -28,64 +28,61 @@
 #pragma once
 
 #include <pangolin/image/image.h>
-#include <pangolin/image/runtime_image.h>
 #include <pangolin/image/pixel_format.h>
+#include <pangolin/image/runtime_image.h>
 
-namespace pangolin {
+namespace pangolin
+{
 
 class PANGOLIN_EXPORT StreamInfo
 {
-public:
-    inline StreamInfo(): shape_(0,0,0), offset_bytes_(0) {}
+  public:
+  inline StreamInfo() : shape_(0, 0, 0), offset_bytes_(0) {}
 
-    inline StreamInfo(RuntimePixelType fmt, const sophus::ImageShape shape, size_t offset_bytes )
-        : fmt_(fmt), shape_(shape), offset_bytes_(offset_bytes) {}
+  inline StreamInfo(
+      RuntimePixelType fmt, const sophus::ImageShape shape,
+      size_t offset_bytes) :
+      fmt_(fmt), shape_(shape), offset_bytes_(offset_bytes)
+  {
+  }
 
-    inline sophus::ImageShape shape() const
-    {
-        return shape_;
-    }
+  inline sophus::ImageShape shape() const { return shape_; }
 
-    inline RuntimePixelType format() const
-    {
-        return fmt_;
-    }
+  inline RuntimePixelType format() const { return fmt_; }
 
-    inline size_t offsetBytes() const
-    {
-        return offset_bytes_;
-    }
+  inline size_t offsetBytes() const { return offset_bytes_; }
 
-    inline size_t rowBytes() const
-    {
-        return format().bytesPerPixel() * shape().width();
-    }
+  inline size_t rowBytes() const
+  {
+    return format().bytesPerPixel() * shape().width();
+  }
 
-    //! Return Image wrapper around raw base pointer
-    inline sophus::ImageView<uint8_t> StreamImage(const uint8_t* base_ptr) const {
-        return { shape_, base_ptr + offset_bytes_ };
-    }
+  //! Return Image wrapper around raw base pointer
+  inline sophus::ImageView<uint8_t> StreamImage(const uint8_t* base_ptr) const
+  {
+    return {shape_, base_ptr + offset_bytes_};
+  }
 
-    inline sophus::MutImageView<uint8_t> StreamImage(uint8_t* base_ptr) const {
-        return { shape_, base_ptr + offset_bytes_ };
-    }
+  inline sophus::MutImageView<uint8_t> StreamImage(uint8_t* base_ptr) const
+  {
+    return {shape_, base_ptr + offset_bytes_};
+  }
 
-    inline IntensityImage<> copyToRuntimeImage(const uint8_t* base_ptr) const {
-        PANGO_DEBUG("Unneeded image copy happening...");
-        IntensityImage<> runtime(shape_, fmt_);
-        sophus::details::pitchedCopy(
-            const_cast<uint8_t*>(runtime.rawPtr()),
-            runtime.shape().pitchBytes(),
-            base_ptr, shape_.pitchBytes(), shape_.imageSize(),
-            fmt_.bytesPerPixel()
-        );
-        return runtime;
-    }
+  inline IntensityImage<> copyToRuntimeImage(const uint8_t* base_ptr) const
+  {
+    PANGO_DEBUG("Unneeded image copy happening...");
+    IntensityImage<> runtime(shape_, fmt_);
+    sophus::details::pitchedCopy(
+        const_cast<uint8_t*>(runtime.rawPtr()), runtime.shape().pitchBytes(),
+        base_ptr, shape_.pitchBytes(), shape_.imageSize(),
+        fmt_.bytesPerPixel());
+    return runtime;
+  }
 
-protected:
-    RuntimePixelType fmt_;
-    sophus::ImageShape shape_;
-    size_t offset_bytes_;
+  protected:
+  RuntimePixelType fmt_;
+  sophus::ImageShape shape_;
+  size_t offset_bytes_;
 };
 
-}
+}  // namespace pangolin

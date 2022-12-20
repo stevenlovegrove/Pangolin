@@ -32,49 +32,51 @@
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT JoinVideo
-    : public VideoInterface, public VideoFilterInterface
+class PANGOLIN_EXPORT JoinVideo : public VideoInterface,
+                                  public VideoFilterInterface
 {
-public:
-    JoinVideo(std::vector<std::unique_ptr<VideoInterface>> &src, const bool verbose);
+  public:
+  JoinVideo(
+      std::vector<std::unique_ptr<VideoInterface>>& src, const bool verbose);
 
-    ~JoinVideo();
+  ~JoinVideo();
 
-    // Explicitly delete copy ctor and assignment operator.
-    // See http://stackoverflow.com/questions/29565299/how-to-use-a-vector-of-unique-pointers-in-a-dll-exported-class-with-visual-studi
-    // >> It appears adding __declspec(dllexport) forces the compiler to define the implicitly-declared copy constructor and copy assignment operator
-    JoinVideo(const JoinVideo&) = delete;
-    JoinVideo& operator=(const JoinVideo&) = delete;
+  // Explicitly delete copy ctor and assignment operator.
+  // See
+  // http://stackoverflow.com/questions/29565299/how-to-use-a-vector-of-unique-pointers-in-a-dll-exported-class-with-visual-studi
+  // >> It appears adding __declspec(dllexport) forces the compiler to define
+  // the implicitly-declared copy constructor and copy assignment operator
+  JoinVideo(const JoinVideo&) = delete;
+  JoinVideo& operator=(const JoinVideo&) = delete;
 
-    size_t SizeBytes() const;
+  size_t SizeBytes() const;
 
-    const std::vector<StreamInfo>& Streams() const;
+  const std::vector<StreamInfo>& Streams() const;
 
-    void Start();
+  void Start();
 
-    void Stop();
+  void Stop();
 
-    bool Sync(int64_t tolerance_us, double transfer_bandwidth_gbps = 0);
+  bool Sync(int64_t tolerance_us, double transfer_bandwidth_gbps = 0);
 
-    bool GrabNext( unsigned char* image, bool wait = true );
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    std::vector<VideoInterface*>& InputStreams();
+  std::vector<VideoInterface*>& InputStreams();
 
-protected:
-    int64_t GetAdjustedCaptureTime(size_t src_index);
+  protected:
+  int64_t GetAdjustedCaptureTime(size_t src_index);
 
-    std::vector<std::unique_ptr<VideoInterface>> storage;
-    std::vector<VideoInterface*> src;
-    std::vector<bool> frame_seen;
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
+  std::vector<std::unique_ptr<VideoInterface>> storage;
+  std::vector<VideoInterface*> src;
+  std::vector<bool> frame_seen;
+  std::vector<StreamInfo> streams;
+  size_t size_bytes;
 
-    int64_t sync_tolerance_us;
-    int64_t transfer_bandwidth_bytes_per_us;
-    bool verbose;
+  int64_t sync_tolerance_us;
+  int64_t transfer_bandwidth_bytes_per_us;
+  bool verbose;
 };
 
-
-}
+}  // namespace pangolin

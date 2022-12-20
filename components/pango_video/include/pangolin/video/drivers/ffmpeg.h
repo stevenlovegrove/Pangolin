@@ -27,61 +27,68 @@
 
 #pragma once
 
-#include <pangolin/video/video_interface.h>
-#include <pangolin/video/iostream_operators.h>
 #include <pangolin/video/drivers/ffmpeg_common.h>
+#include <pangolin/video/iostream_operators.h>
+#include <pangolin/video/video_interface.h>
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT FfmpegVideo : public VideoInterface, public VideoPlaybackInterface
+class PANGOLIN_EXPORT FfmpegVideo : public VideoInterface,
+                                    public VideoPlaybackInterface
 {
-public:
-    FfmpegVideo(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false, int user_video_stream = -1, ImageDim size = ImageDim(0,0));
-    ~FfmpegVideo();
-    
-    //! Implement VideoInput::Start()
-    void Start() override;
-    
-    //! Implement VideoInput::Stop()
-    void Stop() override;
+  public:
+  FfmpegVideo(
+      const std::string filename, const std::string fmtout = "RGB24",
+      const std::string codec_hint = "", bool dump_info = false,
+      int user_video_stream = -1, ImageDim size = ImageDim(0, 0));
+  ~FfmpegVideo();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const override;
+  //! Implement VideoInput::Start()
+  void Start() override;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const override;
-    
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true ) override;
-    
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true ) override;
-    
-    //! VideoPlaybackInterface methods
-    size_t GetCurrentFrameId() const override;
-    size_t GetTotalFrames() const override;
-    size_t Seek(size_t frameid) override;
+  //! Implement VideoInput::Stop()
+  void Stop() override;
 
-protected:
-    void InitUrl(const std::string filename, const std::string fmtout = "RGB24", const std::string codec_hint = "", bool dump_info = false , int user_video_stream = -1, ImageDim size= ImageDim(0,0));
-    
-    std::vector<StreamInfo> streams;
-    
-    SwsContext      *img_convert_ctx;
-    AVFormatContext *pFormatCtx;
-    int             videoStream;
-    int64_t         numFrames;
-    int64_t         ptsPerFrame;
-    const AVCodec         *pVidCodec;
-    const AVCodec         *pAudCodec;
-    AVCodecContext *pCodecContext;
-    AVFrame         *pFrame;
-    AVFrame         *pFrameOut;
-    AVPacket        *packet;
-    int             numBytesOut;
-    AVPixelFormat     fmtout;
-    int64_t next_frame;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const override;
+
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo> &Streams() const override;
+
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char *image, bool wait = true) override;
+
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char *image, bool wait = true) override;
+
+  //! VideoPlaybackInterface methods
+  size_t GetCurrentFrameId() const override;
+  size_t GetTotalFrames() const override;
+  size_t Seek(size_t frameid) override;
+
+  protected:
+  void InitUrl(
+      const std::string filename, const std::string fmtout = "RGB24",
+      const std::string codec_hint = "", bool dump_info = false,
+      int user_video_stream = -1, ImageDim size = ImageDim(0, 0));
+
+  std::vector<StreamInfo> streams;
+
+  SwsContext *img_convert_ctx;
+  AVFormatContext *pFormatCtx;
+  int videoStream;
+  int64_t numFrames;
+  int64_t ptsPerFrame;
+  const AVCodec *pVidCodec;
+  const AVCodec *pAudCodec;
+  AVCodecContext *pCodecContext;
+  AVFrame *pFrame;
+  AVFrame *pFrameOut;
+  AVPacket *packet;
+  int numBytesOut;
+  AVPixelFormat fmtout;
+  int64_t next_frame;
 };
 
-}
+}  // namespace pangolin

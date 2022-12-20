@@ -35,10 +35,9 @@
 // PangolinNSGLView
 ////////////////////////////////////////////////////////////////////
 
-@interface PangolinNSGLView : NSOpenGLView
-{
-    float backing_scale;
-    @public pangolin::WindowInterface* osx_window;
+@interface PangolinNSGLView : NSOpenGLView {
+  float backing_scale;
+  @public
+  pangolin::WindowInterface* osx_window;
 }
 @end
-

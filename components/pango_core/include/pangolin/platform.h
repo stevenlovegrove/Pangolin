@@ -33,33 +33,33 @@
 #define PANGOLIN_UNUSED(x)
 
 #ifdef __GNUC__
-#  define PANGOLIN_DEPRECATED(x) __attribute__((deprecated(x)))
+#define PANGOLIN_DEPRECATED(x) __attribute__((deprecated(x)))
 #elif defined(_MSC_VER)
-#  define PANGOLIN_DEPRECATED(x) __declspec(deprecated(x))
+#define PANGOLIN_DEPRECATED(x) __declspec(deprecated(x))
 #else
-#  define PANGOLIN_DEPRECATED(x)
+#define PANGOLIN_DEPRECATED(x)
 #endif
 
 #ifdef _MSC_VER
-#   define __thread __declspec(thread)
-#   include <pangolin/pangolin_export.h>
+#define __thread __declspec(thread)
+#include <pangolin/pangolin_export.h>
 #else
-#   define PANGOLIN_EXPORT
-#endif //_MSVC_
+#define PANGOLIN_EXPORT
+#endif  //_MSVC_
 
 // HOST / DEVICE Annotations
 #ifdef __CUDACC__
-#  include <cuda_runtime.h>
-#  define PANGO_HOST_DEVICE __host__ __device__
+#include <cuda_runtime.h>
+#define PANGO_HOST_DEVICE __host__ __device__
 #else
-#  define PANGO_HOST_DEVICE
+#define PANGO_HOST_DEVICE
 #endif
 
 // Workaround for Apple-Clangs lack of thread_local support
 #if defined(__clang__)
-#  if !__has_feature(cxx_thread_local)
-#    define PANGO_NO_THREADLOCAL
-#  endif
+#if !__has_feature(cxx_thread_local)
+#define PANGO_NO_THREADLOCAL
+#endif
 #endif
 
 #include <pangolin/utils/logging.h>

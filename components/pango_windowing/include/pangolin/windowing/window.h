@@ -26,117 +26,111 @@
  */
 
 #pragma once
-#include <exception>
-#include <functional>
-#include <array>
-#include <string>
-#include <memory>
 #include <pangolin/platform.h>
+#include <pangolin/utils/shared.h>
 #include <pangolin/utils/signal_slot.h>
 #include <pangolin/utils/true_false_toggle.h>
 #include <pangolin/utils/uri.h>
-#include <pangolin/utils/shared.h>
 #include <pangolin/windowing/handler_bitsets.h>
 
+#include <array>
+#include <exception>
+#include <functional>
+#include <memory>
+#include <string>
 
 namespace pangolin
 {
 
 // CreateWindowAndBind parameter key names.
-constexpr char PARAM_DISPLAYNAME[]    = "DISPLAYNAME\0";    // std::string
-constexpr char PARAM_DOUBLEBUFFER[]   = "DOUBLEBUFFER\0";   // bool
-constexpr char PARAM_SAMPLE_BUFFERS[] = "SAMPLE_BUFFERS\0"; // int
-constexpr char PARAM_SAMPLES[]        = "SAMPLES\0";        // int
-constexpr char PARAM_HIGHRES[]        = "HIGHRES\0";        // bool
-constexpr char PARAM_GL_PROFILE[]     = "GL_PROFILE\0";     // std::string
+constexpr char PARAM_DISPLAYNAME[] = "DISPLAYNAME\0";        // std::string
+constexpr char PARAM_DOUBLEBUFFER[] = "DOUBLEBUFFER\0";      // bool
+constexpr char PARAM_SAMPLE_BUFFERS[] = "SAMPLE_BUFFERS\0";  // int
+constexpr char PARAM_SAMPLES[] = "SAMPLES\0";                // int
+constexpr char PARAM_HIGHRES[] = "HIGHRES\0";                // bool
+constexpr char PARAM_GL_PROFILE[] = "GL_PROFILE\0";          // std::string
 
-struct PANGOLIN_EXPORT WindowResizeEvent
-{
-    int width;
-    int height;
+struct PANGOLIN_EXPORT WindowResizeEvent {
+  int width;
+  int height;
 };
 
-struct PANGOLIN_EXPORT WindowInputEvent
-{
-    float x;
-    float y;
-    KeyModifierBitmask key_modifiers;
+struct PANGOLIN_EXPORT WindowInputEvent {
+  float x;
+  float y;
+  KeyModifierBitmask key_modifiers;
 };
 
-struct PANGOLIN_EXPORT KeyboardEvent : public WindowInputEvent
-{
-    unsigned char key;
-    bool pressed;
+struct PANGOLIN_EXPORT KeyboardEvent : public WindowInputEvent {
+  unsigned char key;
+  bool pressed;
 };
 
-struct PANGOLIN_EXPORT MouseEvent : public WindowInputEvent
-{
-    int button;
-    bool pressed;
+struct PANGOLIN_EXPORT MouseEvent : public WindowInputEvent {
+  int button;
+  bool pressed;
 };
 
-struct PANGOLIN_EXPORT MouseMotionEvent : public WindowInputEvent
-{
+struct PANGOLIN_EXPORT MouseMotionEvent : public WindowInputEvent {
 };
 
-struct PANGOLIN_EXPORT SpecialInputEvent : public WindowInputEvent
-{
-    InputSpecial inType;
-    float p[4];
+struct PANGOLIN_EXPORT SpecialInputEvent : public WindowInputEvent {
+  InputSpecial inType;
+  float p[4];
 };
 
 class PANGOLIN_EXPORT GlContextInterface
 {
-public:
-    virtual ~GlContextInterface() {}
+  public:
+  virtual ~GlContextInterface() {}
 };
 
-class PANGOLIN_EXPORT WindowInterface : std::enable_shared_from_this<WindowInterface>
+class PANGOLIN_EXPORT WindowInterface
+    : std::enable_shared_from_this<WindowInterface>
 {
-public:
-    virtual ~WindowInterface() {}
+  public:
+  virtual ~WindowInterface() {}
 
-    /// Move window to (\param x, \param y) on screen
-    /// measured in pixels.
-    virtual void Move(int x, int y) = 0;
+  /// Move window to (\param x, \param y) on screen
+  /// measured in pixels.
+  virtual void Move(int x, int y) = 0;
 
-    /// Resize window to (\param x, \param y) on screen
-    /// measured in pixels
-    virtual void Resize(unsigned int w, unsigned int h) = 0;
+  /// Resize window to (\param x, \param y) on screen
+  /// measured in pixels
+  virtual void Resize(unsigned int w, unsigned int h) = 0;
 
-    /// If supported by this windowing system, turn on,
-    /// turn off, or toggle fullscreen mode.
-    virtual void ShowFullscreen(const TrueFalseToggle on_off) = 0;
+  /// If supported by this windowing system, turn on,
+  /// turn off, or toggle fullscreen mode.
+  virtual void ShowFullscreen(const TrueFalseToggle on_off) = 0;
 
-    /// Make this the active context for graphic rendering.
-    virtual void MakeCurrent() = 0;
+  /// Make this the active context for graphic rendering.
+  virtual void MakeCurrent() = 0;
 
-    /// Unregister this context from being the active rendering context.
-    virtual void RemoveCurrent() = 0;
+  /// Unregister this context from being the active rendering context.
+  virtual void RemoveCurrent() = 0;
 
-    /// Process all windowing events to keep window alive
-    /// and emit interaction callbacks (e.g. mouse, keyboard, resize)
-    virtual void ProcessEvents() = 0;
+  /// Process all windowing events to keep window alive
+  /// and emit interaction callbacks (e.g. mouse, keyboard, resize)
+  virtual void ProcessEvents() = 0;
 
-    /// If double-buffered rendering is enabled, swap the
-    /// front and back buffers revealing the recent renders
-    /// to the back buffer.
-    virtual void SwapBuffers() = 0;
+  /// If double-buffered rendering is enabled, swap the
+  /// front and back buffers revealing the recent renders
+  /// to the back buffer.
+  virtual void SwapBuffers() = 0;
 
-    sigslot::signal<>                    CloseSignal;
-    sigslot::signal<WindowResizeEvent>   ResizeSignal;
-    sigslot::signal<KeyboardEvent> KeyboardSignal;
-    sigslot::signal<MouseEvent>    MouseSignal;
-    sigslot::signal<MouseMotionEvent> MouseMotionSignal;
-    sigslot::signal<MouseMotionEvent> PassiveMouseMotionSignal;
-    sigslot::signal<SpecialInputEvent> SpecialInputSignal;
-    
-    struct Params
-    {
-        Uri uri;
-    };
+  sigslot::signal<> CloseSignal;
+  sigslot::signal<WindowResizeEvent> ResizeSignal;
+  sigslot::signal<KeyboardEvent> KeyboardSignal;
+  sigslot::signal<MouseEvent> MouseSignal;
+  sigslot::signal<MouseMotionEvent> MouseMotionSignal;
+  sigslot::signal<MouseMotionEvent> PassiveMouseMotionSignal;
+  sigslot::signal<SpecialInputEvent> SpecialInputSignal;
 
-    static Shared<WindowInterface> Create(const Params& params);
+  struct Params {
+    Uri uri;
+  };
+
+  static Shared<WindowInterface> Create(const Params& params);
 };
 
-}
+}  // namespace pangolin

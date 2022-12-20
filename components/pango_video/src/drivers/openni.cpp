@@ -25,291 +25,294 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/openni.h>
 #include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/drivers/openni.h>
 #include <pangolin/video/iostream_operators.h>
 
 namespace pangolin
 {
 
-OpenNiVideo::OpenNiVideo(OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim, int fps)
+OpenNiVideo::OpenNiVideo(
+    OpenNiSensorType s1, OpenNiSensorType s2, ImageDim dim, int fps)
 {
-    sensor_type[0] = s1;
-    sensor_type[1] = s2;
+  sensor_type[0] = s1;
+  sensor_type[1] = s2;
 
-    XnStatus nRetVal = XN_STATUS_OK;
-    nRetVal = context.Init();
+  XnStatus nRetVal = XN_STATUS_OK;
+  nRetVal = context.Init();
+  if (nRetVal != XN_STATUS_OK) {
+    std::cerr << "context.Init: " << xnGetStatusString(nRetVal) << std::endl;
+  }
+
+  XnMapOutputMode mapMode;
+  mapMode.nXRes = dim.x;
+  mapMode.nYRes = dim.y;
+  mapMode.nFPS = fps;
+
+  sizeBytes = 0;
+
+  bool use_depth = false;
+  bool use_ir = false;
+  bool use_rgb = false;
+  bool depth_to_color = false;
+
+  for (int i = 0; i < 2; ++i) {
+    PixelFormat fmt;
+
+    // Establish output pixel format for sensor streams
+    switch (sensor_type[i]) {
+      case OpenNiDepth_1mm_Registered:
+      case OpenNiDepth_1mm:
+      case OpenNiIr:
+      case OpenNiIrProj:
+        fmt = PixelFormatFromString("GRAY16LE");
+        break;
+      case OpenNiIr8bit:
+      case OpenNiIr8bitProj:
+        fmt = PixelFormatFromString("GRAY8");
+        break;
+      case OpenNiRgb:
+        fmt = PixelFormatFromString("RGB24");
+        break;
+      default:
+        continue;
+    }
+
+    switch (sensor_type[i]) {
+      case OpenNiDepth_1mm_Registered:
+        depth_to_color = true;
+        use_depth = true;
+        break;
+      case OpenNiDepth_1mm:
+        use_depth = true;
+        break;
+      case OpenNiIr:
+      case OpenNiIr8bit:
+        use_ir = true;
+        break;
+      case OpenNiIrProj:
+      case OpenNiIr8bitProj:
+        use_ir = true;
+        use_depth = true;
+        break;
+      case OpenNiRgb:
+        use_rgb = true;
+        break;
+      default:
+        break;
+    }
+
+    const StreamInfo stream(
+        fmt, mapMode.nXRes, mapMode.nYRes, (mapMode.nXRes * fmt.bpp) / 8,
+        (unsigned char*)0 + sizeBytes);
+    sizeBytes += stream.SizeBytes();
+    streams.push_back(stream);
+  }
+
+  if (use_depth) {
+    nRetVal = depthNode.Create(context);
     if (nRetVal != XN_STATUS_OK) {
-        std::cerr << "context.Init: " << xnGetStatusString(nRetVal) << std::endl;
+      throw VideoException(
+          (std::string) "Unable to create DepthNode: " +
+          xnGetStatusString(nRetVal));
+    } else {
+      nRetVal = depthNode.SetMapOutputMode(mapMode);
+      if (nRetVal != XN_STATUS_OK) {
+        throw VideoException(
+            (std::string) "Invalid DepthNode mode: " +
+            xnGetStatusString(nRetVal));
+      }
+    }
+  }
+
+  if (use_rgb) {
+    nRetVal = imageNode.Create(context);
+    if (nRetVal != XN_STATUS_OK) {
+      throw VideoException(
+          (std::string) "Unable to create ImageNode: " +
+          xnGetStatusString(nRetVal));
+    } else {
+      nRetVal = imageNode.SetMapOutputMode(mapMode);
+      if (nRetVal != XN_STATUS_OK) {
+        throw VideoException(
+            (std::string) "Invalid ImageNode mode: " +
+            xnGetStatusString(nRetVal));
+      }
+    }
+  }
+
+  if (depth_to_color && use_rgb) {
+    // Registration
+    if (depthNode.IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT)) {
+      nRetVal = depthNode.GetAlternativeViewPointCap().SetViewPoint(imageNode);
+      if (nRetVal != XN_STATUS_OK) {
+        std::cerr << "depthNode.GetAlternativeViewPointCap().SetViewPoint("
+                     "imageNode): "
+                  << xnGetStatusString(nRetVal) << std::endl;
+      }
     }
 
-    XnMapOutputMode mapMode;
-    mapMode.nXRes = dim.x;
-    mapMode.nYRes = dim.y;
-    mapMode.nFPS = fps;
-
-    sizeBytes = 0;
-
-    bool use_depth = false;
-    bool use_ir = false;
-    bool use_rgb = false;
-    bool depth_to_color = false;
-
-    for(int i=0; i<2; ++i) {
-        PixelFormat fmt;
-
-        // Establish output pixel format for sensor streams
-        switch( sensor_type[i] ) {
-        case OpenNiDepth_1mm_Registered:
-        case OpenNiDepth_1mm:
-        case OpenNiIr:
-        case OpenNiIrProj:
-            fmt = PixelFormatFromString("GRAY16LE");
-            break;
-        case OpenNiIr8bit:
-        case OpenNiIr8bitProj:
-            fmt = PixelFormatFromString("GRAY8");
-            break;
-        case OpenNiRgb:
-            fmt = PixelFormatFromString("RGB24");
-            break;
-        default:
-            continue;
-        }
-
-        switch( sensor_type[i] ) {
-        case OpenNiDepth_1mm_Registered:
-            depth_to_color = true;
-            use_depth = true;
-            break;
-        case OpenNiDepth_1mm:
-            use_depth = true;
-            break;
-        case OpenNiIr:
-        case OpenNiIr8bit:
-            use_ir = true;
-            break;
-        case OpenNiIrProj:
-        case OpenNiIr8bitProj:
-            use_ir = true;
-            use_depth = true;
-            break;
-        case OpenNiRgb:
-            use_rgb = true;
-            break;
-        default:
-            break;
-        }
-
-        const StreamInfo stream(fmt, mapMode.nXRes, mapMode.nYRes, (mapMode.nXRes * fmt.bpp) / 8, (unsigned char*)0 + sizeBytes);
-        sizeBytes += stream.SizeBytes();
-        streams.push_back(stream);
-    }
-
-    if( use_depth ) {
-        nRetVal = depthNode.Create(context);
+    // Frame Sync
+    if (depthNode.IsCapabilitySupported(XN_CAPABILITY_FRAME_SYNC)) {
+      if (depthNode.GetFrameSyncCap().CanFrameSyncWith(imageNode)) {
+        nRetVal = depthNode.GetFrameSyncCap().FrameSyncWith(imageNode);
         if (nRetVal != XN_STATUS_OK) {
-            throw VideoException( (std::string)"Unable to create DepthNode: " + xnGetStatusString(nRetVal) );
-        }else{
-            nRetVal = depthNode.SetMapOutputMode(mapMode);
-            if (nRetVal != XN_STATUS_OK) {
-                throw VideoException( (std::string)"Invalid DepthNode mode: " + xnGetStatusString(nRetVal) );
-            }
+          std::cerr << "depthNode.GetFrameSyncCap().FrameSyncWith(imageNode): "
+                    << xnGetStatusString(nRetVal) << std::endl;
         }
+      }
     }
+  }
 
-    if( use_rgb ) {
-        nRetVal = imageNode.Create(context);
-        if (nRetVal != XN_STATUS_OK) {
-            throw VideoException( (std::string)"Unable to create ImageNode: " + xnGetStatusString(nRetVal) );
-        }else{
-            nRetVal = imageNode.SetMapOutputMode(mapMode);
-            if (nRetVal != XN_STATUS_OK) {
-                throw VideoException( (std::string)"Invalid ImageNode mode: " + xnGetStatusString(nRetVal) );
-            }
-        }
+  if (use_ir) {
+    nRetVal = irNode.Create(context);
+    if (nRetVal != XN_STATUS_OK) {
+      throw VideoException(
+          (std::string) "Unable to create IrNode: " +
+          xnGetStatusString(nRetVal));
+    } else {
+      nRetVal = irNode.SetMapOutputMode(mapMode);
+      if (nRetVal != XN_STATUS_OK) {
+        throw VideoException(
+            (std::string) "Invalid IrNode mode: " + xnGetStatusString(nRetVal));
+      }
     }
+  }
 
-    if (depth_to_color && use_rgb) {
-        //Registration
-        if( depthNode.IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT) ) {
-            nRetVal = depthNode.GetAlternativeViewPointCap().SetViewPoint( imageNode  );
-            if (nRetVal != XN_STATUS_OK) {
-                std::cerr << "depthNode.GetAlternativeViewPointCap().SetViewPoint(imageNode): " << xnGetStatusString(nRetVal) << std::endl;
-            }
-        }
-
-        // Frame Sync
-        if (depthNode.IsCapabilitySupported(XN_CAPABILITY_FRAME_SYNC))
-        {
-            if (depthNode.GetFrameSyncCap().CanFrameSyncWith(imageNode))
-            {
-                nRetVal = depthNode.GetFrameSyncCap().FrameSyncWith(imageNode);
-                if (nRetVal != XN_STATUS_OK) {
-                    std::cerr << "depthNode.GetFrameSyncCap().FrameSyncWith(imageNode): " << xnGetStatusString(nRetVal) << std::endl;
-                }
-            }
-        }
-    }
-
-    if( use_ir ) {
-        nRetVal = irNode.Create(context);
-        if (nRetVal != XN_STATUS_OK) {
-            throw VideoException( (std::string)"Unable to create IrNode: " + xnGetStatusString(nRetVal) );
-        }else{
-            nRetVal = irNode.SetMapOutputMode(mapMode);
-            if (nRetVal != XN_STATUS_OK) {
-                throw VideoException( (std::string)"Invalid IrNode mode: " + xnGetStatusString(nRetVal) );
-            }
-        }
-    }
-
-    Start();
+  Start();
 }
 
-OpenNiVideo::~OpenNiVideo()
-{
-    context.Release();
-}
+OpenNiVideo::~OpenNiVideo() { context.Release(); }
 
-size_t OpenNiVideo::SizeBytes() const
-{
-    return sizeBytes;
-}
+size_t OpenNiVideo::SizeBytes() const { return sizeBytes; }
 
-const std::vector<StreamInfo>& OpenNiVideo::Streams() const
-{
-    return streams;
-}
+const std::vector<StreamInfo>& OpenNiVideo::Streams() const { return streams; }
 
 void OpenNiVideo::Start()
 {
-    //    XnStatus nRetVal =
-    context.StartGeneratingAll();
+  //    XnStatus nRetVal =
+  context.StartGeneratingAll();
 }
 
-void OpenNiVideo::Stop()
+void OpenNiVideo::Stop() { context.StopGeneratingAll(); }
+
+bool OpenNiVideo::GrabNext(unsigned char* image, bool /*wait*/)
 {
-    context.StopGeneratingAll();
-}
+  //    XnStatus nRetVal = context.WaitAndUpdateAll();
+  XnStatus nRetVal = context.WaitAnyUpdateAll();
+  //    nRetVal = context.WaitOneUpdateAll(imageNode);
 
-bool OpenNiVideo::GrabNext( unsigned char* image, bool /*wait*/ )
-{
-    //    XnStatus nRetVal = context.WaitAndUpdateAll();
-    XnStatus nRetVal = context.WaitAnyUpdateAll();
-    //    nRetVal = context.WaitOneUpdateAll(imageNode);
+  if (nRetVal != XN_STATUS_OK) {
+    std::cerr << "Failed updating data: " << xnGetStatusString(nRetVal)
+              << std::endl;
+    return false;
+  } else {
+    unsigned char* out_img = image;
 
-    if (nRetVal != XN_STATUS_OK) {
-        std::cerr << "Failed updating data: " << xnGetStatusString(nRetVal) << std::endl;
-        return false;
-    }else{
-        unsigned char* out_img = image;
-
-        for(int i=0; i<2; ++i) {
-            switch (sensor_type[i]) {
-            case OpenNiDepth_1mm:
-            case OpenNiDepth_1mm_Registered:
-            {
-                const XnDepthPixel* pDepthMap = depthNode.GetDepthMap();
-                memcpy(out_img,pDepthMap, streams[i].SizeBytes() );
-                break;
-            }
-            case OpenNiIr:
-            case OpenNiIrProj:
-            {
-                const XnIRPixel* pIrMap = irNode.GetIRMap();
-                memcpy(out_img, pIrMap, streams[i].SizeBytes() );
-                break;
-            }
-            case OpenNiIr8bit:
-            case OpenNiIr8bitProj:
-            {
-                const XnIRPixel* pIr16Map = irNode.GetIRMap();
-
-                // rescale from 16-bit (10 effective) to 8-bit
-                xn::IRMetaData meta_data;
-                irNode.GetMetaData(meta_data);
-                int w = meta_data.XRes();
-                int h = meta_data.YRes();
-
-                // Copy to out_img with conversion
-                XnUInt8* pIrMapScaled = (XnUInt8*)out_img;
-                for (int v = 0; v < h; ++v)
-                for (int u = 0; u < w; ++u) {
-                    int val = *pIr16Map >> 2; // 10bit to 8 bit
-                    pIrMapScaled[w * v + u] = val;
-                    pIr16Map++;
-                }
-
-                break;
-            }
-            case OpenNiRgb:
-            {
-                const XnUInt8* pImageMap = imageNode.GetImageMap();
-                memcpy(out_img,pImageMap, streams[i].SizeBytes());
-                break;
-            }
-            default:
-                continue;
-                break;
-            }
-
-            out_img += streams[i].SizeBytes();
+    for (int i = 0; i < 2; ++i) {
+      switch (sensor_type[i]) {
+        case OpenNiDepth_1mm:
+        case OpenNiDepth_1mm_Registered: {
+          const XnDepthPixel* pDepthMap = depthNode.GetDepthMap();
+          memcpy(out_img, pDepthMap, streams[i].SizeBytes());
+          break;
         }
+        case OpenNiIr:
+        case OpenNiIrProj: {
+          const XnIRPixel* pIrMap = irNode.GetIRMap();
+          memcpy(out_img, pIrMap, streams[i].SizeBytes());
+          break;
+        }
+        case OpenNiIr8bit:
+        case OpenNiIr8bitProj: {
+          const XnIRPixel* pIr16Map = irNode.GetIRMap();
 
-        return true;
+          // rescale from 16-bit (10 effective) to 8-bit
+          xn::IRMetaData meta_data;
+          irNode.GetMetaData(meta_data);
+          int w = meta_data.XRes();
+          int h = meta_data.YRes();
+
+          // Copy to out_img with conversion
+          XnUInt8* pIrMapScaled = (XnUInt8*)out_img;
+          for (int v = 0; v < h; ++v)
+            for (int u = 0; u < w; ++u) {
+              int val = *pIr16Map >> 2;  // 10bit to 8 bit
+              pIrMapScaled[w * v + u] = val;
+              pIr16Map++;
+            }
+
+          break;
+        }
+        case OpenNiRgb: {
+          const XnUInt8* pImageMap = imageNode.GetImageMap();
+          memcpy(out_img, pImageMap, streams[i].SizeBytes());
+          break;
+        }
+        default:
+          continue;
+          break;
+      }
+
+      out_img += streams[i].SizeBytes();
     }
+
+    return true;
+  }
 }
 
-bool OpenNiVideo::GrabNewest( unsigned char* image, bool wait )
+bool OpenNiVideo::GrabNewest(unsigned char* image, bool wait)
 {
-    return GrabNext(image,wait);
+  return GrabNext(image, wait);
 }
 
 PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
 {
-    struct OpenNiVideoFactory final : public TypedFactoryInterface<VideoInterface> {
-        std::map<std::string,Precedence> Schemes() const override
-        {
-            return {{"openni1",10}, {"openni",100}, {"oni",100}};
-        }
-        const char* Description() const override
-        {
-            return "OpenNI v1 Driver to access Kinect / Primesense devices.";
-        }
-        ParamSet Params() const override
-        {
-            return {{
-                {"size","640x480","Image dimension"},
-                {"fps","30","Frames per second"},
-                {"autoexposure","1","enable (1) or disable (0) RGB autoexposure"},
-                {"img1","depth","Camera stream to use for stream 1 {depth,rgb,ir}"},
-                {"img2","","Camera stream to use for stream 2 {depth,rgb,ir}"}
-            }};
-        }
-        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640,480));
-            const unsigned int fps = uri.Get<unsigned int>("fps", 30);
-            const bool autoexposure = uri.Get<bool>("autoexposure", true);
+  struct OpenNiVideoFactory final
+      : public TypedFactoryInterface<VideoInterface> {
+    std::map<std::string, Precedence> Schemes() const override
+    {
+      return {{"openni1", 10}, {"openni", 100}, {"oni", 100}};
+    }
+    const char* Description() const override
+    {
+      return "OpenNI v1 Driver to access Kinect / Primesense devices.";
+    }
+    ParamSet Params() const override
+    {
+      return {
+          {{"size", "640x480", "Image dimension"},
+           {"fps", "30", "Frames per second"},
+           {"autoexposure", "1", "enable (1) or disable (0) RGB autoexposure"},
+           {"img1", "depth",
+            "Camera stream to use for stream 1 {depth,rgb,ir}"},
+           {"img2", "", "Camera stream to use for stream 2 {depth,rgb,ir}"}}};
+    }
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    {
+      const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640, 480));
+      const unsigned int fps = uri.Get<unsigned int>("fps", 30);
+      const bool autoexposure = uri.Get<bool>("autoexposure", true);
 
-            OpenNiSensorType img1 = OpenNiRgb;
-            OpenNiSensorType img2 = OpenNiUnassigned;
+      OpenNiSensorType img1 = OpenNiRgb;
+      OpenNiSensorType img2 = OpenNiUnassigned;
 
-            if( uri.Contains("img1") ){
-                img1 = openni_sensor(uri.Get<std::string>("img1", "depth"));
-            }
+      if (uri.Contains("img1")) {
+        img1 = openni_sensor(uri.Get<std::string>("img1", "depth"));
+      }
 
-            if( uri.Contains("img2") ){
-                img2 = openni_sensor(uri.Get<std::string>("img2","rgb"));
-            }
+      if (uri.Contains("img2")) {
+        img2 = openni_sensor(uri.Get<std::string>("img2", "rgb"));
+      }
 
-            OpenNiVideo* oniv = new OpenNiVideo(img1, img2, dim, fps);
-            oniv->SetAutoExposure(autoexposure);
-            return std::unique_ptr<VideoInterface>(oniv);
-        }
-    };
+      OpenNiVideo* oniv = new OpenNiVideo(img1, img2, dim, fps);
+      oniv->SetAutoExposure(autoexposure);
+      return std::unique_ptr<VideoInterface>(oniv);
+    }
+  };
 
-    return FactoryRegistry::I()->RegisterFactory<VideoInterface>( std::make_shared<OpenNiVideoFactory>());
+  return FactoryRegistry::I()->RegisterFactory<VideoInterface>(
+      std::make_shared<OpenNiVideoFactory>());
 }
 
-}
+}  // namespace pangolin

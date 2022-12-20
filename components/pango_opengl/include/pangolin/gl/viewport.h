@@ -33,31 +33,30 @@ namespace pangolin
 {
 
 /// Encapsulates OpenGl Viewport.
-struct PANGOLIN_EXPORT Viewport
-{
-    Viewport() : l(0),b(0),w(0),h(0) {}
-    Viewport(GLint l,GLint b,GLint w,GLint h) : l(l),b(b),w(w),h(h) {}
+struct PANGOLIN_EXPORT Viewport {
+  Viewport() : l(0), b(0), w(0), h(0) {}
+  Viewport(GLint l, GLint b, GLint w, GLint h) : l(l), b(b), w(w), h(h) {}
 
-    void Activate() const;
-    void ActivateIdentity() const;
-    void ActivatePixelOrthographic() const;
+  void Activate() const;
+  void ActivateIdentity() const;
+  void ActivatePixelOrthographic() const;
 
-    void Scissor() const;
-    void ActivateAndScissor() const;
+  void Scissor() const;
+  void ActivateAndScissor() const;
 
-    bool Contains(int x, int y) const;
+  bool Contains(int x, int y) const;
 
-    Viewport Inset(int i) const;
-    Viewport Inset(int horiz, int vert) const;
-    Viewport Intersect(const Viewport& vp) const;
+  Viewport Inset(int i) const;
+  Viewport Inset(int horiz, int vert) const;
+  Viewport Intersect(const Viewport& vp) const;
 
-    static void DisableScissor();
+  static void DisableScissor();
 
-    GLint r() const { return l+w;}
-    GLint t() const { return b+h;}
-    GLfloat aspect() const { return (GLfloat)w / (GLfloat)h; }
-    GLint area() const { return w * h; }
-    GLint l,b,w,h;
+  GLint r() const { return l + w; }
+  GLint t() const { return b + h; }
+  GLfloat aspect() const { return (GLfloat)w / (GLfloat)h; }
+  GLint area() const { return w * h; }
+  GLint l, b, w, h;
 };
 
-}
+}  // namespace pangolin

@@ -33,51 +33,50 @@ namespace pangolin
 {
 
 // Video class that packs its video input using the given method.
-class PANGOLIN_EXPORT PackVideo :
-    public VideoInterface,
-    public VideoFilterInterface,
-    public BufferAwareVideoInterface
+class PANGOLIN_EXPORT PackVideo : public VideoInterface,
+                                  public VideoFilterInterface,
+                                  public BufferAwareVideoInterface
 {
-public:
-    PackVideo(std::unique_ptr<VideoInterface>& videoin, PixelFormat new_fmt);
-    ~PackVideo();
+  public:
+  PackVideo(std::unique_ptr<VideoInterface>& videoin, PixelFormat new_fmt);
+  ~PackVideo();
 
-    //! Implement VideoInput::Start()
-    void Start();
+  //! Implement VideoInput::Start()
+  void Start();
 
-    //! Implement VideoInput::Stop()
-    void Stop();
+  //! Implement VideoInput::Stop()
+  void Stop();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const;
 
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    //! Implement VideoFilterInterface method
-    std::vector<VideoInterface*>& InputStreams();
+  //! Implement VideoFilterInterface method
+  std::vector<VideoInterface*>& InputStreams();
 
-    uint32_t AvailableFrames() const;
+  uint32_t AvailableFrames() const;
 
-    bool DropNFrames(uint32_t n);
+  bool DropNFrames(uint32_t n);
 
-protected:
-    void Process(unsigned char* image, const unsigned char* buffer);
+  protected:
+  void Process(unsigned char* image, const unsigned char* buffer);
 
-    std::unique_ptr<VideoInterface> src;
-    std::vector<VideoInterface*> videoin;
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
-    unsigned char* buffer;
+  std::unique_ptr<VideoInterface> src;
+  std::vector<VideoInterface*> videoin;
+  std::vector<StreamInfo> streams;
+  size_t size_bytes;
+  unsigned char* buffer;
 
-    picojson::value device_properties;
-    picojson::value frame_properties;
+  picojson::value device_properties;
+  picojson::value frame_properties;
 };
 
-}
+}  // namespace pangolin

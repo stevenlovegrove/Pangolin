@@ -28,35 +28,34 @@
 #pragma once
 
 #include <pangolin/video/video_interface.h>
+
 #include <vector>
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT DeinterlaceVideo
-    : public VideoInterface
+class PANGOLIN_EXPORT DeinterlaceVideo : public VideoInterface
 {
-public:
-    DeinterlaceVideo(std::unique_ptr<VideoInterface>& videoin);
-    ~DeinterlaceVideo();
-    
-    size_t SizeBytes() const;
-    
-    const std::vector<StreamInfo>& Streams() const;
-    
-    void Start();
-    
-    void Stop();
-    
-    bool GrabNext( unsigned char* image, bool wait = true );
-    
-    bool GrabNewest( unsigned char* image, bool wait = true );    
-    
-protected:
-    std::unique_ptr<VideoInterface> videoin;
-    std::vector<StreamInfo> streams;
-    unsigned char* buffer;
+  public:
+  DeinterlaceVideo(std::unique_ptr<VideoInterface>& videoin);
+  ~DeinterlaceVideo();
+
+  size_t SizeBytes() const;
+
+  const std::vector<StreamInfo>& Streams() const;
+
+  void Start();
+
+  void Stop();
+
+  bool GrabNext(unsigned char* image, bool wait = true);
+
+  bool GrabNewest(unsigned char* image, bool wait = true);
+
+  protected:
+  std::unique_ptr<VideoInterface> videoin;
+  std::vector<StreamInfo> streams;
+  unsigned char* buffer;
 };
 
-
-}
+}  // namespace pangolin

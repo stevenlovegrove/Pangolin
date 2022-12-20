@@ -27,169 +27,160 @@
 
 #pragma once
 
-#include <pangolin/video/video_interface.h>
-
+#include <PvBuffer.h>
 #include <PvDevice.h>
 #include <PvDeviceGEV.h>
 #include <PvDeviceU3V.h>
 #include <PvStream.h>
 #include <PvStreamGEV.h>
 #include <PvStreamU3V.h>
-#include <PvBuffer.h>
-
 #include <PvSystem.h>
-
+#include <pangolin/video/video_interface.h>
 #include <stdlib.h>
+
 #include <list>
 
 namespace pangolin
 {
 
 struct GrabbedBuffer {
-
-  inline GrabbedBuffer(PvBuffer* b,PvResult r,bool v)
-      : buff(b), res(r), valid(v)
+  inline GrabbedBuffer(PvBuffer* b, PvResult r, bool v) :
+      buff(b), res(r), valid(v)
   {
   }
 
   PvBuffer* buff;
   PvResult res;
   bool valid;
-
 };
 
 typedef std::list<GrabbedBuffer> GrabbedBufferList;
 
-typedef std::list<PvBuffer *> BufferList;
+typedef std::list<PvBuffer*> BufferList;
 
-class PANGOLIN_EXPORT PleoraVideo : public VideoInterface, public VideoPropertiesInterface,
-        public BufferAwareVideoInterface, public GenicamVideoInterface
+class PANGOLIN_EXPORT PleoraVideo : public VideoInterface,
+                                    public VideoPropertiesInterface,
+                                    public BufferAwareVideoInterface,
+                                    public GenicamVideoInterface
 {
-public:
+  public:
+  static const size_t DEFAULT_BUFFER_COUNT = 30;
 
-    static const size_t DEFAULT_BUFFER_COUNT = 30;
+  PleoraVideo(const Params& p);
 
-    PleoraVideo(const Params& p);
+  ~PleoraVideo();
 
-    ~PleoraVideo();
+  void Start();
 
-    void Start();
+  void Stop();
 
-    void Stop();
+  size_t SizeBytes() const;
 
-    size_t SizeBytes() const;
+  const std::vector<StreamInfo>& Streams() const;
 
-    const std::vector<StreamInfo>& Streams() const;
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    bool GrabNext( unsigned char* image, bool wait = true );
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  std::string GetParameter(const std::string& name);
 
-    std::string GetParameter(const std::string& name);
+  void SetParameter(const std::string& name, const std::string& value);
 
-    void SetParameter(const std::string& name, const std::string& value);
+  void SetGain(int64_t val);
 
-    void SetGain(int64_t val);
+  int64_t GetGain();
 
-    int64_t GetGain();
+  void SetAnalogBlackLevel(int64_t val);
 
-    void SetAnalogBlackLevel(int64_t val);
+  int64_t GetAnalogBlackLevel();
 
-    int64_t GetAnalogBlackLevel();
+  void SetExposure(double val);
 
-    void SetExposure(double val);
+  double GetExposure();
 
-    double GetExposure();
+  void SetGamma(double val);
 
-    void SetGamma(double val);
+  double GetGamma();
 
-    double GetGamma();
+  void SetupTrigger(
+      bool triggerActive, int64_t triggerSource, int64_t acquisitionMode);
 
+  const picojson::value& DeviceProperties() const { return device_properties; }
 
+  const picojson::value& FrameProperties() const { return frame_properties; }
 
-    void SetupTrigger(bool triggerActive, int64_t triggerSource, int64_t acquisitionMode);
+  uint32_t AvailableFrames() const;
 
-    const picojson::value& DeviceProperties() const {
-        return device_properties;
-    }
+  bool DropNFrames(uint32_t n);
 
-    const picojson::value& FrameProperties() const {
-        return frame_properties;
-    }
+  protected:
+  void InitDevice(const char* model_name, const char* serial_num, size_t index);
 
-    uint32_t AvailableFrames() const;
+  void DeinitDevice();
 
-    bool DropNFrames(uint32_t n);
+  void SetDeviceParams(Params& p);
 
-protected:
+  void InitStream();
 
-    void InitDevice(const char *model_name, const char *serial_num, size_t index);
+  void DeinitStream();
 
-    void DeinitDevice();
+  void InitPangoStreams();
 
-    void SetDeviceParams(Params& p);
+  void InitPangoDeviceProperties();
 
-    void InitStream();
+  void InitBuffers(size_t buffer_count);
 
-    void DeinitStream();
+  void DeinitBuffers();
 
-    void InitPangoStreams();
+  template <typename T>
+  T DeviceParam(const char* name);
 
-    void InitPangoDeviceProperties();
+  template <typename T>
+  bool SetDeviceParam(const char* name, T val);
 
-    void InitBuffers(size_t buffer_count);
+  template <typename T>
+  T StreamParam(const char* name);
 
-    void DeinitBuffers();
+  template <typename T>
+  bool SetStreamParam(const char* name, T val);
 
-    template<typename T>
-    T DeviceParam(const char* name);
+  bool ParseBuffer(PvBuffer* lBuffer, unsigned char* image);
 
-    template<typename T>
-    bool SetDeviceParam(const char* name, T val);
+  void RetriveAllAvailableBuffers(uint32_t timeout);
 
-    template<typename T>
-    T StreamParam(const char* name);
+  std::vector<StreamInfo> streams;
+  picojson::value device_properties;
+  picojson::value frame_properties;
 
-    template<typename T>
-    bool SetStreamParam(const char* name, T val);
+  size_t size_bytes;
 
-    bool ParseBuffer(PvBuffer* lBuffer,  unsigned char* image);
+  // Pleora handles
+  PvSystem* lPvSystem;
+  const PvDeviceInfo* lDeviceInfo;
+  PvDevice* lDevice;
+  PvStream* lStream;
 
-    void RetriveAllAvailableBuffers(uint32_t timeout);
+  // Genicam device parameters
+  PvGenParameterArray* lDeviceParams;
+  PvGenCommand* lStart;
+  PvGenCommand* lStop;
 
-    std::vector<StreamInfo> streams;
-    picojson::value device_properties;
-    picojson::value frame_properties;
+  PvGenInteger* lAnalogGain;
+  PvGenInteger* lAnalogBlackLevel;
+  PvGenFloat* lExposure;
+  PvGenFloat* lGamma;
+  PvGenEnum* lAquisitionMode;
+  PvGenEnum* lTriggerSource;
+  PvGenEnum* lTriggerMode;
+  PvGenFloat* lTemperatureCelcius;
+  bool getTemp;
 
-    size_t size_bytes;
+  // Genicam stream parameters
+  PvGenParameterArray* lStreamParams;
 
-    // Pleora handles
-    PvSystem* lPvSystem;
-    const PvDeviceInfo* lDeviceInfo;
-    PvDevice* lDevice;
-    PvStream* lStream;
-
-    // Genicam device parameters
-    PvGenParameterArray* lDeviceParams;
-    PvGenCommand* lStart;
-    PvGenCommand* lStop;
-
-    PvGenInteger* lAnalogGain;
-    PvGenInteger* lAnalogBlackLevel;
-    PvGenFloat*   lExposure;
-    PvGenFloat*   lGamma;
-    PvGenEnum*    lAquisitionMode;
-    PvGenEnum*    lTriggerSource;
-    PvGenEnum*    lTriggerMode;
-    PvGenFloat*   lTemperatureCelcius;
-    bool getTemp;
-
-    // Genicam stream parameters
-    PvGenParameterArray* lStreamParams;
-
-    BufferList lBufferList;
-    GrabbedBufferList lGrabbedBuffList;
-    uint32_t validGrabbedBuffers;
+  BufferList lBufferList;
+  GrabbedBufferList lGrabbedBuffList;
+  uint32_t validGrabbedBuffers;
 };
 
-}
+}  // namespace pangolin

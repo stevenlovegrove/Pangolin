@@ -1,18 +1,21 @@
 #pragma once
 
-#include <optional>
-#include <Eigen/Core>
 #include <farm_ng/core/logging/expected.h>
-#include <sophus/image/image.h>
 #include <pangolin/maths/min_max.h>
 #include <pangolin/utils/shared.h>
+#include <sophus/image/image.h>
 
-namespace pangolin {
+#include <Eigen/Core>
+#include <optional>
+
+namespace pangolin
+{
 
 struct Context;
 
-class DepthSampler {
- public:
+class DepthSampler
+{
+  public:
   enum class DepthKind { clip, zaxis, radial };
 
   struct Sample {
@@ -26,16 +29,15 @@ class DepthSampler {
   };
 
   virtual std::optional<Sample> sampleDepth(
-    const SampleLocation& pix, int patch_rad,
-    MinMax<double> near_far, const Context* default_context
-  ) = 0;
+      const SampleLocation& pix, int patch_rad, MinMax<double> near_far,
+      const Context* default_context) = 0;
 
   virtual ~DepthSampler() {}
 
-  struct Params{
+  struct Params {
     std::shared_ptr<Context> context;
   };
   static Shared<DepthSampler> Create(Params p);
 };
 
-}
+}  // namespace pangolin

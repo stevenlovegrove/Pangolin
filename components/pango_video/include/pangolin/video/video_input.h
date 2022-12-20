@@ -33,98 +33,101 @@
 namespace pangolin
 {
 
-struct PANGOLIN_EXPORT VideoInput
-    : public VideoInterface,
-      public VideoFilterInterface
-{
-    /////////////////////////////////////////////////////////////
-    // VideoInterface Methods
-    /////////////////////////////////////////////////////////////
+struct PANGOLIN_EXPORT VideoInput : public VideoInterface,
+                                    public VideoFilterInterface {
+  /////////////////////////////////////////////////////////////
+  // VideoInterface Methods
+  /////////////////////////////////////////////////////////////
 
-    size_t SizeBytes() const override;
-    const std::vector<StreamInfo>& Streams() const override;
-    void Start() override;
-    void Stop() override;
-    bool GrabNext( unsigned char* image, bool wait = true ) override;
-    bool GrabNewest( unsigned char* image, bool wait = true ) override;
+  size_t SizeBytes() const override;
+  const std::vector<StreamInfo>& Streams() const override;
+  void Start() override;
+  void Stop() override;
+  bool GrabNext(unsigned char* image, bool wait = true) override;
+  bool GrabNewest(unsigned char* image, bool wait = true) override;
 
-    /////////////////////////////////////////////////////////////
-    // VideoFilterInterface Methods
-    /////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////
+  // VideoFilterInterface Methods
+  /////////////////////////////////////////////////////////////
 
-    std::vector<VideoInterface*>& InputStreams() override
-    {
-        return videos;
-    }
+  std::vector<VideoInterface*>& InputStreams() override { return videos; }
 
-    /////////////////////////////////////////////////////////////
-    // VideoInput Methods
-    /////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////
+  // VideoInput Methods
+  /////////////////////////////////////////////////////////////
 
-    VideoInput();
-    VideoInput(VideoInput&& other) = default;
-    VideoInput(const std::string &input_uri, const std::string &output_uri = "pango:[buffer_size_mb=100]//video_log.pango");
-    ~VideoInput();
+  VideoInput();
+  VideoInput(VideoInput&& other) = default;
+  VideoInput(
+      const std::string& input_uri,
+      const std::string& output_uri =
+          "pango:[buffer_size_mb=100]//video_log.pango");
+  ~VideoInput();
 
-    void Open(const std::string &input_uri, const std::string &output_uri = "pango:[buffer_size_mb=100]//video_log.pango");
-    void Close();
+  void Open(
+      const std::string& input_uri,
+      const std::string& output_uri =
+          "pango:[buffer_size_mb=100]//video_log.pango");
+  void Close();
 
-    // experimental - not stable
-    bool Grab( unsigned char* buffer, std::vector<sophus::ImageView<uint8_t> >& images, bool wait = true, bool newest = false);
+  // experimental - not stable
+  bool Grab(
+      unsigned char* buffer, std::vector<sophus::ImageView<uint8_t> >& images,
+      bool wait = true, bool newest = false);
 
-    const Uri& VideoUri() const {
-        return uri_input;
-    }
+  const Uri& VideoUri() const { return uri_input; }
 
-    void Reset() {
-        Close();
-        Open(uri_input.full_uri, uri_output.full_uri);
-    }
+  void Reset()
+  {
+    Close();
+    Open(uri_input.full_uri, uri_output.full_uri);
+  }
 
-    // Return pointer to inner video class as VideoType
-    template<typename VideoType>
-    VideoType* Cast() {
-        return dynamic_cast<VideoType*>(video_src.get());
-    }
+  // Return pointer to inner video class as VideoType
+  template <typename VideoType>
+  VideoType* Cast()
+  {
+    return dynamic_cast<VideoType*>(video_src.get());
+  }
 
-    const std::string& LogFilename() const;
-    std::string& LogFilename();
+  const std::string& LogFilename() const;
+  std::string& LogFilename();
 
-    // Switch to live video and record output to file
-    void Record();
+  // Switch to live video and record output to file
+  void Record();
 
-    // Switch to live video and record a single frame
-    void RecordOneFrame();
+  // Switch to live video and record a single frame
+  void RecordOneFrame();
 
-    // Specify that one in n frames are logged to file. Default is 1.
-    void SetTimelapse(size_t one_in_n_frames);
+  // Specify that one in n frames are logged to file. Default is 1.
+  void SetTimelapse(size_t one_in_n_frames);
 
-    // True iff grabbed live frames are being logged to file
-    bool IsRecording() const;
+  // True iff grabbed live frames are being logged to file
+  bool IsRecording() const;
 
-protected:
-    void InitialiseRecorder();
+  protected:
+  void InitialiseRecorder();
 
-    Uri uri_input;
-    Uri uri_output;
+  Uri uri_input;
+  Uri uri_output;
 
-    std::unique_ptr<VideoInterface> video_src;
-    std::unique_ptr<VideoOutputInterface> video_recorder;
+  std::unique_ptr<VideoInterface> video_src;
+  std::unique_ptr<VideoOutputInterface> video_recorder;
 
-    // Use to store either video_src or video_file for VideoFilterInterface,
-    // depending on which is active
-    std::vector<VideoInterface*> videos;
+  // Use to store either video_src or video_file for VideoFilterInterface,
+  // depending on which is active
+  std::vector<VideoInterface*> videos;
 
-    int buffer_size_bytes;
+  int buffer_size_bytes;
 
-    int frame_num;
-    size_t record_frame_skip;
+  int frame_num;
+  size_t record_frame_skip;
 
-    bool record_once;
-    bool record_continuous;
+  bool record_once;
+  bool record_continuous;
 };
 
 // VideoInput subsumes the previous VideoRecordRepeat class.
 typedef VideoInput VideoRecordRepeat;
 
-}
+}  // namespace pangolin

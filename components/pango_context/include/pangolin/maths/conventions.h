@@ -3,10 +3,11 @@
 #pragma once
 
 #include <farm_ng/core/enum/enum.h>
-#include <sophus/linalg/rotation_matrix.h>
 #include <pangolin/utils/logging.h>
+#include <sophus/linalg/rotation_matrix.h>
 
-namespace pangolin {
+namespace pangolin
+{
 
 // clang-format off
 FARM_ENUM(
@@ -69,7 +70,8 @@ FARM_ENUM(
 // clang-format on
 
 template <typename TScalar, int Dim>
-Eigen::Matrix<TScalar, Dim, 1> axisDirection(AxisDirection2 dir) {
+Eigen::Matrix<TScalar, Dim, 1> axisDirection(AxisDirection2 dir)
+{
   int const ordinal = static_cast<int>(dir);  // [0, ... 2*Dim]
   int const axis = ordinal % 3;               // [0, ... Dim]
   int const pos_neg = ordinal / 3;            // [0, 1]
@@ -78,12 +80,10 @@ Eigen::Matrix<TScalar, Dim, 1> axisDirection(AxisDirection2 dir) {
 }
 
 template <typename TScalar>
-Eigen::Vector3<TScalar> upDirectionInCamera(DeviceXyz axis_convention) {
+Eigen::Vector3<TScalar> upDirectionInCamera(DeviceXyz axis_convention)
+{
   const static Eigen::Vector3<TScalar> up_dirs[3] = {
-    {0.0, -1.0, 0.0},
-    {0.0, 0.0, 1.0},
-    {0.0, 1.0, 0.0}
-  };
+      {0.0, -1.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 1.0, 0.0}};
 
   const size_t index = static_cast<size_t>(axis_convention);
   PANGO_ENSURE(index < 3);
@@ -95,7 +95,8 @@ Eigen::Vector3<TScalar> upDirectionInCamera(DeviceXyz axis_convention) {
 // where those now point in the `to_rdf_axis_dirs` dirs
 template <typename TScalar, int Dim = 3>
 Eigen::Matrix<TScalar, Dim, Dim> toConventionFromRdf(
-    std::array<AxisDirection2, Dim> const& to_rdf_axis_dirs) {
+    std::array<AxisDirection2, Dim> const& to_rdf_axis_dirs)
+{
   static_assert(2 <= Dim && Dim <= 3);
 
   Eigen::Matrix<TScalar, Dim, Dim> to_Rmat_rdf;
@@ -106,22 +107,20 @@ Eigen::Matrix<TScalar, Dim, Dim> toConventionFromRdf(
 }
 
 template <typename TScalar>
-Eigen::Matrix<TScalar, 3, 3> toConventionFromRdf(DeviceXyz to) {
+Eigen::Matrix<TScalar, 3, 3> toConventionFromRdf(DeviceXyz to)
+{
   switch (to) {
     case DeviceXyz::right_down_forward:
       return toConventionFromRdf<TScalar, 3>(
-          {AxisDirection2::positive_x,
-           AxisDirection2::positive_y,
+          {AxisDirection2::positive_x, AxisDirection2::positive_y,
            AxisDirection2::positive_z});
     case DeviceXyz::forward_left_up:
       return toConventionFromRdf<TScalar, 3>(
-          {AxisDirection2::positive_z,
-           AxisDirection2::negative_x,
+          {AxisDirection2::positive_z, AxisDirection2::negative_x,
            AxisDirection2::negative_y});
     case DeviceXyz::right_up_back:
       return toConventionFromRdf<TScalar, 3>(
-          {AxisDirection2::positive_x,
-           AxisDirection2::negative_y,
+          {AxisDirection2::positive_x, AxisDirection2::negative_y,
            AxisDirection2::negative_z});
     default:
       PANGO_FATAL();
@@ -129,7 +128,8 @@ Eigen::Matrix<TScalar, 3, 3> toConventionFromRdf(DeviceXyz to) {
 }
 
 template <typename TScalar>
-Eigen::Matrix<TScalar, 3, 3> toConventionFrom(DeviceXyz to, DeviceXyz from) {
+Eigen::Matrix<TScalar, 3, 3> toConventionFrom(DeviceXyz to, DeviceXyz from)
+{
   return toConventionFromRdf<TScalar>(to) *
          toConventionFromRdf<TScalar>(from).inverse();
 }

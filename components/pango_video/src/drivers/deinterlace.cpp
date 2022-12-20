@@ -25,97 +25,96 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/deinterlace.h>
-#include <pangolin/factory/factory_registry.h>
-#include <pangolin/video/iostream_operators.h>
 #include <dc1394/conversions.h>
+#include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/drivers/deinterlace.h>
+#include <pangolin/video/iostream_operators.h>
 #include <pangolin/video/video.h>
 
 namespace pangolin
 {
 
-DeinterlaceVideo::DeinterlaceVideo(std::unique_ptr<VideoInterface> &videoin_)
-    : videoin(std::move(videoin_)), buffer(0)
+DeinterlaceVideo::DeinterlaceVideo(std::unique_ptr<VideoInterface>& videoin_) :
+    videoin(std::move(videoin_)), buffer(0)
 {
-    if(videoin->Streams().size() != 1)
-        throw VideoException("FirewireDeinterlace input must have exactly one stream");
+  if (videoin->Streams().size() != 1)
+    throw VideoException(
+        "FirewireDeinterlace input must have exactly one stream");
 
-    const StreamInfo& stmin = videoin->Streams()[0];
+  const StreamInfo& stmin = videoin->Streams()[0];
 
-    StreamInfo stm1(PixelFormatFromString("GRAY8"), stmin.Width(), stmin.Height(), stmin.Width(), 0);
-    StreamInfo stm2(PixelFormatFromString("GRAY8"), stmin.Width(), stmin.Height(), stmin.Width(), (unsigned char*)0 + stmin.Width()*stmin.Height());
-    streams.push_back(stm1);
-    streams.push_back(stm2);
+  StreamInfo stm1(
+      PixelFormatFromString("GRAY8"), stmin.Width(), stmin.Height(),
+      stmin.Width(), 0);
+  StreamInfo stm2(
+      PixelFormatFromString("GRAY8"), stmin.Width(), stmin.Height(),
+      stmin.Width(), (unsigned char*)0 + stmin.Width() * stmin.Height());
+  streams.push_back(stm1);
+  streams.push_back(stm2);
 
-    buffer = new unsigned char[videoin->SizeBytes()];
+  buffer = new unsigned char[videoin->SizeBytes()];
 
-    std::cout << videoin->Streams()[0].Width() << ", " << videoin->Streams()[0].Height() << std::endl;
+  std::cout << videoin->Streams()[0].Width() << ", "
+            << videoin->Streams()[0].Height() << std::endl;
 }
 
-DeinterlaceVideo::~DeinterlaceVideo()
-{
-    delete[] buffer;
-}
+DeinterlaceVideo::~DeinterlaceVideo() { delete[] buffer; }
 
-size_t DeinterlaceVideo::SizeBytes() const
-{
-    return videoin->SizeBytes();
-}
+size_t DeinterlaceVideo::SizeBytes() const { return videoin->SizeBytes(); }
 
 const std::vector<StreamInfo>& DeinterlaceVideo::Streams() const
 {
-    return streams;
+  return streams;
 }
 
-void DeinterlaceVideo::Start()
+void DeinterlaceVideo::Start() { videoin->Start(); }
+
+void DeinterlaceVideo::Stop() { videoin->Stop(); }
+
+bool DeinterlaceVideo::GrabNext(unsigned char* image, bool wait)
 {
-    videoin->Start();
+  if (videoin->GrabNext(buffer, wait)) {
+    return (
+        dc1394_deinterlace_stereo(
+            buffer, image, videoin->Streams()[0].Width(),
+            2 * videoin->Streams()[0].Height()) == DC1394_SUCCESS);
+  }
+  return false;
 }
 
-void DeinterlaceVideo::Stop()
+bool DeinterlaceVideo::GrabNewest(unsigned char* image, bool wait)
 {
-    videoin->Stop();
-}
-
-bool DeinterlaceVideo::GrabNext( unsigned char* image, bool wait )
-{
-    if(videoin->GrabNext(buffer, wait)) {
-        return ( dc1394_deinterlace_stereo(buffer,image, videoin->Streams()[0].Width(), 2*videoin->Streams()[0].Height() ) == DC1394_SUCCESS );
-    }
-    return false;
-}
-
-bool DeinterlaceVideo::GrabNewest( unsigned char* image, bool wait )
-{
-    if(videoin->GrabNewest(buffer, wait)) {
-        return ( dc1394_deinterlace_stereo(buffer,image, videoin->Streams()[0].Width(), 2*videoin->Streams()[0].Height() ) == DC1394_SUCCESS );
-    }
-    return false;
+  if (videoin->GrabNewest(buffer, wait)) {
+    return (
+        dc1394_deinterlace_stereo(
+            buffer, image, videoin->Streams()[0].Width(),
+            2 * videoin->Streams()[0].Height()) == DC1394_SUCCESS);
+  }
+  return false;
 }
 
 PANGOLIN_REGISTER_FACTORY(DeinterlaceVideo)
 {
-    struct DeinterlaceVideoFactory final : public TypedFactoryInterface<VideoInterface> {
-        std::map<std::string,Precedence> Schemes() const override
-        {
-            return {{"deinterlace",10}};
-        }
-        const char* Description() const override
-        {
-            return "Deinterlace sub-video.";
-        }
-        ParamSet Params() const override
-        {
-            return {{
-            }};
-        }
-        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
-            return std::unique_ptr<VideoInterface>( new DeinterlaceVideo(subvid) );
-        }
-    };
+  struct DeinterlaceVideoFactory final
+      : public TypedFactoryInterface<VideoInterface> {
+    std::map<std::string, Precedence> Schemes() const override
+    {
+      return {{"deinterlace", 10}};
+    }
+    const char* Description() const override
+    {
+      return "Deinterlace sub-video.";
+    }
+    ParamSet Params() const override { return {{}}; }
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    {
+      std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+      return std::unique_ptr<VideoInterface>(new DeinterlaceVideo(subvid));
+    }
+  };
 
-    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<DeinterlaceVideoFactory>());
+  return FactoryRegistry::I()->RegisterFactory<VideoInterface>(
+      std::make_shared<DeinterlaceVideoFactory>());
 }
 
-}
+}  // namespace pangolin

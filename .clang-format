@@ -1,2 +1,13 @@
-DisableFormat: true
-SortIncludes: false
+BasedOnStyle: Google
+AccessModifierOffset: '0'
+AlignAfterOpenBracket: AlwaysBreak
+AlignEscapedNewlines: Right
+AlwaysBreakTemplateDeclarations: 'Yes'
+BreakBeforeBraces: Linux
+BreakConstructorInitializers: AfterColon
+ColumnLimit: '80'
+CompactNamespaces: 'true'
+IndentWidth: '2'
+KeepEmptyLinesAtTheStartOfBlocks: 'false'
+MaxEmptyLinesToKeep: '1'
+SortIncludes: 'true'

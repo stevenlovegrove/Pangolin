@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <pangolin/video/video_interface.h>
 #include <pangolin/image/image_io.h>
+#include <pangolin/video/video_interface.h>
 
 #include <deque>
 #include <vector>
@@ -37,92 +37,96 @@ namespace pangolin
 {
 
 // Video class that outputs test video signal.
-class PANGOLIN_EXPORT ImagesVideo : public VideoInterface, public VideoPlaybackInterface, public VideoPropertiesInterface
+class PANGOLIN_EXPORT ImagesVideo : public VideoInterface,
+                                    public VideoPlaybackInterface,
+                                    public VideoPropertiesInterface
 {
-public:
-    ImagesVideo(const std::string& wildcard_path);
+  public:
+  ImagesVideo(const std::string& wildcard_path);
 
-    ImagesVideo(
-        const std::string& wildcard_path, const RuntimePixelType& raw_fmt,
-        size_t raw_width, size_t raw_height, size_t raw_pitch,
-        size_t raw_offset, size_t raw_planes
-    );
+  ImagesVideo(
+      const std::string& wildcard_path, const RuntimePixelType& raw_fmt,
+      size_t raw_width, size_t raw_height, size_t raw_pitch, size_t raw_offset,
+      size_t raw_planes);
 
-    // Explicitly delete copy ctor and assignment operator.
-    // See http://stackoverflow.com/questions/29565299/how-to-use-a-vector-of-unique-pointers-in-a-dll-exported-class-with-visual-studi
-    // >> It appears adding __declspec(dllexport) forces the compiler to define the implicitly-declared copy constructor and copy assignment operator
-    ImagesVideo(const ImagesVideo&) = delete;
-    ImagesVideo& operator=(const ImagesVideo&) = delete;
+  // Explicitly delete copy ctor and assignment operator.
+  // See
+  // http://stackoverflow.com/questions/29565299/how-to-use-a-vector-of-unique-pointers-in-a-dll-exported-class-with-visual-studi
+  // >> It appears adding __declspec(dllexport) forces the compiler to define
+  // the implicitly-declared copy constructor and copy assignment operator
+  ImagesVideo(const ImagesVideo&) = delete;
+  ImagesVideo& operator=(const ImagesVideo&) = delete;
 
-    ~ImagesVideo();
+  ~ImagesVideo();
 
-    ///////////////////////////////////
-    // Implement VideoInterface
+  ///////////////////////////////////
+  // Implement VideoInterface
 
-    void Start() override;
+  void Start() override;
 
-    void Stop() override;
+  void Stop() override;
 
-    size_t SizeBytes() const override;
+  size_t SizeBytes() const override;
 
-    const std::vector<StreamInfo>& Streams() const override;
+  const std::vector<StreamInfo>& Streams() const override;
 
-    bool GrabNext( unsigned char* image, bool wait = true ) override;
+  bool GrabNext(unsigned char* image, bool wait = true) override;
 
-    bool GrabNewest( unsigned char* image, bool wait = true ) override;
+  bool GrabNewest(unsigned char* image, bool wait = true) override;
 
-    ///////////////////////////////////
-    // Implement VideoPlaybackInterface
+  ///////////////////////////////////
+  // Implement VideoPlaybackInterface
 
-    size_t GetCurrentFrameId() const override;
+  size_t GetCurrentFrameId() const override;
 
-    size_t GetTotalFrames() const override;
+  size_t GetTotalFrames() const override;
 
-    size_t Seek(size_t frameid) override;
+  size_t Seek(size_t frameid) override;
 
-    ///////////////////////////////////
-    // Implement VideoPropertiesInterface
+  ///////////////////////////////////
+  // Implement VideoPropertiesInterface
 
-    const picojson::value& DeviceProperties() const override;
+  const picojson::value& DeviceProperties() const override;
 
-    const picojson::value& FrameProperties() const override;
+  const picojson::value& FrameProperties() const override;
 
-protected:
-    typedef std::vector<IntensityImage<>> Frame;
+  protected:
+  typedef std::vector<IntensityImage<>> Frame;
 
-    const std::string& Filename(size_t frameNum, size_t channelNum) {
-        return filenames[channelNum][frameNum];
-    }
+  const std::string& Filename(size_t frameNum, size_t channelNum)
+  {
+    return filenames[channelNum][frameNum];
+  }
 
-    void PopulateFilenames(const std::string& wildcard_path);
+  void PopulateFilenames(const std::string& wildcard_path);
 
-    void PopulateFilenamesFromJson(const std::string& filename);
+  void PopulateFilenamesFromJson(const std::string& filename);
 
-    bool LoadFrame(size_t i);
+  bool LoadFrame(size_t i);
 
-    void ConfigureStreamSizes();
+  void ConfigureStreamSizes();
 
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
+  std::vector<StreamInfo> streams;
+  size_t size_bytes;
 
-    size_t num_files;
-    size_t num_channels;
-    size_t next_frame_id;
-    std::vector<std::vector<std::string> > filenames;
-    std::vector<Frame> loaded;
+  size_t num_files;
+  size_t num_channels;
+  size_t next_frame_id;
+  std::vector<std::vector<std::string>> filenames;
+  std::vector<Frame> loaded;
 
-    bool unknowns_are_raw;
-    RuntimePixelType raw_fmt;
-    size_t raw_width;
-    size_t raw_height;
-    size_t raw_planes;
-    size_t raw_pitch;
-    size_t raw_offset;
+  bool unknowns_are_raw;
+  RuntimePixelType raw_fmt;
+  size_t raw_width;
+  size_t raw_height;
+  size_t raw_planes;
+  size_t raw_pitch;
+  size_t raw_offset;
 
-    // Load any json properties if they are defined
-    picojson::value device_properties;
-    picojson::value json_frames;
-    picojson::value null_props;
+  // Load any json properties if they are defined
+  picojson::value device_properties;
+  picojson::value json_frames;
+  picojson::value null_props;
 };
 
-}
+}  // namespace pangolin

@@ -1,17 +1,19 @@
 // Copyright (c) farm-ng, inc. All rights reserved.
 
-#include <pangolin/testing/eigen.h>
 #include <pangolin/maths/conventions.h>
+#include <pangolin/testing/eigen.h>
 
 #include "test_data.h"
 
 using namespace Eigen;
 using namespace sophus;
 
-namespace pangolin {
+namespace pangolin
+{
 
 template <typename T>
-void testAxisDirection() {
+void testAxisDirection()
+{
   CHECK_EIGEN_APPROX(
       (axisDirection<T, 3>(AxisDirection2::positive_x)),
       (Eigen::Vector<T, 3>(1.0, 0.0, 0.0)));
@@ -34,7 +36,8 @@ void testAxisDirection() {
 }
 
 template <typename T>
-void testOrtho() {
+void testOrtho()
+{
   for (DeviceXyz convention : getAll(DeviceXyz())) {
     Eigen::Matrix<T, 3, 3> m = toConventionFromRdf<T>(convention);
     CHECK_EIGEN_APPROX(m * m.transpose(), (Eigen::Matrix<T, 3, 3>::Identity()))
@@ -43,7 +46,8 @@ void testOrtho() {
 }
 
 template <typename T>
-void testRdf() {
+void testRdf()
+{
   CHECK_EIGEN_APPROX(
       (toConventionFromRdf<T>(DeviceXyz::right_down_forward)),
       (Eigen::Matrix<T, 3, 3>::Identity()));
@@ -78,17 +82,20 @@ void testRdf() {
   }
 }
 
-TEST_CASE("coord_convention direction") {
+TEST_CASE("coord_convention direction")
+{
   testAxisDirection<float>();
   testAxisDirection<double>();
 }
 
-TEST_CASE("coord_convention ortho") {
+TEST_CASE("coord_convention ortho")
+{
   testOrtho<float>();
   testOrtho<double>();
 }
 
-TEST_CASE("coord_convention RDF") {
+TEST_CASE("coord_convention RDF")
+{
   testRdf<float>();
   testRdf<double>();
 }

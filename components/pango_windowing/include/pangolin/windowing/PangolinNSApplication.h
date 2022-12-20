@@ -47,8 +47,9 @@
 // PangolinWindowDelegate
 ////////////////////////////////////////////////////////////////////
 
-@interface PangolinWindowDelegate : NSObject <NSWindowDelegate>{
-    @public pangolin::WindowInterface* osx_window;
+@interface PangolinWindowDelegate : NSObject <NSWindowDelegate> {
+  @public
+  pangolin::WindowInterface* osx_window;
 }
 @end
 

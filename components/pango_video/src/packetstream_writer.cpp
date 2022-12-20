@@ -32,125 +32,127 @@ using std::lock_guard;
 
 #define SCOPED_LOCK lock_guard<decltype(_lock)> lg(_lock)
 
-//#define SCOPED_LOCK
+// #define SCOPED_LOCK
 
 namespace pangolin
 {
 
 static inline const std::string CurrentTimeStr()
 {
-    time_t time_now = time(0);
-    struct tm time_struct = *localtime(&time_now);
-    char buffer[80];
-    strftime(buffer, sizeof(buffer), "%Y-%m-%d %X", &time_struct);
-    return buffer;
+  time_t time_now = time(0);
+  struct tm time_struct = *localtime(&time_now);
+  char buffer[80];
+  strftime(buffer, sizeof(buffer), "%Y-%m-%d %X", &time_struct);
+  return buffer;
 }
 
 void PacketStreamWriter::WriteHeader()
 {
-    SCOPED_LOCK;
-    _stream.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
-    picojson::value pango;
-    pango["pangolin_version"] = PANGOLIN_VERSION_STRING;
-    pango["time_us"] = Time_us(TimeNow());
-    pango["date_created"] = CurrentTimeStr();
-    pango["endian"] = "little_endian";
+  SCOPED_LOCK;
+  _stream.write(PANGO_MAGIC.c_str(), PANGO_MAGIC.size());
+  picojson::value pango;
+  pango["pangolin_version"] = PANGOLIN_VERSION_STRING;
+  pango["time_us"] = Time_us(TimeNow());
+  pango["date_created"] = CurrentTimeStr();
+  pango["endian"] = "little_endian";
 
-    writeTag(_stream, TAG_PANGO_HDR);
-    pango.serialize(std::ostream_iterator<char>(_stream), true);
+  writeTag(_stream, TAG_PANGO_HDR);
+  pango.serialize(std::ostream_iterator<char>(_stream), true);
 
-    for (const auto& source : _sources)
-        Write(source);
+  for (const auto& source : _sources) Write(source);
 }
 
 void PacketStreamWriter::Write(const PacketStreamSource& source)
 {
-    SCOPED_LOCK;
-    picojson::value serialize;
-    serialize[pss_src_driver] = source.driver;
-    serialize[pss_src_id] = source.id;
-    serialize[pss_src_uri] = source.uri;
-    serialize[pss_src_info] = source.info;
-    serialize[pss_src_version] = source.version;
-    serialize[pss_src_packet][pss_pkt_alignment_bytes] = source.data_alignment_bytes;
-    serialize[pss_src_packet][pss_pkt_definitions] = source.data_definitions;
-    serialize[pss_src_packet][pss_pkt_size_bytes] = source.data_size_bytes;
+  SCOPED_LOCK;
+  picojson::value serialize;
+  serialize[pss_src_driver] = source.driver;
+  serialize[pss_src_id] = source.id;
+  serialize[pss_src_uri] = source.uri;
+  serialize[pss_src_info] = source.info;
+  serialize[pss_src_version] = source.version;
+  serialize[pss_src_packet][pss_pkt_alignment_bytes] =
+      source.data_alignment_bytes;
+  serialize[pss_src_packet][pss_pkt_definitions] = source.data_definitions;
+  serialize[pss_src_packet][pss_pkt_size_bytes] = source.data_size_bytes;
 
-    writeTag(_stream, TAG_ADD_SOURCE);
-    serialize.serialize(std::ostream_iterator<char>(_stream), true);
+  writeTag(_stream, TAG_ADD_SOURCE);
+  serialize.serialize(std::ostream_iterator<char>(_stream), true);
 }
-
 
 PacketStreamSourceId PacketStreamWriter::AddSource(PacketStreamSource& source)
 {
-    SCOPED_LOCK;
-    source.id = AddSource(const_cast<const PacketStreamSource&>(source));
-    return source.id;
+  SCOPED_LOCK;
+  source.id = AddSource(const_cast<const PacketStreamSource&>(source));
+  return source.id;
 }
 
-PacketStreamSourceId PacketStreamWriter::AddSource(const PacketStreamSource& source)
+PacketStreamSourceId PacketStreamWriter::AddSource(
+    const PacketStreamSource& source)
 {
-    SCOPED_LOCK;
-    PacketStreamSourceId r = _sources.size(); //source id is by vector position, so we must reassign.
-    _sources.push_back(source);
-    _sources.back().id = r;
+  SCOPED_LOCK;
+  PacketStreamSourceId r =
+      _sources.size();  // source id is by vector position, so we must reassign.
+  _sources.push_back(source);
+  _sources.back().id = r;
 
-    if (_open) //we might be a pipe, in which case we may not be open
-        Write(_sources.back());
+  if (_open)  // we might be a pipe, in which case we may not be open
+    Write(_sources.back());
 
-    return _sources.back().id;
+  return _sources.back().id;
 }
 
-void PacketStreamWriter::WriteMeta(PacketStreamSourceId src, const picojson::value& data)
+void PacketStreamWriter::WriteMeta(
+    PacketStreamSourceId src, const picojson::value& data)
 {
-    SCOPED_LOCK;
-    writeTag(_stream, TAG_SRC_JSON);
-    writeCompressedUnsignedInt(_stream, src);
-    data.serialize(std::ostream_iterator<char>(_stream), false);
+  SCOPED_LOCK;
+  writeTag(_stream, TAG_SRC_JSON);
+  writeCompressedUnsignedInt(_stream, src);
+  data.serialize(std::ostream_iterator<char>(_stream), false);
 }
 
-void PacketStreamWriter::WriteSourcePacket(PacketStreamSourceId src, const char* source, const int64_t receive_time_us, size_t sourcelen, const picojson::value& meta)
+void PacketStreamWriter::WriteSourcePacket(
+    PacketStreamSourceId src, const char* source, const int64_t receive_time_us,
+    size_t sourcelen, const picojson::value& meta)
 {
+  SCOPED_LOCK;
+  _sources[src].index.push_back({_stream.tellp(), receive_time_us});
 
-    SCOPED_LOCK;
-    _sources[src].index.push_back({_stream.tellp(), receive_time_us});
+  if (!meta.is<picojson::null>()) WriteMeta(src, meta);
 
-    if (!meta.is<picojson::null>())
-        WriteMeta(src, meta);
+  writeTag(_stream, TAG_SRC_PACKET);
+  writeTimestamp(_stream, receive_time_us);
+  writeCompressedUnsignedInt(_stream, src);
 
-    writeTag(_stream, TAG_SRC_PACKET);
-    writeTimestamp(_stream, receive_time_us);
-    writeCompressedUnsignedInt(_stream, src);
+  if (_sources[src].data_size_bytes) {
+    if (sourcelen != static_cast<size_t>(_sources[src].data_size_bytes))
+      throw std::runtime_error(
+          "oPacketStream::writePacket --> Tried to write a fixed-size packet "
+          "with bad size.");
+  } else {
+    writeCompressedUnsignedInt(_stream, sourcelen);
+  }
 
-    if (_sources[src].data_size_bytes) {
-        if (sourcelen != static_cast<size_t>(_sources[src].data_size_bytes))
-            throw std::runtime_error("oPacketStream::writePacket --> Tried to write a fixed-size packet with bad size.");
-    } else {
-        writeCompressedUnsignedInt(_stream, sourcelen);
-    }
-
-    _stream.write(source, sourcelen);
-    _bytes_written += sourcelen;
+  _stream.write(source, sourcelen);
+  _bytes_written += sourcelen;
 }
 
 void PacketStreamWriter::WriteSync()
 {
-    SCOPED_LOCK;
-    for (unsigned i = 0; i < 10; ++i)
-    writeTag(_stream, TAG_PANGO_SYNC);
+  SCOPED_LOCK;
+  for (unsigned i = 0; i < 10; ++i) writeTag(_stream, TAG_PANGO_SYNC);
 }
 
 void PacketStreamWriter::WriteEnd()
 {
-    SCOPED_LOCK;
-    if (!_indexable)
-        return;
+  SCOPED_LOCK;
+  if (!_indexable) return;
 
-    auto indexpos = _stream.tellp();
-    writeTag(_stream, TAG_PANGO_STATS);
-    SourceStats(_sources).serialize(std::ostream_iterator<char>(_stream), false);
-    writeTag(_stream, TAG_PANGO_FOOTER);
-    _stream.write(reinterpret_cast<char*>(&indexpos), sizeof(uint64_t));
+  auto indexpos = _stream.tellp();
+  writeTag(_stream, TAG_PANGO_STATS);
+  SourceStats(_sources).serialize(std::ostream_iterator<char>(_stream), false);
+  writeTag(_stream, TAG_PANGO_FOOTER);
+  _stream.write(reinterpret_cast<char*>(&indexpos), sizeof(uint64_t));
 }
 
-}
+}  // namespace pangolin

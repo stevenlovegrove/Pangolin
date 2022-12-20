@@ -1,32 +1,34 @@
 #include <pangolin/log/playback_session.h>
 
-namespace pangolin {
+namespace pangolin
+{
 
 std::shared_ptr<PlaybackSession> PlaybackSession::Default()
 {
-    static std::shared_ptr<PlaybackSession> instance = std::make_shared<PlaybackSession>();
-    return instance;
+  static std::shared_ptr<PlaybackSession> instance =
+      std::make_shared<PlaybackSession>();
+  return instance;
 }
 
-std::shared_ptr<PlaybackSession> PlaybackSession::ChooseFromParams(const ParamReader& reader)
+std::shared_ptr<PlaybackSession> PlaybackSession::ChooseFromParams(
+    const ParamReader& reader)
 {
-    return Choose(reader.Get<bool>("OrderedPlayback"));
+  return Choose(reader.Get<bool>("OrderedPlayback"));
 }
 
-std::shared_ptr<PlaybackSession> PlaybackSession::ChooseFromParams(const Params& params)
+std::shared_ptr<PlaybackSession> PlaybackSession::ChooseFromParams(
+    const Params& params)
 {
-    return Choose(params.Get<bool>("OrderedPlayback", false));
+  return Choose(params.Get<bool>("OrderedPlayback", false));
 }
 
-std::shared_ptr<PlaybackSession> PlaybackSession::Choose(bool use_ordered_playback)
+std::shared_ptr<PlaybackSession> PlaybackSession::Choose(
+    bool use_ordered_playback)
 {
-    if(use_ordered_playback)
-    {
-        return Default();
-    }
-    else
-    {
-        return std::make_shared<PlaybackSession>();
-    }
+  if (use_ordered_playback) {
+    return Default();
+  } else {
+    return std::make_shared<PlaybackSession>();
+  }
 }
-}
+}  // namespace pangolin

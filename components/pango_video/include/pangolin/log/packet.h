@@ -25,46 +25,46 @@
 
 #pragma once
 
-#include <mutex>
-
 #include <pangolin/log/packetstream.h>
 #include <pangolin/log/packetstream_source.h>
 
-namespace pangolin {
+#include <mutex>
+
+namespace pangolin
+{
 
 // Encapsulate serialized reading of Packet from stream.
-struct PANGOLIN_EXPORT Packet
-{
-    Packet(PacketStream& s, std::unique_lock<std::recursive_mutex>&& mutex, std::vector<PacketStreamSource>& srcs);
-    Packet(const Packet&) = delete;
-    Packet(Packet&& o);
-    ~Packet();
+struct PANGOLIN_EXPORT Packet {
+  Packet(
+      PacketStream& s, std::unique_lock<std::recursive_mutex>&& mutex,
+      std::vector<PacketStreamSource>& srcs);
+  Packet(const Packet&) = delete;
+  Packet(Packet&& o);
+  ~Packet();
 
-    size_t BytesRead() const;
-    int BytesRemaining() const;
+  size_t BytesRead() const;
+  int BytesRemaining() const;
 
-    PacketStream& Stream()
-    {
-        return _stream;
-    }
+  PacketStream& Stream() { return _stream; }
 
-    PacketStreamSourceId src;
-    int64_t time;
-    size_t size;
-    size_t sequence_num;
-    picojson::value meta;
-    std::streampos frame_streampos;
+  PacketStreamSourceId src;
+  int64_t time;
+  size_t size;
+  size_t sequence_num;
+  picojson::value meta;
+  std::streampos frame_streampos;
 
-private:
-    void ParsePacketHeader(PacketStream& s, std::vector<PacketStreamSource>& srcs);
-    void ReadRemaining();
+  private:
+  void ParsePacketHeader(
+      PacketStream& s, std::vector<PacketStreamSource>& srcs);
+  void ReadRemaining();
 
-    PacketStream& _stream;
+  PacketStream& _stream;
 
-    std::unique_lock<std::recursive_mutex> lock;
+  std::unique_lock<std::recursive_mutex> lock;
 
-    std::streampos data_streampos;
-    size_t _data_len;
+  std::streampos data_streampos;
+  size_t _data_len;
 };
 
-}
+}  // namespace pangolin

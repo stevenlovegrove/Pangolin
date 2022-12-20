@@ -26,23 +26,20 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/factory/factory_registry.h>
-#include <pangolin/utils/timer.h>
-#include <pangolin/video/drivers/v4l.h>
-#include <pangolin/video/iostream_operators.h>
-
 #include <assert.h>
-#include <iostream>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
 #include <malloc.h>
+#include <pangolin/factory/factory_registry.h>
+#include <pangolin/utils/timer.h>
+#include <pangolin/video/drivers/v4l.h>
+#include <pangolin/video/iostream_operators.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -50,7 +47,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define CLEAR(x) memset (&(x), 0, sizeof (x))
+#include <iostream>
+
+#define CLEAR(x) memset(&(x), 0, sizeof(x))
 
 using namespace std;
 
@@ -59,794 +58,792 @@ namespace pangolin
 
 static int xioctl(int fd, int request, void* arg)
 {
-    int r;
-    do r = ioctl (fd, request, arg);
-    while (-1 == r && EINTR == errno);
-    return r;
+  int r;
+  do r = ioctl(fd, request, arg);
+  while (-1 == r && EINTR == errno);
+  return r;
 }
 
 inline std::string V4lToString(int32_t v)
 {
-    //	v = ((__u32)(a) | ((__u32)(b) << 8) | ((__u32)(c) << 16) | ((__u32)(d) << 24))
-    char cc[5];
-    cc[0] = v       & 0xff;
-    cc[1] = (v>>8)  & 0xff;
-    cc[2] = (v>>16) & 0xff;
-    cc[3] = (v>>24) & 0xff;
-    cc[4] = 0;
-    return std::string(cc);
+  //	v = ((__u32)(a) | ((__u32)(b) << 8) | ((__u32)(c) << 16) | ((__u32)(d)
+  //<< 24))
+  char cc[5];
+  cc[0] = v & 0xff;
+  cc[1] = (v >> 8) & 0xff;
+  cc[2] = (v >> 16) & 0xff;
+  cc[3] = (v >> 24) & 0xff;
+  cc[4] = 0;
+  return std::string(cc);
 }
 
-V4lVideo::V4lVideo(const char* dev_name, uint32_t period, io_method io, unsigned iwidth, unsigned iheight, unsigned v4l_format)
-    : io(io), fd(-1), buffers(0), n_buffers(0), running(false), period(period)
+V4lVideo::V4lVideo(
+    const char* dev_name, uint32_t period, io_method io, unsigned iwidth,
+    unsigned iheight, unsigned v4l_format) :
+    io(io), fd(-1), buffers(0), n_buffers(0), running(false), period(period)
 {
-    open_device(dev_name);
-    init_device(dev_name,iwidth,iheight,0,v4l_format);
-    InitPangoDeviceProperties();
+  open_device(dev_name);
+  init_device(dev_name, iwidth, iheight, 0, v4l_format);
+  InitPangoDeviceProperties();
 
-    Start();
+  Start();
 }
 
 V4lVideo::~V4lVideo()
 {
-    if(running)
-    {
-        Stop();
-    }
+  if (running) {
+    Stop();
+  }
 
-    uninit_device();
-    close_device();
+  uninit_device();
+  close_device();
 }
 
 void V4lVideo::InitPangoDeviceProperties()
 {
-    // Store camera details in device properties
-    device_properties[PANGO_HAS_TIMING_DATA] = true;
+  // Store camera details in device properties
+  device_properties[PANGO_HAS_TIMING_DATA] = true;
 }
 
-const std::vector<StreamInfo>& V4lVideo::Streams() const
+const std::vector<StreamInfo>& V4lVideo::Streams() const { return streams; }
+
+size_t V4lVideo::SizeBytes() const { return image_size; }
+
+bool V4lVideo::GrabNext(unsigned char* image, bool wait)
 {
-    return streams;
-}
+  for (;;) {
+    fd_set fds;
+    struct timeval tv;
+    int r;
 
-size_t V4lVideo::SizeBytes() const
-{
-    return image_size;
-}
+    FD_ZERO(&fds);
+    FD_SET(fd, &fds);
 
-bool V4lVideo::GrabNext( unsigned char* image, bool wait )
-{
-    for (;;) {
-        fd_set fds;
-        struct timeval tv;
-        int r;
+    /* Timeout. */
+    tv.tv_sec = 0;
+    tv.tv_usec = 2 * period;
 
-        FD_ZERO (&fds);
-        FD_SET (fd, &fds);
+    r = select(fd + 1, &fds, NULL, NULL, &tv);
 
-        /* Timeout. */
-        tv.tv_sec = 0;
-        tv.tv_usec = 2 * period;
+    if (-1 == r) {
+      if (EINTR == errno) continue;
 
-        r = select (fd + 1, &fds, NULL, NULL, &tv);
-
-        if (-1 == r) {
-            if (EINTR == errno)
-                continue;
-
-            // This is a terminal condition that must be propogated up.
-            throw VideoException ("select", strerror(errno));
-        }
-
-        if (0 == r) {
-            // Timeout has occured - This is longer than any reasonable frame interval,
-            // but not necessarily terminal, so return false to indicate that no frame was captured.
-            return false;
-        }
-
-        if (ReadFrame(image, wait))
-            break;
-
-        /* EAGAIN - continue select loop. */
+      // This is a terminal condition that must be propogated up.
+      throw VideoException("select", strerror(errno));
     }
 
-    return true;
+    if (0 == r) {
+      // Timeout has occured - This is longer than any reasonable frame
+      // interval, but not necessarily terminal, so return false to indicate
+      // that no frame was captured.
+      return false;
+    }
+
+    if (ReadFrame(image, wait)) break;
+
+    /* EAGAIN - continue select loop. */
+  }
+
+  return true;
 }
 
-bool V4lVideo::GrabNewest( unsigned char* image, bool wait )
+bool V4lVideo::GrabNewest(unsigned char* image, bool wait)
 {
-    // TODO: Implement
-    return GrabNext(image,wait);
+  // TODO: Implement
+  return GrabNext(image, wait);
 }
 
 int V4lVideo::ReadFrame(unsigned char* image, bool wait)
 {
-    struct v4l2_buffer buf;
-    unsigned int i;
+  struct v4l2_buffer buf;
+  unsigned int i;
 
-    switch (io) {
+  switch (io) {
     case IO_METHOD_READ:
-        if (-1 == read (fd, buffers[0].start, buffers[0].length)) {
-            switch (errno) {
-            case EAGAIN:
-                return 0;
+      if (-1 == read(fd, buffers[0].start, buffers[0].length)) {
+        switch (errno) {
+          case EAGAIN:
+            return 0;
 
-            case EIO:
-                /* Could ignore EIO, see spec. */
+          case EIO:
+            /* Could ignore EIO, see spec. */
 
-                /* fall through */
+            /* fall through */
 
-            default:
-                throw VideoException("read", strerror(errno));
-            }
+          default:
+            throw VideoException("read", strerror(errno));
         }
-        // This is a hack, this ts sould come from the device.
-        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+      }
+      // This is a hack, this ts sould come from the device.
+      frame_properties[PANGO_HOST_RECEPTION_TIME_US] =
+          picojson::value(pangolin::Time_us(pangolin::TimeNow()));
 
-        //            process_image(buffers[0].start);
-        memcpy(image,buffers[0].start,buffers[0].length);
+      //            process_image(buffers[0].start);
+      memcpy(image, buffers[0].start, buffers[0].length);
 
-        break;
+      break;
 
     case IO_METHOD_MMAP:
-        CLEAR (buf);
+      CLEAR(buf);
 
-        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        buf.memory = V4L2_MEMORY_MMAP;
+      buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+      buf.memory = V4L2_MEMORY_MMAP;
 
-        if (-1 == xioctl (fd, VIDIOC_DQBUF, &buf)) {
-            // Sleep for one period if wait is specified
-            if (wait) {
-              std::this_thread::sleep_for(std::chrono::microseconds(period));
-            }
-            switch (errno) {
-            case EAGAIN:
-                return 0;
-
-            case EIO:
-                /* Could ignore EIO, see spec. */
-
-                /* fall through */
-
-            default:
-                throw VideoException("VIDIOC_DQBUF", strerror(errno));
-            }
+      if (-1 == xioctl(fd, VIDIOC_DQBUF, &buf)) {
+        // Sleep for one period if wait is specified
+        if (wait) {
+          std::this_thread::sleep_for(std::chrono::microseconds(period));
         }
-        // This is a hack, this ts sould come from the device.
-        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+        switch (errno) {
+          case EAGAIN:
+            return 0;
 
-        assert (buf.index < n_buffers);
+          case EIO:
+            /* Could ignore EIO, see spec. */
 
-        //            process_image (buffers[buf.index].start);
-        memcpy(image,buffers[buf.index].start,buffers[buf.index].length);
+            /* fall through */
 
+          default:
+            throw VideoException("VIDIOC_DQBUF", strerror(errno));
+        }
+      }
+      // This is a hack, this ts sould come from the device.
+      frame_properties[PANGO_HOST_RECEPTION_TIME_US] =
+          picojson::value(pangolin::Time_us(pangolin::TimeNow()));
 
-        if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
-            throw VideoException("VIDIOC_QBUF", strerror(errno));
+      assert(buf.index < n_buffers);
 
-        break;
+      //            process_image (buffers[buf.index].start);
+      memcpy(image, buffers[buf.index].start, buffers[buf.index].length);
+
+      if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
+        throw VideoException("VIDIOC_QBUF", strerror(errno));
+
+      break;
 
     case IO_METHOD_USERPTR:
-        CLEAR (buf);
+      CLEAR(buf);
 
-        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        buf.memory = V4L2_MEMORY_USERPTR;
+      buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+      buf.memory = V4L2_MEMORY_USERPTR;
 
-        if (-1 == xioctl (fd, VIDIOC_DQBUF, &buf)) {
-            switch (errno) {
-            case EAGAIN:
-                return 0;
+      if (-1 == xioctl(fd, VIDIOC_DQBUF, &buf)) {
+        switch (errno) {
+          case EAGAIN:
+            return 0;
 
-            case EIO:
-                /* Could ignore EIO, see spec. */
+          case EIO:
+            /* Could ignore EIO, see spec. */
 
-                /* fall through */
+            /* fall through */
 
-            default:
-                throw VideoException("VIDIOC_DQBUF", strerror(errno));
-            }
+          default:
+            throw VideoException("VIDIOC_DQBUF", strerror(errno));
         }
-        // This is a hack, this ts sould come from the device.
-        frame_properties[PANGO_HOST_RECEPTION_TIME_US] = picojson::value(pangolin::Time_us(pangolin::TimeNow()));
+      }
+      // This is a hack, this ts sould come from the device.
+      frame_properties[PANGO_HOST_RECEPTION_TIME_US] =
+          picojson::value(pangolin::Time_us(pangolin::TimeNow()));
 
-        for (i = 0; i < n_buffers; ++i)
-            if (buf.m.userptr == (unsigned long) buffers[i].start
-                    && buf.length == buffers[i].length)
-                break;
+      for (i = 0; i < n_buffers; ++i)
+        if (buf.m.userptr == (unsigned long)buffers[i].start &&
+            buf.length == buffers[i].length)
+          break;
 
-        assert (i < n_buffers);
+      assert(i < n_buffers);
 
-        //            process_image ((void *) buf.m.userptr);
-        memcpy(image,(void *)buf.m.userptr,buf.length);
+      //            process_image ((void *) buf.m.userptr);
+      memcpy(image, (void*)buf.m.userptr, buf.length);
 
+      if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
+        throw VideoException("VIDIOC_QBUF", strerror(errno));
 
-        if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
-            throw VideoException("VIDIOC_QBUF", strerror(errno));
+      break;
+  }
 
-        break;
-    }
-
-    return 1;
+  return 1;
 }
 
 void V4lVideo::Stop()
 {
-    if(running) {
-        enum v4l2_buf_type type;
+  if (running) {
+    enum v4l2_buf_type type;
 
-        switch (io) {
-        case IO_METHOD_READ:
-            /* Nothing to do. */
-            break;
+    switch (io) {
+      case IO_METHOD_READ:
+        /* Nothing to do. */
+        break;
 
-        case IO_METHOD_MMAP:
-        case IO_METHOD_USERPTR:
-            type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+      case IO_METHOD_MMAP:
+      case IO_METHOD_USERPTR:
+        type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-            if (-1 == xioctl (fd, VIDIOC_STREAMOFF, &type)) {
-                // throwing on dtors is not good, commenting out for now
-                // throw VideoException("VIDIOC_STREAMOFF", strerror(errno));
-                pango_print_warn("V4lVideo::Stop() VIDIOC_STREAMOFF error: %s\n", strerror(errno));
-            }
-
-            break;
+        if (-1 == xioctl(fd, VIDIOC_STREAMOFF, &type)) {
+          // throwing on dtors is not good, commenting out for now
+          // throw VideoException("VIDIOC_STREAMOFF", strerror(errno));
+          pango_print_warn(
+              "V4lVideo::Stop() VIDIOC_STREAMOFF error: %s\n", strerror(errno));
         }
 
-        running = false;
+        break;
     }
+
+    running = false;
+  }
 }
 
 void V4lVideo::Start()
 {
-    if(!running) {
-        unsigned int i;
-        enum v4l2_buf_type type;
+  if (!running) {
+    unsigned int i;
+    enum v4l2_buf_type type;
 
-        switch (io) {
-        case IO_METHOD_READ:
-            /* Nothing to do. */
-            break;
+    switch (io) {
+      case IO_METHOD_READ:
+        /* Nothing to do. */
+        break;
 
-        case IO_METHOD_MMAP:
-            for (i = 0; i < n_buffers; ++i) {
-                struct v4l2_buffer buf;
+      case IO_METHOD_MMAP:
+        for (i = 0; i < n_buffers; ++i) {
+          struct v4l2_buffer buf;
 
-                CLEAR (buf);
+          CLEAR(buf);
 
-                buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                buf.memory      = V4L2_MEMORY_MMAP;
-                buf.index       = i;
+          buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+          buf.memory = V4L2_MEMORY_MMAP;
+          buf.index = i;
 
-                if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
-                    throw VideoException("VIDIOC_QBUF", strerror(errno));
-            }
-
-            type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-            if (-1 == xioctl (fd, VIDIOC_STREAMON, &type))
-                throw VideoException("VIDIOC_STREAMON", strerror(errno));
-
-            break;
-
-        case IO_METHOD_USERPTR:
-            for (i = 0; i < n_buffers; ++i) {
-                struct v4l2_buffer buf;
-
-                CLEAR (buf);
-
-                buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                buf.memory      = V4L2_MEMORY_USERPTR;
-                buf.index       = i;
-                buf.m.userptr   = (unsigned long) buffers[i].start;
-                buf.length      = buffers[i].length;
-
-                if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
-                    throw VideoException("VIDIOC_QBUF", strerror(errno));
-            }
-
-            type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-            if (-1 == xioctl (fd, VIDIOC_STREAMON, &type))
-                throw VideoException ("VIDIOC_STREAMON", strerror(errno));
-
-            break;
+          if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
+            throw VideoException("VIDIOC_QBUF", strerror(errno));
         }
 
-        running = true;
+        type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+        if (-1 == xioctl(fd, VIDIOC_STREAMON, &type))
+          throw VideoException("VIDIOC_STREAMON", strerror(errno));
+
+        break;
+
+      case IO_METHOD_USERPTR:
+        for (i = 0; i < n_buffers; ++i) {
+          struct v4l2_buffer buf;
+
+          CLEAR(buf);
+
+          buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+          buf.memory = V4L2_MEMORY_USERPTR;
+          buf.index = i;
+          buf.m.userptr = (unsigned long)buffers[i].start;
+          buf.length = buffers[i].length;
+
+          if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
+            throw VideoException("VIDIOC_QBUF", strerror(errno));
+        }
+
+        type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+        if (-1 == xioctl(fd, VIDIOC_STREAMON, &type))
+          throw VideoException("VIDIOC_STREAMON", strerror(errno));
+
+        break;
     }
+
+    running = true;
+  }
 }
 
 void V4lVideo::uninit_device()
 {
-    unsigned int i;
+  unsigned int i;
 
-    switch (io) {
+  switch (io) {
     case IO_METHOD_READ:
-        free (buffers[0].start);
-        break;
+      free(buffers[0].start);
+      break;
 
     case IO_METHOD_MMAP:
-        for (i = 0; i < n_buffers; ++i)
-            if (-1 == munmap (buffers[i].start, buffers[i].length))
-                throw VideoException ("munmap");
-        break;
+      for (i = 0; i < n_buffers; ++i)
+        if (-1 == munmap(buffers[i].start, buffers[i].length))
+          throw VideoException("munmap");
+      break;
 
     case IO_METHOD_USERPTR:
-        for (i = 0; i < n_buffers; ++i)
-            free (buffers[i].start);
-        break;
-    }
+      for (i = 0; i < n_buffers; ++i) free(buffers[i].start);
+      break;
+  }
 
-    free (buffers);
+  free(buffers);
 }
 
 void V4lVideo::init_read(unsigned int buffer_size)
 {
-    buffers = (buffer*)calloc (1, sizeof (buffer));
+  buffers = (buffer*)calloc(1, sizeof(buffer));
 
-    if (!buffers) {
-        throw VideoException("Out of memory\n");
-    }
+  if (!buffers) {
+    throw VideoException("Out of memory\n");
+  }
 
-    buffers[0].length = buffer_size;
-    buffers[0].start = malloc (buffer_size);
+  buffers[0].length = buffer_size;
+  buffers[0].start = malloc(buffer_size);
 
-    if (!buffers[0].start) {
-        throw VideoException("Out of memory\n");
-    }
+  if (!buffers[0].start) {
+    throw VideoException("Out of memory\n");
+  }
 }
 
 void V4lVideo::init_mmap(const char* /*dev_name*/)
 {
-    struct v4l2_requestbuffers req;
+  struct v4l2_requestbuffers req;
 
-    CLEAR (req);
+  CLEAR(req);
 
-    req.count               = 4;
-    req.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    req.memory              = V4L2_MEMORY_MMAP;
+  req.count = 4;
+  req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  req.memory = V4L2_MEMORY_MMAP;
 
-    if (-1 == xioctl (fd, VIDIOC_REQBUFS, &req)) {
-        if (EINVAL == errno) {
-            throw VideoException("does not support memory mapping", strerror(errno));
-        } else {
-            throw VideoException ("VIDIOC_REQBUFS", strerror(errno));
-        }
+  if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
+    if (EINVAL == errno) {
+      throw VideoException("does not support memory mapping", strerror(errno));
+    } else {
+      throw VideoException("VIDIOC_REQBUFS", strerror(errno));
     }
+  }
 
-    if (req.count < 2) {
-        throw VideoException("Insufficient buffer memory");
-    }
+  if (req.count < 2) {
+    throw VideoException("Insufficient buffer memory");
+  }
 
-    buffers = (buffer*)calloc(req.count, sizeof(buffer));
+  buffers = (buffer*)calloc(req.count, sizeof(buffer));
 
-    if (!buffers) {
-        throw VideoException( "Out of memory\n");
-    }
+  if (!buffers) {
+    throw VideoException("Out of memory\n");
+  }
 
-    for (n_buffers = 0; n_buffers < req.count; ++n_buffers) {
-        struct v4l2_buffer buf;
+  for (n_buffers = 0; n_buffers < req.count; ++n_buffers) {
+    struct v4l2_buffer buf;
 
-        CLEAR (buf);
+    CLEAR(buf);
 
-        buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        buf.memory      = V4L2_MEMORY_MMAP;
-        buf.index       = n_buffers;
+    buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    buf.memory = V4L2_MEMORY_MMAP;
+    buf.index = n_buffers;
 
-        if (-1 == xioctl (fd, VIDIOC_QUERYBUF, &buf))
-            throw VideoException ("VIDIOC_QUERYBUF", strerror(errno));
+    if (-1 == xioctl(fd, VIDIOC_QUERYBUF, &buf))
+      throw VideoException("VIDIOC_QUERYBUF", strerror(errno));
 
-        buffers[n_buffers].length = buf.length;
-        buffers[n_buffers].start =
-                mmap (NULL /* start anywhere */,
-                      buf.length,
-                      PROT_READ | PROT_WRITE /* required */,
-                      MAP_SHARED /* recommended */,
-                      fd, buf.m.offset);
+    buffers[n_buffers].length = buf.length;
+    buffers[n_buffers].start = mmap(
+        NULL /* start anywhere */, buf.length,
+        PROT_READ | PROT_WRITE /* required */, MAP_SHARED /* recommended */, fd,
+        buf.m.offset);
 
-        if (MAP_FAILED == buffers[n_buffers].start)
-            throw VideoException ("mmap");
-    }
+    if (MAP_FAILED == buffers[n_buffers].start) throw VideoException("mmap");
+  }
 }
 
 void V4lVideo::init_userp(const char* /*dev_name*/, unsigned int buffer_size)
 {
-    struct v4l2_requestbuffers req;
-    unsigned int page_size;
+  struct v4l2_requestbuffers req;
+  unsigned int page_size;
 
-    page_size = getpagesize ();
-    buffer_size = (buffer_size + page_size - 1) & ~(page_size - 1);
+  page_size = getpagesize();
+  buffer_size = (buffer_size + page_size - 1) & ~(page_size - 1);
 
-    CLEAR (req);
+  CLEAR(req);
 
-    req.count               = 4;
-    req.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    req.memory              = V4L2_MEMORY_USERPTR;
+  req.count = 4;
+  req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  req.memory = V4L2_MEMORY_USERPTR;
 
-    if (-1 == xioctl (fd, VIDIOC_REQBUFS, &req)) {
-        if (EINVAL == errno) {
-            throw VideoException( "Does not support user pointer i/o", strerror(errno));
-        } else {
-            throw VideoException ("VIDIOC_REQBUFS", strerror(errno));
-        }
+  if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
+    if (EINVAL == errno) {
+      throw VideoException(
+          "Does not support user pointer i/o", strerror(errno));
+    } else {
+      throw VideoException("VIDIOC_REQBUFS", strerror(errno));
     }
+  }
 
-    buffers = (buffer*)calloc(4, sizeof(buffer));
+  buffers = (buffer*)calloc(4, sizeof(buffer));
 
-    if (!buffers) {
-        throw VideoException( "Out of memory\n");
+  if (!buffers) {
+    throw VideoException("Out of memory\n");
+  }
+
+  for (n_buffers = 0; n_buffers < 4; ++n_buffers) {
+    buffers[n_buffers].length = buffer_size;
+    buffers[n_buffers].start = memalign(/* boundary */ page_size, buffer_size);
+
+    if (!buffers[n_buffers].start) {
+      throw VideoException("Out of memory\n");
     }
-
-    for (n_buffers = 0; n_buffers < 4; ++n_buffers) {
-        buffers[n_buffers].length = buffer_size;
-        buffers[n_buffers].start = memalign (/* boundary */ page_size,
-                                             buffer_size);
-
-        if (!buffers[n_buffers].start) {
-            throw VideoException( "Out of memory\n");
-        }
-    }
+  }
 }
 
-void V4lVideo::init_device(const char* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps, unsigned v4l_format, v4l2_field field)
+void V4lVideo::init_device(
+    const char* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps,
+    unsigned v4l_format, v4l2_field field)
 {
-    struct v4l2_capability cap;
-    struct v4l2_cropcap cropcap;
-    struct v4l2_crop crop;
-    struct v4l2_format fmt;
-    struct v4l2_streamparm strm;
+  struct v4l2_capability cap;
+  struct v4l2_cropcap cropcap;
+  struct v4l2_crop crop;
+  struct v4l2_format fmt;
+  struct v4l2_streamparm strm;
 
-    unsigned int min;
+  unsigned int min;
 
-    if (-1 == xioctl (fd, VIDIOC_QUERYCAP, &cap)) {
-        if (EINVAL == errno) {
-            throw VideoException("Not a V4L2 device", strerror(errno));
-        } else {
-            throw VideoException ("VIDIOC_QUERYCAP", strerror(errno));
-        }
-    }
-
-    if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-        throw VideoException("Not a video capture device");
-    }
-
-    switch (io) {
-    case IO_METHOD_READ:
-        if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
-            throw VideoException("Does not support read i/o");
-        }
-
-        break;
-
-    case IO_METHOD_MMAP:
-    case IO_METHOD_USERPTR:
-        if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-            throw VideoException("Does not support streaming i/o");
-        }
-
-        break;
-    }
-
-
-    /* Select video input, video standard and tune here. */
-
-    CLEAR (cropcap);
-
-    cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-    if (0 == xioctl (fd, VIDIOC_CROPCAP, &cropcap)) {
-        crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        crop.c = cropcap.defrect; /* reset to default */
-
-        if (-1 == xioctl (fd, VIDIOC_S_CROP, &crop)) {
-            switch (errno) {
-            case EINVAL:
-                /* Cropping not supported. */
-                break;
-            default:
-                /* Errors ignored. */
-                break;
-            }
-        }
+  if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
+    if (EINVAL == errno) {
+      throw VideoException("Not a V4L2 device", strerror(errno));
     } else {
-        /* Errors ignored. */
+      throw VideoException("VIDIOC_QUERYCAP", strerror(errno));
     }
+  }
 
-    CLEAR (fmt);
+  if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
+    throw VideoException("Not a video capture device");
+  }
 
-    if(iwidth!=0 && iheight!=0) {
-        fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        fmt.fmt.pix.width       = iwidth;
-        fmt.fmt.pix.height      = iheight;
-        fmt.fmt.pix.pixelformat = v4l_format;
-        fmt.fmt.pix.field       = field;
-
-        if (-1 == xioctl (fd, VIDIOC_S_FMT, &fmt))
-            throw VideoException("VIDIOC_S_FMT", strerror(errno));
-    }else{
-        fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-        /* Preserve original settings as set by v4l2-ctl for example */
-        if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt))
-            throw VideoException("VIDIOC_G_FMT", strerror(errno));
-    }
-
-    /* Buggy driver paranoia. */
-    min = fmt.fmt.pix.width * 2;
-    if (fmt.fmt.pix.bytesperline < min)
-        fmt.fmt.pix.bytesperline = min;
-    min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
-    if (fmt.fmt.pix.sizeimage < min)
-        fmt.fmt.pix.sizeimage = min;
-
-    /* Note VIDIOC_S_FMT may change width and height. */
-    width = fmt.fmt.pix.width;
-    height = fmt.fmt.pix.height;
-    image_size = fmt.fmt.pix.sizeimage;
-
-    if(ifps!=0)
-    {
-        CLEAR(strm);
-        strm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        strm.parm.capture.capability = V4L2_CAP_TIMEPERFRAME;
-        strm.parm.capture.timeperframe.numerator = 1;
-        strm.parm.capture.timeperframe.denominator = ifps;
-
-        if (-1 == xioctl (fd, VIDIOC_S_PARM, &fmt))
-            throw VideoException("VIDIOC_S_PARM", strerror(errno));
-
-        fps = (float)strm.parm.capture.timeperframe.denominator / strm.parm.capture.timeperframe.numerator;
-    }else{
-        fps = 0;
-    }
-
-    switch (io) {
+  switch (io) {
     case IO_METHOD_READ:
-        init_read (fmt.fmt.pix.sizeimage);
-        break;
+      if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
+        throw VideoException("Does not support read i/o");
+      }
+
+      break;
 
     case IO_METHOD_MMAP:
-        init_mmap (dev_name );
-        break;
+    case IO_METHOD_USERPTR:
+      if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
+        throw VideoException("Does not support streaming i/o");
+      }
+
+      break;
+  }
+
+  /* Select video input, video standard and tune here. */
+
+  CLEAR(cropcap);
+
+  cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+  if (0 == xioctl(fd, VIDIOC_CROPCAP, &cropcap)) {
+    crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    crop.c = cropcap.defrect; /* reset to default */
+
+    if (-1 == xioctl(fd, VIDIOC_S_CROP, &crop)) {
+      switch (errno) {
+        case EINVAL:
+          /* Cropping not supported. */
+          break;
+        default:
+          /* Errors ignored. */
+          break;
+      }
+    }
+  } else {
+    /* Errors ignored. */
+  }
+
+  CLEAR(fmt);
+
+  if (iwidth != 0 && iheight != 0) {
+    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    fmt.fmt.pix.width = iwidth;
+    fmt.fmt.pix.height = iheight;
+    fmt.fmt.pix.pixelformat = v4l_format;
+    fmt.fmt.pix.field = field;
+
+    if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
+      throw VideoException("VIDIOC_S_FMT", strerror(errno));
+  } else {
+    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+    /* Preserve original settings as set by v4l2-ctl for example */
+    if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt))
+      throw VideoException("VIDIOC_G_FMT", strerror(errno));
+  }
+
+  /* Buggy driver paranoia. */
+  min = fmt.fmt.pix.width * 2;
+  if (fmt.fmt.pix.bytesperline < min) fmt.fmt.pix.bytesperline = min;
+  min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
+  if (fmt.fmt.pix.sizeimage < min) fmt.fmt.pix.sizeimage = min;
+
+  /* Note VIDIOC_S_FMT may change width and height. */
+  width = fmt.fmt.pix.width;
+  height = fmt.fmt.pix.height;
+  image_size = fmt.fmt.pix.sizeimage;
+
+  if (ifps != 0) {
+    CLEAR(strm);
+    strm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    strm.parm.capture.capability = V4L2_CAP_TIMEPERFRAME;
+    strm.parm.capture.timeperframe.numerator = 1;
+    strm.parm.capture.timeperframe.denominator = ifps;
+
+    if (-1 == xioctl(fd, VIDIOC_S_PARM, &fmt))
+      throw VideoException("VIDIOC_S_PARM", strerror(errno));
+
+    fps = (float)strm.parm.capture.timeperframe.denominator /
+          strm.parm.capture.timeperframe.numerator;
+  } else {
+    fps = 0;
+  }
+
+  switch (io) {
+    case IO_METHOD_READ:
+      init_read(fmt.fmt.pix.sizeimage);
+      break;
+
+    case IO_METHOD_MMAP:
+      init_mmap(dev_name);
+      break;
 
     case IO_METHOD_USERPTR:
-        init_userp (dev_name, fmt.fmt.pix.sizeimage);
-        break;
-    }
+      init_userp(dev_name, fmt.fmt.pix.sizeimage);
+      break;
+  }
 
-    uint32_t bit_depth = 0;
+  uint32_t bit_depth = 0;
 
-    std::string spix="GRAY8";
-    if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_GREY) {
-        spix="GRAY8";
-        bit_depth = 8;
-    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
-        spix="YUYV422";
-        bit_depth = 8;
-    } else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY) {
-        spix="UYVY422";
-        bit_depth = 8;
-    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16) {
-        spix="GRAY16LE";
-        bit_depth = 16;
-    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y10) {
-        spix="GRAY10";
-        bit_depth = 10;
-    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y12) {
-        spix="GRAY12";
-        bit_depth = 12;
-    }else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB24) {
-        spix="RGB24";
-        bit_depth = 24;
-    }else{
-        // TODO: Add method to translate from V4L to FFMPEG type.
-        std::cerr << "V4L Format " << V4lToString(fmt.fmt.pix.pixelformat)
-                  << " not recognised. Defaulting to '" << spix << std::endl;
-    }
+  std::string spix = "GRAY8";
+  if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_GREY) {
+    spix = "GRAY8";
+    bit_depth = 8;
+  } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+    spix = "YUYV422";
+    bit_depth = 8;
+  } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY) {
+    spix = "UYVY422";
+    bit_depth = 8;
+  } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y16) {
+    spix = "GRAY16LE";
+    bit_depth = 16;
+  } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y10) {
+    spix = "GRAY10";
+    bit_depth = 10;
+  } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_Y12) {
+    spix = "GRAY12";
+    bit_depth = 12;
+  } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB24) {
+    spix = "RGB24";
+    bit_depth = 24;
+  } else {
+    // TODO: Add method to translate from V4L to FFMPEG type.
+    std::cerr << "V4L Format " << V4lToString(fmt.fmt.pix.pixelformat)
+              << " not recognised. Defaulting to '" << spix << std::endl;
+  }
 
-    PixelFormat pfmt = PixelFormatFromString(spix);
-    pfmt.channel_bit_depth = bit_depth;
-    const StreamInfo stream_info(pfmt, width, height, (width*pfmt.bpp)/8, 0);
+  PixelFormat pfmt = PixelFormatFromString(spix);
+  pfmt.channel_bit_depth = bit_depth;
+  const StreamInfo stream_info(pfmt, width, height, (width * pfmt.bpp) / 8, 0);
 
-    streams.push_back(stream_info);
+  streams.push_back(stream_info);
 }
 
 bool V4lVideo::SetExposure(int exposure_us)
 {
-    struct v4l2_ext_controls ctrls = {};
-    struct v4l2_ext_control ctrl = {};
+  struct v4l2_ext_controls ctrls = {};
+  struct v4l2_ext_control ctrl = {};
 
-    ctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
-    // v4l specifies exposure in 100us units
-    ctrl.value = int(exposure_us / 100.0);
-    ctrls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
-    ctrls.count = 1;
-    ctrls.controls = &ctrl;
+  ctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
+  // v4l specifies exposure in 100us units
+  ctrl.value = int(exposure_us / 100.0);
+  ctrls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
+  ctrls.count = 1;
+  ctrls.controls = &ctrl;
 
-    if (-1 == xioctl(fd, VIDIOC_S_EXT_CTRLS, &ctrls)){
-        pango_print_warn("V4lVideo::SetExposure() ioctl error: %s\n", strerror(errno));
-        return false;
-    } else {
-        return true;
-    }
+  if (-1 == xioctl(fd, VIDIOC_S_EXT_CTRLS, &ctrls)) {
+    pango_print_warn(
+        "V4lVideo::SetExposure() ioctl error: %s\n", strerror(errno));
+    return false;
+  } else {
+    return true;
+  }
 }
 
 bool V4lVideo::GetExposure(int& exposure_us)
 {
-    struct v4l2_ext_controls ctrls = {};
-    struct v4l2_ext_control ctrl = {};
+  struct v4l2_ext_controls ctrls = {};
+  struct v4l2_ext_control ctrl = {};
 
-    ctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
-    ctrls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
-    ctrls.count = 1;
-    ctrls.controls = &ctrl;
+  ctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
+  ctrls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
+  ctrls.count = 1;
+  ctrls.controls = &ctrl;
 
-    if (-1 == xioctl(fd, VIDIOC_G_EXT_CTRLS, &ctrls)){
-        pango_print_warn("V4lVideo::GetExposure() ioctl error: %s\n", strerror(errno));
-        return false;
-    } else {
-        // v4l specifies exposure in 100us units
-        exposure_us = ctrls.controls->value * 100;
-        return true;
-    }
+  if (-1 == xioctl(fd, VIDIOC_G_EXT_CTRLS, &ctrls)) {
+    pango_print_warn(
+        "V4lVideo::GetExposure() ioctl error: %s\n", strerror(errno));
+    return false;
+  } else {
+    // v4l specifies exposure in 100us units
+    exposure_us = ctrls.controls->value * 100;
+    return true;
+  }
 }
 
 bool V4lVideo::SetGain(float gain)
 {
-    struct v4l2_control control;
-    control.id = V4L2_CID_GAIN;
-    control.value = gain;
+  struct v4l2_control control;
+  control.id = V4L2_CID_GAIN;
+  control.value = gain;
 
-    if (-1 == xioctl (fd, VIDIOC_S_CTRL, &control)) {
-        pango_print_warn("V4lVideo::SetGain() ioctl error: %s\n", strerror(errno));
-        return false;
-    } else {
-        return true;
-    }
+  if (-1 == xioctl(fd, VIDIOC_S_CTRL, &control)) {
+    pango_print_warn("V4lVideo::SetGain() ioctl error: %s\n", strerror(errno));
+    return false;
+  } else {
+    return true;
+  }
 }
 
 bool V4lVideo::GetGain(float& gain)
 {
-    struct v4l2_control control;
-    control.id = V4L2_CID_GAIN;
+  struct v4l2_control control;
+  control.id = V4L2_CID_GAIN;
 
-    if (-1 == xioctl (fd, VIDIOC_G_CTRL, &control)) {
-        pango_print_warn("V4lVideo::GetGain() ioctl error: %s\n", strerror(errno));
-        return false;
-    } else {
-        gain = control.value;
-        return true;
-    }
+  if (-1 == xioctl(fd, VIDIOC_G_CTRL, &control)) {
+    pango_print_warn("V4lVideo::GetGain() ioctl error: %s\n", strerror(errno));
+    return false;
+  } else {
+    gain = control.value;
+    return true;
+  }
 }
 
 void V4lVideo::close_device()
 {
-    if (-1 == close (fd))
-        throw VideoException("close");
+  if (-1 == close(fd)) throw VideoException("close");
 
-    fd = -1;
+  fd = -1;
 }
 
 void V4lVideo::open_device(const char* dev_name)
 {
-    struct stat st;
+  struct stat st;
 
-    if (-1 == stat (dev_name, &st)) {
-        throw VideoException("Cannot stat device", strerror(errno));
-    }
+  if (-1 == stat(dev_name, &st)) {
+    throw VideoException("Cannot stat device", strerror(errno));
+  }
 
-    if (!S_ISCHR (st.st_mode)) {
-        throw VideoException("Not device");
-    }
+  if (!S_ISCHR(st.st_mode)) {
+    throw VideoException("Not device");
+  }
 
-    fd = open (dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
+  fd = open(dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
 
-    if (-1 == fd) {
-        throw VideoException("Cannot open device");
-    }
+  if (-1 == fd) {
+    throw VideoException("Cannot open device");
+  }
 }
 
-int V4lVideo::IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code)
+int V4lVideo::IoCtrl(
+    uint8_t unit, uint8_t ctrl, unsigned char* data, int len,
+    UvcRequestCode req_code)
 {
-    struct uvc_xu_control_query xu;
-    xu.unit = unit;
-    xu.selector = ctrl;
-    xu.size = len;
-    xu.data = data;
-    xu.query = req_code;
+  struct uvc_xu_control_query xu;
+  xu.unit = unit;
+  xu.selector = ctrl;
+  xu.size = len;
+  xu.data = data;
+  xu.query = req_code;
 
-    int ret = ioctl(fd, UVCIOC_CTRL_QUERY, &xu);
-    if (ret == -1) {
-        pango_print_warn("V4lVideo::IoCtrl() ioctl error: %d\n", errno);
-        return ret;
-    }
-    return 0;
+  int ret = ioctl(fd, UVCIOC_CTRL_QUERY, &xu);
+  if (ret == -1) {
+    pango_print_warn("V4lVideo::IoCtrl() ioctl error: %d\n", errno);
+    return ret;
+  }
+  return 0;
 }
 
 //! Access JSON properties of device
 const picojson::value& V4lVideo::DeviceProperties() const
 {
-        return device_properties;
+  return device_properties;
 }
 
 //! Access JSON properties of most recently captured frame
 const picojson::value& V4lVideo::FrameProperties() const
 {
-    return frame_properties;
+  return frame_properties;
 }
 
 PANGOLIN_REGISTER_FACTORY(V4lVideo)
 {
-    struct V4lVideoFactory final : public TypedFactoryInterface<VideoInterface> {
-        std::map<std::string,Precedence> Schemes() const override
-        {
-            return {{"v4l",0}, {"uvc",20}};
-        }
-        const char* Description() const override
-        {
-            return "Use V4L to open a video device";
-        }
-        ParamSet Params() const override
-        {
-            return {{
-                {"method","mmap","Possible values are: read, mmap, userptr"},
-                {"size","0x0","Desired image size"},
-                {"format","YUYV422","Desired image format"},
-                {"period","50000","Period in microsecs"},
-                {"ExposureTime","10000","Exposure time in microsecs"},
-                {"Gain","1","Image gain parameter"}
-            }};
-        }
-        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            ParamReader reader(Params(), uri);
+  struct V4lVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+    std::map<std::string, Precedence> Schemes() const override
+    {
+      return {{"v4l", 0}, {"uvc", 20}};
+    }
+    const char* Description() const override
+    {
+      return "Use V4L to open a video device";
+    }
+    ParamSet Params() const override
+    {
+      return {
+          {{"method", "mmap", "Possible values are: read, mmap, userptr"},
+           {"size", "0x0", "Desired image size"},
+           {"format", "YUYV422", "Desired image format"},
+           {"period", "50000", "Period in microsecs"},
+           {"ExposureTime", "10000", "Exposure time in microsecs"},
+           {"Gain", "1", "Image gain parameter"}}};
+    }
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    {
+      ParamReader reader(Params(), uri);
 
-            const std::string smethod = reader.Get<std::string>("method");
-            const ImageDim desired_dim = reader.Get<ImageDim>("size");
-            const std::string sformat = reader.Get<std::string>("format");
+      const std::string smethod = reader.Get<std::string>("method");
+      const ImageDim desired_dim = reader.Get<ImageDim>("size");
+      const std::string sformat = reader.Get<std::string>("format");
 
-            unsigned format = V4L2_PIX_FMT_YUYV;
+      unsigned format = V4L2_PIX_FMT_YUYV;
 
-            if(sformat == "GRAY8") {
-                format = V4L2_PIX_FMT_GREY;
-            } else if(sformat == "YUYV422") {
-                format = V4L2_PIX_FMT_YUYV;
-            } else if(sformat == "UYVY422") {
-                format = V4L2_PIX_FMT_UYVY;
-            } else if(sformat == "GRAY16LE") {
-                format = V4L2_PIX_FMT_Y16;
-            } else if(sformat == "GRAY10") {
-                format = V4L2_PIX_FMT_Y10;
-            } else if(sformat == "GRAY12") {
-                format = V4L2_PIX_FMT_Y12;
-            } else if(sformat == "RGB24") {
-                format = V4L2_PIX_FMT_RGB24;
-            }
+      if (sformat == "GRAY8") {
+        format = V4L2_PIX_FMT_GREY;
+      } else if (sformat == "YUYV422") {
+        format = V4L2_PIX_FMT_YUYV;
+      } else if (sformat == "UYVY422") {
+        format = V4L2_PIX_FMT_UYVY;
+      } else if (sformat == "GRAY16LE") {
+        format = V4L2_PIX_FMT_Y16;
+      } else if (sformat == "GRAY10") {
+        format = V4L2_PIX_FMT_Y10;
+      } else if (sformat == "GRAY12") {
+        format = V4L2_PIX_FMT_Y12;
+      } else if (sformat == "RGB24") {
+        format = V4L2_PIX_FMT_RGB24;
+      }
 
-            io_method method = IO_METHOD_MMAP;
+      io_method method = IO_METHOD_MMAP;
 
-            if(smethod == "read" ) {
-                method = IO_METHOD_READ;
-            }else if(smethod == "mmap" ) {
-                method = IO_METHOD_MMAP;
-            }else if(smethod == "userptr" ) {
-                method = IO_METHOD_USERPTR;
-            }
+      if (smethod == "read") {
+        method = IO_METHOD_READ;
+      } else if (smethod == "mmap") {
+        method = IO_METHOD_MMAP;
+      } else if (smethod == "userptr") {
+        method = IO_METHOD_USERPTR;
+      }
 
-            uint32_t period = reader.Get<int>("period");
+      uint32_t period = reader.Get<int>("period");
 
-            V4lVideo* video_raw = new V4lVideo(uri.url.c_str(), period, method, desired_dim.x, desired_dim.y, format);
-            if(video_raw  && uri.Contains("ExposureTime")) {
-                static_cast<V4lVideo*>(video_raw)->SetExposure(reader.Get<int>("ExposureTime"));
-            }
-            if(video_raw  && uri.Contains("Gain")) {
-                static_cast<V4lVideo*>(video_raw)->SetGain(reader.Get<int>("Gain"));
-            }
-            return std::unique_ptr<VideoInterface>(video_raw);
-        }
-    };
+      V4lVideo* video_raw = new V4lVideo(
+          uri.url.c_str(), period, method, desired_dim.x, desired_dim.y,
+          format);
+      if (video_raw && uri.Contains("ExposureTime")) {
+        static_cast<V4lVideo*>(video_raw)->SetExposure(
+            reader.Get<int>("ExposureTime"));
+      }
+      if (video_raw && uri.Contains("Gain")) {
+        static_cast<V4lVideo*>(video_raw)->SetGain(reader.Get<int>("Gain"));
+      }
+      return std::unique_ptr<VideoInterface>(video_raw);
+    }
+  };
 
-    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<V4lVideoFactory>());
+  return FactoryRegistry::I()->RegisterFactory<VideoInterface>(
+      std::make_shared<V4lVideoFactory>());
 }
 
-
-}
+}  // namespace pangolin

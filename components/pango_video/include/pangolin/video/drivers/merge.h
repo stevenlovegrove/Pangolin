@@ -27,43 +27,46 @@
 
 #pragma once
 
-#include <pangolin/video/video_interface.h>
 #include <pangolin/video/iostream_operators.h>
+#include <pangolin/video/video_interface.h>
 
 namespace pangolin
 {
 
 // Take N streams, and place them into one big buffer.
-class PANGOLIN_EXPORT MergeVideo : public VideoInterface, public VideoFilterInterface
+class PANGOLIN_EXPORT MergeVideo : public VideoInterface,
+                                   public VideoFilterInterface
 {
-public:
-    MergeVideo(std::unique_ptr<VideoInterface>& src, const std::vector<Point>& stream_pos, size_t w, size_t h);
-    ~MergeVideo();
-    
-    void Start() override;
-    
-    void Stop() override;
+  public:
+  MergeVideo(
+      std::unique_ptr<VideoInterface>& src,
+      const std::vector<Point>& stream_pos, size_t w, size_t h);
+  ~MergeVideo();
 
-    size_t SizeBytes() const override;
+  void Start() override;
 
-    const std::vector<StreamInfo>& Streams() const override;
-    
-    bool GrabNext( unsigned char* image, bool wait = true ) override;
-    
-    bool GrabNewest( unsigned char* image, bool wait = true ) override;
+  void Stop() override;
 
-    std::vector<VideoInterface*>& InputStreams() override;
-    
-protected:
-    void CopyBuffer(unsigned char* dst_bytes, unsigned char* src_bytes);
+  size_t SizeBytes() const override;
 
-    std::unique_ptr<VideoInterface> src;
-    std::vector<VideoInterface*> videoin;
-    std::unique_ptr<uint8_t[]> buffer;
-    std::vector<Point> stream_pos;
+  const std::vector<StreamInfo>& Streams() const override;
 
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
+  bool GrabNext(unsigned char* image, bool wait = true) override;
+
+  bool GrabNewest(unsigned char* image, bool wait = true) override;
+
+  std::vector<VideoInterface*>& InputStreams() override;
+
+  protected:
+  void CopyBuffer(unsigned char* dst_bytes, unsigned char* src_bytes);
+
+  std::unique_ptr<VideoInterface> src;
+  std::vector<VideoInterface*> videoin;
+  std::unique_ptr<uint8_t[]> buffer;
+  std::vector<Point> stream_pos;
+
+  std::vector<StreamInfo> streams;
+  size_t size_bytes;
 };
 
-}
+}  // namespace pangolin

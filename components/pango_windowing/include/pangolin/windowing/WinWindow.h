@@ -27,63 +27,59 @@
 
 #pragma once
 
-#include <string>
 #include <pangolin/platform.h>
 #include <pangolin/windowing/window.h>
 #include <windowsx.h>
 
+#include <string>
+
 namespace pangolin
 {
 
-struct WinWindow : public WindowInterface
-{
-    WinWindow(
-        const std::string& title, int width, int height
-    );
+struct WinWindow : public WindowInterface {
+  WinWindow(const std::string& title, int width, int height);
 
-    ~WinWindow();
+  ~WinWindow();
 
-    void Move(int x, int y) override;
+  void Move(int x, int y) override;
 
-    void Resize(unsigned int w, unsigned int h) override;
+  void Resize(unsigned int w, unsigned int h) override;
 
-    void ShowFullscreen(const TrueFalseToggle on_off) override;
+  void ShowFullscreen(const TrueFalseToggle on_off) override;
 
-    void MakeCurrent() override;
+  void MakeCurrent() override;
 
-    void RemoveCurrent() override;
+  void RemoveCurrent() override;
 
-    void ProcessEvents() override;
+  void ProcessEvents() override;
 
-    void SwapBuffers() override;
+  void SwapBuffers() override;
 
-    HGLRC GetGLRenderContext()
-    {
-        return hGLRC;
-    }
+  HGLRC GetGLRenderContext() { return hGLRC; }
 
-private:
-    void StartFullScreen();
-    void StopFullScreen();
+  private:
+  void StartFullScreen();
+  void StopFullScreen();
 
-    static LRESULT APIENTRY WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+  static LRESULT APIENTRY
+  WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-    LRESULT HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam);
+  LRESULT HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam);
 
-    void RegisterThisClass(HMODULE hCurrentInst);
+  void RegisterThisClass(HMODULE hCurrentInst);
 
-    void SetupPixelFormat(HDC hdc);
+  void SetupPixelFormat(HDC hdc);
 
-    void SetupPalette(HDC hDC);
+  void SetupPalette(HDC hDC);
 
-    // Owns the Window
-    HWND hWnd;
-    HDC hDC;
-    HGLRC hGLRC;
-    HPALETTE hPalette;
-    bool bIsFullscreen;
-    RECT cWindowedRect;
-    float afLastMousePos[2];
+  // Owns the Window
+  HWND hWnd;
+  HDC hDC;
+  HGLRC hGLRC;
+  HPALETTE hPalette;
+  bool bIsFullscreen;
+  RECT cWindowedRect;
+  float afLastMousePos[2];
 };
 
-}
+}  // namespace pangolin

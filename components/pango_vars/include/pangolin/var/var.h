@@ -27,161 +27,144 @@
 
 #pragma once
 
-#include <stdexcept>
-#include <string.h>
-#include <cmath>
-
 #include <pangolin/utils/is_streamable.h>
+#include <pangolin/var/varstate.h>
 #include <pangolin/var/varvalue.h>
 #include <pangolin/var/varwrapper.h>
-#include <pangolin/var/varstate.h>
+#include <string.h>
+
+#include <cmath>
+#include <stdexcept>
 
 namespace pangolin
 {
 
-template<typename T>
+template <typename T>
 class Var
 {
-public:
-    static T& Attach( T& variable, const VarMeta& meta ) {
-        VarState::I().AttachVar<T&>(variable,meta);
-        return variable;
-    }
+  public:
+  static T& Attach(T& variable, const VarMeta& meta)
+  {
+    VarState::I().AttachVar<T&>(variable, meta);
+    return variable;
+  }
 
-    static T& Attach( const std::string& name, T& variable )
-    {
-        return Attach(variable, VarMeta(name));
-    }
+  static T& Attach(const std::string& name, T& variable)
+  {
+    return Attach(variable, VarMeta(name));
+  }
 
-    static T& Attach(
-        const std::string& name, T& variable,
-        double min, double max, bool logscale = false
-    ) {
-        return Attach(variable, VarMeta(name, min, max, DefaultIncrementForType<T>(min,max), META_FLAG_NONE, logscale));
-    }
+  static T& Attach(
+      const std::string& name, T& variable, double min, double max,
+      bool logscale = false)
+  {
+    return Attach(
+        variable, VarMeta(
+                      name, min, max, DefaultIncrementForType<T>(min, max),
+                      META_FLAG_NONE, logscale));
+  }
 
-    static T& Attach( const std::string& name, T& variable, int flags )
-    {
-        return Attach(variable, VarMeta(name, 0., 0., 0., flags) );
-    }
+  static T& Attach(const std::string& name, T& variable, int flags)
+  {
+    return Attach(variable, VarMeta(name, 0., 0., 0., flags));
+  }
 
-    static T& Attach( const std::string& name, T& variable, bool toggle )
-    {
-        return Attach(variable, VarMeta(name, 0., 0., 0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE) );
-    }
+  static T& Attach(const std::string& name, T& variable, bool toggle)
+  {
+    return Attach(
+        variable,
+        VarMeta(name, 0., 0., 0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE));
+  }
 
-    ~Var()
-    {
-    }
+  ~Var() {}
 
-    Var( const std::shared_ptr<VarValueGeneric>& v )
-        : var(InitialiseFromPreviouslyTypedVar<T>(v))
-    {
-    }
+  Var(const std::shared_ptr<VarValueGeneric>& v) :
+      var(InitialiseFromPreviouslyTypedVar<T>(v))
+  {
+  }
 
-    Var( const T& value, const VarMeta& meta )
-        : var(InitialiseFromPreviouslyTypedVar<T>(VarState::I().GetOrCreateVar<T>(value, meta)))
-    {
-    }
+  Var(const T& value, const VarMeta& meta) :
+      var(InitialiseFromPreviouslyTypedVar<T>(
+          VarState::I().GetOrCreateVar<T>(value, meta)))
+  {
+  }
 
-    Var( const std::string& name, const T& value = T() )
-        : Var(value, VarMeta(name))
-    {
-    }
+  Var(const std::string& name, const T& value = T()) : Var(value, VarMeta(name))
+  {
+  }
 
-    Var(const std::string& name, const T& value, int flags)
-        : Var(value, VarMeta(name, 0., 0.,0., flags))
-    {
-    }
-     
+  Var(const std::string& name, const T& value, int flags) :
+      Var(value, VarMeta(name, 0., 0., 0., flags))
+  {
+  }
 
-    Var(const std::string& name, const T& value, bool toggle)
-        : Var(value, VarMeta(name, 0., 0.,0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE))
-    {
-    }
+  Var(const std::string& name, const T& value, bool toggle) :
+      Var(value,
+          VarMeta(name, 0., 0., 0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE))
+  {
+  }
 
-    Var(const std::string& name, const T& value,
-        double min, double max, bool logscale = false)
-        : Var(value, VarMeta(name, min, max, DefaultIncrementForType<T>(min,max), META_FLAG_NONE, logscale))
-    {
-    }
+  Var(const std::string& name, const T& value, double min, double max,
+      bool logscale = false) :
+      Var(value, VarMeta(
+                     name, min, max, DefaultIncrementForType<T>(min, max),
+                     META_FLAG_NONE, logscale))
+  {
+  }
 
-    void Reset()
-    {
-        var->Reset();
-    }
+  void Reset() { var->Reset(); }
 
-    void Detach()
-    {
-        VarState::I().Remove(Meta().full_name);
-    }
+  void Detach() { VarState::I().Remove(Meta().full_name); }
 
-    const T& Get() const
-    {
-        return var->Get();
-    }
+  const T& Get() const { return var->Get(); }
 
-    operator const T& () const
-    {
-        return Get();
-    }
+  operator const T&() const { return Get(); }
 
-    const T* operator->()
-    {
-        return &(var->Get());
-    }
+  const T* operator->() { return &(var->Get()); }
 
-    Var<T>& operator=(const T& val)
-    {
-        var->Set(val);
-        return *this;
-    }
+  Var<T>& operator=(const T& val)
+  {
+    var->Set(val);
+    return *this;
+  }
 
-    Var<T>& operator=(const Var<T>& v)
-    {
-        var->Set(v.var->Get());
-        return *this;
-    }
+  Var<T>& operator=(const Var<T>& v)
+  {
+    var->Set(v.var->Get());
+    return *this;
+  }
 
-    VarMeta& Meta()
-    {
-        return var->Meta();
-    }
+  VarMeta& Meta() { return var->Meta(); }
 
-    const VarMeta& Meta() const
-    {
-        return var->Meta();
-    }
+  const VarMeta& Meta() const { return var->Meta(); }
 
-    bool GuiChanged()
-    {
-        return Meta().gui_changed && !(Meta().gui_changed = false);
-    }
+  bool GuiChanged()
+  {
+    return Meta().gui_changed && !(Meta().gui_changed = false);
+  }
 
-    std::shared_ptr<VarValueT<T>> Ref()
-    {
-        return var;
-    }
+  std::shared_ptr<VarValueT<T>> Ref() { return var; }
 
-    // Holds reference to stored variable object
-    // N.B. mutable because it is a cached value and Get() is advertised as const.
-    mutable std::shared_ptr<VarValueT<T>> var;
+  // Holds reference to stored variable object
+  // N.B. mutable because it is a cached value and Get() is advertised as const.
+  mutable std::shared_ptr<VarValueT<T>> var;
 };
 
-inline Var<bool> Button(const std::string& name){
-    return Var(true, VarMeta(name, 0., 0.,0., META_FLAG_NONE));
+inline Var<bool> Button(const std::string& name)
+{
+  return Var(true, VarMeta(name, 0., 0., 0., META_FLAG_NONE));
 }
 
-inline Var<bool> Checkbox(const std::string& name, bool val){
-    return Var(val, VarMeta(name, 0., 0.,0., META_FLAG_TOGGLE));
+inline Var<bool> Checkbox(const std::string& name, bool val)
+{
+  return Var(val, VarMeta(name, 0., 0., 0., META_FLAG_TOGGLE));
 }
 
-
-template<typename T>
+template <typename T>
 inline std::ostream& operator<<(std::ostream& s, Var<T>& rhs)
 {
-    s << rhs.operator const T &();
-    return s;
+  s << rhs.operator const T&();
+  return s;
 }
 
-}
+}  // namespace pangolin

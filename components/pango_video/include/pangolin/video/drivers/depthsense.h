@@ -27,12 +27,12 @@
 
 #pragma once
 
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-
-#include <pangolin/video/video_interface.h>
 #include <pangolin/video/iostream_operators.h>
+#include <pangolin/video/video_interface.h>
+
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 
 // DepthSense SDK for SoftKinetic cameras from Creative
 #include <DepthSense.hxx>
@@ -40,131 +40,137 @@
 namespace pangolin
 {
 
-enum DepthSenseSensorType
-{
-    DepthSenseUnassigned = -1,
-    DepthSenseRgb = 0,
-    DepthSenseDepth
+enum DepthSenseSensorType {
+  DepthSenseUnassigned = -1,
+  DepthSenseRgb = 0,
+  DepthSenseDepth
 };
 
 // Video class that outputs test video signal.
-class PANGOLIN_EXPORT DepthSenseVideo :
-        public VideoInterface, public VideoPropertiesInterface
+class PANGOLIN_EXPORT DepthSenseVideo : public VideoInterface,
+                                        public VideoPropertiesInterface
 {
-public:
-    DepthSenseVideo(DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri);
-    ~DepthSenseVideo();
-    
-    //! Implement VideoInput::Start()
-    void Start();
-    
-    //! Implement VideoInput::Stop()
-    void Stop();
+  public:
+  DepthSenseVideo(
+      DepthSense::Device device, DepthSenseSensorType s1,
+      DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1,
+      unsigned int fps2, const Uri& uri);
+  ~DepthSenseVideo();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+  //! Implement VideoInput::Start()
+  void Start();
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
-    
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
-    
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
-    
-    //! Implement VideoInput::DeviceProperties()
-    const picojson::value& DeviceProperties() const {
-        return device_properties;
-    }
+  //! Implement VideoInput::Stop()
+  void Stop();
 
-    //! Implement VideoInput::DeviceProperties()
-    const picojson::value& FrameProperties() const {
-        return frame_properties;
-    }
-protected:
-    void onNewColorSample(DepthSense::ColorNode node, DepthSense::ColorNode::NewSampleReceivedData data);
-    void onNewDepthSample(DepthSense::DepthNode node, DepthSense::DepthNode::NewSampleReceivedData data);
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const;
 
-    struct SensorConfig
-    {
-        DepthSenseSensorType type;
-        ImageDim dim;
-        unsigned int fps;
-    };
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const;
 
-    void UpdateParameters(const DepthSense::Node& node, const Uri& uri);
-    void ConfigureNodes(const Uri& uri);
-    void ConfigureDepthNode(const SensorConfig& sensorConfig, const Uri& uri);
-    void ConfigureColorNode(const SensorConfig& sensorConfig, const Uri& uri);
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    double GetDeltaTime() const;
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    std::vector<StreamInfo> streams;
-    picojson::value device_properties;
-    picojson::value frame_properties;
-    picojson::value* streams_properties;
+  //! Implement VideoInput::DeviceProperties()
+  const picojson::value& DeviceProperties() const { return device_properties; }
 
+  //! Implement VideoInput::DeviceProperties()
+  const picojson::value& FrameProperties() const { return frame_properties; }
 
-    DepthSense::Device device;
-    DepthSense::DepthNode g_dnode;
-    DepthSense::ColorNode g_cnode;
+  protected:
+  void onNewColorSample(
+      DepthSense::ColorNode node,
+      DepthSense::ColorNode::NewSampleReceivedData data);
+  void onNewDepthSample(
+      DepthSense::DepthNode node,
+      DepthSense::DepthNode::NewSampleReceivedData data);
 
-    unsigned char* fill_image;
+  struct SensorConfig {
+    DepthSenseSensorType type;
+    ImageDim dim;
+    unsigned int fps;
+  };
 
-    int depthmap_stream;
-    int rgb_stream;
+  void UpdateParameters(const DepthSense::Node& node, const Uri& uri);
+  void ConfigureNodes(const Uri& uri);
+  void ConfigureDepthNode(const SensorConfig& sensorConfig, const Uri& uri);
+  void ConfigureColorNode(const SensorConfig& sensorConfig, const Uri& uri);
 
-    int gotDepth;
-    int gotColor;
-    std::mutex update_mutex;
-    std::condition_variable cond_image_filled;
-    std::condition_variable cond_image_requested;
+  double GetDeltaTime() const;
 
-    SensorConfig sensorConfig[2];
+  std::vector<StreamInfo> streams;
+  picojson::value device_properties;
+  picojson::value frame_properties;
+  picojson::value* streams_properties;
 
-    bool enableDepth;
-    bool enableColor;
-    double depthTs;
-    double colorTs;
+  DepthSense::Device device;
+  DepthSense::DepthNode g_dnode;
+  DepthSense::ColorNode g_cnode;
 
-    size_t size_bytes;
+  unsigned char* fill_image;
+
+  int depthmap_stream;
+  int rgb_stream;
+
+  int gotDepth;
+  int gotColor;
+  std::mutex update_mutex;
+  std::condition_variable cond_image_filled;
+  std::condition_variable cond_image_requested;
+
+  SensorConfig sensorConfig[2];
+
+  bool enableDepth;
+  bool enableColor;
+  double depthTs;
+  double colorTs;
+
+  size_t size_bytes;
 };
 
 class DepthSenseContext
 {
-    friend class DepthSenseVideo;
+  friend class DepthSenseVideo;
 
-public:
-    // Singleton Instance
-    static DepthSenseContext& I();
+  public:
+  // Singleton Instance
+  static DepthSenseContext& I();
 
-    DepthSenseVideo* GetDepthSenseVideo(size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2, const Uri& uri);
+  DepthSenseVideo* GetDepthSenseVideo(
+      size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2,
+      ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2,
+      const Uri& uri);
 
-protected:
-    // Protected Constructor 
-    DepthSenseContext();
-    ~DepthSenseContext();
+  protected:
+  // Protected Constructor
+  DepthSenseContext();
+  ~DepthSenseContext();
 
-    DepthSense::Context& Context();
+  DepthSense::Context& Context();
 
-    void NewDeviceRunning();
-    void DeviceClosing();
+  void NewDeviceRunning();
+  void DeviceClosing();
 
-    void StartNodes();
-    void StopNodes();
+  void StartNodes();
+  void StopNodes();
 
-    void EventLoop();
+  void EventLoop();
 
-    void onDeviceConnected(DepthSense::Context context, DepthSense::Context::DeviceAddedData data);
-    void onDeviceDisconnected(DepthSense::Context context, DepthSense::Context::DeviceRemovedData data);
+  void onDeviceConnected(
+      DepthSense::Context context, DepthSense::Context::DeviceAddedData data);
+  void onDeviceDisconnected(
+      DepthSense::Context context, DepthSense::Context::DeviceRemovedData data);
 
-    DepthSense::Context g_context;
+  DepthSense::Context g_context;
 
-    std::thread event_thread;
-    bool is_running;
+  std::thread event_thread;
+  bool is_running;
 
-    int running_devices;
+  int running_devices;
 };
 
-}
+}  // namespace pangolin

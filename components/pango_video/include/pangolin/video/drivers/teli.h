@@ -27,12 +27,12 @@
 
 #pragma once
 
-#include <pangolin/video/video_interface.h>
 #include <pangolin/utils/timer.h>
+#include <pangolin/video/video_interface.h>
 
 #if defined(_WIN_)
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #endif
 
 #include <TeliCamApi.h>
@@ -41,82 +41,83 @@ namespace pangolin
 {
 
 // Video class that outputs test video signal.
-class PANGOLIN_EXPORT TeliVideo : public VideoInterface, public VideoPropertiesInterface,
-        public BufferAwareVideoInterface, public GenicamVideoInterface
+class PANGOLIN_EXPORT TeliVideo : public VideoInterface,
+                                  public VideoPropertiesInterface,
+                                  public BufferAwareVideoInterface,
+                                  public GenicamVideoInterface
 {
-public:
-    TeliVideo(const Params &p);
-    ~TeliVideo();
+  public:
+  TeliVideo(const Params& p);
+  ~TeliVideo();
 
-    Params OpenCameraAndGetRemainingParameters(Params &params);
-    
-    //! Implement VideoInput::Start()
-    void Start();
-    
-    //! Implement VideoInput::Stop()
-    void Stop();
+  Params OpenCameraAndGetRemainingParameters(Params& params);
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+  //! Implement VideoInput::Start()
+  void Start();
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
-    
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
-    
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::Stop()
+  void Stop();
 
-    inline Teli::CAM_HANDLE GetCameraHandle() {
-        return cam;
-    }
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const;
 
-    inline Teli::CAM_STRM_HANDLE GetCameraStreamHandle() {
-        return strm;
-    }
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const;
 
-    bool GetParameter(const std::string& name, std::string& result);
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    bool SetParameter(const std::string& name, const std::string& value);
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    //! Returns number of available frames
-    uint32_t AvailableFrames() const;
+  inline Teli::CAM_HANDLE GetCameraHandle() { return cam; }
 
-    //! Drops N frames in the queue starting from the oldest
-    //! returns false if less than n frames arae available
-    bool DropNFrames(uint32_t n);
+  inline Teli::CAM_STRM_HANDLE GetCameraStreamHandle() { return strm; }
 
-    //! Access JSON properties of device
-    const picojson::value& DeviceProperties() const;
+  bool GetParameter(const std::string& name, std::string& result);
 
-    //! Access JSON properties of most recently captured frame
-    const picojson::value& FrameProperties() const;
+  bool SetParameter(const std::string& name, const std::string& value);
 
-    void PopulateEstimatedCenterCaptureTime(pangolin::basetime host_reception_time);
+  //! Returns number of available frames
+  uint32_t AvailableFrames() const;
 
-protected:
-    void Initialise();
-    void InitPangoDeviceProperties();
-    void SetDeviceParams(const Params &p);
-    void SetNodeValStr(Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string node_str, std::string val_str);
+  //! Drops N frames in the queue starting from the oldest
+  //! returns false if less than n frames arae available
+  bool DropNFrames(uint32_t n);
 
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
+  //! Access JSON properties of device
+  const picojson::value& DeviceProperties() const;
 
-    Teli::CAM_HANDLE cam;
-    Teli::CAM_STRM_HANDLE strm;
+  //! Access JSON properties of most recently captured frame
+  const picojson::value& FrameProperties() const;
+
+  void PopulateEstimatedCenterCaptureTime(
+      pangolin::basetime host_reception_time);
+
+  protected:
+  void Initialise();
+  void InitPangoDeviceProperties();
+  void SetDeviceParams(const Params& p);
+  void SetNodeValStr(
+      Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string node_str,
+      std::string val_str);
+
+  std::vector<StreamInfo> streams;
+  size_t size_bytes;
+
+  Teli::CAM_HANDLE cam;
+  Teli::CAM_STRM_HANDLE strm;
 
 #ifdef _WIN_
-    HANDLE hStrmCmpEvt;
+  HANDLE hStrmCmpEvt;
 #endif
 #ifdef _LINUX_
-    Teli::SIGNAL_HANDLE hStrmCmpEvt;
+  Teli::SIGNAL_HANDLE hStrmCmpEvt;
 #endif
-    double transfer_bandwidth_gbps;
-    int exposure_us;
-    picojson::value device_properties;
-    picojson::value frame_properties;
+  double transfer_bandwidth_gbps;
+  int exposure_us;
+  picojson::value device_properties;
+  picojson::value frame_properties;
 };
 
-}
+}  // namespace pangolin

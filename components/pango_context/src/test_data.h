@@ -6,17 +6,19 @@
 
 #include <vector>
 
+namespace pangolin
+{
 
-namespace pangolin {
-
-inline std::vector<double> testVecs() {
+inline std::vector<double> testVecs()
+{
   // TODO: add more
   return {0.0, 98.1234, -9887.0, 1E5, 4E-3};
 }
 
 template <typename T, int kR, int kC>
 std::vector<Eigen::Matrix<T, kR, kC>> testMats(
-    std::vector<T> const& scalars, int const num_to_make) {
+    std::vector<T> const& scalars, int const num_to_make)
+{
   std::vector<Eigen::Matrix<T, kR, kC>> ret;
 
   for (int k = 0; k < num_to_make; ++k) {

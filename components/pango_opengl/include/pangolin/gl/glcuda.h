@@ -27,8 +27,9 @@
 
 #pragma once
 
-#include <algorithm>
 #include <cuda_runtime.h>
+
+#include <algorithm>
 
 #include "gl.h"
 // Must include glew.h before gl.h
@@ -41,62 +42,84 @@ namespace pangolin
 // Interface
 ////////////////////////////////////////////////
 
-struct GlBufferCudaPtr : public GlBuffer
-{
-    //! Default constructor represents 'no buffer'
-    GlBufferCudaPtr();
-    
-    GlBufferCudaPtr(GlBufferType buffer_type, GLuint size_bytes, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
-    GlBufferCudaPtr(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
-    
-    PANGOLIN_DEPRECATED("Please use GlBufferCudaPtr(buffer_type, width*height, datatype,...) instead")
-    GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
-    
-    ~GlBufferCudaPtr();
-    
-    void Reinitialise(GlBufferType buffer_type, GLuint size_bytes, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
-    void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ );
+struct GlBufferCudaPtr : public GlBuffer {
+  //! Default constructor represents 'no buffer'
+  GlBufferCudaPtr();
 
-    /**
-     * Use parameters from another @c GlBufferCudaPtr to initialize this buffer.
-     */
-    void Reinitialise(const GlBufferCudaPtr& other);
-    
-    unsigned int cuda_use;
-    cudaGraphicsResource* cuda_res;
+  GlBufferCudaPtr(
+      GlBufferType buffer_type, GLuint size_bytes,
+      unsigned int cudause /*= cudaGraphicsMapFlagsNone*/,
+      GLenum gluse /*= GL_DYNAMIC_DRAW*/);
+  GlBufferCudaPtr(
+      GlBufferType buffer_type, GLuint num_elements, GLenum datatype,
+      GLuint count_per_element,
+      unsigned int cudause /*= cudaGraphicsMapFlagsNone*/,
+      GLenum gluse /*= GL_DYNAMIC_DRAW*/);
+
+  PANGOLIN_DEPRECATED(
+      "Please use GlBufferCudaPtr(buffer_type, width*height, datatype,...) "
+      "instead")
+  GlBufferCudaPtr(
+      GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype,
+      GLuint count_per_element,
+      unsigned int cudause /*= cudaGraphicsMapFlagsNone*/,
+      GLenum gluse /*= GL_DYNAMIC_DRAW*/);
+
+  ~GlBufferCudaPtr();
+
+  void Reinitialise(
+      GlBufferType buffer_type, GLuint size_bytes,
+      unsigned int cudause /*= cudaGraphicsMapFlagsNone*/,
+      GLenum gluse /*= GL_DYNAMIC_DRAW*/);
+  void Reinitialise(
+      GlBufferType buffer_type, GLuint num_elements, GLenum datatype,
+      GLuint count_per_element,
+      unsigned int cudause /*= cudaGraphicsMapFlagsNone*/,
+      GLenum gluse /*= GL_DYNAMIC_DRAW*/);
+
+  /**
+   * Use parameters from another @c GlBufferCudaPtr to initialize this buffer.
+   */
+  void Reinitialise(const GlBufferCudaPtr& other);
+
+  unsigned int cuda_use;
+  cudaGraphicsResource* cuda_res;
 };
 
-struct GlTextureCudaArray : GlTexture
-{
-    GlTextureCudaArray();
-    // Some internal_formats aren't accepted. I have trouble with GL_RGB8
-    GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL);
-    ~GlTextureCudaArray();
+struct GlTextureCudaArray : GlTexture {
+  GlTextureCudaArray();
+  // Some internal_formats aren't accepted. I have trouble with GL_RGB8
+  GlTextureCudaArray(
+      int width, int height, GLint internal_format, bool sampling_linear = true,
+      int border = 0, GLenum glformat = GL_RGBA,
+      GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL);
+  ~GlTextureCudaArray();
 
-    void Reinitialise(int width, int height, GLint internal_format, bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA, GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL) override;
-    cudaGraphicsResource* cuda_res;
+  void Reinitialise(
+      int width, int height, GLint internal_format, bool sampling_linear = true,
+      int border = 0, GLenum glformat = GL_RGBA,
+      GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL) override;
+  cudaGraphicsResource* cuda_res;
 };
 
-struct CudaScopedMappedPtr
-{
-    CudaScopedMappedPtr(const GlBufferCudaPtr& buffer);
-    ~CudaScopedMappedPtr();
-    void* operator*();
-    cudaGraphicsResource* res;
-    
-private:
-    CudaScopedMappedPtr(const CudaScopedMappedPtr&) {}
+struct CudaScopedMappedPtr {
+  CudaScopedMappedPtr(const GlBufferCudaPtr& buffer);
+  ~CudaScopedMappedPtr();
+  void* operator*();
+  cudaGraphicsResource* res;
+
+  private:
+  CudaScopedMappedPtr(const CudaScopedMappedPtr&) {}
 };
 
-struct CudaScopedMappedArray
-{
-    CudaScopedMappedArray(const GlTextureCudaArray& tex);
-    ~CudaScopedMappedArray();
-    cudaArray* operator*();
-    cudaGraphicsResource* res;
-    
-private:
-    CudaScopedMappedArray(const CudaScopedMappedArray&) {}
+struct CudaScopedMappedArray {
+  CudaScopedMappedArray(const GlTextureCudaArray& tex);
+  ~CudaScopedMappedArray();
+  cudaArray* operator*();
+  cudaGraphicsResource* res;
+
+  private:
+  CudaScopedMappedArray(const CudaScopedMappedArray&) {}
 };
 
 void CopyPboToTex(GlBufferCudaPtr& buffer, GlTexture& tex);
@@ -107,153 +130,187 @@ void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b);
 // Implementation
 ////////////////////////////////////////////////
 
-inline GlBufferCudaPtr::GlBufferCudaPtr()
-    : cuda_res(0)
+inline GlBufferCudaPtr::GlBufferCudaPtr() : cuda_res(0) {}
+
+inline GlBufferCudaPtr::GlBufferCudaPtr(
+    GlBufferType buffer_type, GLuint size_bytes,
+    unsigned int cudause /*= cudaGraphicsMapFlagsNone*/,
+    GLenum gluse /*= GL_DYNAMIC_DRAW*/) :
+    cuda_res(0)
 {
+  Reinitialise(buffer_type, size_bytes, cudause, gluse);
 }
 
-inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint size_bytes, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ )
-    : cuda_res(0)
+inline GlBufferCudaPtr::GlBufferCudaPtr(
+    GlBufferType buffer_type, GLuint num_elements, GLenum datatype,
+    GLuint count_per_element, unsigned int cudause, GLenum gluse) :
+    cuda_res(0)
 {
-    Reinitialise(buffer_type, size_bytes, cudause, gluse);
+  Reinitialise(
+      buffer_type, num_elements, datatype, count_per_element, cudause, gluse);
 }
 
-inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause, GLenum gluse )
-    : cuda_res(0)
+inline GlBufferCudaPtr::GlBufferCudaPtr(
+    GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype,
+    GLuint count_per_element,
+    unsigned int cudause /*= cudaGraphicsMapFlagsNone*/,
+    GLenum gluse /*= GL_DYNAMIC_DRAW*/) :
+    cuda_res(0)
 {
-    Reinitialise(buffer_type, num_elements, datatype, count_per_element, cudause, gluse);
-}
-
-inline GlBufferCudaPtr::GlBufferCudaPtr(GlBufferType buffer_type, GLuint width, GLuint height, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ )
-    : cuda_res(0)
-{
-    Reinitialise(buffer_type, width*height, datatype, count_per_element, cudause, gluse);
+  Reinitialise(
+      buffer_type, width * height, datatype, count_per_element, cudause, gluse);
 }
 
 inline GlBufferCudaPtr::~GlBufferCudaPtr()
 {
-    if(cuda_res) {    
-        cudaGraphicsUnregisterResource(cuda_res);
-    }
+  if (cuda_res) {
+    cudaGraphicsUnregisterResource(cuda_res);
+  }
 }
 
-inline void GlBufferCudaPtr::Reinitialise(GlBufferType buffer_type, GLuint size_bytes, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ )
+inline void GlBufferCudaPtr::Reinitialise(
+    GlBufferType buffer_type, GLuint size_bytes,
+    unsigned int cudause /*= cudaGraphicsMapFlagsNone*/,
+    GLenum gluse /*= GL_DYNAMIC_DRAW*/)
 {
-    GlBufferCudaPtr::Reinitialise(buffer_type, size_bytes, GL_BYTE, 1, cudause, gluse);
+  GlBufferCudaPtr::Reinitialise(
+      buffer_type, size_bytes, GL_BYTE, 1, cudause, gluse);
 }
 
-inline void GlBufferCudaPtr::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, unsigned int cudause /*= cudaGraphicsMapFlagsNone*/, GLenum gluse /*= GL_DYNAMIC_DRAW*/ )
+inline void GlBufferCudaPtr::Reinitialise(
+    GlBufferType buffer_type, GLuint num_elements, GLenum datatype,
+    GLuint count_per_element,
+    unsigned int cudause /*= cudaGraphicsMapFlagsNone*/,
+    GLenum gluse /*= GL_DYNAMIC_DRAW*/)
 {
-    if(cuda_res) {
-        cudaGraphicsUnregisterResource(cuda_res);
-    }
-    GlBuffer::Reinitialise(buffer_type, num_elements, datatype, count_per_element, gluse);
+  if (cuda_res) {
+    cudaGraphicsUnregisterResource(cuda_res);
+  }
+  GlBuffer::Reinitialise(
+      buffer_type, num_elements, datatype, count_per_element, gluse);
 
-    cuda_use = cudause;
-    cudaGraphicsGLRegisterBuffer( &cuda_res, bo, cudause );    
+  cuda_use = cudause;
+  cudaGraphicsGLRegisterBuffer(&cuda_res, bo, cudause);
 }
 
 inline void GlBufferCudaPtr::Reinitialise(const GlBufferCudaPtr& other)
 {
-  Reinitialise(other.buffer_type, other.num_elements, other.datatype, other.count_per_element, other.cuda_use, other.gluse);
+  Reinitialise(
+      other.buffer_type, other.num_elements, other.datatype,
+      other.count_per_element, other.cuda_use, other.gluse);
 }
 
-inline GlTextureCudaArray::GlTextureCudaArray()
-    : GlTexture(), cuda_res(0)
+inline GlTextureCudaArray::GlTextureCudaArray() : GlTexture(), cuda_res(0)
 {
-    // Not a texture
+  // Not a texture
 }
 
-inline GlTextureCudaArray::GlTextureCudaArray(int width, int height, GLint internal_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, GLvoid *data)
-    :GlTexture(width,height,internal_format, sampling_linear, border, glformat, gltype, data)
+inline GlTextureCudaArray::GlTextureCudaArray(
+    int width, int height, GLint internal_format, bool sampling_linear,
+    int border, GLenum glformat, GLenum gltype, GLvoid* data) :
+    GlTexture(
+        width, height, internal_format, sampling_linear, border, glformat,
+        gltype, data)
 {
-    // TODO: specify flags too
-    const cudaError_t err = cudaGraphicsGLRegisterImage(&cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
-    if( err != cudaSuccess ) {
-        std::cout << "cudaGraphicsGLRegisterImage failed: " << err << std::endl;
-    }
+  // TODO: specify flags too
+  const cudaError_t err = cudaGraphicsGLRegisterImage(
+      &cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
+  if (err != cudaSuccess) {
+    std::cout << "cudaGraphicsGLRegisterImage failed: " << err << std::endl;
+  }
 }
 
 inline GlTextureCudaArray::~GlTextureCudaArray()
 {
-    if(cuda_res) {
-        cudaGraphicsUnregisterResource(cuda_res);
-    }
+  if (cuda_res) {
+    cudaGraphicsUnregisterResource(cuda_res);
+  }
 }
 
-inline void GlTextureCudaArray::Reinitialise(int width, int height, GLint internal_format, bool sampling_linear, int border, GLenum glformat, GLenum gltype, GLvoid* data)
+inline void GlTextureCudaArray::Reinitialise(
+    int width, int height, GLint internal_format, bool sampling_linear,
+    int border, GLenum glformat, GLenum gltype, GLvoid* data)
 {
-    if(cuda_res) {
-        cudaGraphicsUnregisterResource(cuda_res);
-    }
+  if (cuda_res) {
+    cudaGraphicsUnregisterResource(cuda_res);
+  }
 
-    GlTexture::Reinitialise(width, height, internal_format, sampling_linear, border, glformat, gltype, data);
+  GlTexture::Reinitialise(
+      width, height, internal_format, sampling_linear, border, glformat, gltype,
+      data);
 
-    const cudaError_t err = cudaGraphicsGLRegisterImage(&cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
-    if( err != cudaSuccess ) {
-        std::cout << "cudaGraphicsGLRegisterImage failed: " << err << std::endl;
-    }
+  const cudaError_t err = cudaGraphicsGLRegisterImage(
+      &cuda_res, tid, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
+  if (err != cudaSuccess) {
+    std::cout << "cudaGraphicsGLRegisterImage failed: " << err << std::endl;
+  }
 }
 
-inline CudaScopedMappedPtr::CudaScopedMappedPtr(const GlBufferCudaPtr& buffer)
-    : res(buffer.cuda_res)
+inline CudaScopedMappedPtr::CudaScopedMappedPtr(const GlBufferCudaPtr& buffer) :
+    res(buffer.cuda_res)
 {
-    cudaGraphicsMapResources(1, &res, 0);
+  cudaGraphicsMapResources(1, &res, 0);
 }
 
 inline CudaScopedMappedPtr::~CudaScopedMappedPtr()
 {
-    cudaGraphicsUnmapResources(1, &res, 0);
+  cudaGraphicsUnmapResources(1, &res, 0);
 }
 
 inline void* CudaScopedMappedPtr::operator*()
 {
-    size_t num_bytes;
-    void* d_ptr;
-    cudaGraphicsResourceGetMappedPointer(&d_ptr,&num_bytes,res);
-    return d_ptr;
+  size_t num_bytes;
+  void* d_ptr;
+  cudaGraphicsResourceGetMappedPointer(&d_ptr, &num_bytes, res);
+  return d_ptr;
 }
 
-inline CudaScopedMappedArray::CudaScopedMappedArray(const GlTextureCudaArray& tex)
-    : res(tex.cuda_res)
+inline CudaScopedMappedArray::CudaScopedMappedArray(
+    const GlTextureCudaArray& tex) :
+    res(tex.cuda_res)
 {
-    cudaGraphicsMapResources(1, &res);
+  cudaGraphicsMapResources(1, &res);
 }
 
 inline CudaScopedMappedArray::~CudaScopedMappedArray()
 {
-    cudaGraphicsUnmapResources(1, &res);
+  cudaGraphicsUnmapResources(1, &res);
 }
 
 inline cudaArray* CudaScopedMappedArray::operator*()
 {
-    cudaArray* array;
-    cudaGraphicsSubResourceGetMappedArray(&array, res, 0, 0);
-    return array;
+  cudaArray* array;
+  cudaGraphicsSubResourceGetMappedArray(&array, res, 0, 0);
+  return array;
 }
 
-inline void CopyPboToTex(const GlBufferCudaPtr& buffer, GlTexture& tex, GLenum buffer_layout, GLenum buffer_data_type )
+inline void CopyPboToTex(
+    const GlBufferCudaPtr& buffer, GlTexture& tex, GLenum buffer_layout,
+    GLenum buffer_data_type)
 {
-    buffer.Bind();
-    tex.Bind();
-    glTexImage2D(GL_TEXTURE_2D, 0, tex.internal_format, tex.width, tex.height, 0, buffer_layout, buffer_data_type, 0);
-    buffer.Unbind();
-    tex.Unbind();
+  buffer.Bind();
+  tex.Bind();
+  glTexImage2D(
+      GL_TEXTURE_2D, 0, tex.internal_format, tex.width, tex.height, 0,
+      buffer_layout, buffer_data_type, 0);
+  buffer.Unbind();
+  tex.Unbind();
 }
 
-template<typename T>
-inline void CopyDevMemtoTex(T* d_img, size_t pitch, GlTextureCudaArray& tex )
+template <typename T>
+inline void CopyDevMemtoTex(T* d_img, size_t pitch, GlTextureCudaArray& tex)
 {
-    CudaScopedMappedArray arr_tex(tex);
-    cudaMemcpy2DToArray(*arr_tex, 0, 0, d_img, pitch, tex.width*sizeof(T), tex.height, cudaMemcpyDeviceToDevice );
+  CudaScopedMappedArray arr_tex(tex);
+  cudaMemcpy2DToArray(
+      *arr_tex, 0, 0, d_img, pitch, tex.width * sizeof(T), tex.height,
+      cudaMemcpyDeviceToDevice);
 }
 
 inline void swap(GlBufferCudaPtr& a, GlBufferCudaPtr& b)
 {
-    std::swap(a.bo, b.bo);
-    std::swap(a.cuda_res, b.cuda_res);
-    std::swap(a.buffer_type, b.buffer_type);
+  std::swap(a.bo, b.bo);
+  std::swap(a.cuda_res, b.cuda_res);
+  std::swap(a.buffer_type, b.buffer_type);
 }
 
-
-}
+}  // namespace pangolin

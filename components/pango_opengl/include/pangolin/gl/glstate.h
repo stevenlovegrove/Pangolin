@@ -28,193 +28,199 @@
 #pragma once
 
 #include <pangolin/gl/glplatform.h>
+
 #include <stack>
 
 namespace pangolin
 {
 
-class GlState {
-
-    class CapabilityState {
+class GlState
+{
+  class CapabilityState
+  {
     public:
+    CapabilityState(GLenum cap, GLboolean enable) : m_cap(cap), m_enable(enable)
+    {
+    }
 
-        CapabilityState(GLenum cap, GLboolean enable)
-            : m_cap(cap), m_enable(enable)
-        {
+    void Apply()
+    {
+      if (m_enable) {
+        ::glEnable(m_cap);
+      } else {
+        ::glDisable(m_cap);
+      }
+    }
 
-        }
-
-        void Apply() {
-            if(m_enable) {
-                ::glEnable(m_cap);
-            }else{
-                ::glDisable(m_cap);
-            }
-        }
-
-        void UnApply() {
-            if(m_enable) {
-                ::glDisable(m_cap);
-            }else{
-                ::glEnable(m_cap);
-            }
-        }
+    void UnApply()
+    {
+      if (m_enable) {
+        ::glDisable(m_cap);
+      } else {
+        ::glEnable(m_cap);
+      }
+    }
 
     protected:
-        GLenum m_cap;
-        GLboolean m_enable;
-    };
+    GLenum m_cap;
+    GLboolean m_enable;
+  };
 
-public:
-    GlState()
-        : m_DepthMaskCalled(false),
-          m_ShadeModelCalled(false),
-          m_CullFaceCalled(false),
-          m_PointSizeCalled(false),
-          m_LineWidthCalled(false),
-          m_ColorMaskCalled(false),
-          m_ViewportCalled(false)
-    {
+  public:
+  GlState() :
+      m_DepthMaskCalled(false),
+      m_ShadeModelCalled(false),
+      m_CullFaceCalled(false),
+      m_PointSizeCalled(false),
+      m_LineWidthCalled(false),
+      m_ColorMaskCalled(false),
+      m_ViewportCalled(false)
+  {
+  }
+
+  ~GlState()
+  {
+    //  Restore original state
+    while (!m_history.empty()) {
+      m_history.top().UnApply();
+      m_history.pop();
     }
 
-    ~GlState() {
-        //  Restore original state
-        while (!m_history.empty()) {
-            m_history.top().UnApply();
-            m_history.pop();
-        }
-
-        if (m_DepthMaskCalled) {
-            ::glDepthMask(m_OriginalDepthMask);
-        }
-
-        if (m_ShadeModelCalled) {
-            ::glShadeModel(m_OriginalShadeModel);
-        }
-
-        if (m_CullFaceCalled) {
-            ::glCullFace(m_OriginalCullFace);
-        }
-
-        if(m_PointSizeCalled) {
-            ::glPointSize(m_OriginalPointSize);
-        }
-
-        if(m_LineWidthCalled) {
-            ::glLineWidth(m_OriginalLineWidth);
-        }
-
-        if (m_ColorMaskCalled) {
-            ::glColorMask(m_OriginalColorMask[0], m_OriginalColorMask[1], m_OriginalColorMask[2], m_OriginalColorMask[3]);
-        }
-
-        if (m_ViewportCalled) {
-            ::glViewport(m_OriginalViewport[0], m_OriginalViewport[1], m_OriginalViewport[2], m_OriginalViewport[3]);
-        }
+    if (m_DepthMaskCalled) {
+      ::glDepthMask(m_OriginalDepthMask);
     }
 
-    static inline GLboolean IsEnabled(GLenum cap)
-    {
-        GLboolean curVal;
-        glGetBooleanv(cap, &curVal);
-        return curVal;
+    if (m_ShadeModelCalled) {
+      ::glShadeModel(m_OriginalShadeModel);
     }
 
-    inline void glEnable(GLenum cap)
-    {
-        if(!IsEnabled(cap)) {
-            m_history.push(CapabilityState(cap,true));
-            ::glEnable(cap);
-        }
+    if (m_CullFaceCalled) {
+      ::glCullFace(m_OriginalCullFace);
     }
 
-    inline void glDisable(GLenum cap)
-    {
-        if(IsEnabled(cap)) {
-            m_history.push(CapabilityState(cap,false));
-           ::glDisable(cap);
-        }
+    if (m_PointSizeCalled) {
+      ::glPointSize(m_OriginalPointSize);
     }
 
-    bool m_DepthMaskCalled;
-    GLboolean m_OriginalDepthMask;
-    inline void glDepthMask(GLboolean flag)
-    {
-        if(!m_DepthMaskCalled) {
-            m_DepthMaskCalled = true;
-            glGetBooleanv(GL_DEPTH_WRITEMASK, &m_OriginalDepthMask);
-        }
-        ::glDepthMask(flag);
+    if (m_LineWidthCalled) {
+      ::glLineWidth(m_OriginalLineWidth);
     }
 
-    bool m_ShadeModelCalled;
-    GLint m_OriginalShadeModel;
-    inline void glShadeModel(GLint mode)
-    {
-        if(!m_ShadeModelCalled) {
-            m_ShadeModelCalled = true;
-            glGetIntegerv(GL_SHADE_MODEL, &m_OriginalShadeModel);
-        }
-        ::glShadeModel(mode);
+    if (m_ColorMaskCalled) {
+      ::glColorMask(
+          m_OriginalColorMask[0], m_OriginalColorMask[1],
+          m_OriginalColorMask[2], m_OriginalColorMask[3]);
     }
 
-    bool m_CullFaceCalled;
-    GLint m_OriginalCullFace;
-    void glCullFace(GLenum mode)
-    {
-        if(!m_ShadeModelCalled) {
-            m_ShadeModelCalled = true;
-            glGetIntegerv(GL_CULL_FACE_MODE, &m_OriginalCullFace);
-        }
-        ::glCullFace(mode);
+    if (m_ViewportCalled) {
+      ::glViewport(
+          m_OriginalViewport[0], m_OriginalViewport[1], m_OriginalViewport[2],
+          m_OriginalViewport[3]);
     }
+  }
 
-    bool m_PointSizeCalled;
-    GLfloat m_OriginalPointSize;
-    void glPointSize(GLfloat size)
-    {
-        if(!m_PointSizeCalled) {
-            m_PointSizeCalled = true;
-            glGetFloatv(GL_POINT_SIZE, &m_OriginalPointSize);
-        }
-        ::glPointSize(size);
+  static inline GLboolean IsEnabled(GLenum cap)
+  {
+    GLboolean curVal;
+    glGetBooleanv(cap, &curVal);
+    return curVal;
+  }
+
+  inline void glEnable(GLenum cap)
+  {
+    if (!IsEnabled(cap)) {
+      m_history.push(CapabilityState(cap, true));
+      ::glEnable(cap);
     }
+  }
 
-    bool m_LineWidthCalled;
-    GLfloat m_OriginalLineWidth;
-    void glLineWidth(GLfloat width)
-    {
-        if(!m_LineWidthCalled) {
-            m_LineWidthCalled = true;
-            glGetFloatv(GL_LINE_WIDTH, &m_OriginalLineWidth);
-        }
-        ::glLineWidth(width);
-
+  inline void glDisable(GLenum cap)
+  {
+    if (IsEnabled(cap)) {
+      m_history.push(CapabilityState(cap, false));
+      ::glDisable(cap);
     }
+  }
 
-    bool m_ColorMaskCalled;
-    GLboolean m_OriginalColorMask[4];
-    inline void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
-    {
-        if(!m_ColorMaskCalled) {
-            m_ColorMaskCalled = true;
-            glGetBooleanv(GL_COLOR_WRITEMASK,  m_OriginalColorMask);
-        }
-        ::glColorMask(red, green, blue, alpha);
+  bool m_DepthMaskCalled;
+  GLboolean m_OriginalDepthMask;
+  inline void glDepthMask(GLboolean flag)
+  {
+    if (!m_DepthMaskCalled) {
+      m_DepthMaskCalled = true;
+      glGetBooleanv(GL_DEPTH_WRITEMASK, &m_OriginalDepthMask);
     }
+    ::glDepthMask(flag);
+  }
 
-    bool m_ViewportCalled;
-    GLint m_OriginalViewport[4];
-    inline void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
-    {
-        if(!m_ViewportCalled) {
-            m_ViewportCalled = true;
-            glGetIntegerv(GL_VIEWPORT, m_OriginalViewport);
-        }
-        ::glViewport(x, y, width, height);
+  bool m_ShadeModelCalled;
+  GLint m_OriginalShadeModel;
+  inline void glShadeModel(GLint mode)
+  {
+    if (!m_ShadeModelCalled) {
+      m_ShadeModelCalled = true;
+      glGetIntegerv(GL_SHADE_MODEL, &m_OriginalShadeModel);
     }
+    ::glShadeModel(mode);
+  }
 
-    std::stack<CapabilityState> m_history;
+  bool m_CullFaceCalled;
+  GLint m_OriginalCullFace;
+  void glCullFace(GLenum mode)
+  {
+    if (!m_ShadeModelCalled) {
+      m_ShadeModelCalled = true;
+      glGetIntegerv(GL_CULL_FACE_MODE, &m_OriginalCullFace);
+    }
+    ::glCullFace(mode);
+  }
+
+  bool m_PointSizeCalled;
+  GLfloat m_OriginalPointSize;
+  void glPointSize(GLfloat size)
+  {
+    if (!m_PointSizeCalled) {
+      m_PointSizeCalled = true;
+      glGetFloatv(GL_POINT_SIZE, &m_OriginalPointSize);
+    }
+    ::glPointSize(size);
+  }
+
+  bool m_LineWidthCalled;
+  GLfloat m_OriginalLineWidth;
+  void glLineWidth(GLfloat width)
+  {
+    if (!m_LineWidthCalled) {
+      m_LineWidthCalled = true;
+      glGetFloatv(GL_LINE_WIDTH, &m_OriginalLineWidth);
+    }
+    ::glLineWidth(width);
+  }
+
+  bool m_ColorMaskCalled;
+  GLboolean m_OriginalColorMask[4];
+  inline void glColorMask(
+      GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
+  {
+    if (!m_ColorMaskCalled) {
+      m_ColorMaskCalled = true;
+      glGetBooleanv(GL_COLOR_WRITEMASK, m_OriginalColorMask);
+    }
+    ::glColorMask(red, green, blue, alpha);
+  }
+
+  bool m_ViewportCalled;
+  GLint m_OriginalViewport[4];
+  inline void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+  {
+    if (!m_ViewportCalled) {
+      m_ViewportCalled = true;
+      glGetIntegerv(GL_VIEWPORT, m_OriginalViewport);
+    }
+    ::glViewport(x, y, width, height);
+  }
+
+  std::stack<CapabilityState> m_history;
 };
 
-}
+}  // namespace pangolin

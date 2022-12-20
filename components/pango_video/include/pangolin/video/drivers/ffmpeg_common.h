@@ -1,22 +1,21 @@
 #pragma once
 
-#include <pangolin/video/video_exception.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/video/video_exception.h>
 
-extern "C"
-{
+extern "C" {
 
 // HACK for some versions of FFMPEG
 #ifndef INT64_C
-#define INT64_C(c) (c ## LL)
-#define UINT64_C(c) (c ## ULL)
+#define INT64_C(c) (c##LL)
+#define UINT64_C(c) (c##ULL)
 #endif
 
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
-#include <libavutil/pixdesc.h>
 #include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 #include <libavutil/imgutils.h>
+#include <libavutil/pixdesc.h>
+#include <libswscale/swscale.h>
 
 // Some versions of FFMPEG define this horrid macro in global scope.
 #undef PixelFormat
@@ -27,19 +26,20 @@ namespace pangolin
 
 inline AVPixelFormat FfmpegFmtFromString(const std::string fmt)
 {
-    const std::string lfmt = ToLowerCopy(fmt);
-    if(!lfmt.compare("gray8") || !lfmt.compare("grey8") || !lfmt.compare("grey")) {
-        return AV_PIX_FMT_GRAY8;
-    }
-    return av_get_pix_fmt(lfmt.c_str());
+  const std::string lfmt = ToLowerCopy(fmt);
+  if (!lfmt.compare("gray8") || !lfmt.compare("grey8") ||
+      !lfmt.compare("grey")) {
+    return AV_PIX_FMT_GRAY8;
+  }
+  return av_get_pix_fmt(lfmt.c_str());
 }
 
-
-#define TEST_PIX_FMT_RETURN(fmt) case AV_PIX_FMT_##fmt: return #fmt;
+#define TEST_PIX_FMT_RETURN(fmt)                                               \
+  case AV_PIX_FMT_##fmt:                                                       \
+    return #fmt;
 inline std::string FfmpegFmtToString(const AVPixelFormat fmt)
 {
-    switch( fmt )
-    {
+  switch (fmt) {
     TEST_PIX_FMT_RETURN(YUV420P);
     TEST_PIX_FMT_RETURN(YUYV422);
     TEST_PIX_FMT_RETURN(RGB24);
@@ -81,8 +81,8 @@ inline std::string FfmpegFmtToString(const AVPixelFormat fmt)
     TEST_PIX_FMT_RETURN(VDPAU_WMV3);
     TEST_PIX_FMT_RETURN(VDPAU_VC1);
 #endif
-    TEST_PIX_FMT_RETURN(RGB48BE );
-    TEST_PIX_FMT_RETURN(RGB48LE );
+    TEST_PIX_FMT_RETURN(RGB48BE);
+    TEST_PIX_FMT_RETURN(RGB48LE);
     TEST_PIX_FMT_RETURN(RGB565BE);
     TEST_PIX_FMT_RETURN(RGB565LE);
     TEST_PIX_FMT_RETURN(RGB555BE);
@@ -112,12 +112,13 @@ inline std::string FfmpegFmtToString(const AVPixelFormat fmt)
     TEST_PIX_FMT_RETURN(RGB444LE);
     TEST_PIX_FMT_RETURN(BGR444BE);
     TEST_PIX_FMT_RETURN(BGR444LE);
-    TEST_PIX_FMT_RETURN(Y400A   );
-    TEST_PIX_FMT_RETURN(NB      );
-    default: return "";
-    }
+    TEST_PIX_FMT_RETURN(Y400A);
+    TEST_PIX_FMT_RETURN(NB);
+    default:
+      return "";
+  }
 }
 
 #undef TEST_PIX_FMT_RETURN
 
-}
+}  // namespace pangolin

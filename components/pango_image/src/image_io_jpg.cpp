@@ -1,321 +1,339 @@
+#include <pangolin/image/runtime_image.h>
+#include <pangolin/platform.h>
+
 #include <algorithm>
 #include <fstream>
 #include <vector>
 
-
-#include <pangolin/platform.h>
-
-#include <pangolin/image/runtime_image.h>
-
 #ifdef HAVE_JPEG
-#  include <jpeglib.h>
-#  ifdef _WIN_
+#include <jpeglib.h>
+#ifdef _WIN_
 //   Undef windows Macro polution from jpeglib.h
-#    undef LoadImage
-#  endif
-#endif // HAVE_JPEG
+#undef LoadImage
+#endif
+#endif  // HAVE_JPEG
 
 using namespace sophus;
 
 // Inspired by https://cs.stanford.edu/~acoates/jpegAndIOS.txt
 
-namespace pangolin {
+namespace pangolin
+{
 
 #ifdef HAVE_JPEG
 
-void error_handler(j_common_ptr cinfo) {
-    char msg[JMSG_LENGTH_MAX];
-    (*(cinfo->err->format_message)) (cinfo, msg);
-    throw std::runtime_error(msg);
+void error_handler(j_common_ptr cinfo)
+{
+  char msg[JMSG_LENGTH_MAX];
+  (*(cinfo->err->format_message))(cinfo, msg);
+  throw std::runtime_error(msg);
 }
 
 const static size_t PANGO_JPEG_BUF_SIZE = 16384;
 
 struct pango_jpeg_source_mgr {
-    struct jpeg_source_mgr pub;
-    std::istream* is;
-    JOCTET*       buffer;
+  struct jpeg_source_mgr pub;
+  std::istream* is;
+  JOCTET* buffer;
 };
 
-static void pango_jpeg_init_source(j_decompress_ptr /*cinfo*/) {
-}
+static void pango_jpeg_init_source(j_decompress_ptr /*cinfo*/) {}
 // https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/jdatasrc.c#L69
 // ignore current state of src->pub.next_input_byte and src->pub.bytes_in_buffer
-static boolean pango_jpeg_fill_input_buffer(j_decompress_ptr cinfo) {
-    pango_jpeg_source_mgr* src = (pango_jpeg_source_mgr*)cinfo->src;
-    src->is->read((char*)src->buffer, PANGO_JPEG_BUF_SIZE);
-    size_t bytes = src->is->gcount();
-    if (bytes == 0) {
-        /* Insert a fake EOI marker */
-        src->buffer[0] = (JOCTET) 0xFF;
-        src->buffer[1] = (JOCTET) JPEG_EOI;
-        bytes = 2;
-    }
-    src->pub.next_input_byte = src->buffer;
-    src->pub.bytes_in_buffer = bytes;
-    return TRUE;
+static boolean pango_jpeg_fill_input_buffer(j_decompress_ptr cinfo)
+{
+  pango_jpeg_source_mgr* src = (pango_jpeg_source_mgr*)cinfo->src;
+  src->is->read((char*)src->buffer, PANGO_JPEG_BUF_SIZE);
+  size_t bytes = src->is->gcount();
+  if (bytes == 0) {
+    /* Insert a fake EOI marker */
+    src->buffer[0] = (JOCTET)0xFF;
+    src->buffer[1] = (JOCTET)JPEG_EOI;
+    bytes = 2;
+  }
+  src->pub.next_input_byte = src->buffer;
+  src->pub.bytes_in_buffer = bytes;
+  return TRUE;
 }
-static void pango_jpeg_skip_input_data(j_decompress_ptr cinfo, long num_bytes) {
-    pango_jpeg_source_mgr* src = (pango_jpeg_source_mgr*)cinfo->src;
-    if (num_bytes > 0) {
-        while (num_bytes > (long)src->pub.bytes_in_buffer) {
-            num_bytes -= (long)src->pub.bytes_in_buffer;
-            pango_jpeg_fill_input_buffer(cinfo);
-        }
-        src->pub.next_input_byte += num_bytes;
-        src->pub.bytes_in_buffer -= num_bytes;
+static void pango_jpeg_skip_input_data(j_decompress_ptr cinfo, long num_bytes)
+{
+  pango_jpeg_source_mgr* src = (pango_jpeg_source_mgr*)cinfo->src;
+  if (num_bytes > 0) {
+    while (num_bytes > (long)src->pub.bytes_in_buffer) {
+      num_bytes -= (long)src->pub.bytes_in_buffer;
+      pango_jpeg_fill_input_buffer(cinfo);
     }
+    src->pub.next_input_byte += num_bytes;
+    src->pub.bytes_in_buffer -= num_bytes;
+  }
 }
-static void pango_jpeg_term_source(j_decompress_ptr cinfo) {
-    // must seek backward so that future reads will start at correct place.
-    pango_jpeg_source_mgr* src = (pango_jpeg_source_mgr*)cinfo->src;
-    src->is->clear();
-    src->is->seekg( src->is->tellg() - (std::streampos)src->pub.bytes_in_buffer );
-    src->pub.bytes_in_buffer = 0;
-    src->pub.next_input_byte = nullptr;
+static void pango_jpeg_term_source(j_decompress_ptr cinfo)
+{
+  // must seek backward so that future reads will start at correct place.
+  pango_jpeg_source_mgr* src = (pango_jpeg_source_mgr*)cinfo->src;
+  src->is->clear();
+  src->is->seekg(src->is->tellg() - (std::streampos)src->pub.bytes_in_buffer);
+  src->pub.bytes_in_buffer = 0;
+  src->pub.next_input_byte = nullptr;
 }
 
-static void pango_jpeg_set_source_mgr(j_decompress_ptr cinfo, std::istream& is) {
-    pango_jpeg_source_mgr* src = nullptr;
+static void pango_jpeg_set_source_mgr(j_decompress_ptr cinfo, std::istream& is)
+{
+  pango_jpeg_source_mgr* src = nullptr;
 
-    if (cinfo->src == 0)
-    {
-        cinfo->src = (struct jpeg_source_mgr *)(*cinfo->mem->alloc_small)
-                ((j_common_ptr) cinfo, JPOOL_PERMANENT, sizeof(pango_jpeg_source_mgr));
+  if (cinfo->src == 0) {
+    cinfo->src = (struct jpeg_source_mgr*)(*cinfo->mem->alloc_small)(
+        (j_common_ptr)cinfo, JPOOL_PERMANENT, sizeof(pango_jpeg_source_mgr));
 
-        src = (pango_jpeg_source_mgr*) cinfo->src;
-        src->buffer = (JOCTET *)(*cinfo->mem->alloc_small)
-                ((j_common_ptr) cinfo, JPOOL_PERMANENT, PANGO_JPEG_BUF_SIZE*sizeof(JOCTET));
-    }else{
-        src = (pango_jpeg_source_mgr*) cinfo->src;
-    }
+    src = (pango_jpeg_source_mgr*)cinfo->src;
+    src->buffer = (JOCTET*)(*cinfo->mem->alloc_small)(
+        (j_common_ptr)cinfo, JPOOL_PERMANENT,
+        PANGO_JPEG_BUF_SIZE * sizeof(JOCTET));
+  } else {
+    src = (pango_jpeg_source_mgr*)cinfo->src;
+  }
 
-    src->is = &is;
-    src->pub.init_source = pango_jpeg_init_source;
-    src->pub.fill_input_buffer = pango_jpeg_fill_input_buffer;
-    src->pub.skip_input_data = pango_jpeg_skip_input_data;
-    src->pub.resync_to_restart = jpeg_resync_to_restart; /* use default method */
-    src->pub.term_source = pango_jpeg_term_source;
-    src->pub.bytes_in_buffer = 0;
-    src->pub.next_input_byte = nullptr;
+  src->is = &is;
+  src->pub.init_source = pango_jpeg_init_source;
+  src->pub.fill_input_buffer = pango_jpeg_fill_input_buffer;
+  src->pub.skip_input_data = pango_jpeg_skip_input_data;
+  src->pub.resync_to_restart = jpeg_resync_to_restart; /* use default method */
+  src->pub.term_source = pango_jpeg_term_source;
+  src->pub.bytes_in_buffer = 0;
+  src->pub.next_input_byte = nullptr;
 }
 
 struct pango_jpeg_destination_mgr {
-    struct jpeg_destination_mgr pub; /* public fields */
-    std::ostream* os; /* target stream */
-    JOCTET * buffer;	   /* start of buffer */
+  struct jpeg_destination_mgr pub; /* public fields */
+  std::ostream* os;                /* target stream */
+  JOCTET* buffer;                  /* start of buffer */
 };
 
-void pango_jpeg_init_destination (j_compress_ptr cinfo) {
-    pango_jpeg_destination_mgr* dest = (pango_jpeg_destination_mgr*) cinfo->dest;
-    dest->buffer = (JOCTET *)(*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-                                                         PANGO_JPEG_BUF_SIZE * sizeof(JOCTET));
-    dest->pub.next_output_byte = dest->buffer;
-    dest->pub.free_in_buffer = PANGO_JPEG_BUF_SIZE;
+void pango_jpeg_init_destination(j_compress_ptr cinfo)
+{
+  pango_jpeg_destination_mgr* dest = (pango_jpeg_destination_mgr*)cinfo->dest;
+  dest->buffer = (JOCTET*)(*cinfo->mem->alloc_small)(
+      (j_common_ptr)cinfo, JPOOL_IMAGE, PANGO_JPEG_BUF_SIZE * sizeof(JOCTET));
+  dest->pub.next_output_byte = dest->buffer;
+  dest->pub.free_in_buffer = PANGO_JPEG_BUF_SIZE;
 }
 
-boolean pango_jpeg_empty_output_buffer(j_compress_ptr cinfo) {
-    pango_jpeg_destination_mgr* dest = (pango_jpeg_destination_mgr*)cinfo->dest;
+boolean pango_jpeg_empty_output_buffer(j_compress_ptr cinfo)
+{
+  pango_jpeg_destination_mgr* dest = (pango_jpeg_destination_mgr*)cinfo->dest;
 
-    dest->os->write((const char*)dest->buffer, PANGO_JPEG_BUF_SIZE);
+  dest->os->write((const char*)dest->buffer, PANGO_JPEG_BUF_SIZE);
 
+  if (dest->os->fail()) {
+    throw std::runtime_error("Couldn't write entire jpeg buffer to stream.");
+  }
+
+  dest->pub.next_output_byte = dest->buffer;
+  dest->pub.free_in_buffer = PANGO_JPEG_BUF_SIZE;
+  return TRUE;
+}
+
+void pango_jpeg_term_destination(j_compress_ptr cinfo)
+{
+  pango_jpeg_destination_mgr* dest = (pango_jpeg_destination_mgr*)cinfo->dest;
+  size_t datacount = PANGO_JPEG_BUF_SIZE - dest->pub.free_in_buffer;
+
+  /* Write any data remaining in the buffer */
+  if (datacount > 0) {
+    dest->os->write((const char*)dest->buffer, datacount);
     if (dest->os->fail()) {
-        throw std::runtime_error("Couldn't write entire jpeg buffer to stream.");
+      throw std::runtime_error("Couldn't write remaining jpeg data to stream.");
     }
-
-    dest->pub.next_output_byte = dest->buffer;
-    dest->pub.free_in_buffer = PANGO_JPEG_BUF_SIZE;
-    return TRUE;
+  }
+  dest->os->flush();
 }
 
-void pango_jpeg_term_destination (j_compress_ptr cinfo) {
-    pango_jpeg_destination_mgr* dest = (pango_jpeg_destination_mgr*) cinfo->dest;
-    size_t datacount = PANGO_JPEG_BUF_SIZE - dest->pub.free_in_buffer;
+void pango_jpeg_set_dest_mgr(j_compress_ptr cinfo, std::ostream& os)
+{
+  pango_jpeg_destination_mgr* dest;
 
-    /* Write any data remaining in the buffer */
-    if (datacount > 0) {
-        dest->os->write((const char*)dest->buffer, datacount);
-        if (dest->os->fail()) {
-            throw std::runtime_error("Couldn't write remaining jpeg data to stream.");
-        }
-    }
-    dest->os->flush();
+  if (cinfo->dest == NULL) { /* first time for this JPEG object? */
+    cinfo->dest = (struct jpeg_destination_mgr*)(*cinfo->mem->alloc_small)(
+        (j_common_ptr)cinfo, JPOOL_PERMANENT,
+        sizeof(pango_jpeg_destination_mgr));
+  }
+
+  dest = (pango_jpeg_destination_mgr*)cinfo->dest;
+  dest->pub.init_destination = pango_jpeg_init_destination;
+  dest->pub.empty_output_buffer = pango_jpeg_empty_output_buffer;
+  dest->pub.term_destination = pango_jpeg_term_destination;
+  dest->os = &os;
 }
 
-void pango_jpeg_set_dest_mgr(j_compress_ptr cinfo, std::ostream& os) {
-    pango_jpeg_destination_mgr* dest;
+#endif  // HAVE_JPEG
 
-    if (cinfo->dest == NULL) {	/* first time for this JPEG object? */
-        cinfo->dest = (struct jpeg_destination_mgr *)
-                (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
-                                            sizeof(pango_jpeg_destination_mgr));
-    }
-
-    dest = (pango_jpeg_destination_mgr*)cinfo->dest;
-    dest->pub.init_destination = pango_jpeg_init_destination;
-    dest->pub.empty_output_buffer = pango_jpeg_empty_output_buffer;
-    dest->pub.term_destination = pango_jpeg_term_destination;
-    dest->os = &os;
-}
-
-#endif // HAVE_JPEG
-
-IntensityImage<> LoadJpg(std::istream& is) {
+IntensityImage<> LoadJpg(std::istream& is)
+{
 #ifdef HAVE_JPEG
-    sophus::IntensityImage<> image;
+  sophus::IntensityImage<> image;
 
-    struct jpeg_decompress_struct cinfo;
-    struct jpeg_error_mgr jerr;
+  struct jpeg_decompress_struct cinfo;
+  struct jpeg_error_mgr jerr;
 
-    // Setup decompression structure
-    cinfo.err = jpeg_std_error(&jerr);
-    jerr.error_exit = error_handler;
-    jpeg_create_decompress(&cinfo);
-    pango_jpeg_set_source_mgr(&cinfo, is);
+  // Setup decompression structure
+  cinfo.err = jpeg_std_error(&jerr);
+  jerr.error_exit = error_handler;
+  jpeg_create_decompress(&cinfo);
+  pango_jpeg_set_source_mgr(&cinfo, is);
 
-    // read info from header.
-    int r = jpeg_read_header(&cinfo, TRUE);
-    if (r != JPEG_HEADER_OK) {
+  // read info from header.
+  int r = jpeg_read_header(&cinfo, TRUE);
+  if (r != JPEG_HEADER_OK) {
+    throw std::runtime_error("Failed to read JPEG header.");
+  } else if (cinfo.num_components != 3 && cinfo.num_components != 1) {
+    throw std::runtime_error("Unsupported number of color components");
+  } else {
+    jpeg_start_decompress(&cinfo);
+    // resize storage if necessary
+    RuntimePixelType fmt =
+        PixelFormatFromString(cinfo.output_components == 3 ? "RGB24" : "GRAY8");
+    image = sophus::IntensityImage<>(
+        ImageSize(cinfo.output_width, cinfo.output_height), fmt);
+    JSAMPARRAY imageBuffer = (*cinfo.mem->alloc_sarray)(
+        (j_common_ptr)&cinfo, JPOOL_IMAGE,
+        cinfo.output_width * cinfo.output_components, 1);
+    for (size_t y = 0; y < cinfo.output_height; y++) {
+      jpeg_read_scanlines(&cinfo, imageBuffer, 1);
+      uint8_t* dstRow = const_cast<uint8_t*>(image.rawRowPtr(y));
+      memcpy(
+          dstRow, imageBuffer[0], cinfo.output_width * cinfo.output_components);
+    }
+    jpeg_finish_decompress(&cinfo);
+  }
+
+  // clean up.
+  jpeg_destroy_decompress(&cinfo);
+
+  return image;
+#else
+  PANGOLIN_UNUSED(is);
+  throw std::runtime_error("Rebuild Pangolin for JPEG support.");
+#endif  // HAVE_JPEG
+}
+
+std::vector<std::streampos> GetMJpegOffsets(std::ifstream& is)
+{
+  std::vector<std::streampos> offsets;
+
+#ifdef HAVE_JPEG
+  struct jpeg_decompress_struct cinfo;
+  struct jpeg_error_mgr jerr;
+  cinfo.err = jpeg_std_error(&jerr);
+  jerr.error_exit = error_handler;
+  jpeg_create_decompress(&cinfo);
+  pango_jpeg_set_source_mgr(&cinfo, is);
+
+  try {
+    while (true) {
+      // read info from header.
+      std::streampos jpeg_start_pos = is.tellg();
+      int r = jpeg_read_header(&cinfo, TRUE);
+      if (r != JPEG_HEADER_OK) {
         throw std::runtime_error("Failed to read JPEG header.");
-    } else if (cinfo.num_components != 3 && cinfo.num_components != 1) {
+      } else if (cinfo.num_components != 3 && cinfo.num_components != 1) {
         throw std::runtime_error("Unsupported number of color components");
-    } else {
+      } else {
         jpeg_start_decompress(&cinfo);
+
         // resize storage if necessary
-        RuntimePixelType fmt = PixelFormatFromString(cinfo.output_components == 3 ? "RGB24" : "GRAY8");
-        image = sophus::IntensityImage<>(ImageSize(cinfo.output_width, cinfo.output_height), fmt);
-        JSAMPARRAY imageBuffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE,
-                                                            cinfo.output_width*cinfo.output_components, 1);
-        for (size_t y = 0; y < cinfo.output_height; y++) {
-            jpeg_read_scanlines(&cinfo, imageBuffer, 1);
-            uint8_t* dstRow = const_cast<uint8_t*>(image.rawRowPtr(y));
-            memcpy(dstRow, imageBuffer[0], cinfo.output_width*cinfo.output_components);
-        }
-        jpeg_finish_decompress(&cinfo);
-    }
-
-    // clean up.
-    jpeg_destroy_decompress(&cinfo);
-
-    return image;
-#else
-    PANGOLIN_UNUSED(is);
-    throw std::runtime_error("Rebuild Pangolin for JPEG support.");
-#endif // HAVE_JPEG
-
-}
-
-std::vector<std::streampos> GetMJpegOffsets(std::ifstream& is) {
-    std::vector<std::streampos> offsets;
-
-#ifdef HAVE_JPEG
-    struct jpeg_decompress_struct cinfo;
-    struct jpeg_error_mgr jerr;
-    cinfo.err = jpeg_std_error(&jerr);
-    jerr.error_exit = error_handler;
-    jpeg_create_decompress(&cinfo);
-    pango_jpeg_set_source_mgr(&cinfo, is);
-
-    try {
-        while(true) {
-            // read info from header.
-            std::streampos jpeg_start_pos = is.tellg();
-            int r = jpeg_read_header(&cinfo, TRUE);
-            if (r != JPEG_HEADER_OK) {
-                throw std::runtime_error("Failed to read JPEG header.");
-            } else if (cinfo.num_components != 3 && cinfo.num_components != 1) {
-                throw std::runtime_error("Unsupported number of color components");
-            } else {
-                jpeg_start_decompress(&cinfo);
-
-                // resize storage if necessary
-                JSAMPARRAY imageBuffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE,
-                                                                    cinfo.output_width*cinfo.output_components, 1);
-                // TODO: Is there a better way to truly skip ANY decoding?
+        JSAMPARRAY imageBuffer = (*cinfo.mem->alloc_sarray)(
+            (j_common_ptr)&cinfo, JPOOL_IMAGE,
+            cinfo.output_width * cinfo.output_components, 1);
+        // TODO: Is there a better way to truly skip ANY decoding?
 #ifdef LIBJPEG_TURBO_VERSION
-                // bug in libjpeg-turbo prevents us from skipping to end, so skip to end-1
-                jpeg_skip_scanlines(&cinfo, cinfo.output_height-1);
-                jpeg_read_scanlines(&cinfo, imageBuffer, 1);
+        // bug in libjpeg-turbo prevents us from skipping to end, so skip to
+        // end-1
+        jpeg_skip_scanlines(&cinfo, cinfo.output_height - 1);
+        jpeg_read_scanlines(&cinfo, imageBuffer, 1);
 #else
-                for (size_t y = 0; y < cinfo.output_height; y++) {
-                    jpeg_read_scanlines(&cinfo, imageBuffer, 1);
-                }
-#endif
-                jpeg_finish_decompress(&cinfo);
-                offsets.push_back(jpeg_start_pos);
-                cinfo.src->term_source(&cinfo);
-            }
+        for (size_t y = 0; y < cinfo.output_height; y++) {
+          jpeg_read_scanlines(&cinfo, imageBuffer, 1);
         }
-    }  catch (const std::runtime_error&) {
-    }
-
-    jpeg_destroy_decompress(&cinfo);
-
-    if(offsets.size() > 0) {
-        is.clear(); // clear eof marker
-        is.seekg(offsets[0]);
-    }
 #endif
-    return offsets;
+        jpeg_finish_decompress(&cinfo);
+        offsets.push_back(jpeg_start_pos);
+        cinfo.src->term_source(&cinfo);
+      }
+    }
+  } catch (const std::runtime_error&) {
+  }
+
+  jpeg_destroy_decompress(&cinfo);
+
+  if (offsets.size() > 0) {
+    is.clear();  // clear eof marker
+    is.seekg(offsets[0]);
+  }
+#endif
+  return offsets;
 }
 
-IntensityImage<> LoadJpg(const std::string& filename) {
-    std::ifstream f(filename);
-    return LoadJpg(f);
+IntensityImage<> LoadJpg(const std::string& filename)
+{
+  std::ifstream f(filename);
+  return LoadJpg(f);
 }
 
-void SaveJpg(const IntensityImage<>& img, std::ostream& os, float quality) {
+void SaveJpg(const IntensityImage<>& img, std::ostream& os, float quality)
+{
 #ifdef HAVE_JPEG
-    const int iquality = (int)std::max(std::min(quality, 100.0f),0.0f);
+  const int iquality = (int)std::max(std::min(quality, 100.0f), 0.0f);
 
-    struct jpeg_compress_struct cinfo;
-    struct jpeg_error_mgr       jerr;
+  struct jpeg_compress_struct cinfo;
+  struct jpeg_error_mgr jerr;
 
-    if (img.numChannels() != 1 && img.numChannels() != 3) {
-        throw std::runtime_error("Unsupported number of image channels.");
-    }
-    if (img.numBytesPerPixelChannel() != 1) {
-        throw std::runtime_error("Unsupported image depth.");
-    }
+  if (img.numChannels() != 1 && img.numChannels() != 3) {
+    throw std::runtime_error("Unsupported number of image channels.");
+  }
+  if (img.numBytesPerPixelChannel() != 1) {
+    throw std::runtime_error("Unsupported image depth.");
+  }
 
-    // set up compression structure
-    cinfo.err = jpeg_std_error(&jerr);
-    jpeg_create_compress(&cinfo);
-    pango_jpeg_set_dest_mgr(&cinfo, os);
+  // set up compression structure
+  cinfo.err = jpeg_std_error(&jerr);
+  jpeg_create_compress(&cinfo);
+  pango_jpeg_set_dest_mgr(&cinfo, os);
 
-    cinfo.image_width      = (JDIMENSION)img.width();
-    cinfo.image_height     = (JDIMENSION)img.height();
-    cinfo.input_components = img.numChannels();
-    if (img.numChannels() == 3) {
-        cinfo.in_color_space   = JCS_RGB;
-    } else {
-        cinfo.in_color_space   = JCS_GRAYSCALE;
-    }
+  cinfo.image_width = (JDIMENSION)img.width();
+  cinfo.image_height = (JDIMENSION)img.height();
+  cinfo.input_components = img.numChannels();
+  if (img.numChannels() == 3) {
+    cinfo.in_color_space = JCS_RGB;
+  } else {
+    cinfo.in_color_space = JCS_GRAYSCALE;
+  }
 
-    jpeg_set_defaults(&cinfo);
-    jpeg_set_quality(&cinfo, iquality, (boolean)true);
-    jpeg_start_compress(&cinfo, (boolean)true);
+  jpeg_set_defaults(&cinfo);
+  jpeg_set_quality(&cinfo, iquality, (boolean) true);
+  jpeg_start_compress(&cinfo, (boolean) true);
 
-    JSAMPROW row;
-    while (cinfo.next_scanline < cinfo.image_height) {
-        row = (JSAMPROW)((char*)img.rawRowPtr(cinfo.next_scanline));
-        jpeg_write_scanlines(&cinfo, &row, 1);
-    }
+  JSAMPROW row;
+  while (cinfo.next_scanline < cinfo.image_height) {
+    row = (JSAMPROW)((char*)img.rawRowPtr(cinfo.next_scanline));
+    jpeg_write_scanlines(&cinfo, &row, 1);
+  }
 
-    jpeg_finish_compress(&cinfo);
-    jpeg_destroy_compress(&cinfo);
+  jpeg_finish_compress(&cinfo);
+  jpeg_destroy_compress(&cinfo);
 #else
-    PANGOLIN_UNUSED(img);
-    PANGOLIN_UNUSED(fmt);
-    PANGOLIN_UNUSED(os);
-    PANGOLIN_UNUSED(quality);
-    throw std::runtime_error("Rebuild Pangolin for JPEG support.");
-#endif // HAVE_JPEG
+  PANGOLIN_UNUSED(img);
+  PANGOLIN_UNUSED(fmt);
+  PANGOLIN_UNUSED(os);
+  PANGOLIN_UNUSED(quality);
+  throw std::runtime_error("Rebuild Pangolin for JPEG support.");
+#endif  // HAVE_JPEG
 }
 
-void SaveJpg(const IntensityImage<>& img, const std::string& filename, float quality) {
-    std::ofstream f(filename);
-    SaveJpg(img, f, quality);
+void SaveJpg(
+    const IntensityImage<>& img, const std::string& filename, float quality)
+{
+  std::ofstream f(filename);
+  SaveJpg(img, f, quality);
 }
 
-}
+}  // namespace pangolin

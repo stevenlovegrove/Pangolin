@@ -1,7 +1,6 @@
-#include <pangolin/utils/posix/shared_memory_buffer.h>
-
 #include <fcntl.h>
 #include <limits.h>
+#include <pangolin/utils/posix/shared_memory_buffer.h>
 #include <sys/file.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -16,14 +15,16 @@ namespace pangolin
 // objects.
 class PosixSharedMemoryBuffer : public SharedMemoryBufferInterface
 {
-public:
-  PosixSharedMemoryBuffer(int fd, unsigned char *ptr, size_t size, bool ownership, const std::string& name) :
-    _fd(fd),
-    _ptr(ptr),
-    _size(size),
-    _ownership(ownership),
-    _name(name),
-    _lockCount(0)
+  public:
+  PosixSharedMemoryBuffer(
+      int fd, unsigned char *ptr, size_t size, bool ownership,
+      const std::string &name) :
+      _fd(fd),
+      _ptr(ptr),
+      _size(size),
+      _ownership(ownership),
+      _name(name),
+      _lockCount(0)
   {
   }
 
@@ -40,7 +41,7 @@ public:
   bool tryLock() override
   {
     if (_lockCount == 0) {
-      int err = flock(_fd, LOCK_EX|LOCK_NB);
+      int err = flock(_fd, LOCK_EX | LOCK_NB);
       if (0 == err) {
         _lockCount++;
       }
@@ -64,17 +65,11 @@ public:
     _lockCount--;
   }
 
-  unsigned char *ptr() override
-  {
-    return _ptr;
-  }
+  unsigned char *ptr() override { return _ptr; }
 
-  std::string name() override
-  {
-    return _name;
-  }
+  std::string name() override { return _name; }
 
-private:
+  private:
   int _fd;
   unsigned char *_ptr;
   size_t _size;
@@ -83,13 +78,14 @@ private:
   unsigned int _lockCount;
 };
 
-std::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffer(const
-  string& name, size_t size)
+std::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffer(
+    const string &name, size_t size)
 {
   std::shared_ptr<SharedMemoryBufferInterface> ptr;
 
-  int fd = shm_open(name.c_str(), O_RDWR | O_RDONLY | O_CREAT,
-    S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+  int fd = shm_open(
+      name.c_str(), O_RDWR | O_RDONLY | O_CREAT,
+      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
   if (-1 == fd) {
     return ptr;
   }
@@ -100,15 +96,15 @@ std::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffer(c
     return ptr;
   }
 
-  unsigned char *buffer = reinterpret_cast<unsigned char *>(mmap(NULL, size,
-      PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
+  unsigned char *buffer = reinterpret_cast<unsigned char *>(
+      mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
 
   ptr.reset(new PosixSharedMemoryBuffer(fd, buffer, size, true, name));
   return ptr;
 }
 
-std::shared_ptr<SharedMemoryBufferInterface> open_named_shared_memory_buffer(const
-  string& name, bool readwrite)
+std::shared_ptr<SharedMemoryBufferInterface> open_named_shared_memory_buffer(
+    const string &name, bool readwrite)
 {
   std::shared_ptr<SharedMemoryBufferInterface> ptr;
 
@@ -124,11 +120,11 @@ std::shared_ptr<SharedMemoryBufferInterface> open_named_shared_memory_buffer(con
   }
 
   size_t size = sbuf.st_size;
-  unsigned char *buffer = reinterpret_cast<unsigned char *>(mmap(NULL, size,
-      PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
+  unsigned char *buffer = reinterpret_cast<unsigned char *>(
+      mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
 
   ptr.reset(new PosixSharedMemoryBuffer(fd, buffer, size, false, name));
   return ptr;
 }
 
-}
+}  // namespace pangolin

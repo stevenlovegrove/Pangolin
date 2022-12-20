@@ -27,102 +27,108 @@
 
 #pragma once
 
-#include <pangolin/video/video_interface.h>
-
 #include <asm/types.h>
 #include <linux/videodev2.h>
+#include <pangolin/video/video_interface.h>
 
 namespace pangolin
 {
 
 typedef enum {
-    IO_METHOD_READ,
-    IO_METHOD_MMAP,
-    IO_METHOD_USERPTR,
+  IO_METHOD_READ,
+  IO_METHOD_MMAP,
+  IO_METHOD_USERPTR,
 } io_method;
 
 struct buffer {
-    void*  start;
-    size_t length;
+  void* start;
+  size_t length;
 };
 
-class PANGOLIN_EXPORT V4lVideo : public VideoInterface, public VideoUvcInterface, public VideoPropertiesInterface
+class PANGOLIN_EXPORT V4lVideo : public VideoInterface,
+                                 public VideoUvcInterface,
+                                 public VideoPropertiesInterface
 {
-public:
-    V4lVideo(const char* dev_name, uint32_t period, io_method io = IO_METHOD_MMAP, unsigned iwidth=0, unsigned iheight=0, unsigned v4l_format=V4L2_PIX_FMT_YUYV);
-    ~V4lVideo();
+  public:
+  V4lVideo(
+      const char* dev_name, uint32_t period, io_method io = IO_METHOD_MMAP,
+      unsigned iwidth = 0, unsigned iheight = 0,
+      unsigned v4l_format = V4L2_PIX_FMT_YUYV);
+  ~V4lVideo();
 
-    //! Implement VideoInput::Start()
-    void Start();
+  //! Implement VideoInput::Start()
+  void Start();
 
-    //! Implement VideoInput::Stop()
-    void Stop();
+  //! Implement VideoInput::Stop()
+  void Stop();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const;
 
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    //! Implement VideoUvcInterface::IoCtrl()
-    int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code);
+  //! Implement VideoUvcInterface::IoCtrl()
+  int IoCtrl(
+      uint8_t unit, uint8_t ctrl, unsigned char* data, int len,
+      UvcRequestCode req_code);
 
-    bool GetExposure(int& exp_us);
+  bool GetExposure(int& exp_us);
 
-    bool SetExposure(int exp_us);
+  bool SetExposure(int exp_us);
 
-    bool GetGain(float& gain);
+  bool GetGain(float& gain);
 
-    bool SetGain(float gain);
+  bool SetGain(float gain);
 
-    int GetFileDescriptor() const{
-        return fd;
-    }
+  int GetFileDescriptor() const { return fd; }
 
-    //! Access JSON properties of device
-    const picojson::value& DeviceProperties() const;
+  //! Access JSON properties of device
+  const picojson::value& DeviceProperties() const;
 
-    //! Access JSON properties of most recently captured frame
-    const picojson::value& FrameProperties() const;
+  //! Access JSON properties of most recently captured frame
+  const picojson::value& FrameProperties() const;
 
-protected:
-    void InitPangoDeviceProperties();
+  protected:
+  void InitPangoDeviceProperties();
 
+  int ReadFrame(unsigned char* image, bool wait = true);
+  void Mainloop();
 
-    int ReadFrame(unsigned char* image, bool wait = true);
-    void Mainloop();
+  void init_read(unsigned int buffer_size);
+  void init_mmap(const char* dev_name);
+  void init_userp(const char* dev_name, unsigned int buffer_size);
 
-    void init_read(unsigned int buffer_size);
-    void init_mmap(const char* dev_name);
-    void init_userp(const char* dev_name, unsigned int buffer_size);
+  void init_device(
+      const char* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps,
+      unsigned v4l_format = V4L2_PIX_FMT_YUYV,
+      v4l2_field field = V4L2_FIELD_INTERLACED);
+  void uninit_device();
 
-    void init_device(const char* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps, unsigned v4l_format = V4L2_PIX_FMT_YUYV, v4l2_field field = V4L2_FIELD_INTERLACED);
-    void uninit_device();
+  void open_device(const char* dev_name);
+  void close_device();
 
-    void open_device(const char* dev_name);
-    void close_device();
+  std::vector<StreamInfo> streams;
 
-    std::vector<StreamInfo> streams;
+  io_method io;
+  int fd;
+  buffer* buffers;
+  unsigned int n_buffers;
+  bool running;
+  unsigned width;
+  unsigned height;
+  float fps;
+  size_t image_size;
+  uint32_t period;
 
-    io_method io;
-    int       fd;
-    buffer*   buffers;
-    unsigned  int n_buffers;
-    bool running;
-    unsigned width;
-    unsigned height;
-    float fps;
-    size_t image_size;
-    uint32_t period;
-
-    picojson::value device_properties;
-    picojson::value frame_properties;
+  picojson::value device_properties;
+  picojson::value frame_properties;
 };
 
-}
+}  // namespace pangolin

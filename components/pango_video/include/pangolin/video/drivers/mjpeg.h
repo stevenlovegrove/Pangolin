@@ -27,51 +27,53 @@
 
 #pragma once
 
-#include <pangolin/video/video_interface.h>
 #include <pangolin/image/typed_image.h>
+#include <pangolin/video/video_interface.h>
+
 #include <fstream>
 
 namespace pangolin
 {
 
 // Video class that outputs test video signal.
-class PANGOLIN_EXPORT MjpegVideo : public VideoInterface, public VideoPlaybackInterface
+class PANGOLIN_EXPORT MjpegVideo : public VideoInterface,
+                                   public VideoPlaybackInterface
 {
-public:
-    MjpegVideo(const std::string& filename);
-    ~MjpegVideo();
+  public:
+  MjpegVideo(const std::string& filename);
+  ~MjpegVideo();
 
-    //! Implement VideoInput::Start()
-    void Start() override;
+  //! Implement VideoInput::Start()
+  void Start() override;
 
-    //! Implement VideoInput::Stop()
-    void Stop() override;
+  //! Implement VideoInput::Stop()
+  void Stop() override;
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const override;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const override;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const override;
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const override;
 
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true ) override;
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true) override;
 
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true ) override;
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true) override;
 
-    size_t GetCurrentFrameId() const override;
-    size_t GetTotalFrames() const override;
-    size_t Seek(size_t frameid) override;
+  size_t GetCurrentFrameId() const override;
+  size_t GetTotalFrames() const override;
+  size_t Seek(size_t frameid) override;
 
-protected:
-    bool LoadNext();
+  protected:
+  bool LoadNext();
 
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
-    std::ifstream bFile;
-    TypedImage next_image;
-    std::vector<std::streampos> offsets;
-    size_t next_frame_id;
+  std::vector<StreamInfo> streams;
+  size_t size_bytes;
+  std::ifstream bFile;
+  TypedImage next_image;
+  std::vector<std::streampos> offsets;
+  size_t next_frame_id;
 };
 
-}
+}  // namespace pangolin

@@ -25,96 +25,80 @@
 
 #pragma once
 
-#include <fstream>
-#include <mutex>
-#include <thread>
-
 #include <pangolin/log/packet.h>
-
 #include <pangolin/log/sync_time.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/timer.h>
+
+#include <fstream>
+#include <mutex>
+#include <thread>
 
 namespace pangolin
 {
 
 class PANGOLIN_EXPORT PacketStreamReader
 {
-public:
-    PacketStreamReader();
+  public:
+  PacketStreamReader();
 
-    PacketStreamReader(const std::string& filename);
+  PacketStreamReader(const std::string& filename);
 
-    ~PacketStreamReader();
+  ~PacketStreamReader();
 
-    void Open(const std::string& filename);
+  void Open(const std::string& filename);
 
-    void Close();
+  void Close();
 
-    const std::vector<PacketStreamSource>&
-    Sources() const
-    {
-        return _sources;
-    }
+  const std::vector<PacketStreamSource>& Sources() const { return _sources; }
 
-    // Grab Next available frame packetstream
-    Packet NextFrame();
+  // Grab Next available frame packetstream
+  Packet NextFrame();
 
-    // Grab Next available frame in packetstream from src, discarding other frames.
-    Packet NextFrame(PacketStreamSourceId src);
+  // Grab Next available frame in packetstream from src, discarding other
+  // frames.
+  Packet NextFrame(PacketStreamSourceId src);
 
-    bool Good() const
-    {
-        return _stream.good();
-    }
+  bool Good() const { return _stream.good(); }
 
-    // Jumps to a particular packet.
-    size_t Seek(PacketStreamSourceId src, size_t framenum);
+  // Jumps to a particular packet.
+  size_t Seek(PacketStreamSourceId src, size_t framenum);
 
-    // Jumps to the first packet with time >= time
-    size_t Seek(PacketStreamSourceId src, SyncTime::TimePoint time);
+  // Jumps to the first packet with time >= time
+  size_t Seek(PacketStreamSourceId src, SyncTime::TimePoint time);
 
-    void FixFileIndex();
+  void FixFileIndex();
 
-private:
-    bool GoodToRead();
+  private:
+  bool GoodToRead();
 
-    bool SetupIndex();
+  bool SetupIndex();
 
-    void ParseHeader();
+  void ParseHeader();
 
-    void ParseNewSource();
+  void ParseNewSource();
 
-    bool ParseIndex();
+  bool ParseIndex();
 
-    void RebuildIndex();
+  void RebuildIndex();
 
-    void AppendIndex();
+  void AppendIndex();
 
-    std::streampos ParseFooter();
+  std::streampos ParseFooter();
 
-    void SkipSync();
+  void SkipSync();
 
-    void ReSync() {
-        _stream.syncToTag();
-    }
+  void ReSync() { _stream.syncToTag(); }
 
-    std::string _filename;
-    std::vector<PacketStreamSource> _sources;
-    SyncTime::TimePoint packet_stream_start;
+  std::string _filename;
+  std::vector<PacketStreamSource> _sources;
+  SyncTime::TimePoint packet_stream_start;
 
-    PacketStream _stream;
-    std::recursive_mutex _mutex;
+  PacketStream _stream;
+  std::recursive_mutex _mutex;
 
-    bool _is_pipe;
-    int _pipe_fd;
+  bool _is_pipe;
+  int _pipe_fd;
 };
 
-
-
-
-
-
-
-
-}
+}  // namespace pangolin

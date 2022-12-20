@@ -28,51 +28,54 @@
 #pragma once
 
 #include <pangolin/video/video_interface.h>
+
 #include <set>
 
 namespace pangolin
 {
 
 // Video class that debayers its video input using the given method.
-class PANGOLIN_EXPORT ShiftVideo : public VideoInterface, public VideoFilterInterface
+class PANGOLIN_EXPORT ShiftVideo : public VideoInterface,
+                                   public VideoFilterInterface
 {
-public:
-    ShiftVideo(std::unique_ptr<VideoInterface>& videoin,
-               const std::map<size_t, int>& shift_right_bits,
-               const std::map<size_t, uint32_t>& masks);
-    ~ShiftVideo();
+  public:
+  ShiftVideo(
+      std::unique_ptr<VideoInterface>& videoin,
+      const std::map<size_t, int>& shift_right_bits,
+      const std::map<size_t, uint32_t>& masks);
+  ~ShiftVideo();
 
-    //! Implement VideoInput::Start()
-    void Start();
+  //! Implement VideoInput::Start()
+  void Start();
 
-    //! Implement VideoInput::Stop()
-    void Stop();
+  //! Implement VideoInput::Stop()
+  void Stop();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const;
 
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( uint8_t* image, bool wait = true );
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(uint8_t* image, bool wait = true);
 
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( uint8_t* image, bool wait = true );
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(uint8_t* image, bool wait = true);
 
-    std::vector<VideoInterface*>& InputStreams();
+  std::vector<VideoInterface*>& InputStreams();
 
-protected:
-    void Process(uint8_t* buffer_out, const uint8_t* buffer_in);
+  protected:
+  void Process(uint8_t* buffer_out, const uint8_t* buffer_in);
 
-    std::unique_ptr<VideoInterface> src;
-    std::vector<VideoInterface*> videoin;
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
-    std::unique_ptr<uint8_t[]> buffer;
-    const std::map<size_t, int> shift_right_bits;
-    const std::map<size_t, uint32_t> masks;
-    std::set<std::string> formats_supported;
+  std::unique_ptr<VideoInterface> src;
+  std::vector<VideoInterface*> videoin;
+  std::vector<StreamInfo> streams;
+  size_t size_bytes;
+  std::unique_ptr<uint8_t[]> buffer;
+  const std::map<size_t, int> shift_right_bits;
+  const std::map<size_t, uint32_t> masks;
+  std::set<std::string> formats_supported;
 };
 
-}
+}  // namespace pangolin

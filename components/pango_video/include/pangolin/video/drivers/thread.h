@@ -27,85 +27,88 @@
 
 #pragma once
 
-#include <memory>
-#include <pangolin/video/video_interface.h>
 #include <pangolin/utils/fix_size_buffer_queue.h>
+#include <pangolin/video/video_interface.h>
+
+#include <memory>
 
 namespace pangolin
 {
 
-
-// Video class that creates a thread that keeps pulling frames and processing from its children.
-class PANGOLIN_EXPORT ThreadVideo :  public VideoInterface, public VideoPropertiesInterface,
-        public BufferAwareVideoInterface, public VideoFilterInterface
+// Video class that creates a thread that keeps pulling frames and processing
+// from its children.
+class PANGOLIN_EXPORT ThreadVideo : public VideoInterface,
+                                    public VideoPropertiesInterface,
+                                    public BufferAwareVideoInterface,
+                                    public VideoFilterInterface
 {
-public:
-    ThreadVideo(std::unique_ptr<VideoInterface>& videoin, size_t num_buffers, const std::string& name);
-    ~ThreadVideo();
+  public:
+  ThreadVideo(
+      std::unique_ptr<VideoInterface>& videoin, size_t num_buffers,
+      const std::string& name);
+  ~ThreadVideo();
 
-    //! Implement VideoInput::Start()
-    void Start();
+  //! Implement VideoInput::Start()
+  void Start();
 
-    //! Implement VideoInput::Stop()
-    void Stop();
+  //! Implement VideoInput::Stop()
+  void Stop();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const;
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const;
 
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    const picojson::value& DeviceProperties() const;
+  const picojson::value& DeviceProperties() const;
 
-    const picojson::value& FrameProperties() const;
+  const picojson::value& FrameProperties() const;
 
-    uint32_t AvailableFrames() const;
+  uint32_t AvailableFrames() const;
 
-    bool DropNFrames(uint32_t n);
+  bool DropNFrames(uint32_t n);
 
-    void operator()();
+  void operator()();
 
-    std::vector<VideoInterface*>& InputStreams();
+  std::vector<VideoInterface*>& InputStreams();
 
-protected:
-    struct GrabResult
+  protected:
+  struct GrabResult {
+    GrabResult(const size_t buffer_size) :
+        return_status(false), buffer(new unsigned char[buffer_size])
     {
-        GrabResult(const size_t buffer_size)
-            : return_status(false),
-              buffer(new unsigned char[buffer_size])
-        {
-        }
+    }
 
-        // No copy constructor.
-        GrabResult(const GrabResult& o) = delete;
+    // No copy constructor.
+    GrabResult(const GrabResult& o) = delete;
 
-        // Default move constructor
-        GrabResult(GrabResult&& o) = default;
+    // Default move constructor
+    GrabResult(GrabResult&& o) = default;
 
-        bool return_status;
-        std::unique_ptr<unsigned char[]> buffer;
-        picojson::value frame_properties;
-    };
-
-    std::unique_ptr<VideoInterface> src;
-    std::vector<VideoInterface*> videoin;
-
-    bool quit_grab_thread;
-    FixSizeBuffersQueue<GrabResult> queue;
-
-    std::condition_variable cv;
-    std::mutex cvMtx;
-    std::thread grab_thread;
-    std::string thread_name;
-
-    mutable picojson::value device_properties;
+    bool return_status;
+    std::unique_ptr<unsigned char[]> buffer;
     picojson::value frame_properties;
+  };
+
+  std::unique_ptr<VideoInterface> src;
+  std::vector<VideoInterface*> videoin;
+
+  bool quit_grab_thread;
+  FixSizeBuffersQueue<GrabResult> queue;
+
+  std::condition_variable cv;
+  std::mutex cvMtx;
+  std::thread grab_thread;
+  std::string thread_name;
+
+  mutable picojson::value device_properties;
+  picojson::value frame_properties;
 };
 
-}
+}  // namespace pangolin

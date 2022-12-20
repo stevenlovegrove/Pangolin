@@ -26,8 +26,9 @@
  */
 
 #include <pangolin/utils/sigstate.h>
-#include <iostream>
+
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 using namespace std;
@@ -35,26 +36,23 @@ using namespace std;
 namespace pangolin
 {
 
-SigState& SigState::I() {
-    static SigState singleton;
-    return singleton;
-}
-
-SigState::SigState()
+SigState& SigState::I()
 {
+  static SigState singleton;
+  return singleton;
 }
 
-SigState::~SigState() {
-    Clear();
-}
+SigState::SigState() {}
 
-void SigState::Clear() {
-    sig_callbacks.clear();
-}
+SigState::~SigState() { Clear(); }
 
-void RegisterNewSigCallback(SigCallbackFn callback, void* data, const int signal)
+void SigState::Clear() { sig_callbacks.clear(); }
+
+void RegisterNewSigCallback(
+    SigCallbackFn callback, void* data, const int signal)
 {
-    SigState::I().sig_callbacks.insert(std::pair<int, SigCallback>(signal, SigCallback(signal, callback, data)));
+  SigState::I().sig_callbacks.insert(
+      std::pair<int, SigCallback>(signal, SigCallback(signal, callback, data)));
 }
 
-}
+}  // namespace pangolin

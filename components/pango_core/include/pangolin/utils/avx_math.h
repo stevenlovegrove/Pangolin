@@ -35,4 +35,4 @@ namespace pangolin
 #ifdef __AVX2__
 __m256 pow256_ps(__m256 x, __m256 y);
 #endif
-}
+}  // namespace pangolin

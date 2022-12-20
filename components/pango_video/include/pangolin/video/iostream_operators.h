@@ -27,101 +27,114 @@
 
 #pragma once
 
-#include <iostream>
-#include <cctype>
-
-#include <pangolin/video/video_exception.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/video/stream_info.h>
+#include <pangolin/video/video_exception.h>
+
+#include <cctype>
+#include <iostream>
 
 namespace pangolin
 {
 
-struct PANGOLIN_EXPORT Point
-{
-    inline Point() : x(0), y(0) {}
-    inline Point(size_t x, size_t y) : x(x), y(y) {}
-    size_t x;
-    size_t y;
+struct PANGOLIN_EXPORT Point {
+  inline Point() : x(0), y(0) {}
+  inline Point(size_t x, size_t y) : x(x), y(y) {}
+  size_t x;
+  size_t y;
 };
 
 typedef Point ImageDim;
 
-struct PANGOLIN_EXPORT ImageRoi
-{
-    inline ImageRoi() : x(0), y(0), w(0), h(0) {}
-    inline ImageRoi(size_t x, size_t y, size_t w, size_t h) : x(x), y(y), w(w), h(h) {}
-    size_t x; size_t y;
-    size_t w; size_t h;
+struct PANGOLIN_EXPORT ImageRoi {
+  inline ImageRoi() : x(0), y(0), w(0), h(0) {}
+  inline ImageRoi(size_t x, size_t y, size_t w, size_t h) :
+      x(x), y(y), w(w), h(h)
+  {
+  }
+  size_t x;
+  size_t y;
+  size_t w;
+  size_t h;
 };
 
-inline std::istream& operator>> (std::istream &is, ImageDim &dim)
+inline std::istream &operator>>(std::istream &is, ImageDim &dim)
 {
-    if(std::isdigit(is.peek()) ) {
-        // Expect 640x480, 640*480, ...
-        is >> dim.x; is.get(); is >> dim.y;
-    }else{
-        // Expect 'VGA', 'QVGA', etc
-        std::string sdim;
-        is >> sdim;
-        ToUpper(sdim);
+  if (std::isdigit(is.peek())) {
+    // Expect 640x480, 640*480, ...
+    is >> dim.x;
+    is.get();
+    is >> dim.y;
+  } else {
+    // Expect 'VGA', 'QVGA', etc
+    std::string sdim;
+    is >> sdim;
+    ToUpper(sdim);
 
-        if( !sdim.compare("QQVGA") ) {
-            dim = ImageDim(160,120);
-        }else if( !sdim.compare("HQVGA") ) {
-            dim = ImageDim(240,160);
-        }else if( !sdim.compare("QVGA") ) {
-            dim = ImageDim(320,240);
-        }else if( !sdim.compare("WQVGA") ) {
-            dim = ImageDim(360,240);
-        }else if( !sdim.compare("HVGA") ) {
-            dim = ImageDim(480,320);
-        }else if( !sdim.compare("VGA") ) {
-            dim = ImageDim(640,480);
-        }else if( !sdim.compare("WVGA") ) {
-            dim = ImageDim(720,480);
-        }else if( !sdim.compare("SVGA") ) {
-            dim = ImageDim(800,600);
-        }else if( !sdim.compare("DVGA") ) {
-            dim = ImageDim(960,640);
-        }else if( !sdim.compare("WSVGA") ) {
-            dim = ImageDim(1024,600);
-        }else{
-            throw VideoException("Unrecognised image-size string.");
-        }
+    if (!sdim.compare("QQVGA")) {
+      dim = ImageDim(160, 120);
+    } else if (!sdim.compare("HQVGA")) {
+      dim = ImageDim(240, 160);
+    } else if (!sdim.compare("QVGA")) {
+      dim = ImageDim(320, 240);
+    } else if (!sdim.compare("WQVGA")) {
+      dim = ImageDim(360, 240);
+    } else if (!sdim.compare("HVGA")) {
+      dim = ImageDim(480, 320);
+    } else if (!sdim.compare("VGA")) {
+      dim = ImageDim(640, 480);
+    } else if (!sdim.compare("WVGA")) {
+      dim = ImageDim(720, 480);
+    } else if (!sdim.compare("SVGA")) {
+      dim = ImageDim(800, 600);
+    } else if (!sdim.compare("DVGA")) {
+      dim = ImageDim(960, 640);
+    } else if (!sdim.compare("WSVGA")) {
+      dim = ImageDim(1024, 600);
+    } else {
+      throw VideoException("Unrecognised image-size string.");
     }
-    return is;
+  }
+  return is;
 }
 
-inline std::istream& operator>> (std::istream &is, ImageRoi &roi)
+inline std::istream &operator>>(std::istream &is, ImageRoi &roi)
 {
-    is >> roi.x; is.get(); is >> roi.y; is.get();
-    is >> roi.w; is.get(); is >> roi.h;
-    return is;
+  is >> roi.x;
+  is.get();
+  is >> roi.y;
+  is.get();
+  is >> roi.w;
+  is.get();
+  is >> roi.h;
+  return is;
 }
 
-inline std::istream& operator>> (std::istream &is, RuntimePixelType& fmt)
+inline std::istream &operator>>(std::istream &is, RuntimePixelType &fmt)
 {
-    std::string sfmt;
-    is >> sfmt;
-    fmt = PixelFormatFromString(sfmt.c_str());
-    return is;
+  std::string sfmt;
+  is >> sfmt;
+  fmt = PixelFormatFromString(sfmt.c_str());
+  return is;
 }
 
-inline std::istream& operator>> (std::istream &is, StreamInfo &stream)
+inline std::istream &operator>>(std::istream &is, StreamInfo &stream)
 {
-    RuntimePixelType fmt;
-    ImageSize size(0,0);
-    size_t pitch = 0;
-    size_t offset = 0;
+  RuntimePixelType fmt;
+  ImageSize size(0, 0);
+  size_t pitch = 0;
+  size_t offset = 0;
 
-    is >> offset; is.get();
-    is >> size.width; is.get();
-    is >> size.height; is.get();
-    is >> pitch;
-    is >> fmt;
-    stream = StreamInfo(fmt, ImageShape(size,pitch), offset);
-    return is;
+  is >> offset;
+  is.get();
+  is >> size.width;
+  is.get();
+  is >> size.height;
+  is.get();
+  is >> pitch;
+  is >> fmt;
+  stream = StreamInfo(fmt, ImageShape(size, pitch), offset);
+  return is;
 }
 
-}
+}  // namespace pangolin

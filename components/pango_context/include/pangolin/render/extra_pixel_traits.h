@@ -1,12 +1,10 @@
 #pragma once
 
-#include <sophus/lie/se3.h>
 #include <pangolin/gl/color.h>
-
+#include <sophus/lie/se3.h>
 
 // Specialization of sophus::ImageTraits for types we might like to consider
 // in pixel or vertex-like buffers
-
 
 namespace sophus
 {
@@ -36,4 +34,4 @@ struct ImageTraits<pangolin::Color> {
   using ChannelT = float;
 };
 
-}
+}  // namespace sophus

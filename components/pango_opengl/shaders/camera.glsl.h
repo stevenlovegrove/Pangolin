@@ -2,7 +2,8 @@
 // coordinate system of size 'output_image_dim'.
 //  (0, 0) references center of bottom-left pixel
 // tex is a continous coord representing viewport position in the range [0,1]
-vec2 getCameraPixelCoord(vec2 output_image_dim, vec2 tex) {
+vec2 getCameraPixelCoord(vec2 output_image_dim, vec2 tex)
+{
   vec2 cam_continuous = output_image_dim * tex;
 
   // Convert to discrete pixel coordinates
@@ -15,7 +16,9 @@ vec2 getCameraPixelCoord(vec2 output_image_dim, vec2 tex) {
 //  (0, 0) references center of bottom-left pixel
 // viewport_xy:  The top-left of the viewport in window coordinates
 // viewport_dim: The dimensions of the viewport representing the output image
-vec2 getCameraPixelCoord(vec2 output_image_dim, vec2 viewport_xy, vec2 viewport_dim) {
+vec2 getCameraPixelCoord(
+    vec2 output_image_dim, vec2 viewport_xy, vec2 viewport_dim)
+{
   // Window-relative coordinate of fragment
   // Assumes a lower-left origin
   vec2 win = gl_FragCoord.xy;
@@ -31,27 +34,19 @@ vec2 getCameraPixelCoord(vec2 output_image_dim, vec2 viewport_xy, vec2 viewport_
   return cam;
 }
 
-vec3 proj(vec4 p) {
-  return p.xyz / p.w;
-}
+vec3 proj(vec4 p) { return p.xyz / p.w; }
 
-vec3 normToOneZ(vec3 p) {
-  return p.xyz / p.z;
-}
+vec3 normToOneZ(vec3 p) { return p.xyz / p.z; }
 
 // Project the image coordinate `uv` to a 3D point in camera space
-vec3 unproj(mat3 Kinv, vec2 uv) {
-    return Kinv * vec3(uv, 1.0);
-}
+vec3 unproj(mat3 Kinv, vec2 uv) { return Kinv * vec3(uv, 1.0); }
 
-vec3 unproj(vec2 x)
-{
-    return vec3(x,1.0);
-}
+vec3 unproj(vec2 x) { return vec3(x, 1.0); }
 
 // Scales a depth value `real_depth`, in world units, to the range [0, 1]
 // Derived from https://stackoverflow.com/questions/6652253
-float fragDepthFromSceneDepth(float real_depth, float znear, float zfar) {
+float fragDepthFromSceneDepth(float real_depth, float znear, float zfar)
+{
   // Scale to normalized device coordinates, [-1, 1]
   float z_n =
       -((2.0 * znear * zfar) / real_depth - zfar - znear) / (zfar - znear);

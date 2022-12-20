@@ -27,34 +27,41 @@
 
 #pragma once
 
-#include <fstream>
-#include <pangolin/video/video_output_interface.h>
 #include <pangolin/log/packetstream_writer.h>
+#include <pangolin/video/video_output_interface.h>
+
+#include <fstream>
 
 namespace pangolin
 {
 
 class PANGOLIN_EXPORT ImagesVideoOutput : public VideoOutputInterface
 {
-public:
-    ImagesVideoOutput(const std::string& image_folder, const std::string& json_file_out, const std::string &image_file_extension);
-    ~ImagesVideoOutput();
+  public:
+  ImagesVideoOutput(
+      const std::string& image_folder, const std::string& json_file_out,
+      const std::string& image_file_extension);
+  ~ImagesVideoOutput();
 
-    const std::vector<StreamInfo>& Streams() const override;
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const picojson::value& device_properties) override;
-    int WriteStreams(const unsigned char* data, const picojson::value& frame_properties) override;
-    bool IsPipe() const override;
+  const std::vector<StreamInfo>& Streams() const override;
+  void SetStreams(
+      const std::vector<StreamInfo>& streams, const std::string& uri,
+      const picojson::value& device_properties) override;
+  int WriteStreams(
+      const unsigned char* data,
+      const picojson::value& frame_properties) override;
+  bool IsPipe() const override;
 
-protected:
-    std::vector<StreamInfo> streams;
-    std::string input_uri;
-    picojson::value device_properties;
-    picojson::value json_frames;
+  protected:
+  std::vector<StreamInfo> streams;
+  std::string input_uri;
+  picojson::value device_properties;
+  picojson::value json_frames;
 
-    size_t image_index;
-    std::string image_folder;
-    std::string image_file_extension;
-    std::ofstream file;
+  size_t image_index;
+  std::string image_folder;
+  std::string image_file_extension;
+  std::ofstream file;
 };
 
-}
+}  // namespace pangolin

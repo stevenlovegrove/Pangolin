@@ -35,118 +35,124 @@
 namespace pangolin
 {
 
-template<typename BufPType>
+template <typename BufPType>
 class FixSizeBuffersQueue
 {
+  public:
+  FixSizeBuffersQueue() {}
 
-public:
-    FixSizeBuffersQueue() {}
+  ~FixSizeBuffersQueue() {}
 
-    ~FixSizeBuffersQueue() {
+  BufPType getNewest()
+  {
+    std::lock_guard<std::mutex> vlock(vMtx);
+    std::lock_guard<std::mutex> elock(eMtx);
+    if (validBuffers.size() == 0) {
+      // Empty queue.
+      return 0;
+    } else {
+      // Requeue all but newest buffers.
+      while (validBuffers.size() > 1) {
+        emptyBuffers.push_back(std::move(validBuffers.front()));
+        validBuffers.pop_front();
+      }
+      // Return newest buffer.
+      BufPType bp = std::move(validBuffers.front());
+      validBuffers.pop_front();
+      return bp;
     }
+  }
 
-    BufPType getNewest() {
-        std::lock_guard<std::mutex> vlock(vMtx);
-        std::lock_guard<std::mutex> elock(eMtx);
-        if(validBuffers.size() == 0) {
-            // Empty queue.
-            return 0;
-        } else {
-            // Requeue all but newest buffers.
-            while(validBuffers.size() > 1) {
-                emptyBuffers.push_back(std::move(validBuffers.front()));
-                validBuffers.pop_front();
-            }
-            // Return newest buffer.
-            BufPType bp = std::move(validBuffers.front());
-            validBuffers.pop_front();
-            return bp;
-        }
+  BufPType getNext()
+  {
+    std::lock_guard<std::mutex> vlock(vMtx);
+    if (validBuffers.size() == 0) {
+      // Empty queue.
+      return 0;
+    } else {
+      // Return oldest buffer.
+      BufPType bp = std::move(validBuffers.front());
+      validBuffers.pop_front();
+      return bp;
     }
+  }
 
-    BufPType getNext() {
-        std::lock_guard<std::mutex> vlock(vMtx);
-        if(validBuffers.size() == 0) {
-            // Empty queue.
-            return 0;
-        } else {
-            // Return oldest buffer.
-            BufPType bp = std::move(validBuffers.front());
-            validBuffers.pop_front();
-            return bp;
-        }
+  BufPType getFreeBuffer()
+  {
+    std::lock_guard<std::mutex> vlock(vMtx);
+    std::lock_guard<std::mutex> elock(eMtx);
+    if (emptyBuffers.size() > 0) {
+      // Simply get a free buffer from the free buffers list.
+      BufPType bp = std::move(emptyBuffers.front());
+      emptyBuffers.pop_front();
+      return bp;
+    } else {
+      if (validBuffers.size() == 0) {
+        // Queue not yet initialized.
+        throw std::runtime_error("Queue not yet initialised.");
+      } else {
+        std::cerr << "Out of free buffers." << std::endl;
+        // No free buffers return oldest among the valid buffers.
+        BufPType bp = std::move(validBuffers.front());
+        validBuffers.pop_front();
+        return bp;
+      }
     }
+  }
 
-    BufPType getFreeBuffer() {
-        std::lock_guard<std::mutex> vlock(vMtx);
-        std::lock_guard<std::mutex> elock(eMtx);
-        if(emptyBuffers.size() > 0) {
-            // Simply get a free buffer from the free buffers list.
-            BufPType bp = std::move(emptyBuffers.front());
-            emptyBuffers.pop_front();
-            return bp;
-        } else {
-            if(validBuffers.size() == 0) {
-                // Queue not yet initialized.
-                throw std::runtime_error("Queue not yet initialised.");
-            } else {
-                std::cerr << "Out of free buffers." << std::endl;
-                // No free buffers return oldest among the valid buffers.
-                BufPType bp = std::move(validBuffers.front());
-                validBuffers.pop_front();
-                return bp;
-            }
-        }
+  void addValidBuffer(BufPType bp)
+  {
+    // Add buffer to valid buffers queue.
+    std::lock_guard<std::mutex> vlock(vMtx);
+    validBuffers.push_back(std::move(bp));
+  }
+
+  void returnOrAddUsedBuffer(BufPType bp)
+  {
+    // Add buffer back to empty buffers queue.
+    std::lock_guard<std::mutex> elock(eMtx);
+    emptyBuffers.push_back(std::move(bp));
+  }
+
+  size_t AvailableFrames() const
+  {
+    std::lock_guard<std::mutex> vlock(vMtx);
+    return validBuffers.size();
+  }
+
+  size_t EmptyBuffers() const
+  {
+    std::lock_guard<std::mutex> elock(eMtx);
+    return emptyBuffers.size();
+  }
+
+  bool DropNFrames(size_t n)
+  {
+    std::lock_guard<std::mutex> vlock(vMtx);
+    if (validBuffers.size() < n) {
+      return false;
+    } else {
+      std::lock_guard<std::mutex> elock(eMtx);
+      // Requeue all but newest buffers.
+      for (unsigned int i = 0; i < n; ++i) {
+        emptyBuffers.push_back(std::move(validBuffers.front()));
+        validBuffers.pop_front();
+      }
+      return true;
     }
+  }
 
-    void addValidBuffer(BufPType bp) {
-        // Add buffer to valid buffers queue.
-        std::lock_guard<std::mutex> vlock(vMtx);
-        validBuffers.push_back(std::move(bp));
-    }
+  //    unsigned int BufferSizeBytes(){
+  //        return bufferSizeBytes;
+  //    }
 
-    void returnOrAddUsedBuffer(BufPType bp) {
-        // Add buffer back to empty buffers queue.
-        std::lock_guard<std::mutex> elock(eMtx);
-        emptyBuffers.push_back(std::move(bp));
-    }
-
-    size_t AvailableFrames() const {
-        std::lock_guard<std::mutex> vlock(vMtx);
-        return validBuffers.size();
-    }
-
-    size_t EmptyBuffers() const {
-        std::lock_guard<std::mutex> elock(eMtx);
-        return emptyBuffers.size();
-    }
-
-    bool DropNFrames(size_t n) {
-        std::lock_guard<std::mutex> vlock(vMtx);
-        if(validBuffers.size() < n) {
-            return false;
-        } else {
-            std::lock_guard<std::mutex> elock(eMtx);
-            // Requeue all but newest buffers.
-            for(unsigned int i=0; i<n; ++i) {
-                emptyBuffers.push_back(std::move(validBuffers.front()));
-                validBuffers.pop_front();
-            }
-            return true;
-        }
-    }
-
-//    unsigned int BufferSizeBytes(){
-//        return bufferSizeBytes;
-//    }
-
-private:
-    std::list<BufPType> validBuffers;
-    std::list<BufPType> emptyBuffers;
-    mutable std::mutex vMtx;
-    mutable std::mutex eMtx;
-//    unsigned int maxNumBuffers;
-//    unsigned int bufferSizeBytes;
+  private:
+  std::list<BufPType> validBuffers;
+  std::list<BufPType> emptyBuffers;
+  mutable std::mutex vMtx;
+  mutable std::mutex eMtx;
+  //    unsigned int maxNumBuffers;
+  //    unsigned int bufferSizeBytes;
 };
 
-}
+}  // namespace pangolin

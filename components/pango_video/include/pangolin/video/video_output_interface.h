@@ -27,26 +27,31 @@
 
 #pragma once
 
-#include <vector>
 #include <pangolin/platform.h>
-#include <pangolin/video/stream_info.h>
 #include <pangolin/utils/picojson.h>
+#include <pangolin/video/stream_info.h>
 
-namespace pangolin {
+#include <vector>
+
+namespace pangolin
+{
 
 //! Interface to video recording destinations
-struct PANGOLIN_EXPORT VideoOutputInterface
-{
-    virtual ~VideoOutputInterface() {}
+struct PANGOLIN_EXPORT VideoOutputInterface {
+  virtual ~VideoOutputInterface() {}
 
-    //! Get format and dimensions of all video streams
-    virtual const std::vector<StreamInfo>& Streams() const = 0;
+  //! Get format and dimensions of all video streams
+  virtual const std::vector<StreamInfo>& Streams() const = 0;
 
-    virtual void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri ="", const picojson::value& properties = picojson::value() ) = 0;
+  virtual void SetStreams(
+      const std::vector<StreamInfo>& streams, const std::string& uri = "",
+      const picojson::value& properties = picojson::value()) = 0;
 
-    virtual int WriteStreams(const unsigned char* data, const picojson::value& frame_properties = picojson::value() ) = 0;
+  virtual int WriteStreams(
+      const unsigned char* data,
+      const picojson::value& frame_properties = picojson::value()) = 0;
 
-    virtual bool IsPipe() const = 0;
+  virtual bool IsPipe() const = 0;
 };
 
-}
+}  // namespace pangolin

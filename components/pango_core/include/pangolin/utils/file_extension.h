@@ -28,33 +28,32 @@
 #pragma once
 
 #include <pangolin/platform.h>
+
 #include <string>
 
 namespace pangolin
 {
 
-enum ImageFileType
-{
-    ImageFileTypePpm,
-    ImageFileTypeTga,
-    ImageFileTypePng,
-    ImageFileTypeJpg,
-    ImageFileTypeTiff,
-    ImageFileTypeGif,
-    ImageFileTypeExr,
-    ImageFileTypeBmp,
-    ImageFileTypePango,
-    ImageFileTypePvn,
-    ImageFileTypeVrs,
-    ImageFileTypeZstd,
-    ImageFileTypeLz4,
-    ImageFileTypeP12b,
-    ImageFileTypePly,
-    ImageFileTypeObj,
-    ImageFileTypeArw,
-    ImageFileTypeUnknown
+enum ImageFileType {
+  ImageFileTypePpm,
+  ImageFileTypeTga,
+  ImageFileTypePng,
+  ImageFileTypeJpg,
+  ImageFileTypeTiff,
+  ImageFileTypeGif,
+  ImageFileTypeExr,
+  ImageFileTypeBmp,
+  ImageFileTypePango,
+  ImageFileTypePvn,
+  ImageFileTypeVrs,
+  ImageFileTypeZstd,
+  ImageFileTypeLz4,
+  ImageFileTypeP12b,
+  ImageFileTypePly,
+  ImageFileTypeObj,
+  ImageFileTypeArw,
+  ImageFileTypeUnknown
 };
-
 
 PANGOLIN_EXPORT
 std::string ImageFileTypeToName(ImageFileType);
@@ -74,4 +73,4 @@ ImageFileType FileTypeExtension(const std::string& ext);
 PANGOLIN_EXPORT
 ImageFileType FileType(const std::string& filename);
 
-}
+}  // namespace pangolin

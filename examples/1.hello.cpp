@@ -33,15 +33,18 @@
     (TODO)
 */
 
-
 using namespace pangolin;
 
-const char* image_url = "https://www.wwf.org.uk/sites/default/files/styles/gallery_image/public/2019-09/pangolin_with_tongue_out.jpg";
+const char* image_url =
+    "https://www.wwf.org.uk/sites/default/files/styles/gallery_image/public/"
+    "2019-09/pangolin_with_tongue_out.jpg";
 
-int main( int /*argc*/, char** /*argv*/ )
+int main(int /*argc*/, char** /*argv*/)
 {
-    auto context = Context::Create({ .title="Hello Pangolin World!", } );
-    context->setLayout(LoadImage(image_url));
-    context->loop();
-    return 0;
+  auto context = Context::Create({
+      .title = "Hello Pangolin World!",
+  });
+  context->setLayout(LoadImage(image_url));
+  context->loop();
+  return 0;
 }

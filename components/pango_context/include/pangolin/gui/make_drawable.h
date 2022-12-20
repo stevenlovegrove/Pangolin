@@ -1,30 +1,25 @@
 #pragma once
 
+#include <pangolin/gl/color.h>
 #include <pangolin/gui/draw_layer.h>
 #include <pangolin/gui/drawn_primitives.h>
-#include <pangolin/gl/color.h>
 
-namespace pangolin{
-
-namespace draw{
-struct Shape
+namespace pangolin
 {
-    Eigen::Vector3d pos = {0.0, 0.0, 0.0};
-    Eigen::Vector4d color = {1.0, 0.3, 0.5, 1.0};
-    double size = 1.0;
-    DrawnPrimitives::Shape type = DrawnPrimitives::Shape::hollow_star;
+
+namespace draw
+{
+struct Shape {
+  Eigen::Vector3d pos = {0.0, 0.0, 0.0};
+  Eigen::Vector4d color = {1.0, 0.3, 0.5, 1.0};
+  double size = 1.0;
+  DrawnPrimitives::Shape type = DrawnPrimitives::Shape::hollow_star;
 };
 
 struct Cube {
-
   float size = 1.f;
-  std::array<Color, 6> colors = {
-      Color::red(),
-      Color::red(),
-      Color::green(),
-      Color::green(),
-      Color::blue(),
-      Color::blue()};
+  std::array<Color, 6> colors = {Color::red(),   Color::red(),  Color::green(),
+                                 Color::green(), Color::blue(), Color::blue()};
 };
 
 // https://en.wikipedia.org/w/index.php?title=Geodesic_polyhedron&oldid=1011674560
@@ -43,11 +38,11 @@ struct Axis {
 };
 
 struct Axes {
- static Axes from(
-      std::vector<sophus::SE3d> const& entity_poses_axis_d,
-      float scale = 0.1f,
-      float line_width = 1.5f) {
-    Axes axes{.scale = scale,.line_width=line_width};
+  static Axes from(
+      std::vector<sophus::SE3d> const& entity_poses_axis_d, float scale = 0.1f,
+      float line_width = 1.5f)
+  {
+    Axes axes{.scale = scale, .line_width = line_width};
     for (auto drawable_from_axis : axes.drawable_from_axis_poses) {
       axes.drawable_from_axis_poses.push_back(drawable_from_axis.cast<float>());
     }
@@ -55,10 +50,10 @@ struct Axes {
   }
 
   static Axes from(
-      std::vector<sophus::SE3f> const& entity_poses_axis_d,
-      float scale = 0.1f,
-      float line_width = 1.5f) {
-    Axes axes{.scale = scale,.line_width=line_width};
+      std::vector<sophus::SE3f> const& entity_poses_axis_d, float scale = 0.1f,
+      float line_width = 1.5f)
+  {
+    Axes axes{.scale = scale, .line_width = line_width};
     axes.drawable_from_axis_poses = entity_poses_axis_d;
     return axes;
   }
@@ -68,11 +63,9 @@ struct Axes {
   float line_width = 1.5;
 };
 
-
-
-template<class T>
+template <class T>
 struct Points3 {
-  std::vector<Eigen::Vector<T,3>> points;
+  std::vector<Eigen::Vector<T, 3>> points;
   Color color;
   float size = 1.5f;
 };
@@ -81,25 +74,19 @@ using Points3f = Points3<float>;
 using Points3d = Points3<double>;
 
 struct Line2 {
- Line2() {}
-  Line2(
-      Eigen::Vector2f p0,
-      Eigen::Vector2f p1,
-      Color color = Color::white())
-      : a(p0), b(p1), color(color) {}
-  Line2(
-      Eigen::Vector2d p0,
-      Eigen::Vector2d p1,
-      Color color = Color::white())
-      : a(p0.cast<float>()), b(p1.cast<float>()), color(color) {}
-
-  Eigen::Vector3f toXy0A() const {
-    return Eigen::Vector3f(a.x(), a.y(), 0.f);
+  Line2() {}
+  Line2(Eigen::Vector2f p0, Eigen::Vector2f p1, Color color = Color::white()) :
+      a(p0), b(p1), color(color)
+  {
+  }
+  Line2(Eigen::Vector2d p0, Eigen::Vector2d p1, Color color = Color::white()) :
+      a(p0.cast<float>()), b(p1.cast<float>()), color(color)
+  {
   }
 
-    Eigen::Vector3f toXy0B() const {
-    return Eigen::Vector3f(b.x(), b.y(), 0.f);
-  }
+  Eigen::Vector3f toXy0A() const { return Eigen::Vector3f(a.x(), a.y(), 0.f); }
+
+  Eigen::Vector3f toXy0B() const { return Eigen::Vector3f(b.x(), b.y(), 0.f); }
 
   Eigen::Vector2f a = Eigen::Vector2f::Zero();
   Eigen::Vector2f b = Eigen::Vector2f::Zero();
@@ -109,27 +96,20 @@ struct Line2 {
 struct Line3 {
   Line3() {}
 
-  Line3(
-      Eigen::Vector3f p0,
-      Eigen::Vector3f p1)
-      : a(p0), b(p1)  {}
-  Line3(
-      Eigen::Vector3f p0,
-      Eigen::Vector3f p1,
-       Color color)
-      : Line3(p0,p1) {
-    this-> color = color;
+  Line3(Eigen::Vector3f p0, Eigen::Vector3f p1) : a(p0), b(p1) {}
+  Line3(Eigen::Vector3f p0, Eigen::Vector3f p1, Color color) : Line3(p0, p1)
+  {
+    this->color = color;
   }
 
-  Line3(
-      Eigen::Vector3d p0,
-      Eigen::Vector3d p1)
-      : Line3(p0.cast<float>().eval(), p1.cast<float>().eval()) {}
-  Line3(
-      Eigen::Vector3d p0,
-      Eigen::Vector3d p1,
-      Color color)
-      : Line3(p0.cast<float>().eval(), p1.cast<float>().eval(), color) {}
+  Line3(Eigen::Vector3d p0, Eigen::Vector3d p1) :
+      Line3(p0.cast<float>().eval(), p1.cast<float>().eval())
+  {
+  }
+  Line3(Eigen::Vector3d p0, Eigen::Vector3d p1, Color color) :
+      Line3(p0.cast<float>().eval(), p1.cast<float>().eval(), color)
+  {
+  }
 
   Eigen::Vector3f a = Eigen::Vector3f::Zero();
   Eigen::Vector3f b = Eigen::Vector3f::Zero();
@@ -143,90 +123,90 @@ struct CameraFrustum {
   Color color = Color::red();
 };
 
-}
+}  // namespace draw
 
-template<>
+template <>
 struct DrawableConversionTraits<draw::Shape> {
-static Shared<Drawable> makeDrawable(const draw::Shape& x);
+  static Shared<Drawable> makeDrawable(const draw::Shape& x);
 };
 
-
-template<>
+template <>
 struct DrawableConversionTraits<draw::Cube> {
-static Shared<Drawable> makeDrawable(const draw::Cube& x);
+  static Shared<Drawable> makeDrawable(const draw::Cube& x);
 };
 
-template<>
+template <>
 struct DrawableConversionTraits<draw::Icosphere> {
-static Shared<Drawable> makeDrawable(const draw::Icosphere& x);
+  static Shared<Drawable> makeDrawable(const draw::Icosphere& x);
 };
 
-template<>
+template <>
 struct DrawableConversionTraits<draw::CheckerPlane> {
-static Shared<Drawable> makeDrawable(const draw::CheckerPlane& x);
+  static Shared<Drawable> makeDrawable(const draw::CheckerPlane& x);
 };
 
-template<>
+template <>
 struct DrawableConversionTraits<draw::Axes> {
-static Shared<Drawable> makeDrawable(const draw::Axes& x);
+  static Shared<Drawable> makeDrawable(const draw::Axes& x);
 };
 // draw::Axes convenient methods
 
-template<>
+template <>
 struct DrawableConversionTraits<sophus::Se3F32> {
-static Shared<Drawable> makeDrawable(const sophus::Se3F32& x) {
+  static Shared<Drawable> makeDrawable(const sophus::Se3F32& x)
+  {
     draw::Axes axes;
     axes.drawable_from_axis_poses.push_back(x);
     return DrawableConversionTraits<draw::Axes>::makeDrawable(axes);
-}
+  }
 };
 
-template<typename T>
+template <typename T>
 struct DrawableConversionTraits<sophus::Se3<T>> {
-static Shared<Drawable> makeDrawable(const sophus::Se3<T>& x) {
+  static Shared<Drawable> makeDrawable(const sophus::Se3<T>& x)
+  {
     return makeDrawable(x.template cast<float>());
-}
+  }
 };
 
 // Single axis at the identity.
 //
 // Example: scene->addToSceneAt(draw::Axis{.size - 0.5}, sophus::SE3d{...});
-template<>
+template <>
 struct DrawableConversionTraits<draw::Axis> {
-static Shared<Drawable> makeDrawable(const draw::Axis& x) {
+  static Shared<Drawable> makeDrawable(const draw::Axis& x)
+  {
     draw::Axes axes;
     axes.line_width = x.line_width;
     axes.scale = x.scale;
     axes.drawable_from_axis_poses.push_back(sophus::SE3f{});
     return DrawableConversionTraits<draw::Axes>::makeDrawable(axes);
-}
+  }
 };
 
-template<>
+template <>
 struct DrawableConversionTraits<draw::Points3f> {
-static Shared<Drawable> makeDrawable(const draw::Points3f& x);
+  static Shared<Drawable> makeDrawable(const draw::Points3f& x);
 };
 
-template<>
+template <>
 struct DrawableConversionTraits<draw::Points3d> {
-static Shared<Drawable> makeDrawable(const draw::Points3d& x);
+  static Shared<Drawable> makeDrawable(const draw::Points3d& x);
 };
 
-
-template<>
+template <>
 struct DrawableConversionTraits<std::vector<draw::Line3>> {
-static Shared<Drawable> makeDrawable(const std::vector<draw::Line3>& x);
+  static Shared<Drawable> makeDrawable(const std::vector<draw::Line3>& x);
 };
 
-template<>
+template <>
 struct DrawableConversionTraits<std::vector<draw::Line2>> {
-static Shared<Drawable> makeDrawable(const std::vector<draw::Line2>& x);
+  static Shared<Drawable> makeDrawable(const std::vector<draw::Line2>& x);
 };
 
-
-template<>
+template <>
 struct DrawableConversionTraits<draw::CameraFrustum> {
-static Shared<Drawable> makeDrawable(const draw::CameraFrustum& x);
+  static Shared<Drawable> makeDrawable(const draw::CameraFrustum& x);
 };
 
-}
+}  // namespace pangolin

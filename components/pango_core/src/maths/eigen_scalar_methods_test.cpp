@@ -1,13 +1,15 @@
 // Copyright (c) farm-ng, inc. All rights reserved.
 
-#include <pangolin/testing/eigen.h>
 #include <pangolin/maths/eigen_scalar_methods.h>
+#include <pangolin/testing/eigen.h>
 
 #include "test_data.h"
 
-namespace pangolin {
+namespace pangolin
+{
 
-TEST_CASE("scalar_methods, scalars") {
+TEST_CASE("scalar_methods, scalars")
+{
   auto const x = testVecs();
 
   for (double const a : x) {
@@ -18,7 +20,8 @@ TEST_CASE("scalar_methods, scalars") {
   }
 }
 
-TEST_CASE("scalar_methods, eigen_vecs") {
+TEST_CASE("scalar_methods, eigen_vecs")
+{
   // const auto m3x4 = testMat<double,3,4>(testVec(), 100);
   // const auto m5x2 = testMat<double,5,2>(testVec(), 100);
   // const auto m1x1 = testMat<double,1,1>(testVec(), 100);

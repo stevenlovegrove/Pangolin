@@ -5,16 +5,16 @@
 namespace pangolin
 {
 
-template<class T>
+template <class T>
 std::shared_ptr<T> copyShared(const T& x)
 {
-    return std::make_shared<T>(x);
+  return std::make_shared<T>(x);
 }
 
-template<class T>
+template <class T>
 std::shared_ptr<T> moveShared(T&& x)
 {
-    return std::make_shared<T>(std::move(x));
+  return std::make_shared<T>(std::move(x));
 }
 
-}
+}  // namespace pangolin

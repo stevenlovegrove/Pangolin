@@ -25,74 +25,85 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/video.h>
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/file_extension.h>
+#include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/transform.h>
+#include <pangolin/video/video.h>
 
 #include <fstream>
 #include <functional>
 
-namespace pangolin {
+namespace pangolin
+{
 
 PANGOLIN_REGISTER_FACTORY(JsonVideo)
 {
-    struct JsonVideoFactory final : public TypedFactoryInterface<VideoInterface> {
-        std::map<std::string,Precedence> Schemes() const override
-        {
-            return {{"json",0}, {"file",5}};
-        }
-        const char* Description() const override
-        {
-            return "Construct Video URI from supplied json file. Json file should contain video_uri string and video_uri_defaults map for overridable substitutions.";
-        }
-        ParamSet Params() const override
-        {
-            return {{
-                {"*","","Override any video_uri_defaults keys in the json file."},
-            }};
-        }
-        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            if(uri.scheme == "json" || (uri.scheme == "file" && FileLowercaseExtention(uri.url) == ".json")) {
-                const std::string json_filename = PathExpand(uri.url);
-                std::ifstream f( json_filename );
+  struct JsonVideoFactory final : public TypedFactoryInterface<VideoInterface> {
+    std::map<std::string, Precedence> Schemes() const override
+    {
+      return {{"json", 0}, {"file", 5}};
+    }
+    const char* Description() const override
+    {
+      return "Construct Video URI from supplied json file. Json file should "
+             "contain video_uri string and video_uri_defaults map for "
+             "overridable substitutions.";
+    }
+    ParamSet Params() const override
+    {
+      return {{
+          {"*", "", "Override any video_uri_defaults keys in the json file."},
+      }};
+    }
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    {
+      if (uri.scheme == "json" ||
+          (uri.scheme == "file" &&
+           FileLowercaseExtention(uri.url) == ".json")) {
+        const std::string json_filename = PathExpand(uri.url);
+        std::ifstream f(json_filename);
 
-                // Parse json file to determine sub-video
-                if(f.is_open())
-                {
-                    picojson::value file_json(picojson::object_type,true);
-                    const std::string err = picojson::parse(file_json,f);
-                    if(err.empty())
-                    {
-                        // Json loaded. Parse output.
-                        std::string input_uri = file_json.get_value<std::string>("video_uri", "");
-                        if(!input_uri.empty())
-                        {
-                            // Transform input_uri based on sub args.
-                            const picojson::value input_uri_params = file_json.get_value<picojson::object>("video_uri_defaults", picojson::object());
-                            input_uri = Transform(input_uri, [&](const std::string& k) {
-                                return uri.Get<std::string>(k, input_uri_params.contains(k) ? input_uri_params[k].to_str() : "#");
-                            });
+        // Parse json file to determine sub-video
+        if (f.is_open()) {
+          picojson::value file_json(picojson::object_type, true);
+          const std::string err = picojson::parse(file_json, f);
+          if (err.empty()) {
+            // Json loaded. Parse output.
+            std::string input_uri =
+                file_json.get_value<std::string>("video_uri", "");
+            if (!input_uri.empty()) {
+              // Transform input_uri based on sub args.
+              const picojson::value input_uri_params =
+                  file_json.get_value<picojson::object>(
+                      "video_uri_defaults", picojson::object());
+              input_uri = Transform(input_uri, [&](const std::string& k) {
+                return uri.Get<std::string>(
+                    k, input_uri_params.contains(k)
+                           ? input_uri_params[k].to_str()
+                           : "#");
+              });
 
-                            return pangolin::OpenVideo(input_uri);
-                        }else{
-                            throw VideoException("JsonVideo failed.", "Bad input URI.");
-                        }
-                    }else{
-                        throw VideoException("JsonVideo failed.", err);
-                    }
-                }else{
-                    throw VideoException("JsonVideo failed. Unable to load file.", json_filename);
-                }
-            }else{
-                // Not applicable for this factory.
-                return std::unique_ptr<VideoInterface>();
+              return pangolin::OpenVideo(input_uri);
+            } else {
+              throw VideoException("JsonVideo failed.", "Bad input URI.");
             }
+          } else {
+            throw VideoException("JsonVideo failed.", err);
+          }
+        } else {
+          throw VideoException(
+              "JsonVideo failed. Unable to load file.", json_filename);
         }
-    };
+      } else {
+        // Not applicable for this factory.
+        return std::unique_ptr<VideoInterface>();
+      }
+    }
+  };
 
-    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<JsonVideoFactory>());
+  return FactoryRegistry::I()->RegisterFactory<VideoInterface>(
+      std::make_shared<JsonVideoFactory>());
 }
 
-}
+}  // namespace pangolin

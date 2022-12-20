@@ -28,36 +28,37 @@
 #pragma once
 
 #include <pangolin/platform.h>
-#include <pangolin/windowing/window.h>
 #include <pangolin/windowing/PangolinNSApplication.h>
 #include <pangolin/windowing/PangolinNSGLView.h>
+#include <pangolin/windowing/window.h>
 
 namespace pangolin
 {
 
-struct OsxWindow : public WindowInterface
-{
-    OsxWindow(const std::string& title, int width, int height, bool USE_RETINA, NSOpenGLPixelFormatAttribute gl_profile);
+struct OsxWindow : public WindowInterface {
+  OsxWindow(
+      const std::string& title, int width, int height, bool USE_RETINA,
+      NSOpenGLPixelFormatAttribute gl_profile);
 
-    ~OsxWindow();
+  ~OsxWindow();
 
-    void ShowFullscreen(const TrueFalseToggle on_off) override;
+  void ShowFullscreen(const TrueFalseToggle on_off) override;
 
-    void Move(int x, int y) override;
+  void Move(int x, int y) override;
 
-    void Resize(unsigned int w, unsigned int h) override;
+  void Resize(unsigned int w, unsigned int h) override;
 
-    void MakeCurrent() override;
+  void MakeCurrent() override;
 
-    void RemoveCurrent() override;
+  void RemoveCurrent() override;
 
-    void ProcessEvents() override;
+  void ProcessEvents() override;
 
-    void SwapBuffers() override;
+  void SwapBuffers() override;
 
-private:
-    NSWindow* _window;
-    PangolinNSGLView *view;
+  private:
+  NSWindow* _window;
+  PangolinNSGLView* view;
 };
 
-}
+}  // namespace pangolin

@@ -1,8 +1,10 @@
 #include <pangolin/maths/conventions.h>
 
-namespace pangolin {
+namespace pangolin
+{
 
-Conventions& Conventions::global() {
+Conventions& Conventions::global()
+{
   static Conventions instance = {};
   return instance;
 }

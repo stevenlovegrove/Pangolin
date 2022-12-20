@@ -27,85 +27,94 @@
 
 #pragma once
 
-#include <pangolin/video/video_output_interface.h>
 #include <pangolin/video/drivers/ffmpeg_common.h>
+#include <pangolin/video/video_output_interface.h>
 
 namespace pangolin
 {
 
-#if (LIBAVFORMAT_VERSION_MAJOR > 55) || ((LIBAVFORMAT_VERSION_MAJOR == 55) && (LIBAVFORMAT_VERSION_MINOR >= 7))
+#if (LIBAVFORMAT_VERSION_MAJOR > 55) ||                                        \
+    ((LIBAVFORMAT_VERSION_MAJOR == 55) && (LIBAVFORMAT_VERSION_MINOR >= 7))
 typedef AVCodecID CodecID;
 #endif
 
 // Forward declaration
 class FfmpegVideoOutputStream;
 
-class PANGOLIN_EXPORT FfmpegVideoOutput
-    : public VideoOutputInterface
+class PANGOLIN_EXPORT FfmpegVideoOutput : public VideoOutputInterface
 {
-    friend class FfmpegVideoOutputStream;
-public:
-    FfmpegVideoOutput( const std::string& filename, int base_frame_rate, int bit_rate, bool flip = false);
-    ~FfmpegVideoOutput();
+  friend class FfmpegVideoOutputStream;
 
-    const std::vector<StreamInfo>& Streams() const override;
+  public:
+  FfmpegVideoOutput(
+      const std::string& filename, int base_frame_rate, int bit_rate,
+      bool flip = false);
+  ~FfmpegVideoOutput();
 
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri, const picojson::value& properties) override;
+  const std::vector<StreamInfo>& Streams() const override;
 
-    int WriteStreams(const unsigned char* data, const picojson::value& frame_properties) override;
+  void SetStreams(
+      const std::vector<StreamInfo>& streams, const std::string& uri,
+      const picojson::value& properties) override;
 
-    bool IsPipe() const override;
+  int WriteStreams(
+      const unsigned char* data,
+      const picojson::value& frame_properties) override;
 
-protected:
-    void Initialise(std::string filename);
-    void StartStream();
-    void Close();
+  bool IsPipe() const override;
 
-    std::string filename;
-    bool started;
-    AVFormatContext *oc;
-    std::vector<FfmpegVideoOutputStream*> streams;
-    std::vector<StreamInfo> strs;
+  protected:
+  void Initialise(std::string filename);
+  void StartStream();
+  void Close();
 
-    int frame_count;
+  std::string filename;
+  bool started;
+  AVFormatContext* oc;
+  std::vector<FfmpegVideoOutputStream*> streams;
+  std::vector<StreamInfo> strs;
 
-    int base_frame_rate;
-    int bit_rate;
-    bool is_pipe;
-    bool flip;
+  int frame_count;
+
+  int base_frame_rate;
+  int bit_rate;
+  bool is_pipe;
+  bool flip;
 };
 
 class FfmpegVideoOutputStream
 {
-public:
-    FfmpegVideoOutputStream(FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate, int bit_rate, const StreamInfo& input_info, bool flip );
-    ~FfmpegVideoOutputStream();
+  public:
+  FfmpegVideoOutputStream(
+      FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate,
+      int bit_rate, const StreamInfo& input_info, bool flip);
+  ~FfmpegVideoOutputStream();
 
-    const StreamInfo& GetStreamInfo() const;
+  const StreamInfo& GetStreamInfo() const;
 
-    void WriteImage(const uint8_t* img, int w, int h);
-    void Flush();
+  void WriteImage(const uint8_t* img, int w, int h);
+  void Flush();
 
-protected:
-    void WriteAvPacket(AVPacket* pkt);
-    void WriteFrame(AVFrame* frame);
-    double BaseFrameTime();
+  protected:
+  void WriteAvPacket(AVPacket* pkt);
+  void WriteFrame(AVFrame* frame);
+  double BaseFrameTime();
 
-    FfmpegVideoOutput& recorder;
+  FfmpegVideoOutput& recorder;
 
-    StreamInfo input_info;
-    AVPixelFormat input_format;
-    AVPixelFormat output_format;
-    int64_t last_pts;
+  StreamInfo input_info;
+  AVPixelFormat input_format;
+  AVPixelFormat output_format;
+  int64_t last_pts;
 
-    // These pointers are owned by class
-    AVStream* stream;
-    SwsContext *sws_ctx;
-    AVFrame* src_frame;
-    AVFrame* frame;
-    AVCodecContext* codec_context;
+  // These pointers are owned by class
+  AVStream* stream;
+  SwsContext* sws_ctx;
+  AVFrame* src_frame;
+  AVFrame* frame;
+  AVCodecContext* codec_context;
 
-    bool flip;
+  bool flip;
 };
 
-}
+}  // namespace pangolin

@@ -32,8 +32,8 @@ namespace pangolin
 
 GlEngine& glEngine()
 {
-    static GlEngine engine;
-    return engine;
+  static GlEngine engine;
+  return engine;
 }
 
-}
+}  // namespace pangolin

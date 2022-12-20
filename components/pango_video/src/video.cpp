@@ -25,51 +25,54 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/video.h>
-#include <pangolin/video/video_output.h>
-#include <pangolin/factory/factory_registry.h>
 #include <pangolin/factory/RegisterFactoriesVideoInterface.h>
 #include <pangolin/factory/RegisterFactoriesVideoOutputInterface.h>
+#include <pangolin/factory/factory_registry.h>
+#include <pangolin/video/video.h>
+#include <pangolin/video/video_output.h>
 
 namespace pangolin
 {
 
 std::unique_ptr<VideoInterface> OpenVideo(const std::string& str_uri)
 {
-    return OpenVideo( ParseUri(str_uri) );
+  return OpenVideo(ParseUri(str_uri));
 }
 
 std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri)
 {
-    RegisterFactoriesVideoInterface();
+  RegisterFactoriesVideoInterface();
 
-    std::unique_ptr<VideoInterface> video =
-            FactoryRegistry::I()->Construct<VideoInterface>(uri);
+  std::unique_ptr<VideoInterface> video =
+      FactoryRegistry::I()->Construct<VideoInterface>(uri);
 
-    if(!video) {
-        throw VideoExceptionNoKnownHandler(uri.scheme);
-    }
+  if (!video) {
+    throw VideoExceptionNoKnownHandler(uri.scheme);
+  }
 
-    return video;
+  return video;
 }
 
-std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const std::string& str_uri)
+std::unique_ptr<VideoOutputInterface> OpenVideoOutput(
+    const std::string& str_uri)
 {
-    return OpenVideoOutput( ParseUri(str_uri) );
+  return OpenVideoOutput(ParseUri(str_uri));
 }
 
 std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri)
 {
-    RegisterFactoriesVideoOutputInterface();
+  RegisterFactoriesVideoOutputInterface();
 
-    std::unique_ptr<VideoOutputInterface> video =
-            FactoryRegistry::I()->Construct<VideoOutputInterface>(uri);
+  std::unique_ptr<VideoOutputInterface> video =
+      FactoryRegistry::I()->Construct<VideoOutputInterface>(uri);
 
-    if(!video) {
-        throw VideoException("No known video handler for URI '" + uri.scheme + "', or device not found.");
-    }
+  if (!video) {
+    throw VideoException(
+        "No known video handler for URI '" + uri.scheme +
+        "', or device not found.");
+  }
 
-    return video;
+  return video;
 }
 
-}
+}  // namespace pangolin

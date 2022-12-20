@@ -1,24 +1,32 @@
 
-#include <pangolin/gui/make_drawable.h>
 #include <pangolin/gui/drawn_solids.h>
+#include <pangolin/gui/make_drawable.h>
 
-namespace pangolin{
+namespace pangolin
+{
 
-Shared<Drawable> DrawableConversionTraits<draw::Shape>::makeDrawable(const draw::Shape& x) {
-    auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::shapes,
-        .default_size = x.size,
-    });
-    prims->vertices->update(std::vector<Eigen::Vector3f>{ x.pos.cast<float>() }, {});
-    prims->shapes->update(std::vector<uint16_t>{ static_cast<uint16_t>(x.type) }, {});
-    prims->colors->update(std::vector<Eigen::Vector4f>{ x.color.cast<float>() }, {});
-    return prims;
+Shared<Drawable> DrawableConversionTraits<draw::Shape>::makeDrawable(
+    const draw::Shape& x)
+{
+  auto prims = DrawnPrimitives::Create({
+      .element_type = DrawnPrimitives::Type::shapes,
+      .default_size = x.size,
+  });
+  prims->vertices->update(
+      std::vector<Eigen::Vector3f>{x.pos.cast<float>()}, {});
+  prims->shapes->update(
+      std::vector<uint16_t>{static_cast<uint16_t>(x.type)}, {});
+  prims->colors->update(
+      std::vector<Eigen::Vector4f>{x.color.cast<float>()}, {});
+  return prims;
 }
 
-Shared<Drawable> DrawableConversionTraits<draw::Cube>::makeDrawable(const draw::Cube& cube) {
- auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::triangles,
-    });
+Shared<Drawable> DrawableConversionTraits<draw::Cube>::makeDrawable(
+    const draw::Cube& cube)
+{
+  auto prims = DrawnPrimitives::Create({
+      .element_type = DrawnPrimitives::Type::triangles,
+  });
 
   std::vector<Eigen::Vector3f> vertices;
   std::vector<Color> colors;
@@ -123,17 +131,19 @@ Shared<Drawable> DrawableConversionTraits<draw::Cube>::makeDrawable(const draw::
   colors.push_back(cube.colors[5]);
   colors.push_back(cube.colors[5]);
 
-  prims->vertices->update( vertices, {});
+  prims->vertices->update(vertices, {});
   prims->colors->update(colors, {});
 
   return prims;
 }
 
-Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(const draw::Icosphere& sphere){
-    auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::triangles,
-    });
- using FaceT = Eigen::Matrix<uint32_t, 3, 1>;
+Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
+    const draw::Icosphere& sphere)
+{
+  auto prims = DrawnPrimitives::Create({
+      .element_type = DrawnPrimitives::Type::triangles,
+  });
+  using FaceT = Eigen::Matrix<uint32_t, 3, 1>;
   std::vector<FaceT> faces;
 
   // http://www.songho.ca/opengl/gl_sphere.html#icosphere
@@ -212,121 +222,126 @@ Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(const d
     }
   }
 
-  prims->vertices->update( vertices, {});
+  prims->vertices->update(vertices, {});
   prims->indices->update(faces, {});
- 
+
   return prims;
 }
 
-Shared<Drawable> DrawableConversionTraits<draw::CheckerPlane>::makeDrawable(const draw::CheckerPlane& ) {
-    auto board = DrawnSolids::Create({
-        .object_type=DrawnSolids::Type::checkerboard,
-    });
-    return board;
+Shared<Drawable> DrawableConversionTraits<draw::CheckerPlane>::makeDrawable(
+    const draw::CheckerPlane&)
+{
+  auto board = DrawnSolids::Create({
+      .object_type = DrawnSolids::Type::checkerboard,
+  });
+  return board;
 }
 
-Shared<Drawable> DrawableConversionTraits<draw::Axes>::makeDrawable(const draw::Axes& axes) {
-    auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::axes,
-    });
-    prims->vertices->update(axes.drawable_from_axis_poses, {});
-    prims->default_size = axes.scale;
-    return prims;
+Shared<Drawable> DrawableConversionTraits<draw::Axes>::makeDrawable(
+    const draw::Axes& axes)
+{
+  auto prims = DrawnPrimitives::Create({
+      .element_type = DrawnPrimitives::Type::axes,
+  });
+  prims->vertices->update(axes.drawable_from_axis_poses, {});
+  prims->default_size = axes.scale;
+  return prims;
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Points3f>::makeDrawable(
-    const draw::Points3f& points) {
-    std::vector<Color> colors(points.points.size(), points.color);
+    const draw::Points3f& points)
+{
+  std::vector<Color> colors(points.points.size(), points.color);
 
-    auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::points,
-    });
+  auto prims = DrawnPrimitives::Create({
+      .element_type = DrawnPrimitives::Type::points,
+  });
 
-    prims->vertices->update(points.points, {});
-    prims->colors->update(colors, {});
-    return prims;
+  prims->vertices->update(points.points, {});
+  prims->colors->update(colors, {});
+  return prims;
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Points3d>::makeDrawable(
-    const draw::Points3d& points) {
-    std::vector<Color> colors;
-        std::vector<Eigen::Vector3f> vertices;
+    const draw::Points3d& points)
+{
+  std::vector<Color> colors;
+  std::vector<Eigen::Vector3f> vertices;
 
+  auto prims = DrawnPrimitives::Create({
+      .element_type = DrawnPrimitives::Type::points,
+  });
 
-    auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::points,
-    });
-
-    for (auto const& p : points.points) {
-        vertices.push_back(p.cast<float>());
-        colors.push_back(points.color);
-    }
-    prims->vertices->update(vertices, {});
-    prims->colors->update(colors, {});
-    return prims;
+  for (auto const& p : points.points) {
+    vertices.push_back(p.cast<float>());
+    colors.push_back(points.color);
+  }
+  prims->vertices->update(vertices, {});
+  prims->colors->update(colors, {});
+  return prims;
 }
 
-Shared<Drawable> DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
-    const std::vector<draw::Line3>& lines) {
-    std::vector<Eigen::Vector3f> vertices;
-    std::vector<Color> colors;
+Shared<Drawable>
+DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
+    const std::vector<draw::Line3>& lines)
+{
+  std::vector<Eigen::Vector3f> vertices;
+  std::vector<Color> colors;
 
-    auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::lines,
-    });
+  auto prims = DrawnPrimitives::Create({
+      .element_type = DrawnPrimitives::Type::lines,
+  });
 
-    for (draw::Line3 const& line : lines) {
-        vertices.push_back(line.a);
-        vertices.push_back(line.b);
-        colors.push_back(line.color);
-        colors.push_back(line.color);
-    }
-    prims->vertices->update(vertices, {});
-    prims->colors->update(colors, {});
+  for (draw::Line3 const& line : lines) {
+    vertices.push_back(line.a);
+    vertices.push_back(line.b);
+    colors.push_back(line.color);
+    colors.push_back(line.color);
+  }
+  prims->vertices->update(vertices, {});
+  prims->colors->update(colors, {});
 
-    return prims;
+  return prims;
 }
 
-Shared<Drawable> DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
-    const std::vector<draw::Line2>& lines) {
-    std::vector<Eigen::Vector3f> vertices;
-    std::vector<Color> colors;
+Shared<Drawable>
+DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
+    const std::vector<draw::Line2>& lines)
+{
+  std::vector<Eigen::Vector3f> vertices;
+  std::vector<Color> colors;
 
-    auto prims = DrawnPrimitives::Create({
-        .element_type=DrawnPrimitives::Type::lines,
-    });
+  auto prims = DrawnPrimitives::Create({
+      .element_type = DrawnPrimitives::Type::lines,
+  });
 
-    for (draw::Line2 const& line : lines) {
-        vertices.push_back(line.toXy0A());
-        vertices.push_back(line.toXy0B());
-        colors.push_back(line.color);
-        colors.push_back(line.color);
-    }
-    prims->vertices->update(vertices, {});
-    prims->colors->update(colors, {});
-    return prims;
+  for (draw::Line2 const& line : lines) {
+    vertices.push_back(line.toXy0A());
+    vertices.push_back(line.toXy0B());
+    colors.push_back(line.color);
+    colors.push_back(line.color);
+  }
+  prims->vertices->update(vertices, {});
+  prims->colors->update(colors, {});
+  return prims;
 }
-
 
 Shared<Drawable> DrawableConversionTraits<draw::CameraFrustum>::makeDrawable(
-    const draw::CameraFrustum& frustum) {
+    const draw::CameraFrustum& frustum)
+{
   std::vector<draw::Line3> lines;
 
-  Eigen::Vector2d left(
-      -0.5, 0.5 * frustum.camera.imageSize().height - 0.25);
+  Eigen::Vector2d left(-0.5, 0.5 * frustum.camera.imageSize().height - 0.25);
   Eigen::Vector2d right(
       frustum.camera.imageSize().width - 0.5,
       0.5 * frustum.camera.imageSize().height - 0.25);
-  Eigen::Vector2d top(
-      0.5 * frustum.camera.imageSize().width - 0.25, -0.5);
+  Eigen::Vector2d top(0.5 * frustum.camera.imageSize().width - 0.25, -0.5);
   Eigen::Vector2d bottom(
       0.5 * frustum.camera.imageSize().width - 0.25,
       frustum.camera.imageSize().height - 0.5);
 
-  Eigen::Vector3d top_near =
-      frustum.near * frustum.camera.camUnproj(top, 1.0);
-  Eigen::Vector3d top_far =
-      frustum.far * frustum.camera.camUnproj(top, 1.0);
+  Eigen::Vector3d top_near = frustum.near * frustum.camera.camUnproj(top, 1.0);
+  Eigen::Vector3d top_far = frustum.far * frustum.camera.camUnproj(top, 1.0);
 
   Eigen::Vector3d right_near =
       frustum.near * frustum.camera.camUnproj(right, 1.0);
@@ -335,8 +350,7 @@ Shared<Drawable> DrawableConversionTraits<draw::CameraFrustum>::makeDrawable(
 
   Eigen::Vector3d left_near =
       frustum.near * frustum.camera.camUnproj(left, 1.0);
-  Eigen::Vector3d left_far =
-      frustum.far * frustum.camera.camUnproj(left, 1.0);
+  Eigen::Vector3d left_far = frustum.far * frustum.camera.camUnproj(left, 1.0);
 
   Eigen::Vector3d bottom_near =
       frustum.near * frustum.camera.camUnproj(bottom, 1.0);
@@ -368,6 +382,7 @@ Shared<Drawable> DrawableConversionTraits<draw::CameraFrustum>::makeDrawable(
   lines.emplace_back(bottom_right_far, bottom_left_far, frustum.color);
   lines.emplace_back(bottom_left_far, top_left_far, frustum.color);
 
-  return DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(lines);
+  return DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
+      lines);
 }
-}
+}  // namespace pangolin

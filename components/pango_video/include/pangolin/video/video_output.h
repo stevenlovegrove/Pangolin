@@ -43,8 +43,9 @@
 //  e.g. ffmpeg://output_file.avi
 //  e.g. ffmpeg:[fps=30,bps=1000000,unique_filename]//output_file.avi
 
-#include <pangolin/video/video_output_interface.h>
 #include <pangolin/utils/uri.h>
+#include <pangolin/video/video_output_interface.h>
+
 #include <memory>
 
 namespace pangolin
@@ -53,41 +54,48 @@ namespace pangolin
 //! VideoOutput wrap to generically construct instances of VideoOutputInterface.
 class PANGOLIN_EXPORT VideoOutput : public VideoOutputInterface
 {
-public:
-    VideoOutput();
-    VideoOutput(VideoOutput&& other) = default;
-    VideoOutput(const std::string& uri);
-    ~VideoOutput();
+  public:
+  VideoOutput();
+  VideoOutput(VideoOutput&& other) = default;
+  VideoOutput(const std::string& uri);
+  ~VideoOutput();
 
-    bool IsOpen() const;
-    void Open(const std::string& uri);
-    void Close();
+  bool IsOpen() const;
+  void Open(const std::string& uri);
+  void Close();
 
-    const std::vector<StreamInfo>& Streams() const override;
+  const std::vector<StreamInfo>& Streams() const override;
 
-    void SetStreams(const std::vector<StreamInfo>& streams, const std::string& uri = "", const picojson::value& properties = picojson::value() ) override;
+  void SetStreams(
+      const std::vector<StreamInfo>& streams, const std::string& uri = "",
+      const picojson::value& properties = picojson::value()) override;
 
-    int WriteStreams(const uint8_t* data, const picojson::value& frame_properties = picojson::value() ) override;
+  int WriteStreams(
+      const uint8_t* data,
+      const picojson::value& frame_properties = picojson::value()) override;
 
-    bool IsPipe() const override;
+  bool IsPipe() const override;
 
-    void AddStream(const RuntimePixelType& pf, sophus::ImageShape shape);
+  void AddStream(const RuntimePixelType& pf, sophus::ImageShape shape);
 
-    void AddStream(const RuntimePixelType& pf, sophus::ImageSize size);
+  void AddStream(const RuntimePixelType& pf, sophus::ImageSize size);
 
-    void SetStreams(const std::string& uri = "", const picojson::value& properties = picojson::value() );
+  void SetStreams(
+      const std::string& uri = "",
+      const picojson::value& properties = picojson::value());
 
-    size_t SizeBytes(void) const ;
+  size_t SizeBytes(void) const;
 
-    std::vector<sophus::ImageView<uint8_t>> GetOutputImages(uint8_t* buffer) const ;
+  std::vector<sophus::ImageView<uint8_t>> GetOutputImages(
+      uint8_t* buffer) const;
 
-    std::vector<sophus::ImageView<uint8_t>> GetOutputImages(std::vector<uint8_t>& buffer) const ;
+  std::vector<sophus::ImageView<uint8_t>> GetOutputImages(
+      std::vector<uint8_t>& buffer) const;
 
-
-protected:
-    std::vector<StreamInfo> streams;
-    Uri uri;
-    std::unique_ptr<VideoOutputInterface> recorder;
+  protected:
+  std::vector<StreamInfo> streams;
+  Uri uri;
+  std::unique_ptr<VideoOutputInterface> recorder;
 };
 
-}
+}  // namespace pangolin

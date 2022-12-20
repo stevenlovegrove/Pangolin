@@ -48,4 +48,4 @@ std::string ToString(const RuntimePixelType& fmt);
 PANGOLIN_EXPORT
 const std::unordered_map<std::string, RuntimePixelType>& KnownPixelTypes();
 
-}
+}  // namespace pangolin

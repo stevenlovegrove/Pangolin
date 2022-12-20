@@ -25,158 +25,149 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/video/drivers/merge.h>
+#include <assert.h>
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/video/video.h>
-#include <pangolin/video/iostream_operators.h>
 #include <pangolin/utils/range.h>
-#include <assert.h>
-
-#include <assert.h>
+#include <pangolin/video/drivers/merge.h>
+#include <pangolin/video/iostream_operators.h>
+#include <pangolin/video/video.h>
 
 namespace pangolin
 {
 
-MergeVideo::MergeVideo(std::unique_ptr<VideoInterface>& src_, const std::vector<Point>& stream_pos, size_t w = 0, size_t h = 0 )
-    : src( std::move(src_) ), buffer(new uint8_t[src->SizeBytes()]), stream_pos(stream_pos)
+MergeVideo::MergeVideo(
+    std::unique_ptr<VideoInterface>& src_, const std::vector<Point>& stream_pos,
+    size_t w = 0, size_t h = 0) :
+    src(std::move(src_)),
+    buffer(new uint8_t[src->SizeBytes()]),
+    stream_pos(stream_pos)
 {
-    videoin.push_back(src.get());
+  videoin.push_back(src.get());
 
-    // Must be a stream_pos for each stream
-    // Each stream must have the same format.
-    assert(stream_pos.size() == src->Streams().size());
-    assert(src->Streams().size() > 0);
-    const PixelFormat fmt = src->Streams()[0].PixFormat();
-    for(size_t i=1; i < src->Streams().size(); ++i) {
-        assert(src->Streams()[i].PixFormat().format == fmt.format);
-    }
+  // Must be a stream_pos for each stream
+  // Each stream must have the same format.
+  assert(stream_pos.size() == src->Streams().size());
+  assert(src->Streams().size() > 0);
+  const PixelFormat fmt = src->Streams()[0].PixFormat();
+  for (size_t i = 1; i < src->Streams().size(); ++i) {
+    assert(src->Streams()[i].PixFormat().format == fmt.format);
+  }
 
-    // Compute buffer regions for data copying.
-    XYRange<size_t> r = XYRange<size_t>::Empty();
-    for(size_t i=0; i < src->Streams().size(); ++i) {
-        const StreamInfo& si = src->Streams()[i];
-        const size_t x = stream_pos[i].x;
-        const size_t y = stream_pos[i].y;
-        XYRange<size_t> sr(x, x + si.Width(), y, y + si.Height());
-        r.Insert(sr);
-    }
+  // Compute buffer regions for data copying.
+  XYRange<size_t> r = XYRange<size_t>::Empty();
+  for (size_t i = 0; i < src->Streams().size(); ++i) {
+    const StreamInfo& si = src->Streams()[i];
+    const size_t x = stream_pos[i].x;
+    const size_t y = stream_pos[i].y;
+    XYRange<size_t> sr(x, x + si.Width(), y, y + si.Height());
+    r.Insert(sr);
+  }
 
-    // Use implied min / max based on points
-    if(!w && !h) {
-        w = r.x.max;
-        h = r.y.max;
-    }
+  // Use implied min / max based on points
+  if (!w && !h) {
+    w = r.x.max;
+    h = r.y.max;
+  }
 
-    size_bytes = w*h*fmt.bpp/8;
-    streams.emplace_back(fmt,w,h,w*fmt.bpp/8,(unsigned char*)0);
+  size_bytes = w * h * fmt.bpp / 8;
+  streams.emplace_back(fmt, w, h, w * fmt.bpp / 8, (unsigned char*)0);
 }
 
-MergeVideo::~MergeVideo()
-{
-
-}
+MergeVideo::~MergeVideo() {}
 
 //! Implement VideoInput::Start()
-void MergeVideo::Start()
-{
-    src->Start();
-}
+void MergeVideo::Start() { src->Start(); }
 
 //! Implement VideoInput::Stop()
-void MergeVideo::Stop()
-{
-    src->Stop();
-}
+void MergeVideo::Stop() { src->Stop(); }
 
 //! Implement VideoInput::SizeBytes()
-size_t MergeVideo::SizeBytes() const
-{
-    return size_bytes;
-}
+size_t MergeVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-const std::vector<StreamInfo>& MergeVideo::Streams() const
-{
-    return streams;
-}
+const std::vector<StreamInfo>& MergeVideo::Streams() const { return streams; }
 
 void MergeVideo::CopyBuffer(unsigned char* dst_bytes, unsigned char* src_bytes)
 {
-    Image<unsigned char> dst_image = Streams()[0].StreamImage(dst_bytes);
-    const size_t dst_pix_bytes = Streams()[0].PixFormat().bpp / 8;
+  Image<unsigned char> dst_image = Streams()[0].StreamImage(dst_bytes);
+  const size_t dst_pix_bytes = Streams()[0].PixFormat().bpp / 8;
 
-    for(size_t i=0; i < stream_pos.size(); ++i) {
-        const StreamInfo& src_stream = src->Streams()[i];
-        const Image<unsigned char> src_image = src_stream.StreamImage(src_bytes);
-        const Point& p = stream_pos[i];
-        for(size_t y=0; y < src_stream.Height(); ++y) {
-            // Copy row from src to dst
-            std::memcpy(
-                dst_image.RowPtr(y + p.y) + p.x * dst_pix_bytes,
-                src_image.RowPtr(y), src_stream.RowBytes()
-            );
-        }
+  for (size_t i = 0; i < stream_pos.size(); ++i) {
+    const StreamInfo& src_stream = src->Streams()[i];
+    const Image<unsigned char> src_image = src_stream.StreamImage(src_bytes);
+    const Point& p = stream_pos[i];
+    for (size_t y = 0; y < src_stream.Height(); ++y) {
+      // Copy row from src to dst
+      std::memcpy(
+          dst_image.RowPtr(y + p.y) + p.x * dst_pix_bytes, src_image.RowPtr(y),
+          src_stream.RowBytes());
     }
+  }
 }
 
 //! Implement VideoInput::GrabNext()
-bool MergeVideo::GrabNext( unsigned char* image, bool wait )
+bool MergeVideo::GrabNext(unsigned char* image, bool wait)
 {
-    const bool success = src->GrabNext(buffer.get(), wait);
-    if(success) CopyBuffer(image, buffer.get());
-    return success;
+  const bool success = src->GrabNext(buffer.get(), wait);
+  if (success) CopyBuffer(image, buffer.get());
+  return success;
 }
 
 //! Implement VideoInput::GrabNewest()
-bool MergeVideo::GrabNewest( unsigned char* image, bool wait )
+bool MergeVideo::GrabNewest(unsigned char* image, bool wait)
 {
-    const bool success = src->GrabNewest(buffer.get(), wait);
-    if(success) CopyBuffer(image, buffer.get());
-    return success;
+  const bool success = src->GrabNewest(buffer.get(), wait);
+  if (success) CopyBuffer(image, buffer.get());
+  return success;
 }
 
-std::vector<VideoInterface*>& MergeVideo::InputStreams()
-{
-    return videoin;
-}
+std::vector<VideoInterface*>& MergeVideo::InputStreams() { return videoin; }
 
 PANGOLIN_REGISTER_FACTORY(MergeVideo)
 {
-    struct MergeVideoFactory final : public TypedFactoryInterface<VideoInterface> {
-        std::map<std::string,Precedence> Schemes() const override
-        {
-            return {{"merge",10}};
-        }
-        const char* Description() const override
-        {
-            return "Merges seperate video streams into one larger stream with configurable position.";
-        }
-        ParamSet Params() const override
-        {
-            return {{
-                {"size","0x0","Destination image size. 0x0 will dynamically create a bounding box size from all the streams and their x,y positions"},
-                {"pos\\d+","0x0","posK, 0 <= K < N, where N is the number of streams. Destination x,y positions to merge video streams into."}
-            }};
-        }
+  struct MergeVideoFactory final
+      : public TypedFactoryInterface<VideoInterface> {
+    std::map<std::string, Precedence> Schemes() const override
+    {
+      return {{"merge", 10}};
+    }
+    const char* Description() const override
+    {
+      return "Merges seperate video streams into one larger stream with "
+             "configurable position.";
+    }
+    ParamSet Params() const override
+    {
+      return {
+          {{"size", "0x0",
+            "Destination image size. 0x0 will dynamically create a bounding "
+            "box size from all the streams and their x,y positions"},
+           {"pos\\d+", "0x0",
+            "posK, 0 <= K < N, where N is the number of streams. Destination "
+            "x,y positions to merge video streams into."}}};
+    }
 
-        std::unique_ptr<VideoInterface> Open(const Uri& uri) override {
-            ParamReader reader(Params(), uri);
-            const ImageDim dim = reader.Get<ImageDim>("size", ImageDim(0,0));
-            std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
-            std::vector<Point> points;
-            Point p(0,0);
-            for(size_t s=0; s < subvid->Streams().size(); ++s) {
-                const StreamInfo& si = subvid->Streams()[s];
-                p = reader.Get<Point>("pos"+std::to_string(s+1), p);
-                points.push_back(p);
-                p.x += si.Width();
-            }
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    {
+      ParamReader reader(Params(), uri);
+      const ImageDim dim = reader.Get<ImageDim>("size", ImageDim(0, 0));
+      std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
+      std::vector<Point> points;
+      Point p(0, 0);
+      for (size_t s = 0; s < subvid->Streams().size(); ++s) {
+        const StreamInfo& si = subvid->Streams()[s];
+        p = reader.Get<Point>("pos" + std::to_string(s + 1), p);
+        points.push_back(p);
+        p.x += si.Width();
+      }
 
-            return std::unique_ptr<VideoInterface>(new MergeVideo(subvid, points, dim.x, dim.y));
-        }
-    };
+      return std::unique_ptr<VideoInterface>(
+          new MergeVideo(subvid, points, dim.x, dim.y));
+    }
+  };
 
-    return FactoryRegistry::I()->RegisterFactory<VideoInterface>(std::make_shared<MergeVideoFactory>());
+  return FactoryRegistry::I()->RegisterFactory<VideoInterface>(
+      std::make_shared<MergeVideoFactory>());
 }
 
-}
+}  // namespace pangolin

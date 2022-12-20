@@ -1,11 +1,12 @@
 #include "pangolin/factory/factory_registry.h"
 
-namespace pangolin {
+namespace pangolin
+{
 
 std::shared_ptr<FactoryRegistry> FactoryRegistry::I()
 {
-    static std::shared_ptr<FactoryRegistry> registry(new FactoryRegistry());
-    return registry;
+  static std::shared_ptr<FactoryRegistry> registry(new FactoryRegistry());
+  return registry;
 }
 
-}
+}  // namespace pangolin

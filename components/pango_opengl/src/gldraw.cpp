@@ -25,7 +25,6 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/utils/timer.h>
 
@@ -34,22 +33,20 @@ namespace pangolin
 
 void glRecordGraphic(float x, float y, float radius)
 {
-    const int ticks = static_cast<int>(TimeNow_s());
-    if( ticks % 2 )
-    {
-        // now, render a little red "recording" dot
+  const int ticks = static_cast<int>(TimeNow_s());
+  if (ticks % 2) {
+    // now, render a little red "recording" dot
 #ifndef HAVE_GLES
-        glPushAttrib(GL_ENABLE_BIT);
+    glPushAttrib(GL_ENABLE_BIT);
 #endif
-        glDisable(GL_LIGHTING);
-        glDisable(GL_DEPTH_TEST);
-        glColor3f( 1.0f, 0.0f, 0.0f );
-        glDrawCircle( x, y, radius );
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glDrawCircle(x, y, radius);
 #ifndef HAVE_GLES
-        glPopAttrib();
+    glPopAttrib();
 #endif
-    }
-
+  }
 }
 
-}
+}  // namespace pangolin

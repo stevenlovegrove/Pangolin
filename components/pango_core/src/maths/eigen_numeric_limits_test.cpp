@@ -1,14 +1,16 @@
 // Copyright (c) farm-ng, inc. All rights reserved.
 
-#include <pangolin/testing/eigen.h>
 #include <pangolin/maths/eigen_numeric_limits.h>
 #include <pangolin/maths/eigen_scalar_methods.h>
+#include <pangolin/testing/eigen.h>
 
-namespace pangolin {
+namespace pangolin
+{
 
 template <typename T>
 struct CommonTestsForType {
-  static void run() {
+  static void run()
+  {
     T const lowest = MultiDimLimits<T>::lowest();
     T const min = MultiDimLimits<T>::min();
     T const max = MultiDimLimits<T>::max();
@@ -24,7 +26,8 @@ struct CommonTestsForType {
   }
 };
 
-TEST_CASE("Limits") {
+TEST_CASE("Limits")
+{
   CommonTestsForType<double>::run();
   CommonTestsForType<float>::run();
   CommonTestsForType<int32_t>::run();

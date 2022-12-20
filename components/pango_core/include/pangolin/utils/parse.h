@@ -28,8 +28,8 @@
 #ifndef PANGOLIN_PARSE_H
 #define PANGOLIN_PARSE_H
 
-#include <string>
 #include <cctype>
+#include <string>
 
 namespace pangolin
 {
@@ -38,71 +38,75 @@ const unsigned int parse_max_token_size = 1024;
 
 inline void ConsumeWhitespace(std::istream& is)
 {
-    while(is.good() && std::isspace(is.peek()) ) {
-        is.get();
-    }
+  while (is.good() && std::isspace(is.peek())) {
+    is.get();
+  }
 }
 
 inline bool ConsumeToNewline(std::istream& is)
 {
-    while(is.good()) {
-        if(is.get() == '\n') {
-            return true;
-        }
+  while (is.good()) {
+    if (is.get() == '\n') {
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
-template<size_t buffer_size> inline
-size_t ReadToken(std::istream& is, char buffer[buffer_size])
+template <size_t buffer_size>
+inline size_t ReadToken(std::istream& is, char buffer[buffer_size])
 {
-    size_t r = 0;
-    while(is.good() && r < buffer_size-1) {
-        int c = is.peek();
-        if( std::isgraph(c) ) {
-            buffer[r++] = (char)is.get();
-        }else{
-            break;
-        }
+  size_t r = 0;
+  while (is.good() && r < buffer_size - 1) {
+    int c = is.peek();
+    if (std::isgraph(c)) {
+      buffer[r++] = (char)is.get();
+    } else {
+      break;
     }
-    buffer[r] = '\0';
-    return r;
+  }
+  buffer[r] = '\0';
+  return r;
 }
 
-inline std::string ReadToken(std::istream &is)
+inline std::string ReadToken(std::istream& is)
 {
-    char str_token[parse_max_token_size];
-    ReadToken<parse_max_token_size>(is, str_token);
-    return std::string(str_token);
+  char str_token[parse_max_token_size];
+  ReadToken<parse_max_token_size>(is, str_token);
+  return std::string(str_token);
 }
 
-template<size_t buffer_size> inline
-size_t ConsumeWhitespaceReadToken(std::istream& is, char buffer[buffer_size])
+template <size_t buffer_size>
+inline size_t ConsumeWhitespaceReadToken(
+    std::istream& is, char buffer[buffer_size])
 {
-    ConsumeWhitespace(is);
-    return ReadToken<buffer_size>(is, buffer);
+  ConsumeWhitespace(is);
+  return ReadToken<buffer_size>(is, buffer);
 }
 
-inline int ParseToken(const char* token, const char* token_list[], size_t token_list_size)
+inline int ParseToken(
+    const char* token, const char* token_list[], size_t token_list_size)
 {
-    for(size_t i=0; i < token_list_size; ++i) {
-        if( strcmp(token, token_list[i]) == 0 ) {
-            return i;
-        }
+  for (size_t i = 0; i < token_list_size; ++i) {
+    if (strcmp(token, token_list[i]) == 0) {
+      return i;
     }
-    return -1;
+  }
+  return -1;
 }
 
-#define PANGOLIN_DEFINE_PARSE_TOKEN(x) \
-    inline x ParseToken##x(const char* token) { \
-        return (x)ParseToken(token, x##String, x##Size); \
-    } \
-    inline x ParseToken##x(std::istream& is) { \
-        char str_token[parse_max_token_size]; \
-        ReadToken<parse_max_token_size>(is, str_token); \
-        return ParseToken##x( str_token ); \
-    }
+#define PANGOLIN_DEFINE_PARSE_TOKEN(x)                                         \
+  inline x ParseToken##x(const char* token)                                    \
+  {                                                                            \
+    return (x)ParseToken(token, x##String, x##Size);                           \
+  }                                                                            \
+  inline x ParseToken##x(std::istream& is)                                     \
+  {                                                                            \
+    char str_token[parse_max_token_size];                                      \
+    ReadToken<parse_max_token_size>(is, str_token);                            \
+    return ParseToken##x(str_token);                                           \
+  }
 
-}
+}  // namespace pangolin
 
-#endif // PANGOLIN_PARSE_H
+#endif  // PANGOLIN_PARSE_H

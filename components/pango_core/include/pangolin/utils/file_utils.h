@@ -29,21 +29,23 @@
 
 #include <pangolin/platform.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 namespace pangolin
 {
 
 PANGOLIN_EXPORT
-std::vector<std::string>& Split(const std::string& s, char delim, std::vector<std::string>& elements);
+std::vector<std::string>& Split(
+    const std::string& s, char delim, std::vector<std::string>& elements);
 
 PANGOLIN_EXPORT
-std::vector<std::string> Split(const std::string &s, char delim);
+std::vector<std::string> Split(const std::string& s, char delim);
 
 PANGOLIN_EXPORT
-std::vector<std::string> Expand(const std::string &s, char open='[', char close=']', char delim=',');
+std::vector<std::string> Expand(
+    const std::string& s, char open = '[', char close = ']', char delim = ',');
 
 PANGOLIN_EXPORT
 std::string SanitizePath(const std::string& path);
@@ -55,7 +57,8 @@ PANGOLIN_EXPORT
 bool FileExists(const std::string& filename);
 
 PANGOLIN_EXPORT
-std::string FindPath(const std::string& child_path, const std::string& signature_path);
+std::string FindPath(
+    const std::string& child_path, const std::string& signature_path);
 
 PANGOLIN_EXPORT
 std::string PathExpand(const std::string& sPath);
@@ -72,10 +75,7 @@ std::string GetExecutablePath();
 PANGOLIN_EXPORT
 std::string GetExecutableDir();
 
-enum class SortMethod {
-  STANDARD,
-  NATURAL 
-};
+enum class SortMethod { STANDARD, NATURAL };
 
 // Fill 'file_vec' with the files that match the glob-like 'wildcard_file_path'
 // ? can be used to match any single charector
@@ -85,7 +85,9 @@ enum class SortMethod {
 //   e.g. FilesMatchingWildcard("~/**/*.png", vec);
 // sort the file_vec according to the specified sorting method.
 PANGOLIN_EXPORT
-bool FilesMatchingWildcard(const std::string& wildcard_file_path, std::vector<std::string>& file_vec, SortMethod sort_method = SortMethod::STANDARD);
+bool FilesMatchingWildcard(
+    const std::string& wildcard_file_path, std::vector<std::string>& file_vec,
+    SortMethod sort_method = SortMethod::STANDARD);
 
 PANGOLIN_EXPORT
 std::string MakeUniqueFilename(const std::string& filename);
@@ -120,47 +122,47 @@ void FlushPipe(const std::string& file);
 
 inline bool StartsWith(const std::string& str, const std::string& prefix)
 {
-    return !str.compare(0, prefix.size(), prefix);
+  return !str.compare(0, prefix.size(), prefix);
 }
 
 inline bool EndsWith(const std::string& str, const std::string& prefix)
 {
-    return !str.compare(str.size() - prefix.size(), prefix.size(), prefix);
+  return !str.compare(str.size() - prefix.size(), prefix.size(), prefix);
 }
 
-inline std::string Trim(const std::string& str, const std::string& delimiters = " \f\n\r\t\v" )
+inline std::string Trim(
+    const std::string& str, const std::string& delimiters = " \f\n\r\t\v")
 {
-    const size_t f = str.find_first_not_of( delimiters );
-    return f == std::string::npos ?
-                "" :
-                str.substr( f, str.find_last_not_of( delimiters ) + 1 );
+  const size_t f = str.find_first_not_of(delimiters);
+  return f == std::string::npos
+             ? ""
+             : str.substr(f, str.find_last_not_of(delimiters) + 1);
 }
 
-inline void ToUpper( std::string& str )
+inline void ToUpper(std::string& str)
 {
-    std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+  std::transform(str.begin(), str.end(), str.begin(), ::toupper);
 }
 
-inline void ToLower( std::string& str )
+inline void ToLower(std::string& str)
 {
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+  std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 }
 
-inline std::string ToUpperCopy( const std::string& str )
+inline std::string ToUpperCopy(const std::string& str)
 {
-    std::string out;
-    out.resize(str.size());
-    std::transform(str.begin(), str.end(), out.begin(), ::toupper);
-    return out;
+  std::string out;
+  out.resize(str.size());
+  std::transform(str.begin(), str.end(), out.begin(), ::toupper);
+  return out;
 }
 
-inline std::string ToLowerCopy( const std::string& str )
+inline std::string ToLowerCopy(const std::string& str)
 {
-    std::string out;
-    out.resize(str.size());
-    std::transform(str.begin(), str.end(), out.begin(), ::tolower);
-    return out;
+  std::string out;
+  out.resize(str.size());
+  std::transform(str.begin(), str.end(), out.begin(), ::tolower);
+  return out;
 }
 
-
-}
+}  // namespace pangolin

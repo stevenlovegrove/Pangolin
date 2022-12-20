@@ -1,10 +1,11 @@
 // Copyright (c) farm-ng, inc. All rights reserved.
 
-#include <pangolin/testing/eigen.h>
 #include <pangolin/maths/min_max.h>
+#include <pangolin/testing/eigen.h>
 #include <sophus/image/image.h>
 
-namespace pangolin {
+namespace pangolin
+{
 
 #if 0
 template <typename T>

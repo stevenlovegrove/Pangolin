@@ -6,36 +6,40 @@ namespace pangolin
 {
 
 struct DrawnGroup : public Drawable {
-
-void draw(const ViewParams& params) override {
+  void draw(const ViewParams& params) override
+  {
     // Assumption parent_from_drawable is already in params.camera_from_world
-    // TODO: rename params.camera_from_world since it isn't the world but drawable frame.
+    // TODO: rename params.camera_from_world since it isn't the world but
+    // drawable frame.
     ViewParams child_params = params;
 
-    for(auto& child : children) {
-        child_params.camera_from_world = params.camera_from_world * child->pose.parentFromDrawableMatrix();
-        child->draw(child_params);
+    for (auto& child : children) {
+      child_params.camera_from_world =
+          params.camera_from_world * child->pose.parentFromDrawableMatrix();
+      child->draw(child_params);
     }
-}
+  }
 
-MinMax<Eigen::Vector3d> boundsInParent() const override {
+  MinMax<Eigen::Vector3d> boundsInParent() const override
+  {
     auto bounds = MinMax<Eigen::Vector3d>::closed();
-    for(const auto& child : children) {
-        // TODO: need a frame transform here.
-        bounds.extend(child->boundsInParent());
+    for (const auto& child : children) {
+      // TODO: need a frame transform here.
+      bounds.extend(child->boundsInParent());
     }
     return bounds;
-}
-struct Params {
+  }
+  struct Params {
     std::vector<Shared<Drawable>> children;
-};
-static Shared<DrawnGroup> Create(const Params& p) {
+  };
+  static Shared<DrawnGroup> Create(const Params& p)
+  {
     auto ret = Shared<DrawnGroup>::make();
     ret->children = p.children;
     return ret;
-}
+  }
 
-std::vector<Shared<Drawable>> children;
+  std::vector<Shared<Drawable>> children;
 };
 
-}
+}  // namespace pangolin

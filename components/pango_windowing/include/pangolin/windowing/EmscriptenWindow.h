@@ -27,46 +27,45 @@
 
 #pragma once
 
-#include <pangolin/windowing/window.h>
-
-#include <stdexcept>
-#include <string>
-#include <list>
-
 #include <emscripten.h>
 #include <emscripten/html5.h>
+#include <pangolin/windowing/window.h>
+
+#include <list>
+#include <stdexcept>
+#include <string>
 
 namespace pangolin
 {
 
-struct EmscriptenWindow : public WindowInterface
-{
- public:
-    EmscriptenWindow();
+struct EmscriptenWindow : public WindowInterface {
+  public:
+  EmscriptenWindow();
 
-    ~EmscriptenWindow();
+  ~EmscriptenWindow();
 
-    void Move(int x, int y) override;
+  void Move(int x, int y) override;
 
-    void Resize(unsigned int w, unsigned int h) override;
+  void Resize(unsigned int w, unsigned int h) override;
 
-    void ShowFullscreen(const TrueFalseToggle on_off) override;
+  void ShowFullscreen(const TrueFalseToggle on_off) override;
 
-    void MakeCurrent() override;
+  void MakeCurrent() override;
 
-    void RemoveCurrent() override;
+  void RemoveCurrent() override;
 
-    void SwapBuffers() override;
+  void SwapBuffers() override;
 
-    void ProcessEvents() override;
+  void ProcessEvents() override;
 
-    int x;
-    int y;
-    KeyModifierBitmask key_modifier_state;
- private:
-    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = NULL;
-    GLuint program = 0;
-    bool done_init_events;
+  int x;
+  int y;
+  KeyModifierBitmask key_modifier_state;
+
+  private:
+  EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = NULL;
+  GLuint program = 0;
+  bool done_init_events;
 };
 
-}
+}  // namespace pangolin

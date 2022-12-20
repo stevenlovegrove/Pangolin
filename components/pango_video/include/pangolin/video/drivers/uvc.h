@@ -27,88 +27,96 @@
 
 #pragma once
 
-#include <pangolin/video/video_interface.h>
 #include <pangolin/utils/timer.h>
+#include <pangolin/video/video_interface.h>
 
 #ifdef _MSC_VER
 // Define missing timeval struct
 typedef struct timeval {
-    long tv_sec;
-    long tv_usec;
+  long tv_sec;
+  long tv_usec;
 } timeval;
-#endif // _MSC_VER
+#endif  // _MSC_VER
 
 #include <libuvc/libuvc.h>
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT UvcVideo : public VideoInterface, public VideoUvcInterface, public VideoPropertiesInterface
+class PANGOLIN_EXPORT UvcVideo : public VideoInterface,
+                                 public VideoUvcInterface,
+                                 public VideoPropertiesInterface
 {
-public:
-    UvcVideo(int vendor_id, int product_id, const char* sn, int deviceid, int width, int height, int fps);
-    ~UvcVideo();
-    
-    void InitDevice(int vid, int pid, const char* sn, int deviceid, int width, int height, int fps);
-    void DeinitDevice();
-    
-    //! Implement VideoInput::Start()
-    void Start();
-    
-    //! Implement VideoInput::Stop()
-    void Stop();
+  public:
+  UvcVideo(
+      int vendor_id, int product_id, const char* sn, int deviceid, int width,
+      int height, int fps);
+  ~UvcVideo();
 
-    //! Implement VideoInput::SizeBytes()
-    size_t SizeBytes() const;
+  void InitDevice(
+      int vid, int pid, const char* sn, int deviceid, int width, int height,
+      int fps);
+  void DeinitDevice();
 
-    //! Implement VideoInput::Streams()
-    const std::vector<StreamInfo>& Streams() const;
-    
-    //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true );
-    
-    //! Implement VideoInput::GrabNewest()
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  //! Implement VideoInput::Start()
+  void Start();
 
-    //! Implement VideoUvcInterface::GetCtrl()
-    int IoCtrl(uint8_t unit, uint8_t ctrl, unsigned char* data, int len, UvcRequestCode req_code);
+  //! Implement VideoInput::Stop()
+  void Stop();
 
-    //! Implement VideoUvcInterface::GetExposure()
-    bool GetExposure(int& exp_us);
+  //! Implement VideoInput::SizeBytes()
+  size_t SizeBytes() const;
 
-    //! Implement VideoUvcInterface::SetExposure()
-    bool SetExposure(int exp_us);
+  //! Implement VideoInput::Streams()
+  const std::vector<StreamInfo>& Streams() const;
 
-    //! Implement VideoUvcInterface::GetGain()
-    bool GetGain(float& gain);
+  //! Implement VideoInput::GrabNext()
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    //! Implement VideoUvcInterface::SetGain()
-    bool SetGain(float gain);
+  //! Implement VideoInput::GrabNewest()
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    //! Access JSON properties of device
-    const picojson::value& DeviceProperties() const;
+  //! Implement VideoUvcInterface::GetCtrl()
+  int IoCtrl(
+      uint8_t unit, uint8_t ctrl, unsigned char* data, int len,
+      UvcRequestCode req_code);
 
-    //! Access JSON properties of most recently captured frame
-    const picojson::value& FrameProperties() const;
+  //! Implement VideoUvcInterface::GetExposure()
+  bool GetExposure(int& exp_us);
 
-protected:
-    void InitPangoDeviceProperties();
-    static uvc_error_t FindDevice(
-        uvc_context_t *ctx, uvc_device_t **dev,
-        int vid, int pid, const char *sn, int device_id);
+  //! Implement VideoUvcInterface::SetExposure()
+  bool SetExposure(int exp_us);
 
-    std::vector<StreamInfo> streams;
-    size_t size_bytes;
-    
-    uvc_context* ctx_;
-    uvc_device*  dev_;
-    uvc_device_handle* devh_;
-    uvc_stream_handle* strm_;
-    uvc_stream_ctrl_t ctrl_;
-    uvc_frame_t* frame_;
-    picojson::value device_properties;
-    picojson::value frame_properties;
-    bool is_streaming;
+  //! Implement VideoUvcInterface::GetGain()
+  bool GetGain(float& gain);
+
+  //! Implement VideoUvcInterface::SetGain()
+  bool SetGain(float gain);
+
+  //! Access JSON properties of device
+  const picojson::value& DeviceProperties() const;
+
+  //! Access JSON properties of most recently captured frame
+  const picojson::value& FrameProperties() const;
+
+  protected:
+  void InitPangoDeviceProperties();
+  static uvc_error_t FindDevice(
+      uvc_context_t* ctx, uvc_device_t** dev, int vid, int pid, const char* sn,
+      int device_id);
+
+  std::vector<StreamInfo> streams;
+  size_t size_bytes;
+
+  uvc_context* ctx_;
+  uvc_device* dev_;
+  uvc_device_handle* devh_;
+  uvc_stream_handle* strm_;
+  uvc_stream_ctrl_t ctrl_;
+  uvc_frame_t* frame_;
+  picojson::value device_properties;
+  picojson::value frame_properties;
+  bool is_streaming;
 };
 
-}
+}  // namespace pangolin

@@ -30,67 +30,60 @@
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glchar.h>
 
-#include <vector>
 #include <string>
+#include <vector>
 
-namespace pangolin {
+namespace pangolin
+{
 
 class PANGOLIN_EXPORT GlText
 {
-public:
-    GlText();
+  public:
+  GlText();
 
-    GlText(const GlText& txt);
+  GlText(const GlText& txt);
 
-    GlText(const GlTexture& font_tex);
-    
-    void AddSpace(GLfloat s);
+  GlText(const GlTexture& font_tex);
 
-    // Add specified charector to this string.
-    void Add(const GlChar& glc);
+  void AddSpace(GLfloat s);
 
-    // Clear text
-    void Clear();
+  // Add specified charector to this string.
+  void Add(const GlChar& glc);
 
-    // Render without transform in text-centric pixel coordinates
-    void Draw() const;
-    void DrawGlSl() const;
+  // Clear text
+  void Clear();
 
-    // Render at (x,y,z)' in object coordinates,
-    // keeping text size and orientation constant
-    void Draw(GLfloat x, GLfloat y, GLfloat z = 0.0f) const;
+  // Render without transform in text-centric pixel coordinates
+  void Draw() const;
+  void DrawGlSl() const;
 
-    // Render at (x,y,z)' in window coordinates.
-    void DrawWindow(GLfloat x, GLfloat y, GLfloat z = 0.0f) const;
-    
-    // Return text that this object signifies.
-    const std::string& Text() const {
-        return str;
-    }
-    
-    // Return width in pixels of this text.
-    GLfloat Width() const {
-        return width;
-    }
+  // Render at (x,y,z)' in object coordinates,
+  // keeping text size and orientation constant
+  void Draw(GLfloat x, GLfloat y, GLfloat z = 0.0f) const;
 
-    // Return height in pixels of this text.
-    GLfloat Height() const {
-        return ymax;
-    }
-    
-    // Return height in pixels of this text, including under baseline
-    GLfloat FullHeight() const {
-        return ymax - ymin;
-    }
+  // Render at (x,y,z)' in window coordinates.
+  void DrawWindow(GLfloat x, GLfloat y, GLfloat z = 0.0f) const;
 
-//protected:
-    const GlTexture* tex;
-    std::string str;
-    GLfloat width;
-    GLfloat ymin;
-    GLfloat ymax;
-    
-    std::vector<XYUV> vs;
+  // Return text that this object signifies.
+  const std::string& Text() const { return str; }
+
+  // Return width in pixels of this text.
+  GLfloat Width() const { return width; }
+
+  // Return height in pixels of this text.
+  GLfloat Height() const { return ymax; }
+
+  // Return height in pixels of this text, including under baseline
+  GLfloat FullHeight() const { return ymax - ymin; }
+
+  // protected:
+  const GlTexture* tex;
+  std::string str;
+  GLfloat width;
+  GLfloat ymin;
+  GLfloat ymax;
+
+  std::vector<XYUV> vs;
 };
 
-}
+}  // namespace pangolin

@@ -27,45 +27,49 @@
 
 #pragma once
 
-#include <vector>
 #include <pangolin/video/video_interface.h>
+
+#include <vector>
 
 namespace pangolin
 {
 
-class PANGOLIN_EXPORT TruncateVideo
-    : public VideoInterface, public VideoFilterInterface
+class PANGOLIN_EXPORT TruncateVideo : public VideoInterface,
+                                      public VideoFilterInterface
 {
-public:
-    TruncateVideo(std::unique_ptr<VideoInterface>& videoin, size_t begin, size_t end);
+  public:
+  TruncateVideo(
+      std::unique_ptr<VideoInterface>& videoin, size_t begin, size_t end);
 
-    ~TruncateVideo();
+  ~TruncateVideo();
 
-    size_t SizeBytes() const;
+  size_t SizeBytes() const;
 
-    const std::vector<StreamInfo>& Streams() const;
+  const std::vector<StreamInfo>& Streams() const;
 
-    void Start();
+  void Start();
 
-    void Stop();
+  void Stop();
 
-    bool GrabNext( unsigned char* image, bool wait = true );
+  bool GrabNext(unsigned char* image, bool wait = true);
 
-    bool GrabNewest( unsigned char* image, bool wait = true );
+  bool GrabNewest(unsigned char* image, bool wait = true);
 
-    std::vector<VideoInterface*>& InputStreams();
+  std::vector<VideoInterface*>& InputStreams();
 
-protected:
-    std::unique_ptr<VideoInterface> src;
-    std::vector<VideoInterface*> videoin;
-    std::vector<StreamInfo> streams;
+  protected:
+  std::unique_ptr<VideoInterface> src;
+  std::vector<VideoInterface*> videoin;
+  std::vector<StreamInfo> streams;
 
-    size_t begin;
-    size_t end;
-    size_t next_frame_to_grab;
+  size_t begin;
+  size_t end;
+  size_t next_frame_to_grab;
 
-    inline VideoPlaybackInterface* GetVideoPlaybackInterface(){ return dynamic_cast<VideoPlaybackInterface*>(src.get()); }
+  inline VideoPlaybackInterface* GetVideoPlaybackInterface()
+  {
+    return dynamic_cast<VideoPlaybackInterface*>(src.get());
+  }
 };
 
-
-}
+}  // namespace pangolin

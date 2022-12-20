@@ -1,12 +1,12 @@
 #pragma once
 
 #include <pangolin/maths/conventions.h>
-
 #include <sophus/lie/se3.h>
 
 // TODO: Will be refactored into Pangolin at some point
 
-namespace pangolin {
+namespace pangolin
+{
 
 // Return a pose (world from camera transform) which
 // represents a camera centered at `camera_center_in_world`
@@ -18,12 +18,13 @@ namespace pangolin {
 // * Forward direction and `up` are co-linear
 // In these cases, method respects conditions that are possible
 // and chooses arbitrarily from underspecified dimensions.
-template <typename TScalar=double>
+template <typename TScalar = double>
 sophus::Se3<TScalar> worldLookatFromCamera(
     Eigen::Vector3<TScalar> const& camera_center_in_world,
     Eigen::Vector3<TScalar> const& interest_point_in_world,
     Eigen::Vector3<TScalar> const& updir_world,
-    const DeviceXyz xyz_convention = Conventions::global().device_xyz) {
+    const DeviceXyz xyz_convention = Conventions::global().device_xyz)
+{
   using Vec3 = Eigen::Vector3<TScalar>;
   const Vec3 forward_world = interest_point_in_world - camera_center_in_world;
   const Vec3 right_world = forward_world.cross(updir_world);
@@ -66,31 +67,30 @@ sophus::Se3<TScalar> worldLookatFromCamera(
 }
 
 // Convenience version of above, using AxisDirection enum to specify Up vector
-template <typename TScalar=double>
+template <typename TScalar = double>
 sophus::Se3<TScalar> worldLookatFromCamera(
     Eigen::Vector3<TScalar> const& camera_center_in_world,
     Eigen::Vector3<TScalar> const& interest_point_in_world,
     const AxisDirection2 updir_world = Conventions::global().up_direction_world,
-    const DeviceXyz xyz_convention = Conventions::global().device_xyz) {
+    const DeviceXyz xyz_convention = Conventions::global().device_xyz)
+{
   return worldLookatFromCamera<TScalar>(
-      camera_center_in_world,
-      interest_point_in_world,
-      axisDirection<TScalar,3>(updir_world),
-      xyz_convention);
+      camera_center_in_world, interest_point_in_world,
+      axisDirection<TScalar, 3>(updir_world), xyz_convention);
 }
 
 // Convenience version of above, using AxisDirection enum to specify Up vector
-template <typename TScalar=double>
+template <typename TScalar = double>
 sophus::Se3<TScalar> cameraLookatFromWorld(
     Eigen::Vector3<TScalar> const& camera_center_in_world,
     Eigen::Vector3<TScalar> const& interest_point_in_world,
     const AxisDirection2 updir_world = Conventions::global().up_direction_world,
-    const DeviceXyz xyz_convention = Conventions::global().device_xyz) {
+    const DeviceXyz xyz_convention = Conventions::global().device_xyz)
+{
   return worldLookatFromCamera<TScalar>(
-      camera_center_in_world,
-      interest_point_in_world,
-      axisDirection<TScalar,3>(updir_world),
-      xyz_convention).inverse();
+             camera_center_in_world, interest_point_in_world,
+             axisDirection<TScalar, 3>(updir_world), xyz_convention)
+      .inverse();
 }
 
 }  // namespace pangolin
