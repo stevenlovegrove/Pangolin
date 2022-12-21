@@ -59,7 +59,7 @@
 namespace pangolin
 {
 JoinVideo::JoinVideo(
-    std::vector<std::unique_ptr<VideoInterface>>& src_, const bool verbose) :
+    std::vector<std::unique_ptr<VideoInterface>>& src_, bool const verbose) :
     storage(std::move(src_)),
     size_bytes(0),
     sync_tolerance_us(0),
@@ -76,7 +76,7 @@ JoinVideo::JoinVideo(
     for (size_t i = 0; i < vid.Streams().size(); ++i) {
       const StreamInfo si = vid.Streams()[i];
       const PixelFormat fmt = si.PixFormat();
-      const Image<unsigned char> img_offset =
+      Image<unsigned char> const img_offset =
           si.StreamImage((unsigned char*)size_bytes);
       streams.push_back(StreamInfo(fmt, img_offset));
     }
@@ -93,7 +93,7 @@ JoinVideo::~JoinVideo()
 
 size_t JoinVideo::SizeBytes() const { return size_bytes; }
 
-const std::vector<StreamInfo>& JoinVideo::Streams() const { return streams; }
+std::vector<StreamInfo> const& JoinVideo::Streams() const { return streams; }
 
 void JoinVideo::Start()
 {
@@ -491,7 +491,7 @@ PANGOLIN_REGISTER_FACTORY(JoinVideo)
     {
       return {{"join", 10}, {"zip", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Zips two or more videos together to create a new video "
              "containing all of constituent streams in correspondence.";
@@ -507,21 +507,21 @@ PANGOLIN_REGISTER_FACTORY(JoinVideo)
             "for sync logic"},
            {"Verbose", "false", "For verbose error/warning messages"}}};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       std::vector<std::string> uris = SplitBrackets(uri.url);
 
       ParamReader reader(Params(), uri);
 
       // Standard by which we should measure if frames are in sync.
-      const unsigned long sync_tol_us =
+      unsigned long const sync_tol_us =
           reader.Get<unsigned long>("sync_tolerance_us");
 
       // Bandwidth used to compute exposure end time from reception time for
       // sync logic
-      const double transfer_bandwidth_gbps =
+      double const transfer_bandwidth_gbps =
           reader.Get<double>("transfer_bandwidth_gbps");
-      const bool verbose = reader.Get<bool>("Verbose");
+      bool const verbose = reader.Get<bool>("Verbose");
       if (uris.size() == 0) {
         throw VideoException(
             "No VideoSources found in join URL.",

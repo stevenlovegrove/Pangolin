@@ -13,13 +13,13 @@ namespace pangolin
 
 // Defined in ffmpeg.cpp
 int pango_sws_scale_frame(
-    struct SwsContext* c, AVFrame* dst, const AVFrame* src);
+    struct SwsContext* c, AVFrame* dst, AVFrame const* src);
 
 AVCodecContext* CreateVideoCodecContext(
     AVCodecID codec_id, uint64_t frame_rate, int bit_rate,
     AVPixelFormat EncoderFormat, int width, int height)
 {
-  const AVCodec* codec = avcodec_find_encoder(codec_id);
+  AVCodec const* codec = avcodec_find_encoder(codec_id);
   if (!(codec)) throw VideoException("Could not find encoder");
 
   if (codec->type != AVMEDIA_TYPE_VIDEO)
@@ -109,7 +109,7 @@ void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
   return;
 }
 
-void FfmpegVideoOutputStream::WriteImage(const uint8_t* img, int w, int h)
+void FfmpegVideoOutputStream::WriteImage(uint8_t const* img, int w, int h)
 {
   static int64_t pts = 0;
 
@@ -146,7 +146,7 @@ void FfmpegVideoOutputStream::WriteImage(const uint8_t* img, int w, int h)
 
 void FfmpegVideoOutputStream::Flush() { WriteFrame(nullptr); }
 
-const StreamInfo& FfmpegVideoOutputStream::GetStreamInfo() const
+StreamInfo const& FfmpegVideoOutputStream::GetStreamInfo() const
 {
   return input_info;
 }
@@ -159,7 +159,7 @@ double FfmpegVideoOutputStream::BaseFrameTime()
 
 FfmpegVideoOutputStream::FfmpegVideoOutputStream(
     FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate,
-    int bit_rate, const StreamInfo& input_info, bool flip_image) :
+    int bit_rate, StreamInfo const& input_info, bool flip_image) :
     recorder(recorder),
     input_info(input_info),
     input_format(FfmpegFmtFromString(input_info.PixFormat())),
@@ -217,7 +217,7 @@ FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
 }
 
 FfmpegVideoOutput::FfmpegVideoOutput(
-    const std::string& filename, int base_frame_rate, int bit_rate,
+    std::string const& filename, int base_frame_rate, int bit_rate,
     bool flip_image) :
     filename(filename),
     started(false),
@@ -282,14 +282,14 @@ void FfmpegVideoOutput::Close()
   avformat_free_context(oc);
 }
 
-const std::vector<StreamInfo>& FfmpegVideoOutput::Streams() const
+std::vector<StreamInfo> const& FfmpegVideoOutput::Streams() const
 {
   return strs;
 }
 
 void FfmpegVideoOutput::SetStreams(
-    const std::vector<StreamInfo>& str, const std::string& /*uri*/,
-    const picojson::value& properties)
+    std::vector<StreamInfo> const& str, std::string const& /*uri*/,
+    picojson::value const& properties)
 {
   strs.insert(strs.end(), str.begin(), str.end());
 
@@ -305,7 +305,7 @@ void FfmpegVideoOutput::SetStreams(
 }
 
 int FfmpegVideoOutput::WriteStreams(
-    const unsigned char* data, const picojson::value& /*frame_properties*/)
+    unsigned char const* data, picojson::value const& /*frame_properties*/)
 {
   for (std::vector<FfmpegVideoOutputStream*>::iterator i = streams.begin();
        i != streams.end(); ++i) {
@@ -324,7 +324,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideoOutput)
     {
       return {{"ffmpeg", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Use FFMPEG lib to encode video";
     }
@@ -338,11 +338,11 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideoOutput)
            "Automatically append a unique number instead of overwriting files"},
       }};
     }
-    std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoOutputInterface> Open(Uri const& uri) override
     {
-      const int desired_frame_rate = uri.Get("fps", 60);
-      const int desired_bit_rate = uri.Get("bps", 20000 * 1024);
-      const bool flip = uri.Get("flip", false);
+      int const desired_frame_rate = uri.Get("fps", 60);
+      int const desired_bit_rate = uri.Get("bps", 20000 * 1024);
+      bool const flip = uri.Get("flip", false);
       std::string filename = uri.url;
 
       if (uri.Contains("unique_filename")) {

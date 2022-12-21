@@ -58,7 +58,7 @@ class PANGOLIN_EXPORT StreamInfo
   }
 
   //! Return Image wrapper around raw base pointer
-  inline sophus::ImageView<uint8_t> StreamImage(const uint8_t* base_ptr) const
+  inline sophus::ImageView<uint8_t> StreamImage(uint8_t const* base_ptr) const
   {
     return {shape_, base_ptr + offset_bytes_};
   }
@@ -68,7 +68,7 @@ class PANGOLIN_EXPORT StreamInfo
     return {shape_, base_ptr + offset_bytes_};
   }
 
-  inline IntensityImage<> copyToRuntimeImage(const uint8_t* base_ptr) const
+  inline IntensityImage<> copyToRuntimeImage(uint8_t const* base_ptr) const
   {
     PANGO_DEBUG("Unneeded image copy happening...");
     IntensityImage<> runtime(shape_, fmt_);

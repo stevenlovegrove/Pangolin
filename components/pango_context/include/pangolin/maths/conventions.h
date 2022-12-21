@@ -82,7 +82,7 @@ Eigen::Matrix<TScalar, Dim, 1> axisDirection(AxisDirection2 dir)
 template <typename TScalar>
 Eigen::Vector3<TScalar> upDirectionInCamera(DeviceXyz axis_convention)
 {
-  const static Eigen::Vector3<TScalar> up_dirs[3] = {
+  static const Eigen::Vector3<TScalar> up_dirs[3] = {
       {0.0, -1.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 1.0, 0.0}};
 
   const size_t index = static_cast<size_t>(axis_convention);

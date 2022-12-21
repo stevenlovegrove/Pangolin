@@ -35,7 +35,7 @@
 namespace pangolin
 {
 
-std::string ReplaceChar(const std::string& str, char from, char to)
+std::string ReplaceChar(std::string const& str, char from, char to)
 {
   std::string ret = str;
   for (size_t i = 0; i < ret.length(); ++i) {
@@ -45,7 +45,7 @@ std::string ReplaceChar(const std::string& str, char from, char to)
 }
 
 std::set<int> ConvertSequences(
-    const std::string& str, char seq_char = '$', char id_char = 'i')
+    std::string const& str, char seq_char = '$', char id_char = 'i')
 {
   std::set<int> sequences;
 
@@ -70,7 +70,7 @@ Plotter::PlotSeries::PlotSeries() : log(nullptr), drawing_mode(GL_LINE_STRIP) {}
 
 // X-Y Plot given C-Code style (GLSL) expressions x and y.
 void Plotter::PlotSeries::CreatePlot(
-    const std::string& x, const std::string& y, Colour colour,
+    std::string const& x, std::string const& y, Colour colour,
     std::string title)
 {
   static const std::string vs_header =
@@ -137,7 +137,7 @@ void Plotter::PlotSeries::CreatePlot(
   prog.Unbind();
 }
 
-void Plotter::PlotImplicit::CreatePlot(const std::string& code)
+void Plotter::PlotImplicit::CreatePlot(std::string const& code)
 {
   static const std::string vs =
       "attribute vec2 a_position;\n"
@@ -167,7 +167,7 @@ void Plotter::PlotImplicit::CreatePlot(const std::string& code)
   prog.BindPangolinDefaultAttribLocationsAndLink();
 }
 
-void Plotter::PlotImplicit::CreateColouredPlot(const std::string& code)
+void Plotter::PlotImplicit::CreateColouredPlot(std::string const& code)
 {
   CreatePlot(
       "  float r=1.0;\n"
@@ -177,7 +177,7 @@ void Plotter::PlotImplicit::CreateColouredPlot(const std::string& code)
       code + "  z = vec4(r,g,b,a);\n");
 }
 
-void Plotter::PlotImplicit::CreateInequality(const std::string& ie, Colour c)
+void Plotter::PlotImplicit::CreateInequality(std::string const& ie, Colour c)
 {
   std::ostringstream oss;
   oss << std::fixed << std::setprecision(1);
@@ -187,7 +187,7 @@ void Plotter::PlotImplicit::CreateInequality(const std::string& ie, Colour c)
   CreatePlot(oss.str());
 }
 
-void Plotter::PlotImplicit::CreateDistancePlot(const std::string& /*dist*/) {}
+void Plotter::PlotImplicit::CreateDistancePlot(std::string const& /*dist*/) {}
 
 Plotter::Plotter(
     DataLog* log, float left, float right, float bottom, float top, float tickx,
@@ -320,15 +320,15 @@ void Plotter::ComputeTrackValue(float track_val[2])
 {
   if (trigger_edge) {
     // Track last edge transition matching trigger_edge
-    const DataLogBlock* block = default_log->LastBlock();
+    DataLogBlock const* block = default_log->LastBlock();
     if (block) {
       int s = (int)block->StartId() + (int)block->Samples() - 1;
       const size_t dim = block->Dimensions();
-      const float* data = block->Sample(s);
+      float const* data = block->Sample(s);
       int last_sgn = 0;
       for (; s >= 0; --s, data -= dim) {
-        const float val = data[0] - trigger_value;
-        const int sgn = data_sgn(val);
+        float const val = data[0] - trigger_value;
+        int const sgn = data_sgn(val);
         if (last_sgn * sgn == -1 && last_sgn == trigger_edge) {
           track_val[0] = (float)s;
           track_val[1] = 0.0f;
@@ -349,13 +349,13 @@ XYRangef Plotter::ComputeAutoSelection()
   XYRangef range;
   range.x = target.x;
 
-  const DataLogBlock* block = default_log->FirstBlock();
+  DataLogBlock const* block = default_log->FirstBlock();
 
   if (block) {
     for (size_t i = 0; i < plotseries.size(); ++i) {
       if (plotseries[i].attribs.size() == 2 &&
           plotseries[i].attribs[0].plot_id == -1) {
-        const int id = plotseries[i].attribs[1].plot_id;
+        int const id = plotseries[i].attribs[1].plot_id;
         if (0 <= id && id < (int)block->Dimensions()) {
           range.y.Insert(default_log->Stats(id).min);
           range.y.Insert(default_log->Stats(id).max);
@@ -404,12 +404,12 @@ void Plotter::Render()
   glDisable(GL_LIGHTING);
   glDisable(GL_DEPTH_TEST);
 
-  const float w = rview.x.AbsSize();
-  const float h = rview.y.AbsSize();
-  const float ox = -rview.x.Mid();
-  const float oy = -rview.y.Mid();
-  const float sx = 2.0f / w;
-  const float sy = 2.0f / h;
+  float const w = rview.x.AbsSize();
+  float const h = rview.y.AbsSize();
+  float const ox = -rview.x.Mid();
+  float const oy = -rview.y.Mid();
+  float const sx = 2.0f / w;
+  float const sy = 2.0f / h;
 
   //////////////////////////////////////////////////////////////////////////
   // Draw ticks
@@ -418,11 +418,11 @@ void Plotter::Render()
   prog_lines.SetUniform("u_offset", ox, oy);
   prog_lines.SetUniform("u_color", colour_tk);
 
-  const float min_space = 80.0;
+  float const min_space = 80.0;
   float ta[2] = {1, 1};
 
   while (true) {
-    const float interval = v.w * tick[0].val / w;
+    float const interval = v.w * tick[0].val / w;
 
     if (ta[0] * interval < min_space) ta[0] *= 2;
     if (ta[0] * interval < min_space) ta[0] = (5 * ta[0]) / 2;
@@ -432,7 +432,7 @@ void Plotter::Render()
       break;
   }
   while (true) {
-    const float interval = v.h * tick[1].val / h;
+    float const interval = v.h * tick[1].val / h;
 
     if (ta[1] * interval < min_space) ta[1] *= 2;
     if (ta[1] * interval < min_space) ta[1] = (5 * ta[1]) / 2;
@@ -442,12 +442,12 @@ void Plotter::Render()
       break;
   }
 
-  const float tdelta[2] = {tick[0].val * ta[0], tick[1].val * ta[1]};
+  float const tdelta[2] = {tick[0].val * ta[0], tick[1].val * ta[1]};
 
-  const int tx[2] = {
+  int const tx[2] = {
       (int)ceil(rview.x.min / tdelta[0]), (int)ceil(rview.x.max / tdelta[0])};
 
-  const int ty[2] = {
+  int const ty[2] = {
       (int)ceil(rview.y.min / tdelta[1]), (int)ceil(rview.y.max / tdelta[1])};
   if (showTicks) {
     for (int i = tx[0]; i < tx[1]; ++i) {
@@ -506,7 +506,7 @@ void Plotter::Render()
       DataLog* log = ps.log ? ps.log : default_log;
       std::lock_guard<std::mutex> l(log->access_mutex);
 
-      const DataLogBlock* block = log->FirstBlock();
+      DataLogBlock const* block = log->FirstBlock();
       while (block) {
         if (ps.contains_id) {
           if (id_size < block->Samples()) {
@@ -566,7 +566,7 @@ void Plotter::Render()
   glLineWidth(2.5f);
 
   for (size_t i = 0; i < plotmarkers.size(); ++i) {
-    const Marker& m = plotmarkers[i];
+    Marker const& m = plotmarkers[i];
 
     XYRangef draw_range = m.range;
     draw_range.Clamp(rview);
@@ -663,7 +663,7 @@ Plotter::Tick Plotter::FindTickFactor(float tick)
   Plotter::Tick ret;
   ret.val = tick;
 
-  const float eps = 1E-6f;
+  float const eps = 1E-6f;
 
   if (std::abs(tick / M_PI - floor(tick / M_PI)) < eps) {
     ret.factor = 1.0f / (float)M_PI;
@@ -694,7 +694,7 @@ void Plotter::SetTicks(float tickx, float ticky)
   tick[1] = FindTickFactor(ticky);
 }
 
-void Plotter::Track(const std::string& x, const std::string& y)
+void Plotter::Track(std::string const& x, std::string const& y)
 {
   Plotter& p = linked_plotter_x
                    ? *linked_plotter_x
@@ -720,7 +720,7 @@ void Plotter::ToggleTracking()
   p.ComputeTrackValue(p.last_track_val);
 }
 
-void Plotter::Trigger(const std::string& x, int edge, float value)
+void Plotter::Trigger(std::string const& x, int edge, float value)
 {
   if (x != "$0") {
     throw std::runtime_error("Trigger option not fully implemented");
@@ -738,11 +738,11 @@ void Plotter::ToggleTrigger()
   ComputeTrackValue(last_track_val);
 }
 
-void Plotter::SetBackgroundColour(const Colour& col) { colour_bg = col; }
+void Plotter::SetBackgroundColour(Colour const& col) { colour_bg = col; }
 
-void Plotter::SetAxisColour(const Colour& col) { colour_ax = col; }
+void Plotter::SetAxisColour(Colour const& col) { colour_ax = col; }
 
-void Plotter::SetTickColour(const Colour& col) { colour_tk = col; }
+void Plotter::SetTickColour(Colour const& col) { colour_tk = col; }
 
 XYRangef& Plotter::GetView() { return target; }
 
@@ -776,7 +776,7 @@ void Plotter::UpdateView()
     last_track_val[1] = newTrackVal[1];
   }
 
-  const float sf = 1.0f / 20.0f;
+  float const sf = 1.0f / 20.0f;
   //    XYRange d = target - rview;
   //    rview += d * sf;
 
@@ -801,7 +801,7 @@ void Plotter::UpdateView()
   }
 }
 
-void Plotter::SetView(const XYRangef& range)
+void Plotter::SetView(XYRangef const& range)
 {
   Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
   Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
@@ -812,7 +812,7 @@ void Plotter::SetView(const XYRangef& range)
   py.target.y = range.y;
 }
 
-void Plotter::SetViewSmooth(const XYRangef& range)
+void Plotter::SetViewSmooth(XYRangef const& range)
 {
   Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
   Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
@@ -821,7 +821,7 @@ void Plotter::SetViewSmooth(const XYRangef& range)
   py.target.y = range.y;
 }
 
-void Plotter::SetDefaultView(const XYRangef& range)
+void Plotter::SetDefaultView(XYRangef const& range)
 {
   Plotter& px = linked_plotter_x ? *linked_plotter_x : *this;
   Plotter& py = linked_plotter_y ? *linked_plotter_y : *this;
@@ -882,9 +882,9 @@ void Plotter::ResetView()
 void Plotter::Keyboard(
     View&, unsigned char key, int /*x*/, int /*y*/, bool pressed)
 {
-  const float mvfactor = 1.0f / 10.0f;
+  float const mvfactor = 1.0f / 10.0f;
 
-  const float c[2] = {
+  float const c[2] = {
       track || trigger_edge ? target.x.max : rview.x.Mid(), rview.y.Mid()};
 
   if (pressed) {
@@ -903,20 +903,20 @@ void Plotter::Keyboard(
         selection.y.max = selection.y.min;
       }
     } else if (key == PANGO_SPECIAL + PANGO_KEY_LEFT) {
-      const float w = rview.x.Size();
-      const float dx = mvfactor * w;
+      float const w = rview.x.Size();
+      float const dx = mvfactor * w;
       ScrollViewSmooth(-dx, 0);
     } else if (key == PANGO_SPECIAL + PANGO_KEY_RIGHT) {
-      const float w = rview.x.Size();
-      const float dx = mvfactor * w;
+      float const w = rview.x.Size();
+      float const dx = mvfactor * w;
       ScrollViewSmooth(+dx, 0);
     } else if (key == PANGO_SPECIAL + PANGO_KEY_DOWN) {
-      const float h = target.y.Size();
-      const float dy = mvfactor * h;
+      float const h = target.y.Size();
+      float const dy = mvfactor * h;
       ScrollViewSmooth(0, -dy);
     } else if (key == PANGO_SPECIAL + PANGO_KEY_UP) {
-      const float h = target.y.Size();
-      const float dy = mvfactor * h;
+      float const h = target.y.Size();
+      float const dy = mvfactor * h;
       ScrollViewSmooth(0, +dy);
     } else if (key == '=') {
       ScaleViewSmooth(0.5, 0.5, c[0], c[1]);
@@ -958,10 +958,10 @@ void Plotter::Mouse(
   // Update hover status (after potential resizing)
   ScreenToPlot(x, y, hover[0], hover[1]);
 
-  const float scinc = 1.05f;
-  const float scdec = 1.0f / scinc;
+  float const scinc = 1.05f;
+  float const scdec = 1.0f / scinc;
 
-  const float c[2] = {
+  float const c[2] = {
       track || trigger_edge ? last_track_val[0] : hover[0], hover[1]};
 
   if (button_state & KeyModifierShift) {
@@ -981,7 +981,7 @@ void Plotter::Mouse(
       ScaleViewSmooth(scdec, 1.0f, c[0], c[1]);
     }
   } else {
-    const float mvfactor = 1.0f / 20.0f;
+    float const mvfactor = 1.0f / 20.0f;
 
     if (button == MouseButtonLeft) {
       // Update selected range
@@ -1011,9 +1011,9 @@ void Plotter::Mouse(
 
 void Plotter::MouseMotion(View& view, int x, int y, int button_state)
 {
-  const int d[2] = {x - last_mouse_pos[0], y - last_mouse_pos[1]};
-  const float is[2] = {rview.x.Size(), rview.y.Size()};
-  const float df[2] = {is[0] * d[0] / (float)v.w, is[1] * d[1] / (float)v.h};
+  int const d[2] = {x - last_mouse_pos[0], y - last_mouse_pos[1]};
+  float const is[2] = {rview.x.Size(), rview.y.Size()};
+  float const df[2] = {is[0] * d[0] / (float)v.w, is[1] * d[1] / (float)v.h};
 
   // Update hover status (after potential resizing)
   ScreenToPlot(x, y, hover[0], hover[1]);
@@ -1027,10 +1027,10 @@ void Plotter::MouseMotion(View& view, int x, int y, int button_state)
         view, InputSpecialScroll, df[0], df[1], 0.0f, 0.0f, 0.0f, 0.0f,
         button_state);
   } else if (button_state == MouseButtonRight) {
-    const float c[2] = {
+    float const c[2] = {
         track || trigger_edge ? last_track_val[0] : hover[0], hover[1]};
 
-    const float scale[2] = {
+    float const scale[2] = {
         1.0f + (float)d[0] / (float)v.w,
         1.0f - (float)d[1] / (float)v.h,
     };
@@ -1051,9 +1051,9 @@ void Plotter::Special(
     float /*p3*/, float /*p4*/, int button_state)
 {
   if (inType == InputSpecialScroll) {
-    const float d[2] = {p1, -p2};
-    const float is[2] = {rview.x.Size(), rview.y.Size()};
-    const float df[2] = {is[0] * d[0] / (float)v.w, is[1] * d[1] / (float)v.h};
+    float const d[2] = {p1, -p2};
+    float const is[2] = {rview.x.Size(), rview.y.Size()};
+    float const df[2] = {is[0] * d[0] / (float)v.w, is[1] * d[1] / (float)v.h};
 
     ScrollView(-df[0], -df[1]);
   } else if (inType == InputSpecialZoom) {
@@ -1067,7 +1067,7 @@ void Plotter::Special(
       scalex = 1.0f;
     }
 
-    const float c[2] = {
+    float const c[2] = {
         track || trigger_edge ? last_track_val[0] : hover[0], hover[1]};
 
     ScaleView(scalex, scaley, c[0], c[1]);
@@ -1078,8 +1078,8 @@ void Plotter::Special(
 }
 
 void Plotter::AddSeries(
-    const std::string& x_expr, const std::string& y_expr,
-    DrawingMode drawing_mode, Colour colour, const std::string& title,
+    std::string const& x_expr, std::string const& y_expr,
+    DrawingMode drawing_mode, Colour colour, std::string const& title,
     DataLog* log)
 {
   if (!std::isfinite(colour.r)) {
@@ -1093,9 +1093,9 @@ void Plotter::AddSeries(
   plotseries.back().drawing_mode = (GLenum)drawing_mode;
 }
 
-std::string Plotter::PlotTitleFromExpr(const std::string& expr) const
+std::string Plotter::PlotTitleFromExpr(std::string const& expr) const
 {
-  const std::vector<std::string>& labels = default_log->Labels();
+  std::vector<std::string> const& labels = default_log->Labels();
 
   std::stringstream exp_in(expr);
   std::stringstream exp_out;
@@ -1125,7 +1125,7 @@ Marker& Plotter::AddMarker(
   return AddMarker(Marker(d, value, leg, c));
 }
 
-Marker& Plotter::AddMarker(const Marker& marker)
+Marker& Plotter::AddMarker(Marker const& marker)
 {
   plotmarkers.push_back(marker);
   return plotmarkers.back();

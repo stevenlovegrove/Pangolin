@@ -52,7 +52,7 @@ struct PANGOLIN_EXPORT Params {
   }
 
   // \returns true iff any entry has the key \param key
-  bool Contains(const std::string& key) const
+  bool Contains(std::string const& key) const
   {
     for (ParamMap::const_iterator it = params.begin(); it != params.end();
          ++it) {
@@ -64,7 +64,7 @@ struct PANGOLIN_EXPORT Params {
   // \returns the value of the last entry with key \param key
   //          or \param default_val if no such entry exists
   template <typename T>
-  T Get(const std::string& key, T default_val) const
+  T Get(std::string const& key, T default_val) const
   {
     // Return last value passed to the key.
     for (ParamMap::const_reverse_iterator it = params.rbegin();
@@ -78,19 +78,19 @@ struct PANGOLIN_EXPORT Params {
   // parameters list note: Any existing entry with key \param key will remain,
   // but be overriden users with map-semantics.
   template <typename T>
-  void Set(const std::string& key, const T& val)
+  void Set(std::string const& key, const T& val)
   {
     params.push_back(std::pair<std::string, std::string>(
         key, Convert<std::string, T>::Do(val)));
   }
 
   // Remove all entries with key \param key
-  void Remove(const std::string& key)
+  void Remove(std::string const& key)
   {
     params.erase(
         std::remove_if(
             params.begin(), params.end(),
-            [&key](const KeyValue& kv) { return kv.first == key; }),
+            [&key](KeyValue const& kv) { return kv.first == key; }),
         params.end());
   }
 

@@ -20,7 +20,7 @@ int main(int /*argc*/, char** /*argv*/)
   std::vector<Eigen::Vector3f> points;
   std::vector<Eigen::Vector4f> colors;
   std::vector<uint16_t> shapes;
-  const int N = 11 * 2;
+  int const N = 11 * 2;
   ColorWheel wheel;
 
   for (int i = 0; i < N; ++i) {

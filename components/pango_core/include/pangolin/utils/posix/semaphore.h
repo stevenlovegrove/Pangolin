@@ -17,8 +17,8 @@ class SemaphoreInterface
 };
 
 std::shared_ptr<SemaphoreInterface> create_named_semaphore(
-    const std::string& name, unsigned int value);
+    std::string const& name, unsigned int value);
 std::shared_ptr<SemaphoreInterface> open_named_semaphore(
-    const std::string& name);
+    std::string const& name);
 
 }  // namespace pangolin

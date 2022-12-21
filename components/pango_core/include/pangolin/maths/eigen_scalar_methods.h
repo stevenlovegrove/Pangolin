@@ -154,7 +154,7 @@ class Cast<std::vector<TT>>
     using ToEl = std::decay_t<decltype(*std::declval<To>().data())>;
     std::vector<ToEl> r;
     r.reserve(v.size());
-    for (const auto& el : v) {
+    for (auto const& el : v) {
       r.push_back(Cast<TT>::template impl<ToEl>(el));
     }
     return r;
@@ -165,7 +165,7 @@ class Cast<std::vector<TT>>
     using ToEl = decltype(Cast<TT>::template implScalar<To>(v[0]));
     std::vector<ToEl> r;
     r.reserve(v.size());
-    for (const auto& el : v) {
+    for (auto const& el : v) {
       r.push_back(Cast<TT>::template impl<ToEl>(el));
     }
     return r;

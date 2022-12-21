@@ -38,11 +38,11 @@ namespace pangolin
 
 #define FORMAT_STRING_LIST(x) #x,
 
-const char* PlyHeaderString[] = {PLY_HEADER_LIST(FORMAT_STRING_LIST)};
+char const* PlyHeaderString[] = {PLY_HEADER_LIST(FORMAT_STRING_LIST)};
 
-const char* PlyFormatString[] = {PLY_FORMAT_LIST(FORMAT_STRING_LIST)};
+char const* PlyFormatString[] = {PLY_FORMAT_LIST(FORMAT_STRING_LIST)};
 
-const char* PlyTypeString[] = {PLY_TYPE_LIST(FORMAT_STRING_LIST)};
+char const* PlyTypeString[] = {PLY_TYPE_LIST(FORMAT_STRING_LIST)};
 
 #undef FORMAT_STRING_LIST
 
@@ -127,7 +127,7 @@ void ParsePlyHeader(PlyHeaderDetails& ply, std::istream& is)
 }
 
 void ParsePlyAscii(
-    pangolin::Geometry& /*geom*/, const PlyHeaderDetails& /*ply*/,
+    pangolin::Geometry& /*geom*/, PlyHeaderDetails const& /*ply*/,
     std::istream& /*is*/)
 {
   throw std::runtime_error(
@@ -141,13 +141,13 @@ void AddVertexNormals(pangolin::Geometry& geom)
   auto it_face = geom.objects.find("default");
 
   if (it_geom != geom.buffers.end() && it_face != geom.objects.end()) {
-    const auto it_vbo = it_geom->second.attributes.find("vertex");
-    const auto it_ibo = it_face->second.attributes.find("vertex_indices");
+    auto const it_vbo = it_geom->second.attributes.find("vertex");
+    auto const it_ibo = it_face->second.attributes.find("vertex_indices");
 
     if (it_vbo != it_geom->second.attributes.end() &&
         it_ibo != it_face->second.attributes.end()) {
-      const auto& ibo = std::get<Image<uint32_t>>(it_ibo->second);
-      const auto& vbo = std::get<Image<float>>(it_vbo->second);
+      auto const& ibo = std::get<Image<uint32_t>>(it_ibo->second);
+      auto const& vbo = std::get<Image<float>>(it_vbo->second);
 
       // Assume we have triangles.
       PANGO_ASSERT(ibo.w == 3 && vbo.w == 3);
@@ -238,7 +238,7 @@ void StandardizeRgbToColor(pangolin::Geometry& geom)
     }
 
     if (all_found(verts.attributes, it_r, it_g, it_b)) {
-      const bool have_alpha = it_a != verts.attributes.end();
+      bool const have_alpha = it_a != verts.attributes.end();
 
       if (verts.attributes.find("color") == verts.attributes.end()) {
         Geometry::Element::Attribute& red = it_r->second;
@@ -269,38 +269,38 @@ void StandardizeRgbToColor(pangolin::Geometry& geom)
 
 void StandardizeMultiTextureFaceToXyzuv(pangolin::Geometry& geom)
 {
-  const auto it_multi_texture_face = geom.buffers.find("multi_texture_face");
-  const auto it_multi_texture_vertex =
+  auto const it_multi_texture_face = geom.buffers.find("multi_texture_face");
+  auto const it_multi_texture_vertex =
       geom.buffers.find("multi_texture_vertex");
-  const auto it_geom = geom.buffers.find("geometry");
-  const auto it_face = geom.objects.find("default");
+  auto const it_geom = geom.buffers.find("geometry");
+  auto const it_face = geom.objects.find("default");
 
   if (it_geom != geom.buffers.end() && it_face != geom.objects.end()) {
-    const auto it_vbo = it_geom->second.attributes.find("vertex");
-    const auto it_ibo = it_face->second.attributes.find("vertex_indices");
+    auto const it_vbo = it_geom->second.attributes.find("vertex");
+    auto const it_ibo = it_face->second.attributes.find("vertex_indices");
 
     if (all_found(
             geom.buffers, it_multi_texture_face, it_multi_texture_vertex) &&
         it_vbo != it_geom->second.attributes.end() &&
         it_ibo != it_face->second.attributes.end()) {
-      const auto it_uv_ibo = it_multi_texture_face->second.attributes.find(
+      auto const it_uv_ibo = it_multi_texture_face->second.attributes.find(
           "texture_vertex_indices");
-      const auto it_tx = it_multi_texture_face->second.attributes.find("tx");
-      const auto it_tn = it_multi_texture_face->second.attributes.find("tn");
+      auto const it_tx = it_multi_texture_face->second.attributes.find("tx");
+      auto const it_tn = it_multi_texture_face->second.attributes.find("tn");
 
-      const auto it_u = it_multi_texture_vertex->second.attributes.find("u");
-      const auto it_v = it_multi_texture_vertex->second.attributes.find("v");
+      auto const it_u = it_multi_texture_vertex->second.attributes.find("u");
+      auto const it_v = it_multi_texture_vertex->second.attributes.find("v");
 
       if (all_found(it_multi_texture_vertex->second.attributes, it_u, it_v) &&
           it_uv_ibo != it_multi_texture_face->second.attributes.end()) {
         // We're going to create a new vertex buffer to hold uv's too
         auto& orig_ibo = std::get<Image<uint32_t>>(it_ibo->second);
-        const auto& orig_xyz = std::get<Image<float>>(it_vbo->second);
-        const auto& uv_ibo = std::get<Image<uint32_t>>(it_uv_ibo->second);
-        const auto& u = std::get<Image<float>>(it_u->second);
-        const auto& v = std::get<Image<float>>(it_v->second);
-        const auto& tx = std::get<Image<uint8_t>>(it_tx->second);
-        const auto& tn = std::get<Image<uint32_t>>(it_tn->second);
+        auto const& orig_xyz = std::get<Image<float>>(it_vbo->second);
+        auto const& uv_ibo = std::get<Image<uint32_t>>(it_uv_ibo->second);
+        auto const& u = std::get<Image<float>>(it_u->second);
+        auto const& v = std::get<Image<float>>(it_v->second);
+        auto const& tx = std::get<Image<uint8_t>>(it_tx->second);
+        auto const& tn = std::get<Image<uint32_t>>(it_tn->second);
 
         PANGO_ASSERT(u.h == v.h);
         PANGO_ASSERT(orig_ibo.w == 3 && uv_ibo.w == 3);
@@ -391,7 +391,7 @@ void ParsePlyLE(
         size_t offset_bytes = 0;
         for (auto& prop : el.properties) {
           if (prop.isList()) {
-            const int list_items = ReadGlIntType(prop.list_index_type, is);
+            int const list_items = ReadGlIntType(prop.list_index_type, is);
             if (prop.num_items == -1) {
               prop.num_items = list_items;
               prop.offset_bytes = offset_bytes;
@@ -453,14 +453,14 @@ void ParsePlyLE(
 }
 
 void ParsePlyBE(
-    pangolin::Geometry& /*geom*/, const PlyHeaderDetails& /*ply*/,
+    pangolin::Geometry& /*geom*/, PlyHeaderDetails const& /*ply*/,
     std::istream& /*is*/)
 {
   throw std::runtime_error("Not implemented.");
 }
 
 void AttachAssociatedTexturesPly(
-    pangolin::Geometry& geom, const std::string& filename)
+    pangolin::Geometry& geom, std::string const& filename)
 {
   // For PLY, texture names are generally implicit
   auto dot = filename.find_last_of('.');
@@ -470,7 +470,7 @@ void AttachAssociatedTexturesPly(
       const std::string glob = FormatString("%_%.*", base, i);
       std::vector<std::string> file_vec;
       if (FilesMatchingWildcard(glob, file_vec)) {
-        for (const auto& file : file_vec) {
+        for (auto const& file : file_vec) {
           try {
             geom.textures[FormatString("texture_%", i)] = LoadImage(file);
             break;
@@ -482,7 +482,7 @@ void AttachAssociatedTexturesPly(
   }
 }
 
-pangolin::Geometry LoadGeometryPly(const std::string& filename)
+pangolin::Geometry LoadGeometryPly(std::string const& filename)
 {
   std::ifstream bFile(filename.c_str(), std::ios::in | std::ios::binary);
   if (!bFile.is_open())

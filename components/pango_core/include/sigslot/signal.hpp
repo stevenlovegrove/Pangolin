@@ -120,7 +120,7 @@ struct is_weak_ptr_compatible<T, void_t<decltype(to_weak(std::declval<T>()))>>
 
 }  // namespace detail
 
-static constexpr bool with_rtti =
+static bool constexpr with_rtti =
 #ifdef SIGSLOT_RTTI_ENABLED
     true;
 #else
@@ -129,30 +129,30 @@ static constexpr bool with_rtti =
 
 /// determine if a pointer is convertible into a "weak" pointer
 template <typename P>
-constexpr bool is_weak_ptr_compatible_v =
+bool constexpr is_weak_ptr_compatible_v =
     detail::is_weak_ptr_compatible<std::decay_t<P>>::value;
 
 /// determine if a type T (Callable or Pmf) is callable with supplied arguments
 template <typename L, typename... T>
-constexpr bool is_callable_v = detail::is_callable<T..., L>::value;
+bool constexpr is_callable_v = detail::is_callable<T..., L>::value;
 
 template <typename T>
-constexpr bool is_weak_ptr_v = detail::is_weak_ptr<T>::value;
+bool constexpr is_weak_ptr_v = detail::is_weak_ptr<T>::value;
 
 template <typename T>
-constexpr bool has_call_operator_v = detail::has_call_operator<T>::value;
+bool constexpr has_call_operator_v = detail::has_call_operator<T>::value;
 
 template <typename T>
-constexpr bool is_pointer_v = std::is_pointer<T>::value;
+bool constexpr is_pointer_v = std::is_pointer<T>::value;
 
 template <typename T>
-constexpr bool is_func_v = std::is_function<T>::value;
+bool constexpr is_func_v = std::is_function<T>::value;
 
 template <typename T>
-constexpr bool is_pmf_v = std::is_member_function_pointer<T>::value;
+bool constexpr is_pmf_v = std::is_member_function_pointer<T>::value;
 
 template <typename T>
-constexpr bool is_observer_v = std::is_base_of<
+bool constexpr is_observer_v = std::is_base_of<
     ::sigslot::detail::observer_type, std::remove_pointer_t<T>>::value;
 
 }  // namespace trait
@@ -215,7 +215,7 @@ union fun_types {
 union SIGSLOT_MAY_ALIAS func_ptr {
   void *value() { return &data[0]; }
 
-  const void *value() const { return &data[0]; }
+  void const *value() const { return &data[0]; }
 
   template <typename T>
   T &value()
@@ -231,7 +231,7 @@ union SIGSLOT_MAY_ALIAS func_ptr {
 
   inline explicit operator bool() const { return value() != nullptr; }
 
-  inline bool operator==(const func_ptr &o) const
+  inline bool operator==(func_ptr const &o) const
   {
     return std::equal(std::begin(data), std::end(data), std::begin(o.data));
   }
@@ -247,32 +247,32 @@ struct function_traits {
     d.value<std::nullptr_t>() = nullptr;
   }
 
-  static constexpr bool is_disconnectable = false;
-  static constexpr bool must_check_object = true;
+  static bool constexpr is_disconnectable = false;
+  static bool constexpr must_check_object = true;
 };
 
 template <typename T>
 struct function_traits<T, std::enable_if_t<trait::is_func_v<T>>> {
   static void ptr(T &t, func_ptr &d) { d.value<T *>() = &t; }
 
-  static constexpr bool is_disconnectable = true;
-  static constexpr bool must_check_object = false;
+  static bool constexpr is_disconnectable = true;
+  static bool constexpr must_check_object = false;
 };
 
 template <typename T>
 struct function_traits<T *, std::enable_if_t<trait::is_func_v<T>>> {
   static void ptr(T *t, func_ptr &d) { d.value<T *>() = t; }
 
-  static constexpr bool is_disconnectable = true;
-  static constexpr bool must_check_object = false;
+  static bool constexpr is_disconnectable = true;
+  static bool constexpr must_check_object = false;
 };
 
 template <typename T>
 struct function_traits<T, std::enable_if_t<trait::is_pmf_v<T>>> {
   static void ptr(const T &t, func_ptr &d) { d.value<T>() = t; }
 
-  static constexpr bool is_disconnectable = trait::with_rtti;
-  static constexpr bool must_check_object = true;
+  static bool constexpr is_disconnectable = trait::with_rtti;
+  static bool constexpr must_check_object = true;
 };
 
 // for function objects, the assumption is that we are looking for the call
@@ -286,9 +286,9 @@ struct function_traits<T, std::enable_if_t<trait::has_call_operator_v<T>>> {
     function_traits<call_type>::ptr(&T::operator(), d);
   }
 
-  static constexpr bool is_disconnectable =
+  static bool constexpr is_disconnectable =
       function_traits<call_type>::is_disconnectable;
-  static constexpr bool must_check_object =
+  static bool constexpr must_check_object =
       function_traits<call_type>::must_check_object;
 };
 
@@ -306,7 +306,7 @@ func_ptr get_function_ptr(const T &t)
  * The object_pointer traits are needed to handle trackable objects correctly,
  * as they are likely to not be pointers.
  */
-using obj_ptr = const void *;
+using obj_ptr = void const *;
 
 template <typename T>
 obj_ptr get_object_ptr(const T &t);
@@ -351,8 +351,8 @@ obj_ptr get_object_ptr(const T &t)
 struct null_mutex {
   null_mutex() noexcept = default;
   ~null_mutex() noexcept = default;
-  null_mutex(const null_mutex &) = delete;
-  null_mutex &operator=(const null_mutex &) = delete;
+  null_mutex(null_mutex const &) = delete;
+  null_mutex &operator=(null_mutex const &) = delete;
   null_mutex(null_mutex &&) = delete;
   null_mutex &operator=(null_mutex &&) = delete;
 
@@ -370,7 +370,7 @@ struct spin_mutex {
   spin_mutex() noexcept = default;
   ~spin_mutex() noexcept = default;
   spin_mutex(spin_mutex const &) = delete;
-  spin_mutex &operator=(const spin_mutex &) = delete;
+  spin_mutex &operator=(spin_mutex const &) = delete;
   spin_mutex(spin_mutex &&) = delete;
   spin_mutex &operator=(spin_mutex &&) = delete;
 
@@ -431,7 +431,7 @@ class copy_on_write
   {
   }
 
-  copy_on_write(const copy_on_write &x) noexcept : m_data(x.m_data)
+  copy_on_write(copy_on_write const &x) noexcept : m_data(x.m_data)
   {
     ++m_data->count;
   }
@@ -448,7 +448,7 @@ class copy_on_write
     }
   }
 
-  copy_on_write &operator=(const copy_on_write &x) noexcept
+  copy_on_write &operator=(copy_on_write const &x) noexcept
   {
     if (&x != this) {
       *this = copy_on_write(x);
@@ -471,7 +471,7 @@ class copy_on_write
     return m_data->value;
   }
 
-  const element_type &read() const noexcept { return m_data->value; }
+  element_type const &read() const noexcept { return m_data->value; }
 
   friend inline void swap(copy_on_write &x, copy_on_write &y) noexcept
   {
@@ -596,8 +596,8 @@ class connection_blocker
   connection_blocker() = default;
   ~connection_blocker() noexcept { release(); }
 
-  connection_blocker(const connection_blocker &) = delete;
-  connection_blocker &operator=(const connection_blocker &) = delete;
+  connection_blocker(connection_blocker const &) = delete;
+  connection_blocker &operator=(connection_blocker const &) = delete;
 
   connection_blocker(connection_blocker &&o) noexcept :
       m_state{std::move(o.m_state)}
@@ -645,8 +645,8 @@ class connection
   connection() = default;
   virtual ~connection() = default;
 
-  connection(const connection &) noexcept = default;
-  connection &operator=(const connection &) noexcept = default;
+  connection(connection const &) noexcept = default;
+  connection &operator=(connection const &) noexcept = default;
   connection(connection &&) noexcept = default;
   connection &operator=(connection &&) noexcept = default;
 
@@ -654,7 +654,7 @@ class connection
 
   bool connected() const noexcept
   {
-    const auto d = m_state.lock();
+    auto const d = m_state.lock();
     return d && d->connected();
   }
 
@@ -666,7 +666,7 @@ class connection
 
   bool blocked() const noexcept
   {
-    const auto d = m_state.lock();
+    auto const d = m_state.lock();
     return d && d->blocked();
   }
 
@@ -711,7 +711,7 @@ class scoped_connection final : public connection
   scoped_connection() = default;
   ~scoped_connection() override { disconnect(); }
 
-  /*implicit*/ scoped_connection(const connection &c) noexcept : connection(c)
+  /*implicit*/ scoped_connection(connection const &c) noexcept : connection(c)
   {
   }
   /*implicit*/ scoped_connection(connection &&c) noexcept :
@@ -719,8 +719,8 @@ class scoped_connection final : public connection
   {
   }
 
-  scoped_connection(const scoped_connection &) noexcept = delete;
-  scoped_connection &operator=(const scoped_connection &) noexcept = delete;
+  scoped_connection(scoped_connection const &) noexcept = delete;
+  scoped_connection &operator=(scoped_connection const &) noexcept = delete;
 
   scoped_connection(scoped_connection &&o) noexcept :
       connection{std::move(o.m_state)}
@@ -880,7 +880,7 @@ class slot_base : public slot_state
 
 #ifdef SIGSLOT_RTTI_ENABLED
   // retieve a pointer to the callable embedded in the slot
-  virtual const std::type_info &get_callable_type() const noexcept
+  virtual std::type_info const &get_callable_type() const noexcept
   {
     return typeid(nullptr);
   }
@@ -927,7 +927,7 @@ class slot final : public slot_base<Args...>
   }
 
 #ifdef SIGSLOT_RTTI_ENABLED
-  const std::type_info &get_callable_type() const noexcept override
+  std::type_info const &get_callable_type() const noexcept override
   {
     return typeid(func);
   }
@@ -961,7 +961,7 @@ class slot_extended final : public slot_base<Args...>
   }
 
 #ifdef SIGSLOT_RTTI_ENABLED
-  const std::type_info &get_callable_type() const noexcept override
+  std::type_info const &get_callable_type() const noexcept override
   {
     return typeid(func);
   }
@@ -999,7 +999,7 @@ class slot_pmf final : public slot_base<Args...>
   obj_ptr get_object() const noexcept override { return get_object_ptr(ptr); }
 
 #ifdef SIGSLOT_RTTI_ENABLED
-  const std::type_info &get_callable_type() const noexcept override
+  std::type_info const &get_callable_type() const noexcept override
   {
     return typeid(pmf);
   }
@@ -1037,7 +1037,7 @@ class slot_pmf_extended final : public slot_base<Args...>
   obj_ptr get_object() const noexcept override { return get_object_ptr(ptr); }
 
 #ifdef SIGSLOT_RTTI_ENABLED
-  const std::type_info &get_callable_type() const noexcept override
+  std::type_info const &get_callable_type() const noexcept override
   {
     return typeid(pmf);
   }
@@ -1091,7 +1091,7 @@ class slot_tracked final : public slot_base<Args...>
   obj_ptr get_object() const noexcept override { return get_object_ptr(ptr); }
 
 #ifdef SIGSLOT_RTTI_ENABLED
-  const std::type_info &get_callable_type() const noexcept override
+  std::type_info const &get_callable_type() const noexcept override
   {
     return typeid(func);
   }
@@ -1145,7 +1145,7 @@ class slot_pmf_tracked final : public slot_base<Args...>
   obj_ptr get_object() const noexcept override { return get_object_ptr(ptr); }
 
 #ifdef SIGSLOT_RTTI_ENABLED
-  const std::type_info &get_callable_type() const noexcept override
+  std::type_info const &get_callable_type() const noexcept override
   {
     return typeid(pmf);
   }
@@ -1210,8 +1210,8 @@ class signal_base final : public detail::cleanable
   signal_base() noexcept : m_block(false) {}
   ~signal_base() override { disconnect_all(); }
 
-  signal_base(const signal_base &) = delete;
-  signal_base &operator=(const signal_base &) = delete;
+  signal_base(signal_base const &) = delete;
+  signal_base &operator=(signal_base const &) = delete;
 
   signal_base(signal_base &&o) /* not noexcept */
       :
@@ -1257,8 +1257,8 @@ class signal_base final : public detail::cleanable
     // a copy may occur if another thread writes to it.
     cow_copy_type<list_type, Lockable> ref = slots_reference();
 
-    for (const auto &group : detail::cow_read(ref)) {
-      for (const auto &s : group.slts) {
+    for (auto const &group : detail::cow_read(ref)) {
+      for (auto const &s : group.slts) {
         s->operator()(a...);
       }
     }
@@ -1480,10 +1480,10 @@ class signal_base final : public detail::cleanable
        trait::is_pmf_v<
            Callable>)&&detail::function_traits<Callable>::is_disconnectable,
       size_t>
-  disconnect(const Callable &c)
+  disconnect(Callable const &c)
   {
     return disconnect_if(
-        [&](const auto &s) { return s->has_full_callable(c); });
+        [&](auto const &s) { return s->has_full_callable(c); });
   }
 
   /**
@@ -1503,9 +1503,9 @@ class signal_base final : public detail::cleanable
       !trait::is_callable_v<arg_list, Obj> &&
           !trait::is_callable_v<ext_arg_list, Obj> && !trait::is_pmf_v<Obj>,
       size_t>
-  disconnect(const Obj &obj)
+  disconnect(Obj const &obj)
   {
-    return disconnect_if([&](const auto &s) { return s->has_object(obj); });
+    return disconnect_if([&](auto const &s) { return s->has_object(obj); });
   }
 
   /**
@@ -1522,9 +1522,9 @@ class signal_base final : public detail::cleanable
    * @return the number of disconnected slots
    */
   template <typename Callable, typename Obj>
-  size_t disconnect(const Callable &c, const Obj &obj)
+  size_t disconnect(Callable const &c, Obj const &obj)
   {
-    return disconnect_if([&](const auto &s) {
+    return disconnect_if([&](auto const &s) {
       return s->has_object(obj) && s->has_callable(c);
     });
   }
@@ -1586,7 +1586,7 @@ class signal_base final : public detail::cleanable
   {
     cow_copy_type<list_type, Lockable> ref = slots_reference();
     size_t count = 0;
-    for (const auto &g : detail::cow_read(ref)) {
+    for (auto const &g : detail::cow_read(ref)) {
       count += g.slts.size();
     }
     return count;
@@ -1599,8 +1599,8 @@ class signal_base final : public detail::cleanable
   void clean(detail::slot_state *state) override
   {
     lock_type lock(m_mutex);
-    const auto idx = state->index();
-    const auto gid = state->group();
+    auto const idx = state->index();
+    auto const gid = state->group();
 
     // find the group
     for (auto &group : detail::cow_write(m_slots)) {

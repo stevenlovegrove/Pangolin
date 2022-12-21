@@ -42,7 +42,7 @@ class PANGOLIN_EXPORT PangoVideo : public VideoInterface,
 {
   public:
   PangoVideo(
-      const std::string& filename,
+      std::string const& filename,
       std::shared_ptr<PlaybackSession> playback_session);
   ~PangoVideo();
 
@@ -50,7 +50,7 @@ class PANGOLIN_EXPORT PangoVideo : public VideoInterface,
 
   size_t SizeBytes() const override;
 
-  const std::vector<StreamInfo>& Streams() const override;
+  std::vector<StreamInfo> const& Streams() const override;
 
   void Start() override;
 
@@ -61,13 +61,13 @@ class PANGOLIN_EXPORT PangoVideo : public VideoInterface,
   bool GrabNewest(unsigned char* image, bool wait = true) override;
 
   // Implement VideoPropertiesInterface
-  const picojson::value& DeviceProperties() const override
+  picojson::value const& DeviceProperties() const override
   {
     if (-1 == _src_id) throw std::runtime_error("Not initialised");
     return _device_properties;
   }
 
-  const picojson::value& FrameProperties() const override
+  picojson::value const& FrameProperties() const override
   {
     return _frame_properties;
   }
@@ -87,14 +87,14 @@ class PANGOLIN_EXPORT PangoVideo : public VideoInterface,
 
   protected:
   int FindPacketStreamSource();
-  void SetupStreams(const PacketStreamSource& src);
+  void SetupStreams(PacketStreamSource const& src);
 
   const std::string _filename;
   std::shared_ptr<PlaybackSession> _playback_session;
   std::shared_ptr<PacketStreamReader> _reader;
   SyncTimeEventPromise _event_promise;
   int _src_id;
-  const PacketStreamSource* _source;
+  PacketStreamSource const* _source;
 
   size_t _size_bytes;
   bool _fixed_size;

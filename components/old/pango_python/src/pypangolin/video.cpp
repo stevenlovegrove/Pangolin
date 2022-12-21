@@ -45,10 +45,10 @@ class PyVideoInterface : public pangolin::VideoInterface
     PYBIND11_OVERLOAD_PURE(size_t, pangolin::VideoInterface, SizeBytes);
   }
 
-  const std::vector<pangolin::StreamInfo>& Streams() const override
+  std::vector<pangolin::StreamInfo> const& Streams() const override
   {
     PYBIND11_OVERLOAD_PURE(
-        const std::vector<pangolin::StreamInfo>&, pangolin::VideoInterface,
+        std::vector<pangolin::StreamInfo> const&, pangolin::VideoInterface,
         Streams);
   }
 
@@ -80,13 +80,13 @@ class PyGenicamVideoInterface : public pangolin::GenicamVideoInterface
   public:
   using pangolin::GenicamVideoInterface::GenicamVideoInterface;
 
-  bool GetParameter(const std::string& name, std::string& result) override
+  bool GetParameter(std::string const& name, std::string& result) override
   {
     PYBIND11_OVERLOAD_PURE(
         bool, pangolin::GenicamVideoInterface, GetParameter, name, result);
   }
 
-  bool SetParameter(const std::string& name, const std::string& value) override
+  bool SetParameter(std::string const& name, std::string const& value) override
   {
     PYBIND11_OVERLOAD_PURE(
         bool, pangolin::GenicamVideoInterface, SetParameter, name, value);
@@ -121,17 +121,17 @@ class PyVideoPropertiesInterface : public pangolin::VideoPropertiesInterface
   public:
   using pangolin::VideoPropertiesInterface::VideoPropertiesInterface;
 
-  const picojson::value& DeviceProperties() const override
+  picojson::value const& DeviceProperties() const override
   {
     PYBIND11_OVERLOAD_PURE(
-        const picojson::value&, pangolin::VideoPropertiesInterface,
+        picojson::value const&, pangolin::VideoPropertiesInterface,
         DeviceProperties);
   }
 
-  const picojson::value& FrameProperties() const override
+  picojson::value const& FrameProperties() const override
   {
     PYBIND11_OVERLOAD_PURE(
-        const picojson::value&, pangolin::VideoPropertiesInterface,
+        picojson::value const&, pangolin::VideoPropertiesInterface,
         FrameProperties);
   }
 };
@@ -223,16 +223,16 @@ class PyVideoOutputInterface : public pangolin::VideoOutputInterface
   public:
   using pangolin::VideoOutputInterface::VideoOutputInterface;
 
-  const std::vector<pangolin::StreamInfo>& Streams() const override
+  std::vector<pangolin::StreamInfo> const& Streams() const override
   {
     PYBIND11_OVERLOAD_PURE(
-        const std::vector<pangolin::StreamInfo>&,
+        std::vector<pangolin::StreamInfo> const&,
         pangolin::VideoOutputInterface, Streams);
   }
 
   void SetStreams(
-      const std::vector<pangolin::StreamInfo>& streams, const std::string& uri,
-      const picojson::value& properties) override
+      std::vector<pangolin::StreamInfo> const& streams, std::string const& uri,
+      picojson::value const& properties) override
   {
     PYBIND11_OVERLOAD_PURE(
         void, pangolin::VideoOutputInterface, SetStreams, streams, uri,
@@ -240,8 +240,8 @@ class PyVideoOutputInterface : public pangolin::VideoOutputInterface
   }
 
   int WriteStreams(
-      const unsigned char* data,
-      const picojson::value& frame_properties) override
+      unsigned char const* data,
+      picojson::value const& frame_properties) override
   {
     PYBIND11_OVERLOAD_PURE(
         int, pangolin::VideoOutputInterface, WriteStreams, data,
@@ -264,14 +264,14 @@ pybind11::list VideoInputGrab(pangolin::VideoInput& vi, bool wait, bool newest)
   if (vi.Grab(buffer, imgs, wait, newest)) {
     for (size_t s = 0; s < vi.Streams().size(); ++s) {
       // Let's just return the first stream for the moment
-      const pangolin::StreamInfo& si = vi.Streams()[s];
+      pangolin::StreamInfo const& si = vi.Streams()[s];
       const pangolin::Image<uint8_t> img = si.StreamImage(buffer);
 
-      const int c = si.PixFormat().channels;
+      int const c = si.PixFormat().channels;
       const std::string fmt = si.PixFormat().format;
-      const int Bpp = si.PixFormat().bpp / (8);
-      const int Bpc = Bpp / c;
-      const int bpc = si.PixFormat().bpp / c;
+      int const Bpp = si.PixFormat().bpp / (8);
+      int const Bpc = Bpp / c;
+      int const bpc = si.PixFormat().bpp / c;
       PANGO_ASSERT(
           bpc == 8 || bpc == 16 || bpc == 32,
           "only support 8, 16, 32 bits channel");
@@ -444,7 +444,7 @@ void bind_video(pybind11::module& m)
   pybind11::class_<pangolin::VideoInput>(m, "VideoInput", video_interface)
       .def(pybind11::init<>())
       .def(
-          pybind11::init<const std::string&, const std::string&>(),
+          pybind11::init<std::string const&, std::string const&>(),
           pybind11::arg("input_uri"),
           pybind11::arg("output_uri") =
               "pango:[buffer_size_mb=100]//video_log.pango")
@@ -525,7 +525,7 @@ void bind_video(pybind11::module& m)
       .def("Reset", &pangolin::VideoInput::Reset)
       .def(
           "LogFilename",
-          (const std::string& (pangolin::VideoInput::*)() const) &
+          (std::string const& (pangolin::VideoInput::*)() const) &
               pangolin::VideoInput::LogFilename)
       .def(
           "LogFilename", (std::string & (pangolin::VideoInput::*)()) &
@@ -541,7 +541,7 @@ void bind_video(pybind11::module& m)
   pybind11::class_<pangolin::VideoOutput>(
       m, "VideoOutput", video_output_interface)
       .def(pybind11::init<>())
-      .def(pybind11::init<const std::string&>())
+      .def(pybind11::init<std::string const&>())
       .def("IsOpen", &pangolin::VideoOutput::IsOpen)
       .def("Open", &pangolin::VideoOutput::Open)
       .def("Close", &pangolin::VideoOutput::Close)
@@ -549,10 +549,10 @@ void bind_video(pybind11::module& m)
       .def(
           "WriteStreams",
           [](pangolin::VideoOutput& vo, pybind11::list images,
-             const std::vector<int>& streamsBitDepth,
+             std::vector<int> const& streamsBitDepth,
              pybind11::object frame_properties,
              pybind11::object device_properties,
-             const std::string& descriptive_uri) {
+             std::string const& descriptive_uri) {
             if (vo.SizeBytes() == 0) {
               PANGO_ASSERT(
                   streamsBitDepth.size() == images.size() ||
@@ -719,11 +719,11 @@ void bind_video(pybind11::module& m)
       .def(
           "AddStream",
           (void(pangolin::VideoOutput::*)(
-              const pangolin::PixelFormat&, size_t, size_t, size_t)) &
+              pangolin::PixelFormat const&, size_t, size_t, size_t)) &
               pangolin::VideoOutput::AddStream)
       .def(
           "AddStream", (void(pangolin::VideoOutput::*)(
-                           const pangolin::PixelFormat&, size_t, size_t)) &
+                           pangolin::PixelFormat const&, size_t, size_t)) &
                            pangolin::VideoOutput::AddStream)
       .def("SizeBytes", &pangolin::VideoOutput::SizeBytes)
       .def(

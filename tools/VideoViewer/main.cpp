@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     std::cerr << argparser << std::endl;
 
     const std::string scheme_filter = args["scheme"].as<std::string>("");
-    const int v = std::clamp(
+    int const v = std::clamp(
         args["verbose"].as<int>(scheme_filter.empty() ? 0 : 2), 0, 2);
     pangolin::VideoHelp(std::cerr, scheme_filter, (pangolin::HelpVerbosity)v);
     return 0;
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
       (args.pos.size() > 1) ? std::string(args.pos[1]) : dflt_output_uri;
   try {
     pangolin::RunVideoViewerUI(input_uri, output_uri);
-  } catch (const pangolin::VideoException& e) {
+  } catch (pangolin::VideoException const& e) {
     std::cerr << e.what() << std::endl;
   }
 

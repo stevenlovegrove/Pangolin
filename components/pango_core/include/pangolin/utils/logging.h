@@ -112,13 +112,13 @@ struct Log {
   virtual void setVerbosity(Kind severity_to_print, bool unique_only) = 0;
 
   virtual void logImpl(
-      Kind level, const char* sFile, const char* sFunction, const int nLine,
-      const char* assertion_statement, const std::string& description) = 0;
+      Kind level, char const* sFile, char const* sFunction, int const nLine,
+      char const* assertion_statement, std::string const& description) = 0;
 
   template <typename... Args>
   void log(
-      Kind kind, const char* sFile, const char* sFunction, const int nLine,
-      const char* assertion_statement, Args... args)
+      Kind kind, char const* sFile, char const* sFunction, int const nLine,
+      char const* assertion_statement, Args... args)
   {
     if constexpr (sizeof...(args) > 0) {
       const std::string arg_string = fmt::format(std::forward<Args>(args)...);
@@ -130,8 +130,8 @@ struct Log {
 
   template <typename... Args>
   void logAndThrow(
-      Kind kind, const char* sFile, const char* sFunction, const int nLine,
-      const char* assertion_statement, Args... args)
+      Kind kind, char const* sFile, char const* sFunction, int const nLine,
+      char const* assertion_statement, Args... args)
   {
     if constexpr (sizeof...(args) > 0) {
       const std::string arg_string = fmt::format(std::forward<Args>(args)...);

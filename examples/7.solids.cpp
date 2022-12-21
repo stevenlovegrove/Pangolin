@@ -12,27 +12,27 @@ using namespace pangolin;
 using namespace sophus;
 
 inline void translate(
-    std::vector<sophus::SE3f>& T_world_obj, const Eigen::Vector3f& dir_last,
+    std::vector<sophus::SE3f>& T_world_obj, Eigen::Vector3f const& dir_last,
     int steps)
 {
   PANGO_ENSURE(T_world_obj.size() > 0);
   const SE3f T_last_new(SO3f(), dir_last / float(steps));
 
   for (int i = 0; i < steps; ++i) {
-    const auto& T_world_last = T_world_obj.back();
+    auto const& T_world_last = T_world_obj.back();
     T_world_obj.push_back(T_world_last * T_last_new);
   }
 }
 
 inline void rotate(
-    std::vector<sophus::SE3f>& T_world_obj, const Eigen::Vector3f& axis_angle,
+    std::vector<sophus::SE3f>& T_world_obj, Eigen::Vector3f const& axis_angle,
     int steps)
 {
   PANGO_ENSURE(T_world_obj.size() > 0);
   const SE3f T_last_new(SO3f::exp(axis_angle / steps), Eigen::Vector3f::Zero());
 
   for (int i = 0; i < steps; ++i) {
-    const auto& T_world_last = T_world_obj.back();
+    auto const& T_world_last = T_world_obj.back();
     T_world_obj.push_back(T_world_last * T_last_new);
   }
 }

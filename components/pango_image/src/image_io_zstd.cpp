@@ -23,7 +23,7 @@ struct zstd_image_header {
 #pragma pack(pop)
 
 void SaveZstd(
-    const IntensityImage<>& image, std::ostream& out, int compression_level)
+    IntensityImage<> const& image, std::ostream& out, int compression_level)
 {
 #ifdef HAVE_ZSTD
   // Write out header, uncompressed

@@ -62,12 +62,12 @@ class InterpreterInterface
   public:
   inline virtual ~InterpreterInterface() {}
 
-  virtual void PushCommand(const std::string& cmd) = 0;
+  virtual void PushCommand(std::string const& cmd) = 0;
 
   virtual bool PullLine(InterpreterLine& line) = 0;
 
   virtual std::vector<std::string> Complete(
-      const std::string& cmd, int max_options = 20) = 0;
+      std::string const& cmd, int max_options = 20) = 0;
 };
 
 }  // namespace pangolin

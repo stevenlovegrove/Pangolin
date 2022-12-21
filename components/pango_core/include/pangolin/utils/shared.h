@@ -107,14 +107,14 @@ class Shared
 
   // Copy constructor from derived bases
   template <DerivedFrom<T> Derived>
-  Shared(const Shared<Derived>& other) : non_null_shared_(other.sharedPtr())
+  Shared(Shared<Derived> const& other) : non_null_shared_(other.sharedPtr())
   {
     checkMaybeThrow();
   }
 
   // Construct from shared_ptr
   template <DerivedFrom<T> Derived>
-  Shared(const std::shared_ptr<Derived>& panic_if_null) :
+  Shared(std::shared_ptr<Derived> const& panic_if_null) :
       non_null_shared_(panic_if_null)
   {
     checkMaybeThrow();
@@ -130,7 +130,7 @@ class Shared
 
   // Not sure why this is needed when the generic one
   // is defined above
-  Shared(const std::shared_ptr<T>& panic_if_null) :
+  Shared(std::shared_ptr<T> const& panic_if_null) :
       non_null_shared_(panic_if_null)
   {
     checkMaybeThrow();
@@ -150,10 +150,10 @@ class Shared
     return *this;
   }
 
-  Shared(const Shared<T>&) = default;
-  Shared<T>& operator=(const Shared<T>&) = default;
+  Shared(Shared<T> const&) = default;
+  Shared<T>& operator=(Shared<T> const&) = default;
 
-  bool operator==(const Shared<T>& rhs) const noexcept
+  bool operator==(Shared<T> const& rhs) const noexcept
   {
     return this->non_null_shared_ == rhs.non_null_shared_;
   }
@@ -192,7 +192,7 @@ Shared<T>& operator+(ExpectShared<T>& x)
 /// Unlike Expected::operator*() which will allow for UB,
 /// + will Panic if x is in the error state.
 template <class T>
-const Shared<T>& operator+(const ExpectShared<T>& x)
+Shared<T> const& operator+(ExpectShared<T> const& x)
 {
   return x.value();
 }

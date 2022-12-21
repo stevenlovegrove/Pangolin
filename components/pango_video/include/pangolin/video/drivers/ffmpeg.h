@@ -54,7 +54,7 @@ class PANGOLIN_EXPORT FfmpegVideo : public VideoInterface,
   size_t SizeBytes() const override;
 
   //! Implement VideoInput::Streams()
-  const std::vector<StreamInfo> &Streams() const override;
+  std::vector<StreamInfo> const &Streams() const override;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char *image, bool wait = true) override;
@@ -80,8 +80,8 @@ class PANGOLIN_EXPORT FfmpegVideo : public VideoInterface,
   int videoStream;
   int64_t numFrames;
   int64_t ptsPerFrame;
-  const AVCodec *pVidCodec;
-  const AVCodec *pAudCodec;
+  AVCodec const *pVidCodec;
+  AVCodec const *pAudCodec;
   AVCodecContext *pCodecContext;
   AVFrame *pFrame;
   AVFrame *pFrameOut;

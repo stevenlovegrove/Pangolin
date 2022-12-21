@@ -8,7 +8,7 @@ namespace pangolin
 {
 
 using ImageEncoderFunc =
-    std::function<void(std::ostream&, const sophus::IntensityImage<>&)>;
+    std::function<void(std::ostream&, sophus::IntensityImage<> const&)>;
 using ImageDecoderFunc = std::function<sophus::IntensityImage<>(std::istream&)>;
 
 class StreamEncoderFactory
@@ -17,10 +17,10 @@ class StreamEncoderFactory
   static StreamEncoderFactory& I();
 
   ImageEncoderFunc GetEncoder(
-      const std::string& encoder_spec, const RuntimePixelType& fmt);
+      std::string const& encoder_spec, RuntimePixelType const& fmt);
 
   ImageDecoderFunc GetDecoder(
-      const std::string& encoder_spec, const RuntimePixelType& fmt);
+      std::string const& encoder_spec, RuntimePixelType const& fmt);
 };
 
 }  // namespace pangolin

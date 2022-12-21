@@ -11,7 +11,7 @@ namespace pangolin
 {
 
 struct GlDrawnPlotBackground : public DrawnPlotBackground {
-  GlDrawnPlotBackground(const DrawnPlotBackground::Params& p)
+  GlDrawnPlotBackground(DrawnPlotBackground::Params const& p)
   {
     auto bind_prog = prog->bind();
     u_color_background = p.color_background;
@@ -19,7 +19,7 @@ struct GlDrawnPlotBackground : public DrawnPlotBackground {
     u_tick_to_tick = p.tick_to_tick;
   }
 
-  void draw(const ViewParams& params) override
+  void draw(ViewParams const& params) override
   {
     auto bind_prog = prog->bind();
     auto bind_vao = vao.bind();
@@ -57,20 +57,20 @@ struct GlDrawnPlotBackground : public DrawnPlotBackground {
   }
 
   private:
-  const Shared<GlSlProgram> prog = GlSlProgram::Create(
+  Shared<GlSlProgram> const prog = GlSlProgram::Create(
       {.sources = {
            {.origin = "/components/pango_opengl/shaders/"
                       "main_plot_background.glsl"}}});
   GlVertexArrayObject vao = {};
-  const GlUniform<Eigen::Matrix4f> u_graph_from_clip = {"graph_from_clip"};
-  const GlUniform<Eigen::Vector4f> u_color_background = {"color_background"};
-  const GlUniform<Eigen::Vector4f> u_tick_color_scale = {"tick_color_scale"};
-  const GlUniform<Eigen::Vector2f> u_graph_per_pix = {"graph_per_pix"};
-  const GlUniform<Eigen::Vector2f> u_log10_view = {"log10_view"};
-  const GlUniform<Eigen::Vector2f> u_log10_start = {"log10_start"};
-  const GlUniform<Eigen::Vector2f> u_unit_graph_start = {"unit_graph_start"};
+  GlUniform<Eigen::Matrix4f> const u_graph_from_clip = {"graph_from_clip"};
+  GlUniform<Eigen::Vector4f> const u_color_background = {"color_background"};
+  GlUniform<Eigen::Vector4f> const u_tick_color_scale = {"tick_color_scale"};
+  GlUniform<Eigen::Vector2f> const u_graph_per_pix = {"graph_per_pix"};
+  GlUniform<Eigen::Vector2f> const u_log10_view = {"log10_view"};
+  GlUniform<Eigen::Vector2f> const u_log10_start = {"log10_start"};
+  GlUniform<Eigen::Vector2f> const u_unit_graph_start = {"unit_graph_start"};
 
-  const GlUniform<float> u_tick_to_tick = {"tick_to_tick"};
+  GlUniform<float> const u_tick_to_tick = {"tick_to_tick"};
 };
 
 PANGO_CREATE(DrawnPlotBackground)

@@ -49,12 +49,12 @@ inline std::string trimmed(std::string s)
   return s;
 }
 
-inline bool startsWith(const std::string& str, const std::string& prefix)
+inline bool startsWith(std::string const& str, std::string const& prefix)
 {
   return !str.compare(0, prefix.size(), prefix);
 }
 
-inline bool endsWith(const std::string& str, const std::string& prefix)
+inline bool endsWith(std::string const& str, std::string const& prefix)
 {
   return !str.compare(str.size() - prefix.size(), prefix.size(), prefix);
 }
@@ -89,7 +89,7 @@ inline std::vector<std::string> tokenize(std::istringstream& iss)
       std::istream_iterator<std::string>{}};
 }
 
-inline std::vector<std::string> split(const std::string& s, char delim)
+inline std::vector<std::string> split(std::string const& s, char delim)
 {
   std::vector<std::string> elements;
   std::stringstream ss(s);

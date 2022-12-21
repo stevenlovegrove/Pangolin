@@ -26,8 +26,8 @@ void PrintSchemeHelp(std::ostream& out = std::cout, bool color = true);
 /// should be listed \p level the level of detail to use when printing (see enum
 /// above) \p color whether ANSI Color codes should be used for formatting
 void PrintFactoryRegistryDetails(
-    std::ostream& out, const pangolin::FactoryRegistry& registry,
-    std::type_index factory_type, const std::string& scheme_filter = "",
+    std::ostream& out, pangolin::FactoryRegistry const& registry,
+    std::type_index factory_type, std::string const& scheme_filter = "",
     HelpVerbosity level = HelpVerbosity::SYNOPSIS, bool color = true);
 
 }  // namespace pangolin

@@ -55,7 +55,7 @@ struct RenderParams {
 };
 
 struct Manipulator : public Interactive {
-  virtual void Render(const RenderParams& params) = 0;
+  virtual void Render(RenderParams const& params) = 0;
 };
 
 }  // namespace pangolin

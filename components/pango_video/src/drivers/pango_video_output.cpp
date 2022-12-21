@@ -53,8 +53,8 @@ void SigPipeHandler(int sig)
 }
 
 PangoVideoOutput::PangoVideoOutput(
-    const std::string& filename, size_t buffer_size_bytes,
-    const std::map<size_t, std::string>& stream_encoder_uris) :
+    std::string const& filename, size_t buffer_size_bytes,
+    std::map<size_t, std::string> const& stream_encoder_uris) :
     filename(filename),
     packetstream_buffer_size_bytes(buffer_size_bytes),
     packetstreamsrcid(-1),
@@ -74,7 +74,7 @@ PangoVideoOutput::PangoVideoOutput(
 
 PangoVideoOutput::~PangoVideoOutput() {}
 
-const std::vector<StreamInfo>& PangoVideoOutput::Streams() const
+std::vector<StreamInfo> const& PangoVideoOutput::Streams() const
 {
   return streams;
 }
@@ -82,8 +82,8 @@ const std::vector<StreamInfo>& PangoVideoOutput::Streams() const
 bool PangoVideoOutput::IsPipe() const { return is_pipe; }
 
 void PangoVideoOutput::SetStreams(
-    const std::vector<StreamInfo>& st, const std::string& uri,
-    const picojson::value& properties)
+    std::vector<StreamInfo> const& st, std::string const& uri,
+    picojson::value const& properties)
 {
   std::set<size_t> unique_offsets;
   for (size_t i = 0; i < st.size(); ++i) {
@@ -149,7 +149,7 @@ void PangoVideoOutput::SetStreams(
 }
 
 int PangoVideoOutput::WriteStreams(
-    const unsigned char* data, const picojson::value& frame_properties)
+    unsigned char const* data, picojson::value const& frame_properties)
 {
   const int64_t host_reception_time_us = frame_properties.get_value(
       PANGO_HOST_RECEPTION_TIME_US, Time_us(TimeNow()));
@@ -249,11 +249,11 @@ int PangoVideoOutput::WriteStreams(
     }
 
     packetstream.WriteSourcePacket(
-        packetstreamsrcid, reinterpret_cast<const char*>(encoded.data()),
+        packetstreamsrcid, reinterpret_cast<char const*>(encoded.data()),
         host_reception_time_us, encoded.size(), frame_properties);
   } else {
     packetstream.WriteSourcePacket(
-        packetstreamsrcid, reinterpret_cast<const char*>(data),
+        packetstreamsrcid, reinterpret_cast<char const*>(data),
         host_reception_time_us, total_frame_size, frame_properties);
   }
 
@@ -268,7 +268,7 @@ PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
     {
       return {{"pango", 10}, {"file", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Output to a Pango video container.";
     }
@@ -283,7 +283,7 @@ PANGOLIN_REGISTER_FACTORY(PangoVideoOutput)
             "encoder or encoderN, 1 <= N <= 100. The default values of "
             "encoderN are set to encoder"}}};
     }
-    std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoOutputInterface> Open(Uri const& uri) override
     {
       ParamReader reader(Params(), uri);
 

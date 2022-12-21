@@ -38,7 +38,7 @@ struct PANGOLIN_EXPORT Packet {
   Packet(
       PacketStream& s, std::unique_lock<std::recursive_mutex>&& mutex,
       std::vector<PacketStreamSource>& srcs);
-  Packet(const Packet&) = delete;
+  Packet(Packet const&) = delete;
   Packet(Packet&& o);
   ~Packet();
 

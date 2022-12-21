@@ -186,7 +186,7 @@ OpenNiVideo::~OpenNiVideo() { context.Release(); }
 
 size_t OpenNiVideo::SizeBytes() const { return sizeBytes; }
 
-const std::vector<StreamInfo>& OpenNiVideo::Streams() const { return streams; }
+std::vector<StreamInfo> const& OpenNiVideo::Streams() const { return streams; }
 
 void OpenNiVideo::Start()
 {
@@ -213,19 +213,19 @@ bool OpenNiVideo::GrabNext(unsigned char* image, bool /*wait*/)
       switch (sensor_type[i]) {
         case OpenNiDepth_1mm:
         case OpenNiDepth_1mm_Registered: {
-          const XnDepthPixel* pDepthMap = depthNode.GetDepthMap();
+          XnDepthPixel const* pDepthMap = depthNode.GetDepthMap();
           memcpy(out_img, pDepthMap, streams[i].SizeBytes());
           break;
         }
         case OpenNiIr:
         case OpenNiIrProj: {
-          const XnIRPixel* pIrMap = irNode.GetIRMap();
+          XnIRPixel const* pIrMap = irNode.GetIRMap();
           memcpy(out_img, pIrMap, streams[i].SizeBytes());
           break;
         }
         case OpenNiIr8bit:
         case OpenNiIr8bitProj: {
-          const XnIRPixel* pIr16Map = irNode.GetIRMap();
+          XnIRPixel const* pIr16Map = irNode.GetIRMap();
 
           // rescale from 16-bit (10 effective) to 8-bit
           xn::IRMetaData meta_data;
@@ -245,7 +245,7 @@ bool OpenNiVideo::GrabNext(unsigned char* image, bool /*wait*/)
           break;
         }
         case OpenNiRgb: {
-          const XnUInt8* pImageMap = imageNode.GetImageMap();
+          XnUInt8 const* pImageMap = imageNode.GetImageMap();
           memcpy(out_img, pImageMap, streams[i].SizeBytes());
           break;
         }
@@ -274,7 +274,7 @@ PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
     {
       return {{"openni1", 10}, {"openni", 100}, {"oni", 100}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "OpenNI v1 Driver to access Kinect / Primesense devices.";
     }
@@ -288,11 +288,11 @@ PANGOLIN_REGISTER_FACTORY(OpenNiVideo)
             "Camera stream to use for stream 1 {depth,rgb,ir}"},
            {"img2", "", "Camera stream to use for stream 2 {depth,rgb,ir}"}}};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640, 480));
-      const unsigned int fps = uri.Get<unsigned int>("fps", 30);
-      const bool autoexposure = uri.Get<bool>("autoexposure", true);
+      unsigned int const fps = uri.Get<unsigned int>("fps", 30);
+      bool const autoexposure = uri.Get<bool>("autoexposure", true);
 
       OpenNiSensorType img1 = OpenNiRgb;
       OpenNiSensorType img2 = OpenNiUnassigned;

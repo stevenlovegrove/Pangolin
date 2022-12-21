@@ -19,7 +19,7 @@ class PosixSharedMemoryBuffer : public SharedMemoryBufferInterface
   public:
   PosixSharedMemoryBuffer(
       int fd, unsigned char *ptr, size_t size, bool ownership,
-      const std::string &name) :
+      std::string const &name) :
       _fd(fd),
       _ptr(ptr),
       _size(size),
@@ -80,7 +80,7 @@ class PosixSharedMemoryBuffer : public SharedMemoryBufferInterface
 };
 
 std::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffer(
-    const string &name, size_t size)
+    string const &name, size_t size)
 {
   std::shared_ptr<SharedMemoryBufferInterface> ptr;
 
@@ -105,7 +105,7 @@ std::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffer(
 }
 
 std::shared_ptr<SharedMemoryBufferInterface> open_named_shared_memory_buffer(
-    const string &name, bool readwrite)
+    string const &name, bool readwrite)
 {
   std::shared_ptr<SharedMemoryBufferInterface> ptr;
 

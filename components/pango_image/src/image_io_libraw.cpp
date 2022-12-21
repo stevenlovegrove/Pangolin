@@ -9,7 +9,7 @@
 namespace pangolin
 {
 
-IntensityImage<> LoadLibRaw(const std::string& filename)
+IntensityImage<> LoadLibRaw(std::string const& filename)
 {
 #ifdef HAVE_LIBRAW
   throw std::runtime_error("implement me.");

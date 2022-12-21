@@ -22,7 +22,7 @@ struct Axis : public Renderable, public Interactive {
   {
   }
 
-  void Render(const RenderParams&) override
+  void Render(RenderParams const &) override
   {
     glColor4f(1, 0, 0, 1);
     glPushName(label_x.Id());

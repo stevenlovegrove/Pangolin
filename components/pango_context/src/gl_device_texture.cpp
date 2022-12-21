@@ -36,8 +36,8 @@ struct DeviceGlTexture : public DeviceTexture {
   RuntimePixelType pixelType() const override { return data_type_; }
 
   void update(
-      const sophus::IntensityImage<>& image,
-      const Eigen::Array2i& destination = {0, 0}) override
+      sophus::IntensityImage<> const& image,
+      Eigen::Array2i const& destination = {0, 0}) override
   {
     std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
     updates_.push_back(Update{image, destination});

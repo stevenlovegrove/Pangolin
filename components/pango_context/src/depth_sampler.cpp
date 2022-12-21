@@ -11,11 +11,11 @@ namespace pangolin
 class DepthSamplerImpl : public DepthSampler
 {
   public:
-  DepthSamplerImpl(const DepthSampler::Params& p) : context_(p.context) {}
+  DepthSamplerImpl(DepthSampler::Params const& p) : context_(p.context) {}
 
   std::optional<Sample> sampleDepth(
-      const SampleLocation& location, int patch_rad, MinMax<double> near_far,
-      const Context* default_context) override
+      SampleLocation const& location, int patch_rad, MinMax<double> near_far,
+      Context const* default_context) override
   {
     using namespace sophus;
 
@@ -24,7 +24,7 @@ class DepthSamplerImpl : public DepthSampler
         pix - Eigen::Array2i(patch_rad, patch_rad),
         pix + Eigen::Array2i(patch_rad, patch_rad)};
 
-    const Context* context = context_ ? context_.get() : default_context;
+    Context const* context = context_ ? context_.get() : default_context;
     PANGO_CHECK(context);
     if (!context) return std::nullopt;
 
@@ -33,7 +33,7 @@ class DepthSamplerImpl : public DepthSampler
 
     visitImage(
         overload{
-            [&](const ImageView<float>& image) {
+            [&](ImageView<float> const& image) {
               image.visit([&](float gl_z) {
                 float real_z =
                     realDepthFromGl(gl_z, near_far.min(), near_far.max());
@@ -42,7 +42,7 @@ class DepthSamplerImpl : public DepthSampler
                 }
               });
             },
-            [&](const auto& image) { PANGO_UNREACHABLE(); },
+            [&](auto const& image) { PANGO_UNREACHABLE(); },
         },
         patch);
 

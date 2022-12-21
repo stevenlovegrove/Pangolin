@@ -40,7 +40,7 @@ class PANGOLIN_EXPORT MjpegVideo : public VideoInterface,
                                    public VideoPlaybackInterface
 {
   public:
-  MjpegVideo(const std::string& filename);
+  MjpegVideo(std::string const& filename);
   ~MjpegVideo();
 
   //! Implement VideoInput::Start()
@@ -53,7 +53,7 @@ class PANGOLIN_EXPORT MjpegVideo : public VideoInterface,
   size_t SizeBytes() const override;
 
   //! Implement VideoInput::Streams()
-  const std::vector<StreamInfo>& Streams() const override;
+  std::vector<StreamInfo> const& Streams() const override;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true) override;

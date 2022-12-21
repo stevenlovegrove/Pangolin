@@ -7,20 +7,20 @@ namespace pangolin
 
 using PangoTagType = uint32_t;
 
-const static std::string PANGO_MAGIC = "PANGO";
+static const std::string PANGO_MAGIC = "PANGO";
 
-const static std::string pss_src_driver = "driver";
-const static std::string pss_src_id = "id";
-const static std::string pss_src_info = "info";
-const static std::string pss_src_uri = "uri";
-const static std::string pss_src_packet = "packet";
-const static std::string pss_src_version = "version";
-const static std::string pss_pkt_alignment_bytes = "alignment_bytes";
-const static std::string pss_pkt_definitions = "definitions";
-const static std::string pss_pkt_size_bytes = "size_bytes";
-const static std::string pss_pkt_format_written = "format_written";
+static const std::string pss_src_driver = "driver";
+static const std::string pss_src_id = "id";
+static const std::string pss_src_info = "info";
+static const std::string pss_src_uri = "uri";
+static const std::string pss_src_packet = "packet";
+static const std::string pss_src_version = "version";
+static const std::string pss_pkt_alignment_bytes = "alignment_bytes";
+static const std::string pss_pkt_definitions = "definitions";
+static const std::string pss_pkt_size_bytes = "size_bytes";
+static const std::string pss_pkt_format_written = "format_written";
 
-const unsigned int TAG_LENGTH = 3;
+unsigned int const TAG_LENGTH = 3;
 
 #define PANGO_TAG(a, b, c) ((c << 16) | (b << 8) | a)
 const PangoTagType TAG_PANGO_HDR = PANGO_TAG('L', 'I', 'N');

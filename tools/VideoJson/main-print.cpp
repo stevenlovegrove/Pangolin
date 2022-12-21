@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
     for (size_t i = 0; i < reader.Sources().size(); ++i) {
       picojson::value source_props;
 
-      const pangolin::PacketStreamSource& src = reader.Sources()[i];
+      pangolin::PacketStreamSource const& src = reader.Sources()[i];
       source_props["device_properties"] = src.info["device"];
 
       // Seek through index, loading frame properties

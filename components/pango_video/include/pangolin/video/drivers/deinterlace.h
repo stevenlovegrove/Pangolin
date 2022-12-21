@@ -42,7 +42,7 @@ class PANGOLIN_EXPORT DeinterlaceVideo : public VideoInterface
 
   size_t SizeBytes() const;
 
-  const std::vector<StreamInfo>& Streams() const;
+  std::vector<StreamInfo> const& Streams() const;
 
   void Start();
 

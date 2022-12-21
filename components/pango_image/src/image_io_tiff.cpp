@@ -30,12 +30,12 @@ T GetOrDefault(TIFF* tif, uint32_t tag, T default_val)
 }
 #endif
 
-void DummyTiffOpenHandler(const char* module, const char* fmt, va_list ap)
+void DummyTiffOpenHandler(char const* module, char const* fmt, va_list ap)
 {
   // TODO: Should probably send these somewhere...
 }
 
-IntensityImage<> LoadTiff(const std::string& filename)
+IntensityImage<> LoadTiff(std::string const& filename)
 {
 #ifdef HAVE_LIBTIFF
   TIFFSetWarningHandler(DummyTiffOpenHandler);
@@ -45,14 +45,14 @@ IntensityImage<> LoadTiff(const std::string& filename)
     throw std::runtime_error("libtiff failed to open " + filename);
   }
 
-  const auto width = GetOrThrow<uint32_t>(tif, TIFFTAG_IMAGEWIDTH);
-  const auto height = GetOrThrow<uint32_t>(tif, TIFFTAG_IMAGELENGTH);
-  const auto channels = GetOrThrow<uint16_t>(tif, TIFFTAG_SAMPLESPERPIXEL);
-  const auto bits_per_channel =
+  auto const width = GetOrThrow<uint32_t>(tif, TIFFTAG_IMAGEWIDTH);
+  auto const height = GetOrThrow<uint32_t>(tif, TIFFTAG_IMAGELENGTH);
+  auto const channels = GetOrThrow<uint16_t>(tif, TIFFTAG_SAMPLESPERPIXEL);
+  auto const bits_per_channel =
       GetOrThrow<uint16_t>(tif, TIFFTAG_BITSPERSAMPLE);
-  const auto sample_format =
+  auto const sample_format =
       GetOrDefault<uint16_t>(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT);
-  const auto planar = GetOrThrow<uint16_t>(tif, TIFFTAG_PLANARCONFIG);
+  auto const planar = GetOrThrow<uint16_t>(tif, TIFFTAG_PLANARCONFIG);
   //    const auto photom = GetOrThrow<uint16_t>(tif, TIFFTAG_PHOTOMETRIC);
 
   // comparison of unsigned with >= 0 is always true!

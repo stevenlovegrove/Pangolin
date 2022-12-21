@@ -62,7 +62,7 @@ class PANGOLIN_EXPORT GlTexture
       GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL);
 
   // Construct this texture from a CPU image
-  GlTexture(const IntensityImage<>& img, bool sampling_linear = true);
+  GlTexture(IntensityImage<> const& img, bool sampling_linear = true);
 
   //! Move Constructor / asignment
   GlTexture(GlTexture&& tex);
@@ -81,7 +81,7 @@ class PANGOLIN_EXPORT GlTexture
   virtual void Reinitialise(
       GLsizei width, GLsizei height, GLint internal_format = GL_RGBA8,
       bool sampling_linear = true, int border = 0, GLenum glformat = GL_RGBA,
-      GLenum gltype = GL_UNSIGNED_BYTE, const GLvoid* data = NULL);
+      GLenum gltype = GL_UNSIGNED_BYTE, GLvoid const* data = NULL);
 
   void Bind() const;
   void Unbind() const;
@@ -89,21 +89,21 @@ class PANGOLIN_EXPORT GlTexture
   //! data_layout normally one of GL_LUMINANCE, GL_RGB, ...
   //! data_type normally one of GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_FLOAT
   void Upload(
-      const void* image, GLenum data_format = GL_LUMINANCE,
+      void const* image, GLenum data_format = GL_LUMINANCE,
       GLenum data_type = GL_FLOAT);
 
   //! Upload data to texture, overwriting a sub-region of it.
   //! data ptr contains packed data_w x data_h of pixel data.
   void Upload(
-      const void* data, GLsizei tex_x_offset, GLsizei tex_y_offset,
+      void const* data, GLsizei tex_x_offset, GLsizei tex_y_offset,
       GLsizei data_w, GLsizei data_h, GLenum data_format, GLenum data_type);
 
-  void Load(const IntensityImage<>& image, bool sampling_linear = true);
+  void Load(IntensityImage<> const& image, bool sampling_linear = true);
 
   template <typename T>
-  void Load(const sophus::ImageView<T>& image, bool sampling_linear = true);
+  void Load(sophus::ImageView<T> const& image, bool sampling_linear = true);
 
-  void LoadFromFile(const std::string& filename, bool sampling_linear = true);
+  void LoadFromFile(std::string const& filename, bool sampling_linear = true);
 
   void Download(
       void* image, GLenum data_layout = GL_LUMINANCE,
@@ -111,14 +111,14 @@ class PANGOLIN_EXPORT GlTexture
 
   void Download(IntensityImage<>& image) const;
 
-  void CopyFrom(const GlTexture& tex);
+  void CopyFrom(GlTexture const& tex);
 
-  void Save(const std::string& filename, bool top_line_first = true);
+  void Save(std::string const& filename, bool top_line_first = true);
 
   void SetLinear();
   void SetNearestNeighbour();
 
-  void RenderToViewport(const bool flip) const;
+  void RenderToViewport(bool const flip) const;
   void RenderToViewport() const;
   void RenderToViewport(
       Viewport tex_vp, bool flipx = false, bool flipy = false) const;
@@ -132,7 +132,7 @@ class PANGOLIN_EXPORT GlTexture
 
   private:
   // Private copy constructor
-  GlTexture(const GlTexture&) {}
+  GlTexture(GlTexture const&) {}
 };
 
 struct PANGOLIN_EXPORT GlRenderBuffer {
@@ -154,7 +154,7 @@ struct PANGOLIN_EXPORT GlRenderBuffer {
 
   private:
   // Private copy constructor
-  GlRenderBuffer(const GlRenderBuffer&) {}
+  GlRenderBuffer(GlRenderBuffer const&) {}
 };
 
 struct PANGOLIN_EXPORT GlFramebuffer {
@@ -205,11 +205,11 @@ struct PANGOLIN_EXPORT GlBufferData {
 
   GlBufferData(
       GlBufferType buffer_type, GLsizeiptr size_bytes,
-      GLenum gluse = GL_DYNAMIC_DRAW, const void* data = 0);
+      GLenum gluse = GL_DYNAMIC_DRAW, void const* data = 0);
 
   template <typename T>
   GlBufferData(
-      GlBufferType buffer_type, const std::vector<T>& data,
+      GlBufferType buffer_type, std::vector<T> const& data,
       GLenum gluse = GL_STATIC_DRAW);
 
   virtual ~GlBufferData();
@@ -226,19 +226,19 @@ struct PANGOLIN_EXPORT GlBufferData {
 
   void Reinitialise(
       GlBufferType buffer_type, GLsizeiptr size_bytes,
-      GLenum gluse = GL_DYNAMIC_DRAW, const void* data = 0);
+      GLenum gluse = GL_DYNAMIC_DRAW, void const* data = 0);
 
   void Bind() const;
   void Unbind() const;
-  void Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset = 0);
+  void Upload(GLvoid const* data, GLsizeiptr size_bytes, GLintptr offset = 0);
   void Download(GLvoid* ptr, GLsizeiptr size_bytes, GLintptr offset = 0) const;
 
   template <typename T>
-  void Upload(const std::vector<T>& data, GLintptr offset = 0);
+  void Upload(std::vector<T> const& data, GLintptr offset = 0);
 
 #ifdef USE_EIGEN
   template <typename Derived>
-  void Upload(const Eigen::DenseBase<Derived>& data, GLintptr offset = 0);
+  void Upload(Eigen::DenseBase<Derived> const& data, GLintptr offset = 0);
 #endif
 
   GLuint bo;
@@ -247,7 +247,7 @@ struct PANGOLIN_EXPORT GlBufferData {
   GLsizeiptr size_bytes;
 
   private:
-  GlBufferData(const GlBufferData&) {}
+  GlBufferData(GlBufferData const&) {}
 };
 
 // This encapsulates a GL Buffer object, also storing information about its
@@ -258,7 +258,7 @@ struct PANGOLIN_EXPORT GlBuffer : public GlBufferData {
   GlBuffer(
       GlBufferType buffer_type, GLuint num_elements, GLenum datatype,
       GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW);
-  GlBuffer(const GlBuffer&) = delete;
+  GlBuffer(GlBuffer const&) = delete;
 
   //! Move Constructor
   GlBuffer(GlBuffer&& tex);
@@ -266,20 +266,20 @@ struct PANGOLIN_EXPORT GlBuffer : public GlBufferData {
 
   void Reinitialise(
       GlBufferType buffer_type, GLuint num_elements, GLenum datatype,
-      GLuint count_per_element, GLenum gluse, const void* data = nullptr);
+      GLuint count_per_element, GLenum gluse, void const* data = nullptr);
   void Reinitialise(GlBuffer const& other);
   void Resize(GLuint num_elements);
 
   template <typename Scalar>
   GlBuffer(
-      GlBufferType buffer_type, const std::vector<Scalar>& data,
+      GlBufferType buffer_type, std::vector<Scalar> const& data,
       GLenum gluse = GL_STATIC_DRAW);
 
 #ifdef USE_EIGEN
   template <typename Scalar, int R, int C>
   GlBuffer(
       GlBufferType buffer_type,
-      const std::vector<Eigen::Matrix<Scalar, R, C>>& data,
+      std::vector<Eigen::Matrix<Scalar, R, C>> const& data,
       GLenum gluse = GL_STATIC_DRAW);
 #endif
 
@@ -300,10 +300,10 @@ class PANGOLIN_EXPORT GlSizeableBuffer : public pangolin::GlBuffer
 
 #ifdef USE_EIGEN
   template <typename Derived>
-  void Add(const Eigen::DenseBase<Derived>& vec);
+  void Add(Eigen::DenseBase<Derived> const& vec);
 
   template <typename Derived>
-  void Update(const Eigen::DenseBase<Derived>& vec, size_t position = 0);
+  void Update(Eigen::DenseBase<Derived> const& vec, size_t position = 0);
 #endif
 
   size_t start() const;
@@ -323,7 +323,7 @@ size_t GlFormatChannels(GLenum data_layout);
 size_t GlDataTypeBytes(GLenum type);
 
 IntensityImage<> ReadFramebuffer(
-    const Viewport& v, const char* pixel_format = "RGBA32");
+    Viewport const& v, char const* pixel_format = "RGBA32");
 
 }  // namespace pangolin
 

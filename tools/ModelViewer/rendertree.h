@@ -9,7 +9,7 @@ struct Renderable {
   Renderable() : show(true) {}
   virtual void Render(
       pangolin::GlSlProgram& /*prog*/,
-      const pangolin::GlTexture* /*matcap*/) const
+      pangolin::GlTexture const* /*matcap*/) const
   {
   }
   inline virtual Eigen::AlignedBox3f GetAABB() const
@@ -21,12 +21,12 @@ struct Renderable {
 
 struct GlGeomRenderable : public Renderable {
   GlGeomRenderable(
-      pangolin::GlGeometry&& glgeom, const Eigen::AlignedBox3f& aabb) :
+      pangolin::GlGeometry&& glgeom, Eigen::AlignedBox3f const& aabb) :
       glgeom(std::move(glgeom)), aabb(aabb)
   {
   }
 
-  void Render(pangolin::GlSlProgram& prog, const pangolin::GlTexture* matcap)
+  void Render(pangolin::GlSlProgram& prog, pangolin::GlTexture const* matcap)
       const override
   {
     if (show) {
@@ -64,8 +64,8 @@ struct SpinTransform : public RenderableTransform {
   Eigen::Matrix4f GetT_pc() const override
   {
     if (dir != pangolin::AxisNone) {
-      const double rad_per_sec = 0.5;
-      const double rad = rad_per_sec *
+      double const rad_per_sec = 0.5;
+      double const rad = rad_per_sec *
                          (std::chrono::steady_clock::now() - start).count() /
                          1E9;
       const Eigen::Map<const Eigen::Matrix<pangolin::GLprecision, 3, 1>> axis(
@@ -87,8 +87,8 @@ using RenderNode = pangolin::TreeNode<
     std::shared_ptr<Renderable>, std::shared_ptr<RenderableTransform>>;
 void render_tree(
     pangolin::GlSlProgram& prog, RenderNode& node,
-    const pangolin::OpenGlMatrix& K,
-    const pangolin::OpenGlMatrix& T_camera_node, pangolin::GlTexture* matcap)
+    pangolin::OpenGlMatrix const& K,
+    pangolin::OpenGlMatrix const& T_camera_node, pangolin::GlTexture* matcap)
 {
   if (node.item) {
     prog.SetUniform("KT_cw", K * T_camera_node);

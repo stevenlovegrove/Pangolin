@@ -62,14 +62,14 @@ void BindToContext(std::string name);
 PANGOLIN_EXPORT
 WindowInterface& CreateWindowAndBind(
     std::string window_title, int w = 640, int h = 480,
-    const Params& params = Params());
+    Params const& params = Params());
 
 /// Return pointer to current Pangolin Window context, or nullptr if none bound.
 PANGOLIN_EXPORT
 WindowInterface* GetBoundWindow();
 
 PANGOLIN_EXPORT
-void DestroyWindow(const std::string& window_title);
+void DestroyWindow(std::string const& window_title);
 
 /// Launch users derived UserApp, controlling OpenGL event loop.
 /// This method will block until the application exits, calling app's
@@ -118,7 +118,7 @@ void RegisterKeyPressCallback(int key, std::function<void(int)> func);
 /// construction will save entire window.
 PANGOLIN_EXPORT
 void SaveWindowOnRender(
-    const std::string& filename_hint, const Viewport& v = Viewport());
+    std::string const& filename_hint, Viewport const& v = Viewport());
 
 /// Save the contents of current window within the specified viewport (whole
 /// window by default). This will block whilst waiting for pending draw calls to
@@ -127,7 +127,7 @@ void SaveWindowOnRender(
 /// portion of the window to save. Default construction will save entire window.
 PANGOLIN_EXPORT
 void SaveWindowNow(
-    const std::string& filename_hint, const Viewport& v = Viewport());
+    std::string const& filename_hint, Viewport const& v = Viewport());
 
 /// Retrieve 'base' display, corresponding to entire window.
 PANGOLIN_EXPORT
@@ -136,7 +136,7 @@ View& DisplayBase();
 /// Create or retrieve named display managed by pangolin (automatically
 /// deleted).
 PANGOLIN_EXPORT
-View& Display(const std::string& name);
+View& Display(std::string const& name);
 
 /// Create unnamed display managed by pangolin (automatically deleted).
 PANGOLIN_EXPORT

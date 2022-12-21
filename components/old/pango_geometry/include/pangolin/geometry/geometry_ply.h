@@ -98,11 +98,11 @@ struct PlyElementDetails {
   std::vector<PlyPropertyDetails> properties;
 
   inline std::vector<PlyPropertyDetails>::iterator FindProperty(
-      const std::string& name)
+      std::string const& name)
   {
     return std::find_if(
         properties.begin(), properties.end(),
-        [&name](const PlyPropertyDetails& p) { return p.name == name; });
+        [&name](PlyPropertyDetails const& p) { return p.name == name; });
   }
 };
 
@@ -112,11 +112,11 @@ struct PlyHeaderDetails {
   std::vector<PlyElementDetails> elements;
 
   inline std::vector<PlyElementDetails>::iterator FindElement(
-      const std::string& name)
+      std::string const& name)
   {
     return std::find_if(
         elements.begin(), elements.end(),
-        [&name](const PlyElementDetails& el) { return el.name == name; });
+        [&name](PlyElementDetails const& el) { return el.name == name; });
   }
 };
 
@@ -129,7 +129,7 @@ struct PlyBuffer {
 };
 
 void ParsePlyAscii(
-    pangolin::Geometry& /*geom*/, const PlyHeaderDetails& /*ply*/,
+    pangolin::Geometry& /*geom*/, PlyHeaderDetails const& /*ply*/,
     std::istream& /*is*/);
 
 // Convert Seperate "x","y","z" attributes into a single "vertex" attribute
@@ -144,12 +144,12 @@ void ParsePlyLE(
     pangolin::Geometry& geom, PlyHeaderDetails& ply, std::istream& is);
 
 void ParsePlyBE(
-    pangolin::Geometry& /*geom*/, const PlyHeaderDetails& /*ply*/,
+    pangolin::Geometry& /*geom*/, PlyHeaderDetails const& /*ply*/,
     std::istream& /*is*/);
 
 void AttachAssociatedTexturesPly(
-    pangolin::Geometry& geom, const std::string& filename);
+    pangolin::Geometry& geom, std::string const& filename);
 
-pangolin::Geometry LoadGeometryPly(const std::string& filename);
+pangolin::Geometry LoadGeometryPly(std::string const& filename);
 
 }  // namespace pangolin

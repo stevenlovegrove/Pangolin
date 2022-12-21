@@ -12,7 +12,7 @@ namespace pangolin
 {
 
 template <size_t kN, size_t kFrom>
-std::array<size_t, kN> headAndZeros(const std::array<size_t, kFrom>& x)
+std::array<size_t, kN> headAndZeros(std::array<size_t, kFrom> const& x)
 {
   std::array<size_t, kN> ret;
   for (size_t i = 0; i < kN; ++i) {
@@ -53,7 +53,7 @@ struct DeviceGlBuffer : public DeviceBuffer {
     };
   }
 
-  void pushToUpdateQueue(const Data& u) override
+  void pushToUpdateQueue(Data const& u) override
   {
     FARM_CHECK(u.data);
     FARM_CHECK_GE(u.num_elements, 0);
@@ -83,7 +83,7 @@ struct DeviceGlBuffer : public DeviceBuffer {
     }
   }
 
-  void applyUpdateNow(const Data& u) const
+  void applyUpdateNow(Data const& u) const
   {
     FARM_CHECK(u.data);
     FARM_CHECK_GE(u.num_elements, 0);

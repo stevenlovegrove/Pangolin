@@ -33,7 +33,7 @@
 namespace py_pangolin
 {
 
-bool is_packed(const pybind11::buffer_info &info)
+bool is_packed(pybind11::buffer_info const &info)
 {
   int next_expected_stride = info.itemsize;
   for (int i = info.ndim - 1; i >= 0; --i) {

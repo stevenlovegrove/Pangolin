@@ -119,7 +119,7 @@ class GlState
     }
   }
 
-  static inline GLboolean IsEnabled(GLenum cap)
+  inline static GLboolean IsEnabled(GLenum cap)
   {
     GLboolean curVal;
     glGetBooleanv(cap, &curVal);

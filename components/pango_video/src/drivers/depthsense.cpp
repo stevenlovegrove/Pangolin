@@ -35,7 +35,7 @@ namespace pangolin
 {
 
 const size_t ROGUE_ADDR = 0x01;
-const double MAX_DELTA_TIME = 20000.0;  // u_s
+double const MAX_DELTA_TIME = 20000.0;  // u_s
 
 DepthSenseContext& DepthSenseContext::I()
 {
@@ -67,7 +67,7 @@ void DepthSenseContext::DeviceClosing()
 DepthSenseVideo* DepthSenseContext::GetDepthSenseVideo(
     size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2,
     ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2,
-    const Uri& uri)
+    Uri const& uri)
 {
   if (running_devices == 0) {
     // Initialise SDK
@@ -119,7 +119,7 @@ void DepthSenseContext::EventLoop()
 DepthSenseVideo::DepthSenseVideo(
     DepthSense::Device device, DepthSenseSensorType s1, DepthSenseSensorType s2,
     ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2,
-    const Uri& uri) :
+    Uri const& uri) :
     device(device),
     fill_image(0),
     depthmap_stream(-1),
@@ -191,7 +191,7 @@ picojson::value Json(DepthSense::ExtrinsicParameters& p)
   return js;
 }
 
-void DepthSenseVideo::ConfigureNodes(const Uri& uri)
+void DepthSenseVideo::ConfigureNodes(Uri const& uri)
 {
   std::vector<DepthSense::Node> nodes = device.getNodes();
 
@@ -244,7 +244,7 @@ void DepthSenseVideo::ConfigureNodes(const Uri& uri)
   }
 }
 
-inline DepthSense::FrameFormat ImageDim2FrameFormat(const ImageDim& dim)
+inline DepthSense::FrameFormat ImageDim2FrameFormat(ImageDim const& dim)
 {
   DepthSense::FrameFormat retVal = DepthSense::FRAME_FORMAT_UNKNOWN;
   if (dim.x == 160 && dim.y == 120) {
@@ -280,7 +280,7 @@ inline DepthSense::FrameFormat ImageDim2FrameFormat(const ImageDim& dim)
 }
 
 void DepthSenseVideo::UpdateParameters(
-    const DepthSense::Node& node, const Uri& uri)
+    DepthSense::Node const& node, Uri const& uri)
 {
   DepthSense::Type type = node.getType();
   picojson::value& jsnode = device_properties[type.name()];
@@ -289,7 +289,7 @@ void DepthSenseVideo::UpdateParameters(
   for (std::vector<DepthSense::PropertyBase>::const_iterator it =
            properties.begin();
        it != properties.end(); ++it) {
-    const DepthSense::PropertyBase& prop = *it;
+    DepthSense::PropertyBase const& prop = *it;
 
     if (prop.is<DepthSense::Property<int32_t> >()) {
       DepthSense::Property<int32_t> tprop =
@@ -348,7 +348,7 @@ void DepthSenseVideo::UpdateParameters(
 }
 
 void DepthSenseVideo::ConfigureDepthNode(
-    const SensorConfig& sensorConfig, const Uri& uri)
+    SensorConfig const& sensorConfig, Uri const& uri)
 {
   g_dnode.newSampleReceivedEvent().connect(
       this, &DepthSenseVideo::onNewDepthSample);
@@ -370,8 +370,8 @@ void DepthSenseVideo::ConfigureDepthNode(
   }
 
   // Set pangolin stream for this channel
-  const int w = sensorConfig.dim.x;
-  const int h = sensorConfig.dim.y;
+  int const w = sensorConfig.dim.x;
+  int const h = sensorConfig.dim.y;
 
   const PixelFormat pfmt = PixelFormatFromString("GRAY16LE");
 
@@ -387,7 +387,7 @@ void DepthSenseVideo::ConfigureDepthNode(
 }
 
 void DepthSenseVideo::ConfigureColorNode(
-    const SensorConfig& sensorConfig, const Uri& uri)
+    SensorConfig const& sensorConfig, Uri const& uri)
 {
   // connect new color sample handler
   g_cnode.newSampleReceivedEvent().connect(
@@ -410,8 +410,8 @@ void DepthSenseVideo::ConfigureColorNode(
   }
 
   // Set pangolin stream for this channel
-  const int w = sensorConfig.dim.x;
-  const int h = sensorConfig.dim.y;
+  int const w = sensorConfig.dim.x;
+  int const h = sensorConfig.dim.y;
 
   const PixelFormat pfmt = PixelFormatFromString("BGR24");
 
@@ -545,7 +545,7 @@ void DepthSenseVideo::Stop() {}
 
 size_t DepthSenseVideo::SizeBytes() const { return size_bytes; }
 
-const std::vector<StreamInfo>& DepthSenseVideo::Streams() const
+std::vector<StreamInfo> const& DepthSenseVideo::Streams() const
 {
   return streams;
 }
@@ -590,7 +590,7 @@ bool DepthSenseVideo::GrabNewest(unsigned char* image, bool wait)
 
 double DepthSenseVideo::GetDeltaTime() const { return depthTs - colorTs; }
 
-DepthSenseSensorType depthsense_sensor(const std::string& str)
+DepthSenseSensorType depthsense_sensor(std::string const& str)
 {
   if (!str.compare("rgb")) {
     return DepthSenseRgb;
@@ -607,7 +607,7 @@ PANGOLIN_REGISTER_FACTORY(DepthSenseVideo)
 {
   struct DepthSenseVideoFactory final
       : public TypedFactoryInterface<VideoInterface> {
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       DepthSenseSensorType img1 =
           depthsense_sensor(uri.Get<std::string>("img1", "depth"));
@@ -621,8 +621,8 @@ PANGOLIN_REGISTER_FACTORY(DepthSenseVideo)
           "size2",
           img2 == DepthSenseDepth ? ImageDim(320, 240) : ImageDim(640, 480));
 
-      const unsigned int fps1 = uri.Get<unsigned int>("fps1", 30);
-      const unsigned int fps2 = uri.Get<unsigned int>("fps2", 30);
+      unsigned int const fps1 = uri.Get<unsigned int>("fps1", 30);
+      unsigned int const fps2 = uri.Get<unsigned int>("fps2", 30);
 
       return std::unique_ptr<VideoInterface>(
           DepthSenseContext::I().GetDepthSenseVideo(

@@ -7,10 +7,10 @@ namespace pangolin
 {
 
 CsvTableLoader::CsvTableLoader(
-    const std::vector<std::string>& csv_files, char delim, char comment) :
+    std::vector<std::string> const& csv_files, char delim, char comment) :
     delim(delim), comment(comment)
 {
-  for (const auto& f : csv_files) {
+  for (auto const& f : csv_files) {
     if (f == "-") {
       streams.push_back(&std::cin);
     } else {
@@ -22,7 +22,7 @@ CsvTableLoader::CsvTableLoader(
   }
 }
 
-bool CsvTableLoader::SkipLines(const std::vector<size_t>& lines_per_input)
+bool CsvTableLoader::SkipLines(std::vector<size_t> const& lines_per_input)
 {
   if (lines_per_input.size()) {
     PANGO_ASSERT(lines_per_input.size() == streams.size());

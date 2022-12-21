@@ -15,12 +15,12 @@ class SharedMemoryVideo : public VideoInterface
   public:
   SharedMemoryVideo(
       size_t w, size_t h, std::string pix_fmt,
-      const std::shared_ptr<SharedMemoryBufferInterface>& shared_memory,
-      const std::shared_ptr<ConditionVariableInterface>& buffer_full);
+      std::shared_ptr<SharedMemoryBufferInterface> const& shared_memory,
+      std::shared_ptr<ConditionVariableInterface> const& buffer_full);
   ~SharedMemoryVideo();
 
   size_t SizeBytes() const;
-  const std::vector<StreamInfo>& Streams() const;
+  std::vector<StreamInfo> const& Streams() const;
   void Start();
   void Stop();
   bool GrabNext(unsigned char* image, bool wait);

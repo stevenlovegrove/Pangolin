@@ -78,7 +78,7 @@ inline std::string V4lToString(int32_t v)
 }
 
 V4lVideo::V4lVideo(
-    const char* dev_name, uint32_t period, io_method io, unsigned iwidth,
+    char const* dev_name, uint32_t period, io_method io, unsigned iwidth,
     unsigned iheight, unsigned v4l_format) :
     io(io), fd(-1), buffers(0), n_buffers(0), running(false), period(period)
 {
@@ -105,7 +105,7 @@ void V4lVideo::InitPangoDeviceProperties()
   device_properties[PANGO_HAS_TIMING_DATA] = true;
 }
 
-const std::vector<StreamInfo>& V4lVideo::Streams() const { return streams; }
+std::vector<StreamInfo> const& V4lVideo::Streams() const { return streams; }
 
 size_t V4lVideo::SizeBytes() const { return image_size; }
 
@@ -391,7 +391,7 @@ void V4lVideo::init_read(unsigned int buffer_size)
   }
 }
 
-void V4lVideo::init_mmap(const char* /*dev_name*/)
+void V4lVideo::init_mmap(char const* /*dev_name*/)
 {
   struct v4l2_requestbuffers req;
 
@@ -441,7 +441,7 @@ void V4lVideo::init_mmap(const char* /*dev_name*/)
   }
 }
 
-void V4lVideo::init_userp(const char* /*dev_name*/, unsigned int buffer_size)
+void V4lVideo::init_userp(char const* /*dev_name*/, unsigned int buffer_size)
 {
   struct v4l2_requestbuffers req;
   unsigned int page_size;
@@ -481,7 +481,7 @@ void V4lVideo::init_userp(const char* /*dev_name*/, unsigned int buffer_size)
 }
 
 void V4lVideo::init_device(
-    const char* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps,
+    char const* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps,
     unsigned v4l_format, v4l2_field field)
 {
   struct v4l2_capability cap;
@@ -719,7 +719,7 @@ void V4lVideo::close_device()
   fd = -1;
 }
 
-void V4lVideo::open_device(const char* dev_name)
+void V4lVideo::open_device(char const* dev_name)
 {
   struct stat st;
 
@@ -758,13 +758,13 @@ int V4lVideo::IoCtrl(
 }
 
 //! Access JSON properties of device
-const picojson::value& V4lVideo::DeviceProperties() const
+picojson::value const& V4lVideo::DeviceProperties() const
 {
   return device_properties;
 }
 
 //! Access JSON properties of most recently captured frame
-const picojson::value& V4lVideo::FrameProperties() const
+picojson::value const& V4lVideo::FrameProperties() const
 {
   return frame_properties;
 }
@@ -776,7 +776,7 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
     {
       return {{"v4l", 0}, {"uvc", 20}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Use V4L to open a video device";
     }
@@ -790,7 +790,7 @@ PANGOLIN_REGISTER_FACTORY(V4lVideo)
            {"ExposureTime", "10000", "Exposure time in microsecs"},
            {"Gain", "1", "Image gain parameter"}}};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       ParamReader reader(Params(), uri);
 

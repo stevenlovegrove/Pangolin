@@ -47,7 +47,7 @@ namespace pangolin
 {
 
 struct X11Display {
-  X11Display(const char* name = 0)
+  X11Display(char const* name = 0)
   {
     XInitThreads();
     display = XOpenDisplay(name);
@@ -79,7 +79,7 @@ struct X11GlContext : public GlContextInterface {
 
 struct X11Window : public WindowInterface {
   X11Window(
-      const std::string& title, int width, int height,
+      std::string const& title, int width, int height,
       std::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc);
 
   ~X11Window();

@@ -42,10 +42,10 @@ class PANGOLIN_EXPORT ImagesVideo : public VideoInterface,
                                     public VideoPropertiesInterface
 {
   public:
-  ImagesVideo(const std::string& wildcard_path);
+  ImagesVideo(std::string const& wildcard_path);
 
   ImagesVideo(
-      const std::string& wildcard_path, const RuntimePixelType& raw_fmt,
+      std::string const& wildcard_path, RuntimePixelType const& raw_fmt,
       size_t raw_width, size_t raw_height, size_t raw_pitch, size_t raw_offset,
       size_t raw_planes);
 
@@ -54,8 +54,8 @@ class PANGOLIN_EXPORT ImagesVideo : public VideoInterface,
   // http://stackoverflow.com/questions/29565299/how-to-use-a-vector-of-unique-pointers-in-a-dll-exported-class-with-visual-studi
   // >> It appears adding __declspec(dllexport) forces the compiler to define
   // the implicitly-declared copy constructor and copy assignment operator
-  ImagesVideo(const ImagesVideo&) = delete;
-  ImagesVideo& operator=(const ImagesVideo&) = delete;
+  ImagesVideo(ImagesVideo const&) = delete;
+  ImagesVideo& operator=(ImagesVideo const&) = delete;
 
   ~ImagesVideo();
 
@@ -68,7 +68,7 @@ class PANGOLIN_EXPORT ImagesVideo : public VideoInterface,
 
   size_t SizeBytes() const override;
 
-  const std::vector<StreamInfo>& Streams() const override;
+  std::vector<StreamInfo> const& Streams() const override;
 
   bool GrabNext(unsigned char* image, bool wait = true) override;
 
@@ -86,21 +86,21 @@ class PANGOLIN_EXPORT ImagesVideo : public VideoInterface,
   ///////////////////////////////////
   // Implement VideoPropertiesInterface
 
-  const picojson::value& DeviceProperties() const override;
+  picojson::value const& DeviceProperties() const override;
 
-  const picojson::value& FrameProperties() const override;
+  picojson::value const& FrameProperties() const override;
 
   protected:
   typedef std::vector<IntensityImage<>> Frame;
 
-  const std::string& Filename(size_t frameNum, size_t channelNum)
+  std::string const& Filename(size_t frameNum, size_t channelNum)
   {
     return filenames[channelNum][frameNum];
   }
 
-  void PopulateFilenames(const std::string& wildcard_path);
+  void PopulateFilenames(std::string const& wildcard_path);
 
-  void PopulateFilenamesFromJson(const std::string& filename);
+  void PopulateFilenamesFromJson(std::string const& filename);
 
   bool LoadFrame(size_t i);
 

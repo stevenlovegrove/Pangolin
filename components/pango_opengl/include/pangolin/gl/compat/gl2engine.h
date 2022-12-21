@@ -38,7 +38,7 @@ namespace pangolin
 class GlEngine
 {
   public:
-  const char* vert =
+  char const* vert =
       "attribute vec4 a_position;\n"
       "attribute vec4 a_color;\n"
       "attribute vec3 a_normal;\n"
@@ -53,7 +53,7 @@ class GlEngine
       "    v_texcoord = a_texcoord;\n"
       "}\n";
 
-  const char* frag =
+  char const* frag =
 #ifdef HAVE_GLES_2
       "precision mediump float;\n"
 #endif  // HAVE_GLES_2
@@ -212,7 +212,7 @@ inline void glDisableClientState(GLenum cap)
 }
 
 inline void glVertexPointer(
-    GLint size, GLenum type, GLsizei stride, const GLvoid* pointer)
+    GLint size, GLenum type, GLsizei stride, GLvoid const* pointer)
 {
   glVertexAttribPointer(
       pangolin::DEFAULT_LOCATION_POSITION, size, type, GL_FALSE, stride,
@@ -220,7 +220,7 @@ inline void glVertexPointer(
 }
 
 inline void glTexCoordPointer(
-    GLint size, GLenum type, GLsizei stride, const GLvoid* pointer)
+    GLint size, GLenum type, GLsizei stride, GLvoid const* pointer)
 {
   glVertexAttribPointer(
       pangolin::DEFAULT_LOCATION_TEXCOORD, size, type, GL_FALSE, stride,
@@ -241,7 +241,7 @@ inline void glLoadIdentity()
   gl.UpdateMatrices();
 }
 
-inline void glLoadMatrixf(const GLfloat* m)
+inline void glLoadMatrixf(GLfloat const* m)
 {
   pangolin::GlEngine& gl = pangolin::glEngine();
   pangolin::GLprecision* cm = gl.currentmatrix->top().m;
@@ -249,7 +249,7 @@ inline void glLoadMatrixf(const GLfloat* m)
   gl.UpdateMatrices();
 }
 
-inline void glLoadMatrixd(const GLdouble* m)
+inline void glLoadMatrixd(GLdouble const* m)
 {
   pangolin::GlEngine& gl = pangolin::glEngine();
   pangolin::GLprecision* cm = gl.currentmatrix->top().m;
@@ -257,7 +257,7 @@ inline void glLoadMatrixd(const GLdouble* m)
   gl.UpdateMatrices();
 }
 
-inline void glMultMatrixf(const GLfloat* m)
+inline void glMultMatrixf(GLfloat const* m)
 {
   //    pangolin::GlEngine& gl = pangolin::glEngine();
   //    float res[16];
@@ -267,7 +267,7 @@ inline void glMultMatrixf(const GLfloat* m)
       "Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);
 }
 
-inline void glMultMatrixd(const GLdouble* m)
+inline void glMultMatrixd(GLdouble const* m)
 {
   pango_print_error(
       "Not Implemented: %s, %s, %d", __FUNCTION__, __FILE__, __LINE__);

@@ -26,13 +26,13 @@ struct formatter<std::optional<T>> {
   std::string_view underlying_fmt = "{}";
   std::string_view or_else = "<nullopt>";
 
-  constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
+  auto constexpr parse(format_parse_context& ctx) -> decltype(ctx.begin())
   {
     return ctx.end();
   }
 
   template <typename FormatContext>
-  auto format(const std::optional<T>& p, FormatContext& ctx) const
+  auto format(std::optional<T> const& p, FormatContext& ctx) const
       -> decltype(ctx.out())
   {
     if (p.has_value()) {

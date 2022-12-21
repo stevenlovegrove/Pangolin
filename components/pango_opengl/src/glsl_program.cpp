@@ -32,7 +32,7 @@ bool checkLinkSuccess(GLhandleARB prog)
   GLint status;
   glGetProgramiv(prog, GL_LINK_STATUS, &status);
   if (status != GL_TRUE) {
-    const int PROGRAM_LOG_MAX_LEN = 10240;
+    int const PROGRAM_LOG_MAX_LEN = 10240;
     char infolog[PROGRAM_LOG_MAX_LEN];
     GLsizei len = 0;
     PANGO_GL(glGetProgramInfoLog(prog, PROGRAM_LOG_MAX_LEN, &len, infolog));
@@ -43,7 +43,7 @@ bool checkLinkSuccess(GLhandleARB prog)
   return true;
 }
 
-std::pair<int, int> lineNumFromCompilationError(const std::string& info)
+std::pair<int, int> lineNumFromCompilationError(std::string const& info)
 {
   auto tokens = split(info, ':');
   if (tokens.size() >= 3 && tokens[0] == "ERROR") {
@@ -56,12 +56,12 @@ std::pair<int, int> lineNumFromCompilationError(const std::string& info)
   return {-1, -1};
 }
 
-bool checkCompileSuccess(GLhandleARB shader, const GlSlProgram::Source& source)
+bool checkCompileSuccess(GLhandleARB shader, GlSlProgram::Source const& source)
 {
   GLint status;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
   if (status != GL_TRUE) {
-    const int SHADER_LOG_MAX_LEN = 10240;
+    int const SHADER_LOG_MAX_LEN = 10240;
     char infolog[SHADER_LOG_MAX_LEN];
     GLsizei len;
     PANGO_GL(glGetShaderInfoLog(shader, SHADER_LOG_MAX_LEN, &len, infolog));
@@ -116,7 +116,7 @@ struct GlSlProgramImpl : public GlSlProgram {
     for (auto& s : sources_) {
       PANGO_ENSURE(s.shader_type != ShaderType::Annotated);
       GLhandleARB shader = glCreateShader(static_cast<GLenum>(s.shader_type));
-      const char* src = s.glsl_code.c_str();
+      char const* src = s.glsl_code.c_str();
       glShaderSource(shader, 1, &src, nullptr);
       glCompileShader(shader);
       if (checkCompileSuccess(shader, s)) {
@@ -147,7 +147,7 @@ struct GlSlProgramImpl : public GlSlProgram {
     }
 
     // Split any annotated shaders
-    for (const auto& in : input) {
+    for (auto const& in : input) {
       auto split = splitAnnotatedShaders(in);
       new_sources.insert(new_sources.begin(), split.begin(), split.end());
       if (split.size() == 0)

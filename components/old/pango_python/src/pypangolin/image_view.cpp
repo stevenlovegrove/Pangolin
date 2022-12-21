@@ -41,7 +41,7 @@ void bind_image_view(pybind11::module& m)
       .def(
           "SetImage",
           [](ImageView& view, pybind11::array_t<float>& img,
-             const std::string& format) -> ImageView& {
+             std::string const& format) -> ImageView& {
             if (img.ndim() == 2) {
               Image<uint8_t> wrapper(
                   (uint8_t*)img.mutable_data(0, 0), img.shape(1), img.shape(0),
@@ -72,7 +72,7 @@ void bind_image_view(pybind11::module& m)
       .def(
           "SetImage",
           [](ImageView& view, pybind11::array_t<uint8_t>& img,
-             const std::string& format) -> ImageView& {
+             std::string const& format) -> ImageView& {
             if (img.ndim() == 2) {
               Image<uint8_t> wrapper(
                   (uint8_t*)img.mutable_data(0, 0), img.shape(1), img.shape(0),
@@ -103,7 +103,7 @@ void bind_image_view(pybind11::module& m)
       .def(
           "SetImage",
           [](ImageView& view, pybind11::array_t<uint16_t>& img,
-             const std::string& format) -> ImageView& {
+             std::string const& format) -> ImageView& {
             if (img.ndim() == 2) {
               Image<uint8_t> wrapper(
                   (uint8_t*)img.mutable_data(0, 0), img.shape(1), img.shape(0),

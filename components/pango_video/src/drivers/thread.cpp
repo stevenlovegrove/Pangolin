@@ -60,7 +60,7 @@ const uint64_t capture_timout_ms = 5000;
 
 ThreadVideo::ThreadVideo(
     std::unique_ptr<VideoInterface>& src_, size_t num_buffers,
-    const std::string& name) :
+    std::string const& name) :
     src(std::move(src_)), quit_grab_thread(true), thread_name(name)
 {
   if (!src) {
@@ -107,18 +107,18 @@ void ThreadVideo::Stop()
 size_t ThreadVideo::SizeBytes() const { return videoin[0]->SizeBytes(); }
 
 //! Implement VideoInput::Streams()
-const std::vector<StreamInfo>& ThreadVideo::Streams() const
+std::vector<StreamInfo> const& ThreadVideo::Streams() const
 {
   return videoin[0]->Streams();
 }
 
-const picojson::value& ThreadVideo::DeviceProperties() const
+picojson::value const& ThreadVideo::DeviceProperties() const
 {
   device_properties = GetVideoDeviceProperties(videoin[0]);
   return device_properties;
 }
 
-const picojson::value& ThreadVideo::FrameProperties() const
+picojson::value const& ThreadVideo::FrameProperties() const
 {
   return frame_properties;
 }
@@ -204,7 +204,7 @@ bool ThreadVideo::GrabNewest(unsigned char* image, bool wait)
     // At least one valid frame in queue, return it.
     DBGPRINT("GrabNewest at least one frame available.");
     GrabResult grab = queue.getNewest();
-    const bool success = grab.return_status;
+    bool const success = grab.return_status;
     if (success) {
       std::memcpy(image, grab.buffer.get(), videoin[0]->SizeBytes());
       frame_properties = grab.frame_properties;
@@ -230,7 +230,7 @@ void ThreadVideo::operator()()
       // Blocking grab (i.e. GrabNext with wait = true).
       try {
         grab.return_status = videoin[0]->GrabNext(grab.buffer.get(), true);
-      } catch (const VideoException& e) {
+      } catch (VideoException const& e) {
         // User doesn't have the opportunity to catch exceptions here.
         std::string what = e.what();
         pango_print_warn(
@@ -240,7 +240,7 @@ void ThreadVideo::operator()()
           quit_grab_thread = true;
         }
         grab.return_status = false;
-      } catch (const std::exception& e) {
+      } catch (std::exception const& e) {
         // User doesn't have the opportunity to catch exceptions here.
         pango_print_warn("ThreadVideo caught exception (%s)\n", e.what());
         grab.return_status = false;
@@ -280,7 +280,7 @@ PANGOLIN_REGISTER_FACTORY(ThreadVideo)
     {
       return {{"thread", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Queues sub-video frames in thread.";
     }
@@ -291,11 +291,11 @@ PANGOLIN_REGISTER_FACTORY(ThreadVideo)
             "Size of the input queue/buffer for this thread"},
            {"name", "Unnamed", "Name of the thread"}}};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       ParamReader reader(Params(), uri);
       std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
-      const int num_buffers = reader.Get<int>("num_buffers");
+      int const num_buffers = reader.Get<int>("num_buffers");
       const std::string name = reader.Get<std::string>("name");
       return std::unique_ptr<VideoInterface>(
           new ThreadVideo(subvid, num_buffers, name));

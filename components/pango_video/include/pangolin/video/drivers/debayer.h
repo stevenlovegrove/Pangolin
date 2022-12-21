@@ -79,8 +79,8 @@ class PANGOLIN_EXPORT DebayerVideo : public VideoInterface,
   public:
   DebayerVideo(
       std::unique_ptr<VideoInterface>& videoin,
-      const std::vector<bayer_method_t>& method, color_filter_t tile,
-      const WbGains& input_wb_gains);
+      std::vector<bayer_method_t> const& method, color_filter_t tile,
+      WbGains const& input_wb_gains);
   ~DebayerVideo();
 
   //! Implement VideoInput::Start()
@@ -93,7 +93,7 @@ class PANGOLIN_EXPORT DebayerVideo : public VideoInterface,
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  const std::vector<StreamInfo>& Streams() const;
+  std::vector<StreamInfo> const& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);
@@ -112,7 +112,7 @@ class PANGOLIN_EXPORT DebayerVideo : public VideoInterface,
   bool DropNFrames(uint32_t n);
 
   protected:
-  void ProcessStreams(unsigned char* out, const unsigned char* in);
+  void ProcessStreams(unsigned char* out, unsigned char const* in);
 
   std::unique_ptr<VideoInterface> src;
   std::vector<VideoInterface*> videoin;

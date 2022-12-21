@@ -66,7 +66,7 @@ class PANGOLIN_EXPORT FfmpegConverter : public VideoInterface
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  const std::vector<StreamInfo>& Streams() const;
+  std::vector<StreamInfo> const& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);
@@ -87,7 +87,7 @@ class PANGOLIN_EXPORT FfmpegConverter : public VideoInterface
     size_t src_buffer_offset;
     size_t dst_buffer_offset;
 
-    void convert(const unsigned char* src, unsigned char* dst);
+    void convert(unsigned char const* src, unsigned char* dst);
   };
 
   std::unique_ptr<VideoInterface> videoin;

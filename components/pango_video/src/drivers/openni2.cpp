@@ -84,7 +84,7 @@ PixelFormat VideoFormatFromOpenNI2(openni::PixelFormat fmt)
 void OpenNi2Video::PrintOpenNI2Modes(openni::SensorType sensorType)
 {
   // Query supported modes for device
-  const openni::Array<openni::VideoMode>& modes =
+  openni::Array<openni::VideoMode> const& modes =
       devices[0].getSensorInfo(sensorType)->getSupportedVideoModes();
 
   switch (sensorType) {
@@ -103,7 +103,7 @@ void OpenNi2Video::PrintOpenNI2Modes(openni::SensorType sensorType)
     std::string sfmt = "PangolinUnknown";
     try {
       sfmt = VideoFormatFromOpenNI2(modes[i].getPixelFormat()).format;
-    } catch (const VideoException&) {
+    } catch (VideoException const&) {
     }
     pango_print_info(
         "  %dx%d, %d fps, %s\n", modes[i].getResolutionX(),
@@ -116,7 +116,7 @@ openni::VideoMode OpenNi2Video::FindOpenNI2Mode(
     int height, int fps, openni::PixelFormat fmt)
 {
   // Query supported modes for device
-  const openni::Array<openni::VideoMode>& modes =
+  openni::Array<openni::VideoMode> const& modes =
       device.getSensorInfo(sensorType)->getSupportedVideoModes();
 
   // Select last listed mode which matches parameters
@@ -171,8 +171,8 @@ OpenNi2Video::OpenNi2Video(ImageDim dim, ImageRoi roi, int fps)
   }
 
   for (int i = 0; i < deviceList.getSize(); i++) {
-    const char* device_uri = deviceList[i].getUri();
-    const int dev_id = AddDevice(device_uri);
+    char const* device_uri = deviceList[i].getUri();
+    int const dev_id = AddDevice(device_uri);
     AddStream(OpenNiStreamMode(OpenNiDepth_1mm, dim, roi, fps, dev_id));
     AddStream(OpenNiStreamMode(OpenNiRgb, dim, roi, fps, dev_id));
   }
@@ -180,11 +180,11 @@ OpenNi2Video::OpenNi2Video(ImageDim dim, ImageRoi roi, int fps)
   SetupStreamModes();
 }
 
-OpenNi2Video::OpenNi2Video(const std::string& device_uri)
+OpenNi2Video::OpenNi2Video(std::string const& device_uri)
 {
   InitialiseOpenNI();
 
-  const int dev_id = AddDevice(device_uri);
+  int const dev_id = AddDevice(device_uri);
   AddStream(
       OpenNiStreamMode(OpenNiDepth_1mm, ImageDim(), ImageRoi(), 30, dev_id));
   AddStream(OpenNiStreamMode(OpenNiRgb, ImageDim(), ImageRoi(), 30, dev_id));
@@ -193,7 +193,7 @@ OpenNi2Video::OpenNi2Video(const std::string& device_uri)
 }
 
 OpenNi2Video::OpenNi2Video(
-    const std::string& device_uri, std::vector<OpenNiStreamMode>& stream_modes)
+    std::string const& device_uri, std::vector<OpenNiStreamMode>& stream_modes)
 {
   InitialiseOpenNI();
 
@@ -220,7 +220,7 @@ OpenNi2Video::OpenNi2Video(std::vector<OpenNiStreamMode>& stream_modes)
   }
 
   for (int i = 0; i < deviceList.getSize(); i++) {
-    const char* device_uri = deviceList[i].getUri();
+    char const* device_uri = deviceList[i].getUri();
     AddDevice(device_uri);
   }
 
@@ -250,7 +250,7 @@ void OpenNi2Video::InitialiseOpenNI()
   }
 }
 
-int OpenNi2Video::AddDevice(const std::string& device_uri)
+int OpenNi2Video::AddDevice(std::string const& device_uri)
 {
   const size_t dev_id = numDevices;
   openni::Status rc = devices[dev_id].open(device_uri.c_str());
@@ -262,7 +262,7 @@ int OpenNi2Video::AddDevice(const std::string& device_uri)
   return dev_id;
 }
 
-void OpenNi2Video::AddStream(const OpenNiStreamMode& mode)
+void OpenNi2Video::AddStream(OpenNiStreamMode const& mode)
 {
   sensor_type[numStreams] = mode;
   openni::Device& device = devices[mode.device];
@@ -296,7 +296,7 @@ void OpenNi2Video::SetupStreamModes()
 
   sizeBytes = 0;
   for (size_t i = 0; i < numStreams; ++i) {
-    const OpenNiStreamMode& mode = sensor_type[i];
+    OpenNiStreamMode const& mode = sensor_type[i];
     openni::SensorType nisensortype;
     openni::PixelFormat nipixelfmt;
 
@@ -354,7 +354,7 @@ void OpenNi2Video::SetupStreamModes()
       onivmode = FindOpenNI2Mode(
           devices[mode.device], nisensortype, mode.dim.x, mode.dim.y, mode.fps,
           nipixelfmt);
-    } catch (const VideoException& e) {
+    } catch (VideoException const& e) {
       pango_print_error(
           "Unable to find compatible OpenNI Video Mode. Please choose from:\n");
       PrintOpenNI2Modes(nisensortype);
@@ -567,7 +567,7 @@ OpenNi2Video::~OpenNi2Video()
 
 size_t OpenNi2Video::SizeBytes() const { return sizeBytes; }
 
-const std::vector<StreamInfo>& OpenNi2Video::Streams() const { return streams; }
+std::vector<StreamInfo> const& OpenNi2Video::Streams() const { return streams; }
 
 void OpenNi2Video::Start()
 {
@@ -621,10 +621,10 @@ bool OpenNi2Video::GrabNext(unsigned char* image, bool /*wait*/)
           "Error reading frame:\n%s", openni::OpenNI::getExtendedError());
     }
 
-    const bool toGreyscale = false;
+    bool const toGreyscale = false;
     if (toGreyscale) {
-      const int w = streams[i].Width();
-      const int h = streams[i].Height();
+      int const w = streams[i].Width();
+      int const h = streams[i].Height();
 
       openni::RGB888Pixel* pColour =
           (openni::RGB888Pixel*)video_frame[i].getData();
@@ -681,7 +681,7 @@ PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
     {
       return {{"openni2", 10}, {"openni", 10}, {"oni", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "OpenNI v2 Driver to access Kinect / Primesense devices.";
     }
@@ -701,14 +701,14 @@ PANGOLIN_REGISTER_FACTORY(OpenNi2Video)
            {"holefilter", "false", "Enable hole filter"},
            {"fastcrop", "false", "?"}}};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
-      const bool realtime = uri.Contains("realtime");
+      bool const realtime = uri.Contains("realtime");
       const ImageDim default_dim =
           uri.Get<ImageDim>("size", ImageDim(640, 480));
       const ImageRoi default_roi =
           uri.Get<ImageRoi>("roi", ImageRoi(0, 0, 0, 0));
-      const unsigned int default_fps = uri.Get<unsigned int>("fps", 30);
+      unsigned int const default_fps = uri.Get<unsigned int>("fps", 30);
 
       std::vector<OpenNiStreamMode> stream_modes;
 

@@ -45,20 +45,20 @@ class Renderable
   static guid_t UniqueGuid();
 
   Renderable(
-      const std::weak_ptr<Renderable>& parent = std::weak_ptr<Renderable>());
+      std::weak_ptr<Renderable> const& parent = std::weak_ptr<Renderable>());
 
   virtual ~Renderable();
 
   // Default implementation simply renders children.
-  virtual void Render(const RenderParams& params = RenderParams());
+  virtual void Render(RenderParams const& params = RenderParams());
 
-  void RenderChildren(const RenderParams& params);
+  void RenderChildren(RenderParams const& params);
 
   std::shared_ptr<Renderable> FindChild(guid_t guid);
 
-  Renderable& Add(const std::shared_ptr<Renderable>& child);
+  Renderable& Add(std::shared_ptr<Renderable> const& child);
 
-  void Remove(const std::shared_ptr<Renderable>& child)
+  void Remove(std::shared_ptr<Renderable> const& child)
   {
     if (child) {
       children.erase(child->guid);

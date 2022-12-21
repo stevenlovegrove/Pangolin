@@ -66,18 +66,18 @@ struct Geometry {
   std::map<std::string, TypedImage> textures;
 };
 
-pangolin::Geometry LoadGeometry(const std::string& filename);
+pangolin::Geometry LoadGeometry(std::string const& filename);
 
 #ifdef HAVE_EIGEN
-inline Eigen::AlignedBox3f GetAxisAlignedBox(const Geometry& geom)
+inline Eigen::AlignedBox3f GetAxisAlignedBox(Geometry const& geom)
 {
   Eigen::AlignedBox3f box;
   box.setEmpty();
 
-  for (const auto& b : geom.buffers) {
-    const auto& it_vert = b.second.attributes.find("vertex");
+  for (auto const& b : geom.buffers) {
+    auto const& it_vert = b.second.attributes.find("vertex");
     if (it_vert != b.second.attributes.end()) {
-      const Image<float>& vs = std::get<Image<float>>(it_vert->second);
+      Image<float> const& vs = std::get<Image<float>>(it_vert->second);
       for (size_t i = 0; i < vs.h; ++i) {
         const Eigen::Map<const Eigen::Vector3f> v(vs.RowPtr(i));
         box.extend(v);

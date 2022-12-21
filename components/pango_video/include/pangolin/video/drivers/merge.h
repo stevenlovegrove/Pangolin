@@ -40,7 +40,7 @@ class PANGOLIN_EXPORT MergeVideo : public VideoInterface,
   public:
   MergeVideo(
       std::unique_ptr<VideoInterface>& src,
-      const std::vector<Point>& stream_pos, size_t w, size_t h);
+      std::vector<Point> const& stream_pos, size_t w, size_t h);
   ~MergeVideo();
 
   void Start() override;
@@ -49,7 +49,7 @@ class PANGOLIN_EXPORT MergeVideo : public VideoInterface,
 
   size_t SizeBytes() const override;
 
-  const std::vector<StreamInfo>& Streams() const override;
+  std::vector<StreamInfo> const& Streams() const override;
 
   bool GrabNext(unsigned char* image, bool wait = true) override;
 

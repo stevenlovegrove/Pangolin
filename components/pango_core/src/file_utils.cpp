@@ -76,7 +76,7 @@ namespace pangolin
 {
 
 std::vector<std::string>& Split(
-    const std::string& s, char delim, std::vector<std::string>& elements)
+    std::string const& s, char delim, std::vector<std::string>& elements)
 {
   std::stringstream ss(s);
   std::string item;
@@ -86,14 +86,14 @@ std::vector<std::string>& Split(
   return elements;
 }
 
-std::vector<std::string> Split(const std::string& s, char delim)
+std::vector<std::string> Split(std::string const& s, char delim)
 {
   std::vector<std::string> elems;
   return Split(s, delim, elems);
 }
 
 std::vector<std::string> Expand(
-    const std::string& s, char open, char close, char delim)
+    std::string const& s, char open, char close, char delim)
 {
   const size_t no = s.find_first_of(open);
   if (no != std::string::npos) {
@@ -130,7 +130,7 @@ void PathOsNormaliseInplace(std::string& path)
 #endif
 }
 
-std::string SanitizePath(const std::string& path)
+std::string SanitizePath(std::string const& path)
 {
   std::string path_copy(path.length(), '\0');
 
@@ -180,7 +180,7 @@ std::string SanitizePath(const std::string& path)
 }
 
 // Return path 'levels' directories above 'path'
-std::string PathParent(const std::string& path, int levels)
+std::string PathParent(std::string const& path, int levels)
 {
   std::string res = path;
 
@@ -212,7 +212,7 @@ std::string PathParent(const std::string& path, int levels)
 }
 
 std::string FindPath(
-    const std::string& child_path, const std::string& signature_path)
+    std::string const& child_path, std::string const& signature_path)
 {
   std::string path = PathExpand(child_path);
 #ifdef _UNIX_
@@ -236,7 +236,7 @@ std::string FindPath(
   return path + signature;
 }
 
-std::string PathExpand(const std::string& sPath)
+std::string PathExpand(std::string const& sPath)
 {
   if (sPath.length() > 0 && sPath[0] == '~') {
 #ifdef _WIN_
@@ -257,10 +257,10 @@ std::string PathExpand(const std::string& sPath)
 
 // Based on
 // http://www.codeproject.com/Articles/188256/A-Simple-Wildcard-Matching-Function
-bool MatchesWildcard(const std::string& str, const std::string& wildcard)
+bool MatchesWildcard(std::string const& str, std::string const& wildcard)
 {
-  const char* psQuery = str.c_str();
-  const char* psWildcard = wildcard.c_str();
+  char const* psQuery = str.c_str();
+  char const* psWildcard = wildcard.c_str();
 
   while (*psWildcard) {
     if (*psWildcard == '?') {
@@ -282,7 +282,7 @@ bool MatchesWildcard(const std::string& str, const std::string& wildcard)
   return !*psQuery && !*psWildcard;
 }
 
-std::string MakeUniqueFilename(const std::string& filename)
+std::string MakeUniqueFilename(std::string const& filename)
 {
   if (FileExists(filename)) {
     const size_t dot = filename.find_last_of('.');
@@ -315,7 +315,7 @@ std::string MakeUniqueFilename(const std::string& filename)
 
 // Based on
 // https://insanecoding.blogspot.com/2011/11/how-to-read-in-file-in-c.html
-std::string GetFileContents(const std::string& filename)
+std::string GetFileContents(std::string const& filename)
 {
   std::ifstream in(filename.c_str(), std::ios::in | std::ios::binary);
   if (in) {
@@ -331,7 +331,7 @@ std::string GetFileContents(const std::string& filename)
   }
 }
 
-bool IsPipe(const std::string& file)
+bool IsPipe(std::string const& file)
 {
 #ifdef _WIN_
   return false;
@@ -353,7 +353,7 @@ bool IsPipe(int fd)
 #endif
 }
 
-int WritablePipeFileDescriptor(const std::string& file)
+int WritablePipeFileDescriptor(std::string const& file)
 {
 #ifdef _WIN_
   return false;
@@ -366,7 +366,7 @@ int WritablePipeFileDescriptor(const std::string& file)
 #endif  // _WIN_
 }
 
-int ReadablePipeFileDescriptor(const std::string& file)
+int ReadablePipeFileDescriptor(std::string const& file)
 {
 #ifdef _WIN_
   return -1;
@@ -393,7 +393,7 @@ bool PipeHasDataToRead(int fd)
 #endif
 }
 
-void FlushPipe(const std::string& file)
+void FlushPipe(std::string const& file)
 {
 #ifndef _WIN_
   int fd = open(file.c_str(), O_RDONLY | O_NONBLOCK);
@@ -412,12 +412,12 @@ void FlushPipe(const std::string& file)
 typedef std::codecvt_utf8<wchar_t> WinStringConvert;
 typedef std::wstring WinString;
 
-WinString s2ws(const std::string& str)
+WinString s2ws(std::string const& str)
 {
   std::wstring_convert<WinStringConvert, wchar_t> converter;
   return converter.from_bytes(str);
 }
-std::string ws2s(const WinString& wstr)
+std::string ws2s(WinString const& wstr)
 {
   std::wstring_convert<WinStringConvert, wchar_t> converter;
   return converter.to_bytes(wstr);
@@ -430,7 +430,7 @@ typedef std::string WinString;
 #endif  // UNICODE
 
 bool FilesMatchingWildcard(
-    const std::string& wildcard, std::vector<std::string>& file_vec,
+    std::string const& wildcard, std::vector<std::string>& file_vec,
     SortMethod sort_method)
 {
   size_t nLastSlash = wildcard.find_last_of("/\\");
@@ -478,7 +478,7 @@ bool FilesMatchingWildcard(
   return files.size() > 0;
 }
 
-bool FileExists(const std::string& filename)
+bool FileExists(std::string const& filename)
 {
   std::string search_filename = filename;
   if (filename.length() > 0 && (filename[filename.length() - 1] == '\\' ||
@@ -487,7 +487,7 @@ bool FileExists(const std::string& filename)
   }
   WIN32_FIND_DATA wfd;
   HANDLE fh = FindFirstFile(s2ws(search_filename).c_str(), &wfd);
-  const bool exists = fh != INVALID_HANDLE_VALUE;
+  bool const exists = fh != INVALID_HANDLE_VALUE;
   FindClose(fh);
   return exists;
 }
@@ -495,7 +495,7 @@ bool FileExists(const std::string& filename)
 #else  // _WIN_
 
 bool FilesMatchingWildcard_(
-    const std::string& in_wildcard, std::vector<std::string>& file_vec)
+    std::string const& in_wildcard, std::vector<std::string>& file_vec)
 {
   const std::string wildcard = PathExpand(in_wildcard);
   const size_t first_wildcard = wildcard.find_first_of("?*");
@@ -536,7 +536,7 @@ bool FilesMatchingWildcard_(
 }
 
 bool FilesMatchingWildcard(
-    const std::string& in_wildcard, std::vector<std::string>& file_vec,
+    std::string const& in_wildcard, std::vector<std::string>& file_vec,
     SortMethod sort_method)
 {
   if (FilesMatchingWildcard_(in_wildcard, file_vec)) {
@@ -555,7 +555,7 @@ bool FilesMatchingWildcard(
   return false;
 }
 
-bool FileExists(const std::string& filename)
+bool FileExists(std::string const& filename)
 {
   struct stat buf;
   return stat(filename.c_str(), &buf) != -1;
@@ -627,7 +627,7 @@ std::string GetExecutableDir()
 }
 #endif
 
-bool checkIfFileExists(const std::string& filePath)
+bool checkIfFileExists(std::string const& filePath)
 {
   return access(filePath.c_str(), 0) == 0;
 }

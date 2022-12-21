@@ -47,7 +47,7 @@ class bitmask
   void operator|=(option_type t) { mask_ |= mask_value(t); }
 
   // Get the value of the bit corresponding to the given option.
-  constexpr bool operator&(option_type t) { return mask_ & mask_value(t); }
+  bool constexpr operator&(option_type t) { return mask_ & mask_value(t); }
 
   // Set the bit corresponding to the given option.
   void operator&=(option_type t) { mask_ &= mask_value(t); }

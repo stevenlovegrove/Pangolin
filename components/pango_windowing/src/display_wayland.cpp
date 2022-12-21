@@ -24,7 +24,7 @@
 // https://github.com/libretro/RetroArch/blob/a9125fffaa981cab811ba6caf4d756fa6ef9a561/input/common/wayland_common.h#L50-L53
 #define WL_ARRAY_FOR_EACH(pos, array, type)                                    \
   for (pos = (type)(array)->data;                                              \
-       (const char *)pos < ((const char *)(array)->data + (array)->size);      \
+       (char const *)pos < ((char const *)(array)->data + (array)->size);      \
        (pos)++)
 
 namespace pangolin
@@ -91,7 +91,7 @@ struct ButtonSurface {
     if (surface) wl_surface_destroy(surface);
   }
 
-  void reposition(const int main_w) const
+  void reposition(int const main_w) const
   {
     wl_subsurface_set_position(subsurface, main_w - x - width, y);
   }
@@ -178,7 +178,7 @@ struct DecorationSurface {
   }
 
   void calc_dim(
-      const int main_w, const int main_h, int &x, int &y, int &w, int &h) const
+      int const main_w, int const main_h, int &x, int &y, int &w, int &h) const
   {
     // get position and dimension from type and main surface
     switch (function) {
@@ -239,7 +239,7 @@ struct DecorationSurface {
     }
   }
 
-  void resize(const int main_w, const int main_h) const
+  void resize(int const main_w, int const main_h) const
   {
     int x = 0, y = 0, w = 0, h = 0;
     calc_dim(main_w, main_h, x, y, w, h);
@@ -333,33 +333,33 @@ struct Decoration {
 
   void resize(const int32_t width, const int32_t height)
   {
-    for (const DecorationSurface &d : decorations) {
+    for (DecorationSurface const &d : decorations) {
       d.resize(width, height);
     }
-    for (const ButtonSurface &b : buttons) {
+    for (ButtonSurface const &b : buttons) {
       b.reposition(width);
     }
   }
 
   void draw()
   {
-    for (const DecorationSurface &d : decorations) {
+    for (DecorationSurface const &d : decorations) {
       d.draw();
     }
-    for (const ButtonSurface &b : buttons) {
+    for (ButtonSurface const &b : buttons) {
       b.draw();
     }
   }
 
-  void setTypeFromSurface(const wl_surface *surface)
+  void setTypeFromSurface(wl_surface const *surface)
   {
-    for (const DecorationSurface &d : decorations) {
+    for (DecorationSurface const &d : decorations) {
       if (d.surface == surface) {
         last_type = d.function;
         return;
       }
     }
-    for (const ButtonSurface &b : buttons) {
+    for (ButtonSurface const &b : buttons) {
       if (b.surface == surface) {
         last_type = b.function;
         return;
@@ -377,14 +377,14 @@ struct Decoration {
   }
 
   void toContentSize(
-      const int window_w, const int window_h, int &content_w, int &content_h)
+      int const window_w, int const window_h, int &content_w, int &content_h)
   {
     content_w = window_w - (2 * border_size);
     content_h = window_h - (2 * border_size + title_size);
   }
 
   void toWindowSize(
-      const int content_w, const int content_h, int &window_w, int &window_h)
+      int const content_w, int const content_h, int &window_w, int &window_h)
   {
     window_w = content_w + (2 * border_size);
     window_h = content_h + (2 * border_size + title_size);
@@ -467,16 +467,16 @@ constexpr EGLint WaylandDisplay::attribs[];
 struct WaylandWindow : public WindowInterface {
   public:
   WaylandWindow(
-      const int width, const int height, const std::string &title,
+      int const width, int const height, std::string const &title,
       std::shared_ptr<WaylandDisplay> display);
 
   ~WaylandWindow() override;
 
   void ShowFullscreen(const TrueFalseToggle on_off) override;
 
-  void Move(const int x, const int y) override;
+  void Move(int const x, int const y) override;
 
-  void Resize(const unsigned int w, const unsigned int h) override;
+  void Resize(unsigned int const w, unsigned int const h) override;
 
   void MakeCurrent() override;
 
@@ -547,8 +547,8 @@ static void handle_configure_toplevel(
     void *data, struct xdg_toplevel * /*xdg_toplevel*/, int32_t width,
     int32_t height, struct wl_array *states)
 {
-  const static uint min_width = 70;
-  const static uint min_height = 70;
+  static const uint min_width = 70;
+  static const uint min_height = 70;
 
   WaylandWindow *const w = static_cast<WaylandWindow *>(data);
 
@@ -655,7 +655,7 @@ static void pointer_handle_enter(
 
   const std::string cursor = w->decoration->getCursorForCurrentSurface();
 
-  const auto image =
+  auto const image =
       wl_cursor_theme_get_cursor(d->cursor_theme, cursor.c_str())->images[0];
   wl_pointer_set_cursor(
       pointer, serial, d->cursor_surface, image->hotspot_x, image->hotspot_y);
@@ -748,7 +748,7 @@ static void pointer_handle_axis(
   WaylandDisplay *const d = static_cast<WaylandDisplay *>(data);
   WaylandWindow *const w = d->window;
 
-  const float v = wl_fixed_to_double(value);
+  float const v = wl_fixed_to_double(value);
   float dx = 0, dy = 0;
 
   switch (axis) {
@@ -942,7 +942,7 @@ static void seat_handle_capabilities(
 }
 
 static void seat_handle_name(
-    void * /*data*/, struct wl_seat * /*wl_seat*/, const char * /*name*/)
+    void * /*data*/, struct wl_seat * /*wl_seat*/, char const * /*name*/)
 {
 }
 
@@ -953,7 +953,7 @@ static const struct wl_seat_listener seat_listener = {
 
 static void global_registry_handler(
     void *data, struct wl_registry *registry, uint32_t id,
-    const char *interface, uint32_t version)
+    char const *interface, uint32_t version)
 {
   WaylandDisplay *const w = static_cast<WaylandDisplay *>(data);
 
@@ -1060,7 +1060,7 @@ WaylandDisplay::~WaylandDisplay()
 }
 
 WaylandWindow::WaylandWindow(
-    const int w, const int h, const std::string &title,
+    int const w, int const h, std::string const &title,
     std::shared_ptr<WaylandDisplay> display) :
     display(display)
 {
@@ -1155,9 +1155,9 @@ void WaylandWindow::ShowFullscreen(const TrueFalseToggle on_off)
   wl_display_sync(display->wdisplay);
 }
 
-void WaylandWindow::Move(const int /*x*/, const int /*y*/) {}
+void WaylandWindow::Move(int const /*x*/, int const /*y*/) {}
 
-void WaylandWindow::Resize(const unsigned int /*w*/, const unsigned int /*h*/)
+void WaylandWindow::Resize(unsigned int const /*w*/, unsigned int const /*h*/)
 {
 }
 
@@ -1176,14 +1176,14 @@ void WaylandWindow::SwapBuffers()
 }
 
 std::unique_ptr<WindowInterface> CreateWaylandWindowAndBind(
-    const std::string window_title, const int w, const int h,
-    const std::string /*display_name*/, const bool /*double_buffered*/,
-    const int /*sample_buffers*/, const int /*samples*/)
+    const std::string window_title, int const w, int const h,
+    const std::string /*display_name*/, bool const /*double_buffered*/,
+    int const /*sample_buffers*/, int const /*samples*/)
 {
   try {
     return std::make_unique<WaylandWindow>(
         w, h, window_title, std::make_shared<WaylandDisplay>());
-  } catch (const std::runtime_error &) {
+  } catch (std::runtime_error const &) {
     // return null pointer for fallback to X11
     return nullptr;
   }
@@ -1199,7 +1199,7 @@ PANGOLIN_REGISTER_FACTORY(WaylandWindow)
       return {{"wayland", 10}, {"linux", 9}, {"default", 90}};
     }
 
-    const char *Description() const override { return "Use X11 native window"; }
+    char const *Description() const override { return "Use X11 native window"; }
 
     ParamSet Params() const override
     {
@@ -1216,16 +1216,16 @@ PANGOLIN_REGISTER_FACTORY(WaylandWindow)
       }};
     }
 
-    std::unique_ptr<WindowInterface> Open(const Uri &uri) override
+    std::unique_ptr<WindowInterface> Open(Uri const &uri) override
     {
       const std::string window_title =
           uri.Get<std::string>("window_title", "window");
-      const int w = uri.Get<int>("w", 640);
-      const int h = uri.Get<int>("h", 480);
+      int const w = uri.Get<int>("w", 640);
+      int const h = uri.Get<int>("h", 480);
       const std::string display_name = uri.Get<std::string>("display_name", "");
-      const bool double_buffered = uri.Get<bool>("double_buffered", true);
-      const int sample_buffers = uri.Get<int>("sample_buffers", 1);
-      const int samples = uri.Get<int>("samples", 1);
+      bool const double_buffered = uri.Get<bool>("double_buffered", true);
+      int const sample_buffers = uri.Get<int>("sample_buffers", 1);
+      int const samples = uri.Get<int>("samples", 1);
       return std::unique_ptr<WindowInterface>(
           wayland::CreateWaylandWindowAndBind(
               window_title, w, h, display_name, double_buffered, sample_buffers,

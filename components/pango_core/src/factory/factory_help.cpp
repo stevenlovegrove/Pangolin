@@ -48,13 +48,13 @@ void PrintSchemeHelp(std::ostream& out, bool color)
 
 // assumes schemes is not empty
 std::string HighestPriScheme(
-    const std::map<FactoryInterface::Name, FactoryInterface::Precedence>&
+    std::map<FactoryInterface::Name, FactoryInterface::Precedence> const&
         schemes)
 {
   FactoryInterface::Name best_name;
   FactoryInterface::Precedence best_pri =
       std::numeric_limits<FactoryInterface::Precedence>::max();
-  for (const auto& scheme : schemes) {
+  for (auto const& scheme : schemes) {
     if (scheme.second < best_pri) {
       best_name = scheme.first;
       best_pri = scheme.second;
@@ -65,7 +65,7 @@ std::string HighestPriScheme(
 
 void PrintFactoryDetails(
     std::ostream& out, const std::string name,
-    const pangolin::FactoryInterface& f, HelpVerbosity level, size_t indent,
+    pangolin::FactoryInterface const& f, HelpVerbosity level, size_t indent,
     bool color)
 {
   const std::string c_normal = color ? "\033[0m" : "";
@@ -85,7 +85,7 @@ void PrintFactoryDetails(
       out << std::setw(indent) << " "
           << "| ";
       out << c_alias << "aliases: " << c_normal << "{";
-      for (const auto& s : f.Schemes()) {
+      for (auto const& s : f.Schemes()) {
         out << c_scheme << s.first << c_normal << " (" << s.second << "); ";
       }
       out << "}" << std::endl;
@@ -116,8 +116,8 @@ void PrintFactoryDetails(
 }
 
 void PrintFactoryRegistryDetails(
-    std::ostream& out, const pangolin::FactoryRegistry& registry,
-    std::type_index factory_type, const std::string& scheme_filter,
+    std::ostream& out, pangolin::FactoryRegistry const& registry,
+    std::type_index factory_type, std::string const& scheme_filter,
     HelpVerbosity level, bool color)
 {
   const std::string c_normal = color ? "\033[0m" : "";
@@ -126,7 +126,7 @@ void PrintFactoryRegistryDetails(
   auto& factories = registry.GetFactories(factory_type);
   std::vector<std::string> high_pri_names;
   size_t longest_scheme = 0;
-  for (const auto& f : factories) {
+  for (auto const& f : factories) {
     const std::string scheme = HighestPriScheme(f->Schemes());
     high_pri_names.push_back(scheme);
     longest_scheme = std::max(longest_scheme, scheme.size());

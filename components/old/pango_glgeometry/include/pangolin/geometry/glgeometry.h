@@ -51,7 +51,7 @@ struct GlGeometry {
     {
     }
 
-    inline bool HasAttribute(const std::string& name) const
+    inline bool HasAttribute(std::string const& name) const
     {
       return attributes.find(name) != attributes.end();
     }
@@ -67,9 +67,9 @@ struct GlGeometry {
     std::map<std::string, Attribute> attributes;
   };
 
-  inline bool HasAttribute(const std::string& name) const
+  inline bool HasAttribute(std::string const& name) const
   {
-    for (const auto& b : buffers)
+    for (auto const& b : buffers)
       if (b.second.HasAttribute(name)) return true;
     return false;
   }
@@ -83,10 +83,10 @@ struct GlGeometry {
 };
 
 GlGeometry::Element ToGlGeometry(
-    const Geometry::Element& el, GlBufferType buffertype);
+    Geometry::Element const& el, GlBufferType buffertype);
 
-GlGeometry ToGlGeometry(const Geometry& geom);
+GlGeometry ToGlGeometry(Geometry const& geom);
 
-void GlDraw(GlSlProgram& prog, const GlGeometry& geom, const GlTexture* matcap);
+void GlDraw(GlSlProgram& prog, GlGeometry const& geom, GlTexture const* matcap);
 
 }  // namespace pangolin

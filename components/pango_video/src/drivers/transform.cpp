@@ -38,7 +38,7 @@ namespace pangolin
 
 void PitchedImageCopy(
     MutImageView<unsigned char>& img_out,
-    const ImageView<unsigned char>& img_in, size_t bytes_per_pixel)
+    ImageView<unsigned char> const& img_in, size_t bytes_per_pixel)
 {
   if (img_out.imageSize() != img_in.imageSize()) {
     throw std::runtime_error("PitchedImageCopy: Incompatible image sizes");
@@ -53,7 +53,7 @@ void PitchedImageCopy(
 
 TransformVideo::TransformVideo(
     std::unique_ptr<VideoInterface>& src,
-    const std::vector<TransformOptions>& flips) :
+    std::vector<TransformOptions> const& flips) :
     videoin(std::move(src)), flips(flips), size_bytes(0), buffer(0)
 {
   if (!videoin) {
@@ -103,13 +103,13 @@ void TransformVideo::Stop() { videoin->Stop(); }
 size_t TransformVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-const std::vector<StreamInfo>& TransformVideo::Streams() const
+std::vector<StreamInfo> const& TransformVideo::Streams() const
 {
   return streams;
 }
 
 void FlipY(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in,
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in,
     size_t bytes_per_pixel)
 {
   if (img_out.imageSize() != img_in.imageSize()) {
@@ -117,7 +117,7 @@ void FlipY(
   }
 
   for (int y_out = 0; y_out < img_out.height(); ++y_out) {
-    const int y_in = (img_in.height() - 1) - y_out;
+    int const y_in = (img_in.height() - 1) - y_out;
     std::memcpy(
         img_out.rowPtrMut((int)y_out), img_in.rowPtr((int)y_in),
         bytes_per_pixel * img_in.width());
@@ -144,7 +144,7 @@ void ChainSwap4(T& a, T& b, T& c, T& d)
 
 template <size_t BPP, size_t TSZ>
 void TiledFlipX(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in)
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in)
 {
   const size_t w = img_in.width();
   const size_t h = img_in.height();
@@ -177,7 +177,7 @@ void TiledFlipX(
 
 template <size_t BPP, size_t TSZ>
 void TiledRotate180(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in)
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in)
 {
   static_assert(!(TSZ & 1), "Tilesize must be even.");
 
@@ -212,7 +212,7 @@ void TiledRotate180(
 
 template <size_t BPP, size_t TSZ>
 void TiledTranspose(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in)
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in)
 {
   const size_t w = img_in.width();
   const size_t h = img_in.height();
@@ -244,7 +244,7 @@ void TiledTranspose(
 
 template <size_t BPP, size_t TSZ>
 void TiledRotateCW(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in)
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in)
 {
   static_assert(!(TSZ & 1), "Tilesize must be even.");
 
@@ -281,7 +281,7 @@ void TiledRotateCW(
 
 template <size_t BPP, size_t TSZ>
 void TiledRotateCCW(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in)
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in)
 {
   static_assert(!(TSZ & 1), "Tilesize must be even.");
 
@@ -315,7 +315,7 @@ void TiledRotateCCW(
 }
 
 void FlipX(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in,
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in,
     size_t bytes_per_pixel)
 {
   if (bytes_per_pixel == 1)
@@ -341,7 +341,7 @@ void FlipX(
 }
 
 void FlipXY(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in,
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in,
     size_t bytes_per_pixel)
 {
   if (bytes_per_pixel == 1)
@@ -368,7 +368,7 @@ void FlipXY(
 }
 
 void RotateCW(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in,
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in,
     size_t bytes_per_pixel)
 {
   if (bytes_per_pixel == 1)
@@ -394,7 +394,7 @@ void RotateCW(
 }
 
 void Transpose(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in,
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in,
     size_t bytes_per_pixel)
 {
   if (bytes_per_pixel == 1)
@@ -420,7 +420,7 @@ void Transpose(
 }
 
 void RotateCCW(
-    MutImageView<uint8_t>& img_out, const ImageView<uint8_t>& img_in,
+    MutImageView<uint8_t>& img_out, ImageView<uint8_t> const& img_in,
     size_t bytes_per_pixel)
 {
   if (bytes_per_pixel == 1)
@@ -445,11 +445,11 @@ void RotateCCW(
   }
 }
 
-void TransformVideo::Process(uint8_t* buffer_out, const uint8_t* buffer_in)
+void TransformVideo::Process(uint8_t* buffer_out, uint8_t const* buffer_in)
 {
   for (size_t s = 0; s < streams.size(); ++s) {
     MutImageView<uint8_t> img_out = Streams()[s].StreamImage(buffer_out);
-    const ImageView<uint8_t> img_in =
+    ImageView<uint8_t> const img_in =
         videoin->Streams()[s].StreamImage(buffer_in);
     const size_t bytes_per_pixel = Streams()[s].format().bytesPerPixel();
 
@@ -568,7 +568,7 @@ PANGOLIN_REGISTER_FACTORY(TransformVideo)
               {"rotateccw", 10}, {"flipx", 10},     {"flipy", 10},
               {"flipxy", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Filter: Apply one of a number of simple image transforms to the "
              "streams.";
@@ -580,7 +580,7 @@ PANGOLIN_REGISTER_FACTORY(TransformVideo)
             "Transform to apply to stream. One of "
             "(None,FlipX,FlipY,FlipXY,Transpose,RotateCW,RotateCCW)."}}};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
       auto default_it = StringToMirrorOptionMap.find(uri.scheme);

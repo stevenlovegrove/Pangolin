@@ -9,7 +9,7 @@
 namespace pangolin
 {
 
-IntensityImage<> LoadPango(const std::string& uri)
+IntensityImage<> LoadPango(std::string const& uri)
 {
   PANGOLIN_UNUSED(uri);
 
@@ -21,7 +21,7 @@ IntensityImage<> LoadPango(const std::string& uri)
   }
 
   std::unique_ptr<uint8_t[]> buffer(new uint8_t[video->SizeBytes()]);
-  const StreamInfo& stream_info = video->Streams()[0];
+  StreamInfo const& stream_info = video->Streams()[0];
 
   // Grab first image from video
   if (!video->GrabNext(buffer.get(), true)) {
@@ -33,7 +33,7 @@ IntensityImage<> LoadPango(const std::string& uri)
       stream_info.Width(), stream_info.Height(), stream_info.PixFormat());
 
   // Copy image data into user buffer.
-  const Image<unsigned char> img = stream_info.StreamImage(buffer.get());
+  Image<unsigned char> const img = stream_info.StreamImage(buffer.get());
   PANGO_ENSURE(image.pitch <= img.pitch);
   for (size_t y = 0; y < image.h; ++y) {
     std::memcpy(image.RowPtr(y), img.RowPtr(y), image.pitch);
@@ -47,7 +47,7 @@ IntensityImage<> LoadPango(const std::string& uri)
 }
 
 void SavePango(
-    const IntensityImage<>& image, const std::string& uri,
+    IntensityImage<> const& image, std::string const& uri,
     bool /*top_line_first*/)
 {
   PANGOLIN_UNUSED(image);

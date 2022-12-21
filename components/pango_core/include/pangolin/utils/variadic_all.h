@@ -12,7 +12,7 @@ bool all_of(TPred pred, const T& i)
 }
 
 template <typename TPred, typename T, typename... Targs>
-bool all_of(const TPred& pred, const T& i, const Targs&... ins)
+bool all_of(TPred const& pred, const T& i, Targs const&... ins)
 {
   return pred(i) && all_of(pred, ins...);
 }
@@ -24,20 +24,20 @@ bool any_of(TPred pred, const T& i)
 }
 
 template <typename TPred, typename T, typename... Targs>
-bool any_of(const TPred& pred, const T& i, Targs&... ins)
+bool any_of(TPred const& pred, const T& i, Targs&... ins)
 {
   return pred(i) || any_of(pred, ins...);
 }
 
 template <typename TContainer, typename... Targs>
-bool all_found(const TContainer& c, const Targs&... its)
+bool all_found(TContainer const& c, Targs const&... its)
 {
   using T1 = typename std::tuple_element<0, std::tuple<Targs...>>::type;
   return all_of([&c](const T1& it) { return it != c.end(); }, its...);
 }
 
 template <typename T, typename... Targs>
-bool all_equal(const T& v1, const Targs&... its)
+bool all_equal(const T& v1, Targs const&... its)
 {
   return all_of([v1](const T& o) { return v1 == o; }, its...);
 }

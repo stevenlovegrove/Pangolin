@@ -40,13 +40,13 @@ class PANGOLIN_EXPORT SplitVideo : public VideoInterface,
   public:
   SplitVideo(
       std::unique_ptr<VideoInterface>& videoin,
-      const std::vector<StreamInfo>& streams);
+      std::vector<StreamInfo> const& streams);
 
   ~SplitVideo();
 
   size_t SizeBytes() const;
 
-  const std::vector<StreamInfo>& Streams() const;
+  std::vector<StreamInfo> const& Streams() const;
 
   void Start();
 

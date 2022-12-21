@@ -14,10 +14,10 @@ namespace pangolin
 
 // Defined in ffmpeg.cpp
 int pango_sws_scale_frame(
-    struct SwsContext* c, AVFrame* dst, const AVFrame* src);
+    struct SwsContext* c, AVFrame* dst, AVFrame const* src);
 
 void FfmpegConverter::ConvertContext::convert(
-    const unsigned char* src, unsigned char* dst)
+    unsigned char const* src, unsigned char* dst)
 {
   // Copy into ffmpeg src buffer from user buffer
   memcpy(avsrc->buf[0]->data, src + src_buffer_offset, avsrc->buf[0]->size);
@@ -104,7 +104,7 @@ void FfmpegConverter::Stop()
 
 size_t FfmpegConverter::SizeBytes() const { return dst_buffer_size; }
 
-const std::vector<StreamInfo>& FfmpegConverter::Streams() const
+std::vector<StreamInfo> const& FfmpegConverter::Streams() const
 {
   return streams;
 }
@@ -138,7 +138,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideoConvert)
     {
       return {{"ffmpeg_convert", 0}, {"convert", 20}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Use FFMPEG library to convert pixel format.";
     }
@@ -148,7 +148,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideoConvert)
           {{"fmt", "RGB24",
             "Pixel format: see pixel format help for all possible values"}}};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       std::string outfmt = uri.Get<std::string>("fmt", "RGB24");
       ToUpper(outfmt);

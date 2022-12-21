@@ -38,10 +38,10 @@ struct Layer : public Interactive {
 
   virtual double aspectHint() const { return 0; };
 
-  virtual void renderIntoRegion(const Context&, const RenderParams&) = 0;
+  virtual void renderIntoRegion(Context const &, RenderParams const &) = 0;
 
   // By default, we ignore all input events
-  virtual bool handleEvent(const Context&, const Event&) override
+  virtual bool handleEvent(Context const &, Event const &) override
   {
     return false;
   }

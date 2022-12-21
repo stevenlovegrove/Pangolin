@@ -5,7 +5,7 @@
 namespace pangolin
 {
 
-RuntimePixelType PpmFormat(const std::string& strType, int num_colours)
+RuntimePixelType PpmFormat(std::string const& strType, int num_colours)
 {
   if (strType == "P5") {
     if (num_colours < 256) {
@@ -62,14 +62,14 @@ IntensityImage<> LoadPpm(std::istream& in)
 }
 
 void SavePpm(
-    const IntensityImage<>& image, std::ostream& out, bool top_line_first)
+    IntensityImage<> const& image, std::ostream& out, bool top_line_first)
 {
   using namespace sophus;
 
   // Setup header variables
   std::string ppm_type = "";
-  const int w = (int)image.width();
-  const int h = (int)image.height();
+  int const w = (int)image.width();
+  int const h = (int)image.height();
 
   int num_colors = 0;
 

@@ -40,10 +40,10 @@ struct MouseUpdateArgs {
 // Return the projection of ``point_in_foo`` onto the plane
 // through the origin which is perpendicular to ``axis_in_foo``
 Eigen::Vector3d componentPerpendicularToAxis(
-    const Eigen::Vector3d& unit_axis_in_foo,
-    const Eigen::Vector3d& point_in_foo)
+    Eigen::Vector3d const& unit_axis_in_foo,
+    Eigen::Vector3d const& point_in_foo)
 {
-  const double projection = unit_axis_in_foo.dot(point_in_foo);
+  double const projection = unit_axis_in_foo.dot(point_in_foo);
   const Eigen::Vector3d point_on_axis = projection * unit_axis_in_foo;
   const Eigen::Vector3d perp = point_in_foo - point_on_axis;
   return perp;
@@ -51,7 +51,7 @@ Eigen::Vector3d componentPerpendicularToAxis(
 
 // Return a transform which represents a rotation by angle_rad around axis.
 sophus::SE3d rotateAroundAxis(
-    const sophus::Ray3<double>& axis, double angle_rad)
+    sophus::Ray3<double> const& axis, double angle_rad)
 {
   sophus::SE3d point_T_cam(sophus::SO3d(), -axis.origin());
   sophus::SE3d point_R_point(
@@ -62,8 +62,8 @@ sophus::SE3d rotateAroundAxis(
 
 // NOT WELL TESTED (probably broken)
 sophus::SO3d alignUpDir(
-    const Eigen::Vector3d& unit_axis_in_cam,
-    const Eigen::Vector3d& unit_up_in_cam, DeviceXyz axis_convention)
+    Eigen::Vector3d const& unit_axis_in_cam,
+    Eigen::Vector3d const& unit_up_in_cam, DeviceXyz axis_convention)
 {
   // this is the vector we will be attempting to reorient to unit_up_in_cam
   const Eigen::Vector3d unit_camup_in_cam =
@@ -135,7 +135,7 @@ void cameraTranslatePointToPoint(MouseUpdateArgs& info)
 // such that point_in_world, camera_center and up_dir_in_world lie in a common
 // plane.
 void cameraRotateAbout(
-    MouseUpdateArgs& info, const Eigen::Vector3d& rotation_amount)
+    MouseUpdateArgs& info, Eigen::Vector3d const& rotation_amount)
 {
   PANGO_ENSURE(info.unit_up_in_world);
 
@@ -164,7 +164,7 @@ void cameraRotateAbout(
       rotx_T_world;
 }
 
-void cameraMoveTowardsPoint(MouseUpdateArgs& info, const double zoom_input)
+void cameraMoveTowardsPoint(MouseUpdateArgs& info, double const zoom_input)
 {
   const Eigen::Vector3d vec =
       zoom_input * (info.render_state.camera_from_world * info.point_in_world);
@@ -188,7 +188,7 @@ void imagePointToPoint(MouseUpdateArgs& info)
 
 void clampClipViewTransform(sophus::Sim2<double>& clip_view_transform)
 {
-  const double scale = clip_view_transform.scale();
+  double const scale = clip_view_transform.scale();
   // Scale 1.0 means we're at min size (occupies entire viewport), so min/max
   // translation would be +-0. Scale 2.0 means we're zoomed in my 2. We can move
   // half the viewport in each direction which corresponds to min/max of 1 in
@@ -199,7 +199,7 @@ void clampClipViewTransform(sophus::Sim2<double>& clip_view_transform)
       clip_view_transform.translation().y(), -(scale - 1.0), +(scale - 1.0));
 }
 
-void imageZoom(MouseUpdateArgs& info, const double zoom_input)
+void imageZoom(MouseUpdateArgs& info, double const zoom_input)
 {
   using namespace sophus;
   double factor = 1.0 - zoom_input;
@@ -218,7 +218,7 @@ void imageZoom(MouseUpdateArgs& info, const double zoom_input)
       std::max(1.0, info.render_state.clip_view_transform.scale()));
 }
 
-void imagePan(MouseUpdateArgs& info, const Eigen::Array2d& pan)
+void imagePan(MouseUpdateArgs& info, Eigen::Array2d const& pan)
 {
   sophus::Sim2<double> new_old;
   new_old.translation() =
@@ -230,7 +230,7 @@ void imagePan(MouseUpdateArgs& info, const Eigen::Array2d& pan)
 class HandlerImpl : public DrawLayerHandler
 {
   public:
-  HandlerImpl(const DrawLayerHandler::Params& p) :
+  HandlerImpl(DrawLayerHandler::Params const& p) :
       depth_sampler_(p.depth_sampler),
       up_in_world_(p.up_in_world),
       view_mode_(p.view_mode)
@@ -242,15 +242,15 @@ class HandlerImpl : public DrawLayerHandler
   void setViewMode(ViewMode view_mode) override { view_mode_ = view_mode; }
 
   bool handleEvent(
-      const Context& context, const Interactive::Event& event,
-      const Eigen::Array2d& p_clip, const Eigen::Array2d& p_img,
+      Context const& context, Interactive::Event const& event,
+      Eigen::Array2d const& p_clip, Eigen::Array2d const& p_img,
       Eigen::Array2d clip_aspect_scale, DrawLayer& layer,
       DrawLayerRenderState& render_state) override
   {
     using namespace sophus;
 
     const CameraModel camera = render_state.camera;
-    const MinMax<double> near_far = render_state.near_far;
+    MinMax<double> const near_far = render_state.near_far;
     Se3<double>& camera_from_world = render_state.camera_from_world;
     Sim2<double>& clip_view_transform = render_state.clip_view_transform;
 
@@ -288,7 +288,7 @@ class HandlerImpl : public DrawLayerHandler
 
     std::visit(
         overload{
-            [&](const Interactive::PointerEvent& arg) {
+            [&](Interactive::PointerEvent const& arg) {
               if (arg.action == PointerAction::down) {
                 down_state_ = state;
                 cursor_in_world_ = p_world;
@@ -338,7 +338,7 @@ class HandlerImpl : public DrawLayerHandler
                                    arg.action == PointerAction::drag});
               }
             },
-            [&](const Interactive::ScrollEvent& arg) {
+            [&](Interactive::ScrollEvent const& arg) {
               const double zoom_input = std::clamp(-arg.zoom / 1.0, -1.0, 1.0);
 
               if (view_mode_ == ViewMode::image_plane) {
@@ -364,7 +364,7 @@ class HandlerImpl : public DrawLayerHandler
                 cameraMoveTowardsPoint(info, zoom_input);
               }
             },
-            [&](const Interactive::KeyboardEvent& arg) {
+            [&](Interactive::KeyboardEvent const& arg) {
               // do nothing for now
             },
             [](auto&& arg) { PANGO_UNREACHABLE(); },

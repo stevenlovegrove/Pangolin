@@ -40,12 +40,12 @@ class VarWrapper : public VarValueT<T>
   public:
   typedef typename std::remove_reference<S>::type VarS;
 
-  VarWrapper(const std::shared_ptr<VarValueT<S>>& src) : src(src)
+  VarWrapper(std::shared_ptr<VarValueT<S>> const& src) : src(src)
   {
     this->str = src->str;
   }
 
-  const char* TypeId() const { return typeid(T).name(); }
+  char const* TypeId() const { return typeid(T).name(); }
 
   void Reset()
   {

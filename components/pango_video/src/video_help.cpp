@@ -17,15 +17,15 @@ void PrintPixelFormats(std::ostream& out, bool color)
 }
 
 void VideoHelp(
-    std::ostream& out, const std::string& scheme_filter,
+    std::ostream& out, std::string const& scheme_filter,
     HelpVerbosity verbosity)
 {
   RegisterFactoriesVideoInterface();
 
 #ifndef _WIN32_
-  const bool use_color = true;
+  bool const use_color = true;
 #else
-  const bool use_color = false;
+  bool const use_color = false;
 #endif
 
   if (verbosity >= HelpVerbosity::SYNOPSIS) {

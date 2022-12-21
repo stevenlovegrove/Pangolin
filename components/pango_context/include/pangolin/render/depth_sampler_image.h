@@ -8,7 +8,7 @@ namespace pangolin
 class DepthSamplerImage : public DepthSampler
 {
   public:
-  virtual void setDepthImage(const sophus::Image<float>& image) = 0;
+  virtual void setDepthImage(sophus::Image<float> const& image) = 0;
 
   struct Params {
     DepthKind kind = DepthKind::zaxis;

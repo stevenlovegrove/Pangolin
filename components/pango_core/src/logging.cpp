@@ -8,15 +8,15 @@
 
 namespace pangolin
 {
-using LogKey = std::pair<const char*, int>;
+using LogKey = std::pair<char const*, int>;
 }
 namespace std
 {
 template <>
 struct hash<pangolin::LogKey> {
-  size_t operator()(const pangolin::LogKey& x) const
+  size_t operator()(pangolin::LogKey const& x) const
   {
-    return hash<const char*>()(x.first) + 13441 * hash<int>()(x.second);
+    return hash<char const*>()(x.first) + 13441 * hash<int>()(x.second);
   }
 };
 }  // namespace std
@@ -25,7 +25,7 @@ namespace pangolin
 {
 
 constexpr size_t kNumLogKinds = 6;
-constexpr const char* sLogKindNameTable[] = {
+char constexpr const* sLogKindNameTable[] = {
     "DEBUG:", "INFO: ", "UNIMP:", "WARN: ", "ERROR:", "FATAL:"};
 
 constexpr fmt::color sLogKindColorTable[] = {
@@ -61,21 +61,21 @@ struct LoggingImpl : public Log {
   }
 
   void logImpl(
-      Kind level, const char* sFile, const char* sFunction, const int nLine,
-      const char* assertion_statement, const std::string& description) override
+      Kind level, char const* sFile, char const* sFunction, int const nLine,
+      char const* assertion_statement, std::string const& description) override
   {
     // This could hurt performance if we're really spamming log output, but it
     // will ensure that lines aren't intermingled between threads and that we
     // don't corrupt the maps during insertion.
     std::lock_guard<std::mutex> lk(log_mutex_);
 
-    const auto last_err = last_error_for_line_.find({sFile, nLine});
-    const bool already_printed = unique_only_ &&
+    auto const last_err = last_error_for_line_.find({sFile, nLine});
+    bool const already_printed = unique_only_ &&
                                  last_err != last_error_for_line_.end() &&
                                  (last_err->second.description == description);
 
     if (!already_printed && level >= min_severity_) {
-      const char* level_text = sLogKindNameTable[static_cast<int>(level)];
+      char const* level_text = sLogKindNameTable[static_cast<int>(level)];
       const fmt::color level_color =
           sLogKindColorTable[static_cast<int>(level)];
 

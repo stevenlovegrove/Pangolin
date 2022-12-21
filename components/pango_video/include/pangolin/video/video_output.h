@@ -57,32 +57,32 @@ class PANGOLIN_EXPORT VideoOutput : public VideoOutputInterface
   public:
   VideoOutput();
   VideoOutput(VideoOutput&& other) = default;
-  VideoOutput(const std::string& uri);
+  VideoOutput(std::string const& uri);
   ~VideoOutput();
 
   bool IsOpen() const;
-  void Open(const std::string& uri);
+  void Open(std::string const& uri);
   void Close();
 
-  const std::vector<StreamInfo>& Streams() const override;
+  std::vector<StreamInfo> const& Streams() const override;
 
   void SetStreams(
-      const std::vector<StreamInfo>& streams, const std::string& uri = "",
-      const picojson::value& properties = picojson::value()) override;
+      std::vector<StreamInfo> const& streams, std::string const& uri = "",
+      picojson::value const& properties = picojson::value()) override;
 
   int WriteStreams(
-      const uint8_t* data,
-      const picojson::value& frame_properties = picojson::value()) override;
+      uint8_t const* data,
+      picojson::value const& frame_properties = picojson::value()) override;
 
   bool IsPipe() const override;
 
-  void AddStream(const RuntimePixelType& pf, sophus::ImageShape shape);
+  void AddStream(RuntimePixelType const& pf, sophus::ImageShape shape);
 
-  void AddStream(const RuntimePixelType& pf, sophus::ImageSize size);
+  void AddStream(RuntimePixelType const& pf, sophus::ImageSize size);
 
   void SetStreams(
-      const std::string& uri = "",
-      const picojson::value& properties = picojson::value());
+      std::string const& uri = "",
+      picojson::value const& properties = picojson::value());
 
   size_t SizeBytes(void) const;
 

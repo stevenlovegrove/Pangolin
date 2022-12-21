@@ -52,7 +52,7 @@ class PANGOLIN_EXPORT VarState
 
   /// \returns true iff a pangolin var with key name \param key exists in the
   /// index.
-  bool Exists(const std::string& key) const;
+  bool Exists(std::string const& key) const;
 
   /// Register a user defined variable in memory into the VarState index.
   /// Note that the user memory must have a lifetime which exceeds all accesses
@@ -67,7 +67,7 @@ class PANGOLIN_EXPORT VarState
   ///             accessible name and is also used as input to lookup any Var in
   ///             the index.
   template <typename T>
-  std::shared_ptr<VarValueGeneric> AttachVar(T& variable, const VarMeta& meta);
+  std::shared_ptr<VarValueGeneric> AttachVar(T& variable, VarMeta const& meta);
 
   /// Get a reference to an existing Var in the index, or create one if it
   /// doesn't exist. The variable name to be used is inside of \param meta.name.
@@ -83,12 +83,12 @@ class PANGOLIN_EXPORT VarState
   ///             the index.
   template <typename T>
   std::shared_ptr<VarValueGeneric> GetOrCreateVar(
-      const T& value, const VarMeta& meta);
+      const T& value, VarMeta const& meta);
 
   /// \return A reference to the corresponding var with name \param full_name,
   /// or nullptr
   ///         if no such Var exists
-  std::shared_ptr<VarValueGeneric> GetByName(const std::string& full_name);
+  std::shared_ptr<VarValueGeneric> GetByName(std::string const& full_name);
 
   /// \return A reference to the corresponding var with underlying memory \param
   /// value, or nullptr
@@ -99,7 +99,7 @@ class PANGOLIN_EXPORT VarState
   /// Callback Event structure for notification of Var Additions and Deletions
   struct Event {
     /// Function signature for user callbacks
-    using Function = std::function<void(const Event&)>;
+    using Function = std::function<void(Event const&)>;
 
     /// Type of Var Event
     enum class Action {
@@ -138,32 +138,32 @@ class PANGOLIN_EXPORT VarState
 
   /// Removes a Var with the given name from the VarState index if it exists
   /// \returns true iff a var was found to remove
-  bool Remove(const std::string& name);
+  bool Remove(std::string const& name);
 
   /// Load Var state from file
   void LoadFromFile(
-      const std::string& filename, FileKind kind = FileKind::detected);
+      std::string const& filename, FileKind kind = FileKind::detected);
 
   /// Save current Var state to file
-  void SaveToFile(const std::string& filename, FileKind kind = FileKind::json);
+  void SaveToFile(std::string const& filename, FileKind kind = FileKind::json);
 
   private:
   typedef std::map<std::string, std::shared_ptr<VarValueGeneric>> VarStoreMap;
-  typedef std::map<const void*, std::weak_ptr<VarValueGeneric>>
+  typedef std::map<void const*, std::weak_ptr<VarValueGeneric>>
       VarStoreMapReverse;
   typedef std::vector<std::weak_ptr<VarValueGeneric>> VarStoreAdditions;
 
   template <typename T>
   VarStoreMap::iterator AddVar(
-      const std::shared_ptr<VarValue<T>>& var, bool record_and_notify = true);
+      std::shared_ptr<VarValue<T>> const& var, bool record_and_notify = true);
 
   template <typename T>
   VarStoreMap::iterator AddUpgradedVar(
-      const std::shared_ptr<VarValue<T>>& var,
-      const VarStoreMap::iterator& existing, bool record_and_notify = true);
+      std::shared_ptr<VarValue<T>> const& var,
+      VarStoreMap::iterator const& existing, bool record_and_notify = true);
 
-  void AddOrSetGeneric(const std::string& name, const std::string& value);
-  std::string ProcessVal(const std::string& val);
+  void AddOrSetGeneric(std::string const& name, std::string const& value);
+  std::string ProcessVal(std::string const& val);
 
   void LoadFromJsonStream(std::istream& is);
   void LoadFromConfigStream(std::istream& is);
@@ -182,7 +182,7 @@ class PANGOLIN_EXPORT VarState
 
 template <typename T>
 std::shared_ptr<VarValueGeneric> VarState::AttachVar(
-    T& variable, const VarMeta& meta)
+    T& variable, VarMeta const& meta)
 {
   VarStoreMap::iterator it = vars.find(meta.full_name);
 
@@ -205,7 +205,7 @@ std::shared_ptr<VarValueGeneric> VarState::AttachVar(
 
 template <typename T>
 std::shared_ptr<VarValueGeneric> VarState::GetOrCreateVar(
-    const T& value, const VarMeta& meta)
+    const T& value, VarMeta const& meta)
 {
   VarStoreMap::iterator it = vars.find(meta.full_name);
 
@@ -222,7 +222,7 @@ std::shared_ptr<VarValueGeneric> VarState::GetOrCreateVar(
 }
 
 inline std::shared_ptr<VarValueGeneric> VarState::GetByName(
-    const std::string& full_name)
+    std::string const& full_name)
 {
   VarStoreMap::iterator it = vars.find(full_name);
 
@@ -236,7 +236,7 @@ inline std::shared_ptr<VarValueGeneric> VarState::GetByName(
 template <typename T>
 std::shared_ptr<VarValueGeneric> VarState::GetByReference(const T& value)
 {
-  const void* backingValue = &value;
+  void const* backingValue = &value;
   auto it = vars_reverse.find(backingValue);
 
   if (it != vars_reverse.end())
@@ -247,9 +247,9 @@ std::shared_ptr<VarValueGeneric> VarState::GetByReference(const T& value)
 
 template <typename T>
 VarState::VarStoreMap::iterator VarState::AddVar(
-    const std::shared_ptr<VarValue<T>>& var, bool record_and_notify)
+    std::shared_ptr<VarValue<T>> const& var, bool record_and_notify)
 {
-  const auto [it, success] =
+  auto const [it, success] =
       vars.insert(VarStoreMap::value_type(var->Meta().full_name, var));
   assert(success);
 
@@ -263,8 +263,8 @@ VarState::VarStoreMap::iterator VarState::AddVar(
 
 template <typename T>
 VarState::VarStoreMap::iterator VarState::AddUpgradedVar(
-    const std::shared_ptr<VarValue<T>>& var,
-    const VarStoreMap::iterator& existing, bool record_and_notify)
+    std::shared_ptr<VarValue<T>> const& var,
+    VarStoreMap::iterator const& existing, bool record_and_notify)
 {
   existing->second = var;
 

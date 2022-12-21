@@ -35,7 +35,7 @@
 
 using namespace pangolin;
 
-const char* image_url =
+char const* image_url =
     "https://www.wwf.org.uk/sites/default/files/styles/gallery_image/public/"
     "2019-09/pangolin_with_tongue_out.jpg";
 

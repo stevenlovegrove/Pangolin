@@ -59,57 +59,57 @@ void bind_glsl(pybind11::module &m)
       .def("GetUniformHandle", &pangolin::GlSlProgram::GetUniformHandle)
       .def(
           "SetUniform",
-          (void(pangolin::GlSlProgram::*)(const std::string &, int)) &
+          (void(pangolin::GlSlProgram::*)(std::string const &, int)) &
               pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform",
-          (void(pangolin::GlSlProgram::*)(const std::string &, int, int)) &
+          (void(pangolin::GlSlProgram::*)(std::string const &, int, int)) &
               pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform",
-          (void(pangolin::GlSlProgram::*)(const std::string &, int, int, int)) &
+          (void(pangolin::GlSlProgram::*)(std::string const &, int, int, int)) &
               pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform", (void(pangolin::GlSlProgram::*)(
-                            const std::string &, int, int, int, int)) &
+                            std::string const &, int, int, int, int)) &
                             pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform",
-          (void(pangolin::GlSlProgram::*)(const std::string &, float)) &
+          (void(pangolin::GlSlProgram::*)(std::string const &, float)) &
               pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform",
-          (void(pangolin::GlSlProgram::*)(const std::string &, float, float)) &
+          (void(pangolin::GlSlProgram::*)(std::string const &, float, float)) &
               pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform", (void(pangolin::GlSlProgram::*)(
-                            const std::string &, float, float, float)) &
+                            std::string const &, float, float, float)) &
                             pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform", (void(pangolin::GlSlProgram::*)(
-                            const std::string &, float, float, float, float)) &
+                            std::string const &, float, float, float, float)) &
                             pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform",
           (void(pangolin::GlSlProgram::*)(
-              const std::string &, const pangolin::OpenGlMatrix &)) &
+              std::string const &, pangolin::OpenGlMatrix const &)) &
               pangolin::GlSlProgram::SetUniform)
 #ifdef HAVE_EIGEN
       .def(
           "SetUniform", (void(pangolin::GlSlProgram::*)(
-                            const std::string &, const Eigen::Matrix3f &)) &
+                            std::string const &, Eigen::Matrix3f const &)) &
                             pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform", (void(pangolin::GlSlProgram::*)(
-                            const std::string &, const Eigen::Matrix4f &)) &
+                            std::string const &, Eigen::Matrix4f const &)) &
                             pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform", (void(pangolin::GlSlProgram::*)(
-                            const std::string &, const Eigen::Matrix3d &)) &
+                            std::string const &, Eigen::Matrix3d const &)) &
                             pangolin::GlSlProgram::SetUniform)
       .def(
           "SetUniform", (void(pangolin::GlSlProgram::*)(
-                            const std::string &, const Eigen::Matrix4d &)) &
+                            std::string const &, Eigen::Matrix4d const &)) &
                             pangolin::GlSlProgram::SetUniform)
 #endif
       .def("Bind", &pangolin::GlSlProgram::Bind)

@@ -27,9 +27,9 @@ sophus::Image<sophus::Pixel3F32> testImage(int w, int h)
 
 int main(int argc, char** argv)
 {
-  const int w = 8;
-  const int h = 5;
-  const int win_scale = 100;
+  int const w = 8;
+  int const h = 5;
+  int const win_scale = 100;
   auto context = Context::Create({
       .title = "Pangolin Video",
       .window_size = {win_scale * w, win_scale * h},

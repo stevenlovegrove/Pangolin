@@ -62,7 +62,7 @@ struct DimensionStats {
     max = std::numeric_limits<float>::lowest();
   }
 
-  void Add(const float v)
+  void Add(float const v)
   {
     isMonotonic = isMonotonic && (v >= max);
     sum += v;
@@ -106,7 +106,7 @@ class DataLogBlock
 
   /// Add data to block
   void AddSamples(
-      size_t num_samples, size_t dimensions, const float* data_dim_major);
+      size_t num_samples, size_t dimensions, float const* data_dim_major);
 
   /// Delete all samples
   void ClearLinked()
@@ -123,9 +123,9 @@ class DataLogBlock
 
   size_t Dimensions() const { return dim; }
 
-  const float* Sample(size_t n) const
+  float const* Sample(size_t n) const
   {
-    const int id = (int)n - (int)start_id;
+    int const id = (int)n - (int)start_id;
 
     if (0 <= id && id < (int)samples) {
       return sample_buffer.get() + dim * id;
@@ -160,10 +160,10 @@ class PANGOLIN_EXPORT DataLog
 
   /// Provide textual labels corresponding to each dimension logged.
   /// This information may be used by graphical interfaces to DataLog.
-  void SetLabels(const std::vector<std::string>& labels);
-  const std::vector<std::string>& Labels() const;
+  void SetLabels(std::vector<std::string> const& labels);
+  std::vector<std::string> const& Labels() const;
 
-  void Log(size_t dimension, const float* vals, unsigned int samples = 1);
+  void Log(size_t dimension, float const* vals, unsigned int samples = 1);
   void Log(float v);
   void Log(float v1, float v2);
   void Log(float v1, float v2, float v3);
@@ -181,11 +181,11 @@ class PANGOLIN_EXPORT DataLog
   void Log(
       float v1, float v2, float v3, float v4, float v5, float v6, float v7,
       float v8, float v9, float v10);
-  void Log(const std::vector<float>& vals);
+  void Log(std::vector<float> const& vals);
 
 #ifdef USE_EIGEN
   template <typename Derived>
-  void Log(const Eigen::MatrixBase<Derived>& M)
+  void Log(Eigen::MatrixBase<Derived> const& M)
   {
     Log(M.rows() * M.cols(), M.template cast<float>().eval().data());
   }
@@ -195,19 +195,19 @@ class PANGOLIN_EXPORT DataLog
   void Save(std::string filename);
 
   // Return first block of stored data
-  const DataLogBlock* FirstBlock() const;
+  DataLogBlock const* FirstBlock() const;
 
   // Return last block of stored data
-  const DataLogBlock* LastBlock() const;
+  DataLogBlock const* LastBlock() const;
 
   // Return number of samples stored in this DataLog
   size_t Samples() const;
 
   // Return pointer to stored sample n
-  const float* Sample(int n) const;
+  float const* Sample(int n) const;
 
   // Return stats computed for each dimension if enabled.
-  const DimensionStats& Stats(size_t dim) const;
+  DimensionStats const& Stats(size_t dim) const;
 
   std::mutex access_mutex;
 

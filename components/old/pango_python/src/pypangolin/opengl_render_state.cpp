@@ -35,7 +35,7 @@
 namespace py_pangolin
 {
 
-void bind_opengl_render_state(pybind11::module& m)
+void bind_opengl_render_state(pybind11::module &m)
 {
   pybind11::enum_<pangolin::AxisDirection>(m, "AxisDirection")
       .value("AxisNone", pangolin::AxisDirection::AxisNone)
@@ -69,7 +69,7 @@ void bind_opengl_render_state(pybind11::module& m)
       .def("Inverse", &pangolin::OpenGlMatrix::Inverse)
       .def(
           "Matrix",
-          [](pangolin::OpenGlMatrix& mat) {
+          [](pangolin::OpenGlMatrix &mat) {
             using T = pangolin::GLprecision;
             return pybind11::array_t<T>(
                 {4, 4}, {1 * sizeof(T), 4 * sizeof(T)}, mat.m);
@@ -117,9 +117,9 @@ void bind_opengl_render_state(pybind11::module& m)
   m.def("negIdentityMatrix", &pangolin::negIdentityMatrix);
 
   pybind11::class_<pangolin::OpenGlRenderState>(m, "OpenGlRenderState")
-      .def(pybind11::init<const pangolin::OpenGlMatrix&>())
+      .def(pybind11::init<pangolin::OpenGlMatrix const &>())
       .def(pybind11::init<
-           const pangolin::OpenGlMatrix&, const pangolin::OpenGlMatrix&>())
+           pangolin::OpenGlMatrix const &, pangolin::OpenGlMatrix const &>())
       .def(pybind11::init<>())
       .def("ApplyIdentity", &pangolin::OpenGlRenderState::ApplyIdentity)
       .def("Apply", &pangolin::OpenGlRenderState::Apply)

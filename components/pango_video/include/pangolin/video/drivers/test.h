@@ -36,7 +36,7 @@ namespace pangolin
 class PANGOLIN_EXPORT TestVideo : public VideoInterface
 {
   public:
-  TestVideo(size_t w, size_t h, size_t n, const std::string& pix_fmt);
+  TestVideo(size_t w, size_t h, size_t n, std::string const& pix_fmt);
   ~TestVideo();
 
   //! Implement VideoInput::Start()
@@ -49,7 +49,7 @@ class PANGOLIN_EXPORT TestVideo : public VideoInterface
   size_t SizeBytes() const override;
 
   //! Implement VideoInput::Streams()
-  const std::vector<StreamInfo>& Streams() const override;
+  std::vector<StreamInfo> const& Streams() const override;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true) override;

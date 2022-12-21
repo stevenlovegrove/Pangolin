@@ -48,10 +48,10 @@ class IsStreamable
   static auto test(...) -> std::false_type;
 
   public:
-  static const bool value = decltype(test<T>(0))::value;
+  static bool const value = decltype(test<T>(0))::value;
 };
 
-inline void FormatStream(std::stringstream& stream, const char* text)
+inline void FormatStream(std::stringstream& stream, char const* text)
 {
   stream << text;
 }
@@ -59,7 +59,7 @@ inline void FormatStream(std::stringstream& stream, const char* text)
 // Following: http://en.cppreference.com/w/cpp/language/parameter_pack
 template <typename T, typename... Args>
 void FormatStream(
-    std::stringstream& stream, const char* text, T arg, Args... args)
+    std::stringstream& stream, char const* text, T arg, Args... args)
 {
   static_assert(
       IsStreamable<T>::value, "One of the args has not an ostream overload!");
@@ -78,7 +78,7 @@ void FormatStream(
 }  // namespace details
 
 template <typename... Args>
-std::string FormatString(const char* text, Args... args)
+std::string FormatString(char const* text, Args... args)
 {
   std::stringstream stream;
   details::FormatStream(stream, text, args...);

@@ -33,7 +33,7 @@ namespace pangolin
 {
 
 UvcVideo::UvcVideo(
-    int vendor_id, int product_id, const char* sn, int device_id, int width,
+    int vendor_id, int product_id, char const* sn, int device_id, int width,
     int height, int fps) :
     ctx_(NULL), dev_(NULL), devh_(NULL), frame_(NULL), is_streaming(false)
 {
@@ -64,7 +64,7 @@ UvcVideo::~UvcVideo()
 }
 
 uvc_error_t UvcVideo::FindDevice(
-    uvc_context_t* ctx, uvc_device_t** dev, int vid, int pid, const char* sn,
+    uvc_context_t* ctx, uvc_device_t** dev, int vid, int pid, char const* sn,
     int device_id)
 {
   uvc_error_t ret = UVC_SUCCESS;
@@ -92,7 +92,7 @@ uvc_error_t UvcVideo::FindDevice(
 
     if (uvc_get_device_descriptor(test_dev, &desc) != UVC_SUCCESS) continue;
 
-    const bool matches =
+    bool const matches =
         (!vid || desc->idVendor == vid) && (!pid || desc->idProduct == pid) &&
         (!sn || (desc->serialNumber && !strcmp(desc->serialNumber, sn)));
 
@@ -120,7 +120,7 @@ uvc_error_t UvcVideo::FindDevice(
 }
 
 void UvcVideo::InitDevice(
-    int vid, int pid, const char* sn, int device_id, int width, int height,
+    int vid, int pid, char const* sn, int device_id, int width, int height,
     int fps)
 {
   uvc_error_t find_err = FindDevice(ctx_, &dev_, vid, pid, sn, device_id);
@@ -164,7 +164,7 @@ void UvcVideo::InitDevice(
   // Default to greyscale.
   PixelFormat pfmt = PixelFormatFromString("GRAY8");
 
-  const uvc_format_desc_t* uvc_fmt = uvc_get_format_descs(devh_);
+  uvc_format_desc_t const* uvc_fmt = uvc_get_format_descs(devh_);
   while (uvc_fmt->bFormatIndex != ctrl_.bFormatIndex && uvc_fmt) {
     uvc_fmt = uvc_fmt->next;
   }
@@ -235,7 +235,7 @@ void UvcVideo::Stop()
 
 size_t UvcVideo::SizeBytes() const { return size_bytes; }
 
-const std::vector<StreamInfo>& UvcVideo::Streams() const { return streams; }
+std::vector<StreamInfo> const& UvcVideo::Streams() const { return streams; }
 
 bool UvcVideo::GrabNext(unsigned char* image, bool wait)
 {
@@ -328,13 +328,13 @@ bool UvcVideo::GetGain(float& gain)
 }
 
 //! Access JSON properties of device
-const picojson::value& UvcVideo::DeviceProperties() const
+picojson::value const& UvcVideo::DeviceProperties() const
 {
   return device_properties;
 }
 
 //! Access JSON properties of most recently captured frame
-const picojson::value& UvcVideo::FrameProperties() const
+picojson::value const& UvcVideo::FrameProperties() const
 {
   return frame_properties;
 }
@@ -346,7 +346,7 @@ PANGOLIN_REGISTER_FACTORY(UvcVideo)
     {
       return {{"uvc", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Use libuvc to open UVC USB device";
     }
@@ -359,7 +359,7 @@ PANGOLIN_REGISTER_FACTORY(UvcVideo)
            {"vid", "0x0000", "Open based on USB VID and PID"},
            {"pid", "0x0000", "Open based on USB VID and PID"}}};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       int vid = 0;
       int pid = 0;
@@ -367,9 +367,9 @@ PANGOLIN_REGISTER_FACTORY(UvcVideo)
           vid;
       std::istringstream(uri.Get<std::string>("pid", "0x0000")) >> std::hex >>
           pid;
-      const unsigned int dev_id = uri.Get<int>("num", 0);
+      unsigned int const dev_id = uri.Get<int>("num", 0);
       const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640, 480));
-      const unsigned int fps =
+      unsigned int const fps =
           uri.Get<unsigned int>("fps", 0);  // 0 means unspecified.
       return std::unique_ptr<VideoInterface>(
           new UvcVideo(vid, pid, 0, dev_id, dim.x, dim.y, fps));

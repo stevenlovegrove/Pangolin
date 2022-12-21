@@ -16,7 +16,7 @@ class PANGOLIN_EXPORT ImageView : public pangolin::View,
                                   public pangolin::ImageViewHandler
 {
   public:
-  ImageView(const std::string& title = "");
+  ImageView(std::string const& title = "");
 
   ~ImageView();
 
@@ -36,12 +36,12 @@ class PANGOLIN_EXPORT ImageView : public pangolin::View,
       pangolin::GlPixFormat img_fmt, bool delayed_upload = false);
 
   ImageView& SetImage(
-      const pangolin::Image<unsigned char>& img,
-      const pangolin::GlPixFormat& glfmt, bool delayed_upload = false);
+      pangolin::Image<unsigned char> const& img,
+      pangolin::GlPixFormat const& glfmt, bool delayed_upload = false);
 
   template <typename T>
   inline ImageView& SetImage(
-      const pangolin::Image<T>& img, bool delayed_upload = false)
+      pangolin::Image<T> const& img, bool delayed_upload = false)
   {
     return SetImage(
         img.template UnsafeReinterpret<unsigned char>(),
@@ -49,9 +49,9 @@ class PANGOLIN_EXPORT ImageView : public pangolin::View,
   }
 
   ImageView& SetImage(
-      const pangolin::TypedImage& img, bool delayed_upload = false);
+      pangolin::TypedImage const& img, bool delayed_upload = false);
 
-  ImageView& SetImage(const pangolin::GlTexture& texture);
+  ImageView& SetImage(pangolin::GlTexture const& texture);
 
   void LoadPending();
 
@@ -63,7 +63,7 @@ class PANGOLIN_EXPORT ImageView : public pangolin::View,
 
   bool MousePressed() const;
 
-  void SetRenderOverlay(const bool& val);
+  void SetRenderOverlay(bool const& val);
 
   //  private:
   // img_to_load contains image data that should be uploaded to the texture on

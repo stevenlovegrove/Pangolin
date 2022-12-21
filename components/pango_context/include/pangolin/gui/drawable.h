@@ -30,7 +30,7 @@ struct DrawablePose {
 
 struct Drawable {
   virtual ~Drawable() {}
-  virtual void draw(const ViewParams&) = 0;
+  virtual void draw(ViewParams const &) = 0;
   virtual MinMax<Eigen::Vector3d> boundsInParent() const = 0;
   DrawablePose pose;
 };

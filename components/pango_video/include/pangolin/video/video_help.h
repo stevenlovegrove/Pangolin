@@ -16,7 +16,7 @@ void PrintPixelFormats(std::ostream& out = std::cout, bool color = true);
 /// \p scheme_filter a constraint on schemes to print, or empty if all should be
 /// listed \p level the level of detail to use when printing (see enum above)
 void VideoHelp(
-    std::ostream& out = std::cout, const std::string& scheme_filter = "",
+    std::ostream& out = std::cout, std::string const& scheme_filter = "",
     HelpVerbosity verbosity = HelpVerbosity::SYNOPSIS);
 
 }  // namespace pangolin

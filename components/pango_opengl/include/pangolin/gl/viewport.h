@@ -48,7 +48,7 @@ struct PANGOLIN_EXPORT Viewport {
 
   Viewport Inset(int i) const;
   Viewport Inset(int horiz, int vert) const;
-  Viewport Intersect(const Viewport& vp) const;
+  Viewport Intersect(Viewport const& vp) const;
 
   static void DisableScissor();
 

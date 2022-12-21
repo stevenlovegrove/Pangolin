@@ -75,7 +75,7 @@ struct Convert<T, T> {
 // Apply bool alpha IO manipulator for bool types
 template <>
 struct Convert<bool, std::string> {
-  static bool Do(const std::string& src)
+  static bool Do(std::string const& src)
   {
     bool target;
     std::istringstream iss(src);
@@ -97,7 +97,7 @@ struct Convert<
     T, std::string,
     typename pangolin::enable_if_c<
         !std::is_same<T, std::string>::value>::type> {
-  static T Do(const std::string& src)
+  static T Do(std::string const& src)
   {
     T target;
     std::istringstream iss(src);
@@ -166,7 +166,7 @@ std::string ToString(const S& src)
 }
 
 template <typename T>
-T FromString(const std::string& src)
+T FromString(std::string const& src)
 {
   return Convert<T, std::string>::Do(src);
 }

@@ -68,7 +68,7 @@ void bind_datalog(pybind11::module& m)
       .def("Labels", &pangolin::DataLog::Labels)
       .def(
           "Log",
-          (void(pangolin::DataLog::*)(size_t, const float*, unsigned int)) &
+          (void(pangolin::DataLog::*)(size_t, float const*, unsigned int)) &
               pangolin::DataLog::Log,
           pybind11::arg("dimension"), pybind11::arg("vals"),
           pybind11::arg("samples") = 1)
@@ -109,7 +109,7 @@ void bind_datalog(pybind11::module& m)
                      float, float)) &
                      pangolin::DataLog::Log)
       .def(
-          "Log", (void(pangolin::DataLog::*)(const std::vector<float>&)) &
+          "Log", (void(pangolin::DataLog::*)(std::vector<float> const&)) &
                      pangolin::DataLog::Log)
       .def("Clear", &pangolin::DataLog::Clear)
       .def("Save", &pangolin::DataLog::Save)

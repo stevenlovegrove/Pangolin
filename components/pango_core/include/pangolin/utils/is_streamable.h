@@ -28,7 +28,7 @@ class is_streamable
   static auto test(...) -> std::false_type;
 
   public:
-  static const bool value = decltype(test<S, T>(0))::value;
+  static bool const value = decltype(test<S, T>(0))::value;
 };
 
 }  // namespace pangolin

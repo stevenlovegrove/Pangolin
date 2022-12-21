@@ -12,7 +12,7 @@ struct ClearLayerImpl : public Layer {
   std::string name() const override { return "-"; }
   Size sizeHint() const override { return {Parts{0}, Parts{0}}; }
 
-  void renderIntoRegion(const Context&, const RenderParams&) override
+  void renderIntoRegion(Context const &, RenderParams const &) override
   {
     glClear(clear_mask_);
   }

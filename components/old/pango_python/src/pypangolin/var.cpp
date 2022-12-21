@@ -35,7 +35,7 @@
 namespace py_pangolin
 {
 
-var_t::var_t(const std::string& top_level_ns)
+var_t::var_t(std::string const& top_level_ns)
 {
   if (top_level_ns == "" ||
       top_level_ns.find_first_of('.') != std::string::npos) {
@@ -50,10 +50,10 @@ var_t::var_t(const std::string& top_level_ns)
       std::bind(&var_t::new_var_callback, this, std::placeholders::_1), true);
 }
 
-void var_t::new_var_callback(const pangolin::VarState::Event& e)
+void var_t::new_var_callback(pangolin::VarState::Event const& e)
 {
   if (e.action == pangolin::VarState::Event::Action::Added) {
-    const int namespace_size = namespace_prefix.size();
+    int const namespace_size = namespace_prefix.size();
     const std::string name = e.var->Meta().full_name;
     if (!name.compare(0, namespace_size, namespace_prefix)) {
       const size_t dot = name.find_first_of('.', namespace_size);
@@ -67,32 +67,32 @@ void var_t::new_var_callback(const pangolin::VarState::Event& e)
 
 var_t::~var_t() noexcept {}
 
-var_t::var_t(const var_t& /*other*/) {}
+var_t::var_t(var_t const& /*other*/) {}
 
 var_t::var_t(var_t&& /*other*/) noexcept {}
 
-var_t& var_t::operator=(const var_t& /*other*/) { return *this; }
+var_t& var_t::operator=(var_t const& /*other*/) { return *this; }
 
 var_t& var_t::operator=(var_t&& /*other*/) noexcept { return *this; }
 
-pybind11::object var_t::get_attr(const std::string& name)
+pybind11::object var_t::get_attr(std::string const& name)
 {
   const std::shared_ptr<pangolin::VarValueGeneric> var =
       pangolin::VarState::I().GetByName(namespace_prefix + name);
   if (var) {
     if (!strcmp(var->TypeId(), typeid(bool).name())) {
-      const bool val = pangolin::Var<bool>(var).Get();
+      bool const val = pangolin::Var<bool>(var).Get();
       return pybind11::bool_(val);
     } else if (
         !strcmp(var->TypeId(), typeid(short).name()) ||
         !strcmp(var->TypeId(), typeid(int).name()) ||
         !strcmp(var->TypeId(), typeid(long).name())) {
-      const long val = pangolin::Var<long>(var).Get();
+      long const val = pangolin::Var<long>(var).Get();
       return pybind11::int_(val);
     } else if (
         !strcmp(var->TypeId(), typeid(double).name()) ||
         !strcmp(var->TypeId(), typeid(float).name())) {
-      const double val = pangolin::Var<double>(var).Get();
+      double const val = pangolin::Var<double>(var).Get();
       return pybind11::float_(val);
     } else {
       const std::string val = var->str->Get();
@@ -103,7 +103,7 @@ pybind11::object var_t::get_attr(const std::string& name)
 }
 
 template <typename T>
-void var_t::set_attr_(const std::string& name, T val, const PyVarMeta& meta)
+void var_t::set_attr_(std::string const& name, T val, PyVarMeta const& meta)
 {
   using namespace pangolin;
 
@@ -125,7 +125,7 @@ void var_t::set_attr_(const std::string& name, T val, const PyVarMeta& meta)
   }
 }
 
-pybind11::object var_t::gui_changed(const std::string& name)
+pybind11::object var_t::gui_changed(std::string const& name)
 {
   const std::shared_ptr<pangolin::VarValueGeneric> var =
       pangolin::VarState::I().GetByName(namespace_prefix + name);
@@ -141,20 +141,20 @@ std::vector<std::string>& var_t::get_members() { return members; }
 
 template <typename... Ts>
 struct VarBinder {
-  static inline void Bind(pybind11::class_<var_t>& varClass) {}
+  inline static void Bind(pybind11::class_<var_t>& varClass) {}
 };
 
 template <typename Head, typename... Tail>
 struct VarBinder<Head, Tail...> {
-  static inline void Bind(pybind11::class_<var_t>& varClass)
+  inline static void Bind(pybind11::class_<var_t>& varClass)
   {
     varClass
         .def(
-            "__setattr__", [](var_t& v, const std::string& name,
+            "__setattr__", [](var_t& v, std::string const& name,
                               Head val) { v.set_attr_<Head>(name, val); })
         .def(
-            "__setattr__", [](var_t& v, const std::string& name,
-                              const std::tuple<Head, PyVarMeta>& valMeta) {
+            "__setattr__", [](var_t& v, std::string const& name,
+                              std::tuple<Head, PyVarMeta> const& valMeta) {
               v.set_attr_<Head>(
                   name, std::get<0>(valMeta), std::get<1>(valMeta));
             });
@@ -173,7 +173,7 @@ void bind_var(pybind11::module& m)
           pybind11::arg("read_only") = false);
 
   pybind11::class_<py_pangolin::var_t> varClass(m, "Var");
-  varClass.def(pybind11::init<const std::string&>())
+  varClass.def(pybind11::init<std::string const&>())
       .def("__members__", &py_pangolin::var_t::get_members)
       .def("__getattr__", &py_pangolin::var_t::get_attr)
       .def("GuiChanged", &py_pangolin::var_t::gui_changed);

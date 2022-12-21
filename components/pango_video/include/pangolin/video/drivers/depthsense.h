@@ -54,7 +54,7 @@ class PANGOLIN_EXPORT DepthSenseVideo : public VideoInterface,
   DepthSenseVideo(
       DepthSense::Device device, DepthSenseSensorType s1,
       DepthSenseSensorType s2, ImageDim dim1, ImageDim dim2, unsigned int fps1,
-      unsigned int fps2, const Uri& uri);
+      unsigned int fps2, Uri const& uri);
   ~DepthSenseVideo();
 
   //! Implement VideoInput::Start()
@@ -67,7 +67,7 @@ class PANGOLIN_EXPORT DepthSenseVideo : public VideoInterface,
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  const std::vector<StreamInfo>& Streams() const;
+  std::vector<StreamInfo> const& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);
@@ -76,10 +76,10 @@ class PANGOLIN_EXPORT DepthSenseVideo : public VideoInterface,
   bool GrabNewest(unsigned char* image, bool wait = true);
 
   //! Implement VideoInput::DeviceProperties()
-  const picojson::value& DeviceProperties() const { return device_properties; }
+  picojson::value const& DeviceProperties() const { return device_properties; }
 
   //! Implement VideoInput::DeviceProperties()
-  const picojson::value& FrameProperties() const { return frame_properties; }
+  picojson::value const& FrameProperties() const { return frame_properties; }
 
   protected:
   void onNewColorSample(
@@ -95,10 +95,10 @@ class PANGOLIN_EXPORT DepthSenseVideo : public VideoInterface,
     unsigned int fps;
   };
 
-  void UpdateParameters(const DepthSense::Node& node, const Uri& uri);
-  void ConfigureNodes(const Uri& uri);
-  void ConfigureDepthNode(const SensorConfig& sensorConfig, const Uri& uri);
-  void ConfigureColorNode(const SensorConfig& sensorConfig, const Uri& uri);
+  void UpdateParameters(DepthSense::Node const& node, Uri const& uri);
+  void ConfigureNodes(Uri const& uri);
+  void ConfigureDepthNode(SensorConfig const& sensorConfig, Uri const& uri);
+  void ConfigureColorNode(SensorConfig const& sensorConfig, Uri const& uri);
 
   double GetDeltaTime() const;
 
@@ -143,7 +143,7 @@ class DepthSenseContext
   DepthSenseVideo* GetDepthSenseVideo(
       size_t device_num, DepthSenseSensorType s1, DepthSenseSensorType s2,
       ImageDim dim1, ImageDim dim2, unsigned int fps1, unsigned int fps2,
-      const Uri& uri);
+      Uri const& uri);
 
   protected:
   // Protected Constructor

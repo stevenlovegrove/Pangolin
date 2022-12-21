@@ -68,7 +68,7 @@ void RenderVboIboCboNbo(
 
 inline void MakeTriangleStripIboForVbo(GlBuffer& ibo, int w, int h)
 {
-  const int num_elements = w * (h - 1) * 2;
+  int const num_elements = w * (h - 1) * 2;
   unsigned int* buffer = new unsigned int[num_elements];
   unsigned int* ptr = buffer;
 

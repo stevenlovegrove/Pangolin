@@ -70,7 +70,7 @@ class PANGOLIN_EXPORT SyncTime
   }
 
   // No copy constructor
-  SyncTime(const SyncTime&) = delete;
+  SyncTime(SyncTime const&) = delete;
 
   void SetOffset(Duration virtual_clock_offset)
   {

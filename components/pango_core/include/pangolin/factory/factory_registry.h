@@ -56,7 +56,7 @@ class FactoryRegistry
 
   /// Register a new TypedFactoryInterface with the registry
   template <typename T>
-  bool RegisterFactory(const std::shared_ptr<TypedFactoryInterface<T>>& factory)
+  bool RegisterFactory(std::shared_ptr<TypedFactoryInterface<T>> const& factory)
   {
     TypeRegistry& registry = type_registries[typeid(T)];
     registry.push_back(factory);
@@ -84,7 +84,7 @@ class FactoryRegistry
   /// \class FactoryInterface which acceps \param uri
   /// \throws FactoryRegistry::Exception
   template <typename T>
-  std::unique_ptr<T> Construct(const Uri& uri)
+  std::unique_ptr<T> Construct(Uri const& uri)
   {
     TypeRegistry& registry = type_registries[typeid(T)];
 
@@ -126,9 +126,9 @@ class FactoryRegistry
     throw NoFactorySucceededException(uri);
   }
 
-  const TypeRegistry& GetFactories(std::type_index type) const
+  TypeRegistry const& GetFactories(std::type_index type) const
   {
-    const auto& ifac = type_registries.find(type);
+    auto const& ifac = type_registries.find(type);
     if (ifac != type_registries.end()) {
       return ifac->second;
     } else {
@@ -137,7 +137,7 @@ class FactoryRegistry
   }
 
   template <typename T>
-  const TypeRegistry& GetFactories() const
+  TypeRegistry const& GetFactories() const
   {
     return GetFactories(typeid(T));
   }
@@ -146,17 +146,17 @@ class FactoryRegistry
   class Exception : public std::exception
   {
     public:
-    Exception(const Uri& uri) : uri(uri)
+    Exception(Uri const& uri) : uri(uri)
     {
       err = "Unable to open URI";
       err += "\n  full_uri: " + uri.full_uri;
       err += "\n  scheme: " + uri.scheme;
       err += "\n  params:\n";
-      for (const auto& p : uri.params) {
+      for (auto const& p : uri.params) {
         err += "    " + p.first + " = " + p.second + "\n";
       }
     }
-    virtual const char* what() const throw() override { return err.c_str(); }
+    virtual char const* what() const throw() override { return err.c_str(); }
     const Uri uri;
     std::string err;
   };
@@ -164,7 +164,7 @@ class FactoryRegistry
   class NoMatchingSchemeException : public Exception
   {
     public:
-    NoMatchingSchemeException(const Uri& uri) : Exception(uri)
+    NoMatchingSchemeException(Uri const& uri) : Exception(uri)
     {
       err += " No matching scheme.";
     }
@@ -173,7 +173,7 @@ class FactoryRegistry
   class NoFactorySucceededException : public Exception
   {
     public:
-    NoFactorySucceededException(const Uri& uri) : Exception(uri)
+    NoFactorySucceededException(Uri const& uri) : Exception(uri)
     {
       err += " No factory succeeded.";
     }
@@ -183,12 +183,12 @@ class FactoryRegistry
   {
     public:
     ParameterMismatchException(
-        const Uri& uri,
-        const std::unordered_set<std::string>& unrecognized_params) :
+        Uri const& uri,
+        std::unordered_set<std::string> const& unrecognized_params) :
         Exception(uri), unrecognized_params(unrecognized_params)
     {
       std::stringstream ss;
-      for (const auto& p : unrecognized_params) ss << p << ",";
+      for (auto const& p : unrecognized_params) ss << p << ",";
       err += " Unrecognized options for scheme (" + ss.str() + ")";
     }
     const std::unordered_set<std::string> unrecognized_params;
@@ -222,7 +222,7 @@ class FactoryRegistry
 // Forward declaration; static load variable; definition
 #define PANGOLIN_REGISTER_FACTORY_WITH_STATIC_INITIALIZER(x)                   \
   bool Register##x##Factory();                                                 \
-  static const bool Load##x##Success = Register##x##Factory();                 \
+  static bool const Load##x##Success = Register##x##Factory();                 \
   bool Register##x##Factory()
 //  {
 //    return

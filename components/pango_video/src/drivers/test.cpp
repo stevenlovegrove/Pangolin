@@ -40,7 +40,7 @@ void setRandomData(unsigned char* arr, size_t size)
   }
 }
 
-TestVideo::TestVideo(size_t w, size_t h, size_t n, const std::string& pix_fmt)
+TestVideo::TestVideo(size_t w, size_t h, size_t n, std::string const& pix_fmt)
 {
   const RuntimePixelType pfmt = PixelFormatFromString(pix_fmt.c_str());
   const sophus::ImageShape shape =
@@ -68,7 +68,7 @@ void TestVideo::Stop() {}
 size_t TestVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-const std::vector<StreamInfo>& TestVideo::Streams() const { return streams; }
+std::vector<StreamInfo> const& TestVideo::Streams() const { return streams; }
 
 //! Implement VideoInput::GrabNext()
 bool TestVideo::GrabNext(unsigned char* image, bool /*wait*/)
@@ -90,7 +90,7 @@ PANGOLIN_REGISTER_FACTORY(TestVideo)
     {
       return {{"test", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "A test video feed with pixel-wise white noise.";
     }
@@ -102,11 +102,11 @@ PANGOLIN_REGISTER_FACTORY(TestVideo)
            {"fmt", "RGB24",
             "Pixel format: see pixel format help for all possible values"}}};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       ParamReader reader(Params(), uri);
       const ImageDim dim = reader.Get<ImageDim>("size");
-      const int n = reader.Get<int>("n");
+      int const n = reader.Get<int>("n");
       std::string fmt = reader.Get<std::string>("fmt");
       return std::unique_ptr<VideoInterface>(
           new TestVideo(dim.x, dim.y, n, fmt));

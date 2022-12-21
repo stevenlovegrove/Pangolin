@@ -6,7 +6,7 @@
 namespace pangolin
 {
 
-ImageView::ImageView(const std::string& title) :
+ImageView::ImageView(std::string const& title) :
     pangolin::ImageViewHandler(title),
     offset_scale(0.0f, 1.0f),
     lastPressed(false),
@@ -79,7 +79,7 @@ void ImageView::Keyboard(
     }
 
     // compute scale
-    const bool have_selection = std::isfinite(GetSelection().Area()) &&
+    bool const have_selection = std::isfinite(GetSelection().Area()) &&
                                 std::abs(GetSelection().Area()) >= 4;
     const pangolin::XYRangef froi =
         have_selection ? GetSelection() : GetViewToRender();
@@ -97,7 +97,7 @@ void ImageView::Keyboard(
     }
 
     // compute scale
-    const bool have_selection = std::isfinite(GetSelection().Area()) &&
+    bool const have_selection = std::isfinite(GetSelection().Area()) &&
                                 std::abs(GetSelection().Area()) >= 4;
     const pangolin::XYRangef froi =
         have_selection ? GetSelection() : GetViewToRender();
@@ -123,7 +123,7 @@ ImageView& ImageView::SetImage(
   const size_t pix_bytes = pangolin::GlFormatChannels(img_fmt.glformat) *
                            pangolin::GlDataTypeBytes(img_fmt.gltype);
 
-  const bool convert_first = (img_fmt.gltype == GL_DOUBLE);
+  bool const convert_first = (img_fmt.gltype == GL_DOUBLE);
 
   if (delayed_upload || !pangolin::GetBoundWindow() || IsDevicePtr(ptr) ||
       convert_first) {
@@ -168,21 +168,21 @@ ImageView& ImageView::SetImage(
 }
 
 ImageView& ImageView::SetImage(
-    const pangolin::Image<unsigned char>& img,
-    const pangolin::GlPixFormat& glfmt, bool delayed_upload)
+    pangolin::Image<unsigned char> const& img,
+    pangolin::GlPixFormat const& glfmt, bool delayed_upload)
 {
   return SetImage(img.ptr, img.w, img.h, img.pitch, glfmt, delayed_upload);
 }
 
 ImageView& ImageView::SetImage(
-    const pangolin::TypedImage& img, bool delayed_upload)
+    pangolin::TypedImage const& img, bool delayed_upload)
 {
   return SetImage(
       img.ptr, img.w, img.h, img.pitch, pangolin::GlPixFormat(img.fmt),
       delayed_upload);
 }
 
-ImageView& ImageView::SetImage(const pangolin::GlTexture& texture)
+ImageView& ImageView::SetImage(pangolin::GlTexture const& texture)
 {
   // Initialise if it didn't already exist or the size was too small
   if (!tex.tid || tex.width != texture.width || tex.height != texture.height ||
@@ -223,6 +223,6 @@ bool ImageView::MouseReleased() const { return mouseReleased; }
 
 bool ImageView::MousePressed() const { return mousePressed; }
 
-void ImageView::SetRenderOverlay(const bool& val) { overlayRender = val; }
+void ImageView::SetRenderOverlay(bool const& val) { overlayRender = val; }
 
 }  // namespace pangolin

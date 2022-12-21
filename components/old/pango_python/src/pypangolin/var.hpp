@@ -49,25 +49,25 @@ void bind_var(pybind11::module &m);
 class var_t
 {
   public:
-  var_t(const std::string &top_level_ns);
+  var_t(std::string const &top_level_ns);
   virtual ~var_t() noexcept;
-  pybind11::object get_attr(const std::string &name);
+  pybind11::object get_attr(std::string const &name);
 
   template <typename T>
-  void set_attr_(const std::string &name, T val, const PyVarMeta &meta = {});
+  void set_attr_(std::string const &name, T val, PyVarMeta const &meta = {});
 
-  pybind11::object gui_changed(const std::string &name);
+  pybind11::object gui_changed(std::string const &name);
 
   std::vector<std::string> &get_members();
 
   protected:
-  var_t(const var_t &other);
+  var_t(var_t const &other);
   var_t(var_t &&other) noexcept;
-  var_t &operator=(const var_t &other);
+  var_t &operator=(var_t const &other);
   var_t &operator=(var_t &&other) noexcept;
 
   private:
-  void new_var_callback(const pangolin::VarState::Event &);
+  void new_var_callback(pangolin::VarState::Event const &);
 
   std::vector<std::string> members;
   std::string namespace_prefix;

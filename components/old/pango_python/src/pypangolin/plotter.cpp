@@ -36,7 +36,7 @@ namespace py_pangolin
 {
 
 template <typename P>
-void bind_range(pybind11::module& m, const char* python_name_postfix)
+void bind_range(pybind11::module& m, char const* python_name_postfix)
 {
   pybind11::class_<pangolin::Range<P>>(
       m, (std::string("Range") + python_name_postfix).c_str())
@@ -91,7 +91,7 @@ void bind_plotter(pybind11::module& m)
           pybind11::arg("leg") = pangolin::Marker::Equality::Equal,
           pybind11::arg("c") = pangolin::Colour())
       .def(
-          pybind11::init<const pangolin::XYRangef&, const pangolin::Colour&>(),
+          pybind11::init<pangolin::XYRangef const&, pangolin::Colour const&>(),
           pybind11::arg("range"), pybind11::arg("c") = pangolin::Colour())
       .def_readwrite("range", &pangolin::Marker::range)
       .def_readwrite("colour", &pangolin::Marker::colour);
@@ -161,7 +161,7 @@ void bind_plotter(pybind11::module& m)
           pybind11::arg("c") = pangolin::Colour())
       .def(
           "AddMarker",
-          (pangolin::Marker & (pangolin::Plotter::*)(const pangolin::Marker&)) &
+          (pangolin::Marker & (pangolin::Plotter::*)(pangolin::Marker const&)) &
               pangolin::Plotter::AddMarker)
       //      .def("ClearImplicitPlots",
       //      &pangolin::Plotter::ClearImplicitPlots);

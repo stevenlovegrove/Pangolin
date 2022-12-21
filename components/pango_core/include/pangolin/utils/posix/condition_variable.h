@@ -19,7 +19,7 @@ class ConditionVariableInterface
 };
 
 std::shared_ptr<ConditionVariableInterface> create_named_condition_variable(
-    const std::string& name);
+    std::string const& name);
 std::shared_ptr<ConditionVariableInterface> open_named_condition_variable(
-    const std::string& name);
+    std::string const& name);
 }  // namespace pangolin

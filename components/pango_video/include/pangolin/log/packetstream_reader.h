@@ -42,15 +42,15 @@ class PANGOLIN_EXPORT PacketStreamReader
   public:
   PacketStreamReader();
 
-  PacketStreamReader(const std::string& filename);
+  PacketStreamReader(std::string const& filename);
 
   ~PacketStreamReader();
 
-  void Open(const std::string& filename);
+  void Open(std::string const& filename);
 
   void Close();
 
-  const std::vector<PacketStreamSource>& Sources() const { return _sources; }
+  std::vector<PacketStreamSource> const& Sources() const { return _sources; }
 
   // Grab Next available frame packetstream
   Packet NextFrame();

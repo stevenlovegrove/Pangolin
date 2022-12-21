@@ -44,7 +44,7 @@ namespace pangolin
 typedef void (*SigCallbackFn)(int);
 
 struct PANGOLIN_EXPORT SigCallback {
-  SigCallback(const int& sig, SigCallbackFn fn, void* data) :
+  SigCallback(int const& sig, SigCallbackFn fn, void* data) :
       sig(sig), fn(fn), data(data), value(false)
   {
     std::signal(sig, fn);
@@ -71,6 +71,6 @@ class PANGOLIN_EXPORT SigState
 
 PANGOLIN_EXPORT
 void RegisterNewSigCallback(
-    SigCallbackFn callback, void* data, const int signal);
+    SigCallbackFn callback, void* data, int const signal);
 
 }  // namespace pangolin

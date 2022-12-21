@@ -60,7 +60,7 @@ IntensityImage<> LoadBmp(std::istream& in)
     throw std::runtime_error("LoadBmp: Invalid Bitmap size");
 
   sophus::MutImage3U8 img(sophus::ImageSize(w, h));
-  const int num_channels = 3;
+  int const num_channels = 3;
 
   for (int y = ((int)h - 1); y != -1; y--) {
     char* p_pix = (char*)img.rowPtrMut(y);
@@ -83,7 +83,7 @@ IntensityImage<> LoadBmp(std::istream& in)
 }
 
 void SaveBmp(
-    const IntensityImage<>& /*image*/, std::ostream& /*out*/,
+    IntensityImage<> const& /*image*/, std::ostream& /*out*/,
     bool /*top_line_first*/)
 {
   throw std::runtime_error("SaveBMP: Not implemented");

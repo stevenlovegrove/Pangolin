@@ -55,7 +55,7 @@ TruncateVideo::~TruncateVideo() {}
 
 size_t TruncateVideo::SizeBytes() const { return videoin[0]->SizeBytes(); }
 
-const std::vector<StreamInfo>& TruncateVideo::Streams() const
+std::vector<StreamInfo> const& TruncateVideo::Streams() const
 {
   return streams;
 }
@@ -87,7 +87,7 @@ PANGOLIN_REGISTER_FACTORY(TruncateVideo)
     {
       return {{"truncate", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Truncates the length of a video stream with begin and end "
              "markers";
@@ -99,7 +99,7 @@ PANGOLIN_REGISTER_FACTORY(TruncateVideo)
           {"end", "size_t::max*", "Dynamically set to the max of size_t"},
       }};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
       if (subvid->Streams().size() == 0) {

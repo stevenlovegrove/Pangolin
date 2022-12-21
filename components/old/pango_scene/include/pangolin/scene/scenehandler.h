@@ -62,7 +62,7 @@ struct SceneHandler : public Handler3D {
       // buf[1] is the z distance
       // buf[2] is an array of names (aka pickId) with length buf[0]
       for (unsigned int name = 0; name < buf[0]; name++) {
-        const int pickId = (buf + 3)[name];
+        int const pickId = (buf + 3)[name];
         hit_map.emplace(std::pair<GLuint, SelectedObject>(
             buf[1],
             SelectedObject(pickId, InteractiveIndex::I().Find(pickId))));
@@ -72,7 +72,7 @@ struct SceneHandler : public Handler3D {
   }
 
   void ComputeHits(
-      pangolin::View& view, const pangolin::OpenGlRenderState& cam_state, int x,
+      pangolin::View& view, pangolin::OpenGlRenderState const& cam_state, int x,
       int y, int grab_width, std::map<GLuint, SelectedObject>& hit_objects)
   {
     // Get views viewport / modelview /projection
@@ -81,7 +81,7 @@ struct SceneHandler : public Handler3D {
     pangolin::OpenGlMatrix proj = cam_state.GetProjectionMatrix();
 
     // Prepare hit buffer object
-    const unsigned int MAX_SEL_SIZE = 64;
+    unsigned int const MAX_SEL_SIZE = 64;
     GLuint vSelectBuf[MAX_SEL_SIZE];
     glSelectBuffer(MAX_SEL_SIZE, vSelectBuf);
 

@@ -37,7 +37,7 @@ using std::lock_guard;
 namespace pangolin
 {
 
-static inline const std::string CurrentTimeStr()
+inline static const std::string CurrentTimeStr()
 {
   time_t time_now = time(0);
   struct tm time_struct = *localtime(&time_now);
@@ -59,10 +59,10 @@ void PacketStreamWriter::WriteHeader()
   writeTag(_stream, TAG_PANGO_HDR);
   pango.serialize(std::ostream_iterator<char>(_stream), true);
 
-  for (const auto& source : _sources) Write(source);
+  for (auto const& source : _sources) Write(source);
 }
 
-void PacketStreamWriter::Write(const PacketStreamSource& source)
+void PacketStreamWriter::Write(PacketStreamSource const& source)
 {
   SCOPED_LOCK;
   picojson::value serialize;
@@ -83,12 +83,12 @@ void PacketStreamWriter::Write(const PacketStreamSource& source)
 PacketStreamSourceId PacketStreamWriter::AddSource(PacketStreamSource& source)
 {
   SCOPED_LOCK;
-  source.id = AddSource(const_cast<const PacketStreamSource&>(source));
+  source.id = AddSource(const_cast<PacketStreamSource const&>(source));
   return source.id;
 }
 
 PacketStreamSourceId PacketStreamWriter::AddSource(
-    const PacketStreamSource& source)
+    PacketStreamSource const& source)
 {
   SCOPED_LOCK;
   PacketStreamSourceId r =
@@ -103,7 +103,7 @@ PacketStreamSourceId PacketStreamWriter::AddSource(
 }
 
 void PacketStreamWriter::WriteMeta(
-    PacketStreamSourceId src, const picojson::value& data)
+    PacketStreamSourceId src, picojson::value const& data)
 {
   SCOPED_LOCK;
   writeTag(_stream, TAG_SRC_JSON);
@@ -112,8 +112,8 @@ void PacketStreamWriter::WriteMeta(
 }
 
 void PacketStreamWriter::WriteSourcePacket(
-    PacketStreamSourceId src, const char* source, const int64_t receive_time_us,
-    size_t sourcelen, const picojson::value& meta)
+    PacketStreamSourceId src, char const* source, const int64_t receive_time_us,
+    size_t sourcelen, picojson::value const& meta)
 {
   SCOPED_LOCK;
   _sources[src].index.push_back({_stream.tellp(), receive_time_us});

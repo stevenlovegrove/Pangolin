@@ -39,17 +39,17 @@ using namespace std;
 namespace pangolin
 {
 
-void ParseVarsFile(const string& filename)
+void ParseVarsFile(string const& filename)
 {
   VarState::I().LoadFromFile(filename, VarState::FileKind::config);
 }
 
-void LoadJsonFile(const std::string& filename, const string& prefix)
+void LoadJsonFile(std::string const& filename, string const& prefix)
 {
   VarState::I().LoadFromFile(filename, VarState::FileKind::json);
 }
 
-void SaveJsonFile(const std::string& filename, const string& prefix)
+void SaveJsonFile(std::string const& filename, string const& prefix)
 {
   VarState::I().SaveToFile(filename, VarState::FileKind::json);
 }

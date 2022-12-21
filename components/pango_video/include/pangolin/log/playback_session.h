@@ -20,7 +20,7 @@ class PlaybackSession
 
   // Return thread-safe, shared instance of PacketStreamReader, providing
   // serialised read for PacketStreamReader
-  std::shared_ptr<PacketStreamReader> Open(const std::string& filename)
+  std::shared_ptr<PacketStreamReader> Open(std::string const& filename)
   {
     const std::string path = SanitizePath(PathExpand(filename));
 
@@ -44,9 +44,9 @@ class PlaybackSession
 
   SyncTime& Time() { return time; }
   static std::shared_ptr<PlaybackSession> ChooseFromParams(
-      const ParamReader& reader);
+      ParamReader const& reader);
   static std::shared_ptr<PlaybackSession> ChooseFromParams(
-      const Params& params);
+      Params const& params);
 
   private:
   static std::shared_ptr<PlaybackSession> Choose(bool ordered_playback);

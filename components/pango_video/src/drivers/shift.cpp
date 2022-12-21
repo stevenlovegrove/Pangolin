@@ -35,8 +35,8 @@ namespace pangolin
 
 ShiftVideo::ShiftVideo(
     std::unique_ptr<VideoInterface>& src_,
-    const std::map<size_t, int>& shift_right_bits,
-    const std::map<size_t, uint32_t>& masks) :
+    std::map<size_t, int> const& shift_right_bits,
+    std::map<size_t, uint32_t> const& masks) :
     src(std::move(src_)),
     size_bytes(0),
     shift_right_bits(shift_right_bits),
@@ -108,16 +108,16 @@ void ShiftVideo::Stop() { videoin[0]->Stop(); }
 size_t ShiftVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-const std::vector<StreamInfo>& ShiftVideo::Streams() const { return streams; }
+std::vector<StreamInfo> const& ShiftVideo::Streams() const { return streams; }
 
 void DoShift16to8(
-    Image<uint8_t>& out, const Image<uint8_t>& in, const int shift_right_bits,
+    Image<uint8_t>& out, Image<uint8_t> const& in, int const shift_right_bits,
     const uint32_t mask, const uint16_t maxValBitDepth)
 {
   for (size_t r = 0; r < out.h; ++r) {
     uint8_t* pout = (uint8_t*)(out.ptr + r * out.pitch);
     uint16_t* pin = (uint16_t*)(in.ptr + r * in.pitch);
-    const uint16_t* pin_end = (uint16_t*)(in.ptr + (r + 1) * in.pitch);
+    uint16_t const* pin_end = (uint16_t*)(in.ptr + (r + 1) * in.pitch);
     while (pin != pin_end) {
       *(pout++) =
           (std::min(*(pin++), maxValBitDepth) >> shift_right_bits) & mask;
@@ -125,10 +125,10 @@ void DoShift16to8(
   }
 }
 
-void ShiftVideo::Process(uint8_t* buffer_out, const uint8_t* buffer_in)
+void ShiftVideo::Process(uint8_t* buffer_out, uint8_t const* buffer_in)
 {
   for (size_t s = 0; s < streams.size(); ++s) {
-    const Image<uint8_t> img_in =
+    Image<uint8_t> const img_in =
         videoin[0]->Streams()[s].StreamImage(buffer_in);
     Image<uint8_t> img_out = Streams()[s].StreamImage(buffer_out);
     const size_t bytes_per_pixel = Streams()[s].PixFormat().bpp / 8;
@@ -188,7 +188,7 @@ PANGOLIN_REGISTER_FACTORY(ShiftVideo)
     {
       return {{"shift", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Video Filter: bitwise shift pixel values.";
     }
@@ -201,7 +201,7 @@ PANGOLIN_REGISTER_FACTORY(ShiftVideo)
            "maskN, N:[1,streams]. Bitwise pixel mask (after shift)"},
       }};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       std::map<size_t, int> shift_right_bits;
       std::map<size_t, uint32_t> masks;

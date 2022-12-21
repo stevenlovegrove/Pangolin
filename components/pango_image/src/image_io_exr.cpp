@@ -25,9 +25,9 @@ Imf::PixelType OpenEXRPixelType(int channel_bits)
   }
 }
 
-void SetOpenEXRChannels(Imf::ChannelList& ch, const pangolin::PixelFormat& fmt)
+void SetOpenEXRChannels(Imf::ChannelList& ch, pangolin::PixelFormat const& fmt)
 {
-  const char* CHANNEL_NAMES[] = {"R", "G", "B", "A"};
+  char const* CHANNEL_NAMES[] = {"R", "G", "B", "A"};
   for (size_t c = 0; c < fmt.channels; ++c) {
     ch.insert(
         CHANNEL_NAMES[c], Imf::Channel(OpenEXRPixelType(fmt.channel_bits[c])));
@@ -60,16 +60,16 @@ class StdIStream : public Imf::IStream
   std::istream* _is;
 };
 
-PixelFormat GetPixelFormat(const Imf::Header& header)
+PixelFormat GetPixelFormat(Imf::Header const& header)
 {
-  const Imf::ChannelList& channels = header.channels();
+  Imf::ChannelList const& channels = header.channels();
   size_t count = 0;
 
   std::stringstream pixelFormat;
   size_t depth = 0;
   for (Imf::ChannelList::ConstIterator i = channels.begin();
        i != channels.end(); ++i) {
-    const Imf::Channel& channel = i.channel();
+    Imf::Channel const& channel = i.channel();
     if (depth == 0) {
       switch (channel.type) {
         case Imf::FLOAT:
@@ -125,7 +125,7 @@ IntensityImage<> LoadExr(std::istream& source)
                                        sizeof(float) * format.channels;
   Imf::FrameBuffer fb;
 
-  const Imf::ChannelList& channels = file.header().channels();
+  Imf::ChannelList const& channels = file.header().channels();
   size_t c = 0;
   unsigned int d = format.channel_bit_depth;
   Imf::PixelType pixeltype;
@@ -174,7 +174,7 @@ IntensityImage<> LoadExr(std::istream& source)
 }
 
 void SaveExr(
-    const IntensityImage<>& image_in, const std::string& filename,
+    IntensityImage<> const& image_in, std::string const& filename,
     bool top_line_first)
 {
 #ifdef HAVE_OPENEXR
@@ -200,9 +200,9 @@ void SaveExr(
   Imf::FrameBuffer frameBuffer;
 
   size_t ch_bits = 0;
-  const char* CHANNEL_NAMES[] = {"R", "G", "B", "A"};
+  char const* CHANNEL_NAMES[] = {"R", "G", "B", "A"};
   for (unsigned int i = 0; i < fmt.channels; i++) {
-    const Imf::Channel* channel =
+    Imf::Channel const* channel =
         header.channels().findChannel(CHANNEL_NAMES[i]);
     frameBuffer.insert(
         CHANNEL_NAMES[i], Imf::Slice(

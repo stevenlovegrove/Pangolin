@@ -25,8 +25,8 @@ struct DrawLayerHandler {
 
   // Handle 2D window events
   virtual bool handleEvent(
-      const Context& context, const Interactive::Event& event,
-      const Eigen::Array2d& pos_clip, const Eigen::Array2d& pos_img,
+      Context const& context, Interactive::Event const& event,
+      Eigen::Array2d const& pos_clip, Eigen::Array2d const& pos_img,
       Eigen::Array2d clip_aspect_scale, DrawLayer& layer,
       DrawLayerRenderState& render_state) = 0;
 

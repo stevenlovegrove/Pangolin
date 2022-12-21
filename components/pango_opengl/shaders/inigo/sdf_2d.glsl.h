@@ -88,7 +88,7 @@ float sdParallelogram(in vec2 p, float wi, float he, float sk)
 
 float sdEquilateralTriangle(in vec2 p)
 {
-  const float k = sqrt(3.0);
+  float const k = sqrt(3.0);
   p.x = abs(p.x) - 1.0;
   p.y = p.y + 1.0 / k;
   if (p.x + k * p.y > 0.0) p = vec2(p.x - k * p.y, -k * p.x - p.y) / 2.0;
@@ -270,7 +270,7 @@ float sdRoundedCross(in vec2 p, in float h)
 
 float sdEgg(in vec2 p, in float ra, in float rb)
 {
-  const float k = sqrt(3.0);
+  float const k = sqrt(3.0);
   p.x = abs(p.x);
   float r = ra - rb;
   return ((p.y < 0.0)             ? length(vec2(p.x, p.y)) - r

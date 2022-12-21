@@ -7,7 +7,7 @@
 
 template <typename T>
 inline void ExpectExceptionWithMessageFromAction(
-    std::function<void()> action, const std::string& exceptionMessageBegin)
+    std::function<void()> action, std::string const& exceptionMessageBegin)
 {
   try {
     action();

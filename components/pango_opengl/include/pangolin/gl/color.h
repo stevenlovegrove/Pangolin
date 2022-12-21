@@ -55,15 +55,15 @@ struct Color {
   /// @param hue Color hue in range [0,1]
   /// @param sat Saturation in range [0,1]
   /// @param val Value / Brightness in range [0,1].
-  static inline Color Hsv(
-      const float hue, const float sat = 1.0f, const float val = 1.0f,
-      const float a = 1.0f)
+  inline static Color Hsv(
+      float const hue, float const sat = 1.0f, float const val = 1.0f,
+      float const a = 1.0f)
   {
-    const float h = 6.0f * hue;
-    const int i = (int)floor(h);
-    const float f = (i % 2 == 0) ? 1 - (h - i) : h - i;
-    const float m = val * (1 - sat);
-    const float n = val * (1 - sat * f);
+    float const h = 6.0f * hue;
+    int const i = (int)floor(h);
+    float const f = (i % 2 == 0) ? 1 - (h - i) : h - i;
+    float const m = val * (1 - sat);
+    float const n = val * (1 - sat * f);
 
     switch (i) {
       case 0:

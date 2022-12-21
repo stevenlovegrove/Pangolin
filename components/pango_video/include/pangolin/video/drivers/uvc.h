@@ -49,12 +49,12 @@ class PANGOLIN_EXPORT UvcVideo : public VideoInterface,
 {
   public:
   UvcVideo(
-      int vendor_id, int product_id, const char* sn, int deviceid, int width,
+      int vendor_id, int product_id, char const* sn, int deviceid, int width,
       int height, int fps);
   ~UvcVideo();
 
   void InitDevice(
-      int vid, int pid, const char* sn, int deviceid, int width, int height,
+      int vid, int pid, char const* sn, int deviceid, int width, int height,
       int fps);
   void DeinitDevice();
 
@@ -68,7 +68,7 @@ class PANGOLIN_EXPORT UvcVideo : public VideoInterface,
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  const std::vector<StreamInfo>& Streams() const;
+  std::vector<StreamInfo> const& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);
@@ -94,15 +94,15 @@ class PANGOLIN_EXPORT UvcVideo : public VideoInterface,
   bool SetGain(float gain);
 
   //! Access JSON properties of device
-  const picojson::value& DeviceProperties() const;
+  picojson::value const& DeviceProperties() const;
 
   //! Access JSON properties of most recently captured frame
-  const picojson::value& FrameProperties() const;
+  picojson::value const& FrameProperties() const;
 
   protected:
   void InitPangoDeviceProperties();
   static uvc_error_t FindDevice(
-      uvc_context_t* ctx, uvc_device_t** dev, int vid, int pid, const char* sn,
+      uvc_context_t* ctx, uvc_device_t** dev, int vid, int pid, char const* sn,
       int device_id);
 
   std::vector<StreamInfo> streams;

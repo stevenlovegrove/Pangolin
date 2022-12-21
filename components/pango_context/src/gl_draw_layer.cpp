@@ -19,7 +19,7 @@ namespace pangolin
 {
 
 struct DrawLayerImpl : public DrawLayer {
-  DrawLayerImpl(const DrawLayerImpl::Params& p) :
+  DrawLayerImpl(DrawLayerImpl::Params const& p) :
       name_(p.name),
       size_hint_(p.size_hint),
       handler_(p.handler),
@@ -46,17 +46,17 @@ struct DrawLayerImpl : public DrawLayer {
 
   std::string name() const override { return name_; }
 
-  const DrawLayerRenderState& renderState() const override
+  DrawLayerRenderState const& renderState() const override
   {
     return render_state_;
   }
 
-  void setCamera(const sophus::CameraModel& camera) override
+  void setCamera(sophus::CameraModel const& camera) override
   {
     render_state_.camera = camera;
   }
 
-  void setCameraFromWorld(const sophus::Se3F64& cam_from_world) override
+  void setCameraFromWorld(sophus::Se3F64 const& cam_from_world) override
   {
     render_state_.camera_from_world = cam_from_world;
   }
@@ -66,7 +66,7 @@ struct DrawLayerImpl : public DrawLayer {
     render_state_.clip_view_transform = clip_view_transform;
   }
 
-  void setNearFarPlanes(const MinMax<double>& near_far) override
+  void setNearFarPlanes(MinMax<double> const& near_far) override
   {
     render_state_.near_far = near_far;
   }
@@ -101,7 +101,7 @@ struct DrawLayerImpl : public DrawLayer {
   std::optional<Eigen::Array2i> tryGetDrawableBaseImageSize() const
   {
     MinMax<Eigen::Vector3d> pixel_bounds;
-    for (const auto& obj : pixels_collection_.drawables) {
+    for (auto const& obj : pixels_collection_.drawables) {
       pixel_bounds.extend(obj->boundsInParent());
     }
     const Eigen::Array2i dim = pixel_bounds.range().head<2>().cast<int>();
@@ -144,7 +144,7 @@ struct DrawLayerImpl : public DrawLayer {
   }
 
   static void updateRenderData(
-      RenderData& state, const DrawLayerRenderState& render_state,
+      RenderData& state, DrawLayerRenderState const& render_state,
       MinMax<Eigen::Array2i> viewport)
   {
     state.clip_view = sim2To4x4(render_state.clip_view_transform);
@@ -170,7 +170,7 @@ struct DrawLayerImpl : public DrawLayer {
     if (state.unproject_map->empty() &&
         render_state.camera.distortionType() != CameraDistortionType::pinhole) {
       std::visit(
-          [&](const auto& camera) {
+          [&](auto const& camera) {
             auto unprojmap = Image<Pixel3<float>>::makeGenerative(
                 render_state.camera.imageSize(), [&](int x, int y) {
                   auto p_img = Eigen::Vector2d(x, y);
@@ -193,7 +193,7 @@ struct DrawLayerImpl : public DrawLayer {
             ? GraphicsProjection::orthographic
             : GraphicsProjection::perspective;
 
-    const auto clip_from_projection = transformClipFromProjection(
+    auto const clip_from_projection = transformClipFromProjection(
         render_state.camera.imageSize(), render_state.image_convention,
         render_state.image_indexing);
 
@@ -224,7 +224,7 @@ struct DrawLayerImpl : public DrawLayer {
   }
 
   void renderIntoRegion(
-      const Context& context, const RenderParams& params) override
+      Context const& context, RenderParams const& params) override
   {
     if (!tryInitializeEmptyCamera()) {
       return;
@@ -255,7 +255,7 @@ struct DrawLayerImpl : public DrawLayer {
     }
   }
 
-  bool handleEvent(const Context& context, const Event& event) override
+  bool handleEvent(Context const& context, Event const& event) override
   {
     Eigen::Matrix4d clip_from_proj =
         render_data_.clip_view * render_data_.clip_aspect *
@@ -289,7 +289,7 @@ struct DrawLayerImpl : public DrawLayer {
   double aspectHint() const override
   {
     MinMax<Eigen::Vector3d> cam_bounds;
-    for (const auto& obj : pixels_collection_.drawables) {
+    for (auto const& obj : pixels_collection_.drawables) {
       cam_bounds.extend(obj->boundsInParent());
     }
     if (!cam_bounds.empty()) {
@@ -305,7 +305,7 @@ struct DrawLayerImpl : public DrawLayer {
   };
 
   void add(
-      const Shared<Drawable>& r, In domain, const std::string& name) override
+      Shared<Drawable> const& r, In domain, std::string const& name) override
   {
     if (!name.empty()) {
       // has a name, remove old Drawables with that name
@@ -327,7 +327,7 @@ struct DrawLayerImpl : public DrawLayer {
     }
   }
 
-  std::shared_ptr<Drawable> get(const std::string& name) const override
+  std::shared_ptr<Drawable> get(std::string const& name) const override
   {
     for (auto& map :
          {scene_collection_.named_drawables,
@@ -340,7 +340,7 @@ struct DrawLayerImpl : public DrawLayer {
     return nullptr;
   }
 
-  bool remove(const Shared<Drawable>& r) override
+  bool remove(Shared<Drawable> const& r) override
   {
     bool anything_erased = false;
     anything_erased |= pixels_collection_.remove(r);
@@ -349,7 +349,7 @@ struct DrawLayerImpl : public DrawLayer {
     return anything_erased;
   }
 
-  bool remove(const std::string& name) override
+  bool remove(std::string const& name) override
   {
     auto maybe_shared = get(name);
     if (maybe_shared == nullptr) {
@@ -382,7 +382,7 @@ struct DrawLayerImpl : public DrawLayer {
       named_drawables.clear();
     }
 
-    bool remove(const Shared<Drawable>& r) noexcept
+    bool remove(Shared<Drawable> const& r) noexcept
     {
       bool anything_erased = false;
 
@@ -393,7 +393,7 @@ struct DrawLayerImpl : public DrawLayer {
       }
       {
         std::string key;
-        for (const auto& e : named_drawables) {
+        for (auto const& e : named_drawables) {
           if (e.second == r) {
             key = e.first;
           }
@@ -405,9 +405,9 @@ struct DrawLayerImpl : public DrawLayer {
     }
   };
 
-  void updateBackgroundImage(const sophus::IntensityImage<>& image) override
+  void updateBackgroundImage(sophus::IntensityImage<> const& image) override
   {
-    const sophus::CameraModel& camera = defaultOrthoCameraForImage(image);
+    sophus::CameraModel const& camera = defaultOrthoCameraForImage(image);
     this->setCamera(camera);
     this->addNamedInPixels("---unique-background-image---", image);
   }

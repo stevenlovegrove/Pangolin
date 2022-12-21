@@ -37,7 +37,7 @@ class PANGOLIN_EXPORT JoinVideo : public VideoInterface,
 {
   public:
   JoinVideo(
-      std::vector<std::unique_ptr<VideoInterface>>& src, const bool verbose);
+      std::vector<std::unique_ptr<VideoInterface>>& src, bool const verbose);
 
   ~JoinVideo();
 
@@ -46,12 +46,12 @@ class PANGOLIN_EXPORT JoinVideo : public VideoInterface,
   // http://stackoverflow.com/questions/29565299/how-to-use-a-vector-of-unique-pointers-in-a-dll-exported-class-with-visual-studi
   // >> It appears adding __declspec(dllexport) forces the compiler to define
   // the implicitly-declared copy constructor and copy assignment operator
-  JoinVideo(const JoinVideo&) = delete;
-  JoinVideo& operator=(const JoinVideo&) = delete;
+  JoinVideo(JoinVideo const&) = delete;
+  JoinVideo& operator=(JoinVideo const&) = delete;
 
   size_t SizeBytes() const;
 
-  const std::vector<StreamInfo>& Streams() const;
+  std::vector<StreamInfo> const& Streams() const;
 
   void Start();
 

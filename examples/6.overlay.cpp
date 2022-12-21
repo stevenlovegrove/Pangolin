@@ -13,14 +13,14 @@ using namespace pangolin;
 using namespace sophus;
 
 // Forward declaration. See end of this file for the inline shader code.
-extern const char* eg_shader;
+extern char const* eg_shader;
 
 struct ExampleCustomLayer : public Layer {
   std::string name() const override { return "example"; }
 
   Size sizeHint() const override { return size_; }
 
-  void renderIntoRegion(const Context& c, const RenderParams& p) override
+  void renderIntoRegion(Context const& c, RenderParams const& p) override
   {
     c.setViewport(p.region);
     auto bind_prog = prog->bind();
@@ -30,7 +30,7 @@ struct ExampleCustomLayer : public Layer {
   }
 
   GlVertexArrayObject vao = {};
-  const Shared<GlSlProgram> prog =
+  Shared<GlSlProgram> const prog =
       GlSlProgram::Create({.sources = {{.glsl_code = eg_shader}}});
   GlUniform<float> u_time = {"time"};
   Size size_ = {Parts{1}, Parts{1}};
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 }
 
 // Beautiful shader from https://www.shadertoy.com/view/WdB3Dw
-const char* eg_shader = R"SHADER(
+char const* eg_shader = R"SHADER(
 @start vertex
 #version 150 core
 out vec2 v_tex;

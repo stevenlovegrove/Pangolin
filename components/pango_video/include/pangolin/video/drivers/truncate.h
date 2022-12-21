@@ -45,7 +45,7 @@ class PANGOLIN_EXPORT TruncateVideo : public VideoInterface,
 
   size_t SizeBytes() const;
 
-  const std::vector<StreamInfo>& Streams() const;
+  std::vector<StreamInfo> const& Streams() const;
 
   void Start();
 

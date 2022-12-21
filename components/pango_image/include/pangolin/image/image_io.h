@@ -39,34 +39,34 @@ IntensityImage<> LoadImage(std::istream& in, ImageFileType file_type);
 
 PANGOLIN_EXPORT
 IntensityImage<> LoadImage(
-    const std::string& filename, ImageFileType file_type);
+    std::string const& filename, ImageFileType file_type);
 
 PANGOLIN_EXPORT
-IntensityImage<> LoadImage(const std::string& filename);
+IntensityImage<> LoadImage(std::string const& filename);
 
 PANGOLIN_EXPORT
 IntensityImage<> LoadImage(
-    const std::string& filename, const RuntimePixelType& raw_plane_fmt,
+    std::string const& filename, RuntimePixelType const& raw_plane_fmt,
     size_t raw_width, size_t raw_height, size_t raw_pitch, size_t offset = 0,
     size_t image_planes = 1);
 
 /// Quality \in [0..100] for lossy formats
 PANGOLIN_EXPORT
 void SaveImage(
-    const IntensityImage<>& image, std::ostream& out, ImageFileType file_type,
+    IntensityImage<> const& image, std::ostream& out, ImageFileType file_type,
     bool top_line_first = true, float quality = 100.0f);
 
 /// Quality \in [0..100] for lossy formats
 PANGOLIN_EXPORT
 void SaveImage(
-    const IntensityImage<>& image, const std::string& filename,
+    IntensityImage<> const& image, std::string const& filename,
     ImageFileType file_type, bool top_line_first = true,
     float quality = 100.0f);
 
 /// Quality \in [0..100] for lossy formats
 PANGOLIN_EXPORT
 void SaveImage(
-    const IntensityImage<>& image, const std::string& filename,
+    IntensityImage<> const& image, std::string const& filename,
     bool top_line_first = true, float quality = 100.0f);
 
 }  // namespace pangolin

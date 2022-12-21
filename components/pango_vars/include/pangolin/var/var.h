@@ -44,19 +44,19 @@ template <typename T>
 class Var
 {
   public:
-  static T& Attach(T& variable, const VarMeta& meta)
+  static T& Attach(T& variable, VarMeta const& meta)
   {
     VarState::I().AttachVar<T&>(variable, meta);
     return variable;
   }
 
-  static T& Attach(const std::string& name, T& variable)
+  static T& Attach(std::string const& name, T& variable)
   {
     return Attach(variable, VarMeta(name));
   }
 
   static T& Attach(
-      const std::string& name, T& variable, double min, double max,
+      std::string const& name, T& variable, double min, double max,
       bool logscale = false)
   {
     return Attach(
@@ -65,12 +65,12 @@ class Var
                       META_FLAG_NONE, logscale));
   }
 
-  static T& Attach(const std::string& name, T& variable, int flags)
+  static T& Attach(std::string const& name, T& variable, int flags)
   {
     return Attach(variable, VarMeta(name, 0., 0., 0., flags));
   }
 
-  static T& Attach(const std::string& name, T& variable, bool toggle)
+  static T& Attach(std::string const& name, T& variable, bool toggle)
   {
     return Attach(
         variable,
@@ -79,33 +79,33 @@ class Var
 
   ~Var() {}
 
-  Var(const std::shared_ptr<VarValueGeneric>& v) :
+  Var(std::shared_ptr<VarValueGeneric> const& v) :
       var(InitialiseFromPreviouslyTypedVar<T>(v))
   {
   }
 
-  Var(const T& value, const VarMeta& meta) :
+  Var(const T& value, VarMeta const& meta) :
       var(InitialiseFromPreviouslyTypedVar<T>(
           VarState::I().GetOrCreateVar<T>(value, meta)))
   {
   }
 
-  Var(const std::string& name, const T& value = T()) : Var(value, VarMeta(name))
+  Var(std::string const& name, const T& value = T()) : Var(value, VarMeta(name))
   {
   }
 
-  Var(const std::string& name, const T& value, int flags) :
+  Var(std::string const& name, const T& value, int flags) :
       Var(value, VarMeta(name, 0., 0., 0., flags))
   {
   }
 
-  Var(const std::string& name, const T& value, bool toggle) :
+  Var(std::string const& name, const T& value, bool toggle) :
       Var(value,
           VarMeta(name, 0., 0., 0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE))
   {
   }
 
-  Var(const std::string& name, const T& value, double min, double max,
+  Var(std::string const& name, const T& value, double min, double max,
       bool logscale = false) :
       Var(value, VarMeta(
                      name, min, max, DefaultIncrementForType<T>(min, max),
@@ -129,7 +129,7 @@ class Var
     return *this;
   }
 
-  Var<T>& operator=(const Var<T>& v)
+  Var<T>& operator=(Var<T> const& v)
   {
     var->Set(v.var->Get());
     return *this;
@@ -137,7 +137,7 @@ class Var
 
   VarMeta& Meta() { return var->Meta(); }
 
-  const VarMeta& Meta() const { return var->Meta(); }
+  VarMeta const& Meta() const { return var->Meta(); }
 
   bool GuiChanged()
   {
@@ -151,12 +151,12 @@ class Var
   mutable std::shared_ptr<VarValueT<T>> var;
 };
 
-inline Var<bool> Button(const std::string& name)
+inline Var<bool> Button(std::string const& name)
 {
   return Var(true, VarMeta(name, 0., 0., 0., META_FLAG_NONE));
 }
 
-inline Var<bool> Checkbox(const std::string& name, bool val)
+inline Var<bool> Checkbox(std::string const& name, bool val)
 {
   return Var(val, VarMeta(name, 0., 0., 0., META_FLAG_TOGGLE));
 }

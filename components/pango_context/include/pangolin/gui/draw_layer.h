@@ -43,22 +43,22 @@ struct DrawLayerRenderState {
 struct DrawLayer : public Layer {
   enum In { scene, pixels };
 
-  virtual const DrawLayerRenderState& renderState() const = 0;
-  virtual void setCamera(const sophus::CameraModel&) = 0;
-  virtual void setCameraFromWorld(const sophus::Se3<double>&) = 0;
+  virtual DrawLayerRenderState const& renderState() const = 0;
+  virtual void setCamera(sophus::CameraModel const&) = 0;
+  virtual void setCameraFromWorld(sophus::Se3<double> const&) = 0;
   virtual void setClipViewTransform(sophus::Sim2<double>&) = 0;
-  virtual void setNearFarPlanes(const MinMax<double>&) = 0;
+  virtual void setNearFarPlanes(MinMax<double> const&) = 0;
   virtual void add(
-      const Shared<Drawable>& r, In domain, const std::string& name = "") = 0;
-  virtual std::shared_ptr<Drawable> get(const std::string& name) const = 0;
-  virtual bool remove(const Shared<Drawable>& r) = 0;
-  virtual bool remove(const std::string& name) = 0;
+      Shared<Drawable> const& r, In domain, std::string const& name = "") = 0;
+  virtual std::shared_ptr<Drawable> get(std::string const& name) const = 0;
+  virtual bool remove(Shared<Drawable> const& r) = 0;
+  virtual bool remove(std::string const& name) = 0;
   virtual void clear(std::optional<In> domain = std::nullopt) = 0;
-  virtual void updateBackgroundImage(const sophus::IntensityImage<>& image) = 0;
+  virtual void updateBackgroundImage(sophus::IntensityImage<> const& image) = 0;
 
   // Convenience method to add several drawables together
   template <typename... Ts>
-  void bulkAddInScene(const Ts&... ts)
+  void bulkAddInScene(Ts const&... ts)
   {
     (add(DrawableConversionTraits<Ts>::makeDrawable(ts), In::scene), ...);
   }
@@ -72,7 +72,7 @@ struct DrawLayer : public Layer {
   }
 
   template <typename T>
-  auto addNamedInScene(const std::string& name, const T& r)
+  auto addNamedInScene(std::string const& name, const T& r)
   {
     auto d = DrawableConversionTraits<T>::makeDrawable(r);
     add(d, In::scene, name);
@@ -80,7 +80,7 @@ struct DrawLayer : public Layer {
   }
 
   template <typename T>
-  auto addInSceneAt(const T& t, const sophus::Se3F64& world_from_drawable)
+  auto addInSceneAt(const T& t, sophus::Se3F64 const& world_from_drawable)
   {
     auto d = DrawableConversionTraits<T>::makeDrawable(t);
     d->pose.world_from_drawable = world_from_drawable;
@@ -90,8 +90,8 @@ struct DrawLayer : public Layer {
 
   template <typename T>
   auto addNamedInSceneAt(
-      const std::string& name, const T& r,
-      const sophus::Se3F64& world_from_drawable)
+      std::string const& name, const T& r,
+      sophus::Se3F64 const& world_from_drawable)
   {
     auto d = DrawableConversionTraits<T>::makeDrawable(r);
     d->pose.world_from_drawable = world_from_drawable;
@@ -101,7 +101,7 @@ struct DrawLayer : public Layer {
 
   // Convenience method to add several drawables together
   template <typename... Ts>
-  void bulkAddInPixels(const Ts&... ts)
+  void bulkAddInPixels(Ts const&... ts)
   {
     (add(DrawableConversionTraits<Ts>::makeDrawable(ts), In::pixels), ...);
   }
@@ -113,7 +113,7 @@ struct DrawLayer : public Layer {
   }
 
   template <typename T>
-  void addNamedInPixels(const std::string& name, const T& r)
+  void addNamedInPixels(std::string const& name, const T& r)
   {
     add(DrawableConversionTraits<T>::makeDrawable(r), In::pixels, name);
   }
@@ -146,12 +146,12 @@ struct DrawLayer : public Layer {
 
 template <DerivedFrom<Drawable> L>
 struct DrawableConversionTraits<Shared<L>> {
-  static Shared<Drawable> makeDrawable(const Shared<L>& x) { return x; }
+  static Shared<Drawable> makeDrawable(Shared<L> const& x) { return x; }
 };
 
 template <DerivedFrom<Drawable> L>
 struct DrawableConversionTraits<std::shared_ptr<L>> {
-  static Shared<Drawable> makeDrawable(const std::shared_ptr<L>& x)
+  static Shared<Drawable> makeDrawable(std::shared_ptr<L> const& x)
   {
     return x;
   }
@@ -177,7 +177,7 @@ Shared<Drawable> makeDrawable(const T& v)
 // Helper for adding Drawables directly into layouts
 template <DerivedFrom<Drawable> T>
 struct LayerConversionTraits<Shared<T>> {
-  static Shared<Layer> makeLayer(const Shared<T>& drawable)
+  static Shared<Layer> makeLayer(Shared<T> const& drawable)
   {
     return DrawLayer::Create({.in_scene = {makeDrawable(drawable)}});
   }

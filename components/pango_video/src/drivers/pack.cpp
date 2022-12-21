@@ -98,15 +98,15 @@ void PackVideo::Stop() { videoin[0]->Stop(); }
 size_t PackVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-const std::vector<StreamInfo>& PackVideo::Streams() const { return streams; }
+std::vector<StreamInfo> const& PackVideo::Streams() const { return streams; }
 
 template <typename T>
-void ConvertTo8bit(Image<unsigned char>& out, const Image<unsigned char>& in)
+void ConvertTo8bit(Image<unsigned char>& out, Image<unsigned char> const& in)
 {
   for (size_t r = 0; r < out.h; ++r) {
     T* pout = (T*)(out.ptr + r * out.pitch);
     uint8_t* pin = in.ptr + r * in.pitch;
-    const uint8_t* pin_end = in.ptr + (r + 1) * in.pitch;
+    uint8_t const* pin_end = in.ptr + (r + 1) * in.pitch;
     while (pin != pin_end) {
       *(pout++) = *(pin++);
     }
@@ -114,7 +114,7 @@ void ConvertTo8bit(Image<unsigned char>& out, const Image<unsigned char>& in)
 }
 
 template <typename T>
-void ConvertTo10bit(Image<unsigned char>& out, const Image<unsigned char>& in)
+void ConvertTo10bit(Image<unsigned char>& out, Image<unsigned char> const& in)
 {
   for (size_t r = 0; r < out.h; ++r) {
     uint8_t* pout = out.ptr + r * out.pitch;
@@ -135,7 +135,7 @@ void ConvertTo10bit(Image<unsigned char>& out, const Image<unsigned char>& in)
 }
 
 template <typename T>
-void ConvertTo12bit(Image<unsigned char>& out, const Image<unsigned char>& in)
+void ConvertTo12bit(Image<unsigned char>& out, Image<unsigned char> const& in)
 {
   for (size_t r = 0; r < out.h; ++r) {
     uint8_t* pout = out.ptr + r * out.pitch;
@@ -151,15 +151,15 @@ void ConvertTo12bit(Image<unsigned char>& out, const Image<unsigned char>& in)
   }
 }
 
-void PackVideo::Process(unsigned char* image, const unsigned char* buffer)
+void PackVideo::Process(unsigned char* image, unsigned char const* buffer)
 {
   TSTART()
   for (size_t s = 0; s < streams.size(); ++s) {
-    const Image<unsigned char> img_in =
+    Image<unsigned char> const img_in =
         videoin[0]->Streams()[s].StreamImage(buffer);
     Image<unsigned char> img_out = Streams()[s].StreamImage(image);
 
-    const int bits_out = Streams()[s].PixFormat().bpp;
+    int const bits_out = Streams()[s].PixFormat().bpp;
 
     if (videoin[0]->Streams()[s].PixFormat().format == "GRAY16LE") {
       if (bits_out == 8) {
@@ -233,7 +233,7 @@ PANGOLIN_REGISTER_FACTORY(PackVideo)
     {
       return {{"pack", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Packs a video from a given format.";
     }
@@ -245,7 +245,7 @@ PANGOLIN_REGISTER_FACTORY(PackVideo)
             "for all possible values."}}};
     }
 
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       ParamReader reader(Params(), uri);
       std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);

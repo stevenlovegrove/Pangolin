@@ -9,19 +9,19 @@ namespace pangolin
 {
 
 // forward declaration of map build by cmake (into shaders.cpp)
-const std::unordered_map<std::string, const char*>& GetBuiltinShaders();
+std::unordered_map<std::string, char const*> const& GetBuiltinShaders();
 
-constexpr const char* PANGO_BEGIN_MARKER = "// PANGO_BEGIN_INCLUDE ";
-constexpr const char* PANGO_END_MARKER = "// PANGO_END_INCLUDE ";
+char constexpr const* PANGO_BEGIN_MARKER = "// PANGO_BEGIN_INCLUDE ";
+char constexpr const* PANGO_END_MARKER = "// PANGO_END_INCLUDE ";
 
 void includeBeginMarker(
-    std::ostream& output, const std::filesystem::path& full_include_path)
+    std::ostream& output, std::filesystem::path const& full_include_path)
 {
   output << PANGO_BEGIN_MARKER << full_include_path << std::endl;
 }
 
 void includeEndMarker(
-    std::ostream& output, const std::filesystem::path& full_include_path)
+    std::ostream& output, std::filesystem::path const& full_include_path)
 {
   output << PANGO_END_MARKER << full_include_path << std::endl;
 }
@@ -31,7 +31,7 @@ void includeEndMarker(
 // focus feature is not used if focus_line < 0, in which case all code is
 // shown
 void printSourceForUser(
-    const GlSlProgram::Source& source, int focus_line, int focus_radius)
+    GlSlProgram::Source const& source, int focus_line, int focus_radius)
 {
   std::istringstream is(source.glsl_code);
 
@@ -80,7 +80,7 @@ void printSourceForUser(
   }
 }
 
-std::string filenameFromIncludeToken(const std::string& location)
+std::string filenameFromIncludeToken(std::string const& location)
 {
   size_t start = location.find_first_of("\"<");
   if (start != std::string::npos) {
@@ -93,23 +93,23 @@ std::string filenameFromIncludeToken(const std::string& location)
   PANGO_UNREACHABLE();
 }
 
-bool builtInPathExists(const std::filesystem::path& filename)
+bool builtInPathExists(std::filesystem::path const& filename)
 {
   auto it = GetBuiltinShaders().find(filename.string());
   return it != GetBuiltinShaders().end();
 }
 
 // Version of pangolin::FileExists that also looks in the builtin_shaders map
-bool builtInOrRealPathExists(const std::filesystem::path& filename)
+bool builtInOrRealPathExists(std::filesystem::path const& filename)
 {
   return builtInPathExists(filename) || std::filesystem::exists(filename);
 }
 
 std::optional<std::filesystem::path> findInPath(
-    const std::filesystem::path& include_path,
-    const std::vector<std::filesystem::path>& search_path,
-    const std::filesystem::path& current_path,
-    const std::function<bool(const std::filesystem::path&)>& exists_func)
+    std::filesystem::path const& include_path,
+    std::vector<std::filesystem::path> const& search_path,
+    std::filesystem::path const& current_path,
+    std::function<bool(std::filesystem::path const&)> const& exists_func)
 {
   if (exists_func(include_path)) {
     return include_path;
@@ -130,7 +130,7 @@ struct Directive {
 };
 
 std::optional<std::vector<std::string>> maybeTokenized(
-    const std::string& line, char escape_char)
+    std::string const& line, char escape_char)
 {
   const size_t hash = line.find(escape_char);
   if (hash != std::string::npos) {
@@ -145,10 +145,10 @@ std::optional<std::vector<std::string>> maybeTokenized(
   return std::nullopt;
 }
 
-std::optional<Directive> getDirective(const std::string& line)
+std::optional<Directive> getDirective(std::string const& line)
 {
   if (auto maybe_tokens = maybeTokenized(line, '#')) {
-    const std::vector<std::string>& tokens = *maybe_tokens;
+    std::vector<std::string> const& tokens = *maybe_tokens;
     PANGO_THROW_IF(tokens.size() == 0, "Stray '#' in GLSL line: {}", line);
 
     const std::string dstr = lowercased(tokens[0]);
@@ -169,10 +169,10 @@ std::optional<Directive> getDirective(const std::string& line)
 }
 
 void preprocessInclude(
-    const std::filesystem::path& include_path, std::ostream& output,
-    const GlSlProgram::Defines& program_defines,
-    const GlSlProgram::PathList& search_path,
-    const std::filesystem::path& current_path)
+    std::filesystem::path const& include_path, std::ostream& output,
+    GlSlProgram::Defines const& program_defines,
+    GlSlProgram::PathList const& search_path,
+    std::filesystem::path const& current_path)
 {
   auto maybe_file = findInPath(
       include_path, search_path, current_path, builtInOrRealPathExists);
@@ -202,9 +202,9 @@ void preprocessInclude(
 
 void preprocessGlSl(
     std::istream& input, std::ostream& output,
-    const GlSlProgram::Defines& program_defines,
-    const GlSlProgram::PathList& search_path,
-    const std::filesystem::path& current_path)
+    GlSlProgram::Defines const& program_defines,
+    GlSlProgram::PathList const& search_path,
+    std::filesystem::path const& current_path)
 {
   std::string line;
 
@@ -256,8 +256,8 @@ void preprocessGlSl(
 }
 
 void populateCodeFromFile(
-    GlSlProgram::Source& source, const GlSlProgram::PathList& search_path,
-    const std::filesystem::path& current_path)
+    GlSlProgram::Source& source, GlSlProgram::PathList const& search_path,
+    std::filesystem::path const& current_path)
 {
   //
   PANGO_ENSURE(
@@ -298,7 +298,7 @@ void populateCodeFromFile(
 }
 
 std::vector<GlSlProgram::Source> splitAnnotatedShaders(
-    const GlSlProgram::Source& source)
+    GlSlProgram::Source const& source)
 {
   std::vector<GlSlProgram::Source> ret;
   ShaderType current_type = source.shader_type;
@@ -337,7 +337,7 @@ std::vector<GlSlProgram::Source> splitAnnotatedShaders(
 
     auto maybe_tokens = maybeTokenized(line, '@');
     if (maybe_tokens) {
-      const auto& tokens = *maybe_tokens;
+      auto const& tokens = *maybe_tokens;
       PANGO_THROW_IF(tokens.size() != 2, "Bad annotation in line '{}'", line);
       PANGO_THROW_IF(
           lowercased(tokens[0]) != "start",

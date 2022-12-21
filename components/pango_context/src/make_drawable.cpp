@@ -6,7 +6,7 @@ namespace pangolin
 {
 
 Shared<Drawable> DrawableConversionTraits<draw::Shape>::makeDrawable(
-    const draw::Shape& x)
+    draw::Shape const& x)
 {
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::shapes,
@@ -22,7 +22,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Shape>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Cube>::makeDrawable(
-    const draw::Cube& cube)
+    draw::Cube const& cube)
 {
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::triangles,
@@ -138,7 +138,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Cube>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
-    const draw::Icosphere& sphere)
+    draw::Icosphere const& sphere)
 {
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::triangles,
@@ -229,7 +229,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::CheckerPlane>::makeDrawable(
-    const draw::CheckerPlane&)
+    draw::CheckerPlane const&)
 {
   auto board = DrawnSolids::Create({
       .object_type = DrawnSolids::Type::checkerboard,
@@ -238,7 +238,7 @@ Shared<Drawable> DrawableConversionTraits<draw::CheckerPlane>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Axes>::makeDrawable(
-    const draw::Axes& axes)
+    draw::Axes const& axes)
 {
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::axes,
@@ -249,7 +249,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Axes>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Points3f>::makeDrawable(
-    const draw::Points3f& points)
+    draw::Points3f const& points)
 {
   std::vector<Color> colors(points.points.size(), points.color);
 
@@ -263,7 +263,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Points3f>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Points3d>::makeDrawable(
-    const draw::Points3d& points)
+    draw::Points3d const& points)
 {
   std::vector<Color> colors;
   std::vector<Eigen::Vector3f> vertices;
@@ -283,7 +283,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Points3d>::makeDrawable(
 
 Shared<Drawable>
 DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
-    const std::vector<draw::Line3>& lines)
+    std::vector<draw::Line3> const& lines)
 {
   std::vector<Eigen::Vector3f> vertices;
   std::vector<Color> colors;
@@ -306,7 +306,7 @@ DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
 
 Shared<Drawable>
 DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
-    const std::vector<draw::Line2>& lines)
+    std::vector<draw::Line2> const& lines)
 {
   std::vector<Eigen::Vector3f> vertices;
   std::vector<Color> colors;
@@ -327,7 +327,7 @@ DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::CameraFrustum>::makeDrawable(
-    const draw::CameraFrustum& frustum)
+    draw::CameraFrustum const& frustum)
 {
   std::vector<draw::Line3> lines;
 

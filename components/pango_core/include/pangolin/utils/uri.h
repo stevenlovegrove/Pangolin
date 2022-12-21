@@ -43,6 +43,6 @@ struct PANGOLIN_EXPORT Uri : public Params {
 
 //! Parse string as Video URI
 PANGOLIN_EXPORT
-Uri ParseUri(const std::string& str_uri);
+Uri ParseUri(std::string const& str_uri);
 
 }  // namespace pangolin

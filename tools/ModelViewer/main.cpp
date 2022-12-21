@@ -19,9 +19,9 @@
 
 int main(int argc, char** argv)
 {
-  const float w = 640.0f;
-  const float h = 480.0f;
-  const float f = 300.0f;
+  float const w = 640.0f;
+  float const h = 480.0f;
+  float const f = 300.0f;
 
   using namespace pangolin;
 
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
                                     "SHOW_MATCAP", "SHOW_VERTEX"};
   const std::string spin_names[] = {"NONE", "NEGX", "X", "NEGY",
                                     "Y",    "NEGZ", "Z"};
-  const char mode_key[] = {'u', 't', 'c', 'n', 'm', 'v'};
+  char const mode_key[] = {'u', 't', 'c', 'n', 'm', 'v'};
   RenderMode current_mode = RenderMode::normal;
   for (int i = 0; i < (int)RenderMode::num_modes; ++i)
     if (pangolin::ToUpperCopy(args["mode"].as<std::string>("SHOW_NORMAL")) ==
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 
   // Load Geometry asynchronously
   std::vector<std::future<pangolin::Geometry>> geom_to_load;
-  for (const auto& filename : ExpandGlobOption(args["model"])) {
+  for (auto const& filename : ExpandGlobOption(args["model"])) {
     geom_to_load.emplace_back(std::async(std::launch::async, [filename]() {
       return pangolin::LoadGeometry(filename);
     }));
@@ -168,14 +168,14 @@ int main(int argc, char** argv)
   // Load Any matcap materials
   size_t matcap_index = 0;
   std::vector<pangolin::GlTexture> matcaps = TryLoad<pangolin::GlTexture>(
-      ExpandGlobOption(args["matcap"]), [](const std::string& f) {
+      ExpandGlobOption(args["matcap"]), [](std::string const& f) {
         return pangolin::GlTexture(pangolin::LoadImage(f));
       });
 
   // Load Any Environment maps
   size_t envmap_index = 0;
   std::vector<pangolin::GlTexture> envmaps = TryLoad<pangolin::GlTexture>(
-      ExpandGlobOption(args["envmap"]), [](const std::string& f) {
+      ExpandGlobOption(args["envmap"]), [](std::string const& f) {
         return pangolin::GlTexture(pangolin::LoadImage(f));
       });
 

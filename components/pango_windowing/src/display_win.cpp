@@ -35,7 +35,7 @@
 #define CheckWGLDieOnError() pangolin::_CheckWLDieOnError(__FILE__, __LINE__);
 namespace pangolin
 {
-inline void _CheckWLDieOnError(const char* sFile, const int nLine)
+inline void _CheckWLDieOnError(char const* sFile, int const nLine)
 {
   DWORD errorCode = GetLastError();
   if (errorCode != 0) {
@@ -57,7 +57,7 @@ inline void _CheckWLDieOnError(const char* sFile, const int nLine)
 namespace pangolin
 {
 
-const char* className = "Pangolin";
+char const* className = "Pangolin";
 
 ////////////////////////////////////////////////////////////////////////
 // Utils
@@ -107,7 +107,7 @@ unsigned char GetPangoKey(WPARAM wParam, LPARAM lParam)
     case VK_DELETE:
       return 127;
     default:
-      const int lBufferSize = 2;
+      int const lBufferSize = 2;
       WCHAR lBuffer[lBufferSize];
 
       BYTE State[256];
@@ -244,7 +244,7 @@ void WinWindow::SetupPalette(HDC hDC)
   }
 }
 
-WinWindow::WinWindow(const std::string& window_title, int width, int height) :
+WinWindow::WinWindow(std::string const& window_title, int width, int height) :
     hWnd(0), bIsFullscreen(false)
 {
   const HMODULE hCurrentInst = GetModuleHandleA(nullptr);
@@ -553,7 +553,7 @@ void WinWindow::StopFullScreen()
 
 void WinWindow::ShowFullscreen(const TrueFalseToggle on_off)
 {
-  const bool target = to_bool(on_off, bIsFullscreen);
+  bool const target = to_bool(on_off, bIsFullscreen);
   if (target != bIsFullscreen) {
     if (target) {
       StartFullScreen();
@@ -647,7 +647,7 @@ PANGOLIN_REGISTER_FACTORY(WinWindow)
     {
       return {{"winapi", 10}, {"default", 100}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Use Windows native window";
     }
@@ -660,12 +660,12 @@ PANGOLIN_REGISTER_FACTORY(WinWindow)
           {PARAM_GL_PROFILE, "Ignored for now"},
       }};
     }
-    std::unique_ptr<WindowInterface> Open(const Uri& uri) override
+    std::unique_ptr<WindowInterface> Open(Uri const& uri) override
     {
       const std::string window_title =
           uri.Get<std::string>("window_title", "window");
-      const int w = uri.Get<int>("w", 640);
-      const int h = uri.Get<int>("h", 480);
+      int const w = uri.Get<int>("w", 640);
+      int const h = uri.Get<int>("h", 480);
       return std::unique_ptr<WindowInterface>(
           CreateWinWindowAndBind(window_title, w, h));
     }

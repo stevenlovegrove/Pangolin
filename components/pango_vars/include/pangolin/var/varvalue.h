@@ -41,50 +41,50 @@ class VarValue : public VarValueT<typename std::remove_reference<T>::type>
   typedef typename std::remove_reference<T>::type VarT;
 
   VarValue(
-      const T& value, const VarT& default_value,
-      const VarMeta& meta = VarMeta()) :
+      const T& value, VarT const& default_value,
+      VarMeta const& meta = VarMeta()) :
       value(value), default_value(default_value), meta(meta)
   {
     Init();
   }
 
-  VarValue(const T& value, const VarMeta& meta = VarMeta()) :
+  VarValue(const T& value, VarMeta const& meta = VarMeta()) :
       VarValue(value, value, meta)
   {
   }
 
   VarValue() : VarValue(T(), T()) {}
 
-  const char* TypeId() const { return typeid(VarT).name(); }
+  char const* TypeId() const { return typeid(VarT).name(); }
 
   void Reset() { value = default_value; }
 
   VarMeta& Meta() { return meta; }
 
-  const VarMeta& Meta() const { return meta; }
+  VarMeta const& Meta() const { return meta; }
 
-  const VarT& Get() const { return value; }
+  VarT const& Get() const { return value; }
 
   VarT& Get() { return value; }
 
-  void Set(const VarT& val) { value = val; }
+  void Set(VarT const& val) { value = val; }
 
   protected:
   // Specialization dummy for non-serializable types
   struct ExceptionVarValue : public VarValueT<std::string> {
     typedef typename std::string VarT;
     ExceptionVarValue() {}
-    const char* TypeId() const override { throw BadInputException(); }
+    char const* TypeId() const override { throw BadInputException(); }
     virtual void Reset() override { throw BadInputException(); }
     VarMeta& Meta() override { throw BadInputException(); }
-    const VarT& Get() const override { throw BadInputException(); }
-    void Set(const VarT& val) override { throw BadInputException(); }
+    VarT const& Get() const override { throw BadInputException(); }
+    void Set(VarT const& val) override { throw BadInputException(); }
   };
 
   template <typename TT>
   static typename std::enable_if<
       is_streamable<TT>::value, std::shared_ptr<VarValueT<std::string>>>::type
-  MakeStringWrapper(const std::shared_ptr<VarValueT<TT>>& v)
+  MakeStringWrapper(std::shared_ptr<VarValueT<TT>> const& v)
   {
     return std::make_shared<VarWrapper<std::string, VarT>>(v);
   }
@@ -92,7 +92,7 @@ class VarValue : public VarValueT<typename std::remove_reference<T>::type>
   template <typename TT>
   static typename std::enable_if<
       !is_streamable<TT>::value, std::shared_ptr<VarValueT<std::string>>>::type
-  MakeStringWrapper(const std::shared_ptr<VarValueT<TT>>& v)
+  MakeStringWrapper(std::shared_ptr<VarValueT<TT>> const& v)
   {
     return std::make_shared<ExceptionVarValue>();
   }

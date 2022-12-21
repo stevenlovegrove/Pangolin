@@ -34,7 +34,7 @@
 
 namespace pangolin
 {
-const int MAX_OPENNI2_STREAMS = 2 * ONI_MAX_SENSORS;
+int const MAX_OPENNI2_STREAMS = 2 * ONI_MAX_SENSORS;
 
 //! Interface to video capture sources
 struct OpenNi2Video : public VideoInterface,
@@ -50,11 +50,11 @@ struct OpenNi2Video : public VideoInterface,
   OpenNi2Video(std::vector<OpenNiStreamMode>& stream_modes);
 
   // Open openni file
-  OpenNi2Video(const std::string& filename);
+  OpenNi2Video(std::string const& filename);
 
   // Open openni file with certain params
   OpenNi2Video(
-      const std::string& filename, std::vector<OpenNiStreamMode>& stream_modes);
+      std::string const& filename, std::vector<OpenNiStreamMode>& stream_modes);
 
   void UpdateProperties();
 
@@ -81,7 +81,7 @@ struct OpenNi2Video : public VideoInterface,
   size_t SizeBytes() const override;
 
   //! Implement VideoInput::Streams()
-  const std::vector<StreamInfo>& Streams() const override;
+  std::vector<StreamInfo> const& Streams() const override;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true) override;
@@ -90,13 +90,13 @@ struct OpenNi2Video : public VideoInterface,
   bool GrabNewest(unsigned char* image, bool wait = true) override;
 
   //! Implement VideoPropertiesInterface::Properties()
-  const picojson::value& DeviceProperties() const override
+  picojson::value const& DeviceProperties() const override
   {
     return device_properties;
   }
 
   //! Implement VideoPropertiesInterface::Properties()
-  const picojson::value& FrameProperties() const override
+  picojson::value const& FrameProperties() const override
   {
     return frame_properties;
   }
@@ -114,8 +114,8 @@ struct OpenNi2Video : public VideoInterface,
 
   protected:
   void InitialiseOpenNI();
-  int AddDevice(const std::string& device_uri);
-  void AddStream(const OpenNiStreamMode& mode);
+  int AddDevice(std::string const& device_uri);
+  void AddStream(OpenNiStreamMode const& mode);
   void SetupStreamModes();
   void PrintOpenNI2Modes(openni::SensorType sensorType);
   openni::VideoMode FindOpenNI2Mode(

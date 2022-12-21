@@ -35,7 +35,7 @@ namespace pangolin
 {
 
 void DataLogBlock::AddSamples(
-    size_t num_samples, size_t dimensions, const float* data_dim_major)
+    size_t num_samples, size_t dimensions, float const* data_dim_major)
 {
   if (nextBlock) {
     // If next block exists, add to it instead
@@ -99,7 +99,7 @@ DataLog::DataLog(unsigned int buffer_size) :
 
 DataLog::~DataLog() { Clear(); }
 
-void DataLog::SetLabels(const std::vector<std::string>& new_labels)
+void DataLog::SetLabels(std::vector<std::string> const& new_labels)
 {
   std::lock_guard<std::mutex> l(access_mutex);
 
@@ -111,9 +111,9 @@ void DataLog::SetLabels(const std::vector<std::string>& new_labels)
   for (unsigned int i = 0; i < labels.size(); ++i) labels[i] = new_labels[i];
 }
 
-const std::vector<std::string>& DataLog::Labels() const { return labels; }
+std::vector<std::string> const& DataLog::Labels() const { return labels; }
 
-void DataLog::Log(size_t dimension, const float* vals, unsigned int samples)
+void DataLog::Log(size_t dimension, float const* vals, unsigned int samples)
 {
   if (!block0) {
     // Create first block
@@ -144,41 +144,41 @@ void DataLog::Log(size_t dimension, const float* vals, unsigned int samples)
 
 void DataLog::Log(float v)
 {
-  const float vs[] = {v};
+  float const vs[] = {v};
   Log(1, vs);
 }
 
 void DataLog::Log(float v1, float v2)
 {
-  const float vs[] = {v1, v2};
+  float const vs[] = {v1, v2};
   Log(2, vs);
 }
 
 void DataLog::Log(float v1, float v2, float v3)
 {
-  const float vs[] = {v1, v2, v3};
+  float const vs[] = {v1, v2, v3};
   Log(3, vs);
 }
 void DataLog::Log(float v1, float v2, float v3, float v4)
 {
-  const float vs[] = {v1, v2, v3, v4};
+  float const vs[] = {v1, v2, v3, v4};
   Log(4, vs);
 }
 void DataLog::Log(float v1, float v2, float v3, float v4, float v5)
 {
-  const float vs[] = {v1, v2, v3, v4, v5};
+  float const vs[] = {v1, v2, v3, v4, v5};
   Log(5, vs);
 }
 void DataLog::Log(float v1, float v2, float v3, float v4, float v5, float v6)
 {
-  const float vs[] = {v1, v2, v3, v4, v5, v6};
+  float const vs[] = {v1, v2, v3, v4, v5, v6};
   Log(6, vs);
 }
 
 void DataLog::Log(
     float v1, float v2, float v3, float v4, float v5, float v6, float v7)
 {
-  const float vs[] = {v1, v2, v3, v4, v5, v6, v7};
+  float const vs[] = {v1, v2, v3, v4, v5, v6, v7};
   Log(7, vs);
 }
 
@@ -186,7 +186,7 @@ void DataLog::Log(
     float v1, float v2, float v3, float v4, float v5, float v6, float v7,
     float v8)
 {
-  const float vs[] = {v1, v2, v3, v4, v5, v6, v7, v8};
+  float const vs[] = {v1, v2, v3, v4, v5, v6, v7, v8};
   Log(8, vs);
 }
 
@@ -194,7 +194,7 @@ void DataLog::Log(
     float v1, float v2, float v3, float v4, float v5, float v6, float v7,
     float v8, float v9)
 {
-  const float vs[] = {v1, v2, v3, v4, v5, v6, v7, v8, v9};
+  float const vs[] = {v1, v2, v3, v4, v5, v6, v7, v8, v9};
   Log(9, vs);
 }
 
@@ -202,11 +202,11 @@ void DataLog::Log(
     float v1, float v2, float v3, float v4, float v5, float v6, float v7,
     float v8, float v9, float v10)
 {
-  const float vs[] = {v1, v2, v3, v4, v5, v6, v7, v8, v9, v10};
+  float const vs[] = {v1, v2, v3, v4, v5, v6, v7, v8, v9, v10};
   Log(10, vs);
 }
 
-void DataLog::Log(const std::vector<float>& vals)
+void DataLog::Log(std::vector<float> const& vals)
 {
   Log(vals.size(), &vals[0]);
 }
@@ -235,7 +235,7 @@ void DataLog::Save(std::string filename)
     csvStream << std::endl;
   }
 
-  const DataLogBlock* block = FirstBlock();
+  DataLogBlock const* block = FirstBlock();
 
   size_t i = 0;
 
@@ -256,11 +256,11 @@ void DataLog::Save(std::string filename)
   }
 }
 
-const DataLogBlock* DataLog::FirstBlock() const { return block0.get(); }
+DataLogBlock const* DataLog::FirstBlock() const { return block0.get(); }
 
-const DataLogBlock* DataLog::LastBlock() const { return blockn; }
+DataLogBlock const* DataLog::LastBlock() const { return blockn; }
 
-const DimensionStats& DataLog::Stats(size_t dim) const { return stats[dim]; }
+DimensionStats const& DataLog::Stats(size_t dim) const { return stats[dim]; }
 
 size_t DataLog::Samples() const
 {
@@ -270,7 +270,7 @@ size_t DataLog::Samples() const
   return 0;
 }
 
-const float* DataLog::Sample(int n) const
+float const* DataLog::Sample(int n) const
 {
   if (block0) {
     return block0->Sample(n);

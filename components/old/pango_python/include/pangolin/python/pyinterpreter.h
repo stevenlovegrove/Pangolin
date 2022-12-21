@@ -45,23 +45,23 @@ class PyInterpreter : public InterpreterInterface
 
   ~PyInterpreter() override;
 
-  void PushCommand(const std::string& cmd) override;
+  void PushCommand(std::string const& cmd) override;
 
   bool PullLine(InterpreterLine& line) override;
 
   std::vector<std::string> Complete(
-      const std::string& cmd, int max_options) override;
+      std::string const& cmd, int max_options) override;
 
   private:
-  void NewVarCallback(const pangolin::VarState::Event& e);
+  void NewVarCallback(pangolin::VarState::Event const& e);
 
   pybind11::scoped_interpreter guard;
 
   pybind11::object pycompleter;
   pybind11::object pycomplete;
 
-  std::string ToString(const pybind11::object& py);
-  pybind11::object EvalExec(const std::string& cmd);
+  std::string ToString(pybind11::object const& py);
+  pybind11::object EvalExec(std::string const& cmd);
   void CheckPrintClearError();
 
   std::queue<InterpreterLine> line_queue;

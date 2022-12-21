@@ -22,3 +22,7 @@ IncludeCategories:
   # third-party libraries
   - Regex:           '<([A-Za-z0-9.\/-_])+>'
     Priority:        2
+PointerAlignment: Left
+QualifierOrder: ['inline', 'static', 'type', 'constexpr', 'const', 'volatile' ]
+QualifierAlignment: Custom
+ReferenceAlignment: Left

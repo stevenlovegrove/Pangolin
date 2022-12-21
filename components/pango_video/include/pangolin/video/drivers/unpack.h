@@ -51,7 +51,7 @@ class PANGOLIN_EXPORT UnpackVideo : public VideoInterface,
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  const std::vector<StreamInfo>& Streams() const;
+  std::vector<StreamInfo> const& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);
@@ -67,7 +67,7 @@ class PANGOLIN_EXPORT UnpackVideo : public VideoInterface,
   bool DropNFrames(uint32_t n);
 
   protected:
-  void Process(unsigned char* image, const unsigned char* buffer);
+  void Process(unsigned char* image, unsigned char const* buffer);
 
   std::unique_ptr<VideoInterface> src;
   std::vector<VideoInterface*> videoin;

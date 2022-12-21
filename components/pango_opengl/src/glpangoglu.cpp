@@ -33,7 +33,7 @@
 namespace pangolin
 {
 
-const GLubyte* glErrorString(GLenum err)
+GLubyte const* glErrorString(GLenum err)
 {
   switch (err) {
     case GL_NO_ERROR:
@@ -113,8 +113,8 @@ int InvertMatrix(const P m[16], P invOut[16])
 
 // Based on glu implementation
 GLint glProject(
-    float objx, float objy, float objz, const float* const modelMatrix,
-    const float* const projMatrix, const GLint* const viewport, float* winx,
+    float objx, float objy, float objz, float const* const modelMatrix,
+    float const* const projMatrix, GLint const* const viewport, float* winx,
     float* winy, float* winz)
 {
   float t1[4] = {objx, objy, objz, 1.0f};
@@ -150,8 +150,8 @@ GLint glProject(
 
 // Based on glu implementation
 GLint glUnProject(
-    float winx, float winy, float winz, const float* const mv,
-    const float* const proj, const GLint* const viewport, float* objx,
+    float winx, float winy, float winz, float const* const mv,
+    float const* const proj, GLint const* const viewport, float* objx,
     float* objy, float* objz)
 {
   float t1[16];
@@ -194,8 +194,8 @@ GLint glUnProject(
 
 // Based on glu implementation
 GLint glProject(
-    double objx, double objy, double objz, const double* const modelMatrix,
-    const double* const projMatrix, const GLint* const viewport, double* winx,
+    double objx, double objy, double objz, double const* const modelMatrix,
+    double const* const projMatrix, GLint const* const viewport, double* winx,
     double* winy, double* winz)
 {
   double t1[4] = {objx, objy, objz, 1.0f};
@@ -231,8 +231,8 @@ GLint glProject(
 
 // Based on glu implementation
 GLint glUnProject(
-    double winx, double winy, double winz, const double* const mv,
-    const double* const proj, const GLint* const viewport, double* objx,
+    double winx, double winy, double winz, double const* const mv,
+    double const* const proj, GLint const* const viewport, double* objx,
     double* objy, double* objz)
 {
   double t1[16];

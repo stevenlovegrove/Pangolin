@@ -9,8 +9,8 @@ namespace pangolin
 
 SharedMemoryVideo::SharedMemoryVideo(
     size_t w, size_t h, std::string pix_fmt,
-    const std::shared_ptr<SharedMemoryBufferInterface>& shared_memory,
-    const std::shared_ptr<ConditionVariableInterface>& buffer_full) :
+    std::shared_ptr<SharedMemoryBufferInterface> const& shared_memory,
+    std::shared_ptr<ConditionVariableInterface> const& buffer_full) :
     _fmt(PixelFormatFromString(pix_fmt)),
     _frame_size(w * h * _fmt.bpp / 8),
     _shared_memory(shared_memory),
@@ -29,7 +29,7 @@ void SharedMemoryVideo::Stop() {}
 
 size_t SharedMemoryVideo::SizeBytes() const { return _frame_size; }
 
-const std::vector<StreamInfo>& SharedMemoryVideo::Streams() const
+std::vector<StreamInfo> const& SharedMemoryVideo::Streams() const
 {
   return _streams;
 }
@@ -69,7 +69,7 @@ PANGOLIN_REGISTER_FACTORY(SharedMemoryVideo)
     {
       return {{"shmem", 10}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Stream from posix shared memory";
     }
@@ -80,7 +80,7 @@ PANGOLIN_REGISTER_FACTORY(SharedMemoryVideo)
             "Pixel format: see pixel format help for all possible values"},
            {"size", "640x480", "Image dimension"}}};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(0, 0));
       const std::string sfmt = uri.Get<std::string>("fmt", "GRAY8");

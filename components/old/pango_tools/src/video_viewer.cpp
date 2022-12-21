@@ -21,8 +21,8 @@ void videoviewer_signal_quit(int)
 }
 
 VideoViewer::VideoViewer(
-    const std::string& window_name, const std::string& input_uri,
-    const std::string& output_uri) :
+    std::string const& window_name, std::string const& input_uri,
+    std::string const& output_uri) :
     window_name(window_name),
     video_playback(nullptr),
     video_interface(nullptr),
@@ -86,7 +86,7 @@ void VideoViewer::Run()
   std::unique_ptr<unsigned char[]> buffer(
       new unsigned char[video.SizeBytes() + 1]);
 
-  const int slider_size =
+  int const slider_size =
       (TotalFrames() < std::numeric_limits<int>::max() ? 20 : 0);
 
   // Create OpenGL window - guess sensible dimensions
@@ -133,8 +133,8 @@ void VideoViewer::Run()
 
   RegisterDefaultKeyShortcutsAndPangoVariables();
 
-  const char show_hide_keys[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
-  const char screenshot_keys[] = {'!', '@', '#', '$', '%', '^', '&', '*', '('};
+  char const show_hide_keys[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
+  char const screenshot_keys[] = {'!', '@', '#', '$', '%', '^', '&', '*', '('};
 
   // Show/hide streams
   for (size_t v = 0; v < container.NumChildren() && v < 9; v++) {
@@ -219,14 +219,14 @@ void VideoViewer::RegisterDefaultKeyShortcutsAndPangoVariables()
   pangolin::RegisterKeyPressCallback('c', [this]() { SetActiveCamera(+1); });
 }
 
-void VideoViewer::OpenInput(const std::string& input_uri)
+void VideoViewer::OpenInput(std::string const& input_uri)
 {
   std::lock_guard<std::mutex> lock(control_mutex);
   video.Open(input_uri, output_uri);
 
   // Output details of video stream
   for (size_t s = 0; s < video.Streams().size(); ++s) {
-    const pangolin::StreamInfo& si = video.Streams()[s];
+    pangolin::StreamInfo const& si = video.Streams()[s];
     std::cout << FormatString(
                      "Stream %: % x % % (pitch: % bytes)", s, si.Width(),
                      si.Height(), si.PixFormat().format, si.Pitch())
@@ -366,7 +366,7 @@ void VideoViewer::Skip(int frames)
   std::lock_guard<std::mutex> lock(control_mutex);
 
   if (video_playback) {
-    const int next_frame = current_frame + frames;
+    int const next_frame = current_frame + frames;
     if (next_frame >= 0) {
       current_frame = video_playback->Seek(next_frame) - 1;
       grab_until = current_frame + 1;
@@ -441,7 +441,7 @@ void VideoViewer::WaitUntilExit()
 }
 
 void RunVideoViewerUI(
-    const std::string& input_uri, const std::string& output_uri)
+    std::string const& input_uri, std::string const& output_uri)
 {
   RegisterNewSigCallback(videoviewer_signal_quit, nullptr, SIGINT);
   RegisterNewSigCallback(videoviewer_signal_quit, nullptr, SIGTERM);

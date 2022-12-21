@@ -57,7 +57,7 @@ void bind_display(pybind11::module& m)
 
   m.def("ShowConsole", &pangolin::ShowConsole);
 
-  m.def("RegisterKeyPressCallback", [](int v, const std::function<void()>& f) {
+  m.def("RegisterKeyPressCallback", [](int v, std::function<void()> const& f) {
     pangolin::RegisterKeyPressCallback(v, f);
   });
 

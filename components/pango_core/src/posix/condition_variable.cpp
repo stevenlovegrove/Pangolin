@@ -55,7 +55,7 @@ class PThreadConditionVariable : public ConditionVariableInterface
 };
 
 std::shared_ptr<ConditionVariableInterface> create_named_condition_variable(
-    const string &name)
+    string const &name)
 {
   std::shared_ptr<SharedMemoryBufferInterface> shmem =
       create_named_shared_memory_buffer(name, sizeof(PThreadSharedData));
@@ -81,7 +81,7 @@ std::shared_ptr<ConditionVariableInterface> create_named_condition_variable(
 }
 
 std::shared_ptr<ConditionVariableInterface> open_named_condition_variable(
-    const string &name)
+    string const &name)
 {
   std::shared_ptr<SharedMemoryBufferInterface> shmem =
       open_named_shared_memory_buffer(name, true);

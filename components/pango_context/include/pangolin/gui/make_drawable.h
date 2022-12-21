@@ -127,33 +127,33 @@ struct CameraFrustum {
 
 template <>
 struct DrawableConversionTraits<draw::Shape> {
-  static Shared<Drawable> makeDrawable(const draw::Shape& x);
+  static Shared<Drawable> makeDrawable(draw::Shape const& x);
 };
 
 template <>
 struct DrawableConversionTraits<draw::Cube> {
-  static Shared<Drawable> makeDrawable(const draw::Cube& x);
+  static Shared<Drawable> makeDrawable(draw::Cube const& x);
 };
 
 template <>
 struct DrawableConversionTraits<draw::Icosphere> {
-  static Shared<Drawable> makeDrawable(const draw::Icosphere& x);
+  static Shared<Drawable> makeDrawable(draw::Icosphere const& x);
 };
 
 template <>
 struct DrawableConversionTraits<draw::CheckerPlane> {
-  static Shared<Drawable> makeDrawable(const draw::CheckerPlane& x);
+  static Shared<Drawable> makeDrawable(draw::CheckerPlane const& x);
 };
 
 template <>
 struct DrawableConversionTraits<draw::Axes> {
-  static Shared<Drawable> makeDrawable(const draw::Axes& x);
+  static Shared<Drawable> makeDrawable(draw::Axes const& x);
 };
 // draw::Axes convenient methods
 
 template <>
 struct DrawableConversionTraits<sophus::Se3F32> {
-  static Shared<Drawable> makeDrawable(const sophus::Se3F32& x)
+  static Shared<Drawable> makeDrawable(sophus::Se3F32 const& x)
   {
     draw::Axes axes;
     axes.drawable_from_axis_poses.push_back(x);
@@ -163,7 +163,7 @@ struct DrawableConversionTraits<sophus::Se3F32> {
 
 template <typename T>
 struct DrawableConversionTraits<sophus::Se3<T>> {
-  static Shared<Drawable> makeDrawable(const sophus::Se3<T>& x)
+  static Shared<Drawable> makeDrawable(sophus::Se3<T> const& x)
   {
     return makeDrawable(x.template cast<float>());
   }
@@ -174,7 +174,7 @@ struct DrawableConversionTraits<sophus::Se3<T>> {
 // Example: scene->addToSceneAt(draw::Axis{.size - 0.5}, sophus::SE3d{...});
 template <>
 struct DrawableConversionTraits<draw::Axis> {
-  static Shared<Drawable> makeDrawable(const draw::Axis& x)
+  static Shared<Drawable> makeDrawable(draw::Axis const& x)
   {
     draw::Axes axes;
     axes.line_width = x.line_width;
@@ -186,27 +186,27 @@ struct DrawableConversionTraits<draw::Axis> {
 
 template <>
 struct DrawableConversionTraits<draw::Points3f> {
-  static Shared<Drawable> makeDrawable(const draw::Points3f& x);
+  static Shared<Drawable> makeDrawable(draw::Points3f const& x);
 };
 
 template <>
 struct DrawableConversionTraits<draw::Points3d> {
-  static Shared<Drawable> makeDrawable(const draw::Points3d& x);
+  static Shared<Drawable> makeDrawable(draw::Points3d const& x);
 };
 
 template <>
 struct DrawableConversionTraits<std::vector<draw::Line3>> {
-  static Shared<Drawable> makeDrawable(const std::vector<draw::Line3>& x);
+  static Shared<Drawable> makeDrawable(std::vector<draw::Line3> const& x);
 };
 
 template <>
 struct DrawableConversionTraits<std::vector<draw::Line2>> {
-  static Shared<Drawable> makeDrawable(const std::vector<draw::Line2>& x);
+  static Shared<Drawable> makeDrawable(std::vector<draw::Line2> const& x);
 };
 
 template <>
 struct DrawableConversionTraits<draw::CameraFrustum> {
-  static Shared<Drawable> makeDrawable(const draw::CameraFrustum& x);
+  static Shared<Drawable> makeDrawable(draw::CameraFrustum const& x);
 };
 
 }  // namespace pangolin

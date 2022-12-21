@@ -60,7 +60,7 @@ std::string ffmpeg_error_string(int err)
   return ret;
 }
 
-std::ostream& operator<<(std::ostream& os, const AVRational& v)
+std::ostream& operator<<(std::ostream& os, AVRational const& v)
 {
   os << v.num << "/" << v.den;
   return os;
@@ -68,7 +68,7 @@ std::ostream& operator<<(std::ostream& os, const AVRational& v)
 
 // Implementation of sws_scale_frame for versions which don't have it.
 int pango_sws_scale_frame(
-    struct SwsContext* c, AVFrame* dst, const AVFrame* src)
+    struct SwsContext* c, AVFrame* dst, AVFrame const* src)
 {
   return sws_scale(
       c, src->data, src->linesize, 0, src->height, dst->data, dst->linesize);
@@ -99,7 +99,7 @@ void FfmpegVideo::InitUrl(
   avdevice_register_all();
 
 #if (LIBAVFORMAT_VERSION_MAJOR >= 59)
-  const AVInputFormat* fmt = nullptr;
+  AVInputFormat const* fmt = nullptr;
 #else
   AVInputFormat* fmt = nullptr;
 #endif
@@ -132,17 +132,17 @@ void FfmpegVideo::InitUrl(
     av_dump_format(pFormatCtx, 0, url.c_str(), false);
   }
 
-  const AVCodec* pCodec = nullptr;
-  const AVCodecParameters* pCodecParameters = NULL;
+  AVCodec const* pCodec = nullptr;
+  AVCodecParameters const* pCodecParameters = NULL;
   int found_video_streams = 0;
 
   // loop though all the streams and print its main information
   for (int i = 0; i < pFormatCtx->nb_streams; i++) {
     AVStream* stream = pFormatCtx->streams[i];
-    const AVCodecParameters* pLocalCodecParameters = stream->codecpar;
+    AVCodecParameters const* pLocalCodecParameters = stream->codecpar;
 
     // finds the registered decoder for a codec ID
-    const AVCodec* pLocalCodec =
+    AVCodec const* pLocalCodec =
         avcodec_find_decoder(pLocalCodecParameters->codec_id);
     if (!pLocalCodec) {
       pango_print_debug("Skipping stream with unsupported codec.\n");
@@ -246,8 +246,8 @@ void FfmpegVideo::InitUrl(
     throw VideoException("failed to open codec through avcodec_open2");
 
   // Image dimensions
-  const int w = pCodecContext->width;
-  const int h = pCodecContext->height;
+  int const w = pCodecContext->width;
+  int const h = pCodecContext->height;
 
   pFrameOut->width = w;
   pFrameOut->height = h;
@@ -289,7 +289,7 @@ FfmpegVideo::~FfmpegVideo()
   sws_freeContext(img_convert_ctx);
 }
 
-const std::vector<StreamInfo>& FfmpegVideo::Streams() const { return streams; }
+std::vector<StreamInfo> const& FfmpegVideo::Streams() const { return streams; }
 
 size_t FfmpegVideo::SizeBytes() const { return numBytesOut; }
 
@@ -302,9 +302,9 @@ bool FfmpegVideo::GrabNext(unsigned char* image, bool /*wait*/)
   auto vid_stream = pFormatCtx->streams[videoStream];
 
   while (true) {
-    const int rx_res = avcodec_receive_frame(pCodecContext, pFrame);
+    int const rx_res = avcodec_receive_frame(pCodecContext, pFrame);
     if (rx_res == 0) {
-      const int expected_pts =
+      int const expected_pts =
           vid_stream->start_time + next_frame * ptsPerFrame;
       if (ptsPerFrame > 0 && expected_pts > pFrame->pts) {
         // We dont have the right frame, probably from seek to keyframe.
@@ -318,7 +318,7 @@ bool FfmpegVideo::GrabNext(unsigned char* image, bool /*wait*/)
       return true;
     } else {
       while (true) {
-        const int read_res = av_read_frame(pFormatCtx, packet);
+        int const read_res = av_read_frame(pFormatCtx, packet);
         if (read_res == 0) {
           if (packet->stream_index == videoStream) {
             if (avcodec_send_packet(pCodecContext, packet) == 0) {
@@ -348,7 +348,7 @@ size_t FfmpegVideo::Seek(size_t frameid)
 {
   if (ptsPerFrame && frameid != next_frame) {
     const int64_t pts = ptsPerFrame * frameid;
-    const int res = avformat_seek_file(pFormatCtx, videoStream, 0, pts, pts, 0);
+    int const res = avformat_seek_file(pFormatCtx, videoStream, 0, pts, pts, 0);
     avcodec_flush_buffers(pCodecContext);
 
     if (res >= 0) {
@@ -372,7 +372,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
     {
       return {{"ffmpeg", 0}, {"file", 15}, {"files", 15}};
     }
-    const char* Description() const override
+    char const* Description() const override
     {
       return "Use the FFMPEG library to decode videos.";
     }
@@ -388,7 +388,7 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
           {"verbose", "0", "Output FFMPEG instantiation information."},
       }};
     }
-    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
+    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
     {
       const std::array<std::string, 43> ffmpeg_ext = {
           {".3g2", ".3gp",  ".amv",  ".asf",  ".avi",  ".drc", ".flv",  ".f4v",
@@ -407,12 +407,12 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
         }
       }
 
-      const bool verbose = uri.Get<bool>("verbose", false);
+      bool const verbose = uri.Get<bool>("verbose", false);
       std::string outfmt = uri.Get<std::string>("fmt", "RGB24");
       std::string codec_hint = uri.Get<std::string>("codec_hint", "");
       ToUpper(outfmt);
       ToUpper(codec_hint);
-      const int video_stream = uri.Get<int>("stream", 0);
+      int const video_stream = uri.Get<int>("stream", 0);
       const ImageDim size = uri.Get<ImageDim>("size", ImageDim(0, 0));
       return std::unique_ptr<VideoInterface>(new FfmpegVideo(
           uri.url.c_str(), outfmt, codec_hint, verbose, video_stream));

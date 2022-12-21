@@ -45,18 +45,18 @@ namespace pangolin
 ////////////////////////////////////////////////
 
 #ifndef HAVE_GLES
-const int MAX_ATTACHMENTS = 8;
-const static GLuint attachment_buffers[] = {
+int const MAX_ATTACHMENTS = 8;
+static const GLuint attachment_buffers[] = {
     GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT,
     GL_COLOR_ATTACHMENT2_EXT, GL_COLOR_ATTACHMENT3_EXT,
     GL_COLOR_ATTACHMENT4_EXT, GL_COLOR_ATTACHMENT5_EXT,
     GL_COLOR_ATTACHMENT6_EXT, GL_COLOR_ATTACHMENT7_EXT};
 #else   // HAVE_GLES
-const int MAX_ATTACHMENTS = 1;
-const static GLuint attachment_buffers[] = {GL_COLOR_ATTACHMENT0_EXT};
+int const MAX_ATTACHMENTS = 1;
+static const GLuint attachment_buffers[] = {GL_COLOR_ATTACHMENT0_EXT};
 #endif  // HAVE_GLES
 
-const static size_t datatype_bytes[] = {
+static const size_t datatype_bytes[] = {
     1,  //  #define GL_BYTE 0x1400
     1,  //  #define GL_UNSIGNED_BYTE 0x1401
     2,  //  #define GL_SHORT 0x1402
@@ -70,7 +70,7 @@ const static size_t datatype_bytes[] = {
     8   //  #define GL_DOUBLE 0x140A
 };
 
-const static size_t format_channels[] = {
+static const size_t format_channels[] = {
     1,  //  #define GL_RED 0x1903
     1,  //  #define GL_GREEN 0x1904
     1,  //  #define GL_BLUE 0x1905
@@ -115,7 +115,7 @@ inline GlTexture::GlTexture(
       data);
 }
 
-inline GlTexture::GlTexture(const IntensityImage<>& img, bool sampling_linear)
+inline GlTexture::GlTexture(IntensityImage<> const& img, bool sampling_linear)
 {
   this->Load(img, sampling_linear);
 }
@@ -157,7 +157,7 @@ inline void GlTexture::Unbind() const { glBindTexture(GL_TEXTURE_2D, 0); }
 
 inline void GlTexture::Reinitialise(
     GLsizei w, GLsizei h, GLint int_format, bool sampling_linear, int border,
-    GLenum glformat, GLenum gltype, const GLvoid* data)
+    GLenum glformat, GLenum gltype, GLvoid const* data)
 {
   if (tid != 0) {
     PANGO_GL(glDeleteTextures(1, &tid));
@@ -189,7 +189,7 @@ inline void GlTexture::Reinitialise(
 }
 
 inline void GlTexture::Upload(
-    const void* data, GLenum data_format, GLenum data_type)
+    void const* data, GLenum data_format, GLenum data_type)
 {
   Bind();
   glTexSubImage2D(
@@ -198,7 +198,7 @@ inline void GlTexture::Upload(
 }
 
 inline void GlTexture::Upload(
-    const void* data, GLsizei tex_x_offset, GLsizei tex_y_offset,
+    void const* data, GLsizei tex_x_offset, GLsizei tex_y_offset,
     GLsizei data_w, GLsizei data_h, GLenum data_format, GLenum data_type)
 {
   Bind();
@@ -208,7 +208,7 @@ inline void GlTexture::Upload(
   PANGO_GL_CHECK();
 }
 
-inline void GlTexture::Load(const IntensityImage<>& image, bool sampling_linear)
+inline void GlTexture::Load(IntensityImage<> const& image, bool sampling_linear)
 {
   auto maybe_glfmt = glTypeInfo(image.pixelType());
   auto glfmt = FARM_UNWRAP(maybe_glfmt);
@@ -219,7 +219,7 @@ inline void GlTexture::Load(const IntensityImage<>& image, bool sampling_linear)
 }
 
 template <typename T>
-void GlTexture::Load(const sophus::ImageView<T>& image, bool sampling_linear)
+void GlTexture::Load(sophus::ImageView<T> const& image, bool sampling_linear)
 {
   using GlFmt = GlFormatTraits<T>;
 
@@ -229,7 +229,7 @@ void GlTexture::Load(const sophus::ImageView<T>& image, bool sampling_linear)
 }
 
 inline void GlTexture::LoadFromFile(
-    const std::string& filename, bool sampling_linear)
+    std::string const& filename, bool sampling_linear)
 {
   IntensityImage<> image = LoadImage(filename);
   Load(image, sampling_linear);
@@ -324,7 +324,7 @@ inline void GlTexture::Download(IntensityImage<>& image) const
   }
 }
 
-inline void GlTexture::CopyFrom(const GlTexture& tex)
+inline void GlTexture::CopyFrom(GlTexture const& tex)
 {
 #ifndef HAVE_GLES
   if (!tid || width != tex.width || height != tex.height ||
@@ -342,7 +342,7 @@ inline void GlTexture::CopyFrom(const GlTexture& tex)
 #endif
 }
 
-inline void GlTexture::Save(const std::string& filename, bool top_line_first)
+inline void GlTexture::Save(std::string const& filename, bool top_line_first)
 {
   IntensityImage<> image;
   Download(image);
@@ -365,7 +365,7 @@ inline void GlTexture::SetNearestNeighbour()
   Unbind();
 }
 
-inline void GlTexture::RenderToViewport(const bool flip) const
+inline void GlTexture::RenderToViewport(bool const flip) const
 {
   if (flip) {
     RenderToViewportFlipY();
@@ -685,7 +685,7 @@ inline GlBufferData::GlBufferData() : bo(0) {}
 
 inline GlBufferData::GlBufferData(
     GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse,
-    const void* data) :
+    void const* data) :
     bo(0)
 {
   Reinitialise(buffer_type, size_bytes, gluse, data);
@@ -693,7 +693,7 @@ inline GlBufferData::GlBufferData(
 
 template <typename T>
 GlBufferData::GlBufferData(
-    GlBufferType buffer_type, const std::vector<T>& data, GLenum gluse) :
+    GlBufferType buffer_type, std::vector<T> const& data, GLenum gluse) :
     bo(0)
 {
   Reinitialise(buffer_type, data.size() * sizeof(T), gluse, &data[0]);
@@ -731,7 +731,7 @@ inline GLsizeiptr GlBufferData::SizeBytes() const { return size_bytes; }
 
 inline void GlBufferData::Reinitialise(
     GlBufferType buffer_type, GLsizeiptr size_bytes, GLenum gluse,
-    const void* data)
+    void const* data)
 {
   if (!bo) {
     glGenBuffers(1, &bo);
@@ -751,7 +751,7 @@ inline void GlBufferData::Bind() const { glBindBuffer(buffer_type, bo); }
 inline void GlBufferData::Unbind() const { glBindBuffer(buffer_type, 0); }
 
 inline void GlBufferData::Upload(
-    const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
+    GLvoid const* data, GLsizeiptr size_bytes, GLintptr offset)
 {
   if (offset + size_bytes > this->size_bytes) {
     throw std::runtime_error("GlBufferData: Trying to upload past capacity.");
@@ -771,7 +771,7 @@ inline void GlBufferData::Download(
 }
 
 template <typename T>
-inline void GlBufferData::Upload(const std::vector<T>& data, GLintptr offset)
+inline void GlBufferData::Upload(std::vector<T> const& data, GLintptr offset)
 {
   const size_t total_bytes = data.size() * sizeof(T);
   assert(offset + total_bytes <= size_bytes);
@@ -781,7 +781,7 @@ inline void GlBufferData::Upload(const std::vector<T>& data, GLintptr offset)
 #ifdef USE_EIGEN
 template <typename Derived>
 inline void GlBufferData::Upload(
-    const Eigen::DenseBase<Derived>& data, GLintptr offset)
+    Eigen::DenseBase<Derived> const& data, GLintptr offset)
 {
   const size_t num_elements = data.outerSize();
   const size_t matrix_bytes = data.outerStride() * num_elements;
@@ -826,7 +826,7 @@ inline GlBuffer& GlBuffer::operator=(GlBuffer&& o)
 
 inline void GlBuffer::Reinitialise(
     GlBufferType buffer_type, GLuint num_elements, GLenum datatype,
-    GLuint count_per_element, GLenum gluse, const void* data)
+    GLuint count_per_element, GLenum gluse, void const* data)
 {
   this->datatype = datatype;
   this->num_elements = num_elements;
@@ -873,7 +873,7 @@ inline void GlBuffer::Resize(GLuint new_num_elements)
 
 template <typename Scalar>
 GlBuffer::GlBuffer(
-    GlBufferType buffer_type, const std::vector<Scalar>& data, GLenum gluse) :
+    GlBufferType buffer_type, std::vector<Scalar> const& data, GLenum gluse) :
     GlBufferData(buffer_type, data, gluse)
 {
   datatype = pangolin::GlFormatTraits<Scalar>::gltype;
@@ -885,7 +885,7 @@ GlBuffer::GlBuffer(
 template <typename Scalar, int R, int C>
 GlBuffer::GlBuffer(
     GlBufferType buffer_type,
-    const std::vector<Eigen::Matrix<Scalar, R, C>>& data, GLenum gluse) :
+    std::vector<Eigen::Matrix<Scalar, R, C>> const& data, GLenum gluse) :
     GlBufferData(buffer_type, data, gluse)
 {
   typedef typename Eigen::Matrix<Scalar, R, C> Element;
@@ -917,7 +917,7 @@ inline void GlSizeableBuffer::Clear() { m_num_verts = 0; }
 
 #ifdef USE_EIGEN
 template <typename Derived>
-inline void GlSizeableBuffer::Add(const Eigen::DenseBase<Derived>& vec)
+inline void GlSizeableBuffer::Add(Eigen::DenseBase<Derived> const& vec)
 {
   typedef typename Eigen::DenseBase<Derived>::Scalar Scalar;
   assert(vec.rows() == GlBuffer::count_per_element);
@@ -932,7 +932,7 @@ inline void GlSizeableBuffer::Add(const Eigen::DenseBase<Derived>& vec)
 
 template <typename Derived>
 inline void GlSizeableBuffer::Update(
-    const Eigen::DenseBase<Derived>& vec, size_t position)
+    Eigen::DenseBase<Derived> const& vec, size_t position)
 {
   typedef typename Eigen::DenseBase<Derived>::Scalar Scalar;
   assert(vec.rows() == GlBuffer::count_per_element);
@@ -970,7 +970,7 @@ inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
 ////////////////////////////////////////////////////////////////////////////
 
 inline IntensityImage<> ReadFramebuffer(
-    const Viewport& v, const char* pixel_format)
+    Viewport const& v, char const* pixel_format)
 {
   const RuntimePixelType fmt = PixelFormatFromString(pixel_format);
   const GlPixFormat glfmt(fmt);

@@ -44,7 +44,7 @@ void bind_view(pybind11::module &m)
           (void(pangolin::View::*)() const) & pangolin::View::Activate)
       .def(
           "Activate",
-          (void(pangolin::View::*)(const pangolin::OpenGlRenderState &) const) &
+          (void(pangolin::View::*)(pangolin::OpenGlRenderState const &) const) &
               pangolin::View::Activate)
       .def(
           "ActivateAndScissor", (void(pangolin::View::*)() const) &
@@ -55,11 +55,11 @@ void bind_view(pybind11::module &m)
               pangolin::View::ActivateScissorAndClear)
       .def(
           "ActivateAndScissor",
-          (void(pangolin::View::*)(const pangolin::OpenGlRenderState &) const) &
+          (void(pangolin::View::*)(pangolin::OpenGlRenderState const &) const) &
               pangolin::View::ActivateAndScissor)
       .def(
           "ActivateScissorAndClear",
-          (void(pangolin::View::*)(const pangolin::OpenGlRenderState &) const) &
+          (void(pangolin::View::*)(pangolin::OpenGlRenderState const &) const) &
               pangolin::View::ActivateScissorAndClear)
       .def(
           "ActivatePixelOrthographic",

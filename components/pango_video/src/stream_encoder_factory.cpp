@@ -19,7 +19,7 @@ struct EncoderDetails {
   float quality;
 };
 
-inline EncoderDetails EncoderDetailsFromString(const std::string& encoder_spec)
+inline EncoderDetails EncoderDetailsFromString(std::string const& encoder_spec)
 {
   std::string::const_reverse_iterator rit = encoder_spec.rbegin();
   for (; std::isdigit(*rit) && rit != encoder_spec.rend(); ++rit)
@@ -40,20 +40,20 @@ inline EncoderDetails EncoderDetailsFromString(const std::string& encoder_spec)
 }
 
 ImageEncoderFunc StreamEncoderFactory::GetEncoder(
-    const std::string& encoder_spec, const RuntimePixelType& fmt)
+    std::string const& encoder_spec, RuntimePixelType const& fmt)
 {
   const EncoderDetails encdet = EncoderDetailsFromString(encoder_spec);
   if (encdet.file_type == ImageFileTypeUnknown)
     throw std::invalid_argument("Unsupported encoder format: " + encoder_spec);
 
-  return [](std::ostream& os, const sophus::IntensityImage<>& img) {
+  return [](std::ostream& os, sophus::IntensityImage<> const& img) {
     PANGO_UNIMPLEMENTED();
     // SaveImage(img,fmt,os,encdet.file_type,true,encdet.quality);
   };
 }
 
 ImageDecoderFunc StreamEncoderFactory::GetDecoder(
-    const std::string& encoder_spec, const RuntimePixelType& /* fmt */)
+    std::string const& encoder_spec, RuntimePixelType const& /* fmt */)
 {
   const EncoderDetails encdet = EncoderDetailsFromString(encoder_spec);
   PANGO_ENSURE(encdet.file_type != ImageFileTypeUnknown);
