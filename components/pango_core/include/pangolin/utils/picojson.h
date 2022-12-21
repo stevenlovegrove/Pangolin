@@ -5,6 +5,8 @@
  * Original licence applies (below), https://github.com/kazuho/picojson
  */
 
+#pragma once
+
 /*
  * Copyright 2009-2010 Cybozu Labs, Inc.
  * Copyright 2011-2014 Kazuho Oku

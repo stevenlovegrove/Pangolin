@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PLOTTER_H
-#define PLOTTER_H
+#pragma once
 
 #include <pangolin/display/view.h>
 #include <pangolin/gl/colour.h>
@@ -275,5 +274,3 @@ class PANGOLIN_EXPORT Plotter : public View, Handler
 };
 
 }  // namespace pangolin
-
-#endif  // PLOTTER_H

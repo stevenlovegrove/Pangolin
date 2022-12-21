@@ -5,6 +5,8 @@
 #include <pangolin/render/device_texture.h>
 #include <sophus/image/runtime_image.h>
 
+#pragma once
+
 namespace pangolin
 {
 

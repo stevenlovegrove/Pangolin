@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_GEOMETRY_H
-#define PANGOLIN_GEOMETRY_H
+#pragma once
 
 #include <pangolin/image/typed_image.h>
 
@@ -91,5 +90,3 @@ inline Eigen::AlignedBox3f GetAxisAlignedBox(const Geometry& geom)
 #endif
 
 }  // namespace pangolin
-
-#endif  // PANGOLIN_GEOMETRY_H

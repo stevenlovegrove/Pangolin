@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#pragma once
+
 namespace pangolin
 {
 
@@ -18,7 +20,7 @@ enum HelpVerbosity {
 void PrintSchemeHelp(std::ostream& out = std::cout, bool color = true);
 
 /// Print to \p out Factories registered to \p registry that match \p
-/// scheme_filter. \p out the stream to stream the help message to \p registry
+/// scheme_filter. \p out the stream to stream the help message to \p registr
 /// the registy to use \p factory_type the typeid(T) of the FactoryInterface T
 /// to list \p scheme_filter a constraint on schemes to print, or empty if all
 /// should be listed \p level the level of detail to use when printing (see enum

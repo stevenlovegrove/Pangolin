@@ -5,8 +5,7 @@
 //  MIT License
 //
 
-#ifndef CPPHTTPLIB_HTTPLIB_H
-#define CPPHTTPLIB_HTTPLIB_H
+#pragma once
 
 #define CPPHTTPLIB_VERSION "0.11.2"
 
@@ -9520,5 +9519,3 @@ inline SSL_CTX *Client::ssl_context() const
 // ----------------------------------------------------------------------------
 
 }  // namespace httplib
-
-#endif  // CPPHTTPLIB_HTTPLIB_H

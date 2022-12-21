@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PANGOLIN_PARSE_H
-#define PANGOLIN_PARSE_H
+#pragma once
 
 #include <cctype>
 #include <string>
@@ -108,5 +107,3 @@ inline int ParseToken(
   }
 
 }  // namespace pangolin
-
-#endif  // PANGOLIN_PARSE_H

@@ -25,8 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HANDLER_GLBUFFER_H
-#define HANDLER_GLBUFFER_H
+#pragma once
 
 #include <pangolin/gl/gl.h>
 #include <pangolin/handler/handler.h>
@@ -48,5 +47,3 @@ struct PANGOLIN_EXPORT Handler3DFramebuffer : public pangolin::HandlerBase3D {
 };
 
 }  // namespace pangolin
-
-#endif  // HANDLER_GLBUFFER_H

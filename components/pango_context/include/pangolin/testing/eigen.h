@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <sophus/common/common.h>
 
+#pragma once
+
 #define CHECK_EIGEN_APPROX(A, B)                                               \
   CHECK(                                                                       \
       (A - B).squaredNorm() <                                                  \

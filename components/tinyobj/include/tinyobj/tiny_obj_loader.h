@@ -49,8 +49,7 @@ THE SOFTWARE.
 //   #include "tiny_obj_loader.h"
 //
 
-#ifndef TINY_OBJ_LOADER_H_
-#define TINY_OBJ_LOADER_H_
+#pragma once
 
 #include <map>
 #include <string>
@@ -2590,5 +2589,3 @@ bool LoadObjWithCallback(
 #pragma clang diagnostic pop
 #endif
 }  // namespace tinyobj
-
-#endif

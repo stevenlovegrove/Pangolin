@@ -19,7 +19,7 @@ repos:
         name: pragma once check
         entry: "#pragma once"
         language: pygrep
-        exclude: thirdparty/.*$
+        exclude: shaders/.*$
         files: \.h$
         args: [--negate]
       - id: no-c-std-lib

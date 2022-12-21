@@ -1,6 +1,8 @@
 // Modified version of https://gpfault.net/posts/typesafe-bitmasks.txt.html
 // (public domain)
 
+#pragma once
+
 #include <type_traits>
 
 namespace pangolin

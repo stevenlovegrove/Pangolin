@@ -1,3 +1,5 @@
+#pragma once
+
 // stb_truetype.h - v1.21 - public domain
 // authored from 2009-2016 by Sean Barrett / RAD Game Tools
 //

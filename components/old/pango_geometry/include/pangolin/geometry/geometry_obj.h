@@ -25,6 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
+
 #include <pangolin/geometry/geometry.h>
 
 namespace pangolin
