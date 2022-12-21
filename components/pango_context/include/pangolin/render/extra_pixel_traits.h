@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pangolin/gl/color.h>
+#include <sophus/image/image_types.h>
 #include <sophus/lie/se3.h>
 
 // Specialization of sophus::ImageTraits for types we might like to consider

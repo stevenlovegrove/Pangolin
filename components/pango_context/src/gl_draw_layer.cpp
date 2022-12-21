@@ -413,7 +413,7 @@ struct DrawLayerImpl : public DrawLayer {
     }
   };
 
-  void updateBackgroundImage(const sophus::IntensityImage<>& image)
+  void updateBackgroundImage(const sophus::IntensityImage<>& image) override
   {
     const sophus::CameraModel& camera = defaultOrthoCameraForImage(image);
     this->setCamera(camera);

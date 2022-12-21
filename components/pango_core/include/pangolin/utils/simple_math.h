@@ -27,10 +27,9 @@
 
 #pragma once
 
-#include <cstdarg>
-
 #include <algorithm>
 #include <cmath>
+#include <cstdarg>
 #include <cstring>
 #include <iostream>
 
