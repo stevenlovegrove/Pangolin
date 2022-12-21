@@ -28,7 +28,7 @@ struct GlDrawnPlotBackground : public DrawnPlotBackground {
 
     Eigen::Matrix4d graph_from_clip =
         (params.clip_from_image * params.image_from_camera *
-         params.camera_from_world)
+         params.camera_from_world.matrix())
             .inverse();
     Eigen::Array2d graph_min =
         (graph_from_clip * Eigen::Vector4d(-1.0, -1.0, 0.0, 1.0)).head<2>();

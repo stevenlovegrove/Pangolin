@@ -11,7 +11,7 @@ struct ViewParams {
   MinMax<Eigen::Array2i> viewport;
   sophus::ImageSize camera_dim;
   MinMax<double> near_far;
-  Eigen::Matrix4d camera_from_world;
+  sophus::SE3d camera_from_world;
   Eigen::Matrix4d image_from_camera;
   Eigen::Matrix4d clip_from_image;
   std::shared_ptr<DeviceTexture> unproject_map;

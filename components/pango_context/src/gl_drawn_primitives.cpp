@@ -163,6 +163,8 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
 
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
+
+      PANGO_INFO("draw\n{}", pose.worldFromDrawableMatrix());
       u_cam_from_world =
           (params.camera_from_world.matrix() * pose.worldFromDrawableMatrix())
               .cast<float>();

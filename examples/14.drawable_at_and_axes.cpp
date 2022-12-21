@@ -35,6 +35,7 @@ int main(int argc, char** argv)
       1);
 
   context->loop([&]() {
+    PANGO_INFO("loop:\n{}", world_from_box.get().matrix());
     scene->addNamedInSceneAt(
         "world_from_box", draw::Cube{}, world_from_box.get());
 
