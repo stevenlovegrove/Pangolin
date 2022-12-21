@@ -31,9 +31,10 @@
 #include <pangolin/var/varstate.h>
 #include <pangolin/var/varvalue.h>
 #include <pangolin/var/varwrapper.h>
-#include <string.h>
+#include <sophus/lie/se3.h>
 
 #include <cmath>
+#include <cstring>
 #include <stdexcept>
 
 namespace pangolin
@@ -166,5 +167,96 @@ inline std::ostream& operator<<(std::ostream& s, Var<T>& rhs)
   s << rhs.operator const T&();
   return s;
 }
+
+template <int N>
+class VarVector
+{
+  public:
+  static_assert(N >= 1);
+  VarVector(
+      std::string name, Eigen::Vector<double, N> const& init,
+      Eigen::Vector<double, N> const& min, Eigen::Vector<double, N> const& max)
+  {
+    for (int i = 0; i < N; ++i) {
+      var_vec_[i] = std::make_optional(
+          Var<double>(FARM_FORMAT("{}[{}]", name, i), init[i], min[i], max[i]));
+    }
+  }
+
+  VarVector(
+      std::string name, Eigen::Vector<double, N> const& init, double min,
+      double max) :
+      VarVector(
+          name, init, (min * Eigen::Vector<double, N>::Ones()).eval(),
+          (max * Eigen::Vector<double, N>::Ones()).eval())
+  {
+  }
+
+  bool hasGuiChanged()
+  {
+    for (int i = 0; i < N; ++i) {
+      if (FARM_UNWRAP(var_vec_[i]).GuiChanged()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void set(Eigen::Vector<double, N> const& init)
+  {
+    for (int i = 0; i < N; ++i) {
+      auto& var = FARM_UNWRAP(var_vec_[i]);
+      var = init[i];
+    }
+  }
+
+  Eigen::Vector<double, N> get() const
+  {
+    Eigen::Vector<double, N> var;
+    for (int i = 0; i < N; ++i) {
+      var[i] = FARM_UNWRAP(var_vec_[i]);
+    }
+    return var;
+  }
+
+  private:
+  std::array<std::optional<Var<double>>, N> var_vec_;
+};
+
+class VarSe3
+{
+  public:
+  VarSe3(
+      std::string name, Eigen::Vector3d const& init_rot,
+      Eigen::Vector3d const& init_trans, Eigen::Vector3d const& min_trans,
+      Eigen::Vector3d const& max_trans) :
+      rot_vec_(name + "_rot", init_rot, -sophus::kPiF64, sophus::kPiF64),
+      trans_vec_(name + "_trans", init_trans, -sophus::kPiF64, sophus::kPiF64)
+  {
+  }
+
+  VarSe3(
+      std::string name, Eigen::Vector3d const& init_rot,
+      Eigen::Vector3d const& init_trans, double min_trans, double max_trans) :
+      VarSe3(
+          name, init_rot, init_trans, min_trans * Eigen::Vector3d::Ones(),
+          max_trans * Eigen::Vector3d::Ones())
+  {
+  }
+
+  bool hasGuiChanged()
+  {
+    return rot_vec_.hasGuiChanged() || trans_vec_.hasGuiChanged();
+  }
+
+  sophus::SE3d get() const
+  {
+    return sophus::SE3d(sophus::SO3d::exp(rot_vec_.get()), trans_vec_.get());
+  }
+
+  private:
+  VarVector<3> rot_vec_;
+  VarVector<3> trans_vec_;
+};
 
 }  // namespace pangolin

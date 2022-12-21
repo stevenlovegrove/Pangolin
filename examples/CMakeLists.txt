@@ -16,6 +16,7 @@ set(examples
     11.scene-group
     12.named_drawables
     13.plot-experiment
+    14.drawable_at_and_axes
 )
 
 foreach(example IN LISTS examples)

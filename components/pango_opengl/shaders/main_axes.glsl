@@ -15,13 +15,12 @@ void main() {
 @start geometry
 #version 330
 layout (points) in;
-layout (line_strip, max_vertices = 5) out;
+layout (line_strip, max_vertices = 6) out;
 
 in mat4 cam_T_axes[];
 out vec4 vert_color;
 
 uniform mat4 proj;
-uniform vec4 color;
 uniform float size;
 
 void main() {
@@ -38,17 +37,19 @@ void main() {
     vert_color = vec4(1.0, 0.0, 0.0, 1.0);
     gl_Position = points_proj[0];
     EmitVertex();
-    vert_color = color;
     gl_Position = points_proj[3];
     EmitVertex();
+
     vert_color = vec4(0.0, 1.0, 0.0, 1.0);
     gl_Position = points_proj[1];
     EmitVertex();
-    vert_color = color;
     gl_Position = points_proj[3];
     EmitVertex();
+
     vert_color = vec4(0.0, 0.0, 1.0, 1.0);
     gl_Position = points_proj[2];
+    EmitVertex();
+    gl_Position = points_proj[3];
     EmitVertex();
 }
 
