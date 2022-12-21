@@ -26,9 +26,9 @@
  */
 
 #include <pangolin/utils/file_extension.h>
-#include <string.h>
 
 #include <algorithm>
+#include <cstring>
 #include <fstream>
 
 namespace pangolin

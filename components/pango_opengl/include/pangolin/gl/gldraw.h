@@ -27,10 +27,10 @@
 
 #pragma once
 
-#include <math.h>
 #include <pangolin/gl/glformattraits.h>
 #include <pangolin/gl/glplatform.h>
 
+#include <cmath>
 #include <vector>
 
 #if defined(HAVE_EIGEN) &&                                                     \

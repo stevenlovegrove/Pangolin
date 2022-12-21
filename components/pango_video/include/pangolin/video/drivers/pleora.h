@@ -36,8 +36,8 @@
 #include <PvStreamU3V.h>
 #include <PvSystem.h>
 #include <pangolin/video/video_interface.h>
-#include <stdlib.h>
 
+#include <cstdlib>
 #include <list>
 
 namespace pangolin

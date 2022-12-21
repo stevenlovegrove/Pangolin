@@ -41,17 +41,18 @@
 #define access _access_s
 #else
 #include <dirent.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
-#include <limits.h>
 #include <poll.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <cerrno>
+#include <climits>
+#include <cstdio>
+#include <cstring>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>

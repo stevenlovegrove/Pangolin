@@ -34,7 +34,6 @@
 #include <android/sensor.h>
 #include <android/window.h>
 #include <dlfcn.h>
-#include <errno.h>
 #include <jni.h>
 #include <pangolin/display/device/display_android.h>
 #include <pangolin/display/display.h>
@@ -44,11 +43,12 @@
 #include <poll.h>
 #include <pthread.h>
 #include <sched.h>
-#include <string.h>
 #include <sys/resource.h>
 #include <unistd.h>
 
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <sstream>

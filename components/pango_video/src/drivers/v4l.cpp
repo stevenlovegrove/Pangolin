@@ -26,8 +26,6 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <assert.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
@@ -36,10 +34,6 @@
 #include <pangolin/utils/timer.h>
 #include <pangolin/video/drivers/v4l.h>
 #include <pangolin/video/iostream_operators.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -47,6 +41,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cassert>
+#include <cerrno>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))

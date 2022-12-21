@@ -27,7 +27,6 @@
 
 #pragma once
 
-#include <assert.h>
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/gl_type_info.h>
 #include <pangolin/gl/glpixformat.h>
@@ -35,6 +34,7 @@
 #include <pangolin/utils/type_convert.h>
 
 #include <algorithm>
+#include <cassert>
 #include <stdexcept>
 
 namespace pangolin

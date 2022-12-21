@@ -58,11 +58,11 @@
 #else
 extern "C" {
 #ifdef _MSC_VER
-#include <float.h>
+#include <cfloat>
 #elif defined(__INTEL_COMPILER)
 #include <mathimf.h>
 #else
-#include <math.h>
+#include <cmath>
 #endif
 }
 #endif
@@ -72,8 +72,8 @@ extern "C" {
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif
-#include <errno.h>
-#include <inttypes.h>
+#include <cerrno>
+#include <cinttypes>
 #endif  // PICOJSON_USE_INT64
 
 // to disable the use of localeconv(3), set PICOJSON_USE_LOCALE to 0
@@ -83,7 +83,7 @@ extern "C" {
 
 #if PICOJSON_USE_LOCALE
 extern "C" {
-#include <locale.h>
+#include <clocale>
 }
 #endif  // PICOJSON_USE_LOCALE
 
@@ -1304,10 +1304,9 @@ void is(const T& x, const T& y, const char* name = "")
   }
 }
 
-#include <float.h>
-#include <limits.h>
-
 #include <algorithm>
+#include <cfloat>
+#include <climits>
 #include <sstream>
 
 int main(void)

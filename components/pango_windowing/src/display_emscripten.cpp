@@ -30,12 +30,12 @@
 #include <pangolin/platform.h>
 #include <pangolin/windowing/EmscriptenWindow.h>
 #include <pangolin/windowing/window.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <mutex>
 #include <stdexcept>
 

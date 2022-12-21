@@ -27,11 +27,11 @@
 
 #pragma once
 
-#include <stdarg.h>
-#include <string.h>
+#include <cstdarg>
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <iostream>
 
 namespace pangolin

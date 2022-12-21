@@ -40,8 +40,7 @@
 #include <Eigen/Core>
 #endif
 
-#include <math.h>
-
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <vector>

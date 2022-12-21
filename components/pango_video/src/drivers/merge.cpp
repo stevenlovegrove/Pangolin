@@ -25,12 +25,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <assert.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/utils/range.h>
 #include <pangolin/video/drivers/merge.h>
 #include <pangolin/video/iostream_operators.h>
 #include <pangolin/video/video.h>
+
+#include <cassert>
 
 namespace pangolin
 {

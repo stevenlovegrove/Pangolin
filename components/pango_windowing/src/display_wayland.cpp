@@ -5,12 +5,12 @@
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/platform.h>
 #include <pangolin/windowing/window.h>
-#include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <xkbcommon/xkbcommon.h>
 
 #include <cstdlib>
+#include <cstring>
 #include <mutex>
 #include <wayland-client.h>
 #include <wayland-cursor.h>

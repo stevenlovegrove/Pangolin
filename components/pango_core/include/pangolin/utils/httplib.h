@@ -200,7 +200,6 @@ using socket_t = int;
 #endif
 #endif  //_WIN32
 
-#include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 
@@ -209,6 +208,7 @@ using socket_t = int;
 #include <atomic>
 #include <cassert>
 #include <cctype>
+#include <cerrno>
 #include <climits>
 #include <condition_variable>
 #include <cstring>

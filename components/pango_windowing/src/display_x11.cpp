@@ -31,11 +31,11 @@
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/platform.h>
 #include <pangolin/windowing/X11Window.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <mutex>
 #include <stdexcept>
 

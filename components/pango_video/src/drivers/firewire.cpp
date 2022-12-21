@@ -25,14 +25,15 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <inttypes.h>
 #include <pangolin/factory/factory_registry.h>
 #include <pangolin/video/drivers/deinterlace.h>
 #include <pangolin/video/drivers/firewire.h>
 #include <pangolin/video/iostream_operators.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+
+#include <cinttypes>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 
 using namespace std;
 

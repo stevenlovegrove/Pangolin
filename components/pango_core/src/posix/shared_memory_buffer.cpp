@@ -1,10 +1,11 @@
 #include <fcntl.h>
-#include <limits.h>
 #include <pangolin/utils/posix/shared_memory_buffer.h>
 #include <sys/file.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include <climits>
 
 using namespace std;
 
