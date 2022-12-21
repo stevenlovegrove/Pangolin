@@ -33,7 +33,7 @@ int main(int argc, char** argv)
       makeDrawable(draw::Shape{.type = DrawnPrimitives::Shape::hollow_box});
 
   // Set the position of the star within its group
-  star->pose.parent_from_drawable = sophus::SE3d::trans(1.0, 0.0, 1.0);
+  star->pose.world_from_drawable = sophus::SE3d::trans(1.0, 0.0, 1.0);
 
   auto scene = DrawLayer::Create(
       {.camera_from_world = cameraLookatFromWorld(
@@ -58,10 +58,10 @@ int main(int argc, char** argv)
   // Alow the position of group one (containing the axis, star and square) to
   // be manipulated in the gui.
   Var<double>::Attach(
-      "group1-x", group1->pose.parent_from_drawable.translation().x(), -10.0,
+      "group1-x", group1->pose.world_from_drawable.translation().x(), -10.0,
       10.0);
   Var<double>::Attach(
-      "group1-y", group1->pose.parent_from_drawable.translation().y(), -10.0,
+      "group1-y", group1->pose.world_from_drawable.translation().y(), -10.0,
       10.0);
 
   context->loop();

@@ -67,7 +67,7 @@ int main(int /*argc*/, char** /*argv*/)
     primitives->element_type = filled ? DrawnPrimitives::Type::triangles
                                       : DrawnPrimitives::Type::line_loop;
 
-    primitives->pose.parent_from_drawable =
+    primitives->pose.world_from_drawable =
         sophus::SE3d(sophus::SO3d::rotZ(angle_theta), Eigen::Vector3d::Zero());
 
     // We return true to indicate that we should keep running

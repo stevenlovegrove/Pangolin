@@ -67,7 +67,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
       u_cam_from_world =
-          (params.camera_from_world.matrix() * pose.parentFromDrawableMatrix())
+          (params.camera_from_world.matrix() * pose.worldFromDrawableMatrix())
               .cast<float>();
       u_color = default_color.cast<float>();
       u_size = default_size;
@@ -109,7 +109,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
       u_cam_from_world =
-          (params.camera_from_world.matrix() * pose.parentFromDrawableMatrix())
+          (params.camera_from_world.matrix() * pose.worldFromDrawableMatrix())
               .cast<float>();
       if (false) {
         u_use_clip_size_units = false;
@@ -164,7 +164,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
       u_cam_from_world =
-          (params.camera_from_world.matrix() * pose.parentFromDrawableMatrix())
+          (params.camera_from_world.matrix() * pose.worldFromDrawableMatrix())
               .cast<float>();
 
       vao.addVertexAttrib(location_vertex, *vertices);

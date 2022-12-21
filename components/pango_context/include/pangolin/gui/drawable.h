@@ -18,14 +18,14 @@ struct ViewParams {
 };
 
 struct DrawablePose {
-  Eigen::Matrix4d parentFromDrawableMatrix()
+  Eigen::Matrix4d worldFromDrawableMatrix()
   {
-    return parent_from_drawable.matrix();
+    return world_from_drawable.matrix();
   }
 
   // Add Eigen::Matrix4d representation augmentations (e.g. drawable_scales),
   // and/or alternatives (Sim3, Aff3, etc.) here when needed.
-  sophus::Se3F64 parent_from_drawable;
+  sophus::Se3F64 world_from_drawable;
 };
 
 struct Drawable {

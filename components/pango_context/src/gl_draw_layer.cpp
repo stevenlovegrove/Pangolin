@@ -241,7 +241,7 @@ struct DrawLayerImpl : public DrawLayer {
       for (auto& obj : pixels_collection_.drawables) {
         child_params.camera_from_world =
             render_data_.pixel_params.camera_from_world *
-            obj->pose.parentFromDrawableMatrix();
+            obj->pose.worldFromDrawableMatrix();
         obj->draw(child_params);
       }
 
@@ -257,7 +257,7 @@ struct DrawLayerImpl : public DrawLayer {
       for (auto& obj : scene_collection_.drawables) {
         child_params.camera_from_world =
             render_data_.scene_params.camera_from_world *
-            obj->pose.parentFromDrawableMatrix();
+            obj->pose.worldFromDrawableMatrix();
         obj->draw(child_params);
       }
     }
