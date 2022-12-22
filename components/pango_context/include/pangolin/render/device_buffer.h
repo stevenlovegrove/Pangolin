@@ -47,7 +47,7 @@ struct DeviceBuffer {
   // Use with any contiguous, movable or copyable container with a
   // data() and size() method.
   template <typename Container>
-  bool update(Container&& data, UpdateParams params)
+  bool update(Container&& data, UpdateParams params = {})
   {
     using C = std::decay_t<Container>;
     using T = std::decay_t<decltype(*data.data())>;

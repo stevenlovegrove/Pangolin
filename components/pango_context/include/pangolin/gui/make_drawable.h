@@ -123,6 +123,14 @@ struct CameraFrustum {
   Color color = Color::red();
 };
 
+struct Circle3 {
+  Eigen::Vector3d center = Eigen::Vector3d::Zero();
+  double radius = 1.0;
+  Eigen::Vector3d a = Eigen::Vector3d::Zero();
+  Eigen::Vector3d b = Eigen::Vector3d::Zero();
+  Color color = Color::white();
+};
+
 }  // namespace draw
 
 template <>
@@ -207,6 +215,11 @@ struct DrawableConversionTraits<std::vector<draw::Line2>> {
 template <>
 struct DrawableConversionTraits<draw::CameraFrustum> {
   static Shared<Drawable> makeDrawable(const draw::CameraFrustum& x);
+};
+
+template <>
+struct DrawableConversionTraits<draw::Circle3> {
+  static Shared<Drawable> makeDrawable(const draw::Circle3& x);
 };
 
 }  // namespace pangolin
