@@ -201,7 +201,7 @@ struct DrawLayerImpl : public DrawLayer {
         .viewport = viewport,
         .camera_dim = render_state.camera.imageSize(),
         .near_far = {-2.0, 2.0},
-        .camera_from_world = Eigen::Matrix4d::Identity(),
+        .camera_from_drawable = Eigen::Matrix4d::Identity(),
         .image_from_camera = Eigen::Matrix4d::Identity(),
         .clip_from_image = state.clip_view * state.clip_aspect *
                            clip_from_projection *
@@ -212,7 +212,7 @@ struct DrawLayerImpl : public DrawLayer {
         .viewport = viewport,
         .camera_dim = render_state.camera.imageSize(),
         .near_far = render_state.near_far,
-        .camera_from_world = render_state.camera_from_world.matrix(),
+        .camera_from_drawable = render_state.camera_from_world.matrix(),
         .image_from_camera = transformImageFromCamera4x4(render_state.camera),
         .clip_from_image =
             state.clip_view * state.clip_aspect * clip_from_projection *
@@ -239,8 +239,8 @@ struct DrawLayerImpl : public DrawLayer {
       context.setViewport(render_data_.pixel_params.viewport);
       auto child_params = render_data_.pixel_params;
       for (auto& obj : pixels_collection_.drawables) {
-        child_params.camera_from_world =
-            render_data_.pixel_params.camera_from_world *
+        child_params.camera_from_drawable =
+            render_data_.pixel_params.camera_from_drawable *
             obj->pose.parentFromDrawableMatrix();
         obj->draw(child_params);
       }
@@ -255,8 +255,8 @@ struct DrawLayerImpl : public DrawLayer {
       context.setViewport(render_data_.scene_params.viewport);
       auto child_params = render_data_.scene_params;
       for (auto& obj : scene_collection_.drawables) {
-        child_params.camera_from_world =
-            render_data_.scene_params.camera_from_world *
+        child_params.camera_from_drawable =
+            render_data_.scene_params.camera_from_drawable *
             obj->pose.parentFromDrawableMatrix();
         obj->draw(child_params);
       }

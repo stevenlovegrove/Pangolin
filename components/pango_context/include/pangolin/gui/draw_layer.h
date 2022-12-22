@@ -80,10 +80,10 @@ struct DrawLayer : public Layer {
   }
 
   template <typename T>
-  auto addInSceneAt(const T& t, const sophus::Se3F64& parent_from_drawable)
+  auto addInSceneAt(const T& t, const sophus::Se3F64& world_from_drawable)
   {
     auto d = DrawableConversionTraits<T>::makeDrawable(t);
-    d->pose.parent_from_drawable = parent_from_drawable;
+    d->pose.parent_from_drawable = world_from_drawable;
     add(d, In::scene);
     return d;
   }
@@ -91,10 +91,10 @@ struct DrawLayer : public Layer {
   template <typename T>
   auto addNamedInSceneAt(
       const std::string& name, const T& r,
-      const sophus::Se3F64& parent_from_drawable)
+      const sophus::Se3F64& world_from_drawable)
   {
     auto d = DrawableConversionTraits<T>::makeDrawable(r);
-    d->pose.parent_from_drawable = parent_from_drawable;
+    d->pose.parent_from_drawable = world_from_drawable;
     add(d, In::scene, name);
     return d;
   }

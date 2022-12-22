@@ -18,8 +18,8 @@ struct GlDrawnSolids : public DrawnSolids {
     u_cam_from_clip = (params.clip_from_image * params.image_from_camera)
                           .inverse()
                           .cast<float>();
-    u_world_from_cam =
-        params.camera_from_world.inverse().cast<float>().matrix();
+    u_world_from_drawable =
+        params.camera_from_drawable.inverse().cast<float>().matrix();
     u_znear_zfar =
         Eigen::Vector2f(params.near_far.min(), params.near_far.max());
 
@@ -44,7 +44,7 @@ struct GlDrawnSolids : public DrawnSolids {
            {.origin = "/components/pango_opengl/shaders/main_plane.glsl"}}});
   GlVertexArrayObject vao = {};
   const GlUniform<Eigen::Matrix4f> u_cam_from_clip = {"camera_from_clip"};
-  const GlUniform<Eigen::Matrix4f> u_world_from_cam = {"world_from_cam"};
+  const GlUniform<Eigen::Matrix4f> u_world_from_drawable = {"world_from_cam"};
   const GlUniform<Eigen::Vector2f> u_znear_zfar = {"znear_zfar"};
   const GlUniform<bool> u_use_unproject_map = {"use_unproject_map"};
 };

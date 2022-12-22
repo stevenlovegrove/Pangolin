@@ -66,9 +66,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
 
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
-      u_cam_from_world =
-          (params.camera_from_world.matrix() * pose.parentFromDrawableMatrix())
-              .cast<float>();
+      u_cam_from_drawable = params.camera_from_drawable.cast<float>();
       u_color = default_color.cast<float>();
       u_size = default_size;
 
@@ -108,9 +106,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
 
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
-      u_cam_from_world =
-          (params.camera_from_world.matrix() * pose.parentFromDrawableMatrix())
-              .cast<float>();
+      u_cam_from_drawable = params.camera_from_drawable.cast<float>();
       if (false) {
         u_use_clip_size_units = false;
         u_size = default_size;
@@ -163,9 +159,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
 
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
-      u_cam_from_world =
-          (params.camera_from_world.matrix() * pose.parentFromDrawableMatrix())
-              .cast<float>();
+      u_cam_from_drawable = params.camera_from_drawable.cast<float>();
 
       vao.addVertexAttrib(location_vertex, *vertices);
       if (!colors->empty()) {
@@ -211,7 +205,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
 
   GlVertexArrayObject vao = {};
   const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
-  const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
+  const GlUniform<Eigen::Matrix4f> u_cam_from_drawable = {"cam_from_world"};
   const GlUniform<Eigen::Vector4f> u_color = {"color"};
   const GlUniform<bool> u_use_clip_size_units = {"use_clip_size_units"};
   const GlUniform<float> u_size = {"size"};
