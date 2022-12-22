@@ -31,7 +31,7 @@ struct GlDrawnImage : public DrawnImage {
     u_image_size = toEigen(image->imageSize()).cast<float>();
     u_intrinsics =
         (params.clip_from_image * params.image_from_camera).cast<float>();
-    u_cam_from_world = params.camera_from_world.cast<float>().matrix();
+    u_cam_from_drawable = params.camera_from_drawable.cast<float>().matrix();
 
     if (color_transform) {
       u_color_transform = color_transform->cast<float>();
@@ -66,7 +66,7 @@ struct GlDrawnImage : public DrawnImage {
   GlVertexArrayObject vao = {};
   const GlUniform<int> texture_unit = {"image"};
   const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
-  const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
+  const GlUniform<Eigen::Matrix4f> u_cam_from_drawable = {"cam_from_world"};
   const GlUniform<Eigen::Vector2f> u_image_size = {"image_size"};
   const GlUniform<Eigen::Matrix4f> u_color_transform = {"color_transform"};
   const GlUniform<Palette> u_colormap_index = {"colormap_index"};

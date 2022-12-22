@@ -408,8 +408,6 @@ bool ParseTextureNameAndOption(
     const bool is_bump);
 }  // namespace tinyobj
 
-#endif  // TINY_OBJ_LOADER_H_
-
 #ifdef TINYOBJLOADER_IMPLEMENTATION
 #include <cassert>
 #include <cctype>
@@ -2589,3 +2587,4 @@ bool LoadObjWithCallback(
 #pragma clang diagnostic pop
 #endif
 }  // namespace tinyobj
+#endif
