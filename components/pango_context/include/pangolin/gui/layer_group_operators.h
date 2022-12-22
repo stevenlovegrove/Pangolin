@@ -16,12 +16,12 @@ struct LayerConversionTraits;
 
 template <DerivedFrom<Layer> L>
 struct LayerConversionTraits<Shared<L>> {
-  static Shared<Layer> makeLayer(Shared<L> const& layer) { return layer; }
+  static Shared<Layer> makeLayer(const Shared<L>& layer) { return layer; }
 };
 
 template <DerivedFrom<Layer> L>
 struct LayerConversionTraits<std::shared_ptr<L>> {
-  static Shared<Layer> makeLayer(std::shared_ptr<L> const& layer)
+  static Shared<Layer> makeLayer(const std::shared_ptr<L>& layer)
   {
     return layer;
   }
@@ -72,7 +72,7 @@ namespace detail
 {
 // Implementation of how layergroups are composed (and simplified)
 inline LayerGroup join(
-    LayerGroup::Grouping op_type, LayerGroup const& lhs, LayerGroup const& rhs)
+    LayerGroup::Grouping op_type, const LayerGroup& lhs, const LayerGroup& rhs)
 {
   PANGO_ASSERT(lhs.children.size() > 0 || lhs.layer);
   PANGO_ASSERT(rhs.children.size() > 0 || rhs.layer);
@@ -136,10 +136,10 @@ LayerGroup flex(T head, TArgs... args)
 
 ////////////////////////////////////////////////////////////////////
 
-void computeLayoutConstraints(LayerGroup const& group);
+void computeLayoutConstraints(const LayerGroup& group);
 void computeLayoutRegion(
-    LayerGroup const& group, MinMax<Eigen::Array2i> const& region);
+    const LayerGroup& group, const MinMax<Eigen::Array2i>& region);
 
-std::ostream& operator<<(std::ostream& s, LayerGroup const& layout);
+std::ostream& operator<<(std::ostream& s, const LayerGroup& layout);
 
 }  // namespace pangolin

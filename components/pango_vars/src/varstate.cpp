@@ -11,7 +11,7 @@ namespace pangolin
 namespace
 {
 template <typename ContainerT, typename PredicateT>
-void erase_if(ContainerT& items, PredicateT const& predicate)
+void erase_if(ContainerT& items, const PredicateT& predicate)
 {
   for (auto it = items.begin(); it != items.end();) {
     if (predicate(*it))
@@ -39,7 +39,7 @@ void VarState::Clear()
   vars_add_order.clear();
 }
 
-bool VarState::Remove(std::string const& name)
+bool VarState::Remove(const std::string& name)
 {
   VarStoreMap::iterator it = vars.find(name);
   if (it != vars.end()) {
@@ -57,7 +57,7 @@ bool VarState::Remove(std::string const& name)
   return false;
 }
 
-bool VarState::Exists(std::string const& key) const
+bool VarState::Exists(const std::string& key) const
 {
   return vars.find(key) != vars.end();
 }
@@ -93,9 +93,9 @@ bool VarState::Exists(std::string const& key) const
 //}
 
 void VarState::AddOrSetGeneric(
-    std::string const& name, std::string const& value)
+    const std::string& name, const std::string& value)
 {
-  auto const it = vars.find(name);
+  const auto it = vars.find(name);
 
   if (it != vars.end()) {
     it->second->str->Set(value);
@@ -118,8 +118,8 @@ void VarState::LoadFromJsonStream(std::istream& is)
         for (picojson::object::iterator i =
                  var_json.get<picojson::object>().begin();
              i != var_json.get<picojson::object>().end(); ++i) {
-          std::string const& name = i->first;
-          std::string const& val = i->second.get<std::string>();
+          const std::string& name = i->first;
+          const std::string& val = i->second.get<std::string>();
           AddOrSetGeneric(name, val);
         }
       }
@@ -130,9 +130,9 @@ void VarState::LoadFromJsonStream(std::istream& is)
 }
 
 // Recursively expand val
-std::string VarState::ProcessVal(std::string const& val)
+std::string VarState::ProcessVal(const std::string& val)
 {
-  return Transform(val, [this](std::string const& k) -> std::string {
+  return Transform(val, [this](const std::string& k) -> std::string {
     auto var = GetByName(k);
     if (var && var->str) {
       return var->str->Get();
@@ -145,7 +145,7 @@ std::string VarState::ProcessVal(std::string const& val)
 void VarState::LoadFromConfigStream(std::istream& is)
 {
   while (!is.bad() && !is.eof()) {
-    int const c = is.peek();
+    const int c = is.peek();
 
     if (isspace(c)) {
       // ignore leading whitespace
@@ -180,11 +180,11 @@ void VarState::SaveToJsonStream(std::ostream& os)
 {
   picojson::value json_vars(picojson::object_type, true);
 
-  for (auto const& key_value : vars) {
-    std::string const& name = key_value.first;
+  for (const auto& key_value : vars) {
+    const std::string& name = key_value.first;
     try {
       json_vars[name] = key_value.second->str->Get();
-    } catch (BadInputException const&) {
+    } catch (const BadInputException&) {
       // Ignore things we can't serialise
     }
   }
@@ -194,13 +194,13 @@ void VarState::SaveToJsonStream(std::ostream& os)
   os << file_json.serialize(true);
 }
 
-void VarState::LoadFromFile(std::string const& filename, FileKind kind)
+void VarState::LoadFromFile(const std::string& filename, FileKind kind)
 {
   std::ifstream f(filename.c_str());
   if (f.is_open()) {
     switch (kind) {
       case FileKind::detected: {
-        auto const fl = ToLowerCopy(filename);
+        const auto fl = ToLowerCopy(filename);
         if (EndsWith(fl, ".json") || EndsWith(fl, ".jsn")) {
           LoadFromJsonStream(f);
         } else {
@@ -220,7 +220,7 @@ void VarState::LoadFromFile(std::string const& filename, FileKind kind)
   }
 }
 
-void VarState::SaveToFile(std::string const& filename, FileKind kind)
+void VarState::SaveToFile(const std::string& filename, FileKind kind)
 {
   std::ofstream f(filename);
   if (f.is_open()) {

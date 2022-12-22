@@ -7,7 +7,7 @@ namespace pangolin
 
 // By design, ignoring the pose of the children
 struct DrawnGroup : public Drawable {
-  void draw(ViewParams const& params) override
+  void draw(const ViewParams& params) override
   {
     for (auto& child : children) {
       child->draw(params);
@@ -17,7 +17,7 @@ struct DrawnGroup : public Drawable {
   MinMax<Eigen::Vector3d> boundsInParent() const override
   {
     auto bounds = MinMax<Eigen::Vector3d>::closed();
-    for (auto const& child : children) {
+    for (const auto& child : children) {
       // TODO: need a frame transform here.
       bounds.extend(child->boundsInParent());
     }
@@ -26,7 +26,7 @@ struct DrawnGroup : public Drawable {
   struct Params {
     std::vector<Shared<Drawable>> children;
   };
-  static Shared<DrawnGroup> Create(Params const& p)
+  static Shared<DrawnGroup> Create(const Params& p)
   {
     auto ret = Shared<DrawnGroup>::make();
     ret->children = p.children;

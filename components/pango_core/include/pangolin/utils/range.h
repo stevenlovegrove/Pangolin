@@ -101,26 +101,26 @@ struct Range {
     return *this;
   }
 
-  Range& operator+=(Range const& o)
+  Range& operator+=(const Range& o)
   {
     min += o.min;
     max += o.max;
     return *this;
   }
 
-  Range& operator-=(Range const& o)
+  Range& operator-=(const Range& o)
   {
     min -= o.min;
     max -= o.max;
     return *this;
   }
 
-  Range operator+(Range const& o) const
+  Range operator+(const Range& o) const
   {
     return Range(min + o.min, max + o.max);
   }
 
-  Range operator-(Range const& o) const
+  Range operator-(const Range& o) const
   {
     return Range(min - o.min, max - o.max);
   }
@@ -145,7 +145,7 @@ struct Range {
     max = std::max(max, v);
   }
 
-  void Insert(Range<T> const& r)
+  void Insert(const Range<T>& r)
   {
     Insert(r.min);
     Insert(r.max);
@@ -157,7 +157,7 @@ struct Range {
     max = std::min(std::max(vmin, max), vmax);
   }
 
-  void Clamp(Range const& o) { Clamp(o.min, o.max); }
+  void Clamp(const Range& o) { Clamp(o.min, o.max); }
 
   void Clear()
   {
@@ -223,20 +223,20 @@ struct XYRange {
 
   XYRange() {}
 
-  XYRange(Range<T> const& xrange, Range<T> const& yrange) : x(xrange), y(yrange)
+  XYRange(const Range<T>& xrange, const Range<T>& yrange) : x(xrange), y(yrange)
   {
   }
 
   XYRange(T xmin, T xmax, T ymin, T ymax) : x(xmin, xmax), y(ymin, ymax) {}
 
-  XYRange operator-(XYRange const& o) const
+  XYRange operator-(const XYRange& o) const
   {
     return XYRange(x - o.x, y - o.y);
   }
 
   XYRange operator*(float s) const { return XYRange(x * s, y * s); }
 
-  XYRange& operator+=(XYRange const& o)
+  XYRange& operator+=(const XYRange& o)
   {
     x += o.x;
     y += o.y;
@@ -261,7 +261,7 @@ struct XYRange {
     y.Clamp(ymin, ymax);
   }
 
-  void Clamp(XYRange const& o)
+  void Clamp(const XYRange& o)
   {
     x.Clamp(o.x);
     y.Clamp(o.y);
@@ -324,13 +324,13 @@ typedef XYRange<float> XYRangef;
 typedef XYRange<double> XYRanged;
 
 template <typename T>
-inline Rangei Round(Range<T> const& r)
+inline Rangei Round(const Range<T>& r)
 {
   return Rangei(int(r.min + 0.5), int(r.max + 0.5));
 }
 
 template <typename T>
-inline XYRangei Round(XYRange<T> const& r)
+inline XYRangei Round(const XYRange<T>& r)
 {
   return XYRangei(Round(r.x), Round(r.y));
 }

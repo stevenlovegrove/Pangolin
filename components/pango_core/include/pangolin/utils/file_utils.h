@@ -38,36 +38,36 @@ namespace pangolin
 
 PANGOLIN_EXPORT
 std::vector<std::string>& Split(
-    std::string const& s, char delim, std::vector<std::string>& elements);
+    const std::string& s, char delim, std::vector<std::string>& elements);
 
 PANGOLIN_EXPORT
-std::vector<std::string> Split(std::string const& s, char delim);
+std::vector<std::string> Split(const std::string& s, char delim);
 
 PANGOLIN_EXPORT
 std::vector<std::string> Expand(
-    std::string const& s, char open = '[', char close = ']', char delim = ',');
+    const std::string& s, char open = '[', char close = ']', char delim = ',');
 
 PANGOLIN_EXPORT
-std::string SanitizePath(std::string const& path);
+std::string SanitizePath(const std::string& path);
 
 PANGOLIN_EXPORT
-std::string PathParent(std::string const& path, int levels = 1);
+std::string PathParent(const std::string& path, int levels = 1);
 
 PANGOLIN_EXPORT
-bool FileExists(std::string const& filename);
+bool FileExists(const std::string& filename);
 
 PANGOLIN_EXPORT
 std::string FindPath(
-    std::string const& child_path, std::string const& signature_path);
+    const std::string& child_path, const std::string& signature_path);
 
 PANGOLIN_EXPORT
-std::string PathExpand(std::string const& sPath);
+std::string PathExpand(const std::string& sPath);
 
 PANGOLIN_EXPORT
-bool MatchesWildcard(std::string const& str, std::string const& wildcard);
+bool MatchesWildcard(const std::string& str, const std::string& wildcard);
 
 PANGOLIN_EXPORT
-std::string GetFileContents(std::string const& filename);
+std::string GetFileContents(const std::string& filename);
 
 PANGOLIN_EXPORT
 std::string GetExecutablePath();
@@ -86,20 +86,20 @@ enum class SortMethod { STANDARD, NATURAL };
 // sort the file_vec according to the specified sorting method.
 PANGOLIN_EXPORT
 bool FilesMatchingWildcard(
-    std::string const& wildcard_file_path, std::vector<std::string>& file_vec,
+    const std::string& wildcard_file_path, std::vector<std::string>& file_vec,
     SortMethod sort_method = SortMethod::STANDARD);
 
 PANGOLIN_EXPORT
-std::string MakeUniqueFilename(std::string const& filename);
+std::string MakeUniqueFilename(const std::string& filename);
 
 PANGOLIN_EXPORT
-bool IsPipe(std::string const& file);
+bool IsPipe(const std::string& file);
 
 PANGOLIN_EXPORT
 bool IsPipe(int fd);
 
 PANGOLIN_EXPORT
-int WritablePipeFileDescriptor(std::string const& file);
+int WritablePipeFileDescriptor(const std::string& file);
 
 /**
  * Open the file for reading. Note that it is opened with O_NONBLOCK.  The pipe
@@ -110,28 +110,28 @@ int WritablePipeFileDescriptor(std::string const& file);
  * side of the pipe does not get signaled.
  */
 PANGOLIN_EXPORT
-int ReadablePipeFileDescriptor(std::string const& file);
+int ReadablePipeFileDescriptor(const std::string& file);
 
 PANGOLIN_EXPORT
 bool PipeHasDataToRead(int fd);
 
 PANGOLIN_EXPORT
-void FlushPipe(std::string const& file);
+void FlushPipe(const std::string& file);
 
 // TODO: Tidy these inlines up / move them
 
-inline bool StartsWith(std::string const& str, std::string const& prefix)
+inline bool StartsWith(const std::string& str, const std::string& prefix)
 {
   return !str.compare(0, prefix.size(), prefix);
 }
 
-inline bool EndsWith(std::string const& str, std::string const& prefix)
+inline bool EndsWith(const std::string& str, const std::string& prefix)
 {
   return !str.compare(str.size() - prefix.size(), prefix.size(), prefix);
 }
 
 inline std::string Trim(
-    std::string const& str, std::string const& delimiters = " \f\n\r\t\v")
+    const std::string& str, const std::string& delimiters = " \f\n\r\t\v")
 {
   const size_t f = str.find_first_not_of(delimiters);
   return f == std::string::npos
@@ -149,7 +149,7 @@ inline void ToLower(std::string& str)
   std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 }
 
-inline std::string ToUpperCopy(std::string const& str)
+inline std::string ToUpperCopy(const std::string& str)
 {
   std::string out;
   out.resize(str.size());
@@ -157,7 +157,7 @@ inline std::string ToUpperCopy(std::string const& str)
   return out;
 }
 
-inline std::string ToLowerCopy(std::string const& str)
+inline std::string ToLowerCopy(const std::string& str)
 {
   std::string out;
   out.resize(str.size());

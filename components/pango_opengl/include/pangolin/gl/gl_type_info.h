@@ -17,7 +17,7 @@ bool between(const T& val, const T& low_inclusive, const T& high_inclusive)
 }
 
 template <typename T>
-bool isOneOf(const T& val, std::initializer_list<T> const& of)
+bool isOneOf(const T& val, const std::initializer_list<T>& of)
 {
   for (auto x : of) {
     if (val == x) return true;
@@ -41,7 +41,7 @@ struct GlFormatInfo {
 };
 
 inline farm_ng::Expected<GlFormatInfo> glTypeInfo(
-    sophus::RuntimePixelType const& pixel_type)
+    const sophus::RuntimePixelType& pixel_type)
 {
   static constexpr GLint type_table[] = {
       0,  // unspecified
@@ -58,12 +58,12 @@ inline farm_ng::Expected<GlFormatInfo> glTypeInfo(
   };
 
   // Make sure we'll be in bounds...
-  int const nbytes = pixel_type.num_bytes_per_pixel_channel;
-  bool const bfixed = pixel_type.number_type == sophus::NumberType::fixed_point;
+  const int nbytes = pixel_type.num_bytes_per_pixel_channel;
+  const bool bfixed = pixel_type.number_type == sophus::NumberType::fixed_point;
 
   if (between(pixel_type.num_channels, 1, 4) && isOneOf(nbytes, {1, 2, 4})) {
-    int const cidx = pixel_type.num_channels - 1;
-    int const fidx = (nbytes == 4 && bfixed) ? 3 : nbytes;
+    const int cidx = pixel_type.num_channels - 1;
+    const int fidx = (nbytes == 4 && bfixed) ? 3 : nbytes;
     return GlFormatInfo(
         {.gl_sized_format = format_table[fidx][cidx],
          .gl_base_format = format_table[0][cidx],

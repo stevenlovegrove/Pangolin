@@ -3,9 +3,9 @@
 namespace pangolin
 {
 
-bool ParamReader::Contains(std::string const& param_name)
+bool ParamReader::Contains(const std::string& param_name)
 {
-  ParamSet::Param const* param = GetMatchingParamFromParamSet(param_name);
+  const ParamSet::Param* param = GetMatchingParamFromParamSet(param_name);
   if (param) {
     return uri_.Contains(param_name);
   }
@@ -15,7 +15,7 @@ bool ParamReader::Contains(std::string const& param_name)
 std::unordered_set<std::string> ParamReader::FindUnrecognizedUriParams()
 {
   std::unordered_set<std::string> result;
-  for (auto const& param_pair : uri_.params) {
+  for (const auto& param_pair : uri_.params) {
     if (GetMatchingParamFromParamSet(param_pair.first) == nullptr) {
       result.insert(param_pair.first);
     }
@@ -23,10 +23,10 @@ std::unordered_set<std::string> ParamReader::FindUnrecognizedUriParams()
   return result;
 }
 
-ParamSet::Param const* ParamReader::GetMatchingParamFromParamSet(
-    std::string const& param_name) const
+const ParamSet::Param* ParamReader::GetMatchingParamFromParamSet(
+    const std::string& param_name) const
 {
-  for (auto const& param : param_set_.params) {
+  for (const auto& param : param_set_.params) {
     std::regex name_regex(param.name_regex);
     if (std::regex_match(param_name, name_regex)) {
       return &param;
@@ -41,7 +41,7 @@ std::string ParamSet::str() const
   if (params.size() > 0) {
     ss << "[";
     size_t count = 0;
-    for (auto const& param : params) {
+    for (const auto& param : params) {
       ss << param.name_regex;
       if (!param.default_value.empty()) {
         ss << "=" << param.default_value;

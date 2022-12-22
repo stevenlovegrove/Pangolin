@@ -9,7 +9,7 @@ PyPangoIO::PyPangoIO(
 {
 }
 
-void PyPangoIO::write(std::string const& text)
+void PyPangoIO::write(const std::string& text)
 {
   buffer += text;
   size_t nl = buffer.find_first_of('\n');

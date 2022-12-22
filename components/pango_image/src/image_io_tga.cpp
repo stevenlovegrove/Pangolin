@@ -35,8 +35,8 @@ IntensityImage<> LoadTga(std::istream& in)
   in.seekg(12);
   in.read((char*)info, 6 * sizeof(char));
 
-  int const width = info[0] + (info[1] * 256);
-  int const height = info[2] + (info[3] * 256);
+  const int width = info[0] + (info[1] * 256);
+  const int height = info[2] + (info[3] * 256);
 
   if (in.good()) {
     IntensityImage<> img(

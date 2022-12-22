@@ -6,16 +6,16 @@
 namespace pangolin
 {
 
-int constexpr kDynamic = -1;
-int constexpr kMaxMultiDimSizeBytes = 128;
+constexpr int kDynamic = -1;
+constexpr int kMaxMultiDimSizeBytes = 128;
 
 template <int... kSizes>
 struct MultiDim;
 
 template <int kSize>
 struct MultiDim<kSize> {
-  static int constexpr kDim = 1;
-  static int constexpr kDynamicDim = []() {
+  static constexpr int kDim = 1;
+  static constexpr int kDynamicDim = []() {
     if constexpr (kSize == kDynamic)
       return 1;
     else
@@ -23,7 +23,7 @@ struct MultiDim<kSize> {
   }();
   using Index = std::array<int, kDim>;
   using DynamicSize = std::array<int, kDynamicDim>;
-  static int constexpr kFixedVolume = []() {
+  static constexpr int kFixedVolume = []() {
     if constexpr (kSize != kDynamic)
       return kSize;
     else
@@ -35,12 +35,12 @@ struct MultiDim<kSize> {
 
 template <int kSizes0, int... kSizes>
 struct MultiDim<kSizes0, kSizes...> {
-  static int constexpr kDim = 1 + sizeof...(kSizes);
-  static int constexpr kDynamicDim =
+  static constexpr int kDim = 1 + sizeof...(kSizes);
+  static constexpr int kDynamicDim =
       MultiDim<kSizes0>::kDynamicDim + MultiDim<kSizes...>::kDynamicDim;
   using Index = std::array<int, kDim>;
   using DynamicSize = std::array<int, kDynamicDim>;
-  static int constexpr kFixedVolume =
+  static constexpr int kFixedVolume =
       MultiDim<kSizes0>::kFixedVolume * MultiDim<kSizes...>::kFixedVolume;
 
   DynamicSize sizes;
@@ -51,27 +51,27 @@ struct MaybeStaticStorage;
 
 template <typename T, int kStaticSize>
 struct MaybeStaticStorage<T, kStaticSize, false> {
-  static int constexpr kSizeAtCompileTime = kDynamic;
+  static constexpr int kSizeAtCompileTime = kDynamic;
 
   MaybeStaticStorage() = default;
   MaybeStaticStorage(MaybeStaticStorage&&) = default;
-  MaybeStaticStorage(MaybeStaticStorage const&) = delete;
+  MaybeStaticStorage(const MaybeStaticStorage&) = delete;
   MaybeStaticStorage& operator=(MaybeStaticStorage&&) = default;
 
   MaybeStaticStorage(int size) : data(new T[size]) {}
 
-  int constexpr size() const { return kSizeAtCompileTime; }
+  constexpr int size() const { return kSizeAtCompileTime; }
 
   std::unique_ptr<T[]> data;
 };
 
 template <typename T, int kStaticSize>
 struct MaybeStaticStorage<T, kStaticSize, true> {
-  static int constexpr kSizeAtCompileTime = kStaticSize;
+  static constexpr int kSizeAtCompileTime = kStaticSize;
 
   MaybeStaticStorage() = default;
   MaybeStaticStorage(MaybeStaticStorage&&) = default;
-  MaybeStaticStorage(MaybeStaticStorage const&) = delete;
+  MaybeStaticStorage(const MaybeStaticStorage&) = delete;
   MaybeStaticStorage& operator=(MaybeStaticStorage&&) = default;
 
   MaybeStaticStorage(int size)
@@ -79,7 +79,7 @@ struct MaybeStaticStorage<T, kStaticSize, true> {
     // assert(kStaticSize == size);
   }
 
-  int constexpr size() const { return data.size(); }
+  constexpr int size() const { return data.size(); }
 
   std::array<T, kStaticSize> data;
 };
@@ -101,7 +101,7 @@ struct AllAre<T> : std::true_type {
 };
 
 template <class T, int N>
-T arrayProduct(std::array<T, N> const& arr)
+T arrayProduct(const std::array<T, N>& arr)
 {
   T sum = static_cast<T>(0);
   for (T v : arr) {
@@ -115,20 +115,20 @@ struct MultiDimArray {
   using Dim = MultiDim<kSizes...>;
   using DynamicSize = typename Dim::DynamicSize;
   using Index = typename Dim::Index;
-  static bool constexpr kPackIntoStruct =
+  static constexpr bool kPackIntoStruct =
       Dim::kDynamicDim == 0 &&
       (sizeof(T) * Dim::kFixedVolume <= kMaxMultiDimSizeBytes);
   using Storage = MaybeStaticStorage<T, Dim::kFixedVolume, kPackIntoStruct>;
 
   MultiDimArray() { static_assert(Dim::kDynamicDim == 0); }
 
-  MultiDimArray(DynamicSize const& dynamic_sizes) :
+  MultiDimArray(const DynamicSize& dynamic_sizes) :
       dynamic_dim_sizes(dynamic_sizes),
       data(Dim::kFixedVolume * arrayProduct(dynamic_sizes))
   {
   }
 
-  T& operator()(Index const& idx)
+  T& operator()(const Index& idx)
   {
     // ...
   }

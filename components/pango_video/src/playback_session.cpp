@@ -11,13 +11,13 @@ std::shared_ptr<PlaybackSession> PlaybackSession::Default()
 }
 
 std::shared_ptr<PlaybackSession> PlaybackSession::ChooseFromParams(
-    ParamReader const& reader)
+    const ParamReader& reader)
 {
   return Choose(reader.Get<bool>("OrderedPlayback"));
 }
 
 std::shared_ptr<PlaybackSession> PlaybackSession::ChooseFromParams(
-    Params const& params)
+    const Params& params)
 {
   return Choose(params.Get<bool>("OrderedPlayback", false));
 }

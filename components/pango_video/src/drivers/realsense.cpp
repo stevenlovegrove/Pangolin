@@ -52,7 +52,7 @@ void RealSenseVideo::Stop()
 
 size_t RealSenseVideo::SizeBytes() const { return sizeBytes; }
 
-std::vector<StreamInfo> const& RealSenseVideo::Streams() const
+const std::vector<StreamInfo>& RealSenseVideo::Streams() const
 {
   return streams;
 }
@@ -98,7 +98,7 @@ PANGOLIN_REGISTER_FACTORY(RealSenseVideo)
     {
       return {{"realsense1", 10}, {"realsense", 20}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Stream from RealSense devices.";
     }
@@ -108,10 +108,10 @@ PANGOLIN_REGISTER_FACTORY(RealSenseVideo)
           {{"size", "640x480", "Image dimension"},
            {"fps", "30", "Frames per second"}}};
     }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       const ImageDim dim = uri.Get<ImageDim>("size", ImageDim(640, 480));
-      unsigned int const fps = uri.Get<unsigned int>("fps", 30);
+      const unsigned int fps = uri.Get<unsigned int>("fps", 30);
       return std::unique_ptr<VideoInterface>(new RealSenseVideo(dim, fps));
     }
   };

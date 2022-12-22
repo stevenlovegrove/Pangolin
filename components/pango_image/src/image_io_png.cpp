@@ -150,14 +150,14 @@ IntensityImage<> LoadPng(std::istream& source)
 #endif  // HAVE_PNG
 }
 
-IntensityImage<> LoadPng(std::string const& filename)
+IntensityImage<> LoadPng(const std::string& filename)
 {
   std::ifstream f(filename);
   return LoadPng(f);
 }
 
 void SavePng(
-    IntensityImage<> const& image, std::ostream& stream, bool top_line_first,
+    const IntensityImage<>& image, std::ostream& stream, bool top_line_first,
     int zlib_compression_level)
 {
 #ifdef HAVE_PNG
@@ -190,7 +190,7 @@ void SavePng(
       png_ptr, (png_voidp)&stream, pango_png_stream_write,
       pango_png_stream_write_flush);
 
-  int const bit_depth = image.numBytesPerPixelChannel() * 8;
+  const int bit_depth = image.numBytesPerPixelChannel() * 8;
 
   int colour_type;
   switch (image.numChannels()) {

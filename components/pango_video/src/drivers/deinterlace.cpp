@@ -41,7 +41,7 @@ DeinterlaceVideo::DeinterlaceVideo(std::unique_ptr<VideoInterface>& videoin_) :
     throw VideoException(
         "FirewireDeinterlace input must have exactly one stream");
 
-  StreamInfo const& stmin = videoin->Streams()[0];
+  const StreamInfo& stmin = videoin->Streams()[0];
 
   StreamInfo stm1(
       PixelFormatFromString("GRAY8"), stmin.Width(), stmin.Height(),
@@ -62,7 +62,7 @@ DeinterlaceVideo::~DeinterlaceVideo() { delete[] buffer; }
 
 size_t DeinterlaceVideo::SizeBytes() const { return videoin->SizeBytes(); }
 
-std::vector<StreamInfo> const& DeinterlaceVideo::Streams() const
+const std::vector<StreamInfo>& DeinterlaceVideo::Streams() const
 {
   return streams;
 }
@@ -101,12 +101,12 @@ PANGOLIN_REGISTER_FACTORY(DeinterlaceVideo)
     {
       return {{"deinterlace", 10}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Deinterlace sub-video.";
     }
     ParamSet Params() const override { return {{}}; }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);
       return std::unique_ptr<VideoInterface>(new DeinterlaceVideo(subvid));

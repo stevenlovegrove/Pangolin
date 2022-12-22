@@ -19,7 +19,7 @@ struct TreeNode {
 };
 
 template <typename T, typename TEdge>
-using NodeFunction = std::function<void(TreeNode<T, TEdge> &, TEdge const &)>;
+using NodeFunction = std::function<void(TreeNode<T, TEdge> &, const TEdge &)>;
 
 // template<typename T, typename TEdge>
 // void VisitDepthFirst(TreeNode<T,TEdge>& node, const NodeFunction<T,TEdge>&

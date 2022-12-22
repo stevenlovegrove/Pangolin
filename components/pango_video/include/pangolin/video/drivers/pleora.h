@@ -66,7 +66,7 @@ class PANGOLIN_EXPORT PleoraVideo : public VideoInterface,
   public:
   static const size_t DEFAULT_BUFFER_COUNT = 30;
 
-  PleoraVideo(Params const& p);
+  PleoraVideo(const Params& p);
 
   ~PleoraVideo();
 
@@ -76,15 +76,15 @@ class PANGOLIN_EXPORT PleoraVideo : public VideoInterface,
 
   size_t SizeBytes() const;
 
-  std::vector<StreamInfo> const& Streams() const;
+  const std::vector<StreamInfo>& Streams() const;
 
   bool GrabNext(unsigned char* image, bool wait = true);
 
   bool GrabNewest(unsigned char* image, bool wait = true);
 
-  std::string GetParameter(std::string const& name);
+  std::string GetParameter(const std::string& name);
 
-  void SetParameter(std::string const& name, std::string const& value);
+  void SetParameter(const std::string& name, const std::string& value);
 
   void SetGain(int64_t val);
 
@@ -105,16 +105,16 @@ class PANGOLIN_EXPORT PleoraVideo : public VideoInterface,
   void SetupTrigger(
       bool triggerActive, int64_t triggerSource, int64_t acquisitionMode);
 
-  picojson::value const& DeviceProperties() const { return device_properties; }
+  const picojson::value& DeviceProperties() const { return device_properties; }
 
-  picojson::value const& FrameProperties() const { return frame_properties; }
+  const picojson::value& FrameProperties() const { return frame_properties; }
 
   uint32_t AvailableFrames() const;
 
   bool DropNFrames(uint32_t n);
 
   protected:
-  void InitDevice(char const* model_name, char const* serial_num, size_t index);
+  void InitDevice(const char* model_name, const char* serial_num, size_t index);
 
   void DeinitDevice();
 
@@ -133,16 +133,16 @@ class PANGOLIN_EXPORT PleoraVideo : public VideoInterface,
   void DeinitBuffers();
 
   template <typename T>
-  T DeviceParam(char const* name);
+  T DeviceParam(const char* name);
 
   template <typename T>
-  bool SetDeviceParam(char const* name, T val);
+  bool SetDeviceParam(const char* name, T val);
 
   template <typename T>
-  T StreamParam(char const* name);
+  T StreamParam(const char* name);
 
   template <typename T>
-  bool SetStreamParam(char const* name, T val);
+  bool SetStreamParam(const char* name, T val);
 
   bool ParseBuffer(PvBuffer* lBuffer, unsigned char* image);
 
@@ -156,7 +156,7 @@ class PANGOLIN_EXPORT PleoraVideo : public VideoInterface,
 
   // Pleora handles
   PvSystem* lPvSystem;
-  PvDeviceInfo const* lDeviceInfo;
+  const PvDeviceInfo* lDeviceInfo;
   PvDevice* lDevice;
   PvStream* lStream;
 

@@ -23,7 +23,7 @@ struct lz4_image_header {
 #pragma pack(pop)
 
 void SaveLz4(
-    IntensityImage<> const& image, std::ostream& out, int compression_level)
+    const IntensityImage<>& image, std::ostream& out, int compression_level)
 {
 #ifdef HAVE_LZ4
   const int64_t src_size = image.sizeBytes();
@@ -80,7 +80,7 @@ IntensityImage<> LoadLz4(std::istream& in)
   std::unique_ptr<char[]> input_buffer(new char[header.compressed_size]);
 
   in.read(input_buffer.get(), header.compressed_size);
-  int const decompressed_size = LZ4_decompress_safe(
+  const int decompressed_size = LZ4_decompress_safe(
       input_buffer.get(), (char*)const_cast<uint8_t*>(img.rawPtr()),
       header.compressed_size, img.sizeBytes());
 

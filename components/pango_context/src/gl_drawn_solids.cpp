@@ -10,7 +10,7 @@ namespace pangolin
 {
 
 struct GlDrawnSolids : public DrawnSolids {
-  void draw(ViewParams const& params) override
+  void draw(const ViewParams& params) override
   {
     auto bind_prog = prog->bind();
     auto bind_vao = vao.bind();
@@ -39,14 +39,14 @@ struct GlDrawnSolids : public DrawnSolids {
   }
 
   private:
-  Shared<GlSlProgram> const prog = GlSlProgram::Create(
+  const Shared<GlSlProgram> prog = GlSlProgram::Create(
       {.sources = {
            {.origin = "/components/pango_opengl/shaders/main_plane.glsl"}}});
   GlVertexArrayObject vao = {};
-  GlUniform<Eigen::Matrix4f> const u_cam_from_clip = {"camera_from_clip"};
-  GlUniform<Eigen::Matrix4f> const u_world_from_cam = {"world_from_cam"};
-  GlUniform<Eigen::Vector2f> const u_znear_zfar = {"znear_zfar"};
-  GlUniform<bool> const u_use_unproject_map = {"use_unproject_map"};
+  const GlUniform<Eigen::Matrix4f> u_cam_from_clip = {"camera_from_clip"};
+  const GlUniform<Eigen::Matrix4f> u_world_from_cam = {"world_from_cam"};
+  const GlUniform<Eigen::Vector2f> u_znear_zfar = {"znear_zfar"};
+  const GlUniform<bool> u_use_unproject_map = {"use_unproject_map"};
 };
 
 PANGO_CREATE(DrawnSolids)

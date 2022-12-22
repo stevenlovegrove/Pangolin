@@ -17,19 +17,19 @@ namespace pangolin
 {
 
 struct GlWidgetLayer : WidgetLayer {
-  GlWidgetLayer(WidgetLayer::Params const &p);
+  GlWidgetLayer(const WidgetLayer::Params &p);
 
   std::string name() const override;
 
   Size sizeHint() const override;
 
-  void renderIntoRegion(Context const &, RenderParams const &) override;
+  void renderIntoRegion(const Context &, const RenderParams &) override;
 
-  bool handleEvent(Context const &, Event const &) override;
+  bool handleEvent(const Context &, const Event &) override;
 
   ///////////
 
-  static float constexpr sping_coeff = 0.2;
+  static constexpr float sping_coeff = 0.2;
 
   enum class WidgetType {
     label = 0,
@@ -46,7 +46,7 @@ struct GlWidgetLayer : WidgetLayer {
     float value_percent;
     int divisions;
     WidgetType widget_type;
-    std::function<void(WidgetParams const &)> read_params;
+    std::function<void(const WidgetParams &)> read_params;
     std::function<void(WidgetParams &)> write_params;
   };
 
@@ -56,25 +56,25 @@ struct GlWidgetLayer : WidgetLayer {
 
   void UpdateWidgetVBO(float width);
 
-  std::u32string toUtf32(std::string const &utf8);
+  std::u32string toUtf32(const std::string &utf8);
 
-  float TextWidthPix(std::u32string const &utf32);
+  float TextWidthPix(const std::u32string &utf32);
 
   void AddTextToHostBuffer(
-      std::u32string const &utf32, Eigen::Array2d p,
+      const std::u32string &utf32, Eigen::Array2d p,
       std::vector<Eigen::Vector3f> &host_vbo_pos,
       std::vector<uint16_t> &host_vbo_index);
 
   void UpdateCharsVBO(float width);
 
   void SetValue(
-      Eigen::Array2d const &p, MinMax<Eigen::Array2i> const &region,
+      const Eigen::Array2d &p, const MinMax<Eigen::Array2i> &region,
       bool pressed, bool dragging);
 
   std::pair<int, Eigen::Vector2f> WidgetXY(
-      Eigen::Array2d const &p, MinMax<Eigen::Array2i> const &region);
+      const Eigen::Array2d &p, const MinMax<Eigen::Array2i> &region);
 
-  void process_var_event(pangolin::VarState::Event const &event);
+  void process_var_event(const pangolin::VarState::Event &event);
 
   Size size_hint_;
 
@@ -104,7 +104,7 @@ struct GlWidgetLayer : WidgetLayer {
       color_slider_outline = {0.8f, 0.6f, 0.6f};
     }
 
-    Shared<GlSlProgram> const prog = GlSlProgram::Create(
+    const Shared<GlSlProgram> prog = GlSlProgram::Create(
         {.sources = {
              {.origin =
                   "/components/pango_opengl/shaders/main_widgets.glsl"}}});
@@ -139,7 +139,7 @@ struct GlWidgetLayer : WidgetLayer {
       color = {0.0f, 0.0f, 0.0f};
     }
 
-    Shared<GlSlProgram> const prog = GlSlProgram::Create(
+    const Shared<GlSlProgram> prog = GlSlProgram::Create(
         {.sources = {
              {.origin = "/components/pango_opengl/shaders/main_text.glsl"}}});
     GlUniform<int> font_atlas = {"u_font_atlas"};

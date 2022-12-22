@@ -14,7 +14,7 @@ namespace pangolin
 template <typename T>  // T really just defines the domain 'parent'
 struct [[nodiscard]] ScopedBind {
   // Not copyable
-  ScopedBind(ScopedBind const&) = delete;
+  ScopedBind(const ScopedBind&) = delete;
 
   // but moveable
   ScopedBind(ScopedBind&& o) { *this = std::move(o); }
@@ -29,8 +29,8 @@ struct [[nodiscard]] ScopedBind {
   }
 
   ScopedBind(
-      std::function<void()> const& bind_func,
-      std::function<void()> const& unbind_func) :
+      const std::function<void()>& bind_func,
+      const std::function<void()>& unbind_func) :
       bind_func_(bind_func),
       unbind_func_(unbind_func),
       parent_(getLocalActiveScopePtr())

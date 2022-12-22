@@ -41,15 +41,15 @@ struct PANGOLIN_EXPORT VideoOutputInterface {
   virtual ~VideoOutputInterface() {}
 
   //! Get format and dimensions of all video streams
-  virtual std::vector<StreamInfo> const& Streams() const = 0;
+  virtual const std::vector<StreamInfo>& Streams() const = 0;
 
   virtual void SetStreams(
-      std::vector<StreamInfo> const& streams, std::string const& uri = "",
-      picojson::value const& properties = picojson::value()) = 0;
+      const std::vector<StreamInfo>& streams, const std::string& uri = "",
+      const picojson::value& properties = picojson::value()) = 0;
 
   virtual int WriteStreams(
-      unsigned char const* data,
-      picojson::value const& frame_properties = picojson::value()) = 0;
+      const unsigned char* data,
+      const picojson::value& frame_properties = picojson::value()) = 0;
 
   virtual bool IsPipe() const = 0;
 };

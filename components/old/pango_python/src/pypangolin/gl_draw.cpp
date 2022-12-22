@@ -51,20 +51,20 @@ void bind_gl_draw(pybind11::module &m)
       (void (*)(GLfloat, GLfloat, GLfloat, GLfloat, int, int, GLfloat)) &
           pangolin::glDrawFrustum);
   m.def(
-      "glDrawFrustum", (void (*)(Eigen::Matrix3f const &, int, int, GLfloat)) &
+      "glDrawFrustum", (void (*)(const Eigen::Matrix3f &, int, int, GLfloat)) &
                            pangolin::glDrawFrustum<float>);
   m.def(
-      "glDrawFrustum", (void (*)(Eigen::Matrix3d const &, int, int, GLfloat)) &
+      "glDrawFrustum", (void (*)(const Eigen::Matrix3d &, int, int, GLfloat)) &
                            pangolin::glDrawFrustum<double>);
   m.def(
       "glDrawFrustum",
       (void (*)(
-          Eigen::Matrix3f const &, int, int, Eigen::Matrix4f const &, float)) &
+          const Eigen::Matrix3f &, int, int, const Eigen::Matrix4f &, float)) &
           pangolin::glDrawFrustum<float>);
   m.def(
       "glDrawFrustum",
       (void (*)(
-          Eigen::Matrix3d const &, int, int, Eigen::Matrix4d const &, double)) &
+          const Eigen::Matrix3d &, int, int, const Eigen::Matrix4d &, double)) &
           pangolin::glDrawFrustum<double>);
 
   m.def("glDrawTexture", (void (*)(GLenum, GLint)) & pangolin::glDrawTexture);
@@ -74,18 +74,18 @@ void bind_gl_draw(pybind11::module &m)
 
   m.def("glDrawAxis", (void (*)(float)) & pangolin::glDrawAxis);
   m.def(
-      "glDrawAxis", (void (*)(Eigen::Matrix4f const &, float)) &
+      "glDrawAxis", (void (*)(const Eigen::Matrix4f &, float)) &
                         pangolin::glDrawAxis<Eigen::Matrix4f, float>);
   m.def(
-      "glDrawAxis", (void (*)(Eigen::Matrix4d const &, float)) &
+      "glDrawAxis", (void (*)(const Eigen::Matrix4d &, float)) &
                         pangolin::glDrawAxis<Eigen::Matrix4d, float>);
 
   m.def(
       "glSetFrameOfReference",
-      (void (*)(Eigen::Matrix4f const &)) & pangolin::glSetFrameOfReference);
+      (void (*)(const Eigen::Matrix4f &)) & pangolin::glSetFrameOfReference);
   m.def(
       "glSetFrameOfReference",
-      (void (*)(Eigen::Matrix4d const &)) & pangolin::glSetFrameOfReference);
+      (void (*)(const Eigen::Matrix4d &)) & pangolin::glSetFrameOfReference);
 
   m.def("glUnsetFrameOfReference", &pangolin::glUnsetFrameOfReference);
 
@@ -156,7 +156,7 @@ void bind_gl_draw(pybind11::module &m)
 
   m.def(
       "glDrawAlignedBox",
-      (void (*)(Eigen::AlignedBox2f const &, GLenum)) &
+      (void (*)(const Eigen::AlignedBox2f &, GLenum)) &
           pangolin::glDrawAlignedBox<float>,
       pybind11::arg("box"), pybind11::arg("mode") = GL_TRIANGLE_FAN);
 
@@ -164,7 +164,7 @@ void bind_gl_draw(pybind11::module &m)
       "glDrawCirclePerimeter",
       (void (*)(float, float, float)) & pangolin::glDrawCirclePerimeter);
   m.def(
-      "glDrawCirclePerimeter", (void (*)(Eigen::Vector2d const &, double)) &
+      "glDrawCirclePerimeter", (void (*)(const Eigen::Vector2d &, double)) &
                                    pangolin::glDrawCirclePerimeter);
 
   m.def("glDrawRectPerimeter", &pangolin::glDrawRectPerimeter);
@@ -177,16 +177,16 @@ void bind_gl_draw(pybind11::module &m)
       (void (*)(GLfloat, GLfloat, GLfloat, GLfloat)) & pangolin::glDrawCross);
   m.def(
       "glDrawCross",
-      (void (*)(Eigen::Vector2d const &, double)) & pangolin::glDrawCross);
+      (void (*)(const Eigen::Vector2d &, double)) & pangolin::glDrawCross);
   m.def(
       "glDrawCross",
-      (void (*)(Eigen::Vector3d const &, double)) & pangolin::glDrawCross);
+      (void (*)(const Eigen::Vector3d &, double)) & pangolin::glDrawCross);
 
   m.def(
       "glDrawCircle", (void (*)(float, float, float)) & pangolin::glDrawCircle);
   m.def(
       "glDrawCircle",
-      (void (*)(Eigen::Vector2d const &, double)) & pangolin::glDrawCircle);
+      (void (*)(const Eigen::Vector2d &, double)) & pangolin::glDrawCircle);
 }
 
 }  // namespace py_pangolin

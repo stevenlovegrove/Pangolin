@@ -83,7 +83,7 @@ struct PANGOLIN_EXPORT View {
   void Activate() const;
 
   //! Activate Displays and set State Matrices
-  void Activate(OpenGlRenderState const& state) const;
+  void Activate(const OpenGlRenderState& state) const;
 
   //! Activate Displays viewport and Scissor for drawing within this area
   void ActivateAndScissor() const;
@@ -92,10 +92,10 @@ struct PANGOLIN_EXPORT View {
   void ActivateScissorAndClear() const;
 
   //! Activate Display and set State Matrices
-  void ActivateAndScissor(OpenGlRenderState const& state) const;
+  void ActivateAndScissor(const OpenGlRenderState& state) const;
 
   //! Activate Display and set State Matrices
-  void ActivateScissorAndClear(OpenGlRenderState const& state) const;
+  void ActivateScissorAndClear(const OpenGlRenderState& state) const;
 
   //! Activate Display and setup coordinate system for 2d pixel View coordinates
   void ActivatePixelOrthographic() const;
@@ -109,17 +109,17 @@ struct PANGOLIN_EXPORT View {
   //! Obtain camera space coordinates of scene at pixel (winx, winy, winzdepth)
   //! winzdepth can be obtained from GetClosestDepth
   void GetCamCoordinates(
-      OpenGlRenderState const& cam_state, double winx, double winy,
+      const OpenGlRenderState& cam_state, double winx, double winy,
       double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const;
 
   //! Obtain object space coordinates of scene at pixel (winx, winy, winzdepth)
   //! winzdepth can be obtained from GetClosestDepth
   void GetObjectCoordinates(
-      OpenGlRenderState const& cam_state, double winx, double winy,
+      const OpenGlRenderState& cam_state, double winx, double winy,
       double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const;
 
   //! Given the specification of Display, compute viewport
-  virtual void Resize(Viewport const& parent);
+  virtual void Resize(const Viewport& parent);
 
   //! Instruct all children to resize
   virtual void ResizeChildren();
@@ -155,7 +155,7 @@ struct PANGOLIN_EXPORT View {
   View& SetHandler(Handler* handler);
 
   //! Set drawFunc as the drawing function for this view
-  View& SetDrawFunction(std::function<void(View&)> const& drawFunc);
+  View& SetDrawFunction(const std::function<void(View&)>& drawFunc);
 
   //! Force this view to have the given aspect, whilst fitting snuggly
   //! within the parent. A negative value with 'over-draw', fitting the
@@ -236,10 +236,10 @@ struct PANGOLIN_EXPORT View {
   ////////////////////////////////////////////////
 
   PANGOLIN_DEPRECATED("Use pangolin::SaveWindowOnRender(...) instead.")
-  void SaveOnRender(std::string const& filename_hint);
+  void SaveOnRender(const std::string& filename_hint);
 
   PANGOLIN_DEPRECATED("Use pangolin::SaveWindowNow(...) instead.")
-  void SaveRenderNow(std::string const& filename_hint);
+  void SaveRenderNow(const std::string& filename_hint);
 
   private:
   // Private copy constructor

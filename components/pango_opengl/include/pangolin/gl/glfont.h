@@ -43,35 +43,35 @@ class PANGOLIN_EXPORT GlFont
 
   // Load GL Font data. Delay uploading as texture until first use.
   GlFont(
-      unsigned char const* ttf_buffer, float pixel_height, int tex_w = 1024,
+      const unsigned char* ttf_buffer, float pixel_height, int tex_w = 1024,
       int tex_h = 1024, bool use_alpha_font = true);
   GlFont(
-      std::string const& filename, float pixel_height, int tex_w = 1024,
+      const std::string& filename, float pixel_height, int tex_w = 1024,
       int tex_h = 1024, bool use_alpha_font = true);
-  GlFont(std::string const& atlas_filename, std::string const& json_filename);
+  GlFont(const std::string& atlas_filename, const std::string& json_filename);
 
   virtual ~GlFont();
 
   // Generate renderable GlText object from this font.
-  GlText Text(char const* fmt, ...);
+  GlText Text(const char* fmt, ...);
 
   // Utf8 encoded string
-  GlText Text(std::string const& utf8);
+  GlText Text(const std::string& utf8);
 
   inline float Height() const { return font_height_px; }
   inline float MaxWidth() const { return font_max_width_px; }
 
   // protected:
   sophus::Image<Eigen::Vector4f> MakeFontLookupImage();
-  sophus::Image<uint16_t> MakeFontIndexImage(std::string const& utf8);
-  std::u16string to_index_string(std::u32string const& utf32);
-  std::u16string to_index_string(std::string const& utf8);
+  sophus::Image<uint16_t> MakeFontIndexImage(const std::string& utf8);
+  std::u16string to_index_string(const std::u32string& utf32);
+  std::u16string to_index_string(const std::string& utf8);
 
   void InitialiseFont(
-      unsigned char const* ttf_buffer, float pixel_height, int tex_w, int tex_h,
+      const unsigned char* ttf_buffer, float pixel_height, int tex_w, int tex_h,
       bool use_alpha_font);
   void InitialiseFontFromAtlas(
-      std::string const& atlas_bitmap, std::string const& atlas_json);
+      const std::string& atlas_bitmap, const std::string& atlas_json);
 
   // This can only be called once GL context is initialised
   void InitialiseGlTexture();

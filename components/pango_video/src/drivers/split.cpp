@@ -37,7 +37,7 @@ namespace pangolin
 
 SplitVideo::SplitVideo(
     std::unique_ptr<VideoInterface>& src_,
-    std::vector<StreamInfo> const& streams) :
+    const std::vector<StreamInfo>& streams) :
     src(std::move(src_)), streams(streams)
 {
   videoin.push_back(src.get());
@@ -56,7 +56,7 @@ SplitVideo::~SplitVideo() {}
 
 size_t SplitVideo::SizeBytes() const { return videoin[0]->SizeBytes(); }
 
-std::vector<StreamInfo> const& SplitVideo::Streams() const { return streams; }
+const std::vector<StreamInfo>& SplitVideo::Streams() const { return streams; }
 
 void SplitVideo::Start() { videoin[0]->Start(); }
 
@@ -82,7 +82,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
     {
       return {{"split", 10}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Transforms a set of video streams into a new set by providing "
              "region-of-interest, raw memory layout, or stream order "
@@ -97,7 +97,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
            {"stream\\d+", "0", "Integer"}}};
     }
 
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       std::vector<StreamInfo> streams;
 
@@ -119,8 +119,8 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
                               pangolin::Convert<std::string, size_t>::Do(n);
 
         if (uri.Contains(key_roi)) {
-          StreamInfo const& st1 = subvid->Streams()[0];
-          ImageRoi const& roi = param_reader.Get<ImageRoi>(key_roi, ImageRoi());
+          const StreamInfo& st1 = subvid->Streams()[0];
+          const ImageRoi& roi = param_reader.Get<ImageRoi>(key_roi, ImageRoi());
           if (roi.w == 0 || roi.h == 0) {
             throw VideoException("split: empty ROI.");
           }
@@ -130,7 +130,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
               st1.format(), ImageShape(roi.w, roi.h, st1.shape().pitchBytes()),
               start1));
         } else if (uri.Contains(key_mem)) {
-          StreamInfo const& info = param_reader.Get(
+          const StreamInfo& info = param_reader.Get(
               key_mem, subvid->Streams()[0]);  // uri.Get<StreamInfo>(key_mem,
                                                // subvid->Streams()[0] );
           streams.push_back(info);
@@ -149,7 +149,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
 
       // Default split if no arguments
       if (streams.size() == 0) {
-        StreamInfo const& st1 = subvid->Streams()[0];
+        const StreamInfo& st1 = subvid->Streams()[0];
         const size_t subw = st1.shape().width();
         const size_t subh = st1.shape().height();
 

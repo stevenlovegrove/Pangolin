@@ -45,7 +45,7 @@ class PANGOLIN_EXPORT PacketStreamWriter
   }
 
   PacketStreamWriter(
-      std::string const& filename, size_t buffer_size = 100 * 1024 * 1024) :
+      const std::string& filename, size_t buffer_size = 100 * 1024 * 1024) :
       _buffer(pangolin::PathExpand(filename), buffer_size),
       _stream(&_buffer),
       _indexable(!IsPipe(filename)),
@@ -58,7 +58,7 @@ class PANGOLIN_EXPORT PacketStreamWriter
 
   ~PacketStreamWriter() { Close(); }
 
-  void Open(std::string const& filename, size_t buffer_size = 100 * 1024 * 1024)
+  void Open(const std::string& filename, size_t buffer_size = 100 * 1024 * 1024)
   {
     Close();
     _buffer.open(filename, buffer_size);
@@ -93,12 +93,12 @@ class PANGOLIN_EXPORT PacketStreamWriter
   PacketStreamSourceId AddSource(PacketStreamSource& source);
 
   // If constructor is called inline
-  PacketStreamSourceId AddSource(PacketStreamSource const& source);
+  PacketStreamSourceId AddSource(const PacketStreamSource& source);
 
   void WriteSourcePacket(
-      PacketStreamSourceId src, char const* source,
+      PacketStreamSourceId src, const char* source,
       const int64_t receive_time_us, size_t sourcelen,
-      picojson::value const& meta = picojson::value());
+      const picojson::value& meta = picojson::value());
 
   // For stream read/write synchronization. Note that this is NOT the same as
   // time synchronization on playback of iPacketStreams.
@@ -108,14 +108,14 @@ class PANGOLIN_EXPORT PacketStreamWriter
   // the underlying ostream.
   void WriteEnd();
 
-  std::vector<PacketStreamSource> const& Sources() const { return _sources; }
+  const std::vector<PacketStreamSource>& Sources() const { return _sources; }
 
   bool IsOpen() const { return _open; }
 
   private:
   void WriteHeader();
-  void Write(PacketStreamSource const&);
-  void WriteMeta(PacketStreamSourceId src, picojson::value const& data);
+  void Write(const PacketStreamSource&);
+  void WriteMeta(PacketStreamSourceId src, const picojson::value& data);
 
   threadedfilebuf _buffer;
   std::ostream _stream;
@@ -138,15 +138,15 @@ inline void writeCompressedUnsignedInt(std::ostream& writer, size_t n)
 inline void writeTimestamp(std::ostream& writer, int64_t time_us)
 {
   writer.write(
-      reinterpret_cast<char const*>(&time_us), sizeof(decltype(time_us)));
+      reinterpret_cast<const char*>(&time_us), sizeof(decltype(time_us)));
 }
 
 inline void writeTag(std::ostream& writer, const PangoTagType tag)
 {
-  writer.write(reinterpret_cast<char const*>(&tag), TAG_LENGTH);
+  writer.write(reinterpret_cast<const char*>(&tag), TAG_LENGTH);
 }
 
-inline picojson::value SourceStats(std::vector<PacketStreamSource> const& srcs)
+inline picojson::value SourceStats(const std::vector<PacketStreamSource>& srcs)
 {
   picojson::value stat;
   stat["num_sources"] = srcs.size();
@@ -155,7 +155,7 @@ inline picojson::value SourceStats(std::vector<PacketStreamSource> const& srcs)
 
   for (auto& src : srcs) {
     picojson::array pkt_index, pkt_times;
-    for (PacketStreamSource::PacketInfo const& frame : src.index) {
+    for (const PacketStreamSource::PacketInfo& frame : src.index) {
       pkt_index.emplace_back(frame.pos);
       pkt_times.emplace_back(frame.capture_time);
     }

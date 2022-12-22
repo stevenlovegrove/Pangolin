@@ -32,18 +32,18 @@
 
 #ifdef HAVE_DC1394
 #include <dc1394/conversions.h>
-bool const have_dc1394 = true;
+const bool have_dc1394 = true;
 #else
-bool const have_dc1394 = false;
+const bool have_dc1394 = false;
 #endif
 
 namespace pangolin
 {
 
 pangolin::StreamInfo BayerOutputFormat(
-    StreamInfo const& stream_in, bayer_method_t method, size_t start_offset)
+    const StreamInfo& stream_in, bayer_method_t method, size_t start_offset)
 {
-  bool const downsample = (method == BAYER_METHOD_DOWNSAMPLE) ||
+  const bool downsample = (method == BAYER_METHOD_DOWNSAMPLE) ||
                           (method == BAYER_METHOD_DOWNSAMPLE_MONO);
 
   const size_t w = downsample ? stream_in.Width() / 2 : stream_in.Width();
@@ -68,8 +68,8 @@ pangolin::StreamInfo BayerOutputFormat(
 
 DebayerVideo::DebayerVideo(
     std::unique_ptr<VideoInterface>& src_,
-    std::vector<bayer_method_t> const& bayer_method, color_filter_t tile,
-    WbGains const& input_wb_gains) :
+    const std::vector<bayer_method_t>& bayer_method, color_filter_t tile,
+    const WbGains& input_wb_gains) :
     src(std::move(src_)),
     size_bytes(0),
     methods(bayer_method),
@@ -94,7 +94,7 @@ DebayerVideo::DebayerVideo(
       methods[s] = BAYER_METHOD_DOWNSAMPLE;
     }
 
-    StreamInfo const& stin = src->Streams()[s];
+    const StreamInfo& stin = src->Streams()[s];
     streams.push_back(BayerOutputFormat(stin, methods[s], size_bytes));
     size_bytes += streams.back().SizeBytes();
   }
@@ -114,7 +114,7 @@ void DebayerVideo::Stop() { videoin[0]->Stop(); }
 size_t DebayerVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-std::vector<StreamInfo> const& DebayerVideo::Streams() const { return streams; }
+const std::vector<StreamInfo>& DebayerVideo::Streams() const { return streams; }
 
 unsigned int DebayerVideo::AvailableFrames() const
 {
@@ -141,12 +141,12 @@ bool DebayerVideo::DropNFrames(uint32_t n)
 }
 
 template <typename Tup, typename Tout, typename Tin>
-void DownsampleToMono(Image<Tout>& out, Image<Tin> const& in)
+void DownsampleToMono(Image<Tout>& out, const Image<Tin>& in)
 {
   for (int y = 0; y < (int)out.h; ++y) {
     Tout* pixout = out.RowPtr(y);
-    Tin const* irow0 = in.RowPtr(2 * y);
-    Tin const* irow1 = in.RowPtr(2 * y + 1);
+    const Tin* irow0 = in.RowPtr(2 * y);
+    const Tin* irow1 = in.RowPtr(2 * y + 1);
     for (size_t x = 0; x < out.w; ++x) {
       Tup val =
           ((Tup)irow0[0] + (Tup)irow0[1] + (Tup)irow1[0] + (Tup)irow1[1]) / 4;
@@ -161,8 +161,8 @@ void DownsampleToMono(Image<Tout>& out, Image<Tin> const& in)
 
 template <typename Tout, typename Tin>
 void DownsampleDebayer(
-    Image<Tout>& out, Image<Tin> const& in, color_filter_t tile,
-    WbGains wb_gains, bool const has_metadata_line)
+    Image<Tout>& out, const Image<Tin>& in, color_filter_t tile,
+    WbGains wb_gains, const bool has_metadata_line)
 {
   int y_offset = 0;
   if (has_metadata_line) {
@@ -173,8 +173,8 @@ void DownsampleDebayer(
     case DC1394_COLOR_FILTER_RGGB:
       for (int y = 0; y < (int)out.h; ++y) {
         Tout* pixout = out.RowPtr(y);
-        Tin const* irow0 = in.RowPtr(2 * y + y_offset);
-        Tin const* irow1 = in.RowPtr(2 * y + 1 + y_offset);
+        const Tin* irow0 = in.RowPtr(2 * y + y_offset);
+        const Tin* irow1 = in.RowPtr(2 * y + 1 + y_offset);
         for (size_t x = 0; x < out.w; ++x) {
           *(pixout++) = irow0[2 * x] * wb_gains.r;
           *(pixout++) = ((irow0[2 * x + 1] + irow1[2 * x]) >> 1) * wb_gains.g;
@@ -185,8 +185,8 @@ void DownsampleDebayer(
     case DC1394_COLOR_FILTER_GBRG:
       for (int y = 0; y < (int)out.h; ++y) {
         Tout* pixout = out.RowPtr(y);
-        Tin const* irow0 = in.RowPtr(2 * y + y_offset);
-        Tin const* irow1 = in.RowPtr(2 * y + 1 + y_offset);
+        const Tin* irow0 = in.RowPtr(2 * y + y_offset);
+        const Tin* irow1 = in.RowPtr(2 * y + 1 + y_offset);
         for (size_t x = 0; x < out.w; ++x) {
           *(pixout++) = irow1[2 * x] * wb_gains.r;
           *(pixout++) = ((irow0[2 * x] + irow1[2 * x + 1]) >> 1) * wb_gains.g;
@@ -197,8 +197,8 @@ void DownsampleDebayer(
     case DC1394_COLOR_FILTER_GRBG:
       for (int y = 0; y < (int)out.h; ++y) {
         Tout* pixout = out.RowPtr(y);
-        Tin const* irow0 = in.RowPtr(2 * y + y_offset);
-        Tin const* irow1 = in.RowPtr(2 * y + 1 + y_offset);
+        const Tin* irow0 = in.RowPtr(2 * y + y_offset);
+        const Tin* irow1 = in.RowPtr(2 * y + 1 + y_offset);
         for (size_t x = 0; x < out.w; ++x) {
           *(pixout++) = irow0[2 * x + 1] * wb_gains.r;
           *(pixout++) = ((irow0[2 * x] + irow1[2 * x + 1]) >> 1) * wb_gains.g;
@@ -209,8 +209,8 @@ void DownsampleDebayer(
     case DC1394_COLOR_FILTER_BGGR:
       for (int y = 0; y < (int)out.h; ++y) {
         Tout* pixout = out.RowPtr(y);
-        Tin const* irow0 = in.RowPtr(2 * y + y_offset);
-        Tin const* irow1 = in.RowPtr(2 * y + 1 + y_offset);
+        const Tin* irow0 = in.RowPtr(2 * y + y_offset);
+        const Tin* irow1 = in.RowPtr(2 * y + 1 + y_offset);
         for (size_t x = 0; x < out.w; ++x) {
           *(pixout++) = irow1[2 * x + 1] * wb_gains.r;
           *(pixout++) = ((irow0[2 * x + 1] + irow1[2 * x]) >> 1) * wb_gains.g;
@@ -222,7 +222,7 @@ void DownsampleDebayer(
 }
 
 template <typename T>
-void PitchedImageCopy(Image<T>& img_out, Image<T> const& img_in)
+void PitchedImageCopy(Image<T>& img_out, const Image<T>& img_in)
 {
   if (img_out.w != img_in.w || img_out.h != img_in.h ||
       sizeof(T) * img_in.w > img_out.pitch) {
@@ -237,8 +237,8 @@ void PitchedImageCopy(Image<T>& img_out, Image<T> const& img_in)
 
 template <typename Tout, typename Tin>
 void ProcessImage(
-    Image<Tout>& img_out, Image<Tin> const& img_in, bayer_method_t method,
-    color_filter_t tile, WbGains wb_gains, bool const has_metadata_line)
+    Image<Tout>& img_out, const Image<Tin>& img_in, bayer_method_t method,
+    color_filter_t tile, WbGains wb_gains, const bool has_metadata_line)
 {
   if (method == BAYER_METHOD_NONE) {
     PitchedImageCopy(img_out, img_in.template UnsafeReinterpret<Tout>());
@@ -265,13 +265,13 @@ void ProcessImage(
   }
 }
 
-void DebayerVideo::ProcessStreams(unsigned char* out, unsigned char const* in)
+void DebayerVideo::ProcessStreams(unsigned char* out, const unsigned char* in)
 {
-  bool const has_metadata_line =
+  const bool has_metadata_line =
       frame_properties.get_value<bool>(PANGO_HAS_LINE0_METADATA, false);
 
   for (size_t s = 0; s < streams.size(); ++s) {
-    StreamInfo const& stin = videoin[0]->Streams()[s];
+    const StreamInfo& stin = videoin[0]->Streams()[s];
     Image<unsigned char> img_in = stin.StreamImage(in);
     Image<unsigned char> img_out = Streams()[s].StreamImage(out);
 
@@ -377,7 +377,7 @@ PANGOLIN_REGISTER_FACTORY(DebayerVideo)
     {
       return {{"debayer", 10}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Demosaics raw RGB sensor data (one or multiple streams) to RGB "
              "images";
@@ -397,7 +397,7 @@ PANGOLIN_REGISTER_FACTORY(DebayerVideo)
            {"wb_g", "1.0", "White balance - green component"},
            {"wb_b", "1.0", "White balance - blue component"}}};
     }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       ParamReader reader(DebayerVideoFactory::Params(), uri);
 

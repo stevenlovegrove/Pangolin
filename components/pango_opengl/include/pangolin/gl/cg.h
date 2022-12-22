@@ -53,18 +53,18 @@ class CgProgram
   friend class CgLoader;
 
   public:
-  void SetUniform(std::string const& name, GlTexture& tex);
-  void SetUniform(std::string const& name, float f);
-  void SetUniform(std::string const& name, float v0, float v1);
+  void SetUniform(const std::string& name, GlTexture& tex);
+  void SetUniform(const std::string& name, float f);
+  void SetUniform(const std::string& name, float v0, float v1);
   void SetUniform(
-      std::string const& name, float v0, float v1, float v2, float v3);
+      const std::string& name, float v0, float v1, float v2, float v3);
 
 #ifdef HAVE_TOON
-  void SetUniform(std::string const& name, TooN::Vector<2> const& v);
-  void SetUniform(std::string const& name, TooN::Vector<3> const& v);
+  void SetUniform(const std::string& name, const TooN::Vector<2>& v);
+  void SetUniform(const std::string& name, const TooN::Vector<3>& v);
 
   template <int R, int C>
-  void SetUniform(std::string const& name, TooN::Matrix<R, C> const& M);
+  void SetUniform(const std::string& name, const TooN::Matrix<R, C>& M);
 #endif
 
   void UpdateParams();
@@ -85,7 +85,7 @@ class CgLoader
   void Initialise();
 
   CgProgram LoadProgramFromFile(
-      std::string const& file, std::string const& function,
+      const std::string& file, const std::string& function,
       bool isVertexShader);
 
   void EnableProgram(CgProgram program);
@@ -107,7 +107,7 @@ class CgLoader
 inline bool cgOkay()
 {
   CGerror error;
-  char const* string = cgGetLastErrorString(&error);
+  const char* string = cgGetLastErrorString(&error);
 
   if (error != CG_NO_ERROR) {
     std::cout << "CG Error: " << string << std::endl;
@@ -143,7 +143,7 @@ inline void CgLoader::Initialise()
 }
 
 inline CgProgram CgLoader::LoadProgramFromFile(
-    std::string const& file, std::string const& function, bool isVertexShader)
+    const std::string& file, const std::string& function, bool isVertexShader)
 {
   if (!mContext) {
     Initialise();
@@ -164,7 +164,7 @@ inline CgProgram CgLoader::LoadProgramFromFile(
 
   cgGLLoadProgram(prog.mProg);
   if (!cgOkay()) {
-    char const* err = cgGetProgramString(prog.mProg, CG_COMPILED_PROGRAM);
+    const char* err = cgGetProgramString(prog.mProg, CG_COMPILED_PROGRAM);
     int pos;
     glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &pos);
     std::cout << err << std::endl;
@@ -211,14 +211,14 @@ inline void CgLoader::RenderDummyQuadWithTexCoords(int w, int h)
   glEnd();
 }
 
-void CgProgram::SetUniform(std::string const& name, float f)
+void CgProgram::SetUniform(const std::string& name, float f)
 {
   CGparameter p = cgGetNamedParameter(mProg, name.c_str());
   cgSetParameter1f(p, f);
   cgUpdateProgramParameters(mProg);
 }
 
-void CgProgram::SetUniform(std::string const& name, GlTexture& tex)
+void CgProgram::SetUniform(const std::string& name, GlTexture& tex)
 {
   CGparameter p = cgGetNamedParameter(mProg, name.c_str());
   cgGLSetTextureParameter(p, tex.tid);
@@ -227,14 +227,14 @@ void CgProgram::SetUniform(std::string const& name, GlTexture& tex)
 }
 
 void CgProgram::SetUniform(
-    std::string const& name, float v0, float v1, float v2, float v3)
+    const std::string& name, float v0, float v1, float v2, float v3)
 {
   CGparameter p = cgGetNamedParameter(mProg, name.c_str());
   cgGLSetParameter4f(p, v0, v1, v2, v3);
   cgUpdateProgramParameters(mProg);
 }
 
-void CgProgram::SetUniform(std::string const& name, float v0, float v1)
+void CgProgram::SetUniform(const std::string& name, float v0, float v1)
 {
   CGparameter p = cgGetNamedParameter(mProg, name.c_str());
   cgGLSetParameter2f(p, v0, v1);
@@ -242,14 +242,14 @@ void CgProgram::SetUniform(std::string const& name, float v0, float v1)
 }
 
 #ifdef HAVE_TOON
-void CgProgram::SetUniform(std::string const& name, TooN::Vector<2> const& v)
+void CgProgram::SetUniform(const std::string& name, const TooN::Vector<2>& v)
 {
   CGparameter p = cgGetNamedParameter(mProg, name.c_str());
   cgGLSetParameter2f(p, v[0], v[1]);
   cgUpdateProgramParameters(mProg);
 }
 
-void CgProgram::SetUniform(std::string const& name, TooN::Vector<3> const& v)
+void CgProgram::SetUniform(const std::string& name, const TooN::Vector<3>& v)
 {
   CGparameter p = cgGetNamedParameter(mProg, name.c_str());
   cgGLSetParameter3f(p, v[0], v[1], v[2]);
@@ -257,7 +257,7 @@ void CgProgram::SetUniform(std::string const& name, TooN::Vector<3> const& v)
 }
 
 template <int R, int C>
-void CgProgram::SetUniform(std::string const& name, TooN::Matrix<R, C> const& M)
+void CgProgram::SetUniform(const std::string& name, const TooN::Matrix<R, C>& M)
 {
   CGparameter p = cgGetNamedParameter(mProg, name.c_str());
   float Mdata[R * C];

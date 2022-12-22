@@ -10,7 +10,7 @@
 
 template <typename T>
 inline void ExpectExceptionWithMessageFromAction(
-    std::function<void()> action, std::string const& exceptionMessageBegin)
+    std::function<void()> action, const std::string& exceptionMessageBegin)
 {
   try {
     action();
@@ -42,7 +42,7 @@ TEST_CASE("Uri Dimension Legal Separator Character")
       continue;
     }
 
-    int const dimWidth = 123, dimHeight = 456;
+    const int dimWidth = 123, dimHeight = 456;
     const std::string encodedDim =
         std::to_string(dimWidth) + c + std::to_string(dimHeight);
     const std::string fullUri = "abc:[size=" + encodedDim + ",other=value]";

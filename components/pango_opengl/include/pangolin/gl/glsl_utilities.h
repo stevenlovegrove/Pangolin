@@ -54,7 +54,7 @@ class GlSlUtilities
   // protected constructor
   GlSlUtilities()
   {
-    char const* source_scale =
+    const char* source_scale =
         "uniform float scale;"
         "uniform float bias;"
         "uniform sampler2D tex;"
@@ -74,7 +74,7 @@ class GlSlUtilities
 
     // shader performs automatically gamma correction, assuming that image data
     // is linear maps to (approximate) sRGB
-    char const* source_offsetscalegamma =
+    const char* source_offsetscalegamma =
         "uniform float offset;"
         "uniform float scale;"
         "uniform sampler2D tex;"
@@ -94,7 +94,7 @@ class GlSlUtilities
         GlSlFragmentShader, source_offsetscalegamma);
     prog_offsetscalegamma.Link();
 
-    char const* source_offsetscale =
+    const char* source_offsetscale =
         "uniform float offset;"
         "uniform float scale;"
         "uniform sampler2D tex;"

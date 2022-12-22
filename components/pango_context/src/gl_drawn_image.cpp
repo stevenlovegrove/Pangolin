@@ -17,7 +17,7 @@ struct GlDrawnImage : public DrawnImage {
   // (w-0.5,h-0.5).
   // TODO: Add a flag to take convention as configuration.
 
-  void draw(ViewParams const& params) override
+  void draw(const ViewParams& params) override
   {
     // ensure we're synced
     image->sync();
@@ -60,16 +60,16 @@ struct GlDrawnImage : public DrawnImage {
   }
 
   private:
-  Shared<GlSlProgram> const prog = GlSlProgram::Create(
+  const Shared<GlSlProgram> prog = GlSlProgram::Create(
       {.sources = {
            {.origin = "/components/pango_opengl/shaders/main_image.glsl"}}});
   GlVertexArrayObject vao = {};
-  GlUniform<int> const texture_unit = {"image"};
-  GlUniform<Eigen::Matrix4f> const u_intrinsics = {"proj"};
-  GlUniform<Eigen::Matrix4f> const u_cam_from_world = {"cam_from_world"};
-  GlUniform<Eigen::Vector2f> const u_image_size = {"image_size"};
-  GlUniform<Eigen::Matrix4f> const u_color_transform = {"color_transform"};
-  GlUniform<Palette> const u_colormap_index = {"colormap_index"};
+  const GlUniform<int> texture_unit = {"image"};
+  const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
+  const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
+  const GlUniform<Eigen::Vector2f> u_image_size = {"image_size"};
+  const GlUniform<Eigen::Matrix4f> u_color_transform = {"color_transform"};
+  const GlUniform<Palette> u_colormap_index = {"colormap_index"};
 };
 
 PANGO_CREATE(DrawnImage)

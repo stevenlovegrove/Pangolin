@@ -40,17 +40,17 @@ class PANGOLIN_EXPORT PangoVideoOutput : public VideoOutputInterface
 {
   public:
   PangoVideoOutput(
-      std::string const& filename, size_t buffer_size_bytes,
-      std::map<size_t, std::string> const& stream_encoder_uris);
+      const std::string& filename, size_t buffer_size_bytes,
+      const std::map<size_t, std::string>& stream_encoder_uris);
   ~PangoVideoOutput();
 
-  std::vector<StreamInfo> const& Streams() const override;
+  const std::vector<StreamInfo>& Streams() const override;
   void SetStreams(
-      std::vector<StreamInfo> const& streams, std::string const& uri,
-      picojson::value const& device_properties) override;
+      const std::vector<StreamInfo>& streams, const std::string& uri,
+      const picojson::value& device_properties) override;
   int WriteStreams(
-      unsigned char const* data,
-      picojson::value const& frame_properties) override;
+      const unsigned char* data,
+      const picojson::value& frame_properties) override;
   bool IsPipe() const override;
 
   protected:

@@ -11,7 +11,7 @@ namespace pangolin
 // this is defined in image_io_jpg.cpp but not in any public headers.
 std::vector<std::streampos> GetMJpegOffsets(std::ifstream& is);
 
-MjpegVideo::MjpegVideo(std::string const& filename)
+MjpegVideo::MjpegVideo(const std::string& filename)
 {
   const std::string full_path = PathExpand(filename);
   if (!FileExists(full_path)) {
@@ -54,14 +54,14 @@ void MjpegVideo::Stop() {}
 size_t MjpegVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-std::vector<StreamInfo> const& MjpegVideo::Streams() const { return streams; }
+const std::vector<StreamInfo>& MjpegVideo::Streams() const { return streams; }
 
 bool MjpegVideo::LoadNext()
 {
   if (!next_image.IsValid() && bFile.good()) {
     try {
       next_image = LoadImage(bFile, ImageFileType::ImageFileTypeJpg);
-    } catch (std::runtime_error const&) {
+    } catch (const std::runtime_error&) {
       return false;
     }
   }
@@ -114,12 +114,12 @@ PANGOLIN_REGISTER_FACTORY(MjpegVideo)
     {
       return {{"mjpeg", 0}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Load Motion Jpeg video streams";
     }
     ParamSet Params() const override { return {{}}; }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       return std::unique_ptr<VideoInterface>(new MjpegVideo(uri.url));
     }

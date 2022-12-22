@@ -74,8 +74,8 @@ struct PANGOLIN_EXPORT Guid {
 class PANGOLIN_EXPORT FirewireVideo : public VideoInterface
 {
   public:
-  static int const MAX_FR = -1;
-  static int const EXT_TRIG = -1;
+  static const int MAX_FR = -1;
+  static const int EXT_TRIG = -1;
   static const uint32_t GPIO_CTRL_PIN0 = 0x1110;
   static const uint32_t GPIO_CTRL_PIN1 = 0x1120;
   static const uint32_t GPIO_CTRL_PIN2 = 0x1130;
@@ -114,7 +114,7 @@ class PANGOLIN_EXPORT FirewireVideo : public VideoInterface
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  std::vector<StreamInfo> const& Streams() const;
+  const std::vector<StreamInfo>& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);

@@ -179,7 +179,7 @@ class AsyncSourceReader : public IMFSourceReaderCallback
 };
 
 UvcMediaFoundationVideo::UvcMediaFoundationVideo(
-    int vendorId, int productId, std::string const& instanceId, size_t width,
+    int vendorId, int productId, const std::string& instanceId, size_t width,
     size_t height, int fps) :
     size_bytes(0),
     mediaSource(nullptr),
@@ -225,7 +225,7 @@ void UvcMediaFoundationVideo::Stop() {}
 
 size_t UvcMediaFoundationVideo::SizeBytes() const { return size_bytes; }
 
-std::vector<pangolin::StreamInfo> const& UvcMediaFoundationVideo::Streams()
+const std::vector<pangolin::StreamInfo>& UvcMediaFoundationVideo::Streams()
     const
 {
   return streams;
@@ -460,18 +460,18 @@ bool UvcMediaFoundationVideo::SetGain(float gain)
   return true;
 }
 
-picojson::value const& UvcMediaFoundationVideo::DeviceProperties() const
+const picojson::value& UvcMediaFoundationVideo::DeviceProperties() const
 {
   return device_properties;
 }
 
-picojson::value const& UvcMediaFoundationVideo::FrameProperties() const
+const picojson::value& UvcMediaFoundationVideo::FrameProperties() const
 {
   return frame_properties;
 }
 
 bool UvcMediaFoundationVideo::FindDevice(
-    int vendorId, int productId, std::string const& instanceId)
+    int vendorId, int productId, const std::string& instanceId)
 {
   // Create attributes for finding UVC devices
   IMFAttributes* searchAttributes = nullptr;
@@ -752,7 +752,7 @@ void UvcMediaFoundationVideo::InitDevice(
         bestGuid = {0};
       }
 
-      auto const stride_result =
+      const auto stride_result =
           checkMediaType->GetUINT32(MF_MT_DEFAULT_STRIDE, &bestStride);
       hasValidStride = !(stride_result == MF_E_ATTRIBUTENOTFOUND);
     } else {
@@ -905,7 +905,7 @@ void UvcMediaFoundationVideo::DeinitDevice()
 }
 
 bool UvcMediaFoundationVideo::DeviceMatches(
-    std::wstring const& symLink, int vendorId, int productId,
+    const std::wstring& symLink, int vendorId, int productId,
     std::wstring& instanceId)
 {
   // Example symlink:
@@ -929,7 +929,7 @@ bool UvcMediaFoundationVideo::DeviceMatches(
 }
 
 bool UvcMediaFoundationVideo::SymLinkIDMatches(
-    std::wstring const& symLink, wchar_t const* idStr, int id)
+    const std::wstring& symLink, const wchar_t* idStr, int id)
 {
   // Find the ID prefix
   size_t idOffset = symLink.find(idStr);
@@ -951,7 +951,7 @@ PANGOLIN_REGISTER_FACTORY(UvcMediaFoundationVideo)
     {
       return {{"uvc", 10}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Use Windows Media Foundation to open UVC USB device.";
     }
@@ -965,7 +965,7 @@ PANGOLIN_REGISTER_FACTORY(UvcMediaFoundationVideo)
           {"num", "0", "Open the nth device (no need for vid and pid)"},
       }};
     }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       int vendorId = 0;
       int productId = 0;

@@ -17,7 +17,7 @@ class SharedMemoryBufferInterface
 };
 
 std::shared_ptr<SharedMemoryBufferInterface> create_named_shared_memory_buffer(
-    std::string const& name, size_t size);
+    const std::string& name, size_t size);
 std::shared_ptr<SharedMemoryBufferInterface> open_named_shared_memory_buffer(
-    std::string const& name, bool readwrite);
+    const std::string& name, bool readwrite);
 }  // namespace pangolin

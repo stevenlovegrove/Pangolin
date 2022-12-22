@@ -76,7 +76,7 @@ struct Marker {
     }
   }
 
-  Marker(XYRangef const& range, Colour const& c = Colour()) :
+  Marker(const XYRangef& range, const Colour& c = Colour()) :
       range(range), colour(c)
   {
   }
@@ -100,11 +100,11 @@ class PANGOLIN_EXPORT Plotter : public View, Handler
   XYRangef& GetSelection();
 
   XYRangef& GetDefaultView();
-  void SetDefaultView(XYRangef const& range);
+  void SetDefaultView(const XYRangef& range);
 
   XYRangef& GetView();
-  void SetView(XYRangef const& range);
-  void SetViewSmooth(XYRangef const& range);
+  void SetView(const XYRangef& range);
+  void SetViewSmooth(const XYRangef& range);
 
   void ScrollView(float x, float y);
   void ScrollViewSmooth(float x, float y);
@@ -116,15 +116,15 @@ class PANGOLIN_EXPORT Plotter : public View, Handler
 
   void SetTicks(float tickx, float ticky);
 
-  void Track(std::string const& x = "$i", std::string const& y = "");
+  void Track(const std::string& x = "$i", const std::string& y = "");
   void ToggleTracking();
 
-  void Trigger(std::string const& x = "$0", int edge = -1, float value = 0.0f);
+  void Trigger(const std::string& x = "$0", int edge = -1, float value = 0.0f);
   void ToggleTrigger();
 
-  void SetBackgroundColour(Colour const& col);
-  void SetAxisColour(Colour const& col);
-  void SetTickColour(Colour const& col);
+  void SetBackgroundColour(const Colour& col);
+  void SetAxisColour(const Colour& col);
+  void SetTickColour(const Colour& col);
 
   void ScreenToPlot(int xpix, int ypix, float& xplot, float& yplot);
   void Keyboard(View&, unsigned char key, int x, int y, bool pressed);
@@ -146,12 +146,12 @@ class PANGOLIN_EXPORT Plotter : public View, Handler
   ///    e.g. x_expr = "$0", y_expr = "$1"       // data[0], data[1] X-Y plot
   ///    e.g. x_exptr ="$i", y_expr = "sqrt($1)} // index - sqrt(data[0]) plot
   void AddSeries(
-      std::string const& x_expr, std::string const& y_expr,
+      const std::string& x_expr, const std::string& y_expr,
       DrawingMode drawing_mode = DrawingModeLine,
-      Colour colour = Colour::Unspecified(), std::string const& title = "$y",
+      Colour colour = Colour::Unspecified(), const std::string& title = "$y",
       DataLog* log = nullptr);
 
-  std::string PlotTitleFromExpr(std::string const& expr) const;
+  std::string PlotTitleFromExpr(const std::string& expr) const;
 
   /// Remove all current markers
   void ClearMarkers();
@@ -163,7 +163,7 @@ class PANGOLIN_EXPORT Plotter : public View, Handler
       Marker::Direction d, float value, Marker::Equality leg = Marker::Equal,
       Colour c = Colour());
 
-  Marker& AddMarker(Marker const& marker);
+  Marker& AddMarker(const Marker& marker);
 
   void ClearImplicitPlots();
   void AddImplicitPlot();
@@ -197,7 +197,7 @@ class PANGOLIN_EXPORT Plotter : public View, Handler
   struct PANGOLIN_EXPORT PlotSeries {
     PlotSeries();
     void CreatePlot(
-        std::string const& x, std::string const& y, Colour c,
+        const std::string& x, const std::string& y, Colour c,
         std::string title);
 
     GlSlProgram prog;
@@ -212,16 +212,16 @@ class PANGOLIN_EXPORT Plotter : public View, Handler
 
   struct PANGOLIN_EXPORT PlotImplicit {
     // Assign to gl_FragColor
-    void CreatePlot(std::string const& code);
+    void CreatePlot(const std::string& code);
 
     // Expression uses x,y and assignes colours [0,1] to r,g,b,a
-    void CreateColouredPlot(std::string const& code);
+    void CreateColouredPlot(const std::string& code);
 
     // Expression uses x,y and evaluates to true/false;
-    void CreateInequality(std::string const& ie, Colour c);
+    void CreateInequality(const std::string& ie, Colour c);
 
     // Expression uses x,y and evaluates to a number
-    void CreateDistancePlot(std::string const& dist);
+    void CreateDistancePlot(const std::string& dist);
 
     GlSlProgram prog;
   };

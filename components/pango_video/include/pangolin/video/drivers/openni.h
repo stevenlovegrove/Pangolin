@@ -37,7 +37,7 @@ struct PANGOLIN_EXPORT OpenNiVideo : public VideoInterface {
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  std::vector<StreamInfo> const& Streams() const;
+  const std::vector<StreamInfo>& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);

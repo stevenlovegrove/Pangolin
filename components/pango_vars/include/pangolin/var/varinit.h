@@ -17,7 +17,7 @@ template <typename T, typename S>
 typename std::enable_if<
     is_streamable<S>::value && is_streamable<T>::value,
     std::shared_ptr<VarValueT<T>>>::type
-Wrapped(std::shared_ptr<VarValueT<S>> const &src) noexcept
+Wrapped(const std::shared_ptr<VarValueT<S>> &src) noexcept
 {
   return std::make_shared<VarWrapper<T, S>>(src);
 }
@@ -26,7 +26,7 @@ template <typename T, typename S>
 typename std::enable_if<
     !(is_streamable<S>::value && is_streamable<T>::value),
     std::shared_ptr<VarValueT<T>>>::type
-Wrapped(std::shared_ptr<VarValueT<S>> const &)
+Wrapped(const std::shared_ptr<VarValueT<S>> &)
 {
   throw std::runtime_error("Unable to wrap Var");
 }
@@ -34,7 +34,7 @@ Wrapped(std::shared_ptr<VarValueT<S>> const &)
 template <typename T>
 typename std::enable_if<
     !is_streamable<T>::value, std::shared_ptr<VarValue<T>>>::type
-InitialiseFromPreviouslyGenericVar(std::shared_ptr<VarValueGeneric> const &v)
+InitialiseFromPreviouslyGenericVar(const std::shared_ptr<VarValueGeneric> &v)
 {
   // We can't initialize this variable from a 'generic' string type.
   throw BadInputException();
@@ -42,7 +42,7 @@ InitialiseFromPreviouslyGenericVar(std::shared_ptr<VarValueGeneric> const &v)
 template <typename T>
 typename std::enable_if<
     is_streamable<T>::value, std::shared_ptr<VarValue<T>>>::type
-InitialiseFromPreviouslyGenericVar(std::shared_ptr<VarValueGeneric> const &v)
+InitialiseFromPreviouslyGenericVar(const std::shared_ptr<VarValueGeneric> &v)
 {
   return std::make_shared<VarValue<T>>(
       Convert<T, std::string>::Do(v->str->Get()));
@@ -51,7 +51,7 @@ InitialiseFromPreviouslyGenericVar(std::shared_ptr<VarValueGeneric> const &v)
 // Initialise from existing variable, obtain data / accessor
 template <typename T>
 std::shared_ptr<VarValueT<T>> InitialiseFromPreviouslyTypedVar(
-    std::shared_ptr<VarValueGeneric> const &v)
+    const std::shared_ptr<VarValueGeneric> &v)
 {
   // Macro hack to prevent code duplication
 #define PANGO_VAR_TYPES(x)                                                     \

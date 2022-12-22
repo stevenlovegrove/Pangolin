@@ -49,9 +49,9 @@ class PANGOLIN_EXPORT threadedfilebuf : public std::streambuf
   public:
   ~threadedfilebuf();
   threadedfilebuf();
-  threadedfilebuf(std::string const& filename, size_t buffer_size_bytes);
+  threadedfilebuf(const std::string& filename, size_t buffer_size_bytes);
 
-  void open(std::string const& filename, size_t buffer_size_bytes);
+  void open(const std::string& filename, size_t buffer_size_bytes);
   void close();
   void force_close();
 
@@ -61,7 +61,7 @@ class PANGOLIN_EXPORT threadedfilebuf : public std::streambuf
   void soft_close();
 
   //! Override streambuf::xsputn for asynchronous write
-  std::streamsize xsputn(char const* s, std::streamsize n) override;
+  std::streamsize xsputn(const char* s, std::streamsize n) override;
 
   //! Override streambuf::overflow for asynchronous write
   int overflow(int c) override;

@@ -38,21 +38,21 @@ namespace pangolin
 //! Open Video Interface from string specification (as described in this files
 //! header)
 PANGOLIN_EXPORT
-std::unique_ptr<VideoInterface> OpenVideo(std::string const& uri);
+std::unique_ptr<VideoInterface> OpenVideo(const std::string& uri);
 
 //! Open Video Interface from Uri specification
 PANGOLIN_EXPORT
-std::unique_ptr<VideoInterface> OpenVideo(Uri const& uri);
+std::unique_ptr<VideoInterface> OpenVideo(const Uri& uri);
 
 //! Open VideoOutput Interface from string specification (as described in this
 //! files header)
 PANGOLIN_EXPORT
 std::unique_ptr<VideoOutputInterface> OpenVideoOutput(
-    std::string const& str_uri);
+    const std::string& str_uri);
 
 //! Open VideoOutput Interface from Uri specification
 PANGOLIN_EXPORT
-std::unique_ptr<VideoOutputInterface> OpenVideoOutput(Uri const& uri);
+std::unique_ptr<VideoOutputInterface> OpenVideoOutput(const Uri& uri);
 
 //! Create vector of matching interfaces either through direct cast or filter
 //! interface.
@@ -111,7 +111,7 @@ inline picojson::value GetVideoFrameProperties(VideoInterface* video)
         const picojson::value dev_props =
             GetVideoFrameProperties(fi->InputStreams()[i]);
         if (dev_props.contains("streams")) {
-          picojson::value const& dev_streams = dev_props["streams"];
+          const picojson::value& dev_streams = dev_props["streams"];
           for (size_t j = 0; j < dev_streams.size(); ++j) {
             streams.push_back(dev_streams[j]);
           }
@@ -149,7 +149,7 @@ inline picojson::value GetVideoDeviceProperties(VideoInterface* video)
         const picojson::value dev_props =
             GetVideoDeviceProperties(fi->InputStreams()[i]);
         if (dev_props.contains("streams")) {
-          picojson::value const& dev_streams = dev_props["streams"];
+          const picojson::value& dev_streams = dev_props["streams"];
           for (size_t j = 0; j < dev_streams.size(); ++j) {
             streams.push_back(dev_streams[j]);
           }

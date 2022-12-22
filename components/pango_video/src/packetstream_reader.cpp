@@ -46,7 +46,7 @@ namespace pangolin
 
 PacketStreamReader::PacketStreamReader() : _pipe_fd(-1) {}
 
-PacketStreamReader::PacketStreamReader(std::string const& filename) :
+PacketStreamReader::PacketStreamReader(const std::string& filename) :
     _pipe_fd(-1)
 {
   Open(filename);
@@ -54,7 +54,7 @@ PacketStreamReader::PacketStreamReader(std::string const& filename) :
 
 PacketStreamReader::~PacketStreamReader() { Close(); }
 
-void PacketStreamReader::Open(std::string const& filename)
+void PacketStreamReader::Open(const std::string& filename)
 {
   std::lock_guard<std::recursive_mutex> lg(_mutex);
 
@@ -185,14 +185,14 @@ bool PacketStreamReader::ParseIndex()
   picojson::value json;
   picojson::parse(json, _stream);
 
-  bool const index_good =
+  const bool index_good =
       json.contains("src_packet_index") && json.contains("src_packet_times");
 
   if (index_good) {
     // This is a two-dimensional serialized array, [source id][sequence number]
     // ---> packet position in stream
-    auto const& json_index = json["src_packet_index"].get<picojson::array>();
-    auto const& json_times = json["src_packet_times"].get<picojson::array>();
+    const auto& json_index = json["src_packet_index"].get<picojson::array>();
+    const auto& json_times = json["src_packet_times"].get<picojson::array>();
 
     // We shouldn't have seen more sources than exist in the index
     PANGO_ENSURE(_sources.size() <= json_index.size());
@@ -395,8 +395,8 @@ size_t PacketStreamReader::Seek(
   // Find time in indextime
   auto lb = std::lower_bound(
       source.index.begin(), source.index.end(), v,
-      [](PacketStreamSource::PacketInfo const& a,
-         PacketStreamSource::PacketInfo const& b) {
+      [](const PacketStreamSource::PacketInfo& a,
+         const PacketStreamSource::PacketInfo& b) {
         return a.capture_time < b.capture_time;
       });
 

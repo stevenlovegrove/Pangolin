@@ -29,8 +29,8 @@ class DepthSampler
   };
 
   virtual std::optional<Sample> sampleDepth(
-      SampleLocation const& pix, int patch_rad, MinMax<double> near_far,
-      Context const* default_context) = 0;
+      const SampleLocation& pix, int patch_rad, MinMax<double> near_far,
+      const Context* default_context) = 0;
 
   virtual ~DepthSampler() {}
 

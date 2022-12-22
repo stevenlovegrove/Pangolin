@@ -41,8 +41,8 @@ class PANGOLIN_EXPORT ShiftVideo : public VideoInterface,
   public:
   ShiftVideo(
       std::unique_ptr<VideoInterface>& videoin,
-      std::map<size_t, int> const& shift_right_bits,
-      std::map<size_t, uint32_t> const& masks);
+      const std::map<size_t, int>& shift_right_bits,
+      const std::map<size_t, uint32_t>& masks);
   ~ShiftVideo();
 
   //! Implement VideoInput::Start()
@@ -55,7 +55,7 @@ class PANGOLIN_EXPORT ShiftVideo : public VideoInterface,
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  std::vector<StreamInfo> const& Streams() const;
+  const std::vector<StreamInfo>& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(uint8_t* image, bool wait = true);
@@ -66,7 +66,7 @@ class PANGOLIN_EXPORT ShiftVideo : public VideoInterface,
   std::vector<VideoInterface*>& InputStreams();
 
   protected:
-  void Process(uint8_t* buffer_out, uint8_t const* buffer_in);
+  void Process(uint8_t* buffer_out, const uint8_t* buffer_in);
 
   std::unique_ptr<VideoInterface> src;
   std::vector<VideoInterface*> videoin;

@@ -43,12 +43,12 @@ namespace pangolin
 {
 
 // CreateWindowAndBind parameter key names.
-char constexpr PARAM_DISPLAYNAME[] = "DISPLAYNAME\0";        // std::string
-char constexpr PARAM_DOUBLEBUFFER[] = "DOUBLEBUFFER\0";      // bool
-char constexpr PARAM_SAMPLE_BUFFERS[] = "SAMPLE_BUFFERS\0";  // int
-char constexpr PARAM_SAMPLES[] = "SAMPLES\0";                // int
-char constexpr PARAM_HIGHRES[] = "HIGHRES\0";                // bool
-char constexpr PARAM_GL_PROFILE[] = "GL_PROFILE\0";          // std::string
+constexpr char PARAM_DISPLAYNAME[] = "DISPLAYNAME\0";        // std::string
+constexpr char PARAM_DOUBLEBUFFER[] = "DOUBLEBUFFER\0";      // bool
+constexpr char PARAM_SAMPLE_BUFFERS[] = "SAMPLE_BUFFERS\0";  // int
+constexpr char PARAM_SAMPLES[] = "SAMPLES\0";                // int
+constexpr char PARAM_HIGHRES[] = "HIGHRES\0";                // bool
+constexpr char PARAM_GL_PROFILE[] = "GL_PROFILE\0";          // std::string
 
 struct PANGOLIN_EXPORT WindowResizeEvent {
   int width;
@@ -130,7 +130,7 @@ class PANGOLIN_EXPORT WindowInterface
     Uri uri;
   };
 
-  static Shared<WindowInterface> Create(Params const& params);
+  static Shared<WindowInterface> Create(const Params& params);
 };
 
 }  // namespace pangolin

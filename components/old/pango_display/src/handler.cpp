@@ -36,7 +36,7 @@ namespace pangolin
 
 namespace
 {
-float constexpr sentinal = std::numeric_limits<float>::quiet_NaN();
+constexpr float sentinal = std::numeric_limits<float>::quiet_NaN();
 }
 
 void Handler::Keyboard(View& d, unsigned char key, int x, int y, bool pressed)
@@ -162,8 +162,8 @@ void HandlerBase3D::GetPosNormalImpl(
     GLprecision Pw[3], GLprecision Pc[3], GLprecision nw[3],
     GLprecision default_z, float* zs)
 {
-  int const zl = (hwin * 2 + 1);
-  int const zsize = zl * zl;
+  const int zl = (hwin * 2 + 1);
+  const int zsize = zl * zl;
 
   GLfloat mindepth = *(std::min_element(zs, zs + zsize));
   if (mindepth == 1) mindepth = (GLfloat)default_z;
@@ -208,8 +208,8 @@ void HandlerBase3D::GetPosNormal(
     GLprecision Pw[3], GLprecision Pc[3], GLprecision nw[3],
     GLprecision default_z)
 {
-  int const zl = (hwin * 2 + 1);
-  int const zsize = zl * zl;
+  const int zl = (hwin * 2 + 1);
+  const int zsize = zl * zl;
   GLfloat zs[zsize];
 
   GLint readid = 0;
@@ -263,8 +263,8 @@ void HandlerBase3D::Mouse(
 void HandlerBase3D::MouseMotion(View& display, int x, int y, int button_state)
 {
   const GLprecision rf = 0.01;
-  float const delta[2] = {(float)x - last_pos[0], (float)y - last_pos[1]};
-  float const mag = delta[0] * delta[0] + delta[1] * delta[1];
+  const float delta[2] = {(float)x - last_pos[0], (float)y - last_pos[1]};
+  const float mag = delta[0] * delta[0] + delta[1] * delta[1];
 
   if ((button_state & KeyModifierCtrl) && (button_state & KeyModifierShift)) {
     GLprecision T_nc[3 * 4];
@@ -285,7 +285,7 @@ void HandlerBase3D::MouseMotion(View& display, int x, int y, int button_state)
   // TODO: make transformation with respect to cam spec
   if (mag < 50.0f * 50.0f) {
     OpenGlMatrix& mv = cam_state->GetModelViewMatrix();
-    GLprecision const* up = AxisDirectionVector[enforce_up];
+    const GLprecision* up = AxisDirectionVector[enforce_up];
     GLprecision T_nc[3 * 4];
     LieSetIdentity(T_nc);
     bool rotation_changed = false;
@@ -446,8 +446,8 @@ void Handler3DBlitCopy::GetPosNormal(
   // ROI's of GL textures The process below is the simplest I could make work
   // that avoids a large GPU -> CPU download.
 
-  int const w = pangolin::DisplayBase().v.w;
-  int const h = pangolin::DisplayBase().v.h;
+  const int w = pangolin::DisplayBase().v.w;
+  const int h = pangolin::DisplayBase().v.h;
 
   GLint num_bits;
   glGetIntegerv(GL_DEPTH_BITS, &num_bits);
@@ -496,8 +496,8 @@ void Handler3DBlitCopy::GetPosNormal(
   depth_blit.RenderToViewport();
   depth_blit.Unbind();
 
-  int const zl = (hwin * 2 + 1);
-  int const zsize = zl * zl;
+  const int zl = (hwin * 2 + 1);
+  const int zsize = zl * zl;
   GLfloat zs[4 * zsize];
   GLfloat zsr[zsize];
 

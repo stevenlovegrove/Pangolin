@@ -36,7 +36,7 @@ namespace py = pybind11;
 namespace pangolin
 {
 
-void PyInterpreter::NewVarCallback(pangolin::VarState::Event const& e)
+void PyInterpreter::NewVarCallback(const pangolin::VarState::Event& e)
 {
   if (e.action == VarState::Event::Action::Added) {
     const std::string name = e.var->Meta().full_name;
@@ -101,7 +101,7 @@ PyInterpreter::PyInterpreter()
 
 PyInterpreter::~PyInterpreter() {}
 
-std::string PyInterpreter::ToString(py::object const& py)
+std::string PyInterpreter::ToString(const py::object& py)
 {
   auto pystr = py::repr(py);
   return std::string(PyUnicode_AsUTF8(pystr.ptr()));
@@ -115,14 +115,14 @@ void PyInterpreter::CheckPrintClearError()
   }
 }
 
-py::object PyInterpreter::EvalExec(std::string const& cmd)
+py::object PyInterpreter::EvalExec(const std::string& cmd)
 {
   py::object ret = py::none();
 
   if (!cmd.empty()) {
     try {
       ret = py::eval(cmd);
-    } catch (pybind11::error_already_set const& e) {
+    } catch (const pybind11::error_already_set& e) {
       line_queue.push(InterpreterLine(e.what(), ConsoleLineTypeStderr));
     }
     CheckPrintClearError();
@@ -132,7 +132,7 @@ py::object PyInterpreter::EvalExec(std::string const& cmd)
 }
 
 std::vector<std::string> PyInterpreter::Complete(
-    std::string const& cmd, int max_options)
+    const std::string& cmd, int max_options)
 {
   // TODO: When there is exactly 1 completion and it is smaller than our current
   // string, we must invoke again with the prefix removed.
@@ -162,12 +162,12 @@ std::vector<std::string> PyInterpreter::Complete(
   return ret;
 }
 
-void PyInterpreter::PushCommand(std::string const& cmd)
+void PyInterpreter::PushCommand(const std::string& cmd)
 {
   if (!cmd.empty()) {
     try {
       py::eval<py::eval_single_statement>(cmd);
-    } catch (pybind11::error_already_set const& e) {
+    } catch (const pybind11::error_already_set& e) {
       line_queue.push(InterpreterLine(e.what(), ConsoleLineTypeStderr));
     }
   }
@@ -192,12 +192,12 @@ PANGOLIN_REGISTER_FACTORY_WITH_STATIC_INITIALIZER(PyInterpreter)
     {
       return {{"python", 10}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Python line interpreter.";
     }
     ParamSet Params() const override { return {{}}; }
-    std::unique_ptr<InterpreterInterface> Open(Uri const& /*uri*/) override
+    std::unique_ptr<InterpreterInterface> Open(const Uri& /*uri*/) override
     {
       return std::unique_ptr<InterpreterInterface>(new PyInterpreter());
     }

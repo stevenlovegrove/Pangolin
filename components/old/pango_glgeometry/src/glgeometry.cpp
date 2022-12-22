@@ -32,10 +32,10 @@ namespace pangolin
 {
 
 GlGeometry::Element ToGlGeometryElement(
-    Geometry::Element const& el, GlBufferType buffertype)
+    const Geometry::Element& el, GlBufferType buffertype)
 {
   GlGeometry::Element glel(buffertype, el.SizeBytes(), GL_STATIC_DRAW, el.ptr);
-  for (auto const& attrib_variant : el.attributes) {
+  for (const auto& attrib_variant : el.attributes) {
     visit(
         [&](auto&& attrib) {
           using T = std::decay_t<decltype(attrib)>;
@@ -51,29 +51,29 @@ GlGeometry::Element ToGlGeometryElement(
   return glel;
 }
 
-GlGeometry ToGlGeometry(Geometry const& geom)
+GlGeometry ToGlGeometry(const Geometry& geom)
 {
   GlGeometry gl;
-  for (auto const& b : geom.buffers)
+  for (const auto& b : geom.buffers)
     gl.buffers[b.first] = ToGlGeometryElement(b.second, GlArrayBuffer);
 
-  for (auto const& b : geom.objects)
+  for (const auto& b : geom.objects)
     gl.objects.emplace(
         b.first, ToGlGeometryElement(b.second, GlElementArrayBuffer));
 
-  for (auto const& tex : geom.textures) {
+  for (const auto& tex : geom.textures) {
     auto& gltex = gl.textures[tex.first];
     gltex.Load(tex.second);
   }
   return gl;
 }
 
-void BindGlElement(GlSlProgram& prog, GlGeometry::Element const& el)
+void BindGlElement(GlSlProgram& prog, const GlGeometry::Element& el)
 {
   el.Bind();
   for (auto& a : el.attributes) {
     const GLint attrib_handle = prog.GetAttributeHandle(a.first);
-    GlGeometry::Element::Attribute const& attr = a.second;
+    const GlGeometry::Element::Attribute& attr = a.second;
     if (attrib_handle >= 0) {
       glEnableVertexAttribArray(attrib_handle);
       glVertexAttribPointer(
@@ -83,7 +83,7 @@ void BindGlElement(GlSlProgram& prog, GlGeometry::Element const& el)
   }
 }
 
-void UnbindGlElements(GlSlProgram& prog, GlGeometry::Element const& el)
+void UnbindGlElements(GlSlProgram& prog, const GlGeometry::Element& el)
 {
   for (auto& a : el.attributes) {
     const GLint attrib_handle = prog.GetAttributeHandle(a.first);
@@ -94,7 +94,7 @@ void UnbindGlElements(GlSlProgram& prog, GlGeometry::Element const& el)
   el.Unbind();
 }
 
-void GlDraw(GlSlProgram& prog, GlGeometry const& geom, GlTexture const* matcap)
+void GlDraw(GlSlProgram& prog, const GlGeometry& geom, const GlTexture* matcap)
 {
   // Bind textures
   int num_tex_bound = 0;

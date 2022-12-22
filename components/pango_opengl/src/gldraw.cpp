@@ -33,7 +33,7 @@ namespace pangolin
 
 void glRecordGraphic(float x, float y, float radius)
 {
-  int const ticks = static_cast<int>(TimeNow_s());
+  const int ticks = static_cast<int>(TimeNow_s());
   if (ticks % 2) {
     // now, render a little red "recording" dot
 #ifndef HAVE_GLES

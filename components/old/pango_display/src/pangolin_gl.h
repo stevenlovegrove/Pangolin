@@ -93,9 +93,9 @@ struct PANGOLIN_EXPORT PangolinGl {
 PangolinGl* GetCurrentContext();
 void SetCurrentContext(PangolinGl* context);
 void RegisterNewContext(
-    std::string const& name, std::shared_ptr<PangolinGl> newcontext);
-void DeleteContext(std::string const& name);
-PangolinGl* FindContext(std::string const& name);
+    const std::string& name, std::shared_ptr<PangolinGl> newcontext);
+void DeleteContext(const std::string& name);
+PangolinGl* FindContext(const std::string& name);
 void SetCurrentContext(PangolinGl* newcontext);
 
 }  // namespace pangolin

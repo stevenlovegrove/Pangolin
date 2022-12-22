@@ -23,6 +23,6 @@ IncludeCategories:
   - Regex:           '<([A-Za-z0-9.\/-_])+>'
     Priority:        2
 PointerAlignment: Left
-QualifierOrder: ['inline', 'static', 'type', 'constexpr', 'const', 'volatile' ]
+QualifierOrder: ['static',  'constexpr', 'const', 'type']
 QualifierAlignment: Custom
 ReferenceAlignment: Left

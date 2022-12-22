@@ -60,7 +60,7 @@ class PANGOLIN_EXPORT ImageViewHandler : public Handler
 
   // Default constructor: User must call SetDimensions() once image dimensions
   // are known. Default range is [0,1] in x and y.
-  ImageViewHandler(std::string const& title = "");
+  ImageViewHandler(const std::string& title = "");
 
   // View ranges store extremes of image (boundary of pixels)
   // in 'discrete' coords, where 0,0 is center of top-left pixel.
@@ -105,9 +105,9 @@ class PANGOLIN_EXPORT ImageViewHandler : public Handler
 
   void GetHover(float& x, float& y);
 
-  void SetView(pangolin::XYRangef const& range);
+  void SetView(const pangolin::XYRangef& range);
 
-  void SetViewSmooth(pangolin::XYRangef const& range);
+  void SetViewSmooth(const pangolin::XYRangef& range);
 
   void ScrollView(float x, float y);
 

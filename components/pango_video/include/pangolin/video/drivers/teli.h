@@ -47,7 +47,7 @@ class PANGOLIN_EXPORT TeliVideo : public VideoInterface,
                                   public GenicamVideoInterface
 {
   public:
-  TeliVideo(Params const& p);
+  TeliVideo(const Params& p);
   ~TeliVideo();
 
   Params OpenCameraAndGetRemainingParameters(Params& params);
@@ -62,7 +62,7 @@ class PANGOLIN_EXPORT TeliVideo : public VideoInterface,
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  std::vector<StreamInfo> const& Streams() const;
+  const std::vector<StreamInfo>& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);
@@ -74,9 +74,9 @@ class PANGOLIN_EXPORT TeliVideo : public VideoInterface,
 
   inline Teli::CAM_STRM_HANDLE GetCameraStreamHandle() { return strm; }
 
-  bool GetParameter(std::string const& name, std::string& result);
+  bool GetParameter(const std::string& name, std::string& result);
 
-  bool SetParameter(std::string const& name, std::string const& value);
+  bool SetParameter(const std::string& name, const std::string& value);
 
   //! Returns number of available frames
   uint32_t AvailableFrames() const;
@@ -86,10 +86,10 @@ class PANGOLIN_EXPORT TeliVideo : public VideoInterface,
   bool DropNFrames(uint32_t n);
 
   //! Access JSON properties of device
-  picojson::value const& DeviceProperties() const;
+  const picojson::value& DeviceProperties() const;
 
   //! Access JSON properties of most recently captured frame
-  picojson::value const& FrameProperties() const;
+  const picojson::value& FrameProperties() const;
 
   void PopulateEstimatedCenterCaptureTime(
       pangolin::basetime host_reception_time);
@@ -97,7 +97,7 @@ class PANGOLIN_EXPORT TeliVideo : public VideoInterface,
   protected:
   void Initialise();
   void InitPangoDeviceProperties();
-  void SetDeviceParams(Params const& p);
+  void SetDeviceParams(const Params& p);
   void SetNodeValStr(
       Teli::CAM_HANDLE cam, Teli::CAM_NODE_HANDLE node, std::string node_str,
       std::string val_str);

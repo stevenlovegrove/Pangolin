@@ -4,7 +4,7 @@
 namespace pangolin
 {
 
-ImageViewHandler::ImageViewHandler(std::string const& title) :
+ImageViewHandler::ImageViewHandler(const std::string& title) :
     linked_view_handler(0),
     use_nn(false),
     flipTextureX(false),
@@ -34,7 +34,7 @@ void ImageViewHandler::SetDimensions(size_t w, size_t h)
 void ImageViewHandler::UpdateView()
 {
   // TODO: Base this on current framerate.
-  float const animate_factor = 1.0f / 5.0f;
+  const float animate_factor = 1.0f / 5.0f;
 
   if (linked_view_handler) {
     // Synchronise rview and target with linked plotter
@@ -54,7 +54,7 @@ void ImageViewHandler::UpdateView()
 
 void ImageViewHandler::glSetViewOrtho()
 {
-  pangolin::XYRangef const& xy = GetViewToRender();
+  const pangolin::XYRangef& xy = GetViewToRender();
 
   glMatrixMode(GL_PROJECTION);
   ProjectionMatrixOrthographic(
@@ -72,9 +72,9 @@ void ImageViewHandler::glRenderTexture(pangolin::GlTexture& tex)
 void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height)
 {
   if (tex != 0) {
-    pangolin::XYRangef const& xy = GetViewToRender();
-    float const w = (float)width;
-    float const h = (float)height;
+    const pangolin::XYRangef& xy = GetViewToRender();
+    const float w = (float)width;
+    const float h = (float)height;
 
     // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
     const GLfloat l = xy.x.min;
@@ -124,9 +124,9 @@ void ImageViewHandler::glRenderTexture(
     GLuint tex, GLint width, GLint height, XYRangef tex_region)
 {
   if (tex != 0) {
-    pangolin::XYRangef const& xy = tex_region;
-    float const w = (float)width;
-    float const h = (float)height;
+    const pangolin::XYRangef& xy = tex_region;
+    const float w = (float)width;
+    const float h = (float)height;
 
     // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
     const GLfloat l = xy.x.min;
@@ -174,7 +174,7 @@ void ImageViewHandler::glRenderTexture(
 
 void ImageViewHandler::glRenderOverlay()
 {
-  pangolin::XYRangef const& selxy = GetSelection();
+  const pangolin::XYRangef& selxy = GetSelection();
   const GLfloat sq_select[] = {selxy.x.min, selxy.y.min, selxy.x.max,
                                selxy.y.min, selxy.x.max, selxy.y.max,
                                selxy.x.min, selxy.y.max};
@@ -185,7 +185,7 @@ void ImageViewHandler::glRenderOverlay()
   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   glColor4f(1.0, 1.0, 1.0, 1.0);
 
-  bool const have_text = std::abs(selxy.Area()) > 0 || !title.empty();
+  const bool have_text = std::abs(selxy.Area()) > 0 || !title.empty();
 
   GLboolean gl_blend_enabled;
   pangolin::Viewport v;
@@ -270,14 +270,14 @@ void ImageViewHandler::GetHover(float& x, float& y)
   y = tv.hover_img[1];
 }
 
-void ImageViewHandler::SetView(pangolin::XYRangef const& range)
+void ImageViewHandler::SetView(const pangolin::XYRangef& range)
 {
   ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
   tv.rview = range;
   tv.target = range;
 }
 
-void ImageViewHandler::SetViewSmooth(pangolin::XYRangef const& range)
+void ImageViewHandler::SetViewSmooth(const pangolin::XYRangef& range)
 {
   ImageViewHandler& tv = linked_view_handler ? *linked_view_handler : *this;
   tv.target = range;
@@ -328,8 +328,8 @@ void ImageViewHandler::Keyboard(
 {
   XYRangef& sel =
       linked_view_handler ? linked_view_handler->selection : selection;
-  float const mvfactor = 1.0f / 10.0f;
-  float const c[2] = {rview.x.Mid(), rview.y.Mid()};
+  const float mvfactor = 1.0f / 10.0f;
+  const float c[2] = {rview.x.Mid(), rview.y.Mid()};
 
   if (pressed) {
     if (key == '\r') {
@@ -351,20 +351,20 @@ void ImageViewHandler::Keyboard(
         to_link = this;
       }
     } else if (key == PANGO_SPECIAL + PANGO_KEY_LEFT) {
-      float const w = target.x.Size();
-      float const dx = mvfactor * w;
+      const float w = target.x.Size();
+      const float dx = mvfactor * w;
       ScrollViewSmooth(-dx, 0);
     } else if (key == PANGO_SPECIAL + PANGO_KEY_RIGHT) {
-      float const w = target.x.Size();
-      float const dx = mvfactor * w;
+      const float w = target.x.Size();
+      const float dx = mvfactor * w;
       ScrollViewSmooth(+dx, 0);
     } else if (key == PANGO_SPECIAL + PANGO_KEY_DOWN) {
-      float const h = target.y.Size();
-      float const dy = mvfactor * h;
+      const float h = target.y.Size();
+      const float dy = mvfactor * h;
       ScrollViewSmooth(0, -dy);
     } else if (key == PANGO_SPECIAL + PANGO_KEY_UP) {
-      float const h = target.y.Size();
-      float const dy = mvfactor * h;
+      const float h = target.y.Size();
+      const float dy = mvfactor * h;
       ScrollViewSmooth(0, +dy);
     } else if (key == '=') {
       ScaleViewSmooth(0.5, 0.5, c[0], c[1]);
@@ -390,11 +390,11 @@ void ImageViewHandler::Mouse(
       linked_view_handler ? linked_view_handler->selection : selection;
   ScreenToImage(view.v, (float)x, (float)y, hover_img[0], hover_img[1]);
 
-  float const scinc = 1.05f;
-  float const scdec = 1.0f / scinc;
+  const float scinc = 1.05f;
+  const float scdec = 1.0f / scinc;
 
   if (button_state & KeyModifierCtrl) {
-    float const mvfactor = 1.0f / 20.0f;
+    const float mvfactor = 1.0f / 20.0f;
 
     if (button == MouseWheelUp) {
       ScrollViewSmooth(0.0f, +mvfactor * rview.y.Size());
@@ -434,7 +434,7 @@ void ImageViewHandler::MouseMotion(View& view, int x, int y, int button_state)
 {
   XYRangef& sel =
       linked_view_handler ? linked_view_handler->selection : selection;
-  int const d[2] = {x - last_mouse_pos[0], y - last_mouse_pos[1]};
+  const int d[2] = {x - last_mouse_pos[0], y - last_mouse_pos[1]};
 
   // Update hover status (after potential resizing)
   ScreenToImage(view.v, (float)x, (float)y, hover_img[0], hover_img[1]);
@@ -469,9 +469,9 @@ void ImageViewHandler::Special(
   ScreenToImage(view.v, x, y, hover_img[0], hover_img[1]);
 
   if (inType == InputSpecialScroll) {
-    float const d[2] = {p1, p2};
-    float const is[2] = {rview.x.Size(), rview.y.Size()};
-    float const df[2] = {
+    const float d[2] = {p1, p2};
+    const float is[2] = {rview.x.Size(), rview.y.Size()};
+    const float df[2] = {
         is[0] * d[0] / (float)view.v.w, is[1] * d[1] / (float)view.v.h};
     ScrollView(-df[0], -df[1]);
   } else if (inType == InputSpecialZoom) {

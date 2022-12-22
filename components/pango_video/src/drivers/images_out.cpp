@@ -36,8 +36,8 @@ namespace pangolin
 {
 
 ImagesVideoOutput::ImagesVideoOutput(
-    std::string const& image_folder, std::string const& json_file_out,
-    std::string const& image_file_extension) :
+    const std::string& image_folder, const std::string& json_file_out,
+    const std::string& image_file_extension) :
     json_frames(picojson::array_type, true),
     image_index(0),
     image_folder(PathExpand(image_folder) + "/"),
@@ -68,14 +68,14 @@ ImagesVideoOutput::~ImagesVideoOutput()
   }
 }
 
-std::vector<StreamInfo> const& ImagesVideoOutput::Streams() const
+const std::vector<StreamInfo>& ImagesVideoOutput::Streams() const
 {
   return streams;
 }
 
 void ImagesVideoOutput::SetStreams(
-    std::vector<StreamInfo> const& streams, std::string const& uri,
-    picojson::value const& device_properties)
+    const std::vector<StreamInfo>& streams, const std::string& uri,
+    const picojson::value& device_properties)
 {
   this->streams = streams;
   this->input_uri = uri;
@@ -83,13 +83,13 @@ void ImagesVideoOutput::SetStreams(
 }
 
 int ImagesVideoOutput::WriteStreams(
-    unsigned char const* data, picojson::value const& frame_properties)
+    const unsigned char* data, const picojson::value& frame_properties)
 {
   picojson::value json_filenames(picojson::array_type, true);
 
   // Write each stream image to file.
   for (size_t s = 0; s < streams.size(); ++s) {
-    pangolin::StreamInfo const& si = streams[s];
+    const pangolin::StreamInfo& si = streams[s];
     const std::string filename =
         fmt::format("image_{:010}_{}.{}", image_index, s, image_file_extension);
     json_filenames.push_back(filename);
@@ -117,7 +117,7 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideoOutput)
     {
       return {{"images", 10}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Writes video frames out to sequance of images + json index file.";
     }
@@ -129,7 +129,7 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideoOutput)
             "formats e.g.: "
             "png,jpg,jpeg,ppm,pgm,pxm,pdm,zstd,lzf,p12b,exr,pango"}}};
     }
-    std::unique_ptr<VideoOutputInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoOutputInterface> Open(const Uri& uri) override
     {
       ParamReader reader(Params(), uri);
 

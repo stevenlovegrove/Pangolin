@@ -47,7 +47,7 @@ GlTexture createTextureForType(sophus::ImageSize dimensions)
 
 template <class... PixelTypes>
 void renderToImage(
-    std::function<void()> const& user_render_func,
+    const std::function<void()>& user_render_func,
     std::tuple<sophus::MutImageView<PixelTypes>...> output_channels)
 {
   constexpr size_t kNumChannels = sizeof...(PixelTypes);
@@ -77,7 +77,7 @@ void renderToImage(
 
 template <class PixelType>
 sophus::MutImage<PixelType> renderToImage(
-    sophus::ImageSize image_size, std::function<void()> const& user_render_func)
+    sophus::ImageSize image_size, const std::function<void()>& user_render_func)
 {
   sophus::MutImage<PixelType> image(image_size);
   renderToImage<PixelType>(user_render_func, {image});

@@ -17,7 +17,7 @@ TEST_CASE("Loading built in video driver")
   REQUIRE(video->Streams()[0].shape().height() == 345);
 
   std::unique_ptr<unsigned char[]> image(new unsigned char[video->SizeBytes()]);
-  bool const success = video->GrabNext(image.get());
+  const bool success = video->GrabNext(image.get());
   REQUIRE(success);
 }
 

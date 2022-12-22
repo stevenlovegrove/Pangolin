@@ -41,14 +41,14 @@ class PANGOLIN_EXPORT GlText
   public:
   GlText();
 
-  GlText(GlText const& txt);
+  GlText(const GlText& txt);
 
-  GlText(GlTexture const& font_tex);
+  GlText(const GlTexture& font_tex);
 
   void AddSpace(GLfloat s);
 
   // Add specified charector to this string.
-  void Add(GlChar const& glc);
+  void Add(const GlChar& glc);
 
   // Clear text
   void Clear();
@@ -65,7 +65,7 @@ class PANGOLIN_EXPORT GlText
   void DrawWindow(GLfloat x, GLfloat y, GLfloat z = 0.0f) const;
 
   // Return text that this object signifies.
-  std::string const& Text() const { return str; }
+  const std::string& Text() const { return str; }
 
   // Return width in pixels of this text.
   GLfloat Width() const { return width; }
@@ -77,7 +77,7 @@ class PANGOLIN_EXPORT GlText
   GLfloat FullHeight() const { return ymax - ymin; }
 
   // protected:
-  GlTexture const* tex;
+  const GlTexture* tex;
   std::string str;
   GLfloat width;
   GLfloat ymin;

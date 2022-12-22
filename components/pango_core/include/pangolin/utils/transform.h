@@ -35,8 +35,8 @@ namespace pangolin
 {
 
 // Find the open brace preceeded by '$'
-inline char const* FirstOpenBrace(
-    char const* str, char token = '$', char open = '{')
+inline const char* FirstOpenBrace(
+    const char* str, char token = '$', char open = '{')
 {
   bool symbol = false;
 
@@ -57,8 +57,8 @@ inline char const* FirstOpenBrace(
 }
 
 // Find the first matching end brace. str includes open brace
-inline char const* MatchingEndBrace(
-    char const* str, char open = '{', char close = '}')
+inline const char* MatchingEndBrace(
+    const char* str, char open = '{', char close = '}')
 {
   int b = 0;
   for (; *str != '\0'; ++str) {
@@ -75,16 +75,16 @@ inline char const* MatchingEndBrace(
 }
 
 inline std::string Transform(
-    std::string const& val,
-    std::function<std::string(std::string const&)> dictionary, char token = '$',
+    const std::string& val,
+    std::function<std::string(const std::string&)> dictionary, char token = '$',
     char open = '{', char close = '}')
 {
   std::string expanded = val;
 
   while (true) {
-    char const* brace = FirstOpenBrace(expanded.c_str(), token, open);
+    const char* brace = FirstOpenBrace(expanded.c_str(), token, open);
     if (brace) {
-      char const* endbrace = MatchingEndBrace(brace);
+      const char* endbrace = MatchingEndBrace(brace);
       if (endbrace) {
         std::ostringstream oss;
         oss << std::string(expanded.c_str(), brace - 1);

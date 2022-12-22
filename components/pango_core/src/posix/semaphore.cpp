@@ -15,7 +15,7 @@ namespace pangolin
 class PosixSemaphore : public SemaphoreInterface
 {
   public:
-  PosixSemaphore(sem_t *semaphore, bool ownership, string const &name) :
+  PosixSemaphore(sem_t *semaphore, bool ownership, const string &name) :
       _semaphore(semaphore), _ownership(ownership), _name(name)
   {
   }
@@ -46,7 +46,7 @@ class PosixSemaphore : public SemaphoreInterface
 };
 
 std::shared_ptr<SemaphoreInterface> create_named_semaphore(
-    string const &name, unsigned int value)
+    const string &name, unsigned int value)
 {
   std::shared_ptr<SemaphoreInterface> ptr;
   sem_t *semaphore = sem_open(
@@ -60,7 +60,7 @@ std::shared_ptr<SemaphoreInterface> create_named_semaphore(
   return ptr;
 }
 
-std::shared_ptr<SemaphoreInterface> open_named_semaphore(string const &name)
+std::shared_ptr<SemaphoreInterface> open_named_semaphore(const string &name)
 {
   std::shared_ptr<SemaphoreInterface> ptr;
   sem_t *semaphore = sem_open(name.c_str(), 0);

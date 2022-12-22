@@ -20,14 +20,14 @@ namespace pangolin
 template <typename To, typename From>
 struct ComponentCast {
   PANGO_HOST_DEVICE
-  static To cast(From const& val) { return static_cast<To>(val); }
+  static To cast(const From& val) { return static_cast<To>(val); }
 };
 
 #ifdef HAVE_EIGEN
 template <typename To, typename FromDerived>
 struct ComponentCast<To, Eigen::MatrixBase<FromDerived> > {
   PANGO_HOST_DEVICE
-  static To cast(Eigen::MatrixBase<FromDerived> const& val)
+  static To cast(const Eigen::MatrixBase<FromDerived>& val)
   {
     return val.template cast<typename To::Scalar>();
   }

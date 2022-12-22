@@ -15,12 +15,12 @@ struct PANGOLIN_EXPORT VideoException : std::exception {
     desc = str + "\n\t" + detail;
   }
   ~VideoException() throw() {}
-  char const* what() const throw() { return desc.c_str(); }
+  const char* what() const throw() { return desc.c_str(); }
   std::string desc;
 };
 
 struct PANGOLIN_EXPORT VideoExceptionNoKnownHandler : public VideoException {
-  VideoExceptionNoKnownHandler(std::string const& scheme) :
+  VideoExceptionNoKnownHandler(const std::string& scheme) :
       VideoException("No known video handler for URI '" + scheme + "'")
   {
   }

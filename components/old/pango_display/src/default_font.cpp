@@ -2,7 +2,7 @@
 
 #include <pangolin/display/default_font.h>
 
-extern unsigned char const AnonymousPro_ttf[];
+extern const unsigned char AnonymousPro_ttf[];
 
 namespace pangolin
 {

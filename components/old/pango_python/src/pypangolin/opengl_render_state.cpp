@@ -117,9 +117,9 @@ void bind_opengl_render_state(pybind11::module &m)
   m.def("negIdentityMatrix", &pangolin::negIdentityMatrix);
 
   pybind11::class_<pangolin::OpenGlRenderState>(m, "OpenGlRenderState")
-      .def(pybind11::init<pangolin::OpenGlMatrix const &>())
+      .def(pybind11::init<const pangolin::OpenGlMatrix &>())
       .def(pybind11::init<
-           pangolin::OpenGlMatrix const &, pangolin::OpenGlMatrix const &>())
+           const pangolin::OpenGlMatrix &, const pangolin::OpenGlMatrix &>())
       .def(pybind11::init<>())
       .def("ApplyIdentity", &pangolin::OpenGlRenderState::ApplyIdentity)
       .def("Apply", &pangolin::OpenGlRenderState::Apply)

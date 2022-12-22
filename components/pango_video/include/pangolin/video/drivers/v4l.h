@@ -51,7 +51,7 @@ class PANGOLIN_EXPORT V4lVideo : public VideoInterface,
 {
   public:
   V4lVideo(
-      char const* dev_name, uint32_t period, io_method io = IO_METHOD_MMAP,
+      const char* dev_name, uint32_t period, io_method io = IO_METHOD_MMAP,
       unsigned iwidth = 0, unsigned iheight = 0,
       unsigned v4l_format = V4L2_PIX_FMT_YUYV);
   ~V4lVideo();
@@ -66,7 +66,7 @@ class PANGOLIN_EXPORT V4lVideo : public VideoInterface,
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  std::vector<StreamInfo> const& Streams() const;
+  const std::vector<StreamInfo>& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);
@@ -90,10 +90,10 @@ class PANGOLIN_EXPORT V4lVideo : public VideoInterface,
   int GetFileDescriptor() const { return fd; }
 
   //! Access JSON properties of device
-  picojson::value const& DeviceProperties() const;
+  const picojson::value& DeviceProperties() const;
 
   //! Access JSON properties of most recently captured frame
-  picojson::value const& FrameProperties() const;
+  const picojson::value& FrameProperties() const;
 
   protected:
   void InitPangoDeviceProperties();
@@ -102,16 +102,16 @@ class PANGOLIN_EXPORT V4lVideo : public VideoInterface,
   void Mainloop();
 
   void init_read(unsigned int buffer_size);
-  void init_mmap(char const* dev_name);
-  void init_userp(char const* dev_name, unsigned int buffer_size);
+  void init_mmap(const char* dev_name);
+  void init_userp(const char* dev_name, unsigned int buffer_size);
 
   void init_device(
-      char const* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps,
+      const char* dev_name, unsigned iwidth, unsigned iheight, unsigned ifps,
       unsigned v4l_format = V4L2_PIX_FMT_YUYV,
       v4l2_field field = V4L2_FIELD_INTERLACED);
   void uninit_device();
 
-  void open_device(char const* dev_name);
+  void open_device(const char* dev_name);
   void close_device();
 
   std::vector<StreamInfo> streams;

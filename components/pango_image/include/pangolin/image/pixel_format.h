@@ -40,12 +40,12 @@ using RuntimePixelType = sophus::RuntimePixelType;
 //! Return Pixel Format properties given string specification in
 //! FFMPEG notation. E.g. GRAY8, RGB24, ...
 PANGOLIN_EXPORT
-RuntimePixelType PixelFormatFromString(std::string const& format);
+RuntimePixelType PixelFormatFromString(const std::string& format);
 
 PANGOLIN_EXPORT
-std::string ToString(RuntimePixelType const& fmt);
+std::string ToString(const RuntimePixelType& fmt);
 
 PANGOLIN_EXPORT
-std::unordered_map<std::string, RuntimePixelType> const& KnownPixelTypes();
+const std::unordered_map<std::string, RuntimePixelType>& KnownPixelTypes();
 
 }  // namespace pangolin

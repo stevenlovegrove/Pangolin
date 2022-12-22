@@ -37,7 +37,7 @@ namespace pangolin
 {
 
 struct WinWindow : public WindowInterface {
-  WinWindow(std::string const& title, int width, int height);
+  WinWindow(const std::string& title, int width, int height);
 
   ~WinWindow();
 

@@ -35,7 +35,7 @@ namespace pangolin
 
 GammaVideo::GammaVideo(
     std::unique_ptr<VideoInterface>& src_,
-    std::map<size_t, float> const& stream_gammas) :
+    const std::map<size_t, float>& stream_gammas) :
     src(std::move(src_)), size_bytes(0), stream_gammas(stream_gammas)
 {
   if (!src.get()) {
@@ -82,18 +82,18 @@ void GammaVideo::Stop() { videoin[0]->Stop(); }
 size_t GammaVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-std::vector<StreamInfo> const& GammaVideo::Streams() const { return streams; }
+const std::vector<StreamInfo>& GammaVideo::Streams() const { return streams; }
 
 template <typename T>
 void ApplyGamma(
-    Image<uint8_t>& out, Image<uint8_t> const& in, float const gamma,
-    float const channel_max_value);
+    Image<uint8_t>& out, const Image<uint8_t>& in, const float gamma,
+    const float channel_max_value);
 
 #ifdef __AVX2__
 template <>
 void ApplyGamma<uint8_t>(
-    Image<uint8_t>& out, Image<uint8_t> const& in, float const gamma,
-    float const channel_max_value)
+    Image<uint8_t>& out, const Image<uint8_t>& in, const float gamma,
+    const float channel_max_value)
 {
   // Special shuffling constants for bytes across lanes
   const __m256i K0 = _mm256_setr_epi8(
@@ -115,12 +115,12 @@ void ApplyGamma<uint8_t>(
   for (size_t r = 0; r < out.h; ++r) {
     uint8_t* pout = out.ptr + r * out.pitch;
     uint8_t* pin = in.ptr + r * in.pitch;
-    uint8_t const* pin_end = in.ptr + (r + 1) * in.pitch;
+    const uint8_t* pin_end = in.ptr + (r + 1) * in.pitch;
     const uint32_t numElems = in.pitch / sizeof(uint8_t);
 
-    int constexpr vecElems = 8;
+    constexpr int vecElems = 8;
 
-    int const numVecs = (numElems / vecElems) * vecElems;
+    const int numVecs = (numElems / vecElems) * vecElems;
 
     // Processing eight at a time (max number of floats per vector)
     for (int vec = 0; vec < numVecs;
@@ -168,25 +168,25 @@ void ApplyGamma<uint8_t>(
 
 template <>
 void ApplyGamma<uint16_t>(
-    Image<uint8_t>& out, Image<uint8_t> const& in, float const gamma,
-    float const channel_max_value)
+    Image<uint8_t>& out, const Image<uint8_t>& in, const float gamma,
+    const float channel_max_value)
 {
   for (size_t r = 0; r < out.h; ++r) {
     uint16_t* pout = (uint16_t*)(out.ptr + r * out.pitch);
     uint16_t* pin = (uint16_t*)(in.ptr + r * in.pitch);
-    uint16_t const* pin_end = (uint16_t*)(in.ptr + (r + 1) * in.pitch);
+    const uint16_t* pin_end = (uint16_t*)(in.ptr + (r + 1) * in.pitch);
     const uint32_t numElems = in.pitch / sizeof(uint16_t);
 
-    int constexpr vecElems = 8;
+    constexpr int vecElems = 8;
 
-    int const numVecs = (numElems / vecElems) * vecElems;
+    const int numVecs = (numElems / vecElems) * vecElems;
 
     // Processing eight at a time (max number of floats per vector)
     for (int vec = 0; vec < numVecs;
          vec += vecElems, pin += vecElems, pout += vecElems) {
       // Convert shorts to floats
       const __m256 floatVals = _mm256_cvtepi32_ps(
-          _mm256_cvtepu16_epi32(_mm_loadu_si128((__m128i const*)pin)));
+          _mm256_cvtepu16_epi32(_mm_loadu_si128((const __m128i*)pin)));
 
       // Apply gamma and prepare for truncation (rounding) to integer
       const __m256 gammaValues = _mm256_add_ps(
@@ -223,8 +223,8 @@ void ApplyGamma<uint16_t>(
 #else
 template <typename T>
 void ApplyGamma(
-    Image<uint8_t>& out, Image<uint8_t> const& in, float const gamma,
-    float const channel_max_value)
+    Image<uint8_t>& out, const Image<uint8_t>& in, const float gamma,
+    const float channel_max_value)
 {
   for (size_t r = 0; r < out.h; ++r) {
     T* pout = (T*)(out.ptr + r * out.pitch);
@@ -240,18 +240,18 @@ void ApplyGamma(
 }
 #endif
 
-void GammaVideo::Process(uint8_t* buffer_out, uint8_t const* buffer_in)
+void GammaVideo::Process(uint8_t* buffer_out, const uint8_t* buffer_in)
 {
   for (size_t s = 0; s < streams.size(); ++s) {
     Image<uint8_t> img_out = Streams()[s].StreamImage(buffer_out);
-    Image<uint8_t> const img_in =
+    const Image<uint8_t> img_in =
         videoin[0]->Streams()[s].StreamImage(buffer_in);
     const size_t bytes_per_pixel = Streams()[s].PixFormat().bpp / 8;
 
     auto i = stream_gammas.find(s);
 
     if (i != stream_gammas.end() && i->second != 0.0f && i->second != 1.0f) {
-      float const gamma = i->second;
+      const float gamma = i->second;
 
       if (Streams()[s].PixFormat().format == "GRAY8" ||
           Streams()[s].PixFormat().format == "RGB24" ||
@@ -346,7 +346,7 @@ PANGOLIN_REGISTER_FACTORY(GammaVideo)
           {{"gamma\\d+", "1.0",
             "gammaK, where 1 <= K <= N where N is the number of streams"}}};
     }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       ParamReader reader(param_set_, uri);
       // Gamma for each stream
@@ -364,21 +364,21 @@ PANGOLIN_REGISTER_FACTORY(GammaVideo)
       return std::unique_ptr<VideoInterface>(
           new GammaVideo(subvid, stream_gammas));
     }
-    FactoryUseInfo Help(std::string const& scheme) const override
+    FactoryUseInfo Help(const std::string& scheme) const override
     {
       return FactoryUseInfo(
           scheme, "Gamma corrects a set of video streams", param_set_);
     }
 
     bool ValidateUri(
-        std::string const& scheme, Uri const& uri,
+        const std::string& scheme, const Uri& uri,
         std::unordered_set<std::string>& unrecognized_params) const override
     {
       return ValidateUriAgainstParamSet(
           scheme, param_set_, uri, unrecognized_params);
     }
 
-    bool IsValidated(std::string const&) const override { return true; }
+    bool IsValidated(const std::string&) const override { return true; }
 
     ParamSet param_set_;
   };

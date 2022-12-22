@@ -17,10 +17,10 @@ class CsvTableLoader : public TableLoaderInterface
   /// \param csv_files a list of CSV files to read from
   /// \param delim the field delimiter between columns, normally ',' for CSV
   CsvTableLoader(
-      std::vector<std::string> const& csv_files, char delim = ',',
+      const std::vector<std::string>& csv_files, char delim = ',',
       char comment = '#');
 
-  bool SkipLines(std::vector<size_t> const& lines_per_input);
+  bool SkipLines(const std::vector<size_t>& lines_per_input);
 
   bool ReadRow(std::vector<std::string>& row) override;
 

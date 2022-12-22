@@ -34,38 +34,38 @@ namespace pangolin
 
 /// Clone of glErrorString
 PANGOLIN_EXPORT
-GLubyte const* glErrorString(GLenum error);
+const GLubyte* glErrorString(GLenum error);
 
 /// Clone of gluProject
 PANGOLIN_EXPORT
 GLint glProject(
-    float objx, float objy, float objz, float const* const modelMatrix /*[16]*/,
-    float const* const projMatrix /*[16]*/, GLint const* const viewport /*[4]*/,
+    float objx, float objy, float objz, const float* const modelMatrix /*[16]*/,
+    const float* const projMatrix /*[16]*/, const GLint* const viewport /*[4]*/,
     float* winx, float* winy, float* winz);
 
 /// Clone of gluUnProject
 PANGOLIN_EXPORT
 GLint glUnProject(
-    float winx, float winy, float winz, float const* const modelMatrix /*[16]*/,
-    float const* const projMatrix /*[16]*/, GLint const* const viewport /*[4]*/,
+    float winx, float winy, float winz, const float* const modelMatrix /*[16]*/,
+    const float* const projMatrix /*[16]*/, const GLint* const viewport /*[4]*/,
     float* objx, float* objy, float* objz);
 
 /// Clone of gluProject
 PANGOLIN_EXPORT
 GLint glProject(
     double objx, double objy, double objz,
-    double const* const modelMatrix /*[16]*/,
-    double const* const projMatrix /*[16]*/,
-    GLint const* const viewport /*[4]*/, double* winx, double* winy,
+    const double* const modelMatrix /*[16]*/,
+    const double* const projMatrix /*[16]*/,
+    const GLint* const viewport /*[4]*/, double* winx, double* winy,
     double* winz);
 
 /// Clone of gluUnProject
 PANGOLIN_EXPORT
 GLint glUnProject(
     double winx, double winy, double winz,
-    double const* const modelMatrix /*[16]*/,
-    double const* const projMatrix /*[16]*/,
-    GLint const* const viewport /*[4]*/, double* objx, double* objy,
+    const double* const modelMatrix /*[16]*/,
+    const double* const projMatrix /*[16]*/,
+    const GLint* const viewport /*[4]*/, double* objx, double* objy,
     double* objz);
 
 }  // namespace pangolin

@@ -19,7 +19,7 @@ namespace pangolin
 // Implement traits so that Pangolin knows how to render the type.
 template <>
 struct DrawableConversionTraits<Cross> {
-  static Shared<Drawable> makeDrawable(Cross const& x)
+  static Shared<Drawable> makeDrawable(const Cross& x)
   {
     auto prims = DrawnPrimitives::Create(
         {.element_type = DrawnPrimitives::Type::lines,
@@ -41,9 +41,9 @@ int main(int argc, char** argv)
   using namespace sophus;
   using namespace pangolin;
 
-  int const w = 8;
-  int const h = 5;
-  int const win_scale = 100;
+  const int w = 8;
+  const int h = 5;
+  const int win_scale = 100;
   auto context = Context::Create({
       .title = "Pixel-perfect overlay",
       .window_size = {win_scale * w, win_scale * h},

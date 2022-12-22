@@ -31,7 +31,7 @@ inline sophus::ImageSize toImageSize(const Eigen::Array2i size)
 inline Eigen::Array2d axisScale(
     Eigen::Array2i viewport_dim, Eigen::Array2i object_dim)
 {
-  double const object_viewport_ratio =
+  const double object_viewport_ratio =
       aspect(object_dim) / aspect(viewport_dim);
   return object_viewport_ratio > 1.0
              ? Eigen::Array2d{1.0, 1.0 / object_viewport_ratio}
@@ -39,7 +39,7 @@ inline Eigen::Array2d axisScale(
 }
 
 inline Eigen::Matrix3d camera_from_image(
-    Eigen::Matrix4d const& image_from_camera_4x4)
+    const Eigen::Matrix4d& image_from_camera_4x4)
 {
   return invProjectionCameraFromImage(
       {image_from_camera_4x4(0, 0), image_from_camera_4x4(1, 1)},
@@ -47,7 +47,7 @@ inline Eigen::Matrix3d camera_from_image(
 }
 
 inline Eigen::Matrix4d transformImageFromCamera4x4(
-    sophus::CameraModel const& cam)
+    const sophus::CameraModel& cam)
 {
   auto focal_distance_pixels = cam.focalLength().eval();
   auto principle_point = cam.principalPoint().eval();
@@ -65,7 +65,7 @@ inline Eigen::Matrix4d transformImageFromCamera4x4(
   }
 }
 
-inline Eigen::Matrix3d linearCameraFromImage(sophus::CameraModel const& camera)
+inline Eigen::Matrix3d linearCameraFromImage(const sophus::CameraModel& camera)
 {
   return invProjectionCameraFromImage(
       camera.focalLength(), camera.principalPoint());

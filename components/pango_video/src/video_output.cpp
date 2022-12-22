@@ -34,13 +34,13 @@ namespace pangolin
 {
 VideoOutput::VideoOutput() {}
 
-VideoOutput::VideoOutput(std::string const& uri) { Open(uri); }
+VideoOutput::VideoOutput(const std::string& uri) { Open(uri); }
 
 VideoOutput::~VideoOutput() {}
 
 bool VideoOutput::IsOpen() const { return recorder.get() != nullptr; }
 
-void VideoOutput::Open(std::string const& str_uri)
+void VideoOutput::Open(const std::string& str_uri)
 {
   Close();
   uri = ParseUri(str_uri);
@@ -49,20 +49,20 @@ void VideoOutput::Open(std::string const& str_uri)
 
 void VideoOutput::Close() { recorder.reset(); }
 
-std::vector<StreamInfo> const& VideoOutput::Streams() const
+const std::vector<StreamInfo>& VideoOutput::Streams() const
 {
   return recorder->Streams();
 }
 
 void VideoOutput::SetStreams(
-    std::vector<StreamInfo> const& streams, std::string const& uri,
-    picojson::value const& properties)
+    const std::vector<StreamInfo>& streams, const std::string& uri,
+    const picojson::value& properties)
 {
   recorder->SetStreams(streams, uri, properties);
 }
 
 int VideoOutput::WriteStreams(
-    unsigned char const* data, picojson::value const& frame_properties)
+    const unsigned char* data, const picojson::value& frame_properties)
 {
   return recorder->WriteStreams(data, frame_properties);
 }
@@ -70,12 +70,12 @@ int VideoOutput::WriteStreams(
 bool VideoOutput::IsPipe() const { return recorder->IsPipe(); }
 
 void VideoOutput::AddStream(
-    RuntimePixelType const& pf, sophus::ImageShape shape)
+    const RuntimePixelType& pf, sophus::ImageShape shape)
 {
   streams.emplace_back(pf, shape, 0);
 }
 
-void VideoOutput::AddStream(RuntimePixelType const& pf, sophus::ImageSize size)
+void VideoOutput::AddStream(const RuntimePixelType& pf, sophus::ImageSize size)
 {
   AddStream(
       pf, sophus::ImageShape::makeFromSizeAndPitchUnchecked(
@@ -83,7 +83,7 @@ void VideoOutput::AddStream(RuntimePixelType const& pf, sophus::ImageSize size)
 }
 
 void VideoOutput::SetStreams(
-    std::string const& uri, picojson::value const& properties)
+    const std::string& uri, const picojson::value& properties)
 {
   size_t offset = 0;
   for (size_t i = 0; i < streams.size(); i++) {
@@ -97,7 +97,7 @@ void VideoOutput::SetStreams(
 size_t VideoOutput::SizeBytes(void) const
 {
   size_t total = 0;
-  for (StreamInfo const& si : recorder->Streams())
+  for (const StreamInfo& si : recorder->Streams())
     total += si.shape().sizeBytes();
   return total;
 }

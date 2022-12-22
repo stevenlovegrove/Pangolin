@@ -19,7 +19,7 @@
 namespace pangolin
 {
 
-GlWidgetLayer::GlWidgetLayer(WidgetLayer::Params const& p) :
+GlWidgetLayer::GlWidgetLayer(const WidgetLayer::Params& p) :
     size_hint_(p.size_hint),
     name_(p.name),
     widget_height(p.scale * p.widget_height_pix),
@@ -36,7 +36,7 @@ GlWidgetLayer::GlWidgetLayer(WidgetLayer::Params const& p) :
 
   // Receive Pangolin var events
   sigslot_lifetime = pangolin::VarState::I().RegisterForVarEvents(
-      [this](pangolin::VarState::Event const& event) {
+      [this](const pangolin::VarState::Event& event) {
         process_var_event(event);
       },
       true);
@@ -70,7 +70,7 @@ void GlWidgetLayer::UpdateWidgetVBO(float width)
 
   std::vector<Eigen::Vector4f> host_vbo;
   for (size_t i = 0; i < widgets.size(); ++i) {
-    auto const& w = widgets[i];
+    const auto& w = widgets[i];
     host_vbo.emplace_back(
         0.0, i, w.divisions + w.value_percent / 2.0, uint(w.widget_type));
   }
@@ -78,13 +78,13 @@ void GlWidgetLayer::UpdateWidgetVBO(float width)
   widget_program.vao.addVertexAttrib(0, widget_program.vbo);
 }
 
-std::u32string GlWidgetLayer::toUtf32(std::string const& utf8)
+std::u32string GlWidgetLayer::toUtf32(const std::string& utf8)
 {
   return std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}
       .from_bytes(utf8);
 }
 
-float GlWidgetLayer::TextWidthPix(std::u32string const& utf32)
+float GlWidgetLayer::TextWidthPix(const std::u32string& utf32)
 {
   float w = 0;
   for (auto c : utf32) {
@@ -94,7 +94,7 @@ float GlWidgetLayer::TextWidthPix(std::u32string const& utf32)
 }
 
 void GlWidgetLayer::AddTextToHostBuffer(
-    std::u32string const& utf32, Eigen::Array2d p,
+    const std::u32string& utf32, Eigen::Array2d p,
     std::vector<Eigen::Vector3f>& host_vbo_pos,
     std::vector<uint16_t>& host_vbo_index)
 {
@@ -112,9 +112,9 @@ void GlWidgetLayer::AddTextToHostBuffer(
       auto ch = font->chardata[this_char];
 
       if (last_char) {
-        auto const key = GlFont::codepointpair_t(last_char, this_char);
-        auto const kit = font->kern_table.find(key);
-        float const kern = (kit != font->kern_table.end()) ? kit->second : 0;
+        const auto key = GlFont::codepointpair_t(last_char, this_char);
+        const auto kit = font->kern_table.find(key);
+        const float kern = (kit != font->kern_table.end()) ? kit->second : 0;
         p.x() += font_scale * kern;
       }
 
@@ -137,16 +137,16 @@ void GlWidgetLayer::UpdateCharsVBO(float widget_width)
         font->bitmap_max_sdf_dist_uv[0], font->bitmap_max_sdf_dist_uv[1]};
   }
 
-  float const text_pad = 2.5 * widget_padding;
+  const float text_pad = 2.5 * widget_padding;
 
   std::vector<Eigen::Vector3f> host_vbo_pos;
   std::vector<uint16_t> host_vbo_index;
   for (size_t i = 0; i < widgets.size(); ++i) {
-    auto const& w = widgets[i];
+    const auto& w = widgets[i];
 
     // y-position is roughly center with fudge factor since text is balanced
     // low.
-    float const y_pos =
+    const float y_pos =
         (i + 0.5) * widget_height + 0.3 * font_scale * font->font_height_px;
 
     AddTextToHostBuffer(
@@ -155,8 +155,8 @@ void GlWidgetLayer::UpdateCharsVBO(float widget_width)
 
     //            if(w.widget_type == WidgetType::slider)
     if (!w.value.empty()) {
-      auto const utf32 = toUtf32(w.value);
-      float const width = TextWidthPix(utf32);
+      const auto utf32 = toUtf32(w.value);
+      const float width = TextWidthPix(utf32);
       AddTextToHostBuffer(
           utf32,
           {widget_width - text_pad - width,
@@ -175,7 +175,7 @@ void GlWidgetLayer::UpdateCharsVBO(float widget_width)
 }
 
 void GlWidgetLayer::renderIntoRegion(
-    Context const& context, RenderParams const& p)
+    const Context& context, const RenderParams& p)
 {
   ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
   ScopedGlDisable dis_depth(GL_DEPTH_TEST);
@@ -186,9 +186,9 @@ void GlWidgetLayer::renderIntoRegion(
   glClearColor(0.85f, 0.85f, 0.85f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  auto const size = p.region.range();
+  const auto size = p.region.range();
 
-  auto const region = p.region.translated(-p.region.min())
+  const auto region = p.region.translated(-p.region.min())
                           .cast<Eigen::Vector2d>()
                           .translated({-0.5, -(0.5 + scroll_offset)});
 
@@ -227,14 +227,14 @@ void GlWidgetLayer::renderIntoRegion(
   glActiveTexture(GL_TEXTURE0);
 }
 
-bool GlWidgetLayer::handleEvent(Context const&, Event const& event)
+bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
 {
-  auto const region = event.pointer_pos.region;
+  const auto region = event.pointer_pos.region;
   const Eigen::Array2d p_window = event.pointer_pos.pos_window;
 
   std::visit(
       overload{
-          [&](Interactive::PointerEvent const& arg) {
+          [&](const Interactive::PointerEvent& arg) {
             bool pressed = arg.action == PointerAction::down;
             auto w = WidgetXY(p_window, region);
 
@@ -261,13 +261,13 @@ bool GlWidgetLayer::handleEvent(Context const&, Event const& event)
                 break;
             }
           },
-          [&](Interactive::ScrollEvent const& arg) {
+          [&](const Interactive::ScrollEvent& arg) {
             const float delta = arg.pan.y();
             const float offset_max = (widgets.size() - 1.0f) * widget_height;
             scroll_offset =
                 std::clamp(scroll_offset + delta, -offset_max, 0.0f);
           },
-          [&](Interactive::KeyboardEvent const& arg) {
+          [&](const Interactive::KeyboardEvent& arg) {
             auto w = WidgetXY(p_window, region);
             if (0 <= w.first && w.first < (int)widgets.size()) {
               WidgetParams& wp = widgets[w.first];
@@ -294,7 +294,7 @@ bool GlWidgetLayer::handleEvent(Context const&, Event const& event)
 }
 
 void GlWidgetLayer::SetValue(
-    Eigen::Array2d const& p, MinMax<Eigen::Array2i> const& region, bool pressed,
+    const Eigen::Array2d& p, const MinMax<Eigen::Array2i>& region, bool pressed,
     bool dragging)
 {
   auto w = WidgetXY(p, region);
@@ -307,7 +307,7 @@ void GlWidgetLayer::SetValue(
       wp.value_percent = pressed ? 0.0 : 1.0;
     } else {
       if (pressed || dragging) {
-        float const val = std::clamp(
+        const float val = std::clamp(
             (w.second.x() - widget_padding) /
                 (region.range().x() - 2 * widget_padding),
             0.0f, 1.0f);
@@ -317,7 +317,7 @@ void GlWidgetLayer::SetValue(
           wp.value_percent = val;
         } else {
           // springy discrete version
-          float const d = (std::round(val * wp.divisions) / wp.divisions);
+          const float d = (std::round(val * wp.divisions) / wp.divisions);
           float diff = val - d;
           wp.value_percent = d + diff * sping_coeff;
         }
@@ -339,17 +339,17 @@ void GlWidgetLayer::SetValue(
 }
 
 std::pair<int, Eigen::Vector2f> GlWidgetLayer::WidgetXY(
-    Eigen::Array2d const& p, MinMax<Eigen::Array2i> const& region)
+    const Eigen::Array2d& p, const MinMax<Eigen::Array2i>& region)
 {
   const Eigen::Vector2f p_view(
       p.x() - region.min().x(), p.y() - region.min().y() - scroll_offset);
-  int const i = std::floor(p_view[1] / widget_height);
+  const int i = std::floor(p_view[1] / widget_height);
   const Eigen::Vector2f p_widget(
       p_view[0], std::fmod(p_view[1], widget_height));
   return {i, p_widget};
 }
 
-void GlWidgetLayer::process_var_event(pangolin::VarState::Event const& event)
+void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
 {
   using namespace pangolin;
 
@@ -367,7 +367,7 @@ void GlWidgetLayer::process_var_event(pangolin::VarState::Event const& event)
           0,
           var->Meta().flags & META_FLAG_TOGGLE ? WidgetType::checkbox
                                                : WidgetType::button,
-          [var](WidgetParams const& p) {  // read_params
+          [var](const WidgetParams& p) {  // read_params
             Var<bool> v(var);
             v = p.value_percent > 0.5;
             v.Meta().gui_changed = true;
@@ -389,12 +389,12 @@ void GlWidgetLayer::process_var_event(pangolin::VarState::Event const& event)
         !strcmp(var->TypeId(), typeid(uint32_t).name()) ||
         !strcmp(var->TypeId(), typeid(int64_t).name()) ||
         !strcmp(var->TypeId(), typeid(uint64_t).name())) {
-      bool const is_integral = strcmp(var->TypeId(), typeid(double).name()) &&
+      const bool is_integral = strcmp(var->TypeId(), typeid(double).name()) &&
                                strcmp(var->TypeId(), typeid(float).name());
 
       auto& r = var->Meta().range;
-      double const range = r[1] - r[0];
-      double const steps =
+      const double range = r[1] - r[0];
+      const double steps =
           is_integral ? range : (range / var->Meta().increment);
       widgets.push_back(WidgetParams{
           event.var->Meta().friendly,
@@ -402,7 +402,7 @@ void GlWidgetLayer::process_var_event(pangolin::VarState::Event const& event)
           1.0f,
           static_cast<int>(steps),
           WidgetType::slider,
-          [var, is_integral](WidgetParams const& p) {  // read_params
+          [var, is_integral](const WidgetParams& p) {  // read_params
             Var<double> v(var);
             auto& r = var->Meta().range;
             const double range = r[1] - r[0];
@@ -436,7 +436,7 @@ void GlWidgetLayer::process_var_event(pangolin::VarState::Event const& event)
           1.0f,
           0,
           WidgetType::button,
-          [var](WidgetParams const& p) {  // read_params
+          [var](const WidgetParams& p) {  // read_params
             Var<std::function<void(void)>> v(var);
             if (p.value_percent > 0.5) v.Get()();
           },
@@ -448,7 +448,7 @@ void GlWidgetLayer::process_var_event(pangolin::VarState::Event const& event)
           1.0f,
           0,
           WidgetType::textbox,
-          [var](WidgetParams const& p) {  // read_params
+          [var](const WidgetParams& p) {  // read_params
           },
           [var](WidgetParams& p) {  // write params
             Var<std::string> v(var);

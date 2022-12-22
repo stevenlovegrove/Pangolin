@@ -110,7 +110,7 @@ struct PANGOLIN_EXPORT HandlerBase3D : Handler {
 
   protected:
   OpenGlRenderState* cam_state;
-  static int const hwin = 8;
+  static const int hwin = 8;
   AxisDirection enforce_up;
   float tf;  // translation factor
   float zf;  // zoom fraction

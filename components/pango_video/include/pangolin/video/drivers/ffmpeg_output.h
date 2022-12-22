@@ -47,19 +47,19 @@ class PANGOLIN_EXPORT FfmpegVideoOutput : public VideoOutputInterface
 
   public:
   FfmpegVideoOutput(
-      std::string const& filename, int base_frame_rate, int bit_rate,
+      const std::string& filename, int base_frame_rate, int bit_rate,
       bool flip = false);
   ~FfmpegVideoOutput();
 
-  std::vector<StreamInfo> const& Streams() const override;
+  const std::vector<StreamInfo>& Streams() const override;
 
   void SetStreams(
-      std::vector<StreamInfo> const& streams, std::string const& uri,
-      picojson::value const& properties) override;
+      const std::vector<StreamInfo>& streams, const std::string& uri,
+      const picojson::value& properties) override;
 
   int WriteStreams(
-      unsigned char const* data,
-      picojson::value const& frame_properties) override;
+      const unsigned char* data,
+      const picojson::value& frame_properties) override;
 
   bool IsPipe() const override;
 
@@ -87,12 +87,12 @@ class FfmpegVideoOutputStream
   public:
   FfmpegVideoOutputStream(
       FfmpegVideoOutput& recorder, CodecID codec_id, uint64_t frame_rate,
-      int bit_rate, StreamInfo const& input_info, bool flip);
+      int bit_rate, const StreamInfo& input_info, bool flip);
   ~FfmpegVideoOutputStream();
 
-  StreamInfo const& GetStreamInfo() const;
+  const StreamInfo& GetStreamInfo() const;
 
-  void WriteImage(uint8_t const* img, int w, int h);
+  void WriteImage(const uint8_t* img, int w, int h);
   void Flush();
 
   protected:

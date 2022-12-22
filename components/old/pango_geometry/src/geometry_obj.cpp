@@ -39,7 +39,7 @@ namespace std
 
 template <>
 struct hash<tinyobj::index_t> {
-  std::size_t operator()(tinyobj::index_t const& t) const noexcept
+  std::size_t operator()(const tinyobj::index_t& t) const noexcept
   {
     static std::hash<int> h;
     return h(t.vertex_index) ^ h(t.normal_index) ^ h(t.texcoord_index);
@@ -64,8 +64,8 @@ namespace pangolin
 
 template <typename T>
 Geometry::Element ConvertVectorToGeometryElement(
-    std::vector<T> const& v, size_t count_per_element,
-    std::string const& attribute_name)
+    const std::vector<T>& v, size_t count_per_element,
+    const std::string& attribute_name)
 {
   PANGO_ASSERT(v.size() % count_per_element == 0);
   const size_t num_elements = v.size() / count_per_element;
@@ -90,7 +90,7 @@ Image<T> GetImageWrapper(std::vector<T>& vec, size_t count_per_element)
   }
 }
 
-pangolin::Geometry LoadGeometryObj(std::string const& filename)
+pangolin::Geometry LoadGeometryObj(const std::string& filename)
 {
   pangolin::Geometry geom;
 
@@ -116,7 +116,7 @@ pangolin::Geometry LoadGeometryObj(std::string const& filename)
           TypedImage& tex_image = geom.textures[tex_name];
           tex_image = LoadImage(
               PathParent(filename) + "/" + materials[i].diffuse_texname);
-          int const row_bytes = tex_image.w * tex_image.fmt.bpp / 8;
+          const int row_bytes = tex_image.w * tex_image.fmt.bpp / 8;
           std::vector<unsigned char> tmp_row(row_bytes);
           for (std::size_t y = 0; y < (tex_image.h >> 1); ++y) {
             std::memcpy(tmp_row.data(), tex_image.RowPtr(y), row_bytes);
@@ -127,7 +127,7 @@ pangolin::Geometry LoadGeometryObj(std::string const& filename)
                 tex_image.RowPtr(tex_image.h - 1 - y), tmp_row.data(),
                 row_bytes);
           }
-        } catch (std::exception const& e) {
+        } catch (const std::exception& e) {
           pango_print_warn("Unable to read texture '%s'\n", tex_name.c_str());
           geom.textures.erase(tex_name);
         }
@@ -174,7 +174,7 @@ pangolin::Geometry LoadGeometryObj(std::string const& filename)
       }
     }
 
-    int const num_unique_verts = reindex_map.size();
+    const int num_unique_verts = reindex_map.size();
 
     // Create unified verts attribute
     auto& verts = geom.buffers["geometry"];

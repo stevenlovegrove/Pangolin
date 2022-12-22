@@ -42,9 +42,9 @@
 namespace pangolin
 {
 
-char constexpr em_dom_id[] = "#canvas";
+constexpr char em_dom_id[] = "#canvas";
 
-int spec_key(char const *key_string)
+int spec_key(const char *key_string)
 {
   if (strlen(key_string) == 1) {
     return -1;
@@ -79,7 +79,7 @@ int spec_key(char const *key_string)
   return -1;
 }
 
-KeyModifier mod_key(char const *key_string)
+KeyModifier mod_key(const char *key_string)
 {
   if (strlen(key_string) == 1) return KeyModifier(0);
   if (strcmp(key_string, "Shift") == 0) return pangolin::KeyModifierShift;
@@ -92,7 +92,7 @@ KeyModifier mod_key(char const *key_string)
 std::mutex window_mutex;
 
 pangolin::KeyModifierBitmask GetKeyModifierBitmask(
-    EmscriptenKeyboardEvent const *event)
+    const EmscriptenKeyboardEvent *event)
 {
   pangolin::KeyModifierBitmask mask;
   if (event->shiftKey) mask |= pangolin::KeyModifierShift;
@@ -103,7 +103,7 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(
 }
 
 pangolin::KeyModifierBitmask GetKeyModifierBitmask(
-    EmscriptenMouseEvent const *event)
+    const EmscriptenMouseEvent *event)
 {
   pangolin::KeyModifierBitmask mask;
   if (event->shiftKey) mask |= pangolin::KeyModifierShift;
@@ -114,7 +114,7 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(
 }
 
 EM_BOOL key_callback(
-    int eventType, EmscriptenKeyboardEvent const *e, void *userData)
+    int eventType, const EmscriptenKeyboardEvent *e, void *userData)
 {
   EmscriptenWindow *w = (EmscriptenWindow *)userData;
 
@@ -142,7 +142,7 @@ EM_BOOL key_callback(
 }
 
 EM_BOOL mouse_callback(
-    int eventType, EmscriptenMouseEvent const *e, void *userData)
+    int eventType, const EmscriptenMouseEvent *e, void *userData)
 {
   EmscriptenWindow *w = (EmscriptenWindow *)userData;
   w->x = e->targetX;
@@ -175,7 +175,7 @@ EM_BOOL mouse_callback(
 }
 
 EM_BOOL wheel_callback(
-    int eventType, EmscriptenWheelEvent const *e, void *userData)
+    int eventType, const EmscriptenWheelEvent *e, void *userData)
 {
   EmscriptenWindow *w = (EmscriptenWindow *)userData;
   w->SpecialInputSignal(SpecialInputEvent(
@@ -184,7 +184,7 @@ EM_BOOL wheel_callback(
   return true;
 }
 EM_BOOL uievent_callback(
-    int eventType, EmscriptenUiEvent const *e, void *userData)
+    int eventType, const EmscriptenUiEvent *e, void *userData)
 {
   EmscriptenWindow *w = (EmscriptenWindow *)userData;
   switch (eventType) {
@@ -300,7 +300,7 @@ PANGOLIN_REGISTER_FACTORY(EmscriptenWindow)
     {
       return {{"emscripten", 10}, {"default", 100}};
     }
-    char const *Description() const override { return "Use WebGL window"; }
+    const char *Description() const override { return "Use WebGL window"; }
     ParamSet Params() const override
     {
       return {{
@@ -311,7 +311,7 @@ PANGOLIN_REGISTER_FACTORY(EmscriptenWindow)
       }};
     }
 
-    std::unique_ptr<WindowInterface> Open(Uri const &uri) override
+    std::unique_ptr<WindowInterface> Open(const Uri &uri) override
     {
       // We're going to be naughty and actually ignore the title, width and
       // height, but list them as parameters to be compatible with other

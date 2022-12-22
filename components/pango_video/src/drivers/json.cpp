@@ -44,7 +44,7 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
     {
       return {{"json", 0}, {"file", 5}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Construct Video URI from supplied json file. Json file should "
              "contain video_uri string and video_uri_defaults map for "
@@ -56,7 +56,7 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
           {"*", "", "Override any video_uri_defaults keys in the json file."},
       }};
     }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       if (uri.scheme == "json" ||
           (uri.scheme == "file" &&
@@ -77,7 +77,7 @@ PANGOLIN_REGISTER_FACTORY(JsonVideo)
               const picojson::value input_uri_params =
                   file_json.get_value<picojson::object>(
                       "video_uri_defaults", picojson::object());
-              input_uri = Transform(input_uri, [&](std::string const& k) {
+              input_uri = Transform(input_uri, [&](const std::string& k) {
                 return uri.Get<std::string>(
                     k, input_uri_params.contains(k)
                            ? input_uri_params[k].to_str()

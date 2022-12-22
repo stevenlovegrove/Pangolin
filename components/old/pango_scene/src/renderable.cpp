@@ -10,7 +10,7 @@ Renderable::guid_t Renderable::UniqueGuid()
   return (guid_t)gen();
 }
 
-Renderable::Renderable(std::weak_ptr<Renderable> const& parent) :
+Renderable::Renderable(const std::weak_ptr<Renderable>& parent) :
     guid(UniqueGuid()),
     parent(parent),
     T_pc(IdentityMatrix()),
@@ -21,9 +21,9 @@ Renderable::Renderable(std::weak_ptr<Renderable> const& parent) :
 Renderable::~Renderable() {}
 
 // Default implementation simply renders children.
-void Renderable::Render(RenderParams const& params) { RenderChildren(params); }
+void Renderable::Render(const RenderParams& params) { RenderChildren(params); }
 
-void Renderable::RenderChildren(RenderParams const& params)
+void Renderable::RenderChildren(const RenderParams& params)
 {
   for (auto& p : children) {
     Renderable& r = *p.second;
@@ -54,7 +54,7 @@ std::shared_ptr<Renderable> Renderable::FindChild(guid_t guid)
   return std::shared_ptr<Renderable>();
 }
 
-Renderable& Renderable::Add(std::shared_ptr<Renderable> const& child)
+Renderable& Renderable::Add(const std::shared_ptr<Renderable>& child)
 {
   if (child) {
     children[child->guid] = child;

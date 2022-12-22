@@ -17,7 +17,7 @@ namespace headless
 class EGLDisplayHL
 {
   public:
-  EGLDisplayHL(int const width, int const height);
+  EGLDisplayHL(const int width, const int height);
 
   ~EGLDisplayHL();
 
@@ -55,15 +55,15 @@ class EGLDisplayHL
 constexpr EGLint EGLDisplayHL::attribs[];
 
 struct HeadlessWindow : public WindowInterface {
-  HeadlessWindow(int const width, int const height);
+  HeadlessWindow(const int width, const int height);
 
   ~HeadlessWindow() override;
 
   void ShowFullscreen(const TrueFalseToggle on_off) override;
 
-  void Move(int const x, int const y) override;
+  void Move(const int x, const int y) override;
 
-  void Resize(unsigned int const w, unsigned int const h) override;
+  void Resize(const unsigned int w, const unsigned int h) override;
 
   void MakeCurrent() override;
 
@@ -76,7 +76,7 @@ struct HeadlessWindow : public WindowInterface {
   EGLDisplayHL display;
 };
 
-EGLDisplayHL::EGLDisplayHL(int const width, int const height)
+EGLDisplayHL::EGLDisplayHL(const int width, const int height)
 {
   egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   if (!egl_display) {
@@ -132,7 +132,7 @@ void EGLDisplayHL::removeCurrent()
   eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
-HeadlessWindow::HeadlessWindow(int const w, int const h) : display(w, h) {}
+HeadlessWindow::HeadlessWindow(const int w, const int h) : display(w, h) {}
 
 HeadlessWindow::~HeadlessWindow() {}
 
@@ -142,9 +142,9 @@ void HeadlessWindow::RemoveCurrent() { display.removeCurrent(); }
 
 void HeadlessWindow::ShowFullscreen(const TrueFalseToggle) {}
 
-void HeadlessWindow::Move(int const /*x*/, int const /*y*/) {}
+void HeadlessWindow::Move(const int /*x*/, const int /*y*/) {}
 
-void HeadlessWindow::Resize(unsigned int const /*w*/, unsigned int const /*h*/)
+void HeadlessWindow::Resize(const unsigned int /*w*/, const unsigned int /*h*/)
 {
 }
 
@@ -165,7 +165,7 @@ PANGOLIN_REGISTER_FACTORY(HeadlessWindow)
     {
       return {{"egl", 10}, {"nogui", 10}, {"headless", 10}, {"none", 10}};
     }
-    char const* Description() const override { return "Headless GL Buffer"; }
+    const char* Description() const override { return "Headless GL Buffer"; }
     ParamSet Params() const override
     {
       return {{
@@ -175,7 +175,7 @@ PANGOLIN_REGISTER_FACTORY(HeadlessWindow)
           {PARAM_GL_PROFILE, "Ignored for now"},
       }};
     }
-    std::unique_ptr<WindowInterface> Open(Uri const& uri) override
+    std::unique_ptr<WindowInterface> Open(const Uri& uri) override
     {
       return std::unique_ptr<WindowInterface>(new headless::HeadlessWindow(
           uri.Get<int>("w", 640), uri.Get<int>("h", 480)));

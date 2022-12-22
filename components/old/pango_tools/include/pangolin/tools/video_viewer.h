@@ -17,17 +17,17 @@ class VideoViewer
 {
   public:
   typedef std::function<void(
-      unsigned char const* data,
-      std::vector<Image<unsigned char> > const& images,
-      picojson::value const& properties)>
+      const unsigned char* data,
+      const std::vector<Image<unsigned char> >& images,
+      const picojson::value& properties)>
       FrameChangedCallbackFn;
 
-  static int constexpr FRAME_SKIP = 30;
+  static constexpr int FRAME_SKIP = 30;
 
   VideoViewer(
-      std::string const& window_name, std::string const& input_uri,
-      std::string const& output_uri = "video.pango");
-  VideoViewer(VideoViewer const&) = delete;
+      const std::string& window_name, const std::string& input_uri,
+      const std::string& output_uri = "video.pango");
+  VideoViewer(const VideoViewer&) = delete;
 
   virtual ~VideoViewer();
 
@@ -44,7 +44,7 @@ class VideoViewer
   }
 
   // Control playback
-  void OpenInput(std::string const& input_uri);
+  void OpenInput(const std::string& input_uri);
   void CloseInput();
 
   // Control recording
@@ -71,7 +71,7 @@ class VideoViewer
   void WaitUntilExit();
 
   VideoInput& Video() { return video; }
-  VideoInput const& Video() const { return video; }
+  const VideoInput& Video() const { return video; }
 
   void SetRecordNthFrame(int record_nth_frame_)
   {
@@ -104,6 +104,6 @@ class VideoViewer
 };
 
 void PANGOLIN_EXPORT
-RunVideoViewerUI(std::string const& input_uri, std::string const& output_uri);
+RunVideoViewerUI(const std::string& input_uri, const std::string& output_uri);
 
 }  // namespace pangolin

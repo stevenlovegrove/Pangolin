@@ -44,19 +44,19 @@ template <typename T>
 class Var
 {
   public:
-  static T& Attach(T& variable, VarMeta const& meta)
+  static T& Attach(T& variable, const VarMeta& meta)
   {
     VarState::I().AttachVar<T&>(variable, meta);
     return variable;
   }
 
-  static T& Attach(std::string const& name, T& variable)
+  static T& Attach(const std::string& name, T& variable)
   {
     return Attach(variable, VarMeta(name));
   }
 
   static T& Attach(
-      std::string const& name, T& variable, double min, double max,
+      const std::string& name, T& variable, double min, double max,
       bool logscale = false)
   {
     return Attach(
@@ -65,12 +65,12 @@ class Var
                       META_FLAG_NONE, logscale));
   }
 
-  static T& Attach(std::string const& name, T& variable, int flags)
+  static T& Attach(const std::string& name, T& variable, int flags)
   {
     return Attach(variable, VarMeta(name, 0., 0., 0., flags));
   }
 
-  static T& Attach(std::string const& name, T& variable, bool toggle)
+  static T& Attach(const std::string& name, T& variable, bool toggle)
   {
     return Attach(
         variable,
@@ -79,33 +79,33 @@ class Var
 
   ~Var() {}
 
-  Var(std::shared_ptr<VarValueGeneric> const& v) :
+  Var(const std::shared_ptr<VarValueGeneric>& v) :
       var(InitialiseFromPreviouslyTypedVar<T>(v))
   {
   }
 
-  Var(const T& value, VarMeta const& meta) :
+  Var(const T& value, const VarMeta& meta) :
       var(InitialiseFromPreviouslyTypedVar<T>(
           VarState::I().GetOrCreateVar<T>(value, meta)))
   {
   }
 
-  Var(std::string const& name, const T& value = T()) : Var(value, VarMeta(name))
+  Var(const std::string& name, const T& value = T()) : Var(value, VarMeta(name))
   {
   }
 
-  Var(std::string const& name, const T& value, int flags) :
+  Var(const std::string& name, const T& value, int flags) :
       Var(value, VarMeta(name, 0., 0., 0., flags))
   {
   }
 
-  Var(std::string const& name, const T& value, bool toggle) :
+  Var(const std::string& name, const T& value, bool toggle) :
       Var(value,
           VarMeta(name, 0., 0., 0., toggle ? META_FLAG_TOGGLE : META_FLAG_NONE))
   {
   }
 
-  Var(std::string const& name, const T& value, double min, double max,
+  Var(const std::string& name, const T& value, double min, double max,
       bool logscale = false) :
       Var(value, VarMeta(
                      name, min, max, DefaultIncrementForType<T>(min, max),
@@ -129,7 +129,7 @@ class Var
     return *this;
   }
 
-  Var<T>& operator=(Var<T> const& v)
+  Var<T>& operator=(const Var<T>& v)
   {
     var->Set(v.var->Get());
     return *this;
@@ -137,7 +137,7 @@ class Var
 
   VarMeta& Meta() { return var->Meta(); }
 
-  VarMeta const& Meta() const { return var->Meta(); }
+  const VarMeta& Meta() const { return var->Meta(); }
 
   bool GuiChanged()
   {
@@ -151,12 +151,12 @@ class Var
   mutable std::shared_ptr<VarValueT<T>> var;
 };
 
-inline Var<bool> Button(std::string const& name)
+inline Var<bool> Button(const std::string& name)
 {
   return Var(true, VarMeta(name, 0., 0., 0., META_FLAG_NONE));
 }
 
-inline Var<bool> Checkbox(std::string const& name, bool val)
+inline Var<bool> Checkbox(const std::string& name, bool val)
 {
   return Var(val, VarMeta(name, 0., 0., 0., META_FLAG_TOGGLE));
 }
@@ -174,8 +174,8 @@ class VarVector
   public:
   static_assert(N >= 1);
   VarVector(
-      std::string name, Eigen::Vector<double, N> const& init,
-      Eigen::Vector<double, N> const& min, Eigen::Vector<double, N> const& max)
+      std::string name, const Eigen::Vector<double, N>& init,
+      const Eigen::Vector<double, N>& min, const Eigen::Vector<double, N>& max)
   {
     for (int i = 0; i < N; ++i) {
       var_vec_[i] = std::make_optional(
@@ -184,7 +184,7 @@ class VarVector
   }
 
   VarVector(
-      std::string name, Eigen::Vector<double, N> const& init, double min,
+      std::string name, const Eigen::Vector<double, N>& init, double min,
       double max) :
       VarVector(
           name, init, (min * Eigen::Vector<double, N>::Ones()).eval(),
@@ -202,7 +202,7 @@ class VarVector
     return false;
   }
 
-  void set(Eigen::Vector<double, N> const& init)
+  void set(const Eigen::Vector<double, N>& init)
   {
     for (int i = 0; i < N; ++i) {
       auto& var = FARM_UNWRAP(var_vec_[i]);
@@ -227,17 +227,17 @@ class VarSe3
 {
   public:
   VarSe3(
-      std::string name, Eigen::Vector3d const& init_rot,
-      Eigen::Vector3d const& init_trans, Eigen::Vector3d const& min_trans,
-      Eigen::Vector3d const& max_trans) :
+      std::string name, const Eigen::Vector3d& init_rot,
+      const Eigen::Vector3d& init_trans, const Eigen::Vector3d& min_trans,
+      const Eigen::Vector3d& max_trans) :
       rot_vec_(name + "_rot", init_rot, -sophus::kPiF64, sophus::kPiF64),
       trans_vec_(name + "_trans", init_trans, -sophus::kPiF64, sophus::kPiF64)
   {
   }
 
   VarSe3(
-      std::string name, Eigen::Vector3d const& init_rot,
-      Eigen::Vector3d const& init_trans, double min_trans, double max_trans) :
+      std::string name, const Eigen::Vector3d& init_rot,
+      const Eigen::Vector3d& init_trans, double min_trans, double max_trans) :
       VarSe3(
           name, init_rot, init_trans, min_trans * Eigen::Vector3d::Ones(),
           max_trans * Eigen::Vector3d::Ones())

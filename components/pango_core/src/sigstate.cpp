@@ -49,7 +49,7 @@ SigState::~SigState() { Clear(); }
 void SigState::Clear() { sig_callbacks.clear(); }
 
 void RegisterNewSigCallback(
-    SigCallbackFn callback, void* data, int const signal)
+    SigCallbackFn callback, void* data, const int signal)
 {
   SigState::I().sig_callbacks.insert(
       std::pair<int, SigCallback>(signal, SigCallback(signal, callback, data)));

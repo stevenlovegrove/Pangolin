@@ -39,7 +39,7 @@
 namespace pangolin
 {
 
-int const panal_v_margin = 6;
+const int panal_v_margin = 6;
 
 int AttachAbs(int low, int high, Attach a)
 {
@@ -56,7 +56,7 @@ double AspectAreaWithinTarget(double target, double test)
     return target / test;
 }
 
-void View::Resize(Viewport const& p)
+void View::Resize(const Viewport& p)
 {
   // Compute Bounds based on specification
   v.l = AttachAbs(p.l, p.r(), left);
@@ -75,19 +75,19 @@ void View::Resize(Viewport const& p)
 
   // Adjust based on aspect requirements
   if (aspect != 0) {
-    float const current_aspect = (float)v.w / (float)v.h;
+    const float current_aspect = (float)v.w / (float)v.h;
     if (aspect > 0) {
       // Fit to space
       if (current_aspect < aspect) {
         // Adjust height
-        int const nh = (int)(v.w / aspect);
+        const int nh = (int)(v.w / aspect);
         v.b += vlock == LockBottom
                    ? 0
                    : (vlock == LockCenter ? (v.h - nh) / 2 : (v.h - nh));
         v.h = nh;
       } else if (current_aspect > aspect) {
         // Adjust width
-        int const nw = (int)(v.h * aspect);
+        const int nw = (int)(v.h * aspect);
         v.l += hlock == LockLeft
                    ? 0
                    : (hlock == LockCenter ? (v.w - nw) / 2 : (v.w - nw));
@@ -98,14 +98,14 @@ void View::Resize(Viewport const& p)
       double true_aspect = -aspect;
       if (current_aspect < true_aspect) {
         // Adjust width
-        int const nw = (int)(v.h * true_aspect);
+        const int nw = (int)(v.h * true_aspect);
         v.l += hlock == LockLeft
                    ? 0
                    : (hlock == LockCenter ? (v.w - nw) / 2 : (v.w - nw));
         v.w = nw;
       } else if (current_aspect > true_aspect) {
         // Adjust height
-        int const nh = (int)(v.w / true_aspect);
+        const int nh = (int)(v.w / true_aspect);
         v.b += vlock == LockBottom
                    ? 0
                    : (vlock == LockCenter ? (v.h - nh) / 2 : (v.h - nh));
@@ -117,7 +117,7 @@ void View::Resize(Viewport const& p)
   ResizeChildren();
 }
 
-inline int zcompare(View const* lhs, View const* rhs)
+inline int zcompare(const View* lhs, const View* rhs)
 {
   return lhs->zorder < rhs->zorder;
 }
@@ -150,7 +150,7 @@ void View::ResizeChildren()
     }
   } else if (layout == LayoutHorizontal) {
     // Allocate space incrementally
-    int const margin = 8;
+    const int margin = 8;
     Viewport space = v.Inset(margin);
     for (std::vector<View*>::iterator iv = views.begin(); iv != views.end();
          ++iv) {
@@ -160,7 +160,7 @@ void View::ResizeChildren()
   } else if (layout == LayoutEqualVertical) {
     // Allocate vertical space equally
     const size_t visiblechildren = NumVisibleChildren();
-    float const height = (float)v.h / (float)visiblechildren;
+    const float height = (float)v.h / (float)visiblechildren;
 
     for (size_t i = 0; i < visiblechildren; ++i) {
       Viewport space(
@@ -171,7 +171,7 @@ void View::ResizeChildren()
   } else if (layout == LayoutEqualHorizontal) {
     // Allocate vertical space equally
     const size_t visiblechildren = NumVisibleChildren();
-    float const width = (float)v.w / (float)visiblechildren;
+    const float width = (float)v.w / (float)visiblechildren;
 
     for (size_t i = 0; i < visiblechildren; ++i) {
       Viewport space((GLint)(v.l + i * width), v.b, (GLint)width, v.h);
@@ -182,7 +182,7 @@ void View::ResizeChildren()
     // TODO: Make this neater, and make fewer assumptions!
     if (visiblechildren > 0) {
       // This containers aspect
-      double const this_a = std::fabs(v.aspect());
+      const double this_a = std::fabs(v.aspect());
 
       // Use first child with fixed aspect for all children
       double child_a = std::fabs(VisibleChild(0).aspect);
@@ -201,8 +201,8 @@ void View::ResizeChildren()
       for (; cols > 0; --cols) {
         const size_t rows =
             visiblechildren / cols + (visiblechildren % cols == 0 ? 0 : 1);
-        double const na = cols * child_a / rows;
-        double const new_area = visiblechildren *
+        const double na = cols * child_a / rows;
+        const double new_area = visiblechildren *
                                 AspectAreaWithinTarget(this_a, na) /
                                 (rows * cols);
         if (new_area <= area) break;
@@ -265,20 +265,20 @@ void View::ActivateScissorAndClear() const
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void View::Activate(OpenGlRenderState const& state) const
+void View::Activate(const OpenGlRenderState& state) const
 {
   v.Activate();
   state.Apply();
 }
 
-void View::ActivateAndScissor(OpenGlRenderState const& state) const
+void View::ActivateAndScissor(const OpenGlRenderState& state) const
 {
   vp.Scissor();
   v.Activate();
   state.Apply();
 }
 
-void View::ActivateScissorAndClear(OpenGlRenderState const& state) const
+void View::ActivateScissorAndClear(const OpenGlRenderState& state) const
 {
   vp.Scissor();
   v.Activate();
@@ -297,12 +297,12 @@ GLfloat View::GetClosestDepth(int x, int y, int radius) const
 #ifdef _MSC_VER
   // MSVC Requires fixed sized arrays on stack
   radius = 5;
-  int const zl = (5 * 2 + 1);
+  const int zl = (5 * 2 + 1);
 #else
-  int const zl = (radius * 2 + 1);
+  const int zl = (radius * 2 + 1);
 #endif
 
-  int const zsize = zl * zl;
+  const int zsize = zl * zl;
   GLfloat zs[zsize];
 
 #ifndef HAVE_GLES
@@ -318,7 +318,7 @@ GLfloat View::GetClosestDepth(int x, int y, int radius) const
 }
 
 void View::GetObjectCoordinates(
-    OpenGlRenderState const& cam_state, double winx, double winy,
+    const OpenGlRenderState& cam_state, double winx, double winy,
     double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
 {
   const GLint viewport[4] = {v.l, v.b, v.w, v.h};
@@ -328,7 +328,7 @@ void View::GetObjectCoordinates(
 }
 
 void View::GetCamCoordinates(
-    OpenGlRenderState const& cam_state, double winx, double winy,
+    const OpenGlRenderState& cam_state, double winx, double winy,
     double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
 {
   const GLint viewport[4] = {v.l, v.b, v.w, v.h};
@@ -430,12 +430,12 @@ Viewport View::GetBounds() const
       std::min(v.h, vp.h));
 }
 
-void View::SaveOnRender(std::string const& filename_hint)
+void View::SaveOnRender(const std::string& filename_hint)
 {
   SaveWindowOnRender(filename_hint, this->v.Intersect(this->vp));
 }
 
-void View::SaveRenderNow(std::string const& filename_hint)
+void View::SaveRenderNow(const std::string& filename_hint)
 {
   SaveWindowNow(filename_hint, this->v);
 }
@@ -486,7 +486,7 @@ View& View::SetHandler(Handler* h)
   return *this;
 }
 
-View& View::SetDrawFunction(std::function<void(View&)> const& drawFunc)
+View& View::SetDrawFunction(const std::function<void(View&)>& drawFunc)
 {
   extern_draw_function = drawFunc;
   return *this;

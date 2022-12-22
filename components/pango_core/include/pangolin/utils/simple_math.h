@@ -36,17 +36,17 @@
 namespace pangolin
 {
 
-static double const Identity3d[] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
-static double const Zero3d[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-static double const Identity4d[] = {1, 0, 0, 0, 0, 1, 0, 0,
+static const double Identity3d[] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+static const double Zero3d[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const double Identity4d[] = {1, 0, 0, 0, 0, 1, 0, 0,
                                     0, 0, 1, 0, 0, 0, 0, 1};
-static double const Zero4d[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const double Zero4d[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-static float const Identity3f[] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
-static float const Zero3f[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-static float const Identity4f[] = {1, 0, 0, 0, 0, 1, 0, 0,
+static const float Identity3f[] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+static const float Zero3f[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const float Identity4f[] = {1, 0, 0, 0, 0, 1, 0, 0,
                                    0, 0, 1, 0, 0, 0, 0, 1};
-static float const Zero4f[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const float Zero4f[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 template <int R, int C, typename P>
 void MatPrint(const P m[R * C])

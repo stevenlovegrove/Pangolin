@@ -13,13 +13,13 @@ namespace pangolin
 
 template <typename T>
 void testForParams(
-    Vector3<T> const& lookat_in_world, Vector3<T> const& camera_in_world,
-    Vector3<T> const& up_in_world, DeviceXyz convention)
+    const Vector3<T>& lookat_in_world, const Vector3<T>& camera_in_world,
+    const Vector3<T>& up_in_world, DeviceXyz convention)
 {
-  Se3<T> const world_pose_cam = worldLookatFromCamera(
+  const Se3<T> world_pose_cam = worldLookatFromCamera(
       camera_in_world, lookat_in_world, up_in_world, convention);
-  Se3<T> const cam_pose_world = world_pose_cam.inverse();
-  Vector3<T> const lookat_in_cam = cam_pose_world * lookat_in_world;
+  const Se3<T> cam_pose_world = world_pose_cam.inverse();
+  const Vector3<T> lookat_in_cam = cam_pose_world * lookat_in_world;
 
   // defines (in the rows) the directions we expect for right, down and forward
   // in camera frame
@@ -38,9 +38,9 @@ void testForParams(
 
 void simpleTest()
 {
-  Vector3<double> const lookat_in_world(0.0, 0.0, 1.0);
-  Vector3<double> const camera_in_world(0.0, 0.0, 0.0);
-  Vector3<double> const up_in_world(0.0, -1.0, 0.0);
+  const Vector3<double> lookat_in_world(0.0, 0.0, 1.0);
+  const Vector3<double> camera_in_world(0.0, 0.0, 0.0);
+  const Vector3<double> up_in_world(0.0, -1.0, 0.0);
   const Se3F64 world_pose_cam = worldLookatFromCamera(
       camera_in_world, lookat_in_world, up_in_world,
       DeviceXyz::right_down_forward);

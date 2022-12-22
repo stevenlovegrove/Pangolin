@@ -52,7 +52,7 @@ namespace pangolin
 std::mutex window_mutex;
 std::weak_ptr<X11GlContext> global_gl_context;
 
-long const EVENT_MASKS = ButtonPressMask | ButtonReleaseMask |
+const long EVENT_MASKS = ButtonPressMask | ButtonReleaseMask |
                          StructureNotifyMask | ButtonMotionMask |
                          PointerMotionMask | KeyPressMask | KeyReleaseMask |
                          FocusChangeMask;
@@ -60,24 +60,24 @@ long const EVENT_MASKS = ButtonPressMask | ButtonReleaseMask |
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
 typedef GLXContext (*glXCreateContextAttribsARBProc)(
-    ::Display*, ::GLXFBConfig, ::GLXContext, Bool, int const*);
+    ::Display*, ::GLXFBConfig, ::GLXContext, Bool, const int*);
 
 // Adapted from: http://www.opengl.org/resources/features/OGLextensions/
-bool isExtensionSupported(char const* extList, char const* extension)
+bool isExtensionSupported(const char* extList, const char* extension)
 {
   /* Extension names should not have spaces. */
-  char const* where = strchr(extension, ' ');
+  const char* where = strchr(extension, ' ');
   if (where || *extension == '\0') {
     return false;
   }
 
-  for (char const* start = extList;;) {
+  for (const char* start = extList;;) {
     where = strstr(start, extension);
     if (!where) {
       break;
     }
 
-    char const* terminator = where + strlen(extension);
+    const char* terminator = where + strlen(extension);
 
     if (where == start || *(where - 1) == ' ') {
       if (*terminator == ' ' || *terminator == '\0') {
@@ -178,7 +178,7 @@ bool isExtensionSupported(char const* extList, char const* extension)
 static bool ctxErrorOccurred = false;
 static int ctxErrorHandler(::Display* /*dpy*/, ::XErrorEvent* ev)
 {
-  int const buffer_size = 10240;
+  const int buffer_size = 10240;
   char buffer[buffer_size];
   XGetErrorText(ev->display, ev->error_code, buffer, buffer_size);
   PANGO_ERROR("X11 Error: {}\n", buffer);
@@ -199,12 +199,12 @@ GLXContext CreateGlContext(
   GLXContext new_ctx;
 
   // Get the default screen's GLX extension list
-  char const* glxExts =
+  const char* glxExts =
       glXQueryExtensionsString(display, DefaultScreen(display));
 
   glXCreateContextAttribsARBProc glXCreateContextAttribsARB =
       (glXCreateContextAttribsARBProc)glXGetProcAddressARB(
-          (GLubyte const*)"glXCreateContextAttribsARB");
+          (const GLubyte*)"glXCreateContextAttribsARB");
 
   // Install an X error handler so the application won't exit if GL 3.0
   // context allocation fails. Handler is global and shared across all threads.
@@ -286,7 +286,7 @@ X11GlContext::~X11GlContext()
 }
 
 X11Window::X11Window(
-    std::string const& title, int width, int height,
+    const std::string& title, int width, int height,
     std::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc) :
     display(display), glcontext(0), win(0), cmap(0)
 {
@@ -424,7 +424,7 @@ void X11Window::ProcessEvents()
         break;
       case ButtonPress:
       case ButtonRelease: {
-        int const button = ev.xbutton.button - 1;
+        const int button = ev.xbutton.button - 1;
         MouseSignal(MouseEvent{
             (float)ev.xbutton.x, (float)ev.xbutton.y,
             GetEventFlagsFromXState(ev.xkey.state), 1 << button,
@@ -548,9 +548,9 @@ void X11Window::ProcessEvents()
 void X11Window::SwapBuffers() { glXSwapBuffers(display->display, win); }
 
 std::unique_ptr<WindowInterface> CreateX11WindowAndBind(
-    std::string const& window_title, int const w, int const h,
-    std::string const& display_name, bool const double_buffered,
-    int const sample_buffers, int const samples)
+    const std::string& window_title, const int w, const int h,
+    const std::string& display_name, const bool double_buffered,
+    const int sample_buffers, const int samples)
 {
   std::shared_ptr<X11Display> newdisplay = std::make_shared<X11Display>(
       display_name.empty() ? NULL : display_name.c_str());
@@ -582,7 +582,7 @@ PANGOLIN_REGISTER_FACTORY(X11Window)
     {
       return {{"x11", 10}, {"linux", 10}, {"default", 100}};
     }
-    char const* Description() const override { return "Use X11 native window"; }
+    const char* Description() const override { return "Use X11 native window"; }
     ParamSet Params() const override
     {
       return {{
@@ -598,16 +598,16 @@ PANGOLIN_REGISTER_FACTORY(X11Window)
       }};
     }
 
-    std::unique_ptr<WindowInterface> Open(Uri const& uri) override
+    std::unique_ptr<WindowInterface> Open(const Uri& uri) override
     {
       const std::string window_title =
           uri.Get<std::string>("window_title", "window");
-      int const w = uri.Get<int>("w", 640);
-      int const h = uri.Get<int>("h", 480);
+      const int w = uri.Get<int>("w", 640);
+      const int h = uri.Get<int>("h", 480);
       const std::string display_name = uri.Get<std::string>("display_name", "");
-      bool const double_buffered = uri.Get<bool>("double_buffered", true);
-      int const sample_buffers = uri.Get<int>("sample_buffers", 1);
-      int const samples = uri.Get<int>("samples", 1);
+      const bool double_buffered = uri.Get<bool>("double_buffered", true);
+      const int sample_buffers = uri.Get<int>("sample_buffers", 1);
+      const int samples = uri.Get<int>("samples", 1);
       return std::unique_ptr<WindowInterface>(CreateX11WindowAndBind(
           window_title, w, h, display_name, double_buffered, sample_buffers,
           samples));

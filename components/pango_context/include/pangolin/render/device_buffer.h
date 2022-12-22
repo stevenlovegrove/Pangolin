@@ -42,7 +42,7 @@ struct DeviceBuffer {
   ///
   ///   - u.data must not be null
   ///   - u.num_elements must be >= 1.
-  virtual void pushToUpdateQueue(Data const& u) = 0;
+  virtual void pushToUpdateQueue(const Data& u) = 0;
 
   // Use with any contiguous, movable or copyable container with a
   // data() and size() method.

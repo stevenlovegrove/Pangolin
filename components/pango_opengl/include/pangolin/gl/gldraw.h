@@ -52,7 +52,7 @@ namespace pangolin
 inline void glColorHSV(GLfloat hue, GLfloat s = 1.0f, GLfloat v = 1.0f)
 {
   const GLfloat h = hue / 60.0f;
-  int const i = (int)floor(h);
+  const int i = (int)floor(h);
   const GLfloat f = (i % 2 == 0) ? 1 - (h - i) : h - i;
   const GLfloat m = v * (1 - s);
   const GLfloat n = v * (1 - s * f);
@@ -184,10 +184,10 @@ inline void glDrawRectPerimeter(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
 
 inline void glDrawCirclePerimeter(float x, float y, float rad)
 {
-  int const N = 50;
+  const int N = 50;
   GLfloat verts[N * 2];
 
-  float const TAU_DIV_N = 2 * (float)M_PI / N;
+  const float TAU_DIV_N = 2 * (float)M_PI / N;
   for (int i = 0; i < N * 2; i += 2) {
     verts[i] = x + rad * cos(i * TAU_DIV_N);
     verts[i + 1] = y + rad * sin(i * TAU_DIV_N);
@@ -198,11 +198,11 @@ inline void glDrawCirclePerimeter(float x, float y, float rad)
 
 inline void glDrawCircle(GLfloat x, GLfloat y, GLfloat rad)
 {
-  int const N = 50;
+  const int N = 50;
   GLfloat verts[N * 2];
 
   // Draw vertices anticlockwise for front face
-  float const TAU_DIV_N = 2 * (float)M_PI / N;
+  const float TAU_DIV_N = 2 * (float)M_PI / N;
   for (int i = 0; i < N * 2; i += 2) {
     verts[i] = x + rad * cos(-i * TAU_DIV_N);
     verts[i + 1] = y + rad * sin(-i * TAU_DIV_N);
@@ -339,10 +339,10 @@ inline void glDrawTextureFlipY(GLenum target, GLuint texid)
 #ifdef USE_EIGEN
 
 #ifndef HAVE_GLES
-inline void glVertex(Eigen::Vector3d const& p) { glVertex3dv(p.data()); }
+inline void glVertex(const Eigen::Vector3d& p) { glVertex3dv(p.data()); }
 #endif
 
-inline void glDrawLine(Eigen::Vector2d const& p1, Eigen::Vector2d const& p2)
+inline void glDrawLine(const Eigen::Vector2d& p1, const Eigen::Vector2d& p2)
 {
   glDrawLine((GLfloat)p1(0), (GLfloat)p1(1), (GLfloat)p2(0), (GLfloat)p2(1));
 }
@@ -355,7 +355,7 @@ inline void glDrawLine(Eigen::Vector2d const& p1, Eigen::Vector2d const& p2)
 //
 template <typename P, int N, class Allocator>
 void glDrawVertices(
-    std::vector<Eigen::Matrix<P, N, 1>, Allocator> const& vertices, GLenum mode)
+    const std::vector<Eigen::Matrix<P, N, 1>, Allocator>& vertices, GLenum mode)
 {
   glDrawVertices(vertices.size(), vertices.data(), mode);
 }
@@ -364,7 +364,7 @@ void glDrawVertices(
 //
 template <typename P, int N, class Allocator>
 void glDrawPoints(
-    std::vector<Eigen::Matrix<P, N, 1>, Allocator> const& vertices)
+    const std::vector<Eigen::Matrix<P, N, 1>, Allocator>& vertices)
 {
   glDrawVertices(vertices, GL_POINTS);
 }
@@ -374,7 +374,7 @@ void glDrawPoints(
 //  Precondition: ``vertices.size()`` must be a multiple of 2.
 //
 template <typename P, int N, class Allocator>
-void glDrawLines(std::vector<Eigen::Matrix<P, N, 1>, Allocator> const& vertices)
+void glDrawLines(const std::vector<Eigen::Matrix<P, N, 1>, Allocator>& vertices)
 {
   glDrawVertices(vertices, GL_LINES);
 }
@@ -383,7 +383,7 @@ void glDrawLines(std::vector<Eigen::Matrix<P, N, 1>, Allocator> const& vertices)
 //
 template <typename P, int N, class Allocator>
 void glDrawLineStrip(
-    std::vector<Eigen::Matrix<P, N, 1>, Allocator> const& vertices)
+    const std::vector<Eigen::Matrix<P, N, 1>, Allocator>& vertices)
 {
   glDrawVertices(vertices, GL_LINE_STRIP);
 }
@@ -392,39 +392,39 @@ void glDrawLineStrip(
 //
 template <typename P, int N, class Allocator>
 void glDrawLineLoop(
-    std::vector<Eigen::Matrix<P, N, 1>, Allocator> const& vertices)
+    const std::vector<Eigen::Matrix<P, N, 1>, Allocator>& vertices)
 {
   glDrawVertices(vertices, GL_LINE_LOOP);
 }
 
-inline void glDrawCross(Eigen::Vector2d const& p, double r = 5.0)
+inline void glDrawCross(const Eigen::Vector2d& p, double r = 5.0)
 {
   glDrawCross((GLfloat)p(0), (GLfloat)p(1), (GLfloat)r);
 }
 
-inline void glDrawCross(Eigen::Vector3d const& p, double r = 5.0)
+inline void glDrawCross(const Eigen::Vector3d& p, double r = 5.0)
 {
   glDrawCross((GLfloat)p(0), (GLfloat)p(1), (GLfloat)p(2), (GLfloat)r);
 }
 
-inline void glDrawCircle(Eigen::Vector2d const& p, double radius = 5.0)
+inline void glDrawCircle(const Eigen::Vector2d& p, double radius = 5.0)
 {
   glDrawCircle((GLfloat)p(0), (GLfloat)p(1), (GLfloat)radius);
 }
 
-inline void glDrawCirclePerimeter(Eigen::Vector2d const& p, double radius = 5.0)
+inline void glDrawCirclePerimeter(const Eigen::Vector2d& p, double radius = 5.0)
 {
   glDrawCirclePerimeter((GLfloat)p(0), (GLfloat)p(1), (GLfloat)radius);
 }
 
-inline void glSetFrameOfReference(Eigen::Matrix4f const& T_wf)
+inline void glSetFrameOfReference(const Eigen::Matrix4f& T_wf)
 {
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixf(T_wf.data());
 }
 
-inline void glSetFrameOfReference(Eigen::Matrix4d const& T_wf)
+inline void glSetFrameOfReference(const Eigen::Matrix4d& T_wf)
 {
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
@@ -448,7 +448,7 @@ inline void glDrawAxis(const T& T_wf, S scale)
 
 template <typename T>
 inline void glDrawFrustum(
-    Eigen::Matrix<T, 3, 3> const& Kinv, int w, int h, GLfloat scale)
+    const Eigen::Matrix<T, 3, 3>& Kinv, int w, int h, GLfloat scale)
 {
   glDrawFrustum(
       (GLfloat)Kinv(0, 2), (GLfloat)Kinv(1, 2), (GLfloat)Kinv(0, 0),
@@ -457,8 +457,8 @@ inline void glDrawFrustum(
 
 template <typename T>
 inline void glDrawFrustum(
-    Eigen::Matrix<T, 3, 3> const& Kinv, int w, int h,
-    Eigen::Matrix<T, 4, 4> const& T_wf, T scale)
+    const Eigen::Matrix<T, 3, 3>& Kinv, int w, int h,
+    const Eigen::Matrix<T, 4, 4>& T_wf, T scale)
 {
   glSetFrameOfReference(T_wf);
   glDrawFrustum(Kinv, w, h, scale);
@@ -467,7 +467,7 @@ inline void glDrawFrustum(
 
 template <typename T>
 inline void glDrawAlignedBox(
-    Eigen::AlignedBox<T, 2> const& box, GLenum mode = GL_TRIANGLE_FAN)
+    const Eigen::AlignedBox<T, 2>& box, GLenum mode = GL_TRIANGLE_FAN)
 {
   const Eigen::Matrix<float, 2, 1> l = box.min().template cast<float>();
   const Eigen::Matrix<float, 2, 1> h = box.max().template cast<float>();
@@ -478,13 +478,13 @@ inline void glDrawAlignedBox(
 }
 
 template <typename T>
-inline void glDrawAlignedBoxPerimeter(Eigen::AlignedBox<T, 2> const& box)
+inline void glDrawAlignedBoxPerimeter(const Eigen::AlignedBox<T, 2>& box)
 {
   glDrawAlignedBox<T>(box, GL_LINE_LOOP);
 }
 
 template <typename T>
-inline void glDrawAlignedBox(Eigen::AlignedBox<T, 3> const& box)
+inline void glDrawAlignedBox(const Eigen::AlignedBox<T, 3>& box)
 {
   const Eigen::Matrix<float, 3, 1> l = box.min().template cast<float>();
   const Eigen::Matrix<float, 3, 1> h = box.max().template cast<float>();

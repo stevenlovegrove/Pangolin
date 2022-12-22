@@ -61,7 +61,7 @@ struct Interactive {
     std::variant<PointerEvent, ScrollEvent, KeyboardEvent> detail;
   };
 
-  virtual bool handleEvent(Context const &, Event const &) = 0;
+  virtual bool handleEvent(const Context &, const Event &) = 0;
 };
 
 }  // namespace pangolin

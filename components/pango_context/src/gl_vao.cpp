@@ -45,7 +45,7 @@ bool isGlIntegralDatatype(GLenum datatype)
 }
 
 void GlVertexArrayObject::addVertexAttrib(
-    GLuint attrib_location, GlBuffer const& bo, size_t offset_bytes,
+    GLuint attrib_location, const GlBuffer& bo, size_t offset_bytes,
     size_t stride_bytes, GLboolean normalized)
 {
   auto vao_bind = bind();
@@ -72,7 +72,7 @@ void GlVertexArrayObject::addVertexAttrib(
 }
 
 void GlVertexArrayObject::addVertexAttrib(
-    GLuint attrib_location, DeviceBuffer const& bo, size_t offset_bytes,
+    GLuint attrib_location, const DeviceBuffer& bo, size_t offset_bytes,
     size_t stride_bytes, GLboolean normalized)
 {
   auto bind_vao = bind();

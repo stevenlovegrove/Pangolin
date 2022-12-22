@@ -40,7 +40,7 @@ VideoInput::VideoInput() :
 }
 
 VideoInput::VideoInput(
-    std::string const& input_uri, std::string const& output_uri) :
+    const std::string& input_uri, const std::string& output_uri) :
     frame_num(0),
     record_frame_skip(1),
     record_once(false),
@@ -50,7 +50,7 @@ VideoInput::VideoInput(
 }
 
 void VideoInput::Open(
-    std::string const& input_uri, std::string const& output_uri)
+    const std::string& input_uri, const std::string& output_uri)
 {
   uri_input = ParseUri(input_uri);
   uri_output = ParseUri(output_uri);
@@ -80,7 +80,7 @@ void VideoInput::Close()
 
 VideoInput::~VideoInput() { Close(); }
 
-std::string const& VideoInput::LogFilename() const { return uri_output.url; }
+const std::string& VideoInput::LogFilename() const { return uri_output.url; }
 
 std::string& VideoInput::LogFilename() { return uri_output.url; }
 
@@ -150,7 +150,7 @@ size_t VideoInput::SizeBytes() const
   return video_src->SizeBytes();
 }
 
-std::vector<StreamInfo> const& VideoInput::Streams() const
+const std::vector<StreamInfo>& VideoInput::Streams() const
 {
   return video_src->Streams();
 }
@@ -170,10 +170,10 @@ bool VideoInput::GrabNext(unsigned char* image, bool wait)
 {
   frame_num++;
 
-  bool const should_record =
+  const bool should_record =
       (record_continuous && !(frame_num % record_frame_skip)) || record_once;
 
-  bool const success = video_src->GrabNext(image, wait);
+  const bool success = video_src->GrabNext(image, wait);
 
   if (should_record && video_recorder != 0 && success) {
     video_recorder->WriteStreams(
@@ -188,9 +188,9 @@ bool VideoInput::GrabNewest(unsigned char* image, bool wait)
 {
   frame_num++;
 
-  bool const should_record =
+  const bool should_record =
       (record_continuous && !(frame_num % record_frame_skip)) || record_once;
-  bool const success = video_src->GrabNewest(image, wait);
+  const bool success = video_src->GrabNewest(image, wait);
 
   if (should_record && video_recorder != 0 && success) {
     video_recorder->WriteStreams(

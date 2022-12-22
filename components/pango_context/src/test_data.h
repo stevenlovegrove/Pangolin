@@ -17,7 +17,7 @@ inline std::vector<double> testVecs()
 
 template <typename T, int kR, int kC>
 std::vector<Eigen::Matrix<T, kR, kC>> testMats(
-    std::vector<T> const& scalars, int const num_to_make)
+    const std::vector<T>& scalars, const int num_to_make)
 {
   std::vector<Eigen::Matrix<T, kR, kC>> ret;
 

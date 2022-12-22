@@ -41,7 +41,7 @@ bool ImagesVideo::LoadFrame(size_t i)
   if (i < num_files) {
     Frame& frame = loaded[i];
     for (size_t c = 0; c < num_channels; ++c) {
-      std::string const& filename = Filename(i, c);
+      const std::string& filename = Filename(i, c);
       const ImageFileType file_type = FileType(filename);
 
       if (file_type == ImageFileTypeUnknown && unknowns_are_raw) {
@@ -60,7 +60,7 @@ bool ImagesVideo::LoadFrame(size_t i)
   return false;
 }
 
-void ImagesVideo::PopulateFilenamesFromJson(std::string const& filename)
+void ImagesVideo::PopulateFilenamesFromJson(const std::string& filename)
 {
   std::ifstream ifs(PathExpand(filename));
   picojson::value json;
@@ -96,7 +96,7 @@ void ImagesVideo::PopulateFilenamesFromJson(std::string const& filename)
   }
 }
 
-void ImagesVideo::PopulateFilenames(std::string const& wildcard_path)
+void ImagesVideo::PopulateFilenames(const std::string& wildcard_path)
 {
   const std::vector<std::string> wildcards =
       Expand(wildcard_path, '[', ']', ',');
@@ -143,14 +143,14 @@ void ImagesVideo::ConfigureStreamSizes()
 {
   size_bytes = 0;
   for (size_t c = 0; c < num_channels; ++c) {
-    IntensityImage<> const& img = loaded[0][c];
+    const IntensityImage<>& img = loaded[0][c];
     const StreamInfo stream_info(img.pixelType(), img.shape(), size_bytes);
     streams.push_back(stream_info);
     size_bytes += img.height() * img.pitchBytes();
   }
 }
 
-ImagesVideo::ImagesVideo(std::string const& wildcard_path) :
+ImagesVideo::ImagesVideo(const std::string& wildcard_path) :
     num_files(-1), num_channels(0), next_frame_id(0), unknowns_are_raw(false)
 {
   // Work out which files to sequence
@@ -165,7 +165,7 @@ ImagesVideo::ImagesVideo(std::string const& wildcard_path) :
 }
 
 ImagesVideo::ImagesVideo(
-    std::string const& wildcard_path, RuntimePixelType const& raw_fmt,
+    const std::string& wildcard_path, const RuntimePixelType& raw_fmt,
     size_t raw_width, size_t raw_height, size_t raw_pitch, size_t raw_offset,
     size_t raw_planes) :
     num_files(-1),
@@ -202,7 +202,7 @@ void ImagesVideo::Stop() {}
 size_t ImagesVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-std::vector<StreamInfo> const& ImagesVideo::Streams() const { return streams; }
+const std::vector<StreamInfo>& ImagesVideo::Streams() const { return streams; }
 
 //! Implement VideoInput::GrabNext()
 bool ImagesVideo::GrabNext(unsigned char* image, bool /*wait*/)
@@ -219,7 +219,7 @@ bool ImagesVideo::GrabNext(unsigned char* image, bool /*wait*/)
       if (img.isEmpty() || img.shape() != streams[c].shape()) {
         return false;
       }
-      StreamInfo const& si = streams[c];
+      const StreamInfo& si = streams[c];
       std::memcpy(
           image + si.offsetBytes(), img.rawPtr(), si.shape().sizeBytes());
     }
@@ -248,17 +248,17 @@ size_t ImagesVideo::Seek(size_t frameid)
   return next_frame_id;
 }
 
-picojson::value const& ImagesVideo::DeviceProperties() const
+const picojson::value& ImagesVideo::DeviceProperties() const
 {
   return device_properties;
 }
 
-picojson::value const& ImagesVideo::FrameProperties() const
+const picojson::value& ImagesVideo::FrameProperties() const
 {
   const size_t frame = GetCurrentFrameId();
 
   if (json_frames.evaluate_as_boolean() && frame < json_frames.size()) {
-    picojson::value const& frame_props = json_frames[frame];
+    const picojson::value& frame_props = json_frames[frame];
     if (frame_props.contains("frame_properties")) {
       return frame_props["frame_properties"];
     }
@@ -275,7 +275,7 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
     {
       return {{"file", 20}, {"files", 20}, {"image", 10}, {"images", 10}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Load an image collection as a video. Supports one or more "
              "synchronized streams. Use images://[wildcard1,wildcard2,...] to "
@@ -301,11 +301,11 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
             "fmt should be the format of an element in the individual "
             "plane."}}};
     }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       ParamReader reader(Params(), uri);
 
-      bool const raw = reader.Contains("fmt");
+      const bool raw = reader.Contains("fmt");
       const std::string path = PathExpand(uri.url);
 
       if (raw) {

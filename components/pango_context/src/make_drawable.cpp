@@ -6,7 +6,7 @@ namespace pangolin
 {
 
 Shared<Drawable> DrawableConversionTraits<draw::Shape>::makeDrawable(
-    draw::Shape const& x)
+    const draw::Shape& x)
 {
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::shapes,
@@ -22,7 +22,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Shape>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Cube>::makeDrawable(
-    draw::Cube const& cube)
+    const draw::Cube& cube)
 {
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::triangles,
@@ -138,7 +138,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Cube>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
-    draw::Icosphere const& sphere)
+    const draw::Icosphere& sphere)
 {
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::triangles,
@@ -147,8 +147,8 @@ Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
   std::vector<FaceT> faces;
 
   // http://www.songho.ca/opengl/gl_sphere.html#icosphere
-  static float constexpr kHAngle = M_PI / 180 * 72;
-  float const k_v_angle = std::atan(1.0f / 2);
+  static constexpr float kHAngle = M_PI / 180 * 72;
+  const float k_v_angle = std::atan(1.0f / 2);
 
   float h_angle1 = -M_PI / 2 - kHAngle / 2;  // start from -126 deg at 1st row
   float h_angle2 = -M_PI / 2;                // start from -90 deg at 2nd row
@@ -199,7 +199,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
   for (size_t i = 0; i < sphere.num_subdivisions; ++i) {
     std::vector<FaceT> source_faces = faces;
     faces.clear();
-    for (FaceT const& t : source_faces) {
+    for (const FaceT& t : source_faces) {
       Eigen::Vector3f p0_p1 =
           (vertices[t.x()] + vertices[t.y()]).normalized() * sphere.radius;
       int p0_p1_id = vertices.size();
@@ -229,7 +229,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::CheckerPlane>::makeDrawable(
-    draw::CheckerPlane const&)
+    const draw::CheckerPlane&)
 {
   auto board = DrawnSolids::Create({
       .object_type = DrawnSolids::Type::checkerboard,
@@ -238,7 +238,7 @@ Shared<Drawable> DrawableConversionTraits<draw::CheckerPlane>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Axes>::makeDrawable(
-    draw::Axes const& axes)
+    const draw::Axes& axes)
 {
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::axes,
@@ -249,7 +249,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Axes>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Points3f>::makeDrawable(
-    draw::Points3f const& points)
+    const draw::Points3f& points)
 {
   std::vector<Color> colors(points.points.size(), points.color);
 
@@ -263,7 +263,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Points3f>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::Points3d>::makeDrawable(
-    draw::Points3d const& points)
+    const draw::Points3d& points)
 {
   std::vector<Color> colors;
   std::vector<Eigen::Vector3f> vertices;
@@ -272,7 +272,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Points3d>::makeDrawable(
       .element_type = DrawnPrimitives::Type::points,
   });
 
-  for (auto const& p : points.points) {
+  for (const auto& p : points.points) {
     vertices.push_back(p.cast<float>());
     colors.push_back(points.color);
   }
@@ -283,7 +283,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Points3d>::makeDrawable(
 
 Shared<Drawable>
 DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
-    std::vector<draw::Line3> const& lines)
+    const std::vector<draw::Line3>& lines)
 {
   std::vector<Eigen::Vector3f> vertices;
   std::vector<Color> colors;
@@ -292,7 +292,7 @@ DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
       .element_type = DrawnPrimitives::Type::lines,
   });
 
-  for (draw::Line3 const& line : lines) {
+  for (const draw::Line3& line : lines) {
     vertices.push_back(line.a);
     vertices.push_back(line.b);
     colors.push_back(line.color);
@@ -306,7 +306,7 @@ DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
 
 Shared<Drawable>
 DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
-    std::vector<draw::Line2> const& lines)
+    const std::vector<draw::Line2>& lines)
 {
   std::vector<Eigen::Vector3f> vertices;
   std::vector<Color> colors;
@@ -315,7 +315,7 @@ DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
       .element_type = DrawnPrimitives::Type::lines,
   });
 
-  for (draw::Line2 const& line : lines) {
+  for (const draw::Line2& line : lines) {
     vertices.push_back(line.toXy0A());
     vertices.push_back(line.toXy0B());
     colors.push_back(line.color);
@@ -327,7 +327,7 @@ DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
 }
 
 Shared<Drawable> DrawableConversionTraits<draw::CameraFrustum>::makeDrawable(
-    draw::CameraFrustum const& frustum)
+    const draw::CameraFrustum& frustum)
 {
   std::vector<draw::Line3> lines;
 

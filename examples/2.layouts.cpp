@@ -43,10 +43,10 @@
 
 using namespace pangolin;
 
-char const* image_url_1 =
+const char* image_url_1 =
     "https://www.wwf.org.uk/sites/default/files/styles/gallery_image/public/"
     "2019-09/pangolin_with_tongue_out.jpg";
-char const* image_url_2 =
+const char* image_url_2 =
     "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/"
     "Space_Needle_2011-07-04.jpg/500px-Space_Needle_2011-07-04.jpg";
 

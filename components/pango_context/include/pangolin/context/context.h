@@ -59,7 +59,7 @@ struct Context : std::enable_shared_from_this<Context> {
   // customized at runtime by the end-user.
   // TODO: provide a method to serialize LayerGroup for easily
   //       saving layouts
-  virtual LayerGroup const& layout() const = 0;
+  virtual const LayerGroup& layout() const = 0;
   virtual LayerGroup& layout() = 0;
 
   // Specify the Layers which will make up the drawing canvas via a LayerGroup
@@ -72,7 +72,7 @@ struct Context : std::enable_shared_from_this<Context> {
   // Once detached, Layers will not automatically interact with the Context.
   // Users may safely hold onto unused PanelGroups and restore them via
   // setLayout to quickly reconfigure the window.
-  virtual void setLayout(LayerGroup const& layout) = 0;
+  virtual void setLayout(const LayerGroup& layout) = 0;
 
   // Convenience method to accept anything convertable to a LayourGroup
   template <LayerGroupConvertable T>
@@ -90,7 +90,7 @@ struct Context : std::enable_shared_from_this<Context> {
   // window/buffer managed by the context, with origin respecting the
   // window_convention parameter.
   virtual void setViewport(
-      MinMax<Eigen::Array2i> const& region,
+      const MinMax<Eigen::Array2i>& region,
       ImageXy window_convention = Conventions::global().image_xy) const = 0;
 
   // Read from the graphics device the specified buffer associated with this

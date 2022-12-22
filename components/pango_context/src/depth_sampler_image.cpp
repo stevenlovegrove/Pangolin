@@ -6,7 +6,7 @@ namespace pangolin
 {
 
 struct DepthSamplerImageImpl : public DepthSamplerImage {
-  DepthSamplerImageImpl(Params const& p) :
+  DepthSamplerImageImpl(const Params& p) :
       kind_(p.kind), depth_image_(p.depth_image)
   {
     if (kind_ != DepthKind::zaxis) {
@@ -14,14 +14,14 @@ struct DepthSamplerImageImpl : public DepthSamplerImage {
     }
   }
 
-  void setDepthImage(sophus::Image<float> const& image) override
+  void setDepthImage(const sophus::Image<float>& image) override
   {
     depth_image_ = image;
   }
 
   std::optional<Sample> sampleDepth(
-      SampleLocation const& location, int patch_rad, MinMax<double> near_far,
-      Context const* default_context) override
+      const SampleLocation& location, int patch_rad, MinMax<double> near_far,
+      const Context* default_context) override
   {
     const Eigen::Array2i pix = location.pos_camera_pixel.cast<int>();
 

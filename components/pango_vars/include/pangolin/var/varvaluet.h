@@ -39,8 +39,8 @@ class VarValueT : public VarValueGeneric
   public:
   typedef typename std::remove_reference<T>::type VarT;
 
-  virtual VarT const& Get() const = 0;
-  virtual void Set(VarT const& val) = 0;
+  virtual const VarT& Get() const = 0;
+  virtual void Set(const VarT& val) = 0;
 };
 
 }  // namespace pangolin

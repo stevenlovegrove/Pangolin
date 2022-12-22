@@ -221,7 +221,7 @@ void TeliVideo::SetNodeValStr(
   }
 }
 
-TeliVideo::TeliVideo(Params const& p) :
+TeliVideo::TeliVideo(const Params& p) :
     cam(0), strm(0), hStrmCmpEvt(0), transfer_bandwidth_gbps(0), exposure_us(0)
 {
   TeliSystem::Instance();
@@ -283,7 +283,7 @@ TeliVideo::TeliVideo(Params const& p) :
   Initialise();
 }
 
-bool TeliVideo::GetParameter(std::string const& name, std::string& result)
+bool TeliVideo::GetParameter(const std::string& name, std::string& result)
 {
   Teli::CAM_NODE_HANDLE node;
   Teli::CAM_API_STATUS st = Teli::Nd_GetNode(cam, name.c_str(), &node);
@@ -297,7 +297,7 @@ bool TeliVideo::GetParameter(std::string const& name, std::string& result)
   }
 }
 
-bool TeliVideo::SetParameter(std::string const& name, std::string const& value)
+bool TeliVideo::SetParameter(const std::string& name, const std::string& value)
 {
   Teli::CAM_NODE_HANDLE node;
   Teli::CAM_API_STATUS st = Teli::Nd_GetNode(cam, name.c_str(), &node);
@@ -375,7 +375,7 @@ void TeliVideo::Initialise()
         "TeliSDK: Unable to establish stream dimensions.");
   }
 
-  int const n = 1;
+  const int n = 1;
   for (size_t c = 0; c < n; ++c) {
     const StreamInfo stream_info(pfmt, w, h, (w * pfmt.bpp) / 8, 0);
     streams.push_back(stream_info);
@@ -402,7 +402,7 @@ void TeliVideo::InitPangoDeviceProperties()
   // TODO: Enumerate other settings.
 }
 
-void TeliVideo::SetDeviceParams(Params const& p)
+void TeliVideo::SetDeviceParams(const Params& p)
 {
   for (Params::ParamMap::const_iterator it = p.params.begin();
        it != p.params.end(); it++) {
@@ -454,12 +454,12 @@ void TeliVideo::Stop()
 size_t TeliVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-std::vector<StreamInfo> const& TeliVideo::Streams() const { return streams; }
+const std::vector<StreamInfo>& TeliVideo::Streams() const { return streams; }
 
 void TeliVideo::PopulateEstimatedCenterCaptureTime(basetime host_reception_time)
 {
   if (transfer_bandwidth_gbps) {
-    float const transfer_time_us =
+    const float transfer_time_us =
         size_bytes / int64_t((transfer_bandwidth_gbps * 1E3) / 8.0);
     frame_properties[PANGO_ESTIMATED_CENTER_CAPTURE_TIME_US] =
         picojson::value(int64_t(
@@ -537,13 +537,13 @@ bool TeliVideo::GrabNext(unsigned char* image, bool /*wait*/)
     }
 
     //! Access JSON properties of device
-    picojson::value const& TeliVideo::DeviceProperties() const
+    const picojson::value& TeliVideo::DeviceProperties() const
     {
       return device_properties;
     }
 
     //! Access JSON properties of most recently captured frame
-    picojson::value const& TeliVideo::FrameProperties() const
+    const picojson::value& TeliVideo::FrameProperties() const
     {
       return frame_properties;
     }
@@ -556,7 +556,7 @@ bool TeliVideo::GrabNext(unsigned char* image, bool /*wait*/)
         {
           return {{"teli", 10}, {"u3v", 5}};
         }
-        char const* Description() const override
+        const char* Description() const override
         {
           return "Uses Toshiba TeliCam library to open u3v camera.";
         }
@@ -567,7 +567,7 @@ bool TeliVideo::GrabNext(unsigned char* image, bool /*wait*/)
                 "Enumerates arguments dynamically from camera. Use native u3v "
                 "properties."}}};
         }
-        std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+        std::unique_ptr<VideoInterface> Open(const Uri& uri) override
         {
           return std::unique_ptr<VideoInterface>(new TeliVideo(uri));
         }

@@ -15,7 +15,7 @@ struct packed12bit_image_header {
 };
 #pragma pack(pop)
 
-void SavePacked12bit(IntensityImage<> const& image, std::ostream& out)
+void SavePacked12bit(const IntensityImage<>& image, std::ostream& out)
 {
   if (image.numBytesPerPixelChannel() != 2) {
     throw std::runtime_error(
@@ -30,7 +30,7 @@ void SavePacked12bit(IntensityImage<> const& image, std::ostream& out)
   for (int r = 0; r < image.height(); ++r) {
     uint8_t* pout = output_buffer.get() + r * dest_pitch;
     uint16_t* pin = (uint16_t*)(image.rawRowPtr(r));
-    uint16_t const* pin_end = (uint16_t*)(image.rawRowPtr(r + 1));
+    const uint16_t* pin_end = (uint16_t*)(image.rawRowPtr(r + 1));
     while (pin < pin_end) {
       uint32_t val = (*(pin++) & 0x00000FFF);
       val |= uint32_t(*(pin++) & 0x00000FFF) << 12;
@@ -78,7 +78,7 @@ IntensityImage<> LoadPacked12bit(std::istream& in)
   for (int r = 0; r < img.height(); ++r) {
     uint16_t* pout = (uint16_t*)(img.rawRowPtr(r));
     uint8_t* pin = input_buffer.get() + r * input_pitch;
-    uint8_t const* pin_end = input_buffer.get() + (r + 1) * input_pitch;
+    const uint8_t* pin_end = input_buffer.get() + (r + 1) * input_pitch;
     while (pin < pin_end) {
       uint32_t val = *(pin++);
       val |= uint32_t(*(pin++)) << 8;

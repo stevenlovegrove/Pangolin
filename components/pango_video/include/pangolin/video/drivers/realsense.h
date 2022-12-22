@@ -32,7 +32,7 @@ struct RealSenseVideo : public VideoInterface,
   size_t SizeBytes() const override;
 
   //! Implement VideoInput::Streams()
-  std::vector<StreamInfo> const& Streams() const override;
+  const std::vector<StreamInfo>& Streams() const override;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true) override;
@@ -41,13 +41,13 @@ struct RealSenseVideo : public VideoInterface,
   bool GrabNewest(unsigned char* image, bool wait = true) override;
 
   //! Implement VideoPropertiesInterface::Properties()
-  picojson::value const& DeviceProperties() const override
+  const picojson::value& DeviceProperties() const override
   {
     return device_properties;
   }
 
   //! Implement VideoPropertiesInterface::Properties()
-  picojson::value const& FrameProperties() const override
+  const picojson::value& FrameProperties() const override
   {
     return frame_properties;
   }

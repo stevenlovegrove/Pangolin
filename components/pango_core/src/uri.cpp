@@ -35,7 +35,7 @@
 namespace pangolin
 {
 
-Uri ParseUri(std::string const &str_uri)
+Uri ParseUri(const std::string &str_uri)
 {
   Uri uri;
   uri.full_uri = str_uri;

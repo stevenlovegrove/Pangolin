@@ -38,57 +38,57 @@ namespace pangolin
 // PNG
 IntensityImage<> LoadPng(std::istream& in);
 void SavePng(
-    IntensityImage<> const& image, std::ostream& out, bool top_line_first,
+    const IntensityImage<>& image, std::ostream& out, bool top_line_first,
     int zlib_compression_level);
 
 // JPG
 IntensityImage<> LoadJpg(std::istream& in);
-void SaveJpg(IntensityImage<> const& image, std::ostream& out, float quality);
+void SaveJpg(const IntensityImage<>& image, std::ostream& out, float quality);
 
 // PPM
 IntensityImage<> LoadPpm(std::istream& in);
 void SavePpm(
-    IntensityImage<> const& image, std::ostream& out, bool top_line_first);
+    const IntensityImage<>& image, std::ostream& out, bool top_line_first);
 
 // TGA
 IntensityImage<> LoadTga(std::istream& in);
 
 // Pango
-IntensityImage<> LoadPango(std::string const& filename);
+IntensityImage<> LoadPango(const std::string& filename);
 void SavePango(
-    IntensityImage<> const& image, std::string const& filename,
+    const IntensityImage<>& image, const std::string& filename,
     bool top_line_first);
 
 // EXR
 IntensityImage<> LoadExr(std::istream& source);
 void SaveExr(
-    IntensityImage<> const& image, std::string const& filename,
+    const IntensityImage<>& image, const std::string& filename,
     bool top_line_first);
 
 // BMP
 IntensityImage<> LoadBmp(std::istream& source);
 void SaveBmp(
-    IntensityImage<> const& image, std::ostream& out, bool top_line_first);
+    const IntensityImage<>& image, std::ostream& out, bool top_line_first);
 
 // ZSTD (https://github.com/facebook/zstd)
 IntensityImage<> LoadZstd(std::istream& in);
 void SaveZstd(
-    IntensityImage<> const& image, std::ostream& out, int compression_level);
+    const IntensityImage<>& image, std::ostream& out, int compression_level);
 
 // https://github.com/lz4/lz4
 IntensityImage<> LoadLz4(std::istream& in);
 void SaveLz4(
-    IntensityImage<> const& image, std::ostream& out, int compression_level);
+    const IntensityImage<>& image, std::ostream& out, int compression_level);
 
 // packed 12 bit image (obtained from unpacked 16bit)
 IntensityImage<> LoadPacked12bit(std::istream& in);
-void SavePacked12bit(IntensityImage<> const& image, std::ostream& out);
+void SavePacked12bit(const IntensityImage<>& image, std::ostream& out);
 
 // LibRaw raw camera files
-IntensityImage<> LoadLibRaw(std::string const& filename);
+IntensityImage<> LoadLibRaw(const std::string& filename);
 
 // TIFF
-IntensityImage<> LoadTiff(std::string const& filename);
+IntensityImage<> LoadTiff(const std::string& filename);
 
 IntensityImage<> LoadImage(std::istream& in, ImageFileType file_type)
 {
@@ -117,7 +117,7 @@ IntensityImage<> LoadImage(std::istream& in, ImageFileType file_type)
   }
 }
 
-IntensityImage<> LoadImage(std::string const& filename, ImageFileType file_type)
+IntensityImage<> LoadImage(const std::string& filename, ImageFileType file_type)
 {
   switch (file_type) {
     case ImageFileTypePng:
@@ -150,7 +150,7 @@ struct Uri {
   std::string path;
 };
 
-Uri splitUri(std::string const& uri)
+Uri splitUri(const std::string& uri)
 {
   const size_t scheme_end = uri.find("://");
   PANGO_THROW_IF(scheme_end == uri.npos);
@@ -163,7 +163,7 @@ Uri splitUri(std::string const& uri)
   }
 }
 
-IntensityImage<> LoadHttpImage(std::string const& uri)
+IntensityImage<> LoadHttpImage(const std::string& uri)
 {
   auto split = splitUri(uri);
 
@@ -184,7 +184,7 @@ IntensityImage<> LoadHttpImage(std::string const& uri)
   }
 }
 
-IntensityImage<> LoadImage(std::string const& filename)
+IntensityImage<> LoadImage(const std::string& filename)
 {
   if (startsWith(filename, "http")) {
     return LoadHttpImage(filename);
@@ -195,7 +195,7 @@ IntensityImage<> LoadImage(std::string const& filename)
 }
 
 void SaveImage(
-    IntensityImage<> const& image, std::ostream& out, ImageFileType file_type,
+    const IntensityImage<>& image, std::ostream& out, ImageFileType file_type,
     bool top_line_first, float quality)
 {
   switch (file_type) {
@@ -221,7 +221,7 @@ void SaveImage(
 }
 
 void SaveImage(
-    IntensityImage<> const& image, std::string const& filename,
+    const IntensityImage<>& image, const std::string& filename,
     ImageFileType file_type, bool top_line_first, float quality)
 {
   switch (file_type) {
@@ -246,7 +246,7 @@ void SaveImage(
 }
 
 void SaveImage(
-    IntensityImage<> const& image, std::string const& filename,
+    const IntensityImage<>& image, const std::string& filename,
     bool top_line_first, float quality)
 {
   const std::string ext = FileLowercaseExtention(filename);

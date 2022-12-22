@@ -35,7 +35,7 @@ namespace pangolin
 {
 
 // TODO: Replace this with proper factory registry
-pangolin::Geometry LoadGeometry(std::string const& filename)
+pangolin::Geometry LoadGeometry(const std::string& filename)
 {
   const std::string expanded_filename = PathExpand(filename);
   const ImageFileType ft = FileType(expanded_filename);

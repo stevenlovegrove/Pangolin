@@ -33,7 +33,7 @@
 namespace pangolin
 {
 
-unsigned int const parse_max_token_size = 1024;
+const unsigned int parse_max_token_size = 1024;
 
 inline void ConsumeWhitespace(std::istream& is)
 {
@@ -84,7 +84,7 @@ inline size_t ConsumeWhitespaceReadToken(
 }
 
 inline int ParseToken(
-    char const* token, char const* token_list[], size_t token_list_size)
+    const char* token, const char* token_list[], size_t token_list_size)
 {
   for (size_t i = 0; i < token_list_size; ++i) {
     if (strcmp(token, token_list[i]) == 0) {
@@ -95,7 +95,7 @@ inline int ParseToken(
 }
 
 #define PANGOLIN_DEFINE_PARSE_TOKEN(x)                                         \
-  inline x ParseToken##x(char const* token)                                    \
+  inline x ParseToken##x(const char* token)                                    \
   {                                                                            \
     return (x)ParseToken(token, x##String, x##Size);                           \
   }                                                                            \

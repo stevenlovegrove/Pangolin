@@ -7,8 +7,8 @@ namespace pangolin
 Eigen::Matrix4d transformProjectionFromImage(
     MinMax<double> near_far_in_world_units, GraphicsProjection projection)
 {
-  double const near = near_far_in_world_units.min();
-  double const far = near_far_in_world_units.max();
+  const double near = near_far_in_world_units.min();
+  const double far = near_far_in_world_units.max();
 
   PANGO_ENSURE(
       projection == GraphicsProjection::orthographic ||
@@ -16,8 +16,8 @@ Eigen::Matrix4d transformProjectionFromImage(
       "near and far planes must have the same sign for perspective projection");
 
   Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
-  bool const nofar = (far == std::numeric_limits<double>::infinity());
-  double const sign = std::signbit(near) ? -1.0 : +1.0;
+  const bool nofar = (far == std::numeric_limits<double>::infinity());
+  const double sign = std::signbit(near) ? -1.0 : +1.0;
 
   if (projection == GraphicsProjection::perspective) {
     ret(2, 2) = nofar ? sign : (far + near) / (far - near);
@@ -49,7 +49,7 @@ Eigen::Matrix4d transformClipFromProjection(
     ret(0, 3) = -1.0;
     ret(1, 3) = -1.0;
   } else {
-    bool const cont = image_indexing == ImageIndexing::pixel_continuous;
+    const bool cont = image_indexing == ImageIndexing::pixel_continuous;
     ret(0, 0) = 2.0 / size.width;
     ret(1, 1) = 2.0 / size.height;
     ret(0, 3) = cont ? -1.0 : 1.0 / double(size.width) - 1.0;
@@ -107,8 +107,8 @@ Eigen::Matrix<double, 4, 4> projectionClipFromOrtho(
   double r = extent.max().x();
   double b = extent.max().y();  // assuming 0 is top
   double t = extent.min().y();  // assuming 0 is top
-  double const n = near_far_in_world_units.min();
-  double const f = near_far_in_world_units.max();
+  const double n = near_far_in_world_units.min();
+  const double f = near_far_in_world_units.max();
 
   // fix assumption if needed
   if (image_convention == ImageXy::right_up) std::swap(b, t);

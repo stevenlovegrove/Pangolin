@@ -45,7 +45,7 @@ struct PyPangoIO {
   PyPangoIO(
       std::queue<InterpreterLine>& line_queue, InterpreterLineType line_type);
 
-  void write(std::string const& text);
+  void write(const std::string& text);
 
   void flush();
 

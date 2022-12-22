@@ -35,13 +35,13 @@
 
 namespace pangolin
 {
-int constexpr META_FLAG_NONE = 0x0000;
-int constexpr META_FLAG_TOGGLE = 0x0001;
-int constexpr META_FLAG_READONLY = 0x0002;
+constexpr int META_FLAG_NONE = 0x0000;
+constexpr int META_FLAG_TOGGLE = 0x0001;
+constexpr int META_FLAG_READONLY = 0x0002;
 
 struct VarMeta {
   VarMeta(
-      std::string const& full_name = "", double min_val = 0.0,
+      const std::string& full_name = "", double min_val = 0.0,
       double max_val = 0.0, double increment = 0.0, int flags = META_FLAG_NONE,
       bool logscale = false, bool generic = false) :
       full_name(full_name),
@@ -65,7 +65,7 @@ struct VarMeta {
     }
   }
 
-  void SetName(std::string const& full_name)
+  void SetName(const std::string& full_name)
   {
     this->full_name = full_name;
     const std::vector<std::string> parts = pangolin::Split(full_name, '.');
@@ -94,7 +94,7 @@ class VarValueGeneric
 
   virtual ~VarValueGeneric() {}
 
-  virtual char const* TypeId() const = 0;
+  virtual const char* TypeId() const = 0;
   virtual void Reset() = 0;
   virtual VarMeta& Meta() = 0;
 

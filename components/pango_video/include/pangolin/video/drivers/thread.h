@@ -45,7 +45,7 @@ class PANGOLIN_EXPORT ThreadVideo : public VideoInterface,
   public:
   ThreadVideo(
       std::unique_ptr<VideoInterface>& videoin, size_t num_buffers,
-      std::string const& name);
+      const std::string& name);
   ~ThreadVideo();
 
   //! Implement VideoInput::Start()
@@ -58,7 +58,7 @@ class PANGOLIN_EXPORT ThreadVideo : public VideoInterface,
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  std::vector<StreamInfo> const& Streams() const;
+  const std::vector<StreamInfo>& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);
@@ -66,9 +66,9 @@ class PANGOLIN_EXPORT ThreadVideo : public VideoInterface,
   //! Implement VideoInput::GrabNewest()
   bool GrabNewest(unsigned char* image, bool wait = true);
 
-  picojson::value const& DeviceProperties() const;
+  const picojson::value& DeviceProperties() const;
 
-  picojson::value const& FrameProperties() const;
+  const picojson::value& FrameProperties() const;
 
   uint32_t AvailableFrames() const;
 
@@ -86,7 +86,7 @@ class PANGOLIN_EXPORT ThreadVideo : public VideoInterface,
     }
 
     // No copy constructor.
-    GrabResult(GrabResult const& o) = delete;
+    GrabResult(const GrabResult& o) = delete;
 
     // Default move constructor
     GrabResult(GrabResult&& o) = default;

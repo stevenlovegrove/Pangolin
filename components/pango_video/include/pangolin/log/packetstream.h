@@ -39,7 +39,7 @@ class PANGOLIN_EXPORT PacketStream : public std::ifstream
   public:
   PacketStream() : _is_pipe(false) { cclear(); }
 
-  PacketStream(std::string const& filename) :
+  PacketStream(const std::string& filename) :
       Base(filename.c_str(), std::ios::in | std::ios::binary),
       _is_pipe(IsPipe(filename))
   {
@@ -48,7 +48,7 @@ class PANGOLIN_EXPORT PacketStream : public std::ifstream
 
   bool seekable() const { return is_open() && !_is_pipe; }
 
-  void open(std::string const& filename)
+  void open(const std::string& filename)
   {
     close();
     _is_pipe = IsPipe(filename);

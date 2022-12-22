@@ -53,7 +53,7 @@ namespace pangolin
 
 // temp utility for temp API
 template <typename T>
-std::optional<T> optGet(std::optional<std::vector<T>> const& v, size_t index)
+std::optional<T> optGet(const std::optional<std::vector<T>>& v, size_t index)
 {
   if (v && v->size() > index) {
     return (*v)[index];
@@ -69,7 +69,7 @@ struct PANGOLIN_EXPORT VideoInterface {
   virtual size_t SizeBytes() const = 0;
 
   //! Get format and dimensions of all video streams
-  virtual std::vector<StreamInfo> const& Streams() const = 0;
+  virtual const std::vector<StreamInfo>& Streams() const = 0;
 
   //! Start Video device
   virtual void Start() = 0;
@@ -87,7 +87,7 @@ struct PANGOLIN_EXPORT VideoInterface {
     if (GrabNext(buffer.get())) {
       std::vector<IntensityImage<>> res;
       // Allocation into seperate images too, ughhhhhh
-      for (auto const& s : Streams()) {
+      for (const auto& s : Streams()) {
         res.emplace_back(ImageSize(s.shape().imageSize()), s.format());
         auto& dst_image = res.back();
         sophus::details::pitchedCopy(
@@ -116,10 +116,10 @@ struct PANGOLIN_EXPORT VideoInterface {
 struct PANGOLIN_EXPORT GenicamVideoInterface {
   virtual ~GenicamVideoInterface() {}
 
-  virtual bool GetParameter(std::string const& name, std::string& result) = 0;
+  virtual bool GetParameter(const std::string& name, std::string& result) = 0;
 
   virtual bool SetParameter(
-      std::string const& name, std::string const& value) = 0;
+      const std::string& name, const std::string& value) = 0;
 
   virtual size_t CameraCount() const { return 1; }
 };
@@ -139,10 +139,10 @@ struct PANGOLIN_EXPORT VideoPropertiesInterface {
   virtual ~VideoPropertiesInterface() {}
 
   //! Access JSON properties of device
-  virtual picojson::value const& DeviceProperties() const = 0;
+  virtual const picojson::value& DeviceProperties() const = 0;
 
   //! Access JSON properties of most recently captured frame
-  virtual picojson::value const& FrameProperties() const = 0;
+  virtual const picojson::value& FrameProperties() const = 0;
 };
 
 enum UvcRequestCode {

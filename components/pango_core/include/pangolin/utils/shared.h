@@ -28,7 +28,7 @@ class Shared
   /// The return value is an object containing either a non-null Shared object
   /// pointer,
   //  or an farm_ng::Error object
-  static ExpectedT tryFrom(std::shared_ptr<T> const& maybe_null) noexcept
+  static ExpectedT tryFrom(const std::shared_ptr<T>& maybe_null) noexcept
   {
     if (!maybe_null) {
       return FARM_ERROR("is null");
@@ -57,7 +57,7 @@ class Shared
 
   /// Construct from a possibly null shared_ptr
   /// Panics if shared is null. See `tryFrom()` for alternate.
-  static Shared from(std::shared_ptr<T> const& shared)
+  static Shared from(const std::shared_ptr<T>& shared)
   {
     auto maybe = tryFrom(shared);
     if (!maybe) throw BadExpectedAccess(FARM_ERROR_ONLY());
@@ -107,14 +107,14 @@ class Shared
 
   // Copy constructor from derived bases
   template <DerivedFrom<T> Derived>
-  Shared(Shared<Derived> const& other) : non_null_shared_(other.sharedPtr())
+  Shared(const Shared<Derived>& other) : non_null_shared_(other.sharedPtr())
   {
     checkMaybeThrow();
   }
 
   // Construct from shared_ptr
   template <DerivedFrom<T> Derived>
-  Shared(std::shared_ptr<Derived> const& panic_if_null) :
+  Shared(const std::shared_ptr<Derived>& panic_if_null) :
       non_null_shared_(panic_if_null)
   {
     checkMaybeThrow();
@@ -130,7 +130,7 @@ class Shared
 
   // Not sure why this is needed when the generic one
   // is defined above
-  Shared(std::shared_ptr<T> const& panic_if_null) :
+  Shared(const std::shared_ptr<T>& panic_if_null) :
       non_null_shared_(panic_if_null)
   {
     checkMaybeThrow();
@@ -150,10 +150,10 @@ class Shared
     return *this;
   }
 
-  Shared(Shared<T> const&) = default;
-  Shared<T>& operator=(Shared<T> const&) = default;
+  Shared(const Shared<T>&) = default;
+  Shared<T>& operator=(const Shared<T>&) = default;
 
-  bool operator==(Shared<T> const& rhs) const noexcept
+  bool operator==(const Shared<T>& rhs) const noexcept
   {
     return this->non_null_shared_ == rhs.non_null_shared_;
   }
@@ -192,7 +192,7 @@ Shared<T>& operator+(ExpectShared<T>& x)
 /// Unlike Expected::operator*() which will allow for UB,
 /// + will Panic if x is in the error state.
 template <class T>
-Shared<T> const& operator+(ExpectShared<T> const& x)
+const Shared<T>& operator+(const ExpectShared<T>& x)
 {
   return x.value();
 }

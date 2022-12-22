@@ -19,7 +19,7 @@ class PANGOLIN_EXPORT UvcMediaFoundationVideo
 {
   public:
   UvcMediaFoundationVideo(
-      int vendorId, int productId, std::string const& instanceId, size_t width,
+      int vendorId, int productId, const std::string& instanceId, size_t width,
       size_t height, int fps);
   ~UvcMediaFoundationVideo();
 
@@ -33,7 +33,7 @@ class PANGOLIN_EXPORT UvcMediaFoundationVideo
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  std::vector<pangolin::StreamInfo> const& Streams() const;
+  const std::vector<pangolin::StreamInfo>& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);
@@ -59,22 +59,22 @@ class PANGOLIN_EXPORT UvcMediaFoundationVideo
   bool SetGain(float gain);
 
   //! Access JSON properties of device
-  picojson::value const& DeviceProperties() const;
+  const picojson::value& DeviceProperties() const;
 
   //! Access JSON properties of most recently captured frame
-  picojson::value const& FrameProperties() const;
+  const picojson::value& FrameProperties() const;
 
   protected:
-  bool FindDevice(int vendorId, int productId, std::string const& instanceId);
+  bool FindDevice(int vendorId, int productId, const std::string& instanceId);
   void InitDevice(size_t width, size_t height, bool async);
   void DeinitDevice();
   void PopulateGainControls();
 
   static bool DeviceMatches(
-      std::wstring const& symLink, int vendorId, int productId,
+      const std::wstring& symLink, int vendorId, int productId,
       std::wstring& instanceId);
   static bool SymLinkIDMatches(
-      std::wstring const& symLink, wchar_t const* idStr, int id);
+      const std::wstring& symLink, const wchar_t* idStr, int id);
 
   std::vector<pangolin::StreamInfo> streams;
   size_t size_bytes;
@@ -92,8 +92,8 @@ class PANGOLIN_EXPORT UvcMediaFoundationVideo
   long gainCamMax;
   long gainCamDefault;
 
-  float const gainApiMin = 1.0f;
-  float const gainApiMax = 15.5f;
+  const float gainApiMin = 1.0f;
+  const float gainApiMax = 15.5f;
   int64_t expected_fps;
 
   picojson::value device_properties;

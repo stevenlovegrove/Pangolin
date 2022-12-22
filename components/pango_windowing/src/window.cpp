@@ -6,7 +6,7 @@ namespace pangolin
 {
 
 Shared<WindowInterface> WindowInterface::Create(
-    WindowInterface::Params const& params)
+    const WindowInterface::Params& params)
 {
   RegisterFactoriesWindowInterface();
   return FactoryRegistry::I()->Construct<WindowInterface>(params.uri);

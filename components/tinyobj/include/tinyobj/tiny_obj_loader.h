@@ -285,13 +285,13 @@ typedef struct callback_t_ {
   // `name` material name, `material_id` = the array index of material_t[]. -1
   // if
   // a material not found in .mtl
-  void (*usemtl_cb)(void *user_data, char const *name, int material_id);
+  void (*usemtl_cb)(void *user_data, const char *name, int material_id);
   // `materials` = parsed material data.
   void (*mtllib_cb)(
-      void *user_data, material_t const *materials, int num_materials);
+      void *user_data, const material_t *materials, int num_materials);
   // There may be multiple group names
-  void (*group_cb)(void *user_data, char const **names, int num_names);
-  void (*object_cb)(void *user_data, char const *name);
+  void (*group_cb)(void *user_data, const char **names, int num_names);
+  void (*object_cb)(void *user_data, const char *name);
 
   callback_t_() :
       vertex_cb(NULL),
@@ -313,7 +313,7 @@ class MaterialReader
   virtual ~MaterialReader();
 
   virtual bool operator()(
-      std::string const &matId, std::vector<material_t> *materials,
+      const std::string &matId, std::vector<material_t> *materials,
       std::map<std::string, int> *matMap, std::string *warn,
       std::string *err) = 0;
 };
@@ -321,13 +321,13 @@ class MaterialReader
 class MaterialFileReader : public MaterialReader
 {
   public:
-  explicit MaterialFileReader(std::string const &mtl_basedir) :
+  explicit MaterialFileReader(const std::string &mtl_basedir) :
       m_mtlBaseDir(mtl_basedir)
   {
   }
   virtual ~MaterialFileReader() {}
   virtual bool operator()(
-      std::string const &matId, std::vector<material_t> *materials,
+      const std::string &matId, std::vector<material_t> *materials,
       std::map<std::string, int> *matMap, std::string *warn, std::string *err);
 
   private:
@@ -342,7 +342,7 @@ class MaterialStreamReader : public MaterialReader
   }
   virtual ~MaterialStreamReader() {}
   virtual bool operator()(
-      std::string const &matId, std::vector<material_t> *materials,
+      const std::string &matId, std::vector<material_t> *materials,
       std::map<std::string, int> *matMap, std::string *warn, std::string *err);
 
   private:
@@ -364,7 +364,7 @@ class MaterialStreamReader : public MaterialReader
 bool LoadObj(
     attrib_t *attrib, std::vector<shape_t> *shapes,
     std::vector<material_t> *materials, std::string *warn, std::string *err,
-    char const *filename, char const *mtl_basedir = NULL,
+    const char *filename, const char *mtl_basedir = NULL,
     bool triangulate = true, bool default_vcols_fallback = true);
 
 /// Loads .obj from a file with custom user callback.
@@ -374,7 +374,7 @@ bool LoadObj(
 /// Returns warning message into `warn`, and error message into `err`
 /// See `examples/callback_api/` for how to use this function.
 bool LoadObjWithCallback(
-    std::istream &inStream, callback_t const &callback, void *user_data = NULL,
+    std::istream &inStream, const callback_t &callback, void *user_data = NULL,
     MaterialReader *readMatFn = NULL, std::string *warn = NULL,
     std::string *err = NULL);
 
@@ -404,8 +404,8 @@ void LoadMtl(
 /// @param[in] is_bump Is this texture bump/normal?
 ///
 bool ParseTextureNameAndOption(
-    std::string *texname, texture_option_t *texopt, char const *linebuf,
-    bool const is_bump);
+    std::string *texname, texture_option_t *texopt, const char *linebuf,
+    const bool is_bump);
 }  // namespace tinyobj
 
 #ifdef TINYOBJLOADER_IMPLEMENTATION
@@ -531,7 +531,7 @@ inline static bool fixIndex(int idx, int n, int *ret)
   return false;  // never reach here.
 }
 
-inline static std::string parseString(char const **token)
+inline static std::string parseString(const char **token)
 {
   std::string s;
   (*token) += strspn((*token), " \t");
@@ -541,7 +541,7 @@ inline static std::string parseString(char const **token)
   return s;
 }
 
-inline static int parseInt(char const **token)
+inline static int parseInt(const char **token)
 {
   (*token) += strspn((*token), " \t");
   int i = atoi((*token));
@@ -576,7 +576,7 @@ inline static int parseInt(char const **token)
 //  - s >= s_end.
 //  - parse failure.
 //
-static bool tryParseDouble(char const *s, char const *s_end, double *result)
+static bool tryParseDouble(const char *s, const char *s_end, double *result)
 {
   if (s >= s_end) {
     return false;
@@ -596,7 +596,7 @@ static bool tryParseDouble(char const *s, char const *s_end, double *result)
   // TO JUMP OVER DEFINITIONS.
   char sign = '+';
   char exp_sign = '+';
-  char const *curr = s;
+  const char *curr = s;
 
   // How many characters were read in a loop.
   int read = 0;
@@ -637,10 +637,10 @@ static bool tryParseDouble(char const *s, char const *s_end, double *result)
     read = 1;
     end_not_reached = (curr != s_end);
     while (end_not_reached && IS_DIGIT(*curr)) {
-      static double const pow_lut[] = {
+      static const double pow_lut[] = {
           1.0, 0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001,
       };
-      int const lut_entries = sizeof pow_lut / sizeof pow_lut[0];
+      const int lut_entries = sizeof pow_lut / sizeof pow_lut[0];
 
       // NOTE: Don't use powf here, it will absolutely murder precision.
       mantissa += static_cast<int>(*curr - 0x30) *
@@ -692,10 +692,10 @@ fail:
   return false;
 }
 
-inline static real_t parseReal(char const **token, double default_value = 0.0)
+inline static real_t parseReal(const char **token, double default_value = 0.0)
 {
   (*token) += strspn((*token), " \t");
-  char const *end = (*token) + strcspn((*token), " \t\r");
+  const char *end = (*token) + strcspn((*token), " \t\r");
   double val = default_value;
   tryParseDouble((*token), end, &val);
   real_t f = static_cast<real_t>(val);
@@ -703,10 +703,10 @@ inline static real_t parseReal(char const **token, double default_value = 0.0)
   return f;
 }
 
-inline static bool parseReal(char const **token, real_t *out)
+inline static bool parseReal(const char **token, real_t *out)
 {
   (*token) += strspn((*token), " \t");
-  char const *end = (*token) + strcspn((*token), " \t\r");
+  const char *end = (*token) + strcspn((*token), " \t\r");
   double val;
   bool ret = tryParseDouble((*token), end, &val);
   if (ret) {
@@ -718,17 +718,17 @@ inline static bool parseReal(char const **token, real_t *out)
 }
 
 inline static void parseReal2(
-    real_t *x, real_t *y, char const **token, double const default_x = 0.0,
-    double const default_y = 0.0)
+    real_t *x, real_t *y, const char **token, const double default_x = 0.0,
+    const double default_y = 0.0)
 {
   (*x) = parseReal(token, default_x);
   (*y) = parseReal(token, default_y);
 }
 
 inline static void parseReal3(
-    real_t *x, real_t *y, real_t *z, char const **token,
-    double const default_x = 0.0, double const default_y = 0.0,
-    double const default_z = 0.0)
+    real_t *x, real_t *y, real_t *z, const char **token,
+    const double default_x = 0.0, const double default_y = 0.0,
+    const double default_z = 0.0)
 {
   (*x) = parseReal(token, default_x);
   (*y) = parseReal(token, default_y);
@@ -736,9 +736,9 @@ inline static void parseReal3(
 }
 
 inline static void parseV(
-    real_t *x, real_t *y, real_t *z, real_t *w, char const **token,
-    double const default_x = 0.0, double const default_y = 0.0,
-    double const default_z = 0.0, double const default_w = 1.0)
+    real_t *x, real_t *y, real_t *z, real_t *w, const char **token,
+    const double default_x = 0.0, const double default_y = 0.0,
+    const double default_z = 0.0, const double default_w = 1.0)
 {
   (*x) = parseReal(token, default_x);
   (*y) = parseReal(token, default_y);
@@ -749,14 +749,14 @@ inline static void parseV(
 // Extension: parse vertex with colors(6 items)
 inline static bool parseVertexWithColor(
     real_t *x, real_t *y, real_t *z, real_t *r, real_t *g, real_t *b,
-    char const **token, double const default_x = 0.0,
-    double const default_y = 0.0, double const default_z = 0.0)
+    const char **token, const double default_x = 0.0,
+    const double default_y = 0.0, const double default_z = 0.0)
 {
   (*x) = parseReal(token, default_x);
   (*y) = parseReal(token, default_y);
   (*z) = parseReal(token, default_z);
 
-  bool const found_color =
+  const bool found_color =
       parseReal(token, r) && parseReal(token, g) && parseReal(token, b);
 
   if (!found_color) {
@@ -766,10 +766,10 @@ inline static bool parseVertexWithColor(
   return found_color;
 }
 
-inline static bool parseOnOff(char const **token, bool default_value = true)
+inline static bool parseOnOff(const char **token, bool default_value = true)
 {
   (*token) += strspn((*token), " \t");
-  char const *end = (*token) + strcspn((*token), " \t\r");
+  const char *end = (*token) + strcspn((*token), " \t\r");
 
   bool ret = default_value;
   if ((0 == strncmp((*token), "on", 2))) {
@@ -783,10 +783,10 @@ inline static bool parseOnOff(char const **token, bool default_value = true)
 }
 
 inline static texture_type_t parseTextureType(
-    char const **token, texture_type_t default_value = TEXTURE_TYPE_NONE)
+    const char **token, texture_type_t default_value = TEXTURE_TYPE_NONE)
 {
   (*token) += strspn((*token), " \t");
-  char const *end = (*token) + strcspn((*token), " \t\r");
+  const char *end = (*token) + strcspn((*token), " \t\r");
   texture_type_t ty = default_value;
 
   if ((0 == strncmp((*token), "cube_top", strlen("cube_top")))) {
@@ -809,7 +809,7 @@ inline static texture_type_t parseTextureType(
   return ty;
 }
 
-static tag_sizes parseTagTriple(char const **token)
+static tag_sizes parseTagTriple(const char **token)
 {
   tag_sizes ts;
 
@@ -837,7 +837,7 @@ static tag_sizes parseTagTriple(char const **token)
 
 // Parse triples with index offsets: i, i/j/k, i//k, i/j
 static bool parseTriple(
-    char const **token, int vsize, int vnsize, int vtsize, vertex_index_t *ret)
+    const char **token, int vsize, int vnsize, int vtsize, vertex_index_t *ret)
 {
   if (!ret) {
     return false;
@@ -891,7 +891,7 @@ static bool parseTriple(
 }
 
 // Parse raw triples: i, i/j/k, i//k, i/j
-static vertex_index_t parseRawTriple(char const **token)
+static vertex_index_t parseRawTriple(const char **token)
 {
   vertex_index_t vi(static_cast<int>(0));  // 0 is an invalid index in OBJ
 
@@ -925,8 +925,8 @@ static vertex_index_t parseRawTriple(char const **token)
 }
 
 bool ParseTextureNameAndOption(
-    std::string *texname, texture_option_t *texopt, char const *linebuf,
-    bool const is_bump)
+    std::string *texname, texture_option_t *texopt, const char *linebuf,
+    const bool is_bump)
 {
   // @todo { write more robust lexer and parser. }
   bool found_texname = false;
@@ -956,7 +956,7 @@ bool ParseTextureNameAndOption(
   texopt->turbulence[2] = static_cast<real_t>(0.0);
   texopt->type = TEXTURE_TYPE_NONE;
 
-  char const *token = linebuf;  // Assume line ends with NULL
+  const char *token = linebuf;  // Assume line ends with NULL
 
   while (!IS_NEW_LINE((*token))) {
     token += strspn(token, " \t");  // skip space
@@ -996,7 +996,7 @@ bool ParseTextureNameAndOption(
     } else if ((0 == strncmp(token, "-imfchan", 8)) && IS_SPACE((token[8]))) {
       token += 9;
       token += strspn(token, " \t");
-      char const *end = token + strcspn(token, " \t\r");
+      const char *end = token + strcspn(token, " \t\r");
       if ((end - token) == 1) {  // Assume one char for -imfchan
         texopt->imfchan = (*token);
       }
@@ -1091,10 +1091,10 @@ static int pnpoly(int nvert, T *vertx, T *verty, T testx, T testy)
 
 // TODO(syoyo): refactor function.
 static bool exportGroupsToShape(
-    shape_t *shape, std::vector<face_t> const &faceGroup,
-    std::vector<int> &lineGroup, std::vector<tag_t> const &tags,
-    int const material_id, std::string const &name, bool triangulate,
-    std::vector<real_t> const &v)
+    shape_t *shape, const std::vector<face_t> &faceGroup,
+    std::vector<int> &lineGroup, const std::vector<tag_t> &tags,
+    const int material_id, const std::string &name, bool triangulate,
+    const std::vector<real_t> &v)
 {
   if (faceGroup.empty() && lineGroup.empty()) {
     return false;
@@ -1103,7 +1103,7 @@ static bool exportGroupsToShape(
   if (!faceGroup.empty()) {
     // Flatten vertices and indices
     for (size_t i = 0; i < faceGroup.size(); i++) {
-      face_t const &face = faceGroup[i];
+      const face_t &face = faceGroup[i];
 
       size_t npolys = face.vertex_indices.size();
 
@@ -1339,7 +1339,7 @@ static bool exportGroupsToShape(
 // Split a string with specified delimiter character.
 // http://stackoverflow.com/questions/236129/split-a-string-in-c
 static void SplitString(
-    std::string const &s, char delim, std::vector<std::string> &elems)
+    const std::string &s, char delim, std::vector<std::string> &elems)
 {
   std::stringstream ss;
   ss.str(s);
@@ -1393,7 +1393,7 @@ void LoadMtl(
     }
 
     // Skip leading space.
-    char const *token = linebuf.c_str();
+    const char *token = linebuf.c_str();
     token += strspn(token, " \t");
 
     assert(token);
@@ -1723,7 +1723,7 @@ void LoadMtl(
     }
 
     // unknown parameter
-    char const *_space = strchr(token, ' ');
+    const char *_space = strchr(token, ' ');
     if (!_space) {
       _space = strchr(token, '\t');
     }
@@ -1746,7 +1746,7 @@ void LoadMtl(
 }
 
 bool MaterialFileReader::operator()(
-    std::string const &matId, std::vector<material_t> *materials,
+    const std::string &matId, std::vector<material_t> *materials,
     std::map<std::string, int> *matMap, std::string *warn, std::string *err)
 {
   std::string filepath;
@@ -1773,7 +1773,7 @@ bool MaterialFileReader::operator()(
 }
 
 bool MaterialStreamReader::operator()(
-    std::string const &matId, std::vector<material_t> *materials,
+    const std::string &matId, std::vector<material_t> *materials,
     std::map<std::string, int> *matMap, std::string *warn, std::string *err)
 {
   (void)err;
@@ -1795,7 +1795,7 @@ bool MaterialStreamReader::operator()(
 bool LoadObj(
     attrib_t *attrib, std::vector<shape_t> *shapes,
     std::vector<material_t> *materials, std::string *warn, std::string *err,
-    char const *filename, char const *mtl_basedir, bool trianglulate,
+    const char *filename, const char *mtl_basedir, bool trianglulate,
     bool default_vcols_fallback)
 {
   attrib->vertices.clear();
@@ -1818,9 +1818,9 @@ bool LoadObj(
   std::string baseDir = mtl_basedir ? mtl_basedir : "";
   if (!baseDir.empty()) {
 #ifndef _WIN32
-    char const dirsep = '/';
+    const char dirsep = '/';
 #else
-    char const dirsep = '\\';
+    const char dirsep = '\\';
 #endif
     if (baseDir[baseDir.length() - 1] != dirsep) baseDir += dirsep;
   }
@@ -1887,7 +1887,7 @@ bool LoadObj(
     }
 
     // Skip leading space.
-    char const *token = linebuf.c_str();
+    const char *token = linebuf.c_str();
     token += strspn(token, " \t");
 
     assert(token);
@@ -2160,7 +2160,7 @@ bool LoadObj(
     }
 
     if (token[0] == 't' && IS_SPACE(token[1])) {
-      int const max_tag_nums = 8192;  // FIXME(syoyo): Parameterize.
+      const int max_tag_nums = 8192;  // FIXME(syoyo): Parameterize.
       tag_t tag;
 
       token += 2;
@@ -2302,7 +2302,7 @@ bool LoadObj(
 }
 
 bool LoadObjWithCallback(
-    std::istream &inStream, callback_t const &callback,
+    std::istream &inStream, const callback_t &callback,
     void *user_data /*= NULL*/, MaterialReader *readMatFn /*= NULL*/,
     std::string *warn, /* = NULL*/
     std::string *err /*= NULL*/)
@@ -2317,7 +2317,7 @@ bool LoadObjWithCallback(
   std::vector<material_t> materials;
   std::vector<std::string> names;
   names.reserve(2);
-  std::vector<char const *> names_out;
+  std::vector<const char *> names_out;
 
   std::string linebuf;
   while (inStream.peek() != -1) {
@@ -2339,7 +2339,7 @@ bool LoadObjWithCallback(
     }
 
     // Skip leading space.
-    char const *token = linebuf.c_str();
+    const char *token = linebuf.c_str();
     token += strspn(token, " \t");
 
     assert(token);

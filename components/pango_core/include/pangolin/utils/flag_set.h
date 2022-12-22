@@ -30,7 +30,7 @@ class flag_set
     return *this;
   }
 
-  flag_set& operator&=(flag_set const& o) noexcept
+  flag_set& operator&=(const flag_set& o) noexcept
   {
     flags &= o.flags;
     return *this;
@@ -42,7 +42,7 @@ class flag_set
     return *this;
   }
 
-  flag_set& operator|=(flag_set const& o) noexcept
+  flag_set& operator|=(const flag_set& o) noexcept
   {
     flags |= o.flags;
     return *this;
@@ -58,7 +58,7 @@ class flag_set
     return ret;
   }
 
-  flag_set operator&(flag_set const& val) const
+  flag_set operator&(const flag_set& val) const
   {
     flag_set ret(*this);
     ret.flags &= val.flags;
@@ -76,7 +76,7 @@ class flag_set
     return ret;
   }
 
-  flag_set operator|(flag_set const& val) const
+  flag_set operator|(const flag_set& val) const
   {
     flag_set ret(*this);
     ret.flags |= val.flags;
@@ -97,7 +97,7 @@ class flag_set
 
   // Methods from std::bitset.
 
-  bool operator==(flag_set const& o) const { return flags == o.flags; }
+  bool operator==(const flag_set& o) const { return flags == o.flags; }
 
   bool operator==(const T& v) const { return *this == flag_set<T>(v); }
 
@@ -141,7 +141,7 @@ class flag_set
     return *this;
   }
 
-  bool constexpr operator[](const T& val) const
+  constexpr bool operator[](const T& val) const
   {
     return flags[static_cast<u_type>(val)];
   }
@@ -149,7 +149,7 @@ class flag_set
   std::string to_string() const { return flags.to_string(); }
 
   // Operator for outputting to std::ostream.
-  friend std::ostream& operator<<(std::ostream& stream, flag_set const& self)
+  friend std::ostream& operator<<(std::ostream& stream, const flag_set& self)
   {
     return stream << self.flags;
   }

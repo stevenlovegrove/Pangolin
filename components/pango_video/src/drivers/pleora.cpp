@@ -56,7 +56,7 @@
 namespace pangolin
 {
 
-inline void ThrowOnFailure(PvResult const& res)
+inline void ThrowOnFailure(const PvResult& res)
 {
   if (res.IsFailure()) {
     throw std::runtime_error(
@@ -85,7 +85,7 @@ struct PleoraParamTraits<std::string> {
 };
 
 template <typename T>
-T GetParam(PvGenParameterArray* params, char const* name)
+T GetParam(PvGenParameterArray* params, const char* name)
 {
   typedef typename PleoraParamTraits<T>::PvType PvType;
   PvType* param = dynamic_cast<PvType*>(params->Get(name));
@@ -102,7 +102,7 @@ T GetParam(PvGenParameterArray* params, char const* name)
 }
 
 template <typename T>
-bool SetParam(PvGenParameterArray* params, char const* name, T val)
+bool SetParam(PvGenParameterArray* params, const char* name, T val)
 {
   typedef typename PleoraParamTraits<T>::PvType PvType;
   PvType* param = dynamic_cast<PvType*>(params->Get(name));
@@ -123,8 +123,8 @@ bool SetParam(PvGenParameterArray* params, char const* name, T val)
   return true;
 }
 
-inline PvDeviceInfo const* SelectDevice(
-    PvSystem& aSystem, char const* model_name = 0, char const* serial_num = 0,
+inline const PvDeviceInfo* SelectDevice(
+    PvSystem& aSystem, const char* model_name = 0, const char* serial_num = 0,
     size_t index = 0)
 {
   aSystem.Find();
@@ -132,12 +132,12 @@ inline PvDeviceInfo const* SelectDevice(
   // Enumerate all devices, select first that matches criteria
   size_t matches = 0;
   for (uint32_t i = 0; i < aSystem.GetInterfaceCount(); i++) {
-    PvInterface const* lInterface =
-        dynamic_cast<PvInterface const*>(aSystem.GetInterface(i));
+    const PvInterface* lInterface =
+        dynamic_cast<const PvInterface*>(aSystem.GetInterface(i));
     if (lInterface) {
       for (uint32_t j = 0; j < lInterface->GetDeviceCount(); j++) {
-        PvDeviceInfo const* lDI =
-            dynamic_cast<PvDeviceInfo const*>(lInterface->GetDeviceInfo(j));
+        const PvDeviceInfo* lDI =
+            dynamic_cast<const PvDeviceInfo*>(lInterface->GetDeviceInfo(j));
         if (lDI && lDI->IsConfigurationValid()) {
           if (model_name && strcmp(lDI->GetModelName().GetAscii(), model_name))
             continue;
@@ -156,7 +156,7 @@ inline PvDeviceInfo const* SelectDevice(
   return 0;
 }
 
-PixelFormat PleoraFormat(PvGenEnum const* pfmt)
+PixelFormat PleoraFormat(const PvGenEnum* pfmt)
 {
   std::string spfmt = pfmt->ToString().GetAscii();
   if (!spfmt.compare("Mono8")) {
@@ -180,7 +180,7 @@ PixelFormat PleoraFormat(PvGenEnum const* pfmt)
   }
 }
 
-PleoraVideo::PleoraVideo(Params const& p) :
+PleoraVideo::PleoraVideo(const Params& p) :
     size_bytes(0),
     lPvSystem(0),
     lDevice(0),
@@ -243,7 +243,7 @@ PleoraVideo::~PleoraVideo()
   DeinitDevice();
 }
 
-std::string PleoraVideo::GetParameter(std::string const& name)
+std::string PleoraVideo::GetParameter(const std::string& name)
 {
   PvGenParameter* par = lDeviceParams->Get(PvString(name.c_str()));
   if (par) {
@@ -256,7 +256,7 @@ std::string PleoraVideo::GetParameter(std::string const& name)
 }
 
 void PleoraVideo::SetParameter(
-    std::string const& name, std::string const& value)
+    const std::string& name, const std::string& value)
 {
   PvGenParameter* par = lDeviceParams->Get(PvString(name.c_str()));
   if (par) {
@@ -275,7 +275,7 @@ void PleoraVideo::SetParameter(
 }
 
 void PleoraVideo::InitDevice(
-    char const* model_name, char const* serial_num, size_t index)
+    const char* model_name, const char* serial_num, size_t index)
 {
   lPvSystem = new PvSystem();
   if (!lPvSystem) {
@@ -448,8 +448,8 @@ void PleoraVideo::DeinitBuffers()
 void PleoraVideo::InitPangoStreams()
 {
   // Get actual width, height and payload size
-  int const w = DeviceParam<int64_t>("Width");
-  int const h = DeviceParam<int64_t>("Height");
+  const int w = DeviceParam<int64_t>("Width");
+  const int h = DeviceParam<int64_t>("Height");
   const uint32_t lSize = lDevice->GetPayloadSize();
 
   // Setup pangolin for stream
@@ -549,7 +549,7 @@ void PleoraVideo::Stop()
 
 size_t PleoraVideo::SizeBytes() const { return size_bytes; }
 
-std::vector<StreamInfo> const& PleoraVideo::Streams() const { return streams; }
+const std::vector<StreamInfo>& PleoraVideo::Streams() const { return streams; }
 
 bool PleoraVideo::ParseBuffer(PvBuffer* lBuffer, unsigned char* image)
 {
@@ -761,8 +761,8 @@ void PleoraVideo::SetupTrigger(
       lAquisitionMode->IsWritable() && lTriggerSource->IsWritable() &&
       lTriggerMode->IsWritable()) {
     // Check input is valid.
-    PvGenEnumEntry const* entry_src;
-    PvGenEnumEntry const* entry_acq;
+    const PvGenEnumEntry* entry_src;
+    const PvGenEnumEntry* entry_acq;
     lTriggerSource->GetEntryByValue(triggerSource, &entry_src);
     lAquisitionMode->GetEntryByValue(acquisitionMode, &entry_acq);
 
@@ -780,25 +780,25 @@ void PleoraVideo::SetupTrigger(
 }
 
 template <typename T>
-T PleoraVideo::DeviceParam(char const* name)
+T PleoraVideo::DeviceParam(const char* name)
 {
   return GetParam<T>(lDeviceParams, name);
 }
 
 template <typename T>
-bool PleoraVideo::SetDeviceParam(char const* name, T val)
+bool PleoraVideo::SetDeviceParam(const char* name, T val)
 {
   return SetParam<T>(lDeviceParams, name, val);
 }
 
 template <typename T>
-T PleoraVideo::StreamParam(char const* name)
+T PleoraVideo::StreamParam(const char* name)
 {
   return GetParam<T>(lStreamParams, name);
 }
 
 template <typename T>
-bool PleoraVideo::SetStreamParam(char const* name, T val)
+bool PleoraVideo::SetStreamParam(const char* name, T val)
 {
   return SetParam<T>(lStreamParams, name, val);
 }
@@ -811,7 +811,7 @@ PANGOLIN_REGISTER_FACTORY(PleoraVideo)
     {
       return {{"pleora", 10}, {"u3v", 10}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Uses Pleora EBusSDK to open u3v camera.";
     }
@@ -822,7 +822,7 @@ PANGOLIN_REGISTER_FACTORY(PleoraVideo)
             "Enumerates arguments dynamically from camera. Use native u3v "
             "properties."}}};
     }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       return std::unique_ptr<VideoInterface>(new PleoraVideo(uri));
     }

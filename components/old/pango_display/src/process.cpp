@@ -95,7 +95,7 @@ void Mouse(
 
   const MouseButton button = (MouseButton)(1 << (button_raw & 0xf));
 
-  bool const fresh_input = ((context->mouse_state & 7) == 0);
+  const bool fresh_input = ((context->mouse_state & 7) == 0);
 
   if (pressed) {
     context->mouse_state |= (button & 7);
@@ -108,7 +108,7 @@ void Mouse(
   context->mouse_state |= (button_raw >> 4) << 16;
 #endif
 
-  int const button_state = context->mouse_state | key_modifiers.mask();
+  const int button_state = context->mouse_state | key_modifiers.mask();
 
   if (fresh_input) {
     context->base.handler->Mouse(
@@ -129,7 +129,7 @@ void MouseMotion(int x, int y, KeyModifierBitmask key_modifiers)
   last_x = (float)x;
   last_y = (float)y;
 
-  int const button_state = context->mouse_state | key_modifiers.mask();
+  const int button_state = context->mouse_state | key_modifiers.mask();
 
   if (context->activeDisplay) {
     if (context->activeDisplay->handler)
@@ -147,7 +147,7 @@ void PassiveMouseMotion(int x, int y, KeyModifierBitmask key_modifiers)
   // Force coords to match OpenGl Window Coords
   y = context->base.v.h - y;
 
-  int const button_state = context->mouse_state | key_modifiers.mask();
+  const int button_state = context->mouse_state | key_modifiers.mask();
   context->base.handler->PassiveMouseMotion(context->base, x, y, button_state);
 
   last_x = (float)x;
@@ -163,8 +163,8 @@ void SpecialInput(
   // Force coords to match OpenGl Window Coords
   y = context->base.v.h - y;
 
-  bool const fresh_input = (context->mouse_state == 0);
-  int const button_state = context->mouse_state | key_modifiers.mask();
+  const bool fresh_input = (context->mouse_state == 0);
+  const int button_state = context->mouse_state | key_modifiers.mask();
 
   if (fresh_input) {
     context->base.handler->Special(

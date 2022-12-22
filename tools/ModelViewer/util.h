@@ -1,16 +1,16 @@
 #pragma once
 
 template <typename R>
-bool is_ready(std::future<R> const& f)
+bool is_ready(const std::future<R>& f)
 {
   return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
 
 inline std::vector<std::string> ExpandGlobOption(
-    argagg::option_results const& opt)
+    const argagg::option_results& opt)
 {
   std::vector<std::string> expanded;
-  for (auto const& o : opt.all) {
+  for (const auto& o : opt.all) {
     const std::string r = o.as<std::string>();
     pangolin::FilesMatchingWildcard(r, expanded);
   }
@@ -18,13 +18,13 @@ inline std::vector<std::string> ExpandGlobOption(
 }
 
 template <typename Tout, typename Tin, typename F>
-inline std::vector<Tout> TryLoad(std::vector<Tin> const& in, const F& load_func)
+inline std::vector<Tout> TryLoad(const std::vector<Tin>& in, const F& load_func)
 {
   std::vector<Tout> loaded;
-  for (Tin const& file : in) {
+  for (const Tin& file : in) {
     try {
       loaded.emplace_back(load_func(file));
-    } catch (std::exception const&) {
+    } catch (const std::exception&) {
     }
   }
   return loaded;

@@ -15,8 +15,8 @@ struct DeviceTexture {
 
   // Update or initialize this texture or a subregion of it
   virtual void update(
-      sophus::IntensityImage<> const& image,
-      Eigen::Array2i const& destination = {0, 0}) = 0;
+      const sophus::IntensityImage<>& image,
+      const Eigen::Array2i& destination = {0, 0}) = 0;
 
   virtual void sync() const = 0;
 

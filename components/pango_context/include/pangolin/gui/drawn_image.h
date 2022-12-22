@@ -85,7 +85,7 @@ struct LayerConversionTraits<T> {
 // add to .in_pixels instead of .in_scene
 template <>
 struct LayerConversionTraits<Shared<DrawnImage>> {
-  static Shared<DrawLayer> makeLayer(Shared<DrawnImage> const& drawable)
+  static Shared<DrawLayer> makeLayer(const Shared<DrawnImage>& drawable)
   {
     return DrawLayer::Create(
         {.in_pixels = {DrawnChecker::Create({}), drawable}});

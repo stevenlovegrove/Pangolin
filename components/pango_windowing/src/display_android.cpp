@@ -118,7 +118,7 @@ static int engine_init_display(struct engine* engine)
   //    ANativeActivity_setWindowFlags(engine->app->activity,
   //    AWINDOW_FLAG_FULLSCREEN, 0 );
 
-  EGLint const attrib_list[] = {
+  const EGLint attrib_list[] = {
 #ifdef HAVE_GLES_2
       EGL_CONTEXT_CLIENT_VERSION, 2,
 #endif
@@ -275,8 +275,8 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event)
   if (input_type == AINPUT_EVENT_TYPE_MOTION) {
     engine->has_focus = 1;
 
-    float const x = AMotionEvent_getX(event, 0);
-    float const y = AMotionEvent_getY(event, 0);
+    const float x = AMotionEvent_getX(event, 0);
+    const float y = AMotionEvent_getY(event, 0);
     const int32_t actionAndPtr = AMotionEvent_getAction(event);
     const int32_t action = AMOTION_EVENT_ACTION_MASK & actionAndPtr;
     //        const int32_t ptrindex = (AMOTION_EVENT_ACTION_POINTER_INDEX_MASK
@@ -293,14 +293,14 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event)
       case AMOTION_EVENT_ACTION_POINTER_DOWN:
         UnpressAll(last_x, last_y);
         if (num_ptrs <= 2) {
-          int const button = (num_ptrs == 1) ? 0 : 2;
+          const int button = (num_ptrs == 1) ? 0 : 2;
           pangolin::process::Mouse(button, 0, x, y);
         }
         break;
       case AMOTION_EVENT_ACTION_MOVE:
         if (num_ptrs == 3) {
-          double const dx = x - last_x;
-          double const dy = y - last_y;
+          const double dx = x - last_x;
+          const double dy = y - last_y;
           pangolin::process::Scroll(dx, dy);
         } else {
           pangolin::process::MouseMotion(x, y);
@@ -699,7 +699,7 @@ static void* android_app_entry(void* param)
         intent, gseid, env->NewStringUTF("ARGV"));
 
     if (jsARGV) {
-      char const* chARGV = env->GetStringUTFChars(jsARGV, 0);
+      const char* chARGV = env->GetStringUTFChars(jsARGV, 0);
       if (chARGV) {
         sargv = std::string(chARGV);
         LOGI("ARGV: pango %s", chARGV);
@@ -921,7 +921,7 @@ static void onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue)
   android_app_set_input((struct android_app*)activity->instance, NULL);
 }
 
-static void onContentRectChanged(ANativeActivity* activity, ARect const* rect)
+static void onContentRectChanged(ANativeActivity* activity, const ARect* rect)
 {
   LOGV(
       "onContentRectChanged: %p -- (%d, %d), (%d, %d)\n", activity, rect->left,
@@ -930,7 +930,7 @@ static void onContentRectChanged(ANativeActivity* activity, ARect const* rect)
 
 void DeferredNativeActivity_onCreate(
     ANativeActivity* activity, void* savedState, size_t savedStateSize,
-    char const* load_target)
+    const char* load_target)
 {
   activity->callbacks->onDestroy = onDestroy;
   activity->callbacks->onStart = onStart;
@@ -1052,7 +1052,7 @@ void FinishAndroidFrame()
 
 // Implement platform agnostic version
 void CreateWindowAndBind(
-    std::string window_title, int /*w*/, int /*h*/, Params const& /*params*/)
+    std::string window_title, int /*w*/, int /*h*/, const Params& /*params*/)
 {
   CreateAndroidWindowAndBind(window_title);
 
@@ -1077,7 +1077,7 @@ void PangolinPlatformDeinit(PangolinGl& /*context*/) {}
 PANGOLIN_REGISTER_FACTORY(AndroidWindow)
 {
   struct AndroidWindowFactory : public TypedFactoryInterface<WindowInterface> {
-    std::unique_ptr<WindowInterface> Open(Uri const& uri) override
+    std::unique_ptr<WindowInterface> Open(const Uri& uri) override
     {
       const std::string window_title =
           uri.Get<std::string>("window_title", "window");

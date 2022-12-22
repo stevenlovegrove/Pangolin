@@ -34,7 +34,7 @@ namespace py_pangolin
 {
 
 template <typename T>
-void bind_image(pybind11::module& m, std::string const& pyname)
+void bind_image(pybind11::module& m, const std::string& pyname)
 {
   pybind11::class_<pangolin::Image<T> >(m, pyname.c_str())
       .def(pybind11::init<>())
@@ -50,10 +50,10 @@ void bind_image(pybind11::module& m, std::string const& pyname)
           "end",
           (unsigned char* (pangolin::Image<T>::*)()) & pangolin::Image<T>::end)
       .def(
-          "begin", (unsigned char const* (pangolin::Image<T>::*)() const) &
+          "begin", (const unsigned char* (pangolin::Image<T>::*)() const) &
                        pangolin::Image<T>::begin)
       .def(
-          "end", (unsigned char const* (pangolin::Image<T>::*)() const) &
+          "end", (const unsigned char* (pangolin::Image<T>::*)() const) &
                      pangolin::Image<T>::end)
       .def("size", &pangolin::Image<T>::size)
       .def("Fill", &pangolin::Image<T>::Fill)

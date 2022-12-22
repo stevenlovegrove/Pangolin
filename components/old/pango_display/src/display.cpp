@@ -65,7 +65,7 @@ void SetCurrentContext(PangolinGl* newcontext) { context = newcontext; }
 
 PangolinGl* GetCurrentContext() { return context; }
 
-PangolinGl* FindContext(std::string const& name)
+PangolinGl* FindContext(const std::string& name)
 {
   contexts_mutex.lock();
   ContextMap::iterator ic = contexts.find(name);
@@ -75,13 +75,13 @@ PangolinGl* FindContext(std::string const& name)
 }
 
 WindowInterface& CreateWindowAndBind(
-    std::string window_title, int w, int h, Params const& params)
+    std::string window_title, int w, int h, const Params& params)
 {
   std::unique_lock<std::recursive_mutex> l(contexts_mutex);
 
   pangolin::Uri win_uri;
 
-  if (char const* extra_params = std::getenv("PANGOLIN_WINDOW_URI")) {
+  if (const char* extra_params = std::getenv("PANGOLIN_WINDOW_URI")) {
     // Take any defaults from the environment
     win_uri = pangolin::ParseUri(extra_params);
   } else {
@@ -90,14 +90,14 @@ WindowInterface& CreateWindowAndBind(
   }
 
   // Override with anything the program specified
-  for (auto const& param : params.params) {
+  for (const auto& param : params.params) {
     if (param.first != "scheme") win_uri.params.push_back(param);
   }
 
   // Special params that shouldn't get passed to window factory
   win_uri.scheme = win_uri.Get("scheme", win_uri.scheme);
   const std::string default_font = win_uri.Get<std::string>("default_font", "");
-  int const default_font_size = win_uri.Get("default_font_size", 18);
+  const int default_font_size = win_uri.Get("default_font_size", 18);
   win_uri.Remove("scheme");
   win_uri.Remove("default_font");
   win_uri.Remove("default_font_size");
@@ -158,7 +158,7 @@ WindowInterface& CreateWindowAndBind(
 // Assumption: unique lock is held on contexts_mutex for multi-threaded
 // operation
 void RegisterNewContext(
-    std::string const& name, std::shared_ptr<PangolinGl> newcontext)
+    const std::string& name, std::shared_ptr<PangolinGl> newcontext)
 {
   // Set defaults
   newcontext->base.left = 0.0;
@@ -189,7 +189,7 @@ void RegisterNewContext(
 
 WindowInterface* GetBoundWindow() { return context->window.get(); }
 
-void DestroyWindow(std::string const& name)
+void DestroyWindow(const std::string& name)
 {
   contexts_mutex.lock();
   ContextMap::iterator ic = contexts.find(name);
@@ -282,7 +282,7 @@ void ShowConsole(TrueFalseToggle on_off)
   }
 }
 
-View& Display(std::string const& name)
+View& Display(const std::string& name)
 {
   // Get / Create View
   ViewMap::iterator vi = context->named_managed_views.find(name);
@@ -307,12 +307,12 @@ void RegisterKeyPressCallback(int key, std::function<void(void)> func)
   context->keypress_hooks[key] = [=](int) { func(); };
 }
 
-void SaveWindowOnRender(std::string const& filename, Viewport const& v)
+void SaveWindowOnRender(const std::string& filename, const Viewport& v)
 {
   context->screen_capture.push(std::pair<std::string, Viewport>(filename, v));
 }
 
-void SaveWindowNow(std::string const& filename_hint, Viewport const& v)
+void SaveWindowNow(const std::string& filename_hint, const Viewport& v)
 {
   const Viewport to_save =
       v.area() ? v.Intersect(DisplayBase().v) : DisplayBase().v;

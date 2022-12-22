@@ -85,7 +85,7 @@ threadedfilebuf::threadedfilebuf() :
 }
 
 threadedfilebuf::threadedfilebuf(
-    std::string const& filename, size_t buffer_size_bytes) :
+    const std::string& filename, size_t buffer_size_bytes) :
     mem_buffer(0),
     mem_size(0),
     mem_max_size(0),
@@ -98,7 +98,7 @@ threadedfilebuf::threadedfilebuf(
 }
 
 void threadedfilebuf::open(
-    std::string const& filename, size_t buffer_size_bytes)
+    const std::string& filename, size_t buffer_size_bytes)
 {
   is_pipe = pangolin::IsPipe(filename);
 
@@ -182,7 +182,7 @@ void threadedfilebuf::force_close()
 threadedfilebuf::~threadedfilebuf() { close(); }
 
 std::streamsize threadedfilebuf::xsputn(
-    char const* data, std::streamsize num_bytes)
+    const char* data, std::streamsize num_bytes)
 {
   if (num_bytes > mem_max_size) {
     std::unique_lock<std::mutex> lock(update_mutex);

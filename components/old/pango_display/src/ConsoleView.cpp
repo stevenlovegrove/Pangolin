@@ -8,7 +8,7 @@
 namespace pangolin
 {
 
-inline Colour ParseJson(picojson::value const& val)
+inline Colour ParseJson(const picojson::value& val)
 {
   return Colour(
       val.contains("r") ? val["r"].get<double>() : 0.0,
@@ -17,7 +17,7 @@ inline Colour ParseJson(picojson::value const& val)
       val.contains("a") ? val["a"].get<double>() : 1.0);
 }
 
-inline picojson::value toJson(Colour const& colour)
+inline picojson::value toJson(const Colour& colour)
 {
   picojson::value ret(picojson::object_type, true);
   ret["r"] = colour.r;
@@ -27,7 +27,7 @@ inline picojson::value toJson(Colour const& colour)
   return ret;
 }
 
-inline std::ostream& operator<<(std::ostream& os, Colour const& colour)
+inline std::ostream& operator<<(std::ostream& os, const Colour& colour)
 {
   os << toJson(colour).serialize();
   return os;
@@ -41,10 +41,10 @@ inline std::istream& operator>>(std::istream& is, Colour& colour)
   return is;
 }
 
-inline void glColour(Colour const& c) { glColor4f(c.r, c.g, c.b, c.a); }
+inline void glColour(const Colour& c) { glColor4f(c.r, c.g, c.b, c.a); }
 
 ConsoleView::ConsoleView(
-    std::shared_ptr<InterpreterInterface> const& interpreter) :
+    const std::shared_ptr<InterpreterInterface>& interpreter) :
     interpreter(interpreter),
     font(*pangolin::default_font().get()),
     carat(0),
@@ -116,12 +116,12 @@ void ConsoleView::ToggleShow() { Show(!IsShown()); }
 
 bool ConsoleView::IsShown() const { return show && !hiding; }
 
-void ConsoleView::DrawLine(ConsoleView::Line const& l, int carat = -1)
+void ConsoleView::DrawLine(const ConsoleView::Line& l, int carat = -1)
 {
   glColour(line_colours[l.linetype]);
   l.text.Draw();
   if (carat >= 0) {
-    double const w = font.Text(l.text.str.substr(0, carat)).Width();
+    const double w = font.Text(l.text.str.substr(0, carat)).Width();
     glDrawLine(w, -2, w, font.Height() - 4);
   }
 }
@@ -186,7 +186,7 @@ void ConsoleView::Render()
 #endif
 }
 
-inline std::string CommonPrefix(std::vector<std::string> const& vec)
+inline std::string CommonPrefix(const std::vector<std::string>& vec)
 {
   if (!vec.size()) return "";
 
@@ -299,13 +299,13 @@ void ConsoleView::Keyboard(
   }
 }
 
-void ConsoleView::AddLine(std::string const& text, InterpreterLineType linetype)
+void ConsoleView::AddLine(const std::string& text, InterpreterLineType linetype)
 {
   line_buffer.push_front(Line(font.Text("%s", text.c_str()), linetype));
 }
 
 ConsoleView::Line* ConsoleView::GetLine(
-    int id, InterpreterLineType line_type, std::string const& prefix)
+    int id, InterpreterLineType line_type, const std::string& prefix)
 {
   int match = 0;
   for (Line& l : line_buffer) {

@@ -37,7 +37,7 @@ void bind_colour(pybind11::module& m)
   pybind11::class_<pangolin::Colour>(m, "Colour")
       .def(pybind11::init<>())
       .def(
-          pybind11::init<float const, float const, float const, float const>(),
+          pybind11::init<const float, const float, const float, const float>(),
           pybind11::arg("red"), pybind11::arg("green"), pybind11::arg("blue"),
           pybind11::arg("alpha") = 1.0f)
       //      .def(pybind11::init<float[4]>())

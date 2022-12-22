@@ -31,7 +31,7 @@ constexpr GLenum toGlEnum(DrawnPrimitives::Type type)
 }
 
 struct GlDrawnPrimitives : public DrawnPrimitives {
-  void draw(ViewParams const& params) override
+  void draw(const ViewParams& params) override
   {
     switch (element_type) {
       case DrawnPrimitives::Type::axes:
@@ -51,7 +51,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     return MinMax<Eigen::Vector3d>();
   }
 
-  void drawAxes(ViewParams const& params)
+  void drawAxes(const ViewParams& params)
   {
     if (!prog) {
       prog = GlSlProgram::Create(
@@ -89,7 +89,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     }
   }
 
-  void drawShapes(ViewParams const& params)
+  void drawShapes(const ViewParams& params)
   {
     if (!prog) {
       prog = GlSlProgram::Create(
@@ -127,12 +127,12 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     }
   }
 
-  void drawPointsLinesTriangles(ViewParams const& params)
+  void drawPointsLinesTriangles(const ViewParams& params)
   {
-    int constexpr location_vertex = 0;
-    int constexpr location_colors = 1;
-    int constexpr location_normals = 2;
-    int constexpr location_uvs = 3;
+    constexpr int location_vertex = 0;
+    constexpr int location_colors = 1;
+    constexpr int location_normals = 2;
+    constexpr int location_uvs = 3;
 
     indices->sync();
     vertices->sync();
@@ -198,7 +198,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
         PANGO_GL(
             glDrawArrays(toGlEnum(element_type), 0, vertices->numElements()));
       } else {
-        auto const maybe_gl_fmt = glTypeInfo(indices->dataType());
+        const auto maybe_gl_fmt = glTypeInfo(indices->dataType());
         const GlFormatInfo gl_fmt = FARM_UNWRAP(maybe_gl_fmt);
 
         auto bind_ibo = indices->bind();
@@ -212,12 +212,12 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
   std::shared_ptr<GlSlProgram> prog;
 
   GlVertexArrayObject vao = {};
-  GlUniform<Eigen::Matrix4f> const u_intrinsics = {"proj"};
-  GlUniform<Eigen::Matrix4f> const u_cam_from_world = {"cam_from_world"};
-  GlUniform<Eigen::Vector4f> const u_color = {"color"};
-  GlUniform<bool> const u_use_clip_size_units = {"use_clip_size_units"};
-  GlUniform<float> const u_size = {"size"};
-  GlUniform<Eigen::Vector2f> const u_size_clip = {"size_clip"};
+  const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
+  const GlUniform<Eigen::Matrix4f> u_cam_from_world = {"cam_from_world"};
+  const GlUniform<Eigen::Vector4f> u_color = {"color"};
+  const GlUniform<bool> u_use_clip_size_units = {"use_clip_size_units"};
+  const GlUniform<float> u_size = {"size"};
+  const GlUniform<Eigen::Vector2f> u_size_clip = {"size_clip"};
 };
 
 PANGO_CREATE(DrawnPrimitives)

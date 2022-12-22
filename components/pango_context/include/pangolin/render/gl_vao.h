@@ -18,11 +18,11 @@ class PANGOLIN_EXPORT GlVertexArrayObject
   ScopedBind<GlVertexArrayObject> bind() const;
 
   void addVertexAttrib(
-      GLuint attrib_location, GlBuffer const& bo, size_t offset_bytes = 0,
+      GLuint attrib_location, const GlBuffer& bo, size_t offset_bytes = 0,
       size_t stride_bytes = 0, GLboolean normalized = GL_FALSE);
 
   void addVertexAttrib(
-      GLuint attrib_location, DeviceBuffer const& bo, size_t offset_bytes = 0,
+      GLuint attrib_location, const DeviceBuffer& bo, size_t offset_bytes = 0,
       size_t stride_bytes = 0, GLboolean normalized = GL_FALSE);
 
   protected:

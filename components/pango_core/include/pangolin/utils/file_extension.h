@@ -59,18 +59,18 @@ PANGOLIN_EXPORT
 std::string ImageFileTypeToName(ImageFileType);
 
 PANGOLIN_EXPORT
-ImageFileType NameToImageFileType(std::string const &);
+ImageFileType NameToImageFileType(const std::string &);
 
 PANGOLIN_EXPORT
-std::string FileLowercaseExtention(std::string const &filename);
+std::string FileLowercaseExtention(const std::string &filename);
 
 PANGOLIN_EXPORT
-ImageFileType FileTypeMagic(unsigned char const data[], size_t bytes);
+ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes);
 
 PANGOLIN_EXPORT
-ImageFileType FileTypeExtension(std::string const &ext);
+ImageFileType FileTypeExtension(const std::string &ext);
 
 PANGOLIN_EXPORT
-ImageFileType FileType(std::string const &filename);
+ImageFileType FileType(const std::string &filename);
 
 }  // namespace pangolin

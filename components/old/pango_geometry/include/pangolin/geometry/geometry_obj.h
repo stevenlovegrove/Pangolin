@@ -32,6 +32,6 @@
 namespace pangolin
 {
 
-pangolin::Geometry LoadGeometryObj(std::string const& filename);
+pangolin::Geometry LoadGeometryObj(const std::string& filename);
 
 }

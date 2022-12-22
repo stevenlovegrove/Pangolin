@@ -37,10 +37,10 @@ const GLuint DEFAULT_LOCATION_COLOUR = 1;
 const GLuint DEFAULT_LOCATION_NORMAL = 2;
 const GLuint DEFAULT_LOCATION_TEXCOORD = 3;
 
-char const DEFAULT_NAME_POSITION[] = "a_position";
-char const DEFAULT_NAME_COLOUR[] = "a_color";
-char const DEFAULT_NAME_NORMAL[] = "a_normal";
-char const DEFAULT_NAME_TEXCOORD[] = "a_texcoord";
+const char DEFAULT_NAME_POSITION[] = "a_position";
+const char DEFAULT_NAME_COLOUR[] = "a_color";
+const char DEFAULT_NAME_NORMAL[] = "a_normal";
+const char DEFAULT_NAME_TEXCOORD[] = "a_texcoord";
 
 GlText::GlText() :
     tex(NULL),
@@ -50,7 +50,7 @@ GlText::GlText() :
 {
 }
 
-GlText::GlText(GlText const& txt) :
+GlText::GlText(const GlText& txt) :
     tex(txt.tex),
     str(txt.str),
     width(txt.width),
@@ -60,7 +60,7 @@ GlText::GlText(GlText const& txt) :
 {
 }
 
-GlText::GlText(GlTexture const& font_tex) :
+GlText::GlText(const GlTexture& font_tex) :
     tex(&font_tex),
     width(0),
     ymin(std::numeric_limits<GLfloat>::max()),
@@ -70,7 +70,7 @@ GlText::GlText(GlTexture const& font_tex) :
 
 void GlText::AddSpace(GLfloat s) { width += s; }
 
-void GlText::Add(GlChar const& glc)
+void GlText::Add(const GlChar& glc)
 {
   GLfloat x = width;
 

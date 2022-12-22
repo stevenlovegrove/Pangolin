@@ -80,7 +80,7 @@ struct GlBufferCudaPtr : public GlBuffer {
   /**
    * Use parameters from another @c GlBufferCudaPtr to initialize this buffer.
    */
-  void Reinitialise(GlBufferCudaPtr const& other);
+  void Reinitialise(const GlBufferCudaPtr& other);
 
   unsigned int cuda_use;
   cudaGraphicsResource* cuda_res;
@@ -103,23 +103,23 @@ struct GlTextureCudaArray : GlTexture {
 };
 
 struct CudaScopedMappedPtr {
-  CudaScopedMappedPtr(GlBufferCudaPtr const& buffer);
+  CudaScopedMappedPtr(const GlBufferCudaPtr& buffer);
   ~CudaScopedMappedPtr();
   void* operator*();
   cudaGraphicsResource* res;
 
   private:
-  CudaScopedMappedPtr(CudaScopedMappedPtr const&) {}
+  CudaScopedMappedPtr(const CudaScopedMappedPtr&) {}
 };
 
 struct CudaScopedMappedArray {
-  CudaScopedMappedArray(GlTextureCudaArray const& tex);
+  CudaScopedMappedArray(const GlTextureCudaArray& tex);
   ~CudaScopedMappedArray();
   cudaArray* operator*();
   cudaGraphicsResource* res;
 
   private:
-  CudaScopedMappedArray(CudaScopedMappedArray const&) {}
+  CudaScopedMappedArray(const CudaScopedMappedArray&) {}
 };
 
 void CopyPboToTex(GlBufferCudaPtr& buffer, GlTexture& tex);
@@ -193,7 +193,7 @@ inline void GlBufferCudaPtr::Reinitialise(
   cudaGraphicsGLRegisterBuffer(&cuda_res, bo, cudause);
 }
 
-inline void GlBufferCudaPtr::Reinitialise(GlBufferCudaPtr const& other)
+inline void GlBufferCudaPtr::Reinitialise(const GlBufferCudaPtr& other)
 {
   Reinitialise(
       other.buffer_type, other.num_elements, other.datatype,
@@ -246,7 +246,7 @@ inline void GlTextureCudaArray::Reinitialise(
   }
 }
 
-inline CudaScopedMappedPtr::CudaScopedMappedPtr(GlBufferCudaPtr const& buffer) :
+inline CudaScopedMappedPtr::CudaScopedMappedPtr(const GlBufferCudaPtr& buffer) :
     res(buffer.cuda_res)
 {
   cudaGraphicsMapResources(1, &res, 0);
@@ -266,7 +266,7 @@ inline void* CudaScopedMappedPtr::operator*()
 }
 
 inline CudaScopedMappedArray::CudaScopedMappedArray(
-    GlTextureCudaArray const& tex) :
+    const GlTextureCudaArray& tex) :
     res(tex.cuda_res)
 {
   cudaGraphicsMapResources(1, &res);
@@ -285,7 +285,7 @@ inline cudaArray* CudaScopedMappedArray::operator*()
 }
 
 inline void CopyPboToTex(
-    GlBufferCudaPtr const& buffer, GlTexture& tex, GLenum buffer_layout,
+    const GlBufferCudaPtr& buffer, GlTexture& tex, GLenum buffer_layout,
     GLenum buffer_data_type)
 {
   buffer.Bind();

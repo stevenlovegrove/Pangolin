@@ -71,7 +71,7 @@ std::string ImageFileTypeToName(ImageFileType t)
   }
 }
 
-ImageFileType NameToImageFileType(std::string const& name)
+ImageFileType NameToImageFileType(const std::string& name)
 {
   if ("ppm" == name)
     return ImageFileTypePpm;
@@ -115,7 +115,7 @@ ImageFileType NameToImageFileType(std::string const& name)
   return ImageFileTypeUnknown;
 }
 
-ImageFileType FileTypeExtension(std::string const& ext)
+ImageFileType FileTypeExtension(const std::string& ext)
 {
   if (ext == ".png") {
     return ImageFileTypePng;
@@ -158,7 +158,7 @@ ImageFileType FileTypeExtension(std::string const& ext)
   }
 }
 
-std::string FileLowercaseExtention(std::string const& filename)
+std::string FileLowercaseExtention(const std::string& filename)
 {
   size_t pos = filename.find_last_of('.');
   if (pos != std::string::npos) {
@@ -170,25 +170,25 @@ std::string FileLowercaseExtention(std::string const& filename)
   }
 }
 
-ImageFileType FileTypeMagic(unsigned char const data[], size_t bytes)
+ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
 {
   // Check we wont go over bounds when comparing.
   if (bytes >= 8) {
-    unsigned char const magic_png[] = "\211PNG\r\n\032\n";
-    unsigned char const magic_jpg1[] = "\xFF\xD8";
-    unsigned char const magic_jpg2[] = "\xFF\xD9";
-    unsigned char const magic_gif1[] = "GIF87a";
-    unsigned char const magic_gif2[] = "GIF89a";
-    unsigned char const magic_tiff1[] = "\x49\x49\x2A\x00";
-    unsigned char const magic_tiff2[] = "\x4D\x4D\x00\x2A";
-    unsigned char const magic_exr[] = "\x76\x2F\x31\x01";
-    unsigned char const magic_bmp[] = "BM";
-    unsigned char const magic_pango[] = "PANGO";
-    unsigned char const magic_pango_zstd[] = "ZSTD";
-    unsigned char const magic_pango_lz4[] = "LZ4";
-    unsigned char const magic_pango_p12b[] = "P12B";
-    unsigned char const magic_vrs[] = "VisionR";
-    unsigned char const magic_ply[] = "ply";
+    const unsigned char magic_png[] = "\211PNG\r\n\032\n";
+    const unsigned char magic_jpg1[] = "\xFF\xD8";
+    const unsigned char magic_jpg2[] = "\xFF\xD9";
+    const unsigned char magic_gif1[] = "GIF87a";
+    const unsigned char magic_gif2[] = "GIF89a";
+    const unsigned char magic_tiff1[] = "\x49\x49\x2A\x00";
+    const unsigned char magic_tiff2[] = "\x4D\x4D\x00\x2A";
+    const unsigned char magic_exr[] = "\x76\x2F\x31\x01";
+    const unsigned char magic_bmp[] = "BM";
+    const unsigned char magic_pango[] = "PANGO";
+    const unsigned char magic_pango_zstd[] = "ZSTD";
+    const unsigned char magic_pango_lz4[] = "LZ4";
+    const unsigned char magic_pango_p12b[] = "P12B";
+    const unsigned char magic_vrs[] = "VisionR";
+    const unsigned char magic_ply[] = "ply";
 
     if (!strncmp((char*)data, (char*)magic_png, 8)) {
       return ImageFileTypePng;
@@ -227,7 +227,7 @@ ImageFileType FileTypeMagic(unsigned char const data[], size_t bytes)
   return ImageFileTypeUnknown;
 }
 
-ImageFileType FileType(std::string const& filename)
+ImageFileType FileType(const std::string& filename)
 {
   // file extension incase we need that as a hint
   const std::string ext = FileLowercaseExtention(filename);

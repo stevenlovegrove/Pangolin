@@ -8,7 +8,7 @@ struct CustomType {
   float a;
   int b;
 };
-std::ostream& operator<<(std::ostream& os, CustomType const& x)
+std::ostream& operator<<(std::ostream& os, const CustomType& x)
 {
   return os << x.a << "," << x.b;
 }
@@ -383,7 +383,7 @@ SCENARIO("Var Events")
     std::vector<std::string> names;
 
     sigslot::scoped_connection conn = VarState::I().RegisterForVarEvents(
-        [&names](VarState::Event const& e) {
+        [&names](const VarState::Event& e) {
           REQUIRE(e.action == VarState::Event::Action::Added);
           names.push_back(e.var->Meta().full_name);
         },
@@ -397,7 +397,7 @@ SCENARIO("Var Events")
     std::vector<std::string> added;
     std::vector<std::string> removed;
     sigslot::scoped_connection conn1 = VarState::I().RegisterForVarEvents(
-        [&added, &removed](VarState::Event const& e) {
+        [&added, &removed](const VarState::Event& e) {
           auto& vec =
               (e.action == VarState::Event::Action::Added) ? added : removed;
           vec.push_back(e.var->Meta().full_name);
@@ -421,7 +421,7 @@ SCENARIO("Var Events")
     WHEN("We add another listener")
     {
       sigslot::scoped_connection conn2 = VarState::I().RegisterForVarEvents(
-          [&added, &removed](VarState::Event const& e) {
+          [&added, &removed](const VarState::Event& e) {
             auto& vec =
                 (e.action == VarState::Event::Action::Added) ? added : removed;
             vec.push_back(e.var->Meta().full_name + "_");

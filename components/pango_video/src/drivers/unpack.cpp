@@ -96,15 +96,15 @@ void UnpackVideo::Stop() { videoin[0]->Stop(); }
 size_t UnpackVideo::SizeBytes() const { return size_bytes; }
 
 //! Implement VideoInput::Streams()
-std::vector<StreamInfo> const& UnpackVideo::Streams() const { return streams; }
+const std::vector<StreamInfo>& UnpackVideo::Streams() const { return streams; }
 
 template <typename T>
-void ConvertFrom8bit(Image<unsigned char>& out, Image<unsigned char> const& in)
+void ConvertFrom8bit(Image<unsigned char>& out, const Image<unsigned char>& in)
 {
   for (size_t r = 0; r < out.h; ++r) {
     T* pout = (T*)(out.ptr + r * out.pitch);
     uint8_t* pin = in.ptr + r * in.pitch;
-    uint8_t const* pin_end = in.ptr + (r + 1) * in.pitch;
+    const uint8_t* pin_end = in.ptr + (r + 1) * in.pitch;
     while (pin != pin_end) {
       *(pout++) = *(pin++);
     }
@@ -112,12 +112,12 @@ void ConvertFrom8bit(Image<unsigned char>& out, Image<unsigned char> const& in)
 }
 
 template <typename T>
-void ConvertFrom10bit(Image<unsigned char>& out, Image<unsigned char> const& in)
+void ConvertFrom10bit(Image<unsigned char>& out, const Image<unsigned char>& in)
 {
   for (size_t r = 0; r < out.h; ++r) {
     T* pout = (T*)(out.ptr + r * out.pitch);
     uint8_t* pin = in.ptr + r * in.pitch;
-    uint8_t const* pin_end = in.ptr + (r + 1) * in.pitch;
+    const uint8_t* pin_end = in.ptr + (r + 1) * in.pitch;
     while (pin != pin_end) {
       uint64_t val = *(pin++);
       val |= uint64_t(*(pin++)) << 8;
@@ -133,12 +133,12 @@ void ConvertFrom10bit(Image<unsigned char>& out, Image<unsigned char> const& in)
 }
 
 template <typename T>
-void ConvertFrom12bit(Image<unsigned char>& out, Image<unsigned char> const& in)
+void ConvertFrom12bit(Image<unsigned char>& out, const Image<unsigned char>& in)
 {
   for (size_t r = 0; r < out.h; ++r) {
     T* pout = (T*)(out.ptr + r * out.pitch);
     uint8_t* pin = in.ptr + r * in.pitch;
-    uint8_t const* pin_end = in.ptr + (r + 1) * in.pitch;
+    const uint8_t* pin_end = in.ptr + (r + 1) * in.pitch;
     while (pin != pin_end) {
       uint32_t val = *(pin++);
       val |= uint32_t(*(pin++)) << 8;
@@ -149,15 +149,15 @@ void ConvertFrom12bit(Image<unsigned char>& out, Image<unsigned char> const& in)
   }
 }
 
-void UnpackVideo::Process(unsigned char* image, unsigned char const* buffer)
+void UnpackVideo::Process(unsigned char* image, const unsigned char* buffer)
 {
   TSTART()
   for (size_t s = 0; s < streams.size(); ++s) {
-    Image<unsigned char> const img_in =
+    const Image<unsigned char> img_in =
         videoin[0]->Streams()[s].StreamImage(buffer);
     Image<unsigned char> img_out = Streams()[s].StreamImage(image);
 
-    int const bits_in = videoin[0]->Streams()[s].PixFormat().bpp;
+    const int bits_in = videoin[0]->Streams()[s].PixFormat().bpp;
 
     if (Streams()[s].PixFormat().format == "GRAY32F") {
       if (bits_in == 8) {
@@ -241,7 +241,7 @@ PANGOLIN_REGISTER_FACTORY(UnpackVideo)
     {
       return {{"unpack", 10}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Converts from a potentially packed pixel format to a higher "
              "bit-depth format (e.g. 10 to 16 bit).";
@@ -250,7 +250,7 @@ PANGOLIN_REGISTER_FACTORY(UnpackVideo)
     {
       return {{{"fmt", "GRAY16LE", "Destination pixel format."}}};
     }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       ParamReader reader(Params(), uri);
       std::unique_ptr<VideoInterface> subvid = pangolin::OpenVideo(uri.url);

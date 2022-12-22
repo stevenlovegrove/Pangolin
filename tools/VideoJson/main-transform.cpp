@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     PANGO_ASSERT(all_properties.size() == reader.Sources().size());
 
     for (size_t i = 0; i < reader.Sources().size(); ++i) {
-      picojson::value const& src_json = all_properties[i];
+      const picojson::value& src_json = all_properties[i];
       pangolin::PacketStreamSource src = reader.Sources()[i];
 
       PANGO_ASSERT(src_json.contains("frame_properties"));
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
         buffer.resize(pkt.BytesRemaining());
         pkt.Stream().read(buffer.data(), buffer.size());
 
-        picojson::value const& new_frame_json =
+        const picojson::value& new_frame_json =
             all_properties[pkt.src]["frame_properties"][pkt.sequence_num];
         writer.WriteSourcePacket(
             pkt.src, buffer.data(), pkt.time, buffer.size(), new_frame_json);
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
                   << reader.Sources()[pkt.src].index.size() << '\r';
         std::cout.flush();
       }
-    } catch (std::runtime_error const& e) {
+    } catch (const std::runtime_error& e) {
       std::cout << "Runtime error: " << e.what() << std::endl;
       throw e;
     }

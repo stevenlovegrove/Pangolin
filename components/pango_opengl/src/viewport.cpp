@@ -76,7 +76,7 @@ Viewport Viewport::Inset(int horiz, int vert) const
   return Viewport(l + horiz, b + vert, w - horiz, h - vert);
 }
 
-Viewport Viewport::Intersect(Viewport const& vp) const
+Viewport Viewport::Intersect(const Viewport& vp) const
 {
   GLint nl = std::max(l, vp.l);
   GLint nr = std::min(r(), vp.r());

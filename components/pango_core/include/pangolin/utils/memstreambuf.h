@@ -23,14 +23,14 @@ struct memstreambuf : public std::streambuf {
 
   size_t size() const { return buffer.size(); }
 
-  unsigned char const* data() const { return buffer.data(); }
+  const unsigned char* data() const { return buffer.data(); }
 
   void clear() { buffer.clear(); }
 
   std::vector<unsigned char> buffer;
 
   protected:
-  std::streamsize xsputn(char_type const* __s, std::streamsize __n) override
+  std::streamsize xsputn(const char_type* __s, std::streamsize __n) override
   {
     buffer.insert(buffer.end(), __s, __s + __n);
     return __n;
@@ -46,7 +46,7 @@ struct memstreambuf : public std::streambuf {
 class StreambufMemoryWrapper : public std::basic_streambuf<char>
 {
   public:
-  StreambufMemoryWrapper(uint8_t const* p, size_t l)
+  StreambufMemoryWrapper(const uint8_t* p, size_t l)
   {
     setg((char*)p, (char*)p, (char*)p + l);
   }
@@ -55,7 +55,7 @@ class StreambufMemoryWrapper : public std::basic_streambuf<char>
 class IStreamMemoryWrapper : public std::istream
 {
   public:
-  IStreamMemoryWrapper(uint8_t const* p, size_t l) :
+  IStreamMemoryWrapper(const uint8_t* p, size_t l) :
       std::istream(&_buffer), _buffer(p, l)
   {
     rdbuf(&_buffer);

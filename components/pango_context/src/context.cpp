@@ -22,30 +22,30 @@ Shared<Engine> Engine::singleton()
 }
 
 void renderIntoRegionImpl(
-    Context const& context, Layer::RenderParams const& p,
-    LayerGroup const& group)
+    const Context& context, const Layer::RenderParams& p,
+    const LayerGroup& group)
 {
   if (group.layer) {
     group.layer->renderIntoRegion(context, {.region = group.cached_.region});
   }
   if (group.grouping == LayerGroup::Grouping::stacked) {
     // Back-to-front for blending / overlays
-    for (auto const& child : reverse(group.children)) {
+    for (const auto& child : reverse(group.children)) {
       renderIntoRegionImpl(context, p, child);
     }
   } else if (group.grouping == LayerGroup::Grouping::tabbed) {
     PANGO_ENSURE(group.selected_tab < group.children.size());
     renderIntoRegionImpl(context, p, group.children[group.selected_tab]);
   } else {
-    for (auto const& child : group.children) {
+    for (const auto& child : group.children) {
       renderIntoRegionImpl(context, p, child);
     }
   }
 }
 
 void renderIntoRegion(
-    Context const& context, Layer::RenderParams const& p,
-    LayerGroup const& group)
+    const Context& context, const Layer::RenderParams& p,
+    const LayerGroup& group)
 {
   computeLayoutConstraints(group);
   computeLayoutRegion(group, p.region);
@@ -58,9 +58,9 @@ void renderIntoRegion(
 // Pre-condition: layer positions have been computed by a previous call to
 // render
 std::shared_ptr<Layer> giveEventToLayers(
-    Context const& context, Interactive::Event event, LayerGroup const& group)
+    const Context& context, Interactive::Event event, const LayerGroup& group)
 {
-  auto const r = group.cached_.region;
+  const auto r = group.cached_.region;
   const Eigen::Vector2i winpos = event.pointer_pos.pos_window.cast<int>();
 
   if (r.contains(winpos)) {
@@ -72,7 +72,7 @@ std::shared_ptr<Layer> giveEventToLayers(
     }
 
     // see if child nodes want it
-    for (auto const& child : group.children) {
+    for (const auto& child : group.children) {
       auto layer = giveEventToLayers(context, event, child);
       if (layer) return layer;
     }
@@ -84,12 +84,12 @@ std::shared_ptr<Layer> giveEventToLayers(
 // we know the active_layer already. We do this just so we can
 // find the cached region so we can send it through
 bool giveEventToActiveLayer(
-    Context const& context, Interactive::Event event, LayerGroup const& group,
-    std::shared_ptr<Layer> const& active_layer)
+    const Context& context, Interactive::Event event, const LayerGroup& group,
+    const std::shared_ptr<Layer>& active_layer)
 {
   PANGO_ENSURE(active_layer);
 
-  auto const r = group.cached_.region;
+  const auto r = group.cached_.region;
   event.pointer_pos.region = r;
 
   if (group.layer == active_layer) {
@@ -97,8 +97,8 @@ bool giveEventToActiveLayer(
   }
 
   // see if child nodes want it
-  for (auto const& child : group.children) {
-    bool const found =
+  for (const auto& child : group.children) {
+    const bool found =
         giveEventToActiveLayer(context, event, child, active_layer);
     if (found) return true;
   }
@@ -108,7 +108,7 @@ bool giveEventToActiveLayer(
 
 struct ContextImpl : public Context {
   // TODO: Convert Window to use new factory idiom directly
-  ContextImpl(Context::Params const& params) :
+  ContextImpl(const Context::Params& params) :
       size_(params.window_size),
       window_(Window::Create(
           {.uri = ParseUri(fmt::format(
@@ -116,7 +116,7 @@ struct ContextImpl : public Context {
                params.window_engine, params.title, params.window_size.width,
                params.window_size.height, "3.2 CORE"))}))
   {
-    window()->ResizeSignal.connect([this](WindowResizeEvent const& e) {
+    window()->ResizeSignal.connect([this](const WindowResizeEvent& e) {
       size_.width = e.width;
       size_.height = e.height;
       // commenting these in will trigger render during
@@ -145,10 +145,10 @@ struct ContextImpl : public Context {
   }
 
   void setViewport(
-      MinMax<Eigen::Array2i> const& bounds,
+      const MinMax<Eigen::Array2i>& bounds,
       ImageXy image_convention = Conventions::global().image_xy) const override
   {
-    auto const gl_bounds = regionGlFromConvention(bounds, image_convention);
+    const auto gl_bounds = regionGlFromConvention(bounds, image_convention);
     const Eigen::Array2i pos = gl_bounds.min();
     const Eigen::Array2i size = gl_bounds.range() + Eigen::Array2i(1, 1);
     glViewport(pos.x(), pos.y(), size.x(), size.y());
@@ -194,7 +194,7 @@ struct ContextImpl : public Context {
     modifier_active_ = toInteractiveModifierKey(e.key_modifiers);
 
     if (e.button == MouseWheelUp || e.button == MouseWheelDown) {
-      float const delta = (e.button == MouseWheelDown ? -1.0f : 1.0f);
+      const float delta = (e.button == MouseWheelDown ? -1.0f : 1.0f);
       Interactive::Event layer_event = {
           .pointer_pos = WindowPosition{.pos_window = {e.x, e.y}},
           .modifier_active = modifier_active_,
@@ -278,7 +278,7 @@ struct ContextImpl : public Context {
   enum class ActiveLayerAction { ignore, capture, release };
 
   void dispatchLayerEvent(
-      Interactive::Event const& src,
+      const Interactive::Event& src,
       ActiveLayerAction active_layer_action = ActiveLayerAction::ignore)
   {
     if (active_layer_) {
@@ -296,9 +296,9 @@ struct ContextImpl : public Context {
 
   Shared<Window> window() override { return window_; }
 
-  void setLayout(LayerGroup const& layout) override { layout_ = layout; }
+  void setLayout(const LayerGroup& layout) override { layout_ = layout; }
 
-  LayerGroup const& layout() const override { return layout_; }
+  const LayerGroup& layout() const override { return layout_; }
 
   LayerGroup& layout() override { return layout_; }
 
@@ -339,16 +339,16 @@ struct ContextImpl : public Context {
       ImageXy image_axis_convention) const override
   {
     using namespace sophus;
-    auto const gl_bounds =
+    const auto gl_bounds =
         regionGlFromConvention(bounds, image_axis_convention);
     const Eigen::Array2i imsize = bounds.range() + Eigen::Array2i(1, 1);
-    bool const is_depth = attachment == Attachment::depth;
+    const bool is_depth = attachment == Attachment::depth;
 
     const RuntimePixelType pixel_type =
         is_depth ? RuntimePixelType::fromTemplate<float>()
                  : RuntimePixelType::fromTemplate<sophus::Pixel3U8>();
 
-    auto const maybe_gl_pixel_type = glTypeInfo(pixel_type);
+    const auto maybe_gl_pixel_type = glTypeInfo(pixel_type);
     const GlFormatInfo gl_pixel_type = FARM_UNWRAP(maybe_gl_pixel_type);
 
     sophus::IntensityImage<> image(ImageSize(imsize[0], imsize[1]), pixel_type);

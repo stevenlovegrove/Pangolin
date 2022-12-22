@@ -122,7 +122,7 @@ boolean pango_jpeg_empty_output_buffer(j_compress_ptr cinfo)
 {
   pango_jpeg_destination_mgr* dest = (pango_jpeg_destination_mgr*)cinfo->dest;
 
-  dest->os->write((char const*)dest->buffer, PANGO_JPEG_BUF_SIZE);
+  dest->os->write((const char*)dest->buffer, PANGO_JPEG_BUF_SIZE);
 
   if (dest->os->fail()) {
     throw std::runtime_error("Couldn't write entire jpeg buffer to stream.");
@@ -140,7 +140,7 @@ void pango_jpeg_term_destination(j_compress_ptr cinfo)
 
   /* Write any data remaining in the buffer */
   if (datacount > 0) {
-    dest->os->write((char const*)dest->buffer, datacount);
+    dest->os->write((const char*)dest->buffer, datacount);
     if (dest->os->fail()) {
       throw std::runtime_error("Couldn't write remaining jpeg data to stream.");
     }
@@ -260,7 +260,7 @@ std::vector<std::streampos> GetMJpegOffsets(std::ifstream& is)
         cinfo.src->term_source(&cinfo);
       }
     }
-  } catch (std::runtime_error const&) {
+  } catch (const std::runtime_error&) {
   }
 
   jpeg_destroy_decompress(&cinfo);
@@ -273,16 +273,16 @@ std::vector<std::streampos> GetMJpegOffsets(std::ifstream& is)
   return offsets;
 }
 
-IntensityImage<> LoadJpg(std::string const& filename)
+IntensityImage<> LoadJpg(const std::string& filename)
 {
   std::ifstream f(filename);
   return LoadJpg(f);
 }
 
-void SaveJpg(IntensityImage<> const& img, std::ostream& os, float quality)
+void SaveJpg(const IntensityImage<>& img, std::ostream& os, float quality)
 {
 #ifdef HAVE_JPEG
-  int const iquality = (int)std::max(std::min(quality, 100.0f), 0.0f);
+  const int iquality = (int)std::max(std::min(quality, 100.0f), 0.0f);
 
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
@@ -330,7 +330,7 @@ void SaveJpg(IntensityImage<> const& img, std::ostream& os, float quality)
 }
 
 void SaveJpg(
-    IntensityImage<> const& img, std::string const& filename, float quality)
+    const IntensityImage<>& img, const std::string& filename, float quality)
 {
   std::ofstream f(filename);
   SaveJpg(img, f, quality);

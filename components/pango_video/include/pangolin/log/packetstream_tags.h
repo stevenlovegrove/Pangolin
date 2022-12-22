@@ -20,7 +20,7 @@ static const std::string pss_pkt_definitions = "definitions";
 static const std::string pss_pkt_size_bytes = "size_bytes";
 static const std::string pss_pkt_format_written = "format_written";
 
-unsigned int const TAG_LENGTH = 3;
+const unsigned int TAG_LENGTH = 3;
 
 #define PANGO_TAG(a, b, c) ((c << 16) | (b << 8) | a)
 const PangoTagType TAG_PANGO_HDR = PANGO_TAG('L', 'I', 'N');

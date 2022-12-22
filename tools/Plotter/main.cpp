@@ -13,7 +13,7 @@ namespace convert
 {
 
 template <>
-pangolin::Rangef arg<pangolin::Rangef>(char const* str)
+pangolin::Rangef arg<pangolin::Rangef>(const char* str)
 {
   std::stringstream ss(str);
   pangolin::Rangef r;
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   // Default values
   const std::string xs = args["x"].as<std::string>("$i");
   const std::string ys = args["y"].as<std::string>("$0");
-  char const delim = args["delim"].as<char>(',');
+  const char delim = args["delim"].as<char>(',');
   const pangolin::Rangef xrange =
       args["xrange"].as<>(pangolin::Rangef(0.0f, 100.0f));
   const pangolin::Rangef yrange =
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
   const std::string skips = args["skip"].as<std::string>("");
   const std::vector<std::string> skipvecstr = pangolin::Split(skips, ',');
   std::vector<size_t> skipvec;
-  for (std::string const& s : skipvecstr) {
+  for (const std::string& s : skipvecstr) {
     skipvec.push_back(std::stoul(s));
   }
   if (!(skipvec.size() == 0 || skipvec.size() == args.count())) {

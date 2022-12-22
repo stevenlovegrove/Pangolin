@@ -50,7 +50,7 @@ class PANGOLIN_EXPORT TransformVideo : public VideoInterface,
   public:
   TransformVideo(
       std::unique_ptr<VideoInterface>& videoin,
-      std::vector<TransformOptions> const& flips);
+      const std::vector<TransformOptions>& flips);
   ~TransformVideo();
 
   //! Implement VideoInput::Start()
@@ -63,7 +63,7 @@ class PANGOLIN_EXPORT TransformVideo : public VideoInterface,
   size_t SizeBytes() const;
 
   //! Implement VideoInput::Streams()
-  std::vector<StreamInfo> const& Streams() const;
+  const std::vector<StreamInfo>& Streams() const;
 
   //! Implement VideoInput::GrabNext()
   bool GrabNext(unsigned char* image, bool wait = true);
@@ -79,7 +79,7 @@ class PANGOLIN_EXPORT TransformVideo : public VideoInterface,
   bool DropNFrames(uint32_t n);
 
   protected:
-  void Process(unsigned char* image, unsigned char const* buffer);
+  void Process(unsigned char* image, const unsigned char* buffer);
 
   std::unique_ptr<VideoInterface> videoin;
   std::vector<VideoInterface*> inputs;

@@ -25,8 +25,8 @@ struct DrawLayerHandler {
 
   // Handle 2D window events
   virtual bool handleEvent(
-      Context const& context, Interactive::Event const& event,
-      Eigen::Array2d const& pos_clip, Eigen::Array2d const& pos_img,
+      const Context& context, const Interactive::Event& event,
+      const Eigen::Array2d& pos_clip, const Eigen::Array2d& pos_img,
       Eigen::Array2d clip_aspect_scale, DrawLayer& layer,
       DrawLayerRenderState& render_state) = 0;
 
@@ -41,7 +41,7 @@ struct DrawLayerHandler {
     MinMax<Eigen::Vector3d> camera_limits_in_world = {};
     ViewMode view_mode = ViewMode::best_guess;
   };
-  static Shared<DrawLayerHandler> Create(Params const&);
+  static Shared<DrawLayerHandler> Create(const Params&);
 };
 
 }  // namespace pangolin

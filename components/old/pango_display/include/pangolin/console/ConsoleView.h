@@ -46,7 +46,7 @@ class ConsoleView : public pangolin::View, pangolin::Handler
     Line() : linetype(ConsoleLineTypeCmd) {}
 
     Line(
-        GlText const& text, InterpreterLineType linetype = ConsoleLineTypeCmd) :
+        const GlText& text, InterpreterLineType linetype = ConsoleLineTypeCmd) :
         text(text), linetype(linetype)
     {
     }
@@ -56,7 +56,7 @@ class ConsoleView : public pangolin::View, pangolin::Handler
   };
 
   // Construct with interpreter (and take ownership)
-  ConsoleView(std::shared_ptr<InterpreterInterface> const& interpreter);
+  ConsoleView(const std::shared_ptr<InterpreterInterface>& interpreter);
 
   ~ConsoleView();
 
@@ -76,16 +76,16 @@ class ConsoleView : public pangolin::View, pangolin::Handler
   void Keyboard(View&, unsigned char key, int x, int y, bool pressed) override;
 
   private:
-  void DrawLine(ConsoleView::Line const& l, int carat);
+  void DrawLine(const ConsoleView::Line& l, int carat);
 
   void ProcessOutputLines();
 
   void AddLine(
-      std::string const& text,
+      const std::string& text,
       InterpreterLineType linetype = ConsoleLineTypeCmd);
 
   Line* GetLine(
-      int id, InterpreterLineType line_type, std::string const& prefix = "");
+      int id, InterpreterLineType line_type, const std::string& prefix = "");
 
   std::shared_ptr<InterpreterInterface> interpreter;
 

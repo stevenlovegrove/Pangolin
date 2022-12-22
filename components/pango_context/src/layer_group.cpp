@@ -4,7 +4,7 @@ namespace pangolin
 {
 
 struct FlexArrangement {
-  static double constexpr row_height = 1.0;
+  static constexpr double row_height = 1.0;
   double row_width = 0.0;
   double width_sum = 0.0;
   size_t num_rows = 0.0;
@@ -21,17 +21,17 @@ struct FlexArrangement {
 
   double efficiency(double target_aspect) const
   {
-    double const flex_aspect = flexAspect();
-    double const aspect_efficiency = target_aspect >= flex_aspect
+    const double flex_aspect = flexAspect();
+    const double aspect_efficiency = target_aspect >= flex_aspect
                                          ? flex_aspect / target_aspect
                                          : target_aspect / flex_aspect;
-    double const fill_efficiency = elementArea() / flexArea();
+    const double fill_efficiency = elementArea() / flexArea();
     return aspect_efficiency * fill_efficiency;
   }
 };
 
 std::optional<FlexArrangement> getFlexRows(
-    std::vector<double> const& el_width, double row_width)
+    const std::vector<double>& el_width, double row_width)
 {
   FlexArrangement flex = {
       .row_width = row_width,
@@ -41,12 +41,12 @@ std::optional<FlexArrangement> getFlexRows(
   double row_total = 0.0;
 
   for (size_t i = 0; i < el_width.size(); ++i) {
-    double const w = el_width[i];
+    const double w = el_width[i];
     flex.width_sum += w;
 
     if (w > row_width) return getFlexRows(el_width, w);
 
-    double const width_with_el = row_total + w;
+    const double width_with_el = row_total + w;
     if (width_with_el <= row_width) {
       // add to row
       row_total = width_with_el;
@@ -61,7 +61,7 @@ std::optional<FlexArrangement> getFlexRows(
   return flex;
 }
 
-void computeLayoutConstraints(LayerGroup const& group)
+void computeLayoutConstraints(const LayerGroup& group)
 {
   LayerGroup::LayoutInfo total = {};
 
@@ -69,7 +69,7 @@ void computeLayoutConstraints(LayerGroup const& group)
   int aspect_n = 0;
 
   // 1st pass, bottom up
-  for (auto const& child : group.children) {
+  for (const auto& child : group.children) {
     // ask child to compute its layout size and cache
     computeLayoutConstraints(child);
     auto& x_info = child.cached_;
@@ -140,7 +140,7 @@ void computeLayoutConstraints(LayerGroup const& group)
 
   // Finally, apply any constraints from the group layer, if it exists
   if (group.layer) {
-    double const aspect_hint = group.layer->aspectHint();
+    const double aspect_hint = group.layer->aspectHint();
     if (aspect_hint) total.aspect_hint = aspect_hint;
 
     for (int i = 0; i < 2; ++i) {
@@ -162,23 +162,23 @@ void computeLayoutConstraints(LayerGroup const& group)
 }
 
 void computeLayoutRegion(
-    LayerGroup const& group, MinMax<Eigen::Array2i> const& region)
+    const LayerGroup& group, const MinMax<Eigen::Array2i>& region)
 {
   // 2nd pass, top down
 
   auto& r = group.cached_;
   r.region = region;
 
-  int constexpr handle_pix = 5;
-  int const num_children = group.children.size();
-  int const total_handle_pix = handle_pix * (num_children - 1);
+  constexpr int handle_pix = 5;
+  const int num_children = group.children.size();
+  const int total_handle_pix = handle_pix * (num_children - 1);
 
   switch (group.grouping) {
     case LayerGroup::Grouping::stacked:
       [[fallthrough]];
     case LayerGroup::Grouping::tabbed:
       // the same region for stacked and tabbed.
-      for (auto const& child : group.children) {
+      for (const auto& child : group.children) {
         computeLayoutRegion(child, region);
       }
       break;
@@ -188,13 +188,13 @@ void computeLayoutRegion(
 
       // Compute the size of one ratio unit given total and pixels we have
       // to fill.
-      double const ratio_unit_pix = remaining / r.parts[0];
+      const double ratio_unit_pix = remaining / r.parts[0];
 
       int x = region.min()[0];
-      for (auto const& child : group.children) {
-        int const w = int(
+      for (const auto& child : group.children) {
+        const int w = int(
             child.cached_.min_pix[0] + child.cached_.parts[0] * ratio_unit_pix);
-        MinMax<Eigen::Array2i> const child_region(
+        const MinMax<Eigen::Array2i> child_region(
             Eigen::Array2i(x, region.min()[1]),
             Eigen::Array2i(x + w - 1, region.max()[1]));
         computeLayoutRegion(child, child_region);
@@ -209,13 +209,13 @@ void computeLayoutRegion(
 
       // Compute the size of one ratio unit given total and pixels we have
       // to fill.
-      double const ratio_unit_pix = remaining / r.parts[1];
+      const double ratio_unit_pix = remaining / r.parts[1];
 
       int y = region.min()[1];
-      for (auto const& child : group.children) {
-        int const h = int(
+      for (const auto& child : group.children) {
+        const int h = int(
             child.cached_.min_pix[1] + child.cached_.parts[1] * ratio_unit_pix);
-        MinMax<Eigen::Array2i> const child_region(
+        const MinMax<Eigen::Array2i> child_region(
             Eigen::Array2i(region.min()[0], y),
             Eigen::Array2i(region.max()[0], y + h - 1));
         computeLayoutRegion(child, child_region);
@@ -227,18 +227,18 @@ void computeLayoutRegion(
     case LayerGroup::Grouping::flex: {
       // everything here is in normalized units where h=1 and w = aspect
 
-      auto const region_size = region.range();
-      double const target_aspect = double(region_size[0]) / region_size[1];
+      const auto region_size = region.range();
+      const double target_aspect = double(region_size[0]) / region_size[1];
 
       // children widths if they were to maintain aspect and have same
       // unit height
       std::vector<double> ws;
       double total_width = 0.0;
 
-      for (auto const& child : group.children) {
-        double const aspect =
+      for (const auto& child : group.children) {
+        const double aspect =
             child.cached_.aspect_hint ? child.cached_.aspect_hint : 1.0;
-        double const w = aspect;
+        const double w = aspect;
         ws.push_back(w);
         total_width += w;
       }
@@ -251,7 +251,7 @@ void computeLayoutRegion(
       for (int i = 0; i < 4; ++i) {
         auto maybe_flex = getFlexRows(ws, col_break);
         if (maybe_flex) {
-          double const eff = maybe_flex->efficiency(target_aspect);
+          const double eff = maybe_flex->efficiency(target_aspect);
           if (eff > best_eff) {
             best_eff = eff;
             best = maybe_flex;
@@ -268,24 +268,24 @@ void computeLayoutRegion(
 
       PANGO_ENSURE(best, "Problem packing for flex layout.");
 
-      double const flex_aspect = best->flexAspect();
-      double const unit_size_pix = flex_aspect > target_aspect
+      const double flex_aspect = best->flexAspect();
+      const double unit_size_pix = flex_aspect > target_aspect
                                        ? region.range().x() / best->row_width
                                        : region.range().y() / best->num_rows;
-      int const row_height_pix = int(unit_size_pix);
+      const int row_height_pix = int(unit_size_pix);
 
       int x = region.min()[0];
       int y = region.min()[1];
-      for (auto const& child : group.children) {
-        double const aspect =
+      for (const auto& child : group.children) {
+        const double aspect =
             child.cached_.aspect_hint ? child.cached_.aspect_hint : 1.0;
-        int const h = row_height_pix;
-        int const w = int(unit_size_pix * aspect);
+        const int h = row_height_pix;
+        const int w = int(unit_size_pix * aspect);
         if ((x + w) > region.max()[0]) {
           x = region.min()[0];
           y += h;
         }
-        MinMax<Eigen::Array2i> const child_region(
+        const MinMax<Eigen::Array2i> child_region(
             Eigen::Array2i(x, y), Eigen::Array2i(x + w - 1, y + h - 1));
         computeLayoutRegion(child, child_region);
         x += w;
@@ -294,9 +294,9 @@ void computeLayoutRegion(
   }
 }
 
-std::ostream& operator<<(std::ostream& s, LayerGroup const& layout)
+std::ostream& operator<<(std::ostream& s, const LayerGroup& layout)
 {
-  auto const& v = layout.children;
+  const auto& v = layout.children;
   FARM_CHECK(v.size() > 0);
   if (layout.layer) s << "x";
   s << "(";

@@ -38,14 +38,14 @@ namespace detail
 {
 /********** Compare Two Character CaseInsensitive ********/
 template <typename ElementType>
-bool natural_less(ElementType const &lhs, ElementType const &rhs)
+bool natural_less(const ElementType &lhs, const ElementType &rhs)
 {
   if (tolower(lhs) < tolower(rhs)) return true;
   return false;
 }
 
 template <typename ElementType>
-bool is_not_digit(ElementType const &x)
+bool is_not_digit(const ElementType &x)
 {
   return !isdigit(x);
 }
@@ -53,7 +53,7 @@ bool is_not_digit(ElementType const &x)
 /********** Compare Two Iterators CaseInsensitive ********/
 template <typename ElementType, typename Iterator>
 struct comp_over_iterator {
-  int operator()(Iterator const &lhs, Iterator const &rhs) const
+  int operator()(const Iterator &lhs, const Iterator &rhs) const
   {
     if (natural_less<ElementType>(*lhs, *rhs)) return -1;
     if (natural_less<ElementType>(*rhs, *lhs)) return +1;
@@ -156,8 +156,8 @@ Suffix 2 represents for components of 2nd String
 
 template <typename ElementType, typename Iterator>
 bool _compare(
-    Iterator const &lhsBegin, Iterator const &lhsEnd, Iterator const &rhsBegin,
-    Iterator const &rhsEnd)
+    const Iterator &lhsBegin, const Iterator &lhsEnd, const Iterator &rhsBegin,
+    const Iterator &rhsEnd)
 {
   Iterator current1 = lhsBegin, current2 = rhsBegin;
 
@@ -219,7 +219,7 @@ bool _compare(
 }
 
 template <typename String>
-inline bool compare(String const &first, String const &second)
+inline bool compare(const String &first, const String &second)
 {
   return _compare<typename String::value_type, typename String::const_iterator>(
       first.begin(), first.end(), second.begin(), second.end());
@@ -243,7 +243,7 @@ inline void sort(Container &container)
 }
 
 template <typename Iterator>
-inline void sort(Iterator const &first, Iterator const &end)
+inline void sort(const Iterator &first, const Iterator &end)
 {
   std::sort(first, end, compare<typename Iterator::value_type>);
 }

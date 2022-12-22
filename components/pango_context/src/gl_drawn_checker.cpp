@@ -11,7 +11,7 @@ namespace pangolin
 {
 
 struct GlDrawnChecker : public DrawnChecker {
-  GlDrawnChecker(DrawnChecker::Params const& p)
+  GlDrawnChecker(const DrawnChecker::Params& p)
   {
     auto bind_prog = prog->bind();
     u_color1 = p.check_color_1;
@@ -19,7 +19,7 @@ struct GlDrawnChecker : public DrawnChecker {
     u_checksize = p.check_size_pixels;
   }
 
-  void draw(ViewParams const& params) override
+  void draw(const ViewParams& params) override
   {
     auto bind_prog = prog->bind();
     auto bind_vao = vao.bind();
@@ -34,14 +34,14 @@ struct GlDrawnChecker : public DrawnChecker {
   }
 
   private:
-  Shared<GlSlProgram> const prog = GlSlProgram::Create(
+  const Shared<GlSlProgram> prog = GlSlProgram::Create(
       {.sources = {
            {.origin = "/components/pango_opengl/shaders/main_checker.glsl"}}});
   GlVertexArrayObject vao = {};
-  GlUniform<Eigen::Vector2f> const u_viewport_size = {"viewport_size"};
-  GlUniform<Eigen::Vector4f> const u_color1 = {"color1"};
-  GlUniform<Eigen::Vector4f> const u_color2 = {"color2"};
-  GlUniform<int> const u_checksize = {"checksize"};
+  const GlUniform<Eigen::Vector2f> u_viewport_size = {"viewport_size"};
+  const GlUniform<Eigen::Vector4f> u_color1 = {"color1"};
+  const GlUniform<Eigen::Vector4f> u_color2 = {"color2"};
+  const GlUniform<int> u_checksize = {"checksize"};
 };
 
 PANGO_CREATE(DrawnChecker) { return Shared<GlDrawnChecker>::make(p); }

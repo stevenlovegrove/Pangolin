@@ -5,7 +5,7 @@
 #include <pangolin/video/video_help.h>
 #include <pangolin/video/video_input.h>
 
-void VideoConvert(std::string const& input_uri, std::string const& output_uri)
+void VideoConvert(const std::string& input_uri, const std::string& output_uri)
 {
   pangolin::Var<bool> video_wait("video.wait", true);
   pangolin::Var<bool> video_newest("video.newest", false);
@@ -20,7 +20,7 @@ void VideoConvert(std::string const& input_uri, std::string const& output_uri)
 
   // Output details of video stream
   for (size_t s = 0; s < num_streams; ++s) {
-    pangolin::StreamInfo const& si = video.Streams()[s];
+    const pangolin::StreamInfo& si = video.Streams()[s];
     std::cout << "Stream " << s << ": " << si.Width() << " x " << si.Height()
               << " " << si.PixFormat().format << " (pitch: " << si.Pitch()
               << " bytes)" << std::endl;
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     std::cerr << argparser << std::endl;
 
     const std::string scheme_filter = args["scheme"].as<std::string>("");
-    int const v = std::clamp(
+    const int v = std::clamp(
         args["verbose"].as<int>(scheme_filter.empty() ? 0 : 2), 0, 2);
     pangolin::VideoHelp(std::cerr, scheme_filter, (pangolin::HelpVerbosity)v);
     return 0;
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
       (args.pos.size() > 1) ? std::string(args.pos[1]) : dflt_output_uri;
   try {
     VideoConvert(input_uri, output_uri);
-  } catch (pangolin::VideoException const& e) {
+  } catch (const pangolin::VideoException& e) {
     std::cout << e.what() << std::endl;
   }
 

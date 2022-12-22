@@ -24,7 +24,7 @@ void glUniformArray(GLint location, const T* val);
 // Specializations...
 #define PANGO_DEF_UNIFORM_ARR(type, postfix, R, C)                             \
   template <>                                                                  \
-  inline void glUniformArray<type, R, C>(GLint location, type const* val)      \
+  inline void glUniformArray<type, R, C>(GLint location, const type* val)      \
   {                                                                            \
     glUniform##postfix(location, 1, val);                                      \
   }
@@ -44,7 +44,7 @@ PANGO_DEF_UNIFORM_ARR(GLuint, 4uiv, 4, 1)
 
 #define PANGO_DEF_UNIFORM_MAT_ARR(type, postfix, R, C)                         \
   template <>                                                                  \
-  inline void glUniformArray<type, R, C>(GLint location, type const* val)      \
+  inline void glUniformArray<type, R, C>(GLint location, const type* val)      \
   {                                                                            \
     glUniformMatrix##postfix(location, 1, false, val);                         \
   }
@@ -138,16 +138,16 @@ template <typename T>
 class GlUniform
 {
   public:
-  GlUniform(char const* name) :
+  GlUniform(const char* name) :
       name_(name), current_value_(T{}), handle_(kHandleInvalid)
   {
   }
 
-  GlUniform(GlUniform const&) = default;
+  GlUniform(const GlUniform&) = default;
 
   void setValue(const T& new_value) const
   {
-    bool const needs_init = handle_ == kHandleInvalid;
+    const bool needs_init = handle_ == kHandleInvalid;
 
     if (needs_init) {
       GLint bound_prog_id = 0;
@@ -177,7 +177,7 @@ class GlUniform
   GLint handle() const { return handle_; }
 
   private:
-  static int constexpr kHandleInvalid = -1;
+  static constexpr int kHandleInvalid = -1;
 
   std::string name_;
   mutable T current_value_;

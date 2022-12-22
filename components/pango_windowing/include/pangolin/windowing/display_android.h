@@ -62,7 +62,7 @@ inline void Log(T v)
 }
 
 template <typename T>
-inline void Log(std::string const& str, T v)
+inline void Log(const std::string& str, T v)
 {
   const std::string sv = pangolin::Convert<std::string, T>::Do(v);
   LOGI((str + ":" + sv).c_str());
@@ -181,7 +181,7 @@ struct android_app {
   ANativeWindow* pendingWindow;
   ARect pendingContentRect;
 
-  char const* application_so;
+  const char* application_so;
 };
 
 enum {

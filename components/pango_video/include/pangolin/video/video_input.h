@@ -40,7 +40,7 @@ struct PANGOLIN_EXPORT VideoInput : public VideoInterface,
   /////////////////////////////////////////////////////////////
 
   size_t SizeBytes() const override;
-  std::vector<StreamInfo> const& Streams() const override;
+  const std::vector<StreamInfo>& Streams() const override;
   void Start() override;
   void Stop() override;
   bool GrabNext(unsigned char* image, bool wait = true) override;
@@ -59,14 +59,14 @@ struct PANGOLIN_EXPORT VideoInput : public VideoInterface,
   VideoInput();
   VideoInput(VideoInput&& other) = default;
   VideoInput(
-      std::string const& input_uri,
-      std::string const& output_uri =
+      const std::string& input_uri,
+      const std::string& output_uri =
           "pango:[buffer_size_mb=100]//video_log.pango");
   ~VideoInput();
 
   void Open(
-      std::string const& input_uri,
-      std::string const& output_uri =
+      const std::string& input_uri,
+      const std::string& output_uri =
           "pango:[buffer_size_mb=100]//video_log.pango");
   void Close();
 
@@ -75,7 +75,7 @@ struct PANGOLIN_EXPORT VideoInput : public VideoInterface,
       unsigned char* buffer, std::vector<sophus::ImageView<uint8_t> >& images,
       bool wait = true, bool newest = false);
 
-  Uri const& VideoUri() const { return uri_input; }
+  const Uri& VideoUri() const { return uri_input; }
 
   void Reset()
   {
@@ -90,7 +90,7 @@ struct PANGOLIN_EXPORT VideoInput : public VideoInterface,
     return dynamic_cast<VideoType*>(video_src.get());
   }
 
-  std::string const& LogFilename() const;
+  const std::string& LogFilename() const;
   std::string& LogFilename();
 
   // Switch to live video and record output to file

@@ -23,7 +23,7 @@ struct zstd_image_header {
 #pragma pack(pop)
 
 void SaveZstd(
-    IntensityImage<> const& image, std::ostream& out, int compression_level)
+    const IntensityImage<>& image, std::ostream& out, int compression_level)
 {
 #ifdef HAVE_ZSTD
   // Write out header, uncompressed
@@ -48,7 +48,7 @@ void SaveZstd(
     throw std::runtime_error("ZSTD_createCStream() error");
   }
 
-  size_t const initResult = ZSTD_initCStream(cstream, compression_level);
+  const size_t initResult = ZSTD_initCStream(cstream, compression_level);
   PANGO_THROW_IF(
       ZSTD_isError(initResult), "ZSTD_initCStream() error : {}",
       ZSTD_getErrorName(initResult));
@@ -70,7 +70,7 @@ void SaveZstd(
   }
 
   ZSTD_outBuffer output = {output_buffer.get(), output_buffer_size, 0};
-  size_t const remainingToFlush =
+  const size_t remainingToFlush =
       ZSTD_endStream(cstream, &output); /* close frame */
   if (remainingToFlush) {
     throw std::runtime_error("not fully flushed");

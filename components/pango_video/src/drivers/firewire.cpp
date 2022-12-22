@@ -443,7 +443,7 @@ void FirewireVideo::init_stream_info()
   frame_size_bytes = stream.Pitch() * stream.Height();
 }
 
-std::vector<StreamInfo> const& FirewireVideo::Streams() const
+const std::vector<StreamInfo>& FirewireVideo::Streams() const
 {
   return streams;
 }
@@ -931,7 +931,7 @@ dc1394video_mode_t get_firewire_mode(
       Dc1394ModeDetails(video_mode, w, h, format);
 
       if (w == width && h == height && !fmt.compare(format)) return video_mode;
-    } catch (VideoException const& e) {
+    } catch (const VideoException& e) {
     }
   }
 
@@ -968,7 +968,7 @@ PANGOLIN_REGISTER_FACTORY(FirewireVideo)
     {
       return {{"dc1394", 10}, {"firewire", 10}};
     }
-    char const* Description() const override
+    const char* Description() const override
     {
       return "Access Firewire (dc1394) cameras";
     }
@@ -987,17 +987,17 @@ PANGOLIN_REGISTER_FACTORY(FirewireVideo)
            {"deinterlace", "0",
             "Apply deinterlacing on video stream (0 off, 1 on)"}}};
     }
-    std::unique_ptr<VideoInterface> Open(Uri const& uri) override
+    std::unique_ptr<VideoInterface> Open(const Uri& uri) override
     {
       std::string desired_format = uri.Get<std::string>("fmt", "RGB24");
       ToUpper(desired_format);
       const ImageDim desired_dim =
           uri.Get<ImageDim>("size", ImageDim(640, 480));
       const ImageDim desired_xy = uri.Get<ImageDim>("pos", ImageDim(0, 0));
-      int const desired_dma = uri.Get<int>("dma", 10);
-      int const desired_iso = uri.Get<int>("iso", 400);
-      float const desired_fps = uri.Get<float>("fps", 30);
-      bool const deinterlace = uri.Get<bool>("deinterlace", 0);
+      const int desired_dma = uri.Get<int>("dma", 10);
+      const int desired_iso = uri.Get<int>("iso", 400);
+      const float desired_fps = uri.Get<float>("fps", 30);
+      const bool deinterlace = uri.Get<bool>("deinterlace", 0);
 
       Guid guid = 0;
       unsigned deviceid = 0;
