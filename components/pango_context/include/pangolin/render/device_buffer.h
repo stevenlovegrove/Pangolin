@@ -8,6 +8,11 @@
 namespace pangolin
 {
 
+struct UpdateParams {
+  size_t dest_element = 0;
+  size_t num_reserve_elements = 0;
+};
+
 struct DeviceBuffer {
   enum class Kind {
     VertexIndices,
@@ -25,11 +30,6 @@ struct DeviceBuffer {
 
   virtual sophus::RuntimePixelType dataType() const = 0;
   virtual size_t numElements() const = 0;
-
-  struct UpdateParams {
-    size_t dest_element = 0;
-    size_t num_reserve_elements = 0;
-  };
 
   struct Data {
     std::shared_ptr<void> data;

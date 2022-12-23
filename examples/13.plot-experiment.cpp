@@ -45,7 +45,7 @@ int main(int /*argc*/, char** /*argv*/)
   // Create a drawable with line series
   auto graph_xy = DrawnPrimitives::Create(
       {.element_type = DrawnPrimitives::Type::line_strip, .default_size = 1.5});
-  graph_xy->vertices->update(plot_data, {});
+  graph_xy->vertices->update(plot_data);
 
   if (0) {
     // Create point markers
@@ -61,9 +61,9 @@ int main(int /*argc*/, char** /*argv*/)
         .element_type = DrawnPrimitives::Type::shapes,
         .default_size = 15,  // pixels
     });
-    markers->vertices->update(plot_data, {});
-    markers->shapes->update(plot_shape, {});
-    markers->colors->update(plot_color, {});
+    markers->vertices->update(plot_data);
+    markers->shapes->update(plot_shape);
+    markers->colors->update(plot_color);
   }
 
   auto bg = DrawnPlotBackground::Create(

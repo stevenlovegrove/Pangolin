@@ -30,9 +30,9 @@ int main(int /*argc*/, char** /*argv*/)
     shapes.push_back(i);
   }
 
-  primitives->vertices->update(points, {});
-  primitives->colors->update(colors, {});
-  primitives->shapes->update(shapes, {});
+  primitives->vertices->update(points);
+  primitives->colors->update(colors);
+  primitives->shapes->update(shapes);
 
   context->setLayout(primitives);
   context->loop();
