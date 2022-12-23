@@ -2,39 +2,47 @@
 #include <pangolin/gl/color.h>
 #include <pangolin/gui/all_layers.h>
 #include <pangolin/gui/drawn_plot_background.h>
-#include <sophus/sensor/orthographic.h>
 
 using namespace pangolin;
 
-/// Returns orthographic camera model given bounding box and image size.
-template <class TScalar>
-sophus::OrthographicModelT<TScalar> plot_camera(
-    Eigen::AlignedBox<TScalar, 2> const& bounding_box)
+// Some global plot data for example
+std::vector<Eigen::Vector2f> plot_data;
+
+Shared<Drawable> sample_markers()
 {
-  // Plotter is not discretized into pixels, so we use a unit width and
-  // height
+  // Create point markers
+  std::vector<uint16_t> plot_shape;
+  std::vector<Color> plot_color;
+  ColorWheel wheel;
+  for (auto& x : plot_data) {
+    plot_shape.push_back(wheel.GetCurrentIndex() % 21);
+    plot_color.push_back(wheel.GetUniqueColor());
+  }
 
-  Eigen::Array<TScalar, 2, 1> const range =
-      bounding_box.max() - bounding_box.min();
-  Eigen::Array<TScalar, 2, 1> const scale =
-      Eigen::Array<TScalar, 2, 1>(1.0, 1.0) / range;
-  Eigen::Array<TScalar, 2, 1> const offset =
-      -(scale * bounding_box.min().array());
+  auto markers = DrawnPrimitives::Create({
+      .element_type = DrawnPrimitives::Type::shapes,
+      .default_size = 15,  // pixels
+  });
+  markers->vertices->update(plot_data, {});
+  markers->shapes->update(plot_shape, {});
+  markers->colors->update(plot_color, {});
+  return markers;
+}
 
-  Eigen::Matrix<TScalar, 4, 1> const params(
-      scale.x(), scale.y(), offset.x(), offset.y());
-
-  return sophus::OrthographicModelT<TScalar>({1, 1}, params);
+Shared<Drawable> sample_text()
+{
+  auto test = DrawnText::Create({.font_height_pixels = 64});
+  test->addText({2.0, 0.5}, "Hello");
+  test->addText({3.0, 0.3}, "World!");
+  return std::move(test);
 }
 
 int main(int /*argc*/, char** /*argv*/)
 {
   // Make some data
-  std::vector<Eigen::Vector2f> plot_data;
-
   for (double x = 0; x < 100.0; x += 0.2) {
     float y = std::sin(x);
-    plot_data.emplace_back(x, y);
+    plot_data.emplace_back(x / 10.0, y);
   }
 
   // Create application window
@@ -47,24 +55,11 @@ int main(int /*argc*/, char** /*argv*/)
       {.element_type = DrawnPrimitives::Type::line_strip, .default_size = 1.5});
   graph_xy->vertices->update(plot_data, {});
 
-  if (0) {
-    // Create point markers
-    std::vector<uint16_t> plot_shape;
-    std::vector<Color> plot_color;
-    ColorWheel wheel;
-    for (auto& x : plot_data) {
-      plot_shape.push_back(wheel.GetCurrentIndex() % 21);
-      plot_color.push_back(wheel.GetUniqueColor());
-    }
+  std::optional<Shared<Drawable>> maybe_markers;
+  std::optional<Shared<Drawable>> maybe_text;
 
-    auto markers = DrawnPrimitives::Create({
-        .element_type = DrawnPrimitives::Type::shapes,
-        .default_size = 15,  // pixels
-    });
-    markers->vertices->update(plot_data, {});
-    markers->shapes->update(plot_shape, {});
-    markers->colors->update(plot_color, {});
-  }
+  // maybe_markers = sample_markers();
+  maybe_text = sample_text();
 
   auto bg = DrawnPlotBackground::Create(
       {.color_background = Eigen::Vector4f(0.97, 0.98, 1.0, 1.0)});
@@ -76,8 +71,15 @@ int main(int /*argc*/, char** /*argv*/)
        .handler =
            DrawLayerHandler::Create({.view_mode = ViewMode::image_plane}),
        .camera = plot_camera(Eigen::AlignedBox2d{
-           Eigen::Vector2d(-1.0, -1.1), Eigen::Vector2d(11.0, 1.1)}),
-       .in_scene = {bg, graph_xy /* , markers */}});
+           Eigen::Vector2d(-0.1, -1.1), Eigen::Vector2d(11.0, 1.1)}),
+       .in_scene = {bg, graph_xy}});
+
+  if (maybe_markers) {
+    layer->addInScene(*maybe_markers);
+  }
+  if (maybe_text) {
+    layer->addInScene(*maybe_text);
+  }
 
   context->setLayout(layer);
   context->loop();

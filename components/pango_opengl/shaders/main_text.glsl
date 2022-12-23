@@ -3,11 +3,11 @@
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in uint a_char_index;
-out vec3 pos;
+out vec3 pos_fontpix;
 out uint index;
 
 void main() {
-    pos = a_position;
+    pos_fontpix = a_position;
     index = a_char_index;
 }
 
@@ -19,38 +19,29 @@ layout (triangle_strip, max_vertices = 4) out;
 #include "font_offset_table.glsl.h"
 uniform sampler2D u_font_atlas;
 
-uniform mat4 u_T_cm;
+uniform mat4 u_clip_from_fontpix;
 
-in vec3 pos[];
+in vec3 pos_fontpix[];
 in uint index[];
 out vec2 v_uv;
-out vec2 v_win;
-
-uniform float u_scale;
 
 void main() {
     uint char_id = index[0];
+    vec4 font_offset_uv, screen_offset_fontpix;
+    font_and_screen_offset(char_id, font_offset_uv, screen_offset_fontpix);
 
-    vec4 font_offset, screen_offset;
-    font_and_screen_offset(char_id, font_offset, screen_offset);
+    vec2 display_offset_fontpix = screen_offset_fontpix.xy;
+    vec2 dim_fontpix = screen_offset_fontpix.zw;
 
-    float w = u_scale * screen_offset.z;
-    float h = u_scale * screen_offset.w;
-
-    vec2 corners[4] = vec2[](
-        vec2(0.0,0.0), vec2(w,0.0),
-        vec2(0.0,h), vec2(w,h)
+    vec2 corners_fontpix[4] = vec2[](
+        vec2(0.0,0.0), vec2(dim_fontpix.x,0.0),
+        vec2(0.0,dim_fontpix.y), dim_fontpix
     );
 
-    vec2 pos_scale = 1.0 / (u_scale * textureSize(u_font_atlas, 0) );
-
     for(uint i=0u; i < 4u;  ++i) {
-        vec2 p = corners[i] * pos_scale ;
-        v_uv = font_offset.xy + p;
-
-        v_win = pos[0].xy + u_scale*screen_offset.xy + corners[i];
-
-        gl_Position = u_T_cm * vec4(v_win, pos[0].z, 1.0);
+        vec2 corner_fontpix = pos_fontpix[0].xy + display_offset_fontpix + corners_fontpix[i];
+        gl_Position = u_clip_from_fontpix * vec4(corner_fontpix, pos_fontpix[0].z, 1.0);
+        v_uv = font_offset_uv.xy + corners_fontpix[i] / textureSize(u_font_atlas, 0);
         EmitVertex();
     }
 
@@ -68,7 +59,6 @@ in vec2  v_uv;
 out vec4 FragColor;
 
 uniform int  u_font_bitmap_type;
-uniform float u_scale;
 uniform vec2  u_max_sdf_dist_uv;
 uniform vec3  u_color;
 

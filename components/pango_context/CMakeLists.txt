@@ -21,6 +21,7 @@ set(component_file_basenames
   gl_drawn_solids
   gl_drawn_checker
   gl_drawn_plot_background
+  gl_drawn_text
   layer
   layer_group
   multi_dim

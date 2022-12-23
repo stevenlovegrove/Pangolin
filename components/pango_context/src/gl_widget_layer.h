@@ -76,17 +76,6 @@ struct GlWidgetLayer : WidgetLayer {
 
   void process_var_event(const pangolin::VarState::Event& event);
 
-  Size size_hint_;
-
-  std::string name_;
-
-  bool dirty;
-
-  std::shared_ptr<GlFont> font;
-  GlTexture font_offsets;
-
-  Eigen::Matrix<float, 4, 4> T_cm;
-
   struct WidgetProgram {
     WidgetProgram()
     {
@@ -124,7 +113,7 @@ struct GlWidgetLayer : WidgetLayer {
     GlUniform<Eigen::Array3f> color_slider = {"color_slider"};
     GlUniform<Eigen::Array3f> color_slider_outline = {"color_slider_outline"};
 
-    GlUniform<Eigen::Matrix4f> T_cm = {"u_T_cm"};
+    GlUniform<Eigen::Matrix4f> clip_from_pix = {"u_T_cm"};
 
     pangolin::GlBuffer vbo;
     GlVertexArrayObject vao = {};
@@ -147,31 +136,32 @@ struct GlWidgetLayer : WidgetLayer {
     GlUniform<Eigen::Array3f> color = {"u_color"};
 
     GlUniform<int> font_bitmap_type = {"u_font_bitmap_type"};
-    GlUniform<float> scale = {"u_scale"};
     GlUniform<Eigen::Array2f> max_sdf_dist_uv = {"u_max_sdf_dist_uv"};
 
-    GlUniform<Eigen::Matrix4f> T_cm = {"u_T_cm"};
+    GlUniform<Eigen::Matrix4f> clip_from_pix = {"u_clip_from_fontpix"};
 
     pangolin::GlBuffer vbo_pos;
     pangolin::GlBuffer vbo_index;
     GlVertexArrayObject vao;
   };
 
+  Size size_hint_;
+  std::string name_;
+  bool dirty;
+  std::shared_ptr<GlFont> font;
+  GlTexture font_offsets;
+  Eigen::Matrix<float, 4, 4> clip_from_pix;
+
   WidgetProgram widget_program;
   TextProgram text_program;
-
   bool reload_shader = false;
-
   float widget_height;
   float widget_padding;
-  float font_scale;
-
+  int font_height_pix;
   float scroll_offset;
-
   int selected_widget;
   int hover_widget;
   std::vector<WidgetParams> widgets;
-
   sigslot::connection sigslot_lifetime;
 };
 

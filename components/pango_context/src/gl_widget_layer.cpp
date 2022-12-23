@@ -22,13 +22,14 @@ namespace pangolin
 GlWidgetLayer::GlWidgetLayer(const WidgetLayer::Params& p) :
     size_hint_(p.size_hint),
     name_(p.name),
-    widget_height(p.scale * p.widget_height_pix),
-    widget_padding(p.scale * p.widget_padding_pix),
-    font_scale(p.scale * 0.5),
+    widget_height(p.widget_height_pix),
+    widget_padding(p.widget_height_pix * p.fraction_padding),
+    font_height_pix(p.widget_height_pix * p.fraction_fontheight),
     scroll_offset(0.0),
     selected_widget(-1)
 {
-  font = build_builtin_font(32, 1024, 1024, false);
+  font = build_builtin_font(
+      font_height_pix, 32 * font_height_pix, 32 * font_height_pix, false);
   font->InitialiseGlTexture();
   font_offsets.Load(font->MakeFontLookupImage());
 
@@ -88,7 +89,7 @@ float GlWidgetLayer::TextWidthPix(const std::u32string& utf32)
 {
   float w = 0;
   for (auto c : utf32) {
-    w += font_scale * font->chardata[c].StepX();
+    w += font->chardata[c].StepX();
   }
   return w;
 }
@@ -106,7 +107,7 @@ void GlWidgetLayer::AddTextToHostBuffer(
 
     if (!index16[c]) {
       // TODO: use some symbol such as '?' maybe
-      p.x() += font_scale * font->default_advance_px;
+      p.x() += font->default_advance_px;
       last_char = 0;
     } else {
       auto ch = font->chardata[this_char];
@@ -115,12 +116,12 @@ void GlWidgetLayer::AddTextToHostBuffer(
         const auto key = GlFont::codepointpair_t(last_char, this_char);
         const auto kit = font->kern_table.find(key);
         const float kern = (kit != font->kern_table.end()) ? kit->second : 0;
-        p.x() += font_scale * kern;
+        p.x() += kern;
       }
 
       host_vbo_pos.emplace_back(p.x(), p.y(), 0.0);
       host_vbo_index.emplace_back(index16[c]);
-      p.x() += font_scale * ch.StepX();
+      p.x() += ch.StepX();
       last_char = this_char;
     }
   }
@@ -132,7 +133,6 @@ void GlWidgetLayer::UpdateCharsVBO(float widget_width)
   {
     auto bind_prog = text_program.prog->bind();
     text_program.font_bitmap_type = static_cast<int>(font->bitmap_type);
-    text_program.scale = font_scale;
     text_program.max_sdf_dist_uv = {
         font->bitmap_max_sdf_dist_uv[0], font->bitmap_max_sdf_dist_uv[1]};
   }
@@ -146,8 +146,7 @@ void GlWidgetLayer::UpdateCharsVBO(float widget_width)
 
     // y-position is roughly center with fudge factor since text is balanced
     // low.
-    const float y_pos =
-        (i + 0.5) * widget_height + 0.3 * font_scale * font->font_height_px;
+    const float y_pos = (i + 0.5) * widget_height + 0.3 * font->font_height_px;
 
     AddTextToHostBuffer(
         toUtf32(w.text), {text_pad, y_pos - 0.175 * font->font_height_px},
@@ -192,10 +191,10 @@ void GlWidgetLayer::renderIntoRegion(
                           .cast<Eigen::Vector2d>()
                           .translated({-0.5, -(0.5 + scroll_offset)});
 
-  T_cm = projectionClipFromOrtho(
-             region, {-1.0, 1.0}, ImageXy::right_down,
-             ImageIndexing::pixel_centered)
-             .cast<float>();
+  clip_from_pix = projectionClipFromOrtho(
+                      region, {-1.0, 1.0}, ImageXy::right_down,
+                      ImageIndexing::pixel_centered)
+                      .cast<float>();
 
   // TODO: try to do this less. It's expensive
   {
@@ -207,14 +206,14 @@ void GlWidgetLayer::renderIntoRegion(
   {
     auto bind_prog = widget_program.prog->bind();
     auto bind_vao = widget_program.vao.bind();
-    widget_program.T_cm = T_cm;
+    widget_program.clip_from_pix = clip_from_pix;
     glDrawArrays(GL_POINTS, 0, widget_program.vbo.num_elements);
   }
 
   {
     auto bind_prog = text_program.prog->bind();
     auto bind_vao = text_program.vao.bind();
-    text_program.T_cm = T_cm;
+    text_program.clip_from_pix = clip_from_pix;
 
     glActiveTexture(GL_TEXTURE0);
     font->mTex.Bind();
