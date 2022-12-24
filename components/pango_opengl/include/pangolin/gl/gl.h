@@ -268,7 +268,7 @@ struct PANGOLIN_EXPORT GlBuffer : public GlBufferData {
   void Reinitialise(
       GlBufferType buffer_type, GLuint num_elements, GLenum datatype,
       GLuint count_per_element, GLenum gluse, const void* data = nullptr);
-  void Reinitialise(GlBuffer const& other);
+  void Reinitialise(const GlBuffer& other);
   void Resize(GLuint num_elements);
 
   template <typename Scalar>

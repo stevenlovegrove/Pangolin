@@ -39,7 +39,7 @@ struct Axis {
 
 struct Axes {
   static Axes from(
-      std::vector<sophus::SE3d> const& entity_poses_axis_d, float scale = 0.1f,
+      const std::vector<sophus::SE3d>& entity_poses_axis_d, float scale = 0.1f,
       float line_width = 1.5f)
   {
     Axes axes{.scale = scale, .line_width = line_width};
@@ -50,7 +50,7 @@ struct Axes {
   }
 
   static Axes from(
-      std::vector<sophus::SE3f> const& entity_poses_axis_d, float scale = 0.1f,
+      const std::vector<sophus::SE3f>& entity_poses_axis_d, float scale = 0.1f,
       float line_width = 1.5f)
   {
     Axes axes{.scale = scale, .line_width = line_width};

@@ -599,7 +599,7 @@ static bool tryParseDouble(const char *s, const char *s_end, double *result)
   // TO JUMP OVER DEFINITIONS.
   char sign = '+';
   char exp_sign = '+';
-  char const *curr = s;
+  const char *curr = s;
 
   // How many characters were read in a loop.
   int read = 0;

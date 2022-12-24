@@ -72,10 +72,10 @@ FARM_ENUM(
 template <typename TScalar, int Dim>
 Eigen::Matrix<TScalar, Dim, 1> axisDirection(AxisDirection2 dir)
 {
-  int const ordinal = static_cast<int>(dir);  // [0, ... 2*Dim]
-  int const axis = ordinal % 3;               // [0, ... Dim]
-  int const pos_neg = ordinal / 3;            // [0, 1]
-  int const scale = -2 * pos_neg + 1;         // [-1, +1]
+  const int ordinal = static_cast<int>(dir);  // [0, ... 2*Dim]
+  const int axis = ordinal % 3;               // [0, ... Dim]
+  const int pos_neg = ordinal / 3;            // [0, 1]
+  const int scale = -2 * pos_neg + 1;         // [-1, +1]
   return scale * Eigen::Matrix<TScalar, Dim, Dim>::Identity().col(axis);
 }
 
@@ -95,7 +95,7 @@ Eigen::Vector3<TScalar> upDirectionInCamera(DeviceXyz axis_convention)
 // where those now point in the `to_rdf_axis_dirs` dirs
 template <typename TScalar, int Dim = 3>
 Eigen::Matrix<TScalar, Dim, Dim> toConventionFromRdf(
-    std::array<AxisDirection2, Dim> const& to_rdf_axis_dirs)
+    const std::array<AxisDirection2, Dim>& to_rdf_axis_dirs)
 {
   static_assert(2 <= Dim && Dim <= 3);
 

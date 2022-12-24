@@ -9,19 +9,19 @@ using namespace pangolin;
 /// Returns orthographic camera model given bounding box and image size.
 template <class TScalar>
 sophus::OrthographicModelT<TScalar> plot_camera(
-    Eigen::AlignedBox<TScalar, 2> const& bounding_box)
+    const Eigen::AlignedBox<TScalar, 2>& bounding_box)
 {
   // Plotter is not discretized into pixels, so we use a unit width and
   // height
 
-  Eigen::Array<TScalar, 2, 1> const range =
+  const Eigen::Array<TScalar, 2, 1> range =
       bounding_box.max() - bounding_box.min();
-  Eigen::Array<TScalar, 2, 1> const scale =
+  const Eigen::Array<TScalar, 2, 1> scale =
       Eigen::Array<TScalar, 2, 1>(1.0, 1.0) / range;
-  Eigen::Array<TScalar, 2, 1> const offset =
+  const Eigen::Array<TScalar, 2, 1> offset =
       -(scale * bounding_box.min().array());
 
-  Eigen::Matrix<TScalar, 4, 1> const params(
+  const Eigen::Matrix<TScalar, 4, 1> params(
       scale.x(), scale.y(), offset.x(), offset.y());
 
   return sophus::OrthographicModelT<TScalar>({1, 1}, params);

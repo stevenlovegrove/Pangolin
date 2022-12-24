@@ -1,7 +1,7 @@
 #pragma once
 
 template <typename R>
-bool is_ready(std::future<R> const& f)
+bool is_ready(const std::future<R>& f)
 {
   return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }

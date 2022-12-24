@@ -369,7 +369,7 @@ struct null_mutex {
 struct spin_mutex {
   spin_mutex() noexcept = default;
   ~spin_mutex() noexcept = default;
-  spin_mutex(spin_mutex const &) = delete;
+  spin_mutex(const spin_mutex &) = delete;
   spin_mutex &operator=(const spin_mutex &) = delete;
   spin_mutex(spin_mutex &&) = delete;
   spin_mutex &operator=(spin_mutex &&) = delete;

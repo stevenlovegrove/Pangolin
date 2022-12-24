@@ -13,7 +13,7 @@ namespace convert
 {
 
 template <>
-pangolin::Rangef arg<pangolin::Rangef>(char const* str)
+pangolin::Rangef arg<pangolin::Rangef>(const char* str)
 {
   std::stringstream ss(str);
   pangolin::Rangef r;

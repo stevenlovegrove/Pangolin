@@ -39,7 +39,7 @@
 namespace pangolin
 {
 struct BadInputException : std::exception {
-  char const* what() const throw() { return "Failed to serialise type"; }
+  const char* what() const throw() { return "Failed to serialise type"; }
 };
 }  // namespace pangolin
 

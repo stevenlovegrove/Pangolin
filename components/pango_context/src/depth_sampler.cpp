@@ -28,7 +28,7 @@ class DepthSamplerImpl : public DepthSampler
     PANGO_CHECK(context);
     if (!context) return std::nullopt;
 
-    auto const patch = context->read(region, Context::Attachment::depth);
+    const auto patch = context->read(region, Context::Attachment::depth);
     Sample sample{.depth_kind = DepthKind::zaxis};
 
     visitImage(

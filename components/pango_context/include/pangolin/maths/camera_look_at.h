@@ -20,9 +20,9 @@ namespace pangolin
 // and chooses arbitrarily from underspecified dimensions.
 template <typename TScalar = double>
 sophus::Se3<TScalar> worldLookatFromCamera(
-    Eigen::Vector3<TScalar> const& camera_center_in_world,
-    Eigen::Vector3<TScalar> const& interest_point_in_world,
-    Eigen::Vector3<TScalar> const& updir_world,
+    const Eigen::Vector3<TScalar>& camera_center_in_world,
+    const Eigen::Vector3<TScalar>& interest_point_in_world,
+    const Eigen::Vector3<TScalar>& updir_world,
     const DeviceXyz xyz_convention = Conventions::global().device_xyz)
 {
   using Vec3 = Eigen::Vector3<TScalar>;
@@ -69,8 +69,8 @@ sophus::Se3<TScalar> worldLookatFromCamera(
 // Convenience version of above, using AxisDirection enum to specify Up vector
 template <typename TScalar = double>
 sophus::Se3<TScalar> worldLookatFromCamera(
-    Eigen::Vector3<TScalar> const& camera_center_in_world,
-    Eigen::Vector3<TScalar> const& interest_point_in_world,
+    const Eigen::Vector3<TScalar>& camera_center_in_world,
+    const Eigen::Vector3<TScalar>& interest_point_in_world,
     const AxisDirection2 updir_world = Conventions::global().up_direction_world,
     const DeviceXyz xyz_convention = Conventions::global().device_xyz)
 {
@@ -82,8 +82,8 @@ sophus::Se3<TScalar> worldLookatFromCamera(
 // Convenience version of above, using AxisDirection enum to specify Up vector
 template <typename TScalar = double>
 sophus::Se3<TScalar> cameraLookatFromWorld(
-    Eigen::Vector3<TScalar> const& camera_center_in_world,
-    Eigen::Vector3<TScalar> const& interest_point_in_world,
+    const Eigen::Vector3<TScalar>& camera_center_in_world,
+    const Eigen::Vector3<TScalar>& interest_point_in_world,
     const AxisDirection2 updir_world = Conventions::global().up_direction_world,
     const DeviceXyz xyz_convention = Conventions::global().device_xyz)
 {
