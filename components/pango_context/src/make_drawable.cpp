@@ -12,12 +12,9 @@ Shared<Drawable> DrawableConversionTraits<draw::Shape>::makeDrawable(
       .element_type = DrawnPrimitives::Type::shapes,
       .default_size = x.size,
   });
-  prims->vertices->update(
-      std::vector<Eigen::Vector3f>{x.pos.cast<float>()}, {});
-  prims->shapes->update(
-      std::vector<uint16_t>{static_cast<uint16_t>(x.type)}, {});
-  prims->colors->update(
-      std::vector<Eigen::Vector4f>{x.color.cast<float>()}, {});
+  prims->vertices->update(std::vector<Eigen::Vector3f>{x.pos.cast<float>()});
+  prims->shapes->update(std::vector<uint16_t>{static_cast<uint16_t>(x.type)});
+  prims->colors->update(std::vector<Eigen::Vector4f>{x.color.cast<float>()});
   return prims;
 }
 
@@ -131,8 +128,8 @@ Shared<Drawable> DrawableConversionTraits<draw::Cube>::makeDrawable(
   colors.push_back(cube.colors[5]);
   colors.push_back(cube.colors[5]);
 
-  prims->vertices->update(vertices, {});
-  prims->colors->update(colors, {});
+  prims->vertices->update(vertices);
+  prims->colors->update(colors);
 
   return prims;
 }
@@ -222,8 +219,8 @@ Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
     }
   }
 
-  prims->vertices->update(vertices, {});
-  prims->indices->update(faces, {});
+  prims->vertices->update(vertices);
+  prims->indices->update(faces);
 
   return prims;
 }
@@ -243,7 +240,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Axes>::makeDrawable(
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::axes,
   });
-  prims->vertices->update(axes.drawable_from_axis_poses, {});
+  prims->vertices->update(axes.drawable_from_axis_poses);
   prims->default_size = axes.scale;
   return prims;
 }
@@ -257,8 +254,8 @@ Shared<Drawable> DrawableConversionTraits<draw::Points3f>::makeDrawable(
       .element_type = DrawnPrimitives::Type::points,
   });
 
-  prims->vertices->update(points.points, {});
-  prims->colors->update(colors, {});
+  prims->vertices->update(points.points);
+  prims->colors->update(colors);
   return prims;
 }
 
@@ -276,8 +273,8 @@ Shared<Drawable> DrawableConversionTraits<draw::Points3d>::makeDrawable(
     vertices.push_back(p.cast<float>());
     colors.push_back(points.color);
   }
-  prims->vertices->update(vertices, {});
-  prims->colors->update(colors, {});
+  prims->vertices->update(vertices);
+  prims->colors->update(colors);
   return prims;
 }
 
@@ -290,6 +287,7 @@ DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
 
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::lines,
+      .default_size = 3,
   });
 
   for (draw::Line3 const& line : lines) {
@@ -298,8 +296,8 @@ DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
     colors.push_back(line.color);
     colors.push_back(line.color);
   }
-  prims->vertices->update(vertices, {});
-  prims->colors->update(colors, {});
+  prims->vertices->update(vertices);
+  prims->colors->update(colors);
 
   return prims;
 }
@@ -313,6 +311,7 @@ DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
 
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::lines,
+      .default_size = 3,
   });
 
   for (draw::Line2 const& line : lines) {
@@ -321,8 +320,8 @@ DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
     colors.push_back(line.color);
     colors.push_back(line.color);
   }
-  prims->vertices->update(vertices, {});
-  prims->colors->update(colors, {});
+  prims->vertices->update(vertices);
+  prims->colors->update(colors);
   return prims;
 }
 
@@ -384,5 +383,30 @@ Shared<Drawable> DrawableConversionTraits<draw::CameraFrustum>::makeDrawable(
 
   return DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
       lines);
+}
+
+Shared<Drawable> DrawableConversionTraits<draw::Circle3>::makeDrawable(
+    const draw::Circle3& circle)
+{
+  auto prims = DrawnPrimitives::Create({
+      .element_type = DrawnPrimitives::Type::lines,
+  });
+  size_t num_vertices = 3.f * std::ceil(circle.radius);
+  std::vector<Color> colors(num_vertices, circle.color);
+
+  std::vector<Eigen::Vector3f> vertices;
+  vertices.reserve(num_vertices);
+  for (size_t i = 0; i < num_vertices; ++i) {
+    auto const theta = (2.0 * M_PI) / num_vertices * i;
+    vertices.push_back(Eigen::Vector3d{
+        circle.center + circle.radius * std::cos(theta) * circle.a +
+        circle.radius * std::sin(theta) * circle.b}
+                           .cast<float>());
+  }
+
+  prims->vertices->update(vertices);
+  prims->colors->update(colors);
+
+  return prims;
 }
 }  // namespace pangolin

@@ -185,6 +185,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       }
 
       PANGO_GL(glPointSize(default_size));
+      PANGO_GL(glLineWidth(default_size));
 
       if (indices->empty()) {
         PANGO_GL(
