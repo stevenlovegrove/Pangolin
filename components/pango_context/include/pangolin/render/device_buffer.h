@@ -30,7 +30,6 @@ struct DeviceBuffer {
     size_t dest_element = 0;
     size_t num_reserve_elements = 0;
   };
-
   struct Data {
     std::shared_ptr<void> data;
     sophus::RuntimePixelType data_type;
@@ -63,6 +62,12 @@ struct DeviceBuffer {
         .params = params,
     });
     return true;
+  }
+
+  template <typename Container>
+  bool update(Container&& data)
+  {
+    return update(data, UpdateParams());
   }
 
   virtual void sync() const = 0;
