@@ -32,6 +32,7 @@ std::u32string toUtf32(const std::string& utf8)
 struct GlDrawnText : public DrawnText {
   struct TextBuffer {
     Eigen::Vector2d pos_in_drawable;
+    double angle;
     pangolin::GlBuffer vbo_pos;
     pangolin::GlBuffer vbo_index;
     GlVertexArrayObject vao;
@@ -54,8 +55,8 @@ struct GlDrawnText : public DrawnText {
   }
 
   void addText(
-      const Eigen::Vector2d& pos_in_drawable, const std::u32string& utf32,
-      const double font_size_em)
+      const Eigen::Vector2d& pos_in_drawable, double angle,
+      const std::u32string& utf32, const double font_size_em)
   {
     const std::u16string index16 = font->to_index_string(utf32);
     GlFont::codepoint_t last_char = 0;
@@ -91,6 +92,7 @@ struct GlDrawnText : public DrawnText {
     auto t = Shared<TextBuffer>::make();
     t->font_size_em = font_size_em;
     t->pos_in_drawable = pos_in_drawable;
+    t->angle = angle;
     t->vbo_pos = pangolin::GlBuffer(pangolin::GlArrayBuffer, host_vbo_pos);
     t->vbo_index = pangolin::GlBuffer(pangolin::GlArrayBuffer, host_vbo_index);
     t->vao.addVertexAttrib(0, t->vbo_pos);
@@ -99,11 +101,13 @@ struct GlDrawnText : public DrawnText {
   }
 
   void addText(
-      const Eigen::Vector2d& pos_parent, const std::string& utf8,
+      const Eigen::Vector2d& pos_parent, const std::string& utf8, double angle,
       const double font_size_em) override
   {
-    addText(pos_parent, toUtf32(utf8), font_size_em);
+    addText(pos_parent, angle, toUtf32(utf8), font_size_em);
   }
+
+  virtual void clearTexts() override { texts.clear(); }
 
   void draw(const ViewParams& p) override
   {
@@ -130,7 +134,8 @@ struct GlDrawnText : public DrawnText {
           text->font_size_em * Eigen::Array2d(2.0, -2.0) /
           p.viewport.range().cast<double>();
       const Eigen::Matrix4d textclip_from_screenpix =
-          sophus::SE3d::trans(pos_in_clip).matrix() * clip_from_pix_scale;
+          sophus::SE3d::trans(pos_in_clip).matrix() * clip_from_pix_scale *
+          sophus::SE3d::rotZ(text->angle).matrix();
       u_clip_from_fontpix = textclip_from_screenpix.cast<float>();
 
       glActiveTexture(GL_TEXTURE0);
