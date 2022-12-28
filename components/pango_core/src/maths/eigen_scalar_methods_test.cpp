@@ -10,10 +10,10 @@ namespace pangolin
 
 TEST_CASE("scalar_methods, scalars")
 {
-  auto const x = testVecs();
+  const auto x = testVecs();
 
-  for (double const a : x) {
-    for (double const b : x) {
+  for (const double a : x) {
+    for (const double b : x) {
       CHECK(pangolin::min(a, b) == std::min(a, b));
       CHECK(pangolin::max(a, b) == std::max(a, b));
     }

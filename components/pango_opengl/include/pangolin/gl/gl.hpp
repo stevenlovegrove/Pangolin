@@ -836,7 +836,7 @@ inline void GlBuffer::Reinitialise(
   GlBufferData::Reinitialise(buffer_type, size_bytes, gluse, data);
 }
 
-inline void GlBuffer::Reinitialise(GlBuffer const& other)
+inline void GlBuffer::Reinitialise(const GlBuffer& other)
 {
   Reinitialise(
       other.buffer_type, other.num_elements, other.datatype,

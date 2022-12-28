@@ -43,7 +43,6 @@
 #endif
 // clang-format(on)
 
-
 namespace pangolin
 {
 

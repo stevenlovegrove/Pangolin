@@ -13,12 +13,17 @@ MaxEmptyLinesToKeep: '1'
 SortIncludes: 'true'
 IncludeBlocks: Regroup
 IncludeCategories:
-  # first-party libraries
-  - Regex:           '\"([A-Za-z0-9.\/-_])+\"'
-    Priority:        1
   # standard libraries
-  - Regex:           '<([A-Za-z0-_])+>'
-    Priority:        3
+  - Regex:           '^<([A-Za-z0-_])+>'
+    Priority:        4
   # third-party libraries
-  - Regex:           '<([A-Za-z0-9.\/-_])+>'
+  - Regex:           '^<([A-Za-z0-9.\/-_])+>'
+    Priority:        3
+  # pangolin includes
+  - Regex:           '^<pangolin\/([A-Za-z0-9.\/-_])+>'
     Priority:        2
+  # very local includes
+  - Regex:           '^\"([A-Za-z0-9.\/-_])+\"'
+    Priority:        1
+PointerAlignment: Left
+QualifierAlignment: Left

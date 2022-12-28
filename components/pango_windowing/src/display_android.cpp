@@ -118,7 +118,7 @@ static int engine_init_display(struct engine* engine)
   //    ANativeActivity_setWindowFlags(engine->app->activity,
   //    AWINDOW_FLAG_FULLSCREEN, 0 );
 
-  EGLint const attrib_list[] = {
+  const EGLint attrib_list[] = {
 #ifdef HAVE_GLES_2
       EGL_CONTEXT_CLIENT_VERSION, 2,
 #endif

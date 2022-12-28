@@ -41,7 +41,7 @@ struct DrawLayerHandler {
     MinMax<Eigen::Vector3d> camera_limits_in_world = {};
     ViewMode view_mode = ViewMode::best_guess;
   };
-  static Shared<DrawLayerHandler> Create(Params const&);
+  static Shared<DrawLayerHandler> Create(const Params&);
 };
 
 }  // namespace pangolin

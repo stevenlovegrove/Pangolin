@@ -12,6 +12,7 @@
 
 #include <cstdlib>
 #include <mutex>
+
 #include <wayland-client.h>
 #include <wayland-cursor.h>
 #include <wayland-egl.h>

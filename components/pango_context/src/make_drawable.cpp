@@ -148,7 +148,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
 
   // http://www.songho.ca/opengl/gl_sphere.html#icosphere
   static float constexpr kHAngle = M_PI / 180 * 72;
-  float const k_v_angle = std::atan(1.0f / 2);
+  const float k_v_angle = std::atan(1.0f / 2);
 
   float h_angle1 = -M_PI / 2 - kHAngle / 2;  // start from -126 deg at 1st row
   float h_angle2 = -M_PI / 2;                // start from -90 deg at 2nd row
@@ -199,7 +199,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
   for (size_t i = 0; i < sphere.num_subdivisions; ++i) {
     std::vector<FaceT> source_faces = faces;
     faces.clear();
-    for (FaceT const& t : source_faces) {
+    for (const FaceT& t : source_faces) {
       Eigen::Vector3f p0_p1 =
           (vertices[t.x()] + vertices[t.y()]).normalized() * sphere.radius;
       int p0_p1_id = vertices.size();
@@ -272,7 +272,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Points3d>::makeDrawable(
       .element_type = DrawnPrimitives::Type::points,
   });
 
-  for (auto const& p : points.points) {
+  for (const auto& p : points.points) {
     vertices.push_back(p.cast<float>());
     colors.push_back(points.color);
   }
@@ -292,7 +292,7 @@ DrawableConversionTraits<std::vector<draw::Line3>>::makeDrawable(
       .element_type = DrawnPrimitives::Type::lines,
   });
 
-  for (draw::Line3 const& line : lines) {
+  for (const draw::Line3& line : lines) {
     vertices.push_back(line.a);
     vertices.push_back(line.b);
     colors.push_back(line.color);
@@ -315,7 +315,7 @@ DrawableConversionTraits<std::vector<draw::Line2>>::makeDrawable(
       .element_type = DrawnPrimitives::Type::lines,
   });
 
-  for (draw::Line2 const& line : lines) {
+  for (const draw::Line2& line : lines) {
     vertices.push_back(line.toXy0A());
     vertices.push_back(line.toXy0B());
     colors.push_back(line.color);

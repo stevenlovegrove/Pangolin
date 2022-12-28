@@ -1,35 +1,11 @@
+files: ^components/pango_.*\.(h|hpp|cpp)$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-        exclude: thirdparty/.*$
-      - id: check-yaml
-      - id: check-json
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v14.0.0
     hooks:
       - id: clang-format
-        files: \.(h|cpp)
-        exclude: (thirdparty)/.*$
-  - repo: local
-    hooks:
-      - id: pragma-once
-        name: pragma once check
-        entry: "#pragma once"
-        language: pygrep
-        exclude: thirdparty/.*$
-        files: \.h$
-        args: [--negate]
-      - id: no-c-std-lib
-        name: c standard library check
-        exclude: thirdparty/.*$
-        entry: |
-          (?x)<(
-            assert|complex|ctype|errno|fenv|float|inttypes|iso646|limits|locale|math|setjmp|signal|
-            stdalign|stdarg|stdatomic|stdbool|stddef|stdint|stdio|stdlib|stdnoreturn|string|tgmath|
-            threads|time|uchar|wchar|wctype
-          ).h>
-        language: pygrep
-        files: \.(h|cpp)$

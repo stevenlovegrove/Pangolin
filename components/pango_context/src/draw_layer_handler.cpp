@@ -402,7 +402,7 @@ class HandlerImpl : public DrawLayerHandler
   ViewMode view_mode_;
 };
 
-Shared<DrawLayerHandler> DrawLayerHandler::Create(Params const& p)
+Shared<DrawLayerHandler> DrawLayerHandler::Create(const Params& p)
 {
   return Shared<HandlerImpl>::make(p);
 }

@@ -28,7 +28,7 @@ class Shared
   /// The return value is an object containing either a non-null Shared object
   /// pointer,
   //  or an farm_ng::Error object
-  static ExpectedT tryFrom(std::shared_ptr<T> const& maybe_null) noexcept
+  static ExpectedT tryFrom(const std::shared_ptr<T>& maybe_null) noexcept
   {
     if (!maybe_null) {
       return FARM_ERROR("is null");
@@ -57,7 +57,7 @@ class Shared
 
   /// Construct from a possibly null shared_ptr
   /// Panics if shared is null. See `tryFrom()` for alternate.
-  static Shared from(std::shared_ptr<T> const& shared)
+  static Shared from(const std::shared_ptr<T>& shared)
   {
     auto maybe = tryFrom(shared);
     if (!maybe) throw BadExpectedAccess(FARM_ERROR_ONLY());
