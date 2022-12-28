@@ -34,7 +34,7 @@ Shared<Drawable> sample_text()
   auto test = DrawnText::Create({.font_height_pixels = 64});
   test->addText({2.0, 0.5}, "Hello");
   test->addText({3.0, 0.3}, "World!");
-  return std::move(test);
+  return test;
 }
 
 int main(int /*argc*/, char** /*argv*/)
