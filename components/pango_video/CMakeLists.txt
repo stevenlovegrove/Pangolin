@@ -240,7 +240,7 @@ target_sources(${COMPONENT} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include/pangoli
 target_sources(${COMPONENT} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/factory/RegisterFactoriesVideoOutputInterface.h")
 
 
-if(BUILD_TESTS)
+if(PANGOLIN_BUILD_TESTS)
     add_executable(test_video_uris ${CMAKE_CURRENT_LIST_DIR}/tests/tests_video_uri.cpp)
     target_link_libraries(test_video_uris PRIVATE Catch2::Catch2WithMain ${COMPONENT})
     catch_discover_tests(test_video_uris)

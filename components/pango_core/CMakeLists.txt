@@ -46,7 +46,7 @@ install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
 )
 
 find_package(Sophus REQUIRED)
-target_link_libraries(${COMPONENT} PUBLIC Sophus::sophus)
+target_link_libraries(${COMPONENT} PUBLIC sophus)
 
 find_package(Threads QUIET)
 if(Threads_FOUND)
@@ -71,7 +71,7 @@ IF(MSVC)
     )
 ENDIF()
 
-if(BUILD_TESTS)
+if(PANGOLIN_BUILD_TESTS)
     add_executable(test_uris ${CMAKE_CURRENT_LIST_DIR}/tests/tests_uri.cpp)
     target_link_libraries(test_uris PRIVATE Catch2::Catch2WithMain ${COMPONENT})
     catch_discover_tests(test_uris)

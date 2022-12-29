@@ -1,38 +1,88 @@
 cmake_minimum_required(VERSION 3.16)
 
-project("Pangolin")
-set(PANGOLIN_VERSION_MAJOR 0)
-set(PANGOLIN_VERSION_MINOR 8)
-set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
+project(Pangolin
+  VERSION 2.0
+  DESCRIPTION "Lightweight Visualization and Input Library for Computer Vision"
+  LANGUAGES CXX
+)
 
+# See if we're the root project
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    include(CTest)
+endif()
 
-find_package(Eigen3 3.4.0 REQUIRED)
-find_package(farm_ng_core 0.1.0 REQUIRED)
-find_package(Sophus REQUIRED)
+##############################################################################
+# Options
 
+option( PANGOLIN_BUILD_TOOLS "Build Tools" ON )
+option( PANGOLIN_BUILD_EXAMPLES "Build Examples" ON )
+option( PANGOLIN_BUILD_TESTS "Build Tests" ON)
+option( PANGOLIN_BUILD_ASAN "Enable AddressSanitizer for Debug builds" OFF )
 
+##############################################################################
+# CMake includes / imports
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+include(FetchContent)
+include(CMakePackageConfigHelpers)
+include(SetPlatformVars)
+include(PangolinFactory)
+
+##############################################################################
 # Prevent in source builds
 if(EXISTS "${PROJECT_BINARY_DIR}/CMakeLists.txt")
     message(FATAL_ERROR "Source build detected: please use a subdir. You may remove 'CMakeCache.txt' and 'CMakeFiles'.")
 endif()
 
-# Make our own cmake imports accessible
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-
-include(SetPlatformVars)
-include(PangolinFactory)
-
-option( BUILD_TOOLS "Build Tools" ON )
-option( BUILD_EXAMPLES "Build Examples" ON )
-option( BUILD_ASAN "Enable AddressSanitizer for Debug builds" OFF )
-
+##############################################################################
 # Default build type (Override with cmake .. -DCMAKE_BUILD_TYPE=...)
+
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
   message(STATUS "Setting build type to '${CMAKE_BUILD_TYPE}' as none was specified.")
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
+
+##############################################################################
+# Declare dependencies. CMake will first try to use find_package for these, so
+# you can override location by specifying farm_ng_cmake_DIR, farm_ng_core_DIR,
+# Sophus_DIR etc. If they can't be found through find_package, they'll be
+# downloaded and configured through cmake. These libs are lightweight.
+
+FetchContent_Declare( farm_ng_cmake
+  GIT_REPOSITORY https://github.com/farm-ng/farm-ng-cmake.git
+  GIT_TAG        ae21a4f8214b6a3dc248422928f1571cf8387a2e
+  FIND_PACKAGE_ARGS NAMES farm_ng_cmake
+)
+FetchContent_Declare( farm_ng_core
+  GIT_REPOSITORY https://github.com/farm-ng/farm-ng-core.git
+  GIT_TAG        4225733de17933a44e865e38a65b0061300c88b3
+  FIND_PACKAGE_ARGS NAMES farm_ng_core
+)
+FetchContent_Declare( Sophus
+  GIT_REPOSITORY https://github.com/strasdat/Sophus.git
+  GIT_TAG        735a2b6d492ceada4d5f744f0f302baae5c17644
+  FIND_PACKAGE_ARGS NAMES Sophus
+)
+FetchContent_Declare( Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        GIT_TAG v2.13.6
+  FIND_PACKAGE_ARGS NAMES Catch2
+)
+FetchContent_Declare( fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG 9.1.0
+  FIND_PACKAGE_ARGS NAMES fmt
+)
+FetchContent_MakeAvailable(farm_ng_cmake)
+set(farm_ng_core_BUILD_TESTS off)
+set(Sophus_BUILD_TESTS off)
+set(BUILD_SOPHUS_TESTS off)
+include("${farm_ng_cmake_SOURCE_DIR}/cmake/farm_ng_cmakeConfig.cmake")
+# set(farm_ng_cmake_DIR "${farm_ng_cmake_SOURCE_DIR}")
+
+##############################################################################
+# Setup build config
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -76,42 +126,29 @@ else()
 endif()
 
 # run with "ASAN_OPTIONS=fast_unwind_on_malloc=0" to print stack with more details
-if(BUILD_ASAN)
+if(PANGOLIN_BUILD_ASAN)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} \
-        -fsanitize=address \
-        -fsanitize=bool \
-        -fsanitize=bounds \
-        -fsanitize=enum \
-        -fsanitize=float-cast-overflow \
-        -fsanitize=float-divide-by-zero \
-        -fsanitize=nonnull-attribute \
-        -fsanitize=returns-nonnull-attribute \
-        -fsanitize=signed-integer-overflow \
-        -fsanitize=undefined \
-        -fsanitize=vla-bound \
-        -fno-sanitize=alignment \
-        -fsanitize=leak \
-        -fsanitize=object-size \
-    ")
+    -fsanitize=address -fsanitize=bool -fsanitize=bounds -fsanitize=enum \
+    -fsanitize=float-cast-overflow -fsanitize=float-divide-by-zero \
+    -fsanitize=nonnull-attribute -fsanitize=returns-nonnull-attribute \
+    -fsanitize=signed-integer-overflow -fsanitize=undefined \
+    -fsanitize=vla-bound -fno-sanitize=alignment -fsanitize=leak \
+    -fsanitize=object-size")
 endif()
 
 #######################################################
 ## Testing setup
 
-option( BUILD_TESTS "Build Tests" OFF)
-find_package(Catch2 QUIET)
-if(TARGET Catch2::Catch2)
-    include(CTest)
+if(PANGOLIN_BUILD_TESTS)
+    FetchContent_MakeAvailable(Catch2)
+    list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
     include(Catch)
-else()
-    if(BUILD_TESTS)
-        message(WARNING "Building Tests requested, but Catch2 library not found.")
-        set( BUILD_TESTS OFF)
-    endif()
 endif()
 
 #######################################################
 ## Add all pangolin components
+
+FetchContent_MakeAvailable(fmt farm_ng_core Sophus)
 
 file(GLOB components_cmake "${CMAKE_CURRENT_LIST_DIR}/components/*/CMakeLists.txt")
 set(component_list "")
@@ -127,59 +164,68 @@ foreach(component_cmake ${components_cmake})
 endforeach()
 
 #######################################################
+#
+
+write_basic_package_version_file(
+    PangolinConfigVersion.cmake
+    VERSION ${CMAKE_PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+    )
+
+#######################################################
 ## Build Tree Export
 
 # Export Targets
-export(TARGETS ${component_list} FILE PangolinTargets.cmake)
-export(PACKAGE Pangolin)
+# export(TARGETS ${component_list} FILE PangolinTargets.cmake)
+# export(PACKAGE Pangolin)
 
-# Version information
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake.in
-"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" @ONLY)
+# # Version information
+# configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake.in
+# "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" @ONLY)
 
 # Build tree config
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
-${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY IMMEDIATE )
+# configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
+# ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY IMMEDIATE )
 
 
 #######################################################
 ## Install headers / targets
 
 # This relative path allows installed files to be relocatable.
-set( CMAKECONFIG_INSTALL_DIR lib/cmake/${PROJECT_NAME} )
-file( RELATIVE_PATH REL_INCLUDE_DIR
-    "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
-    "${CMAKE_INSTALL_PREFIX}/include"
-)
+# set( CMAKECONFIG_INSTALL_DIR lib/cmake/${PROJECT_NAME} )
+# file( RELATIVE_PATH REL_INCLUDE_DIR
+#     "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
+#     "${CMAKE_INSTALL_PREFIX}/include"
+# )
 
-install(
-    TARGETS ${component_list}
-    EXPORT ${PROJECT_NAME}Targets
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
-)
+# install(
+#     TARGETS ${component_list}
+#     EXPORT ${PROJECT_NAME}Targets
+#     LIBRARY DESTINATION lib
+#     ARCHIVE DESTINATION lib
+#     RUNTIME DESTINATION bin
+#     INCLUDES DESTINATION include
+# )
 
-install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-          "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-    DESTINATION ${CMAKECONFIG_INSTALL_DIR}
-)
-install(
-    EXPORT ${PROJECT_NAME}Targets DESTINATION ${CMAKECONFIG_INSTALL_DIR}
-)
+# install(
+#     FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+#           "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+#     DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+# )
+# install(
+#     EXPORT ${PROJECT_NAME}Targets DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+# )
 
-# uninstall target
-if(NOT TARGET uninstall)
-  configure_file(
-    "${CMAKE_CURRENT_LIST_DIR}/cmake/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
+# # uninstall target
+# if(NOT TARGET uninstall)
+#   configure_file(
+#     "${CMAKE_CURRENT_LIST_DIR}/cmake/cmake_uninstall.cmake.in"
+#     "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+#     IMMEDIATE @ONLY)
 
-  add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
-endif()
+#   add_custom_target(uninstall
+#     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+# endif()
 
 
 #######################################################
@@ -187,10 +233,10 @@ endif()
 
 set(Pangolin_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-if(BUILD_EXAMPLES)
+if(PANGOLIN_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
-# if(BUILD_TOOLS)
+# if(PANGOLIN_BUILD_TOOLS)
 #     add_subdirectory(tools)
 # endif()

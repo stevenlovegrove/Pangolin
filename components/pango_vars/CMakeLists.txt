@@ -15,7 +15,7 @@ install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
   DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
-if(BUILD_TESTS)
+if(PANGOLIN_BUILD_TESTS)
     add_executable(test_vars ${CMAKE_CURRENT_LIST_DIR}/tests/test_all.cpp)
     target_link_libraries(test_vars PRIVATE Catch2::Catch2WithMain ${COMPONENT})
     catch_discover_tests(test_vars)

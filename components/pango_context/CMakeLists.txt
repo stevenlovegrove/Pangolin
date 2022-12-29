@@ -30,7 +30,7 @@ set(component_file_basenames
 foreach(basename ${component_file_basenames})
   target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/${basename}.cpp )
 
-  if(BUILD_TESTS)
+  if(PANGOLIN_BUILD_TESTS)
       add_executable(${basename}_test ${CMAKE_CURRENT_LIST_DIR}/src/${basename}_test.cpp)
       target_link_libraries(${basename}_test PRIVATE Catch2::Catch2WithMain ${COMPONENT})
       catch_discover_tests(${basename}_test)
@@ -38,7 +38,8 @@ foreach(basename ${component_file_basenames})
 endforeach()
 
 find_package(Sophus REQUIRED)
-target_link_libraries(${COMPONENT} PUBLIC pango_opengl pango_windowing pango_vars Sophus::sophus_image Sophus::sophus_sensor)
+find_package(fmt REQUIRED)
+target_link_libraries(${COMPONENT} PUBLIC pango_opengl pango_windowing pango_vars sophus_image sophus_sensor fmt::fmt)
 
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
