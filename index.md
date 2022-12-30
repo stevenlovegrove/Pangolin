@@ -145,6 +145,18 @@ To contribute to Pangolin, I would appreciate pull requests against the master b
 
 
 
+## Installing Pangolin(vcpkg) ##
+
+You can download and install pangolin using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ./vcpkg integrate install
+    ./vcpkg install pangolin
+
+The pangolin port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+
 ## Extensibility & Factories
 
 Pangolin uses an extensible factory mechanism for modularising video drivers, windowing backends and console interpreters. Concrete instances are instantiated from a particular factory using a URI string which identifies which factory to use and what parameters it should use. As strings, URI's are a useful mechanism for providing and validating configuration from an end user. The URI form is:
