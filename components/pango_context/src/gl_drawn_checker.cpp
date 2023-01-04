@@ -28,9 +28,9 @@ struct GlDrawnChecker : public DrawnChecker {
     PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
   }
 
-  MinMax<Eigen::Vector3d> boundsInParent() const override
+  Interval<Eigen::Vector3d> boundsInParent() const override
   {
-    return MinMax<Eigen::Vector3d>::closed();
+    return Interval<Eigen::Vector3d>::closed();
   }
 
   private:

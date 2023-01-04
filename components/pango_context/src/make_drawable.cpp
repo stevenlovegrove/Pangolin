@@ -397,7 +397,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Circle3>::makeDrawable(
   std::vector<Eigen::Vector3f> vertices;
   vertices.reserve(num_vertices);
   for (size_t i = 0; i < num_vertices; ++i) {
-    auto const theta = (2.0 * M_PI) / num_vertices * i;
+    const auto theta = (2.0 * M_PI) / num_vertices * i;
     vertices.push_back(Eigen::Vector3d{
         circle.center + circle.radius * std::cos(theta) * circle.a +
         circle.radius * std::sin(theta) * circle.b}

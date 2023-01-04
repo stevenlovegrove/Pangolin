@@ -80,7 +80,7 @@ void GlVertexArrayObject::addVertexAttrib(
 
   const sophus::RuntimePixelType data_type = bo.dataType();
   auto maybe_gl_fmt = glTypeInfo(data_type);
-  const GlFormatInfo gl_fmt = FARM_UNWRAP(maybe_gl_fmt);
+  const GlFormatInfo gl_fmt = SOPHUS_UNWRAP(maybe_gl_fmt);
 
   if (isGlIntegralDatatype(gl_fmt.gl_type)) {
     PANGO_GL(glVertexAttribIPointer(

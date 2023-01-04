@@ -20,7 +20,7 @@ struct DepthSamplerImageImpl : public DepthSamplerImage {
   }
 
   std::optional<Sample> sampleDepth(
-      const SampleLocation& location, int patch_rad, MinMax<double> near_far,
+      const SampleLocation& location, int patch_rad, Interval<double> near_far,
       const Context* default_context) override
   {
     const Eigen::Array2i pix = location.pos_camera_pixel.cast<int>();

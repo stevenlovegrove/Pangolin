@@ -50,7 +50,7 @@ struct GlDrawnImage : public DrawnImage {
     PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
   }
 
-  MinMax<Eigen::Vector3d> boundsInParent() const override
+  Interval<Eigen::Vector3d> boundsInParent() const override
   {
     return {
         Eigen::Vector3d(-0.5, -0.5, 1.0),

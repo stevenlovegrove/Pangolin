@@ -30,7 +30,7 @@ struct DrawLayerRenderState {
   sophus::CameraModel camera;
   sophus::SE3d camera_from_world;
   sophus::Sim2<double> clip_view_transform;
-  MinMax<double> near_far;
+  Interval<double> near_far;
 
   AspectPolicy aspect_policy;
   ImageXy image_convention;
@@ -47,7 +47,7 @@ struct DrawLayer : public Layer {
   virtual void setCamera(const sophus::CameraModel&) = 0;
   virtual void setCameraFromWorld(const sophus::Se3<double>&) = 0;
   virtual void setClipViewTransform(sophus::Sim2<double>&) = 0;
-  virtual void setNearFarPlanes(const MinMax<double>&) = 0;
+  virtual void setNearFarPlanes(const Interval<double>&) = 0;
   virtual void add(
       const Shared<Drawable>& r, In domain, const std::string& name = "") = 0;
   virtual std::shared_ptr<Drawable> get(const std::string& name) const = 0;
@@ -129,7 +129,7 @@ struct DrawLayer : public Layer {
 
     std::optional<sophus::CameraModel> camera = std::nullopt;
     std::optional<sophus::Se3F64> camera_from_world = std::nullopt;
-    MinMax<double> near_far = {1e-3, 1e6};
+    Interval<double> near_far = {1e-3, 1e6};
 
     // Objects to draw through modelview transform
     std::vector<Shared<Drawable>> in_scene = {};

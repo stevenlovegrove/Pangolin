@@ -14,13 +14,13 @@ class DepthSamplerImpl : public DepthSampler
   DepthSamplerImpl(const DepthSampler::Params& p) : context_(p.context) {}
 
   std::optional<Sample> sampleDepth(
-      const SampleLocation& location, int patch_rad, MinMax<double> near_far,
+      const SampleLocation& location, int patch_rad, Interval<double> near_far,
       const Context* default_context) override
   {
     using namespace sophus;
 
     const Eigen::Array2i pix = location.pos_window.cast<int>();
-    MinMax<Eigen::Array2i> region = {
+    Interval<Eigen::Array2i> region = {
         pix - Eigen::Array2i(patch_rad, patch_rad),
         pix + Eigen::Array2i(patch_rad, patch_rad)};
 

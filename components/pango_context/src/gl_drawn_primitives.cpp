@@ -46,9 +46,9 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     }
   }
 
-  MinMax<Eigen::Vector3d> boundsInParent() const override
+  Interval<Eigen::Vector3d> boundsInParent() const override
   {
-    return MinMax<Eigen::Vector3d>();
+    return Interval<Eigen::Vector3d>();
   }
 
   void drawAxes(const ViewParams& params)
@@ -191,7 +191,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
             glDrawArrays(toGlEnum(element_type), 0, vertices->numElements()));
       } else {
         const auto maybe_gl_fmt = glTypeInfo(indices->dataType());
-        const GlFormatInfo gl_fmt = FARM_UNWRAP(maybe_gl_fmt);
+        const GlFormatInfo gl_fmt = SOPHUS_UNWRAP(maybe_gl_fmt);
 
         auto bind_ibo = indices->bind();
         PANGO_GL(glDrawElements(

@@ -211,7 +211,7 @@ inline void GlTexture::Upload(
 inline void GlTexture::Load(const IntensityImage<>& image, bool sampling_linear)
 {
   auto maybe_glfmt = glTypeInfo(image.pixelType());
-  auto glfmt = FARM_UNWRAP(maybe_glfmt);
+  auto glfmt = SOPHUS_UNWRAP(maybe_glfmt);
 
   Reinitialise(
       (GLint)image.width(), (GLint)image.height(), glfmt.gl_sized_format,

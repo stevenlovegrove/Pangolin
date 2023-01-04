@@ -33,9 +33,9 @@ struct GlDrawnSolids : public DrawnSolids {
     PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
   }
 
-  MinMax<Eigen::Vector3d> boundsInParent() const override
+  Interval<Eigen::Vector3d> boundsInParent() const override
   {
-    return MinMax<Eigen::Vector3d>();
+    return Interval<Eigen::Vector3d>();
   }
 
   private:

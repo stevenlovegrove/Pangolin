@@ -28,7 +28,7 @@ Eigen::Matrix3d invProjectionCameraFromImage(
 // recommended to set 'far' to infinity for perspective projections, and a
 // finite value for orthographic.
 Eigen::Matrix4d transformProjectionFromImage(
-    MinMax<double> near_far_in_world_units,
+    Interval<double> near_far_in_world_units,
     GraphicsProjection projection = GraphicsProjection::perspective);
 
 // Returns 4x4 transform which takes z-buffer mapped pixel homogenious points
@@ -38,17 +38,17 @@ Eigen::Matrix4d transformClipFromProjection(
     ImageXy image_convention = Conventions::global().image_xy,
     ImageIndexing image_indexing = Conventions::global().image_indexing);
 
-Eigen::Matrix3d transformWindowFromClip(MinMax<Eigen::Array2i> viewport);
+Eigen::Matrix3d transformWindowFromClip(Interval<Eigen::Array2i> viewport);
 
 Eigen::Matrix4d projectionClipFromCamera(
     sophus::ImageSize size, Eigen::Vector2d focal_distance_pixels,
-    Eigen::Vector2d principle_point, MinMax<double> near_far_in_world_units,
+    Eigen::Vector2d principle_point, Interval<double> near_far_in_world_units,
     DeviceXyz coord_convention = Conventions::global().device_xyz,
     ImageXy image_convention = Conventions::global().image_xy,
     ImageIndexing image_indexing = Conventions::global().image_indexing);
 
 Eigen::Matrix4d projectionClipFromOrtho(
-    MinMax<Eigen::Vector2d> extent, MinMax<double> near_far_in_world_units,
+    Interval<Eigen::Vector2d> extent, Interval<double> near_far_in_world_units,
     ImageXy image_convention = Conventions::global().image_xy,
     ImageIndexing image_indexing = Conventions::global().image_indexing);
 

@@ -66,7 +66,7 @@ struct DrawLayerImpl : public DrawLayer {
     render_state_.clip_view_transform = clip_view_transform;
   }
 
-  void setNearFarPlanes(const MinMax<double>& near_far) override
+  void setNearFarPlanes(const Interval<double>& near_far) override
   {
     render_state_.near_far = near_far;
   }
@@ -74,8 +74,9 @@ struct DrawLayerImpl : public DrawLayer {
   // // Shrinks viewport such that aspect matches the provided camera
   // dimensions.
   // // Will leave padding on in dimension unrendered.
-  // static MinMax<Eigen::Array2i>
-  // viewportFromCameraAspect(double cam_aspect, MinMax<Eigen::Array2i> region)
+  // static Interval<Eigen::Array2i>
+  // viewportFromCameraAspect(double cam_aspect, Interval<Eigen::Array2i>
+  // region)
   // {
   //     const Eigen::Array2i region_size = region.range();
   //     const double region_aspect = double(region_size.x()) /
@@ -100,7 +101,7 @@ struct DrawLayerImpl : public DrawLayer {
 
   std::optional<Eigen::Array2i> tryGetDrawableBaseImageSize() const
   {
-    MinMax<Eigen::Vector3d> pixel_bounds;
+    Interval<Eigen::Vector3d> pixel_bounds;
     for (const auto& obj : pixels_collection_.drawables) {
       pixel_bounds.extend(obj->boundsInParent());
     }
@@ -145,7 +146,7 @@ struct DrawLayerImpl : public DrawLayer {
 
   static void updateRenderData(
       RenderData& state, const DrawLayerRenderState& render_state,
-      MinMax<Eigen::Array2i> viewport)
+      Interval<Eigen::Array2i> viewport)
   {
     state.clip_view = sim2To4x4(render_state.clip_view_transform);
     state.clip_aspect_scale =
@@ -296,7 +297,7 @@ struct DrawLayerImpl : public DrawLayer {
 
   double aspectHint() const override
   {
-    MinMax<Eigen::Vector3d> cam_bounds;
+    Interval<Eigen::Vector3d> cam_bounds;
     for (const auto& obj : pixels_collection_.drawables) {
       cam_bounds.extend(obj->boundsInParent());
     }

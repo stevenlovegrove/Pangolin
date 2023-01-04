@@ -149,9 +149,9 @@ struct GlDrawnText : public DrawnText {
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
-  MinMax<Eigen::Vector3d> boundsInParent() const override
+  Interval<Eigen::Vector3d> boundsInParent() const override
   {
-    return MinMax<Eigen::Vector3d>::closed();
+    return Interval<Eigen::Vector3d>::closed();
   }
 
   const Shared<GlSlProgram> prog = GlSlProgram::Create(
