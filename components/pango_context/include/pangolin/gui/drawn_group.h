@@ -17,9 +17,9 @@ struct DrawnGroup : public Drawable {
     }
   }
 
-  MinMax<Eigen::Vector3d> boundsInParent() const override
+  Interval<Eigen::Vector3d> boundsInParent() const override
   {
-    auto bounds = MinMax<Eigen::Vector3d>::closed();
+    auto bounds = Interval<Eigen::Vector3d>::closed();
     for (const auto& child : children) {
       // TODO: need a frame transform here.
       bounds.extend(child->boundsInParent());

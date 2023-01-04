@@ -60,14 +60,14 @@ jobs:
       with:
         path: ${{runner.workspace}}/Pangolin/farm_ng_core
         repository: 'farm-ng/farm-ng-core'
-        ref: 441262f92adadd533228957b01689a7a4e6644af
+        ref: ff841025c374e6ec8560412c3b5e28f1f6986a79
 
     - name: Checkout Sophus
       uses: actions/checkout@v2
       with:
         path: ${{runner.workspace}}/Pangolin/Sophus
         repository: 'strasdat/Sophus'
-        ref: 735a2b6d492ceada4d5f744f0f302baae5c17644
+        ref: 9aaa4cfea23e68258783ec0d44757bd06d8363f2
 
     - name: Checkout Pangolin
       uses: actions/checkout@v2

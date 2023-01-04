@@ -14,7 +14,7 @@ namespace pangolin
 struct Context;
 
 struct WindowPosition {
-  MinMax<Eigen::Array2i> region;
+  Interval<Eigen::Array2i> region;
   Eigen::Array2d pos_window;
 };
 

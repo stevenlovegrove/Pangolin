@@ -2,6 +2,7 @@
 
 #include <pangolin/gui/layer_group.h>
 #include <pangolin/maths/eigen_scalar_methods.h>
+#include <pangolin/utils/concept_utils.h>
 #include <pangolin/utils/variant_overload.h>
 #include <sophus/image/runtime_image.h>
 
@@ -138,7 +139,7 @@ LayerGroup flex(T head, TArgs... args)
 
 void computeLayoutConstraints(const LayerGroup& group);
 void computeLayoutRegion(
-    const LayerGroup& group, const MinMax<Eigen::Array2i>& region);
+    const LayerGroup& group, const Interval<Eigen::Array2i>& region);
 
 std::ostream& operator<<(std::ostream& s, const LayerGroup& layout);
 

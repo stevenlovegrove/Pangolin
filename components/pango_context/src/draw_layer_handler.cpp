@@ -23,7 +23,7 @@ struct PointerState {
 struct MouseUpdateArgs {
   // Potentially updated by function
   DrawLayerRenderState& render_state;
-  MinMax<Eigen::Vector3d>& camera_limits_in_world;
+  Interval<Eigen::Vector3d>& camera_limits_in_world;
   Eigen::Vector3d point_in_world;
   // Information
   PointerState pointer_now;
@@ -250,11 +250,11 @@ class HandlerImpl : public DrawLayerHandler
     using namespace sophus;
 
     const CameraModel camera = render_state.camera;
-    const MinMax<double> near_far = render_state.near_far;
+    const Interval<double> near_far = render_state.near_far;
     Se3<double>& camera_from_world = render_state.camera_from_world;
     Sim2<double>& clip_view_transform = render_state.clip_view_transform;
 
-    auto camera_limits_in_world = MinMax<Eigen::Vector3d>::open();
+    auto camera_limits_in_world = Interval<Eigen::Vector3d>::open();
 
     double zdepth_cam = last_zcam_;
 
@@ -326,7 +326,7 @@ class HandlerImpl : public DrawLayerHandler
 
               // When holding shift, selection is made
               if (event.modifier_active & ModifierKey::shift) {
-                auto selection = MinMax<Eigen::Array2d>(p_img);
+                auto selection = Interval<Eigen::Array2d>(p_img);
                 if (down_state_) {
                   selection.extend(down_state_->p_img);
                 }

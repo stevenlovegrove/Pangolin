@@ -90,14 +90,14 @@ struct Context : std::enable_shared_from_this<Context> {
   // window/buffer managed by the context, with origin respecting the
   // window_convention parameter.
   virtual void setViewport(
-      const MinMax<Eigen::Array2i>& region,
+      const Interval<Eigen::Array2i>& region,
       ImageXy window_convention = Conventions::global().image_xy) const = 0;
 
   // Read from the graphics device the specified buffer associated with this
   // context. For example, you can use this to read back an image to save, or to
   // query the rendered depth for user interaction.
   virtual sophus::IntensityImage<> read(
-      MinMax<Eigen::Array2i> region =
+      Interval<Eigen::Array2i> region =
           {},  // empty region will return full buffer
       Attachment attachment = Attachment::color,
       ImageXy image_axis_convention = Conventions::global().image_xy) const = 0;

@@ -162,7 +162,7 @@ void computeLayoutConstraints(const LayerGroup& group)
 }
 
 void computeLayoutRegion(
-    const LayerGroup& group, const MinMax<Eigen::Array2i>& region)
+    const LayerGroup& group, const Interval<Eigen::Array2i>& region)
 {
   // 2nd pass, top down
 
@@ -194,7 +194,7 @@ void computeLayoutRegion(
       for (const auto& child : group.children) {
         const int w = int(
             child.cached_.min_pix[0] + child.cached_.parts[0] * ratio_unit_pix);
-        const MinMax<Eigen::Array2i> child_region(
+        const Interval<Eigen::Array2i> child_region(
             Eigen::Array2i(x, region.min()[1]),
             Eigen::Array2i(x + w - 1, region.max()[1]));
         computeLayoutRegion(child, child_region);
@@ -215,7 +215,7 @@ void computeLayoutRegion(
       for (const auto& child : group.children) {
         const int h = int(
             child.cached_.min_pix[1] + child.cached_.parts[1] * ratio_unit_pix);
-        const MinMax<Eigen::Array2i> child_region(
+        const Interval<Eigen::Array2i> child_region(
             Eigen::Array2i(region.min()[0], y),
             Eigen::Array2i(region.max()[0], y + h - 1));
         computeLayoutRegion(child, child_region);
@@ -285,7 +285,7 @@ void computeLayoutRegion(
           x = region.min()[0];
           y += h;
         }
-        const MinMax<Eigen::Array2i> child_region(
+        const Interval<Eigen::Array2i> child_region(
             Eigen::Array2i(x, y), Eigen::Array2i(x + w - 1, y + h - 1));
         computeLayoutRegion(child, child_region);
         x += w;
@@ -297,7 +297,7 @@ void computeLayoutRegion(
 std::ostream& operator<<(std::ostream& s, const LayerGroup& layout)
 {
   const auto& v = layout.children;
-  FARM_CHECK(v.size() > 0);
+  SOPHUS_ASSERT(v.size() > 0);
   if (layout.layer) s << "x";
   s << "(";
   s << v[0];

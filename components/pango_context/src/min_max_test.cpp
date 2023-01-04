@@ -11,27 +11,27 @@ namespace pangolin
 template <typename T>
 void typeChecks() {
   // Check default construction
-  MinMax<T> mm;
+  Interval<T> mm;
   CHECK(mm.min() == std::numeric_limits<T>::max());
   CHECK(mm.max() == std::numeric_limits<T>::lowest());
 
-  mm = MinMax<T>(10, 22);
-  CHECK(mm == MinMax<T>(10, 22));
+  mm = Interval<T>(10, 22);
+  CHECK(mm == Interval<T>(10, 22));
   mm.extend(11);
-  CHECK(mm == MinMax<T>(10, 22));
+  CHECK(mm == Interval<T>(10, 22));
   mm.extend(190);
-  CHECK(mm == MinMax<T>(10, 190));
+  CHECK(mm == Interval<T>(10, 190));
   mm.extend(7);
-  CHECK(mm == MinMax<T>(7, 190));
+  CHECK(mm == Interval<T>(7, 190));
 
-  mm.extend(MinMax<T>(70, 200));
-  CHECK(mm == MinMax<T>(7, 200));
+  mm.extend(Interval<T>(70, 200));
+  CHECK(mm == Interval<T>(7, 200));
 
-  mm.extend(MinMax<T>(6, 201));
-  CHECK(mm == MinMax<T>(6, 201));
+  mm.extend(Interval<T>(6, 201));
+  CHECK(mm == Interval<T>(6, 201));
 
-  CHECK(mm != MinMax<T>(5, 201));
-  CHECK(mm != MinMax<T>(6, 200));
+  CHECK(mm != Interval<T>(5, 201));
+  CHECK(mm != Interval<T>(6, 200));
 }
 
 TEST_CASE("minmax, scalar_test") {
@@ -40,7 +40,7 @@ TEST_CASE("minmax, scalar_test") {
   typeChecks<int16_t>();
   typeChecks<uint8_t>();
   typeChecks<size_t>();
-  MinMax<double> mm(-1.0);
+  Interval<double> mm(-1.0);
 }
 
 TEST_CASE("minmax, image_reduction") {
@@ -53,7 +53,7 @@ TEST_CASE("minmax, image_reduction") {
     }
     auto min_max = finiteMinMax(img);
     CHECK(
-        min_max == MinMax<double>(0.0, img.width() * img.height() - 1.0));
+        min_max == Interval<double>(0.0, img.width() * img.height() - 1.0));
   }
 }
 #endif

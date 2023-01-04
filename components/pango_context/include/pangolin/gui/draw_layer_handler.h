@@ -15,7 +15,7 @@ enum class ViewMode { freeview, image_plane, best_guess };
 
 struct SelectionEvent {
   Interactive::Event trigger_event;
-  MinMax<Eigen::Array2d> in_pixel_selection;
+  Interval<Eigen::Array2d> in_pixel_selection;
   bool in_progress;
 };
 
@@ -38,7 +38,7 @@ struct DrawLayerHandler {
   struct Params {
     Shared<DepthSampler> depth_sampler = DepthSampler::Create({});
     Eigen::Vector3d up_in_world = {0.0, 0.0, 1.0};
-    MinMax<Eigen::Vector3d> camera_limits_in_world = {};
+    Interval<Eigen::Vector3d> camera_limits_in_world = {};
     ViewMode view_mode = ViewMode::best_guess;
   };
   static Shared<DrawLayerHandler> Create(const Params&);

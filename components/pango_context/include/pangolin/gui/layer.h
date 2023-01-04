@@ -29,7 +29,7 @@ struct Layer : public Interactive {
   using Size = Eigen::Vector<Dim, 2>;
 
   struct RenderParams {
-    MinMax<Eigen::Array2i> region;
+    Interval<Eigen::Array2i> region;
   };
 
   virtual std::string name() const = 0;

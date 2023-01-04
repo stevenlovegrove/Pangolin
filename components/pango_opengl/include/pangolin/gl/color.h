@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <farm_ng/core/enum/enum.h>
+#include <sophus/common/enum.h>
 
 #include <cmath>
 #include <limits>
@@ -36,12 +36,12 @@
 namespace pangolin
 {
 
-FARM_ENUM(
+SOPHUS_ENUM(
     ColorHue, (red, orange, yellow, chartreuse, green, turquoise, cyan, azure,
                blue, violet, magenta, pink));
 
-FARM_ENUM(ColorBrightness, (bright, medium, dark));
-FARM_ENUM(ColorSaturation, (normal, neon));
+SOPHUS_ENUM(ColorBrightness, (bright, medium, dark));
+SOPHUS_ENUM(ColorSaturation, (normal, neon));
 
 struct Color {
   constexpr Color(float a = 1.0) : r(1.0), g(1.0), b(1.0), a(a) {}

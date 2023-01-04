@@ -70,7 +70,7 @@ inline farm_ng::Expected<GlFormatInfo> glTypeInfo(
          .gl_type = type_table[fidx]});
   }
 
-  return FARM_ERROR("Unsupported GL image type, {}", pixel_type);
+  return SOPHUS_UNEXPECTED("Unsupported GL image type, {}", pixel_type);
 }
 
 }  // namespace pangolin

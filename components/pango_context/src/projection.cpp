@@ -1,3 +1,4 @@
+#include <pangolin/maths/eigen_scalar_methods.h>
 #include <pangolin/maths/projection.h>
 #include <pangolin/utils/logging.h>
 
@@ -5,7 +6,7 @@ namespace pangolin
 {
 
 Eigen::Matrix4d transformProjectionFromImage(
-    MinMax<double> near_far_in_world_units, GraphicsProjection projection)
+    Interval<double> near_far_in_world_units, GraphicsProjection projection)
 {
   const double near = near_far_in_world_units.min();
   const double far = near_far_in_world_units.max();
@@ -65,7 +66,7 @@ Eigen::Matrix4d transformClipFromProjection(
   }
 }
 
-Eigen::Matrix3d transformWindowFromClip(MinMax<Eigen::Array2i> viewport)
+Eigen::Matrix3d transformWindowFromClip(Interval<Eigen::Array2i> viewport)
 {
   // TODO: fixup for 0.5 ofsets (for discrete coords)
   const Eigen::Array2d scale = cast<double>(viewport.range()) / 2.0;
@@ -98,7 +99,7 @@ Eigen::Matrix3d invProjectionCameraFromImage(
 }
 
 Eigen::Matrix<double, 4, 4> projectionClipFromOrtho(
-    MinMax<Eigen::Vector2d> extent, MinMax<double> near_far_in_world_units,
+    Interval<Eigen::Vector2d> extent, Interval<double> near_far_in_world_units,
     ImageXy image_convention, ImageIndexing image_indexing)
 {
   Eigen::Matrix4d m = Eigen::Matrix4d::Zero();

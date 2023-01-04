@@ -2,15 +2,15 @@
 
 #pragma once
 
-#include <farm_ng/core/enum/enum.h>
 #include <pangolin/utils/logging.h>
+#include <sophus/common/enum.h>
 #include <sophus/linalg/rotation_matrix.h>
 
 namespace pangolin
 {
 
 // clang-format off
-FARM_ENUM(
+SOPHUS_ENUM(
   AxisDirection2,
   (positive_x,
    positive_y,
@@ -22,7 +22,7 @@ FARM_ENUM(
 
 // Defines the semantic meaning of the coordinate axis
 // in relation to a physical camera or other device
-FARM_ENUM(
+SOPHUS_ENUM(
   DeviceXyz,
   (right_down_forward,        // Common in computer vision, where forward is the principle ray.
    forward_left_up,           // Common in robotics from a robotic egocentric perspective
@@ -30,21 +30,21 @@ FARM_ENUM(
 );
 
 
-FARM_ENUM(
+SOPHUS_ENUM(
   Handed,
   (left,
    right)
 );
 
 // Describes the semantic meaning of an images coordinate axis
-FARM_ENUM(
+SOPHUS_ENUM(
   ImageXy,
   (right_down,                // Common in computer vision
    right_up)                  // Common in graphics
 );
 
 // Describes how image indexing relates to discrete pixels in memory
-FARM_ENUM(
+SOPHUS_ENUM(
   ImageIndexing,
   (normalized_zero_one,       // x and y lie in the range [ 0,1] inclusive
    normalized_minus_one_one,  // x and y lie in the range [-1,1] inclusive
@@ -52,7 +52,7 @@ FARM_ENUM(
    pixel_continuous)          // integral index locations lie at corners. (0,0)
 );                            //      will lie at the corner of an edge pixel
 
-FARM_ENUM(
+SOPHUS_ENUM(
     DistanceUnits,
     (millimeters,
      centimeters,
@@ -61,7 +61,7 @@ FARM_ENUM(
      other)
 );
 
-FARM_ENUM(
+SOPHUS_ENUM(
   GraphicsProjection,
   (perspective,
    orthographic)

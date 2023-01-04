@@ -145,7 +145,7 @@ struct ContextImpl : public Context {
   }
 
   void setViewport(
-      const MinMax<Eigen::Array2i>& bounds,
+      const Interval<Eigen::Array2i>& bounds,
       ImageXy image_convention = Conventions::global().image_xy) const override
   {
     const auto gl_bounds = regionGlFromConvention(bounds, image_convention);
@@ -309,7 +309,7 @@ struct ContextImpl : public Context {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    MinMax<Eigen::Array2i> region;
+    Interval<Eigen::Array2i> region;
     region.extend({0, 0});
     region.extend({size_.width, size_.height});
 
@@ -335,7 +335,7 @@ struct ContextImpl : public Context {
   bool isRunning() const override { return should_run; }
 
   sophus::IntensityImage<> read(
-      MinMax<Eigen::Array2i> bounds, Attachment attachment,
+      Interval<Eigen::Array2i> bounds, Attachment attachment,
       ImageXy image_axis_convention) const override
   {
     using namespace sophus;
@@ -349,7 +349,7 @@ struct ContextImpl : public Context {
                  : RuntimePixelType::fromTemplate<sophus::Pixel3U8>();
 
     const auto maybe_gl_pixel_type = glTypeInfo(pixel_type);
-    const GlFormatInfo gl_pixel_type = FARM_UNWRAP(maybe_gl_pixel_type);
+    const GlFormatInfo gl_pixel_type = SOPHUS_UNWRAP(maybe_gl_pixel_type);
 
     sophus::IntensityImage<> image(ImageSize(imsize[0], imsize[1]), pixel_type);
 
@@ -364,8 +364,8 @@ struct ContextImpl : public Context {
   }
 
   private:
-  MinMax<Eigen::Array2i> regionGlFromConvention(
-      MinMax<Eigen::Array2i> bounds, ImageXy axis_convention) const
+  Interval<Eigen::Array2i> regionGlFromConvention(
+      Interval<Eigen::Array2i> bounds, ImageXy axis_convention) const
   {
     if (axis_convention == ImageXy::right_up) {
       // Same as OpenGL
