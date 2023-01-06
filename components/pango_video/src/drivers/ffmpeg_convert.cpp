@@ -44,43 +44,42 @@ FfmpegConverter::FfmpegConverter(
   for (size_t i = 0; i < videoin->Streams().size(); ++i) {
     const StreamInfo instrm = videoin->Streams()[i];
 
-    converters[i].w = instrm.Width();
-    converters[i].h = instrm.Height();
+    converters[i].w = instrm.shape().width();
+    converters[i].h = instrm.shape().height();
 
     converters[i].fmtdst = FfmpegFmtFromString(sfmtdst);
-    converters[i].fmtsrc = FfmpegFmtFromString(instrm.PixFormat());
+    converters[i].fmtsrc = FfmpegFmtFromString(ToString(instrm.format()));
     converters[i].img_convert_ctx = sws_getContext(
-        instrm.Width(), instrm.Height(), converters[i].fmtsrc, instrm.Width(),
-        instrm.Height(), converters[i].fmtdst, method, NULL, NULL, NULL);
+        instrm.shape().width(), instrm.shape().height(), converters[i].fmtsrc, instrm.shape().width(),
+        instrm.shape().height(), converters[i].fmtdst, method, NULL, NULL, NULL);
     if (!converters[i].img_convert_ctx)
       throw VideoException(
           "Could not create SwScale context for pixel conversion");
 
     converters[i].dst_buffer_offset = dst_buffer_size;
-    converters[i].src_buffer_offset = instrm.Offset() - (unsigned char*)0;
+    converters[i].src_buffer_offset = instrm.offsetBytes();
     // converters[i].src_buffer_offset=src_buffer_size;
 
     converters[i].avsrc = av_frame_alloc();
-    converters[i].avsrc->width = instrm.Width();
-    converters[i].avsrc->height = instrm.Height();
-    converters[i].avsrc->format = FfmpegFmtFromString(instrm.PixFormat());
+    converters[i].avsrc->width = instrm.shape().width();
+    converters[i].avsrc->height = instrm.shape().height();
+    converters[i].avsrc->format = FfmpegFmtFromString(ToString(instrm.format()));
     av_frame_get_buffer(converters[i].avsrc, 0);
 
     converters[i].avdst = av_frame_alloc();
-    converters[i].avdst->width = instrm.Width();
-    converters[i].avdst->height = instrm.Height();
+    converters[i].avdst->width = instrm.shape().width();
+    converters[i].avdst->height = instrm.shape().height();
     converters[i].avdst->format = FfmpegFmtFromString(sfmtdst);
     av_frame_get_buffer(converters[i].avdst, 0);
 
-    const PixelFormat pxfmtdst = PixelFormatFromString(sfmtdst);
+    const RuntimePixelType pxfmtdst = PixelFormatFromString(sfmtdst);
     const StreamInfo sdst(
-        pxfmtdst, instrm.Width(), instrm.Height(),
-        (instrm.Width() * pxfmtdst.bpp) / 8,
-        (unsigned char*)0 + converters[i].dst_buffer_offset);
+        pxfmtdst, instrm.shape(),
+        converters[i].dst_buffer_offset);
     streams.push_back(sdst);
 
     dst_buffer_size += av_image_get_buffer_size(
-        converters[i].fmtdst, instrm.Width(), instrm.Height(), 0);
+        converters[i].fmtdst, instrm.shape().width(), instrm.shape().height(), 0);
   }
 }
 

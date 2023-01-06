@@ -145,7 +145,7 @@ void FfmpegVideo::InitUrl(
     const AVCodec* pLocalCodec =
         avcodec_find_decoder(pLocalCodecParameters->codec_id);
     if (!pLocalCodec) {
-      pango_print_debug("Skipping stream with unsupported codec.\n");
+      PANGO_DEBUG("Skipping stream with unsupported codec.\n");
       stream->discard = AVDISCARD_ALL;
       continue;
     }
@@ -160,7 +160,7 @@ void FfmpegVideo::InitUrl(
       ++found_video_streams;
     } else {
       stream->discard = AVDISCARD_ALL;
-      pango_print_debug(
+      PANGO_DEBUG(
           "Skipping stream with supported but non-video codec.\n");
     }
   }
@@ -179,7 +179,7 @@ void FfmpegVideo::InitUrl(
     if (!var) {
       var = val;
     } else if (var != val) {
-      pango_print_warn("Inconsistent calculation for video.");
+      PANGO_WARN("Inconsistent calculation for video.");
     }
   };
 
@@ -194,7 +194,7 @@ void FfmpegVideo::InitUrl(
     if (duration_pts.den == 1) {
       vid_stream->duration = duration_pts.num;
     } else {
-      pango_print_warn("Non integral result for duration in pts. Ignoring.\n");
+      PANGO_WARN("Non integral result for duration in pts. Ignoring.\n");
     }
   }
 
@@ -207,7 +207,7 @@ void FfmpegVideo::InitUrl(
     if (frames_rational.num > 0 && frames_rational.den == 1) {
       numFrames = frames_rational.num;
     } else {
-      pango_print_warn("Non integral result for numFrames. Ignoring.\n");
+      PANGO_WARN("Non integral result for numFrames. Ignoring.\n");
     }
   }
 
@@ -217,7 +217,7 @@ void FfmpegVideo::InitUrl(
   } else {
     ptsPerFrame = 0;
     numFrames = 0;
-    pango_print_warn("Video Doesn't contain seeking information\n");
+    PANGO_WARN("Video Doesn't contain seeking information\n");
   }
 
   next_frame = 0;
@@ -267,12 +267,12 @@ void FfmpegVideo::InitUrl(
   // Populate stream info for users to query
   numBytesOut = 0;
   {
-    const PixelFormat strm_fmt =
+    const RuntimePixelType strm_fmt =
         PixelFormatFromString(FfmpegFmtToString(fmtout));
-    const size_t pitch = (w * strm_fmt.bpp) / 8;
+    const size_t pitch = strm_fmt.bytesPerPixel()*w;
     const size_t size_bytes = h * pitch;
     streams.emplace_back(
-        strm_fmt, w, h, pitch, (unsigned char*)0 + numBytesOut);
+        strm_fmt, ImageShape(w,h,pitch), numBytesOut);
     numBytesOut += size_bytes;
   }
 
@@ -356,8 +356,8 @@ size_t FfmpegVideo::Seek(size_t frameid)
       // before that.
       next_frame = frameid;
     } else {
-      pango_print_info(
-          "error whilst seeking. %u, %s\n", (unsigned)frameid,
+      PANGO_WARN(
+          "error whilst seeking. {}, {}\n", (unsigned)frameid,
           ffmpeg_error_string(res).data());
     }
   }
