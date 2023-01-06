@@ -85,7 +85,7 @@ void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
     if (response == AVERROR(EAGAIN) || response == AVERROR_EOF) {
       break;
     } else if (response < 0) {
-      pango_print_error("Error while receiving packet from encoder.\n");
+      PANGO_ERROR("Error while receiving packet from encoder.\n");
       return;
     }
 
@@ -162,7 +162,7 @@ FfmpegVideoOutputStream::FfmpegVideoOutputStream(
     int bit_rate, const StreamInfo& input_info, bool flip_image) :
     recorder(recorder),
     input_info(input_info),
-    input_format(FfmpegFmtFromString(input_info.PixFormat())),
+    input_format(FfmpegFmtFromString(ToString(input_info.format()))),
     output_format(FfmpegFmtFromString("YUV420P")),
     last_pts(-1),
     sws_ctx(NULL),
@@ -170,8 +170,8 @@ FfmpegVideoOutputStream::FfmpegVideoOutputStream(
     flip(flip_image)
 {
   codec_context = CreateVideoCodecContext(
-      codec_id, frame_rate, bit_rate, output_format, input_info.Width(),
-      input_info.Height());
+      codec_id, frame_rate, bit_rate, output_format, input_info.shape().width(),
+      input_info.shape().height());
   stream = CreateStream(recorder.oc, codec_context);
 
   // Allocate frame
@@ -185,8 +185,8 @@ FfmpegVideoOutputStream::FfmpegVideoOutputStream(
 
   src_frame = av_frame_alloc();
   src_frame->format = input_format;
-  src_frame->width = input_info.Width();
-  src_frame->height = input_info.Height();
+  src_frame->width = input_info.shape().width();
+  src_frame->height = input_info.shape().height();
   if (av_frame_get_buffer(src_frame, 0)) {
     throw VideoException("Could not allocate picture");
   }
@@ -240,7 +240,7 @@ void FfmpegVideoOutput::Initialise(std::string filename)
   int ret = avformat_alloc_output_context2(&oc, NULL, NULL, filename.c_str());
 
   if (ret < 0 || !oc) {
-    pango_print_error(
+    PANGO_ERROR(
         "Could not deduce output format from file extension: using MPEG.\n");
     ret = avformat_alloc_output_context2(&oc, NULL, "mpeg", filename.c_str());
     if (ret < 0 || !oc) throw VideoException("Couldn't create AVFormatContext");
@@ -300,7 +300,7 @@ void FfmpegVideoOutput::SetStreams(
   }
 
   if (!properties.is<picojson::null>()) {
-    pango_print_warn("Ignoring attached video properties.");
+    PANGO_WARN("Ignoring attached video properties.");
   }
 }
 
@@ -310,8 +310,9 @@ int FfmpegVideoOutput::WriteStreams(
   for (std::vector<FfmpegVideoOutputStream*>::iterator i = streams.begin();
        i != streams.end(); ++i) {
     FfmpegVideoOutputStream& s = **i;
-    Image<unsigned char> img = s.GetStreamInfo().StreamImage(data);
-    s.WriteImage(img.ptr, img.w, img.h);
+    ImageView<unsigned char> img = s.GetStreamInfo().StreamImage(data);
+    PANGO_ASSERT(img.isContiguous())
+    s.WriteImage(img.ptr(), img.width(), img.height());
   }
   return frame_count++;
 }
