@@ -18,6 +18,7 @@ struct SelectionEvent {
   Interval<Eigen::Array2d> in_pixel_selection;
   bool in_progress;
   Eigen::Vector3d p_world;
+  Eigen::Vector2d p_img;
 };
 
 struct DrawLayerHandler {
