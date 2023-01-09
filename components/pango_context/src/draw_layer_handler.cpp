@@ -335,7 +335,8 @@ class HandlerImpl : public DrawLayerHandler
                     .trigger_event = event,
                     .in_pixel_selection = selection,
                     .in_progress = arg.action == PointerAction::down ||
-                                   arg.action == PointerAction::drag});
+                                   arg.action == PointerAction::drag,
+                    .p_world = p_world});
               }
             },
             [&](const Interactive::ScrollEvent& arg) {
