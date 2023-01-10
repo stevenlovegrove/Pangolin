@@ -28,11 +28,11 @@ in vec2 graph;
 
 uniform vec4 color_background;
 uniform vec4 tick_color_scale;
-uniform float tick_to_tick;
-uniform vec2 graph_per_pix;
-uniform vec2 log10_view;
-uniform vec2 log10_start;
-uniform vec2 unit_graph_start;
+uniform float num_divisions;
+uniform vec2 graph_units_per_pixel;
+uniform vec2 log_s_min_dist;
+uniform vec2 log_s_of_octave_start;
+uniform vec2 octave_start;
 
 out vec4 color;
 
@@ -52,17 +52,18 @@ vec2 modDist(vec2 v, vec2 modval)
 void main() {
   vec4 atten = tick_color_scale;
   vec4 one_minus_atten = vec4(1.0) - tick_color_scale;
-  vec2 unit_graph = unit_graph_start;
+  vec2 ith_octave_start = octave_start;
 
   color = color_background;
 
-  for(int i=0; i < 4; ++i) {
-    vec2 dist_pix = modDist(graph, unit_graph) / graph_per_pix;
-    vec2 logdiff = log10_start - log10_view; // [0-1].
+  int num_octaves = 4;
+  for(int i=0; i < num_octaves; ++i) {
+    vec2 dist_pix = modDist(graph, ith_octave_start) / graph_units_per_pixel;
+    vec2 logdiff = log_s_of_octave_start - log_s_min_dist; // [0-1].
     vec4 attenuation_x = (i==0) ? vec4(1.0) - one_minus_atten * logdiff.x : atten;
     vec4 attenuation_y = (i==0) ? vec4(1.0) - one_minus_atten * logdiff.y : atten;
     color *= transition(attenuation_x, vec4(1.0), 1.5, dist_pix.x);
     color *= transition(attenuation_y, vec4(1.0), 1.5, dist_pix.y);
-    unit_graph *= tick_to_tick;
+    ith_octave_start *= num_divisions;
   }
 }
