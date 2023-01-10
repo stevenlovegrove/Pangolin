@@ -6,8 +6,6 @@ set(component_file_basenames
   draw_layer_handler
   look_at
   projection
-  min_max
-  shared
   depth_sampler
   depth_sampler_image
   make_drawable
