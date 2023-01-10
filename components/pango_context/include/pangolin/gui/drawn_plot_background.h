@@ -22,7 +22,7 @@ struct DrawnPlotBackground : public Drawable {
     Eigen::Vector4f tick_color_scale = {0.90, 0.90, 0.90, 1.0};
 
     // The scale from one tick octave to the next
-    float tick_to_tick = 5.0;
+    float num_divisions = 5.0;
   };
   static Shared<DrawnPlotBackground> Create(Params p);
 };
