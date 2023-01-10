@@ -11,11 +11,6 @@ jobs:
   pre-commit-check:
       runs-on: ubuntu-latest
       steps:
-        - name: Checkout workspace
-          uses: actions/checkout@v3
-        - name: Install pre-commit and install
-          run: |
-            pip install pre-commit pylint sympy==1.8
-            pre-commit install
-        - name: Run pre-commit checks
-          run: pre-commit run --all-files
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - uses: pre-commit/action@v3.0.0
