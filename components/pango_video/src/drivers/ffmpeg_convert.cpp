@@ -50,8 +50,9 @@ FfmpegConverter::FfmpegConverter(
     converters[i].fmtdst = FfmpegFmtFromString(sfmtdst);
     converters[i].fmtsrc = FfmpegFmtFromString(ToString(instrm.format()));
     converters[i].img_convert_ctx = sws_getContext(
-        instrm.shape().width(), instrm.shape().height(), converters[i].fmtsrc, instrm.shape().width(),
-        instrm.shape().height(), converters[i].fmtdst, method, NULL, NULL, NULL);
+        instrm.shape().width(), instrm.shape().height(), converters[i].fmtsrc,
+        instrm.shape().width(), instrm.shape().height(), converters[i].fmtdst,
+        method, NULL, NULL, NULL);
     if (!converters[i].img_convert_ctx)
       throw VideoException(
           "Could not create SwScale context for pixel conversion");
@@ -63,7 +64,8 @@ FfmpegConverter::FfmpegConverter(
     converters[i].avsrc = av_frame_alloc();
     converters[i].avsrc->width = instrm.shape().width();
     converters[i].avsrc->height = instrm.shape().height();
-    converters[i].avsrc->format = FfmpegFmtFromString(ToString(instrm.format()));
+    converters[i].avsrc->format =
+        FfmpegFmtFromString(ToString(instrm.format()));
     av_frame_get_buffer(converters[i].avsrc, 0);
 
     converters[i].avdst = av_frame_alloc();
@@ -74,12 +76,12 @@ FfmpegConverter::FfmpegConverter(
 
     const RuntimePixelType pxfmtdst = PixelFormatFromString(sfmtdst);
     const StreamInfo sdst(
-        pxfmtdst, instrm.shape(),
-        converters[i].dst_buffer_offset);
+        pxfmtdst, instrm.shape(), converters[i].dst_buffer_offset);
     streams.push_back(sdst);
 
     dst_buffer_size += av_image_get_buffer_size(
-        converters[i].fmtdst, instrm.shape().width(), instrm.shape().height(), 0);
+        converters[i].fmtdst, instrm.shape().width(), instrm.shape().height(),
+        0);
   }
 }
 
