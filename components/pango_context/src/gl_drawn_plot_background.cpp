@@ -48,7 +48,7 @@ struct GlDrawnPlotBackground : public DrawnPlotBackground {
         min_dist_in_pixels * graph_units_per_pixel;
 
     // let s be the number of subdivisions ('grid lines') per octave.
-    double s = u_num_divisions.getValue();
+    const double s = u_num_divisions.getValue();
 
     // log with base s of minimum distance between tics (in graph units)
     Eigen::Array2d log_s_min_dist = tics_min_dist_in_graph.log() / std::log(s);
