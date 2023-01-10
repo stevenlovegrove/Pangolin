@@ -145,12 +145,13 @@ struct ContextImpl : public Context {
   }
 
   void setViewport(
-      const Interval<Eigen::Array2i>& bounds,
+      const Region2I& bounds,
       ImageXy image_convention = Conventions::global().image_xy) const override
   {
     const auto gl_bounds = regionGlFromConvention(bounds, image_convention);
     const Eigen::Array2i pos = gl_bounds.min();
-    const Eigen::Array2i size = gl_bounds.range() + Eigen::Array2i(1, 1);
+    const Eigen::Array2i size =
+        gl_bounds.range().array() + Eigen::Array2i(1, 1);
     glViewport(pos.x(), pos.y(), size.x(), size.y());
     glScissor(pos.x(), pos.y(), size.x(), size.y());
   }
@@ -309,7 +310,7 @@ struct ContextImpl : public Context {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Interval<Eigen::Array2i> region;
+    Region2I region = Region2I::empty();
     region.extend({0, 0});
     region.extend({size_.width, size_.height});
 
@@ -335,13 +336,13 @@ struct ContextImpl : public Context {
   bool isRunning() const override { return should_run; }
 
   sophus::IntensityImage<> read(
-      Interval<Eigen::Array2i> bounds, Attachment attachment,
+      Region2I bounds, Attachment attachment,
       ImageXy image_axis_convention) const override
   {
     using namespace sophus;
     const auto gl_bounds =
         regionGlFromConvention(bounds, image_axis_convention);
-    const Eigen::Array2i imsize = bounds.range() + Eigen::Array2i(1, 1);
+    const Eigen::Array2i imsize = bounds.range().array() + Eigen::Array2i(1, 1);
     const bool is_depth = attachment == Attachment::depth;
 
     const RuntimePixelType pixel_type =
@@ -364,8 +365,8 @@ struct ContextImpl : public Context {
   }
 
   private:
-  Interval<Eigen::Array2i> regionGlFromConvention(
-      Interval<Eigen::Array2i> bounds, ImageXy axis_convention) const
+  Region2I regionGlFromConvention(
+      Region2I bounds, ImageXy axis_convention) const
   {
     if (axis_convention == ImageXy::right_up) {
       // Same as OpenGL
@@ -373,9 +374,10 @@ struct ContextImpl : public Context {
     } else if (axis_convention == ImageXy::right_down) {
       // Reverse image Y
       const Eigen::Array2i pos = bounds.min();
-      const Eigen::Array2i size = bounds.range() + Eigen::Array2i(1, 1);
+      const Eigen::Array2i size = bounds.range().array() + Eigen::Array2i(1, 1);
       int y = size_.height - pos.y() - size.y();
-      return {{pos.x(), y}, {pos.x() + size.x() - 1, y + size.y() - 1}};
+      return Region2I::fromMinMax(
+          {pos.x(), y}, {pos.x() + size.x() - 1, y + size.y() - 1});
     } else {
       PANGO_UNREACHABLE();
     }

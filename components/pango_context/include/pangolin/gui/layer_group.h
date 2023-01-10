@@ -35,7 +35,7 @@ struct LayerGroup {
     Eigen::Array2i min_pix = {0, 0};
     Eigen::Array2d parts = {0.0f, 0.0f};
     double aspect_hint = 0.0;
-    Interval<Eigen::Array2i> region;
+    Region2I region = Region2I::empty();
   };
 
   mutable LayoutInfo cached_;

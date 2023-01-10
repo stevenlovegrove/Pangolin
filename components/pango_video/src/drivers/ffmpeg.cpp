@@ -137,7 +137,7 @@ void FfmpegVideo::InitUrl(
   int found_video_streams = 0;
 
   // loop though all the streams and print its main information
-  for (int i = 0; i < pFormatCtx->nb_streams; i++) {
+  for (size_t i = 0; i < pFormatCtx->nb_streams; i++) {
     AVStream* stream = pFormatCtx->streams[i];
     const AVCodecParameters* pLocalCodecParameters = stream->codecpar;
 
@@ -174,7 +174,7 @@ void FfmpegVideo::InitUrl(
   // to pts
   auto vid_stream = pFormatCtx->streams[videoStream];
 
-  auto set_or_check = [this](int64_t& var, int64_t val) {
+  auto set_or_check = [](int64_t& var, int64_t val) {
     if (!var) {
       var = val;
     } else if (var != val) {
@@ -344,7 +344,7 @@ size_t FfmpegVideo::GetTotalFrames() const { return numFrames; }
 
 size_t FfmpegVideo::Seek(size_t frameid)
 {
-  if (ptsPerFrame && frameid != next_frame) {
+  if (ptsPerFrame && frameid != size_t(next_frame)) {
     const int64_t pts = ptsPerFrame * frameid;
     const int res = avformat_seek_file(pFormatCtx, videoStream, 0, pts, pts, 0);
     avcodec_flush_buffers(pCodecContext);

@@ -188,7 +188,7 @@ void GlWidgetLayer::renderIntoRegion(
   const auto size = p.region.range();
 
   const auto region = p.region.translated(-p.region.min())
-                          .cast<Eigen::Vector2d>()
+                          .cast<Eigen::Array2d>()
                           .translated({-0.5, -(0.5 + scroll_offset)});
 
   clip_from_pix = projectionClipFromOrtho(
@@ -293,8 +293,8 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
 }
 
 void GlWidgetLayer::SetValue(
-    const Eigen::Array2d& p, const Interval<Eigen::Array2i>& region,
-    bool pressed, bool dragging)
+    const Eigen::Array2d& p, const Region2I& region, bool pressed,
+    bool dragging)
 {
   auto w = WidgetXY(p, region);
   if (w.first == selected_widget && 0 <= w.first &&
@@ -338,7 +338,7 @@ void GlWidgetLayer::SetValue(
 }
 
 std::pair<int, Eigen::Vector2f> GlWidgetLayer::WidgetXY(
-    const Eigen::Array2d& p, const Interval<Eigen::Array2i>& region)
+    const Eigen::Array2d& p, const Region2I& region)
 {
   const Eigen::Vector2f p_view(
       p.x() - region.min().x(), p.y() - region.min().y() - scroll_offset);

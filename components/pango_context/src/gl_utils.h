@@ -1,7 +1,7 @@
 #pragma once
 
 #include <pangolin/gl/gl.h>
-#include <pangolin/maths/min_max.h>
+#include <pangolin/maths/region.h>
 
 namespace pangolin
 {

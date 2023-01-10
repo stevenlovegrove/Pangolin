@@ -39,7 +39,7 @@ struct GlDrawnPlotBackground : public DrawnPlotBackground {
 
     // how many graph units are there per pixel (graph units / pixels)
     Eigen::Array2d graph_units_per_pixel =
-        range_in_graph / params.viewport.range().cast<double>();
+        range_in_graph.array() / params.viewport.range().cast<double>().array();
 
     // minimum distance between tics in pixels
     const double min_dist_in_pixels = 10.0;
@@ -66,10 +66,7 @@ struct GlDrawnPlotBackground : public DrawnPlotBackground {
     PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
   }
 
-  Interval<Eigen::Vector3d> boundsInParent() const override
-  {
-    return Interval<Eigen::Vector3d>::closed();
-  }
+  Region3F64 boundsInParent() const override { return Region3F64::empty(); }
 
   private:
   const Shared<GlSlProgram> prog = GlSlProgram::Create(

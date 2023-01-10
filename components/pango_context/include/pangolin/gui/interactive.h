@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 #include <pangolin/maths/conventions.h>
-#include <pangolin/maths/min_max.h>
+#include <pangolin/maths/region.h>
 #include <pangolin/utils/flag_set.h>
 
 #include <optional>
@@ -14,7 +14,7 @@ namespace pangolin
 struct Context;
 
 struct WindowPosition {
-  Interval<Eigen::Array2i> region;
+  Region2I region = Region2I::empty();
   Eigen::Array2d pos_window;
 };
 

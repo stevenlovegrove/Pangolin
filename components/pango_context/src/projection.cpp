@@ -6,7 +6,7 @@ namespace pangolin
 {
 
 Eigen::Matrix4d transformProjectionFromImage(
-    Interval<double> near_far_in_world_units, GraphicsProjection projection)
+    RegionF64 near_far_in_world_units, GraphicsProjection projection)
 {
   const double near = near_far_in_world_units.min();
   const double far = near_far_in_world_units.max();
@@ -66,7 +66,7 @@ Eigen::Matrix4d transformClipFromProjection(
   }
 }
 
-Eigen::Matrix3d transformWindowFromClip(Interval<Eigen::Array2i> viewport)
+Eigen::Matrix3d transformWindowFromClip(Region2I viewport)
 {
   // TODO: fixup for 0.5 ofsets (for discrete coords)
   const Eigen::Array2d scale = cast<double>(viewport.range()) / 2.0;
@@ -99,7 +99,7 @@ Eigen::Matrix3d invProjectionCameraFromImage(
 }
 
 Eigen::Matrix<double, 4, 4> projectionClipFromOrtho(
-    Interval<Eigen::Vector2d> extent, Interval<double> near_far_in_world_units,
+    Region2F64 extent, RegionF64 near_far_in_world_units,
     ImageXy image_convention, ImageIndexing image_indexing)
 {
   Eigen::Matrix4d m = Eigen::Matrix4d::Zero();

@@ -17,9 +17,9 @@ struct DrawnGroup : public Drawable {
     }
   }
 
-  Interval<Eigen::Vector3d> boundsInParent() const override
+  Region3F64 boundsInParent() const override
   {
-    auto bounds = Interval<Eigen::Vector3d>::closed();
+    auto bounds = Region3F64::empty();
     for (const auto& child : children) {
       // TODO: need a frame transform here.
       bounds.extend(child->boundsInParent());

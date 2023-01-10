@@ -11,9 +11,9 @@ template <typename T>
 struct CommonTestsForType {
   static void run()
   {
-    T const lowest = MultiDimLimits<T>::lowest();
-    T const min = MultiDimLimits<T>::min();
-    T const max = MultiDimLimits<T>::max();
+    T const lowest = PointTypeLimits<T>::lowest();
+    T const min = PointTypeLimits<T>::min();
+    T const max = PointTypeLimits<T>::max();
 
     CHECK(reduce(
         min, max, true, [](auto a, auto b, bool& r) { r = r && (a < b); }));

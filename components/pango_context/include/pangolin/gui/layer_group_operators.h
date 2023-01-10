@@ -138,8 +138,7 @@ LayerGroup flex(T head, TArgs... args)
 ////////////////////////////////////////////////////////////////////
 
 void computeLayoutConstraints(const LayerGroup& group);
-void computeLayoutRegion(
-    const LayerGroup& group, const Interval<Eigen::Array2i>& region);
+void computeLayoutRegion(const LayerGroup& group, const Region2I& region);
 
 std::ostream& operator<<(std::ostream& s, const LayerGroup& layout);
 
