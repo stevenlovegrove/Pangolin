@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <sophus/common/eigen_scalar_method.h>
+#include <sophus/common/point_methods.h>
 
 namespace pangolin
 {

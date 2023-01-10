@@ -68,11 +68,11 @@ struct GlWidgetLayer : WidgetLayer {
   void UpdateCharsVBO(float width);
 
   void SetValue(
-      const Eigen::Array2d& p, const Interval<Eigen::Array2i>& region,
-      bool pressed, bool dragging);
+      const Eigen::Array2d& p, const Region2I& region, bool pressed,
+      bool dragging);
 
   std::pair<int, Eigen::Vector2f> WidgetXY(
-      const Eigen::Array2d& p, const Interval<Eigen::Array2i>& region);
+      const Eigen::Array2d& p, const Region2I& region);
 
   void process_var_event(const pangolin::VarState::Event& event);
 

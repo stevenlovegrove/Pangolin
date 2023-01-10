@@ -33,10 +33,7 @@ struct GlDrawnSolids : public DrawnSolids {
     PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
   }
 
-  Interval<Eigen::Vector3d> boundsInParent() const override
-  {
-    return Interval<Eigen::Vector3d>();
-  }
+  Region3F64 boundsInParent() const override { return Region3F64::empty(); }
 
   private:
   const Shared<GlSlProgram> prog = GlSlProgram::Create(

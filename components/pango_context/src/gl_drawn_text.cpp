@@ -132,7 +132,7 @@ struct GlDrawnText : public DrawnText {
           pos_in_clip4.head<3>() / pos_in_clip4.w();
       clip_from_pix_scale.diagonal().head<2>() =
           text->font_size_em * Eigen::Array2d(2.0, -2.0) /
-          p.viewport.range().cast<double>();
+          p.viewport.range().cast<double>().array();
       const Eigen::Matrix4d textclip_from_screenpix =
           sophus::SE3d::trans(pos_in_clip).matrix() * clip_from_pix_scale *
           sophus::SE3d::rotZ(text->angle).matrix();
@@ -149,10 +149,7 @@ struct GlDrawnText : public DrawnText {
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
-  Interval<Eigen::Vector3d> boundsInParent() const override
-  {
-    return Interval<Eigen::Vector3d>::closed();
-  }
+  Region3F64 boundsInParent() const override { return Region3F64::empty(); }
 
   const Shared<GlSlProgram> prog = GlSlProgram::Create(
       {.sources = {

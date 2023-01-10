@@ -50,13 +50,13 @@ struct GlDrawnImage : public DrawnImage {
     PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
   }
 
-  Interval<Eigen::Vector3d> boundsInParent() const override
+  Region3F64 boundsInParent() const override
   {
-    return {
+    return Region3F64::fromMinMax(
         Eigen::Vector3d(-0.5, -0.5, 1.0),
         Eigen::Vector3d(
             image->imageSize().width - 0.5, image->imageSize().height - 0.5,
-            1.0)};
+            1.0));
   }
 
   private:

@@ -14,15 +14,15 @@ class DepthSamplerImpl : public DepthSampler
   DepthSamplerImpl(const DepthSampler::Params& p) : context_(p.context) {}
 
   std::optional<Sample> sampleDepth(
-      const SampleLocation& location, int patch_rad, Interval<double> near_far,
+      const SampleLocation& location, int patch_rad, RegionF64 near_far,
       const Context* default_context) override
   {
     using namespace sophus;
 
     const Eigen::Array2i pix = location.pos_window.cast<int>();
-    Interval<Eigen::Array2i> region = {
+    auto region = Region2I::fromMinMax(
         pix - Eigen::Array2i(patch_rad, patch_rad),
-        pix + Eigen::Array2i(patch_rad, patch_rad)};
+        pix + Eigen::Array2i(patch_rad, patch_rad));
 
     const Context* context = context_ ? context_.get() : default_context;
     PANGO_CHECK(context);
@@ -46,8 +46,9 @@ class DepthSamplerImpl : public DepthSampler
         },
         patch);
 
-    if (sample.min_max.empty()) return std::nullopt;
-
+    if (sample.min_max.isEmpty()) {
+      return std::nullopt;
+    }
     return sample;
   }
 

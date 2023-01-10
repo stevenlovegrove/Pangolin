@@ -1,16 +1,16 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <pangolin/maths/min_max.h>
+#include <pangolin/maths/region.h>
 #include <pangolin/render/device_texture.h>
 
 namespace pangolin
 {
 
 struct ViewParams {
-  Interval<Eigen::Array2i> viewport;
+  Region2I viewport = Region2I::empty();
   sophus::ImageSize camera_dim;
-  Interval<double> near_far;
+  RegionF64 near_far = RegionF64::empty();
   Eigen::Matrix4d camera_from_drawable;
   Eigen::Matrix4d image_from_camera;
   Eigen::Matrix4d clip_from_image;
@@ -32,7 +32,7 @@ struct DrawablePose {
 struct Drawable {
   virtual ~Drawable() {}
   virtual void draw(const ViewParams&) = 0;
-  virtual Interval<Eigen::Vector3d> boundsInParent() const = 0;
+  virtual Region3F64 boundsInParent() const = 0;
   DrawablePose pose;
 };
 

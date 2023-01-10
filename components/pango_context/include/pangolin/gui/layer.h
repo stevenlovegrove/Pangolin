@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 #include <pangolin/gui/interactive.h>
-#include <pangolin/maths/min_max.h>
+#include <pangolin/maths/region.h>
 #include <pangolin/utils/shared.h>
 
 #include <variant>
@@ -29,7 +29,7 @@ struct Layer : public Interactive {
   using Size = Eigen::Vector<Dim, 2>;
 
   struct RenderParams {
-    Interval<Eigen::Array2i> region;
+    Region2I region;
   };
 
   virtual std::string name() const = 0;

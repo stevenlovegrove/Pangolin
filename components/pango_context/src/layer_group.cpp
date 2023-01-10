@@ -161,8 +161,7 @@ void computeLayoutConstraints(const LayerGroup& group)
   group.cached_ = total;
 }
 
-void computeLayoutRegion(
-    const LayerGroup& group, const Interval<Eigen::Array2i>& region)
+void computeLayoutRegion(const LayerGroup& group, const Region2I& region)
 {
   // 2nd pass, top down
 
@@ -194,7 +193,7 @@ void computeLayoutRegion(
       for (const auto& child : group.children) {
         const int w = int(
             child.cached_.min_pix[0] + child.cached_.parts[0] * ratio_unit_pix);
-        const Interval<Eigen::Array2i> child_region(
+        const auto child_region = Region2I::fromMinMax(
             Eigen::Array2i(x, region.min()[1]),
             Eigen::Array2i(x + w - 1, region.max()[1]));
         computeLayoutRegion(child, child_region);
@@ -215,7 +214,7 @@ void computeLayoutRegion(
       for (const auto& child : group.children) {
         const int h = int(
             child.cached_.min_pix[1] + child.cached_.parts[1] * ratio_unit_pix);
-        const Interval<Eigen::Array2i> child_region(
+        const auto child_region = Region2I::fromMinMax(
             Eigen::Array2i(region.min()[0], y),
             Eigen::Array2i(region.max()[0], y + h - 1));
         computeLayoutRegion(child, child_region);
@@ -285,7 +284,7 @@ void computeLayoutRegion(
           x = region.min()[0];
           y += h;
         }
-        const Interval<Eigen::Array2i> child_region(
+        const auto child_region = Region2I::fromMinMax(
             Eigen::Array2i(x, y), Eigen::Array2i(x + w - 1, y + h - 1));
         computeLayoutRegion(child, child_region);
         x += w;

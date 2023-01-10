@@ -46,10 +46,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     }
   }
 
-  Interval<Eigen::Vector3d> boundsInParent() const override
-  {
-    return Interval<Eigen::Vector3d>();
-  }
+  Region3F64 boundsInParent() const override { return Region3F64::empty(); }
 
   void drawAxes(const ViewParams& params)
   {
@@ -113,7 +110,8 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       } else {
         u_use_clip_size_units = true;
         Eigen::Array2f size_pix = Eigen::Vector2f(default_size, default_size);
-        u_size_clip = 2.0 * size_pix / params.viewport.range().cast<float>();
+        u_size_clip = 2.0 * size_pix.array() /
+                      params.viewport.range().cast<float>().array();
       }
 
       vao.addVertexAttrib(0, *vertices);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <pangolin/maths/conventions.h>
-#include <pangolin/maths/min_max.h>
+#include <pangolin/maths/region.h>
 #include <sophus/image/image_size.h>
 
 namespace pangolin
@@ -28,7 +28,7 @@ Eigen::Matrix3d invProjectionCameraFromImage(
 // recommended to set 'far' to infinity for perspective projections, and a
 // finite value for orthographic.
 Eigen::Matrix4d transformProjectionFromImage(
-    Interval<double> near_far_in_world_units,
+    RegionF64 near_far_in_world_units,
     GraphicsProjection projection = GraphicsProjection::perspective);
 
 // Returns 4x4 transform which takes z-buffer mapped pixel homogenious points
@@ -38,17 +38,17 @@ Eigen::Matrix4d transformClipFromProjection(
     ImageXy image_convention = Conventions::global().image_xy,
     ImageIndexing image_indexing = Conventions::global().image_indexing);
 
-Eigen::Matrix3d transformWindowFromClip(Interval<Eigen::Array2i> viewport);
+Eigen::Matrix3d transformWindowFromClip(Region2I viewport);
 
 Eigen::Matrix4d projectionClipFromCamera(
     sophus::ImageSize size, Eigen::Vector2d focal_distance_pixels,
-    Eigen::Vector2d principle_point, Interval<double> near_far_in_world_units,
+    Eigen::Vector2d principle_point, RegionF64 near_far_in_world_units,
     DeviceXyz coord_convention = Conventions::global().device_xyz,
     ImageXy image_convention = Conventions::global().image_xy,
     ImageIndexing image_indexing = Conventions::global().image_indexing);
 
 Eigen::Matrix4d projectionClipFromOrtho(
-    Interval<Eigen::Vector2d> extent, Interval<double> near_far_in_world_units,
+    Region2F64 extent, RegionF64 near_far_in_world_units,
     ImageXy image_convention = Conventions::global().image_xy,
     ImageIndexing image_indexing = Conventions::global().image_indexing);
 

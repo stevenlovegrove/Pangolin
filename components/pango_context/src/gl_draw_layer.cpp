@@ -66,7 +66,7 @@ struct DrawLayerImpl : public DrawLayer {
     render_state_.clip_view_transform = clip_view_transform;
   }
 
-  void setNearFarPlanes(const Interval<double>& near_far) override
+  void setNearFarPlanes(const RegionF64& near_far) override
   {
     render_state_.near_far = near_far;
   }
@@ -74,8 +74,8 @@ struct DrawLayerImpl : public DrawLayer {
   // // Shrinks viewport such that aspect matches the provided camera
   // dimensions.
   // // Will leave padding on in dimension unrendered.
-  // static Interval<Eigen::Array2i>
-  // viewportFromCameraAspect(double cam_aspect, Interval<Eigen::Array2i>
+  // static Region2I
+  // viewportFromCameraAspect(double cam_aspect, Region2I
   // region)
   // {
   //     const Eigen::Array2i region_size = region.range();
@@ -101,7 +101,7 @@ struct DrawLayerImpl : public DrawLayer {
 
   std::optional<Eigen::Array2i> tryGetDrawableBaseImageSize() const
   {
-    Interval<Eigen::Vector3d> pixel_bounds;
+    Region3F64 pixel_bounds = Region3F64::empty();
     for (const auto& obj : pixels_collection_.drawables) {
       pixel_bounds.extend(obj->boundsInParent());
     }
@@ -146,7 +146,7 @@ struct DrawLayerImpl : public DrawLayer {
 
   static void updateRenderData(
       RenderData& state, const DrawLayerRenderState& render_state,
-      Interval<Eigen::Array2i> viewport)
+      Region2I viewport)
   {
     state.clip_view = sim2To4x4(render_state.clip_view_transform);
     state.clip_aspect_scale =
@@ -269,10 +269,12 @@ struct DrawLayerImpl : public DrawLayer {
     Eigen::Matrix4d clip_from_proj =
         render_data_.clip_view * render_data_.clip_aspect *
         transformClipFromProjection(render_state_.camera.imageSize());
-
+    const Eigen::Array2d d =
+        event.pointer_pos.pos_window.cast<double>().array() -
+        sophus::cast<double>(event.pointer_pos.region.min()).array();
     const Eigen::Array2d pos_zero_one =
-        event.pointer_pos.region.fractionalPosition(
-            event.pointer_pos.pos_window.cast<double>());
+        d / sophus::cast<double>(event.pointer_pos.region.range()).array();
+
     const Eigen::Array2d pos_clip =
         (pos_zero_one * 2.0 - Eigen::Array2d(1.0, 1.0)) *
         Eigen::Array2d(1.0, -1.0);
@@ -297,11 +299,11 @@ struct DrawLayerImpl : public DrawLayer {
 
   double aspectHint() const override
   {
-    Interval<Eigen::Vector3d> cam_bounds;
+    Region3F64 cam_bounds = Region3F64::empty();
     for (const auto& obj : pixels_collection_.drawables) {
       cam_bounds.extend(obj->boundsInParent());
     }
-    if (!cam_bounds.empty()) {
+    if (!cam_bounds.isEmpty()) {
       Eigen::Vector2d dim = cam_bounds.range().head<2>();
       return dim.x() / dim.y();
     }

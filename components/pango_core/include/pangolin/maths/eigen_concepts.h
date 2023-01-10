@@ -5,7 +5,7 @@
 #include "pangolin/utils/concept_utils.h"
 
 #include <Eigen/Core>
-#include <sophus/common/eigen_concepts.h>
+#include <sophus/common/point_concepts.h>
 
 namespace pangolin
 {
