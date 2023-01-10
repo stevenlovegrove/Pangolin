@@ -160,8 +160,7 @@ void FfmpegVideo::InitUrl(
       ++found_video_streams;
     } else {
       stream->discard = AVDISCARD_ALL;
-      PANGO_DEBUG(
-          "Skipping stream with supported but non-video codec.\n");
+      PANGO_DEBUG("Skipping stream with supported but non-video codec.\n");
     }
   }
 
@@ -269,10 +268,9 @@ void FfmpegVideo::InitUrl(
   {
     const RuntimePixelType strm_fmt =
         PixelFormatFromString(FfmpegFmtToString(fmtout));
-    const size_t pitch = strm_fmt.bytesPerPixel()*w;
+    const size_t pitch = strm_fmt.bytesPerPixel() * w;
     const size_t size_bytes = h * pitch;
-    streams.emplace_back(
-        strm_fmt, ImageShape(w,h,pitch), numBytesOut);
+    streams.emplace_back(strm_fmt, ImageShape(w, h, pitch), numBytesOut);
     numBytesOut += size_bytes;
   }
 
