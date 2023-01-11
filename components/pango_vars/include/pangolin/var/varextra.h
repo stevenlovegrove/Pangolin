@@ -89,4 +89,20 @@ void DetachVar(const T& value)
   if (var) DetachVarByName(var->Meta().full_name);
 }
 
+// Return true if any of the pangolin variables are set.
+// Additionally, resets the 'gui_changed' flag on all input variables.
+bool checkReset() { return false; }
+template <typename Var, typename... Rest>
+bool checkReset(Var& var, Rest&... rest)
+{
+  bool res = false;
+  if (var.Meta().gui_changed) {
+    res = true;
+    var.Meta().gui_changed = false;
+  }
+  // avoid short-circuit so they all get reset
+  const bool other = checkReset(rest...);
+  return res | other;
+}
+
 }  // namespace pangolin
