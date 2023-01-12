@@ -1,8 +1,8 @@
 #pragma once
 
 #include <pangolin/gl/glplatform.h>
-#include <pangolin/maths/eigen_concepts.h>
-#include <pangolin/maths/eigen_scalar_methods.h>
+#include <pangolin/maths/point_concepts.h>
+#include <pangolin/maths/point_methods.h>
 
 namespace pangolin
 {

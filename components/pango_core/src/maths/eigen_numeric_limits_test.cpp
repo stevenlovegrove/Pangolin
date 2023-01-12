@@ -1,7 +1,7 @@
 // Copyright (c) farm-ng, inc. All rights reserved.
 
 #include <pangolin/maths/eigen_numeric_limits.h>
-#include <pangolin/maths/eigen_scalar_methods.h>
+#include <pangolin/maths/point_methods.h>
 #include <pangolin/testing/eigen.h>
 
 namespace pangolin

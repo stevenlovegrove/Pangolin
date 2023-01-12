@@ -1,1 +1,1 @@
-#include <pangolin/maths/eigen_scalar_methods.h>
+#include <pangolin/maths/point_methods.h>
