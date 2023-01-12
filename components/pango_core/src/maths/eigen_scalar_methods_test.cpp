@@ -2,7 +2,7 @@
 
 #include "test_data.h"
 
-#include <pangolin/maths/eigen_scalar_methods.h>
+#include <pangolin/maths/point_methods.h>
 #include <pangolin/testing/eigen.h>
 
 namespace pangolin

@@ -7,6 +7,6 @@
 namespace pangolin
 {
 
-using sophus::PointTypeLimits;
+using sophus::MultiDimLimits;
 
 }  // namespace pangolin

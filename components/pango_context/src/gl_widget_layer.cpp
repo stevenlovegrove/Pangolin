@@ -5,7 +5,7 @@
 #include <pangolin/context/context.h>
 #include <pangolin/context/factory.h>
 #include <pangolin/gl/glsl_program.h>
-#include <pangolin/maths/eigen_scalar_methods.h>
+#include <pangolin/maths/point_methods.h>
 #include <pangolin/maths/projection.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/utils/string.h>
