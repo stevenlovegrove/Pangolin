@@ -8,6 +8,21 @@
 namespace pangolin
 {
 
+template <typename T>
+concept ContainerWithDataMethod = requires(T)
+{
+  (void*)std::declval<T>().data();
+};
+
+template <ContainerWithDataMethod Container>
+std::shared_ptr<void> makeTypeErasedSharedPtr(Container&& container)
+{
+  using C = std::decay_t<Container>;
+  auto shared_data = std::make_shared<C>(std::forward<Container>(container));
+  auto shared_void = std::shared_ptr<void>(shared_data, shared_data->data());
+  return shared_void;
+}
+
 struct DeviceBuffer {
   enum class Kind {
     VertexIndices,
@@ -31,9 +46,9 @@ struct DeviceBuffer {
     size_t num_reserve_elements = 0;
   };
   struct Data {
-    std::shared_ptr<void> data;
     sophus::RuntimePixelType data_type;
     size_t num_elements = 0;
+    std::shared_ptr<void> data;
     UpdateParams params = {};
   };
 
@@ -45,29 +60,20 @@ struct DeviceBuffer {
 
   // Use with any contiguous, movable or copyable container with a
   // data() and size() method.
-  template <typename Container>
-  bool update(Container&& data, UpdateParams params)
+  template <ContainerWithDataMethod Container>
+  void update(
+      Container&& data,
+      UpdateParams params = {.dest_element = 0, .num_reserve_elements = 0})
   {
-    using C = std::decay_t<Container>;
     using T = std::decay_t<decltype(*data.data())>;
-    auto shared_data = std::make_shared<C>(std::forward<Container>(data));
-    auto shared_void = std::shared_ptr<void>(shared_data, shared_data->data());
-    if (shared_void == nullptr) {
-      return false;
-    }
+    const size_t num_elements = data.size();
+
     pushToUpdateQueue({
-        .data = shared_void,
         .data_type = sophus::RuntimePixelType::fromTemplate<T>(),
-        .num_elements = shared_data->size(),
+        .num_elements = num_elements,
+        .data = makeTypeErasedSharedPtr(data),
         .params = params,
     });
-    return true;
-  }
-
-  template <typename Container>
-  bool update(Container&& data)
-  {
-    return update(data, UpdateParams());
   }
 
   virtual void sync() const = 0;

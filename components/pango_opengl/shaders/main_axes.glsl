@@ -15,7 +15,7 @@ void main() {
 @start geometry
 #version 330
 layout (points) in;
-layout (line_strip, max_vertices = 5) out;
+layout (line_strip, max_vertices = 7) out;
 
 in mat4 cam_T_axes[];
 out vec4 vert_color;
@@ -35,19 +35,24 @@ void main() {
     // Transform to cam frame and project
     mat4 points_proj = proj * cam_T_axes[0] * points_axes;
 
+    // x-line
     vert_color = vec4(1.0, 0.0, 0.0, 1.0);
     gl_Position = points_proj[0];
     EmitVertex();
-    vert_color = color;
     gl_Position = points_proj[3];
     EmitVertex();
+    // y-line
     vert_color = vec4(0.0, 1.0, 0.0, 1.0);
+    gl_Position = points_proj[3];
+    EmitVertex();
     gl_Position = points_proj[1];
     EmitVertex();
-    vert_color = color;
     gl_Position = points_proj[3];
     EmitVertex();
+    // z-line
     vert_color = vec4(0.0, 0.0, 1.0, 1.0);
+    gl_Position = points_proj[3];
+    EmitVertex();
     gl_Position = points_proj[2];
     EmitVertex();
 }

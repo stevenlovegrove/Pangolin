@@ -26,7 +26,7 @@ struct DrawnImage : public Drawable {
 
   // optional transform which maps the pixel color space to the rendered
   // output intensity
-  std::optional<Eigen::MatrixXd> color_transform;
+  std::optional<Eigen::Matrix4d> color_transform;
 
   // if a palatte beside `none` is specified, the first (red) channel is used
   // as input to the non-linear map. Colormapping occurs after the linear
@@ -37,7 +37,7 @@ struct DrawnImage : public Drawable {
     sophus::IntensityImage<> image = {};
     Palette colormap = Palette::none;
     Interpolation interpolation = Interpolation::nearest;
-    std::optional<Eigen::MatrixXd> color_transform = std::nullopt;
+    std::optional<Eigen::Matrix4d> color_transform = std::nullopt;
   };
   static Shared<DrawnImage> Create(Params p);
 };

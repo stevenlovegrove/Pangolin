@@ -64,7 +64,6 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
       u_cam_from_drawable = params.camera_from_drawable.cast<float>();
-      u_color = default_color.cast<float>();
       u_size = default_size;
 
       auto bind_bo = vertices->bind();
