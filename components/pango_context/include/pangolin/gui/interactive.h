@@ -16,6 +16,14 @@ struct Context;
 struct WindowPosition {
   Region2I region = Region2I::empty();
   Eigen::Array2d pos_window;
+
+  // Eigen::Array2d posRegionNdc() const
+  // {
+  //   const auto r = region.cast<double>();
+  //   return (pos_window - r.min()) / r.range();
+  // }
+  // Eigen::Array2d posRegionClip() const { return posRegionNdc() * 2.0 - 1.0; }
+  // Eigen::Array2d posRegionWindow() const { return pos_window; }
 };
 
 enum class PointerAction {
