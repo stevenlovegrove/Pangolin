@@ -56,7 +56,8 @@ struct DeviceGlBuffer : public DeviceBuffer {
   void pushToUpdateQueue(const Data& u) override
   {
     SOPHUS_ASSERT(u.data);
-    SOPHUS_ASSERT_GE(u.num_elements, 0);
+    // always true
+    //SOPHUS_ASSERT_GE(u.num_elements, 0);
 
     std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
     updates_.push_back(u);
@@ -86,7 +87,8 @@ struct DeviceGlBuffer : public DeviceBuffer {
   void applyUpdateNow(const Data& u) const
   {
     SOPHUS_ASSERT(u.data);
-    SOPHUS_ASSERT_GE(u.num_elements, 0);
+    // always true
+    // SOPHUS_ASSERT_GE(u.num_elements, 0);
     if (u.num_elements == 0) {
       return;
     }
