@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pangolin/gl/scoped_bind.h>
+#include <pangolin/utils/scoped_bind.h>
 #include <pangolin/render/extra_pixel_traits.h>
 #include <pangolin/utils/shared.h>
 #include <sophus/image/runtime_image.h>

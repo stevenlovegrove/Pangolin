@@ -36,7 +36,8 @@ foreach(basename ${component_file_basenames})
 endforeach()
 
 find_package(Sophus REQUIRED)
-target_link_libraries(${COMPONENT} PUBLIC pango_opengl pango_windowing pango_vars Sophus::sophus_image Sophus::sophus_sensor)
+target_link_libraries(${COMPONENT} PUBLIC pango_windowing pango_vars Sophus::sophus_image Sophus::sophus_sensor)
+target_link_libraries(${COMPONENT} PRIVATE pango_opengl)
 
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pangolin/gl/color.h>
+#include <pangolin/color/color.h>
 #include <sophus/image/image_types.h>
 #include <sophus/lie/se3.h>
 

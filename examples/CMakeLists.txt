@@ -22,3 +22,6 @@ foreach(example IN LISTS examples)
     add_executable(${example} ${example}.cpp)
     target_link_libraries(${example} pango_context pango_video)
 endforeach()
+
+# explicitly link to OpenGL because we use it directly.
+target_link_libraries(6.overlay pango_opengl)
