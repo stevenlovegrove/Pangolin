@@ -1,6 +1,6 @@
 
+#include <pangolin/color/color.h>
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/gl/color.h>
 #include <pangolin/gl/gldraw.h>
 #include <pangolin/platform.h>
 #include <pangolin/windowing/window.h>
