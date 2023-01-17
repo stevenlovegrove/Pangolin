@@ -1,5 +1,5 @@
 #include <pangolin/context/context.h>
-#include <pangolin/gl/color.h>
+#include <pangolin/color/color.h>
 #include <pangolin/gui/all_layers.h>
 #include <pangolin/image/image_io.h>
 
