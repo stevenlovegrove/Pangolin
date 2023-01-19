@@ -43,9 +43,8 @@ template <typename T>
 class Var
 {
   public:
+  Var(const Var&) = default;
 
-  Var(Var const&) = default;
-   
   static T& Attach(T& variable, const VarMeta& meta)
   {
     VarState::I().AttachVar<T&>(variable, meta);

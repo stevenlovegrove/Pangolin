@@ -9,8 +9,10 @@ namespace pangolin
 {
 
 template <typename T>
-concept ContainerWithDataMethod =
-    requires(T) { (void*)std::declval<T>().data(); };
+concept ContainerWithDataMethod = requires(T)
+{
+  (void*)std::declval<T>().data();
+};
 
 template <ContainerWithDataMethod Container>
 std::shared_ptr<void> makeTypeErasedSharedPtr(Container&& container)

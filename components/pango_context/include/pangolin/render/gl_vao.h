@@ -1,8 +1,8 @@
 #pragma once
 
 #include <pangolin/gl/gl.h>
-#include <pangolin/utils/scoped_bind.h>
 #include <pangolin/render/device_buffer.h>
+#include <pangolin/utils/scoped_bind.h>
 
 #include <vector>
 
