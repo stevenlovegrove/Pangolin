@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <pangolin/utils/scoped_bind.h>
 #include <pangolin/gl/uniform.h>
+#include <pangolin/utils/scoped_bind.h>
 #include <pangolin/utils/shared.h>
 
 #include <filesystem>
