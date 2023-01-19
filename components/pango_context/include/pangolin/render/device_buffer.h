@@ -1,7 +1,7 @@
 #pragma once
 
-#include <pangolin/utils/scoped_bind.h>
 #include <pangolin/render/extra_pixel_traits.h>
+#include <pangolin/utils/scoped_bind.h>
 #include <pangolin/utils/shared.h>
 #include <sophus/image/runtime_image.h>
 
@@ -9,10 +9,8 @@ namespace pangolin
 {
 
 template <typename T>
-concept ContainerWithDataMethod = requires(T)
-{
-  (void*)std::declval<T>().data();
-};
+concept ContainerWithDataMethod =
+    requires(T) { (void*)std::declval<T>().data(); };
 
 template <ContainerWithDataMethod Container>
 std::shared_ptr<void> makeTypeErasedSharedPtr(Container&& container)
@@ -65,6 +63,10 @@ struct DeviceBuffer {
       Container&& data,
       UpdateParams params = {.dest_element = 0, .num_reserve_elements = 0})
   {
+    if (!data.data()) {
+      return;
+    }
+
     using T = std::decay_t<decltype(*data.data())>;
     const size_t num_elements = data.size();
 
