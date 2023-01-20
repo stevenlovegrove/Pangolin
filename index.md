@@ -102,7 +102,7 @@ ctest
 
 #### With Python
 
-You have to be careful about what python version Pangolin has found and is attempting to link against. It will tell you during the `cmake ..` step and you can change it by explicitly telling it the python executable with `cmake -DPYTHON_EXECUTABLE=/path/to/python ..`or ``cmake -DPYTHON_EXECUTABLE=`which python3` `` to use the python accessed through the `python3` alias.
+You have to be careful about what python version Pangolin has found and is attempting to link against. It will tell you during the `cmake ..` step and you can change it by explicitly telling it the python executable with `cmake -DPython_EXECUTABLE=/path/to/python ..`or ``cmake -DPython_EXECUTABLE=`which python3` `` to use the python accessed through the `python3` alias.
 
 If python is found, the pypangolin module will be built with the default `all` target. A Python wheel can be built manually using the `pypangolin_wheel` target, and the wheel can be installed / uninstalled with `pypangolin_pip_install` and `pypangolin_pip_uninstall` targets.
 
@@ -144,6 +144,18 @@ For CI, Pangolin uses [Github Actions](https://github.com/stevenlovegrove/Pangol
 To contribute to Pangolin, I would appreciate pull requests against the master branch. If you raise an issue, please include your environment (compiler, operating system, etc).
 
 
+
+## Installing Pangolin(vcpkg) ##
+
+You can download and install pangolin using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ./vcpkg integrate install
+    ./vcpkg install pangolin
+
+The pangolin port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
 
 ## Extensibility & Factories
 
