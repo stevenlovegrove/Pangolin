@@ -124,13 +124,13 @@ sophus::Image<Eigen::Vector4f> GlFont::MakeFontLookupImage()
 
   for (const auto& cp_char : chardata) {
     // font offset
-    img.uncheckedMut(cp_char.second.AtlasIndex(), 0) = {
+    img.mut(cp_char.second.AtlasIndex(), 0) = {
         cp_char.second.GetVert(0).tu, cp_char.second.GetVert(0).tv,
         cp_char.second.GetVert(2).tu - cp_char.second.GetVert(0).tu,  // w
         cp_char.second.GetVert(2).tv - cp_char.second.GetVert(0).tv   // h
     };
     // screen offset
-    img.uncheckedMut(cp_char.second.AtlasIndex(), 1) = {
+    img.mut(cp_char.second.AtlasIndex(), 1) = {
         cp_char.second.GetVert(0).x, -cp_char.second.GetVert(0).y,
         cp_char.second.GetVert(2).x - cp_char.second.GetVert(0).x,  // w
         cp_char.second.GetVert(0).y - cp_char.second.GetVert(2).y   // h
@@ -170,7 +170,7 @@ sophus::Image<uint16_t> GlFont::MakeFontIndexImage(const std::string& utf8)
 
   for (size_t i = 0; i < utf32.size(); ++i) {
     const auto& ch = chardata[utf32[i]];
-    img.uncheckedMut(i, 0) = ch.AtlasIndex();
+    img.mut(i, 0) = ch.AtlasIndex();
   }
 
   return img;
