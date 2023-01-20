@@ -102,7 +102,7 @@ ctest
 
 #### With Python
 
-You have to be careful about what python version Pangolin has found and is attempting to link against. It will tell you during the `cmake ..` step and you can change it by explicitly telling it the python executable with `cmake -DPYTHON_EXECUTABLE=/path/to/python ..`or ``cmake -DPYTHON_EXECUTABLE=`which python3` `` to use the python accessed through the `python3` alias.
+You have to be careful about what python version Pangolin has found and is attempting to link against. It will tell you during the `cmake ..` step and you can change it by explicitly telling it the python executable with `cmake -DPython_EXECUTABLE=/path/to/python ..`or ``cmake -DPython_EXECUTABLE=`which python3` `` to use the python accessed through the `python3` alias.
 
 If python is found, the pypangolin module will be built with the default `all` target. A Python wheel can be built manually using the `pypangolin_wheel` target, and the wheel can be installed / uninstalled with `pypangolin_pip_install` and `pypangolin_pip_uninstall` targets.
 
