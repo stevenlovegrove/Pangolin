@@ -128,6 +128,9 @@ class PANGOLIN_EXPORT WindowInterface
 
   struct Params {
     Uri uri;
+
+    // Optionally, an existing context to share resources with
+    std::shared_ptr<WindowInterface> shared_context;
   };
 
   static Shared<WindowInterface> Create(const Params& params);

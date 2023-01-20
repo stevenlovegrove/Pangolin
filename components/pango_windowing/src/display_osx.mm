@@ -29,32 +29,35 @@
 #define GL_SILENCE_DEPRECATION
 
 #include <pangolin/factory/factory_registry.h>
-#include <pangolin/platform.h>
 #include <pangolin/gl/glplatform.h>
+#include <pangolin/platform.h>
 #include <pangolin/windowing/OsxWindow.h>
-#include <pangolin/windowing/PangolinNSGLView.h>
 #include <pangolin/windowing/PangolinNSApplication.h>
+#include <pangolin/windowing/PangolinNSGLView.h>
+
 #include <memory>
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
-#  define NSFullScreenWindowMask      NSWindowStyleMaskFullScreen
-#  define NSTitledWindowMask          NSWindowStyleMaskTitled
-#  define NSMiniaturizableWindowMask  NSWindowStyleMaskMiniaturizable
-#  define NSResizableWindowMask       NSWindowStyleMaskResizable
-#  define NSClosableWindowMask        NSWindowStyleMaskClosable
+#define NSFullScreenWindowMask NSWindowStyleMaskFullScreen
+#define NSTitledWindowMask NSWindowStyleMaskTitled
+#define NSMiniaturizableWindowMask NSWindowStyleMaskMiniaturizable
+#define NSResizableWindowMask NSWindowStyleMaskResizable
+#define NSClosableWindowMask NSWindowStyleMaskClosable
 #endif
 
 // Hack to fix window focus issue
 // http://www.miscdebris.net/blog/2010/03/30/solution-for-my-mac-os-x-gui-program-doesnt-get-focus-if-its-outside-an-application-bundle/
-extern "C" { void CPSEnableForegroundOperation(ProcessSerialNumber* psn); }
+extern "C" {
+void CPSEnableForegroundOperation(ProcessSerialNumber* psn);
+}
 inline void FixOsxFocus()
 {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    ProcessSerialNumber psn;
-    GetCurrentProcess( &psn );
-    CPSEnableForegroundOperation( &psn );
-    SetFrontProcess( &psn );
+  ProcessSerialNumber psn;
+  GetCurrentProcess(&psn);
+  CPSEnableForegroundOperation(&psn);
+  SetFrontProcess(&psn);
 #pragma clang diagnostic pop
 }
 
@@ -62,159 +65,191 @@ namespace pangolin
 {
 
 OsxWindow::OsxWindow(
-    const std::string& title, int width, int height, bool USE_RETINA, NSOpenGLPixelFormatAttribute gl_profile
-) {
-    ///////////////////////////////////////////////////////////////////////
-    // Make sure Application is initialised correctly.
-    // This can be run repeatedly.
+    const std::string& title, int width, int height, bool USE_RETINA,
+    NSOpenGLPixelFormatAttribute gl_profile,
+    std::shared_ptr<WindowInterface> context_to_share)
+{
+  ///////////////////////////////////////////////////////////////////////
+  // Make sure Application is initialised correctly.
+  // This can be run repeatedly.
 
-    [NSApplication sharedApplication];
-    PangolinAppDelegate *delegate = [[PangolinAppDelegate alloc] init];
+  [NSApplication sharedApplication];
+  PangolinAppDelegate* delegate = [[PangolinAppDelegate alloc] init];
 
-    [NSApp setDelegate:delegate];
-    [NSApp setPresentationOptions:NSFullScreenWindowMask];
+  [NSApp setDelegate:delegate];
+  [NSApp setPresentationOptions:NSFullScreenWindowMask];
 
-    [PangolinNSApplication run_pre];
-    [PangolinNSApplication run_step];
+  [PangolinNSApplication run_pre];
+  [PangolinNSApplication run_step];
 
-    ///////////////////////////////////////////////////////////////////////
-    // Create Window
+  ///////////////////////////////////////////////////////////////////////
+  // Create Window
 
-    NSRect viewRect = NSMakeRect( 0.0, 0.0, USE_RETINA ? width/2 : width, USE_RETINA ? height/2 : height );
+  NSRect viewRect = NSMakeRect(
+      0.0, 0.0, USE_RETINA ? width / 2 : width,
+      USE_RETINA ? height / 2 : height);
 
-    _window = [[NSWindow alloc] initWithContentRect:viewRect styleMask:NSTitledWindowMask|NSMiniaturizableWindowMask|NSResizableWindowMask|NSClosableWindowMask backing:NSBackingStoreBuffered defer:YES];
-    [_window setTitle:[NSString stringWithUTF8String:title.c_str()]];
-    [_window setOpaque:YES];
-    [_window makeKeyAndOrderFront:NSApp];
-    [_window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenPrimary];
+  _window = [[NSWindow alloc]
+      initWithContentRect:viewRect
+                styleMask:NSTitledWindowMask | NSMiniaturizableWindowMask |
+                          NSResizableWindowMask | NSClosableWindowMask
+                  backing:NSBackingStoreBuffered
+                    defer:YES];
+  [_window setTitle:[NSString stringWithUTF8String:title.c_str()]];
+  [_window setOpaque:YES];
+  [_window makeKeyAndOrderFront:NSApp];
+  [_window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 
-    PangolinWindowDelegate *windelegate = [[PangolinWindowDelegate alloc] init];
-    [_window setDelegate:windelegate];
-    windelegate->osx_window = this;
+  ///////////////////////////////////////////////////////////////////////
+  // Create OpenGL View for Window
 
-    ///////////////////////////////////////////////////////////////////////
-    // Create OpenGL View for Window
+  NSOpenGLPixelFormatAttribute attrs[] = {
+      NSOpenGLPFADoubleBuffer,  NSOpenGLPFADepthSize, 32,
+      NSOpenGLPFAOpenGLProfile, gl_profile,           0};
 
-    NSOpenGLPixelFormatAttribute attrs[] =
-    {
-        NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFADepthSize, 32,
-        NSOpenGLPFAOpenGLProfile, gl_profile,
-        0
-    };
+  NSOpenGLPixelFormat* format =
+      [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
 
-    NSOpenGLPixelFormat *format = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
-    view = [[PangolinNSGLView alloc] initWithFrame:_window.frame pixelFormat:format];
-    view->osx_window = this;
+  view = [[PangolinNSGLView alloc] initWithFrame:_window.frame
+                                     pixelFormat:format];
+  view->osx_window = this;
 
-    [format release];
+  ///////////////////////////////////////////////////////////////////////
+  // Get ref to context to share if available
+  NSOpenGLContext* to_share = nil;
+  if (auto other_win = std::dynamic_pointer_cast<OsxWindow>(context_to_share)) {
+    if (other_win->view) {
+      to_share = [other_win->view openGLContext];
+    }
+  }
+
+  if (to_share) {
+    // we'll actually replace the one we've been given with one that's shared.
+    render_context = [[NSOpenGLContext alloc] initWithFormat:format
+                                                shareContext:to_share];
+    [render_context setView:view];
+    [view setOpenGLContext:render_context];
+    std::cout << "1" << std::endl;
+    std::cout << render_context << std::endl;
+  } else {
+    render_context = [view openGLContext];
+    std::cout << "2" << std::endl;
+    std::cout << render_context << std::endl;
+  }
+
+  [format release];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
-    if( USE_RETINA && floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_6)
-        [view setWantsBestResolutionOpenGLSurface:YES];
+  if (USE_RETINA && floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_6)
+    [view setWantsBestResolutionOpenGLSurface:YES];
 #endif /*MAC_OS_X_VERSION_MAX_ALLOWED*/
 
-    [_window setContentView:view];
+  [_window setContentView:view];
 
-    glewInit();
+  glewInit();
 
-    FixOsxFocus();
+  FixOsxFocus();
+
+  PangolinWindowDelegate* windelegate = [[PangolinWindowDelegate alloc] init];
+  [_window setDelegate:windelegate];
+  windelegate->osx_window = this;
 }
 
 OsxWindow::~OsxWindow()
 {
-    // Not sure how to deallocate...
+  // Not sure how to deallocate...
 }
-
 
 void OsxWindow::ShowFullscreen(const TrueFalseToggle on_off)
 {
-    const bool is_fullscreen = ([_window styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask;
-    if(should_toggle(on_off, is_fullscreen) ) {
-        [_window toggleFullScreen:nil];
-    }
+  const bool is_fullscreen =
+      ([_window styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask;
+  if (should_toggle(on_off, is_fullscreen)) {
+    [_window toggleFullScreen:nil];
+  }
 }
 
 void OsxWindow::Move(int x, int y)
 {
-    [_window setFrame:CGRectMake(x, y, [_window frame].size.width,
-      [_window frame].size.height) display:NO];
+  [_window setFrame:CGRectMake(
+                        x, y, [_window frame].size.width,
+                        [_window frame].size.height)
+            display:NO];
 }
 
 void OsxWindow::Resize(unsigned int w, unsigned int h)
 {
-    const CGFloat title_height = _window.frame.size.height -
-      [_window contentRectForFrameRect: _window.frame].size.height;
+  const CGFloat title_height =
+      _window.frame.size.height -
+      [_window contentRectForFrameRect:_window.frame].size.height;
 
-    [_window setFrame:CGRectMake([_window frame].origin.x,
-      [_window frame].origin.y, w, h+title_height) display:NO];
+  [_window setFrame:CGRectMake(
+                        [_window frame].origin.x, [_window frame].origin.y, w,
+                        h + title_height)
+            display:NO];
 }
 
-void OsxWindow::MakeCurrent()
-{
-    [[view openGLContext] makeCurrentContext];
-}
+void OsxWindow::MakeCurrent() { [render_context makeCurrentContext]; }
 
-void OsxWindow::RemoveCurrent()
-{
-    [NSOpenGLContext clearCurrentContext];
-}
+void OsxWindow::RemoveCurrent() { [NSOpenGLContext clearCurrentContext]; }
 
-void OsxWindow::SwapBuffers()
-{
-    [[view openGLContext] flushBuffer];
-}
+void OsxWindow::SwapBuffers() { [render_context flushBuffer]; }
 
-void OsxWindow::ProcessEvents()
-{
-    [PangolinNSApplication run_step];
-}
+void OsxWindow::ProcessEvents() { [PangolinNSApplication run_step]; }
+
+extern std::shared_ptr<WindowInterface> context_to_share;
 
 PANGOLIN_REGISTER_FACTORY(OsxWindow)
 {
   struct OsxWindowFactory : public TypedFactoryInterface<WindowInterface> {
-    std::map<std::string,Precedence> Schemes() const override
+    std::map<std::string, Precedence> Schemes() const override
     {
-        return {{"cocoa",10}, {"default",10}};
+      return {{"cocoa", 10}, {"default", 10}};
     }
     const char* Description() const override
     {
-        return "Use MacOS native window toolkit";
+      return "Use MacOS native window toolkit";
     }
     ParamSet Params() const override
     {
-        return {{
-            {"window_title","window","Title of application Window"},
-            {"w","640","Requested window width"},
-            {"h","480","Requested window height"},
-            {PARAM_HIGHRES,"true","Use 'retina' resolution"},
-            {PARAM_GL_PROFILE,"legacy","OpenGL profile to use. One of [LEGACY, 3.2 CORE, 4.1 CORE]"},
-        }};
+      return {{
+          {"window_title", "window", "Title of application Window"},
+          {"w", "640", "Requested window width"},
+          {"h", "480", "Requested window height"},
+          {PARAM_HIGHRES, "true", "Use 'retina' resolution"},
+          {PARAM_GL_PROFILE, "legacy",
+           "OpenGL profile to use. One of [LEGACY, 3.2 CORE, 4.1 CORE]"},
+      }};
     }
-    std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
-
-      const std::string window_title = uri.Get<std::string>("window_title", "window");
+    std::unique_ptr<WindowInterface> Open(const Uri& uri) override
+    {
+      const std::string window_title =
+          uri.Get<std::string>("window_title", "window");
       const int w = uri.Get<int>("w", 640);
       const int h = uri.Get<int>("h", 480);
       const bool is_highres = uri.Get<bool>(PARAM_HIGHRES, true);
-      const std::string str_profile = uri.Get<std::string>(PARAM_GL_PROFILE, "LEGACY");
+      const std::string str_profile =
+          uri.Get<std::string>(PARAM_GL_PROFILE, "LEGACY");
 
       NSOpenGLPixelFormatAttribute profile;
 
-      if(str_profile == "LEGACY") {
+      if (str_profile == "LEGACY") {
         profile = NSOpenGLProfileVersionLegacy;
-      } else if(str_profile == "3.2 CORE") {
+      } else if (str_profile == "3.2 CORE") {
         profile = NSOpenGLProfileVersion3_2Core;
-      } else if(str_profile == "4.1 CORE") {
+      } else if (str_profile == "4.1 CORE") {
         profile = NSOpenGLProfileVersion4_1Core;
-      }else{
-        throw std::runtime_error(std::string("'") + str_profile + "' : unknown GL Profile.");
+      } else {
+        throw std::runtime_error(
+            std::string("'") + str_profile + "' : unknown GL Profile.");
       }
 
-      return std::unique_ptr<WindowInterface>(new OsxWindow(window_title, w, h, is_highres, profile));
+      return std::unique_ptr<WindowInterface>(new OsxWindow(
+          window_title, w, h, is_highres, profile, context_to_share));
     }
   };
 
-  return FactoryRegistry::I()->RegisterFactory<WindowInterface>(std::make_shared<OsxWindowFactory>());
+  return FactoryRegistry::I()->RegisterFactory<WindowInterface>(
+      std::make_shared<OsxWindowFactory>());
 }
 
-}
+}  // namespace pangolin

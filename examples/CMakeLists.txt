@@ -16,6 +16,7 @@ set(examples
     11.scene-group
     12.named_drawables
     13.plot-experiment
+    14.shared-context
 )
 
 foreach(example IN LISTS examples)
@@ -25,3 +26,4 @@ endforeach()
 
 # explicitly link to OpenGL because we use it directly.
 target_link_libraries(6.overlay pango_opengl)
+target_link_libraries(14.shared-context pango_opengl)
