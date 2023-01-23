@@ -106,15 +106,28 @@ bool giveEventToActiveLayer(
   return false;
 }
 
+namespace
+{
+
+Uri parseWindowUri(const Context::Params& params)
+{
+  if (const char* env_params = std::getenv("PANGOLIN_WINDOW_URI")) {
+    // Environment-specified params take precedent
+    return ParseUri(env_params);
+  }
+  return ParseUri(fmt::format(
+      "{}:[window_title={},w={},h={},GL_PROFILE={}]//", params.window_engine,
+      params.title, params.window_size.width, params.window_size.height,
+      "3.2 CORE"));
+}
+
+}  // namespace
+
 struct ContextImpl : public Context {
   // TODO: Convert Window to use new factory idiom directly
   ContextImpl(const Context::Params& params) :
       size_(params.window_size),
-      window_(Window::Create(
-          {.uri = ParseUri(fmt::format(
-               "{}:[window_title={},w={},h={},GL_PROFILE={}]//",
-               params.window_engine, params.title, params.window_size.width,
-               params.window_size.height, "3.2 CORE"))}))
+      window_(Window::Create({.uri = parseWindowUri(params)}))
   {
     window()->ResizeSignal.connect([this](const WindowResizeEvent& e) {
       size_.width = e.width;
