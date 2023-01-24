@@ -215,7 +215,7 @@ GLXContext CreateGlContext(
   if (isExtensionSupported(glxExts, "GLX_ARB_create_context") &&
       glXCreateContextAttribsARB) {
     int context_attribs[] = {
-        GLX_CONTEXT_MAJOR_VERSION_ARB, 3, GLX_CONTEXT_MINOR_VERSION_ARB, 0,
+        GLX_CONTEXT_MAJOR_VERSION_ARB, 3, GLX_CONTEXT_MINOR_VERSION_ARB, 2,
         // GLX_CONTEXT_FLAGS_ARB        ,
         // GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
         None};
