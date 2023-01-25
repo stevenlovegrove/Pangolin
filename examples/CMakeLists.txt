@@ -16,9 +16,12 @@ set(examples
     11.scene-group
     12.named_drawables
     13.plot-experiment
+    14.multitouch
 )
 
 foreach(example IN LISTS examples)
     add_executable(${example} ${example}.cpp)
     target_link_libraries(${example} pango_context pango_video)
 endforeach()
+
+target_link_libraries(14.multitouch mtdev)
