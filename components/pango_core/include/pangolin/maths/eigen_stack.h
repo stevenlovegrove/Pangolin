@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <pangolin/maths/eigen_concepts.h>
+#include <sophus/common/point_concepts.h>
 
 namespace pangolin
 {
