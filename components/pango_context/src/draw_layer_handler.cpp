@@ -199,7 +199,9 @@ void clampClipViewTransform(sophus::Sim2<double>& clip_view_transform)
       clip_view_transform.translation().y(), -(scale - 1.0), +(scale - 1.0));
 }
 
-void imageZoom(MouseUpdateArgs& info, const double zoom_input)
+void imageZoom(
+    MouseUpdateArgs& info, const double zoom_input,
+    const bool constrain_image_zoom_bounds)
 {
   using namespace sophus;
   double factor = 1.0 - zoom_input;
@@ -214,8 +216,10 @@ void imageZoom(MouseUpdateArgs& info, const double zoom_input)
                                           new_old * center_on_pointer *
                                           info.render_state.clip_view_transform;
 
-  info.render_state.clip_view_transform.setScale(
-      std::max(1.0, info.render_state.clip_view_transform.scale()));
+  if (constrain_image_zoom_bounds) {
+    info.render_state.clip_view_transform.setScale(
+        std::max(1.0, info.render_state.clip_view_transform.scale()));
+  }
 }
 
 void imagePan(MouseUpdateArgs& info, const Eigen::Array2d& pan)
@@ -233,7 +237,8 @@ class HandlerImpl : public DrawLayerHandler
   HandlerImpl(const DrawLayerHandler::Params& p) :
       depth_sampler_(p.depth_sampler),
       up_in_world_(p.up_in_world),
-      view_mode_(p.view_mode)
+      view_mode_(p.view_mode),
+      constrain_image_zoom_bounds_(p.constrain_image_zoom_bounds)
   {
   }
 
@@ -346,7 +351,7 @@ class HandlerImpl : public DrawLayerHandler
                 const Eigen::Vector2d pan =
                     Eigen::Vector2d(arg.pan[0], arg.pan[1]).array() / 200.0;
                 imagePan(info, pan);
-                imageZoom(info, zoom_input);
+                imageZoom(info, zoom_input, constrain_image_zoom_bounds_);
               } else {
                 // Don't allow the center of rotation change without a small
                 // delay from scrolling - otherwise it is very easy to
@@ -371,7 +376,9 @@ class HandlerImpl : public DrawLayerHandler
         },
         event.detail);
 
-    clampClipViewTransform(info.render_state.clip_view_transform);
+    if (constrain_image_zoom_bounds_) {
+      clampClipViewTransform(info.render_state.clip_view_transform);
+    }
 
     return true;
   }
@@ -400,6 +407,7 @@ class HandlerImpl : public DrawLayerHandler
 
   // Mode of interpretting input
   ViewMode view_mode_;
+  bool constrain_image_zoom_bounds_;
 };
 
 Shared<DrawLayerHandler> DrawLayerHandler::Create(const Params& p)

@@ -1,5 +1,5 @@
-#include <pangolin/context/context.h>
 #include <pangolin/color/color.h>
+#include <pangolin/context/context.h>
 #include <pangolin/gui/all_layers.h>
 #include <pangolin/gui/drawn_plot_background.h>
 
@@ -68,8 +68,9 @@ int main(int /*argc*/, char** /*argv*/)
       {.aspect_policy = AspectPolicy::stretch,
        .image_convention = ImageXy::right_up,
        .image_indexing = ImageIndexing::normalized_zero_one,
-       .handler =
-           DrawLayerHandler::Create({.view_mode = ViewMode::image_plane}),
+       .handler = DrawLayerHandler::Create(
+           {.view_mode = ViewMode::image_plane,
+            .constrain_image_zoom_bounds = false}),
        .camera = plot_camera(Eigen::AlignedBox2d{
            Eigen::Vector2d(-0.1, -1.1), Eigen::Vector2d(11.0, 1.1)}),
        .in_scene = {bg, graph_xy}});

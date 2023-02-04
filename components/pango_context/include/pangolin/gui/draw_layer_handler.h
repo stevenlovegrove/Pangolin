@@ -40,6 +40,7 @@ struct DrawLayerHandler {
     Eigen::Vector3d up_in_world = {0.0, 0.0, 1.0};
     Region3F64 camera_limits_in_world = Region3F64::empty();
     ViewMode view_mode = ViewMode::best_guess;
+    bool constrain_image_zoom_bounds = true;
   };
   static Shared<DrawLayerHandler> Create(const Params&);
 };
