@@ -85,16 +85,25 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
 
   void drawShapes(const ViewParams& params)
   {
-    if (!prog) {
-      prog = GlSlProgram::Create(
-          {.sources = {
-               {.origin =
-                    "/components/pango_opengl/shaders/main_shapes.glsl"}}});
-    }
+    constexpr int location_vertex = 0;
+    constexpr int location_colors = 1;
+    constexpr int location_shapes = 2;
 
     vertices->sync();
     colors->sync();
     shapes->sync();
+
+    if (!prog) {
+      GlSlProgram::Defines defines;
+      defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
+      defines["VERTEX_SHAPES"] = std::to_string(!shapes->empty());
+
+      prog = GlSlProgram::Create(
+          {.sources =
+               {{.origin =
+                     "/components/pango_opengl/shaders/main_shapes.glsl"}},
+           .program_defines = defines});
+    }
 
     if (!vertices->empty()) {
       auto bind_prog = prog->bind();
@@ -113,9 +122,18 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
                       params.viewport.range().cast<float>().array();
       }
 
-      vao.addVertexAttrib(0, *vertices);
-      vao.addVertexAttrib(1, *colors);
-      vao.addVertexAttrib(2, *shapes);
+      vao.addVertexAttrib(location_vertex, *vertices);
+      if (!colors->empty()) {
+        vao.addVertexAttrib(location_colors, *colors);
+      } else {
+        u_color = default_color.cast<float>();
+      }
+      if (!shapes->empty()) {
+        vao.addVertexAttrib(location_shapes, *shapes);
+      } else {
+        u_shape = static_cast<int>(default_shape);
+      }
+
       PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->numElements()));
     }
   }
@@ -204,6 +222,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
   const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
   const GlUniform<Eigen::Matrix4f> u_cam_from_drawable = {"cam_from_world"};
   const GlUniform<Eigen::Vector4f> u_color = {"color"};
+  const GlUniform<uint> u_shape = {"shape"};
   const GlUniform<bool> u_use_clip_size_units = {"use_clip_size_units"};
   const GlUniform<float> u_size = {"size"};
   const GlUniform<Eigen::Vector2f> u_size_clip = {"size_clip"};
@@ -215,6 +234,7 @@ PANGO_CREATE(DrawnPrimitives)
   r->element_type = p.element_type;
   r->default_color = p.default_color;
   r->default_size = p.default_size;
+  r->default_shape = p.default_shape;
   return r;
 }
 

@@ -1,17 +1,39 @@
 @start vertex
 #version 330 core
 layout(location = 0) in vec3 a_position;
-layout(location = 1) in vec4 a_colors;
-layout(location = 2) in uint a_type;
+
+#expect VERTEX_COLORS
+#if VERTEX_COLORS
+    layout(location = 1) in vec4 a_colors;
+#else
+    uniform vec4 color;
+#endif
+
+#expect VERTEX_SHAPES
+#if VERTEX_SHAPES
+    layout(location = 2) in uint a_shapes;
+#else
+    uniform uint shape;
+#endif
 
 out vec3 v_position;
 out vec4 v_color;
-out uint v_type;
+out uint v_shape;
 
 void main() {
     v_position = a_position;
+
+#if VERTEX_COLORS
     v_color = a_colors;
-    v_type = a_type;
+#else
+    v_color = color;
+#endif
+
+#if VERTEX_SHAPES
+    v_shape = a_shapes;
+#else
+    v_shape = shape;
+#endif
 }
 
 @start geometry
@@ -21,9 +43,9 @@ layout (triangle_strip, max_vertices = 4) out;
 
 in vec3 v_position[];
 in vec4 v_color[];
-in uint v_type[];
+in uint v_shape[];
 
-flat out uint type;
+flat out uint shape;
 out vec2 uv;
 out vec4 color;
 
@@ -44,7 +66,7 @@ void main() {
 
     for(uint i=0u; i < 4u;  ++i) {
         color = v_color[0];
-        type = v_type[0];
+        shape = v_shape[0];
         uv = corners[i] * vec2(1.0,-1.0);
         if(use_clip_size_units) {
             gl_Position = center_clip + vec4(center_clip.w * size_clip * corners[i], 0.0, 0.0);
@@ -62,7 +84,7 @@ void main() {
 
 #include <inigo/sdf_2d.glsl.h>
 
-flat in uint type;
+flat in uint shape;
 in vec4 color;
 in vec2 uv;
 
@@ -99,7 +121,7 @@ float sdForType(vec2 p, float r, uint type) {
 void main() {
     vec2 w2 = 1.0 / fwidth(uv);
     float w = max(w2.x, w2.y);
-    float sd = w*sdForType(uv, 1.0, type);
+    float sd = w*sdForType(uv, 1.0, shape);
     FragColor = color_sdf(sd, color);
     if(sd > 0.8) discard;
 }
