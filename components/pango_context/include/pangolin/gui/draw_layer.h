@@ -44,6 +44,7 @@ struct DrawLayer : public Layer {
   enum In { scene, pixels };
 
   virtual const DrawLayerRenderState& renderState() const = 0;
+  virtual DrawLayerHandler& getHandler() = 0;
   virtual void setCamera(const sophus::CameraModel&) = 0;
   virtual void setCameraFromWorld(const sophus::Se3<double>&) = 0;
   virtual void setClipViewTransform(sophus::Sim2<double>&) = 0;

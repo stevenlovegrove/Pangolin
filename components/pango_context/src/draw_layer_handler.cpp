@@ -297,6 +297,12 @@ class HandlerImpl : public DrawLayerHandler
               if (arg.action == PointerAction::down) {
                 down_state_ = state;
                 cursor_in_world_ = p_world;
+              } else if (arg.action == PointerAction::double_click_down) {
+                selection_signal(SelectionEvent{
+                    .trigger_event = event,
+                    .in_pixel_selection = Region2F64::empty(),
+                    .in_scene_cursor = cursor_in_world_,
+                    .in_progress = false});
               } else if (arg.action == PointerAction::drag) {
                 if (!down_state_) {
                   PANGO_WARN("Unexpected");
