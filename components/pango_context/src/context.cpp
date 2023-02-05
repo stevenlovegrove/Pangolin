@@ -139,6 +139,8 @@ struct ContextImpl : public Context {
     });
     window()->MouseSignal.connect(&ContextImpl::mouseEvent, this);
     window()->MouseMotionSignal.connect(&ContextImpl::mouseMotionEvent, this);
+    window()->PassiveMouseMotionSignal.connect(
+        &ContextImpl::mouseHoverEvent, this);
     window()->SpecialInputSignal.connect(&ContextImpl::specialInputEvent, this);
     window()->KeyboardSignal.connect(&ContextImpl::keyboardEvent, this);
 
@@ -221,19 +223,32 @@ struct ContextImpl : public Context {
       if (!maybe_button) return;
 
       button_active_.set(*maybe_button, e.pressed);
+      PointerAction action =
+          e.pressed ? PointerAction::down : PointerAction::click_up;
+
+      constexpr double kDoubleClickInterval = 0.3;
+      if (e.pressed && *maybe_button == last_click_button &&
+          (std::chrono::system_clock::now() - last_click_time).count() / 1e6 <
+              kDoubleClickInterval) {
+        action = PointerAction::double_click_down;
+      }
 
       Interactive::Event layer_event = {
           .pointer_pos = WindowPosition{.pos_window = {e.x, e.y}},
           .modifier_active = modifier_active_,
           .detail = Interactive::PointerEvent{
-              .action =
-                  e.pressed ? PointerAction::down : PointerAction::click_up,
+              .action = action,
               .button = *maybe_button,
               .button_active = button_active_,
           }};
       dispatchLayerEvent(
           layer_event,
           e.pressed ? ActiveLayerAction::capture : ActiveLayerAction::release);
+
+      if (e.pressed) {
+        last_click_time = std::chrono::system_clock::now();
+        last_click_button = *maybe_button;
+      }
     }
   }
 
@@ -246,6 +261,20 @@ struct ContextImpl : public Context {
         .modifier_active = modifier_active_,
         .detail = Interactive::PointerEvent{
             .action = PointerAction::drag,
+            .button_active = button_active_,
+        }};
+    dispatchLayerEvent(layer_event);
+  }
+
+  void mouseHoverEvent(MouseMotionEvent e)
+  {
+    modifier_active_ = toInteractiveModifierKey(e.key_modifiers);
+
+    Interactive::Event layer_event = {
+        .pointer_pos = WindowPosition{.pos_window = {e.x, e.y}},
+        .modifier_active = modifier_active_,
+        .detail = Interactive::PointerEvent{
+            .action = PointerAction::hover,
             .button_active = button_active_,
         }};
     dispatchLayerEvent(layer_event);
@@ -404,6 +433,9 @@ struct ContextImpl : public Context {
 
   Interactive::PointerButtonStatus button_active_ = {};
   Interactive::ModifierKeyStatus modifier_active_ = {};
+
+  std::chrono::system_clock::time_point last_click_time;
+  PointerButton last_click_button;
 };
 
 PANGO_CREATE(Context) { return Shared<ContextImpl>::make(p); }

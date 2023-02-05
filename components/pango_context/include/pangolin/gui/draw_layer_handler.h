@@ -16,6 +16,7 @@ enum class ViewMode { freeview, image_plane, best_guess };
 struct SelectionEvent {
   Interactive::Event trigger_event;
   Region2F64 in_pixel_selection = Region2F64::empty();
+  std::optional<Eigen::Vector3d> in_scene_cursor;
   bool in_progress;
 };
 

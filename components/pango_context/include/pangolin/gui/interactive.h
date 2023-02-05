@@ -24,7 +24,7 @@ enum class PointerAction {
   drag,
   drag_up,
   click_up,
-  double_click_up
+  double_click_down
 };
 
 enum class PointerButton { primary, secondary, tertiary, back, forward, _ };

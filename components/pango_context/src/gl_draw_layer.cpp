@@ -51,6 +51,8 @@ struct DrawLayerImpl : public DrawLayer {
     return render_state_;
   }
 
+  DrawLayerHandler& getHandler() override { return *handler_; }
+
   void setCamera(const sophus::CameraModel& camera) override
   {
     render_state_.camera = camera;

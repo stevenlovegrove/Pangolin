@@ -49,6 +49,12 @@ int main(int argc, char** argv)
            {0.0, 0.0, 1.0}, {10.0, 0.0, 0.0}, AxisDirection2::positive_z),
        .near_far = {0.01, 1000.0}});
   auto checker_plane = DrawnSolids::Create({});
+  scene->getHandler().selection_signal.connect([](SelectionEvent e) {
+    if (e.in_scene_cursor) {
+      std::cout << "Double clicked with 3D curser in scene coordinates:\n "
+                << e.in_scene_cursor->transpose() << std::endl;
+    }
+  });
 
   static_assert(sizeof(sophus::SE3f) == 32);
   std::vector<sophus::SE3f> parent_from_axis_poses;
