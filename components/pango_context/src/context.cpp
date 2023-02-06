@@ -227,9 +227,12 @@ struct ContextImpl : public Context {
           e.pressed ? PointerAction::down : PointerAction::click_up;
 
       constexpr double kDoubleClickInterval = 0.3;
+      double delta_t =
+          std::chrono::duration_cast<std::chrono::duration<double>>(
+              std::chrono::system_clock::now() - last_click_time)
+              .count();
       if (e.pressed && *maybe_button == last_click_button &&
-          (std::chrono::system_clock::now() - last_click_time).count() / 1e6 <
-              kDoubleClickInterval) {
+          (delta_t < kDoubleClickInterval)) {
         action = PointerAction::double_click_down;
       }
 
