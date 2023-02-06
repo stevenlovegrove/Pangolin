@@ -89,6 +89,16 @@ void DetachVar(const T& value)
   if (var) DetachVarByName(var->Meta().full_name);
 }
 
+inline bool checkPushed(Var<bool>& var)
+{
+  bool res = false;
+  if (var.Meta().gui_changed) {
+    res = true;
+    var.Meta().gui_changed = false;
+  }
+  return res && var.Get();
+}
+
 // Return true if any of the pangolin variables are set.
 // Additionally, resets the 'gui_changed' flag on all input variables.
 bool checkReset() { return false; }
