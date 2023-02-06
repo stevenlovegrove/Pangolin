@@ -234,11 +234,14 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
   std::visit(
       overload{
           [&](const Interactive::PointerEvent& arg) {
-            bool pressed = arg.action == PointerAction::down;
+            const bool pressed =
+                (arg.action == PointerAction::down) ||
+                (arg.action == PointerAction::double_click_down);
             auto w = WidgetXY(p_window, region);
 
             switch (arg.action) {
               case PointerAction::down:
+              case PointerAction::double_click_down:
               case PointerAction::click_up: {
                 if (selected_widget >= 0) {
                   auto& sw = widgets[selected_widget];
@@ -255,6 +258,9 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
               case PointerAction::drag: {
                 SetValue(p_window, region, pressed, true);
                 break;
+              }
+              case PointerAction::hover: {
+                hover_widget = w.first;
               }
               default:
                 break;
@@ -303,7 +309,7 @@ void GlWidgetLayer::SetValue(
     if (wp.widget_type == WidgetType::checkbox) {
       if (pressed && !dragging) wp.value_percent = 1.0 - wp.value_percent;
     } else if (wp.widget_type == WidgetType::button) {
-      wp.value_percent = pressed ? 0.0 : 1.0;
+      wp.value_percent = pressed ? 1.0 : 0.0;
     } else {
       if (pressed || dragging) {
         const float val = std::clamp(
@@ -446,7 +452,8 @@ void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
           "",
           1.0f,
           0,
-          WidgetType::textbox,
+          var->Meta().flags & META_FLAG_DIVIDER ? WidgetType::seperator
+                                                : WidgetType::textbox,
           [var](const WidgetParams& p) {  // read_params
           },
           [var](WidgetParams& p) {  // write params
