@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <Eigen/Core>
 #include <sophus/common/enum.h>
 
 #include <cmath>
@@ -50,6 +51,10 @@ struct Color {
       r(r), g(g), b(b), a(a)
   {
   }
+
+  operator Eigen::Vector4f() const { return {r, g, b, a}; }
+
+  operator Eigen::Vector4d() const { return {r, g, b, a}; }
 
   /// Construct from HSV Colour
   /// @param hue Color hue in range [0,1]

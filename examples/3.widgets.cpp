@@ -45,7 +45,7 @@ int main(int /*argc*/, char** /*argv*/)
 
   auto primitives = DrawnPrimitives::Create({});
 
-  primitives->vertices->update(
+  primitives->vertices->queueUpdate(
       std::vector<Eigen::Vector3f>{
           {-2.0f, -2.0f, 0.0f}, {2.0f, -2.0f, 0.0f}, {0.0f, 2.0f, 0.0f}},
       {});
