@@ -67,7 +67,9 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       u_size = default_size;
 
       auto bind_bo = vertices->bind();
-      PANGO_ENSURE(vertices->dataType().is<sophus::Se3<float>>());
+      PANGO_ENSURE(
+          vertices->dataType() &&
+          vertices->dataType()->is<sophus::Se3<float>>());
       // xyzw quaternion
       PANGO_GL(
           glVertexAttribPointer(0, 4, GL_FLOAT, false, 8 * sizeof(float), 0));
@@ -79,7 +81,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       PANGO_GL(glEnableVertexAttribArray(1));
 
       PANGO_GL(glPointSize(5.0));
-      PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->numElements()));
+      PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->size()));
     }
   }
 
@@ -134,7 +136,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
         u_shape = static_cast<int>(default_shape);
       }
 
-      PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->numElements()));
+      PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->size()));
     }
   }
 
@@ -202,15 +204,15 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       PANGO_GL(glPointSize(default_size));
 
       if (indices->empty()) {
-        PANGO_GL(
-            glDrawArrays(toGlEnum(element_type), 0, vertices->numElements()));
+        PANGO_GL(glDrawArrays(toGlEnum(element_type), 0, vertices->size()));
       } else {
-        const auto maybe_gl_fmt = glTypeInfo(indices->dataType());
+        PANGO_ENSURE(indices->dataType());
+        const auto maybe_gl_fmt = glTypeInfo(*indices->dataType());
         const GlFormatInfo gl_fmt = SOPHUS_UNWRAP(maybe_gl_fmt);
 
         auto bind_ibo = indices->bind();
         PANGO_GL(glDrawElements(
-            toGlEnum(element_type), indices->numElements(), gl_fmt.gl_type, 0));
+            toGlEnum(element_type), indices->size(), gl_fmt.gl_type, 0));
       }
     }
   }

@@ -438,7 +438,7 @@ void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
       widgets.push_back(WidgetParams{
           event.var->Meta().friendly,
           "",
-          1.0f,
+          0.0f,
           0,
           WidgetType::button,
           [var](const WidgetParams& p) {  // read_params
