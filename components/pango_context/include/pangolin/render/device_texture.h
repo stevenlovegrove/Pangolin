@@ -2,7 +2,7 @@
 
 #include <pangolin/utils/scoped_bind.h>
 #include <pangolin/utils/shared.h>
-#include <sophus/image/runtime_image.h>
+#include <sophus/image/runtime_image_types.h>
 
 namespace pangolin
 {
