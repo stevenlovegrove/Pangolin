@@ -72,15 +72,20 @@ struct DeviceGlBuffer : public DeviceBuffer {
     };
   }
 
+  void checkRequest(const SharedDataPackage& data, size_t dest_element) const
+  {
+    const size_t needed_size = dest_element + data.num_elements;
+    const bool needs_to_grow = capacity() < needed_size;
+    const bool needs_retype = !dataType() || !(data.data_type == *dataType());
+
+    PANGO_ENSURE(data.data);
+    PANGO_ENSURE(grow_to_fit_ || !needs_to_grow);
+    PANGO_ENSURE(allow_retyping_ || !allocated() || !needs_retype);
+  }
+
   void queueUpdate(const SharedDataPackage& data, size_t dest_element) override
   {
-    PANGO_ENSURE(data.data);
-    PANGO_ENSURE(
-        allow_retyping_ || data.data_type == dataType() || !allocated());
-    PANGO_ENSURE(
-        grow_to_fit_ || data.num_elements + dest_element <= capacity() ||
-        !allocated());
-
+    checkRequest(data, dest_element);
     std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
     updates_.push_back({data, dest_element});
   }
@@ -124,21 +129,18 @@ struct DeviceGlBuffer : public DeviceBuffer {
 
   void applyUpdateNow(const QueueData& u) const
   {
-    PANGO_ENSURE(allow_retyping_ || u.data.data_type == dataType());
-    PANGO_ENSURE(
-        grow_to_fit_ || (u.data.num_elements + u.dest_element <= capacity()));
-
-    if (u.data.num_elements == 0) return;
-
+    // We already checked if these are compatible with policies on entry to
+    // queue
     const size_t needed_size = u.dest_element + u.data.num_elements;
     const bool needs_to_grow = capacity() < needed_size;
+    const bool needs_retype = !dataType() || !(u.data.data_type == *dataType());
 
-    if (!allocated() || u.data.data_type != dataType() || needs_to_grow) {
+    if (!allocated() || needs_retype || needs_to_grow) {
       GLuint backup_id = 0;
       size_t backup_size = 0;
 
-      if (allocated() && u.data.data_type == dataType()) {
-        PANGO_CHECK(needs_to_grow);  // we can only reach here if needs_to_grow
+      if (needs_to_grow && !needs_retype) {
+        PANGO_CHECK(needs_to_grow);
         backup_id = gl_id_;
         backup_size = std::min(u.dest_element, size());
         gl_id_ = 0;
