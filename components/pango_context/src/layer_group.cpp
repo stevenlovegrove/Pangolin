@@ -61,87 +61,97 @@ std::optional<FlexArrangement> getFlexRows(
   return flex;
 }
 
-void computeLayoutConstraints(const LayerGroup& group)
+void computeLayoutConstraints(LayerGroup& group)
 {
-  LayerGroup::LayoutInfo total = {};
+  LayerGroup::Constraints total = {};
 
   double aspect_sum = 0.0;
   int aspect_n = 0;
 
+  const LayerGroup::Params params = group.params();
+
   // 1st pass, bottom up
-  for (const auto& child : group.children) {
-    // ask child to compute its layout size and cache
+  for (LayerGroup& child : group.children()) {
+    // Recursive call: ask child to compute its layout constraints
     computeLayoutConstraints(child);
-    auto& x_info = child.cached_;
+    const LayerGroup::Constraints& child_constraint =
+        PANGO_UNWRAP(child.constraints());
 
     // Update our constraints base on those of the children
-    switch (group.grouping) {
+    switch (params.grouping) {
       case LayerGroup::Grouping::stacked:
         [[fallthrough]];
       case LayerGroup::Grouping::tabbed:
-        total.min_pix = max(total.min_pix, x_info.min_pix);
-        total.parts = max(total.parts, x_info.parts);
-        if (x_info.aspect_hint) {
-          aspect_sum += x_info.aspect_hint;
+        // the same constraints for stacked and tabbed.
+        total.min_pix = max(total.min_pix, child_constraint.min_pix);
+        total.parts = max(total.parts, child_constraint.parts);
+        if (child_constraint.aspect.hasHint()) {
+          aspect_sum += child_constraint.aspect.hint();
           ++aspect_n;
         }
         break;
       case LayerGroup::Grouping::horizontal:
-        total.min_pix[0] += x_info.min_pix[0];
-        total.parts[0] += x_info.parts[0];
-        total.min_pix[1] = max(total.min_pix[1], x_info.min_pix[1]);
-        total.parts[1] = max(total.parts[1], x_info.parts[1]);
-        if (x_info.aspect_hint) {
-          aspect_sum += x_info.aspect_hint;
+        total.min_pix[0] += child_constraint.min_pix[0];
+        total.parts[0] += child_constraint.parts[0];
+        total.min_pix[1] = max(total.min_pix[1], child_constraint.min_pix[1]);
+        total.parts[1] = max(total.parts[1], child_constraint.parts[1]);
+        if (child_constraint.aspect.hasHint()) {
+          aspect_sum += child_constraint.aspect.hint();
           ++aspect_n;
         }
         break;
       case LayerGroup::Grouping::vertical:
-        total.min_pix[1] += x_info.min_pix[1];
-        total.parts[1] += x_info.parts[1];
-        total.min_pix[0] = max(total.min_pix[0], x_info.min_pix[0]);
-        total.parts[0] = max(total.parts[0], x_info.parts[0]);
-        if (x_info.aspect_hint) {
-          aspect_sum += 1.0 / x_info.aspect_hint;
+        total.min_pix[1] += child_constraint.min_pix[1];
+        total.parts[1] += child_constraint.parts[1];
+        total.min_pix[0] = max(total.min_pix[0], child_constraint.min_pix[0]);
+        total.parts[0] = max(total.parts[0], child_constraint.parts[0]);
+        if (child_constraint.aspect.hasHint()) {
+          aspect_sum += 1.0 / child_constraint.aspect.hint();
           ++aspect_n;
         }
         break;
       case LayerGroup::Grouping::flex:
         // flex layout is pretty heuristic-ey
-        double part_area = x_info.parts[0] * x_info.parts[1];
-        double part_w = x_info.aspect_hint * part_area;
+        double part_area =
+            child_constraint.parts[0] * child_constraint.parts[1];
+        double part_w = child_constraint.aspect.hint() * part_area;
         double part_h = part_area / part_w;
         total.parts[0] += part_w;
         total.parts[1] += part_h;
-        if (x_info.aspect_hint) {
-          aspect_sum += x_info.aspect_hint;
+        if (child_constraint.aspect.hasHint()) {
+          aspect_sum += child_constraint.aspect.hint();
           ++aspect_n;
         }
         break;
     }
   }
 
-  switch (group.grouping) {
+  switch (params.grouping) {
     case LayerGroup::Grouping::stacked:
     case LayerGroup::Grouping::tabbed:
     case LayerGroup::Grouping::flex:
       // Use average aspect
-      total.aspect_hint = aspect_n ? aspect_sum / aspect_n : 0.0;
+      total.aspect.setHint(aspect_n ? aspect_sum / aspect_n : 0.0);
       break;
     case LayerGroup::Grouping::horizontal:
-      // Use sum
-      total.aspect_hint = aspect_sum;
+      // Use sum, fall back to 1.0 if aspect_sum is 0.0, which most likely means
+      // that aspect_n==0.
+      total.aspect.setHint(aspect_sum == 0.0 ? 1.0 : aspect_sum);
       break;
     case LayerGroup::Grouping::vertical:
       // Use sum of inverse, inversed.
-      total.aspect_hint = aspect_sum ? 1.0 / aspect_sum : 0.0;
+      total.aspect.setHint(aspect_sum == 0.0 ? 1.0 / aspect_sum : 0.0);
       break;
   }
 
   // Finally, apply any constraints from the group layer, if it exists
-  if (group.layer) {
-    const double aspect_hint = group.layer->aspectHint();
-    if (aspect_hint) total.aspect_hint = aspect_hint;
+  if (params.layer) {
+    const auto layer_aspect = params.layer->aspectHint();
+    if (layer_aspect.hasHint()) {
+      // If the aspect hint from layer if there is one. In this case, aspect
+      // ratio hints from children are ignored.
+      total.aspect = layer_aspect;
+    }
 
     for (int i = 0; i < 2; ++i) {
       std::visit(
@@ -153,47 +163,50 @@ void computeLayoutConstraints(const LayerGroup& group)
                 total.min_pix[i] = max(total.min_pix[i], ab.pixels);
               },
           },
-          group.layer->sizeHint()[i]);
+          params.layer->sizeHint()[i]);
     }
   }
 
-  // cache for later 2nd pass
-  group.cached_ = total;
+  // set constraints for later 2nd pass
+  group.constraints() = total;
 }
 
-void computeLayoutRegion(const LayerGroup& group, const Region2I& region)
+void computeLayoutRegion(LayerGroup& group, const Region2I& region)
 {
   // 2nd pass, top down
-
-  auto& r = group.cached_;
-  r.region = region;
+  group.region() = region;
 
   constexpr int handle_pix = 5;
-  const int num_children = group.children.size();
+  const int num_children = group.children().size();
   const int total_handle_pix = handle_pix * (num_children - 1);
+  const auto& constraints = PANGO_UNWRAP(group.constraints());
 
-  switch (group.grouping) {
+  switch (group.params().grouping) {
     case LayerGroup::Grouping::stacked:
       [[fallthrough]];
     case LayerGroup::Grouping::tabbed:
       // the same region for stacked and tabbed.
-      for (const auto& child : group.children) {
+      for (auto& child : group.children()) {
         computeLayoutRegion(child, region);
       }
       break;
     case LayerGroup::Grouping::horizontal: {
       // compute how many pixels we have to spend after accounting fixed stuff
-      int remaining = region.range()[0] - r.min_pix[0] - total_handle_pix;
+      int remaining =
+          region.range()[0] - constraints.min_pix[0] - total_handle_pix;
 
       // Compute the size of one ratio unit given total and pixels we have
       // to fill.
-      const double ratio_unit_pix = remaining / r.parts[0];
+      const double ratio_unit_pix = remaining / constraints.parts[0];
 
       int x = region.min()[0];
-      for (const auto& child : group.children) {
-        const int w = int(
-            child.cached_.min_pix[0] + child.cached_.parts[0] * ratio_unit_pix);
-        const auto child_region = Region2I::fromMinMax(
+      for (auto& child : group.children()) {
+        const auto& child_constraints = PANGO_UNWRAP(child.constraints());
+
+        const int w =
+            int(child_constraints.min_pix[0] +
+                child_constraints.parts[0] * ratio_unit_pix);
+        const Region2I child_region = Region2I::fromMinMax(
             Eigen::Array2i(x, region.min()[1]),
             Eigen::Array2i(x + w - 1, region.max()[1]));
         computeLayoutRegion(child, child_region);
@@ -204,16 +217,20 @@ void computeLayoutRegion(const LayerGroup& group, const Region2I& region)
     }
     case LayerGroup::Grouping::vertical: {
       // compute how many pixels we have to spend after accounting fixed stuff
-      int remaining = region.range()[1] - r.min_pix[1] - total_handle_pix;
+      int remaining =
+          region.range()[1] - constraints.min_pix[1] - total_handle_pix;
 
       // Compute the size of one ratio unit given total and pixels we have
       // to fill.
-      const double ratio_unit_pix = remaining / r.parts[1];
+      const double ratio_unit_pix = remaining / constraints.parts[1];
 
       int y = region.min()[1];
-      for (const auto& child : group.children) {
-        const int h = int(
-            child.cached_.min_pix[1] + child.cached_.parts[1] * ratio_unit_pix);
+      for (auto& child : group.children()) {
+        const auto& child_constraints = PANGO_UNWRAP(child.constraints());
+
+        const int h =
+            int(child_constraints.min_pix[1] +
+                child_constraints.parts[1] * ratio_unit_pix);
         const auto child_region = Region2I::fromMinMax(
             Eigen::Array2i(region.min()[0], y),
             Eigen::Array2i(region.max()[0], y + h - 1));
@@ -234,9 +251,12 @@ void computeLayoutRegion(const LayerGroup& group, const Region2I& region)
       std::vector<double> ws;
       double total_width = 0.0;
 
-      for (const auto& child : group.children) {
-        const double aspect =
-            child.cached_.aspect_hint ? child.cached_.aspect_hint : 1.0;
+      for (const auto& child : group.children()) {
+        const auto& child_constraints = PANGO_UNWRAP(child.constraints());
+
+        const double aspect = child_constraints.aspect.hasHint()
+                                  ? child_constraints.aspect.hint()
+                                  : 1.0;
         const double w = aspect;
         ws.push_back(w);
         total_width += w;
@@ -275,9 +295,12 @@ void computeLayoutRegion(const LayerGroup& group, const Region2I& region)
 
       int x = region.min()[0];
       int y = region.min()[1];
-      for (const auto& child : group.children) {
-        const double aspect =
-            child.cached_.aspect_hint ? child.cached_.aspect_hint : 1.0;
+      for (auto& child : group.children()) {
+        const auto& child_constraints = PANGO_UNWRAP(child.constraints());
+
+        const double aspect = child_constraints.aspect.hasHint()
+                                  ? child_constraints.aspect.hint()
+                                  : 1.0;
         const int h = row_height_pix;
         const int w = int(unit_size_pix * aspect);
         if ((x + w) > region.max()[0]) {
@@ -295,13 +318,22 @@ void computeLayoutRegion(const LayerGroup& group, const Region2I& region)
 
 std::ostream& operator<<(std::ostream& s, const LayerGroup& layout)
 {
-  const auto& v = layout.children;
-  SOPHUS_ASSERT(v.size() > 0);
-  if (layout.layer) s << "x";
+  const auto& v = layout.children();
+  if (layout.params().layer) {
+    s << "x";
+  }
+  if (layout.region()) {
+    s << "[" << layout.region()->min().transpose() << ", "
+      << layout.region()->max().transpose() << "]";
+  }
+
+  if (v.empty()) {
+    return s;
+  }
   s << "(";
   s << v[0];
   for (size_t i = 1; i < v.size(); ++i) {
-    switch (layout.grouping) {
+    switch (layout.params().grouping) {
       case LayerGroup::Grouping::horizontal:
         s << "|";
         break;
