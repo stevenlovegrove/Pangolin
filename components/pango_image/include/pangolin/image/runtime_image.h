@@ -2,12 +2,12 @@
 
 #include <pangolin/image/image.h>
 #include <pangolin/image/pixel_format.h>
-#include <sophus/image/runtime_image.h>
+#include <sophus/image/runtime_image_types.h>
 
 namespace pangolin
 {
 
-template <template <typename> class TAllocator = Eigen::aligned_allocator>
+template <class TAllocator = Eigen::aligned_allocator<uint8_t>>
 using IntensityImage = sophus::IntensityImage<TAllocator>;
 
 }

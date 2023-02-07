@@ -3,7 +3,7 @@
 #include "farm_ng/core/logging/expected.h"
 
 #include <pangolin/gl/glplatform.h>
-#include <sophus/image/runtime_image.h>
+#include <sophus/image/runtime_image_types.h>
 
 namespace pangolin
 {
