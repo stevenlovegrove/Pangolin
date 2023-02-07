@@ -299,22 +299,24 @@ struct DrawLayerImpl : public DrawLayer {
 
   Size sizeHint() const override { return size_hint_; }
 
-  double aspectHint() const override
+  AspectRatio aspectHint() const override
   {
     Region3F64 cam_bounds = Region3F64::empty();
     for (const auto& obj : pixels_collection_.drawables) {
       cam_bounds.extend(obj->boundsInParent());
     }
-    if (!cam_bounds.isEmpty()) {
+    if (cam_bounds.isProper()) {
+      // cam_bounds are not empty nor degenerated
       Eigen::Vector2d dim = cam_bounds.range().head<2>();
-      return dim.x() / dim.y();
+      return AspectRatio::fromRatio(dim.x() / dim.y());
     }
-    if (render_state_.camera.imageSize().width &&
-        render_state_.camera.imageSize().height) {
-      return (double)render_state_.camera.imageSize().width /
-             (double)render_state_.camera.imageSize().height;
+    if (render_state_.camera.imageSize().width > 0 &&
+        render_state_.camera.imageSize().height > 0) {
+      return AspectRatio::fromRatio(
+          (double)render_state_.camera.imageSize().width /
+          (double)render_state_.camera.imageSize().height);
     }
-    return 1.0;
+    return AspectRatio::one();
   };
 
   void add(

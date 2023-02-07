@@ -1,5 +1,6 @@
 #pragma once
 
+#include <farm_ng/core/logging/logger.h>
 #include <fmt/format.h>
 #include <pangolin/utils/fmt.h>
 
@@ -100,6 +101,8 @@
         "We've reached code we thought was unreachable.");                     \
     ::std::abort();                                                            \
   } while (false)
+
+#define PANGO_UNWRAP(expr, ...) FARM_UNWRAP(expr, ##__VA_ARGS__)
 
 namespace pangolin
 {

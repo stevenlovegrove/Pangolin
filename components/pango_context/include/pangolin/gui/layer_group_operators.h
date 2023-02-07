@@ -65,7 +65,7 @@ LayerGroup makeLayerGroup(const T& v)
   if constexpr (same_as<BaseT, LayerGroup>) {
     return v;
   } else {
-    return LayerGroup(Shared<Layer>(makeLayer(v)));
+    return LayerGroup({.layer = Shared<Layer>(makeLayer(v))});
   }
 }
 
@@ -75,25 +75,24 @@ namespace detail
 inline LayerGroup join(
     LayerGroup::Grouping op_type, const LayerGroup& lhs, const LayerGroup& rhs)
 {
-  PANGO_ASSERT(lhs.children.size() > 0 || lhs.layer);
-  PANGO_ASSERT(rhs.children.size() > 0 || rhs.layer);
+  PANGO_ASSERT(lhs.children().size() > 0 || lhs.params().layer);
+  PANGO_ASSERT(rhs.children().size() > 0 || rhs.params().layer);
 
-  LayerGroup ret;
-  ret.grouping = op_type;
+  LayerGroup ret({.grouping = op_type});
 
-  if (op_type == lhs.grouping && !lhs.layer) {
+  if (op_type == lhs.params().grouping && !lhs.params().layer) {
     // We can merge hierarchy
-    ret.children = lhs.children;
+    ret.children() = lhs.children();
   } else {
-    ret.children.push_back(lhs);
+    ret.children().push_back(lhs);
   }
 
-  if (op_type == rhs.grouping && !rhs.layer) {
+  if (op_type == rhs.params().grouping && !rhs.params().layer) {
     // We can merge hierarchy
-    ret.children.insert(
-        ret.children.end(), rhs.children.begin(), rhs.children.end());
+    ret.children().insert(
+        ret.children().end(), rhs.children().begin(), rhs.children().end());
   } else {
-    ret.children.push_back(rhs);
+    ret.children().push_back(rhs);
   }
 
   return ret;
@@ -121,9 +120,8 @@ PANGO_PANEL_OPERATOR(operator^, LayerGroup::Grouping::stacked)
 template <typename T>
 LayerGroup flex(T head)
 {
-  LayerGroup g;
-  g.grouping = LayerGroup::Grouping::flex;
-  g.children.push_back(makeLayerGroup(head));
+  LayerGroup g({.grouping = LayerGroup::Grouping::flex});
+  g.children().push_back(makeLayerGroup(head));
   return g;
 }
 
@@ -137,8 +135,21 @@ LayerGroup flex(T head, TArgs... args)
 
 ////////////////////////////////////////////////////////////////////
 
-void computeLayoutConstraints(const LayerGroup& group);
-void computeLayoutRegion(const LayerGroup& group, const Region2I& region);
+// Calculates and populates constraints for given layout group recursively.
+//
+// Side-effect: The constraints for the give group and all its children are
+// calculated and populated recursively in a bottom ups fashion.
+void computeLayoutConstraints(LayerGroup& group);
+
+// Populates region in layer group in top down-fashion.
+//
+// Side-effects:
+//  - Provided region is assigned to group.
+//  - Recursively, regions are calculated for all children and assign to them.
+//
+// Precondition: The constraints of the group and its children must be populated
+// already (e.g. by corresponding call to populateConstraintsRecursively).
+void computeLayoutRegion(LayerGroup& group, const Region2I& region);
 
 std::ostream& operator<<(std::ostream& s, const LayerGroup& layout);
 

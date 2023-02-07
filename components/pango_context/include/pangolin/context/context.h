@@ -65,7 +65,6 @@ struct Context : std::enable_shared_from_this<Context> {
   // TODO: provide a method to serialize LayerGroup for easily
   //       saving layouts
   virtual const LayerGroup& layout() const = 0;
-  virtual LayerGroup& layout() = 0;
 
   // Specify the Layers which will make up the drawing canvas via a LayerGroup
   // object - a nested tree of Panels with a layout specification at each node.
