@@ -85,6 +85,7 @@ struct DeviceGlBuffer : public DeviceBuffer {
 
   void queueUpdate(const SharedDataPackage& data, size_t dest_element) override
   {
+    if (!data.num_elements) return;
     checkRequest(data, dest_element);
     std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
     updates_.push_back({data, dest_element});
