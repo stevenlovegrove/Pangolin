@@ -291,7 +291,7 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
 
             // PANGO_INFO("key: {}", (int)arg.key);
           },
-          [](auto&& arg) { PANGO_UNREACHABLE(); },
+          [](auto&& arg) {},
       },
       event.detail);
 

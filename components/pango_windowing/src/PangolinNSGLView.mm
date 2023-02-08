@@ -94,6 +94,7 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
                                                         owner:self
                                                      userInfo:nil];
   [self addTrackingArea:area];
+  [self setAcceptsTouchEvents:YES];
   [area release];
 }
 
@@ -333,6 +334,46 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
 {
     PANGOLIN_UNUSED(event);
 }
+
+void notifyForFingerContact(pangolin::WindowInterface* osx_window, pangolin::KeyModifierBitmask modifiers, float x, float y, int count, bool enter)
+{
+    static int last_count = 0;
+
+    osx_window->SpecialInputSignal(pangolin::SpecialInputEvent({
+        {x, y, modifiers },
+        pangolin::InputSpecialTouchContact,
+        {float(count), float(count - last_count), 0.0, 0.0f}
+    }));
+    last_count = count;
+}
+
+- (void)touchesBeganWithEvent:(NSEvent *)event
+{
+    // https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/EventOverview/HandlingTouchEvents/HandlingTouchEvents.html
+    const NSPoint location = [self _Location: event];
+    NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching inView:self];
+    notifyForFingerContact(osx_window, GetKeyModifierBitmask(event), (float)location.x, (float)location.y, touches.count, true);
+}
+
+- (void)touchesMovedWithEvent:(NSEvent *)event
+{
+    PANGOLIN_UNUSED(event);
+}
+
+- (void)touchesEndedWithEvent:(NSEvent *)event
+{
+    const NSPoint location = [self _Location: event];
+    NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching inView:self];
+    notifyForFingerContact(osx_window, GetKeyModifierBitmask(event), (float)location.x, (float)location.y, touches.count, false);
+}
+
+- (void)touchesCancelledWithEvent:(NSEvent *)event
+{
+    const NSPoint location = [self _Location: event];
+    NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching inView:self];
+    notifyForFingerContact(osx_window, GetKeyModifierBitmask(event), (float)location.x, (float)location.y, touches.count, false);
+}
+
 
 -(void)dealloc
 {

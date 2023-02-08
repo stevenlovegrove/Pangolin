@@ -55,10 +55,15 @@ struct Interactive {
     bool pressed;
   };
 
+  struct TouchEvent {
+    int in_contact_count;
+    int in_contact_delta;
+  };
+
   struct Event {
     WindowPosition pointer_pos;
     ModifierKeyStatus modifier_active;
-    std::variant<PointerEvent, ScrollEvent, KeyboardEvent> detail;
+    std::variant<PointerEvent, ScrollEvent, KeyboardEvent, TouchEvent> detail;
   };
 
   virtual bool handleEvent(const Context&, const Event&) = 0;

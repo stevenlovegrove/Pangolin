@@ -299,6 +299,14 @@ struct ContextImpl : public Context {
           .modifier_active = modifier_active_,
           .detail = Interactive::ScrollEvent{.zoom = e.p[0]}};
       dispatchLayerEvent(layer_event);
+    } else if (e.inType == InputSpecialTouchContact) {
+      Interactive::Event layer_event = {
+          .pointer_pos = WindowPosition{.pos_window = {e.x, e.y}},
+          .modifier_active = modifier_active_,
+          .detail = Interactive::TouchEvent{
+              .in_contact_count = int(e.p[0]),
+              .in_contact_delta = int(e.p[1])}};
+      dispatchLayerEvent(layer_event);
     }
   }
 
