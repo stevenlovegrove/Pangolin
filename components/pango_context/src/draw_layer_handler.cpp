@@ -378,7 +378,7 @@ class HandlerImpl : public DrawLayerHandler
             [&](const Interactive::KeyboardEvent& arg) {
               // do nothing for now
             },
-            [](auto&& arg) { PANGO_UNREACHABLE(); },
+            [](auto&& arg) {},
         },
         event.detail);
 
