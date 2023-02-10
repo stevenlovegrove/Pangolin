@@ -87,11 +87,32 @@ std::u32string GlWidgetLayer::toUtf32(const std::string& utf8)
 
 float GlWidgetLayer::TextWidthPix(const std::u32string& utf32)
 {
-  float w = 0;
-  for (auto c : utf32) {
-    w += font->chardata[c].StepX();
+  float width = 0.0;
+
+  const std::u16string index16 = font->to_index_string(utf32);
+  GlFont::codepoint_t last_char = 0;
+
+  for (size_t c = 0; c < index16.size(); ++c) {
+    const GlFont::codepoint_t this_char = utf32[c];
+
+    if (!index16[c]) {
+      // TODO: use some symbol such as '?' maybe
+      width += font->default_advance_px;
+      last_char = 0;
+    } else {
+      auto ch = font->chardata[this_char];
+      if (last_char) {
+        const auto key = GlFont::codepointpair_t(last_char, this_char);
+        const auto kit = font->kern_table.find(key);
+        const float kern = (kit != font->kern_table.end()) ? kit->second : 0;
+        width += kern;
+      }
+      width += ch.StepX();
+      last_char = this_char;
+    }
   }
-  return w;
+
+  return width;
 }
 
 void GlWidgetLayer::AddTextToHostBuffer(
