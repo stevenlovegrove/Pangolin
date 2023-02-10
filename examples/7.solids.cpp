@@ -50,9 +50,9 @@ int main(int argc, char** argv)
        .near_far = {0.01, 1000.0}});
   auto checker_plane = DrawnSolids::Create({});
   scene->getHandler().selection_signal.connect([](SelectionEvent e) {
-    if (e.in_scene_cursor) {
-      std::cout << "Double clicked with 3D curser in scene coordinates:\n "
-                << e.in_scene_cursor->transpose() << std::endl;
+    if (e.pointer_event.action == PointerAction::down) {
+      std::cout << "Clicked with 3D curser in scene coordinates:\n "
+                << e.in_scene_cursor.transpose() << std::endl;
     }
   });
 

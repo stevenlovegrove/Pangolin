@@ -299,13 +299,13 @@ class HandlerImpl : public DrawLayerHandler
                 down_state_ = state;
                 cursor_in_world_ = p_world;
               } else if (arg.action == PointerAction::double_click_down) {
-                auto selection = Region2F64::from(p_img);
+                // auto selection = Region2F64::from(p_img);
 
-                selection_signal(SelectionEvent{
-                    .trigger_event = event,
-                    .in_pixel_selection = selection,
-                    .in_scene_cursor = cursor_in_world_,
-                    .in_progress = false});
+                // selection_signal(SelectionEvent{
+                //     .trigger_event = event,
+                //     .in_pixel_selection = selection,
+                //     .in_scene_cursor = cursor_in_world_,
+                //     .in_progress = false});
               } else if (arg.action == PointerAction::drag) {
                 if (!down_state_) {
                   PANGO_WARN("Unexpected");
@@ -336,21 +336,31 @@ class HandlerImpl : public DrawLayerHandler
                     down_state_ = state;
                   }
                 }
+              } else {
+                down_state_ = std::nullopt;
               }
 
               // When holding shift, selection is made
-              if (event.modifier_active & ModifierKey::shift) {
-                auto selection = Region2F64::from(p_img);
-                if (down_state_) {
+              // if (event.modifier_active & ModifierKey::shift)
+              {
+                auto selection = Region2F64::empty();
+                if (p_img.isFinite().all()) selection.extend(p_img);
+                if (down_state_ &&
+                    down_state_->p_img.array().isFinite().all()) {
                   selection.extend(down_state_->p_img);
                 }
 
                 selection_signal(SelectionEvent{
                     .trigger_event = event,
+                    .pointer_event = arg,
                     .in_pixel_selection = selection,
-                    .in_progress = arg.action == PointerAction::down ||
+                    .in_scene_cursor = cursor_in_world_,
+                    .in_scene_hover = p_world,
+                    .in_progress = arg.action == PointerAction::hover ||
+                                   arg.action == PointerAction::down ||
                                    arg.action == PointerAction::drag});
               }
+
               handled = true;
             },
             [&](const Interactive::ScrollEvent& arg) {
