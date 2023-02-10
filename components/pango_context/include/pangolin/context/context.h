@@ -1,10 +1,12 @@
 #pragma once
 
 #include <pangolin/context/engine.h>
+#include <pangolin/gui/interactive.h>
 #include <pangolin/gui/layer_group.h>
 #include <pangolin/maths/conventions.h>
 #include <pangolin/maths/region.h>
 #include <pangolin/utils/shared.h>
+#include <pangolin/utils/signal_slot.h>
 #include <sophus/image/image_size.h>
 #include <sophus/image/runtime_image_types.h>
 
@@ -36,6 +38,9 @@ struct Context : std::enable_shared_from_this<Context> {
   // Return the implementation window (onscreen or offscreen) backing this
   // context
   virtual Shared<Window> window() = 0;
+
+  virtual sigslot::signal<const Interactive::Event&>&
+  signalUnhandledEvents() = 0;
 
   // Enter the blocking event loop that will process window events such as user
   // input and manage which elements are drawn within the window. After each

@@ -93,7 +93,9 @@ bool giveEventToActiveLayer(
   event.pointer_pos.region = r;
 
   if (group.layer == active_layer) {
-    group.layer->handleEvent(context, event);
+    if (group.layer->handleEvent(context, event)) {
+      return true;
+    }
   }
 
   // see if child nodes want it
@@ -335,16 +337,24 @@ struct ContextImpl : public Context {
       const Interactive::Event& src,
       ActiveLayerAction active_layer_action = ActiveLayerAction::ignore)
   {
+    bool handled = false;
     if (active_layer_) {
-      giveEventToActiveLayer(*this, src, layout_, active_layer_);
+      handled = giveEventToActiveLayer(*this, src, layout_, active_layer_);
+
       if (active_layer_action == ActiveLayerAction::release) {
         active_layer_ = nullptr;
       }
     } else {
       auto layer = giveEventToLayers(*this, src, layout_);
+      handled = layer != nullptr;
+
       if (active_layer_action == ActiveLayerAction::capture) {
         active_layer_ = layer;
       }
+    }
+
+    if (!handled) {
+      signal_unhandled_events_(src);
     }
   }
 
@@ -357,6 +367,11 @@ struct ContextImpl : public Context {
   LayerGroup& layout() override { return layout_; }
 
   ImageSize size() const override { return size_; }
+
+  sigslot::signal<const Interactive::Event&>& signalUnhandledEvents() override
+  {
+    return signal_unhandled_events_;
+  }
 
   void drawPanels()
   {
@@ -447,6 +462,8 @@ struct ContextImpl : public Context {
 
   std::chrono::system_clock::time_point last_click_time;
   PointerButton last_click_button;
+
+  sigslot::signal<const Interactive::Event&> signal_unhandled_events_;
 };
 
 PANGO_CREATE(Context) { return Shared<ContextImpl>::make(p); }
