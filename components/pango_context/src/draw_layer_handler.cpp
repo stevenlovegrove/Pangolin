@@ -299,9 +299,11 @@ class HandlerImpl : public DrawLayerHandler
                 down_state_ = state;
                 cursor_in_world_ = p_world;
               } else if (arg.action == PointerAction::double_click_down) {
+                auto selection = Region2F64::from(p_img);
+
                 selection_signal(SelectionEvent{
                     .trigger_event = event,
-                    .in_pixel_selection = Region2F64::empty(),
+                    .in_pixel_selection = selection,
                     .in_scene_cursor = cursor_in_world_,
                     .in_progress = false});
               } else if (arg.action == PointerAction::drag) {
