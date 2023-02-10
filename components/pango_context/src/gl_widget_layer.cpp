@@ -291,7 +291,8 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
 #ifdef __APPLE__
             const float delta = arg.pan.y();
 #else
-            const float delta = arg.zoom;
+            const float delta = arg.zoom * 1000;
+            PANGO_INFO("zoom {}", delta);
 #endif
 
             const float offset_max = (widgets.size() - 1.0f) * widget_height;
