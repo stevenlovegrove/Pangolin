@@ -267,7 +267,12 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
             }
           },
           [&](const Interactive::ScrollEvent& arg) {
+#ifdef __APPLE__
             const float delta = arg.pan.y();
+#else
+            const float delta = arg.zoom;
+#endif
+
             const float offset_max = (widgets.size() - 1.0f) * widget_height;
             scroll_offset =
                 std::clamp(scroll_offset + delta, -offset_max, 0.0f);
