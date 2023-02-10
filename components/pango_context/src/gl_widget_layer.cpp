@@ -72,8 +72,10 @@ void GlWidgetLayer::UpdateWidgetVBO(float width)
   std::vector<Eigen::Vector4f> host_vbo;
   for (size_t i = 0; i < widgets.size(); ++i) {
     const auto& w = widgets[i];
+    const double display_percent =
+        std::isfinite(w.value_percent) ? w.value_percent : 0.0;
     host_vbo.emplace_back(
-        0.0, i, w.divisions + w.value_percent / 2.0, uint(w.widget_type));
+        0.0, i, w.divisions + display_percent / 2.0, uint(w.widget_type));
   }
   widget_program.vbo = pangolin::GlBuffer(pangolin::GlArrayBuffer, host_vbo);
   widget_program.vao.addVertexAttrib(0, widget_program.vbo);
