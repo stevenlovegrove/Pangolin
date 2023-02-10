@@ -291,6 +291,7 @@ class HandlerImpl : public DrawLayerHandler
                             ImageXy::right_down, DeviceXyz::right_down_forward,
                             up_in_world_};
 
+    bool handled = false;
     std::visit(
         overload{
             [&](const Interactive::PointerEvent& arg) {
@@ -348,6 +349,7 @@ class HandlerImpl : public DrawLayerHandler
                     .in_progress = arg.action == PointerAction::down ||
                                    arg.action == PointerAction::drag});
               }
+              handled = true;
             },
             [&](const Interactive::ScrollEvent& arg) {
               const double zoom_input = std::clamp(-arg.zoom / 1.0, -1.0, 1.0);
@@ -374,6 +376,7 @@ class HandlerImpl : public DrawLayerHandler
                     info, Eigen::Vector3d(arg.pan[1], arg.pan[0], 0.0) / 200.0);
                 cameraMoveTowardsPoint(info, zoom_input);
               }
+              handled = true;
             },
             [&](const Interactive::KeyboardEvent& arg) {
               // do nothing for now
@@ -386,7 +389,7 @@ class HandlerImpl : public DrawLayerHandler
       clampClipViewTransform(info.render_state.clip_view_transform);
     }
 
-    return true;
+    return handled;
   }
 
   double last_zcam_ = 1.0;
