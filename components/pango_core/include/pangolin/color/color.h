@@ -52,6 +52,14 @@ struct Color {
   {
   }
 
+  constexpr Color(int hex_color_code) :
+      r(((0xff000000 & hex_color_code) >> 24) / 255.0),
+      g(((0x00ff0000 & hex_color_code) >> 16) / 255.0),
+      b(((0x0000ff00 & hex_color_code) >> 8) / 255.0),
+      a(((0x000000ff & hex_color_code) >> 0) / 255.0)
+  {
+  }
+
   operator Eigen::Vector4f() const { return {r, g, b, a}; }
 
   operator Eigen::Vector4d() const { return {r, g, b, a}; }
