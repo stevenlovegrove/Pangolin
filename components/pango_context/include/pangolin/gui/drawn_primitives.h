@@ -20,6 +20,7 @@ struct DrawnPrimitives : public Drawable {
     axes,  // populate vertices with axes_T_world sophus::SE3f elements
            // [indices,colors,radius]
            // lines and triangles
+    path,  // populate vertices with centerline of path
     lines,
     line_strip,
     line_loop,

@@ -40,6 +40,9 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       case DrawnPrimitives::Type::shapes:
         drawShapes(params);
         break;
+      case DrawnPrimitives::Type::path:
+        drawPath(params);
+        break;
       default:
         drawPointsLinesTriangles(params);
         break;
@@ -137,6 +140,52 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       }
 
       PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->size()));
+    }
+  }
+
+  void drawPath(const ViewParams& params)
+  {
+    constexpr int location_vertex = 0;
+    constexpr int location_colors = 4;
+
+    vertices->sync();
+    colors->sync();
+
+    if (!prog) {
+      GlSlProgram::Defines defines;
+      defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
+
+      prog = GlSlProgram::Create(
+          {.sources =
+               {{.origin = "/components/pango_opengl/shaders/"
+                           "main_path.glsl"}},
+           .program_defines = defines});
+    }
+
+    if (!vertices->empty()) {
+      PANGO_ENSURE(vertices->dataType());
+      auto bind_prog = prog->bind();
+      auto bind_vao = vao.bind();
+
+      u_intrinsics =
+          (params.clip_from_image * params.image_from_camera).cast<float>();
+      u_cam_from_drawable = params.camera_from_drawable.cast<float>();
+      u_size = default_size;
+
+      if (!colors->empty()) {
+        vao.addVertexAttrib(location_colors, *colors);
+      } else if (geometry_texture->empty()) {
+        u_color = default_color.cast<float>();
+      }
+
+      const sophus::RuntimePixelType data_type = *vertices->dataType();
+
+      for (int i = 0; i < 4; ++i) {
+        vao.addVertexAttrib(
+            location_vertex + i, *vertices, i * data_type.bytesPerPixel());
+      }
+
+      PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->size() - 3));
     }
   }
 
