@@ -63,6 +63,11 @@ std::shared_ptr<Layer> giveEventToLayers(
     const Context& context, Interactive::Event event,
     const LayerGroup& layer_group)
 {
+  if (!layer_group.region()) {
+    // This can happen if a UI event modifies the layout in the process of
+    // event dispatch.
+    return nullptr;
+  }
   const Region2I r = PANGO_UNWRAP(layer_group.region());
   const Eigen::Vector2i winpos = event.pointer_pos.pos_window.cast<int>();
 
