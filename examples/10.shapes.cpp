@@ -1,5 +1,5 @@
-#include <pangolin/context/context.h>
 #include <pangolin/color/color.h>
+#include <pangolin/context/context.h>
 #include <pangolin/gui/all_layers.h>
 #include <pangolin/image/image_io.h>
 
@@ -15,7 +15,7 @@ int main(int /*argc*/, char** /*argv*/)
   });
 
   auto primitives = DrawnPrimitives::Create(
-      {.element_type = DrawnPrimitives::Type::shapes, .default_size = 10.0});
+      {.element_type = DrawnPrimitives::Type::shapes, .default_size = 0.5});
 
   {
     std::vector<Eigen::Vector3f> points;
@@ -26,7 +26,7 @@ int main(int /*argc*/, char** /*argv*/)
 
     for (int i = 0; i < N; ++i) {
       auto c = wheel.GetColorBin(i);
-      points.push_back({float(i), 0.0, 0.0});
+      points.push_back({float(i), 0.0, 0.01});
       colors.push_back({c.r, c.g, c.b, 1.0});
       shapes.push_back(i);
     }
@@ -36,7 +36,12 @@ int main(int /*argc*/, char** /*argv*/)
     primitives->shapes->queueUpdate(std::move(shapes));
   }
 
-  context->setLayout(primitives);
+  auto scene = DrawLayer::Create(
+      {.camera_from_world = cameraLookatFromWorld(
+           {0.0, 0.0, 1.0}, {10.0, 0.0, 0.0}, AxisDirection2::positive_z),
+       .in_scene = {DrawnSolids::Create({}), primitives}});
+
+  context->setLayout(scene);
   context->loop();
   return 0;
 }
