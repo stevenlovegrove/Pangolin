@@ -1,10 +1,12 @@
 #pragma once
 
 #include <pangolin/context/engine.h>
+#include <pangolin/gui/interactive.h>
 #include <pangolin/gui/layer_group.h>
 #include <pangolin/maths/conventions.h>
 #include <pangolin/maths/region.h>
 #include <pangolin/utils/shared.h>
+#include <pangolin/utils/signal_slot.h>
 #include <sophus/image/image_size.h>
 #include <sophus/image/runtime_image_types.h>
 
@@ -37,6 +39,9 @@ struct Context : std::enable_shared_from_this<Context> {
   // context
   virtual Shared<Window> window() = 0;
 
+  virtual sigslot::signal<const Interactive::Event&>&
+  signalUnhandledEvents() = 0;
+
   // Enter the blocking event loop that will process window events such as user
   // input and manage which elements are drawn within the window. After each
   // rendered frame, the user loop_function is invoked within the same gui
@@ -60,7 +65,6 @@ struct Context : std::enable_shared_from_this<Context> {
   // TODO: provide a method to serialize LayerGroup for easily
   //       saving layouts
   virtual const LayerGroup& layout() const = 0;
-  virtual LayerGroup& layout() = 0;
 
   // Specify the Layers which will make up the drawing canvas via a LayerGroup
   // object - a nested tree of Panels with a layout specification at each node.

@@ -40,6 +40,9 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       case DrawnPrimitives::Type::shapes:
         drawShapes(params);
         break;
+      case DrawnPrimitives::Type::path:
+        drawPath(params);
+        break;
       default:
         drawPointsLinesTriangles(params);
         break;
@@ -67,7 +70,9 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       u_size = default_size;
 
       auto bind_bo = vertices->bind();
-      PANGO_ENSURE(vertices->dataType().is<sophus::Se3<float>>());
+      PANGO_ENSURE(
+          vertices->dataType() &&
+          vertices->dataType()->is<sophus::Se3<float>>());
       // xyzw quaternion
       PANGO_GL(
           glVertexAttribPointer(0, 4, GL_FLOAT, false, 8 * sizeof(float), 0));
@@ -79,7 +84,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       PANGO_GL(glEnableVertexAttribArray(1));
 
       PANGO_GL(glPointSize(5.0));
-      PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->numElements()));
+      PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->size()));
     }
   }
 
@@ -112,14 +117,14 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
       u_cam_from_drawable = params.camera_from_drawable.cast<float>();
-      if (false) {
-        u_use_clip_size_units = false;
-        u_size = default_size;
-      } else {
-        u_use_clip_size_units = true;
+      if (size_in_pixels) {
+        u_mode = 1;
         Eigen::Array2f size_pix = Eigen::Vector2f(default_size, default_size);
         u_size_clip = 2.0 * size_pix.array() /
                       params.viewport.range().cast<float>().array();
+      } else {
+        u_mode = 0;
+        u_size = default_size;
       }
 
       vao.addVertexAttrib(location_vertex, *vertices);
@@ -134,7 +139,66 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
         u_shape = static_cast<int>(default_shape);
       }
 
-      PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->numElements()));
+      PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->size()));
+    }
+  }
+
+  void drawPath(const ViewParams& params)
+  {
+    constexpr int location_vertex = 0;
+    constexpr int location_colors = 4;
+
+    vertices->sync();
+    colors->sync();
+
+    if (!prog) {
+      GlSlProgram::Defines defines;
+      defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
+
+      prog = GlSlProgram::Create(
+          {.sources =
+               {{.origin = "/components/pango_opengl/shaders/"
+                           "main_path.glsl"}},
+           .program_defines = defines});
+    }
+
+    if (vertices->size() >= 3) {
+      PANGO_ENSURE(vertices->dataType());
+      auto bind_prog = prog->bind();
+      auto bind_vao = vao.bind();
+
+      u_intrinsics =
+          (params.clip_from_image * params.image_from_camera).cast<float>();
+      u_cam_from_drawable = params.camera_from_drawable.cast<float>();
+
+      if (size_in_pixels) {
+        u_mode = 1;
+        Eigen::Array2f size_pix = Eigen::Vector2f(default_size, default_size);
+        u_size_clip = 2.0 * size_pix.array() /
+                      params.viewport.range().cast<float>().array();
+      } else {
+        u_mode = 0;
+        u_size_clip = Eigen::Vector2f(default_size, default_size);
+        u_size_clip = Eigen::Vector2f(1.0, 1.0);
+        u_size = default_size;
+      }
+
+      if (!colors->empty()) {
+        vao.addVertexAttrib(location_colors, *colors);
+      } else if (geometry_texture->empty()) {
+        u_color = default_color.cast<float>();
+      }
+
+      ScopedGlDisable disable_depth(depth_test ? 0 : GL_DEPTH_TEST);
+
+      const sophus::RuntimePixelType data_type = *vertices->dataType();
+
+      for (int i = 0; i < 4; ++i) {
+        vao.addVertexAttrib(
+            location_vertex + i, *vertices, i * data_type.bytesPerPixel());
+      }
+
+      PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->size() - 3));
     }
   }
 
@@ -199,18 +263,20 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
         bind_texture = geometry_texture->bind();
       }
 
+      ScopedGlDisable disable_depth(depth_test ? 0 : GL_DEPTH_TEST);
+
       PANGO_GL(glPointSize(default_size));
 
       if (indices->empty()) {
-        PANGO_GL(
-            glDrawArrays(toGlEnum(element_type), 0, vertices->numElements()));
+        PANGO_GL(glDrawArrays(toGlEnum(element_type), 0, vertices->size()));
       } else {
-        const auto maybe_gl_fmt = glTypeInfo(indices->dataType());
+        PANGO_ENSURE(indices->dataType());
+        const auto maybe_gl_fmt = glTypeInfo(*indices->dataType());
         const GlFormatInfo gl_fmt = SOPHUS_UNWRAP(maybe_gl_fmt);
 
         auto bind_ibo = indices->bind();
         PANGO_GL(glDrawElements(
-            toGlEnum(element_type), indices->numElements(), gl_fmt.gl_type, 0));
+            toGlEnum(element_type), indices->size(), gl_fmt.gl_type, 0));
       }
     }
   }
@@ -223,7 +289,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
   const GlUniform<Eigen::Matrix4f> u_cam_from_drawable = {"cam_from_world"};
   const GlUniform<Eigen::Vector4f> u_color = {"color"};
   const GlUniform<uint> u_shape = {"shape"};
-  const GlUniform<bool> u_use_clip_size_units = {"use_clip_size_units"};
+  const GlUniform<bool> u_mode = {"mode"};
   const GlUniform<float> u_size = {"size"};
   const GlUniform<Eigen::Vector2f> u_size_clip = {"size_clip"};
 };
@@ -235,6 +301,8 @@ PANGO_CREATE(DrawnPrimitives)
   r->default_color = p.default_color;
   r->default_size = p.default_size;
   r->default_shape = p.default_shape;
+  r->size_in_pixels = p.size_in_pixels;
+  r->depth_test = p.depth_test;
   return r;
 }
 

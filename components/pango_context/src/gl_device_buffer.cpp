@@ -27,25 +27,44 @@ std::array<size_t, kN> headAndZeros(const std::array<size_t, kFrom>& x)
 }
 
 struct DeviceGlBuffer : public DeviceBuffer {
-  DeviceGlBuffer(GLenum buffer_type, GLenum gluse) :
-      buffer_type_(buffer_type),
-      gluse_(gluse),
+  struct QueueData {
+    SharedDataPackage data;
+    size_t dest_element;
+  };
+
+  DeviceGlBuffer(DeviceBuffer::Params params) :
+      gluse_(GL_DYNAMIC_DRAW),
+      grow_to_fit_(params.grow_to_fit),
+      allow_retyping_(params.allow_retyping),
       num_elements_(0),
-      num_elements_capacity_(0),
+      num_elements_capacity_(params.min_element_size),
       gl_id_(0)
   {
+    switch (params.kind) {
+      case DeviceBuffer::Kind::VertexIndices:
+        buffer_type_ = GL_ELEMENT_ARRAY_BUFFER;
+        break;
+      case DeviceBuffer::Kind::VertexAttributes:
+        buffer_type_ = GL_ARRAY_BUFFER;
+        break;
+    };
+
+    if (params.data) {
+      queueUpdate(*params.data, 0);
+      params.data = std::nullopt;
+    }
   }
 
   ~DeviceGlBuffer() { free(); }
 
-  void free()
+  void free() const
   {
     if (gl_id_ != 0) glDeleteBuffers(1, &gl_id_);
   }
 
   ScopedBind<DeviceBuffer> bind() const override
   {
-    PANGO_CHECK(!empty(), "Attempting to bind uninitialized DeviceBuffer");
+    PANGO_CHECK(allocated(), "Attempting to bind uninitialized DeviceBuffer");
 
     return {
         [t = this->buffer_type_, id = this->gl_id_]() { glBindBuffer(t, id); },
@@ -53,27 +72,52 @@ struct DeviceGlBuffer : public DeviceBuffer {
     };
   }
 
-  void pushToUpdateQueue(const Data& u) override
+  void checkRequest(const SharedDataPackage& data, size_t dest_element) const
   {
-    SOPHUS_ASSERT(u.data);
-    // always true
-    // SOPHUS_ASSERT_GE(u.num_elements, 0);
+    const size_t needed_size = dest_element + data.num_elements;
+    const bool needs_to_grow = capacity() < needed_size;
+    const bool needs_retype = !dataType() || !(data.data_type == *dataType());
 
-    std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
-    updates_.push_back(u);
-    // sync();
+    PANGO_ENSURE(data.data);
+    PANGO_ENSURE(grow_to_fit_ || !needs_to_grow);
+    PANGO_ENSURE(allow_retyping_ || !allocated() || !needs_retype);
   }
 
-  bool empty() const override { return gl_id_ == 0; }
+  void queueUpdate(const SharedDataPackage& data, size_t dest_element) override
+  {
+    if (!data.num_elements) return;
+    checkRequest(data, dest_element);
+    std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
+    updates_.push_back({data, dest_element});
+  }
 
-  sophus::RuntimePixelType dataType() const override { return data_type_; }
+  bool empty() const override { return size() == 0; }
 
-  size_t numElements() const override { return num_elements_; }
+  bool allocated() const { return bool(dataType()); }
+
+  std::optional<sophus::RuntimePixelType> dataType() const override
+  {
+    return data_type_;
+  }
+
+  size_t size() const override { return num_elements_; }
+
+  size_t capacity() const override { return num_elements_capacity_; }
+
+  void reserve(size_t elements) const override
+  {
+    num_elements_capacity_ = std::max(num_elements_capacity_, elements);
+  }
+
+  size_t sizeBytes() const override
+  {
+    return num_elements_capacity_ * elementSizeBytes();
+  }
 
   void sync() const override
   {
     while (true) {
-      Data u;
+      QueueData u;
       {
         std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);
         if (updates_.empty()) return;
@@ -84,73 +128,80 @@ struct DeviceGlBuffer : public DeviceBuffer {
     }
   }
 
-  void applyUpdateNow(const Data& u) const
+  void applyUpdateNow(const QueueData& u) const
   {
-    SOPHUS_ASSERT(u.data);
-    // always true
-    // SOPHUS_ASSERT_GE(u.num_elements, 0);
-    if (u.num_elements == 0) {
-      return;
-    }
+    // We already checked if these are compatible with policies on entry to
+    // queue
+    const size_t needed_size = u.dest_element + u.data.num_elements;
+    const bool needs_to_grow = capacity() < needed_size;
+    const bool needs_retype = !dataType() || !(u.data.data_type == *dataType());
 
-    if (gl_id_ == 0 /* || incompatible...  */) {
-      data_type_ = u.data_type;
-      num_elements_ = u.params.dest_element + u.num_elements;
-      num_elements_capacity_ =
-          std::max(num_elements_, u.params.num_reserve_elements);
+    if (!allocated() || needs_retype || needs_to_grow) {
+      GLuint backup_id = 0;
+      size_t backup_size = 0;
+
+      if (needs_to_grow && !needs_retype) {
+        PANGO_CHECK(needs_to_grow);
+        backup_id = gl_id_;
+        backup_size = std::min(u.dest_element, size());
+        gl_id_ = 0;
+      } else {
+        free();
+      }
+
+      data_type_ = u.data.data_type;
+      num_elements_ = needed_size;
+      num_elements_capacity_ = std::max(num_elements_capacity_, num_elements_);
 
       const size_t capacity_bytes = num_elements_capacity_ * elementSizeBytes();
-      glGenBuffers(1, &gl_id_);
-      glBindBuffer(buffer_type_, gl_id_);
-      glBufferData(buffer_type_, capacity_bytes, nullptr, gluse_);
+      PANGO_ENSURE(capacity_bytes);
+      PANGO_GL(glGenBuffers(1, &gl_id_));
+      PANGO_GL(glBindBuffer(buffer_type_, gl_id_));
+      PANGO_GL(glBufferData(buffer_type_, capacity_bytes, nullptr, gluse_));
+
+      if (backup_id) {
+        // restore previous data and delete old one
+        glBindBuffer(GL_COPY_READ_BUFFER, backup_id);
+        glBindBuffer(GL_COPY_WRITE_BUFFER, gl_id_);
+        glCopyBufferSubData(buffer_type_, buffer_type_, 0, 0, backup_size);
+        glDeleteBuffers(1, &backup_id);
+        glBindBuffer(GL_COPY_READ_BUFFER, 0);
+        glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+      }
     } else {
-      const size_t needed_size = u.params.dest_element + u.num_elements;
-      PANGO_CHECK(
-          u.data_type == data_type_,
-          "Attempting to upload {} format for {} texture.", u.data_type,
-          data_type_);
       PANGO_CHECK(needed_size <= num_elements_capacity_);
+      PANGO_ENSURE(u.data.data_type == dataType());
+
       // Grow if within capacity if needed.
       num_elements_ = std::max(num_elements_, needed_size);
       glBindBuffer(buffer_type_, gl_id_);
     }
 
     glBufferSubData(
-        buffer_type_, elementSizeBytes() * u.params.dest_element,
-        elementSizeBytes() * u.num_elements, u.data.get());
+        buffer_type_, elementSizeBytes() * u.dest_element,
+        elementSizeBytes() * u.data.num_elements, u.data.data.get());
 
     glBindBuffer(buffer_type_, 0);
   }
 
   size_t elementSizeBytes() const
   {
-    return data_type_.num_channels * data_type_.num_bytes_per_pixel_channel;
+    return data_type_ ? data_type_->bytesPerPixel() : 0;
   }
-
-  size_t sizeBytes() const { return num_elements_ * elementSizeBytes(); }
 
   GLenum buffer_type_ = 0;
   GLenum gluse_ = 0;
+  bool grow_to_fit_;
+  bool allow_retyping_;
   mutable std::recursive_mutex buffer_mutex_;
-  mutable std::deque<Data> updates_;
-  mutable RuntimePixelType data_type_;
+  mutable std::deque<QueueData> updates_;
+  mutable std::optional<RuntimePixelType> data_type_;
   mutable size_t num_elements_;
   mutable size_t num_elements_capacity_;
   mutable GLuint gl_id_;
 };
 
-PANGO_CREATE(DeviceBuffer)
-{
-  const GLenum bo_use = GL_DYNAMIC_DRAW;
-
-  switch (p.kind) {
-    case DeviceBuffer::Kind::VertexIndices:
-      return Shared<DeviceGlBuffer>::make(GL_ELEMENT_ARRAY_BUFFER, bo_use);
-    case DeviceBuffer::Kind::VertexAttributes:
-      return Shared<DeviceGlBuffer>::make(GL_ARRAY_BUFFER, bo_use);
-  };
-  PANGO_UNREACHABLE();
-}
+PANGO_CREATE(DeviceBuffer) { return Shared<DeviceGlBuffer>::make(p); }
 
 template <>
 ScopedBind<DeviceBuffer>::pScopedBind&

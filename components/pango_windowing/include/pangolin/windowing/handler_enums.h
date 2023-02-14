@@ -85,7 +85,8 @@ enum InputSpecial {
   InputSpecialScroll,
   InputSpecialZoom,
   InputSpecialRotate,
-  InputSpecialTablet
+  InputSpecialTablet,
+  InputSpecialTouchContact,
 };
 
 }  // namespace pangolin

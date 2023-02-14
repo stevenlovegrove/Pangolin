@@ -291,6 +291,7 @@ class HandlerImpl : public DrawLayerHandler
                             ImageXy::right_down, DeviceXyz::right_down_forward,
                             up_in_world_};
 
+    bool handled = false;
     std::visit(
         overload{
             [&](const Interactive::PointerEvent& arg) {
@@ -298,11 +299,13 @@ class HandlerImpl : public DrawLayerHandler
                 down_state_ = state;
                 cursor_in_world_ = p_world;
               } else if (arg.action == PointerAction::double_click_down) {
-                selection_signal(SelectionEvent{
-                    .trigger_event = event,
-                    .in_pixel_selection = Region2F64::empty(),
-                    .in_scene_cursor = cursor_in_world_,
-                    .in_progress = false});
+                // auto selection = Region2F64::from(p_img);
+
+                // selection_signal(SelectionEvent{
+                //     .trigger_event = event,
+                //     .in_pixel_selection = selection,
+                //     .in_scene_cursor = cursor_in_world_,
+                //     .in_progress = false});
               } else if (arg.action == PointerAction::drag) {
                 if (!down_state_) {
                   PANGO_WARN("Unexpected");
@@ -333,21 +336,32 @@ class HandlerImpl : public DrawLayerHandler
                     down_state_ = state;
                   }
                 }
+              } else {
+                down_state_ = std::nullopt;
               }
 
               // When holding shift, selection is made
-              if (event.modifier_active & ModifierKey::shift) {
-                auto selection = Region2F64::from(p_img);
-                if (down_state_) {
+              // if (event.modifier_active & ModifierKey::shift)
+              {
+                auto selection = Region2F64::empty();
+                if (p_img.isFinite().all()) selection.extend(p_img);
+                if (down_state_ &&
+                    down_state_->p_img.array().isFinite().all()) {
                   selection.extend(down_state_->p_img);
                 }
 
                 selection_signal(SelectionEvent{
                     .trigger_event = event,
+                    .pointer_event = arg,
                     .in_pixel_selection = selection,
-                    .in_progress = arg.action == PointerAction::down ||
+                    .in_scene_cursor = cursor_in_world_,
+                    .in_scene_hover = p_world,
+                    .in_progress = arg.action == PointerAction::hover ||
+                                   arg.action == PointerAction::down ||
                                    arg.action == PointerAction::drag});
               }
+
+              handled = true;
             },
             [&](const Interactive::ScrollEvent& arg) {
               const double zoom_input = std::clamp(-arg.zoom / 1.0, -1.0, 1.0);
@@ -374,11 +388,12 @@ class HandlerImpl : public DrawLayerHandler
                     info, Eigen::Vector3d(arg.pan[1], arg.pan[0], 0.0) / 200.0);
                 cameraMoveTowardsPoint(info, zoom_input);
               }
+              handled = true;
             },
             [&](const Interactive::KeyboardEvent& arg) {
               // do nothing for now
             },
-            [](auto&& arg) { PANGO_UNREACHABLE(); },
+            [](auto&& arg) {},
         },
         event.detail);
 
@@ -386,7 +401,7 @@ class HandlerImpl : public DrawLayerHandler
       clampClipViewTransform(info.render_state.clip_view_transform);
     }
 
-    return true;
+    return handled;
   }
 
   double last_zcam_ = 1.0;

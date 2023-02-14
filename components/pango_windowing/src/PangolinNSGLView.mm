@@ -1,78 +1,77 @@
-#include <pangolin/platform.h>
 #include <pangolin/gl/glplatform.h>
+#include <pangolin/platform.h>
 #include <pangolin/windowing/PangolinNSGLView.h>
 #include <pangolin/windowing/handler_enums.h>
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
-#  define NSDeviceIndependentModifierFlagsMask NSEventModifierFlagDeviceIndependentFlagsMask
-#  define  NSShiftKeyMask NSEventModifierFlagShift
-#  define  NSControlKeyMask NSEventModifierFlagControl
-#  define  NSAlternateKeyMask NSEventModifierFlagOption
-#  define  NSCommandKeyMask NSEventModifierFlagCommand
-#  define  NSFunctionKeyMask NSEventModifierFlagFunction
+#define NSDeviceIndependentModifierFlagsMask                                   \
+  NSEventModifierFlagDeviceIndependentFlagsMask
+#define NSShiftKeyMask NSEventModifierFlagShift
+#define NSControlKeyMask NSEventModifierFlagControl
+#define NSAlternateKeyMask NSEventModifierFlagOption
+#define NSCommandKeyMask NSEventModifierFlagCommand
+#define NSFunctionKeyMask NSEventModifierFlagFunction
 #endif
 
 ////////////////////////////////////////////////////////////////////
 // Input maps
 ////////////////////////////////////////////////////////////////////
 
-inline
-int mapMouseButton(int osx_button )
+inline int mapMouseButton(int osx_button)
 {
-    if(0 <= osx_button && osx_button < 3) {
-        const int map[] = {
-            pangolin::MouseButton::MouseButtonLeft,
-            pangolin::MouseButton::MouseButtonRight,
-            pangolin::MouseButton::MouseButtonMiddle,
-        };
-        return map[osx_button];
-    }else{
-        PANGO_WARN("Unexpected button id {}", osx_button);
-        return pangolin::MouseButton::MouseButtonLeft;
-    }
+  if (0 <= osx_button && osx_button < 3) {
+    const int map[] = {
+        pangolin::MouseButton::MouseButtonLeft,
+        pangolin::MouseButton::MouseButtonRight,
+        pangolin::MouseButton::MouseButtonMiddle,
+    };
+    return map[osx_button];
+  } else {
+    PANGO_WARN("Unexpected button id {}", osx_button);
+    return pangolin::MouseButton::MouseButtonLeft;
+  }
 }
 
-inline
-int mapKeymap(int osx_key)
+inline int mapKeymap(int osx_key)
 {
-    if(osx_key == NSUpArrowFunctionKey)
-        return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_UP;
-    else if(osx_key == NSDownArrowFunctionKey)
-        return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_DOWN;
-    else if(osx_key == NSLeftArrowFunctionKey)
-        return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_LEFT;
-    else if(osx_key == NSRightArrowFunctionKey)
-        return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_RIGHT;
-    else if(osx_key == NSPageUpFunctionKey)
-        return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_PAGE_UP;
-    else if(osx_key == NSPageDownFunctionKey)
-        return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_PAGE_DOWN;
-    else if(osx_key == NSHomeFunctionKey)
-        return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_HOME;
-    else if(osx_key == NSEndFunctionKey)
-        return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_END;
-    else if(osx_key == NSInsertFunctionKey)
-        return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_INSERT;
-    else if(osx_key == NSDeleteCharacter )
-        return NSBackspaceCharacter;
-    else if(osx_key == NSDeleteFunctionKey)
-        return NSDeleteCharacter;
-    else {
-        return osx_key;
-    }
+  if (osx_key == NSUpArrowFunctionKey)
+    return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_UP;
+  else if (osx_key == NSDownArrowFunctionKey)
+    return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_DOWN;
+  else if (osx_key == NSLeftArrowFunctionKey)
+    return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_LEFT;
+  else if (osx_key == NSRightArrowFunctionKey)
+    return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_RIGHT;
+  else if (osx_key == NSPageUpFunctionKey)
+    return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_PAGE_UP;
+  else if (osx_key == NSPageDownFunctionKey)
+    return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_PAGE_DOWN;
+  else if (osx_key == NSHomeFunctionKey)
+    return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_HOME;
+  else if (osx_key == NSEndFunctionKey)
+    return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_END;
+  else if (osx_key == NSInsertFunctionKey)
+    return pangolin::PANGO_SPECIAL + pangolin::PANGO_KEY_INSERT;
+  else if (osx_key == NSDeleteCharacter)
+    return NSBackspaceCharacter;
+  else if (osx_key == NSDeleteFunctionKey)
+    return NSDeleteCharacter;
+  else {
+    return osx_key;
+  }
 }
 
-inline
-pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
+inline pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
 {
-    unsigned int flags = [event modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-    pangolin::KeyModifierBitmask mask;
-    if(flags&NSShiftKeyMask) mask |=  pangolin::KeyModifierShift;
-    if(flags&NSControlKeyMask) mask |=  pangolin::KeyModifierCtrl;
-    if(flags&NSAlternateKeyMask) mask |=  pangolin::KeyModifierAlt;
-    if(flags&NSCommandKeyMask) mask |=  pangolin::KeyModifierCmd;
-    if(flags&NSFunctionKeyMask) mask |=  pangolin::KeyModifierFnc;
-    return mask;
+  unsigned int flags =
+      [event modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+  pangolin::KeyModifierBitmask mask;
+  if (flags & NSShiftKeyMask) mask |= pangolin::KeyModifierShift;
+  if (flags & NSControlKeyMask) mask |= pangolin::KeyModifierCtrl;
+  if (flags & NSAlternateKeyMask) mask |= pangolin::KeyModifierAlt;
+  if (flags & NSCommandKeyMask) mask |= pangolin::KeyModifierCmd;
+  if (flags & NSFunctionKeyMask) mask |= pangolin::KeyModifierFnc;
+  return mask;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -81,262 +80,306 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
 
 @implementation PangolinNSGLView
 
-- (void)updateTrackingAreas {
+- (void)updateTrackingAreas
+{
   [self initTrackingArea];
 }
 
-- (void) initTrackingArea {
-  NSTrackingAreaOptions options = (NSTrackingActiveAlways | NSTrackingInVisibleRect |
-                                   NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved);
+- (void)initTrackingArea
+{
+  NSTrackingAreaOptions options =
+      (NSTrackingActiveAlways | NSTrackingInVisibleRect |
+       NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved);
 
   NSTrackingArea *area = [[NSTrackingArea alloc] initWithRect:[self bounds]
                                                       options:options
                                                         owner:self
                                                      userInfo:nil];
   [self addTrackingArea:area];
+  [self setAcceptsTouchEvents:YES];
   [area release];
 }
 
--(id)initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat *)format
+- (id)initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat *)format
 {
-    self = [super initWithFrame:frameRect pixelFormat:format];
-    return(self);
+  self = [super initWithFrame:frameRect pixelFormat:format];
+  return (self);
 }
 
 - (void)prepareOpenGL
 {
-    [super prepareOpenGL];
+  [super prepareOpenGL];
 }
 
--(void)reshape
+- (void)reshape
 {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-    if ( [self wantsBestResolutionOpenGLSurface] && [ self.window respondsToSelector:@selector(backingScaleFactor) ] )
-        backing_scale = [self.window backingScaleFactor];
-    else
+  if ([self wantsBestResolutionOpenGLSurface] &&
+      [self.window respondsToSelector:@selector(backingScaleFactor)])
+    backing_scale = [self.window backingScaleFactor];
+  else
 #endif
     backing_scale = 1.0;
 
-    const int width  = self.bounds.size.width * backing_scale;
-    const int height = self.bounds.size.height * backing_scale;
-    osx_window->ResizeSignal(pangolin::WindowResizeEvent({width, height}));
+  const int width = self.bounds.size.width * backing_scale;
+  const int height = self.bounds.size.height * backing_scale;
+  osx_window->ResizeSignal(pangolin::WindowResizeEvent({width, height}));
 
-    [[self openGLContext] update];
-    [super reshape];
+  [[self openGLContext] update];
+  [super reshape];
 }
 
--(BOOL)acceptsFirstResponder
+- (BOOL)acceptsFirstResponder
 {
-    return(YES);
+  return (YES);
 }
 
--(BOOL)becomeFirstResponder
+- (BOOL)becomeFirstResponder
 {
-    return(YES);
+  return (YES);
 }
 
--(BOOL)resignFirstResponder
+- (BOOL)resignFirstResponder
 {
-    return(YES);
+  return (YES);
 }
 
--(BOOL)isFlipped
+- (BOOL)isFlipped
 {
-    return(YES);
+  return (YES);
 }
 
--(NSPoint)_Location:(NSEvent *)event
+- (NSPoint)_Location:(NSEvent *)event
 {
-    NSPoint location = [self convertPoint: [event locationInWindow] fromView: nil];
-    location.x *= backing_scale;
-    location.y *= backing_scale;
-    return location;
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  location.x *= backing_scale;
+  location.y *= backing_scale;
+  return location;
 }
 
 ////////////////////////////////////////////////////////////////////
 // Keyboard
 ////////////////////////////////////////////////////////////////////
 
--(void)keyDown:(NSEvent *)event
+- (void)keyDown:(NSEvent *)event
 {
-    const NSPoint location = [self _Location: event];
-    NSString *str = [event characters];
-    int len = (int)[str length];
-    for(int i = 0; i < len; i++)
-    {
-        const int osx_key = [str characterAtIndex:i];
-        osx_window->KeyboardSignal(pangolin::KeyboardEvent(
-            {{(float)location.x, (float)location.y,
-             GetKeyModifierBitmask(event)},
-             (unsigned char)mapKeymap(osx_key), true}
-        ));
-    }
+  const NSPoint location = [self _Location:event];
+  NSString *str = [event characters];
+  int len = (int)[str length];
+  for (int i = 0; i < len; i++) {
+    const int osx_key = [str characterAtIndex:i];
+    osx_window->KeyboardSignal(pangolin::KeyboardEvent(
+        {{(float)location.x, (float)location.y, GetKeyModifierBitmask(event)},
+         (unsigned char)mapKeymap(osx_key),
+         true}));
+  }
 }
 
--(void)keyUp:(NSEvent *)event
+- (void)keyUp:(NSEvent *)event
 {
-    const NSPoint location = [self _Location: event];
-    NSString *str = [event characters];
-    int len = (int)[str length];
-    for(int i = 0; i < len; i++)
-    {
-        const int osx_key = [str characterAtIndex:i];
-        osx_window->KeyboardSignal(pangolin::KeyboardEvent(
-            {{(float)location.x, (float)location.y,
-             GetKeyModifierBitmask(event)},
-             (unsigned char)mapKeymap(osx_key), false}
-        ));
-    }
+  const NSPoint location = [self _Location:event];
+  NSString *str = [event characters];
+  int len = (int)[str length];
+  for (int i = 0; i < len; i++) {
+    const int osx_key = [str characterAtIndex:i];
+    osx_window->KeyboardSignal(pangolin::KeyboardEvent(
+        {{(float)location.x, (float)location.y, GetKeyModifierBitmask(event)},
+         (unsigned char)mapKeymap(osx_key),
+         false}));
+  }
 }
 
 ////////////////////////////////////////////////////////////////////
 // Mouse Input
 ////////////////////////////////////////////////////////////////////
 
--(void)mouseDownCommon:(NSEvent *)event
+- (void)mouseDownCommon:(NSEvent *)event
 {
-    const int button = (int)[event buttonNumber];
-    const NSPoint location = [self _Location: event];
-    osx_window->MouseSignal(pangolin::MouseEvent({
-        {(float)location.x, (float)location.y,
-        GetKeyModifierBitmask(event)},
-        mapMouseButton(button), true
-    }));
+  const int button = (int)[event buttonNumber];
+  const NSPoint location = [self _Location:event];
+  osx_window->MouseSignal(pangolin::MouseEvent(
+      {{(float)location.x, (float)location.y, GetKeyModifierBitmask(event)},
+       mapMouseButton(button),
+       true}));
 }
 
--(void)mouseUpCommon:(NSEvent *)event
+- (void)mouseUpCommon:(NSEvent *)event
 {
-    const int button = (int)[event buttonNumber];
-    const NSPoint location = [self _Location: event];
-    osx_window->MouseSignal(pangolin::MouseEvent({
-        {(float)location.x, (float)location.y,
-        GetKeyModifierBitmask(event)},
-        mapMouseButton(button), false
-    }));
+  const int button = (int)[event buttonNumber];
+  const NSPoint location = [self _Location:event];
+  osx_window->MouseSignal(pangolin::MouseEvent(
+      {{(float)location.x, (float)location.y, GetKeyModifierBitmask(event)},
+       mapMouseButton(button),
+       false}));
 }
 
-- (void)mouseDraggedCommon: (NSEvent *)event
+- (void)mouseDraggedCommon:(NSEvent *)event
 {
-    const NSPoint location = [self _Location: event];
-    osx_window->MouseMotionSignal(pangolin::MouseMotionEvent({
-        (float)location.x, (float)location.y,
-        GetKeyModifierBitmask(event)
-    }));
+  const NSPoint location = [self _Location:event];
+  osx_window->MouseMotionSignal(pangolin::MouseMotionEvent(
+      {(float)location.x, (float)location.y, GetKeyModifierBitmask(event)}));
 }
 
--(void)mouseDown:(NSEvent *)event
+- (void)mouseDown:(NSEvent *)event
 {
-    [self mouseDownCommon:event];
+  [self mouseDownCommon:event];
 }
 
--(void)mouseUp:(NSEvent *)event
+- (void)mouseUp:(NSEvent *)event
 {
-    [self mouseUpCommon:event];
+  [self mouseUpCommon:event];
 }
 
-- (void)mouseDragged: (NSEvent *)event
+- (void)mouseDragged:(NSEvent *)event
 {
-    [self mouseDraggedCommon:event];
+  [self mouseDraggedCommon:event];
 }
 
--(void)rightMouseDown:(NSEvent *)event
+- (void)rightMouseDown:(NSEvent *)event
 {
-    [self mouseDownCommon:event];
+  [self mouseDownCommon:event];
 }
 
--(void)rightMouseUp:(NSEvent *)event
+- (void)rightMouseUp:(NSEvent *)event
 {
-    [self mouseUpCommon:event];
+  [self mouseUpCommon:event];
 }
 
-- (void)rightMouseDragged: (NSEvent *)event
+- (void)rightMouseDragged:(NSEvent *)event
 {
-    [self mouseDraggedCommon:event];
+  [self mouseDraggedCommon:event];
 }
 
--(void)otherMouseDown:(NSEvent *)event
+- (void)otherMouseDown:(NSEvent *)event
 {
-    [self mouseDownCommon:event];
+  [self mouseDownCommon:event];
 }
 
--(void)otherMouseUp:(NSEvent *)event
+- (void)otherMouseUp:(NSEvent *)event
 {
-    [self mouseUpCommon:event];
+  [self mouseUpCommon:event];
 }
 
-- (void)otherMouseDragged: (NSEvent *)event
+- (void)otherMouseDragged:(NSEvent *)event
 {
-    [self mouseDraggedCommon:event];
+  [self mouseDraggedCommon:event];
 }
 
-- (void)mouseMoved: (NSEvent *)event
+- (void)mouseMoved:(NSEvent *)event
 {
-    const NSPoint location = [self _Location: event];
-    osx_window->PassiveMouseMotionSignal(pangolin::MouseMotionEvent({{(float)location.x, (float)location.y, {}} }));
+  const NSPoint location = [self _Location:event];
+  osx_window->PassiveMouseMotionSignal(pangolin::MouseMotionEvent(
+      {{(float)location.x, (float)location.y, GetKeyModifierBitmask(event)}}));
 }
 
 - (void)scrollWheel:(NSEvent *)event
 {
-    const NSPoint location = [self _Location: event];
+  const NSPoint location = [self _Location:event];
 
-    float dx, dy;
-    if([event respondsToSelector:@selector(scrollingDeltaX)]) {
-       dx = event.scrollingDeltaX; dy = event.scrollingDeltaY;
-    } else {
-       dx = event.deltaX; dy = event.deltaY;
-    }
+  float dx, dy;
+  if ([event respondsToSelector:@selector(scrollingDeltaX)]) {
+    dx = event.scrollingDeltaX;
+    dy = event.scrollingDeltaY;
+  } else {
+    dx = event.deltaX;
+    dy = event.deltaY;
+  }
 
-    if(dx != 0.0f || dy != 0.0f) {
-        osx_window->SpecialInputSignal(pangolin::SpecialInputEvent({
-            {(float)location.x, (float)location.y,
-            GetKeyModifierBitmask(event)},
-            pangolin::InputSpecialScroll,
-            {dx, dy, 0.0f, 0.0f}
-        }));
-    }
+  if (dx != 0.0f || dy != 0.0f) {
+    osx_window->SpecialInputSignal(pangolin::SpecialInputEvent(
+        {{(float)location.x, (float)location.y, GetKeyModifierBitmask(event)},
+         pangolin::InputSpecialScroll,
+         {dx, dy, 0.0f, 0.0f}}));
+  }
 }
 
-- (void)magnifyWithEvent: (NSEvent *)event
+- (void)magnifyWithEvent:(NSEvent *)event
 {
-    const NSPoint location = [self _Location: event];
-    const float dm = event.magnification;
-    if(dm != 0.0f) {
-        osx_window->SpecialInputSignal(pangolin::SpecialInputEvent({
-            {(float)location.x, (float)location.y,
-            GetKeyModifierBitmask(event)},
-            pangolin::InputSpecialZoom,
-            {dm, 0.0f, 0.0f, 0.0f}
-        }));
-    }
+  const NSPoint location = [self _Location:event];
+  const float dm = event.magnification;
+  if (dm != 0.0f) {
+    osx_window->SpecialInputSignal(pangolin::SpecialInputEvent(
+        {{(float)location.x, (float)location.y, GetKeyModifierBitmask(event)},
+         pangolin::InputSpecialZoom,
+         {dm, 0.0f, 0.0f, 0.0f}}));
+  }
 }
 
-- (void)rotateWithEvent: (NSEvent *)event
+- (void)rotateWithEvent:(NSEvent *)event
 {
-    const NSPoint location = [self _Location: event];
-    const float dr = event.rotation;
-    if(dr != 0.0f) {
-        osx_window->SpecialInputSignal(pangolin::SpecialInputEvent({
-            {(float)location.x, (float)location.y,
-            GetKeyModifierBitmask(event)},
-            pangolin::InputSpecialRotate,
-            {dr, 0.0f, 0.0f, 0.0f}
-        }));
-    }
+  const NSPoint location = [self _Location:event];
+  const float dr = event.rotation;
+  if (dr != 0.0f) {
+    osx_window->SpecialInputSignal(pangolin::SpecialInputEvent(
+        {{(float)location.x, (float)location.y, GetKeyModifierBitmask(event)},
+         pangolin::InputSpecialRotate,
+         {dr, 0.0f, 0.0f, 0.0f}}));
+  }
 }
 
-- (void)mouseEntered: (NSEvent *)event
+- (void)mouseEntered:(NSEvent *)event
 {
-    PANGOLIN_UNUSED(event);
+  PANGOLIN_UNUSED(event);
 }
 
-- (void)mouseExited: (NSEvent *)event
+- (void)mouseExited:(NSEvent *)event
 {
-    PANGOLIN_UNUSED(event);
+  PANGOLIN_UNUSED(event);
 }
 
--(void)dealloc
+void notifyForFingerContact(
+    pangolin::WindowInterface *osx_window,
+    pangolin::KeyModifierBitmask modifiers, float x, float y, int count,
+    bool enter)
 {
-    [super dealloc];
+  static int last_count = 0;
+
+  osx_window->SpecialInputSignal(pangolin::SpecialInputEvent(
+      {{x, y, modifiers},
+       pangolin::InputSpecialTouchContact,
+       {float(count), float(count - last_count), 0.0, 0.0f}}));
+  last_count = count;
+}
+
+- (void)touchesBeganWithEvent:(NSEvent *)event
+{
+  // https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/EventOverview/HandlingTouchEvents/HandlingTouchEvents.html
+  const NSPoint location = [self _Location:event];
+  NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching
+                                        inView:self];
+  notifyForFingerContact(
+      osx_window, GetKeyModifierBitmask(event), (float)location.x,
+      (float)location.y, touches.count, true);
+}
+
+- (void)touchesMovedWithEvent:(NSEvent *)event
+{
+  PANGOLIN_UNUSED(event);
+}
+
+- (void)touchesEndedWithEvent:(NSEvent *)event
+{
+  const NSPoint location = [self _Location:event];
+  NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching
+                                        inView:self];
+  notifyForFingerContact(
+      osx_window, GetKeyModifierBitmask(event), (float)location.x,
+      (float)location.y, touches.count, false);
+}
+
+- (void)touchesCancelledWithEvent:(NSEvent *)event
+{
+  const NSPoint location = [self _Location:event];
+  NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching
+                                        inView:self];
+  notifyForFingerContact(
+      osx_window, GetKeyModifierBitmask(event), (float)location.x,
+      (float)location.y, touches.count, false);
+}
+
+- (void)dealloc
+{
+  [super dealloc];
 }
 
 @end

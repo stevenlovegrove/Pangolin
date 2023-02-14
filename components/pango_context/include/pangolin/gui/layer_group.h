@@ -13,7 +13,9 @@ namespace pangolin
 ////////////////////////////////////////////////////////////////////
 /// Represents a (possibly nested) arrangement of Panels on screen
 ///
-struct LayerGroup {
+class LayerGroup
+{
+  public:
   enum class Grouping {
     stacked,     // layers blended over one another
     tabbed,      // one layer shown at a time, with user selecting current
@@ -23,22 +25,41 @@ struct LayerGroup {
                  // available space. Requires common aspect for each layer.
   };
 
-  LayerGroup() = default;
-  LayerGroup(Shared<Layer> layer) : layer(layer) {}
-
-  Grouping grouping = Grouping::horizontal;
-  std::vector<LayerGroup> children = {};
-  std::shared_ptr<Layer> layer = nullptr;
-  size_t selected_tab = 0;
-
-  struct LayoutInfo {
-    Eigen::Array2i min_pix = {0, 0};
-    Eigen::Array2d parts = {0.0f, 0.0f};
-    double aspect_hint = 0.0;
-    Region2I region = Region2I::empty();
+  struct Params {
+    Grouping grouping = Grouping::horizontal;
+    std::shared_ptr<Layer> layer = nullptr;
+    size_t selected_tab = 0;
   };
 
-  mutable LayoutInfo cached_;
+  struct Constraints {
+    // todo: Describe semantic: What is the precise definition of min_pix?  What
+    // is the precise definition of parts?
+    Eigen::Array2i min_pix = {0, 0};
+    Eigen::Array2d parts = {0.0f, 0.0f};
+    // Hint / recommendation for what aspect ratio to use.
+    AspectRatio aspect = {};
+  };
+
+  LayerGroup() = default;
+  LayerGroup(const Params& params) : params_(params) {}
+
+  const Params& params() const { return params_; }
+
+  std::optional<Constraints>& constraints() { return constraints_; }
+  const std::optional<Constraints>& constraints() const { return constraints_; }
+
+  const std::vector<LayerGroup>& children() const { return children_; }
+  std::vector<LayerGroup>& children() { return children_; }
+
+  std::optional<Region2I>& region() { return region_; }
+  const std::optional<Region2I>& region() const { return region_; }
+
+  private:
+  std::vector<LayerGroup> children_ = {};
+
+  Params params_ = Params{};
+  std::optional<Constraints> constraints_;
+  std::optional<Region2I> region_;
 };
 
 }  // namespace pangolin

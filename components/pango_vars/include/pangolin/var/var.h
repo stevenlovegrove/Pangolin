@@ -154,12 +154,17 @@ class Var
 
 inline Var<bool> Button(const std::string& name)
 {
-  return Var(true, VarMeta(name, 0., 0., 0., META_FLAG_NONE));
+  return Var(false, VarMeta(name, 0., 0., 0., META_FLAG_NONE));
 }
 
-inline Var<bool> Checkbox(const std::string& name, bool val)
+inline Var<bool> Checkbox(const std::string& name, bool val = false)
 {
   return Var(val, VarMeta(name, 0., 0., 0., META_FLAG_TOGGLE));
+}
+
+inline Var<std::string> Seperator(const std::string& title)
+{
+  return Var<std::string>("", VarMeta(title, 0., 0., 0., META_FLAG_DIVIDER));
 }
 
 template <typename T>

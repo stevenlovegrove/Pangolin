@@ -72,8 +72,10 @@ void GlWidgetLayer::UpdateWidgetVBO(float width)
   std::vector<Eigen::Vector4f> host_vbo;
   for (size_t i = 0; i < widgets.size(); ++i) {
     const auto& w = widgets[i];
+    const double display_percent =
+        std::isfinite(w.value_percent) ? w.value_percent : 0.0;
     host_vbo.emplace_back(
-        0.0, i, w.divisions + w.value_percent / 2.0, uint(w.widget_type));
+        0.0, i, w.divisions + display_percent / 2.0, uint(w.widget_type));
   }
   widget_program.vbo = pangolin::GlBuffer(pangolin::GlArrayBuffer, host_vbo);
   widget_program.vao.addVertexAttrib(0, widget_program.vbo);
@@ -87,11 +89,32 @@ std::u32string GlWidgetLayer::toUtf32(const std::string& utf8)
 
 float GlWidgetLayer::TextWidthPix(const std::u32string& utf32)
 {
-  float w = 0;
-  for (auto c : utf32) {
-    w += font->chardata[c].StepX();
+  float width = 0.0;
+
+  const std::u16string index16 = font->to_index_string(utf32);
+  GlFont::codepoint_t last_char = 0;
+
+  for (size_t c = 0; c < index16.size(); ++c) {
+    const GlFont::codepoint_t this_char = utf32[c];
+
+    if (!index16[c]) {
+      // TODO: use some symbol such as '?' maybe
+      width += font->default_advance_px;
+      last_char = 0;
+    } else {
+      auto ch = font->chardata[this_char];
+      if (last_char) {
+        const auto key = GlFont::codepointpair_t(last_char, this_char);
+        const auto kit = font->kern_table.find(key);
+        const float kern = (kit != font->kern_table.end()) ? kit->second : 0;
+        width += kern;
+      }
+      width += ch.StepX();
+      last_char = this_char;
+    }
   }
-  return w;
+
+  return width;
 }
 
 void GlWidgetLayer::AddTextToHostBuffer(
@@ -234,11 +257,14 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
   std::visit(
       overload{
           [&](const Interactive::PointerEvent& arg) {
-            bool pressed = arg.action == PointerAction::down;
+            const bool pressed =
+                (arg.action == PointerAction::down) ||
+                (arg.action == PointerAction::double_click_down);
             auto w = WidgetXY(p_window, region);
 
             switch (arg.action) {
               case PointerAction::down:
+              case PointerAction::double_click_down:
               case PointerAction::click_up: {
                 if (selected_widget >= 0) {
                   auto& sw = widgets[selected_widget];
@@ -256,12 +282,21 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
                 SetValue(p_window, region, pressed, true);
                 break;
               }
+              case PointerAction::hover: {
+                hover_widget = w.first;
+              }
               default:
                 break;
             }
           },
           [&](const Interactive::ScrollEvent& arg) {
+#ifdef __APPLE__
             const float delta = arg.pan.y();
+#else
+            const float delta = arg.zoom * 1000;
+            PANGO_INFO("zoom {}", delta);
+#endif
+
             const float offset_max = (widgets.size() - 1.0f) * widget_height;
             scroll_offset =
                 std::clamp(scroll_offset + delta, -offset_max, 0.0f);
@@ -285,7 +320,7 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
 
             // PANGO_INFO("key: {}", (int)arg.key);
           },
-          [](auto&& arg) { PANGO_UNREACHABLE(); },
+          [](auto&& arg) {},
       },
       event.detail);
 
@@ -303,7 +338,7 @@ void GlWidgetLayer::SetValue(
     if (wp.widget_type == WidgetType::checkbox) {
       if (pressed && !dragging) wp.value_percent = 1.0 - wp.value_percent;
     } else if (wp.widget_type == WidgetType::button) {
-      wp.value_percent = pressed ? 0.0 : 1.0;
+      wp.value_percent = pressed ? 1.0 : 0.0;
     } else {
       if (pressed || dragging) {
         const float val = std::clamp(
@@ -432,7 +467,7 @@ void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
       widgets.push_back(WidgetParams{
           event.var->Meta().friendly,
           "",
-          1.0f,
+          0.0f,
           0,
           WidgetType::button,
           [var](const WidgetParams& p) {  // read_params
@@ -446,7 +481,8 @@ void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
           "",
           1.0f,
           0,
-          WidgetType::textbox,
+          var->Meta().flags & META_FLAG_DIVIDER ? WidgetType::seperator
+                                                : WidgetType::textbox,
           [var](const WidgetParams& p) {  // read_params
           },
           [var](WidgetParams& p) {  // write params

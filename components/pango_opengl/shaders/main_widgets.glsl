@@ -89,9 +89,6 @@ uniform vec3 color_boss_diff;
 uniform vec3 color_slider;
 uniform vec3 color_slider_outline;
 
-const vec2 light_dir = vec2(-sqrt(0.5), -sqrt(0.5));
-const float M_PI = 3.1415926535897932384626433832795;
-
 float padding = u_padding;
 float half_width = u_width/2.0 - padding;
 float half_height = u_height/2.0 - padding;
@@ -125,7 +122,8 @@ vec4 widget()
     // 5: seperator
 
     bool is_textbox   = widget_type==1u;
-    bool is_button    = widget_type==2u || widget_type==3u;
+    bool is_button    = widget_type==2u;
+    bool is_checkbox  = widget_type==3u;
     bool is_slider    = widget_type==4u;
     bool is_seperator = widget_type==5u;
 
@@ -151,9 +149,10 @@ vec4 widget()
     float inside_height = half_height;
     float inside_radius = half_height;
 
-    if(is_button) {
-        slider_center = 2*half_width-half_height;
-        slider_width = half_height+padding;
+    if(is_checkbox || is_button) {
+        float bar_width = is_checkbox ? half_height : 1.5*half_height;
+        slider_center = 2*half_width-bar_width;
+        slider_width = bar_width+padding;
         color_inside_outline = color_slider_outline;
         color_inside = is_toggled ? vec3(0.9,0.8,0.8): vec3(0.8);
         border_inside = 2;
@@ -169,8 +168,8 @@ vec4 widget()
     // Panel
     vec4 v = widget_panel(v_win);
 
-    if(is_button || is_slider || is_textbox) {
-        vec3 color_boss = color_boss_base - /*dot(box_grad,light_dir) **/ color_boss_diff;
+    if(!is_seperator) {
+        vec3 color_boss = color_boss_base - color_boss_diff;
         float border = boss_border;
         if(is_active_widget) {
             color_boss.x += .3;
@@ -185,7 +184,7 @@ vec4 widget()
         }
     }
 
-    if(is_button || is_slider) {
+    if(is_checkbox || is_button || is_slider) {
         // Add Slider with outline
         v = composite( color_sdf(slide_sdf+boss_border, color_inside, color_inside_outline, border_inside ), v);
     }

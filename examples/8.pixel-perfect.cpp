@@ -24,13 +24,12 @@ struct DrawableConversionTraits<Cross> {
     auto prims = DrawnPrimitives::Create(
         {.element_type = DrawnPrimitives::Type::lines,
          .default_color = x.color});
-    prims->vertices->update(
+    prims->vertices->queueUpdate(
         std::vector<Eigen::Vector3f>{
             x.pos.cast<float>() + Eigen::Vector3f{-0.5f, -0.5f, 0.0f},
             x.pos.cast<float>() + Eigen::Vector3f{+0.5f, +0.5f, 0.0f},
             x.pos.cast<float>() + Eigen::Vector3f{-0.5f, +0.5f, 0.0f},
-            x.pos.cast<float>() + Eigen::Vector3f{+0.5f, -0.5f, 0.0f}},
-        {});
+            x.pos.cast<float>() + Eigen::Vector3f{+0.5f, -0.5f, 0.0f}});
     return prims;
   }
 };

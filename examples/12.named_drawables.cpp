@@ -19,7 +19,7 @@ int main(int argc, char** argv)
   });
 
   auto widgets = WidgetLayer::Create(
-      {.name = "ui.", .size_hint = {Pixels{180}, Parts{1}}});
+      {.name = "ui.", .size_hint = {Pixels{220}, Parts{1}}});
 
   auto scene = DrawLayer::Create(
       {.camera_from_world = cameraLookatFromWorld(

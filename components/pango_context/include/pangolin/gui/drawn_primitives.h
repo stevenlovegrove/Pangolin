@@ -20,6 +20,7 @@ struct DrawnPrimitives : public Drawable {
     axes,  // populate vertices with axes_T_world sophus::SE3f elements
            // [indices,colors,radius]
            // lines and triangles
+    path,  // populate vertices with centerline of path
     lines,
     line_strip,
     line_loop,
@@ -97,14 +98,22 @@ struct DrawnPrimitives : public Drawable {
   // points are in pixel units. Other elements are world units.
   double default_size;
 
+  // If true and supported for the primitive, size will be constant in
+  // screensize pixels instead of world units.
+  bool size_in_pixels;
+
   // To use when `shapes` is empty
   Shape default_shape;
+
+  bool depth_test;
 
   struct Params {
     Type element_type = Type::points;
     Eigen::Vector4d default_color = {1.0f, 0.0f, 0.0f, 1.0f};
     double default_size = 1.0;
+    bool size_in_pixels = false;
     Shape default_shape = Shape::filled_circle;
+    bool depth_test = true;
   };
   static Shared<DrawnPrimitives> Create(Params p);
 };

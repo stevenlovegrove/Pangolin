@@ -25,56 +25,67 @@ void renderIntoRegionImpl(
     const Context& context, const Layer::RenderParams& p,
     const LayerGroup& group)
 {
-  if (group.layer) {
-    group.layer->renderIntoRegion(context, {.region = group.cached_.region});
+  if (group.params().layer) {
+    group.params().layer->renderIntoRegion(
+        context, {.region = PANGO_UNWRAP(group.region())});
   }
-  if (group.grouping == LayerGroup::Grouping::stacked) {
+  if (group.params().grouping == LayerGroup::Grouping::stacked) {
     // Back-to-front for blending / overlays
-    for (const auto& child : reverse(group.children)) {
+    for (const auto& child : reverse(group.children())) {
       renderIntoRegionImpl(context, p, child);
     }
-  } else if (group.grouping == LayerGroup::Grouping::tabbed) {
-    PANGO_ENSURE(group.selected_tab < group.children.size());
-    renderIntoRegionImpl(context, p, group.children[group.selected_tab]);
+  } else if (group.params().grouping == LayerGroup::Grouping::tabbed) {
+    PANGO_ENSURE(group.params().selected_tab < group.children().size());
+    renderIntoRegionImpl(
+        context, p, group.children()[group.params().selected_tab]);
   } else {
-    for (const auto& child : group.children) {
+    for (const auto& child : group.children()) {
       renderIntoRegionImpl(context, p, child);
     }
   }
 }
 
 void renderIntoRegion(
-    const Context& context, const Layer::RenderParams& p,
-    const LayerGroup& group)
+    const Context& context, const Layer::RenderParams& p, LayerGroup& mut_group)
 {
-  computeLayoutConstraints(group);
-  computeLayoutRegion(group, p.region);
+  computeLayoutConstraints(mut_group);
+  computeLayoutRegion(mut_group, p.region);
+  const LayerGroup& group = mut_group;
   renderIntoRegionImpl(context, p, group);
 }
 
 // Find layer to receive event based on pointer location
 // Return the layer which processed the event.
 //
-// Pre-condition: layer positions have been computed by a previous call to
-// render
+// Pre-condition: layer region must have been populated by a previous call to
+// render, i.e. layer_group.hasRegion() must be true.
 std::shared_ptr<Layer> giveEventToLayers(
-    const Context& context, Interactive::Event event, const LayerGroup& group)
+    const Context& context, Interactive::Event event,
+    const LayerGroup& layer_group)
 {
-  const auto r = group.cached_.region;
+  if (!layer_group.region()) {
+    // This can happen if a UI event modifies the layout in the process of
+    // event dispatch.
+    return nullptr;
+  }
+  const Region2I r = PANGO_UNWRAP(layer_group.region());
   const Eigen::Vector2i winpos = event.pointer_pos.pos_window.cast<int>();
 
   if (r.contains(winpos)) {
     event.pointer_pos.region = r;
 
-    if (group.layer && group.layer->handleEvent(context, event)) {
+    if (layer_group.params().layer &&
+        layer_group.params().layer->handleEvent(context, event)) {
       // event handled, stop dfs
-      return group.layer;
+      return layer_group.params().layer;
     }
 
     // see if child nodes want it
-    for (const auto& child : group.children) {
+    for (const auto& child : layer_group.children()) {
       auto layer = giveEventToLayers(context, event, child);
-      if (layer) return layer;
+      if (layer) {
+        return layer;
+      }
     }
   }
   return nullptr;
@@ -83,21 +94,27 @@ std::shared_ptr<Layer> giveEventToLayers(
 // This is kinda dumb - we look through all nodes even though
 // we know the active_layer already. We do this just so we can
 // find the cached region so we can send it through
+//
+// Preconditions:
+//  - active_layer != nullptr
+//  - group.region() != nullopt
 bool giveEventToActiveLayer(
     const Context& context, Interactive::Event event, const LayerGroup& group,
     const std::shared_ptr<Layer>& active_layer)
 {
   PANGO_ENSURE(active_layer);
 
-  const auto r = group.cached_.region;
+  const Region2I r = PANGO_UNWRAP(group.region());
   event.pointer_pos.region = r;
 
-  if (group.layer == active_layer) {
-    group.layer->handleEvent(context, event);
+  if (group.params().layer == active_layer) {
+    if (group.params().layer->handleEvent(context, event)) {
+      return true;
+    }
   }
 
   // see if child nodes want it
-  for (const auto& child : group.children) {
+  for (const auto& child : group.children()) {
     const bool found =
         giveEventToActiveLayer(context, event, child, active_layer);
     if (found) return true;
@@ -227,9 +244,12 @@ struct ContextImpl : public Context {
           e.pressed ? PointerAction::down : PointerAction::click_up;
 
       constexpr double kDoubleClickInterval = 0.3;
+      double delta_t =
+          std::chrono::duration_cast<std::chrono::duration<double>>(
+              std::chrono::system_clock::now() - last_click_time)
+              .count();
       if (e.pressed && *maybe_button == last_click_button &&
-          (std::chrono::system_clock::now() - last_click_time).count() / 1e6 <
-              kDoubleClickInterval) {
+          (delta_t < kDoubleClickInterval)) {
         action = PointerAction::double_click_down;
       }
 
@@ -296,6 +316,14 @@ struct ContextImpl : public Context {
           .modifier_active = modifier_active_,
           .detail = Interactive::ScrollEvent{.zoom = e.p[0]}};
       dispatchLayerEvent(layer_event);
+    } else if (e.inType == InputSpecialTouchContact) {
+      Interactive::Event layer_event = {
+          .pointer_pos = WindowPosition{.pos_window = {e.x, e.y}},
+          .modifier_active = modifier_active_,
+          .detail = Interactive::TouchEvent{
+              .in_contact_count = int(e.p[0]),
+              .in_contact_delta = int(e.p[1])}};
+      dispatchLayerEvent(layer_event);
     }
   }
 
@@ -324,16 +352,24 @@ struct ContextImpl : public Context {
       const Interactive::Event& src,
       ActiveLayerAction active_layer_action = ActiveLayerAction::ignore)
   {
+    bool handled = false;
     if (active_layer_) {
-      giveEventToActiveLayer(*this, src, layout_, active_layer_);
+      handled = giveEventToActiveLayer(*this, src, layout_, active_layer_);
+
       if (active_layer_action == ActiveLayerAction::release) {
         active_layer_ = nullptr;
       }
     } else {
       auto layer = giveEventToLayers(*this, src, layout_);
+      handled = layer != nullptr;
+
       if (active_layer_action == ActiveLayerAction::capture) {
         active_layer_ = layer;
       }
+    }
+
+    if (!handled) {
+      signal_unhandled_events_(src);
     }
   }
 
@@ -343,9 +379,12 @@ struct ContextImpl : public Context {
 
   const LayerGroup& layout() const override { return layout_; }
 
-  LayerGroup& layout() override { return layout_; }
-
   ImageSize size() const override { return size_; }
+
+  sigslot::signal<const Interactive::Event&>& signalUnhandledEvents() override
+  {
+    return signal_unhandled_events_;
+  }
 
   void drawPanels()
   {
@@ -356,7 +395,11 @@ struct ContextImpl : public Context {
     region.extend({0, 0});
     region.extend({size_.width, size_.height});
 
-    renderIntoRegion(*this, {.region = region}, layout_);
+    renderIntoRegion(*this, {.region = region}, this->layout_);
+    PANGO_ASSERT(
+        bool(layout_.region()),
+        "Logic error: layout must have a valid region attached to it after "
+        "renderIntoRegion call.");
   }
 
   void loop(std::function<bool(void)> loop_function) override
@@ -436,6 +479,8 @@ struct ContextImpl : public Context {
 
   std::chrono::system_clock::time_point last_click_time;
   PointerButton last_click_button;
+
+  sigslot::signal<const Interactive::Event&> signal_unhandled_events_;
 };
 
 PANGO_CREATE(Context) { return Shared<ContextImpl>::make(p); }
