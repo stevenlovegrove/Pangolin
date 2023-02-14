@@ -105,12 +105,15 @@ struct DrawnPrimitives : public Drawable {
   // To use when `shapes` is empty
   Shape default_shape;
 
+  bool depth_test;
+
   struct Params {
     Type element_type = Type::points;
     Eigen::Vector4d default_color = {1.0f, 0.0f, 0.0f, 1.0f};
     double default_size = 1.0;
     bool size_in_pixels = false;
     Shape default_shape = Shape::filled_circle;
+    bool depth_test = true;
   };
   static Shared<DrawnPrimitives> Create(Params p);
 };

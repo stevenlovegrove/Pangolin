@@ -189,6 +189,8 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
         u_color = default_color.cast<float>();
       }
 
+      ScopedGlDisable disable_depth(depth_test ? 0 : GL_DEPTH_TEST);
+
       const sophus::RuntimePixelType data_type = *vertices->dataType();
 
       for (int i = 0; i < 4; ++i) {
@@ -261,6 +263,8 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
         bind_texture = geometry_texture->bind();
       }
 
+      ScopedGlDisable disable_depth(depth_test ? 0 : GL_DEPTH_TEST);
+
       PANGO_GL(glPointSize(default_size));
 
       if (indices->empty()) {
@@ -298,6 +302,7 @@ PANGO_CREATE(DrawnPrimitives)
   r->default_size = p.default_size;
   r->default_shape = p.default_shape;
   r->size_in_pixels = p.size_in_pixels;
+  r->depth_test = p.depth_test;
   return r;
 }
 
