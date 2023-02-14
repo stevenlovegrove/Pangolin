@@ -21,7 +21,8 @@ Shared<Drawable> sample_markers()
 
   auto markers = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::shapes,
-      .default_size = 15,  // pixels
+      .default_size = 15,
+      .size_in_pixels = true,
   });
   markers->vertices->queueUpdate(plot_data);
   markers->shapes->queueUpdate(std::move(plot_shape));
@@ -40,8 +41,8 @@ Shared<Drawable> sample_text()
 int main(int /*argc*/, char** /*argv*/)
 {
   // Make some data
-  for (double x = 0; x < 100.0; x += 0.2) {
-    float y = std::sin(x);
+  for (double x = 0; x < 1000.0; x += 0.2) {
+    float y = std::sin(x/10.0);
     plot_data.emplace_back(x / 10.0, y);
   }
 
@@ -52,7 +53,7 @@ int main(int /*argc*/, char** /*argv*/)
 
   // Create a drawable with line series
   auto graph_xy = DrawnPrimitives::Create(
-      {.element_type = DrawnPrimitives::Type::line_strip, .default_size = 1.5});
+      {.element_type = DrawnPrimitives::Type::path, .default_size = 2, .size_in_pixels=true});
   graph_xy->vertices->queueUpdate(plot_data);
 
   std::optional<Shared<Drawable>> maybe_markers;

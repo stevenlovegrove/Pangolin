@@ -51,9 +51,12 @@ out vec4 color;
 
 uniform mat4 proj;
 uniform mat4 cam_from_world;
-uniform bool use_clip_size_units;
 uniform float size;
 uniform vec2 size_clip;
+
+// 0: Oriented/Sized in XY World plane
+// 1: Oriented/Sized in Clip plane.
+uniform int mode;
 
 vec2 corners[4] = vec2[](
     vec2(-1.0,-1.0), vec2(+1.0,-1.0),
@@ -68,10 +71,10 @@ void main() {
         color = v_color[0];
         shape = v_shape[0];
         uv = corners[i] * vec2(1.0,-1.0);
-        if(use_clip_size_units) {
+        if(mode == 0) {
+            gl_Position = proj * (cam_from_world * vec4(v_position[0] + vec3(0.5*size * corners[i],0.0), 1.0) );
+        }else if(mode == 1) {
             gl_Position = center_clip + vec4(center_clip.w * size_clip * corners[i], 0.0, 0.0);
-        }else{
-            gl_Position = proj * (center_cam + vec4(0.5*size * corners[i],0.0, 0.0) );
         }
         EmitVertex();
     }

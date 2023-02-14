@@ -117,14 +117,14 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
       u_cam_from_drawable = params.camera_from_drawable.cast<float>();
-      if (false) {
-        u_use_clip_size_units = false;
-        u_size = default_size;
-      } else {
-        u_use_clip_size_units = true;
+      if (size_in_pixels) {
+        u_mode = 1;
         Eigen::Array2f size_pix = Eigen::Vector2f(default_size, default_size);
         u_size_clip = 2.0 * size_pix.array() /
                       params.viewport.range().cast<float>().array();
+      } else {
+        u_mode = 0;
+        u_size = default_size;
       }
 
       vao.addVertexAttrib(location_vertex, *vertices);
@@ -162,7 +162,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
            .program_defines = defines});
     }
 
-    if (!vertices->empty()) {
+    if (vertices->size() >= 3) {
       PANGO_ENSURE(vertices->dataType());
       auto bind_prog = prog->bind();
       auto bind_vao = vao.bind();
@@ -170,7 +170,18 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       u_intrinsics =
           (params.clip_from_image * params.image_from_camera).cast<float>();
       u_cam_from_drawable = params.camera_from_drawable.cast<float>();
-      u_size = default_size;
+
+      if (size_in_pixels) {
+        u_mode = 1;
+        Eigen::Array2f size_pix = Eigen::Vector2f(default_size, default_size);
+        u_size_clip = 2.0 * size_pix.array() /
+                      params.viewport.range().cast<float>().array();
+      } else {
+        u_mode = 0;
+        u_size_clip = Eigen::Vector2f(default_size, default_size);
+        u_size_clip = Eigen::Vector2f(1.0, 1.0);
+        u_size = default_size;
+      }
 
       if (!colors->empty()) {
         vao.addVertexAttrib(location_colors, *colors);
@@ -274,7 +285,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
   const GlUniform<Eigen::Matrix4f> u_cam_from_drawable = {"cam_from_world"};
   const GlUniform<Eigen::Vector4f> u_color = {"color"};
   const GlUniform<uint> u_shape = {"shape"};
-  const GlUniform<bool> u_use_clip_size_units = {"use_clip_size_units"};
+  const GlUniform<bool> u_mode = {"mode"};
   const GlUniform<float> u_size = {"size"};
   const GlUniform<Eigen::Vector2f> u_size_clip = {"size_clip"};
 };
@@ -286,6 +297,7 @@ PANGO_CREATE(DrawnPrimitives)
   r->default_color = p.default_color;
   r->default_size = p.default_size;
   r->default_shape = p.default_shape;
+  r->size_in_pixels = p.size_in_pixels;
   return r;
 }
 

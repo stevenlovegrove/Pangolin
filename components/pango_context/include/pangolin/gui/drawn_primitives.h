@@ -98,6 +98,10 @@ struct DrawnPrimitives : public Drawable {
   // points are in pixel units. Other elements are world units.
   double default_size;
 
+  // If true and supported for the primitive, size will be constant in
+  // screensize pixels instead of world units.
+  bool size_in_pixels;
+
   // To use when `shapes` is empty
   Shape default_shape;
 
@@ -105,6 +109,7 @@ struct DrawnPrimitives : public Drawable {
     Type element_type = Type::points;
     Eigen::Vector4d default_color = {1.0f, 0.0f, 0.0f, 1.0f};
     double default_size = 1.0;
+    bool size_in_pixels = false;
     Shape default_shape = Shape::filled_circle;
   };
   static Shared<DrawnPrimitives> Create(Params p);
