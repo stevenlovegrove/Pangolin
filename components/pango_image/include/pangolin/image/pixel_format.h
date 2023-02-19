@@ -28,24 +28,24 @@
 #pragma once
 
 #include <pangolin/platform.h>
-#include <sophus/image/runtime_image_types.h>
+#include <sophus/image/dyn_image_types.h>
 
 #include <string>
 #include <unordered_map>
 
 namespace pangolin
 {
-using RuntimePixelType = sophus::RuntimePixelType;
+using PixelFormat = sophus::PixelFormat;
 
 //! Return Pixel Format properties given string specification in
 //! FFMPEG notation. E.g. GRAY8, RGB24, ...
 PANGOLIN_EXPORT
-RuntimePixelType PixelFormatFromString(const std::string& format);
+PixelFormat PixelFormatFromString(const std::string& format);
 
 PANGOLIN_EXPORT
-std::string ToString(const RuntimePixelType& fmt);
+std::string ToString(const PixelFormat& fmt);
 
 PANGOLIN_EXPORT
-const std::unordered_map<std::string, RuntimePixelType>& KnownPixelTypes();
+const std::unordered_map<std::string, PixelFormat>& KnownPixelTypes();
 
 }  // namespace pangolin

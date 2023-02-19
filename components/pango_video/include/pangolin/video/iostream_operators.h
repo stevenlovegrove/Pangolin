@@ -110,7 +110,7 @@ inline std::istream &operator>>(std::istream &is, ImageRoi &roi)
   return is;
 }
 
-inline std::istream &operator>>(std::istream &is, RuntimePixelType &fmt)
+inline std::istream &operator>>(std::istream &is, PixelFormat &fmt)
 {
   std::string sfmt;
   is >> sfmt;
@@ -120,7 +120,7 @@ inline std::istream &operator>>(std::istream &is, RuntimePixelType &fmt)
 
 inline std::istream &operator>>(std::istream &is, StreamInfo &stream)
 {
-  RuntimePixelType fmt;
+  PixelFormat fmt;
   ImageSize size(0, 0);
   size_t pitch = 0;
   size_t offset = 0;
@@ -133,7 +133,7 @@ inline std::istream &operator>>(std::istream &is, StreamInfo &stream)
   is.get();
   is >> pitch;
   is >> fmt;
-  stream = StreamInfo(fmt, ImageShape(size, pitch), offset);
+  stream = StreamInfo(fmt, ImageLayout(size, pitch), offset);
   return is;
 }
 

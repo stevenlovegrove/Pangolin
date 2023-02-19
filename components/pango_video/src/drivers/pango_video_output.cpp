@@ -110,8 +110,8 @@ void PangoVideoOutput::SetStreams(
     total_frame_size = 0;
     for (unsigned int i = 0; i < streams.size(); ++i) {
       StreamInfo& si = streams[i];
-      total_frame_size =
-          std::max(total_frame_size, si.offsetBytes() + si.shape().sizeBytes());
+      total_frame_size = std::max(
+          total_frame_size, si.offsetBytes() + si.layout().sizeBytes());
 
       picojson::value& json_stream = json_streams.push_back();
 
@@ -127,9 +127,9 @@ void PangoVideoOutput::SetStreams(
       }
 
       json_stream["encoding"] = encoder_name;
-      json_stream["width"] = si.shape().width();
-      json_stream["height"] = si.shape().height();
-      json_stream["pitch"] = si.shape().pitchBytes();
+      json_stream["width"] = si.layout().width();
+      json_stream["height"] = si.layout().height();
+      json_stream["pitch"] = si.layout().pitchBytes();
       json_stream["offset"] = si.offsetBytes();
     }
 
@@ -201,7 +201,7 @@ int PangoVideoOutput::WriteStreams(
     // data later
     encoded_stream_data.emplace_back(total_frame_size);
     for (size_t i = 1; i < streams.size(); ++i) {
-      encoded_stream_data.emplace_back(streams[i].shape().sizeBytes());
+      encoded_stream_data.emplace_back(streams[i].layout().sizeBytes());
     }
 
     // lambda encodes frame data i to encoded_stream_data[i]
@@ -213,12 +213,12 @@ int PangoVideoOutput::WriteStreams(
 
       if (stream_encoders[i]) {
         // Encode to buffer
-        stream_encoders[i](encode_stream, si.copyToRuntimeImage(data));
+        stream_encoders[i](encode_stream, si.copyToDynImage(data));
       } else {
         const ImageView<uint8_t> stream_image = si.StreamImage(data);
         if (stream_image.isContiguous()) {
           encode_stream.write(
-              (char*)stream_image.ptr(), streams[i].shape().sizeBytes());
+              (char*)stream_image.ptr(), streams[i].layout().sizeBytes());
         } else {
           for (int row = 0; row < stream_image.height(); ++row) {
             encode_stream.write((char*)stream_image.rowPtr(row), si.rowBytes());

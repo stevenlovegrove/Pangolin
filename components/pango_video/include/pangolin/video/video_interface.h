@@ -88,12 +88,12 @@ struct PANGOLIN_EXPORT VideoInterface {
       std::vector<IntensityImage<>> res;
       // Allocation into seperate images too, ughhhhhh
       for (const auto& s : Streams()) {
-        res.emplace_back(ImageSize(s.shape().imageSize()), s.format());
+        res.emplace_back(ImageSize(s.layout().imageSize()), s.format());
         auto& dst_image = res.back();
         sophus::details::pitchedCopy(
             const_cast<uint8_t*>(dst_image.rawPtr()),
-            dst_image.shape().pitchBytes(), buffer.get() + s.offsetBytes(),
-            s.shape().pitchBytes(), dst_image.imageSize(),
+            dst_image.layout().pitchBytes(), buffer.get() + s.offsetBytes(),
+            s.layout().pitchBytes(), dst_image.imageSize(),
             s.format().bytesPerPixel());
       }
       return res;

@@ -9,10 +9,10 @@ namespace pangolin
 {
 
 IntensityImage<> LoadImageNonPlanar(
-    const std::string& filename, const RuntimePixelType& raw_fmt,
-    size_t raw_width, size_t raw_height, size_t raw_pitch, size_t offset)
+    const std::string& filename, const PixelFormat& raw_fmt, size_t raw_width,
+    size_t raw_height, size_t raw_pitch, size_t offset)
 {
-  ImageShape shape = ImageShape::makeFromSizeAndPitch<uint8_t>(
+  ImageLayout shape = ImageLayout::makeFromSizeAndPitch<uint8_t>(
       ImageSize(raw_width, raw_height), raw_pitch);
   IntensityImage<> img(shape, raw_fmt);
 
@@ -32,7 +32,7 @@ IntensityImage<> LoadImageNonPlanar(
 template <typename Tin, typename Tout>
 IntensityImage<> ToNonPlanarT(const IntensityImageView& planar_image)
 {
-  RuntimePixelType new_fmt = RuntimePixelType::fromTemplate<Tout>();
+  PixelFormat new_fmt = PixelFormat::fromTemplate<Tout>();
   const size_t planes = new_fmt.num_channels;
 
   PANGO_ENSURE(planar_image.height() % planes == 0);
@@ -83,7 +83,7 @@ IntensityImage<> ToNonPlanar(const IntensityImage<>& planar, size_t planes)
             [&](const auto&) {
               PANGO_THROW(
                   "Unable to convert planar image of type {}",
-                  planar.pixelType());
+                  planar.pixelFormat());
             },
         },
         planar);
@@ -102,7 +102,7 @@ IntensityImage<> ToNonPlanar(const IntensityImage<>& planar, size_t planes)
             [&](const auto&) {
               PANGO_THROW(
                   "Unable to convert planar image of type {}",
-                  planar.pixelType());
+                  planar.pixelFormat());
             },
         },
         planar);
@@ -114,7 +114,7 @@ IntensityImage<> ToNonPlanar(const IntensityImage<>& planar, size_t planes)
 }
 
 IntensityImage<> LoadImage(
-    const std::string& filename, const RuntimePixelType& raw_plane_fmt,
+    const std::string& filename, const PixelFormat& raw_plane_fmt,
     size_t raw_width, size_t raw_height, size_t raw_pitch, size_t offset,
     size_t image_planes)
 {

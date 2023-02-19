@@ -4,7 +4,7 @@
 namespace pangolin
 {
 
-RuntimePixelType TgaFormat(int depth, int color_type, int color_map)
+PixelFormat TgaFormat(int depth, int color_type, int color_map)
 {
   if (color_map == 0) {
     if (color_type == 2) {

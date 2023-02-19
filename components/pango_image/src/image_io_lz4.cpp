@@ -51,7 +51,8 @@ void SaveLz4(
 
   lz4_image_header header;
   memcpy(header.magic, "LZ4", 3);
-  strncpy(header.fmt, ToString(image.pixelType()).c_str(), sizeof(header.fmt));
+  strncpy(
+      header.fmt, ToString(image.pixelFormat()).c_str(), sizeof(header.fmt));
   header.w = image.width();
   header.h = image.height();
   header.compressed_size = compressed_data_size;

@@ -7,8 +7,8 @@
 #include <pangolin/maths/region.h>
 #include <pangolin/utils/shared.h>
 #include <pangolin/utils/signal_slot.h>
+#include <sophus/image/dyn_image_types.h>
 #include <sophus/image/image_size.h>
-#include <sophus/image/runtime_image_types.h>
 
 #include <array>
 

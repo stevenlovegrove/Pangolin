@@ -144,7 +144,7 @@ void ImagesVideo::ConfigureStreamSizes()
   size_bytes = 0;
   for (size_t c = 0; c < num_channels; ++c) {
     const IntensityImage<>& img = loaded[0][c];
-    const StreamInfo stream_info(img.pixelType(), img.shape(), size_bytes);
+    const StreamInfo stream_info(img.pixelFormat(), img.layout(), size_bytes);
     streams.push_back(stream_info);
     size_bytes += img.height() * img.pitchBytes();
   }
@@ -165,7 +165,7 @@ ImagesVideo::ImagesVideo(const std::string& wildcard_path) :
 }
 
 ImagesVideo::ImagesVideo(
-    const std::string& wildcard_path, const RuntimePixelType& raw_fmt,
+    const std::string& wildcard_path, const PixelFormat& raw_fmt,
     size_t raw_width, size_t raw_height, size_t raw_pitch, size_t raw_offset,
     size_t raw_planes) :
     num_files(-1),
@@ -216,12 +216,12 @@ bool ImagesVideo::GrabNext(unsigned char* image, bool /*wait*/)
 
     for (size_t c = 0; c < num_channels; ++c) {
       IntensityImage<>& img = frame[c];
-      if (img.isEmpty() || img.shape() != streams[c].shape()) {
+      if (img.isEmpty() || img.layout() != streams[c].layout()) {
         return false;
       }
       const StreamInfo& si = streams[c];
       std::memcpy(
-          image + si.offsetBytes(), img.rawPtr(), si.shape().sizeBytes());
+          image + si.offsetBytes(), img.rawPtr(), si.layout().sizeBytes());
     }
     frame.clear();
 
@@ -310,7 +310,7 @@ PANGOLIN_REGISTER_FACTORY(ImagesVideo)
 
       if (raw) {
         const std::string sfmt = reader.Get<std::string>("fmt");
-        const RuntimePixelType fmt = PixelFormatFromString(sfmt);
+        const PixelFormat fmt = PixelFormatFromString(sfmt);
         const ImageDim dim = reader.Get<ImageDim>("size");
         const size_t image_pitch = reader.Get<int>("pitch");
         const size_t image_offset = reader.Get<int>("offset");

@@ -191,7 +191,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
 
       ScopedGlDisable disable_depth(depth_test ? 0 : GL_DEPTH_TEST);
 
-      const sophus::RuntimePixelType data_type = *vertices->dataType();
+      const sophus::PixelFormat data_type = *vertices->dataType();
 
       for (int i = 0; i < 4; ++i) {
         vao.addVertexAttrib(

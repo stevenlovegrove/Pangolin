@@ -49,14 +49,14 @@ void bind_image_view(pybind11::module& m)
               return view.SetImage(
                   wrapper, GlPixFormat(PixelFormatFromString(
                                format.empty() ? "GRAY32F" : format)));
-            } else if (img.ndim() == 3 && img.shape()[2] == 3) {
+            } else if (img.ndim() == 3 && img.layout()[2] == 3) {
               Image<uint8_t> wrapper(
                   (uint8_t*)img.mutable_data(0, 0), img.shape(1), img.shape(0),
                   img.strides(0));
               return view.SetImage(
                   wrapper, GlPixFormat(PixelFormatFromString(
                                format.empty() ? "RGB96F" : format)));
-            } else if (img.ndim() == 3 && img.shape()[2] == 4) {
+            } else if (img.ndim() == 3 && img.layout()[2] == 4) {
               Image<uint8_t> wrapper(
                   (uint8_t*)img.mutable_data(0, 0), img.shape(1), img.shape(0),
                   img.strides(0));
@@ -80,14 +80,14 @@ void bind_image_view(pybind11::module& m)
               return view.SetImage(
                   wrapper, GlPixFormat(PixelFormatFromString(
                                format.empty() ? "GRAY8" : format)));
-            } else if (img.ndim() == 3 && img.shape()[2] == 3) {
+            } else if (img.ndim() == 3 && img.layout()[2] == 3) {
               Image<uint8_t> wrapper(
                   (uint8_t*)img.mutable_data(0, 0), img.shape(1), img.shape(0),
                   img.strides(0));
               return view.SetImage(
                   wrapper, GlPixFormat(PixelFormatFromString(
                                format.empty() ? "RGB24" : format)));
-            } else if (img.ndim() == 3 && img.shape()[2] == 4) {
+            } else if (img.ndim() == 3 && img.layout()[2] == 4) {
               Image<uint8_t> wrapper(
                   (uint8_t*)img.mutable_data(0, 0), img.shape(1), img.shape(0),
                   img.strides(0));
@@ -111,14 +111,14 @@ void bind_image_view(pybind11::module& m)
               return view.SetImage(
                   wrapper, GlPixFormat(PixelFormatFromString(
                                format.empty() ? "GRAY16" : format)));
-            } else if (img.ndim() == 3 && img.shape()[2] == 3) {
+            } else if (img.ndim() == 3 && img.layout()[2] == 3) {
               Image<uint8_t> wrapper(
                   (uint8_t*)img.mutable_data(0, 0), img.shape(1), img.shape(0),
                   img.strides(0));
               return view.SetImage(
                   wrapper, GlPixFormat(PixelFormatFromString(
                                format.empty() ? "RGB48" : format)));
-            } else if (img.ndim() == 3 && img.shape()[2] == 4) {
+            } else if (img.ndim() == 3 && img.layout()[2] == 4) {
               Image<uint8_t> wrapper(
                   (uint8_t*)img.mutable_data(0, 0), img.shape(1), img.shape(0),
                   img.strides(0));

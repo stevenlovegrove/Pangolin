@@ -32,10 +32,10 @@
 namespace pangolin
 {
 
-const std::unordered_map<std::string, RuntimePixelType>& KnownPixelTypes()
+const std::unordered_map<std::string, PixelFormat>& KnownPixelTypes()
 {
   using namespace sophus;
-  static std::unordered_map<std::string, RuntimePixelType> table = {
+  static std::unordered_map<std::string, PixelFormat> table = {
       {"GRAY8", {NumberType::fixed_point, 1, 1}},
       {"GRAY10", {NumberType::fixed_point, 1, 1}},
       {"GRAY12", {NumberType::fixed_point, 1, 1}},
@@ -67,7 +67,7 @@ const std::unordered_map<std::string, RuntimePixelType>& KnownPixelTypes()
   return table;
 }
 
-RuntimePixelType PixelFormatFromString(const std::string& format)
+PixelFormat PixelFormatFromString(const std::string& format)
 {
   const auto& m = KnownPixelTypes();
   auto it = m.find(format);
@@ -75,7 +75,7 @@ RuntimePixelType PixelFormatFromString(const std::string& format)
   throw std::runtime_error(std::string("Unknown Format: ") + format);
 }
 
-std::string ToString(const RuntimePixelType& fmt)
+std::string ToString(const PixelFormat& fmt)
 {
   for (auto& [key, val] : KnownPixelTypes()) {
     if (val == fmt) return key;

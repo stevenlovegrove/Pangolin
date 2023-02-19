@@ -190,7 +190,7 @@ IntensityImage<> LoadJpg(std::istream& is)
   } else {
     jpeg_start_decompress(&cinfo);
     // resize storage if necessary
-    RuntimePixelType fmt =
+    PixelFormat fmt =
         PixelFormatFromString(cinfo.output_components == 3 ? "RGB24" : "GRAY8");
     image = sophus::IntensityImage<>(
         ImageSize(cinfo.output_width, cinfo.output_height), fmt);

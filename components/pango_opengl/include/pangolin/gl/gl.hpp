@@ -210,7 +210,7 @@ inline void GlTexture::Upload(
 
 inline void GlTexture::Load(const IntensityImage<>& image, bool sampling_linear)
 {
-  auto maybe_glfmt = glTypeInfo(image.pixelType());
+  auto maybe_glfmt = glTypeInfo(image.pixelFormat());
   auto glfmt = SOPHUS_UNWRAP(maybe_glfmt);
 
   Reinitialise(
@@ -972,7 +972,7 @@ inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
 inline IntensityImage<> ReadFramebuffer(
     const Viewport& v, const char* pixel_format)
 {
-  const RuntimePixelType fmt = PixelFormatFromString(pixel_format);
+  const PixelFormat fmt = PixelFormatFromString(pixel_format);
   const GlPixFormat glfmt(fmt);
 
   IntensityImage<> buffer(sophus::ImageSize(v.w, v.h), fmt);

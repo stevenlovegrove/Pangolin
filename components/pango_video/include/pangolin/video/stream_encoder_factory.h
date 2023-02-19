@@ -17,10 +17,10 @@ class StreamEncoderFactory
   static StreamEncoderFactory& I();
 
   ImageEncoderFunc GetEncoder(
-      const std::string& encoder_spec, const RuntimePixelType& fmt);
+      const std::string& encoder_spec, const PixelFormat& fmt);
 
   ImageDecoderFunc GetDecoder(
-      const std::string& encoder_spec, const RuntimePixelType& fmt);
+      const std::string& encoder_spec, const PixelFormat& fmt);
 };
 
 }  // namespace pangolin

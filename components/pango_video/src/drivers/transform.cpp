@@ -74,13 +74,13 @@ TransformVideo::TransformVideo(
       case TransformOptions::RotateCW:
       case TransformOptions::RotateCCW:
 
-        auto orig_shape = videoin->Streams()[i].shape();
+        auto orig_shape = videoin->Streams()[i].layout();
         auto offset = videoin->Streams()[i].offsetBytes();
         auto fmt = videoin->Streams()[i].format();
 
         streams.emplace_back(
             fmt,
-            ImageShape{
+            ImageLayout{
                 orig_shape.height(), orig_shape.width(),
                 orig_shape.pitchBytes()},
             offset);

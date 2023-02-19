@@ -95,7 +95,7 @@ struct DeviceGlBuffer : public DeviceBuffer {
 
   bool allocated() const { return bool(dataType()); }
 
-  std::optional<sophus::RuntimePixelType> dataType() const override
+  std::optional<sophus::PixelFormat> dataType() const override
   {
     return data_type_;
   }
@@ -195,7 +195,7 @@ struct DeviceGlBuffer : public DeviceBuffer {
   bool allow_retyping_;
   mutable std::recursive_mutex buffer_mutex_;
   mutable std::deque<QueueData> updates_;
-  mutable std::optional<RuntimePixelType> data_type_;
+  mutable std::optional<PixelFormat> data_type_;
   mutable size_t num_elements_;
   mutable size_t num_elements_capacity_;
   mutable GLuint gl_id_;

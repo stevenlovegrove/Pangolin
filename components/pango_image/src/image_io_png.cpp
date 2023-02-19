@@ -13,7 +13,7 @@ namespace pangolin
 
 #ifdef HAVE_PNG
 
-RuntimePixelType PngFormat(png_structp png_ptr, png_infop info_ptr)
+PixelFormat PngFormat(png_structp png_ptr, png_infop info_ptr)
 {
   const png_byte colour = png_get_color_type(png_ptr, info_ptr);
   const png_byte depth = png_get_bit_depth(png_ptr, info_ptr);
@@ -133,7 +133,7 @@ IntensityImage<> LoadPng(std::istream& source)
   const size_t h = png_get_image_height(png_ptr, info_ptr);
   const size_t pitch = png_get_rowbytes(png_ptr, info_ptr);
 
-  auto shape = sophus::ImageShape::makeFromSizeAndPitch<uint8_t>(
+  auto shape = sophus::ImageLayout::makeFromSizeAndPitch<uint8_t>(
       sophus::ImageSize(w, h), pitch);
   IntensityImage<> img(shape, PngFormat(png_ptr, info_ptr));
 

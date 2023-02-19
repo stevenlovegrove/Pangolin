@@ -2,7 +2,7 @@
 
 #include <pangolin/image/image.h>
 #include <pangolin/image/pixel_format.h>
-#include <sophus/image/runtime_image_types.h>
+#include <sophus/image/dyn_image_types.h>
 
 namespace pangolin
 {

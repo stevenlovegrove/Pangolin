@@ -4,7 +4,7 @@
 #include <pangolin/maths/point_methods.h>
 #include <pangolin/utils/concept_utils.h>
 #include <pangolin/utils/variant_overload.h>
-#include <sophus/image/runtime_image_types.h>
+#include <sophus/image/dyn_image_types.h>
 
 namespace pangolin
 {

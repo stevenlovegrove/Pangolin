@@ -4,7 +4,7 @@
 #include <pangolin/maths/conventions.h>
 #include <pangolin/render/colormap.h>
 #include <pangolin/render/device_texture.h>
-#include <sophus/image/runtime_image_types.h>
+#include <sophus/image/dyn_image_types.h>
 #include <sophus/sensor/orthographic.h>
 
 namespace pangolin

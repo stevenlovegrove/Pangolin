@@ -27,19 +27,19 @@ template <std::size_t I = 0, typename FuncT, typename... Tp>
   for_each<I + 1, FuncT, Tp...>(t, f);
 }
 
-template <class PixelType>
-GlTexture createTextureFromImage(sophus::ImageView<PixelType>& image)
+template <class PixelFormat>
+GlTexture createTextureFromImage(sophus::ImageView<PixelFormat>& image)
 {
-  using Fmt = GlFormatTraits<PixelType>;
+  using Fmt = GlFormatTraits<PixelFormat>;
   return pangolin::GlTexture(
       image.width(), image.height(), Fmt::glinternalformat, true, 0,
       Fmt::glformat, Fmt::gltype, (void*)image.ptr());
 }
 
-template <class PixelType>
+template <class PixelFormat>
 GlTexture createTextureForType(sophus::ImageSize dimensions)
 {
-  using Fmt = GlFormatTraits<PixelType>;
+  using Fmt = GlFormatTraits<PixelFormat>;
   return pangolin::GlTexture(
       dimensions.width, dimensions.height, Fmt::glinternalformat, true, 0,
       Fmt::glformat, Fmt::gltype);
@@ -68,19 +68,19 @@ void renderToImage(
   fbo.Unbind();
 
   for_each(output_channels, [&](size_t ch, auto image) {
-    using TPix = typename decltype(image)::PixelType;
+    using TPix = typename decltype(image)::PixelFormat;
     using Fmt = GlFormatTraits<TPix>;
     channels[ch].Download(image.ptrMut(), Fmt::glformat, Fmt::gltype);
     PANGO_GL_CHECK();
   });
 }
 
-template <class PixelType>
-sophus::MutImage<PixelType> renderToImage(
+template <class PixelFormat>
+sophus::MutImage<PixelFormat> renderToImage(
     sophus::ImageSize image_size, const std::function<void()>& user_render_func)
 {
-  sophus::MutImage<PixelType> image(image_size);
-  renderToImage<PixelType>(user_render_func, {image});
+  sophus::MutImage<PixelFormat> image(image_size);
+  renderToImage<PixelFormat>(user_render_func, {image});
   return image;
 }
 

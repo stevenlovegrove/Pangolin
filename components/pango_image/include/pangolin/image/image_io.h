@@ -46,7 +46,7 @@ IntensityImage<> LoadImage(const std::string& filename);
 
 PANGOLIN_EXPORT
 IntensityImage<> LoadImage(
-    const std::string& filename, const RuntimePixelType& raw_plane_fmt,
+    const std::string& filename, const PixelFormat& raw_plane_fmt,
     size_t raw_width, size_t raw_height, size_t raw_pitch, size_t offset = 0,
     size_t image_planes = 1);
 
