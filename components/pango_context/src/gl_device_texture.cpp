@@ -33,7 +33,7 @@ struct DeviceGlTexture : public DeviceTexture {
 
   sophus::ImageSize imageSize() const override { return image_size_; }
 
-  RuntimePixelType pixelType() const override { return data_type_; }
+  PixelFormat pixelFormat() const override { return data_type_; }
 
   void update(
       const sophus::IntensityImage<>& image,
@@ -43,7 +43,7 @@ struct DeviceGlTexture : public DeviceTexture {
     updates_.push_back(Update{image, destination});
 
     if (image_size_.isEmpty()) {
-      data_type_ = image.pixelType();
+      data_type_ = image.pixelFormat();
       image_size_ = image.imageSize();
     } else {
       // TODO: Check compatibility
@@ -82,7 +82,7 @@ struct DeviceGlTexture : public DeviceTexture {
     constexpr GLint mip_level = 0;
     constexpr GLint border = 0;
 
-    auto data_type = u.image.pixelType();
+    auto data_type = u.image.pixelFormat();
     auto maybe_type = glTypeInfo(data_type);
     const GlFormatInfo gl_fmt = SOPHUS_UNWRAP(maybe_type);
 
@@ -146,7 +146,7 @@ struct DeviceGlTexture : public DeviceTexture {
   GLenum gl_target_ = 0;
   mutable std::recursive_mutex buffer_mutex_;
   mutable std::deque<Update> updates_;
-  mutable RuntimePixelType data_type_;
+  mutable PixelFormat data_type_;
   mutable ImageSize image_size_ = {};
   mutable GLuint gl_id_ = 0;
 };

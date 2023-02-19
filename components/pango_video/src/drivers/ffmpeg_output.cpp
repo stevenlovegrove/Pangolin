@@ -170,8 +170,8 @@ FfmpegVideoOutputStream::FfmpegVideoOutputStream(
     flip(flip_image)
 {
   codec_context = CreateVideoCodecContext(
-      codec_id, frame_rate, bit_rate, output_format, input_info.shape().width(),
-      input_info.shape().height());
+      codec_id, frame_rate, bit_rate, output_format,
+      input_info.layout().width(), input_info.layout().height());
   stream = CreateStream(recorder.oc, codec_context);
 
   // Allocate frame
@@ -185,8 +185,8 @@ FfmpegVideoOutputStream::FfmpegVideoOutputStream(
 
   src_frame = av_frame_alloc();
   src_frame->format = input_format;
-  src_frame->width = input_info.shape().width();
-  src_frame->height = input_info.shape().height();
+  src_frame->width = input_info.layout().width();
+  src_frame->height = input_info.layout().height();
   if (av_frame_get_buffer(src_frame, 0)) {
     throw VideoException("Could not allocate picture");
   }

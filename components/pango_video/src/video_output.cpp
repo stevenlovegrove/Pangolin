@@ -69,16 +69,15 @@ int VideoOutput::WriteStreams(
 
 bool VideoOutput::IsPipe() const { return recorder->IsPipe(); }
 
-void VideoOutput::AddStream(
-    const RuntimePixelType& pf, sophus::ImageShape shape)
+void VideoOutput::AddStream(const PixelFormat& pf, sophus::ImageLayout shape)
 {
   streams.emplace_back(pf, shape, 0);
 }
 
-void VideoOutput::AddStream(const RuntimePixelType& pf, sophus::ImageSize size)
+void VideoOutput::AddStream(const PixelFormat& pf, sophus::ImageSize size)
 {
   AddStream(
-      pf, sophus::ImageShape::makeFromSizeAndPitchUnchecked(
+      pf, sophus::ImageLayout::makeFromSizeAndPitchUnchecked(
               size, size.width * pf.bytesPerPixel()));
 }
 
@@ -88,8 +87,8 @@ void VideoOutput::SetStreams(
   size_t offset = 0;
   for (size_t i = 0; i < streams.size(); i++) {
     // Correct the offset for each stream
-    streams[i] = StreamInfo(streams[i].format(), streams[i].shape(), offset);
-    offset += streams[i].shape().sizeBytes();
+    streams[i] = StreamInfo(streams[i].format(), streams[i].layout(), offset);
+    offset += streams[i].layout().sizeBytes();
   }
   SetStreams(streams, uri, properties);
 }
@@ -98,7 +97,7 @@ size_t VideoOutput::SizeBytes(void) const
 {
   size_t total = 0;
   for (const StreamInfo& si : recorder->Streams())
-    total += si.shape().sizeBytes();
+    total += si.layout().sizeBytes();
   return total;
 }
 

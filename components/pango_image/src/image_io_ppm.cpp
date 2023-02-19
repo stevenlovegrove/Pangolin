@@ -5,7 +5,7 @@
 namespace pangolin
 {
 
-RuntimePixelType PpmFormat(const std::string& strType, int num_colours)
+PixelFormat PpmFormat(const std::string& strType, int num_colours)
 {
   if (strType == "P5") {
     if (num_colours < 256) {
@@ -73,13 +73,13 @@ void SavePpm(
 
   int num_colors = 0;
 
-  if (image.pixelType().is<uint8_t>()) {
+  if (image.pixelFormat().is<uint8_t>()) {
     ppm_type = "P5";
     num_colors = 255;
-  } else if (image.pixelType().is<uint16_t>()) {
+  } else if (image.pixelFormat().is<uint16_t>()) {
     ppm_type = "P5";
     num_colors = 65535;
-  } else if (image.pixelType().is<Pixel3U8>()) {
+  } else if (image.pixelFormat().is<Pixel3U8>()) {
     ppm_type = "P6";
     num_colors = 255;
   } else {

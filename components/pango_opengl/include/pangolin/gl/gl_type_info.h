@@ -3,7 +3,7 @@
 #include "farm_ng/core/logging/expected.h"
 
 #include <pangolin/gl/glplatform.h>
-#include <sophus/image/runtime_image_types.h>
+#include <sophus/image/dyn_image_types.h>
 
 namespace pangolin
 {
@@ -41,7 +41,7 @@ struct GlFormatInfo {
 };
 
 inline farm_ng::Expected<GlFormatInfo> glTypeInfo(
-    const sophus::RuntimePixelType& pixel_type)
+    const sophus::PixelFormat& pixel_type)
 {
   constexpr static GLint type_table[] = {
       0,  // unspecified

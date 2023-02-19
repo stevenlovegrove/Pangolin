@@ -76,9 +76,9 @@ class PANGOLIN_EXPORT VideoOutput : public VideoOutputInterface
 
   bool IsPipe() const override;
 
-  void AddStream(const RuntimePixelType& pf, sophus::ImageShape shape);
+  void AddStream(const PixelFormat& pf, sophus::ImageLayout shape);
 
-  void AddStream(const RuntimePixelType& pf, sophus::ImageSize size);
+  void AddStream(const PixelFormat& pf, sophus::ImageSize size);
 
   void SetStreams(
       const std::string& uri = "",

@@ -14,12 +14,12 @@ namespace pangolin
 {
 
 #ifdef HAVE_OPENEXR
-Imf::PixelType OpenEXRPixelType(int channel_bits)
+Imf::PixelFormat OpenEXRPixelType(int channel_bits)
 {
   if (channel_bits == 16) {
-    return Imf::PixelType::HALF;
+    return Imf::PixelFormat::HALF;
   } else if (channel_bits == 32) {
-    return Imf::PixelType::FLOAT;
+    return Imf::PixelFormat::FLOAT;
   } else {
     throw std::runtime_error("Unsupported OpenEXR Pixel Type.");
   }
@@ -128,7 +128,7 @@ IntensityImage<> LoadExr(std::istream& source)
   const Imf::ChannelList& channels = file.header().channels();
   size_t c = 0;
   unsigned int d = format.channel_bit_depth;
-  Imf::PixelType pixeltype;
+  Imf::PixelFormat pixeltype;
   switch (d) {
     case 16:
       pixeltype = Imf::HALF;

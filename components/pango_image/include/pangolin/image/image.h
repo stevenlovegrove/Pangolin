@@ -19,6 +19,6 @@ using MutImage = sophus::MutImage<T>;
 
 using ImageSize = sophus::ImageSize;
 
-using ImageShape = sophus::ImageShape;
+using ImageLayout = sophus::ImageLayout;
 
 }  // namespace pangolin

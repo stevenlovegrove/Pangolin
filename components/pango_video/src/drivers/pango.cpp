@@ -171,25 +171,25 @@ void PangoVideo::SetupStreams(const PacketStreamSource& src)
     if (json_stream.contains("decoded")) {
       const std::string compressed_encoding = encoding;
       encoding = json_stream["decoded"].get<std::string>();
-      const RuntimePixelType decoded_fmt = PixelFormatFromString(encoding);
+      const PixelFormat decoded_fmt = PixelFormatFromString(encoding);
       stream_decoder.push_back(StreamEncoderFactory::I().GetDecoder(
           compressed_encoding, decoded_fmt));
     } else {
       stream_decoder.push_back(nullptr);
     }
 
-    RuntimePixelType fmt = PixelFormatFromString(encoding);
+    PixelFormat fmt = PixelFormatFromString(encoding);
 
     StreamInfo si(
         fmt,
-        ImageShape(
+        ImageLayout(
             json_stream["width"].get<int64_t>(),
             json_stream["height"].get<int64_t>(),
             json_stream["pitch"].get<int64_t>()),
         static_cast<size_t>(json_stream["offset"].get<int64_t>()));
 
     if (!_fixed_size) {
-      _size_bytes += si.shape().sizeBytes();
+      _size_bytes += si.layout().sizeBytes();
     }
 
     _streams.push_back(si);

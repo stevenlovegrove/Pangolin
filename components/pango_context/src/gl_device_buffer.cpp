@@ -66,7 +66,7 @@ struct DeviceGlBuffer : public DeviceBuffer {
 
   bool empty() const override { return gl_id_ == 0; }
 
-  sophus::RuntimePixelType dataType() const override { return data_type_; }
+  sophus::PixelFormat dataType() const override { return data_type_; }
 
   size_t numElements() const override { return num_elements_; }
 
@@ -133,7 +133,7 @@ struct DeviceGlBuffer : public DeviceBuffer {
   GLenum gluse_ = 0;
   mutable std::recursive_mutex buffer_mutex_;
   mutable std::deque<Data> updates_;
-  mutable RuntimePixelType data_type_;
+  mutable PixelFormat data_type_;
   mutable size_t num_elements_;
   mutable size_t num_elements_capacity_;
   mutable GLuint gl_id_;

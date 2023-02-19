@@ -37,51 +37,50 @@ namespace pangolin
 class PANGOLIN_EXPORT StreamInfo
 {
   public:
-  inline StreamInfo() : shape_(0, 0, 0), offset_bytes_(0) {}
+  inline StreamInfo() : layout_(0, 0, 0), offset_bytes_(0) {}
 
   inline StreamInfo(
-      RuntimePixelType fmt, const sophus::ImageShape shape,
-      size_t offset_bytes) :
-      fmt_(fmt), shape_(shape), offset_bytes_(offset_bytes)
+      PixelFormat fmt, const sophus::ImageLayout shape, size_t offset_bytes) :
+      fmt_(fmt), layout_(shape), offset_bytes_(offset_bytes)
   {
   }
 
-  inline sophus::ImageShape shape() const { return shape_; }
+  inline sophus::ImageLayout layout() const { return layout_; }
 
-  inline RuntimePixelType format() const { return fmt_; }
+  inline PixelFormat format() const { return fmt_; }
 
   inline size_t offsetBytes() const { return offset_bytes_; }
 
   inline size_t rowBytes() const
   {
-    return format().bytesPerPixel() * shape().width();
+    return format().bytesPerPixel() * layout().width();
   }
 
   //! Return Image wrapper around raw base pointer
   inline sophus::ImageView<uint8_t> StreamImage(const uint8_t* base_ptr) const
   {
-    return {shape_, base_ptr + offset_bytes_};
+    return {layout_, base_ptr + offset_bytes_};
   }
 
   inline sophus::MutImageView<uint8_t> StreamImage(uint8_t* base_ptr) const
   {
-    return {shape_, base_ptr + offset_bytes_};
+    return {layout_, base_ptr + offset_bytes_};
   }
 
-  inline IntensityImage<> copyToRuntimeImage(const uint8_t* base_ptr) const
+  inline IntensityImage<> copyToDynImage(const uint8_t* base_ptr) const
   {
     PANGO_DEBUG("Unneeded image copy happening...");
-    IntensityImage<> runtime(shape_, fmt_);
+    IntensityImage<> runtime(layout_, fmt_);
     sophus::details::pitchedCopy(
-        const_cast<uint8_t*>(runtime.rawPtr()), runtime.shape().pitchBytes(),
-        base_ptr, shape_.pitchBytes(), shape_.imageSize(),
+        const_cast<uint8_t*>(runtime.rawPtr()), runtime.layout().pitchBytes(),
+        base_ptr, layout_.pitchBytes(), layout_.imageSize(),
         fmt_.bytesPerPixel());
     return runtime;
   }
 
   protected:
-  RuntimePixelType fmt_;
-  sophus::ImageShape shape_;
+  PixelFormat fmt_;
+  sophus::ImageLayout layout_;
   size_t offset_bytes_;
 };
 

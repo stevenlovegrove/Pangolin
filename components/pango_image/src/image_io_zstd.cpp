@@ -34,7 +34,8 @@ void SaveZstd(
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
 #pragma GCC diagnostic pop
 #endif
-  strncpy(header.fmt, ToString(image.pixelType()).c_str(), sizeof(header.fmt));
+  strncpy(
+      header.fmt, ToString(image.pixelFormat()).c_str(), sizeof(header.fmt));
   header.w = image.width();
   header.h = image.height();
   out.write((char*)&header, sizeof(header));

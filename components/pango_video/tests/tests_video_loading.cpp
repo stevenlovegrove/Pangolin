@@ -13,8 +13,8 @@ TEST_CASE("Loading built in video driver")
   REQUIRE(video->SizeBytes() == 123 * 345 * 3);
   REQUIRE(video->Streams().size() == 1);
   REQUIRE(ToString(video->Streams()[0].format()) == std::string("RGB24"));
-  REQUIRE(video->Streams()[0].shape().width() == 123);
-  REQUIRE(video->Streams()[0].shape().height() == 345);
+  REQUIRE(video->Streams()[0].layout().width() == 123);
+  REQUIRE(video->Streams()[0].layout().height() == 345);
 
   std::unique_ptr<unsigned char[]> image(new unsigned char[video->SizeBytes()]);
   const bool success = video->GrabNext(image.get());

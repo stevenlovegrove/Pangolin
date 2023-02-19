@@ -40,7 +40,7 @@ GlGeometry::Element ToGlGeometryElement(
         [&](auto&& attrib) {
           using T = std::decay_t<decltype(attrib)>;
           auto& glattrib = glel.attributes[attrib_variant.first];
-          glattrib.gltype = GlFormatTraits<typename T::PixelType>::gltype;
+          glattrib.gltype = GlFormatTraits<typename T::PixelFormat>::gltype;
           glattrib.count_per_element = attrib.w;
           glattrib.num_elements = attrib.h;
           glattrib.offset = (uint8_t*)attrib.ptr - el.ptr;

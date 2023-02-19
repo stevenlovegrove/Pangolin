@@ -3,7 +3,7 @@
 #include <pangolin/render/extra_pixel_traits.h>
 #include <pangolin/utils/scoped_bind.h>
 #include <pangolin/utils/shared.h>
-#include <sophus/image/runtime_image_types.h>
+#include <sophus/image/dyn_image_types.h>
 
 namespace pangolin
 {
@@ -38,7 +38,7 @@ struct DeviceBuffer {
   // no data or typed information
   virtual bool empty() const = 0;
 
-  virtual sophus::RuntimePixelType dataType() const = 0;
+  virtual sophus::PixelFormat dataType() const = 0;
   virtual size_t numElements() const = 0;
 
   struct UpdateParams {
@@ -46,7 +46,7 @@ struct DeviceBuffer {
     size_t num_reserve_elements = 0;
   };
   struct Data {
-    sophus::RuntimePixelType data_type;
+    sophus::PixelFormat data_type;
     size_t num_elements = 0;
     std::shared_ptr<void> data;
     UpdateParams params = {};
@@ -73,7 +73,7 @@ struct DeviceBuffer {
     const size_t num_elements = data.size();
 
     pushToUpdateQueue({
-        .data_type = sophus::RuntimePixelType::fromTemplate<T>(),
+        .data_type = sophus::PixelFormat::fromTemplate<T>(),
         .num_elements = num_elements,
         .data = makeTypeErasedSharedPtr(data),
         .params = params,

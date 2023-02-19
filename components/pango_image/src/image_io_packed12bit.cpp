@@ -42,7 +42,7 @@ void SavePacked12bit(const IntensityImage<>& image, std::ostream& out)
 
   packed12bit_image_header header;
   static_assert(sizeof(header.magic) == 4, "[bug]");
-  const std::string fmt_str = ToString(image.pixelType());
+  const std::string fmt_str = ToString(image.pixelFormat());
   memcpy(header.magic, "P12B", 4);
   memset(header.fmt, '\0', sizeof(header.fmt));
   memcpy(

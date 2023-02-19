@@ -94,7 +94,7 @@ int ImagesVideoOutput::WriteStreams(
         fmt::format("image_{:010}_{}.{}", image_index, s, image_file_extension);
     json_filenames.push_back(filename);
 
-    pangolin::SaveImage(si.copyToRuntimeImage(data), image_folder + filename);
+    pangolin::SaveImage(si.copyToDynImage(data), image_folder + filename);
   }
 
   // Add frame_properties to json file.

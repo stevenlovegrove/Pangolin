@@ -399,9 +399,9 @@ struct ContextImpl : public Context {
     const Eigen::Array2i imsize = bounds.range().array() + Eigen::Array2i(1, 1);
     const bool is_depth = attachment == Attachment::depth;
 
-    const RuntimePixelType pixel_type =
-        is_depth ? RuntimePixelType::fromTemplate<float>()
-                 : RuntimePixelType::fromTemplate<sophus::Pixel3U8>();
+    const PixelFormat pixel_type =
+        is_depth ? PixelFormat::fromTemplate<float>()
+                 : PixelFormat::fromTemplate<sophus::Pixel3U8>();
 
     const auto maybe_gl_pixel_type = glTypeInfo(pixel_type);
     const GlFormatInfo gl_pixel_type = SOPHUS_UNWRAP(maybe_gl_pixel_type);
