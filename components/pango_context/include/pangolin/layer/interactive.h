@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <pangolin/maths/conventions.h>
-#include <pangolin/maths/region.h>
+#include <pangolin/render/conventions.h>
 #include <pangolin/utils/flag_set.h>
+#include <sophus/calculus/region.h>
 
 #include <optional>
 #include <variant>
@@ -14,7 +14,7 @@ namespace pangolin
 struct Context;
 
 struct WindowPosition {
-  Region2I region = Region2I::empty();
+  sophus::Region2I region = sophus::Region2I::empty();
   Eigen::Array2d pos_window;
 };
 

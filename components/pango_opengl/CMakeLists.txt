@@ -8,29 +8,26 @@ embed_binary_files_rule(fonts.cpp ${BINARY_FILES_TO_EMBED})
 embed_shader_files_rule(shaders.cpp "${SHADER_FILES_TO_EMBED}")
 
 set(component_file_basenames
-    glsl_program
     glsl_preprocessor
+    glsl_program
+    gl_device_buffer
+    gl_device_texture
+    gl_vao
+    glchar
+    gldraw
+    glfont
+    glpangoglu
+    gltext
+    viewport
 )
 
 foreach(basename ${component_file_basenames})
   target_sources( ${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/${basename}.cpp )
-  if(BUILD_TESTS)
-      add_executable(${basename}_test ${CMAKE_CURRENT_LIST_DIR}/src/${basename}_test.cpp)
-      target_link_libraries(${basename}_test PRIVATE Catch2::Catch2WithMain ${COMPONENT})
-      catch_discover_tests(${basename}_test)
-  endif()
 endforeach()
 
 # TODO move more of these into above as they mature and get tests...
 target_sources( ${COMPONENT}
 PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/src/glchar.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/gldraw.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/glfont.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/gltext.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/glpangoglu.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/viewport.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/stb_truetype.h
     ${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/shaders.cpp
 )
@@ -39,7 +36,7 @@ find_package (Eigen3 REQUIRED QUIET)
 message(STATUS "Found Eigen: '${EIGEN3_INCLUDE_DIRS}'")
 target_compile_definitions(${COMPONENT} PUBLIC HAVE_EIGEN HAVE_GLEW)
 
-target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image Eigen3::Eigen)
+target_link_libraries(${COMPONENT} PUBLIC pango_core pango_image pango_render Eigen3::Eigen)
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
     $<INSTALL_INTERFACE:include>

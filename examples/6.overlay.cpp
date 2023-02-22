@@ -1,7 +1,7 @@
 #include <pangolin/context/context.h>
+#include <pangolin/gl/gl_vao.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/layer/all_layers.h>
-#include <pangolin/render/gl_vao.h>
 #include <pangolin/video/video.h>
 
 /*

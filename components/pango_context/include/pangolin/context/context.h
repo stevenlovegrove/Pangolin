@@ -2,8 +2,7 @@
 
 #include <pangolin/layer/interactive.h>
 #include <pangolin/layer/layer_group.h>
-#include <pangolin/maths/conventions.h>
-#include <pangolin/maths/region.h>
+#include <pangolin/render/conventions.h>
 #include <pangolin/utils/shared.h>
 #include <pangolin/utils/signal_slot.h>
 #include <sophus/image/dyn_image_types.h>
@@ -97,15 +96,15 @@ struct Context : std::enable_shared_from_this<Context> {
   // window/buffer managed by the context, with origin respecting the
   // window_convention parameter.
   virtual void setViewport(
-      const Region2I& region,
+      const sophus::Region2I& region,
       ImageXy window_convention = Conventions::global().image_xy) const = 0;
 
   // Read from the graphics device the specified buffer associated with this
   // context. For example, you can use this to read back an image to save, or to
   // query the rendered depth for user interaction.
   virtual sophus::IntensityImage<> read(
-      Region2I region =
-          Region2I::empty(),  // empty region will return full buffer
+      sophus::Region2I region =
+          sophus::Region2I::empty(),  // empty region will return full buffer
       Attachment attachment = Attachment::color,
       ImageXy image_axis_convention = Conventions::global().image_xy) const = 0;
 

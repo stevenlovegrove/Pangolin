@@ -1,7 +1,6 @@
-#include "camera_utils.h"
-
 #include <pangolin/layer/draw_layer.h>
 #include <pangolin/layer/draw_layer_handler.h>
+#include <pangolin/render/camera_utils.h>
 #include <pangolin/utils/fmt.h>
 #include <pangolin/utils/logging.h>
 #include <pangolin/utils/variant_overload.h>
@@ -23,7 +22,7 @@ struct PointerState {
 struct MouseUpdateArgs {
   // Potentially updated by function
   DrawLayerRenderState& render_state;
-  Region3F64& camera_limits_in_world;
+  sophus::Region3F64& camera_limits_in_world;
   Eigen::Vector3d point_in_world;
   // Information
   PointerState pointer_now;

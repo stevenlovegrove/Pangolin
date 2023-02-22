@@ -51,15 +51,15 @@ class LayerGroup
   const std::vector<LayerGroup>& children() const { return children_; }
   std::vector<LayerGroup>& children() { return children_; }
 
-  std::optional<Region2I>& region() { return region_; }
-  const std::optional<Region2I>& region() const { return region_; }
+  std::optional<sophus::Region2I>& region() { return region_; }
+  const std::optional<sophus::Region2I>& region() const { return region_; }
 
   private:
   std::vector<LayerGroup> children_ = {};
 
   Params params_ = Params{};
   std::optional<Constraints> constraints_;
-  std::optional<Region2I> region_;
+  std::optional<sophus::Region2I> region_;
 };
 
 }  // namespace pangolin

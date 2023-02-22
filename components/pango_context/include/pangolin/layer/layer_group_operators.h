@@ -149,7 +149,7 @@ void computeLayoutConstraints(LayerGroup& group);
 //
 // Precondition: The constraints of the group and its children must be populated
 // already (e.g. by corresponding call to populateConstraintsRecursively).
-void computeLayoutRegion(LayerGroup& group, const Region2I& region);
+void computeLayoutRegion(LayerGroup& group, const sophus::Region2I& region);
 
 std::ostream& operator<<(std::ostream& s, const LayerGroup& layout);
 
