@@ -29,8 +29,8 @@
 #include <pangolin/log/playback_session.h>
 #include <pangolin/utils/file_extension.h>
 #include <pangolin/utils/file_utils.h>
-#include <pangolin/utils/signal_slot.h>
 #include <pangolin/video/drivers/pango.h>
+#include <sigslot/signal.hpp>
 
 #include <functional>
 

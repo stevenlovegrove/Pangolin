@@ -29,9 +29,9 @@
 
 #include <pangolin/log/packetstream_reader.h>
 #include <pangolin/log/playback_session.h>
-#include <pangolin/utils/signal_slot.h>
 #include <pangolin/video/stream_encoder_factory.h>
 #include <pangolin/video/video_interface.h>
+#include <sigslot/signal.hpp>
 
 namespace pangolin
 {

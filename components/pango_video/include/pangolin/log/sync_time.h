@@ -26,8 +26,8 @@
 #pragma once
 
 #include <pangolin/platform.h>
-#include <pangolin/utils/signal_slot.h>
 #include <pangolin/utils/timer.h>
+#include <sigslot/signal.hpp>
 
 #include <atomic>
 #include <condition_variable>
@@ -179,7 +179,7 @@ class PANGOLIN_EXPORT SyncTime
   private:
   template <typename T, typename Pred>
   static typename std::vector<T>::iterator insert_sorted(
-      std::vector<T>& vec, T const& item, Pred pred)
+      std::vector<T>& vec, const T& item, Pred pred)
   {
     return vec.insert(
         std::upper_bound(vec.begin(), vec.end(), item, pred), item);

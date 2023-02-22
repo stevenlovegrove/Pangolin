@@ -29,9 +29,9 @@
 
 #include <pangolin/platform.h>
 #include <pangolin/utils/file_utils.h>
-#include <pangolin/utils/signal_slot.h>
 #include <pangolin/var/varinit.h>
 #include <pangolin/var/varvalue.h>
+#include <sigslot/signal.hpp>
 
 #include <any>
 #include <cassert>

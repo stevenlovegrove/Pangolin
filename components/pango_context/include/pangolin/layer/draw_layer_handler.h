@@ -2,7 +2,7 @@
 
 #include <pangolin/context/depth_sampler.h>
 #include <pangolin/layer/interactive.h>
-#include <pangolin/utils/signal_slot.h>
+#include <sigslot/signal.hpp>
 #include <sophus/sensor/camera_model.h>
 
 namespace pangolin
