@@ -17,9 +17,9 @@ struct DrawnGroup : public Drawable {
     }
   }
 
-  Region3F64 boundsInParent() const override
+  sophus::Region3F64 boundsInParent() const override
   {
-    auto bounds = Region3F64::empty();
+    auto bounds = sophus::Region3F64::empty();
     for (const auto& child : children) {
       // TODO: need a frame transform here.
       bounds.extend(child->boundsInParent());

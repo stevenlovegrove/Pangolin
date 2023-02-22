@@ -1,4 +1,4 @@
-#include <pangolin/render/depth_sampler_image.h>
+#include <pangolin/context/depth_sampler_image.h>
 #include <pangolin/utils/logging.h>
 #include <pangolin/utils/shared.h>
 
@@ -20,7 +20,7 @@ struct DepthSamplerImageImpl : public DepthSamplerImage {
   }
 
   std::optional<Sample> sampleDepth(
-      const SampleLocation& location, int patch_rad, RegionF64 near_far,
+      const SampleLocation& location, int patch_rad, sophus::RegionF64 near_far,
       const Context* default_context) override
   {
     const Eigen::Array2i pix = location.pos_camera_pixel.cast<int>();

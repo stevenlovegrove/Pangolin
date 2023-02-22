@@ -1,7 +1,7 @@
 #pragma once
 
+#include <pangolin/context/depth_sampler.h>
 #include <pangolin/layer/interactive.h>
-#include <pangolin/render/depth_sampler.h>
 #include <pangolin/utils/signal_slot.h>
 #include <sophus/sensor/camera_model.h>
 
@@ -16,7 +16,7 @@ enum class ViewMode { freeview, image_plane, best_guess };
 struct SelectionEvent {
   Interactive::Event trigger_event;
   Interactive::PointerEvent pointer_event;
-  Region2F64 in_pixel_selection = Region2F64::empty();
+  sophus::Region2F64 in_pixel_selection = sophus::Region2F64::empty();
   Eigen::Vector3d in_scene_cursor;
   Eigen::Vector3d in_scene_hover;
   bool in_progress;
@@ -41,7 +41,7 @@ struct DrawLayerHandler {
   struct Params {
     Shared<DepthSampler> depth_sampler = DepthSampler::Create({});
     Eigen::Vector3d up_in_world = {0.0, 0.0, 1.0};
-    Region3F64 camera_limits_in_world = Region3F64::empty();
+    sophus::Region3F64 camera_limits_in_world = sophus::Region3F64::empty();
     ViewMode view_mode = ViewMode::best_guess;
     bool constrain_image_zoom_bounds = true;
   };

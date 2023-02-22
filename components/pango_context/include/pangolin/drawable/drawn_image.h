@@ -1,7 +1,7 @@
+#include <pangolin/color/colormap.h>
 #include <pangolin/drawable/drawn_checker.h>
 #include <pangolin/layer/draw_layer.h>
-#include <pangolin/maths/conventions.h>
-#include <pangolin/render/colormap.h>
+#include <pangolin/render/conventions.h>
 #include <pangolin/render/device_texture.h>
 #include <sophus/image/dyn_image_types.h>
 

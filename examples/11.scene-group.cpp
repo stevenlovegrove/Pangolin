@@ -2,7 +2,7 @@
 #include <pangolin/layer/all_layers.h>
 #include <pangolin/drawable/drawn_group.h>
 #include <pangolin/drawable/make_drawable.h>
-#include <pangolin/maths/camera_look_at.h>
+#include <pangolin/render/camera_look_at.h>
 
 /*
   == Pangolin-by-example ==

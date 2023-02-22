@@ -89,7 +89,6 @@ endif()
 
 target_sources(${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/window.cpp)
 target_link_libraries(${COMPONENT} PUBLIC pango_core )
-target_link_libraries(${COMPONENT} PRIVATE pango_opengl )
 
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>

@@ -1,4 +1,3 @@
-#include <pangolin/gl/glplatform.h>
 #include <pangolin/platform.h>
 #include <pangolin/windowing/PangolinNSGLView.h>
 #include <pangolin/windowing/handler_enums.h>

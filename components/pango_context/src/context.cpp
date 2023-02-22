@@ -9,6 +9,8 @@
 #include <pangolin/utils/variant_overload.h>
 #include <pangolin/windowing/window.h>
 
+using namespace sophus;
+
 namespace pangolin
 {
 
@@ -411,7 +413,7 @@ struct ContextImpl : public Context {
 
   bool isRunning() const override { return should_run; }
 
-  sophus::IntensityImage<> read(
+  IntensityImage<> read(
       Region2I bounds, Attachment attachment,
       ImageXy image_axis_convention) const override
   {
@@ -421,14 +423,14 @@ struct ContextImpl : public Context {
     const Eigen::Array2i imsize = bounds.range().array() + Eigen::Array2i(1, 1);
     const bool is_depth = attachment == Attachment::depth;
 
-    const PixelFormat pixel_type =
-        is_depth ? PixelFormat::fromTemplate<float>()
-                 : PixelFormat::fromTemplate<sophus::Pixel3U8>();
+    const PixelFormat pixel_type = is_depth
+                                       ? PixelFormat::fromTemplate<float>()
+                                       : PixelFormat::fromTemplate<Pixel3U8>();
 
     const auto maybe_gl_pixel_type = glTypeInfo(pixel_type);
     const GlFormatInfo gl_pixel_type = SOPHUS_UNWRAP(maybe_gl_pixel_type);
 
-    sophus::IntensityImage<> image(ImageSize(imsize[0], imsize[1]), pixel_type);
+    IntensityImage<> image(ImageSize(imsize[0], imsize[1]), pixel_type);
 
     glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
     glDrawBuffer(GL_FRONT);
