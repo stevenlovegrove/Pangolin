@@ -67,6 +67,9 @@ else()
         target_include_directories(${COMPONENT} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
         target_sources( ${COMPONENT} PRIVATE xdg-shell-protocol.c)
 
+        # wayland windowing uses OpenGL to render buttons
+        target_link_libraries(${COMPONENT} PRIVATE pango_opengl )
+
         # register window factory
         target_compile_definitions(${COMPONENT} PUBLIC "PANGO_DEFAULT_WIN_URI=\"wayland\"")
         PangolinRegisterFactory(WindowInterface WaylandWindow)
