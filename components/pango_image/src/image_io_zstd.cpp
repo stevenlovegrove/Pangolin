@@ -1,5 +1,4 @@
-
-#include <pangolin/image/runtime_image.h>
+#include <pangolin/image/image_io.h>
 
 #include <fstream>
 #include <memory>
@@ -8,8 +7,12 @@
 #include <zstd.h>
 #endif
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif
+
+using namespace sophus;
 
 namespace pangolin
 {

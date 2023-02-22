@@ -1,5 +1,6 @@
 #include <pangolin/image/image_io.h>
-#include <pangolin/platform.h>
+
+using namespace sophus;
 
 namespace pangolin
 {

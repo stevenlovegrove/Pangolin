@@ -1,10 +1,12 @@
-#include <pangolin/image/runtime_image.h>
+#include <pangolin/image/image_io.h>
 
 #include <cassert>
 
 #ifdef HAVE_LIBTIFF
 #include <tiffio.h>
 #endif
+
+using namespace sophus;
 
 namespace pangolin
 {

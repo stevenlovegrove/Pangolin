@@ -33,6 +33,8 @@
 #include <cstring>
 #include <fstream>
 
+using namespace sophus;
+
 namespace pangolin
 {
 

@@ -35,17 +35,15 @@
 
 namespace pangolin
 {
-using PixelFormat = sophus::PixelFormat;
-
 //! Return Pixel Format properties given string specification in
 //! FFMPEG notation. E.g. GRAY8, RGB24, ...
 PANGOLIN_EXPORT
-PixelFormat PixelFormatFromString(const std::string& format);
+sophus::PixelFormat PixelFormatFromString(const std::string& format);
 
 PANGOLIN_EXPORT
-std::string ToString(const PixelFormat& fmt);
+std::string ToString(const sophus::PixelFormat& fmt);
 
 PANGOLIN_EXPORT
-const std::unordered_map<std::string, PixelFormat>& KnownPixelTypes();
+const std::unordered_map<std::string, sophus::PixelFormat>& KnownPixelTypes();
 
 }  // namespace pangolin

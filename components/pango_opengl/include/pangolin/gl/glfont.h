@@ -83,7 +83,7 @@ class PANGOLIN_EXPORT GlFont
   FontBitmapType bitmap_type;
   std::array<float, 2> bitmap_max_sdf_dist_uv;
 
-  IntensityImage<> font_bitmap;
+  sophus::IntensityImage<> font_bitmap;
   GlTexture mTex;
   bool use_alpha_font;
 

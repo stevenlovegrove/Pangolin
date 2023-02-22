@@ -32,6 +32,8 @@
 
 #include <fstream>
 
+using namespace sophus;
+
 namespace pangolin
 {
 

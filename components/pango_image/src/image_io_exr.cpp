@@ -1,4 +1,4 @@
-#include <pangolin/image/runtime_image.h>
+#include <pangolin/image/image_io.h>
 #include <pangolin/platform.h>
 
 #include <fstream>
@@ -9,6 +9,8 @@
 #include <ImfInputFile.h>
 #include <ImfOutputFile.h>
 #endif  // HAVE_OPENEXR
+
+using namespace sophus;
 
 namespace pangolin
 {

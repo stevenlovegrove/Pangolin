@@ -1,5 +1,4 @@
 #include <pangolin/image/image_io.h>
-#include <pangolin/platform.h>
 
 #include <fstream>
 #include <vector>
@@ -7,6 +6,8 @@
 #ifdef HAVE_PNG
 #include <png.h>
 #endif  // HAVE_PNG
+
+using namespace sophus;
 
 namespace pangolin
 {

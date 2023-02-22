@@ -27,9 +27,7 @@
 
 #pragma once
 
-#include <pangolin/image/image.h>
-#include <pangolin/image/pixel_format.h>
-#include <pangolin/image/runtime_image.h>
+#include <sophus/image/dyn_image_types.h>
 
 namespace pangolin
 {
@@ -40,14 +38,15 @@ class PANGOLIN_EXPORT StreamInfo
   inline StreamInfo() : layout_(0, 0, 0), offset_bytes_(0) {}
 
   inline StreamInfo(
-      PixelFormat fmt, const sophus::ImageLayout shape, size_t offset_bytes) :
+      sophus::PixelFormat fmt, const sophus::ImageLayout shape,
+      size_t offset_bytes) :
       fmt_(fmt), layout_(shape), offset_bytes_(offset_bytes)
   {
   }
 
   inline sophus::ImageLayout layout() const { return layout_; }
 
-  inline PixelFormat format() const { return fmt_; }
+  inline sophus::PixelFormat format() const { return fmt_; }
 
   inline size_t offsetBytes() const { return offset_bytes_; }
 
@@ -67,10 +66,10 @@ class PANGOLIN_EXPORT StreamInfo
     return {layout_, base_ptr + offset_bytes_};
   }
 
-  inline IntensityImage<> copyToDynImage(const uint8_t* base_ptr) const
+  inline sophus::IntensityImage<> copyToDynImage(const uint8_t* base_ptr) const
   {
     PANGO_DEBUG("Unneeded image copy happening...");
-    IntensityImage<> runtime(layout_, fmt_);
+    sophus::IntensityImage<> runtime(layout_, fmt_);
     sophus::details::pitchedCopy(
         const_cast<uint8_t*>(runtime.rawPtr()), runtime.layout().pitchBytes(),
         base_ptr, layout_.pitchBytes(), layout_.imageSize(),
@@ -79,7 +78,7 @@ class PANGOLIN_EXPORT StreamInfo
   }
 
   protected:
-  PixelFormat fmt_;
+  sophus::PixelFormat fmt_;
   sophus::ImageLayout layout_;
   size_t offset_bytes_;
 };

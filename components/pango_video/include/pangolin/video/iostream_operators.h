@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <pangolin/image/pixel_format.h>
 #include <pangolin/utils/file_utils.h>
 #include <pangolin/video/stream_info.h>
 #include <pangolin/video/video_exception.h>
@@ -110,7 +111,7 @@ inline std::istream &operator>>(std::istream &is, ImageRoi &roi)
   return is;
 }
 
-inline std::istream &operator>>(std::istream &is, PixelFormat &fmt)
+inline std::istream &operator>>(std::istream &is, sophus::PixelFormat &fmt)
 {
   std::string sfmt;
   is >> sfmt;
@@ -120,8 +121,8 @@ inline std::istream &operator>>(std::istream &is, PixelFormat &fmt)
 
 inline std::istream &operator>>(std::istream &is, StreamInfo &stream)
 {
-  PixelFormat fmt;
-  ImageSize size(0, 0);
+  sophus::PixelFormat fmt;
+  sophus::ImageSize size(0, 0);
   size_t pitch = 0;
   size_t offset = 0;
 
@@ -133,7 +134,7 @@ inline std::istream &operator>>(std::istream &is, StreamInfo &stream)
   is.get();
   is >> pitch;
   is >> fmt;
-  stream = StreamInfo(fmt, ImageLayout(size, pitch), offset);
+  stream = StreamInfo(fmt, sophus::ImageLayout(size, pitch), offset);
   return is;
 }
 

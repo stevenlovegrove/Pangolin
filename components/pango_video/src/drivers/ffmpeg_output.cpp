@@ -310,7 +310,7 @@ int FfmpegVideoOutput::WriteStreams(
   for (std::vector<FfmpegVideoOutputStream*>::iterator i = streams.begin();
        i != streams.end(); ++i) {
     FfmpegVideoOutputStream& s = **i;
-    ImageView<unsigned char> img = s.GetStreamInfo().StreamImage(data);
+    sophus::ImageView<unsigned char> img = s.GetStreamInfo().StreamImage(data);
     PANGO_ASSERT(img.isContiguous())
     s.WriteImage(img.ptr(), img.width(), img.height());
   }

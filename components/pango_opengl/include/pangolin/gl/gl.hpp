@@ -115,7 +115,8 @@ inline GlTexture::GlTexture(
       data);
 }
 
-inline GlTexture::GlTexture(const IntensityImage<>& img, bool sampling_linear)
+inline GlTexture::GlTexture(
+    const sophus::IntensityImage<>& img, bool sampling_linear)
 {
   this->Load(img, sampling_linear);
 }
@@ -208,7 +209,8 @@ inline void GlTexture::Upload(
   PANGO_GL_CHECK();
 }
 
-inline void GlTexture::Load(const IntensityImage<>& image, bool sampling_linear)
+inline void GlTexture::Load(
+    const sophus::IntensityImage<>& image, bool sampling_linear)
 {
   auto maybe_glfmt = glTypeInfo(image.pixelFormat());
   auto glfmt = SOPHUS_UNWRAP(maybe_glfmt);
@@ -231,7 +233,7 @@ void GlTexture::Load(const sophus::ImageView<T>& image, bool sampling_linear)
 inline void GlTexture::LoadFromFile(
     const std::string& filename, bool sampling_linear)
 {
-  IntensityImage<> image = LoadImage(filename);
+  sophus::IntensityImage<> image = LoadImage(filename);
   Load(image, sampling_linear);
 }
 
@@ -247,74 +249,74 @@ inline void GlTexture::Download(
   Unbind();
 }
 
-inline void GlTexture::Download(IntensityImage<>& image) const
+inline void GlTexture::Download(sophus::IntensityImage<>& image) const
 {
   auto size = sophus::ImageSize(width, height);
   uint8_t* unsafe_ptr = const_cast<uint8_t*>(image.rawPtr());
 
   switch (internal_format) {
     case GL_LUMINANCE8:
-      image = IntensityImage<>(size, PixelFormatFromString("GRAY8"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY8"));
       Download(unsafe_ptr, GL_RED, GL_UNSIGNED_BYTE);
       break;
     case GL_LUMINANCE16:
-      image = IntensityImage<>(size, PixelFormatFromString("GRAY16LE"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY16LE"));
       Download(unsafe_ptr, GL_RED, GL_UNSIGNED_SHORT);
       break;
     case GL_RGB8:
-      image = IntensityImage<>(size, PixelFormatFromString("RGB24"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGB24"));
       Download(unsafe_ptr, GL_RGB, GL_UNSIGNED_BYTE);
       break;
     case GL_RGBA8:
-      image = IntensityImage<>(size, PixelFormatFromString("RGBA32"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGBA32"));
       Download(unsafe_ptr, GL_RGBA, GL_UNSIGNED_BYTE);
       break;
     case GL_RED_INTEGER:
-      image = IntensityImage<>(size, PixelFormatFromString("GRAY32"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY32"));
       Download(unsafe_ptr, GL_RED, GL_UNSIGNED_INT);
       break;
     case GL_LUMINANCE:
     case GL_LUMINANCE32F_ARB:
     case GL_R32F:
-      image = IntensityImage<>(size, PixelFormatFromString("GRAY32F"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY32F"));
       Download(unsafe_ptr, GL_RED, GL_FLOAT);
       break;
     case GL_RGB16:
-      image = IntensityImage<>(size, PixelFormatFromString("RGB48"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGB48"));
       Download(unsafe_ptr, GL_RGB, GL_UNSIGNED_SHORT);
       break;
     case GL_RGBA16:
-      image = IntensityImage<>(size, PixelFormatFromString("RGBA64"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGBA64"));
       Download(unsafe_ptr, GL_RGBA, GL_UNSIGNED_SHORT);
       break;
     case GL_RGB16F:
-      image = IntensityImage<>(size, PixelFormatFromString("RGB48F"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGB48F"));
       Download(unsafe_ptr, GL_RGB, GL_HALF_FLOAT);
       break;
     case GL_RGBA16F:
-      image = IntensityImage<>(size, PixelFormatFromString("RGBA64F"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGBA64F"));
       Download(unsafe_ptr, GL_RGBA, GL_HALF_FLOAT);
       break;
     case GL_RGB:
     case GL_RGB32F:
-      image = IntensityImage<>(size, PixelFormatFromString("RGB96F"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGB96F"));
       Download(unsafe_ptr, GL_RGB, GL_FLOAT);
       break;
     case GL_RGBA:
     case GL_RGBA32F:
-      image = IntensityImage<>(size, PixelFormatFromString("RGBA128F"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGBA128F"));
       Download(unsafe_ptr, GL_RGBA, GL_FLOAT);
       break;
     case GL_DEPTH_COMPONENT16:
-      image = IntensityImage<>(size, PixelFormatFromString("GRAY16LE"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY16LE"));
       Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
       break;
     case GL_DEPTH_COMPONENT24:
-      image = IntensityImage<>(size, PixelFormatFromString("GRAY32"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY32"));
       Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
       break;
     case GL_DEPTH_COMPONENT32F:
-      image = IntensityImage<>(size, PixelFormatFromString("GRAY32F"));
+      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY32F"));
       Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_FLOAT);
       break;
     default:
@@ -344,7 +346,7 @@ inline void GlTexture::CopyFrom(const GlTexture& tex)
 
 inline void GlTexture::Save(const std::string& filename, bool top_line_first)
 {
-  IntensityImage<> image;
+  sophus::IntensityImage<> image;
   Download(image);
   pangolin::SaveImage(image, filename, top_line_first);
 }
@@ -969,13 +971,13 @@ inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline IntensityImage<> ReadFramebuffer(
+inline sophus::IntensityImage<> ReadFramebuffer(
     const Viewport& v, const char* pixel_format)
 {
-  const PixelFormat fmt = PixelFormatFromString(pixel_format);
+  const sophus::PixelFormat fmt = PixelFormatFromString(pixel_format);
   const GlPixFormat glfmt(fmt);
 
-  IntensityImage<> buffer(sophus::ImageSize(v.w, v.h), fmt);
+  sophus::IntensityImage<> buffer(sophus::ImageSize(v.w, v.h), fmt);
   glReadBuffer(GL_BACK);
   glPixelStorei(GL_PACK_ALIGNMENT, 1);
   glReadPixels(

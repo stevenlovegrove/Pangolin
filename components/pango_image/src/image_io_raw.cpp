@@ -1,4 +1,4 @@
-#include <pangolin/image/runtime_image.h>
+#include <pangolin/image/image_io.h>
 #include <pangolin/utils/variant_overload.h>
 
 #include <fstream>

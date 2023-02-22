@@ -45,7 +45,7 @@ class PANGOLIN_EXPORT ImagesVideo : public VideoInterface,
   ImagesVideo(const std::string& wildcard_path);
 
   ImagesVideo(
-      const std::string& wildcard_path, const PixelFormat& raw_fmt,
+      const std::string& wildcard_path, const sophus::PixelFormat& raw_fmt,
       size_t raw_width, size_t raw_height, size_t raw_pitch, size_t raw_offset,
       size_t raw_planes);
 
@@ -91,7 +91,7 @@ class PANGOLIN_EXPORT ImagesVideo : public VideoInterface,
   const picojson::value& FrameProperties() const override;
 
   protected:
-  typedef std::vector<IntensityImage<>> Frame;
+  typedef std::vector<sophus::IntensityImage<>> Frame;
 
   const std::string& Filename(size_t frameNum, size_t channelNum)
   {
@@ -116,7 +116,7 @@ class PANGOLIN_EXPORT ImagesVideo : public VideoInterface,
   std::vector<Frame> loaded;
 
   bool unknowns_are_raw;
-  PixelFormat raw_fmt;
+  sophus::PixelFormat raw_fmt;
   size_t raw_width;
   size_t raw_height;
   size_t raw_planes;

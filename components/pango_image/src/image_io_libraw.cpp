@@ -1,10 +1,12 @@
-#include <pangolin/image/runtime_image.h>
+#include <pangolin/image/image_io.h>
 
 #include <fstream>
 
 #ifdef HAVE_LIBRAW
 #include <libraw/libraw.h>
 #endif
+
+using namespace sophus;
 
 namespace pangolin
 {

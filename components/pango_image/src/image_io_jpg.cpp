@@ -1,5 +1,4 @@
-#include <pangolin/image/runtime_image.h>
-#include <pangolin/platform.h>
+#include <pangolin/image/image_io.h>
 
 #include <algorithm>
 #include <fstream>
