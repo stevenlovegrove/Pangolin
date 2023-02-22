@@ -1,8 +1,10 @@
-#include <pangolin/image/runtime_image.h>
+#include <pangolin/image/image_io.h>
 
 #include <algorithm>
 #include <fstream>
 #include <memory>
+
+using namespace sophus;
 
 namespace pangolin
 {

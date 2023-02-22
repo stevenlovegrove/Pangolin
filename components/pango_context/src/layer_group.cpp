@@ -1,5 +1,7 @@
 #include <pangolin/gui/layer_group.h>
 
+using namespace sophus;
+
 namespace pangolin
 {
 

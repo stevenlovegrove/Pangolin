@@ -128,7 +128,8 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
                                 st1.format().bytesPerPixel() * roi.x;
           streams.push_back(StreamInfo(
               st1.format(),
-              ImageLayout(roi.w, roi.h, st1.layout().pitchBytes()), start1));
+              sophus::ImageLayout(roi.w, roi.h, st1.layout().pitchBytes()),
+              start1));
         } else if (uri.Contains(key_mem)) {
           const StreamInfo& info = param_reader.Get(
               key_mem, subvid->Streams()[0]);  // uri.Get<StreamInfo>(key_mem,
@@ -171,10 +172,12 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
                               st1.format().bytesPerPixel() * roi2.x;
         streams.push_back(StreamInfo(
             st1.format(),
-            ImageLayout(roi1.w, roi1.h, st1.layout().pitchBytes()), start1));
+            sophus::ImageLayout(roi1.w, roi1.h, st1.layout().pitchBytes()),
+            start1));
         streams.push_back(StreamInfo(
             st1.format(),
-            ImageLayout(roi2.w, roi2.h, st1.layout().pitchBytes()), start2));
+            sophus::ImageLayout(roi2.w, roi2.h, st1.layout().pitchBytes()),
+            start2));
       }
 
       return std::unique_ptr<VideoInterface>(new SplitVideo(subvid, streams));

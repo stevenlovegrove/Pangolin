@@ -29,6 +29,8 @@
 
 #include <stdexcept>
 
+using namespace sophus;
+
 namespace pangolin
 {
 

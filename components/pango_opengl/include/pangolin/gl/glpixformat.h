@@ -40,7 +40,7 @@ namespace pangolin
 struct GlPixFormat {
   GlPixFormat() {}
 
-  GlPixFormat(const PixelFormat& fmt)
+  GlPixFormat(const sophus::PixelFormat& fmt)
   {
     switch (fmt.num_channels) {
       case 1:

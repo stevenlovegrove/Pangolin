@@ -40,7 +40,7 @@ inline EncoderDetails EncoderDetailsFromString(const std::string& encoder_spec)
 }
 
 ImageEncoderFunc StreamEncoderFactory::GetEncoder(
-    const std::string& encoder_spec, const PixelFormat& fmt)
+    const std::string& encoder_spec, const sophus::PixelFormat& fmt)
 {
   const EncoderDetails encdet = EncoderDetailsFromString(encoder_spec);
   if (encdet.file_type == ImageFileTypeUnknown)
@@ -53,7 +53,7 @@ ImageEncoderFunc StreamEncoderFactory::GetEncoder(
 }
 
 ImageDecoderFunc StreamEncoderFactory::GetDecoder(
-    const std::string& encoder_spec, const PixelFormat& /* fmt */)
+    const std::string& encoder_spec, const sophus::PixelFormat& /* fmt */)
 {
   const EncoderDetails encdet = EncoderDetailsFromString(encoder_spec);
   PANGO_ENSURE(encdet.file_type != ImageFileTypeUnknown);

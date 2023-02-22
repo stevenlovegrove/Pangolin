@@ -6,6 +6,7 @@
 #endif
 
 #include <pangolin/factory/factory_registry.h>
+#include <pangolin/image/pixel_format.h>
 #include <pangolin/video/drivers/ffmpeg_convert.h>
 #include <pangolin/video/video.h>
 
@@ -74,7 +75,7 @@ FfmpegConverter::FfmpegConverter(
     converters[i].avdst->format = FfmpegFmtFromString(sfmtdst);
     av_frame_get_buffer(converters[i].avdst, 0);
 
-    const PixelFormat pxfmtdst = PixelFormatFromString(sfmtdst);
+    const sophus::PixelFormat pxfmtdst = PixelFormatFromString(sfmtdst);
     const StreamInfo sdst(
         pxfmtdst, instrm.layout(), converters[i].dst_buffer_offset);
     streams.push_back(sdst);

@@ -436,7 +436,7 @@ void GlFont::InitialiseGlTexture()
     } else {
       mTex.Load(font_bitmap);
     }
-    font_bitmap = IntensityImage<>();
+    font_bitmap = sophus::IntensityImage<>();
   }
 }
 

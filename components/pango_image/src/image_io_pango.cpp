@@ -1,10 +1,11 @@
-#include <pangolin/image/runtime_image.h>
-#include <pangolin/platform.h>
+#include <pangolin/image/image_io.h>
 
 #ifdef BUILD_PANGOLIN_VIDEO
 #include <pangolin/video/drivers/pango.h>
 #include <pangolin/video/drivers/pango_video_output.h>
 #endif
+
+using namespace sophus;
 
 namespace pangolin
 {

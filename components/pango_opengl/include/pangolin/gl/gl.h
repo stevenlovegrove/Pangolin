@@ -63,7 +63,7 @@ class PANGOLIN_EXPORT GlTexture
       GLenum gltype = GL_UNSIGNED_BYTE, GLvoid* data = NULL);
 
   // Construct this texture from a CPU image
-  GlTexture(const IntensityImage<>& img, bool sampling_linear = true);
+  GlTexture(const sophus::IntensityImage<>& img, bool sampling_linear = true);
 
   //! Move Constructor / asignment
   GlTexture(GlTexture&& tex);
@@ -99,7 +99,7 @@ class PANGOLIN_EXPORT GlTexture
       const void* data, GLsizei tex_x_offset, GLsizei tex_y_offset,
       GLsizei data_w, GLsizei data_h, GLenum data_format, GLenum data_type);
 
-  void Load(const IntensityImage<>& image, bool sampling_linear = true);
+  void Load(const sophus::IntensityImage<>& image, bool sampling_linear = true);
 
   template <typename T>
   void Load(const sophus::ImageView<T>& image, bool sampling_linear = true);
@@ -110,7 +110,7 @@ class PANGOLIN_EXPORT GlTexture
       void* image, GLenum data_layout = GL_LUMINANCE,
       GLenum data_type = GL_FLOAT) const;
 
-  void Download(IntensityImage<>& image) const;
+  void Download(sophus::IntensityImage<>& image) const;
 
   void CopyFrom(const GlTexture& tex);
 
@@ -323,7 +323,7 @@ size_t GlFormatChannels(GLenum data_layout);
 
 size_t GlDataTypeBytes(GLenum type);
 
-IntensityImage<> ReadFramebuffer(
+sophus::IntensityImage<> ReadFramebuffer(
     const Viewport& v, const char* pixel_format = "RGBA32");
 
 }  // namespace pangolin

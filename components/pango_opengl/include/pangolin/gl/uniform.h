@@ -1,8 +1,8 @@
 #pragma once
 
 #include <pangolin/gl/glplatform.h>
-#include <pangolin/maths/point_concepts.h>
-#include <pangolin/maths/point_methods.h>
+#include <sophus/common/point_concepts.h>
+#include <sophus/common/point_methods.h>
 
 namespace pangolin
 {
@@ -114,20 +114,21 @@ template <typename T>
 void glUniformImpl(GLint location, const T& val);
 
 template <class T, size_t R, size_t C>
-requires(EigenWithDim<R, C, T>) void glUniformImpl(GLint location, const T& mat)
+requires(sophus::EigenWithDim<R, C, T>) void glUniformImpl(
+    GLint location, const T& mat)
 {
   glUniformArray<typename T::Scalar, R, C>(location, mat.data());
 }
 }  // namespace detail
 
-template <EigenDenseType T>
+template <sophus::EigenDenseType T>
 void glUniform(GLint location, const T& val)
 {
   detail::glUniformImpl<T, T::RowsAtCompileTime, T::ColsAtCompileTime>(
       location, val);
 }
 
-template <EnumType T>
+template <sophus::EnumType T>
 void glUniform(GLint location, T val)
 {
   using U = std::underlying_type_t<T>;
@@ -164,7 +165,7 @@ class GlUniform
           name_);
     }
 
-    if (needs_init || anyTrue(new_value != current_value_)) {
+    if (needs_init || sophus::anyTrue(new_value != current_value_)) {
       glUniform<T>(handle_, new_value);
       current_value_ = new_value;
     }

@@ -266,11 +266,12 @@ void FfmpegVideo::InitUrl(
   // Populate stream info for users to query
   numBytesOut = 0;
   {
-    const PixelFormat strm_fmt =
+    const sophus::PixelFormat strm_fmt =
         PixelFormatFromString(FfmpegFmtToString(fmtout));
     const size_t pitch = strm_fmt.bytesPerPixel() * w;
     const size_t size_bytes = h * pitch;
-    streams.emplace_back(strm_fmt, ImageLayout(w, h, pitch), numBytesOut);
+    streams.emplace_back(
+        strm_fmt, sophus::ImageLayout(w, h, pitch), numBytesOut);
     numBytesOut += size_bytes;
   }
 

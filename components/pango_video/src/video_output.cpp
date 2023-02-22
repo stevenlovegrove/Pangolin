@@ -69,12 +69,14 @@ int VideoOutput::WriteStreams(
 
 bool VideoOutput::IsPipe() const { return recorder->IsPipe(); }
 
-void VideoOutput::AddStream(const PixelFormat& pf, sophus::ImageLayout shape)
+void VideoOutput::AddStream(
+    const sophus::PixelFormat& pf, sophus::ImageLayout shape)
 {
   streams.emplace_back(pf, shape, 0);
 }
 
-void VideoOutput::AddStream(const PixelFormat& pf, sophus::ImageSize size)
+void VideoOutput::AddStream(
+    const sophus::PixelFormat& pf, sophus::ImageSize size)
 {
   AddStream(
       pf, sophus::ImageLayout::makeFromSizeAndPitchUnchecked(

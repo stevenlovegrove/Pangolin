@@ -1,6 +1,6 @@
-#include <pangolin/maths/point_methods.h>
 #include <pangolin/maths/projection.h>
 #include <pangolin/utils/logging.h>
+#include <sophus/common/point_methods.h>
 
 namespace pangolin
 {
@@ -69,9 +69,9 @@ Eigen::Matrix4d transformClipFromProjection(
 Eigen::Matrix3d transformWindowFromClip(Region2I viewport)
 {
   // TODO: fixup for 0.5 ofsets (for discrete coords)
-  const Eigen::Array2d scale = cast<double>(viewport.range()) / 2.0;
-  const Eigen::Array2d offset =
-      cast<double>(viewport.min()) + cast<double>(viewport.range()) / 2.0;
+  const Eigen::Array2d scale = sophus::cast<double>(viewport.range()) / 2.0;
+  const Eigen::Array2d offset = sophus::cast<double>(viewport.min()) +
+                                sophus::cast<double>(viewport.range()) / 2.0;
   Eigen::Matrix3d ret = Eigen::Matrix3d::Identity();
   ret(0, 0) = scale[0];
   ret(1, 1) = -scale[1];
