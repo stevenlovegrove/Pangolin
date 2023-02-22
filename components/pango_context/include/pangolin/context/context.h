@@ -1,8 +1,7 @@
 #pragma once
 
-#include <pangolin/context/engine.h>
-#include <pangolin/gui/interactive.h>
-#include <pangolin/gui/layer_group.h>
+#include <pangolin/layer/interactive.h>
+#include <pangolin/layer/layer_group.h>
 #include <pangolin/maths/conventions.h>
 #include <pangolin/maths/region.h>
 #include <pangolin/utils/shared.h>
@@ -28,6 +27,10 @@ struct Layer;
 struct Context : std::enable_shared_from_this<Context> {
   using Window = WindowInterface;
   using ImageSize = sophus::ImageSize;
+  enum class Profile {
+    gl_3_2_core,
+    // vulkan ...
+  };
   enum class Attachment {
     depth,
     color,  //...
@@ -109,8 +112,8 @@ struct Context : std::enable_shared_from_this<Context> {
   struct Params {
     std::string title = "Pangolin App";
     ImageSize window_size = {1024, 768};
-    std::string window_engine = Engine::singleton()->defaults.window_engine;
-    Engine::Profile profile = Engine::singleton()->defaults.profile;
+    std::string window_engine = "default";
+    Profile profile = Profile::gl_3_2_core;
   };
   static Shared<Context> Create(Params p);
 };

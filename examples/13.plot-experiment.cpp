@@ -1,7 +1,7 @@
 #include <pangolin/color/color.h>
 #include <pangolin/context/context.h>
-#include <pangolin/gui/all_layers.h>
-#include <pangolin/gui/drawn_plot_background.h>
+#include <pangolin/layer/all_layers.h>
+#include <pangolin/drawable/drawn_plot_background.h>
 
 using namespace pangolin;
 

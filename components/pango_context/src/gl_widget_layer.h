@@ -4,7 +4,7 @@
 #include <pangolin/gl/glfont.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
-#include <pangolin/gui/widget_layer.h>
+#include <pangolin/layer/widget_layer.h>
 #include <pangolin/render/gl_vao.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>

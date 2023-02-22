@@ -1,11 +1,11 @@
 #include "camera_utils.h"
 #include "gl_utils.h"
 
-#include <pangolin/context/factory.h>
+#include <pangolin/drawable/drawn_checker.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
-#include <pangolin/gui/drawn_checker.h>
 #include <pangolin/render/gl_vao.h>
+#include <pangolin/utils/shared.h>
 
 namespace pangolin
 {
@@ -41,6 +41,9 @@ struct GlDrawnChecker : public DrawnChecker {
   const GlUniform<int> u_checksize = {"checksize"};
 };
 
-PANGO_CREATE(DrawnChecker) { return Shared<GlDrawnChecker>::make(p); }
+Shared<DrawnChecker> DrawnChecker::Create(DrawnChecker::Params p)
+{
+  return Shared<GlDrawnChecker>::make(p);
+}
 
 }  // namespace pangolin

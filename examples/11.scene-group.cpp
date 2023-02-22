@@ -1,7 +1,7 @@
 #include <pangolin/context/context.h>
-#include <pangolin/gui/all_layers.h>
-#include <pangolin/gui/drawn_group.h>
-#include <pangolin/gui/make_drawable.h>
+#include <pangolin/layer/all_layers.h>
+#include <pangolin/drawable/drawn_group.h>
+#include <pangolin/drawable/make_drawable.h>
 #include <pangolin/maths/camera_look_at.h>
 
 /*

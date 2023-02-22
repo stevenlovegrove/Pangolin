@@ -2,13 +2,13 @@
 #include "gl_utils.h"
 
 #include <pangolin/context/context.h>
-#include <pangolin/context/factory.h>
+#include <pangolin/drawable/drawn_image.h>
 #include <pangolin/gl/gl.h>
-#include <pangolin/gui/draw_layer.h>
-#include <pangolin/gui/draw_layer_handler.h>
-#include <pangolin/gui/drawn_image.h>
+#include <pangolin/layer/draw_layer.h>
+#include <pangolin/layer/draw_layer_handler.h>
 #include <pangolin/render/device_texture.h>
 #include <pangolin/render/projection_lut.h>
+#include <pangolin/utils/shared.h>
 #include <pangolin/var/var.h>
 
 #include <unordered_map>
@@ -439,6 +439,9 @@ struct DrawLayerImpl : public DrawLayer {
   DrawableCollection pixels_collection_;
 };
 
-PANGO_CREATE(DrawLayer) { return Shared<DrawLayerImpl>::make(p); }
+Shared<DrawLayer> DrawLayer::Create(DrawLayer::Params p)
+{
+  return Shared<DrawLayerImpl>::make(p);
+}
 
 }  // namespace pangolin

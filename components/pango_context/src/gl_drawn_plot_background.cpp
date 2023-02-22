@@ -1,11 +1,11 @@
 #include "camera_utils.h"
 #include "gl_utils.h"
 
-#include <pangolin/context/factory.h>
+#include <pangolin/drawable/drawn_plot_background.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
-#include <pangolin/gui/drawn_plot_background.h>
 #include <pangolin/render/gl_vao.h>
+#include <pangolin/utils/shared.h>
 
 namespace pangolin
 {
@@ -87,7 +87,8 @@ struct GlDrawnPlotBackground : public DrawnPlotBackground {
   const GlUniform<float> u_num_divisions = {"num_divisions"};
 };
 
-PANGO_CREATE(DrawnPlotBackground)
+Shared<DrawnPlotBackground> DrawnPlotBackground::Create(
+    DrawnPlotBackground::Params p)
 {
   return Shared<GlDrawnPlotBackground>::make(p);
 }

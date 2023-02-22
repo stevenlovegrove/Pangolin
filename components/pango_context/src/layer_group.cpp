@@ -1,4 +1,4 @@
-#include <pangolin/gui/layer_group.h>
+#include <pangolin/layer/layer_group.h>
 
 using namespace sophus;
 

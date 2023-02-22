@@ -1,8 +1,8 @@
 #include <pangolin/context/context.h>
-#include <pangolin/context/factory.h>
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/render/depth_sampler.h>
 #include <pangolin/render/gl_depth.h>
+#include <pangolin/utils/shared.h>
 #include <pangolin/utils/variant_overload.h>
 
 namespace pangolin
@@ -55,6 +55,9 @@ class DepthSamplerImpl : public DepthSampler
   std::shared_ptr<Context> context_;
 };
 
-PANGO_CREATE(DepthSampler) { return Shared<DepthSamplerImpl>::make(p); }
+Shared<DepthSampler> DepthSampler::Create(DepthSampler::Params p)
+{
+  return Shared<DepthSamplerImpl>::make(p);
+}
 
 }  // namespace pangolin

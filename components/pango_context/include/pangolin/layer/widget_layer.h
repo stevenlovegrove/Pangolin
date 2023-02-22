@@ -1,7 +1,7 @@
 #pragma once
 
-#include <pangolin/gui/draw_layer.h>
-#include <pangolin/gui/layer.h>
+#include <pangolin/layer/draw_layer.h>
+#include <pangolin/layer/layer.h>
 #include <pangolin/var/var.h>
 
 namespace pangolin

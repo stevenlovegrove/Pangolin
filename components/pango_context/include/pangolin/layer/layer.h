@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <pangolin/gui/interactive.h>
+#include <pangolin/layer/interactive.h>
 #include <pangolin/maths/region.h>
 #include <pangolin/utils/shared.h>
 

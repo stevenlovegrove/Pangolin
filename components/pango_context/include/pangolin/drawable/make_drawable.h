@@ -1,8 +1,8 @@
 #pragma once
 
 #include <pangolin/color/color.h>
-#include <pangolin/gui/draw_layer.h>
-#include <pangolin/gui/drawn_primitives.h>
+#include <pangolin/drawable/drawn_primitives.h>
+#include <pangolin/layer/draw_layer.h>
 
 namespace pangolin
 {

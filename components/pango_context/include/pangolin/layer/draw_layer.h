@@ -1,9 +1,9 @@
 #pragma once
 
-#include <pangolin/gui/draw_layer_handler.h>
-#include <pangolin/gui/drawable.h>
-#include <pangolin/gui/drawn_checker.h>
-#include <pangolin/gui/layer_group.h>
+#include <pangolin/drawable/drawable.h>
+#include <pangolin/drawable/drawn_checker.h>
+#include <pangolin/layer/draw_layer_handler.h>
+#include <pangolin/layer/layer_group.h>
 #include <pangolin/maths/camera_look_at.h>
 #include <pangolin/maths/region.h>
 #include <sophus/lie/se3.h>

@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
-#include <pangolin/gui/all_layers.h>
-#include <pangolin/gui/layer_group.h>
+#include <pangolin/layer/all_layers.h>
+#include <pangolin/layer/layer_group.h>
 
 namespace pangolin
 {

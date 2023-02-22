@@ -1,11 +1,11 @@
 #include "camera_utils.h"
 #include "gl_utils.h"
 
-#include <pangolin/context/factory.h>
+#include <pangolin/drawable/drawn_image.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
-#include <pangolin/gui/drawn_image.h>
 #include <pangolin/render/gl_vao.h>
+#include <pangolin/utils/shared.h>
 
 namespace pangolin
 {
@@ -72,7 +72,7 @@ struct GlDrawnImage : public DrawnImage {
   const GlUniform<Palette> u_colormap_index = {"colormap_index"};
 };
 
-PANGO_CREATE(DrawnImage)
+Shared<DrawnImage> DrawnImage::Create(DrawnImage::Params p)
 {
   auto r = Shared<GlDrawnImage>::make();
   r->colormap = p.colormap;

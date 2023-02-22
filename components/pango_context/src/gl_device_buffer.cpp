@@ -1,6 +1,6 @@
-#include <pangolin/context/factory.h>
 #include <pangolin/gl/gl_type_info.h>
 #include <pangolin/render/device_buffer.h>
+#include <pangolin/utils/shared.h>
 
 #include <deque>
 #include <mutex>
@@ -201,7 +201,10 @@ struct DeviceGlBuffer : public DeviceBuffer {
   mutable GLuint gl_id_;
 };
 
-PANGO_CREATE(DeviceBuffer) { return Shared<DeviceGlBuffer>::make(p); }
+Shared<DeviceBuffer> DeviceBuffer::Create(DeviceBuffer::Params p)
+{
+  return Shared<DeviceGlBuffer>::make(p);
+}
 
 template <>
 ScopedBind<DeviceBuffer>::pScopedBind&
