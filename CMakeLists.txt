@@ -10,8 +10,6 @@ find_package(Eigen3 3.4.0 REQUIRED)
 find_package(farm_ng_core 0.1.0 REQUIRED)
 find_package(Sophus REQUIRED)
 
-
-
 # Prevent in source builds
 if(EXISTS "${PROJECT_BINARY_DIR}/CMakeLists.txt")
     message(FATAL_ERROR "Source build detected: please use a subdir. You may remove 'CMakeCache.txt' and 'CMakeFiles'.")

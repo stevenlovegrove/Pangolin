@@ -1,4 +1,4 @@
-set(COMPONENT tinyobj)
+get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 target_sources( ${COMPONENT} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/tinyobj.cpp")
 set_property(TARGET ${COMPONENT} PROPERTY CXX_STANDARD 11)

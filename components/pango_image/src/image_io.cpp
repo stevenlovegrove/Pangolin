@@ -25,8 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <httplib/httplib.h>
 #include <pangolin/image/image_io.h>
-#include <pangolin/utils/httplib.h>
 #include <pangolin/utils/memstreambuf.h>
 #include <pangolin/utils/string.h>
 

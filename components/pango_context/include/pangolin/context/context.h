@@ -4,7 +4,7 @@
 #include <pangolin/layer/layer_group.h>
 #include <pangolin/render/conventions.h>
 #include <pangolin/utils/shared.h>
-#include <pangolin/utils/signal_slot.h>
+#include <sigslot/signal.hpp>
 #include <sophus/image/dyn_image_types.h>
 #include <sophus/image/image_size.h>
 

@@ -28,10 +28,10 @@
 #pragma once
 #include <pangolin/platform.h>
 #include <pangolin/utils/shared.h>
-#include <pangolin/utils/signal_slot.h>
 #include <pangolin/utils/true_false_toggle.h>
 #include <pangolin/utils/uri.h>
 #include <pangolin/windowing/handler_bitsets.h>
+#include <sigslot/signal.hpp>
 
 #include <array>
 #include <exception>
