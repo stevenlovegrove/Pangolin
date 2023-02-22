@@ -1,6 +1,6 @@
 #include <pangolin/context/context.h>
-#include <pangolin/gui/drawn_image.h>
-#include <pangolin/gui/drawn_primitives.h>
+#include <pangolin/drawable/drawn_image.h>
+#include <pangolin/drawable/drawn_primitives.h>
 
 /*
   == Pangolin-by-example ==

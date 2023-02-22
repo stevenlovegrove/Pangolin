@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pangolin/gui/interactive.h>
+#include <pangolin/layer/interactive.h>
 #include <pangolin/render/depth_sampler.h>
 #include <pangolin/utils/signal_slot.h>
 #include <sophus/sensor/camera_model.h>

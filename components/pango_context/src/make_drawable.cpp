@@ -1,6 +1,6 @@
 
-#include <pangolin/gui/drawn_solids.h>
-#include <pangolin/gui/make_drawable.h>
+#include <pangolin/drawable/drawn_solids.h>
+#include <pangolin/drawable/make_drawable.h>
 
 namespace pangolin
 {

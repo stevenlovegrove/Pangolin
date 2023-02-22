@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pangolin/gui/draw_layer.h>
+#include <pangolin/layer/draw_layer.h>
 #include <pangolin/maths/conventions.h>
 #include <pangolin/render/colormap.h>
 #include <pangolin/render/device_texture.h>

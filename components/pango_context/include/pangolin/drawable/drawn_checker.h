@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pangolin/gui/drawable.h>
+#include <pangolin/drawable/drawable.h>
 #include <pangolin/maths/conventions.h>
 #include <pangolin/render/colormap.h>
 #include <pangolin/render/device_texture.h>

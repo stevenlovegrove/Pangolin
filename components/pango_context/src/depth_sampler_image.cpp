@@ -1,6 +1,6 @@
-#include <pangolin/context/factory.h>
 #include <pangolin/render/depth_sampler_image.h>
 #include <pangolin/utils/logging.h>
+#include <pangolin/utils/shared.h>
 
 namespace pangolin
 {
@@ -44,7 +44,7 @@ struct DepthSamplerImageImpl : public DepthSamplerImage {
   sophus::Image<float> depth_image_;
 };
 
-PANGO_CREATE(DepthSamplerImage)
+Shared<DepthSamplerImage> DepthSamplerImage::Create(DepthSamplerImage::Params p)
 {
   return Shared<DepthSamplerImageImpl>::make(p);
 }

@@ -1,5 +1,5 @@
 #include <pangolin/context/context.h>
-#include <pangolin/gui/all_layers.h>
+#include <pangolin/layer/all_layers.h>
 #include <pangolin/video/video.h>
 
 /*

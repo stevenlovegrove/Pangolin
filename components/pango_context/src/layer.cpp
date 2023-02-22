@@ -1,5 +1,5 @@
 #include <pangolin/gl/glplatform.h>
-#include <pangolin/gui/layer.h>
+#include <pangolin/layer/layer.h>
 
 namespace pangolin
 {

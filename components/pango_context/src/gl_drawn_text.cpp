@@ -1,13 +1,13 @@
 #include "gl_utils.h"
 
-#include <pangolin/context/factory.h>
+#include <pangolin/drawable/drawn_text.h>
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glfont.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
-#include <pangolin/gui/drawn_text.h>
 #include <pangolin/maths/projection.h>
 #include <pangolin/render/gl_vao.h>
+#include <pangolin/utils/shared.h>
 
 #include <codecvt>
 #include <locale>
@@ -168,6 +168,9 @@ struct GlDrawnText : public DrawnText {
   std::vector<Shared<TextBuffer>> texts;
 };
 
-PANGO_CREATE(DrawnText) { return Shared<GlDrawnText>::make(p); }
+Shared<DrawnText> DrawnText::Create(DrawnText::Params p)
+{
+  return Shared<GlDrawnText>::make(p);
+}
 
 }  // namespace pangolin

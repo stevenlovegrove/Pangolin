@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pangolin/gui/layer_group.h>
+#include <pangolin/layer/layer_group.h>
 #include <pangolin/utils/concept_utils.h>
 #include <pangolin/utils/variant_overload.h>
 #include <sophus/common/point_methods.h>

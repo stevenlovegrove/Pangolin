@@ -1,25 +1,16 @@
 #include <fmt/format.h>
 #include <pangolin/context/context.h>
-#include <pangolin/context/factory.h>
 #include <pangolin/gl/gl_type_info.h>
 #include <pangolin/gl/glplatform.h>
-#include <pangolin/gui/interactive.h>
-#include <pangolin/gui/layer_group.h>
+#include <pangolin/layer/interactive.h>
+#include <pangolin/layer/layer_group.h>
 #include <pangolin/utils/reverse_iterable.h>
+#include <pangolin/utils/shared.h>
 #include <pangolin/utils/variant_overload.h>
 #include <pangolin/windowing/window.h>
 
 namespace pangolin
 {
-
-struct EngineImpl : public Engine {
-};
-
-Shared<Engine> Engine::singleton()
-{
-  static Shared<Engine> global = Shared<EngineImpl>::make();
-  return global;
-}
 
 void renderIntoRegionImpl(
     const Context& context, const Layer::RenderParams& p,
@@ -483,6 +474,9 @@ struct ContextImpl : public Context {
   sigslot::signal<const Interactive::Event&> signal_unhandled_events_;
 };
 
-PANGO_CREATE(Context) { return Shared<ContextImpl>::make(p); }
+Shared<Context> Context::Create(Context::Params p)
+{
+  return Shared<ContextImpl>::make(p);
+}
 
 }  // namespace pangolin

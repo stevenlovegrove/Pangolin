@@ -1,6 +1,6 @@
-#include <pangolin/context/factory.h>
 #include <pangolin/gl/gl_type_info.h>
 #include <pangolin/render/device_texture.h>
+#include <pangolin/utils/shared.h>
 
 #include <deque>
 #include <mutex>
@@ -151,7 +151,7 @@ struct DeviceGlTexture : public DeviceTexture {
   mutable GLuint gl_id_ = 0;
 };
 
-PANGO_CREATE(DeviceTexture)
+Shared<DeviceTexture> DeviceTexture::Create(DeviceTexture::Params p)
 {
   const GLenum tex_target = GL_TEXTURE_2D;
   return Shared<DeviceGlTexture>::make(tex_target);

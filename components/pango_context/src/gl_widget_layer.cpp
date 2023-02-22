@@ -3,10 +3,10 @@
 #include "gl_utils.h"
 
 #include <pangolin/context/context.h>
-#include <pangolin/context/factory.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/maths/projection.h>
 #include <pangolin/utils/file_utils.h>
+#include <pangolin/utils/shared.h>
 #include <pangolin/utils/string.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
@@ -498,6 +498,9 @@ void GlWidgetLayer::process_var_event(const pangolin::VarState::Event& event)
   }
 }
 
-PANGO_CREATE(WidgetLayer) { return Shared<GlWidgetLayer>::make(p); }
+Shared<WidgetLayer> WidgetLayer::Create(WidgetLayer::Params p)
+{
+  return Shared<GlWidgetLayer>::make(p);
+}
 
 }  // namespace pangolin

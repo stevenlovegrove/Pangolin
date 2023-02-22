@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pangolin/gui/draw_layer.h>
+#include <pangolin/layer/draw_layer.h>
 
 namespace pangolin
 {

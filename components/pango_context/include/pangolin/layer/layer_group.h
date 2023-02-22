@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <pangolin/gui/layer.h>
+#include <pangolin/layer/layer.h>
 #include <pangolin/utils/logging.h>
 
 #include <algorithm>
@@ -64,4 +64,4 @@ class LayerGroup
 
 }  // namespace pangolin
 
-#include <pangolin/gui/layer_group_operators.h>
+#include <pangolin/layer/layer_group_operators.h>

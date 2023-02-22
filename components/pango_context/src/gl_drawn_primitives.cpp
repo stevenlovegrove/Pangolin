@@ -1,11 +1,11 @@
 #include "camera_utils.h"
 #include "gl_utils.h"
 
-#include <pangolin/context/factory.h>
+#include <pangolin/drawable/drawn_primitives.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
-#include <pangolin/gui/drawn_primitives.h>
 #include <pangolin/render/gl_vao.h>
+#include <pangolin/utils/shared.h>
 
 namespace pangolin
 {
@@ -294,7 +294,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
   const GlUniform<Eigen::Vector2f> u_size_clip = {"size_clip"};
 };
 
-PANGO_CREATE(DrawnPrimitives)
+Shared<DrawnPrimitives> DrawnPrimitives::Create(DrawnPrimitives::Params p)
 {
   auto r = Shared<GlDrawnPrimitives>::make();
   r->element_type = p.element_type;

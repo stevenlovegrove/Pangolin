@@ -1,10 +1,10 @@
 #include "camera_utils.h"
 
-#include <pangolin/context/factory.h>
+#include <pangolin/drawable/drawn_solids.h>
 #include <pangolin/gl/glsl_program.h>
 #include <pangolin/gl/uniform.h>
-#include <pangolin/gui/drawn_solids.h>
 #include <pangolin/render/gl_vao.h>
+#include <pangolin/utils/shared.h>
 
 namespace pangolin
 {
@@ -46,7 +46,7 @@ struct GlDrawnSolids : public DrawnSolids {
   const GlUniform<bool> u_use_unproject_map = {"use_unproject_map"};
 };
 
-PANGO_CREATE(DrawnSolids)
+Shared<DrawnSolids> DrawnSolids::Create(DrawnSolids::Params p)
 {
   auto r = Shared<GlDrawnSolids>::make();
   return r;
