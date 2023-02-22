@@ -28,7 +28,6 @@
 #pragma once
 
 #include <pangolin/gl/glplatform.h>
-#include <pangolin/gl/viewport.h>
 #include <pangolin/image/image_io.h>
 
 #if defined(HAVE_EIGEN) &&                                                     \
@@ -121,8 +120,6 @@ class PANGOLIN_EXPORT GlTexture
 
   void RenderToViewport(const bool flip) const;
   void RenderToViewport() const;
-  void RenderToViewport(
-      Viewport tex_vp, bool flipx = false, bool flipy = false) const;
   void RenderToViewportFlipY() const;
   void RenderToViewportFlipXFlipY() const;
 
@@ -322,9 +319,6 @@ class PANGOLIN_EXPORT GlSizeableBuffer : public pangolin::GlBuffer
 size_t GlFormatChannels(GLenum data_layout);
 
 size_t GlDataTypeBytes(GLenum type);
-
-sophus::IntensityImage<> ReadFramebuffer(
-    const Viewport& v, const char* pixel_format = "RGBA32");
 
 }  // namespace pangolin
 

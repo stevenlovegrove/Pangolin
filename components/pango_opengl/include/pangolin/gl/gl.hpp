@@ -406,41 +406,6 @@ inline void GlTexture::RenderToViewport() const
 #endif
 }
 
-inline void GlTexture::RenderToViewport(
-    Viewport tex_vp, bool flipx, bool flipy) const
-{
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-
-  GLfloat sq_vert[] = {-1, -1, 1, -1, 1, 1, -1, 1};
-  glVertexPointer(2, GL_FLOAT, 0, sq_vert);
-  glEnableClientState(GL_VERTEX_ARRAY);
-
-  GLfloat l = tex_vp.l / (float)(width);
-  GLfloat b = tex_vp.b / (float)(height);
-  GLfloat r = (tex_vp.l + tex_vp.w) / (float)(width);
-  GLfloat t = (tex_vp.b + tex_vp.h) / (float)(height);
-
-  if (flipx) std::swap(l, r);
-  if (flipy) std::swap(b, t);
-
-  GLfloat sq_tex[] = {l, b, r, b, r, t, l, t};
-  glTexCoordPointer(2, GL_FLOAT, 0, sq_tex);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-  glEnable(GL_TEXTURE_2D);
-  Bind();
-
-  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-  glDisableClientState(GL_VERTEX_ARRAY);
-  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-  glDisable(GL_TEXTURE_2D);
-}
-
 inline void GlTexture::RenderToViewportFlipY() const
 {
   glMatrixMode(GL_PROJECTION);
@@ -967,23 +932,6 @@ inline size_t GlSizeableBuffer::NextSize(size_t min_size) const
     new_size *= 2;
   }
   return new_size;
-}
-
-////////////////////////////////////////////////////////////////////////////
-
-inline sophus::IntensityImage<> ReadFramebuffer(
-    const Viewport& v, const char* pixel_format)
-{
-  const sophus::PixelFormat fmt = PixelFormatFromString(pixel_format);
-  const GlPixFormat glfmt(fmt);
-
-  sophus::IntensityImage<> buffer(sophus::ImageSize(v.w, v.h), fmt);
-  glReadBuffer(GL_BACK);
-  glPixelStorei(GL_PACK_ALIGNMENT, 1);
-  glReadPixels(
-      v.l, v.b, v.w, v.h, glfmt.glformat, glfmt.gltype,
-      const_cast<uint8_t*>(buffer.rawPtr()));
-  return buffer;
 }
 
 }  // namespace pangolin

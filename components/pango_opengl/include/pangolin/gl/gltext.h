@@ -57,10 +57,6 @@ class PANGOLIN_EXPORT GlText
   void Draw() const;
   void DrawGlSl() const;
 
-  // Render at (x,y,z)' in object coordinates,
-  // keeping text size and orientation constant
-  void Draw(GLfloat x, GLfloat y, GLfloat z = 0.0f) const;
-
   // Render at (x,y,z)' in window coordinates.
   void DrawWindow(GLfloat x, GLfloat y, GLfloat z = 0.0f) const;
 

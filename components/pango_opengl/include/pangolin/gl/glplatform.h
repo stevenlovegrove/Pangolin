@@ -59,8 +59,12 @@
 #endif // HAVE_GLES
 // clang-format on
 
-// For glErrorString
-#include <pangolin/gl/glpangoglu.h>
+namespace pangolin
+{
+/// Clone of glErrorString
+PANGOLIN_EXPORT
+const GLubyte* glErrorString(GLenum error);
+}  // namespace pangolin
 
 #define PANGO_GL(FUNC)                                                         \
   [&]() {                                                                      \
