@@ -138,50 +138,6 @@ void GlText::Draw() const
   }
 }
 
-void GlText::Draw(GLfloat x, GLfloat y, GLfloat z) const
-{
-  // find object point (x,y,z)' in pixel coords
-  GLdouble projection[16];
-  GLdouble modelview[16];
-  GLint view[4];
-  GLdouble scrn[3];
-
-#ifdef HAVE_GLES_2
-  std::copy(
-      glEngine().projection.top().m, glEngine().projection.top().m + 16,
-      projection);
-  std::copy(
-      glEngine().modelview.top().m, glEngine().modelview.top().m + 16,
-      modelview);
-#else
-  glGetDoublev(GL_PROJECTION_MATRIX, projection);
-  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-#endif
-  glGetIntegerv(GL_VIEWPORT, view);
-
-  pangolin::glProject(
-      x, y, z, modelview, projection, view, scrn, scrn + 1, scrn + 2);
-
-  // Save current state
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-
-  SetWindowOrthographicContinuous();
-  glTranslatef(
-      std::floor((GLfloat)scrn[0]), std::floor((GLfloat)scrn[1]),
-      (GLfloat)scrn[2]);
-  Draw();
-
-  // Restore viewport & matrices
-  glViewport(view[0], view[1], view[2], view[3]);
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-}
-
 // Render at (x,y) in window coordinates.
 void GlText::DrawWindow(GLfloat x, GLfloat y, GLfloat z) const
 {

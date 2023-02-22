@@ -18,7 +18,6 @@ set(component_file_basenames
     glfont
     glpangoglu
     gltext
-    viewport
 )
 
 foreach(basename ${component_file_basenames})
