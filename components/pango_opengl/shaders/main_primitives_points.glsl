@@ -30,7 +30,7 @@ void main() {
         color = a_colors;
     #endif
     #if VERTEX_NORMALS
-        normal_cam = mat3(cam_from_world) * a_normals_world;
+        normal_cam = normalize(mat3(cam_from_world) * a_normals_world);
     #endif
     #if VERTEX_UVS
         uv = a_uvs;
