@@ -45,10 +45,10 @@ void main() {
     uniform sampler2D texture_for_uv;
 #endif
 
-// #expect USE_MATCAP
-// #if USE_MATCAP
-//     uniform sampler2D texture_matcap;
-// #endif
+#expect USE_MATCAP
+#if USE_MATCAP
+    uniform sampler2D texture_matcap;
+#endif
 
 #expect VERTEX_COLORS
 #if VERTEX_COLORS
@@ -72,7 +72,10 @@ void main() {
 out vec4 FragColor;
 
 void main() {
-    #if USE_TEXTURE && VERTEX_UVS
+    #if USE_MATCAP && VERTEX_NORMALS
+        vec2 matcap_uv = (normal_cam.xy + vec2(1.0)) / 2.0;
+        FragColor = texture(texture_matcap, matcap_uv );
+    #elif USE_TEXTURE && VERTEX_UVS
         FragColor = texture(texture_for_uv, uv);
     #elif VERTEX_NORMALS
         FragColor = vec4(normal_cam, 1.0);

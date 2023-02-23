@@ -8,6 +8,7 @@ set(component_file_basenames
   make_drawable
   gl_context/gl_depth_sampler
   gl_drawable/gl_drawn_checker
+  gl_drawable/gl_drawn_group
   gl_drawable/gl_drawn_image
   gl_drawable/gl_drawn_plot_background
   gl_drawable/gl_drawn_primitives
@@ -30,7 +31,14 @@ endif()
 
 find_package(Sophus REQUIRED)
 target_link_libraries(${COMPONENT} PUBLIC pango_windowing pango_render pango_vars Sophus::sophus_image Sophus::sophus_sensor)
-target_link_libraries(${COMPONENT} PRIVATE pango_opengl)
+target_link_libraries(${COMPONENT} PUBLIC pango_opengl)
+
+find_package(assimp QUIET)
+if(assimp_FOUND)
+  message(STATUS "libassimp Found and Enabled")
+  target_compile_definitions(${COMPONENT} PRIVATE HAVE_ASSIMP)
+  target_link_libraries(${COMPONENT} PRIVATE assimp::assimp)
+endif()
 
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
