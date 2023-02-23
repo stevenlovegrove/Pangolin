@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <pangolin/render/device_texture.h>
 #include <sophus/calculus/region.h>
+#include <sophus/lie/sim3.h>
 
 namespace pangolin
 {
@@ -26,7 +27,7 @@ struct DrawablePose {
 
   // Add Eigen::Matrix4d representation augmentations (e.g. drawable_scales),
   // and/or alternatives (Sim3, Aff3, etc.) here when needed.
-  sophus::Se3F64 parent_from_drawable;
+  sophus::Sim3F64 parent_from_drawable;
 };
 
 struct Drawable {
