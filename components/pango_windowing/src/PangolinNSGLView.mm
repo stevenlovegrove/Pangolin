@@ -216,7 +216,7 @@ inline pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
 {
   const NSPoint location = [self _Location:event];
   osx_window->MouseMotionSignal(pangolin::MouseMotionEvent(
-      {(float)location.x, (float)location.y, GetKeyModifierBitmask(event)}));
+      {{(float)location.x, (float)location.y, GetKeyModifierBitmask(event)}}));
 }
 
 - (void)mouseDown:(NSEvent *)event

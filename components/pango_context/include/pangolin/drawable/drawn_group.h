@@ -2,6 +2,8 @@
 
 #include <pangolin/layer/draw_layer.h>
 
+#include <filesystem>
+
 namespace pangolin
 {
 
@@ -27,14 +29,10 @@ struct DrawnGroup : public Drawable {
     return bounds;
   }
   struct Params {
+    std::optional<std::filesystem::path> file_assets;
     std::vector<Shared<Drawable>> children;
   };
-  static Shared<DrawnGroup> Create(const Params& p)
-  {
-    auto ret = Shared<DrawnGroup>::make();
-    ret->children = p.children;
-    return ret;
-  }
+  static Shared<DrawnGroup> Create(const Params& p);
 
   std::vector<Shared<Drawable>> children;
 };
