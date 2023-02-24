@@ -1,6 +1,6 @@
 #ifdef HAVE_ASSIMP
 #include <assimp/Exporter.hpp>
-#include <assimp/cimport.h>
+#include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #endif
@@ -58,15 +58,11 @@ Shared<DrawnPrimitives> toDrawnPrimitives(MeshData& mesh)
   return prim;
 }
 
-Shared<DrawnGroup> loadMesh(const std::filesystem::path& filename)
-{
 #ifdef HAVE_ASSIMP
+Shared<DrawnGroup> loadMesh(
+    const aiScene* ai_scene, const std::filesystem::path& root_path)
+{
   using Mat3X = Eigen::Matrix<float, 3, Eigen::Dynamic>;
-
-  const aiScene* ai_scene = aiImportFile(
-      filename.c_str(), aiProcess_Triangulate | aiProcess_SortByPType |
-                            aiProcess_GenSmoothNormals);
-  PANGO_ENSURE(ai_scene, "{}", aiGetErrorString());
 
   auto group = Shared<DrawnGroup>::make();
 
@@ -117,30 +113,63 @@ Shared<DrawnGroup> loadMesh(const std::filesystem::path& filename)
         std::string fix_texture_path(texture_relative_path.C_Str());
         std::replace(
             fix_texture_path.begin(), fix_texture_path.end(), '\\', '/');
-        const auto tex_filename = filename.parent_path() / fix_texture_path;
+        const auto tex_filename = root_path / fix_texture_path;
         mesh.texture_color = pangolin::LoadImage(tex_filename);
       }
     }
 
     group->children.push_back(toDrawnPrimitives(mesh));
   }
-  aiReleaseImport(ai_scene);
 
   return group;
+}
+#endif  // HAVE_ASSIMP
+
+Shared<DrawnGroup> DrawnGroup::Load(
+    const std::filesystem::path& filename, const LoadParams& params)
+{
+#ifdef HAVE_ASSIMP
+
+  Assimp::Importer importer;
+  // importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_NORMALS);
+
+  const aiScene* ai_scene = importer.ReadFile(
+      filename.c_str(), aiProcess_Triangulate | aiProcess_SortByPType |
+                            aiProcess_JoinIdenticalVertices |
+                            aiProcess_GenSmoothNormals /* |
+                            aiProcess_RemoveComponent */);
+  PANGO_ENSURE(ai_scene, "{}: {}", filename, importer.GetErrorString());
+  return loadMesh(ai_scene, filename.parent_path());
 #else
   PANGO_FATAL("Please compile with ASSIMP support for mesh loading.");
 #endif  // HAVE_ASSIMP
 }
 
+Shared<DrawnGroup> DrawnGroup::Load(
+    const void* data, size_t num_bytes, const LoadParams& params)
+{
+#ifdef HAVE_ASSIMP
+
+  Assimp::Importer importer;
+  // importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_NORMALS);
+
+  const aiScene* ai_scene = importer.ReadFileFromMemory(data, num_bytes,
+      aiProcess_Triangulate | aiProcess_SortByPType |
+                            aiProcess_JoinIdenticalVertices |
+                            aiProcess_GenSmoothNormals /* |
+                            aiProcess_RemoveComponent */);
+  PANGO_ENSURE(ai_scene, "{}", importer.GetErrorString());
+  return loadMesh(ai_scene, ".");
+#else
+  PANGO_FATAL("Please compile with ASSIMP support for mesh loading.");
+#endif  // HAVE_ASSIMP}
+}
+
 Shared<DrawnGroup> DrawnGroup::Create(const DrawnGroup::Params& p)
 {
-  if (p.file_assets) {
-    return loadMesh(*p.file_assets);
-  } else {
-    auto ret = Shared<DrawnGroup>::make();
-    ret->children = p.children;
-    return ret;
-  }
+  auto ret = Shared<DrawnGroup>::make();
+  ret->children = p.children;
+  return ret;
 }
 
 }  // namespace pangolin

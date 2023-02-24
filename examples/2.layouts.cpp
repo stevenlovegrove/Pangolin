@@ -1,6 +1,7 @@
 #include <pangolin/context/context.h>
-#include <pangolin/layer/all_layers.h>
+#include <pangolin/drawable/mascot.h>
 #include <pangolin/image/image_io.h>
+#include <pangolin/layer/all_layers.h>
 
 /*
   == Pangolin-by-example ==
@@ -59,21 +60,12 @@ int main(int /*argc*/, char** /*argv*/)
 
   auto im1 = LoadImage(image_url_1);
   auto im2 = LoadImage(image_url_2);
-
-  // Create an object to render a triangle
-  auto primitives = DrawnPrimitives::Create(
-      {.element_type = DrawnPrimitives::Type::triangles,
-       .default_color = {1.0f, 0.0f, 0.0f, 1.0f}});
-
-  primitives->vertices->queueUpdate(
-      std::vector<Eigen::Vector3f>{
-          {-1.0f, -1.0f, 0.0f}, {1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-      {});
+  auto mascot = makePangolin();
 
   // Add the images and the triangle to the window.
   // Pangolin automatically adds some appropriate 'Layers' to
   // enable interaction with these elements.
-  context->setLayout((im1 / primitives) | im2);
+  context->setLayout((im1 / mascot) | im2);
   context->loop();
   return 0;
 }

@@ -244,7 +244,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       vao.addVertexAttrib(location_vertex, *vertices);
       if (!colors->empty()) {
         vao.addVertexAttrib(location_colors, *colors);
-      } else if (geometry_texture->empty() && material_image->empty()) {
+      } else if (normals->empty() && material_image->empty()) {
         u_color = default_color.cast<float>();
       }
       if (!normals->empty()) {

@@ -21,7 +21,7 @@ set(examples
 
 foreach(example IN LISTS examples)
     add_executable(${example} ${example}.cpp)
-    target_link_libraries(${example} pango_context pango_video)
+    target_link_libraries(${example} pango_context pango_video pango_assets)
 endforeach()
 
 # explicitly link to OpenGL because we use it directly.

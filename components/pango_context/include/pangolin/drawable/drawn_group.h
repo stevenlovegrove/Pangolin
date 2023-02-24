@@ -28,8 +28,16 @@ struct DrawnGroup : public Drawable {
     }
     return bounds;
   }
+
+  struct LoadParams {
+    bool recompute_normals = false;
+  };
+  static Shared<DrawnGroup> Load(
+      const std::filesystem::path& filename, const LoadParams& params);
+  static Shared<DrawnGroup> Load(
+      const void* data, size_t num_bytes, const LoadParams& params);
+
   struct Params {
-    std::optional<std::filesystem::path> file_assets;
     std::vector<Shared<Drawable>> children;
   };
   static Shared<DrawnGroup> Create(const Params& p);

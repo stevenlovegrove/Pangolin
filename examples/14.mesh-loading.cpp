@@ -37,7 +37,7 @@ int main(int argc, char** argv)
   });
 
   // Load and process mesh from file.
-  auto mesh = DrawnGroup::Create({.file_assets = mesh_file});
+  auto mesh = DrawnGroup::Load(mesh_file, {});
   if (!matcap_file.empty()) {
     auto material_image = DeviceTexture::Create({});
     material_image->update(LoadImage(matcap_file));
