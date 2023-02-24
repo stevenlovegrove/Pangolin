@@ -46,7 +46,7 @@ int main(int argc, char** argv)
 
   auto scene = DrawLayer::Create(
       {.camera_from_world = cameraLookatFromWorld(
-           {0.0, 0.0, 1.0}, {10.0, 0.0, 0.0}, AxisDirection2::positive_z),
+           {0.0, 0.0, 1.0}, {10.0, 0.0, 0.0}, AxisDirection::positive_z),
        .near_far = {0.01, 1000.0}});
   auto checker_plane = DrawnSolids::Create({});
   scene->getHandler().selection_signal.connect([](SelectionEvent e) {

@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 
   auto scene = DrawLayer::Create(
       {.camera_from_world = cameraLookatFromWorld(
-           {0.0, 0.0, 1.0}, {10.0, 0.0, 0.0}, AxisDirection2::positive_z),
+           {0.0, 0.0, 1.0}, {10.0, 0.0, 0.0}, AxisDirection::positive_z),
        .in_scene = {checker_plane, axis}});
 
   // group some objects

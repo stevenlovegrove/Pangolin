@@ -39,7 +39,7 @@ struct DrawLayerImpl : public DrawLayer {
       render_state_.camera_from_world = *p.camera_from_world;
     } else {
       render_state_.camera_from_world =
-          cameraLookatFromWorld({0.0, 0.0, -5.0}, {0.0, 0.0, 0.0});
+          cameraLookatFromWorld({10.0, 10.0, 10.0}, {0.0, 0.0, 0.0});
     }
   }
 

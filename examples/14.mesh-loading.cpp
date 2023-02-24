@@ -50,7 +50,7 @@ int main(int argc, char** argv)
   // Create scene to render
   auto scene = DrawLayer::Create(
       {.camera_from_world = cameraLookatFromWorld(
-           {2.0, 0.0, 2.0}, {0.0, 0.0, 0.0}, AxisDirection2::positive_z),
+           {2.0, 0.0, 2.0}, {0.0, 0.0, 0.0}, AxisDirection::positive_z),
        });
   if(with_grid) {
     scene->addInScene(draw::CheckerPlane{});

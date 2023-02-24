@@ -11,7 +11,7 @@ namespace pangolin
 
 // clang-format off
 SOPHUS_ENUM(
-  AxisDirection2,
+  AxisDirection,
   (positive_x,
    positive_y,
    positive_z,
@@ -70,7 +70,7 @@ SOPHUS_ENUM(
 // clang-format on
 
 template <typename TScalar, int Dim>
-Eigen::Matrix<TScalar, Dim, 1> axisDirection(AxisDirection2 dir)
+Eigen::Matrix<TScalar, Dim, 1> axisDirection(AxisDirection dir)
 {
   const int ordinal = static_cast<int>(dir);  // [0, ... 2*Dim]
   const int axis = ordinal % 3;               // [0, ... Dim]
@@ -95,7 +95,7 @@ Eigen::Vector3<TScalar> upDirectionInCamera(DeviceXyz axis_convention)
 // where those now point in the `to_rdf_axis_dirs` dirs
 template <typename TScalar, int Dim = 3>
 Eigen::Matrix<TScalar, Dim, Dim> toConventionFromRdf(
-    const std::array<AxisDirection2, Dim>& to_rdf_axis_dirs)
+    const std::array<AxisDirection, Dim>& to_rdf_axis_dirs)
 {
   static_assert(2 <= Dim && Dim <= 3);
 
@@ -112,16 +112,16 @@ Eigen::Matrix<TScalar, 3, 3> toConventionFromRdf(DeviceXyz to)
   switch (to) {
     case DeviceXyz::right_down_forward:
       return toConventionFromRdf<TScalar, 3>(
-          {AxisDirection2::positive_x, AxisDirection2::positive_y,
-           AxisDirection2::positive_z});
+          {AxisDirection::positive_x, AxisDirection::positive_y,
+           AxisDirection::positive_z});
     case DeviceXyz::forward_left_up:
       return toConventionFromRdf<TScalar, 3>(
-          {AxisDirection2::positive_z, AxisDirection2::negative_x,
-           AxisDirection2::negative_y});
+          {AxisDirection::positive_z, AxisDirection::negative_x,
+           AxisDirection::negative_y});
     case DeviceXyz::right_up_back:
       return toConventionFromRdf<TScalar, 3>(
-          {AxisDirection2::positive_x, AxisDirection2::negative_y,
-           AxisDirection2::negative_z});
+          {AxisDirection::positive_x, AxisDirection::negative_y,
+           AxisDirection::negative_z});
     default:
       PANGO_FATAL();
   }
@@ -143,7 +143,7 @@ struct Conventions {
   ImageXy image_xy = ImageXy::right_down;
   ImageIndexing image_indexing = ImageIndexing::pixel_centered;
   DistanceUnits units = DistanceUnits::meters;
-  AxisDirection2 up_direction_world = AxisDirection2::negative_y;
+  AxisDirection up_direction_world = AxisDirection::positive_z;
 };
 
 }  // namespace pangolin

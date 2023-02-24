@@ -15,23 +15,23 @@ template <typename T>
 void testAxisDirection()
 {
   CHECK_EIGEN_APPROX(
-      (axisDirection<T, 3>(AxisDirection2::positive_x)),
+      (axisDirection<T, 3>(AxisDirection::positive_x)),
       (Eigen::Vector<T, 3>(1.0, 0.0, 0.0)));
 
   CHECK_EIGEN_APPROX(
-      (axisDirection<T, 3>(AxisDirection2::positive_y)),
+      (axisDirection<T, 3>(AxisDirection::positive_y)),
       (Eigen::Vector<T, 3>(0.0, 1.0, 0.0)))
   CHECK_EIGEN_APPROX(
-      (axisDirection<T, 3>(AxisDirection2::positive_z)),
+      (axisDirection<T, 3>(AxisDirection::positive_z)),
       (Eigen::Vector<T, 3>(0.0, 0.0, 1.0)))
   CHECK_EIGEN_APPROX(
-      (axisDirection<T, 3>(AxisDirection2::negative_x)),
+      (axisDirection<T, 3>(AxisDirection::negative_x)),
       (Eigen::Vector<T, 3>(-1.0, 0.0, 0.0)))
   CHECK_EIGEN_APPROX(
-      (axisDirection<T, 3>(AxisDirection2::negative_y)),
+      (axisDirection<T, 3>(AxisDirection::negative_y)),
       (Eigen::Vector<T, 3>(0.0, -1.0, 0.0)))
   CHECK_EIGEN_APPROX(
-      (axisDirection<T, 3>(AxisDirection2::negative_z)),
+      (axisDirection<T, 3>(AxisDirection::negative_z)),
       (Eigen::Vector<T, 3>(0.0, 0.0, -1.0)))
 }
 

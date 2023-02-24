@@ -71,7 +71,7 @@ template <typename TScalar = double>
 sophus::Se3<TScalar> worldLookatFromCamera(
     const Eigen::Vector3<TScalar>& camera_center_in_world,
     const Eigen::Vector3<TScalar>& interest_point_in_world,
-    const AxisDirection2 updir_world = Conventions::global().up_direction_world,
+    const AxisDirection updir_world = Conventions::global().up_direction_world,
     const DeviceXyz xyz_convention = Conventions::global().device_xyz)
 {
   return worldLookatFromCamera<TScalar>(
@@ -84,7 +84,7 @@ template <typename TScalar = double>
 sophus::Se3<TScalar> cameraLookatFromWorld(
     const Eigen::Vector3<TScalar>& camera_center_in_world,
     const Eigen::Vector3<TScalar>& interest_point_in_world,
-    const AxisDirection2 updir_world = Conventions::global().up_direction_world,
+    const AxisDirection updir_world = Conventions::global().up_direction_world,
     const DeviceXyz xyz_convention = Conventions::global().device_xyz)
 {
   return worldLookatFromCamera<TScalar>(
