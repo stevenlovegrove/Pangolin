@@ -1,6 +1,9 @@
 # Creates C resources file from specified files
 # Based on http://stackoverflow.com/a/27206982
-function(embed_binary_files_now output binary_files)
+function(embed_binary_files_now output escaped_binary_files)
+    # Undo the hack we did within embed_shader_files_rule
+    string(REGEX REPLACE "," ";" binary_files "${escaped_binary_files}")
+
     # Create empty output file
     file(WRITE ${output} "")
     # Iterate through input files
@@ -20,11 +23,14 @@ endfunction()
 
 # Sets up rule for embedding files when they are newer than the output file (or it doesn't exist yet)
 function(embed_binary_files_rule output binary_files)
+    # Hack so that add_custom_command doesn't do something silly with the semi-colons.
+    string(REGEX REPLACE ";" "," escaped_binary_files "${binary_files}")
+
     add_custom_command(
         OUTPUT ${output}
         DEPENDS ${binary_files}
         COMMAND
-            ${CMAKE_COMMAND} -DINPUT_BINARY_FILES=${binary_files}
+            ${CMAKE_COMMAND} -DINPUT_BINARY_FILES=${escaped_binary_files}
                              -DOUTPUT_SRC_FILE=${output}
                              -P ${PROJECT_SOURCE_DIR}/cmake/EmbedBinaryFiles.cmake
         COMMENT "Embedding ${binary_files} into ${output}"
@@ -33,5 +39,5 @@ endfunction()
 
 if(CMAKE_SCRIPT_MODE_FILE AND NOT CMAKE_PARENT_LIST_FILE)
     # Running in script mode as part of build-time procedure to actually to the embedding
-    embed_binary_files_now(${OUTPUT_SRC_FILE} ${INPUT_BINARY_FILES} )
+    embed_binary_files_now("${OUTPUT_SRC_FILE}" "${INPUT_BINARY_FILES}" )
 endif()

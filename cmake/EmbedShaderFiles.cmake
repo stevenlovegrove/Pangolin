@@ -2,7 +2,7 @@
 # Based on http://stackoverflow.com/a/27206982
 function(embed_shader_files_now output escaped_shader_files project_prefix)
     # Undo the hack we did within embed_shader_files_rule
-    string(REGEX REPLACE ":" ";" shader_files "${escaped_shader_files}")
+    string(REGEX REPLACE "," ";" shader_files "${escaped_shader_files}")
 
     # Create empty output file
     file(WRITE ${output} "")
@@ -41,7 +41,7 @@ endfunction()
 # Sets up rule for embedding files when they are newer than the output file (or it doesn't exist yet)
 function(embed_shader_files_rule output shader_files)
     # Hack so that add_custom_command doesn't do something silly with the semi-colons.
-    string(REGEX REPLACE ";" ":" escaped_shader_files "${shader_files}")
+    string(REGEX REPLACE ";" "," escaped_shader_files "${shader_files}")
 
     add_custom_command(
         OUTPUT ${output}
