@@ -42,8 +42,9 @@ struct DrawLayerRenderState {
 struct DrawLayer : public Layer {
   enum In { scene, pixels };
 
-  virtual const DrawLayerRenderState& renderState() const = 0;
   virtual DrawLayerHandler& getHandler() = 0;
+  virtual const DrawLayerRenderState& renderState() const = 0;
+  virtual void linkRenderState(const std::shared_ptr<DrawLayer>& layer) = 0;
   virtual void setCamera(const sophus::CameraModel&) = 0;
   virtual void setCameraFromWorld(const sophus::Se3<double>&) = 0;
   virtual void setClipViewTransform(sophus::Sim2<double>&) = 0;
@@ -177,7 +178,7 @@ Shared<Drawable> makeDrawable(const T& v)
 // Helper for adding Drawables directly into layouts
 template <DerivedFrom<Drawable> T>
 struct LayerConversionTraits<Shared<T>> {
-  static Shared<Layer> makeLayer(const Shared<T>& drawable)
+  static Shared<DrawLayer> makeLayer(const Shared<T>& drawable)
   {
     return DrawLayer::Create({.in_scene = {makeDrawable(drawable)}});
   }

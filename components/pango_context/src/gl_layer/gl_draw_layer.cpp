@@ -25,20 +25,20 @@ struct DrawLayerImpl : public DrawLayer {
       scene_collection_({.drawables = p.in_scene}),
       pixels_collection_({.drawables = p.in_pixels})
   {
-    render_state_.aspect_policy = p.aspect_policy;
-    render_state_.image_convention = p.image_convention;
-    render_state_.image_indexing = p.image_indexing;
+    render_state_->aspect_policy = p.aspect_policy;
+    render_state_->image_convention = p.image_convention;
+    render_state_->image_indexing = p.image_indexing;
 
-    render_state_.near_far = p.near_far;
+    render_state_->near_far = p.near_far;
 
     if (p.camera) {
-      render_state_.camera = *p.camera;
+      render_state_->camera = *p.camera;
     }
 
     if (p.camera_from_world) {
-      render_state_.camera_from_world = *p.camera_from_world;
+      render_state_->camera_from_world = *p.camera_from_world;
     } else {
-      render_state_.camera_from_world =
+      render_state_->camera_from_world =
           cameraLookatFromWorld({10.0, 10.0, 10.0}, {0.0, 0.0, 0.0});
     }
   }
@@ -47,29 +47,40 @@ struct DrawLayerImpl : public DrawLayer {
 
   const DrawLayerRenderState& renderState() const override
   {
-    return render_state_;
+    return *render_state_;
+  }
+
+  void linkRenderState(const std::shared_ptr<DrawLayer>& layer) override
+  {
+    if (auto impl = std::dynamic_pointer_cast<DrawLayerImpl>(layer)) {
+      // link
+      render_state_ = impl->render_state_;
+    } else {
+      // fork current state to new unshared object.
+      render_state_ = Shared<DrawLayerRenderState>::make(*render_state_);
+    }
   }
 
   DrawLayerHandler& getHandler() override { return *handler_; }
 
   void setCamera(const sophus::CameraModel& camera) override
   {
-    render_state_.camera = camera;
+    render_state_->camera = camera;
   }
 
   void setCameraFromWorld(const sophus::Se3F64& cam_from_world) override
   {
-    render_state_.camera_from_world = cam_from_world;
+    render_state_->camera_from_world = cam_from_world;
   }
 
   void setClipViewTransform(sophus::Sim2<double>& clip_view_transform) override
   {
-    render_state_.clip_view_transform = clip_view_transform;
+    render_state_->clip_view_transform = clip_view_transform;
   }
 
   void setNearFarPlanes(const RegionF64& near_far) override
   {
-    render_state_.near_far = near_far;
+    render_state_->near_far = near_far;
   }
 
   // // Shrinks viewport such that aspect matches the provided camera
@@ -113,13 +124,13 @@ struct DrawLayerImpl : public DrawLayer {
 
   bool tryInitializeEmptyCamera()
   {
-    if (render_state_.camera.isEmpty()) {
+    if (render_state_->camera.isEmpty()) {
       if (auto maybe_dim = tryGetDrawableBaseImageSize()) {
         sophus::ImageSize size = toImageSize(*maybe_dim);
-        render_state_.camera = sophus::createDefaultPinholeModel(size);
+        render_state_->camera = sophus::createDefaultPinholeModel(size);
         return true;
       } else if (scene_collection_.drawables.size()) {
-        render_state_.camera = sophus::createDefaultPinholeModel({640, 480});
+        render_state_->camera = sophus::createDefaultPinholeModel({640, 480});
         return true;
       }
       return false;
@@ -232,7 +243,7 @@ struct DrawLayerImpl : public DrawLayer {
       return;
     }
 
-    updateRenderData(render_data_, render_state_, params.region);
+    updateRenderData(render_data_, *render_state_, params.region);
 
     ScopedGlEnable en_scissor(GL_SCISSOR_TEST);
 
@@ -269,7 +280,7 @@ struct DrawLayerImpl : public DrawLayer {
   {
     Eigen::Matrix4d clip_from_proj =
         render_data_.clip_view * render_data_.clip_aspect *
-        transformClipFromProjection(render_state_.camera.imageSize());
+        transformClipFromProjection(render_state_->camera.imageSize());
     const Eigen::Array2d d =
         event.pointer_pos.pos_window.cast<double>().array() -
         sophus::cast<double>(event.pointer_pos.region.min()).array();
@@ -293,7 +304,7 @@ struct DrawLayerImpl : public DrawLayer {
     Eigen::Matrix3d clip_from_window, pixel_from_window;
     return handler_->handleEvent(
         context, event, pos_clip, pos_img, render_data_.clip_aspect_scale,
-        *this, render_state_);
+        *this, *render_state_);
   }
 
   Size sizeHint() const override { return size_hint_; }
@@ -309,11 +320,11 @@ struct DrawLayerImpl : public DrawLayer {
       Eigen::Vector2d dim = cam_bounds.range().head<2>();
       return AspectRatio::fromRatio(dim.x() / dim.y());
     }
-    if (render_state_.camera.imageSize().width > 0 &&
-        render_state_.camera.imageSize().height > 0) {
+    if (render_state_->camera.imageSize().width > 0 &&
+        render_state_->camera.imageSize().height > 0) {
       return AspectRatio::fromRatio(
-          (double)render_state_.camera.imageSize().width /
-          (double)render_state_.camera.imageSize().height);
+          (double)render_state_->camera.imageSize().width /
+          (double)render_state_->camera.imageSize().height);
     }
     return AspectRatio::one();
   };
@@ -429,7 +440,7 @@ struct DrawLayerImpl : public DrawLayer {
   std::string name_;
   Size size_hint_;
 
-  DrawLayerRenderState render_state_;
+  Shared<DrawLayerRenderState> render_state_;
   RenderData render_data_;
 
   Shared<DrawLayerHandler> handler_;

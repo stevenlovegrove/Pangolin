@@ -54,6 +54,11 @@ class LayerGroup
   std::optional<sophus::Region2I>& region() { return region_; }
   const std::optional<sophus::Region2I>& region() const { return region_; }
 
+  // Conveniance accessors for children()
+  size_t size() const { return children_.size(); }
+  LayerGroup& operator[](size_t i) { return children_[i]; }
+  const LayerGroup& operator[](size_t i) const { return children_[i]; }
+
   private:
   std::vector<LayerGroup> children_ = {};
 
