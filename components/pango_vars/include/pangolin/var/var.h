@@ -45,18 +45,17 @@ class Var
   public:
   Var(const Var&) = default;
 
-  static T& Attach(T& variable, const VarMeta& meta)
+  static Var<T> Attach(T& variable, const VarMeta& meta)
   {
-    VarState::I().AttachVar<T&>(variable, meta);
-    return variable;
+    return Var<T>(VarState::I().AttachVar<T&>(variable, meta));
   }
 
-  static T& Attach(const std::string& name, T& variable)
+  static Var<T> Attach(const std::string& name, T& variable)
   {
     return Attach(variable, VarMeta(name));
   }
 
-  static T& Attach(
+  static Var<T> Attach(
       const std::string& name, T& variable, double min, double max,
       bool logscale = false)
   {
@@ -66,12 +65,12 @@ class Var
                       META_FLAG_NONE, logscale));
   }
 
-  static T& Attach(const std::string& name, T& variable, int flags)
+  static Var<T> Attach(const std::string& name, T& variable, int flags)
   {
     return Attach(variable, VarMeta(name, 0., 0., 0., flags));
   }
 
-  static T& Attach(const std::string& name, T& variable, bool toggle)
+  static Var<T> Attach(const std::string& name, T& variable, bool toggle)
   {
     return Attach(
         variable,
