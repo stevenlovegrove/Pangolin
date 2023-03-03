@@ -37,14 +37,14 @@ struct GlDrawnSolids : public DrawnSolids {
   }
 
   private:
-  const Shared<GlSlProgram> prog = GlSlProgram::Create(
+  Shared<GlSlProgram> prog = GlSlProgram::Create(
       {.sources = {
            {.origin = "/components/pango_opengl/shaders/main_plane.glsl"}}});
   GlVertexArrayObject vao = {};
-  const GlUniform<Eigen::Matrix4f> u_cam_from_clip = {"camera_from_clip"};
-  const GlUniform<Eigen::Matrix4f> u_world_from_drawable = {"world_from_cam"};
-  const GlUniform<Eigen::Vector2f> u_znear_zfar = {"znear_zfar"};
-  const GlUniform<bool> u_use_unproject_map = {"use_unproject_map"};
+  GlUniform<Eigen::Matrix4f> u_cam_from_clip{prog, "camera_from_clip"};
+  GlUniform<Eigen::Matrix4f> u_world_from_drawable{prog, "world_from_cam"};
+  GlUniform<Eigen::Vector2f> u_znear_zfar{prog, "znear_zfar"};
+  GlUniform<bool> u_use_unproject_map{prog, "use_unproject_map"};
 };
 
 Shared<DrawnSolids> DrawnSolids::Create(DrawnSolids::Params p)

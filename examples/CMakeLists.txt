@@ -17,6 +17,7 @@ set(examples
     12.named_drawables
     13.plot-experiment
     14.mesh-loading
+    15.reload-example
 )
 
 foreach(example IN LISTS examples)

@@ -93,27 +93,28 @@ struct GlWidgetLayer : WidgetLayer {
       color_slider_outline = {0.8f, 0.6f, 0.6f};
     }
 
-    const Shared<GlSlProgram> prog = GlSlProgram::Create(
+    Shared<GlSlProgram> prog = GlSlProgram::Create(
         {.sources = {
              {.origin =
                   "/components/pango_opengl/shaders/main_widgets.glsl"}}});
-    GlUniform<float> width = {"u_width"};
-    GlUniform<float> height = {"u_height"};
-    GlUniform<float> padding = {"u_padding"};
-    GlUniform<int> num_widgets = {"u_num_widgets"};
-    GlUniform<int> selected_index = {"u_selected_index"};
+    GlUniform<float> width{prog, "u_width"};
+    GlUniform<float> height{prog, "u_height"};
+    GlUniform<float> padding{prog, "u_padding"};
+    GlUniform<int> num_widgets{prog, "u_num_widgets"};
+    GlUniform<int> selected_index{prog, "u_selected_index"};
 
-    GlUniform<float> slider_outline_border = {"slider_outline_border"};
-    GlUniform<float> boss_border = {"boss_border"};
-    GlUniform<float> boss_radius_factor = {"boss_radius_factor"};
+    GlUniform<float> slider_outline_border{prog, "slider_outline_border"};
+    GlUniform<float> boss_border{prog, "boss_border"};
+    GlUniform<float> boss_radius_factor{prog, "boss_radius_factor"};
 
-    GlUniform<Eigen::Array3f> color_panel = {"color_panel"};
-    GlUniform<Eigen::Array3f> color_boss_base = {"color_boss_base"};
-    GlUniform<Eigen::Array3f> color_boss_diff = {"color_boss_diff"};
-    GlUniform<Eigen::Array3f> color_slider = {"color_slider"};
-    GlUniform<Eigen::Array3f> color_slider_outline = {"color_slider_outline"};
+    GlUniform<Eigen::Array3f> color_panel{prog, "color_panel"};
+    GlUniform<Eigen::Array3f> color_boss_base{prog, "color_boss_base"};
+    GlUniform<Eigen::Array3f> color_boss_diff{prog, "color_boss_diff"};
+    GlUniform<Eigen::Array3f> color_slider{prog, "color_slider"};
+    GlUniform<Eigen::Array3f> color_slider_outline{
+        prog, "color_slider_outline"};
 
-    GlUniform<Eigen::Matrix4f> clip_from_pix = {"u_T_cm"};
+    GlUniform<Eigen::Matrix4f> clip_from_pix{prog, "u_T_cm"};
 
     pangolin::GlBuffer vbo;
     GlVertexArrayObject vao = {};
@@ -128,17 +129,17 @@ struct GlWidgetLayer : WidgetLayer {
       color = {0.0f, 0.0f, 0.0f};
     }
 
-    const Shared<GlSlProgram> prog = GlSlProgram::Create(
+    Shared<GlSlProgram> prog = GlSlProgram::Create(
         {.sources = {
              {.origin = "/components/pango_opengl/shaders/main_text.glsl"}}});
-    GlUniform<int> font_atlas = {"u_font_atlas"};
-    GlUniform<int> font_offsets = {"u_font_offsets"};
-    GlUniform<Eigen::Array3f> color = {"u_color"};
+    GlUniform<int> font_atlas{prog, "u_font_atlas"};
+    GlUniform<int> font_offsets{prog, "u_font_offsets"};
+    GlUniform<Eigen::Array3f> color{prog, "u_color"};
 
-    GlUniform<int> font_bitmap_type = {"u_font_bitmap_type"};
-    GlUniform<Eigen::Array2f> max_sdf_dist_uv = {"u_max_sdf_dist_uv"};
+    GlUniform<int> font_bitmap_type{prog, "u_font_bitmap_type"};
+    GlUniform<Eigen::Array2f> max_sdf_dist_uv{prog, "u_max_sdf_dist_uv"};
 
-    GlUniform<Eigen::Matrix4f> clip_from_pix = {"u_clip_from_fontpix"};
+    GlUniform<Eigen::Matrix4f> clip_from_pix{prog, "u_clip_from_fontpix"};
 
     pangolin::GlBuffer vbo_pos;
     pangolin::GlBuffer vbo_index;

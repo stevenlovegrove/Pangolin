@@ -153,16 +153,17 @@ struct GlDrawnText : public DrawnText {
     return sophus::Region3F64::empty();
   }
 
-  const Shared<GlSlProgram> prog = GlSlProgram::Create(
+  Shared<GlSlProgram> prog = GlSlProgram::Create(
       {.sources = {
            {.origin = "/components/pango_opengl/shaders/main_text.glsl"}}});
-  GlUniform<int> u_font_atlas = {"u_font_atlas"};
-  GlUniform<int> u_font_offsets = {"u_font_offsets"};
-  GlUniform<Eigen::Array3f> u_color = {"u_color"};
+  GlUniform<int> u_font_atlas = {prog, "u_font_atlas"};
+  GlUniform<int> u_font_offsets = {prog, "u_font_offsets"};
+  GlUniform<Eigen::Array3f> u_color = {prog, "u_color"};
 
-  GlUniform<int> u_font_bitmap_type = {"u_font_bitmap_type"};
-  GlUniform<Eigen::Array2f> u_max_sdf_dist_uv = {"u_max_sdf_dist_uv"};
-  GlUniform<Eigen::Matrix4f> u_clip_from_fontpix = {"u_clip_from_fontpix"};
+  GlUniform<int> u_font_bitmap_type = {prog, "u_font_bitmap_type"};
+  GlUniform<Eigen::Array2f> u_max_sdf_dist_uv = {prog, "u_max_sdf_dist_uv"};
+  GlUniform<Eigen::Matrix4f> u_clip_from_fontpix = {
+      prog, "u_clip_from_fontpix"};
 
   std::shared_ptr<GlFont> font;
   GlTexture font_offsets;

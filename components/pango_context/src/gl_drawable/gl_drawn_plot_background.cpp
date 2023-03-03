@@ -70,22 +70,22 @@ struct GlDrawnPlotBackground : public DrawnPlotBackground {
   }
 
   private:
-  const Shared<GlSlProgram> prog = GlSlProgram::Create(
+  Shared<GlSlProgram> prog = GlSlProgram::Create(
       {.sources = {
            {.origin = "/components/pango_opengl/shaders/"
                       "main_plot_background.glsl"}}});
   GlVertexArrayObject vao = {};
-  const GlUniform<Eigen::Matrix4f> u_graph_from_clip = {"graph_from_clip"};
-  const GlUniform<Eigen::Vector4f> u_color_background = {"color_background"};
-  const GlUniform<Eigen::Vector4f> u_tick_color_scale = {"tick_color_scale"};
-  const GlUniform<Eigen::Vector2f> u_graph_units_per_pixel = {
-      "graph_units_per_pixel"};
-  const GlUniform<Eigen::Vector2f> u_log_s_min_dist = {"log_s_min_dist"};
-  const GlUniform<Eigen::Vector2f> u_log_s_of_octave_start = {
-      "log_s_of_octave_start"};
-  const GlUniform<Eigen::Vector2f> u_octave_start = {"octave_start"};
+  GlUniform<Eigen::Matrix4f> u_graph_from_clip = {prog, "graph_from_clip"};
+  GlUniform<Eigen::Vector4f> u_color_background = {prog, "color_background"};
+  GlUniform<Eigen::Vector4f> u_tick_color_scale = {prog, "tick_color_scale"};
+  GlUniform<Eigen::Vector2f> u_graph_units_per_pixel = {
+      prog, "graph_units_per_pixel"};
+  GlUniform<Eigen::Vector2f> u_log_s_min_dist = {prog, "log_s_min_dist"};
+  GlUniform<Eigen::Vector2f> u_log_s_of_octave_start = {
+      prog, "log_s_of_octave_start"};
+  GlUniform<Eigen::Vector2f> u_octave_start = {prog, "octave_start"};
 
-  const GlUniform<float> u_num_divisions = {"num_divisions"};
+  GlUniform<float> u_num_divisions = {prog, "num_divisions"};
 };
 
 Shared<DrawnPlotBackground> DrawnPlotBackground::Create(

@@ -59,16 +59,16 @@ struct GlDrawnImage : public DrawnImage {
   }
 
   private:
-  const Shared<GlSlProgram> prog = GlSlProgram::Create(
+  Shared<GlSlProgram> prog = GlSlProgram::Create(
       {.sources = {
            {.origin = "/components/pango_opengl/shaders/main_image.glsl"}}});
   GlVertexArrayObject vao = {};
-  const GlUniform<int> texture_unit = {"image"};
-  const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
-  const GlUniform<Eigen::Matrix4f> u_cam_from_drawable = {"cam_from_world"};
-  const GlUniform<Eigen::Vector2f> u_image_size = {"image_size"};
-  const GlUniform<Eigen::Matrix4f> u_color_transform = {"color_transform"};
-  const GlUniform<Palette> u_colormap_index = {"colormap_index"};
+  GlUniform<int> texture_unit = {prog, "image"};
+  GlUniform<Eigen::Matrix4f> u_intrinsics = {prog, "proj"};
+  GlUniform<Eigen::Matrix4f> u_cam_from_drawable = {prog, "cam_from_world"};
+  GlUniform<Eigen::Vector2f> u_image_size = {prog, "image_size"};
+  GlUniform<Eigen::Matrix4f> u_color_transform = {prog, "color_transform"};
+  GlUniform<Palette> u_colormap_index = {prog, "colormap_index"};
 };
 
 Shared<DrawnImage> DrawnImage::Create(DrawnImage::Params p)
