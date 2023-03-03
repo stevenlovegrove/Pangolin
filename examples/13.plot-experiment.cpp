@@ -1,7 +1,7 @@
 #include <pangolin/color/color.h>
 #include <pangolin/context/context.h>
-#include <pangolin/layer/all_layers.h>
 #include <pangolin/drawable/drawn_plot_background.h>
+#include <pangolin/layer/all_layers.h>
 
 using namespace pangolin;
 
@@ -42,7 +42,7 @@ int main(int /*argc*/, char** /*argv*/)
 {
   // Make some data
   for (double x = 0; x < 1000.0; x += 0.2) {
-    float y = std::sin(x/10.0);
+    float y = std::sin(x / 10.0);
     plot_data.emplace_back(x / 10.0, y);
   }
 
@@ -53,7 +53,9 @@ int main(int /*argc*/, char** /*argv*/)
 
   // Create a drawable with line series
   auto graph_xy = DrawnPrimitives::Create(
-      {.element_type = DrawnPrimitives::Type::path, .default_size = 2, .size_in_pixels=true});
+      {.element_type = DrawnPrimitives::Type::path,
+       .default_size = 2,
+       .size_in_pixels = true});
   graph_xy->vertices->queueUpdate(plot_data);
 
   std::optional<Shared<Drawable>> maybe_markers;
@@ -74,6 +76,8 @@ int main(int /*argc*/, char** /*argv*/)
             .constrain_image_zoom_bounds = false}),
        .camera = plot_camera(Eigen::AlignedBox2d{
            Eigen::Vector2d(-0.1, -1.1), Eigen::Vector2d(11.0, 1.1)}),
+       .camera_from_world = cameraLookatFromWorld(
+           {0.0, 0.0, 0.0}, {0.0, 0.0, 1.0}, AxisDirection::negative_y),
        .in_scene = {bg, graph_xy}});
 
   if (maybe_markers) {

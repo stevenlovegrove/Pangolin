@@ -2,6 +2,7 @@
 
 #include <pangolin/context/depth_sampler.h>
 #include <pangolin/layer/interactive.h>
+#include <pangolin/render/conventions.h>
 #include <sigslot/signal.hpp>
 #include <sophus/sensor/camera_model.h>
 
@@ -40,7 +41,8 @@ struct DrawLayerHandler {
 
   struct Params {
     Shared<DepthSampler> depth_sampler = DepthSampler::Create({});
-    Eigen::Vector3d up_in_world = {0.0, 0.0, 1.0};
+    Eigen::Vector3d up_in_world =
+        axisDirection<double, 3>(Conventions::global().up_direction_world);
     sophus::Region3F64 camera_limits_in_world = sophus::Region3F64::empty();
     ViewMode view_mode = ViewMode::best_guess;
     bool constrain_image_zoom_bounds = true;
