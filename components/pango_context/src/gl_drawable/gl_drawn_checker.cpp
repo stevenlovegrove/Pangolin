@@ -33,14 +33,14 @@ struct GlDrawnChecker : public DrawnChecker {
   }
 
   private:
-  const Shared<GlSlProgram> prog = GlSlProgram::Create(
+  Shared<GlSlProgram> prog = GlSlProgram::Create(
       {.sources = {
            {.origin = "/components/pango_opengl/shaders/main_checker.glsl"}}});
   GlVertexArrayObject vao = {};
-  const GlUniform<Eigen::Vector2f> u_viewport_size = {"viewport_size"};
-  const GlUniform<Eigen::Vector4f> u_color1 = {"color1"};
-  const GlUniform<Eigen::Vector4f> u_color2 = {"color2"};
-  const GlUniform<int> u_checksize = {"checksize"};
+  GlUniform<Eigen::Vector2f> u_viewport_size = {prog, "viewport_size"};
+  GlUniform<Eigen::Vector4f> u_color1 = {prog, "color1"};
+  GlUniform<Eigen::Vector4f> u_color2 = {prog, "color2"};
+  GlUniform<int> u_checksize = {prog, "checksize"};
 };
 
 Shared<DrawnChecker> DrawnChecker::Create(DrawnChecker::Params p)

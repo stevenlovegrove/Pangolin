@@ -1,6 +1,7 @@
 #include <pangolin/context/context.h>
 #include <pangolin/gl/gl_vao.h>
 #include <pangolin/gl/glsl_program.h>
+#include <pangolin/gl/uniform.h>
 #include <pangolin/layer/all_layers.h>
 #include <pangolin/video/video.h>
 
@@ -30,9 +31,9 @@ struct ExampleCustomLayer : public Layer {
   }
 
   GlVertexArrayObject vao = {};
-  const Shared<GlSlProgram> prog =
+  Shared<GlSlProgram> prog =
       GlSlProgram::Create({.sources = {{.glsl_code = eg_shader}}});
-  GlUniform<float> u_time = {"time"};
+  GlUniform<float> u_time = {prog, "time"};
   Size size_ = {Parts{1}, Parts{1}};
 };
 

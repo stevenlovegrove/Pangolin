@@ -2,7 +2,6 @@
 #include <Eigen/Core>
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/glsl_preprocessor.h>
-#include <pangolin/gl/uniform.h>
 #include <pangolin/utils/string.h>
 
 #include <algorithm>
@@ -83,26 +82,9 @@ bool checkCompileSuccess(GLhandleARB shader, const GlSlProgram::Source& source)
 // Implementation of GlSlProgram
 
 struct GlSlProgramImpl : public GlSlProgram {
-  GlSlProgramImpl(GlSlProgram::Params p) :
-      prog_(0),
-      program_defines_(p.program_defines),
-      search_path_(p.search_path),
-      auto_reload(p.automatically_reload)
-  {
-    // Perform any code transformations we have
-    sources_ = processSources(p.sources);
+  GlSlProgramImpl(const GlSlProgram::Params& p) { reload(p); }
 
-    if (sources_.size() == 0) {
-      PANGO_WARN("No concrete shader types found");
-    }
-
-    // Actually try to compile
-    if (p.link_immediately) {
-      initialize();
-    }
-  }
-
-  bool initialize()
+  bool reinitialize()
   {
     if (!prog_) {
       // program object
@@ -110,6 +92,13 @@ struct GlSlProgramImpl : public GlSlProgram {
       PANGO_ENSURE(prog_ > 0);
     } else {
       clearShaders();
+    }
+
+    // Perform any code transformations we have
+    sources_ = processSources(source_inputs_);
+
+    if (sources_.size() == 0) {
+      PANGO_WARN("No concrete shader types found");
     }
 
     // compile shaders
@@ -133,6 +122,13 @@ struct GlSlProgramImpl : public GlSlProgram {
     // link
     glLinkProgram(prog_);
     return checkLinkSuccess(prog_);
+  }
+
+  void ensureLinked()
+  {
+    if (!prog_) {
+      reinitialize();
+    }
   }
 
   // Transform sources with preprocessor.
@@ -185,7 +181,10 @@ struct GlSlProgramImpl : public GlSlProgram {
   void clearProgram()
   {
     clearShaders();
-    if (prog_) glDeleteProgram(prog_);
+    if (prog_) {
+      glDeleteProgram(prog_);
+      prog_ = 0;
+    }
   }
 
   void clearShaders()
@@ -195,16 +194,24 @@ struct GlSlProgramImpl : public GlSlProgram {
       PANGO_GL(glDeleteShader(s));
     }
     shaders_.clear();
+
+    // notify any connected objects.
+    signal_event_(Event::program_unlinked);
   }
 
-  ScopedBind<GlSlProgram> bind() const override
+  sigslot::signal<Event>& signalEvent() override { return signal_event_; }
+
+  ScopedBind<GlSlProgram> bind() override
   {
+    ensureLinked();
     const GLenum prog = prog_;
     return {[prog]() { glUseProgram(prog); }, []() { glUseProgram(0); }};
   }
 
-  Attributes getAttributes() const override
+  Attributes getAttributes() override
   {
+    ensureLinked();
+
     GLint count = 0;
     PANGO_GL(glGetProgramiv(prog_, GL_ACTIVE_ATTRIBUTES, &count));
 
@@ -237,8 +244,10 @@ struct GlSlProgramImpl : public GlSlProgram {
     return ret;
   }
 
-  Uniforms getUniforms() const override
+  Uniforms getUniforms() override
   {
+    ensureLinked();
+
     GLint count = 0;
     PANGO_GL(glGetProgramiv(prog_, GL_ACTIVE_UNIFORMS, &count));
 
@@ -271,17 +280,35 @@ struct GlSlProgramImpl : public GlSlProgram {
     return ret;
   }
 
-  void reload() override { initialize(); }
+  void reload() override
+  {
+    clearProgram();
+    if (link_immediately_) {
+      reinitialize();
+    }
+  }
+
+  void reload(const Params& p) override
+  {
+    prog_ = 0;
+    program_defines_ = p.program_defines;
+    search_path_ = p.search_path;
+    source_inputs_ = p.sources;
+    link_immediately_ = p.link_immediately;
+    reload();
+  }
 
   GLenum prog_ = 0;
   std::vector<GLhandleARB> shaders_;
   Defines program_defines_ = {};
   PathList search_path_ = {};
+  bool link_immediately_ = false;
+  std::vector<Source> source_inputs_;
   std::vector<Source> sources_;
-  bool auto_reload = false;
+  sigslot::signal<Event> signal_event_;
 };
 
-Shared<GlSlProgram> GlSlProgram::Create(GlSlProgram::Params p)
+Shared<GlSlProgram> GlSlProgram::Create(const GlSlProgram::Params& p)
 {
   return Shared<GlSlProgramImpl>::make(p);
 }

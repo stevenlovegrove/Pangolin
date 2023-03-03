@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pangolin/gl/glplatform.h>
+#include <pangolin/gl/glsl_program.h>
 #include <sophus/common/point_concepts.h>
 #include <sophus/common/point_methods.h>
 
@@ -139,14 +140,14 @@ template <typename T>
 class GlUniform
 {
   public:
-  GlUniform(const char* name) :
-      name_(name), current_value_(T{}), handle_(kHandleInvalid)
+  GlUniform(Shared<GlSlProgram> prog, const char* name) :
+      prog_(prog), name_(name), current_value_(T{}), handle_(kHandleInvalid)
   {
   }
 
-  GlUniform(const GlUniform&) = default;
+  void reset() const { handle_ = kHandleInvalid; }
 
-  void setValue(const T& new_value) const
+  void setValue(const T& new_value)
   {
     const bool needs_init = handle_ == kHandleInvalid;
 
@@ -163,6 +164,7 @@ class GlUniform
           "Name '{}' doesn't correspond to a used uniform (may have been "
           "optimized out).",
           name_);
+      subscribeToProgramEvents();
     }
 
     if (needs_init || sophus::anyTrue(new_value != current_value_)) {
@@ -173,14 +175,26 @@ class GlUniform
 
   const T& getValue() const { return current_value_; }
 
-  void operator=(const T& new_value) const { setValue(new_value); }
+  void operator=(const T& new_value) { setValue(new_value); }
 
   GLint handle() const { return handle_; }
 
   private:
+  void subscribeToProgramEvents()
+  {
+    prog_connection_ =
+        prog_->signalEvent().connect([this](const GlSlProgram::Event& event) {
+          if (event == GlSlProgram::Event::program_unlinked) {
+            reset();
+          }
+        });
+  }
+
   static constexpr int kHandleInvalid = -1;
 
+  Shared<GlSlProgram> prog_;
   std::string name_;
+  std::optional<sigslot::scoped_connection> prog_connection_;
   mutable T current_value_;
   mutable int handle_;
 };

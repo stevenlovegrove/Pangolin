@@ -27,9 +27,9 @@
 
 #pragma once
 
-#include <pangolin/gl/uniform.h>
 #include <pangolin/utils/scoped_bind.h>
 #include <pangolin/utils/shared.h>
+#include <sigslot/signal.hpp>
 
 #include <filesystem>
 #include <map>
@@ -74,22 +74,27 @@ struct GlSlProgram {
 
   virtual ~GlSlProgram() {}
 
-  virtual ScopedBind<GlSlProgram> bind() const = 0;
+  virtual ScopedBind<GlSlProgram> bind() = 0;
 
-  virtual Attributes getAttributes() const = 0;
+  virtual Attributes getAttributes() = 0;
 
-  virtual Uniforms getUniforms() const = 0;
+  virtual Uniforms getUniforms() = 0;
 
-  virtual void reload() = 0;
+  enum class Event { program_unlinked };
+  virtual sigslot::signal<Event>& signalEvent() = 0;
 
   struct Params {
     std::vector<Source> sources;
     Defines program_defines = {};
     PathList search_path = {};
-    bool link_immediately = true;
+    bool link_immediately = false;
     bool automatically_reload = true;
   };
-  static Shared<GlSlProgram> Create(Params p);
+  static Shared<GlSlProgram> Create(const Params& p);
+
+  virtual void reload() = 0;
+
+  virtual void reload(const Params& new_params) = 0;
 };
 
 }  // namespace pangolin

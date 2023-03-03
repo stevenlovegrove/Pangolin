@@ -54,8 +54,8 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
 
   void drawAxes(const ViewParams& params)
   {
-    if (!prog) {
-      prog = GlSlProgram::Create(
+    if (prog_kind != ProgramKind::axis) {
+      prog->reload(
           {.sources = {
                {.origin = "/components/pango_opengl/shaders/main_axes.glsl"}}});
     }
@@ -99,12 +99,12 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     colors->sync();
     shapes->sync();
 
-    if (!prog) {
+    if (prog_kind != ProgramKind::shapes) {
       GlSlProgram::Defines defines;
       defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
       defines["VERTEX_SHAPES"] = std::to_string(!shapes->empty());
 
-      prog = GlSlProgram::Create(
+      prog->reload(
           {.sources =
                {{.origin =
                      "/components/pango_opengl/shaders/main_shapes.glsl"}},
@@ -152,11 +152,11 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     vertices->sync();
     colors->sync();
 
-    if (!prog) {
+    if (prog_kind != ProgramKind::path) {
       GlSlProgram::Defines defines;
       defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
 
-      prog = GlSlProgram::Create(
+      prog->reload(
           {.sources =
                {{.origin = "/components/pango_opengl/shaders/"
                            "main_path.glsl"}},
@@ -218,7 +218,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     material_image->sync();
     geometry_texture->sync();
 
-    if (!prog) {
+    if (prog_kind != ProgramKind::primitives) {
       GlSlProgram::Defines defines;
       defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
       defines["VERTEX_NORMALS"] = std::to_string(!normals->empty());
@@ -226,7 +226,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       defines["USE_MATCAP"] = std::to_string(!material_image->empty());
       defines["USE_TEXTURE"] = std::to_string(!geometry_texture->empty());
 
-      prog = GlSlProgram::Create(
+      prog->reload(
           {.sources =
                {{.origin = "/components/pango_opengl/shaders/"
                            "main_primitives_points.glsl"}},
@@ -283,16 +283,18 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
   }
 
   private:
-  std::shared_ptr<GlSlProgram> prog;
+  enum class ProgramKind { none, axis, shapes, path, primitives };
+  ProgramKind prog_kind = ProgramKind::none;
+  Shared<GlSlProgram> prog = GlSlProgram::Create({});
 
   GlVertexArrayObject vao = {};
-  const GlUniform<Eigen::Matrix4f> u_intrinsics = {"proj"};
-  const GlUniform<Eigen::Matrix4f> u_cam_from_drawable = {"cam_from_world"};
-  const GlUniform<Eigen::Vector4f> u_color = {"color"};
-  const GlUniform<uint> u_shape = {"shape"};
-  const GlUniform<bool> u_mode = {"mode"};
-  const GlUniform<float> u_size = {"size"};
-  const GlUniform<Eigen::Vector2f> u_size_clip = {"size_clip"};
+  GlUniform<Eigen::Matrix4f> u_intrinsics = {prog, "proj"};
+  GlUniform<Eigen::Matrix4f> u_cam_from_drawable = {prog, "cam_from_world"};
+  GlUniform<Eigen::Vector4f> u_color = {prog, "color"};
+  GlUniform<uint> u_shape = {prog, "shape"};
+  GlUniform<bool> u_mode = {prog, "mode"};
+  GlUniform<float> u_size = {prog, "size"};
+  GlUniform<Eigen::Vector2f> u_size_clip = {prog, "size_clip"};
 };
 
 Shared<DrawnPrimitives> DrawnPrimitives::Create(DrawnPrimitives::Params p)

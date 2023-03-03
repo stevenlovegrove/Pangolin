@@ -1,5 +1,7 @@
+#include <fmt/color.h>
 #include <fmt/ranges.h>
 #include <pangolin/gl/glsl_preprocessor.h>
+#include <pangolin/utils/logging.h>
 #include <pangolin/utils/string.h>
 
 #include <fstream>
