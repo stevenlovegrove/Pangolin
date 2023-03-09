@@ -3,7 +3,7 @@
 #include <pangolin/layer/layer_group.h>
 #include <pangolin/utils/concept_utils.h>
 #include <pangolin/utils/variant_overload.h>
-#include <sophus/common/point_methods.h>
+#include <sophus/concepts/point.h>
 #include <sophus/image/dyn_image_types.h>
 
 namespace pangolin

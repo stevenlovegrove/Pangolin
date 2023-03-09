@@ -6,7 +6,7 @@
 #include <pangolin/layer/layer_group.h>
 #include <pangolin/render/camera_look_at.h>
 #include <sophus/lie/se3.h>
-#include <sophus/lie/sim2.h>
+#include <sophus/lie/similarity2.h>
 #include <sophus/sensor/camera_model.h>
 
 #include <variant>
@@ -28,7 +28,7 @@ enum AspectPolicy {
 struct DrawLayerRenderState {
   sophus::CameraModel camera;
   sophus::SE3d camera_from_world;
-  sophus::Sim2<double> clip_view_transform;
+  sophus::Similarity2<double> clip_view_transform;
   sophus::RegionF64 near_far = sophus::RegionF64::empty();
 
   AspectPolicy aspect_policy;
@@ -46,8 +46,8 @@ struct DrawLayer : public Layer {
   virtual const DrawLayerRenderState& renderState() const = 0;
   virtual void linkRenderState(const std::shared_ptr<DrawLayer>& layer) = 0;
   virtual void setCamera(const sophus::CameraModel&) = 0;
-  virtual void setCameraFromWorld(const sophus::Se3<double>&) = 0;
-  virtual void setClipViewTransform(sophus::Sim2<double>&) = 0;
+  virtual void setCameraFromWorld(const sophus::Isometry3<double>&) = 0;
+  virtual void setClipViewTransform(sophus::Similarity2<double>&) = 0;
   virtual void setNearFarPlanes(const sophus::RegionF64&) = 0;
   virtual void add(
       const Shared<Drawable>& r, In domain, const std::string& name = "") = 0;
@@ -81,7 +81,7 @@ struct DrawLayer : public Layer {
   }
 
   template <typename T>
-  auto addInSceneAt(const T& t, const sophus::Se3F64& world_from_drawable)
+  auto addInSceneAt(const T& t, const sophus::Isometry3F64& world_from_drawable)
   {
     auto d = DrawableConversionTraits<T>::makeDrawable(t);
     d->pose.parent_from_drawable = world_from_drawable;
@@ -92,7 +92,7 @@ struct DrawLayer : public Layer {
   template <typename T>
   auto addNamedInSceneAt(
       const std::string& name, const T& r,
-      const sophus::Se3F64& world_from_drawable)
+      const sophus::Isometry3F64& world_from_drawable)
   {
     auto d = DrawableConversionTraits<T>::makeDrawable(r);
     d->pose.parent_from_drawable = world_from_drawable;
@@ -129,7 +129,7 @@ struct DrawLayer : public Layer {
     Shared<DrawLayerHandler> handler = DrawLayerHandler::Create({});
 
     std::optional<sophus::CameraModel> camera = std::nullopt;
-    std::optional<sophus::Se3F64> camera_from_world = std::nullopt;
+    std::optional<sophus::Isometry3F64> camera_from_world = std::nullopt;
     sophus::RegionF64 near_far = {1e-3, 1e6};
 
     // Objects to draw through modelview transform

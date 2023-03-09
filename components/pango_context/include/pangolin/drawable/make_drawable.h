@@ -43,7 +43,7 @@ struct Axes {
       float line_width = 1.5f)
   {
     Axes axes{.scale = scale, .line_width = line_width};
-    for (auto drawable_from_axis : axes.drawable_from_axis_poses) {
+    for (auto drawable_from_axis : entity_poses_axis_d) {
       axes.drawable_from_axis_poses.push_back(drawable_from_axis.cast<float>());
     }
     return axes;
@@ -162,8 +162,8 @@ struct DrawableConversionTraits<draw::Axes> {
 // draw::Axes convenient methods
 
 template <>
-struct DrawableConversionTraits<sophus::Se3F32> {
-  static Shared<Drawable> makeDrawable(const sophus::Se3F32& x)
+struct DrawableConversionTraits<sophus::Isometry3F32> {
+  static Shared<Drawable> makeDrawable(const sophus::Isometry3F32& x)
   {
     draw::Axes axes;
     axes.drawable_from_axis_poses.push_back(x);
@@ -172,8 +172,8 @@ struct DrawableConversionTraits<sophus::Se3F32> {
 };
 
 template <typename T>
-struct DrawableConversionTraits<sophus::Se3<T>> {
-  static Shared<Drawable> makeDrawable(const sophus::Se3<T>& x)
+struct DrawableConversionTraits<sophus::Isometry3<T>> {
+  static Shared<Drawable> makeDrawable(const sophus::Isometry3<T>& x)
   {
     return makeDrawable(x.template cast<float>());
   }

@@ -68,12 +68,13 @@ struct DrawLayerImpl : public DrawLayer {
     render_state_->camera = camera;
   }
 
-  void setCameraFromWorld(const sophus::Se3F64& cam_from_world) override
+  void setCameraFromWorld(const sophus::Isometry3F64& cam_from_world) override
   {
     render_state_->camera_from_world = cam_from_world;
   }
 
-  void setClipViewTransform(sophus::Sim2<double>& clip_view_transform) override
+  void setClipViewTransform(
+      sophus::Similarity2<double>& clip_view_transform) override
   {
     render_state_->clip_view_transform = clip_view_transform;
   }
@@ -147,7 +148,7 @@ struct DrawLayerImpl : public DrawLayer {
     Shared<DeviceTexture> unproject_map = DeviceTexture::Create({});
   };
 
-  static Eigen::Matrix4d sim2To4x4(Sim2<double> sim2)
+  static Eigen::Matrix4d sim2To4x4(Similarity2<double> sim2)
   {
     const Eigen::Matrix3d m3 = sim2.matrix();
     Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();

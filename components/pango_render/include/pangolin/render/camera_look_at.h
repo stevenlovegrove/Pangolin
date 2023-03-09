@@ -19,7 +19,7 @@ namespace pangolin
 // In these cases, method respects conditions that are possible
 // and chooses arbitrarily from underspecified dimensions.
 template <typename TScalar = double>
-sophus::Se3<TScalar> worldLookatFromCamera(
+sophus::Isometry3<TScalar> worldLookatFromCamera(
     const Eigen::Vector3<TScalar>& camera_center_in_world,
     const Eigen::Vector3<TScalar>& interest_point_in_world,
     const Eigen::Vector3<TScalar>& updir_world,
@@ -62,13 +62,14 @@ sophus::Se3<TScalar> worldLookatFromCamera(
   }
 
   // Compose rotation and translation
-  return sophus::Se3<TScalar>(
-      sophus::So3<TScalar>::fitToSo3(world_Rmat_cam), camera_center_in_world);
+  return sophus::Isometry3<TScalar>(
+      camera_center_in_world,
+      sophus::Rotation3<TScalar>::fitFromMatrix(world_Rmat_cam));
 }
 
 // Convenience version of above, using AxisDirection enum to specify Up vector
 template <typename TScalar = double>
-sophus::Se3<TScalar> worldLookatFromCamera(
+sophus::Isometry3<TScalar> worldLookatFromCamera(
     const Eigen::Vector3<TScalar>& camera_center_in_world,
     const Eigen::Vector3<TScalar>& interest_point_in_world,
     const AxisDirection updir_world = Conventions::global().up_direction_world,
@@ -81,7 +82,7 @@ sophus::Se3<TScalar> worldLookatFromCamera(
 
 // Convenience version of above, using AxisDirection enum to specify Up vector
 template <typename TScalar = double>
-sophus::Se3<TScalar> cameraLookatFromWorld(
+sophus::Isometry3<TScalar> cameraLookatFromWorld(
     const Eigen::Vector3<TScalar>& camera_center_in_world,
     const Eigen::Vector3<TScalar>& interest_point_in_world,
     const AxisDirection updir_world = Conventions::global().up_direction_world,

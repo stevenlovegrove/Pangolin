@@ -3,8 +3,9 @@
 #pragma once
 
 #include <pangolin/utils/logging.h>
+#include <sophus/common/common.h>
 #include <sophus/common/enum.h>
-#include <sophus/linalg/rotation_matrix.h>
+#include <sophus/linalg/orthogonal.h>
 
 namespace pangolin
 {

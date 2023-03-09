@@ -24,7 +24,7 @@ mat3 makeSo3(vec4 q)
       ));
 }
 
-// Assembles 4x4 Se3 from rotation and translation
+// Assembles 4x4 Isometry3 from rotation and translation
 mat4 makeSe3(mat3 b_R_a, vec3 a_in_b)
 {
   return mat4(

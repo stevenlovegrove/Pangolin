@@ -68,7 +68,7 @@ int main(int /*argc*/, char** /*argv*/)
                                       : DrawnPrimitives::Type::line_loop;
 
     primitives->pose.parent_from_drawable =
-        sophus::SE3d(sophus::SO3d::rotZ(angle_theta), Eigen::Vector3d::Zero());
+        sophus::SE3d::fromRz(angle_theta);
 
     // We return true to indicate that we should keep running
     return true;

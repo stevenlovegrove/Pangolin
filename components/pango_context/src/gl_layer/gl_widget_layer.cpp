@@ -9,7 +9,7 @@
 #include <pangolin/utils/string.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
-#include <sophus/common/point_methods.h>
+#include <sophus/concepts/point.h>
 
 #include <codecvt>
 #include <locale>

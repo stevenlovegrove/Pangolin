@@ -73,13 +73,13 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       auto bind_bo = vertices->bind();
       PANGO_ENSURE(
           vertices->dataType() &&
-          vertices->dataType()->is<sophus::Se3<float>>());
+          vertices->dataType()->is<sophus::Isometry3F32>());
       // xyzw quaternion
       PANGO_GL(
-          glVertexAttribPointer(0, 4, GL_FLOAT, false, 8 * sizeof(float), 0));
+          glVertexAttribPointer(0, 4, GL_FLOAT, false, 7 * sizeof(float), 0));
       // translation + uninitialized padding
       PANGO_GL(glVertexAttribPointer(
-          1, 4, GL_FLOAT, false, 8 * sizeof(float),
+          1, 3, GL_FLOAT, false, 7 * sizeof(float),
           (uint8_t*)(4 * sizeof(float))));
       PANGO_GL(glEnableVertexAttribArray(0));
       PANGO_GL(glEnableVertexAttribArray(1));

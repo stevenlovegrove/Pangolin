@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <sophus/common/point_concepts.h>
+#include <sophus/concepts/point.h>
 
 namespace pangolin
 {
@@ -10,7 +10,8 @@ template <typename TT>
 concept FloatingPointType = std::is_floating_point_v<TT>;
 
 template <typename TT>
-concept EigenOrFloatType = sophus::EigenType<TT> || FloatingPointType<TT>;
+concept EigenOrFloatType =
+    sophus::concepts::EigenType<TT> || FloatingPointType<TT>;
 
 template <typename Ts>
 struct DimTraits;
@@ -21,7 +22,7 @@ struct DimTraits<TT> {
   constexpr static int kNumCols = 1;
 };
 
-template <sophus::EigenType TT>
+template <sophus::concepts::EigenType TT>
 struct DimTraits<TT> {
   constexpr static int kNumRows = TT::RowsAtCompileTime;
   constexpr static int kNumCols = TT::ColsAtCompileTime;

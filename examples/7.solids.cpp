@@ -16,7 +16,7 @@ inline void translate(
     int steps)
 {
   PANGO_ENSURE(T_world_obj.size() > 0);
-  const SE3f T_last_new(SO3f(), dir_last / float(steps));
+  const SE3f T_last_new(dir_last / float(steps));
 
   for (int i = 0; i < steps; ++i) {
     const auto& T_world_last = T_world_obj.back();
@@ -29,7 +29,7 @@ inline void rotate(
     int steps)
 {
   PANGO_ENSURE(T_world_obj.size() > 0);
-  const SE3f T_last_new(SO3f::exp(axis_angle / steps), Eigen::Vector3f::Zero());
+  const SE3f T_last_new(Rotation3F32::exp(axis_angle / steps));
 
   for (int i = 0; i < steps; ++i) {
     const auto& T_world_last = T_world_obj.back();
@@ -56,7 +56,6 @@ int main(int argc, char** argv)
     }
   });
 
-  static_assert(sizeof(sophus::SE3f) == 32);
   std::vector<sophus::SE3f> parent_from_axis_poses;
   parent_from_axis_poses.emplace_back();
   // up 1m
@@ -70,13 +69,12 @@ int main(int argc, char** argv)
 
   // Spiral
   for (int i = 0; i < 100; ++i) {
-    const sophus::SE3f delta(
-        sophus::SO3f::rotX(0.1) * sophus::SO3f::rotY(0.05),
-        Eigen::Vector3f(0.1, 0.2f, 0.0f));
+    const sophus::SE3f delta(Eigen::Vector3f(0.1, 0.2f, 0.0f),
+        sophus::Rotation3F32::fromRx(0.1) * sophus::Rotation3F32::fromRy(0.05));
     parent_from_axis_poses.push_back(parent_from_axis_poses.back() * delta);
   }
 
-  sophus::SE3d scene_from_parent = sophus::Se3F64::transZ(0.2);
+  sophus::SE3d scene_from_parent = sophus::Isometry3F64::fromTz(0.2);
   scene->addInScene(checker_plane);
   scene->addInSceneAt(
       draw::Axes{.drawable_from_axis_poses = parent_from_axis_poses},

@@ -35,13 +35,13 @@ int main(int argc, char** argv)
   });
 
   Var<std::function<void(void)>> ui_add_axis("ui.add_axis", [&]() {
-    scene->addNamedInScene(unique_name, sophus::SE3f::transX(1));
+    scene->addNamedInScene(unique_name, sophus::SE3f::fromTx(1));
   });
 
   Var<std::function<void(void)>> ui_add_cube("ui.add_cube", [&]() {
     scene->addNamedInSceneAt(
         unique_name, pangolin::draw::Cube{},
-        sophus::SE3d::trans(5.0, 0.0, 1.0));
+        sophus::SE3d::fromT(5.0, 0.0, 1.0));
   });
 
   Var<std::function<void(void)>> ui_add_camera("ui.add_camera", [&]() {
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
         pangolin::draw::CameraFrustum{
             .camera = sophus::CameraModel::createDefaultPinholeModel(
                 sophus::ImageSize(640, 480))},
-        sophus::SE3d::trans(5.0, 0.0, 1.0));
+        sophus::SE3d::fromT(5.0, 0.0, 1.0));
   });
 
   scene->addNamedInScene(unique_name, draw::CheckerPlane{});

@@ -2,8 +2,7 @@
 
 #include <pangolin/gl/glplatform.h>
 #include <pangolin/gl/glsl_program.h>
-#include <sophus/common/point_concepts.h>
-#include <sophus/common/point_methods.h>
+#include <sophus/concepts/point.h>
 
 namespace pangolin
 {
@@ -115,21 +114,21 @@ template <typename T>
 void glUniformImpl(GLint location, const T& val);
 
 template <class T, size_t R, size_t C>
-requires(sophus::EigenWithDim<R, C, T>) void glUniformImpl(
+requires(sophus::concepts::EigenWithDim<R, C, T>) void glUniformImpl(
     GLint location, const T& mat)
 {
   glUniformArray<typename T::Scalar, R, C>(location, mat.data());
 }
 }  // namespace detail
 
-template <sophus::EigenDenseType T>
+template <sophus::concepts::EigenDenseType T>
 void glUniform(GLint location, const T& val)
 {
   detail::glUniformImpl<T, T::RowsAtCompileTime, T::ColsAtCompileTime>(
       location, val);
 }
 
-template <sophus::EnumType T>
+template <sophus::concepts::EnumType T>
 void glUniform(GLint location, T val)
 {
   using U = std::underlying_type_t<T>;

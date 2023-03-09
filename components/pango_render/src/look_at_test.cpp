@@ -16,9 +16,9 @@ void testForParams(
     const Vector3<T>& lookat_in_world, const Vector3<T>& camera_in_world,
     const Vector3<T>& up_in_world, DeviceXyz convention)
 {
-  const Se3<T> world_pose_cam = worldLookatFromCamera(
+  const Isometry3<T> world_pose_cam = worldLookatFromCamera(
       camera_in_world, lookat_in_world, up_in_world, convention);
-  const Se3<T> cam_pose_world = world_pose_cam.inverse();
+  const Isometry3<T> cam_pose_world = world_pose_cam.inverse();
   const Vector3<T> lookat_in_cam = cam_pose_world * lookat_in_world;
 
   // defines (in the rows) the directions we expect for right, down and forward
@@ -41,7 +41,7 @@ void simpleTest()
   const Vector3<double> lookat_in_world(0.0, 0.0, 1.0);
   const Vector3<double> camera_in_world(0.0, 0.0, 0.0);
   const Vector3<double> up_in_world(0.0, -1.0, 0.0);
-  const Se3F64 world_pose_cam = worldLookatFromCamera(
+  const Isometry3F64 world_pose_cam = worldLookatFromCamera(
       camera_in_world, lookat_in_world, up_in_world,
       DeviceXyz::right_down_forward);
 

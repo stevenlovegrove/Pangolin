@@ -1,6 +1,6 @@
 #include <pangolin/render/projection.h>
 #include <pangolin/utils/logging.h>
-#include <sophus/common/point_methods.h>
+#include <sophus/concepts/point.h>
 
 namespace pangolin
 {

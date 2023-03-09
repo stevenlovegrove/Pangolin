@@ -3,13 +3,13 @@
 #include "lie_groups.glsl.h"
 
 layout(location = 0) in vec4 a_quat_world_from_axes;
-layout(location = 1) in vec4 a_axes_in_world; // .w is junk padding
+layout(location = 1) in vec3 a_axes_in_world; 
 uniform mat4 cam_from_world;
 out mat4 cam_T_axes;
 
 void main() {
     cam_T_axes = cam_from_world *
-        makeSe3(a_quat_world_from_axes, a_axes_in_world.xyz);
+        makeSe3(a_quat_world_from_axes, a_axes_in_world);
 }
 
 @start geometry

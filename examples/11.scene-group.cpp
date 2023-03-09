@@ -33,7 +33,7 @@ int main(int argc, char** argv)
       makeDrawable(draw::Shape{.type = DrawnPrimitives::Shape::hollow_box});
 
   // Set the position of the star within its group
-  star->pose.parent_from_drawable = sophus::SE3d::trans(1.0, 0.0, 1.0);
+  star->pose.parent_from_drawable = sophus::SE3d::fromT(1.0, 0.0, 1.0);
 
   auto scene = DrawLayer::Create(
       {.camera_from_world = cameraLookatFromWorld(
@@ -45,13 +45,13 @@ int main(int argc, char** argv)
       DrawnGroup::Create({
           .children = {axis, star, square},
       }),
-      sophus::SE3d::trans(5.0, 0.0, 1.0));
+      sophus::SE3d::fromT(5.0, 0.0, 1.0));
 
   auto group2 = scene->addInSceneAt(
       DrawnGroup::Create({
           .children = {axis, heart},
       }),
-      sophus::SE3d::trans(4.0, 1.0, 1.0));
+      sophus::SE3d::fromT(4.0, 1.0, 1.0));
 
   context->setLayout(widget_layer | scene);
 
