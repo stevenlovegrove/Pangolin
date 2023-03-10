@@ -184,15 +184,15 @@ void imagePointToPoint(MouseUpdateArgs& info)
 
 void clampClipViewTransform(sophus::Similarity2<double>& clip_view_transform)
 {
-  const double scale = clip_view_transform.scale();
   // Scale 1.0 means we're at min size (occupies entire viewport), so min/max
   // translation would be +-0. Scale 2.0 means we're zoomed in my 2. We can move
   // half the viewport in each direction which corresponds to min/max of 1 in
   // clip space. Scale 4.0 means min/max would be 3
-  clip_view_transform.translation().x() = std::clamp(
-      clip_view_transform.translation().x(), -(scale - 1.0), +(scale - 1.0));
-  clip_view_transform.translation().y() = std::clamp(
-      clip_view_transform.translation().y(), -(scale - 1.0), +(scale - 1.0));
+  const double scale = clip_view_transform.scale();
+  const Eigen::Vector2d max_trans = {scale - 1.0, scale - 1.0};
+  clip_view_transform.translation() =
+      clip_view_transform.translation().cwiseMin(max_trans).cwiseMax(
+          -max_trans);
 }
 
 void imageZoom(
