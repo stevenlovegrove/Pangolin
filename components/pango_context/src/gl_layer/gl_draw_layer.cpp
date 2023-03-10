@@ -118,6 +118,7 @@ struct DrawLayerImpl : public DrawLayer {
     for (const auto& obj : pixels_collection_.drawables) {
       pixel_bounds.extend(obj->boundsInParent());
     }
+    if (pixel_bounds.isEmpty()) return std::nullopt;
     const Eigen::Array2i dim = pixel_bounds.range().head<2>().cast<int>();
     if (0 < dim[0] && 0 < dim[1]) return dim;
     return std::nullopt;

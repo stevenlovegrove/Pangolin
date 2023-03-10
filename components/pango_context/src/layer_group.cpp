@@ -183,6 +183,11 @@ void computeLayoutRegion(LayerGroup& group, const Region2I& region)
   const int total_handle_pix = handle_pix * (num_children - 1);
   const auto& constraints = PANGO_UNWRAP(group.constraints());
 
+  if (num_children == 0) {
+    // nothing to do.
+    return;
+  }
+
   switch (group.params().grouping) {
     case LayerGroup::Grouping::stacked:
       [[fallthrough]];
