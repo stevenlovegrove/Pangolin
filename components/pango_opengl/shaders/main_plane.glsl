@@ -28,8 +28,8 @@ out vec4 color;
 uniform mat4 camera_from_clip;
 uniform mat4 world_from_cam;
 uniform vec2 znear_zfar;
-uniform bool use_unproject_map;
-uniform sampler2D unproject_map;
+// uniform bool use_unproject_map;
+// uniform sampler2D unproject_map;
 
 vec4 color_sky = vec4(1.0,1.0,1.0,1.0);
 
@@ -54,12 +54,12 @@ vec4 material(vec4 albedo, vec4 depth_normal)
 }
 
 vec3 getCameraRayFromClip(vec2 clip_pos) {
-  if(use_unproject_map) {
-    vec2 uv = (v_clip_pos*vec2(1.0,-1.0) + vec2(1.0)) / 2.0;
-    return texture(unproject_map, uv).xyz;
-  }else{
+  // if(use_unproject_map) {
+  //   vec2 uv = (v_clip_pos*vec2(1.0,-1.0) + vec2(1.0)) / 2.0;
+  //   return texture(unproject_map, uv).xyz;
+  // }else{
     return normToOneZ(proj(camera_from_clip * vec4(v_clip_pos, -1.0, 1.0)));
-  }
+  // }
 }
 
 void main()

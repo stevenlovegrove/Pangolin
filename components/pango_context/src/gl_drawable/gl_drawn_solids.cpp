@@ -21,12 +21,12 @@ struct GlDrawnSolids : public DrawnSolids {
     u_znear_zfar =
         Eigen::Vector2f(params.near_far.min(), params.near_far.max());
 
-    std::optional<ScopedBind<DeviceTexture>> bind_unprojmap;
-    if (params.unproject_map && !params.unproject_map->empty()) {
-      PANGO_GL(glActiveTexture(GL_TEXTURE0));
-      bind_unprojmap = params.unproject_map->bind();
-      u_use_unproject_map = true;
-    }
+    // std::optional<ScopedBind<DeviceTexture>> bind_unprojmap;
+    // if (params.unproject_map && !params.unproject_map->empty()) {
+    //   PANGO_GL(glActiveTexture(GL_TEXTURE0));
+    //   bind_unprojmap = params.unproject_map->bind();
+    //   u_use_unproject_map = true;
+    // }
 
     PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
   }
@@ -44,7 +44,7 @@ struct GlDrawnSolids : public DrawnSolids {
   GlUniform<Eigen::Matrix4f> u_cam_from_clip{prog, "camera_from_clip"};
   GlUniform<Eigen::Matrix4f> u_world_from_drawable{prog, "world_from_cam"};
   GlUniform<Eigen::Vector2f> u_znear_zfar{prog, "znear_zfar"};
-  GlUniform<bool> u_use_unproject_map{prog, "use_unproject_map"};
+  // GlUniform<bool> u_use_unproject_map{prog, "use_unproject_map"};
 };
 
 Shared<DrawnSolids> DrawnSolids::Create(DrawnSolids::Params p)
