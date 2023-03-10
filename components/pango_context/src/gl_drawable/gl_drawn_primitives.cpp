@@ -55,6 +55,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
   void drawAxes(const ViewParams& params)
   {
     if (prog_kind != ProgramKind::axis) {
+      prog_kind = ProgramKind::axis;
       prog->reload(
           {.sources = {
                {.origin = "/components/pango_opengl/shaders/main_axes.glsl"}}});
@@ -100,6 +101,8 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     shapes->sync();
 
     if (prog_kind != ProgramKind::shapes) {
+      prog_kind = ProgramKind::shapes;
+
       GlSlProgram::Defines defines;
       defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
       defines["VERTEX_SHAPES"] = std::to_string(!shapes->empty());
@@ -153,6 +156,8 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     colors->sync();
 
     if (prog_kind != ProgramKind::path) {
+      prog_kind = ProgramKind::path;
+
       GlSlProgram::Defines defines;
       defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
 
@@ -219,6 +224,8 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     geometry_texture->sync();
 
     if (prog_kind != ProgramKind::primitives) {
+      prog_kind = ProgramKind::primitives;
+
       GlSlProgram::Defines defines;
       defines["VERTEX_COLORS"] = std::to_string(!colors->empty());
       defines["VERTEX_NORMALS"] = std::to_string(!normals->empty());
