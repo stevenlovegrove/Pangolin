@@ -124,11 +124,13 @@ struct GlSlProgramImpl : public GlSlProgram {
     return checkLinkSuccess(prog_);
   }
 
-  void ensureLinked()
+  bool ensureLinked()
   {
-    if (!prog_) {
-      reinitialize();
+    if (prog_) return true;
+    if (!link_failed_) {
+      link_failed_ = !reinitialize();
     }
+    return !link_failed_;
   }
 
   // Transform sources with preprocessor.
@@ -185,6 +187,7 @@ struct GlSlProgramImpl : public GlSlProgram {
       glDeleteProgram(prog_);
       prog_ = 0;
     }
+    link_failed_ = false;
   }
 
   void clearShaders()
@@ -203,14 +206,19 @@ struct GlSlProgramImpl : public GlSlProgram {
 
   ScopedBind<GlSlProgram> bind() override
   {
-    ensureLinked();
-    const GLenum prog = prog_;
-    return {[prog]() { glUseProgram(prog); }, []() { glUseProgram(0); }};
+    if (ensureLinked()) {
+      const GLenum prog = prog_;
+      return {[prog]() { glUseProgram(prog); }, []() { glUseProgram(0); }};
+    } else {
+      return {[]() {}, []() {}};
+    }
   }
 
   Attributes getAttributes() override
   {
-    ensureLinked();
+    if (!ensureLinked()) {
+      return Attributes();
+    }
 
     GLint count = 0;
     PANGO_GL(glGetProgramiv(prog_, GL_ACTIVE_ATTRIBUTES, &count));
@@ -246,7 +254,9 @@ struct GlSlProgramImpl : public GlSlProgram {
 
   Uniforms getUniforms() override
   {
-    ensureLinked();
+    if (!ensureLinked()) {
+      return Uniforms();
+    }
 
     GLint count = 0;
     PANGO_GL(glGetProgramiv(prog_, GL_ACTIVE_UNIFORMS, &count));
@@ -306,6 +316,7 @@ struct GlSlProgramImpl : public GlSlProgram {
   std::vector<Source> source_inputs_;
   std::vector<Source> sources_;
   sigslot::signal<Event> signal_event_;
+  bool link_failed_ = false;
 };
 
 Shared<GlSlProgram> GlSlProgram::Create(const GlSlProgram::Params& p)

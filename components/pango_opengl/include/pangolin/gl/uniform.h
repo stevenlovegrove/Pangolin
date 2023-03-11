@@ -148,22 +148,23 @@ class GlUniform
 
   void setValue(const T& new_value)
   {
+    if (handle_ == kHandleInvalidNoRetry) return;
+
     const bool needs_init = handle_ == kHandleInvalid;
 
     if (needs_init) {
+      subscribeToProgramEvents();
       GLint bound_prog_id = 0;
       PANGO_GL(glGetIntegerv(GL_CURRENT_PROGRAM, &bound_prog_id));
-      PANGO_CHECK(
-          bound_prog_id != 0,
-          "This method can only be called with the corresponding program "
-          "already bound.");
+      if (!bound_prog_id) {
+        PANGO_WARN("Unable to set uniform. No program bound.");
+        return;
+      }
       handle_ = glGetUniformLocation(bound_prog_id, name_.c_str());
-      PANGO_CHECK(
-          handle_ != -1,
-          "Name '{}' doesn't correspond to a used uniform (may have been "
-          "optimized out).",
-          name_);
-      subscribeToProgramEvents();
+      if (handle_ == kHandleInvalid) {
+        PANGO_WARN("No uniform '{}'. May have been optimized out.", name_);
+        handle_ = kHandleInvalidNoRetry;
+      }
     }
 
     if (needs_init || sophus::anyTrue(new_value != current_value_)) {
@@ -190,6 +191,7 @@ class GlUniform
   }
 
   static constexpr int kHandleInvalid = -1;
+  static constexpr int kHandleInvalidNoRetry = -2;
 
   Shared<GlSlProgram> prog_;
   std::string name_;
