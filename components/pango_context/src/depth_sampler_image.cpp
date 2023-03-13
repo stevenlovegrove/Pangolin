@@ -33,7 +33,9 @@ struct DepthSamplerImageImpl : public DepthSamplerImage {
         patch.visit([&](float real_z) {
           if (real_z > 0) sample.min_max.extend(real_z);
         });
-        return sample;
+        if (!sample.min_max.isEmpty()) {
+          return sample;
+        }
       }
     }
 
