@@ -160,7 +160,7 @@ std::optional<Directive> getDirective(const std::string& line)
       return Directive{.kind = Directive::Kind::expect, .tokens = tokens};
     } else if (
         dstr == "version" || dstr == "define" || dstr == "if" ||
-        dstr == "else" || dstr == "endif") {
+        dstr == "ifdef" || dstr == "else" || dstr == "endif") {
       // The GlSl compiler will use these - we can ignore them.
       return std::nullopt;
     } else {
