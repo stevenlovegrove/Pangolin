@@ -44,17 +44,21 @@ inline farm_ng::Expected<GlFormatInfo> glTypeInfo(
     const sophus::PixelFormat& pixel_type)
 {
   constexpr static GLint type_table[] = {
-      0,  // unspecified
       GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT, GL_FLOAT};
 
   // inner stride is GL_RED, GL_RG, GL_RGB, GL_RGBA
   // outer stride is format type
   constexpr static GLint format_table[][4] = {
-      {GL_RED, GL_RG, GL_RGB, GL_RGBA},                // base (untyped)
       {GL_R8, GL_RG8, GL_RGB8, GL_RGBA8},              // uint8_t
       {GL_R16, GL_RG16, GL_RGB16, GL_RGBA16},          // uint16_t
       {GL_R32UI, GL_RG32UI, GL_RGB32UI, GL_RGBA32UI},  // uint32_t
       {GL_R32F, GL_RG32F, GL_RGB32F, GL_RGBA32F},      // float (32bits)
+  };
+  constexpr static GLint base_table[][4] = {
+      {GL_RED, GL_RG, GL_RGB, GL_RGBA},
+      {GL_RED, GL_RG, GL_RGB, GL_RGBA},
+      {GL_RED_INTEGER, GL_RG_INTEGER, GL_RGB_INTEGER, GL_RGBA_INTEGER},
+      {GL_RED, GL_RG, GL_RGB, GL_RGBA},
   };
 
   // Make sure we'll be in bounds...
@@ -63,10 +67,10 @@ inline farm_ng::Expected<GlFormatInfo> glTypeInfo(
 
   if (between(pixel_type.num_channels, 1, 4) && isOneOf(nbytes, {1, 2, 4})) {
     const int cidx = pixel_type.num_channels - 1;
-    const int fidx = (nbytes == 4 && bfixed) ? 3 : nbytes;
+    const int fidx = (nbytes == 4 && bfixed) ? 2 : nbytes - 1;
     return GlFormatInfo(
         {.gl_sized_format = format_table[fidx][cidx],
-         .gl_base_format = format_table[0][cidx],
+         .gl_base_format = base_table[fidx][cidx],
          .gl_type = type_table[fidx]});
   }
 
