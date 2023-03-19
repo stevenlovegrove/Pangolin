@@ -151,7 +151,8 @@ struct DeviceGlBuffer : public DeviceBuffer {
 
       data_type_ = u.data.data_type;
       num_elements_ = needed_size;
-      num_elements_capacity_ = std::max(num_elements_capacity_, num_elements_);
+      num_elements_capacity_ =
+          std::max(num_elements_capacity_, needed_size * 2);
 
       const size_t capacity_bytes = num_elements_capacity_ * elementSizeBytes();
       PANGO_ENSURE(capacity_bytes);
@@ -161,12 +162,15 @@ struct DeviceGlBuffer : public DeviceBuffer {
 
       if (backup_id) {
         // restore previous data and delete old one
-        glBindBuffer(GL_COPY_READ_BUFFER, backup_id);
-        glBindBuffer(GL_COPY_WRITE_BUFFER, gl_id_);
-        glCopyBufferSubData(buffer_type_, buffer_type_, 0, 0, backup_size);
-        glDeleteBuffers(1, &backup_id);
-        glBindBuffer(GL_COPY_READ_BUFFER, 0);
-        glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+        PANGO_GL(glBindBuffer(GL_COPY_READ_BUFFER, backup_id));
+        PANGO_GL(glBindBuffer(GL_COPY_WRITE_BUFFER, gl_id_));
+        PANGO_GL(glCopyBufferSubData(
+            GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
+            backup_size * elementSizeBytes()));
+        PANGO_GL(glDeleteBuffers(1, &backup_id));
+        PANGO_GL(glBindBuffer(GL_COPY_READ_BUFFER, 0));
+        PANGO_GL(glBindBuffer(GL_COPY_WRITE_BUFFER, 0));
+        PANGO_GL(glBindBuffer(buffer_type_, gl_id_));
       }
     } else {
       PANGO_CHECK(needed_size <= num_elements_capacity_);
@@ -174,14 +178,14 @@ struct DeviceGlBuffer : public DeviceBuffer {
 
       // Grow if within capacity if needed.
       num_elements_ = std::max(num_elements_, needed_size);
-      glBindBuffer(buffer_type_, gl_id_);
+      PANGO_GL(glBindBuffer(buffer_type_, gl_id_));
     }
 
-    glBufferSubData(
+    PANGO_GL(glBufferSubData(
         buffer_type_, elementSizeBytes() * u.dest_element,
-        elementSizeBytes() * u.data.num_elements, u.data.data.get());
+        elementSizeBytes() * u.data.num_elements, u.data.data.get()));
 
-    glBindBuffer(buffer_type_, 0);
+    PANGO_GL(glBindBuffer(buffer_type_, 0));
   }
 
   size_t elementSizeBytes() const
