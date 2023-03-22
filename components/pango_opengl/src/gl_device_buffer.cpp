@@ -190,7 +190,7 @@ struct DeviceGlBuffer : public DeviceBuffer {
 
   size_t elementSizeBytes() const
   {
-    return data_type_ ? data_type_->bytesPerPixel() : 0;
+    return data_type_ ? data_type_->numBytesPerPixel() : 0;
   }
 
   GLenum buffer_type_ = 0;

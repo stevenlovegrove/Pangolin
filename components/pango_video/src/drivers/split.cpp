@@ -125,7 +125,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
             throw VideoException("split: empty ROI.");
           }
           const size_t start1 = roi.y * st1.layout().pitchBytes() +
-                                st1.format().bytesPerPixel() * roi.x;
+                                st1.format().numBytesPerPixel() * roi.x;
           streams.push_back(StreamInfo(
               st1.format(),
               sophus::ImageLayout(roi.w, roi.h, st1.layout().pitchBytes()),
@@ -167,16 +167,18 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
         }
 
         const size_t start1 = roi1.y * st1.layout().pitchBytes() +
-                              st1.format().bytesPerPixel() * roi1.x;
+                              st1.format().numBytesPerPixel() * roi1.x;
         const size_t start2 = roi2.y * st1.layout().pitchBytes() +
-                              st1.format().bytesPerPixel() * roi2.x;
+                              st1.format().numBytesPerPixel() * roi2.x;
         streams.push_back(StreamInfo(
             st1.format(),
-            sophus::ImageLayout(roi1.w, roi1.h, st1.layout().pitchBytes()),
+            sophus::ImageLayout(
+                sophus::ImageSize(roi1.w, roi1.h), st1.layout().pitchBytes()),
             start1));
         streams.push_back(StreamInfo(
             st1.format(),
-            sophus::ImageLayout(roi2.w, roi2.h, st1.layout().pitchBytes()),
+            sophus::ImageLayout(
+                sophus::ImageSize(roi2.w, roi2.h), st1.layout().pitchBytes()),
             start2));
       }
 

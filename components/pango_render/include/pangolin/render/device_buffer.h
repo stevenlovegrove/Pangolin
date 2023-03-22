@@ -34,7 +34,7 @@ struct DeviceBuffer {
   virtual void reserve(size_t) const = 0;
 
   // size of allocated buffer in bytes. Will be at least `capacity() *
-  // dataType().bytesPerPixel()`.
+  // dataType().numBytesPerPixel()`.
   virtual size_t sizeBytes() const = 0;
 
   // Queue upload of data into position `dest_element` of device buffer. The

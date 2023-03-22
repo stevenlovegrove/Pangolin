@@ -453,7 +453,7 @@ void TransformVideo::Process(uint8_t* buffer_out, const uint8_t* buffer_in)
     MutImageView<uint8_t> img_out = Streams()[s].StreamImage(buffer_out);
     const ImageView<uint8_t> img_in =
         videoin->Streams()[s].StreamImage(buffer_in);
-    const size_t bytes_per_pixel = Streams()[s].format().bytesPerPixel();
+    const size_t bytes_per_pixel = Streams()[s].format().numBytesPerPixel();
 
     switch (flips[s]) {
       case TransformOptions::FlipX:

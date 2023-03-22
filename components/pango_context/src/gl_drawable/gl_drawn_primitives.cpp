@@ -201,7 +201,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
 
       for (int i = 0; i < 4; ++i) {
         vao.addVertexAttrib(
-            location_vertex + i, *vertices, i * data_type.bytesPerPixel());
+            location_vertex + i, *vertices, i * data_type.numBytesPerPixel());
       }
 
       PANGO_GL(glDrawArrays(GL_POINTS, 0, vertices->size() - 3));

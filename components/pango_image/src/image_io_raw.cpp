@@ -14,7 +14,7 @@ IntensityImage<> LoadImageNonPlanar(
 {
   ImageLayout shape = ImageLayout::makeFromSizeAndPitch<uint8_t>(
       ImageSize(raw_width, raw_height), raw_pitch);
-  IntensityImage<> img(shape, raw_fmt);
+  auto img = IntensityImage<>::fromFormat(shape, raw_fmt);
 
   // Read from file, row at a time.
   std::ifstream bFile(filename.c_str(), std::ios::in | std::ios::binary);
@@ -33,11 +33,11 @@ template <typename Tin, typename Tout>
 IntensityImage<> ToNonPlanarT(const IntensityImageView& planar_image)
 {
   PixelFormat new_fmt = PixelFormat::fromTemplate<Tout>();
-  const size_t planes = new_fmt.num_channels;
+  const size_t planes = new_fmt.num_components;
 
   PANGO_ENSURE(planar_image.height() % planes == 0);
   PANGO_ENSURE(sizeof(Tin) * planes == sizeof(Tout));
-  PANGO_ENSURE(sizeof(Tout) == new_fmt.bytesPerPixel());
+  PANGO_ENSURE(sizeof(Tout) == new_fmt.numBytesPerPixel());
 
   ImageView<Tin> in = planar_image.imageView<Tin>();
   MutImage<Tout> out(

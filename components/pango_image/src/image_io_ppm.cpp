@@ -48,7 +48,7 @@ IntensityImage<> LoadPpm(std::istream& in)
   in.ignore(1, '\n');
 
   if (!in.fail() && w > 0 && h > 0) {
-    IntensityImage<> img(
+    auto img = IntensityImage<>::fromFormat(
         sophus::ImageSize(w, h), PpmFormat(ppm_type, num_colors));
 
     // Read in data

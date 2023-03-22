@@ -191,7 +191,7 @@ IntensityImage<> LoadJpg(std::istream& is)
     // resize storage if necessary
     PixelFormat fmt =
         PixelFormatFromString(cinfo.output_components == 3 ? "RGB24" : "GRAY8");
-    image = sophus::IntensityImage<>(
+    image = sophus::IntensityImage<>::fromFormat(
         ImageSize(cinfo.output_width, cinfo.output_height), fmt);
     JSAMPARRAY imageBuffer = (*cinfo.mem->alloc_sarray)(
         (j_common_ptr)&cinfo, JPOOL_IMAGE,
@@ -289,7 +289,7 @@ void SaveJpg(const IntensityImage<>& img, std::ostream& os, float quality)
   if (img.numChannels() != 1 && img.numChannels() != 3) {
     throw std::runtime_error("Unsupported number of image channels.");
   }
-  if (img.numBytesPerPixelChannel() != 1) {
+  if (img.pixelFormat().num_bytes_per_component != 1) {
     throw std::runtime_error("Unsupported image depth.");
   }
 

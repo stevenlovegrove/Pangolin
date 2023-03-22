@@ -268,7 +268,7 @@ void FfmpegVideo::InitUrl(
   {
     const sophus::PixelFormat strm_fmt =
         PixelFormatFromString(FfmpegFmtToString(fmtout));
-    const size_t pitch = strm_fmt.bytesPerPixel() * w;
+    const size_t pitch = strm_fmt.numBytesPerPixel() * w;
     const size_t size_bytes = h * pitch;
     streams.emplace_back(
         strm_fmt, sophus::ImageLayout(w, h, pitch), numBytesOut);

@@ -41,8 +41,8 @@ struct SharedDataPackage {
     using C = Eigen::Matrix<float, kRows, kCols>;
     data_type = {
         .number_type = sophus::NumberType::floating_point,
-        .num_channels = int(matrix.rows()),
-        .num_bytes_per_pixel_channel = sizeof(float),
+        .num_components = uint8_t(matrix.rows()),
+        .num_bytes_per_component = sizeof(float),
     };
     num_elements = matrix.cols();
     data = makeTypeErasedSharedPtr(std::forward<C>(matrix));

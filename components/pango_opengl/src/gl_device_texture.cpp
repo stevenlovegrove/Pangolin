@@ -126,9 +126,9 @@ struct DeviceGlTexture : public DeviceTexture {
     }
 
     // Upload data
-    const size_t stride = u.image.pitchBytes() / data_type.bytesPerPixel();
+    const size_t stride = u.image.pitchBytes() / data_type.numBytesPerPixel();
     PANGO_CHECK(
-        stride * data_type.bytesPerPixel() == u.image.pitchBytes(),
+        stride * data_type.numBytesPerPixel() == u.image.pitchBytes(),
         "Image pitch is not a multiple of the pixel size (which OpenGL "
         "requires).");
     PANGO_GL(glPixelStorei(GL_UNPACK_ROW_LENGTH, stride));

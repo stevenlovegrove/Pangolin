@@ -67,7 +67,7 @@ jobs:
       with:
         path: ${{runner.workspace}}/Pangolin/Sophus
         repository: 'strasdat/Sophus'
-        ref: 5cb40f05e84ab5b8cc05ff1e1ae080bc9b61bed2
+        ref: a4070695b4bca492647a7966e4cb50f90a44ec95
 
     - name: Checkout Pangolin
       uses: actions/checkout@v2

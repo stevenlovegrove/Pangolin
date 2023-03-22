@@ -80,7 +80,7 @@ IntensityImage<> LoadTiff(const std::string& filename)
           "image_io_tiff.cpp.");
   }
 
-  IntensityImage<> image(
+  auto image = IntensityImage<>::fromFormat(
       sophus::ImageSize(width, height), PixelFormatFromString(sfmt.c_str()));
   const tsize_t scanlength_bytes = TIFFScanlineSize(tif);
   if (scanlength_bytes != tsize_t(image.pitchBytes()))

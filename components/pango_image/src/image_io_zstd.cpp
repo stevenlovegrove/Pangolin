@@ -57,8 +57,9 @@ void SaveZstd(
       ZSTD_isError(initResult), "ZSTD_initCStream() error : {}",
       ZSTD_getErrorName(initResult));
 
-  const size_t row_size_bytes =
-      image.numChannels() * image.numBytesPerPixelChannel() * image.width();
+  const size_t row_size_bytes = image.numChannels() *
+                                image.pixelFormat().num_bytes_per_component *
+                                image.width();
 
   for (int y = 0; y < image.height(); ++y) {
     ZSTD_inBuffer input = {image.rawRowPtr(y), row_size_bytes, 0};
@@ -98,7 +99,7 @@ IntensityImage<> LoadZstd(std::istream& in)
   zstd_image_header header;
   in.read((char*)&header, sizeof(header));
 
-  IntensityImage<> img(
+  auto img = IntensityImage<>::fromFormat(
       ImageSize(header.w, header.h), PixelFormatFromString(header.fmt));
 
   const size_t input_buffer_size = ZSTD_DStreamInSize();

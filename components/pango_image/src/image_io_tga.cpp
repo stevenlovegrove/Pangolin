@@ -40,7 +40,7 @@ IntensityImage<> LoadTga(std::istream& in)
   const int height = info[2] + (info[3] * 256);
 
   if (in.good()) {
-    IntensityImage<> img(
+    auto img = IntensityImage<>::fromFormat(
         sophus::ImageSize(width, height), TgaFormat(info[4], type[2], type[1]));
 
     // read in image data

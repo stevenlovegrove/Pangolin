@@ -49,7 +49,7 @@ bool ImagesVideo::LoadFrame(size_t i)
       if (file_type == ImageFileTypeUnknown && unknowns_are_raw) {
         // if raw_pitch is zero, assume image is packed.
         const size_t pitch =
-            raw_pitch ? raw_pitch : raw_fmt.bytesPerPixel() * raw_width;
+            raw_pitch ? raw_pitch : raw_fmt.numBytesPerPixel() * raw_width;
         frame.push_back(LoadImage(
             filename, raw_fmt, raw_width, raw_height, pitch, raw_offset,
             raw_planes));

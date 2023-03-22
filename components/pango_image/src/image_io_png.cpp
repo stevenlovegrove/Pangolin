@@ -136,7 +136,7 @@ IntensityImage<> LoadPng(std::istream& source)
 
   auto shape = sophus::ImageLayout::makeFromSizeAndPitch<uint8_t>(
       sophus::ImageSize(w, h), pitch);
-  IntensityImage<> img(shape, PngFormat(png_ptr, info_ptr));
+  auto img = IntensityImage<>::fromFormat(shape, PngFormat(png_ptr, info_ptr));
 
   png_bytepp rows = png_get_rows(png_ptr, info_ptr);
   for (unsigned int r = 0; r < h; r++) {
@@ -191,7 +191,7 @@ void SavePng(
       png_ptr, (png_voidp)&stream, pango_png_stream_write,
       pango_png_stream_write_flush);
 
-  const int bit_depth = image.numBytesPerPixelChannel() * 8;
+  const int bit_depth = image.pixelFormat().num_bytes_per_component * 8;
 
   int colour_type;
   switch (image.numChannels()) {
