@@ -62,11 +62,12 @@ inline farm_ng::Expected<GlFormatInfo> glTypeInfo(
   };
 
   // Make sure we'll be in bounds...
-  const int nbytes = pixel_type.num_bytes_per_pixel_channel;
+  const int nbytes = pixel_type.num_bytes_per_component;
   const bool bfixed = pixel_type.number_type == sophus::NumberType::fixed_point;
 
-  if (between(pixel_type.num_channels, 1, 4) && isOneOf(nbytes, {1, 2, 4})) {
-    const int cidx = pixel_type.num_channels - 1;
+  if (between(int(pixel_type.num_components), 1, 4) &&
+      isOneOf(nbytes, {1, 2, 4})) {
+    const int cidx = pixel_type.num_components - 1;
     const int fidx = (nbytes == 4 && bfixed) ? 2 : nbytes - 1;
     return GlFormatInfo(
         {.gl_sized_format = format_table[fidx][cidx],

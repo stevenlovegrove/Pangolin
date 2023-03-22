@@ -78,9 +78,7 @@ void VideoOutput::AddStream(
 void VideoOutput::AddStream(
     const sophus::PixelFormat& pf, sophus::ImageSize size)
 {
-  AddStream(
-      pf, sophus::ImageLayout::makeFromSizeAndPitchUnchecked(
-              size, size.width * pf.bytesPerPixel()));
+  AddStream(pf, sophus::ImageLayout(size, size.width * pf.numBytesPerPixel()));
 }
 
 void VideoOutput::SetStreams(

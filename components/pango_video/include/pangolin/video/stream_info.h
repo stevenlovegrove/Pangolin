@@ -35,7 +35,7 @@ namespace pangolin
 class PANGOLIN_EXPORT StreamInfo
 {
   public:
-  inline StreamInfo() : layout_(0, 0, 0), offset_bytes_(0) {}
+  inline StreamInfo() : layout_(), offset_bytes_(0) {}
 
   inline StreamInfo(
       sophus::PixelFormat fmt, const sophus::ImageLayout shape,
@@ -52,7 +52,7 @@ class PANGOLIN_EXPORT StreamInfo
 
   inline size_t rowBytes() const
   {
-    return format().bytesPerPixel() * layout().width();
+    return format().numBytesPerPixel() * layout().width();
   }
 
   //! Return Image wrapper around raw base pointer
@@ -69,11 +69,12 @@ class PANGOLIN_EXPORT StreamInfo
   inline sophus::IntensityImage<> copyToDynImage(const uint8_t* base_ptr) const
   {
     PANGO_DEBUG("Unneeded image copy happening...");
-    sophus::IntensityImage<> runtime(layout_, fmt_);
+    sophus::IntensityImage<> runtime =
+        sophus::IntensityImage<>::fromFormat(layout_, fmt_);
     sophus::details::pitchedCopy(
         const_cast<uint8_t*>(runtime.rawPtr()), runtime.layout().pitchBytes(),
         base_ptr, layout_.pitchBytes(), layout_.imageSize(),
-        fmt_.bytesPerPixel());
+        fmt_.numBytesPerPixel());
     return runtime;
   }
 

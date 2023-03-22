@@ -430,7 +430,8 @@ struct ContextImpl : public Context {
     const auto maybe_gl_pixel_type = glTypeInfo(pixel_type);
     const GlFormatInfo gl_pixel_type = SOPHUS_UNWRAP(maybe_gl_pixel_type);
 
-    IntensityImage<> image(ImageSize(imsize[0], imsize[1]), pixel_type);
+    auto image = IntensityImage<>::fromFormat(
+        ImageSize(imsize[0], imsize[1]), pixel_type);
 
     glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
     glDrawBuffer(GL_FRONT);

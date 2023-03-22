@@ -35,7 +35,7 @@ struct GlDrawnImage : public DrawnImage {
     if (color_transform) {
       u_color_transform = color_transform->cast<float>();
     } else if (
-        image->pixelFormat().num_channels == 1 &&
+        image->pixelFormat().num_components == 1 &&
         u_colormap_index.getValue() == Palette::none) {
       u_color_transform =
           (Eigen::Matrix4f() << 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1)

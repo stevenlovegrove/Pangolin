@@ -80,8 +80,9 @@ IntensityImage<> LoadLz4(std::istream& in)
   lz4_image_header header;
   in.read((char*)&header, sizeof(header));
 
-  IntensityImage<> img(
+  auto img = IntensityImage<>::fromFormat(
       ImageSize(header.w, header.h), PixelFormatFromString(header.fmt));
+
   std::unique_ptr<char[]> input_buffer(new char[header.compressed_size]);
 
   in.read(input_buffer.get(), header.compressed_size);

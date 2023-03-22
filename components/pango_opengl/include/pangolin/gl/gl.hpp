@@ -256,67 +256,82 @@ inline void GlTexture::Download(sophus::IntensityImage<>& image) const
 
   switch (internal_format) {
     case GL_LUMINANCE8:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY8"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("GRAY8"));
       Download(unsafe_ptr, GL_RED, GL_UNSIGNED_BYTE);
       break;
     case GL_LUMINANCE16:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY16LE"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("GRAY16LE"));
       Download(unsafe_ptr, GL_RED, GL_UNSIGNED_SHORT);
       break;
     case GL_RGB8:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGB24"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("RGB24"));
       Download(unsafe_ptr, GL_RGB, GL_UNSIGNED_BYTE);
       break;
     case GL_RGBA8:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGBA32"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("RGBA32"));
       Download(unsafe_ptr, GL_RGBA, GL_UNSIGNED_BYTE);
       break;
     case GL_RED_INTEGER:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY32"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("GRAY32"));
       Download(unsafe_ptr, GL_RED, GL_UNSIGNED_INT);
       break;
     case GL_LUMINANCE:
     case GL_LUMINANCE32F_ARB:
     case GL_R32F:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY32F"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("GRAY32F"));
       Download(unsafe_ptr, GL_RED, GL_FLOAT);
       break;
     case GL_RGB16:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGB48"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("RGB48"));
       Download(unsafe_ptr, GL_RGB, GL_UNSIGNED_SHORT);
       break;
     case GL_RGBA16:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGBA64"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("RGBA64"));
       Download(unsafe_ptr, GL_RGBA, GL_UNSIGNED_SHORT);
       break;
     case GL_RGB16F:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGB48F"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("RGB48F"));
       Download(unsafe_ptr, GL_RGB, GL_HALF_FLOAT);
       break;
     case GL_RGBA16F:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGBA64F"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("RGBA64F"));
       Download(unsafe_ptr, GL_RGBA, GL_HALF_FLOAT);
       break;
     case GL_RGB:
     case GL_RGB32F:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGB96F"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("RGB96F"));
       Download(unsafe_ptr, GL_RGB, GL_FLOAT);
       break;
     case GL_RGBA:
     case GL_RGBA32F:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("RGBA128F"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("RGBA128F"));
       Download(unsafe_ptr, GL_RGBA, GL_FLOAT);
       break;
     case GL_DEPTH_COMPONENT16:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY16LE"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("GRAY16LE"));
       Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
       break;
     case GL_DEPTH_COMPONENT24:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY32"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("GRAY32"));
       Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
       break;
     case GL_DEPTH_COMPONENT32F:
-      image = sophus::IntensityImage<>(size, PixelFormatFromString("GRAY32F"));
+      image = sophus::IntensityImage<>::fromFormat(
+          size, PixelFormatFromString("GRAY32F"));
       Download(unsafe_ptr, GL_DEPTH_COMPONENT, GL_FLOAT);
       break;
     default:

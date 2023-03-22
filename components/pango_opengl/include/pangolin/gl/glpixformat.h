@@ -42,7 +42,7 @@ struct GlPixFormat {
 
   GlPixFormat(const sophus::PixelFormat& fmt)
   {
-    switch (fmt.num_channels) {
+    switch (fmt.num_components) {
       case 1:
         glformat = GL_RED;
         break;
@@ -63,7 +63,7 @@ struct GlPixFormat {
 
     const bool is_integral = fmt.number_type == sophus::NumberType::fixed_point;
 
-    switch (fmt.num_bytes_per_pixel_channel) {
+    switch (fmt.num_bytes_per_component) {
       case 1:
         gltype = GL_UNSIGNED_BYTE;
         break;

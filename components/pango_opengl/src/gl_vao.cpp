@@ -85,11 +85,11 @@ void GlVertexArrayObject::addVertexAttrib(
 
   if (isGlIntegralDatatype(gl_fmt.gl_type)) {
     PANGO_GL(glVertexAttribIPointer(
-        attrib_location, data_type.num_channels, gl_fmt.gl_type, stride_bytes,
+        attrib_location, data_type.num_components, gl_fmt.gl_type, stride_bytes,
         (void*)offset_bytes));
   } else {
     PANGO_GL(glVertexAttribPointer(
-        attrib_location, data_type.num_channels, gl_fmt.gl_type, normalized,
+        attrib_location, data_type.num_components, gl_fmt.gl_type, normalized,
         stride_bytes, (void*)offset_bytes));
   }
   PANGO_GL(glEnableVertexAttribArray(attrib_location));
