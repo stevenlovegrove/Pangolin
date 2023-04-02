@@ -143,8 +143,7 @@ Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
   auto prims = DrawnPrimitives::Create({
       .element_type = DrawnPrimitives::Type::triangles,
   });
-  using FaceT = Eigen::Matrix<uint32_t, 3, 1>;
-  std::vector<FaceT> faces;
+  std::vector<uint32_t> faces;
 
   // http://www.songho.ca/opengl/gl_sphere.html#icosphere
   static float constexpr kHAngle = M_PI / 180 * 72;
@@ -173,57 +172,59 @@ Shared<Drawable> DrawableConversionTraits<draw::Icosphere>::makeDrawable(
 
   vertices.push_back({0, 0, -sphere.radius});
 
-  faces.push_back(FaceT(0, 1, 3));
-  faces.push_back(FaceT(0, 3, 5));
-  faces.push_back(FaceT(0, 5, 7));
-  faces.push_back(FaceT(0, 7, 9));
-  faces.push_back(FaceT(0, 9, 1));
-
-  faces.push_back(FaceT(11, 4, 2));
-  faces.push_back(FaceT(11, 6, 4));
-  faces.push_back(FaceT(11, 8, 6));
-  faces.push_back(FaceT(11, 10, 8));
-  faces.push_back(FaceT(11, 2, 10));
-
-  faces.push_back(FaceT(1, 2, 3));
-  faces.push_back(FaceT(2, 4, 3));
-  faces.push_back(FaceT(3, 4, 5));
-  faces.push_back(FaceT(4, 6, 5));
-  faces.push_back(FaceT(5, 6, 7));
-  faces.push_back(FaceT(6, 8, 7));
-  faces.push_back(FaceT(7, 8, 9));
-  faces.push_back(FaceT(8, 10, 9));
-  faces.push_back(FaceT(9, 10, 1));
-  faces.push_back(FaceT(10, 2, 1));
+  faces.insert(faces.end(), {0, 1, 3});
+  faces.insert(faces.end(), {0, 3, 5});
+  faces.insert(faces.end(), {0, 5, 7});
+  faces.insert(faces.end(), {0, 7, 9});
+  faces.insert(faces.end(), {0, 9, 1});
+  faces.insert(faces.end(), {11, 4, 2});
+  faces.insert(faces.end(), {11, 6, 4});
+  faces.insert(faces.end(), {11, 8, 6});
+  faces.insert(faces.end(), {11, 10, 8});
+  faces.insert(faces.end(), {11, 2, 10});
+  faces.insert(faces.end(), {1, 2, 3});
+  faces.insert(faces.end(), {2, 4, 3});
+  faces.insert(faces.end(), {3, 4, 5});
+  faces.insert(faces.end(), {4, 6, 5});
+  faces.insert(faces.end(), {5, 6, 7});
+  faces.insert(faces.end(), {6, 8, 7});
+  faces.insert(faces.end(), {7, 8, 9});
+  faces.insert(faces.end(), {8, 10, 9});
+  faces.insert(faces.end(), {9, 10, 1});
+  faces.insert(faces.end(), {10, 2, 1});
 
   for (size_t i = 0; i < sphere.num_subdivisions; ++i) {
-    std::vector<FaceT> source_faces = faces;
+    std::vector<uint32_t> source_faces = faces;
     faces.clear();
-    for (const FaceT& t : source_faces) {
+    for (size_t j = 0; j < source_faces.size(); j += 3) {
+      auto t0 = source_faces[j];
+      auto t1 = source_faces[j + 1];
+      auto t2 = source_faces[j + 2];
       Eigen::Vector3f p0_p1 =
-          (vertices[t.x()] + vertices[t.y()]).normalized() * sphere.radius;
-      int p0_p1_id = vertices.size();
+          (vertices[t0] + vertices[t1]).normalized() * sphere.radius;
+      uint32_t p0_p1_id = vertices.size();
       vertices.push_back(p0_p1);
 
       Eigen::Vector3f p0_p2 =
-          (vertices[t.x()] + vertices[t.z()]).normalized() * sphere.radius;
-      int p0_p2_id = vertices.size();
+          (vertices[t0] + vertices[t2]).normalized() * sphere.radius;
+      uint32_t p0_p2_id = vertices.size();
       vertices.push_back(p0_p2);
 
       Eigen::Vector3f p1_p2 =
-          (vertices[t.y()] + vertices[t.z()]).normalized() * sphere.radius;
-      int p1_p2_id = vertices.size();
+          (vertices[t1] + vertices[t2]).normalized() * sphere.radius;
+      uint32_t p1_p2_id = vertices.size();
       vertices.push_back(p1_p2);
 
-      faces.push_back(FaceT(t.x(), p0_p1_id, p0_p2_id));
-      faces.push_back(FaceT(t.y(), p1_p2_id, p0_p1_id));
-      faces.push_back(FaceT(t.z(), p0_p2_id, p1_p2_id));
-      faces.push_back(FaceT(p0_p1_id, p1_p2_id, p0_p2_id));
+      faces.insert(faces.end(), {t0, p0_p1_id, p0_p2_id});
+      faces.insert(faces.end(), {t1, p1_p2_id, p0_p1_id});
+      faces.insert(faces.end(), {t2, p0_p2_id, p1_p2_id});
+      faces.insert(faces.end(), {p0_p1_id, p1_p2_id, p0_p2_id});
     }
   }
 
   prims->vertices->queueUpdate(std::move(vertices));
   prims->indices->queueUpdate(std::move(faces));
+  prims->default_color = sphere.color;
 
   return prims;
 }
