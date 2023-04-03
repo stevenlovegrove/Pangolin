@@ -2,6 +2,8 @@ get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_compile_definitions(${COMPONENT} PUBLIC "_OSX_")
+    find_library(CORE_SERVICES_FRAMEWORK CoreServices)
+    target_link_libraries(${COMPONENT} PRIVATE ${CORE_SERVICES_FRAMEWORK})
 elseif(WIN32 OR WIN64)
     target_compile_definitions(${COMPONENT} PUBLIC "_WIN_")
 elseif(EMSCRIPTEN)
@@ -14,6 +16,9 @@ target_sources( ${COMPONENT}
 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/file_extension.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/file_utils.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/file_notifier_osx.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/file_notifier_win.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/file_notifier_linux.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/sigstate.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/threadedfilebuf.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/avx_math.cpp

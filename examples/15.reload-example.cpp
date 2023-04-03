@@ -5,6 +5,8 @@
 #include <pangolin/layer/all_layers.h>
 #include <pangolin/video/video.h>
 
+#include <pangolin/utils/file_notifier.h>
+
 /*
   == Pangolin-by-example ==
 
@@ -52,6 +54,16 @@ struct ExampleCustomLayer : public Layer {
 
 int main(int argc, char** argv)
 {
+  auto notifier = FileChangeNotifier::create("/Users/stevenlovegrove/test_file.txt", [](const std::string& file){
+    FARM_INFO("File changed '{}'", file);
+  });
+
+  // Keep the main thread running to monitor the file indefinitely
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+  return 0;
   PANGO_ENSURE(
       argc == 2,
       "Please provide one argument - the path to a full-screen shader.");
