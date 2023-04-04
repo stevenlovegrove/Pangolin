@@ -418,9 +418,13 @@ struct ContextImpl : public Context {
       ImageXy image_axis_convention) const override
   {
     using namespace sophus;
+    if(bounds.isEmpty()) {
+      bounds = Region2I::fromMinMax({0,0}, {size().width-1, size().height-1});
+    }
+
     const auto gl_bounds =
         regionGlFromConvention(bounds, image_axis_convention);
-    const Eigen::Array2i imsize = bounds.range().array() + Eigen::Array2i(1, 1);
+    const Eigen::Array2i imsize = bounds.range().array();
     const bool is_depth = attachment == Attachment::depth;
 
     const PixelFormat pixel_type = is_depth
@@ -440,6 +444,7 @@ struct ContextImpl : public Context {
         gl_bounds.min().x(), gl_bounds.min().y(), imsize.x(), imsize.y(),
         is_depth ? GL_DEPTH_COMPONENT : gl_pixel_type.gl_base_format,
         gl_pixel_type.gl_type, const_cast<uint8_t*>(image.rawPtr()));
+    glDrawBuffer(GL_BACK);
     return image;
   }
 
