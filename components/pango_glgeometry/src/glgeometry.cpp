@@ -95,48 +95,52 @@ void UnbindGlElements(GlSlProgram& prog, const GlGeometry::Element& el)
 void GlDraw(GlSlProgram& prog, const GlGeometry& geom, const GlTexture* matcap)
 {
     // Bind textures
-    int num_tex_bound = 0;
-    for(auto& tex : geom.textures) {
-        glActiveTexture(GL_TEXTURE0 + num_tex_bound);
-        tex.second.Bind();
-        prog.SetUniform(tex.first, (int)num_tex_bound);
-        ++num_tex_bound;
+    // Bind textures
+    for (auto &buffer: geom.buffers) {
+        BindGlElement(prog, buffer.second);
     }
-
+    int num_tex_bound = 0;
     if(matcap) {
         glActiveTexture(GL_TEXTURE0 + num_tex_bound);
         matcap->Bind();
         prog.SetUniform("matcap", (int)num_tex_bound);
         ++num_tex_bound;
-    }
+    }else{
+        std::vector<std::string> texturesNames;
+        for (auto &tex: geom.textures) {
+            texturesNames.emplace_back(tex.first);
+        }
+        for (auto &texName: texturesNames) {
+            glActiveTexture(GL_TEXTURE0 + num_tex_bound);
+            geom.textures.at(texName).Bind();
+            prog.SetUniform("texture", (int) num_tex_bound);
 
-    // Bind all attribute buffers
-    for(auto& buffer : geom.buffers) {
-        BindGlElement(prog, buffer.second);
-    }
+            auto &buffer = *geom.objects.equal_range(texName).first;
+            auto it_indices = buffer.second.attributes.find("vertex_indices");
+            if (it_indices != buffer.second.attributes.end()) {
+                buffer.second.Bind();
+                auto &attrib = it_indices->second;
+                glDrawElements(
+                        GL_TRIANGLES, attrib.count_per_element * attrib.num_elements,
+                        attrib.gltype, reinterpret_cast<uint8_t *>(attrib.offset)
+                );
+                buffer.second.Unbind();
 
-    // Draw all geometry
-    for(auto& buffer : geom.objects) {
-        auto it_indices = buffer.second.attributes.find("vertex_indices");
-        if(it_indices != buffer.second.attributes.end()) {
-            buffer.second.Bind();
-            auto& attrib = it_indices->second;
-            glDrawElements(
-               GL_TRIANGLES, attrib.count_per_element * attrib.num_elements,
-               attrib.gltype, reinterpret_cast<uint8_t*>(attrib.offset)
-            );
-            buffer.second.Unbind();
+            }
+
+            ++num_tex_bound;
+
         }
     }
-
-    // Unbind attribute buffers
-    for(auto& buffer : geom.buffers) {
-        UnbindGlElements(prog, buffer.second);
-    }
-
     // Unbind textures
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE0);
+    for (auto &buffer: geom.buffers) {
+        UnbindGlElements(prog, buffer.second);
+    }
+
+
+
 }
 
 }

@@ -30,8 +30,12 @@ const std::string default_model_shader = R"Shader(
 #elif SHOW_TEXTURE
     attribute vec2 uv;
     varying vec2 vUV;
+    attribute vec3 normal;
+    varying vec3 vNormal;
     void main() {
         vUV = uv;
+        vNormal = mat3(T_cam_norm) * normal;
+
 #elif SHOW_MATCAP
     attribute vec3 normal;
     varying vec3 vNormalCam;
@@ -65,7 +69,9 @@ const std::string default_model_shader = R"Shader(
     varying vec3 vNormal;
 #elif SHOW_TEXTURE
     varying vec2 vUV;
-    uniform sampler2D texture_0;
+    uniform sampler2D texture;
+    varying vec3 vNormal;
+
 #elif SHOW_MATCAP
     varying vec3 vNormalCam;
     uniform sampler2D matcap;
@@ -81,7 +87,8 @@ void main() {
 #elif SHOW_NORMAL
     gl_FragColor = vec4((vNormal + vec3(1.0,1.0,1.0)) / 2.0, 1.0);
 #elif SHOW_TEXTURE
-    gl_FragColor = texture2D(texture_0, vUV);
+    vec4((vNormal + vec3(1.0,1.0,1.0)) / 2.0, 1.0);
+    gl_FragColor = texture2D(texture, vUV);
 #elif SHOW_MATCAP
     vec2 uv = 0.5 * vNormalCam.xy + vec2(0.5, 0.5);
     gl_FragColor = texture2D(matcap, uv);
@@ -92,7 +99,128 @@ void main() {
 #endif
 }
 )Shader";
+const std::string uv_shader = R"Shader(
+/////////////////////////////////////////
+@start vertex
+#version 120
 
+    uniform mat4 T_cam_norm;
+    uniform mat4 KT_cw;
+    attribute vec3 vertex;
+    attribute vec2 uv;
+    varying vec2 vUV;
+    void main() {
+        vUV = uv;
+        gl_Position = KT_cw * vec4(vertex, 1.0);
+    }
+
+/////////////////////////////////////////
+@start fragment
+#version 120
+    varying vec2 vUV;
+
+void main() {
+    gl_FragColor = vec4(vUV,1.0-vUV.x,1.0);
+}
+)Shader";
+
+const std::string color_shader = R"Shader(
+/////////////////////////////////////////
+@start vertex
+#version 120
+
+    uniform mat4 T_cam_norm;
+    uniform mat4 KT_cw;
+    attribute vec3 vertex;
+    attribute vec4 color;
+    varying vec4 vColor;
+    void main() {
+        vColor = color;
+        gl_Position = KT_cw * vec4(vertex, 1.0);
+    }
+
+/////////////////////////////////////////
+@start fragment
+#version 120
+    varying vec4 vColor;
+
+void main() {
+    gl_FragColor = vColor;
+}
+)Shader";
+const std::string matcap_shader = R"Shader(
+/////////////////////////////////////////
+@start vertex
+#version 120
+
+    uniform mat4 T_cam_norm;
+    uniform mat4 KT_cw;
+    attribute vec3 normal;
+    varying vec3 vNormalCam;
+    void main() {
+        vNormalCam = mat3(T_cam_norm) * normal;
+        gl_Position = KT_cw * vec4(vertex, 1.0);
+    }
+
+/////////////////////////////////////////
+@start fragment
+#version 120
+varying vec3 vNormalCam;
+uniform sampler2D matcap;
+void main() {
+    vec2 uv = 0.5 * vNormalCam.xy + vec2(0.5, 0.5);
+    gl_FragColor = texture2D(matcap, uv);
+}
+)Shader";
+
+const std::string normal_shader = R"Shader(
+/////////////////////////////////////////
+@start vertex
+#version 120
+
+    uniform mat4 T_cam_norm;
+    uniform mat4 KT_cw;
+    attribute vec3 vertex;
+     attribute vec3 normal;
+    varying vec3 vNormal;
+    void main() {
+        vNormal = mat3(T_cam_norm) * normal;
+        gl_Position = KT_cw * vec4(vertex, 1.0);
+    }
+
+/////////////////////////////////////////
+@start fragment
+#version 120
+    varying vec3 vNormal;
+void main() {
+    gl_FragColor = vec4((vNormal + vec3(1.0,1.0,1.0)) / 2.0, 1.0);
+}
+)Shader";
+const std::string texture_shader = R"Shader(
+/////////////////////////////////////////
+@start vertex
+#version 120
+
+
+    uniform mat4 KT_cw;
+    attribute vec3 vertex;
+    attribute vec2 uv;
+    varying vec2 vUV;
+    void main() {
+        vUV = uv;
+        gl_Position = KT_cw * vec4(vertex, 1.0);
+    }
+
+/////////////////////////////////////////
+@start fragment
+#version 120
+    varying vec2 vUV;
+    uniform sampler2D texture;
+
+void main() {
+    gl_FragColor = texture2D(texture, vUV);
+}
+)Shader";
 const std::string equi_env_shader = R"Shader(
 /////////////////////////////////////////
 @start vertex
