@@ -294,14 +294,6 @@ class HandlerImpl : public DrawLayerHandler
               if (arg.action == PointerAction::down) {
                 down_state_ = state;
                 cursor_in_world_ = p_world;
-              } else if (arg.action == PointerAction::double_click_down) {
-                // auto selection = Region2F64::from(p_img);
-
-                // selection_signal(SelectionEvent{
-                //     .trigger_event = event,
-                //     .in_pixel_selection = selection,
-                //     .in_scene_cursor = cursor_in_world_,
-                //     .in_progress = false});
               } else if (arg.action == PointerAction::drag) {
                 if (!down_state_) {
                   PANGO_WARN("Unexpected");
@@ -332,12 +324,8 @@ class HandlerImpl : public DrawLayerHandler
                     down_state_ = state;
                   }
                 }
-              } else {
-                down_state_ = std::nullopt;
               }
 
-              // When holding shift, selection is made
-              // if (event.modifier_active & ModifierKey::shift)
               {
                 auto selection = Region2F64::empty();
                 if (p_img.isFinite().all()) selection.extend(p_img);
@@ -355,6 +343,10 @@ class HandlerImpl : public DrawLayerHandler
                     .in_progress = arg.action == PointerAction::hover ||
                                    arg.action == PointerAction::down ||
                                    arg.action == PointerAction::drag});
+              }
+
+              if(arg.action == PointerAction::click_up) {
+                down_state_ = std::nullopt;
               }
 
               handled = true;
