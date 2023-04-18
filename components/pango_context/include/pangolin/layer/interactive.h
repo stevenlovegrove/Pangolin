@@ -22,7 +22,7 @@ enum class PointerAction {
   hover,
   down,
   drag,
-  drag_up,
+  // drag_up,
   click_up,
   double_click_down
 };
