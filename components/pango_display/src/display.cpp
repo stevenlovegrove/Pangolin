@@ -182,7 +182,13 @@ void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> new
     context = newcontext.get();
 
     // Default key bindings can be overridden
-    RegisterKeyPressCallback(PANGO_KEY_ESCAPE, Quit );
+    // Only set the escape key to quit if PANGOLIN_BIND_ESC_TO_QUIT is not set, or is set to 1.
+    const char* bind_esc = std::getenv("PANGOLIN_BIND_ESC_TO_QUIT");
+    if( bind_esc == nullptr || std::string(bind_esc) == "1" )
+    {
+        RegisterKeyPressCallback(PANGO_KEY_ESCAPE, Quit );
+    }
+
     RegisterKeyPressCallback('\t', [](){ShowFullscreen(TrueFalseToggle::Toggle);} );
     RegisterKeyPressCallback('`',  [](){ShowConsole(TrueFalseToggle::Toggle);} );
 
