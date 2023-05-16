@@ -418,8 +418,9 @@ struct ContextImpl : public Context {
       ImageXy image_axis_convention) const override
   {
     using namespace sophus;
-    if(bounds.isEmpty()) {
-      bounds = Region2I::fromMinMax({0,0}, {size().width-1, size().height-1});
+    if (bounds.isEmpty()) {
+      bounds =
+          Region2I::fromMinMax({0, 0}, {size().width - 1, size().height - 1});
     }
 
     const auto gl_bounds =
