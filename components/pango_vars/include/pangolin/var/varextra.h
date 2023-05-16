@@ -101,7 +101,7 @@ inline bool checkPushed(Var<bool>& var)
 
 // Return true if any of the pangolin variables are set.
 // Additionally, resets the 'gui_changed' flag on all input variables.
-bool checkReset() { return false; }
+inline bool checkReset() { return false; }
 template <typename Var, typename... Rest>
 bool checkReset(Var& var, Rest&... rest)
 {
