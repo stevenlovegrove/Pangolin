@@ -116,6 +116,7 @@ void SetWindowOrthographic()
     glMatrixMode(GL_PROJECTION);
     ProjectionMatrixOrthographic(-0.5, dims[0]-0.5, -0.5, dims[1]-0.5, -1.0, 1.0).Load();
     glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 void GlText::Draw() const
