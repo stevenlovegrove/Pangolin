@@ -50,7 +50,12 @@ std::pair<int, int> lineNumFromCompilationError(const std::string& info)
     int line = std::stoi(tokens[2]);
     return {column, line};
   } else {
-    PANGO_DEBUG("Unable to parse GlSl error string to extract line number");
+    auto t1 = split(tokens[0], '(');
+    auto t2 = split(t1[1], ')');
+    int column = 0;
+    int line = std::stoi(t2[0]);
+    return {column, line};
+    // PANGO_DEBUG("Unable to parse GlSl error string to extract line number");
   }
   return {-1, -1};
 }
