@@ -345,7 +345,7 @@ class HandlerImpl : public DrawLayerHandler
                                    arg.action == PointerAction::drag});
               }
 
-              if(arg.action == PointerAction::click_up) {
+              if (arg.action == PointerAction::click_up) {
                 down_state_ = std::nullopt;
               }
 
