@@ -50,9 +50,7 @@ inline void _CheckWLDieOnError( const char *sFile, const int nLine )
 
 namespace pangolin
 {
-
 const char *className = "Pangolin";
-
 ////////////////////////////////////////////////////////////////////////
 // Utils
 ////////////////////////////////////////////////////////////////////////
@@ -214,10 +212,10 @@ WinWindow::WinWindow(
         std::cerr << "GetModuleHandle() failed" << std::endl;
         CheckWGLDieOnError();
     }
-    RegisterThisClass(hCurrentInst);
+    RegisterThisClass(hCurrentInst,window_title);
 
     HWND thishwnd = CreateWindowA(
-        className, window_title.c_str(),
+        window_title.c_str(), window_title.c_str(),
         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
         0, 0, width, height,
         NULL, NULL, hCurrentInst, this);
@@ -229,7 +227,6 @@ WinWindow::WinWindow(
     if( thishwnd != hWnd ) {
         throw std::runtime_error("Pangolin Window Creation Failed.");
     }
-
     // Display Window
     ShowWindow(hWnd, SW_SHOW);
 }
@@ -242,10 +239,10 @@ WinWindow::~WinWindow()
     }
 }
 
-void WinWindow::RegisterThisClass(HMODULE hCurrentInst)
+void WinWindow::RegisterThisClass(HMODULE hCurrentInst,const std::string &window_title)
 {
     WNDCLASSA wndClass;
-    wndClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+    wndClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW | WS_OVERLAPPEDWINDOW;
     wndClass.lpfnWndProc = WinWindow::WndProc;
     wndClass.cbClsExtra = 0;
     wndClass.cbWndExtra = 0;
@@ -254,7 +251,7 @@ void WinWindow::RegisterThisClass(HMODULE hCurrentInst)
     wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     wndClass.lpszMenuName = NULL;
-    wndClass.lpszClassName = className;
+    wndClass.lpszClassName = window_title.c_str();
     if(!RegisterClassA(&wndClass)) {
         std::cerr << "RegisterClass() failed" << std::endl;
         CheckWGLDieOnError();
@@ -537,7 +534,6 @@ void WinWindow::Resize(unsigned int w, unsigned int h)
         CheckWGLDieOnError();
     }
 }
-
 void WinWindow::MakeCurrent()
 {
     if(wglMakeCurrent(hDC, hGLRC)==FALSE) {
