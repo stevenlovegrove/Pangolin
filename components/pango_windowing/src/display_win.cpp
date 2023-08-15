@@ -242,7 +242,7 @@ WinWindow::~WinWindow()
 void WinWindow::RegisterThisClass(HMODULE hCurrentInst,const std::string &window_title)
 {
     WNDCLASSA wndClass;
-    wndClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW | WS_OVERLAPPEDWINDOW;
+    wndClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
     wndClass.lpfnWndProc = WinWindow::WndProc;
     wndClass.cbClsExtra = 0;
     wndClass.cbWndExtra = 0;
