@@ -29,7 +29,6 @@ if(BUILD_TESTS)
   catch_discover_tests(layer_group_test)
 endif()
 
-find_package(Sophus REQUIRED)
 target_link_libraries(${COMPONENT} PUBLIC pango_windowing pango_render pango_vars Sophus::sophus_image Sophus::sophus_sensor)
 target_link_libraries(${COMPONENT} PUBLIC pango_opengl)
 

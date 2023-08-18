@@ -45,7 +45,6 @@ install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
   DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
-find_package(Sophus REQUIRED)
 target_link_libraries(${COMPONENT} PUBLIC Sophus::sophus third_party)
 
 find_package(Threads QUIET)

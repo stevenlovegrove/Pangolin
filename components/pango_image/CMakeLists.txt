@@ -3,7 +3,6 @@ get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 find_package (Eigen3 REQUIRED QUIET)
 target_compile_definitions(${COMPONENT} PUBLIC HAVE_EIGEN)
 
-find_package(Sophus REQUIRED)
 target_link_libraries(${COMPONENT} PUBLIC Sophus::sophus_image)
 
 option(BUILD_PANGOLIN_LIBPNG "Build support for libpng image input" ON)

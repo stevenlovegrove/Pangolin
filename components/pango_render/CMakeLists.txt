@@ -16,7 +16,6 @@ foreach(basename ${component_file_basenames})
   endif()
 endforeach()
 
-find_package(Sophus REQUIRED)
 target_link_libraries(${COMPONENT} PUBLIC pango_core Sophus::sophus_image Sophus::sophus_sensor)
 
 target_include_directories(${COMPONENT} PUBLIC
