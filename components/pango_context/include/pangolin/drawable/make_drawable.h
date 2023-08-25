@@ -58,7 +58,7 @@ struct Axes {
     return axes;
   }
 
-  std::vector<sophus::SE3f> drawable_from_axis_poses;
+  std::vector<sophus::SE3f> drawable_from_axis_poses = {};
   float scale = 0.1f;
   float line_width = 1.5;
 };
