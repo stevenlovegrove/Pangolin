@@ -145,6 +145,24 @@ file( RELATIVE_PATH REL_INCLUDE_DIR
     "${CMAKE_INSTALL_PREFIX}/include"
 )
 
+install(
+    TARGETS ${component_list}
+    # EXPORT ${PROJECT_NAME}Targets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+)
+
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+          "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+)
+# install(
+#     EXPORT ${PROJECT_NAME}Targets DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+# )
+
 # uninstall target
 if(NOT TARGET uninstall)
   configure_file(
