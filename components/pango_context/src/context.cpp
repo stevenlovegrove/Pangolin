@@ -324,9 +324,7 @@ struct ContextImpl : public Context {
   {
     modifier_active_ = toInteractiveModifierKey(e.key_modifiers);
 
-    if (e.key == 27) {  // escape
-      should_run = false;
-    } else if (e.key == 9) {  // tab
+    if (e.key == 9) {  // tab
       window_->ShowFullscreen(TrueFalseToggle::Toggle);
     } else {
       Interactive::Event layer_event = {
