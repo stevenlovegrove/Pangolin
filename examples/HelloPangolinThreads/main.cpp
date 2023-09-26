@@ -68,7 +68,6 @@ int main( int /*argc*/, char** /*argv*/ )
     std::thread render_loop2;
     
     render_loop2 = std::thread(run,std::ref(window_name2));
-    Sleep(5000);
    render_loop = std::thread(run,std::ref(window_name));
      render_loop.join();
 
