@@ -34,7 +34,7 @@ endif()
 
 if(_WIN_)
     option( BUILD_SHARED_LIBS    "Build Shared Library" OFF)
-    option( MSVC_USE_STATIC_CRT  "Use static C Runtime with MSVC, /MT instead of /MD" ON)
+    option( MSVC_USE_STATIC_CRT  "Use static C Runtime with MSVC, /MT instead of /MD" OFF)
 
     # Make sure there are no erroneous C Runtime flags
     list(APPEND FLAG_VARS
