@@ -66,7 +66,6 @@ int main(/*int argc, char* argv[]*/)
   const int height = 48;
   unsigned char* imageArray = new unsigned char[3*width*height];
   pangolin::GlTexture imageTexture(width,height,GL_RGB,false,0,GL_RGB,GL_UNSIGNED_BYTE);
-
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
   {
