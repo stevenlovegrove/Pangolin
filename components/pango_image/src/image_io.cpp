@@ -93,6 +93,7 @@ IntensityImage<> LoadLibRaw(const std::string& filename);
 
 // TIFF
 IntensityImage<> LoadTiff(const std::string& filename);
+void SaveTiff(const IntensityImage<>& image, const std::string& filename);
 
 IntensityImage<> LoadImage(std::istream& in, ImageFileType file_type)
 {
@@ -243,6 +244,8 @@ void SaveImage(
       return SaveExr(image, filename, top_line_first);
     case ImageFileTypePango:
       return SavePango(image, filename, top_line_first);
+    case ImageFileTypeTiff:
+      return SaveTiff(image, filename);
     default:
       throw std::runtime_error(
           "Unsupported image file type, '" + filename + "'");
