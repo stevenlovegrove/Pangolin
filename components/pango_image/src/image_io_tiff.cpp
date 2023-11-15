@@ -30,11 +30,66 @@ T GetOrDefault(TIFF* tif, uint32_t tag, T default_val)
   TIFFGetField(tif, tag, &r);
   return r;
 }
+
+template <typename T>
+void SetOrThrow(TIFF* tif, uint32_t tag, T val)
+{
+  if (TIFFSetField(tif, tag, val) != 1) {
+    throw std::runtime_error(
+        "Error when writing tiff tag (" + std::to_string(tag) + ")");
+  }
+}
+
 #endif
 
 void DummyTiffOpenHandler(const char* module, const char* fmt, va_list ap)
 {
   // TODO: Should probably send these somewhere...
+}
+
+void SaveTiff(const IntensityImage<>& image, const std::string& filename)
+{
+#ifdef HAVE_LIBTIFF
+
+  TIFFSetWarningHandler(DummyTiffOpenHandler);
+
+  TIFF* tif = TIFFOpen(filename.c_str(), "w");
+  if (!tif) {
+    throw std::runtime_error("libtiff failed to open " + filename);
+  }
+
+  SetOrThrow<uint32_t>(tif, TIFFTAG_IMAGEWIDTH, image.width());
+  SetOrThrow<uint32_t>(tif, TIFFTAG_IMAGELENGTH, image.height());
+  SetOrThrow<uint16_t>(tif, TIFFTAG_SAMPLESPERPIXEL, image.numChannels());
+  SetOrThrow<uint16_t>(
+      tif, TIFFTAG_BITSPERSAMPLE,
+      image.pixelFormat().num_bytes_per_component * 8);
+  if (image.pixelFormat().is<uint8_t>() || image.pixelFormat().is<Pixel3U8>()) {
+    SetOrThrow<uint16_t>(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT);
+  } else if (
+      image.pixelFormat().is<float>() || image.pixelFormat().is<Pixel3F32>()) {
+    SetOrThrow<uint16_t>(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_IEEEFP);
+  } else {
+    throw std::runtime_error(
+        "TIFF support is currently limited. Consider contributing to "
+        "image_io_tiff.cpp.");
+  }
+  SetOrThrow<uint16_t>(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+
+  for (uint32_t row = 0; row < static_cast<uint32_t>(image.height()); ++row) {
+    auto result =
+        TIFFWriteScanline(tif, const_cast<uint8_t*>(image.rawRowPtr(row)), row);
+    if (result != 1) {
+      FARM_WARN("TIFFWriteScanline error");
+    }
+  }
+
+  TIFFClose(tif);
+
+#else
+  PANGOLIN_UNUSED(filename);
+  throw std::runtime_error("Rebuild Pangolin for libtiff support.");
+#endif
 }
 
 IntensityImage<> LoadTiff(const std::string& filename)
