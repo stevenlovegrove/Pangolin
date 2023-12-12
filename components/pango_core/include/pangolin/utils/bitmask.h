@@ -1,3 +1,5 @@
+#pragma once
+
 // Modified version of https://gpfault.net/posts/typesafe-bitmasks.txt.html
 // (public domain)
 
