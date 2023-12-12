@@ -9,3 +9,17 @@ repos:
     rev: v14.0.0
     hooks:
       - id: clang-format
+  - repo: local
+    hooks:
+      - id: pragma-once
+        name: pragma once check
+        entry: "#pragma once"
+        language: pygrep
+        files: \.h$
+        args: [--negate]
+        exclude: |
+          (?x)(
+            components/pango_core/include/pangolin/utils/picojson.h|
+            (components/pango_opengl/shaders/.*.glsl.h$)|
+            components/pango_opengl/src/stb_truetype.h
+          )

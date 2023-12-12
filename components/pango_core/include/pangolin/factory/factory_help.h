@@ -1,3 +1,5 @@
+#pragma once
+
 #include <pangolin/factory/factory_registry.h>
 
 #include <iostream>

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <pangolin/color/colormap.h>
 #include <pangolin/drawable/drawn_checker.h>
 #include <pangolin/layer/draw_layer.h>

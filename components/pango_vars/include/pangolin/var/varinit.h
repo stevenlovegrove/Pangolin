@@ -1,3 +1,5 @@
+#pragma once
+
 #include <pangolin/var/varvalue.h>
 
 #include <cstring>

@@ -1,3 +1,5 @@
+#pragma once
+
 /* This file is part of the Pangolin Project.
  * http://github.com/stevenlovegrove/Pangolin
  *
@@ -24,9 +26,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-
-#ifndef PANGOLIN_PARSE_H
-#define PANGOLIN_PARSE_H
 
 #include <cctype>
 #include <string>
@@ -108,5 +107,3 @@ inline int ParseToken(
   }
 
 }  // namespace pangolin
-
-#endif  // PANGOLIN_PARSE_H
