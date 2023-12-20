@@ -3,7 +3,7 @@
 # exit when any command fails
 set -e
 
-MANAGERS=(dnf apt port vcpkg brew)
+MANAGERS=(dnf apt port vcpkg brew pacman)
 MANAGER=""
 LIST=0
 VERBOSE=0
@@ -132,6 +132,17 @@ elif [[ "$MANAGER" == "dnf" ]]; then
     PKGS_REQUIRED+=(glew-devel eigen3 cmake)
     PKGS_RECOMMENDED+=(libjpeg-devel libpng-devel OpenEXR-devel)
     PKGS_ALL+=(libdc1394-22-devel libraw1394-devel librealsense-devel openni-devel)
+    if ((DRYRUN > 0));  then
+        MANAGER="echo $MANAGER"
+        SUDO=""
+    fi
+elif [[ "$MANAGER" == "pacman" ]]; then
+    SUDO="sudo"
+    PKGS_UPDATE=""  # databases and packages are updated in -Syu install options
+    PKGS_OPTIONS+=(-Syu)
+    PKGS_REQUIRED+=(mesa wayland libxkbcommon wayland-protocols libc++ glew eigen cmake gcc ninja)
+    PKGS_RECOMMENDED+=(libjpeg-turbo libpng ffmpeg)
+    PKGS_ALL+=(libdc1394 libraw1394 openni python39 python-distutils-extra)
     if ((DRYRUN > 0));  then
         MANAGER="echo $MANAGER"
         SUDO=""
