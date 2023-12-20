@@ -41,7 +41,7 @@ git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
 
 ## Dependencies ##
 
-*Pangolin* is split into a few *components* so you can include just what you need. Most dependencies are *optional* so you can pick and mix for your needs. Rather than enforcing a particular package manager, you can use a simple [script](https://github.com/stevenlovegrove/Pangolin/blob/master/scripts/install_prerequisites.sh) to generate a list of (**required**, **recommended** or **all**) packages for installation for that manager (e.g. apt, port, brew, dnf, vcpkg):
+*Pangolin* is split into a few *components* so you can include just what you need. Most dependencies are *optional* so you can pick and mix for your needs. Rather than enforcing a particular package manager, you can use a simple [script](https://github.com/stevenlovegrove/Pangolin/blob/master/scripts/install_prerequisites.sh) to generate a list of (**required**, **recommended** or **all**) packages for installation for that manager (e.g. apt, port, brew, dnf, pacman, vcpkg):
 
 ```bash
 # See what package manager and packages are recommended
