@@ -118,3 +118,5 @@ Log& Log::instance()
 }
 
 }  // namespace pangolin
+
+template <> struct fmt::formatter<pangolin::Log::Kind> : ostream_formatter {};

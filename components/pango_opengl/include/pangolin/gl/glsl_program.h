@@ -67,7 +67,7 @@ struct GlSlProgram {
   // for compile error messages only.
   struct Source {
     ShaderType shader_type = ShaderType::Annotated;
-    std::filesystem::path origin;
+    std::filesystem::path origin = {};
     std::string glsl_code = "";
     int origin_line = 0;
   };

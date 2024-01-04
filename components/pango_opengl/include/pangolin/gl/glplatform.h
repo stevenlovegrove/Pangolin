@@ -73,7 +73,8 @@ const GLubyte* glErrorString(GLenum error);
     if (gl_error != GL_NO_ERROR) {                                             \
       pangolin::Log::instance().log(                                           \
           pangolin::Log::Kind::Error, __FILE__, PANGO_FUNCTION, __LINE__, "",  \
-          "GL Error ({}): {}", gl_error, pangolin::glErrorString(gl_error));   \
+          "GL Error ({}): {}", gl_error,                                       \
+          reinterpret_cast<const char*>(pangolin::glErrorString(gl_error)));   \
       return false;                                                            \
     }                                                                          \
     return true;                                                               \

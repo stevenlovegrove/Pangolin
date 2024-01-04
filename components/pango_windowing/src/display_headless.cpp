@@ -172,7 +172,7 @@ PANGOLIN_REGISTER_FACTORY(HeadlessWindow)
           {"w", "640", "Requested buffer width"},
           {"h", "480", "Requested buffer height"},
           {"window_title", "main", "Title (Unused)"},
-          {PARAM_GL_PROFILE, "Ignored for now"},
+          {PARAM_GL_PROFILE, "Ignored for now", ""},
       }};
     }
     std::unique_ptr<WindowInterface> Open(const Uri& uri) override

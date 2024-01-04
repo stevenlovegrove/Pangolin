@@ -426,8 +426,8 @@ void X11Window::ProcessEvents()
       case ButtonRelease: {
         const int button = ev.xbutton.button - 1;
         MouseSignal(MouseEvent{
-            (float)ev.xbutton.x, (float)ev.xbutton.y,
-            GetEventFlagsFromXState(ev.xkey.state), 1 << button,
+            {(float)ev.xbutton.x, (float)ev.xbutton.y,
+            GetEventFlagsFromXState(ev.xkey.state)}, 1 << button,
             ev.xbutton.type == ButtonPress});
         break;
       }
@@ -435,15 +435,15 @@ void X11Window::ProcessEvents()
         break;
       case MotionNotify:
         if (ev.xmotion.state & (Button1Mask | Button2Mask | Button3Mask)) {
-          MouseMotionSignal(MouseMotionEvent{
+          MouseMotionSignal(MouseMotionEvent{{
               (float)ev.xbutton.x,
               (float)ev.xbutton.y,
-              GetEventFlagsFromXState(ev.xkey.state),
+              GetEventFlagsFromXState(ev.xkey.state)}
           });
         } else {
-          PassiveMouseMotionSignal(MouseMotionEvent{
+          PassiveMouseMotionSignal(MouseMotionEvent{{
               (float)ev.xbutton.x, (float)ev.xbutton.y,
-              GetEventFlagsFromXState(ev.xkey.state)});
+              GetEventFlagsFromXState(ev.xkey.state)}});
         }
         break;
       case KeyPress:
@@ -534,9 +534,9 @@ void X11Window::ProcessEvents()
         }
 
         if (key >= 0) {
-          KeyboardSignal(KeyboardEvent{
+          KeyboardSignal(KeyboardEvent{{
               (float)ev.xkey.x, (float)ev.xkey.y,
-              GetEventFlagsFromXState(ev.xkey.state), (unsigned char)key,
+              GetEventFlagsFromXState(ev.xkey.state)}, (unsigned char)key,
               ev.type == KeyPress});
         }
 
@@ -594,7 +594,7 @@ PANGOLIN_REGISTER_FACTORY(X11Window)
            "Whether the window should be double buffered"},
           {"sample_buffers", "1", ""},
           {"samples", "1", ""},
-          {PARAM_GL_PROFILE, "Ignored for now"},
+          {PARAM_GL_PROFILE, "Ignored for now", ""},
       }};
     }
 
