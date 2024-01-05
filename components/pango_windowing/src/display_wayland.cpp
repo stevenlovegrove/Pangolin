@@ -278,6 +278,10 @@ struct Decoration {
         buttons.clear();
     }
 
+    bool visible() {
+        return !(decorations.empty() && buttons.empty());
+    }
+
     void resize(const int32_t width, const int32_t height) {
         for(const DecorationSurface &d : decorations) { d.resize(width, height); }
         for(const ButtonSurface &b : buttons) { b.reposition(width); }
@@ -537,6 +541,11 @@ static void handle_configure_toplevel(void *data, struct xdg_toplevel */*xdg_top
 
 static void handle_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial) {
     WaylandWindow* const w = static_cast<WaylandWindow*>(data);
+
+    if (w->is_fullscreen && w->decoration->visible())
+        w->decoration->destroy();
+    else if (!w->is_fullscreen && !w->decoration->visible())
+        w->decoration->create();
 
     // resize main surface
     wl_egl_window_resize(w->egl_window, w->width, w->height, 0, 0);
