@@ -24,21 +24,21 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup ROS environment
-        uses: ros-tooling/setup-ros@v0.3
+        uses: ros-tooling/setup-ros@v0.7
 
       - name: ROS 1 CI Action
         if: ${{ matrix.ros_version == 1 }}
-        uses: ros-tooling/action-ros-ci@v0.2
+        uses: ros-tooling/action-ros-ci@v0.3
         with:
           package-name: pangolin
           target-ros1-distro: ${{ matrix.ros_distribution }}
 
       - name: ROS 2 CI Action
         if: ${{ matrix.ros_version == 2 }}
-        uses: ros-tooling/action-ros-ci@v0.2
+        uses: ros-tooling/action-ros-ci@v0.3
         with:
           package-name: pangolin
           target-ros2-distro: ${{ matrix.ros_distribution }}
