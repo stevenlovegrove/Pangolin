@@ -4,6 +4,7 @@
   <version>0.8.0</version>
   <description>Pangolin is a set of lightweight and portable utility libraries for prototyping 3D, numeric or video based programs and algorithms.</description>
   <maintainer email="stevenlovegrove@gmail.com">Steven Lovegrove</maintainer>
+  <maintainer email="Rauch.Christian@gmx.de">Christian Rauch</maintainer>
   <author     email="stevenlovegrove@gmail.com">Steven Lovegrove</author>
   <license>MIT</license>
 
