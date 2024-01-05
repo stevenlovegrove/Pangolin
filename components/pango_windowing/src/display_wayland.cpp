@@ -246,6 +246,8 @@ struct Decoration {
     { }
 
     void create() {
+        destroy();
+
         // reserve memory to prevent that DecorationSurface's destructor gets
         // called by 'emplace_back'
         decorations.reserve(9);
