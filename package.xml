@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>pangolin</name>
   <version>0.8.0</version>
   <description>Pangolin is a set of lightweight and portable utility libraries for prototyping 3D, numeric or video based programs and algorithms.</description>
@@ -13,6 +13,9 @@
   <depend>libglew-dev</depend>
   <depend>python3-dev</depend>
   <build_depend>eigen</build_depend>
+  <depend>libpng-dev</depend>
+  <depend>libturbojpeg</depend>
+  <depend>libxkbcommon-dev</depend>
 
   <export>
     <build_type>cmake</build_type>
