@@ -28,24 +28,15 @@ jobs:
 
     steps:
     - name: Checkout Pangolin
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         submodules: true
 
-    - name: "(vcpkg only) Setup cache key"
-      if: ${{ matrix.package_manager == 'vcpkg' }}
-      run: |
-        export PACKAGES=$($GITHUB_WORKSPACE/scripts/install_prerequisites.sh -l -m ${{matrix.package_manager}} all)
-        echo "PACKAGES=$PACKAGES" >> $GITHUB_ENV
-
     - name: "(vcpkg only) Restore any cached ports"
-      uses: lukka/run-vcpkg@v6
+      uses: lukka/run-vcpkg@v11
       if: ${{ matrix.package_manager == 'vcpkg' }}
       with:
-        setupOnly: true
         vcpkgDirectory: '${{github.workspace}}/scripts/vcpkg'
-        appendedCacheKey: '${{env.PACKAGES}}'
-        vcpkgTriplet: x64-windows
 
     - name: "(vcpkg only) Setup CMake Toolchain file"
       if: ${{ matrix.package_manager == 'vcpkg' }}
@@ -76,12 +67,12 @@ jobs:
 
     steps:
     - name: Checkout Pangolin
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         path: pangolin
 
     - name: Checkout Eigen
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         path: eigen
         repository: 'libigl/eigen'
@@ -114,7 +105,7 @@ jobs:
 
     - name: Deploy Examples to GitHub Pages (for pushes to master)
       if: success() && (github.ref == 'refs/heads/master')
-      uses: crazy-max/ghaction-github-pages@v2.2.0
+      uses: crazy-max/ghaction-github-pages@v4
       with:
         target_branch: gh-pages
         keep_history: true
