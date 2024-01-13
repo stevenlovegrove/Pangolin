@@ -67,45 +67,31 @@ jobs:
       run: ctest
 
   emscripten:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout Pangolin
       uses: actions/checkout@v4
-      with:
-        path: pangolin
 
-    - name: Checkout Eigen
-      uses: actions/checkout@v4
-      with:
-        path: eigen
-        repository: 'libigl/eigen'
-
-    - name: Create Build Directories
+    - name: install build dependencies
       run: |
-        cmake -E make_directory ${{runner.workspace}}/eigen-build
-        cmake -E make_directory ${{runner.workspace}}/pangolin-build
-
-    - name: Start Emscripten Docker
-      run: docker run -dit --name emscripten -v ${{runner.workspace}}:/src emscripten/emsdk:latest bash
-
-    - name: Configure Eigen
-      run: docker exec -t -w /src/eigen-build emscripten cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE /src/Pangolin/eigen
+        sudo apt update
+        sudo apt install -y emscripten ninja-build libeigen3-dev
 
     - name: Configure Pangolin
-      run: docker exec -t -w /src/pangolin-build emscripten emcmake cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DEigen3_DIR=/src/eigen-build /src/Pangolin/pangolin
+      run: emcmake cmake -G Ninja -B pangolin-build -D CMAKE_BUILD_TYPE=$BUILD_TYPE -D Eigen3_DIR=/usr/share/eigen3/cmake/
 
     - name: Build Pangolin
-      run: docker exec -t -w /src/pangolin-build emscripten cmake --build .
+      run: cmake --build pangolin-build
 
     - name: Copy Examples to www folder
       run: |
         mkdir -p ${{runner.workspace}}/www/emscripten
-        rsync -zarvm --include="*/" --include="*.html" --include="*.js" --include="*.wasm" --exclude="*" ${{runner.workspace}}/pangolin-build/examples ${{runner.workspace}}/www/emscripten
+        rsync -zarvm --include="*/" --include="*.html" --include="*.js" --include="*.wasm" --exclude="*" pangolin-build/examples ${{runner.workspace}}/www/emscripten
 
     - name: Copy README to www folder
       run: |
-        cp "${{github.workspace}}/pangolin/README.md" "${{runner.workspace}}/www/index.md"
+        cp "${{github.workspace}}/README.md" "${{runner.workspace}}/www/index.md"
 
     - name: Deploy Examples to GitHub Pages (for pushes to master)
       if: success() && (github.ref == 'refs/heads/master')
