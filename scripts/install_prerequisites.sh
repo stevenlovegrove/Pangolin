@@ -168,7 +168,7 @@ elif [[ "$MANAGER" == "vcpkg" ]]; then
     # TODO: this should be a config option somehow...
     PKGS_OPTIONS+=(install --triplet=x64-windows )
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); fi
-    PKGS_REQUIRED+=(glew eigen3)
+    PKGS_REQUIRED+=(glew eigen3 vcpkg-tool-ninja)
     PKGS_RECOMMENDED+=(libjpeg-turbo libpng openexr tiff ffmpeg lz4 zstd python3 Catch2)
     PKGS_ALL+=(openni2 realsense2)
 else
