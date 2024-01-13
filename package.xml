@@ -16,6 +16,8 @@
   <depend>libpng-dev</depend>
   <depend>libturbojpeg</depend>
   <depend>libxkbcommon-dev</depend>
+  <build_depend>wayland-dev</build_depend>
+  <exec_depend>wayland</exec_depend>
 
   <export>
     <build_type>cmake</build_type>
