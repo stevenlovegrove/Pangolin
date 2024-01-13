@@ -57,7 +57,7 @@ jobs:
 
     - name: Configure CMake
       run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" -DBUILD_TESTS=ON
+        cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" -DBUILD_TESTS=ON
 
     - name: Build
       run: cmake --build build --config $BUILD_TYPE
@@ -90,10 +90,10 @@ jobs:
       run: docker run -dit --name emscripten -v ${{runner.workspace}}:/src emscripten/emsdk:latest bash
 
     - name: Configure Eigen
-      run: docker exec -t -w /src/eigen-build emscripten cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE /src/Pangolin/eigen
+      run: docker exec -t -w /src/eigen-build emscripten cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE /src/Pangolin/eigen
 
     - name: Configure Pangolin
-      run: docker exec -t -w /src/pangolin-build emscripten emcmake cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DEigen3_DIR=/src/eigen-build /src/Pangolin/pangolin
+      run: docker exec -t -w /src/pangolin-build emscripten emcmake cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DEigen3_DIR=/src/eigen-build /src/Pangolin/pangolin
 
     - name: Build Pangolin
       run: docker exec -t -w /src/pangolin-build emscripten cmake --build .
