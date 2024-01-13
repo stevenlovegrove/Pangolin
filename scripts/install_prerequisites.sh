@@ -153,13 +153,13 @@ elif [[ "$MANAGER" == "port" ]]; then
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(-y); SUDO=""; fi
     PKGS_OPTIONS+=(-N install -q)
     PKGS_REQUIRED+=(glew eigen3-devel cmake +gui ninja)
-    PKGS_RECOMMENDED+=(jpeg libpng openexr tiff ffmpeg-devel lz4 zstd py37-pybind11 catch2)
+    PKGS_RECOMMENDED+=(libjpeg-turbo libpng openexr tiff ffmpeg-devel lz4 zstd py37-pybind11 catch2)
     PKGS_ALL+=(libdc1394 openni)
 elif [[ "$MANAGER" == "brew" ]]; then
     PKGS_OPTIONS+=(install)
     if ((VERBOSE > 0)); then PKGS_OPTIONS+=(--verbose); fi
     PKGS_REQUIRED+=(glew eigen cmake ninja)
-    PKGS_RECOMMENDED+=(libjpeg libpng openexr libtiff ffmpeg lz4 zstd catch2)
+    PKGS_RECOMMENDED+=(libjpeg-turbo libpng openexr libtiff ffmpeg lz4 zstd catch2)
     # Brew doesn't have a dryrun option
     if ((DRYRUN > 0));  then
         MANAGER="echo $MANAGER"
