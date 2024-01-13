@@ -32,6 +32,10 @@ jobs:
       with:
         submodules: true
 
+    - name: "(vcpkg only) Install Microsoft Visual C++"
+      if: ${{ matrix.package_manager == 'vcpkg' }}
+      uses: ilammy/msvc-dev-cmd@v1
+
     - name: "(vcpkg only) Restore any cached ports"
       uses: lukka/run-vcpkg@v11
       if: ${{ matrix.package_manager == 'vcpkg' }}
