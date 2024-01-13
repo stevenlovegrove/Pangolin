@@ -23,7 +23,7 @@ jobs:
         - os: macos-12
           package_manager: "brew"
 
-        - os: windows-2019
+        - os: windows-2022
           package_manager: "vcpkg"
 
     steps:
