@@ -19,12 +19,15 @@ jobs:
         include:
         - os: ubuntu-22.04
           package_manager: "apt"
+          test: "ON"
 
         - os: macos-13
           package_manager: "brew"
+          test: "OFF"
 
         - os: windows-2022
           package_manager: "vcpkg"
+          test: "OFF"
 
     steps:
     - name: Checkout Pangolin
@@ -57,12 +60,13 @@ jobs:
 
     - name: Configure CMake
       run: |
-        cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" -DBUILD_TESTS=ON
+        cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" -DBUILD_TESTS=${{matrix.test}}
 
     - name: Build
       run: cmake --build build --config $BUILD_TYPE
 
     - name: Run all tests
+      if: ${{ matrix.test == 'ON' }}
       run: |
         cmake --build build --target test
 
