@@ -19,6 +19,8 @@
   <build_depend>wayland-dev</build_depend>
   <exec_depend>wayland</exec_depend>
 
+  <test_depend>catch2</test_depend>
+
   <export>
     <build_type>cmake</build_type>
   </export>
