@@ -63,8 +63,8 @@ jobs:
       run: cmake --build build --config $BUILD_TYPE
 
     - name: Run all tests
-      working-directory: ${{runner.workspace}}/Pangolin/build
-      run: ctest
+      run: |
+        cmake --build build --target test
 
   emscripten:
     runs-on: ubuntu-22.04
