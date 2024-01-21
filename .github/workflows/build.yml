@@ -20,7 +20,7 @@ jobs:
         - os: ubuntu-20.04
           package_manager: "apt"
 
-        - os: macos-12
+        - os: macos-13
           package_manager: "brew"
 
         - os: windows-2022
