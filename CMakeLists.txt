@@ -87,16 +87,11 @@ endif()
 #######################################################
 ## Testing setup
 
-option( BUILD_TESTS "Build Tests" OFF)
-find_package(Catch2 2 QUIET)
-if(Catch2_FOUND)
+option(BUILD_TESTS "Build Tests" OFF)
+if(BUILD_TESTS)
+    find_package(Catch2 2 REQUIRED)
     include(CTest)
     include(Catch)
-else()
-    if(BUILD_TESTS)
-        message(WARNING "Building Tests requested, but Catch2 library not found.")
-        set( BUILD_TESTS OFF)
-    endif()
 endif()
 
 #######################################################
