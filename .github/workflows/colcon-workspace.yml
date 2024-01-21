@@ -1,4 +1,4 @@
-name: ROS workspace CI
+name: colcon workspace
 
 on: [push, pull_request]
 
