@@ -28,7 +28,7 @@
 #include <pangolin/display/process.h>
 #include <pangolin/console/ConsoleView.h>
 #include <pangolin/handler/handler.h>
-#include "pangolin_gl.h"
+#include <pangolin/display/pangolin_gl.h>
 
 namespace pangolin
 {
@@ -47,7 +47,7 @@ void Resize( int width, int height )
 
 void Keyboard(unsigned char key, int x, int y, bool pressed, KeyModifierBitmask /*key_modifiers*/)
 {
-    PangolinGl* context = GetCurrentContext();
+   PangolinGl* context = GetCurrentContext();
 
     // Force coords to match OpenGl Window Coords
     y = context->base.v.h - y;

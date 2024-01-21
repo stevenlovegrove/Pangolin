@@ -35,7 +35,7 @@ endif()
 
 if(_WIN_)
     option( BUILD_SHARED_LIBS    "Build Shared Library" OFF)
-    option( MSVC_USE_STATIC_CRT  "Use static C Runtime with MSVC, /MT instead of /MD" ON)
+    option( MSVC_USE_STATIC_CRT  "Use static C Runtime with MSVC, /MT instead of /MD" OFF)
 
     # Make sure there are no erroneous C Runtime flags
     list(APPEND FLAG_VARS
@@ -54,14 +54,14 @@ if(_WIN_)
         endforeach()
     endif()
 elseif(_OSX_)
-    option( BUILD_SHARED_LIBS "Build Shared Library" ON)
+    option( BUILD_SHARED_LIBS "Build Shared Library" OFF)
     set(CMAKE_MACOSX_RPATH ON)
 elseif(EMSCRIPTEN)
     set(BUILD_SHARED_LIBS OFF)
     include(EmscriptenUtils)
     set(CMAKE_EXE_LINKER_FLAGS "-sASYNCIFY=1 -sDISABLE_EXCEPTION_CATCHING=0 -sGL_ASSERTIONS=1 -sFULL_ES3=1 --bind")
 else()
-    option( BUILD_SHARED_LIBS "Build Shared Library" ON)
+    option( BUILD_SHARED_LIBS "Build Shared Library" OFF)
 endif()
 
 # run with "ASAN_OPTIONS=fast_unwind_on_malloc=0" to print stack with more details
@@ -102,8 +102,12 @@ set(component_list "")
 foreach(component_cmake ${components_cmake})
     get_filename_component(component_dir ${component_cmake} DIRECTORY)
     get_filename_component(component_name ${component_dir} NAME)
-    add_library(${component_name} "")
-    list(APPEND component_list ${component_name})
+    list(FIND component_list ${component_name} index)
+
+    if(index EQUAL -1)
+        add_library(${component_name} "")
+        list(APPEND component_list ${component_name})
+    endif()
 endforeach()
 
 foreach(component_cmake ${components_cmake})

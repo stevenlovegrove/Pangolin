@@ -51,6 +51,7 @@ typedef std::map<int,std::function<void(int)> > KeyhookMap;
 struct PANGOLIN_EXPORT PangolinGl
 {
     PangolinGl();
+    PangolinGl(PangolinGl& other);
     ~PangolinGl();
 
     void Run();
@@ -88,15 +89,15 @@ struct PANGOLIN_EXPORT PangolinGl
     std::shared_ptr<WindowInterface> window;
     std::shared_ptr<GlFont> font;
 
-    std::unique_ptr<ConsoleView> console_view;
+    std::shared_ptr<ConsoleView> console_view;
 };
 
 PangolinGl* GetCurrentContext();
 void SetCurrentContext(PangolinGl* context);
 void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> newcontext);
 void DeleteContext(const std::string& name);
-PangolinGl *FindContext(const std::string& name);
-void SetCurrentContext(PangolinGl* newcontext);
+PangolinGl* FindContext(const std::string& name);
+void SetCurrentContext(std::shared_ptr<PangolinGl> newcontext);
 
 }
 

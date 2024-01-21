@@ -48,7 +48,7 @@
 #include <pangolin/image/image_io.h>
 #include <pangolin/var/var.h>
 
-#include "pangolin_gl.h"
+#include <pangolin/display/pangolin_gl.h>
 
 extern const unsigned char AnonymousPro_ttf[];
 
@@ -63,7 +63,6 @@ std::recursive_mutex contexts_mutex;
 
 // Context active for current thread
 __thread PangolinGl* context = 0;
-
 void SetCurrentContext(PangolinGl* newcontext) {
     context = newcontext;
 }
@@ -85,7 +84,6 @@ PangolinGl *FindContext(const std::string& name)
 WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, const Params& params)
 {
     std::unique_lock<std::recursive_mutex> l(contexts_mutex);
-
     pangolin::Uri win_uri;
 
     if(const char* extra_params = std::getenv("PANGOLIN_WINDOW_URI"))
@@ -176,7 +174,6 @@ void RegisterNewContext(const std::string& name, std::shared_ptr<PangolinGl> new
         throw std::runtime_error("Context already exists.");
     }
     contexts[name] = newcontext;
-
     // Process the following as if this context is now current.
     PangolinGl *oldContext = context;
     context = newcontext.get();
@@ -262,7 +259,7 @@ View& DisplayBase()
 
 View& CreateDisplay()
 {
-    int iguid = rand();
+    int iguid =std::chrono::high_resolution_clock::now().time_since_epoch().count();
     std::stringstream ssguid;
     ssguid << iguid;
     return Display(ssguid.str());

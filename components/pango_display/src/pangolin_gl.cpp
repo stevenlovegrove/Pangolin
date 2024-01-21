@@ -25,7 +25,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "pangolin_gl.h"
+#include <pangolin/display/pangolin_gl.h>
 #include <pangolin/display/display.h>
 #include <pangolin/console/ConsoleView.h>
 
@@ -36,7 +36,6 @@ PangolinGl::PangolinGl()
     : user_app(0), quit(false), mouse_state(0),activeDisplay(0)
 {
 }
-
 PangolinGl::~PangolinGl()
 {
     // Free displays owned by named_managed_views
