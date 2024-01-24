@@ -16,6 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-22.04, macos-13, windows-2022]
+        shared_libs: ['ON', 'OFF']
         include:
         - os: ubuntu-22.04
           package_manager: "apt"
@@ -59,8 +61,12 @@ jobs:
         $GITHUB_WORKSPACE/scripts/install_prerequisites.sh -v -u -m ${{matrix.package_manager}} all
 
     - name: Configure CMake
-      run: |
-        cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" -DBUILD_TESTS=${{matrix.test}}
+      run: >
+        cmake -G Ninja -B build
+        -D CMAKE_BUILD_TYPE=$BUILD_TYPE
+        -D CMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"
+        -D BUILD_SHARED_LIBS=${{ matrix.shared_libs }}
+        -D BUILD_TESTS=${{ matrix.test }}
 
     - name: Build
       run: cmake --build build --config $BUILD_TYPE
