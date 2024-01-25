@@ -20,6 +20,7 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 include(SetPlatformVars)
 include(PangolinFactory)
