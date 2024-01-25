@@ -19,6 +19,8 @@ endif()
 # Make our own cmake imports accessible
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 include(SetPlatformVars)
 include(PangolinFactory)
 
