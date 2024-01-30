@@ -114,7 +114,7 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
                     std::memcpy(tex_image.RowPtr(y), tex_image.RowPtr(tex_image.h - 1 - y), row_bytes);
                     std::memcpy(tex_image.RowPtr(tex_image.h - 1 - y), tmp_row.data(), row_bytes);
                 }
-              } catch(const std::exception& e) {
+              } catch(const std::exception&) {
                 pango_print_warn("Unable to read texture '%s'\n", tex_name.c_str());
                 geom.textures.erase(tex_name);
               }
