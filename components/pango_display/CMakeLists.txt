@@ -13,6 +13,7 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/image_view.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/ConsoleView.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/default_font.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp
 )
 
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl pango_windowing pango_vars )
