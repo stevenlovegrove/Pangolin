@@ -60,7 +60,7 @@ public:
     // IUnknown methods
     STDMETHODIMP QueryInterface(REFIID iid, void** ppv)
     {
-      if (iid != __uuidof(IMFSourceReaderCallback)) {
+      if (!IsEqualGUID(iid, __uuidof(IMFSourceReaderCallback))) {
         return E_NOINTERFACE;
       }
       InterlockedIncrement(&ref_);
@@ -696,7 +696,7 @@ bool UvcMediaFoundationVideo::FindDevice(int vendorId, int productId, const std:
                 continue;
             }
 
-            if(nodeGuid == KSNODETYPE_DEV_SPECIFIC)
+            if(IsEqualGUID(nodeGuid, KSNODETYPE_DEV_SPECIFIC))
             {
                 // This is the extension node
                 IKsNodeControl* pUnknown = nullptr;
@@ -859,12 +859,12 @@ void UvcMediaFoundationVideo::InitDevice(size_t width, size_t height, bool async
                 stride = bestStride;
             }
 
-            if(bestGuid == MFVideoFormat_YUY2)
+            if(IsEqualGUID(bestGuid, MFVideoFormat_YUY2))
             {
                 pixelFormat = PixelFormatFromString("GRAY8");
                 bit_depth = 8;
             }
-            else if(bestGuid == MFVideoFormat_Y10)
+            else if(IsEqualGUID(bestGuid, MFVideoFormat_Y10))
             {
                 pixelFormat = PixelFormatFromString("GRAY10");
                 bit_depth = 10;
