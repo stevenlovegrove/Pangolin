@@ -35,8 +35,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+option( BUILD_SHARED_LIBS "Build Shared Library" ON)
+
 if(_WIN_)
-    option( BUILD_SHARED_LIBS    "Build Shared Library" OFF)
     option( MSVC_USE_STATIC_CRT  "Use static C Runtime with MSVC, /MT instead of /MD" ON)
 
     # Make sure there are no erroneous C Runtime flags
@@ -56,14 +57,11 @@ if(_WIN_)
         endforeach()
     endif()
 elseif(_OSX_)
-    option( BUILD_SHARED_LIBS "Build Shared Library" ON)
     set(CMAKE_MACOSX_RPATH ON)
 elseif(EMSCRIPTEN)
     set(BUILD_SHARED_LIBS OFF)
     include(EmscriptenUtils)
     set(CMAKE_EXE_LINKER_FLAGS "-sASYNCIFY=1 -sDISABLE_EXCEPTION_CATCHING=0 -sGL_ASSERTIONS=1 -sFULL_ES3=1 --bind")
-else()
-    option( BUILD_SHARED_LIBS "Build Shared Library" ON)
 endif()
 
 # run with "ASAN_OPTIONS=fast_unwind_on_malloc=0" to print stack with more details
