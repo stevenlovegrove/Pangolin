@@ -124,7 +124,7 @@ struct Log {
       const char* assertion_statement, Args... args)
   {
     if constexpr (sizeof...(args) > 0) {
-      const std::string arg_string = fmt::format(std::forward<Args>(args)...);
+      const std::string arg_string = pangolin::format(std::forward<Args>(args)...);
       logImpl(kind, sFile, sFunction, nLine, assertion_statement, arg_string);
     } else {
       logImpl(kind, sFile, sFunction, nLine, assertion_statement, "");
@@ -137,7 +137,7 @@ struct Log {
       const char* assertion_statement, Args... args)
   {
     if constexpr (sizeof...(args) > 0) {
-      const std::string arg_string = fmt::format(std::forward<Args>(args)...);
+      const std::string arg_string = pangolin::format(std::forward<Args>(args)...);
       logImpl(kind, sFile, sFunction, nLine, assertion_statement, arg_string);
       throw std::runtime_error(arg_string);
     } else {
