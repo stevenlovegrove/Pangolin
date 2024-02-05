@@ -8,8 +8,17 @@ namespace pangolin
 {
 
 // Scalar declarations
+
+// A bug in GCC 11 complains about an ambiguity in the overload set for this function, even though the standard
+// is clear that the constrained versions should be selected.
+// Reference:
+// - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111748
+// - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=102184
+// - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105481
+// By adding a constraint expression, we make it extra clear to GCC that there is no ambiguity.
 template <typename T>
-void glUniform(GLint location, T val);
+void glUniform(GLint location, T val) requires(!sophus::concepts::EigenDenseType<T> && !sophus::concepts::EnumType<T>);
+
 template <typename T>
 void glUniform(GLint location, T a, T b);
 template <typename T>
