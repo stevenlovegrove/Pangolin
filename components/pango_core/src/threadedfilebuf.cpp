@@ -35,6 +35,7 @@
 #ifdef USE_POSIX_FILE_IO
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 // Optionally use direct file i/o to avoid the cache.
 #define USE_DIRECT_FILE_IO
