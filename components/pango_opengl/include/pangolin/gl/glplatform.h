@@ -55,8 +55,10 @@
     #undef ERROR
 #endif
 
-#ifdef HAVE_GLEW
+#if defined(HAVE_GLEW)
     #include <GL/glew.h>
+#elif defined(HAVE_EPOXY)
+    #include <epoxy/gl.h>
 #endif
 
 #ifdef HAVE_GLES
