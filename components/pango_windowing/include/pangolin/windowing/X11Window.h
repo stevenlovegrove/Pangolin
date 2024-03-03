@@ -34,7 +34,7 @@
 #include <string>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <GL/glx.h>
+#include <EGL/egl.h>
 
 namespace pangolin
 {
@@ -59,22 +59,23 @@ struct X11Display
 
 struct X11GlContext : public GlContextInterface
 {
-    X11GlContext(std::shared_ptr<X11Display> &d, ::GLXFBConfig chosenFbc, std::shared_ptr<X11GlContext> shared_context = std::shared_ptr<X11GlContext>() );
+    X11GlContext(std::shared_ptr<X11Display> &d);
     ~X11GlContext();
 
     std::shared_ptr<X11Display> display;
 
-    std::shared_ptr<X11GlContext> shared_context;
-
     // Owns the OpenGl Context
-    ::GLXContext glcontext;
+    EGLContext egl_context;
+    EGLDisplay egl_display;
+    EGLConfig egl_config;
+    EGLSurface egl_surface;
 };
 
 struct X11Window : public WindowInterface
 {
     X11Window(
         const std::string& title, int width, int height,
-        std::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc
+        std::shared_ptr<X11Display>& display, std::shared_ptr<X11GlContext> newglcontext
     );
 
     ~X11Window();
@@ -85,7 +86,7 @@ struct X11Window : public WindowInterface
 
     void Resize(unsigned int w, unsigned int h) override;
 
-    void MakeCurrent(GLXContext ctx);
+    void MakeCurrent(EGLContext ctx);
 
     void MakeCurrent() override;
 

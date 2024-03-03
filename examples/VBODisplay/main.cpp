@@ -1,6 +1,10 @@
 #include <iostream>
 
-#include <GL/glew.h>
+#if defined(HAVE_GLEW)
+    #include <GL/glew.h>
+#elif defined(HAVE_EPOXY)
+    #include <epoxy/gl.h>
+#endif
 
 #include <pangolin/pangolin.h>
 #include <pangolin/gl/glcuda.h>
@@ -24,10 +28,12 @@ int main( int /*argc*/, char* argv[] )
 //  cudaGLSetGLDevice(0);
 
   pangolin::CreateWindowAndBind("Main",640,480);
+#ifdef HAVE_GLEW
   glewInit();
-  
-  // 3D Mouse handler requires depth testing to be enabled  
-  glEnable(GL_DEPTH_TEST);  
+#endif
+
+  // 3D Mouse handler requires depth testing to be enabled
+  glEnable(GL_DEPTH_TEST);
 
   // Create vertex and colour buffer objects and register them with CUDA
   GlBufferCudaPtr vertex_array(

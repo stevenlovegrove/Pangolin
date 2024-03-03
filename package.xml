@@ -11,6 +11,7 @@
   <buildtool_depend>cmake</buildtool_depend>
 
   <depend>libglew-dev</depend>
+  <depend>libepoxy-dev</depend>
   <depend>python3-dev</depend>
   <build_depend>eigen</build_depend>
   <depend>libpng-dev</depend>
