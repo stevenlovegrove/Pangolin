@@ -1,13 +1,13 @@
 #pragma once
 
 #include <pangolin/color/color.h>
-#include <sophus/image/image_types.h>
-#include <sophus/lie/isometry3.h>
+#include <sophus2/image/image_types.h>
+#include <sophus2/lie/isometry3.h>
 
-// Specialization of sophus::ImageTraits for types we might like to consider
+// Specialization of sophus2::ImageTraits for types we might like to consider
 // in pixel or vertex-like buffers
 
-namespace sophus
+namespace sophus2
 {
 
 template <class TT>

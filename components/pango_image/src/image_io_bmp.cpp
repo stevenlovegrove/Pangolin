@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
@@ -61,7 +61,7 @@ IntensityImage<> LoadBmp(std::istream& in)
   if (w == 0 || h == 0)
     throw std::runtime_error("LoadBmp: Invalid Bitmap size");
 
-  sophus::MutImage3U8 img(sophus::ImageSize(w, h));
+  sophus2::MutImage3U8 img(sophus2::ImageSize(w, h));
   const int num_channels = 3;
 
   for (int y = ((int)h - 1); y != -1; y--) {

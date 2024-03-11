@@ -12,7 +12,7 @@
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
 #endif
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {

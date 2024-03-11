@@ -3,7 +3,7 @@
 
 #include <fstream>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {

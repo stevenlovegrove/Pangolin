@@ -28,7 +28,7 @@
 #pragma once
 
 #include <pangolin/platform.h>
-#include <sophus/image/dyn_image_types.h>
+#include <sophus2/image/dyn_image_types.h>
 
 #include <string>
 #include <unordered_map>
@@ -38,12 +38,12 @@ namespace pangolin
 //! Return Pixel Format properties given string specification in
 //! FFMPEG notation. E.g. GRAY8, RGB24, ...
 PANGOLIN_EXPORT
-sophus::PixelFormat PixelFormatFromString(const std::string& format);
+sophus2::PixelFormat PixelFormatFromString(const std::string& format);
 
 PANGOLIN_EXPORT
-std::string ToString(const sophus::PixelFormat& fmt);
+std::string ToString(const sophus2::PixelFormat& fmt);
 
 PANGOLIN_EXPORT
-const std::unordered_map<std::string, sophus::PixelFormat>& KnownPixelTypes();
+const std::unordered_map<std::string, sophus2::PixelFormat>& KnownPixelTypes();
 
 }  // namespace pangolin

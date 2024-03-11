@@ -9,10 +9,10 @@
 */
 
 using namespace pangolin;
-using namespace sophus;
+using namespace sophus2;
 
 inline void translate(
-    std::vector<sophus::SE3f>& T_world_obj, const Eigen::Vector3f& dir_last,
+    std::vector<sophus2::SE3f>& T_world_obj, const Eigen::Vector3f& dir_last,
     int steps)
 {
   PANGO_ENSURE(T_world_obj.size() > 0);
@@ -25,7 +25,7 @@ inline void translate(
 }
 
 inline void rotate(
-    std::vector<sophus::SE3f>& T_world_obj, const Eigen::Vector3f& axis_angle,
+    std::vector<sophus2::SE3f>& T_world_obj, const Eigen::Vector3f& axis_angle,
     int steps)
 {
   PANGO_ENSURE(T_world_obj.size() > 0);
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     }
   });
 
-  std::vector<sophus::SE3f> parent_from_axis_poses;
+  std::vector<sophus2::SE3f> parent_from_axis_poses;
   parent_from_axis_poses.emplace_back();
   // up 1m
   translate(parent_from_axis_poses, {0.0f, 0.0, 1.0}, 10);
@@ -69,12 +69,12 @@ int main(int argc, char** argv)
 
   // Spiral
   for (int i = 0; i < 100; ++i) {
-    const sophus::SE3f delta(Eigen::Vector3f(0.1, 0.2f, 0.0f),
-        sophus::Rotation3F32::fromRx(0.1) * sophus::Rotation3F32::fromRy(0.05));
+    const sophus2::SE3f delta(Eigen::Vector3f(0.1, 0.2f, 0.0f),
+        sophus2::Rotation3F32::fromRx(0.1) * sophus2::Rotation3F32::fromRy(0.05));
     parent_from_axis_poses.push_back(parent_from_axis_poses.back() * delta);
   }
 
-  sophus::SE3d scene_from_parent = sophus::Isometry3F64::fromTz(0.2);
+  sophus2::SE3d scene_from_parent = sophus2::Isometry3F64::fromTz(0.2);
   scene->addInScene(checker_plane);
   scene->addInSceneAt(
       draw::Axes{.drawable_from_axis_poses = parent_from_axis_poses},

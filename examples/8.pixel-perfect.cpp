@@ -37,7 +37,7 @@ struct DrawableConversionTraits<Cross> {
 
 int main(int argc, char** argv)
 {
-  using namespace sophus;
+  using namespace sophus2;
   using namespace pangolin;
 
   const int w = 8;
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 
   // Draw a very low resolution image so that we can visually ensure we are
   // not missing any half pixels etc
-  auto image = sophus::Image<float>::makeGenerative(
+  auto image = sophus2::Image<float>::makeGenerative(
       {w, h}, [](int x, int y) { return float(y * w + x) / float(w * h); });
 
   auto layer = makeLayer(image);

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <pangolin/render/conventions.h>
-#include <sophus/calculus/region.h>
-#include <sophus/image/image_size.h>
+#include <sophus2/calculus/region.h>
+#include <sophus2/image/image_size.h>
 
 namespace pangolin
 {
@@ -28,27 +28,27 @@ Eigen::Matrix3d invProjectionCameraFromImage(
 // recommended to set 'far' to infinity for perspective projections, and a
 // finite value for orthographic.
 Eigen::Matrix4d transformProjectionFromImage(
-    sophus::RegionF64 near_far_in_world_units,
+    sophus2::RegionF64 near_far_in_world_units,
     GraphicsProjection projection = GraphicsProjection::perspective);
 
 // Returns 4x4 transform which takes z-buffer mapped pixel homogenious points
 // into clip coordinates (with interval [-1, -1, -1] to [1,1,1]).
 Eigen::Matrix4d transformClipFromProjection(
-    sophus::ImageSize size,
+    sophus2::ImageSize size,
     ImageXy image_convention = Conventions::global().image_xy,
     ImageIndexing image_indexing = Conventions::global().image_indexing);
 
-Eigen::Matrix3d transformWindowFromClip(sophus::Region2I viewport);
+Eigen::Matrix3d transformWindowFromClip(sophus2::Region2I viewport);
 
 Eigen::Matrix4d projectionClipFromCamera(
-    sophus::ImageSize size, Eigen::Vector2d focal_distance_pixels,
-    Eigen::Vector2d principle_point, sophus::RegionF64 near_far_in_world_units,
+    sophus2::ImageSize size, Eigen::Vector2d focal_distance_pixels,
+    Eigen::Vector2d principle_point, sophus2::RegionF64 near_far_in_world_units,
     DeviceXyz coord_convention = Conventions::global().device_xyz,
     ImageXy image_convention = Conventions::global().image_xy,
     ImageIndexing image_indexing = Conventions::global().image_indexing);
 
 Eigen::Matrix4d projectionClipFromOrtho(
-    sophus::Region2F64 extent, sophus::RegionF64 near_far_in_world_units,
+    sophus2::Region2F64 extent, sophus2::RegionF64 near_far_in_world_units,
     ImageXy image_convention = Conventions::global().image_xy,
     ImageIndexing image_indexing = Conventions::global().image_indexing);
 

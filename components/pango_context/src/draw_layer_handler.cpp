@@ -4,7 +4,7 @@
 #include <pangolin/utils/fmt.h>
 #include <pangolin/utils/logging.h>
 #include <pangolin/utils/variant_overload.h>
-#include <sophus/geometry/ray.h>
+#include <sophus2/geometry/ray.h>
 
 namespace pangolin
 {
@@ -14,15 +14,15 @@ struct PointerState {
   Eigen::Vector2d p_clip;
   Eigen::Vector2d p_img;
   Eigen::Vector3d p_cam;
-  sophus::Isometry3<double> cam_T_world;
-  sophus::Similarity2<double> clip_view_transform;
+  sophus2::Isometry3<double> cam_T_world;
+  sophus2::Similarity2<double> clip_view_transform;
   double z_depth_cam;
 };
 
 struct MouseUpdateArgs {
   // Potentially updated by function
   DrawLayerRenderState& render_state;
-  sophus::Region3F64& camera_limits_in_world;
+  sophus2::Region3F64& camera_limits_in_world;
   Eigen::Vector3d point_in_world;
   // Information
   PointerState pointer_now;
@@ -49,17 +49,17 @@ Eigen::Vector3d componentPerpendicularToAxis(
 }
 
 // Return a transform which represents a rotation by angle_rad around axis.
-sophus::SE3d rotateAroundAxis(
-    const sophus::Ray3<double>& axis, double angle_rad)
+sophus2::SE3d rotateAroundAxis(
+    const sophus2::Ray3<double>& axis, double angle_rad)
 {
-  sophus::SE3d point_T_cam(-axis.origin());
-  sophus::SE3d point_R_point(
-      sophus::Rotation3F64::exp(axis.direction().vector() * angle_rad));
+  sophus2::SE3d point_T_cam(-axis.origin());
+  sophus2::SE3d point_R_point(
+      sophus2::Rotation3F64::exp(axis.direction().vector() * angle_rad));
   return point_T_cam.inverse() * point_R_point * point_T_cam;
 }
 
 // NOT WELL TESTED (probably broken)
-sophus::Rotation3F64 alignUpDir(
+sophus2::Rotation3F64 alignUpDir(
     const Eigen::Vector3d& unit_axis_in_cam,
     const Eigen::Vector3d& unit_up_in_cam, DeviceXyz axis_convention)
 {
@@ -77,7 +77,7 @@ sophus::Rotation3F64 alignUpDir(
           .normalized();
 
   // TODO: if either a or b are colinear with up, we probably have a problem.
-  const sophus::Rotation3F64 b_R_a = sophus::rotThroughPoints(a, b);
+  const sophus2::Rotation3F64 b_R_a = sophus2::rotThroughPoints(a, b);
   return b_R_a;
 }
 
@@ -94,13 +94,13 @@ void cameraOrientPointToPoint(MouseUpdateArgs& info)
 
   // pointed frame has target aligned under mouse, but may introduce in-plane
   // rotation
-  const sophus::Rotation3F64 pointed_R_from =
-      sophus::rotThroughPoints(unit_x_from, unit_x_to);
+  const sophus2::Rotation3F64 pointed_R_from =
+      sophus2::rotThroughPoints(unit_x_from, unit_x_to);
 
-  sophus::Rotation3F64 to_R_from;
+  sophus2::Rotation3F64 to_R_from;
 
   if (info.unit_up_in_world) {
-    const sophus::Rotation3F64 to_R_pointed = alignUpDir(
+    const sophus2::Rotation3F64 to_R_pointed = alignUpDir(
         pointed_R_from * unit_x_from,
         pointed_R_from * info.pointer_pressed.cam_T_world.so3() *
             (*info.unit_up_in_world),
@@ -111,7 +111,7 @@ void cameraOrientPointToPoint(MouseUpdateArgs& info)
   }
 
   info.render_state.camera_from_world =
-      sophus::SE3d(to_R_from) * info.pointer_pressed.cam_T_world;
+      sophus2::SE3d(to_R_from) * info.pointer_pressed.cam_T_world;
 }
 
 // Translate camera such that the point in 3D under the cursor at
@@ -124,7 +124,7 @@ void cameraTranslatePointToPoint(MouseUpdateArgs& info)
       from.z() * info.pointer_now.p_cam / info.pointer_now.p_cam.z();
   const Eigen::Vector3d to_in_from = to - from;
   info.render_state.camera_from_world =
-      sophus::SE3d(to_in_from) * info.pointer_pressed.cam_T_world;
+      sophus2::SE3d(to_in_from) * info.pointer_pressed.cam_T_world;
 }
 
 // Rotate about point_in_world maintaining up_dir_in_world relative to camera,
@@ -139,11 +139,11 @@ void cameraRotateAbout(
       info.render_state.camera_from_world.so3() * (*info.unit_up_in_world);
   Eigen::Vector3d point_in_cam =
       info.render_state.camera_from_world * info.point_in_world;
-  sophus::SE3d rotx_T_world =
+  sophus2::SE3d rotx_T_world =
       rotateAroundAxis(
-          sophus::Ray3<double>(
+          sophus2::Ray3<double>(
               point_in_cam,
-              sophus::UnitVector3<double>::fromUnitVector(up_dir_in_cam)),
+              sophus2::UnitVector3<double>::fromUnitVector(up_dir_in_cam)),
           rotation_amount.y()) *
       info.render_state.camera_from_world;
 
@@ -153,9 +153,9 @@ void cameraRotateAbout(
   Eigen::Vector3d right_dir_in_cam(1.0, 0.0, 0.0);
   info.render_state.camera_from_world =
       rotateAroundAxis(
-          sophus::Ray3<double>(
+          sophus2::Ray3<double>(
               point_in_cam,
-              sophus::UnitVector3<double>::fromUnitVector(right_dir_in_cam)),
+              sophus2::UnitVector3<double>::fromUnitVector(right_dir_in_cam)),
           rotation_amount.x()) *
       rotx_T_world;
 }
@@ -165,7 +165,7 @@ void cameraMoveTowardsPoint(MouseUpdateArgs& info, const double zoom_input)
   const Eigen::Vector3d vec =
       zoom_input * (info.render_state.camera_from_world * info.point_in_world);
   info.render_state.camera_from_world =
-      sophus::SE3d(vec) * info.render_state.camera_from_world;
+      sophus2::SE3d(vec) * info.render_state.camera_from_world;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -176,13 +176,13 @@ void cameraMoveTowardsPoint(MouseUpdateArgs& info, const double zoom_input)
 // having the same z_depth
 void imagePointToPoint(MouseUpdateArgs& info)
 {
-  sophus::Similarity2<double> new_old;
+  sophus2::Similarity2<double> new_old;
   new_old.translation() = info.pointer_now.p_clip - info.pointer_pressed.p_clip;
   info.render_state.clip_view_transform =
       new_old * info.pointer_pressed.clip_view_transform;
 }
 
-void clampClipViewTransform(sophus::Similarity2<double>& clip_view_transform)
+void clampClipViewTransform(sophus2::Similarity2<double>& clip_view_transform)
 {
   // Scale 1.0 means we're at min size (occupies entire viewport), so min/max
   // translation would be +-0. Scale 2.0 means we're zoomed in my 2. We can move
@@ -199,13 +199,13 @@ void imageZoom(
     MouseUpdateArgs& info, const double zoom_input,
     const bool constrain_image_zoom_bounds)
 {
-  using namespace sophus;
+  using namespace sophus2;
   double factor = 1.0 - zoom_input;
 
-  sophus::Similarity2<double> center_on_pointer;
+  sophus2::Similarity2<double> center_on_pointer;
   center_on_pointer.translation() = -info.pointer_now.p_clip;
 
-  sophus::Similarity2<double> new_old;
+  sophus2::Similarity2<double> new_old;
   new_old.setScale(factor);
 
   info.render_state.clip_view_transform = center_on_pointer.inverse() *
@@ -220,7 +220,7 @@ void imageZoom(
 
 void imagePan(MouseUpdateArgs& info, const Eigen::Array2d& pan)
 {
-  sophus::Similarity2<double> new_old;
+  sophus2::Similarity2<double> new_old;
   new_old.translation() =
       info.clip_aspect_scale * pan * Eigen::Array2d(1.0, -1.0);
   info.render_state.clip_view_transform =
@@ -248,7 +248,7 @@ class HandlerImpl : public DrawLayerHandler
       Eigen::Array2d clip_aspect_scale, DrawLayer& layer,
       DrawLayerRenderState& render_state) override
   {
-    using namespace sophus;
+    using namespace sophus2;
 
     const CameraModel camera = render_state.camera;
     const RegionF64 near_far = render_state.near_far;

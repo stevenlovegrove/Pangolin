@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <sophus/image/dyn_image_types.h>
+#include <sophus2/image/dyn_image_types.h>
 
 namespace pangolin
 {
@@ -38,15 +38,15 @@ class PANGOLIN_EXPORT StreamInfo
   inline StreamInfo() : layout_(), offset_bytes_(0) {}
 
   inline StreamInfo(
-      sophus::PixelFormat fmt, const sophus::ImageLayout shape,
+      sophus2::PixelFormat fmt, const sophus2::ImageLayout shape,
       size_t offset_bytes) :
       fmt_(fmt), layout_(shape), offset_bytes_(offset_bytes)
   {
   }
 
-  inline sophus::ImageLayout layout() const { return layout_; }
+  inline sophus2::ImageLayout layout() const { return layout_; }
 
-  inline sophus::PixelFormat format() const { return fmt_; }
+  inline sophus2::PixelFormat format() const { return fmt_; }
 
   inline size_t offsetBytes() const { return offset_bytes_; }
 
@@ -56,22 +56,22 @@ class PANGOLIN_EXPORT StreamInfo
   }
 
   //! Return Image wrapper around raw base pointer
-  inline sophus::ImageView<uint8_t> StreamImage(const uint8_t* base_ptr) const
+  inline sophus2::ImageView<uint8_t> StreamImage(const uint8_t* base_ptr) const
   {
     return {layout_, base_ptr + offset_bytes_};
   }
 
-  inline sophus::MutImageView<uint8_t> StreamImage(uint8_t* base_ptr) const
+  inline sophus2::MutImageView<uint8_t> StreamImage(uint8_t* base_ptr) const
   {
     return {layout_, base_ptr + offset_bytes_};
   }
 
-  inline sophus::IntensityImage<> copyToDynImage(const uint8_t* base_ptr) const
+  inline sophus2::IntensityImage<> copyToDynImage(const uint8_t* base_ptr) const
   {
     PANGO_DEBUG("Unneeded image copy happening...");
-    sophus::IntensityImage<> runtime =
-        sophus::IntensityImage<>::fromFormat(layout_, fmt_);
-    sophus::details::pitchedCopy(
+    sophus2::IntensityImage<> runtime =
+        sophus2::IntensityImage<>::fromFormat(layout_, fmt_);
+    sophus2::details::pitchedCopy(
         const_cast<uint8_t*>(runtime.rawPtr()), runtime.layout().pitchBytes(),
         base_ptr, layout_.pitchBytes(), layout_.imageSize(),
         fmt_.numBytesPerPixel());
@@ -79,8 +79,8 @@ class PANGOLIN_EXPORT StreamInfo
   }
 
   protected:
-  sophus::PixelFormat fmt_;
-  sophus::ImageLayout layout_;
+  sophus2::PixelFormat fmt_;
+  sophus2::ImageLayout layout_;
   size_t offset_bytes_;
 };
 

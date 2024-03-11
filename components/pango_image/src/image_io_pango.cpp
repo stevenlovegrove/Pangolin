@@ -5,7 +5,7 @@
 #include <pangolin/video/drivers/pango_video_output.h>
 #endif
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {

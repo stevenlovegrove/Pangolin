@@ -6,7 +6,7 @@
 #include <tiffio.h>
 #endif
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
@@ -136,7 +136,7 @@ IntensityImage<> LoadTiff(const std::string& filename)
   }
 
   auto image = IntensityImage<>::fromFormat(
-      sophus::ImageSize(width, height), PixelFormatFromString(sfmt.c_str()));
+      sophus2::ImageSize(width, height), PixelFormatFromString(sfmt.c_str()));
   const tsize_t scanlength_bytes = TIFFScanlineSize(tif);
   if (scanlength_bytes != tsize_t(image.pitchBytes()))
     throw std::runtime_error("TIFF: unexpected scanline length");

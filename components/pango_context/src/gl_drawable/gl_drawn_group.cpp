@@ -21,7 +21,7 @@ struct MeshData {
   Eigen::Matrix<float, 3, Eigen::Dynamic> normals;
   Eigen::Matrix<float, 3, Eigen::Dynamic> uvs;
   Eigen::Vector4d default_color = {1.0, 1.0, 1.0, 1.0};
-  sophus::IntensityImage<> texture_color;
+  sophus2::IntensityImage<> texture_color;
 };
 
 Shared<DrawnPrimitives> toDrawnPrimitives(MeshData& mesh)
@@ -32,7 +32,7 @@ Shared<DrawnPrimitives> toDrawnPrimitives(MeshData& mesh)
 
   if (!mesh.texture_color.isEmpty()) {
     prim->geometry_texture->update(mesh.texture_color);
-    mesh.texture_color = sophus::IntensityImage<>();
+    mesh.texture_color = sophus2::IntensityImage<>();
   }
 
   if (mesh.vertices.size()) {

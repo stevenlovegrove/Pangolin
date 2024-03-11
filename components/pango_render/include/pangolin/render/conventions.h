@@ -3,9 +3,9 @@
 #pragma once
 
 #include <pangolin/utils/logging.h>
-#include <sophus/common/common.h>
-#include <sophus/common/enum.h>
-#include <sophus/linalg/orthogonal.h>
+#include <sophus2/common/common.h>
+#include <sophus2/common/enum.h>
+#include <sophus2/linalg/orthogonal.h>
 
 namespace pangolin
 {

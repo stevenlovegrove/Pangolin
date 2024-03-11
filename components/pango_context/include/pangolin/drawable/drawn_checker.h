@@ -4,7 +4,7 @@
 #include <pangolin/drawable/drawable.h>
 #include <pangolin/render/conventions.h>
 #include <pangolin/render/device_texture.h>
-#include <sophus/image/dyn_image_types.h>
+#include <sophus2/image/dyn_image_types.h>
 
 namespace pangolin
 {

@@ -6,7 +6,7 @@
 #include <pangolin/testing/eigen.h>
 
 using namespace Eigen;
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
@@ -29,11 +29,11 @@ void testForParams(
   const Eigen::Vector3<T> fwd_conv = conv_R_rdf.row(2);
   const T look_dot_fwd = fwd_conv.dot(lookat_in_cam.normalized());
   CHECK(look_dot_fwd > 0.0);
-  CHECK(T(1.0) - std::abs(look_dot_fwd) < sophus::kEpsilon<T>);
+  CHECK(T(1.0) - std::abs(look_dot_fwd) < sophus2::kEpsilon<T>);
 
   // check right vector is orthogonal forward
   const Eigen::Vector3<T> right_conv = conv_R_rdf.row(0);
-  CHECK(std::abs(fwd_conv.dot(right_conv)) < sophus::kEpsilon<T>);
+  CHECK(std::abs(fwd_conv.dot(right_conv)) < sophus2::kEpsilon<T>);
 }
 
 void simpleTest()

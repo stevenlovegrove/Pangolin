@@ -3,8 +3,8 @@
 #include <pangolin/layer/layer_group.h>
 #include <pangolin/utils/concept_utils.h>
 #include <pangolin/utils/variant_overload.h>
-#include <sophus/concepts/point.h>
-#include <sophus/image/dyn_image_types.h>
+#include <sophus2/concepts/point.h>
+#include <sophus2/image/dyn_image_types.h>
 
 namespace pangolin
 {
@@ -149,7 +149,7 @@ void computeLayoutConstraints(LayerGroup& group);
 //
 // Precondition: The constraints of the group and its children must be populated
 // already (e.g. by corresponding call to populateConstraintsRecursively).
-void computeLayoutRegion(LayerGroup& group, const sophus::Region2I& region);
+void computeLayoutRegion(LayerGroup& group, const sophus2::Region2I& region);
 
 std::ostream& operator<<(std::ostream& s, const LayerGroup& layout);
 

@@ -76,9 +76,9 @@ class PANGOLIN_EXPORT VideoOutput : public VideoOutputInterface
 
   bool IsPipe() const override;
 
-  void AddStream(const sophus::PixelFormat& pf, sophus::ImageLayout shape);
+  void AddStream(const sophus2::PixelFormat& pf, sophus2::ImageLayout shape);
 
-  void AddStream(const sophus::PixelFormat& pf, sophus::ImageSize size);
+  void AddStream(const sophus2::PixelFormat& pf, sophus2::ImageSize size);
 
   void SetStreams(
       const std::string& uri = "",
@@ -86,10 +86,10 @@ class PANGOLIN_EXPORT VideoOutput : public VideoOutputInterface
 
   size_t SizeBytes(void) const;
 
-  std::vector<sophus::ImageView<uint8_t>> GetOutputImages(
+  std::vector<sophus2::ImageView<uint8_t>> GetOutputImages(
       uint8_t* buffer) const;
 
-  std::vector<sophus::ImageView<uint8_t>> GetOutputImages(
+  std::vector<sophus2::ImageView<uint8_t>> GetOutputImages(
       std::vector<uint8_t>& buffer) const;
 
   protected:

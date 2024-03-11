@@ -14,13 +14,13 @@ struct DepthSamplerImageImpl : public DepthSamplerImage {
     }
   }
 
-  void setDepthImage(const sophus::Image<float>& image) override
+  void setDepthImage(const sophus2::Image<float>& image) override
   {
     depth_image_ = image;
   }
 
   std::optional<Sample> sampleDepth(
-      const SampleLocation& location, int patch_rad, sophus::RegionF64 near_far,
+      const SampleLocation& location, int patch_rad, sophus2::RegionF64 near_far,
       const Context* default_context) override
   {
     const Eigen::Array2i pix = location.pos_camera_pixel.cast<int>();
@@ -29,7 +29,7 @@ struct DepthSamplerImageImpl : public DepthSamplerImage {
       if (depth_image_.imageSize().contains(pix, patch_rad)) {
         Sample sample{.depth_kind = DepthKind::zaxis};
         auto patch = depth_image_.subview(
-            pix - patch_rad, sophus::ImageSize(2 * patch_rad, 2 * patch_rad));
+            pix - patch_rad, sophus2::ImageSize(2 * patch_rad, 2 * patch_rad));
         patch.visit([&](float real_z) {
           if (real_z > 0) sample.min_max.extend(real_z);
         });
@@ -43,7 +43,7 @@ struct DepthSamplerImageImpl : public DepthSamplerImage {
   }
 
   DepthKind kind_;
-  sophus::Image<float> depth_image_;
+  sophus2::Image<float> depth_image_;
 };
 
 Shared<DepthSamplerImage> DepthSamplerImage::Create(DepthSamplerImage::Params p)

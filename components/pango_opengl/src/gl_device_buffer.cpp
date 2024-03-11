@@ -6,7 +6,7 @@
 #include <mutex>
 #include <stdexcept>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
@@ -95,7 +95,7 @@ struct DeviceGlBuffer : public DeviceBuffer {
 
   bool allocated() const { return bool(dataType()); }
 
-  std::optional<sophus::PixelFormat> dataType() const override
+  std::optional<sophus2::PixelFormat> dataType() const override
   {
     return data_type_;
   }

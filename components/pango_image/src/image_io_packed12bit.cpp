@@ -4,7 +4,7 @@
 #include <fstream>
 #include <memory>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
@@ -63,7 +63,7 @@ IntensityImage<> LoadPacked12bit(std::istream& in)
   in.read((char*)&header, sizeof(header));
 
   auto img = IntensityImage<>::fromFormat(
-      sophus::ImageSize(header.w, header.h), PixelFormatFromString(header.fmt));
+      sophus2::ImageSize(header.w, header.h), PixelFormatFromString(header.fmt));
 
   if (img.pixelFormat().num_bytes_per_component != 2) {
     throw std::runtime_error(

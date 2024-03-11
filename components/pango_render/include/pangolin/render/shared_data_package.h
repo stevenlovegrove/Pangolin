@@ -2,7 +2,7 @@
 
 #include <pangolin/render/extra_pixel_traits.h>
 #include <pangolin/utils/shared.h>
-#include <sophus/image/dyn_image.h>
+#include <sophus2/image/dyn_image.h>
 
 namespace pangolin
 {
@@ -31,7 +31,7 @@ struct SharedDataPackage {
   {
     using T = std::decay_t<decltype(*container.data())>;
     num_elements = container.size();
-    data_type = sophus::PixelFormat::fromTemplate<T>();
+    data_type = sophus2::PixelFormat::fromTemplate<T>();
     data = makeTypeErasedSharedPtr(std::forward<Container>(container));
   }
 
@@ -40,7 +40,7 @@ struct SharedDataPackage {
   {
     using C = Eigen::Matrix<float, kRows, kCols>;
     data_type = {
-        .number_type = sophus::NumberType::floating_point,
+        .number_type = sophus2::NumberType::floating_point,
         .num_components = uint8_t(matrix.rows()),
         .num_bytes_per_component = sizeof(float),
     };
@@ -48,7 +48,7 @@ struct SharedDataPackage {
     data = makeTypeErasedSharedPtr(std::forward<C>(matrix));
   }
 
-  sophus::PixelFormat data_type;
+  sophus2::PixelFormat data_type;
   size_t num_elements;
   std::shared_ptr<void> data;
 };

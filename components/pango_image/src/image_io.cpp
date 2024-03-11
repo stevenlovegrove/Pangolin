@@ -34,7 +34,7 @@
 // include last to prevent Eigen conflict.
 #include <httplib/httplib.h>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {

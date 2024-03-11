@@ -1,12 +1,12 @@
 #include <pangolin/render/projection.h>
 #include <pangolin/utils/logging.h>
-#include <sophus/concepts/point.h>
+#include <sophus2/concepts/point.h>
 
 namespace pangolin
 {
 
 Eigen::Matrix4d transformProjectionFromImage(
-    sophus::RegionF64 near_far_in_world_units, GraphicsProjection projection)
+    sophus2::RegionF64 near_far_in_world_units, GraphicsProjection projection)
 {
   const double near = near_far_in_world_units.min();
   const double far = near_far_in_world_units.max();
@@ -37,7 +37,7 @@ Eigen::Matrix4d transformProjectionFromImage(
 }
 
 Eigen::Matrix4d transformClipFromProjection(
-    sophus::ImageSize size, ImageXy image_convention,
+    sophus2::ImageSize size, ImageXy image_convention,
     ImageIndexing image_indexing)
 {
   Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
@@ -66,12 +66,12 @@ Eigen::Matrix4d transformClipFromProjection(
   }
 }
 
-Eigen::Matrix3d transformWindowFromClip(sophus::Region2I viewport)
+Eigen::Matrix3d transformWindowFromClip(sophus2::Region2I viewport)
 {
   // TODO: fixup for 0.5 ofsets (for discrete coords)
-  const Eigen::Array2d scale = sophus::cast<double>(viewport.range()) / 2.0;
-  const Eigen::Array2d offset = sophus::cast<double>(viewport.min()) +
-                                sophus::cast<double>(viewport.range()) / 2.0;
+  const Eigen::Array2d scale = sophus2::cast<double>(viewport.range()) / 2.0;
+  const Eigen::Array2d offset = sophus2::cast<double>(viewport.min()) +
+                                sophus2::cast<double>(viewport.range()) / 2.0;
   Eigen::Matrix3d ret = Eigen::Matrix3d::Identity();
   ret(0, 0) = scale[0];
   ret(1, 1) = -scale[1];
@@ -99,7 +99,7 @@ Eigen::Matrix3d invProjectionCameraFromImage(
 }
 
 Eigen::Matrix<double, 4, 4> projectionClipFromOrtho(
-    sophus::Region2F64 extent, sophus::RegionF64 near_far_in_world_units,
+    sophus2::Region2F64 extent, sophus2::RegionF64 near_far_in_world_units,
     ImageXy image_convention, ImageIndexing image_indexing)
 {
   Eigen::Matrix4d m = Eigen::Matrix4d::Zero();

@@ -45,7 +45,7 @@ install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include"
   DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
-target_link_libraries(${COMPONENT} PUBLIC farm_ng_core::sophus third_party)
+target_link_libraries(${COMPONENT} PUBLIC farm_ng_core::sophus2 third_party)
 
 find_package(Threads QUIET)
 if(Threads_FOUND)

@@ -1,7 +1,7 @@
 #include <pangolin/context/context.h>
 #include <pangolin/layer/all_layers.h>
 #include <pangolin/var/var.h>
-#include <sophus/lie/so3.h>
+#include <sophus2/lie/so3.h>
 
 /*
   == Pangolin-by-example ==
@@ -32,7 +32,7 @@
 */
 
 using namespace pangolin;
-using namespace sophus;
+using namespace sophus2;
 
 int main(int /*argc*/, char** /*argv*/)
 {
@@ -52,7 +52,7 @@ int main(int /*argc*/, char** /*argv*/)
 
   // TODO: Pangolin Vars will probably get modernized soon...
   Var<double> angle_theta(
-      "ui.theta", 0.0, -sophus::kPi<double>, +sophus::kPi<double>);
+      "ui.theta", 0.0, -sophus2::kPi<double>, +sophus2::kPi<double>);
   Var<bool> filled("ui.filled", true, true);
   Var<double> color_red("ui.red", 0.6, 0.0, 1.0);
   Var<double> color_green("ui.green", 0.3, 0.0, 1.0);
@@ -68,7 +68,7 @@ int main(int /*argc*/, char** /*argv*/)
                                       : DrawnPrimitives::Type::line_loop;
 
     primitives->pose.parent_from_drawable =
-        sophus::SE3d::fromRz(angle_theta);
+        sophus2::SE3d::fromRz(angle_theta);
 
     // We return true to indicate that we should keep running
     return true;

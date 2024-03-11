@@ -7,7 +7,7 @@
 #include <png.h>
 #endif  // HAVE_PNG
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
@@ -134,8 +134,8 @@ IntensityImage<> LoadPng(std::istream& source)
   const size_t h = png_get_image_height(png_ptr, info_ptr);
   const size_t pitch = png_get_rowbytes(png_ptr, info_ptr);
 
-  auto shape = sophus::ImageLayout::makeFromSizeAndPitch<uint8_t>(
-      sophus::ImageSize(w, h), pitch);
+  auto shape = sophus2::ImageLayout::makeFromSizeAndPitch<uint8_t>(
+      sophus2::ImageSize(w, h), pitch);
   auto img = IntensityImage<>::fromFormat(shape, PngFormat(png_ptr, info_ptr));
 
   png_bytepp rows = png_get_rows(png_ptr, info_ptr);

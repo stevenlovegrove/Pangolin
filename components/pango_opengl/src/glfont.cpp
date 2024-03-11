@@ -118,9 +118,9 @@ std::vector<std::pair<uint32_t, uint32_t>> GetCodepointRanges(
   return ranges;
 }
 
-sophus::Image<Eigen::Vector4f> GlFont::MakeFontLookupImage()
+sophus2::Image<Eigen::Vector4f> GlFont::MakeFontLookupImage()
 {
-  sophus::MutImage<Eigen::Vector4f> img(sophus::ImageSize(chardata.size(), 2));
+  sophus2::MutImage<Eigen::Vector4f> img(sophus2::ImageSize(chardata.size(), 2));
 
   for (const auto& cp_char : chardata) {
     // font offset
@@ -160,13 +160,13 @@ std::u16string GlFont::to_index_string(const std::string& utf8)
   return to_index_string(utf32);
 }
 
-sophus::Image<uint16_t> GlFont::MakeFontIndexImage(const std::string& utf8)
+sophus2::Image<uint16_t> GlFont::MakeFontIndexImage(const std::string& utf8)
 {
   const std::u32string utf32 =
       std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(
           utf8);
 
-  sophus::MutImage<uint16_t> img(sophus::ImageSize(utf32.size(), 1));
+  sophus2::MutImage<uint16_t> img(sophus2::ImageSize(utf32.size(), 1));
 
   for (size_t i = 0; i < utf32.size(); ++i) {
     const auto& ch = chardata[utf32[i]];
@@ -238,7 +238,7 @@ void GlFont::InitialiseFont(
   font_max_width_px = 0;
   bitmap_type = use_alpha_font ? FontBitmapType::Alpha : FontBitmapType::SDF;
 
-  sophus::MutImage<uint8_t> font_write(sophus::ImageSize(tex_w, tex_h));
+  sophus2::MutImage<uint8_t> font_write(sophus2::ImageSize(tex_w, tex_h));
 
   const int offset = 0;
 
@@ -305,7 +305,7 @@ void GlFont::InitialiseFont(
             &f, scale, g, half_max_sdf_dist_pix, 128,
             128.0 / half_max_sdf_dist_pix, &gw, &gh, &x0, &y0);
         if (psdf) {
-          sophus::ImageView<unsigned char> sdf(sophus::ImageSize(gw, gh), psdf);
+          sophus2::ImageView<unsigned char> sdf(sophus2::ImageSize(gw, gh), psdf);
 
           font_max_width_px = std::max(font_max_width_px, (float)gw);
 
@@ -436,7 +436,7 @@ void GlFont::InitialiseGlTexture()
     } else {
       mTex.Load(font_bitmap);
     }
-    font_bitmap = sophus::IntensityImage<>();
+    font_bitmap = sophus2::IntensityImage<>();
   }
 }
 

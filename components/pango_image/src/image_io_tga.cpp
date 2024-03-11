@@ -1,6 +1,6 @@
 #include <pangolin/image/image_io.h>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
@@ -41,7 +41,7 @@ IntensityImage<> LoadTga(std::istream& in)
 
   if (in.good()) {
     auto img = IntensityImage<>::fromFormat(
-        sophus::ImageSize(width, height), TgaFormat(info[4], type[2], type[1]));
+        sophus2::ImageSize(width, height), TgaFormat(info[4], type[2], type[1]));
 
     // read in image data
     const size_t data_size = img.sizeBytes();

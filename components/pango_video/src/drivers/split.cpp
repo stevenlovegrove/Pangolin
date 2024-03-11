@@ -128,7 +128,7 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
                                 st1.format().numBytesPerPixel() * roi.x;
           streams.push_back(StreamInfo(
               st1.format(),
-              sophus::ImageLayout(roi.w, roi.h, st1.layout().pitchBytes()),
+              sophus2::ImageLayout(roi.w, roi.h, st1.layout().pitchBytes()),
               start1));
         } else if (uri.Contains(key_mem)) {
           const StreamInfo& info = param_reader.Get(
@@ -172,13 +172,13 @@ PANGOLIN_REGISTER_FACTORY(SplitVideo)
                               st1.format().numBytesPerPixel() * roi2.x;
         streams.push_back(StreamInfo(
             st1.format(),
-            sophus::ImageLayout(
-                sophus::ImageSize(roi1.w, roi1.h), st1.layout().pitchBytes()),
+            sophus2::ImageLayout(
+                sophus2::ImageSize(roi1.w, roi1.h), st1.layout().pitchBytes()),
             start1));
         streams.push_back(StreamInfo(
             st1.format(),
-            sophus::ImageLayout(
-                sophus::ImageSize(roi2.w, roi2.h), st1.layout().pitchBytes()),
+            sophus2::ImageLayout(
+                sophus2::ImageSize(roi2.w, roi2.h), st1.layout().pitchBytes()),
             start2));
       }
 

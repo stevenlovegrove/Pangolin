@@ -31,9 +31,9 @@ struct GlDrawnSolids : public DrawnSolids {
     PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
   }
 
-  sophus::Region3F64 boundsInParent() const override
+  sophus2::Region3F64 boundsInParent() const override
   {
-    return sophus::Region3F64::empty();
+    return sophus2::Region3F64::empty();
   }
 
   private:

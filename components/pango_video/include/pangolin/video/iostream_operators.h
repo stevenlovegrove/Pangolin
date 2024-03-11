@@ -111,7 +111,7 @@ inline std::istream &operator>>(std::istream &is, ImageRoi &roi)
   return is;
 }
 
-inline std::istream &operator>>(std::istream &is, sophus::PixelFormat &fmt)
+inline std::istream &operator>>(std::istream &is, sophus2::PixelFormat &fmt)
 {
   std::string sfmt;
   is >> sfmt;
@@ -121,8 +121,8 @@ inline std::istream &operator>>(std::istream &is, sophus::PixelFormat &fmt)
 
 inline std::istream &operator>>(std::istream &is, StreamInfo &stream)
 {
-  sophus::PixelFormat fmt;
-  sophus::ImageSize size(0, 0);
+  sophus2::PixelFormat fmt;
+  sophus2::ImageSize size(0, 0);
   size_t pitch = 0;
   size_t offset = 0;
 
@@ -134,7 +134,7 @@ inline std::istream &operator>>(std::istream &is, StreamInfo &stream)
   is.get();
   is >> pitch;
   is >> fmt;
-  stream = StreamInfo(fmt, sophus::ImageLayout(size, pitch), offset);
+  stream = StreamInfo(fmt, sophus2::ImageLayout(size, pitch), offset);
   return is;
 }
 

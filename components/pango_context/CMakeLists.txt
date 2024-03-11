@@ -29,7 +29,7 @@ if(BUILD_TESTS)
   catch_discover_tests(layer_group_test)
 endif()
 
-target_link_libraries(${COMPONENT} PUBLIC pango_windowing pango_render pango_vars farm_ng_core::sophus_image farm_ng_core::sophus_sensor)
+target_link_libraries(${COMPONENT} PUBLIC pango_windowing pango_render pango_vars farm_ng_core::sophus2_image farm_ng_core::sophus2_sensor)
 target_link_libraries(${COMPONENT} PUBLIC pango_opengl)
 
 find_package(assimp QUIET)

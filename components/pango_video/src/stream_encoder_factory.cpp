@@ -40,20 +40,20 @@ inline EncoderDetails EncoderDetailsFromString(const std::string& encoder_spec)
 }
 
 ImageEncoderFunc StreamEncoderFactory::GetEncoder(
-    const std::string& encoder_spec, const sophus::PixelFormat& fmt)
+    const std::string& encoder_spec, const sophus2::PixelFormat& fmt)
 {
   const EncoderDetails encdet = EncoderDetailsFromString(encoder_spec);
   if (encdet.file_type == ImageFileTypeUnknown)
     throw std::invalid_argument("Unsupported encoder format: " + encoder_spec);
 
-  return [](std::ostream& os, const sophus::IntensityImage<>& img) {
+  return [](std::ostream& os, const sophus2::IntensityImage<>& img) {
     PANGO_UNIMPLEMENTED();
     // SaveImage(img,fmt,os,encdet.file_type,true,encdet.quality);
   };
 }
 
 ImageDecoderFunc StreamEncoderFactory::GetDecoder(
-    const std::string& encoder_spec, const sophus::PixelFormat& /* fmt */)
+    const std::string& encoder_spec, const sophus2::PixelFormat& /* fmt */)
 {
   const EncoderDetails encdet = EncoderDetailsFromString(encoder_spec);
   PANGO_ENSURE(encdet.file_type != ImageFileTypeUnknown);

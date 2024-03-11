@@ -12,7 +12,7 @@
 #endif
 #endif  // HAVE_JPEG
 
-using namespace sophus;
+using namespace sophus2;
 
 // Inspired by https://cs.stanford.edu/~acoates/jpegAndIOS.txt
 
@@ -169,7 +169,7 @@ void pango_jpeg_set_dest_mgr(j_compress_ptr cinfo, std::ostream& os)
 IntensityImage<> LoadJpg(std::istream& is)
 {
 #ifdef HAVE_JPEG
-  sophus::IntensityImage<> image;
+  sophus2::IntensityImage<> image;
 
   struct jpeg_decompress_struct cinfo;
   struct jpeg_error_mgr jerr;
@@ -191,7 +191,7 @@ IntensityImage<> LoadJpg(std::istream& is)
     // resize storage if necessary
     PixelFormat fmt =
         PixelFormatFromString(cinfo.output_components == 3 ? "RGB24" : "GRAY8");
-    image = sophus::IntensityImage<>::fromFormat(
+    image = sophus2::IntensityImage<>::fromFormat(
         ImageSize(cinfo.output_width, cinfo.output_height), fmt);
     JSAMPARRAY imageBuffer = (*cinfo.mem->alloc_sarray)(
         (j_common_ptr)&cinfo, JPOOL_IMAGE,

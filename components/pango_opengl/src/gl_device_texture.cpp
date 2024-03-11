@@ -6,7 +6,7 @@
 #include <mutex>
 #include <stdexcept>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
@@ -31,12 +31,12 @@ struct DeviceGlTexture : public DeviceTexture {
     };
   }
 
-  sophus::ImageSize imageSize() const override { return image_size_; }
+  sophus2::ImageSize imageSize() const override { return image_size_; }
 
   PixelFormat pixelFormat() const override { return data_type_; }
 
   void update(
-      const sophus::IntensityImage<>& image,
+      const sophus2::IntensityImage<>& image,
       const Eigen::Array2i& destination = {0, 0}) override
   {
     std::lock_guard<std::recursive_mutex> guard(buffer_mutex_);

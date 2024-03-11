@@ -5,7 +5,7 @@
 #include <pangolin/render/conventions.h>
 #include <pangolin/render/device_buffer.h>
 #include <pangolin/render/device_texture.h>
-#include <sophus/image/dyn_image_types.h>
+#include <sophus2/image/dyn_image_types.h>
 
 #include <vector>
 
@@ -17,7 +17,7 @@ struct DrawnPrimitives : public Drawable {
     // Sized in image pixels
     points,  // populate vertices, [indices,colors,radius]
     shapes,
-    axes,  // populate vertices with axes_T_world sophus::SE3f elements
+    axes,  // populate vertices with axes_T_world sophus2::SE3f elements
            // [indices,colors,radius]
            // lines and triangles
     path,  // populate vertices with centerline of path

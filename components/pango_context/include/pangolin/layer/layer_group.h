@@ -51,8 +51,8 @@ class LayerGroup
   const std::vector<LayerGroup>& children() const { return children_; }
   std::vector<LayerGroup>& children() { return children_; }
 
-  std::optional<sophus::Region2I>& region() { return region_; }
-  const std::optional<sophus::Region2I>& region() const { return region_; }
+  std::optional<sophus2::Region2I>& region() { return region_; }
+  const std::optional<sophus2::Region2I>& region() const { return region_; }
 
   // Conveniance accessors for children()
   size_t size() const { return children_.size(); }
@@ -64,7 +64,7 @@ class LayerGroup
 
   Params params_ = Params{};
   std::optional<Constraints> constraints_;
-  std::optional<sophus::Region2I> region_;
+  std::optional<sophus2::Region2I> region_;
 };
 
 }  // namespace pangolin

@@ -133,8 +133,8 @@ struct GlDrawnText : public DrawnText {
           text->font_size_em * Eigen::Array2d(2.0, -2.0) /
           p.viewport.range().cast<double>().array();
       const Eigen::Matrix4d textclip_from_screenpix =
-          sophus::SE3d(pos_in_clip).matrix() * clip_from_pix_scale *
-          sophus::SE3d::fromRz(text->angle).matrix();
+          sophus2::SE3d(pos_in_clip).matrix() * clip_from_pix_scale *
+          sophus2::SE3d::fromRz(text->angle).matrix();
       u_clip_from_fontpix = textclip_from_screenpix.cast<float>();
 
       glActiveTexture(GL_TEXTURE0);
@@ -148,9 +148,9 @@ struct GlDrawnText : public DrawnText {
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
-  sophus::Region3F64 boundsInParent() const override
+  sophus2::Region3F64 boundsInParent() const override
   {
-    return sophus::Region3F64::empty();
+    return sophus2::Region3F64::empty();
   }
 
   Shared<GlSlProgram> prog = GlSlProgram::Create(

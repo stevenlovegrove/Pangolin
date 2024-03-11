@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
@@ -49,7 +49,7 @@ IntensityImage<> LoadPpm(std::istream& in)
 
   if (!in.fail() && w > 0 && h > 0) {
     auto img = IntensityImage<>::fromFormat(
-        sophus::ImageSize(w, h), PpmFormat(ppm_type, num_colors));
+        sophus2::ImageSize(w, h), PpmFormat(ppm_type, num_colors));
 
     // Read in data
     for (int r = 0; r < img.height(); ++r) {
@@ -66,7 +66,7 @@ IntensityImage<> LoadPpm(std::istream& in)
 void SavePpm(
     const IntensityImage<>& image, std::ostream& out, bool top_line_first)
 {
-  using namespace sophus;
+  using namespace sophus2;
 
   // Setup header variables
   std::string ppm_type = "";

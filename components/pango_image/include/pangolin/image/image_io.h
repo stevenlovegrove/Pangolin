@@ -30,45 +30,45 @@
 #include <pangolin/image/pixel_format.h>
 #include <pangolin/platform.h>
 #include <pangolin/utils/file_extension.h>
-#include <sophus/image/dyn_image_types.h>
+#include <sophus2/image/dyn_image_types.h>
 
 namespace pangolin
 {
 
 PANGOLIN_EXPORT
-sophus::IntensityImage<> LoadImage(std::istream& in, ImageFileType file_type);
+sophus2::IntensityImage<> LoadImage(std::istream& in, ImageFileType file_type);
 
 PANGOLIN_EXPORT
-sophus::IntensityImage<> LoadImage(
+sophus2::IntensityImage<> LoadImage(
     const std::string& filename, ImageFileType file_type);
 
 PANGOLIN_EXPORT
-sophus::IntensityImage<> LoadImage(const std::string& filename);
+sophus2::IntensityImage<> LoadImage(const std::string& filename);
 
 PANGOLIN_EXPORT
-sophus::IntensityImage<> LoadImage(
-    const std::string& filename, const sophus::PixelFormat& raw_plane_fmt,
+sophus2::IntensityImage<> LoadImage(
+    const std::string& filename, const sophus2::PixelFormat& raw_plane_fmt,
     size_t raw_width, size_t raw_height, size_t raw_pitch, size_t offset = 0,
     size_t image_planes = 1);
 
 /// Quality \in [0..100] for lossy formats
 PANGOLIN_EXPORT
 void SaveImage(
-    const sophus::IntensityImage<>& image, std::ostream& out,
+    const sophus2::IntensityImage<>& image, std::ostream& out,
     ImageFileType file_type, bool top_line_first = true,
     float quality = 100.0f);
 
 /// Quality \in [0..100] for lossy formats
 PANGOLIN_EXPORT
 void SaveImage(
-    const sophus::IntensityImage<>& image, const std::string& filename,
+    const sophus2::IntensityImage<>& image, const std::string& filename,
     ImageFileType file_type, bool top_line_first = true,
     float quality = 100.0f);
 
 /// Quality \in [0..100] for lossy formats
 PANGOLIN_EXPORT
 void SaveImage(
-    const sophus::IntensityImage<>& image, const std::string& filename,
+    const sophus2::IntensityImage<>& image, const std::string& filename,
     bool top_line_first = true, float quality = 100.0f);
 
 }  // namespace pangolin

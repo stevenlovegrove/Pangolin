@@ -47,9 +47,9 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
     }
   }
 
-  sophus::Region3F64 boundsInParent() const override
+  sophus2::Region3F64 boundsInParent() const override
   {
-    return sophus::Region3F64::empty();
+    return sophus2::Region3F64::empty();
   }
 
   void drawAxes(const ViewParams& params)
@@ -74,7 +74,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
       auto bind_bo = vertices->bind();
       PANGO_ENSURE(
           vertices->dataType() &&
-          vertices->dataType()->is<sophus::Isometry3F32>());
+          vertices->dataType()->is<sophus2::Isometry3F32>());
       // xyzw quaternion
       PANGO_GL(
           glVertexAttribPointer(0, 4, GL_FLOAT, false, 7 * sizeof(float), 0));
@@ -197,7 +197,7 @@ struct GlDrawnPrimitives : public DrawnPrimitives {
 
       ScopedGlDisable disable_depth(depth_test ? 0 : GL_DEPTH_TEST);
 
-      const sophus::PixelFormat data_type = *vertices->dataType();
+      const sophus2::PixelFormat data_type = *vertices->dataType();
 
       for (int i = 0; i < 4; ++i) {
         vao.addVertexAttrib(

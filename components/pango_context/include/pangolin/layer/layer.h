@@ -3,7 +3,7 @@
 #include <Eigen/Core>
 #include <pangolin/layer/interactive.h>
 #include <pangolin/utils/shared.h>
-#include <sophus/calculus/region.h>
+#include <sophus2/calculus/region.h>
 
 #include <variant>
 
@@ -74,7 +74,7 @@ struct Layer : public Interactive {
   using Size = LayerSize;
 
   struct RenderParams {
-    sophus::Region2I region;
+    sophus2::Region2I region;
   };
 
   virtual std::string name() const = 0;

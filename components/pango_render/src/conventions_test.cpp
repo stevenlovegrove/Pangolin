@@ -6,7 +6,7 @@
 #include <pangolin/testing/eigen.h>
 
 using namespace Eigen;
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {

@@ -9,7 +9,7 @@
 #include <pangolin/utils/string.h>
 #include <pangolin/var/var.h>
 #include <pangolin/var/varextra.h>
-#include <sophus/concepts/point.h>
+#include <sophus2/concepts/point.h>
 
 #include <codecvt>
 #include <locale>
@@ -327,7 +327,7 @@ bool GlWidgetLayer::handleEvent(const Context&, const Event& event)
 }
 
 void GlWidgetLayer::SetValue(
-    const Eigen::Array2d& p, const sophus::Region2I& region, bool pressed,
+    const Eigen::Array2d& p, const sophus2::Region2I& region, bool pressed,
     bool dragging)
 {
   auto w = WidgetXY(p, region);
@@ -372,7 +372,7 @@ void GlWidgetLayer::SetValue(
 }
 
 std::pair<int, Eigen::Vector2f> GlWidgetLayer::WidgetXY(
-    const Eigen::Array2d& p, const sophus::Region2I& region)
+    const Eigen::Array2d& p, const sophus2::Region2I& region)
 {
   const Eigen::Vector2f p_view(
       p.x() - region.min().x(), p.y() - region.min().y() - scroll_offset);

@@ -8,7 +8,7 @@
 */
 
 using namespace pangolin;
-using namespace sophus;
+using namespace sophus2;
 
 int main(int argc, char** argv)
 {

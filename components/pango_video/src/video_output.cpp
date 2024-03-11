@@ -70,15 +70,15 @@ int VideoOutput::WriteStreams(
 bool VideoOutput::IsPipe() const { return recorder->IsPipe(); }
 
 void VideoOutput::AddStream(
-    const sophus::PixelFormat& pf, sophus::ImageLayout shape)
+    const sophus2::PixelFormat& pf, sophus2::ImageLayout shape)
 {
   streams.emplace_back(pf, shape, 0);
 }
 
 void VideoOutput::AddStream(
-    const sophus::PixelFormat& pf, sophus::ImageSize size)
+    const sophus2::PixelFormat& pf, sophus2::ImageSize size)
 {
-  AddStream(pf, sophus::ImageLayout(size, size.width * pf.numBytesPerPixel()));
+  AddStream(pf, sophus2::ImageLayout(size, size.width * pf.numBytesPerPixel()));
 }
 
 void VideoOutput::SetStreams(
@@ -101,17 +101,17 @@ size_t VideoOutput::SizeBytes(void) const
   return total;
 }
 
-std::vector<sophus::ImageView<uint8_t>> VideoOutput::GetOutputImages(
+std::vector<sophus2::ImageView<uint8_t>> VideoOutput::GetOutputImages(
     uint8_t* buffer) const
 {
-  std::vector<sophus::ImageView<uint8_t>> images;
+  std::vector<sophus2::ImageView<uint8_t>> images;
   for (size_t s = 0; s < recorder->Streams().size(); ++s) {
     images.push_back(recorder->Streams()[s].StreamImage(buffer));
   }
   return images;
 }
 
-std::vector<sophus::ImageView<uint8_t>> VideoOutput::GetOutputImages(
+std::vector<sophus2::ImageView<uint8_t>> VideoOutput::GetOutputImages(
     std::vector<uint8_t>& buffer) const
 {
   buffer.resize(SizeBytes());

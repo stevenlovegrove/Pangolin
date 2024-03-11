@@ -12,7 +12,7 @@
 
 #include <unordered_map>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
@@ -63,18 +63,18 @@ struct DrawLayerImpl : public DrawLayer {
 
   DrawLayerHandler& getHandler() override { return *handler_; }
 
-  void setCamera(const sophus::CameraModel& camera) override
+  void setCamera(const sophus2::CameraModel& camera) override
   {
     render_state_->camera = camera;
   }
 
-  void setCameraFromWorld(const sophus::Isometry3F64& cam_from_world) override
+  void setCameraFromWorld(const sophus2::Isometry3F64& cam_from_world) override
   {
     render_state_->camera_from_world = cam_from_world;
   }
 
   void setClipViewTransform(
-      sophus::Similarity2<double>& clip_view_transform) override
+      sophus2::Similarity2<double>& clip_view_transform) override
   {
     render_state_->clip_view_transform = clip_view_transform;
   }
@@ -128,11 +128,11 @@ struct DrawLayerImpl : public DrawLayer {
   {
     if (render_state_->camera.isEmpty()) {
       if (auto maybe_dim = tryGetDrawableBaseImageSize()) {
-        sophus::ImageSize size = toImageSize(*maybe_dim);
-        render_state_->camera = sophus::createDefaultPinholeModel(size);
+        sophus2::ImageSize size = toImageSize(*maybe_dim);
+        render_state_->camera = sophus2::createDefaultPinholeModel(size);
         return true;
       } else if (scene_collection_.drawables.size()) {
-        render_state_->camera = sophus::createDefaultPinholeModel({640, 480});
+        render_state_->camera = sophus2::createDefaultPinholeModel({640, 480});
         return true;
       }
       return false;
@@ -204,7 +204,7 @@ struct DrawLayerImpl : public DrawLayer {
 
     const GraphicsProjection proj_type =
         render_state.camera.distortionType() ==
-                sophus::CameraDistortionType::orthographic
+                sophus2::CameraDistortionType::orthographic
             ? GraphicsProjection::orthographic
             : GraphicsProjection::perspective;
 
@@ -285,9 +285,9 @@ struct DrawLayerImpl : public DrawLayer {
         transformClipFromProjection(render_state_->camera.imageSize());
     const Eigen::Array2d d =
         event.pointer_pos.pos_window.cast<double>().array() -
-        sophus::cast<double>(event.pointer_pos.region.min()).array();
+        sophus2::cast<double>(event.pointer_pos.region.min()).array();
     const Eigen::Array2d pos_zero_one =
-        d / sophus::cast<double>(event.pointer_pos.region.range()).array();
+        d / sophus2::cast<double>(event.pointer_pos.region.range()).array();
 
     const Eigen::Array2d pos_clip =
         (pos_zero_one * 2.0 - Eigen::Array2d(1.0, 1.0)) *
@@ -432,9 +432,9 @@ struct DrawLayerImpl : public DrawLayer {
     }
   };
 
-  void updateBackgroundImage(const sophus::IntensityImage<>& image) override
+  void updateBackgroundImage(const sophus2::IntensityImage<>& image) override
   {
-    const sophus::CameraModel& camera = defaultOrthoCameraForImage(image);
+    const sophus2::CameraModel& camera = defaultOrthoCameraForImage(image);
     this->setCamera(camera);
     this->addNamedInPixels("---unique-background-image---", image);
   }

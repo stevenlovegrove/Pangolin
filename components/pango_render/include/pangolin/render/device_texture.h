@@ -2,7 +2,7 @@
 
 #include <pangolin/utils/scoped_bind.h>
 #include <pangolin/utils/shared.h>
-#include <sophus/image/dyn_image_types.h>
+#include <sophus2/image/dyn_image_types.h>
 
 namespace pangolin
 {
@@ -10,12 +10,12 @@ namespace pangolin
 struct DeviceTexture {
   virtual ~DeviceTexture(){};
   virtual ScopedBind<DeviceTexture> bind() const = 0;
-  virtual sophus::ImageSize imageSize() const = 0;
-  virtual sophus::PixelFormat pixelFormat() const = 0;
+  virtual sophus2::ImageSize imageSize() const = 0;
+  virtual sophus2::PixelFormat pixelFormat() const = 0;
 
   // Update or initialize this texture or a subregion of it
   virtual void update(
-      const sophus::IntensityImage<>& image,
+      const sophus2::IntensityImage<>& image,
       const Eigen::Array2i& destination = {0, 0}) = 0;
 
   virtual void sync() const = 0;

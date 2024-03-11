@@ -39,7 +39,7 @@ struct Axis {
 
 struct Axes {
   static Axes from(
-      const std::vector<sophus::SE3d>& entity_poses_axis_d, float scale = 0.1f,
+      const std::vector<sophus2::SE3d>& entity_poses_axis_d, float scale = 0.1f,
       float line_width = 1.5f)
   {
     Axes axes{.scale = scale, .line_width = line_width};
@@ -50,7 +50,7 @@ struct Axes {
   }
 
   static Axes from(
-      const std::vector<sophus::SE3f>& entity_poses_axis_d, float scale = 0.1f,
+      const std::vector<sophus2::SE3f>& entity_poses_axis_d, float scale = 0.1f,
       float line_width = 1.5f)
   {
     Axes axes{.scale = scale, .line_width = line_width};
@@ -58,7 +58,7 @@ struct Axes {
     return axes;
   }
 
-  std::vector<sophus::SE3f> drawable_from_axis_poses = {};
+  std::vector<sophus2::SE3f> drawable_from_axis_poses = {};
   float scale = 0.1f;
   float line_width = 1.5;
 };
@@ -119,7 +119,7 @@ struct Line3 {
 };
 
 struct CameraFrustum {
-  sophus::CameraModel camera;
+  sophus2::CameraModel camera;
   float near = 0.01;
   float far = 1.0;
   Color color = Color::red();
@@ -162,8 +162,8 @@ struct DrawableConversionTraits<draw::Axes> {
 // draw::Axes convenient methods
 
 template <>
-struct DrawableConversionTraits<sophus::Isometry3F32> {
-  static Shared<Drawable> makeDrawable(const sophus::Isometry3F32& x)
+struct DrawableConversionTraits<sophus2::Isometry3F32> {
+  static Shared<Drawable> makeDrawable(const sophus2::Isometry3F32& x)
   {
     draw::Axes axes;
     axes.drawable_from_axis_poses.push_back(x);
@@ -172,8 +172,8 @@ struct DrawableConversionTraits<sophus::Isometry3F32> {
 };
 
 template <typename T>
-struct DrawableConversionTraits<sophus::Isometry3<T>> {
-  static Shared<Drawable> makeDrawable(const sophus::Isometry3<T>& x)
+struct DrawableConversionTraits<sophus2::Isometry3<T>> {
+  static Shared<Drawable> makeDrawable(const sophus2::Isometry3<T>& x)
   {
     return makeDrawable(x.template cast<float>());
   }
@@ -181,7 +181,7 @@ struct DrawableConversionTraits<sophus::Isometry3<T>> {
 
 // Single axis at the identity.
 //
-// Example: scene->addToSceneAt(draw::Axis{.size - 0.5}, sophus::SE3d{...});
+// Example: scene->addToSceneAt(draw::Axis{.size - 0.5}, sophus2::SE3d{...});
 template <>
 struct DrawableConversionTraits<draw::Axis> {
   static Shared<Drawable> makeDrawable(const draw::Axis& x)
@@ -189,7 +189,7 @@ struct DrawableConversionTraits<draw::Axis> {
     draw::Axes axes;
     axes.line_width = x.line_width;
     axes.scale = x.scale;
-    axes.drawable_from_axis_poses.push_back(sophus::SE3f{});
+    axes.drawable_from_axis_poses.push_back(sophus2::SE3f{});
     return DrawableConversionTraits<draw::Axes>::makeDrawable(axes);
   }
 };

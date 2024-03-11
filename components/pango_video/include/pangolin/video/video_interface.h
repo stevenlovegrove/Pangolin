@@ -78,9 +78,9 @@ struct PANGOLIN_EXPORT VideoInterface {
   virtual void Stop() = 0;
 
   // TODO: temporary typesafe API. Will move to async model.
-  inline std::optional<std::vector<sophus::IntensityImage<>>> GrabImages()
+  inline std::optional<std::vector<sophus2::IntensityImage<>>> GrabImages()
   {
-    using namespace sophus;
+    using namespace sophus2;
 
     // allocating each frame, ughhh.
     std::unique_ptr<uint8_t[]> buffer(new uint8_t[SizeBytes()]);
@@ -88,10 +88,10 @@ struct PANGOLIN_EXPORT VideoInterface {
       std::vector<IntensityImage<>> res;
       // Allocation into seperate images too, ughhhhhh
       for (const auto& s : Streams()) {
-        res.push_back(sophus::IntensityImage<>::fromFormat(
+        res.push_back(sophus2::IntensityImage<>::fromFormat(
             ImageSize(s.layout().imageSize()), s.format()));
         auto& dst_image = res.back();
-        sophus::details::pitchedCopy(
+        sophus2::details::pitchedCopy(
             const_cast<uint8_t*>(dst_image.rawPtr()),
             dst_image.layout().pitchBytes(), buffer.get() + s.offsetBytes(),
             s.layout().pitchBytes(), dst_image.imageSize(),

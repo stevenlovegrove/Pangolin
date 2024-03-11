@@ -62,8 +62,8 @@ class PANGOLIN_EXPORT GlFont
   inline float MaxWidth() const { return font_max_width_px; }
 
   // protected:
-  sophus::Image<Eigen::Vector4f> MakeFontLookupImage();
-  sophus::Image<uint16_t> MakeFontIndexImage(const std::string& utf8);
+  sophus2::Image<Eigen::Vector4f> MakeFontLookupImage();
+  sophus2::Image<uint16_t> MakeFontIndexImage(const std::string& utf8);
   std::u16string to_index_string(const std::u32string& utf32);
   std::u16string to_index_string(const std::string& utf8);
 
@@ -83,7 +83,7 @@ class PANGOLIN_EXPORT GlFont
   FontBitmapType bitmap_type;
   std::array<float, 2> bitmap_max_sdf_dist_uv;
 
-  sophus::IntensityImage<> font_bitmap;
+  sophus2::IntensityImage<> font_bitmap;
   GlTexture mTex;
   bool use_alpha_font;
 

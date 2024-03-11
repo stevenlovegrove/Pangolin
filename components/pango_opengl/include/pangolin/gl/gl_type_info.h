@@ -3,7 +3,7 @@
 #include "farm_ng/core/logging/expected.h"
 
 #include <pangolin/gl/glplatform.h>
-#include <sophus/image/dyn_image_types.h>
+#include <sophus2/image/dyn_image_types.h>
 
 namespace pangolin
 {
@@ -41,7 +41,7 @@ struct GlFormatInfo {
 };
 
 inline farm_ng::Expected<GlFormatInfo> glTypeInfo(
-    const sophus::PixelFormat& pixel_type)
+    const sophus2::PixelFormat& pixel_type)
 {
   constexpr static GLint type_table[] = {
       GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT, GL_FLOAT};
@@ -63,7 +63,7 @@ inline farm_ng::Expected<GlFormatInfo> glTypeInfo(
 
   // Make sure we'll be in bounds...
   const int nbytes = pixel_type.num_bytes_per_component;
-  const bool bfixed = pixel_type.number_type == sophus::NumberType::fixed_point;
+  const bool bfixed = pixel_type.number_type == sophus2::NumberType::fixed_point;
 
   if (between(int(pixel_type.num_components), 1, 4) &&
       isOneOf(nbytes, {1, 2, 4})) {

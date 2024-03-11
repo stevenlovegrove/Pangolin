@@ -7,19 +7,19 @@
 */
 
 using namespace pangolin;
-using namespace sophus;
+using namespace sophus2;
 
 std::random_device rd;
 std::mt19937 e2(rd());
 std::uniform_real_distribution<> dist(0.0, 1.0);
 
-sophus::Image<sophus::Pixel3F32> testImage(int w, int h)
+sophus2::Image<sophus2::Pixel3F32> testImage(int w, int h)
 {
-  const sophus::Pixel3F32 mean =
-      sophus::Pixel3F32(dist(e2), dist(e2), dist(e2));
-  sophus::MutImage<sophus::Pixel3F32> img(ImageSize(w, h));
-  img.mutate([&](sophus::Pixel3F32&) -> sophus::Pixel3F32 {
-    const sophus::Pixel3F32 r(dist(e2), dist(e2), dist(e2));
+  const sophus2::Pixel3F32 mean =
+      sophus2::Pixel3F32(dist(e2), dist(e2), dist(e2));
+  sophus2::MutImage<sophus2::Pixel3F32> img(ImageSize(w, h));
+  img.mutate([&](sophus2::Pixel3F32&) -> sophus2::Pixel3F32 {
+    const sophus2::Pixel3F32 r(dist(e2), dist(e2), dist(e2));
     return (mean + r / 10.0);
   });
   return img;

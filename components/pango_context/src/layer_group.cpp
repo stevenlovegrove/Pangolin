@@ -1,6 +1,6 @@
 #include <pangolin/layer/layer_group.h>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {

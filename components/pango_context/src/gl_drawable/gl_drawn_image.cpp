@@ -49,9 +49,9 @@ struct GlDrawnImage : public DrawnImage {
     PANGO_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
   }
 
-  sophus::Region3F64 boundsInParent() const override
+  sophus2::Region3F64 boundsInParent() const override
   {
-    return sophus::Region3F64::fromMinMax(
+    return sophus2::Region3F64::fromMinMax(
         Eigen::Vector3d(-0.5, -0.5, 1.0),
         Eigen::Vector3d(
             image->imageSize().width - 0.5, image->imageSize().height - 0.5,

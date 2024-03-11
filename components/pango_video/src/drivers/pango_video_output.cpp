@@ -215,7 +215,7 @@ int PangoVideoOutput::WriteStreams(
         // Encode to buffer
         stream_encoders[i](encode_stream, si.copyToDynImage(data));
       } else {
-        const sophus::ImageView<uint8_t> stream_image = si.StreamImage(data);
+        const sophus2::ImageView<uint8_t> stream_image = si.StreamImage(data);
         if (stream_image.isContiguous()) {
           encode_stream.write(
               (char*)stream_image.ptr(), streams[i].layout().sizeBytes());

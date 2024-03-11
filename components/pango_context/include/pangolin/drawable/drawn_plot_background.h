@@ -4,8 +4,8 @@
 #include <pangolin/layer/draw_layer.h>
 #include <pangolin/render/conventions.h>
 #include <pangolin/render/device_texture.h>
-#include <sophus/image/dyn_image_types.h>
-#include <sophus/sensor/orthographic.h>
+#include <sophus2/image/dyn_image_types.h>
+#include <sophus2/sensor/orthographic.h>
 
 namespace pangolin
 {
@@ -31,7 +31,7 @@ struct DrawnPlotBackground : public Drawable {
 /// plotting on a DrawLayer.
 /// Returns orthographic camera model given bounding box and image size.
 template <class TScalar>
-sophus::OrthographicModelT<TScalar> plot_camera(
+sophus2::OrthographicModelT<TScalar> plot_camera(
     const Eigen::AlignedBox<TScalar, 2>& bounding_box)
 {
   // Plotter is not discretized into pixels, so we use a unit width and
@@ -47,7 +47,7 @@ sophus::OrthographicModelT<TScalar> plot_camera(
   const Eigen::Matrix<TScalar, 4, 1> params(
       scale.x(), scale.y(), offset.x(), offset.y());
 
-  return sophus::OrthographicModelT<TScalar>({1, 1}, params);
+  return sophus2::OrthographicModelT<TScalar>({1, 1}, params);
 }
 
 }  // namespace pangolin

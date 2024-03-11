@@ -29,14 +29,14 @@
 
 #include <stdexcept>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {
 
 const std::unordered_map<std::string, PixelFormat>& KnownPixelTypes()
 {
-  using namespace sophus;
+  using namespace sophus2;
   static std::unordered_map<std::string, PixelFormat> table = {
       {"GRAY8", {NumberType::fixed_point, 1, 1}},
       {"GRAY10", {NumberType::fixed_point, 1, 1}},

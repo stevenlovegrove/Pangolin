@@ -72,7 +72,7 @@ struct PANGOLIN_EXPORT VideoInput : public VideoInterface,
 
   // experimental - not stable
   bool Grab(
-      unsigned char* buffer, std::vector<sophus::ImageView<uint8_t> >& images,
+      unsigned char* buffer, std::vector<sophus2::ImageView<uint8_t> >& images,
       bool wait = true, bool newest = false);
 
   const Uri& VideoUri() const { return uri_input; }

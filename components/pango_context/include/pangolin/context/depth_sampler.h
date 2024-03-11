@@ -2,8 +2,8 @@
 
 #include <Eigen/Core>
 #include <pangolin/utils/shared.h>
-#include <sophus/calculus/region.h>
-#include <sophus/image/image.h>
+#include <sophus2/calculus/region.h>
+#include <sophus2/image/image.h>
 
 #include <optional>
 
@@ -18,7 +18,7 @@ class DepthSampler
   enum class DepthKind { clip, zaxis, radial };
 
   struct Sample {
-    sophus::RegionF64 min_max = sophus::RegionF64::empty();
+    sophus2::RegionF64 min_max = sophus2::RegionF64::empty();
     DepthKind depth_kind;
   };
 
@@ -28,7 +28,7 @@ class DepthSampler
   };
 
   virtual std::optional<Sample> sampleDepth(
-      const SampleLocation& pix, int patch_rad, sophus::RegionF64 near_far,
+      const SampleLocation& pix, int patch_rad, sophus2::RegionF64 near_far,
       const Context* default_context) = 0;
 
   virtual ~DepthSampler() {}

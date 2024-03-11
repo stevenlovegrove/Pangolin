@@ -33,7 +33,7 @@
 #include <unordered_map>
 #include <vector>
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {

@@ -3,7 +3,7 @@
 #include <Eigen/Core>
 #include <pangolin/render/conventions.h>
 #include <pangolin/utils/flag_set.h>
-#include <sophus/calculus/region.h>
+#include <sophus2/calculus/region.h>
 
 #include <optional>
 #include <variant>
@@ -14,7 +14,7 @@ namespace pangolin
 struct Context;
 
 struct WindowPosition {
-  sophus::Region2I region = sophus::Region2I::empty();
+  sophus2::Region2I region = sophus2::Region2I::empty();
   Eigen::Array2d pos_window;
 };
 

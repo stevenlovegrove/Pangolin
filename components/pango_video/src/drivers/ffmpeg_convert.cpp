@@ -75,7 +75,7 @@ FfmpegConverter::FfmpegConverter(
     converters[i].avdst->format = FfmpegFmtFromString(sfmtdst);
     av_frame_get_buffer(converters[i].avdst, 0);
 
-    const sophus::PixelFormat pxfmtdst = PixelFormatFromString(sfmtdst);
+    const sophus2::PixelFormat pxfmtdst = PixelFormatFromString(sfmtdst);
     const StreamInfo sdst(
         pxfmtdst, instrm.layout(), converters[i].dst_buffer_offset);
     streams.push_back(sdst);

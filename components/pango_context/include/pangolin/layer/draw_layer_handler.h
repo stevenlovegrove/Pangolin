@@ -4,7 +4,7 @@
 #include <pangolin/layer/interactive.h>
 #include <pangolin/render/conventions.h>
 #include <sigslot/signal.hpp>
-#include <sophus/sensor/camera_model.h>
+#include <sophus2/sensor/camera_model.h>
 
 namespace pangolin
 {
@@ -17,7 +17,7 @@ enum class ViewMode { freeview, image_plane, best_guess };
 struct SelectionEvent {
   Interactive::Event trigger_event;
   Interactive::PointerEvent pointer_event;
-  sophus::Region2F64 in_pixel_selection = sophus::Region2F64::empty();
+  sophus2::Region2F64 in_pixel_selection = sophus2::Region2F64::empty();
   Eigen::Vector3d in_scene_cursor;
   Eigen::Vector3d in_scene_hover;
   bool in_progress;
@@ -43,7 +43,7 @@ struct DrawLayerHandler {
     Shared<DepthSampler> depth_sampler = DepthSampler::Create({});
     Eigen::Vector3d up_in_world =
         axisDirection<double, 3>(Conventions::global().up_direction_world);
-    sophus::Region3F64 camera_limits_in_world = sophus::Region3F64::empty();
+    sophus2::Region3F64 camera_limits_in_world = sophus2::Region3F64::empty();
     ViewMode view_mode = ViewMode::best_guess;
     bool constrain_image_zoom_bounds = true;
   };

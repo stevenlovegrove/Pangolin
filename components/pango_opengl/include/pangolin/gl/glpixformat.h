@@ -40,7 +40,7 @@ namespace pangolin
 struct GlPixFormat {
   GlPixFormat() {}
 
-  GlPixFormat(const sophus::PixelFormat& fmt)
+  GlPixFormat(const sophus2::PixelFormat& fmt)
   {
     switch (fmt.num_components) {
       case 1:
@@ -61,7 +61,7 @@ struct GlPixFormat {
             std::string(ToString(fmt)) + "'.");
     }
 
-    const bool is_integral = fmt.number_type == sophus::NumberType::fixed_point;
+    const bool is_integral = fmt.number_type == sophus2::NumberType::fixed_point;
 
     switch (fmt.num_bytes_per_component) {
       case 1:

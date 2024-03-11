@@ -4,8 +4,8 @@
 
 #include <pangolin/gl/gl.h>
 #include <pangolin/gl/glformattraits.h>
-#include <sophus/image/image.h>
-#include <sophus/image/image_view.h>
+#include <sophus2/image/image.h>
+#include <sophus2/image/image_view.h>
 
 // Will eventually make it into Pangolin
 
@@ -28,7 +28,7 @@ template <std::size_t I = 0, typename FuncT, typename... Tp>
 }
 
 template <class PixelFormat>
-GlTexture createTextureFromImage(sophus::ImageView<PixelFormat>& image)
+GlTexture createTextureFromImage(sophus2::ImageView<PixelFormat>& image)
 {
   using Fmt = GlFormatTraits<PixelFormat>;
   return pangolin::GlTexture(
@@ -37,7 +37,7 @@ GlTexture createTextureFromImage(sophus::ImageView<PixelFormat>& image)
 }
 
 template <class PixelFormat>
-GlTexture createTextureForType(sophus::ImageSize dimensions)
+GlTexture createTextureForType(sophus2::ImageSize dimensions)
 {
   using Fmt = GlFormatTraits<PixelFormat>;
   return pangolin::GlTexture(
@@ -48,10 +48,10 @@ GlTexture createTextureForType(sophus::ImageSize dimensions)
 template <class... PixelTypes>
 void renderToImage(
     const std::function<void()>& user_render_func,
-    std::tuple<sophus::MutImageView<PixelTypes>...> output_channels)
+    std::tuple<sophus2::MutImageView<PixelTypes>...> output_channels)
 {
   constexpr size_t kNumChannels = sizeof...(PixelTypes);
-  const sophus::ImageSize dim = std::get<0>(output_channels).imageSize();
+  const sophus2::ImageSize dim = std::get<0>(output_channels).imageSize();
 
   pangolin::GlRenderBuffer depth(dim.width, dim.height);
   std::array<pangolin::GlTexture, kNumChannels> channels = {
@@ -76,10 +76,10 @@ void renderToImage(
 }
 
 template <class PixelFormat>
-sophus::MutImage<PixelFormat> renderToImage(
-    sophus::ImageSize image_size, const std::function<void()>& user_render_func)
+sophus2::MutImage<PixelFormat> renderToImage(
+    sophus2::ImageSize image_size, const std::function<void()>& user_render_func)
 {
-  sophus::MutImage<PixelFormat> image(image_size);
+  sophus2::MutImage<PixelFormat> image(image_size);
   renderToImage<PixelFormat>(user_render_func, {image});
   return image;
 }

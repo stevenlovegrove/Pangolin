@@ -79,7 +79,7 @@ void GlVertexArrayObject::addVertexAttrib(
   auto bind_buf = bo.bind();
 
   PANGO_ENSURE(bo.dataType());
-  const sophus::PixelFormat data_type = *bo.dataType();
+  const sophus2::PixelFormat data_type = *bo.dataType();
   auto maybe_gl_fmt = glTypeInfo(data_type);
   const GlFormatInfo gl_fmt = SOPHUS_UNWRAP(maybe_gl_fmt);
 

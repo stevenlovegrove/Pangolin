@@ -28,7 +28,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <sophus/common/enum.h>
+#include <sophus2/common/enum.h>
 
 #include <cmath>
 #include <limits>

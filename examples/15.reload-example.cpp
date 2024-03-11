@@ -11,7 +11,7 @@
 */
 
 using namespace pangolin;
-using namespace sophus;
+using namespace sophus2;
 
 // Forward declaration. See end of this file for the inline shader code.
 extern const char* eg_shader;

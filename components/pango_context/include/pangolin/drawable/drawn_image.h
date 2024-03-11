@@ -5,7 +5,7 @@
 #include <pangolin/layer/draw_layer.h>
 #include <pangolin/render/conventions.h>
 #include <pangolin/render/device_texture.h>
-#include <sophus/image/dyn_image_types.h>
+#include <sophus2/image/dyn_image_types.h>
 
 namespace pangolin
 {
@@ -36,7 +36,7 @@ struct DrawnImage : public Drawable {
   Palette colormap = Palette::none;
 
   struct Params {
-    sophus::IntensityImage<> image = {};
+    sophus2::IntensityImage<> image = {};
     Palette colormap = Palette::none;
     Interpolation interpolation = Interpolation::nearest;
     std::optional<Eigen::Matrix4d> color_transform = std::nullopt;
@@ -50,15 +50,15 @@ template <typename T>
 concept ImageConvertable = requires(T x)
 {
   {
-    sophus::IntensityImage<>(x)
-    } -> SameAs<sophus::IntensityImage<>>;
+    sophus2::IntensityImage<>(x)
+    } -> SameAs<sophus2::IntensityImage<>>;
 };
 
 template <ImageConvertable T>
-sophus::CameraModel defaultOrthoCameraForImage(const T& image)
+sophus2::CameraModel defaultOrthoCameraForImage(const T& image)
 {
-  return sophus::CameraModel(
-      image.imageSize(), sophus::CameraDistortionType::orthographic,
+  return sophus2::CameraModel(
+      image.imageSize(), sophus2::CameraDistortionType::orthographic,
       Eigen::Vector4d{1.0, 1.0, 0.0, 0.0});
 }
 

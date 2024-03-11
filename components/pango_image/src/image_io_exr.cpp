@@ -10,7 +10,7 @@
 #include <ImfOutputFile.h>
 #endif  // HAVE_OPENEXR
 
-using namespace sophus;
+using namespace sophus2;
 
 namespace pangolin
 {

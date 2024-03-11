@@ -5,8 +5,8 @@
 #include <pangolin/render/conventions.h>
 #include <pangolin/utils/shared.h>
 #include <sigslot/signal.hpp>
-#include <sophus/image/dyn_image_types.h>
-#include <sophus/image/image_size.h>
+#include <sophus2/image/dyn_image_types.h>
+#include <sophus2/image/image_size.h>
 
 #include <array>
 
@@ -25,7 +25,7 @@ struct Layer;
 ///
 struct Context : std::enable_shared_from_this<Context> {
   using Window = WindowInterface;
-  using ImageSize = sophus::ImageSize;
+  using ImageSize = sophus2::ImageSize;
   enum class Profile {
     gl_3_2_core,
     // vulkan ...
@@ -96,15 +96,15 @@ struct Context : std::enable_shared_from_this<Context> {
   // window/buffer managed by the context, with origin respecting the
   // window_convention parameter.
   virtual void setViewport(
-      const sophus::Region2I& region,
+      const sophus2::Region2I& region,
       ImageXy window_convention = Conventions::global().image_xy) const = 0;
 
   // Read from the graphics device the specified buffer associated with this
   // context. For example, you can use this to read back an image to save, or to
   // query the rendered depth for user interaction.
-  virtual sophus::IntensityImage<> read(
-      sophus::Region2I region =
-          sophus::Region2I::empty(),  // empty region will return full buffer
+  virtual sophus2::IntensityImage<> read(
+      sophus2::Region2I region =
+          sophus2::Region2I::empty(),  // empty region will return full buffer
       Attachment attachment = Attachment::color,
       ImageXy image_axis_convention = Conventions::global().image_xy) const = 0;
 

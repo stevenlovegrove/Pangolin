@@ -5,7 +5,7 @@
 #include <pangolin/render/extra_pixel_traits.h>
 #include <pangolin/utils/scoped_bind.h>
 #include <pangolin/utils/shared.h>
-#include <sophus/image/dyn_image_types.h>
+#include <sophus2/image/dyn_image_types.h>
 
 namespace pangolin
 {
@@ -22,7 +22,7 @@ struct DeviceBuffer {
   virtual bool empty() const = 0;
 
   // Return the type for the stored data, if allocated, otherwise nullopt
-  virtual std::optional<sophus::PixelFormat> dataType() const = 0;
+  virtual std::optional<sophus2::PixelFormat> dataType() const = 0;
 
   // size in number of stored dataType() elements
   virtual size_t size() const = 0;

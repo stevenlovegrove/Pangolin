@@ -3,12 +3,12 @@
 #include <pangolin/render/camera_look_at.h>
 #include <pangolin/render/projection.h>
 #include <pangolin/utils/variant_overload.h>
-#include <sophus/sensor/orthographic.h>
+#include <sophus2/sensor/orthographic.h>
 
 namespace pangolin
 {
 
-inline double aspect(const sophus::ImageSize size)
+inline double aspect(const sophus2::ImageSize size)
 {
   return double(size.width) / double(size.height);
 }
@@ -18,12 +18,12 @@ inline double aspect(const Eigen::Array2i size)
   return double(size.x()) / double(size.y());
 }
 
-inline Eigen::Array2i toEigen(const sophus::ImageSize size)
+inline Eigen::Array2i toEigen(const sophus2::ImageSize size)
 {
   return {size.width, size.height};
 }
 
-inline sophus::ImageSize toImageSize(const Eigen::Array2i size)
+inline sophus2::ImageSize toImageSize(const Eigen::Array2i size)
 {
   return {size[0], size[1]};
 }
@@ -47,12 +47,12 @@ inline Eigen::Matrix3d camera_from_image(
 }
 
 inline Eigen::Matrix4d transformImageFromCamera4x4(
-    const sophus::CameraModel& cam)
+    const sophus2::CameraModel& cam)
 {
   auto focal_distance_pixels = cam.focalLength().eval();
   auto principle_point = cam.principalPoint().eval();
 
-  if (cam.distortionType() == sophus::CameraDistortionType::orthographic) {
+  if (cam.distortionType() == sophus2::CameraDistortionType::orthographic) {
     return (Eigen::Matrix4d() << focal_distance_pixels[0], 0.0, 0.0,
             principle_point[0], 0.0, focal_distance_pixels[1], 0.0,
             principle_point[1], 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0)
@@ -65,7 +65,7 @@ inline Eigen::Matrix4d transformImageFromCamera4x4(
   }
 }
 
-inline Eigen::Matrix3d linearCameraFromImage(const sophus::CameraModel& camera)
+inline Eigen::Matrix3d linearCameraFromImage(const sophus2::CameraModel& camera)
 {
   return invProjectionCameraFromImage(
       camera.focalLength(), camera.principalPoint());

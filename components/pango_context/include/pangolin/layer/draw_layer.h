@@ -5,9 +5,9 @@
 #include <pangolin/layer/draw_layer_handler.h>
 #include <pangolin/layer/layer_group.h>
 #include <pangolin/render/camera_look_at.h>
-#include <sophus/lie/se3.h>
-#include <sophus/lie/similarity2.h>
-#include <sophus/sensor/camera_model.h>
+#include <sophus2/lie/se3.h>
+#include <sophus2/lie/similarity2.h>
+#include <sophus2/sensor/camera_model.h>
 
 #include <variant>
 
@@ -26,10 +26,10 @@ enum AspectPolicy {
 };
 
 struct DrawLayerRenderState {
-  sophus::CameraModel camera;
-  sophus::SE3d camera_from_world;
-  sophus::Similarity2<double> clip_view_transform;
-  sophus::RegionF64 near_far = sophus::RegionF64::empty();
+  sophus2::CameraModel camera;
+  sophus2::SE3d camera_from_world;
+  sophus2::Similarity2<double> clip_view_transform;
+  sophus2::RegionF64 near_far = sophus2::RegionF64::empty();
 
   AspectPolicy aspect_policy;
   ImageXy image_convention;
@@ -45,17 +45,17 @@ struct DrawLayer : public Layer {
   virtual DrawLayerHandler& getHandler() = 0;
   virtual const DrawLayerRenderState& renderState() const = 0;
   virtual void linkRenderState(const std::shared_ptr<DrawLayer>& layer) = 0;
-  virtual void setCamera(const sophus::CameraModel&) = 0;
-  virtual void setCameraFromWorld(const sophus::Isometry3<double>&) = 0;
-  virtual void setClipViewTransform(sophus::Similarity2<double>&) = 0;
-  virtual void setNearFarPlanes(const sophus::RegionF64&) = 0;
+  virtual void setCamera(const sophus2::CameraModel&) = 0;
+  virtual void setCameraFromWorld(const sophus2::Isometry3<double>&) = 0;
+  virtual void setClipViewTransform(sophus2::Similarity2<double>&) = 0;
+  virtual void setNearFarPlanes(const sophus2::RegionF64&) = 0;
   virtual void add(
       const Shared<Drawable>& r, In domain, const std::string& name = "") = 0;
   virtual std::shared_ptr<Drawable> get(const std::string& name) const = 0;
   virtual bool remove(const Shared<Drawable>& r) = 0;
   virtual bool remove(const std::string& name) = 0;
   virtual void clear(std::optional<In> domain = std::nullopt) = 0;
-  virtual void updateBackgroundImage(const sophus::IntensityImage<>& image) = 0;
+  virtual void updateBackgroundImage(const sophus2::IntensityImage<>& image) = 0;
 
   // Convenience method to add several drawables together
   template <typename... Ts>
@@ -81,7 +81,7 @@ struct DrawLayer : public Layer {
   }
 
   template <typename T>
-  auto addInSceneAt(const T& t, const sophus::Isometry3F64& world_from_drawable)
+  auto addInSceneAt(const T& t, const sophus2::Isometry3F64& world_from_drawable)
   {
     auto d = DrawableConversionTraits<T>::makeDrawable(t);
     d->pose.parent_from_drawable = world_from_drawable;
@@ -92,7 +92,7 @@ struct DrawLayer : public Layer {
   template <typename T>
   auto addNamedInSceneAt(
       const std::string& name, const T& r,
-      const sophus::Isometry3F64& world_from_drawable)
+      const sophus2::Isometry3F64& world_from_drawable)
   {
     auto d = DrawableConversionTraits<T>::makeDrawable(r);
     d->pose.parent_from_drawable = world_from_drawable;
@@ -128,9 +128,9 @@ struct DrawLayer : public Layer {
 
     Shared<DrawLayerHandler> handler = DrawLayerHandler::Create({});
 
-    std::optional<sophus::CameraModel> camera = std::nullopt;
-    std::optional<sophus::Isometry3F64> camera_from_world = std::nullopt;
-    sophus::RegionF64 near_far = {1e-3, 1e6};
+    std::optional<sophus2::CameraModel> camera = std::nullopt;
+    std::optional<sophus2::Isometry3F64> camera_from_world = std::nullopt;
+    sophus2::RegionF64 near_far = {1e-3, 1e6};
 
     // Objects to draw through modelview transform
     std::vector<Shared<Drawable>> in_scene = {};

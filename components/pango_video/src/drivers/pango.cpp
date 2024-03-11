@@ -86,11 +86,11 @@ bool PangoVideo::GrabNext(unsigned char* image, bool /*wait*/)
     } else {
       for (size_t s = 0; s < _streams.size(); ++s) {
         StreamInfo& si = _streams[s];
-        auto dst = sophus::MutImageView<uint8_t>::unsafeConstCast(
+        auto dst = sophus2::MutImageView<uint8_t>::unsafeConstCast(
             si.StreamImage(image));
 
         if (stream_decoder[s]) {
-          sophus::IntensityImage<> img = stream_decoder[s](fi.Stream());
+          sophus2::IntensityImage<> img = stream_decoder[s](fi.Stream());
           PANGO_ENSURE(!img.isEmpty());
 
           // TODO: We can avoid this copy by decoding directly into img
@@ -171,18 +171,18 @@ void PangoVideo::SetupStreams(const PacketStreamSource& src)
     if (json_stream.contains("decoded")) {
       const std::string compressed_encoding = encoding;
       encoding = json_stream["decoded"].get<std::string>();
-      const sophus::PixelFormat decoded_fmt = PixelFormatFromString(encoding);
+      const sophus2::PixelFormat decoded_fmt = PixelFormatFromString(encoding);
       stream_decoder.push_back(StreamEncoderFactory::I().GetDecoder(
           compressed_encoding, decoded_fmt));
     } else {
       stream_decoder.push_back(nullptr);
     }
 
-    sophus::PixelFormat fmt = PixelFormatFromString(encoding);
+    sophus2::PixelFormat fmt = PixelFormatFromString(encoding);
 
     StreamInfo si(
         fmt,
-        sophus::ImageLayout(
+        sophus2::ImageLayout(
             json_stream["width"].get<int64_t>(),
             json_stream["height"].get<int64_t>(),
             json_stream["pitch"].get<int64_t>()),

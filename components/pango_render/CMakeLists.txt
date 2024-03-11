@@ -16,7 +16,7 @@ foreach(basename ${component_file_basenames})
   endif()
 endforeach()
 
-target_link_libraries(${COMPONENT} PUBLIC pango_core farm_ng_core::sophus_image farm_ng_core::sophus_sensor)
+target_link_libraries(${COMPONENT} PUBLIC pango_core farm_ng_core::sophus2_image farm_ng_core::sophus2_sensor)
 
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
