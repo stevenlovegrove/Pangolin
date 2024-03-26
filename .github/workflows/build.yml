@@ -55,6 +55,8 @@ jobs:
         echo "TOOLCHAIN_FILE=$TOOLCHAIN_FILE" >> $GITHUB_ENV
 
     - name: Install Dependencies
+      env:
+        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
       run: |
         echo "vcpkg location: $(which vcpkg)"
         echo "CMake toolchain file: $TOOLCHAIN_FILE"
