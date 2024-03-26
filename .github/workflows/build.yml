@@ -54,6 +54,20 @@ jobs:
         echo "${{github.workspace}}/scripts/vcpkg" >> $GITHUB_PATH
         echo "TOOLCHAIN_FILE=$TOOLCHAIN_FILE" >> $GITHUB_ENV
 
+    - name: "(brew only) Remove Python symlinks"
+      if: ${{ matrix.package_manager == 'brew' }}
+      run: |
+        rm /usr/local/bin/2to3
+        rm /usr/local/bin/2to3-3.12
+        rm /usr/local/bin/idle3
+        rm /usr/local/bin/idle3.12
+        rm /usr/local/bin/pydoc3
+        rm /usr/local/bin/pydoc3.12
+        rm /usr/local/bin/python3
+        rm /usr/local/bin/python3.12
+        rm /usr/local/bin/python3-config
+        rm /usr/local/bin/python3.12-config
+
     - name: Install Dependencies
       env:
         HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
