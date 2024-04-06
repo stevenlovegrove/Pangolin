@@ -87,6 +87,9 @@ jobs:
     - name: Build
       run: cmake --build build --config $BUILD_TYPE
 
+    - name: Build Python wheel
+      run: cmake --build build -t pypangolin_wheel
+
     - name: Run all tests
       if: ${{ matrix.test == 'ON' }}
       run: |
