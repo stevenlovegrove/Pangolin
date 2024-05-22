@@ -16,6 +16,10 @@ PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/fonts.cpp
 )
 
+set_target_properties(
+    ${COMPONENT} PROPERTIES VERSION ${PANGOLIN_VERSION} SOVERSION ${PANGOLIN_VERSION_MAJOR}
+)
+
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl pango_windowing pango_vars )
 
 target_include_directories(${COMPONENT} PUBLIC

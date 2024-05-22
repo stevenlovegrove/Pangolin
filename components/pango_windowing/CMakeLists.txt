@@ -86,6 +86,9 @@ if(OpenGL_EGL_FOUND)
     PangolinRegisterFactory(WindowInterface HeadlessWindow)
 endif()
 
+set_target_properties(
+    ${COMPONENT} PROPERTIES VERSION ${PANGOLIN_VERSION} SOVERSION ${PANGOLIN_VERSION_MAJOR}
+)
 
 target_sources(${COMPONENT} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/window.cpp)
 target_link_libraries(${COMPONENT} PUBLIC pango_core pango_opengl )

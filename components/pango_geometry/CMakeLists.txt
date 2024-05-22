@@ -10,6 +10,10 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/geometry_ply.cpp
 )
 
+set_target_properties(
+    ${COMPONENT} PROPERTIES VERSION ${PANGOLIN_VERSION} SOVERSION ${PANGOLIN_VERSION_MAJOR}
+)
+
 target_link_libraries(${COMPONENT} pango_core pango_image tinyobj Eigen3::Eigen)
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>

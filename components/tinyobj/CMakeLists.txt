@@ -1,6 +1,11 @@
 set(COMPONENT tinyobj)
 
 target_sources( ${COMPONENT} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/tinyobj.cpp")
+
+set_target_properties(
+    ${COMPONENT} PROPERTIES VERSION ${PANGOLIN_VERSION} SOVERSION ${PANGOLIN_VERSION_MAJOR}
+)
+
 set_property(TARGET ${COMPONENT} PROPERTY CXX_STANDARD 11)
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
