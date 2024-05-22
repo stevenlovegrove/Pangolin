@@ -9,6 +9,10 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/playback_session.cpp
 )
 
+set_target_properties(
+    ${COMPONENT} PROPERTIES VERSION ${PANGOLIN_VERSION} SOVERSION ${PANGOLIN_VERSION_MAJOR}
+)
+
 target_compile_definitions(${COMPONENT} PRIVATE "PANGOLIN_VERSION_STRING=\"${PANGOLIN_VERSION}\"")
 target_link_libraries(${COMPONENT} PUBLIC pango_core)
 target_include_directories(${COMPONENT} PUBLIC

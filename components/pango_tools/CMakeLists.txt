@@ -5,6 +5,10 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/video_viewer.cpp
 )
 
+set_target_properties(
+    ${COMPONENT} PROPERTIES VERSION ${PANGOLIN_VERSION} SOVERSION ${PANGOLIN_VERSION_MAJOR}
+)
+
 target_link_libraries(${COMPONENT} PUBLIC pango_display pango_video)
 target_include_directories(${COMPONENT} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>

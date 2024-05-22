@@ -36,6 +36,9 @@ elseif(WIN32 OR WIN64)
     target_link_libraries(${COMPONENT} PRIVATE shlwapi.lib)
 endif()
 
+set_target_properties(
+    ${COMPONENT} PROPERTIES VERSION ${PANGOLIN_VERSION} SOVERSION ${PANGOLIN_VERSION_MAJOR}
+)
 
 target_compile_features(${COMPONENT} PUBLIC cxx_decltype_auto )
 target_include_directories(${COMPONENT} PUBLIC
