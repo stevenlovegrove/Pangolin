@@ -16,3 +16,11 @@ find_dependency(Eigen3)
 if (UNIX)
   find_dependency(Threads)
 endif()
+
+if (NOT EMSCRIPTEN)
+    find_dependency(OpenGL REQUIRED COMPONENTS OpenGL)
+endif()
+
+if(_LINUX_)
+    find_dependency(OpenGL REQUIRED COMPONENTS EGL)
+endif()
