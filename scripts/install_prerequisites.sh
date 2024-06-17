@@ -123,7 +123,7 @@ if [[ "$MANAGER" == "apt" ]]; then
     PKGS_REQUIRED+=(libc++-dev libepoxy-dev libglew-dev libeigen3-dev cmake g++ ninja-build)
     PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev catch2)
     PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev)
-    PKGS_ALL+=(libdc1394-dev libraw1394-dev libopenni-dev python3-dev python3-distutils)
+    PKGS_ALL+=(libdc1394-dev libraw1394-dev libopenni-dev python3-dev)
 elif [[ "$MANAGER" == "dnf" ]]; then
     SUDO="sudo"
     PKGS_UPDATE="dnf check-update"
@@ -142,7 +142,7 @@ elif [[ "$MANAGER" == "pacman" ]]; then
     PKGS_OPTIONS+=(-Syu)
     PKGS_REQUIRED+=(mesa wayland libxkbcommon wayland-protocols libc++ glew eigen cmake gcc ninja)
     PKGS_RECOMMENDED+=(libjpeg-turbo libpng ffmpeg)
-    PKGS_ALL+=(libdc1394 libraw1394 openni python3 python-distutils-extra)
+    PKGS_ALL+=(libdc1394 libraw1394 openni python3)
     if ((DRYRUN > 0));  then
         MANAGER="echo $MANAGER"
         SUDO=""
