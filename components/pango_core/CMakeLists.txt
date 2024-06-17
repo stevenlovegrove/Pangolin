@@ -56,6 +56,6 @@ endif()
 
 if(BUILD_TESTS)
     add_executable(test_uris ${CMAKE_CURRENT_LIST_DIR}/tests/tests_uri.cpp)
-    target_link_libraries(test_uris PRIVATE Catch2::Catch2 ${COMPONENT})
+    target_link_libraries(test_uris PRIVATE Catch2::Catch2WithMain ${COMPONENT})
     catch_discover_tests(test_uris)
 endif()
