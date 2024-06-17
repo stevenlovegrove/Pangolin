@@ -67,7 +67,7 @@ inline void DrawWindow(GlText& text, GLfloat x, GLfloat y, GLfloat z = 0.0)
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     // Pixel continuous coords
-    ProjectionMatrixOrthographic(0.0, d.v.w, 0.0, d.v.h, -1.0, 1.0).Load();
+    ProjectionMatrixOrthographic(-0.5, d.v.w-0.5, -0.5, d.v.h-0.5, -1.0, 1.0).Load();
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
