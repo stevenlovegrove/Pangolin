@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ros_distribution: [noetic, humble]
         include:
           - docker_image: ubuntu:20.04
             ros_distribution: noetic
@@ -17,6 +16,10 @@ jobs:
 
           - docker_image: ubuntu:22.04
             ros_distribution: humble
+            ros_version: 2
+
+          - docker_image: ubuntu:24.04
+            ros_distribution: jazzy
             ros_version: 2
 
     container:
