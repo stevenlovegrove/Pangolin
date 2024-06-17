@@ -16,10 +16,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-14, windows-2022]
+        os: [ubuntu-22.04, ubuntu-24.04, macos-14, windows-2022]
         shared_libs: ['ON', 'OFF']
         include:
         - os: ubuntu-22.04
+          package_manager: "apt"
+          test: "ON"
+
+        - os: ubuntu-24.04
           package_manager: "apt"
           test: "ON"
 
