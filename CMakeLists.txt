@@ -90,7 +90,7 @@ endif()
 
 option(BUILD_TESTS "Build Tests" OFF)
 if(BUILD_TESTS)
-    find_package(Catch2 2 REQUIRED)
+    find_package(Catch2 REQUIRED)
     include(CTest)
     include(Catch)
 endif()
