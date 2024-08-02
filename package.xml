@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>pangolin</name>
-  <version>0.9.1</version>
+  <version>0.9.2</version>
   <description>Pangolin is a set of lightweight and portable utility libraries for prototyping 3D, numeric or video based programs and algorithms.</description>
   <maintainer email="stevenlovegrove@gmail.com">Steven Lovegrove</maintainer>
   <maintainer email="Rauch.Christian@gmx.de">Christian Rauch</maintainer>
