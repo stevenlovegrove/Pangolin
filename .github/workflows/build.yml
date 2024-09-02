@@ -94,6 +94,15 @@ jobs:
     - name: Build Python wheel
       run: cmake --build build -t pypangolin_wheel
 
+    - name: Install Python wheel
+      if: ${{ matrix.package_manager == 'apt' }}
+      env:
+        PIP_BREAK_SYSTEM_PACKAGES: 1
+      run: |
+        pip install build/pypangolin-*.whl
+        pip show pypangolin
+        python -c "import pypangolin"
+
     - name: Run all tests
       if: ${{ matrix.test == 'ON' }}
       run: |
