@@ -92,7 +92,7 @@ if(BUILD_PANGOLIN_PYTHON AND Python_FOUND AND pybind11_FOUND)
         AUTHOR "Steven Lovegrove"
         EMAIL "stevenlovegrove@gmail.com"
         LICENCE "MIT"
-        REQUIRES "pyopengl;pyopengl-accelerate;numpy;pillow;pybind11"
+        REQUIRES "pyopengl;numpy;pillow;pybind11"
         PRINT_HELP
     )
 else()
