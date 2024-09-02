@@ -44,10 +44,10 @@ if(BUILD_PANGOLIN_PYTHON AND Python_FOUND AND pybind11_FOUND)
     )
 
     target_sources(
-        ${COMPONENT} PRIVATE 
+        ${COMPONENT} PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src/pyinterpreter.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin_embed.cpp 
-        ${SRC_BINDINGS} 
+        ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin_embed.cpp
+        ${SRC_BINDINGS}
     )
 
     target_compile_definitions(${COMPONENT} PUBLIC HAVE_PYTHON)
