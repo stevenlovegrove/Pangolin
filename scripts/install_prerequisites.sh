@@ -139,7 +139,7 @@ elif [[ "$MANAGER" == "dnf" ]]; then
 elif [[ "$MANAGER" == "pacman" ]]; then
     SUDO="sudo"
     PKGS_UPDATE=""  # databases and packages are updated in -Syu install options
-    PKGS_OPTIONS+=(-Syu)
+    PKGS_OPTIONS+=(-Syu --needed)
     PKGS_REQUIRED+=(mesa wayland libxkbcommon wayland-protocols libc++ glew eigen cmake gcc ninja)
     PKGS_RECOMMENDED+=(libjpeg-turbo libpng ffmpeg)
     PKGS_ALL+=(libdc1394 libraw1394 openni python3)
