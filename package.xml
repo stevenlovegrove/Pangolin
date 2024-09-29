@@ -17,6 +17,7 @@
   <depend>libpng-dev</depend>
   <depend>libturbojpeg</depend>
   <depend>libxkbcommon-dev</depend>
+  <depend>opengl</depend>
   <build_depend>wayland-dev</build_depend>
   <exec_depend>wayland</exec_depend>
 
