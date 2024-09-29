@@ -1,0 +1,50 @@
+name: bloom
+
+on: [push, pull_request]
+
+jobs:
+  build_linux:
+    name: "Ubuntu (${{ matrix.ros_distribution }})"
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - docker_image: ubuntu:22.04
+            ros_distribution: humble
+
+          - docker_image: ubuntu:24.04
+            ros_distribution: jazzy
+
+    container:
+      image: ${{ matrix.docker_image }}
+
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
+    steps:
+      - name: install core dependencies
+        run: |
+          apt update
+          apt install -y --no-install-recommends git ca-certificates
+
+      - uses: actions/checkout@v4
+
+      - uses: ros-tooling/setup-ros@v0.7
+
+      - name: install build tool dependencies
+        run: |
+          apt install -y --no-install-recommends devscripts equivs python3-bloom
+
+      - name: bloom
+        run: |
+          rosdep update
+          bloom-generate rosdebian --ros-distro ${{ matrix.ros_distribution }}
+          mk-build-deps
+          apt install -y --no-install-recommends ./ros-${{ matrix.ros_distribution }}-*-build-deps_*_all.deb
+          dpkg-buildpackage -b
+
+      - name: install bloomed packages
+        run: |
+          apt install -y --no-install-recommends ../ros-${{ matrix.ros_distribution }}-*_*.deb ../ros-${{ matrix.ros_distribution }}-*-dbgsym_*.ddeb
