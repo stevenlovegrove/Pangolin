@@ -9,6 +9,11 @@ function( MakeWheel python_module)
     cmake_parse_arguments(MAKEWHEEL "PRINT_HELP" "MODULE;VERSION;SUMMARY;DESCRIPTION;HOMEPAGE;AUTHOR;EMAIL;LICENCE" "REQUIRES" ${ARGN} )
     set(version ${MAKEWHEEL_VERSION})
 
+    execute_process(COMMAND ${Python_EXECUTABLE} -c "import setuptools" ERROR_QUIET RESULT_VARIABLE has_setuptools)
+    if(has_setuptools EQUAL "1")
+        message(FATAL_ERROR "Python module `setuptools` required for correct wheel filename generation.")
+    endif()
+
     execute_process(
         COMMAND ${Python_EXECUTABLE} -c "
 from setuptools.dist import Distribution
@@ -31,10 +36,6 @@ print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Ext
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_QUIET
     )
-    if(NOT wheel_filename)
-        message(STATUS "Python module `setuptools` required for correct wheel filename generation. Please install if needed.")
-        set(wheel_filename "unknown-unknown")
-    endif()
 
     set(wheel_filename "${CMAKE_BINARY_DIR}/${wheel_filename}.whl")
     set(wheel_distinfo "${CMAKE_BINARY_DIR}/${python_module}-${version}.dist-info")
