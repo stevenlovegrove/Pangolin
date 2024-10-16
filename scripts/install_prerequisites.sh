@@ -159,7 +159,7 @@ elif [[ "$MANAGER" == "brew" ]]; then
     PKGS_OPTIONS+=(install)
     if ((VERBOSE > 0)); then PKGS_OPTIONS+=(--verbose); fi
     PKGS_REQUIRED+=(glew eigen cmake ninja)
-    PKGS_RECOMMENDED+=(libjpeg-turbo libpng openexr libtiff ffmpeg lz4 zstd catch2)
+    PKGS_RECOMMENDED+=(libjpeg-turbo libpng openexr libtiff ffmpeg lz4 zstd catch2 python-setuptools)
     # Brew doesn't have a dryrun option
     if ((DRYRUN > 0));  then
         MANAGER="echo $MANAGER"
