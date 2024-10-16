@@ -23,9 +23,9 @@ def wheel_name(**kwargs):
     # assemble wheel file name
     distname = bdist_wheel_cmd.wheel_dist_name
     tag = '-'.join(bdist_wheel_cmd.get_tag())
-    return f'{distname};{tag}'
+    return f'{distname}-{tag}'
 
-print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Extension('dummy', ['summy.c'])]))
+print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Extension('dummy', ['dummy.c'])]))
 "
         OUTPUT_VARIABLE wheel_filename
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -33,14 +33,10 @@ print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Ext
     )
     if(NOT wheel_filename)
         message(STATUS "Python module `setuptools` required for correct wheel filename generation. Please install if needed.")
-        set(wheel_filename "unknown;unknown")
+        set(wheel_filename "unknown-unknown")
     endif()
 
-    list(GET wheel_filename 0 distname)
-    list(GET wheel_filename 1 platformtag)
-    set(complete_tag "${distname}-${platformtag}")
-
-    set(wheel_filename "${CMAKE_BINARY_DIR}/${complete_tag}.whl")
+    set(wheel_filename "${CMAKE_BINARY_DIR}/${wheel_filename}.whl")
     set(wheel_distinfo "${CMAKE_BINARY_DIR}/${python_module}-${version}.dist-info")
     set(wheel_data "${CMAKE_BINARY_DIR}/${python_module}-${version}.data")
     set(wheel_generator_string "pango_wheelgen_${version}")
