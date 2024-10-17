@@ -3,10 +3,13 @@ get_filename_component(COMPONENT ${CMAKE_CURRENT_LIST_DIR} NAME)
 option(BUILD_PANGOLIN_PYTHON "Build support for Pangolin Interactive Console" ON)
 
 if(BUILD_PANGOLIN_PYTHON)
-  find_package(Python COMPONENTS Interpreter Development QUIET)
+  if(POLICY CMP0148)
+    cmake_policy(SET CMP0148 NEW)
+  endif()
+  find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 endif()
 
-if(BUILD_PANGOLIN_PYTHON AND Python_FOUND)
+if(BUILD_PANGOLIN_PYTHON AND Python3_FOUND)
     # If we've inited the submodule, use that
     if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/pybind11/CMakeLists.txt")
         add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/pybind11)
@@ -15,7 +18,7 @@ if(BUILD_PANGOLIN_PYTHON AND Python_FOUND)
     endif()
 endif()
 
-if(BUILD_PANGOLIN_PYTHON AND Python_FOUND AND pybind11_FOUND)
+if(BUILD_PANGOLIN_PYTHON AND Python3_FOUND AND pybind11_FOUND)
     set(SRC_BINDINGS
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/attach.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pypangolin/colour.cpp
