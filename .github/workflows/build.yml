@@ -120,7 +120,7 @@ jobs:
         sudo apt install -y emscripten ninja-build libeigen3-dev catch2
 
     - name: Configure Pangolin
-      run: emcmake cmake -G Ninja -B pangolin-build -D CMAKE_BUILD_TYPE=$BUILD_TYPE -D Eigen3_DIR=/usr/share/eigen3/cmake/
+      run: emcmake cmake -G Ninja -B pangolin-build -D CMAKE_BUILD_TYPE=$BUILD_TYPE -D BUILD_PANGOLIN_PYTHON=OFF -D Eigen3_DIR=/usr/share/eigen3/cmake/
 
     - name: Build Pangolin
       run: cmake --build pangolin-build
