@@ -21,19 +21,15 @@ jobs:
         include:
         - os: ubuntu-22.04
           package_manager: "apt"
-          test: "ON"
 
         - os: ubuntu-24.04
           package_manager: "apt"
-          test: "ON"
 
         - os: macos-14
           package_manager: "brew"
-          test: "OFF"
 
         - os: windows-2022
           package_manager: "vcpkg"
-          test: "OFF"
 
     steps:
     - name: Checkout Pangolin
@@ -101,7 +97,7 @@ jobs:
         -D CMAKE_BUILD_TYPE=$BUILD_TYPE
         -D CMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"
         -D BUILD_SHARED_LIBS=${{ matrix.shared_libs }}
-        -D BUILD_TESTS=${{ matrix.test }}
+        -D BUILD_TESTS=ON
 
     - name: Build
       run: cmake --build build --config $BUILD_TYPE
@@ -123,7 +119,6 @@ jobs:
         python -c "import pypangolin"
 
     - name: Run all tests
-      if: ${{ matrix.test == 'ON' }}
       run: |
         cmake --build build --target test
 
