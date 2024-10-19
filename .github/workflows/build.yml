@@ -80,6 +80,21 @@ jobs:
         echo "CMake toolchain file: $TOOLCHAIN_FILE"
         $GITHUB_WORKSPACE/scripts/install_prerequisites.sh -v -u -m ${{matrix.package_manager}} all
 
+    - name: "(vcpkg only) remove python"
+      if: ${{ matrix.package_manager == 'vcpkg' }}
+      run: |
+        vcpkg remove python3
+
+    - uses: actions/setup-python@v5
+      if: ${{ matrix.package_manager == 'vcpkg' }}
+      with:
+        python-version: '3.12'
+
+    - name: "(vcpkg only) install setuptools"
+      if: ${{ matrix.package_manager == 'vcpkg' }}
+      run: |
+        pip install setuptools
+
     - name: Configure CMake
       run: >
         cmake -G Ninja -B build
