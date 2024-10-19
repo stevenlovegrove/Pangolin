@@ -113,6 +113,7 @@ jobs:
       env:
         PIP_BREAK_SYSTEM_PACKAGES: 1
       run: |
+        python -m zipfile --list build/pypangolin-*.whl
         pip install build/pypangolin-*.whl
         pip show pypangolin
         python -c "import pypangolin"
