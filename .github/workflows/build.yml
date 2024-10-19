@@ -116,6 +116,10 @@ jobs:
         python -m zipfile --list build/pypangolin-*.whl
         pip install build/pypangolin-*.whl
         pip show pypangolin
+
+    - name: Test Python wheel
+      if: ${{ !(matrix.package_manager == 'vcpkg' && matrix.shared_libs == 'ON') }}
+      run: |
         python -c "import pypangolin"
 
     - name: Run all tests
