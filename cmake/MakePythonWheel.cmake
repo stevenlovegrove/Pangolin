@@ -94,19 +94,19 @@ print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Ext
     add_custom_target(
         "${python_module}_pip_install"
         DEPENDS "${python_module}_wheel"
-        COMMAND ${Python_EXECUTABLE} -mpip install "${wheel_filename}" --force-reinstall
-        COMMENT "Installing for selected Python '${Python_EXECUTABLE}'"
+        COMMAND ${Python3_EXECUTABLE} -mpip install "${wheel_filename}" --force-reinstall
+        COMMENT "Installing for selected Python '${Python3_EXECUTABLE}'"
     )
 
     add_custom_target(
         "${python_module}_pip_uninstall"
-        COMMAND ${Python_EXECUTABLE} -mpip uninstall -y ${python_module}
+        COMMAND ${Python3_EXECUTABLE} -mpip uninstall -y ${python_module}
     )
 
     ##########################################
     ## Help message since this is tricky for people
     if(MAKEWHEEL_PRINT_HELP)
-        message(STATUS "Selected Python: '${Python_EXECUTABLE}'. cmake --build . -t ${python_module}_pip_install to use ${python_module} module.")
+        message(STATUS "Selected Python: '${Python3_EXECUTABLE}'. cmake --build . -t ${python_module}_pip_install to use ${python_module} module.")
     endif()
 endfunction()
 
