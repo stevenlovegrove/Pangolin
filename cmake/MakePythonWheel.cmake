@@ -46,8 +46,12 @@ print(wheel_name(name='${python_module}', version='${version}', ext_modules=[Ext
 "
         OUTPUT_VARIABLE wheel_filename
         OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
+        RESULT_VARIABLE has_wheel_filename
     )
+
+    if(NOT has_wheel_filename EQUAL "0")
+        message(FATAL_ERROR "Cannot format wheel filename via 'setuptools'.")
+    endif()
 
     set(wheel_filename "${CMAKE_BINARY_DIR}/${wheel_filename}.whl")
     set(wheel_distinfo "${CMAKE_BINARY_DIR}/${python_module}-${version}.dist-info")
