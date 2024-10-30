@@ -28,6 +28,23 @@ except ImportError as e:
 
     execute_process(
         COMMAND ${Python3_EXECUTABLE} -c "
+import sys
+try:
+    from wheel.bdist_wheel import bdist_wheel
+    sys.exit(0)
+except ImportError as e:
+    print(f'{e}. Search paths:', file=sys.stderr)
+    for p in sys.path: print(f'  {p}', file=sys.stderr)
+    sys.exit(1)
+"
+    RESULT_VARIABLE has_bdist_wheel)
+
+    if(has_bdist_wheel EQUAL "1")
+        message(FATAL_ERROR "Python module `wheel.bdist_wheel` required for correct wheel filename generation.")
+    endif()
+
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} -c "
 from setuptools.dist import Distribution
 from setuptools import Extension
 
