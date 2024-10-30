@@ -89,7 +89,7 @@ jobs:
     - name: "(vcpkg only) install setuptools"
       if: ${{ matrix.package_manager == 'vcpkg' }}
       run: |
-        pip install setuptools
+        pip install setuptools wheel
 
     - name: Configure CMake
       run: >
