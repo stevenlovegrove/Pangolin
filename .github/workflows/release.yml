@@ -26,5 +26,5 @@ jobs:
         name:  ${{ github.ref_name }}
         tag_name: ${{ github.ref_name  }}
         files: release_artifacts/*
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.REPO_TOKEN }}
         generate_release_notes: true
