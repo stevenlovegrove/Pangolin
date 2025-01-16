@@ -1,0 +1,30 @@
+name: release
+
+on:
+  workflow_run:
+    workflows: [build]
+    types: [completed]
+    branches: [master]
+
+jobs:
+  prepare_artifacts:
+    # Only run the deployment if the build workflow succeeded.
+    if: ${{ github.event.workflow_run.conclusion == 'success'}} && contains(github.ref, '/tags/v')
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Download build artifact from triggered workflow
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        run_id: ${{ github.event.workflow_run.id }}
+        name: ./release_artifacts/*
+        name_is_regexp: true
+        path: ./release_artifacts
+    - name: Upload release
+      uses: softprops/action-gh-release@v2
+      with:
+        name:  ${{ github.ref_name }}
+        tag_name: ${{ github.ref_name  }}
+        files: release_artifacts/*
+        token: ${{ secrets.GITHUB_TOKEN }}
+        generate_release_notes: true

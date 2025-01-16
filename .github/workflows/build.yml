@@ -122,6 +122,23 @@ jobs:
       run: |
         cmake --build build --target test
 
+    - name: Make release_artifacts folder
+      run: mkdir release_artifacts
+
+    - name: Add prefix to python_wheel artifact
+      run: |
+        for file in ./build/pypangolin-*.whl; do 
+          mv $file ./release_artifacts/${{matrix.os}}_shared_libs_${{matrix.shared_libs}}.$(basename $file); 
+        done
+        
+    - name: 'Upload release_artifacts'
+      uses: actions/upload-artifact@v4
+      with:
+        name: "release_artifacts_${{matrix.os}}_${{matrix.shared_libs}}"
+        path: release_artifacts/*
+        retention-days: 2
+  
+
   emscripten:
     runs-on: ubuntu-22.04
 
