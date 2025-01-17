@@ -167,3 +167,21 @@ jobs:
         build_dir: ../www
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    needs: build
+    if: contains(needs.*.result, 'success') && contains(github.ref, '/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: download artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pypangolin_wheel_*
+          merge-multiple: true
+          path: ./
+
+      - name: create release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: pypangolin-*.whl
+          artifactErrorsFailBuild: true
