@@ -122,6 +122,14 @@ jobs:
       run: |
         cmake --build build --target test
 
+    - name: upload wheel file
+      if: ${{ matrix.shared_libs == 'OFF' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: pypangolin_wheel_${{ matrix.os }}
+        if-no-files-found: error
+        path: ./build/pypangolin-*.whl
+
   emscripten:
     runs-on: ubuntu-22.04
 
