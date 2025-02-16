@@ -40,8 +40,6 @@ class PANGOLIN_EXPORT GlText
 public:
     GlText();
 
-    GlText(const GlText& txt);
-
     GlText(const GlTexture& font_tex);
     
     void AddSpace(GLfloat s);

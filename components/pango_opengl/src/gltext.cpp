@@ -39,12 +39,6 @@ GlText::GlText()
 
 }
 
-GlText::GlText(const GlText& txt)
-    : tex(txt.tex), str(txt.str), width(txt.width),
-      ymin(txt.ymin), ymax(txt.ymax), vs(txt.vs)
-{
-}
-
 GlText::GlText(const GlTexture& font_tex)
     : tex(&font_tex), width(0),
       ymin(std::numeric_limits<GLfloat>::max()),
