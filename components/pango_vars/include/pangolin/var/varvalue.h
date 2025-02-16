@@ -97,7 +97,7 @@ protected:
         virtual void Reset() override { throw BadInputException(); }
         VarMeta& Meta() override  { throw BadInputException(); }
         const VarT& Get() const override { throw BadInputException(); }
-        void Set(const VarT& val) override { throw BadInputException(); }
+        void Set(const VarT& /*val*/) override { throw BadInputException(); }
     };
 
     template<typename TT> static
@@ -109,7 +109,7 @@ protected:
 
     template<typename TT> static
     typename std::enable_if<!is_streamable<TT>::value, std::shared_ptr<VarValueT<std::string>>>::type
-    MakeStringWrapper( const std::shared_ptr<VarValueT<TT>>& v )
+    MakeStringWrapper( const std::shared_ptr<VarValueT<TT>>& /*v*/ )
     {
         return std::make_shared<ExceptionVarValue>();
     }

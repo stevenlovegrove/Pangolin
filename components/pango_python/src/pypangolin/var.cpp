@@ -168,7 +168,7 @@ std::vector<std::string>& var_t::get_members(){
 template <typename ... Ts>
 struct VarBinder {
 
-  static inline void Bind(pybind11::class_<var_t> & varClass) {}
+  static inline void Bind(pybind11::class_<var_t> & /*varClass*/) {}
 
 };
 

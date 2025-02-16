@@ -54,7 +54,7 @@ public:
     const std::vector<StreamInfo>& Streams() const override;
 
     //! Implement VideoInput::GrabNext()
-    bool GrabNext( unsigned char* image, bool wait = true ) override;
+    bool GrabNext( unsigned char* image, bool /*wait*/ = true ) override;
 
     //! Implement VideoInput::GrabNewest()
     bool GrabNewest( unsigned char* image, bool wait = true ) override;

@@ -81,7 +81,7 @@ bool MjpegVideo::LoadNext()
 }
 
 //! Implement VideoInput::GrabNext()
-bool MjpegVideo::GrabNext( unsigned char* image, bool wait )
+bool MjpegVideo::GrabNext( unsigned char* image, bool /*wait*/ )
 {
     if( LoadNext() ) {
         memcpy(image, next_image.ptr, size_bytes);

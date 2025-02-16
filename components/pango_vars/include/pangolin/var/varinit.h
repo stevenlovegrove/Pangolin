@@ -24,7 +24,7 @@ Wrapped(const std::shared_ptr<VarValueT<S>>&)
 
 template<typename T>
 typename std::enable_if<!is_streamable<T>::value, std::shared_ptr<VarValue<T>>>::type
-InitialiseFromPreviouslyGenericVar(const std::shared_ptr<VarValueGeneric>& v)
+InitialiseFromPreviouslyGenericVar(const std::shared_ptr<VarValueGeneric>& /*v*/)
 {
     // We can't initialize this variable from a 'generic' string type.
     throw BadInputException();
