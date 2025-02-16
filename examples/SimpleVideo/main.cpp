@@ -51,7 +51,7 @@ void VideoSample(const std::string uri)
 
     unsigned char* img = new unsigned char[video.SizeBytes()];
 
-    for(int frame=0; !pangolin::ShouldQuit(); ++frame)
+    while( !pangolin::ShouldQuit() )
     {
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
