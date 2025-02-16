@@ -81,7 +81,7 @@ protected:
     AVPacket        *packet;
     int             numBytesOut;
     AVPixelFormat     fmtout;
-    int64_t next_frame;
+    size_t next_frame;
 };
 
 }
