@@ -235,7 +235,7 @@ void Quit()
 
 void QuitAll()
 {
-    for(auto& nc : contexts) {
+    for(const auto& nc : contexts) {
         nc.second->quit = true;
     }
 }
