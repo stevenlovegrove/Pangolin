@@ -65,7 +65,6 @@ struct EmscriptenWindow : public WindowInterface
     KeyModifierBitmask key_modifier_state;
  private:
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = NULL;
-    GLuint program = 0;
     bool done_init_events;
 };
 
