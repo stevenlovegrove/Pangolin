@@ -135,7 +135,7 @@ TypedImage LoadExr(std::istream& source)
     const Imf::ChannelList &channels = file.header().channels();
     size_t c = 0;
     unsigned int d = format.channel_bit_depth;
-    Imf::PixelType pixeltype;
+    Imf::PixelType pixeltype = Imf::PixelType::UINT;
     switch(d)
     {
       case 16: pixeltype = Imf::HALF; break;
