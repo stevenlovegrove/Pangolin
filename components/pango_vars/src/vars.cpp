@@ -44,12 +44,12 @@ void ParseVarsFile(const string& filename)
     VarState::I().LoadFromFile(filename, VarState::FileKind::config);
 }
 
-void LoadJsonFile(const std::string& filename, const string &prefix)
+void LoadJsonFile(const std::string& filename)
 {
     VarState::I().LoadFromFile(filename, VarState::FileKind::json);
 }
 
-void SaveJsonFile(const std::string& filename, const string &prefix)
+void SaveJsonFile(const std::string& filename)
 {
     VarState::I().SaveToFile(filename, VarState::FileKind::json);
 }

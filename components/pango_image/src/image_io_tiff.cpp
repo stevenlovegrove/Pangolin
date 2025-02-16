@@ -27,7 +27,7 @@ T GetOrDefault(TIFF* tif, uint32_t tag, T default_val)
 }
 #endif
 
-void DummyTiffOpenHandler(const char* module, const char* fmt, va_list ap)
+void DummyTiffOpenHandler(const char* /*module*/, const char* /*fmt*/, va_list /*ap*/)
 {
     // TODO: Should probably send these somewhere...
 }
