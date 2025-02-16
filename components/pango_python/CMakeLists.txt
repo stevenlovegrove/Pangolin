@@ -71,6 +71,11 @@ if(BUILD_PANGOLIN_PYTHON AND Python3_FOUND AND pybind11_FOUND)
         DESTINATION ${CMAKE_INSTALL_PREFIX}
     )
 
+    if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+        # ignore "maybe-uninitialized" for Eigen
+        target_compile_options(${COMPONENT} PRIVATE "-Wno-maybe-uninitialized")
+    endif()
+
     PangolinRegisterFactory( InterpreterInterface PyInterpreter )
 
     # Add python module as another target. For some reason, it doesn't work to just link against ${COMPONENT}
