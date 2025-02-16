@@ -40,7 +40,7 @@ void SaveLz4(const Image<unsigned char>& image, const pangolin::PixelFormat& fmt
 
     lz4_image_header header;
     memcpy(header.magic,"LZ4",3);
-    strncpy(header.fmt, fmt.format.c_str(), sizeof(header.fmt));
+    memcpy(header.fmt, fmt.format.c_str(), sizeof(header.fmt));
     header.w = image.w;
     header.h = image.h;
     header.compressed_size = compressed_data_size;
