@@ -411,7 +411,6 @@ bool JoinVideo::GrabNewest(unsigned char* image, bool wait)
         std::vector<int64_t> reception_times;
         int64_t newest = std::numeric_limits<int64_t>::min();
         int64_t oldest = std::numeric_limits<int64_t>::max();
-        bool grabbed_any = false;
         int first_stream_backlog = 0;
         int64_t rt = 0;
         bool got_frame = false;
@@ -426,7 +425,6 @@ bool JoinVideo::GrabNewest(unsigned char* image, bool wait)
                     rt = GetAdjustedCaptureTime(0);
                 }
                 first_stream_backlog++;
-                grabbed_any = true;
             }
         } while(got_frame);
         offsets.push_back(offset);
@@ -445,7 +443,7 @@ bool JoinVideo::GrabNewest(unsigned char* image, bool wait)
         {
             for(int i = 0; i < first_stream_backlog; i++)
             {
-                grabbed_any |= src[s]->GrabNext(image + offset, true);
+                src[s]->GrabNext(image + offset, true);
                 if(sync_tolerance_us > 0)
                 {
                     rt = GetAdjustedCaptureTime(s);
