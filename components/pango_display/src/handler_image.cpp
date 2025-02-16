@@ -147,8 +147,6 @@ void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height, XY
 {
     if(tex != 0) {
         const pangolin::XYRangef& xy = tex_region;
-        const float w = (float)width;
-        const float h = (float)height;
 
         // discrete coords, (-0.5, -0.5) - (w-0.5, h-0.5)
         const GLfloat l = xy.x.min;

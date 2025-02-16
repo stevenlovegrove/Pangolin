@@ -262,8 +262,6 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
         streams.emplace_back(strm_fmt, w, h, pitch, (unsigned char*)0 + numBytesOut);
         numBytesOut += size_bytes;
     }
-
-    auto s = pFormatCtx->streams[videoStream];
 }
 
 FfmpegVideo::~FfmpegVideo()
