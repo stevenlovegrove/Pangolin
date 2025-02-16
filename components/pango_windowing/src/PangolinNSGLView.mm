@@ -263,7 +263,7 @@ pangolin::KeyModifierBitmask GetKeyModifierBitmask(NSEvent *event)
 - (void)mouseMoved: (NSEvent *)event
 {
     const NSPoint location = [self _Location: event];
-    osx_window->PassiveMouseMotionSignal(pangolin::MouseMotionEvent({{(float)location.x, (float)location.y}}));
+    osx_window->PassiveMouseMotionSignal(pangolin::MouseMotionEvent({{(float)location.x, (float)location.y, {}}}));
 }
 
 - (void)scrollWheel:(NSEvent *)event
