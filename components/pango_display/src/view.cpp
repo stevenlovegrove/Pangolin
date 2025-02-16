@@ -299,7 +299,7 @@ void View::ActivateIdentity() const
     v.ActivateIdentity();
 }
 
-GLfloat View::GetClosestDepth(int x, int y, int radius) const
+GLfloat View::GetClosestDepth([[maybe_unused]] int x, [[maybe_unused]] int y, int radius) const
 {
     // TODO: Get to work on android
 
