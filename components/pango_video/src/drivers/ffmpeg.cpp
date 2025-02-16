@@ -128,7 +128,7 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     int found_video_streams = 0;
 
     // loop though all the streams and print its main information
-    for (int i = 0; i < pFormatCtx->nb_streams; i++)
+    for (unsigned int i = 0; i < pFormatCtx->nb_streams; i++)
     {
         AVStream * stream = pFormatCtx->streams[i];
         const AVCodecParameters *pLocalCodecParameters = stream->codecpar;
