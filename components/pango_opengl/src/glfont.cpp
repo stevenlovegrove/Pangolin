@@ -233,7 +233,15 @@ GlText GlFont::Text( const char* format, ... )
 
 GlText GlFont::Text(const std::string& utf8 )
 {
+// "wstring_convert" and "codecvt_utf8" are deprecated since C++17
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     const std::u32string utf32 = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(utf8);
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
     if(!mTex.IsValid()) InitialiseGlTexture();
 
