@@ -203,7 +203,7 @@ TypedImage LoadJpg(std::istream& is) {
 
 }
 
-std::vector<std::streampos> GetMJpegOffsets(std::ifstream& is) {
+std::vector<std::streampos> GetMJpegOffsets([[maybe_unused]] std::ifstream& is) {
     std::vector<std::streampos> offsets;
 
 #ifdef HAVE_JPEG
