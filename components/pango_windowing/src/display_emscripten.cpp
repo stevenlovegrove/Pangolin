@@ -115,13 +115,13 @@ EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *user
         int key = spec_key(e->key);
         if(key != -1){
             w->KeyboardSignal(KeyboardEvent({
-                (float)w->x, (float)w->y, GetKeyModifierBitmask(e),
+                {(float)w->x, (float)w->y, GetKeyModifierBitmask(e)},
                 (uint8_t)key, eventType==EMSCRIPTEN_EVENT_KEYDOWN
             }));
         }
         if(strlen(e->key)==1){
             w->KeyboardSignal(KeyboardEvent({
-                (float)w->x, (float)w->y, GetKeyModifierBitmask(e),
+                {(float)w->x, (float)w->y, GetKeyModifierBitmask(e)},
                 (uint8_t)((e->ctrlKey?PANGO_CTRL:0) + e->key[0]),
                 eventType==EMSCRIPTEN_EVENT_KEYDOWN
             }));
@@ -141,7 +141,7 @@ EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userD
     case EMSCRIPTEN_EVENT_MOUSEDOWN:
     case EMSCRIPTEN_EVENT_MOUSEUP:
         w->MouseSignal(MouseEvent({
-            (float)w->x, (float)w->y, GetKeyModifierBitmask(e),
+            {(float)w->x, (float)w->y, GetKeyModifierBitmask(e)},
             e->button, eventType == EMSCRIPTEN_EVENT_MOUSEDOWN
         }));
         break;
@@ -165,9 +165,9 @@ EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userD
 EM_BOOL wheel_callback(int /*eventType*/, const EmscriptenWheelEvent *e, void *userData){
     EmscriptenWindow* w=(EmscriptenWindow*)userData;
     w->SpecialInputSignal(SpecialInputEvent({
-        (float)w->x, (float)w->y, w->key_modifier_state,
+        {(float)w->x, (float)w->y, w->key_modifier_state},
         InputSpecialScroll,
-        (float)e->deltaX, (float)e->deltaY, 0, 0
+        {(float)e->deltaX, (float)e->deltaY, 0, 0}
     }));
     return true;
 }
