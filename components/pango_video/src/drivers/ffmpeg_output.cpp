@@ -70,9 +70,6 @@ void FfmpegVideoOutputStream::WriteFrame(AVFrame* frame)
     pkt->data = NULL;
     pkt->size = 0;
 
-    int ret;
-    int got_packet = 1;
-
     /* encode the image */
     int response = avcodec_send_frame(codec_context, frame);
     while (response >= 0) {
