@@ -162,7 +162,7 @@ EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userD
     return false;
 }
 
-EM_BOOL wheel_callback(int eventType, const EmscriptenWheelEvent *e, void *userData){
+EM_BOOL wheel_callback(int /*eventType*/, const EmscriptenWheelEvent *e, void *userData){
     EmscriptenWindow* w=(EmscriptenWindow*)userData;
     w->SpecialInputSignal(SpecialInputEvent({
         (float)w->x, (float)w->y, w->key_modifier_state,
@@ -171,7 +171,7 @@ EM_BOOL wheel_callback(int eventType, const EmscriptenWheelEvent *e, void *userD
     }));
     return true;
 }
-EM_BOOL uievent_callback(int eventType, const EmscriptenUiEvent *e, void *userData){
+EM_BOOL uievent_callback(int eventType, const EmscriptenUiEvent */*e*/, void *userData){
     EmscriptenWindow* w=(EmscriptenWindow*)userData;
     switch(eventType) {
     case EMSCRIPTEN_EVENT_RESIZE:
@@ -257,7 +257,7 @@ void EmscriptenWindow::ShowFullscreen(const TrueFalseToggle)
     // Not implemented
 }
 
-void EmscriptenWindow::Move(int x, int y)
+void EmscriptenWindow::Move(int /*x*/, int /*y*/)
 {
     // Not implemented
 }
@@ -303,7 +303,7 @@ PANGOLIN_REGISTER_FACTORY(EmscriptenWindow)
             }};
         }
 
-        std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
+        std::unique_ptr<WindowInterface> Open(const Uri& /*uri*/) override {
             // We're going to be naughty and actually ignore the title, width and height,
             // but list them as parameters to be compatible with other windowing libs.
             return std::unique_ptr<WindowInterface>(new EmscriptenWindow());
