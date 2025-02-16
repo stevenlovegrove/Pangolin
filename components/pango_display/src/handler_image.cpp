@@ -143,7 +143,7 @@ void ImageViewHandler::glRenderTexture(GLuint tex, GLint original_img_width, GLi
     }
 }
 
-void ImageViewHandler::glRenderTexture(GLuint tex, GLint width, GLint height, XYRangef tex_region)
+void ImageViewHandler::glRenderTexture(GLuint tex, XYRangef tex_region)
 {
     if(tex != 0) {
         const pangolin::XYRangef& xy = tex_region;
