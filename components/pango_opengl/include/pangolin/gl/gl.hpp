@@ -247,7 +247,9 @@ inline void GlTexture::LoadFromFile(const std::string& filename, bool sampling_l
     Load(image, sampling_linear);
 }
 
-inline void GlTexture::Download(void* image, GLenum data_layout, GLenum data_type) const
+inline void GlTexture::Download([[maybe_unused]] void* image,
+                                [[maybe_unused]] GLenum data_layout,
+                                [[maybe_unused]] GLenum data_type) const
 {
     Bind();
 #ifndef HAVE_GLES
