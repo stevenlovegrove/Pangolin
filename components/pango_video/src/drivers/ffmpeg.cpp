@@ -165,14 +165,6 @@ void FfmpegVideo::InitUrl(const std::string url, const std::string strfmtout, co
     // try to work out how many frames we have in video and conversion from frames to pts
     auto vid_stream = pFormatCtx->streams[videoStream];
 
-    auto set_or_check = [this](int64_t& var, int64_t val){
-        if(!var) {
-            var = val;
-        }else if(var != val) {
-            pango_print_warn("Inconsistent calculation for video.");
-        }
-    };
-
     numFrames = vid_stream->nb_frames;
 
     // try to fix missing duration if we have numFrames
@@ -406,7 +398,6 @@ PANGOLIN_REGISTER_FACTORY(FfmpegVideo)
             ToUpper(outfmt);
             ToUpper(codec_hint);
             const int video_stream = uri.Get<int>("stream",0);
-            const ImageDim size = uri.Get<ImageDim>("size",ImageDim(0,0));
             return std::unique_ptr<VideoInterface>( new FfmpegVideo(uri.url.c_str(), outfmt, codec_hint, verbose, video_stream) );
         }
     };
