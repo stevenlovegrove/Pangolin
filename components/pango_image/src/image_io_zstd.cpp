@@ -25,10 +25,7 @@ void SaveZstd(const Image<unsigned char>& image, const pangolin::PixelFormat& fm
     // Write out header, uncompressed
     zstd_image_header header;
     memcpy(header.magic,"ZSTD",4);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-    strncpy(header.fmt, fmt.format.c_str(), sizeof(header.fmt));
-#pragma GCC diagnostic pop
+    memcpy(header.fmt, fmt.format.c_str(), sizeof(header.fmt));
     header.w = image.w;
     header.h = image.h;
     out.write((char*)&header, sizeof(header));
