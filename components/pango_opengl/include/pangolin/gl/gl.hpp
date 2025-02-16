@@ -336,7 +336,7 @@ inline void GlTexture::Download(TypedImage& image) const
 
 }
 
-inline void GlTexture::CopyFrom(const GlTexture& tex)
+inline void GlTexture::CopyFrom([[maybe_unused]] const GlTexture& tex)
 {
 #ifndef HAVE_GLES
     if(!tid || width != tex.width || height != tex.height ||
