@@ -34,14 +34,14 @@ jobs:
 
       - name: ROS 1 CI Action
         if: ${{ matrix.ros_version == 1 }}
-        uses: ros-tooling/action-ros-ci@v0.3
+        uses: ros-tooling/action-ros-ci@v0.4
         with:
           package-name: pangolin
           target-ros1-distro: ${{ matrix.ros_distribution }}
 
       - name: ROS 2 CI Action
         if: ${{ matrix.ros_version == 2 }}
-        uses: ros-tooling/action-ros-ci@v0.3
+        uses: ros-tooling/action-ros-ci@v0.4
         with:
           package-name: pangolin
           target-ros2-distro: ${{ matrix.ros_distribution }}
