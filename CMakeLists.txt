@@ -93,6 +93,9 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wno-parentheses)
     add_compile_options(-Wno-null-pointer-arithmetic)
     add_compile_options(-Wno-null-pointer-subtraction)
+    if(CMAKE_COMPILER_IS_GNUCC)
+        add_compile_options(-Werror=maybe-uninitialized)
+    endif()
 endif()
 
 #######################################################
