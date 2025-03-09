@@ -72,8 +72,11 @@ if(BUILD_PANGOLIN_PYTHON AND Python3_FOUND AND pybind11_FOUND)
     )
 
     if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
-        # ignore "maybe-uninitialized" for Eigen
-        target_compile_options(${COMPONENT} PRIVATE "-Wno-uninitialized")
+        # ignore "maybe-uninitialized" and "maybe-uninitialized" for Eigen
+        if(CMAKE_COMPILER_IS_GNUCC)
+            target_compile_options(${COMPONENT} PRIVATE  "-Wno-error=maybe-uninitialized")
+        endif()
+        target_compile_options(${COMPONENT} PRIVATE  "-Wno-error=uninitialized")
     endif()
 
     PangolinRegisterFactory( InterpreterInterface PyInterpreter )
