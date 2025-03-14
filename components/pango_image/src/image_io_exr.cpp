@@ -1,10 +1,12 @@
 #include <pangolin/platform.h>
 
+#include <cstdint>
 #include <fstream>
 #include <pangolin/image/typed_image.h>
 
 #ifdef HAVE_OPENEXR
 #include <ImfChannelList.h>
+#include <ImfFrameBuffer.h>
 #include <ImfInputFile.h>
 #include <ImfOutputFile.h>
 #include <ImfIO.h>
@@ -54,12 +56,12 @@ class StdIStream: public Imf::IStream
         return true;
     }
 
-    virtual Imf::Int64 tellg ()
+    virtual uint64_t tellg ()
     {
         return std::streamoff (_is->tellg());
     }
 
-    virtual void seekg (Imf::Int64 pos)
+    virtual void seekg (uint64_t pos)
     {
         _is->seekg (pos);
     }
