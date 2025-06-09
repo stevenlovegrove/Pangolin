@@ -312,7 +312,8 @@ GLfloat View::GetClosestDepth([[maybe_unused]] int x, [[maybe_unused]] int y, in
 #endif
 
     const int zsize = zl*zl;
-    GLfloat zs[zsize];
+    std::vector<GLfloat> zsVec(zsize);
+    GLfloat* zs = zsVec.data();
 
 #ifndef HAVE_GLES
     glReadBuffer(GL_FRONT);
