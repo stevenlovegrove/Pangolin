@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04, macos-14, windows-2022]
+        os: [ubuntu-22.04, ubuntu-24.04, macos-15, windows-2025]
         shared_libs: ['ON', 'OFF']
         include:
         - os: ubuntu-22.04
@@ -25,10 +25,10 @@ jobs:
         - os: ubuntu-24.04
           package_manager: "apt"
 
-        - os: macos-14
+        - os: macos-15
           package_manager: "brew"
 
-        - os: windows-2022
+        - os: windows-2025
           package_manager: "vcpkg"
 
     steps:
