@@ -96,6 +96,7 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
     if(CMAKE_COMPILER_IS_GNUCC)
         add_compile_options(-Werror=maybe-uninitialized)
     endif()
+    add_compile_options(-Werror=vla)
 endif()
 
 #######################################################
