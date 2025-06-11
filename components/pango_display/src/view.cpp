@@ -303,13 +303,7 @@ GLfloat View::GetClosestDepth([[maybe_unused]] int x, [[maybe_unused]] int y, in
 {
     // TODO: Get to work on android
 
-#ifdef _MSC_VER
-    // MSVC Requires fixed sized arrays on stack
-    radius = 5;
-    const int zl = (5*2+1);
-#else
     const int zl = (radius*2+1);
-#endif
 
     const int zsize = zl*zl;
     GLfloat zs[zsize];
