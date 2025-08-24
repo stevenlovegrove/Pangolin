@@ -40,7 +40,7 @@ namespace std {
 template<>
 struct hash<tinyobj::index_t> {
 
-    std::size_t operator()(const tinyobj::index_t & t) const noexcept {
+    std::size_t operator()(const tinyobj::index_t& t) const noexcept {
         static std::hash<int> h;
         return h(t.vertex_index) ^ h(t.normal_index) ^ h(t.texcoord_index);
     }
@@ -101,10 +101,10 @@ pangolin::Geometry LoadGeometryObj(const std::string& filename)
         PANGO_ASSERT(attrib.texcoords.size() % 2 == 0);
 
         // Load textures - a bit of a hack for now.
-        for(auto &material : materials) {
+        for(auto& material : materials) {
             if(!material.diffuse_texname.empty()) {
               try {
-                  TypedImage &tex_image = geom.textures[material.name];
+                  TypedImage& tex_image = geom.textures[material.name];
                 tex_image = LoadImage(PathParent(filename) + "/" + material.diffuse_texname);
                 const int row_bytes = tex_image.w * tex_image.fmt.bpp / 8;
                 std::vector<unsigned char> tmp_row(row_bytes);
