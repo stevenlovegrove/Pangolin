@@ -31,10 +31,9 @@
 #include <pangolin/platform.h>
 #include <pangolin/windowing/window.h>
 #include <windowsx.h>
-
 namespace pangolin
 {
-
+   
 struct WinWindow : public WindowInterface
 {
     WinWindow(
@@ -70,7 +69,7 @@ private:
 
     LRESULT HandleWinMessages(UINT message, WPARAM wParam, LPARAM lParam);
 
-    void RegisterThisClass(HMODULE hCurrentInst);
+    void RegisterThisClass(HMODULE hCurrentInst,const std::string &window_title);
 
     void SetupPixelFormat(HDC hdc);
 
