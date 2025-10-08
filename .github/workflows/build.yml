@@ -185,3 +185,6 @@ jobs:
         with:
           artifacts: pypangolin-*.whl
           artifactErrorsFailBuild: true
+          allowUpdates: true
+          omitNameDuringUpdate: true
+          omitBodyDuringUpdate: true
