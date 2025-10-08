@@ -199,7 +199,7 @@ FfmpegVideoOutputStream::~FfmpegVideoOutputStream()
     }
 
     av_free(frame);
-    avcodec_close(codec_context);
+    avcodec_free_context(&codec_context);
 }
 
 FfmpegVideoOutput::FfmpegVideoOutput(const std::string& filename, int base_frame_rate, int bit_rate, bool flip_image)
