@@ -15,7 +15,7 @@
   <depend>python3-dev</depend>
   <build_depend>eigen</build_depend>
   <depend>libpng-dev</depend>
-  <depend>libturbojpeg</depend>
+  <depend>libjpeg</depend>
   <depend>libxkbcommon-dev</depend>
   <depend>opengl</depend>
   <build_depend>wayland-dev</build_depend>
