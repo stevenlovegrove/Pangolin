@@ -234,6 +234,18 @@ create_factory_registry_file( "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/fact
 target_sources(${COMPONENT} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/factory/RegisterFactoriesVideoInterface.h")
 target_sources(${COMPONENT} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include/pangolin/factory/RegisterFactoriesVideoOutputInterface.h")
 
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+    # ignore errors in librealsense2 headers
+    target_compile_options(${COMPONENT} PUBLIC
+        -Wno-error=ignored-qualifiers
+        -Wno-error=sign-compare
+        -Wno-error=deprecated-copy
+        -Wno-error=missing-field-initializers
+        -Wno-error=missing-field-initializers
+        -Wno-error=pessimizing-move
+    )
+endif()
+
 
 if(BUILD_TESTS)
     add_executable(test_video_uris ${CMAKE_CURRENT_LIST_DIR}/tests/tests_video_uri.cpp)
