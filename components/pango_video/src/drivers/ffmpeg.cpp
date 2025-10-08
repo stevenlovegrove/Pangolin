@@ -261,7 +261,7 @@ FfmpegVideo::~FfmpegVideo()
     av_free(pFrameOut);
     av_free(pFrame);
 
-    avcodec_close(pCodecContext);
+    avcodec_free_context(&pCodecContext);
     avformat_close_input(&pFormatCtx);
     sws_freeContext(img_convert_ctx);
 }
