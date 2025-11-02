@@ -135,11 +135,29 @@ struct Colour
 
 };
 
+/// The base class of colour providers. It does not enforce any strategy on how to provide the colours
+class ColourProvider
+{
+public:
+    /// Adds a colour to this provider. Some providers that generate colours
+    /// might not need to implement this (e.g. ColourWheel)
+    virtual void Add(const Colour& /*colour*/) {};
+
+    /// Get next colour. In the case of generation it would create a new one.
+    virtual Colour GetNext() = 0;
+
+    /// Reset colours
+    virtual void Reset() = 0;
+
+    /// Virtual destructor to ensure correct destruction of derived classes
+    virtual ~ColourProvider() = default;
+};
+
 /// A ColourWheel is like a continuous colour palate that can be sampled.
 /// In the future, different ColourWheels will be supported, but this one
 /// is based on sampling hues in HSV colourspace. An indefinite number of
 /// unique colours are sampled using the golden angle.
-class ColourWheel
+class ColourWheel : public ColourProvider
 {
 public:
     /// Construct ColourWheel with Saturation, Value and Alpha constant.
@@ -163,8 +181,14 @@ public:
         return GetColourBin(unique_colours++);
     }
 
+    /// Return next unique colour from ColourWheel for ColorProvider.
+    inline Colour GetNext() override
+    {
+        return GetUniqueColour();
+    }
+
     /// Reset colour wheel counter to initial state
-    inline void Reset() {
+    inline void Reset() override {
       unique_colours = 0;
     }
 
@@ -173,6 +197,34 @@ protected:
     float sat;
     float val;
     float alpha;
+};
+
+/// A simple Circular Buffer of colours
+class ColourCircularBuffer : public ColourProvider
+{
+public:
+    /// Adds a new color to the vector
+    virtual void Add(const Colour& colour) override {
+        colours.emplace_back(colour);
+        current_idx = colours.size() - 1;
+    }
+
+    /// Return next colour in the buffer
+    inline Colour GetNext() override
+    {
+        current_idx = (current_idx + 1) % colours.size();
+        return colours[current_idx];
+    }
+
+    /// Clear all added colours
+    inline void Reset() override {
+        colours.clear();
+        current_idx = 0;
+    }
+
+protected:
+    std::vector<Colour> colours;
+    size_t current_idx = 0;
 };
 
 }
