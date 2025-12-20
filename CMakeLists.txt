@@ -86,17 +86,24 @@ if(BUILD_ASAN)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Wall -Wextra -Werror)
-    # error: ISO C++ prohibits anonymous structs
-    # add_compile_options(-Wpedantic)
-    # ignore "parentheses" warning for custom "picojson" fork
+    option(PANGOLIN_ENABLE_WERROR "Treat warnings as errors" OFF)
+
+    # Basic warning flags for all compilers
+    add_compile_options(-Wall -Wextra)
+
     add_compile_options(-Wno-parentheses)
     add_compile_options(-Wno-null-pointer-arithmetic)
     add_compile_options(-Wno-null-pointer-subtraction)
-    if(CMAKE_COMPILER_IS_GNUCC)
-        add_compile_options(-Werror=maybe-uninitialized)
+
+    # Treat warnings as errors when explicitly enabled, or when the standard CMake
+    # option CMAKE_COMPILE_WARNING_AS_ERROR is set.
+    if(PANGOLIN_ENABLE_WERROR OR CMAKE_COMPILE_WARNING_AS_ERROR)
+        if(CMAKE_COMPILER_IS_GNUCC)
+            add_compile_options(-Werror -Werror=maybe-uninitialized -Werror=vla)
+        elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+            add_compile_options(-Werror -Werror=vla)
+        endif()
     endif()
-    add_compile_options(-Werror=vla)
 endif()
 
 #######################################################
