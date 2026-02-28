@@ -973,7 +973,6 @@ WaylandWindow::WaylandWindow(const int w, const int h,
     wl_surface_commit(wsurface);
 
     wl_display_roundtrip(display->wdisplay);
-    wl_display_roundtrip(display->wdisplay);
 
     // wait for the first configure event
     while (!configured) {
