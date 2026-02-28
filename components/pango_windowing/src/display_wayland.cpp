@@ -677,8 +677,8 @@ static void pointer_handle_axis(void *data, struct wl_pointer */*wl_pointer*/, u
     float dx = 0, dy = 0;
 
     switch (axis) {
-    case REL_X: dy = v; break;   // up, down
-    case REL_Y: dx = v; break;   // left, right
+    case WL_POINTER_AXIS_VERTICAL_SCROLL: dy = -v; break;   // up, down
+    case WL_POINTER_AXIS_HORIZONTAL_SCROLL: dx = v; break;  // left, right
     }
 
     w->SpecialInputSignal(SpecialInputEvent({
