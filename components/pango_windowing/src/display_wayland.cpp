@@ -1025,17 +1025,17 @@ void WaylandWindow::Move(const int /*x*/, const int /*y*/) { }
 
 void WaylandWindow::Resize(const unsigned int /*w*/, const unsigned int /*h*/) { }
 
-void WaylandWindow::ProcessEvents() { }
+void WaylandWindow::ProcessEvents() {
+    wl_display_dispatch_pending(display->wdisplay);
+}
 
 void WaylandWindow::SwapBuffers() {
-    eglSwapBuffers(display->egl_display, egl_surface);
-
     // draw all decoration elements
     decoration->draw();
 
     MakeCurrent();
 
-    wl_display_dispatch(display->wdisplay);
+    eglSwapBuffers(display->egl_display, egl_surface);
 }
 
 
