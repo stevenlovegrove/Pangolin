@@ -33,7 +33,7 @@ jobs:
 
     steps:
     - name: Checkout Pangolin
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         submodules: true
 
@@ -81,7 +81,7 @@ jobs:
       run: |
         vcpkg remove python3
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v6
       if: ${{ matrix.package_manager == 'vcpkg' }}
       with:
         python-version: '3.12'
@@ -124,7 +124,7 @@ jobs:
 
     - name: upload wheel file
       if: ${{ matrix.shared_libs == 'OFF' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: pypangolin_wheel_${{ matrix.os }}
         if-no-files-found: error
@@ -135,7 +135,7 @@ jobs:
 
     steps:
     - name: Checkout Pangolin
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: install build dependencies
       run: |
@@ -159,7 +159,7 @@ jobs:
 
     - name: Deploy Examples to GitHub Pages (for pushes to master)
       if: success() && (github.ref == 'refs/heads/master')
-      uses: crazy-max/ghaction-github-pages@v4
+      uses: crazy-max/ghaction-github-pages@v5
       with:
         target_branch: gh-pages
         keep_history: true
@@ -174,7 +174,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: pypangolin_wheel_*
           merge-multiple: true
