@@ -37,11 +37,10 @@ endif()
 
 option(BUILD_PANGOLIN_LIBOPENEXR "Build support for libopenexr image input" ON)
 if(BUILD_PANGOLIN_LIBOPENEXR)
-    find_package(OpenEXR QUIET)
+    find_package(OpenEXR 3 QUIET)
     if(OpenEXR_FOUND)
         target_compile_definitions(${COMPONENT} PRIVATE HAVE_OPENEXR)
-        target_include_directories(${COMPONENT} PRIVATE ${OpenEXR_INCLUDE_DIR} )
-        target_link_libraries(${COMPONENT} PRIVATE ${OpenEXR_LIBRARY})
+        target_link_libraries(${COMPONENT} PRIVATE OpenEXR::OpenEXR)
         target_compile_options(${COMPONENT} PRIVATE
             $<$<OR:$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
             -Wno-deprecated-register -Wno-deprecated>
