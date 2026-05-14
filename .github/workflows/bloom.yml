@@ -17,6 +17,9 @@ jobs:
           - docker_image: ubuntu:24.04
             ros_distribution: jazzy
 
+          - docker_image: ubuntu:26.04
+            ros_distribution: lyrical
+
     container:
       image: ${{ matrix.docker_image }}
 
