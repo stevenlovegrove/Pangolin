@@ -10,6 +10,7 @@
 #include <ImfInputFile.h>
 #include <ImfOutputFile.h>
 #include <ImfIO.h>
+#include <ImfHeader.h>
 #endif // HAVE_OPENEXR
 
 namespace pangolin {
