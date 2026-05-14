@@ -121,7 +121,7 @@ if [[ "$MANAGER" == "apt" ]]; then
     if ((DRYRUN > 0));  then PKGS_OPTIONS+=(--dry-run); SUDO=""; fi
     PKGS_REQUIRED+=(libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev)
     PKGS_REQUIRED+=(libc++-dev libepoxy-dev libglew-dev libeigen3-dev cmake g++ ninja-build)
-    PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev catch2)
+    PKGS_RECOMMENDED+=(libjpeg-dev libpng-dev libopenexr-dev catch2)
     PKGS_RECOMMENDED+=(libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev)
     PKGS_ALL+=(libdc1394-dev libraw1394-dev libopenni-dev python3-dev)
 elif [[ "$MANAGER" == "dnf" ]]; then
