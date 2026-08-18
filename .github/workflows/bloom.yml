@@ -32,7 +32,7 @@ jobs:
           apt update
           apt install -y --no-install-recommends git ca-certificates
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: ros-tooling/setup-ros@v0.7
 
