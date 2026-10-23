@@ -250,7 +250,7 @@ int PangoVideoOutput::WriteStreams(const unsigned char* data, const picojson::va
 
         // Wait on all threads to finish and copy into data packet
         for(size_t i=1; i < streams.size(); ++i) {
-            encode_finished[i-1].get();
+            (void)encode_finished[i-1].get();
             encoded.insert(encoded.end(), encoded_stream_data[i].buffer.begin(), encoded_stream_data[i].buffer.end());
         }
 
