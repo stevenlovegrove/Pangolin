@@ -61,15 +61,10 @@ jobs:
       if: ${{ matrix.package_manager == 'brew' }}
       run: |
         rm /usr/local/bin/2to3
-        rm /usr/local/bin/2to3-3.12
         rm /usr/local/bin/idle3
-        rm /usr/local/bin/idle3.12
         rm /usr/local/bin/pydoc3
-        rm /usr/local/bin/pydoc3.12
         rm /usr/local/bin/python3
-        rm /usr/local/bin/python3.12
         rm /usr/local/bin/python3-config
-        rm /usr/local/bin/python3.12-config
 
     - name: Install Dependencies
       env:
@@ -87,7 +82,7 @@ jobs:
     - uses: actions/setup-python@v7
       if: ${{ matrix.package_manager == 'vcpkg' }}
       with:
-        python-version: '3.12'
+        python-version: '3.15'
 
     - name: "(vcpkg only) install setuptools"
       if: ${{ matrix.package_manager == 'vcpkg' }}
