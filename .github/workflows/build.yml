@@ -80,12 +80,12 @@ jobs:
         vcpkg remove python3
 
     - uses: actions/setup-python@v7
-      if: ${{ matrix.package_manager == 'vcpkg' }}
+      if: ${{ matrix.package_manager != 'apt' }}
       with:
         python-version: '3.15'
 
     - name: "(vcpkg only) install setuptools"
-      if: ${{ matrix.package_manager == 'vcpkg' }}
+      if: ${{ matrix.package_manager != 'apt' }}
       run: |
         pip install setuptools wheel
 
