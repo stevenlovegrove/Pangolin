@@ -75,7 +75,7 @@ endif()
 
 option(BUILD_PANGOLIN_LIBRAW "Build support for raw images (libraw)" ON)
 if(BUILD_PANGOLIN_LIBRAW)
-    find_package(libraw QUIET)
+    find_package(Libraw QUIET)
     if(libraw_FOUND)
         target_compile_definitions(${COMPONENT} PRIVATE HAVE_LIBRAW)
         target_include_directories(${COMPONENT} PRIVATE ${libraw_INCLUDE_DIR} )
